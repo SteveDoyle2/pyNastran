@@ -79,8 +79,7 @@ class OGPWG(OP2Common):
         #print(self.label)
         #print(self.pval_step)
         #print(self.superelement_adaptivity_index)
-        weight = GridPointWeight()
-        weight.set_grid_point_weight(
+        weight = GridPointWeight(
             self.reference_point,
             MO, S, mass, cg, IS, IQ, Q,
             approach_code=self.approach_code, table_code=self.table_code,

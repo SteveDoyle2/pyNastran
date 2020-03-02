@@ -14,7 +14,10 @@ integer_types = (int, np.int32)
 #good = (4, 2, 4, 8, 1464878927, 538976327, 8, 4, -1, 4, 4, 7, 4, 28, 101, 0, 0, 0, 0,   0, 1, 28, 4, -2, 4, 4, 1, 4, 4, 0, 4, 4, 2, 4, 8,  1464878927, 538976327, 8, 4,                   -3, 4, 4, 1, 4, 4, 0, 4, 4, 146, 4)
 #bad  = (4, 2, 4, 8, 1464878927, 538976327, 8, 4, -1, 4, 4, 7, 4, 28, 102, 0, 0, 0, 512, 0, 0, 28, 4, -2, 4, 4, 1, 4, 4, 0, 4, 4, 7, 4, 28, 1464878927, 538976327, 9, 27, 19, 0, 1, 28, 4, -3, 4, 4, 1, 4, 4)
 class GridPointWeight:
-    def __init__(self):
+    def __init__(self, reference_point, MO, S, mass, cg, IS, IQ, Q,
+                 approach_code=1, table_code=13,
+                 title='', subtitle='', label='',
+                 superelement_adaptivity_index=''):
         """
         .. seealso:: http://www.6dof.com/index.php?option=com_content&view=article&id=298:output-from-the-grid-point-weight-generator&catid=178:courses-and-trainings&Itemid=61
         """
@@ -28,56 +31,76 @@ class GridPointWeight:
         # defined in the basic coordinate system. Subsequently, the mass properties are
         # transformed to principal mass axes and to principal inertia axes. The actual printout
         # is composed of several elements. These are:
-        self.reference_point = None
+        self.reference_point = reference_point
+        assert isinstance(reference_point, int), f'reference_point={reference_point!r}; type={type(reference_point)}'
 
         # M0 RIGID BODY MASS MATRIX IN BASIC COORDINATE SYSTEM
-        # This is the rigid body mass matrix of the entire structure in the basic coordinate
-        # system with respect to a reference point chosen by the analyst.
-        self.MO = None
+        # This is the rigid body mass matrix of the entire structure in
+        # the basic coordinate system with respect to a reference point
+        # chosen by the analyst.
+        self.MO = MO
+        assert MO.shape == (6, 6), MO.shape
 
         # S TRANSFORMATION MATRIX FOR SCALAR MASS PARTITION
-        # S is the transformation from the basic coordinate system to the set of principal axes
-        # for the 3 x 3 scalar mass partition of the 6 x 6 mass matrix. The principal axes for
-        # just the scalar partition are known as the principal mass axes.
-        self.S = None
+        # S is the transformation from the basic coordinate system to the
+        # set of principal axes for the 3 x 3 scalar mass partition of the
+        # 6 x 6 mass matrix. The principal axes for just the scalar
+        # partition are known as the principal mass axes.
+        self.S = S
+        assert S.shape == (3, 3), S.shape
 
-        self.mass = None
+        self.mass = mass
+        assert mass.shape == (3,), mass.shape
 
         # XC.G. YC.G. ZC.G.
-        # It is possible in NASTRAN to assemble a structural model having different values of
-        # mass in each coordinate direction at a grid point. This can arise, for example, by
-        # assembling scalar mass components or from omitting some components by means of bar
-        # element pin flags. Consequently three distinct mass systems are assembled one in each of
-        # the three directions of the principal mass axes (the S system). This third tabulation
-        # has five columns. The first column lists the axis direction in the S coordinates. The
-        # second column lists the mass associated with the appropriate axis direction. The final
-        # three columns list the x, y, and z coordinate distances from the reference point to the
-        # center of mass for each of the three mass systems.
-        self.cg = None
+        # It is possible in NASTRAN to assemble a structural model having
+        # different values of mass in each coordinate direction at a grid
+        # point. This can arise, for example, by assembling scalar mass
+        # components or from omitting some components by means of bar
+        # element pin flags. Consequently three distinct mass systems are
+        # assembled one in each of the three directions of the principal
+        # mass axes (the S system). This third tabulation has five columns.
+        # The first column lists the axis direction in the S coordinates.
+        # The second column lists the mass associated with the appropriate
+        # axis direction. The final three columns list the x, y, and z
+        # coordinate distances from the reference point to the center of
+        # mass for each of the three mass systems.
+        self.cg = cg
+        assert cg.shape == (3, 3), cg.shape
 
         # I(S) INERTIAS RELATIVE TO C.G.
-        # This is the 3 x 3 mass moment of inertia partition with respect to the center of
-        # gravity referred to the principal mass axes (the S system). This is not necessarily a
-        # diagonal matrix because the determination of the S system does not involve second
-        # moments. The values of inertias at the center of gravity are found from the values at
-        # the reference point employing the parallel axes rule.
-        self.IS = None
+        # This is the 3 x 3 mass moment of inertia partition with respect
+        # to the center of gravity referred to the principal mass axes
+        # (the S system).
+        #
+        # This is not necessarily a diagonal matrix because the
+        # determination of the S system does not involve second moments.
+        # The values of inertias at the center of gravity are found from
+        # the values at the reference point employing the
+        # parallel axes rule.
+        self.IS = IS
+        assert IS.shape == (3, 3), IS.shape
 
         # I(Q) PRINCIPAL INERTIAS
-        # The principal moments of inertia at the center of gravity are displayed in matrix
-        # form with reference to the Q system of axes. The Q system is obtained from an eigenvalue
-        # analysis of the I(S) matrix.
-        self.IQ = None
+        # The principal moments of inertia at the center of gravity are displayed
+        # in matrix form with reference to the Q system of axes. The Q system is
+        # obtained from an eigenvalue analysis of the I(S) matrix.
+        self.IQ = IQ
+        assert IQ.shape == (3, ), f'IQ.shape={IQ.shape}; IQ=\n{IQ}'
 
-        # Q TRANSFORMATION MATRIX I(Q) = QT*IBAR(S)*Q
-        # Q is the coordinate transformation between the S axes and the Q axes. IBAR(S) is the
-        # same as I(s) except that the signs of the offdiagonal terms are reversed.
-        self.Q = None
+        # Q TRANSFORMATION MATRIX I(Q) = Q^T*IBAR(S)*Q
+        # Q is the coordinate transformation between the S axes and the Q axes.
+        # IBAR(S) is the same as I(s) except that the signs of the off-diagonal
+        # terms are reversed.
+        self.Q = Q
+        assert Q.shape == (3, 3), Q.shape
 
-        self.title = ''
-        self.subtitle = ''
-        self.label = ''
-        self.superelement_adaptivity_index = ''
+        self.title = title
+        self.subtitle = subtitle
+        self.label = label
+        self.superelement_adaptivity_index = subtitle
+        self.approach_code = approach_code
+        self.table_code = table_code
 
     def export_to_hdf5(self, group, log) -> None:
         """exports the object to HDF5 format"""
@@ -126,28 +149,6 @@ class GridPointWeight:
         if msg:
             raise ValueError('GridPointWeight:\n' + msg)
         return True
-
-    def set_grid_point_weight(self, reference_point, MO, S, mass, cg, IS, IQ, Q,
-                              approach_code=1, table_code=13,
-                              title='', subtitle='', label='',
-                              superelement_adaptivity_index=''):
-        """used by the op2 reader to set the table parameters"""
-        self.reference_point = reference_point
-        self.approach_code = approach_code
-        self.table_code = table_code
-
-        self.MO = MO
-        self.S = S
-        self.mass = mass
-        self.cg = cg
-        self.IS = IS
-        self.IQ = IQ
-        self.Q = Q
-
-        self.title = title
-        self.subtitle = subtitle
-        self.label = label
-        self.superelement_adaptivity_index = superelement_adaptivity_index
 
     def get_stats(self, key='', short=True):
         key2 = f'[{key!r}]'
@@ -429,3 +430,123 @@ class GridPointWeight:
         msg.append('\n' + page_stamp % page_num + '\n')
         f06_file.write('\n'.join(msg))
         return page_num + 1
+
+def make_grid_point_weight(reference_point, MO,
+                           approach_code=1, table_code=13,
+                           title='', subtitle='', label='',
+                           superelement_adaptivity_index='') -> None:
+    """creates a grid point weight table"""
+    Mtt_ = MO[:3, :3]
+    Mrr_ = MO[3:, 3:]
+    Mtr_ = MO[:3, 3:]
+    Mtd = np.diag(Mtt_)
+    delta = np.linalg.norm(Mtd)
+    e_ = [Mtt_[0, 1], Mtt_[0, 2], Mtt_[1, 2]]
+    epsilon = np.linalg.norm(e_)
+    #print(Mtd)
+    #print(Mte)
+    #print(Mtd)
+
+    #print(Mte)
+    if epsilon/delta > 0.001:
+        unused_eigvals, S = np.linalg.eigh(Mtt_)
+        #print('S1:')
+        #print(S)
+        #print(f'eigvals = {eigvals}')
+        msg = (
+            '*** USER WARNING MESSAGE 3042 MODULE = GPWG\n'
+            f'INCONSISTENT SCALAR MASSES HAVE BEEN USED. EPSILON/DELTA = {epsilon/delta:.7E}\n')
+        print(msg)
+        #print('S*:')
+        #print(S)
+    else:
+        S = np.eye(3, dtype=Mtt_.dtype)
+
+
+    #iswap = []
+    #if np.sign(S[0, 0]) != np.sign(Mtt_[0, 0]):
+        #mass[0] *= -1.
+        #S[:, 0] *= -1
+        #iswap.append(0)
+
+    #if np.sign(S[1, 1]) != np.sign(Mtt_[1, 1]):
+        #iswap.append(1)
+    #if S[1, 1] < 0.:
+        #iswap.append(1)
+    #if S[2, 2] < 0.:
+        #iswap.append(2)
+
+    #if abs(S[0, 0]) < np.abs(S[:, 0]).max():
+        #print('swap0')
+        #iswap.append(0)
+    #if S[0, 0] < 0.:
+        #S[:, 0] *= -1
+    #if abs(S[1, 1]) < np.abs(S[1, 0]).max():
+        #iswap.append(1)
+    #if abs(S[0, 0]) < np.abs(S[1, 0]):
+        #iswap.append(2)
+
+    #if iswap:
+        #i1, i2 = iswap
+        #print(f'swap; {iswap}')
+        #m1, m2 = mass[iswap]
+        #mass[[i2, i1]] = mass[iswap]
+        #S[[i2, i1], :] = S[iswap, :]
+        #S[:, [i2, i1]] = S[:, iswap]
+    #print('S2:')
+    #print(S)
+    #print('S3:')
+    #S = np.array([
+        #[.432, 0.902, 0.],
+        #[-.902, .432, 0.],
+        #[0., 0., 1.],
+    #])
+    #print(S)
+
+    Mtt = S.T @ Mtt_ @ S # Mt
+    Mtr = S.T @ Mtr_ @ S
+    Mrr = S.T @ Mrr_ @ S # Mr = I(Q)?
+    #print('---------')
+    #print(Mtt)
+
+    #cg = Mtr / mass[:, np.newaxis]
+    mx, my, mz = Mtt[0, 0], Mtt[1, 1], Mtt[2, 2]
+    mass = np.hstack([mx, my, mz])
+    cg = np.vstack([
+        [Mtr[0, 0], -Mtr[0, 2], Mtr[0, 1]],  # Xx, Yx, Zx
+        [Mtr[1, 2], Mtr[1, 1], -Mtr[1, 0]],  # Xy, Yy, Zy
+        [-Mtr[2, 1], Mtr[2, 0], -Mtr[2, 2]], # Xz, Yz, Zz
+    ])
+    if abs(mx) > 0:
+        cg[0, :] /= mx
+    if abs(my) > 0:
+        cg[1, :] /= my
+    if abs(mz) > 0:
+        cg[2, :] /= mz
+    Xx, Yx, Zx = cg[0, :]
+    Xy, Yy, Zy = cg[1, :]
+    Xz, Yz, Zz = cg[2, :]
+    IS = np.zeros((3, 3), dtype=MO.dtype)
+    IS[0, 0] = Mrr[0, 0] - my * Zy ** 2 - mz * Yz ** 2
+    IS[1, 1] = Mrr[1, 1] - mz * Xz ** 2 - mx * Zx ** 2
+    IS[2, 2] = Mrr[2, 2] - mx * Yx ** 2 - my * Xy ** 2
+
+    IS[1, 0] = IS[0, 1] = -Mrr[0, 1] - mz * Xz * Yz
+    IS[2, 0] = IS[0, 2] = -Mrr[0, 2] - my * Xy * Zy
+    IS[2, 1] = IS[1, 2] = -Mrr[1, 2] - mx * Yx * Zx
+
+    neg_off_diag = np.array([
+        [1, -1, -1],
+        [-1, 1, -1],
+        [-1, -1, 1]], dtype=MO.dtype)
+    IQi = neg_off_diag * IS
+    #print(IQi)
+    IQ, Q = np.linalg.eigh(IQi)
+    #IQ = np.diag(Q.T @ IS @ Q)
+
+    weight = GridPointWeight(
+        reference_point, MO, S, mass, cg, IS, IQ, Q,
+        approach_code=approach_code, table_code=table_code,
+        title=title, subtitle=subtitle, label=label,
+        superelement_adaptivity_index=superelement_adaptivity_index)
+    return weight

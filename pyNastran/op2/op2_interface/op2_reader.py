@@ -1052,7 +1052,7 @@ class OP2Reader:
         if ndata == 8:
             #self.show_data(data, types='ifs', endian=None)
             name, = Struct(self._endian + b'8s').unpack(data)
-            print(name, 8)
+            #print(name, 8)
         elif ndata == 16:
             name, int1, int2 = Struct(self._endian + b'8s 2i').unpack(data)
             #name = name.decode(self._encoding)
@@ -1118,7 +1118,8 @@ class OP2Reader:
                 data, ndata = self._read_record_ndata()
                 if ndata == 12:
                     name, int1, int2 = Struct(self._endian + b'4s 2i').unpack(data)
-                    print(name, int1, int2, 12)
+                    # b'\xff\xff\x00\x00' 65535 25535 12 ???
+                    #print(name, int1, int2, 12)
                     #self.show_data(data)
                     #self.show_data(data)
                 elif ndata > 99:

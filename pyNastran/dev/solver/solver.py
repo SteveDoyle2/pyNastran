@@ -19,14 +19,15 @@ from pyNastran.f06.tables.oload_resultant import Resultant
 
 from pyNastran.op2.op2 import OP2
 from pyNastran.op2.op2_interface.hdf5_interface import (
-    RealDisplacementArray, RealSPCForcesArray, RealLoadVectorArray, RealEigenvalues)
+    RealDisplacementArray, RealSPCForcesArray, RealLoadVectorArray,
+    RealEigenvalues)
+from pyNastran.op2.result_objects.grid_point_weight import make_grid_point_weight
 from pyNastran.bdf.mesh_utils.loads import _get_dof_map, get_ndof
 
-from pyNastran.dev.solver.static_force import recover_force_101
-from pyNastran.dev.solver.static_stress import recover_stress_101
-from pyNastran.dev.solver.static_strain import recover_strain_101
-
-from pyNastran.dev.solver.build_stiffness import build_Kbb, DOF_MAP
+from .recover.static_force import recover_force_101
+from .recover.static_stress import recover_stress_101
+from .recover.static_strain import recover_strain_101
+from .build_stiffness import build_Kbb, DOF_MAP
 
 
 class Solver:
@@ -423,6 +424,7 @@ class Solver:
         b = l - c ???
         c = l - b ???
         """
+        self.log.debug(f'run_sol_101')
         end_options = [
             'SEMG', # STIFFNESS AND MASS MATRIX GENERATION STEP
             'SEMR', # MASS MATRIX REDUCTION STEP (INCLUDES EIGENVALUE SOLUTION FOR MODES)
@@ -446,6 +448,16 @@ class Solver:
         gset_b = ps_to_sg_set(ndof, ps)
         Kbb = build_Kbb(model, dof_map, ndof, fdtype=fdtype)
         Mbb = build_Mbb(model, subcase, dof_map, ndof, fdtype=fdtype)
+        #print(self.op2.grid_point_weight)
+        reference_point, MO = grid_point_weight(model, Mbb, dof_map, ndof)
+        weight = make_grid_point_weight(
+            reference_point, MO,
+            approach_code=1, table_code=13,
+            title=title, subtitle=subtitle, label=label,
+            superelement_adaptivity_index='')
+        self.op2.grid_point_weight[label] = weight
+        page_num = weight.write_f06(f06_file, page_stamp, page_num)
+
         self.get_mpc_constraints(subcase, dof_map)
 
         #Kgg = Kbb_to_Kgg(model, Kbb, ngrid, ndof_per_grid, inplace=False)
@@ -813,6 +825,7 @@ class Solver:
         λ^2 = [M]^-1[K]
         [A][X] = [X]λ^2
         """
+        self.log.debug(f'run_sol_101')
         end_options = [
             'SEMR',  # MASS MATRIX REDUCTION STEP (INCLUDES EIGENVALUE SOLUTION FOR MODES)
             'SEKR',  # STIFFNESS MATRIX REDUCTION STEP
@@ -1212,7 +1225,6 @@ def _get_node_gridtype(model: BDF, idtype: str='int32') -> NDArrayN2int:
             #node_gridtype.append((nid, 2))
         else:
             raise NotImplementedError(node_ref)
-    print(model.spoints)
 
     spoint_ids = np.array(list(model.spoints.keys()), dtype='int32')
     spoint_ids.sort()
@@ -1571,6 +1583,7 @@ def build_Mbb(model: BDF,
     """builds the mass matrix in the basic frame, [Mbb]"""
     log = model.log
     log.info('starting build_Mbb')
+    wtmass = model.get_param('WTMASS', 1.0)
     #Mbb = np.eye(ndof, dtype=fdtype)
     Mbb = np.zeros((ndof, ndof), dtype=fdtype)
     #Mbb = np.eye(ndof, dtype='int32')
@@ -1848,6 +1861,10 @@ def build_Mbb(model: BDF,
         else:  # pragma: no cover
             print(elem.get_stats())
             raise NotImplementedError(elem)
+
+    if wtmass != 1.0:
+        Mbb *= wtmass
+
     if Mbb.sum() == 0.0:
         Mbb = np.eye(ndof, dtype=fdtype)
         log.error(f'finished build_Mbb; faking mass; M={Mbb.sum()}')
@@ -1856,7 +1873,6 @@ def build_Mbb(model: BDF,
         #print(Mbb[i, i])
         massi = Mbb[i, i].sum()
         log.info(f'finished build_Mbb; M={massi:.6g}; mass_total={mass_total:.6g}')
-    grid_point_weight(model, Mbb, dof_map, ndof)
     return Mbb
 
 def grid_point_weight(model: BDF, Mbb, dof_map: DOF_MAP, ndof: int):
@@ -1873,8 +1889,14 @@ def grid_point_weight(model: BDF, Mbb, dof_map: DOF_MAP, ndof: int):
     inid = 0
     #print(model.nodes)
     #print(f'D.shape = {D.shape}')
+    reference_point = model.get_param('GRDPNT', 0)
+    if reference_point == 0:
+        dxyz = np.zeros(3, dtype=Mbb.dtype)
+    else:
+        dxyz = model.nodes[reference_point].get_position()
+
     for nid, node in sorted(model.nodes.items()):
-        xi, yi, zi = node.get_position()
+        xi, yi, zi = node.get_position() - dxyz
         Tr = np.array([
             [0, zi, -yi],
             [-zi, 0, xi],
@@ -1907,24 +1929,7 @@ def grid_point_weight(model: BDF, Mbb, dof_map: DOF_MAP, ndof: int):
     #print(f'D.shape = {D.shape}')
     #print(f'D.T =\n{D.T}')
     M0 = D.T @ Mbb @ D
-    translation_set, rotation_set = dof_map_to_tr_set(dof_map, ndof)
-    #print('translation_set =', translation_set, len(translation_set))
-    #print('rotation_set =', rotation_set, len(rotation_set))
-    #print(f'M0.shape = {M0.shape}')
-    #Mtt = M0[translation_set, :][:, translation_set]
-    #M0_dict = partition_matrix(M0, [['t', translation_set], ['r', rotation_set]])
-    M0_dict = partition_matrix(M0, [['t', [0, 1, 2]], ['r', [3, 4, 5]]])
-    Mtt = M0_dict['tt']
-    Mrr = M0_dict['rr']
-    #Mrt = M0_dict['rt']
-    Mtr = M0_dict['tr']
-    unused_eigvals, S = np.linalg.eig(Mtt)
-    #unused_eigvals, Q = np.linalg.eig(Mrr)
-    Mt = S.T @ Mtt @ S
-    Mtr = S.T @ Mtr @ S
-    Mr = S.T @ Mrr @ S
-    print(Mt)
-    return Mt, Mtr, Mr
+    return reference_point, M0
 
 def dof_map_to_tr_set(dof_map, ndof: int) -> Tuple[NDArrayNbool, NDArrayNbool]:
     """creates the translation/rotation sets"""

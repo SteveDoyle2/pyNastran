@@ -968,7 +968,7 @@ TABLE_OBJ_KEYS = list(TABLE_OBJ_MAP.keys())
 
 def _load_grid_point_weight(h5_result):
     """Loads a GridPointWeight"""
-    obj = GridPointWeight()
+    #obj = GridPointWeight()
     #IQ
     #IS
     #MO
@@ -982,11 +982,15 @@ def _load_grid_point_weight(h5_result):
     #subtitle
     #table_code
     #title
+    data = {}
     for key in h5_result.keys():
         value = _cast(h5_result.get(key))
-        #if key not in ['IQ', 'IS', 'Q', 'S', 'mass', 'MO', 'table_code', 'cg']:
-            #print(key, value)
-        setattr(obj, key, value)
+        data[key] = value
+    datai = []
+    for key in ['reference_point', 'MO', 'S', 'mass', 'cg', 'IS', 'IQ', 'Q']:
+        datai.append(data[key])
+        del data[key]
+    obj = GridPointWeight(*datai, *data)
     return obj
 
 def _load_eigenvalue(h5_result, log):

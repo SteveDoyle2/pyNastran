@@ -1158,6 +1158,15 @@ class BDFAttributes:
             param = self.params[key]
             param.update_values(*values)
 
+    def get_param(self, key: str, default: Union[int, float, str, List[float]]
+                  ) -> Union[int, float, str, List[float]]:
+        """gets a param card"""
+        key = key.upper()
+        if key in self.params:
+            param = self.params[key]
+            return param.value
+        return default
+
     #--------------------
     # deprecations
     @property

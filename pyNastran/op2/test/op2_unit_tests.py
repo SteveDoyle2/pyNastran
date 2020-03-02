@@ -43,13 +43,32 @@ from pyNastran.op2.export_to_vtk import export_to_vtk_filename
 from pyNastran.op2.vector_utils import filter1d, abs_max_min_global, abs_max_min_vector
 from pyNastran.op2.tables.oug.oug_displacements import RealDisplacementArray
 from pyNastran.femutils.test.utils import is_array_close
-
+from pyNastran.op2.result_objects.grid_point_weight import make_grid_point_weight
 from pyNastran.op2.tables.geom.geom4 import _read_spcadd_mpcadd
 
 PKG_PATH = pyNastran.__path__[0]
 MODEL_PATH = os.path.abspath(os.path.join(PKG_PATH, '..', 'models'))
 OP2_TEST_PATH = os.path.abspath(os.path.join(PKG_PATH, 'op2', 'test', 'examples'))
 
+
+class TestOP2Unit(Tester):
+    """various OP2 tests"""
+    def test_grid_point_weight(self):
+        """tests GridPointWeight"""
+        reference_point = 0
+        MO = np.array([
+            [9.25, -.933, 0, 0, 2., -2.967],
+            [-.933, 10.75, 0., -3., 0., 6.058],
+            [0., 0., 20., 5., -10., 0.],
+            [0., -3., 5., 8., -2.5, -1.5],
+            [2., 0., -10., -2.5, 9.5, 0.],
+            [-2.967, 6.058, 0., -1.5, 0., 7.496],
+        ])
+        weight = make_grid_point_weight(
+            reference_point, MO, approach_code=1, table_code=13,
+            title='', subtitle='', label='',
+            superelement_adaptivity_index='')
+        str(weight)
 
 class TestOP2(Tester):
     """various OP2 tests"""

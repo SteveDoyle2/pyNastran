@@ -1,4 +1,4 @@
-from pyNastran.op2.test.op2_unit_tests import TestOP2
+from pyNastran.op2.test.op2_unit_tests import TestOP2, TestOP2Unit
 from pyNastran.op2.test.matrices.test_matrices import TestOP2Matrix
 from pyNastran.op2.test.examples.test_op2_in_material_coord import TestMaterialCoordReal
 from pyNastran.op2.test.examples.test_op2_in_material_coord_panel_SOL_108 import TestMaterialCoordComplex

@@ -20,6 +20,7 @@ if TYPE_CHECKING:  # pragma: no cover
 def build_Kbb(model: BDF, dof_map: DOF_MAP, ndof: int,
               idtype: str='int32', fdtype: str='float32') -> Tuple[NDArrayNNfloat, Any]:
     """[K] = d{P}/dx"""
+    model.log.debug(f'starting build_Kbb')
     Kbb = sci_sparse.dok_matrix((ndof, ndof), dtype=fdtype)
     #print(dof_map)
 
@@ -46,6 +47,7 @@ def build_Kbb(model: BDF, dof_map: DOF_MAP, ndof: int,
                                   all_nids, xyz_cid0, idtype='int32', fdtype='float64')
     assert nelements > 0, nelements
     Kbb2 = Kbb.tocsc()
+    model.log.debug(f'end of build_Kbb')
     return Kbb2
 
 
