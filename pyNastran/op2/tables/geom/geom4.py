@@ -11,6 +11,7 @@ from pyNastran.bdf.cards.bdf_sets import (
     OMIT1, # SEQSET
 )
 from pyNastran.op2.errors import MixedVersionCard
+from pyNastran.op2.op2_interface.op2_reader import mapfmt, reshape_bytes_block
 from pyNastran.op2.tables.geom.geom_common import GeomCommon
 from pyNastran.bdf.cards.loads.loads import SPCD
 from pyNastran.bdf.cards.constraints import (

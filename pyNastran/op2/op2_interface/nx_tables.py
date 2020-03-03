@@ -406,6 +406,7 @@ NX_GEOM_TABLES = [
 ]  # type: List[bytes]
 
 NX_MATRIX_TABLES = [
+    b'ATV',
     b'XSOP2DIR',
     b'RADEFMP', # Modal Effective Inertia Matrix - Modal Matrix (per Vibrata)
 
@@ -492,7 +493,6 @@ NX_EXTRA_TABLES = [
 
 NX_RESULT_TABLES = [
     # ???
-    b'ATV',
     b'OSTR1THC',
     b'OSTR1PLC',
     b'OSTR1CRC',

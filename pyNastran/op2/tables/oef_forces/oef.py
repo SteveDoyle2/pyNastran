@@ -3888,7 +3888,6 @@ def oef_cbar_real(self, data, obj: RealCBarForceArray, nelements, ntotal) -> int
 
 def oef_cbar_imag(self, data, obj: ComplexCBarForceArray, nelements, ntotal, is_magnitude_phase) -> int:
     n = 0
-    assert self.is_sort1, self.code_information()
 
     fmt = mapfmt(self._endian + self._analysis_code_fmt + b'16f', self.size)
     s = Struct(fmt)

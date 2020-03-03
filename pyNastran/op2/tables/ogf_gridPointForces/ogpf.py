@@ -22,11 +22,11 @@ class OGPF(OP2Common):
     def _read_ogpf1_4(self, data, ndata):
         prefix = ''
         if self.table_code == 19:  # grid point force balance
-            if self.table_name in [b'OGPFB1']:
+            if self.table_name == b'OGPFB1':
                 pass
-            elif self.table_name in [b'RAGEATC']:
+            elif self.table_name == b'RAGEATC':
                 prefix = 'RAGEATC.'
-            elif self.table_name in [b'RAGCONS']:
+            elif self.table_name == b'RAGCONS':
                 prefix = 'RAGCONS.'
             else:
                 msg = 'table_name=%s table_code=%s' % (self.table_name, self.table_code)
@@ -139,6 +139,7 @@ class OGPF(OP2Common):
                 # complex
                 ntotal = 64
                 nnodes = ndata // ntotal
+                assert self.size == 4, self.size
                 obj_vector_real = ComplexGridPointForcesArray
                 auto_return, is_vectorized = self._create_ntotal_object(
                     nnodes, result_name, slot, obj_vector_real)

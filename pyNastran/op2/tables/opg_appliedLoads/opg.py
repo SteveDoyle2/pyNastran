@@ -22,7 +22,7 @@ class OPG(OP2Common):
     def __init__(self):
         pass
 
-    def _read_opg1_3(self, data, ndata):
+    def _read_opg1_3(self, data: bytes, ndata: int) -> None:
         self.words = [
             'aCode', 'tCode', '???', 'isubcase',
             '???', '???', '???', 'dLoadID',

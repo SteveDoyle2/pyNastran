@@ -256,6 +256,11 @@ class Subcase:
         table_code = data_code['table_code']
         unused_sort_code = data_code['sort_code']
         unused_device_code = data_code['device_code']
+
+        sort_str = 'SORT1'
+        if table_name in {'OESNLBR2'}:
+            sort_str = 'SORT1'
+
         #print(data_code)
         #print('table_name=%r table_code=%s sort_code=%r device_code=%r' % (
             #table_name, table_code, sort_code, device_code))
@@ -443,9 +448,9 @@ class Subcase:
         elif table_name in ['OES1', 'OES1X', 'OES1X1', 'OES1C', 'OESCP',
                             'OESNL2', 'OESNLXD', 'OESNLXR', 'OESNLBR', 'OESTRCP',
                             'OESVM1', 'OESVM1C', 'OESNL1X',
-                            'OESNLXR2', 'RASCONS', 'RASEATC']:
+                            'OESNLXR2', 'RASCONS', 'RASEATC', 'OESNLBR2']:
             #assert data_code['is_stress_flag'] == True, data_code
-            options.append('SORT1')
+            options.append(sort_str)
             if table_code == 5:
                 self.add('STRESS', 'ALL', options, 'STRESS-type')
             else:  # pragma: no cover

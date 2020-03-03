@@ -7,6 +7,7 @@ from pyNastran.bdf.cards.loads.loads import DAREA
 from pyNastran.bdf.cards.methods import EIGB
 from pyNastran.bdf.cards.dynamic import FREQ1, TF, DELAY, DPHASE
 from pyNastran.bdf.cards.loads.dloads import TLOAD1, TLOAD2, RLOAD1, RLOAD2, ACSRCE
+from pyNastran.op2.op2_interface.op2_reader import mapfmt, reshape_bytes_block
 from pyNastran.op2.tables.geom.geom_common import GeomCommon
 from pyNastran.op2.tables.geom.dit import get_iend_from_ints
 
@@ -373,6 +374,8 @@ class DYNAMICS(GeomCommon):
         CONTFLG =-1 Without continuation
         End CONTFLG
 
+        data  = (2, CLAN, '', MAX, '', 0,     0, 1e-08, 32, -1,
+                 3, HESS, '', MAX, '', 0,     0, 1e-08, 32, -1)
         """
         if 0:
             ntotal = 60
@@ -398,11 +401,16 @@ class DYNAMICS(GeomCommon):
 
         #-------------------------------------------------
         ndata = len(data)
-        nfields = (ndata - n) // 4
+        nfields = (ndata - n) // self.size
         datan = data[n:]
-        ints = unpack(self._endian + b'%ii' % nfields, datan)
-        floats = unpack(self._endian + b'%if' % nfields, datan)
-        strings = unpack(self._endian + b'4s'* nfields, datan)
+        if self.size == 4:
+            ints = unpack(self._endian + b'%ii' % nfields, datan)
+            floats = unpack(self._endian + b'%if' % nfields, datan)
+            strings = unpack(self._endian + b'4s'* nfields, datan)
+        else:
+            ints = unpack(self._endian + b'%iq' % nfields, datan)
+            floats = unpack(self._endian + b'%id' % nfields, datan)
+            strings = unpack(self._endian + b'8s'* nfields, datan)
 
         i = 0
         nentries = 0
@@ -416,9 +424,9 @@ class DYNAMICS(GeomCommon):
             neigenvalues = ints[i+8]
             control_flag = ints[i+9]
 
-            #print('sid=%s method=%r norm=%r grid=%s component=%s epsilon=%s, '
-            #      'neigenvalues=%s ctlflag=%s' % (
-            #          sid, method, norm, grid, component, epsilon, neigenvalues, control_flag))
+            #print('sid=%s method=%r norm=%r grid=%s component=%s epsilon=%g, '
+                  #'neigenvalues=%s ctlflag=%s' % (
+                      #sid, method, norm, grid, component, epsilon, neigenvalues, control_flag))
 
             alphaAjs = []
             omegaAjs = []
@@ -435,6 +443,7 @@ class DYNAMICS(GeomCommon):
             NJIs = []
             if control_flag == -1:
                 datai = [sid, method, norm, grid, component, epsilon, neigenvalues, -1]
+                i += 10
             elif control_flag == 0:
                 intsi = ints[i+10:i+17]
                 assert len(intsi) == 7, 'len=%s intsi=%s' % (len(intsi), intsi)
@@ -479,6 +488,9 @@ class DYNAMICS(GeomCommon):
                 assert len(intsi) == 7, intsi
                 #print('intsi = ', intsi)
                 #raise NotImplementedError('EIGC control_flag=%s' % control_flag)
+
+                # +10 is for the prefix; +7 is for the -1s
+                i += 10 + 7 # 3 + 4 from (-1,-1,-1) and (sid,grid,comp,coeff)
             else:
                 raise NotImplementedError('EIGC control_flag=%s' % control_flag)
             datai.extend([-1, -1, -1, -1, -1, -1, -1])  # creates a +7
@@ -508,8 +520,6 @@ class DYNAMICS(GeomCommon):
                 #coefficients.append(coeffi)
                 #i += 3
 
-            # +10 is for the prefix; +7 is for the -1s
-            i += 10 + 7 # 3 + 4 from (-1,-1,-1) and (sid,grid,comp,coeff)
             nentries += 1
             #print('--------------')
         self.increase_card_count('EIGC', nentries)

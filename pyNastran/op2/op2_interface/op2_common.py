@@ -156,7 +156,7 @@ class OP2Common(Op2Codes, F06Writer):
         if self.format_code == -1:
             if self.is_debug_file:
                 self.op2_reader._write_ndata(self.binary_debug, 100)
-            if self.table_name in [b'OESNLXR', b'OESNLBR', b'OESNLXD', b'OESNL1X']:
+            if self.table_name in [b'OESNLXR', b'OESNLBR', b'OESNLXD', b'OESNL1X', b'OESNLBR2']:
                 assert self.format_code == -1, self.format_code
                 self.format_code = 1
             else:
@@ -164,7 +164,10 @@ class OP2Common(Op2Codes, F06Writer):
             #return
 
         random_code = self.random_code if hasattr(self, 'random_code') else 0
+        #if self.format_code == 0:
+            #self.code_information()
         if random_code == 0:
+            #self.log.debug(f'random_code = {random_code}')
             if self.analysis_code == 1:   # statics / displacement / heat flux
                 assert self.format_code in [1, 3], self.code_information()
                 self.format_code = 1
@@ -178,8 +181,8 @@ class OP2Common(Op2Codes, F06Writer):
                 if self.format_code == 1:
                     self.format_code = 2
             elif self.analysis_code == 6:  # transient
-                assert self.format_code in [1, 2, 3], self.code_information()
                 self.format_code = 1
+                assert self.format_code in [1, 2, 3], self.code_information()
             elif self.analysis_code == 7:  # pre-buckling
                 assert self.format_code in [1], self.code_information()
             elif self.analysis_code == 8:  # post-buckling
@@ -248,20 +251,21 @@ class OP2Common(Op2Codes, F06Writer):
             fix_device_code=fix_device_code,
             add_to_dict=add_to_dict)
 
-    def add_data_parameter8(self, data, var_name, Type, field_num,
-                           apply_nonlinear_factor=True, fix_device_code=False,
-                           add_to_dict=True):
+    def add_data_parameter8(self, data: bytes,
+                            var_name: str, var_type: bytes, field_num: int,
+                            apply_nonlinear_factor: bool=True, fix_device_code: bool=False,
+                            add_to_dict: bool=True):
         assert len(data) == 1168, len(data)
         datai = data[8 * (field_num - 1) : 8 * (field_num)]
         assert len(datai) == 8, len(datai)
-        if Type == b'i':
-            Type = b'q'
-        elif Type == b'f':
-            Type = b'd'
+        if var_type == b'i':
+            var_type = b'q'
+        elif var_type == b'f':
+            var_type = b'd'
         else:
-            raise NotImplementedError(Type)
+            raise NotImplementedError(var_type)
         value = self._unpack_data_parameter(
-            datai, var_name, Type, field_num,
+            datai, var_name, var_type, field_num,
             apply_nonlinear_factor=apply_nonlinear_factor,
             fix_device_code=fix_device_code,
             add_to_dict=add_to_dict)
@@ -2211,10 +2215,15 @@ class OP2Common(Op2Codes, F06Writer):
     def del_structs(self):
         """deepcopy(OP2) fails on Python 3.6 without doing this"""
         del self.fdtype, self.idtype, self.double_dtype, self.long_dtype
-        if hasattr(self, 'struct_2i'):
-            del self.struct_i, self.struct_2i, self.struct_3i, self.struct_8s, self.struct_8s_i
-        else:
+        if hasattr(self, 'struct_2q'):
             del self.struct_i, self.struct_2q, self.struct_16s, self.struct_16s_q
+            del self.struct_q, self.struct_8s
+            if hasattr(self, 'struct_2i'):
+                del self.struct_2i
+        elif hasattr(self, 'struct_2i'):
+            del self.struct_i, self.struct_2i, self.struct_3i, self.struct_8s, self.struct_8s_i
+        out = [outi for outi in self.object_attributes() if 'struct_' in outi]
+        assert len(out) == 0, out
 
 def _cast_nonlinear_factor(value):
     """h5py is picky about it's data types"""

@@ -1329,10 +1329,9 @@ class OP2Reader:
 
         responses = {}
         if self.read_mode == 2:
-            ndata = len(data) // 4
-            nresponses_dresp1 = ndata // 9
-            ints = np.frombuffer(data, dtype='int32')
-            floats = np.frombuffer(data, dtype='float32')
+            ints = np.frombuffer(data, dtype=op2.idtype8)
+            floats = np.frombuffer(data, dtype=op2.fdtype8)
+            nresponses_dresp1 = len(ints) // 9
             dscmcol_dresp1(responses, nresponses_dresp1, ints, floats)
 
         #self.show_data(data[4*idata:])
@@ -1346,8 +1345,8 @@ class OP2Reader:
         data = self._read_record()
         if self.read_mode == 2:
             # read the DRESP2 columns
-            ints = np.frombuffer(data, dtype='int32')
-            floats = np.frombuffer(data, dtype='float32')
+            ints = np.frombuffer(data, dtype=op2.idtype8)
+            floats = np.frombuffer(data, dtype=op2.fdtype8)
             nresponses_dresp2 = len(ints) // 6
             dscmcol_dresp2(responses, nresponses_dresp2, ints, floats)
 
@@ -1569,7 +1568,10 @@ class OP2Reader:
 
         self.read_3_markers([-2, 1, 0])
         data = self._read_record()
-        gpl_gpls, method = Struct(self._endian + b'8si').unpack(data)
+        if self.size == 4:
+            gpl_gpls, method = Struct(self._endian + b'8si').unpack(data)
+        else:
+            gpl_gpls, method = Struct(self._endian + b'16sq').unpack(data)
         assert gpl_gpls.strip() in [b'GPL', b'GPLS'], gpl_gpls.strip()
         assert method in [0, 1, 2, 3, 4, 5, 6, 7, 10, 12, 13, 15, 20, 30, 40, 99,
                           101, 201], f'GPLS method={method}'
@@ -4512,14 +4514,14 @@ class OP2Reader:
             if self.is_debug_file:
                 self.binary_debug.write('  recordi = [%r]\n'  % subtable_name)
                 self.binary_debug.write('  subtable_name=%r\n' % subtable_name)
-        #elif ndata == 32: # 16*2
-            # (name1, name2, 170, 170)
-            #subtable_name, = op2.struct_16s.unpack(data[:16])
-            #assert len(subtable_name) == 16, len(subtable_name)
-            #subtable_name = reshape_bytes_block(subtable_name)
-            #if self.is_debug_file:
-                #self.binary_debug.write('  recordi = [%r]\n'  % subtable_name)
-                #self.binary_debug.write('  subtable_name=%r\n' % subtable_name)
+        elif ndata == 32: # 16*2
+            #(name1, name2, 170, 170)
+            subtable_name, = op2.struct_16s.unpack(data[:16])
+            assert len(subtable_name) == 16, len(subtable_name)
+            subtable_name = reshape_bytes_block(subtable_name)
+            if self.is_debug_file:
+                self.binary_debug.write('  recordi = [%r]\n'  % subtable_name)
+                self.binary_debug.write('  subtable_name=%r\n' % subtable_name)
         elif ndata == 56: # 28*2
             subtable_name, month, day, year, zero, one = unpack(self._endian + b'16s5q', data)
             subtable_name = reshape_bytes_block(subtable_name)

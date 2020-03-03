@@ -553,7 +553,7 @@ class DSCMCOL:
                     warnings.warn(str(respi))
                 continue
             msg += '\n\n'
-        print(msg)
+        str(msg)
 
     def _write_static(self, ids, response_name_to_f06_response_type):
         msg = ''
