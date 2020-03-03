@@ -21,6 +21,7 @@ from pyNastran.bdf.cards.properties.springs import PELAS, PELAST
 from pyNastran.bdf.cards.thermal.thermal import PCONV, PHBDY, PCONVM
 # PCOMPG, PBUSH1D, PBEAML, PBEAM3
 from pyNastran.op2.tables.geom.geom_common import GeomCommon
+from pyNastran.op2.op2_interface.op2_reader import mapfmt, reshape_bytes_block
 
 
 class EPT(GeomCommon):
@@ -309,11 +310,11 @@ class EPT(GeomCommon):
         18 K2  RS Area factor for shear in plane 2
         19 I12 RS Area product of inertia for plane 1 and 2
         """
-        ntotal = 76  # 19*4
-        struct1 = Struct(self._endian + b'2i17f')
+        ntotal = 76 * self.factor  # 19*4
+        struct1 = Struct(mapfmt(self._endian + b'2i17f', self.size))
         nentries = (len(data) - n) // ntotal
         for unused_i in range(nentries):
-            edata = data[n:n+76]
+            edata = data[n:n+ntotal]
             out = struct1.unpack(edata)
             #(pid, mid, a, I1, I2, J, nsm, fe, c1, c2, d1, d2,
              #e1, e2, f1, f2, k1, k2, I12) = out
@@ -354,15 +355,19 @@ class EPT(GeomCommon):
             #'MLO TUBE' : 2,
         }  # for GROUP="MSCBML0"
 
-        ntotal = 28  # 7*4 - ROD - shortest entry...could be buggy... # TODO fix this
-        struct1 = Struct(self._endian + b'2i8s8sf')
+        ntotal = 28 * self.factor  # 7*4 - ROD - shortest entry...could be buggy... # TODO fix this
+        if self.size == 4:
+            struct1 = Struct(self._endian + b'2i 8s 8s f')
+        else:
+            struct1 = Struct(self._endian + b'2q 16s 16s d')
+
         #nentries = (len(data) - n) // ntotal
         #print(self.show_ndata(80))
         ndata = len(data)
 
         while ndata - n > ntotal:
-            edata = data[n:n+28]
-            n += 28
+            edata = data[n:n+ntotal]
+            n += ntotal
 
             out = struct1.unpack(edata)
             (pid, mid, group, beam_type, value) = out
@@ -415,21 +420,54 @@ class EPT(GeomCommon):
         return n
 
     def _read_pbcomp(self, data: bytes, n: int) -> int:
-        struct1 = Struct(self._endian + b'2i 12f i')
-        struct2 = Struct(self._endian + b'3f 2i')
+        """
+        PBCOMP(5403, 55, 349)
+
+                    pid      mid  A      I1      I2         I12 J           NSM
+        PBCOMP         3       2 2.00E-4 6.67E-9 1.67E-9    0.0 4.58E-9     0.0 +
+                 pid mid
+        floats = (3, 2, 0.0002, 6.67e-09, 1.67e-09, 0.0, 4.58e-09, 0.0, 1.0, 1.0,
+        0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0)
+        ints   = (3, 2, 0.0002, 6.67E-9, 1.67E-9, 0, 4.58E-9, 0, 1.0, 1.0,
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
+
+        """
+        struct1 = Struct(mapfmt(self._endian + b'2i 12f i', self.size))
+        struct2 = Struct(mapfmt(self._endian + b'3f 2i', self.size))
         nproperties = 0
+        ntotal1 = 60 * self.factor  # 4*15
+        ntotal2 = 20 * self.factor
+
         ndata = len(data)
+        #print(ntotal1, ntotal2)
+        self.show_data(data[12*self.factor:], types='qd')
+        #print(len(data[12*self.factor:]))
         while n < ndata:
-            edata = data[n:n+60]  # 4*15
-            n += 60
+            print(f"n={n} ndata={ndata}")
+            edata = data[n:n+ntotal1]
+            #if len(edata) == ntotal1:
             data1 = struct1.unpack(edata)
+            #else:
+                #self.show_data(edata, types='qdi')
+                #n += ntotal2
+                #continue
             nsections = data1[-1]
             if self.is_debug_file:
-                (pid, mid, a, i1, i2, i12, j, nsm, unused_k1, unused_k2,
-                 unused_m1, unused_m2, unused_n1, unused_n2, unused_nsections) = data1
-                self.log.info('PBCOMP pid=%s mid=%s nsections=%s\n' % (pid, mid, nsections))
+                (pid, mid, a, i1, i2, i12, j, nsm, k1, k2,
+                 m1, m2, n1, n2, unused_nsections) = data1
+                self.log.info(f'PBCOMP pid={pid} mid={mid} nsections={nsections} '
+                              f'k1={k1} k2={k2} m=({m1},{m2}) n=({n1},{n2})\n')
+            #if pid > 0 and nsections == 0:
+                #print('n1')
+                #n += ntotal1
+                #continue
+            #if pid == 0 and nsections == 0:
+                #print('n2')
+                #n += ntotal2
+                #continue
 
             data2 = []
+            n += ntotal1
             if nsections in [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20]:
                 # 16 Y   RS    Lumped area location along element's y-axis
                 # 17 Z   RS    Lumped area location along element's z-axis
@@ -438,10 +476,10 @@ class EPT(GeomCommon):
                 # 20     UNDEF None
                 # Words 16 through 20 repeat NSECT times
                 for unused_i in range(nsections):
-                    datai = data[n:n+20]
+                    datai = data[n:n+ntotal2]
                     xi, yi, ci, mid, unused_null = struct2.unpack(datai)
                     data2.append((xi, yi, ci, mid))
-                    n += 20
+                    n += ntotal2
             else:
                 raise NotImplementedError('PBCOMP nsections=%r' % nsections)
 
@@ -466,6 +504,7 @@ class EPT(GeomCommon):
 
             self._add_op2_property(prop)
             nproperties += 1
+        #print(f"n={n} ndata={ndata}")
         assert nproperties > 0, 'PBCOMP nproperties=%s' % (nproperties)
         if len(self._type_to_id_map['PBEAM']) == 0 and 'PBEAM' in self.card_count:
             del self._type_to_id_map['PBEAM']
@@ -484,9 +523,9 @@ class EPT(GeomCommon):
             2 : '???',
         }
 
-        struct1 = Struct(self._endian + b'4if')
-        struct2 = Struct(self._endian + b'16f')
-        struct3 = Struct(self._endian + b'16f')
+        struct1 = Struct(mapfmt(self._endian + b'4if', self.size))
+        struct2 = Struct(mapfmt(self._endian + b'16f', self.size))
+        struct3 = Struct(mapfmt(self._endian + b'16f', self.size))
         unused_ntotal = 768 # 4*(5+16*12)
         #nproperties = (len(data) - n) // ntotal
         #assert nproperties > 0, 'ndata-n=%s n=%s datai\n%s' % (len(data)-n, n, self.show_data(data[n:100+n]))
@@ -494,10 +533,13 @@ class EPT(GeomCommon):
         #self.show_data(data[12:], 'if')
         #assert ndata % ntotal == 0, 'ndata-n=%s n=%s ndata%%ntotal=%s' % (len(data)-n, n, ndata % ntotal)
         nproperties = 0
+
+        ntotal1 = 20 * self.factor
+        ntotal2 = 64 * self.factor
         while n < ndata:
         #while 1: #for i in range(nproperties):
-            edata = data[n:n+20]
-            n += 20
+            edata = data[n:n+ntotal1]
+            n += ntotal1
             data_in = list(struct1.unpack(edata))
             #if self.is_debug_file:
                 #self.log.info('PBEAM pid=%s mid=%s nsegments=%s ccf=%s x=%s\n' % tuple(data_in))
@@ -516,11 +558,11 @@ class EPT(GeomCommon):
 
             is_pbcomp = False
             for i in range(11):
-                edata = data[n:n+64]
-                if len(edata) != 64:
+                edata = data[n:n+ntotal2]
+                if len(edata) != ntotal2:
                     endpack = []
                     raise RuntimeError('PBEAM unexpected length i=%s...' % i)
-                n += 64
+                n += ntotal2
                 pack = struct2.unpack(edata)
                 (soi, xxb, a, i1, i2, i12, j, nsm, c1, c2,
                  d1, d2, e1, e2, f1, f2) = pack
@@ -562,12 +604,12 @@ class EPT(GeomCommon):
                 #)
                 #print(msg)
 
-            edata = data[n:n+64]
-            if len(edata) != 64:
+            edata = data[n:n+ntotal2]
+            if len(edata) != ntotal2:
                 endpack = []
                 raise RuntimeError('PBEAM unexpected length 2...')
             endpack = struct3.unpack(edata)
-            n += 64
+            n += ntotal2
 
             assert len(endpack) == 16, endpack
             #(k1, k2, s1, s2, nsia, nsib, cwa, cwb, # 8
@@ -603,26 +645,33 @@ class EPT(GeomCommon):
         Word 7 repeats until (-1) occurs
         """
         #strs = numpy.core.defchararray.reshapesplit(data, sep=",")
-        ints = np.frombuffer(data[n:], self._uendian + 'i').copy()
-        floats = np.frombuffer(data[n:], self._uendian + 'f').copy()
+        #ints = np.frombuffer(data[n:], self._uendian + 'i').copy()
+        #floats = np.frombuffer(data[n:], self._uendian + 'f').copy()
+        ints = np.frombuffer(data[n:], self.idtype8).copy()
+        floats = np.frombuffer(data[n:], self.fdtype8).copy()
         iminus1 = np.where(ints == -1)[0]
 
         istart = [0] + list(iminus1[:-1] + 1)
         iend = iminus1
 
-        struct1 = Struct(self._endian + b'2i8s8s')
+        size = self.size
         nproperties = len(istart)
+        if size == 4:
+            struct1 = Struct(self._endian + b'2i 8s 8s')
+        else:
+            struct1 = Struct(self._endian + b'2q 16s 16s')
+
         for unused_i, (istarti, iendi) in enumerate(zip(istart, iend)):
-            idata = data[n+istarti*4 : n+(istarti+6)*4]
+            idata = data[n+istarti*size : n+(istarti+6)*size]
             pid, mid, group, beam_type = struct1.unpack(idata)
             group = group.decode('latin1').strip()
             beam_type = beam_type.decode('latin1').strip()
             fvalues = floats[istarti+6: iendi]
             if self.is_debug_file:
                 self.binary_debug.write('     %s\n' % str(fvalues))
-                self.log.debug('pid=%i mid=%i group=%r beam_type=%r' % (pid, mid, group, beam_type))
+                self.log.debug(f'pid={pid:d} mid={mid:d} group={group} beam_type={beam_type}')
                 self.log.debug(fvalues)
-            #self.log.debug('pid=%i mid=%i group=%s beam_type=%s' % (pid, mid, group, beam_type))
+            #self.log.debug(f'pid={pid:d} mid={mid:d} group={group} beam_type={beam_type}')
             data_in = [pid, mid, group, beam_type, fvalues]
             prop = PBEAML.add_op2_data(data_in)
             if pid in self.properties:
@@ -805,18 +854,19 @@ class EPT(GeomCommon):
 
     def _read_pbush_nx(self, data: bytes, n: int) -> int:
         """PBUSH(1402,14,37) - 18 fields"""
-        ntotal = 72
-        struct1 = Struct(self._endian + b'i17f')
+        ntotal = 72 * self.factor
+        struct1 = Struct(mapfmt(self._endian + b'i17f', self.size))
         ndata = len(data) - n
         nentries = ndata // ntotal
         assert nentries > 0, 'table={self.table_name} len={ndata}'
         assert ndata % ntotal == 0, f'table={self.table_name} leftover = {ndata} % {ntotal} = {ndata % ntotal}'
         props = []
         for unused_i in range(nentries):
-            edata = data[n:n+72]
+            edata = data[n:n+ntotal]
             out = struct1.unpack(edata)
             (pid, k1, k2, k3, k4, k5, k6, b1, b2, b3, b4, b5, b6,
              g1, sa, st, ea, et) = out
+            self.log.debug(out)
             g2 = g3 = g4 = g5 = g6 = g1
             data_in = (pid, k1, k2, k3, k4, k5, k6, b1, b2, b3, b4, b5, b6,
                        g1, g2, g3, g4, g5, g6, sa, st, ea, et)
@@ -827,8 +877,8 @@ class EPT(GeomCommon):
 
     def _read_pbush_msc(self, data: bytes, n: int) -> int:
         """PBUSH(1402,14,37) - 23 fields"""
-        ntotal = 92  # 23*4
-        struct1 = Struct(self._endian + b'i22f')
+        ntotal = 92 * self.factor # 23*4
+        struct1 = Struct(mapfmt(self._endian + b'i22f', self.size))
 
         ndata = len(data) - n
         nentries = ndata // ntotal
@@ -837,7 +887,7 @@ class EPT(GeomCommon):
 
         props = []
         for unused_i in range(nentries):
-            edata = data[n:n+92]
+            edata = data[n:n+ntotal]
             out = struct1.unpack(edata)
             #(pid, k1, k2, k3, k4, k5, k6, b1, b2, b3, b4, b5, b6,
              #g1, g2, g3, g4, g5, g6, sa, st, ea, et) = out
@@ -900,11 +950,11 @@ class EPT(GeomCommon):
             1 : 'EQUAT',
             2 : 'TABLE',
         }
-        ntotal = 152  # 38*4
-        struct1 = Struct(self._endian + b'i 6f i 4f 24i 2f')
+        ntotal = 152 * self.factor  # 38*4
+        struct1 = Struct(mapfmt(self._endian + b'i 6f i 4f 24i 2f', self.size))
         nentries = (len(data) - n) // ntotal
         for unused_i in range(nentries):
-            edata = data[n:n+152]
+            edata = data[n:n+ntotal]
             out = struct1.unpack(edata)
             (pid, k, c, m, unused_alpha, sa, se,
              typea, cvt, cvc, expvt, expvc, idtsu, idtcu, idtsud, idcsud,
@@ -999,7 +1049,7 @@ class EPT(GeomCommon):
         15 TKNID(6) I TABLEDi entry IDs for force versus deflection
         """
         #self.show_data(data[12:])
-        ndata = len(data) - n
+        ndata = (len(data) - n) // self.factor
 
         if ndata % 100 == 0 and ndata % 80 == 0:
             self.log.info(f"skipping PBUSHT in EPT because nfields={ndata//4}, which is "
@@ -1012,7 +1062,7 @@ class EPT(GeomCommon):
         return n, props
 
     def _read_pbusht_80(self, data: bytes, n: int) -> int:
-        ntotal = 80
+        ntotal = 80 * self.factor
         struct1 = Struct(self._endian + b'20i')
         nentries = (len(data) - n) // ntotal
         assert nentries > 0, 'table=%r len=%s' % (self.table_name, len(data) - n)
@@ -1042,8 +1092,8 @@ class EPT(GeomCommon):
 
     def _read_pbusht_100(self, data: bytes, n: int) -> int:
         props = []
-        ntotal = 100
-        struct1 = Struct(self._endian + b'25i')
+        ntotal = 100 * self.factor
+        struct1 = Struct(mapfmt(self._endian + b'25i', self.size))
         nentries = (len(data) - n) // ntotal
         assert nentries > 0, 'table=%r len=%s' % (self.table_name, len(data) - n)
         for unused_i in range(nentries):
@@ -1081,20 +1131,61 @@ class EPT(GeomCommon):
         11 THETA RS Orientation angle of the longitudinal direction of the ply
         12 SOUT  I Stress or strain output request of the ply
         Words 9 through 12 repeat N times
+
+        TODO:
+           64-bit bug: why is the number of plies 0???
+
+          doubles (float64) = (
+          1, 0.0, 1.7368e-18, 0.0, 1.0, 1.5e-323, 0.0, 0.0,
+            1, 0.11, 0, 1,
+            1, 0.11, 0, 1,
+            1, 0.11, 0, 1,
+          -1, -1, -1, -1,
+          21, 0.0, 1.7368e-18, 0.0, 1.0, 1.5e-323, 0.0, 0.0,
+            1, 0.11, 0, 1,
+            1, 0.11, 0, 1,
+            1, 0.11, 0, 1,
+            1, 0.11, 0, 1,
+          -1, -1, -1, -1)
+          long long (int64) = (
+          1, 0,   1.7368e-18, 0,   1.0, 3, 0, 0, 1, 4592590756007337001, 0, 1,
+            1, 0.11, 0, 1,
+            1, 0.11, 0, 1,
+            1, 0.11, 0, 1,
+          -1, -1, -1, -1,
+          21, 0, 4341475431749739292, 0, 4607182418800017408, 3, 0, 0,
+            1, 0.11, 0, 1,
+            1, 0.11, 0, 1,
+            1, 0.11, 0, 1,
+            1, 0.11, 0, 1,
+          -1, -1, -1, -1)
         """
         nproperties = 0
-        s1 = Struct(self._endian + b'2i3fi2f')
-        s2 = Struct(self._endian + b'i2fi')
+        s1 = Struct(mapfmt(self._endian + b'2i3fi2f', self.size))
+        ntotal1 = 32 * self.factor
+        #if self.size == 4:
+            #s1 = Struct(self._endian + b'2i 3f i 2f')
+            #ntotal1 = 32
+        #else:
+            #s1 = Struct(self._endian + b'iq 3d q 2d')
+            #ntotal1 = 60
+        s2 = Struct(mapfmt(self._endian + b'i2fi', self.size))
 
+        #self.show_data(data[n:], types='idq')
+        #self.show_data(data, types='idq')
         ndata = len(data)
-        while n < (ndata - 32):
-            out = s1.unpack(data[n:n+32])
-            (pid, nlayers, z0, nsm, sb, ft, Tref, ge) = out
+        #ntotal1 = 32 * self.factor
+        ntotal2 = 16 * self.factor
+        while n < (ndata - ntotal1):
+            out = s1.unpack(data[n:n+ntotal1])
+            (pid, nlayers, z0, nsm, sb, ft, tref, ge) = out
             if self.binary_debug:
-                self.binary_debug.write('PCOMP pid=%s nlayers=%s z0=%s nsm=%s '
-                                        'sb=%s ft=%s Tref=%s ge=%s' % tuple(out))
+                self.binary_debug.write(f'PCOMP pid={pid} nlayers={nlayers} z0={z0} nsm={nsm} '
+                                        f'sb={sb} ft={ft} Tref={tref} ge={ge}')
             assert isinstance(nlayers, int), out
-            n += 32
+            print(f'PCOMP pid={pid} nlayers={nlayers} z0={z0} nsm={nsm} '
+                  f'sb={sb} ft={ft} Tref={tref} ge={ge}')
+            n += ntotal1
 
             mids = []
             T = []
@@ -1109,13 +1200,13 @@ class EPT(GeomCommon):
             assert nlayers > 0, out
 
             assert 0 < nlayers < 100, 'pid=%s nlayers=%s z0=%s nms=%s sb=%s ft=%s Tref=%s ge=%s' % (
-                pid, nlayers, z0, nsm, sb, ft, Tref, ge)
+                pid, nlayers, z0, nsm, sb, ft, tref, ge)
 
             if self.is_debug_file:
                 self.binary_debug.write('    pid=%s nlayers=%s z0=%s nms=%s sb=%s ft=%s Tref=%s ge=%s\n' % (
-                    pid, nlayers, z0, nsm, sb, ft, Tref, ge))
+                    pid, nlayers, z0, nsm, sb, ft, tref, ge))
             for unused_ilayer in range(nlayers):
-                (mid, t, theta, sout) = s2.unpack(data[n:n+16])
+                (mid, t, theta, sout) = s2.unpack(data[n:n+ntotal2])
                 mids.append(mid)
                 T.append(t)
                 thetas.append(theta)
@@ -1123,10 +1214,10 @@ class EPT(GeomCommon):
                 if self.is_debug_file:
                     self.binary_debug.write('      mid=%s t=%s theta=%s sout=%s\n' % (
                         mid, t, theta, sout))
-                n += 16
+                n += ntotal2
 
             data_in = [
-                pid, z0, nsm, sb, ft, Tref, ge,
+                pid, z0, nsm, sb, ft, tref, ge,
                 is_symmetrical, mids, T, thetas, souts]
             prop = PCOMP.add_op2_data(data_in)
             self._add_op2_property(prop)
@@ -1153,11 +1244,27 @@ class EPT(GeomCommon):
         12 THETA   RS Orientation angle of the longitudinal direction of the ply
         13 SOUT    I  Stress or strain output request of the ply
         Words 9 through 13 repeat N times (until -1, -1, -1, -1, -1 as Nplies doesn't exist...)
+
+        float = (15006, 150, 604,
+                 5, 0.0, 1.7368e-18, 0.0, 0.0, 0.0, 20.0, 0.0,
+                     5e-324, 5e-324, 2.0, 0.0, 0.0,
+                     1e-323, 1e-323, 3.0, 0.0, 0.0,
+                     1.5e-323, 1e-323, 3.0, 0.0, 0.0,
+                     2e-323, 5e-324, 2.0, 0.0, 0.0,
+                     nan, nan, nan, nan, nan)
+        int   = (15006, 150, 604,
+                 5, 0,   1.7368e-18, 0,   0,   0,   20.0, 0,
+                     1, 1, 4611686018427387904, 0, 0,
+                     2, 2, 4613937818241073152, 0, 0,
+                     3, 2, 4613937818241073152, 0, 0,
+                     4, 1, 4611686018427387904, 0, 0,
+                     -1, -1, -1, -1, -1)
+
         """
         nproperties = 0
-        s1 = Struct(self._endian + b'2i 3f i 2f')
-        s2 = Struct(self._endian + b'2i2fi')
-        struct_i5 = Struct(self._endian + b'5i')
+        s1 = Struct(mapfmt(self._endian + b'2i 3f i 2f', self.size))
+        s2 = Struct(mapfmt(self._endian + b'2i 2f i', self.size))
+        struct_i5 = Struct(mapfmt(self._endian + b'5i', self.size))
 
         # lam - SYM, MEM, BEND, SMEAR, SMCORE, None
         lam_map = {
@@ -1182,9 +1289,11 @@ class EPT(GeomCommon):
             1 : 'YES',
         }
         ndata = len(data)
-        self.show_data(data[:48])
-        while n < (ndata - 32):
-            out = s1.unpack(data[n:n+32])
+        #self.show_data(data, types='qd')
+        ntotal1 = 32 * self.factor
+        ntotal2 = 20 * self.factor
+        while n < (ndata - ntotal1):
+            out = s1.unpack(data[n:n+ntotal1])
             (pid, lam_int, z0, nsm, sb, ft_int, tref, ge) = out
             if self.binary_debug:
                 self.binary_debug.write(f'PCOMPG pid={pid} lam_int={lam_int} z0={z0} nsm={nsm} '
@@ -1193,7 +1302,7 @@ class EPT(GeomCommon):
                   #f'ft_int={ft_int} tref={tref} ge={ge}')
             assert isinstance(lam_int, int), out
             assert pid > -1, out
-            n += 32
+            n += ntotal1
 
             mids = []
             thicknesses = []
@@ -1216,12 +1325,13 @@ class EPT(GeomCommon):
                     #pid, nlayers, z0, nsm, sb, ft, tref, ge))
             ilayer = 0
             while ilayer < 1000:
-                ints5 = struct_i5.unpack(data[n:n+20])
+                ints5 = struct_i5.unpack(data[n:n+ntotal2])
                 if ints5 == (-1, -1, -1, -1, -1):
                     if self.is_debug_file:
                         self.binary_debug.write('      global_ply=%-1 mid=%-1 t=%-1 theta=%-1 sout=-1\n')
                     break
-                (global_ply, mid, t, theta, sout_int) = s2.unpack(data[n:n+20])
+                (global_ply, mid, t, theta, sout_int) = s2.unpack(data[n:n+ntotal2])
+                #print('  ', (global_ply, mid, t, theta, sout_int))
                 try:
                     sout = sout_map[sout_int]
                 except KeyError:
@@ -1237,9 +1347,9 @@ class EPT(GeomCommon):
                 if self.is_debug_file:
                     self.binary_debug.write('      global_ply=%s mid=%s t=%s theta=%s sout_int=%s sout=%r\n' % (
                         global_ply, mid, t, theta, sout_int, sout))
-                n += 20
+                n += ntotal2
                 ilayer += 1
-            n += 20
+            n += ntotal2
 
             try:
                 ft = ft_map[ft_int]
@@ -1353,8 +1463,8 @@ class EPT(GeomCommon):
         """
         PDAMP(202,2,45) - the marker for Record ???
         """
-        ntotal = 8  # 2*4
-        struct_if = Struct(self._endian + b'if')
+        ntotal = 8 * self.factor # 2*4
+        struct_if = Struct(mapfmt(self._endian + b'if', self.size))
         nentries = (len(data) - n) // ntotal
         for unused_i in range(nentries):
             out = struct_if.unpack(data[n:n+ntotal])
@@ -1385,11 +1495,11 @@ class EPT(GeomCommon):
 
     def _read_pelas(self, data: bytes, n: int) -> int:
         """PELAS(302,3,46) - the marker for Record 39"""
-        struct_i3f = Struct(self._endian + b'i3f')
-        ntotal = 16  # 4*4
+        struct_i3f = Struct(mapfmt(self._endian + b'i3f', self.size))
+        ntotal = 16 * self.factor # 4*4
         nproperties = (len(data) - n) // ntotal
         for unused_i in range(nproperties):
-            edata = data[n:n+16]
+            edata = data[n:n+ntotal]
             out = struct_i3f.unpack(edata)
             #(pid, k, ge, s) = out
             if self.is_debug_file:
@@ -1458,8 +1568,8 @@ class EPT(GeomCommon):
                   damping
         4 TKNID I TABLEDi entry
         """
-        ntotal = 16
-        struct_4i = Struct(self._endian + b'4i')
+        ntotal = 16 * self.factor
+        struct_4i = Struct(mapfmt(self._endian + b'4i', self.size))
         nproperties = (len(data) - n) // ntotal
         for unused_i in range(nproperties):
             edata = data[n:n+ntotal]
@@ -1477,8 +1587,8 @@ class EPT(GeomCommon):
         """
         PGAP(2102,21,121) - the marker for Record 42
         """
-        ntotal = 44
-        struct_i10f = Struct(self._endian + b'i10f')
+        ntotal = 44 * self.factor
+        struct_i10f = Struct(mapfmt(self._endian + b'i10f', self.size))
         nproperties = (len(data) - n) // ntotal
         for unused_i in range(nproperties):
             edata = data[n:n+ntotal]
@@ -1540,8 +1650,11 @@ class EPT(GeomCommon):
 
         .. warning:: CSOPT ad T are not supported
         """
-        ntotal = 44  # 4*11
-        s = Struct(self._endian + b'3i 4s f 6i')
+        ntotal = 44 * self.factor  # 4*11
+        if self.size == 4:
+            s = Struct(self._endian + b'3i 4s f 6i')
+        else:
+            s = Struct(self._endian + b'3q 8s d 6q')
         nentries = (len(data) - n) // ntotal
         for unused_i in range(nentries):
             out = s.unpack(data[n:n+ntotal])
@@ -1570,8 +1683,11 @@ class EPT(GeomCommon):
 
         .. warning:: CSOPT is not supported
         """
-        ntotal = 28  # 4*7
-        struct1 = Struct(self._endian + b'2i 4s 4i')
+        ntotal = 28 * self.factor  # 4*7
+        if self.size == 4:
+            struct1 = Struct(self._endian + b'2i 4s 4i')
+        else:
+            struct1 = Struct(self._endian + b'2q 8s 4q')
         nentries = (len(data) - n) // ntotal
         for unused_i in range(nentries):
             out = struct1.unpack(data[n:n+ntotal])
@@ -1587,28 +1703,29 @@ class EPT(GeomCommon):
         """
         PMASS(402,4,44) - the marker for Record 48
         """
-        struct_if = Struct(self._endian + b'if')
-        nentries = (len(data) - n) // 8  # 2*4
+        ntotal = 8 * self.factor # 2*4
+        struct_if = Struct(mapfmt(self._endian + b'if', self.size))
+        nentries = (len(data) - n) // ntotal
         for unused_i in range(nentries):
-            edata = data[n:n + 8]
+            edata = data[n:n + ntotal]
             out = struct_if.unpack(edata)
             #out = (pid, mass)
             if self.is_debug_file:
                 self.binary_debug.write('  PMASS=%s\n' % str(out))
             prop = PMASS.add_op2_data(out)
             self._add_op2_property(prop)
-            n += 8
+            n += ntotal
         return n
 
     def _read_prod(self, data: bytes, n: int) -> int:
         """
         PROD(902,9,29) - the marker for Record 49
         """
-        ntotal = 24  # 6*4
-        struct_2i4f = Struct(self._endian + b'2i4f')
+        ntotal = 24 * self.factor  # 6*4
+        struct_2i4f = Struct(mapfmt(self._endian + b'2i4f', self.size))
         nproperties = (len(data) - n) // ntotal
         for unused_i in range(nproperties):
-            edata = data[n:n+24]
+            edata = data[n:n+ntotal]
             out = struct_2i4f.unpack(edata)
             #(pid, mid, a, j, c, nsm) = out
             prop = PROD.add_op2_data(out)
@@ -1623,17 +1740,18 @@ class EPT(GeomCommon):
         """
         PSHEAR(1002,10,42) - the marker for Record 50
         """
-        struct_2i4f = Struct(self._endian + b'2i4f')
-        nproperties = (len(data) - n) // 24
+        ntotal = 24 * self.factor
+        struct_2i4f = Struct(mapfmt(self._endian + b'2i4f', self.size))
+        nproperties = (len(data) - n) // ntotal
         for unused_i in range(nproperties):
-            edata = data[n:n+24]
+            edata = data[n:n+ntotal]
             out = struct_2i4f.unpack(edata)
             #(pid, mid, t, nsm, f1, f2) = out
             if self.is_debug_file:
                 self.binary_debug.write('  PSHEAR=%s\n' % str(out))
             prop = PSHEAR.add_op2_data(out)
             self._add_op2_property(prop)
-            n += 24
+            n += ntotal
         self.card_count['PSHEAR'] = nproperties
         return n
 
@@ -1641,11 +1759,11 @@ class EPT(GeomCommon):
         """
         PSHELL(2302,23,283) - the marker for Record 51
         """
-        ntotal = 44  # 11*4
-        s = Struct(self._endian + b'iififi4fi')
+        ntotal = 44 * self.factor  # 11*4
+        s = Struct(mapfmt(self._endian + b'iififi4fi', self.size))
         nproperties = (len(data) - n) // ntotal
         for unused_i in range(nproperties):
-            edata = data[n:n+44]
+            edata = data[n:n+ntotal]
             out = s.unpack(edata)
             (pid, mid1, unused_t, mid2, unused_bk, mid3, unused_ts,
              unused_nsm, unused_z1, unused_z2, mid4) = out
@@ -1677,11 +1795,16 @@ class EPT(GeomCommon):
         PSOLID(2402,24,281) - the marker for Record 52
         """
         #print("reading PSOLID")
-        ntotal = 28  # 7*4
-        struct_6i4s = Struct(self._endian + b'6i4s')
+        if self.size == 4:
+            ntotal = 28  # 7*4
+            struct_6i4s = Struct(self._endian + b'6i4s')
+        else:
+            ntotal = 28 * 2
+            struct_6i4s = Struct(self._endian + b'6q8s')
+
         nproperties = (len(data) - n) // ntotal
         for unused_i in range(nproperties):
-            edata = data[n:n+28]
+            edata = data[n:n+ntotal]
             out = struct_6i4s.unpack(edata)
             #(pid, mid, cid, inp, stress, isop, fctn) = out
             #data_in = [pid, mid, cid, inp, stress, isop, fctn]
@@ -1765,10 +1888,18 @@ class EPT(GeomCommon):
         Words 1 through 7 repeat until End of Record
         """
         #self.show_data(data[n:])
-        struct_5i4si = Struct(self._endian + b'5i4si')
+        if self.size == 4:
+            struct_5i4si = Struct(self._endian + b'5i 4s i')
+            struct_i = self.struct_i
+        else:
+            struct_5i4si = Struct(self._endian + b'5q 8s q')
+            struct_i = self.struct_q
+
         nentries = 0
+        ntotal = 28 * self.factor
+        size = self.size
         while  n < len(data):
-            edata = data[n:n+28]
+            edata = data[n:n+ntotal]
             out = struct_5i4si.unpack(edata)
             #print(out)
             idi, poly1, poly2, poly3, cid, typei, typeid = out
@@ -1778,11 +1909,11 @@ class EPT(GeomCommon):
                 self.binary_debug.write('  PVAL=%s\n' % str(out))
             #print(idi, poly1, poly2, poly3, cid, typei, typeid)
             typeids = []
-            n += 28
+            n += ntotal
             while typeid != -1:
                 typeids.append(typeid)
-                typeid, = self.struct_i.unpack(data[n:n+4])
-                n += 4
+                typeid, = struct_i.unpack(data[n:n+size])
+                n += size
                 #print(val)
             #print(typeids)
             # PVAL ID POLY1 POLY2 POLY3 CID SETTYP ID

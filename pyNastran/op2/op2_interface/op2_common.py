@@ -535,7 +535,6 @@ class OP2Common(Op2Codes, F06Writer):
             ngeom = 12
             structi = self.struct_3i
         else:
-            raise NotImplementedError(self.size)
             ngeom = 24
             structi = self.struct_3q
 
@@ -2201,12 +2200,14 @@ class OP2Common(Op2Codes, F06Writer):
             #raise NotImplementedError('64-bit precison is not supported')
             self.struct_q = Struct(self._endian + b'q')
             self.struct_16s = Struct(self._endian + b'16s')
-            #self.struct_3i = Struct(self._endian + b'3q')
             #self.struct_8s = Struct(self._endian + b'8s')
             self.struct_2q = Struct(self._endian + b'2q')
             self.struct_16s_q = Struct(self._endian + b'16sq')
             #self.op2_reader.read_block = self.op2_reader.read_block8
             #self.op2_reader.read_markers = self.op2_reader.read_markers8
+
+            # geom
+            self.struct_3q = Struct(self._endian + b'3q')
         else:
             NotImplementedError(size)
         self.op2_reader.size = size
@@ -2220,6 +2221,9 @@ class OP2Common(Op2Codes, F06Writer):
             del self.struct_q, self.struct_8s
             if hasattr(self, 'struct_2i'):
                 del self.struct_2i
+            if hasattr(self, 'struct_3q'): # geom
+                del self.struct_3q
+
         elif hasattr(self, 'struct_2i'):
             del self.struct_i, self.struct_2i, self.struct_3i, self.struct_8s, self.struct_8s_i
         out = [outi for outi in self.object_attributes() if 'struct_' in outi]

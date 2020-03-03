@@ -4993,7 +4993,7 @@ class OES(OP2Common):
             self._results._found_result(result_name)
             slot = self.get_result(result_name)
 
-            ntotal = 68  # 4*17
+            ntotal = 68 * self.factor  # 4*17
             nelements = ndata // ntotal
             nlayers = nelements * 2
             nnodes_expected = 1
@@ -7800,7 +7800,7 @@ def oes_quad4_33_complex_17(self, data: bytes,
 
     """
     n = 0
-    struct1 = Struct(self._endian + self._analysis_code_fmt + b'16f')
+    struct1 = Struct(mapfmt(self._endian + self._analysis_code_fmt + b'16f', self.size))
     cen = 0 # CEN/4
     for unused_i in range(nelements):
         edata = data[n:n+ntotal]

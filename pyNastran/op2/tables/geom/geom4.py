@@ -205,7 +205,7 @@ class GEOM4(GeomCommon):
             return packs
 
         ndata = len(data)
-        out = np.frombuffer(data[n:], self.idtype).copy()
+        out = np.frombuffer(data[n:], self.idtype8).copy()
 
         #print(out)
         #izero = np.where(out == -1)[0]
@@ -254,7 +254,7 @@ class GEOM4(GeomCommon):
         ndata = len(data)
         #nfields = (ndata - n) // 4
         #fmt = '%ii' % nfields
-        out = np.frombuffer(data[n:], self.idtype).copy()
+        out = np.frombuffer(data[n:], self.idtype8).copy()
         #print(out)
         iminus1 = np.where(out == -1)[0]
         if len(iminus1) == 0:
@@ -348,10 +348,10 @@ class GEOM4(GeomCommon):
     def _read_mpc(self, data, n):
         """MPC(4901,49,17) - Record 16"""
         ndata = len(data)
-        nfields = (ndata - n) // 4
+        nfields = (ndata - n) // self.size
         datan = data[n:]
-        ints = unpack(self._endian + b'%ii' % nfields, datan)
-        floats = unpack(self._endian + b'%if' % nfields, datan)
+        ints = unpack(mapfmt(self._endian + b'%ii' % nfields, self.size), datan)
+        floats = unpack(mapfmt(self._endian + b'%if' % nfields, self.size), datan)
 
         i = 0
         nentries = 0
@@ -388,7 +388,7 @@ class GEOM4(GeomCommon):
         """
         MPCADD(4891,60,83) - Record 17
         """
-        datai = np.frombuffer(data[n:], self.idtype).copy()
+        datai = np.frombuffer(data[n:], self.idtype8).copy()
         _read_spcadd_mpcadd(self, 'MPCADD', datai)
         return len(data)
 
@@ -416,8 +416,8 @@ class GEOM4(GeomCommon):
         50502, 50002, 52126, 123456, 0, 0, 654321,
         50503, 50003, 52127, 123456, 0, 0, 654321,
         """
-        s = Struct(self._endian + b'7i')
-        ntotal = 28
+        s = Struct(mapfmt(self._endian + b'7i', self.size))
+        ntotal = 28 * self.factor
         nelements = (len(data) - n) // ntotal
         assert (len(data) - n) % ntotal == 0
         elems = []
@@ -440,14 +440,14 @@ class GEOM4(GeomCommon):
 
     def _read_rbar_msc(self, data, n):
         """RBAR(6601,66,292) - Record 22 - MSC version"""
-        s = Struct(self._endian + b'7if')
-        ntotal = 32
+        s = Struct(mapfmt(self._endian + b'7if', self.size))
+        ntotal = 32 * self.factor  # 8*4
         nelements = (len(data) - n) // ntotal
         if not (len(data) - n) % ntotal == 0:
             raise MixedVersionCard('failed reading as MSC')
         elems = []
         for unused_i in range(nelements):
-            edata = data[n:n + ntotal]  # 8*4
+            edata = data[n:n + ntotal]
             out = s.unpack(edata)
             if self.is_debug_file:
                 self.binary_debug.write('  RBAR MSC=%s\n' % str(out))
@@ -477,7 +477,7 @@ class GEOM4(GeomCommon):
         7 UNDEF none Not used
         """
         # TODO: neither reader or writer considers alpha; no current examples
-        idata = np.frombuffer(data[n:], self.idtype).copy()
+        idata = np.frombuffer(data[n:], self.idtype8).copy()
         i = 0
         nelements = 0
         nfields = len(idata)
@@ -547,7 +547,7 @@ class GEOM4(GeomCommon):
             10103, 10103, 123456, 5, -1,
         ]
         """
-        idata = np.frombuffer(data[n:], self.idtype).copy()
+        idata = np.frombuffer(data[n:], self.idtype8).copy()
         iminus1 = np.where(idata == -1)[0]
         if idata[-1] == -1:
             is_alpha = False
@@ -556,7 +556,7 @@ class GEOM4(GeomCommon):
         else:
             is_alpha = True
             i = np.hstack([[0], iminus1[:-1]+2])
-            fdata = np.frombuffer(data[n:], self.fdtype).copy()
+            fdata = np.frombuffer(data[n:], self.fdtype8).copy()
             j = np.hstack([iminus1[:-1]+1, len(idata)-1])
         #print('is_alpha=%s' % is_alpha)
         #print('i=%s' % i)
@@ -629,8 +629,8 @@ class GEOM4(GeomCommon):
     def _read_rbe3(self, data, n):
         """RBE3(7101,71,187) - Record 25"""
         #self.show_data(data[n+80:], 'ifs')
-        idata = np.frombuffer(data[n:], self.idtype).copy()
-        fdata = np.frombuffer(data[n:], self.fdtype).copy()
+        idata = np.frombuffer(data[n:], self.idtype8).copy()
+        fdata = np.frombuffer(data[n:], self.fdtype8).copy()
         read_rbe3s_from_idata_fdata(self, idata, fdata)
         return n
 
@@ -696,8 +696,8 @@ class GEOM4(GeomCommon):
 
     def _read_rrod_nx(self, data, n):
         """RROD(6501,65,291) - Record 30"""
-        struct_5i = Struct(self._endian + b'5i')
-        ntotal = 20
+        struct_5i = Struct(mapfmt(self._endian + b'5i', self.size))
+        ntotal = 20 * self.factor
         nelements = (len(data) - n) // ntotal
         assert (len(data) - n) % ntotal == 0
         elements = []
@@ -716,8 +716,8 @@ class GEOM4(GeomCommon):
 
     def _read_rrod_msc(self, data, n):
         """RROD(6501,65,291) - Record 30"""
-        s = Struct(self._endian + b'5if')
-        ntotal = 24
+        s = Struct(mapfmt(self._endian + b'5if', self.size))
+        ntotal = 24 * self.factor
         nelements = (len(data) - n) // ntotal
         assert (len(data) - n) % ntotal == 0
         elements = []
@@ -857,13 +857,13 @@ class GEOM4(GeomCommon):
         4 D   RS Enforced displacement
         """
         msg = ''
-        ntotal = 16
+        ntotal = 16 * self.factor
         nentries = (len(data) - n) // ntotal
         assert nentries > 0, nentries
         assert (len(data) - n) % ntotal == 0
         #self.show_data(data, types='if')
 
-        struc = Struct(self._endian + b'iiif')
+        struc = Struct(mapfmt(self._endian + b'iiif', self.size))
         constraints = []
         def check_component(component, msg):
             scomponent = str(component)
@@ -885,7 +885,7 @@ class GEOM4(GeomCommon):
                 assert componenti in '0123456789', msg
 
         for unused_i in range(nentries):
-            edata = data[n:n + 16]
+            edata = data[n:n + ntotal]
             (sid, nid, comp, dx) = struc.unpack(edata)
             if self.is_debug_file:
                 self.binary_debug.write('SPC-NX sid=%s nid=%s comp=%s dx=%s\n' % (
@@ -900,7 +900,7 @@ class GEOM4(GeomCommon):
             #msg += '  SPC-NX sid=%s nid=%s comp=%s dx=%s\n' % (sid, nid, comp, dx)
             #else:
                 #msg += '  SPC-NX sid=%s nid=%s comp=%s dx=%s\n' % (sid, nid, comp, dx)
-            n += 16
+            n += ntotal
         #if msg:
             #self.log.warning('Invalid Node IDs; skipping\n' + msg)
         return n, constraints
@@ -1004,7 +1004,7 @@ class GEOM4(GeomCommon):
         """
         #nentries = 0
         #nints = (len(data) - n) // 4
-        idata = np.frombuffer(data[n:], self.idtype).copy()
+        idata = np.frombuffer(data[n:], self.idtype8).copy()
         if not idata[-1] == -1:
             idata = np.hstack([idata, -1])
         iminus1 = np.where(idata == -1)[0]
@@ -1051,7 +1051,7 @@ class GEOM4(GeomCommon):
     def _read_spcadd(self, data, n):
         """SPCADD(5491,59,13) - Record 46"""
         #nentries = (len(data) - n) // 4
-        datai = np.frombuffer(data[n:], self.idtype).copy()
+        datai = np.frombuffer(data[n:], self.idtype8).copy()
         _read_spcadd_mpcadd(self, 'SPCADD', datai)
         return len(data)
 
@@ -1204,8 +1204,8 @@ class GEOM4(GeomCommon):
         USET(2010,20,193) - Record 63
         (sid, nid, comp), ...
         """
-        struct_3i = Struct(self._endian + b'3i')
-        ntotal = 12
+        struct_3i = Struct(mapfmt(self._endian + b'3i', self.size))
+        ntotal = 12 * self.factor
         #self.show_data(data, types='is')
         nelements = (len(data) - n) // ntotal
         for unused_i in range(nelements):
@@ -1252,15 +1252,16 @@ class GEOM4(GeomCommon):
             12, 12345, 0, -1)
         """
         nentries = 0
-        nints = (len(data) - n) // 4
-        fmti = self._endian + b'%ii' % nints
+        size = self.size
+        nints = (len(data) - n) // size
+        fmti = mapfmt(self._endian + b'%ii' % nints, size)
         idata = unpack(fmti, data[n:])
         i = 0
         #print('idata = %s' % idata)
         nidata = len(idata)
-        struct_4s = Struct('4s')
+        struct_4s = Struct(mapfmt('4s', size))  # TODO: maybe this doesn't change for 64-bit?
         while i < nidata:
-            sname = data[n+i*(4) : n+(i+1)*4]
+            sname = data[n+i*size : n+(i+1)*size]
             sname_str = struct_4s.unpack(sname)
             #print('sname_str = %r' % sname_str)
             comp, thru_flag = idata[i+1:i+3]
@@ -1291,6 +1292,7 @@ class GEOM4(GeomCommon):
             #    sid, comp, thru_flag))
             #print('   nids=%s\n' % str(nids))
             in_data = [sname_str, comp, nids]
+            #print(in_data)
 
             constraint = USET1.add_op2_data(in_data)
             self._add_uset_object(constraint)

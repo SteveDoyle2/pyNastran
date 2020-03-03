@@ -372,17 +372,21 @@ def plot_flutter_f06(f06_filename, f06_units=None, out_units=None, make_alt=Fals
 
 def make_flutter_plots(modes, flutters, xlim, ylim_damping, ylim_freq, ylim_kfreq,
                        plot_type,
-                       plot_vg, plot_vg_vf, plot_root_locus, plot_kfreq_damping,
-                       nopoints, noline,
-                       legend=True,
-                       export_zona_filename=None,
-                       export_veas_filename=None,
-                       export_f06_filename=None,
-                       vg_filename=None,
-                       vg_vf_filename=None,
-                       root_locus_filename=None,
-                       kfreq_damping_filename=None,
-                       show=True, clear=False, close=False):
+                       plot_vg: bool,
+                       plot_vg_vf: bool,
+                       plot_root_locus: bool,
+                       plot_kfreq_damping: bool,
+                       nopoints: bool,
+                       noline: bool,
+                       legend: bool=True,
+                       export_zona_filename: Optional[str]=None,
+                       export_veas_filename: Optional[str]=None,
+                       export_f06_filename: Optional[str]=None,
+                       vg_filename: Optional[str]=None,
+                       vg_vf_filename: Optional[str]=None,
+                       root_locus_filename: Optional[str]=None,
+                       kfreq_damping_filename: Optional[str]=None,
+                       show: bool=True, clear: bool=False, close: bool=False):
     """actually makes the flutter plots"""
     for subcase, flutter in sorted(flutters.items()):
         if plot_vg:

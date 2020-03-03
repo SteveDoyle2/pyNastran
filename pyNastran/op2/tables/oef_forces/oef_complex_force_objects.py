@@ -2959,14 +2959,12 @@ class ComplexSolidPressureForceArray(ComplexForceObject):
         self.is_built = True
 
         #print("ntimes=%s nelements=%s ntotal=%s" % (self.ntimes, self.nelements, self.ntotal))
-        dtype = 'float32'
-        if isinstance(self.nonlinear_factor, integer_types):
-            dtype = 'int32'
+        dtype, idtype, cfdtype = get_complex_times_dtype(self.nonlinear_factor, self.size)
         self._times = zeros(self.ntimes, dtype=dtype)
-        self.element = zeros(self.nelements, dtype='int32')
+        self.element = zeros(self.nelements, dtype=idtype)
 
         #[ax, ay, az, vx, vy, vz, pressure]
-        self.data = zeros((self.ntimes, self.ntotal, 7), dtype='complex64')
+        self.data = zeros((self.ntimes, self.ntotal, 7), dtype=cfdtype)
 
     def build_dataframe(self):
         """creates a pandas dataframe"""

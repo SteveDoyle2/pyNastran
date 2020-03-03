@@ -60,7 +60,7 @@ class GridPointSurfaceStressesArray(ScalarObject):
         dtype, idtype, fdtype = get_times_dtype(self.nonlinear_factor, self.size)
         self.node_element = np.zeros((self.ntotal, 2), dtype=idtype)
         #oxx, oyy, txy, angle, major, minor, ovm
-        self.data = np.zeros((self.ntimes, self.ntotal, 8), dtype=fdtype)
+        self.data = np.zeros((self.ntimes, self.nelements, 8), dtype=fdtype)
         self.location = np.empty(self.ntotal, dtype='U8')
 
         self._times = np.zeros(self.ntimes, dtype=dtype)

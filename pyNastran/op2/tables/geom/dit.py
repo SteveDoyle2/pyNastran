@@ -10,6 +10,7 @@ from pyNastran.bdf.cards.bdf_tables import (TABLED1, TABLED2, TABLED3, TABLED4,
                                             TABLEM1, TABLEM2, TABLEM3, TABLEM4,
                                             TABRND1, TABDMP1, TABLES1)
 from pyNastran.op2.tables.geom.geom_common import GeomCommon
+from pyNastran.op2.op2_interface.op2_reader import mapfmt, reshape_bytes_block
 
 
 class DIT(GeomCommon):
@@ -59,8 +60,8 @@ class DIT(GeomCommon):
         #nfields = (ndata - n) // 4
 
         datan = data[n:]
-        ints = np.frombuffer(datan, self.idtype)
-        floats = np.frombuffer(datan, self.fdtype)
+        ints = np.frombuffer(datan, self.idtype8)
+        floats = np.frombuffer(datan, self.fdtype8)
         iminus1_delta = get_iend_from_ints(ints)
         istart = 0
         nentries = 0
@@ -74,7 +75,10 @@ class DIT(GeomCommon):
             x = xy[:, 0]
             y = xy[:, 1]
             table = TABDMP1(tid, x, y, Type='G')
-            self._add_table_sdamping_object(table)
+            if tid in self.tables_sdamping:
+                assert table == self.tables_sdamping[tid]
+            else:
+                self._add_table_sdamping_object(table)
             istart = iend + 2
             nentries += 1
         self.increase_card_count('TABDMP1', nentries)
@@ -116,7 +120,7 @@ class DIT(GeomCommon):
 
     def _read_tables1(self, data, n):
         """TABLES1(3105, 31, 97)"""
-        n = self._read_table1(TABLES1, self._add_table_object, data, n, 'TABLES1',
+        n = self._read_table1(TABLES1, self.tables, self._add_table_object, data, n, 'TABLES1',
                               add_codes=False)
         return n
 
@@ -142,17 +146,27 @@ class DIT(GeomCommon):
         """
         TABLED1(1105,11,133) - the marker for Record 4
         """
-        n = self._read_table1(TABLED1, self._add_tabled_object, data, n, 'TABLED1')
+        n = self._read_table1(TABLED1, self.tables_d, self._add_tabled_object, data, n, 'TABLED1')
         return n
 
-    def _read_table1(self, cls, add_method, data, n, table_name, add_codes=True):
+    def _read_table1(self, cls, slot, add_method, data, n, table_name, add_codes=True):
         nentries = 0
         ndata = len(data)
-        struct_8i2f = Struct('8iff')
-        struct_ff = Struct('ff')
-        struct_2i = self.struct_2i
-        while ndata - n >= 40:
-            edata = data[n:n + 40]
+        if self.size == 4:
+            struct_8i2f = Struct('8iff')
+            struct_ff = Struct('ff')
+            struct_2i = self.struct_2i
+            ntotal1 = 40
+            ntotal2 = 8
+        else:
+            struct_8i2f = Struct('8qdd')
+            struct_ff = Struct('dd')
+            struct_2i = self.struct_2q
+            ntotal1 = 80
+            ntotal2 = 16
+
+        while ndata - n >= ntotal1:
+            edata = data[n:n + ntotal1]
             out = struct_8i2f.unpack(edata)
             (tid, code_x, code_y, unused_a, unused_b, unused_c, unused_d, unused_e,
              x, y) = out
@@ -163,12 +177,12 @@ class DIT(GeomCommon):
             else:
                 data_in = [tid, x, y]
 
-            n += 40
+            n += ntotal1
             while 1:
-                (xint, yint) = struct_2i.unpack(data[n:n + 8])
-                (x, y) = struct_ff.unpack(data[n:n + 8])
+                (xint, yint) = struct_2i.unpack(data[n:n + ntotal2])
+                (x, y) = struct_ff.unpack(data[n:n + ntotal2])
 
-                n += 8
+                n += ntotal2
                 if [xint, yint] == [-1, -1]:
                     break
                 else:
@@ -176,7 +190,10 @@ class DIT(GeomCommon):
 
             #print('data_in =', data_in)
             table = cls.add_op2_data(data_in)
-            add_method(table)
+            if tid in slot:
+                assert table == slot[tid]
+            else:
+                add_method(table)
             nentries += 1
         self.increase_card_count(table_name, nentries)
         return n
@@ -185,10 +202,10 @@ class DIT(GeomCommon):
         """
         TABLED2(1205,12,134) - the marker for Record 5
         """
-        n = self._read_table2(TABLED2, self._add_tabled_object, data, n, 'TABLED2')
+        n = self._read_table2(TABLED2, self.tables_d, self._add_tabled_object, data, n, 'TABLED2')
         return n
 
-    def _read_table2(self, cls, add_method, data, n, table_name):
+    def _read_table2(self, cls, slot, add_method, data, n, table_name):
         """
         1 ID    I  Table identification number
         2 X1    RS X-axis shift
@@ -200,21 +217,30 @@ class DIT(GeomCommon):
         """
         ndata = len(data)
         nentries = 0
-        struct1 = Struct('ifiiiiiiff')
-        struct_ff = Struct('ff')
-        struct_2i = self.struct_2i
+        if self.size == 4:
+            struct1 = Struct('ifiiiiiiff')
+            struct_ff = Struct('ff')
+            struct_2i = self.struct_2i
+            ntotal1 = 40
+            ntotal2 = 8
+        else:
+            struct1 = Struct('qdqqqqqqdd')
+            struct_ff = Struct('dd')
+            struct_2i = self.struct_2q
+            ntotal1 = 80
+            ntotal2 = 16
         while n < ndata:
-            edata = data[n:n + 40]
+            edata = data[n:n + ntotal1]
             out = struct1.unpack(edata)
             (tid, x1, unused_a, unused_b, unused_c, unused_d, unused_e, unused_f,
              x, y) = out
             data_in = [tid, x1, x, y]
-            n += 40
+            n += ntotal1
             while 1:
-                (xint, yint) = struct_2i.unpack(data[n:n + 8])
-                (x, y) = struct_ff.unpack(data[n:n + 8])
+                (xint, yint) = struct_2i.unpack(data[n:n + ntotal2])
+                (x, y) = struct_ff.unpack(data[n:n + ntotal2])
 
-                n += 8
+                n += ntotal2
                 if [xint, yint] == [-1, -1]:
                     break
                 else:
@@ -229,14 +255,14 @@ class DIT(GeomCommon):
         """
         TABLED3(1305,13,140) - the marker for Record 6
         """
-        n = self._read_table3(TABLED3, self._add_tabled_object, data, n, 'TABLED3')
+        n = self._read_table3(TABLED3, self.tables_d, self._add_tabled_object, data, n, 'TABLED3')
         return n
 
     def _read_tabled4(self, data, n):
         """
         TABLED4 - the marker for Record 7
         """
-        n = self._read_table4(TABLED4, self._add_tabled_object, data, n, 'TABLED4')
+        n = self._read_table4(TABLED4, self.tables_d, self._add_tabled_object, data, n, 'TABLED4')
         return n
 
 #TABLEDR
@@ -245,48 +271,58 @@ class DIT(GeomCommon):
         """
         TABLEM1(105,1,93) - the marker for Record 9
         """
-        n = self._read_table1(TABLEM1, self._add_tablem_object, data, n, 'TABLEM1')
+        n = self._read_table1(TABLEM1, self.tables_m, self._add_tablem_object, data, n, 'TABLEM1')
         return n
 
     def _read_tablem2(self, data, n):
         """
         TABLEM2(205,2,94) - the marker for Record 10
         """
-        n = self._read_table2(TABLEM2, self._add_tablem_object, data, n, 'TABLEM2')
+        n = self._read_table2(TABLEM2, self.tables_m, self._add_tablem_object, data, n, 'TABLEM2')
         return n
 
     def _read_tablem3(self, data, n):
         """
         TABLEM3(305,3,95) - the marker for Record 11
         """
-        n = self._read_table3(TABLEM3, self._add_tablem_object, data, n, 'TABLEM3')
+        n = self._read_table3(TABLEM3, self.tables_m, self._add_tablem_object, data, n, 'TABLEM3')
         return n
 
     def _read_tablem4(self, data, n):
         """
         TABLEM4(405,4,96) - the marker for Record 12
         """
-        n = self._read_table4(TABLEM4, self._add_tablem_object, data, n, 'TABLEM4')
+        n = self._read_table4(TABLEM4, self.tables_m, self._add_tablem_object, data, n, 'TABLEM4')
         return n
 
-    def _read_table3(self, cls, add_method, data, n, table_name):
+    def _read_table3(self, cls, slot, add_method, data, n, table_name):
         nentries = 0
         ndata = len(data)
-        struct1 = Struct('iffiiiiiff')
-        struct_2i = self.struct_2i
-        struct_ff = Struct('ff')
-        while ndata - n >= 40:
-            edata = data[n:n + 40]
+        if self.size == 4:
+            ntotal1 = 40
+            ntotal2 = 8
+            struct1 = Struct('iffiiiiiff')
+            struct_2i = self.struct_2i
+            struct_ff = Struct('ff')
+        else:
+            ntotal1 = 80
+            ntotal2 = 16
+            struct1 = Struct('qddqqqqqdd')
+            struct_2i = self.struct_2q
+            struct_ff = Struct('dd')
+
+        while ndata - n >= ntotal1:
+            edata = data[n:n + ntotal1]
             out = struct1.unpack(edata)
             (tid, x1, x2, unused_a, unused_b, unused_c, unused_d, unused_e,
              x, y) = out
             data_in = [tid, x1, x2, x, y]
-            n += 40
+            n += ntotal1
             while 1:
-                (xint, yint) = struct_2i.unpack(data[n:n + 8])
-                (x, y) = struct_ff.unpack(data[n:n + 8])
+                (xint, yint) = struct_2i.unpack(data[n:n + ntotal2])
+                (x, y) = struct_ff.unpack(data[n:n + ntotal2])
 
-                n += 8
+                n += ntotal2
                 if [xint, yint] == [-1, -1]:
                     break
                 else:
@@ -297,7 +333,7 @@ class DIT(GeomCommon):
         self.increase_card_count(table_name, nentries)
         return n
 
-    def _read_table4(self, cls, add_method, data, n, table_name):
+    def _read_table4(self, cls, slot, add_method, data, n, table_name):
         """
         1 ID I Table identification number
         2 X1 RS X-axis shift
@@ -311,24 +347,27 @@ class DIT(GeomCommon):
         n0 = n
         nentries = 0
         ndata = len(data)
-        struct1 = Struct('i 4f 3i f i')
-        struct_i = self.struct_i
-        struct_f = Struct('f')
+        size = self.size
+        struct1 = Struct(mapfmt(self._endian + b'i 4f 3i f i', size))
+        struct_i = self.struct_i if size == 4 else self.struct_q
+        struct_f = Struct(self._endian + b'f') if size == 4 else Struct(self._endian + b'd')
+        ntotal1 = 40 * self.factor
+        ntotal2 = 36 * self.factor
         try:
-            while ndata - n >= 40:
-                edata = data[n:n + 40]
+            while ndata - n >= ntotal1:
+                edata = data[n:n + ntotal1]
                 out = struct1.unpack(edata)
                 (tid, x1, x2, x3, x4, unused_a, unused_b, unused_c, x, test_minus1) = out
                 data_in = [tid, x1, x2, x3, x4, x]
-                n += 36
+                n += ntotal2
                 if test_minus1 == -1:
-                    n += 4
+                    n += size
                 else:
                     while 1:
-                        xint, = struct_i.unpack(data[n:n + 4])
-                        x, = struct_f.unpack(data[n:n + 4])
+                        xint, = struct_i.unpack(data[n:n + size])
+                        x, = struct_f.unpack(data[n:n + size])
 
-                        n += 4
+                        n += size
                         if xint == -1:
                             break
                         else:

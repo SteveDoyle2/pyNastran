@@ -99,12 +99,12 @@ class DYNAMICS(GeomCommon):
         8 T     RS Time delay
         9 PH    RS Phase lead
         """
-        ntotal = 36
+        ntotal = 36 * self.factor
         nentries = (len(data) - n) // ntotal
         assert (len(data) - n) % ntotal == 0, 'ACSRCE'
 
         loads = []
-        struc = Struct(self._endian + b'5i4f')
+        struc = Struct(mapfmt(self._endian + b'5i4f', self.size))
         for unused_i in range(nentries):
             edata = data[n:n+ntotal]
             out = struc.unpack(edata)
@@ -139,12 +139,12 @@ class DYNAMICS(GeomCommon):
         10 TCR    RS If TCI     = 0, constant value for C(f)
 
         """
-        ntotal = 40
+        ntotal = 40 * self.factor
         nentries = (len(data) - n) // ntotal
         assert (len(data) - n) % ntotal == 0, 'ACSRCE'
 
         loads = []
-        struc = Struct(self._endian + b'5i5f')
+        struc = Struct(mapfmt(self._endian + b'5i5f', self.size))
         for unused_i in range(nentries):
             edata = data[n:n+ntotal]
             out = struc.unpack(edata)
@@ -226,8 +226,8 @@ class DYNAMICS(GeomCommon):
         #nfields = (ndata - n) // 4
 
         datan = data[n:]
-        ints = np.frombuffer(datan, self.idtype).copy()
-        floats = np.frombuffer(datan, self.fdtype).copy()
+        ints = np.frombuffer(datan, self.idtype8).copy()
+        floats = np.frombuffer(datan, self.fdtype8).copy()
         istart = 0
         iminus1_delta = get_iend_from_ints(ints)
         nentries = 0
@@ -329,10 +329,13 @@ class DYNAMICS(GeomCommon):
 
     def _read_eigb(self, data, n):
         """EIGB(107,1,86) - Record 7"""
-        ntotal = 60
+        ntotal = 60 * self.factor
         nentries = (len(data) - n) // ntotal
         self.increase_card_count('EIGB', nentries)
-        struc = Struct(self._endian + b'i8s ff 3i i 8s 4i')
+        if self.size == 4:
+            struc = Struct(self._endian + b'i 8s ff 3i i 8s 4i')
+        else:
+            struc = Struct(self._endian + b'q 16s dd 3q q 16s 4q')
         for unused_i in range(nentries):
             edata = data[n:n+ntotal]
             #self.show_data(edata[44:])
@@ -567,9 +570,13 @@ class DYNAMICS(GeomCommon):
         14 UNDEF(5 ) None
 
         """
-        ntotal = 72
+        ntotal = 72 * self.factor
         nentries = (len(data) - n) // ntotal
-        struct1 = Struct('i 8s 2f 4i 8s 7i')
+        if self.size == 4:
+            struct1 = Struct('i 8s 2f 4i 8s 7i')
+        else:
+            struct1 = Struct('q 16s 2d 4q 16s 7q')
+
         for unused_i in range(nentries):
             edata = data[n:n+ntotal]
             out = struct1.unpack(edata)
@@ -607,8 +614,15 @@ class DYNAMICS(GeomCommon):
 
         """
         ndata = len(data)
-        s = Struct('i 2f 3i f 2i 8s f i')
-        nbytes = 52
+        if self.size == 4:
+            s = Struct('i 2f 3i f 2i 8s f i')
+            nbytes = 52
+            types = 'if'
+        else:
+            s = Struct('q 2d 3q d 2q 16s d i')
+            nbytes = 100
+            types = 'qds'
+
         nentries = 0
         while n < ndata:
             #edata = data[n:n+46] # 11*4+2 = 46
@@ -617,11 +631,13 @@ class DYNAMICS(GeomCommon):
             sid, v1, v2, nd, msglvl, maxset, shfscl, flag1, flag2, norm, alpha, nums = out
             norm = norm.decode('latin1').rstrip('\x00 ')
             if nums != 538976288:
+                self.log.warning(f'sid={sid} v1={v1} v2={v2} nd={nd} msglvl={msglvl} maxset={maxset} '
+                                 f'shfscl={shfscl} flag1={flag1} flag2={flag2} norm={norm} alpha={alpha} nums={nums}')
                 assert nums < 10000, nums
                 #edata2 = data[n+46:n+46+nums*4]
                 edata2 = data[n+nbytes:n+nbytes+nums*4]
-                self.show_data(edata2, 'if')
-                fi = unpack('%if' % nums, edata2)
+                self.show_data(edata2, types=types)
+                fi = unpack(mapfmt('%if' % nums, self.size), edata2)
                 print(out, fi)
                 raise NotImplementedError(nums)
 
@@ -656,8 +672,8 @@ class DYNAMICS(GeomCommon):
 
     def _read_freq(self, data, n):
         """FREQ(1307,13,126) - Record 13"""
-        ints = np.frombuffer(data[n:], self.idtype).copy()
-        floats = np.frombuffer(data[n:], self.fdtype).copy()
+        ints = np.frombuffer(data[n:], self.idtype8).copy()
+        floats = np.frombuffer(data[n:], self.fdtype8).copy()
         iminus1 = np.where(ints == -1)[0]
         istart = 0
         for iend in iminus1:
@@ -678,9 +694,9 @@ class DYNAMICS(GeomCommon):
         4 NDF I  Number of frequency increments
 
         """
-        ntotal = 16
+        ntotal = 16 * self.factor
         nentries = (len(data) - n) // ntotal
-        struc = Struct(self._endian + b'iffi')
+        struc = Struct(mapfmt(self._endian + b'iffi', self.size))
         for unused_i in range(nentries):
             edata = data[n:n+ntotal]
             out = struc.unpack(edata)
@@ -703,9 +719,9 @@ class DYNAMICS(GeomCommon):
         3 F2  RS Last frequency
         4 NF   I Number of logarithmic intervals
         """
-        ntotal = 16
+        ntotal = 16 * self.factor
         nentries = (len(data) - n) // ntotal
-        struc = Struct(self._endian + b'iffi')
+        struc = Struct(mapfmt(self._endian + b'iffi', self.size))
         for unused_i in range(nentries):
             edata = data[n:n+ntotal]
             out = struc.unpack(edata)
@@ -1139,9 +1155,9 @@ class DYNAMICS(GeomCommon):
 
         """
         dloads = []
-        ntotal = 44
+        ntotal = 44 * self.factor
         nentries = (len(data) - n) // ntotal
-        struc = Struct(self._endian + b'7i 4f')
+        struc = Struct(mapfmt(self._endian + b'7i 4f', self.size))
         for unused_i in range(nentries):
             edata = data[n:n+ntotal]
             out = struc.unpack(edata)
@@ -1185,9 +1201,9 @@ class DYNAMICS(GeomCommon):
 
         """
         dloads = []
-        ntotal = 36
+        ntotal = 36 * self.factor
         nentries = (len(data) - n) // ntotal
-        struc = Struct(self._endian + b'2i 2f 3i 2f')
+        struc = Struct(mapfmt(self._endian + b'2i 2f 3i 2f', self.size))
         for unused_i in range(nentries):
             edata = data[n:n+ntotal]
             out = struc.unpack(edata)
@@ -1230,9 +1246,9 @@ class DYNAMICS(GeomCommon):
 
         """
         dloads = []
-        ntotal = 44
+        ntotal = 44 * self.factor
         nentries = (len(data) - n) // ntotal
-        struc = Struct(self._endian + b'7i 4f')
+        struc = Struct(mapfmt(self._endian + b'7i 4f', self.size))
         for unused_i in range(nentries):
             edata = data[n:n+ntotal]
             out = struc.unpack(edata)
@@ -1415,8 +1431,8 @@ class DYNAMICS(GeomCommon):
         5 V0 RS Initial velocity
 
         """
-        ntotal = 20  # 5*4
-        struct1 = Struct(self._endian + b'3i 2f')
+        ntotal = 20 *self.factor  # 5*4
+        struct1 = Struct(mapfmt(self._endian + b'3i 2f', self.size))
         nentries = (len(data) - n) // ntotal
         for unused_i in range(nentries):
             out = struct1.unpack(data[n:n+ntotal])
@@ -1521,10 +1537,12 @@ class DYNAMICS(GeomCommon):
         """
         #self.show_data(data)
         ndata = len(data)
-        nfields = (ndata - n) // 4
+        nfields = (ndata - n) // self.size
         datan = data[n:]
-        ints = unpack(self._endian + b'%ii' % nfields, datan)
-        floats = unpack(self._endian + b'%if' % nfields, datan)
+        #ints = np.frombuffer(datan, self.idtype8).copy()
+        #floats = np.frombuffer(datan, self.fdtype8).copy()
+        ints = unpack(mapfmt(self._endian + b'%ii' % nfields, self.size), datan)
+        floats = unpack(mapfmt(self._endian + b'%if' % nfields, self.size), datan)
         # strings = unpack(self._endian + b'4s'* nfields, datan)
 
         i = 0

@@ -211,11 +211,11 @@ def _recover_straini_rod(xb, dof_map, elem, prop):
 
     q_axial = np.array([
         xb[i11], xb[i12], xb[i13],
-        xb[i21], xb[i22], xb[i23]
+        xb[i21], xb[i22], xb[i23],
     ])
     q_torsion = np.array([
         xb[i14], xb[i15], xb[i16],
-        xb[i24], xb[i25], xb[i26]
+        xb[i24], xb[i25], xb[i26],
     ])
     xyz1 = elem.nodes_ref[0].get_position()
     xyz2 = elem.nodes_ref[1].get_position()
@@ -264,11 +264,11 @@ def _recover_straini_ctube(xb, dof_map, elem, prop):
 
     q_axial = np.array([
         xb[i11], xb[i12], xb[i13],
-        xb[i21], xb[i22], xb[i23]
+        xb[i21], xb[i22], xb[i23],
     ])
     q_torsion = np.array([
         xb[i14], xb[i15], xb[i16],
-        xb[i24], xb[i25], xb[i26]
+        xb[i24], xb[i25], xb[i26],
     ])
     xyz1 = elem.nodes_ref[0].get_position()
     xyz2 = elem.nodes_ref[1].get_position()
@@ -298,7 +298,7 @@ def _recover_strain_bar(f06_file, op2,
                         page_num: int=1, page_stamp='PAGE %s') -> None:
     """recovers static rod strain"""
     neids, irod, eids, strains = get_ieids_eids(model, element_name, eids_str,
-                                                ncols=4, fdtype=fdtype)
+                                                ncols=15, fdtype=fdtype)
     if not neids:
         return neids
 
@@ -307,7 +307,7 @@ def _recover_strain_bar(f06_file, op2,
             elem = model.elements[eid]
             #[s1a, s2a, s3a, s4a, axial, smaxa, smina, MS_tension,
             # s1b, s2b, s3b, s4b,        sminb, sminb, MS_compression] - 15
-            strains[ieid, :] = _recover_straini_cbar(xb, dof_map, elem, elem.pid_ref)
+            strains[ieid, :] = _recover_straini_cbar(model, xb, dof_map, elem, elem.pid_ref)
     else:  # pragma: no cover
         raise NotImplementedError(element_name)
 
@@ -328,7 +328,7 @@ def _recover_strain_bar(f06_file, op2,
                          page_num=page_num, is_mag_phase=False, is_sort1=True)
     return neids
 
-def _recover_straini_cbar(model: BDF, xb, dof_map, elem, prop):
+def _recover_straini_cbar(model: BDF, xb, dof_map, elem: CBAR, prop, fdtype='float64'):
     """get the static bar strain"""
     nid1, nid2 = elem.nodes
 
@@ -340,19 +340,20 @@ def _recover_straini_cbar(model: BDF, xb, dof_map, elem, prop):
         xb[i1:i1+6],
         xb[j1:j1+6],
     ])
-    #q_axial = np.array([
-        #xb[i11], xb[i12], xb[i13],
-        #xb[i21], xb[i22], xb[i23],
-    #])
-    #q_torsion = np.array([
-        #xb[i14], xb[i15], xb[i16],
-        #xb[i24], xb[i25], xb[i26]
-    #])
+    print(len(xb[i1:i1+3],))
+    q_axial = np.hstack([
+        xb[i1:i1+3],
+        xb[j1:j1+3],
+    ])
+    print(q_axial)
+    q_torsion = np.hstack([
+        xb[i1+3:i1+6],
+        xb[j1+3:j1+6],
+    ])
     #{F} = [K]{u}
 
-    elem = model.elements[eid]  # type: CBAR
     nid1, nid2 = elem.nodes
-    is_passed, K = ke_cbar(model, elem, fdtype=fdtype)
+    is_passed, Ke = ke_cbar(model, elem, fdtype=fdtype)
     assert is_passed
 
     pid_ref = elem.pid_ref
@@ -365,13 +366,13 @@ def _recover_straini_cbar(model: BDF, xb, dof_map, elem, prop):
     #mat = prop.mid_ref
     I1 = prop.I11()
     I2 = prop.I22()
-    A = prop.A()
+    A = prop.Area()
     J = prop.J()
     unused_I12 = prop.I12()
 
-    F = K @ q_all
+    Fe = Ke @ q_all
     (Fx1, Fy1, Fz1, Mx1, My1, Mz1,
-    Fx2, Fy2, Fz2, Mx2, My2, Mz2) = F
+    Fx2, Fy2, Fz2, Mx2, My2, Mz2) = Fe
     s_axial = Fx1 / A
     s_torsion = Mx1 / J
 
@@ -389,11 +390,21 @@ def _recover_straini_cbar(model: BDF, xb, dof_map, elem, prop):
     xyz2 = elem.nodes_ref[1].get_position()
     dxyz12 = xyz1 - xyz2
     L = np.linalg.norm(dxyz12)
+    Lambda = lambda1d(dxyz12, debug=False)
+
+    u_axial = Lambda @ q_axial
+    u_torsion = Lambda @ q_torsion
+    du_axial = u_axial[0] - u_axial[1]
+    du_torsion = u_torsion[0] - u_torsion[1]
+
 
     axial = du_axial / L
 
-    MS_tension = np.nan
-    MS_compression = np.nan
+    s1a = s2a = s3a = s4a = np.nan
+    s1b = s2b = s3b = s4b = np.nan
+    smaxa = smina = np.nan
+    smaxb = sminb = np.nan
+    MS_tension = MS_compression = np.nan
     out = (
         s1a, s2a, s3a, s4a, axial, smaxa, smina, MS_tension,
         s1b, s2b, s3b, s4b,        sminb, sminb, MS_compression) # 15

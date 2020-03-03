@@ -852,13 +852,13 @@ class OP2Reader:
             itable -= 1
         markers = self.get_nmarkers(1, rewind=False)
 
-        if not is_geometry or self.read_mode == 1 or b'GEOM1' in self.op2.table_names:
+        if not is_geometry or self.read_mode == 1 or b'GEOM1' in op2.table_names:
             return
         nblocks = len(blocks)
         if nblocks == 1:
             # vectorized
-            ints = np.frombuffer(blocks[0], dtype='int32')
-            floats = np.frombuffer(blocks[0], dtype='float32')
+            ints = np.frombuffer(blocks[0], dtype=op2.idtype8)
+            floats = np.frombuffer(blocks[0], dtype=op2.fdtype8)
             #doubles = np.frombuffer(blocks[1], dtype='float64')
             nints = len(ints)
 

@@ -10,6 +10,7 @@ from pyNastran.op2.tables.geom.geom_common import GeomCommon
 #from pyNastran.bdf.cards.thermal.thermal import (CHBDYE, CHBDYG, CHBDYP, PCONV, PCONVM,
                                                  #PHBDY, CONV, CONVM, RADBC)
 from pyNastran.bdf.cards.thermal.radiation import RADM
+from pyNastran.op2.op2_interface.op2_reader import mapfmt, reshape_bytes_block
 
 
 class MPT(GeomCommon):
@@ -66,10 +67,11 @@ class MPT(GeomCommon):
         """
         CREEP(1003,10,245) - record 1
         """
-        nmaterials = (len(data) - n) // 64
-        s = Struct(self._endian + b'i2f4ifi7f')
+        ntotal = 64 * self.factor
+        nmaterials = (len(data) - n) // ntotal
+        s = Struct(mapfmt(self._endian + b'i2f4ifi7f', self.size))
         for unused_i in range(nmaterials):
-            edata = data[n:n+64]
+            edata = data[n:n+ntotal]
             out = s.unpack(edata)
             #(mid, T0, exp, form, tidkp, tidcp, tidcs, thresh,
              #Type, ag1, ag2, ag3, ag4, ag5, ag6, ag7) = out
@@ -77,7 +79,7 @@ class MPT(GeomCommon):
                 self.binary_debug.write('  CREEP=%s\n' % str(out))
             mat = CREEP.add_op2_data(out)
             self._add_creep_material_object(mat, allow_overwrites=False)
-            n += 64
+            n += ntotal
         self.card_count['CREEP'] = nmaterials
         return n
 
@@ -85,11 +87,11 @@ class MPT(GeomCommon):
         """
         MAT1(103,1,77) - record 2
         """
-        ntotal = 48  # 12*4
-        s = Struct(self._endian + b'i10fi')
+        ntotal = 48 * self.factor  # 12*4
+        s = Struct(mapfmt(self._endian + b'i10fi', self.size))
         nmaterials = (len(data) - n) // ntotal
         for unused_i in range(nmaterials):
-            edata = data[n:n+48]
+            edata = data[n:n+ntotal]
             out = s.unpack(edata)
             #(mid, E, G, nu, rho, A, tref, ge, St, Sc, Ss, mcsid) = out
             mat = MAT1.add_op2_data(out)
@@ -148,10 +150,11 @@ class MPT(GeomCommon):
         """
         MAT3(1403,14,122) - record 4
         """
-        s = Struct(self._endian + b'i8fi5fi')
-        nmaterials = (len(data) - n) // 64
+        ntotal = 64 * self.factor
+        s = Struct(mapfmt(self._endian + b'i8fi5fi', self.size))
+        nmaterials = (len(data) - n) // ntotal
         for unused_i in range(nmaterials):
-            out = s.unpack(data[n:n+64])
+            out = s.unpack(data[n:n+ntotal])
             (mid, ex, eth, ez, nuxth, nuthz, nuzx, rho, gzx,
              blank, ax, ath, az, tref, ge, blank) = out
             if self.is_debug_file:
@@ -159,7 +162,7 @@ class MPT(GeomCommon):
             mat = MAT3.add_op2_data([mid, ex, eth, ez, nuxth, nuthz,
                                      nuzx, rho, gzx, ax, ath, az, tref, ge])
             self.add_op2_material(mat)
-            n += 64
+            n += ntotal
         self.card_count['MAT3'] = nmaterials
         return n
 
@@ -167,14 +170,15 @@ class MPT(GeomCommon):
         """
         MAT4(2103,21,234) - record 5
         """
-        s = Struct(self._endian + b'i10f')
-        nmaterials = (len(data) - n) // 44
+        ntotal = 44 * self.factor
+        s = Struct(mapfmt(self._endian + b'i10f', self.size))
+        nmaterials = (len(data) - n) // ntotal
         for unused_i in range(nmaterials):
-            out = s.unpack(data[n:n+44])
+            out = s.unpack(data[n:n+ntotal])
             #(mid, k, cp, rho, h, mu, hgen, refenth, tch, tdelta, qlat) = out
             mat = MAT4.add_op2_data(out)
             self._add_thermal_material_object(mat, allow_overwrites=False)
-            n += 44
+            n += ntotal
         self.card_count['MAT4'] = nmaterials
         return n
 
@@ -199,15 +203,16 @@ class MPT(GeomCommon):
         """
         MAT8(2503,25,288) - record 7
         """
-        s = Struct(self._endian + b'i18f')
-        nmaterials = (len(data) - n) // 76
+        ntotal = 76 * self.factor
+        s = Struct(mapfmt(self._endian + b'i18f', self.size))
+        nmaterials = (len(data) - n) // ntotal
         for unused_i in range(nmaterials):
-            out = s.unpack(data[n:n+76])
+            out = s.unpack(data[n:n+ntotal])
             #(mid, E1, E2, nu12, G12, G1z, G2z, rho, a1, a2,
             # tref, Xt, Xc, Yt, Yc, S, ge, f12, strn) = out
             mat = MAT8.add_op2_data(out)
             self.add_op2_material(mat)
-            n += 76
+            n += ntotal
         self.card_count['MAT8'] = nmaterials
         return n
 
@@ -306,8 +311,8 @@ class MPT(GeomCommon):
         """
         MAT11(2903,29,371)
         """
-        ntotal = 128  # 23*4
-        struc = Struct(self._endian + b'i 15f 16i')
+        ntotal = 128 * self.factor  # 23*4
+        struc = Struct(mapfmt(self._endian + b'i 15f 16i', self.size))
         nmaterials = (len(data) - n) // ntotal
         assert nmaterials > 0, nmaterials
         for unused_i in range(nmaterials):
@@ -398,13 +403,15 @@ class MPT(GeomCommon):
         End CONTFLG
         """
         nmaterials = 0
-        s1 = Struct(self._endian + b'i7f3i23fi')
-        s2 = Struct(self._endian + b'8i')
+        s1 = Struct(mapfmt(self._endian + b'i7f3i23fi', self.size))
+        s2 = Struct(mapfmt(self._endian + b'8i', self.size))
         n2 = len(data)
+        ntotal1 = 140 * self.factor
+        ntotal2 = 32 * self.factor  # 7*4
         while n < n2:
-            edata = data[n:n+140]
+            edata = data[n:n+ntotal1]
             out1 = s1.unpack(edata)
-            n += 140
+            n += ntotal1
             (mid, a10, a01, d1, rho, alpha, tref, ge, sf, na, nd, kp,
              a20, a11, a02, d2,
              a30, a21, a12, a03, d3,
@@ -425,9 +432,9 @@ class MPT(GeomCommon):
             data_in = [out1]
 
             if continue_flag:
-                edata = data[n:n+32]  # 7*4
+                edata = data[n:n+ntotal2]
                 out2 = s2.unpack(edata)
-                n += 32
+                n += ntotal2
                 #(tab1, tab2, tab3, tab4, x1, x2, x3, tab5) = out2
                 data_in.append(out2)
             mat = MATHP.add_op2_data(data_in)
@@ -444,11 +451,11 @@ class MPT(GeomCommon):
         """
         MATS1(503,5,90) - record 12
         """
-        ntotal = 44  # 11*4
-        s = Struct(self._endian + b'3ifiiff3i')
+        ntotal = 44 * self.factor  # 11*4
+        s = Struct(mapfmt(self._endian + b'3ifiiff3i', self.size))
         nmaterials = (len(data) - n) // ntotal
         for unused_i in range(nmaterials):
-            edata = data[n:n+44]
+            edata = data[n:n+ntotal]
             out = s.unpack(edata)
             (mid, tid, Type, h, yf, hr, limit1, limit2, a, bmat, c) = out
             assert a == 0, a
@@ -467,8 +474,8 @@ class MPT(GeomCommon):
         MATT1(703,7,91)
         checked NX-10.1, MSC-2016
         """
-        s = Struct(self._endian + b'12i')
-        ntotal = 48 # 12*4
+        s = Struct(mapfmt(self._endian + b'12i', self.size))
+        ntotal = 48 *  self.factor # 12*4
         ncards = (len(data) - n) // ntotal
         for unused_i in range(ncards):
             edata = data[n:n + ntotal]
@@ -543,8 +550,8 @@ class MPT(GeomCommon):
         MATT4(2303,23,237)
         checked NX-10.1, MSC-2016
         """
-        struct_7i = Struct(self._endian + b'7i')
-        ntotal = 28 # 7*4
+        struct_7i = Struct(mapfmt(self._endian + b'7i', self.size))
+        ntotal = 28 * self.factor # 7*4
         ncards = (len(data) - n) // ntotal
         for unused_i in range(ncards):
             edata = data[n:n + ntotal]
@@ -702,11 +709,11 @@ class MPT(GeomCommon):
 
     def _read_tstepnl(self, data, n):
         """TSTEPNL(3103,31,337) - record 29"""
-        ntotal = 88  # 19*4
-        s = Struct(self._endian + b'iif5i3f3if3i4f')
+        ntotal = 88 * self.factor  # 19*4
+        s = Struct(mapfmt(self._endian + b'iif5i3f3if3i4f', self.size))
         nentries = (len(data) - n) // ntotal
         for unused_i in range(nentries):
-            edata = data[n:n+88]
+            edata = data[n:n+ntotal]
             out = s.unpack(edata)
             #(sid,ndt,dt,no,kMethod,kStep,maxIter,conv,epsU,epsP,epsW,
             # maxDiv,maxQn,maxLs,fStress,lsTol,maxBisect,adjust,mStep,rb,maxR,uTol,rTolB) = out

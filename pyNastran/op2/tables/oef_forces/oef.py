@@ -3217,12 +3217,12 @@ class OEF(OP2Common):
                     obj.add_sort1(dt, eid, ename, ax, ay, az, vx, vy, vz, pressure)
 
         elif self.format_code in [2, 3] and self.num_wide == 16:  # imag
-            ntotal = 64
+            ntotal = 64 * self.factor
             nelements = ndata // ntotal
             auto_return, is_vectorized = self._create_oes_object4(
                 nelements, result_name, slot, ComplexSolidPressureForceArray)
             if auto_return:
-                return nelements * self.num_wide * 4, None, None
+                return nelements * ntotal, None, None
 
             obj = self.obj
             #if self.is_debug_file:
@@ -3232,15 +3232,15 @@ class OEF(OP2Common):
                 #self.binary_debug.write('  nelements=%i; nnodes=1 # centroid\n' % nelements)
 
             if self.use_vector and is_vectorized and self.sort_method == 1:
-                n = nelements * 4 * self.num_wide
+                n = nelements * ntotal
                 itotal = obj.ielement
                 ielement2 = obj.itotal + nelements
                 itotal2 = ielement2
 
-                floats = frombuffer(data, dtype=self.fdtype).reshape(nelements, 16).copy()
+                floats = frombuffer(data, dtype=self.fdtype8).reshape(nelements, 16).copy()
                 obj._times[obj.itime] = dt
                 if obj.itime == 0:
-                    ints = frombuffer(data, dtype=self.idtype).reshape(nelements, 16)
+                    ints = frombuffer(data, dtype=self.idtype8).reshape(nelements, 16)
                     eids = ints[:, 0] // 10
                     assert eids.min() > 0, eids.min()
                     obj.element[itotal:itotal2] = eids
@@ -3266,14 +3266,18 @@ class OEF(OP2Common):
                 obj.itotal = itotal2
                 obj.ielement = ielement2
             else:
-                s = Struct(self._endian + self._analysis_code_fmt + b'8s13f')
+                if self.size == 4:
+                    s = Struct(self._endian + self._analysis_code_fmt + b'8s 13f')
+                else:
+                    s = Struct(mapfmt(self._endian + self._analysis_code_fmt, self.size) + b'16s 13d')
                 for unused_i in range(nelements):
-                    edata = data[n:n+64]
-                    n += 64
+                    edata = data[n:n+ntotal]
+                    n += ntotal
 
+                    print(len(edata))
                     out = s.unpack(edata)
                     if self.is_debug_file:
-                        self.binary_debug.write('OEF_PentaPressure-%s %s\n' % (self.element_type, str(out)))
+                        self.binary_debug.write('_oef_csolid_pressure-%s %s\n' % (self.element_type, str(out)))
                     (eid_device, ename,
                      axr, ayr, azr, vxr, vyr, vzr, pressure,
                      axi, ayi, azi, vxi, vyi, vzi) = out

@@ -15,6 +15,7 @@ from pyNastran.bdf.cards.loads.loads import LSEQ, SLOAD, RFORCE #, DAREA, RANDPS
 from pyNastran.bdf.cards.thermal.loads import (
     QBDY1, QBDY2, QBDY3, TEMP, TEMPD, TEMPP1, QVOL, QHBDY)
 from pyNastran.op2.tables.geom.geom_common import GeomCommon
+from pyNastran.op2.op2_interface.op2_reader import mapfmt, reshape_bytes_block
 
 
 class GEOM3(GeomCommon):
@@ -216,18 +217,18 @@ class GEOM3(GeomCommon):
         4 N(3) RS Components of a vector coordinate system defined by CID
         7 MB I Bulk Data Section with CID definition: -1=main, 0=partitioned
         """
-        ntotal = 28  # 7*4
-        s = Struct(self._endian + b'ii4fi')
+        ntotal = 28 * self.factor  # 7*4
+        s = Struct(mapfmt(self._endian + b'ii4fi', self.size))
         nentries = (len(data) - n) // ntotal
         for unused_i in range(nentries):
-            edata = data[n:n + 28]
+            edata = data[n:n + ntotal]
             out = s.unpack(edata)
             if self.is_debug_file:
                 self.binary_debug.write('  GRAV=%s\n' % str(out))
             #(sid, cid, a, n1, n2, n3, mb) = out
             grav = GRAV.add_op2_data(out)
             self._add_load_object(grav)
-            n += 28
+            n += ntotal
         self.card_count['GRAV'] = nentries
         return n
 
@@ -236,14 +237,17 @@ class GEOM3(GeomCommon):
         (4551, 61, 84) - the marker for Record 8
         .. todo:: add object
         """
-        ntotal = 16  # 4*4
+        ntotal = 16 * self.factor # 4*4
+        ntotal2 = 8 * self.factor
         nentries = (len(data) - n) // ntotal
         #count = 0
-        struct_i2fi = Struct(self._endian + b'iffi')
-        struct_fi = Struct(self._endian + b'fi')
-        while (len(data) - n) >= 16:
-            edata = data[n:n+16]
-            n += 16
+        struct_i2fi = Struct(mapfmt(self._endian + b'iffi', self.size))
+        struct_fi = Struct(mapfmt(self._endian + b'fi', self.size))
+
+        nentries_actual = 0
+        while (len(data) - n) >= ntotal:
+            edata = data[n:n+ntotal]
+            n += ntotal
             out = struct_i2fi.unpack(edata)
             (sid, s, si, l1) = out
             if self.is_debug_file:
@@ -251,8 +255,8 @@ class GEOM3(GeomCommon):
             Si = [si]
             L1 = [l1]
             while 1:
-                edata = data[n:n+8]
-                n += 8
+                edata = data[n:n+ntotal2]
+                n += ntotal2
                 (si, l1) = struct_fi.unpack(edata)
                 si_test, = self.struct_i.unpack(edata[0:4])
 
@@ -265,10 +269,11 @@ class GEOM3(GeomCommon):
 
             load = LOAD(sid, s, Si, L1)
             self._add_load_combination_object(load)
+            nentries_actual += 1
             #count += 1
             #if count > 1000:
                 #raise RuntimeError('Iteration limit...probably have a bug.')
-        self.card_count['LOAD'] = nentries
+        self.card_count['LOAD'] = nentries_actual
         return n
 
     def _read_loadcyh(self, data, n):
@@ -381,18 +386,18 @@ class GEOM3(GeomCommon):
         """
         PLOAD1(6909, 69, 198) - the marker for Record 17
         """
-        ntotal = 32  # 8*4
-        s = Struct(self._endian + b'4i4f')
+        ntotal = 32 * self.factor  # 8*4
+        s = Struct(mapfmt(self._endian + b'4i4f', self.size))
         nentries = (len(data) - n) // ntotal
         for unused_i in range(nentries):
-            edata = data[n:n + 32]
+            edata = data[n:n + ntotal]
             out = s.unpack(edata)
             if self.is_debug_file:
                 self.binary_debug.write('  PLOAD1=%s\n' % str(out))
             #(sid, eid, load_type, scale, x1, p1, x2, p2) = out
             load = PLOAD1.add_op2_data(out)
             self._add_load_object(load)
-            n += 32
+            n += ntotal
         self.card_count['PLOAD1'] = nentries
         return n
 
@@ -459,13 +464,17 @@ class GEOM3(GeomCommon):
         13 SDRL(2) CHAR4 Load set on element SURF or LINE
         15 LDIR(2) CHAR4 Load direction
         """
-        ntotal = 64  # 16*4
+        ntotal = 64 * self.factor # 16*4
         nentries = (len(data) - n) // ntotal
         assert (len(data) - n) % ntotal == 0
         loads = []
-        s = Struct(self._endian + b'2i 4f 3i 3f 8s 8s')
+        if self.size == 4:
+            s = Struct(self._endian + b'2i 4f 3i 3f 8s 8s')
+        else:
+            s = Struct(self._endian + b'2q 4d 3q 3d 16s 16s')
+
         for unused_i in range(nentries):
-            edata = data[n:n + 64]
+            edata = data[n:n + ntotal]
             out = s.unpack(edata)
             if self.is_debug_file:
                 self.binary_debug.write('  PLOAD4=%s\n' % str(out))
@@ -503,13 +512,13 @@ class GEOM3(GeomCommon):
         9  CID         I Coordinate system identification number
         10 N(3)       RS Components of a vector coordinate system defined by CID
         """
-        ntotal = 48  # 12*4
+        ntotal = 48 * self.factor  # 12*4
         nentries = (len(data) - n) // ntotal
         assert (len(data) - n) % ntotal == 0
         loads = []
-        s = Struct(self._endian + b'2i 4f 3i 3f')
+        s = Struct(mapfmt(self._endian + b'2i 4f 3i 3f', self.size))
         for unused_i in range(nentries):
-            edata = data[n:n + 48]
+            edata = data[n:n + ntotal]
             out = s.unpack(edata)
             if self.is_debug_file:
                 self.binary_debug.write('  PLOAD4=%s\n' % str(out))
@@ -522,7 +531,7 @@ class GEOM3(GeomCommon):
                  cid, [n1, n2, n3], surf_or_line, line_load_dir])
             load.validate()
             loads.append(load)
-            n += 48
+            n += ntotal
         self.card_count['PLOAD4'] = nentries
         return n, loads
 
@@ -537,11 +546,11 @@ class GEOM3(GeomCommon):
         4 G(3)  I Grid point identification numbers
         """
         from pyNastran.bdf.field_writer_16 import print_card_16
-        ntotal = 24  # 6*4
+        ntotal = 24 * self.factor  # 6*4
         nentries = (len(data) - n) // ntotal
-        struc = Struct(self._endian + b'iff3i')
+        struc = Struct(mapfmt(self._endian + b'iff3i', self.size))
         for unused_i in range(nentries):
-            edata = data[n:n + 24]
+            edata = data[n:n + ntotal]
             out = struc.unpack(edata)
             if self.is_debug_file:
                 self.binary_debug.write('  PLOADX=%s\n' % str(out))
@@ -549,7 +558,7 @@ class GEOM3(GeomCommon):
             self.reject_lines.append(print_card_16(fields))
             #load = PLOADX.add_op2_data(out)
             #self._add_load_object(load)
-            n += 28
+            n += ntotal + 28 * self.factor
         self.card_count['PLOADX'] = nentries
         return n
 
@@ -641,11 +650,11 @@ class GEOM3(GeomCommon):
         TEMP(5701,57,27) - the marker for Record 32
         .. warning:: buggy
         """
-        ntotal = 12  # 3*4
+        ntotal = 12 * self.factor # 3*4
         nentries = (len(data) - n) // ntotal
-        struct_2if = Struct(self._endian + b'iif')
+        struct_2if = Struct(mapfmt(self._endian + b'iif', self.size))
         for unused_i in range(nentries):
-            edata = data[n:n + 12]
+            edata = data[n:n + ntotal]
             out = struct_2if.unpack(edata)
             if self.is_debug_file:
                 self.binary_debug.write('  TEMP=%s\n' % str(out))
@@ -655,7 +664,7 @@ class GEOM3(GeomCommon):
                 self._add_thermal_load_object(load)
             else:
                 self.log.debug('TEMP = %s' % (out))
-            n += 12
+            n += ntotal
         self.card_count['TEMP'] = nentries
         return n
 
@@ -664,9 +673,9 @@ class GEOM3(GeomCommon):
         TEMPD(5641,65,98) - the marker for Record 33
         .. todo:: add object
         """
-        ntotal = 8  # 2*4
+        ntotal = 8 * self.factor  # 2*4
         nentries = (len(data) - n) // ntotal
-        struct_if = Struct(self._endian + b'if')
+        struct_if = Struct(mapfmt(self._endian + b'if', self.size))
         for unused_i in range(nentries):
             edata = data[n:n + ntotal]
             out = struct_if.unpack(edata)
@@ -738,9 +747,9 @@ class GEOM3(GeomCommon):
         return n
 
     def _read_rforce(self, data, n):
-        ntotal =  40  # 10*4
+        ntotal =  40 * self.factor  # 10*4
         nentries = (len(data) - n) // ntotal
-        struc = Struct(self._endian + b'3i 4f ifi')
+        struc = Struct(mapfmt(self._endian + b'3i 4f ifi', self.size))
         for unused_i in range(nentries):
             edata = data[n:n + ntotal]
             out = struc.unpack(edata)

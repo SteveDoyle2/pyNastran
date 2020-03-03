@@ -15,6 +15,8 @@ from pyNastran.bdf.cards.coordinate_systems import (
 from pyNastran.bdf.cards.elements.damper import CVISC
 #from pyNastran.bdf.cards.elements.mass import CMASS2
 from pyNastran.op2.tables.geom.geom_common import GeomCommon
+from pyNastran.op2.op2_interface.op2_reader import mapfmt, reshape_bytes_block
+
 
 class GEOM1(GeomCommon):
     """defines methods for reading op2 nodes/coords"""
@@ -103,10 +105,11 @@ class GEOM1(GeomCommon):
         """
         (1701,17,6) - the marker for Record 1
         """
-        struct_6i = Struct(self._endian + b'6i')
-        nentries = (len(data) - n) // 24
+        ntotal = 24 * self.factor  # 6*4
+        struct_6i = Struct(mapfmt(self._endian + b'6i', self.size))
+        nentries = (len(data) - n) // ntotal
         for unused_i in range(nentries):
-            edata = data[n:n + 24]  # 6*4
+            edata = data[n:n + ntotal]
             out = struct_6i.unpack(edata)
             (cid, one, two, g1, g2, g3) = out
             assert one in [1, 2], one
@@ -116,7 +119,7 @@ class GEOM1(GeomCommon):
             data_in = [cid, g1, g2, g3]
             coord = CORD1C.add_op2_data(data_in)
             self._add_coord_object(coord)
-            n += 24
+            n += ntotal
         self.increase_card_count('CORD1C', nentries)
         return n
 
@@ -124,10 +127,11 @@ class GEOM1(GeomCommon):
         """
         (1801,18,5) - the marker for Record 2
         """
-        struct_6i = Struct(self._endian + b'6i')
-        nentries = (len(data) - n) // 24
+        ntotal = 24 * self.factor  # 6*4
+        struct_6i = Struct(mapfmt(self._endian + b'6i', self.size))
+        nentries = (len(data) - n) // ntotal
         for unused_i in range(nentries):
-            edata = data[n:n + 24]  # 6*4
+            edata = data[n:n + ntotal]
             out = struct_6i.unpack(edata)
             (cid, one1, one2, g1, g2, g3) = out
             if self.is_debug_file:
@@ -137,7 +141,7 @@ class GEOM1(GeomCommon):
             data_in = [cid, g1, g2, g3]
             coord = CORD1R.add_op2_data(data_in)
             self._add_coord_object(coord)
-            n += 24
+            n += ntotal
         self.increase_card_count('CORD1R', nentries)
         return n
 
@@ -145,10 +149,11 @@ class GEOM1(GeomCommon):
         """
         (1901,19,7) - the marker for Record 3
         """
-        struct_6i = Struct(self._endian + b'6i')
-        nentries = (len(data) - n) // 24
+        ntotal = 24 * self.factor  # 6*4
+        struct_6i = Struct(mapfmt(self._endian + b'6i', self.size))
+        nentries = (len(data) - n) // ntotal
         for unused_i in range(nentries):
-            edata = data[n:n + 24]  # 6*4
+            edata = data[n:n + ntotal]
             out = struct_6i.unpack(edata)
             (cid, three, one, g1, g2, g3) = out
             if self.is_debug_file:
@@ -158,7 +163,7 @@ class GEOM1(GeomCommon):
             data_in = [cid, g1, g2, g3]
             coord = CORD1S.add_op2_data(data_in)
             self._add_coord_object(coord, allow_overwrites=False)
-            n += 24
+            n += ntotal
         self.increase_card_count('CORD1S', nentries)
         return n
 
@@ -166,10 +171,11 @@ class GEOM1(GeomCommon):
         """
         (2001,20,9) - the marker for Record 4
         """
-        s = Struct(self._endian + b'4i9f')
-        nentries = (len(data) - n) // 52
+        ntotal = 52 * self.factor # 13*4
+        s = Struct(mapfmt(self._endian + b'4i9f', self.size))
+        nentries = (len(data) - n) // ntotal
         for unused_i in range(nentries):
-            edata = data[n:n + 52]  # 13*4
+            edata = data[n:n + ntotal]
             out = s.unpack(edata)
             (cid, two1, two2, rid, a1, a2, a3, b1, b2, b3, c1, c2, c3) = out
             assert two1 == 2, two1
@@ -179,7 +185,7 @@ class GEOM1(GeomCommon):
             if self.is_debug_file:
                 self.binary_debug.write('  CORD2C=%s\n' % str(out))
             self._add_coord_object(coord, allow_overwrites=False)
-            n += 52
+            n += ntotal
         self.increase_card_count('CORD2C', nentries)
         return n
 
@@ -187,10 +193,11 @@ class GEOM1(GeomCommon):
         """
         (2101,21,8) - the marker for Record 5
         """
-        nentries = (len(data) - n) // 52
-        s = Struct(self._endian + b'4i9f')
+        ntotal = 52 * self.factor # 13*4
+        s = Struct(mapfmt(self._endian + b'4i9f', self.size))
+        nentries = (len(data) - n) // ntotal
         for unused_i in range(nentries):
-            edata = data[n:n + 52]  # 13*4
+            edata = data[n:n + ntotal]
             (cid, one, two, rid, a1, a2, a3, b1, b2, b3, c1,
              c2, c3) = s.unpack(edata)
             assert one == 1, one
@@ -202,7 +209,7 @@ class GEOM1(GeomCommon):
                 self.binary_debug.write('  CORD2R=%s\n' % data_in)
             coord = CORD2R.add_op2_data(data_in)
             self._add_coord_object(coord, allow_overwrites=False)
-            n += 52
+            n += ntotal
         self.increase_card_count('CORD2R', nentries)
         return n
 
@@ -210,10 +217,11 @@ class GEOM1(GeomCommon):
         """
         (2201,22,10) - the marker for Record 6
         """
-        s = Struct(self._endian + b'4i9f')
-        nentries = (len(data) - n) // 52
+        ntotal = 52 * self.factor # 13*4
+        s = Struct(mapfmt(self._endian + b'4i9f', self.size))
+        nentries = (len(data) - n) // ntotal
         for unused_i in range(nentries):
-            edata = data[n:n + 52]  # 13*4
+            edata = data[n:n + ntotal]
             out = s.unpack(edata)
             (cid, sixty5, eight, rid, a1, a2, a3, b1, b2, b3, c1, c2, c3) = out
             data_in = [cid, rid, a1, a2, a3, b1, b2, b3, c1, c2, c3]
@@ -221,7 +229,7 @@ class GEOM1(GeomCommon):
                 self.binary_debug.write('  CORD2S=%s\n' % str(out))
             coord = CORD2S.add_op2_data(data_in)
             self._add_coord_object(coord, allow_overwrites=False)
-            n += 52
+            n += ntotal
         self.increase_card_count('CORD2S', nentries)
         return n
 
@@ -370,12 +378,15 @@ class GEOM1(GeomCommon):
         # FEEDGE EDGEID GRID1 GRID2 CIDBC GEOMIN ID1 ID2
         #FEEDGE    1002    6     12
         #self.show_data(data[12:])
-        ntotal = 28  # 7*4
-        s = Struct(self._endian + b'4i 4s 2i') #expected
+        ntotal = 28 * self.factor  # 7*4
+        if self.size == 4:
+            s = Struct(self._endian + b'4i 4s 2i') #expected
+        else:
+            s = Struct(self._endian + b'4q 8s 2q') #expected
         #s = Struct(self._endian + b'7i')
-        nelements = (len(data) - n)// 28  # 7*4
+        nelements = (len(data) - n)// ntotal
         for unused_i in range(nelements):
-            edata = data[n:n+28]
+            edata = data[n:n+ntotal]
             out = s.unpack(edata)
             #print(out)
             edge_id, n1, n2, cid, geomin, geom1, geom2 = out # expected
@@ -383,6 +394,7 @@ class GEOM1(GeomCommon):
             if self.is_debug_file:
                 self.binary_debug.write('  FEEDGE=%s\n' % str(out))
 
+            geomin = geomin.rstrip()
             if geomin == b'POIN':
                 geomin_str = 'POINT'
             elif geomin == b'GMCU':
@@ -406,29 +418,38 @@ class GEOM1(GeomCommon):
         5 CIDBC        I Coordinate system identification number for the constraints
         6 DATA     CHAR4 Geometry evaluator specific data
         """
-        structi = Struct(b'i 8s ii')
-        struct_i = self.struct_i
+        size = self.size
+        if size == 4:
+            struct_i = self.struct_i
+            structi = Struct(b'i 8s ii')
+        else:
+            struct_i = self.struct_q
+            structi = Struct(b'q 16s qq')
+
+        ntotal1 = 20 * self.factor
+        ntotal2 = 64 * self.factor
         while n < len(data):
-            datab = data[n:n+20]
+            datab = data[n:n+ntotal1]
             curve_id, group_bytes, cid_in, cid_bc = structi.unpack(datab)
+            group_bytes = reshape_bytes_block(group_bytes)
             group = group_bytes.decode('latin1').rstrip()
             #print(curve_id, group, cid_in, cid_bc)
             assert group in ['MSCGRP0', 'MSCGRP1', 'MSCGRP2'], f'GMCURV: curve_id={curve_id} group={repr(group)} cid_in={cid_in} cid_bc={cid_bc}'
-            n += 20
+            n += ntotal1
 
-            databi_bytes = data[n:n+4]
-            n += 4
-            databi = data[n:n+4]
+            databi_bytes = data[n:n+size]
+            n += size
+            databi = data[n:n+size]
             datab_int, = struct_i.unpack(databi)
-            n += 4
+            n += size
             while datab_int != -1:
                 databi_bytes += databi
-                databi = data[n:n+4]
+                databi = data[n:n+size]
                 datab_int, = struct_i.unpack(databi)
-                n += 4
+                n += size
             datai = databi_bytes.decode('latin1').rstrip()
 
-            data_split = ['        %s\n' % datai[i:i+64].strip() for i in range(0, len(datai), 64)]
+            data_split = ['        %s\n' % datai[i:i+ntotal2].strip() for i in range(0, len(datai), ntotal2)]
             self.add_gmcurv(curve_id, group, data_split, cid_in=cid_in, cid_bc=cid_bc)
             #print(datai)
 
@@ -504,10 +525,11 @@ class GEOM1(GeomCommon):
         7 MEDIA   I Media format of boundary data of external SE
         8 UNIT    I FORTRAN unit number of OP2 and OP4 input of external SE
         """
-        structi = Struct(self._endian + b'4if3i')
-        nentries = (len(data) - n) // 32 # 4*8
+        ntotal = 32 * self.factor # 4*8
+        nentries = (len(data) - n) // ntotal
+        structi = Struct(mapfmt(self._endian + b'4if3i', self.size))
         for unused_i in range(nentries):
-            edata = data[n:n + 32]  # 4*8
+            edata = data[n:n + ntotal]  # 4*8
             out = structi.unpack(edata)
             (seid, superelement_type, rseid, method, tol, loc, media, unit) = out
             if superelement_type == 1:

@@ -190,7 +190,8 @@ def ke_cbar(model: BDF, elem: CBAR, fdtype: str='float64'):
         [T, z],
         [z, T],
     ])
-    is_passed, (wa, wb, ihat, jhat, khat) = elem.get_axes(model)
+    is_failed, (wa, wb, ihat, jhat, khat) = elem.get_axes(model)
+    assert is_failed is False
     #print(wa, wb)
     xyz1 = elem.nodes_ref[0].get_position() + wa
     xyz2 = elem.nodes_ref[1].get_position() + wb
@@ -210,6 +211,7 @@ def ke_cbar(model: BDF, elem: CBAR, fdtype: str='float64'):
     k2 = pid_ref.k2
     Ke = _beami_stiffness(pid_ref, mat, L, I1, I2, k1=k1, k2=k2)
     K = Teb.T @ Ke @ Teb
+    is_passed = not is_failed
     return is_passed, K
 
 def _build_kbb_crod(model: BDF, Kbb, dof_map: DOF_MAP) -> None:
@@ -354,8 +356,9 @@ def _build_kbb_cbeam(model: BDF, Kbb, dof_map: DOF_MAP,
         L = np.linalg.norm(dxyz)
         pid_ref = elem.pid_ref
         mat = pid_ref.mid_ref
-        is_passed, (wa, wb, ihat, jhat, khat) = elem.get_axes(model)
-        assert is_passed
+        is_failed, (wa, wb, ihat, jhat, khat) = elem.get_axes(model)
+        print(wa, wb, ihat, jhat, khat)
+        assert is_failed is False
         T = np.vstack([ihat, jhat, khat])
         z = np.zeros((3, 3), dtype=fdtype)
         Teb = np.block([

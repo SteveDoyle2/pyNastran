@@ -2,6 +2,7 @@
 defines readers for BDF objects in the OP2 EDOM/EDOMS table
 """
 from pyNastran.op2.tables.geom.geom_common import GeomCommon
+from pyNastran.op2.op2_interface.op2_reader import mapfmt, reshape_bytes_block
 
 
 class EDOM(GeomCommon):
@@ -88,9 +89,14 @@ class EDOM(GeomCommon):
         8 DDVAL    I     ID of a DDVAL entry that provides a set of allowable
                          discrete values
         """
-        ntotal = 32  # 8*4
         from struct import Struct
-        s = Struct(self._endian + b'i8s ffff i')
+        if self.size == 4:
+            ntotal = 32  # 8*4
+            s = Struct(self._endian + b'i8s ffff i')
+        else:
+            ntotal = 64
+            s = Struct(self._endian + b'q16s dddd q')
+
         ncards = (len(data) - n) // ntotal
         for unused_i in range(ncards):
             edata = data[n:n + ntotal]

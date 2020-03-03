@@ -595,6 +595,7 @@ class PSOLID(Property):
         else:  # pragma: no cover
             raise NotImplementedError('isop=%s and must be [0, 1, 2]' % isop)
 
+        fctn = fctn.rstrip()
         if fctn == 'SMEC':
             fctn = 'SMECH'
         elif fctn == 'PFLU':
