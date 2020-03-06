@@ -121,7 +121,7 @@ def _build_kbbi_celas34(Kbb, dof_map: DOF_MAP,
                         elem: Union[CELAS3, CELAS4], ki: float) -> None:
     """fill the CELASx Kbb matrix"""
     nid1, nid2 = elem.nodes
-    print(dof_map)
+    #print(dof_map)
     i = dof_map[(nid1, 0)]
     j = dof_map[(nid2, 0)]
     k = ki * np.array([[1, -1,],
@@ -161,9 +161,9 @@ def _build_kbb_cbar(model, Kbb, dof_map: DOF_MAP, fdtype: str='float64') -> int:
             i2 + 1, i2 + 2,
             i2 + 3, i2 + 4, i2 + 5,
         ]
-        for i1 in n_ijv:
-            for i2 in n_ijv:
-                ki = K[i1, i2]
+        for i, i1 in enumerate(n_ijv):
+            for j, i2 in enumerate(n_ijv):
+                ki = K[i, j]
                 if abs(ki) > 0.:
                     Kbb[i1, i2] += ki
     return nelements
@@ -181,6 +181,8 @@ def ke_cbar(model: BDF, elem: CBAR, fdtype: str='float64'):
     I1 = prop.I11()
     I2 = prop.I22()
     unused_I12 = prop.I12()
+    pa = elem.pa
+    pb = elem.pb
     #J = prop.J()
     #E = mat.E()
     #G = mat.G()
@@ -209,7 +211,7 @@ def ke_cbar(model: BDF, elem: CBAR, fdtype: str='float64'):
     ])
     k1 = pid_ref.k1
     k2 = pid_ref.k2
-    Ke = _beami_stiffness(pid_ref, mat, L, I1, I2, k1=k1, k2=k2)
+    Ke = _beami_stiffness(pid_ref, mat, L, I1, I2, k1=k1, k2=k2, pa=pa, pb=pb)
     K = Teb.T @ Ke @ Teb
     is_passed = not is_failed
     return is_passed, K
@@ -280,14 +282,17 @@ def _build_kbbi_conrod_crod(Kbb, dof_map: DOF_MAP, elem, mat, fdtype='float64') 
     nki, nkj = K.shape
     K2 = np.zeros((nki*2, nkj*2), dtype=fdtype)
 
+    ni1 = dof_map[(nid1, 1)]
+    nj1 = dof_map[(nid2, 1)]
+
     i1 = 0
     i2 = 3 # dof_map[(n1, 2)]
     if k_torsion == 0.0: # axial; 2D or 3D
         K2 = K * k_axial
         n_ijv = [
             # axial
-            dof_map[(nid1, 1)], dof_map[(nid1, 2)], dof_map[(nid1, 3)],
-            dof_map[(nid2, 1)], dof_map[(nid2, 2)], dof_map[(nid2, 3)],
+            ni1, ni1 + 1, ni1 + 2,  # node 1
+            nj1, nj1 + 1, nj1 + 2,  # node 2
         ]
         dofs = np.array([
             i1, i1+1, i1+2,
@@ -297,8 +302,8 @@ def _build_kbbi_conrod_crod(Kbb, dof_map: DOF_MAP, elem, mat, fdtype='float64') 
         K2 = K * k_torsion
         n_ijv = [
             # torsion
-            dof_map[(nid1, 4)], dof_map[(nid1, 5)], dof_map[(nid1, 6)],
-            dof_map[(nid2, 4)], dof_map[(nid2, 5)], dof_map[(nid2, 6)],
+            ni1 + 3, ni1 + 4, ni1 + 5,  # node 1
+            nj1 + 3, nj1 + 4, nj1 + 5,  # node 2
         ]
         dofs = np.array([
             i1, i1+1, i1+2,
@@ -320,12 +325,12 @@ def _build_kbbi_conrod_crod(Kbb, dof_map: DOF_MAP, elem, mat, fdtype='float64') 
         ], dtype='int32')
         n_ijv = [
             # axial
-            dof_map[(nid1, 1)], dof_map[(nid1, 2)], dof_map[(nid1, 3)],
-            dof_map[(nid2, 1)], dof_map[(nid2, 2)], dof_map[(nid2, 3)],
+            ni1, ni1 + 1, ni1 + 2,  # node 1
+            nj1, nj1 + 1, nj1 + 2,  # node 2
 
             # torsion
-            dof_map[(nid1, 4)], dof_map[(nid1, 5)], dof_map[(nid1, 6)],
-            dof_map[(nid2, 4)], dof_map[(nid2, 5)], dof_map[(nid2, 6)],
+            ni1 + 3, ni1 + 4, ni1 + 5,  # node 1
+            nj1 + 3, nj1 + 4, nj1 + 5,  # node 2
         ]
     for dof1, i1 in zip(dofs, n_ijv):
         for dof2, i2 in zip(dofs, n_ijv):
@@ -357,7 +362,7 @@ def _build_kbb_cbeam(model: BDF, Kbb, dof_map: DOF_MAP,
         pid_ref = elem.pid_ref
         mat = pid_ref.mid_ref
         is_failed, (wa, wb, ihat, jhat, khat) = elem.get_axes(model)
-        print(wa, wb, ihat, jhat, khat)
+        #print(wa, wb, ihat, jhat, khat)
         assert is_failed is False
         T = np.vstack([ihat, jhat, khat])
         z = np.zeros((3, 3), dtype=fdtype)
@@ -371,18 +376,19 @@ def _build_kbb_cbeam(model: BDF, Kbb, dof_map: DOF_MAP,
         Iz = pid_ref.I22()
         k1 = pid_ref.k1
         k2 = pid_ref.k2
-        Ke = _beami_stiffness(pid_ref, mat, L, Iy, Iz, k1=k1, k2=k2)
+        pa = elem.pa
+        pb = elem.pb
+        Ke = _beami_stiffness(pid_ref, mat, L, Iy, Iz, pa, pb, k1=k1, k2=k2)
         K = Teb.T @ Ke @ Teb
+        i1 = dof_map[(nid1, 1)]
+        j1 = dof_map[(nid2, 1)]
         n_ijv = [
-            dof_map[(nid1, 1)], dof_map[(nid1, 2)], dof_map[(nid1, 3)],
-            dof_map[(nid1, 4)], dof_map[(nid1, 5)], dof_map[(nid1, 6)],
-
-            dof_map[(nid2, 1)], dof_map[(nid2, 2)], dof_map[(nid2, 3)],
-            dof_map[(nid2, 4)], dof_map[(nid2, 5)], dof_map[(nid2, 6)],
+            i1, i1 + 1, i1 + 2, i1 + 3, i1 + 4, i1 + 5, # node 1
+            j1, j1 + 1, j1 + 2, j1 + 3, j1 + 4, j1 + 5, # node 2
         ]
-        for i1 in n_ijv:
-            for i2 in n_ijv:
-                ki = K[i1, i2]
+        for i, i1 in enumerate(n_ijv):
+            for j, i2 in enumerate(n_ijv):
+                ki = K[i, j]
                 if abs(ki) > 0.:
                     Kbb[i1, i2] += ki
     return nelements
@@ -390,6 +396,7 @@ def _build_kbb_cbeam(model: BDF, Kbb, dof_map: DOF_MAP,
 def _beami_stiffness(prop: Union[PBAR, PBARL, PBEAM, PBEAML],
                      mat: MAT1,
                      L: float, Iy: float, Iz: float,
+                     pa: int, pb: int,
                      k1: Optional[float]=None,
                      k2: Optional[float]=None):
     """gets the ith Euler-Bernoulli beam stiffness"""
@@ -460,4 +467,17 @@ def _beami_stiffness(prop: Union[PBAR, PBARL, PBEAM, PBEAML],
     K[4, 8] = K[8, 4] = K[8, 10] = K[10, 8] = -6. * L * ky
     K[4, 10] = K[10, 4] = 2. * L * L * ky * (2. - phiy)
     K[4, 4] = K[10, 10] = 4. * L * L * ky * (4. + phiy)
+
+    if pa != 0:
+        assert pa > 0
+        for pas in str(pa): # 123456
+            pai = int(pas) - 1 # 012345 (0-5)
+            K[pai, :] = 0
+            K[:, pai] = 0
+    if pb != 0:
+        assert pb > 0
+        for pbs in str(pb): # 123456
+            pbi = int(pbs) + 5 #  (6 - 11)
+            K[pbi, :] = 0
+            K[:, pbi] = 0
     return K

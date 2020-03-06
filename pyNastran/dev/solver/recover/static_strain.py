@@ -2,6 +2,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 import numpy as np
 
+from pyNastran.nptyping import NDArrayNfloat
 from pyNastran.dev.solver.utils import lambda1d, get_ieids_eids
 from pyNastran.dev.solver.build_stiffness import ke_cbar
 from pyNastran.op2.op2_interface.hdf5_interface import (
@@ -9,7 +10,7 @@ from pyNastran.op2.op2_interface.hdf5_interface import (
     RealBarStrainArray,
 )
 if TYPE_CHECKING:  # pragma: no cover
-    from pyNastran.bdf.bdf import BDF
+    from pyNastran.bdf.bdf import BDF, CBAR, PBAR, PBARL
 
 
 def recover_strain_101(f06_file, op2,
@@ -328,7 +329,9 @@ def _recover_strain_bar(f06_file, op2,
                          page_num=page_num, is_mag_phase=False, is_sort1=True)
     return neids
 
-def _recover_straini_cbar(model: BDF, xb, dof_map, elem: CBAR, prop, fdtype='float64'):
+def _recover_straini_cbar(model: BDF, xb: NDArrayNfloat,
+                          dof_map,
+                          elem: CBAR, prop: Union[PBAR, PBARL], fdtype='float64'):
     """get the static bar strain"""
     nid1, nid2 = elem.nodes
 
@@ -400,10 +403,73 @@ def _recover_straini_cbar(model: BDF, xb, dof_map, elem: CBAR, prop, fdtype='flo
 
     axial = du_axial / L
 
-    s1a = s2a = s3a = s4a = np.nan
-    s1b = s2b = s3b = s4b = np.nan
-    smaxa = smina = np.nan
-    smaxb = sminb = np.nan
+    # cdef = prop.get_cdef()
+    if prop.type == 'PBARL':
+        # these axes are backwards...
+        #     ^ y
+        # +---|---+
+        # |   |   |
+        # |   +------> z
+        # |       |
+        # +-------+
+        if prop.Type in ['ROD', 'TUBE']:
+            R = prop.dims[0]
+            cdef = np.array([
+                [R, 0.],
+                [0., R],
+                [-R, 0.],
+                [0., -R],
+            ], dtype='float64')
+        elif prop.Type in ['BAR', 'BOX']:
+            height, width = prop.dims
+            cdef = np.array([
+                [width, height],
+                [width, -height],
+                [-width, -height],
+                [-width, height],
+            ], dtype='float64') / 2.
+        else:
+            raise NotImplementedError(prop.Type)
+    elif prop.type == 'PBAR':
+        cdef = np.array([
+                [prop.c1, prop.c2],
+                [prop.d1, prop.d2],
+                [prop.e1, prop.e2],
+                [prop.f1, prop.f2],
+            ], dtype='float64')
+    else:
+        raise NotImplementedError(prop.get_stats())
+    model.log.info(f'cdef: {cdef}\n')
+
+    Iy = I1
+    Iz = I2
+    G = mat.G()
+    E = mat.E()
+    strains = []
+    for (T, My, Mz) in [(Mx1, My1, Mz1), (Mx2, My2, Mz2)]:
+        for yz in cdef:
+            y, z = yz
+            radius = np.linalg.norm(yz)
+            unused_torsional_stress = (T * radius) / J
+            unused_phi = (T * L) / (G * J)
+
+            stress = My * y / Iy + Mz * z / Iy
+            strain = stress / E
+            strains.append(strain)
+
+    s1a = strains[0]
+    s2a = strains[1]
+    s3a = strains[2]
+    s4a = strains[3]
+    s1b = strains[4]
+    s2b = strains[5]
+    s3b = strains[6]
+    s4b = strains[7]
+    smaxa = max(s1a, s2a, s3a, s4a)
+    smaxb = max(s1b, s2b, s3b, s4b)
+
+    smina = min(s1a, s2a, s3a, s4a)
+    sminb = min(s1b, s2b, s3b, s4b)
     MS_tension = MS_compression = np.nan
     out = (
         s1a, s2a, s3a, s4a, axial, smaxa, smina, MS_tension,

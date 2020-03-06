@@ -431,7 +431,8 @@ class GEOM1(GeomCommon):
         while n < len(data):
             datab = data[n:n+ntotal1]
             curve_id, group_bytes, cid_in, cid_bc = structi.unpack(datab)
-            group_bytes = reshape_bytes_block(group_bytes)
+            if size == 8:
+                group_bytes = reshape_bytes_block(group_bytes)
             group = group_bytes.decode('latin1').rstrip()
             #print(curve_id, group, cid_in, cid_bc)
             assert group in ['MSCGRP0', 'MSCGRP1', 'MSCGRP2'], f'GMCURV: curve_id={curve_id} group={repr(group)} cid_in={cid_in} cid_bc={cid_bc}'

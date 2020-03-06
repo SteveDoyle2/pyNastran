@@ -1358,17 +1358,15 @@ class TestOP2(Tester):
         #save_load_deck(model, run_save_load=False)
 
         log = get_logger(level='warning')
-        with self.assertRaises(FortranMarkerError):
-            run_op2(op2_filename, make_geom=False, write_bdf=True, read_bdf=False,
-                    write_f06=True, write_op2=False,
-                    is_mag_phase=False,
-                    is_sort2=False, is_nx=None, delete_f06=True,
-                    subcases=None, exclude=None, short_stats=False,
-                    compare=False, debug=False, binary_debug=True,
-                    quiet=True,
-                    stop_on_failure=True, dev=False,
-                    build_pandas=False, log=log)
-        log.error('failed parsing 64-bit OP2')
+        run_op2(op2_filename, make_geom=False, write_bdf=False, read_bdf=False,
+                write_f06=True, write_op2=False,
+                is_mag_phase=False,
+                is_sort2=False, is_nx=None, delete_f06=True,
+                subcases=None, exclude=None, short_stats=False,
+                compare=False, debug=False, binary_debug=True,
+                quiet=True,
+                stop_on_failure=True, dev=False,
+                build_pandas=False, log=log)
 
     def test_op2_nasa_nastran_01(self):
         """checks sdr11se_s2dc.bdf, which tests ComplexCBushStressArray"""

@@ -6469,21 +6469,21 @@ class OES(OP2Common):
             else:
                 obj_complex = ComplexCBushStrainArray
 
-            ntotal = 52 # 4*13
+            ntotal = 52 * self.factor  # 4*13
             nelements = ndata // ntotal
             auto_return, is_vectorized = self._create_oes_object4(
                 nelements, result_name, slot, obj_complex)
             if auto_return:
-                return nelements * self.num_wide * 4, None, None
+                return nelements * ntotal, None, None
 
             obj = self.obj
             if self.use_vector and is_vectorized and self.sort_method == 1:
-                n = nelements * 4 * self.num_wide
+                n = nelements * ntotal
                 itotal = obj.ielement
                 ielement2 = obj.itotal + nelements
                 itotal2 = ielement2
 
-                floats = frombuffer(data, dtype=self.fdtype).reshape(nelements, 13).copy()
+                floats = frombuffer(data, dtype=self.fdtype8).reshape(nelements, 13).copy()
                 obj._times[obj.itime] = dt
                 self.obj_set_element(obj, itotal, itotal2, data, nelements)
 

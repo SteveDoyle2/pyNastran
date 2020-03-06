@@ -560,6 +560,8 @@ class TestBar(unittest.TestCase):
         model.bdf_filename = 'cbar.bdf'
         model.add_grid(1, [0., 0., 0.])
         model.add_grid(2, [1., 0., 0.])
+        L = 1.0
+
         nids = [1, 2]
         eid = 1
         pid = 2
@@ -574,8 +576,11 @@ class TestBar(unittest.TestCase):
         g0 = None
         model.add_cbar(eid, pid, nids, x, g0,
                        offt='GGG', pa=0, pb=0, wa=None, wb=None, comment='')
+
+        A = 1.
+        k_axial = A * E / L
         model.add_pbar(pid, mid,
-                       A=1., i1=1., i2=1., i12=1., j=1.,
+                       A=A, i1=1., i2=1., i12=1., j=1.,
                        nsm=0.,
                        c1=0., c2=0., d1=0., d2=0.,
                        e1=0., e2=0., f1=0., f2=0.,
@@ -594,12 +599,73 @@ class TestBar(unittest.TestCase):
         solver = Solver(model)
         solver.run()
 
+        # F = kx
+        fmag = 1.0
+        dx = fmag / k_axial
+        assert dx == solver.xg[6], f'dx={dx} xg={xg}'
+
+    def test_cbar2(self):
+        """Tests a CBAR/PBAR"""
+        model = BDF(debug=True, log=None, mode='msc')
+        model.bdf_filename = 'cbar.bdf'
+        model.add_grid(1, [0., 0., 0.])
+        model.add_grid(2, [0.5, 0., 0.])
+        model.add_grid(3, [1., 0., 0.])
+        L = 1.0
+        pid = 2
+        mid = 3
+        E = 3.0e7
+        G = None
+        nu = 0.3
+        model.add_mat1(mid, E, G, nu, rho=0.0, a=0.0, tref=0.0, ge=0.0, St=0.0,
+                       Sc=0.0, Ss=0.0, mcsid=0)
+
+        eid = 1
+        x = [0., 1., 0.]
+        g0 = None
+        nids = [1, 2]
+        model.add_cbar(eid, pid, nids, x, g0,
+                       offt='GGG', pa=0, pb=0, wa=None, wb=None, comment='')
+
+        eid = 2
+        nids = [2, 3]
+        model.add_cbar(eid, pid, nids, x, g0,
+                       offt='GGG', pa=0, pb=0, wa=None, wb=None, comment='')
+
+        A = 1.
+        k_axial = A * E / L
+        model.add_pbar(pid, mid,
+                       A=A, i1=1., i2=1., i12=1., j=1.,
+                       nsm=0.,
+                       c1=0., c2=0., d1=0., d2=0.,
+                       e1=0., e2=0., f1=0., f2=0.,
+                       k1=1.e8, k2=1.e8, comment='')
+        load_id = 2
+        spc_id = 3
+        nid = 3
+        mag = 1.
+        fxyz = [1., 0., 0.]
+        model.add_force(load_id, nid, mag, fxyz, cid=0)
+
+        components = 123456
+        nodes = 1
+        model.add_spc1(spc_id, components, nodes, comment='')
+        setup_case_control(model)
+        solver = Solver(model)
+        solver.run()
+
+        # F = kx
+        fmag = 1.0
+        dx = fmag / k_axial
+        assert dx == solver.xg[6*2], f'dx={dx} xg={xg}'
+
     def test_cbeam(self):
         """Tests a CBEAM/PBEAM"""
         model = BDF(debug=True, log=None, mode='msc')
         model.bdf_filename = 'cbeam.bdf'
         model.add_grid(1, [0., 0., 0.])
         model.add_grid(2, [1., 0., 0.])
+        L = 1.0
         nids = [1, 2]
         eid = 1
         pid = 2
@@ -619,6 +685,7 @@ class TestBar(unittest.TestCase):
         #dims = [[1., 2.]]
         #model.add_pbeaml(pid, mid, beam_type, xxb, dims,
                          #so=None, nsm=None, group='MSCBML0', comment='')
+        A = 1.0
         so = ['YES']
         area = [1.0]
         i1 = [1.]
@@ -643,6 +710,83 @@ class TestBar(unittest.TestCase):
         setup_case_control(model)
         solver = Solver(model)
         solver.run()
+
+        # F = kx
+        k_axial = A * E / L
+        fmag = 1.0
+        dx = fmag / k_axial
+        assert dx == solver.xg[6], f'dx={dx} xg={xg}'
+
+
+    def test_cbeam2(self):
+        """Tests a CBEAM/PBEAM"""
+        model = BDF(debug=True, log=None, mode='msc')
+        model.bdf_filename = 'cbeam.bdf'
+        model.add_grid(1, [0., 0., 0.])
+        model.add_grid(2, [.5, 0., 0.])
+        model.add_grid(3, [1., 0., 0.])
+        L = 1.0
+        pid = 2
+        mid = 3
+        E = 3.0e7
+        G = None
+        nu = 0.3
+        model.add_mat1(mid, E, G, nu, rho=0.0, a=0.0, tref=0.0, ge=0.0, St=0.0,
+                       Sc=0.0, Ss=0.0, mcsid=0)
+
+        eid = 1
+        nids = [1, 2]
+        x = [0., 1., 0.]
+        g0 = None
+        model.add_cbeam(eid, pid, nids, x, g0, offt='GGG', bit=None,
+                        pa=0, pb=0, wa=None, wb=None, sa=0, sb=0, comment='')
+
+        eid = 2
+        nids = [2, 3]
+        x = [0., 1., 0.]
+        g0 = None
+        model.add_cbeam(eid, pid, nids, x, g0, offt='GGG', bit=None,
+                        pa=0, pb=0, wa=None, wb=None, sa=0, sb=0, comment='')
+
+
+        #beam_type = 'BAR'
+        xxb = [0.]
+        #dims = [[1., 2.]]
+        #model.add_pbeaml(pid, mid, beam_type, xxb, dims,
+                         #so=None, nsm=None, group='MSCBML0', comment='')
+        A = 1.0
+        so = ['YES']
+        area = [1.0]
+        i1 = [1.]
+        i2 = [2.]
+        i12 = [0.]
+        j = [2.]
+        model.add_pbeam(pid, mid, xxb, so, area, i1, i2, i12, j, nsm=None,
+                        c1=None, c2=None, d1=None, d2=None, e1=None, e2=None, f1=None, f2=None,
+                        k1=1., k2=1., s1=0., s2=0., nsia=0., nsib=None, cwa=0., cwb=None,
+                        m1a=0., m2a=0., m1b=None, m2b=None, n1a=0., n2a=0., n1b=None, n2b=None,
+                        comment='')
+        load_id = 2
+        spc_id = 3
+        nid = 3
+        mag = 1.
+        fxyz = [1., 0., 0.]
+        model.add_force(load_id, nid, mag, fxyz, cid=0)
+
+        components = 123456
+        nodes = 1
+        model.add_spc1(spc_id, components, nodes, comment='')
+        setup_case_control(model)
+        solver = Solver(model)
+        solver.run()
+
+        # F = kx
+        k_axial = A * E / L
+        fmag = 1.0
+        dx = fmag / k_axial
+        assert dx == solver.xg[6*2], f'dx={dx} xg={xg}'
+
+
 
 def setup_case_control(model, extra_case_lines=None):
     lines = [
@@ -798,7 +942,7 @@ class TestShell(unittest.TestCase):
         solver = Solver(model)
         #with self.assertRaises(RuntimeError):
         solver.run()
-        print('total_mass =', mass * 5)
+        #print('total_mass =', mass * 5)
         #os.remove(model.bdf_filename)
         #os.remove(solver.f06_filename)
         #os.remove(solver.op2_filename)
