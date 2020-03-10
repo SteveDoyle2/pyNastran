@@ -547,12 +547,13 @@ class WriteMesh(BDFAttributes):
         size, is_long_ids = self._write_mesh_long_ids_size(size, is_long_ids)
         if len(self.coords) > 1:
             bdf_file.write('$COORDS\n')
-        for (unused_id, coord) in sorted(self.coords.items()):
-            if unused_id != 0:
-                try:
-                    bdf_file.write(coord.write_card(size, is_double))
-                except RuntimeError:
-                    bdf_file.write(coord.write_card(16, is_double))
+        for (coord_id, coord) in sorted(self.coords.items()):
+            if coord_id == 0:
+                continue
+            try:
+                bdf_file.write(coord.write_card(size, is_double))
+            except RuntimeError:
+                bdf_file.write(coord.write_card_16(is_double))
 
     def _write_dmigs(self, bdf_file: Any, size: int=8, is_double: bool=False,
                      is_long_ids: Optional[bool]=None) -> None:
@@ -643,14 +644,26 @@ class WriteMesh(BDFAttributes):
                         print('failed printing load...type=%s key=%r'
                               % (load_combination.type, key))
                         raise
-            for (key, loadcase) in sorted(self.loads.items()):
-                for load in loadcase:
-                    try:
-                        bdf_file.write(load.write_card(size, is_double))
-                    except:
-                        print('failed printing load...type=%s key=%r'
-                              % (load.type, key))
-                        raise
+
+            if is_long_ids:
+                for (key, loadcase) in sorted(self.loads.items()):
+                    for load in loadcase:
+                        try:
+                            bdf_file.write(load.write_card_16(is_double))
+                        except:
+                            print('failed printing load...type=%s key=%r'
+                                  % (load.type, key))
+                            raise
+            else:
+                for (key, loadcase) in sorted(self.loads.items()):
+                    for load in loadcase:
+                        try:
+                            bdf_file.write(load.write_card(size, is_double))
+                        except:
+                            print('failed printing load...type=%s key=%r'
+                                  % (load.type, key))
+                            raise
+
             for unused_key, tempd in sorted(self.tempds.items()):
                 bdf_file.write(tempd.write_card(size, is_double))
             for unused_key, cyjoin in sorted(self.cyjoin.items()):
@@ -795,12 +808,7 @@ class WriteMesh(BDFAttributes):
             bdf_file.write('$NODES\n')
             if self.grdset:
                 bdf_file.write(self.grdset.write_card(size))
-            if is_long_ids:
-                for (unused_nid, node) in sorted(self.nodes.items()):
-                    bdf_file.write(node.write_card_16(is_double))
-            else:
-                for (unused_nid, node) in sorted(self.nodes.items()):
-                    bdf_file.write(node.write_card(size, is_double))
+            _write_dict(bdf_file, self.nodes, size, is_double, is_long_ids)
 
     #def _write_nodes_associated(self, bdf_file, size=8, is_double=False):
         #"""
@@ -1076,8 +1084,7 @@ class WriteMesh(BDFAttributes):
                         raise
         if self.plotels:
             bdf_file.write('$PLOT ELEMENTS\n')
-            for (eid, element) in sorted(self.plotels.items()):
-                bdf_file.write(element.write_card(size, is_double))
+            _write_dict(bdf_file, self.plotels, size, is_double, is_long_ids)
 
     def _write_sets(self, bdf_file: Any, size: int=8, is_double: bool=False,
                     is_long_ids: Optional[bool]=None) -> None:
@@ -1222,3 +1229,12 @@ class WriteMesh(BDFAttributes):
             bdf_file.write('$THERMAL MATERIALS\n')
             for (unused_mid, material) in sorted(self.thermal_materials.items()):
                 bdf_file.write(material.write_card(size, is_double))
+
+def _write_dict(bdf_file, my_dict: Dict[int, Any], size: int, is_double: bool, is_long_ids: bool) -> None:
+    """writes a dictionary that may require long format"""
+    if is_long_ids:
+        for (unused_nid, node) in sorted(my_dict.items()):
+            bdf_file.write(node.write_card_16(is_double))
+    else:
+        for (unused_nid, node) in sorted(my_dict.items()):
+            bdf_file.write(node.write_card(size, is_double))

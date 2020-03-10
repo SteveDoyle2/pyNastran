@@ -520,8 +520,9 @@ class DCONSTR(OptConstraint):
             unique optimization id
         dresp_id : int
             DRESP1/2 id
-        lid / uid=-1.e20 / 1.e20
-            lower/upper bound
+        lid / uid : int/float; default=-1.e20 / 1.e20
+            int: f(ω) defined by TABLED1-4
+            float: lower/upper bound
         lowfq / highfq : float; default=0. / 1.e20
             lower/upper end of the frequency range
         comment : str; default=''

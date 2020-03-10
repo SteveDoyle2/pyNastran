@@ -27,7 +27,8 @@ from pyNastran.bdf.mesh_utils.loads import _get_dof_map, get_ndof
 from .recover.static_force import recover_force_101
 from .recover.static_stress import recover_stress_101
 from .recover.static_strain import recover_strain_101
-from .build_stiffness import build_Kbb, DOF_MAP
+from .recover.utils import get_plot_request
+from .build_stiffness import build_Kgg, DOF_MAP, Kbb_to_Kgg
 
 
 class Solver:
@@ -446,7 +447,9 @@ class Solver:
         ngrid, ndof_per_grid, ndof = get_ndof(model, subcase)
 
         gset_b = ps_to_sg_set(ndof, ps)
-        Kbb = build_Kbb(model, dof_map, ndof, fdtype=fdtype)
+        Kgg = build_Kgg(model, dof_map,
+                        ndof, ngrid, ndof_per_grid,
+                        idtype='int32', fdtype=fdtype)
         Mbb = build_Mbb(model, subcase, dof_map, ndof, fdtype=fdtype)
         #print(self.op2.grid_point_weight)
         reference_point, MO = grid_point_weight(model, Mbb, dof_map, ndof)
@@ -460,10 +463,8 @@ class Solver:
 
         self.get_mpc_constraints(subcase, dof_map)
 
-        #Kgg = Kbb_to_Kgg(model, Kbb, ngrid, ndof_per_grid, inplace=False)
-        Kgg = Kbb_to_Kgg(model, Kbb, ngrid, ndof_per_grid)
         Mgg = Kbb_to_Kgg(model, Mbb, ngrid, ndof_per_grid, inplace=False)
-        del Kbb, Mbb, Mgg
+        del Mbb, Mgg
 
         gset = np.arange(ndof, dtype=idtype)
         #gset_b = np.ones(ndof, dtype='bool')
@@ -694,16 +695,16 @@ class Solver:
         op2 = self.op2
         page_stamp += '\n'
         if 'FORCE' in subcase:
-            recover_force_101(f06_file, op2, self.model, dof_map, isubcase, xb,
+            recover_force_101(f06_file, op2, self.model, dof_map, subcase, xb,
                               title=title, subtitle=subtitle, label=label,
                               page_stamp=page_stamp)
 
         if 'STRAIN' in subcase:
-            recover_strain_101(f06_file, op2, self.model, dof_map, isubcase, xb,
+            recover_strain_101(f06_file, op2, self.model, dof_map, subcase, xb,
                                title=title, subtitle=subtitle, label=label,
                                page_stamp=page_stamp)
         if 'STRESS' in subcase:
-            recover_stress_101(f06_file, op2, self.model, dof_map, isubcase, xb,
+            recover_stress_101(f06_file, op2, self.model, dof_map, subcase, xb,
                                title=title, subtitle=subtitle, label=label,
                                page_stamp=page_stamp)
         #Fg[sz_set] = -1
@@ -727,7 +728,7 @@ class Solver:
             f06_file,
             subcase, itime, ntimes,
             node_gridtype, xg,
-            RealDisplacementArray, f06_request_name, table_name,
+            RealDisplacementArray, f06_request_name, table_name, self.op2.displacements,
             ngrid, ndof_per_grid,
             title=title, subtitle=subtitle, label=label,
             fdtype=fdtype, page_num=page_num, page_stamp=page_stamp)
@@ -747,7 +748,7 @@ class Solver:
             f06_file,
             subcase, itime, ntimes,
             node_gridtype, fspc,
-            RealSPCForcesArray, f06_request_name, table_name,
+            RealSPCForcesArray, f06_request_name, table_name, self.op2.spc_forces,
             ngrid, ndof_per_grid,
             title=title, subtitle=subtitle, label=label,
             fdtype=fdtype, page_num=page_num, page_stamp=page_stamp)
@@ -768,7 +769,7 @@ class Solver:
             f06_file,
             subcase, itime, ntimes,
             node_gridtype, Fg,
-            RealLoadVectorArray, f06_request_name, table_name,
+            RealLoadVectorArray, f06_request_name, table_name, self.op2.load_vectors,
             ngrid, ndof_per_grid,
             title=title, subtitle=subtitle, label=label,
             fdtype=fdtype, page_num=page_num, page_stamp=page_stamp)
@@ -778,17 +779,18 @@ class Solver:
                            subcase: Subcase, itime: int, ntimes: int,
                            node_gridtype: NDArrayN2int, Fg: NDArrayNfloat,
                            obj: Union[RealSPCForcesArray],
-                           f06_request_name: str, table_name: str,
+                           f06_request_name: str,
+                           table_name: str, slot: Dict[Any, RealSPCForcesArray],
                            ngrid: int, ndof_per_grid: int,
                            title: str='', subtitle: str='', label: str='',
                            fdtype: str='float32', page_num: int=1,
                            page_stamp: str='PAGE %s') -> int:
-        if f06_request_name not in subcase:
-            return page_num
         isubcase = subcase.id
         #self.log.debug(f'saving {f06_request_name} -> {table_name}')
-        unused_nids_write, write_f06, write_op2 = get_plot_request(
+        unused_nids_write, write_f06, write_op2, quick_return = get_plot_request(
             subcase, f06_request_name)
+        if quick_return:
+            return page_num
         nnodes = node_gridtype.shape[0]
         data = np.zeros((ntimes, nnodes, 6), dtype=fdtype)
         ngrid_dofs = ngrid * ndof_per_grid
@@ -809,7 +811,8 @@ class Solver:
                 page_stamp=page_stamp, page_num=page_num,
                 is_mag_phase=False, is_sort1=True)
             f06_file.write('\n')
-        self.op2.spc_forces[isubcase] = spc_forces
+        if write_op2:
+            slot[isubcase] = spc_forces
         return page_num
 
     def run_sol_103(self, subcase: Subcase, f06_file,
@@ -838,13 +841,15 @@ class Solver:
         dof_map, ps = _get_dof_map(model)
         node_gridtype = _get_node_gridtype(model, idtype=idtype)
         ngrid, ndof_per_grid, ndof = get_ndof(self.model, subcase)
-        Kbb = build_Kbb(model, dof_map, ndof, fdtype=fdtype)
+        Kgg = build_Kgg(model, dof_map,
+                        ndof, ngrid,
+                        ndof_per_grid,
+                        idtype='int32', fdtype=fdtype)
 
         Mbb = build_Mbb(model, subcase, dof_map, ndof, fdtype=fdtype)
 
-        Kgg = Kbb_to_Kgg(model, Kbb, ngrid, ndof_per_grid)
         Mgg = Kbb_to_Kgg(model, Mbb, ngrid, ndof_per_grid)
-        del Kbb, Mbb
+        del Mbb
 
         gset = np.arange(ndof, dtype=idtype)
         sset, sset_b, xg = self.build_xg(dof_map, ndof, subcase)
@@ -1236,22 +1241,6 @@ def _get_node_gridtype(model: BDF, idtype: str='int32') -> NDArrayN2int:
     node_gridtype_array = np.array(node_gridtype, dtype=idtype)
     return node_gridtype_array
 
-def get_plot_request(subcase: Subcase, request: str) -> Tuple[str, bool, bool]:
-    """
-    request = 'SPCFORCES'
-    """
-    value, options = subcase.get_parameter(request)
-    write_f06 = False
-    write_f06 = True
-    if 'PRINT' in options:
-        write_f06 = True
-    if 'PLOT' in options:
-        write_op2 = True
-    if not(write_f06 or write_op2):
-        write_op2 = True
-    nids_write = value
-    return nids_write, write_f06, write_op2
-
 def get_aset(model: BDF) -> Set[Tuple[int, int]]:
     aset_map = set()
     for aset in model.asets:
@@ -1487,34 +1476,6 @@ def xg_to_xb(model, xg: NDArrayNfloat, ngrid: int, ndof_per_grid: int,
             xi = xg[i1:i2]
             xb[i1:i2] = xi @ T  # TODO: verify the transform; I think it's right
     return xb
-
-
-def Kbb_to_Kgg(model: BDF, Kbb: NDArrayNNfloat,
-               ngrid: int, ndof_per_grid: int, inplace=True) -> NDArrayNNfloat:
-    """does an in-place transformation"""
-    assert isinstance(Kbb, (np.ndarray, sci_sparse.csc.csc_matrix)), type(Kbb)
-    if not isinstance(Kbb, np.ndarray):
-        Kbb = Kbb.tolil()
-
-    ndof = Kbb.shape[0]
-    assert ndof > 0, f'ngrid={ngrid} card_count={model.card_count}'
-    nids = model._type_to_id_map['GRID']
-
-    Kgg = Kbb
-    if not inplace:
-        Kgg = copy.deepcopy(Kgg)
-
-    for i, nid in enumerate(nids):
-        node = model.nodes[nid]
-        if node.cd:
-            model.log.debug(f'node {nid} has a CD={node.cd}')
-            cd_ref = node.cd_ref
-            T = cd_ref.beta_n(n=2)
-            i1 = i * ndof_per_grid
-            i2 = (i+1) * ndof_per_grid
-            Ki = Kbb[i1:i2, i1:i2]
-            Kgg[i1:i2, i1:i2] = T.T @ Ki @ T
-    return Kgg
 
 def write_oload(Fb: NDArrayNfloat,
                 dof_map: DOF_MAP,
@@ -1938,7 +1899,7 @@ def dof_map_to_tr_set(dof_map, ndof: int) -> Tuple[NDArrayNbool, NDArrayNbool]:
     """creates the translation/rotation sets"""
     trans_set = np.zeros(ndof, dtype='bool')
     rot_set = np.zeros(ndof, dtype='bool')
-    for (nid, dof), idof in dof_map.items():
+    for (unused_nid, dof), idof in dof_map.items():
         if dof in [0, 1, 2, 3]:
             trans_set[idof] = True
         else:

@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import TYPE_CHECKING
+from typing import Union, TYPE_CHECKING
 import numpy as np
 
 from pyNastran.nptyping import NDArrayNfloat
@@ -9,12 +9,14 @@ from pyNastran.op2.op2_interface.hdf5_interface import (
     RealSpringStrainArray, RealRodStrainArray,
     RealBarStrainArray,
 )
+from .utils import get_plot_request
+
 if TYPE_CHECKING:  # pragma: no cover
-    from pyNastran.bdf.bdf import BDF, CBAR, PBAR, PBARL
+    from pyNastran.bdf.bdf import BDF, Subcase, CBAR, PBAR, PBARL
 
 
 def recover_strain_101(f06_file, op2,
-                       model: BDF, dof_map, isubcase: int, xb, fdtype: str='float32',
+                       model: BDF, dof_map, subcase: Subcase, xb, fdtype: str='float32',
                        title: str='', subtitle: str='', label: str='',
                        page_num: int=1, page_stamp: str='PAGE %s'):
     """
@@ -23,6 +25,12 @@ def recover_strain_101(f06_file, op2,
 
     """
     eid_str = 'ALL'
+    unused_eids_write, write_f06, write_op2, quick_return = get_plot_request(
+        subcase, 'STRAIN')
+    if quick_return:
+        return page_num
+    isubcase = subcase.id
+
     nelements = 0
     nelements += _recover_strain_celas(
         f06_file, op2, model, dof_map, isubcase, xb, eid_str,
@@ -69,7 +77,7 @@ def recover_strain_101(f06_file, op2,
 
     #assert nelements > 0, nelements
     if nelements == 0:
-        model.log.warning(f'no strain output...{model.card_count}')
+        model.log.warning(f'no strain output...{model.card_count}; {model.bdf_filename}')
 
 def _recover_strain_celas(f06_file, op2,
                           model: BDF, dof_map, isubcase, xg, eids_str,
@@ -193,30 +201,16 @@ def _recover_straini_rod(xb, dof_map, elem, prop):
     nid1, nid2 = elem.nodes
 
     # axial
-    i11 = dof_map[(nid1, 1)]
-    i12 = i11 + 1
-    i13 = i11 + 2
-
-    i21 = dof_map[(nid2, 1)]
-    i22 = i21 + 1
-    i23 = i21 + 2
-
-    # torsion
-    i14 = i11 + 3
-    i15 = i11 + 4
-    i16 = i11 + 5
-
-    i24 = i21 + 3
-    i25 = i21 + 4
-    i26 = i21 + 5
+    i1 = dof_map[(nid1, 1)]
+    i2 = dof_map[(nid2, 1)]
 
     q_axial = np.array([
-        xb[i11], xb[i12], xb[i13],
-        xb[i21], xb[i22], xb[i23],
+        xb[i1], xb[i1+1], xb[i1+2],
+        xb[i2], xb[i2+2], xb[i2+2],
     ])
     q_torsion = np.array([
-        xb[i14], xb[i15], xb[i16],
-        xb[i24], xb[i25], xb[i26],
+        xb[i1+3], xb[i1+4], xb[i1+5],
+        xb[i2+3], xb[i2+4], xb[i2+5],
     ])
     xyz1 = elem.nodes_ref[0].get_position()
     xyz2 = elem.nodes_ref[1].get_position()
@@ -246,30 +240,16 @@ def _recover_straini_ctube(xb, dof_map, elem, prop):
     nid1, nid2 = elem.nodes
 
     # axial
-    i11 = dof_map[(nid1, 1)]
-    i12 = i11 + 1
-    i13 = i11 + 2
-
-    i21 = dof_map[(nid2, 1)]
-    i22 = i21 + 1
-    i23 = i21 + 2
-
-    # torsion
-    i14 = i11 + 3
-    i15 = i11 + 4
-    i16 = i11 + 5
-
-    i24 = i21 + 3
-    i25 = i21 + 4
-    i26 = i21 + 5
+    i1 = dof_map[(nid1, 1)]
+    i2 = dof_map[(nid2, 1)]
 
     q_axial = np.array([
-        xb[i11], xb[i12], xb[i13],
-        xb[i21], xb[i22], xb[i23],
+        xb[i1], xb[i1+1], xb[i1+2],
+        xb[i2], xb[i2+2], xb[i2+2],
     ])
     q_torsion = np.array([
-        xb[i14], xb[i15], xb[i16],
-        xb[i24], xb[i25], xb[i26],
+        xb[i1+3], xb[i1+4], xb[i1+5],
+        xb[i2+3], xb[i2+4], xb[i2+5],
     ])
     xyz1 = elem.nodes_ref[0].get_position()
     xyz2 = elem.nodes_ref[1].get_position()
@@ -404,39 +384,8 @@ def _recover_straini_cbar(model: BDF, xb: NDArrayNfloat,
     axial = du_axial / L
 
     # cdef = prop.get_cdef()
-    if prop.type == 'PBARL':
-        # these axes are backwards...
-        #     ^ y
-        # +---|---+
-        # |   |   |
-        # |   +------> z
-        # |       |
-        # +-------+
-        if prop.Type in ['ROD', 'TUBE']:
-            R = prop.dims[0]
-            cdef = np.array([
-                [R, 0.],
-                [0., R],
-                [-R, 0.],
-                [0., -R],
-            ], dtype='float64')
-        elif prop.Type in ['BAR', 'BOX']:
-            height, width = prop.dims
-            cdef = np.array([
-                [width, height],
-                [width, -height],
-                [-width, -height],
-                [-width, height],
-            ], dtype='float64') / 2.
-        else:
-            raise NotImplementedError(prop.Type)
-    elif prop.type == 'PBAR':
-        cdef = np.array([
-                [prop.c1, prop.c2],
-                [prop.d1, prop.d2],
-                [prop.e1, prop.e2],
-                [prop.f1, prop.f2],
-            ], dtype='float64')
+    if prop.type in ['PBARL', 'PBAR']:
+        cdef = prop.get_cdef()
     else:
         raise NotImplementedError(prop.get_stats())
     model.log.info(f'cdef: {cdef}\n')

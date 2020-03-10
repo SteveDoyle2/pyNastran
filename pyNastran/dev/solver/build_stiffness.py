@@ -1,4 +1,5 @@
 from __future__ import annotations
+import copy
 from typing import Tuple, Union, Optional, Any, TYPE_CHECKING
 
 import numpy as np
@@ -17,10 +18,13 @@ if TYPE_CHECKING:  # pragma: no cover
     )
 
 
-def build_Kbb(model: BDF, dof_map: DOF_MAP, ndof: int,
+def build_Kgg(model: BDF, dof_map: DOF_MAP,
+              ndof: int,
+              ngrid: int,
+              ndof_per_grid: int,
               idtype: str='int32', fdtype: str='float32') -> Tuple[NDArrayNNfloat, Any]:
     """[K] = d{P}/dx"""
-    model.log.debug(f'starting build_Kbb')
+    model.log.debug(f'starting build_Kgg')
     Kbb = sci_sparse.dok_matrix((ndof, ndof), dtype=fdtype)
     #print(dof_map)
 
@@ -31,10 +35,12 @@ def build_Kbb(model: BDF, dof_map: DOF_MAP, ndof: int,
     del xyz_cp, nid_cp_cd
 
     nelements = 0
+    # TODO: I think these need to be in the global frame
     nelements += _build_kbb_celas1(model, Kbb, dof_map)
     nelements += _build_kbb_celas2(model, Kbb, dof_map)
     nelements += _build_kbb_celas3(model, Kbb, dof_map)
     nelements += _build_kbb_celas4(model, Kbb, dof_map)
+
     nelements += _build_kbb_conrod(model, Kbb, dof_map)
     nelements += _build_kbb_crod(model, Kbb, dof_map)
     nelements += _build_kbb_ctube(model, Kbb, dof_map)
@@ -47,8 +53,12 @@ def build_Kbb(model: BDF, dof_map: DOF_MAP, ndof: int,
                                   all_nids, xyz_cid0, idtype='int32', fdtype='float64')
     assert nelements > 0, nelements
     Kbb2 = Kbb.tocsc()
-    model.log.debug(f'end of build_Kbb')
-    return Kbb2
+
+    #Kgg = Kbb_to_Kgg(model, Kbb, ngrid, ndof_per_grid, inplace=False)
+    Kgg = Kbb_to_Kgg(model, Kbb2, ngrid, ndof_per_grid)
+
+    model.log.debug(f'end of build_Kgg')
+    return Kgg
 
 
 def _build_kbb_celas1(model: BDF, Kbb, dof_map: DOF_MAP) -> None:
@@ -188,10 +198,10 @@ def ke_cbar(model: BDF, elem: CBAR, fdtype: str='float64'):
     #G = mat.G()
     z = np.zeros((3, 3), dtype='float64')
     T = z
-    unused_Teb = np.block([
-        [T, z],
-        [z, T],
-    ])
+    #unused_Teb = np.block([
+        #[T, z],
+        #[z, T],
+    #])
     is_failed, (wa, wb, ihat, jhat, khat) = elem.get_axes(model)
     assert is_failed is False
     #print(wa, wb)
@@ -481,3 +491,31 @@ def _beami_stiffness(prop: Union[PBAR, PBARL, PBEAM, PBEAML],
             K[pbi, :] = 0
             K[:, pbi] = 0
     return K
+
+def Kbb_to_Kgg(model: BDF, Kbb: NDArrayNNfloat,
+               ngrid: int, ndof_per_grid: int, inplace=True) -> NDArrayNNfloat:
+    """does an in-place transformation"""
+    assert isinstance(Kbb, (np.ndarray, sci_sparse.csc.csc_matrix)), type(Kbb)
+    #assert isinstance(Kbb, (np.ndarray, sci_sparse.csc.csc_matrix, sci_sparse.dok.dok_matrix)), type(Kbb)
+    if not isinstance(Kbb, np.ndarray):
+        Kbb = Kbb.tolil()
+
+    ndof = Kbb.shape[0]
+    assert ndof > 0, f'ngrid={ngrid} card_count={model.card_count}'
+    nids = model._type_to_id_map['GRID']
+
+    Kgg = Kbb
+    if not inplace:
+        Kgg = copy.deepcopy(Kgg)
+
+    for i, nid in enumerate(nids):
+        node = model.nodes[nid]
+        if node.cd:
+            model.log.debug(f'node {nid} has a CD={node.cd}')
+            cd_ref = node.cd_ref
+            T = cd_ref.beta_n(n=2)
+            i1 = i * ndof_per_grid
+            i2 = (i+1) * ndof_per_grid
+            Ki = Kbb[i1:i2, i1:i2]
+            Kgg[i1:i2, i1:i2] = T.T @ Ki @ T
+    return Kgg

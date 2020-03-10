@@ -1331,6 +1331,15 @@ class PBAR(LineProperty):
         nsm = self.Nsm()
         return rho * A + nsm
 
+    def get_cdef(self):
+        cdef = np.array([
+                [self.c1, self.c2],
+                [self.d1, self.d2],
+                [self.e1, self.e2],
+                [self.f1, self.f2],
+            ], dtype='float64')
+        return cdef
+
     def cross_reference(self, model: BDF) -> None:
         """
         Cross links the card so referenced cards can be extracted directly
@@ -1666,6 +1675,38 @@ class PBARL(LineProperty):
         if xref:
             mpl = self.MassPerLength()
             assert isinstance(mpl, float), 'mass_per_length=%r' % mpl
+
+
+    def get_cdef(self):
+        r"""
+        these axes are backwards...
+
+            ^ y
+        +---|---+
+        |   |   |
+        |   +------> z
+        |       |
+        +-------+
+        """
+        if self.Type in ['ROD', 'TUBE']:
+            R = self.dims[0]
+            cdef = np.array([
+                [R, 0.],
+                [0., R],
+                [-R, 0.],
+                [0., -R],
+            ], dtype='float64')
+        elif self.Type in ['BAR', 'BOX']:
+            height, width = self.dims
+            cdef = np.array([
+                [width, height],
+                [width, -height],
+                [-width, -height],
+                [-width, height],
+            ], dtype='float64') / 2.
+        else:
+            raise NotImplementedError(self.Type)
+        return cdef
 
     @property
     def Type(self):

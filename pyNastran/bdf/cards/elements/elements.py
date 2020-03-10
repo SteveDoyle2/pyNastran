@@ -884,7 +884,7 @@ class PLOTEL(BaseCard):
         self.nodes_ref = None
 
     @classmethod
-    def add_card(cls, card, comment=''):
+    def add_card(cls, card, icard: int, comment=''):
         """
         Adds a PLOTEL card from ``BDF.add_card(...)``
 
@@ -896,12 +896,14 @@ class PLOTEL(BaseCard):
             a comment for the card
 
         """
-        eid = integer(card, 1, 'eid')
+        offset = icard * 4
+        eid = integer(card, 1+offset, 'eid')
         nodes = [
-            integer(card, 2, 'g1'),
-            integer(card, 3, 'g2'),
+            integer(card, 2+offset, 'g1'),
+            integer(card, 3+offset, 'g2'),
         ]
-        assert len(card) <= 4, 'len(PLOTEL card) = %i\ncard=%s' % (len(card), card)
+        #assert len(card) <= 4, 'len(PLOTEL card) = %i\ncard=%s' % (len(card), card)
+        assert len(card) <= 8, 'len(PLOTEL card) = %i\ncard=%s' % (len(card), card)
         return PLOTEL(eid, nodes, comment=comment)
 
     @classmethod

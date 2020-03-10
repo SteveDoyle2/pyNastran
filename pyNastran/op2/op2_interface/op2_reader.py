@@ -4823,7 +4823,7 @@ class OP2Reader:
         if hasattr(self, 'obj'):
             str(self.obj.get_stats())
 
-    def show(self, n, types='ifs', endian=None):  # pragma: no cover
+    def show(self, n: int, types: str='ifs', endian: Optional[str]=None):  # pragma: no cover
         """
         shows the next N bytes
 
@@ -4844,7 +4844,7 @@ class OP2Reader:
         op2.f.seek(op2.n)
         return strings, ints, floats
 
-    def show_data(self, data, types='ifs', endian=None):  # pragma: no cover
+    def show_data(self, data: bytes, types: str='ifs', endian: Optional[str]=None):  # pragma: no cover
         """
         Shows a data block as various types
 
@@ -4872,7 +4872,7 @@ class OP2Reader:
         #ifsdqlILQ
         return self._write_data(sys.stdout, data, types=types, endian=endian)
 
-    def _write_data(self, f, data, types='ifs', endian=None):  # pragma: no cover
+    def _write_data(self, f, data: bytes, types: str='ifs', endian: Optional[str]=None):  # pragma: no cover
         """
         Useful function for seeing what's going on locally when debugging.
 
@@ -4946,10 +4946,10 @@ class OP2Reader:
         f.write('\n')
         return strings, ints, floats
 
-    def show_ndata(self, n, types='ifs'):  # pragma: no cover
+    def show_ndata(self, n: int, types: str='ifs'):  # pragma: no cover
         return self._write_ndata(sys.stdout, n, types=types)
 
-    def _write_ndata(self, f, n, types='ifs'):  # pragma: no cover
+    def _write_ndata(self, f, n: int, types: str='ifs'):  # pragma: no cover
         """Useful function for seeing what's going on locally when debugging."""
         op2 = self.op2
         nold = op2.n
@@ -4959,8 +4959,23 @@ class OP2Reader:
         return self._write_data(f, data, types=types)
 
 def grids_comp_array_to_index(grids1, comps1, grids2, comps2,
-                              make_matrix_symmetric):
-    """maps the dofs"""
+                              make_matrix_symmetric: bool) -> Tuple[Any, Any, int, int, int]:
+    """
+    Maps the dofs
+
+    Returns
+    -------
+    ja : ???
+        ???
+    jb : ???
+        ???
+    nja : ???
+        ???
+    njb : ???
+        ???
+    nj : ???
+        ???
+    """
     #from pyNastran.femutils.utils import unique2d
     ai = np.vstack([grids1, comps1]).T
     bi = np.vstack([grids2, comps2]).T
@@ -5016,7 +5031,7 @@ def grids_comp_array_to_index(grids1, comps1, grids2, comps2,
 
         return ja, jb, nja, njb, nj
 
-def eqexin_to_nid_dof_doftype(eqexin1, eqexin2):
+def eqexin_to_nid_dof_doftype(eqexin1, eqexin2) -> Tuple[Any, Any, Any]:
     """assemble dof table"""
     dof = eqexin2[1::2] // 10
     doftype = eqexin2[1::2] - 10 * dof
@@ -5029,7 +5044,7 @@ def eqexin_to_nid_dof_doftype(eqexin1, eqexin2):
     nid = nid[i]
     return nid, dof, doftype
 
-def get_table_size_from_ncolumns(table_name, nvalues, ncolumns):
+def get_table_size_from_ncolumns(table_name: str, nvalues: int, ncolumns: int) -> int:
     nrows = nvalues // ncolumns
     if nvalues % ncolumns != 0:
         msg = 'table=%s: nrows=nvalues/ncolumns=%s/%s=%s; nrows=%s must be an int' % (

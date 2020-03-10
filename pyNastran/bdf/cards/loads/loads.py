@@ -1075,6 +1075,7 @@ class DEFORM(Load):
         if self.eid_ref is None:
             return self.eid
         return self.eid_ref.eid
+
     def raw_fields(self):
         fields = ['DEFORM', self.sid, self.Eid(), self.deformation]
         return fields
@@ -1244,6 +1245,12 @@ class SLOAD(Load):
     def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.raw_fields()
         return self.comment + print_card_8(card)
+
+    def write_card_16(self, is_double: bool=False) -> str:
+        card = self.raw_fields()
+        if is_double:
+            return self.comment + print_card_double(card)
+        return self.comment + print_card_16(card)
 
 
 class RFORCE(Load):

@@ -1910,6 +1910,14 @@ class Cord2x(Coord):
             return self.comment + print_card_double(card)
         return self.comment + print_card_16(card)
 
+    def write_card_16(self, is_double=False):
+        # type: (bool) -> str
+        """Writes a CORD2x card in 16-field format"""
+        card = self.repr_fields()
+        if is_double:
+            return self.comment + print_card_double(card)
+        return self.comment + print_card_16(card)
+
     def cross_reference(self, model: BDF) -> None:
         """
         Cross links the card so referenced cards can be extracted directly
@@ -2193,6 +2201,14 @@ class Cord1x(Coord):
     def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.repr_fields()
         return self.comment + print_card_8(card)
+
+    def write_card_16(self, is_double=False):
+        # type: (bool) -> str
+        """Writes a CORD1x card in 16-field format"""
+        card = self.repr_fields()
+        if is_double:
+            return self.comment + print_card_double(card)
+        return self.comment + print_card_16(card)
 
 
 class GMCORD(BaseCard):

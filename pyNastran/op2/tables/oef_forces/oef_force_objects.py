@@ -3182,6 +3182,46 @@ class RealCBarForceArray(RealCBarFastForceArray):  # 34-CBAR
     def __init__(self, data_code, is_sort1, isubcase, dt):
         RealCBarFastForceArray.__init__(self, data_code, is_sort1, isubcase, dt)
 
+    @classmethod
+    def add_static_case(cls, table_name, element, data, isubcase,
+                        is_sort1=True, is_random=False, is_msc=True,
+                        random_code=0, title='', subtitle='', label=''):
+
+        analysis_code = 1 # static
+        data_code = oef_data_code(table_name, analysis_code,
+                                  is_sort1=is_sort1, is_random=is_random,
+                                  random_code=random_code,
+                                  title=title, subtitle=subtitle, label=label,
+                                  is_msc=is_msc)
+        data_code['loadIDs'] = [0] # TODO: ???
+        data_code['data_names'] = []
+
+        # I'm only sure about the 1s in the strains and the
+        # corresponding 0s in the stresses.
+        #if is_stress:
+            #data_code['stress_bits'] = [0, 0, 0, 0]
+            #data_code['s_code'] = 0
+        #else:
+            #data_code['stress_bits'] = [0, 1, 0, 1]
+            #data_code['s_code'] = 1 # strain?
+
+        data_code['element_name'] = 'CBAR'
+        data_code['element_type'] = 34
+        #data_code['load_set'] = 1
+
+        ntimes = data.shape[0]
+        nnodes = data.shape[1]
+        dt = None
+        obj = cls(data_code, is_sort1, isubcase, dt)
+        obj.element = element
+        obj.data = data
+
+        obj.ntimes = ntimes
+        obj.ntotal = nnodes
+        obj._times = [None]
+        obj.is_built = True
+        return obj
+
     def _words(self) -> List[str]:
         words = ['                                 F O R C E S   I N   B A R   E L E M E N T S         ( C B A R )\n',
                  '0    ELEMENT         BEND-MOMENT END-A            BEND-MOMENT END-B                - SHEAR -               AXIAL\n',

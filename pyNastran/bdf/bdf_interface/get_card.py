@@ -924,6 +924,12 @@ class GetCard(GetMethods):
         return self.get_elements_properties_nodes_by_element_type(
             dtype=dtype, solids=solids)
 
+    def _upcast_int_dtype(self, dtype: str) -> str:
+        if dtype == 'int32' and max(self.nodes) > 2147483647:
+            # or max(self.elements) > 2147483647):
+            dtype = 'int64'
+        return dtype
+
     def get_elements_properties_nodes_by_element_type(self,
                                                       dtype: str='int32',
                                                       solids: Optional[Dict[str, Any]]=None,
@@ -961,11 +967,13 @@ class GetCard(GetMethods):
                 the nodes corresponding to the element
 
         """
-        etypes_no_pids = [
-            'CELAS4', 'CDAMP4', 'CHBDYG', 'GENEL',
-        ]
+        dtype = self._upcast_int_dtype(dtype)
 
-        etypes = [
+        etypes_no_pids = {
+            'CELAS4', 'CDAMP4', 'CHBDYG', 'GENEL',
+        }
+
+        etypes = {
             'CELAS1', 'CELAS2', 'CELAS3', 'CELAS4',
             'CDAMP1', 'CDAMP2', 'CDAMP3', 'CDAMP4', 'CDAMP5',
             'CROD', 'CONROD', 'CTUBE',
@@ -982,7 +990,7 @@ class GetCard(GetMethods):
 
             # not supported
             'GENEL', 'CHBDYG',
-        ]
+        }
         output = {}
 
         if solids is None:

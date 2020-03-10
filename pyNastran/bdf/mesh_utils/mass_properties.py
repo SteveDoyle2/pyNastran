@@ -498,10 +498,11 @@ def mass_properties_nsm(model, element_ids=None, mass_ids=None, nsm_id=None,
     cg = array([0., 0., 0.])
     inertia = array([0., 0., 0., 0., 0., 0., ])
 
-    all_eids = np.array(list(model.elements.keys()), dtype='int32')
+    idtype = model._upcast_int_dtype(dtype='int32')
+    all_eids = np.array(list(model.elements.keys()), dtype=idtype)
     all_eids.sort()
 
-    all_mass_ids = np.array(list(model.masses.keys()), dtype='int32')
+    all_mass_ids = np.array(list(model.masses.keys()), dtype=idtype)
     all_mass_ids.sort()
 
     #element_nsms, property_nsms = _get_nsm_data(model, nsm_id, debug=debug)
@@ -536,8 +537,8 @@ def mass_properties_nsm(model, element_ids=None, mass_ids=None, nsm_id=None,
             area_eids_pids, nsm_centroids_area, areas,
             mass, cg, inertia, reference_point)
 
-    model_eids = np.array(list(model.elements.keys()), dtype='int32')
-    model_pids = np.array(list(model.properties.keys()), dtype='int32')
+    model_eids = np.array(list(model.elements.keys()), dtype=idtype)
+    model_pids = np.array(list(model.properties.keys()), dtype=idtype)
     if debug:  # pragma: no cover
         model.log.debug('model_pids = %s' % model_pids)
 

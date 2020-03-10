@@ -6,12 +6,14 @@ from pyNastran.dev.solver.utils import lambda1d, get_ieids_eids
 from pyNastran.op2.op2_interface.hdf5_interface import (
     RealSpringStressArray, RealRodStressArray,
 )
+from .utils import get_plot_request
+
 if TYPE_CHECKING:  # pragma: no cover
-    from pyNastran.bdf.bdf import BDF
+    from pyNastran.bdf.bdf import BDF, Subcase
 
 
 def recover_stress_101(f06_file, op2,
-                       model: BDF, dof_map, isubcase: int, xb, fdtype: str='float32',
+                       model: BDF, dof_map, subcase: Subcase, xb, fdtype: str='float32',
                        title: str='', subtitle: str='', label: str='',
                        page_num: int=1, page_stamp: str='PAGE %s'):
     """
@@ -20,6 +22,12 @@ def recover_stress_101(f06_file, op2,
 
     """
     eid_str = 'ALL'
+    unused_eids_write, write_f06, write_op2, quick_return = get_plot_request(
+        subcase, 'STRESS')
+    if quick_return:
+        return page_num
+    isubcase = subcase.id
+
     nelements = 0
     nelements += _recover_stress_celas(
         f06_file, op2, model, dof_map, isubcase, xb, eid_str,
@@ -59,7 +67,7 @@ def recover_stress_101(f06_file, op2,
         page_num=page_num, page_stamp=page_stamp)
     #assert nelements > 0, nelements
     if nelements == 0:
-        model.log.warning(f'no stress output...{model.card_count}')
+        model.log.warning(f'no stress output...{model.card_count}; {model.bdf_filename}')
 
 
 def _recover_stress_celas(f06_file, op2,

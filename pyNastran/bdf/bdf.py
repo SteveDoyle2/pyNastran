@@ -1819,8 +1819,6 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             'GMCORD' : (GMCORD, self._add_coord_object),
             'CGEN' : (CGEN, self._add_element_object),
 
-            'PLOTEL' : (PLOTEL, self._add_plotel_object),
-
             'CONROD' : (CONROD, self._add_element_object),
             'CROD' : (CROD, self._add_element_object),
             'PROD' : (PROD, self._add_property_object),
@@ -2245,6 +2243,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
         }
 
         self._card_parser_prepare = {
+            'PLOTEL': self._prepare_plotel,
             'CBAR' : self._prepare_cbar,
             'CBEAM' : self._prepare_cbeam,
             'CTETRA' : self._prepare_ctetra,
@@ -2345,6 +2344,16 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             #if ' ' in card_name:
                 #_check_for_spaces(card_name, card_lines, comment, self.log)
             self.log.info('    rejecting card_name = %s' % card_name)
+
+    def _prepare_plotel(self, unused_card: List[str], card_obj: BDFCard, comment='') -> None:
+        """adds a PLOTEL"""
+        #['PLOTEL', '3101', '3101', '3102', None, '3102', '3102', '3103']
+        plotels = [PLOTEL.add_card(card_obj, 0, comment=comment)]
+        if card_obj.field(5):  # eid
+            plotels.append(PLOTEL.add_card(card_obj, 1, comment=''))
+        for plotel in plotels:
+            self._add_plotel_object(plotel)
+        return plotels
 
     def _prepare_cbar(self, unused_card: List[str], card_obj: BDFCard, comment='') -> None:
         """adds a CBAR"""
