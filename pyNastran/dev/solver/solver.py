@@ -27,6 +27,7 @@ from pyNastran.bdf.mesh_utils.loads import _get_dof_map, get_ndof
 from .recover.static_force import recover_force_101
 from .recover.static_stress import recover_stress_101
 from .recover.static_strain import recover_strain_101
+from .recover.strain_energy import recover_strain_energy_101
 from .recover.utils import get_plot_request
 from .build_stiffness import build_Kgg, DOF_MAP, Kbb_to_Kgg
 
@@ -707,6 +708,10 @@ class Solver:
             recover_stress_101(f06_file, op2, self.model, dof_map, subcase, xb,
                                title=title, subtitle=subtitle, label=label,
                                page_stamp=page_stamp)
+        if 'ESE' in subcase:
+            recover_strain_energy_101(f06_file, op2, self.model, dof_map, subcase, xb,
+                                      title=title, subtitle=subtitle, label=label,
+                                      page_stamp=page_stamp)
         #Fg[sz_set] = -1
         #xg[sz_set] = -1
         op2.write_op2(self.op2_filename, post=-1, endian=b'<', skips=None, nastran_format='nx')

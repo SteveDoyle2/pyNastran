@@ -10,6 +10,9 @@ from pyNastran.op2.op2_interface.write_utils import set_table3_field
 SORT2_TABLE_NAME_MAP = {
     'ONRGY2' : 'ONRGY1',
 }
+TABLE_NAME_TO_TABLE_CODE = {
+    'ONRGY1' : 18,
+}
 class RealStrainEnergyArray(BaseElement):
     """
     ::
@@ -197,6 +200,75 @@ class RealStrainEnergyArray(BaseElement):
             # remove empty rows
             assert self.data_frame is not None
             self.data_frame = self.data_frame[self.data_frame.ElementID != compare]
+
+    @classmethod
+    def add_static_case(cls, table_name, element_name, element, data, isubcase,
+                        is_sort1=True, is_random=False, is_msc=True,
+                        random_code=0, title='', subtitle='', label=''):
+        assert len(element.shape) == 1, element.shape
+        assert data.shape[0] == 1, data.shape
+        assert data.shape[2] == 1, data.shape
+
+        analysis_code = 1 # static
+        data_code = oee_data_code(table_name, analysis_code,
+                                  is_sort1=is_sort1, is_random=is_random,
+                                  random_code=random_code,
+                                  title=title, subtitle=subtitle, label=label,
+                                  is_msc=is_msc)
+        #data_code['loadIDs'] = [0] # TODO: ???
+        data_code['lsdvmns'] = [0] # TODO: ???
+        data_code['data_names'] = []
+
+        # I'm only sure about the 1s in the strains and the
+        # corresponding 0s in the stresses.
+        #if is_stress:
+            #data_code['stress_bits'] = [0, 0, 0, 0]
+            #data_code['s_code'] = 0
+        #else:
+            #data_code['stress_bits'] = [0, 1, 0, 1]
+            #data_code['s_code'] = 1 # strain?
+        element_name_to_element_type = {
+            'CELAS1' : 11,
+            'CELAS2' : 12,
+            'CELAS3' : 13,
+            'CELAS4' : 14,
+        }
+
+        element_type = element_name_to_element_type[element_name]
+        data_code['element_name'] = element_name
+        data_code['element_type'] = element_type
+        #data_code['load_set'] = 1
+
+        ntimes = data.shape[0]
+        nnodes = data.shape[1]
+        dt = None
+        obj = cls(data_code, is_sort1, isubcase, dt)
+        nelements = len(element)
+        obj.element = element.reshape(1, nelements)
+
+        # [energy, percent, density]
+        ntimes = 1
+        data += 1
+        obj.data = np.full((ntimes, nelements+1, 3), np.nan, dtype=data.dtype)
+        totals = data.sum(axis=0)
+        #print(obj.data[0, :, :])
+        #print('totals =', totals)
+        obj.data[:, :-1, 0] = data
+        percent = data / totals
+        obj.data[:, :-1, 1] = percent
+        #obj.data[:, :-1, 2] = data / totals  # density???
+        obj.data[:, -1, 0] = np.nansum(data, axis=0)
+        obj.data[:, -1, 1] = np.nansum(percent, axis=0)
+        #print(obj.data[0, :, :])
+
+        ntotals = len(totals)
+        assert ntimes == ntotals, ntotals
+
+        obj.ntimes = ntimes
+        obj.ntotal = nnodes
+        obj._times = [None]
+        obj.is_built = True
+        return obj
 
     def __eq__(self, table):  # pragma: no cover
         return self.assert_equal(table)
@@ -987,3 +1059,59 @@ class ComplexStrainEnergyArray(BaseElement):
             page_num += 1
             #break
         return page_num - 1
+
+def oee_data_code(table_name, analysis_code,
+                  is_sort1=True, is_random=False,
+                  random_code=0, title='', subtitle='', label='', is_msc=True):
+    """helper for result creation writing"""
+    sort1_sort_bit = 0 if is_sort1 else 1
+    random_sort_bit = 1 if is_random else 0
+    sort_method = 1 if is_sort1 else 2
+    assert analysis_code != 0, analysis_code
+    #if format_code == 1:
+        #format_word = "Real"
+    #elif format_code == 2:
+        #format_word = "Real/Imaginary"
+    #elif format_code == 3:
+        #format_word = "Magnitude/Phase"
+    #DEVICE_CODE_MAP = {
+        #1 : "Print",
+        #2 : "Plot",
+        #3 : "Print and Plot",
+        #4 : "Punch",
+        #5 : "Print and Punch",
+        #6 : "Plot and Punch",
+        #7 : "Print, Plot, and Punch",
+    #}
+
+    table_code = TABLE_NAME_TO_TABLE_CODE[table_name]
+    sort_code = 1 # TODO: what should this be???
+
+    #table_code = tCode % 1000
+    #sort_code = tCode // 1000
+    tCode = table_code * 1000 + sort_code
+
+    device_code = 2  # Plot
+    approach_code = analysis_code * 10 + device_code
+    #print(f'approach_code={approach_code} analysis_code={analysis_code} device_code={device_code}')
+    data_code = {
+        'nonlinear_factor': None,
+        'approach_code' : approach_code,
+        'analysis_code' : analysis_code,
+        'sort_bits': [0, sort1_sort_bit, random_sort_bit], # real, sort1, random
+        'sort_method' : sort_method,
+        'is_msc': is_msc,
+        #'is_nasa95': is_nasa95,
+        'format_code': 1, # real
+        'table_code': table_code,
+        'tCode': tCode,
+        'table_name': table_name, ## TODO: should this be a string?
+        'device_code' : device_code,
+        'random_code' : random_code,
+        'thermal': 0,
+        'title' : title,
+        'subtitle': subtitle,
+        'label': label,
+        'num_wide' : 8, # displacement-style table
+    }
+    return data_code

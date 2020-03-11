@@ -540,7 +540,6 @@ class BDF(BDF_):
         #self._card_parser_prepare['CBUSH2D'] = self._prepare_cbush2d
 
         del self._card_parser['CVISC']
-        del self._card_parser['PLOTEL']
         self._card_parser_prepare['CVISC'] = self._prepare_cvisc
         self._card_parser_prepare['PLOTEL'] = self._prepare_plotel
 

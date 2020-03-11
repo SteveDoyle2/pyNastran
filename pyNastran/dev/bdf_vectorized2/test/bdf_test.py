@@ -121,24 +121,26 @@ def main():
 
     msg = "Usage:\n"
     is_release = False
-    msg += "bdf_test [-r] [-n] [-s S...] [-e E] [-L] [-x] [-c C]\n"
-    msg += "  bdf_test -h | --help\n"
-    msg += "  bdf_test -v | --version\n"
-    msg += "\n"
-    msg += "Tests to see if many BDFs will work with pyNastran %s.\n" % ver
-    msg += "\n"
-    #msg += "Positional Arguments:\n"
-    #msg += "  OP2_FILENAME         Path to OP2 file\n"
-    #msg += "\n"
-    msg += "Options:\n"
-    msg += "  -r, --regenerate     Resets the tests\n"
-    msg += '  -c C, --crash_cards  Crash on specific cards (e.g. CGEN,EGRID)\n'
-    msg += "  -n, --run_nastran    Runs Nastran\n"
-    msg += "  -L, --sum_loads      Disables static/dynamic loads sum\n"
-    msg += "  -s S, --size S       Sets the field size\n"
-    msg += '  -e E, --nerrors E    Allow for cross-reference errors (default=100)\n'
-    msg += '  -x, --xref           disables cross-referencing and checks of the BDF.\n'
-    msg += '                       (default=False -> on)\n'
+    msg += (
+        "Usage:  bdf_test [-r] [-n] [-s S...] [-e E] [-L] [-x] [-c C]\n"
+        "        bdf_test -h | --help\n"
+        "        bdf_test -v | --version\n"
+        "\n"
+        f"Tests to see if many BDFs will work with pyNastran {ver}.\n"
+        "\n"
+        #"Positional Arguments:\n"
+        #"  OP2_FILENAME         Path to OP2 file\n"
+        #"\n"
+        "Options:\n"
+        "  -r, --regenerate     Resets the tests\n"
+        '  -c C, --crash_cards  Crash on specific cards (e.g. CGEN,EGRID)\n'
+        "  -n, --run_nastran    Runs Nastran\n"
+        "  -L, --sum_loads      Disables static/dynamic loads sum\n"
+        "  -s S, --size S       Sets the field size\n"
+        '  -e E, --nerrors E    Allow for cross-reference errors (default=100)\n'
+        '  -x, --xref           disables cross-referencing and checks of the BDF.\n'
+        '                       (default=False -> on)\n'
+    )
     if len(sys.argv) == 0:
         sys.exit(msg)
 

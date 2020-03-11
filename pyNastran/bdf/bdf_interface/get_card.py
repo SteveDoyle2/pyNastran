@@ -925,7 +925,8 @@ class GetCard(GetMethods):
             dtype=dtype, solids=solids)
 
     def _upcast_int_dtype(self, dtype: str) -> str:
-        if dtype == 'int32' and max(self.nodes) > 2147483647:
+        """helper for 64-bit integers"""
+        if dtype == 'int32' and len(self.nodes) and max(self.nodes) > 2147483647:
             # or max(self.elements) > 2147483647):
             dtype = 'int64'
         return dtype
