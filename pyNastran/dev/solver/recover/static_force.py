@@ -7,6 +7,7 @@ from pyNastran.op2.op2_interface.hdf5_interface import (
     RealSpringForceArray, RealRodForceArray, RealCBarForceArray,
 )
 from pyNastran.dev.solver.build_stiffness import ke_cbar
+from .static_spring import _recover_force_celas
 from .utils import get_plot_request
 
 if TYPE_CHECKING:  # pragma: no cover
@@ -74,59 +75,16 @@ def recover_force_101(f06_file, op2,
     if nelements == 0:
         model.log.warning(f'no force output...{model.card_count}; {model.bdf_filename}')
 
-def _recover_force_celas(f06_file, op2,
-                         model: BDF, dof_map, isubcase, xg, eids_str,
-                         element_name: str, fdtype='float32',
-                         title: str='', subtitle: str='', label: str='',
-                         page_num: int=1, page_stamp='PAGE %s') -> None:
-    """recovers static spring force"""
-    neids, ielas, eids, forces = get_ieids_eids(model, element_name, eids_str, fdtype=fdtype)
-    if not neids:
-        return neids
-    if element_name in {'CELAS1', 'CELAS2'}:
-        for ieid, eid in zip(ielas, eids):
-            elem = model.elements[eid]
-            ki = elem.K()
-            force = _recover_forcei_celas12(xg, dof_map, elem, ki)
-            forces[ieid] = force
-    elif element_name in {'CELAS3', 'CELAS4'}:
-        for ieid, eid in zip(ielas, eids):
-            elem = model.elements[eid]
-            ki = elem.K()
-            force = _recover_forcei_celas34(xg, dof_map, elem, ki)
-            forces[ieid] = force
-    else:  # pragma: no cover
-        raise NotImplementedError(element_name)
-
-    data = forces.reshape(1, *forces.shape)
-    table_name = 'OEF1'
-    spring_force = RealSpringForceArray.add_static_case(
-        table_name, element_name, eids, data, isubcase,
-        is_sort1=True, is_random=False, is_msc=True,
-        random_code=0, title=title, subtitle=subtitle, label=label)
-    if element_name == 'CELAS1':
-        op2.celas1_force[isubcase] = spring_force
-    elif element_name == 'CELAS2':
-        op2.celas2_force[isubcase] = spring_force
-    elif element_name == 'CELAS3':
-        op2.celas3_force[isubcase] = spring_force
-    elif element_name == 'CELAS4':
-        op2.celas4_force[isubcase] = spring_force
-    else:  # pragma: no cover
-        raise NotImplementedError(element_name)
-    spring_force.write_f06(f06_file, header=None, page_stamp=page_stamp,
-                            page_num=page_num, is_mag_phase=False, is_sort1=True)
-    return neids
-
 def _recover_force_rod(f06_file, op2,
                        model: BDF, dof_map, isubcase, xb, eids_str,
                        element_name, fdtype='float32',
                        title: str='', subtitle: str='', label: str='',
                        page_num: int=1, page_stamp='PAGE %s') -> None:
     """recovers static rod force"""
-    neids, irod, eids, forces = get_ieids_eids(model, element_name, eids_str, ncols=2, fdtype=fdtype)
+    neids, irod, eids = get_ieids_eids(model, element_name, eids_str)
     if not neids:
         return neids
+    forces = np.full((neids, 2), np.nan, dtype=fdtype)
     if element_name == 'CONROD':
         for ieid, eid in zip(irod, eids):
             elem = model.elements[eid]
@@ -161,28 +119,6 @@ def _recover_force_rod(f06_file, op2,
     force_obj.write_f06(f06_file, header=None, page_stamp=page_stamp,
                         page_num=page_num, is_mag_phase=False, is_sort1=True)
     return neids
-
-def _recover_forcei_celas12(xg, dof_map, elem, ki: float):
-    """get the static spring force"""
-    # F = kx
-    nid1, nid2 = elem.nodes
-    c1, c2 = elem.c1, elem.c2
-    i = dof_map[(nid1, c1)]
-    j = dof_map[(nid2, c2)]
-    strain = xg[j] - xg[i]  # TODO: check the sign
-    force = ki * strain
-    return force
-
-
-def _recover_forcei_celas34(xg, dof_map, elem, ki: float):
-    """get the static spring force"""
-    # F = kx
-    nid1, nid2 = elem.nodes
-    i = dof_map[(nid1, 0)]
-    j = dof_map[(nid2, 0)]
-    strain = xg[j] - xg[i]  # TODO: check the sign
-    force = ki * strain
-    return force
 
 def _recover_forcei_rod(xb, dof_map, elem, prop):
     """get the static rod force"""
@@ -240,10 +176,11 @@ def _recover_force_cbar(f06_file, op2,
     .. todo:: doesn't support CBAR-100
 
     """
-    neids, irod, eids, forces = get_ieids_eids(model, element_name, eids_str,
-                                               ncols=8, fdtype=fdtype)
+    neids, irod, eids = get_ieids_eids(model, element_name, eids_str)
     if not neids:
         return neids
+    forces = np.full((neids, 8), np.nan, dtype=fdtype)
+
     for ieid, eid in zip(irod, eids):
         elem = model.elements[eid]
         forces[ieid, :] = _recover_forcei_cbar(model, xb, dof_map, elem, elem.pid_ref)
@@ -269,6 +206,8 @@ def _recover_forcei_cbar(model: BDF,
              #'0    ELEMENT         BEND-MOMENT END-A            BEND-MOMENT END-B                - SHEAR -               AXIAL\n',
              #'       ID.         PLANE 1       PLANE 2        PLANE 1       PLANE 2        PLANE 1       PLANE 2         FORCE         TORQUE\n']
     nid1, nid2 = elem.nodes
+    prop = elem.pid_ref
+    mat = prop.mid_ref
 
     i1 = dof_map[(nid1, 1)]
     i2 = dof_map[(nid2, 1)]
@@ -316,24 +255,65 @@ def _recover_forcei_cbar(model: BDF,
         [z, z, z, T],
     ]) # 12x12
     q_element = Teb @ q_all
+    u_e = q_element.reshape(12, 1)
+    Fe = Ke @ q_element
+
+    # ---------------------------------
+    f_e = Fe
+    #c, d, e, f = prop.get_cdef()
+    #C1, C2 = c
+    #D1, D2 = d
+    #E1, E2 = e
+    #F1, F2 = f
+    C1, C2, D1, D2, E1, E2, F1, F2 = prop.get_cdef().ravel()
+    A = prop.A
+    E = mat.E()
+    I1 = prop.I11()
+    I2 = prop.I22()
+
+    #f_e = obj.k_e * u_e
+    force2stress = np.array([
+        [1/A, 0, 0, 0, C2/I2, -C1/I1],
+        [1/A, 0, 0, 0, D2/I2, -D1/I1],
+        [1/A, 0, 0, 0, E2/I2, -E1/I1],
+        [1/A, 0, 0, 0, F2/I2, -F1/I1],
+    ])
+
+    #print(force2stress.shape)
+    #print(f_e.shape)
+    stress = np.hstack([
+        -force2stress @ f_e[:6],
+        force2stress @ f_e[6:],
+    ])
+    #print(E, stress)
+
+    # [End A Long. Stress or Strain at Point C;
+    #  End A Long. Stress or Strain at Point D;
+    #  End A Long. Stress or Strain at Point E;
+    #  End A Long. Stress or Strain at Point F;
+    #  End B Long. Stress or Strain at Point C;
+    #  End B Long. Stress or Strain at Point D;
+    #  End B Long. Stress or Strain at Point E;
+    #  End B Long. Stress or Strain at Point F]
+    strain = 1 / E * stress
+
+    strain_energy = 0.5 * np.diag(u_e.T @ f_e).T
+    #print('strain_energy =', strain_energy)
+    # ---------------------------------
     #k1 = pid_ref.k1
     #k2 = pid_ref.k2
     #Ke = _beami_stiffness(pid_ref, mat, L, I1, I2, k1=k1, k2=k2, pa=pa, pb=pb)
     #K = Teb.T @ Ke @ Teb
-    #-------------------
 
     #is_passed, (wa, wb, ihat, jhat, khat) = elem.get_axes(model)
     #T = np.vstack([ihat, jhat, khat])
     #z = np.zeros((3, 3), dtype='float64')
-    prop = elem.pid_ref
-    #mat = prop.mid_ref
     #I1 = prop.I11()
     #I2 = prop.I22()
     #A = prop.Area()
     #J = prop.J()
     #unused_I12 = prop.I12()
 
-    Fe = Ke @ q_element
     (Fx1, Fy1, Fz1, Mx1, My1, Mz1,
     Fx2, Fy2, Fz2, Mx2, My2, Mz2) = Fe
 

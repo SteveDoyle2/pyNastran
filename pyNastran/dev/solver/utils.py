@@ -9,12 +9,12 @@ if TYPE_CHECKING:  # pragma: no cover
 
 DOF_MAP = Dict[Tuple[int, int], int]
 
-def get_ieids_eids(model: BDF, etype: str, eids_str, ncols: int=1,
-                   idtype: str='int32', fdtype: str='float32') -> Tuple[int, Any, Any, Any, ANy]:
+def get_ieids_eids(model: BDF, etype: str, eids_str,
+                   idtype: str='int32') -> Tuple[int, Any, Any, Any]:
     """helper for the stress/strain/force/displacment recovery"""
     eids = np.array(model._type_to_id_map[etype], dtype=idtype)
     if len(eids) == 0:
-        return 0, None, None, None
+        return 0, None, None
 
     if eids_str == 'ALL':
         neids = len(eids)
@@ -22,9 +22,7 @@ def get_ieids_eids(model: BDF, etype: str, eids_str, ncols: int=1,
     else:
         ieids = np.searchsorted(eids_str, eids)
         neids = len(ieids)
-    shape = (neids, ncols)
-    empty_array = np.full(shape, np.nan, dtype=fdtype)
-    return neids, ieids, eids, empty_array
+    return neids, ieids, eids
 
 
 def lambda1d(dxyz, debug=True):

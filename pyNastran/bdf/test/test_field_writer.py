@@ -1,6 +1,7 @@
 import random
 import unittest
 
+import numpy as np
 from pyNastran.bdf.field_writer import print_card
 from pyNastran.bdf.field_writer_8 import (print_field_8, print_float_8,
                                           set_default_if_blank,
@@ -368,10 +369,21 @@ class Testfield_writer_8(unittest.TestCase):
             '-8.182+6', '-8.182+7', '-8.182+8', '-8.182+9', '-8.18+10', '-8.18+11',
             '-8.18+12', '-8.18+13', '-8.18+14', '-8.18+15', '-8.18+16',
         ]
-        for x, expectedi in zip(nums, expected):
-            output = print_float_8(x)
+        for num, expectedi in zip(nums, expected):
+            output = print_float_8(num)
             self.assertEqual(len(output), 8, msg='output=%r len(output)=%i' % (output, len(output)))
-            self.assertEqual(output, expectedi, msg='num=%s output=%r expected=%r' % (x, output, expectedi))
+            self.assertEqual(output, expectedi, msg='num=%s output=%r expected=%r' % (num, output, expectedi))
+
+    def test_float_8_many(self):
+        for istart in np.arange(-13, 13):
+            #print(istart)
+            nums = np.logspace(istart, istart+1, num=1000, endpoint=True, base=10.0, dtype=None, axis=0)
+            for num in nums:
+                output = print_float_8(num)
+                self.assertEqual(len(output), 8, msg='output=%r len(output)=%i' % (output, len(output)))
+                #self.assertEqual(output, expectedi, msg='num=%s output=%r expected=%r' % (x, output, expectedi))
+                output = print_scientific_8(num)
+                self.assertEqual(len(output), 8, msg='output=%r len(output)=%i' % (output, len(output)))
 
     def test_scientific_8(self):
         expected_num = [
@@ -421,10 +433,10 @@ class Testfield_writer_8(unittest.TestCase):
             '-8.18181818182+5', '-8.18181818182+6', '-8.18181818182+7', '-8.18181818182+8',
             '-8.18181818182+9', '-8.1818181818+10', '-8.1818181818+11', '-8.1818181818+12',
             '-8.1818181818+13', '-8.1818181818+14', '-8.1818181818+15', '-8.1818181818+16', ]
-        for x, expectedi in zip(nums, expected):
-            output = print_scientific_16(x)
+        for num, expectedi in zip(nums, expected):
+            output = print_scientific_16(num)
             self.assertEqual(len(output), 16, msg='output=%r len(output)=%i' % (output, len(output)))
-            self.assertEqual(output, expectedi, msg='num=%s output=%r expected=%r' % (x, output, expectedi))
+            self.assertEqual(output, expectedi, msg='num=%s output=%r expected=%r' % (num, output, expectedi))
             #print('%16s %r' % (x, output))
 
     def test_float_16(self):
@@ -461,10 +473,10 @@ class Testfield_writer_8(unittest.TestCase):
             '-81818181818.182', '-818181818181.82', '-8181818181818.2', '-81818181818182.',
             '-8.1818181818+14', '-8.1818181818+15', '-8.1818181818+16',
         ]
-        for x, expectedi in zip(nums, expected):
-            output = print_float_16(x)
+        for num, expectedi in zip(nums, expected):
+            output = print_float_16(num)
             self.assertEqual(len(output), 16, msg='output=%r len(output)=%i' % (output, len(output)))
-            self.assertEqual(output, expectedi, msg='num=%s output=%r expected=%r' % (x, output, expectedi))
+            self.assertEqual(output, expectedi, msg='num=%s output=%r expected=%r' % (num, output, expectedi))
 
         nums = [0.99999999999999 * 10**x for x in range(small_exponent, large_exponent+1)]
         unused_positive_output = [print_float_16(x) for x in nums]

@@ -2,10 +2,11 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 import numpy as np
 
-from pyNastran.dev.solver.utils import lambda1d, get_ieids_eids
-from pyNastran.op2.op2_interface.hdf5_interface import (
-    RealStrainEnergyArray,
-)
+#from pyNastran.dev.solver.utils import lambda1d, get_ieids_eids
+#from pyNastran.op2.op2_interface.hdf5_interface import (
+    #RealStrainEnergyArray,
+#)
+from .static_spring import _recover_strain_energy_celas
 #from pyNastran.dev.solver.build_stiffness import ke_cbar
 from .utils import get_plot_request
 
@@ -74,55 +75,13 @@ def recover_strain_energy_101(f06_file, op2,
     if nelements == 0:
         model.log.warning(f'no strain energy output...{model.card_count}; {model.bdf_filename}')
 
-def _recover_strain_energy_celas(f06_file, op2,
-                                 model: BDF, dof_map, isubcase, xg, eids_str,
-                                 element_name: str, fdtype='float32',
-                                 title: str='', subtitle: str='', label: str='',
-                                 page_num: int=1, page_stamp='PAGE %s') -> None:
-    """recovers static spring strain energy"""
-    neids, ielas, eids, strain_energies = get_ieids_eids(model, element_name, eids_str, fdtype=fdtype)
-    if not neids:
-        return neids
-    if element_name in {'CELAS1', 'CELAS2'}:
-        for ieid, eid in zip(ielas, eids):
-            elem = model.elements[eid]
-            ki = elem.K()
-            strain_energies[ieid] = _recover_strain_energyi_celas12(xg, dof_map, elem, ki)
-    elif element_name in {'CELAS3', 'CELAS4'}:
-        for ieid, eid in zip(ielas, eids):
-            elem = model.elements[eid]
-            ki = elem.K()
-            strain_energies[ieid] = _recover_strain_energyi_celas34(xg, dof_map, elem, ki)
-    else:  # pragma: no cover
-        raise NotImplementedError(element_name)
-
-    data = strain_energies.reshape(1, *strain_energies.shape)
-    table_name = 'ONRGY1'
-    spring_strain_energy = RealStrainEnergyArray.add_static_case(
-        table_name, element_name, eids, data, isubcase,
-        is_sort1=True, is_random=False, is_msc=True,
-        random_code=0, title=title, subtitle=subtitle, label=label)
-    if element_name == 'CELAS1':
-        op2.celas1_strain_energy[isubcase] = spring_strain_energy
-    elif element_name == 'CELAS2':
-        op2.celas2_strain_energy[isubcase] = spring_strain_energy
-    elif element_name == 'CELAS3':
-        op2.celas3_strain_energy[isubcase] = spring_strain_energy
-    elif element_name == 'CELAS4':
-        op2.celas4_strain_energy[isubcase] = spring_strain_energy
-    else:  # pragma: no cover
-        raise NotImplementedError(element_name)
-    spring_strain_energy.write_f06(f06_file, header=None, page_stamp=page_stamp,
-                                   page_num=page_num, is_mag_phase=False, is_sort1=True)
-    return neids
-
 #def _recover_strain_energy_rod(f06_file, op2,
                                #model: BDF, dof_map, isubcase, xb, eids_str,
                                #element_name, fdtype='float32',
                                #title: str='', subtitle: str='', label: str='',
                                #page_num: int=1, page_stamp='PAGE %s') -> None:
     #"""recovers static rod force"""
-    #neids, irod, eids, forces = get_ieids_eids(model, element_name, eids_str, ncols=2, fdtype=fdtype)
+    #neids, irod, eids = get_ieids_eids(model, element_name, eids_str)
     #if not neids:
         #return neids
     #if element_name == 'CONROD':
@@ -159,28 +118,6 @@ def _recover_strain_energy_celas(f06_file, op2,
     #force_obj.write_f06(f06_file, header=None, page_stamp=page_stamp,
                         #page_num=page_num, is_mag_phase=False, is_sort1=True)
     #return neids
-
-def _recover_strain_energyi_celas12(xg, dof_map, elem, ki: float):
-    """get the static spring force"""
-    # F = kx
-    nid1, nid2 = elem.nodes
-    c1, c2 = elem.c1, elem.c2
-    i = dof_map[(nid1, c1)]
-    j = dof_map[(nid2, c2)]
-    strain = xg[j] - xg[i]  # TODO: check the sign
-    force = ki * strain ** 2
-    return force
-
-
-def _recover_strain_energyi_celas34(xg, dof_map, elem, ki: float):
-    """get the static spring force"""
-    # F = kx
-    nid1, nid2 = elem.nodes
-    i = dof_map[(nid1, 0)]
-    j = dof_map[(nid2, 0)]
-    strain = xg[j] - xg[i]  # TODO: check the sign
-    force = ki * strain ** 2
-    return force
 
 #def _recover_strain_energyi_rod(xb, dof_map, elem, prop):
     #"""get the static rod force"""
@@ -238,8 +175,7 @@ def _recover_strain_energyi_celas34(xg, dof_map, elem, ki: float):
     #.. todo:: doesn't support CBAR-100
 
     #"""
-    #neids, irod, eids, forces = get_ieids_eids(model, element_name, eids_str,
-                                               #ncols=8, fdtype=fdtype)
+    #neids, irod, eids = get_ieids_eids(model, element_name, eids_str)
     #if not neids:
         #return neids
     #for ieid, eid in zip(irod, eids):

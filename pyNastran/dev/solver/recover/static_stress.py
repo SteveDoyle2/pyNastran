@@ -1,11 +1,17 @@
+"""
+Hooke law:
+   {\sigma^0} = [D][B]{u_0}
+
+"""
 from __future__ import annotations
 from typing import TYPE_CHECKING
 import numpy as np
 
 from pyNastran.dev.solver.utils import lambda1d, get_ieids_eids
 from pyNastran.op2.op2_interface.hdf5_interface import (
-    RealSpringStressArray, RealRodStressArray,
+    RealRodStressArray,
 )
+from .static_spring import _recover_stress_celas
 from .utils import get_plot_request
 
 if TYPE_CHECKING:  # pragma: no cover
@@ -70,77 +76,16 @@ def recover_stress_101(f06_file, op2,
         model.log.warning(f'no stress output...{model.card_count}; {model.bdf_filename}')
 
 
-def _recover_stress_celas(f06_file, op2,
-                          model: BDF, dof_map, isubcase, xg, eids_str,
-                          element_name: str, fdtype='float32',
-                          title: str='', subtitle: str='', label: str='',
-                          page_num: int=1, page_stamp='PAGE %s') -> None:
-    """recovers static spring stress"""
-    neids, ielas, eids, stresses = get_ieids_eids(model, element_name, eids_str, fdtype=fdtype)
-    if not neids:
-        return neids
-    if element_name == 'CELAS1':
-        for ieid, eid in zip(ielas, eids):
-            elem = model.elements[eid]
-            pid_ref = elem.pid_ref
-            ki = pid_ref.K()
-            si = pid_ref.s
-            stresses[ieid] = _recover_stressi_celas12(xg, dof_map, elem, ki, si)
-    elif element_name == 'CELAS2':
-        for ieid, eid in zip(ielas, eids):
-            elem = model.elements[eid]
-            ki = elem.K()
-            si = elem.s
-            stresses[ieid] = _recover_stressi_celas12(xg, dof_map, elem, ki, si)
-    elif element_name == 'CELAS3':
-        for ieid, eid in zip(ielas, eids):
-            elem = model.elements[eid]
-            pid_ref = elem.pid_ref
-            ki = pid_ref.K()
-            si = pid_ref.s
-            stresses[ieid] = _recover_stressi_celas34(xg, dof_map, elem, ki, si)
-    elif element_name == 'CELAS4':
-        for ieid, eid in zip(ielas, eids):
-            elem = model.elements[eid]
-            ki = elem.K()
-            si = 1.0 # TODO: is this right?
-            #si = elem.s
-            stresses[ieid] = _recover_stressi_celas34(xg, dof_map, elem, ki, si)
-    else:  # pragma: no cover
-        raise NotImplementedError(element_name)
-
-
-    data = stresses.reshape(1, *stresses.shape)
-    table_name = 'OES1'
-    spring_stress = RealSpringStressArray.add_static_case(
-        table_name, element_name, eids, data, isubcase, is_stress=True,
-        is_sort1=True, is_random=False, is_msc=True,
-        random_code=0, title=title, subtitle=subtitle, label=label)
-    if element_name == 'CELAS1':
-        op2.celas1_stress[isubcase] = spring_stress
-    elif element_name == 'CELAS2':
-        op2.celas2_stress[isubcase] = spring_stress
-    elif element_name == 'CELAS3':
-        op2.celas3_stress[isubcase] = spring_stress
-    elif element_name == 'CELAS4':
-        op2.celas4_stress[isubcase] = spring_stress
-    else:  # pragma: no cover
-        raise NotImplementedError(element_name)
-    spring_stress.write_f06(f06_file, header=None, page_stamp=page_stamp,
-                            page_num=page_num, is_mag_phase=False, is_sort1=True)
-    return neids
-
-
 def _recover_stress_rod(f06_file, op2,
                         model: BDF, dof_map, isubcase, xb, eids_str,
                         element_name, fdtype='float32',
                         title: str='', subtitle: str='', label: str='',
                         page_num: int=1, page_stamp='PAGE %s') -> None:
     """recovers static rod stress"""
-    neids, irod, eids, stresses = get_ieids_eids(model, element_name, eids_str,
-                                                 ncols=4, fdtype=fdtype)
+    neids, irod, eids = get_ieids_eids(model, element_name, eids_str)
     if not neids:
         return neids
+    stresses = np.full((neids, 4), np.nan, dtype=fdtype)
     if element_name == 'CONROD':
         for ieid, eid in zip(irod, eids):
             elem = model.elements[eid]
@@ -175,27 +120,6 @@ def _recover_stress_rod(f06_file, op2,
     stress_obj.write_f06(f06_file, header=None, page_stamp=page_stamp,
                          page_num=page_num, is_mag_phase=False, is_sort1=True)
     return neids
-
-def _recover_stressi_celas12(xg, dof_map, elem, ki: float, si: float):
-    """get the static spring stress"""
-    # F = kx
-    nid1, nid2 = elem.nodes
-    c1, c2 = elem.c1, elem.c2
-    i = dof_map[(nid1, c1)]
-    j = dof_map[(nid2, c2)]
-    strain = xg[j] - xg[i]  # TODO: check the sign
-    stress = ki * si * strain
-    return stress
-
-def _recover_stressi_celas34(xg, dof_map, elem, ki: float, si: float):
-    """get the static spring stress"""
-    # F = kx
-    nid1, nid2 = elem.nodes
-    i = dof_map[(nid1, 0)]
-    j = dof_map[(nid2, 0)]
-    strain = xg[j] - xg[i]  # TODO: check the sign
-    stress = ki * si * strain
-    return stress
 
 def _recover_stressi_rod(xb, dof_map, elem, prop):
     """get the static rod stress"""
