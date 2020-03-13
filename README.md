@@ -36,7 +36,7 @@ for more detailed information.
 pyNastran is an interface library to the various Nastran file formats (BDF, OP2, OP4).
 Using the BDF interface, you can read/edit/write Nastran geometry without worrying about
 field formatting.  Many checks are also performed to verify that your model is correct.
-Using the OP2 interface, you can read large result files quckly and efficiently.
+Using the OP2 interface, you can read large result files quickly and efficiently.
 Additionally, you can also extract a subset of the result data and write OP2/F06 result
 files.  For a more detailed list of features, see:
   * [Features](https://pynastran-git.readthedocs.io/en/1.2/quick_start/features.html#overview)
