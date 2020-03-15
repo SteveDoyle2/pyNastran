@@ -47,7 +47,8 @@ class Responses:
             'fractional_mass_response',
         ]
         return ['responses.' + table for table in tables
-                if getattr(self, table) is not None]
+                #if getattr(self, table) is not None
+                ]
 
 class WeightResponse:
     def __init__(self):

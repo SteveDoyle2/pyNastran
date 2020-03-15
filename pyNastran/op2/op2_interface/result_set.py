@@ -38,6 +38,7 @@ class ResultSet:
 
         # the full set of allowable results
         self.allowed = set(allowed_results)
+        #assert 'responses.convergence_data' in allowed_results
 
         # the set of results that have been found
         self.found = set()

@@ -587,11 +587,17 @@ class OP2Reader:
         self.read_markers([0])
         self.op2.matdicts[name] = matdict
 
-    def _read_destab(self):
+    def _read_destab(self) -> None:
         """reads the DESTAB table"""
+        op2 = self.op2
+
+        result_name = 'responses.desvars'
+        if op2._results.is_not_saved(result_name):
+            data = self._skip_table('DESTAB', warn=False)
+            return
+
         #if self.read_mode == 1:
             #return ndata
-        op2 = self.op2
         op2.table_name = self._read_table_name(rewind=False)
         #self.log.debug('table_name = %r' % op2.table_name)
         if self.is_debug_file:
@@ -1000,42 +1006,42 @@ class OP2Reader:
             #print('myints =', ints)
             #print('floats =', floats)
 
-    def _read_dit(self):
-        """
-        Reads the DIT table (poorly).
-        The DIT table stores information about table cards
-        (e.g. TABLED1, TABLEM1).
+    #def _read_dit(self):
+        #"""
+        #Reads the DIT table (poorly).
+        #The DIT table stores information about table cards
+        #(e.g. TABLED1, TABLEM1).
 
-        """
-        asd
-        op2 = self.op2
-        unused_table_name = self._read_table_name(rewind=False)
-        self.read_markers([-1])
-        data = self._read_record()
+        #"""
+        #asd
+        #op2 = self.op2
+        #unused_table_name = self._read_table_name(rewind=False)
+        #self.read_markers([-1])
+        #data = self._read_record()
 
-        self.read_3_markers([-2, 1, 0])
-        data = self._read_record()
-        unused_table_name, = op2.struct_8s.unpack(data)
+        #self.read_3_markers([-2, 1, 0])
+        #data = self._read_record()
+        #unused_table_name, = op2.struct_8s.unpack(data)
 
-        self.read_3_markers([-3, 1, 0])
-        data = self._read_record()
+        #self.read_3_markers([-3, 1, 0])
+        #data = self._read_record()
 
-        self.read_3_markers([-4, 1, 0])
-        data = self._read_record()
+        #self.read_3_markers([-4, 1, 0])
+        #data = self._read_record()
 
-        self.read_3_markers([-5, 1, 0])
+        #self.read_3_markers([-5, 1, 0])
 
-        itable = -6
-        while 1:
-            markers = self.get_nmarkers(1, rewind=True)
-            if markers == [0]:
-                break
-            data = self._read_record()
-            self.read_3_markers([itable, 1, 0])
-            itable -= 1
+        #itable = -6
+        #while 1:
+            #markers = self.get_nmarkers(1, rewind=True)
+            #if markers == [0]:
+                #break
+            #data = self._read_record()
+            #self.read_3_markers([itable, 1, 0])
+            #itable -= 1
 
-        #self.show(100)
-        self.read_markers([0])
+        ##self.show(100)
+        #self.read_markers([0])
 
     def read_extdb(self):
         r"""
@@ -1882,20 +1888,35 @@ class OP2Reader:
     def read_hisadd(self):
         """optimization history (SOL200) table"""
         op2 = self.op2
+
+        result_name = 'responses.convergence_data'
+        is_saved_result = op2._results.is_saved(result_name)
+        #read_mode = self.read_mode
+        if is_saved_result:
+            op2._results._found_result(result_name)
+        else:
+            self._skip_table('HISADD', warn=False)
+            return
+        is_not_saved_result = not is_saved_result
+
+        #slot = op2.get_result(result_name)
+
         responses = op2.op2_results.responses
         op2.table_name = self._read_table_name(rewind=False)
 
-        if self.read_mode == 1:
+        if self.read_mode == 1 or is_not_saved_result:
             self.read_markers([-1])
             self._skip_record()
             self.read_3_markers([-2, 1, 0])
             self._skip_record()
             self.read_3_markers([-3, 1, 0])
 
-            if responses.convergence_data is None:
+            if is_saved_result and responses.convergence_data is None:
                 data = self._read_record()
                 ndvs = len(data) // 4 - 7
                 responses.convergence_data = Convergence(ndvs)
+            #elif is_not_saved_result:
+                #self._skip_record()
             else:
                 self._skip_record()
                 responses.convergence_data.n += 1
@@ -2466,7 +2487,6 @@ class OP2Reader:
 
         """
         op2 = self.op2
-        responses = op2.op2_results.responses
         if op2._table4_count == 0:
             op2._count += 1
         op2._table4_count += 1
@@ -2475,6 +2495,12 @@ class OP2Reader:
             #op2._count += 1
         #op2._table4_count += 1
 
+        result_name = 'responses'
+        if op2._results.is_not_saved(result_name):
+            return ndata
+
+        #op2._results._found_result(result_name)
+        responses = op2.op2_results.responses
         if self.read_mode == 1:
             assert data is not None, data
             assert len(data) > 12, len(data)

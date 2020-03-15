@@ -332,7 +332,7 @@ class Usm3d:
             }
             if stop_after_header:
                 return self.header
-            self.log.info(self.header)
+            self.log.info(str(self.header))
 
             # nbn nodes
             #
