@@ -141,6 +141,7 @@ install:
   - echo "python=$TRAVIS_PYTHON_VERSION ${NUMPY}"
   - sudo apt-get update
   - sudo apt-get install ${LIB} ${LIBH5} gfortran
+  - python -m pip install pip setuptools --upgrade
 
   # We do this conditionally because it saves us some downloading if the
   # version is the same.
@@ -150,6 +151,7 @@ install:
 
 #===install dependencies===
 #-----------pip------------
+  - pip install 
   - pip install ${NUMPY}
   - pip list
 #----------run-----------
