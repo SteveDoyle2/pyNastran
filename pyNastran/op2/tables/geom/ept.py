@@ -21,7 +21,7 @@ from pyNastran.bdf.cards.properties.springs import PELAS, PELAST
 from pyNastran.bdf.cards.thermal.thermal import PCONV, PHBDY, PCONVM
 # PCOMPG, PBUSH1D, PBEAML, PBEAM3
 from pyNastran.op2.tables.geom.geom_common import GeomCommon
-from pyNastran.op2.op2_interface.op2_reader import mapfmt, reshape_bytes_block
+from pyNastran.op2.op2_interface.op2_reader import mapfmt # , reshape_bytes_block
 
 
 class EPT(GeomCommon):
@@ -1183,8 +1183,8 @@ class EPT(GeomCommon):
                 self.binary_debug.write(f'PCOMP pid={pid} nlayers={nlayers} z0={z0} nsm={nsm} '
                                         f'sb={sb} ft={ft} Tref={tref} ge={ge}')
             assert isinstance(nlayers, int), out
-            print(f'PCOMP pid={pid} nlayers={nlayers} z0={z0} nsm={nsm} '
-                  f'sb={sb} ft={ft} Tref={tref} ge={ge}')
+            #print(f'PCOMP pid={pid} nlayers={nlayers} z0={z0} nsm={nsm} '
+                  #f'sb={sb} ft={ft} Tref={tref} ge={ge}')
             n += ntotal1
 
             mids = []

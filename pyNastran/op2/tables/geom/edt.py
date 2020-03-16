@@ -1,6 +1,7 @@
 """
 defines readers for BDF objects in the OP2 EDT/EDTS table
 """
+import numpy as np
 from pyNastran.op2.tables.geom.geom_common import GeomCommon
 
 
@@ -51,7 +52,7 @@ class EDT(GeomCommon):
             (2702, 27, 387) : ['DIVERG', self._read_fake],
             (4102, 41, 274) : ['FLFACT', self._read_fake],
             (3902, 39, 272) : ['FLUTTER', self._read_fake],
-            (17400, 174, 616) : ['GROUP', self._read_fake],
+            (17400, 174, 616) : ['GROUP', self._read_group],
             (3802, 38, 271) : ['MKAERO1', self._read_fake],
             (3702, 37, 270) : ['MKAERO2', self._read_fake],
             (7601, 76, 577) : ['MONPNT1', self._read_fake],
@@ -87,3 +88,109 @@ class EDT(GeomCommon):
             #(10500, 105, 14) : ['???', self._read_fake],
             #(10500, 105, 14) : ['???', self._read_fake],
         }
+    def _read_group(self, data, n):
+        """
+        GROUP(17400,174,616)
+
+        1 GID          I Group identification number
+        2 NDESC(C)     I Length of group description
+        3 GDESC(2) CHAR4 Group description
+        Word 3 repeats NDESC times
+
+        NDESC+3 GTYPE I Group type
+        -2 = Meta data
+        -3 = Property identification numbers
+        -4 = Grid identification numbers
+        -5 = Element identification numbers
+        GTYPE = -2 Meta data
+        NDESC+4 NMETA        I Length of meta data (includes -1 terminator)
+        NDESC+5 MDESC(2) CHAR4 Meta data
+        Word NDESC+5 repeats NMETA times
+
+        GTYPE = -3 Property identification numbers
+        NDESC+5
+        +NMETA
+        ID I Property identification numbers
+        > 0 for ID
+        = 0 for THRU
+        = -6 for BY
+        = -7 for ALL
+        Word NDESC+5+NMETA repeats until -1 occurs
+        GTYPE = -4 Grid identification numbers
+        NDESC+5
+        +NMETA
+        ID I Grid identification numbers
+        > 0 for ID
+        = 0 for THRU
+        = -6 for BY
+        = -7 for ALL
+        Word NDESC+5+NMETA repeats until -1 occurs
+        GTYPE = -5 Element identification numbers
+        NDESC+5
+        +NMETA
+        ID I Element identification numbers
+        > 0 for ID
+        = 0 for THRU
+        = -6 for BY
+        = -7 for ALL
+        Word NDESC+5+NMETA repeats until -1 occurs
+        """
+        nentries = 0
+        ints = np.frombuffer(data[12:], dtype=self.idtype)
+        strs = np.frombuffer(data[12:], dtype='|S4')
+        #print(ints)
+        #print(strs)
+
+        i = 0
+        while n < len(data):
+            #1 GID          I Group identification number
+            #2 NDESC(C)     I Length of group description
+            #3 GDESC(2) CHAR4 Group description
+            #Word 3 repeats NDESC times
+            grid, ndesc = ints[i:i+2]
+            i += 2
+            n += 8
+
+            gdesc = ''.join(stri.decode('latin1') for stri in strs[i:i+ndesc])
+            i += ndesc
+            n += 4 * ndesc
+            #print(grid, ndesc, gdesc)
+
+            #------------------------------
+            #gtype, nmeta, mdesc
+            gtype = ints[i]
+            i += 1
+            n += 4
+
+            if gtype == -2:  # pragma: no cover
+                nmeta = ints[i:i+1]
+                i += 1
+                n += 4
+
+                mdesc = ''.join(stri.decode('latin1') for stri in strs[i:i+nmeta])
+                i += nmeta
+                n += 4 * nmeta
+                #print(gtype, nmeta, mdesc)
+            if gtype == -5:
+                #GTYPE = -5 Element identification numbers
+                #NDESC+5+NMETA
+                #ID I Element identification numbers
+                #> 0 for ID
+                #= 0 for THRU
+                #= -6 for BY
+                #= -7 for ALL
+                #Word NDESC+5+NMETA repeats until -1 occurs
+                nstop = np.where(ints[i:]==-1)[0][0]
+                eids = ints[i:i+nstop]
+                i += nstop + 1
+                n += (nstop + 1) * 4
+            else:
+                raise NotImplementedError(gtype)
+            assert ints[i] == -1, ints[i:]
+            i += 1
+            n += 4
+            self.log.warning(f'skipping GROUP in {self.table_name}')
+            #self.add_rgyro(sid, asynci, refrot, unit, speed_low, speed_high, speed)
+        self.increase_card_count('GROUP', nentries)
+        return n
+

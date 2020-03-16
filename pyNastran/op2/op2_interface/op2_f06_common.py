@@ -309,16 +309,16 @@ class OP2_F06_Common:
         self.op2_results.strain_energy.conrod_strain_energy = conrod_strain_energy
 
     @cquad4_strain_energy.setter
-    def cquad4_strain_energy(self):
+    def cquad4_strain_energy(self, cquad4_strain_energy):
         self.op2_results.strain_energy.cquad4_strain_energy = cquad4_strain_energy
     @cquad8_strain_energy.setter
-    def cquad8_strain_energy(self):
+    def cquad8_strain_energy(self, cquad8_strain_energy):
         self.op2_results.strain_energy.cquad8_strain_energy = cquad8_strain_energy
     @cquadr_strain_energy.setter
-    def cquadr_strain_energy(self):
+    def cquadr_strain_energy(self, cquadr_strain_energy):
         self.op2_results.strain_energy.cquadr_strain_energy = cquadr_strain_energy
     @cquadx_strain_energy.setter
-    def cquadx_strain_energy(self):
+    def cquadx_strain_energy(self, cquadx_strain_energy):
         self.op2_results.strain_energy.cquadx_strain_energy = cquadx_strain_energy
 
     @ctetra_strain_energy.setter
@@ -1433,7 +1433,7 @@ def _get_op2_stats_full(model: OP2, table_types: List[str], log):
                     raise RuntimeError(msgi)
         except:
             log.warning('type(table)=%s' % type(table))
-            log.warning(table)
+            log.warning(str(table))
             raise
     return msg
 

@@ -1,10 +1,8 @@
 # coding: utf-8
 # pylint: disable=W0201,C0301
 import os.path
-import datetime
 from collections import OrderedDict
 from math import ceil
-import html
 
 import numpy as np
 from cpylog import SimpleLogger
@@ -45,7 +43,13 @@ from .menus.legend.write_gif import (
     setup_animation, update_animation_inputs, write_gif, make_two_sided)
 from .utils.vtk.animation_callback import AnimationCallback
 from .utils.vtk.base_utils import numpy_to_vtk_idtype
-from .utils.html_utils import str_to_html
+
+try:
+    from cpylog.html_utils import str_to_html
+except ImportError:
+    import warnings
+    warnings.warn('upgrade your cpylog to v1.4')
+    from .utils.html_utils import str_to_html
 
 
 #from pyNastran.gui.menus.multidialog import MultiFileDialog

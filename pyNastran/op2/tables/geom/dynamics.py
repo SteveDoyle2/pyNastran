@@ -7,7 +7,7 @@ from pyNastran.bdf.cards.loads.loads import DAREA
 from pyNastran.bdf.cards.methods import EIGB
 from pyNastran.bdf.cards.dynamic import FREQ1, TF, DELAY, DPHASE
 from pyNastran.bdf.cards.loads.dloads import TLOAD1, TLOAD2, RLOAD1, RLOAD2, ACSRCE
-from pyNastran.op2.op2_interface.op2_reader import mapfmt, reshape_bytes_block
+from pyNastran.op2.op2_interface.op2_reader import mapfmt # , reshape_bytes_block
 from pyNastran.op2.tables.geom.geom_common import GeomCommon
 from pyNastran.op2.tables.geom.dit import get_iend_from_ints
 
@@ -51,8 +51,8 @@ class DYNAMICS(GeomCommon):
             (5107, 51, 131): ['RLOAD1', self._read_rload1],  # 26
             (5207, 52, 132): ['RLOAD2', self._read_rload2],  # 27
             (8910, 89, 606): ['ROTORB', self._read_fake],  # 28
-            (8210, 82, 599): ['ROTORD', self._read_fake],  # 29
-            (8410, 84, 600): ['ROTORG', self._read_fake],  # 30
+            (8210, 82, 599): ['ROTORD', self._read_rotord],  # 29
+            (8410, 84, 600): ['ROTORG', self._read_rotorg],  # 30
             (5707, 57, 135): ['SEQEP', self._read_fake],  # 31
             (6207, 62, 136): ['TF', self._read_tf],  # 32
             (6607, 66, 137): ['TIC', self._read_tic],  # 33
@@ -1312,7 +1312,7 @@ class DYNAMICS(GeomCommon):
 
     def _read_rgyro(self, data, n):
         """
-        FREQ4(1507,15,40) - Record 17
+        RGYRO(1507,15,40) - Record 17
 
         1 SID          I RGYRO identification number
         2 ATYPE(2) CHAR4 ASYNC/SYNC flag
@@ -1339,7 +1339,115 @@ class DYNAMICS(GeomCommon):
         self.increase_card_count('RGYRO', nentries)
         return n
 
-#ROTORG
+    def _read_rotord(self, data, n):
+        """
+        ROTORD(8210, 82, 599)
+
+        1 SID               I Set identification number
+        2 NUMROT            I Number of rotors (i=1, NUMROT below)
+        3 RSTART           RS Starting rotor speed (in RPM)
+        4 RSTEP            RS Rotor speed step size (in RPM)
+        5 NUMSTEP           I Number of steps for rotor speed
+        6,7 REFSYS      CHAR8 Rotational reference system (YHROT,YH or YHFIX,YH
+        8 CMOUT            RS Complex mode output request
+        9,10 RUNIT      CHAR8 Revolution input/output units for rotor (YHRPM or YHRAD or YHCPS or YHHZ)
+        11,12 FUNIT     CHAR8 Frequency output units (YHRPM or YHRAD or YHCPS or YHHZ)
+        13,14 ZSTEIN    CHAR8 Flag to incorpoate Steiner inertia terms (YHYES,YH or YHNO,YH)
+        15 ORBEPS          RS Threshold value for detection of whirl direction
+        16 ROTPRT           I Optional printout flag
+        17 SYNC             I Synchronous analysis selection flag
+        18 ETYPE            I Excitation type
+        19 EORDER          RS Excitation order
+        20–21                 (not used)
+        22+8*(i-1) RIDi     I Rotor ID for ith rotor
+        23+8*(i-1) RSETi    I Set number for rotor speed for multiple rotors
+        24+8*(i-1) RSPEEDi RS Relative rotor speed for multiple rotors
+        25+8*(i-1) RCOORDI  I Coordinate system ID number specifying rotation axis as Z
+        26+8*(i-1) W3i     RS Damping coefficient like PARAM,W3
+        27+8*(i-1) W4i     RS Damping coefficient like PARAM,W4
+        28+8*(i-1) RFORCEi I RFORCE bulk data ID number specifying rotational force to be applied
+        29+8*(i-1) BRGSETi I CBEAR bearing set GROUP ID number
+
+        verified in NX 2019
+        """
+        nentries = 0
+
+        # up to EORDER
+        ntotal = 84 # 19*4
+        struct1 = Struct(self._endian + b'2i 2f i 8s f 8s8s8s f 3i f 2i')
+
+        ntotal2 = 32 # 8 * 4
+        struct2 = Struct(self._endian + b'2i f i 2f 2i')
+        while n < len(data):
+            #if self.is_debug_file:
+                #self.binary_debug.write('  ROTORD=%s\n' % str(out))
+            edata = data[n:n+ntotal]
+            (sid, numrot, rstart, rstep, numstep, refsys, cmout, runit, funit,
+             zstein, orbeps, rotprt, sync, etype, eorder, unused_a, unused_b) = struct1.unpack(edata)
+            runit = runit.decode('latin1').strip()
+            funit = funit.decode('latin1').strip()
+            refsys = refsys.decode('latin1').strip()
+            zstein = zstein.decode('latin1').strip()
+            #print(sid, numrot, rstart, rstep, numstep, refsys, cmout,
+                  #runit, funit, zstein, orbeps, rotprt, sync, etype, eorder)
+            n += ntotal
+
+            rids = []
+            rsets = []
+            rspeeds = []
+            rcords = []
+            w3s = []
+            w4s = []
+            rforces = []
+            brgsets = []
+            while n < len(data):
+                edata = data[n:n+ntotal2]
+                (rid, rset, rspeed, rcoord, w3, w4, rforce, brgset) = struct2.unpack(edata)
+                #print((rid, rset, rspeed, rcoord, w3, w4, rforce, brgset))
+                rids.append(rid)
+                rsets.append(rset)
+                rspeeds.append(rspeed)
+                rcords.append(rcoord)
+                w3s.append(w3)
+                w4s.append(w4)
+                rforces.append(rforce)
+                brgsets.append(brgset)
+                n += ntotal2
+
+            self.add_rotord(sid, rstart, rstep, numstep,
+                            rids, rsets, rspeeds, rcords, w3s, w4s, rforces, brgsets,
+                            refsys=refsys, cmout=cmout, runit=runit, funit=funit,
+                            zstein=zstein, orbeps=orbeps, roprt=rotprt, sync=sync, etype=etype,
+                            eorder=eorder, threshold=0.02, maxiter=10, comment='')
+            nentries += 1
+        self.increase_card_count('ROTORD', nentries)
+        return n
+
+    def _read_rotorg(self, data, n):
+        """
+        ROTORG(8410, 84, 600)
+
+        1 SID I Set identification number of rotor
+        2 ID  I Grid or scalar point ID's which define a rotor
+
+        verified in NX 2019
+        """
+        nentries = 0
+        ints = np.frombuffer(data[12:], dtype=self.idtype)
+        izero = np.where(ints==-1)[0]
+        istart = 0
+        for iend in izero:
+            sid = ints[istart]
+            grids = ints[istart+1:iend]
+            assert -1 not in grids, grids.tolist()
+            assert sid > 0, sid
+            rotorg = self.add_rotorg(sid, grids.tolist())
+            str(rotorg)
+            istart = iend + 1
+            nentries += 1
+        self.increase_card_count('ROTORG', nentries)
+        return len(data)
+
 #RSPINR
 
     def _read_rspint(self, data, n):
@@ -1354,7 +1462,6 @@ class DYNAMICS(GeomCommon):
         7 TABLEID     I Table identification number for speed history
 
         """
-        #self.show_data(data[12:], 'ifs')
         ntotal = 28 # 4*7
         nentries = (len(data) - n) // ntotal
         struc = Struct(self._endian + b'3if 8s i')

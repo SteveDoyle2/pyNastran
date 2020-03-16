@@ -229,6 +229,69 @@ class GuiVTKCommon(GuiQtCommon):
         self.glyphs_centroid = glyphs_centroid
         self.glyph_mapper_centroid = glyph_mapper_centroid
         self.arrow_actor_centroid = arrow_actor_centroid
+        #self._create_node_element_labels()
+
+    def _create_node_element_labels(self):
+        """
+        creates the node/element labels
+        TODO: not done
+        """
+        #vertex_ids = vtk.vtkIntArray()
+        #vertex_ids.SetNumberOfComponents(1)
+
+        self.point_id_filter = vtk.vtkIdFilter()
+        #get_ids_filter(self.grid, idsname='Ids42', is_nids=True, is_eids=False)
+        #self.ids.SetInputConnection(self.geom_actor.GetOutputPort())
+        #self.ids.PointIdsOn()
+        #self.ids.CellIdsOn()
+        #self.ids.FieldDataOn()
+
+
+        # filter inner points, so only surface points will be available
+        geo = vtk.vtkUnstructuredGridGeometryFilter()
+        geo.SetInputData(self.grid)
+
+        # points
+        vertexFilter = vtk.vtkVertexGlyphFilter()
+        vertexFilter.SetInputConnection(geo.GetOutputPort())
+        vertexFilter.SetData(self.grid)
+        vertexFilter.Update()
+
+        ptsMapper = vtk.vtkPolyDataMapper()
+        ptsMapper.SetInputConnection(vertexFilter.GetOutputPort())
+        ptsMapper.ScalarVisibilityOn()
+        ptsActor = vtk.vtkActor()
+        ptsActor.SetMapper(ptsMapper)
+        ptsActor.GetProperty().SetPointSize(10.0)
+
+        # point labels
+        self.lblMapper = vtk.vtkLabeledDataMapper()
+        self.lblMapper.SetInputConnection(self.point_id_filter.GetOutputPort())
+        self.lblMapper.SetLabelModeToLabelFieldData()
+        lblActor = vtk.vtkActor2D()
+        lblActor.SetMapper(self.lblMapper)
+
+        #visPts = vtk.vtkSelectVisiblePoints()
+        #visPts.SetInputConnection(self.vertex_ids.GetOutputPort())
+        ##vertex_ids.SetName("VertexIDs")
+
+        ## Set the vertex labels
+        #self.vertex_ids.InsertNextValue(0)
+        #self.vertex_ids.InsertNextValue(1)
+        #self.vertex_ids.InsertNextValue(2)
+
+        ## Create the mapper to display the point ids.  Specify the
+        ## format to use for the labels.  Also create the associated actor.
+        #ldm = vtk.vtkLabeledDataMapper()
+        #ldm.SetInputConnection(visPts.GetOutputPort())
+        #ldm.SetLabelModeToLabelFieldData()
+
+        #self.point_labels = vtk.vtkActor2D()
+        #self.point_labels.SetMapper(ldm)
+        self.rend.AddActor(lblActor)
+
+        #cc = vtk.vtkCellCenters()
+        #cc.SetInputConnection(ids.GetOutputPort())
 
     def _build_vtk_frame_post(self, build_lookup_table=True):
         if build_lookup_table:

@@ -9,7 +9,7 @@ import numpy as np
 from qtpy import QtGui
 from qtpy.QtWidgets import (
     QLabel, QPushButton, QGridLayout, QApplication, QHBoxLayout, QVBoxLayout,
-    QDoubleSpinBox, QColorDialog)
+    QDoubleSpinBox, QColorDialog, QCheckBox)
 #import vtk
 from vtk.util.numpy_support import vtk_to_numpy
 
@@ -19,6 +19,7 @@ from pyNastran.gui.utils.qt.qpush_button_color import QPushButtonColor
 from pyNastran.gui.utils.qt.qelement_edit import QNodeEdit, QElementEdit#, QNodeElementEdit
 
 from pyNastran.gui.qt_files.mouse_actions import create_highlighted_actor
+from pyNastran.gui.styles.area_pick_style import get_ids_filter
 from pyNastran.gui.styles.highlight_style import (
     create_vtk_selection_node_by_cell_ids,
     #create_vtk_selection_node_by_point_ids,
@@ -119,6 +120,7 @@ class HighlightWindow(PyDialog):
         #-----------------------------------------------------------------------
         # closing
         self.show_button = QPushButton("Show")
+        self.mark_button = QCheckBox("Mark")
         self.clear_button = QPushButton("Clear")
         self.close_button = QPushButton("Close")
 
@@ -151,6 +153,7 @@ class HighlightWindow(PyDialog):
         #grid2 = self.create_legend_layout()
         ok_cancel_box = QHBoxLayout()
         ok_cancel_box.addWidget(self.show_button)
+        #ok_cancel_box.addWidget(self.mark_button)
         ok_cancel_box.addWidget(self.clear_button)
         ok_cancel_box.addWidget(self.close_button)
 
@@ -279,6 +282,15 @@ class HighlightWindow(PyDialog):
                 gui, grid,
                 all_nodes=self.nodes, nodes=nodes_filtered,
                 all_elements=self.elements, elements=elements_filtered)
+
+            if hasattr(gui, 'point_id_filter'):
+                point_id_filter = get_ids_filter(
+                    grid, idsname='Ids_points', is_nids=True, is_eids=False)
+                #point_id_filter.SetPointIds()
+                #self.gui.point_id_filter.Modified()
+                gui.lblMapper.SetInputConnection(point_id_filter.GetOutputPort())
+                gui.gui.point_id_filter = point_id_filter
+                gui.lblMapper.Modified()
 
             if actors:
                 add_actors_to_gui(gui, actors, render=True)

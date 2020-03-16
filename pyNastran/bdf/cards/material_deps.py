@@ -51,7 +51,7 @@ class MaterialDependenceThermal(MaterialDependence):
     def _xref_table(self, model, key, msg):
         slot = getattr(self, key)
         if slot is not None:
-            setattr(self, key + '_ref', model.TableM(slot, msg))
+            setattr(self, key + '_ref', model.TableM(slot, msg + f' for {key}'))
 
 class MATS1(MaterialDependence):
     """
@@ -115,8 +115,8 @@ class MATS1(MaterialDependence):
         return MATS1(mid, tid, Type, h, hr, yf, limit1, limit2, comment='')
 
     def validate(self):
-        if self.Type not in ['NLELAST', 'PLASTIC']:
-            raise ValueError('MATS1 Type must be [NLELAST, PLASTIC]; Type=%r' % self.Type)
+        if self.Type not in ['NLELAST', 'PLASTIC', 'PLSTRN']:
+            raise ValueError('MATS1 Type must be [NLELAST, PLASTIC, PLSTRN]; Type=%r' % self.Type)
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -552,6 +552,28 @@ class MATT2(MaterialDependenceThermal):
         if comment:
             self.comment = comment
 
+        if g13_table == 0:
+            g13_table = None
+        if g23_table == 0:
+            g23_table = None
+        if rho_table == 0:
+            rho_table = None
+
+        if a1_table == 0:
+            a1_table = None
+        if a2_table == 0:
+            a2_table = None
+        if a3_table == 0:
+            a3_table = None
+        if ge_table == 0:
+            ge_table = None
+
+        if st_table == 0:
+            st_table = None
+        if sc_table == 0:
+            sc_table = None
+        if ss_table == 0:
+            ss_table = None
         self.mid = mid
         self.g11_table = g11_table
         self.g12_table = g12_table
