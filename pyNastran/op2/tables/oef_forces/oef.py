@@ -3274,7 +3274,7 @@ class OEF(OP2Common):
                     edata = data[n:n+ntotal]
                     n += ntotal
 
-                    print(len(edata))
+                    #print(len(edata))
                     out = s.unpack(edata)
                     if self.is_debug_file:
                         self.binary_debug.write('_oef_csolid_pressure-%s %s\n' % (self.element_type, str(out)))

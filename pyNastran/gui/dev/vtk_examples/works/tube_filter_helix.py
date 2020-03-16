@@ -67,7 +67,7 @@ vtk_spline_filter.Update() method.
 vtk_spline_filter = vtk.vtkSplineFilter()
 if vtk_major_version == 6:
     vtk_spline_filter.SetInputData(vtk_poly_data)
-elif vtk_major_version == 7:
+elif vtk_major_version in [7, 8]:
     vtk_spline_filter.SetInputData(vtk_poly_data)
 else:
     # this was written in ~2009, so we had to hack it
