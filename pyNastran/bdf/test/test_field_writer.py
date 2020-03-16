@@ -377,7 +377,7 @@ class Testfield_writer_8(unittest.TestCase):
     def test_float_8_many(self):
         for istart in np.arange(-13, 13):
             #print(istart)
-            nums = np.logspace(istart, istart+1, num=1000, endpoint=True, base=10.0, dtype=None, axis=0)
+            nums = np.logspace(istart, istart+1, num=1000, endpoint=True, base=10.0, dtype=None)
             for num in nums:
                 output = print_float_8(num)
                 self.assertEqual(len(output), 8, msg='output=%r len(output)=%i' % (output, len(output)))

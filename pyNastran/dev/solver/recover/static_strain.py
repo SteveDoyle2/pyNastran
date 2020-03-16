@@ -284,7 +284,7 @@ def _recover_straini_cbar(model: BDF, xb: NDArrayNfloat,
         xb[i1:i1+6],
         xb[j1:j1+6],
     ])
-    print(len(xb[i1:i1+3],))
+    #print(len(xb[i1:i1+3],))
     q_axial = np.hstack([
         xb[i1:i1+3],
         xb[j1:j1+3],
