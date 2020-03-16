@@ -1,3 +1,4 @@
+from typing import List, Optional
 import numpy as np
 import vtk
 
@@ -295,8 +296,9 @@ class MouseActions:
             self.gui.log_info('\n%s' % msg.lstrip())
 
     def on_area_pick(self, is_eids=True, is_nids=True, representation='wire',
-                     name=None, callback=None, force=False):
+                     name=None, callback=None, cleanup=True, force=False) -> Optional[AreaPickStyle]:
         """Creates a box picker"""
+        style = None
         if name is None:
             name = self.gui.name
         self.revert_pressed('area_pick')
@@ -306,7 +308,7 @@ class MouseActions:
             # revert area_pick
             self.setup_mouse_buttons(mode='default')
             if not force:
-                return
+                return style
 
         #self.gui.log_info('on_area_pick')
         self._picker_points = []
@@ -315,13 +317,14 @@ class MouseActions:
             callback = self.on_area_pick_callback
         style = AreaPickStyle(parent=self, is_eids=is_eids, is_nids=is_nids,
                               representation=representation,
-                              name=name, callback=callback)
+                              name=name, callback=callback, cleanup=cleanup)
         self.setup_mouse_buttons(mode='style', revert=True,
                                  style=style) #, style_name='area_pick'
+        return style
 
 
     def on_highlight(self, is_eids=True, is_nids=True, representation='wire',
-                     name=None, callback=None, force=False):
+                     name=None, callback=None, cleanup=True, force=False) -> HighlightStyle:
         """
         Selects a single point/cell
 
@@ -335,8 +338,11 @@ class MouseActions:
             the name of the actor
         callback : function
             fill up a QLineEdit or some other custom action
+        cleanup : bool; default=True
+            should the actor be removed when the camera is moved
         force : bool; default=False
             handles gui interaction; don't mess with this
+
         """
         if name is None:
             name = self.gui.name
@@ -350,9 +356,10 @@ class MouseActions:
                 return
         style = HighlightStyle(parent=self, is_eids=is_eids, is_nids=is_nids,
                                representation=representation,
-                               name=name, callback=callback)
+                               name=name, callback=callback, cleanup=cleanup)
         self.setup_mouse_buttons(mode='style', revert=True,
                                  style=style)
+        return style
 
     def on_area_pick_not_square(self):
         self.revert_pressed('area_pick')
@@ -501,7 +508,9 @@ class MouseActions:
 
         #-----------------------------------------------
 
-    def create_highlighted_actor(self, ugrid, representation='wire', add_actor=True):
+    def create_highlighted_actor(self, ugrid: vtk.vtkUnstructuredGrid,
+                                 representation='wire',
+                                 add_actor=True) -> List[vtk.vtkLODActor]:
         """creates a highlighted actor given a vtkUnstructuredGrid"""
         actor = create_highlighted_actor(
             self.gui, ugrid, representation=representation, add_actor=add_actor)
@@ -777,7 +786,9 @@ class MouseActions:
         return self.gui.get_element_ids(model_name, ids)
 
 
-def create_highlighted_actor(gui, ugrid, representation='wire', add_actor=True):
+def create_highlighted_actor(gui, ugrid: vtk.vtkUnstructuredGrid,
+                             representation: str='wire',
+                             add_actor: bool=True) -> vtk.vtkLODActor:
     """creates a highlighted actor given a vtkUnstructuredGrid"""
     actor = vtk.vtkLODActor()
     mapper = vtk.vtkDataSetMapper()
@@ -802,7 +813,7 @@ def create_highlighted_actor(gui, ugrid, representation='wire', add_actor=True):
         prop.SetRepresentationToWireframe()
         prop.SetLineWidth(settings.highlight_line_thickness)
     else:
-        raise NotImplementedError('representation=%r and must be [surface, points, wire]' % (
+        raise NotImplementedError('representation=%r and must be [points, wire, surface]' % (
             representation))
 
     if add_actor:

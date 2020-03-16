@@ -12,6 +12,7 @@ http://www.vtk.org/Wiki/VTK/Examples/Cxx/Picking/HighlightSelection
 http://public.kitware.com/pipermail/vtkusers/2012-January/072046.html
 http://vtk.1045678.n5.nabble.com/Getting-the-original-cell-id-s-from-vtkExtractUnstructuredGrid-td1239667.html
 """
+from typing import Tuple, List, Union
 import numpy as np
 import vtk
 #from vtk.util import numpy_support
@@ -41,7 +42,7 @@ from pyNastran.gui.utils.vtk.gui_utils import add_actors_to_gui
 class AreaPickStyle(vtk.vtkInteractorStyleRubberBandZoom):  # works
     """Picks nodes & elements with a visible box widget"""
     def __init__(self, parent=None, is_eids=True, is_nids=True, representation='wire',
-                 name=None, callback=None):
+                 name=None, callback=None, cleanup=True):
         """creates the AreaPickStyle instance"""
         # for vtk.vtkInteractorStyleRubberBandZoom
         self.AddObserver("LeftButtonPressEvent", self._left_button_press_event)
@@ -56,9 +57,11 @@ class AreaPickStyle(vtk.vtkInteractorStyleRubberBandZoom):  # works
         self.representation = representation
         assert is_eids or is_nids, 'is_eids=%r is_nids=%r, must not both be False' % (is_eids, is_nids)
         self.callback = callback
+        self.cleanup = cleanup
         self._pick_visible = False
         self.name = name
         assert name is not None
+        self.actors = []
 
     def _left_button_press_event(self, obj, event):
         """gets the first point"""
@@ -97,6 +100,7 @@ class AreaPickStyle(vtk.vtkInteractorStyleRubberBandZoom):  # works
             dy = abs(p1y - p2y)
             self.picker_points = []
             if dx > 0 and dy > 0:
+                #self.remove_actors()
                 if self._pick_visible:
                     self._pick_visible_ids(xmin, ymin, xmax, ymax)
                 else:
@@ -126,8 +130,9 @@ class AreaPickStyle(vtk.vtkInteractorStyleRubberBandZoom):  # works
         actors, eids, nids = get_actors_by_area_picker(
             gui, area_picker, self.name,
             is_nids=self.is_nids, is_eids=self.is_eids,
-            representation='points', add_actors=False)
-        self.actor = actors[0]
+            representation=self.representation, add_actors=False)
+
+        self.actors = actors
         add_actors_to_gui(gui, actors, render=False)
 
         if self.callback is not None:
@@ -137,15 +142,23 @@ class AreaPickStyle(vtk.vtkInteractorStyleRubberBandZoom):  # works
 
         # TODO: it would be nice if you could do a rotation without
         #       destroying the highlighted actor
-        self.cleanup_observer = self.parent.setup_mouse_buttons(
-            mode='default', left_button_down_cleanup=self.cleanup_callback)
+        if self.cleanup:
+            self.cleanup_observer = self.parent.setup_mouse_buttons(
+                mode='default', left_button_down_cleanup=self.cleanup_callback)
+
+    def remove_actors(self):
+        if len(self.actors) == 0:
+            return
+        for actor in self.actors:
+            self.parent.rend.RemoveActor(actor)
+        self.actors = []
 
     def cleanup_callback(self, obj, event):
         """this is the cleanup step to remove the highlighted actor"""
-        self.parent.rend.RemoveActor(self.actor)
+        self.remove_actors()
         #self.vtk_interactor.RemoveObservers('LeftButtonPressEvent')
         self.parent.vtk_interactor.RemoveObserver(self.cleanup_observer)
-        cleanup_observer = None
+        #cleanup_observer = None
 
     def right_button_press_event(self, obj, event):
         """cancels the button"""
@@ -154,9 +167,11 @@ class AreaPickStyle(vtk.vtkInteractorStyleRubberBandZoom):  # works
         self.parent.vtk_interactor.Render()
 
 
-
-def get_actors_by_area_picker(gui, area_picker, model_name, is_nids=True, is_eids=True,
-                              representation='points', add_actors=False):
+def get_actors_by_area_picker(gui, area_picker,
+                              model_name: str,
+                              is_nids: bool=True, is_eids: bool=True,
+                              representation: str='points',
+                              add_actors: bool=False) -> Tuple[List[vtk.vtkActor], List[int], List[int]]:
     """doesn't handle multiple actors yet..."""
     frustum = area_picker.GetFrustum() # vtkPlanes
 
@@ -165,14 +180,31 @@ def get_actors_by_area_picker(gui, area_picker, model_name, is_nids=True, is_eid
         is_nids=is_nids, is_eids=is_eids,
         representation=representation)
 
-    actor = gui.create_highlighted_actor(
-        ugrid, representation=representation, add_actor=add_actors)
-    actors = [actor]
+    actors = []
+    is_points = 'points' in representation
+    is_wire = 'wire' in representation
+    is_surface = 'surface' in representation
+
+    if is_nids and is_points:
+        actor = gui.create_highlighted_actor(
+            ugrid, representation='points', add_actor=add_actors)
+        actors.append(actor)
+
+    if is_eids and is_wire:
+        actor = gui.create_highlighted_actor(  # or surface
+            ugrid, representation='wire', add_actor=add_actors)
+        actors.append(actor)
+    elif is_eids and is_surface:
+        actor = gui.create_highlighted_actor(  # or surface
+            ugrid, representation='surface', add_actor=add_actors)
+        actors.append(actor)
+
     return actors, eids, nids
 
 
-def get_depth_ids(gui, frustum, model_name='main',
-                  is_nids=True, is_eids=True, representation='points'):
+def get_depth_ids(gui, frustum: vtk.vtkPlanes, model_name: str='main',
+                  is_nids: bool=True, is_eids: bool=True,
+                  representation: str='points') -> Tuple[List[vtk.vtkActor], List[int], List[int]]:
     """
     Picks the nodes and/or elements.  Only one grid (e.g., the elements)
     is currently returned.
@@ -208,8 +240,10 @@ def get_depth_ids(gui, frustum, model_name='main',
     return ugrid, eids, nids
 
 
-def get_inside_point_ids(gui, ugrid, ugrid_flipped, model_name,
-                         representation='points'):
+def get_inside_point_ids(gui, ugrid: vtk.vtkUnstructuredGrid,
+                         ugrid_flipped: vtk.vtkUnstructuredGrid,
+                         model_name: str,
+                         representation: str='points') -> Tuple[vtk.vtkUnstructuredGrid, List[int]]:
     """
     The points that are returned from the frustum, despite being
     defined as inside are not all inside.  The cells are correct
@@ -275,7 +309,9 @@ def get_inside_point_ids(gui, ugrid, ugrid_flipped, model_name,
     return ugrid, nids
 
 
-def get_ids_filter(grid, idsname='Ids', is_nids=True, is_eids=True):
+def get_ids_filter(grid: Union[vtk.vtkUnstructuredGrid, vtk.vtkPolyData],
+                   idsname: str='Ids',
+                   is_nids: bool=True, is_eids: bool=True) -> vtk.vtkIdFilter:
     """
     get the vtkIdFilter associated with a grid and either
     nodes/elements or both
@@ -347,7 +383,8 @@ def grid_ids_frustum_to_ugrid_ugrid_flipped(grid, ids, frustum):
         ugrid_flipped = None
     return ugrid, ugrid_flipped
 
-def create_filtered_point_ugrid(ugrid, nids, nids2):
+def create_filtered_point_ugrid(ugrid: vtk.vtkUnstructuredGrid,
+                                nids, nids2) -> vtk.vtkUnstructuredGrid:
     """
     We need to filter the nodes that were filtered by the
     numpy setdiff1d, so we don't show extra points

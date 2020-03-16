@@ -11,9 +11,9 @@ def add_actors_to_gui(gui, actors, render=True):
     if render:
         renderer.Render()
 
-def remove_actors_from_gui(gui, actors, render=True):
+def remove_actors_from_gui(gui, actors, render=True, force_render=False):
     """removes multiple vtk actors"""
-    if not len(actors):
+    if not (len(actors) or force_render):
         return
     renderer = gui.rend
     for actor in actors:

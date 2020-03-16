@@ -15,7 +15,7 @@ from pyNastran.bdf.utils import write_patran_syntax_dict
 class QNodeElementEdit(QLineEdit):
     """creates a QLineEdit that can pick node/element ids"""
     def __init__(self, win_parent, name, parent=None, is_eids=True, is_nids=True,
-                 representation='wire', pick_style='area', *args, **kwargs):
+                 representation='wire', pick_style='area', cleanup=True, *args, **kwargs):
         """
         A node/element picker
 
@@ -37,6 +37,7 @@ class QNodeElementEdit(QLineEdit):
         pick_style : str; default='area'
             the style of the picker
             {area, single}
+
         """
         super(QNodeElementEdit, self).__init__(parent=parent, *args, **kwargs)
         self.win_parent = win_parent
@@ -45,8 +46,11 @@ class QNodeElementEdit(QLineEdit):
         self.is_nids = is_nids
         self.representation = representation
         self.pick_style = pick_style
-        assert self.representation in ['wire', 'points', 'surface'], 'representation=%r' % representation
+        self.cleanup = cleanup
+        assert self.representation in ['wire', 'points', 'surface', 'points+wire', 'points+surface'], 'representation=%r' % representation
         assert self.pick_style in ['area', 'single'], 'pick_style=%r' % pick_style
+        self.style = None
+        self._is_updated = False
         #self.focusInEvent.connect(self.on_focus)
 
     def focusInEvent(self, event):
@@ -67,26 +71,39 @@ class QNodeElementEdit(QLineEdit):
         gui = win_parent.win_parent
         if gui is None:
             return
+
+        self._is_updated = False
         if self.pick_style == 'area':
-            gui.mouse_actions.on_area_pick(is_eids=self.is_eids, is_nids=self.is_nids,
-                                           representation=self.representation,
-                                           name=self.name,
-                                           callback=self.on_focus_callback,
-                                           force=True)
+            style = gui.mouse_actions.on_area_pick(
+                is_eids=self.is_eids, is_nids=self.is_nids,
+                representation=self.representation,
+                name=self.name,
+                callback=self.on_focus_callback,
+                cleanup=self.cleanup,
+                force=True)
         elif self.pick_style == 'single':
-            gui.mouse_actions.on_highlight(is_eids=self.is_eids, is_nids=self.is_nids,
-                                           representation=self.representation,
-                                           name=self.name,
-                                           callback=self.on_focus_callback,
-                                           force=True)
+            style = gui.mouse_actions.on_highlight(
+                is_eids=self.is_eids, is_nids=self.is_nids,
+                representation=self.representation,
+                name=self.name,
+                callback=self.on_focus_callback,
+                cleanup=self.cleanup,
+                force=True)
         else:
             raise NotImplementedError('pick_style=%r and must be [area, single]' % self.pick_style)
 
+        # if style has updated the gui
+        if self._is_updated and 0:
+            if self.style is not None:
+                self.style.remove_actors()
+                gui.vtk_interactor.Render()
+
+        #self.style = style
 
 class QElementEdit(QNodeElementEdit):
     """creates a QLineEdit that can pick element ids"""
     def __init__(self, win_parent, name, parent=None, pick_style='area', tab_to_next=False,
-                 *args, **kwargs):
+                 cleanup=True, *args, **kwargs):
         """
         An element picker
 
@@ -111,7 +128,7 @@ class QElementEdit(QNodeElementEdit):
         super(QElementEdit, self).__init__(win_parent, name, parent=parent,
                                            is_eids=True, is_nids=False,
                                            representation='wire', pick_style=pick_style,
-                                           *args, **kwargs)
+                                           cleanup=cleanup, *args, **kwargs)
 
     def on_focus_callback(self, eids, nids, name):
         """the callback method for ``on_focus``"""
@@ -122,6 +139,8 @@ class QElementEdit(QNodeElementEdit):
             return
         eids_str = write_patran_syntax_dict({'' : eids})
         self.setText(eids_str)
+
+        self._is_updated = True
         #if self.tab_to_next:
             #self.keyPressEvent(QtCore.Qt.Key_Tab)
 
@@ -129,7 +148,7 @@ class QElementEdit(QNodeElementEdit):
 class QNodeEdit(QNodeElementEdit):
     """creates a QLineEdit that can pick node ids"""
     def __init__(self, win_parent, name, parent=None, pick_style='area', tab_to_next=False,
-                 *args, **kwargs):
+                 cleanup=True, *args, **kwargs):
         """
         A node picker
 
@@ -151,7 +170,7 @@ class QNodeEdit(QNodeElementEdit):
         super(QNodeEdit, self).__init__(win_parent, name, parent=parent,
                                         is_eids=False, is_nids=True,
                                         representation='points', pick_style=pick_style,
-                                        *args, **kwargs)
+                                        cleanup=cleanup, *args, **kwargs)
 
     def on_focus_callback(self, eids, nids, name):
         """the callback method for ``on_focus``"""
@@ -162,5 +181,7 @@ class QNodeEdit(QNodeElementEdit):
             return
         nids_str = write_patran_syntax_dict({'' : nids})
         self.setText(nids_str)
+
+        self._is_updated = True
         #if self.tab_to_next:
             #self.keyPressEvent(QtCore.Qt.Key_Tab)

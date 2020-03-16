@@ -4,13 +4,14 @@ The highlight menu handles:
  - Preferences
 
 """
+from typing import List
 import numpy as np
 
 from qtpy import QtGui
 from qtpy.QtWidgets import (
     QLabel, QPushButton, QGridLayout, QApplication, QHBoxLayout, QVBoxLayout,
-    QDoubleSpinBox, QColorDialog, QCheckBox)
-#import vtk
+    QSpinBox, QDoubleSpinBox, QColorDialog, QCheckBox)
+import vtk
 from vtk.util.numpy_support import vtk_to_numpy
 
 from pyNastran.gui.utils.qt.pydialog import PyDialog, check_patran_syntax
@@ -27,7 +28,7 @@ from pyNastran.gui.styles.highlight_style import (
 )
 from pyNastran.gui.utils.vtk.vtk_utils import (
     extract_selection_node_from_grid_to_ugrid,
-    create_unstructured_point_grid, numpy_to_vtk_points, )
+    create_unstructured_point_grid, numpy_to_vtk_points, numpy_to_vtk)
 from pyNastran.gui.utils.vtk.gui_utils import add_actors_to_gui, remove_actors_from_gui
 
 
@@ -54,11 +55,20 @@ class HighlightWindow(PyDialog):
             self.highlight_color_float = [0., 0., 0.]
             self.highlight_color_int = [0, 0, 0]
             self._highlight_opacity = 0.9
+            self._point_size = 10
+            self._label_size = 10.0
+            self._default_text_size = 10.0
         else:
-            self.highlight_color_float = gui.settings.highlight_color
-            self.highlight_color_int = [int(val) for val in self.highlight_color_float]
+            #self.highlight_color_float = gui.settings.highlight_color
+            #self.highlight_color_int = [int(val) for val in self.highlight_color_float]
+            self.highlight_color_float, self.highlight_color_int = _check_color(
+                gui.settings.highlight_color)
+
             #self.highlight_color_int = gui.settings.highlight_color_int
             self._highlight_opacity = gui.settings.highlight_opacity
+            self._point_size = 10
+            self._label_size = 10.0
+            self._default_text_size = 10.0
         self._updated_highlight = False
 
         self.actors = []
@@ -99,10 +109,12 @@ class HighlightWindow(PyDialog):
 
         model_name = self.model_name
         self.nodes_label = QLabel("Nodes:")
-        self.nodes_edit = QNodeEdit(self, model_name, pick_style='area', tab_to_next=False)
+        self.nodes_edit = QNodeEdit(self, model_name, pick_style='area',
+                                    cleanup=True, tab_to_next=False)
 
         self.elements_label = QLabel("Elements:")
-        self.elements_edit = QElementEdit(self, model_name, pick_style='area', tab_to_next=False)
+        self.elements_edit = QElementEdit(self, model_name, pick_style='area',
+                                          cleanup=True, tab_to_next=False)
 
         #-----------------------------------------------------------------------
         # Highlight Color
@@ -117,6 +129,18 @@ class HighlightWindow(PyDialog):
         # Text Color
         self.highlight_color_label = QLabel("Highlight Color:")
         self.highlight_color_edit = QPushButtonColor(self.highlight_color_int)
+
+        self.point_size_label = QLabel("Point Size:")
+        self.point_size_edit = QSpinBox(self)
+        self.point_size_edit.setValue(self._point_size)
+        self.point_size_edit.setRange(7, 30)
+        #self.point_size_button = QPushButton("Default")
+
+        self.label_size_label = QLabel("Label Size:")
+        self.label_size_edit = QSpinBox(self)
+        self.label_size_edit.setValue(self._default_text_size)
+        self.label_size_edit.setRange(7, 30)
+        #self.label_size_button = QPushButton("Default")
         #-----------------------------------------------------------------------
         # closing
         self.show_button = QPushButton("Show")
@@ -137,23 +161,41 @@ class HighlightWindow(PyDialog):
         grid.addWidget(self.elements_edit, irow, 1)
         irow += 1
 
+        # TODO: enable me
         grid.addWidget(self.highlight_color_label, irow, 0)
         grid.addWidget(self.highlight_color_edit, irow, 1)
-        self.highlight_color_label.setVisible(False)
-        self.highlight_color_edit.setVisible(False)
+        self.highlight_color_label.setEnabled(False)
+        self.highlight_color_edit.setEnabled(False)
         irow += 1
 
+        # TODO: enable me
         grid.addWidget(self.highlight_opacity_label, irow, 0)
         grid.addWidget(self.highlight_opacity_edit, irow, 1)
-        self.highlight_opacity_label.setVisible(False)
-        self.highlight_opacity_edit.setVisible(False)
+        self.highlight_opacity_label.setEnabled(False)
+        self.highlight_opacity_edit.setEnabled(False)
         irow += 1
+
+        # TODO: enable me
+        grid.addWidget(self.point_size_label, irow, 0)
+        grid.addWidget(self.point_size_edit, irow, 1)
+        self.point_size_label.setEnabled(False)
+        self.point_size_edit.setEnabled(False)
+        irow += 1
+
+        # TODO: enable me
+        grid.addWidget(self.label_size_label, irow, 0)
+        grid.addWidget(self.label_size_edit, irow, 1)
+        self.label_size_label.setEnabled(False)
+        self.label_size_edit.setEnabled(False)
+        irow += 1
+
+        self.mark_button.setEnabled(False)
 
         #self.create_legend_widgets()
         #grid2 = self.create_legend_layout()
         ok_cancel_box = QHBoxLayout()
+        ok_cancel_box.addWidget(self.mark_button)
         ok_cancel_box.addWidget(self.show_button)
-        #ok_cancel_box.addWidget(self.mark_button)
         ok_cancel_box.addWidget(self.clear_button)
         ok_cancel_box.addWidget(self.close_button)
 
@@ -280,17 +322,50 @@ class HighlightWindow(PyDialog):
 
             actors = create_highlighted_actors(
                 gui, grid,
-                all_nodes=self.nodes, nodes=nodes_filtered,
-                all_elements=self.elements, elements=elements_filtered)
+                all_nodes=self.nodes, nodes=nodes_filtered, set_node_scalars=True,
+                all_elements=self.elements, elements=elements_filtered, set_element_scalars=True)
 
-            if hasattr(gui, 'point_id_filter'):
+            iactor = 0
+            make_element_labels = True
+            make_node_labels = True
+            if make_node_labels and nnodes:
+                mapper = actors[iactor].GetMapper()
+                mygrid = mapper.GetInput()
+
                 point_id_filter = get_ids_filter(
-                    grid, idsname='Ids_points', is_nids=True, is_eids=False)
-                #point_id_filter.SetPointIds()
-                #self.gui.point_id_filter.Modified()
-                gui.lblMapper.SetInputConnection(point_id_filter.GetOutputPort())
-                gui.gui.point_id_filter = point_id_filter
-                gui.lblMapper.Modified()
+                    mygrid, idsname='Ids_points', is_nids=True, is_eids=False)
+                point_id_filter.SetFieldData(1)
+                point_id_filter.SetPointIds(0)
+                point_id_filter.FieldDataOn()
+
+                label_actor = create_node_labels(
+                    point_id_filter, mygrid, gui.rend, label_size=self._label_size)
+                actors.append(label_actor)
+                iactor += 1
+
+            if make_element_labels and nelements:
+                mapper = actors[iactor].GetMapper()
+                mygrid = mapper.GetInput()
+
+                element_id_filter = get_ids_filter(
+                    mygrid, idsname='Ids_cells', is_nids=False, is_eids=True)
+                element_id_filter.SetFieldData(1)
+                element_id_filter.SetCellIds(0)
+                element_id_filter.FieldDataOn()
+
+                # Create labels for cells
+                cell_centers = vtk.vtkCellCenters()
+                cell_centers.SetInputConnection(element_id_filter.GetOutputPort())
+
+                cell_mapper = vtk.vtkLabeledDataMapper()
+                cell_mapper.SetInputConnection(cell_centers.GetOutputPort())
+                cell_mapper.SetLabelModeToLabelScalars()
+
+                label_actor = vtk.vtkActor2D()
+                label_actor.SetMapper(cell_mapper)
+
+                actors.append(label_actor)
+                iactor += 1
 
             if actors:
                 add_actors_to_gui(gui, actors, render=True)
@@ -301,7 +376,11 @@ class HighlightWindow(PyDialog):
         """removes multiple vtk actors"""
         gui = self.parent()
         if gui is not None:
-            remove_actors_from_gui(gui, self.actors, render=True)
+            if self.nodes_edit.style is not None:
+                self.nodes_edit.style.remove_actors()
+            if self.elements_edit.style is not None:
+                self.elements_edit.style.remove_actors()
+            remove_actors_from_gui(gui, self.actors, render=True, force_render=True)
         self.actors = []
 
     def on_close(self):
@@ -310,10 +389,38 @@ class HighlightWindow(PyDialog):
         self.out_data['close'] = True
         self.close()
 
+def create_node_labels(point_id_filter: vtk.vtkIdFilter,
+                       grid: vtk.vtkUnstructuredGrid, rend: vtk.vtkRenderer,
+                       label_size: float=10.0):
+    """creates the node labels"""
+    # filter inner points, so only surface points will be available
+    geo = vtk.vtkUnstructuredGridGeometryFilter()
+    geo.SetInputData(grid)
 
-def create_highlighted_actors(gui, grid,
-                              all_nodes=None, nodes=None,
-                              all_elements=None, elements=None, add_actors=False):
+    # points
+    vertex_filter = vtk.vtkVertexGlyphFilter()
+    vertex_filter.SetInputConnection(geo.GetOutputPort())
+    vertex_filter.Update()
+
+    points_mapper = vtk.vtkPolyDataMapper()
+    points_mapper.SetInputConnection(vertex_filter.GetOutputPort())
+    points_mapper.ScalarVisibilityOn()
+    points_actor = vtk.vtkActor()
+    points_actor.SetMapper(points_mapper)
+    points_actor.GetProperty().SetPointSize(label_size)
+
+    # point labels
+    label_mapper = vtk.vtkLabeledDataMapper()
+    label_mapper.SetInputConnection(point_id_filter.GetOutputPort())
+    label_mapper.SetLabelModeToLabelFieldData()
+    label_actor = vtk.vtkActor2D()
+    label_actor.SetMapper(label_mapper)
+    return label_actor
+
+def create_highlighted_actors(gui, grid: vtk.vtkUnstructuredGrid,
+                              all_nodes=None, nodes=None, set_node_scalars=True,
+                              all_elements=None, elements=None, set_element_scalars=True,
+                              add_actors: bool=False) -> List[vtk.vtkLODActor]:
     """creates nodes & element highlighted objects"""
     actors = []
     nnodes = 0
@@ -336,7 +443,12 @@ def create_highlighted_actors(gui, grid,
         points2 = numpy_to_vtk_points(point_array2)
 
         ugrid = create_unstructured_point_grid(points2, nnodes)
-        actor = create_highlighted_actor(gui, ugrid, representation='points', add_actor=add_actors)
+        if set_node_scalars:
+            point_ids_array = numpy_to_vtk(nodes)
+            ugrid.GetPointData().SetScalars(point_ids_array)
+        actor = create_highlighted_actor(
+            gui, ugrid, representation='points',
+            add_actor=add_actors)
         actors.append(actor)
 
     if nelements:
@@ -344,7 +456,11 @@ def create_highlighted_actors(gui, grid,
 
         selection_node = create_vtk_selection_node_by_cell_ids(cell_ids)
         ugrid = extract_selection_node_from_grid_to_ugrid(grid, selection_node)
-        actor = create_highlighted_actor(gui, ugrid, representation='wire', add_actor=False)
+        if set_element_scalars:
+            element_ids_array = numpy_to_vtk(elements)
+            ugrid.GetPointData().SetScalars(None)
+            ugrid.GetCellData().SetScalars(element_ids_array)
+        actor = create_highlighted_actor(gui, ugrid, representation='wire', add_actor=add_actors)
         actors.append(actor)
     return actors
 

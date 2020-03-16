@@ -11,6 +11,7 @@ from pyNastran.gui.utils.vtk.base_utils import (
     vtkConstants, numpy_to_vtk, numpy_to_vtkIdTypeArray,
     get_numpy_idtype_for_vtk)
 
+
 def numpy_to_vtk_points(nodes, points=None, dtype='<f', deep=1):
     """common method to account for vtk endian quirks and efficiently adding points"""
     assert isinstance(nodes, np.ndarray), type(nodes)
@@ -105,7 +106,8 @@ def create_vtk_cells_of_constant_element_type(grid, elements, etype):
 
     grid.SetCells(vtk_cell_types, vtk_cell_offsets, vtk_cells)
 
-def create_vtk_cells_of_constant_element_types(grid, elements_list, etypes_list):
+def create_vtk_cells_of_constant_element_types(grid: vtk.vtkUnstructuredGrid,
+                                               elements_list, etypes_list):
     """
     Adding constant type elements is overly complicated enough as in
     ``create_vtk_cells_of_constant_element_type``.  Now we extend
@@ -173,7 +175,8 @@ def create_vtk_cells_of_constant_element_types(grid, elements_list, etypes_list)
 
     grid.SetCells(vtk_cell_types, vtk_cell_offsets, vtk_cells)
 
-def create_unstructured_point_grid(points, npoints):
+def create_unstructured_point_grid(points: vtk.vtkPoints,
+                                   npoints: int) -> vtk.vtkUnstructuredGrid:
     """creates a point grid"""
     ugrid = vtk.vtkUnstructuredGrid()
     ugrid.SetPoints(points)
@@ -187,7 +190,8 @@ def create_unstructured_point_grid(points, npoints):
     return ugrid
 
 
-def extract_selection_node_from_grid_to_ugrid(grid, selection_node):
+def extract_selection_node_from_grid_to_ugrid(grid: vtk.vtkUnstructuredGrid,
+                                              selection_node: vtk.vtkSelectionNode) -> vtk.vtkUnstructuredGrid:
     """
     Creates a sub-UGRID from a UGRID and a vtkSelectionNode.  In other
     words, we use a selection criteria (a definition of a subset of

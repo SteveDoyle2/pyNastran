@@ -169,7 +169,7 @@ def chan_faces(n1, n2):
 
     wflange = 0.5
     hweb = 1.
-    ysc = 0.
+    #ysc = 0.
     tflange = 0.2
     tweb = 0.1
     points = np.array([
@@ -423,7 +423,8 @@ def hollow_box_faces(n1, n2):
     return faces, points
 
 import vtk
-from pyNastran.gui.utils.vtk.vtk_utils import numpy_to_vtk, numpy_to_vtkIdTypeArray, VTK_VERSION
+from pyNastran.gui.utils.vtk.vtk_utils import numpy_to_vtk, numpy_to_vtkIdTypeArray
+from pyNastran.gui.utils.vtk.base_utils import VTK_VERSION
 
 
 # Create polyhedron (cube)

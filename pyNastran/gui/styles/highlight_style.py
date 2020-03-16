@@ -28,7 +28,7 @@ from pyNastran.gui.utils.vtk.vtk_utils import (
 class HighlightStyle(vtk.vtkInteractorStyleTrackballCamera):  # works
     """Highlights nodes & elements"""
     def __init__(self, parent=None, is_eids=True, is_nids=True, representation='wire',
-                 name=None, callback=None):
+                 name=None, callback=None, cleanup=True):
         """
         Creates the HighlightStyle instance
 
@@ -42,6 +42,8 @@ class HighlightStyle(vtk.vtkInteractorStyleTrackballCamera):  # works
             the name of the actor
         callback : function
             fill up a QLineEdit or some other custom action
+        cleanup : bool; default=True
+            should the actor be removed when the camera is moved
 
         """
         self.AddObserver("LeftButtonPressEvent", self._left_button_press_event)
@@ -57,9 +59,11 @@ class HighlightStyle(vtk.vtkInteractorStyleTrackballCamera):  # works
         self.representation = representation
         assert is_eids or is_nids, 'is_eids=%r is_nids=%r, must not both be False' % (is_eids, is_nids)
         self.callback = callback
+        self.cleanup = cleanup
         #self._pick_visible = False
         self.model_name = name
         assert self.model_name is not None
+        self.actors = []
 
     def _left_button_press_event(self, obj, event):
         """
@@ -94,7 +98,8 @@ class HighlightStyle(vtk.vtkInteractorStyleTrackballCamera):  # works
 
 
         #print('highlight_style  point_id=', point_id)
-        self.actor = actor
+        #self.remove_actors()
+        self.actors = [actor]
         self.parent.vtk_interactor.Render()
 
         if self.callback is not None:
@@ -106,15 +111,23 @@ class HighlightStyle(vtk.vtkInteractorStyleTrackballCamera):  # works
 
         # TODO: it would be nice if you could do a rotation without
         #       destroying the highlighted actor
-        self.cleanup_observer = self.parent.setup_mouse_buttons(
-            mode='default', left_button_down_cleanup=self.cleanup_callback)
+        if self.cleanup:
+            self.cleanup_observer = self.parent.setup_mouse_buttons(
+                mode='default', left_button_down_cleanup=self.cleanup_callback)
+
+    def remove_actors(self):
+        if len(self.actors) == 0:
+            return
+        for actor in self.actors:
+            self.parent.rend.RemoveActor(actor)
+        self.actors = []
 
     def cleanup_callback(self, obj, event):
         """this is the cleanup step to remove the highlighted actor"""
-        self.parent.rend.RemoveActor(self.actor)
+        self.remove_actors()
         #self.vtk_interactor.RemoveObservers('LeftButtonPressEvent')
         self.parent.vtk_interactor.RemoveObserver(self.cleanup_observer)
-        cleanup_observer = None
+        #cleanup_observer = None
 
     def _highlight_picker_node(self, cell_id, grid, node_xyz, add_actor=True):
         """won't handle multiple cell_ids/node_xyz"""
