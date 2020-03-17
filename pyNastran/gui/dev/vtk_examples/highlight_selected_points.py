@@ -25,7 +25,7 @@ class InteractorStyle(vtk.vtkInteractorStyleRubberBandPick):
 
     def OnLeftButtonUp(self):
         # Forward events
-        vtkInteractorStyleRubberBandPick.OnLeftButtonUp()
+        vtk.vtkInteractorStyleRubberBandPick.OnLeftButtonUp()
 
         frustum = vtk.vtkAreaPicker(self.GetInteractor().GetPicker()).GetFrustum()
 
