@@ -3,6 +3,8 @@ defines readers for BDF objects in the OP2 GEOM2/GEOM2S table
 """
 # pylint: disable=C0103
 from struct import Struct
+from functools import partial
+from typing import Tuple, Union, Any
 import numpy as np
 
 from pyNastran.bdf.cards.elements.elements import CGAP, PLOTEL
@@ -30,7 +32,7 @@ from pyNastran.bdf.cards.parametric.geometry import FEEDGE
 from pyNastran.bdf.cards.elements.acoustic import CHACAB, CHACBR, CAABSF
 from pyNastran.op2.errors import MixedVersionCard
 from pyNastran.op2.tables.geom.geom_common import GeomCommon
-from pyNastran.op2.op2_interface.op2_reader import mapfmt, reshape_bytes_block
+from pyNastran.op2.op2_interface.op2_reader import mapfmt # , reshape_bytes_block
 
 
 class GEOM2(GeomCommon):
@@ -407,7 +409,7 @@ class GEOM2(GeomCommon):
     def add_op2_element(self, elem):
         """checks that eids are positive and that -1 node ids become None"""
         if elem.eid <= 0:
-            self.log.debug(elem)
+            self.log.debug(str(elem))
             raise ValueError(elem)
             #return
 
@@ -439,7 +441,7 @@ class GEOM2(GeomCommon):
         5 G3  I Grid point 3 identification number
         6 G4  I Grid point 4 identification number
         """
-        return self._run_4nodes(data, n, CAABSF)
+        return self._run_4nodes(CAABSF, data, n)
 
 # 3-CAXIF2 (2108,21,224)
 # 4-CAXIF3 (2208,22,225)
@@ -1131,13 +1133,13 @@ class GEOM2(GeomCommon):
 
     def _read_chacab(self, data: bytes, n: int) -> int:
         """CHACAB(8100,81,381)"""
-        return self._run_20nodes(data, n, CHACAB)
+        return self._run_20nodes(CHACAB, data, n)
 
     def _read_chacbr(self, data: bytes, n: int) -> int:
         """CHACAB(8100,81,381)"""
-        return self._run_20nodes(data, n, CHACBR)
+        return self._run_20nodes(CHACBR, data, n)
 
-    def _run_20nodes(self, data, n, element):
+    def _run_20nodes(self, element: CHEXA20, data: bytes, n: int) -> int:
         """
         common method for
         Word Name Type Description
@@ -1782,23 +1784,29 @@ class GEOM2(GeomCommon):
 
     def _read_cquad(self, data: bytes, n: int) -> int:
         """CQUAD(9108,91,507)  - the marker for Record 69"""
-        return self._run_cquad(data, n, CQUAD)
+        return self._run_cquad(CQUAD, data, n)
 
     def _read_cquad4(self, data: bytes, n: int) -> int:
         """
         CQUAD4(2958,51,177)    - the marker for Record 70
         CQUAD4(13900,139,9989) - the marker for Record 71
         """
-        return self._run_cquad4(data, n, CQUAD4)
+        nx_method = partial(self._run_cquad4_nx, CQUAD4)
+        msc_method = partial(self._run_cquad4_msc, CQUAD4)
+        n = self._read_dual_card(
+            data, n,
+            nx_method, msc_method,
+            'CQUAD4', self.add_op2_element)
+        return n
 
     def _read_vutria3(self, data: bytes, n: int) -> int:
-        return self._run_3nodes(data, n, CTRIA3)
+        return self._run_3nodes(CTRIA3, data, n)
 
     def _read_vuquad4(self, data: bytes, n: int) -> int:
         """VUQUAD4(11201,112,9940)"""
-        return self._run_4nodes(data, n, CQUAD4)
+        return self._run_4nodes(CQUAD4, data, n)
 
-    def _run_cquad(self, data, n, element):
+    def _run_cquad(self, element: Union[CQUAD, CQUADX], data: bytes, n: int) -> int:
         """common method for CQUAD, CQUADX"""
         ntotal = 44 * self.factor  # 11*4
         s = Struct(mapfmt(self._endian + b'11i', self.size))
@@ -1820,7 +1828,7 @@ class GEOM2(GeomCommon):
         self.card_count[element.type] = nelements
         return n
 
-    def _run_2nodes(self, data, n, element):
+    def _run_2nodes(self, element, data: bytes, n: int) -> int:
         """common method for VUBEAM"""
         nelements = (len(data) - n) // 16
         s = Struct(self._endian + b'4i')
@@ -1847,7 +1855,7 @@ class GEOM2(GeomCommon):
         self.card_count[elem.type] = nelements
         return n
 
-    def _run_3nodes(self, data, n, element):
+    def _run_3nodes(self, element: CTRIA3, data: bytes, n: int) -> int:
         """common method for CTRIA3, VUTRIA3"""
         nelements = (len(data) - n) // 20
         s = Struct(self._endian + b'5i')
@@ -1874,7 +1882,7 @@ class GEOM2(GeomCommon):
         self.card_count[element.type] = nelements
         return n
 
-    def _run_4nodes(self, data, n, element):
+    def _run_4nodes(self, element: Union[CQUAD4, CAABSF], data: bytes, n: int) -> int:
         """common method for CQUAD4, CQUADR"""
         nelements = (len(data) - n) // 24
         s = Struct(self._endian + b'6i')
@@ -1901,11 +1909,97 @@ class GEOM2(GeomCommon):
         self.card_count[element.type] = nelements
         return n
 
-    def _run_cquad4(self, data, n, element):
-        """common method for CQUAD4, CQUADR"""
+    def _run_cquad4_msc(self, element: CQUAD4, data: bytes, n: int) -> Tuple[int, Any]:
+        """
+        buggy MSC 2018.2 version
+
+        #TODO is this right?  What's with the intermediate zeros?
+        data = (
+            2958, 51, 177,
+            1, 1, 1, 2, 73, 72, 0, 0, 0, 0, -1.0, -1.0, -1.0, -1.0, -1,
+            2, 1, 2, 3, 74, 73, 0, 0, 0, 0, -1.0, -1.0, -1.0, -1.0, -1,
+            3, 1, 3, 4, 75, 74, 0, 0, 0, 0, -1.0, -1.0, -1.0, -1.0, -1,
+        )
+        """
+        elements = []
+        ntotal = 60 * self.factor  # 15*4
+        nelements = (len(data) - n) // ntotal
+        leftover = (len(data) - n) % ntotal
+        assert leftover == 0, leftover
+
+        #  TODO: not sure...
+        #   6i is correct
+        #   3f-i zeros as float/int???
+        #   4f correct
+        #   i correct
+        s = Struct(mapfmt(self._endian + b'6i 4f 3fi i', self.size))
+        #if self.is_debug_file:
+            #self.binary_debug.write('ndata=%s\n' % (nelements * 44))
+
+        if self.is_debug_file:
+            self.binary_debug.write(f'  {element.type}=(eid, pid, [n1, n2, n3, n4], theta, zoffs, '
+                                    'unused_blank, [tflag, t1, t2, t3, t4]); theta_mcid\n')
+
+        for unused_i in range(nelements):
+            edata = data[n:n + ntotal]
+            out = s.unpack(edata)
+            # theta, zoffs, blank, tflag, t1, t2, t3, t4
+            (eid, pid, n1, n2, n3, n4,
+             theta, zoffs, blank, tflag,
+             t1, t2, t3, t4,
+             minus1) = out
+            minus1 = out[-1]
+
+            msg = ('eid=%s pid=%s nodes=%s '
+                   'theta=%s zoffs=%s '
+                   'blank=%s tflag=%s '
+                   't1-t4=%s minus1=%s' % (
+                       eid, pid, (n1, n2, n3, n4),
+                       theta, zoffs,
+                       blank, tflag,
+                       (t1, t2, t3, t4), minus1))
+
+            assert theta == 0, msg
+            assert zoffs == 0, msg
+            assert blank == 0, msg
+            assert tflag == 0, msg
+
+            theta_mcid = convert_theta_to_mcid(theta)
+            if self.is_debug_file:
+                self.binary_debug.write(
+                    f'  {element.type}=({eid}, {pid}, [{n1}, {n2}, {n3}, {n4}], '
+                    f'{theta}, {zoffs}, {blank}, [{tflag}, {t1}, {t2}, {t3}, {t4})]; {theta_mcid}\n')
+            assert minus1 == -1, minus1
+
+            data_init = [
+                eid, pid, n1, n2, n3, n4, theta_mcid, zoffs,
+                tflag, t1, t2, t3, t4]
+            elem = element.add_op2_data(data_init)
+            elements.append(elem)
+            n += ntotal
+        #if stop:
+            #raise RuntimeError('theta is too large...make the quad wrong')
+        #self.card_count[element.type] = nelements
+        return n, elements
+
+    def _run_cquad4_nx(self, element: Union[CQUAD4, CQUADR],
+                       data: bytes, n: int) -> Tuple[int, Any]:
+        """
+        common method for CQUAD4, CQUADR
+
+        data = (
+            2958, 51, 177,
+            1, 1, 1, 2, 8, 7, 0, 0, 0, 0, -1.0, -1.0, -1.0, -1.0
+            2, 1, 2, 3, 9, 8, 0, 0, 0, 0, -1.0, -1.0, -1.0, -1.0
+            3, 1, 3, 4, 10, 9, 0, 0, 0, 0, -1.0, -1.0, -1.0, -1.0
+        )
+        """
+        elements = []
         ntotal = 56 * self.factor  # 14*4
         nelements = (len(data) - n) // ntotal
-        s = Struct(mapfmt(self._endian + b'6iffii4f', self.size))
+        leftover = (len(data) - n) % ntotal
+        assert leftover == 0, leftover
+        s = Struct(mapfmt(self._endian + b'6i ff ii 4f', self.size))
         if self.is_debug_file:
             self.binary_debug.write('ndata=%s\n' % (nelements * 44))
 
@@ -1933,12 +2027,13 @@ class GEOM2(GeomCommon):
                 eid, pid, n1, n2, n3, n4, theta_mcid, zoffs,
                 tflag, t1, t2, t3, t4]
             elem = element.add_op2_data(data_init)
-            self.add_op2_element(elem)
+            #self.add_op2_element(elem)
+            elements.append(elem)
             n += ntotal
         #if stop:
             #raise RuntimeError('theta is too large...make the quad wrong')
-        self.card_count[element.type] = nelements
-        return n
+        #self.card_count[element.type] = nelements
+        return n, elements
 
 # CQUAD4FD
 
@@ -2035,11 +2130,17 @@ class GEOM2(GeomCommon):
 
     def _read_cquadr(self, data: bytes, n: int) -> int:
         """CQUADR(8009,80,367)  - the marker for Record 75"""
-        return self._run_cquad4(data, n, CQUADR)
+        nx_method = partial(self._run_cquad4_nx, CQUADR)
+        msc_method = partial(self._run_cquad4_msc, CQUADR)
+        n = self._read_dual_card(
+            data, n,
+            nx_method, msc_method,
+            'CQUADR', self.add_op2_element)
+        return n
 
     def _read_cquadx(self, data: bytes, n: int) -> int:
         """CQUADX(9008,90,508)  - the marker for Record 76"""
-        return self._run_cquad(data, n, CQUADX)
+        return self._run_cquad(CQUADX, data, n)
 
     def _read_crbar(self, data: bytes, n: int) -> int:
         # C:\NASA\m4\formats\git\examples\move_tpl\nrgd20c.op2
@@ -2700,7 +2801,7 @@ class GEOM2(GeomCommon):
         #self.log.info(f'skipping GENEL in GEOM2; len(data)={len(data)-12}')
         #print(n)
         ints = np.frombuffer(data[n:], dtype='int32').copy()
-        floats = np.frombuffer(data[n:], dtype='float32').copy()
+        #floats = np.frombuffer(data[n:], dtype='float32').copy()
         i = 0
         while i < len(ints):
             #1 EID I Element identification number
@@ -2869,7 +2970,7 @@ class GEOM2(GeomCommon):
             elem = CBEAM(eid-deltae, pid, nids2, x, g0)
             return elem
         element.type = 'CBEAM' #  I love python
-        self._run_2nodes(data, n, element)
+        self._run_2nodes(element, data, n)
         #assert len(self.elements) > 0, self.elements
         return n
 

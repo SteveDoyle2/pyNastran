@@ -5531,6 +5531,7 @@ def _parse_nastran_version(data, version, encoding, log):
         MSC_LONG_VERSION = [
             b'XXXXXXXX20140',
             b'XXXXXXXX20141',
+            b'XXXXXXXX20182',
         ]
         #self.show_data(data[:16], types='ifsdqlILQ', endian=None)
         #self.show_data(data[16:], types='ifsdqlILQ', endian=None)
@@ -5539,7 +5540,7 @@ def _parse_nastran_version(data, version, encoding, log):
             # 'XXXXXXXX20141   0   \x00\x00\x00\x00        '
             mode = 'msc'
         else:
-            raise NotImplementedError(data)
+            raise NotImplementedError(f'check={data[:16].strip()} data={data!r}')
     elif len(data) == 8:
         mode = _parse_nastran_version_8(
             data, version, encoding, log)

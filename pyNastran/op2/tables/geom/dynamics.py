@@ -173,10 +173,10 @@ class DYNAMICS(GeomCommon):
         4 A   RS Scale factor
 
         """
-        ntotal = 16
+        ntotal = 16 * self.factor
         nentries = (len(data) - n) // ntotal
         self.increase_card_count('DAREA', nentries)
-        struc = Struct(self._endian + b'3if')
+        struc = Struct(mapfmt(self._endian + b'3if', self.size))
         for unused_i in range(nentries):
             edata = data[n:n+ntotal]
             out = struc.unpack(edata)

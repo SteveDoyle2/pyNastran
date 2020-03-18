@@ -117,8 +117,7 @@ class EDT(GeomCommon):
         = -7 for ALL
         Word NDESC+5+NMETA repeats until -1 occurs
         GTYPE = -4 Grid identification numbers
-        NDESC+5
-        +NMETA
+        NDESC+5+NMETA:
         ID I Grid identification numbers
         > 0 for ID
         = 0 for THRU
@@ -134,6 +133,14 @@ class EDT(GeomCommon):
         = -6 for BY
         = -7 for ALL
         Word NDESC+5+NMETA repeats until -1 occurs
+
+        (
+            17400, 174, 616,
+            6, 0,
+                -2, 1, -1,
+                -4, 1, 0, 440, -1,
+            -1
+        )
         """
         nentries = 0
         ints = np.frombuffer(data[12:], dtype=self.idtype)
@@ -142,7 +149,10 @@ class EDT(GeomCommon):
         #print(strs)
 
         i = 0
-        while n < len(data):
+        #minus1_count = 0
+        #minus1 = np.where(ints == -1)[0]
+        ndata = len(data)
+        while n < ndata:
             #1 GID          I Group identification number
             #2 NDESC(C)     I Length of group description
             #3 GDESC(2) CHAR4 Group description
@@ -151,44 +161,103 @@ class EDT(GeomCommon):
             i += 2
             n += 8
 
-            gdesc = ''.join(stri.decode('latin1') for stri in strs[i:i+ndesc])
+            gdesc = ''.join(stri.decode('latin1') for stri in strs[i:i+ndesc]).strip()
             i += ndesc
             n += 4 * ndesc
-            #print(grid, ndesc, gdesc)
 
             #------------------------------
             #gtype, nmeta, mdesc
             gtype = ints[i]
             i += 1
             n += 4
+            print(f'grid={grid} ndesc={ndesc} gdesc={gdesc!r}; gtype={gtype!r}')
 
-            if gtype == -2:  # pragma: no cover
-                nmeta = ints[i:i+1]
-                i += 1
-                n += 4
+            def _expand_vals(grids):
+                grids2 = []
+                for val in grids:
+                    #> 0 for ID
+                    #= 0 for THRU
+                    #= -6 for BY
+                    #= -7 for ALL
+                    if val > 0:
+                        pass
+                    elif val == 0:
+                        val = 'THRU'
+                    elif val == -6:
+                        val = 'BY'
+                    elif val == -7:
+                        val = 'ALL'
+                    else:
+                        raise NotImplementedError(f'val={val} data={grids}')
+                    grids2.append(val)
+                return grids2
 
-                mdesc = ''.join(stri.decode('latin1') for stri in strs[i:i+nmeta])
-                i += nmeta
-                n += 4 * nmeta
-                #print(gtype, nmeta, mdesc)
-            if gtype == -5:
-                #GTYPE = -5 Element identification numbers
-                #NDESC+5+NMETA
-                #ID I Element identification numbers
-                #> 0 for ID
-                #= 0 for THRU
-                #= -6 for BY
-                #= -7 for ALL
-                #Word NDESC+5+NMETA repeats until -1 occurs
-                nstop = np.where(ints[i:]==-1)[0][0]
-                eids = ints[i:i+nstop]
-                i += nstop + 1
-                n += (nstop + 1) * 4
-            else:
-                raise NotImplementedError(gtype)
-            assert ints[i] == -1, ints[i:]
-            i += 1
-            n += 4
+            while n < ndata:
+                if gtype == -2:
+                    # meta-data
+                    nmeta = ints[i]
+                    i += 1
+                    n += 4
+                    #print(i, nmeta)
+                    #print(strs[i:i+nmeta-1])
+                    mdesc = ''.join(stri.decode('latin1') for stri in strs[i:i+nmeta-1])
+                    i += nmeta
+                    n += 4 * nmeta
+                    print(f'gtype={gtype} nmeta={nmeta} mdesc={mdesc!r}')
+                    #iminus1 = minus1[minus1_count+2]
+                    #print('ints: ', ints[i:iminus1].tolist())
+                    #minus1_count += 1
+                elif gtype == -4:
+                    # grids
+                    #iminus1 = minus1[minus1_count] # + 1
+                    #print(ints[iminus1:])
+                    #grids = ints[i+1:iminus1].tolist()
+
+                    for j, nj in enumerate(ints[i:]):
+                        if nj == -1:
+                            break
+                    grids = ints[i+1:i+j].tolist()
+                    grids2 = _expand_vals(grids)
+                    print(f'grids = {grids2}')
+                    #minus1_count += 1
+
+                    nstop = len(grids) + 2
+                    i += nstop
+                    n += nstop * 4
+                    #i = iminus1
+                    #n = iminus1 * 4
+                elif gtype == -5:
+                    #print('data', ints[i:].tolist())
+                    #GTYPE = -5 Element identification numbers
+                    #NDESC+5+NMETA
+                    #ID I Element identification numbers
+                    #> 0 for ID
+                    #= 0 for THRU
+                    #= -6 for BY
+                    #= -7 for ALL
+                    #Word NDESC+5+NMETA repeats until -1 occurs
+                    for j, nj in enumerate(ints[i:]):
+                        if nj == -1:
+                            break
+                    eids = ints[i+1:i+j].tolist()
+                    eids2 = _expand_vals(eids)
+                    print(f'eids = {eids2}')
+                    nstop = len(eids) + 2
+                    i += nstop
+                    n += nstop * 4
+                else:
+                    raise NotImplementedError(gtype)
+                gtype = ints[i]
+                print(f'***gtype={gtype} (ndata-n)={(ndata-n)}')
+                if gtype == -1 and (ndata - n) == 4:
+                    print('break')
+                    #minus1_count += 1
+                    i += 1
+                    n += 4
+                    break
+                #i += 1
+                #n += 4
+            #assert ints[i] == -1, ints[i:]
             self.log.warning(f'skipping GROUP in {self.table_name}')
             #self.add_rgyro(sid, asynci, refrot, unit, speed_low, speed_high, speed)
         self.increase_card_count('GROUP', nentries)

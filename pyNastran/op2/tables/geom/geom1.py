@@ -92,7 +92,7 @@ class GEOM1(GeomCommon):
             (3901,   39,  50): ['CVISC', self._read_cvisc],  # record
             (13301, 133, 509): ['', self._read_fake],  # record
             (1127,   11, 461) : ['SELOAD', self._read_fake],  # record NX
-            (4501, 45, 1120001): ['BCT?/BOLT?', self._read_fake],  # record ???; test_ibulk
+            (4501, 45, 1120001): ['GRID/BCT?/BOLT?', self._read_grid_maybe],  # record ???; test_ibulk
 
             # F:\work\pyNastran\pyNastran\master2\pyNastran\bdf\test\nx_spike\out_boltsold01d.op2
             (2101, 21, 2220008) : ['', self._read_fake],
@@ -252,7 +252,75 @@ class GEOM1(GeomCommon):
         self.increase_card_count('CORD3G', nentries)
         return n
 
-    def _read_grid(self, data, n):  # 21.8 sec, 18.9
+    def _read_grid_maybe(self, data: bytes, n: int) -> int:  # pragma: no cover
+        """(4501, 45, 1120001) - the marker for Record 17"""
+        return len(data)
+        nfields = (len(data) - n) // 4
+        # nfields = 3 * 11 * 17 * 71
+
+        # it's not 11, 17...
+        #self.show_data(data[12:], types='if')
+
+        # 2i: correct
+        #   id, 0
+        # i: ???
+        # i/f: ???
+        # f: correct
+        # i: ???
+        # f: correct
+        # 5i: ???
+        #                                    ? ?   ?
+        structi = Struct(self._endian + b'2i i f i f 5i') # 11...decent
+
+        #structi = Struct(self._endian + b'17i') # 17...not a chance
+
+        # i: id
+        # i/f: ???
+        # 3f
+        #structi = Struct(self._endian + b'i i 3f 28i') # 33...better?...still not right
+
+        #structi = Struct(self._endian + b'51i') # 17*3..nope
+        #structi = Struct(self._endian + b'71i') # 71...nope
+        #structi = Struct(self._endian + b'187i') # 11*17...
+
+        ntotal = 4 * 11
+
+        nentries = (len(data) - n) // ntotal
+        leftover = (len(data) - n) % ntotal
+        assert leftover == 0, f'ndata={len(data)-n} leftover={leftover}'
+        nfailed = 0
+        for unused_i in range(nentries):
+            edata = data[n:n + ntotal]
+            out = structi.unpack(edata)
+            print(out)
+            n += ntotal
+            continue
+            (nid, cp, x1, x2, x3, cd, ps, seid) = out
+            if self.is_debug_file:
+                self.binary_debug.write('  GRID=%s\n' % str(out))
+            if nid < 10000000:
+                # cd can be < 0
+                if ps == 0:
+                    ps = ''
+                node = GRID(nid, np.array([x1, x2, x3]), cp, cd, ps, seid)
+                self._type_to_id_map['GRID'].append(nid)
+                self.nodes[nid] = node
+                #if nid in self.nodes:
+                    #self.reject_lines.append(str(node))
+                #else:
+                #self.nodes[nid] = node
+                #self.add_node(node)
+            else:
+                #self.log.warning('*nid=%s cp=%s x1=%-5.2f x2=%-5.2f x3=%-5.2f cd=%-2s ps=%s '
+                                 #'seid=%s' % (nid, cp, x1, x2, x3, cd, ps, seid))
+                #node = GRID(nid, np.array([x1, x2, x3]), cp, cd, ps, seid)
+                #self.rejects.append(str(node))
+                nfailed += 1
+            n += ntotal
+        self.increase_card_count('GRID', nentries - nfailed)
+        return n
+
+    def _read_grid(self, data: bytes, n: int) -> int:  # 21.8 sec, 18.9
         """(4501,45,1) - the marker for Record 17"""
         structi = Struct(self._endian + b'ii3f3i')
         ntotal = 32
