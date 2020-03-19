@@ -141,6 +141,17 @@ class EDT(GeomCommon):
                 -4, 1, 0, 440, -1,
             -1
         )
+        (
+            17400, 174, 616,
+            55, 0,
+                -5, 90011, -1,
+                -1,
+             65, 0,
+                -5, 90012, -1,
+                -1,
+             75, 0,
+                -5 90013, -1,
+                -1)
         """
         nentries = 0
         ints = np.frombuffer(data[12:], dtype=self.idtype)
@@ -193,7 +204,12 @@ class EDT(GeomCommon):
                 return grids2
 
             while n < ndata:
-                if gtype == -2:
+                if gtype == -1:
+                    # end of card
+                    i += 1
+                    n += 4
+                    break
+                elif gtype == -2:
                     # meta-data
                     nmeta = ints[i]
                     i += 1
