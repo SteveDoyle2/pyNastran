@@ -11,8 +11,11 @@ import numpy as np
 from pyNastran.bdf.mesh_utils.bdf_equivalence import (
     _get_tree)
 
-def find_closest_nodes(nodes_xyz, nids, xyz_compare, neq_max=1, tol=None, msg=''):
-    # type: (np.ndarray, np.ndarray, np.ndarray, int, Optional[float], str) -> np.ndarray
+from pyNastran.nptyping import NDArray3float, NDArrayNint
+
+def find_closest_nodes(nodes_xyz: NDArray3float, nids: NDArrayNint,
+                       xyz_compare: NDArray3float, neq_max: int=1, tol: Optional[float]=None,
+                       msg: str='') -> NDArrayNint:
     """
     Finds the closest nodes to an arbitrary set of xyz points
 
@@ -140,8 +143,9 @@ def _not_equal_nodes_build_tree(nodes_xyz, xyz_compare, tol, neq_max=4, msg=''):
         error message
 
     """
+    assert isinstance(nodes_xyz, np.ndarray), type(nodes_xyz)
     assert isinstance(xyz_compare, np.ndarray), type(xyz_compare)
-    if nodes_xyz.shape[1] != xyz_compare.shape[1]:
+    if len(nodes_xyz.shape) != len(xyz_compare.shape) or nodes_xyz.shape[1] != xyz_compare.shape[1]:
         msgi = 'nodes_xyz.shape=%s xyz_compare.shape=%s%s' % (
             str(nodes_xyz.shape), str(xyz_compare.shape), msg)
         raise RuntimeError(msgi)

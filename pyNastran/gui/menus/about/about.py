@@ -17,18 +17,11 @@ from qtpy.QtCore import Qt
 from qtpy import QtGui
 from qtpy.QtWidgets import (
     QLabel, QPushButton, QGridLayout, QApplication, QHBoxLayout, QVBoxLayout,
-    QColorDialog, QLineEdit, QCheckBox, QComboBox, QTabWidget, QWidget)
+    QTabWidget, QWidget, QScrollArea, QTextEdit)
 
 from pyNastran.gui.utils.qt.pydialog import PyDialog
-from pyNastran.gui.utils.qt.qpush_button_color import QPushButtonColor
-from pyNastran.gui.utils.qt.dialogs import save_file_dialog
-from pyNastran.gui.utils.qt.checks.qlineedit import (
-    check_save_path, #check_path,
-    #check_int, check_positive_int_or_blank,
-    check_float,# check_float_ranged,
-    #check_name_str, check_name_length, check_format, check_format_str,
-)
-from pyNastran.gui.utils.wildcards import wildcard_csv
+#from pyNastran.gui.utils.qt.qpush_button_color import QPushButtonColor
+#from pyNastran.gui.utils.qt.dialogs import save_file_dialog
 
 CREDITS = """
 pyNastran was written by Steve Doyle since 2011.  This product contains the following third party modules:
@@ -47,8 +40,8 @@ pyNastran was written by Steve Doyle since 2011.  This product contains the foll
 
   * Pygments by Georg Brandl, Armin Ronacher, Tim Hatch, and contributors.
 
-We gratefully acknowledge the efforts of all that have contributed to these and the other open source products and tools that are used in the development of Wing.
-"""
+We gratefully acknowledge the efforts of all that have contributed to these and the other open source products and tools that are used in the development of pyNastran.
+""".replace('\n', '<br>')
 
 class AboutWindow(PyDialog):
     """
@@ -102,12 +95,14 @@ class AboutWindow(PyDialog):
         ok_cancel_box.addWidget(self.cancel_button)
 
         #---------------------
-        version_tab = _version_tab(ok_cancel_box)
-        package_tab = _package_tab()
+        version_tab, len_version = _version_tab(ok_cancel_box)
+        package_tab = _package_tab(len_version)
+        credits_tab = _credits_tab()
         # --------------------
         tab_widget = QTabWidget()
         tab_widget.addTab(version_tab, 'Version')
         tab_widget.addTab(package_tab, 'Packages')
+        tab_widget.addTab(credits_tab, 'Credits')
 
         #---------------------
         vbox_outer = QVBoxLayout()
@@ -153,12 +148,12 @@ class AboutWindow(PyDialog):
         self.out_data['close'] = True
         self.close()
 
-def get_packages():
+def get_packages(len_version=80):
     import sys
     import numpy
     import scipy
-    import matplotlib
-    import pandas
+    #import matplotlib
+    #import pandas
     import vtk
     from pyNastran.gui.qt_version import qt_version
 
@@ -174,16 +169,24 @@ def get_packages():
     else:
         raise NotImplementedError(qt_version)
 
+    import importlib
+
+    python = str(sys.version_info)
     packages = {
-        'python' : str(sys.version_info),
+        'Python' : python + ' ' * (len_version - len(python) + 15),
         'numpy' : numpy.__version__,
         'scipy' : scipy.__version__,
-        'matplotlib' : matplotlib.__version__,
-        'pandas' : pandas.__version__,
+        #'matplotlib' : matplotlib.__version__,
+        #'pandas' : pandas.__version__,
+        'matplotlib' : 'N/A',
+        'pandas' : 'N/A',
         'vtk' : vtk.VTK_VERSION,
         #'PyQt5':,
         qt_name : _qt_version,
      }
+    for name in ['matplotlib', 'pandas', 'docopt']:
+        module = importlib.import_module(name, package=None)
+        packages[name] = module.__version__
     return packages
 
 def _version_tab(ok_cancel_box):
@@ -210,21 +213,15 @@ def _version_tab(ok_cancel_box):
         'Memory': str(['1000 bytes']),
         'Locale': localei,
     }
-    irow = 0
-    grid = QGridLayout()
-    for key, valuei in version_data.items():
-        label = QLabel(key + ':')
-        label.setAlignment(Qt.AlignRight)
+    len_version = len(os_version)
+    grid = grid_from_dict(version_data)
 
-        value = QLabel(valuei)
-        value.setTextInteractionFlags(Qt.TextSelectableByMouse)
-        grid.addWidget(label, irow, 0)
-        grid.addWidget(value, irow, 1)
-        irow += 1
-
+    hbox = QHBoxLayout()
+    hbox.addLayout(grid)
+    hbox.addStretch()
 
     vbox = QVBoxLayout()
-    vbox.addLayout(grid)
+    vbox.addLayout(hbox)
     vbox.addStretch()
     vbox.addLayout(ok_cancel_box)
 
@@ -232,22 +229,12 @@ def _version_tab(ok_cancel_box):
     version_tab = QWidget()
     version_tab.setLayout(vbox)
 
-    return version_tab
+    return version_tab, len_version
 
-def _package_tab():
+def _package_tab(len_version=80):
     """makes the packages tab"""
-    packages = get_packages()
-    irow = 0
-    grid = QGridLayout()
-    for key, valuei in packages.items():
-        label = QLabel(key + ':')
-        label.setAlignment(Qt.AlignRight)
-
-        value = QLabel(valuei)
-        value.setTextInteractionFlags(Qt.TextSelectableByMouse)
-        grid.addWidget(label, irow, 0)
-        grid.addWidget(value, irow, 1)
-        irow += 1
+    packages = get_packages(len_version=len_version)
+    grid = grid_from_dict(packages)
 
     vbox = QVBoxLayout()
     vbox.addLayout(grid)
@@ -256,6 +243,20 @@ def _package_tab():
     package_tab = QWidget()
     package_tab.setLayout(vbox)
     return package_tab
+
+def grid_from_dict(mydict):
+    irow = 0
+    grid = QGridLayout()
+    for key, valuei in mydict.items():
+        label = QLabel(key + ':')
+        label.setAlignment(Qt.AlignRight)
+
+        value = QLabel(valuei)
+        value.setTextInteractionFlags(Qt.TextSelectableByMouse)
+        grid.addWidget(label, irow, 0)
+        grid.addWidget(value, irow, 1)
+        irow += 1
+    return grid
 
 #class Window(QScrollArea):
     #def __init__(self):
@@ -268,7 +269,7 @@ def _package_tab():
         #self.setWidget(widget)
         #self.setWidgetResizable(True)
 
-#def _credits_tab():
+def _credits_tab():
     #scroll = QScrollArea()
     #scroll.setWidget(self)
     #scroll.setWidgetResizable(True)
@@ -279,9 +280,25 @@ def _package_tab():
     #vbox.addLayout(layout)
     #vbox.addStretch()
 
-    #package_tab = QWidget()
-    #package_tab.setLayout(vbox)
-    #return package_tab
+    scrollArea = QScrollArea()
+    scrollArea.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOn)
+    scrollArea.setWidgetResizable(True)
+    #scrollArea->setGeometry( 10, 10, 200, 200 );
+
+    package_tab = QWidget()
+    scrollArea.setWidget(package_tab)
+
+    widget = QWidget(scrollArea)
+
+    vbox = QVBoxLayout(widget)
+    text = QTextEdit(CREDITS)
+    text.setReadOnly(True)
+    vbox.addWidget(text)
+    #vbox.addLayout(scrollArea)
+
+    package_tab = QWidget()
+    package_tab.setLayout(vbox)
+    return package_tab
 
 def main():
     # kills the program when you hit Cntl+C from the command line

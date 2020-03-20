@@ -22,6 +22,11 @@ from pyNastran.bdf.mesh_utils.mass_properties import (
 from pyNastran.bdf.mesh_utils.make_half_model import make_symmetric_model
 from pyNastran.bdf.mesh_utils.bdf_merge import bdf_merge
 from pyNastran.bdf.mesh_utils.utils import cmd_line
+from pyNastran.bdf.mesh_utils.find_closest_nodes import find_closest_nodes
+from pyNastran.bdf.mesh_utils.find_coplanar_elements import find_coplanar_triangles
+from pyNastran.bdf.mesh_utils.force_to_pressure import force_to_pressure
+from pyNastran.bdf.mesh_utils.free_edges import free_edges
+from pyNastran.bdf.mesh_utils.get_oml import get_oml_eids
 
 from pyNastran.bdf.mesh_utils.mesh import create_structured_cquad4s, create_structured_chexas
 
@@ -726,6 +731,60 @@ class TestMeshUtils(unittest.TestCase):
 
 
 class TestEquiv(unittest.TestCase):
+
+    def test_closest(self):
+        """Finds the closest nodes to specified points"""
+        log = SimpleLogger(level='error')
+        msg = (
+            'CEND\n'
+            'BEGIN BULK\n'
+            'GRID,1,,0.,0.,0.\n'
+            'GRID,2,,0.,0.,0.5\n'
+            'GRID,3,,0.,0.,0.51\n'
+            'GRID,10,,0.,0.,1.\n'
+            'GRID,11,,0.,0.,1.\n'
+            'CTRIA3,1,1,1,2,11\n'
+            'CTRIA3,3,1,2,3,11\n'
+            'CTRIA3,4,1,1,2,10\n'
+            'PSHELL,1,1,0.1\n'
+            'MAT1,1,3.0,, 0.3\n'
+            'ENDDATA'
+        )
+        bdf_filename = os.path.join(DIRNAME, 'nonunique.bdf')
+        #bdf_filename_out = os.path.join(DIRNAME, 'unique.bdf')
+        with open(bdf_filename, 'w') as bdf_file:
+            bdf_file.write(msg)
+
+        model = read_bdf(bdf_filename)
+        out = model.get_displacement_index_xyz_cp_cd()
+        icd_transform, icp_transform, xyz_cp, nid_cp_cd = out
+
+        nids = nid_cp_cd[:, 0]
+        xyz_cid0 = model.transform_xyzcp_to_xyz_cid(
+                xyz_cp, nids, icp_transform,
+                cid=0)
+        nodes_xyz = xyz_cid0
+
+        #'GRID,2,,0.,0.,0.5\n'
+        #'GRID,3,,0.,0.,0.51\n'
+        xyz_compare = np.array([
+            [0., 0., 0.52]])
+        nids_close = find_closest_nodes(
+            nodes_xyz, nids,
+            xyz_compare, neq_max=2, tol=None,
+            msg='')
+        nids_expected = [
+            [3, 2],
+        ]
+        assert np.array_equal(nids_close, nids_expected), f'A: nids_close={nids_close} nids_expected={nids_expected}'
+        # --------------------------------------------------------------
+        #'GRID,3,,0.,0.,0.51\n'
+        nids_close = find_closest_nodes(
+            nodes_xyz, nids,
+            xyz_compare, neq_max=1, tol=None,
+            msg='')
+        nids_expected = [3]
+        assert np.array_equal(nids_close, nids_expected), f'B: nids_close={nids_close} nids_expected={nids_expected}'
 
     def test_eq1(self):
         """Collapse nodes 2 and 3; consider 1-3"""
