@@ -17,7 +17,7 @@ from qtpy.QtWidgets import (
     QLabel, QPushButton, QGridLayout, QApplication, QHBoxLayout, QVBoxLayout,
     QColorDialog, QLineEdit, QCheckBox, QComboBox)
 
-from pyNastran.gui.utils.qt.pydialog import PyDialog
+from pyNastran.gui.utils.qt.pydialog import PyDialog, check_color
 from pyNastran.gui.utils.qt.qpush_button_color import QPushButtonColor
 from pyNastran.gui.utils.qt.dialogs import save_file_dialog
 from pyNastran.gui.utils.qt.checks.qlineedit import (
@@ -60,7 +60,7 @@ class CuttingPlaneWindow(PyDialog):
 
         #self.out_data = data
 
-        self.plane_color_float, self.plane_color_int = _check_color(
+        self.plane_color_float, self.plane_color_int = check_color(
             data['plane_color'])
         self.methods = ['Z-Axis Projection', 'CORD2R']
         self.zaxis_methods = ['Global Z', 'Camera Normal', 'Manual']
@@ -557,12 +557,6 @@ def get_zaxis(win_parent, zaxis_method_pulldown, zaxis_x_edit, zaxis_y_edit, zax
     else:
         raise NotImplementedError(zaxis_method)
     return flag1, flag2, flag3, zaxis_cid, zaxis
-
-def _check_color(color_float):
-    assert len(color_float) == 3, color_float
-    assert isinstance(color_float[0], float), color_float
-    color_int = [int(colori * 255) for colori in color_float]
-    return color_float, color_int
 
 def get_pulldown_text(method_int, methods, pulldown):
     if method_int is None:

@@ -74,10 +74,6 @@ class ClippingPropertiesWindow(PyDialog):
 
     def set_connections(self):
         """creates the actions for the menu"""
-        if qt_version == 4:
-            self.connect(self, QtCore.SIGNAL('triggered()'), self.closeEvent)
-        #else:
-            # closeEvent
         self.min_button.clicked.connect(self.on_default_min)
         self.max_button.clicked.connect(self.on_default_max)
         self.min_edit.textChanged.connect(self.on_apply)

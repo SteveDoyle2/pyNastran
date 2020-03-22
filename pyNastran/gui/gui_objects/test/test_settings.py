@@ -2,6 +2,7 @@ import unittest
 from numpy import allclose
 from pyNastran.gui.gui_objects.utils import autotype_value
 
+
 class TestSettings(unittest.TestCase):
     def test_settings_bool(self):
         value = autotype_value('true', bool)

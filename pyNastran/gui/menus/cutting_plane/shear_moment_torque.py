@@ -17,11 +17,11 @@ from qtpy.QtWidgets import (
     QLabel, QPushButton, QGridLayout, QApplication, QHBoxLayout, QVBoxLayout,
     QColorDialog, QLineEdit, QCheckBox, QComboBox, QSpinBox, QDoubleSpinBox)
 
-from pyNastran.gui.utils.qt.pydialog import PyDialog, make_combo_box, make_font
+from pyNastran.gui.utils.qt.pydialog import PyDialog, make_combo_box, make_font, check_color
 from pyNastran.gui.utils.qt.qpush_button_color import QPushButtonColor
 from pyNastran.gui.utils.qt.dialogs import save_file_dialog
 from pyNastran.gui.utils.qt.checks.qlineedit import check_save_path, check_float
-from pyNastran.gui.menus.cutting_plane.cutting_plane import get_zaxis, _check_color
+from pyNastran.gui.menus.cutting_plane.cutting_plane import get_zaxis
 from pyNastran.gui.utils.wildcards import wildcard_csv
 
 
@@ -59,7 +59,7 @@ class ShearMomentTorqueWindow(PyDialog):
 
         #self.out_data = data
 
-        self.plane_color_float, self.plane_color_int = _check_color(
+        self.plane_color_float, self.plane_color_int = check_color(
             data['plane_color'])
         self.plane_opacity = data['plane_opacity']
         self.methods = ['Z-Axis Projection', 'CORD2R']
@@ -622,7 +622,7 @@ def get_pulldown_text(method_int, methods, pulldown):
         method = methods[method_int]
     return method
 
-def main():
+def main():  # pragma: no cover
     # kills the program when you hit Cntl+C from the command line
     # doesn't save the current state as presumably there's been an error
     import signal

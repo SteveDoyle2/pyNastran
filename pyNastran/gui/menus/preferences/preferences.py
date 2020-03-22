@@ -16,7 +16,7 @@ from qtpy.QtWidgets import (
     QLabel, QPushButton, QGridLayout, QApplication, QHBoxLayout, QVBoxLayout,
     QSpinBox, QDoubleSpinBox, QColorDialog, QLineEdit, QCheckBox)
 
-from pyNastran.gui.utils.qt.pydialog import PyDialog, make_font
+from pyNastran.gui.utils.qt.pydialog import PyDialog, make_font, check_color
 from pyNastran.gui.utils.qt.qpush_button_color import QPushButtonColor
 from pyNastran.gui.menus.menu_utils import eval_float_from_string
 from pyNastran.gui.gui_objects.settings import (
@@ -75,15 +75,15 @@ class PreferencesWindow(PyDialog):
         self._text_size = data['text_size']
         self._highlight_opacity = data['highlight_opacity']
 
-        self.annotation_color_float, self.annotation_color_int = _check_color(
+        self.annotation_color_float, self.annotation_color_int = check_color(
             data['annotation_color'])
-        self.background_color_float, self.background_color_int = _check_color(
+        self.background_color_float, self.background_color_int = check_color(
             data['background_color'])
-        self.background_color2_float, self.background_color2_int = _check_color(
+        self.background_color2_float, self.background_color2_int = check_color(
             data['background_color2'])
-        self.text_color_float, self.text_color_int = _check_color(
+        self.text_color_float, self.text_color_int = check_color(
             data['text_color'])
-        self.highlight_color_float, self.highlight_color_int = _check_color(
+        self.highlight_color_float, self.highlight_color_int = check_color(
             data['highlight_color'])
 
         self._nastran_is_element_quality = data['nastran_is_element_quality']
@@ -830,12 +830,6 @@ def check_label_float(cell):
     except ValueError:
         cell.setStyleSheet("QLineEdit{background: red;}")
         return None, False
-
-def _check_color(color_float):
-    assert len(color_float) == 3, color_float
-    assert isinstance(color_float[0], float), color_float
-    color_int = [int(colori * 255) for colori in color_float]
-    return color_float, color_int
 
 def main():  # pragma: no cover
     # kills the program when you hit Cntl+C from the command line

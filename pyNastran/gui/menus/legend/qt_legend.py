@@ -642,12 +642,6 @@ class LegendPropertiesWindow(PyDialog):
         self.ok_button.clicked.connect(self.on_ok)
         self.cancel_button.clicked.connect(self.on_cancel)
 
-        if qt_version == 4:
-            self.connect(self, QtCore.SIGNAL('triggered()'), self.closeEvent)
-            #self.colormap_edit.activated[str].connect(self.onActivated)
-        #else:
-            # closeEvent???
-
     def set_font_size(self, font_size):
         """
         Updates the font size of the objects

@@ -77,10 +77,7 @@ class EditNodeProperties(QDialog):
         table_model = Model(items, header_labels, self)
         view = SingleChoiceQTableView(self) #Call your custom QTableView here
         view.setModel(table_model)
-        if qt_version == 4:
-            view.horizontalHeader().setResizeMode(QHeaderView.Stretch)
-        else:
-            view.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
+        view.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
         self.table = view
 
         #self.representation = actor_obj.representation

@@ -107,8 +107,6 @@ class CameraWindow(PyDialog):
 
     def set_connections(self):
         """creates the actions for the menu"""
-        #if qt_version == 4:
-            #self.connect(self.ok_button, QtCore.SIGNAL('clicked()'), self.on_ok)
         self.set_button.clicked.connect(self.on_set)
         self.save_button.clicked.connect(self.on_save)
         self.delete_button.clicked.connect(self.on_delete)

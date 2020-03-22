@@ -64,12 +64,7 @@ if IS_SCINTILLA:
 
             # Clickable margin 1 for showing markers
             self.setMarginSensitivity(1, True)
-            if qt_version == 'pyqt4':
-                self.connect(self,
-                             QtCore.SIGNAL('marginClicked(int, int, Qt::KeyboardModifiers)'),
-                             self.on_margin_clicked)
-            else:
-                self.marginClicked.connect(self.on_margin_clicked)
+            self.marginClicked.connect(self.on_margin_clicked)
 
             self.markerDefine(Qsci.QsciScintilla.RightArrow,
                               self.ARROW_MARKER_NUM)
@@ -91,11 +86,8 @@ if IS_SCINTILLA:
             lexer.setDefaultFont(font)
             self.setLexer(lexer)
 
-            if qt_version == 'pyqt4':
-                self.SendScintilla(Qsci.QsciScintilla.SCI_STYLESETFONT, 1, 'Courier')
-            else:
-                font_style = bytearray(str.encode("Courier"))
-                self.SendScintilla(Qsci.QsciScintilla.SCI_STYLESETFONT, 1, font_style)
+            font_style = bytearray(str.encode("Courier"))
+            self.SendScintilla(Qsci.QsciScintilla.SCI_STYLESETFONT, 1, font_style)
 
             # Don't want to see the horizontal scrollbar at all
             # Use raw message to Scintilla here (all messages are documented

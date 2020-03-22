@@ -8,9 +8,7 @@ from qtpy.QtWidgets import (
     QHBoxLayout, QVBoxLayout, QTableWidget, QTableWidgetItem,
 )
 
-if qt_version == 4:
-    QString = QtCore.QString
-elif qt_version == 5:
+if qt_version == 5:
     QString =  str
 else:
     raise NotImplementedError('qt_version = %r' % qt_version)

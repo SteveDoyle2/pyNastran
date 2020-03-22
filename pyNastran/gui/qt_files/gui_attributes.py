@@ -244,9 +244,7 @@ class GuiAttributes:
         self.group_active = 'main'
 
         #if not isinstance(res_widget, MockResWidget):
-            #if qt_version == 4:
-                #QMainWindow.__init__(self)
-            #elif qt_version == 5:
+            #if qt_version == 5:
                 #super(QMainWindow, self).__init__()
 
         self.main_grids = {}

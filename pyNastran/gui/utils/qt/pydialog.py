@@ -117,3 +117,9 @@ def set_combo_box_text(combo_box, value):
         combo_box.setCurrentIndex(j)
     else:
         combo_box.setCurrentText(value)
+
+def check_color(color_float):
+    assert len(color_float) == 3, color_float
+    assert isinstance(color_float[0], float), color_float
+    color_int = [int(colori * 255) for colori in color_float]
+    return color_float, color_int

@@ -1,4 +1,5 @@
 """The about menu credits 3rd party packages."""
+import os
 import sys
 import locale
 import platform
@@ -13,9 +14,9 @@ from qtpy.QtCore import Qt
 from qtpy import QtGui
 from qtpy.QtWidgets import (
     QLabel, QPushButton, QGridLayout, QApplication, QHBoxLayout, QVBoxLayout,
-    QTabWidget, QWidget, QScrollArea, QTextEdit, QMessageBox)
+    QTabWidget, QWidget, QScrollArea, QTextEdit, QMessageBox, QFrame)
 
-from pyNastran.gui import IS_LINUX, IS_MAC # IS_WINDOWS
+from pyNastran.gui import ICON_PATH, IS_LINUX, IS_MAC # IS_WINDOWS
 from pyNastran.gui.qt_version import qt_name, PYQT_VERSION, is_pygments # qt_version,
 from pyNastran.gui.utils.qt.pydialog import PyDialog
 
@@ -99,7 +100,20 @@ class AboutWindow(PyDialog):
         tab_widget.addTab(credits_tab, 'Credits')
 
         #---------------------
+        png_filename = os.path.join(ICON_PATH, '..', 'images', 'logo.png')
+        im = QtGui.QPixmap(png_filename)
+        im_resized = im.scaled(525, 405, Qt.KeepAspectRatio)
+        picture = QLabel()
+        picture.setFrameShape(QFrame.HLine)
+        picture.setFrameStyle(QFrame.NoFrame)
+        #label->setLineWidth(0)
+        #label->setMidLineWidth(0)
+        picture.setPixmap(im_resized)
+
+
         vbox_outer = QVBoxLayout()
+        vbox_outer.setContentsMargins(0, 0, 0, 0)
+        vbox_outer.addWidget(picture)
         vbox_outer.addWidget(tab_widget)
         vbox_outer.addLayout(ok_cancel_box)
         #---------------------
@@ -134,9 +148,9 @@ class AboutWindow(PyDialog):
 
     def on_update(self):
         """check for a newer version"""
-        if self.win_parent is None:
-            return
-        is_newer = self.win_parent._check_for_latest_version()
+        is_newer = False
+        if self.win_parent is not None:
+            is_newer = self.win_parent._check_for_latest_version()
         if not is_newer:
             self.update_button.setDisabled(True)
             QMessageBox.about(self, 'About pyNastran GUI', 'PyNastran GUI is already up to date')
@@ -172,7 +186,7 @@ def get_packages(len_version=80):
     'python_branch', 'python_revision', 'python_build', 'python_compiler', 'python_implementation',
     packages = {
         'Python' : python + ' ' * (len_version - len(python) + 10),
-        'branch': platform.python_branch(),
+        'Branch': platform.python_branch(),
         #'Python revision': platform.python_revision(),
         #'Python Build': str(platform.python_build()),
         'Compiler': platform.python_compiler(),
@@ -201,10 +215,10 @@ def get_version() -> Dict[str, str]:
     """makes the version data"""
     sys_platform = sys.platform
     localei, unused_encoding = locale.getdefaultlocale()
-    try:
-        os_version = str(sys.getwindowsversion())
-    except:
-        os_version = '???'
+    #try:
+        #os_version = str(sys.getwindowsversion())
+    #except:
+        #os_version = '???'
 
     pmsg = [
         'machine', 'platform', 'processor', 'architecture',
@@ -229,7 +243,7 @@ def get_version() -> Dict[str, str]:
         'Release Date': pyNastran.__releaseDate__,
         #'Cache Directory': ,
         'OS' : f'win32 (sys.platform={sys_platform})',
-        'OS Version' : os_version,
+        #'OS Version' : os_version,
         'CPU': cpu,
         #'Bit': bit,
         #'Memory': memory,
@@ -237,14 +251,15 @@ def get_version() -> Dict[str, str]:
     }
     for key in pmsg:
         value = getattr(platform, key)()
-        version_data[key] = str(value)
+        version_data[key.title()] = str(value)
     return version_data
 
 def _version_tab(ok_cancel_box):
     """makes the version tab"""
     version_data = get_version()
 
-    len_version = len(version_data['OS Version'])
+    len_version = 0
+    #len_version = len(version_data['OS Version'])
     grid = grid_from_dict(version_data)
 
     hbox = QHBoxLayout()

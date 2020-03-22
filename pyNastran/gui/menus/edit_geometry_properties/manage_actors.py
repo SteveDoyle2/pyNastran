@@ -225,8 +225,6 @@ class EditGeometryProperties(PyDialog):
         table_model = Model(items, header_labels, self)
         view = SingleChoiceQTableView(self) #Call your custom QTableView here
         view.setModel(table_model)
-        #if qt_version == 4:
-            #view.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
 
         self.table = view
         #self.opacity_edit.valueChanged.connect(self.on_opacity)
@@ -712,8 +710,6 @@ class EditGeometryProperties(PyDialog):
         # self.connect(self.line_width, QtCore.SIGNAL('clicked()'), self.on_line_width)
         # self.connect(self.point_size, QtCore.SIGNAL('clicked()'), self.on_point_size)
 
-        if qt_version == 4:
-            self.connect(self, QtCore.SIGNAL('triggered()'), self.closeEvent)
         self.color_edit.clicked.connect(self.on_color)
         self.checkbox_show.clicked.connect(self.on_show)
         self.checkbox_hide.clicked.connect(self.on_hide)

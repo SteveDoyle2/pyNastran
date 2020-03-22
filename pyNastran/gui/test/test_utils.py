@@ -24,6 +24,7 @@ PKG_PATH = pyNastran.__path__[0]
 MODEL_PATH = os.path.join(PKG_PATH, '..', 'models')
 from pyNastran.gui.gui_objects.gui_result import GuiResult
 
+
 class GuiUtils(unittest.TestCase):
     def test_gui_result(self):
         """tests GuiResult"""

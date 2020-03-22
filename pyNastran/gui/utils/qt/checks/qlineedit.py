@@ -214,6 +214,7 @@ def check_name_str(cell):
     ----------
     cell : QLineEdit
         a QLineEdit containing a string.
+
     """
     cell_value = cell.text()
     try:

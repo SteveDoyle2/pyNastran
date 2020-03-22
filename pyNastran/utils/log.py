@@ -31,7 +31,5 @@ def make_log():
     return msg
 
 
-
-
 if __name__ == '__main__':  # pragma: no cover
     make_log()

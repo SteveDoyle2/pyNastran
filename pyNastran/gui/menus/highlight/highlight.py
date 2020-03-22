@@ -14,7 +14,7 @@ from qtpy.QtWidgets import (
 import vtk
 from vtk.util.numpy_support import vtk_to_numpy
 
-from pyNastran.gui.utils.qt.pydialog import PyDialog, check_patran_syntax
+from pyNastran.gui.utils.qt.pydialog import PyDialog, check_patran_syntax, check_color
 from pyNastran.gui.utils.qt.qpush_button_color import QPushButtonColor
 #from pyNastran.gui.menus.menu_utils import eval_float_from_string
 from pyNastran.gui.utils.qt.qelement_edit import QNodeEdit, QElementEdit#, QNodeElementEdit
@@ -61,7 +61,7 @@ class HighlightWindow(PyDialog):
         else:
             #self.highlight_color_float = gui.settings.highlight_color
             #self.highlight_color_int = [int(val) for val in self.highlight_color_float]
-            self.highlight_color_float, self.highlight_color_int = _check_color(
+            self.highlight_color_float, self.highlight_color_int = check_color(
                 gui.settings.highlight_color)
 
             #self.highlight_color_int = gui.settings.highlight_color_int
@@ -479,12 +479,6 @@ def check_float(cell):
     #except ValueError:
         #cell.setStyleSheet("QLineEdit{background: red;}")
         #return None, False
-
-def _check_color(color_float):
-    assert len(color_float) == 3, color_float
-    assert isinstance(color_float[0], float), color_float
-    color_int = [int(colori * 255) for colori in color_float]
-    return color_float, color_int
 
 def main():  # pragma: no cover
     """basic testing"""

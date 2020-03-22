@@ -86,9 +86,6 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
             html_logging = kwds['html_logging']
         del kwds['html_logging']
 
-        #if qt_version == 4:  # TODO: remove this???
-            #QMainWindow.__init__(self)
-
         #-----------------------------------------------------------------------
         self._active_background_image = None
         self.reset_settings = False
