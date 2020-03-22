@@ -49,9 +49,11 @@ from qtpy import API as qt_version
 
 if qt_version == 'pyqt5':
     qt_int = 5
+    qt_name = 'PyQt5'
     from qtpy import PYQT_VERSION  # pylint: disable=unused-import
 elif qt_version == 'pyside2':
     qt_int = 5
+    qt_name = 'PySide2'
     from qtpy import PYSIDE_VERSION as PYQT_VERSION  # pylint: disable=unused-import
 else:
     raise ImportError('PyQt5 or PySide2 is required; API=%r' % qt_version)

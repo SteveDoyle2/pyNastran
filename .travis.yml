@@ -32,29 +32,29 @@ matrix:
       #- LIB='libblas-dev liblapack-dev'
       - LIBH5='libhdf5-dev'
 
-    - name: "Python 3.8 (no vtk/qt)"
-      python: '3.8'
-      env:
-      - NUMPY='numpy scipy matplotlib h5py pandas>=0.25'
-      - NOGUI='_no_gui'
-      #- LIB='libblas-dev liblapack-dev'
-      - LIBH5='libhdf5-dev'
+    #- name: "Python 3.8 (no vtk/qt)"
+    #  python: '3.8'
+    #  env:
+    #  - NUMPY='numpy scipy matplotlib h5py pandas>=0.25'
+    #  - NOGUI='_no_gui'
+    #  #- LIB='libblas-dev liblapack-dev'
+    #  - LIBH5='libhdf5-dev'
 
-    - name: "Python 3.7 (PyQt5)"
-      python: '3.7'
-      env:
-      - NUMPY='numpy scipy matplotlib h5py vtk pyqt5 pandas>=0.25 imageio'
+    #- name: "Python 3.7 (PyQt5)"
+    #  python: '3.7'
+    #  env:
+    #  - NUMPY='numpy scipy matplotlib h5py vtk pyqt5 pandas>=0.25 imageio'
     #--------------------------------------------------------------------------------------------------
 
     # old versions of packages
-    - name: "Python 3.7 old packages"
-      python: '3.7'
-      env:
-      #- NUMPY='numpy==1.15 scipy==0.19 matplotlib==2.2'  # doesn't work
-      # - bumped scipy from 1.0 to 1.1 for compatibility with numpy
-      # - no pyside2 on conda
-      # - bumped from numpy 1.14 to 1.14.5 for py3.7 pypi compatibility
-      - NUMPY='numpy==1.14.5 scipy==1.1 matplotlib==2.2 h5py vtk pyqt5 pandas<0.25'
+    #- name: "Python 3.7 old packages"
+    #  python: '3.7'
+    #  env:
+    #  #- NUMPY='numpy==1.15 scipy==0.19 matplotlib==2.2'  # doesn't work
+    #  # - bumped scipy from 1.0 to 1.1 for compatibility with numpy
+    #  # - no pyside2 on conda
+    #  # - bumped from numpy 1.14 to 1.14.5 for py3.7 pypi compatibility
+    #  - NUMPY='numpy==1.14.5 scipy==1.1 matplotlib==2.2 h5py vtk pyqt5 pandas<0.25'
     #--------------------------------------------------------------------------------------------------
 
   include:

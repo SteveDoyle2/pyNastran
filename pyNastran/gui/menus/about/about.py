@@ -1,60 +1,62 @@
-"""
-The preferences menu handles:
- - Font Size
- - Background Color
- - Text Color
- - Annotation Color
- - Annotation Size
- - Clipping Min
- - Clipping Max
-
-"""
-import os
+"""The about menu credits 3rd party packages."""
 import sys
 import locale
+import platform
+from typing import Dict
+
+import numpy
+import scipy
+import vtk
+import pyNastran
 
 from qtpy.QtCore import Qt
 from qtpy import QtGui
 from qtpy.QtWidgets import (
     QLabel, QPushButton, QGridLayout, QApplication, QHBoxLayout, QVBoxLayout,
-    QTabWidget, QWidget, QScrollArea, QTextEdit)
+    QTabWidget, QWidget, QScrollArea, QTextEdit, QMessageBox)
 
+from pyNastran.gui import IS_LINUX, IS_MAC # IS_WINDOWS
+from pyNastran.gui.qt_version import qt_name, PYQT_VERSION, is_pygments # qt_version,
 from pyNastran.gui.utils.qt.pydialog import PyDialog
-#from pyNastran.gui.utils.qt.qpush_button_color import QPushButtonColor
-#from pyNastran.gui.utils.qt.dialogs import save_file_dialog
 
-CREDITS = """
+QT = """
+  * PyQt5 Python bindings for Qt5, by Riverbank Computing Limited.
+
+  * Scintilla, a source code editor widget, written by Neil Hodgson and many contributors.
+""" if qt_name == 'PyQt5' else """
+  * PySide2 Python bindings for Qt5, by Qt for Python.
+"""
+
+PYGMENTS = """
+  * Pygments by Georg Brandl, Armin Ronacher, Tim Hatch, and contributors.
+""" if is_pygments else ''
+
+CREDITS = f"""
 pyNastran was written by Steve Doyle since 2011.  This product contains the following third party modules:
+
+  * Numpy array library, developed by many contributors.
+
+  * Scipy scientific library, developed by many contributors.
 
   * Python, the programming language, written by Guido van Rossum and many contributors.
 
+  * VTK Python bindings for Qt5, by Riverbank Computing Limited.
+
   * Qt5 cross-platform GUI toolkit, developed by many contributors.
-
-  * PyQt5 Python bindings for Qt5, by Riverbank Computing Limited.
-
+{QT}
   * Python Imaging Library, developed by Secret Labs AB and Fredrik Lundh.
+{PYGMENTS}
+  * WingIDE, the primary IDE used for development, by Wingware.
 
-  * Scintilla, a source code editor widget, written by Neil Hodgson and many contributors.
-
-  * Docutils, tools for ReST document conversion, written by David Goodger and contributors.
-
-  * Pygments by Georg Brandl, Armin Ronacher, Tim Hatch, and contributors.
-
-We gratefully acknowledge the efforts of all that have contributed to these and the other open source products and tools that are used in the development of pyNastran.
+I gratefully acknowledge the efforts of all that have contributed to these and the other open source products and tools that are used in the development of pyNastran.
 """.replace('\n', '<br>')
+
 
 class AboutWindow(PyDialog):
     """
     +-------------+
     | AboutWindow |
-    +------------------------+
-    | Origin/P1   cid  x y z |
-    | P2          cid  x y z |
-    | z-axis      cid  x y z |
-    | tol         cid  x y z |
-    |                        |
-    |    Apply OK Cancel     |
-    +------------------------+
+    +-------------+
     """
     def __init__(self, data, win_parent=None, show_tol=True):
         """
@@ -63,36 +65,28 @@ class AboutWindow(PyDialog):
         """
         PyDialog.__init__(self, data, win_parent)
 
-        self._updated_preference = False
-
         self._default_font_size = data['font_size']
-        #self.out_data = data
 
         self.setWindowTitle('About pyNastran GUI')
         self.create_widgets(show_tol)
         self.create_layout()
-        #self.set_connections()
+        self.set_connections()
         self.on_font(self._default_font_size)
-        #self.show()
 
     def create_widgets(self, show_tol):
         """creates the display window"""
-        # CORD2R
-        #self.origin_label = QLabel("Origin:")
-        #self.zaxis_label = QLabel("Z Axis:")
-        #self.xz_plane_label = QLabel("XZ Plane:")
-
         #-----------------------------------------------------------------------
         # closing
-        self.apply_button = QPushButton('Apply')
+        self.update_button = QPushButton('Check for Updates')
         self.ok_button = QPushButton('OK')
-        self.cancel_button = QPushButton('Cancel')
+        #self.cancel_button = QPushButton('Cancel')
 
     def create_layout(self):
         ok_cancel_box = QHBoxLayout()
-        ok_cancel_box.addWidget(self.apply_button)
+        ok_cancel_box.addWidget(self.update_button)
+        ok_cancel_box.addStretch()
         ok_cancel_box.addWidget(self.ok_button)
-        ok_cancel_box.addWidget(self.cancel_button)
+        #ok_cancel_box.addWidget(self.cancel_button)
 
         #---------------------
         version_tab, len_version = _version_tab(ok_cancel_box)
@@ -107,6 +101,7 @@ class AboutWindow(PyDialog):
         #---------------------
         vbox_outer = QVBoxLayout()
         vbox_outer.addWidget(tab_widget)
+        vbox_outer.addLayout(ok_cancel_box)
         #---------------------
 
         self.setLayout(vbox_outer)
@@ -118,17 +113,16 @@ class AboutWindow(PyDialog):
         #hint.setWidth(hint.width() * 1.1)
         #self.setFixedSize(hint)
 
-    #def set_connections(self):
+    def set_connections(self):
         #"""creates the actions for the menu"""
         #self.method_pulldown.currentIndexChanged.connect(self.on_method)
         #self.zaxis_method_pulldown.currentIndexChanged.connect(self.on_zaxis_method)
         #self.plane_color_edit.clicked.connect(self.on_plane_color)
 
         #self.apply_button.clicked.connect(self.on_apply)
-        #self.ok_button.clicked.connect(self.on_ok)
+        self.update_button.clicked.connect(self.on_update)
+        self.ok_button.clicked.connect(self.on_ok)
         #self.cancel_button.clicked.connect(self.on_cancel)
-        ## closeEvent
-        #return
 
     def on_font(self, value=None):
         """update the font for the current window"""
@@ -138,82 +132,119 @@ class AboutWindow(PyDialog):
         font.setPointSize(value)
         self.setFont(font)
 
+    def on_update(self):
+        """check for a newer version"""
+        if self.win_parent is None:
+            return
+        is_newer = self.win_parent._check_for_latest_version()
+        if not is_newer:
+            self.update_button.setDisabled(True)
+            QMessageBox.about(self, 'About pyNastran GUI', 'PyNastran GUI is already up to date')
+
     def on_ok(self):
+        """closes the window"""
         #passed = self.on_apply()
         #if passed:
         self.close()
         #self.destroy()
 
-    def on_cancel(self):
-        self.out_data['close'] = True
-        self.close()
+    #def on_cancel(self):
+        #self.out_data['close'] = True
+        #self.close()
 
 def get_packages(len_version=80):
-    import sys
-    import numpy
-    import scipy
-    #import matplotlib
-    #import pandas
-    import vtk
-    from pyNastran.gui.qt_version import qt_version
-
-
-    if qt_version == 'pyqt5':
-        import PyQt5
-        qt_name = 'PyQt5'
-        _qt_version = PyQt5.__version__
-    elif qt_version == 'pyside2':
-        import PySide2
-        qt_name = 'PySide2'
-        _qt_version = PySide2.__version__
-    else:
-        raise NotImplementedError(qt_version)
+    """makes the packages data"""
+    #if qt_version == 'pyqt5':
+        #import PyQt5
+        #qt_name = 'PyQt5'
+        #_qt_version = PyQt5.__version__
+    #elif qt_version == 'pyside2':
+        #import PySide2
+        #qt_name = 'PySide2'
+        #_qt_version = PySide2.__version__
+    #else:
+        #raise NotImplementedError(qt_version)
 
     import importlib
 
     python = str(sys.version_info)
+
+    'python_branch', 'python_revision', 'python_build', 'python_compiler', 'python_implementation',
     packages = {
-        'Python' : python + ' ' * (len_version - len(python) + 15),
+        'Python' : python + ' ' * (len_version - len(python) + 10),
+        'branch': platform.python_branch(),
+        #'Python revision': platform.python_revision(),
+        #'Python Build': str(platform.python_build()),
+        'Compiler': platform.python_compiler(),
+        'Implementation': platform.python_implementation(),
         'numpy' : numpy.__version__,
         'scipy' : scipy.__version__,
         #'matplotlib' : matplotlib.__version__,
         #'pandas' : pandas.__version__,
         'matplotlib' : 'N/A',
         'pandas' : 'N/A',
+        'imageio' : 'N/A',
+        'PIL' : 'N/A',
         'vtk' : vtk.VTK_VERSION,
         #'PyQt5':,
-        qt_name : _qt_version,
-     }
-    for name in ['matplotlib', 'pandas', 'docopt']:
-        module = importlib.import_module(name, package=None)
+        qt_name : PYQT_VERSION,
+    }
+    for name in ['matplotlib', 'pandas', 'docopt', 'imageio', 'PIL']:
+        try:
+            module = importlib.import_module(name, package=None)
+        except ImportError:
+            continue
         packages[name] = module.__version__
     return packages
 
-def _version_tab(ok_cancel_box):
-    import pyNastran
-    platform = sys.platform
+def get_version() -> Dict[str, str]:
+    """makes the version data"""
+    sys_platform = sys.platform
     localei, unused_encoding = locale.getdefaultlocale()
     try:
         os_version = str(sys.getwindowsversion())
     except:
         os_version = '???'
 
-    import platform
-    cpu = platform.processor()
+    pmsg = [
+        'machine', 'platform', 'processor', 'architecture',
+        # 'win32_ver',
+        'system', 'version', # 'uname',
+        'mac_ver', 'libc_ver',
+    ]
+    #if not IS_WINDOWS:
+        #pmsg.remove('win32_ver')
+    if not IS_LINUX:
+        pmsg.remove('libc_ver')
+    if not IS_MAC:
+        pmsg.remove('mac_ver')
 
+
+    cpu = platform.processor()
+    #memory = str(sys.getsizeof(None))
     version_data = {
         'Product': 'pyNastran GUI',
         'Version': pyNastran.__version__,
         'Release Type': 'Final Release',
         'Release Date': pyNastran.__releaseDate__,
         #'Cache Directory': ,
-        'OS' : f'win32 (sys.platform={platform})',
+        'OS' : f'win32 (sys.platform={sys_platform})',
         'OS Version' : os_version,
         'CPU': cpu,
-        'Memory': str(['1000 bytes']),
+        #'Bit': bit,
+        #'Memory': memory,
         'Locale': localei,
     }
-    len_version = len(os_version)
+    for key in pmsg:
+        value = getattr(platform, key)()
+        version_data[key] = str(value)
+    return version_data
+
+def _version_tab(ok_cancel_box):
+    """makes the version tab"""
+    version_data = get_version()
+
+    len_version = len(version_data['OS Version'])
     grid = grid_from_dict(version_data)
 
     hbox = QHBoxLayout()
@@ -223,7 +254,7 @@ def _version_tab(ok_cancel_box):
     vbox = QVBoxLayout()
     vbox.addLayout(hbox)
     vbox.addStretch()
-    vbox.addLayout(ok_cancel_box)
+    #vbox.addLayout(ok_cancel_box)
 
     #---------------------
     version_tab = QWidget()
@@ -258,49 +289,26 @@ def grid_from_dict(mydict):
         irow += 1
     return grid
 
-#class Window(QScrollArea):
-    #def __init__(self):
-        #super(Window, self).__init__()
-        #widget = QWidget()
-        #layout = QVBoxLayout(widget)
-        #layout.setAlignment(Qt.AlignTop)
-        #for index in range(100):
-            #layout.addWidget(QLabel('Label %02d' % index))
-        #self.setWidget(widget)
-        #self.setWidgetResizable(True)
-
 def _credits_tab():
-    #scroll = QScrollArea()
-    #scroll.setWidget(self)
-    #scroll.setWidgetResizable(True)
-    ##scroll.setFixedHeight(400)
-    #layout.addWidget(scroll)
-
-    #vbox = QVBoxLayout()
-    #vbox.addLayout(layout)
-    #vbox.addStretch()
-
-    scrollArea = QScrollArea()
-    scrollArea.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOn)
-    scrollArea.setWidgetResizable(True)
-    #scrollArea->setGeometry( 10, 10, 200, 200 );
+    """creates the credits tab"""
+    scroll_area = QScrollArea()
+    scroll_area.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOn)
+    scroll_area.setWidgetResizable(True)
+    scroll_widget = QWidget(scroll_area)
 
     package_tab = QWidget()
-    scrollArea.setWidget(package_tab)
+    scroll_area.setWidget(package_tab)
 
-    widget = QWidget(scrollArea)
-
-    vbox = QVBoxLayout(widget)
+    vbox = QVBoxLayout(scroll_widget)
     text = QTextEdit(CREDITS)
     text.setReadOnly(True)
     vbox.addWidget(text)
-    #vbox.addLayout(scrollArea)
 
     package_tab = QWidget()
     package_tab.setLayout(vbox)
     return package_tab
 
-def main():
+def main():  # pragma: no cover
     # kills the program when you hit Cntl+C from the command line
     # doesn't save the current state as presumably there's been an error
     import signal
@@ -314,9 +322,6 @@ def main():
     #The Main window
     data = {
         'font_size' : 8,
-        #'cids' : [0, 1, 2, 3],
-        'name' : 'main',
-
     }
     main_window = AboutWindow(data, show_tol=True)
     main_window.show()

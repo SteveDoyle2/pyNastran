@@ -27,6 +27,7 @@ from pyNastran.gui.plugins import plugin_name_to_path
 from pyNastran.gui.formats import NastranIO
 from pyNastran.gui.gui_common import GuiCommon
 from pyNastran.gui.menus.download import DownloadWindow
+from pyNastran.gui.menus.about.about import AboutWindow
 
 # tcolorpick.png and tabout.png trefresh.png icons on LGPL license, see
 # http://openiconlibrary.sourceforge.net/gallery2/?./Icons/actions/color-picker-grey.png
@@ -170,7 +171,7 @@ class MainWindow(GuiCommon, NastranIO):
             for key, is_active in checkables.items():
                 self.checkables[key] = is_active
 
-    def _check_for_latest_version(self, check=True):
+    def _check_for_latest_version(self, check: bool=True) -> bool:
         """
         checks the website for information regarding the latest gui version
 
@@ -184,8 +185,10 @@ class MainWindow(GuiCommon, NastranIO):
             url = pyNastran.__website__
             win = DownloadWindow(url, version_latest, win_parent=self)
             win.show()
+            return True
         #dt = time.time() - time0
         #print('dt_version_check = %.2f' % dt)
+        return False
 
     def mousePressEvent(self, event):
         if not self.run_vtk:
@@ -236,6 +239,13 @@ class MainWindow(GuiCommon, NastranIO):
 
     def about_dialog(self):
         """Display about dialog"""
+        data = {
+            'font_size': self.settings.font_size,
+        }
+        win = AboutWindow(data, win_parent=self, show_tol=True)
+        win.show()
+        return
+
         copyright = pyNastran.__copyright__
         if qt_version in ['pyside2']:
             word = 'PySide'

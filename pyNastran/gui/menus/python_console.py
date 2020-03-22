@@ -6,7 +6,7 @@ from qtpy import QtCore
 #import QScintilla
 from qtpy.QtWidgets import (
     QPushButton, QTextEdit, QDockWidget,
-    QVBoxLayout, QHBoxLayout, QWidget, qApp, QMenu)
+    QVBoxLayout, QHBoxLayout, QWidget)
 #import qtpy.Qsci as Qsci
 
 if qt_version == 'pyqt5':
@@ -137,7 +137,6 @@ class PythonConsoleWidget(QDockWidget):
         # I think this works by accident in qt4/5
         #super(QDockWidget, self).__init__('Python Console', parent=parent)
 
-        #self.listMenu = QMenu()
         self.execute_python_button = QPushButton('Execute')
         self.execute_and_clear_python_button = QPushButton('Execute and Clear')
 

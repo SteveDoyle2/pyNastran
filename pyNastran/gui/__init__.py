@@ -79,4 +79,4 @@ if bi_font_file and not os.path.exists(bi_font_file):
     #assert os.path.exists(font_file), os.listdir(font_dirname)
     bi_font_file = font_file
 
-del font_dirname, IS_WINDOWS, IS_LINUX, IS_MAC
+del font_dirname # , IS_WINDOWS, IS_LINUX, IS_MAC
