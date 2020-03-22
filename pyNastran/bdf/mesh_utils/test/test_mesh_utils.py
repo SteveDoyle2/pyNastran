@@ -25,7 +25,7 @@ from pyNastran.bdf.mesh_utils.utils import cmd_line
 from pyNastran.bdf.mesh_utils.find_closest_nodes import find_closest_nodes
 from pyNastran.bdf.mesh_utils.find_coplanar_elements import find_coplanar_triangles
 from pyNastran.bdf.mesh_utils.force_to_pressure import force_to_pressure
-from pyNastran.bdf.mesh_utils.free_edges import free_edges
+from pyNastran.bdf.mesh_utils.free_edges import free_edges, non_paired_edges
 from pyNastran.bdf.mesh_utils.get_oml import get_oml_eids
 
 from pyNastran.bdf.mesh_utils.mesh import create_structured_cquad4s, create_structured_chexas
@@ -40,6 +40,77 @@ DIRNAME = os.path.dirname(__file__)
 
 class TestMeshUtils(unittest.TestCase):
     """various mesh_utils tests"""
+
+    def test_coplanar_triangles(self):
+        """tests find_coplanar_triangles
+
+        4-----3
+        |   / |
+        |  /  |
+        | /   |
+        1-----2
+        """
+        log = SimpleLogger(level='warning')
+        model = BDF(debug=True, log=log, mode='msc')
+        model.add_grid(1, [0., 0., 0.])
+        model.add_grid(2, [1., 0., 0.])
+        model.add_grid(3, [1., 1., 0.])
+        model.add_grid(4, [0., 1., 0.])
+        model.add_ctria3(1, 1, [1, 2, 3])
+        _junk, coplanar_elements = find_coplanar_triangles(model, eids=None)
+        assert coplanar_elements == set([]), coplanar_elements
+
+        model.add_ctria3(2, 1, [2, 3, 1])
+        _junk, coplanar_elements = find_coplanar_triangles(model, eids=None)
+        assert coplanar_elements == {2}, coplanar_elements
+
+        model.add_ctria3(3, 1, [3, 2, 1])
+        _junk, coplanar_elements = find_coplanar_triangles(model, eids=None)
+        assert coplanar_elements == {2, 3}, coplanar_elements
+
+        _junk, coplanar_elements = find_coplanar_triangles(model, eids=[2, 3])
+        assert coplanar_elements == {3}, coplanar_elements
+
+        model.add_cquad4(4, 1, [1, 2, 3, 4])
+        _junk, coplanar_elements = find_coplanar_triangles(model, eids=None)
+        assert coplanar_elements == {2, 3}, coplanar_elements
+
+    def test_free_edges(self):
+        """Finds the free_edges
+
+        4-----3---5
+        |   / |
+        |  /  |
+        | /   |
+        1-----2
+        """
+        log = SimpleLogger(level='warning')
+        model = BDF(debug=True, log=log, mode='msc')
+        model.add_grid(1, [0., 0., 0.])
+        model.add_grid(2, [1., 0., 0.])
+        model.add_grid(3, [1., 1., 0.])
+        model.add_grid(4, [0., 1., 0.])
+        model.add_grid(5, [1., 1., 1.])  # 1,3,5
+        model.add_ctria3(1, 1, [1, 2, 3])
+        edges1 = free_edges(model, eids=None, maps=None)
+        edges2 = non_paired_edges(model, eids=None, maps=None)
+        assert edges1 == [(1, 2), (2, 3), (1, 3)]
+        assert edges2 == [(1, 2), (2, 3), (1, 3)]
+
+        model.add_ctria3(2, 1, [1, 3, 4])
+        edges1 = free_edges(model, eids=None, maps=None)
+        edges2 = non_paired_edges(model, eids=None, maps=None)
+        assert edges1 == [(1, 2), (2, 3), (3, 4), (1, 4)], edges1
+        assert edges2 == [(1, 2), (2, 3), (3, 4), (1, 4)], edges2
+
+        # edge (1, 3) is associated with 3 elements, so it's not free,
+        # but it's not paired (an edge with only 2 elements)
+        model.add_ctria3(3, 1, [1, 3, 5])
+        edges1 = free_edges(model, eids=None, maps=None)
+        edges2 = non_paired_edges(model, eids=None, maps=None)
+        assert edges1 == [(1, 2), (2, 3),         (3, 4), (1, 4), (3, 5), (1, 5)], edges1
+        assert edges2 == [(1, 2), (2, 3), (1, 3), (3, 4), (1, 4), (3, 5), (1, 5)], edges2
+
     def test_free_faces(self):
         """CTETRA10"""
         #bdf free_faces [-d | -l] [-f] [--encoding ENCODE] BDF_FILENAME SKIN_FILENAME

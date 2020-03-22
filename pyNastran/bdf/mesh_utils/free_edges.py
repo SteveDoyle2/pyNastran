@@ -4,10 +4,13 @@ defines:
     edges = non_paired_edges(model, eids=None)
 
 """
+from __future__ import annotations
 from collections import defaultdict
+from typing import Tuple, List, Optional, TYPE_CHECKING
+if TYPE_CHECKING:
+    from pyNastran.bdf.bdf import BDF
 
-
-def free_edges(model, eids=None, maps=None):
+def free_edges(model: BDF, eids: Optional[List[int]]=None, maps=None) -> List[Tuple[int, int]]:
     """
     Gets the free edges for shell elements.
     A free edge is an edge that is only connected to 1 shell element.
@@ -23,19 +26,24 @@ def free_edges(model, eids=None, maps=None):
                                   consider_0d=False, consider_0d_rigid=False,
                                   consider_1d=False, consider_2d=True, consider_3d=False)
 
+    Returns
+    -------
+    edges: List[Tuple[int,int]]
+        list of node ids of each edges
+
     """
     if maps is not None:
         edge_to_eid_map = maps['edge_to_eid_map']
     else:
         edge_to_eid_map = _get_edge_to_eids_map(model, eids=eids)
 
-    free_edges = []
+    edges = []
     for edge, eids in edge_to_eid_map.items():
         if len(eids) == 1:
-            free_edges.append(edge)
-    return free_edges
+            edges.append(edge)
+    return edges
 
-def non_paired_edges(model, eids=None, maps=None):
+def non_paired_edges(model: BDF, eids: List[int]=None, maps=None) -> List[Tuple[int, int]]:
     """
     Gets the edges not shared by exactly 2 elements.
     This is useful for identifying rib/spar intersections.
@@ -62,11 +70,11 @@ def non_paired_edges(model, eids=None, maps=None):
     else:
         edge_to_eid_map = _get_edge_to_eids_map(model, eids=eids)
 
-    non_paired_edges = []
+    edges = []
     for edge, eids in edge_to_eid_map.items():
         if len(eids) != 2:
-            non_paired_edges.append(edge)
-    return non_paired_edges
+            edges.append(edge)
+    return edges
 
 def _get_edge_to_eids_map(model, eids=None):
     """helper method"""

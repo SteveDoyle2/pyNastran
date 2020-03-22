@@ -1,30 +1,54 @@
+from __future__ import annotations
+from typing import List, Union, Optional, TYPE_CHECKING
+
 import numpy as np
-from pyNastran.bdf.bdf import read_bdf
-from pyNastran.bdf.utils import parse_patran_syntax_dict
+from pyNastran.bdf.mesh_utils.internal_utils import get_bdf_model
+if TYPE_CHECKING:
+    from pyNastran.bdf.bdf import BDF
 
 
-def find_coplanar_triangles(bdf_filename, eids):
+def find_coplanar_triangles(bdf_filename: Union[BDF, str],
+                            eids: Optional[List[int]]=None) -> List[int]:
     """
-
-    finds coplanar triangles
+    Finds coplanar triangles
 
     Parameters
     ----------
-    bdf_filename : str
-        the path to the bdf input file
+    bdf_filename : BDF/str
+        BDF: a model
+        str: the path to the bdf input file
     eids : list
         the element ids to consider
 
+    Returns
+    -------
+    coplanar_eids : List[int]
+        the elements that are coplanar
+
     """
-    model = read_bdf(bdf_filename, xref=False)
+    model = get_bdf_model(bdf_filename, xref=False, log=None, debug=False)
+    log = model.log
 
     if eids is None:
         eids = model.elements.keys()
+
+    i = 0
+    eids_removed = []
     neids = len(eids)
     nids = np.zeros((neids, 3), dtype='int32')
-    for i, eid in enumerate(eids):
+    for eid in eids:
         elem = model.elements[eid]
-        nids[i, :] = elem.nodes
+        try:
+            nids[i, :] = elem.nodes
+        except ValueError:
+            eids_removed.append(eid)
+            assert len(elem.nodes) != 3, str(elem)
+            continue
+        i += 1
+
+    if i != neids:
+        log.warning(f'removed {neids-i} non-triangles; eids_removed={eids_removed}')
+        nids = nids[:i, :]
 
     #nids = np.array([
         #[10, 20, 30],
@@ -68,14 +92,8 @@ def find_coplanar_triangles(bdf_filename, eids):
     for eid, row in zip(eids, nids2):
         new_row = tuple(list(row))
         if new_row in aset:
-            print('eid=%s exists already...' % eid)
+            log.debug(f'eid={eid} exists already...')
             eids_to_remove.add(eid)
         else:
             aset.add(new_row)
-        #print('aset =', aset)
     return model, eids_to_remove
-
-#def main():
-    #"""the test case"""
-    #eids = parse_patran_syntax_dict(' Element 830:84798')['Element']
-    #eids = find_coplanar_elements(bdf_filename, eids)
