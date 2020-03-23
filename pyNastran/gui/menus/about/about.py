@@ -3,19 +3,22 @@ import os
 import sys
 import locale
 import platform
-from typing import Dict
+import importlib
+from typing import Tuple, Dict
 
 import numpy
 import scipy
 import vtk
 import pyNastran
 
-from qtpy.QtCore import Qt
+import qtpy
 from qtpy import QtGui
+from qtpy.QtCore import Qt
 from qtpy.QtWidgets import (
     QLabel, QPushButton, QGridLayout, QApplication, QHBoxLayout, QVBoxLayout,
-    QTabWidget, QWidget, QScrollArea, QTextEdit, QMessageBox, QFrame)
+    QTabWidget, QWidget, QScrollArea, QTextEdit, QMessageBox, QFrame, QGroupBox)
 
+import cpylog
 from pyNastran.gui import ICON_PATH, IS_LINUX, IS_MAC # IS_WINDOWS
 from pyNastran.gui.qt_version import qt_name, PYQT_VERSION, is_pygments # qt_version,
 from pyNastran.gui.utils.qt.pydialog import PyDialog
@@ -32,8 +35,7 @@ PYGMENTS = """
   * Pygments by Georg Brandl, Armin Ronacher, Tim Hatch, and contributors.
 """ if is_pygments else ''
 
-CREDITS = f"""
-pyNastran was written by Steve Doyle since 2011.  This product contains the following third party modules:
+CREDITS = f"""pyNastran was written by Steve Doyle since 2011.  This product contains the following third party modules:
 
   * Numpy array library, developed by many contributors.
 
@@ -90,30 +92,30 @@ class AboutWindow(PyDialog):
         #ok_cancel_box.addWidget(self.cancel_button)
 
         #---------------------
-        version_tab, len_version = _version_tab(ok_cancel_box)
-        package_tab = _package_tab(len_version)
+        version_tab = _version_tab(ok_cancel_box)
+        package_tab = _package_tab()
+        shortcuts_tab = _shortcuts_tab()
         credits_tab = _credits_tab()
         # --------------------
         tab_widget = QTabWidget()
         tab_widget.addTab(version_tab, 'Version')
         tab_widget.addTab(package_tab, 'Packages')
+        tab_widget.addTab(shortcuts_tab, 'Shortcuts')
         tab_widget.addTab(credits_tab, 'Credits')
 
         #---------------------
         png_filename = os.path.join(ICON_PATH, '..', 'images', 'logo.png')
         im = QtGui.QPixmap(png_filename)
         im_resized = im.scaled(525, 405, Qt.KeepAspectRatio)
-        picture = QLabel()
-        picture.setFrameShape(QFrame.HLine)
-        picture.setFrameStyle(QFrame.NoFrame)
-        #label->setLineWidth(0)
-        #label->setMidLineWidth(0)
-        picture.setPixmap(im_resized)
-
+        self.website_button = QLabel()
+        self.website_button.setFrameShape(QFrame.HLine)
+        self.website_button.setFrameStyle(QFrame.NoFrame)
+        self.website_button.setPixmap(im_resized)
+        #self.website_button.setIcon(im_resized)
 
         vbox_outer = QVBoxLayout()
         vbox_outer.setContentsMargins(0, 0, 0, 0)
-        vbox_outer.addWidget(picture)
+        vbox_outer.addWidget(self.website_button)
         vbox_outer.addWidget(tab_widget)
         vbox_outer.addLayout(ok_cancel_box)
         #---------------------
@@ -136,6 +138,7 @@ class AboutWindow(PyDialog):
         #self.apply_button.clicked.connect(self.on_apply)
         self.update_button.clicked.connect(self.on_update)
         self.ok_button.clicked.connect(self.on_ok)
+        self.website_button.mousePressEvent = self.on_website
         #self.cancel_button.clicked.connect(self.on_cancel)
 
     def on_font(self, value=None):
@@ -155,6 +158,12 @@ class AboutWindow(PyDialog):
             self.update_button.setDisabled(True)
             QMessageBox.about(self, 'About pyNastran GUI', 'PyNastran GUI is already up to date')
 
+    def on_website(self, event):
+        """opens the website"""
+        if self.win_parent is None:
+            return
+        self.win_parent.open_website()
+
     def on_ok(self):
         """closes the window"""
         #passed = self.on_apply()
@@ -166,42 +175,28 @@ class AboutWindow(PyDialog):
         #self.out_data['close'] = True
         #self.close()
 
-def get_packages(len_version=80):
+def get_packages() -> Dict[str, str]:
     """makes the packages data"""
-    #if qt_version == 'pyqt5':
-        #import PyQt5
-        #qt_name = 'PyQt5'
-        #_qt_version = PyQt5.__version__
-    #elif qt_version == 'pyside2':
-        #import PySide2
-        #qt_name = 'PySide2'
-        #_qt_version = PySide2.__version__
-    #else:
-        #raise NotImplementedError(qt_version)
-
-    import importlib
-
-    python = str(sys.version_info)
-
-    'python_branch', 'python_revision', 'python_build', 'python_compiler', 'python_implementation',
+    #python = str(sys.version_info)
+    #'python_branch', 'python_revision', 'python_build', 'python_compiler', 'python_implementation',
     packages = {
-        'Python' : python + ' ' * (len_version - len(python) + 10),
-        'Branch': platform.python_branch(),
+        #'Python' : python + ' ' * (len_version - len(python) + 10),
+        'Python': platform.python_branch(),
         #'Python revision': platform.python_revision(),
         #'Python Build': str(platform.python_build()),
         'Compiler': platform.python_compiler(),
         'Implementation': platform.python_implementation(),
         'numpy' : numpy.__version__,
         'scipy' : scipy.__version__,
-        #'matplotlib' : matplotlib.__version__,
-        #'pandas' : pandas.__version__,
+        'cpylog' : cpylog.__version__,
         'matplotlib' : 'N/A',
         'pandas' : 'N/A',
         'imageio' : 'N/A',
         'PIL' : 'N/A',
         'vtk' : vtk.VTK_VERSION,
-        #'PyQt5':,
+        'qtpy' : qtpy.__version__,
         qt_name : PYQT_VERSION,
+        'docopt' : 'N/A',
     }
     for name in ['matplotlib', 'pandas', 'docopt', 'imageio', 'PIL']:
         try:
@@ -258,33 +253,24 @@ def _version_tab(ok_cancel_box):
     """makes the version tab"""
     version_data = get_version()
 
-    len_version = 0
-    #len_version = len(version_data['OS Version'])
     grid = grid_from_dict(version_data)
 
-    hbox = QHBoxLayout()
-    hbox.addLayout(grid)
-    hbox.addStretch()
-
-    vbox = QVBoxLayout()
-    vbox.addLayout(hbox)
-    vbox.addStretch()
-    #vbox.addLayout(ok_cancel_box)
+    hbox = layout_to_hlayout(grid)
+    vbox = layout_to_vlayout(hbox)
 
     #---------------------
     version_tab = QWidget()
     version_tab.setLayout(vbox)
 
-    return version_tab, len_version
+    return version_tab
 
-def _package_tab(len_version=80):
+def _package_tab():
     """makes the packages tab"""
-    packages = get_packages(len_version=len_version)
+    packages = get_packages()
     grid = grid_from_dict(packages)
 
-    vbox = QVBoxLayout()
-    vbox.addLayout(grid)
-    vbox.addStretch()
+    hbox = layout_to_hlayout(grid)
+    vbox = layout_to_vlayout(hbox)
 
     package_tab = QWidget()
     package_tab.setLayout(vbox)
@@ -311,8 +297,8 @@ def _credits_tab():
     scroll_area.setWidgetResizable(True)
     scroll_widget = QWidget(scroll_area)
 
-    package_tab = QWidget()
-    scroll_area.setWidget(package_tab)
+    widget = QWidget()
+    scroll_area.setWidget(widget)
 
     vbox = QVBoxLayout(scroll_widget)
     text = QTextEdit(CREDITS)
@@ -322,6 +308,98 @@ def _credits_tab():
     package_tab = QWidget()
     package_tab.setLayout(vbox)
     return package_tab
+
+def _shortcuts_tab():
+    """creates the credits tab"""
+    #scroll_area = QScrollArea()
+    #scroll_area.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOn)
+    #scroll_area.setWidgetResizable(True)
+    #scroll_widget = QWidget(scroll_area)
+
+    #widget = QWidget()
+    #scroll_area.setWidget(widget)
+
+    #vbox = QVBoxLayout(scroll_widget)
+    vbox = QVBoxLayout()
+
+    mouse_shortcuts, keyboard_shortcuts = get_shortcuts()
+    mouse_grid = grid_from_dict(mouse_shortcuts)
+    keyboard_grid = grid_from_dict(keyboard_shortcuts)
+
+    mouse_group = QGroupBox('Mouse')
+    mouse_group.setLayout(mouse_grid)
+    mouse_layout = QVBoxLayout()
+    mouse_layout.addWidget(mouse_group)
+    mouse_layout2 = layout_to_hlayout(mouse_layout)
+
+    keyboard_group = QGroupBox('Keyboard')
+    keyboard_group.setLayout(keyboard_grid)
+    keyboard_layout = QVBoxLayout()
+    keyboard_layout.addWidget(keyboard_group)
+    keyboard_layout2 = layout_to_hlayout(keyboard_layout)
+
+    #keyboard_vbox = QGroupBox('Keyboard')
+    #keyboard_vbox.addLayout(keyboard_grid)
+    #text = QTextEdit(CREDITS)
+    #text.setReadOnly(True)
+    #vbox.addWidget(text)
+    vbox.addLayout(mouse_layout2)
+    vbox.addLayout(keyboard_layout2)
+    vbox.addStretch()
+
+    shortcuts_tab = QWidget()
+    shortcuts_tab.setLayout(vbox)
+    return shortcuts_tab
+
+def get_shortcuts() -> Tuple[Dict[str, str], Dict[str, str]]:
+    """makes the shortcuts data"""
+
+    mouse_shortcuts = {
+        'Left Click' : 'Rotate',
+        'Middle Click' : 'Pan/Recenter Rotation Point',
+        'Shift + Left Click' : 'Pan/Recenter Rotation Point',
+        'Right Mouse / Wheel' : 'Zoom',
+    }
+    keyboard_shortcuts = {
+        'R' : 'reset camera view',
+        'Shift+X/X' : 'snap to x axis',
+        'Shift+Y/Y' : 'snap to y axis',
+        'Shift+Z/Z' : 'snap to z axis',
+        #'',
+        #'h   - show/hide legend & info',
+
+        # shown on the menu
+        #'CTRL+I - take a screenshot (image)',
+        #'CTRL+W - clear the labels',
+        #'CTRL+L - Legend',
+        #'CTRL+A - Animation',
+        #'S      - view model as a surface',
+        #'W      - view model as a wireframe',
+
+        'L' : 'cycle the results forwards',
+        'K' : 'cycle the results backwards',
+        'm/Shift+M' : 'scale up/scale down by 1.1 times',
+        'o/Shift+O' : 'rotate counter-clockwise/clockwise 5 degrees',
+        'P' : 'pick node/element',
+        'F' : 'set rotation center (zoom out when picking to disable clipping)',
+        'E' : 'view model edges',
+        'B' : 'change edge color from scalar/black',
+        #'',
+        #'Reload Model:  using the same filename, reload the model',
+    }
+    return mouse_shortcuts, keyboard_shortcuts
+
+def layout_to_vlayout(layout):
+    vbox = QVBoxLayout()
+    vbox.addLayout(layout)
+    vbox.addStretch()
+    return vbox
+
+def layout_to_hlayout(layout):
+    hbox = QHBoxLayout()
+    hbox.addLayout(layout)
+    hbox.addStretch()
+    return hbox
 
 def main():  # pragma: no cover
     # kills the program when you hit Cntl+C from the command line

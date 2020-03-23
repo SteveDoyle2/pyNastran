@@ -7,7 +7,7 @@ import sys
 import os.path
 import imp
 #import traceback
-#import webbrowser
+import webbrowser
 #webbrowser.open("http://xkcd.com/353/")
 
 
@@ -233,7 +233,6 @@ class MainWindow(GuiCommon, NastranIO):
 
     def _urlopen(self, url):
         """opens a URL"""
-        import webbrowser
         if self.is_gui:
             webbrowser.open(url)
 
@@ -244,69 +243,6 @@ class MainWindow(GuiCommon, NastranIO):
         }
         win = AboutWindow(data, win_parent=self, show_tol=True)
         win.show()
-        return
-
-        copyright = pyNastran.__copyright__
-        if qt_version in ['pyside2']:
-            word = 'PySide'
-            copyright_qt = pyNastran.__pyside_copyright__
-        else:
-            word = 'PyQt'
-            copyright_qt = pyNastran.__pyqt_copyright__
-
-        about = [
-            'pyNastran %s GUI' % word,
-            '',
-            'pyNastran v%s' % pyNastran.__version__,
-            copyright,
-            copyright_qt,
-            pyNastran.__author__,
-            '',
-            '%s' % pyNastran.__website__,
-            '',
-            'Mouse',
-            'Left Click - Rotate',
-            'Middle Click - Pan/Recenter Rotation Point',
-            'Shift + Left Click - Pan/Recenter Rotation Point',
-            'Right Mouse / Wheel - Zoom',
-            '',
-            'Keyboard Controls',
-            'R   - reset camera view',
-            'Shift+X/X - snap to x axis',
-            'Shift+Y/Y - snap to y axis',
-            'Shift+Z/Z - snap to z axis',
-            #'',
-            #'h   - show/hide legend & info',
-
-            # shown on the menu
-            #'CTRL+I - take a screenshot (image)',
-            #'CTRL+W - clear the labels',
-            #'CTRL+L - Legend',
-            #'CTRL+A - Animation',
-            #'S      - view model as a surface',
-            #'W      - view model as a wireframe',
-
-            'L - cycle the results forwards',
-            'K - cycle the results backwards',
-            'm/Shift+M - scale up/scale down by 1.1 times',
-            'o/Shift+O - rotate counter-clockwise/clockwise 5 degrees',
-            'P      - pick node/element',
-            'F      - set rotation center (zoom out when picking',
-            '         to disable clipping)',
-            'E      - view model edges',
-            'B      - change edge color from scalar/black',
-            '',
-            'Reload Model:  using the same filename, reload the model',
-        ]
-
-        #message_box = QMessageBox()
-        #message_box.setStyleSheet(
-            #'QMessageBox {background-color: #2b5b84; color: white;}\n'
-            #'QPushButton{color: white; font-size: 16px; background-color: #1d1d1d; '
-            #'border-radius: 10px; padding: 10px; text-align: center;}\n'
-            #' QPushButton:hover{color: #2b5b84;}')
-        #message_box.setFont(self.font())
-        QMessageBox.about(self, "About pyNastran GUI", "\n".join(about))
 
     def on_reload(self):
         """
