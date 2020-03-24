@@ -989,6 +989,8 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
 
         """
         self.save_file_structure = save_file_structure
+        if bdf_filename:
+            check_path(bdf_filename, 'bdf_filename')
         self._read_bdf_helper(bdf_filename, encoding, punch, read_includes)
         self.log.debug('---starting BDF.read_bdf of %s---' % self.bdf_filename)
         self._parse_primary_file_header(bdf_filename)
@@ -4420,6 +4422,9 @@ def read_bdf(bdf_filename: Optional[str]=None, validate: bool=True, xref: bool=T
         model.disable_cards(skip_cards)
     elif read_cards:
         model.set_cards(read_cards)
+
+    if bdf_filename:
+        check_path(bdf_filename, 'bdf_filename')
     model.read_bdf(bdf_filename=bdf_filename, validate=validate,
                    xref=xref, punch=punch, read_includes=True,
                    save_file_structure=save_file_structure,

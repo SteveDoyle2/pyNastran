@@ -6,6 +6,7 @@ import numpy as np
 try:
     import matplotlib.pyplot as plt
     import matplotlib.gridspec as gridspec
+    from matplotlib.lines import Line2D
     IS_MATPLOTLIB = True
 except ImportError:  # pragma: no cover
     IS_MATPLOTLIB = False
@@ -167,6 +168,7 @@ class FlutterResponse:
                 #symbol_list.append('%s-%s' % (shape, color))
         self.noline = False
         self._symbols = []  # type: List[str]
+        self._colors = []  # type: List[str]
         self.generate_symbols()
 
     def set_pknl_results(self, results):
@@ -223,24 +225,25 @@ class FlutterResponse:
         """
         This symbol list is taken from a series of "good" colors (e.g. not yellow)
         and easily distinguishable shapes.  Far more combinations that is necessary
-        is defined
+        is defined.
+
         """
-        # max of 35 combinations
+        # rgbkm - max of 35 combinations
+        # C0-10 - max of 70 combinations
         if colors is None:
-            colors = ['r', 'g', 'b', 'k', 'm'] # 5
+            #colors = ['r', 'g', 'b', 'k', 'm'] # 5
+            colors = ['C0', 'C1', 'C2', 'C3', 'C4', 'C5', 'C6', 'C7', 'C8', 'C9'] # 10
         if symbols is None:
             symbols = ['o', '*', 'x', 'v', '>', '<', '^'] # 7
-        self._symbols = []
         for symbol in symbols:
             for color in colors:
-                self._symbols.append(color + symbol)
+                self._symbols.append(symbol)
+                self._colors.append(color)
 
-    def set_plot_options(self, noline=False):
-        # type: (bool) -> None
+    def set_plot_options(self, noline: bool=False) -> None:
         self.noline = noline
 
-    def _get_unit_factor(self, name):
-        # type: (str) -> Tuple[float, str]
+    def _get_unit_factor(self, name: str) -> Tuple[float, str]:
         if not self.f06_units or not self.out_units:
             msg = 'name=%r f06_units=%s out_units=%s' % (name, self.f06_units, self.out_units)
             raise RuntimeError(msg)
@@ -264,15 +267,6 @@ class FlutterResponse:
         else:
             units = 'units'
         return factor, units
-
-    @property
-    def symbols(self):
-        """gets the symbols for the lines"""
-        if not self.noline:
-            symbols = [symbol + '-' for symbol in self._symbols]  # type: List[str]
-        else:
-            symbols = self._symbols
-        return symbols
 
     def plot_vg(self, fig=None, modes=None,
                 plot_type='tas',
@@ -342,6 +336,7 @@ class FlutterResponse:
         framealpha : float; 0.0 <= alpha <= 1.0
             1.0 - no transparency / opaque
             0.0 - fully transparent
+
         """
         xlabel = 'Eigenvalue (Real)'
         ylabel = 'Eigenvalue (Imaginary)'
@@ -370,22 +365,27 @@ class FlutterResponse:
         if fig is None:
             fig = plt.figure()
             axes = fig.add_subplot(111)
-        symbols = self.symbols
+        symbols = self._symbols
+        colors = self._colors
+        linestyle = 'None' if self.noline else '-'
 
         for i, imode, mode in zip(count(), imodes, modes):
             symbol = symbols[i]
+            color = colors[i]
             freq = self.results[imode, :, self.ifreq].ravel()
             xs = self.results[imode, :, ix].ravel()
             ys = self.results[imode, :, iy].ravel()
 
             iplot = np.where(freq != np.nan)
             #iplot = np.where(freq > 0.0)
-            axes.plot(xs[iplot], ys[iplot], symbol, label='Mode %i' % mode, markersize=0)
+            axes.plot(xs[iplot], ys[iplot], color=color, marker=symbol, label='Mode %i' % mode,
+                      linestyle=linestyle, markersize=0)
 
             if scatter:
                 scatteri = np.linspace(.75, 50., len(xs))
                 #assert symbol[2] == '-', symbol
-                axes.scatter(xs[iplot], ys[iplot], s=scatteri, color=symbol[0], marker=symbol[1])
+                #axes.scatter(xs[iplot], ys[iplot], s=scatteri, color=symbol[0], marker=symbol[1])
+                axes.scatter(xs[iplot], ys[iplot], s=scatteri, color=color, marker=symbol)
 
         axes.grid(True)
         axes.set_xlabel(xlabel)
@@ -419,7 +419,15 @@ class FlutterResponse:
                    show=True, clear=False, close=False, legend=True,
                    png_filename=None,
                    **kwargs):
-        """builds the plot"""
+        """
+        Builds the plot
+
+        Parameters
+        ----------
+        scatter : bool
+            draw the points with growth along the x-axis
+
+        """
         self.fix()
         if kwargs is None:
             kwargs = {}
@@ -438,23 +446,25 @@ class FlutterResponse:
             axes1.set_ylim(ylim1)
         if ylim2:
             axes2.set_ylim(ylim2)
-        symbols = self.symbols
 
+        symbols = self._symbols
+        colors = self._colors
+
+        linestyle = 'None' if noline else '-'
         if nopoints: # and noline is False:
             scatter = False
+
+        markersize = None
+        if noline:
+            markersize = 0
 
         #showline = not noline
         #showpoints = not nopoints
 
+        legend_elements = []
         for i, imode, mode in zip(count(), imodes, modes):
             symbol = symbols[i]
-            if nopoints:
-                # ro-  ->  r-
-                #
-                # doesn't support dashed (--) lines
-                symbol = symbol[:-2] + symbol[-1:] # symbol[-2:-1]
-            if noline:
-                symbol = symbol.replace('-', '')
+            color = colors[i]
 
             freq = self.results[imode, :, self.ifreq].ravel()
             xs = self.results[imode, :, ix].ravel()
@@ -463,30 +473,31 @@ class FlutterResponse:
 
             iplot = np.where(freq != np.nan)
             #iplot = np.where(freq > 0.0)
-            axes1.plot(xs[iplot], y1s[iplot], symbol, label='Mode %i' % mode, markersize=0)
-            axes2.plot(xs[iplot], y2s[iplot], symbol, label='Mode %i' % mode, markersize=0)
 
-            #if symbols and showline and showpoints:
-                #symbol = symbols[i]
-                #axes1.plot(xs[iplot], y1s[iplot], symbol, label='Mode %i' % mode)
-                #axes2.plot(xs[iplot], y2s[iplot], symbol)
-            #elif symbols and showpoints:
-                ## show line, no points
-                #symbol = symbols[i].replace('-', '')
-                #axes1.plot(xs[iplot], y1s[iplot], symbol, label='Mode %i' % mode)
-                #axes2.plot(xs[iplot], y2s[iplot], symbol)
-            #else:
-                ## show line
-                #axes1.plot(xs[iplot], y1s[iplot], label='Mode %i' % mode)
-                #axes2.plot(xs[iplot], y2s[iplot])
-
+            # plot the line
+            label = 'Mode %i' % mode
+            legend_element = Line2D([0], [0], color=color, marker=symbol, label=label, linestyle=linestyle)
+            if nopoints:
+                symbol = 'None'
             if scatter:
                 scatteri = np.linspace(.75, 50., len(xs))
                 #assert symbol[2] == '-', symbol
                 axes1.scatter(xs[iplot], y1s[iplot],
-                              s=scatteri, color=symbol[0], marker=symbol[1])
+                              s=scatteri, color=color, marker=symbol)
                 axes2.scatter(xs[iplot], y2s[iplot],
-                              s=scatteri, color=symbol[0], marker=symbol[1])
+                              s=scatteri, color=color, marker=symbol)
+
+                # Draw the line
+                axes1.plot(xs[iplot], y1s[iplot], marker=symbol, label=label,
+                           color=color, markersize=markersize, linestyle=linestyle)
+                axes2.plot(xs[iplot], y2s[iplot], marker=symbol,
+                           color=color, markersize=markersize, linestyle=linestyle)
+            else:
+                axes1.plot(xs[iplot], y1s[iplot], marker=symbol, label=label,
+                           color=color, markersize=markersize, linestyle=linestyle)
+                axes2.plot(xs[iplot], y2s[iplot], marker=symbol,
+                           color=color, markersize=markersize, linestyle=linestyle)
+            legend_elements.append(legend_element)
 
         axes1.grid(True)
         axes1.set_xlabel(xlabel)
@@ -501,7 +512,7 @@ class FlutterResponse:
             title += '\n%s' % png_filename
         fig.suptitle(title)
         if legend:
-            axes1.legend(**kwargs)
+            axes1.legend(handles=legend_elements, **kwargs)
 
         if show:
             plt.show()
@@ -621,11 +632,18 @@ class FlutterResponse:
 
         #self._set_xy_limits(xlim, ylim)
         modes, imodes = _get_modes_imodes(self.modes, modes)
-        symbols = self.symbols
+        symbols = self._symbols
+        colors = self._colors
 
-        legend_items = ['Mode %i' % mode for mode in modes]
+        if nopoints:
+            symbols = ['None'] * len(symbols)
+        linestyle = 'None' if noline else '-'
+
         ix, xlabel = self._plot_type_to_ix_xlabel(plot_type)
         for i, imode, mode in zip(count(), imodes, modes):
+            color = colors[i]
+            symbol = symbols[i]
+
             vel = self.results[imode, :, ix].ravel()
             damping = self.results[imode, :, self.idamping].ravel()
             freq = self.results[imode, :, self.ifreq].ravel()
@@ -637,21 +655,9 @@ class FlutterResponse:
             #iplot = np.where(freq != np.nan)
             #damp_axes.plot(vel[iplot], damping[iplot], symbols[i], label='Mode %i' % mode)
             #freq_axes.plot(vel[iplot], freq[iplot], symbols[i])
-            showline = not noline
-            showpoints = not nopoints
-            if symbols and showline and showpoints:
-                symbol = symbols[i]
-                damp_axes.plot(vel, damping, symbol, label='Mode %i' % mode)
-                freq_axes.plot(vel, freq, symbol)
-            elif symbols and showpoints:
-                # show line, no points
-                symbol = symbols[i].replace('-', '')
-                damp_axes.plot(vel, damping, symbol, label='Mode %i' % mode)
-                freq_axes.plot(vel, freq, symbol)
-            else:
-                # show line
-                damp_axes.plot(vel, damping, label='Mode %i' % mode)
-                freq_axes.plot(vel, freq)
+            #print(color, symbol, linestyle)
+            damp_axes.plot(vel, damping, color=color, marker=symbol, linestyle=linestyle, label='Mode %i' % mode)
+            freq_axes.plot(vel, freq, color=color, marker=symbol, linestyle=linestyle)
 
         damp_axes.set_xlabel(xlabel)
         freq_axes.set_xlabel(xlabel)
@@ -680,7 +686,7 @@ class FlutterResponse:
         #plt.suptitle(title)
 
         if legend:
-            damp_axes.legend(legend_items, fontsize=10, bbox_to_anchor=(1.125, 1.), loc=2)
+            damp_axes.legend(fontsize=10, bbox_to_anchor=(1.125, 1.), loc=2)
             #fig.subplots_adjust(hspace=0.25)
             #fig.subplots_adjust(hspace=.5)
             #plt.legend()
