@@ -5,7 +5,7 @@ from typing import List, Dict, Union, Optional, Tuple
 
 def run_nastran(bdf_filename: str, nastran_cmd: str='nastran',
                 keywords: Optional[Union[str, List[str], Dict[str, str]]]=None,
-                run: bool=True, run_in_bdf_dir: bool=True) -> Tuple[int, List[str]]:
+                run: bool=True, run_in_bdf_dir: bool=True) -> Tuple[Optional[int], List[str]]:
     """
     Call a nastran subprocess with the given filename
 
@@ -27,6 +27,7 @@ def run_nastran(bdf_filename: str, nastran_cmd: str='nastran',
         the nastran flag
     cmd_args : List[str]
         the nastran commands that go into subprocess
+
     """
     if keywords is None:
         keywords_list = ['scr=yes', 'bat=no', 'old=no', 'news=no'] # 'mem=1024mb',

@@ -511,6 +511,8 @@ class OP2(OP2_Scalar, OP2Writer):
             the unicode encoding (default=None; system default)
 
         """
+        if op2_filename:
+            check_path(op2_filename, name='op2_filename')
         mode = self.mode
         if build_dataframe is None:
             build_dataframe = False
@@ -1252,6 +1254,8 @@ def read_op2(op2_filename: Optional[str]=None,
                does not have so many methods
 
     """
+    if op2_filename:
+        check_path(op2_filename, name='op2_filename')
     model = OP2(log=log, debug=debug, debug_file=debug_file, mode=mode)
     model.set_subcases(subcases)
     model.include_exclude_results(exclude_results=exclude_results,

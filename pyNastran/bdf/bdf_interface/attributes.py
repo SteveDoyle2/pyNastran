@@ -1149,7 +1149,7 @@ class BDFAttributes:
             wtmass = param.values[0]
         return wtmass
 
-    def set_param(self, key: str, values: Union[int, float, str, List[float]]) -> None:
+    def set_param(self, key: str, values: Union[int, float, str, List[float]], comment: str='') -> None:
         """sets a param card; creates it if necessary"""
         if isinstance(values, (int, float, str)):
             values = [values]
@@ -1157,6 +1157,8 @@ class BDFAttributes:
         if key in self.params:
             param = self.params[key]
             param.update_values(*values)
+        else:
+            self.add_param(key, values, comment='')
 
     def get_param(self, key: str, default: Union[int, float, str, List[float]]
                   ) -> Union[int, float, str, List[float]]:

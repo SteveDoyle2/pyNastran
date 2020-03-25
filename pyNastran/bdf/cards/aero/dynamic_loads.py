@@ -20,7 +20,9 @@ from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.bdf.field_writer_8 import set_blank_if_default, print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
 from pyNastran.bdf.cards.base_card import BaseCard
-from pyNastran.utils.atmosphere import make_flfacts_alt_sweep, make_flfacts_mach_sweep, atm_density, _velocity_factor
+from pyNastran.utils.atmosphere import (
+    make_flfacts_eas_sweep, make_flfacts_alt_sweep, make_flfacts_mach_sweep,
+    atm_density, _velocity_factor)
 from pyNastran.bdf.bdf_interface.assign_type import (
     integer, integer_or_blank, double, double_or_blank, string,
     fields, string_or_blank, double_string_or_blank, interpret_value)
@@ -679,11 +681,62 @@ class FLUTTER(BaseCard):
                        imethod=imethod, nvalue=nvalue, omax=omax,
                        epsilon=epsilon, comment=comment)
 
-    def make_flfacts_alt_sweep(self, model, mach, alts, eas_limit=1000.,
-                               alt_units='m',
-                               velocity_units='m/s',
-                               density_units='kg/m^3',
-                               eas_units='m/s'):
+    def make_flfacts_eas_sweep(self, model: BDF,
+                               alt: float, eass: List[float],
+                               alt_units: str='m',
+                               velocity_units: str='m/s',
+                               density_units: str='kg/m^3',
+                               eas_units: str='m/s') -> Tuple[Any, Any, Any]:
+        """
+        Makes a sweep across equivalent airspeed for a constant altitude.
+
+        Parameters
+        ----------
+        model : BDF
+            the BDF model object
+        alt : float
+            Altitude in alt_units
+        eass : List[float]
+            Equivalent airspeed in eas_units
+        alt_units : str; default='m'
+            the altitude units; ft, kft, m
+        velocity_units : str; default='m/s'
+            the velocity units; ft/s, m/s, in/s, knots
+        density_units : str; default='kg/m^3'
+            the density units; slug/ft^3, slinch/in^3, kg/m^3
+        eas_units : str; default='m/s'
+            the equivalent airspeed units; ft/s, m/s, in/s, knots
+
+        """
+        eass.sort()
+        rho, mach, velocity = make_flfacts_eas_sweep(
+            alt, eass,
+            alt_units=alt_units, velocity_units=velocity_units,
+            density_units=density_units, eas_units=eas_units)
+        flfact_rho = self.sid + 1
+        flfact_mach = self.sid + 2
+        flfact_velocity = self.sid + 3
+        flfact_eas = self.sid + 4
+
+        comment = ' density: min=%.3e max=%.3e %s' % (
+            rho.min(), rho.max(), density_units,
+        )
+        model.add_flfact(flfact_rho, rho, comment=comment)
+        model.add_flfact(flfact_mach, mach, comment=' Mach: %s' % mach.min())
+        comment = ' velocity: min=%.3f max=%.3f %s' % (
+            velocity.min(), velocity.max(), velocity_units)
+        model.add_flfact(flfact_velocity, velocity, comment=comment)
+
+        # eas in velocity units
+        comment = ' EAS: min=%.3f max=%.3f %s' % (
+            eass.min(), eass.max(), eas_units)
+        model.add_flfact(flfact_eas, eass, comment=comment)
+
+    def make_flfacts_alt_sweep(self, model: BDF, mach, alts, eas_limit: float=1000.,
+                               alt_units: str='m',
+                               velocity_units: str='m/s',
+                               density_units: str='kg/m^3',
+                               eas_units: str='m/s') -> Tuple[Any, Any, Any]:
         """makes an altitude sweep"""
         alts.sort()
         alts = alts[::-1]

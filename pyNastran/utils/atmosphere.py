@@ -23,13 +23,17 @@ All the default units are in English units because the source equations
 are in English units.
 
 """
+from __future__ import annotations
 import sys
 from math import log, exp
+from typing import List, Tuple, TYPE_CHECKING
 import numpy as np
+if TYPE_CHECKING:
+    from pyNastran.nptyping import NDArrayNfloat
 
 
-def get_alt_for_density(density, density_units='slug/ft^3', alt_units='ft', nmax=20, tol=5.):
-    # type : (float, str, str, int) -> float
+def get_alt_for_density(density: float, density_units: str='slug/ft^3',
+                        alt_units: str='ft', nmax: int=20, tol: float=5.) -> float:
     """
     Gets the altitude associated with a given air density.
 
@@ -77,9 +81,9 @@ def get_alt_for_density(density, density_units='slug/ft^3', alt_units='ft', nmax
     return alt_out
 
 
-def get_alt_for_eas_with_constant_mach(equivalent_airspeed, mach,
-                                       velocity_units='ft/s', alt_units='ft', nmax=20, tol=5.):
-    # type : (float, float, str, str, int, float) -> float
+def get_alt_for_eas_with_constant_mach(equivalent_airspeed: float, mach: float,
+                                       velocity_units: str='ft/s', alt_units: str='ft',
+                                       nmax: int=20, tol: float=5.) -> float:
     """
     Gets the altitude associated with a equivalent airspeed.
 
@@ -138,9 +142,9 @@ def get_alt_for_eas_with_constant_mach(equivalent_airspeed, mach,
     alt_final = convert_altitude(alt_final, 'ft', alt_units)
     return alt_final
 
-def get_alt_for_q_with_constant_mach(q, mach, pressure_units='psf', alt_units='ft',
-                                     nmax=20, tol=5.):
-    # type : (float, float, str, str, int, float) -> float
+def get_alt_for_q_with_constant_mach(q: float, mach: float,
+                                     pressure_units: str='psf', alt_units: str='ft',
+                                     nmax: int=20, tol: float=5.) -> float:
     """
     Gets the altitude associated with a dynamic pressure.
 
@@ -170,8 +174,9 @@ def get_alt_for_q_with_constant_mach(q, mach, pressure_units='psf', alt_units='f
         pressure, pressure_units=pressure_units, alt_units=alt_units, nmax=nmax, tol=tol)
     return alt
 
-def get_alt_for_pressure(pressure, pressure_units='psf', alt_units='ft', nmax=20, tol=5.):
-    # type : (float, str, str, int, float) -> float
+def get_alt_for_pressure(pressure: float,
+                         pressure_units: str='psf', alt_units: str='ft',
+                         nmax: int=20, tol: float=5.) -> float:
     """
     Gets the altitude associated with a pressure.
 
@@ -221,8 +226,7 @@ def get_alt_for_pressure(pressure, pressure_units='psf', alt_units='ft', nmax=20
     alt_final = convert_altitude(alt_final, 'ft', alt_units)
     return alt_final
 
-def _feet_to_alt_units(alt_units):
-    # type : (str) -> float
+def _feet_to_alt_units(alt_units: str) -> float:
     """helper method"""
     if alt_units == 'm':
         factor = 0.3048
@@ -601,8 +605,7 @@ def atm_velocity(alt, mach, alt_units='ft', velocity_units='ft/s'):
     V = mach * a # units=ft/s or m/s
     return V
 
-def atm_equivalent_airspeed(alt, mach, alt_units='ft', eas_units='ft/s'):
-    # type : (float, float, str, str) -> float
+def atm_equivalent_airspeed(alt: float, mach: float, alt_units: str='ft', eas_units: str='ft/s') -> float:
     """
     Freestream equivalent airspeed
 
@@ -646,8 +649,7 @@ def atm_equivalent_airspeed(alt, mach, alt_units='ft', eas_units='ft/s'):
     eas2 = convert_velocity(eas, 'ft/s', eas_units)
     return eas2
 
-def atm_mach(alt, V, alt_units='ft', velocity_units='ft/s'):
-    # type : (float, float, str, str) -> float
+def atm_mach(alt: float, V: float, alt_units: str='ft', velocity_units: str='ft/s') -> float:
     r"""
     Freestream Mach Number
 
@@ -674,8 +676,8 @@ def atm_mach(alt, V, alt_units='ft', velocity_units='ft/s'):
     mach = V / a
     return mach
 
-def atm_density(alt, R=1716., alt_units='ft', density_units='slug/ft^3'):
-    # type : (float, float, str, str) -> float
+def atm_density(alt: float, R: float=1716.,
+                alt_units: str='ft', density_units: str='slug/ft^3') -> float:
     r"""
     Freestream Density   \f$ \rho_{\infty} \f$
 
@@ -708,8 +710,7 @@ def atm_density(alt, R=1716., alt_units='ft', density_units='slug/ft^3'):
     rho2 = convert_density(rho, 'slug/ft^3', density_units)
     return rho2
 
-def atm_kinematic_viscosity_nu(alt, alt_units='ft', visc_units='ft^2/s'):
-    # type : (float, str, str) -> float
+def atm_kinematic_viscosity_nu(alt: float, alt_units: str='ft', visc_units: str='ft^2/s') -> float:
     r"""
     Freestream Kinematic Viscosity \f$ \nu_{\infty} \f$
 
@@ -746,8 +747,7 @@ def atm_kinematic_viscosity_nu(alt, alt_units='ft', visc_units='ft^2/s'):
         raise NotImplementedError('visc_units=%r' % visc_units)
     return nu * factor
 
-def atm_dynamic_viscosity_mu(alt, alt_units='ft', visc_units='(lbf*s)/ft^2'):
-    # type : (float, str, str) -> float
+def atm_dynamic_viscosity_mu(alt: float, alt_units: str='ft', visc_units: str='(lbf*s)/ft^2') -> float:
     r"""
     Freestream Dynamic Viscosity  \f$ \mu_{\infty} \f$
 
@@ -781,8 +781,8 @@ def atm_dynamic_viscosity_mu(alt, alt_units='ft', visc_units='(lbf*s)/ft^2'):
         raise NotImplementedError('visc_units=%r; not in (lbf*s)/ft^2 or (N*s)/m^2 or Pa*s')
     return mu * factor
 
-def atm_unit_reynolds_number2(alt, mach, alt_units='ft', reynolds_units='1/ft'):
-    # type : (float, float, str, str) -> float
+def atm_unit_reynolds_number2(alt: float, mach: float,
+                              alt_units: str='ft', reynolds_units: str='1/ft') -> float:
     r"""
     Returns the Reynolds Number per unit length.
 
@@ -822,8 +822,8 @@ def atm_unit_reynolds_number2(alt, mach, alt_units='ft', reynolds_units='1/ft'):
     ReL *= _reynolds_factor('1/ft', reynolds_units)
     return ReL
 
-def atm_unit_reynolds_number(alt, mach, alt_units='ft', reynolds_units='1/ft'):
-    # type : (float, float, str, str) -> float
+def atm_unit_reynolds_number(alt: float, mach: float,
+                             alt_units: str='ft', reynolds_units: str='1/ft') -> float:
     r"""
     Returns the Reynolds Number per unit length.
 
@@ -857,8 +857,7 @@ def atm_unit_reynolds_number(alt, mach, alt_units='ft', reynolds_units='1/ft'):
     ReL *= _reynolds_factor('1/ft', reynolds_units)
     return ReL
 
-def sutherland_viscoscity(T):
-    # type: (float) -> float
+def sutherland_viscoscity(T: float) -> float:
     r"""
     Helper function that calculates the dynamic viscosity \f$ \mu \f$ of air at
     a given temperature.
@@ -891,9 +890,12 @@ def sutherland_viscoscity(T):
         viscosity = 2.27E-8 * (T ** 1.5) / (T + 198.6)
     return viscosity
 
-def make_flfacts_alt_sweep(mach, alts, eas_limit=1000.,
-                           alt_units='m', velocity_units='m/s', density_units='kg/m^3',
-                           eas_units='m/s'):
+def make_flfacts_alt_sweep(mach: float, alts: List[float],
+                           eas_limit: float=1000.,
+                           alt_units: str='m',
+                           velocity_units: str='m/s',
+                           density_units: str='kg/m^3',
+                           eas_units: str='m/s') -> Tuple[NDArrayNfloat, NDArrayNfloat, NDArrayNfloat]:
     """
     Makes a sweep across altitude for a constant Mach number.
 
@@ -930,9 +932,11 @@ def make_flfacts_alt_sweep(mach, alts, eas_limit=1000.,
                                       eas_units=eas_units,)
     return rho, machs, velocity
 
-def make_flfacts_mach_sweep(alt, machs, eas_limit=1000.,
-                            alt_units='m', velocity_units='m/s', density_units='kg/m^3',
-                            eas_units='m/s'):
+def make_flfacts_mach_sweep(alt: float, machs: List[float], eas_limit: float=1000.,
+                            alt_units: str='m',
+                            velocity_units: str='m/s',
+                            density_units: str='kg/m^3',
+                            eas_units: str='m/s') -> Tuple[NDArrayNfloat, NDArrayNfloat, NDArrayNfloat]:
     """
     Makes a sweep across Mach number for a constant altitude.
 
@@ -967,8 +971,11 @@ def make_flfacts_mach_sweep(alt, machs, eas_limit=1000.,
                                       eas_units=eas_units,)
     return rho, machs, velocity
 
-def make_flfacts_eas_sweep(alt, eass, alt_units='m', velocity_units='m/s', density_units='kg/m^3',
-                           eas_units='m/s'):
+def make_flfacts_eas_sweep(alt: float, eass: List[float],
+                           alt_units: str='m',
+                           velocity_units: str='m/s',
+                           density_units: str='kg/m^3',
+                           eas_units: str='m/s') -> Tuple[NDArrayNfloat, NDArrayNfloat, NDArrayNfloat]:
     """
     Makes a sweep across equivalent airspeed for a constant altitude.
 
@@ -999,9 +1006,12 @@ def make_flfacts_eas_sweep(alt, eass, alt_units='m', velocity_units='m/s', densi
     machs = velocity / sos
     return rho, machs, velocity
 
-def _limit_eas(rho, machs, velocity, eas_limit=1000.,
-               alt_units='m', velocity_units='m/s', density_units='kg/m^3',
-               eas_units='m/s'):
+def _limit_eas(rho: float, machs: NDArrayNfloat, velocity: NDArrayNfloat,
+               eas_limit: float=1000.,
+               alt_units: str='m',
+               velocity_units: str='m/s',
+               density_units: str='kg/m^3',
+               eas_units: str='m/s') -> Tuple[NDArrayNfloat, NDArrayNfloat, NDArrayNfloat]:
     """limits the equivalent airspeed"""
     if eas_limit:
         rho0 = atm_density(0., alt_units=alt_units, density_units=density_units)
