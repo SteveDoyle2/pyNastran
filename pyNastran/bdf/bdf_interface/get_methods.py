@@ -1,14 +1,14 @@
 """defines various methods to access low level BDF data"""
 from __future__ import annotations
 from itertools import chain
-from typing import List, Union, Optional, TYPE_CHECKING
+from typing import List, Union, Optional, Iterable, TYPE_CHECKING
 import numpy as np
 
 from pyNastran.bdf.bdf_interface.attributes import BDFAttributes
 from pyNastran.utils.numpy_utils import integer_types
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.bdf.cards.coordinate_systems import Coord
-    from pyNastran.bdf.cards.nodes import POINT # , GRID, GRDSET, SPOINTs, EPOINTs, SEQGP, GRIDB
+    from pyNastran.bdf.cards.nodes import POINT, GRID, SPOINT, EPOINT # , SPOINTs, EPOINTs, SEQGP, GRIDB
     from pyNastran.bdf.cards.aero.aero import (
         #AECOMP, AECOMPL
         AEFACT, AELINK,
@@ -22,15 +22,57 @@ if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.bdf.cards.aero.static_loads import AESTAT, AEROS # CSSCHD, TRIM, TRIM2, DIVERG
     from pyNastran.bdf.cards.aero.dynamic_loads import AERO, FLFACT, FLUTTER, GUST
     # MKAERO1, MKAERO2
+    # ----------------------------------------------------
+
+    from .cards.elements.mass import CONM1, CONM2, CMASS1, CMASS2, CMASS3, CMASS4
+    from pyNastran.bdf.cards.properties.mass import PMASS, NSM, NSM1, NSML, NSML1, NSMADD
+    from pyNastran.bdf.cards.constraints import (SPC, SPCADD, SPC1,
+                                                 MPC, MPCADD) # SUPORT1, SUPORT
+    from pyNastran.bdf.cards.deqatn import DEQATN
+    from pyNastran.bdf.cards.dynamic import (
+        DELAY, DPHASE,
+        NLPARM)
+    from .cards.elements.rigid import RBAR, RBAR1, RBE1, RBE2, RBE3, RROD, RSPLINE, RSSCON
+    from pyNastran.bdf.cards.loads.loads import SLOAD, DAREA
+    from pyNastran.bdf.cards.loads.dloads import DLOAD, TLOAD1, TLOAD2, RLOAD1, RLOAD2
+    from pyNastran.bdf.cards.loads.static_loads import (LOAD, GRAV, ACCEL, ACCEL1, FORCE,
+                                                        FORCE1, FORCE2, MOMENT, MOMENT1, MOMENT2,
+                                                        PLOAD, PLOAD1, PLOAD2, PLOAD4)
+
+    from pyNastran.bdf.cards.materials import (MAT1, MAT2, MAT3, MAT4, MAT5,
+                                               MAT8, MAT9, MAT10, MAT11, MAT3D,
+                                               MATG, MATHE, MATHP, EQUIV)
+
+    from pyNastran.bdf.cards.methods import EIGC, EIGR, EIGRL
+    #from pyNastran.bdf.cards.nodes import GRID, SPOINTs, EPOINTs, POINT
+
+    from pyNastran.bdf.cards.aero.zona import (
+        #ACOORD, AEROZ, AESURFZ, BODY7, CAERO7, MKAEROZ, PAFOIL7, PANLST1, PANLST3,
+        #SEGMESH, SPLINE1_ZONA, SPLINE2_ZONA, SPLINE3_ZONA, TRIMLNK, TRIMVAR, TRIM_ZONA,
+        ZONA)
+
+    from pyNastran.bdf.cards.optimization import (
+        DCONADD, DCONSTR, DESVAR, DDVAL, # DOPTPRM, DLINK,
+        DRESP1, DRESP2, DRESP3,
+        DVCREL1, DVCREL2,
+        DVMREL1, DVMREL2,
+        DVPREL1, DVPREL2)
+    from pyNastran.bdf.cards.bdf_sets import SET1, SET3
+    from pyNastran.bdf.cards.thermal.thermal import PHBDY
+    #from pyNastran.bdf.cards.thermal.loads import (QBDY1, QBDY2, QBDY3, QHBDY, TEMP, TEMPD, TEMPB3,
+                                                   #TEMPRB, QVOL, QVECT)
+    from pyNastran.bdf.cards.bdf_tables import (TABLED1, TABLED2, TABLED3, TABLED4,
+                                                TABLEM1, TABLEM2, TABLEM3, TABLEM4,
+                                                TABLES1, TABLEST, TABLEHT, TABLEH1,
+                                                TABRND1, TABRNDG)
+
 
 class GetMethods(BDFAttributes):
     """defines various methods to access low level BDF data"""
     def __init__(self):
-        # type: () -> None
         BDFAttributes.__init__(self)
 
-    def EmptyNode(self, nid, msg=''):
-        # type: (int, str) -> Optional[Any]
+    def EmptyNode(self, nid: int, msg: str='') -> Optional[Union[GRID, SPOINT, EPOINT]]:
         """
         Gets a GRID/SPOINT/EPOINT object, but allows for empty nodes
         (i.e., the CTETRA10 supports empty nodes, but the CTETRA4 does not).
@@ -63,8 +105,7 @@ class GetMethods(BDFAttributes):
                 msg += 'epoints=%s\n' % np.unique(list(self.epoints.keys()))
             raise KeyError(msg)
 
-    def Node(self, nid, msg=''):
-        # type: (int, str) -> Any
+    def Node(self, nid: int, msg: str='') -> Union[GRID, SPOINT, EPOINT]:
         """
         Gets a GRID/SPOINT/EPOINT object.  This method does not allow for empty nodes
         (i.e., the CTETRA10 supports empty nodes, but the CTETRA4 does not).
@@ -95,7 +136,7 @@ class GetMethods(BDFAttributes):
                 msg += 'epoints=%s\n' % np.unique(list(self.epoints.keys()))
             raise KeyError(msg)
 
-    def EmptyNodes(self, nids: list[int], msg: str='') -> List[Optional[Any]]:
+    def EmptyNodes(self, nids: list[int], msg: str='') -> List[Optional[Union[GRID, SPOINT, EPOINT]]]:
         """
         Returns a series of node objects given a list of IDs
 
@@ -117,10 +158,9 @@ class GetMethods(BDFAttributes):
             if self.epoints:
                 msg += 'epoints=%s\n' % np.unique(list(self.epoints.keys()))
             raise KeyError(msg)
-
         return nodes
 
-    def Nodes(self, nids: List[int], msg: str='') -> List[Any]:
+    def Nodes(self, nids: List[int], msg: str='') -> List[Union[GRID, SPOINT, EPOINT]]:
         """
         Returns a series of node objects given a list of IDs
 
@@ -160,8 +200,7 @@ class GetMethods(BDFAttributes):
             points.append(self.Point(nid, msg=msg))
         return points
 
-    def Element(self, eid, msg=''):
-        # type: (int, str) -> Any
+    def Element(self, eid: int, msg: str='') -> Any:
         """
         Gets an element
 
@@ -174,7 +213,7 @@ class GetMethods(BDFAttributes):
             raise KeyError('eid=%s not found%s.  Allowed elements=%s'
                            % (eid, msg, np.unique(list(self.elements.keys()))))
 
-    def Elements(self, eids, msg=''):
+    def Elements(self, eids: List[int], msg: str='') -> List[Any]:
         """
         Gets an series of elements
 
@@ -195,8 +234,7 @@ class GetMethods(BDFAttributes):
             raise KeyError(msg)
         return elements
 
-    def Mass(self, eid, msg=''):
-        # type: (int, str) -> Any
+    def Mass(self, eid: int, msg: str='') -> Union[CMASS1, CMASS2, CMASS3, CMASS4, CONM1, CONM2]:
         """gets a mass element (CMASS1, CONM2)"""
         try:
             return self.masses[eid]
@@ -204,8 +242,7 @@ class GetMethods(BDFAttributes):
             raise KeyError('eid=%s not found%s.  Allowed masses=%s'
                            % (eid, msg, np.unique(list(self.masses.keys()))))
 
-    def RigidElement(self, eid, msg=''):
-        # type: (int, str) -> Any
+    def RigidElement(self, eid: int, msg: str='') -> Union[RBAR, RBE2, RBE3, RBAR, RBAR1, RROD, RSPLINE, RSSCON]:
         """gets a rigid element (RBAR, RBE2, RBE3, RBAR, RBAR1, RROD, RSPLINE, RSSCON)"""
         try:
             return self.rigid_elements[eid]
@@ -215,9 +252,7 @@ class GetMethods(BDFAttributes):
 
     #--------------------
     # PROPERTY CARDS
-
-    def Property(self, pid, msg=''):
-        # type: (int, str) -> Any
+    def Property(self, pid: int, msg: str='') -> Any:
         """
         gets an elemental property (e.g. PSOLID, PLSOLID, PCOMP, PSHELL, PSHEAR);
         not mass property (PMASS)
@@ -229,7 +264,7 @@ class GetMethods(BDFAttributes):
             raise KeyError('pid=%s not found%s.  Allowed Pids=%s'
                            % (pid, msg, self.property_ids))
 
-    def Properties(self, pids, msg=''):
+    def Properties(self, pids: List[int], msg: str='') -> List[Any]:
         """
         gets one or more elemental property (e.g. PSOLID, PLSOLID,
         PCOMP, PSHELL, PSHEAR); not mass property (PMASS)
@@ -240,8 +275,7 @@ class GetMethods(BDFAttributes):
             properties.append(self.Property(pid, msg))
         return properties
 
-    def PropertyMass(self, pid, msg=''):
-        # type: (int, str) -> Any
+    def PropertyMass(self, pid: int, msg: str='') -> PMASS:
         """
         gets a mass property (PMASS)
         """
@@ -251,8 +285,7 @@ class GetMethods(BDFAttributes):
             raise KeyError('pid=%s not found%s.  Allowed Mass Pids=%s'
                            % (pid, msg, np.unique(list(self.properties_mass.keys()))))
 
-    def Phbdy(self, pid, msg=''):
-        # type: (int, str) -> Any
+    def Phbdy(self, pid: int, msg: str='') -> PHBDY:
         """gets a PHBDY"""
         try:
             return self.phbdys[pid]
@@ -263,10 +296,10 @@ class GetMethods(BDFAttributes):
     #--------------------
     # MATERIAL CARDS
 
-    def get_structural_material_ids(self):
+    def get_structural_material_ids(self) -> Iterable[int]:
         return self.materials.keys()
 
-    def get_material_ids(self):
+    def get_material_ids(self) -> Iterable[int]:
         """gets the material ids"""
         keys = chain(
             self.materials.keys(),
@@ -275,12 +308,11 @@ class GetMethods(BDFAttributes):
         )
         return keys
 
-    def get_thermal_material_ids(self):
+    def get_thermal_material_ids(self) -> Iterable[int]:
         """gets the thermal material ids"""
         return self.thermal_materials.keys()
 
-    def Material(self, mid, msg=''):
-        # type: (int, str) -> Any
+    def Material(self, mid: int, msg: str='') -> Union[MAT1, MAT2, MAT3, MAT4, MAT5, MAT8, MAT9, MAT10, MAT11, MAT3D, EQUIV, MATG]:
         """gets a structural or thermal material"""
         if mid in self.materials:
             return self.materials[mid]
@@ -295,8 +327,7 @@ class GetMethods(BDFAttributes):
             )
             raise KeyError(msg2)
 
-    def StructuralMaterial(self, mid, msg=''):
-        # type: (int, str) -> Any
+    def StructuralMaterial(self, mid, msg='') -> Union[MAT1, MAT2, MAT3, MAT8, MAT9, MAT10, MAT11, MAT3D, EQUIV, MATG]:
         """gets a structural material"""
         try:
             mat = self.materials[mid]
@@ -305,8 +336,7 @@ class GetMethods(BDFAttributes):
             raise KeyError('Invalid Structural Material ID:  mid=%s%s' % (mid, msg))
         return mat
 
-    def ThermalMaterial(self, mid, msg=''):
-        # type: (int, str) -> Any
+    def ThermalMaterial(self, mid: int, msg: str='') -> Union[MAT4, MAT5]:
         """gets a thermal material"""
         try:
             mat = self.thermal_materials[mid]
@@ -315,8 +345,7 @@ class GetMethods(BDFAttributes):
             raise KeyError('Invalid Thermal Material ID:  mid=%s%s' % (mid, msg))
         return mat
 
-    def HyperelasticMaterial(self, mid, msg=''):
-        # type: (int, str) -> Any
+    def HyperelasticMaterial(self, mid: int, msg: str='') -> Union[MATHE, MATHP]:
         """gets a hyperelastic material"""
         try:
             mat = self.hyperelastic_materials[mid]
@@ -325,7 +354,7 @@ class GetMethods(BDFAttributes):
             raise KeyError('Invalid Hyperelastic Material ID:  mid=%s%s' % (mid, msg))
         return mat
 
-    def Materials(self, mids, msg=''):
+    def Materials(self, mids, msg='') -> List[Union[MAT1, MAT2, MAT3, MAT8, MAT9, MAT10, MAT11, MAT3D, EQUIV, MATG]]:
         """gets one or more Materials"""
         if isinstance(mids, integer_types):
             mids = [mids]
@@ -337,7 +366,11 @@ class GetMethods(BDFAttributes):
     #--------------------
     # LOADS
 
-    def Load(self, sid, consider_load_combinations=True, msg=''):
+    def Load(self, sid: int, consider_load_combinations: bool=True,
+             msg: str='') -> List[Union[LOAD, GRAV, ACCEL, ACCEL1, SLOAD,
+                                        FORCE, FORCE1, FORCE2,
+                                        MOMENT, MOMENT1, MOMENT2,
+                                        PLOAD, PLOAD1, PLOAD2, PLOAD4]]:
         """
         Gets an LOAD or FORCE/PLOAD4/etc.
 
@@ -369,7 +402,7 @@ class GetMethods(BDFAttributes):
                 sid, msg, np.unique(loads_ids), np.unique(load_combination_ids)))
         return load
 
-    def DLoad(self, sid, consider_dload_combinations=True, msg=''):
+    def DLoad(self, sid: int, consider_dload_combinations: bool=True, msg: str='') -> DLOAD:
         """
         Gets a DLOAD, TLOAD1, TLOAD2, etc. associcated with the
         Case Control DLOAD entry
@@ -390,7 +423,7 @@ class GetMethods(BDFAttributes):
                                np.unique(dload_combination_ids)))
         return dload
 
-    def get_dload_entries(self, sid, msg=''):
+    def get_dload_entries(self, sid: int, msg: str='') -> Union[TLOAD1, TLOAD2, RLOAD1, RLOAD2]:
         """gets the dload entries (e.g., TLOAD1, TLOAD2)"""
         self.deprecated(
             "get_dload_entries(sid, msg='')",
@@ -398,7 +431,7 @@ class GetMethods(BDFAttributes):
             '1.1')
         return self.DLoad(sid, consider_dload_combinations=False, msg=msg)
 
-    def DAREA(self, darea_id, msg=''):
+    def DAREA(self, darea_id: int, msg: str='') -> DAREA:
         """gets a DAREA"""
         assert isinstance(darea_id, integer_types), darea_id
         try:
@@ -407,8 +440,7 @@ class GetMethods(BDFAttributes):
             raise KeyError('darea_id=%s not found%s.  Allowed DAREA=%s'
                            % (darea_id, msg, list(self.dareas.keys())))
 
-    def DELAY(self, delay_id, msg=''):
-        # type: (int, str) -> Any
+    def DELAY(self, delay_id: int, msg: str='') -> DELAY:
         """gets a DELAY"""
         assert isinstance(delay_id, integer_types), delay_id
         try:
@@ -417,8 +449,7 @@ class GetMethods(BDFAttributes):
             raise KeyError('delay_id=%s not found%s.  Allowed DELAY=%s'
                            % (delay_id, msg, list(self.delays.keys())))
 
-    def DPHASE(self, dphase_id, msg=''):
-        # type: (int, str) -> Any
+    def DPHASE(self, dphase_id: int, msg: str='') -> DPHASE:
         """gets a DPHASE"""
         assert isinstance(dphase_id, integer_types), dphase_id
         try:
@@ -428,7 +459,7 @@ class GetMethods(BDFAttributes):
                            % (dphase_id, msg, list(self.dphases.keys())))
 
     #--------------------
-    def MPC(self, mpc_id, consider_mpcadd=True, msg=''):
+    def MPC(self, mpc_id: int, consider_mpcadd: bool=True, msg: str='') -> Union[MPC, MPCADD]:
         """
         Gets an MPCADD or MPC
 
@@ -455,7 +486,7 @@ class GetMethods(BDFAttributes):
                 mpc_id, msg, np.unique(mpc_ids), np.unique(mpcadd_ids)))
         return constraint
 
-    def SPC(self, spc_id, consider_spcadd=True, msg=''):
+    def SPC(self, spc_id: int, consider_spcadd: bool=True, msg: str='') -> Union[SPC, SPC1, SPCADD]:
         """
         Gets an SPCADD or SPC
 
@@ -482,7 +513,8 @@ class GetMethods(BDFAttributes):
                 spc_id, msg, np.unique(spc_ids), np.unique(spcadd_ids)))
         return constraint
 
-    def NSM(self, nsm_id, consider_nsmadd=True, msg=''):
+    def NSM(self, nsm_id: int, consider_nsmadd: bool=True,
+            msg: str='') -> Union[NSM, NSM1, NSML, NSML1, NSDADD]:
         """
         Gets an LOAD or FORCE/PLOAD4/etc.
 
@@ -513,8 +545,7 @@ class GetMethods(BDFAttributes):
 
     #--------------------
     # Sets
-    def SET1(self, set_id, msg=''):
-        # type: (int, str) -> Any
+    def SET1(self, set_id: int, msg: str='') -> SET1:
         """gets a SET1"""
         assert isinstance(set_id, integer_types), 'set_id=%s is not an integer\n' % set_id
         if set_id in self.sets:
@@ -627,7 +658,6 @@ class GetMethods(BDFAttributes):
                            % (eid, msg, np.unique(list(self.caero_ids))))
 
     def PAero(self, pid: int, msg: str='') -> Union[PAERO1, PAERO2, PAERO3, PAERO4, PAERO5]:
-        # type: (int, str) -> Any
         """gets a PAEROx"""
         try:
             return self.paeros[pid]
@@ -699,8 +729,7 @@ class GetMethods(BDFAttributes):
     #--------------------
     # OPTIMIZATION CARDS
 
-    def DConstr(self, oid, msg=''):
-        # type: (int, str) -> List[Any]
+    def DConstr(self, oid: int, msg: str='') -> List[Union[DCONSTR, DCONADD]]:
         """gets a DCONSTR"""
         try:
             return self.dconstrs[oid]
@@ -708,8 +737,7 @@ class GetMethods(BDFAttributes):
             raise KeyError('oid=%s not found%s.  Allowed DCONSTRs=%s'
                            % (oid, msg, np.unique(list(self.dconstrs.keys()))))
 
-    def DResp(self, dresp_id, msg=''):
-        # type: (int, str) -> Any
+    def DResp(self, dresp_id: int, msg: str='') -> Union[DRESP1, DRESP2, DRESP3]:
         """gets a DRESPx"""
         try:
             return self.dresps[dresp_id]
@@ -717,8 +745,7 @@ class GetMethods(BDFAttributes):
             raise KeyError('dresp_id=%s not found%s.  Allowed DRESPx=%s'
                            % (dresp_id, msg, np.unique(list(self.dresps.keys()))))
 
-    def Desvar(self, desvar_id, msg=''):
-        # type: (int, str) -> Any
+    def Desvar(self, desvar_id: int, msg: int='') -> DESVAR:
         """gets a DESVAR"""
         try:
             return self.desvars[desvar_id]
@@ -726,8 +753,7 @@ class GetMethods(BDFAttributes):
             raise KeyError('desvar_id=%s not found%s.  Allowed DESVARs=%s'
                            % (desvar_id, msg, np.unique(list(self.desvars.keys()))))
 
-    def DDVal(self, oid, msg=''):
-        # type: (int, str) -> Any
+    def DDVal(self, oid: int, msg: str='') -> DDVAL:
         """gets a DDVAL"""
         try:
             return self.ddvals[oid]
@@ -735,8 +761,7 @@ class GetMethods(BDFAttributes):
             raise KeyError('oid=%s not found%s.  Allowed DDVALs=%s'
                            % (oid, msg, np.unique(list(self.ddvals.keys()))))
 
-    def DVcrel(self, dv_id, msg=''):
-        # type: (int, str) -> Any
+    def DVcrel(self, dv_id: int, msg: str='') -> Union[DVCREL1, DVCREL2]:
         """gets a DVCREL1/DVCREL2"""
         try:
             return self.dvcrels[dv_id]
@@ -744,8 +769,7 @@ class GetMethods(BDFAttributes):
             raise KeyError('dv_id=%s not found%s.  Allowed DVCRELx=%s'
                            % (dv_id, msg, np.unique(list(self.dvcrels.keys()))))
 
-    def DVmrel(self, dv_id, msg=''):
-        # type: (int, str) -> Any
+    def DVmrel(self, dv_id: int, msg: str='') -> Union[DVMREL1, DVMREL2]:
         """gets a DVMREL1/DVMREL2"""
         try:
             return self.dvmrels[dv_id]
@@ -753,8 +777,7 @@ class GetMethods(BDFAttributes):
             raise KeyError('dv_id=%s not found%s.  Allowed DVMRELx=%s'
                            % (dv_id, msg, np.unique(list(self.dvmrels.keys()))))
 
-    def DVprel(self, dv_id, msg=''):
-        # type: (int, str) -> Any
+    def DVprel(self, dv_id: int, msg: str='') -> Union[DVPREL1, DVPREL2]:
         """gets a DVPREL1/DVPREL2"""
         try:
             return self.dvprels[dv_id]
@@ -765,8 +788,7 @@ class GetMethods(BDFAttributes):
     #--------------------
     # SET CARDS
 
-    def Set(self, sid, msg=''):
-        # type: (int, str) -> Any
+    def Set(self, sid: int, msg: str='') -> Union[SET1, SET3]:
         """gets a SET, SET1, SET2, or SET3 card"""
         try:
             return self.sets[sid]
@@ -776,8 +798,7 @@ class GetMethods(BDFAttributes):
 
     #--------------------
     # METHOD CARDS
-    def Method(self, sid, msg=''):
-        # type: (int, str) -> Any
+    def Method(self, sid: int, msg: str='') -> Union[EIGR, EIGRL]:
         """gets a METHOD (EIGR, EIGRL)"""
         try:
             return self.methods[sid]
@@ -785,8 +806,7 @@ class GetMethods(BDFAttributes):
             raise KeyError('sid=%s not found%s.  Allowed METHODs=%s'
                            % (sid, msg, np.unique(list(self.methods.keys()))))
 
-    def CMethod(self, sid, msg=''):
-        # type: (int, str) -> Any
+    def CMethod(self, sid: int, msg: str='') -> EIGC:
         """gets a METHOD (EIGC)"""
         try:
             return self.cMethods[sid]
@@ -796,9 +816,8 @@ class GetMethods(BDFAttributes):
 
     #--------------------
     # TABLE CARDS
-    def Table(self, tid, msg=''):
-        # type: (int, str) -> Any
-        """gets a TABLES1, TABLEST, ???"""
+    def Table(self, tid, msg='') -> Union[TABLES1, TABLEST, TABLEH1, TABLEHT]:
+        """gets a TABLES1, TABLEST, TABLEH1, TABLEHT"""
         try:
             return self.tables[tid]
         except KeyError:
@@ -806,7 +825,7 @@ class GetMethods(BDFAttributes):
             raise KeyError('tid=%s not found%s.  Allowed TABLEs=%s'
                            % (tid, msg, table_keys))
 
-    def TableD(self, tid, msg=''):
+    def TableD(self, tid: int, msg: str='') -> Union[TABLED1, TABLED2, TABLED3, TABLED4]:
         """gets a TABLEDx (TABLED1, TABLED2, TABLED3, TABLED4)"""
         try:
             return self.tables_d[tid]
@@ -817,8 +836,7 @@ class GetMethods(BDFAttributes):
             raise KeyError('tid=%s not found%s.  Allowed TABLEDs=%s; TABLEs=%s; TABLEMs=%s'
                            % (tid, msg, tabled_keys, table_keys, tablem_keys))
 
-    def TableM(self, tid, msg=''):
-        # type: (int, str) -> Any
+    def TableM(self, tid: int, msg: str='') -> Union[TABLEM1, TABLEM2, TABLEM3, TABLEM4]:
         """gets a TABLEx (TABLEM1, TABLEM2, TABLEM3, TABLEM4)"""
         try:
             return self.tables_m[tid]
@@ -829,8 +847,7 @@ class GetMethods(BDFAttributes):
             raise KeyError('tid=%s not found%s.  Allowed TABLEMs=%s; TABLEs=%s; TABLEDs=%s'
                            % (tid, msg, tablem_keys, table_keys, tabled_keys))
 
-    def RandomTable(self, tid, msg=''):
-        # type: (int, str) -> Any
+    def RandomTable(self, tid: int, msg: str='') -> Union[TABRND1, TABRNDG]:
         """gets a TABRND1 / TABRNDG"""
         try:
             return self.random_tables[tid]
@@ -841,8 +858,7 @@ class GetMethods(BDFAttributes):
     #--------------------
     # NONLINEAR CARDS
 
-    def NLParm(self, nid, msg=''):
-        # type: (int, str) -> Any
+    def NLParm(self, nid: int, msg: str='') -> NLPARM:
         """gets an NLPARM"""
         try:
             return self.nlparms[nid]
@@ -852,8 +868,7 @@ class GetMethods(BDFAttributes):
 
     #--------------------
     # MATRIX ENTRY CARDS
-    def DMIG(self, dname, msg=''):
-        # type: (str, str) -> Any
+    def DMIG(self, dname: str, msg: str='') -> DMIG:
         """gets a DMIG"""
         try:
             return self.dmigs[dname]
@@ -861,8 +876,7 @@ class GetMethods(BDFAttributes):
             raise KeyError('dname=%s not found%s.  Allowed DMIGs=%s'
                            % (dname, msg, np.unique(list(self.dmigs.keys()))))
 
-    def DEQATN(self, equation_id, msg=''):
-        # type: (int, str) -> Any
+    def DEQATN(self, equation_id: int, msg: str='') -> DEQATN:
         """gets a DEQATN"""
         try:
             return self.dequations[equation_id]

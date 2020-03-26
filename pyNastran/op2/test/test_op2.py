@@ -44,7 +44,8 @@ def parse_table_names_from_f06(f06_filename):
     return names
 
 
-def run_lots_of_files(files, make_geom: bool=True, write_bdf: bool=False, write_f06: bool=True,
+def run_lots_of_files(files, make_geom: bool=True, combine: bool=True,
+                      write_bdf: bool=False, write_f06: bool=True,
                       delete_f06: bool=True, delete_op2: bool=True, delete_hdf5: bool=True,
                       delete_debug_out: bool=True, build_pandas: bool=True, write_op2: bool=False,
                       write_hdf5: bool=True, debug: bool=True, skip_files: Optional[List[str]]=None,
@@ -56,6 +57,7 @@ def run_lots_of_files(files, make_geom: bool=True, write_bdf: bool=False, write_
         skip_files = []
     #n = ''
     assert make_geom in [True, False]
+    assert combine in [True, False]
     assert write_bdf in [True, False]
     assert write_f06 in [True, False]
     assert write_op2 in [True, False]
@@ -83,8 +85,8 @@ def run_lots_of_files(files, make_geom: bool=True, write_bdf: bool=False, write_
             is_passed = True
             for binary_debugi in binary_debug:
                 print('------running binary_debug=%s------' % binary_debugi)
-                is_passedi = run_op2(op2file, make_geom=make_geom, write_bdf=write_bdf,
-                                     write_f06=write_f06, write_op2=write_op2,
+                is_passedi = run_op2(op2file, make_geom=make_geom, combine=combine,
+                                     write_bdf=write_bdf, write_f06=write_f06, write_op2=write_op2,
                                      is_mag_phase=False,
                                      delete_f06=delete_f06,
                                      delete_op2=delete_op2,
@@ -111,7 +113,7 @@ def run_lots_of_files(files, make_geom: bool=True, write_bdf: bool=False, write_
     return failed_cases
 
 
-def run_op2(op2_filename: str, make_geom: bool=False,
+def run_op2(op2_filename: str, make_geom: bool=False, combine: bool=True,
             write_bdf: bool=False, read_bdf: Optional[bool]=None,
             write_f06: bool=True, write_op2: bool=False,
             write_hdf5: bool=True,
@@ -137,6 +139,8 @@ def run_op2(op2_filename: str, make_geom: bool=False,
         path of file to test
     make_geom : bool; default=False
         should the GEOMx, EPT, MPT, DYNAMIC, DIT, etc. tables be read
+    combine : bool; default=True
+        should the op2 tables be combined
     write_bdf : bool; default=False
         should a BDF be written based on the geometry tables
     write_f06 : bool; default=True
@@ -273,8 +277,8 @@ def run_op2(op2_filename: str, make_geom: bool=False,
     try:
         #op2.read_bdf(op2.bdf_filename, includeDir=None, xref=False)
         if compare:
-            op2_nv.read_op2(op2_filename)
-        op2.read_op2(op2_filename)
+            op2_nv.read_op2(op2_filename, combine=combine)
+        op2.read_op2(op2_filename, combine=combine)
         #if not make_geom:  # TODO: enable this...
             #op2.save()
 
@@ -302,10 +306,10 @@ def run_op2(op2_filename: str, make_geom: bool=False,
             if delete_hdf5:
                 remove_file(h5_filename)
         if write_f06:
-            for is_sort2 in sort_methods:
+            for is_sort2i in sort_methods:
                 f06_filename = model + '.test_op2.f06'
                 op2.write_f06(f06_filename, is_mag_phase=is_mag_phase,
-                              is_sort1=not is_sort2, quiet=quiet, repr_check=True)
+                              is_sort1=not is_sort2i, quiet=quiet, repr_check=True)
             if delete_f06:
                 remove_file(f06_filename)
 
@@ -457,16 +461,16 @@ def get_test_op2_data(argv):
     """defines the docopt interface"""
     from docopt import docopt
     ver = str(pyNastran.__version__)
-    is_release = 'dev' not in ver
+    is_dev = 'dev' in ver
 
     msg = "Usage:  "
-    nasa95 = '' if is_release else '|--nasa95'
+    nasa95 = '|--nasa95' if is_dev else ''
     version = f'[--nx|--autodesk{nasa95}]'
     options = f'[-p] [-d] [-z] [-w] [-t] [-s <sub>] [-x <arg>]... {version} [--safe] [--post POST] [--load_hdf5]'
-    if is_release:
-        line1 = f"test_op2 [-q] [-b] [-c] [-g] [-n] [-f] [-o] {options} OP2_FILENAME\n"
+    if is_dev:
+        line1 = f"test_op2 [-q] [-b] [-c] [-g] [-n] [-f] [-o] [--profile] [--nocombine] {options} OP2_FILENAME\n"
     else:
-        line1 = f"test_op2 [-q] [-b] [-c] [-g] [-n] [-f] [-o] [--profile] {options} OP2_FILENAME\n"
+        line1 = f"test_op2 [-q] [-b] [-c] [-g] [-n] [-f] [-o] {options} OP2_FILENAME\n"
 
     while '  ' in line1:
         line1 = line1.replace('  ', ' ')
@@ -495,17 +499,19 @@ def get_test_op2_data(argv):
     msg += "                         Real/Imaginary (still stores Real/Imag); [default: False]\n"
     msg += "  --load_hdf5            Load as HDF5 (default=False)\n"
     msg += "  -p, --pandas           Enables pandas dataframe building; [default: False]\n"
+    if is_dev:
+        msg += "  --nocombine            Disables case combination\n"
     msg += "  -s <sub>, --subcase    Specify one or more subcases to parse; (e.g. 2_5)\n"
     msg += "  -w, --is_sort2         Sets the F06 transient to SORT2\n"
     msg += "  -x <arg>, --exclude    Exclude specific results\n"
     msg += "  --nx                   Assume NX Nastran\n"
     msg += "  --autodesk             Assume Autodesk Nastran\n"
-    if not is_release:
+    if is_dev:
         msg += "  --nasa95               Assume Nastran 95\n"
     msg += "  --post POST            Set the PARAM,POST flag\n"
     msg += "  --safe                 Safe cross-references BDF (default=False)\n"
 
-    if not is_release:
+    if is_dev:
         msg += "\n"
         msg += "Developer:\n"
         msg += '  --profile         Profiles the code (default=False)\n'
@@ -519,10 +525,12 @@ def get_test_op2_data(argv):
         sys.exit(msg)
 
     data = docopt(msg, version=ver, argv=argv[1:])
-    if is_release:
+    if not is_dev:
+        # just set the defaults for these so we don't need special code later
         data['--profile'] = False
         data['--write_xlsx'] = False
         data['--write_op2'] = False
+        data['--combine'] = True
 
     if '--geometry' not in data:
         data['--geometry'] = False
@@ -579,13 +587,13 @@ def main(argv=None, show_args=True):
 
     if data['--profile']:
         import pstats
-
         import cProfile
         prof = cProfile.Profile()
         prof.runcall(
             run_op2,
             data['OP2_FILENAME'],
             make_geom=data['--geometry'],
+            combine=not data['--nocombine'],
             load_as_h5=data['--load_hdf5'],
             write_bdf=data['--write_bdf'],
             write_f06=data['--write_f06'],
@@ -617,6 +625,7 @@ def main(argv=None, show_args=True):
         run_op2(
             data['OP2_FILENAME'],
             make_geom=data['--geometry'],
+            combine=not data['--nocombine'],
             load_as_h5=data['--load_hdf5'],
             write_bdf=data['--write_bdf'],
             write_f06=data['--write_f06'],

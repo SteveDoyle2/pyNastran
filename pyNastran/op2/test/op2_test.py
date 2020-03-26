@@ -98,7 +98,8 @@ def get_all_files(folders_file, file_type, max_size=4.2):
     #print('nfiles = %s' % len(files2))
     return files2
 
-def run(regenerate=True, make_geom=False, write_bdf=False, build_pandas=True,
+def run(regenerate=True, make_geom=False, combine=True,
+        write_bdf=False, build_pandas=True,
         xref_safe=False,
         save_cases=True, debug=False, write_f06=True, write_op2=False,
         compare=True, short_stats=False, write_hdf5=True):
@@ -150,7 +151,8 @@ def run(regenerate=True, make_geom=False, write_bdf=False, build_pandas=True,
     time0 = time.time()
 
     from pyNastran.op2.test.test_op2 import run_lots_of_files
-    failed_files = run_lots_of_files(files, make_geom=make_geom, write_bdf=write_bdf,
+    failed_files = run_lots_of_files(files, make_geom=make_geom, combine=combine,
+                                     write_bdf=write_bdf,
                                      xref_safe=xref_safe,
                                      write_f06=write_f06, delete_f06=True,
                                      write_op2=write_op2, delete_op2=True,
@@ -188,8 +190,9 @@ def main():
 
     msg = "Usage:  "
     #is_release = False
-    if 'dev' in ver:
-        msg += "op2_test [-r] [-s] [-c] [-u] [-t] [-g] [-n] [-f] [-o] [-h] [-d] [-b] [--safe] [--skip_dataframe]\n"
+    is_dev = 'dev' in ver
+    if is_dev:
+        msg += "op2_test [-r] [-s] [-c] [-u] [-t] [-g] [-n] [-f] [-o] [-h] [-d] [-b] [--safe] [--skip_dataframe] [--nocombine]\n"
     else:
         msg += "op2_test [-r] [-s] [-c] [-u] [-t] [-g] [-n] [-f] [-h] [-d] [-b] [--safe] [--skip_dataframe]\n"
     msg += "        op2_test -h | --help\n"
@@ -209,10 +212,12 @@ def main():
     # n is for NAS
     msg += "  -n, --write_bdf        Writes the bdf to fem.test_op2.bdf (default=False)\n"
     msg += "  -f, --write_f06        Writes the f06 to fem.test_op2.f06\n"
-    if 'dev' in ver:
+    if is_dev:
         msg += "  -o, --write_op2        Writes the op2 to fem.test_op2.op2\n"
     msg += "  -h, --write_hdf5       Writes the hdf5 to fem.test_op2.h5\n"
     msg += "  --skip_dataframe       Disables pandas dataframe building; [default: False]\n"
+    if is_dev:
+        msg += "  --nocombine            Disables case combination\n"
     msg += "  -s, --save_cases       Disables saving of the cases (default=False)\n"
     msg += "  --safe                 Safe cross-references BDF (default=False)\n"
     #msg += "  -z, --is_mag_phase    F06 Writer writes Magnitude/Phase instead of\n"
@@ -230,7 +235,7 @@ def main():
     write_bdf = data['--write_bdf']
     write_f06 = data['--write_f06']
     write_op2 = False
-    if 'dev' in ver:
+    if is_dev:
         write_op2 = data['--write_op2']
     write_hdf5 = data['--write_hdf5']
     save_cases = not data['--save_cases']
@@ -238,7 +243,10 @@ def main():
     compare = not data['--disablecompare']
     build_pandas = not data['--skip_dataframe']
     xref_safe = data['--safe']
-    run(regenerate=regenerate, make_geom=make_geom, write_bdf=write_bdf,
+    combine = not data['--nocombine']
+    run(regenerate=regenerate, make_geom=make_geom,
+        combine=combine,
+        write_bdf=write_bdf,
         xref_safe=xref_safe,
         save_cases=save_cases, write_f06=write_f06, write_op2=write_op2,
         write_hdf5=write_hdf5, short_stats=short_stats,
