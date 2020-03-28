@@ -125,10 +125,10 @@ class DTI(BaseCard):
         name = string(card, 1, 'name')
         if name == 'UNITS':
             integer(card, 2, '1')
-            mass = string(card, 3, 'mass')
-            force = string(card, 4, 'force')
-            length = string(card, 5, 'length')
-            time = string(card, 6, 'time')
+            mass = string_or_blank(card, 3, 'mass')
+            force = string_or_blank(card, 4, 'force')
+            length = string_or_blank(card, 5, 'length')
+            time = string_or_blank(card, 6, 'time')
             temp_stress = string_or_blank(card, 7, 'stress/temperature')
             fields = {
                 'mass' : mass,

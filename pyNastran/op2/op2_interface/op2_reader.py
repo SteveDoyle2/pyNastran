@@ -5,7 +5,7 @@ Defines various tables that don't fit in other sections:
     - read_cmodeext_helper(self)
     - read_aemonpt(self)
     - read_monitor(self)
-    - read_r1tabrg(self, data, ndata)
+    - read_r1tabrg(self)
     - read_hisadd(self)
 
     - read_cstm(self)
@@ -158,6 +158,10 @@ class OP2Reader:
             # coordinate system transformation matrices
             b'CSTM' : self.read_cstm,
             b'CSTMS' : self.read_cstm,
+
+            b'R1TABRG': self.read_r1tabrg,
+            # Qualifier info table???
+            b'QUALINFO' : self.read_qualinfo,
 
             # Equivalence between external and internal grid/scalar numbers
             b'EQEXIN' : self.read_eqexin,
@@ -1042,6 +1046,75 @@ class OP2Reader:
 
         ##self.show(100)
         #self.read_markers([0])
+
+    def read_qualinfo(self):
+        r"""
+        Reads the QUALINFO table
+
+        -100001 (AUXMID=0;AFPMID=0;DESITER=0;HIGHQUAL=0;PVALID=0;DESINC=0;DISCRETE=FALSE;MASSID=0;ARBMID=0;PARTNAME=' ';TRIMID=0;MODULE=0)
+        -100000 (AUXMID=0;AFPMID=0;DESITER=0;HIGHQUAL=0;PVALID=0;DESINC=0;ARBMID=0;PARTNAME=' ';DISCRETE=FALSE;TRIMID=0)
+         -99999 (AUXMID=0;AFPMID=0;HIGHQUAL=0;PVALID=0;DESINC=0;PRESEQP=TRUE;ARBMID=0;PARTNAME=' ';TRIMID=0;FLXBDYID=0;DFPHASE=' ')
+         -99998 (AUXMID=0;AFPMID=0;DESITER=0;HIGHQUAL=0;DESINC=0;DISCRETE=FALSE;ARBMID=0;MASSID=0;PARTNAME=' ';TRIMID=0)
+           1431 (HIGHQUAL=0;AUXMID=0;AFPMID=0;DESINC=0;ARBMID=0;PARTNAME=' ';TRIMID=0;FLXBDYID=0)
+           1459 (PEID=0;DESITER=0;PVALID=0;NL99=0;APRCH=' ';QCPLD=' ';HIGHQUAL=0;AUXMID=0;DESINC=0;DISCRETE=FALSE;MASSID=0;PARTNAME=' ';MODULE=0)
+           1461 (PEID=0;APRCH=' ';QCPLD=' ';HIGHQUAL=0;AUXMID=0;DESINC=0;PARTNAME=' ';MODULE=0)
+           1541 (SEID=0;PEID=0;MTEMP=0;DESITER=0;PVALID=0;APRCH=' ';QCPLD=' ';HIGHQUAL=0;P2G=' ';K2GG=' ';M2GG=' ';DELTA=FALSE;AUXMID=0;BNDSHP=FALSE;ADJOINT=FALSE;DESINC=0;DISCRETE=FALSE;CASEF06=' ';ISOLAPP=1;SUBCID=0;OSUBID=1;STEPID=0;RGYRO=0;PARTNAME=' ';SSTEPID=0;MODULE=0)
+
+        Word Name Type Description
+        1 NAME(2) CHAR4 Datablock Name
+
+        Word Name Type Description
+        1 DBKEY   I     database KEY associated with qualifiers
+        2 QLEN(C) I     length in words of qualifiers string
+        3 QUALSTR CHAR4 Qualifier information string
+        Word 3 repeats QLEN times
+
+        Word Name Type Description
+        1 FUNIT   I Fortran unit op2 file was written to
+        2 NUMKEYS I Number of keys
+        3 BIT(5)  I ,{
+
+        """
+        # we read the table on the first pass, so if we ever see a
+        # 64-bit table, the error message makes a bit more sense
+        read_record_ndata = self.get_skip_read_record_ndata()
+
+        op2 = self.op2
+        op2.table_name = self._read_table_name(rewind=False)
+        #self.log.debug('table_name = %r' % op2.table_name)
+        if self.is_debug_file:
+            self.binary_debug.write('_read_geom_table - %s\n' % op2.table_name)
+        self.read_markers([-1])
+
+        if self.is_debug_file:
+            self.binary_debug.write('---markers = [-1]---\n')
+
+        # (301, 1, 8, 0, 0, 0, 0)
+        # (???, ?, n, ?, ?, ?, ?)
+        data, ndata = read_record_ndata()
+        assert ndata == 28, self.show_data(data) # 7*4
+
+        self.read_3_markers([-2, 1, 0])
+
+        # QUALINFO
+        data, ndata = read_record_ndata()
+        assert ndata == 8, self.show_data(data)
+
+        itable = -3
+        while 1:
+            self.read_3_markers([itable, 1, 0])
+            stop_marker = self.get_marker1(rewind=True)
+            if stop_marker == 0:
+                break
+
+            data, ndata = read_record_ndata()
+            if self.read_mode == 1:
+                db_key, qlen = unpack(self._endian + b'2i', data[:8])
+                fmt = self._endian + b'%is' % (ndata - 8)
+                qual_str = unpack(fmt, data[8:])[0].decode('latin1')
+                self.log.debug(f'{db_key: 7d} {qual_str}')
+            itable -= 1
+        stop_marker = self.get_marker1(rewind=False)
 
     def read_extdb(self):
         r"""
@@ -2476,7 +2549,50 @@ class OP2Reader:
         #self.show(50)
         #raise NotImplementedError(op2.table_name)
 
-    def read_r1tabrg(self, data, ndata):
+    def read_r1tabrg(self):
+        """Reads the R1TABRG design response optimization table"""
+        op2 = self.op2
+
+        # TODO: I think this is used to handle optimization
+        op2._count += 1
+
+        op2.table_name = self._read_table_name(rewind=False)
+        self.read_markers([-1])
+
+        read_record_ndata = self.get_skip_read_record_ndata()
+
+        # (101, 221355, 0, 0, 0, 0, 0)
+        # (???, nvalues,?, ?, ?, ?, ?)
+        data = self._read_record()
+        unused_nvalues = unpack(self._endian + b'7i', data)[1]
+        #self.show_data(data, types='i', endian=None)
+
+        #'R1TAB   '
+        self.read_3_markers([-2, 1, 0])
+        data, ndata = read_record_ndata()
+        assert ndata == 8, ndata
+
+        itable = -3
+        while 1:
+            self.read_3_markers([itable, 1, 0])
+            stop_marker = self.get_marker1(rewind=True)
+            if stop_marker == 0:
+                break
+
+            data, ndata = read_record_ndata()
+            self._read_r1tabrg(data, ndata)
+            itable -= 1
+        stop_marker = self.get_marker1(rewind=False)
+
+    def get_skip_read_record_ndata(self):
+        """selects the read_record or skip_record depending on read_mode"""
+        if self.read_mode == 1:
+            read_record_ndata = self._read_record_ndata
+        else:
+            read_record_ndata = self._skip_record_ndata
+        return read_record_ndata
+
+    def _read_r1tabrg(self, data, ndata):
         """
         Design Responses:
           - Weight
@@ -2487,14 +2603,6 @@ class OP2Reader:
 
         """
         op2 = self.op2
-        if op2._table4_count == 0:
-            op2._count += 1
-        op2._table4_count += 1
-
-        #if op2._table4_count == 0:
-            #op2._count += 1
-        #op2._table4_count += 1
-
         result_name = 'responses'
         if op2._results.is_not_saved(result_name):
             return ndata

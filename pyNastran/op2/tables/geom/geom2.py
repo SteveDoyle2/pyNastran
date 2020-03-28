@@ -2668,7 +2668,7 @@ class GEOM2(GeomCommon):
             s1 = s0 + 8
             entity = data[s0:s1].decode('latin1').rstrip()
             eids = ints[i0+5:ispliti]
-            assert entity in ['FEEDGE', 'GRID', 'GMCURV'], f'entity={repr(entity)}'
+            assert entity in ['FEEDGE', 'GRID', 'GMCURV'], f'entity={entity!r}'
             #print(eids)
             i0 = ispliti + 1
 

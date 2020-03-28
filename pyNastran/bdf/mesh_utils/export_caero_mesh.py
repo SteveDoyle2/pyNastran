@@ -114,7 +114,7 @@ def _get_subpanel_property(model: BDF, caero_id: int, eid: int, pid_method: str=
         caero = model.caeros[caero_id]
         pid = caero.pid
     else:  # pragma: no cover
-        raise RuntimeError('pid_method={repr(pid_method)} is not [aesurf, caero, paero]')
+        raise RuntimeError('pid_method={pid_method!r} is not [aesurf, caero, paero]')
 
     if pid is None:
         pid = 1

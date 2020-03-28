@@ -667,7 +667,6 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             #b'RANCONS': [self._table_passer, self._table_passer], # Constraint mode element strain energy table (ORGY1)
 
 
-            b'R1TABRG': [self._table_passer, self.op2_reader.read_r1tabrg],
             #b'TOL': [self._table_passer, self._table_passer],
 
             b'MATPOOL': [self._table_passer, self._table_passer], # DMIG bulk data entries

@@ -373,7 +373,7 @@ MSC_MATRIX_TABLES = [
 ] # type: List[bytes]
 
 MSC_RESULT_TABLES = [b'ASSIG', b'ASEPS'] + [
-    # ???
+    # Qualifier Information Table - which is what???
     b'QUALINFO',
 
     # new
@@ -422,6 +422,7 @@ MSC_RESULT_TABLES = [b'ASSIG', b'ASEPS'] + [
     b'OUG1', b'OAG1',
     b'OUGV1', b'BOUGV1', b'OUGV1PAT',
     b'OUPV1',
+    b'OUG1F',  #  I think this is
 
     # OUGV1PAT - Displacements in the basic coordinate system
     # OUGV1  - Output (O) Displacements (U) in the global/g-set (G)

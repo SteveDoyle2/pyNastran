@@ -1158,7 +1158,7 @@ class BDFAttributes:
             param = self.params[key]
             param.update_values(*values)
         else:
-            self.add_param(key, values, comment='')
+            self.add_param(key, values, comment=comment)
 
     def get_param(self, key: str, default: Union[int, float, str, List[float]]
                   ) -> Union[int, float, str, List[float]]:

@@ -503,7 +503,7 @@ class GEOM1(GeomCommon):
                 group_bytes = reshape_bytes_block(group_bytes)
             group = group_bytes.decode('latin1').rstrip()
             #print(curve_id, group, cid_in, cid_bc)
-            assert group in ['MSCGRP0', 'MSCGRP1', 'MSCGRP2'], f'GMCURV: curve_id={curve_id} group={repr(group)} cid_in={cid_in} cid_bc={cid_bc}'
+            assert group in ['MSCGRP0', 'MSCGRP1', 'MSCGRP2'], f'GMCURV: curve_id={curve_id} group={group!r} cid_in={cid_in} cid_bc={cid_bc}'
             n += ntotal1
 
             databi_bytes = data[n:n+size]
@@ -532,7 +532,7 @@ class GEOM1(GeomCommon):
             #s1 = s0 + 8
             #group = data[s0:s1].decode('latin1').rstrip()
             #print(curve_id, group, cid_in, cid_bc)
-            #assert group in ['MSCGRP1', 'MSCGRP2'], f'GMCURV: curve_id={curve_id} group={repr(group)} cid_in={cid_in} cid_bc={cid_bc}'
+            #assert group in ['MSCGRP1', 'MSCGRP2'], f'GMCURV: curve_id={curve_id} group={group!r} cid_in={cid_in} cid_bc={cid_bc}'
 
             #s2 = s1 + 8
             #s3 = 12 + iminus1i * 4
