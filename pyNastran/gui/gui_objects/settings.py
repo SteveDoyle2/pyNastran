@@ -81,10 +81,15 @@ class Settings:
         self.use_gradient_background = True
         self.background_color = GREY
         self.background_color2 = GREY
+
+        # TODO: what is an annotation color?
         self.annotation_color = BLACK
 
+        # text in the lower left corner
         self.text_size = TEXT_SIZE
         self.text_color = BLACK
+
+        # used for highlight actors
         self.highlight_color = ORANGE
         self.highlight_opacity = HIGHLIGHT_OPACITY
         self.highlight_point_size = HIGHLIGHT_POINT_SIZE

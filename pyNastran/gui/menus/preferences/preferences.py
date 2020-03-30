@@ -50,9 +50,14 @@ class PreferencesWindow(PyDialog):
         self._updated_preference = False
 
         self.dim_max = data['dim_max']
+
+        # font size for menu
         self._default_font_size = FONT_SIZE
         self._default_text_size = TEXT_SIZE
+
+        # an annotation is the marked/probe label
         self._default_annotation_size = ANNOTATION_SIZE
+
         self._default_coord_scale = COORD_SCALE * 100. # * self.dim_max
         self._default_coord_text_scale = COORD_TEXT_SCALE * 100. # * self.dim_max
         self._default_clipping_min = data['min_clip']
@@ -677,7 +682,7 @@ class PreferencesWindow(PyDialog):
         return passed, rgb_color_ints, rgb_color_floats
 
     def on_text_color(self):
-        """ Choose a text color """
+        """Choose a text color"""
         rgb_color_ints = self.text_color_int
         title = "Choose a text color"
         passed, rgb_color_ints, rgb_color_floats = self.on_color(

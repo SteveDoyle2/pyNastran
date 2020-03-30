@@ -357,7 +357,8 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
                 # picking
                 ('area_pick', 'Area Pick', 'tarea_pick.png', None, 'Get a list of nodes/elements', self.mouse_actions.on_area_pick),
                 ('highlight', 'Highlight', 'thighlight.png', None, 'Highlight a list of nodes/elements', self.mouse_actions.on_highlight),
-                ('highlight_nodes_elements', 'Highlight', 'thighlight.png', None, 'Highlight a list of nodes/elements', self.highlight_obj.set_highlight_menu),
+                ('highlight_nodes_elements', 'Highlight', 'thighlight.png', None, 'Highlight a list of nodes/elements', self.highlight_obj.set_menu),
+                ('mark_nodes_elements', 'Mark', 'tmark.png', None, 'Mark a list of nodes/elements', self.mark_obj.set_menu),
             ]
 
         if 'nastran' in self.fmts:
@@ -462,7 +463,7 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
             'rotate_clockwise', 'rotate_cclockwise',
             'rotation_center', 'measure_distance', 'probe_result',
             #'highlight_cell', 'highlight_node',
-            'area_pick', 'highlight_nodes_elements',
+            'area_pick', 'highlight_nodes_elements', 'mark_nodes_elements',
             'wireframe', 'surface', 'edges']
         toolbar_tools += [
             'camera_reset', 'view', 'screenshot', 'min', 'max', 'map_element_fringe',

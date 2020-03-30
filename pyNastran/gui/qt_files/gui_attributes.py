@@ -30,7 +30,7 @@ from pyNastran.gui.qt_files.load_actions import LoadActions
 from pyNastran.gui.qt_files.mark_actions import MarkActions
 
 from pyNastran.gui.menus.legend.legend_object import LegendObject
-from pyNastran.gui.menus.highlight.highlight_object import HighlightObject
+from pyNastran.gui.menus.highlight.highlight_object import HighlightObject, MarkObject
 from pyNastran.gui.menus.preferences.preferences_object import PreferencesObject
 if IS_MATPLOTLIB:
     from pyNastran.gui.menus.cutting_plane.cutting_plane_object import CuttingPlaneObject
@@ -109,6 +109,7 @@ class GuiAttributes:
         self.camera_obj = CameraObject(self)
         self.clipping_obj = ClippingObject(self)
         self.highlight_obj = HighlightObject(self)
+        self.mark_obj = MarkObject(self)
         self.preferences_obj = PreferencesObject(self)
         if IS_MATPLOTLIB:
             self.cutting_plane_obj = CuttingPlaneObject(self)
@@ -1182,6 +1183,7 @@ class GuiAttributes:
         self.legend_obj.set_font_size(font_size)
         self.camera_obj.set_font_size(font_size)
         self.highlight_obj.set_font_size(font_size)
+        self.mark_obj.set_font_size(font_size)
         self.clipping_obj.set_font_size(font_size)
         if self._modify_groups_window_shown:
             self._modify_groups_window.set_font_size(font_size)

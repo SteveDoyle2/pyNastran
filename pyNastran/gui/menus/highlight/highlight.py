@@ -10,7 +10,7 @@ import numpy as np
 from qtpy import QtGui
 from qtpy.QtWidgets import (
     QLabel, QPushButton, QGridLayout, QApplication, QHBoxLayout, QVBoxLayout,
-    QSpinBox, QDoubleSpinBox, QColorDialog, QCheckBox)
+    QSpinBox, QDoubleSpinBox, QColorDialog) # QCheckBox
 import vtk
 from vtk.util.numpy_support import vtk_to_numpy
 
@@ -26,6 +26,7 @@ from pyNastran.gui.styles.highlight_style import (
     #create_vtk_selection_node_by_point_ids,
     #create_surface_actor_from_grid_and_cell_ids,
 )
+from pyNastran.gui.gui_objects.settings import Settings, ANNOTATION_SIZE
 from pyNastran.gui.utils.vtk.vtk_utils import (
     extract_selection_node_from_grid_to_ugrid,
     create_unstructured_point_grid, numpy_to_vtk_points, numpy_to_vtk)
@@ -43,33 +44,35 @@ class HighlightWindow(PyDialog):
     |     Highlight Close      |
     +--------------------------+
     """
-    def __init__(self, data, win_parent=None):
+    def __init__(self, data, menu_type, win_parent=None):
         """
         Saves the data members from data and
         performs type checks
         """
         PyDialog.__init__(self, data, win_parent)
         gui = win_parent
+        self.menu_type = menu_type
 
+        self._default_annotation_size = ANNOTATION_SIZE
         if gui is None:  # pragma: no cover
             self.highlight_color_float = [0., 0., 0.]
             self.highlight_color_int = [0, 0, 0]
             self._highlight_opacity = 0.9
             self._point_size = 10
             self._label_size = 10.0
-            self._default_text_size = 10.0
         else:
-            #self.highlight_color_float = gui.settings.highlight_color
-            #self.highlight_color_int = [int(val) for val in self.highlight_color_float]
+            settings = gui.settings # type: Settings
             self.highlight_color_float, self.highlight_color_int = check_color(
-                gui.settings.highlight_color)
+                settings.highlight_color)
 
-            #self.highlight_color_int = gui.settings.highlight_color_int
-            self._highlight_opacity = gui.settings.highlight_opacity
+            self._highlight_opacity = settings.highlight_opacity
+
+            self._point_size = settings.highlight_point_size
+            self._line_thickness = settings.highlight_line_thickness
+
             self._point_size = 10
-            self._label_size = 10.0
-            self._default_text_size = 10.0
-        self._updated_highlight = False
+            self._annotation_size = settings.annotation_size
+        self._updated_window = False
 
         self.actors = []
         self._default_font_size = data['font_size']
@@ -96,7 +99,13 @@ class HighlightWindow(PyDialog):
         self._nodes_pound = nodes_pound
         self._elements_pound = elements_pound
 
-        self.setWindowTitle('Highlight')
+        if self.menu_type == 'highlight':
+            self.setWindowTitle('Highlight')
+        elif self.menu_type == 'mark':
+            self.setWindowTitle('Mark')
+        else:
+            raise NotImplementedError(self.menu_type)
+
         self.create_widgets()
         self.create_layout()
         self.set_connections()
@@ -108,45 +117,52 @@ class HighlightWindow(PyDialog):
         # Text Size
 
         model_name = self.model_name
-        self.nodes_label = QLabel("Nodes:")
+        self.nodes_label = QLabel('Nodes:')
         self.nodes_edit = QNodeEdit(self, model_name, pick_style='area',
                                     cleanup=True, tab_to_next=False)
 
-        self.elements_label = QLabel("Elements:")
+        self.elements_label = QLabel('Elements:')
         self.elements_edit = QElementEdit(self, model_name, pick_style='area',
                                           cleanup=True, tab_to_next=False)
 
         #-----------------------------------------------------------------------
         # Highlight Color
-        self.highlight_opacity_label = QLabel("Highlight Opacity:")
-        self.highlight_opacity_edit = QDoubleSpinBox(self)
-        self.highlight_opacity_edit.setValue(self._highlight_opacity)
-        self.highlight_opacity_edit.setRange(0.1, 1.0)
-        self.highlight_opacity_edit.setDecimals(1)
-        self.highlight_opacity_edit.setSingleStep(0.1)
-        self.highlight_opacity_button = QPushButton("Default")
+        if self.menu_type == 'highlight':
+            self.highlight_opacity_label = QLabel('Highlight Opacity:')
+            self.highlight_opacity_edit = QDoubleSpinBox(self)
+            self.highlight_opacity_edit.setValue(self._highlight_opacity)
+            self.highlight_opacity_edit.setRange(0.1, 1.0)
+            self.highlight_opacity_edit.setDecimals(1)
+            self.highlight_opacity_edit.setSingleStep(0.1)
+            self.highlight_opacity_button = QPushButton('Default')
 
-        # Text Color
-        self.highlight_color_label = QLabel("Highlight Color:")
-        self.highlight_color_edit = QPushButtonColor(self.highlight_color_int)
+            # Text Color
+            self.highlight_color_label = QLabel('Highlight Color:')
+            self.highlight_color_edit = QPushButtonColor(self.highlight_color_int)
 
-        self.point_size_label = QLabel("Point Size:")
-        self.point_size_edit = QSpinBox(self)
-        self.point_size_edit.setValue(self._point_size)
-        self.point_size_edit.setRange(7, 30)
-        #self.point_size_button = QPushButton("Default")
-
-        self.label_size_label = QLabel("Label Size:")
-        self.label_size_edit = QSpinBox(self)
-        self.label_size_edit.setValue(self._default_text_size)
-        self.label_size_edit.setRange(7, 30)
-        #self.label_size_button = QPushButton("Default")
+            self.point_size_label = QLabel('Point Size:')
+            self.point_size_edit = QSpinBox(self)
+            self.point_size_edit.setValue(self._point_size)
+            self.point_size_edit.setRange(7, 30)
+            #self.point_size_button = QPushButton("Default")
+        elif self.menu_type == 'mark':
+            self.label_size_label = QLabel('Label Size:')
+            self.label_size_edit = QSpinBox(self)
+            self.label_size_edit.setValue(self._default_annotation_size)
+            self.label_size_edit.setRange(7, 30)
+            #self.label_size_button = QPushButton("Default")
+        else:
+            raise NotImplementedError(self.menu_type)
         #-----------------------------------------------------------------------
         # closing
-        self.show_button = QPushButton("Show")
-        self.mark_button = QCheckBox("Mark")
-        self.clear_button = QPushButton("Clear")
-        self.close_button = QPushButton("Close")
+        #if self.menu_type == 'highlight':
+        self.show_button = QPushButton('Show')
+        #elif self.menu_type == 'mark':
+            #self.mark_button = QCheckBox('Mark')
+        #else:
+            #raise NotImplementedError(self.menu_type)
+        self.clear_button = QPushButton('Clear')
+        self.close_button = QPushButton('Close')
 
     def create_layout(self):
         """displays the menu objects"""
@@ -161,41 +177,47 @@ class HighlightWindow(PyDialog):
         grid.addWidget(self.elements_edit, irow, 1)
         irow += 1
 
-        # TODO: enable me
-        grid.addWidget(self.highlight_color_label, irow, 0)
-        grid.addWidget(self.highlight_color_edit, irow, 1)
-        self.highlight_color_label.setEnabled(False)
-        self.highlight_color_edit.setEnabled(False)
-        irow += 1
+        if self.menu_type == 'highlight':
+            # TODO: enable me
+            grid.addWidget(self.highlight_color_label, irow, 0)
+            grid.addWidget(self.highlight_color_edit, irow, 1)
+            self.highlight_color_label.setEnabled(False)
+            self.highlight_color_edit.setEnabled(False)
+            irow += 1
 
-        # TODO: enable me
-        grid.addWidget(self.highlight_opacity_label, irow, 0)
-        grid.addWidget(self.highlight_opacity_edit, irow, 1)
-        self.highlight_opacity_label.setEnabled(False)
-        self.highlight_opacity_edit.setEnabled(False)
-        irow += 1
+            # TODO: enable me
+            grid.addWidget(self.highlight_opacity_label, irow, 0)
+            grid.addWidget(self.highlight_opacity_edit, irow, 1)
+            self.highlight_opacity_label.setEnabled(False)
+            self.highlight_opacity_edit.setEnabled(False)
+            irow += 1
 
-        # TODO: enable me
-        grid.addWidget(self.point_size_label, irow, 0)
-        grid.addWidget(self.point_size_edit, irow, 1)
-        self.point_size_label.setEnabled(False)
-        self.point_size_edit.setEnabled(False)
-        irow += 1
-
-        # TODO: enable me
-        grid.addWidget(self.label_size_label, irow, 0)
-        grid.addWidget(self.label_size_edit, irow, 1)
-        self.label_size_label.setEnabled(False)
-        self.label_size_edit.setEnabled(False)
-        irow += 1
-
-        self.mark_button.setEnabled(False)
+            # TODO: enable me
+            grid.addWidget(self.point_size_label, irow, 0)
+            grid.addWidget(self.point_size_edit, irow, 1)
+            self.point_size_label.setEnabled(False)
+            self.point_size_edit.setEnabled(False)
+            irow += 1
+        elif self.menu_type == 'mark':
+            # TODO: enable me
+            grid.addWidget(self.label_size_label, irow, 0)
+            grid.addWidget(self.label_size_edit, irow, 1)
+            #self.label_size_label.setEnabled(False)
+            #self.label_size_edit.setEnabled(False)
+            irow += 1
+            #self.mark_button.setEnabled(False)
+        else:
+            raise NotImplementedError(self.menu_type)
 
         #self.create_legend_widgets()
         #grid2 = self.create_legend_layout()
         ok_cancel_box = QHBoxLayout()
-        ok_cancel_box.addWidget(self.mark_button)
+        #if self.menu_type == 'highlight':
         ok_cancel_box.addWidget(self.show_button)
+        #elif self.menu_type == 'mark':
+            #ok_cancel_box.addWidget(self.mark_button)
+        #else:
+            #raise NotImplementedError(self.menu_type)
         ok_cancel_box.addWidget(self.clear_button)
         ok_cancel_box.addWidget(self.close_button)
 
@@ -210,14 +232,30 @@ class HighlightWindow(PyDialog):
 
     def set_connections(self):
         """creates the actions for the menu"""
+        if self.menu_type == 'highlight':
+            self._set_connections_highlight()
+        elif self.menu_type == 'mark':
+            self._set_connections_mark()
+        else:
+            raise NotImplementedError(self.menu_type)
+        self._set_connections_end()
+
+    def _set_connections_highlight(self):
+        """creates the actions for the menu"""
         self.highlight_color_edit.clicked.connect(self.on_highlight_color)
         self.highlight_opacity_edit.valueChanged.connect(self.on_highlight_opacity)
+        self.show_button.clicked.connect(self.on_show)
+
+    def _set_connections_mark(self):
+        """creates the actions for the menu"""
+        self.show_button.clicked.connect(self.on_show)
+
+    def _set_connections_end(self):
+        """creates the actions for the menu"""
         self.nodes_edit.textChanged.connect(self.on_validate)
         self.elements_edit.textChanged.connect(self.on_validate)
-        self.show_button.clicked.connect(self.on_show)
         self.clear_button.clicked.connect(self.on_remove_actors)
         self.close_button.clicked.connect(self.on_close)
-        # closeEvent
 
     def on_font(self, value=None):
         """update the font for the current window"""
@@ -237,8 +275,8 @@ class HighlightWindow(PyDialog):
         rgb_color_ints = self.highlight_color_int
         color_edit = self.highlight_color_edit
         func_name = 'set_highlight_color'
-        passed, rgb_color_ints, rgb_color_floats = self._background_color(
-            title, color_edit, rgb_color_ints, func_name)
+        passed, rgb_color_ints, rgb_color_floats = create_color_menu(
+            self, self.win_parent, title, color_edit, rgb_color_ints, func_name)
         if passed:
             self.highlight_color_int = rgb_color_ints
             self.highlight_color_float = rgb_color_floats
@@ -255,36 +293,6 @@ class HighlightWindow(PyDialog):
         if self.win_parent is not None:
             self.win_parent.settings.set_highlight_opacity(value)
 
-    def _background_color(self, title, color_edit, rgb_color_ints, func_name):
-        """helper method for ``on_background_color`` and ``on_background_color2``"""
-        passed, rgb_color_ints, rgb_color_floats = self.on_color(
-            color_edit, rgb_color_ints, title)
-        if passed:
-            if self.win_parent is not None:
-                settings = self.win_parent.settings
-                func_background_color = getattr(settings, func_name)
-                func_background_color(rgb_color_floats)
-        return passed, rgb_color_ints, rgb_color_floats
-
-    def on_color(self, color_edit, rgb_color_ints, title):
-        """pops a color dialog"""
-        col = QColorDialog.getColor(QtGui.QColor(*rgb_color_ints), self, title)
-        if not col.isValid():
-            return False, rgb_color_ints, None
-
-        color_float = col.getRgbF()[:3]  # floats
-        color_int = [int(colori * 255) for colori in color_float]
-
-        assert isinstance(color_float[0], float), color_float
-        assert isinstance(color_int[0], int), color_int
-
-        color_edit.setStyleSheet(
-            "QPushButton {"
-            "background-color: rgb(%s, %s, %s);" % tuple(color_int) +
-            #"border:1px solid rgb(255, 170, 255); "
-            "}")
-        return True, color_int, color_float
-
     #---------------------------------------------------------------------------
 
     def on_validate(self):
@@ -299,78 +307,95 @@ class HighlightWindow(PyDialog):
     def on_show(self):
         """show the highlight"""
         passed = self.on_validate()
+        if not passed or self.win_parent is None:
+            return passed
         self.parent().mouse_actions.get_grid_selected(self.model_name)
 
-        if passed and self.win_parent is not None:
-            nodes, unused_flag1 = check_patran_syntax(self.nodes_edit, pound=self._nodes_pound)
-            elements, unused_flag2 = check_patran_syntax(
-                self.elements_edit, pound=self._elements_pound)
-            if len(nodes) == 0 and len(elements) == 0:
-                return False
-            nodes_filtered = np.intersect1d(self.nodes, nodes)
-            elements_filtered = np.intersect1d(self.elements, elements)
-            nnodes = len(nodes_filtered)
-            nelements = len(elements_filtered)
-            if nnodes == 0 and nelements == 0:
-                return False
-            self.on_remove_actors()
+        nodes, unused_flag1 = check_patran_syntax(self.nodes_edit, pound=self._nodes_pound)
+        elements, unused_flag2 = check_patran_syntax(
+            self.elements_edit, pound=self._elements_pound)
+        if len(nodes) == 0 and len(elements) == 0:
+            return False
+        nodes_filtered = np.intersect1d(self.nodes, nodes)
+        elements_filtered = np.intersect1d(self.elements, elements)
+        nnodes = len(nodes_filtered)
+        nelements = len(elements_filtered)
+        if nnodes == 0 and nelements == 0:
+            return False
+        self.on_remove_actors()
 
 
-            gui = self.parent()
-            mouse_actions = gui.mouse_actions
-            grid = mouse_actions.get_grid_selected(self.model_name)
+        gui = self.parent()
+        mouse_actions = gui.mouse_actions
+        grid = mouse_actions.get_grid_selected(self.model_name)
 
-            actors = create_highlighted_actors(
-                gui, grid,
-                all_nodes=self.nodes, nodes=nodes_filtered, set_node_scalars=True,
-                all_elements=self.elements, elements=elements_filtered, set_element_scalars=True)
+        actors = create_highlighted_actors(
+            gui, grid,
+            all_nodes=self.nodes, nodes=nodes_filtered, set_node_scalars=True,
+            all_elements=self.elements, elements=elements_filtered, set_element_scalars=True,
+            add_actors=False)
 
-            iactor = 0
-            make_element_labels = True
-            make_node_labels = True
-            if make_node_labels and nnodes:
-                mapper = actors[iactor].GetMapper()
-                mygrid = mapper.GetInput()
+        #make_highlight = self.menu_type == 'highlight'
+        make_labels = self.menu_type == 'mark'
+        make_element_labels = True
+        make_node_labels = True
 
-                point_id_filter = get_ids_filter(
-                    mygrid, idsname='Ids_points', is_nids=True, is_eids=False)
-                point_id_filter.SetFieldData(1)
-                point_id_filter.SetPointIds(0)
-                point_id_filter.FieldDataOn()
+        if make_labels:
+            actors = self._save_mark_actors(gui, make_node_labels, make_element_labels,
+                                            nnodes, nelements, actors)
 
-                label_actor = create_node_labels(
-                    point_id_filter, mygrid, gui.rend, label_size=self._label_size)
-                actors.append(label_actor)
-                iactor += 1
-
-            if make_element_labels and nelements:
-                mapper = actors[iactor].GetMapper()
-                mygrid = mapper.GetInput()
-
-                element_id_filter = get_ids_filter(
-                    mygrid, idsname='Ids_cells', is_nids=False, is_eids=True)
-                element_id_filter.SetFieldData(1)
-                element_id_filter.SetCellIds(0)
-                element_id_filter.FieldDataOn()
-
-                # Create labels for cells
-                cell_centers = vtk.vtkCellCenters()
-                cell_centers.SetInputConnection(element_id_filter.GetOutputPort())
-
-                cell_mapper = vtk.vtkLabeledDataMapper()
-                cell_mapper.SetInputConnection(cell_centers.GetOutputPort())
-                cell_mapper.SetLabelModeToLabelScalars()
-
-                label_actor = vtk.vtkActor2D()
-                label_actor.SetMapper(cell_mapper)
-
-                actors.append(label_actor)
-                iactor += 1
-
-            if actors:
-                add_actors_to_gui(gui, actors, render=True)
-                self.actors = actors
+        if actors:
+            add_actors_to_gui(gui, actors, render=True)
+            self.actors = actors
+        gui.Render()
         return passed
+
+    def _save_mark_actors(self, gui, make_node_labels, make_element_labels,
+                          nnodes, nelements, actors):
+        """replace the actors with labels"""
+        iactor = 0
+        actors2 = []
+        if make_node_labels and nnodes:
+            mapper = actors[iactor].GetMapper()
+            mygrid = mapper.GetInput()
+
+            point_id_filter = get_ids_filter(
+                mygrid, idsname='Ids_points', is_nids=True, is_eids=False)
+            point_id_filter.SetFieldData(1)
+            point_id_filter.SetPointIds(0)
+            point_id_filter.FieldDataOn()
+
+            label_actor = create_node_labels(
+                point_id_filter, mygrid, gui.rend, label_size=self._annotation_size)
+            #actors.append(label_actor)
+            actors2.append(label_actor)
+            iactor += 1
+
+        if make_element_labels and nelements:
+            mapper = actors[iactor].GetMapper()
+            mygrid = mapper.GetInput()
+
+            element_id_filter = get_ids_filter(
+                mygrid, idsname='Ids_cells', is_nids=False, is_eids=True)
+            element_id_filter.SetFieldData(1)
+            element_id_filter.SetCellIds(0)
+            element_id_filter.FieldDataOn()
+
+            # Create labels for cells
+            cell_centers = vtk.vtkCellCenters()
+            cell_centers.SetInputConnection(element_id_filter.GetOutputPort())
+
+            cell_mapper = vtk.vtkLabeledDataMapper()
+            cell_mapper.SetInputConnection(cell_centers.GetOutputPort())
+            cell_mapper.SetLabelModeToLabelScalars()
+
+            label_actor = vtk.vtkActor2D()
+            label_actor.SetMapper(cell_mapper)
+
+            #actors.append(label_actor)
+            actors2.append(label_actor)
+            iactor += 1
+        return actors2
 
     def on_remove_actors(self):
         """removes multiple vtk actors"""
@@ -381,13 +406,19 @@ class HighlightWindow(PyDialog):
             if self.elements_edit.style is not None:
                 self.elements_edit.style.remove_actors()
             remove_actors_from_gui(gui, self.actors, render=True, force_render=True)
+            gui.Render()
         self.actors = []
+
+    def closeEvent(self, unused_event):
+        """close the window"""
+        self.on_close()
 
     def on_close(self):
         """close the window"""
         self.on_remove_actors()
         self.out_data['close'] = True
         self.close()
+
 
 def create_node_labels(point_id_filter: vtk.vtkIdFilter,
                        grid: vtk.vtkUnstructuredGrid, rend: vtk.vtkRenderer,
@@ -470,6 +501,37 @@ def check_float(cell):
     value = float(text)
     return value, True
 
+def create_color_menu(parent, win_parent, title, color_edit, rgb_color_ints, func_name):
+    """helper method for ``on_background_color`` and ``on_background_color2``"""
+    passed, rgb_color_ints, rgb_color_floats = _pop_color_dialog(
+        parent, color_edit, rgb_color_ints, title)
+    if passed:
+        if win_parent is not None:
+            settings = win_parent.settings
+            func_background_color = getattr(settings, func_name)
+            func_background_color(rgb_color_floats)
+    return passed, rgb_color_ints, rgb_color_floats
+
+def _pop_color_dialog(parent, color_edit, rgb_color_ints, title):
+    """pops a color dialog"""
+    col = QColorDialog.getColor(QtGui.QColor(*rgb_color_ints), parent, title)
+    if not col.isValid():
+        return False, rgb_color_ints, None
+
+    color_float = col.getRgbF()[:3]  # floats
+    color_int = [int(colori * 255) for colori in color_float]
+
+    assert isinstance(color_float[0], float), color_float
+    assert isinstance(color_int[0], int), color_int
+
+    color_edit.setStyleSheet(
+        "QPushButton {"
+        "background-color: rgb(%s, %s, %s);" % tuple(color_int) +
+        #"border:1px solid rgb(255, 170, 255); "
+        "}")
+    return True, color_int, color_float
+
+
 #def check_label_float(cell):
     #text = cell.text()
     #try:
@@ -499,7 +561,8 @@ def main():  # pragma: no cover
         'nodes_pound' : 100,
         'elements_pound' : 200,
     }
-    main_window = HighlightWindow(data)
+    #main_window = HighlightWindow(data, menu_type='highlight')
+    main_window = HighlightWindow(data, menu_type='mark')
     main_window.show()
     # Enter the main loop
     app.exec_()

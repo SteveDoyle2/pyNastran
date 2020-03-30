@@ -2564,13 +2564,15 @@ class OP2Reader:
         # (101, 221355, 0, 0, 0, 0, 0)
         # (???, nvalues,?, ?, ?, ?, ?)
         data = self._read_record()
-        unused_nvalues = unpack(self._endian + b'7i', data)[1]
+        values = unpack(mapfmt(self._endian + b'7i', self.size), data)
+        unused_nvalues = values[1]
+        #print(values)
         #self.show_data(data, types='i', endian=None)
 
         #'R1TAB   '
         self.read_3_markers([-2, 1, 0])
         data, ndata = read_record_ndata()
-        assert ndata == 8, ndata
+        assert ndata == 8 * self.factor, ndata
 
         itable = -3
         while 1:
