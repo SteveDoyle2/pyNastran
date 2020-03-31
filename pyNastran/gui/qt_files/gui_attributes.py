@@ -32,9 +32,11 @@ from pyNastran.gui.qt_files.mark_actions import MarkActions
 from pyNastran.gui.menus.legend.legend_object import LegendObject
 from pyNastran.gui.menus.highlight.highlight_object import HighlightObject, MarkObject
 from pyNastran.gui.menus.preferences.preferences_object import PreferencesObject
+IS_CUTTING_PLANE = False
 if IS_MATPLOTLIB:
     from pyNastran.gui.menus.cutting_plane.cutting_plane_object import CuttingPlaneObject
     from pyNastran.gui.menus.cutting_plane.shear_moment_torque_object import ShearMomentTorqueObject
+    IS_CUTTING_PLANE = True
 from pyNastran.gui.menus.clipping.clipping_object import ClippingObject
 from pyNastran.gui.menus.camera.camera_object import CameraObject
 from pyNastran.gui.menus.edit_geometry_properties.edit_geometry_properties_object import (
