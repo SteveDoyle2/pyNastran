@@ -279,6 +279,9 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
     def create_nastran_tools_menu(self, gui):
         #if 'dev' not in __version__:
             #return
+        if not hasattr(self, 'shear_moment_torque_obj'):
+            return
+
         tools = [
             #('script', 'Run Python Script...', 'python48.png', None, 'Runs pyNastranGUI in batch mode', self.on_run_script),
             ('shear_moment_torque', 'Shear, Moment, Torque...', 'python48.png', None,

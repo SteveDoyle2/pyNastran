@@ -25,6 +25,7 @@ class Results:
         self.no = NumberOfCrossingsObjects()
         self.crm = CumulativeRootMeansSquareObjects()
 
+        self.acoustic = Acoustic()
         self.modal_contribution = ModalContribution()
         self.solution_set = SolutionSet()
         self.strength_ratio = StrengthRatio()
@@ -80,6 +81,7 @@ class Results:
 
     def get_sum_objects(self):
         sum_objs = [
+            self.acoustic,
             self.responses,
             self.force, self.thermal_load,
             self.stress, self.strain, self.strain_energy,
@@ -114,6 +116,15 @@ class SolutionSet:
         ]
         return ['solution_set.' + table for table in tables]
 
+class Acoustic:
+    def __init__(self):
+        self.displacements = {}
+
+    def get_table_types(self):
+        tables = [
+            'displacements',
+        ]
+        return ['acoustic.' + table for table in tables]
 
 class ModalContribution:
     def __init__(self):

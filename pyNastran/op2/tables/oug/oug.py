@@ -446,7 +446,8 @@ class OUG(OP2Common):
                                    b'OUG1',
                                    b'BOUGV1',
                                    b'TOUGV1',
-                                   b'OUPV1']:
+                                   b'OUPV1', b'OUG1F']:
+                # OUG1F - acoustic displacements?
                 #msg = 'table_name=%s table_code=%s' % (self.table_name, self.table_code)
                 #raise AssertionError(msg)
                 n = self._read_oug_displacement(data, ndata, is_cid=False)
@@ -524,6 +525,21 @@ class OUG(OP2Common):
             self.subcase.add_op2_data(self.data_code, word, self.log)
 
     def _read_oug_displacement(self, data, ndata, is_cid):
+        """
+        Table     Description
+        -----     -----------
+        OUG1      displacements in the global? frame
+        OUGV1/2   displacements in the global frame
+        OUGV1PAT  displacements in the global? frame
+        BOUGV1    displacments in the basic frame
+        ROUGV1/2  relative displacments in the global frame
+        OUPV1     ???
+        OUXY1/2   eigenvectors in the basic frame
+        TOUGV1/2  temperature
+        OCRUG     ???
+        OUG1F     acoustic displacements
+
+        """
         self._setup_op2_subcase('displacement')
 
         if self.table_name in [b'ROUGV1', b'ROUGV2']:
@@ -531,6 +547,7 @@ class OUG(OP2Common):
             result_name = 'displacements_ROUGV1'
 
         elif self.table_name in [b'OUG1', b'OUGV1', b'OUGV2', b'OUGV1PAT', b'BOUGV1']:
+            # OUG1F - acoustic displacements
             assert self.thermal in [0, 1], self.code_information()
             # NX THERMAL
             # 1: heat transfer
@@ -547,7 +564,7 @@ class OUG(OP2Common):
         elif self.table_name in [b'OUXY1', b'OUXY2']:
             assert self.thermal == 0, self.code_information()
             result_name = 'solution_set.displacements'
-        elif self.table_name in [b'OUPV1']:
+        elif self.table_name == b'OUPV1':
             #result_name = 'temperatures'
             assert self.thermal in [2, 4, 8], self.code_information()
             if self.thermal == 2:
@@ -566,6 +583,9 @@ class OUG(OP2Common):
         elif self.table_name in [b'OCRUG']:
             result_name = 'displacements'
             assert self.thermal == 0, self.code_information()
+        elif self.table_name in [b'OUG1F']:
+            result_name = 'acoustic.displacements'  # acoustic displacements
+            assert self.thermal == 0, self.code_information()
         else:  # pragma: no cover
             msg = 'displacements; table_name=%s' % self.table_name
             raise NotImplementedError(msg)
@@ -578,7 +598,8 @@ class OUG(OP2Common):
             #result_name = 'displacements'
             #storage_obj = self.displacements
             assert self.table_name in [b'BOUGV1', b'ROUGV1', b'ROUGV2', b'OUGV1', b'OUGV2',
-                                       b'OUG1', b'OCRUG', b'OUGV1PAT', b'OUXY1', b'OUXY2'], self.table_name
+                                       b'OUG1', b'OCRUG', b'OUGV1PAT', b'OUXY1', b'OUXY2',
+                                       b'OUG1F'], self.table_name
             n = self._read_table_vectorized(data, ndata, result_name, storage_obj,
                                             RealDisplacementArray, ComplexDisplacementArray,
                                             'node', random_code=self.random_code,

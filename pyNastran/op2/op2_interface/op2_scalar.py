@@ -858,6 +858,8 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             # OVG1?
             b'OAG1'    : [self._read_oug1_3, self._read_oug_4],  # accelerations in nodal frame
 
+            b'OUG1F'    : [self._read_oug1_3, self._read_oug_4],  # acoustic displacements in ? frame
+
             b'OUGV1'   : [self._read_oug1_3, self._read_oug_4],  # displacements in nodal frame
             b'BOUGV1'  : [self._read_oug1_3, self._read_oug_4],  # OUG1 on the boundary???
             b'OUGV1PAT': [self._read_oug1_3, self._read_oug_4],  # OUG1 + coord ID

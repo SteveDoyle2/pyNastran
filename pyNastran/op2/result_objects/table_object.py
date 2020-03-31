@@ -83,6 +83,12 @@ SORT2_TABLE_NAME_MAP = {
     'OPNL2' : 'OPNL1',
     'OUXY2' : 'OUXY1',
 }
+SORT1_TABLES = list(SORT2_TABLE_NAME_MAP.values())
+SORT1_TABLES.extend([
+    'OUG1F',
+])
+SORT2_TABLES = list(SORT2_TABLE_NAME_MAP.keys())
+
 table_name_to_table_code = {
     # displacement (msc/nx)
     'OUGV1' : 1,
@@ -681,7 +687,7 @@ class TableArray(ScalarObject):  # displacement style table
             #return
         if self.is_sort1:
             return
-        #print('table_name=%r' % self.table_name)
+        print('set_as_sort1: table_name=%r' % self.table_name)
         try:
             analysis_method = self.analysis_method
         except AttributeError:
@@ -1373,8 +1379,9 @@ class ComplexTableArray(TableArray):
             header.append('')
 
         #is_sort1_table = self.is_sort1
-        is_sort1_table = self.table_name[-1] == '1'
+        is_sort1_table = SORT1_TABLES # self.table_name[-1] == '1'
         if is_sort1_table:
+            assert self.table_name in SORT1_TABLES, self.table_name
             if is_sort1:
                 words += [' \n', '      POINT ID.   TYPE          T1             T2             T3             R1             R2             R3\n']
                 page_num = self.write_sort1_as_sort1(f06_file, page_num, page_stamp, header, words, is_mag_phase)
@@ -1382,6 +1389,7 @@ class ComplexTableArray(TableArray):
                 words += [' \n', '      FREQUENCY   TYPE          T1             T2             T3             R1             R2             R3\n']
                 page_num = self.write_sort1_as_sort2(f06_file, page_num, page_stamp, header, words, is_mag_phase)
         else:
+            assert self.table_name in SORT2_TABLES, self.table_name
             words += [' \n', '      FREQUENCY   TYPE          T1             T2             T3             R1             R2             R3\n']
             page_num = self.write_sort2_as_sort2(f06_file, page_num, page_stamp, header, words, is_mag_phase)
         return page_num - 1
@@ -1485,6 +1493,51 @@ class ComplexTableArray(TableArray):
             f06_file.write(page_stamp % page_num)
             page_num += 1
         return page_num
+
+    #def write_sort2_as_sort2(self, f06_file, page_num, page_stamp, header, words, is_mag_phase):
+        #"""TODO: not validated"""
+        #node = self.node_gridtype[:, 0]
+        #gridtype = self.node_gridtype[:, 1]
+
+        #times = self._times
+        ## print(self.data.shape)
+        #for inode, (node_id, gridtypei) in enumerate(zip(node, gridtype)):
+            ## TODO: for SORT1 pretending to be SORT2
+            ##t1 = self.data[:, inode, 0].ravel()
+            #t1 = self.data[:, inode, 0].ravel()
+            #t2 = self.data[:, inode, 1].ravel()
+            #t3 = self.data[:, inode, 2].ravel()
+            #r1 = self.data[:, inode, 3].ravel()
+            #r2 = self.data[:, inode, 4].ravel()
+            #r3 = self.data[:, inode, 5].ravel()
+            #if len(r3) != len(times):
+                #raise RuntimeError('len(d)=%s len(times)=%s' % (len(r3), len(times)))
+
+            #header[2] = ' POINT-ID = %10i\n' % node_id
+            #f06_file.write(''.join(header + words))
+            #for dt, t1i, t2i, t3i, r1i, r2i, r3i in zip(times, t1, t2, t3, r1, r2, r3):
+                #sgridtype = self.recast_gridtype_as_string(gridtypei)
+                #vals = [t1i, t2i, t3i, r1i, r2i, r3i]
+                #vals2 = write_imag_floats_13e(vals, is_mag_phase)
+                #[dxr, dyr, dzr, rxr, ryr, rzr,
+                 #dxi, dyi, dzi, rxi, ryi, rzi] = vals2
+                #sdt = write_float_12e(dt)
+                ##if not is_all_zeros:
+                #if sgridtype == 'G':
+                    #f06_file.write('0 %12s %6s     %-13s  %-13s  %-13s  %-13s  %-13s  %-s\n'
+                                   #'  %13s %6s     %-13s  %-13s  %-13s  %-13s  %-13s  %-s\n' % (
+                                       #sdt, sgridtype, dxr, dyr, dzr, rxr, ryr, rzr,
+                                       #'', '', dxi, dyi, dzi, rxi, ryi, rzi))
+                #elif sgridtype in ['S', 'M', 'E']:
+                    #f06_file.write('0 %12s %6s     %-13s\n'
+                                   #'  %12s %6s     %-13s\n' % (sdt, sgridtype, dxr, '', '', dxi))
+                #else:
+                    #msg = 'nid=%s dt=%s type=%s dx=%s dy=%s dz=%s rx=%s ry=%s rz=%s' % (
+                        #node_id, dt, sgridtype, t1i, t2i, t3i, r1i, r2i, r3i)
+                    #raise NotImplementedError(msg)
+            #f06_file.write(page_stamp % page_num)
+            #page_num += 1
+        #return page_num
 
     def write_op2(self, op2_file, fascii, itable, new_result,
                   date, is_mag_phase=False, endian='>'):
