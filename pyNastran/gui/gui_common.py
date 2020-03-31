@@ -28,6 +28,7 @@ from .qt_files.QVTKRenderWindowInteractor import QVTKRenderWindowInteractor
 from pyNastran.utils import check_path
 from pyNastran.utils.numpy_utils import integer_types
 
+from .qt_files.gui_attributes import IS_MATPLOTLIB, IS_CUTTING_PLANE
 from .qt_files.gui_vtk_common import GuiVTKCommon
 from .qt_files.scalar_bar import ScalarBar
 
@@ -278,7 +279,6 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
                 ('animation', 'Create Animation...', 'animation.png', 'CTRL+A', 'Create Animation', self.legend_obj.set_animation_menu),
                 ('clipping', 'Set Clipping...', '', None, 'Set Clipping', self.clipping_obj.set_clipping_menu),
                 ('set_preferences', 'Preferences...', 'preferences.png', 'CTRL+P', 'Set GUI Preferences', self.preferences_obj.set_preferences_menu),
-                ('cutting_plane', 'Cutting Plane...', 'cutting_plane.png', None, 'Create Cutting Plane', self.cutting_plane_obj.set_cutting_plane_menu),
                 ('geo_properties', 'Edit Geometry Properties...', '', 'CTRL+E', 'Change Model Color/Opacity/Line Width', self.edit_geometry_properties_obj.edit_geometry_properties),
                 ('map_element_fringe', 'Map Element Fringe', '', 'CTRL+F', 'Map Elemental Centroidal Fringe Result to Nodes', self.map_element_centroid_to_node_fringe_result),
 
@@ -360,6 +360,9 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
                 ('highlight_nodes_elements', 'Highlight', 'thighlight.png', None, 'Highlight a list of nodes/elements', self.highlight_obj.set_menu),
                 ('mark_nodes_elements', 'Mark', 'tmark.png', None, 'Mark a list of nodes/elements', self.mark_obj.set_menu),
             ]
+
+        if IS_MATPLOTLIB and IS_CUTTING_PLANE:
+            tools.append(('cutting_plane', 'Cutting Plane...', 'cutting_plane.png', None, 'Create Cutting Plane', self.cutting_plane_obj.set_cutting_plane_menu))
 
         if 'nastran' in self.fmts:
             tools += [

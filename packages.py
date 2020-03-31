@@ -211,7 +211,9 @@ def get_package_requirements(is_gui=True, add_vtk_qt=True, python_version=None):
                 print("qtpy.__version__ = %r < '1.4.0'" % qtpy.__version__)
                 all_reqs['qtpy'] = '>= 1.4.0'
                 install_requires.append('qtpy >= 1.4.0')
-        except ImportError:
+        #except ImportError:  # also PythonQtError
+        except: # ImportError, PythonQtError
+            # how do you import PythonQtError?
             all_reqs['qtpy'] = '>= 1.4.0'
             install_requires.append('qtpy >= 1.4.0')  # 1.9.0 used
 
