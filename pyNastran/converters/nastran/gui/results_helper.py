@@ -82,6 +82,14 @@ class NastranGuiResults(NastranGuiAttributes):
             self.xyz_cid0,
             nnodes, node_ids, log, dim_max=self.gui.settings.dim_max)
 
+        icase = _fill_nastran_displacements(
+            cases, model, key, icase,
+            form_dict, header_dict, keys_map,
+            self.xyz_cid0,
+            nnodes, node_ids, log, dim_max=self.gui.settings.dim_max,
+            prefix='acoustic',
+        )
+
         icase = _fill_nastran_temperatures(
             cases, model, key, icase,
             form_dict, header_dict, keys_map,
@@ -1072,26 +1080,35 @@ def fill_responses(cases, model: OP2, icase):
 def _fill_nastran_displacements(cases, model: OP2, key, icase: int,
                                 form_dict, header_dict, keys_map,
                                 xyz_cid0,
-                                nnodes: int, node_ids, log, dim_max: float=1.0) -> int:
+                                nnodes: int, node_ids, log, dim_max: float=1.0,
+                                prefix: str='') -> int:
     """
     loads the nodal dispalcements/velocity/acceleration/eigenvector/spc/mpc forces
     """
-    displacement_like = [
-        # slot, name, deflects
+    if prefix == 'acoustic':
+        results = model.op2_results.acoustic
+        displacement_like = [
+            (results.displacements, 'Acoustic Displacement', True),
+        ]
+    elif prefix == '':
+        displacement_like = [
+            # slot, name, deflects
 
-        # TODO: what is a velocity/acceleration?
-        #       is it a fringe, displacement, force?
-        (model.displacements, 'Displacement', True),
-        (model.velocities, 'Velocity', False),
-        (model.accelerations, 'Acceleration', False),
-        (model.eigenvectors, 'Eigenvectors', True),
-        (model.spc_forces, 'SPC Forces', False),
-        (model.mpc_forces, 'MPC Forces', False),
+            # TODO: what is a velocity/acceleration?
+            #       is it a fringe, displacement, force?
+            (model.displacements, 'Displacement', True),
+            (model.velocities, 'Velocity', False),
+            (model.accelerations, 'Acceleration', False),
+            (model.eigenvectors, 'Eigenvectors', True),
+            (model.spc_forces, 'SPC Forces', False),
+            (model.mpc_forces, 'MPC Forces', False),
 
-        (model.load_vectors, 'LoadVectors', False),
-        (model.applied_loads, 'AppliedLoads', False),
-        (model.force_vectors, 'ForceVectors', False),
-    ]
+            (model.load_vectors, 'LoadVectors', False),
+            (model.applied_loads, 'AppliedLoads', False),
+            (model.force_vectors, 'ForceVectors', False),
+        ]
+    else:  # pragma: no cover
+        raise NotImplementedError(prefix)
 
     for (result, name, deflects) in displacement_like:
         if key not in result:

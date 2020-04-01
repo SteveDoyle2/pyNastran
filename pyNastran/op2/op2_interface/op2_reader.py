@@ -246,12 +246,17 @@ class OP2Reader:
                 op2.post = -2
         else:
             raise NotImplementedError(markers)
+
         if op2._nastran_format == 'autodesk':
             op2.post = -4
             mode = 'autodesk'
         elif op2._nastran_format == 'nasa95':
             op2.post = -4
             mode = 'nasa95'
+        elif isinstance(op2._nastran_format, str):
+            if op2._nastran_format not in ['msc', 'nx', 'optistruct']:
+                raise RuntimeError(f'nastran_format={op2._nastran_format} mode={mode} and must be "msc", "nx", "optistruct", or "autodesk"')
+            mode = op2._nastran_format
         elif mode is None:
             self.log.warning("No mode was set, assuming 'msc'")
             mode = 'msc'
@@ -3846,6 +3851,11 @@ class OP2Reader:
             a dummy integer (???)
 
         """
+        if year > 2000:
+            # would you believe they changed the date format?
+            month, day = day, month
+        else:
+            year += 2000
         month, day, year = self._set_op2_date(month, day, year)
 
         #self.log.debug("%s/%s/%4i zero=%s one=%s" % (month, day, year, zero, one))
@@ -3858,7 +3868,7 @@ class OP2Reader:
 
     def _set_op2_date(self, month, day, year):
         """sets the date the job was run"""
-        date = (month, day, 2000 + year)
+        date = (month, day, year)
         self.op2.date = date
         return date
 

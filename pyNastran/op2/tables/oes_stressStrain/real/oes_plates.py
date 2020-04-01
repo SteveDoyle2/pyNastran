@@ -382,6 +382,12 @@ class RealPlateArray(OES_Object):
         elif self.element_type == 70:  # CTRIAR
             nnodes = 3
             is_bilinear = True
+        elif self.element_type == 227:  # CTRIAR-linear
+            nnodes = 3
+            is_bilinear = False
+        elif self.element_type == 228:  # CQUADR-linear
+            nnodes = 4
+            is_bilinear = False
         else:
             raise NotImplementedError('name=%s type=%s' % (self.element_name, self.element_type))
         return nnodes, is_bilinear
@@ -468,7 +474,8 @@ class RealPlateArray(OES_Object):
                  count(), eids_device, eids, nids, fiber_dist, oxx, oyy, txy, angle, major_principal, minor_principal, ovm):
                 ilayer = i % 2
                 # tria3
-                if self.element_type in [33, 74]:  # CQUAD4, CTRIA3
+                if self.element_type in [33, 74, 227, 228]:
+                    # CQUAD4, CTRIA3, CTRIAR-linear, CQUADR-linear
                     if ilayer == 0:
                         #print([eid, fdi, oxxi, oyyi, txyi, anglei, major, minor, ovmi])
                         data = [eid_device, fdi, oxxi, oyyi, txyi, anglei, major, minor, ovmi]
@@ -481,7 +488,8 @@ class RealPlateArray(OES_Object):
                         op2_ascii.write('eid=%s ilayer=1 data=%s' % (eid, str(data[1:])))
                     #print('eid=%-2s ilayer=%s data=%s' % (eid_device, ilayer, str(data[1:])))
 
-                elif self.element_type in [64, 70, 75, 82, 144]:  # CQUAD8, CTRIAR, CTRIA6, CQUADR, CQUAD4
+                elif self.element_type in [64, 70, 75, 82, 144]:
+                    # CQUAD8, CTRIAR, CTRIA6, CQUADR, CQUAD4
                     # bilinear
                     if nid == 0 and ilayer == 0:  # CEN
                         data = [eid_device, cen_word, nid,
@@ -591,7 +599,6 @@ def _get_plate_msg(self):
         ctria3_msg = ['                             S T R A I N S   I N   T R I A N G U L A R   E L E M E N T S   ( T R I A 3 )\n'] + tri_msg_temp
         ctria6_msg = ['                             S T R A I N S   I N   T R I A N G U L A R   E L E M E N T S   ( T R I A 6 )\n'] + tri_msg_temp
         ctriar_msg = ['                             S T R A I N S   I N   T R I A N G U L A R   E L E M E N T S   ( T R I A R )\n'] + tri_msg_temp
-
 
     if self.element_type in [74, 83]:
         msg = ctria3_msg

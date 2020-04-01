@@ -85,7 +85,7 @@ SORT2_TABLE_NAME_MAP = {
 }
 SORT1_TABLES = list(SORT2_TABLE_NAME_MAP.values())
 SORT1_TABLES.extend([
-    'OUG1F',
+    'BOUGV1', 'OUG1F',
 ])
 SORT2_TABLES = list(SORT2_TABLE_NAME_MAP.keys())
 
@@ -1046,8 +1046,12 @@ class RealTableArray(TableArray):
             raise NotImplementedError('SORT2')
         s = Struct(op2_format)
 
-        unused_node = self.node_gridtype[:, 0]
+        node = self.node_gridtype[:, 0]
         gridtype = self.node_gridtype[:, 1]
+        max_id = node.max()
+        if max_id > 99999999:
+            raise NotImplementedError(f'64-bit OP2 writing is not supported; max id={max_id}')
+
         #format_table4_1 = Struct(self._endian + b'15i')
         #format_table4_2 = Struct(self._endian + b'3i')
 
@@ -1566,7 +1570,11 @@ class ComplexTableArray(TableArray):
             raise NotImplementedError('SORT2')
         s = Struct(op2_format)
 
-        unused_node = self.node_gridtype[:, 0]
+        node = self.node_gridtype[:, 0]
+        max_id = node.max()
+        if max_id > 99999999:
+            raise NotImplementedError(f'64-bit OP2 writing is not supported; max id={max_id}')
+
         gridtype = self.node_gridtype[:, 1]
         #format_table4_1 = Struct(self._endian + b'15i')
         #format_table4_2 = Struct(self._endian + b'3i')

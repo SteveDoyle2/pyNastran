@@ -2083,6 +2083,7 @@ class RealPlateForceArray(RealForceObject):  # 33-CQUAD4, 74-CTRIA3
 
         self.dt = dt
         self.nelements = 0
+        assert self.element_name != 'RBAR', self.data_code
 
         #if is_sort1:
             #if dt is not None:
@@ -2277,7 +2278,8 @@ class RealPlateForceArray(RealForceObject):  # 33-CQUAD4, 74-CTRIA3
             ]
             nnodes = 4
         else:
-            raise NotImplementedError(self.element_name)
+            msg = f'element_name={self.element_name} self.element_type={self.element_type}'
+            raise NotImplementedError(msg)
         return self.element_name, nnodes, msg
 
     def write_f06(self, f06_file, header=None, page_stamp='PAGE %s',
@@ -2353,6 +2355,10 @@ class RealPlateForceArray(RealForceObject):  # 33-CQUAD4, 74-CTRIA3
             nnodes = 3
         elif 'CQUAD4' in self.element_name:
             nnodes = 4
+        elif 'CTRIAR' in self.element_name:
+            nnodes = 4 # ???
+        elif 'CQUADR' in self.element_name:
+            nnodes = 5 # ???
         else:  # pragma: no cover
             raise NotImplementedError(self.code_information())
 
@@ -4972,12 +4978,23 @@ class RealCBearForceArray(RealForceMomentArray):
         RealForceMomentArray.__init__(self, data_code, is_sort1, isubcase, dt)
 
     def get_f06_header(self):
-        asdf
-        msg = [
-            '                                 F O R C E S   I N   B U S H   E L E M E N T S        ( C B U S H )\n'
-            ' \n'
-            '                  ELEMENT-ID        FORCE-X       FORCE-Y       FORCE-Z      MOMENT-X      MOMENT-Y      MOMENT-Z  \n']
-           #'0                        599      0.0           2.000000E+00  3.421458E-14  1.367133E-13 -3.752247E-15  1.000000E+00\n']
+        if self.element_type == 0: # 'CBUSH':
+
+            msg = [
+                '                                 F O R C E S   I N   B U S H   E L E M E N T S        ( C B U S H )\n'
+                ' \n'
+                '                  ELEMENT-ID        FORCE-X       FORCE-Y       FORCE-Z      MOMENT-X      MOMENT-Y      MOMENT-Z  \n']
+               #'0                        599      0.0           2.000000E+00  3.421458E-14  1.367133E-13 -3.752247E-15  1.000000E+00\n']
+        elif self.element_type == 280: # 'CBEAR':
+            # C:\MSC.Software\simcenter_nastran_2019.2\tpl_post1\rotbr60f.op2
+            msg = [
+                '                              F O R C E S   I N   B E A R I N G   E L E M E N T S        ( C B E A R )\n'
+                ' \n'
+                '                  ELEMENT-ID        FORCE-X       FORCE-Y       FORCE-Z      MOMENT-X      MOMENT-Y      MOMENT-Z  \n']
+               #'0                        599      0.0           2.000000E+00  3.421458E-14  1.367133E-13 -3.752247E-15  1.000000E+00\n']
+        else:
+            msg = f'element_name={self.element_name} self.element_type={self.element_type}'
+            raise NotImplementedError(msg)
         return msg
 
 class RealCFastForceArrayMSC(RealForceMomentArray):

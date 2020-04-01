@@ -268,8 +268,10 @@ class RealSolidArray(OES_Object):
             nnodes = 8
         elif self.element_type == 68: # CPENTA
             nnodes = 6
+        elif self.element_type == 255: # CPYRAM
+            nnodes = 5
         else:
-            raise NotImplementedError('element_name=%s self.element_type=%s' % (self.element_name, self.element_type))
+            raise NotImplementedError(f'element_name={self.element_name} self.element_type={self.element_type}')
         return nnodes
 
     def get_stats(self, short=False) -> List[str]:
@@ -574,6 +576,7 @@ def _get_solid_msgs(self):
         tetra_msg = ['                   S T R E S S E S   I N    T E T R A H E D R O N   S O L I D   E L E M E N T S   ( C T E T R A )\n', ]
         penta_msg = ['                    S T R E S S E S   I N   P E N T A H E D R O N   S O L I D   E L E M E N T S   ( P E N T A )\n', ]
         hexa_msg = ['                      S T R E S S E S   I N   H E X A H E D R O N   S O L I D   E L E M E N T S   ( H E X A )\n', ]
+        pyram_msg = ['                      S T R E S S E S   I N   P Y R A M I D   S O L I D   E L E M E N T S   ( P Y R A M )\n', ]
     else:
         base_msg = [
             '0                CORNER        ------CENTER AND CORNER POINT  STRAINS---------       DIR.  COSINES       MEAN                   \n',
@@ -581,13 +584,15 @@ def _get_solid_msgs(self):
         tetra_msg = ['                     S T R A I N S   I N    T E T R A H E D R O N   S O L I D   E L E M E N T S   ( C T E T R A )\n', ]
         penta_msg = ['                      S T R A I N S   I N   P E N T A H E D R O N   S O L I D   E L E M E N T S   ( P E N T A )\n', ]
         hexa_msg = ['                        S T R A I N S   I N   H E X A H E D R O N   S O L I D   E L E M E N T S   ( H E X A )\n', ]
+        pyram_msg = ['                        S T R A I N S   I N   P Y R A M I D   S O L I D   E L E M E N T S   ( P Y R A M )\n', ]
+
     tetra_msg += base_msg
     penta_msg += base_msg
     hexa_msg += base_msg
-    return tetra_msg, penta_msg, hexa_msg
+    return tetra_msg, penta_msg, hexa_msg, pyram_msg
 
 def _get_f06_header_nnodes(self, is_mag_phase=True):
-    tetra_msg, penta_msg, hexa_msg = _get_solid_msgs(self)
+    tetra_msg, penta_msg, hexa_msg, pyram_msg = _get_solid_msgs(self)
     if self.element_type == 39: # CTETRA
         msg = tetra_msg
         nnodes = 4
@@ -597,7 +602,10 @@ def _get_f06_header_nnodes(self, is_mag_phase=True):
     elif self.element_type == 68: # CPENTA
         msg = penta_msg
         nnodes = 6
+    elif self.element_type == 255: # CPYRAM
+        msg = pyram_msg
+        nnodes = 5
     else:  # pragma: no cover
-        msg = 'element_name=%s self.element_type=%s' % (self.element_name, self.element_type)
+        msg = f'element_name={self.element_name} self.element_type={self.element_type}'
         raise NotImplementedError(msg)
     return nnodes, msg

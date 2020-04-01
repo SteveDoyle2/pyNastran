@@ -132,6 +132,7 @@ def _write_result_tables(obj: OP2, fop2, fop2_ascii, struct_3i, endian, skips):
         'OUG1',
         'OUGV1PAT',
         'BOPG1',
+        'OPHIG',
 
         'OQG1',
         'OQGV1',
@@ -164,7 +165,7 @@ def _write_result_tables(obj: OP2, fop2, fop2_ascii, struct_3i, endian, skips):
         # ---------------
         # force/heat flux
         'DOEF1', 'HOEF1',
-        'OEF1', 'OEF1X',
+        'OEF1', 'OEF1X', 'OEF2',
         'OEFATO1', 'OEFCRM1', 'OEFNO1', 'OEFPSD1', 'OEFRMS1',
         'OEFATO2', 'OEFCRM2', 'OEFNO2', 'OEFPSD2', 'OEFRMS2',
 
@@ -174,6 +175,7 @@ def _write_result_tables(obj: OP2, fop2, fop2_ascii, struct_3i, endian, skips):
         'OES1', 'OES1X', 'OES1X1', 'OES1C', 'OESVM1',
         'OES2', 'OESVM2',
         'OESCP',
+        'OESNL1',
 
         'OCRPG', 'OCRUG',
         'OESATO1', 'OESCRM1', 'OESNO1', 'OESPSD1', 'OESRMS1',
@@ -194,7 +196,7 @@ def _write_result_tables(obj: OP2, fop2, fop2_ascii, struct_3i, endian, skips):
         # ---------------
 
         'OGPFB1',
-        'ONRGY1',
+        'ONRGY', 'ONRGY1',
         'OGS1',
         'OEFIT',
     ]
