@@ -122,9 +122,25 @@ class AnimationWindow(PyDialog):
             self.is_gui = True
             self.gui = self.win_parent.win_parent
 
+        icase_max = 1000
         if is_gui_parent:
             self.is_gui = True
             self.gui = self.win_parent
+            icase_max = max(self.gui.result_cases)  # TODO: update 1000
+
+        self.icase_fringe_edit.setRange(0, icase_max)
+        self.icase_disp_edit.setRange(1, icase_max)
+        self.icase_vector_edit.setRange(1, icase_max)
+
+        self.icase_fringe_start_edit.setRange(0, icase_max)
+        self.icase_fringe_end_edit.setRange(0, icase_max)
+        self.icase_fringe_delta_edit.setRange(1, icase_max)
+
+        self.icase_disp_start_edit.setRange(0, icase_max)
+        self.icase_disp_end_edit.setRange(0, icase_max)
+        self.icase_disp_delta_edit.setRange(1, icase_max)
+
+
         self.on_update_min_max_defaults()
 
 
@@ -133,7 +149,7 @@ class AnimationWindow(PyDialog):
         self.box_scale = QGroupBox('Animate Scale')
         self.box_time = QGroupBox('Animate Time')
 
-        icase_max = 1000  # TODO: update 1000
+        #icase_max = 1000
 
         self.checkbox_fringe = QCheckBox('Animate')
         self.checkbox_fringe.setToolTip(
@@ -143,7 +159,7 @@ class AnimationWindow(PyDialog):
 
         self.icase_fringe_label = QLabel("iCase (Fringe):")
         self.icase_fringe_edit = QSpinBox(self)
-        self.icase_fringe_edit.setRange(0, icase_max)
+        #self.icase_fringe_edit.setRange(0, icase_max)
         self.icase_fringe_edit.setSingleStep(1)
         if self._icase_fringe is not None:
             self.icase_fringe_edit.setValue(self._icase_fringe)
@@ -154,7 +170,7 @@ class AnimationWindow(PyDialog):
 
         self.icase_disp_label = QLabel("iCase (Disp):")
         self.icase_disp_edit = QSpinBox(self)
-        self.icase_disp_edit.setRange(1, icase_max)
+        #self.icase_disp_edit.setRange(1, icase_max)
         self.icase_disp_edit.setSingleStep(1)
         if self._icase_disp is not None:
             self.icase_disp_edit.setValue(self._icase_disp)
@@ -167,7 +183,7 @@ class AnimationWindow(PyDialog):
 
         self.icase_vector_label = QLabel("iCase (Vector):")
         self.icase_vector_edit = QSpinBox(self)
-        self.icase_vector_edit.setRange(1, icase_max)
+        #self.icase_vector_edit.setRange(1, icase_max)
         self.icase_vector_edit.setSingleStep(1)
         if self._icase_vector is not None:
             self.icase_vector_edit.setValue(self._icase_vector)
@@ -222,19 +238,19 @@ class AnimationWindow(PyDialog):
         self.fringe_label = QLabel("Fringe")
 
         self.icase_fringe_start_edit = QSpinBox(self)
-        self.icase_fringe_start_edit.setRange(0, icase_max)
+        #self.icase_fringe_start_edit.setRange(0, icase_max)
         self.icase_fringe_start_edit.setSingleStep(1)
         self.icase_fringe_start_edit.setValue(self._icase_fringe)
         self.icase_fringe_start_button = QPushButton("Default")
 
         self.icase_fringe_end_edit = QSpinBox(self)
-        self.icase_fringe_end_edit.setRange(0, icase_max)
+        #self.icase_fringe_end_edit.setRange(0, icase_max)
         self.icase_fringe_end_edit.setSingleStep(1)
         self.icase_fringe_end_edit.setValue(self._icase_fringe)
         self.icase_fringe_end_button = QPushButton("Default")
 
         self.icase_fringe_delta_edit = QSpinBox(self)
-        self.icase_fringe_delta_edit.setRange(1, icase_max)
+        #self.icase_fringe_delta_edit.setRange(1, icase_max)
         self.icase_fringe_delta_edit.setSingleStep(1)
         self.icase_fringe_delta_edit.setValue(1)
         self.icase_fringe_delta_button = QPushButton("Default")
@@ -242,21 +258,21 @@ class AnimationWindow(PyDialog):
         self.displacement_label = QLabel("Displacement")
         self.icase_start = QLabel("iCase Start:")
         self.icase_disp_start_edit = QSpinBox(self)
-        self.icase_disp_start_edit.setRange(0, icase_max)
+        #self.icase_disp_start_edit.setRange(0, icase_max)
         self.icase_disp_start_edit.setSingleStep(1)
         self.icase_disp_start_edit.setValue(self._icase_fringe)
         self.icase_disp_start_button = QPushButton("Default")
 
         self.icase_end_label = QLabel("iCase End:")
         self.icase_disp_end_edit = QSpinBox(self)
-        self.icase_disp_end_edit.setRange(0, icase_max)
+        #self.icase_disp_end_edit.setRange(0, icase_max)
         self.icase_disp_end_edit.setSingleStep(1)
         self.icase_disp_end_edit.setValue(self._icase_fringe)
         self.icase_disp_end_button = QPushButton("Default")
 
         self.icase_delta_label = QLabel("iCase Delta:")
         self.icase_disp_delta_edit = QSpinBox(self)
-        self.icase_disp_delta_edit.setRange(1, icase_max)
+        #self.icase_disp_delta_edit.setRange(1, icase_max)
         self.icase_disp_delta_edit.setSingleStep(1)
         self.icase_disp_delta_edit.setValue(1)
         self.icase_disp_delta_button = QPushButton("Default")

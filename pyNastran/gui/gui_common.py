@@ -1902,15 +1902,15 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
         unused_duration = time / nframes
         nframes = int(nframes)
 
-        png_dirname = os.path.dirname(os.path.abspath(gif_filename))
-        if not os.path.exists(png_dirname):
-            os.makedirs(png_dirname)
-
         phases, icases_fringe, icases_disp, icases_vector, isteps, scales = update_animation_inputs(
             phases, icases_fringe, icases_disp, icases_vector,
             isteps, scales, analysis_time, fps)
 
         if gif_filename is not None:
+            png_dirname = os.path.dirname(os.path.abspath(gif_filename))
+            if not os.path.exists(png_dirname):
+                os.makedirs(png_dirname)
+
             png_filenames = []
             fmt = gif_filename[:-4] + '_%%0%ii.png' % (len(str(nframes)))
 
