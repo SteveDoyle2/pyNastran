@@ -9,9 +9,11 @@ from qtpy.QtWidgets import (
     QVBoxLayout, QHBoxLayout, QWidget)
 #import qtpy.Qsci as Qsci
 
+QSCINTILLA_VERSION = 'N/A'
 if qt_version == 'pyqt5':
     try:
         import PyQt5.Qsci as Qsci
+        QSCINTILLA_VERSION = Qsci.QSCINTILLA_VERSION_STR
         IS_SCINTILLA = True
     except ImportError:
         IS_SCINTILLA = False

@@ -28,7 +28,7 @@ from .qt_files.QVTKRenderWindowInteractor import QVTKRenderWindowInteractor
 from pyNastran.utils import check_path
 from pyNastran.utils.numpy_utils import integer_types
 
-from .qt_files.gui_attributes import IS_MATPLOTLIB, IS_CUTTING_PLANE
+#from .qt_files.gui_attributes import IS_MATPLOTLIB, IS_CUTTING_PLANE
 from .qt_files.gui_vtk_common import GuiVTKCommon
 from .qt_files.scalar_bar import ScalarBar
 
@@ -361,7 +361,7 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
                 ('mark_nodes_elements', 'Mark', 'tmark.png', None, 'Mark a list of nodes/elements', self.mark_obj.set_menu),
             ]
 
-        if IS_MATPLOTLIB and IS_CUTTING_PLANE:
+        if hasattr(self, 'cutting_plane_obj'):
             tools.append(('cutting_plane', 'Cutting Plane...', 'cutting_plane.png', None, 'Create Cutting Plane', self.cutting_plane_obj.set_cutting_plane_menu))
 
         if 'nastran' in self.fmts:

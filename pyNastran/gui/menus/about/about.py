@@ -9,6 +9,7 @@ from typing import Tuple, Dict
 import numpy
 import scipy
 import vtk
+import docopt
 import pyNastran
 
 import qtpy
@@ -21,6 +22,7 @@ from qtpy.QtWidgets import (
 import cpylog
 from pyNastran.gui import ICON_PATH, IS_LINUX, IS_MAC # IS_WINDOWS
 from pyNastran.gui.qt_version import qt_name, PYQT_VERSION, is_pygments # qt_version,
+from pyNastran.gui.menus.python_console import QSCINTILLA_VERSION
 from pyNastran.gui.utils.qt.pydialog import PyDialog
 
 QT = """
@@ -186,6 +188,7 @@ def get_packages() -> Dict[str, str]:
         #'Python Build': str(platform.python_build()),
         'Compiler': platform.python_compiler(),
         'Implementation': platform.python_implementation(),
+        'setuptools': 'N/A',
         'numpy' : numpy.__version__,
         'scipy' : scipy.__version__,
         'cpylog' : cpylog.__version__,
@@ -196,9 +199,13 @@ def get_packages() -> Dict[str, str]:
         'vtk' : vtk.VTK_VERSION,
         'qtpy' : qtpy.__version__,
         qt_name : PYQT_VERSION,
-        'docopt' : 'N/A',
+        'QScintilla2': QSCINTILLA_VERSION,
+        'docopt-ng' : docopt.__version__,
     }
-    for name in ['matplotlib', 'pandas', 'docopt', 'imageio', 'PIL']:
+    if 'pyside' in qt_name.lower():
+        del packages['QScintilla2']
+
+    for name in ['matplotlib', 'pandas', 'imageio', 'PIL', 'setuptools']:
         try:
             module = importlib.import_module(name, package=None)
         except ImportError:
@@ -216,9 +223,8 @@ def get_version() -> Dict[str, str]:
         #os_version = '???'
 
     pmsg = [
-        'machine', 'platform', 'processor', 'architecture',
         # 'win32_ver',
-        'system', 'version', # 'uname',
+        # 'uname',
         'mac_ver', 'libc_ver',
     ]
     #if not IS_WINDOWS:
@@ -228,18 +234,19 @@ def get_version() -> Dict[str, str]:
     if not IS_MAC:
         pmsg.remove('mac_ver')
 
-
-    cpu = platform.processor()
     #memory = str(sys.getsizeof(None))
     version_data = {
         'Product': 'pyNastran GUI',
         'Version': pyNastran.__version__,
-        'Release Type': 'Final Release',
+        'Release Type': 'Final Release' if 'dev' not in pyNastran.__version__ else 'Developement',
         'Release Date': pyNastran.__releaseDate__,
         #'Cache Directory': ,
         'OS' : f'win32 (sys.platform={sys_platform})',
-        #'OS Version' : os_version,
-        'CPU': cpu,
+        'Platform' : platform.platform(),
+        'Architecture' : str(platform.architecture()),
+        'Machine' : platform.machine(),
+        'Processor' : platform.processor(),
+
         #'Bit': bit,
         #'Memory': memory,
         'Locale': localei,
