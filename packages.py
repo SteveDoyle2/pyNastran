@@ -221,14 +221,14 @@ def get_package_requirements(is_gui=True, add_vtk_qt=True, python_version=None):
             import PIL
             iver = int_version('pillow', PIL.__version__)
             all_reqs['pillow'] = str_version(iver)
-            if iver < [1, 4, 0]:
-                print("pillow.__version__ = %r > '1.4.0'" % PIL.__version__)
-                all_reqs['pillow'] = 'pillow >=1.4.0'
-                install_requires.append('pillow >= 1.4.0')
+            if iver < [5, 2, 0] or iver > [7, 0, 0]:
+                print("pillow.__version__ = %r > '5.2.0', < '7.1" % PIL.__version__)
+                all_reqs['pillow'] = 'pillow >=5.2.0, <7.1'
+                install_requires.append('pillow >= 5.2.0, <7.1')
         except ImportError:
             #print('missing pillow...')
-            all_reqs['pillow'] = 'pillow >=1.4.0'
-            install_requires.append('pillow >= 1.4.0')  # 6.2.0 used
+            all_reqs['pillow'] = 'pillow >=5.2.0, <7.1'
+            install_requires.append('pillow >= 5.2.0, <7.1')  # 6.2.0 used
 
         try:
             import imageio
