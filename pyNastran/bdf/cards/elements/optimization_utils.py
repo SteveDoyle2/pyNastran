@@ -1,6 +1,5 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING
-from copy import deepcopy
 
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.bdf.bdf import BDF
@@ -33,8 +32,8 @@ def constrain_solid_stress_from_properties(model: BDF, pids: List[int],
 
 
 def constrain_shell_stress_from_properties(model: BDF, pids: List[int],
-                                           constraint_id: int, dresp_id: int, uallow: float,
-                                           dresp_id=1):
+                                           constraint_id: int, uallow: float,
+                                           dresp_id: int=1):
     """adds VM stress constraints for shells"""
     skip_properties = [
         'PROD', 'PELAS', 'PDAMP',
@@ -79,7 +78,7 @@ def constrain_shell_stress_from_properties(model: BDF, pids: List[int],
     DRESP1(dresp_id, label, response_type, property_type, region, atta, attb, atti,
            comment='')
 
-def solid_topology_optimization(model: BDF, pids_to_optimize: List[int], xinit=0.5, uallow):
+def solid_topology_optimization(model: BDF, pids_to_optimize: List[int], xinit=0.5, uallow=1.e20):
     model.sol = 200
     eids_dict = model.get_element_ids_dict_with_pids(pids_to_optimize)
     pid = max(model.properties) + 1
@@ -90,7 +89,7 @@ def solid_topology_optimization(model: BDF, pids_to_optimize: List[int], xinit=0
     constraint_id = 1
     for pid_old, eids in sorted(eids_dict.items()):
         prop_old = model.properties[pid_old]
-        if prop.type != 'PSOLID':
+        if prop_old.type != 'PSOLID':
             continue
         assert prop_old.type == 'PSOLID', prop_old.get_stats()
 

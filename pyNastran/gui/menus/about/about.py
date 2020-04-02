@@ -21,7 +21,7 @@ from qtpy.QtWidgets import (
 
 import cpylog
 from pyNastran.gui import ICON_PATH, IS_LINUX, IS_MAC # IS_WINDOWS
-from pyNastran.gui.qt_version import qt_name, PYQT_VERSION, is_pygments # qt_version,
+from pyNastran.gui.qt_version import qt_name, PYQT_VERSION, is_pygments
 from pyNastran.gui.menus.python_console import QSCINTILLA_VERSION
 from pyNastran.gui.utils.qt.pydialog import PyDialog
 
@@ -106,7 +106,7 @@ class AboutWindow(PyDialog):
         tab_widget.addTab(credits_tab, 'Credits')
 
         #---------------------
-        png_filename = os.path.join(ICON_PATH, '..', 'images', 'logo.png')
+        png_filename = os.path.join(ICON_PATH, 'logo2.png')
         im = QtGui.QPixmap(png_filename)
         im_resized = im.scaled(525, 405, Qt.KeepAspectRatio)
         self.website_button = QLabel()
@@ -200,12 +200,13 @@ def get_packages() -> Dict[str, str]:
         'qtpy' : qtpy.__version__,
         qt_name : PYQT_VERSION,
         'QScintilla2': QSCINTILLA_VERSION,
+        'pygments' : 'N/A',
         'docopt-ng' : docopt.__version__,
     }
     if 'pyside' in qt_name.lower():
         del packages['QScintilla2']
 
-    for name in ['matplotlib', 'pandas', 'imageio', 'PIL', 'setuptools']:
+    for name in ['matplotlib', 'pandas', 'imageio', 'PIL', 'setuptools', 'pygments']:
         try:
             module = importlib.import_module(name, package=None)
         except ImportError:
