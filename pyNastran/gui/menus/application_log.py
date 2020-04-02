@@ -3,7 +3,7 @@ from pyNastran.gui.qt_version import qt_version, is_pygments
 from qtpy.QtCore import Qt
 from qtpy.QtGui import QFont, QFontMetrics, QColor, QCursor
 from qtpy import QtCore
-from qtpy.QtWidgets import QTextEdit, QDockWidget, qApp
+from qtpy.QtWidgets import QTextEdit, QDockWidget, qApp  # PySide2 must be <5.14.2
 
 
 class HtmlLog(QTextEdit):

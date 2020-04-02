@@ -83,7 +83,7 @@ matrix:
     - name: "Python 3.7 (PySide2, no matplotlib)"
       python: '3.7'
       env:
-      - NUMPY='numpy scipy h5py vtk PySide2 pandas>=0.25'
+      - NUMPY='numpy scipy h5py vtk PySide2<5.14.2 pandas>=0.25'
 
     #--------------------------------------------------------------------------------------------------
     # old versions of packages
