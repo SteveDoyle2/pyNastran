@@ -147,9 +147,10 @@ def augmented_identity(nx, ny):
 
     .. code-block:: python
 
-      [ 1, 0, 0, 0 ]
-      [ 0, 1, 0, 0 ]
-      [ 0, 0, 1, 0 ]
+       [ 1, 0, 0, 0 ]
+       [ 0, 1, 0, 0 ]
+       [ 0, 0, 1, 0 ]
+
     """
     eye = np.eye(max(nx, ny), dtype='float64')
     return eye[:nx, :ny]

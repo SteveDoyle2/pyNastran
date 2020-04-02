@@ -12,8 +12,7 @@ signal.signal(signal.SIGINT, signal.SIG_DFL)
 
 
 from qtpy import QtCore, QtGui
-from qtpy.QtWidgets import (
-    QApplication, qApp)
+from qtpy.QtWidgets import QApplication
 
 # 3rd party
 import vtk
@@ -152,7 +151,11 @@ class MainWindow(GuiCommon2):
         qpos = self.pos()
         pos = qpos.x(), qpos.y()
         settings.setValue('pos', pos)
-        qApp.quit()
+
+        q_app = QApplication.instance()
+        if q_app is None:
+            sys.exit()
+        q_app.quit()
 
 
 def main():

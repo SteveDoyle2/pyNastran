@@ -1115,12 +1115,12 @@ class GetCard(GetMethods):
 
         .. code-block:: python
 
-          model = BDF()
-          model.read_bdf(bdf_filename)
-          pids = [1, 2, 3]
-          eids_list = model.get_element_ids_list_with_pids(pids)
-          >>> eids_list
-          [10, 11, 20, 21, 30, 31]
+           model = BDF()
+           model.read_bdf(bdf_filename)
+           pids = [1, 2, 3]
+           eids_list = model.get_element_ids_list_with_pids(pids)
+           >>> eids_list
+           [10, 11, 20, 21, 30, 31]
 
         """
         etypes_no_pids = [
@@ -1295,25 +1295,25 @@ class GetCard(GetMethods):
 
         .. code-block:: python
 
-          model = BDF()
-          model.read_bdf(bdf_filename)
-          pids = [4, 5, 6]
-          eids_dict = model.get_element_ids_dict_with_pids(pids)
-          >>> eids_dict
-          {
-              4 : [40, 41],
-              5 : [50, 51],
-              6 : [60, 61],
-          }
+           model = BDF()
+           model.read_bdf(bdf_filename)
+           pids = [4, 5, 6]
+           eids_dict = model.get_element_ids_dict_with_pids(pids)
+           >>> eids_dict
+           {
+               4 : [40, 41],
+               5 : [50, 51],
+               6 : [60, 61],
+           }
 
-          # consider all properties
-          eids_dict = model.get_element_ids_dict_with_pids()
-          {
-              1 : [1, 2, 3],
-              4 : [40, 41],
-              5 : [50, 51],
-              6 : [60, 61],
-          }
+           # consider all properties
+           eids_dict = model.get_element_ids_dict_with_pids()
+           {
+               1 : [1, 2, 3],
+               4 : [40, 41],
+               5 : [50, 51],
+               6 : [60, 61],
+           }
 
         Notes
         -----
@@ -1494,14 +1494,14 @@ class GetCard(GetMethods):
 
         .. code-block:: python
 
-          >>> mid_to_pid_map = get_material_id_to_property_ids_map()
-          >>> mid = 1
-          >>> pids = get_material_id_to_property_ids_map[mid]
-          >>> pids
-          [1, 2, 3]
+           >>> mid_to_pid_map = get_material_id_to_property_ids_map()
+           >>> mid = 1
+           >>> pids = get_material_id_to_property_ids_map[mid]
+           >>> pids
+           [1, 2, 3]
 
-          .. note:: all properties require an mid to be counted (except for
-                  PCOMP, which has multiple mids)
+        .. note:: all properties require an mid to be counted (except for
+                PCOMP, which has multiple mids)
 
         """
         mid_to_pids_map = {}

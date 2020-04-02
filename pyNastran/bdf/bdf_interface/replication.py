@@ -31,11 +31,11 @@ def to_fields_replication(card_lines: List[str]) -> List[Optional[str]]:
 
     .. code-block:: python
 
-      >>> card_lines = ['GRID,1,,1.0,2.0,3.0']
-      >>> card_name = 'GRID'
-      >>> fields = to_fields_replication(lines)
-      >>> fields
-      ['GRID', '1', '', '1.0', '2.0', '3.0']
+       >>> card_lines = ['GRID,1,,1.0,2.0,3.0']
+       >>> card_name = 'GRID'
+       >>> fields = to_fields_replication(lines)
+       >>> fields
+       ['GRID', '1', '', '1.0', '2.0', '3.0']
 
     """
     #print('to_fields_replicationA =', card_lines)

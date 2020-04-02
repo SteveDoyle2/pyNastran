@@ -246,7 +246,7 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
         if tools is None:
             file_tools = [
 
-                ('exit', '&Exit', 'texit.png', 'Ctrl+Q', 'Exit application', self.closeEvent), # QtGui.qApp.quit
+                ('exit', '&Exit', 'texit.png', 'Ctrl+Q', 'Exit application', self.closeEvent),
 
                 ('reload', 'Reload Model...', 'treload.png', '', 'Remove the model and reload the same geometry file', self.on_reload),
                 ('load_geometry', 'Load &Geometry...', 'load_geometry.png', 'Ctrl+O', 'Loads a geometry input file', self.on_load_geometry),

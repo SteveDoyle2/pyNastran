@@ -31,17 +31,24 @@ GUI formats
  - csv point loading with -u for all formats (multiple files allowed)
  - csv deflection results
 
-PyQt4/PyQt5/PySide unique
-=========================
+PyQt5/PySide2 unique
+====================
  - logger
 
- - buttons/pulldowns for:
+ - buttons/pulldowns/hotkeys for:
    - implicit pulldown for formats
    - zoom/rotate/snap to axis
    - screenshot
    - auto-reload
    - results sidebar
+   - preferences
+   - edges
+   - wireframe mode
+   - surface mode
 
+Menus
+=====
+ - maybe add explcit pulldown for formats
  - auto-reload button.  Useful for:
     - creating Nastran aero panels
     - modifying Panair file
@@ -63,6 +70,13 @@ PyQt4/PyQt5/PySide unique
    - animation
    - TODO: Cancel button doesn't go to original settings if you click apply
      - TODO: should maybe remove the OK button and rename Cancel to Close
+
+ - animation menu
+   - scale factor with multiple animation options (e.g., linear, sinusoidal)
+   - complex results (phase)
+   - time domain results
+   - Optionally independently fringe result (that is applied to the displacment shape)
+   - TODO: Optionally independently vector result (that is applied to the displacment shape)
 
  - secondary actors menu
    - actor selection
@@ -96,8 +110,7 @@ PyQt4/PyQt5/PySide unique
  - command line
    - loading of geometry/results from command line
    - python scripting
-   - edges
-   - disable HTML output (useful for when PyQt is buggy)
+   - disable HTML output (useful for when PySide2/PyQt5 is buggy)
 
  - result probe
    - cell/node picking based on result type
@@ -123,8 +136,7 @@ PyQt4/PyQt5/PySide unique
      - high resolution screenshots
      - animations
    - powerful tool for quickly creating a command line script
-   - syntax highlighting with QScintilla (PyQt4)
-     - TODO: remove QScintilla because it's inconsistent???
+   - syntax highlighting with QScintilla (PyQt5)
      - font is courier new
 
  - groups

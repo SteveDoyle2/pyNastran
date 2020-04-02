@@ -359,22 +359,22 @@ def sum_forces_moments_elements(model, p0, loadcase_id, eids, nids,
 
     .. code-block:: python
 
-      eids = [3]
-      nids = []
+       eids = [3]
+       nids = []
 
     For just force:
 
     .. code-block:: python
 
-      eids = []
-      nids = [5]
+       eids = []
+       nids = [5]
 
     or both:
 
     .. code-block:: python
 
-      eids = [3]
-      nids = [5]
+       eids = [3]
+       nids = [5]
 
     .. note:: If you split the model into sections and sum the loads
               on each section, you may not get the same result as

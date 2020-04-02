@@ -12,8 +12,8 @@ Nastran
      - (nodal/centroidal) stress
      - (nodal) displacement, velocity, acceleration, spc_forces, mpc_forces, temperatures
      - displacement shown as displaced model
-   - Stress
-     - rod_stress, bar_stress, beam_stress, plate_stress, solid_stress
+   - Stress/Strain
+     - rod_stress, bar_stress, **beam_stress, plate_stress, solid_stress
      - composite_plate_stress (centroidal only)
    - Force
      - rod_force, bar_force

@@ -300,24 +300,24 @@ def parse_patran_syntax_dict_map(node_sets: str,
     **Example 1**
     .. code-block:: python
 
-      # we drop the coordinate systems because we didn't request them
-      # (coord is not referenced)
-      #
-      >>> node_sets = "e 1:3 n 2:6:2 Node 10:13 N 15 coord 1:10"
-      >>> type_map = {
-          'n' : 'Node',
-          'Node' : 'Node',
-          'e' : 'Element',
-          'Elm' : 'Element',
-          'Element' : 'Element',
-      }
+       # we drop the coordinate systems because we didn't request them
+       # (coord is not referenced)
+       #
+       >>> node_sets = "e 1:3 n 2:6:2 Node 10:13 N 15 coord 1:10"
+       >>> type_map = {
+           'n' : 'Node',
+           'Node' : 'Node',
+           'e' : 'Element',
+           'Elm' : 'Element',
+           'Element' : 'Element',
+       }
 
-      **Example 2**
-      >>> data = parse_patran_syntax_dict(node_sets, type_map)
-      >>> data = {
-          'Element' : [1, 2, 3],
-          'Node' : [2, 4, 6, 10, 11, 12, 13, 15],
-      }
+       **Example 2**
+       >>> data = parse_patran_syntax_dict(node_sets, type_map)
+       >>> data = {
+           'Element' : [1, 2, 3],
+           'Node' : [2, 4, 6, 10, 11, 12, 13, 15],
+       }
 
     .. todo:: doesn't support pound_dict
 

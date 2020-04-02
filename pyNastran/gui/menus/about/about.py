@@ -25,16 +25,17 @@ from pyNastran.gui.qt_version import qt_name, PYQT_VERSION, is_pygments
 from pyNastran.gui.menus.python_console import QSCINTILLA_VERSION
 from pyNastran.gui.utils.qt.pydialog import PyDialog
 
-QT = """
+QT = ("""
   * PyQt5 Python bindings for Qt5, by Riverbank Computing Limited.
 
-  * Scintilla, a source code editor widget, written by Neil Hodgson and many contributors.
-""" if qt_name == 'PyQt5' else """
-  * PySide2 Python bindings for Qt5, by Qt for Python.
-"""
+  * Scintilla, a source code editor widget, written by Neil Hodgson and many contributors."""
+    if qt_name == 'PyQt5' else """
+  * PySide2 Python bindings for Qt5, by Qt for Python.""")
 
 PYGMENTS = """
   * Pygments by Georg Brandl, Armin Ronacher, Tim Hatch, and contributors.
+
+  * Python Imaging Library, developed by Secret Labs AB and Fredrik Lundh.
 """ if is_pygments else ''
 
 CREDITS = f"""pyNastran was written by Steve Doyle since 2011.  This product contains the following third party modules:
@@ -49,7 +50,6 @@ CREDITS = f"""pyNastran was written by Steve Doyle since 2011.  This product con
 
   * Qt5 cross-platform GUI toolkit, developed by many contributors.
 {QT}
-  * Python Imaging Library, developed by Secret Labs AB and Fredrik Lundh.
 {PYGMENTS}
   * WingIDE, the primary IDE used for development, by Wingware.
 

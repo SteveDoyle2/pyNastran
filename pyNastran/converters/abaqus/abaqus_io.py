@@ -54,7 +54,7 @@ class AbaqusIO:
         grid = self.gui.grid
         grid.Allocate(self.gui.nelements, 1000)
 
-        assert len(all_nodes) > 0 is not None, len(all_nodes)
+        assert len(all_nodes) > 0, len(all_nodes)
         if len(all_nodes) == 1:
             nodes = all_nodes[0]
         else:

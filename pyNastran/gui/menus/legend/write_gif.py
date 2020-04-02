@@ -23,6 +23,12 @@ from pyNastran.utils import remove_files
 if is_pynastrangui_exe:  # pragma: no cover
     assert IS_IMAGEIO, 'imageio is not istalled for the exe'
 
+if IS_IMAGEIO:
+    from pyNastran.utils import int_version
+    iver = int_version('pillow', PIL.__version__)
+    assert iver != [7, 1, 0], 'pillow=7.1.0 is not supported'
+
+
 def setup_animation(scale, istep=None,
                     animate_scale=True, animate_phase=False, animate_time=False,
                     icase_fringe=None, icase_disp=None, icase_vector=None,

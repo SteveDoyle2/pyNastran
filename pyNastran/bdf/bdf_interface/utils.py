@@ -82,11 +82,11 @@ def to_fields(card_lines: List[str], card_name: str) -> List[str]:
 
     .. code-block:: python
 
-      >>> card_lines = ['GRID,1,,1.0,2.0,3.0']
-      >>> card_name = 'GRID'
-      >>> fields = to_fields(lines, card_name)
-      >>> fields
-      ['GRID', '1', '', '1.0', '2.0', '3.0']
+       >>> card_lines = ['GRID,1,,1.0,2.0,3.0']
+       >>> card_name = 'GRID'
+       >>> fields = to_fields(lines, card_name)
+       >>> fields
+       ['GRID', '1', '', '1.0', '2.0', '3.0']
 
     """
     fields = []  # type: List[str]

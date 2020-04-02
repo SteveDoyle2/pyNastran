@@ -422,14 +422,14 @@ class CodeAsterConverter(BDF):
         """
         .. code-block:: python
 
-          MtrlFld=AFFE_MATERIAU(MAILLAGE=MESH,
-                              AFFE=(_F(GROUP_MA=('P32','P33','P42','P43','P46','P47','P48','P49',
-                                                 'P61','P62','P63','P64','P65','P74',
-                                                 'P75',),
-                                       MATER=M3,),
-                                    _F(GROUP_MA=('P11','P13','P14','P15','P55','P56','P59',),
-                                       MATER=M6,),
-        @endcode
+           MtrlFld=AFFE_MATERIAU(MAILLAGE=MESH,
+                               AFFE=(_F(GROUP_MA=('P32','P33','P42','P43','P46','P47','P48','P49',
+                                                  'P61','P62','P63','P64','P65','P74',
+                                                  'P75',),
+                                        MATER=M3,),
+                                     _F(GROUP_MA=('P11','P13','P14','P15','P55','P56','P59',),
+                                        MATER=M6,),
+
         """
         comm = ''
         comm += '# ca_material_field\n'

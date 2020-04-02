@@ -450,7 +450,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
 
         # skip_reading = self.removeOldGeometry(bdf_filename)
         skip_reading = False
-        if bdf_filename is None or bdf_filename is '':
+        if bdf_filename is None or bdf_filename == '':
             #self.grid = vtk.vtkUnstructuredGrid()
             #self.scalar_bar_actor.VisibilityOff()
             skip_reading = True

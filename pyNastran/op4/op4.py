@@ -23,27 +23,27 @@ def read_op4(op4_filename=None, matrix_names=None, precision='default',
 
     .. code-block:: python
 
-      >>> from pyNastran.op4.op4 import OP4
-      >>> op4 = OP4()
+       >>> from pyNastran.op4.op4 import OP4
+       >>> op4 = OP4()
 
-      # get all the matrices
-      >>> matrices = op4.read_op4(op4_filename)
-      >>> (formA, A) = matrices['A']
-      >>> (formB, B) = matrices['B']
-      >>> (formC, C) = matrices['C']
+       # get all the matrices
+       >>> matrices = op4.read_op4(op4_filename)
+       >>> (formA, A) = matrices['A']
+       >>> (formB, B) = matrices['B']
+       >>> (formC, C) = matrices['C']
 
-      # or to reduce memory usage
-      >>> matrices = op4.read_op4(op4_filename, matrix_names=['A', 'B'])
-      >>> (formA, A) = matrices['A']
-      >>> (formB, B) = matrices['B']
+       # or to reduce memory usage
+       >>> matrices = op4.read_op4(op4_filename, matrix_names=['A', 'B'])
+       >>> (formA, A) = matrices['A']
+       >>> (formB, B) = matrices['B']
 
-      # or because you only want A
-      >>> matrices = op4.read_op4(op4_filename, matrix_names='A')
-      >>> (formA, A) = matrices['A']
+       # or because you only want A
+       >>> matrices = op4.read_op4(op4_filename, matrix_names='A')
+       >>> (formA, A) = matrices['A']
 
-      # get all the matrices, but select the file using a file dialog
-      >>> matrices = op4.read_op4()
-      >>>
+       # get all the matrices, but select the file using a file dialog
+       >>> matrices = op4.read_op4()
+       >>>
 
     Parameters
     ----------

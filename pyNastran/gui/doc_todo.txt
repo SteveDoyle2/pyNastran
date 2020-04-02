@@ -59,18 +59,23 @@ General GUI Behavior
 ====================
 - loading a new geometry over a result doesn't overwrite the old name
 - results selector window doesn't update on cycling
-- QScintilla doesn't always work (PyQt4)
-  - PySide doesn't have this
-  - PyQt5 probably doesn't have this
+- QScintilla doesn't always work?
+  - is this still true...I don't think so; I think it was caused by
+    them splitting PyQt4 and QScintilla2
+  - PySide2 doesn't have this
+  - PyQt5 requires installing QScintilla2 separately
 
 ----------------------------------------------------
+---DONE---
+ - add explcit pulldown for formats
+ - Improved Picking
+   - area picking (disappears on rotation though)
+
 ---NOT DONE---
  - usm3d surface/boundary layer/incomplete volume
  - load file from * with a specific file type
  - zoom/rotate/snap hotkeys
  - unbreak hotkeys (r, x, y, z, X, Y, Z???)
- - maybe add explcit pulldown for formats
  - Improved Picking
-   - area picking
    - polygon picking
    - pick visible option

@@ -5,62 +5,62 @@ For example, with cross referencing...
 
 .. code-block:: python
 
-  >>> model = BDF()
-  >>> model.read_bdf(bdf_filename, xref=True)
+   >>> model = BDF()
+   >>> model.read_bdf(bdf_filename, xref=True)
 
-  >>> nid1 = 1
-  >>> node1 = model.nodes[nid1]
-  >>> node.nid
-  1
+   >>> nid1 = 1
+   >>> node1 = model.nodes[nid1]
+   >>> node.nid
+   1
 
-  >>> node.xyz
-  [1., 2., 3.]
+   >>> node.xyz
+   [1., 2., 3.]
 
-  >>> node.Cid()
-  3
+   >>> node.Cid()
+   3
 
-  >>> node.cid
-  3
+   >>> node.cid
+   3
 
-  >>> node.cid_ref
-  CORD2S, 3, 1, 0., 0., 0., 0., 0., 1.,
-          1., 0., 0.
-  # get the position in the global frame
-  >>> node.get_position()
-  [4., 5., 6.]
+   >>> node.cid_ref
+   CORD2S, 3, 1, 0., 0., 0., 0., 0., 1.,
+           1., 0., 0.
+   # get the position in the global frame
+   >>> node.get_position()
+   [4., 5., 6.]
 
-  # get the position with respect to another frame
-  >>> node.get_position_wrt(model, cid=2)
-  [4., 5., 6.]
+   # get the position with respect to another frame
+   >>> node.get_position_wrt(model, cid=2)
+   [4., 5., 6.]
 
 
 Without cross referencing...
 
 .. code-block:: python
 
-  >>> model = BDF()
-  >>> model.read_bdf(bdf_filename, xref=True)
+   >>> model = BDF()
+   >>> model.read_bdf(bdf_filename, xref=True)
 
-  >>> nid1 = 1
-  >>> node1 = model.nodes[nid1]
-  >>> node.nid
-  1
+   >>> nid1 = 1
+   >>> node1 = model.nodes[nid1]
+   >>> node.nid
+   1
 
-  >>> node.xyz
-  [1., 2., 3.]
+   >>> node.xyz
+   [1., 2., 3.]
 
-  >>> node.Cid()
-  3
+   >>> node.Cid()
+   3
 
-  >>> node.cid
-  3
+   >>> node.cid
+   3
 
-  >>> node.cid_ref
-  None
+   >>> node.cid_ref
+   None
 
-  # get the position in the global frame
-  >>> node.get_position()
-  Error!
+   # get the position in the global frame
+   >>> node.get_position()
+   Error!
 
 Cross-referencing allows you to easily jump across cards and also helps
 with calculating things like position, area, and mass.  The BDF is designed
@@ -137,12 +137,12 @@ class XrefMesh(BDFAttributes):
 
         .. code-block:: python
 
-          model = BDF()
-          model.read_bdf(bdf_filename, xref=False)
-          model.cross_reference(xref=True, xref_loads=False, xref_constraints=False,
-                                           xref_materials=False, xref_properties=False,
-                                           xref_aero=False, xref_masses=False,
-                                           xref_sets=False)
+           model = BDF()
+           model.read_bdf(bdf_filename, xref=False)
+           model.cross_reference(xref=True, xref_loads=False, xref_constraints=False,
+                                            xref_materials=False, xref_properties=False,
+                                            xref_aero=False, xref_masses=False,
+                                            xref_sets=False)
 
         .. warning:: be careful if you call this method with False values
         """

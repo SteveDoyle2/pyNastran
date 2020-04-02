@@ -221,14 +221,25 @@ def get_package_requirements(is_gui=True, add_vtk_qt=True, python_version=None):
             import PIL
             iver = int_version('pillow', PIL.__version__)
             all_reqs['pillow'] = str_version(iver)
-            if iver < [5, 2, 0] or iver > [7, 0, 0]:
-                print("pillow.__version__ = %r > '5.2.0', < '7.1" % PIL.__version__)
-                all_reqs['pillow'] = 'pillow >=5.2.0, <7.1'
-                install_requires.append('pillow >= 5.2.0, <7.1')
+
+            # at least 5.2.0, but not 7.1.0
+            if iver > [7, 1, 0]:
+                pass
+                #print("pillow.__version__ = %r > '5.2.0', !='7.1.0" % PIL.__version__)
+                #all_reqs['pillow'] = 'pillow >=5.2.0, !7.1.0'
+                #install_requires.append('pillow >= 5.2.0, !=7.1.0')
+            elif iver == [7, 1, 0]:
+                print("pillow.__version__ = %r > '5.2.0', !='7.1.0" % PIL.__version__)
+                all_reqs['pillow'] = 'pillow >=5.2.0, !7.1.0'
+                install_requires.append('pillow >= 5.2.0, !=7.1.0')
+            elif iver < [5, 2, 0]:
+                print("pillow.__version__ = %r > '5.2.0', !=7.1.0" % PIL.__version__)
+                all_reqs['pillow'] = 'pillow >=5.2.0, !=7.1.0'
+                install_requires.append('pillow >= 5.2.0, !=7.1.0')
         except ImportError:
             #print('missing pillow...')
-            all_reqs['pillow'] = 'pillow >=5.2.0, <7.1'
-            install_requires.append('pillow >= 5.2.0, <7.1')  # 6.2.0 used
+            all_reqs['pillow'] = 'pillow >=5.2.0, !=7.1.0'
+            install_requires.append('pillow >= 5.2.0, !=7.1.0')  # 7.1.1 used
 
         try:
             import imageio

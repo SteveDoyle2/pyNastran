@@ -13,7 +13,7 @@ import webbrowser
 
 from pyNastran.gui.qt_version import qt_version
 from qtpy import QtCore
-from qtpy.QtWidgets import QMessageBox, qApp
+from qtpy.QtWidgets import QMessageBox, QApplication
 import urllib
 
 # 3rd party
@@ -281,6 +281,7 @@ class MainWindow(GuiCommon, NastranIO):
         settings.clear()
         self.settings.save(settings)
 
-        if qApp is None:
+        q_app = QApplication.instance()
+        if q_app is None:
             sys.exit()
-        qApp.quit()
+        q_app.quit()

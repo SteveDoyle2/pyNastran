@@ -973,19 +973,19 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
 
         .. code-block:: python
 
-          >>> bdf = BDF()
-          >>> bdf.read_bdf(bdf_filename, xref=True)
-          >>> g1 = bdf.Node(1)
-          >>> print(g1.get_position())
-          [10.0, 12.0, 42.0]
-          >>> bdf.write_card(bdf_filename2)
-          >>> print(bdf.card_stats())
+           >>> bdf = BDF()
+           >>> bdf.read_bdf(bdf_filename, xref=True)
+           >>> g1 = bdf.Node(1)
+           >>> print(g1.get_position())
+           [10.0, 12.0, 42.0]
+           >>> bdf.write_card(bdf_filename2)
+           >>> print(bdf.card_stats())
 
-          ---BDF Statistics---
-          SOL 101
-          bdf.nodes = 20
-          bdf.elements = 10
-          etc.
+           ---BDF Statistics---
+           SOL 101
+           bdf.nodes = 20
+           bdf.elements = 10
+           etc.
 
         """
         self.save_file_structure = save_file_structure
@@ -1546,12 +1546,12 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
 
         .. code-block:: python
 
-          GRID, 1, %xVar, %yVar, %zVar
+           GRID, 1, %xVar, %yVar, %zVar
 
-          >>> dict_of_vars = {'xVar': 1.0, 'yVar', 2.0, 'zVar':3.0}
-          >>> bdf = BDF()
-          >>> bdf.set_dynamic_syntax(dict_of_vars)
-          >>> bdf.read_bdf(bdf_filename, xref=True)
+           >>> dict_of_vars = {'xVar': 1.0, 'yVar', 2.0, 'zVar':3.0}
+           >>> bdf = BDF()
+           >>> bdf.set_dynamic_syntax(dict_of_vars)
+           >>> bdf.read_bdf(bdf_filename, xref=True)
 
         Notes
         -----
@@ -2714,38 +2714,38 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
 
         .. code-block:: python
 
-          >>> model = BDF()
+           >>> model = BDF()
 
-          # is_list is a somewhat misleading name; is it a list of card_lines
-          # where a card_line is an unparsed string
-          >>> card_lines = ['GRID,1,2']
-          >>> comment = 'this is a comment'
-          >>> model.add_card(card_lines, 'GRID', comment, is_list=True)
+           # is_list is a somewhat misleading name; is it a list of card_lines
+           # where a card_line is an unparsed string
+           >>> card_lines = ['GRID,1,2']
+           >>> comment = 'this is a comment'
+           >>> model.add_card(card_lines, 'GRID', comment, is_list=True)
 
-          # here is_list=False because it's been parsed
-          >>> card = ['GRID', 1, 2,]
-          >>> model.add_card(card_lines, 'GRID', comment, is_list=False)
+           # here is_list=False because it's been parsed
+           >>> card = ['GRID', 1, 2,]
+           >>> model.add_card(card_lines, 'GRID', comment, is_list=False)
 
-          # here is_list=False because it's been parsed
-          # Note the None at the end of the 1st line, which is there
-          #      because the CONM2 card has a blank field.
-          #      It must be there.
-          # We also set i32 on the 2nd line, so it will default to 0.0
-          >>> card = [
-                  'CONM2', eid, nid, cid, mass, x1, x2, x3, None,
-                           i11, i21, i22, i31, None, i33,
-              ]
-          >>> model.add_card(card_lines, 'CONM2', comment, is_list=False)
+           # here is_list=False because it's been parsed
+           # Note the None at the end of the 1st line, which is there
+           #      because the CONM2 card has a blank field.
+           #      It must be there.
+           # We also set i32 on the 2nd line, so it will default to 0.0
+           >>> card = [
+                   'CONM2', eid, nid, cid, mass, x1, x2, x3, None,
+                            i11, i21, i22, i31, None, i33,
+               ]
+           >>> model.add_card(card_lines, 'CONM2', comment, is_list=False)
 
-          # here's an alternate approach for the CONM2
-          # we use Nastran's CSV format
-          # There are many blank fields, but it's parsed exactly like a
-          # standard CONM2.
-          >>> card = [
-                  'CONM2,1,2,3,10.0',
-                  ',1.0,,5.0'
-              ]
-          >>> model.add_card(card_lines, 'CONM2', comment, is_list=True)
+           # here's an alternate approach for the CONM2
+           # we use Nastran's CSV format
+           # There are many blank fields, but it's parsed exactly like a
+           # standard CONM2.
+           >>> card = [
+                   'CONM2,1,2,3,10.0',
+                   ',1.0,,5.0'
+               ]
+           >>> model.add_card(card_lines, 'CONM2', comment, is_list=True)
 
         .. note:: this is a very useful method for interfacing with the code
         .. note:: the card_object is not a card-type object...so not a GRID
@@ -4032,19 +4032,19 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
 
         .. code-block:: python
 
-          >>> bdf = BDF()
-          >>> bdf.read_bdf(bdf_filename, xref=True)
-          >>> g1 = bdf.Node(1)
-          >>> print(g1.get_position())
-          [10.0, 12.0, 42.0]
-          >>> bdf.write_card(bdf_filename2)
-          >>> print(bdf.card_stats())
+           >>> bdf = BDF()
+           >>> bdf.read_bdf(bdf_filename, xref=True)
+           >>> g1 = bdf.Node(1)
+           >>> print(g1.get_position())
+           [10.0, 12.0, 42.0]
+           >>> bdf.write_card(bdf_filename2)
+           >>> print(bdf.card_stats())
 
-          ---BDF Statistics---
-          SOL 101
-          bdf.nodes = 20
-          bdf.elements = 10
-          etc.
+           ---BDF Statistics---
+           SOL 101
+           bdf.nodes = 20
+           bdf.elements = 10
+           etc.
 
         """
         self._is_cards_dict = True
@@ -4144,38 +4144,38 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
 
         .. code-block:: python
 
-          >>> model = BDF()
+           >>> model = BDF()
 
-          # is_list is a somewhat misleading name; is it a list of card_lines
-          # where a card_line is an unparsed string
-          >>> card_lines = ['GRID,1,2']
-          >>> comment = 'this is a comment'
-          >>> model.add_card(card_lines, 'GRID', comment, is_list=True)
+           # is_list is a somewhat misleading name; is it a list of card_lines
+           # where a card_line is an unparsed string
+           >>> card_lines = ['GRID,1,2']
+           >>> comment = 'this is a comment'
+           >>> model.add_card(card_lines, 'GRID', comment, is_list=True)
 
-          # here is_list=False because it's been parsed
-          >>> card = ['GRID', 1, 2,]
-          >>> model.add_card(card_lines, 'GRID', comment, is_list=False)
+           # here is_list=False because it's been parsed
+           >>> card = ['GRID', 1, 2,]
+           >>> model.add_card(card_lines, 'GRID', comment, is_list=False)
 
-          # here is_list=False because it's been parsed
-          # Note the None at the end of the 1st line, which is there
-          #      because the CONM2 card has a blank field.
-          #      It must be there.
-          # We also set i32 on the 2nd line, so it will default to 0.0
-          >>> card = [
-                  'CONM2', eid, nid, cid, mass, x1, x2, x3, None,
-                           i11, i21, i22, i31, None, i33,
-              ]
-          >>> model.add_card(card_lines, 'CONM2', comment, is_list=False)
+           # here is_list=False because it's been parsed
+           # Note the None at the end of the 1st line, which is there
+           #      because the CONM2 card has a blank field.
+           #      It must be there.
+           # We also set i32 on the 2nd line, so it will default to 0.0
+           >>> card = [
+                   'CONM2', eid, nid, cid, mass, x1, x2, x3, None,
+                            i11, i21, i22, i31, None, i33,
+               ]
+           >>> model.add_card(card_lines, 'CONM2', comment, is_list=False)
 
-          # here's an alternate approach for the CONM2
-          # we use Nastran's CSV format
-          # There are many blank fields, but it's parsed exactly like a
-          # standard CONM2.
-          >>> card = [
-                  'CONM2,1,2,3,10.0',
-                  ',1.0,,5.0'
-              ]
-          >>> model.add_card(card_lines, 'CONM2', comment, is_list=True)
+           # here's an alternate approach for the CONM2
+           # we use Nastran's CSV format
+           # There are many blank fields, but it's parsed exactly like a
+           # standard CONM2.
+           >>> card = [
+                   'CONM2,1,2,3,10.0',
+                   ',1.0,,5.0'
+               ]
+           >>> model.add_card(card_lines, 'CONM2', comment, is_list=True)
 
         Notes
         -----

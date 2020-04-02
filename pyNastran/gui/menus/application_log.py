@@ -3,7 +3,7 @@ from pyNastran.gui.qt_version import qt_version, is_pygments
 from qtpy.QtCore import Qt
 from qtpy.QtGui import QFont, QFontMetrics, QColor, QCursor
 from qtpy import QtCore
-from qtpy.QtWidgets import QTextEdit, QDockWidget, qApp  # PySide2 must be <5.14.2
+from qtpy.QtWidgets import QTextEdit, QDockWidget
 
 
 class HtmlLog(QTextEdit):
@@ -33,9 +33,9 @@ class HtmlLog(QTextEdit):
         """calls out to the main GUI to clear the screen"""
         self.parent().on_clear()
 
-    def buttonClicked(self):
-        if qApp.mouseButtons() & QtCore.Qt.RightButton:
-            print(self.sender().toolTip())
+    #def buttonClicked(self):  # PySide2 must be <5.14.2
+        #if qApp.mouseButtons() & QtCore.Qt.RightButton:
+            #print(self.sender().toolTip())
 
     def mousePressEvent(self, event):
         """called when you click a result"""

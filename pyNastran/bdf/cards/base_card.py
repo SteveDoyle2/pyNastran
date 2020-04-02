@@ -186,10 +186,10 @@ class BaseCard:
 
         .. code-block:: python
 
-          nid = 1
-          node = model.nodes[nid]
-          # ['GRID', nid, cp, x, y, z]
-          z = node.get_field(5)
+           nid = 1
+           node = model.nodes[nid]
+           # ['GRID', nid, cp, x, y, z]
+           z = node.get_field(5)
 
         """
         try:
@@ -218,12 +218,12 @@ class BaseCard:
 
         .. code-block:: python
 
-          >>> GRID(nid=1, ...) === GRID(nid=1, ...)
-          True
-          >>> GRID(nid=1, ...) === GRID(nid=2, ...)
-          False
-          >>> GRID(nid=1, ...) === CQUAD4(eid=1, ...)
-          False
+           >>> GRID(nid=1, ...) === GRID(nid=1, ...)
+           True
+           >>> GRID(nid=1, ...) === GRID(nid=2, ...)
+           False
+           >>> GRID(nid=1, ...) === CQUAD4(eid=1, ...)
+           False
 
         """
         if not isinstance(card, self.__class__):

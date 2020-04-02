@@ -769,24 +769,24 @@ class OP2(OP2_Scalar, OP2Writer):
 
         .. code-block:: python
 
-          stress = {
-              # isubcase, analysis_code, sort_method, count, superelement_adaptivity_index, pval_step
-              (1, 2, 1, 0, 'SUPERELEMENT 0', '') : result1,
-              (1, 2, 1, 0, 'SUPERELEMENT 10', '') : result2,
-              (1, 2, 1, 0, 'SUPERELEMENT 20', '') : result3,
-              (2, 2, 1, 0, 'SUPERELEMENT 0', '') : result4,
+           stress = {
+               # isubcase, analysis_code, sort_method, count, superelement_adaptivity_index, pval_step
+               (1, 2, 1, 0, 'SUPERELEMENT 0', '') : result1,
+               (1, 2, 1, 0, 'SUPERELEMENT 10', '') : result2,
+               (1, 2, 1, 0, 'SUPERELEMENT 20', '') : result3,
+               (2, 2, 1, 0, 'SUPERELEMENT 0', '') : result4,
 
-        code = (isubcase, analysis_code, sort_method, count, ogs,
-                superelement_adaptivity_index, pval_step)
-          }
+           code = (isubcase, analysis_code, sort_method, count, ogs,
+                   superelement_adaptivity_index, pval_step)
+             }
         and convert it to:
 
         .. code-block:: python
 
-          stress = {
-              1 : result1 + result2 + results3,
-              2 : result4,
-          }
+           stress = {
+               1 : result1 + result2 + results3,
+               2 : result4,
+           }
 
         """
         self.combine = combine

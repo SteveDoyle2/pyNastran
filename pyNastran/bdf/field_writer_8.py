@@ -273,11 +273,11 @@ def print_card_8(fields: List[Union[int, float, str, None]]) -> str:
 
     .. code-block:: python
 
-      >>> fields = ['DUMMY', 1, 2, 3, None, 4, 5, 6, 7, 8.]
-      >>> print_card_8(fields)
-      DUMMY          1       2       3               4       5       6       7
-      DUMMY          1       2       3               4       5       6       7
-                    8.
+       >>> fields = ['DUMMY', 1, 2, 3, None, 4, 5, 6, 7, 8.]
+       >>> print_card_8(fields)
+       DUMMY          1       2       3               4       5       6       7
+       DUMMY          1       2       3               4       5       6       7
+                     8.
 
     """
     try:
@@ -320,7 +320,7 @@ def print_int_card(fields: List[Union[int]]) -> str:
 
     .. code-block:: python
 
-      fields = ['SET', 1, 2, 3, 4, 5, 6, ..., n]
+       fields = ['SET', 1, 2, 3, 4, 5, 6, ..., n]
 
     """
     try:
@@ -364,14 +364,14 @@ def print_int_card_blocks(fields_blocks: List[Any]) -> str:
 
     .. code-block:: python
 
-      fields_blocks = [
-          'SET1',
-          [['a', 1.0, 3], False], # these are not all integers
-          [[1, 2, 3], True],      # these are all integers
-      ]
-      msg = print_int_card_blocks(fields_blocks)
-      print(msg)
-      >>> 'SET1           a      1.       3       1       2       3\n'
+       fields_blocks = [
+           'SET1',
+           [['a', 1.0, 3], False], # these are not all integers
+           [[1, 2, 3], True],      # these are all integers
+       ]
+       msg = print_int_card_blocks(fields_blocks)
+       print(msg)
+       >>> 'SET1           a      1.       3       1       2       3\n'
 
     """
     card_name = fields_blocks[0]

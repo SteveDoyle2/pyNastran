@@ -48,7 +48,7 @@ class NastranIO(NastranIO_xref):
     def load_nastran_geometry(self, bdf_filename, dirname, name='main'):
         self.eid_map = {}
         self.nid_map = {}
-        if bdf_filename is None or bdf_filename is '':
+        if bdf_filename is None or bdf_filename == '':
             return
         else:
             self.turn_text_off()

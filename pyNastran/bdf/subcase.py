@@ -546,12 +546,13 @@ class Subcase:
 
         .. code-block:: python
 
-          model = BDF()
-          model.read_bdf(bdf_filename)
-          case_control = model.case_control_deck
-          subcase1 = case_control.subcases[1]
-          if 'LOAD' in subcase1:
-              print('found LOAD for subcase 1')
+           model = BDF()
+           model.read_bdf(bdf_filename)
+           case_control = model.case_control_deck
+           subcase1 = case_control.subcases[1]
+           if 'LOAD' in subcase1:
+               print('found LOAD for subcase 1')
+
         """
         if param_name in self.params:
             return True
@@ -573,12 +574,13 @@ class Subcase:
 
         .. code-block:: python
 
-          model = BDF()
-          model.read_bdf(bdf_filename)
-          case_control = model.case_control_deck
-          subcase1 = case_control.subcases[1]
-          if any(subcase1.has_parameter('LOAD', 'TEMPERATURE(LOAD)')):
-              print('found LOAD for subcase 1')
+           model = BDF()
+           model.read_bdf(bdf_filename)
+           case_control = model.case_control_deck
+           subcase1 = case_control.subcases[1]
+           if any(subcase1.has_parameter('LOAD', 'TEMPERATURE(LOAD)')):
+               print('found LOAD for subcase 1')
+
         """
         exists = [param_name.upper() in self.params
                   for param_name in param_names]
@@ -604,11 +606,12 @@ class Subcase:
 
         .. code-block:: python
 
-          model = BDF()
-          model.read_bdf(bdf_filename)
-          case_control = model.case_control_deck
-          subcase1 = case_control.subcases[1]
-          value, options = subcase1['LOAD']
+           model = BDF()
+           model.read_bdf(bdf_filename)
+           case_control = model.case_control_deck
+           subcase1 = case_control.subcases[1]
+           value, options = subcase1['LOAD']
+
         """
         return self.get_parameter(param_name)
 
@@ -660,11 +663,12 @@ class Subcase:
 
         .. code-block:: python
 
-          model = BDF()
-          model.read_bdf(bdf_filename)
-          case_control = model.case_control_deck
-          subcase1 = case_control.subcases[1]
-          value, options = subcase1['LOAD']
+           model = BDF()
+           model.read_bdf(bdf_filename)
+           case_control = model.case_control_deck
+           subcase1 = case_control.subcases[1]
+           value, options = subcase1['LOAD']
+
         """
         param_name = update_param_name(param_name)
         if param_name not in self.params:
