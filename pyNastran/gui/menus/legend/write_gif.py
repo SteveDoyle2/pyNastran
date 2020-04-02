@@ -595,7 +595,10 @@ def write_gif(gif_filename: str, png_filenames: List[str], time: float=2.0,
     if make_gif and IS_IMAGEIO:
         images = []
         for png_filename in png_filenames:
-            images.append(imageio.imread(png_filename))
+            if not isinstance(png_filename, str) and os.path.exists(png_filename):
+                raise TypeError(f'png_filename={png_filename!r} is invalid')
+            imagei = imageio.imread(png_filename)
+            images.append(imagei)
         if nrepeat is True:
             nrepeat = 0
         try:

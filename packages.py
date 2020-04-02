@@ -256,10 +256,22 @@ def get_package_requirements(is_gui=True, add_vtk_qt=True, python_version=None):
     return all_reqs, install_requires
 
 def update_version_file():
+    """
+    Creates the version.py file with the github string
+    to lock down the version when the user the following
+    on the dev version:
+    >>> python setup.py install
+
+    instead of:
+    >>> python setup.py develop
+
+    This is handy
+    """
     import pyNastran
     if 'install' not in sys.argv:
         return
-
+    if 'dev' in pyNastran.__version__:
+        return
     pkg_path = pyNastran.__path__[0]
     init_filename = os.path.join(pkg_path, '__init__.py')
     version_filename = os.path.join(pkg_path, 'version.py')

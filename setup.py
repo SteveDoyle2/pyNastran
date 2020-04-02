@@ -1,11 +1,9 @@
 #!/usr/bin/env python
-from __future__ import absolute_import
 import os
-import sys
 from setuptools import setup, find_packages
 
 import pyNastran
-from packages import check_python_version, get_package_requirements
+from packages import check_python_version, get_package_requirements, update_version_file
 
 add_vtk_qt = True
 if 'bdist_wheel' in sys.argv:
@@ -33,6 +31,7 @@ packages = find_packages(exclude=['ez_setup', 'examples', 'tests'] + exclude_wor
 for exclude_word in exclude_words:
     packages = [package for package in packages if exclude_word not in package]
 #print(packages, len(packages)) # 83
+update_version_file()
 
 setup(
     name='pyNastran',

@@ -3,16 +3,13 @@ import os
 from setuptools import setup, find_packages
 
 import pyNastran
-from packages import check_python_version, get_package_requirements
+from packages import check_python_version, get_package_requirements, update_version_file
 
-packages = find_packages() + ['gui/icons/*.*']
-#print("packages = %s" % packages)
-#sys.exit()
 
 check_python_version()
 unused_all_reqs, install_requires = get_package_requirements(is_gui=False)
-
-
+packages = find_packages() + ['gui/icons/*.*']
+#print("packages = %s" % packages)
 
 # set up all icons
 icon_path = os.path.join('pyNastran', 'gui', 'icons')
@@ -31,6 +28,7 @@ packages = find_packages(exclude=['ez_setup', 'examples', 'tests'] + exclude_wor
 for exclude_word in exclude_words:
     packages = [package for package in packages if exclude_word not in package]
 #print(packages, len(packages)) # 83
+update_version_file()
 
 setup(
     name='pyNastran',
