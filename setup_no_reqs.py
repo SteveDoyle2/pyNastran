@@ -2,7 +2,8 @@
 import os
 from setuptools import setup, find_packages
 
-from packages import check_python_version, get_package_requirements, update_version_file
+from packages import (check_python_version, get_package_requirements,
+                      update_version_file, LONG_DESCRIPTION)
 check_python_version()
 
 import pyNastran
@@ -38,7 +39,7 @@ setup(
     name='pyNastran',
     version=pyNastran.__version__,
     description=pyNastran.__desc__,
-    long_description=pyNastran.__longdesc__,
+    long_description=LONG_DESCRIPTION,
     classifiers=[
         'Natural Language :: English',
         'Intended Audience :: Science/Research',

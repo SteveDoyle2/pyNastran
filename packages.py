@@ -35,6 +35,7 @@ REQS = {
     },
 }
 
+
 def check_python_version():
     """verifies the python version"""
     imajor, minor1, minor2 = sys.version_info[:3]
@@ -298,3 +299,16 @@ def update_version_file():
         data = init_file_out.write(data2)
 
     #__version__ = '1.3.0+%s' % revision
+
+
+
+def cat_files(*filenames, encoding='utf8', sep='\n'):
+    """Get the long description from the relevant file"""
+    # thanks to harold!
+    buf = []
+    for filename in filenames:
+        with open(filename, encoding=encoding) as file_obj:
+            buf.append(file_obj.read())
+    return sep.join(buf)
+
+LONG_DESCRIPTION = cat_files('README.md', 'releaseNotes.txt')

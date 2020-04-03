@@ -4,7 +4,8 @@ import sys
 from setuptools import setup, find_packages
 
 import pyNastran
-from packages import check_python_version, get_package_requirements, update_version_file
+from packages import (check_python_version, get_package_requirements,
+                      update_version_file, LONG_DESCRIPTION)
 
 add_vtk_qt = True
 if 'bdist_wheel' in sys.argv:
@@ -34,14 +35,14 @@ setup(
     name='pyNastran',
     version=pyNastran.__version__,
     description=pyNastran.__desc__,
-    long_description=pyNastran.__longdesc__,
+    long_description=LONG_DESCRIPTION,
     classifiers=[
         'Natural Language :: English',
         'Intended Audience :: Science/Research',
         'License :: OSI Approved :: BSD License',
         'Programming Language :: Python :: 3.7',
         'Programming Language :: Python :: 3.8',
-        ], # Get strings from http://pypi.python.org/pypi?%3Aaction=list_classifiers
+    ], # Get strings from http://pypi.python.org/pypi?%3Aaction=list_classifiers
     keywords='',
     python_requires='>=3.7',
     author=pyNastran.__author__,
