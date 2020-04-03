@@ -3,12 +3,13 @@ import unittest
 from qtpy import QtGui
 
 
-from pyNastran.gui.menus.test_menu import UsesQApplication
+from pyNastran.gui.menus.test.test_gui_menu import UsesQApplication
 from pyNastran.gui.gui import MainWindow
 
 import pyNastran
 PKG_PATH = pyNastran.__path__[0]
 MODEL_PATH = os.path.join(PKG_PATH, '..', 'models')
+PLUGIN_DIR = os.path.dirname(__file__)
 
 
 class TestGUI(UsesQApplication):
@@ -40,6 +41,18 @@ class TestGUI(UsesQApplication):
         gui.open_docs()
         gui.open_issue()
         gui.open_discussion_forum()
+
+        # default plugins
+        gui._load_plugins()
+
+        plugin_name_to_path = [
+            ('spike_module', os.path.join(PLUGIN_DIR, 'spike_module.py'), 'SpikeModule_Bad'),
+            ('spike_module2', 'spike_module_doesnt_exist.py', 'SpikeModule'),
+            ('spike_module', os.path.join(PLUGIN_DIR, 'spike_module.py'), 'SpikeModule'),
+            #('rfs_viewer', os.path.join(PLUGIN_DIR, 'rfs', 'rfs_viewer.py'), 'RFSViewer'),
+        ]
+        # load bad plugins and a good plugin - #3
+        gui._load_plugins(plugin_name_to_path)
 
         bdf_filename = os.path.join(MODEL_PATH, 'beam_modes', 'beam_modes.dat')
         #op2_filename = os.path.join(MODEL_PATH, 'beam_modes', 'beam_modes_m2.op2')
