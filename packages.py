@@ -35,7 +35,6 @@ REQS = {
     },
 }
 
-
 def check_python_version():
     """verifies the python version"""
     imajor, minor1, minor2 = sys.version_info[:3]
@@ -311,4 +310,8 @@ def cat_files(*filenames, encoding='utf8', sep='\n'):
             buf.append(file_obj.read())
     return sep.join(buf)
 
-LONG_DESCRIPTION = cat_files('README.md', 'releaseNotes.txt')
+LONG_DESCRIPTION = cat_files('README.md', 'releaseNotes.md')
+#assert '\r' not in LONG_DESCRIPTION, LONG_DESCRIPTION
+#for i, line in enumerate(LONG_DESCRIPTION.split('\n')):
+    #print(f'%4i: %s' % (i, line))
+    # print(LONG_DESCRIPTION)

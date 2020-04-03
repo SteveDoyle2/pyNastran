@@ -13,7 +13,7 @@ v1.3.0 (2020/4/8)
 -----------------
 With Python 2 now officially dead, it's time for a new feature to encourage people to switch.
 
-There is now support for writing OP2 files!  They're difficult to create from scratch, 
+There is now support for writing OP2 files!  They're difficult to create from scratch,
 but modifying an existing is easy.  This also includes geometry support.
 
 In addition, many new OP2 results have been added.  Modern NX Nastran should work much better.
@@ -23,7 +23,7 @@ Programmatics:
  - Dropping Python 2.7 and 3.6 support
  - GUI is compatible with PyQt5 and PySide2
  - improved testing of old versions of packages
- 
+
 BDF:
  - enhancements
    - 405 cards supported (up from 373)
@@ -55,7 +55,7 @@ BDF:
 OP2:
  - enhancements:
    - OP2 write support
-   - fixed most pandas deprecation warnings/added support for pandas 0.25 
+   - fixed most pandas deprecation warnings/added support for pandas 0.25
    - much improved NX 2019.2 support
  - minor enhancements:
    - more hdf5 results

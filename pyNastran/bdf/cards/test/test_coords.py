@@ -510,7 +510,6 @@ class TestCoords(unittest.TestCase):
         array_equal(xyz_cid0_actual, xyz_cid0_xform)
         assert array_equal(nids, array([30, 31, 32]))
 
-
         for cid in [30, 31, 32]:
             unused_xyz_cid_a = model.transform_xyzcp_to_xyz_cid(
                 xyz_cp, nids, icp_transform, cid=cid)

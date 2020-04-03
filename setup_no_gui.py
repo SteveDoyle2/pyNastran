@@ -9,6 +9,7 @@ from packages import (check_python_version, get_package_requirements,
 
 check_python_version()
 unused_all_reqs, install_requires = get_package_requirements(is_gui=False)
+
 packages = find_packages() + ['gui/icons/*.*']
 #print("packages = %s" % packages)
 
@@ -36,13 +37,14 @@ setup(
     version=pyNastran.__version__,
     description=pyNastran.__desc__,
     long_description=LONG_DESCRIPTION,
+    long_description_content_type='text/markdown',
     classifiers=[
         'Natural Language :: English',
         'Intended Audience :: Science/Research',
         'License :: OSI Approved :: BSD License',
         'Programming Language :: Python :: 3.7',
         'Programming Language :: Python :: 3.8',
-        ], # Get strings from http://pypi.python.org/pypi?%3Aaction=list_classifiers
+    ], # Get strings from http://pypi.python.org/pypi?%3Aaction=list_classifiers
     keywords='',
     python_requires='>=3.7',
     author=pyNastran.__author__,
@@ -78,8 +80,9 @@ setup(
 
             #'pyNastranv = pyNastran.dev.bdf_vectorized.solver.solver:main',
             #'test_bdfv = pyNastran.dev.bdf_vectorized.test.test_bdf_vectorized2:main',
+            #'test_bdfv = pyNastran.dev.bdf_vectorized2.test.test_bdf:main',
             #'nastran_to_code_aster = pyNastran.converters.dev.code_aster.nastran_to_code_aster:main',
-        ]# + py2_gui_scripts
+        ]
     },
     test_suite='pyNastran.all_tests',
 )

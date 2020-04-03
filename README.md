@@ -125,8 +125,8 @@ GUI:
  - enhancements:
    - partial custom results many now be loaded
    - animation now supports complex fringe
-   - result case description now shows the min/max value as well as the location
    - result case description now shows the mode/time/frequency
+   - result case description now shows the min/max value as well as the location
    - map centroidal to nodal option
    - adding node/element highlight menu
    - adding node/element mark/label menu

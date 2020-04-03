@@ -167,7 +167,7 @@ To checkout a branch
 
 .. code-block:: console
 
-  >>> git.exe clone --branch 1.3 --progress -v "https://github.com/SteveDoyle2/pyNastran.git" "C:\\work\\pyNastran_1.2"
+  >>> git.exe clone --branch 1.3 --progress -v "https://github.com/SteveDoyle2/pyNastran.git" "C:\\work\\pyNastran_1.3"
 
 
 Documentation

@@ -10,9 +10,11 @@ from packages import (check_python_version, get_package_requirements,
 add_vtk_qt = True
 if 'bdist_wheel' in sys.argv:
     add_vtk_qt = False
+    assert '\r' not in LONG_DESCRIPTION, LONG_DESCRIPTION
 
 check_python_version()
 install_requires = get_package_requirements(is_gui=True, add_vtk_qt=add_vtk_qt)
+
 packages = find_packages() + ['gui/icons/*.*']
 #print("packages = %s" % packages)
 
@@ -36,6 +38,7 @@ setup(
     version=pyNastran.__version__,
     description=pyNastran.__desc__,
     long_description=LONG_DESCRIPTION,
+    long_description_content_type='text/markdown',
     classifiers=[
         'Natural Language :: English',
         'Intended Audience :: Science/Research',
@@ -78,6 +81,7 @@ setup(
 
             #'pyNastranv = pyNastran.dev.bdf_vectorized.solver.solver:main',
             #'test_bdfv = pyNastran.dev.bdf_vectorized.test.test_bdf_vectorized2:main',
+            #'test_bdfv = pyNastran.dev.bdf_vectorized2.test.test_bdf:main',
             #'nastran_to_code_aster = pyNastran.converters.dev.code_aster.nastran_to_code_aster:main',
         ]
     },

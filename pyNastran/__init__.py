@@ -20,13 +20,12 @@ else:
             IMAJOR, MINOR1, MINOR2))
 
     __version__ = '1.3.0'
-    __releaseDate__ = '2020/4/xx'
-    __releaseDate2__ = 'APRIL xx, 2020'
+    __releaseDate__ = '2020/4/8'
+    __releaseDate2__ = 'APRIL 8, 2020'
 
 __author__ = 'Steven Doyle'
 __email__ = 'mesheb82@gmail.com'
 __desc__ = 'Nastran BDF/F06/OP2/OP4 File reader/editor/writer/viewer'
-__longdesc__ = __desc__
 __license__ = 'BSD-3'
 __copyright__ = f'Copyright {__license__}; 2011-2020'
 __pyside_copyright__ = 'Copyright LGPLv3 - pySide'
