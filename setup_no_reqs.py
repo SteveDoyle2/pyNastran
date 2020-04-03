@@ -2,11 +2,14 @@
 import os
 from setuptools import setup, find_packages
 
-from packages import check_python_version, get_package_requirements, update_version_file
+from packages import (check_python_version, get_package_requirements,
+                      update_version_file, LONG_DESCRIPTION)
+
+
 check_python_version()
 
 import pyNastran
-packages = find_packages()+['gui/icons/*.*']
+packages = find_packages() + ['gui/icons/*.*']
 
 # set up all icons
 icon_path = os.path.join('pyNastran', 'gui', 'icons')
@@ -38,7 +41,8 @@ setup(
     name='pyNastran',
     version=pyNastran.__version__,
     description=pyNastran.__desc__,
-    long_description=pyNastran.__longdesc__,
+    long_description=LONG_DESCRIPTION,
+    long_description_content_type='text/markdown',
     classifiers=[
         'Natural Language :: English',
         'Intended Audience :: Science/Research',

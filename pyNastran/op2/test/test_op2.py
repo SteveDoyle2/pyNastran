@@ -530,7 +530,8 @@ def get_test_op2_data(argv):
         data['--profile'] = False
         data['--write_xlsx'] = False
         data['--write_op2'] = False
-        data['--combine'] = True
+        data['--nocombine'] = False
+        data['--nasa95'] = False
 
     if '--geometry' not in data:
         data['--geometry'] = False

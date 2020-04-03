@@ -225,7 +225,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         """
         hides the Nastran toolbar when loading another format
         """
-        self.nastran_tools_menu.setVisiblnastran_tools_menue(False)
+        self.nastran_tools_menu.setVisible(False)
 
         #self.menu_help.menuAction().setVisible(True)
         #self.menu_help2.menuAction().setVisible(False)
@@ -1439,7 +1439,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         stop_on_failure = IS_TESTING
         build_map_centroidal_result(model, nid_map, stop_on_failure=stop_on_failure)
 
-        if not IS_TESTING:
+        if not IS_TESTING and 'dev' in __version__:
             self.sidebar_nastran = ModelSidebar(self.gui, nastran_io=self)
             self.sidebar_nastran.set_model(model)
 
