@@ -1,18 +1,16 @@
-Information
-===========
+More Information
+----------------
 If you like it/want to help leave some feedback:
  - [Dicussion Page](https://groups.google.com/forum/#!forum/pynastran-discuss)
  - [Developer Dicussion](https://groups.google.com/forum/#!forum/pynastran-dev)
 
 If you have a bug/want a new feature or card, leave some feedback on the [Issue Tracker](https://github.com/SteveDoyle2/pyNastran/issues)
 
-=============
 Release Notes
 =============
 
-------------------------
-v1.3.0 released 2020/4/8
-------------------------
+v1.3.0 (2020/4/8)
+-----------------
 With Python 2 now officially dead, it's time for a new feature to encourage people to switch.
 
 There is now support for writing OP2 files!  They're difficult to create from scratch, 
@@ -192,13 +190,13 @@ OP2:
 
 GUI:
  - bug fixes:
-  - better argument handling
-  - fixed coordinate system scaling bug
-  - added check on highlight menu for model existance
-  - fixed import for new version download menu
-  - improved command line error message
-  - fixed support for CAEROx models without elements
-  - export_cases now supports integers
+   - better argument handling
+   - fixed coordinate system scaling bug
+   - added check on highlight menu for model existance
+   - fixed import for new version download menu
+   - improved command line error message
+   - fixed support for CAEROx models without elements
+   - export_cases now supports integers
 
 v1.2.1 (2019/5/24)
 ------------------
@@ -286,20 +284,6 @@ Known issues:
 
 v1.1.0 (2018/6/26)
 ------------------
-This is a major release.  As in the v1.0 release, the focus has been on testing.
-
-The bigest change has been to cross-referencing.  All cross-referenced
-objects now have an ``_ref`` attribute that is cross-referened, which
-is ``None`` if the model is not cross referenced.  Objects maintain the
-uncross-referenced form as well.  For a CQUAD4, instead of:
- ``model.elements[eid].nodes[0].nid``
-the referenced object is:
- ``model.elements[eid].nodes_ref[0].nid``
-
-For detail on the license for the various components, see the v1.0 release.
-
-Quick Overview:
-===============
 Programmatics:
  - Added support for numpy 1.14
  - Dropping support for Python 3.4 (2.7, 3.5, 3.6 are supported)
@@ -318,99 +302,94 @@ GUI:
  - improved animations
  - improved labels
 
-
-Detailed Overview:
-==================
-BDF:
+BDF (detailed):
   - New features:
-   - model.get_reduced_loads(load_id)
-   - model.get_reduced_dloads(dload_id)
-   - card1 == card2 now supported
-   - PBARL/PBEAML support the NX TUBE2 type
-   - added FREQ3, FREQ5, CAERO5, PAERO5, MATT3, SPLINE3, RSSCON, OMIT1
-   - more xref
-   - added model.clear_attributes()
-   - renumbering:
-     - bdf_renumber now supports renumbers SETs and SPLINEx cards
-     - SPOINTs/EPOINTs now use dictionaries to enable SPOINT/EPOINT renumbering
-     - caero sub-panels ids are now renumbered
-     - renumbering mapper object returned now
-   - improved removed_unused card support
-   - improved mirroring
-   - read_bdf StringIO option now parses pyNastran header
-   - subcase copying speedup (helps with SETs)
-   - preliminary ZONA loading
-   - added atmosphere2.make_flfacts_eas_sweep, make_flfacts_mach_sweep, and
-     make_flfacts_alt_sweep with an EAS (equivalent airspeed) limiter
-   - rotate_v_wa_wb for CBAR/CBEAM to determine element vectors
+    - model.get_reduced_loads(load_id)
+    - model.get_reduced_dloads(dload_id)
+    - card1 == card2 now supported
+    - PBARL/PBEAML support the NX TUBE2 type
+    - added FREQ3, FREQ5, CAERO5, PAERO5, MATT3, SPLINE3, RSSCON, OMIT1
+    - more xref
+    - added model.clear_attributes()
+    - renumbering:
+      - bdf_renumber now supports renumbers SETs and SPLINEx cards
+      - SPOINTs/EPOINTs now use dictionaries to enable SPOINT/EPOINT renumbering
+      - caero sub-panels ids are now renumbered
+      - renumbering mapper object returned now
+    - improved removed_unused card support
+    - improved mirroring
+    - read_bdf StringIO option now parses pyNastran header
+    - subcase copying speedup (helps with SETs)
+    - preliminary ZONA loading
+    - added atmosphere2.make_flfacts_eas_sweep, make_flfacts_mach_sweep, and
+      make_flfacts_alt_sweep with an EAS (equivalent airspeed) limiter
+    - rotate_v_wa_wb for CBAR/CBEAM to determine element vectors
 
   - Bug fixes:
-   - more add_card documentation (e.g., add_grid, add_ctria3)
-   - fixed NSMADD card type (was SPCADD)
-   - fixed CPLTSTN3 card type (was CTRIA3)
-   - fixed CPLTSTS3 card type (was CTRIA3)
-   - fixed shell MCIDs not renumbering
-   - fixed FREQx renumbering crash
-   - model may be pickled again (model.save('model.obj') and model.load('model.obj')
-   - fixed PBARL/PBEAML DBOX error
-   - fixed PositionWRT bug
-   - fixed LOAD card messing up load ids after cross referencing
-   - fixed TRIM default on aeqr (was 0.0/rigid; should be 1.0/elastic)
-   - NLPCI now gets written when there are no other dynamic cards
-   - fixed CBUSH cid=0 bug
-   - fixed TABLED4/TABLEM4 stopping error
+    - more add_card documentation (e.g., add_grid, add_ctria3)
+    - fixed NSMADD card type (was SPCADD)
+    - fixed CPLTSTN3 card type (was CTRIA3)
+    - fixed CPLTSTS3 card type (was CTRIA3)
+    - fixed shell MCIDs not renumbering
+    - fixed FREQx renumbering crash
+    - model may be pickled again (model.save('model.obj') and model.load('model.obj')
+    - fixed PBARL/PBEAML DBOX error
+    - fixed PositionWRT bug
+    - fixed LOAD card messing up load ids after cross referencing
+    - fixed TRIM default on aeqr (was 0.0/rigid; should be 1.0/elastic)
+    - NLPCI now gets written when there are no other dynamic cards
+    - fixed CBUSH cid=0 bug
+    - fixed TABLED4/TABLEM4 stopping error
 
   - API changes:
-   - model.Node(nid, allow_empty_nodes=False msg='') no longer supports
-     allow_empty_nodes.  Use:
-       model.EmptyNode(nid, msg='') instead for that
-       model.Node(nid, msg='') is the new form
-   - model.Nodes(nid, allow_empty_nodes=False msg='') no longer supports
-     allow_empty_nodes.  Use:
-       model.EmptyNodes(nid, msg='') instead for that
-       model.Nodes(nid, msg='') is the new form
-   - PCOMPG.validate() now checks that global ply ids are unique
-   - xref_nodes_with_elements now creates a list instead of a set
-     (fixes a Python 3.x bug)
-   - get_MPCx_node_ids_c1 is now get_MPCx_node_ids_c1
-     (was inconsistent with what it does)
-   - get_MPCx_node_ids_c1 created
-   - xref'd objects now use _ref globally
-   - aestat.id is now aestat.aestat_id
-   - aeparm.id is now aeparm.aeparm_id
-   - model.add_aset1/aset (also bset/cset/qset/uset) now a consistent set of
-     function arguments and call the same function.  The card will be created
-     based on your data instead of necessarily what you asked for.
-   - LOAD cards are now stored in model.load_combinations instead of model.loads
+    - model.Node(nid, allow_empty_nodes=False msg='') no longer supports
+      allow_empty_nodes.  Use:
+        model.EmptyNode(nid, msg='') instead for that
+        model.Node(nid, msg='') is the new form
+    - model.Nodes(nid, allow_empty_nodes=False msg='') no longer supports
+      allow_empty_nodes.  Use:
+        model.EmptyNodes(nid, msg='') instead for that
+        model.Nodes(nid, msg='') is the new form
+    - PCOMPG.validate() now checks that global ply ids are unique
+    - xref_nodes_with_elements now creates a list instead of a set
+      (fixes a Python 3.x bug)
+    - get_MPCx_node_ids_c1 is now get_MPCx_node_ids_c1
+      (was inconsistent with what it does)
+    - get_MPCx_node_ids_c1 created
+    - xref'd objects now use _ref globally
+    - aestat.id is now aestat.aestat_id
+    - aeparm.id is now aeparm.aeparm_id
+    - model.add_aset1/aset (also bset/cset/qset/uset) now a consistent set of
+      function arguments and call the same function.  The card will be created
+      based on your data instead of necessarily what you asked for.
+    - LOAD cards are now stored in model.load_combinations instead of model.loads
 
   - Known bugs:
-   - dynamic loads cross-referencing is buggy;
-     reject the cards if there is a problem
-   - PBEAM defaults with ENDA are slightly incorrect.
+    - dynamic loads cross-referencing is buggy;
+      reject the cards if there is a problem
+    - PBEAM defaults with ENDA are slightly incorrect.
 
-OP2:
+OP2 (detailed):
   - New features:
-   - added model.set_additional_generalized_tables_to_read(tables) to
-     create custom OP2 readers
-   - added complex/average strain energy
-   - save/load hdf5 support
-   - EIGRL support
+    - added model.set_additional_generalized_tables_to_read(tables) to
+      create custom OP2 readers
+    - added complex/average strain energy
+    - save/load hdf5 support
+    - EIGRL support
 
   - Bug fixes:
-   - improved table skipping
-   - fixed RealCShearForceArray f06 writing
-   - fixed CEN/3, CEN/4 writing for RealPlateBilinearForceArray
-   - improved geometry table reading
-   - real sparse matrices take much less memory now; were being converted to dense matrices
-   - added RBAR on NX vs. MSC
-   - fixed RBE2 with alpha bug
-   - fixed CREEP bug
-   - fixed RBE3 bug
-   - fixed PBCOMP bug
-
+    - improved table skipping
+    - fixed RealCShearForceArray f06 writing
+    - fixed CEN/3, CEN/4 writing for RealPlateBilinearForceArray
+    - improved geometry table reading
+    - real sparse matrices take much less memory now; were being converted to dense matrices
+    - added RBAR on NX vs. MSC
+    - fixed RBE2 with alpha bug
+    - fixed CREEP bug
+    - fixed RBE3 bug
+    - fixed PBCOMP bug
   - API changes:
     - xlsx exporter removed
-
   - Known bugs:
     - pandas fails on some decks (numpy<1.13 is fine)
     - a large number of PSOLIDs will crash the read_op2/read_op2_geom;
@@ -418,7 +397,7 @@ OP2:
     - transform_gpforce_to_global doesn't work properly with cylindrical
       or spherical coordinate systems
 
-GUI:
+GUI (detailed):
   - New features:
     - control surfaces now get labels (label size doesn't resize properly)
     - in-gui animation
@@ -447,194 +426,3 @@ OP4 bug fixes:
 
 Applictions:
  - removed due to excessively amount of unmaintained code
-
-
-v1.0.0 (2017/5/25)
-------------------
-This is a major release.  The focus this time has been on robustness and testing.
-Hopefully, it shows.  The software has also been relicensed to be BSD-3, which
-is a more permissive license and is the same one that numpy, scipy, and
-matplotlib use.
-
-Unfortunately, the GUI is more restrictive and more complicated.
- - For open source projects : LGPL 2/3
- - For companies that pay a license to Riverbank : LGPL 2/3
- - For companies that don't pay a license fee : GPL 2/3
-However, you may distribute an unmodified binary.
-
-Quick Overview:
-===============
-
-Programmatics:
- - Dropping Python 3.3 support
- - Adding Python 3.6 support
-
-BDF:
- - This version makes it much easier to programmatically create BDFs with the
-   ``add_grid``, ``add_ctria3(...)``, etc. methods.  Almost every card has a
-    method and many have documentation of every parameter.
-
-OP2:
- - Added support for MATPOOL matrices and RANDOM OUG-style tables.
- - First release of read_op2_geom.  Much improved OP2 Geometry reading.
-
-F06:
- - added a preliminary flutter (SOL 145) parser
-   - supports multiple subcases
-   - PK and PKNL methods supported
-   - `plot_Vg_Vf(...)`, `plot_Vg(...)`, `plot_root_locus(...)`
-   - input/output units
-   - mode switching not fixed yet
-
-GUI:
-  - Animation plots
-  - NaN colors
-  - improved picking tolerancing
-  - probe result by mouse picking
-  - measure distance by mouse picking
-  - rotation center by mouse picking
-  - area picking nodes/elements
-  - added basic support for Patran *.nod results
-  - significant speedups
-
-Detailed Overview:
-==================
-BDF:
- - added cards:
-   - CTRAX3, CTRAX6, CQUADX4, CQUADX8, CIHEX2
-   - PAERO4, MONPNT2, MONPNT3, ROTORD, ROTORG
-   - CPLSTN3, CPLSTN4, CPLSTN6, CPLSTN8, PPLANE, MATHE, MATG
-   - POINT, PBRSECT, PBMSECT, CBARAO
-   - QVECT
-   - DVGRID
-   - TIC, TSTEP1
-   - NSM, NSM1, NSML, NSML1, NSMADD
-   - SEQGP
-
- - fixed:
-    - update_card method:
-      # update cards similar to Nastran's optimization
-      # on grid 1234, update cp (field 2) to a value of 7)
-    - model.update_card('GRID', 1234, 2, 7)
-    - speed issue on CORD1x cards
-    - get_loads now supports PLOAD4 cid/N123
-
-  - other bugs:
-    - fixed DIVERG bug (bad key when adding card)
-    - fixed PFAST bug (bad xref)
-    - really annoying DTABLE/TABLED1 bug (they were both called by DTable,
-      but are very different)
-    - fixed bug in SET3 card (multiple THRUs on single card)
-    - write_path function works (Windows)
-    - corrections to CBAR/CBEAM area formulas
-    - CBAR/CBEAM MSCBLM0 is not MSCBLMO
-
- - minor changes
-    - simplified comment writing per Jeff Lyon
-      >>> card.comment = 'this is a comment'
-      '$ this is a comment\n'
-      >>> card.comment = 'this is a multi lined\n  - comment'
-      card._comment =
-      '$ this is a multi lined\n'
-      '$  - comment\n'
-
- - API changes
-   - TABLEDx are no longer in tables and instead tables_d
-   - TABLEMx are no longer in tables and instead tables_m
-   - card init methods now use nids instead of ga/gb so all cards are consistent
-   - frequencies is now a dictionary of lists (not a single value)
-
- - bdf_renumber
-   - removed execs from bdf_renumber, so Python 3 will work
-   - fixed bug with handling Nones (caused by exec change)
-   - fixed case control update bug
-
- - Aero:
-   - handling of non-uniform lsrb/lrib on CAERO2
-   - fixed unxref bug in AESURF
-   - fixed xref bug in CSSCHD
-   - fixed FLUTTER unxref bug
-   - FLFACT can now write in wide field format
-
-
-OP2:
- - added:
-   - read_op2(include_results=None, exclude_results=None)
-   - read_op2_geom(include_results=None, exclude_results=None)
-
-   - MSC Nastran 2005R3B supported
-   - Radioss supported
-   - eigenvector_ROUGV1 now supported
-   - random tables (e.g., PSD, ATO, RMS) for OUG-style tables
-   - OUG1, OAG1 support
-
- - vectorized:
-   - RealCBeamForceVUArray -> cbeam_force_vu
-   - ComplexCBeamForceVUArray -> cbeam_force_vu
-
- - fixed:
-   - MEFF, ASSIG, ASEPS tables now skipped properly
-   - removed beta_transforms from gpforce
-   - stress/strain/force transforms now support complex numbers
-
- - API changes:
-   - real eigenvectors have eign; complex eigenvectors have eigi/eigr;
-     thus a different variable and frequency formula is required
-   -
-GUI:
- - improved PyQt5 support
- - significantly faster reading
-
- - added:
-   - marker/arrow (force) plots
-   - animation menu
-
-       Name   Subcase     Time    Scale Factor  Phase Angle
-       -----  --------  --------  ------------  -----------
-       Scale  Constant  Constant    Variable      Constant
-       Freq.  Constant  Constant    Constant      Variable
-       Time   Variable  Variable    Constant      Constant
-
-   - NaN colors for invalid results (e.g., normal=NaN for a
-     CTRIA3 that has 2 coincident points)
-   - area picking for groups
-   - custom displacement results
-   - probe support by mouse picking
-   - distance support by mouse picking
-   - rotation center by mouse picking
-   - Python 2 only: nicer Python console
-   - support for PyQt5 (not quite perfect)
-
- - fixed:
-   - display issue with CHEXA20 (element was ordered wrong)
-   - element selection for quadratic solids no longer crashes
-   - all legend values are now saved (e.g., the ones from cart3d)
-   - endian issues
-
- - changes:
-   - significant speedups
-   - cycle_results now takes an integer instead of a string, so it works
-      when you call it with more than 10 results  or have transient solutions
-
-
-Known Issues
-============
-BDF:
- - CBEAMs wa/wb NSMs lead to incorrect mass properties
- - write_path function has problems on Linux (low priority; 1/10)
-
-OP2:
- - SPC bug (component=7)
- - SOL 601 issues
-
-GUI:
- - node Cd deflection issue for results (high priority, 4/10)
- - is this a solid element issue?
-   - fix Min Interior angle (moderate priority; 1/10; see optistruct model - quad?)
-   - fix Aspect Ratio (moderate priority; 1/10; see optistruct model - quad?)
- - issue with picking/focusing on a CAERO/CONM2 grid, which doesn't have a result
-   it causes a segfault (high priority; 4/10)
- - fix bar Cd frame for cylindrical/spherical coords (low priority; 4/10)
-   - see femap_exhaust
-   - old : transform_displacements_to_global(i_transforms, beta_transforms)
-   - new : transform_displacements_to_global(i_transforms, coords, xyz_cid0=None)
