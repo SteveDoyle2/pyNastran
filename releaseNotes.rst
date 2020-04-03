@@ -1,13 +1,16 @@
 Information
------------
-If you like it/want to help leave some feedback on the
-Dicussion Page:       https://groups.google.com/forum/#!forum/pynastran-discuss
-Developer Dicussion:  https://groups.google.com/forum/#!forum/pynastran-dev
+===========
+If you like it/want to help leave some feedback:
+ - [Dicussion Page](https://groups.google.com/forum/#!forum/pynastran-discuss)
+ - [Developer Dicussion](https://groups.google.com/forum/#!forum/pynastran-dev)
 
-If you have a bug/want a new feature or card, leave some feedback on the
-Issues List:     https://github.com/SteveDoyle2/pyNastran/issues
+If you have a bug/want a new feature or card, leave some feedback on the [Issue Tracker](https://github.com/SteveDoyle2/pyNastran/issues)
 
+=============
+Release Notes
+=============
 
+------------------------
 v1.3.0 released 2020/4/8
 ------------------------
 With Python 2 now officially dead, it's time for a new feature to encourage people to switch.
