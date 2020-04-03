@@ -19,27 +19,7 @@ else:
         raise ImportError('Upgrade your Python to >= 3.7.0; version=(%s.%s.%s)' % (
             IMAJOR, MINOR1, MINOR2))
 
-    def get_git_revision_short_hash():
-        """determines the git revision; only works if the packages was checked
-        out using git"""
-        try:
-            #ghash = subprocess.check_output(['git', 'rev-parse', '--short', 'HEAD'])
-
-            # independent of pyNastran location as long as there is a git folder
-            #   what about if you use setup_user.py install?
-            #   what about if you don't have git?
-            # can raise a subprocess.CalledProcessError, which means the return code != 0
-            ghash = subprocess.check_output(['git', 'describe', '--always'],
-                                            cwd=os.path.dirname(__file__))
-
-            ghash = ghash.decode('utf-8').rstrip()
-        except:
-            # git isn't installed
-            ghash = 'no.checksum.error'
-        return 'dev.%s' % ghash
-
-    revision = get_git_revision_short_hash()
-    __version__ = '1.3.0+%s' % revision
+    __version__ = '1.3.0'
     __releaseDate__ = '2020/4/xx'
     __releaseDate2__ = 'APRIL xx, 2020'
 
