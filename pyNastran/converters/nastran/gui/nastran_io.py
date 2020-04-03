@@ -224,7 +224,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         """
         hides the Nastran toolbar when loading another format
         """
-        self.nastran_tools_menu.setVisiblnastran_tools_menue(False)
+        self.nastran_tools_menu.setVisible(False)
 
         #self.menu_help.menuAction().setVisible(True)
         #self.menu_help2.menuAction().setVisible(False)
