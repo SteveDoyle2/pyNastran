@@ -19,5 +19,6 @@ from pyNastran.converters.aflr.aflr2.test_bedge_gui import TestBEdgeGUI
 from pyNastran.converters.aflr.surf.test_surf_gui import TestSurfGui
 from pyNastran.converters.aflr.ugrid.test_ugrid_gui import TestUgridGui
 
+
 if __name__ == '__main__':  # pragma: no cover
     unittest.main()

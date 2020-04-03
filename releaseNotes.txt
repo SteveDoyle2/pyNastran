@@ -10,119 +10,27 @@ Issues List:     https://github.com/SteveDoyle2/pyNastran/issues
 
 *** Not done....
 
---------------------------------Future--------------------------------
-Overall Notes
 
-Added BDF
-   - *** SET2,PEALST,DMI,CONM1
+-----------------------v1.3.0 released 2020/4/8-----------------------
+With Python 2 now officially dead, it's time for a new feature to encourage people to switch.
 
-Overall OP2
-   - ***added support for SORT2
+There is now support for writing OP2 files!  They're difficult to create from scratch, 
+but modifying an existing is easy.  This also includes geometry support.
 
-BDF Bug Fixes
-BDF API Additions
+In addition, many new OP2 results have been added.  Modern NX Nastran should work much better.
 
-Removed BDF
-
-Overall OP2
-   - added plotting support for "standard" results (***complex)
-      - ***complex results may plot in real/imag or mag/phase or PSD
-        (power spectral density)
-      - ***no temperature, stress, element forces, energy
-
-
-Overall F06
-F06 Reader
-F06 Writer
-
-Solver
-   - not released
-   - rewriting pyNastran solver (SOL 101)
-      - improved support for 3D
-      - uses case control deck to identify loads/BCs
-      - still uses dense matricies, but layout will be easier to add sparse
-        matricies later
-      - still need to build Kgg/Fg/SPC/MPC matrices, partition matrices,
-        solve, calculate responses
-   - added D matricies for PSHELL, PCOMP, PSOLID
-
-Solver (New):
-   - not released
-   - rewriting pyNastran solver (SOL 101)
-      - uses case control deck to identify loads/BCs
-      - F06/OP2 output
-      - SOL 101 - Static Displacement
-         - outputs:
-           - OLOAD Resultant
-           - Grid Point Weight Generator (calculated; no table)
-           - Displacement
-           - Applied Load
-           - SPC Forces
-           - Stress
-           - Strain
-           - Element Force
-           - MPC Forces (TODO)
-           - Strain Energy (TODO)
-         - cards:
-           - GRID
-             - CD support - verified for CORDxR
-             - PS support - not verified
-             - SEID support
-           - CORDx
-           - CELAS1/CELAS2
-             - no SPOINTs
-             - stress/strain/force output - verified
-             - stiffness matrix - verified
-           - CELAS3/CELAS4
-             - no GRIDs
-             - no stress/strain/force output
-             - stiffness matrix - verified
-           - CONM1/CONM2
-             - no cid
-             - GRID only
-             - mass matrix - not verified
-           - CROD/CONROD/CTUBE
-             - mass matrix - verified
-             - stiffness matrix - verified
-             - output - verified
-           - constraints:
-             - SPC, SPC1
-           - loads:
-             - LOAD
-             - FORCE/MOMENT
-               - GRID only
-             - SLOAD
-               - SPOINT only
-             - SPCD
-           - CBAR
-             - PBAR/PBARL
-             - stiffness matrix - not verified
-             - no mass matrix
-             - no output
-             - not verified
-           - CBEAM
-             - PBEAM (no PBEAML)
-             - no warping
-             - stiffness matrix - not verified
-             - no mass matrix
-             - no output
-           - PSHELL/PCOMP
-             - CTRIA3
-               - no stiffness matrix
-               - mass matrix - not verified
-             - CQUAD4
-               - mass matrix - not verified
-               - stiffness matrix - not verified
-               - no PSHELL mid3
-               - no output
-
------------------------v1.3   released 2020/?/??-----------------------
+Programmatics:
+ - Supports Python 3.7 and 3.8
+ - Dropping Python 2.7 and 3.6 support
+ - GUI is compatible with PyQt5 and PySide2
+ - improved testing of old versions of packages
+ 
 BDF:
- - bug fixes:
- - new cards:
-   - DTI besides UNITS are now supported
-   - PBEAM3, TEMPB3
- - enhancements:
+ - enhancements
+   - 405 cards supported (up from 373)
+   - improved mesh utilities
+      - bdf mirror, bdf convert, bdf export_caero_mesh
+      - additional `bdf scale`, which takes arbitrary mass, length, time, pressure, or velocity scale factors (3 of 5) to apply a scaling law
    - added deck guessing with punch=None
    - better parser for test_bdf
    - PCOMPG now supports DVPRELx
@@ -133,6 +41,10 @@ BDF:
    - bdf_equivalence:
      - method='new' no longer requires neq_max
      - use method='old' for old behavior (deprecated)
+ - bug fixes:
+ - new cards:
+   - DTI besides UNITS are now supported
+   - PBEAM3, TEMPB3
  - minor enhancements:
    - handling ;; in DEQATN
    - support for SURF cid=None in _get_forces_moments_array
@@ -143,16 +55,63 @@ BDF:
 
 OP2:
  - enhancements:
+   - OP2 write support
+   - fixed most pandas deprecation warnings/added support for pandas 0.25 
+   - much improved NX 2019.2 support
+ - minor enhancements:
    - more hdf5 results
    - a few more cards supported in the OP2 geometry reader
-   - adding op2 writer (includes geometry support)
-   - adding composite failure indicies (OEFIT)
-   - improved sensitivity support (DSCMCOL)
-   - preliminary 64-bit support
+   - preliminary NX 64-bit support
+   - more MSC versions supported
+   - sped up R1TABRG (optimization) reading
+   - various geometry cards added
+   - supports more PARAM reading
+ - new results:
+    - composite failure indicies (OEFIT)
+    - sensitivity support (DSCMCOL)
+    - Cambpell diagrams (CDDATA)
+    - eigenvectors (BOPHIGF)
+    - grid point forces SORT2 (OGPFB2)
+    - stress/strain/force
+      - random stress/strain (OESVM1/2, OESVM1C, OSTRVM1/2, OSTRVM2, OESXRM1C, OESXNO1, OESXNO1C)
+      - real/complex stress/strain/force output for centroidal CQUADR/CTRIAR
+      - complex CBEAR forces
+      - real CFAST, CWELD forces
+      - nonlinear cbush stress/strain/force
+    - other
+      - XSOP2DIR
+      - PSDs
+      - optimization
+        - convergence table
+        - design variables
+        - weight response
+        - displacement response
+        - stress response
+        - strain response
+        - force response
+        - composite stress response
+        - composite strain response
+        - fractional mass response
+    - SOL 401/402 results:
+      - eigenvalue_fluid (LAMAF, LAMAS)
+      - eigenvectors (BOPHIGF, BOPHIGS)
+      - temperature (OTEMP1)
+      - solution set
+        - results: displacement, velocity, acceleration, eigenvectors:
+        - tables: OUXY1, OUXY2, OPHSA
+ - API:
+   - reorganized output results to use op2_results object to simply interface
+     - backwards compatibility for stress, strain, forces, strain energy
+     - model.cbar_force -> model.op2_results.force.cbar_force
+     - model.cbar_stress -> model.op2_results.stress.cbar_stress
+     - model.cbar_strain -> model.op2_results.strain.cbar_strain
+     - model.cbar_strain_energy -> model.op2_results.strain_energy.cbar_strain_energy
+ - TODO: linear/nonlinear hyperelastic solids
+ - TODO: stress transforms.  This is probably a bit of work.
+ - TODO: preliminary NX 64-bit support
+ - TODO: CD transforms for cylindrical/spherical displacement, velocity, acceleration, forces.  This shouldn't be terrible.
 
 GUI:
- - bug fixes:
-   - better argument handling
  - enhancements:
     - Can now load custom fringe/displacement/force results with an incorrect
       number of nodes/elements.  It's assumed that the node/element id in the
@@ -160,11 +119,34 @@ GUI:
       filter out extra nodes/elements or you set some blank nodes/elements.
        - For integer results, no masking is applied.
        - For float results, masking is applied and nan corresponds to no color.
-    - added mark_elements, mark_elements_by_case
+   - animation now supports complex fringe
+   - result case description now shows the min/max value as well as the location
+   - result case description now shows the mode/time/frequency
+   - map centroidal to nodal option
+   - adding node/element highlight menu
+   - adding node/element mark/label menu
+   - result case description now shows the min/max value as well as the location
+   - result case description now shows the mode/time/frequency
+ - minor enhancements:
+   - added export result option to right-click menu
+   - legend supports unicode
+   - more keyboard shortcuts
+ - nastran:
+   - geometry:
+     - added preferences for geometry/results to speed up model loading
+     - element & material coordinate systems
+   - results
+     - added acoustic displacements (OUG1F)
+     - real/complex stress/strain/force results
+       - plate by upper/lower, composite plates by ply, bars, rods, springs, cbush, cdamp
+     - fractional mass response
 
------------------------v1.2.2 released 2020/1/x-----------------------
-BDF:
- - bug fixes:
+F06:
+ - KE support for plot_145
+
+Bug fixes:
+ - BDF:
+   - fixing bug in set_param
    - PBARL & PBEAML DBOX now has defaults for DIM5-DIM10
    - added AECOMPL, DEFORM to bdf attributes
    - added RHO to MAT10 updater
@@ -195,7 +177,7 @@ BDF:
      - plane is now case insensitive and auto-sorted
      - CAERO1 now supports lspan/lchord and Cp
      - CAERO1 handles xy plane properly now (doesn't assume it's xz)
-     - fixing bug in set_param
+
 OP2:
  - geom bug fixes:
     - fixed reading bugs for QHBDY and SPCOFF
@@ -209,6 +191,8 @@ OP2:
 
 GUI:
  - bug fixes:
+  - better argument handling
+  - fixed coordinate system scaling bug
   - added check on highlight menu for model existance
   - fixed import for new version download menu
   - improved command line error message

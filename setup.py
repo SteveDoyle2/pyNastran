@@ -23,11 +23,7 @@ for icon_file in icon_files:
     if icon_file.endswith('.png'):
         icon_files2.append(os.path.join(icon_path, icon_file))
 
-exclude_words = [
-    'pyNastran.dev.bdf_vectorized', 'pyNastran.dev.bdf_vectorized.cards',
-    'pyNastran.f06.dev',
-    'pyNastran.op2.dev', 'pyNastran.op2.dev.original',
-    'pyNastran.converters.dev', 'pyNastran.xdb',]
+exclude_words = []
 packages = find_packages(exclude=['ez_setup', 'examples', 'tests'] + exclude_words)
 for exclude_word in exclude_words:
     packages = [package for package in packages if exclude_word not in package]

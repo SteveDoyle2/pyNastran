@@ -102,7 +102,6 @@ class MainWindow(GuiCommon, NastranIO):
             'avus',
             'bedge', 'surf', 'ugrid', 'ugrid3d', # aflr
             'cart3d',  # results
-            'degen_geom',
             'fast',
             'lawgs',
             'obj',
@@ -115,7 +114,6 @@ class MainWindow(GuiCommon, NastranIO):
             'tetgen',
             'usm3d',  # results
             'avl', # no results
-            'vrml', # no results
         ]
         #GuiCommon2.__init__(self, fmt_order, html_logging, inputs, parent)
         kwds['inputs'] = inputs

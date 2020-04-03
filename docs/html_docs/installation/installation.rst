@@ -16,20 +16,19 @@ Just type:
 Python
 ------
 The software is tested against:
- * Python 3.6 **(Linux)**
  * Python 3.7 **(Windows/Linux)**
+ * Python 3.8 **(Windows/Linux)**
 
 Packages
 --------
-The package requirements are slightly different depending on your version
-of Python, but the ones below will work on all supported versions.  The 
-set of packages include:
+pyNastran is tested against a range of package versions (lowest to highest
+based on availbility), so should work.  The recommended set of packages are:
  * **Required**:
 
    * numpy >= 1.14
    * scipy >= 1.0
    * cpylog >= 1.0.2
-   * docopt == 0.6.2    **(required for command line tools)**
+   * docopt-ng == 0.7.2    **(required for command line tools)**
 
  * **Optional**:
 
@@ -44,9 +43,7 @@ set of packages include:
    * qtpy >= 1.4.0
    * Qt **(pick one)**
 
-     * PyQt4 >= 4.x
      * PyQt5 >= 5.9.2
-     * PySide >= 1.2.1
      * PySide2 >= 5.11.2
    * QScintilla >= ??? **(optional for fancy scripting)**
    * pygments >= 2.2.0 **(optional for fancy scripting)**
@@ -56,73 +53,31 @@ set of packages include:
 Install Procedure - From Anaconda (recommended)
 ***********************************************
 Base functionality:
- * `Anaconda Python <https://store.continuum.io/cshop/anaconda/>`_
- * ``conda install numpy``
- * ``conda install scipy``
- * ``conda install docopt``   **(required for command line tools)**
- * ``conda install pandas``   **(optional)**
- * ``conda install h5py``       **(optional for HDF5 support)**
- * ``conda install matplotlib`` **(optional for plotting)**
- * ``conda install colorama``   **(optional for colored logging)**
+ * `64-bit Python <https://www.python.org/downloads/>`_
+ * ``pip install numpy``
+ * ``pip install scipy``
+ * ``pip install docopt-ng``   **(required for command line tools)**
+ * ``pip install pandas``   **(optional)**
+ * ``pip install h5py``       **(optional for HDF5 support)**
+ * ``pip install matplotlib`` **(optional for plotting)**
+ * ``pip install colorama``   **(optional for colored logging)**
  * ``pip install cpylog``
  * ``pip install pyNastran``
 
 For **optional** GUI support:
 
  * On the command line:
-    * ``conda install imageio`` **(optional for animation support)**
-    * ``conda install pyqt``
+    * ``pip install imageio`` **(optional for animation support)**
+    * ``pip install pyside2``
     * ``pip install VTK*.whl``
-    * ``pip install qtpy``
-
- * **Python 3.6, 3.7**:
-
-   * On the command line:
-    * ``conda install imageio`` **(optional for animation support)**
-    * ``conda install pyqt``
-    * ``conda install vtk``
     * ``pip install qtpy``
 
  * Additional source for `Windows binaries <http://www.lfd.uci.edu/~gohlke/pythonlibs/>`_
 
 
-************************************
-Install Procedure - From Base Python
-************************************
-Base functionality:
- * `Windows <https://www.python.org/downloads/windows/>`_
-   * Download Windows x86-64 MSI installer
- * Linux/Mac `Python <https://www.python.org/downloads/>`_
-   * Make sure to get 64-bit Python.
- * On the command line:
-
-   * ``pip install numpy``
-   * ``pip install scipy``
-   * ``pip install docopt``
-   * ``pip install colorama``
-   * ``pip install pandas``     **(optional)**
-   * ``pip install h5py``       **(optional for HDF5 support)**
-   * ``pip install matplotlib`` **(optional for plotting)**
-   * ``pip install cpylog``
-   * ``pip install pyNastran``
-
-
-For gui support (optional; required for GUI):
- * From `Windows binaries <http://www.lfd.uci.edu/~gohlke/pythonlibs/>`_:
-   * Download VTK:
-     * VTK-8.1.2-cp36-cp36m-win_amd64.whl **(Python 3.6)**
-     * VTK-8.1.2-cp37-cp37m-win_amd64.whl **(Python 3.7)**
-
- * On the command line:
-    * ``pip install imageio``   **(optional for animation support)**
-    * ``pip install VTK*.whl``
-    * ``pip install pyqt``
-    * ``pip install qtpy``
-
-
 Use Web docs
 ------------
-See `docs <https://pynastran-git.readthedocs.io/en/latest/>`_
+See `docs <https://pynastran-git.readthedocs.io/en/1.3/>`_
 
 -------------------------
 Installation From Source
@@ -172,7 +127,7 @@ Install pyNastran
 =================
 There are two ways to install the 1.2 (master/dev) version of pyNastran
 
- 1. Download the most recent `zip version <https://github.com/SteveDoyle2/pyNastran/archive/master.zip>`_
+ 1. Download the most recent `zip version <https://github.com/SteveDoyle2/pyNastran/archive/1.3.zip>`_
 
  2. Clone pyNastran (see below).  Using Git allows you to easily update to the
     latest dev version when you want to as well as push any commits of your own.
@@ -212,7 +167,7 @@ To checkout a branch
 
 .. code-block:: console
 
-  >>> git.exe clone --branch 1.2 --progress -v "https://github.com/SteveDoyle2/pyNastran.git" "C:\\work\\pyNastran_1.2"
+  >>> git.exe clone --branch 1.3 --progress -v "https://github.com/SteveDoyle2/pyNastran.git" "C:\\work\\pyNastran_1.2"
 
 
 Documentation
