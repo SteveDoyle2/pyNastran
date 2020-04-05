@@ -43,10 +43,10 @@ matrix:
     #  #- LIB='libblas-dev liblapack-dev'
     #  - LIBH5='libhdf5-dev'
 
-    #- name: "Python 3.7 (PyQt5)"
-    #  python: '3.7'
-    #  env:
-    #  - NUMPY='numpy scipy matplotlib h5py vtk pyqt5 pandas>=0.25 imageio pillow>5.2,!=7.1.0'
+    - name: "Python 3.7 (PyQt5)"
+      python: '3.7'
+      env:
+      - NUMPY='numpy scipy matplotlib h5py vtk pyqt5 pandas>=0.25 imageio pillow>5.2,!=7.1.0'
     #--------------------------------------------------------------------------------------------------
 
     # old versions of packages
@@ -65,13 +65,13 @@ matrix:
     # latest versions of package
     - name: "Python 3.8 (PyQt5)"
       python: '3.8'
-      services: xvfb
+      #services: xvfb
       env:
       - NUMPY='numpy scipy matplotlib h5py vtk pyqt5 pandas>=0.25 imageio pillow>5.2,!=7.1.0'
       #- LIB='libblas-dev liblapack-dev'
       #- LIB='libegl1-mesa'
       - LIBH5='libhdf5-dev'
-      - XVFB='xvfb-run --auto-servernum -e /dev/stdout'
+      #- XVFB='xvfb-run --auto-servernum -e /dev/stdout'
 
     - name: "Python 3.8 (no vtk/qt)"
       python: '3.8'
@@ -85,11 +85,11 @@ matrix:
 
     - name: "Python 3.7 (PyQt5)"
       python: '3.7'
-      #services: xvfb
+      services: xvfb
       env:
       - NUMPY='numpy scipy matplotlib h5py vtk pyqt5 pandas>=0.25 imageio pillow>5.2,!=7.1.0'
       #- LIB='libegl1-mesa'
-      #- XVFB='xvfb-run --auto-servernum -e /dev/stdout'
+      - XVFB='xvfb-run --auto-servernum -e /dev/stdout'
 
     - name: "Python 3.7 (PySide2, no matplotlib)"
       python: '3.7'
