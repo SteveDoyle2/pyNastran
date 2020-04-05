@@ -1,3 +1,6 @@
+# libraries
+#   libegl1-mesa - make Qt work without a backend
+#
 #os:
 # - linux
 # - osx
@@ -160,6 +163,10 @@ install:
 #----------run-----------
   - python setup${NOGUI}.py develop
 
+before_script:
+  - "export DISPLAY=:99.0"
+  - "sh -e /etc/init.d/xvfb start"
+  - sleep 3
 
 # Run test
 script:
