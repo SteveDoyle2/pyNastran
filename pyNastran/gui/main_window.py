@@ -153,6 +153,8 @@ class MainWindow(GuiCommon, NastranIO):
             ('auto_wireframe', os.path.join(PLUGIN_DIR, 'auto_wireframe.py'), 'AutoWireframe'),
             ('rfs_viewer', os.path.join(PLUGIN_DIR, 'rfs', 'rfs_viewer.py'), 'RFSViewer'),
         ]
+
+        .. see:: https://stackoverflow.com/questions/19009932/import-arbitrary-python-source-file-python-3-3
         """
         if plugin_name_to_path is None:
             return

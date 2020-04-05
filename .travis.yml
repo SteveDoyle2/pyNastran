@@ -65,6 +65,7 @@ matrix:
       env:
       - NUMPY='numpy scipy matplotlib h5py vtk pyqt5 pandas>=0.25 imageio pillow>5.2,!=7.1.0'
       #- LIB='libblas-dev liblapack-dev'
+      - LIB='libegl1-mesa'
       - LIBH5='libhdf5-dev'
 
     - name: "Python 3.8 (no vtk/qt)"
@@ -79,11 +80,13 @@ matrix:
       python: '3.7'
       env:
       - NUMPY='numpy scipy matplotlib h5py vtk pyqt5 pandas>=0.25 imageio pillow>5.2,!=7.1.0'
+      - LIB='libegl1-mesa'
 
     - name: "Python 3.7 (PySide2, no matplotlib)"
       python: '3.7'
       env:
       - NUMPY='numpy scipy h5py vtk PySide2 pandas>=0.25'
+      - LIB='libegl1-mesa'
 
     #--------------------------------------------------------------------------------------------------
     # old versions of packages
@@ -94,6 +97,7 @@ matrix:
       # - bumped scipy from 1.0 to 1.1 for compatibility with numpy
       # - bumped from numpy 1.14 to 1.14.5 for py3.7 pypi compatibility
       - NUMPY='numpy==1.14.5 scipy==1.1 matplotlib==2.2 h5py vtk pyqt5 pandas<0.25'
+      - LIB='libegl1-mesa'
 
     #--------------------------------------------------------------------------------------------------
     # the most basic of pyNastran - no matplotlib, h5py, pandas, or even six
