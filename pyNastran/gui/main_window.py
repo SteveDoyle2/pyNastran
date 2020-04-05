@@ -171,8 +171,8 @@ class MainWindow(GuiCommon, NastranIO):
                         module_name, plugin_file))
                 continue
 
-            module = importlib.import_module(module_name, plugin_file)
-            #module = imp.load_source(module_name, plugin_file)
+            loader = importlib.machinery.SourceFileLoader(module_name, plugin_file)
+            module = loader.load_module()
             try:
                 my_class = getattr(module, class_name)
             except AttributeError:

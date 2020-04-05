@@ -4,7 +4,11 @@ import sys
 import locale
 import platform
 import importlib
+import warnings
 from typing import Tuple, Dict
+with warnings.catch_warnings():  # avoid an imp module deprecation warning
+    warnings.simplefilter("ignore")
+    import setuptools
 
 import numpy
 import scipy
@@ -188,7 +192,7 @@ def get_packages() -> Dict[str, str]:
         #'Python Build': str(platform.python_build()),
         'Compiler': platform.python_compiler(),
         'Implementation': platform.python_implementation(),
-        'setuptools': 'N/A',
+        'setuptools': setuptools.__version__,
         'numpy' : numpy.__version__,
         'scipy' : scipy.__version__,
         'cpylog' : cpylog.__version__,
@@ -206,7 +210,7 @@ def get_packages() -> Dict[str, str]:
     if 'pyside' in qt_name.lower():
         del packages['QScintilla2']
 
-    for name in ['matplotlib', 'pandas', 'imageio', 'PIL', 'setuptools', 'pygments']:
+    for name in ['matplotlib', 'pandas', 'imageio', 'PIL', 'pygments']:
         try:
             module = importlib.import_module(name, package=None)
         except ImportError:

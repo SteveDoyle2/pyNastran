@@ -45,14 +45,18 @@ class TestGUI(UsesQApplication):
         # default plugins
         gui._load_plugins()
 
-        plugin_name_to_path = [
-            ('spike_module', os.path.join(PLUGIN_DIR, 'spike_module.py'), 'SpikeModule_Bad'),
-            ('spike_module2', 'spike_module_doesnt_exist.py', 'SpikeModule'),
-            ('spike_module', os.path.join(PLUGIN_DIR, 'spike_module.py'), 'SpikeModule'),
+        plugin_name_to_path_bad = [
+            ('bad_module1', os.path.join(PLUGIN_DIR, 'spike_module.py'), 'SpikeModule_Bad'),
+            ('bad_module2', 'spike_module_doesnt_exist.py', 'SpikeModule'),
             #('rfs_viewer', os.path.join(PLUGIN_DIR, 'rfs', 'rfs_viewer.py'), 'RFSViewer'),
         ]
+
+        plugin_name_to_path_good = [
+            ('spike_module', os.path.join(PLUGIN_DIR, 'spike_module.py'), 'SpikeModule'),
+        ]
         # load bad plugins and a good plugin - #3
-        gui._load_plugins(plugin_name_to_path)
+        gui._load_plugins(plugin_name_to_path_bad)
+        gui._load_plugins(plugin_name_to_path_good)
 
         bdf_filename = os.path.join(MODEL_PATH, 'beam_modes', 'beam_modes.dat')
         #op2_filename = os.path.join(MODEL_PATH, 'beam_modes', 'beam_modes_m2.op2')

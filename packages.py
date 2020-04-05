@@ -180,13 +180,13 @@ def get_package_requirements(is_gui=True, add_vtk_qt=True, python_version=None):
         import nptyping
         #iver = int_version('nptyping', nptyping.__version__)
         #all_reqs['nptyping'] = str_version(iver)
-        #if iver < [1, 0, 0]:
+        #if iver < [1, 0, 1]:
             #print("nptyping.__version__ = %r < '1.0.0'" % nptyping.__version__)
-        all_reqs['nptyping'] = '>= 1.0.0'
-        install_requires.append('nptyping >= 1.0.0')
+        all_reqs['nptyping'] = '>= 1.0.1'
+        install_requires.append('nptyping >= 1.0.1')
     except ImportError:
-        all_reqs['nptyping'] = '>= 1.0.0'
-        install_requires.append('nptyping >= 1.0.0')  # 1.0.0 used
+        all_reqs['nptyping'] = '>= 1.0.1'
+        install_requires.append('nptyping >= 1.0.1')  # 1.0.1 used
 
     try:
         import docopt

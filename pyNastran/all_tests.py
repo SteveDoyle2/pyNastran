@@ -27,6 +27,7 @@ import pyNastran.gui.gui_common
     #from pyNastran.gui.menus.test_groups import *
 from pyNastran.all_tests_no_gui import *
 from pyNastran.converters.test_gui_formats import *
+from pyNastran.gui.test.all_tests_gui import *
 from pyNastran.gui.menus.test.test_menus import *
 
 if __name__ == "__main__":  # pragma: no cover

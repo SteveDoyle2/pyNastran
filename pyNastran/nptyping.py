@@ -1,9 +1,11 @@
-from typing import Any
+from typing import Any, Optional
 try:
     from nptyping import NDArray
     # vector:
     # [0., 0., 0.]
     NDArray3float = NDArray[(3, ), float]
+    test = Optional[NDArray3float]
+    del test
 
     # vector:
     # [0., 0., 0., 0., 0., 0.]

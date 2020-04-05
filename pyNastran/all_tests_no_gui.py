@@ -35,7 +35,7 @@ from pyNastran.femutils.test.all_tests import *
 from pyNastran.converters.test_formats import *
 
 #gui - just tests the imports
-from pyNastran.gui.test.all_tests import *
+from pyNastran.gui.test.all_tests_no_gui import *
 #on_rtd = os.environ.get('READTHEDOCS', None) == 'True'
 #if not on_rtd:
     #import pyNastran.gui.gui
