@@ -65,14 +65,17 @@ matrix:
     # latest versions of package
     - name: "Python 3.8 (PyQt5)"
       python: '3.8'
+      services: xvfb
       env:
       - NUMPY='numpy scipy matplotlib h5py vtk pyqt5 pandas>=0.25 imageio pillow>5.2,!=7.1.0'
       #- LIB='libblas-dev liblapack-dev'
-      - LIB='libegl1-mesa'
+      #- LIB='libegl1-mesa'
       - LIBH5='libhdf5-dev'
+      - XVBF='xvbf-run'
 
     - name: "Python 3.8 (no vtk/qt)"
       python: '3.8'
+      services: xvfb
       env:
       - NUMPY='numpy scipy matplotlib h5py pandas>=0.25'
       - NOGUI='_no_gui'
@@ -83,24 +86,29 @@ matrix:
       python: '3.7'
       env:
       - NUMPY='numpy scipy matplotlib h5py vtk pyqt5 pandas>=0.25 imageio pillow>5.2,!=7.1.0'
-      - LIB='libegl1-mesa'
+      #- LIB='libegl1-mesa'
+      - XVBF='xvbf-run'
 
     - name: "Python 3.7 (PySide2, no matplotlib)"
       python: '3.7'
+      services: xvfb
       env:
       - NUMPY='numpy scipy h5py vtk PySide2 pandas>=0.25'
-      - LIB='libegl1-mesa'
+      #- LIB='libegl1-mesa'
+      - XVBF='xvbf-run'
 
     #--------------------------------------------------------------------------------------------------
     # old versions of packages
     - name: "Python 3.7 old packages"
       python: '3.7'
+      services: xvfb
       env:
       #- NUMPY='numpy==1.15 scipy==0.19 matplotlib==2.2'  # doesn't work
       # - bumped scipy from 1.0 to 1.1 for compatibility with numpy
       # - bumped from numpy 1.14 to 1.14.5 for py3.7 pypi compatibility
       - NUMPY='numpy==1.14.5 scipy==1.1 matplotlib==2.2 h5py vtk pyqt5 pandas<0.25'
-      - LIB='libegl1-mesa'
+      #- LIB='libegl1-mesa'
+      - XVBF='xvbf-run'
 
     #--------------------------------------------------------------------------------------------------
     # the most basic of pyNastran - no matplotlib, h5py, pandas, or even six
@@ -165,13 +173,14 @@ install:
 
 before_script:
   - "export DISPLAY=:99.0"
-  - "sh -e /etc/init.d/xvfb start"
-  - sleep 3
 
 # Run test
 script:
   #- nosetests --with-cov --cov YOUR_PACKAGE_NAME_HERE --cov-config .coveragerc --logging-level=INFO
-  - coverage run pyNastran/all_tests${NOGUI}.py
+  - ${XVBF} coverage run pyNastran/all_tests${NOGUI}.py
+  
+  # good
+  #- coverage run pyNastran/all_tests${NOGUI}.py
 
   # good
   #- "python pyNastran/all_tests.py"
