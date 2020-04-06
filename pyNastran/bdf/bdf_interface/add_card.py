@@ -115,7 +115,7 @@ from pyNastran.bdf.cards.superelements import (
 from pyNastran.bdf.cards.bdf_sets import (
     ASET, BSET, CSET, QSET, USET, OMIT,
     ASET1, BSET1, CSET1, QSET1, USET1, OMIT1,
-    SET1, SET3,
+    SET1, SET2, SET3,
     SEBSET, SECSET, SEQSET, # SEUSET
     SEBSET1, SECSET1, SEQSET1, # SEUSET1
     SESET, #SEQSEP,
@@ -656,6 +656,7 @@ CARD_MAP = {
     'USET1' : USET1,
 
     'SET1' : SET1,
+    'SET2' : SET2,
     'SET3' : SET3,
 
     'OMIT' : OMIT,
@@ -5326,6 +5327,39 @@ class AddCards(AddMethods):
 
         """
         set_obj = SET1(sid, ids, is_skin=is_skin, comment=comment)
+        self._add_set_object(set_obj)
+        return set_obj
+
+    def add_set2(self, sid, macro, sp1, sp2, ch1, ch2, zmax=.0, zmin=.0, comment='') -> SET2:
+        """
+        Creates a SET2 card, which defines a list of structural grid points in terms of aerodynamic
+        macro elements.
+
+        Parameters
+        ----------
+         sid : int
+            set id
+        macro : int
+            the aerodynamic macro element id
+        sp1 : float
+            lower span division point defining the prism containing the set
+        sp2 : float
+            higher span division point defining the prism containing the set
+        ch1 : float
+            lower chord division point defining the prism containing the set
+        ch2 : float
+            higher chord division point defining the prism containing the set
+        zmax : float; default=0.0
+            z-coordinate of top of the prism containing the set
+            a zero value implies a value of infinity
+        zmin : float; default=0.0
+            z-coordinate of top of the bottom containing the set
+            a zero value implies a value of infinity
+        comment : str; default=''
+            a comment for the card
+
+        """
+        set_obj = SET2(sid, macro, sp1, sp2, ch1, ch2, zmax=zmax, zmin=zmin, comment=comment)
         self._add_set_object(set_obj)
         return set_obj
 

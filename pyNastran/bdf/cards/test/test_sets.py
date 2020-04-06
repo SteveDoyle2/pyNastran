@@ -5,7 +5,7 @@ from pyNastran.bdf.bdf import BDF
 from pyNastran.bdf.bdf_interface.bdf_card import BDFCard
 from pyNastran.bdf.field_writer_8 import print_int_card_blocks
 from pyNastran.bdf.cards.bdf_sets import (
-    SET1, SET3, ASET, ASET1, OMIT1, BSET, BSET1, CSET, CSET1, QSET, QSET1, USET, USET1,
+    SET1, SET2, SET3, ASET, ASET1, OMIT1, BSET, BSET1, CSET, CSET1, QSET, QSET1, USET, USET1,
     SEBSET, SEBSET1, SECSET, SECSET1, SEQSET, SEQSET1, #SEUSET, SEUSET1,
 )
 from pyNastran.bdf.cards.test.utils import save_load_deck
@@ -63,6 +63,35 @@ class TestSets(unittest.TestCase):
         set1a = SET1(sid, ids, is_skin=False, comment='set1')
         set1b = SET1.add_card(BDFCard(['SET1', sid] + ids))
         set1a.write_card()
+
+    def test_set2_01(self):
+        """checks the SET2 card"""
+        bdf = BDF(debug=False)
+        lines = ['SET2,     110,      10,   -0.1,    1.1,   -0.1,     1.1']
+        card = bdf._process_card(lines)
+        card = BDFCard(card)
+
+        size = 8
+        card = SET2.add_card(card)
+        card.write_card(size, 'dummy')
+        card.raw_fields()
+
+        card2 = SET2(110, 10, -0.1, 1.1, -0.1, 1.1, comment='')
+        card2.write_card(size, 'dummy')
+        card2.raw_fields()
+
+        card3 = bdf.add_set2(110, 10, -0.1, 1.1, -0.1, 1.1)
+        print(card3.write_card(size, 'dummy'))
+        card3.raw_fields()
+
+    def test_set2_02(self):
+        """checks the SET2 card"""
+        bdf = BDF(debug=False)
+        caero = bdf.add_caero4(10, 10, [.0, .0, .0], 1, [.0, 1., .0], 1)
+
+        card2 = bdf.add_set2(110, 10, -0.1, 1.1, -0.1, 1.1)
+        print(card2.macro_ref)
+        self.assertEqual(card2.macro_ref, caero)
 
     def test_set3_01(self):
         """checks the SET3 card"""

@@ -2,7 +2,7 @@
 All set cards are defined in this file.  This includes:
 
 * sets
-  * SET1, SET3, RADSET # ??? RADSET
+  * SET1, SET2, SET3, RADSET # ??? RADSET
 * asets - aset, aset1
 * omits - omit, omit1
 * bsets - bset, bset1
@@ -46,7 +46,7 @@ from pyNastran.bdf.cards.base_card import (
 from pyNastran.bdf.cards.collpase_card import collapse_thru, condense, build_thru_packs
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.bdf_interface.assign_type import (
-    integer, integer_or_blank, integer_or_string,
+    integer, double, integer_or_blank, integer_or_string,
     parse_components, components_or_blank as fcomponents_or_blank,
     fields, string, integer_string_or_blank,
 )
@@ -1204,6 +1204,152 @@ class SET1(Set):
         #for field_pack in field_packs:
             #msg.append(print_card_8(field_pack))
         #return ''.join(msg)
+
+
+class SET2(Set):
+    """
+    Defines a list of structural grid points in terms of aerodynamic
+    macro elements.
+
+    +------+--------+-------+-----+------+-----+-----+------+------+
+    |  1   |    2   |    3  |  4  |   5  |  6  |  7  |   8  |  9   |
+    +======+========+=======+=====+======+=====+=====+======+======+
+    | SET2 |  SID   | MACRO | SP1 | SP2  | CH1 | CH2 | ZMAX | ZMIN |
+    +------+--------+-------+-----+------+-----+-----+------+------+
+    | SET2 |   3    |  111  | 0.0 | 0.75 | 0.0 |0.667| 3.51 |      |
+    +------+--------+-------+-----+------+-----+-----+------+------+
+    | SET2 |   6    |  222  | 0.0 | 0.75 | 0.0 |0.667| 3.51 | -1.0 |
+    +------+--------+-------+-----+------+-----+-----+------+------+
+
+    SET2 entries are referenced by:
+    - SPLINEi
+
+    """
+
+    type = 'SET2'
+
+    @classmethod
+    def _init_from_empty(cls):
+        sid = 1
+        macro = 1
+        sp1 = 0
+        sp2 = 1
+        ch1 = 0
+        ch2 = 1
+        return SET2(sid, macro, sp1, sp2, ch1, ch2, comment='')
+
+    def __init__(self, sid, macro, sp1, sp2, ch1, ch2, zmax=.0, zmin=.0, comment=''):
+        """
+        Creates a SET2 card, which sefines a list of structural
+        grid points in terms of aerodynamic macro elements.
+
+        Remarks:
+
+        - Points exactly on the boundary may be missed; therefore, to get all the grid points within the area of the macro element, SP1=-.01, SP2=1.01, etc. should be used.
+
+        - Use DIAG 18 to print the internal grid Ids found.
+
+        Parameters
+        ----------
+        sid : int
+            set id
+        macro : int
+            the aerodynamic macro element id (CAEROi element id)
+        sp1 : float
+            lower span division point defining the prism containing the set
+        sp2 : float
+            higher span division point defining the prism containing the set
+        ch1 : float
+            lower chord division point defining the prism containing the set
+        ch2 : float
+            higher chord division point defining the prism containing the set
+        zmax : float; default=0.0
+            z-coordinate of top of the prism containing the set
+            a zero value implies a value of infinity
+        zmin : float; default=0.0
+            z-coordinate of top of the bottom containing the set
+            a zero value implies a value of infinity
+        comment : str; default=''
+            a comment for the card
+
+        """
+        Set.__init__(self)
+        if comment:
+            self.comment = comment
+        #:  Unique identification number. (Integer > 0)
+        self.sid = sid
+
+        #:  Aerodynamic Macro Element ID. (Integer > 0)
+        self.macro = macro
+
+        #:  Division Points spanwise and chordwise for the selection prism. (Real)
+        self.sp1 = sp1
+        self.sp2 = sp2
+        self.ch1 = ch1
+        self.ch2 = ch2
+
+        #: Heigth limits for the selection prism. (Real)
+        self.zmax = zmax
+        self.zmin = zmin
+
+        self.xref_type = None
+        self.macro_ref = None
+
+    @classmethod
+    def add_card(cls, card, comment=''):
+        """
+        Adds a SET2 card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+
+        """
+        sid = integer(card, 1, 'sid')
+        macro = integer(card, 2, 'macro')
+        sp1 = double(card, 3, 'sp1')
+        sp2 = double(card, 4, 'sp2')
+        ch1 = double(card, 5, 'ch1')
+        ch2 = double(card, 6, 'ch2')
+        zmax = double(card, 7, 'zmax') if len(card) > 7 else 0.0
+        zmin = double(card, 8, 'zmin') if len(card) > 8 else 0.0
+
+        return SET2(sid, macro, sp1, sp2, ch1, ch2, zmax=zmax, zmin=zmin, comment=comment)
+
+    def raw_fields(self):
+        return ['SET2', self.sid, self.macro, self.sp1, self.sp2, self.ch1, self.ch2, self.zmax, self.zmin]
+
+    def cross_reference_set(self, model, xref_type, msg=''):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        xref_type : str
+            {'MACRO'} i.e. the CAEROi elements
+
+        """
+        msg = ', which is required by SET2 sid=%s%s' % (self.sid, msg)
+        if xref_type == 'MACRO':
+            self.macro_ref = model.caeros(self.macro, msg=msg)
+        else:
+            raise NotImplementedError("xref_type=%r and must be ['MACRO']" % xref_type)
+        self.xref_type = xref_type
+
+    def safe_cross_reference(self, model, xref_errors):
+        self.cross_reference_set(model)
+
+    def uncross_reference(self):
+        if self.xref_type == 'MACRO':
+            self.xref_type = None
+        else:
+            raise NotImplementedError("xref_type=%r and must be 'MACRO'" % self.xref_type)
+        self.macro_ref = None
 
 
 class SET3(Set):
