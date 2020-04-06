@@ -1232,10 +1232,10 @@ class SET2(Set):
     def _init_from_empty(cls):
         sid = 1
         macro = 1
-        sp1 = 0
-        sp2 = 1
-        ch1 = 0
-        ch2 = 1
+        sp1 = 0.
+        sp2 = 1.
+        ch1 = 0.
+        ch2 = 1.
         return SET2(sid, macro, sp1, sp2, ch1, ch2, comment='')
 
     def __init__(self, sid, macro, sp1, sp2, ch1, ch2, zmax=.0, zmin=.0, comment=''):

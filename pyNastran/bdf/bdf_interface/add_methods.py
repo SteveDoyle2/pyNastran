@@ -107,13 +107,14 @@ if TYPE_CHECKING:  # pragma: no cover
         CSUPER, CSUPEXT,
     )
     from pyNastran.bdf.cards.bdf_sets import (
-    ASET, BSET, CSET, QSET, USET, OMIT,
-    ASET1, BSET1, CSET1, QSET1, USET1, OMIT1,
-    SET1, SET2, SET3,
-    SEBSET, SECSET, SEQSET,  # SEUSET
-    SEBSET1, SECSET1, SEQSET1,  # SEUSET1
-    SESET,  # SEQSEP,
-    RADSET)
+        ASET, BSET, CSET, QSET, USET, OMIT,
+        ASET1, BSET1, CSET1, QSET1, USET1, OMIT1,
+        SET1, SET2, SET3,
+        SEBSET, SECSET, SEQSET,  # SEUSET
+        SEBSET1, SECSET1, SEQSET1,  # SEUSET1
+        SESET,  # SEQSEP,
+        RADSET
+    )
     from pyNastran.bdf.cards.params import PARAM
     from pyNastran.bdf.cards.dmig import DMIG, DMIAX, DMI, DMIJ, DMIK, DMIJI, DMIG_UACCEL, DTI
     from pyNastran.bdf.cards.thermal.loads import (QBDY1, QBDY2, QBDY3, QHBDY, TEMP, TEMPD, TEMPB3,
