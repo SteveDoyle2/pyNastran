@@ -5,11 +5,11 @@
 # standard library
 import sys
 import os.path
-import imp
+import importlib
 #import traceback
 import webbrowser
 #webbrowser.open("http://xkcd.com/353/")
-
+from typing import Tuple, List, Optional
 
 from pyNastran.gui.qt_version import qt_version
 from qtpy import QtCore
@@ -144,8 +144,18 @@ class MainWindow(GuiCommon, NastranIO):
         self.setup_post(inputs)
         self._check_for_latest_version()
 
-    def _load_plugins(self):
-        """loads the plugins from pyNastran/gui/plugins.py"""
+    def _load_plugins(self, plugin_name_to_path: Optional[List[Tuple[str, str, str]]]=None):
+        """loads the plugins from pyNastran/gui/plugins.py
+
+        plugin_name_to_path = [
+            ('auto_wireframe', os.path.join(PLUGIN_DIR, 'auto_wireframe.py'), 'AutoWireframe'),
+            ('rfs_viewer', os.path.join(PLUGIN_DIR, 'rfs', 'rfs_viewer.py'), 'RFSViewer'),
+        ]
+
+        .. see:: https://stackoverflow.com/questions/19009932/import-arbitrary-python-source-file-python-3-3
+        """
+        if plugin_name_to_path is None:
+            return
         for module_name, plugin_file, class_name in plugin_name_to_path:  # list
             if module_name in self.modules:
                 raise RuntimeError('module_name=%r is already defined' % module_name)
@@ -153,13 +163,23 @@ class MainWindow(GuiCommon, NastranIO):
             if not os.path.exists(plugin_file):
                 # auto_wireframe is a test module and is not intended to
                 # actually load unless you're testing
+                #print('Failed to load plugin %r because %s doesnt exist' % (
+                    #module_name, plugin_file))
+
                 if module_name != 'auto_wireframe':
                     self.log_warning('Failed to load plugin %r because %s doesnt exist' % (
                         module_name, plugin_file))
                 continue
 
-            module = imp.load_source(module_name, plugin_file)
-            my_class = getattr(module, class_name)
+            loader = importlib.machinery.SourceFileLoader(module_name, plugin_file)
+            module = loader.load_module()
+            try:
+                my_class = getattr(module, class_name)
+            except AttributeError:
+                self.log_warning('Failed to load plugin %r because class %s doesnt exist' % (
+                    module_name, class_name))
+                return
+
             class_obj = my_class(self)
             self.modules[module_name] = class_obj
 

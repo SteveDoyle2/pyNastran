@@ -1,54 +1,56 @@
+from typing import Any, Optional
 try:
-    from nptyping import Array
+    from nptyping import NDArray
     # vector:
     # [0., 0., 0.]
-    NDArray3float = Array[float, 3]
+    NDArray3float = NDArray[(3, ), float]
+    test = Optional[NDArray3float]
+    del test
 
     # vector:
     # [0., 0., 0., 0., 0., 0.]
-    NDArray6float = Array[float, 6]
+    NDArray6float = NDArray[(6, ), float]
 
     # vector:
     # [0., 0., 0., ...]
-    NDArrayNbool = Array[bool, ...]
-    NDArrayNfloat = Array[float, ...]
-    NDArrayNint = Array[int, ...]
+    NDArrayNbool = NDArray[(Any, ), bool]
+    NDArrayNfloat = NDArray[(Any, ), float]
+    NDArrayNint = NDArray[(Any, ), int]
 
     # float matrix:
     # [1., 0., 0.]
     # [2., 0., 0.]
     # [3., 0., 0.]
-    NDArrayN3float = Array[float, ..., 3]
+    NDArrayN3float = NDArray[(Any, 3), float]
 
-    NDArrayNNfloat = Array[float, ..., ...]
+    NDArrayNNfloat = NDArray[(Any, Any), float]
 
     # int matrix:
     # [1, 0]
     # [2, 0]
     # [3, 0]
-    NDArrayN2int = Array[int, ..., 2]
+    NDArrayN2int = NDArray[(Any, 2), int]
 
     # int matrix:
     # [1, 0, 0]
     # [2, 0, 0]
     # [3, 0, 0]
-    NDArrayN3int = Array[int, ..., 3]
+    NDArrayN3int = NDArray[(Any, 3), int]
 
     # int matrix:
     # [1, 0, 0, 0]
     # [2, 0, 0, 0]
     # [3, 0, 0, 0]
-    NDArrayN4int = Array[int, ..., 4]
-    NDArrayN6int = Array[int, ..., 6]
-    NDArrayN8int = Array[int, ..., 8]
-    NDArrayN9int = Array[int, ..., 9]
-    NDArrayN10int = Array[int, ..., 10]
-    NDArrayN13int = Array[int, ..., 13]
-    NDArrayN15int = Array[int, ..., 15]
-    NDArrayN20int = Array[int, ..., 20]
+    NDArrayN4int = NDArray[(Any, 4), int]
+    NDArrayN6int = NDArray[(Any, 6), int]
+    NDArrayN8int = NDArray[(Any, 8), int]
+    NDArrayN9int = NDArray[(Any, 9), int]
+    NDArrayN10int = NDArray[(Any, 10), int]
+    NDArrayN13int = NDArray[(Any, 13), int]
+    NDArrayN15int = NDArray[(Any, 15), int]
+    NDArrayN20int = NDArray[(Any, 20), int]
 
 except ImportError:
-    from typing import Any
     NDArrayNbool = \
         NDArray3float = NDArray6float = \
         NDArrayNint = NDArrayNfloat = \

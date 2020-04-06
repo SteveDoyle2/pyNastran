@@ -2,20 +2,6 @@ utils Package
 =============
 This is the pyNastran.utils.rst file.
 
-:mod:`dev` Module
------------------
-
-.. automodule:: pyNastran.utils.dev
-    :members:
-    :undoc-members:
-
-:mod:`docopt_types` Module
---------------------------
-
-.. automodule:: pyNastran.utils.docopt_types
-    :members:
-    :undoc-members:
-
 #:mod:`gui_io` Module
 #--------------------
 #
