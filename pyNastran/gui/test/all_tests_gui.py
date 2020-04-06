@@ -1,6 +1,6 @@
 """with pyQt5/pySide2 and vtk"""
-import os
-# import sys
+#import os
+import sys
 from pyNastran.gui.menus.test.test_menus import *
 # if 'XVFB' in os.environ or sys.platform == 'win32':   # XVFB is for TravisCI and doesn't work
 if sys.platform == 'win32':
