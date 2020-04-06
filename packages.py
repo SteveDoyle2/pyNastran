@@ -179,7 +179,7 @@ def get_package_requirements(is_gui=True, add_vtk_qt=True, python_version=None):
         all_reqs['cpylog'] = f'>= {required_version_str}'
         install_requires.append(f'cpylog >= {required_version_str}')  # 1.3.1 used
 
-    if not is_travis:
+    if not is_rtd:
         try:
             import nptyping
             #iver = int_version('nptyping', nptyping.__version__)
