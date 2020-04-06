@@ -1336,7 +1336,7 @@ class SET2(Set):
         """
         msg = ', which is required by SET2 sid=%s%s' % (self.sid, msg)
         if xref_type == 'MACRO':
-            self.macro_ref = model.caeros(self.macro, msg=msg)
+            self.macro_ref = model.CAero(self.macro, msg=msg)
         else:
             raise NotImplementedError("xref_type=%r and must be ['MACRO']" % xref_type)
         self.xref_type = xref_type

@@ -81,17 +81,21 @@ class TestSets(unittest.TestCase):
         card2.raw_fields()
 
         card3 = bdf.add_set2(110, 10, -0.1, 1.1, -0.1, 1.1)
-        print(card3.write_card(size, 'dummy'))
+        card3.write_card(size, 'dummy')
         card3.raw_fields()
 
     def test_set2_02(self):
         """checks the SET2 card"""
-        bdf = BDF(debug=False)
-        caero = bdf.add_caero4(10, 10, [.0, .0, .0], 1, [.0, 1., .0], 1)
+        bdf = BDF(debug=True)
 
-        card2 = bdf.add_set2(110, 10, -0.1, 1.1, -0.1, 1.1)
-        print(card2.macro_ref)
-        self.assertEqual(card2.macro_ref, caero)
+        set2 = bdf.add_set2(110, 10, -0.1, 1.1, -0.1, 1.1)
+        caero = bdf.add_caero4(10, 10, [.0, .0, .0], 1., [.0, 1., .0], 1.)
+        spline2 = bdf.add_spline2(10, 10, 10, 11, 110)
+
+        spline2.cross_reference(bdf)
+
+        self.assertEqual(spline2.setg_ref, set2)
+        self.assertEqual(set2.macro_ref, caero)
 
     def test_set3_01(self):
         """checks the SET3 card"""
