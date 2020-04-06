@@ -9,13 +9,6 @@ This is the pyNastran.utils.rst file.
     :members:
     :undoc-members:
 
-:mod:`docopt_types` Module
---------------------------
-
-.. automodule:: pyNastran.utils.docopt_types
-    :members:
-    :undoc-members:
-
 #:mod:`gui_io` Module
 #--------------------
 #

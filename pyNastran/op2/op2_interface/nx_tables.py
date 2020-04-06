@@ -2,6 +2,8 @@ from collections import Counter
 from typing import List, Dict
 import numpy as np
 
+NX_VERSIONS = ['8.0', '8.5', '9.1', '10.1', '11.0', '12.0', '12.0.2', '2019.2']
+
 NX_ELEMENTS = {
     0 : 'GRID',
     1 : 'CROD',

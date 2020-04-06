@@ -59,6 +59,8 @@ from pyNastran.op2.result_objects.gpdt import GPDT, BGPDT
 from pyNastran.op2.result_objects.eqexin import EQEXIN
 from pyNastran.op2.result_objects.matrix import Matrix, MatrixDict
 from pyNastran.op2.result_objects.design_response import DSCMCOL
+from pyNastran.op2.op2_interface.nx_tables import NX_VERSIONS
+
 
 from pyNastran.op2.result_objects.design_response import (
     WeightResponse, DisplacementResponse, StressResponse, StrainResponse, ForceResponse,
@@ -74,8 +76,6 @@ IS_TESTING = True
 
 class SubTableReadError(Exception):
     pass
-
-NX_VERSIONS = ['8.0', '8.5', '9.1', '10.1', '11.0', '12.0.2', '2019.2']
 
 DENSE_MATRICES = [
     b'KELM',
@@ -2091,21 +2091,74 @@ class OP2Reader:
         #print(self.show_data(data))
 
         unused_markers = self.get_nmarkers(1, rewind=True)
+
+        save_lines = False
+        write_deck = False
+        bulk_filename = 'bulk.test_op2.bdf'
+        self._read_deck_section(bulk_filename, save_lines,
+                                write_deck, mode='a',
+                                read_mode=2)
+
+    def _read_deck_section(self, deck_filename: str, save_lines: bool,
+                           write_deck: bool, mode='w', read_mode: int=1) -> None:
+        """helper for ``read_ibulk`` and ``read_icase``"""
         marker = -2
-        while 1:
-            self.read_3_markers([marker, 1, 0])
-            nfields = self.get_marker1(rewind=True)
-            if nfields > 0:
-                # we're not reading the record because the IBULK
-                # table is literally just an unsorted echo of the
-                # BULK data table in the BDF
-                unused_data = self._skip_record()
-            elif nfields == 0:
-                #op2.show_ndata(100, types='ifs')
-                break
-            else:
-                raise RuntimeError('nfields=%s' % nfields)
-            marker -= 1
+        if save_lines and write_deck:
+            raise RuntimeError(f'save_lines={save_lines} write_deck={write_deck}; '
+                               'one or more must be False')
+
+        if write_deck and self.read_mode == read_mode:
+            with open(deck_filename, mode) as bdf_file:  # pragma: no cover
+                while 1:
+                    self.read_3_markers([marker, 1, 0])
+                    nfields = self.get_marker1(rewind=True)
+                    if nfields > 0:
+                        # we're not reading the record because the IBULK/ICASE
+                        # table is literally just an unsorted echo of the
+                        # BULK/CASE data table in the BDF
+                        data = self._read_record()
+                        line = unpack('%is' % len(data), data)[0].replace(b'\xff', b'')
+                        bdf_file.write(line.decode(self._encoding) + '\n')
+                    elif nfields == 0:
+                        #op2.show_ndata(100, types='ifs')
+                        break
+                    else:
+                        raise RuntimeError('nfields=%s' % nfields)
+                    marker -= 1
+
+        elif save_lines and self.read_mode == read_mode:
+            lines = []
+            while 1:
+                self.read_3_markers([marker, 1, 0])
+                nfields = self.get_marker1(rewind=True)
+                if nfields > 0:
+                    # we're not reading the record because the IBULK
+                    # table is literally just an unsorted echo of the
+                    # BULK data table in the BDF
+                    data = self._read_record()
+                    line = unpack('%is' % len(data), data)[0].replace(b'\xff', b'')
+                    lines.append(line.decode(self._encoding) + '\n')
+                elif nfields == 0:
+                    #op2.show_ndata(100, types='ifs')
+                    break
+                else:
+                    raise RuntimeError('nfields=%s' % nfields)
+                marker -= 1
+        else:
+            while 1:
+                self.read_3_markers([marker, 1, 0])
+                nfields = self.get_marker1(rewind=True)
+                if nfields > 0:
+                    # we're not reading the record because the IBULK
+                    # table is literally just an unsorted echo of the
+                    # BULK data table in the BDF
+                    unused_data = self._skip_record()
+                elif nfields == 0:
+                    #op2.show_ndata(100, types='ifs')
+                    break
+                else:
+                    raise RuntimeError('nfields=%s' % nfields)
+                marker -= 1
         #print("marker = ", marker)
         unused_marker_end = self.get_marker1(rewind=False)
 
@@ -2127,28 +2180,14 @@ class OP2Reader:
         unused_data = self._read_record()
 
         unused_markers = self.get_nmarkers(1, rewind=True)
-        marker = -2
-        lines = []
-        while 1:
-            self.read_3_markers([marker, 1, 0])
-            nfields = self.get_marker1(rewind=True)
-            if nfields > 0:
-                # we're not reading the record because the IBULK
-                # table is literally just an unsorted echo of the
-                # BULK data table in the BDF
-                bline = self._read_record()
-                line = bline.replace(b'\xff', b'').decode(self._encoding).rstrip()
-                #unused_data = self._skip_record()
-            elif nfields == 0:
-                #op2.show_ndata(100, types='ifs')
-                break
-            else:
-                raise RuntimeError('nfields=%s' % nfields)
-            lines.append(line)
-            marker -= 1
+
+        save_lines = True
+        write_deck = False
+        bulk_filename = 'bulk.test_op2.bdf'
+        lines = self._read_deck_section(bulk_filename, save_lines,
+                                        write_deck=write_deck, mode='w',
+                                        read_mode=1)
         self._case_control_lines = lines
-        #print("marker = ", marker)
-        unused_marker_end = self.get_marker1(rewind=False)
 
     def read_cddata(self):
         """Cambell diagram summary"""

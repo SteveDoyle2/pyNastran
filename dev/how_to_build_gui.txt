@@ -1,6 +1,6 @@
 Windows
 -------
-1.  Use 32-bit or 64-bit Python 2.7
+1.  Use 32-bit or 64-bit Python 3.7
 2.  Verify the gui works by typing:
     >>> pyNastranGUI
 3.  Download pyInstaller -> http://www.pyinstaller.org/

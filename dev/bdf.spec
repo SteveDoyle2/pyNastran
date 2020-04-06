@@ -26,15 +26,10 @@ import os
 import sys
 import shutil
 import datetime
-from six import PY2
 
 # get pyNastran location
 print('sys.version_info.major =', sys.version_info.major)
-if sys.version_info.major == 3:
-    pkg_path = os.path.abspath(os.path.join('.', '..', 'pyNastran'))
-else:
-    import pkgutil
-    pkg_path = pkgutil.get_loader('pyNastran').filename
+pkg_path = os.path.abspath(os.path.join('.', '..', 'pyNastran'))
 init_filename = os.path.join(pkg_path, '__init__.py')
 assert os.path.exists(init_filename), init_filename
 
@@ -131,16 +126,10 @@ assert os.path.exists(icon_main), '%s doesnt exist' % icon_main
 #python_path = 'F:\Anaconda'
 python_path = os.path.dirname(sys.executable)
 
-if PY2:
-    mkl_dlls = [
-        os.path.join(python_path, 'Library', 'bin', 'mkl_def.dll'),
-        #os.path.join(python_path, 'Library', 'bin', 'mkl_avx2.dll'),  # do I need this?
-    ]
-else:
-    mkl_dlls = [
-        os.path.join(python_path, 'evns', 'py35', 'Library', 'bin', 'mkl_def3.dll')
-        # others?
-    ]
+mkl_dlls = [
+    os.path.join(python_path, 'evns', 'py35', 'Library', 'bin', 'mkl_def3.dll')
+    # others?
+]
 
 has_mkl_dlls = False
 if mkl_dlls:
