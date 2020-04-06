@@ -85,12 +85,12 @@ matrix:
 
     - name: "Python 3.7 (PyQt5)"
       python: '3.7'
-      services: xvfb
+      #services: xvfb
       env:
       - NUMPY='numpy scipy matplotlib h5py vtk pyqt5 pandas>=0.25 imageio pillow>5.2,!=7.1.0'
       #- LIB='libegl1-mesa'
       #- XVFB='xvfb-run --auto-servernum -e /dev/stdout'
-       - XVFB=''
+       #- XVFB=''
     - name: "Python 3.7 (PySide2, no matplotlib)"
       python: '3.7'
       #services: xvfb
