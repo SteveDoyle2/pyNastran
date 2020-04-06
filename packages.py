@@ -86,6 +86,9 @@ def get_package_requirements(is_gui=True, add_vtk_qt=True, python_version=None):
         #'READTHEDOCS' in os.environ
     #)
     is_travis = 'TRAVIS' in os.environ or 'TRAVIS_PYTHON_VERSION' in os.environ
+    #user_name = getpass.getuser()
+    #user_name not in ['travis']
+
     is_rtd = 'READTHEDOCS' in os.environ
 
     #if is_dev or is_gui:
@@ -176,29 +179,30 @@ def get_package_requirements(is_gui=True, add_vtk_qt=True, python_version=None):
         all_reqs['cpylog'] = f'>= {required_version_str}'
         install_requires.append(f'cpylog >= {required_version_str}')  # 1.3.1 used
 
-    try:
-        import nptyping
-        #iver = int_version('nptyping', nptyping.__version__)
-        #all_reqs['nptyping'] = str_version(iver)
-        #if iver < [1, 0, 1]:
-            #print("nptyping.__version__ = %r < '1.0.0'" % nptyping.__version__)
-        all_reqs['nptyping'] = '>= 1.0.1'
-        install_requires.append('nptyping >= 1.0.1')
-    except ImportError:
-        all_reqs['nptyping'] = '>= 1.0.1'
-        install_requires.append('nptyping >= 1.0.1')  # 1.0.1 used
+    if not is_travis:
+        try:
+            import nptyping
+            #iver = int_version('nptyping', nptyping.__version__)
+            #all_reqs['nptyping'] = str_version(iver)
+            #if iver < [1, 0, 1]:
+                #print("nptyping.__version__ = %r < '1.0.0'" % nptyping.__version__)
+            all_reqs['nptyping'] = '>= 1.0.1'
+            install_requires.append('nptyping >= 1.0.1')
+        except ImportError:
+            all_reqs['nptyping'] = '>= 1.0.1'
+            install_requires.append('nptyping >= 1.0.1')  # 1.0.1 used
 
     try:
         import docopt
         iver = int_version('docopt', docopt.__version__)
         all_reqs['docopt-ng'] = str_version(iver)
-        if iver < [0, 7, 0]:
-            print("docopt.__version__ = %r < '0.7.0'" % docopt.__version__)
-            all_reqs['docopt-ng'] = '>= 0.7.0'
-            install_requires.append('docopt-ng >= 0.7.0')
+        if iver < [0, 7, 2]:
+            print("docopt.__version__ = %r < '0.7.2'" % docopt.__version__)
+            all_reqs['docopt-ng'] = '>= 0.7.2'
+            install_requires.append('docopt-ng >= 0.7.2')
     except ImportError:
-        all_reqs['docopt-ng'] = '>= 0.7.0'
-        install_requires.append('docopt-ng >= 0.7.0')  # 0.7.2 used
+        all_reqs['docopt-ng'] = '>= 0.7.2'
+        install_requires.append('docopt-ng >= 0.7.2')  # 0.7.2 used
 
     if is_rtd:
         pass
