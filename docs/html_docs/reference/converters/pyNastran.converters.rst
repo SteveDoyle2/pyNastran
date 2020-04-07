@@ -2,12 +2,12 @@
 pyNastran/converters
 ####################
 
-:mod:`type_converter` Module
-----------------------------
+:mod:`format_converter` Module
+------------------------------
 
-.. inheritance-diagram:: pyNastran.converters.type_converter
+.. inheritance-diagram:: pyNastran.converters.format_converter
 
-.. automodule:: pyNastran.converters.type_converter
+.. automodule:: pyNastran.converters.format_converter
     :members:
     :undoc-members:
     :show-inheritance:

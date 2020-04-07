@@ -27,7 +27,7 @@ based on availbility), so should work.  The recommended set of packages are:
 
    * numpy >= 1.14
    * scipy >= 1.0
-   * cpylog >= 1.0.2
+   * cpylog >= 1.4.0
    * docopt-ng == 0.7.2    **(required for command line tools)**
 
  * **Optional**:

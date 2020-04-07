@@ -1,23 +1,12 @@
 nastran Package
 ===============
 
-:mod:`displacements` Module
----------------------------
-
-.. inheritance-diagram:: pyNastran.converters.nastran.displacements
-
-.. automodule:: pyNastran.converters.nastran.displacements
-    :members:
-    :private-members:
-    :undoc-members:
-    :show-inheritance:
-
 :mod:`geometry_helper` Module
 -----------------------------
 
-.. inheritance-diagram:: pyNastran.converters.nastran.geometry_helper
+.. inheritance-diagram:: pyNastran.converters.nastran.gui.geometry_helper
 
-.. automodule:: pyNastran.converters.nastran.geometry_helper
+.. automodule:: pyNastran.converters.nastran.gui.geometry_helper
     :members:
     :private-members:
     :undoc-members:
@@ -66,9 +55,9 @@ nastran Package
 :mod:`results_helper` Module
 ----------------------------
 
-.. inheritance-diagram:: pyNastran.converters.nastran.results_helper
+.. inheritance-diagram:: pyNastran.converters.nastran.gui.results_helper
 
-.. automodule:: pyNastran.converters.nastran.results_helper
+.. automodule:: pyNastran.converters.nastran.gui.results_helper
     :members:
     :undoc-members:
     :show-inheritance:
