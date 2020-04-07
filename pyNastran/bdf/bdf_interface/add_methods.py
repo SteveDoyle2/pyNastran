@@ -109,11 +109,11 @@ if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.bdf.cards.bdf_sets import (
         ASET, BSET, CSET, QSET, USET, OMIT,
         ASET1, BSET1, CSET1, QSET1, USET1, OMIT1,
-        SET1, SET3,
-        SEBSET, SECSET, SEQSET, # SEUSET
-        SEBSET1, SECSET1, SEQSET1, # SEUSET1
-        SESET, #SEQSEP,
-        RADSET,
+        SET1, SET2, SET3,
+        SEBSET, SECSET, SEQSET,  # SEUSET
+        SEBSET1, SECSET1, SEQSET1,  # SEUSET1
+        SESET,  # SEQSEP,
+        RADSET
     )
     from pyNastran.bdf.cards.params import PARAM
     from pyNastran.bdf.cards.dmig import DMIG, DMIAX, DMI, DMIJ, DMIK, DMIJI, DMIG_UACCEL, DTI
@@ -1441,7 +1441,7 @@ class AddMethods(BDFAttributes):
             self.frequencies[key] = [freq]
             self._type_to_id_map[freq.type].append(key)
 
-    def _add_set_object(self, set_obj: Union[SET1, SET3]) -> None:
+    def _add_set_object(self, set_obj: Union[SET1, SET2, SET3]) -> None:
         """adds an SET1/SET3 object"""
         key = set_obj.sid
         assert key >= 0
