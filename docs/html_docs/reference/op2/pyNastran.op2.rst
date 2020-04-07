@@ -27,7 +27,6 @@ pyNastran/op2
    pyNastran.op2.export_to_vtk
    pyNastran.op2.fortran_format
    pyNastran.op2.op2_helper
-   pyNastran.op2.op2_results
    pyNastran.op2.vector_utils
 
 pyNastran/op2/op2_interface
