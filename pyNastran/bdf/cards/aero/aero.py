@@ -3600,6 +3600,11 @@ class PAERO5(BaseCard):
                        self.lxis_id, self.ntaus, self.ltaus_id] + list(self.caoci)
         return list_fields
 
+    def repr_fields(self):
+        list_fields = self.raw_fields()
+        list_fields.insert(8, None)
+        return list_fields
+
     def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.repr_fields()
         return self.comment + print_card_8(card)
