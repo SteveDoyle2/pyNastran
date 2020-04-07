@@ -42,7 +42,7 @@ PYGMENTS = """
   * Python Imaging Library, developed by Secret Labs AB and Fredrik Lundh.
 """ if is_pygments else ''
 
-CREDITS = f"""pyNastran was written by Steve Doyle since 2011.  This product contains the following third party modules:
+CREDITS = f"""pyNastran has been written by Steve Doyle since 2011.  This product contains the following third party modules:
 
   * Numpy array library, developed by many contributors.
 
@@ -55,6 +55,8 @@ CREDITS = f"""pyNastran was written by Steve Doyle since 2011.  This product con
   * Qt5 cross-platform GUI toolkit, developed by many contributors.
 {QT}
 {PYGMENTS}
+  * ImageIO, an animation library for writing videos, developed by many contributors.
+
   * WingIDE, the primary IDE used for development, by Wingware.
 
 I gratefully acknowledge the efforts of all that have contributed to these and the other open source products and tools that are used in the development of pyNastran.

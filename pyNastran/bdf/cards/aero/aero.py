@@ -5337,8 +5337,8 @@ class SPLINE2(Spline):
         else:
             self.setg_ref.cross_reference_set(model, 'Node', msg=msg)
             nnodes = len(self.setg_ref.ids)
-            if nnodes < 3:
-                msg = 'SPLINE1 requires at least 3 nodes; nnodes=%s\n' % (nnodes)
+            if nnodes < 2:
+                msg = 'SPLINE2 requires at least 2 nodes; nnodes=%s\n' % (nnodes)
                 msg += str(self)
                 msg += str(self.setg_ref)
                 raise RuntimeError(msg)
@@ -5354,14 +5354,17 @@ class SPLINE2(Spline):
 
         try:
             self.setg_ref = model.Set(self.Set(), msg=msg)
-            self.setg_ref.cross_reference_set(model, 'Node', msg=msg)
+            if self.setg_ref.type == 'SET2':
+                self.setg_ref.cross_reference_set(model, 'MACRO', msg=msg)
+            else:
+                self.setg_ref.cross_reference_set(model, 'Node', msg=msg)
 
-            nnodes = len(self.setg_ref.ids)
-            if nnodes < 2:
-                msg = 'SPLINE2 requires at least 2 nodes; nnodes=%s\n' % (nnodes)
-                msg += str(self)
-                msg += str(self.setg_ref)
-                raise RuntimeError(msg)
+                nnodes = len(self.setg_ref.ids)
+                if nnodes < 2:
+                    msg = 'SPLINE2 requires at least 2 nodes; nnodes=%s\n' % (nnodes)
+                    msg += str(self)
+                    msg += str(self.setg_ref)
+                    raise RuntimeError(msg)
         except KeyError:
             pass
 
@@ -5845,7 +5848,7 @@ class SPLINE4(Spline):
             self.setg_ref.cross_reference_set(model, 'Node', msg=msg)
             nnodes = len(self.setg_ref.ids)
             if nnodes < 3:
-                msg = 'SPLINE1 requires at least 3 nodes; nnodes=%s\n' % (nnodes)
+                msg = 'SPLINE4 requires at least 3 nodes; nnodes=%s\n' % (nnodes)
                 msg += str(self)
                 msg += str(self.setg_ref)
                 raise RuntimeError(msg)
@@ -5865,14 +5868,18 @@ class SPLINE4(Spline):
         self.caero_ref = model.safe_caero(self.caero, self.eid, xref_errors, msg=msg)
         self.aelist_ref = model.safe_aelist(self.aelist, self.eid, xref_errors, msg=msg)
         self.setg_ref = model.Set(self.Set(), msg=msg)
-        self.setg_ref.cross_reference_set(model, 'Node', msg)
 
-        nnodes = len(self.setg_ref.ids)
-        if nnodes < 3:
-            msg = 'SPLINE4 requires at least 3 nodes; nnodes=%s\n' % (nnodes)
-            msg += str(self)
-            msg += str(self.setg_ref)
-            raise ValueError(msg)
+        if self.setg_ref.type == 'SET2':
+            self.setg_ref.cross_reference_set(model, 'MACRO', msg=msg)
+        else:
+            self.setg_ref.cross_reference_set(model, 'Node', msg)
+
+            nnodes = len(self.setg_ref.ids)
+            if nnodes < 3:
+                msg = 'SPLINE4 requires at least 3 nodes; nnodes=%s\n' % (nnodes)
+                msg += str(self)
+                msg += str(self.setg_ref)
+                raise ValueError(msg)
 
     def uncross_reference(self) -> None:
         """Removes cross-reference links"""

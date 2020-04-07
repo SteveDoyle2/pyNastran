@@ -1436,14 +1436,13 @@ class TestAero(unittest.TestCase):
 
         eid = 2
         setg = 13
-        ids = [1, 2]
+        ids = [1, 2, 3]
         model.add_set1(setg, ids)
         model.add_spline4(eid, caero, aelist, setg, dz, method, usage,
                           nelements, melements, comment='spline4')
         spline = model.splines[eid]
         del model.splines[eid]
-        with self.assertRaises(ValueError):
-            spline.cross_reference(model)
+        spline.cross_reference(model)
 
         model.pop_parse_errors()
         model.pop_xref_errors()
