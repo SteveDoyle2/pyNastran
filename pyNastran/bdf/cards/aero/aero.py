@@ -3600,6 +3600,11 @@ class PAERO5(BaseCard):
                        self.lxis_id, self.ntaus, self.ltaus_id] + list(self.caoci)
         return list_fields
 
+    def repr_fields(self):
+        list_fields = self.raw_fields()
+        list_fields.insert(8, None)
+        return list_fields
+
     def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.repr_fields()
         return self.comment + print_card_8(card)
@@ -5110,14 +5115,17 @@ class SPLINE1(Spline):
         msg = ', which is required by SPLINE1 eid=%s' % self.eid
         self.caero_ref = model.CAero(self.caero, msg=msg)
         self.setg_ref = model.Set(self.setg, msg=msg)
-        self.setg_ref.cross_reference_set(model, 'Node', msg=msg)
 
-        nnodes = len(self.setg_ref.ids)
-        if nnodes < 3:
-            msg = 'SPLINE1 requires at least 3 nodes; nnodes=%s\n' % (nnodes)
-            msg += str(self)
-            msg += str(self.setg_ref)
-            raise RuntimeError(msg)
+        if self.setg_ref.type == 'SET2':
+            self.setg_ref.cross_reference_set(model, 'MACRO', msg=msg)
+        else:
+            self.setg_ref.cross_reference_set(model, 'Node', msg=msg)
+            nnodes = len(self.setg_ref.ids)
+            if nnodes < 3:
+                msg = 'SPLINE1 requires at least 3 nodes; nnodes=%s\n' % (nnodes)
+                msg += str(self)
+                msg += str(self.setg_ref)
+                raise RuntimeError(msg)
 
     def safe_cross_reference(self, model, xref_errors):
         msg = ', which is required by SPLINE1 eid=%s' % self.eid
@@ -5323,14 +5331,17 @@ class SPLINE2(Spline):
         self.cid_ref = model.Coord(self.Cid(), msg=msg)
         self.caero_ref = model.CAero(self.CAero(), msg=msg)
         self.setg_ref = model.Set(self.Set(), msg=msg)
-        self.setg_ref.cross_reference_set(model, 'Node', msg=msg)
 
-        nnodes = len(self.setg_ref.ids)
-        if nnodes < 2:
-            msg = 'SPLINE2 requires at least 2 nodes; nnodes=%s\n' % (nnodes)
-            msg += str(self)
-            msg += str(self.setg_ref)
-            raise RuntimeError(msg)
+        if self.setg_ref.type == 'SET2':
+            self.setg_ref.cross_reference_set(model, 'MACRO', msg=msg)
+        else:
+            self.setg_ref.cross_reference_set(model, 'Node', msg=msg)
+            nnodes = len(self.setg_ref.ids)
+            if nnodes < 3:
+                msg = 'SPLINE1 requires at least 3 nodes; nnodes=%s\n' % (nnodes)
+                msg += str(self)
+                msg += str(self.setg_ref)
+                raise RuntimeError(msg)
 
     def safe_cross_reference(self, model, xref_errors):
         msg = ', which is required by SPLINE2 eid=%s' % self.eid
@@ -5827,14 +5838,18 @@ class SPLINE4(Spline):
         self.caero_ref = model.CAero(self.CAero(), msg=msg)
         self.setg_ref = model.Set(self.Set(), msg=msg)
         self.aelist_ref = model.AEList(self.aelist, msg=msg)
-        self.setg_ref.cross_reference_set(model, 'Node', msg)
 
-        nnodes = len(self.setg_ref.ids)
-        if nnodes < 3:
-            msg = 'SPLINE4 requires at least 3 nodes; nnodes=%s\n' % (nnodes)
-            msg += str(self)
-            msg += str(self.setg_ref)
-            raise ValueError(msg)
+        if self.setg_ref.type == 'SET2':
+            self.setg_ref.cross_reference_set(model, 'MACRO', msg=msg)
+        else:
+            self.setg_ref.cross_reference_set(model, 'Node', msg=msg)
+            nnodes = len(self.setg_ref.ids)
+            if nnodes < 3:
+                msg = 'SPLINE1 requires at least 3 nodes; nnodes=%s\n' % (nnodes)
+                msg += str(self)
+                msg += str(self.setg_ref)
+                raise RuntimeError(msg)
+
 
     def safe_cross_reference(self, model, xref_errors):
         """
@@ -6040,15 +6055,18 @@ class SPLINE5(Spline):
         self.cid_ref = model.Coord(self.cid, msg=msg)
         self.caero_ref = model.CAero(self.caero, msg=msg)
         self.setg_ref = model.Set(self.setg, msg=msg)
-        self.setg_ref.cross_reference_set(model, 'Node', msg)
         self.aelist_ref = model.AEList(self.aelist, msg=msg)
 
-        nnodes = len(self.setg_ref.ids)
-        if nnodes < 3:
-            msg = 'SPLINE5 requires at least 3 nodes; nnodes=%s\n' % (nnodes)
-            msg += str(self)
-            msg += str(self.setg_ref)
-            raise RuntimeError(msg)
+        if self.setg_ref.type == 'SET2':
+            self.setg_ref.cross_reference_set(model, 'MACRO', msg=msg)
+        else:
+            self.setg_ref.cross_reference_set(model, 'Node', msg=msg)
+            nnodes = len(self.setg_ref.ids)
+            if nnodes < 3:
+                msg = 'SPLINE1 requires at least 3 nodes; nnodes=%s\n' % (nnodes)
+                msg += str(self)
+                msg += str(self.setg_ref)
+                raise RuntimeError(msg)
 
     def safe_cross_reference(self, model, xref_errors):
         msg = ', which is required by SPLINE5 eid=%s' % self.eid
