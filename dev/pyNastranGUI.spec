@@ -10,7 +10,7 @@ except ImportError:
 
 pyInstaller_path = [r'C:\NASA\dev\pyinstaller']
 IS_H5PY = True
-DEBUG = False
+DEBUG = True
 IS_RELEASE = True
 
 #-------------------------------------------------------------------------
@@ -459,8 +459,8 @@ qt_imports = [
     'PyQt5.QtPrintSupport',  # needed for Qsci
 ]
 hiddenimports = [
-    'vtk.vtkCommonPythonSIP', 'vtk.vtkFilteringPythonSIP',
-    'vtk.vtkRenderingPythonSIP',
+    'vtk', 'vtk.vtkCommonPythonSIP', 'vtk.vtkFilteringPythonSIP',
+    'vtk.vtkRenderingPythonSIP', 'vtkmodules',
     'scipy._lib.messagestream', # 'scipy',
     'pygments',
 ] + qt_imports
