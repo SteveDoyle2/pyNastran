@@ -14,5 +14,5 @@ pygments>=2.1.0
 docutils>=0.12
 
 # for notebook conversion
-#ipython
+ipython
 #qtpy
