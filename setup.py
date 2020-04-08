@@ -8,12 +8,14 @@ from packages import (check_python_version, get_package_requirements,
                       update_version_file, LONG_DESCRIPTION)
 
 add_vtk_qt = True
+bdist = False
 if 'bdist_wheel' in sys.argv:
     add_vtk_qt = False
+    bdist = True
     assert '\r' not in LONG_DESCRIPTION, LONG_DESCRIPTION
 
 check_python_version()
-install_requires = get_package_requirements(is_gui=True, add_vtk_qt=add_vtk_qt)
+install_requires = get_package_requirements(is_gui=True, add_vtk_qt=add_vtk_qt, bdist=bdist)
 
 packages = find_packages() + ['gui/icons/*.*']
 #print("packages = %s" % packages)
