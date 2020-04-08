@@ -4,8 +4,13 @@ from copy import deepcopy
 import unittest
 
 import numpy as np
-import matplotlib
-matplotlib.use('Agg')
+try:
+    import matplotlib
+    matplotlib.use('Agg')
+except ModuleNotFoundError:  # pyparsing is missing
+    pass
+#except ImportError:
+    #pass
 import vtk
 
 from cpylog import SimpleLogger
