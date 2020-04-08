@@ -7,8 +7,9 @@ import numpy as np
 try:
     import matplotlib
     matplotlib.use('Agg')
+    IS_MATPLOTLIB = True
 except ModuleNotFoundError:  # pyparsing is missing
-    pass
+    IS_MATPLOTLIB = False
 #except ImportError:
     #pass
 import vtk
@@ -77,6 +78,7 @@ class TestNastranGUI(unittest.TestCase):
         test = NastranGUI()
         test.load_nastran_geometry(obj_filename)
 
+    @unittest.skipIf(IS_MATPLOTLIB is False, 'No matplotlib')
     def test_solid_shell_bar_01(self):
         bdf_filename = os.path.join(MODEL_PATH, 'sol_101_elements', 'static_solid_shell_bar.bdf')
         op2_filename = os.path.join(MODEL_PATH, 'sol_101_elements', 'static_solid_shell_bar.op2')
