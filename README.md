@@ -22,7 +22,7 @@
 
 ### v1.3.0
 
-[Download GUI](https://sourceforge.net/projects/pynastran/files/?source=navbar) (latest is from 2019/5/24)
+[Download GUI](https://sourceforge.net/projects/pynastran/files/?source=navbar) (latest is from 2020/4/8)
 
 Also, check out the:
   * [Discussion forum](http://groups.google.com/group/pynastran-discuss) (intended for questions about the latest release)
