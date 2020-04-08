@@ -55,7 +55,7 @@ commercial program.
 This should be hidden...
 
 --->
-### pyNastran v1.3 has been released (2019/4/8)
+### pyNastran v1.3.0 has been released (2019/4/8)
 
 With Python 2 now officially dead, it's time for a new killer feature to get the last few people to switch.
 
