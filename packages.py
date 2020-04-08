@@ -159,19 +159,23 @@ def get_package_requirements(is_gui=True, add_vtk_qt=True, python_version=None, 
 
     if is_gui:
         version_check, required_version = vreqs['matplotlib']
-        try:
-            import matplotlib
-            iver = int_version('matplotlib', matplotlib.__version__)
-            all_reqs['matplotlib'] = str_version(iver)
-            iversion_check = int_version('matplotlib', version_check)
-            if iver < iversion_check:
-                print("matplotlib.__version__ = %r < %r" % (matplotlib.__version__, version_check))
-                    #matplotlib.__version__, str_version(iversion_check)))
-                all_reqs['matplotlib'] = required_version
-                install_requires.append('matplotlib %s' % required_version)
-        except ImportError:
+        if bdist:
             all_reqs['matplotlib'] = required_version
             install_requires.append('matplotlib %s' % required_version)  # 3.2.0 used
+        else:
+            try:
+                import matplotlib
+                iver = int_version('matplotlib', matplotlib.__version__)
+                all_reqs['matplotlib'] = str_version(iver)
+                iversion_check = int_version('matplotlib', version_check)
+                if iver < iversion_check:
+                    print("matplotlib.__version__ = %r < %r" % (matplotlib.__version__, version_check))
+                        #matplotlib.__version__, str_version(iversion_check)))
+                    all_reqs['matplotlib'] = required_version
+                    install_requires.append('matplotlib %s' % required_version)
+            except ImportError:
+                all_reqs['matplotlib'] = required_version
+                install_requires.append('matplotlib %s' % required_version)  # 3.2.0 used
 
 
     required_version_str = '1.4.0'
