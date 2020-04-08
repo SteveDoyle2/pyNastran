@@ -69,7 +69,7 @@ def str_version(version):
     return '.'.join(str(versioni) for versioni in version)
 
 
-def get_package_requirements(is_gui=True, add_vtk_qt=True, python_version=None):
+def get_package_requirements(is_gui=True, add_vtk_qt=True, python_version=None, bdist=False):
     """gets the requirements for setup.py"""
     if python_version is None:
         python_version = '%s.%s' % sys.version_info[:2]
@@ -108,46 +108,54 @@ def get_package_requirements(is_gui=True, add_vtk_qt=True, python_version=None):
         install_requires.append('numpy')
     else:
         version_check, required_version = vreqs['numpy']
-        try:
-            import numpy as np
-            sver = np.lib.NumpyVersion(np.__version__)
-            iver = int_version('numpy', sver.version)
-            all_reqs['numpy'] = sver.version
-
-            iversion_check = int_version('numpy', version_check)
-            #srequired_version = int_version('numpy', required_version)
-            #print('numpy %r %r' % (sver, iversion_check))
-            if iver < iversion_check:
-                print("numpy.__version__ = %r < %s" % (np.__version__, version_check))
-                install_requires.append('numpy %s' % required_version)
-                all_reqs['numpy'] = version_check
-                install_requires.append('numpy %s' % required_version)
-        except ImportError:
+        if bdist:
             all_reqs['numpy'] = required_version
             install_requires.append('numpy %s' % required_version) # 1.18.1 used
+        else:
+            try:
+                import numpy as np
+                sver = np.lib.NumpyVersion(np.__version__)
+                iver = int_version('numpy', sver.version)
+                all_reqs['numpy'] = sver.version
+
+                iversion_check = int_version('numpy', version_check)
+                #srequired_version = int_version('numpy', required_version)
+                #print('numpy %r %r' % (sver, iversion_check))
+                if iver < iversion_check:
+                    print("numpy.__version__ = %r < %s" % (np.__version__, version_check))
+                    install_requires.append('numpy %s' % required_version)
+                    all_reqs['numpy'] = version_check
+                    install_requires.append('numpy %s' % required_version)
+            except ImportError:
+                all_reqs['numpy'] = required_version
+                install_requires.append('numpy %s' % required_version) # 1.18.1 used
 
     if is_rtd:
         install_requires.append('scipy')
     else:
         version_check, required_version = vreqs['scipy']
-        try:
-            import scipy
-            sver = scipy.version.short_version
-            iver = int_version('scipy', sver)
-            all_reqs['scipy'] = sver
-
-            iversion_check = int_version('scipy', version_check)
-            #srequired_version = int_version('scipy', required_version)
-            #print('scipy %r %r' % (sver, iversion_check))
-            #print(iver, iversion_check)
-            if iver < iversion_check:
-                print("scipy.version.short_version = %r < %r" % (
-                    scipy.version.short_version, version_check))
-                all_reqs['scipy'] = required_version
-                install_requires.append('scipy %s' % required_version)
-        except ImportError:
+        if bdist:
             all_reqs['scipy'] = required_version
             install_requires.append('scipy %s' % required_version)  # 1.4.1 used
+        else:
+            try:
+                import scipy
+                sver = scipy.version.short_version
+                iver = int_version('scipy', sver)
+                all_reqs['scipy'] = sver
+
+                iversion_check = int_version('scipy', version_check)
+                #srequired_version = int_version('scipy', required_version)
+                #print('scipy %r %r' % (sver, iversion_check))
+                #print(iver, iversion_check)
+                if iver < iversion_check:
+                    print("scipy.version.short_version = %r < %r" % (
+                        scipy.version.short_version, version_check))
+                    all_reqs['scipy'] = required_version
+                    install_requires.append('scipy %s' % required_version)
+            except ImportError:
+                all_reqs['scipy'] = required_version
+                install_requires.append('scipy %s' % required_version)  # 1.4.1 used
 
     if is_gui:
         version_check, required_version = vreqs['matplotlib']
@@ -167,17 +175,21 @@ def get_package_requirements(is_gui=True, add_vtk_qt=True, python_version=None):
 
 
     required_version_str = '1.4.0'
-    try:
-        import cpylog
-        iver = int_version('cpylog', cpylog.__version__)
-        all_reqs['cpylog'] = str_version(iver)
-        if iver < [1, 4, 0]:
-            print(f"cpylog.__version__ = {cpylog.__version__!r} != {required_version_str!r}")
-            all_reqs['cpylog'] = f'>= {required_version_str}'
-            install_requires.append(f'cpylog >= {required_version_str}')
-    except ImportError:
+    if bdist:
         all_reqs['cpylog'] = f'>= {required_version_str}'
         install_requires.append(f'cpylog >= {required_version_str}')  # 1.3.1 used
+    else:
+        try:
+            import cpylog
+            iver = int_version('cpylog', cpylog.__version__)
+            all_reqs['cpylog'] = str_version(iver)
+            if iver < [1, 4, 0]:
+                print(f"cpylog.__version__ = {cpylog.__version__!r} != {required_version_str!r}")
+                all_reqs['cpylog'] = f'>= {required_version_str}'
+                install_requires.append(f'cpylog >= {required_version_str}')
+        except ImportError:
+            all_reqs['cpylog'] = f'>= {required_version_str}'
+            install_requires.append(f'cpylog >= {required_version_str}')  # 1.3.1 used
 
     if not is_rtd:
         try:
@@ -192,17 +204,21 @@ def get_package_requirements(is_gui=True, add_vtk_qt=True, python_version=None):
             all_reqs['nptyping'] = '>= 1.0.1'
             install_requires.append('nptyping >= 1.0.1')  # 1.0.1 used
 
-    try:
-        import docopt
-        iver = int_version('docopt', docopt.__version__)
-        all_reqs['docopt-ng'] = str_version(iver)
-        if iver < [0, 7, 2]:
-            print("docopt.__version__ = %r < '0.7.2'" % docopt.__version__)
-            all_reqs['docopt-ng'] = '>= 0.7.2'
-            install_requires.append('docopt-ng >= 0.7.2')
-    except ImportError:
+    if bdist:
         all_reqs['docopt-ng'] = '>= 0.7.2'
         install_requires.append('docopt-ng >= 0.7.2')  # 0.7.2 used
+    else:
+        try:
+            import docopt
+            iver = int_version('docopt', docopt.__version__)
+            all_reqs['docopt-ng'] = str_version(iver)
+            if iver < [0, 7, 2]:
+                print("docopt.__version__ = %r < '0.7.2'" % docopt.__version__)
+                all_reqs['docopt-ng'] = '>= 0.7.2'
+                install_requires.append('docopt-ng >= 0.7.2')
+        except ImportError:
+            all_reqs['docopt-ng'] = '>= 0.7.2'
+            install_requires.append('docopt-ng >= 0.7.2')  # 0.7.2 used
 
     if is_rtd:
         pass
