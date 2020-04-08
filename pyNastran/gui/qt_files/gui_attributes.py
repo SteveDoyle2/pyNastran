@@ -1190,8 +1190,10 @@ class GuiAttributes:
         if self._modify_groups_window_shown:
             self._modify_groups_window.set_font_size(font_size)
         self.preferences_obj.set_font_size(font_size)
-        self.cutting_plane_obj.set_font_size(font_size)
-        self.shear_moment_torque_obj.set_font_size(font_size)
+        if hasattr(self, 'cutting_plane_obj'):
+            self.cutting_plane_obj.set_font_size(font_size)
+        if hasattr(self, 'shear_moment_torque_obj'):
+            self.shear_moment_torque_obj.set_font_size(font_size)
         self.edit_geometry_properties_obj.set_font_size(font_size)
 
 
