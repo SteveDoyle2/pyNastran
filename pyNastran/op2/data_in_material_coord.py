@@ -3,13 +3,19 @@ Defines:
  - data_in_material_coord(bdf, op2, in_place=False)
 
 """
+from __future__ import annotations
 import copy
+from typing import Optional, TYPE_CHECKING
 
 import numpy as np
 from numpy import cos, sin, cross
 from numpy.linalg import norm  # type: ignore
 
 from pyNastran.utils.numpy_utils import integer_types
+
+if TYPE_CHECKING:
+    from pyNastran.bdf.bdf import BDF
+    from pyNastran.op2.op2 import OP2
 
 force_vectors = ['cquad4_force', 'cquad8_force', 'cquadr_force',
                  'ctria3_force', 'ctria6_force', 'ctriar_force']
@@ -18,6 +24,92 @@ stress_vectors = ['cquad4_stress', 'cquad8_stress', 'cquadr_stress',
 strain_vectors = ['cquad4_strain', 'cquad8_strain', 'cquadr_strain',
                   'ctria3_strain', 'ctria6_strain', 'ctriar_strain']
 
+
+def transform_solids(model: OP2):
+    """http://web.mit.edu/course/3/3.11/www/modules/trans.pdf"""
+    R = np.array([
+        [1., 0., 0.],
+        [0., 1., 0.],
+        [0., 0., 2.],
+    ])
+    Ri = np.array([
+        [1., 0., 0.],
+        [0., 1., 0.],
+        [0., 0., 0.5],
+    ])
+    thetad = 20.
+    theta = np.radians(thetad)
+    s = np.sin(theta)
+    c = np.cos(theta)
+    sc = s * c
+    c2 = c ** 2
+    s2 = s ** 2
+    oxx = 1.
+    oyy = 2.
+    ozz = 3.
+    txy = 1.
+    txz = 0.
+    tyz = 0.
+    Ar = np.array([
+        [c2, s2, 2. * sc],
+        [s2, c2, -2. * sc],
+        [-sc, sc, c2 - s2],
+    ])
+    """
+    {ox'         {ox}
+    {oy'  = [Ar] {oy}
+    {txy'        {txy}
+    """
+    from pyNastran.bdf.bdf import BDF
+    bdf_model = BDF()
+    bdf_model.add_grid(1, [1., 0., 0.], cp=0, cd=0, ps='', seid=0, comment='')
+    bdf_model.add_grid(2, [1., 1., 0.], cp=0, cd=0, ps='', seid=0, comment='')
+    bdf_model.add_grid(3, [0., 1., 0.], cp=0, cd=0, ps='', seid=0, comment='')
+    bdf_model.add_grid(4, [0., 0., 1.], cp=0, cd=0, ps='', seid=0, comment='')
+    ctetra = bdf_model.add_ctetra(1, 1, [1, 2, 3, 4],)
+    bdf_model.add_psolid(1, 1, cordm=0)
+    E = 3.0E7
+    G = None
+    nu = 0.3
+    bdf_model.add_mat1(1, E, G, nu)
+    bdf_model.cross_reference()
+
+    # this is ACTUALLY the element coordinate system
+    centroid, xe, ye, ze = ctetra.material_coordinate_system()
+    T = np.vstack([xe, ye, ze]) # Te
+
+    #  we're going to transform the Te
+
+    stress = np.array([
+        [oxx, txy, txz],
+        [txy, oyy, tyz],
+        [txz, tyz, ozz],
+    ])
+    #stress2 = Ar @ stress
+    #strain2 = (R @ A @ Ri) @ strain
+
+    #  which is it?
+    stress3 = T.T @ stress @ T
+    stress3t = T @ stress @ T.T
+
+    #  this is a test that these are the same...
+    stress4 = R @ stress @ Ri
+    print(stress)
+    print(stress4)
+    print('------------')
+
+    strain3 = T.T @ strain @ T
+    #strain3t = T.T @ strain @ T
+    #strain4 = R @ strain3 @ Ri
+
+    # is this strain3 or strain3t; is it (R @ strain3x @ Ri) or (Ri @ strain3x @ R)
+    strain4 = R @ strain3 @ Ri
+    #print(T)
+    #print(T @ T.T)
+    #print(stress2)
+    print(stress3)
+    print(stress3t)
+    x = 1
 
 def transf_Mohr(Sxx, Syy, Sxy, thetarad):
     """Mohr's Circle-based Plane Stress Transformation
@@ -151,7 +243,7 @@ def calc_imat(normals, csysi):
     return imat
 
 
-def data_in_material_coord(bdf, op2, in_place=False):
+def data_in_material_coord(bdf: BDF, op2: OP2, in_place: bool=False) -> OP2:
     """Convert OP2 2D element outputs to material coordinates
 
     Nastran allows the use of 'PARAM,OMID,YES' to print 2D element forces,
@@ -444,3 +536,9 @@ def data_in_material_coord(bdf, op2, in_place=False):
                 for i in [2, 3, 4, 5, 6, 7, 8, 9]:
                     new_vector.data[:, i, :] = 0
     return op2_new
+
+if __name__ == '__main__':
+    op2_filename = r'C:\NASA\m4\formats\git\pyNastran\models\solid_bending\solid_bending.op2'
+    from pyNastran.op2.op2 import read_op2
+    model = read_op2(op2_filename)
+    transform_solids(model)

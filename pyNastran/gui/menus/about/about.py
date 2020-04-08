@@ -179,9 +179,9 @@ class AboutWindow(PyDialog):
         self.close()
         #self.destroy()
 
-    #def on_cancel(self):
-        #self.out_data['close'] = True
-        #self.close()
+    def on_cancel(self):
+        self.out_data['close'] = True
+        self.close()
 
 def get_packages() -> Dict[str, str]:
     """makes the packages data"""
@@ -246,7 +246,7 @@ def get_version() -> Dict[str, str]:
         'Product': 'pyNastran GUI',
         'Version': pyNastran.__version__,
         'Release Type': 'Final Release' if 'dev' not in pyNastran.__version__ else 'Developement',
-        'Release Date': pyNastran.__releaseDate__,
+        'Release Date': pyNastran.__releaseDate2__.title(),
         #'Cache Directory': ,
         'OS' : f'win32 (sys.platform={sys_platform})',
         'Platform' : platform.platform(),
