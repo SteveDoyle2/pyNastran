@@ -3,7 +3,7 @@ is_pynastrangui_exe = False
 is_installed = False
 if is_pynastrangui_exe or is_installed:
     # pyInstaller
-    from pyNastran.version import __version__, __releaseDate__
+    from pyNastran.version import __version__, __releaseDate__, __releaseDate2__
 else:
     import sys
     import subprocess
