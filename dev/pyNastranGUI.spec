@@ -12,7 +12,7 @@ pyInstaller_path = [r'C:\NASA\dev\pyinstaller']
 IS_H5PY = True
 DEBUG = False
 IS_RELEASE = True
-USE_TODAY = True
+USE_TODAY = False
 
 #-------------------------------------------------------------------------
 ## this block gets/sets the version so it doesnt use git

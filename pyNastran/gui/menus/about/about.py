@@ -179,9 +179,9 @@ class AboutWindow(PyDialog):
         self.close()
         #self.destroy()
 
-    #def on_cancel(self):
-        #self.out_data['close'] = True
-        #self.close()
+    def on_cancel(self):
+        self.out_data['close'] = True
+        self.close()
 
 def get_packages() -> Dict[str, str]:
     """makes the packages data"""
