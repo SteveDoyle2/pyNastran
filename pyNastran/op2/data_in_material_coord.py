@@ -3,13 +3,19 @@ Defines:
  - data_in_material_coord(bdf, op2, in_place=False)
 
 """
+from __future__ import annotations
 import copy
+from typing import Optional, TYPE_CHECKING
 
 import numpy as np
 from numpy import cos, sin, cross
 from numpy.linalg import norm  # type: ignore
 
 from pyNastran.utils.numpy_utils import integer_types
+
+if TYPE_CHECKING:
+    from pyNastran.bdf.bdf import BDF
+    from pyNastran.op2.op2 import OP2
 
 force_vectors = ['cquad4_force', 'cquad8_force', 'cquadr_force',
                  'ctria3_force', 'ctria6_force', 'ctriar_force']
@@ -151,7 +157,7 @@ def calc_imat(normals, csysi):
     return imat
 
 
-def data_in_material_coord(bdf, op2, in_place=False):
+def data_in_material_coord(bdf: BDF, op2: OP2, in_place: bool=False) -> OP2:
     """Convert OP2 2D element outputs to material coordinates
 
     Nastran allows the use of 'PARAM,OMID,YES' to print 2D element forces,

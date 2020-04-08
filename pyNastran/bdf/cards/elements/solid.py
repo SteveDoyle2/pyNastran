@@ -76,7 +76,6 @@ def volume4(n1: Any, n2: Any, n3: Any, n4: Any) -> float:
     volume = -dot(n1 - n4, cross(n2 - n4, n3 - n4)) / 6.
     return volume
 
-
 def area_centroid(n1: Any, n2: Any, n3: Any, n4: Any) -> Tuple[float, float]:
     """
     Gets the area, :math:`A`, and centroid of a quad.::
@@ -2078,31 +2077,16 @@ class CTETRA4(SolidElement):
         self.pid_ref = model.safe_property(self.pid, self.eid, xref_errors, msg=msg)
 
     def material_coordinate_system(self, xyz=None):
-        """http://www.ipes.dk/Files/Ipes/Filer/nastran_2016_doc_release.pdf"""
-        #if normal is None:
-            #normal = self.Normal() # k = kmat
+        """
+        Returns
+        -------
+        centroid: (3,) float ndarray
+           the centoid
+        xe, ye, ze: (3,) float ndarray
+            the element coordinate system
 
-        if xyz is None:
-            x1 = self.nodes_ref[0].get_position()
-            x2 = self.nodes_ref[1].get_position()
-            x3 = self.nodes_ref[2].get_position()
-            x4 = self.nodes_ref[3].get_position()
-        else:
-            x1 = xyz[:, 0]
-            x2 = xyz[:, 1]
-            x3 = xyz[:, 2]
-            x4 = xyz[:, 3]
-
-        #CORDM=-2
-        centroid = (x1 + x2 + x3 + x4) / 4.
-        xe = (x2 + x3 + x4) / 3. - x1
-        xe /= np.linalg.norm(xe)
-        v = ((x1 + x3 + x4) - (x1 + x2 + x4)) / 3.
-        ze = np.cross(xe, v)
-        ze /= np.linalg.norm(ze)
-
-        ye = np.cross(ze, xe)
-        ye /= np.linalg.norm(ye)
+        """
+        centroid, xe, ye, ze = _ctetra_element_coordinate_system(self, xyz=None)
         return centroid, xe, ye, ze
 
     def _verify(self, xref):
@@ -2349,6 +2333,19 @@ class CTETRA10(SolidElement):
         self.nodes_ref = model.Nodes(self.nodes, msg=msg)
         self.pid_ref = model.safe_property(self.pid, self.eid, xref_errors, msg=msg)
 
+    def material_coordinate_system(self, xyz=None):
+        """
+        Returns
+        -------
+        centroid: (3,) float ndarray
+           the centoid
+        xe, ye, ze: (3,) float ndarray
+            the element coordinate system
+
+        """
+        centroid, xe, ye, ze = _ctetra_element_coordinate_system(self, xyz=None)
+        return centroid, xe, ye, ze
+
     @property
     def faces(self):
         """
@@ -2452,3 +2449,41 @@ class CTETRA10(SolidElement):
     def node_ids(self):
         nids = self._node_ids(nodes=self.nodes_ref, allow_empty_nodes=True)
         return nids
+
+def _ctetra_element_coordinate_system(element: Union[CTETRA4, CTETRA10], xyz=None):
+    """
+    Returns
+    -------
+    centroid: (3,) float ndarray
+       the centoid
+    xe, ye, ze: (3,) float ndarray
+        the element coordinate system
+
+    http://www.ipes.dk/Files/Ipes/Filer/nastran_2016_doc_release.pdf"""
+    # this is the
+    #if normal is None:
+        #normal = element.Normal() # k = kmat
+
+    if xyz is None:
+        x1 = element.nodes_ref[0].get_position()
+        x2 = element.nodes_ref[1].get_position()
+        x3 = element.nodes_ref[2].get_position()
+        x4 = element.nodes_ref[3].get_position()
+    else:
+        x1 = xyz[:, 0]
+        x2 = xyz[:, 1]
+        x3 = xyz[:, 2]
+        x4 = xyz[:, 3]
+
+    #CORDM=-2
+    centroid = (x1 + x2 + x3 + x4) / 4.
+    xe = (x2 + x3 + x4) / 3. - x1
+    xe /= np.linalg.norm(xe)
+    v = ((x1 + x3 + x4) - (x1 + x2 + x4)) / 3.
+    ze = np.cross(xe, v)
+    ze /= np.linalg.norm(ze)
+
+    ye = np.cross(ze, xe)
+    ye /= np.linalg.norm(ye)
+    return centroid, xe, ye, ze
+
