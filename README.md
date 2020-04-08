@@ -27,7 +27,7 @@
 Also, check out the:
   * [Discussion forum](http://groups.google.com/group/pynastran-discuss) (intended for questions about the latest release)
   * [Developer forum](http://groups.google.com/group/pynastran-dev) (intended for questions about the master branch)
-  * [Docs](https://pynastran-git.readthedocs.io/en/1.2/)
+  * [Docs](https://pynastran-git.readthedocs.io/en/1.3/)
 
 for more detailed information.
 
@@ -51,14 +51,20 @@ commercial program.
 # News
 
 <!---
-### pyNastran v1.3 has not been released (2019/4/8)
+
+This should be hidden...
+
+--->
+### pyNastran v1.3 has been released (2019/4/8)
 
 With Python 2 now officially dead, it's time for a new killer feature to get the last few people to switch.
 
 There is now support for writing OP2 files!  They're difficult to create from scratch, 
-but modifying an existing one isn't difficult.  This also includes geometry support.
+but modifying an existing one isn't difficult.  This includes geometry support.
 
 In addition, many new OP2 results have been added.  Modern NX Nastran should work much better.
+
+Better yet, check out this blog post covering [Flutter Analysis in pyNastran](https://www.m4-engineering.com/flutter-analysis-with-pynastran/)
 
 Programmatics:
  - Supports Python 3.7 and 3.8
@@ -100,19 +106,11 @@ OP2:
       - real CFAST, CWELD forces
       - nonlinear cbush stress/strain/force
     - other
-      - XSOP2DIR
       - PSDs
       - optimization
         - convergence table
         - design variables
-        - weight response
-        - displacement response
-        - stress response
-        - strain response
-        - force response
-        - composite stress response
-        - composite strain response
-        - fractional mass response
+        - weight, displacement, stress, strain, force, composite stress, composite strain, fractional mass response
     - SOL 401/402 results:
       - eigenvalue_fluid (LAMAF, LAMAS)
       - eigenvectors (BOPHIGF, BOPHIGS)
@@ -148,11 +146,8 @@ GUI:
 
 F06:
  - KE support for plot_145
-Many bug fixes and a few more details on features, can be found in the <Release Notes>
-
-This should be hidden...
-
---->
+ 
+Many bug fixes and a few more details on features, can be found in the ![Release Notes](https://github.com/SteveDoyle2/pyNastran/blob/1.3/releaseNotes.md)
 
 ### pyNastran v1.2.1 has been released (2019/5/24)
 
