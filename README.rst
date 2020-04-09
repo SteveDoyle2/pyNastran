@@ -91,81 +91,147 @@ In addition, many new OP2 results have been added.  Modern NX Nastran should wor
 Better yet, check out this blog post covering `Flutter Analysis in pyNastran <https://www.m4-engineering.com/flutter-analysis-with-pynastran/>`_
 
 Programmatics:
+
  - Supports Python 3.7 and 3.8
+ 
  - Dropping Python 2.7 and 3.6 support
+ 
  - GUI is compatible with PyQt5 and PySide2
+ 
  - improved testing of old versions of packages
  
 BDF:
  - enhancements
+ 
    - 405 cards supported (up from 373)
+   
    - improved mesh utilities
-      - bdf mirror, bdf convert, bdf export_caero_mesh
-      - additional `bdf scale`, which takes arbitrary mass, length, time, pressure, or velocity scale factors (3 of 5) to apply a scaling law
+   
+     - bdf mirror, bdf convert, bdf export_caero_mesh
+      
+     - additional `bdf scale`, which takes arbitrary mass, length, time, pressure, or velocity scale factors (3 of 5) to apply a scaling law
+      
    - added deck guessing with punch=None
  
 OP2:
  - enhancements:
+ 
    - OP2 write support
+   
    - fixed most pandas deprecation warnings/added support for pandas 0.25 
+   
    - much improved NX 2019.2 support
+   
  - minor enhancements:
+ 
    - more hdf5 results
+   
    - a few more cards supported in the OP2 geometry reader
+   
    - preliminary NX 64-bit support
+   
    - more MSC versions supported
+   
    - sped up R1TABRG (optimization) reading
+   
    - various geometry cards added
+   
    - supports more PARAM reading
+   
  - new results:
+ 
     - composite failure indicies (OEFIT)
+    
     - sensitivity support (DSCMCOL)
+    
     - Cambpell diagrams (CDDATA)
+    
     - eigenvectors (BOPHIGF)
+    
     - grid point forces SORT2 (OGPFB2)
+    
     - stress/strain/force
+    
       - random stress/strain (OESVM1/2, OESVM1C, OSTRVM1/2, OSTRVM2, OESXRM1C, OESXNO1, OESXNO1C)
+      
       - real/complex stress/strain/force output for centroidal CQUADR/CTRIAR
+      
       - complex CBEAR forces
+      
       - real CFAST, CWELD forces
+      
       - nonlinear cbush stress/strain/force
+      
     - other
+    
       - PSDs
+      
       - optimization
+      
         - convergence table
+        
         - design variables
+        
         - weight, displacement, stress, strain, force, composite stress, composite strain, fractional mass response
+        
     - SOL 401/402 results:
+    
       - eigenvalue_fluid (LAMAF, LAMAS)
+      
       - eigenvectors (BOPHIGF, BOPHIGS)
+      
       - temperature (OTEMP1)
+      
       - solution set
+      
         - results: displacement, velocity, acceleration, eigenvectors:
+        
         - tables: OUXY1, OUXY2, OPHSA
 
 GUI:
+
  - enhancements:
+ 
    - partial custom results many now be loaded
+   
    - animation now supports complex fringe
+   
    - result case description now shows the mode/time/frequency
+   
    - result case description now shows the min/max value as well as the location
+   
    - map centroidal to nodal option
+   
    - adding node/element highlight menu
+   
    - adding node/element mark/label menu
+   
    - result case description now shows the min/max value as well as the location
+   
    - result case description now shows the mode/time/frequency
+   
  - minor enhancements:
+ 
    - added export result option to right-click menu
-   - legend supports unicode
+   
    - more keyboard shortcuts
+   
  - nastran:
+ 
    - geometry:
+   
      - added preferences for geometry/results to speed up model loading
+     
      - element & material coordinate systems
+     
    - results
+   
      - added acoustic displacements (OUG1F)
+     
      - real/complex stress/strain/force results
+     
        - plate by upper/lower, composite plates by ply, bars, rods, springs, cbush, cdamp
+       
      - fractional mass response
 
 F06:
