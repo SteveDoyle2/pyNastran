@@ -79,8 +79,8 @@ def check_for_newer_version(version_current: Optional[str]=None,
     tuple_current_version = split_version(version_current, 'current')
     tuple_latest_version = split_version(version_latest, 'latest')
 
-    print('tuple_latest_version = %s' % str(tuple_latest_version))  # (0,7,2)
-    print('tuple_current_version = %s' % str(tuple_current_version))  # (0,8,0)
+    #print('tuple_latest_version = %s' % str(tuple_latest_version))  # (0,7,2)
+    #print('tuple_current_version = %s' % str(tuple_current_version))  # (0,8,0)
 
     if (tuple_current_version < tuple_latest_version or
             (is_dev and tuple_current_version == tuple_latest_version)):
