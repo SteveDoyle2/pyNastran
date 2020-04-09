@@ -55,7 +55,7 @@ commercial program.
 This should be hidden...
 
 --->
-### pyNastran v1.3.2 has been released (2019/4/8)
+### pyNastran v1.3.2 has been released (2020/4/8)
 
 With Python 2 now officially dead, it's time for a new killer feature to get the last few people to switch.
 
@@ -64,7 +64,7 @@ but modifying an existing one isn't difficult.  This includes geometry support.
 
 In addition, many new OP2 results have been added.  Modern NX Nastran should work much better.
 
-Better yet, check out this blog post covering **[Flutter Analysis in pyNastran](https://www.m4-engineering.com/flutter-analysis-with-pynastran/)**.
+Better yet, check out this blog post covering **[Flutter Analysis in pyNastran](https://www.m4-engineering.com/flutter-analysis-with-pynastran/)** that I wrote.
 
 Programmatics:
  - Supports Python 3.7 and 3.8
@@ -148,7 +148,7 @@ F06:
 
 Many bug fixes and a few more details on features, can be found in the ![Release Notes](https://github.com/SteveDoyle2/pyNastran/blob/1.3/releaseNotes.md)
 
-### pyNastran 1.3.1/1.3.0 has been released (2019/4/8)
+### pyNastran 1.3.1/1.3.0 has been released (2020/4/8)
 
 This result has been superseeded by 1.3.2.  The PyPi page was fixed.
 
