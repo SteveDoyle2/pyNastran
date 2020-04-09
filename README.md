@@ -39,7 +39,7 @@ field formatting.  Many checks are also performed to verify that your model is c
 Using the OP2 interface, you can read large result files quickly and efficiently.
 Additionally, you can also extract a subset of the result data and write OP2/F06 result
 files.  For a more detailed list of features, see:
-  * [Features](https://pynastran-git.readthedocs.io/en/1.2/quick_start/features.html#overview)
+  * [Features](https://pynastran-git.readthedocs.io/en/1.3/quick_start/features.html#overview)
 
 Using the pyNastran GUI, you can read in Nastran models and quickly view results for a model.
 While it's no FEMAP/Patran, it can replace many tasks that would otherwise require a
