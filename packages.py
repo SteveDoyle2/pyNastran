@@ -324,7 +324,6 @@ def update_version_file():
     #__version__ = '1.3.0+%s' % revision
 
 
-
 def cat_files(*filenames, encoding='utf8', sep='\n'):
     """Get the long description from the relevant file"""
     # thanks to harold!
@@ -334,7 +333,7 @@ def cat_files(*filenames, encoding='utf8', sep='\n'):
             buf.append(file_obj.read())
     return sep.join(buf)
 
-LONG_DESCRIPTION = cat_files('README.md', 'releaseNotes.md')
+LONG_DESCRIPTION = cat_files('README.rst')
 #assert '\r' not in LONG_DESCRIPTION, LONG_DESCRIPTION
 #for i, line in enumerate(LONG_DESCRIPTION.split('\n')):
     #print(f'%4i: %s' % (i, line))
