@@ -29,11 +29,10 @@ def get_data_from_website(target_url: str) -> Tuple[Optional[List[str]], bool]:
         lines = data.split('\n')  # basically data.readlines()
     return lines, is_failed
 
-def split_version(version: str, sline: List[str], msg: str) -> Tuple[int, int, int]:
+def split_version(version: str, msg: str) -> Tuple[int, int, int]:
     try:
         major, minor, rev = version.split('+')[0].split('.')
     except ValueError:
-        print('sline = %s' % sline)
         print(f'version_{msg} = {version}')
         raise
     imajor = int(major)
@@ -46,15 +45,11 @@ def get_latest_version_from_data(data: str) -> Tuple[Optional[str], List[str]]:
     """finds the latest released version"""
     version_latest = None
     for line in data: # files are iterable
-        line_lower = line.lower()
-        #print(line_lower.rstrip())
-        if 'has been released' in line_lower:
-            sline = line_lower.split()
-            version_latest = [slot for slot in sline if slot.startswith('v')][0][1:]
-            break
+        version_latest = line.lower()
+        break
     if version_latest is None:
-        return version_latest, []
-    return version_latest, sline
+        return version_latest
+    return version_latest
 
 def check_for_newer_version(version_current: Optional[str]=None,
                             quiet=False) -> Tuple[Optional[str], Optional[str], bool]:
@@ -76,19 +71,19 @@ def check_for_newer_version(version_current: Optional[str]=None,
     is_newer = False
     if version_current is None:
         version_current = pyNastran.__version__
-    target_url = 'https://raw.githubusercontent.com/SteveDoyle2/pyNastran/master/README.md'
+    target_url = 'https://raw.githubusercontent.com/SteveDoyle2/pyNastran/master/latest.txt'
     data, is_failed = get_data_from_website(target_url)
     if is_failed:
         return None, None, is_newer
 
-    version_latest, sline = get_latest_version_from_data(data)  # type: ignore
+    version_latest = get_latest_version_from_data(data)  # type: ignore
     if version_latest is None:
         raise RuntimeError("can't parse website")
         #return None, None, is_newer
 
     is_dev = 'dev' in version_current
-    tuple_current_version = split_version(version_current, sline, 'current')
-    tuple_latest_version = split_version(version_latest, sline, 'latest')
+    tuple_current_version = split_version(version_current, 'current')
+    tuple_latest_version = split_version(version_latest, 'latest')
 
     #print('tuple_latest_version = %s' % str(tuple_latest_version))  # (0,7,2)
     #print('tuple_current_version = %s' % str(tuple_current_version))  # (0,8,0)
