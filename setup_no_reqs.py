@@ -42,7 +42,7 @@ setup(
     version=pyNastran.__version__,
     description=pyNastran.__desc__,
     long_description=LONG_DESCRIPTION,
-    long_description_content_type='text/markdown',
+    long_description_content_type='text/x-rst',
     classifiers=[
         'Natural Language :: English',
         'Intended Audience :: Science/Research',
