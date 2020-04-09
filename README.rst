@@ -3,8 +3,6 @@
 +--------------+-----------------------------------------------------------------------+-------------+--------------+
 | |PyPi13|_    | `Docs <https://pynastran-git.readthedocs.io/en/1.3/>`_                | |Travis13|_ | |Codecov13|_ |
 +--------------+-----------------------------------------------------------------------+-------------+--------------+
-| Master       | `Docs <http://pynastran-git.readthedocs.io/en/latest/?badge=latest>`_ | |TravisMa|_ | |CodecovMa|_ |
-+--------------+-----------------------------------------------------------------------+-------------+--------------+
 
 .. |PyPi13| image:: https://img.shields.io/pypi/v/pynastran.svg
 .. _PyPi13: https://pypi.python.org/pypi/pyNastran
