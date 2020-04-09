@@ -9,7 +9,7 @@ If you have a bug/want a new feature or card, leave some feedback on the [Issue 
 Release Notes
 =============
 
-v1.3.0 (2020/4/8)
+v1.3.2 (2020/4/8)
 -----------------
 With Python 2 now officially dead, it's time for a new feature to encourage people to switch.
 
@@ -197,6 +197,10 @@ GUI:
    - improved command line error message
    - fixed support for CAEROx models without elements
    - export_cases now supports integers
+
+v1.3.1 / v1.3.0 (2020/4/8)
+--------------------------
+ - This result has been superseeded by 1.3.2.  No code changes, but the PyPi page was redone.
 
 v1.2.1 (2019/5/24)
 ------------------

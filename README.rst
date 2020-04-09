@@ -42,8 +42,7 @@
 .. comments
    #-----------------------------------------------------------------
 
-
-v1.3.0
+v1.3.2
 ------
 
 `Download GUI <https://sourceforge.net/projects/pynastran/files/?source=navbar>`_ (latest is from 2020/4/8)
@@ -79,7 +78,7 @@ commercial program.
 News
 ====
 
-pyNastran v1.3.0 has been released (2019/4/8)
+pyNastran v1.3.2 has been released (2019/4/8)
 ---------------------------------------------
 
 With Python 2 now officially dead, it's time for a new killer feature to get the last few people to switch.
@@ -241,6 +240,9 @@ F06:
 Many bug fixes and a few more details on features, can be found in the `Release Notes <https://github.com/SteveDoyle2/pyNastran/blob/1.3/releaseNotes.md>`_.
 
 
+pyNastran 1.3.1/1.3.0 has been released (2019/4/8)
+--------------------------------------------------
+This result has been superseeded by 1.3.2.  The PyPi page was fixed.
 
 pyNastran v1.2.1 has been released (2019/5/24)
 ----------------------------------------------

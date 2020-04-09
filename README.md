@@ -55,11 +55,11 @@ commercial program.
 This should be hidden...
 
 --->
-### pyNastran v1.3.0 has been released (2019/4/8)
+### pyNastran v1.3.2 has been released (2019/4/8)
 
 With Python 2 now officially dead, it's time for a new killer feature to get the last few people to switch.
 
-There is now support for writing OP2 files!  They're difficult to create from scratch, 
+There is now support for writing OP2 files!  They're difficult to create from scratch,
 but modifying an existing one isn't difficult.  This includes geometry support.
 
 In addition, many new OP2 results have been added.  Modern NX Nastran should work much better.
@@ -71,7 +71,7 @@ Programmatics:
  - Dropping Python 2.7 and 3.6 support
  - GUI is compatible with PyQt5 and PySide2
  - improved testing of old versions of packages
- 
+
 BDF:
  - enhancements
    - 405 cards supported (up from 373)
@@ -79,11 +79,11 @@ BDF:
       - bdf mirror, bdf convert, bdf export_caero_mesh
       - additional `bdf scale`, which takes arbitrary mass, length, time, pressure, or velocity scale factors (3 of 5) to apply a scaling law
    - added deck guessing with punch=None
- 
+
 OP2:
  - enhancements:
    - OP2 write support
-   - fixed most pandas deprecation warnings/added support for pandas 0.25 
+   - fixed most pandas deprecation warnings/added support for pandas 0.25
    - much improved NX 2019.2 support
  - minor enhancements:
    - more hdf5 results
@@ -132,7 +132,6 @@ GUI:
    - result case description now shows the mode/time/frequency
  - minor enhancements:
    - added export result option to right-click menu
-   - legend supports unicode
    - more keyboard shortcuts
  - nastran:
    - geometry:
@@ -146,8 +145,12 @@ GUI:
 
 F06:
  - KE support for plot_145
- 
+
 Many bug fixes and a few more details on features, can be found in the ![Release Notes](https://github.com/SteveDoyle2/pyNastran/blob/1.3/releaseNotes.md)
+
+### pyNastran 1.3.1/1.3.0 has been released (2019/4/8)
+
+This result has been superseeded by 1.3.2.  The PyPi page was fixed.
 
 ### pyNastran v1.2.1 has been released (2019/5/24)
 
@@ -316,20 +319,9 @@ Known issues:
 
 See [v1.0.0](https://github.com/SteveDoyle2/pyNastran/releases/tag/v1.0.0) for information regarding enhancements.
 
-
 ### pyNastran v0.8.0 has been released (2016/8/21)
 
-|  Version  | Docs  |
-| :--- 	  | :--- 	  |
-|  [v0.8.0](https://github.com/SteveDoyle2/pyNastran/releases/tag/v0.8.0) | [![Documentation Status](https://readthedocs.org/projects/pynastran-git/badge/?version=v0.8)](http://pynastran-git.readthedocs.io/en/v0.8.0/?badge=v0.8.0) |
-
-<!---
-[![Build status](https://ci.appveyor.com/api/projects/status/1qau107h43mbgghi/branch/master?svg=true)](https://ci.appveyor.com/project/SteveDoyle2/pynastran/branch/master)
-[![Build status](https://ci.appveyor.com/api/projects/status/1qau107h43mbgghi?svg=true)](https://ci.appveyor.com/project/SteveDoyle2/pynastran)
---->
-
 See [v0.8.0](https://github.com/SteveDoyle2/pyNastran/releases/tag/v0.8.0) for information regarding enhancements.
-
 
 ### pyNastran v0.7.2 has been Released (2015/4/25)
 
