@@ -58,7 +58,8 @@ Also, check out the:
 
 for more detailed information.
 
-# Overview
+Overview
+========
 
 pyNastran is an interface library to the various Nastran file formats (BDF, OP2, OP4).
 Using the BDF interface, you can read/edit/write Nastran geometry without worrying about
@@ -74,9 +75,11 @@ commercial program.
 
 .. image:: https://github.com/SteveDoyle2/pynastran/blob/master/pyNastran/gui/images/caero.png
 
-# News
+News
+====
 
-### pyNastran v1.3.0 has been released (2019/4/8)
+pyNastran v1.3.0 has been released (2019/4/8)
+---------------------------------------------
 
 With Python 2 now officially dead, it's time for a new killer feature to get the last few people to switch.
 
@@ -172,7 +175,8 @@ Many bug fixes and a few more details on features, can be found in the `Release 
 
 
 
-### pyNastran v1.2.1 has been released (2019/5/24)
+pyNastran v1.2.1 has been released (2019/5/24)
+----------------------------------------------
 
 I keep saying to myself there's not much to add, but Nastran is huge.  Beyond HDF5
 support in the BDF, I'm a huge fan of the new ability to keep track of which include file a
@@ -269,27 +273,31 @@ Known issues:
  - Transient Pandas Dataframes will fail for newer versions of numpy/pandas.
    If anyone knows how to use a MultiIndex, this is probably pretty easy to fix.
 
-### pyNastran v1.2.0 has been released (2019/5/21)
+pyNastran v1.2.0 has been released (2019/5/21)
+----------------------------------------------
 
 This result has been superseeded by 1.2.1.  See release notes for details.
 
-### pyNastran v1.1.0 has been released (2018/6/26)
+pyNastran v1.1.0 has been released (2018/6/26)
+----------------------------------------------
 
 See `v1.1.0 <https://github.com/SteveDoyle2/pyNastran/releases/tag/v1.1.0>`_ for information regarding enhancements.
 
-### pyNastran v1.0.0 has been released (2017/5/25)
+pyNastran v1.0.0 has been released (2017/5/25)
+----------------------------------------------
 
 See `v1.0.0 <https://github.com/SteveDoyle2/pyNastran/releases/tag/v1.0.0>`_ for information regarding enhancements.
 
-### pyNastran v0.8.0 has been released (2016/8/21)
-
+pyNastran v0.8.0 has been released (2016/8/21)
+----------------------------------------------
 See `v0.8.0 <https://github.com/SteveDoyle2/pyNastran/releases/tag/v0.8.0>`_ for information regarding enhancements.
 
-### pyNastran v0.7.2 has been Released (2015/4/25)
-
+pyNastran v0.7.2 has been Released (2015/4/25)
+----------------------------------------------
 See `v0.7.2 <https://github.com/SteveDoyle2/pyNastran/releases>`_ for information regarding enhancements.
 
-### Version 0.6.1 has been released (2013/6)
+Version 0.6.1 has been released (2013/6)
+----------------------------------------
 **Version 0.6** improves BDF reading.  The reader is more robust and also requires proper BDF field formatting (e.g. a integer field can't be a float).  Additionally, cards also have a comment() method.
 
 Marcin Gąsiorek participated in the latest pyNastran under the European Space Agency's (ESA) "Summer of Code In Space" `SOCIS <http://sophia.estec.esa.int/socis2012/?q=node/13>`_ program.  The program provides a stipend to students to work on open-source projects.  He did a great job of simplifying code and creating nicer documentation.
