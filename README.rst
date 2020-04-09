@@ -273,32 +273,36 @@ Programmatics:
 
 BDF:
  - 373 cards supported (up from 343)
+ 
  - added abiltity to write models to separate include files
-     ```python
-     >>> model = BDF()
-     >>> model.read_bdf(bdf_filename, save_file_structure=True)
+ 
+     .. code-block:: python
+     
+        >>> model = BDF()
+        >>> model.read_bdf(bdf_filename, save_file_structure=True)
 
-     out_filenames = {
-         bdf_filename : bdf_filename_new,
-         include_filename : include_filename_new,
-     }
-     >>> model.write_bdfs(out_filenames, relative_dirname=None, is_windows=None)
-     >>> ifile = model.grids[1].ifile
-     ```
+        out_filenames = {
+            bdf_filename : bdf_filename_new,
+            include_filename : include_filename_new,
+        }
+        >>> model.write_bdfs(out_filenames, relative_dirname=None, is_windows=None)
+        >>> ifile = model.grids[1].ifile
 
  - HDF5 import/export
-      ```python
-     >>> model = read_bdf(bdf_filename)
-     >>> model.export_hdf5_filename(hdf5_filename)
-     >>> model_new = OP2()
-     >>> model_new.load_hdf5_filename(hdf5_filename)
-     ```
+ 
+     .. code-block:: python
+
+        >>> model = read_bdf(bdf_filename)
+        >>> model.export_hdf5_filename(hdf5_filename)
+        >>> model_new = OP2()
+        >>> model_new.load_hdf5_filename(hdf5_filename)
 
  - preliminary superelement support
-     ```python
+ 
+     .. code-block:: python
+
      >>> model.read_bdf(bdf_filename)
      >>> model.superelement_models[1].nodes
-     ```
 
 OP2:
  - reorganization of random op2 results into op2.results.psd (or ato, no, crm, rms) to aide in finding data
@@ -310,11 +314,12 @@ OP2:
 
  - Can optionally save directly to HDF5 instead of numpy (limited).
  - Loading OP2s to an HDF5 file to decrease memory usage
-      ```python
-     >>> op2_model = OP2()
-     >>> op2_model.load_as_h5 = True
-     >>> op2_model.read_op2(op2_filename)
-     ```
+ 
+    .. code-block:: python
+
+       >>> op2_model = OP2()
+       >>> op2_model.load_as_h5 = True
+       >>> op2_model.read_op2(op2_filename)
 
 OP2Geom:
  - HDF5 support
