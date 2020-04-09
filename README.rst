@@ -33,11 +33,11 @@
 .. |Codecov12| image:: https://img.shields.io/coveralls/SteveDoyle2/pyNastran/1.2.svg
 .. _Codecov12: https://coveralls.io/github/SteveDoyle2/pyNastran?branch=1.2
 
-.. |Codecov13| image:: https://img.shields.io/coveralls/SteveDoyle2/pyNastran/1.3.svg
-.. _Codecov13: https://coveralls.io/github/SteveDoyle2/pyNastran?branch=1.3
+.. |Codecov13| image:: https://codecov.io/gh/SteveDoyle2/pyNastran/branch/master/graph/badge.svg
+.. _Codecov13: https://codecov.io/gh/SteveDoyle2/pyNastran/branch/1.3
 
 .. |CodecovMa| image:: https://codecov.io/gh/SteveDoyle2/pyNastran/branch/master/graph/badge.svg
-.. _CodecovMa: https://codecov.io/gh/SteveDoyle2/pyNastran
+.. _CodecovMa: https://codecov.io/gh/SteveDoyle2/pyNastran/branch/master
 
 .. comments
    #-----------------------------------------------------------------
@@ -303,8 +303,8 @@ BDF:
  
      .. code-block:: python
 
-     >>> model.read_bdf(bdf_filename)
-     >>> model.superelement_models[1].nodes
+        >>> model.read_bdf(bdf_filename)
+        >>> model.superelement_models[1].nodes
 
 OP2:
  - reorganization of random op2 results into op2.results.psd (or ato, no, crm, rms) to aide in finding data
