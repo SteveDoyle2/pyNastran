@@ -42,8 +42,6 @@
 .. comments
    #-----------------------------------------------------------------
 
- [![Documentation Status](https://readthedocs.org/projects/pynastran-git/badge/?version=latest)](http://pynastran-git.readthedocs.io/en/latest/?badge=latest)
-
 
 v1.3.0
 ------
@@ -52,9 +50,11 @@ v1.3.0
 
 Also, check out the:
 
-  * `Discussion forum <http://groups.google.com/group/pynastran-discuss>`_ (questions about the latest release)
-  * `Developer forum <http://groups.google.com/group/pynastran-dev>`_ (questions about the master branch)
-  * `Docs <https://pynastran-git.readthedocs.io/en/1.3/>`_
+* `Discussion forum <http://groups.google.com/group/pynastran-discuss>`_ (questions about the latest release)
+  
+* `Developer forum <http://groups.google.com/group/pynastran-dev>`_ (questions about the master branch)
+  
+* `Docs <https://pynastran-git.readthedocs.io/en/1.3/>`_
 
 for more detailed information.
 
@@ -67,7 +67,8 @@ field formatting.  Many checks are also performed to verify that your model is c
 Using the OP2 interface, you can read large result files quickly and efficiently.
 Additionally, you can also extract a subset of the result data and write OP2/F06 result
 files.  For a more detailed list of features, see:
-  * `Features <https://pynastran-git.readthedocs.io/en/1.3/quick_start/features.html#overview>`_
+
+* `Features <https://pynastran-git.readthedocs.io/en/1.3/quick_start/features.html#overview>`_
 
 Using the pyNastran GUI, you can read in Nastran models and quickly view results for a model.
 While it's no FEMAP/Patran, it can replace many tasks that would otherwise require a
@@ -92,24 +93,24 @@ Better yet, check out this blog post covering `Flutter Analysis in pyNastran <ht
 
 Programmatics:
 
- - Supports Python 3.7 and 3.8
+* Supports Python 3.7 and 3.8
  
- - Dropping Python 2.7 and 3.6 support
+* Dropping Python 2.7 and 3.6 support
  
- - GUI is compatible with PyQt5 and PySide2
+* GUI is compatible with PyQt5 and PySide2
  
- - improved testing of old versions of packages
+* improved testing of old versions of packages
  
 BDF:
- - enhancements
+ * enhancements
  
-   - 405 cards supported (up from 373)
+   * 405 cards supported (up from 373)
    
-   - improved mesh utilities
+   * improved mesh utilities
    
-     - bdf mirror, bdf convert, bdf export_caero_mesh
+     * bdf mirror, bdf convert, bdf export_caero_mesh
       
-     - additional `bdf scale`, which takes arbitrary mass, length, time, pressure, or velocity scale factors (3 of 5) to apply a scaling law
+     * additional `bdf scale`, which takes arbitrary mass, length, time, pressure, or velocity scale factors (3 of 5) to apply a scaling law
       
    - added deck guessing with punch=None
  
@@ -140,99 +141,99 @@ OP2:
    
  - new results:
  
-    - composite failure indicies (OEFIT)
+   - composite failure indicies (OEFIT)
     
-    - sensitivity support (DSCMCOL)
+   - sensitivity support (DSCMCOL)
     
-    - Cambpell diagrams (CDDATA)
+   - Cambpell diagrams (CDDATA)
     
-    - eigenvectors (BOPHIGF)
+   - eigenvectors (BOPHIGF)
     
-    - grid point forces SORT2 (OGPFB2)
+   - grid point forces SORT2 (OGPFB2)
     
-    - stress/strain/force
+   - stress/strain/force
     
-      - random stress/strain (OESVM1/2, OESVM1C, OSTRVM1/2, OSTRVM2, OESXRM1C, OESXNO1, OESXNO1C)
+     - random stress/strain (OESVM1/2, OESVM1C, OSTRVM1/2, OSTRVM2, OESXRM1C, OESXNO1, OESXNO1C)
       
-      - real/complex stress/strain/force output for centroidal CQUADR/CTRIAR
+     - real/complex stress/strain/force output for centroidal CQUADR/CTRIAR
       
-      - complex CBEAR forces
+     - complex CBEAR forces
       
-      - real CFAST, CWELD forces
+     - real CFAST, CWELD forces
       
-      - nonlinear cbush stress/strain/force
+     - nonlinear cbush stress/strain/force
       
-    - other
+   - other
     
-      - PSDs
+     - PSDs
       
-      - optimization
+     - optimization
       
-        - convergence table
+       - convergence table
         
-        - design variables
+       - design variables
         
-        - weight, displacement, stress, strain, force, composite stress, composite strain, fractional mass response
+       - weight, displacement, stress, strain, force, composite stress, composite strain, fractional mass response
         
-    - SOL 401/402 results:
+   - SOL 401/402 results:
     
-      - eigenvalue_fluid (LAMAF, LAMAS)
+     - eigenvalue_fluid (LAMAF, LAMAS)
       
-      - eigenvectors (BOPHIGF, BOPHIGS)
+     - eigenvectors (BOPHIGF, BOPHIGS)
       
-      - temperature (OTEMP1)
+     - temperature (OTEMP1)
       
-      - solution set
+     - solution set
       
-        - results: displacement, velocity, acceleration, eigenvectors:
+       - results: displacement, velocity, acceleration, eigenvectors:
         
-        - tables: OUXY1, OUXY2, OPHSA
+       - tables: OUXY1, OUXY2, OPHSA
 
 GUI:
 
- - enhancements:
+- enhancements:
  
-   - partial custom results many now be loaded
+  - partial custom results many now be loaded
    
-   - animation now supports complex fringe
+  - animation now supports complex fringe
    
-   - result case description now shows the mode/time/frequency
+  - result case description now shows the mode/time/frequency
    
-   - result case description now shows the min/max value as well as the location
+  - result case description now shows the min/max value as well as the location
    
-   - map centroidal to nodal option
+  - map centroidal to nodal option
    
-   - adding node/element highlight menu
+  - adding node/element highlight menu
    
-   - adding node/element mark/label menu
+  - adding node/element mark/label menu
    
-   - result case description now shows the min/max value as well as the location
+  - result case description now shows the min/max value as well as the location
    
-   - result case description now shows the mode/time/frequency
+  - result case description now shows the mode/time/frequency
    
- - minor enhancements:
+- minor enhancements:
  
-   - added export result option to right-click menu
+  - added export result option to right-click menu
    
-   - more keyboard shortcuts
+  - more keyboard shortcuts
    
- - nastran:
+- nastran:
  
-   - geometry:
+  - geometry:
    
-     - added preferences for geometry/results to speed up model loading
+    - added preferences for geometry/results to speed up model loading
      
-     - element & material coordinate systems
+    - element & material coordinate systems
      
-   - results
+  - results
    
-     - added acoustic displacements (OUG1F)
+    - added acoustic displacements (OUG1F)
      
-     - real/complex stress/strain/force results
+    - real/complex stress/strain/force results
      
-       - plate by upper/lower, composite plates by ply, bars, rods, springs, cbush, cdamp
+      - plate by upper/lower, composite plates by ply, bars, rods, springs, cbush, cdamp
        
-     - fractional mass response
+    - fractional mass response
 
 F06:
  - KE support for plot_145
