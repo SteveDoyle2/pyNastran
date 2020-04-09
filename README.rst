@@ -1,33 +1,60 @@
++--------------+-----------------------------------------------------------------------+-------------+--------------+
+| **Version**  | **Docs**                                                              | **Status**  | **Coverage** |
++--------------+-----------------------------------------------------------------------+-------------+--------------+
+| |PyPi13|_    | `Docs <https://pynastran-git.readthedocs.io/en/1.3/>`_                | |Travis13|_ | |Codecov13|_ |
++--------------+-----------------------------------------------------------------------+-------------+--------------+
+| Master       | `Docs <http://pynastran-git.readthedocs.io/en/latest/?badge=latest>`_ | |TravisMa|_ | |CodecovMa|_ |
++--------------+-----------------------------------------------------------------------+-------------+--------------+
 
-|  Version  | Docs  | Status |
-| :--- 	  | :--- 	  | :--- 	  |
-|  [![PyPi Version](https://img.shields.io/pypi/v/pynastran.svg)](https://pypi.python.org/pypi/pyNastran) | [docs](https://pynastran-git.readthedocs.io/en/1.2/) | [![Build Status](https://img.shields.io/travis/SteveDoyle2/pyNastran/1.2.svg)](https://travis-ci.org/SteveDoyle2/pyNastran) [![Coverage Status](https://img.shields.io/coveralls/SteveDoyle2/pyNastran/1.2.svg)](https://coveralls.io/github/SteveDoyle2/pyNastran?branch=1.2) |
-|   Master | [![Documentation Status](https://readthedocs.org/projects/pynastran-git/badge/?version=latest)](http://pynastran-git.readthedocs.io/en/latest/?badge=latest) | [![Linux Status](https://img.shields.io/travis/SteveDoyle2/pyNastran/master.svg)](https://travis-ci.org/SteveDoyle2/pyNastran) [![Coverage Status](https://codecov.io/gh/SteveDoyle2/pyNastran/branch/master/graph/badge.svg)](https://codecov.io/gh/SteveDoyle2/pyNastran) |
+.. |PyPi13| image:: https://img.shields.io/pypi/v/pynastran.svg
+.. _PyPi13: https://pypi.python.org/pypi/pyNastran
+
+.. comments
+   #-----------------------------------------------------------------
+
+.. |Travis11| image:: https://img.shields.io/travis/SteveDoyle2/pyNastran/v1.1.svg
+.. _Travis13: https://travis-ci.org/SteveDoyle2/pyNastran
+
+.. |Travis12| image:: https://img.shields.io/travis/SteveDoyle2/pyNastran/1.2.svg
+.. _Travis12: https://travis-ci.org/SteveDoyle2/pyNastran
+
+.. |Travis13| image:: https://img.shields.io/travis/SteveDoyle2/pyNastran/1.3.svg
+.. _Travis13: https://travis-ci.org/SteveDoyle2/pyNastran
+
+.. |TravisMa| image:: https://img.shields.io/travis/SteveDoyle2/pyNastran/master.svg
+.. _TravisMa: https://travis-ci.org/SteveDoyle2/pyNastran
+
+.. comments
+   #-----------------------------------------------------------------
+   
+.. |Codecov11| image:: https://img.shields.io/coveralls/SteveDoyle2/pyNastran/1.1.svg
+.. _Codecov11: https://coveralls.io/github/SteveDoyle2/pyNastran?branch=1.2
+
+.. |Codecov12| image:: https://img.shields.io/coveralls/SteveDoyle2/pyNastran/1.2.svg
+.. _Codecov12: https://coveralls.io/github/SteveDoyle2/pyNastran?branch=1.2
+
+.. |Codecov13| image:: https://img.shields.io/coveralls/SteveDoyle2/pyNastran/1.3.svg
+.. _Codecov13: https://coveralls.io/github/SteveDoyle2/pyNastran?branch=1.3
+
+.. |CodecovMa| image:: https://codecov.io/gh/SteveDoyle2/pyNastran/branch/master/graph/badge.svg
+.. _CodecovMa: https://codecov.io/gh/SteveDoyle2/pyNastran
+
+.. comments
+   #-----------------------------------------------------------------
+
+ [![Documentation Status](https://readthedocs.org/projects/pynastran-git/badge/?version=latest)](http://pynastran-git.readthedocs.io/en/latest/?badge=latest)
 
 
+v1.3.0
+------
 
-<!---
-[![Windows Status](https://ci.appveyor.com/api/projects/status/1qau107h43mbgghi/branch/master?svg=true)](https://ci.appveyor.com/project/SteveDoyle2/pynastran)
-[![codecov](https://codecov.io/gh/SteveDoyle2/pyNastran/branch/master/graph/badge.svg)](https://codecov.io/gh/SteveDoyle2/pyNastran)
-[![Coverage Status](https://img.shields.io/coveralls/SteveDoyle2/pyNastran/master.svg)](https://coveralls.io/github/SteveDoyle2/pyNastran?branch=master)
---->
-
-<!---
-[![Build status](https://ci.appveyor.com/api/projects/status/1qau107h43mbgghi/branch/master?svg=true)](https://ci.appveyor.com/project/SteveDoyle2/pynastran/branch/master)
-[![Build status](https://ci.appveyor.com/api/projects/status/1qau107h43mbgghi?svg=true)](https://ci.appveyor.com/project/SteveDoyle2/pynastran)
-[![Build Status](https://travis-ci.org/SteveDoyle2/pyNastran.png)](https://travis-ci.org/SteveDoyle2/pyNastran)
-[![Coverage Status](https://coveralls.io/repos/github/SteveDoyle2/pyNastran/badge.svg?branch=master)](https://coveralls.io/github/SteveDoyle2/pyNastran?branch=master)
-[![Requirements Status](https://img.shields.io/requires/github/SteveDoyle2/pyNastran/master.svg)](https://requires.io/github/SteveDoyle2/pyNastran/requirements/?branch=master)	|
---->
-
-### v1.3.0
-
-[Download GUI](https://sourceforge.net/projects/pynastran/files/?source=navbar) (latest is from 2020/4/8)
+`Download GUI <https://sourceforge.net/projects/pynastran/files/?source=navbar>`_ (latest is from 2020/4/8)
 
 Also, check out the:
-  * [Discussion forum](http://groups.google.com/group/pynastran-discuss) (intended for questions about the latest release)
-  * [Developer forum](http://groups.google.com/group/pynastran-dev) (intended for questions about the master branch)
-  * [Docs](https://pynastran-git.readthedocs.io/en/1.3/)
+
+  * `Discussion forum <http://groups.google.com/group/pynastran-discuss>`_ (questions about the latest release)
+  * `Developer forum <http://groups.google.com/group/pynastran-dev>`_ (questions about the master branch)
+  * `Docs <https://pynastran-git.readthedocs.io/en/1.3/>`_
 
 for more detailed information.
 
@@ -39,22 +66,16 @@ field formatting.  Many checks are also performed to verify that your model is c
 Using the OP2 interface, you can read large result files quickly and efficiently.
 Additionally, you can also extract a subset of the result data and write OP2/F06 result
 files.  For a more detailed list of features, see:
-  * [Features](https://pynastran-git.readthedocs.io/en/1.2/quick_start/features.html#overview)
+  * `Features <https://pynastran-git.readthedocs.io/en/1.3/quick_start/features.html#overview>`_
 
 Using the pyNastran GUI, you can read in Nastran models and quickly view results for a model.
 While it's no FEMAP/Patran, it can replace many tasks that would otherwise require a
 commercial program.
 
-![GUI](https://github.com/SteveDoyle2/pynastran/blob/master/pyNastran/gui/images/caero.png)
-
+.. image:: https://github.com/SteveDoyle2/pynastran/blob/master/pyNastran/gui/images/caero.png
 
 # News
 
-<!---
-
-This should be hidden...
-
---->
 ### pyNastran v1.3.0 has been released (2019/4/8)
 
 With Python 2 now officially dead, it's time for a new killer feature to get the last few people to switch.
@@ -64,7 +85,7 @@ but modifying an existing one isn't difficult.  This includes geometry support.
 
 In addition, many new OP2 results have been added.  Modern NX Nastran should work much better.
 
-Better yet, check out this blog post covering [Flutter Analysis in pyNastran](https://www.m4-engineering.com/flutter-analysis-with-pynastran/)
+Better yet, check out this blog post covering `Flutter Analysis in pyNastran <https://www.m4-engineering.com/flutter-analysis-with-pynastran/>`_
 
 Programmatics:
  - Supports Python 3.7 and 3.8
@@ -147,7 +168,9 @@ GUI:
 F06:
  - KE support for plot_145
  
-Many bug fixes and a few more details on features, can be found in the ![Release Notes](https://github.com/SteveDoyle2/pyNastran/blob/1.3/releaseNotes.md)
+Many bug fixes and a few more details on features, can be found in the `Release Notes <https://github.com/SteveDoyle2/pyNastran/blob/1.3/releaseNotes.md>`_.
+
+
 
 ### pyNastran v1.2.1 has been released (2019/5/24)
 
@@ -206,7 +229,6 @@ BDF:
      >>> model.superelement_models[1].nodes
      ```
 
-
 OP2:
  - reorganization of random op2 results into op2.results.psd (or ato, no, crm, rms) to aide in finding data
  - reorganization of op2 class to reduce number of functions in the object.  This affects any custom table reading.
@@ -253,90 +275,21 @@ This result has been superseeded by 1.2.1.  See release notes for details.
 
 ### pyNastran v1.1.0 has been released (2018/6/26)
 
-|  Version  | Docs  | Status |
-| :--- 	  | :--- 	  | :--- 	  |
-|  [![PyPi Version](https://img.shields.io/pypi/v/pynastran.svg)](https://pypi.python.org/pypi/pyNastran) |  | [![Build Status](https://img.shields.io/travis/SteveDoyle2/pyNastran/v1.1.svg)](https://travis-ci.org/SteveDoyle2/pyNastran) [![Coverage Status](https://img.shields.io/coveralls/SteveDoyle2/pyNastran/v1.1.svg)](https://coveralls.io/github/SteveDoyle2/pyNastran?branch=v1.1) |
-
-It's been roughly a year and ~100 tickets closed since the last version, so it's probably
-time for another release!  I want to thank everybody who helped with this release, especially
-Michael Redmond.  He is working on h5Nastran, which which ties in with pyNastran.  It's not quite
-ready yet, but it offers the possibility of major speedups for large models.
-
-Regarding features, the focus has again been on robustness and testing.  There has been
-a 10% increase in the testing coverage (the same as v0.8 to v1.0).  There are a few
-changes (mainly in the BDF) though.  The GUI now also supports PyQt4, PyQt5, and Pyside
-with the same API, so it's a bit easier to install from source as simplifying licensing
-issues as PyQt is GPL.
-
-Programmatics:
- - Dropping Python 3.4 support
- - Supports Python 2.7, 3.5-3.6
- - dropping VTK 5/6 suppoprt for the GUI
-
-BDF:
- - 343 cards supported (up from 312)
- - cross-referencing is now more straightforward to new users (much of v1.0 works using the `_ref` option)
-   - ``*_ref`` attributes are cross-referenced
-      - ``element.nodes`` is not cross-referenced
-      - ``element.nodes_ref`` is cross-referenced
- - pickling to reload your deck ~5x faster
- - decreased time required for Case Control Deck with large SETs and many load cases
- - improved optimization checks
-
-OP2:
- - HDF5 export/import support
-      ```python
-     >>> op2_model = read_op2(op2_filename)
-     >>> op2_model.export_hdf5_filename(hdf5_filename)
-     >>> op2_model_new = OP2()
-     >>> op2_model_new.load_hdf5_filename(hdf5_filename, combine=True)
-     ```
- - pandas support for matrices
- - couple more results vectorized (e.g., complex strain energy, DMIG strain energy, some forces)
- - grid_point_stressses supported (disabled since v0.7)
- - fixed sparse matrices being stored as dense matrices
-
-GUI:
- - preliminary support for PySide
- - can now mix and match fringe/displacement/vector results (e.g., max principal stress shown on a displaced model)
- - improved animation menu
-    - in gui animation
-    - more animation profiles
- - bar profile visualzation
- - nominal geometry (useful for deflection plots)
- - improved optimization support
- - improved picking display
- - better PSHELL/PCOMP distinction
-
-Known issues:
- - Transient Pandas Dataframes will fail for newer versions of numpy/pandas.
-   If anyone knows how to use a MultiIndex, this is probably pretty easy to fix.
+See `v1.1.0 <https://github.com/SteveDoyle2/pyNastran/releases/tag/v1.1.0>`_ for information regarding enhancements.
 
 ### pyNastran v1.0.0 has been released (2017/5/25)
 
-See [v1.0.0](https://github.com/SteveDoyle2/pyNastran/releases/tag/v1.0.0) for information regarding enhancements.
-
+See `v1.0.0 <https://github.com/SteveDoyle2/pyNastran/releases/tag/v1.0.0>`_ for information regarding enhancements.
 
 ### pyNastran v0.8.0 has been released (2016/8/21)
 
-|  Version  | Docs  |
-| :--- 	  | :--- 	  |
-|  [v0.8.0](https://github.com/SteveDoyle2/pyNastran/releases/tag/v0.8.0) | [![Documentation Status](https://readthedocs.org/projects/pynastran-git/badge/?version=v0.8)](http://pynastran-git.readthedocs.io/en/v0.8.0/?badge=v0.8.0) |
-
-<!---
-[![Build status](https://ci.appveyor.com/api/projects/status/1qau107h43mbgghi/branch/master?svg=true)](https://ci.appveyor.com/project/SteveDoyle2/pynastran/branch/master)
-[![Build status](https://ci.appveyor.com/api/projects/status/1qau107h43mbgghi?svg=true)](https://ci.appveyor.com/project/SteveDoyle2/pynastran)
---->
-
-See [v0.8.0](https://github.com/SteveDoyle2/pyNastran/releases/tag/v0.8.0) for information regarding enhancements.
-
+See `v0.8.0 <https://github.com/SteveDoyle2/pyNastran/releases/tag/v0.8.0>`_ for information regarding enhancements.
 
 ### pyNastran v0.7.2 has been Released (2015/4/25)
 
-See [v0.7.2](https://github.com/SteveDoyle2/pyNastran/releases) for information regarding enhancements.
+See `v0.7.2 <https://github.com/SteveDoyle2/pyNastran/releases>`_ for information regarding enhancements.
 
 ### Version 0.6.1 has been released (2013/6)
 **Version 0.6** improves BDF reading.  The reader is more robust and also requires proper BDF field formatting (e.g. a integer field can't be a float).  Additionally, cards also have a comment() method.
 
-Marcin Gąsiorek participated in the latest pyNastran under the European Space Agency's (ESA) "Summer of Code In Space" [SOCIS](http://sophia.estec.esa.int/socis2012/?q=node/13) program.  The program provides a stipend to students to work on open-source projects.
-He did a great job of simplifying code and creating nicer documentation.
+Marcin Gąsiorek participated in the latest pyNastran under the European Space Agency's (ESA) "Summer of Code In Space" `SOCIS <http://sophia.estec.esa.int/socis2012/?q=node/13>`_ program.  The program provides a stipend to students to work on open-source projects.  He did a great job of simplifying code and creating nicer documentation.
