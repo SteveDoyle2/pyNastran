@@ -33,7 +33,7 @@
 .. |Codecov12| image:: https://img.shields.io/coveralls/SteveDoyle2/pyNastran/1.2.svg
 .. _Codecov12: https://coveralls.io/github/SteveDoyle2/pyNastran?branch=1.2
 
-.. |Codecov13| image:: https://codecov.io/gh/SteveDoyle2/pyNastran/branch/master/graph/badge.svg
+.. |Codecov13| image:: https://codecov.io/gh/SteveDoyle2/pyNastran/branch/1.3/graph/badge.svg
 .. _Codecov13: https://codecov.io/gh/SteveDoyle2/pyNastran/branch/1.3
 
 .. |CodecovMa| image:: https://codecov.io/gh/SteveDoyle2/pyNastran/branch/master/graph/badge.svg
