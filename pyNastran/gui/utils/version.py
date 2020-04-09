@@ -57,16 +57,10 @@ def check_for_newer_version(version_current: Optional[str]=None,
     Checks to see if a newer version of pyNastran has been released.
     Only checks this for the GUI.
 
-    Looks for:
-        ## pyNastran v0.7.2 has been Released (4/25/2015)
+    Looks in latest.txt for:
+        0.7.2
+    and compares that to the current version.
 
-    Specifically, it finds, 'has been released'
-       then takes the the part that:
-         - starts with 'v',
-         - strips the 'v'
-         - makes a version tuple:
-           - (0,7,2)
-       and compares that to the current version
     """
     is_newer = False
     if version_current is None:
@@ -85,8 +79,8 @@ def check_for_newer_version(version_current: Optional[str]=None,
     tuple_current_version = split_version(version_current, 'current')
     tuple_latest_version = split_version(version_latest, 'latest')
 
-    #print('tuple_latest_version = %s' % str(tuple_latest_version))  # (0,7,2)
-    #print('tuple_current_version = %s' % str(tuple_current_version))  # (0,8,0)
+    print('tuple_latest_version = %s' % str(tuple_latest_version))  # (0,7,2)
+    print('tuple_current_version = %s' % str(tuple_current_version))  # (0,8,0)
 
     if (tuple_current_version < tuple_latest_version or
             (is_dev and tuple_current_version == tuple_latest_version)):
