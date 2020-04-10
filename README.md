@@ -31,6 +31,11 @@ Also, check out the:
 
 for more detailed information.
 
+### Blogs
+  * [Flutter Analysis in pyNastran](https://www.m4-engineering.com/flutter-analysis-with-pynastran/)
+
+
+
 # Overview
 
 pyNastran is an interface library to the various Nastran file formats (BDF, OP2, OP4).
@@ -63,8 +68,6 @@ There is now support for writing OP2 files!  They're difficult to create from sc
 but modifying an existing one isn't difficult.  This includes geometry support.
 
 In addition, many new OP2 results have been added.  Modern NX Nastran should work much better.
-
-Better yet, check out this blog post covering **[Flutter Analysis in pyNastran](https://www.m4-engineering.com/flutter-analysis-with-pynastran/)** that I wrote.
 
 Programmatics:
  - Supports Python 3.7 and 3.8
