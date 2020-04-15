@@ -2834,6 +2834,7 @@ class OES(OP2Common):
                         msg += 'grid_device.shape=%s; size=%s\n' % (str(grid_device.shape), grid_device.size)
                         #msg += 'nids=%s' % nids
                         raise ValueError(msg)
+                    #self.log.debug(f'cids = {np.unique(cids)}')
                     obj.element_cid[itotal:itotali, 0] = eids
                     obj.element_cid[itotal:itotali, 1] = cids
 

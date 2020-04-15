@@ -5013,7 +5013,7 @@ class AddCards(AddMethods):
 
         nodes : List[int]
            Grid point identification number of the independent grid point.
-        displacement_components :  : List[int]
+        displacement_components : List[int]
            Component numbers in the displacement coordinate system.
            1-6 (GRIDs)
            0 (SPOINTs)
@@ -5035,8 +5035,9 @@ class AddCards(AddMethods):
         self._add_spline_object(spline)
         return spline
 
-    def add_spline4(self, eid, caero, aelist, setg, dz, method, usage,
-                    nelements, melements, comment='') -> SPLINE4:
+    def add_spline4(self, eid: int, caero: int, aelist: int, setg: int,
+                    dz: float, method: str, usage: str,
+                    nelements: int, melements: int, comment: str='') -> SPLINE4:
         """
         Creates a SPLINE4 card, which defines a curved Infinite Plate,
         Thin Plate, or Finite Plate Spline.
@@ -5066,11 +5067,8 @@ class AddCards(AddMethods):
             to the force transformation, displacement transformation, or
             both
             valid_usage = {FORCE, DISP, BOTH}
-        nelements : int; default=10
-            The number of FE elements along the local spline x-axis if
-            using the FPS option
-        melements : int; default=10
-            The number of FE elements along the local spline y-axis if
+        nelements / melements : int; default=10
+            The number of FE elements along the local spline x/y-axis if
             using the FPS option
         comment : str; default=''
             a comment for the card
