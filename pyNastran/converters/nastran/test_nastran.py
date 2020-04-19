@@ -14,6 +14,7 @@ from pyNastran.converters.nastran.nastran_to_tecplot import nastran_to_tecplot, 
 from pyNastran.converters.nastran.nastran_to_ugrid import nastran_to_ugrid
 from pyNastran.converters.aflr.ugrid.ugrid_reader import read_ugrid
 from pyNastran.converters.cart3d.cart3d import read_cart3d
+from pyNastran.bdf.mesh_utils.skin_solid_elements import write_skin_solid_faces
 
 import pyNastran.converters.nastran.nastran_to_ugrid3d
 
@@ -47,9 +48,9 @@ class TestNastran(unittest.TestCase):
         #log = model.log
         #model.get_element_faces()
         skin_bdf_filename = os.path.join(MODEL_PATH, 'solid_bending', 'solid_skin.bdf')
-        model.write_skin_solid_faces(skin_bdf_filename, write_solids=True,
-                                     write_shells=True,
-                                     size=size, is_double=False, encoding=None)
+        write_skin_solid_faces(model, skin_bdf_filename, write_solids=True,
+                               write_shells=True,
+                               size=size, is_double=False, encoding=None)
 
         bdf_model = read_bdf(skin_bdf_filename, log=log, debug=debug)
         ugrid_filename_out = os.path.join(MODEL_PATH, 'solid_bending', 'solid_skin.b8.ugrid')
@@ -97,6 +98,7 @@ class TestNastran(unittest.TestCase):
         os.remove(ugrid_filename_out)
         os.remove(skin_bdf_filename)
         os.remove(skin_bdf_filename2)
+        os.remove(skin_cart3d_filename)
 
     def test_nastran_to_stl(self):
         """tests nastran_to_stl"""

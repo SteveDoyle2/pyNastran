@@ -4,6 +4,7 @@ import os
 import numpy as np
 import pyNastran
 from pyNastran.bdf.bdf import BDF
+from pyNastran.bdf.mesh_utils.mass_properties import mass_properties
 from pyNastran.utils import object_methods
 
 PKG_PATH = pyNastran.__path__[0]
@@ -149,16 +150,16 @@ class TestMass(unittest.TestCase):
         self.verify_psolid_element(penta, mass, volume, centroid, rho, E, G, nu)
 
         #wtmass = 0.00259
-        mass, cg, I = model.mass_properties(element_ids=None, mass_ids=None,
-                                           reference_point=None,
-                                           sym_axis=None,
-                                           scale=None)
+        mass, cg, I = mass_properties(
+            model, element_ids=None, mass_ids=None,
+            reference_point=None,
+            sym_axis=None, scale=None)
 
         model.params['WTMASS'].values[0] = 1.0
-        mass2, cg, I = model.mass_properties(element_ids=None, mass_ids=None,
-                                             reference_point=None,
-                                             sym_axis=None,
-                                             scale=None)
+        mass2, cg, I = mass_properties(
+            model, element_ids=None, mass_ids=None,
+            reference_point=None,
+            sym_axis=None, scale=None)
         assert np.allclose(mass, 0.005311658333), 'mass=%s' % mass
         assert np.allclose(mass2, 2.050833333), 'mass2=%s' % mass2
 

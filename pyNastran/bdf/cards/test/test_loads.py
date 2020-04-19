@@ -12,6 +12,7 @@ from pyNastran.bdf.cards.base_card import expand_thru_by
 from pyNastran.bdf.cards.collpase_card import collapse_thru_by
 from pyNastran.bdf.cards.test.utils import save_load_deck
 from pyNastran.bdf.mesh_utils.loads import sum_forces_moments, sum_forces_moments_elements
+from pyNastran.bdf.mesh_utils.skin_solid_elements import write_skin_solid_faces
 #from pyNastran.bdf.errors import DuplicateIDsError
 
 from pyNastran.op2.op2 import read_op2 # OP2,
@@ -248,8 +249,8 @@ class TestLoads(unittest.TestCase):
         assert np.array_equal(forces1, forces2)
         assert np.array_equal(moments1, moments2)
 
-        forces1, moments1 = model.sum_forces_moments(p0, loadcase_id,
-                                                     include_grav=True, xyz_cid0=None)
+        forces1, moments1 = sum_forces_moments(model, p0, loadcase_id,
+                                               include_grav=True, xyz_cid0=None)
         forces2, moments2 = sum_forces_moments_elements(model, p0, loadcase_id, eids, nids,
                                                         include_grav=True, xyz_cid0=None)
         assert np.array_equal(forces1, forces2)
@@ -636,7 +637,7 @@ class TestLoads(unittest.TestCase):
             elem = load.eids_ref[0]
             g1 = load.g1_ref.nid
 
-            # f, m = model.sum_forces_moments(p0, loadcase_id, include_grav=False)
+            # f, m = sum_forces_moments(model, p0, loadcase_id, include_grav=False)
             # case = op2.spc_forces[isubcase]
             # fm = case.data[0, 0, :]#.ravel()
             # if f[0] != fm[0]:
@@ -746,7 +747,7 @@ class TestLoads(unittest.TestCase):
             elem = load.eids_ref[0]
             g1 = load.g1_ref.nid
 
-            # f, m = model.sum_forces_moments(p0, loadcase_id, include_grav=False)
+            # f, m = sum_forces_moments(model, p0, loadcase_id, include_grav=False)
             # case = op2.spc_forces[isubcase]
             # fm = case.data[0, 0, :]#.ravel()
             # if f[0] != fm[0]:
@@ -1222,8 +1223,8 @@ class TestLoads(unittest.TestCase):
         #assert np.array_equal(moments1, moments2)
 
 
-        model2.write_skin_solid_faces('skin.bdf', write_solids=False,
-                                      write_shells=True)
+        write_skin_solid_faces(model2, 'skin.bdf', write_solids=False,
+                               write_shells=True)
         os.remove('skin.bdf')
         save_load_deck(model2)
 

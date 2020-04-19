@@ -687,7 +687,7 @@ class TableArray(ScalarObject):  # displacement style table
             #return
         if self.is_sort1:
             return
-        print('set_as_sort1: table_name=%r' % self.table_name)
+        #print('set_as_sort1: table_name=%r' % self.table_name)
         try:
             analysis_method = self.analysis_method
         except AttributeError:

@@ -27,6 +27,7 @@ from pyNastran.bdf.errors import (
 from pyNastran.dev.bdf_vectorized2.bdf_vectorized import BDF, read_bdf
 from pyNastran.bdf.test.test_bdf import (divide, get_matrix_stats,
                                          compare_card_content, get_test_bdf_usage_args_examples)
+from pyNastran.bdf.mesh_utils.skin_solid_elements import write_skin_solid_faces
 
 import pyNastran.bdf.test
 TEST_PATH = pyNastran.bdf.test.__path__[0]
@@ -516,7 +517,7 @@ def run_fem1(fem1, bdf_model, out_model, mesh_form, xref, punch, sum_load, size,
             #fem1.geom_check(geom_check=True, xref=False)
             if not stop and not xref:
                 skin_filename = 'skin_file.bdf'
-                fem1.write_skin_solid_faces(skin_filename, size=16, is_double=False)
+                write_skin_solid_faces(fem1, skin_filename, size=16, is_double=False)
                 if os.path.exists(skin_filename):
                     read_bdf(skin_filename, log=fem1.log)
                     os.remove(skin_filename)

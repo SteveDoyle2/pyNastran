@@ -47,7 +47,10 @@ from pyNastran.bdf.mesh_utils.forces_moments import get_temperatures_array
 from pyNastran.bdf.mesh_utils.mpc_dependency import (
     get_mpc_node_ids, get_mpc_node_ids_c1,
     get_dependent_nid_to_components, get_mpcs)
-from pyNastran.bdf.mesh_utils.loads import get_static_force_vector_from_subcase_id
+from pyNastran.bdf.mesh_utils.loads import (
+    sum_forces_moments, sum_forces_moments_elements,
+    get_static_force_vector_from_subcase_id)
+from pyNastran.bdf.mesh_utils.skin_solid_elements import write_skin_solid_faces
 
 from pyNastran.bdf.cards.dmig import NastranMatrix
 from pyNastran.bdf.bdf_interface.compare_card_content import compare_card_content
@@ -611,7 +614,7 @@ def run_fem1(fem1: BDF, bdf_model: str, out_model: str, mesh_form: str,
             #fem1.geom_check(geom_check=True, xref=False)
             if not stop and not xref and run_skin_solids:
                 skin_filename = 'skin_file.bdf'
-                fem1.write_skin_solid_faces(skin_filename, size=16, is_double=False)
+                write_skin_solid_faces(fem1, skin_filename, size=16, is_double=False)
                 if os.path.exists(skin_filename):
                     read_bdf(skin_filename, log=fem1.log)
                     os.remove(skin_filename)
@@ -1516,12 +1519,12 @@ def _check_case_parameters(subcase, fem2: BDF, p0, isubcase: int, sol: int,
         cid_new = 0
         cid_msg = '' if cid_new == 0 else f'(cid={cid_new:d})'
         loadcase_id = subcase.get_parameter('LOAD')[0]
-        force, moment = fem2.sum_forces_moments(p0, loadcase_id, cid=cid_new, include_grav=False)
+        force, moment = sum_forces_moments(fem2, p0, loadcase_id, cid=cid_new, include_grav=False)
         unused_fvec = get_static_force_vector_from_subcase_id(fem2, isubcase)
         eids = None
         nids = None
-        force2, moment2 = fem2.sum_forces_moments_elements(
-            p0, loadcase_id, eids, nids, cid=cid_new, include_grav=False)
+        force2, moment2 = sum_forces_moments_elements(
+            fem2, p0, loadcase_id, eids, nids, cid=cid_new, include_grav=False)
         assert np.allclose(force, force2), 'force=%s force2=%s' % (force, force2)
         assert np.allclose(moment, moment2), 'moment=%s moment2=%s' % (moment, moment2)
         print('  isubcase=%i F=%s M=%s%s' % (isubcase, force, moment, cid_msg))

@@ -224,8 +224,13 @@ def _update_reference_point(model, reference_point, inertia_reference='cg'):
 
 def mass_properties_no_xref(model, element_ids=None, mass_ids=None,
                             reference_point=None,
-                            sym_axis=None, scale=None, inertia_reference='cg',):
-    """see model.mass_properties_no_xref"""
+                            sym_axis=None, scale=None, inertia_reference='cg'):
+    """
+    Calculates mass properties without cross-referencing the model.
+
+    .. see:: mass_properties
+
+    """
     reference_point, is_cg = _update_reference_point(
         model, reference_point, inertia_reference)
     element_ids, elements, mass_ids, masses = _mass_properties_elements_init(
@@ -462,7 +467,7 @@ def mass_properties_nsm(model, element_ids=None, mass_ids=None, nsm_id=None,
     --------
     **mass properties of entire structure**
 
-    >>> mass, cg, inertia = model.mass_properties()
+    >>> mass, cg, inertia = mass_properties(model)
     >>> Ixx, Iyy, Izz, Ixy, Ixz, Iyz = inertia
 
 

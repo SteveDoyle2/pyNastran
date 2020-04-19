@@ -24,6 +24,8 @@ from pyNastran.bdf.bdf import BDF, BDFCard, PBEAM, PBEND, PBMSECT, PBRSECT
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.cards.test.utils import save_load_deck
 from pyNastran.bdf.cards.properties.bars import get_beam_sections
+from pyNastran.bdf.mesh_utils.mass_properties import mass_properties, mass_properties_nsm
+
 
 class TestBeams(unittest.TestCase):
     """
@@ -729,7 +731,7 @@ class TestBeams(unittest.TestCase):
         model.cross_reference()
 
         model._verify_bdf(xref=True)
-        model.mass_properties()
+        mass_properties(model)
         pids_to_area = model.get_area_breakdown(property_ids=None, sum_bar_area=False)
         for pid, area in sorted(pids_to_area.items()):
             assert area > 0., 'pid=%s area=%s' % (pid, area)
@@ -868,8 +870,8 @@ class TestBeams(unittest.TestCase):
         model.cross_reference()
         #print(model.properties[11])
 
-        unused_mass, unused_cg, unused_I = model.mass_properties(
-            element_ids=None, mass_ids=None,
+        unused_mass, unused_cg, unused_I = mass_properties(
+            model, element_ids=None, mass_ids=None,
             reference_point=None,
             sym_axis=None,
             scale=None)
@@ -1012,8 +1014,8 @@ class TestBeams(unittest.TestCase):
         assert pbeam_a1.MassPerLength() == 1.0
         assert pbeam_b1.MassPerLength() == 1.0, pbeam_b1.MassPerLength() # should be 10
 
-        mass, cg1, unused_inertia = model.mass_properties(
-            element_ids=eid,
+        mass, cg1, unused_inertia = mass_properties(
+            model, element_ids=eid,
             mass_ids=None,
             reference_point=None,
             sym_axis=None,
@@ -1022,8 +1024,8 @@ class TestBeams(unittest.TestCase):
         #print('cg1=%s' % cg)
         assert np.allclose(cg1, [0.5, 1., 1.]), cg1
 
-        mass, cg2, unused_inertia = model.mass_properties_nsm(
-            element_ids=eid, mass_ids=None,
+        mass, cg2, unused_inertia = mass_properties_nsm(
+            model, element_ids=eid, mass_ids=None,
             nsm_id=None,
             reference_point=None,
             sym_axis=None,

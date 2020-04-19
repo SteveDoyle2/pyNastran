@@ -19,7 +19,7 @@ from pyNastran.bdf.mesh_utils.mirror_mesh import (
     write_bdf_symmetric, bdf_mirror, bdf_mirror_plane)
 from pyNastran.bdf.mesh_utils.mass_properties import (
     mass_properties, mass_properties_nsm)  #mass_properties_breakdown
-from pyNastran.bdf.mesh_utils.make_half_model import make_symmetric_model
+from pyNastran.bdf.mesh_utils.make_half_model import make_half_model
 from pyNastran.bdf.mesh_utils.bdf_merge import bdf_merge
 from pyNastran.bdf.mesh_utils.utils import cmd_line
 from pyNastran.bdf.mesh_utils.find_closest_nodes import find_closest_nodes
@@ -732,7 +732,7 @@ class TestMeshUtils(unittest.TestCase):
         model = bdf_mirror(bdf_filename, plane='xz', log=log)[0]
         model.uncross_reference()
         model.cross_reference()
-        make_symmetric_model(model, plane='xz', zero_tol=1e-12)
+        make_half_model(model, plane='xz', zero_tol=1e-12)
         #model.validate()
 
     def test_pierce_model(self):

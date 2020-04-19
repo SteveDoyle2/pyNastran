@@ -9,7 +9,8 @@ from cpylog import get_logger
 from pyNastran.bdf.bdf import PCOMP, MAT1, BDF
 from pyNastran.bdf.cards.materials import get_mat_props_S
 from pyNastran.bdf.cards.test.utils import save_load_deck
-from pyNastran.bdf.mesh_utils.mass_properties import mass_properties_nsm
+from pyNastran.bdf.mesh_utils.mass_properties import (
+    mass_properties, mass_properties_no_xref, mass_properties_nsm)
 
 
 try:
@@ -54,10 +55,10 @@ class TestShells(unittest.TestCase):
             model.add_card(fields, fields[0], is_list=True)
         model.validate()
         model._verify_bdf(xref=False)
-        model.mass_properties_no_xref()
+        mass_properties_no_xref(model)
 
         model.cross_reference()
-        model.mass_properties()
+        mass_properties(model)
         model._verify_bdf(xref=True)
         cquad4 = model.Element(eid)
         cquad4.get_edge_axes()
@@ -619,7 +620,7 @@ class TestShells(unittest.TestCase):
         model._verify_bdf(xref=False)
         model.cross_reference()
         model._verify_bdf(xref=True)
-        model.mass_properties()
+        mass_properties(model)
 
         cshear.write_card(size=8)
         pshear.write_card(size=8)
@@ -987,7 +988,7 @@ class TestShells(unittest.TestCase):
         model.uncross_reference()
         model.safe_cross_reference()
         save_load_deck(model, run_test_bdf=False)
-        #model.mass_properties()
+        #mass_properties(model)
 
     def test_shear(self):
         """tests a CSHEAR, PSHEAR"""
@@ -1027,10 +1028,10 @@ class TestShells(unittest.TestCase):
 
         area = 1.0
         mass_expected = area * (rho * t + nsm)
-        mass = model.mass_properties()[0]
+        mass = mass_properties(model, )[0]
         assert np.allclose(mass, mass_expected*2), 'mass_properties all: mass=%s mass_expected=%s' % (mass, mass_expected*2)
 
-        mass = model.mass_properties(element_ids=10)[0]
+        mass = mass_properties(model, element_ids=10)[0]
         assert np.allclose(mass, mass_expected), 'mass_properties reduced: mass=%s mass_expected=%s' % (mass, mass_expected)
 
         mass = mass_properties_nsm(model)[0]
@@ -1082,7 +1083,7 @@ class TestShells(unittest.TestCase):
         model.cross_reference()
         model.pop_xref_errors()
 
-        mass = model.mass_properties()[0]
+        mass = mass_properties(model)[0]
         assert np.allclose(mass, 0.0), mass  # TODO: not sure
 
         model.uncross_reference()

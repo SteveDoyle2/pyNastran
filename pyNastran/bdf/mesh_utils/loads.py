@@ -7,22 +7,27 @@ Defines:
 
 """
 from __future__ import annotations
-from typing import Tuple, Dict, TYPE_CHECKING
+from typing import Tuple, Dict, Optional, TYPE_CHECKING
 from math import radians, sin, cos
 import numpy as np
 from numpy import array, cross, allclose, mean
 from numpy.linalg import norm  # type: ignore
 from pyNastran.utils.numpy_utils import integer_types
-from pyNastran.bdf.utils import get_xyz_cid0_dict
+from pyNastran.bdf.utils import get_xyz_cid0_dict, transform_load
 from pyNastran.bdf.cards.loads.static_loads import update_pload4_vector
 if TYPE_CHECKING:  # pragma: no cover
+    from pyNastran.nptyping import NDArray3float
     from pyNastran.bdf.bdf import BDF, Subcase
 
 
 def isnan(value):
     return value is None or np.isnan(value)
 
-def sum_forces_moments(model, p0, loadcase_id, include_grav=False, xyz_cid0=None):
+def sum_forces_moments(model: BDF, p0: np.ndarray, loadcase_id: int,
+                       cid: int=0,
+                       include_grav: bool=False,
+                       xyz_cid0: Optional[Dict[int, NDArray3float]]=None,
+                       ) -> Tuple[NDArray3float, NDArray3float]:
     """
     Sums applied forces & moments about a reference point p0 for all
     load cases.
@@ -41,6 +46,8 @@ def sum_forces_moments(model, p0, loadcase_id, include_grav=False, xyz_cid0=None
         the reference point
     loadcase_id : int
         the LOAD=ID to analyze
+    cid : int; default=0
+        the coordinate system for the summation
     include_grav : bool; default=False
         includes gravity in the summation (not supported)
     xyz_cid0 : None / Dict[int] = (3, ) ndarray
@@ -181,7 +188,14 @@ def sum_forces_moments(model, p0, loadcase_id, include_grav=False, xyz_cid0=None
 
     for load_type in unsupported_types:
         model.log.warning('case=%s loadtype=%r not supported' % (loadcase_id, load_type))
-    return (F, M)
+
+    #forces, moments = sum_forces_moments(self, p0, loadcase_id,
+    #include_grav=include_grav, xyz_cid0=xyz_cid0)
+    if cid == 0:
+        return F, M
+    cid0 = 0
+    F2, M2 = transform_load(F, M, cid0, cid, model)
+    return F2, M2
 
 def _pload1_total(model, loadcase_id, load, scale, xyz, F, M, p):
     """helper method for ``sum_forces_moments``"""
@@ -313,8 +327,12 @@ def _pload1_bar_beam(model, unused_loadcase_id, load, elem, scale, xyz, F, M, p)
                        F, M, p)
     return
 
-def sum_forces_moments_elements(model, p0, loadcase_id, eids, nids,
-                                include_grav=False, xyz_cid0=None):
+def sum_forces_moments_elements(model: BDF, p0: int, loadcase_id: int,
+                                eids: List[int], nids: List[int],
+                                cid: int=0,
+                                include_grav: bool=False,
+                                xyz_cid0: Optional[Dict[int, NDArray3float]]=None,
+                                ) -> Tuple[NDArray3float, NDArray3float]:
     """
     Sum the forces/moments based on a list of nodes and elements.
 
@@ -581,7 +599,12 @@ def sum_forces_moments_elements(model, p0, loadcase_id, eids, nids,
     for loadtype in unsupported_types:
         model.log.warning('case=%s loadtype=%r not supported' % (loadcase_id, loadtype))
     #model.log.info("case=%s F=%s M=%s\n" % (loadcase_id, F, M))
-    return F, M
+
+    if cid == 0:
+        return F, M
+    cid0 = 0
+    F2, M2 = transform_load(F, M, cid0, cid, model)
+    return F2, M2
 
 
 def _bar_eq_pload1(load, elem, xyz, Ldir,

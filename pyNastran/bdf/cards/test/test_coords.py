@@ -17,7 +17,7 @@ from pyNastran.bdf.cards.coordinate_systems import (
     CORD2R, CORD2C, #CORD2S,
     CORD3G)
 from pyNastran.bdf.bdf import BDF, BDFCard
-from pyNastran.bdf.utils import Position, PositionWRT, TransformLoadWRT
+from pyNastran.bdf.utils import Position, PositionWRT, transform_load
 from pyNastran.bdf.cards.aero.utils import make_monpnt1s_from_cids
 from pyNastran.bdf.cards.test.utils import save_load_deck
 from pyNastran.dev.bdf_vectorized2.bdf_vectorized import BDF as BDFv
@@ -698,8 +698,8 @@ class TestCoords(unittest.TestCase):
         cid_new = CORD2R.add_op2_data(data=data)
         model = None
 
-        fxyz_local, mxyz_local = TransformLoadWRT(fxyz, mxyz, cid0, cid_new,
-                                                  model)
+        fxyz_local, mxyz_local = transform_load(fxyz, mxyz, cid0, cid_new,
+                                                model)
 
         r = array([Lx, Ly, Lz])
         F = array([0., -Fy, 0.])
@@ -728,8 +728,8 @@ class TestCoords(unittest.TestCase):
         cid_new = CORD2R.add_op2_data(data=data)
         model = None
 
-        fxyz_local, mxyz_local = TransformLoadWRT(fxyz, mxyz, cid0, cid_new,
-                                                  model)
+        fxyz_local, mxyz_local = transform_load(fxyz, mxyz, cid0, cid_new,
+                                                model)
         r = array([Lx, Ly, Lz])
         F = array([0., -Fy, 0.])
         M = cross(r, F)

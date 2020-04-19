@@ -19,12 +19,13 @@ from pyNastran.bdf.patran_utils.colon_syntax import (
     parse_patran_syntax, parse_patran_syntax_dict, parse_patran_syntax_dict_map,
     write_patran_syntax_dict)  # pragma: disable=unused-import
 if TYPE_CHECKING:  # pragma: no cover
+    from pyNastran.nptyping import NDArray3float
     from pyNastran.bdf.bdf import BDF
     from pyNastran.bdf.cards.coordinate_systems import Coord
 
 
 
-def Position(xyz, cid, model):
+def Position(xyz: NDArray3float, cid: int, model: BDF):
     """
     Gets the point in the global XYZ coordinate system.
 
@@ -50,9 +51,8 @@ def Position(xyz, cid, model):
 
 def TransformLoadWRT(F, M, cid, cid_new, model):
     deprecated('TransformLoadWRT', 'transform_load', '1.3', levels=[0, 1, 2])
-    return transform_load(F, M, cid, cid_new, model)
 
-def transform_load(F, M, cid: int, cid_new: int, model):
+def transform_load(F, M, cid: int, cid_new: int, model: BDF):
     """
     Transforms a force/moment from an arbitrary coordinate system to another
     coordinate system.
@@ -115,7 +115,7 @@ def transform_load(F, M, cid: int, cid_new: int, model):
     return Fxyz_local_2, Mxyz_local_2
 
 
-def PositionWRT(xyz: List[float], cid: int, cid_new: int, model: BDF) -> List[float]:
+def PositionWRT(xyz: NDArray3float, cid: int, cid_new: int, model: BDF) -> NDArray3float:
     """
     Gets the location of the GRID which started in some arbitrary system and
     returns it in the desired coordinate system
@@ -171,7 +171,7 @@ def PositionWRT(xyz: List[float], cid: int, cid_new: int, model: BDF) -> List[fl
 
 
 def get_xyz_cid0_dict(model: BDF,
-                      xyz_cid0: Dict[int, List[float]]=None) -> Dict[int, List[float]]:
+                      xyz_cid0: Dict[int, NDArray3float]=None) -> Dict[int, NDArray3float]:
     """
     helper method
 

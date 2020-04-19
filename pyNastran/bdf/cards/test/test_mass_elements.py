@@ -6,6 +6,7 @@ import numpy as np
 from cpylog import get_logger
 from pyNastran.bdf.bdf import BDF
 from pyNastran.bdf.cards.test.utils import save_load_deck
+from pyNastran.bdf.mesh_utils.mass_properties import mass_properties
 #from pyNastran.op2.op2 import OP2, read_op2
 
 
@@ -78,20 +79,23 @@ class TestMassElements(unittest.TestCase):
         assert len(pids_to_mass) == 0, pids_to_mass
         assert mass_type_to_mass['CONM2'] == 42., mass_type_to_mass
 
-        mass, cg, I = model.mass_properties(element_ids=None, mass_ids=None, reference_point=None,
-                                            sym_axis=None, scale=None)
+        mass, cg, I = mass_properties(
+            model, element_ids=None, mass_ids=None, reference_point=None,
+            sym_axis=None, scale=None)
         assert np.allclose(mass, massi), 'massi=%s mass=%s' % (massi, mass)
         assert np.array_equal(cg, np.zeros(3))
         assert np.array_equal(I, np.zeros(6))
 
-        mass, cg, I = model.mass_properties(element_ids=None, mass_ids=[20], reference_point=None,
-                                            sym_axis=None, scale=None)
+        mass, cg, I = mass_properties(
+            model, element_ids=None, mass_ids=[20], reference_point=None,
+            sym_axis=None, scale=None)
         assert np.allclose(mass, massi), 'massi=%s mass=%s' % (massi, mass)
         assert np.array_equal(cg, np.zeros(3))
         assert np.array_equal(I, np.zeros(6))
 
-        mass, cg, I = model.mass_properties(element_ids=None, mass_ids=[42], reference_point=None,
-                                            sym_axis=None, scale=None)
+        mass, cg, I = mass_properties(
+            model, element_ids=None, mass_ids=[42], reference_point=None,
+            sym_axis=None, scale=None)
         ## TODO: is this reasonable behavior
         assert np.allclose(mass, 0.), 'massi=%s mass=%s' % (massi, mass)
 

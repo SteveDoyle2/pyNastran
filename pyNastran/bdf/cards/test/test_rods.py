@@ -7,7 +7,7 @@ import numpy as np
 from pyNastran.bdf.bdf import BDF, BDFCard
 from pyNastran.bdf.bdf import CROD, CONROD, PROD, CTUBE, PTUBE, GRID, MAT1
 from pyNastran.bdf.cards.test.test_shells import make_dvprel_optimization
-from pyNastran.bdf.cards.test.utils import save_load_deck
+from pyNastran.bdf.cards.test.utils import save_load_deck, mass_properties
 
 #from pyNastran.bdf.field_writer_8 import print_card_8
 
@@ -113,8 +113,8 @@ class TestRods(unittest.TestCase):
         model.safe_cross_reference()
         model.uncross_reference()
         model.cross_reference()
-        mass, cg, inertia = model.mass_properties(
-            element_ids=None, mass_ids=None,
+        mass, cg, inertia = mass_properties(
+            model, element_ids=None, mass_ids=None,
             reference_point=None, sym_axis=None,
             scale=None, inertia_reference='cg')
 

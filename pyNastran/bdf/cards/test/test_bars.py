@@ -8,6 +8,7 @@ from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.mesh_utils.mass_properties import (
     mass_properties, mass_properties_nsm)  #mass_properties_breakdown
 from pyNastran.bdf.cards.test.utils import save_load_deck
+from pyNastran.bdf.mesh_utils.loads import sum_forces_moments, sum_forces_moments_elements
 
 
 class TestBars(unittest.TestCase):
@@ -541,10 +542,10 @@ class TestBars(unittest.TestCase):
         p0 = 1
         eids = None
         nids = None
-        force1, moment1 = model.sum_forces_moments(p0, loadcase_id,
-                                                   include_grav=False, xyz_cid0=None)
-        force2, moment2 = model.sum_forces_moments_elements(p0, loadcase_id, eids, nids,
-                                                            include_grav=False, xyz_cid0=None)
+        force1, moment1 = sum_forces_moments(model, p0, loadcase_id,
+                                             include_grav=False, xyz_cid0=None)
+        force2, moment2 = sum_forces_moments_elements(model, p0, loadcase_id, eids, nids,
+                                                      include_grav=False, xyz_cid0=None)
         #print(force1, force2)
         assert np.allclose(force1, force2), force1
         assert np.allclose(moment1, moment2), moment1

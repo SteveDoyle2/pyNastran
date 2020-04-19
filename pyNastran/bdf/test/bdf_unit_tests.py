@@ -775,7 +775,7 @@ class TestBDF(Tester):
 def compare_mass_cg_inertia(fem1, reference_point=None, sym_axis=None):
     unused_mass1, unused_cg1, unused_I1 = mass_properties(
         fem1, reference_point=reference_point, sym_axis=sym_axis)
-    #mass1, cg1, I1 = fem1.mass_properties_no_xref(reference_point=reference_point, sym_axis=sym_axis)
+    #mass1, cg1, I1 = mass_properties_no_xref(fem1, reference_point=reference_point, sym_axis=sym_axis)
 
 
 if __name__ == '__main__':  # pragma: no cover

@@ -224,7 +224,7 @@ INT_PARAMS_1 = {
     b'OPGTKG', b'OPPHIB', b'OUTOPT', b'PKRSP', b'RSPECTRA', b'RSPRINT',
     b'S1G', b'SCRSPEC', b'SEMAPOPT', b'SEQOUT', b'SESEF', b'SKPAMG', b'SKPAMP',
     b'SLOOPID', b'SOLID', b'SPCGEN', b'SRTELTYP', b'SRTOPT', b'START', b'SUBID',
-    b'SUBSKP', b'TABID', b'TESTNEG', b'BDMNCON',
+    b'SUBSKP', b'TABID', b'TESTNEG', b'BDMNCON', b'FRUMIN',
 
     # not defined in qrg...
     b'NT', b'PNCHDB', b'DLOAD', b'NLOAD', b'NOAP', b'NOCMPFLD', b'NODATA',

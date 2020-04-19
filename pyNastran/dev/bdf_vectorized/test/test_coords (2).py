@@ -2,7 +2,7 @@ from numpy import array, allclose, array_equal, cross
 import unittest
 
 from pyNastran.bdf.bdf import BDF, BDFCard, CORD1R, CORD1C, CORD1S, CORD2R, CORD2C #, CORD2S
-from pyNastran.bdf.utils import TransformLoadWRT
+from pyNastran.bdf.utils import transform_load
 
 bdf = BDF(debug=False)  # don't load this up with stuff
 class TestCoords(unittest.TestCase):
@@ -500,8 +500,7 @@ class TestCoords(unittest.TestCase):
         cid_new = CORD2R(data=data)
         model = None
 
-        Fxyz_local, Mxyz_local = TransformLoadWRT(Fxyz, Mxyz, cid0, cid_new,
-                                                  model)
+        Fxyz_local, Mxyz_local = transform_load(Fxyz, Mxyz, cid0, cid_new, model)
 
         r = array([Lx, Ly, Lz])
         F = array([0., -Fy, 0.])
@@ -526,8 +525,7 @@ class TestCoords(unittest.TestCase):
         cid_new = CORD2R(data=data)
         model = None
 
-        Fxyz_local, Mxyz_local = TransformLoadWRT(Fxyz, Mxyz, cid0, cid_new,
-                                                  model)
+        Fxyz_local, Mxyz_local = transform_load(Fxyz, Mxyz, cid0, cid_new, model)
         r = array([Lx, Ly, Lz])
         F = array([0., -Fy, 0.])
         M = cross(r, F)
