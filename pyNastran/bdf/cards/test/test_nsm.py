@@ -278,9 +278,9 @@ class TestNsm(unittest.TestCase):
         #bdf_filename = os.path.join(MODEL_PATH, 'nsm', 'TEST_NSM_SOL101.bdf')
         #model = read_bdf(bdf_filename)
         #print('    %6s %-9s %s' % ('nsm_id', 'mass', 'nsm'))
-        #mass0 = .mass_properties_nsm(model, debug=False)[0]
+        #mass0 = mass_properties_nsm(model, debug=False)[0]
         #for nsm_id in sorted(chain(model.nsms, model.nsmadds)):
-            #mass, cg, I = .mass_properties_nsm(model, nsm_id=nsm_id, debug=False)
+            #mass, cg, I = mass_properties_nsm(model, nsm_id=nsm_id, debug=False)
             #print('    %-6s %-9.4g %.4g' % (nsm_id, mass, mass-mass0))
 
         #area_breakdown = model.get_area_breakdown()
