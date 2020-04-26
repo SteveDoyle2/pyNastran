@@ -680,31 +680,8 @@ class BaseElement(ScalarObject):
                 assert np.array_equal(self._times, table._times), 'ename=%s-%s times=%s table.times=%s' % (
                     self.element_name, self.element_type, self._times, table._times)
 
-        if hasattr(self, 'element') and not np.array_equal(self.element, table.element):
-            assert self.element.shape == table.element.shape, 'shape=%s element.shape=%s' % (
-                self.element.shape, table.element.shape)
-            msg = 'table_name=%r class_name=%s\n' % (self.table_name, self.__class__.__name__)
-            msg += '%s\nEid\n' % str(self.code_information())
-            for eid1, eid2 in zip(self.element, table.element):
-                msg += '%s, %s\n' % (eid1, eid2)
-            print(msg)
-            raise ValueError(msg)
-
-        if hasattr(self, 'element_node') and not np.array_equal(self.element_node, table.element_node):
-            if self.element_node.shape != table.element_node.shape:
-                msg = 'self.element_node.shape=%s table.element_node.shape=%s' % (
-                    self.element_node.shape, table.element_node.shape)
-
-                print(self.element_node.tolist())
-                print(table.element_node.tolist())
-                raise ValueError(msg)
-
-            msg = 'table_name=%r class_name=%s\n' % (self.table_name, self.__class__.__name__)
-            msg += '%s\n' % str(self.code_information())
-            for i, (eid1, nid1), (eid2, nid2) in zip(count(), self.element_node, table.element_node):
-                msg += '%s : (%s, %s), (%s, %s)\n' % (i, eid1, nid1, eid2, nid2)
-            print(msg)
-            raise ValueError(msg)
+        _check_element(self, table)
+        _check_element_node(self, table)
 
     def _build_pandas_transient_elements(self, column_values, column_names, headers, element, data):
         """common method to build a transient dataframe"""
@@ -823,3 +800,58 @@ def get_complex_times_dtype(nonlinear_factor, size):
         cfdtype = 'complex128'
         idtype = 'int64'
     return dtype, idtype, cfdtype
+
+def _check_element(table1: BaseElement, table2: BaseElement):
+    """checks the ``element_node`` variable"""
+    if not hasattr(table1, 'element'):
+        return
+    if table1.element is None:
+        return
+
+    if not np.array_equal(table1.element, table2.element):
+        assert table1.element.shape == table2.element.shape, 'shape=%s element.shape=%s' % (
+            table1.element.shape, table2.element.shape)
+        msg = f'table_name={table1.table_name!r} class_name={table1.__class__.__name__}\n'
+        msg += '%s\nEid\n' % str(table1.code_information())
+        for eid1, eid2 in zip(table1.element, table2.element):
+            msg += '%s, %s\n' % (eid1, eid2)
+        print(msg)
+        raise ValueError(msg)
+
+    element = table1.element
+    eid_min = element.min()
+    nshape = len(element)
+    if eid_min <= 0:
+        if nshape == 1:
+            raise ValueError(f'eids={element.tolist()}.min = {eid_min}')
+        else:
+            if table1.table_name not in ['ONRGY1', 'ONRGY2']:
+                msg = f'table_name = {table1.table_name}\n'
+                for i, eidsi in enumerate(element):
+                    eid_min = eidsi.min()
+                    if eid_min <= 0:
+                        msg += f'eids[{i}]={eidsi.tolist()}.min = {eid_min}\n'
+                raise ValueError(msg)
+
+def _check_element_node(table1: BaseElement, table2: BaseElement):
+    """checks the ``element_node`` variable"""
+    if not hasattr(table1, 'element_node'):
+        return
+    if not np.array_equal(table1.element_node, table2.element_node):
+        if table1.element_node.shape != table2.element_node.shape:
+            msg = 'table1.element_node.shape=%s table2.element_node.shape=%s' % (
+                table1.element_node.shape, table2.element_node.shape)
+
+            print(table1.element_node.tolist())
+            print(table2.element_node.tolist())
+            raise ValueError(msg)
+        msg = f'table_name={table1.table_name!r} class_name={table1.__class__.__name__}\n'
+        msg += '%s\n' % str(table1.code_information())
+        for i, (eid1, nid1), (eid2, nid2) in zip(count(), table1.element_node, table2.element_node):
+            msg += '%s : (%s, %s), (%s, %s)\n' % (i, eid1, nid1, eid2, nid2)
+        print(msg)
+        raise ValueError(msg)
+
+    eids = table1.element_node[:, 0]
+    if eids.min() <= 0:
+        raise ValueError(f'eids={eids}.min = {eids.min()}')

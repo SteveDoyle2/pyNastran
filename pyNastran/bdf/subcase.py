@@ -409,7 +409,7 @@ class Subcase:
         elif table_name in ['OESNO1', 'OESNO2', 'OESXNO1']:
             options.append('NO')
             self.add('STRESS', 'ALL', options, 'STRESS-type')
-        elif table_name in ['OESPSD1', 'OESPSD2']:
+        elif table_name in ['OESPSD1', 'OESPSD2', 'OESPSD2C']:
             options.append('PSDF')
             self.add('STRESS', 'ALL', options, 'STRESS-type')
 
@@ -425,7 +425,8 @@ class Subcase:
         elif table_name in ['OSTRNO1', 'OSTRNO2']:
             options.append('NO')
             self.add('STRAIN', 'ALL', options, 'STRESS-type')
-        elif table_name in ['OSTRPSD1', 'OSTRPSD2']:
+        elif table_name in ['OSTRPSD1', 'OSTRPSD2',
+                            'OSTPSD2C']:
             options.append('PSDF')
             self.add('STRAIN', 'ALL', options, 'STRESS-type')
 

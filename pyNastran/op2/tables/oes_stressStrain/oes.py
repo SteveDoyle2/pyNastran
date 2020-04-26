@@ -1213,7 +1213,9 @@ class OES(OP2Common):
             self.sort_bits[1] = 0 # sort1
             self.sort_bits[2] = 1 # random
             prefix = 'psd.'
-        elif self.table_name in [b'OESPSD2', b'OSTRPSD2']:
+        elif self.table_name in [b'OESPSD2', b'OSTRPSD2',
+                                 b'OESPSD2C', b'OSTPSD2C']:
+            # TODO: the sort bits might not be right...isat_random
             self.format_code = 1
             self.sort_bits[0] = 0 # real
             self.sort_bits[1] = 1 # sort2
@@ -4816,6 +4818,8 @@ class OES(OP2Common):
             nelements = ndata // ntotal
             nlayers = nelements * 2
             nnodes_expected = 1
+            #if self.table_name_str.startswith('OSTRRMS'):
+                #print(f'{self.table_name_str} {result_name}: {nelements} {ntotal}')
 
             auto_return, is_vectorized = self._create_oes_object4(
                 nlayers, result_name, slot, obj_vector_random)
@@ -4840,9 +4844,14 @@ class OES(OP2Common):
                         ints1 = ints.reshape(nelements, 9)
                         eids = ints1[:, 0] // 10
                         assert eids.min() > 0, eids.min()
+                        #print(eids)
+                        eids2 = np.vstack([eids, eids]).T.ravel()
+                        #print(eids2)
 
                         # TODO: what about layer 1/2?
-                        obj.element_node[itotal:itotal2, 0] = eids
+                        #print(self.code_information())
+                        #print(f'eids.shape={eids.shape} obj.element_node.shape={obj.element_node.shape}')
+                        obj.element_node[itotal:itotal2, 0] = eids2
 
                     floats = frombuffer(data, dtype=self.fdtype).reshape(nelements, 9)[:, 1:]
                     #fd1, sx1, sy1, txy1, fd2, fx2, fy2, txy2
@@ -5992,7 +6001,7 @@ class OES(OP2Common):
         if self.is_stress:
             obj_vector_real = RealCompositePlateStressArray
             #obj_vector_complex = ComplexCompositePlateStressArray
-            unused_obj_vector_random = RandomCompositePlateStressArray
+            obj_vector_random = RandomCompositePlateStressArray
             if self.element_type == 95: # CQUAD4
                 result_name = prefix + 'cquad4_composite_stress' + postfix
             elif self.element_type == 96:  # CQUAD8
@@ -6010,7 +6019,7 @@ class OES(OP2Common):
         else:
             obj_vector_real = RealCompositePlateStrainArray
             #obj_vector_complex = ComplexCompositePlateStrainArray
-            unused_obj_vector_random = RandomCompositePlateStrainArray
+            obj_vector_random = RandomCompositePlateStrainArray
             if self.element_type == 95: # CQUAD4
                 result_name = prefix + 'cquad4_composite_strain' + postfix
             elif self.element_type == 96:  # CQUAD8
@@ -6202,10 +6211,68 @@ class OES(OP2Common):
                     #self.binary_debug.write('%s-%s - (%s) + %s\n' % (self.element_name, self.element_type, eid_device, str(out)))
                 #obj.add_new_eid_sort1(dt, eid, theory, lamid, fp, fm, fb, fmax, fflag)
                 n += ntotal
+        elif self.is_nx and self.num_wide == 7:
+            # TCODE,7 =0 Real
+            # 2 PLY I Lamina Number
+            # 3 EX1 RS Normal-1
+            # 4 EY1 RS Normal-2
+            # 5 ET1 RS Shear-12
+            # 6 EL1 RS Shear-1Z
+            # 7 EL2 RS Shear-2Z
+            # 8 A1 RS Shear angle
+            # 9 EMJRP1 RS Major Principal
+            # 10 EMNRP1 RS Minor Principal
+            # 11 ETMAX1 RS von Mises or Maximum shear
+            #
+            # TCODE,7 =1 Real/imaginary
+            # 2 PLY I Lamina Number
+            # 3 EX1 RS Normal-1
+            # 4 EY1 RS Normal-2
+            # 5 ET1 RS Shear-12
+            # 6 EL1 RS Shear-1Z
+            # 7 EL2 RS Shear-2Z
+            # 8 EX1I RS Normal-1
+            # 9 EY1I RS Normal-2
+            # 10 ET1I RS Shear-12
+            # 11 EL1I RS Shear-1Z
+            # 12 EL2I RS Shear-2Z
+            #
+            # TCODE,7 =2 Random Response
+            # 2 PLY I Lamina Number
+            # 3 EX1 RS Normal-1
+            # 4 EY1 RS Normal-2
+            # 5 ET1 RS Shear-12
+            # 6 EL1 RS Shear-1Z
+            # 7 EL2 RS Shear-2Z
+            ntotal = 28
+            nelements = ndata // ntotal
+            auto_return, is_vectorized = self._create_oes_object4(
+                nelements, result_name, slot, obj_vector_random)
+            if auto_return:
+                return nelements * self.num_wide * 4, None, None
+
+            obj = self.obj
+            struct1 = Struct(self._endian + self._analysis_code_fmt + b'i5f')
+            for unused_i in range(nelements):
+                edata = data[n:n+ntotal]
+                out = struct1.unpack(edata)
+
+                (eid_device, ply_id, oxx, oyy, txy, txz, tyz) = out
+                eid, dt = get_eid_dt_from_eid_device(
+                    eid_device, self.nonlinear_factor, self.sort_method)
+                #print(eid, out)
+
+                #if self.is_debug_file:
+                    #self.binary_debug.write('%s-%s - (%s) + %s\n' % (self.element_name, self.element_type, eid_device, str(out)))
+                #print(obj)
+                obj.add_sort1_7words(dt, eid, ply_id, oxx, oyy, txy, txz, tyz)
+                n += ntotal
+
         else:
             #msg = self.code_information()
-            msg = '%s-COMP-random-numwide=%s numwide_real=11 numwide_imag=9' % (
-                self.table_name_str, self.num_wide)
+            msg = (f'etype={self.element_name} ({self.element_type}) '
+                   f'{self.table_name_str}-COMP-random-numwide={self.num_wide} '
+                   'numwide_real=11 numwide_imag=9')
             return self._not_implemented_or_skip(data, ndata, msg), None, None
         return n, nelements, ntotal
 

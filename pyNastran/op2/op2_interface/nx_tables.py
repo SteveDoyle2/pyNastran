@@ -684,6 +684,8 @@ NX_RESULT_TABLES = [
     b'OPRPSD2',  # SORT2 - PSD
     b'OPRATO2',  # SORT2 - AUTO
     b'OPRCRM2',  # SORT2 - CRMS
+    b'OESCRM2C',
+    b'OSTCRM2C',
 
     # modal contribution
     b'OUGMC1',  # Modal contributions for displacements, velocities, accelerations.
@@ -854,6 +856,7 @@ NX_TABLE_CONTENT = {
     #
     # nx 2019.2
     #
+    605 : 'OSTPSD2C - ???',
     804 : 'OEFRMS1 - ???',
     805 : 'OESXRMS1 - element RMS stresses for random analysis that includes von Mises stress output.',
     905 : 'OESXNO1C - Cumulative Root Mean Square output',

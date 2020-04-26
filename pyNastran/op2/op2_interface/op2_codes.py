@@ -3,15 +3,18 @@ from pyNastran.op2.op2_interface.nx_tables import NX_ELEMENTS, NX_TABLE_CONTENT
 from pyNastran.op2.op2_interface.msc_tables import MSC_ELEMENTS, MSC_TABLE_CONTENT
 
 # strings
-SORT1_TABLES = [b'OSTRMS1C', b'OSTNO1C', b'OES1X', b'OSTR1X',
-                b'OESRMS2', b'OESNO2', b'OESXRMS1',
-                b'OES1C', b'OSTR1C',
-                'OES1C', 'OSTR1C', 'OESNLXR']
-SORT2_TABLES = [b'OUGPSD2', b'OUGATO2', b'OESCP',
-                b'OES2C', b'OSTR2C',
-                b'OFMPF2M', b'OLMPF2M', b'OPMPF2M', b'OSMPF2M', b'OGPMPF2M',
-                'OFMPF2M', 'OLMPF2M', 'OPMPF2M', 'OSMPF2M', 'OGPMPF2M',
-                'OES2C', 'OSTR2C']
+SORT1_TABLES_BYTES = [b'OSTRMS1C', b'OSTNO1C', b'OES1X', b'OSTR1X',
+                      b'OESRMS2', b'OESNO2', b'OESXRMS1',
+                      b'OES1C', b'OSTR1C',
+                      b'OSTRMS1C',
+                      b'OESPSD1C',
+                      b'OSTPSD1C', ]
+SORT2_TABLES_BYTES = [b'OUGPSD2', b'OUGATO2', b'OESCP',
+                      b'OES2C', b'OSTR2C',
+                      b'OFMPF2M', b'OLMPF2M', b'OPMPF2M', b'OSMPF2M', b'OGPMPF2M',
+                      b'OESPSD2C', b'OSTPSD2C']
+SORT1_TABLES_STR = [name.decode('utf8') for name in SORT1_TABLES_BYTES] # 'OESNLXR'
+SORT2_TABLES_STR = [name.decode('utf8') for name in SORT2_TABLES_BYTES]
 NO_SORT_METHOD = [b'QHHA']
 
 NASA95_ELEMENTS = {
@@ -189,11 +192,12 @@ GEOM_TABLES = { # no analysis code
     'DBCOPT', 'DSCMCOL', 'DESCYC', 'R1TABRG',
 }
 
-def get_sort_method_from_table_name(table_name):
+def get_sort_method_from_table_name(table_name: bytes):
     """helper method"""
-    if table_name in SORT1_TABLES:
+    assert isinstance(table_name, bytes), table_name
+    if table_name in SORT1_TABLES_BYTES:
         sort_method = 1
-    elif table_name in SORT2_TABLES:
+    elif table_name in SORT2_TABLES_BYTES:
         sort_method = 2
     elif table_name in NO_SORT_METHOD:
         table_name_str = table_name.decode('utf8')
@@ -206,7 +210,7 @@ def get_sort_method_from_table_name(table_name):
         try:
             sort_method = int(table_num)
         except ValueError:
-            print('error determining sort_method: table_name=%r' % table_name_str)
+            print(f'error determining sort_method: table_name={table_name_str} type={type(table_name)}')
             raise
     return sort_method
 
@@ -524,9 +528,10 @@ class Op2Codes:
             is_sort1_table = (sort_method == 1)
         except AssertionError:
             table_name = self.table_name_str
-            if table_name in SORT1_TABLES:
+            assert isinstance(table_name, str), f'table_name={table_name} type={type(table_name)}'
+            if table_name in SORT1_TABLES_STR:
                 is_sort1_table = True
-            elif table_name in SORT2_TABLES:
+            elif table_name in SORT2_TABLES_STR:
                 is_sort1_table = False
             else:
                 try:
@@ -543,9 +548,9 @@ class Op2Codes:
             is_sort2_table = (sort_method == 2)
         except AssertionError:
             table_name = self.table_name_str
-            if table_name in SORT2_TABLES:
+            if table_name in SORT2_TABLES_STR:
                 is_sort2_table = True
-            elif table_name in SORT1_TABLES:
+            elif table_name in SORT1_TABLES_STR:
                 is_sort2_table = False
             else:
                 try:
@@ -740,19 +745,22 @@ def determine_sort_bits_meaning(table_code: int, sort_code: int,
 
     try:
         if is_random:
-            assert sort_bits[0] == 1, 'should be RANDOM; sort_bits=%s; sort_code=%s' % (sort_bits, sort_code)
+            pass
+            #assert sort_bits[0] == 1, f'should be RANDOM; sort_bits={sort_bits} (expected (1,?,?)); sort_code={sort_code} (expected 4, 5, or 6)'
+            # probably wrong...
+            #assert sort_bits[2] == 1, f'should be RANDOM; sort_bits={sort_bits} (expected (1,?,?)); sort_code={sort_code} (expected 4, 5, or 6)'
         else:
-            assert sort_bits[0] == 0, 'should be NOT RANDOM; sort_bits=%s; sort_code=%s' % (sort_bits, sort_code)
+            assert sort_bits[0] == 0, f'should be NOT RANDOM; sort_bits={sort_bits}; sort_code={sort_code}'
 
         if sort_method == 1:
-            assert sort_bits[1] == 0, 'should be SORT1; sort_bits=%s; sort_code=%s' % (sort_bits, sort_code)
+            assert sort_bits[1] == 0, f'should be SORT1; sort_bits={sort_bits}; sort_code={sort_code}'
         else:
-            assert sort_bits[1] == 1, 'should be SORT2; sort_bits=%s; sort_code=%s' % (sort_bits, sort_code)
+            assert sort_bits[1] == 1, f'should be SORT2; sort_bits={sort_bits}; sort_code={sort_code}'
 
         if is_real:
-            assert sort_bits[2] == 0, 'should be REAL; sort_bits=%s; sort_code=%s; table_code=%s table_code%%1000=%s' % (sort_bits, sort_code, table_code, table_code % 1000)
+            assert sort_bits[2] == 0, f'should be REAL; sort_bits={sort_bits}; sort_code={sort_code}; table_code={table_code} table_code%%1000={table_code % 1000}'
         else:
-            assert sort_bits[2] == 1, 'should be IMAG; sort_bits=%s; sort_code=%s; table_code=%s table_code%%1000=%s' % (sort_bits, sort_code, table_code, table_code % 1000)
+            assert sort_bits[2] == 1, f'should be IMAG; sort_bits={sort_bits}; sort_code={sort_code}; table_code={table_code} table_code%%1000={table_code % 1000}'
     except AssertionError:
         #print('sort_method=%r; is_real=%r is_random=%r' % (sort_method, is_real, is_random))
         raise

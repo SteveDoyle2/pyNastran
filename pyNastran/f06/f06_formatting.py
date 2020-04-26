@@ -117,20 +117,22 @@ def write_floats_8p1e(vals: List[float]) -> List[str]:
 def _eigenvalue_header(obj, header, itime: int, ntimes: int, dt):
     if obj.nonlinear_factor not in (None, np.nan):
         name = obj.data_code['name']
-        if isinstance(dt, int):
+        if isinstance(dt, (int, np.int32)):
             dt_line = ' %14s = %i\n' % (name.upper(), dt)
-        elif isinstance(dt, (float, np.float32)):
+        elif isinstance(dt, (float, np.float32, np.float64)):
             dt_line = ' %14s = %12.5E\n' % (name, dt)
+        #elif isinstance(dt, np.complex):
+            #dt_line = ' %14s = %12.5E %12.5Ej\n' % (name, dt.real, dt.imag)
         else:
-            dt_line = ' %14s = %12.5E %12.5Ej\n' % (name, dt.real, dt.imag)
+            raise NotImplementedError(type(dt))
         header[1] = dt_line
         codes = getattr(obj, name + 's')
         if not len(codes) == ntimes:
-            msg = '%ss in %s the wrong size; ntimes=%s; %ss=%s\n' % (
-                name, obj.__class__.__name__, ntimes, name, codes)
+            msg = (f'{name}s in {obj.__class__.__name__} the wrong size; '
+                   f'ntimes={ntimes}; {name}s={codes}\n')
             atts = object_attributes(obj)
-            msg += 'names=%s\n' % atts
-            msg += 'data_names=%s\n' % obj.data_names
+            msg += f'names={atts}\n'
+            msg += f'data_names={obj.data_names}\n'
             raise IndexError(msg)
 
         if hasattr(obj, 'eigr'):

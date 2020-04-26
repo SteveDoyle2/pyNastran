@@ -831,8 +831,8 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             b'OES2'    : [self._read_oes2_3, self._read_oes2_4],  # stress - linear only - disabled; need better tests
             #b'OES2'    : [self._table_passer, self._table_passer],  # stress - linear only - disabled; need better tests
 
-            #b'OESPSD2C' : [self._table_passer, self._table_passer],
-            #b'OSTPSD2C' : [self._table_passer, self._table_passer],
+            b'OESPSD2C' : [self._read_oes2_3, self._read_oes2_4],  # isat_random (nx)
+            b'OSTPSD2C' : [self._read_oes2_3, self._read_ostr2_4], # isat_random (nx)
             #=======================
 
             # off strain

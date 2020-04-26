@@ -94,6 +94,13 @@ class OP2Reader:
         self.h5_file = None
         self.size = 4
 
+        # Hack to dump the IBULK/CASECC decks in reverse order
+        # It's in reverse because that's how Nastran writes it.
+        #
+        # We could write it correctly, but there's a chance the
+        # deck could crash.
+        self._dump_deck = False
+
         self.op2 = op2  # type: OP2
 
         self.mapped_tables = {
@@ -2092,21 +2099,31 @@ class OP2Reader:
 
         unused_markers = self.get_nmarkers(1, rewind=True)
 
-        save_lines = False
-        write_deck = False
-        bulk_filename = 'bulk.test_op2.bdf'
-        self._read_deck_section(bulk_filename, save_lines,
-                                write_deck, mode='a',
-                                read_mode=2)
+        if self._dump_deck:
+            write_deck = True
+            bulk_filename = 'bulk.test_op2.bdf'
+            save_lines = False
+            self._read_deck_section(bulk_filename, save_lines,
+                                    write_deck, mode='w',
+                                    read_mode=1)
+        else:
+            save_lines = False
+            write_deck = False
+            bulk_filename = 'bulk.test_op2.bdf'
+            self._read_deck_section(bulk_filename, save_lines,
+                                    write_deck, mode='a',
+                                    read_mode=2)
+
 
     def _read_deck_section(self, deck_filename: str, save_lines: bool,
-                           write_deck: bool, mode='w', read_mode: int=1) -> None:
+                           write_deck: bool, mode='w', read_mode: int=1) -> List[str]:
         """helper for ``read_ibulk`` and ``read_icase``"""
         marker = -2
         if save_lines and write_deck:
             raise RuntimeError(f'save_lines={save_lines} write_deck={write_deck}; '
                                'one or more must be False')
 
+        lines = []
         if write_deck and self.read_mode == read_mode:
             with open(deck_filename, mode) as bdf_file:  # pragma: no cover
                 while 1:
@@ -2127,7 +2144,6 @@ class OP2Reader:
                     marker -= 1
 
         elif save_lines and self.read_mode == read_mode:
-            lines = []
             while 1:
                 self.read_3_markers([marker, 1, 0])
                 nfields = self.get_marker1(rewind=True)
@@ -2161,6 +2177,7 @@ class OP2Reader:
                 marker -= 1
         #print("marker = ", marker)
         unused_marker_end = self.get_marker1(rewind=False)
+        return lines
 
     def read_icase(self):
         """
@@ -2187,6 +2204,9 @@ class OP2Reader:
         lines = self._read_deck_section(bulk_filename, save_lines,
                                         write_deck=write_deck, mode='w',
                                         read_mode=1)
+        if self._dump_deck:
+            with open(bulk_filename, 'a') as bdf_file:
+                bdf_file.writelines(lines)
         self._case_control_lines = lines
 
     def read_cddata(self):

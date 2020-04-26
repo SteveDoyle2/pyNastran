@@ -134,6 +134,7 @@ class RandomPlateArray(OES_Object):
         self._times = zeros(ntimes, dtype)
         #self.ntotal = self.nelements * nnodes
 
+        #print(f'nelements={nelements} nlayers={nlayers} ntimes={ntimes} ntotal={ntotal}')
         self.element_node = zeros((nlayers, 2), 'int32')
 
         # the number is messed up because of the offset for the element's properties
@@ -598,6 +599,17 @@ def get_nnodes(self):
     return nnodes
 
 class RandomPlateStressArray(RandomPlateArray, StressObject):
+    """
+    NX
+    2 FD1  RS Z1 = Fibre Distance
+    3 SX1  RS Normal in x at Z1
+    4 SY1  RS Normal in y at Z1
+    5 TXY1 RS Shear in xy at Z1
+    6 FD2  RS Z2 = Fibre Distance
+    7 SX2  RS Normal in x at Z2
+    8 SY2  RS Normal in y at Z2
+    9 TXY2 RS Shear in xy at Z2
+    """
     def __init__(self, data_code, is_sort1, isubcase, dt):
         RandomPlateArray.__init__(self, data_code, is_sort1, isubcase, dt)
         StressObject.__init__(self, data_code, isubcase)

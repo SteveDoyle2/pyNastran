@@ -9,9 +9,19 @@ from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import (
 from pyNastran.f06.f06_formatting import write_floats_12e, _eigenvalue_header
 
 
+BASIC_TABLES = {
+    'OSTRMS1C',
+    #'OESATO1', 'OESCRM1', 'OESPSD1', 'OESRMS1', 'OESNO1',
+    #'OESATO2', 'OESCRM2', 'OESPSD2', 'OESRMS2', 'OESNO2',
+    #'OSTRATO1', 'OSTRCRM1', 'OSTRPSD1', 'OSTRRMS1', 'OSTRNO1',
+    #'OSTRATO2', 'OSTRCRM2', 'OSTRPSD2', 'OSTRRMS2', 'OSTRNO2',
+}
+VM_TABLES = {
+    #'OESXRMS1', 'OESXNO1'
+}
+
 class RandomCompositePlateArray(OES_Object):
     def __init__(self, data_code, is_sort1, isubcase, dt):
-        aaa
         OES_Object.__init__(self, data_code, isubcase, apply_data_code=False)
         #self.code = [self.format_code, self.sort_code, self.s_code]
 
@@ -34,6 +44,15 @@ class RandomCompositePlateArray(OES_Object):
     @property
     def is_complex(self):
         return False
+
+    def nnodes_per_element(self):
+        return 1
+
+    def finalize(self):
+        """Calls any OP2 objects that need to do any post matrix calcs"""
+        if self.is_sort1:
+            return
+        self.set_as_sort1()
 
     def _reset_indices(self):
         self.itotal = 0
@@ -76,8 +95,30 @@ class RandomCompositePlateArray(OES_Object):
 
         self.element_layer = zeros((self.ntotal, 2), dtype='int32')
 
-        #[o11, o22, t12, t1z, t2z, angle, major, minor, ovm]
-        self.data = zeros((self.ntimes, self.ntotal, 9), dtype='float32')
+        # [oxx, oyy, txy]
+        nresults = 5
+        if self.has_von_mises:
+            # ovm
+            nresults += 4
+
+        #[o11, o22, t12, t1z, t2z]; 5
+        #[o11, o22, t12, t1z, t2z, angle, major, minor, ovm]; 9
+        self.data = zeros((self.ntimes, self.ntotal, nresults), dtype='float32')
+
+    @property
+    def has_von_mises(self):
+        """what is the form of the table (NX includes Von Mises)"""
+        if self.num_wide == 7:
+            has_von_mises = False
+        #if self.table_name in BASIC_TABLES:  # no von mises
+            #has_von_mises = False
+        #elif self.table_name in VM_TABLES:
+            #has_von_mises = True
+        else:
+            msg = (f'self.table_name={self.table_name!r} (type={type(self.table_name)} '
+                   f'self.table_name_str={self.table_name_str!r}')
+            raise NotImplementedError(msg)
+        return has_von_mises
 
     def build_dataframe(self):
         """
@@ -160,6 +201,14 @@ class RandomCompositePlateArray(OES_Object):
         self._times[self.itime] = dt
         self.element_layer[self.itotal, :] = [eid, layer]
         self.data[self.itime, self.itotal, :] = [o11, o22, t12]
+        self.itotal += 1
+        self.ielement += 1
+
+    def add_sort1_7words(self, dt, eid, layer, o11, o22, t12, t1z, t2z):
+        """nx - von mises is not included"""
+        self._times[self.itime] = dt
+        self.element_layer[self.itotal, :] = [eid, layer]
+        self.data[self.itime, self.itotal, :] = [o11, o22, t12, t1z, t2z]
         self.itotal += 1
         self.ielement += 1
 
