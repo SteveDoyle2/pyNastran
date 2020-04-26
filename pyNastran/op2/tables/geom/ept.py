@@ -443,7 +443,7 @@ class EPT(GeomCommon):
         self.show_data(data[12*self.factor:], types='qd')
         #print(len(data[12*self.factor:]))
         while n < ndata:
-            print(f"n={n} ndata={ndata}")
+            self.log.debug(f"n={n} ndata={ndata}")
             edata = data[n:n+ntotal1]
             #if len(edata) == ntotal1:
             data1 = struct1.unpack(edata)
@@ -866,7 +866,7 @@ class EPT(GeomCommon):
             out = struct1.unpack(edata)
             (pid, k1, k2, k3, k4, k5, k6, b1, b2, b3, b4, b5, b6,
              g1, sa, st, ea, et) = out
-            self.log.debug(out)
+            #self.log.debug(out)
             g2 = g3 = g4 = g5 = g6 = g1
             data_in = (pid, k1, k2, k3, k4, k5, k6, b1, b2, b3, b4, b5, b6,
                        g1, g2, g3, g4, g5, g6, sa, st, ea, et)

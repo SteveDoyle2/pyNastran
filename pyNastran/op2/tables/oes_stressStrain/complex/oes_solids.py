@@ -12,7 +12,6 @@ from pyNastran.f06.f06_formatting import write_imag_floats_13e
 class ComplexSolidArray(OES_Object):
     def __init__(self, data_code, is_sort1, isubcase, dt):
         OES_Object.__init__(self, data_code, isubcase, apply_data_code=False)
-        self.result_flag = 0
         #self.code = [self.format_code, self.sort_code, self.s_code]
 
         #self.ntimes = 0  # or frequency/mode
@@ -116,12 +115,8 @@ class ComplexSolidArray(OES_Object):
                                                                            #self.ntotal)
             #raise RuntimeError(msg)
 
-        if self.result_flag == 0:
-            # [oxx, oyy, ozz, txy, tyz, txz]
-            self.data = zeros((self.ntimes, self.ntotal, 6), dtype=cfdtype)
-        else:
-            # oxx
-            self.data = zeros((self.ntimes, self.ntotal, 1), 'complex64')
+        # [oxx, oyy, ozz, txy, tyz, txz]
+        self.data = zeros((self.ntimes, self.ntotal, 6), dtype=cfdtype)
 
     def build_dataframe(self):
         """creates a pandas dataframe"""

@@ -338,6 +338,7 @@ class OEF(OP2Common):
         self._write_debug_bits()
         assert self.num_wide != 146, self.code_information()
         #print('OEF-%s' % self.element_name)
+        #self._check_result_type()
 
     def _read_oef2_3(self, data, unused_ndata):
         """Table 3 parser for OEF2 table"""
@@ -425,6 +426,7 @@ class OEF(OP2Common):
         self._fix_oes_sort2(data)
         self._set_element_name()
         #assert isinstance(self.nonlinear_factor, int), self.nonlinear_factor
+        #self._check_result_type()
 
     def _read_oef1_4(self, data, ndata):
         """Table 4 parser for OEF1 table"""

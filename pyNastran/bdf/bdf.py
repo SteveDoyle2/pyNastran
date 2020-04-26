@@ -158,7 +158,8 @@ from .cards.bdf_tables import (TABLED1, TABLED2, TABLED3, TABLED4,
                                TABRND1, TABRNDG,
                                DTABLE)
 from .cards.contact import (
-    BCRPARA, BCTADD, BCTSET, BSURF, BSURFS, BCTPARA, BCONP, BLSEG, BFRIC)
+    BCRPARA, BCTADD, BCTSET, BSURF, BSURFS, BCTPARA, BCONP, BLSEG, BFRIC,
+    BCTPARM, BGADD, BGSET)
 from .cards.parametric.geometry import PSET, PVAL, FEEDGE, FEFACE, GMCURV, GMSURF
 
 from .case_control_deck import CaseControlDeck, Subcase
@@ -550,6 +551,9 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             #: contact
             'BCTPARA',  ## bctpara
             'BCRPARA',  ## bcrpara
+            'BCTPARM', ## bctparm
+            'BGADD',  ## bgadds
+            'BGSET',  ## bgsets
             'BCTADD',  ## bctadds
             'BCTSET',  ## bctsets
             'BSURF',  ## bsurf
@@ -557,8 +561,6 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             'BCONP', ## bconp
             'BLSEG', ## blseg
             'BFRIC', ## bfric
-
-
 
             'TEMPBC',
             #'RADMT',
@@ -1754,9 +1756,12 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             'BFRIC' : (BFRIC, self._add_bfric_object),
             'MODTRAK' : (MODTRAK, self._add_modtrak_object),
 
-            #'BGADD', 'BGSET', 'BOLT', 'BOLTFOR'
-            'BGADD' : (Crash, None),
-            'BGSET' : (Crash, None),
+            #  nx contact
+            'BCTPARM' : (BCTPARM, self._add_bctparam_object),
+            'BGADD' : (BGADD, self._add_bgadd_object),
+            'BGSET' : (BGSET, self._add_bgset_object),
+
+            # 'BOLT', 'BOLTFOR'
             'BOLT' : (Crash, None),
             'BOLTFOR' : (Crash, None),
 
@@ -2180,9 +2185,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             'BCTPARA' : (BCTPARA, self._add_bctpara_object),
             'BSURF' : (BSURF, self._add_bsurf_object),
             'BSURFS' : (BSURFS, self._add_bsurfs_object),
-            # 'BGADD', 'BGSET', 'BOUTPUT', 'BOLT', 'BOLTFOR', 'BOLTFRC',
-            'BGADD': (Crash, None),
-            'BGSET': (Crash, None),
+            # 'BOUTPUT', 'BOLT', 'BOLTFOR', 'BOLTFRC',
             'BOUTPUT': (Crash, None),
             'BOLT': (Crash, None),
             'BOLTFOR': (Crash, None),

@@ -559,6 +559,13 @@ class XrefMesh(BDFAttributes):
         for bconp in self.bconp.values():
             bconp.cross_reference(self)
 
+        # bgset
+        # bctset
+        #for bgadd in self.bgadds.values():
+            #bgadd.cross_reference(self)
+        #for bctadd in self.bctadds.values():
+            #bctadd.cross_reference(self)
+
     def _uncross_reference_contact(self) -> None:
         """uncross references the contact objects"""
         for blseg in self.blseg.values():

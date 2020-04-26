@@ -443,7 +443,6 @@ class BSURFS(BaseCard):
         card = self.repr_fields()
         return self.comment + print_card_8(card)
 
-
 class BCTSET(BaseCard):
     """
     3D Contact Set Definition (SOLs 101, 601 and 701 only)
@@ -454,7 +453,7 @@ class BCTSET(BaseCard):
     +========+=======+======+=======+=======+=======+=======+
     | BCTSET | CSID  | SID1 | TID1  | FRIC1 | MIND1 | MAXD1 |
     +--------+-------+------+-------+-------+-------+-------+
-    |        | SID2  | TID2 | FRIC2 | MIND2 | MAXD2 |       |
+    |        |       | SID2  | TID2 | FRIC2 | MIND2 | MAXD2 |
     +--------+-------+------+-------+-------+-------+-------+
     |        |  etc. |      |       |       |       |       |
     +--------+-------+------+-------+-------+-------+-------+
@@ -634,6 +633,165 @@ class BCRPARA(BaseCard):
             return self.comment + print_card_8(card)
         return self.comment + print_card_16(card)
 
+
+class BCTPARM(BaseCard):
+    """
+    Contact Parameters (SOLs 101, 103, 111, 112, and 401).
+    Control parameters for the contact algorithm.
+
+    +---------+--------+--------+--------+--------+--------+---------+--------+
+    |    1    |   2    |    3   |   4    |   5    |   6    |    7    |    8   |
+    +=========+========+========+========+========+========+=========+========+
+    | BCTPARM | CSID   | Param1 | Value1 | Param2 | Value2 | Param3  | Value3 |
+    +---------+--------+--------+--------+--------+--------+---------+--------+
+    |         | Param4 | Value4 | Param5 | Value5 |  etc.  |         |        |
+    +---------+--------+--------+--------+--------+--------+---------+--------+
+    | BCTPARM |   1    | PENN   |  10.0  |  PENT  |  0.5   |   CTOL  | 0.001  |
+    +---------+--------+--------+--------+--------+--------+---------+--------+
+    |         | SHLTHK |   1    |        |        |        |         |        |
+    +---------+--------+--------+--------+--------+--------+---------+--------+
+
+    """
+    type = 'BCTPARM'
+
+    @classmethod
+    def _init_from_empty(cls):
+        csid = 1
+        params = {'CSTIFF' : 1}
+        return BCTPARM(csid, params, comment='')
+
+    def _finalize_hdf5(self, encoding):
+        """hdf5 helper function"""
+        keys, values = self.params
+        self.params = {key : value for key, value in zip(keys, values)}
+
+    def __init__(self, csid, params, comment=''):
+        """
+        Creates a BCTPARM card
+
+        Parameters
+        ----------
+        csid : int
+            Contact set ID. Parameters defined in this command apply to
+            contact set CSID defined by a BCTSET entry. (Integer > 0)
+        params : dict[key] : value
+            the optional parameters
+        comment : str; default=''
+            a comment for the card
+
+        """
+        if comment:
+            self.comment = comment
+
+        #: Contact set ID. Parameters defined in this command apply to
+        #: contact set CSID defined by a BCTSET entry. (Integer > 0)
+        self.csid = csid
+        self.params = params
+
+    @classmethod
+    def add_card(cls, card, comment=''):
+        """
+        Adds a BCTPARM card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+
+        """
+        csid = integer(card, 1, 'csid')
+        i = 2
+        j = 1
+        params = {}
+        while i < card.nfields:
+            param = string(card, i, 'param%s' % j)
+            i += 1
+            if param == 'TYPE' and 0:
+                value = integer_or_blank(card, i, 'value%s' % j, 0)
+                assert value in [0, 1, 2], 'TYPE must be [0, 1, 2]; TYPE=%r' % value
+            elif param == 'PENN':
+                #PENN 10.0
+                value = double(card, i, 'value%s' % j)
+            elif param == 'PENT':
+                #PENT 0.5
+                value = double(card, i, 'value%s' % j)
+            elif param == 'CTOL':
+                #CTOL 10.0
+                value = double(card, i, 'value%s' % j)
+            elif param == 'SHLTHK':
+                #SHLTHK 1
+                value = integer(card, i, 'value%s' % j)
+            #elif param == 'TYPE': # NX
+                #value = string_or_blank(card, i, 'value%s' % j, 'FLEX').upper()
+                #assert value in ['FLEX', 'RIGID', 'COATING'], 'TYPE must be [FLEX, RIGID, COATING.]; CSTIFF=%r' % value
+
+            #elif param == 'NSIDE':
+                #value = integer_or_blank(card, i, 'value%s' % j, 1)
+                #assert value in [1, 2], 'NSIDE must be [1, 2]; NSIDE=%r' % value
+            #elif param == 'TBIRTH':
+                #value = double_or_blank(card, i, 'value%s' % j, 0.0)
+            #elif param == 'TDEATH':
+                #value = double_or_blank(card, i, 'value%s' % j, 0.0)
+            #elif param == 'INIPENE':
+                #value = integer_or_blank(card, i, 'value%s' % j, 0)
+                #assert value in [0, 1, 2, 3], 'INIPENE must be [0, 1, 2]; INIPENE=%r' % value
+            #elif param == 'PDEPTH':
+                #value = double_or_blank(card, i, 'value%s' % j, 0.0)
+            #elif param == 'SEGNORM':
+                #value = integer_or_blank(card, i, 'value%s' % j, 0)
+                #assert value in [-1, 0, 1], 'SEGNORM must be [-1, 0, 1]; SEGNORM=%r' % value
+            #elif param == 'OFFTYPE':
+                #value = integer_or_blank(card, i, 'value%s' % j, 0)
+                #assert value in [0, 1, 2], 'OFFTYPE must be [0, 1, 2]; OFFTYPE=%r' % value
+            #elif param == 'OFFSET':
+                #value = double_or_blank(card, i, 'value%s' % j, 0.0)
+            #elif param == 'TZPENE':
+                #value = double_or_blank(card, i, 'value%s' % j, 0.0)
+
+            #elif param == 'CSTIFF':
+                #value = integer_or_blank(card, i, 'value%s' % j, 0)
+                #assert value in [0, 1], 'CSTIFF must be [0, 1]; CSTIFF=%r' % value
+            #elif param == 'TIED':
+                #value = integer_or_blank(card, i, 'value%s' % j, 0)
+                #assert value in [0, 1], 'TIED must be [0, 1]; TIED=%r' % value
+            #elif param == 'TIEDTOL':
+                #value = double_or_blank(card, i, 'value%s' % j, 0.0)
+            #elif param == 'EXTFAC':
+                #value = double_or_blank(card, i, 'value%s' % j, 0.001)
+                #assert 1.0E-6 <= value <= 0.1, 'EXTFAC must be 1.0E-6 < EXTFAC < 0.1; EXTFAC=%r' % value
+            else:
+                # FRICMOD, FPARA1/2/3/4/5, EPSN, EPST, CFACTOR1, PENETOL
+                # NCMOD, TCMOD, RFORCE, LFORCE, RTPCHECK, RTPMAX, XTYPE
+                # ...
+                value = integer_double_or_blank(card, i, 'value%s' % j)
+                assert value is not None, '%s%i must not be None' % (param, j)
+
+            params[param] = value
+            i += 1
+            j += 1
+            if j == 4:
+                i += 1
+        return BCTPARM(csid, params, comment=comment)
+
+    def raw_fields(self):
+        fields = ['BCTPARM', self.csid]
+        i = 0
+        for key, value in sorted(self.params.items()):
+            if i == 3:
+                fields.append(None)
+                i = 0
+            fields.append(key)
+            fields.append(value)
+            i += 1
+        return fields
+
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
+        card = self.repr_fields()
+        if size == 8:
+            return self.comment + print_card_8(card)
+        return self.comment + print_card_16(card)
 
 class BCTPARA(BaseCard):
     """
@@ -845,6 +1003,152 @@ class BCTADD(BaseCard):
 
     def raw_fields(self):
         fields = ['BCTADD'] + self.contact_sets
+        return fields
+
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
+        card = self.repr_fields()
+        if size == 8:
+            return self.comment + print_card_8(card)
+        return self.comment + print_card_16(card)
+
+class BGADD(BaseCard):
+    """
+    +-------+------+----+-------+----+----+----+----+----+
+    |   1   |  2   | 3  |   4   |  5 | 6  |  7 | 8  |  9 |
+    +=======+======+====+=======+====+====+====+====+====+
+    | BGADD | GSID | SI |  S2   | S3 | S4 | S5 | S6 | S7 |
+    +-------+------+----+-------+----+----+----+----+----+
+    |       |  S8  | S9 |  etc. |    |    |    |    |    |
+    +-------+------+----+-------+----+----+----+----+----+
+
+    """
+    type = 'BGADD'
+
+    @classmethod
+    def _init_from_empty(cls):
+        glue_id = 1
+        contact_sets = [1, 2]
+        return BGADD(glue_id, contact_sets, comment='')
+
+    def __init__(self, glue_id, contact_sets, comment=''):
+        if comment:
+            self.comment = comment
+        #: Glue identification number. (Integer > 0)
+        self.glue_id = glue_id
+
+        #: Identification numbers of contact sets defined via BCTSET entries.
+        #: (Integer > 0)
+        self.contact_sets = contact_sets
+
+    @classmethod
+    def add_card(cls, card, comment=''):
+        """
+        Adds a BGADD card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+
+        """
+        glue_id = integer(card, 1, 'glue_id')
+        contact_sets = []
+
+        i = 1
+        j = 1
+        while i < card.nfields:
+            contact_set = integer(card, i, 'S%i' % j)
+            contact_sets.append(contact_set)
+            i += 1
+            j += 1
+        return BGADD(glue_id, contact_sets, comment=comment)
+
+    def raw_fields(self):
+        fields = ['BGADD'] + self.contact_sets
+        return fields
+
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
+        card = self.repr_fields()
+        if size == 8:
+            return self.comment + print_card_8(card)
+        return self.comment + print_card_16(card)
+
+class BGSET(BaseCard):
+    """
+    +-------+------+------+------+---------+----+------+------+----+
+    |   1   |  2   |  3   |   4  |    5    | 6  |  7   |   8  |  9 |
+    +=======+======+======+======+=========+====+======+======+====+
+    | BGSET | GSID | SID1 | TID1 | SDIST1  |    | EXT1 |      |    |
+    +-------+------+------+------+---------+----+------+------+----+
+    |       |      | SID2 | TID2 | SDIST2  |    | EXT2 |      |    |
+    +-------+------+------+------+---------+----+------+------+----+
+    """
+    type = 'BGSET'
+
+    @classmethod
+    def _init_from_empty(cls):
+        csid = 1
+        sids = [1]
+        tids = [1]
+        sdists = [0.01]
+        exts = [1.]
+        return BGSET(glue_id, sids, tids, sdists, exts, comment='', sol=101)
+
+    def __init__(self, glue_id, sids, tids, sdists, exts,
+                 comment='', sol=101):
+        if comment:
+            self.comment = comment
+        #: GSID Glue set identification number. (Integer > 0)
+        self.glue_id = glue_id
+        #: SIDi Source region (contactor) identification number for contact pair i.
+        #: (Integer > 0)
+        self.sids = sids
+
+        #: TIDi Target region identification number for contact pair i. (Integer > 0)
+        self.tids = tids
+
+        #: SDISTi Search distance for glue regions (Real); (Default=10.0)
+        self.sdists = sdists
+
+        #: EXTi Extension factor for target region (SOLs 402 and 601 only).
+        self.exts = exts
+
+    @classmethod
+    def add_card(cls, card, comment='', sol=101):
+        glue_id = integer(card, 1, 'glue_id')
+        sids = []
+        tids = []
+        sdists = []
+        exts = []
+
+        nfields = card.nfields
+        i = 2
+        j = 1
+        while i < nfields:
+            #SIDi Source region identification number for glue pair i. (Integer > 0)
+            #TIDi Target region identification number for glue pair i. (Integer > 0)
+            #SDISTi Search distance for glue regions (Real); (Default=10.0)
+            #EXTi Extension factor for target region (SOLs 402 and 601 only).
+
+            sids.append(integer(card, i, 'sid%s' % j))
+            tids.append(integer(card, i + 1, 'tid%s' % j))
+            sdists.append(double_or_blank(card, i + 2, 'fric%s' % j, 0.0))
+            #if sol == 101:
+            exts.append(double_or_blank(card, i + 3, 'mind%s' % j, 0.0))
+            #else:
+                #exts.append(None)
+            i += 8
+            j += 1
+        return BGSET(glue_id, sids, tids, sdists, exts,
+                     comment=comment, sol=sol)
+
+    def raw_fields(self):
+        fields = ['BGSET', self.glue_id]
+        for sid, tid, sdist, ext in zip(self.sids, self.tids, self.sdists,
+                                              self.exts):
+            fields += [sid, tid, sdist, None, ext, None, None, None]
         return fields
 
     def write_card(self, size: int=8, is_double: bool=False) -> str:

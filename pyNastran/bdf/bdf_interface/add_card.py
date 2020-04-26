@@ -135,7 +135,9 @@ from pyNastran.bdf.cards.bdf_tables import (TABLED1, TABLED2, TABLED3, TABLED4,
                                             TABRND1, TABRNDG,
                                             DTABLE)
 from pyNastran.bdf.cards.contact import (
-    BCRPARA, BCTADD, BCTSET, BSURF, BSURFS, BCTPARA, BCONP, BLSEG, BFRIC)
+    BCRPARA, BCTADD, BCTSET, BSURF, BSURFS, BCTPARA, BCONP, BLSEG, BFRIC,
+    BGADD, BGSET, BCTPARM,
+)
 from pyNastran.bdf.cards.parametric.geometry import PSET, PVAL, FEEDGE, FEFACE, GMCURV, GMSURF
 
 from pyNastran.utils.numpy_utils import integer_string_types
@@ -162,9 +164,11 @@ CARD_MAP = {
     'BLSEG' : BLSEG,
     'BFRIC' : BFRIC,
 
-    #'BGADD', 'BGSET', 'BOLT', 'BOLTFOR'
-    #'BGADD' : Crash, None),
-    #'BGSET' : Crash, None),
+    # nx glue
+    'BGADD' : BGADD,
+    'BGSET' : BGSET,
+
+    #'BOLT', 'BOLTFOR'
     #'BOLT' : Crash, None),
     #'BOLTFOR' : Crash, None),
 
@@ -630,10 +634,17 @@ CARD_MAP = {
     'DMIG_UACCEL' : DMIG_UACCEL,
 
     'BCRPARA' : BCRPARA,
-    'BCTADD' : BCTADD,
-    'BCTPARA' : BCTPARA,
     'BSURF' : BSURF,
     'BSURFS' : BSURFS,
+
+    # nx contact
+    'BCTADD' : BCTADD,
+    'BCTPARA' : BCTPARA,
+    'BCTPARM' : BCTPARM,
+
+    # nx glue
+    'BGADD' : BGADD,
+    'BGSET' : BGSET,
 
     'RADCAV' : RADCAV,
     'RADLST' : RADLST,

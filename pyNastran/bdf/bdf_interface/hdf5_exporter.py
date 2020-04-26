@@ -63,6 +63,7 @@ dict_int_obj_attrs = [
     # contact
     'bconp', 'bcrparas', 'bctadds',
     'bctparas', 'bctsets', 'blseg', 'bsurf', 'bsurfs',
+    'bgadds', 'bgsets', 'bctparms',
     'bfric',
 
     # other
@@ -70,7 +71,7 @@ dict_int_obj_attrs = [
     'convection_properties',
     'dareas',
     'dmig', 'dmiji', 'dmij', 'dmik', 'dmi', 'dmiax',
-    'dti', 
+    'dti',
     'dphases', 'delays',
     'epoints', 'gridb',
     'nlparms', 'nlpcis',

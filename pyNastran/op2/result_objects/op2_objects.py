@@ -5,6 +5,7 @@ from struct import pack
 from typing import List, Tuple
 import numpy as np
 
+from cpylog import SimpleLogger
 from pyNastran import is_release
 from pyNastran.utils import object_attributes, object_methods
 from pyNastran.utils.numpy_utils import integer_types
@@ -680,8 +681,9 @@ class BaseElement(ScalarObject):
                 assert np.array_equal(self._times, table._times), 'ename=%s-%s times=%s table.times=%s' % (
                     self.element_name, self.element_type, self._times, table._times)
 
-        _check_element(self, table)
-        _check_element_node(self, table)
+        log = SimpleLogger()
+        _check_element(self, table, log)
+        _check_element_node(self, table, log)
 
     def _build_pandas_transient_elements(self, column_values, column_names, headers, element, data):
         """common method to build a transient dataframe"""
@@ -801,7 +803,7 @@ def get_complex_times_dtype(nonlinear_factor, size):
         idtype = 'int64'
     return dtype, idtype, cfdtype
 
-def _check_element(table1: BaseElement, table2: BaseElement):
+def _check_element(table1: BaseElement, table2: BaseElement, log: SimpleLogger):
     """checks the ``element_node`` variable"""
     if not hasattr(table1, 'element'):
         return
@@ -820,27 +822,33 @@ def _check_element(table1: BaseElement, table2: BaseElement):
 
     element = table1.element
     eid_min = element.min()
-    nshape = len(element)
+    nshape = len(element.shape)
     if eid_min <= 0:
         if nshape == 1:
-            raise ValueError(f'eids={element.tolist()}.min = {eid_min}')
+            msg = (f'{table1}\ntable_name={table1.table_name}\n'
+                      f'eids={element.tolist()}.min = {eid_min}')
         else:
             if table1.table_name not in ['ONRGY1', 'ONRGY2']:
                 msg = f'table_name = {table1.table_name}\n'
                 for i, eidsi in enumerate(element):
                     eid_min = eidsi.min()
                     if eid_min <= 0:
-                        msg += f'eids[{i}]={eidsi.tolist()}.min = {eid_min}\n'
-                raise ValueError(msg)
+                        msg += f'{table1}\neids[{i}]={eidsi.tolist()}.min = {eid_min}\n'
+        log.error(msg)
 
-def _check_element_node(table1: BaseElement, table2: BaseElement):
+def _check_element_node(table1: BaseElement, table2: BaseElement, log: SimpleLogger):
     """checks the ``element_node`` variable"""
     if not hasattr(table1, 'element_node'):
         return
+    if table1.element_node is None:
+        return
+
     if not np.array_equal(table1.element_node, table2.element_node):
         if table1.element_node.shape != table2.element_node.shape:
-            msg = 'table1.element_node.shape=%s table2.element_node.shape=%s' % (
-                table1.element_node.shape, table2.element_node.shape)
+            msg = (
+                f'{table1}\n'
+                f'table1.element_node.shape={table1.element_node.shape} '
+                f'table2.element_node.shape={table2.element_node.shape}')
 
             print(table1.element_node.tolist())
             print(table2.element_node.tolist())
@@ -854,4 +862,4 @@ def _check_element_node(table1: BaseElement, table2: BaseElement):
 
     eids = table1.element_node[:, 0]
     if eids.min() <= 0:
-        raise ValueError(f'eids={eids}.min = {eids.min()}')
+        log.error(f'{table1}\neids={eids}.min = {eids.min()}')

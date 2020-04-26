@@ -287,11 +287,27 @@ class ComplexPlateArray(OES_Object):
 
         #print("ntimes=%s nelements=%s ntotal=%s" % (self.ntimes, self.nelements, self.ntotal))
         dtype, idtype, cfdtype = get_complex_times_dtype(self.nonlinear_factor, self.size)
-        self._times = zeros(self.ntimes, dtype=dtype)
+
+        if self.is_sort1:
+            nelements = self.nelements
+            ntimes = self.ntimes
+            nlayers = self.ntotal
+            #nx = ntimes
+            #ny = self.ntotal
+            print("ntimes=%s nlayers=%s" % (ntimes, nlayers))
+        if self.is_sort2:
+            unused_ntotal = self.ntotal
+            nelements = self.ntimes
+            print('self.nnodes_per_element =', self.nnodes_per_element)
+            nlayers = nelements * 2 * self.nnodes_per_element
+            ntimes = self.ntotal
+        print("nelements=%s nlayers=%s ntimes=%s" % (nelements, nlayers, ntimes))
+
+        self._times = zeros(ntimes, dtype=dtype)
         #self.ntotal = self.nelements * nnodes
 
         # TODO: could be more efficient by using nelements for cid
-        self.element_node = zeros((self.ntotal, 2), dtype=idtype)
+        self.element_node = zeros((nlayers, 2), dtype=idtype)
         #self.element_cid = zeros((self.nelements, 2), 'int32')
 
         # the number is messed up because of the offset for the element's properties
@@ -302,28 +318,19 @@ class ComplexPlateArray(OES_Object):
                 #self.nelements * nnodes, self.ntotal)
             #raise RuntimeError(msg)
 
-        self.fiber_curvature = zeros(self.ntotal, 'float32')
+        self.fiber_curvature = zeros(nlayers, 'float32')
 
         if self.has_von_mises:
             # [oxx, oyy, txy, ovm]
-            self.data = zeros((self.ntimes, self.ntotal, 4), dtype=cfdtype)
+            self.data = zeros((ntimes, nlayers, 4), dtype=cfdtype)
         else:
             # [oxx, oyy, txy]
-            self.data = zeros((self.ntimes, self.ntotal, 3), 'complex64')
+            self.data = zeros((ntimes, nlayers, 3), 'complex64')
 
     def build_dataframe(self) -> None:
         """creates a pandas dataframe"""
         headers = self.get_headers()
         column_names, column_values = self._build_dataframe_transient_header()
-        #is_v25 = pd.__version__ >= '0.25'
-        #if is_v25:
-            #print(f'skipping pandas {self.class_name}')
-            #return
-        #else:
-            #data_frame = pd.Panel(self.data, items=column_values,
-                                  #major_axis=self.element_node, minor_axis=headers).to_frame()
-            #data_frame.columns.names = column_names
-            #data_frame.index.names = ['ElementID', 'Item']
 
         data_frame = self._build_pandas_transient_element_node(
             column_values, column_names,
@@ -403,18 +410,63 @@ class ComplexPlateArray(OES_Object):
         #self.ielement += 1
         self.itotal += 1
 
-    def add_ovm_sort1(self, dt, eid, node_id, fdr, oxx, oyy, txy, ovm) -> None:
+    def add_ovm_sort1(self, dt, eid, node_id,
+                      fdr1, oxx1, oyy1, txy1, ovm1,
+                      fdr2, oxx2, oyy2, txy2, ovm2) -> None:
         assert isinstance(eid, integer_types) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
         self._times[self.itime] = dt
         #print(self.element_types2, element_type, self.element_types2.dtype)
         #print('itotal=%s dt=%s eid=%s nid=%-5s oxx=%s' % (self.itotal, dt, eid, node_id, oxx))
 
         assert isinstance(node_id, int), node_id
-        self.data[self.itime, self.itotal] = [oxx, oyy, txy, ovm]
+        self.data[self.itime, self.itotal] = [oxx1, oyy1, txy1, ovm1]
         self.element_node[self.itotal, :] = [eid, node_id]  # 0 is center
-        self.fiber_curvature[self.itotal] = fdr
+        self.fiber_curvature[self.itotal] = fdr1
         #self.ielement += 1
         self.itotal += 1
+
+        self.data[self.itime, self.itotal] = [oxx2, oyy2, txy2, ovm2]
+        self.element_node[self.itotal, :] = [eid, node_id]  # 0 is center
+        self.fiber_curvature[self.itotal] = fdr2
+        #self.ielement += 1
+        self.itotal += 1
+
+    def add_ovm_sort2(self, dt, eid, nid,
+                      fd1, oxx1, oyy1, txy1, ovm1,
+                      fd2, oxx2, oyy2, txy2, ovm2):
+        nnodes = self.nnodes_per_element
+        itime = self.ielement // nnodes
+        inid = self.ielement % nnodes
+        #itotal = self.itotal
+        ielement = self.itime
+        #print(f'itime={itime} eid={eid} nid={nid}; inid={inid} ielement={ielement}')
+
+        #ibase = 2 * ielement # ctria3/cquad4-33
+        ibase = 2 * (ielement * nnodes + inid)
+        ie_upper = ibase
+        ie_lower = ibase + 1
+
+        debug = False
+        self._times[itime] = dt
+        #print(self.element_types2, element_type, self.element_types2.dtype)
+
+        #itime = self.ielement
+        #itime = self.itime
+        #ielement = self.itime
+        assert isinstance(eid, integer_types) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
+
+        if itime == 0:
+            self.element_node[ie_upper, :] = [eid, nid]  # 0 is center
+            self.element_node[ie_lower, :] = [eid, nid]  # 0 is center
+            self.fiber_curvature[ie_upper] = fd1
+            self.fiber_curvature[ie_lower] = fd2
+        self.data[itime, ie_upper, :] = [oxx1, oyy1, txy1, ovm1]
+        self.data[itime, ie_lower, :] = [oxx2, oyy2, txy2, ovm2]
+
+        self.itotal += 2
+        self.ielement += 1
+        if debug:
+            print(self.element_node)
 
     def get_stats(self, short: bool=False) -> List[str]:
         if not self.is_built:

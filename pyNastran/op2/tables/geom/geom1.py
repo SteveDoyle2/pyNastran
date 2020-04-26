@@ -292,7 +292,7 @@ class GEOM1(GeomCommon):
         for unused_i in range(nentries):
             edata = data[n:n + ntotal]
             out = structi.unpack(edata)
-            print(out)
+            self.log.debug(out)
             n += ntotal
             continue
             (nid, cp, x1, x2, x3, cd, ps, seid) = out

@@ -345,13 +345,15 @@ class WriteMeshs(WriteMesh):
     def _write_contact_file(self, bdf_files: Any, size: int=8, is_double: bool=False,
                             is_long_ids: Optional[bool]=None) -> None:
         """Writes the contact cards sorted by ID"""
-        is_contact = (self.bcrparas or self.bctadds or self.bctparas
+        is_contact = (self.bcrparas or self.bctadds or self.bctparas or self.bctparms
                       or self.bctsets or self.bsurf or self.bsurfs
-                      or self.bconp or self.blseg or self.bfric)
+                      or self.bconp or self.blseg or self.bfric
+                      or self.bgsets or self.bgadds)
         if is_contact:
             write_bdfs_dict(bdf_files, self.bcrparas, size, is_double, is_long_ids)
             write_bdfs_dict(bdf_files, self.bctadds, size, is_double, is_long_ids)
             write_bdfs_dict(bdf_files, self.bctparas, size, is_double, is_long_ids)
+            write_bdfs_dict(bdf_files, self.bctparms, size, is_double, is_long_ids)
             write_bdfs_dict(bdf_files, self.bctsets, size, is_double, is_long_ids)
             write_bdfs_dict(bdf_files, self.bsurf, size, is_double, is_long_ids)
             write_bdfs_dict(bdf_files, self.bsurfs, size, is_double, is_long_ids)
@@ -359,6 +361,8 @@ class WriteMeshs(WriteMesh):
             write_bdfs_dict(bdf_files, self.bconp, size, is_double, is_long_ids)
             write_bdfs_dict(bdf_files, self.blseg, size, is_double, is_long_ids)
             write_bdfs_dict(bdf_files, self.bfric, size, is_double, is_long_ids)
+            write_bdfs_dict(bdf_files, self.bgadds, size, is_double, is_long_ids)
+            write_bdfs_dict(bdf_files, self.bgsets, size, is_double, is_long_ids)
 
     def _write_coords_file(self, bdf_files: Any, size: int=8, is_double: bool=False,
                            is_long_ids: Optional[bool]=None) -> None:

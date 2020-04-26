@@ -621,7 +621,9 @@ class BDFAttributes:
         self.bconp = {}  # type: Dict[int, BCONP]
         self.blseg = {}  # type: Dict[int, BLSEG]
         self.bfric = {}  # type: Dict[int, BFRIC]
-
+        self.bgadds = {}  # type: Dict[int, BGADD]
+        self.bgsets = {}  # type: Dict[int, BGSET]
+        self.bctparms = {}  # type: Dict[int, BCTPARAM]
 
         #--------------------------superelements------------------------------
         self.setree = {}  # type: Dict[int, SETREE]
@@ -922,8 +924,11 @@ class BDFAttributes:
             # contact
             'bctparas' : ['BCTPARA'],
             'bcrparas' : ['BCRPARA'],
+            'bctparms' : ['BCTPARM'],
             'bctadds' : ['BCTADD'],
             'bctsets' : ['BCTSET'],
+            'bgadds' : ['BGADD'],
+            'bgsets' : ['BGSET'],
             'bsurf' : ['BSURF'],
             'bsurfs' : ['BSURFS'],
             'bconp' : ['BCONP'],

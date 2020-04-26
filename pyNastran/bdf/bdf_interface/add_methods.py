@@ -129,7 +129,7 @@ if TYPE_CHECKING:  # pragma: no cover
                                                 DTABLE)
     from pyNastran.bdf.cards.contact import (
         BCRPARA, BCTADD, BCTSET, BSURF, BSURFS, BCTPARA, BCONP, BLSEG,
-        BFRIC)
+        BFRIC, BCTPARM, BGADD, BGSET)
     from pyNastran.bdf.cards.parametric.geometry import PSET, PVAL, FEEDGE, FEFACE, GMCURV, GMSURF
 
 class AddMethods(BDFAttributes):
@@ -552,6 +552,12 @@ class AddMethods(BDFAttributes):
         self.bcrparas[key] = card
         self._type_to_id_map[card.type].append(key)
 
+    def _add_bgadd_object(self, card: BGADD, allow_overwrites: bool=False) -> None:
+        """adds an BGADD object"""
+        key = card.glue_id
+        self.bgadds[key] = card
+        self._type_to_id_map[card.type].append(key)
+
     def _add_bctadd_object(self, card: BCTADD, allow_overwrites: bool=False) -> None:
         """adds an BCTADD object"""
         key = card.csid
@@ -564,10 +570,22 @@ class AddMethods(BDFAttributes):
         self.bctparas[key] = card
         self._type_to_id_map[card.type].append(key)
 
+    def _add_bctparam_object(self, card: BCTPARM, allow_overwrites: bool=False) -> None:
+        """adds an BCTPARM object"""
+        key = card.csid
+        self.bctparms[key] = card
+        self._type_to_id_map[card.type].append(key)
+
     def _add_bctset_object(self, card: BCTSET, allow_overwrites: bool=False) -> None:
         """adds an BCTSET object"""
         key = card.csid
         self.bctsets[key] = card
+        self._type_to_id_map[card.type].append(key)
+
+    def _add_bgset_object(self, card: BGSET, allow_overwrites: bool=False) -> None:
+        """adds an BGSET object"""
+        key = card.glue_id
+        self.bgsets[key] = card
         self._type_to_id_map[card.type].append(key)
 
     def _add_bconp_object(self, bconp: BCONP) -> None:

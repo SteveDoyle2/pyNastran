@@ -131,7 +131,7 @@ class MPT(GeomCommon):
                 (mid, g1, g2, g3, g4, g5, g6, rho, aj1, aj2, aj3,
                  tref, ge, St, Sc, Ss, mcsid, *blanks) = out
                 mat = MAT2.add_op2_data(out)
-                print(mat)
+                self.log.debug(mat)
             #print("MAT2 = ",out)
 
             if 0 < mid <= 1e8:  # just a checker for out of range materials
@@ -258,7 +258,7 @@ class MPT(GeomCommon):
                  rho, a1, a2, a3, a4, a5, a6, tref, ge,
                  blank1, blank2, blank3, blank4, *blanks) = out
                 self.show_data(data[n:n+ntotal], types='if')
-                print(blanks)
+                self.log.debug(blanks)
             assert blank1 == 0, blank1
             data_in = [mid, [g1, g2, g3, g4, g5, g6, g7, g8, g9, g10,
                              g11, g12, g13, g14, g15, g16, g17, g18, g19, g20, g21],

@@ -117,7 +117,7 @@ def write_floats_8p1e(vals: List[float]) -> List[str]:
 def _eigenvalue_header(obj, header, itime: int, ntimes: int, dt):
     if obj.nonlinear_factor not in (None, np.nan):
         name = obj.data_code['name']
-        if isinstance(dt, (int, np.int32)):
+        if isinstance(dt, (int, np.int32, np.int64)):
             dt_line = ' %14s = %i\n' % (name.upper(), dt)
         elif isinstance(dt, (float, np.float32, np.float64)):
             dt_line = ' %14s = %12.5E\n' % (name, dt)

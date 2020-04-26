@@ -856,6 +856,7 @@ NX_TABLE_CONTENT = {
     #
     # nx 2019.2
     #
+    604 : 'OEFPSD2 - ???',
     605 : 'OSTPSD2C - ???',
     804 : 'OEFRMS1 - ???',
     805 : 'OESXRMS1 - element RMS stresses for random analysis that includes von Mises stress output.',

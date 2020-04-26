@@ -8,12 +8,14 @@ SORT1_TABLES_BYTES = [b'OSTRMS1C', b'OSTNO1C', b'OES1X', b'OSTR1X',
                       b'OES1C', b'OSTR1C',
                       b'OSTRMS1C',
                       b'OESPSD1C',
-                      b'OSTPSD1C', ]
+                      b'OSTPSD1C',
+                      b'OEF1X',
+                      b'OESNLXR']
 SORT2_TABLES_BYTES = [b'OUGPSD2', b'OUGATO2', b'OESCP',
                       b'OES2C', b'OSTR2C',
                       b'OFMPF2M', b'OLMPF2M', b'OPMPF2M', b'OSMPF2M', b'OGPMPF2M',
-                      b'OESPSD2C', b'OSTPSD2C']
-SORT1_TABLES_STR = [name.decode('utf8') for name in SORT1_TABLES_BYTES] # 'OESNLXR'
+                      b'OESPSD2C', b'OSTPSD2C', ]
+SORT1_TABLES_STR = [name.decode('utf8') for name in SORT1_TABLES_BYTES]
 SORT2_TABLES_STR = [name.decode('utf8') for name in SORT2_TABLES_BYTES]
 NO_SORT_METHOD = [b'QHHA']
 
@@ -291,7 +293,11 @@ class Op2Codes:
                 stress_word = 'Stress'
             else:
                 stress_word = 'Strain'
-            s_word = get_scode_word(s_code, self.stress_bits)
+            try:
+                s_word = get_scode_word_assert(s_code, self.stress_bits)
+            except AssertionError:
+                s_word = get_scode_word(s_code, self.stress_bits)
+                s_word += ' (*assert)'
 
         element_type = None
         if hasattr(self, 'element_type'):
@@ -659,49 +665,40 @@ class Op2Codes:
 
     #----
 
+SCODE_MAP = {
+    # word, stress_bits_expected
+    0 : ('Coordinate Element - Stress Max Shear (Octahedral)',       [0, 0, 0, 0, 0]),
+    14: ('Coordinate Element - Strain Fiber Max Shear (Octahedral)', [0, 1, 1, 1, 0]),
+
+    1: ('Coordinate Element - Stress von Mises',                         [0, 0, 0, 0, 1]),
+    10: ('Coordinate Element - Strain Curvature Max Shear (Octahedral)', [0, 1, 0, 1, 0]),
+
+    11: ('Coordinate Element - Strain Curvature von Mises', [0, 1, 0, 1, 1]),
+    15: ('Coordinate Element - Strain Fiber von Mises',     [0, 1, 1, 1, 1]),
+
+    16: ('Coordinate Material - Stress Max Shear (Octahedral)', [1, 0, 0, 0, 0]),
+    17: ('Coordinate Material - Stress von Mises',              [1, 0, 0, 0, 1]),
+
+    26: ('Coordinate Material - Strain Curvature Max Shear', [1, 1, 0, 1, 0]),
+    30: ('Coordinate Material - Strain Fiber Max Shear (Octahedral)', [1, 1, 1, 1, 0]),
+
+    27: ('Coordinate Material - Strain Curvature von Mises', (1, 1, 0, 1, 1)),
+    31: ('Coordinate Material - Strain Fiber von Mises', (1, 1, 1, 1, 1)),
+}
+
+def get_scode_word_assert(s_code: int, stress_bits: List[int]) -> str:
+    try:
+        s_word, stress_bits_expected = SCODE_MAP[s_code]
+        assert stress_bits == stress_bits_expected, f's_code={s_code} stress_bits={stress_bits} != {stress_bits_expected}'
+    except KeyError:
+        #s_word = 'Stress or Strain - UNDEFINED'
+        s_word = '???'
+    return s_word
+
 def get_scode_word(s_code: int, stress_bits: List[int]) -> str:
-    if s_code == 0:
-        s_word = 'Coordinate Element - Stress Max Shear (Octahedral)'
-        assert stress_bits == [0, 0, 0, 0, 0], stress_bits
-    elif s_code == 14:
-        s_word = 'Coordinate Element - Strain Fiber Max Shear (Octahedral)'
-        assert stress_bits == [0, 1, 1, 1, 0], stress_bits
-
-    elif s_code == 1:
-        s_word = 'Coordinate Element - Stress von Mises'
-        assert stress_bits == [0, 0, 0, 0, 1], stress_bits
-    elif s_code == 10:
-        s_word = 'Coordinate Element - Strain Curvature Max Shear (Octahedral)'
-        assert stress_bits == [0, 1, 0, 1, 0], stress_bits
-
-    elif s_code == 11:
-        s_word = 'Coordinate Element - Strain Curvature von Mises'
-        assert stress_bits == [0, 1, 0, 1, 1], stress_bits
-    elif s_code == 15:
-        s_word = 'Coordinate Element - Strain Fiber von Mises'
-        assert stress_bits == [0, 1, 1, 1, 1], stress_bits
-
-    elif s_code == 16:
-        s_word = 'Coordinate Material - Stress Max Shear (Octahedral)'
-        assert stress_bits == [1, 0, 0, 0, 0], stress_bits
-    elif s_code == 17:
-        s_word = 'Coordinate Material - Stress von Mises'
-        assert stress_bits == [1, 0, 0, 0, 1], stress_bits
-
-    elif s_code == 26:
-        s_word = 'Coordinate Material - Strain Curvature Max Shear'
-        assert stress_bits == [1, 1, 0, 1, 0], stress_bits
-    elif s_code == 30:
-        s_word = 'Coordinate Material - Strain Fiber Max Shear (Octahedral)'
-        assert stress_bits == [1, 1, 1, 1, 0], stress_bits
-
-    elif s_code == 27:
-        s_word = 'Coordinate Material - Strain Curvature von Mises'
-        assert stress_bits == (1, 1, 0, 1, 1), stress_bits
-    elif s_code == 31:
-        s_word = 'Coordinate Material - Strain Fiber von Mises'
-        assert stress_bits == (1, 1, 1, 1, 1), stress_bits
-    else:
+    try:
+        s_word, stress_bits_expected = SCODE_MAP[s_code]
+    except KeyError:
         #s_word = 'Stress or Strain - UNDEFINED'
         s_word = '???'
     return s_word

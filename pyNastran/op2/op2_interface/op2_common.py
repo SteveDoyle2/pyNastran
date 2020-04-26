@@ -16,6 +16,8 @@ from pyNastran.op2.op2_interface.op2_codes import (
     Op2Codes, get_scode_word, get_sort_method_from_table_name)
 
 from pyNastran.op2.errors import SortCodeError, MultipleSolutionNotImplementedError
+from pyNastran.op2.op2_interface.sort_bits import SortBits
+
 
 class OP2Common(Op2Codes, F06Writer):
     def __init__(self):
@@ -179,7 +181,10 @@ class OP2Common(Op2Codes, F06Writer):
             elif self.analysis_code == 5:   # frequency
                 assert self.format_code in [1, 2, 3], self.code_information()
                 if self.format_code == 1:
+                    #self.log.warning('updating format code from real to complex (1 -> 2)')
                     self.format_code = 2
+                self.sort_bits.is_complex = 1
+
             elif self.analysis_code == 6:  # transient
                 self.format_code = 1
                 assert self.format_code in [1, 2, 3], self.code_information()
@@ -375,7 +380,6 @@ class OP2Common(Op2Codes, F06Writer):
         superelement_adaptivity_index = get_superelement_adaptivity_index(subtitle, superelement)
         subtitle, superelement_adaptivity_index = update_subtitle_with_adaptivity_index(
             subtitle, superelement_adaptivity_index, adpativity_index)
-
         self.subtitle = subtitle
         self.superelement_adaptivity_index = superelement_adaptivity_index
         assert len(self.label) <= 124, 'len=%s label=%r' % (len(self.label), self.label)
@@ -1891,7 +1895,6 @@ class OP2Common(Op2Codes, F06Writer):
           sort_bits[2] = 0 -> isReal=True   isReal/Imaginary=False
 
         """
-        bits = [0, 0, 0]
         sort_code = self.sort_code
 
         # Sort codes can range from 0 to 7, but most of the examples
@@ -1899,17 +1902,10 @@ class OP2Common(Op2Codes, F06Writer):
         if self.sort_code not in [0, 1, 2, 3, 4, 5, 6, 7]:
             msg = 'Invalid sort_code=%s' % (self.sort_code)
             raise SortCodeError(msg)
-        i = 2
-        while sort_code > 0:
-            value = sort_code % 2
-            sort_code = (sort_code - value) // 2
-            bits[i] = value
-            i -= 1
 
-        # fixing bit[1]
-        bits[1] = 0 if self.is_table_1 else 1
         #: the bytes describe the SORT information
-        self.sort_bits = bits
+        #print(f'sort_code={sort_code} is_table_1={self.is_table_1} {self.table_name_str}')
+        self.sort_bits = SortBits.add_from_sort_code(sort_code, self.is_table_1)
         self.data_code['sort_bits'] = self.sort_bits
 
     @property

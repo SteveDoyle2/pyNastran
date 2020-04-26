@@ -150,7 +150,7 @@ class RandomPlateArray(OES_Object):
         if self.has_von_mises:
             # ovm
             nresults += 1
-
+        #print('has_vm =', self.has_von_mises)
         #print(f'ntimes={self.ntimes} nelements={self.nelements} ntotal={self.ntotal}')
         self.data = zeros((nx, ny, nresults), 'float32')
 
@@ -187,6 +187,7 @@ class RandomPlateArray(OES_Object):
     def __eq__(self, table):  # pragma: no cover
         assert self.is_sort1 == table.is_sort1
         self._eq_header(table)
+        #print(self.element_node.tolist())
         assert self.element_node[:, 0].min() > 0, self.element_node
         assert table.element_node[:, 0].min() > 0, table.element_node
         if not np.array_equal(self.element_node, table.element_node):
@@ -254,7 +255,9 @@ class RandomPlateArray(OES_Object):
         #print(self.element_node)
         #aaa
 
-    def add_sort1(self, dt, eid, nid, fd1, oxx1, oyy1, txy1, fd2, oxx2, oyy2, txy2):
+    def add_sort1(self, dt, eid, nid,
+                  fd1, oxx1, oyy1, txy1,
+                  fd2, oxx2, oyy2, txy2):
         assert self.is_sort1, self.sort_method
         #assert self.element_node.max() == 0, self.element_node
         #if self.element_name in ['CTRIA3', 'CQUAD8']:
@@ -276,7 +279,9 @@ class RandomPlateArray(OES_Object):
         self.fiber_curvature[self.itotal] = fd2
         self.itotal += 1
 
-    def add_sort2(self, dt, eid, nid, fd1, oxx1, oyy1, txy1, fd2, oxx2, oyy2, txy2):
+    def add_sort2(self, dt, eid, nid,
+                  fd1, oxx1, oyy1, txy1,
+                  fd2, oxx2, oyy2, txy2):
         #if self.element_name == 'CTRIA3':
         #assert self.element_node.max() == 0, self.element_node
         #print(self.element_node, nid)

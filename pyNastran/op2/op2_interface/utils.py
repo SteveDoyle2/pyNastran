@@ -115,7 +115,7 @@ def update_subtitle_with_adaptivity_index(subtitle, superelement_adaptivity_inde
         )
         #print('adpativity_index = %r' % adpativity_index.strip())
         if adpativity_index2.isdigit():
-            print(adpativity_index2)
+            #print(adpativity_index2)
             subtitle2 = '%s; %s' % (subtitle, adpativity_index2)
             superelement_adaptivity_index = adpativity_index2
         else:

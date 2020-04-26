@@ -518,11 +518,14 @@ class WriteMesh(BDFAttributes):
         """Writes the contact cards sorted by ID"""
         is_contact = (self.bcrparas or self.bctadds or self.bctparas
                       or self.bctsets or self.bsurf or self.bsurfs
-                      or self.bconp or self.blseg or self.bfric)
+                      or self.bconp or self.blseg or self.bfric
+                      or self.bgadds or self.bgsets or self.bctparms)
         if is_contact:
             bdf_file.write('$CONTACT\n')
             for (unused_id, bcrpara) in sorted(self.bcrparas.items()):
                 bdf_file.write(bcrpara.write_card(size, is_double))
+            for (unused_id, bctparam) in sorted(self.bctparms.items()):
+                bdf_file.write(bctparam.write_card(size, is_double))
             for (unused_id, bctadds) in sorted(self.bctadds.items()):
                 bdf_file.write(bctadds.write_card(size, is_double))
             for (unused_id, bctpara) in sorted(self.bctparas.items()):
@@ -540,6 +543,10 @@ class WriteMesh(BDFAttributes):
                 bdf_file.write(blseg.write_card(size, is_double))
             for (unused_id, bfric) in sorted(self.bfric.items()):
                 bdf_file.write(bfric.write_card(size, is_double))
+            for (unused_id, bgadd) in sorted(self.bgadds.items()):
+                bdf_file.write(bgadd.write_card(size, is_double))
+            for (unused_id, bgset) in sorted(self.bgsets.items()):
+                bdf_file.write(bgset.write_card(size, is_double))
 
     def _write_coords(self, bdf_file: Any, size: int=8, is_double: bool=False,
                       is_long_ids: Optional[bool]=None) -> None:
