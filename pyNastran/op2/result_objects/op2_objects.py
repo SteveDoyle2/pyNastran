@@ -827,6 +827,7 @@ def _check_element(table1: BaseElement, table2: BaseElement, log: SimpleLogger):
         if nshape == 1:
             msg = (f'{table1}\ntable_name={table1.table_name}\n'
                       f'eids={element.tolist()}.min = {eid_min}')
+            log.error(msg)
         else:
             if table1.table_name not in ['ONRGY1', 'ONRGY2']:
                 msg = f'table_name = {table1.table_name}\n'
@@ -834,7 +835,7 @@ def _check_element(table1: BaseElement, table2: BaseElement, log: SimpleLogger):
                     eid_min = eidsi.min()
                     if eid_min <= 0:
                         msg += f'{table1}\neids[{i}]={eidsi.tolist()}.min = {eid_min}\n'
-        log.error(msg)
+                log.error(msg)
 
 def _check_element_node(table1: BaseElement, table2: BaseElement, log: SimpleLogger):
     """checks the ``element_node`` variable"""
