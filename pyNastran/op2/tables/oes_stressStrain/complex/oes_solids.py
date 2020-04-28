@@ -205,10 +205,7 @@ class ComplexSolidArray(OES_Object):
         #self.itotal += 1
 
     def add_node_sort1(self, dt, eid, grid, inode, ex, ey, ez, etxy, etyz, etzx):
-        if self.result_flag == 0:
-            self.data[self.itime, self.itotal, :] = [ex, ey, ez, etxy, etyz, etzx]
-        else:
-            self.data[self.itime, self.itotal, 0] = ex
+        self.data[self.itime, self.itotal, :] = [ex, ey, ez, etxy, etyz, etzx]
         self.element_node[self.itotal, :] = [eid, grid]
         self.itotal += 1
 

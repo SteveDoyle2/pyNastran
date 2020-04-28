@@ -343,6 +343,16 @@ class OP2(OP2_Scalar, OP2Writer):
             raise RuntimeError(f'mode={mode!r} and must be in [msc, nx, '
                                f'autodesk, nasa95, optistruct]')
 
+    def to_nx(self) -> None:
+        if self.is_msc:
+            self.log.warning('switching to NX')
+            self.set_as_nx()
+
+    def to_msc(self) -> None:
+        if self.is_nx:
+            self.log.warning('switching to MSC')
+            self.set_as_msc()
+
     def include_exclude_results(self,
                                 exclude_results: Optional[List[str]]=None,
                                 include_results: Optional[List[str]]=None) -> None:

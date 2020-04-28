@@ -313,15 +313,7 @@ class OEF(OP2Common):
 
         self.fix_format_code()
         self._parse_thermal_code()
-        try:
-            self.element_name = self.element_mapper[self.element_type]
-        except KeyError:
-            self.log.error(self.code_information())
-            raise
-        assert self.element_name != '', self.code_information()
-
-        #self.element_name = self.element_mapper[self.element_type]
-        self.data_code['element_name'] = self.element_name
+        self._set_force_stress_element_name()
 
         if self.is_debug_file:
             self.binary_debug.write('  %-14s = %r\n' % ('element_name', self.element_name))
@@ -339,6 +331,28 @@ class OEF(OP2Common):
         assert self.num_wide != 146, self.code_information()
         #print('OEF-%s' % self.element_name)
         #self._check_result_type()
+
+    def _set_force_stress_element_name(self):
+        """
+        Not all cards can have OES/OEF output, so if they do, 
+        we have in the wrong solver, specifically:
+        - RBAR
+
+        """
+        try:
+            self.element_name = self.element_mapper[self.element_type]
+        except KeyError:
+            self.log.error(self.code_information())
+            raise
+
+        if self.element_type == 227 and self.element_name == 'RBAR' and self.is_msc:
+            self.log.warning('setting to NX')
+            self.set_as_nx()
+            self.set_table_type()
+            self.element_name = self.element_mapper[self.element_type]
+        assert self.element_name != '', self.code_information()
+
+        self.data_code['element_name'] = self.element_name
 
     def _read_oef2_3(self, data, unused_ndata):
         """Table 3 parser for OEF2 table"""
@@ -424,7 +438,7 @@ class OEF(OP2Common):
             raise RuntimeError(msg)
 
         self._fix_oes_sort2(data)
-        self._set_element_name()
+        self._set_force_stress_element_name()
         #assert isinstance(self.nonlinear_factor, int), self.nonlinear_factor
         #self._check_result_type()
 
@@ -1281,25 +1295,33 @@ class OEF(OP2Common):
             # 21-CDAMP2
             # 22-CDAMP3
             # 23-CDAMP4
-            n, nelements, ntotal = self._oef_celas_cdamp(data, ndata, dt, is_magnitude_phase, prefix, postfix)
+            n, nelements, ntotal = self._oef_celas_cdamp(data, ndata, dt, is_magnitude_phase,
+                                                         prefix, postfix)
 
         elif self.element_type == 24:  # CVISC
-            n, nelements, ntotal = self._oef_cvisc(data, ndata, dt, is_magnitude_phase, prefix, postfix)
+            n, nelements, ntotal = self._oef_cvisc(data, ndata, dt, is_magnitude_phase,
+                                                   prefix, postfix)
 
         elif self.element_type == 34:  # cbar
             # 34-CBAR
-            n, nelements, ntotal = self._oef_cbar_34(data, ndata, dt, is_magnitude_phase, prefix, postfix)
+            n, nelements, ntotal = self._oef_cbar_34(data, ndata, dt, is_magnitude_phase,
+                                                     prefix, postfix)
 
         elif self.element_type == 100:  # cbar
             #100-BARS
-            n, nelements, ntotal = self._oef_cbar_100(data, ndata, dt, is_magnitude_phase, prefix, postfix)
+            n, nelements, ntotal = self._oef_cbar_100(data, ndata, dt, is_magnitude_phase,
+                                                      prefix, postfix)
 
-        elif self.element_type in [33, 74, 227, 228]: # centroidal shells
+        elif self.element_type in [33, 74]:  # centroidal shells
             # 33-CQUAD4
             # 74-CTRIA3
+            n, nelements, ntotal = self._oef_shells_centroidal(data, ndata, dt, is_magnitude_phase,
+                                                               prefix, postfix)
+        elif self.is_nx and self.element_type in [227, 228]:  # centroidal shells
             # 227-CTRIAR? (C:\MSC.Software\simcenter_nastran_2019.2\tpl_post1\cqrdbx102.op2)
             # 228-CQUADR
-            n, nelements, ntotal = self._oef_shells_centroidal(data, ndata, dt, is_magnitude_phase, prefix, postfix)
+            n, nelements, ntotal = self._oef_shells_centroidal(data, ndata, dt, is_magnitude_phase,
+                                                               prefix, postfix)
 
         elif self.element_type in [64, 70, 75, 82, 144]: # bilinear shells
             # 64-CQUAD8
@@ -1307,13 +1329,17 @@ class OEF(OP2Common):
             # 75-CTRIA6
             # 82-CQUADR
             # 144-CQUAD4-bilinear
-            n, nelements, ntotal = self._oef_shells_nodal(data, ndata, dt, is_magnitude_phase, prefix, postfix)
+            n, nelements, ntotal = self._oef_shells_nodal(data, ndata, dt, is_magnitude_phase,
+                                                          prefix, postfix)
 
-        elif self.element_type in [95, 96, 97, 98, 232, 233]: # composites
+        elif self.element_type in [95, 96, 97, 98]: # composites
             # 95 - CQUAD4
             # 96 - CQUAD8
             # 97 - CTRIA3
             # 98 - CTRIA6 (composite)
+            n, nelements, ntotal = self._oef_shells_composite(data, ndata, dt, is_magnitude_phase,
+                                                              prefix, postfix)
+        elif self.is_nx and self.element_type in [232, 233]: # composites
             # 232 - CQUADR
             # 233 - CTRIAR
             n, nelements, ntotal = self._oef_shells_composite(data, ndata, dt, is_magnitude_phase,
@@ -1347,28 +1373,34 @@ class OEF(OP2Common):
             #return ndata
 
         elif self.element_type == 4:  # cshear
-            n, nelements, ntotal = self._oef_cshear(data, ndata, dt, is_magnitude_phase, prefix, postfix)
+            n, nelements, ntotal = self._oef_cshear(data, ndata, dt, is_magnitude_phase,
+                                                    prefix, postfix)
 
         elif self.element_type == 35:  # coneax
-            n, nelements, ntotal = self._oef_cconeax(data, ndata, dt, is_magnitude_phase, prefix, postfix)
+            n, nelements, ntotal = self._oef_cconeax(data, ndata, dt, is_magnitude_phase,
+                                                     prefix, postfix)
 
         elif self.element_type == 38:  # cgap
-            n, nelements, ntotal = self._oef_cgap(data, ndata, dt, is_magnitude_phase, prefix, postfix)
+            n, nelements, ntotal = self._oef_cgap(data, ndata, dt, is_magnitude_phase,
+                                                  prefix, postfix)
 
         elif self.element_type == 69:  # cbend
-            n, nelements, ntotal = self._oef_cbend(data, ndata, dt, is_magnitude_phase, prefix, postfix)
+            n, nelements, ntotal = self._oef_cbend(data, ndata, dt, is_magnitude_phase,
+                                                   prefix, postfix)
 
         elif self.element_type in [76, 77, 78, 79]:
             # 76-HEXPR
             # 77-PENPR
             # 78-TETPR
             # 79-CPYRAM
-            n, nelements, ntotal = self._oef_csolid_pressure(data, ndata, dt, is_magnitude_phase, prefix, postfix)
+            n, nelements, ntotal = self._oef_csolid_pressure(data, ndata, dt, is_magnitude_phase,
+                                                             prefix, postfix)
 
         elif self.element_type in [102, 280]:
             # 102: cbush
             # 280: cbear
-            n, nelements, ntotal = self._oef_cbush(data, ndata, dt, is_magnitude_phase, prefix, postfix)
+            n, nelements, ntotal = self._oef_cbush(data, ndata, dt, is_magnitude_phase,
+                                                   prefix, postfix)
 
         elif self.element_type in [145, 146, 147]:
             # 145-VUHEXA
@@ -1379,14 +1411,17 @@ class OEF(OP2Common):
             return ndata
 
         elif self.element_type in [189, 190]:
-            n, nelements, ntotal = self._oef_vu_shell(data, ndata, dt, is_magnitude_phase, prefix, postfix)
+            n, nelements, ntotal = self._oef_vu_shell(data, ndata, dt, is_magnitude_phase,
+                                                      prefix, postfix)
 
         elif self.element_type == 191:
-            n, nelements, ntotal = self._oef_vu_beam(data, ndata, dt, is_magnitude_phase, prefix, postfix)
+            n, nelements, ntotal = self._oef_vu_beam(data, ndata, dt, is_magnitude_phase,
+                                                     prefix, postfix)
 
         elif self.element_type == 126 and self.is_msc:
             # 119-CFAST-MSC
-            n, nelements, ntotal = self._oef_cbush(data, ndata, dt, is_magnitude_phase, prefix, postfix)
+            n, nelements, ntotal = self._oef_cbush(data, ndata, dt, is_magnitude_phase,
+                                                   prefix, postfix)
         elif self.element_type == 119 and self.is_nx:
             # 119-CFAST-NX
             n, nelements, ntotal = self._oef_cbar_34(data, ndata, dt, is_magnitude_phase,
@@ -2179,6 +2214,7 @@ class OEF(OP2Common):
         228-CQUADR
 
         """
+        assert self.element_name != 'RBAR', self.code_information()
         n = 0
         if self.element_type == 33:
             result_name = prefix + 'cquad4_force' + postfix
