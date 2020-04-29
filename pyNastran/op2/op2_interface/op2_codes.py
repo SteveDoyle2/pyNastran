@@ -1,4 +1,5 @@
 from typing import List, Tuple, Union, Optional
+from pyNastran.op2.op2_interface.function_codes import func7
 from pyNastran.op2.op2_interface.nx_tables import NX_ELEMENTS, NX_TABLE_CONTENT
 from pyNastran.op2.op2_interface.msc_tables import MSC_ELEMENTS, MSC_TABLE_CONTENT
 
@@ -261,6 +262,7 @@ class Op2Codes:
 
         This is not the same thing as SOL 101.  SOL 101 (linear statics)
         and SOL 144 (aero-statics) are both statics.
+
         """
         return ''
 
@@ -268,6 +270,7 @@ class Op2Codes:
         """
         prints the general table information
         DMAP - page 60-63
+
         """
         device_code = self.device_code
         #analysis_code = self.analysis_code
@@ -275,8 +278,10 @@ class Op2Codes:
         sort_code = self.sort_code
 
         format_code = None
+        result_type = None
         if hasattr(self, 'format_code'):
             format_code = self.format_code
+            result_type = func7(self.tCode)
 
         s_code = None
         if hasattr(self, 's_code'):
@@ -303,19 +308,8 @@ class Op2Codes:
         if hasattr(self, 'element_type'):
             element_type = self.element_type
 
-        format_word = '???'
-        if format_code == 1:
-            format_word = "Real"
-        elif format_code == 2:
-            format_word = "Real/Imaginary"
-        elif format_code == 3:
-            format_word = "Magnitude/Phase"
-        else:
-            format_word = '\n%18s1 - Real\n' % ''
-            format_word += '%18s2 - Real/Imaginary\n' % ''
-            format_word += '%18s3 - Magnitude/Phase\n' % ''
-            #msg = 'unsupported format_code:  format_code=%s\n' % format_code
-            #raise InvalidFormatCodeError(msg)
+        format_word = get_format_word(format_code)
+        result_word = get_result_word(result_type)
 
         if self.sort_bits[0] == 0:
             sort_word1 = 'Real'
@@ -380,10 +374,14 @@ class Op2Codes:
         msg += "  analysis_code = %-3s %s\n" % (analysis_code, analysis)
         msg += "  table_code    = %-3s %s-%s\n" % (self_table_code, self.table_name_str, table)
         msg += "  format_code   = %-3s %s\n" % (format_code, format_word)
+        msg += "  result_type   = %-3s %s\n" % (result_type, result_word)
 
-        msg += "  sort_method   = %s\n" % self.sort_method
-        msg += "  sort_code     = %s\n" % self.sort_code
-        msg += "    sort_bits   = (%s, %s, %s)\n" % tuple(self.sort_bits)
+        msg += (
+            f'  sort_method   = {self.sort_method}\n'
+            f'  sort_code     = {self.sort_code}\n'
+            f'    sort_bits   = {tuple(self.sort_bits)}\n'
+        )
+        #msg += "    sort_bits   = (%s, %s, %s)\n" % tuple(self.sort_bits)
         msg += "    data_format = %-3s %s\n" % (self.sort_bits[0], sort_word1)
         msg += "    sort_type   = %-3s %s\n" % (self.sort_bits[1], sort_word2)
         msg += "    is_random   = %-3s %s\n" % (self.sort_bits[2], sort_word3)
@@ -797,3 +795,36 @@ def _adjust_table_code(table_code: int) -> int:
     elif table_code in [901, 910, 911]:
         table_code -= 900
     return table_code
+
+def get_format_word(format_code: int) -> str:
+    format_word = '???'
+    if format_code == 1:
+        format_word = "Real"
+    elif format_code == 2:
+        format_word = "Real/Imaginary"
+    elif format_code == 3:
+        format_word = "Magnitude/Phase"
+    else:
+        format_word = '\n%18s1 - Real\n' % ''
+        format_word += '%18s2 - Real/Imaginary\n' % ''
+        format_word += '%18s3 - Magnitude/Phase\n' % ''
+        #msg = 'unsupported format_code:  format_code=%s\n' % format_code
+        #raise InvalidFormatCodeError(msg)
+    return format_word
+
+def get_result_word(result_type: int) -> str:
+    result_word = '???'
+    if result_type == 0:
+        result_word = "Real"
+    elif result_type == 1:
+        result_word = "Real/Imaginary"
+    elif result_type == 2:
+        result_word = "Magnitude/Phase"
+    else:
+        result_word = '\n%18s1 - Real\n' % ''
+        result_word += '%18s2 - Complex\n' % ''
+        result_word += '%18s3 - Random\n' % ''
+        #msg = 'unsupported format_code:  format_code=%s\n' % format_code
+        #raise InvalidFormatCodeError(msg)
+    return result_word
+

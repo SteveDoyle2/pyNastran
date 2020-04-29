@@ -976,6 +976,11 @@ class OP2_F06_Common:
         self.mpc_forces_RAQCONS = {}
         self.mpc_forces_RAQEATC = {}
 
+        self.contact_forces = {} # OQGCF1
+        self.contact_tractions_and_pressure = {}  # OBC1
+
+        self.glue_forces = {} # OQGGF1
+
         # OQG - thermal forces
         self.thermal_gradient_and_flux = {}
 
@@ -1082,6 +1087,8 @@ class OP2_F06_Common:
             # OQG - spc/mpc forces
             'spc_forces', 'spc_forces_v', 'spc_forces_scaled_response_spectra_nrl',
             'mpc_forces', 'mpc_forces_RAQCONS', 'mpc_forces_RAQEATC',
+            'contact_forces', 'contact_tractions_and_pressure',
+            'glue_forces',
             'thermal_gradient_and_flux',
 
             # OGF - grid point forces

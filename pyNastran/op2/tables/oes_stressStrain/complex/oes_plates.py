@@ -296,7 +296,7 @@ class ComplexPlateArray(OES_Object):
             #ny = self.ntotal
             #print("ntimes=%s nlayers=%s" % (ntimes, nlayers))
         if self.is_sort2:
-            unused_ntotal = self.ntotal
+            #unused_ntotal = self.ntotal
             nelements = self.ntimes
             #print('self.nnodes_per_element =', self.nnodes_per_element)
             nlayers = nelements * 2 * self.nnodes_per_element
@@ -305,10 +305,6 @@ class ComplexPlateArray(OES_Object):
 
         self._times = zeros(ntimes, dtype=dtype)
         #self.ntotal = self.nelements * nnodes
-
-        # TODO: could be more efficient by using nelements for cid
-        self.element_node = zeros((nlayers, 2), dtype=idtype)
-        #self.element_cid = zeros((self.nelements, 2), 'int32')
 
         # the number is messed up because of the offset for the element's properties
 
@@ -321,11 +317,18 @@ class ComplexPlateArray(OES_Object):
         self.fiber_curvature = zeros(nlayers, 'float32')
 
         if self.has_von_mises:
+            nelement_nodes = nelements * 2
+            #nelement_nodes = nelements
             # [oxx, oyy, txy, ovm]
             self.data = zeros((ntimes, nlayers, 4), dtype=cfdtype)
         else:
             # [oxx, oyy, txy]
+            nelement_nodes = nlayers
             self.data = zeros((ntimes, nlayers, 3), 'complex64')
+
+        # TODO: could be more efficient by using nelements for cid
+        self.element_node = zeros((nelement_nodes, 2), dtype=idtype)
+        #self.element_cid = zeros((self.nelements, 2), 'int32')
 
     def build_dataframe(self) -> None:
         """creates a pandas dataframe"""

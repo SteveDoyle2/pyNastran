@@ -7,6 +7,7 @@ import numpy as np
 from pyNastran import is_release
 from pyNastran.op2.errors import FatalError
 from pyNastran.f06.f06_writer import F06Writer
+from pyNastran.op2.op2_interface.function_codes import func7
 from pyNastran.op2.op2_helper import polar_to_real_imag
 from pyNastran.op2.op2_interface.utils import (
     build_obj, get_superelement_adaptivity_index, update_subtitle_with_adaptivity_index,
@@ -162,15 +163,24 @@ class OP2Common(Op2Codes, F06Writer):
         """
         self._set_times_dtype()
         self.format_code_original = self.format_code
-        if self.format_code == -1:
-            if self.is_debug_file:
-                self.op2_reader._write_ndata(self.binary_debug, 100)
-            if self.table_name in [b'OESNLXR', b'OESNLBR', b'OESNLXD', b'OESNL1X', b'OESNLBR2']:
-                assert self.format_code == -1, self.format_code
-                self.format_code = 1
-            else:
-                raise RuntimeError(self.code_information())
-            #return
+        if 1:
+            #print(self.format_code_original)
+            #print(self.code_information())
+            #print('tCode =', self.tCode)
+            result_type = func7(self.tCode)
+            #print('result_type (func7) =', result_type)
+            assert result_type in [0, 1, 2], f'result_type={result_type}\n{self.code_information()}'
+            self.format_code = result_type + 1
+        else:  # old
+            if self.format_code == -1:
+                if self.is_debug_file:
+                    self.op2_reader._write_ndata(self.binary_debug, 100)
+                if self.table_name in [b'OESNLXR', b'OESNLBR', b'OESNLXD', b'OESNL1X', b'OESNLBR2']:
+                    assert self.format_code == -1, self.format_code
+                    self.format_code = 1
+                else:
+                    raise RuntimeError(self.code_information())
+                #return
 
         random_code = self.random_code if hasattr(self, 'random_code') else 0
         #if self.format_code == 0:

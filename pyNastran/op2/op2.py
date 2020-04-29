@@ -347,6 +347,7 @@ class OP2(OP2_Scalar, OP2Writer):
         if self.is_msc:
             self.log.warning('switching to NX')
             self.set_as_nx()
+            self.set_table_type()
 
     def to_msc(self) -> None:
         if self.is_nx:

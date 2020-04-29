@@ -825,7 +825,7 @@ NX_TABLE_CONTENT = {
     64 : 'OSPDSI - Contact Separation Distance - Initial',
     65 : 'OSPDS - Contact Separation Distance',
     66 : 'OBG - Glue force results (normal and in-plane tractions)',
-    #67 : 'OQG - Glue force results',
+    67 : 'OQG - Glue force results ???',
     68 : 'ELRSCALV - Tosca normalized material properties',
     69 : 'OERP - Element equivalent radiated power (panel output)',
     70 : 'OERPEL - Element equivalent radiated power (element output)',

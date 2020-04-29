@@ -132,6 +132,7 @@ DESIRED_RESULTS = [
     # ---------
     'displacements', 'velocities', 'accelerations', 'temperatures',
     'constraint_forces', 'spc_forces', 'mpc_forces', 'eigenvectors',
+    'contact_forces', 'glue_forces',
 
     #'gridPointForces',
     #'stress',

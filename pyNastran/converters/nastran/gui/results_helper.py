@@ -1103,6 +1103,9 @@ def _fill_nastran_displacements(cases, model: OP2, key, icase: int,
             (model.spc_forces, 'SPC Forces', False),
             (model.mpc_forces, 'MPC Forces', False),
 
+            (model.contact_forces, 'Contact Forces', False),
+            (model.glue_forces, 'Glue Forces', False),
+
             (model.load_vectors, 'LoadVectors', False),
             (model.applied_loads, 'AppliedLoads', False),
             (model.force_vectors, 'ForceVectors', False),

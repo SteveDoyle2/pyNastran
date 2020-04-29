@@ -913,24 +913,31 @@ class OP2_Scalar(LAMA, ONR, OGPF,
 
             #=======================
             # contact
-            b'OQGCF1' : [self._table_passer, self._table_passer], # Contact force at grid point.
-            b'OQGCF2' : [self._table_passer, self._table_passer], # Contact force at grid point.
+            b'OQGCF1' : [self._read_oqg1_3, self._read_oqg_4], # Contact force at grid point.
+            b'OQGCF2' : [self._read_oqg2_3, self._read_oqg_4], # Contact force at grid point.
 
-            b'OSPDS1' : [self._table_passer, self._table_passer],  # Final separation distance.
-            b'OSPDS2' : [self._table_passer, self._table_passer],
+            b'OSPDS1' : [self._nx_table_passer, self._table_passer],  # Final separation distance.
+            b'OSPDS2' : [self._nx_table_passer, self._table_passer],
 
-            b'OSPDSI1' : [self._table_passer, self._table_passer], # Initial separation distance.
-            b'OSPDSI2' : [self._table_passer, self._table_passer], # Output contact separation distance results.
+            b'OSPDSI1' : [self._nx_table_passer, self._table_passer], # Initial separation distance.
+            b'OSPDSI2' : [self._nx_table_passer, self._table_passer], # Output contact separation distance results.
 
-            b'OBC1' : [self._table_passer, self._table_passer],
-            b'OBC2' : [self._table_passer, self._table_passer], # Contact pressures and tractions at grid points.
+            b'OBC1' : [self._read_obc1_3, self._read_obc1_4],
+            b'OBC2' : [self._nx_table_passer, self._table_passer], # Contact pressures and tractions at grid points.
+
+            b'OSLIDE1'
 
             # Glue normal and tangential tractions at grid point in basic coordinate system
-            b'OBG1' : [self._table_passer, self._table_passer],
-            b'OBG2' : [self._table_passer, self._table_passer],
+            b'OBG1' : [self._nx_table_passer, self._table_passer],
+            b'OBG2' : [self._nx_table_passer, self._table_passer],
 
-            b'OQGGF1' : [self._table_passer, self._table_passer], # Glue forces at grid point in basic coordinate system
-            b'OQGGF2' : [self._table_passer, self._table_passer],
+            b'OQGGF1' : [self._read_oqg1_3, self._read_oqg_4], # Glue forces at grid point in basic coordinate system
+            b'OQGGF2' : [self._read_oqg2_3, self._read_oqg_4],
+
+            # Table of Euler Angles for transformation from material to basic coordinate system
+            # in the undeformed configuration
+            b'TRMBU' : [self._nx_table_passer, self._table_passer],
+            b'TRMBD' : [self._nx_table_passer, self._table_passer],
             #=======================
             # OGPWG
             # grid point weight
@@ -1430,7 +1437,12 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             raise NotImplementedError(self.table_name)
         return ndata
 
-    def _table_passer(self, data, ndata):
+    def _nx_table_passer(self, data, ndata: int):
+        """auto-table skipper"""
+        self.to_nx()
+        self._table_passer(data, ndata)
+
+    def _table_passer(self, data, ndata: int):
         """auto-table skipper"""
         if self.is_debug_file:
             self.binary_debug.write('  skipping table = %s\n' % self.table_name)

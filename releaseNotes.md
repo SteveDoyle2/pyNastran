@@ -9,6 +9,29 @@ If you have a bug/want a new feature or card, leave some feedback on the [Issue 
 Release Notes
 =============
 
+v1.3.3 (2020/?/?)
+-----------------
+Programmatics:
+ - Supports Python 3.7 and 3.8
+ - Dropping Python 2.7 and 3.6 support
+ - GUI is compatible with PyQt5 and PySide2
+
+BDF:
+ - new cards:
+   - BGSET, BGADD, BCTPARM
+
+OP2:
+ - improved NX 64-bit support
+ - new results (NX):
+   - random sort2
+     - CTRIA3
+     - CQUAD4 (5-nodes)
+     - CTRIA6
+   - glue_forces
+   - contact_tractions_and_pressures
+   - contact_forces
+ -
+
 v1.3.2 (2020/4/8)
 -----------------
 With Python 2 now officially dead, it's time for a new feature to encourage people to switch.

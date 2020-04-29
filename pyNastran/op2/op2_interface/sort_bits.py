@@ -1,8 +1,16 @@
 #from collections import namedtuple
 #SortBits = namedtuple('SortBits', ['is_sort1', 'is_real', 'is_random'])
+SORT_MAP = {
+    1: 1,
+    0: 0,
+    True: 1,
+    False: 0,
+}
 INV_MAP = {
     1: 0,
     0: 1,
+    True: 0,
+    False: 1,
 }
 class SortBits(list):
     """
@@ -50,13 +58,13 @@ class SortBits(list):
         return INV_MAP[self.is_complex]
     @property
     def is_complex(self) -> int:
-        return self[0]
+        return SORT_MAP[self[0]]
     @is_real.setter
     def is_real(self, value: int) -> int:
         self[0] = INV_MAP[value]
     @is_complex.setter
     def is_complex(self, value) -> int:
-        self[0] = value
+        self[0] = SORT_MAP[value]
 
     @property
     def is_sort1(self) -> int:
@@ -66,17 +74,17 @@ class SortBits(list):
         self[1] = INV_MAP[value]
     @property
     def is_sort2(self) -> int:
-        return self[1]
+        return SORT_MAP[self[1]]
     @is_sort2.setter
     def is_sort2(self, value: int) -> int:
-        self[1] = value
+        self[1] = SORT_MAP[value]
 
     @property
     def is_random(self) -> int:
         return self[2]
     @is_random.setter
     def is_random(self, value: int) -> int:
-        self[2] = value
+        self[2] = SORT_MAP[value]
 
     def __repr__(self):
         return f'SortBits(is_complex={self[0]}, is_sort2={self[1]}, is_random={self[2]})'

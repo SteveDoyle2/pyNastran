@@ -10,11 +10,13 @@ This file defines the OUG Table, which contains:
 """
 import numpy as np
 from pyNastran.op2.op2_interface.op2_common import OP2Common
+from pyNastran.op2.op2_interface.op2_reader import mapfmt
 
 from pyNastran.op2.tables.oqg_constraintForces.oqg_spc_forces import (
     RealSPCForcesArray, ComplexSPCForcesArray,)
 from pyNastran.op2.tables.oqg_constraintForces.oqg_mpc_forces import (
     RealMPCForcesArray, ComplexMPCForcesArray,)
+from pyNastran.op2.tables.oqg_constraintForces.oqg_contact_forces import RealContactForcesArray
 from pyNastran.op2.tables.oqg_constraintForces.oqg_thermal_gradient_and_flux import (
     RealTemperatureGradientAndFluxArray)
 
@@ -332,6 +334,12 @@ class OQG(OP2Common):
         elif self.table_name in [b'RAQEATC', b'RAQCONS']:
             # self.table_code == 5 and
             n = self._read_oqg_mpc_forces(data, ndata)
+        elif self.table_code == 63:   # Contact Forces
+            assert self.table_name in [b'OQGCF1'], self.code_information()
+            n = self._oqg_read_contact_forces(data, ndata)
+        elif self.table_code == 67:   # Glue Forces
+            assert self.table_name in [b'OQGGF1', b'OQGGF2'], self.code_information()
+            n = self._oqg_read_glue_forces(data, ndata)
         else:
             raise RuntimeError(self.code_information())
         return n
@@ -415,6 +423,60 @@ class OQG(OP2Common):
             self._results._found_result(result_name)
             n = self._read_table_vectorized(data, ndata, result_name, storage_obj,
                                             RealMPCForcesArray, ComplexMPCForcesArray,
+                                            'node', random_code=self.random_code)
+        else:
+            raise RuntimeError(self.code_information())
+            #msg = 'thermal=%s' % self.thermal
+            #return self._not_implemented_or_skip(data, ndata, msg)
+        assert isinstance(n, int), 'table_name=%s n=%s' % (self.table_name, n)
+        return n
+
+    def _oqg_read_contact_forces(self, data, ndata):
+        """
+        table_code = 63
+        """
+        self.to_nx()
+        #self._setup_op2_subcase('MPCFORCES')
+        if self.table_name in [b'OQGCF1']:
+            result_name = 'contact_forces'
+        else:  # pragma: no cover
+            msg = 'contact_forces; table_name=%s' % self.table_name
+            raise NotImplementedError(msg)
+
+        storage_obj = self.get_result(result_name)
+        if self.thermal == 0:
+            if self._results.is_not_saved(result_name):
+                return ndata
+            self._results._found_result(result_name)
+            n = self._read_table_vectorized(data, ndata, result_name, storage_obj,
+                                            RealContactForcesArray, None,
+                                            'node', random_code=self.random_code)
+        else:
+            raise RuntimeError(self.code_information())
+            #msg = 'thermal=%s' % self.thermal
+            #return self._not_implemented_or_skip(data, ndata, msg)
+        assert isinstance(n, int), 'table_name=%s n=%s' % (self.table_name, n)
+        return n
+
+    def _oqg_read_glue_forces(self, data, ndata):
+        """
+        table_code = 67
+        """
+        self.to_nx()
+        #self._setup_op2_subcase('MPCFORCES')
+        if self.table_name in [b'OQGGF1', b'OQGGF2']:
+            result_name = 'glue_forces'
+        else:  # pragma: no cover
+            msg = 'glue_forces; table_name=%s' % self.table_name
+            raise NotImplementedError(msg)
+
+        storage_obj = self.get_result(result_name)
+        if self.thermal == 0:
+            if self._results.is_not_saved(result_name):
+                return ndata
+            self._results._found_result(result_name)
+            n = self._read_table_vectorized(data, ndata, result_name, storage_obj,
+                                            RealContactForcesArray, None,
                                             'node', random_code=self.random_code)
         else:
             raise RuntimeError(self.code_information())
@@ -682,3 +744,195 @@ class OQG(OP2Common):
                                     random_code=self.random_code)
         assert n is not None, n
         return n
+
+    def _read_obc1_3(self, data: bytes, ndata: int):
+        self.to_nx()
+        self.nonlinear_factor = np.nan #None
+        self.is_table_1 = True
+        self.is_table_2 = False
+        unused_three = self.parse_approach_code(data)
+        self.words = [
+            'analysis_code', 'table_code', '???', 'isubcase',
+            '???', '???', '???', 'random_code',
+            'format_code', 'num_wide', '11', '12',
+            '???', '???', '???', '???',
+            '???', '???', '???', '???',
+            '???', '???', '???', '???',
+            '???', 'Title', 'subtitle', 'label']
+
+        ## random code
+        self.random_code = self.add_data_parameter(data, 'random_code', b'i', 8, False)
+
+        ## format code
+        self.format_code = self.add_data_parameter(data, 'format_code', b'i', 9, False)
+
+        ## number of words per entry in record
+        self.num_wide = self.add_data_parameter(data, 'num_wide', b'i', 10, False)
+
+        #12 PID I Physical property
+        #28 BLTSEQID I Bolt sequence
+        self.pid = self.add_data_parameter(data, 'pid', b'i', 12, False)
+        self.bolt_seq_id = self.add_data_parameter(data, 'bolt_seq_id', b'i', 28, False)
+
+        if not self.is_sort1:
+            raise NotImplementedError('SORT2; code_info=\n%s' % self.code_information())
+        #assert self.isThermal()==False,self.thermal
+
+        ## assuming tCode=1
+        if self.analysis_code == 1:   # statics / displacement / heat flux
+            ## load set number
+            self.lsdvmn = self.add_data_parameter(data, 'lsdvmn', b'i', 5, False)
+            self.data_names = self.apply_data_code_value('data_names', ['lsdvmn'])
+            self.setNullNonlinearFactor()
+        #elif self.analysis_code == 2:  # real eigenvalues
+            ### mode number
+            #self.mode = self.add_data_parameter(data, 'mode', b'i', 5)
+            ### eigenvalue
+            #self.eign = self.add_data_parameter(data, 'eign', b'f', 6, False)
+            ### mode or cycle .. todo:: confused on the type - F1???
+            #self.mode_cycle = self.add_data_parameter(data, 'mode_cycle', b'f', 7, False)
+            #self.update_mode_cycle('mode_cycle')
+            #self.data_names = self.apply_data_code_value('data_names',
+                                                         #['mode', 'eign', 'mode_cycle'])
+        #elif self.analysis_code == 3: # differential stiffness
+            #self.lsdvmn = self.get_values(data, b'i', 5) ## load set number
+            #self.data_names = self.data_code['lsdvmn'] = self.lsdvmn
+        #elif self.analysis_code == 4: # differential stiffness
+            #self.lsdvmn = self.get_values(data, b'i', 5) ## load set number
+        #elif self.analysis_code == 5:   # frequency
+            ### frequency
+            #self.freq = self.add_data_parameter(data, 'freq', b'f', 5)
+            #self.data_names = self.apply_data_code_value('data_names', ['freq'])
+        elif self.analysis_code == 6:  # transient
+            ## time step
+            self.dt = self.add_data_parameter(data, 'dt', b'f', 5)
+            self.data_names = self.apply_data_code_value('data_names', ['dt'])
+        #elif self.analysis_code == 7:  # pre-buckling
+            ### load set number
+            #self.lsdvmn = self.add_data_parameter(data, 'lsdvmn', b'i', 5)
+            #self.data_names = self.apply_data_code_value('data_names', ['lsdvmn'])
+        #elif self.analysis_code == 8:  # post-buckling
+            ### load set number
+            #self.lsdvmn = self.add_data_parameter(data, 'lsdvmn', b'i', 5)
+            ### real eigenvalue
+            #self.eigr = self.add_data_parameter(data, 'eigr', b'f', 6, False)
+            #self.data_names = self.apply_data_code_value('data_names', ['lsdvmn', 'eigr'])
+        #elif self.analysis_code == 9:  # complex eigenvalues
+            ### mode number
+            #self.mode = self.add_data_parameter(data, 'mode', b'i', 5)
+            ### real eigenvalue
+            #self.eigr = self.add_data_parameter(data, 'eigr', b'f', 6, False)
+            ### imaginary eigenvalue
+            #self.eigi = self.add_data_parameter(data, 'eigi', b'f', 7, False)
+            #self.data_names = self.apply_data_code_value('data_names', ['mode', 'eigr', 'eigi'])
+        elif self.analysis_code == 10:  # nonlinear statics
+            ## load step
+            self.lftsfq = self.add_data_parameter(data, 'lftsfq', b'f', 5)
+            self.data_names = self.apply_data_code_value('data_names', ['lftsfq'])
+        #elif self.analysis_code == 11:  # old geometric nonlinear statics
+            ### load set number
+            #self.lsdvmn = self.add_data_parameter(data, 'lsdvmn', b'i', 5)
+            #self.data_names = self.apply_data_code_value('data_names', ['lsdvmn'])
+        #elif self.analysis_code == 12:
+            ## contran ? (may appear as aCode=6)  --> straight from DMAP...grrr...
+            ### load set number
+            #self.lsdvmn = self.add_data_parameter(data, 'lsdvmn', b'i', 5)
+            #self.data_names = self.apply_data_code_value('data_names', ['lsdvmn'])
+        else:
+            msg = 'invalid analysis_code...analysis_code=%s' % self.analysis_code
+            raise RuntimeError(msg)
+
+        #self.fix_format_code()
+        #if self.num_wide == 8:
+            #self.format_code = 1
+            #self.data_code['format_code'] = 1
+        #else:
+            ##self.fix_format_code()
+            #if self.format_code == 1:
+                #self.format_code = 2
+                #self.data_code['format_code'] = 2
+            #assert self.format_code in [2, 3], self.code_information()
+
+        #self._parse_thermal_code()
+        if self.is_debug_file:
+            self.binary_debug.write('  approach_code  = %r\n' % self.approach_code)
+            self.binary_debug.write('  tCode          = %r\n' % self.tCode)
+            self.binary_debug.write('  isubcase       = %r\n' % self.isubcase)
+        self._read_title(data)
+        self._write_debug_bits()
+
+    def _read_obc1_4(self, data: bytes, ndata: int) -> int:
+        """C O N T A C T  P R E S S U R E  A N D  T R A C T I O N S"""
+        from pyNastran.op2.result_objects.contact_traction_and_pressure import RealContactTractionAndPressureArray
+        result_name = 'contact_tractions_and_pressure'
+        #if self._results.is_not_saved(result_name):
+            #print('return A')
+            #return ndata
+        self._results._found_result(result_name)
+        slot = self.get_result(result_name)
+
+        ntotal = 20 * self.factor
+        nnodes = ndata // ntotal
+
+        self.data_code['_times_dtype'] = 'float32'
+        obj_vector_real = RealContactTractionAndPressureArray
+        #auto_return, is_vectorized = self._create_oes_object4(
+            #nnodes, result_name, slot, obj_vector_real)
+        auto_return = self._create_table_vector(
+            result_name, nnodes, slot, obj_vector_real, is_cid=False)
+
+        if auto_return:
+            return nnodes * ntotal
+        obj = self.obj
+        #ints    = (327, 1233577877, 0, 0, -988060411,
+                   #357, 1233066655, 0, 0, -965162024,
+                   #367, 1233710164, 0, 0, -993503801,
+                   #987, 1233710164, 0, 0, 1153979847,
+                   #997, 1233445590, 0, 0, 1163042599,
+                   #1007, 1233066655, 0, 0, 1182321624)
+        #floats  = (4.582245978342152e-43, 1105138.625, 0.0, 0.0, -2486.313720703125,
+                   #5.002635517639597e-43, 1044905.9375, 0.0, 0.0, -15922.9609375,
+                   #5.142765364072079e-43, 1121674.5, 0.0, 0.0, -1602.6805419921875,
+                   #1.3830815842885944e-42, 1121674.5, 0.0, 0.0, 1602.6805419921875,
+                   #1.3970945689318426e-42, 1088602.75, 0.0, 0.0, 3369.947021484375,
+                   #1.4111075535750908e-42, 1044905.9375, 0.0, 0.0, 15922.9609375)
+        dt = self.nonlinear_factor
+        from struct import Struct
+        struct1 = Struct(mapfmt(self._endian + b'i fff f', self.size))
+
+        is_vectorized = False
+        if self.use_vector and is_vectorized:
+            # POINT ID. TYPE  PRESSURE  S1  S2  S3
+            itime = obj.itime
+            n = nnodes * ntotal
+            itotal = obj.itotal
+            itotal2 = itotal + nnodes
+
+            if obj.itime == 0:
+                ints = np.frombuffer(data, dtype=self.idtype8).reshape(nnodes, 4)
+
+                nids = ints[:, 0] // 10
+                assert nids.min() > 0, nids.min()
+                obj.node_gridtype[itotal:itotal2, 0] = nids
+                #obj.node_gridtype[itotal:itotal2, 1] = ints[:, 1].copy()
+
+            floats = np.frombuffer(data, dtype=self.fdtype8).reshape(nnodes, 4)
+            obj.data[obj.itime, obj.itotal:itotal2, :] = floats[:, 2:].copy()
+            obj._times[itime] = dt
+            obj.itotal = itotal2
+        else:
+            n = 0
+            for i in range(nnodes):
+                edata = data[n:n+ntotal]
+                nid_device, pressure, s1, s2, s3 = struct1.unpack(edata)
+                nid = nid_device // 10
+                #out2 = [nid, pressure, s1, s2, s3]
+                #obj.add_sort1(nid, pressure, s1, s2, s3)
+                #print(out2)
+                n += ntotal
+            #self.show_data(data)
+
+        #if self._table4_count == 0:
+            #self.log.warning('no output for "Contact Pressure and Tractions"')
+        #self._table4_count += 1
+        return ndata
