@@ -11,7 +11,7 @@ SORT1_TABLES_BYTES = [b'OSTRMS1C', b'OSTNO1C', b'OES1X', b'OSTR1X',
                       b'OESPSD1C',
                       b'OSTPSD1C',
                       b'OEF1X',
-                      b'OESNLXR']
+                      b'OESNLXR', b'OESVM1C', b'OSTRVM1C']
 SORT2_TABLES_BYTES = [b'OUGPSD2', b'OUGATO2', b'OESCP',
                       b'OES2C', b'OSTR2C',
                       b'OFMPF2M', b'OLMPF2M', b'OPMPF2M', b'OSMPF2M', b'OGPMPF2M',
@@ -278,10 +278,9 @@ class Op2Codes:
         sort_code = self.sort_code
 
         format_code = None
-        result_type = None
         if hasattr(self, 'format_code'):
             format_code = self.format_code
-            result_type = func7(self.tCode)
+            #result_type = func7(self.tCode)
 
         s_code = None
         if hasattr(self, 's_code'):
@@ -309,7 +308,6 @@ class Op2Codes:
             element_type = self.element_type
 
         format_word = get_format_word(format_code)
-        result_word = get_result_word(result_type)
 
         if self.sort_bits[0] == 0:
             sort_word1 = 'Real'
@@ -374,7 +372,9 @@ class Op2Codes:
         msg += "  analysis_code = %-3s %s\n" % (analysis_code, analysis)
         msg += "  table_code    = %-3s %s-%s\n" % (self_table_code, self.table_name_str, table)
         msg += "  format_code   = %-3s %s\n" % (format_code, format_word)
-        msg += "  result_type   = %-3s %s\n" % (result_type, result_word)
+        if hasattr(self, 'result_type'):
+            result_word = get_result_word(self.result_type)
+            msg += "  result_type   = %-3s %s\n" % (self.result_type, result_word)
 
         msg += (
             f'  sort_method   = {self.sort_method}\n'
@@ -817,9 +817,9 @@ def get_result_word(result_type: int) -> str:
     if result_type == 0:
         result_word = "Real"
     elif result_type == 1:
-        result_word = "Real/Imaginary"
+        result_word = "Complex"
     elif result_type == 2:
-        result_word = "Magnitude/Phase"
+        result_word = "Random"
     else:
         result_word = '\n%18s1 - Real\n' % ''
         result_word += '%18s2 - Complex\n' % ''

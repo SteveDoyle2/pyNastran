@@ -135,6 +135,28 @@ class OP2Common(Op2Codes, F06Writer):
         """
         pass
 
+    def _fix_oug_format_code(self):
+        """
+        An OUG-style table has numwide = 8/14/8 for real/complex/random
+        """
+        if self.num_wide == 8:
+            self.format_code = 1
+            self.data_code['format_code'] = 1
+        elif self.num_wide == 14 and self.analysis_code == 5 and self.random_code == 0 and self.format_code in [0, 1]:
+            self.format_code = 2
+            self.data_code['format_code'] = 2  # real/imaginary
+
+        self.fix_format_code()
+        if self.num_wide == 8:
+            self.format_code = 1
+            self.data_code['format_code'] = 1
+        else:
+            #self.fix_format_code()
+            if self.format_code == 1:
+                self.format_code = 2
+                self.data_code['format_code'] = 2
+            assert self.format_code in [2, 3], self.code_information()
+
     def fix_format_code(self):
         """
         Nastran correctly calculates the proper defaults for the analysis
@@ -163,71 +185,98 @@ class OP2Common(Op2Codes, F06Writer):
         """
         self._set_times_dtype()
         self.format_code_original = self.format_code
-        if 1:
-            #print(self.format_code_original)
-            #print(self.code_information())
-            #print('tCode =', self.tCode)
-            result_type = func7(self.tCode)
-            #print('result_type (func7) =', result_type)
-            assert result_type in [0, 1, 2], f'result_type={result_type}\n{self.code_information()}'
-            self.format_code = result_type + 1
-        else:  # old
-            if self.format_code == -1:
-                if self.is_debug_file:
-                    self.op2_reader._write_ndata(self.binary_debug, 100)
-                if self.table_name in [b'OESNLXR', b'OESNLBR', b'OESNLXD', b'OESNL1X', b'OESNLBR2']:
-                    assert self.format_code == -1, self.format_code
-                    self.format_code = 1
-                else:
-                    raise RuntimeError(self.code_information())
-                #return
+        # result_type
+        # 0 - Real
+        # 1 - Complex
+        # 2 - Random
+
+        # format_code
+        # 1 - Real
+        # 2 - Real/Imaginary
+        # 3 - Magnitude/Phase
+        #print(self.format_code_original)
+        #print(self.code_information())
+        #print('tCode =', self.tCode)
+        result_type = func7(self.tCode)
+        #print(f'format_code={self.format_code}; result_type (func7)={result_type}')
+
+        if self.table_name in [b'OESNLXR', b'OESNLBR', b'OESNLXD', b'OESNL1X', b'OESNLBR2']:
+            assert self.format_code in [-1, 1], self.format_code
+            self.format_code = 1
+        elif result_type == 0: # real
+            self.format_code = 1 # real
+        elif result_type == 1: # imag
+            if self.format_code == 1:
+                # Nastran-ism:
+                #    DISP = ALL
+                # becomes:
+                #    DISP(REAL) = ALL
+                # for complex solutions
+                self.format_code = 2
+            assert self.format_code in [2, 3], self.code_information()
+            #assert result_type in [0, 1, 2], f'result_type={result_type}\n{self.code_information()}'
+        elif result_type == 2: # random
+            assert self.format_code in [1, 2], self.code_information()
+        else:
+            raise RuntimeError(f'result_type={result_type} format_code={self.format_code}')
+        #self.format_code = result_type + 1
 
         random_code = self.random_code if hasattr(self, 'random_code') else 0
+        RANDOM_TABLES = {}
+        if self.table_name in RANDOM_TABLES and random_code != 0:
+            self.log.warning(f'{self.table_name} is a random table')
+            raise RuntimeError(f'{self.table_name} is a random table')
         #if self.format_code == 0:
             #self.code_information()
-        if random_code == 0:
-            #self.log.debug(f'random_code = {random_code}')
-            if self.analysis_code == 1:   # statics / displacement / heat flux
-                assert self.format_code in [1, 3], self.code_information()
-                self.format_code = 1
-            elif self.analysis_code == 2:  # real eigenvalues
-                assert self.format_code in [1, 3], self.code_information()
-                self.format_code = 1
-            #elif self.analysis_code==3: # differential stiffness
-            #elif self.analysis_code==4: # differential stiffness
-            elif self.analysis_code == 5:   # frequency
-                assert self.format_code in [1, 2, 3], self.code_information()
-                if self.format_code == 1:
-                    #self.log.warning('updating format code from real to complex (1 -> 2)')
-                    self.format_code = 2
-                self.sort_bits.is_complex = 1
+        #if random_code == 0:
+        #self.log.debug(f'random_code = {random_code}')
+        if self.analysis_code == 1:   # statics / displacement / heat flux
+            assert self.format_code in [1, 3], self.code_information()
+            self.format_code = 1
+        elif self.analysis_code == 2:  # real eigenvalues
+            assert self.format_code in [1, 3], self.code_information()
+            self.format_code = 1
+        #elif self.analysis_code==3: # differential stiffness
+        #elif self.analysis_code==4: # differential stiffness
 
-            elif self.analysis_code == 6:  # transient
-                self.format_code = 1
-                assert self.format_code in [1, 2, 3], self.code_information()
-            elif self.analysis_code == 7:  # pre-buckling
-                assert self.format_code in [1], self.code_information()
-            elif self.analysis_code == 8:  # post-buckling
-                assert self.format_code in [1, 2], self.code_information()
-            elif self.analysis_code == 9:  # complex eigenvalues
-                assert self.format_code in [1, 2, 3], self.code_information()
-                if self.format_code == 1:
-                    self.format_code = 2
-            elif self.analysis_code == 10:  # nonlinear statics
-                assert self.format_code in [1], self.code_information()
-            elif self.analysis_code == 11:  # old geometric nonlinear statics
-                assert self.format_code in [1], self.code_information()
-            elif self.analysis_code == 12:
-                # contran ? (may appear as aCode=6)  --> straight from DMAP...grrr...
-                assert self.format_code in [4], self.code_information() # invalid value
-            else:
-                msg = 'invalid analysis_code...analysis_code=%s' % self.analysis_code
-                raise RuntimeError(msg)
-            self.data_code['format_code'] = self.format_code
+        elif self.analysis_code == 5:   # frequency
+            assert self.format_code in [1, 2, 3], self.code_information()
+            if self.format_code == 1:
+                #self.log.warning('updating format code from real to complex (1 -> 2)')
+                self.format_code = 2
+            self.sort_bits.is_complex = 1
+
+        elif self.analysis_code == 6:  # transient
+            self.format_code = 1
+            assert self.format_code in [1, 2, 3], self.code_information()
+
+        elif self.analysis_code == 7:  # pre-buckling
+            assert self.format_code in [1], self.code_information()
+        elif self.analysis_code == 8:  # post-buckling
+            assert self.format_code in [1, 2], self.code_information()
+        elif self.analysis_code == 9:  # complex eigenvalues
+            assert self.format_code in [1, 2, 3], self.code_information()
+            if self.format_code == 1:
+                self.format_code = 2
+            self.sort_bits.is_complex = 1
+        elif self.analysis_code == 10:  # nonlinear statics
+            assert self.format_code in [1], self.code_information()
+        elif self.analysis_code == 11:  # old geometric nonlinear statics
+            assert self.format_code in [1], self.code_information()
+        elif self.analysis_code == 12:
+            # contran ? (may appear as aCode=6)  --> straight from DMAP...grrr...
+            assert self.format_code in [4], self.code_information() # invalid value
+        else:
+            msg = 'invalid analysis_code...analysis_code=%s' % self.analysis_code
+            raise RuntimeError(msg)
+        self.data_code['format_code'] = self.format_code
         #assert self.format_code == 1, self.code_information()
         #if self.format_code != self.format_code_original:
             #print('self.format_code=%s orig=%s' % (self.format_code,
                                                    #self.format_code_original))
+        if self.format_code in [2, 3]:  # complex
+            result_type = 1 # complex
+        self.result_type = result_type
 
     def _set_times_dtype(self):
         self.data_code['_times_dtype'] = 'float32'

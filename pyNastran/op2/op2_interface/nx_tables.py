@@ -856,10 +856,12 @@ NX_TABLE_CONTENT = {
     #
     # nx 2019.2
     #
+    504 : b'OEFCRM1 - Cumulative Root Mean Square output',
     604 : 'OEFPSD2 - ???',
     605 : 'OSTPSD2C - ???',
     804 : 'OEFRMS1 - ???',
     805 : 'OESXRMS1 - element RMS stresses for random analysis that includes von Mises stress output.',
+    904 : 'OEFNO1 - Cumulative Root Mean Square output',
     905 : 'OESXNO1C - Cumulative Root Mean Square output',
 }  # type: Dict[int, str]
 

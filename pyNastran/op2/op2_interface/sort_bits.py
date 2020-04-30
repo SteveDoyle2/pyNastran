@@ -1,14 +1,14 @@
 #from collections import namedtuple
 #SortBits = namedtuple('SortBits', ['is_sort1', 'is_real', 'is_random'])
 SORT_MAP = {
-    1: 1,
-    0: 0,
+    #1: 1,
+    #0: 0,
     True: 1,
     False: 0,
 }
 INV_MAP = {
-    1: 0,
-    0: 1,
+    #1: 0,
+    #0: 1,
     True: 0,
     False: 1,
 }
@@ -31,7 +31,7 @@ class SortBits(list):
 
     """
     @classmethod
-    def add_from_sort_code(self, sort_code: int, is_table_1: bool) -> None:
+    def add_from_sort_code(cls, sort_code: int, is_table_1: bool):
         """
         Parameters
         ----------
@@ -60,30 +60,30 @@ class SortBits(list):
     def is_complex(self) -> int:
         return SORT_MAP[self[0]]
     @is_real.setter
-    def is_real(self, value: int) -> int:
+    def is_real(self, value: int):
         self[0] = INV_MAP[value]
     @is_complex.setter
-    def is_complex(self, value) -> int:
+    def is_complex(self, value):
         self[0] = SORT_MAP[value]
 
     @property
     def is_sort1(self) -> int:
         return INV_MAP[self[1]]
     @is_sort1.setter
-    def is_sort1(self, value: int) -> int:
+    def is_sort1(self, value: int):
         self[1] = INV_MAP[value]
     @property
     def is_sort2(self) -> int:
         return SORT_MAP[self[1]]
     @is_sort2.setter
-    def is_sort2(self, value: int) -> int:
+    def is_sort2(self, value: int):
         self[1] = SORT_MAP[value]
 
     @property
     def is_random(self) -> int:
         return self[2]
     @is_random.setter
-    def is_random(self, value: int) -> int:
+    def is_random(self, value: int):
         self[2] = SORT_MAP[value]
 
     def __repr__(self):

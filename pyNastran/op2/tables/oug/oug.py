@@ -225,25 +225,7 @@ class OUG(OP2Common):
             raise RuntimeError(msg)
 
         #print self.code_information()
-        #
-        if self.num_wide == 8:
-            self.format_code = 1
-            self.data_code['format_code'] = 1
-        elif self.num_wide == 14 and self.analysis_code == 5 and self.random_code == 0 and self.format_code in [0, 1]:
-            self.format_code = 2
-            self.data_code['format_code'] = 2  # real/imaginary
-
-        self.fix_format_code()
-        if self.num_wide == 8:
-            self.format_code = 1
-            self.data_code['format_code'] = 1
-        else:
-            #self.fix_format_code()
-            if self.format_code == 1:
-                self.format_code = 2
-                self.data_code['format_code'] = 2
-            assert self.format_code in [2, 3], self.code_information()
-
+        self._fix_oug_format_code()
         self._parse_thermal_code()
         if self.is_debug_file:
             self.binary_debug.write('  approach_code  = %r\n' % self.approach_code)
@@ -370,29 +352,7 @@ class OUG(OP2Common):
             msg = 'invalid analysis_code...analysis_code=%s' % self.analysis_code
             raise RuntimeError(msg)
 
-        if self.num_wide == 8:
-            self.format_code = 1
-            self.data_code['format_code'] = 1
-        elif self.num_wide == 14 and self.analysis_code == 5 and self.random_code == 0 and self.format_code in [0, 1]:
-            self.format_code = 2
-            self.data_code['format_code'] = 2  # real/imaginary
-        #else:
-            #print(self.code_information())
-            #print(self.num_wide == 14, self.analysis_code == 5, self.random_code == 0, self.format_code)
-            #aaa
-
-        self.fix_format_code()
-        if self.num_wide == 8:
-            #self.sort_bits[0] = 0 # real
-            self.format_code = 1
-            self.data_code['format_code'] = 1
-        else:
-            #self.fix_format_code()
-            if self.format_code == 1:
-                self.format_code = 2
-                self.data_code['format_code'] = 2
-            assert self.format_code in [2, 3], self.code_information()
-
+        self._fix_oug_format_code()
         self._parse_thermal_code()
         if self.is_debug_file:
             self.binary_debug.write('  %-14s = %r %s\n' % ('approach_code', self.approach_code,
