@@ -83,6 +83,7 @@ SORT2_TABLE_NAME_MAP = {
     'OPNL2' : 'OPNL1',
     'OUXY2' : 'OUXY1',
     'OQGGF2': 'OQGGF1',
+    'OQGCF2': 'OQGCF1',
 }
 SORT1_TABLES = list(SORT2_TABLE_NAME_MAP.values())
 SORT1_TABLES.extend([

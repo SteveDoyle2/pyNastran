@@ -778,6 +778,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             # OGPFB1
             # grid point forces
             b'OGPFB1' : [self._read_ogpf1_3, self._read_ogpf1_4],  # grid point forces
+            #b'OGPFB2' : [self._read_ogpf1_3, self._read_ogpf1_4],  # grid point forces
 
             #=======================
             # ONR/OEE
@@ -870,6 +871,9 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             b'ROUGV1'  : [self._read_oug1_3, self._read_oug_4],  # relative OUG
             b'OPHSA'   : [self._read_oug1_3, self._read_oug_4],  # Displacement output table in SORT1
             b'OUXY1'   : [self._read_oug1_3, self._read_oug_4],  # Displacements in SORT1 format for h-set or d-set.
+            b'OUGPC1'  : [self._read_ougpc1_3, self._read_ougpc_4],  # panel contributions
+            b'OUGPC2'  : [self._read_ougpc2_3, self._read_ougpc_4],  # panel contributions
+            b'OUGF1' : [self._read_oug1_3, self._read_oug_4], # Acoustic pressures at microphone points in SORT1 format
 
             b'OUGV2'   : [self._read_oug2_3, self._read_oug_4],  # displacements in nodal frame
             b'ROUGV2'  : [self._read_oug2_3, self._read_oug_4],  # relative OUG

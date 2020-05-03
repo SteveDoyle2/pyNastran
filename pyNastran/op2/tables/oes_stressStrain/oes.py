@@ -23,6 +23,7 @@ from typing import Tuple, Union, Any
 from numpy import fromstring, frombuffer, radians, sin, cos, vstack, repeat, array
 import numpy as np
 
+from pyNastran.op2.op2_interface.op2_codes import SORT1_TABLES_BYTES, TABLES_BYTES
 from pyNastran.op2.op2_interface.op2_reader import mapfmt
 from pyNastran.op2.op2_interface.op2_common import OP2Common
 from pyNastran.op2.op2_interface.utils import apply_mag_phase, build_obj
@@ -274,7 +275,6 @@ class OES(OP2Common):
         """
         Reads the Stress Table 4
         """
-        result_type = self.result_type # func7(self.tCode)
         #assert self.isubtable == -4, self.isubtable
         #if self.is_debug_file:
             #self.binary_debug.write('  element_name = %r\n' % self.element_name)
@@ -577,9 +577,9 @@ class OES(OP2Common):
             #assert ndata != 146, self.code_information()
         assert isinstance(self.format_code, int), self.format_code
         if self.thermal == 0:
-            n = self._read_oes1_loads(data, ndata, result_type)
+            n = self._read_oes1_loads(data, ndata)
         elif self.thermal == 1:
-            n = self._read_oes1_thermal(data, ndata, result_type)
+            n = self._read_oes1_thermal(data, ndata)
         else:
             msg = 'thermal=%s' % self.thermal
             n = self._not_implemented_or_skip(data, ndata, msg)
@@ -593,17 +593,16 @@ class OES(OP2Common):
         #if self.num_wide == 146:
             #assert self.num_wide != 146
             #assert ndata != 146, self.code_information()
-        result_type = self.result_type # func7(self.tCode)
         if self.thermal == 0:
-            n = self._read_oes1_loads(data, ndata, result_type)
+            n = self._read_oes1_loads(data, ndata)
         elif self.thermal == 1:
-            n = self._read_oes1_thermal(data, ndata,  result_type)
+            n = self._read_oes1_thermal(data, ndata)
         else:
             msg = 'thermal=%s' % self.thermal
             n = self._not_implemented_or_skip(data, ndata, msg)
         return n
 
-    def _read_oes1_thermal(self, unused_data, ndata, result_type):
+    def _read_oes1_thermal(self, unused_data, ndata):
         """
         Reads OES self.thermal=1 tables; uses a hackish method to just skip the table
         """
@@ -1132,57 +1131,59 @@ class OES(OP2Common):
         """
         prefix = ''
         postfix = ''
-        if self.table_name in [b'OES1X1', b'OES1X', b'OSTR1X', b'OSTR1',
+
+        table_name_bytes = self.table_name
+        assert isinstance(table_name_bytes, bytes), table_name_bytes
+        is_sort1 = table_name_bytes in SORT1_TABLES_BYTES
+
+        if table_name_bytes in [b'OES1X1', b'OES1X', b'OSTR1X', b'OSTR1',
                                b'OES1C', b'OSTR1C', b'OES1', ]:
-            pass
-        elif self.table_name in [b'OES2', b'OSTR2', b'OES2C', b'OSTR2C']:
-            assert self.sort_method == 2, self.sort_method
-        #elif self.table_name in ['OESNLXR']:
+            self._set_as_sort1()
+        elif table_name_bytes in [b'OES2', b'OSTR2', b'OES2C', b'OSTR2C']:
+            self._set_as_sort2()
+        #elif table_name_bytes in ['OESNLXR']:
             #prefix = 'sideline_'
-        elif self.table_name in [b'OESNLXD', b'OESNL1X', b'OESNLXR', b'OESNL2']:
+        elif table_name_bytes in [b'OESNLXD', b'OESNL1X', b'OESNLXR', b'OESNL2']:
             prefix = 'nonlinear_'
-        elif self.table_name in [b'OESNLXR2']:
+        elif table_name_bytes in [b'OESNLXR2']:
             prefix = 'nonlinear_'
-        elif self.table_name == b'OESNLBR':
+        elif table_name_bytes == b'OESNLBR':
             prefix = 'sideline_'
-        elif self.table_name == b'OESRT':
+        elif table_name_bytes == b'OESRT':
             prefix = 'strength_ratio.'
-        elif self.table_name in [b'OESCP', b'OESTRCP']:
+        elif table_name_bytes in [b'OESCP', b'OESTRCP']:
             # guessing
             pass
             #self.sort_bits[0] = 0 # real; ???
             #self.sort_bits[1] = 0 # sort1
             #self.sort_bits[2] = 1 # random; ???
-        elif self.table_name in [b'OESVM1C', b'OSTRVM1C', b'OESVM1', b'OSTRVM1',
-                                 #b'OESVM1C', b'OSTRVM1C',
-                                 b'OESVM2', b'OSTRVM2',]:
+        elif table_name_bytes in [b'OESVM1C', b'OSTRVM1C', b'OESVM1', b'OSTRVM1',
+                                  #b'OESVM1C', b'OSTRVM1C',
+                                  b'OESVM2', b'OSTRVM2',]:
             prefix = 'modal_contribution.'
             self.to_nx()
 
         #----------------------------------------------------------------
-        elif self.table_name in [b'OSTRMS1C']: #, b'OSTRMS1C']:
+        elif table_name_bytes in [b'OSTRMS1C']: #, b'OSTRMS1C']:
             self.format_code = 1
             self.sort_bits[0] = 0 # real
-            prefix = 'rms.'
-        elif self.table_name in [b'OESXRMS1']: # wrong...
-            self.format_code = 1
-            self.sort_bits[0] = 0 # real
-            self.sort_bits[1] = 0 # sort1
-            self.sort_bits[2] = 1 # random
-            self._analysis_code_fmt = b'i'
-            self.sort_method = 1
-            #self.data_code['nonlinear_factor'] = self._element_id
-            #assert self.sort_method == 2, self.code_information()
-            #self.nonlinear_factor = self.n
-            #self.data_code['nonlinear_factor'] = None
-            prefix = 'rms.'
-        elif self.table_name in [b'OESXRMS2']: # wrong...
-            self.sort_bits[1] = 1 # sort2
             prefix = 'rms.'
 
-        elif self.table_name in [b'OESXNO1']:
+        elif table_name_bytes in [b'OESXRMS1']:
+            self._analysis_code_fmt = b'i'
+            self._set_as_random()
+            self._set_as_sort1()
+            prefix = 'rms.'
+        elif table_name_bytes in [b'OESXRMS2']: # wrong?
+            self._set_as_random()
+            self._set_as_sort2()
+            prefix = 'rms.'
+
+        elif table_name_bytes in [b'OESXNO1']:
+            self._set_as_random()
+            self._set_as_sort1()
             prefix = 'no.'
-        elif self.table_name in [b'OESXNO1C']:
+        elif table_name_bytes in [b'OESXNO1C']:
             # - ply-by-ply Stresses including:
             #    - von Mises Stress for PSDF (OESPSD1C),
             #    - Cumulative Root Mean Square output (OESXNO1C)
@@ -1190,78 +1191,81 @@ class OES(OP2Common):
             # - ply-by-ply Strains for:
             #    - PSDF (OSTPSD1C)
             #    - Cumulative Root Mean Square (OSTCRM1C) output sets
+            self._set_as_random()
+            self._set_as_sort1()
             prefix = 'crm.'
-        elif self.table_name in [b'OESXRM1C']:
+        elif table_name_bytes in [b'OESXRM1C']:
+            self._set_as_random()
+            self._set_as_sort1()
             prefix = 'rms.'
             #print(self.code_information())
 
-        elif self.table_name in [b'OESRMS1', b'OSTRRMS1']:
-            self.format_code = 1
-            self.sort_bits[0] = 0 # real
-            assert self.sort_method == 1, self.code_information()
+        elif table_name_bytes in [b'OESRMS1', b'OSTRRMS1']:
             self._analysis_code_fmt = b'i'
+            self._set_as_random()
+            self._set_as_sort1()
             prefix = 'rms.'
-        elif self.table_name in [b'OESRMS2', b'OSTRRMS2']:
-            #self.format_code = 1
-            self.sort_bits[0] = 0 # real
-            self.sort_bits[1] = 0 # sort1
-            self.sort_bits[2] = 1 # random
-            self.sort_method = 1
+        elif table_name_bytes in [b'OESRMS2', b'OSTRRMS2']:
             self._analysis_code_fmt = b'i'
+            self._set_as_random()
+            self._set_as_sort1()  # it's not really SORT2...
+            self.sort_method = 1
             #assert self.sort_method == 2, self.code_information()
             prefix = 'rms.'
 
-        elif self.table_name in [b'OESNO1', b'OSTRNO1', b'OSTNO1C']:
+        elif table_name_bytes in [b'OESNO1', b'OSTRNO1', b'OSTNO1C']:
             assert self.sort_method == 1, self.code_information()
-            self.format_code = 1
-            self.sort_bits[0] = 0 # real
-            self.sort_bits[2] = 1 # random
+            self._set_as_random()
             prefix = 'no.'
-        elif self.table_name in [b'OESNO2', b'OSTRNO2']:
-            self.format_code = 1
-            self.sort_bits[0] = 0 # real
-            self.sort_bits[1] = 0 # sort1
-            #self.sort_bits[0] = 1 # sort2
-            self.sort_bits[2] = 1 # random
-            self.sort_method = 1
+        elif table_name_bytes in [b'OESNO2', b'OSTRNO2']:
+            self._set_as_random()
+            self._set_as_sort1()
             self.data_code['nonlinear_factor'] = None
             self._analysis_code_fmt = b'i'
             prefix = 'no.'
         #----------------------------------------------------------------
 
-        elif self.table_name in [b'OESPSD1', b'OSTRPSD1']:
+        elif table_name_bytes in [b'OESPSD1', b'OSTRPSD1']:
             #self.format_code = 1
             self.sort_bits[0] = 0 # real
             self.sort_bits[1] = 0 # sort1
             self.sort_bits[2] = 1 # random
             prefix = 'psd.'
-        elif self.table_name in [b'OESPSD2', b'OSTRPSD2',
-                                 b'OESPSD2C', b'OSTPSD2C']:
-            # TODO: the sort bits might not be right...isat_random
-            #print(self.code_information())
-            #print(self.sort_bits)
-            self.format_code = 1
-            #self.sort_bits[0] = 0 # real
-            #self.sort_bits[1] = 1 # sort2
-            #self.sort_bits[2] = 1 # random
-            self.sort_bits.is_real = 1
-            self.sort_bits.is_sort2 = 1
-            self.sort_bits.is_random = 1
-            #print(self.code_information())
-            #print(self.sort_bits)
-            #ddd
+        elif table_name_bytes in [b'OESPSD2', b'OSTRPSD2',
+                                  b'OESPSD2C', b'OSTPSD2C']:
+            if 0:
+                # TODO: the sort bits might not be right...isat_random
+                #print(self.code_information())
+                #print(self.sort_bits)
+                self.format_code = 1
+                #self.sort_bits[0] = 0 # real
+                #self.sort_bits[1] = 1 # sort2
+                #self.sort_bits[2] = 1 # random
+                self.sort_bits.is_real = 1
+                self.sort_bits.is_sort2 = 1
+                self.sort_bits.is_random = 1
+                #print(self.code_information())
+                #print(self.sort_bits)
+            else:
+                self.format_code = 1 # real
+                self.result_type = 2 # random
+                self.sort_bits[0] = 0 # real
+                self.sort_bits[2] = 1 # random
             prefix = 'psd.'
 
-        elif self.table_name in [b'OESATO1', b'OSTRATO1']:
+        elif table_name_bytes in [b'OESATO1', b'OSTRATO1']:
             prefix = 'ato.'
-        elif self.table_name in [b'OESATO2', b'OSTRATO2']:
+        elif table_name_bytes in [b'OESATO2', b'OSTRATO2']:
             prefix = 'ato.'
 
-        elif self.table_name in [b'OESCRM1', b'OSTRCRM1']:
+        elif table_name_bytes in [b'OESCRM1', b'OSTRCRM1']:
             prefix = 'crm.'
-        elif self.table_name in [b'OESCRM2', b'OSTRCRM2']:
+            self.result_type = 2 # random
+            self.sort_bits[2] = 1 # random
+        elif table_name_bytes in [b'OESCRM2', b'OSTRCRM2']:
             # sort2, random
             self.format_code = 1 # real
+            self.result_type = 2 # random
             self.sort_bits[0] = 0 # real
             self.sort_bits[1] = 1 # sort2
             self.sort_bits[2] = 1 # random
@@ -1271,38 +1275,56 @@ class OES(OP2Common):
             #prefix = 'scaled_response_spectra_'
         #elif self.table_name in ['OESCP']:
 
-        elif self.table_name in [b'RASCONS']: #, b'OSTRMS1C']:
+        elif table_name_bytes in [b'RASCONS']: #, b'OSTRMS1C']:
             self.format_code = 1
             self.sort_bits[0] = 0 # real
             prefix = 'RASCONS.'
-        elif self.table_name in [b'RAECONS']: #, b'OSTRMS1C']:
+        elif table_name_bytes in [b'RAECONS']: #, b'OSTRMS1C']:
             self.format_code = 1
             self.sort_bits[0] = 0 # real
             prefix = 'RAECONS.'
-        elif self.table_name in [b'RAPCONS']: #, b'OSTRMS1C']:
+        elif table_name_bytes in [b'RAPCONS']: #, b'OSTRMS1C']:
             self.format_code = 1
             self.sort_bits[0] = 0 # real
             prefix = 'RAPCONS.'
 
-        elif self.table_name in [b'RASEATC']: #, b'OSTRMS1C']:
-            self.format_code = 1
-            self.sort_bits[0] = 0 # real
+        elif table_name_bytes in [b'RASEATC']: #, b'OSTRMS1C']:
+            self._set_as_real()
             prefix = 'RASEATC.'
-        elif self.table_name in [b'RAEEATC']: #, b'OSTRMS1C']:
-            self.format_code = 1
-            self.sort_bits[0] = 0 # real
+        elif table_name_bytes in [b'RAEEATC']: #, b'OSTRMS1C']:
+            self._set_as_real()
             prefix = 'RAEEATC.'
-        elif self.table_name in [b'RAPEATC']: #, b'OSTRMS1C']:
-            self.format_code = 1
-            self.sort_bits[0] = 0 # real
+        elif table_name_bytes in [b'RAPEATC']: #, b'OSTRMS1C']:
+            self._set_as_real()
             prefix = 'RAPEATC.'
-        elif self.table_name in [b'OESMC1', b'OSTRMC1']:
+        elif table_name_bytes in [b'OESMC1', b'OSTRMC1']:
             prefix = 'modal_contribution.'
         else:
             raise NotImplementedError(self.table_name)
         self.data_code['sort_bits'] = self.sort_bits
         self.data_code['nonlinear_factor'] = self.nonlinear_factor
         return prefix, postfix
+
+    def _set_as_real(self):
+        self.format_code = 1
+        self.result_type = 0
+        self.sort_bits[0] = 0 # real
+        self.sort_bits.is_real = True
+        self.sort_bits.is_random = False
+
+    def _set_as_random(self):
+        self.format_code = 1  # real
+        self.result_type = 2  # random
+        self.sort_bits.is_real = True
+        self.sort_bits.is_random = True
+
+    def _set_as_sort1(self):
+        self.sort_bits[1] = 0 # sort1
+        self.sort_method = 1
+
+    def _set_as_sort2(self):
+        self.sort_bits[1] = 1 # sort2
+        self.sort_method = 2
 
     def _read_oesmc_4(self, data, ndata):
         n = 0
@@ -1324,9 +1346,10 @@ class OES(OP2Common):
             raise NotImplementedError(self.code_information())
         return n
 
-    def _read_oes1_loads_nasa95(self, data, ndata: int, result_type: int) -> Tuple[int, Any, Any]:
+    def _read_oes1_loads_nasa95(self, data, ndata: int) -> Tuple[int, Any, Any]:
         """Reads OES1 subtable 4 for NASA 95"""
         prefix, postfix = self.get_oes_prefix_postfix()
+        result_type = self.result_type
         #self._apply_oes_ato_crm_psd_rms_no('') # TODO: just testing
         n = 0
         is_magnitude_phase = self.is_magnitude_phase()
@@ -1345,10 +1368,12 @@ class OES(OP2Common):
             # 1-CROD
             # 3-CTUBE
             # 10-CONROD
-            n, nelements, ntotal = self._oes_crod(data, ndata, dt, is_magnitude_phase, prefix, postfix)
+            n, nelements, ntotal = self._oes_crod(data, ndata, dt, is_magnitude_phase,
+                                                  result_type, prefix, postfix)
 
         #elif self.element_type == 2: # CBEAM
-            #n, nelements, ntotal = self._oes_cbeam(data, ndata, dt, is_magnitude_phase, prefix, postfix)
+            #n, nelements, ntotal = self._oes_cbeam(data, ndata, dt, is_magnitude_phase,
+                                                   #result_type, prefix, postfix)
 
         elif self.element_type == 4: # CSHEAR
             n, nelements, ntotal = self._oes_cshear(data, ndata, dt, is_magnitude_phase,
@@ -1377,7 +1402,8 @@ class OES(OP2Common):
             # 75-CTRIA6
             # 82-CQUADR
             # 144-CQUAD4-bilinear
-            #n, nelements, ntotal = self._oes_cquad4_144(data, ndata, dt, is_magnitude_phase, prefix, postfix)
+            #n, nelements, ntotal = self._oes_cquad4_144(data, ndata, dt, is_magnitude_phase,
+                                                        #result_type, prefix, postfix)
         else:
             #msg = 'sort1 Type=%s num=%s' % (self.element_name, self.element_type)
             msg = self.code_information()
@@ -1394,9 +1420,11 @@ class OES(OP2Common):
         assert n > 0, "n = %s result_name=%s" % (n, result_name)
         return n
 
-    def _read_oes1_loads(self, data, ndata: int, result_type: int):
+    def _read_oes1_loads(self, data, ndata: int):
         """Reads OES self.thermal=0 stress/strain"""
         prefix, postfix = self.get_oes_prefix_postfix()
+        result_type = self.result_type
+
         #self._apply_oes_ato_crm_psd_rms_no('') # TODO: just testing
         n = 0
         is_magnitude_phase = self.is_magnitude_phase()
@@ -2172,6 +2200,7 @@ class OES(OP2Common):
             result_name = prefix + 'cbeam_strain' + postfix
         table_name_bytes = self.table_name
         assert isinstance(table_name_bytes, bytes), table_name_bytes
+        assert table_name_bytes in TABLES_BYTES, table_name_bytes
 
         if self._results.is_not_saved(result_name):
             return ndata, None, None
@@ -2263,65 +2292,9 @@ class OES(OP2Common):
             else:
                 if is_vectorized and self.use_vector:  # pragma: no cover
                     self.log.debug('vectorize CBEAM imag SORT%s' % self.sort_method)
-                itotal = obj.itotal
-                n1 = 44
-                n2 = 40
-
-                s1 = Struct(self._endian + self._analysis_code_fmt + b'i9f')
-                s2 = Struct(self._endian + b'i9f')
-
-                for unused_i in range(nelements):
-                    edata = data[n:n+n1]
-                    n += n1
-
-                    out1 = s1.unpack(edata)
-                    eid_device = out1[0]
-                    eid, dt = get_eid_dt_from_eid_device(
-                        eid_device, self.nonlinear_factor, self.sort_method)
-                    if self.is_debug_file:
-                        self.binary_debug.write('CBEAM-2 - eid=%i out1=%s\n' % (eid, str(out1)))
-
-                    (grid, sd,
-                     excr, exdr, exer, exfr,
-                     exci, exdi, exei, exfi) = out1[1:]
-
-                    if is_magnitude_phase:
-                        exc = polar_to_real_imag(excr, exci)
-                        exd = polar_to_real_imag(exdr, exdi)
-                        exe = polar_to_real_imag(exer, exei)
-                        exf = polar_to_real_imag(exfr, exfi)
-                    else:
-                        exc = complex(excr, exci)
-                        exd = complex(exdr, exdi)
-                        exe = complex(exer, exei)
-                        exf = complex(exfr, exfi)
-
-                    obj.add_sort1(dt, eid, grid, sd,
-                                  exc, exd, exe, exf)
-
-                    for unused_inode in range(nnodes):
-                        edata = data[n:n+n2]
-                        n += n2
-                        out2 = s2.unpack(edata)
-                        (grid, sd,
-                         excr, exdr, exer, exfr,
-                         exci, exdi, exei, exfi) = out2
-
-                        if is_magnitude_phase:
-                            exc = polar_to_real_imag(excr, exci)
-                            exd = polar_to_real_imag(exdr, exdi)
-                            exe = polar_to_real_imag(exer, exei)
-                            exf = polar_to_real_imag(exfr, exfi)
-                        else:
-                            exc = complex(excr, exci)
-                            exd = complex(exdr, exdi)
-                            exe = complex(exer, exei)
-                            exf = complex(exfr, exfi)
-
-                        obj.add_sort1(dt, eid, grid, sd,
-                                      exc, exd, exe, exf)
-                        if self.is_debug_file:
-                            self.binary_debug.write('CBEAM-2 - eid=%i out2=%s\n' % (eid, str(out2)))
+                n = oes_cbeam_complex_111(self, data, obj,
+                                          nelements, nnodes, ntotal,
+                                          is_magnitude_phase)
 
         elif result_type == 2 and self.num_wide == 67: # random
             # TODO: vectorize
@@ -2366,6 +2339,7 @@ class OES(OP2Common):
             nelements = None
             ntotal = None
         else:  # pragma: no cover
+            print(result_type, result_type == 2, self.num_wide == 67)
             raise RuntimeError(self.code_information())
         return n, nelements, ntotal
 
@@ -5442,13 +5416,23 @@ class OES(OP2Common):
         numwide_real = 2 + 17 * nnodes_all
         numwide_imag = 2 + 15 * nnodes_all
         numwide_random = 2 + 9 * nnodes_all
-        #numwide_imag2 = 2 + 16 * nnodes_all
+
+        numwide_imag2 = 2 + 16 * nnodes_all
         #print('%s real=%s imag=%s imag2=%s random=%s' % (
             #self.element_name, numwide_real, numwide_imag, numwide_imag2, numwide_random
         #))
         #etype = self.element_name
         #grid_center = 'CEN/%i' % nnodes
-        if self.format_code in [1, 2, 3] and self.num_wide == numwide_real:  # real
+
+        # OESVM1/2 (complex)
+        #   87 - CQUAD8
+
+        # OSTRNO1
+        #   47 - CQUAD4
+
+        # CQUAD8 real=87 imag=77 imag2=82 random=47
+        # CQUAD4 ???=
+        if result_type == 0 and self.num_wide == numwide_real:  # real
             ntotal = 4 * (2 + 17 * nnodes_all) * self.factor
             nelements = ndata // ntotal
             assert ndata % ntotal == 0
@@ -5567,7 +5551,7 @@ class OES(OP2Common):
                         obj.add_sort1(dt, eid, grid, fd2, sx2, sy2,
                                       txy2, angle2, major2, minor2, vm2)
                         n += n68
-        elif self.format_code in [2, 3] and self.num_wide == numwide_imag:  # imag
+        elif result_type == 1 and self.num_wide == numwide_imag:  # complex
             ntotal = numwide_imag * 4 * self.factor
             #assert self.num_wide * 4 == ntotal, 'numwide*4=%s ntotal=%s' % (self.num_wide*4, ntotal)
             nelements = ndata // ntotal
@@ -5691,7 +5675,7 @@ class OES(OP2Common):
             #msg += '  numwide=%s numwide_real=%s numwide_imag=%s numwide_random=%s' % (
                 #self.num_wide, numwide_real, numwide_imag, numwide_random)
             #return self._not_implemented_or_skip(data, ndata, msg), None, None
-        elif self.format_code in [1, 2] and self.num_wide == numwide_random:
+        elif result_type == 2 and self.num_wide == numwide_random: # random
             # 47 - CQUAD8-64
             # 38 - CTRIAR-70
             ntotal = self.num_wide * 4
@@ -5775,13 +5759,14 @@ class OES(OP2Common):
                 #self.table_name_str, self.num_wide, self.format_code,
                 #numwide_real, numwide_imag, numwide_random)
             #return self._not_implemented_or_skip(data, ndata, msg), None, None
-        elif self.format_code in [2, 3] and self.num_wide in [70, 87]:
+        elif (result_type == 1 and self.num_wide in [70, 87] and
+              self.table_name in [b'OESVM1', b'OESVM2', b'OSTRVM1', b'OSTRVM2']):  # complex
             # 70 - CTRIA6-75
             # 87 - CQUAD4-144
-            msg = self.code_information()
-            msg += '%s-numwide=%s format_code=%s;\n numwide_real=%s numwide_imag=%s numwide_random=%s' % (
-                self.table_name_str, self.num_wide, self.format_code,
-                numwide_real, numwide_imag, numwide_random)
+            #msg = self.code_information()
+            msg = (f'skipping {self.table_name_str}-{self.element_name}: numwide={self.num_wide} '
+                   f'result_type={self.result_type} (complex);\n numwide_real={numwide_real} '
+                   f'numwide_imag={numwide_imag} numwide_random={numwide_random}')
             #print(msg)
             return self._not_implemented_or_skip(data, ndata, msg), None, None
 
@@ -7982,6 +7967,72 @@ def oes_cbar100_real_10(self, data, obj, nelements, ntotal, dt):
         n += ntotal
         obj.add_new_eid_sort1(self.element_name, dt, eid,
                               sd, sxc, sxd, sxe, sxf, axial, smax, smin, MS)
+    return n
+
+def oes_cbeam_complex_111(self, data: bytes,
+                            obj: Union[ComplexBeamStressArray, ComplexBeamStrainArray],
+                            nelements: int, nnodes: int, ntotal: int,
+                            is_magnitude_phase: bool) -> int:
+    n = 0
+    itotal = obj.itotal
+    n1 = 44
+    n2 = 40
+
+    s1 = Struct(self._endian + self._analysis_code_fmt + b'i9f')
+    s2 = Struct(self._endian + b'i9f')
+
+    for unused_i in range(nelements):
+        edata = data[n:n+n1]
+        n += n1
+
+        out1 = s1.unpack(edata)
+        eid_device = out1[0]
+        eid, dt = get_eid_dt_from_eid_device(
+            eid_device, self.nonlinear_factor, self.sort_method)
+        if self.is_debug_file:
+            self.binary_debug.write('CBEAM-2 - eid=%i out1=%s\n' % (eid, str(out1)))
+
+        (grid, sd,
+         excr, exdr, exer, exfr,
+         exci, exdi, exei, exfi) = out1[1:]
+
+        if is_magnitude_phase:
+            exc = polar_to_real_imag(excr, exci)
+            exd = polar_to_real_imag(exdr, exdi)
+            exe = polar_to_real_imag(exer, exei)
+            exf = polar_to_real_imag(exfr, exfi)
+        else:
+            exc = complex(excr, exci)
+            exd = complex(exdr, exdi)
+            exe = complex(exer, exei)
+            exf = complex(exfr, exfi)
+
+        obj.add_sort1(dt, eid, grid, sd,
+                      exc, exd, exe, exf)
+
+        for unused_inode in range(nnodes):
+            edata = data[n:n+n2]
+            n += n2
+            out2 = s2.unpack(edata)
+            (grid, sd,
+             excr, exdr, exer, exfr,
+             exci, exdi, exei, exfi) = out2
+
+            if is_magnitude_phase:
+                exc = polar_to_real_imag(excr, exci)
+                exd = polar_to_real_imag(exdr, exdi)
+                exe = polar_to_real_imag(exer, exei)
+                exf = polar_to_real_imag(exfr, exfi)
+            else:
+                exc = complex(excr, exci)
+                exd = complex(exdr, exdi)
+                exe = complex(exer, exei)
+                exf = complex(exfr, exfi)
+
+            obj.add_sort1(dt, eid, grid, sd,
+                          exc, exd, exe, exf)
+            if self.is_debug_file:
+                self.binary_debug.write('CBEAM-2 - eid=%i out2=%s\n' % (eid, str(out2)))
     return n
 
 def oes_cbeam_random_67(self, data: bytes,

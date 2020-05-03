@@ -315,7 +315,8 @@ class OQG(OP2Common):
             # self.table_code == 5 and
             n = self._read_oqg_mpc_forces(data, ndata)
         elif self.table_code == 63:   # Contact Forces
-            assert self.table_name in [b'OQGCF1'], self.code_information()
+            self.to_nx()
+            assert self.table_name in [b'OQGCF1', b'OQGCF2'], self.code_information()
             n = self._oqg_read_contact_forces(data, ndata)
         elif self.table_code == 67:   # Glue Forces
             assert self.table_name in [b'OQGGF1', b'OQGGF2'], self.code_information()
@@ -417,7 +418,7 @@ class OQG(OP2Common):
         """
         self.to_nx()
         #self._setup_op2_subcase('MPCFORCES')
-        if self.table_name in [b'OQGCF1']:
+        if self.table_name in [b'OQGCF1', b'OQGCF2']:
             result_name = 'contact_forces'
         else:  # pragma: no cover
             msg = 'contact_forces; table_name=%s' % self.table_name

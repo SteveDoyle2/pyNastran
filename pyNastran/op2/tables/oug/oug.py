@@ -363,6 +363,325 @@ class OUG(OP2Common):
         self._write_debug_bits()
         assert isinstance(self.nonlinear_factor, integer_types), self.nonlinear_factor
 
+    def _read_ougpc1_3(self, data, ndata):
+        """reads table 3 (the header table)"""
+        self.to_nx()
+        #self._set_times_dtype()
+        self.nonlinear_factor = np.nan
+        self.is_table_1 = True
+        self.is_table_2 = False
+        unused_three = self.parse_approach_code(data)
+        self.words = [
+            'approach_code', 'table_code', '???', 'isubcase',
+            '???', '???', '???', '???',
+            'format_code', 'num_wide', '???', '???',
+            '???', '???', '???', '???',
+            '???', '???', '???', '???',
+            '???', '???', 'thermal', '???',
+            '???', 'Title', 'subtitle', 'label']
+
+        ## pcode
+        # Panel contribution code: +/-1=abs, +/-2=norm
+
+        ## data_type
+        #Acoustic dof code (10*grid ID + direction)
+        #Direction has the following values:
+        #=0, Pressure
+        #=1, X-displacement
+        #=2, Y-displacement
+        #=3, Z-displacement
+        #=4, RX-displacement
+        #=5, RY-displacement
+        #=6, RZ-displacement
+        self.dcode = self.add_data_parameter(data, 'dcode', b'i', 5, False)
+
+        ## Panel name (0 for TOTAL)
+        panel_name1 = self.add_data_parameter(data, 'data_type', b'4s', 6, False,
+                                              add_to_dict=False)
+        panel_name2 = self.add_data_parameter(data, 'panel_name', b'4s', 7, False,
+                                              add_to_dict=False)
+        self.panel_name = panel_name1 + panel_name2
+        self.data_code['panel_name'] = self.panel_name
+
+        ## data_type
+        ## (1=pressure, 2=first derivative, 3=second derivative)
+        self.data_type = self.add_data_parameter(data, 'data_type', b'i', 8, False)
+
+        ## format code
+        self.format_code = self.add_data_parameter(data, 'format_code', b'i', 9, False)
+
+        ## number of words per entry in record
+        self.num_wide = self.add_data_parameter(data, 'num_wide', b'i', 10, False)
+
+
+        # 1 ACODE(C) I Device code + 10*Approach Code
+        # 2 TCODE(C) I Table Code
+        # 3 PCODE I Panel contribution code: +/-1=abs, +/-2=norm
+        # 4 SUBCASE I Subcase number
+        # 5 DCODE I Acoustic dof code (10*grid ID + direction)
+        # Direction has the following values:
+        # =0, Pressure
+        # =1, X-displacement
+        # =2, Y-displacement
+        # =3, Z-displacement
+        # =4, RX-displacement
+        # =5, RY-displacement
+        # =6, RZ-displacement
+        # TCODE,1=01 Sort 1
+        #   ACODE,4=05 Frequency
+        #   6 FREQ RS Frequency (Hz)
+        #   End ACODE,4
+        # TCODE,1=02 Sort 2
+        # 6 PNAME(2) CHAR4 Panel name (0 for TOTAL)
+        # End TCODE,1
+        # 8 DATTYP I Data Type (1=pressure, 2=first derivative, 3=second derivative)
+        if self.analysis_code == 1 and 0:   # statics / displacement / heat flux
+            # load set number
+            self.lsdvmn = self.add_data_parameter(data, 'lsdvmn', b'i', 5, False)
+            self.data_names = self.apply_data_code_value('data_names', ['lsdvmn'])
+            self.setNullNonlinearFactor()
+        #elif self.analysis_code == 2:  # real eigenvalues
+            ## mode number
+            #self.mode = self.add_data_parameter(data, 'mode', b'i', 5)
+            ## eigenvalue
+            #self.eign = self.add_data_parameter(data, 'eign', b'f', 6, False)
+            ## mode or cycle .. todo:: confused on the type - F1???
+            ## float - C:\MSC.Software\simcenter_nastran_2019.2\tpl_post1\mftank.op2
+            ##self.mode_cycle = self.add_data_parameter(data, 'mode_cycle', b'i', 7, False)  # nope...
+            #self.mode_cycle = self.add_data_parameter(data, 'mode_cycle', b'f', 7, False) # radians
+            #self.update_mode_cycle('mode_cycle')
+            #self.data_names = self.apply_data_code_value('data_names', ['mode', 'eign', 'mode_cycle'])
+        #elif self.analysis_code == 3: # differential stiffness
+            #self.lsdvmn = self.get_values(data, b'i', 5) ## load set number
+            #self.data_code['lsdvmn'] = self.lsdvmn
+        #elif self.analysis_code == 4: # differential stiffness
+            #self.lsdvmn = self.get_values(data, b'i', 5) ## load set number
+        elif self.analysis_code == 5:   # frequency
+            # frequency
+            self.freq = self.add_data_parameter(data, 'freq', b'i', 5)
+            self.data_names = self.apply_data_code_value('data_names', ['freq'])
+        #elif self.analysis_code == 6:  # transient
+            ## time step
+            #self.dt = self.add_data_parameter(data, 'dt', b'f', 5)
+            #self.data_names = self.apply_data_code_value('data_names', ['dt'])
+        #elif self.analysis_code == 7:  # pre-buckling
+            ## load set number
+            #self.lsdvmn = self.add_data_parameter(data, 'lsdvmn', b'i', 5)
+            #self.data_names = self.apply_data_code_value('data_names', ['lsdvmn'])
+        #elif self.analysis_code == 8:  # post-buckling
+            ## load set number
+            #self.lsdvmn = self.add_data_parameter(data, 'lsdvmn', b'i', 5)
+            ## real eigenvalue
+            #self.eigr = self.add_data_parameter(data, 'eigr', b'f', 6, False)
+            #self.data_names = self.apply_data_code_value('data_names', ['lsdvmn', 'eigr'])
+        #elif self.analysis_code == 9:  # complex eigenvalues
+            ## mode number
+            #self.mode = self.add_data_parameter(data, 'mode', b'i', 5)
+            ## real eigenvalue
+            #self.eigr = self.add_data_parameter(data, 'eigr', b'f', 6, False)
+            ## imaginary eigenvalue
+            #self.eigi = self.add_data_parameter(data, 'eigi', b'f', 7, False)
+            #self.data_names = self.apply_data_code_value('data_names', ['mode', 'eigr', 'eigi'])
+        #elif self.analysis_code == 10:  # nonlinear statics
+            ## load step
+            #self.lftsfq = self.add_data_parameter(data, 'lftsfq', b'f', 5)
+            #self.data_names = self.apply_data_code_value('data_names', ['lftsfq'])
+        #elif self.analysis_code == 11:  # old geometric nonlinear statics
+            ## load set number
+            #self.lsdvmn = self.add_data_parameter(data, 'lsdvmn', b'i', 5)
+            #self.data_names = self.apply_data_code_value('data_names', ['lsdvmn'])
+        #elif self.analysis_code == 12:  # contran ? (may appear as aCode=6)  --> straight from DMAP...grrr...
+            ## load set number
+            #self.lsdvmn = self.add_data_parameter(data, 'lsdvmn', b'i', 5)
+            #self.data_names = self.apply_data_code_value('data_names', ['lsdvmn'])
+        else:  # pragma: no cover
+            msg = f'invalid analysis_code...analysis_code={self.analysis_code}\ndata={self.data_code}'
+            raise RuntimeError(msg)
+
+        #print self.code_information()
+        self._fix_oug_format_code()
+        if self.is_debug_file:
+            self.binary_debug.write('  approach_code  = %r\n' % self.approach_code)
+            self.binary_debug.write('  tCode          = %r\n' % self.tCode)
+            self.binary_debug.write('  isubcase       = %r\n' % self.isubcase)
+        self._read_title(data)
+        self._write_debug_bits()
+        self.warn_skip_table()
+
+    def warn_skip_table(self):
+        if self._table4_count == 0:
+            self.log.warning(f'skipping {self.table_name}')
+            self._table4_count += 1
+
+    def _read_ougpc2_3(self, data, ndata):
+        """reads the SORT2 version of table 4 (the data table)"""
+        #self._set_times_dtype()
+        self.nonlinear_factor = np.nan
+
+        self.is_table_1 = False
+        self.is_table_2 = True
+        unused_three = self.parse_approach_code(data)
+        self.words = [
+            'approach_code', 'table_code', '???', 'isubcase',
+            '???', '???', '???', '???',
+            'format_code', 'num_wide', '???', '???',
+            '???', '???', '???', '???',
+            '???', '???', '???', '???',
+            '???', '???', '???', '???',
+            '???', 'Title', 'subtitle', 'label']
+
+        ## data_type
+        ## (1=pressure, 2=first derivative, 3=second derivative)
+        self.data_type = self.add_data_parameter(data, 'data_type', b'i', 8, False)
+
+        ## format code
+        self.format_code = self.add_data_parameter(data, 'format_code', b'i', 9, False)
+
+        ## number of words per entry in record
+        self.num_wide = self.add_data_parameter(data, 'num_wide', b'i', 10, False)
+
+        self.node_id = self.add_data_parameter(data, 'node_id', b'i', 5, fix_device_code=True)
+        #if self.analysis_code == 1:  # statics / displacement / heat flux
+            ## load set number
+            #self.lsdvmn = self.add_data_parameter(data, 'lsdvmn', b'i', 5, False)
+            #self.data_names = self.apply_data_code_value('data_names', ['node_id'])
+            #self.setNullNonlinearFactor()
+
+        #if self.analysis_code == 1:  # static...because reasons.
+            #self._analysis_code_fmt = b'f'
+            #self.data_names = self.apply_data_code_value('data_names', ['node_id'])
+            #self.apply_data_code_value('analysis_method', 'N/A')
+        #elif self.analysis_code == 2:  # real eigenvalues
+            ### mode number
+            ##self.mode = self.add_data_parameter(data, 'mode', b'i', 5)
+            #self._analysis_code_fmt = b'i'
+            ## real eigenvalue
+            #self.eigr = self.add_data_parameter(data, 'eigr', b'f', 6, False)
+            ### mode or cycle .. todo:: confused on the type - F1???
+            ## float - C:\MSC.Software\simcenter_nastran_2019.2\tpl_post1\mftank.op2
+             ## mode or cycle .. todo:: confused on the type - F1???
+            #self.mode_cycle = self.add_data_parameter(data, 'mode_cycle', b'i', 7, False)
+            ##self.mode_cycle = self.add_data_parameter(data, 'mode_cycle', b'f', 7, False)
+            #self.data_names = self.apply_data_code_value('data_names', ['node_id', 'eigr', 'mode_cycle'])
+            #self.apply_data_code_value('analysis_method', 'mode')
+        #elif self.analysis_code == 3: # differential stiffness
+            #self.lsdvmn = self.get_values(data, b'i', 5) ## load set number
+            #self.data_code['lsdvmn'] = self.lsdvmn
+        #elif self.analysis_code == 4: # differential stiffness
+            #self.lsdvmn = self.get_values(data, b'i', 5) ## load set number
+
+        if self.analysis_code == 5:   # frequency
+            # frequency
+            ## Panel name (0 for TOTAL)
+            panel_name1 = self.add_data_parameter(data, 'panel_name1', b'4s', 6, False,
+                                                  add_to_dict=False)
+            panel_name2 = self.add_data_parameter(data, 'panel_name2', b'4s', 7, False,
+                                                  add_to_dict=False)
+            self.panel_name = panel_name1 + panel_name2
+            self.data_code['panel_name'] = self.panel_name
+            #print(self.panel_name)
+
+
+            #self.freq = self.add_data_parameter(data, 'freq', b'f', 5)
+            self._analysis_code_fmt = b'f'
+            self.data_names = self.apply_data_code_value('data_names', ['node_id'])
+            self.apply_data_code_value('analysis_method', 'freq')
+        #elif self.analysis_code == 6:  # transient
+            ### time step
+            ##self.dt = self.add_data_parameter(data, 'dt', b'f', 5)
+            #self._analysis_code_fmt = b'f'
+            #self.data_names = self.apply_data_code_value('data_names', ['node_id'])
+            #self.apply_data_code_value('analysis_method', 'dt')
+        #elif self.analysis_code == 7:  # pre-buckling
+            ### load set number
+            ##self.lsdvmn = self.add_data_parameter(data, 'lsdvmn', b'i', 5)
+            #self._analysis_code_fmt = b'i'
+            #self.data_names = self.apply_data_code_value('data_names', ['node_id'])
+            #self.apply_data_code_value('analysis_method', 'lsdvmn')
+        #elif self.analysis_code == 8:  # post-buckling
+            ### load set number
+            ##self.lsdvmn = self.add_data_parameter(data, 'lsdvmn', b'i', 5)
+            #self._analysis_code_fmt = b'f'
+            ### real eigenvalue
+            #self.eigr = self.add_data_parameter(data, 'eigr', b'f', 6, False)
+            #self.data_names = self.apply_data_code_value('data_names', ['node_id', 'eigr'])
+            #self.apply_data_code_value('analysis_method', 'eigr')
+        #elif self.analysis_code == 9:  # complex eigenvalues
+            ### mode number
+            ##self.mode = self.add_data_parameter(data, 'mode', b'i', 5)
+            #self._analysis_code_fmt = b'i'
+            ### real eigenvalue
+            #self.eigr = self.add_data_parameter(data, 'eigr', b'f', 6, False)
+            ### imaginary eigenvalue
+            #self.eigi = self.add_data_parameter(data, 'eigi', b'f', 7, False)
+            #self.data_names = self.apply_data_code_value('data_names', ['node_id', 'eigr', 'eigi'])
+            #self.apply_data_code_value('analysis_method', 'mode')
+        #elif self.analysis_code == 10:  # nonlinear statics
+            ### load step
+            ##self.lftsfq = self.add_data_parameter(data, 'lftsfq', b'f', 5)
+            #self._analysis_code_fmt = b'f'
+            #self.data_names = self.apply_data_code_value('data_names', ['node_id'])
+            #self.apply_data_code_value('analysis_method', 'lftsfq')
+        #elif self.analysis_code == 11:  # old geometric nonlinear statics
+            ### load set number
+            ##self.lsdvmn = self.add_data_parameter(data, 'lsdvmn', b'i', 5)
+            #self.data_names = self.apply_data_code_value('data_names', ['node_id'])
+        #elif self.analysis_code == 12:  # contran ? (may appear as aCode=6)  --> straight from DMAP...grrr...
+            ### load set number
+            ##self.lsdvmn = self.add_data_parameter(data, 'lsdvmn', b'i', 5)
+            #self.data_names = self.apply_data_code_value('data_names', ['node_id'])
+            #self.apply_data_code_value('analysis_method', 'lsdvmn')
+        else:
+            msg = 'invalid analysis_code...analysis_code=%s' % self.analysis_code
+            raise RuntimeError(msg)
+
+        self._fix_oug_format_code()
+        if self.is_debug_file:
+            self.binary_debug.write('  %-14s = %r %s\n' % ('approach_code', self.approach_code,
+                                                           self.approach_code_str(self.approach_code)))
+            self.binary_debug.write('  %-14s = %r\n' % ('tCode', self.tCode))
+            self.binary_debug.write('  %-14s = %r\n' % ('isubcase', self.isubcase))
+        self._read_title(data)
+        self._write_debug_bits()
+        assert isinstance(self.nonlinear_factor, integer_types), self.nonlinear_factor
+        self.warn_skip_table()
+
+    def _read_ougpc_4(self, data, ndata):
+        """reads table 4 (the results table)"""
+        assert self.table_code == 49, self.code_information()
+        if self.read_mode == 1:
+            return ndata
+        #self.show_data(data)
+        #print(f'data_type = {self.data_type}')
+        assert self.data_type == 1, self.data_type
+
+        from struct import Struct
+        n = 0
+        ntotal = 16 * self.factor
+        npanels = ndata // ntotal
+        assert ndata % ntotal == 0, f'ndata={ndata} ntotal={ntotal} data_type={self.data_type}'
+        if self.sort_method == 1:
+            struct1 = Struct(self._endian + b'8s ff')
+            for i in range(npanels):
+                # Panel name (0 for TOTAL)
+                edata = data[n:n+ntotal]
+                name, real, imag = struct1.unpack(edata)
+                #print(name, real, imag)
+                n += ntotal
+        else:
+            struct1 = Struct(self._endian + b'ff ff')
+            for i in range(npanels):
+                # Panel name (0 for TOTAL)
+                edata = data[n:n+ntotal]
+                #self.show_data(edata)
+                freq, null, real, imag = struct1.unpack(edata)
+                #print(freq, null, real, imag)
+                n += ntotal
+        #strings = (b'0       \xed\xf0{AE\x9d\\APANEL3  O\xa1\x82A\x81\xc5eAPANEL5  a\xeb"\xbe\xbf/\xa4\xbePANEL6  \xda\xe2\xa1\xbe\x0c\x1a!\xbcPANEL2  \xe3~\r\xbetE\xab\xbdPANEL1  ep\x1a\xbd\x05@\xb8\xbd',)
+        #ints    = (538976304, 538976288, 1098641645, 1096588613, 1162756432, 538981196, 1099080015, 1097188737, 1162756432, 538981708, -1105007775, -1096536129, 1162756432, 538981964, -1096686886, -1138681332, 1162756432, 538980940, -1106411805, -1112849036, 1162756432, 538980684, -1122340763, -1111998459)
+        #floats  = (1.3563177106455426e-19, 1.3563156426940112e-19, 15.746319770812988, 13.788395881652832, 3300.08203125, 1.3569499868262628e-19, 16.328763961791992, 14.360718727111816, 3300.08203125, 1.357016161275267e-19, -0.15910102427005768, -0.3206767737865448, 3300.08203125, 1.3570492484997691e-19, -0.316183865070343, -0.009832870215177536, 3300.08203125, 1.3569168996017607e-19, -0.13817934691905975, -0.0836285650730133, 3300.08203125, 1.3568838123772585e-19, -0.037704844027757645, -0.08996585756540298)
+        return ndata
+
     def _read_ougmc_4(self, data, ndata):
         if self.table_code == 44:   # Displacements
             if self.table_name in [b'OUGMC1', b'OUGMC2']:
@@ -386,36 +705,39 @@ class OUG(OP2Common):
             from struct import Struct
             ntotal = 16 * self.factor  # 4*4
             nnodes = ndata // ntotal
-            fmt = mapfmt(self._endian + b'i3f', self.size)
+            fmt = mapfmt(self._endian + b'i 3f', self.size)
             struct1 = Struct(fmt)
             for inode in range(nnodes):
                 edata = data[n:n+ntotal]
                 out = struct1.unpack(edata)
                 #print(out)
                 n += ntotal
-            self.log.warning(f'skipping {self.table_name}')
         else:
             raise NotImplementedError(self.code_information())
+
+        self.warn_skip_table()
         return n
 
     def _read_oug_4(self, data, ndata):
         """reads the SORT1 version of table 4 (the data table)"""
+        table_name_bytes = self.table_name
         if self.table_code == 1:   # Displacements
-            if self.table_name in [b'OUGV1', b'OUGV2',
-                                   b'ROUGV1', b'ROUGV2',
-                                   b'OUG1',
-                                   b'BOUGV1',
-                                   b'TOUGV1',
-                                   b'OUPV1', b'OUG1F']:
+            if table_name_bytes in [b'OUGV1', b'OUGV2',
+                                    b'OUG1',
+                                    b'BOUGV1',
+                                    b'OUPV1']:
                 # OUG1F - acoustic displacements?
                 #msg = 'table_name=%s table_code=%s' % (self.table_name, self.table_code)
                 #raise AssertionError(msg)
                 n = self._read_oug_displacement(data, ndata, is_cid=False)
-            elif self.table_name == b'OUGV1PAT':
+            elif table_name_bytes in [b'ROUGV1', b'ROUGV2', b'TOUGV1', b'OUGF1']:
+                self.to_nx()
+                n = self._read_oug_displacement(data, ndata, is_cid=False)
+            elif table_name_bytes == b'OUGV1PAT':
                 n = self._read_oug_displacement(data, ndata, is_cid=True)
-            elif self.table_name == b'OAG1':
+            elif table_name_bytes == b'OAG1':
                 n = self._read_oug_acceleration(data, ndata)
-            elif self.table_name == b'OCRUG':
+            elif table_name_bytes == b'OCRUG':
                 n = self._read_oug_displacement(data, ndata, is_cid=False)
             else:
                 raise NotImplementedError(self.code_information())
@@ -427,23 +749,23 @@ class OUG(OP2Common):
             n = self._read_oug_acceleration(data, ndata)
 
         elif self.table_code == 14:  # eigenvector (solution set)
-            assert self.table_name in [b'OPHSA'], self.table_name
+            assert table_name_bytes in [b'OPHSA'], self.table_name
             self.to_nx()
             n = self._read_oug_eigenvector(data, ndata)
         elif self.table_code == 15:  # displacement (solution set)
-            assert self.table_name in [b'OUXY1', b'OUXY2'], self.table_name
+            assert table_name_bytes in [b'OUXY1', b'OUXY2'], self.table_name
             self.to_nx()
             n = self._read_oug_displacement(data, ndata, is_cid=False)
         elif self.table_code == 16:  # velocity (solution set)
-            assert self.table_name in [b'OUXY1', b'OUXY2'], self.table_name
+            assert table_name_bytes in [b'OUXY1', b'OUXY2'], self.table_name
             self.to_nx()
             n = self._read_oug_velocity(data, ndata)
         elif self.table_code == 17:  # acceleration (solution set)
-            assert self.table_name in [b'OUXY1', b'OUXY2'], self.table_name
+            assert table_name_bytes in [b'OUXY1', b'OUXY2'], self.table_name
             self.to_nx()
             n = self._read_oug_acceleration(data, ndata)
         elif self.table_code == 44:   # Displacements
-            assert self.table_name in [b'OUGMC1', b'OUGMC2'], self.table_name
+            assert table_name_bytes in [b'OUGMC1', b'OUGMC2'], self.table_name
             self.to_nx()
             n = self._read_oug_displacement(data, ndata, is_cid=False)
         else:
@@ -503,6 +825,7 @@ class OUG(OP2Common):
         TOUGV1/2  temperature
         OCRUG     ???
         OUG1F     acoustic displacements
+        OUGF1     acoustic displacements
 
         """
         self._setup_op2_subcase('displacement')
@@ -548,7 +871,7 @@ class OUG(OP2Common):
         elif self.table_name in [b'OCRUG']:
             result_name = 'displacements'
             assert self.thermal == 0, self.code_information()
-        elif self.table_name in [b'OUG1F']:
+        elif self.table_name in [b'OUG1F', b'OUGF1']:
             result_name = 'acoustic.displacements'  # acoustic displacements
             assert self.thermal == 0, self.code_information()
         else:  # pragma: no cover
@@ -564,7 +887,7 @@ class OUG(OP2Common):
             #storage_obj = self.displacements
             assert self.table_name in [b'BOUGV1', b'ROUGV1', b'ROUGV2', b'OUGV1', b'OUGV2',
                                        b'OUG1', b'OCRUG', b'OUGV1PAT', b'OUXY1', b'OUXY2',
-                                       b'OUG1F'], self.table_name
+                                       b'OUG1F', b'OUGF1'], self.table_name
             n = self._read_table_vectorized(data, ndata, result_name, storage_obj,
                                             RealDisplacementArray, ComplexDisplacementArray,
                                             'node', random_code=self.random_code,
@@ -765,6 +1088,10 @@ class OUG(OP2Common):
         if self.table_name in [b'OUGV1', b'OUGV2', b'BOUGV1', b'OPHIG', b'BOPHIG', b'OUG1', b'BOPHIGF']:
             self._setup_op2_subcase('VECTOR')
             result_name = 'eigenvectors'
+        elif self.table_name in [b'BOPHIGF', b'OUGF1']:
+            self._setup_op2_subcase('VECTOR')
+            result_name = 'eigenvectors'
+
         elif self.table_name == b'OPHSA':
             self.to_nx()
             self._setup_op2_subcase('SVECTOR')

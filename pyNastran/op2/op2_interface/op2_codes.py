@@ -4,18 +4,42 @@ from pyNastran.op2.op2_interface.nx_tables import NX_ELEMENTS, NX_TABLE_CONTENT
 from pyNastran.op2.op2_interface.msc_tables import MSC_ELEMENTS, MSC_TABLE_CONTENT
 
 # strings
-SORT1_TABLES_BYTES = [b'OSTRMS1C', b'OSTNO1C', b'OES1X', b'OSTR1X',
-                      b'OESRMS2', b'OESNO2', b'OESXRMS1',
-                      b'OES1C', b'OSTR1C',
-                      b'OSTRMS1C',
-                      b'OESPSD1C',
-                      b'OSTPSD1C',
-                      b'OEF1X',
-                      b'OESNLXR', b'OESVM1C', b'OSTRVM1C']
-SORT2_TABLES_BYTES = [b'OUGPSD2', b'OUGATO2', b'OESCP',
-                      b'OES2C', b'OSTR2C',
-                      b'OFMPF2M', b'OLMPF2M', b'OPMPF2M', b'OSMPF2M', b'OGPMPF2M',
-                      b'OESPSD2C', b'OSTPSD2C', ]
+SORT1_TABLES_BYTES = [
+    b'OES1', b'OES1C', b'OES1X', b'OES1X1', b'OESVM1', b'OESVM1C',
+    b'OSTR1C', b'OSTR1X', b'OSTRVM1', b'OSTRVM1C',
+    b'OSTRMS1C',
+
+    b'OESNLXR', b'OESTRCP',
+    # ----------
+    b'OEF1X', b'OEF1', b'OEFIT',
+    # --------
+    # random
+
+    # properly labeled
+    b'OESXRMS1', b'OESPSD1C', b'OESXNO1', b'OESXRM1C',
+    b'OEFCRM1', b'OEFRMS1', b'OEFNO1', b'OEFPSD1',
+    b'OSTRMS1C', b'OSTPSD1C', b'OSTNO1C',
+
+    # mislabeled tables
+    b'OESRMS2', b'OESNO2',
+
+]
+SORT2_TABLES_BYTES = [
+    b'OUGPSD2', b'OUGATO2', b'OESCP',
+    b'OFMPF2M', b'OLMPF2M', b'OPMPF2M', b'OSMPF2M', b'OGPMPF2M',
+
+    b'OES2', b'OES2C', b'OESVM2',
+    b'OSTR2', b'OSTR2C', b'OSTRVM2',
+    b'OEF2',
+
+    # random
+    b'OEFATO2', b'OEFCRM2', b'OEFPSD2',
+    b'OESATO2', b'OESCRM2', b'OESPSD2C', b'OESPSD2',
+    b'OSTRATO2', b'OSTRCRM2', b'OSTPSD2C', b'OSTRPSD2',
+
+
+]
+TABLES_BYTES = SORT1_TABLES_BYTES + SORT2_TABLES_BYTES
 SORT1_TABLES_STR = [name.decode('utf8') for name in SORT1_TABLES_BYTES]
 SORT2_TABLES_STR = [name.decode('utf8') for name in SORT2_TABLES_BYTES]
 NO_SORT_METHOD = [b'QHHA']
@@ -821,9 +845,9 @@ def get_result_word(result_type: int) -> str:
     elif result_type == 2:
         result_word = "Random"
     else:
-        result_word = '\n%18s1 - Real\n' % ''
-        result_word += '%18s2 - Complex\n' % ''
-        result_word += '%18s3 - Random\n' % ''
+        result_word = '\n%18s0 - Real\n' % ''
+        result_word += '%18s1 - Complex\n' % ''
+        result_word += '%18s2 - Random\n' % ''
         #msg = 'unsupported format_code:  format_code=%s\n' % format_code
         #raise InvalidFormatCodeError(msg)
     return result_word

@@ -29,7 +29,7 @@ from pyNastran.op2.op2_interface.op2_common import OP2Common
 from pyNastran.op2.op2_interface.utils import apply_mag_phase
 from pyNastran.op2.op2_interface.msc_tables import MSC_OEF_REAL_MAPPER, MSC_OEF_IMAG_MAPPER
 from pyNastran.op2.op2_interface.nx_tables import NX_OEF_REAL_MAPPER, NX_OEF_IMAG_MAPPER
-from pyNastran.op2.op2_interface.op2_codes import SORT1_TABLES_BYTES
+from pyNastran.op2.op2_interface.op2_codes import SORT1_TABLES_BYTES, TABLES_BYTES
 
 from pyNastran.op2.tables.oef_forces.oef_thermal_objects import (
     Real1DHeatFluxArray,
@@ -103,6 +103,7 @@ class OEF(OP2Common):
         table_name_bytes = self.table_name
         assert isinstance(table_name_bytes, bytes), table_name_bytes
         is_sort1 = table_name_bytes in SORT1_TABLES_BYTES
+        assert table_name_bytes in TABLES_BYTES, table_name_bytes
 
         if table_name_bytes in [b'OEF1X', b'OEF1', b'OEF2']:
             if self.thermal == 0:
@@ -126,36 +127,20 @@ class OEF(OP2Common):
         elif table_name_bytes in [b'OEFCRM1', b'OEFCRM2']:
             assert self.table_code in [4, 504], self.code_information()
             prefix = 'crm.'
-            self.format_code = 1 # real
-            self.result_type = 2 # random
-            self.sort_bits[0] = 0 # real
-            self.sort_bits[2] = 1 # random
+            self._set_as_random()
         elif table_name_bytes in [b'OEFPSD1', b'OEFPSD2']:
             assert self.table_code in [4, 604], self.code_information()
-            self.format_code = 1 # real
-            self.result_type = 2 # random
-            self.sort_bits[0] = 0 # real
-            self.sort_bits[2] = 1 # random
+            self._set_as_random()
             prefix = 'psd.'
         elif table_name_bytes in [b'OEFRMS1', b'OEFRMS2']:
             assert self.table_code in [4, 804], self.code_information()
-            #self.format_code = 1
+            self._set_as_random()
             is_sort1 = True
-            self.sort_bits.is_real = True
-            self.sort_bits.is_random = True
-            #self.sort_bits[0] = 0 # real
-            #self.sort_bits[1] = 0 # sort1
-            #self.sort_bits[2] = 1 # random
-            #self.sort_method = 1
             self._analysis_code_fmt = b'i'
             prefix = 'rms.'
         elif table_name_bytes in [b'OEFNO1', b'OEFNO2']:
             assert self.table_code in [4, 904], self.code_information()
-            self.format_code = 1
-            self.sort_bits[0] = 0 # real
-            self.sort_bits[1] = 0 # sort1
-            #self.sort_bits[0] = 1 # sort2
-            self.sort_bits[2] = 1 # random
+            self._set_as_random()
             self.sort_method = 1
             self.data_code['nonlinear_factor'] = None
             self._analysis_code_fmt = b'i'
@@ -1216,11 +1201,13 @@ class OEF(OP2Common):
         dt = self.nonlinear_factor
 
         if self.element_type in [1, 3, 10]:  # rods
-            n, nelements, ntotal = self._oef_crod(data, ndata, dt, is_magnitude_phase, prefix, postfix)
+            n, nelements, ntotal = self._oef_crod(data, ndata, dt, is_magnitude_phase,
+                                                  result_type, prefix, postfix)
 
         elif self.element_type == 2:  # cbeam
             #2-CBEAM
-            n, nelements, ntotal = self._oef_cbeam(data, ndata, dt, is_magnitude_phase, prefix, postfix)
+            n, nelements, ntotal = self._oef_cbeam(data, ndata, dt, is_magnitude_phase,
+                                                   result_type, prefix, postfix)
 
         elif self.element_type in [11, 12, 13, 14,   # springs
                                    20, 21, 22, 23]:  # dampers
@@ -1233,25 +1220,30 @@ class OEF(OP2Common):
             # 21-CDAMP2
             # 22-CDAMP3
             # 23-CDAMP4
-            n, nelements, ntotal = self._oef_celas_cdamp(data, ndata, dt, is_magnitude_phase, prefix, postfix)
+            n, nelements, ntotal = self._oef_celas_cdamp(data, ndata, dt, is_magnitude_phase,
+                                                         result_type, prefix, postfix)
 
         elif self.element_type == 24:  # CVISC
-            n, nelements, ntotal = self._oef_cvisc(data, ndata, dt, is_magnitude_phase, prefix, postfix)
+            n, nelements, ntotal = self._oef_cvisc(data, ndata, dt, is_magnitude_phase,
+                                                   result_type, prefix, postfix)
 
         elif self.element_type == 34:  # cbar
             # 34-CBAR
-            n, nelements, ntotal = self._oef_cbar_34(data, ndata, dt, is_magnitude_phase, result_type,
-                                                     prefix, postfix)
+            n, nelements, ntotal = self._oef_cbar_34(data, ndata, dt, is_magnitude_phase,
+                                                     result_type, prefix, postfix)
 
         elif self.element_type in [83]: # centroidal shells
             # 33-CQUAD4???
             # 83-CTRIA3
-            n, nelements, ntotal = self._oef_shells_centroidal(data, ndata, dt, is_magnitude_phase, prefix, postfix)
+            n, nelements, ntotal = self._oef_shells_centroidal(data, ndata, dt, is_magnitude_phase,
+                                                               result_type, prefix, postfix)
         elif self.element_type == 4:  # cshear
-            n, nelements, ntotal = self._oef_cshear(data, ndata, dt, is_magnitude_phase, prefix, postfix)
+            n, nelements, ntotal = self._oef_cshear(data, ndata, dt, is_magnitude_phase,
+                                                    result_type, prefix, postfix)
 
         elif self.element_type == 35:  # cconeax
-            n, nelements, ntotal = self._oef_cconeax(data, ndata, dt, is_magnitude_phase, prefix, postfix)
+            n, nelements, ntotal = self._oef_cconeax(data, ndata, dt, is_magnitude_phase,
+                                                     result_type, prefix, postfix)
         else:
             return self._not_implemented_or_skip(data, ndata, self.code_information())
 
@@ -1683,7 +1675,8 @@ class OEF(OP2Common):
         if result_type in [0, 2] and self.num_wide == 100:  # real/random
             if self.sort_method == 2:
                 msg = self.code_information()
-                return self._not_implemented_or_skip(data, ndata, msg), None, None
+                if self.read_mode == 2:
+                    return self._not_implemented_or_skip(data, ndata, msg), None, None
                 return ndata, None, None
             # real - format_code == 1
             # random - format_code == 2
@@ -1793,7 +1786,8 @@ class OEF(OP2Common):
                 n = oef_cbeam_imag_177(self, data, obj, nelements, ntotal, is_magnitude_phase)
         else:
             msg = self.code_information()
-            print(msg)
+            raise RuntimeError(msg)
+            #print(msg)
             return self._not_implemented_or_skip(data, ndata, msg), None, None
         return n, nelements, ntotal
 
@@ -2151,6 +2145,7 @@ class OEF(OP2Common):
             msg = self.code_information()
             print(msg)
             print(result_type)
+            raise NotImplementedError(self.code_information())
             aaa
             return self._not_implemented_or_skip(data, ndata, msg), None, None
         #print self.barForces
@@ -3313,7 +3308,7 @@ class OEF(OP2Common):
 
         n = 0
         numwide_real = 7
-        if self.format_code in [1, 3] and self.num_wide == 7:  # real/random
+        if result_type in [0, 2] and self.num_wide == 7:  # real/random
             # real - format_code == 1
             # random - format_code == 3
             ntotal = 28 # 7*4
@@ -3357,7 +3352,7 @@ class OEF(OP2Common):
                         eid_device, self.nonlinear_factor, self.sort_method)
                     obj.add_sort1(dt, eid, fx, fy, fz, mx, my, mz)
                     n += ntotal
-        elif self.format_code == 2 and self.num_wide == 13:  # imag
+        elif result_type == 1 and self.num_wide == 13:  # imag
             # TODO: vectorize
             ntotal = 52  # 13*4
             nelements = ndata // ntotal
@@ -3401,10 +3396,12 @@ class OEF(OP2Common):
                 n += ntotal
         #elif self.format_code == 2 and self.num_wide == 7:
             #self.log.warning(self.code_information())
-        else:  # pragma: no cover
-            msg = self.code_information()
-            print(msg)
-            return self._not_implemented_or_skip(data, ndata, msg), None, None
+        else:
+            raise NotImplementedError(self.code_information())
+        #else:  # pragma: no cover
+            #msg = self.code_information()
+            #print(msg)
+            #return self._not_implemented_or_skip(data, ndata, msg), None, None
         return n, nelements, ntotal
 
     def _oef_vu_shell(self, data, ndata, dt, is_magnitude_phase,

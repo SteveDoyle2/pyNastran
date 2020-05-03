@@ -1230,9 +1230,10 @@ class RealCBeamForceArray(RealForceObject):
 
         #print("ntimes=%s nelements=%s ntotal=%s" % (self.ntimes, self.nelements, self.ntotal))
         dtype, idtype, fdtype = get_times_dtype(self.nonlinear_factor, self.size)
+        print(dtype, idtype, fdtype)
         self._times = zeros(self.ntimes, dtype)
         self.element = zeros(self.ntotal, idtype)
-        self.element_node = zeros((self.ntotal, 2), fdtype)
+        self.element_node = zeros((self.ntotal, 2), idtype)
 
         # the number is messed up because of the offset for the element's properties
         if not (self.nelements * nnodes) == self.ntotal:
@@ -1242,7 +1243,7 @@ class RealCBeamForceArray(RealForceObject):
                                                                            self.ntotal)
             raise RuntimeError(msg)
         #[sd, bm1, bm2, ts1, ts2, af, ttrq, wtrq]
-        self.data = zeros((self.ntimes, self.ntotal, 8), 'float32')
+        self.data = zeros((self.ntimes, self.ntotal, 8), fdtype)
 
     def finalize(self):
         sd = self.data[0, :, 0]

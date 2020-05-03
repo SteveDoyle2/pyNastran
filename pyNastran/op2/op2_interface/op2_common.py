@@ -1694,6 +1694,8 @@ class OP2Common(Op2Codes, F06Writer):
                 #return ndata
 
         if is_release:
+            #print(self.code_information())
+            #asdf
             if msg != self._last_comment:
                 #print(self.code_information())
                 if self.read_mode == 2:
