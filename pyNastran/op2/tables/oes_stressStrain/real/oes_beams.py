@@ -83,16 +83,14 @@ class RealBeamArray(OES_Object):
         #print("***name=%s type=%s nnodes_per_element=%s ntimes=%s nelements=%s ntotal=%s" % (
             #self.element_name, self.element_type, nnodes_per_element, self.ntimes,
             #self.nelements, self.ntotal))
-        dtype = 'float32'
-        if isinstance(self.nonlinear_factor, integer_types):
-            dtype = 'int32'
+        dtype, idtype, fdtype = get_times_dtype(self.nonlinear_factor, self.size)
         _times = zeros(self.ntimes, dtype=dtype)
-        element_node = zeros((self.ntotal, 2), dtype='int32')
+        element_node = zeros((self.ntotal, 2), dtype=idtype)
 
         # sxc, sxd, sxe, sxf
         # smax, smin, MSt, MSc
-        xxb = zeros(self.ntotal, dtype='float32')
-        data = zeros((self.ntimes, self.ntotal, 8), dtype='float32')
+        xxb = zeros(self.ntotal, dtype=fdtype)
+        data = zeros((self.ntimes, self.ntotal, 8), dtype=fdtype)
 
         if self.load_as_h5:
             #for key, value in sorted(self.data_code.items()):

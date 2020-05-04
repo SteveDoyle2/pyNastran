@@ -874,6 +874,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             b'OUGPC1'  : [self._read_ougpc1_3, self._read_ougpc_4],  # panel contributions
             b'OUGPC2'  : [self._read_ougpc2_3, self._read_ougpc_4],  # panel contributions
             b'OUGF1' : [self._read_oug1_3, self._read_oug_4], # Acoustic pressures at microphone points in SORT1 format
+            b'OUGF2' : [self._read_oug2_3, self._read_oug_4], # Acoustic pressures at microphone points in SORT1 format
 
             b'OUGV2'   : [self._read_oug2_3, self._read_oug_4],  # displacements in nodal frame
             b'ROUGV2'  : [self._read_oug2_3, self._read_oug_4],  # relative OUG
@@ -926,8 +927,8 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             b'OSPDSI1' : [self._nx_table_passer, self._table_passer], # Initial separation distance.
             b'OSPDSI2' : [self._nx_table_passer, self._table_passer], # Output contact separation distance results.
 
-            b'OBC1' : [self._read_obc1_3, self._read_obc1_4],
-            b'OBC2' : [self._nx_table_passer, self._table_passer], # Contact pressures and tractions at grid points.
+            #b'OBC1' : [self._read_obc1_3, self._read_obc1_4],
+            #b'OBC2' : [self._nx_table_passer, self._table_passer], # Contact pressures and tractions at grid points.
 
             b'OSLIDE1'
 

@@ -1612,9 +1612,10 @@ class OEF(OP2Common):
                     obj.add_sort1(dt, eid, axial, torque)
                     n += ntotal
         else:  # pragma: no cover
-            msg = self.code_information()
-            print(msg)
-            return self._not_implemented_or_skip(data, ndata, msg), None, None
+            raise RuntimeError(self.code_information())
+            #msg = self.code_information()
+            #print(msg)
+            #return self._not_implemented_or_skip(data, ndata, msg), None, None
         return n, nelements, ntotal
 
     def _oef_cbeam(self, data, ndata, dt, is_magnitude_phase,
@@ -1785,10 +1786,11 @@ class OEF(OP2Common):
                 nelements = ndata // ntotal
                 n = oef_cbeam_imag_177(self, data, obj, nelements, ntotal, is_magnitude_phase)
         else:
-            msg = self.code_information()
-            raise RuntimeError(msg)
+            raise RuntimeError(self.code_information())
+            #msg = self.code_information()
+            #raise RuntimeError(msg)
             #print(msg)
-            return self._not_implemented_or_skip(data, ndata, msg), None, None
+            #return self._not_implemented_or_skip(data, ndata, msg), None, None
         return n, nelements, ntotal
 
     def _oef_celas_cdamp(self, data, ndata, dt, is_magnitude_phase,
@@ -1939,10 +1941,11 @@ class OEF(OP2Common):
                     obj.add_sort1(dt, eid, force)
                     n += ntotal
         else:
+            raise RuntimeError(self.code_information())
             #msg = 'OEF: element_name=%s element_type=%s' % (self.element_name, self.element_type)
-            msg = self.code_information()
-            print(msg)
-            return self._not_implemented_or_skip(data, ndata, msg), None, None
+            #msg = self.code_information()
+            #print(msg)
+            #return self._not_implemented_or_skip(data, ndata, msg), None, None
         return n, nelements, ntotal
 
     def _oef_cvisc(self, data, ndata, dt, is_magnitude_phase,
@@ -2055,9 +2058,10 @@ class OEF(OP2Common):
                     obj.add_sort1(dt, eid, axial, torque)
                     n += ntotal
         else:
-            msg = self.code_information()
-            print(msg)
-            return self._not_implemented_or_skip(data, ndata, msg), None, None
+            raise RuntimeError(self.code_information())
+            #msg = self.code_information()
+            #print(msg)
+            #return self._not_implemented_or_skip(data, ndata, msg), None, None
         return n, nelements, ntotal
 
     def _oef_cbar_34(self, data, ndata, dt, is_magnitude_phase,
@@ -2141,13 +2145,14 @@ class OEF(OP2Common):
             obj = self.obj
             n = oef_cbar_imag(self, data, obj, nelements, ntotal, is_magnitude_phase)
         else:
-            print(self.table_name)
-            msg = self.code_information()
-            print(msg)
-            print(result_type)
-            raise NotImplementedError(self.code_information())
-            aaa
-            return self._not_implemented_or_skip(data, ndata, msg), None, None
+            raise RuntimeError(self.code_information())
+            #print(self.table_name)
+            #msg = self.code_information()
+            #print(msg)
+            #print(result_type)
+            #raise NotImplementedError(self.code_information())
+            #aaa
+            #return self._not_implemented_or_skip(data, ndata, msg), None, None
         #print self.barForces
         return n, nelements, ntotal
 
@@ -2203,9 +2208,10 @@ class OEF(OP2Common):
                     n += 32
         #elif self.format_code in [2, 3] and self.num_wide == 14:  # imag
         else:  # pragma: no cover
-            msg = self.code_information()
-            print(msg)
-            return self._not_implemented_or_skip(data, ndata, msg)
+            raise RuntimeError(self.code_information())
+            #msg = self.code_information()
+            #print(msg)
+            #return self._not_implemented_or_skip(data, ndata, msg)
         return n, nelements, ntotal
 
     def _oef_shells_centroidal(self, data, ndata, dt, is_magnitude_phase,
@@ -2345,9 +2351,10 @@ class OEF(OP2Common):
                     obj.add_sort1(dt, eid, mx, my, mxy, bmx, bmy, bmxy, tx, ty)
                     n += ntotal
         else:  # pragma: no cover
-            msg = self.code_information()
-            print(msg)
-            return self._not_implemented_or_skip(data, ndata, msg), None, None
+            raise RuntimeError(self.code_information())
+            #msg = self.code_information()
+            #print(msg)
+            #return self._not_implemented_or_skip(data, ndata, msg), None, None
         return n, nelements, ntotal
 
     def _oef_shells_nodal(self, data, ndata, dt, is_magnitude_phase,
@@ -2588,9 +2595,10 @@ class OEF(OP2Common):
                                 eid, nid, str(out)))
                         obj.add_sort1(dt, eid, nid, mx, my, mxy, bmx, bmy, bmxy, tx, ty)
         else:  # pragma: no cover
-            msg = self.code_information()
-            print(msg)
-            return self._not_implemented_or_skip(data, ndata, msg), None, None
+            raise RuntimeError(self.code_information())
+            #msg = self.code_information()
+            #print(msg)
+            #return self._not_implemented_or_skip(data, ndata, msg), None, None
         return n, nelements, ntotal
 
     def _oef_shells_composite(self, data, ndata, dt, unused_is_magnitude_phase,
@@ -2651,9 +2659,10 @@ class OEF(OP2Common):
                 #self.binary_debug.write('  nelements=%i; nnodes=1 # centroid\n' % nelements)
             n = oef_shells_composite_real_9(self, data, obj, nelements, ntotal, dt)
         else:  # pragma: no cover
-            msg = self.code_information()
-            print(msg)
-            return self._not_implemented_or_skip(data, ndata, msg), None, None
+            raise RuntimeError(self.code_information())
+            #msg = self.code_information()
+            #print(msg)
+            #return self._not_implemented_or_skip(data, ndata, msg), None, None
         return n, nelements, ntotal
 
     def _oef_cshear(self, data, ndata, dt, is_magnitude_phase,
@@ -2818,8 +2827,9 @@ class OEF(OP2Common):
                                   f41, f21, f12, f32, f23, f43, f34, f14,
                                   kf1, s12, kf2, s23, kf3, s34, kf4, s41)
         else:  # pragma: no cover
-            msg = self.code_information()
-            return self._not_implemented_or_skip(data, ndata, msg), None, None
+            raise RuntimeError(self.code_information())
+            #msg = self.code_information()
+            #return self._not_implemented_or_skip(data, ndata, msg), None, None
         return n, nelements, ntotal
 
     def _oef_cconeax(self, data, ndata, dt, unused_is_magnitude_phase,
@@ -2873,8 +2883,9 @@ class OEF(OP2Common):
                     obj.add_sort1(dt, eid, hopa, bmu, bmv, tm, su, sv)
                     n += ntotal
         else:  # pragma: no cover
-            msg = self.code_information()
-            return self._not_implemented_or_skip(data, ndata, msg), None, None
+            raise RuntimeError(self.code_information())
+            #msg = self.code_information()
+            #return self._not_implemented_or_skip(data, ndata, msg), None, None
         return n, nelements, ntotal
 
     def _oef_cgap(self, data, ndata, dt, unused_is_magnitude_phase,
@@ -2933,9 +2944,10 @@ class OEF(OP2Common):
                     obj.add_sort1(dt, eid, fx, sfy, sfz, u, v, w, sv, sw)
                     n += ntotal
         else:  # pragma: no cover
-            msg = self.code_information()
-            print(msg)
-            return self._not_implemented_or_skip(data, ndata, msg), None, None
+            raise RuntimeError(self.code_information())
+            #msg = self.code_information()
+            #print(msg)
+            #return self._not_implemented_or_skip(data, ndata, msg), None, None
         return n, nelements, ntotal
 
     def _oef_cbend(self, data, ndata, dt, is_magnitude_phase,
@@ -3104,8 +3116,9 @@ class OEF(OP2Common):
                                   nid_a, bm1_a, bm2_a, ts1_a, ts2_a, af_a, trq_a,
                                   nid_b, bm1_b, bm2_b, ts1_b, ts2_b, af_b, trq_b)
         else:  # pragma: no cover
-            msg = self.code_information()
-            return self._not_implemented_or_skip(data, ndata, msg), None, None
+            raise RuntimeError(self.code_information())
+            #msg = self.code_information()
+            #return self._not_implemented_or_skip(data, ndata, msg), None, None
         return n, nelements, ntotal
 
     def _oef_csolid_pressure(self, data, ndata, dt, is_magnitude_phase,
@@ -3273,8 +3286,9 @@ class OEF(OP2Common):
                     cpressure = complex(pressure, 0.)
                     obj.add_sort1(dt, eid, ename, ax, ay, az, vx, vy, vz, cpressure)
         else:  # pragma: no cover
-            msg = self.code_information()
-            return self._not_implemented_or_skip(data, ndata, msg), None, None
+            raise RuntimeError(self.code_information())
+            #msg = self.code_information()
+            #return self._not_implemented_or_skip(data, ndata, msg), None, None
         return n, nelements, ntotal
 
     def _oef_cbush(self, data, ndata, dt, is_magnitude_phase,
@@ -3593,8 +3607,9 @@ class OEF(OP2Common):
                                      #mfxi,mfyi,mfxyi,bmxi,bmyi,bmxyi,syzi,szxi]
                     obj.add_sort1(nnodes, dt, eid, parent, coord, icord, theta, vugrids, forces)
         else:  # pragma: no cover
-            msg = self.code_information()
-            return self._not_implemented_or_skip(data, ndata, msg), None, None
+            raise RuntimeError(self.code_information())
+            #msg = self.code_information()
+            #return self._not_implemented_or_skip(data, ndata, msg), None, None
         return n, nelements, ntotal
 
     def _oef_vu_beam(self, data, ndata, dt, is_magnitude_phase,
@@ -3830,8 +3845,9 @@ class OEF(OP2Common):
                         obj._add_sort1(dt, eid, parent, coord, icord,
                                        vugrid, posit, force_x, shear_y, shear_z, torsion, bending_y, bending_z)
         else:  # pragma: no cover
-            msg = self.code_information()
-            return self._not_implemented_or_skip(data, ndata, msg), None, None
+            raise RuntimeError(self.code_information())
+            #msg = self.code_information()
+            #return self._not_implemented_or_skip(data, ndata, msg), None, None
         return n, nelements, ntotal
 
 def oef_cbar_real(self, data, obj: RealCBarForceArray, nelements, ntotal) -> int:

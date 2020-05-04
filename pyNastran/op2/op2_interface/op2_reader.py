@@ -87,7 +87,7 @@ DENSE_MATRICES = [
 
 class OP2Reader:
     """Stores methods that aren't useful to an end user"""
-    def __init__(self, op2):
+    def __init__(self, op2: OP2):
         #: should an h5_file be created
         self.load_as_h5 = False
         #: the h5 file object used to reduce memory usage
@@ -175,6 +175,9 @@ class OP2Reader:
             b'EQEXINS' : self.read_eqexin,
 
             b'XSOP2DIR' : self.read_xsop2dir,
+
+            b'OBC1': self.read_obc1,
+            b'OBG1': self.read_obc1,
         }
 
     def read_nastran_version(self, mode):
@@ -1022,42 +1025,76 @@ class OP2Reader:
             #print('myints =', ints)
             #print('floats =', floats)
 
-    #def _read_dit(self):
-        #"""
-        #Reads the DIT table (poorly).
-        #The DIT table stores information about table cards
-        #(e.g. TABLED1, TABLEM1).
+    def read_obc1(self):
+        op2 = self.op2
+        unused_table_name = self._read_table_name(rewind=False)
 
-        #"""
-        #asd
-        #op2 = self.op2
-        #unused_table_name = self._read_table_name(rewind=False)
-        #self.read_markers([-1])
+        #(102, 0, 0, 2, 1, 0, 0)
+        self.read_markers([-1])
+        data = self._read_record()
+
+        self.read_3_markers([-2, 1, 0])
+
+        table_names = ['OBC1', 'OBG1']
+        subtable_name = self._read_subtable_name(table_names)
+
+        self.read_3_markers([-3, 1, 0])
+        data = self._read_record() # 584
+        ndata = len(data)
+
+        op2.subtable_name = subtable_name
+        op2.data_code = {
+            'subtable_name': subtable_name,
+        }
+        #print(len(data))
+        op2._read_obc1_3(data, ndata)
+        #print(op2.data_code)
+        #str(op2.code_information())
+
+        itable = -4
+
+        if 0:
+            import struct
+            markers = self.get_nmarkers(1, rewind=True)
+            while markers[0] != 0:
+                self.read_3_markers([itable, 1, 0])
+
+                try:
+                    self.read_3_markers([itable - 1, 1, 0])
+                except struct.error:
+                    data = self._read_record()
+                    print(itable, len(data))
+                itable -= 1
+        else:
+            self.read_3_markers([-4, 1, 0])
+            markers = self.get_nmarkers(1, rewind=True)
+            #self.show(100)
+            print(markers)
+            data = self._read_record()
+            print(len(data))
+            self.read_3_markers([-5, 1, 0, 0])
+
+        #(4, -5, 4, 4, 1, 4, 4, 0, 4, 4, 0, 4, 4, 0, 4)
         #data = self._read_record()
 
-        #self.read_3_markers([-2, 1, 0])
-        #data = self._read_record()
-        #unused_table_name, = op2.struct_8s.unpack(data)
+        #self.show_data(data)
+        #self.show(2000)
+        #aaa
 
-        #self.read_3_markers([-3, 1, 0])
-        #data = self._read_record()
-
-        #self.read_3_markers([-4, 1, 0])
-        #data = self._read_record()
-
-        #self.read_3_markers([-5, 1, 0])
-
-        #itable = -6
-        #while 1:
-            #markers = self.get_nmarkers(1, rewind=True)
-            #if markers == [0]:
-                #break
-            #data = self._read_record()
-            #self.read_3_markers([itable, 1, 0])
-            #itable -= 1
-
-        ##self.show(100)
-        #self.read_markers([0])
+    def _read_subtable_name(self, table_names: List[str]):
+        data, ndata = self._read_record_ndata()
+        if ndata == 8:
+            table_name2, = self.op2.struct_8s.unpack(data)
+            utable_name2 = table_name2.decode('utf-8').strip()
+        elif self.size == 8 and ndata == 56:
+            table_name2, day, month, year, onea, oneb = Struct(b'16s 5q').unpack(data)
+            utable_name2 = table_name2.decode('utf-8').strip()
+            #self.show_data(data[16:], types='qsd')
+        else:
+            self.show_data(data)
+            raise NotImplementedError(data)
+        assert utable_name2 in table_names, utable_name2
+        return utable_name2
 
     def read_qualinfo(self):
         r"""

@@ -12,13 +12,14 @@ SORT1_TABLES_BYTES = [
     b'OESNLXR', b'OESTRCP',
     # ----------
     b'OEF1X', b'OEF1', b'OEFIT',
+    b'HOEF1',
     # --------
     # random
 
     # properly labeled
     b'OESXRMS1', b'OESPSD1C', b'OESXNO1', b'OESXRM1C',
     b'OEFCRM1', b'OEFRMS1', b'OEFNO1', b'OEFPSD1',
-    b'OSTRMS1C', b'OSTPSD1C', b'OSTNO1C',
+    b'OSTRMS1C', b'OSTPSD1C', b'OSTNO1C', b'OSTRRMS1',
 
     # mislabeled tables
     b'OESRMS2', b'OESNO2',
