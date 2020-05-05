@@ -1035,19 +1035,16 @@ class OP2Reader:
 
         self.read_3_markers([-2, 1, 0])
 
-        table_names = ['OBC1', 'OBG1']
+        table_names = ['OBC1', 'OBC1X', 'OBG1']
         subtable_name = self._read_subtable_name(table_names)
 
         self.read_3_markers([-3, 1, 0])
-        data = self._read_record() # 584
-        ndata = len(data)
 
         op2.subtable_name = subtable_name
         op2.data_code = {
             'subtable_name': subtable_name,
         }
         #print(len(data))
-        op2._read_obc1_3(data, ndata)
         #print(op2.data_code)
         #str(op2.code_information())
 
@@ -1066,13 +1063,47 @@ class OP2Reader:
                     print(itable, len(data))
                 itable -= 1
         else:
-            self.read_3_markers([-4, 1, 0])
-            markers = self.get_nmarkers(1, rewind=True)
-            #self.show(100)
-            print(markers)
-            data = self._read_record()
-            print(len(data))
-            self.read_3_markers([-5, 1, 0, 0])
+            while 1:
+                #print(itable)
+                data = self._read_record() # 584
+                ndata = len(data)
+                #print('ndata A =', ndata)
+                op2._read_obc1_3(data, ndata)
+                #print('---------------')
+
+                self.read_3_markers([itable, 1, 0])  # -4
+                itable -= 1
+
+                marker = self.get_nmarkers(1, rewind=True)[0]
+                #print('marker A1 =', itable, marker)
+                if marker == itable:
+                    self.read_3_markers([itable, 1, 0]) # -5
+                    break
+                #self.show(100, types='isdq')
+                #self.show(100, types='isf')
+
+                data = self._read_record()
+                #print('ndata B =', len(data))
+
+                #self.show(100, types='isdq')
+                #print('---------------')
+
+                marker = self.get_nmarkers(1, rewind=True)[0]
+                #print('marker B =', marker, itable)
+                if marker != itable:
+                    aaa
+                self.read_3_markers([itable, 1, 0]) # -5
+                itable -= 1
+
+                marker = self.get_nmarkers(1, rewind=True)[0]
+                #print('marker C =', marker)
+                if marker == 0:
+                    break
+                #print('---------------')
+
+                #self.show(100, types='isdq')
+            marker = self.get_nmarkers(1, rewind=False)[0]
+            assert marker == 0, marker
 
         #(4, -5, 4, 4, 1, 4, 4, 0, 4, 4, 0, 4, 4, 0, 4)
         #data = self._read_record()

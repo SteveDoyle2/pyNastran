@@ -1230,7 +1230,6 @@ class RealCBeamForceArray(RealForceObject):
 
         #print("ntimes=%s nelements=%s ntotal=%s" % (self.ntimes, self.nelements, self.ntotal))
         dtype, idtype, fdtype = get_times_dtype(self.nonlinear_factor, self.size)
-        print(dtype, idtype, fdtype)
         self._times = zeros(self.ntimes, dtype)
         self.element = zeros(self.ntotal, idtype)
         self.element_node = zeros((self.ntotal, 2), idtype)

@@ -930,7 +930,14 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             #b'OBC1' : [self._read_obc1_3, self._read_obc1_4],
             #b'OBC2' : [self._nx_table_passer, self._table_passer], # Contact pressures and tractions at grid points.
 
-            b'OSLIDE1'
+            #b'OSLIDE1'
+            b'OPRPSD2' : [self._nx_table_passer, self._table_passer],
+            b'OPRATO2' : [self._nx_table_passer, self._table_passer],
+            b'OPRNO1' : [self._nx_table_passer, self._table_passer],
+            b'OPRCRM2' : [self._nx_table_passer, self._table_passer],
+
+            b'OCPSDFC' : [self._nx_table_passer, self._table_passer],
+            b'OCCORFC' : [self._nx_table_passer, self._table_passer],
 
             # Glue normal and tangential tractions at grid point in basic coordinate system
             b'OBG1' : [self._nx_table_passer, self._table_passer],

@@ -6473,7 +6473,7 @@ class OES(OP2Common):
         self._results._found_result(result_name)
 
         slot = self.get_result(result_name)
-        if result_type == 0 and self.num_wide == 7:  # real, TODO: random?
+        if result_type in [0, 2] and self.num_wide == 7:  # real, random
             if self.is_stress:
                 obj_vector_real = RealBushStressArray
             else:
