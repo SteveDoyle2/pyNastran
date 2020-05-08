@@ -18,6 +18,10 @@ def get_data_from_website(target_url: str) -> Tuple[Optional[List[str]], bool]:
         data_bytes = urllib.request.urlopen(target_url)
         is_failed = False
     except (urllib.error.HTTPError, urllib.error.URLError):  #  forbidden, page not found
+        #print(f'error...target_url={target_url}')
+        #import os
+        #print(os.environ.keys())
+        #raise
         pass
     #except: #  urllib2.URLError  # e.g., timeout
         #print(help(urllib))
@@ -83,7 +87,7 @@ def check_for_newer_version(version_current: Optional[str]=None,
     #print('tuple_current_version = %s' % str(tuple_current_version))  # (0,8,0)
 
     if (tuple_current_version < tuple_latest_version or
-            (is_dev and tuple_current_version == tuple_latest_version)):
+            (is_dev and tuple_current_version > tuple_latest_version)):
         msg = 'pyNastran %s is now availible; current=%s' % (version_latest, version_current)
 
         if not quiet:  # pragma: no cover
