@@ -10,6 +10,12 @@ defines:
 #matplotlib.use(matplotlib_backend)
 #from pyNastran.gui.qt_version import qt_version
 
+PLOT_TYPES = '[--eas|--tas|--density|--mach|--alt|--q]'
+USAGE = (
+    'Usage:\n'
+    '  f06 plot_145 F06_FILENAME [--noline] [--modes MODES] [--subcases SUB] [--xlim XLIM] [--ylimdamp DAMP] [--ylimfreq FREQ]'
+    f'{PLOT_TYPES} [--kfreq] [--rootlocus] [--in_units IN] [--out_units OUT] [--nopoints] [--export] [--f06]\n'
+)
 def cmd_line_plot_flutter(argv=None, plot=True, show=True, log=None):
     """the interface to ``f06 plot_145`` on the command line"""
     import sys
@@ -20,9 +26,7 @@ def cmd_line_plot_flutter(argv=None, plot=True, show=True, log=None):
     if argv is None:
         argv = sys.argv
     msg = (
-        'Usage:\n'
-        '  f06 plot_145 F06_FILENAME [--noline] [--modes MODES] [--subcases SUB] [--xlim XLIM] [--ylimdamp DAMP] [--ylimfreq FREQ]'
-        '[--eas|--tas] [--kfreq] [--rootlocus] [--in_units IN][--out_units OUT] [--nopoints] [--export] [--f06]\n'
+        USAGE +
         '  f06 plot_145 -h | --help\n'
         '  f06 plot_145 -v | --version\n'
         '\n'
@@ -38,6 +42,9 @@ def cmd_line_plot_flutter(argv=None, plot=True, show=True, log=None):
         'Plot Types for V-g/V-f:\n'
         '  --tas            plot true airspeed (default)\n'
         '  --eas            plot eqivalent airspeed\n'
+        '  --density        plot density\n'
+        '  --mach           plot Mach number\n'
+        '  --alt            plot altitude\n'
         '\n'
         'Units:\n'
         '  --in_units IN    Selects the input unit system\n'
@@ -79,7 +86,7 @@ def cmd_line_plot_flutter(argv=None, plot=True, show=True, log=None):
         base = os.path.splitext(f06_filename)[0]
         f06_filename = base + '.f06'
 
-    modes = split_int_colon(data['--modes'])
+    modes = split_int_colon(data['--modes'], start_value=1)
 
     xlim = [None, None]
     if data['--xlim']:
@@ -106,6 +113,18 @@ def cmd_line_plot_flutter(argv=None, plot=True, show=True, log=None):
     plot_type = 'tas'
     if data['--eas']:
         plot_type = 'eas'
+    elif data['--tas']:
+        plot_type = 'tas'
+    elif data['--alt']:
+        plot_type = 'alt'
+    elif data['--mach']:
+        plot_type = 'mach'
+    elif data['--density']:
+        plot_type = 'rho'
+    elif data['--q']:
+        plot_type = 'q'
+    else:
+        raise NotImplementedError(plot_type)
 
     plot_kfreq_damping = data['--kfreq']
     plot_root_locus = data['--rootlocus']
@@ -172,10 +191,10 @@ def split_float_colons(string_values):
         values = None # all values
     return values
 
-def split_int_colon(modes, nmax=1000):
+def split_int_colon(modes, nmax=1000, start_value=0):
     """
     Uses numpy-ish syntax to parse a set of integers.  Values are inclusive.
-    Blanks are interpreted as 0.
+    Blanks are interpreted as 0 unless start_value is specified.
 
     Parse the following:
        1:10
@@ -183,6 +202,8 @@ def split_int_colon(modes, nmax=1000):
        :100
        1:5:2
        :5,11:15:2,10:20
+       1,3:
+
     """
     modes2 = []
     if modes is not None:
@@ -192,25 +213,39 @@ def split_int_colon(modes, nmax=1000):
             if ':' in mode:
                 smode = mode.split(':')
                 if len(smode) == 2:
+                    #start_str, stop_str = smode
                     if smode[0] == '':
-                        smode[0] = 0
+                        smode[0] = start_value
                     istart = int(smode[0])
+
                     if smode[1] == '':
                         iend = None
                         modes2 = slice(istart, nmax)
-                        assert len(smodes) == 1, smodes
+                        assert len(smode) == 2, smode
                     else:
                         iend = int(smode[1])
                         assert iend > istart, 'smode=%s; istart=%s iend=%s' % (smode, istart, iend)
                         modes2 += list(range(istart, iend + 1))
                 elif len(smode) == 3:
+                    #start_str, stop_str, step_str = smode
+                    if smode[0] == '':
+                        smode[0] = start_value
                     istart = int(smode[0])
-                    iend = int(smode[1])
-                    assert iend > istart, 'smode=%s; istart=%s iend=%s' % (smode, istart, iend)
+
+                    if smode[2] == '':
+                        smode[2] = 1
                     istep = int(smode[2])
-                    modes2 += list(range(istart, iend + 1, istep))
+
+                    if smode[1] == '':
+                        #iend = None
+                        modes2 += list(range(istart, nmax, istep))
+                    else:
+                        iend = int(smode[1]) + 1
+                        assert iend > istart, 'smode=%s; istart=%s iend=%s' % (smode, istart, iend)
+                        modes2 += list(range(istart, iend, istep))
+
                 else:
-                    raise NotImplementedError('smode=%r; len=%s' % (smode, len(smode)))
+                    raise NotImplementedError('mode=%r; len=%s' % (mode, len(smode)))
             else:
                 imode = int(mode)
                 modes2.append(imode)
@@ -220,6 +255,7 @@ def split_int_colon(modes, nmax=1000):
     #print('modes =', list(modes))
     #if None not in modes:
         #modes.sort()
+    print(modes)
     try:
         modes.sort()
     except AttributeError:
@@ -233,9 +269,7 @@ def cmd_line(argv=None, plot=True, show=True, log=None):
         argv = sys.argv
 
     msg = (
-        'Usage:\n'
-        '  f06 plot_145 F06_FILENAME [--noline] [--modes MODES] [--subcases SUB] [--xlim FREQ] [--ylimdamp DAMP] '
-        '[--eas|--tas] [--kfreq] [--rootlocus] [--export]\n'
+        USAGE +
         '\n'
         '  f06 plot_145 -h | --help\n'
         '  f06 -v | --version\n'

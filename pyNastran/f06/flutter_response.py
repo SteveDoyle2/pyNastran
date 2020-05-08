@@ -57,7 +57,7 @@ class FlutterResponse:
                 f06_units = {'velocity' : 'in/s'}
                 The velocity units are the units for the FLFACT card in the BDF
             PKNL method:
-                f06_units = {'velocity' : 'in/s', 'density' : 'slinch/in^3'}
+                f06_units = {'velocity' : 'in/s', 'density' : 'slinch/in^3', 'altitude' : 'ft', 'dynamic_pressure': 'psi'}
                 The velocity/density units are the units for the FLFACT card in the BDF
 
         out_units dict[str] = str (default=None -> no units conversion)
@@ -69,7 +69,8 @@ class FlutterResponse:
                     'velocity' : 'ft/s',
                     'eas' : 'knots',
                     'density' : 'slinch/in^3',
-                    'altitude' : 'ft'
+                    'altitude' : 'ft',
+                    'dynamic_pressure' : 'psf',
                 }
 
         Unused Parameters
@@ -82,6 +83,7 @@ class FlutterResponse:
         XZ-SYMMETRY : str
             ASYMMETRIC, SYMMETRIC
             unused
+
         """
         self.make_alt = make_alt
         self.f06_units = f06_units
@@ -90,7 +92,7 @@ class FlutterResponse:
         for key in required_keys:
             assert key in f06_units, 'key=%r not in f06_units=%s' % (key, f06_units)
             assert key in out_units, 'key=%r not in out_units=%s' % (key, out_units)
-        for key in f06_units.keys():
+        for key in f06_units:
             assert key in required_keys, 'key=%r not in required_keys=%s' % (key, required_keys)
 
 
@@ -198,7 +200,7 @@ class FlutterResponse:
         kdensityi = convert_density(1., density_units_in, 'slug/ft^3')
         kvel = self._get_unit_factor('velocity')[0]
         kdensity = self._get_unit_factor('density')[0]
-        kpressure = kdensityi * kvel ** 2
+        kpressure = self._get_unit_factor('dynamic_pressure')[0]
 
         vel *= kvel
         if self.make_alt:
@@ -907,6 +909,13 @@ class FlutterResponse:
             ix = self.idensity
             density_units = self.out_units['density']
             xlabel = 'Density [%s]' % density_units
+        elif plot_type == 'q':
+            ix = self.iq
+            pressure_unit = self.out_units['dynamic_pressure']
+            xlabel = 'Dynamic Pressure [%s]' % pressure_unit
+        elif plot_type == 'mach':
+            ix = self.imach
+            xlabel = 'Mach'
         elif plot_type == 'freq':
             ix = self.ifreq
             xlabel = 'Frequency [Hz]'
@@ -924,7 +933,7 @@ class FlutterResponse:
             xlabel = 'Damping'
         else:
             raise NotImplementedError("plot_type=%r not in ['tas', 'eas', 'alt', 'kfreq', "
-                                      "'1/kfreq', 'freq', 'damp', 'eigr', 'eigi']")
+                                      "'1/kfreq', 'freq', 'damp', 'eigr', 'eigi', 'q', 'mach', 'alt']")
         return ix, xlabel
 
     def object_attributes(self, mode='public', keys_to_skip=None,
@@ -998,6 +1007,7 @@ def _get_modes_imodes(all_modes, modes):
     elif len(modes) == 0:
         raise RuntimeError('modes = %s' % modes)
     else:
+        assert 0 not in modes, modes
         modes = np.unique(modes)
     assert 0 not in modes, modes
 

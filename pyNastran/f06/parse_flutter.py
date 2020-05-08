@@ -307,6 +307,9 @@ def plot_flutter_f06(f06_filename, f06_units=None, out_units=None, make_alt=Fals
     plot_type : str; default='tas'
         'tas' : true airspeed
         'eas' : equivalent airspeed
+        'alt' : altitude
+        'dynamic_pressure' : dynamic pressure
+        'mach' : Mach number
     plot_vg : bool; default=False
         make a V-damping plot
     plot_vg_vf : bool; default=False
@@ -352,6 +355,9 @@ def plot_flutter_f06(f06_filename, f06_units=None, out_units=None, make_alt=Fals
      o fixing unconverged points
 
     """
+    if plot_type == 'alt':
+        make_alt = True
+
     flutters = make_flutter_response(
         f06_filename, f06_units=f06_units, out_units=out_units, make_alt=make_alt, log=log)
 
