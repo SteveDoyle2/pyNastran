@@ -1,6 +1,12 @@
-import numpy as np
+from __future__ import annotations
 from collections import defaultdict
+from typing import TYPE_CHECKING, TextIO, Any
 
+import numpy as np
+from pyNastran.nptyping import NDArrayN3float, NDArrayN3int, NDArrayN4int
+
+if TYPE_CHECKING:
+    from cpylog import SimpleLogger
 
 class CaseInsensitiveDict(dict):
     def __getitem__(self, key):
@@ -13,7 +19,7 @@ class CaseInsensitiveDict(dict):
 
 
 class Zone:
-    def __init__(self, log):
+    def __init__(self, log: SimpleLogger):
         self.log = log
 
         self.headers_dict = CaseInsensitiveDict()
@@ -32,64 +38,66 @@ class Zone:
         #self.centroidal_results = np.array([], dtype='float32')
 
     @property
-    def nnodes(self):
+    def nnodes(self) -> int:
         """gets the number of nodes in the model"""
         return self.xyz.shape[0] + self.xy.shape[0]
 
     @property
-    def nelements(self):
+    def nelements(self) -> int:
         """gets the number of elements in the model"""
         return (self.hexa_elements.shape[0] + self.tet_elements.shape[0] +
                 self.quad_elements.shape[0] + self.tri_elements.shape[0])
 
     @property
-    def result_names(self):
+    def result_names(self) -> List[str]:
         """gets the variables"""
         return self.variables
 
     @result_names.setter
-    def result_names(self, vals):
+    def result_names(self, vals: List[str]) -> None:
         """sets the variables"""
         self.variables = vals
 
     @property
-    def ndim(self):
+    def ndim(self) -> int:
         is_x = 'X' in self.variables
         is_y = 'Y' in self.variables
         is_z = 'Z' in self.variables
         return is_x + is_y + is_z
 
     @property
-    def title(self):
+    def title(self) -> str:
         if 'TITLE' not in self.headers_dict:
             self.headers_dict['TITLE'] = 'tecplot geometry and solution file'
         return self.headers_dict['TITLE']
     @title.setter
-    def title(self, title):
+    def title(self, title: str) -> None:
         self.headers_dict['TITLE'] = title
     @property
-    def datapacking(self):
+    def datapacking(self) -> Optional[str]:
+        """'POINT', 'BLOCK'"""
         try:
             return self.headers_dict['DATAPACKING']
         except KeyError:
             return None
     @property
-    def zonetype(self):
+    def zonetype(self) -> Optional[str]:
+        """FEBrick,  FETETRAHEDRON,  FETRIANGLE,  FEQUADRILATERAL"""
         try:
             return self.headers_dict['ZONETYPE']
         except KeyError:
             return None
 
     @property
-    def results(self):
+    def results(self) -> np.ndarray:
         self.log.warning('depecrecated tecplot.results for tecplot.nodal_results')
         return self.nodal_results
     @results.setter
-    def results(self, nodal_results):
+    def results(self, nodal_results: np.ndarray) -> None:
         self.log.warning('depecrecated tecplot.results for tecplot.nodal_results')
         self.nodal_results = nodal_results
 
-    def get_xyz(self):
+    def get_xyz(self) -> np.ndarray:
         """turns 2d points into 3d points"""
         nnodes3d = self.xyz.shape[0]
         nnodes2d = self.xy.shape[0]
@@ -105,7 +113,7 @@ class Zone:
             raise RuntimeError('failed to find 2d/3d nodes')
         return xyz
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         xy_shape = str(self.xy.shape)
         xyz_shape = str(self.xyz.shape)
         a_shape = str(self.A.shape) if self.A is not None else None
@@ -147,7 +155,7 @@ class Zone:
         )
         return msg
 
-    def repr_nijk(self):
+    def repr_nijk(self) -> str:
         ni = self.headers_dict['I']
         if 'J' in self.headers_dict:
             nj = self.headers_dict['J']
@@ -161,8 +169,10 @@ class Zone:
             msgi = f'  nI={ni}\n'
         return msgi
 
-    def write_unstructured_zone(self, tecplot_file, ivars, is_points, nnodes, nelements, zone_type, log,
-                                is_tris, is_quads, is_tets, is_hexas, adjust_nids=True):
+    def write_unstructured_zone(self, tecplot_file: TextIO, ivars: List[int], is_points: bool,
+                                nnodes: int, nelements: int, zone_type: int, log: SimpleLogger,
+                                is_tris: bool, is_quads: bool, is_tets: bool, is_hexas: bool,
+                                adjust_nids: bool=True) -> None:
         msg = 'ZONE '
         self.log.info('is_points = %s' % is_points)
         datapacking = 'POINT' if  is_points else 'BLOCK'
@@ -174,7 +184,30 @@ class Zone:
                              is_tris, is_quads, is_tets, is_hexas,
                              adjust_nids=adjust_nids)
 
-    def determine_element_type(self):
+    def determine_element_type(self) -> Tuple[bool, bool, bool, Optional[str],
+                                              bool, bool, bool, bool]:
+        """
+        Returns
+        -------
+        is_structured : bool
+           is this a structured grid
+        is_unstructured : bool
+           is this an unstructured grid
+        is_points : bool
+           ???
+        zone_type : str / None
+           str : FEBrick,  FETETRAHEDRON,  FETRIANGLE,  FEQUADRILATERAL
+           None : ???
+        is_tris : bool
+            are there CTRIA3s
+        is_quads : bool
+            are there CQUAD4s
+        is_tets : bool
+            are there CTETRAs
+        is_hexas : bool
+            are there CHEXAs
+
+        """
         etype_elements = [
             ('CHEXA', self.hexa_elements),
             ('CTETRA', self.tet_elements),
@@ -226,9 +259,9 @@ class Zone:
             raise RuntimeError('is this structured or unstructured?')
         return is_structured, is_unstructured, is_points, zone_type, is_tris, is_quads, is_tets, is_hexas
 
-    def _write_elements(self, tecplot_file, nnodes,
-                        is_tris, is_quads, is_tets, is_hexas,
-                        adjust_nids=True):
+    def _write_elements(self, tecplot_file: TextIO, nnodes: int,
+                        is_tris: bool, is_quads: bool, is_tets: bool, is_hexas: bool,
+                        adjust_nids: bool=True) -> None:
         """Writes the unstructured elements.  Verifies that nodes are sequential."""
         self.log.info('is_hexas=%s is_tets=%s is_quads=%s is_tris=%s' %
                       (is_hexas, is_tets, is_quads, is_tris))
@@ -267,7 +300,8 @@ class Zone:
         for element in elements:
             tecplot_file.write(efmt % tuple(element))
 
-    def _write_xyz_results(self, tecplot_file, is_points, ivars):
+    def _write_xyz_results(self, tecplot_file: TextIO, is_points: bool,
+                           ivars: List[int]) -> None:
         """writes XY/XYZs and results in POINT or BLOCK format"""
         # xyz
         xyz = self.xyz
@@ -300,7 +334,9 @@ class Zone:
             _write_xyz_results_block(tecplot_file, nodes, self.nodal_results, nresults, ivars,
                                      ndim=ndim, word=word)
 
-    def write_structured_zone(self, tecplot_file, ivars, log, headers_dict, adjust_nids=True):
+    def write_structured_zone(self, tecplot_file: TextIO, ivars: List[int],
+                              log: SimpleLogger, headers_dict: Dict[str, Any],
+                              adjust_nids: bool=True) -> None:
         """writes a structured IxJ or IxJxK grid"""
         headers_dict = self.headers_dict
         ni = headers_dict['I']
@@ -318,7 +354,7 @@ class Zone:
         is_points = True
         self._write_xyz_results(tecplot_file, is_points, ivars)
 
-    def skin_elements(self):
+    def skin_elements(self) -> Tuple[NDArrayN3int, NDArrayN4int]:
         """get the tris/quads from tets/hexas"""
         tris = []
         quads = []
@@ -350,7 +386,7 @@ class Zone:
             # quads = unique_rows(tris)
         return tris, quads
 
-    def get_free_faces(self):
+    def get_free_faces(self) -> List[Tuple[int, int, int, int]]:
         """get the free faces for hexa elements"""
         self.log.info('start get_free_faces')
         sort_face_to_element_map = defaultdict(list)
@@ -375,7 +411,7 @@ class Zone:
         self.log.info('finished get_free_faces')
         return free_faces
 
-    def _slice_plane_inodes(self, inodes):
+    def _slice_plane_inodes(self, inodes: List[int]) -> None:
         """TODO: doesn't remove unused nodes/renumber elements"""
         # old_num = inodes
         # new_num = arange(self.xyz.shape[0], dtype='int32')
@@ -410,7 +446,7 @@ class Zone:
 
 
 
-def is_3d(headers_dict) -> bool:
+def is_3d(headers_dict: Dict[str, Any]) -> bool:
     #print(headers_dict)
     variables = headers_dict['VARIABLES']
     is_3d = 'Z' in variables # or 'z' in variables
@@ -443,8 +479,9 @@ def _write_xyz_results_point(tecplot_file, nodes, nodal_results, nresults, ivars
     # works in numpy 1.15.1
     np.savetxt(tecplot_file, data, fmt=fmt)
 
-def _write_xyz_results_block(tecplot_file, nodes, nodal_results, nresults, ivars,
-                             ndim=3, word='xyz'):
+def _write_xyz_results_block(tecplot_file: TextIO, nodes: NDArrayN3float,
+                             nodal_results, nresults, ivars: List[int],
+                             ndim: int=3, word: str='xyz') -> None:
     """TODO: hasn't been tested for 2d?"""
     #nvalues_per_line = 5
     for ivar in range(ndim):

@@ -19,7 +19,7 @@ else:
         raise ImportError('Upgrade your Python to >= 3.7.0; version=(%s.%s.%s)' % (
             IMAJOR, MINOR1, MINOR2))
 
-    def get_git_revision_short_hash():
+    def get_git_revision_short_hash() -> str:
         """determines the git revision; only works if the packages was checked
         out using git"""
         try:
@@ -39,7 +39,8 @@ else:
         return 'dev.%s' % ghash
 
     revision = get_git_revision_short_hash()
-    __version__ = '1.4.0+%s' % revision
+    __version_release__ = '1.4.0'
+    __version__ = f'{__version_release__}+{revision}'
     __releaseDate__ = '2020/4/xx'
     __releaseDate2__ = 'APRIL xx, 2020'
 

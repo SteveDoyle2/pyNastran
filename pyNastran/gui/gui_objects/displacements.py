@@ -573,6 +573,8 @@ class DisplacementResults(VectorTable):
             else:
                 raise NotImplementedError('dim=%s' % self.dim)
         else:
+            assert isinstance(i, int), (i, phase)
+            assert isinstance(phase, float), (i, phase)
             dxyz = self._get_complex_displacements_by_phase(i, phase)
             deflected_xyz = self.xyz + scale * dxyz
         assert len(deflected_xyz.shape) == 2, deflected_xyz.shape

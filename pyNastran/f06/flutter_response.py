@@ -566,6 +566,7 @@ class FlutterResponse:
         Plots a kfreq vs. damping curve
 
         See ``plot_root_locus`` for arguments
+
         """
         xlabel = 'KFreq [rad]'
         ylabel1 = 'Damping'

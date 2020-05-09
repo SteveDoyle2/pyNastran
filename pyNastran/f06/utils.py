@@ -124,7 +124,8 @@ def cmd_line_plot_flutter(argv=None, plot=True, show=True, log=None):
     elif data['--q']:
         plot_type = 'q'
     else:
-        raise NotImplementedError(plot_type)
+        sys.stderr.write('plot_type assumed to be --tas\n')
+        #raise NotImplementedError(data)
 
     plot_kfreq_damping = data['--kfreq']
     plot_root_locus = data['--rootlocus']
