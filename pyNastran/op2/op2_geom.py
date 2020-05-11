@@ -199,6 +199,7 @@ class OP2GeomCommon(OP2, GEOM1, GEOM2, GEOM3, GEOM4, EPT, MPT, EDT, EDOM, DIT, D
         9 MINGID      I Minimum grid identification number for this element
         10 MAXGID     I Maximum grid identification number for this element
         11 G(8)       I Corner grid identification numbers
+
         """
         # C:\NASA\m4\formats\git\examples\move_tpl\ifsv34b.op2
         import numpy as np
@@ -287,7 +288,9 @@ class OP2GeomCommon(OP2, GEOM1, GEOM2, GEOM3, GEOM4, EPT, MPT, EDT, EDOM, DIT, D
     def _read_viewtb_4(self, data, ndata):
         """
         View information table
-        Contains the relationship between each p-element and its view-elements and view-grids.
+        Contains the relationship between each p-element and its view-elements
+        and view-grids.
+
         """
         return self._read_geom_4(self._viewtb_map, data, ndata)
 
@@ -451,7 +454,8 @@ def bdf_to_op2_geom(model: BDF, validate: bool=True) -> OP2Geom:
     #op2_geom_model.elements = bdf_model.elements
     return op2_geom_model
 
-def attach_op2_results_to_bdf(bdf_model: BDF, op2_model: Optional[OP2]=None, validate: bool=True) -> OP2Geom:
+def attach_op2_results_to_bdf(bdf_model: BDF, op2_model: Optional[OP2]=None,
+                              validate: bool=True) -> OP2Geom:
     """We're up-coverting a BDF and an OP2 result into an OP2Geom object."""
     op2_geom_model = bdf_to_op2_geom(bdf_model, validate=validate)
     if op2_model is None:
