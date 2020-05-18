@@ -4184,9 +4184,15 @@ class OP2Reader:
             raise NotImplementedError(f'data={data!r}; n={len(data)}')
         return table_name.strip()
 
-    def _read_table_name(self, rewind=False, stop_on_failure=True) -> bytes:
+    def _read_table_name(self, last_table_name: Optional[bytes]=None,
+                         rewind: bool=False, stop_on_failure: bool=True) -> bytes:
         """
         Reads the next OP2 table name (e.g. OUG1, OES1X1)
+
+        Parameters
+        ----------
+        last_table_name : bytes; default=Noen
+            the last table name
 
         Returns
         -------
@@ -4232,6 +4238,8 @@ class OP2Reader:
                     if not is_special_nastran and op2.post != -4:
                         op2.f.seek(op2.n)
                         self.show(1000)
+                        if last_table_name:
+                            self.log.error(f'finished table_name = {last_table_name}')
                         raise FatalError('There was a Nastran FATAL Error.  Check the F06.\n'
                                          f'last table={op2.table_name!r}; post={op2.post} '
                                          f'version={self.op2._nastran_format!r}')
@@ -5774,6 +5782,7 @@ def dscmcol_dresp2(responses: Dict[int, Dict[str, Any]],
 
 def _parse_nastran_version(data, version, encoding, log):
     """parses a Nastran version string"""
+    print(data)
     if len(data) == 32:
         MSC_LONG_VERSION = [
             b'XXXXXXXX20140',
