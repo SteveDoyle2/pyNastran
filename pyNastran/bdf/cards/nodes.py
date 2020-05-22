@@ -1590,8 +1590,7 @@ class POINT(BaseCard):
     type = 'POINT'
     _field_map = {1: 'nid', 2:'cp'}
 
-    def _get_field_helper(self, n):
-        # type: (int) -> float
+    def _get_field_helper(self, n: int) -> float:
         """
         Gets complicated parameters on the POINT card
 
@@ -1790,8 +1789,7 @@ class POINT(BaseCard):
         xyz = coord_b.transform_node_to_local(p)
         return xyz
 
-    def Cp(self):
-        # type: () -> int
+    def Cp(self) -> int:
         """
         Gets the analysis coordinate system
 

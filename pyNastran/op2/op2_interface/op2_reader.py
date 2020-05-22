@@ -5782,7 +5782,6 @@ def dscmcol_dresp2(responses: Dict[int, Dict[str, Any]],
 
 def _parse_nastran_version(data, version, encoding, log):
     """parses a Nastran version string"""
-    print(data)
     if len(data) == 32:
         MSC_LONG_VERSION = [
             b'XXXXXXXX20140',

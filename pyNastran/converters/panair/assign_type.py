@@ -11,16 +11,14 @@ defines methods for writing panair values:
 """
 from typing import List, Union, Optional
 
-def double(value, name):
-    # type: (str, str) -> float
+def double(value: str, name: str) -> float:
     """casts to an float value"""
     if isinstance(value, float):
         return value
     fvalue = float(value)
     return fvalue
 
-def integer(value, name):
-    # type: (str, str) -> int
+def integer(value: str, name: str) -> int:
     """casts to an integer value"""
     if isinstance(value, int):
         return value
