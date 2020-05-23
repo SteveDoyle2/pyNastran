@@ -3782,10 +3782,15 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             elif '*' in field:
                 # this is an increment, not multiplication...
                 old_field = _field(old_card, ifield)
-                if '.' in field:
-                    field2 = float_replication(field, old_field)
-                else:
-                    field2 = int_replication(field, old_field)
+                assert old_field is not None, f'old_card:{old_card}\nnew_card:\n{new_card}'
+                try:
+                    if '.' in field:
+                        field2 = float_replication(field, old_field)
+                    else:
+                        field2 = int_replication(field, old_field)
+                except:
+                    self.log.error(f'old_card:{old_card}\nnew_card:\n{new_card}')
+                    raise
             else:
                 assert '(' not in field, 'field=%r' % field
                 assert '*' not in field, 'field=%r' % field

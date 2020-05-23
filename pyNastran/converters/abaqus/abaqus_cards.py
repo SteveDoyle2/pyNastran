@@ -5,7 +5,11 @@ defines:
  - Part
 
 """
+from __future__ import annotations
+from typing import Dict, Any, TYPE_CHECKING
 import numpy as np
+if TYPE_CHECKING:
+    from cpylog import SimpleLogger
 
 allowed_element_types = [
     'r2d2', 'conn2d2',
@@ -18,7 +22,7 @@ allowed_element_types = [
 
 class SolidSection:
     """a SolidSection defines depth and a material"""
-    def __init__(self, param_map, data_lines, log):
+    def __init__(self, param_map, data_lines, log: SimpleLogger):
         self.param_map = param_map
         self.data_lines = data_lines
         self.material = param_map['material']
@@ -131,8 +135,14 @@ class Assembly:
 
 class Part:
     """a Part object is a series of nodes & elements (of various types)"""
-    def __init__(self, name, nids, nodes, element_types, node_sets, element_sets,
-                 solid_sections, log):
+    def __init__(self, name: str,
+                 nids: np.ndarray,
+                 nodes: np.ndarray,
+                 element_types: Dict[str, np.ndarray],
+                 node_sets: np.ndarray,
+                 element_sets: np.ndarray,
+                 solid_sections: Any,
+                 log: SimpleLogger):
         """
         creates a Part object
 
@@ -165,6 +175,11 @@ class Part:
         self.node_sets = node_sets
         self.element_sets = element_sets
         self.solid_sections = solid_sections
+
+        for set_name, node_set in self.node_sets.items():
+            assert isinstance(node_set, np.ndarray), set_name
+        for set_name, element_set in self.element_sets.items():
+            assert isinstance(element_set, np.ndarray), set_name
 
         try:
             self.nids = np.array(nids, dtype='int32')
@@ -264,6 +279,8 @@ class Part:
             if etype in element_types:
                 etype_eids = '%s_eids' % etype
                 elements = element_types[etype]
+                if len(elements) == 0:
+                    continue
                 eids_elements = np.array(elements, dtype='int32')
                 setattr(self, etype, eids_elements)  # r2d2
                 setattr(self, etype_eids, eids_elements[:,  0]) #  r2d2_eids

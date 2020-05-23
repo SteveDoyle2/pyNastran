@@ -1089,7 +1089,7 @@ class BGSET(BaseCard):
 
     @classmethod
     def _init_from_empty(cls):
-        csid = 1
+        glue_id = 1
         sids = [1]
         tids = [1]
         sdists = [0.01]

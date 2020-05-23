@@ -937,12 +937,22 @@ class TEMPRB(ThermalLoad):
     +========+=====+====+=======+====+=======+====+====+
     | TEMPRB | SID | G1 |  T1   | G2 |  T2   | G3 | T3 |
     +--------+-----+----+-------+----+-------+----+----+
-    TEMPRB SID  EID1   TA   TB TP1A TP1B TP2A TP2B
-           TCA   TDA  TEA  TFA  TCB  TDB  TEB TFB
-           EID2 EID3 EID4 EID5 EID6 EID7 -etc.-
-    TEMPRB 200 1 68.0 23.0 0.0 28.0 2.5
-           68.0 91.0 45.0 48.0 80.0 20.0
-           9 10
+
+    +--------+------+------+------+------+------+------+------+------+
+    |    1   |   2  |   3  |   4  |   5  |   6  |   7  |   8  |  9   |
+    +========+======+======+======+======+======+======+======+======+
+    | TEMPRB | SID  | EID1 |   TA |  TB  | TP1A | TP1B | TP2A | TP2B |
+    +--------+------+------+------+------+------+------+------+------+
+    |        | TCA  |  TDA |  TEA |  TFA |  TCB |  TDB |  TEB | TFB  |
+    +--------+------+------+------+------+------+------+------+------+
+    |        | EID2 | EID3 | EID4 | EID5 | EID6 | EID7 | etc. |      |
+    +--------+------+------+------+------+------+------+------+------+
+    | TEMPRB | 200  |   1  | 68.0 | 23.0 | 0.0  | 28.0 | 2.5  |      |
+    +--------+------+------+------+------+------+------+------+------+
+    |        | 68.0 | 91.0 | 45.0 | 48.0 | 80.0 | 20.0 |      |      |
+    +--------+------+------+------+------+------+------+------+------+
+    |        |   9  |  10  |      |      |      |      |      |      |
+    +--------+------+------+------+------+------+------+------+------+
     """
 
     type = 'TEMPRB'
@@ -1032,7 +1042,15 @@ class TEMPRB(ThermalLoad):
         #TEMPRB 200 1 68.0 23.0 0.0 28.0 2.5
                #68.0 91.0 45.0 48.0 80.0 20.0
                #9 10
+
+        ##+========+======+======+======+======+======+======+======+======+
+        ##| TEMPRB | SID  | EID1 |   TA |  TB  | TP1A | TP1B | TP2A | TP2B |
+        ##|        | TCA  |  TDA |  TEA |  TFA |  TCB |  TDB |  TEB | TFB  |
+        ##|        | EID2 | EID3 | EID4 | EID5 | EID6 | EID7 | etc. |      |
+        ##+--------+------+------+------+------+------+------+------+------+
+
         eid1 = integer(card, 2, 'EID1')
+        # TODO: the default for MSC is 0.0
         ta = double(card, 3, 'T(A)')
         tb = double(card, 4, 'T(B)')
         tp1a = double_or_blank(card, 5, 'TP1(A)')
@@ -1042,15 +1060,17 @@ class TEMPRB(ThermalLoad):
         tp1 = [tp1a, tp1b]
         tp2 = [tp2a, tp2b]
 
-        tca = double(card, 9, 'TC(A)')
-        tda = double(card, 10, 'TD(A)')
-        tea = double(card, 11, 'TE(A)')
-        tfa = double(card, 12, 'TF(A)')
+        # TODO: the default for MSC is TA
+        tca = double_or_blank(card, 9, 'TC(A)')
+        tda = double_or_blank(card, 10, 'TD(A)')
+        tea = double_or_blank(card, 11, 'TE(A)')
+        tfa = double_or_blank(card, 12, 'TF(A)')
 
-        tcb = double(card, 13, 'TC(B)')
-        tdb = double(card, 14, 'TD(B)')
-        teb = double(card, 15, 'TE(B)')
-        tfb = double(card, 16, 'TF(B)')
+        # TODO: the default for MSC is TB
+        tcb = double_or_blank(card, 13, 'TC(B)')
+        tdb = double_or_blank(card, 14, 'TD(B)')
+        teb = double_or_blank(card, 15, 'TE(B)')
+        tfb = double_or_blank(card, 16, 'TF(B)')
         eids = [eid1]
 
         nfields = len(card)
@@ -1061,6 +1081,8 @@ class TEMPRB(ThermalLoad):
 
         tai = [tca, tda, tea, tfa]
         tbi = [tcb, tdb, teb, tfb]
+        print('tai =', tai)
+        print('tbi =', tbi)
         return TEMPRB(sid, ta, tb, tp1, tp2,
                       tai, tbi, eids, comment=comment)
 

@@ -826,8 +826,8 @@ class Abaqus:
         self.log.debug('  end of step %i...' % istep)
         return iline, line0
 
-    def write(self, abqaqus_filename_out, is_2d=False):
-        self.log.info('writing %r' % abqaqus_filename_out)
+    def write(self, abaqus_filename_out, is_2d=False):
+        self.log.info('writing %r' % abaqus_filename_out)
         #self.parts = {}
         #self.boundaries = {}
         #self.materials = {}
@@ -837,7 +837,7 @@ class Abaqus:
         #self.steps = {}
         #self.heading = None
         #self.preprint = None
-        with open(abqaqus_filename_out, 'w') as abq_file:
+        with open(abaqus_filename_out, 'w') as abq_file:
             self.log.debug("  nparts = %s" % len(self.parts))
             self.log.debug("  nmaterials = %s" % len(self.materials))
             if self.assembly is not None:
