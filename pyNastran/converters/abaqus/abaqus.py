@@ -579,7 +579,7 @@ class Abaqus:
             #if is_start:
             iline += 1 # skips over the header line
             self.log.debug('  ' + line0)
-            unused_iword = line0.strip('*').lower()
+            #iword = line0.strip('*').lower()
             #self.log.info('part: %s' % iword)
             if '*node' in line0:
                 assert len(nids) == 0, nids
@@ -851,6 +851,33 @@ class Abaqus:
             for unused_mat_name, mat in self.materials.items():
                 mat.write(abq_file)
 
+def get_nodes_nnodes_nelements(model: Abaqus, stop_for_no_elements: bool=True):
+    """helper method"""
+    nnodes = 0
+    nelements = 0
+    nids = []
+    all_nodes = []
+    for unused_part_name, part in model.parts.items():
+        #unused_nids = part.nids - 1
+        nidsi = part.nids
+        nodes = part.nodes
+
+        nnodes += nodes.shape[0]
+        nelements += part.nelements
+        nids.append(nidsi)
+        all_nodes.append(nodes)
+
+    if nelements == 0 and stop_for_no_elements:
+        raise RuntimeError('nelements=0')
+
+    if len(all_nodes) == 1:
+        nids = nids[0]
+        nodes = all_nodes[0]
+    else:
+        nids = np.vstack(nids)
+        nodes = np.vstack(all_nodes)
+    return nnodes, nids, nodes, nelements
+
 def read_node(lines, iline, log, skip_star=False):
     """reads *node"""
     if skip_star:
@@ -1015,7 +1042,7 @@ def get_param_map(iline, word, required_keys=None):
             key = wordi.strip()
             value = None
         else:
-            sword = wordi.split('=')
+            sword = wordi.split('=', 1)
             assert len(sword) == 2, sword
             key = sword[0].strip()
             value = sword[1].strip()

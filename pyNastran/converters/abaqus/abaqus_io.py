@@ -1,5 +1,6 @@
 """Defines how the GUI reads Abaqus files"""
 from collections import OrderedDict
+from typing import Tuple, Any, TYPE_CHECKING
 
 import numpy as np
 
@@ -9,7 +10,9 @@ from pyNastran.gui.utils.vtk.vtk_utils import numpy_to_vtk
 
 from pyNastran.gui.gui_objects.gui_result import GuiResult, NormalResult
 #from pyNastran.gui.qt_files.result import Result
-from pyNastran.converters.abaqus.abaqus import Abaqus
+from pyNastran.converters.abaqus.abaqus import Abaqus, get_nodes_nnodes_nelements
+if TYPE_CHECKING:
+    from vtk import vtkUnstructuredGrid
 
 
 class AbaqusIO:
@@ -26,7 +29,8 @@ class AbaqusIO:
         )
         return data
 
-    def load_abaqus_geometry(self, abaqus_filename, name='main', plot=True):
+    def load_abaqus_geometry(self, abaqus_filename: str,
+                             name: str='main', plot: bool=True) -> None:
         """loads abaqus input files into the gui"""
         model_name = name
         skip_reading = self.gui._remove_old_geometry(abaqus_filename)
@@ -41,7 +45,7 @@ class AbaqusIO:
         model.read_abaqus_inp(abaqus_filename)
 
         self.gui.nid_map = {}
-        nnodes, all_nodes, nelements = get_nodes_nnodes_nelements(model)
+        nnodes, nids, nodes, nelements = get_nodes_nnodes_nelements(model)
         self.gui.log.info('nnodes=%s nelements=%s' % (nnodes, nelements))
         assert nelements > 0, nelements
         #nodes = model.nodes
@@ -54,11 +58,7 @@ class AbaqusIO:
         grid = self.gui.grid
         grid.Allocate(self.gui.nelements, 1000)
 
-        assert len(all_nodes) > 0, len(all_nodes)
-        if len(all_nodes) == 1:
-            nodes = all_nodes[0]
-        else:
-            nodes = np.vstack(all_nodes)
+        assert len(nodes) > 0, len(nodes)
 
         mmax = np.amax(nodes, axis=0)
         mmin = np.amin(nodes, axis=0)
@@ -72,7 +72,7 @@ class AbaqusIO:
         points_array = numpy_to_vtk(
             num_array=nodes,
             deep=True,
-            array_type=data_type
+            array_type=data_type,
         )
         points.SetData(points_array)
 
@@ -127,15 +127,16 @@ class AbaqusIO:
         self.gui.element_ids = element_ids
         self.gui._finish_results_io2(model_name, form, cases)
 
-    def clear_abaqus(self):
+    def clear_abaqus(self) -> None:
         """does nothing"""
         pass
 
-    def load_abaqus_results(self, abaqusd_filename):
+    def load_abaqus_results(self, abaqus_filename: str):
         """does nothing"""
         raise NotImplementedError()
 
-    def _fill_abaqus_case(self, cases, ID, node_ids, nodes, nelements, unused_model):
+    def _fill_abaqus_case(self, cases, ID: int, node_ids, nodes, nelements: int,
+                          unused_model: Abaqus) -> Tuple[Any, Any, int, np.ndarray, np.ndarray]:
         """creates the result objects for abaqus"""
         #return [], {}, 0
         #nelements = elements.shape[0]
@@ -181,25 +182,8 @@ class AbaqusIO:
         icase = 2
         return form, cases, icase, node_ids, element_ids
 
-
-def get_nodes_nnodes_nelements(model, stop_for_no_elements=True):
-    """helper method"""
-    nnodes = 0
-    nelements = 0
-    all_nodes = []
-    for unused_part_name, part in model.parts.items():
-        #unused_nids = part.nids - 1
-        nodes = part.nodes
-
-        nnodes += nodes.shape[0]
-        nelements += part.nelements
-
-        all_nodes.append(nodes)
-    if nelements == 0 and stop_for_no_elements:
-        raise RuntimeError('nelements=0')
-    return nnodes, all_nodes, nelements
-
-def add_lines(grid, nids, eids_lines, nid_offset):
+def add_lines(grid: vtk.vtkUnstructuredGrid,
+              nids, eids_lines: np.ndarray, nid_offset: int) -> int:
     """adds line elements to the vtkUnstructuredGrid"""
     nelements = 0
     if eids_lines is not None:
@@ -217,7 +201,8 @@ def add_lines(grid, nids, eids_lines, nid_offset):
     return nelements
 
 
-def add_tris(grid, nids, eids_tris, nid_offset):
+def add_tris(grid: vtk.vtkUnstructuredGrid,
+             nids, eids_tris: np.ndarray, nid_offset: int) -> int:
     """adds tri elements to the vtkUnstructuredGrid"""
     nelements = 0
     if eids_tris is not None:
@@ -236,7 +221,8 @@ def add_tris(grid, nids, eids_tris, nid_offset):
     return nelements
 
 
-def add_quads(grid, nids, eids_quads, nid_offset):
+def add_quads(grid: vtk.vtkUnstructuredGrid,
+              nids, eids_quads: np.ndarray, nid_offset: int) -> int:
     """adds quad elements to the vtkUnstructuredGrid"""
     nelements = 0
     if eids_quads is not None:
@@ -258,7 +244,8 @@ def add_quads(grid, nids, eids_quads, nid_offset):
     return nelements
 
 
-def add_tetras(grid, nids, eids_tetras, nid_offset):
+def add_tetras(grid: vtk.vtkUnstructuredGrid,
+               nids, eids_tetras: np.ndarray, nid_offset: int) -> int:
     """adds tet elements to the vtkUnstructuredGrid"""
     nelements = 0
     if eids_tetras is not None:
@@ -278,7 +265,8 @@ def add_tetras(grid, nids, eids_tetras, nid_offset):
     return nelements
 
 
-def add_hexas(grid, nids, eids_hexas, nid_offset):
+def add_hexas(grid: vtk.vtkUnstructuredGrid,
+              nids, eids_hexas: np.ndarray, nid_offset: int) -> int:
     """adds hex elements to the vtkUnstructuredGrid"""
     nelements = 0
     if eids_hexas is not None:

@@ -193,15 +193,17 @@ class Part:
 
         if node_shape == 3:
             self.nodes = np.array(nodes, dtype='float32')
+            self.log.info(f'3d model found; nodes.shape={self.nodes.shape}')
         elif node_shape == 2:
             # abaqus can have only x/y coordinates, so we fake the z coordinate
             self.nodes = np.zeros((nnodes, 3), dtype='float32')
             nodes2 = np.array(nodes, dtype='float32')
             #print(nodes2.shape, self.nodes.shape)
             self.nodes[:, :2] = nodes2
+            self.log.info(f'2d model found; nodes.shape={self.nodes.shape}')
         else:
             raise NotImplementedError(node0)
-
+        assert self.nodes.shape[0] == nnodes, f'self.nodes.shape={self.nodes.shape} nnodes={nnodes}'
         # bars
         self.r2d2 = None
 
@@ -443,7 +445,7 @@ class Part:
 
         for set_name, values in sorted(self.element_sets.items()):
             write_element_set_to_file(abq_file, set_name, values)
-        abq_file.write('*endpart\n')
+        abq_file.write('*end part\n')
 
 def write_name(name):
     """Abaqus has odd rules for writing words without spaces vs. with spaces"""
