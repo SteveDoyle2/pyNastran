@@ -1,8 +1,10 @@
 """Defines the Abaqus class"""
+from typing import List
 import numpy as np
-from cpylog import get_logger2
+from cpylog import SimpleLogger, get_logger2
 from pyNastran.converters.abaqus.abaqus_cards import (
-    Assembly, Material, Part, SolidSection, allowed_element_types)
+    Assembly, Material, Part, Step, SolidSection, ShellSection,
+    allowed_element_types)
 
 
 def read_abaqus(abaqus_inp_filename, log=None, debug=False):
@@ -49,9 +51,12 @@ class Abaqus:
         self.amplitudes = {}
         self.assembly = None
         self.initial_conditions = {}
-        self.steps = {}
+        self.steps = []
         self.heading = None
         self.preprint = None
+
+        self.shell_sections = []  # List[ShellSection]
+        self.solid_sections = []  # List[SolidSection]
         self.log = get_logger2(log, debug)
 
     def read_abaqus_inp(self, abaqus_inp_filename):
@@ -77,6 +82,7 @@ class Abaqus:
         node_sets = {}
         element_sets = {}
         solid_sections = []
+        shell_sections = []
 
         while iline < nlines:
             # not handling comments right now
@@ -229,8 +235,19 @@ class Abaqus:
                 elif '*solid section' in line0:
                     iline, solid_section = read_solid_section(line0, lines, iline, self.log)
                     solid_sections.append(solid_section)
+                elif '*shell section' in line0:
+                    iline, shell_section = read_shell_section(line0, lines, iline, self.log)
+                    shell_sections.append(shell_section)
                 elif '*hourglass stiffness' in line0:
                     iline, hourglass_stiffness = read_hourglass_stiffness(line0, lines, iline, self.log)
+                elif '*orientation' in line0:
+                    unused_key = 'orientation'
+                    unused_data = []
+                    while '*' not in line0:
+                        sline = line0.split(',')
+                        iline += 1
+                        line0 = lines[iline].strip().lower()
+                    self.log.debug(line0)
                 else:
                     raise NotImplementedError('word=%r line0=%r' % (word, line0))
             else:
@@ -241,6 +258,8 @@ class Abaqus:
             #if self.debug:
                 #self.log.debug('')
 
+        self.shell_sections = shell_sections
+        self.solid_sections = solid_sections
         self.log.debug('nassembly = %s' % nassembly)
         for part_name, part in sorted(self.parts.items()):
             self.log.info(str(part))
@@ -248,7 +267,7 @@ class Abaqus:
         for unused_mat_name, mat in sorted(self.materials.items()):
             self.log.debug(str(mat))
 
-    def read_material(self, lines, iline, word):
+    def read_material(self, lines: List[str], iline: int, word: str) -> Material:
         """reads a Material card"""
         param_map = get_param_map(iline, word, required_keys=['name'])
         #print(param_map)
@@ -259,6 +278,7 @@ class Abaqus:
         word = word_line.strip('*').lower()
         unused_allowed_words = ['elastic']
         unallowed_words = [
+            'shell section', 'solid section',
             'material', 'step', 'boundary', 'amplitude', 'surface interaction',
             'assembly']
         iline += 1
@@ -272,9 +292,11 @@ class Abaqus:
         while word not in unallowed_words:
             data_lines = []
             #self.log.info('  mat_word = %r' % word)
+            print(sections)
             if word.startswith('elastic'):
                 key = 'elastic'
                 sword = word.split(',')
+                print(key, sword)
 
                 #self.log.debug('  matword = %s' % sword)
                 if len(sword) == 1:
@@ -289,8 +311,17 @@ class Abaqus:
                     if mat_type == 'traction':
                         assert len(sline) == 3, sline
                         self.log.debug('  traction material')
+                    elif mat_type in ['iso', 'isotropic']:
+                        #, TYPE=ISO
+                        #1.00000E+07, 3.00000E-01
+                        assert len(sline) == 2, sline
+                        e, nu = sline
+                        e = float(e)
+                        nu = float(nu)
+                        sections['elastic'] = [e, nu]
+                        print(sections)
                     else:
-                        raise NotImplementedError(mat_type)
+                        raise NotImplementedError(f'mat_type={mat_type!r}')
                 iline += 1
             elif word.startswith('plastic'):
                 key = 'plastic'
@@ -451,12 +482,20 @@ class Abaqus:
                 raise NotImplementedError(msg)
 
             if key in sections:
-                msg = 'key=%r already defined for Material name=%r' % (key, name)
+                msg = f'key={key!r} already defined for Material name={name!r}'
                 self.log.warning(msg)
+            else:
                 #raise RuntimeError(msg)
-            sections[key] = data_lines
+                sections[key] = data_lines
 
-            word_line = lines[iline].strip('\n\r\t, ').lower()
+            try:
+                line = lines[iline]
+            except IndexError:
+                is_broken = True
+                self.log.debug('  breaking on end of file')
+                break
+            word_line = line.strip('\n\r\t, ').lower()
+            del line
             word = word_line.strip('*').lower()
 
             iline += 1
@@ -473,7 +512,9 @@ class Abaqus:
             if is_broken:
                 iline -= 1
                 break
-        material = Material(name, sections=sections, density=density,
+        print(name, sections)
+        material = Material(name, sections=sections,
+                            is_elastic=True, density=density,
                             ndepvars=ndepvars, ndelete=ndelete)
         iline -= 1
         return iline, line0, material
@@ -575,6 +616,7 @@ class Abaqus:
         nodes = []
         unused_is_start = True
         solid_sections = []
+        shell_sections = []
         while not line0.startswith('*end part'):
             #if is_start:
             iline += 1 # skips over the header line
@@ -619,6 +661,9 @@ class Abaqus:
             elif '*solid section' in line0:
                 iline, solid_section = read_solid_section(line0, lines, iline, self.log)
                 solid_sections.append(solid_section)
+            elif '*shell section' in line0:
+                iline, shell_section = read_shell_section(line0, lines, iline, self.log)
+                shell_sections.append(shell_section)
 
             elif '*cohesive section' in line0:
                 # TODO: skips header parsing
@@ -647,6 +692,14 @@ class Abaqus:
                     data_lines.append(line0.split(','))
                     iline += 1
                     line0 = lines[iline].strip().lower()
+            elif '*orientation' in line0:
+                unused_key = 'orientation'
+                unused_data = []
+                while '*' not in line0:
+                    sline = line0.split(',')
+                    iline += 1
+                    line0 = lines[iline].strip().lower()
+                self.log.debug(line0)
             else:
                 msg = 'line=%r\n' % line0
                 allowed = ['*node', '*element', '*nset', '*elset', '*surface',
@@ -663,8 +716,9 @@ class Abaqus:
 
         if self.debug:
             self.log.debug('part_name = %r' % part_name)
+        print('part.shell_sections =', shell_sections)
         part = Part(part_name, nids, nodes, element_types, node_sets, element_sets,
-                    solid_sections, self.log)
+                    solid_sections, shell_sections, self.log)
         return iline, line0, part_name, part
 
     def _read_elements(self, lines, line0, iline):
@@ -814,6 +868,41 @@ class Abaqus:
                     node_output += sline
                     iline += 1
                     line0 = lines[iline].strip().lower()
+            elif word.startswith('buckle'):
+                node_output = []
+                while '*' not in line0:
+                    sline = line0.split(',')
+                    node_output += sline
+                    iline += 1
+                    line0 = lines[iline].strip().lower()
+            elif word.startswith('cload'):
+                node_output = []
+                while '*' not in line0:
+                    sline = line0.split(',')
+                    node_output += sline
+                    iline += 1
+                    line0 = lines[iline].strip().lower()
+            elif word.startswith('node print'):
+                node_output = []
+                while '*' not in line0:
+                    sline = line0.split(',')
+                    node_output += sline
+                    iline += 1
+                    line0 = lines[iline].strip().lower()
+            elif word.startswith('node file'):
+                node_output = []
+                while '*' not in line0:
+                    sline = line0.split(',')
+                    node_output += sline
+                    iline += 1
+                    line0 = lines[iline].strip().lower()
+            elif word.startswith('el file'):
+                node_output = []
+                while '*' not in line0:
+                    sline = line0.split(',')
+                    node_output += sline
+                    iline += 1
+                    line0 = lines[iline].strip().lower()
             else:
                 msg = print_data(lines, iline, word, 'is this an unallowed word for *Step?\n')
                 raise NotImplementedError(msg)
@@ -828,6 +917,7 @@ class Abaqus:
 
     def write(self, abaqus_filename_out, is_2d=False):
         self.log.info('writing %r' % abaqus_filename_out)
+        assert isinstance(self.steps, list), self.steps
         #self.parts = {}
         #self.boundaries = {}
         #self.materials = {}
@@ -850,6 +940,10 @@ class Abaqus:
                 amplitude.write(abq_file)
             for unused_mat_name, mat in self.materials.items():
                 mat.write(abq_file)
+            for step in self.steps:
+                print(step)
+                print(abq_file)
+                step.write(abq_file)
 
 def get_nodes_nnodes_nelements(model: Abaqus, stop_for_no_elements: bool=True):
     """helper method"""
@@ -861,9 +955,10 @@ def get_nodes_nnodes_nelements(model: Abaqus, stop_for_no_elements: bool=True):
         #unused_nids = part.nids - 1
         nidsi = part.nids
         nodes = part.nodes
+        elements = part.elements
 
         nnodes += nodes.shape[0]
-        nelements += part.nelements
+        nelements += elements.nelements
         nids.append(nidsi)
         all_nodes.append(nodes)
 
@@ -942,7 +1037,25 @@ def read_solid_section(line0, lines, iline, log):
     solid_section = SolidSection(params_map, data_lines, log)
     return iline, solid_section
 
-def read_hourglass_stiffness(line0, lines, iline, log):
+def read_shell_section(line0: str, lines: List[str], iline: int,
+                       log: SimpleLogger) -> ShellSection:
+    """reads *shell section"""
+    # TODO: skips header parsing
+    #iline += 1
+    word2 = line0.strip('*').lower()
+    params_map = get_param_map(iline, word2, required_keys=['material'])
+    log.debug('    param_map = %s' % params_map)
+    #line0 = lines[iline].strip().lower()
+    data_lines, iline, line0 = _read_star_block2(lines, iline, line0, log)
+    log.info(f'params_map = {params_map}')
+    log.info(f'data_lines = {data_lines}')
+    for line in data_lines:
+        print(line)
+    shell_section = ShellSection.add_from_data_lines(params_map, data_lines, log)
+    return iline, shell_section
+
+def read_hourglass_stiffness(line0: str, lines: List[str], iline: int,
+                             log: SimpleLogger) -> SolidSection:
     """reads *hourglass stiffness"""
     # TODO: skips header parsing
     #iline += 1

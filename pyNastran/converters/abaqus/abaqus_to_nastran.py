@@ -3,7 +3,10 @@ from typing import Dict
 
 import numpy as np
 from pyNastran.bdf.bdf import read_bdf, BDF
-from pyNastran.converters.abaqus.abaqus import Abaqus, Part, read_abaqus, get_nodes_nnodes_nelements
+from pyNastran.converters.abaqus.abaqus import (
+    Abaqus, Part, Material, Step,
+    ShellSection, SolidSection,
+    read_abaqus, get_nodes_nnodes_nelements)
 
 def nastran_to_abaqus_filename(bdf_filename: str, abaqus_inp_filename: str):
     nastran_model = read_bdf(bdf_filename)
@@ -37,10 +40,18 @@ def nastran_to_abaqus_filename(bdf_filename: str, abaqus_inp_filename: str):
     }
     pid_to_name_map = {}
     element_sets_temp = {}
+    shell_sections = []
     for pid, prop in nastran_model.properties.items():
         pid_to_name_map[pid] = f'{prop.type}_{pid}'  # PSHELL_20
         element_sets_temp[pid] = []  # 20
-        #if prop.type == 'PSHELL':
+        if prop.type == 'PSHELL':
+            mid = prop.mid1
+            material_name = f'{prop.mid1_ref.type}_{mid}'
+            thickness = prop.t
+            shell_section = ShellSection(material_name, thickness, log)
+            shell_sections.append(shell_section)
+        else:
+            print(prop)
         #elif prop.type == 'PSHELL':
 
     for eid, elem in nastran_model.elements.items():
@@ -70,10 +81,28 @@ def nastran_to_abaqus_filename(bdf_filename: str, abaqus_inp_filename: str):
     _process_constraints(nastran_model, node_sets)
 
     solid_sections = []
-    part = Part(name, nids, nodes, element_types, node_sets, element_sets, solid_sections, log)
+    shell_sections = []
+    part = Part(name, nids, nodes, element_types, node_sets, element_sets,
+                solid_sections, shell_sections, log=log)
     model.parts = {
         'model': part,
     }
+
+    for mid, mat in nastran_model.materials.items():
+        name = f'{mat.type}_mid{mid}'
+        density = mat.rho if mat.rho else 0.0
+        sections = {
+            'elastic': 'cat',
+        }
+        material = Material(name, sections, density=density,
+                            is_elastic=True, ndepvars=None, ndelete=None)
+        model.materials[name] = material
+
+    name = 'static_step'
+    boundaries = []
+    outputs = []
+    static_step = Step(name, boundaries, outputs, is_nlgeom=False)
+    model.steps = [static_step]
     model.write(abaqus_inp_filename, is_2d=False)
 
 
@@ -92,7 +121,6 @@ def _process_constraints(nastran_model: BDF, node_sets: Dict[str, np.ndarray]):
                 x = 1
             else:
                 print(spc)
-                x = 1
 
     for key, mylist in spc_dict.items():
         node_sets[key] = np.array(mylist, dtype='int32')
@@ -100,13 +128,15 @@ def _process_constraints(nastran_model: BDF, node_sets: Dict[str, np.ndarray]):
 def make_nodes_elements(model: Abaqus, nastran_model: BDF) -> None:
     log = model.log
     nid_offset = 0
+
     for unused_part_name, part in model.parts.items():
-        log.info('part_name = %r' % unused_part_name)
+        #log.info('part_name = %r' % unused_part_name)
         nnodesi = part.nodes.shape[0]
         #nidsi = part.nids
 
         pid = 1
-        for etype, eids_nids in part.element_types.items():
+        elements = part.elements
+        for etype, eids_nids in elements.element_types.items():
             eids, part_nids = eids_nids
             if eids is None and part_nids is None:
                 continue
@@ -119,6 +149,13 @@ def make_nodes_elements(model: Abaqus, nastran_model: BDF) -> None:
                 for eid, nids in zip(eids, part_nids):
                     nastran_model.add_cquad4(eid, pid, nids[1:], theta_mcid=0.0, zoffset=0., tflag=0,
                                              T1=None, T2=None, T3=None, T4=None, comment='')
+            elif etype == 's8r':
+                for eid, nids in zip(eids, part_nids):
+                    nastran_model.add_cquad8(eid, pid, nids[1:], theta_mcid=0.0, zoffset=0., tflag=0,
+                                             T1=None, T2=None, T3=None, T4=None, comment='')
+            elif etype == 'c3d4':
+                for eid, nids in zip(eids, part_nids):
+                    nastran_model.add_ctetra(eid, pid, nids[1:], comment='')
             else:
                 raise NotImplementedError(etype)
         #nids.append(nidsi)
@@ -146,7 +183,28 @@ def make_nodes_elements(model: Abaqus, nastran_model: BDF) -> None:
         #add_hexas(grid, nidsi, part.c3d8r, nid_offset)
 
         nid_offset += nnodesi
+        for shell_section in part.shell_sections:
+            log.info('shell')
     #nids = np.hstack(nids)
+
+    pid = 1
+    mid = 1
+    for shell_section in model.shell_sections:
+        print(shell_section)
+        mat_name = shell_section.material_name
+        mat = model.materials[mat_name]
+        print(mat)
+        t = shell_section.thickness
+        nastran_model.add_pshell(pid, mid1=mid, t=t, mid2=mid, twelveIt3=1.0, mid3=None, tst=0.833333,
+                                 nsm=0.0, z1=None, z2=None, mid4=None, comment='')
+        G = None
+        elastic = mat.sections['elastic']
+        E = elastic[0]
+        nu = elastic[1]
+        nastran_model.add_mat1(mid, E, G, nu, rho=0.0, a=0.0, tref=0.0,
+                               ge=0.0, St=0.0, Sc=0.0, Ss=0.0, mcsid=0, comment='')
+        log.info('shell2')
+        mid += 1
 
 def abaqus_to_nastran_filename(abaqus_inp_filename: str, nastran_filename_out: str):
     model = read_abaqus(abaqus_inp_filename, log=None, debug=False)
@@ -156,7 +214,7 @@ def abaqus_to_nastran_filename(abaqus_inp_filename: str, nastran_filename_out: s
 
     nastran_model = BDF(debug=True, log=None, mode='msc')
     for nid, xyz in zip(nids, nodes):
-        grid = nastran_model.add_grid(nid, xyz)
+        nastran_model.add_grid(nid, xyz)
     make_nodes_elements(model, nastran_model)
     nastran_model.write_bdf(nastran_filename_out)
     x = 1

@@ -1520,6 +1520,11 @@ class GRID(BaseCard):
                 print_float_8(xyz[0]),
                 print_float_8(xyz[1]),
                 print_float_8(xyz[2]))
+            #msg = 'GRID,%i,%s,%s,%s,%s\n' % (
+                #self.nid, cps.strip(),
+                #print_float_8(xyz[0]),
+                #print_float_8(xyz[1]),
+                #print_float_8(xyz[2]))
         else:
             cds = set_string8_blank_if_default(cd, 0)
             seid = set_string8_blank_if_default(self.SEid(), 0)

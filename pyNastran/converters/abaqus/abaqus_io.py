@@ -84,27 +84,28 @@ class AbaqusIO:
             nidsi = part.nids
             nids.append(nidsi)
 
-            add_lines(grid, nidsi, part.r2d2, nid_offset)
+            elements = part.elements
+            add_lines(grid, nidsi, elements.r2d2, nid_offset)
 
-            add_tris(grid, nidsi, part.cps3, nid_offset)
-            add_tris(grid, nidsi, part.cpe3, nid_offset)
+            add_tris(grid, nidsi, elements.cps3, nid_offset)
+            add_tris(grid, nidsi, elements.cpe3, nid_offset)
 
-            add_quads(grid, nidsi, part.cpe4, nid_offset)
-            add_quads(grid, nidsi, part.cpe4r, nid_offset)
+            add_quads(grid, nidsi, elements.cpe4, nid_offset)
+            add_quads(grid, nidsi, elements.cpe4r, nid_offset)
 
-            add_quads(grid, nidsi, part.cps4, nid_offset)
-            add_quads(grid, nidsi, part.cps4r, nid_offset)
+            add_quads(grid, nidsi, elements.cps4, nid_offset)
+            add_quads(grid, nidsi, elements.cps4r, nid_offset)
 
-            add_quads(grid, nidsi, part.coh2d4, nid_offset)
-            add_quads(grid, nidsi, part.cohax4, nid_offset)
+            add_quads(grid, nidsi, elements.coh2d4, nid_offset)
+            add_quads(grid, nidsi, elements.cohax4, nid_offset)
 
-            add_tris(grid, nidsi, part.cax3, nid_offset)
-            #add_quads(grid, nidsi, part.cax4, nid_offset)
-            add_quads(grid, nidsi, part.cax4r, nid_offset)
+            add_tris(grid, nidsi, elements.cax3, nid_offset)
+            #add_quads(grid, nidsi, elements.cax4, nid_offset)
+            add_quads(grid, nidsi, elements.cax4r, nid_offset)
 
             # solids
-            add_tetras(grid, nidsi, part.c3d10h, nid_offset)
-            add_hexas(grid, nidsi, part.c3d8r, nid_offset)
+            add_tetras(grid, nidsi, elements.c3d10h, nid_offset)
+            add_hexas(grid, nidsi, elements.c3d8r, nid_offset)
 
             nid_offset += nnodesi
         nids = np.hstack(nids)

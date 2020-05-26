@@ -4,10 +4,45 @@ from cpylog import get_logger
 
 import pyNastran
 from pyNastran.converters.abaqus.abaqus import read_abaqus
+from pyNastran.converters.abaqus.abaqus_to_nastran import (
+    nastran_to_abaqus_filename, abaqus_to_nastran_filename)
+
 PKG_PATH = pyNastran.__path__[0]
 MODEL_PATH = os.path.join(PKG_PATH, 'converters', 'abaqus', 'models')
+NASTRAN_MODEL_PATH = os.path.join(PKG_PATH, '..', 'models')
+
 
 class TestAbaqus(unittest.TestCase):
+    def test_abaqus_convert_1(self):
+        """plate conversion"""
+        nastran_filename = os.path.join(NASTRAN_MODEL_PATH, 'plate', 'plate.bdf')
+        abaqus_inp_filename = os.path.join(MODEL_PATH, 'plate.inp')
+        nastran_to_abaqus_filename(nastran_filename, abaqus_inp_filename)
+
+        #model = read_abaqus(abaqus_filename, debug=True)
+        nastran_filename_out = os.path.join(MODEL_PATH, 'plate2.bdf')
+        abaqus_to_nastran_filename(abaqus_inp_filename, nastran_filename_out)
+
+    def test_abaqus_convert_2(self):
+        """plate conversion"""
+        #nastran_filename = os.path.join(MODEL_PATH, 'plate.inp')
+        abaqus_inp_filename = os.path.join(MODEL_PATH, 'in.inp')
+        #nastran_to_abaqus_filename(nastran_filename, abaqus_inp_filename)
+
+        #model = read_abaqus(abaqus_filename, debug=True)
+        nastran_filename_out = os.path.join(MODEL_PATH, 'out.bdf')
+        abaqus_to_nastran_filename(abaqus_inp_filename, nastran_filename_out)
+
+    def test_abaqus_convert_3(self):
+        """plate conversion"""
+        #nastran_filename = os.path.join(MODEL_PATH, 'plate.inp')
+        abaqus_inp_filename = os.path.join(MODEL_PATH, 'test_bracket.inp')
+        #nastran_to_abaqus_filename(nastran_filename, abaqus_inp_filename)
+
+        #model = read_abaqus(abaqus_filename, debug=True)
+        nastran_filename_out = os.path.join(MODEL_PATH, 'test_bracket.bdf')
+        abaqus_to_nastran_filename(abaqus_inp_filename, nastran_filename_out)
+
     def test_abaqus_1(self):
         """simple test"""
         lines = make_model()
