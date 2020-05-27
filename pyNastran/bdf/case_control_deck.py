@@ -677,6 +677,7 @@ class CaseControlDeck:
             key = obj.key
             options = obj.set_id
             value = obj.value
+            #print(f'key={key} value={value} options={options}')
             param_type = 'SET-type'
         elif line_upper.startswith('SETMC ') and equals_count == 1:
             obj = SETMC.add_from_case_control(line_upper, lines, i)

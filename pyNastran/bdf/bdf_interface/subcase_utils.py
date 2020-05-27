@@ -308,8 +308,7 @@ def write_stress_type(key, options, value, spaces=''):
     return msg
 
 
-def write_set(set_id, values, spaces=''):
-    # type: (List[int], List[int], str) -> str
+def write_set(set_id: int, values: List[int], spaces: str='') -> str:
     """
     writes
     SET 80 = 3926, 3927, 3928, 4141, 4142, 4143, 4356, 4357, 4358, 4571,
@@ -318,10 +317,10 @@ def write_set(set_id, values, spaces=''):
 
     Parameters
     ----------
+    set_id : int  / str?
+        the Set ID
     values : List[int]
         the Set values
-    options : int / str; default=''
-        the Set ID
     spaces : str; default=''
         indentation
 
@@ -348,7 +347,7 @@ def write_set(set_id, values, spaces=''):
 
     """
     values.sort()
-    starter = 'SET %s = ' % (set_id)
+    starter = f'SET {set_id:d} = '
     msg2 = spaces + starter
 
     msg = ''

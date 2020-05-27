@@ -1,5 +1,5 @@
 """Subcase creation/extraction class"""
-from typing import List, Dict, Any
+from typing import List, Dict, Tuple, Any
 from numpy import ndarray
 
 from pyNastran.utils.numpy_utils import integer_types
@@ -98,7 +98,7 @@ class Subcase:
                     self.params[group_key] = (value, options, param_type)
                     str(self)
             else:  # pragma: no cover
-                raise RuntimeError('failed exporting Subcase/%s' % key)
+                raise RuntimeError(f'failed exporting Subcase/{key}')
 
     def export_to_hdf5(self, hdf5_file, encoding):
         keys_to_skip = ['log', 'solCodeMap', 'allowed_param_types']
@@ -143,7 +143,7 @@ class Subcase:
                                 sub_groupi.attrs['type'] = key
                                 value.export_to_hdf5(sub_groupi, encoding)
                             else:
-                                print('value = %r' % value)
+                                print(f'value = {value!r}')
                                 raise NotImplementedError(value)
 
                     if param_type is not None:
@@ -177,7 +177,7 @@ class Subcase:
                     #subcase.export_to_hdf5(subcase_group, encoding)
             else:  # pragma: no cover
                 print(key, value)
-                raise RuntimeError('cant export to hdf5 Subcase/%s' % h5attr)
+                raise RuntimeError(f'cant export to hdf5 Subcase/{h5attr}')
 
 
     def __deepcopy__(self, memo):
@@ -251,7 +251,7 @@ class Subcase:
             # table_name is a byte string
             table_name = table_name.decode('latin1')
         else:
-            raise NotImplementedError('table_name=%r' % table_name)
+            raise NotImplementedError(f'table_name={table_name!r}')
 
         table_code = data_code['table_code']
         unused_sort_code = data_code['sort_code']
@@ -674,8 +674,8 @@ class Subcase:
         """
         param_name = update_param_name(param_name)
         if param_name not in self.params:
-            raise KeyError('%s doesnt exist in subcase=%s in the case '
-                           'control deck%s.' % (param_name, self.id, msg))
+            raise KeyError(f'{param_name} doesnt exist in subcase={self.id} in the case '
+                           f'control deck{msg}.')
         value, options, param_type = self.params[param_name]
         #print('param_name=%r value=%s options=%s param_type=%r' % (
             #param_name, value, options, param_type))
@@ -683,7 +683,8 @@ class Subcase:
             return value.value, options
         return value, options
 
-    def _validate_param_type(self, param_type):
+    def _validate_param_type(self, param_type) -> None:
+        """checks to see if a valid parmater type is selected"""
         if param_type not in self.allowed_param_types:
             msg = (
                 f'param_type={param_type!r} is not supported\n'
@@ -706,10 +707,40 @@ class Subcase:
 
     def update(self, key, value, options, param_type):
         self._validate_param_type(param_type)
-        assert key in self.params, 'key=%r is not in isubcase=%s' % (key, self.id)
+        assert key in self.params, f'key={key!r} is not in isubcase={self.id}'
         self._add_data(key, value, options, param_type)
 
+    def add_set_from_values(self, set_id: int, values: List[int]):
+        """
+        Simple way to add SET cards
+
+        Example
+        -------
+        >>> set_id = 42
+        >>> values = [1, 2, 3]
+        >>> subcase.add_set_from_values(set_id, values)
+        >>> subcase
+
+        SUBCASE 1
+            SET 42 = 1, 2, 3
+
+        """
+        key = f'SET {set_id:d}'
+        param_type = 'SET-type'
+        assert isinstance(values, list), values
+        self.params[key] = [values, set_id, param_type]
+
     def _add_data(self, key, value, options, param_type):
+        """
+        Adds the data to the subcase  in the KEY(OPTIONS)=VALUE style.
+
+        Parameters
+        ----------
+        key : str
+            the name
+
+        >>> subcase._add_data(key, value, options, param_type)
+        """
         key = update_param_name(key)
         if key == 'ANALYSIS' and value == 'FLUT':
             value = 'FLUTTER'
@@ -736,14 +767,14 @@ class Subcase:
 
             assert isinstance(values2, list), type(values2)
             if isinstance(options, list):
-                msg = 'invalid type for options=%s value; expected an integer; got a list' % key
+                msg = f'invalid type for options={options!r} value; expected an integer; got a list'
                 raise TypeError(msg)
             options = int(options)
             return (key, values2, options)
 
         elif param_type == 'CSV-type':
-            #print("adding isubcase=%s key=%r value=|%s| options=|%s| "
-            #      "param_type=%s" %(self.id, key, value, options, param_type))
+            #print(f'adding isubcase={self.id} key={key!r} value={value!r} options={options!r} '
+                  #'param_type={param_type!r}')
             if value.isdigit():  # PARAM,DBFIXED,-1
                 value = value
         #elif param_type == 'OBJ-type':
@@ -761,7 +792,7 @@ class Subcase:
             if isinstance(value, integer_types) or value is None:
                 pass
             elif isinstance(value, (list, ndarray)):  # new???
-                msg = 'invalid type for key=%s value; expected an integer; got a list' % key
+                msg = f'invalid type for key={key} value; expected an integer; got a list'
                 raise TypeError(msg)
             elif value.isdigit():  # STRESS = ALL
                 value = value
@@ -863,7 +894,7 @@ class Subcase:
             #if value is not None:
                 #print("   key=%r value=%r" % (key, value))
 
-    def print_param(self, key, param):
+    def print_param(self, key: str, param: Tuple[Any, Any, str]) -> str:
         """
         Prints a single entry of the a subcase from the global or local
         subcase list.
@@ -880,7 +911,7 @@ class Subcase:
         if param_type == 'SUBCASE-type':
             if self.id > 0:
                 msgi = 'SUBCASE %s\n' % (self.id)
-                assert len(msgi) < 72, 'len(msg)=%s; msg=\n%s' % (len(msgi), msgi)
+                assert len(msgi) < 72, f'len(msg)={len(msgi)}; msg=\n{msgi}'
                 msg += msgi
             #else:  global subcase ID=0 and is not printed
             #    pass
@@ -891,20 +922,20 @@ class Subcase:
                 sline = value.split(',')
                 two_spaces = ',\n' + 2 * spaces
                 msgi = spaces + two_spaces.join(sline) + '\n'
-                assert len(msgi) < 68, 'len(msg)=%s; msg=\n%s' % (len(msgi), msgi)
+                assert len(msgi) < 68, f'len(msg)={len(msgi)}; msg=\n{msgi}'
                 msg += msgi
             else:
-                msgi = spaces + '%s\n' % value
+                msgi = spaces + f'{value}\n'
                 #assert len(msgi) < 68, 'len(msg)=%s; msg=\n%s' % (len(msgi), msgi)
                 msg += msgi
         elif param_type == 'STRING-type':
             msgi = spaces + '%s = %s\n' % (key, value)
             if key not in ['TITLE', 'LABEL', 'SUBTITLE']:
-                assert len(msgi) < 68, 'len(msg)=%s; msg=\n%s' % (len(msgi), msgi)
+                assert len(msgi) < 68, f'len(msg)={len(msgi)}; msg=\n{msgi}'
             msg += msgi
         elif param_type == 'CSV-type':
             msgi = spaces + '%s,%s,%s\n' % (key, value, options)
-            assert len(msgi) < 68, 'len(msg)=%s; msg=\n%s' % (len(msgi), msgi)
+            assert len(msgi) < 68, f'len(msg)={len(msgi)}; msg=\n{msgi}'
             msg += msgi
         elif param_type == 'STRESS-type':
             msg += write_stress_type(key, options, value, spaces)
@@ -986,8 +1017,8 @@ class Subcase:
 
     def finish_subcase(self):
         """
-        Removes the subcase parameter from the subcase to avoid printing it in
-        a funny spot
+        Removes the subcase parameter from the subcase to avoid printing
+        it in a funny spot
         """
         if 'SUBCASE' in self.params:
             del self.params['SUBCASE']
@@ -1010,7 +1041,7 @@ class Subcase:
         if self.id == 0:
             msg = str(self)
         else:
-            msg = 'SUBCASE %s\n' % self.id
+            msg = f'SUBCASE {self.id:d}\n'
             nparams = 0
             for (key, param) in self.subcase_sorted(self.params.items()):
                 if key in subcase0.params and subcase0.params[key] == param:
@@ -1031,7 +1062,7 @@ class Subcase:
                           #"param_type=%r" % (key, value, options, param_type))
                     msg += self.print_param(key, param)
                     nparams += 1
-                assert nparams > 0, 'No subcase parameters are defined for isubcase=%s...' % self.id
+                assert nparams > 0, f'No subcase parameters are defined for isubcase={self.id:d}...'
 
         return msg
 
@@ -1069,7 +1100,7 @@ class Subcase:
                     try:
                         key = int(sline[1])
                     except:
-                        msg = 'error caclulating key; sline=%s' % sline
+                        msg = f'error caclulating key; sline={sline}'
                         raise RuntimeError(msg)
 
                 # store the integer ID and the SET-type list
@@ -1103,7 +1134,7 @@ class Subcase:
         #msg = "-------SUBCASE %s-------\n" %(self.id)
         msg = ''
         if self.id > 0:
-            msg += 'SUBCASE %s\n' % self.id
+            msg += f'SUBCASE {self.id:d}\n'
 
         nparams = 0
         for key, param in self.subcase_sorted(self.params.items()):
@@ -1112,7 +1143,7 @@ class Subcase:
             msg += self.print_param(key, param)
             nparams += 1
         if self.id > 0:
-            assert nparams > 0, 'No subcase parameters are defined for isubcase=%s...' % self.id
+            assert nparams > 0, f'No subcase parameters are defined for isubcase={self.id:d}...'
         return msg
 
 def _load_hdf5_param(group, key, encoding):
@@ -1164,7 +1195,7 @@ def _load_hdf5_param(group, key, encoding):
     if len(keys) > 0:
         #keyi = _cast(sub_group['key'])
         #print('keyi = %r' % keyi)
-        raise RuntimeError('keys = %s' % keys)
+        raise RuntimeError(f'keys = {keys}')
 
     #print(value, options, param_type)
     return value, options, param_type

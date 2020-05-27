@@ -522,6 +522,18 @@ class CaseControlTest(unittest.TestCase):
         with self.assertRaises(ValueError):
             deck = CaseControlDeck(lines)
 
+    def test_case_control_set(self):
+        """tests adding SETs"""
+        deck = CaseControlDeck([], log=None)
+        subcase = deck.create_new_subcase(1)
+        subcase.params['SET 42'] = [[1, 2, 3, 4, 5], 42, 'SET-type']
+        set_str = write_set(41, [1, 2, 3]).rstrip()
+        set_str2 = set_str.split('=', 1)[1]
+        assert set_str2 == ' 1, 2, 3', set_str2
+        subcase.add('SET 52', set_str2, 52, 'SET-type')
+        subcase.add_set_from_values(100, [1, 2, 10])
+        # subcase.add('SET', value, options, param_type)  # TODO: doesn't work
+
 def compare_lines(self, lines, lines_expected, has_endline):
     i = 0
     for line, line_expected in zip(lines, lines_expected):
