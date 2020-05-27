@@ -34,13 +34,23 @@ class TestAbaqus(unittest.TestCase):
         abaqus_to_nastran_filename(abaqus_inp_filename, nastran_filename_out)
 
     def test_abaqus_convert_3(self):
-        """plate conversion"""
+        """ctetra4 conversion"""
         #nastran_filename = os.path.join(MODEL_PATH, 'plate.inp')
         abaqus_inp_filename = os.path.join(MODEL_PATH, 'test_bracket.inp')
         #nastran_to_abaqus_filename(nastran_filename, abaqus_inp_filename)
 
         #model = read_abaqus(abaqus_filename, debug=True)
         nastran_filename_out = os.path.join(MODEL_PATH, 'test_bracket.bdf')
+        abaqus_to_nastran_filename(abaqus_inp_filename, nastran_filename_out)
+
+    def test_abaqus_convert_4(self):
+        """ctetra4 conversion"""
+        #nastran_filename = os.path.join(MODEL_PATH, 'plate.inp')
+        abaqus_inp_filename = os.path.join(MODEL_PATH, 'test_bracket_separate.inp')
+        #nastran_to_abaqus_filename(nastran_filename, abaqus_inp_filename)
+
+        #model = read_abaqus(abaqus_filename, debug=True)
+        nastran_filename_out = os.path.join(MODEL_PATH, 'test_bracket_separate.bdf')
         abaqus_to_nastran_filename(abaqus_inp_filename, nastran_filename_out)
 
     def test_abaqus_1(self):

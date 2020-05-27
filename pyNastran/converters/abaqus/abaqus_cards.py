@@ -75,11 +75,28 @@ class ShellSection:
 
 class SolidSection:
     """a SolidSection defines depth and a material"""
-    def __init__(self, param_map, data_lines, log: SimpleLogger):
-        self.param_map = param_map
-        self.data_lines = data_lines
-        self.material = param_map['material']
-        print('param_map =', param_map)
+    def __init__(self, material_name: str,
+                 elset: str,
+                 thickness: float,
+                 log: SimpleLogger):
+        self.material_name = material_name
+        self.elset = elset
+        self.thickness = thickness
+        self.log = log
+
+    @classmethod
+    def add_from_data_lines(cls, param_map: Dict[str, str],
+                            data_lines: List[str],
+                            log: SimpleLogger):
+        material_name = param_map['material']
+        #print('param_map =', param_map)
+        elset = param_map.get('elset', None)
+        log.debug(f'material_name = {material_name}')
+        param_map = param_map
+        data_lines = data_lines
+        thickness = 0.
+
+        #print('param_map =', param_map)
         if len(data_lines) == 0:
             pass
         elif len(data_lines) == 1:
@@ -88,17 +105,20 @@ class SolidSection:
             assert len(line0) == 1, data_lines
 
             try:
-                self.thickness = float(line0[0])
+                thickness = float(line0[0])
             except ValueError:
-                self.thickness = 0.
+                pass
 
         for line in data_lines:
             log.info('solid - %r' % line)
+        return SolidSection(material_name, elset, thickness, log)
 
     def __repr__(self):
         """prints a summary for the solid section"""
         msg = 'SolidSection(\n'
-        msg += '    param_map = %r,\n' % self.param_map
+        msg += f'    material_name = {self.material_name},\n'
+        msg += f'    elset = {self.elset},\n'
+        #msg += '    param_map = %r,\n' % self.param_map
         msg += '    thickness = %s,\n' % self.thickness
         msg += ')\n'
         return msg
@@ -253,34 +273,12 @@ class Part:
         for set_name, element_set in self.element_sets.items():
             assert isinstance(element_set, np.ndarray), set_name
 
-        try:
-            self.nids = np.array(nids, dtype='int32')
-        except ValueError:
-            msg = 'nids=%s is not integers' % nids
-            raise ValueError(msg)
-        nnodes = len(self.nids)
-
-        node0 = nodes[0]
-        node_shape = len(node0)
-
-        if node_shape == 3:
-            self.nodes = np.array(nodes, dtype='float32')
-            self.log.info(f'3d model found; nodes.shape={self.nodes.shape}')
-        elif node_shape == 2:
-            # abaqus can have only x/y coordinates, so we fake the z coordinate
-            self.nodes = np.zeros((nnodes, 3), dtype='float32')
-            nodes2 = np.array(nodes, dtype='float32')
-            #print(nodes2.shape, self.nodes.shape)
-            self.nodes[:, :2] = nodes2
-            self.log.info(f'2d model found; nodes.shape={self.nodes.shape}')
-        else:
-            raise NotImplementedError(node0)
-        assert self.nodes.shape[0] == nnodes, f'self.nodes.shape={self.nodes.shape} nnodes={nnodes}'
+        self.nids, self.nodes = cast_nodes(nids, nodes, self.log, require=True)
 
     def check_materials(self, materials):
         """validates the materials"""
         for section in self.solid_sections:
-            key = section.material
+            key = section.material_name
             if key in materials:
                 self.log.debug('material=%r for part=%r exists' % (key, self.name))
             else:
@@ -318,7 +316,7 @@ class Part:
 
         #for mat in self.materials:
         for shell_section in self.shell_sections:
-            print(shell_section)
+            #print(shell_section)
             shell_section.write(abq_file)
         #for solid_section in self.solid_sections:
             #solid_section.write(abq_file)
@@ -337,6 +335,7 @@ class Step:
     def __init__(self, name: str,
                  boundaries: List[Any],
                  outputs: List[Any],
+                 cloads: Dict[str, Any],
                  is_nlgeom: bool=False):
         """
         *Step, name=Stretch, nlgeom=YES
@@ -357,6 +356,8 @@ class Step:
         self.is_nlgeom = is_nlgeom
         self.boundaries = boundaries
         self.outputs = outputs
+        self.cloads = cloads
+        assert isinstance(cloads, list), cloads
 
     def write(self, abq_file) -> None:
         """writes a Step"""
@@ -367,10 +368,54 @@ class Step:
         abq_file.write('0.1, 1.0, 0.1, 0.1\n')
         for boundary in self.boundaries:
             abq_file.write(boundary + '\n')
+
+        for cload in self.cloads:
+            abq_file.write('*CLOAD\n')
+            for (nid, dof, mag) in cload:
+                #[36, 1, 100.0]
+                abq_file.write(f'{nid}, {dof}, {mag}\n')
+        #for name, cload in self.cloads.items():
+            #abq_file.write('*CLOAD\n')
+            #abq_file.write(f'**name={name}\n')
+            #for (nid, dof, mag) in cload:
+                ##[36, 1, 100.0]
+                #abq_file.write(f'{nid}, {dof}, {mag}\n')
+
         for output in self.outputs:
             abq_file.write(output + '\n')
         abq_file.write(f'*End Step\n')
 
+
+def cast_nodes(nids: List[Any], nodes: List[Any],
+               log: SimpleLogger, require: bool=True) -> Tuple[np.ndarray, np.ndarray]:
+    if len(nids) == 0 and require == False:
+        assert len(nodes) == 0, len(nodes)
+        return None, None
+
+    try:
+        nids = np.array(nids, dtype='int32')
+    except ValueError:
+        msg = 'nids=%s is not integers' % nids
+        raise ValueError(msg)
+    nnodes = len(nids)
+
+    node0 = nodes[0]
+    node_shape = len(node0)
+
+    if node_shape == 3:
+        nodes = np.array(nodes, dtype='float32')
+        log.info(f'3d model found; nodes.shape={nodes.shape}')
+    elif node_shape == 2:
+        # abaqus can have only x/y coordinates, so we fake the z coordinate
+        nodes = np.zeros((nnodes, 3), dtype='float32')
+        nodes2 = np.array(nodes, dtype='float32')
+        #print(nodes2.shape, self.nodes.shape)
+        nodes[:, :2] = nodes2
+        log.info(f'2d model found; nodes.shape={nodes.shape}')
+    else:
+        raise NotImplementedError(node0)
+    assert nodes.shape[0] == nnodes, f'nodes.shape={nodes.shape} nnodes={nnodes}'
+    return nids, nodes
 
 def write_name(name):
     """Abaqus has odd rules for writing words without spaces vs. with spaces"""
