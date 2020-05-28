@@ -2603,6 +2603,8 @@ class GEOM2(GeomCommon):
         """(10108, 101, 512)"""
         ntotal = 36  # 9*4
         nentries = (len(data) - n) // ntotal
+        assert (len(data) - n) % ntotal == 0
+        assert nentries > 0
         struc = Struct(self._endian + b'9i')
         for unused_i in range(nentries):
             edata = data[n:n + 36]
@@ -2621,6 +2623,8 @@ class GEOM2(GeomCommon):
         """(6108, 61, 107)"""
         ntotal = 44 * self.factor  # 11*4
         nentries = (len(data) - n) // ntotal
+        assert (len(data) - n) % ntotal == 0
+        assert nentries > 0
         struc = Struct(mapfmt(self._endian + b'8i f ii', self.size))
         for unused_i in range(nentries):
             edata = data[n:n + ntotal]
@@ -2682,6 +2686,8 @@ class GEOM2(GeomCommon):
         ntotal = 16 * self.factor  # 4*4
         struct_4i = Struct(mapfmt(self._endian + b'4i', self.size))
         nelements = (len(data) - n) // ntotal
+        assert (len(data) - n) % ntotal == 0
+        assert nelements > 0
         for unused_i in range(nelements):
             edata = data[n:n + ntotal]
             out = struct_4i.unpack(edata)
@@ -2699,6 +2705,8 @@ class GEOM2(GeomCommon):
         ntotal = 16 * self.factor  # 4*4
         struct_4i = Struct(mapfmt(self._endian + b'4i', self.size))
         nelements = (len(data) - n) // ntotal
+        assert (len(data) - n) % ntotal == 0
+        assert nelements > 0
         for unused_i in range(nelements):
             edata = data[n:n + ntotal]
             out = struct_4i.unpack(edata)
@@ -2875,6 +2883,8 @@ class GEOM2(GeomCommon):
         struct_3i = Struct(self._endian + b'3i')
         ntotal = 12
         nelements = (len(data) - n) // ntotal
+        assert (len(data) - n) % ntotal == 0
+        assert nelements > 0
         for unused_i in range(nelements):
             edata = data[n:n + ntotal]  # 4*4
             out = struct_3i.unpack(edata)
@@ -2904,6 +2914,8 @@ class GEOM2(GeomCommon):
         structi = Struct(self._endian + b'ifii')
         ntotal = 16
         nelements = (len(data) - n) // ntotal
+        assert (len(data) - n) % ntotal == 0
+        assert nelements > 0
         for unused_i in range(nelements):
             edata = data[n:n + ntotal]  # 4*4
             out = structi.unpack(edata)
@@ -2958,7 +2970,7 @@ class GEOM2(GeomCommon):
         spoint = SPOINTs.add_op2_data(nids)
         self._add_spoint_object(spoint)
         self.card_count['SPOINT'] = npoints
-        return n
+        return len(data)
 
     def _read_vubeam(self, data: bytes, n: int) -> int:  # 119
         deltae = 100000000

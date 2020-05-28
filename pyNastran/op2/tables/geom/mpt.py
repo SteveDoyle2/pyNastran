@@ -287,7 +287,7 @@ class MPT(GeomCommon):
         5 GE   RS Structural damping coefficient
 
         """
-        ntotal = 20  # 5*4
+        ntotal = 20 * self.factor # 5*4
         s = Struct(self._endian + b'i4f')
         nmaterials = (len(data) - n) // ntotal
         assert nmaterials > 0, nmaterials
@@ -303,7 +303,7 @@ class MPT(GeomCommon):
             mat = MAT10.add_op2_data(out)
             assert mat.mid > 0, mat
             self.add_op2_material(mat)
-            n += 20
+            n += ntotal
         self.card_count['MAT10'] = nmaterials
         return n
 
@@ -466,6 +466,7 @@ class MPT(GeomCommon):
                 self.binary_debug.write('  MATS1=%s\n' % str(out))
             mat = MATS1.add_op2_data(data_in)
             self._add_material_dependence_object(mat, allow_overwrites=False)
+            n += ntotal
         self.card_count['MATS1'] = nmaterials
         return n
 
@@ -515,6 +516,7 @@ class MPT(GeomCommon):
                         a1_table, a2_table, a3_table, ge_table,
                         st_table, sc_table, ss_table, comment='')
             self._add_material_dependence_object(mat, allow_overwrites=False)
+            n += ntotal
         self.card_count['MATT2'] = nmaterials
         return n
 
@@ -542,6 +544,7 @@ class MPT(GeomCommon):
                      #ax_table=None, ath_table=None, az_table=None, ge_table=None,)
             mat = MATT3(mid, *tables, comment='')
             self._add_material_dependence_object(mat, allow_overwrites=False)
+            n += ntotal
         self.card_count['MATT3'] = nmaterials
         return n
 
@@ -556,6 +559,7 @@ class MPT(GeomCommon):
         for unused_i in range(ncards):
             edata = data[n:n + ntotal]
             out = struct_7i.unpack(edata)
+
             if self.is_debug_file:
                 self.binary_debug.write('  MATT4=%s\n' % str(out))
             #(mid, tk, tcp, null, th, tmu, thgen) = out
@@ -607,7 +611,7 @@ class MPT(GeomCommon):
         s = Struct(self._endian + b'35i')
         nmaterials = (len(data) - n) // ntotal
         for unused_i in range(nmaterials):
-            edata = data[n:n+140]
+            edata = data[n:n+ntotal]
             out = s.unpack(edata)
             (mid, *tc_tables, trho, ta1, ta2, ta3, ta4, ta5, ta6, a, tge, b, c, d, e) = out
             if self.is_debug_file:
@@ -627,6 +631,7 @@ class MPT(GeomCommon):
                                  #a4_table=None, a5_table=None, a6_table=None, ge_table=None, comment='')
             mat = MATT9(mid, *tc_tables, trho, ta1, ta2, ta3, ta4, ta5, ta6, tge, comment='')
             self._add_material_dependence_object(mat, allow_overwrites=False)
+            n += ntotal
         self.card_count['MATT9'] = nmaterials
         return n
         #self.log.warning('skipping MATT9 in MPT')

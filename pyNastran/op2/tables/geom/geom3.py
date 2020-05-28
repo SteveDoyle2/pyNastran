@@ -5,6 +5,7 @@ defines readers for BDF objects in the OP2 GEOM3/GEOM3S table
 from struct import Struct
 import numpy as np
 
+from pyNastran.bdf.field_writer_16 import print_card_16
 from pyNastran.bdf.cards.loads.static_loads import (
     FORCE, FORCE1, FORCE2, GRAV,
     MOMENT, MOMENT1, MOMENT2,
@@ -545,20 +546,23 @@ class GEOM3(GeomCommon):
         2 P(2) RS Pressure
         4 G(3)  I Grid point identification numbers
         """
-        from pyNastran.bdf.field_writer_16 import print_card_16
         ntotal = 24 * self.factor  # 6*4
         nentries = (len(data) - n) // ntotal
+        assert (len(data) - n) % ntotal == 0
         struc = Struct(mapfmt(self._endian + b'iff3i', self.size))
         for unused_i in range(nentries):
             edata = data[n:n + ntotal]
             out = struc.unpack(edata)
+            print(out)
             if self.is_debug_file:
                 self.binary_debug.write('  PLOADX=%s\n' % str(out))
             fields = ['PLOADX'] + list(out)
             self.reject_lines.append(print_card_16(fields))
             #load = PLOADX.add_op2_data(out)
             #self._add_load_object(load)
-            n += ntotal + 28 * self.factor
+
+            #n += ntotal + 28 * self.factor
+            n += ntotal
         self.card_count['PLOADX'] = nentries
         return n
 

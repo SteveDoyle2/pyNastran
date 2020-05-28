@@ -255,7 +255,7 @@ class DYNAMICS(GeomCommon):
             istart = iend + 2
             nentries += 1
         self.increase_card_count('DLOAD', nentries)
-        return n
+        return len(data)
 
     def _read_dphase(self, data, n):
         """
@@ -331,6 +331,8 @@ class DYNAMICS(GeomCommon):
         """EIGB(107,1,86) - Record 7"""
         ntotal = 60 * self.factor
         nentries = (len(data) - n) // ntotal
+        assert (len(data) - n) % ntotal == 0
+        assert nentries > 0, nentries
         self.increase_card_count('EIGB', nentries)
         if self.size == 4:
             struc = Struct(self._endian + b'i 8s ff 3i i 8s 4i')
@@ -682,7 +684,7 @@ class DYNAMICS(GeomCommon):
             istart = iend + 1
             self.add_freq(sid, freqs)
         self.increase_card_count('FREQ', count_num=len(iminus1))
-        return n
+        return len(data)
 
     def _read_freq1(self, data, n):
         """
@@ -1157,6 +1159,7 @@ class DYNAMICS(GeomCommon):
         dloads = []
         ntotal = 44 * self.factor
         nentries = (len(data) - n) // ntotal
+        assert (len(data) - n) % ntotal == 0
         struc = Struct(mapfmt(self._endian + b'7i 4f', self.size))
         for unused_i in range(nentries):
             edata = data[n:n+ntotal]
@@ -1203,6 +1206,7 @@ class DYNAMICS(GeomCommon):
         dloads = []
         ntotal = 36 * self.factor
         nentries = (len(data) - n) // ntotal
+        assert (len(data) - n) % ntotal == 0
         struc = Struct(mapfmt(self._endian + b'2i 2f 3i 2f', self.size))
         for unused_i in range(nentries):
             edata = data[n:n+ntotal]
@@ -1294,6 +1298,8 @@ class DYNAMICS(GeomCommon):
         dloads = []
         ntotal = 36
         nentries = (len(data) - n) // ntotal
+        assert (len(data) - n) % ntotal == 0
+        assert nentries > 0, nentries
         struc = Struct(self._endian + b'7i 2f')
         for unused_i in range(nentries):
             edata = data[n:n+ntotal]
@@ -1568,10 +1574,11 @@ class DYNAMICS(GeomCommon):
         8 T      RS Time delay (MSC)
 
         """
-        ntotal = 8*4
+        ntotal = 32 * self.factor # 8*4
         #self.show_data(data[n:], 'if')
         nentries = (len(data) - n) // ntotal
-        struc = Struct(self._endian + b'5i 3f')
+        assert (len(data) - n) % ntotal == 0
+        struc = Struct(mapfmt(self._endian + b'5i 3f', self.size))
         for unused_i in range(nentries):
             edata = data[n:n+ntotal]
             out = struc.unpack(edata)
@@ -1613,6 +1620,8 @@ class DYNAMICS(GeomCommon):
         """
         ntotal = 52
         nentries = (len(data) - n) // ntotal
+        assert (len(data) - n) % ntotal == 0
+        assert nentries > 0, nentries
         struc = Struct(self._endian + b'4i 7f 2f')
         for unused_i in range(nentries):
             edata = data[n:n+ntotal]

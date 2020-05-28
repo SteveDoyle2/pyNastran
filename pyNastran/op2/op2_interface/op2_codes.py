@@ -220,7 +220,7 @@ GEOM_TABLES = { # no analysis code
     'DBCOPT', 'DSCMCOL', 'DESCYC', 'R1TABRG',
 }
 
-def get_sort_method_from_table_name(table_name: bytes):
+def get_sort_method_from_table_name(table_name: bytes) -> int:
     """helper method"""
     assert isinstance(table_name, bytes), table_name
     if table_name in SORT1_TABLES_BYTES:
@@ -426,7 +426,7 @@ class Op2Codes:
         if thermal is not None:
             msg += "  thermal       = %-3s %s\n" % (thermal, thermal_word)
             if hasattr(self, 'thermal_bits'):
-                msg += "  thermal_bits  = %s\n" % str(self.thermal_bits)
+                msg += f"  thermal_bits  = {self.thermal_bits}\n"
 
         if hasattr(self, 'num_wide'):
             msg += "  num_wide      = %-3s\n" % self.num_wide
@@ -462,7 +462,7 @@ class Op2Codes:
         elif thermal == 1:
             force_flux = 'Flux'
         else:
-            force_flux = 'Force (or Flux); thermal=%r' % thermal
+            force_flux = f'Force (or Flux); thermal={thermal!r}'
         return force_flux
 
     def get_disp_temp(self, thermal: int) -> str:
@@ -474,7 +474,7 @@ class Op2Codes:
         #elif thermal is None:
             #raise RuntimeError('thermal_code is not specified; thermal_code=None')
         else:
-            disp_temp = 'Displacement/Temperature; thermal=%r' % thermal
+            disp_temp = f'Displacement/Temperature; thermal={thermal!r}'
         return disp_temp
 
     def get_table_code_name(self, disp_temp: str='', force_flux: str='',
@@ -485,11 +485,11 @@ class Op2Codes:
         table_code = _adjust_table_code(self.table_code)
 
         if table_code == 1:
-            table = "OUG - %s vector/scalar" % disp_temp
+            table = f'OUG - {disp_temp} vector/scalar'
         elif table_code == 4:
-            table = "OEF - Element %s" % force_flux
+            table = f'OEF - Element {force_flux}'
         elif table_code == 5:
-            table = "OES - Element %s" % stress_word
+            table = f'OES - Element {stress_word}'
         else:
             #try:
             table = get_table_from_table_code(table_code, self.table_name_str, is_msc=self.is_msc)
@@ -546,7 +546,7 @@ class Op2Codes:
                 try:
                     is_sort1_table = int(table_name[-1]) == 1
                 except ValueError:
-                    raise ValueError('is this SORT1/2?  table_name=%r' % table_name)
+                    raise ValueError(f'is this SORT1/2?  table_name={table_name!r}')
         return is_sort1_table
 
     @property
@@ -566,7 +566,7 @@ class Op2Codes:
                 try:
                     is_sort1_table = int(table_name[-1]) == 1
                 except ValueError:
-                    raise ValueError('is this SORT1/2?  table_name=%r' % table_name)
+                    raise ValueError(f'is this SORT1/2?  table_name={table_name!r}')
         return is_sort1_table
 
     @property
@@ -585,7 +585,7 @@ class Op2Codes:
                 try:
                     is_sort2_table = int(table_name[-1]) == 2
                 except ValueError:
-                    raise ValueError('is this SORT1/2?  table_name=%r' % table_name)
+                    raise ValueError(f'is this SORT1/2?  table_name={table_name!r}')
         return is_sort2_table
 
     def update_t_code(self) -> None:
@@ -824,11 +824,11 @@ def _adjust_table_code(table_code: int) -> int:
 def get_format_word(format_code: int) -> str:
     format_word = '???'
     if format_code == 1:
-        format_word = "Real"
+        format_word = 'Real'
     elif format_code == 2:
-        format_word = "Real/Imaginary"
+        format_word = 'Real/Imaginary'
     elif format_code == 3:
-        format_word = "Magnitude/Phase"
+        format_word = 'Magnitude/Phase'
     else:
         format_word = '\n%18s1 - Real\n' % ''
         format_word += '%18s2 - Real/Imaginary\n' % ''
@@ -840,11 +840,11 @@ def get_format_word(format_code: int) -> str:
 def get_result_word(result_type: int) -> str:
     result_word = '???'
     if result_type == 0:
-        result_word = "Real"
+        result_word = 'Real'
     elif result_type == 1:
-        result_word = "Complex"
+        result_word = 'Complex'
     elif result_type == 2:
-        result_word = "Random"
+        result_word = 'Random'
     else:
         result_word = '\n%18s0 - Real\n' % ''
         result_word += '%18s1 - Complex\n' % ''
@@ -852,4 +852,3 @@ def get_result_word(result_type: int) -> str:
         #msg = 'unsupported format_code:  format_code=%s\n' % format_code
         #raise InvalidFormatCodeError(msg)
     return result_word
-

@@ -82,7 +82,7 @@ class DIT(GeomCommon):
             istart = iend + 2
             nentries += 1
         self.increase_card_count('TABDMP1', nentries)
-        return n
+        return len(data)
 
     def _read_tabrndg(self, data, n):
         """

@@ -726,6 +726,7 @@ class EPT(GeomCommon):
         ntotal = 104  # 26*4
         struct1 = Struct(self._endian + b'2i 4f i 18f f')  # delta_n is a float, not an integer
         nproperties = (len(data) - n) // ntotal
+        assert (len(data) - n) % ntotal == 0
         assert nproperties > 0, 'table=%r len=%s' % (self.table_name, len(data) - n)
         properties = []
         for unused_i in range(nproperties):
@@ -805,6 +806,7 @@ class EPT(GeomCommon):
         ntotal = 132  # 33*4
         struct1 = Struct(self._endian + b'2i 4f i 21f i 4f')
         nproperties = (len(data) - n) // ntotal
+        assert (len(data) - n) % ntotal == 0
         assert nproperties > 0, 'table=%r len=%s' % (self.table_name, len(data) - n)
         properties = []
         for unused_i in range(nproperties):
@@ -1770,6 +1772,7 @@ class EPT(GeomCommon):
             if self.is_debug_file:
                 self.binary_debug.write('  PSHELL=%s\n' % str(out))
             prop = PSHELL.add_op2_data(out)
+            n += ntotal
 
             if pid in self.properties:
                 # this is a fake PSHELL
@@ -1787,7 +1790,6 @@ class EPT(GeomCommon):
                 self.big_properties[pid] = prop
             else:
                 self._add_op2_property(prop)
-            n += ntotal
         if nproperties:
             self.card_count['PSHELL'] = nproperties
         return n

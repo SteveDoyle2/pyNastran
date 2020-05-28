@@ -597,7 +597,7 @@ class GEOM4(GeomCommon):
                 elem = RBE2.add_op2_data(out)
                 self._add_op2_rigid_element(elem)
         self.card_count['RBE2'] = nelements
-        return n
+        return len(data)
 
         #while n < len(data):
             ## (eid, gn, cm, gm, ..., alpha)
@@ -632,7 +632,7 @@ class GEOM4(GeomCommon):
         idata = np.frombuffer(data[n:], self.idtype8).copy()
         fdata = np.frombuffer(data[n:], self.fdtype8).copy()
         read_rbe3s_from_idata_fdata(self, idata, fdata)
-        return n
+        return len(data)
 
     def _read_rbjoint(self, data, n):
         self.log.info('skipping RBJOINT in GEOM4')
