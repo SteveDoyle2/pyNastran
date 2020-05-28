@@ -59,6 +59,14 @@ matrix:
     #  # - bumped from numpy 1.14 to 1.14.5 for py3.7 pypi compatibility
     #  - NUMPY='numpy==1.14.5 scipy==1.1 matplotlib==2.2 h5py vtk pyqt5 pandas<0.25'
     #--------------------------------------------------------------------------------------------------
+    - name: "Python 3.7 (PySide2, no matplotlib)"
+      python: '3.7'
+      #services: xvfb
+      env:
+      - NUMPY='numpy scipy h5py vtk PySide2 pandas>=0.25'
+      #- LIB='libegl1-mesa'
+      #- XVFB='xvfb-run --auto-servernum -e /dev/stdout'
+    #--------------------------------------------------------------------------------------------------
 
   include:
     #--------------------------------------------------------------------------------------------------
