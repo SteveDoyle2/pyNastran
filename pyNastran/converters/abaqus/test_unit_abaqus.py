@@ -16,11 +16,11 @@ class TestAbaqus(unittest.TestCase):
     def test_abaqus_convert_1(self):
         """plate conversion"""
         nastran_filename = os.path.join(NASTRAN_MODEL_PATH, 'plate', 'plate.bdf')
-        abaqus_inp_filename = os.path.join(MODEL_PATH, 'plate.inp')
+        abaqus_inp_filename = os.path.join(MODEL_PATH, 'plate_out.inp')
         nastran_to_abaqus_filename(nastran_filename, abaqus_inp_filename)
 
         #model = read_abaqus(abaqus_filename, debug=True)
-        nastran_filename_out = os.path.join(MODEL_PATH, 'plate2.bdf')
+        nastran_filename_out = os.path.join(MODEL_PATH, 'plate2_out.bdf')
         abaqus_to_nastran_filename(abaqus_inp_filename, nastran_filename_out)
 
     def test_abaqus_convert_2(self):
@@ -40,7 +40,7 @@ class TestAbaqus(unittest.TestCase):
         #nastran_to_abaqus_filename(nastran_filename, abaqus_inp_filename)
 
         #model = read_abaqus(abaqus_filename, debug=True)
-        nastran_filename_out = os.path.join(MODEL_PATH, 'test_bracket.bdf')
+        nastran_filename_out = os.path.join(MODEL_PATH, 'test_bracket_out.bdf')
         abaqus_to_nastran_filename(abaqus_inp_filename, nastran_filename_out)
 
     def test_abaqus_convert_4(self):
@@ -50,7 +50,7 @@ class TestAbaqus(unittest.TestCase):
         #nastran_to_abaqus_filename(nastran_filename, abaqus_inp_filename)
 
         #model = read_abaqus(abaqus_filename, debug=True)
-        nastran_filename_out = os.path.join(MODEL_PATH, 'test_bracket_separate.bdf')
+        nastran_filename_out = os.path.join(MODEL_PATH, 'test_bracket_separate_out.bdf')
         abaqus_to_nastran_filename(abaqus_inp_filename, nastran_filename_out)
 
     def test_abaqus_1(self):
@@ -61,7 +61,7 @@ class TestAbaqus(unittest.TestCase):
         model.write('spike.inp')
         os.remove('spike.inp')
 
-        abaqus_filename = os.path.join(MODEL_PATH, 'abaqus.inp')
+        abaqus_filename = os.path.join(MODEL_PATH, 'abaqus_out.inp')
         with open(abaqus_filename, 'w') as abaqus_file:
             abaqus_file.writelines('\n'.join(lines))
 

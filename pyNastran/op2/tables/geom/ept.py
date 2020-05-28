@@ -1775,9 +1775,11 @@ class EPT(GeomCommon):
                 # this is a fake PSHELL
                 propi = self.properties[pid]
                 if prop == propi:
+                    self.log.warning('Fake PSHELL:\n%s' % propi)
                     nproperties -= 1
                     continue
                 assert propi.type in ['PCOMP'], propi.get_stats()
+                self.log.warning('PSHELL is also PCOMP:\n%s' % propi)
                 nproperties -= 1
                 continue
 
