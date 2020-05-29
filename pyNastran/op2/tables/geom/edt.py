@@ -88,7 +88,7 @@ class EDT(GeomCommon):
             #(10500, 105, 14) : ['???', self._read_fake],
             #(10500, 105, 14) : ['???', self._read_fake],
         }
-    def _read_group(self, data, n):
+    def _read_group(self, data: bytes, n: int) -> int:
         """
         GROUP(17400,174,616)
 

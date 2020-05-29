@@ -409,6 +409,7 @@ class XPoints(BaseCard):
         points = data
         assert isinstance(points, list), points
         assert isinstance(points[0], integer_types), points
+        assert min(points) > 0, points
         return cls(points, comment=comment)
 
     def __len__(self):

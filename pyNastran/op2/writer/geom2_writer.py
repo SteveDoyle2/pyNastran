@@ -167,7 +167,7 @@ def _write_end_block(nbytes, itable, op2, op2_ascii):
 def _write_cbeam(obj, name, eids, nelements, itable, op2, op2_ascii, endian):
     """writes the CBEAM"""
     key = (5408, 54, 261)
-    spack = None
+    #spack = None
     nfields = 18
     nbytes = _write_intermediate_block(name, key, nfields, nelements, op2, op2_ascii)
 
@@ -211,7 +211,7 @@ def _write_cbeam(obj, name, eids, nelements, itable, op2, op2_ascii, endian):
 def _write_cbar(obj, name, eids, nelements, itable, op2, op2_ascii, endian):
     """writes the CBAR"""
     key = (2408, 24, 180)
-    spack = None
+    #spack = None
     nfields = 16
     nbytes = _write_intermediate_block(name, key, nfields, nelements, op2, op2_ascii)
 
@@ -292,7 +292,8 @@ def _write_solid(model, name, eids, nelements, itable, op2, op2_ascii, endian):
         nnodes = 15
     elif name == 'CPYRAM':
         key = (17200, 172, 1000)
-        nnodes = 13
+        # it's 13, but there's a 14th node just because...
+        nnodes = 14
     else:  # pragma: no cover
         raise NotImplementedError(name)
     nfields = nnodes + 2

@@ -892,6 +892,30 @@ def string(card: BDFCard, ifield: int, fieldname: str) -> str:
     raise SyntaxError('%s = %r (field #%s) on card must be a string (not %s).\n'
                       'card=%s' % (fieldname, svalue, ifield, dtype, card))
 
+def check_string(svalue: str, ifield: int, fieldname: str) -> str:
+    if isinstance(svalue, str):
+        svalue = svalue.strip()
+        if ' ' in svalue:
+            raise SyntaxError('%s = %r (field #%s) on card must be a string without a space.\n' % (
+            fieldname, svalue, ifield))
+
+    else:
+        dtype = _get_dtype(svalue)
+        raise SyntaxError('%s = %r (field #%s) on card must be a string (not %s).\n' % (
+            fieldname, svalue, ifield, dtype))
+
+    if svalue[0].isdigit() or '.' in svalue or '+' in svalue or '-' in svalue[0]:
+        #value = integer_or_double(card, ifield, fieldname)
+        #dtype = _get_dtype(value)
+        raise SyntaxError('%s = %s (field #%s) on card must be a '
+                          'string with a character.\n' % (
+                              fieldname, svalue, ifield))
+    if svalue:  # string
+        return str(svalue.upper())
+    dtype = _get_dtype(svalue)
+    raise SyntaxError('%s = %r (field #%s) on card must be a string (not %s).\n' % (
+        fieldname, svalue, ifield, dtype))
+
 
 def string_or_blank(card: BDFCard, ifield: int, fieldname: str, default=None):
     """

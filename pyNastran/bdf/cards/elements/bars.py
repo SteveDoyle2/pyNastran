@@ -9,7 +9,7 @@ defines:
 """
 # pylint: disable=R0904,R0902,E1101,E1103,C0111,C0302,C0103,W0101
 from __future__ import annotations
-from typing import TYPE_CHECKING
+from typing import Tuple, TYPE_CHECKING
 
 import numpy as np
 from numpy.linalg import norm
@@ -24,6 +24,8 @@ from pyNastran.bdf.bdf_interface.assign_type import (
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
 if TYPE_CHECKING:  # pragma: no cover
+    from pyNastran.nptyping import NDArray3float, NDArray33float
+    from cpylog import SimpleLogger
     from pyNastran.bdf.bdf import BDF
 
 
@@ -1829,8 +1831,9 @@ def get_bar_vector(model, elem, node1, node2, xyz1):
 
     return v, cd1, cd1_ref, cd2, cd2_ref
 
-def rotate_v_wa_wb(model, elem, xyz1, xyz2, node1, node2, ihat_offset, i_offset, eid,
-                   Li_offset, log):
+def rotate_v_wa_wb(model: BDF, elem, xyz1, xyz2, node1, node2, ihat_offset, i_offset, eid,
+                   Li_offset,
+                   log: SimpleLogger) -> Tuple[NDArray3float, NDArray3float, NDArray3float, NDArray33float]:
     """
     Rotates v, wa, wb
 

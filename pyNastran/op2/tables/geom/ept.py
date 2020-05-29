@@ -21,7 +21,7 @@ from pyNastran.bdf.cards.properties.springs import PELAS, PELAST
 from pyNastran.bdf.cards.thermal.thermal import PCONV, PHBDY, PCONVM
 # PCOMPG, PBUSH1D, PBEAML, PBEAM3
 from pyNastran.op2.tables.geom.geom_common import GeomCommon
-from pyNastran.op2.op2_interface.op2_reader import mapfmt # , reshape_bytes_block
+from pyNastran.op2.op2_interface.op2_reader import mapfmt, reshape_bytes_block
 
 
 class EPT(GeomCommon):
@@ -365,6 +365,7 @@ class EPT(GeomCommon):
         #print(self.show_ndata(80))
         ndata = len(data)
 
+        #while n < ntotal:
         while ndata - n > ntotal:
             edata = data[n:n+ntotal]
             n += ntotal
@@ -376,8 +377,12 @@ class EPT(GeomCommon):
                     pid, mid, group, beam_type, value))
                 raise RuntimeError('bad parsing...')
 
-            beam_type = beam_type.strip().decode('latin1')
-            group = group.strip().decode('latin1')
+            if self.size == 4:
+                beam_type = beam_type.strip().decode('latin1')
+                group = group.strip().decode('latin1')
+            else:
+                beam_type = reshape_bytes_block(beam_type).strip().decode('latin1')
+                group = reshape_bytes_block(group).strip().decode('latin1')
             data_in = [pid, mid, group, beam_type, value]
 
             expected_length = valid_types[beam_type]
@@ -411,12 +416,15 @@ class EPT(GeomCommon):
 
             # the PBARL ends with a -1 flag
             #value, = unpack(self._endian + b'i', data[n:n+4])
-            n += 4
+            n += 4 * self.factor
         if len(self._type_to_id_map['PBAR']) == 0 and 'PBAR' in self.card_count:
             del self._type_to_id_map['PBAR']
             del self.card_count['PBAR']
         self.increase_card_count('PBARL')
         #assert len(data) == n
+        if self.size == 8:
+            n += 16
+            #n += 8  # same for 32/64 bit - not 100% that it's always active
         return n
 
     def _read_pbcomp(self, data: bytes, n: int) -> int:
@@ -1116,6 +1124,14 @@ class EPT(GeomCommon):
         return n, props
 
     def _read_pcomp(self, data: bytes, n: int) -> int:
+        """PCOMP(2706,27,287) - the marker for Record 22"""
+        if self.size == 4:
+            n2 = self._read_pcomp_32_bit(data, n)
+        else:
+            n2 = self._read_pcomp_64_bit(data, n)
+        return n2
+
+    def _read_pcomp_64_bit(self, data: bytes, n: int) -> int:
         """
         PCOMP(2706,27,287) - the marker for Record 22
 
@@ -1161,22 +1177,88 @@ class EPT(GeomCommon):
             1, 0.11, 0, 1,
             1, 0.11, 0, 1,
           -1, -1, -1, -1)
+
+          doubles (float64) = (5e-324, 0.0, -0.005, 0.0, 0.0, 0.0, 0.0, 0.0,
+                               4e-323, 0.005, 0.0, 5e-324,
+                               4e-323, 0.005, 0.0, 5e-324,
+                               nan, nan, nan, nan)
+          long long (int64) = (1, 0, -4650957407178058629, 0, 0, 0, 0, 0,
+                                  8, 4572414629676717179, 0, 1,
+                                  8, 4572414629676717179, 0, 1,
+                               -1, -1, -1, -1)
         """
+        #self.show_data(data[12:], types='ifs')
         nproperties = 0
         s1 = Struct(mapfmt(self._endian + b'2i3fi2f', self.size))
         ntotal1 = 32 * self.factor
-        #if self.size == 4:
-            #s1 = Struct(self._endian + b'2i 3f i 2f')
-            #ntotal1 = 32
-        #else:
-            #s1 = Struct(self._endian + b'iq 3d q 2d')
-            #ntotal1 = 60
         s2 = Struct(mapfmt(self._endian + b'i2fi', self.size))
 
-        #self.show_data(data[n:], types='idq')
-        #self.show_data(data, types='idq')
+        four_minus1 = Struct(mapfmt(self._endian + b'4i', self.size))
+
         ndata = len(data)
-        #ntotal1 = 32 * self.factor
+        ntotal2 = 16 * self.factor
+
+        while n < (ndata - ntotal1):
+            out = s1.unpack(data[n:n+ntotal1])
+            (pid, nlayers, z0, nsm, sb, ft, tref, ge) = out
+            if self.binary_debug:
+                self.binary_debug.write(f'PCOMP pid={pid} nlayers={nlayers} z0={z0} nsm={nsm} '
+                                        f'sb={sb} ft={ft} Tref={tref} ge={ge}')
+            assert isinstance(nlayers, int), out
+            #print(f'PCOMP pid={pid} nlayers={nlayers} z0={z0} nsm={nsm} '
+                  #f'sb={sb} ft={ft} Tref={tref} ge={ge}')
+            n += ntotal1
+
+            # None, 'SYM', 'MEM', 'BEND', 'SMEAR', 'SMCORE', 'NO'
+            is_symmetrical = 'NO'
+            #if nlayers < 0:
+                #is_symmetrical = 'SYM'
+                #nlayers = abs(nlayers)
+
+            mids = []
+            T = []
+            thetas = []
+            souts = []
+
+            edata2 = data[n:n+ntotal2]
+            idata = four_minus1.unpack(edata2)
+            while idata != (-1, -1, -1, -1):
+                (mid, t, theta, sout) = s2.unpack(edata2)
+                mids.append(mid)
+                T.append(t)
+                thetas.append(theta)
+                souts.append(sout)
+                if self.is_debug_file:
+                    self.binary_debug.write(f'      mid={mid} t={t} theta={theta} sout={sout}\n')
+                n += ntotal2
+                #print(f'      mid={mid} t={t} theta={theta} sout={sout}')
+                edata2 = data[n:n+ntotal2]
+                idata = four_minus1.unpack(edata2)
+
+            if self.size == 4:
+                assert 0 < nlayers < 100, 'pid=%s nlayers=%s z0=%s nms=%s sb=%s ft=%s Tref=%s ge=%s' % (
+                    pid, nlayers, z0, nsm, sb, ft, tref, ge)
+            else:
+                assert nlayers == 0, nlayers
+                nlayers = len(mids)
+
+            data_in = [
+                pid, z0, nsm, sb, ft, tref, ge,
+                is_symmetrical, mids, T, thetas, souts]
+            prop = PCOMP.add_op2_data(data_in)
+            self._add_op2_property(prop)
+            nproperties += 1
+            n += ntotal2
+        return n
+
+    def _read_pcomp_32_bit(self, data: bytes, n: int) -> int:  # pragma: no cover
+        """PCOMP(2706,27,287) - the marker for Record 22"""
+        nproperties = 0
+        s1 = Struct(mapfmt(self._endian + b'2i3fi2f', self.size))
+        ntotal1 = 32 * self.factor
+        s2 = Struct(mapfmt(self._endian + b'i2fi', self.size))
+
+        ndata = len(data)
         ntotal2 = 16 * self.factor
         while n < (ndata - ntotal1):
             out = s1.unpack(data[n:n+ntotal1])
@@ -1199,6 +1281,10 @@ class EPT(GeomCommon):
             if nlayers < 0:
                 is_symmetrical = 'SYM'
                 nlayers = abs(nlayers)
+
+            #if nlayers == 0:
+                #print('nalyers=0')  # 8
+                #continue
             assert nlayers > 0, out
 
             assert 0 < nlayers < 100, 'pid=%s nlayers=%s z0=%s nms=%s sb=%s ft=%s Tref=%s ge=%s' % (
@@ -1214,9 +1300,9 @@ class EPT(GeomCommon):
                 thetas.append(theta)
                 souts.append(sout)
                 if self.is_debug_file:
-                    self.binary_debug.write('      mid=%s t=%s theta=%s sout=%s\n' % (
-                        mid, t, theta, sout))
+                    self.binary_debug.write(f'      mid={mid} t={t} theta={theta} sout={sout}\n')
                 n += ntotal2
+                #print(f'      mid={mid} t={t} theta={theta} sout={sout}\n')
 
             data_in = [
                 pid, z0, nsm, sb, ft, tref, ge,
@@ -1781,7 +1867,7 @@ class EPT(GeomCommon):
                     self.log.warning('Fake PSHELL:\n%s' % propi)
                     nproperties -= 1
                     continue
-                assert propi.type in ['PCOMP'], propi.get_stats()
+                assert propi.type in ['PCOMP', 'PCOMPG'], propi.get_stats()
                 self.log.warning('PSHELL is also PCOMP:\n%s' % propi)
                 nproperties -= 1
                 continue

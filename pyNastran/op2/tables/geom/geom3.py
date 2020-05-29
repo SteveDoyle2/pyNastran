@@ -92,7 +92,7 @@ class GEOM3(GeomCommon):
             (3909, 39, 333): ['LOADCYT', self._read_fake],  # record
         }
 
-    def _read_accel(self, data, n):
+    def _read_accel(self, data: bytes, n: int) -> int:
         """
         Record - ACCEL(7401,74,601)
 
@@ -109,7 +109,7 @@ class GEOM3(GeomCommon):
         self.log.info('skipping ACCEL in GEOM3')
         return len(data)
 
-    def _read_accel1(self, data, n):
+    def _read_accel1(self, data: bytes, n: int) -> int:
         """
         ACCEL1(7501,75,602)
 
@@ -147,7 +147,7 @@ class GEOM3(GeomCommon):
             i0 = i_minus_1 + 1
         return len(data)
 
-    def _read_force(self, data, n):
+    def _read_force(self, data: bytes, n: int) -> int:
         """
         FORCE(4201,42,18) - the marker for Record 3
         """
@@ -165,7 +165,7 @@ class GEOM3(GeomCommon):
         self.card_count['FORCE'] = nentries
         return n
 
-    def _read_force1(self, data, n):
+    def _read_force1(self, data: bytes, n: int) -> int:
         """
         FORCE1(4001,40,20) - the marker for Record 4
         """
@@ -184,7 +184,7 @@ class GEOM3(GeomCommon):
         self.card_count['FORCE1'] = nentries
         return n
 
-    def _read_force2(self, data, n):
+    def _read_force2(self, data: bytes, n: int) -> int:
         """
         FORCE2(4101,41,22) - the marker for Record 5
         """
@@ -202,12 +202,12 @@ class GEOM3(GeomCommon):
         self.card_count['FORCE2'] = nentries
         return n
 
-    def _read_gmload(self, data, n):
+    def _read_gmload(self, data: bytes, n: int) -> int:
         """GMLOAD"""
         self.log.info('skipping GMLOAD in GEOM3')
         return len(data)
 
-    def _read_grav(self, data, n):
+    def _read_grav(self, data: bytes, n: int) -> int:
         """
         GRAV(4401,44,26) - the marker for Record 7
 
@@ -233,14 +233,14 @@ class GEOM3(GeomCommon):
         self.card_count['GRAV'] = nentries
         return n
 
-    def _read_load(self, data, n):
+    def _read_load(self, data: bytes, n: int) -> int:
         """
         (4551, 61, 84) - the marker for Record 8
         .. todo:: add object
         """
         ntotal = 16 * self.factor # 4*4
         ntotal2 = 8 * self.factor
-        nentries = (len(data) - n) // ntotal
+        #nentries = (len(data) - n) // ntotal
         #count = 0
         struct_i2fi = Struct(mapfmt(self._endian + b'iffi', self.size))
         struct_fi = Struct(mapfmt(self._endian + b'fi', self.size))
@@ -277,22 +277,22 @@ class GEOM3(GeomCommon):
         self.card_count['LOAD'] = nentries_actual
         return n
 
-    def _read_loadcyh(self, data, n):
+    def _read_loadcyh(self, data: bytes, n: int) -> int:
         """LOADCYH"""
         self.log.info('skipping LOADCYH in GEOM3')
         return len(data)
 
-    def _read_loadcyn(self, data, n):
+    def _read_loadcyn(self, data: bytes, n: int) -> int:
         """LOADCYN"""
         self.log.info('skipping LOADCYN in GEOM3')
         return len(data)
 
-    def _read_loadcyt(self, data, n):
+    def _read_loadcyt(self, data: bytes, n: int) -> int:
         """LOADCYT"""
         self.log.info('skipping LOADCYT in GEOM3')
         return len(data)
 
-    def _read_lseq(self, data, n):
+    def _read_lseq(self, data: bytes, n: int) -> int:
         ntotal = 20  # 5*4
         struct_5i = Struct(self._endian + b'5i')
         nentries = (len(data) - n) // ntotal
@@ -307,7 +307,7 @@ class GEOM3(GeomCommon):
         self.card_count['LSEQ'] = nentries
         return n
 
-    def _read_moment(self, data, n):
+    def _read_moment(self, data: bytes, n: int) -> int:
         """
         MOMENT(4801,48,19) - the marker for Record 13
         """
@@ -326,7 +326,7 @@ class GEOM3(GeomCommon):
         self.card_count['MOMENT'] = nentries
         return n
 
-    def _read_moment1(self, data, n):
+    def _read_moment1(self, data: bytes, n: int) -> int:
         """
         MOMENT1(4601,46,21) - the marker for Record 14
         """
@@ -345,7 +345,7 @@ class GEOM3(GeomCommon):
         self.card_count['MOMENT1'] = nentries
         return n
 
-    def _read_moment2(self, data, n):
+    def _read_moment2(self, data: bytes, n: int) -> int:
         """
         MOMENT2(4701,47,23) - the marker for Record 15
         """
@@ -364,7 +364,7 @@ class GEOM3(GeomCommon):
         self.card_count['MOMENT2'] = nentries
         return n
 
-    def _read_pload(self, data, n):
+    def _read_pload(self, data: bytes, n: int) -> int:
         """
         PLOAD(5101,51,24)
         """
@@ -383,7 +383,7 @@ class GEOM3(GeomCommon):
         self.card_count['PLOAD1'] = nentries
         return n
 
-    def _read_pload1(self, data, n):
+    def _read_pload1(self, data: bytes, n: int) -> int:
         """
         PLOAD1(6909, 69, 198) - the marker for Record 17
         """
@@ -402,7 +402,7 @@ class GEOM3(GeomCommon):
         self.card_count['PLOAD1'] = nentries
         return n
 
-    def _read_pload2(self, data, n):
+    def _read_pload2(self, data: bytes, n: int) -> int:
         """
         PLOAD2(6802,68,199) - the marker for Record 18
         """
@@ -421,7 +421,7 @@ class GEOM3(GeomCommon):
         self.card_count['PLOAD2'] = nentries
         return n
 
-    def _read_pload3(self, data, n):
+    def _read_pload3(self, data: bytes, n: int) -> int:
         """PLOAD3(7109,71,255) - the marker for Record 19"""
         ntotal = 20  # 5*4
         nentries = (len(data) - n) // ntotal
@@ -438,13 +438,13 @@ class GEOM3(GeomCommon):
         self.card_count['PLOAD3'] = nentries
         return n
 
-    def _read_rbar(self, data, n):
+    def _read_rbar(self, data: bytes, n: int) -> int:
         """RBAR(6601,66,292) - Record 22"""
         n = self._read_dual_card(data, n, self._read_rbar_nx, self._read_rbar_msc,
                                  'RBAR', self._add_op2_rigid_element)
         return n
 
-    def _read_pload4(self, data, n):
+    def _read_pload4(self, data: bytes, n: int) -> int:
         """PLOAD4(7209,72,299) - the marker for Record 20"""
         n = self._read_dual_card(data, n, self._read_pload4_nx, self._read_pload4_msc,
                                  'PLOAD4', self._add_load_object)
@@ -536,7 +536,7 @@ class GEOM3(GeomCommon):
         self.card_count['PLOAD4'] = nentries
         return n, loads
 
-    def _read_ploadx(self, data, n):
+    def _read_ploadx(self, data: bytes, n: int) -> int:
         """
         Record - PLOADX(7001,70,278)
         This record is obsolete
@@ -566,7 +566,7 @@ class GEOM3(GeomCommon):
         self.card_count['PLOADX'] = nentries
         return n
 
-    def _read_ploadx1(self, data, n):
+    def _read_ploadx1(self, data: bytes, n: int) -> int:
         """
         Record - PLOADX1(7309,73,351)
 
@@ -594,7 +594,7 @@ class GEOM3(GeomCommon):
 
 # PRESAX
 
-    def _read_qbdy1(self, data, n):
+    def _read_qbdy1(self, data: bytes, n: int) -> int:
         """
         QBDY1(4509,45,239) - the marker for Record 24
         """
@@ -613,7 +613,7 @@ class GEOM3(GeomCommon):
         self.card_count['QBDY1'] = nentries
         return n
 
-    def _read_qbdy2(self, data, n):
+    def _read_qbdy2(self, data: bytes, n: int) -> int:
         """
         QBDY2(4909,49,240) - the marker for Record 25
         """
@@ -632,7 +632,7 @@ class GEOM3(GeomCommon):
         self.card_count['QBDY2'] = nentries
         return n
 
-    def _read_qbdy3(self, data, n):
+    def _read_qbdy3(self, data: bytes, n: int) -> int:
         """
         QBDY3(2109,21,414) - the marker for Record 26
         """
@@ -649,7 +649,7 @@ class GEOM3(GeomCommon):
         self.card_count['QBDY3'] = nentries
         return n
 
-    def _read_temp(self, data, n):
+    def _read_temp(self, data: bytes, n: int) -> int:
         """
         TEMP(5701,57,27) - the marker for Record 32
         .. warning:: buggy
@@ -672,7 +672,7 @@ class GEOM3(GeomCommon):
         self.card_count['TEMP'] = nentries
         return n
 
-    def _read_tempd(self, data, n):
+    def _read_tempd(self, data: bytes, n: int) -> int:
         """
         TEMPD(5641,65,98) - the marker for Record 33
         .. todo:: add object
@@ -692,7 +692,7 @@ class GEOM3(GeomCommon):
         self.card_count['TEMPD'] = nentries
         return n
 
-    def _read_qhbdy(self, data, n):
+    def _read_qhbdy(self, data: bytes, n: int) -> int:
         """
         (4309,43,233)
 
@@ -720,11 +720,11 @@ class GEOM3(GeomCommon):
         self.card_count['QHBDY'] = nentries
         return n
 
-    def _read_qvect(self, data, n):
+    def _read_qvect(self, data: bytes, n: int) -> int:
         self.log.info('skipping QVECT in GEOM3')
         return len(data)
 
-    def _read_qvol(self, data, n):
+    def _read_qvol(self, data: bytes, n: int) -> int:
         """
         Record 30 -- QVOL(2309,23,416)
 
@@ -750,7 +750,7 @@ class GEOM3(GeomCommon):
         self.card_count['QVOL'] = nentries
         return n
 
-    def _read_rforce(self, data, n):
+    def _read_rforce(self, data: bytes, n: int) -> int:
         ntotal =  40 * self.factor  # 10*4
         nentries = (len(data) - n) // ntotal
         struc = Struct(mapfmt(self._endian + b'3i 4f ifi', self.size))
@@ -766,7 +766,7 @@ class GEOM3(GeomCommon):
         self.card_count['RFORCE'] = nentries
         return n
 
-    def _read_sload(self, data, n):
+    def _read_sload(self, data: bytes, n: int) -> int:
         """SLOAD(5401, 54, 25)"""
         ntotal =  12  # 3*4
         nentries = (len(data) - n) // ntotal
@@ -786,12 +786,12 @@ class GEOM3(GeomCommon):
 # TEMP(5701,57,27) # 32
 # TEMPD(5641,65,98) # 33
 # TEMPEST
-    def _read_tempf(self, data, n):
+    def _read_tempf(self, data: bytes, n: int) -> int:
         self.log.info('skipping TEMPF in GEOM3')
         return len(data)
 # TEMP1C
 
-    def _read_tempp1(self, data, n):
+    def _read_tempp1(self, data: bytes, n: int) -> int:
         ntotal =  24  # 6*4
         nentries = (len(data) - n) // ntotal
         struc = Struct(self._endian + b'2i 4f')
@@ -807,43 +807,43 @@ class GEOM3(GeomCommon):
         self.card_count['TEMPP1'] = nentries
         return n
 
-    def _read_tempp2(self, data, n):
+    def _read_tempp2(self, data: bytes, n: int) -> int:
         self.log.info('skipping TEMPP2 in GEOM3')
         if self.is_debug_file:
             self.binary_debug.write('skipping TEMPP2 in GEOM3\n')
         return len(data)
 
-    def _read_tempp3(self, data, n):
+    def _read_tempp3(self, data: bytes, n: int) -> int:
         self.log.info('skipping TEMPP3 in GEOM3')
         if self.is_debug_file:
             self.binary_debug.write('skipping TEMPP3 in GEOM3\n')
         return len(data)
 
-    def _read_tempp4(self, data, n):
+    def _read_tempp4(self, data: bytes, n: int) -> int:
         """
         TEMPP4(4201,42,18) - the marker for Record 40
         """
         self.log.info('skipping TEMPP4 in GEOM3')
         return len(data)
 
-    def _read_temprb(self, data, n):
+    def _read_temprb(self, data: bytes, n: int) -> int:
         self.log.info('skipping TEMPRB in GEOM3')
         if self.is_debug_file:
             self.binary_debug.write('skipping TEMPRB in GEOM3\n')
         return len(data)
 
-    def _read_pface(self, data, n):
+    def _read_pface(self, data: bytes, n: int) -> int:
         self.log.info('skipping PFACE in GEOM3')
         return len(data)
 
-    def _read_pedge(self, data, n):
+    def _read_pedge(self, data: bytes, n: int) -> int:
         self.log.info('skipping PEDGE in GEOM3')
         return len(data)
 
-    def _read_boltfor(self, data, n):
+    def _read_boltfor(self, data: bytes, n: int) -> int:
         self.log.info('skipping BOLTFOR in GEOM3')
         return len(data)
 
-    def _read_boltld(self, data, n):
+    def _read_boltld(self, data: bytes, n: int) -> int:
         self.log.info('skipping BOLTLD in GEOM3')
         return len(data)

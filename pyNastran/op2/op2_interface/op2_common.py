@@ -1,6 +1,7 @@
 # pylint: disable=C0301,W0201
 import copy
 from struct import Struct, unpack
+from typing import Tuple, Dict, Union, Any
 
 import numpy as np
 
@@ -89,7 +90,7 @@ class OP2Common(Op2Codes, F06Writer):
         self.binary_debug = None
 
         #: the list of "words" on a subtable 3
-        self.words = []
+        self.words = []  # List[Optional[str]]
 
         #: The current table_name (e.g. OES1)
         #: None indicates no table_name has been read
@@ -121,7 +122,7 @@ class OP2Common(Op2Codes, F06Writer):
         # sets the element mapper
         #self.get_element_type(33)
 
-    def _device_code_(self):
+    def _device_code_(self) -> None:
         """
         0 -
         1 - PRINT
@@ -135,7 +136,7 @@ class OP2Common(Op2Codes, F06Writer):
         """
         pass
 
-    def _fix_oug_format_code(self):
+    def _fix_oug_format_code(self) -> None:
         """
         An OUG-style table has numwide = 8/14/8 for real/complex/random
         """
@@ -157,7 +158,7 @@ class OP2Common(Op2Codes, F06Writer):
                 self.data_code['format_code'] = 2
             assert self.format_code in [2, 3], self.code_information()
 
-    def fix_format_code(self):
+    def fix_format_code(self) -> None:
         """
         Nastran correctly calculates the proper defaults for the analysis
         based on the solution type and the the user's requests.  However,
@@ -278,7 +279,7 @@ class OP2Common(Op2Codes, F06Writer):
             result_type = 1 # complex
         self.result_type = result_type
 
-    def _set_times_dtype(self):
+    def _set_times_dtype(self) -> None:
         self.data_code['_times_dtype'] = 'float32'
         if self.analysis_code == 1:   # statics / displacement / heat flux
             pass # static doesn't have a type
@@ -307,9 +308,11 @@ class OP2Common(Op2Codes, F06Writer):
             msg = 'invalid analysis_code...analysis_code=%s' % self.analysis_code
             raise RuntimeError(msg)
 
-    def add_data_parameter(self, data, var_name, Type, field_num,
-                           apply_nonlinear_factor=True, fix_device_code=False,
-                           add_to_dict=True):
+    def add_data_parameter(self, data: bytes, var_name: str,
+                           Type: bytes, field_num: int,
+                           apply_nonlinear_factor: bool=True,
+                           fix_device_code: bool=False,
+                           add_to_dict: bool=True):
         if self.size == 4:
             return self.add_data_parameter4(
                 data, var_name, Type, field_num,
@@ -324,7 +327,8 @@ class OP2Common(Op2Codes, F06Writer):
 
     def add_data_parameter8(self, data: bytes,
                             var_name: str, var_type: bytes, field_num: int,
-                            apply_nonlinear_factor: bool=True, fix_device_code: bool=False,
+                            apply_nonlinear_factor: bool=True,
+                            fix_device_code: bool=False,
                             add_to_dict: bool=True):
         assert len(data) == 1168, len(data)
         datai = data[8 * (field_num - 1) : 8 * (field_num)]
@@ -333,7 +337,7 @@ class OP2Common(Op2Codes, F06Writer):
             var_type = b'q'
         elif var_type == b'f':
             var_type = b'd'
-        else:
+        else:  # pragma: no cover
             raise NotImplementedError(var_type)
         value = self._unpack_data_parameter(
             datai, var_name, var_type, field_num,
@@ -342,9 +346,11 @@ class OP2Common(Op2Codes, F06Writer):
             add_to_dict=add_to_dict)
         return value
 
-    def add_data_parameter4(self, data, var_name, Type, field_num,
-                           apply_nonlinear_factor=True, fix_device_code=False,
-                           add_to_dict=True):
+    def add_data_parameter4(self, data: bytes, var_name: str,
+                            Type: bytes, field_num: int,
+                           apply_nonlinear_factor: bool=True,
+                           fix_device_code: bool=False,
+                           add_to_dict: bool=True):
         assert len(data) == 584, len(data)
         datai = data[4 * (field_num - 1) : 4 * (field_num)]
         assert len(datai) == 4, len(datai)
@@ -356,9 +362,11 @@ class OP2Common(Op2Codes, F06Writer):
             add_to_dict=add_to_dict)
         return value
 
-    def _unpack_data_parameter(self, datai, var_name, Type, field_num,
-                               apply_nonlinear_factor=True, fix_device_code=False,
-                               add_to_dict=True):
+    def _unpack_data_parameter(self, datai: bytes, var_name: str,
+                               Type: bytes, field_num: int,
+                               apply_nonlinear_factor=True,
+                               fix_device_code: bool=False,
+                               add_to_dict: bool=True):
         value, = unpack(self._endian + Type, datai)
         if fix_device_code:
             # was value = (value - self.device_code) // 10
@@ -385,10 +393,10 @@ class OP2Common(Op2Codes, F06Writer):
             raise IndexError(msg)
         return value
 
-    def apply_data_code_value(self, name, value):
+    def apply_data_code_value(self, name: str, value: Union[int, float, str]) -> None:
         self.data_code[name] = value
 
-    def setNullNonlinearFactor(self):
+    def setNullNonlinearFactor(self) -> None:
         """
         Initializes the nonlinear factor, which lets us know if
         this is a transient solution or not.
@@ -422,8 +430,8 @@ class OP2Common(Op2Codes, F06Writer):
         except AssertionError:
             pass
 
-        assert len(label[:nlabel]) <= nlabel, 'len=%s \nlabel     =%r \nlabel[:%s]=%r' % (len(label), label, nlabel, label[:nlabel])
-        assert len(label2) <= 55, 'len=%s label = %r\nlabel[:%s]=%r\nlabel2    =%r' % (len(label2), label, nlabel, label[:nlabel], label2)
+        assert len(label[:nlabel]) <= nlabel, f'len={len(label)} \nlabel     ={label!r} \nlabel[:{nlabel}]={label[:nlabel]!r}'
+        assert len(label2) <= 55, f'len={len(label2)} label = {label!r}\nlabel[:{nlabel}]={label[:nlabel]!r}\nlabel2    ={label2!r}'
         # not done...
         # 65 + 55 = 120 < 128
 
@@ -439,16 +447,16 @@ class OP2Common(Op2Codes, F06Writer):
         #print('superele = %r' % superelement)
 
         subtitle = subtitle[:nsubtitle_break].strip()
-        assert len(superelement) <= 26, 'len=%s superelement=%r' % (len(superelement), superelement)
+        assert len(superelement) <= 26, f'len={len(superelement)} superelement={superelement!r}'
         superelement = superelement.strip()
 
-        assert len(subtitle) <= 67, 'len=%s subtitle=%r' % (len(subtitle), subtitle)
+        assert len(subtitle) <= 67, f'len={len(subtitle)} subtitle={subtitle!r}'
         superelement_adaptivity_index = get_superelement_adaptivity_index(subtitle, superelement)
         subtitle, superelement_adaptivity_index = update_subtitle_with_adaptivity_index(
             subtitle, superelement_adaptivity_index, adpativity_index)
         self.subtitle = subtitle
         self.superelement_adaptivity_index = superelement_adaptivity_index
-        assert len(self.label) <= 124, 'len=%s label=%r' % (len(self.label), self.label)
+        assert len(self.label) <= 124, f'len={len(self.label)} label={self.label!r}'
 
         #: the subtitle of the subcase
         self.data_code['subtitle'] = self.subtitle
@@ -507,7 +515,7 @@ class OP2Common(Op2Codes, F06Writer):
         """
         if self.is_debug_file:
             msg = ''
-            assert len(self.words) in [0, 28], 'table_name=%r len(self.words)=%s words=%s' % (self.table_name, len(self.words), self.words)
+            assert len(self.words) in [0, 28], f'table_name={self.table_name!r} len(self.words)={len(self.words)} words={self.words}'
             for i, param in enumerate(self.words):
                 if param == 's_code':
                     try:
@@ -574,7 +582,7 @@ class OP2Common(Op2Codes, F06Writer):
 
             self.binary_debug.write('  recordi = [%s]\n\n' % msg)
 
-    def get_table_count(self):
+    def get_table_count(self) -> int:
         """identifiers superelements"""
         #{#b'PVT0': 1, b'CASECC': 1,
         #b'GPLS': 2, b'GPDTS': 2, b'EPTS': 2, b'MPTS': 2,
@@ -590,7 +598,13 @@ class OP2Common(Op2Codes, F06Writer):
         max_geom_id = max([self.table_count[key] for key in keys])
         return max_geom_id
 
-    def _read_geom_4(self, mapper, data, ndata):
+    def _read_geom_4(self, mapper: Dict[Tuple[int, int, int], Any],
+                     data: bytes, ndata: int) -> int:
+        """
+        Reads a geometry table
+
+        TODO: Callable[[bytes, int]]
+        """
         if self.read_mode == 1:
             return ndata
         if not self.make_geom:
@@ -661,6 +675,10 @@ class OP2Common(Op2Codes, F06Writer):
         self.card_name = name
         n = func(data, n)  # gets all the grid/mat cards
         assert n is not None, name
+        if n != ndata:  # pragma: no cover
+            msg = f'mishandled geometry table for {name}; n={n} len(data)={ndata}; should be equal'
+            self.log.error(msg)
+            #raise RuntimeError(msg)
         del self.card_name
 
         self.geom_keys = keys

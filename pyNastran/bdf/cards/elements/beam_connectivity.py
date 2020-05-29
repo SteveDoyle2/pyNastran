@@ -37,10 +37,11 @@ The following shapes aren't supported:
 """
 from typing import Tuple
 import numpy as np
+from pyNastran.nptyping import NDArray3float
 from pyNastran.bdf.cards.aero.utils import elements_from_quad, tri_cap
 
 
-def rod_faces(n1: int, n2: int, xform,
+def rod_faces(n1: NDArray3float, n2: NDArray3float, xform,
               dim1: Tuple[float, float],
               dim2: Tuple[float, float]): # validated
     """
@@ -85,7 +86,7 @@ def rod_faces(n1: int, n2: int, xform,
     points = np.vstack(points_list)
     return all_faces, points, points.shape[0]
 
-def tube_faces(n1: int, n2: int, xform,
+def tube_faces(n1: NDArray3float, n2: NDArray3float, xform,
                dim1: Tuple[float, float],
                dim2: Tuple[float, float]):  # validated
     """
@@ -151,7 +152,7 @@ def tube_faces(n1: int, n2: int, xform,
     points = np.vstack(points_list1 + points_list2)
     return all_faces, points, points.shape[0]
 
-def bar_faces(n1: int, n2: int, xform,
+def bar_faces(n1: NDArray3float, n2: NDArray3float, xform,
               dim1: Tuple[float, float],
               dim2: Tuple[float, float]):  # validated
     """
@@ -176,7 +177,7 @@ def bar_faces(n1: int, n2: int, xform,
         points_list.append(pointsi)
     return np.vstack(points_list)
 
-def box_faces(n1: int, n2: int, xform,
+def box_faces(n1: NDArray3float, n2: NDArray3float, xform,
               dim1: Tuple[float, float, float, float],
               dim2: Tuple[float, float, float, float]):  # validated
     """
@@ -238,7 +239,7 @@ def box_faces(n1: int, n2: int, xform,
         points_list.append(pointsi)
     return faces, np.vstack(points_list)
 
-def i_faces(n1: int, n2: int, xform,
+def i_faces(n1: NDArray3float, n2: NDArray3float, xform,
             dim1: Tuple[float, float, float, float, float, float],
             dim2: Tuple[float, float, float, float, float, float]):   # validated
     """
@@ -309,7 +310,7 @@ def i_faces(n1: int, n2: int, xform,
         points_list.append(pointsi)
     return faces, np.vstack(points_list)
 
-def i1_faces(n1: int, n2: int, xform,
+def i1_faces(n1: NDArray3float, n2: NDArray3float, xform,
              dim1: Tuple[float, float, float, float],
              dim2: Tuple[float, float, float, float]):
     """
@@ -386,7 +387,7 @@ def i1_faces(n1: int, n2: int, xform,
         points_list.append(pointsi)
     return faces, np.vstack(points_list)
 
-def h_faces(n1: int, n2: int, xform,
+def h_faces(n1: NDArray3float, n2: NDArray3float, xform,
             dim1: Tuple[float, float, float, float],
             dim2: Tuple[float, float, float, float]):
     """
@@ -456,7 +457,7 @@ def h_faces(n1: int, n2: int, xform,
         points_list.append(pointsi)
     return faces, np.vstack(points_list)
 
-def chan_faces(n1: int, n2: int, xform,
+def chan_faces(n1: NDArray3float, n2: NDArray3float, xform,
                dim1: Tuple[float, float, float, float],
                dim2: Tuple[float, float, float, float]):
     """
@@ -532,7 +533,7 @@ def chan_faces(n1: int, n2: int, xform,
         points_list.append(pointsi)
     return faces, np.vstack(points_list)
 
-def chan1_faces(n1: int, n2: int, xform,
+def chan1_faces(n1: NDArray3float, n2: NDArray3float, xform,
                 dim1: Tuple[float, float, float, float],
                 dim2: Tuple[float, float, float, float]):
     """
@@ -594,7 +595,7 @@ def chan1_faces(n1: int, n2: int, xform,
         points_list.append(pointsi)
     return faces, np.vstack(points_list)
 
-def z_faces(n1: int, n2: int, xform,
+def z_faces(n1: NDArray3float, n2: NDArray3float, xform,
             dim1: Tuple[float, float, float, float],
             dim2: Tuple[float, float, float, float]):
     """
@@ -653,7 +654,7 @@ def z_faces(n1: int, n2: int, xform,
         points_list.append(pointsi)
     return faces, np.vstack(points_list)
 
-def hexa_faces(n1: int, n2: int, xform,
+def hexa_faces(n1: NDArray3float, n2: NDArray3float, xform,
                dim1: Tuple[float, float, float],
                dim2: Tuple[float, float, float]):
     """
@@ -701,7 +702,7 @@ def hexa_faces(n1: int, n2: int, xform,
         points_list.append(pointsi)
     return faces, np.vstack(points_list)
 
-def l_faces(n1: int, n2: int, xform,
+def l_faces(n1: NDArray3float, n2: NDArray3float, xform,
             dim1: Tuple[float, float, float, float],
             dim2: Tuple[float, float, float, float]):
     """
@@ -751,7 +752,7 @@ def l_faces(n1: int, n2: int, xform,
     ]
     return faces, np.vstack(points_list)
 
-def t_faces(n1: int, n2: int, xform,
+def t_faces(n1: NDArray3float, n2: NDArray3float, xform,
             dim1: Tuple[float, float, float, float],
             dim2: Tuple[float, float, float, float]):  # validated
     """
@@ -816,7 +817,7 @@ def t_faces(n1: int, n2: int, xform,
         points_list.append(pointsi)
     return faces, np.vstack(points_list)
 
-def t1_faces(n1: int, n2: int, xform,
+def t1_faces(n1: NDArray3float, n2: NDArray3float, xform,
              dim1: Tuple[float, float, float, float],
              dim2: Tuple[float, float, float, float]):  # validated
     """
@@ -875,7 +876,7 @@ def t1_faces(n1: int, n2: int, xform,
         points_list.append(pointsi)
     return faces, np.vstack(points_list)
 
-def t2_faces(n1: int, n2: int, xform,
+def t2_faces(n1: NDArray3float, n2: NDArray3float, xform,
              dim1: Tuple[float, float, float, float],
              dim2: Tuple[float, float, float, float]):  # validated
     """
@@ -932,7 +933,7 @@ def t2_faces(n1: int, n2: int, xform,
     return faces, np.vstack(points_list)
 
 
-def hat_faces(n1: int, n2: int, xform,
+def hat_faces(n1: NDArray3float, n2: NDArray3float, xform,
               dim1: Tuple[float, float],
               dim2: Tuple[float, float]):
     """

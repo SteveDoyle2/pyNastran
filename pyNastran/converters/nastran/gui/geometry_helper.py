@@ -22,6 +22,7 @@ from pyNastran.bdf.cards.elements.beam_connectivity import (
 from pyNastran.bdf.cards.elements.bars import rotate_v_wa_wb
 from pyNastran.gui.utils.vtk.vtk_utils import numpy_to_vtk_points, numpy_to_vtk
 if TYPE_CHECKING:  # pragma: no cover
+    from pyNastran.nptyping import NDArray3float
     from pyNastran.bdf.bdf import BDF
 
 
@@ -426,8 +427,8 @@ def faces_to_element_facelist(faces, node0):
 
     return face_idlist
 
-def add_3d_bar_element(bar_type, ptype, pid_ref,
-                       n1, n2, xform,
+def add_3d_bar_element(bar_type: str, ptype: str, pid_ref,
+                       n1: NDArray3float, n2: NDArray3float, xform,
                        ugrid, node0, points_list, add_to_ugrid=True):
     """adds a 3d bar element to the unstructured grid"""
     if ptype == 'PBARL':
