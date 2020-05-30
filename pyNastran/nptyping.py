@@ -55,7 +55,7 @@ except ImportError:
     NDArrayNbool = \
         NDArray3float = NDArray6float = \
         NDArrayNint = NDArrayNfloat = \
-        NDArrayN3float = NDArray33float \
+        NDArrayN3float = NDArray33float = \
         NDArrayN2int = NDArrayN3int = NDArrayN4int = NDArrayN6int = NDArrayN8int = NDArrayN9int = \
         NDArrayN10int = NDArrayN13int = NDArrayN15int = NDArrayN20int = \
         NDArrayNNfloat = Any
