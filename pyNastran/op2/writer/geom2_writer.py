@@ -474,6 +474,11 @@ def _write_cgap(eids, spack, obj, op2, op2_ascii, endian):
 def write_card(name, eids, spack, obj, op2, op2_ascii, endian):
     """writes the GEOM2 elements"""
     op2_ascii.write('GEOM2-%s\n' % name)
+
+    eid_max = max(eids)
+    if eid_max > 99999999:
+        raise NotImplementedError(f'64-bit OP2 writing is not supported; {name} max(eid)={eid_max}')
+
     if name == 'CHBDYP':
         _write_chbdyp(eids, spack, obj, op2, op2_ascii)
     elif name == 'CHBDYG':

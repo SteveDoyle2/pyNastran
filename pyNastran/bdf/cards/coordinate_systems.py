@@ -1985,12 +1985,8 @@ class Cord1x(Coord):
         ----------
         cid : int
             the coordinate id
-        g1 : int
-            grid point 1
-        g2 : int
-            grid point 2
-        g3 : int
-            grid point 3
+        g1, g2, g3 : int
+            grid point 1, 2, 3
         comment : str; default=''
             a comment for the card
 
@@ -2480,12 +2476,8 @@ class CORD1R(Cord1x, RectangularCoord):
         ----------
         cid : int
             the coordinate id
-        g1 : int
-            grid point 1
-        g2 : int
-            grid point 2
-        g3 : int
-            grid point 3
+        g1, g2, g3 : int
+            grid point 1, 2, 3
         comment : str; default=''
             a comment for the card
 
@@ -2519,12 +2511,8 @@ class CORD1C(Cord1x, CylindricalCoord):
         ----------
         cid : int
             the coordinate id
-        g1 : int
-            grid point 1
-        g2 : int
-            grid point 2
-        g3 : int
-            grid point 3
+        g1, g2, g3 : int
+            grid point 1, 2, 3
         comment : str; default=''
             a comment for the card
 
@@ -2567,12 +2555,8 @@ class CORD1S(Cord1x, SphericalCoord):
         ----------
         cid : int
             the coordinate id
-        g1 : int
-            grid point 1
-        g2 : int
-            grid point 2
-        g3 : int
-            grid point 3
+        g1, g2, g3 : int
+            grid point 1, 2, 3
         comment : str; default=''
             a comment for the card
 

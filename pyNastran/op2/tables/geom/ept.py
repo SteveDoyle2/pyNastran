@@ -111,6 +111,19 @@ class EPT(GeomCommon):
             self.properties[pid].type == prop.type)
         self._add_property_object(prop, allow_overwrites=allow_overwrites)
 
+    def _add_op2_property_mass(self, prop):
+        """helper method for op2"""
+        #if prop.pid > 100000000:
+            #raise RuntimeError('bad parsing; pid > 100000000...%s' % str(prop))
+        #print(str(prop)[:-1])
+        ntables = self.table_names.count(b'EPT') + self.table_names.count(b'EPTS')
+        pid = prop.pid
+        allow_overwrites = (
+            ntables > 1 and
+            pid in self.properties_mass and
+            self.properties_mass[pid].type == prop.type)
+        self._add_property_mass_object(prop, allow_overwrites=allow_overwrites)
+
     def _add_pconv(self, prop):
         if prop.pconid > 100000000:
             raise RuntimeError('bad parsing pconid > 100000000...%s' % str(prop))
@@ -1187,6 +1200,7 @@ class EPT(GeomCommon):
                                   8, 4572414629676717179, 0, 1,
                                -1, -1, -1, -1)
         """
+        self.to_nx()
         #self.show_data(data[12:], types='ifs')
         nproperties = 0
         s1 = Struct(mapfmt(self._endian + b'2i3fi2f', self.size))
@@ -1626,6 +1640,7 @@ class EPT(GeomCommon):
         PFAST(3601,36,55)
         NX only
         """
+        self.to_nx()
         ntotal = 48
         struct1 = Struct(self._endian + b'ifii 8f')
         nproperties = (len(data) - n) // ntotal
@@ -1801,7 +1816,7 @@ class EPT(GeomCommon):
             if self.is_debug_file:
                 self.binary_debug.write('  PMASS=%s\n' % str(out))
             prop = PMASS.add_op2_data(out)
-            self._add_op2_property(prop)
+            self._add_op2_property_mass(prop)
             n += ntotal
         return n
 

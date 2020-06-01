@@ -127,7 +127,7 @@ def _write_result_tables(obj: OP2, fop2, fop2_ascii, struct_3i, endian, skips):
     table_order = [
         'OUGV1', 'OPHIG',
         'BOUGV1', 'BOPHIG', 'BOPHIGF',
-        'OUPV1', 'OUXY1', 'OUXY2', 'OPHSA',
+        'OUPV1', 'OUXY1', 'OUXY2', 'OPHSA', 'OUGF1',
         'TOUGV1', 'OTEMP1',
         'OUG1',
         'OUGV1PAT',
@@ -138,6 +138,7 @@ def _write_result_tables(obj: OP2, fop2, fop2_ascii, struct_3i, endian, skips):
         'OQGV1',
         'OQP1',
         'OQMG1',
+        'OQGCF1',
         'OPGV1', 'OPG1', 'OPNL1',
 
         # ---------------

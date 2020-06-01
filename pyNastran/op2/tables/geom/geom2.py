@@ -1726,6 +1726,7 @@ class GEOM2(GeomCommon):
 
         Specific to NX Nastran
         """
+        self.to_nx()
         ntotal = 64 * self.factor  # 16*4
         struct_16i = Struct(mapfmt(self._endian + b'16i', self.size))
         nelements = (len(data) - n) // ntotal
@@ -2033,6 +2034,7 @@ class GEOM2(GeomCommon):
         #if stop:
             #raise RuntimeError('theta is too large...make the quad wrong')
         #self.card_count[element.type] = nelements
+        self.to_nx()
         return n, elements
 
 # CQUAD4FD

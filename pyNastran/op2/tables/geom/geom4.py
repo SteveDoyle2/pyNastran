@@ -436,6 +436,7 @@ class GEOM4(GeomCommon):
                 #self.binary_debug.write('	eid	ga	gb	cna	cnb	cma	cmb	alpha\n')
                 #self.binary_debug.write(str(elem))
             n += ntotal
+        self.to_nx()
         return n, elems
 
     def _read_rbar_msc(self, data, n):
@@ -712,6 +713,7 @@ class GEOM4(GeomCommon):
             elem = RROD.add_op2_data(out)
             elements.append(elem)
             n += ntotal
+        self.to_nx()
         return n, elements
 
     def _read_rrod_msc(self, data, n):
@@ -903,6 +905,7 @@ class GEOM4(GeomCommon):
             n += ntotal
         #if msg:
             #self.log.warning('Invalid Node IDs; skipping\n' + msg)
+        self.to_nx()
         return n, constraints
 
     def _read_spcoff1(self, data: bytes, n: int) -> int:
@@ -1083,6 +1086,7 @@ class GEOM4(GeomCommon):
             constraints.append(constraint)
             n += ntotal
         self._is_long_ids = is_long_ids
+        self.to_nx()
         return n, constraints
 
     def _read_spcd_msc(self, data, n):

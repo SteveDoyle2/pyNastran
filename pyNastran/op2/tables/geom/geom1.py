@@ -255,7 +255,7 @@ class GEOM1(GeomCommon):
     def _read_grid_maybe(self, data: bytes, n: int) -> int:  # pragma: no cover
         """(4501, 45, 1120001) - the marker for Record 17"""
         return len(data)
-        nfields = (len(data) - n) // 4
+        #nfields = (len(data) - n) // 4
         # nfields = 3 * 11 * 17 * 71
 
         # it's not 11, 17...
@@ -436,16 +436,17 @@ class GEOM1(GeomCommon):
         POINT(6001,60,377)
         """
         s = Struct(self._endian + b'2i3f')
-        nentries = (len(data) - n) // 20
+        ntotal = 20
+        nentries = (len(data) - n) // ntotal
         for unused_i in range(nentries):
-            edata = data[n:n + 20]  # 5*4
+            edata = data[n:n + ntotal]  # 5*4
             out = s.unpack(edata)
             # (nid, cid, x1, x2, x3) = out
             if self.is_debug_file:
                 self.binary_debug.write('  POINT=%s\n' % str(out))
             point = POINT.add_op2_data(out)
             self._add_point_object(point)
-            n += 20
+            n += ntotal
         self.increase_card_count('POINT', nentries)
         return n
 
@@ -471,16 +472,17 @@ class GEOM1(GeomCommon):
     def _read_cvisc(self, data: bytes, n: int) -> int:
         """CVISC(3901,39,50) - the marker for Record 105"""
         struct_4i = Struct(self._endian + b'4i')
-        nentries = (len(data) - n) // 16
+        ntotal = 16  # 4*4
+        nentries = (len(data) - n) // ntotal
         for unused_i in range(nentries):
-            edata = data[n:n + 16]  # 4*4
+            edata = data[n:n + ntotal]
             out = struct_4i.unpack(edata)
             if self.is_debug_file:
                 self.binary_debug.write('  CVISC=%s\n' % str(out))
             # (eid, pid, n1, n2) = out
             element = CVISC.add_op2_data(out)
             self.add_op2_element(element)
-            n += 16
+            n += ntotal
         self.increase_card_count('CVISC', nentries)
         return n
 
@@ -658,34 +660,39 @@ class GEOM1(GeomCommon):
         ntotal = 32 * self.factor # 4*8
         nentries = (len(data) - n) // ntotal
         structi = Struct(mapfmt(self._endian + b'4if3i', self.size))
+
+        superelement_type_int_to_superelement_type = {
+            1 : 'PRIMARY',
+            5 : 'EXTOP2',
+            6 : 'MIRROR',
+            7 : 'FRFOP2',
+        }
+        loc_int_to_loc = {
+            1 : 'YES',
+            2 : 'NO',
+        }
+        method_int_to_method = {
+            1: 'AUTO',
+            2: 'MANUAL',
+        }
         for unused_i in range(nentries):
             edata = data[n:n + ntotal]  # 4*8
             out = structi.unpack(edata)
-            (seid, superelement_type, rseid, method, tol, loc, media, unit) = out
-            if superelement_type == 1:
-                superelement_type = 'PRIMARY'
-            elif superelement_type == 5:
-                superelement_type = 'EXTOP2'
-            elif superelement_type == 6:
-                superelement_type = 'MIRROR'
-            elif superelement_type == 7:
-                superelement_type = 'FRFOP2'
-            else:  # pragma: no cover
-                raise NotImplementedError(f'superelement_type={superelement_type} not in [PRIMARY, EXTOP2, MIRROR, FRFOP2]')
+            (seid, superelement_type_int, rseid, method_int, tol, loc_int, media, unit) = out
+            try:
+                superelement_type = superelement_type_int_to_superelement_type[superelement_type_int]
+            except KeyError:  # pragma: no cover
+                raise NotImplementedError(f'superelement_type={superelement_type_int} not in [PRIMARY, EXTOP2, MIRROR, FRFOP2]')
 
-            if loc == 1:
-                loc = 'YES'
-            elif loc == 2:
-                loc = 'NO'
-            else:  # pragma: no cover
-                raise NotImplementedError(f'loc={loc} not in [YES, NO]')
+            try:
+                loc = loc_int_to_loc[loc_int]
+            except KeyError:  # pragma: no cover
+                raise NotImplementedError(f'loc={loc_int} not in [YES, NO]')
 
-            if method == 1:
-                method = 'AUTO'
-            elif method == 2:
-                method = 'MANUAL'
-            else:  # pragma: no cover
-                raise NotImplementedError(f'method={method} not in [AUTO, MANUAL]')
+            try:
+                method = method_int_to_method[method_int]
+            except KeyError:  # pragma: no cover
+                raise NotImplementedError(f'method={method_int} not in [AUTO, MANUAL]')
 
             if self.is_debug_file:
                 self.binary_debug.write('  SEBULK=%s\n' % str(out))
