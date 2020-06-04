@@ -1,5 +1,6 @@
 from collections import defaultdict
 from struct import pack, Struct
+from pyNastran.op2.errors import SixtyFourBitError
 
 def write_geom1(op2, op2_ascii, obj, endian=b'<'):
     #if not hasattr(obj, 'nodes'):
@@ -71,6 +72,10 @@ def write_geom1(op2, op2_ascii, obj, endian=b'<'):
             'CORD3G' : (14301, 143, 651),
         }
         for coord_type, cids in sorted(out.items()):
+            max_cid = max(cids)
+            if max_cid > 99999999:  #  is the max 2147483647?  2^31-1
+                raise SixtyFourBitError(f'64-bit OP2 writing is not supported; max {coord_type}={max_cid}')
+
             key = coord_type_key_map[coord_type]
             ncards = len(cids)
             if '2' in coord_type:
@@ -88,6 +93,7 @@ def write_geom1(op2, op2_ascii, obj, endian=b'<'):
                 coord_rcs_int = 3
             else:  # pragma: no cover
                 raise NotImplementedError(coord_type)
+
             if coord_type in ['CORD2R', 'CORD2C', 'CORD2S']:
                 nvalues = 13 * ncards + 3
                 spack = Struct(b'4i 9f')
@@ -103,6 +109,14 @@ def write_geom1(op2, op2_ascii, obj, endian=b'<'):
                 nvalues = 6 * ncards + 3
                 spack = Struct(b'6i')
                 nbytes = write_block(op2, op2_ascii, nvalues, key)
+                nids = []
+                for cid in cids:
+                    coord = obj.coords[cid]
+                    nids.extend([coord.G1(), coord.G2(), coord.G3()])
+                max_nid = max(nids)
+                if max_nid > 99999999:
+                    raise SixtyFourBitError(f'64-bit OP2 writing is not supported; {coord_type}: max nid={max_nid}')
+                del nids
 
                 for cid in sorted(cids):
                     coord = obj.coords[cid]

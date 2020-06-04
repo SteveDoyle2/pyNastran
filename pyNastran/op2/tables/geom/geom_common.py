@@ -43,6 +43,12 @@ class GeomCommon:
             #aaa
         return len(data)
 
+    def _read_fake_nx(self, data, n):
+        """same as _read_fake, but casts to NX"""
+        self.to_nx()
+        self.log.info(f'skipping {self.card_name} in {self.table_name}; ndata={len(data)-12}')
+        return len(data)
+
     def increase_card_count(self, name, count_num=1):  # pragma: no cover
         msg = 'this should be overwritten; name=%s count_num=%s' % (name, count_num)
         raise NotImplementedError(msg)

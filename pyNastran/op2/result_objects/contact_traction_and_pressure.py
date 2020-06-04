@@ -32,6 +32,7 @@ import numpy as np
 
 from pyNastran.op2.result_objects.op2_objects import ScalarObject
 from pyNastran.f06.f06_formatting import write_floats_13e, write_imag_floats_13e, write_float_12e
+from pyNastran.op2.errors import SixtyFourBitError
 from pyNastran.op2.op2_interface.write_utils import set_table3_field
 
 float_types = (float, np.float32)
@@ -788,7 +789,7 @@ class RealContactTractionAndPressureArray(ScalarObject):  # displacement style t
         gridtype = self.node_gridtype[:, 1]
         max_id = node.max()
         if max_id > 99999999:
-            raise NotImplementedError(f'64-bit OP2 writing is not supported; max id={max_id}')
+            raise SixtyFourBitError(f'64-bit OP2 writing is not supported; max id={max_id}')
 
         #format_table4_1 = Struct(self._endian + b'15i')
         #format_table4_2 = Struct(self._endian + b'3i')

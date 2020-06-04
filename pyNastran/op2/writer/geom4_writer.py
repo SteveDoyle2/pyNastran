@@ -3,6 +3,7 @@ from collections import defaultdict
 from typing import List, Dict, Tuple, Union, Any
 
 from pyNastran.bdf.cards.collpase_card import collapse_thru_packs
+from pyNastran.op2.errors import SixtyFourBitError
 from .geom1_writer import write_geom_header, close_geom_table
 
 def write_geom4(op2, op2_ascii, obj, endian: bytes=b'<', nastran_format: str='nx') -> None:
@@ -276,10 +277,10 @@ def _write_spc(card_type: str, cards, ncards: int, op2, op2_ascii,
     #nastran_format = 'msc'
     max_spc_id = max([spc.conid for spc in cards])
     max_nid = max([max(spc.node_ids) for spc in cards])
-    if max_spc_id > 100000000:
-        raise NotImplementedError(f'64-bit OP2 writing is not supported; max spc_id={max_spc_id}')
-    if max_nid > 100000000:
-        raise NotImplementedError(f'64-bit OP2 writing is not supported; max SPC nid={max_nid}')
+    if max_spc_id > 99999999:
+        raise SixtyFourBitError(f'64-bit OP2 writing is not supported; max spc_id={max_spc_id}')
+    if max_nid > 99999999:
+        raise SixtyFourBitError(f'64-bit OP2 writing is not supported; max SPC nid={max_nid}')
 
     data = []  # type: List[Union[int, float]]
     if nastran_format == 'msc':
@@ -446,7 +447,12 @@ def _write_rbe3(card_type: str, cards, unused_ncards: int, op2, op2_ascii,
         fieldsi.append(-2)
         ngmi = len(rbe3.Gmi)
         if ngmi:
-            raise RuntimeError('UM is not implemented')
+            ncmi = len(rbe3.Cmi)
+            assert ncmi == ngmi, rbe3.get_stats()
+            fmti += b'2i' * ncmi
+            for cmi, gmi in zip(rbe3.Cmi, rbe3.Gmi):
+                fieldsi += [cmi, gmi]
+            #op2.log.warning('UM is not implemented')
         fmti += b'i'
         fieldsi += [-3]
 
@@ -510,6 +516,14 @@ def _write_spc1(card_type: str, cards, unused_ncards: int, op2, op2_ascii,
     #else:
         #raise NotImplementedError('SPC1; thru_flag=%s' % thru_flag)
 
+    max_spc_id = max([spc.conid for spc in cards])
+    max_nid = max([max(spc.node_ids) for spc in cards])
+
+    if max_spc_id > 99999999:
+        raise SixtyFourBitError(f'64-bit OP2 writing is not supported; max spc_id={max_spc_id}')
+    if max_nid > 99999999:
+        raise SixtyFourBitError(f'64-bit OP2 writing is not supported; max SPC nid={max_nid}')
+
     nfields = 0
     fields = []  # type: List[int]
     data = defaultdict(list)  # type: Dict[Tuple[int, int], List[int]]
@@ -517,6 +531,7 @@ def _write_spc1(card_type: str, cards, unused_ncards: int, op2, op2_ascii,
         data_key = (spc.conid, int(spc.components))
         ids = spc.node_ids
         data[data_key] += ids
+
     for data_key, nodes in data.items():
         conid, components = data_key
         singles, doubles = collapse_thru_packs(nodes)

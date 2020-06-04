@@ -36,7 +36,8 @@ from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.op2.result_objects.monpnt import MONPNT1, MONPNT3
 
 from pyNastran.f06.errors import FatalError
-from pyNastran.op2.errors import SortCodeError, DeviceCodeError, FortranMarkerError
+from pyNastran.op2.errors import (SortCodeError, DeviceCodeError,
+                                  FortranMarkerError,  SixtyFourBitError)
 from pyNastran.op2.writer.op2_writer import OP2Writer
 #from pyNastran.op2.op2_interface.op2_f06_common import Op2F06Attributes
 from pyNastran.op2.op2_interface.op2_scalar import OP2_Scalar

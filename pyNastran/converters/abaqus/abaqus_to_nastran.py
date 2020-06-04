@@ -51,7 +51,11 @@ def nastran_to_abaqus_filename(bdf_filename: str, abaqus_inp_filename: str):
             shell_section = ShellSection(material_name, thickness, log)
             shell_sections.append(shell_section)
         elif prop.type == 'PSOLID':
-            dd
+            material_name = f'{prop.mid_ref.type}_{mid}'
+            elset = None
+            thickness = None
+            solid_section = SolidSection(material_name, elset, thickness, log)
+            solid_sections.append(solid_section)
         else:
             print(prop)
         #elif prop.type == 'PSHELL':

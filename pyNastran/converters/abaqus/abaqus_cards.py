@@ -1,7 +1,9 @@
 """
 defines:
  - SolidSection
+ - ShellSection
  - Material
+ - Assembly
  - Part
 
 """

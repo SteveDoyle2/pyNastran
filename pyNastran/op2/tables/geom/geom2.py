@@ -133,14 +133,14 @@ class GEOM2(GeomCommon):
             #(16500, 165, 9987): ['CPENT15F', self._read_fake],
             #(16000, 160, 9988): ['CPENT6FD', self._read_fake],
             #(11901, 119, 908): ['CPENTCZ', self._read_fake],
-            (1701, 17, 980): ['CPLSTN3', self._read_fake],
-            (5701, 57, 981): ['CPLSTN4', self._read_fake],
-            (5801, 58, 982): ['CPLSTN6', self._read_fake],
-            (7201, 72, 983): ['CPLSTN8', self._read_fake],
-            (8801, 88, 984): ['CPLSTS3', self._read_fake],
-            (8401, 84, 985): ['CPLSTS4', self._read_fake],
-            (1801, 18, 986): ['CPLSTS6', self._read_fake],
-            (3601, 36, 987): ['CPLSTS8', self._read_fake],
+            (1701, 17, 980): ['CPLSTN3', self._read_fake_nx],
+            (5701, 57, 981): ['CPLSTN4', self._read_fake_nx],
+            (5801, 58, 982): ['CPLSTN6', self._read_fake_nx],
+            (7201, 72, 983): ['CPLSTN8', self._read_fake_nx],
+            (8801, 88, 984): ['CPLSTS3', self._read_fake_nx],
+            (8401, 84, 985): ['CPLSTS4', self._read_fake_nx],
+            (1801, 18, 986): ['CPLSTS6', self._read_fake_nx],
+            (3601, 36, 987): ['CPLSTS8', self._read_fake_nx],
             (17200, 172, 1000) : ['CPYRAM', self._read_cpyram], # nx-specific
             #(14400, 144, 9908): ['CPYRAMF', self._read_fake], # nx-specific
             (25700, 257, 9948) : ['CPYRA5FD', self._read_cpyram], # nx-specific

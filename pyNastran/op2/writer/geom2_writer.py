@@ -1,6 +1,7 @@
 from collections import defaultdict
 from struct import pack, Struct
 
+from pyNastran.op2.errors import SixtyFourBitError
 from .geom1_writer import write_geom_header, close_geom_table
 integer_types = int
 
@@ -79,6 +80,12 @@ def write_geom2(op2, op2_ascii, obj, endian=b'<'):
         if name in etypes_to_skip:
             obj.log.warning('skipping GEOM2-%s' % name)
             continue
+
+        max_eid_id = max(eids)
+        if max_eid_id > 99999999:
+            raise SixtyFourBitError(f'64-bit OP2 writing is not supported; {name}: max eid={max_eid_id}')
+        #if max_nid > 99999999:
+            #raise SixtyFourBitError(f'64-bit OP2 writing is not supported; max SPC nid={max_nid}')
 
         #if nelements == 0:
             #continue
@@ -477,7 +484,7 @@ def write_card(name, eids, spack, obj, op2, op2_ascii, endian):
 
     eid_max = max(eids)
     if eid_max > 99999999:
-        raise NotImplementedError(f'64-bit OP2 writing is not supported; {name} max(eid)={eid_max}')
+        raise SixtyFourBitError(f'64-bit OP2 writing is not supported; {name} max(eid)={eid_max}')
 
     if name == 'CHBDYP':
         _write_chbdyp(eids, spack, obj, op2, op2_ascii)
