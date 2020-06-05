@@ -37,11 +37,11 @@ The following shapes aren't supported:
 """
 from typing import Tuple
 import numpy as np
-from pyNastran.nptyping import NDArray3float
+from pyNastran.nptyping import NDArray3float, NDArray33float, NDArrayN4float
 from pyNastran.bdf.cards.aero.utils import elements_from_quad, tri_cap
 
 
-def rod_faces(n1: NDArray3float, n2: NDArray3float, xform,
+def rod_faces(n1: NDArray3float, n2: NDArray3float, xform: NDArray33float,
               dim1: Tuple[float, float],
               dim2: Tuple[float, float]): # validated
     """
@@ -86,7 +86,7 @@ def rod_faces(n1: NDArray3float, n2: NDArray3float, xform,
     points = np.vstack(points_list)
     return all_faces, points, points.shape[0]
 
-def tube_faces(n1: NDArray3float, n2: NDArray3float, xform,
+def tube_faces(n1: NDArray3float, n2: NDArray3float, xform: NDArray33float,
                dim1: Tuple[float, float],
                dim2: Tuple[float, float]):  # validated
     """
@@ -152,7 +152,7 @@ def tube_faces(n1: NDArray3float, n2: NDArray3float, xform,
     points = np.vstack(points_list1 + points_list2)
     return all_faces, points, points.shape[0]
 
-def bar_faces(n1: NDArray3float, n2: NDArray3float, xform,
+def bar_faces(n1: NDArray3float, n2: NDArray3float, xform: NDArray33float,
               dim1: Tuple[float, float],
               dim2: Tuple[float, float]):  # validated
     """
@@ -177,20 +177,10 @@ def bar_faces(n1: NDArray3float, n2: NDArray3float, xform,
         points_list.append(pointsi)
     return np.vstack(points_list)
 
-def box_faces(n1: NDArray3float, n2: NDArray3float, xform,
-              dim1: Tuple[float, float, float, float],
-              dim2: Tuple[float, float, float, float]):  # validated
-    """
-         ^ y
-         |
-    0---------3
-    |         |
-    |  4---7  |
-    |  | + |  |---> z
-    |  5---6  |
-    |         |
-    1---------2
-    """
+def box_setup(dim1: Tuple[float, float, float, float],
+              dim2: Tuple[float, float, float, float]) -> Tuple[List[List[int]],
+                                                                NDArrayN4float, NDArrayN4float]:
+    """helper for ``box_faces``"""
     faces = [
         # front face
         [0, 1, 5, 4],
@@ -218,13 +208,12 @@ def box_faces(n1: NDArray3float, n2: NDArray3float, xform,
         [6, 14, 15, 7],
         [7, 15, 12, 4],
     ]
-
-    points_list = []
-    for nid, dim in [(n1, dim1), (n2, dim2)]:
+    points = []
+    for dim in (dim1, dim2):
         wbox, hbox, th, tw = dim
         hbox_in = hbox - 2*th
         wbox_in = wbox - 2*tw
-        points = np.array([
+        pointsi = np.array([
             [0., -hbox/2., wbox/2], # 0
             [0., -hbox/2, -wbox/2], # 1
             [0.,  hbox/2, -wbox/2], # 2
@@ -235,11 +224,31 @@ def box_faces(n1: NDArray3float, n2: NDArray3float, xform,
             [0.,  hbox_in/2, -wbox_in/2], # 6
             [0.,  hbox_in/2,  wbox_in/2], # 7
         ])
+        points.append(pointsi)
+    return faces, *points
+
+def box_faces(n1: NDArray3float, n2: NDArray3float, xform: NDArray33float,
+              dim1: Tuple[float, float, float, float],
+              dim2: Tuple[float, float, float, float]):  # validated
+    """
+         ^ y
+         |
+    0---------3
+    |         |
+    |  4---7  |
+    |  | + |  |---> z
+    |  5---6  |
+    |         |
+    1---------2
+    """
+    faces, points1, points2 = box_setup(dim1, dim2)
+    points_list = []
+    for nid, points in [(n1, points1), (n2, points2)]:
         pointsi = points @ xform + nid
         points_list.append(pointsi)
     return faces, np.vstack(points_list)
 
-def i_faces(n1: NDArray3float, n2: NDArray3float, xform,
+def i_faces(n1: NDArray3float, n2: NDArray3float, xform: NDArray33float,
             dim1: Tuple[float, float, float, float, float, float],
             dim2: Tuple[float, float, float, float, float, float]):   # validated
     """
@@ -310,7 +319,7 @@ def i_faces(n1: NDArray3float, n2: NDArray3float, xform,
         points_list.append(pointsi)
     return faces, np.vstack(points_list)
 
-def i1_faces(n1: NDArray3float, n2: NDArray3float, xform,
+def i1_faces(n1: NDArray3float, n2: NDArray3float, xform: NDArray33float,
              dim1: Tuple[float, float, float, float],
              dim2: Tuple[float, float, float, float]):
     """
@@ -387,7 +396,7 @@ def i1_faces(n1: NDArray3float, n2: NDArray3float, xform,
         points_list.append(pointsi)
     return faces, np.vstack(points_list)
 
-def h_faces(n1: NDArray3float, n2: NDArray3float, xform,
+def h_faces(n1: NDArray3float, n2: NDArray3float, xform: NDArray33float,
             dim1: Tuple[float, float, float, float],
             dim2: Tuple[float, float, float, float]):
     """
@@ -457,7 +466,7 @@ def h_faces(n1: NDArray3float, n2: NDArray3float, xform,
         points_list.append(pointsi)
     return faces, np.vstack(points_list)
 
-def chan_faces(n1: NDArray3float, n2: NDArray3float, xform,
+def chan_faces(n1: NDArray3float, n2: NDArray3float, xform: NDArray33float,
                dim1: Tuple[float, float, float, float],
                dim2: Tuple[float, float, float, float]):
     """
@@ -533,7 +542,7 @@ def chan_faces(n1: NDArray3float, n2: NDArray3float, xform,
         points_list.append(pointsi)
     return faces, np.vstack(points_list)
 
-def chan1_faces(n1: NDArray3float, n2: NDArray3float, xform,
+def chan1_faces(n1: NDArray3float, n2: NDArray3float, xform: NDArray33float,
                 dim1: Tuple[float, float, float, float],
                 dim2: Tuple[float, float, float, float]):
     """
@@ -595,7 +604,7 @@ def chan1_faces(n1: NDArray3float, n2: NDArray3float, xform,
         points_list.append(pointsi)
     return faces, np.vstack(points_list)
 
-def z_faces(n1: NDArray3float, n2: NDArray3float, xform,
+def z_faces(n1: NDArray3float, n2: NDArray3float, xform: NDArray33float,
             dim1: Tuple[float, float, float, float],
             dim2: Tuple[float, float, float, float]):
     """
@@ -654,7 +663,7 @@ def z_faces(n1: NDArray3float, n2: NDArray3float, xform,
         points_list.append(pointsi)
     return faces, np.vstack(points_list)
 
-def hexa_faces(n1: NDArray3float, n2: NDArray3float, xform,
+def hexa_faces(n1: NDArray3float, n2: NDArray3float, xform: NDArray33float,
                dim1: Tuple[float, float, float],
                dim2: Tuple[float, float, float]):
     """
@@ -702,7 +711,7 @@ def hexa_faces(n1: NDArray3float, n2: NDArray3float, xform,
         points_list.append(pointsi)
     return faces, np.vstack(points_list)
 
-def l_faces(n1: NDArray3float, n2: NDArray3float, xform,
+def l_faces(n1: NDArray3float, n2: NDArray3float, xform: NDArray33float,
             dim1: Tuple[float, float, float, float],
             dim2: Tuple[float, float, float, float]):
     """
@@ -752,7 +761,7 @@ def l_faces(n1: NDArray3float, n2: NDArray3float, xform,
     ]
     return faces, np.vstack(points_list)
 
-def t_faces(n1: NDArray3float, n2: NDArray3float, xform,
+def t_faces(n1: NDArray3float, n2: NDArray3float, xform: NDArray33float,
             dim1: Tuple[float, float, float, float],
             dim2: Tuple[float, float, float, float]):  # validated
     """
@@ -798,7 +807,6 @@ def t_faces(n1: NDArray3float, n2: NDArray3float, xform,
         #[0, 1, 2,  3,  4,  5,  6,  7],
         #[8, 9, 10, 11, 12, 13, 14, 15],
     ]
-
     points_list = []
     for nid, dim in [(n1, dim1), (n2, dim2)]:
         bflange, htotal, tflange, tweb = dim
@@ -817,7 +825,47 @@ def t_faces(n1: NDArray3float, n2: NDArray3float, xform,
         points_list.append(pointsi)
     return faces, np.vstack(points_list)
 
-def t1_faces(n1: NDArray3float, n2: NDArray3float, xform,
+def t1_setup(dim1: Tuple[float, float, float, float],
+             dim2: Tuple[float, float, float, float]) -> Tuple[List[List[int]],
+                                                               NDArrayN4float, NDArrayN4float]:
+    """helper for ``t1_faces``"""
+    faces = [
+        # front face
+        [0, 1, 2, 7],
+        [2, 3, 4, 5, 6, 7],
+
+        # back face
+        [8, 9, 10, 15],
+        [10, 11, 12, 13, 14, 15],
+
+        # around the T (counter-clockwise)
+        [0, 8, 9, 1],
+        [1, 9, 10, 2],
+        [2, 10, 11, 3],
+        [3, 11, 12, 4],
+        [4, 12, 13, 5],
+        [5, 13, 14, 6],
+        [6, 14, 15, 7],
+        [7, 15, 8, 0],
+    ]
+    points = []
+    for dim in (dim1, dim2):
+        hall, bfoot, tweb, tflange = dim
+        #htotal = tflange + hweb
+        pointsi = np.array([
+            [0.,  tflange/2,  -bfoot - tweb/2], # 0
+            [0., -tflange/2, -bfoot - tweb/2], # 1
+            [0., -tflange/2, -tweb/2], # 2
+            [0., -hall/2,    -tweb/2], # 3
+            [0., -hall/2,     tweb/2], # 4
+            [0.,  hall/2,     tweb/2], # 5
+            [0.,  hall/2,    -tweb/2], # 6
+            [0.,  tflange/2, -tweb/2], # 7
+        ])  # 16 x 3
+        points.append(pointsi)
+    return faces, *points
+
+def t1_faces(n1: NDArray3float, n2: NDArray3float, xform: NDArray33float,
              dim1: Tuple[float, float, float, float],
              dim2: Tuple[float, float, float, float]):  # validated
     """
@@ -838,60 +886,17 @@ def t1_faces(n1: NDArray3float, n2: NDArray3float, xform,
       bflange
     <---------->
     """
-    faces = [
-        # front face
-        [0, 1, 2, 7],
-        [2, 3, 4, 5, 6, 7],
-
-        # back face
-        [8, 9, 10, 15],
-        [10, 11, 12, 13, 14, 15],
-
-        # around the T (counter-clockwise)
-        [0, 8, 9, 1],
-        [1, 9, 10, 2],
-        [2, 10, 11, 3],
-        [3, 11, 12, 4],
-        [4, 12, 13, 5],
-        [5, 13, 14, 6],
-        [6, 14, 15, 7],
-        [7, 15, 8, 0],
-    ]
-
+    faces, points1, points2 = t1_setup(dim1, dim2)
     points_list = []
-    for nid, dim in [(n1, dim1), (n2, dim2)]:
-        hall, bfoot, tweb, tflange = dim
-        #htotal = tflange + hweb
-        points = np.array([
-            [0.,  tflange/2,  -bfoot - tweb/2], # 0
-            [0., -tflange/2, -bfoot - tweb/2], # 1
-            [0., -tflange/2, -tweb/2], # 2
-            [0., -hall/2,    -tweb/2], # 3
-            [0., -hall/2,     tweb/2], # 4
-            [0.,  hall/2,     tweb/2], # 5
-            [0.,  hall/2,    -tweb/2], # 6
-            [0.,  tflange/2, -tweb/2], # 7
-        ])  # 16 x 3
+    for nid, points in [(n1, points1), (n2, points2)]:
         pointsi = points @ xform + nid
         points_list.append(pointsi)
     return faces, np.vstack(points_list)
 
-def t2_faces(n1: NDArray3float, n2: NDArray3float, xform,
-             dim1: Tuple[float, float, float, float],
-             dim2: Tuple[float, float, float, float]):  # validated
-    """
-         ^y
-         |
-       0--7
-       |  |
-       |  |
-    2--1  6--5
-    |        |---->z
-    3--------4
-
-      bflange
-    <---------->
-    """
+def t2_setup(dim1: Tuple[float, float, float, float],
+             dim2: Tuple[float, float, float, float]) -> Tuple[List[List[int]],
+                                                               NDArrayN4float, NDArrayN4float]:
+    """helper for ``t2_faces``"""
     faces = [
         # front face
         [0, 1, 6, 7],
@@ -911,12 +916,11 @@ def t2_faces(n1: NDArray3float, n2: NDArray3float, xform,
         [6, 14, 15, 7],
         [7, 15, 8, 0],
     ]
-
-    points_list = []
-    for nid, dim in [(n1, dim1), (n2, dim2)]:
+    points = []
+    for dim in (dim1, dim2):
         bflange, htotal, tflange, tweb = dim
         hweb = htotal - tflange
-        points = np.array([
+        pointsi = np.array([
             # x, y, z
             [0., hweb + tflange/2, -tweb/2],  # 0
             [0., tflange/2,        -tweb/2],  # 1
@@ -928,12 +932,36 @@ def t2_faces(n1: NDArray3float, n2: NDArray3float, xform,
             [0., tflange/2,        tweb/2],  # 6
             [0., hweb + tflange/2, tweb/2],  # 7
         ])  # 16 x 3
+        points.append(pointsi)
+    return faces, *points
+
+def t2_faces(n1: NDArray3float, n2: NDArray3float, xform: NDArray33float,
+             dim1: Tuple[float, float, float, float],
+             dim2: Tuple[float, float, float, float]):  # validated
+    """
+       <-->  tweb
+         ^y
+         |
+       0--7    ^
+       |  |    | hweb
+       |  |    V
+    2--1  6--5 ^ hflange
+    |        |-|-->z
+    3--------4 v
+
+      bflange
+    <-------->
+
+    """
+    faces, points1, points2 = t2_setup(dim1, dim2)
+    points_list = []
+    for nid, points in [(n1, points1), (n2, points2)]:
         pointsi = points @ xform + nid
         points_list.append(pointsi)
     return faces, np.vstack(points_list)
 
 
-def hat_faces(n1: NDArray3float, n2: NDArray3float, xform,
+def hat_faces(n1: NDArray3float, n2: NDArray3float, xform: NDArray33float,
               dim1: Tuple[float, float],
               dim2: Tuple[float, float]):
     """

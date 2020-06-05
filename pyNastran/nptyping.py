@@ -23,6 +23,7 @@ try:
     # [2., 0., 0.]
     # [3., 0., 0.]
     NDArrayN3float = NDArray[(Any, 3), float]
+    NDArrayN4float = NDArray[(Any, 4), float]
 
     NDArrayNNfloat = NDArray[(Any, Any), float]
 
@@ -53,9 +54,10 @@ try:
 
 except ImportError:
     NDArrayNbool = \
-        NDArray3float = NDArray6float = \
-        NDArrayNint = NDArrayNfloat = \
-        NDArrayN3float = NDArray33float = \
-        NDArrayN2int = NDArrayN3int = NDArrayN4int = NDArrayN6int = NDArrayN8int = NDArrayN9int = \
-        NDArrayN10int = NDArrayN13int = NDArrayN15int = NDArrayN20int = \
-        NDArrayNNfloat = Any
+    NDArray3float = NDArray6float = \
+    NDArrayNint = NDArrayNfloat = \
+    NDArrayN3float = NDArrayN4float = \
+    NDArray33float = \
+    NDArrayN2int = NDArrayN3int = NDArrayN4int = NDArrayN6int = NDArrayN8int = NDArrayN9int = \
+    NDArrayN10int = NDArrayN13int = NDArrayN15int = NDArrayN20int = \
+    NDArrayNNfloat = Any
