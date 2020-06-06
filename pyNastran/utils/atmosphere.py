@@ -236,15 +236,13 @@ def _feet_to_alt_units(alt_units: str) -> float:
         raise RuntimeError('alt_units=%r is not valid; use [ft, m]' % alt_units)
     return factor
 
-def convert_altitude(alt, alt_units_in, alt_units_out):
-    # type : (float, str, str) -> float
+def convert_altitude(alt: float, alt_units_in: str, alt_units_out: str) -> float:
     """nominal unit is ft"""
     if alt_units_in == alt_units_out:
         return alt
     return alt * _altitude_factor(alt_units_in, alt_units_out)
 
-def _altitude_factor(alt_units_in, alt_units_out):
-    # type : (str, str) -> float
+def _altitude_factor(alt_units_in: str, alt_units_out: str) -> float:
     """helper method for convert_altitude"""
     factor = 1.0
     # units to feet
@@ -268,8 +266,7 @@ def _altitude_factor(alt_units_in, alt_units_out):
         raise RuntimeError('alt_units_out=%r is not valid; use [ft, m, kft]' % alt_units_out)
     return factor
 
-def _reynolds_factor(reynolds_units_in, reynolds_units_out):
-    # type : (str, str) -> float
+def _reynolds_factor(reynolds_units_in: str, reynolds_units_out: str) -> float:
     """helper method"""
     factor = 1.0
     # units to 1/feet
@@ -295,15 +292,13 @@ def _reynolds_factor(reynolds_units_in, reynolds_units_out):
         raise RuntimeError(msg)
     return factor
 
-def convert_velocity(velocity, velocity_units_in, velocity_units_out):
-    # type : (float, str, str) -> float
+def convert_velocity(velocity: float, velocity_units_in: str, velocity_units_out: str) -> float:
     """nominal unit is ft/s"""
     if velocity_units_in == velocity_units_out:
         return velocity
     return velocity * _velocity_factor(velocity_units_in, velocity_units_out)
 
-def _velocity_factor(velocity_units_in, velocity_units_out):
-    # type : (str, str) -> float
+def _velocity_factor(velocity_units_in: str, velocity_units_out: str) -> float:
     """helper method for convert_velocity"""
     factor = 1.0
     if velocity_units_in == 'm/s':
@@ -332,15 +327,13 @@ def _velocity_factor(velocity_units_in, velocity_units_out):
         raise RuntimeError(msg)
     return factor
 
-def convert_pressure(pressure, pressure_units_in, pressure_units_out):
-    # type : (float, str, str) -> float
+def convert_pressure(pressure: float, pressure_units_in: str, pressure_units_out: str) -> float:
     """nominal unit is psf"""
     if pressure_units_in == pressure_units_out:
         return pressure
     return pressure * _pressure_factor(pressure_units_in, pressure_units_out)
 
-def _pressure_factor(pressure_units_in, pressure_units_out):
-    # type : (str, str) -> float
+def _pressure_factor(pressure_units_in: str, pressure_units_out: str) -> float:
     """helper method for convert_pressure"""
     factor = 1.0
     if pressure_units_in == 'psf':
@@ -372,15 +365,13 @@ def _pressure_factor(pressure_units_in, pressure_units_out):
             pressure_units_out))
     return factor
 
-def convert_density(density, density_units_in, density_units_out):
-    # type : (float, str, str) -> float
+def convert_density(density: float, density_units_in: str, density_units_out: str) -> float:
     """nominal unit is slug/ft^3"""
     if density_units_in == density_units_out:
         return density
     return density * _density_factor(density_units_in, density_units_out)
 
-def _density_factor(density_units_in, density_units_out):
-    # type : (str, str) -> float
+def _density_factor(density_units_in: str, density_units_out: str) -> float:
     """helper method for convert_density"""
     factor = 1.0
     if density_units_in == 'slug/ft^3':
@@ -405,8 +396,9 @@ def _density_factor(density_units_in, density_units_out):
         raise RuntimeError(msg)
     return factor
 
-def atm_temperature(alt, alt_units='ft', temperature_units='R'):
-    # type : (float, str, str) -> float
+def atm_temperature(alt: float,
+                    alt_units: str='ft',
+                    temperature_units: str='R') -> float:
     r"""
     Freestream Temperature \f$ T_{\infty} \f$
 
@@ -459,8 +451,9 @@ def atm_temperature(alt, alt_units='ft', temperature_units='R'):
     T2 = T * factor
     return T2
 
-def atm_pressure(alt, alt_units='ft', pressure_units='psf'):
-    # type : (float, str, str) -> float
+def atm_pressure(alt: float,
+                 alt_units: str='ft',
+                 pressure_units: str='psf') -> float:
     r"""
     Freestream Pressure \f$ p_{\infty} \f$
 
@@ -507,8 +500,8 @@ def atm_pressure(alt, alt_units='ft', pressure_units='psf'):
     factor = _pressure_factor('psf', pressure_units)
     return p * factor
 
-def atm_dynamic_pressure(alt, mach, alt_units='ft', pressure_units='psf'):
-    # type : (float, float, str, str) -> float
+def atm_dynamic_pressure(alt: float, mach: float,
+                         alt_units: str='ft', pressure_units: str='psf') -> float:
     r"""
     Freestream Dynamic Pressure  \f$ q_{\infty} \f$
 
@@ -577,8 +570,7 @@ def atm_speed_of_sound(alt, alt_units='ft', velocity_units='ft/s', gamma=1.4):
     a2 = a * factor
     return a2
 
-def atm_velocity(alt, mach, alt_units='ft', velocity_units='ft/s'):
-    # type : (float, float, str, str) -> float
+def atm_velocity(alt: float, mach: float, alt_units: str='ft', velocity_units: str='ft/s') -> float:
     r"""
     Freestream Velocity  \f$ V_{\infty} \f$
 
@@ -605,7 +597,10 @@ def atm_velocity(alt, mach, alt_units='ft', velocity_units='ft/s'):
     V = mach * a # units=ft/s or m/s
     return V
 
-def atm_equivalent_airspeed(alt: float, mach: float, alt_units: str='ft', eas_units: str='ft/s') -> float:
+def atm_equivalent_airspeed(alt: float,
+                            mach: float,
+                            alt_units: str='ft',
+                            eas_units: str='ft/s') -> float:
     """
     Freestream equivalent airspeed
 
@@ -649,7 +644,10 @@ def atm_equivalent_airspeed(alt: float, mach: float, alt_units: str='ft', eas_un
     eas2 = convert_velocity(eas, 'ft/s', eas_units)
     return eas2
 
-def atm_mach(alt: float, V: float, alt_units: str='ft', velocity_units: str='ft/s') -> float:
+def atm_mach(alt: float,
+             V: float,
+             alt_units: str='ft',
+             velocity_units: str='ft/s') -> float:
     r"""
     Freestream Mach Number
 
@@ -676,8 +674,10 @@ def atm_mach(alt: float, V: float, alt_units: str='ft', velocity_units: str='ft/
     mach = V / a
     return mach
 
-def atm_density(alt: float, R: float=1716.,
-                alt_units: str='ft', density_units: str='slug/ft^3') -> float:
+def atm_density(alt: float,
+                R: float=1716.,
+                alt_units: str='ft',
+                density_units: str='slug/ft^3') -> float:
     r"""
     Freestream Density   \f$ \rho_{\infty} \f$
 

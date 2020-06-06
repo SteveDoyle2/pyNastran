@@ -255,6 +255,7 @@ class Op2Codes:
 
         This is not the same thing as SOL 101.  SOL 101 (linear statics)
         and SOL 144 (aero-statics) are both statics.
+
         """
         return ''
 
@@ -262,6 +263,7 @@ class Op2Codes:
         """
         prints the general table information
         DMAP - page 60-63
+
         """
         device_code = self.device_code
         #analysis_code = self.analysis_code
@@ -429,7 +431,7 @@ class Op2Codes:
         elif thermal == 1:
             force_flux = 'Flux'
         else:
-            force_flux = 'Force (or Flux); thermal=%r' % thermal
+            force_flux = f'Force (or Flux); thermal={thermal!r}'
         return force_flux
 
     def get_disp_temp(self, thermal: int) -> str:
@@ -441,7 +443,7 @@ class Op2Codes:
         #elif thermal is None:
             #raise RuntimeError('thermal_code is not specified; thermal_code=None')
         else:
-            disp_temp = 'Displacement/Temperature; thermal=%r' % thermal
+            disp_temp = f'Displacement/Temperature; thermal={thermal!r}'
         return disp_temp
 
     def get_table_code_name(self, disp_temp: str='', force_flux: str='',
@@ -452,11 +454,11 @@ class Op2Codes:
         table_code = _adjust_table_code(self.table_code)
 
         if table_code == 1:
-            table = "OUG - %s vector/scalar" % disp_temp
+            table = f'OUG - {disp_temp} vector/scalar'
         elif table_code == 4:
-            table = "OEF - Element %s" % force_flux
+            table = f'OEF - Element {force_flux}'
         elif table_code == 5:
-            table = "OES - Element %s" % stress_word
+            table = f'OES - Element {stress_word}'
         else:
             #try:
             table = get_table_from_table_code(table_code, self.table_name_str, is_msc=self.is_msc)
@@ -513,7 +515,7 @@ class Op2Codes:
                 try:
                     is_sort1_table = int(table_name[-1]) == 1
                 except ValueError:
-                    raise ValueError('is this SORT1/2?  table_name=%r' % table_name)
+                    raise ValueError(f'is this SORT1/2?  table_name={table_name!r}')
         return is_sort1_table
 
     @property
@@ -532,7 +534,7 @@ class Op2Codes:
                 try:
                     is_sort1_table = int(table_name[-1]) == 1
                 except ValueError:
-                    raise ValueError('is this SORT1/2?  table_name=%r' % table_name)
+                    raise ValueError(f'is this SORT1/2?  table_name={table_name!r}')
         return is_sort1_table
 
     @property

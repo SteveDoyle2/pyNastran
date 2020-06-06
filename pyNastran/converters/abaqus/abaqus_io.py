@@ -127,11 +127,11 @@ class AbaqusIO:
         self.gui.element_ids = element_ids
         self.gui._finish_results_io2(model_name, form, cases)
 
-    def clear_abaqus(self):
+    def clear_abaqus(self) -> None:
         """does nothing"""
         pass
 
-    def load_abaqus_results(self, abaqusd_filename):
+    def load_abaqus_results(self, abaqus_filename: str):
         """does nothing"""
         raise NotImplementedError()
 

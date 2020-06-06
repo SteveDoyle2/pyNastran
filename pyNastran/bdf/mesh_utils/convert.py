@@ -4,6 +4,8 @@ defines:
  - convert(model, units_to, units=None)
 
 """
+from typing import Tuple, Optional
+
 import numpy as np
 from pyNastran.bdf.cards.base_card import break_word_by_trailing_parentheses_integer_ab
 from pyNastran.bdf.bdf import read_bdf
@@ -22,8 +24,7 @@ def convert(model, units_to, units=None):
         length = {in, ft, m, cm, mm}
         mass = {g, kg, Mg, lbm, slug, slinch}
         time = {s}
-
-    units : list
+    units : List[str]
         overwrites model.units
 
     Note
@@ -66,6 +67,8 @@ def scale_by_terms(bdf_filename, terms, scales, bdf_filename_out=None,
        the scaled BDF
 
     """
+    assert len(terms) == 3, f'terms={terms} scales={scales}'
+    assert len(scales) == 3, f'terms={terms} scales={scales}'
     quiet = not debug
     mass_scale, xyz_scale, time_scale = _setup_scale_by_terms(scales, terms, quiet=quiet)
 
@@ -87,7 +90,8 @@ def scale_by_terms(bdf_filename, terms, scales, bdf_filename_out=None,
         model.write_bdf(bdf_filename_out)
     return model
 
-def _setup_scale_by_terms(scales, terms, quiet=False):
+def _setup_scale_by_terms(scales: List[float],
+                          terms: List[str], quiet: bool=False) -> Tuple[float, float, float]:
     """determines the mass, length, time scaling factors"""
     term_to_mlt_map = {
         #      M   L   T
@@ -130,7 +134,10 @@ def _setup_scale_by_terms(scales, terms, quiet=False):
         print(msg)
     return mass_scale, xyz_scale, time_scale
 
-def _scale_term(name, coeffs, terms, scales):
+def _scale_term(name: str,
+                coeffs: List[float],
+                terms: List[float],
+                scales: List[float]) -> Tuple[float, str]:
     msg = '%s = ' % name
     value = 1.0
     for coeff, term, scale in zip(coeffs, terms, scales):
@@ -527,7 +534,7 @@ def _convert_properties(model, xyz_scale, time_scale, mass_scale, weight_scale,
             prop.nsm *= nsm_plate_scale
             prop.z1 *= xyz_scale
             prop.z2 *= xyz_scale
-            prop.twelveIt3 /= xyz_scale ** 3
+            # prop.twelveIt3  # this is unchanged
         elif prop_type == 'PSHEAR':
             prop.t *= xyz_scale
             prop.nsm *= nsm_plate_scale

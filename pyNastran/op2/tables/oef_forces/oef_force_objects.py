@@ -307,15 +307,14 @@ class FailureIndicesArray(RealForceObject):
         self.is_built = True
 
         #print("ntimes=%s nelements=%s ntotal=%s" % (self.ntimes, self.nelements, self.ntotal))
-        dtype = 'float32'
-        if isinstance(self.nonlinear_factor, integer_types):
-            dtype = 'int32'
+        dtype, idtype, fdtype = get_times_dtype(self.nonlinear_factor, self.size)
+
         self._times = zeros(self.ntimes, dtype=dtype)
         self.failure_theory = np.full(self.nelements, '', dtype='U8')
-        self.element_layer = zeros((self.nelements, 2), dtype='int32')
+        self.element_layer = zeros((self.nelements, 2), dtype=idtype)
 
         #[failure_stress_for_ply, interlaminar_stress, max_value]
-        self.data = zeros((self.ntimes, self.nelements, 3), dtype='float32')
+        self.data = zeros((self.ntimes, self.nelements, 3), dtype=fdtype)
 
     def build_dataframe(self):
         """creates a pandas dataframe"""
@@ -1230,12 +1229,12 @@ class RealCBeamForceArray(RealForceObject):
         #print('ntotal=%s ntimes=%s nelements=%s' % (self.ntotal, self.ntimes, self.nelements))
 
         #print("ntimes=%s nelements=%s ntotal=%s" % (self.ntimes, self.nelements, self.ntotal))
-        self._times = zeros(self.ntimes, 'float32')
-        self.element = zeros(self.ntotal, 'int32')
-        self.element_node = zeros((self.ntotal, 2), 'int32')
+        dtype, idtype, fdtype = get_times_dtype(self.nonlinear_factor, self.size)
+        self._times = zeros(self.ntimes, dtype)
+        self.element = zeros(self.ntotal, idtype)
+        self.element_node = zeros((self.ntotal, 2), idtype)
 
         # the number is messed up because of the offset for the element's properties
-
         if not (self.nelements * nnodes) == self.ntotal:
             msg = 'ntimes=%s nelements=%s nnodes=%s ne*nn=%s ntotal=%s' % (self.ntimes,
                                                                            self.nelements, nnodes,
@@ -1243,7 +1242,7 @@ class RealCBeamForceArray(RealForceObject):
                                                                            self.ntotal)
             raise RuntimeError(msg)
         #[sd, bm1, bm2, ts1, ts2, af, ttrq, wtrq]
-        self.data = zeros((self.ntimes, self.ntotal, 8), 'float32')
+        self.data = zeros((self.ntimes, self.ntotal, 8), fdtype)
 
     def finalize(self):
         sd = self.data[0, :, 0]

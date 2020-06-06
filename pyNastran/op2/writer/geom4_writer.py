@@ -1,13 +1,15 @@
 from struct import pack, Struct
 from collections import defaultdict
+from typing import List, Dict, Tuple, Union, Any
 
 from pyNastran.bdf.cards.collpase_card import collapse_thru_packs
+from pyNastran.op2.errors import SixtyFourBitError
 from .geom1_writer import write_geom_header, close_geom_table
 
-def write_geom4(op2, op2_ascii, obj, endian=b'<', nastran_format='nx'):
+def write_geom4(op2, op2_ascii, obj, endian: bytes=b'<', nastran_format: str='nx') -> None:
     if not hasattr(obj, 'rigid_elements'):
         return
-    loads_by_type = defaultdict(list)
+    loads_by_type = defaultdict(list)  # type: Dict[str, Any]
     for unused_id, rigid_element in obj.rigid_elements.items():
         loads_by_type[rigid_element.type].append(rigid_element)
     for aset in obj.asets:
@@ -85,7 +87,7 @@ def write_geom4(op2, op2_ascii, obj, endian=b'<', nastran_format='nx'):
         if card_type in skip_cards:
             obj.log.warning('skipping GEOM4-%s' % card_type)
             continue
-        elif card_type in not_defined_cards:
+        if card_type in not_defined_cards:
             continue
         if card_type in supported_cards:
             is_constraints = True
@@ -127,7 +129,8 @@ def write_geom4(op2, op2_ascii, obj, endian=b'<', nastran_format='nx'):
 
     #-------------------------------------
 
-def write_card(op2, op2_ascii, card_type, cards, endian, nastran_format='nx'):
+def write_card(op2, op2_ascii, card_type: str, cards, endian: bytes,
+               nastran_format: str='nx') -> int:
     ncards = len(cards)
     if card_type in ['ASET1', 'BSET1', 'CSET1', 'QSET1', 'OMIT1']:
         if card_type == 'ASET1':
@@ -462,7 +465,7 @@ def write_card(op2, op2_ascii, card_type, cards, endian, nastran_format='nx'):
         raise NotImplementedError(card0)
     return nbytes
 
-def write_header_nvalues(name, nvalues, key, op2, op2_ascii):
+def write_header_nvalues(name: str, nvalues: int, key: Tuple[int, int, int], op2, op2_ascii):
     """a more precise version of write_header for when card lengths can vary"""
     nvalues += 3 # +3 comes from the keys
     nbytes = nvalues * 4
@@ -473,16 +476,26 @@ def write_header_nvalues(name, nvalues, key, op2, op2_ascii):
     op2_ascii.write('%s %s\n' % (name, str(key)))
     return nbytes
 
-def write_header(name, nfields, ncards, key, op2, op2_ascii):
+def write_header(name: str, nfields: int, ncards: int, key: Tuple[int, int, int],
+                 op2, op2_ascii) -> int:
     """writes the op2 card header given the number of cards and the fields per card"""
     nvalues = nfields * ncards
     nbytes = write_header_nvalues(name, nvalues, key, op2, op2_ascii)
     return nbytes
 
-def _write_spc(card_type, cards, ncards, op2, op2_ascii, endian, nastran_format='nx'):
+def _write_spc(card_type: str, cards, ncards: int, op2, op2_ascii,
+               endian: bytes, nastran_format: str='nx') -> int:
     """writes an SPC"""
     key = (5501, 55, 16)
     #nastran_format = 'msc'
+    max_spc_id = max([spc.conid for spc in cards])
+    max_nid = max([max(spc.node_ids) for spc in cards])
+    if max_spc_id > 99999999:
+        raise SixtyFourBitError(f'64-bit OP2 writing is not supported; max spc_id={max_spc_id}')
+    if max_nid > 99999999:
+        raise SixtyFourBitError(f'64-bit OP2 writing is not supported; max SPC nid={max_nid}')
+
+    data = []  # type: List[Union[int, float]]
     if nastran_format == 'msc':
         # MSC
         # SPC(5501,55,16) - Record 44
@@ -494,7 +507,6 @@ def _write_spc(card_type, cards, ncards, op2, op2_ascii, endian, nastran_format=
         # 5 D     RX   Enforced displacement
         nfields = 5
         nbytes = write_header(card_type, nfields, ncards, key, op2, op2_ascii)
-        data = []
         for spc in cards:
             node_ids = spc.node_ids
             for nid, comp, enforcedi in zip(node_ids, spc.components, spc.enforced):
@@ -514,7 +526,6 @@ def _write_spc(card_type, cards, ncards, op2, op2_ascii, endian, nastran_format=
         # 2 ID  I  Grid or scalar point identification number
         # 3 C   I  Component numbers
         # 4 D   RS Enforced displacement
-        data = []
         for spc in cards:
             node_ids = spc.node_ids
             #assert len(node_ids) == 1, spc.get_stats()
@@ -522,6 +533,7 @@ def _write_spc(card_type, cards, ncards, op2, op2_ascii, endian, nastran_format=
             for nid, comp, enforcedi in zip(node_ids, spc.components, spc.enforced):
                 datai = [spc.conid, nid, int(comp), enforcedi]
                 op2_ascii.write('  SPC data=%s\n' % str(datai))
+
             data += datai
         nfields = len(data)
         nbytes = write_header_nvalues(card_type, nfields, key, op2, op2_ascii)
@@ -535,9 +547,9 @@ def _write_rbar(card_type, cards, ncards, op2, op2_ascii, endian, nastran_format
     """writes an RBAR"""
     # MSC
     key = (6601, 66, 292)
+    fields = []  # type: List[Union[int, float]]
     if nastran_format == 'msc':
         fmt = endian + b'7if' * ncards
-        fields = []
         for rbar in cards:
             cna = int(rbar.cna)
             cma = int(rbar.cma)
@@ -550,7 +562,6 @@ def _write_rbar(card_type, cards, ncards, op2, op2_ascii, endian, nastran_format
                 rbar.alpha]
     elif nastran_format == 'nx':
         fmt = endian + b'7i' * ncards
-        fields = []
         for rbar in cards:
             cna = int(rbar.cna)
             cma = int(rbar.cma) if rbar.cma != '' else 0

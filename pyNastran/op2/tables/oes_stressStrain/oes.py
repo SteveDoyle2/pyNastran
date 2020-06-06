@@ -19,7 +19,7 @@ MODCON           OSTRMC        Modal contributions
 
 """
 from struct import Struct
-from typing import Union
+from typing import Tuple, Union, Any
 from numpy import fromstring, frombuffer, radians, sin, cos, vstack, repeat, array
 import numpy as np
 
@@ -75,7 +75,6 @@ from pyNastran.op2.tables.oes_stressStrain.oes_nonlinear_bush import RealNonline
 from pyNastran.op2.tables.oes_stressStrain.oes_hyperelastic import (
     HyperelasticQuadArray)
 from pyNastran.op2.tables.oes_stressStrain.oes_nonlinear import RealNonlinearPlateArray, RealNonlinearSolidArray
-
 
 
 class OES(OP2Common):
@@ -233,13 +232,14 @@ class OES(OP2Common):
         etc.
         s_code = 32 -> stress_bits = [1,1,1,1,1]
 
-        stress_bits[0] = 0 -> isMaxShear=True       isVonMises=False
-        stress_bits[0] = 1 -> isMaxShear=False      isVonMises=True
+        stress_bits[0] = 0 -> is_max_shear=True       isVonMises=False
+        stress_bits[0] = 1 -> is_max_shear=False      isVonMises=True
 
         stress_bits[1] = 0 -> is_stress=True        is_strain=False
         stress_bits[2] = 0 -> isFiberCurvature=True isFiberDistance=False
         stress_bits[3] = 0 -> duplicate of Bit[1] (stress/strain)
         stress_bits[4] = 0 -> material coordinate system flag
+
         """
         bits = [0, 0, 0, 0, 0]
 
@@ -1110,38 +1110,40 @@ class OES(OP2Common):
         """
         prefix = ''
         postfix = ''
-        if self.table_name in [b'OES1X1', b'OES1X', b'OSTR1X', b'OSTR1',
+        table_name_bytes = self.table_name
+        if table_name_bytes in [b'OES1X1', b'OES1X', b'OSTR1X', b'OSTR1',
                                b'OES1C', b'OSTR1C', b'OES1', ]:
             pass
-        elif self.table_name in [b'OES2', b'OSTR2', b'OES2C', b'OSTR2C']:
+        elif table_name_bytes in [b'OES2', b'OSTR2', b'OES2C', b'OSTR2C']:
             assert self.sort_method == 2, self.sort_method
-        #elif self.table_name in ['OESNLXR']:
+        #elif table_name_bytes in ['OESNLXR']:
             #prefix = 'sideline_'
-        elif self.table_name in [b'OESNLXD', b'OESNL1X', b'OESNLXR', b'OESNL2']:
+        elif table_name_bytes in [b'OESNLXD', b'OESNL1X', b'OESNLXR', b'OESNL2']:
             prefix = 'nonlinear_'
-        elif self.table_name in [b'OESNLXR2']:
+        elif table_name_bytes in [b'OESNLXR2']:
             prefix = 'nonlinear_'
-        elif self.table_name == b'OESNLBR':
+        elif table_name_bytes == b'OESNLBR':
             prefix = 'sideline_'
-        elif self.table_name == b'OESRT':
+        elif table_name_bytes == b'OESRT':
             prefix = 'strength_ratio.'
-        elif self.table_name in [b'OESCP', b'OESTRCP']:
+        elif table_name_bytes in [b'OESCP', b'OESTRCP']:
             # guessing
             pass
             #self.sort_bits[0] = 0 # real; ???
             #self.sort_bits[1] = 0 # sort1
             #self.sort_bits[2] = 1 # random; ???
-        elif self.table_name in [b'OESVM1C', b'OSTRVM1C', b'OESVM1', b'OSTRVM1',
-                                 #b'OESVM1C', b'OSTRVM1C',
-                                 b'OESVM2', b'OSTRVM2',]:
+        elif table_name_bytes in [b'OESVM1C', b'OSTRVM1C', b'OESVM1', b'OSTRVM1',
+                                  #b'OESVM1C', b'OSTRVM1C',
+                                  b'OESVM2', b'OSTRVM2',]:
             prefix = 'modal_contribution.'
+            self.to_nx()
 
         #----------------------------------------------------------------
-        elif self.table_name in [b'OSTRMS1C']: #, b'OSTRMS1C']:
+        elif table_name_bytes in [b'OSTRMS1C']: #, b'OSTRMS1C']:
             self.format_code = 1
             self.sort_bits[0] = 0 # real
             prefix = 'rms.'
-        elif self.table_name in [b'OESXRMS1']: # wrong...
+        elif table_name_bytes in [b'OESXRMS1']: # wrong...
             self.format_code = 1
             self.sort_bits[0] = 0 # real
             self.sort_bits[1] = 0 # sort1
@@ -1153,14 +1155,13 @@ class OES(OP2Common):
             #self.nonlinear_factor = self.n
             #self.data_code['nonlinear_factor'] = None
             prefix = 'rms.'
-        elif self.table_name in [b'OESXRMS2']: # wrong...
+        elif table_name_bytes in [b'OESXRMS2']: # wrong...
             self.sort_bits[1] = 1 # sort2
             prefix = 'rms.'
 
-        elif self.table_name in [b'OESXNO1']:
+        elif table_name_bytes in [b'OESXNO1']:
             prefix = 'no.'
-            print(self.code_information())
-        elif self.table_name in [b'OESXNO1C']:
+        elif table_name_bytes in [b'OESXNO1C']:
             # - ply-by-ply Stresses including:
             #    - von Mises Stress for PSDF (OESPSD1C),
             #    - Cumulative Root Mean Square output (OESXNO1C)
@@ -1169,7 +1170,7 @@ class OES(OP2Common):
             #    - PSDF (OSTPSD1C)
             #    - Cumulative Root Mean Square (OSTCRM1C) output sets
             prefix = 'crm.'
-        elif self.table_name in [b'OESXRM1C']:
+        elif table_name_bytes in [b'OESXRM1C']:
             prefix = 'rms.'
             #print(self.code_information())
 
@@ -1179,7 +1180,7 @@ class OES(OP2Common):
             assert self.sort_method == 1, self.code_information()
             self._analysis_code_fmt = b'i'
             prefix = 'rms.'
-        elif self.table_name in [b'OESRMS2', b'OSTRRMS2']:
+        elif table_name_bytes in [b'OESRMS2', b'OSTRRMS2']:
             #self.format_code = 1
             self.sort_bits[0] = 0 # real
             self.sort_bits[1] = 0 # sort1
@@ -1189,13 +1190,13 @@ class OES(OP2Common):
             #assert self.sort_method == 2, self.code_information()
             prefix = 'rms.'
 
-        elif self.table_name in [b'OESNO1', b'OSTRNO1', b'OSTNO1C']:
+        elif table_name_bytes in [b'OESNO1', b'OSTRNO1', b'OSTNO1C']:
             assert self.sort_method == 1, self.code_information()
             self.format_code = 1
             self.sort_bits[0] = 0 # real
             self.sort_bits[2] = 1 # random
             prefix = 'no.'
-        elif self.table_name in [b'OESNO2', b'OSTRNO2']:
+        elif table_name_bytes in [b'OESNO2', b'OSTRNO2']:
             self.format_code = 1
             self.sort_bits[0] = 0 # real
             self.sort_bits[1] = 0 # sort1
@@ -1207,7 +1208,7 @@ class OES(OP2Common):
             prefix = 'no.'
         #----------------------------------------------------------------
 
-        elif self.table_name in [b'OESPSD1', b'OSTRPSD1']:
+        elif table_name_bytes in [b'OESPSD1', b'OSTRPSD1']:
             #self.format_code = 1
             self.sort_bits[0] = 0 # real
             self.sort_bits[1] = 0 # sort1
@@ -1220,14 +1221,14 @@ class OES(OP2Common):
             self.sort_bits[2] = 1 # random
             prefix = 'psd.'
 
-        elif self.table_name in [b'OESATO1', b'OSTRATO1']:
+        elif table_name_bytes in [b'OESATO1', b'OSTRATO1']:
             prefix = 'ato.'
-        elif self.table_name in [b'OESATO2', b'OSTRATO2']:
+        elif table_name_bytes in [b'OESATO2', b'OSTRATO2']:
             prefix = 'ato.'
 
-        elif self.table_name in [b'OESCRM1', b'OSTRCRM1']:
+        elif table_name_bytes in [b'OESCRM1', b'OSTRCRM1']:
             prefix = 'crm.'
-        elif self.table_name in [b'OESCRM2', b'OSTRCRM2']:
+        elif table_name_bytes in [b'OESCRM2', b'OSTRCRM2']:
             # sort2, random
             self.format_code = 1 # real
             self.sort_bits[0] = 0 # real
@@ -1239,32 +1240,32 @@ class OES(OP2Common):
             #prefix = 'scaled_response_spectra_'
         #elif self.table_name in ['OESCP']:
 
-        elif self.table_name in [b'RASCONS']: #, b'OSTRMS1C']:
+        elif table_name_bytes in [b'RASCONS']: #, b'OSTRMS1C']:
             self.format_code = 1
             self.sort_bits[0] = 0 # real
             prefix = 'RASCONS.'
-        elif self.table_name in [b'RAECONS']: #, b'OSTRMS1C']:
+        elif table_name_bytes in [b'RAECONS']: #, b'OSTRMS1C']:
             self.format_code = 1
             self.sort_bits[0] = 0 # real
             prefix = 'RAECONS.'
-        elif self.table_name in [b'RAPCONS']: #, b'OSTRMS1C']:
+        elif table_name_bytes in [b'RAPCONS']: #, b'OSTRMS1C']:
             self.format_code = 1
             self.sort_bits[0] = 0 # real
             prefix = 'RAPCONS.'
 
-        elif self.table_name in [b'RASEATC']: #, b'OSTRMS1C']:
+        elif table_name_bytes in [b'RASEATC']: #, b'OSTRMS1C']:
             self.format_code = 1
             self.sort_bits[0] = 0 # real
             prefix = 'RASEATC.'
-        elif self.table_name in [b'RAEEATC']: #, b'OSTRMS1C']:
+        elif table_name_bytes in [b'RAEEATC']: #, b'OSTRMS1C']:
             self.format_code = 1
             self.sort_bits[0] = 0 # real
             prefix = 'RAEEATC.'
-        elif self.table_name in [b'RAPEATC']: #, b'OSTRMS1C']:
+        elif table_name_bytes in [b'RAPEATC']: #, b'OSTRMS1C']:
             self.format_code = 1
             self.sort_bits[0] = 0 # real
             prefix = 'RAPEATC.'
-        elif self.table_name in [b'OESMC1', b'OSTRMC1']:
+        elif table_name_bytes in [b'OESMC1', b'OSTRMC1']:
             prefix = 'modal_contribution.'
         else:
             raise NotImplementedError(self.table_name)
@@ -1358,7 +1359,7 @@ class OES(OP2Common):
         assert n > 0, "n = %s result_name=%s" % (n, result_name)
         return n
 
-    def _read_oes1_loads(self, data, ndata):
+    def _read_oes1_loads(self, data, ndata: int):
         """Reads OES self.thermal=0 stress/strain"""
         prefix, postfix = self.get_oes_prefix_postfix()
         #self._apply_oes_ato_crm_psd_rms_no('') # TODO: just testing
@@ -1914,6 +1915,7 @@ class OES(OP2Common):
          - 1 : CROD
          - 3 : CTUBE
          - 10 : CONROD
+
         """
         n = 0
         if self.is_stress:
@@ -2102,6 +2104,7 @@ class OES(OP2Common):
         """
         reads stress/strain for element type:
          - 2 : CBEAM
+
         """
         n = 0
         ## TODO: fix method to follow correct pattern...regarding???
@@ -6409,6 +6412,7 @@ class OES(OP2Common):
         """
         reads stress/strain for element type:
          - 102 : CBUSH
+
         """
         n = 0
         if self.is_stress:
@@ -6753,6 +6757,7 @@ class OES(OP2Common):
         reads stress/strain for element type:
          - 224 : CELAS1
          - 226 : CELAS3
+
         """
         # 224-CELAS1
         # 225-CELAS3
@@ -6906,6 +6911,7 @@ class OES(OP2Common):
         """
         reads stress/strain for element type:
          - 69 : CBEND
+
         """
         if self.is_stress:
             result_name = prefix + 'cbend_stress' + postfix
@@ -7222,6 +7228,7 @@ class OES(OP2Common):
         """
         reads stress/strain for element type:
          - 94 : BEAMNL
+
         """
         n = 0
         numwide_real = 51
@@ -7244,7 +7251,7 @@ class OES(OP2Common):
             else:
                 raise NotImplementedError('Nonlinear CBEAM Strain...this should never happen')
 
-            ntotal = numwide_real * 4
+            ntotal = numwide_real * 4 * self.factor  # 204
             nelements = ndata // ntotal
 
             nlayers = nelements * 8
@@ -7261,10 +7268,14 @@ class OES(OP2Common):
                 #self.binary_debug.write('                           s1b, s2b, s3b, s4b, smaxb, sminb,        MSc]\n')
                 #self.binary_debug.write('  nelements=%i; nnodes=1 # centroid\n' % nelements)
 
+            if self.size == 4:
+                struct1 = Struct(self._endian + b'2i 4s5f 4s5f 4s5f 4s5f i 4s5f 4s5f 4s5f 4s5f')  # 2 + 6*8 + 1 = 51
+            else:
+                assert self.size == 8, self.size
+                struct1 = Struct(self._endian + b'2q 8s5d 8s5d 8s5d 8s5d q 8s5d 8s5d 8s5d 8s5d')  # 2 + 6*8 + 1 = 51
 
-            struct1 = Struct(self._endian + b'2i 4s5f 4s5f 4s5f 4s5f i 4s5f 4s5f 4s5f 4s5f')  # 2 + 6*8 + 1 = 51
             for unused_i in range(nelements):  # num_wide=51
-                edata = data[n:n + 204]
+                edata = data[n:n + ntotal]
                 out = struct1.unpack(edata)
 
                 if self.is_debug_file:
@@ -7279,22 +7290,22 @@ class OES(OP2Common):
                 #       EB, long_EB, eqS_EB, tE_EB, eps_EB, ecs_EB,
                 #       FB, long_FB, eqS_FB, tE_FB, eps_FB, ecs_FB,
                 # A
-                assert out[3-1] == b'   C', out[3-1]
-                assert out[9-1] == b'   D', out[9-1]
-                assert out[15-1] == b'   E', out[15-1]
-                assert out[21-1] == b'   F', out[21-1]
+                assert out[3-1].rstrip() == b'   C', out[3-1]
+                assert out[9-1].rstrip() == b'   D', out[9-1]
+                assert out[15-1].rstrip() == b'   E', out[15-1]
+                assert out[21-1].rstrip() == b'   F', out[21-1]
 
                 # B
-                assert out[28-1] == b'   C', out[28-1]
-                assert out[34-1] == b'   D', out[34-1]
-                assert out[40-1] == b'   E', out[40-1]
-                assert out[46-1] == b'   F', out[46-1]
+                assert out[28-1].rstrip() == b'   C', out[28-1]
+                assert out[34-1].rstrip() == b'   D', out[34-1]
+                assert out[40-1].rstrip() == b'   E', out[40-1]
+                assert out[46-1].rstrip() == b'   F', out[46-1]
 
                 eid_device = out[0]
                 eid, dt = get_eid_dt_from_eid_device(
                     eid_device, self.nonlinear_factor, self.sort_method)
                 obj.add_new_eid_sort1(dt, eid, *out[1:])
-                n += 204
+                n += ntotal
 
         elif self.format_code == 1 and self.num_wide == numwide_random:  # random
             msg = self.code_information()

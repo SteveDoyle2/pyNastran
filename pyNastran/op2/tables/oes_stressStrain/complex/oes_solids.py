@@ -12,7 +12,6 @@ from pyNastran.f06.f06_formatting import write_imag_floats_13e
 class ComplexSolidArray(OES_Object):
     def __init__(self, data_code, is_sort1, isubcase, dt):
         OES_Object.__init__(self, data_code, isubcase, apply_data_code=False)
-        self.result_flag = 0
         #self.code = [self.format_code, self.sort_code, self.s_code]
 
         #self.ntimes = 0  # or frequency/mode
@@ -116,12 +115,8 @@ class ComplexSolidArray(OES_Object):
                                                                            #self.ntotal)
             #raise RuntimeError(msg)
 
-        if self.result_flag == 0:
-            # [oxx, oyy, ozz, txy, tyz, txz]
-            self.data = zeros((self.ntimes, self.ntotal, 6), dtype=cfdtype)
-        else:
-            # oxx
-            self.data = zeros((self.ntimes, self.ntotal, 1), 'complex64')
+        # [oxx, oyy, ozz, txy, tyz, txz]
+        self.data = zeros((self.ntimes, self.ntotal, 6), dtype=cfdtype)
 
     def build_dataframe(self):
         """creates a pandas dataframe"""
@@ -210,10 +205,7 @@ class ComplexSolidArray(OES_Object):
         #self.itotal += 1
 
     def add_node_sort1(self, dt, eid, grid, inode, ex, ey, ez, etxy, etyz, etzx):
-        if self.result_flag == 0:
-            self.data[self.itime, self.itotal, :] = [ex, ey, ez, etxy, etyz, etzx]
-        else:
-            self.data[self.itime, self.itotal, 0] = ex
+        self.data[self.itime, self.itotal, :] = [ex, ey, ez, etxy, etyz, etzx]
         self.element_node[self.itotal, :] = [eid, grid]
         self.itotal += 1
 

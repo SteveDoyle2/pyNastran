@@ -25,7 +25,7 @@ except ImportError:
 #warnings.filterwarnings('error', category=UnicodeWarning)
 
 import pyNastran
-from pyNastran.op2.op2 import OP2, FatalError # , read_op2
+from pyNastran.op2.op2 import OP2, FatalError, SixtyFourBitError
 #SortCodeError, DeviceCodeError, FortranMarkerError
 
 from pyNastran.op2.op2_geom import OP2Geom, DuplicateIDsError
@@ -383,6 +383,11 @@ def run_op2(op2_filename: str, make_geom: bool=False, combine: bool=True,
         #is_passed = True
     #except NotImplementedError:  # this block should be commented
         #is_passed = True
+    except SixtyFourBitError:
+        #log.error('SixtyFourBitError')
+        if not dev:
+            raise
+        is_passed = True
     except FatalError:  # this block should be commented
         #if stop_on_failure:
             #raise

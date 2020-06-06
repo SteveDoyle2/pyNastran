@@ -479,6 +479,7 @@ def write_pbush(name, pids, itable, op2, op2_ascii, obj, endian=b'<',
         #props.append(prop)
         #n += ntotal
     #return n, props
+
 def write_pbarl(name, pids, itable, op2, op2_ascii, obj, endian=b'<'):
     """writes the PBARL"""
     key = (9102, 91, 52)
@@ -614,14 +615,17 @@ def write_pcompg(name, pids, itable, op2, op2_ascii, obj, endian=b'<'):
 
     nproperties = len(pids)
     nlayers = 0
-    for pid in sorted(pids):
+    for pid in pids:
         #(pid, mid, a, j, c, nsm) = out
         prop = obj.properties[pid]
         #(pid, nlayers, z0, nsm, sb, ft, Tref, ge) = out # 8
         nlayers += prop.nplies
 
-    # we add a layer for the (-1, -1, -1, -1, -1) at the end
-    nvalues = 8 * nproperties + (5 * (nlayers + 1)) + 3 # +3 comes from the keys
+    # we add a layer for the (-1, -1, -1, -1, -1) at the end of each property
+    nlayers += nproperties
+
+
+    nvalues = 8 * nproperties + (5 * nlayers) + 3 # +3 comes from the keys
     nbytes = nvalues * 4
     op2.write(pack('3i', *[4, nvalues, 4]))
     op2.write(pack('i', nbytes)) #values, nbtyes))
@@ -635,8 +639,8 @@ def write_pcompg(name, pids, itable, op2, op2_ascii, obj, endian=b'<'):
         #nlayers = abs(nlayers)
     #assert nlayers > 0, out
 
-    s1 = Struct(endian + b'2i3fi2f')
-    s2 = Struct(endian + b'ii2fi')
+    s1 = Struct(endian + b'2i 3f i 2f')
+    s2 = Struct(endian + b'ii 2f i')
     struct_i5 = Struct(endian + b'5i')
 
     lam_map = {
@@ -657,8 +661,8 @@ def write_pcompg(name, pids, itable, op2, op2_ascii, obj, endian=b'<'):
         elif prop.ft == 'STRN':
             ft = 4
         else:
-            raise RuntimeError('unsupported ft.  pid=%s ft=%r.'
-                               '\nPCOMP = %s' % (pid, prop.ft, prop))
+            raise RuntimeError(f'unsupported ft.  pid={pid} ft={prop.ft!r}.'
+                               f'\nPCOMP = {prop}')
 
         #is_symmetric = True
         #symmetric_factor = 1
@@ -675,15 +679,14 @@ def write_pcompg(name, pids, itable, op2, op2_ascii, obj, endian=b'<'):
             elif sout == 'YES':
                 sout = 1
             else:
-                raise RuntimeError('unsupported sout.  sout=%r and must be 0 or 1.'
-                                   '\nPCOMPG = %s' % (sout, data))
+                raise RuntimeError(f'unsupported sout.  sout={sout!r} and must be 0 or 1.'
+                                   f'\nPCOMPG = {data}')
             data2 = [glply, mid, t, theta, sout]
             op2.write(s2.pack(*data2))
             op2_ascii.write(str(data2) + '\n')
         data2 = [-1, -1, -1, -1, -1]
         op2.write(struct_i5.pack(*data2))
         op2_ascii.write(str(data2) + '\n')
-
 
     #data_in = [
         #pid, z0, nsm, sb, ft, Tref, ge,

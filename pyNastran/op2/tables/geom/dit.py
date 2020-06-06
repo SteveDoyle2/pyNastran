@@ -48,7 +48,7 @@ class DIT(GeomCommon):
             (1905, 19, 178) : ['TABLEST', self._read_fake],
         }
 
-    def _read_tabdmp1(self, data, n):
+    def _read_tabdmp1(self, data: bytes, n: int) -> int:
         """
         TABDMP1(15, 21, 162)
 
@@ -82,9 +82,9 @@ class DIT(GeomCommon):
             istart = iend + 2
             nentries += 1
         self.increase_card_count('TABDMP1', nentries)
-        return n
+        return len(data)
 
-    def _read_tabrndg(self, data, n):
+    def _read_tabrndg(self, data: bytes, n: int) -> int:
         """
         TABRNDG(56, 26, 303)
         Power spectral density for gust loads in aeroelastic analysis.
@@ -97,9 +97,6 @@ class DIT(GeomCommon):
         Words 1 through 8 repeat until (-1,-1) occurs
 
         """
-        #self.log.info('skipping TABRNDG in DIT\n')
-        #return len(data)
-        #nentries = 0
         ndata = len(data)# - n
         assert ndata == 52, ndata
         struct_2i2f4i = Struct('2i2f4i')
@@ -116,15 +113,16 @@ class DIT(GeomCommon):
             self.add_tabrndg(tid, table_type, lu, wg, comment='')
             #nentries += 1
         #self.increase_card_count('TABRNDG', nentries)
+        n += 8  #  for the (-1,-1)
         return n
 
-    def _read_tables1(self, data, n):
+    def _read_tables1(self, data: bytes, n: int) -> int:
         """TABLES1(3105, 31, 97)"""
         n = self._read_table1(TABLES1, self.tables, self._add_table_object, data, n, 'TABLES1',
                               add_codes=False)
         return n
 
-    def _read_gust(self, data, n):
+    def _read_gust(self, data: bytes, n: int) -> int:
         """
         GUST(1005,10,174) - the marker for Record 1
         """
@@ -142,7 +140,7 @@ class DIT(GeomCommon):
 #TABDMP1
 #TABLE3D
 
-    def _read_tabled1(self, data, n):
+    def _read_tabled1(self, data: bytes, n: int) -> int:
         """
         TABLED1(1105,11,133) - the marker for Record 4
         """
@@ -198,7 +196,7 @@ class DIT(GeomCommon):
         self.increase_card_count(table_name, nentries)
         return n
 
-    def _read_tabled2(self, data, n):
+    def _read_tabled2(self, data: bytes, n: int) -> int:
         """
         TABLED2(1205,12,134) - the marker for Record 5
         """
@@ -251,14 +249,14 @@ class DIT(GeomCommon):
         self.increase_card_count(table_name, nentries)
         return n
 
-    def _read_tabled3(self, data, n):
+    def _read_tabled3(self, data: bytes, n: int) -> int:
         """
         TABLED3(1305,13,140) - the marker for Record 6
         """
         n = self._read_table3(TABLED3, self.tables_d, self._add_tabled_object, data, n, 'TABLED3')
         return n
 
-    def _read_tabled4(self, data, n):
+    def _read_tabled4(self, data: bytes, n: int) -> int:
         """
         TABLED4 - the marker for Record 7
         """
@@ -267,28 +265,28 @@ class DIT(GeomCommon):
 
 #TABLEDR
 
-    def _read_tablem1(self, data, n):
+    def _read_tablem1(self, data: bytes, n: int) -> int:
         """
         TABLEM1(105,1,93) - the marker for Record 9
         """
         n = self._read_table1(TABLEM1, self.tables_m, self._add_tablem_object, data, n, 'TABLEM1')
         return n
 
-    def _read_tablem2(self, data, n):
+    def _read_tablem2(self, data: bytes, n: int) -> int:
         """
         TABLEM2(205,2,94) - the marker for Record 10
         """
         n = self._read_table2(TABLEM2, self.tables_m, self._add_tablem_object, data, n, 'TABLEM2')
         return n
 
-    def _read_tablem3(self, data, n):
+    def _read_tablem3(self, data: bytes, n: int) -> int:
         """
         TABLEM3(305,3,95) - the marker for Record 11
         """
         n = self._read_table3(TABLEM3, self.tables_m, self._add_tablem_object, data, n, 'TABLEM3')
         return n
 
-    def _read_tablem4(self, data, n):
+    def _read_tablem4(self, data: bytes, n: int) -> int:
         """
         TABLEM4(405,4,96) - the marker for Record 12
         """
@@ -385,7 +383,7 @@ class DIT(GeomCommon):
         return n
 
 #TABLEST
-    def _read_tabrnd1(self, data, n):
+    def _read_tabrnd1(self, data: bytes, n: int) -> int:
         """
         TABRND1(55,25,191)
 
@@ -435,7 +433,7 @@ class DIT(GeomCommon):
             istart = iend + 2
             nentries += 1
         self.increase_card_count('TABRND1', nentries)
-        return n
+        return len(data)
 
 def get_iend_from_ints(ints):
     """

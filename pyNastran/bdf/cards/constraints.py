@@ -1138,6 +1138,7 @@ class SPC1(Constraint):
     def validate(self):
         assert isinstance(self.nodes, list), 'nodes=%s\n%s' % (self.nodes, str(self))
         assert isinstance(self.components, str), 'components=%s\n%s' % (self.components, str(self))
+        assert len(self.nodes) > 0, self.get_stats()
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -1177,6 +1178,7 @@ class SPC1(Constraint):
         if nodes[-1] == -1:
             nodes = nodes[:-1]
         assert conid > 0, data
+        assert len(nodes) > 0, data
         for nid in nodes:
             assert nid > 0, data
         return SPC1(conid, components, nodes, comment=comment)

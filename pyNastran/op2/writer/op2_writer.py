@@ -2,7 +2,7 @@
 from __future__ import annotations
 from collections import defaultdict
 from struct import pack, Struct
-from typing import TYPE_CHECKING
+from typing import Set, List, TYPE_CHECKING
 from cpylog import get_logger2
 
 #import pyNastran
@@ -17,6 +17,7 @@ from .ept_writer import write_ept
 from .mpt_writer import write_mpt
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.op2.op2 import OP2
+
 
 class TrashWriter:
     def __init__(self, *args, **kwargs):
@@ -34,7 +35,9 @@ class OP2Writer(OP2_F06_Common):
         self.card_count = {}
 
     def write_op2(self, op2_outname: str,
-                  post: int=-1, endian: bytes=b'<', skips=None, nastran_format='nx') -> int:
+                  post: int=-1, endian: bytes=b'<',
+                  skips: List[str]=None,
+                  nastran_format: str='nx') -> int:
         """
         Writes an OP2 file based on the data we have stored in the object
 
@@ -73,7 +76,8 @@ class OP2Writer(OP2_F06_Common):
         try:
             total_case_count = _write_op2(
                 fop2, fop2_ascii, self,
-                post=post, endian=endian, skips=skips,
+                skips,
+                post=post, endian=endian,
                 nastran_format=nastran_format)
         except:  # NotImplementedError
             if close:
@@ -83,8 +87,9 @@ class OP2Writer(OP2_F06_Common):
         return total_case_count
 
 def _write_op2(fop2, fop2_ascii, obj: OP2,
-               post: int=-1, endian: bytes=b'<', skips=None,
-               nastran_format='nx') -> int:
+               skips: Set[str],
+               post: int=-1, endian: bytes=b'<',
+               nastran_format: str='nx') -> int:
     """actually writes the op2"""
     date = obj.date
     #op2_ascii.write('writing [3, 7, 0] header\n')
@@ -120,14 +125,14 @@ def _write_op2(fop2, fop2_ascii, obj: OP2,
     case_count = _write_result_tables(obj, fop2, fop2_ascii, struct_3i, endian, skips)
     return case_count
 
-def _write_result_tables(obj: OP2, fop2, fop2_ascii, struct_3i, endian, skips):
+def _write_result_tables(obj: OP2, fop2, fop2_ascii, struct_3i, endian, skips: Set[str]):
     """writes the op2 result tables"""
     date = obj.date
     res_categories2 = defaultdict(list)
     table_order = [
         'OUGV1', 'OPHIG',
         'BOUGV1', 'BOPHIG', 'BOPHIGF',
-        'OUPV1', 'OUXY1', 'OUXY2', 'OPHSA',
+        'OUPV1', 'OUXY1', 'OUXY2', 'OPHSA', 'OUGF1',
         'TOUGV1', 'OTEMP1',
         'OUG1',
         'OUGV1PAT',
@@ -138,6 +143,7 @@ def _write_result_tables(obj: OP2, fop2, fop2_ascii, struct_3i, endian, skips):
         'OQGV1',
         'OQP1',
         'OQMG1',
+        'OQGCF1', 'OQGGF1',
         'OPGV1', 'OPG1', 'OPNL1',
 
         # ---------------
@@ -178,9 +184,9 @@ def _write_result_tables(obj: OP2, fop2, fop2_ascii, struct_3i, endian, skips):
         'OESNL1',
 
         'OCRPG', 'OCRUG',
-        'OESATO1', 'OESCRM1', 'OESNO1', 'OESPSD1', 'OESRMS1',
+        'OESATO1', 'OESCRM1', 'OESNO1', 'OESPSD1', 'OESRMS1', 'OESXNO1', 'OESXRMS1',
         'OESATO2', 'OESCRM2', 'OESNO2', 'OESPSD2', 'OESRMS2',
-        'OESXRMS1',
+
 
         # ---------------
         #strain

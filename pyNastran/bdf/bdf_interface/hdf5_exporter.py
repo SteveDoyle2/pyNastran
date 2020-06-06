@@ -70,7 +70,7 @@ dict_int_obj_attrs = [
     'convection_properties',
     'dareas',
     'dmig', 'dmiji', 'dmij', 'dmik', 'dmi', 'dmiax',
-    'dti', 
+    'dti',
     'dphases', 'delays',
     'epoints', 'gridb',
     'nlparms', 'nlpcis',

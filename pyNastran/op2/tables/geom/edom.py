@@ -76,7 +76,7 @@ class EDOM(GeomCommon):
             (7000, 70, 563) : ['DCONSTR/DDVAL?', self._read_fake],
         }
 
-    def _read_desvar(self, data, n):
+    def _read_desvar(self, data: bytes, n: int) -> int:
         """
         Word Name  Type  Description
         1 ID       I     Unique design variable identification number

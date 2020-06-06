@@ -14,3 +14,6 @@ class MultipleSolutionNotImplementedError(NotImplementedError):
 
 class MixedVersionCard(RuntimeError):
     pass
+
+class SixtyFourBitError(NotImplementedError):
+    pass

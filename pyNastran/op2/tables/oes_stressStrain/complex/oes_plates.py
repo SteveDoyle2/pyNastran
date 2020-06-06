@@ -315,15 +315,6 @@ class ComplexPlateArray(OES_Object):
         """creates a pandas dataframe"""
         headers = self.get_headers()
         column_names, column_values = self._build_dataframe_transient_header()
-        #is_v25 = pd.__version__ >= '0.25'
-        #if is_v25:
-            #print(f'skipping pandas {self.class_name}')
-            #return
-        #else:
-            #data_frame = pd.Panel(self.data, items=column_values,
-                                  #major_axis=self.element_node, minor_axis=headers).to_frame()
-            #data_frame.columns.names = column_names
-            #data_frame.index.names = ['ElementID', 'Item']
 
         data_frame = self._build_pandas_transient_element_node(
             column_values, column_names,

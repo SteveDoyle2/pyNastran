@@ -684,6 +684,8 @@ NX_RESULT_TABLES = [
     b'OPRPSD2',  # SORT2 - PSD
     b'OPRATO2',  # SORT2 - AUTO
     b'OPRCRM2',  # SORT2 - CRMS
+    b'OESCRM2C',
+    b'OSTCRM2C',
 
     # modal contribution
     b'OUGMC1',  # Modal contributions for displacements, velocities, accelerations.
@@ -823,7 +825,7 @@ NX_TABLE_CONTENT = {
     64 : 'OSPDSI - Contact Separation Distance - Initial',
     65 : 'OSPDS - Contact Separation Distance',
     66 : 'OBG - Glue force results (normal and in-plane tractions)',
-    #67 : 'OQG - Glue force results',
+    67 : 'OQG - Glue force results ???',
     68 : 'ELRSCALV - Tosca normalized material properties',
     69 : 'OERP - Element equivalent radiated power (panel output)',
     70 : 'OERPEL - Element equivalent radiated power (element output)',
@@ -854,8 +856,12 @@ NX_TABLE_CONTENT = {
     #
     # nx 2019.2
     #
+    504 : b'OEFCRM1 - Cumulative Root Mean Square output',
+    604 : 'OEFPSD2 - ???',
+    605 : 'OSTPSD2C - ???',
     804 : 'OEFRMS1 - ???',
     805 : 'OESXRMS1 - element RMS stresses for random analysis that includes von Mises stress output.',
+    904 : 'OEFNO1 - Cumulative Root Mean Square output',
     905 : 'OESXNO1C - Cumulative Root Mean Square output',
 }  # type: Dict[int, str]
 

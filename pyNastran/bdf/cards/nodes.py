@@ -409,6 +409,7 @@ class XPoints(BaseCard):
         points = data
         assert isinstance(points, list), points
         assert isinstance(points[0], integer_types), points
+        assert min(points) > 0, points
         return cls(points, comment=comment)
 
     def __len__(self):
@@ -1383,8 +1384,7 @@ class GRID(BaseCard):
         xyz = coord_b.transform_node_to_local(p)
         return xyz
 
-    def get_position_wrt(self, model, cid):
-        # type: (Any, int) -> np.ndarray
+    def get_position_wrt(self, model: BDF, cid: int) -> np.ndarray:
         """
         Gets the location of the GRID which started in some arbitrary
         system and returns it in the desired coordinate system
@@ -1414,7 +1414,7 @@ class GRID(BaseCard):
         xyz = coord_b.transform_node_to_local(p)
         return xyz
 
-    def cross_reference(self, model, grdset=None):
+    def cross_reference(self, model: BDF, grdset=None):
         # type: (Any, Optional[Any]) -> None
         """
         Cross links the card so referenced cards can be extracted directly
@@ -1591,8 +1591,7 @@ class POINT(BaseCard):
     type = 'POINT'
     _field_map = {1: 'nid', 2:'cp'}
 
-    def _get_field_helper(self, n):
-        # type: (int) -> float
+    def _get_field_helper(self, n: int) -> float:
         """
         Gets complicated parameters on the POINT card
 
@@ -1791,8 +1790,7 @@ class POINT(BaseCard):
         xyz = coord_b.transform_node_to_local(p)
         return xyz
 
-    def Cp(self):
-        # type: () -> int
+    def Cp(self) -> int:
         """
         Gets the analysis coordinate system
 

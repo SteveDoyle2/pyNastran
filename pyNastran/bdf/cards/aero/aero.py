@@ -5705,8 +5705,9 @@ class SPLINE4(Spline):
         return SPLINE4(eid, caero, aelist, setg, dz, method, usage, nelements, melements,
                        comment='')
 
-    def __init__(self, eid, caero, aelist, setg, dz, method, usage,
-                 nelements, melements, comment=''):
+    def __init__(self, eid: int, caero: int, aelist: int, setg: int,
+                 dz: float, method: str, usage: str,
+                 nelements: int, melements: int, comment: str=''):
         """
         Creates a SPLINE4 card, which defines a curved Infinite Plate,
         Thin Plate, or Finite Plate Spline.
@@ -5736,11 +5737,8 @@ class SPLINE4(Spline):
             to the force transformation, displacement transformation, or
             both
             valid_usage = {FORCE, DISP, BOTH}
-        nelements : int; default=10
-            The number of FE elements along the local spline x-axis if
-            using the FPS option
-        melements : int; default=10
-            The number of FE elements along the local spline y-axis if
+        nelements / melements : int; default=10
+            The number of FE elements along the local spline x/y-axis if
             using the FPS option
         comment : str; default=''
             a comment for the card

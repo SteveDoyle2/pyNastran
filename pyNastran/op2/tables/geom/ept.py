@@ -111,6 +111,19 @@ class EPT(GeomCommon):
             self.properties[pid].type == prop.type)
         self._add_property_object(prop, allow_overwrites=allow_overwrites)
 
+    def _add_op2_property_mass(self, prop):
+        """helper method for op2"""
+        #if prop.pid > 100000000:
+            #raise RuntimeError('bad parsing; pid > 100000000...%s' % str(prop))
+        #print(str(prop)[:-1])
+        ntables = self.table_names.count(b'EPT') + self.table_names.count(b'EPTS')
+        pid = prop.pid
+        allow_overwrites = (
+            ntables > 1 and
+            pid in self.properties_mass and
+            self.properties_mass[pid].type == prop.type)
+        self._add_property_mass_object(prop, allow_overwrites=allow_overwrites)
+
     def _add_pconv(self, prop):
         if prop.pconid > 100000000:
             raise RuntimeError('bad parsing pconid > 100000000...%s' % str(prop))
@@ -376,8 +389,12 @@ class EPT(GeomCommon):
                     pid, mid, group, beam_type, value))
                 raise RuntimeError('bad parsing...')
 
-            beam_type = beam_type.strip().decode('latin1')
-            group = group.strip().decode('latin1')
+            if self.size == 4:
+                beam_type = beam_type.strip().decode('latin1')
+                group = group.strip().decode('latin1')
+            else:
+                beam_type = reshape_bytes_block(beam_type).strip().decode('latin1')
+                group = reshape_bytes_block(group).strip().decode('latin1')
             data_in = [pid, mid, group, beam_type, value]
 
             expected_length = valid_types[beam_type]
@@ -411,7 +428,7 @@ class EPT(GeomCommon):
 
             # the PBARL ends with a -1 flag
             #value, = unpack(self._endian + b'i', data[n:n+4])
-            n += 4
+            n += 4 * self.factor
         if len(self._type_to_id_map['PBAR']) == 0 and 'PBAR' in self.card_count:
             del self._type_to_id_map['PBAR']
             del self.card_count['PBAR']
@@ -443,7 +460,7 @@ class EPT(GeomCommon):
         self.show_data(data[12*self.factor:], types='qd')
         #print(len(data[12*self.factor:]))
         while n < ndata:
-            print(f"n={n} ndata={ndata}")
+            self.log.debug(f"n={n} ndata={ndata}")
             edata = data[n:n+ntotal1]
             #if len(edata) == ntotal1:
             data1 = struct1.unpack(edata)
@@ -866,7 +883,7 @@ class EPT(GeomCommon):
             out = struct1.unpack(edata)
             (pid, k1, k2, k3, k4, k5, k6, b1, b2, b3, b4, b5, b6,
              g1, sa, st, ea, et) = out
-            self.log.debug(out)
+            #self.log.debug(out)
             g2 = g3 = g4 = g5 = g6 = g1
             data_in = (pid, k1, k2, k3, k4, k5, k6, b1, b2, b3, b4, b5, b6,
                        g1, g2, g3, g4, g5, g6, sa, st, ea, et)
@@ -1171,10 +1188,7 @@ class EPT(GeomCommon):
             #ntotal1 = 60
         s2 = Struct(mapfmt(self._endian + b'i2fi', self.size))
 
-        #self.show_data(data[n:], types='idq')
-        #self.show_data(data, types='idq')
         ndata = len(data)
-        #ntotal1 = 32 * self.factor
         ntotal2 = 16 * self.factor
         while n < (ndata - ntotal1):
             out = s1.unpack(data[n:n+ntotal1])
@@ -1212,8 +1226,7 @@ class EPT(GeomCommon):
                 thetas.append(theta)
                 souts.append(sout)
                 if self.is_debug_file:
-                    self.binary_debug.write('      mid=%s t=%s theta=%s sout=%s\n' % (
-                        mid, t, theta, sout))
+                    self.binary_debug.write(f'      mid={mid} t={t} theta={theta} sout={sout}\n')
                 n += ntotal2
 
             data_in = [
@@ -1538,6 +1551,7 @@ class EPT(GeomCommon):
         PFAST(3601,36,55)
         NX only
         """
+        self.to_nx()
         ntotal = 48
         struct1 = Struct(self._endian + b'ifii 8f')
         nproperties = (len(data) - n) // ntotal
@@ -1713,7 +1727,7 @@ class EPT(GeomCommon):
             if self.is_debug_file:
                 self.binary_debug.write('  PMASS=%s\n' % str(out))
             prop = PMASS.add_op2_data(out)
-            self._add_op2_property(prop)
+            self._add_op2_property_mass(prop)
             n += ntotal
         return n
 
@@ -1770,14 +1784,17 @@ class EPT(GeomCommon):
             if self.is_debug_file:
                 self.binary_debug.write('  PSHELL=%s\n' % str(out))
             prop = PSHELL.add_op2_data(out)
+            n += ntotal
 
             if pid in self.properties:
                 # this is a fake PSHELL
                 propi = self.properties[pid]
                 if prop == propi:
+                    self.log.warning('Fake PSHELL (skipping):\n%s' % propi)
                     nproperties -= 1
                     continue
-                assert propi.type in ['PCOMP'], propi.get_stats()
+                assert propi.type in ['PCOMP', 'PCOMPG'], propi.get_stats()
+                self.log.warning(f'PSHELL is also PCOMP (skipping PSHELL):\n{propi}{prop}')
                 nproperties -= 1
                 continue
 
@@ -1785,7 +1802,6 @@ class EPT(GeomCommon):
                 self.big_properties[pid] = prop
             else:
                 self._add_op2_property(prop)
-            n += ntotal
         if nproperties:
             self.card_count['PSHELL'] = nproperties
         return n

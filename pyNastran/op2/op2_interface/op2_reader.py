@@ -87,7 +87,7 @@ DENSE_MATRICES = [
 
 class OP2Reader:
     """Stores methods that aren't useful to an end user"""
-    def __init__(self, op2):
+    def __init__(self, op2: OP2):
         #: should an h5_file be created
         self.load_as_h5 = False
         #: the h5 file object used to reduce memory usage
@@ -1015,42 +1015,7 @@ class OP2Reader:
             #print('myints =', ints)
             #print('floats =', floats)
 
-    #def _read_dit(self):
-        #"""
-        #Reads the DIT table (poorly).
-        #The DIT table stores information about table cards
-        #(e.g. TABLED1, TABLEM1).
 
-        #"""
-        #asd
-        #op2 = self.op2
-        #unused_table_name = self._read_table_name(rewind=False)
-        #self.read_markers([-1])
-        #data = self._read_record()
-
-        #self.read_3_markers([-2, 1, 0])
-        #data = self._read_record()
-        #unused_table_name, = op2.struct_8s.unpack(data)
-
-        #self.read_3_markers([-3, 1, 0])
-        #data = self._read_record()
-
-        #self.read_3_markers([-4, 1, 0])
-        #data = self._read_record()
-
-        #self.read_3_markers([-5, 1, 0])
-
-        #itable = -6
-        #while 1:
-            #markers = self.get_nmarkers(1, rewind=True)
-            #if markers == [0]:
-                #break
-            #data = self._read_record()
-            #self.read_3_markers([itable, 1, 0])
-            #itable -= 1
-
-        ##self.show(100)
-        #self.read_markers([0])
 
     def read_qualinfo(self):
         r"""
@@ -2099,14 +2064,16 @@ class OP2Reader:
                                 write_deck, mode='a',
                                 read_mode=2)
 
+
     def _read_deck_section(self, deck_filename: str, save_lines: bool,
-                           write_deck: bool, mode='w', read_mode: int=1) -> None:
+                           write_deck: bool, mode='w', read_mode: int=1) -> List[str]:
         """helper for ``read_ibulk`` and ``read_icase``"""
         marker = -2
         if save_lines and write_deck:
             raise RuntimeError(f'save_lines={save_lines} write_deck={write_deck}; '
                                'one or more must be False')
 
+        lines = []
         if write_deck and self.read_mode == read_mode:
             with open(deck_filename, mode) as bdf_file:  # pragma: no cover
                 while 1:
@@ -2127,7 +2094,6 @@ class OP2Reader:
                     marker -= 1
 
         elif save_lines and self.read_mode == read_mode:
-            lines = []
             while 1:
                 self.read_3_markers([marker, 1, 0])
                 nfields = self.get_marker1(rewind=True)
@@ -2161,6 +2127,7 @@ class OP2Reader:
                 marker -= 1
         #print("marker = ", marker)
         unused_marker_end = self.get_marker1(rewind=False)
+        return lines
 
     def read_icase(self):
         """

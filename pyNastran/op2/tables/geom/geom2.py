@@ -4,7 +4,7 @@ defines readers for BDF objects in the OP2 GEOM2/GEOM2S table
 # pylint: disable=C0103
 from struct import Struct
 from functools import partial
-from typing import Tuple, Union, Any
+from typing import Tuple, List, Union, Any
 import numpy as np
 
 from pyNastran.bdf.cards.elements.elements import CGAP, PLOTEL
@@ -133,14 +133,14 @@ class GEOM2(GeomCommon):
             #(16500, 165, 9987): ['CPENT15F', self._read_fake],
             #(16000, 160, 9988): ['CPENT6FD', self._read_fake],
             #(11901, 119, 908): ['CPENTCZ', self._read_fake],
-            (1701, 17, 980): ['CPLSTN3', self._read_fake],
-            (5701, 57, 981): ['CPLSTN4', self._read_fake],
-            (5801, 58, 982): ['CPLSTN6', self._read_fake],
-            (7201, 72, 983): ['CPLSTN8', self._read_fake],
-            (8801, 88, 984): ['CPLSTS3', self._read_fake],
-            (8401, 84, 985): ['CPLSTS4', self._read_fake],
-            (1801, 18, 986): ['CPLSTS6', self._read_fake],
-            (3601, 36, 987): ['CPLSTS8', self._read_fake],
+            (1701, 17, 980): ['CPLSTN3', self._read_fake_nx],
+            (5701, 57, 981): ['CPLSTN4', self._read_fake_nx],
+            (5801, 58, 982): ['CPLSTN6', self._read_fake_nx],
+            (7201, 72, 983): ['CPLSTN8', self._read_fake_nx],
+            (8801, 88, 984): ['CPLSTS3', self._read_fake_nx],
+            (8401, 84, 985): ['CPLSTS4', self._read_fake_nx],
+            (1801, 18, 986): ['CPLSTS6', self._read_fake_nx],
+            (3601, 36, 987): ['CPLSTS8', self._read_fake_nx],
             (17200, 172, 1000) : ['CPYRAM', self._read_cpyram], # nx-specific
             #(14400, 144, 9908): ['CPYRAMF', self._read_fake], # nx-specific
             (25700, 257, 9948) : ['CPYRA5FD', self._read_cpyram], # nx-specific
@@ -1726,7 +1726,8 @@ class GEOM2(GeomCommon):
 
         Specific to NX Nastran
         """
-        ntotal = 64 * self.factor  # 15*4
+        self.to_nx()
+        ntotal = 64 * self.factor  # 16*4
         struct_16i = Struct(mapfmt(self._endian + b'16i', self.size))
         nelements = (len(data) - n) // ntotal
         for unused_i in range(nelements):
@@ -2062,7 +2063,9 @@ class GEOM2(GeomCommon):
         17 TFLAG  I Relative thickness flag
         """
         ntotal = 68 * self.factor # 17*4
+        ndatai = (len(data) - n)
         nelements = (len(data) - n) // ntotal
+        assert ndatai % ntotal == 0
         s = Struct(mapfmt(self._endian + b'10i 6f i', self.size))
         elements = []
         for unused_i in range(nelements):
@@ -2102,7 +2105,9 @@ class GEOM2(GeomCommon):
                     reference plane
         """
         ntotal = 64 * self.factor  # 16*4
-        nelements = (len(data) - n) // ntotal
+        ndatai = (len(data) - n)
+        nelements = ndatai // ntotal
+        assert ndatai % ntotal == 0
         s = Struct(mapfmt(self._endian + b'10i 6f', self.size))
         elements = []
         for unused_i in range(nelements):
@@ -2600,27 +2605,61 @@ class GEOM2(GeomCommon):
         #return n
 
     def _read_ctriax(self, data: bytes, n: int) -> int:
+        """common method for reading CTRIAXs"""
+        n = self._read_dual_card(data, n, self._read_ctriax_8, self._read_ctriax_9,
+                                 'CTRIAX', self.add_op2_element)
+        return n
+
+    def _read_ctriax_8(self, data: bytes, n: int) -> Tuple[int, List[CTRIAX]]:
+        """(10108, 101, 512)"""
+        ntotal = 32  # 9*4
+        struc = Struct(self._endian + b'8i')
+
+        nentries = (len(data) - n) // ntotal
+        assert (len(data) - n) % ntotal == 0
+        assert nentries > 0
+
+        elems = []
+        for unused_i in range(nentries):
+            edata = data[n:n + ntotal]
+            out = struc.unpack(edata)
+            if self.is_debug_file:
+                self.binary_debug.write('  CTRIAX=%s\n' % str(out))
+            eid, pid, n1, n2, n3, n4, n5, n6 = out
+            nids = [n1, n2, n3, n4, n5, n6]
+            elem = CTRIAX(eid, pid, nids, theta_mcid=0., comment='no theta set')
+            elems.append(elem)
+            n += ntotal
+        return n, elems
+
+    def _read_ctriax_9(self, data: bytes, n: int) -> Tuple[int, List[CTRIAX]]:
         """(10108, 101, 512)"""
         ntotal = 36  # 9*4
-        nentries = (len(data) - n) // ntotal
         struc = Struct(self._endian + b'9i')
+
+        nentries = (len(data) - n) // ntotal
+        assert (len(data) - n) % ntotal == 0
+        assert nentries > 0
+
+        elems = []
         for unused_i in range(nentries):
-            edata = data[n:n + 36]
+            edata = data[n:n + ntotal]
             out = struc.unpack(edata)
             if self.is_debug_file:
                 self.binary_debug.write('  CTRIAX=%s\n' % str(out))
             eid, pid, n1, n2, n3, n4, n5, n6, unused_undef1 = out
             nids = [n1, n2, n3, n4, n5, n6]
             elem = CTRIAX(eid, pid, nids, theta_mcid=0., comment='no theta set')
-            self.add_op2_element(elem)
-            n += 36
-        self.card_count['CTRIAX'] = nentries
-        return n
+            elems.append(elem)
+            n += ntotal
+        return n, elems
 
     def _read_ctriax6(self, data: bytes, n: int) -> int:  # 101
         """(6108, 61, 107)"""
         ntotal = 44 * self.factor  # 11*4
         nentries = (len(data) - n) // ntotal
+        assert (len(data) - n) % ntotal == 0
+        assert nentries > 0
         struc = Struct(mapfmt(self._endian + b'8i f ii', self.size))
         for unused_i in range(nentries):
             edata = data[n:n + ntotal]
@@ -2682,6 +2721,8 @@ class GEOM2(GeomCommon):
         ntotal = 16 * self.factor  # 4*4
         struct_4i = Struct(mapfmt(self._endian + b'4i', self.size))
         nelements = (len(data) - n) // ntotal
+        assert (len(data) - n) % ntotal == 0
+        assert nelements > 0
         for unused_i in range(nelements):
             edata = data[n:n + ntotal]
             out = struct_4i.unpack(edata)
@@ -2699,6 +2740,8 @@ class GEOM2(GeomCommon):
         ntotal = 16 * self.factor  # 4*4
         struct_4i = Struct(mapfmt(self._endian + b'4i', self.size))
         nelements = (len(data) - n) // ntotal
+        assert (len(data) - n) % ntotal == 0
+        assert nelements > 0
         for unused_i in range(nelements):
             edata = data[n:n + ntotal]
             out = struct_4i.unpack(edata)
@@ -2875,6 +2918,8 @@ class GEOM2(GeomCommon):
         struct_3i = Struct(self._endian + b'3i')
         ntotal = 12
         nelements = (len(data) - n) // ntotal
+        assert (len(data) - n) % ntotal == 0
+        assert nelements > 0
         for unused_i in range(nelements):
             edata = data[n:n + ntotal]  # 4*4
             out = struct_3i.unpack(edata)
@@ -2904,6 +2949,8 @@ class GEOM2(GeomCommon):
         structi = Struct(self._endian + b'ifii')
         ntotal = 16
         nelements = (len(data) - n) // ntotal
+        assert (len(data) - n) % ntotal == 0
+        assert nelements > 0
         for unused_i in range(nelements):
             edata = data[n:n + ntotal]  # 4*4
             out = structi.unpack(edata)
@@ -2951,14 +2998,15 @@ class GEOM2(GeomCommon):
         """
         (5551,49,105)    - the marker for Record 118
         """
-        npoints = (len(data) - n) // 4
-        nids = np.frombuffer(data[n:], self.idtype).tolist()
+        ntotal = 4 * self.factor
+        npoints = (len(data) - n) // ntotal
+        nids = np.frombuffer(data[n:], self.idtype8).tolist()
         if self.is_debug_file:
             self.binary_debug.write('SPOINT=%s\n' % nids)
         spoint = SPOINTs.add_op2_data(nids)
         self._add_spoint_object(spoint)
         self.card_count['SPOINT'] = npoints
-        return n
+        return len(data)
 
     def _read_vubeam(self, data: bytes, n: int) -> int:  # 119
         deltae = 100000000

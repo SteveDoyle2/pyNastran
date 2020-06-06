@@ -2044,15 +2044,29 @@ class TSTEPNL(BaseCard):
     heat transfer analysis. TSTEPNL is intended for SOLs 129, 159, and 600.
     Parameters for Nonlinear Transient Analysis.
 
-    +---------+--------+--------+-------+--------+--------+-------+---------+------+
-    |    1    |   2    |   3    |   4   |   5    |   6    |   7   |    8    |  9   |
-    +=========+========+========+=======+========+========+=======+=========+======+
-    | TSTEPNL |   ID   |  NDT   |  DT   |   NO   | METHOD | KSTEP | MAXITER | CONV |
-    +---------+--------+--------+-------+--------+--------+-------+---------+------+
-    |         |  ESPU  |  EPSP  |  EPSW | MAXDIV | MAXQN  | MAXLS | FSTRESS |      |
-    +---------+--------+--------+-------+--------+--------+-------+---------+------+
-    |         | MAXBIS | ADJUST | MSTEP |   RB   |  MAXR  | UTOL  | RTOLB   |      |
-    +---------+--------+--------+-------+--------+--------+-------+---------+------+
+    MSC 2005.2
+    +---------+---------+--------+-------+--------+--------+-------+---------+------+
+    |    1    |    2    |   3    |   4   |   5    |   6    |   7   |    8    |  9   |
+    +=========+=========+========+=======+========+========+=======+=========+======+
+    | TSTEPNL |    ID   |  NDT   |  DT   |   NO   | METHOD | KSTEP | MAXITER | CONV |
+    +---------+---------+--------+-------+--------+--------+-------+---------+------+
+    |         |  ESPU   |  EPSP  |  EPSW | MAXDIV | MAXQN  | MAXLS | FSTRESS |      |
+    +---------+---------+--------+-------+--------+--------+-------+---------+------+
+    |         | MAXBIS  | ADJUST | MSTEP |   RB   |  MAXR  | UTOL  | RTOLB   |      |
+    +---------+---------+--------+-------+--------+--------+-------+---------+------+
+
+    NX 2019.2
+    +---------+---------+--------+-------+--------+--------+-------+---------+------+
+    |    1    |    2    |   3    |   4   |   5    |   6    |   7   |    8    |  9   |
+    +=========+=========+========+=======+========+========+=======+=========+======+
+    | TSTEPNL |   ID    |  NDT   |  DT   |   NO   | METHOD | KSTEP | MAXITER | CONV |
+    +---------+---------+--------+-------+--------+--------+-------+---------+------+
+    |         |  ESPU   |  EPSP  |  EPSW | MAXDIV | MAXQN  | MAXLS | FSTRESS |      |
+    +---------+---------+--------+-------+--------+--------+-------+---------+------+
+    |         | MAXBIS  | ADJUST | MSTEP |   RB   |  MAXR  | UTOL  | RTOLB   |      |
+    +---------+---------+--------+-------+--------+--------+-------+---------+------+
+    |         | KUPDATE |        |       |        |        |       |         |      |
+    +---------+---------+--------+-------+--------+--------+-------+---------+------+
 
     method = None for NX, but apparently TSTEP as well, which is not in the QRG
 
@@ -2251,9 +2265,16 @@ class TSTEPNL(BaseCard):
             a comment for the card
 
         """
-        (sid, ndt, dt, no, method, kstep, max_iter, conv, eps_u, eps_p, eps_w,
-         max_div, max_qn, max_ls, fstress, max_bisect,
-         adjust, mstep, rb, max_r, utol, rtol_b) = data
+        if len(data) == 22:
+            (sid, ndt, dt, no, method, kstep, max_iter, conv, eps_u, eps_p, eps_w,
+             max_div, max_qn, max_ls, fstress, max_bisect,
+             adjust, mstep, rb, max_r, utol, rtol_b) = data
+        else:
+            assert len(data) == 27, len(data)
+            (sid, ndt, dt, no, method, kstep, max_iter, conv, eps_u, eps_p, eps_w,
+             max_div, max_qn, max_ls, fstress, max_bisect,
+             adjust, mstep, rb, max_r, utol, rtol_b,
+             kdamp, kupdate, kustep, tintopt, gamma) = data
 
         if method == 1:
             method = 'AUTO'

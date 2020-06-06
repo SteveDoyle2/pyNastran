@@ -558,8 +558,6 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             'BLSEG', ## blseg
             'BFRIC', ## bfric
 
-
-
             'TEMPBC',
             #'RADMT',
             'RADLST', 'RADMTX', #'RADBND',
@@ -3236,7 +3234,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
 
         Examples
         --------
-        >>> out = model.get_xyz_in_coord_array(cid=0)
+        >>> out = model.get_xyz_in_coord_array(cid=0, fdtype='float64', idtype='int32')
         >>> nid_cp_cd, xyz_cid, xyz_cp, icd_transform, icp_transform = out
         """
         icd_transform, icp_transform, xyz_cp, nid_cp_cd = self.get_displacement_index_xyz_cp_cd(
@@ -3779,10 +3777,15 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             elif '*' in field:
                 # this is an increment, not multiplication...
                 old_field = _field(old_card, ifield)
-                if '.' in field:
-                    field2 = float_replication(field, old_field)
-                else:
-                    field2 = int_replication(field, old_field)
+                assert old_field is not None, f'old_card:{old_card}\nnew_card:\n{new_card}'
+                try:
+                    if '.' in field:
+                        field2 = float_replication(field, old_field)
+                    else:
+                        field2 = int_replication(field, old_field)
+                except:
+                    self.log.error(f'old_card:{old_card}\nnew_card:\n{new_card}')
+                    raise
             else:
                 assert '(' not in field, 'field=%r' % field
                 assert '*' not in field, 'field=%r' % field

@@ -32,7 +32,7 @@ def get_files_of_type(dirname: str, extension: str='.txt',
     if not os.path.exists(dirname):
         return []
 
-    filenames2 = []
+    filenames2 = []  # type: List[str]
     filenames = os.listdir(dirname)
     allow_digging = True
     if limit_file in filenames:

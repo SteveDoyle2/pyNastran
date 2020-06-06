@@ -1,4 +1,9 @@
-"""SOL 145 plotter"""
+# encoding: utf-8
+"""
+SOL 145 plotter
+
+kfreq = ?c/(2V)
+"""
 from typing import  Optional, Dict, Union
 #import PySide
 try:

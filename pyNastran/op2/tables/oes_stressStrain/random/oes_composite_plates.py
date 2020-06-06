@@ -11,7 +11,6 @@ from pyNastran.f06.f06_formatting import write_floats_12e, _eigenvalue_header
 
 class RandomCompositePlateArray(OES_Object):
     def __init__(self, data_code, is_sort1, isubcase, dt):
-        aaa
         OES_Object.__init__(self, data_code, isubcase, apply_data_code=False)
         #self.code = [self.format_code, self.sort_code, self.s_code]
 
@@ -34,6 +33,15 @@ class RandomCompositePlateArray(OES_Object):
     @property
     def is_complex(self):
         return False
+
+    def nnodes_per_element(self):
+        return 1
+
+    def finalize(self):
+        """Calls any OP2 objects that need to do any post matrix calcs"""
+        if self.is_sort1:
+            return
+        self.set_as_sort1()
 
     def _reset_indices(self):
         self.itotal = 0

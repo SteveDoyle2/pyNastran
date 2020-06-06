@@ -32,6 +32,7 @@ import numpy as np
 
 from pyNastran.op2.result_objects.op2_objects import ScalarObject
 from pyNastran.f06.f06_formatting import write_floats_13e, write_imag_floats_13e, write_float_12e
+from pyNastran.op2.errors import SixtyFourBitError
 from pyNastran.op2.op2_interface.write_utils import set_table3_field
 
 float_types = (float, np.float32)
@@ -82,6 +83,9 @@ SORT2_TABLE_NAME_MAP = {
     'OPG2' : 'OPG1',
     'OPNL2' : 'OPNL1',
     'OUXY2' : 'OUXY1',
+    'OQGGF2' : 'OQGGF1',
+    'OQGCF2' : 'OQGCF1',
+    'OUGF2' : 'OUGF1',
 }
 SORT1_TABLES = list(SORT2_TABLE_NAME_MAP.values())
 SORT1_TABLES.extend([
@@ -687,7 +691,7 @@ class TableArray(ScalarObject):  # displacement style table
             #return
         if self.is_sort1:
             return
-        print('set_as_sort1: table_name=%r' % self.table_name)
+        #print('set_as_sort1: table_name=%r' % self.table_name)
         try:
             analysis_method = self.analysis_method
         except AttributeError:
@@ -1027,6 +1031,7 @@ class RealTableArray(TableArray):
             'OQGPSD1',
             'OCRPG', 'OCRUG', 'OUG1',
             'OUGV1PAT',
+            'OUGF1', 'OQGCF1', 'OQGGF1',
             'RADCONS', 'RADEATC', 'RADEFFM',
         ]
         assert self.table_name in allowed_tables, self.table_name
@@ -1050,7 +1055,7 @@ class RealTableArray(TableArray):
         gridtype = self.node_gridtype[:, 1]
         max_id = node.max()
         if max_id > 99999999:
-            raise NotImplementedError(f'64-bit OP2 writing is not supported; max id={max_id}')
+            raise SixtyFourBitError(f'64-bit OP2 writing is not supported; max id={max_id}')
 
         #format_table4_1 = Struct(self._endian + b'15i')
         #format_table4_2 = Struct(self._endian + b'3i')
@@ -1552,6 +1557,7 @@ class ComplexTableArray(TableArray):
             'OQG1', 'OQMG1',
             'OPG1',
             'OUXY1',
+            'OUGF1',
         ]
         assert self.table_name in allowed_tables, self.table_name
 
@@ -1573,7 +1579,7 @@ class ComplexTableArray(TableArray):
         node = self.node_gridtype[:, 0]
         max_id = node.max()
         if max_id > 99999999:
-            raise NotImplementedError(f'64-bit OP2 writing is not supported; max id={max_id}')
+            raise SixtyFourBitError(f'64-bit OP2 writing is not supported; max id={max_id}')
 
         gridtype = self.node_gridtype[:, 1]
         #format_table4_1 = Struct(self._endian + b'15i')

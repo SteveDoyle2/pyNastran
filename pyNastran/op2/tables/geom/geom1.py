@@ -101,7 +101,7 @@ class GEOM1(GeomCommon):
             #(707, 7, 124) :  ['EPOINT', self._read_epoint],  # record 12
         }
 
-    def _read_cord1c(self, data, n):
+    def _read_cord1c(self, data: bytes, n: int) -> int:
         """
         (1701,17,6) - the marker for Record 1
         """
@@ -123,7 +123,7 @@ class GEOM1(GeomCommon):
         self.increase_card_count('CORD1C', nentries)
         return n
 
-    def _read_cord1r(self, data, n):
+    def _read_cord1r(self, data: bytes, n: int) -> int:
         """
         (1801,18,5) - the marker for Record 2
         """
@@ -145,7 +145,7 @@ class GEOM1(GeomCommon):
         self.increase_card_count('CORD1R', nentries)
         return n
 
-    def _read_cord1s(self, data, n):
+    def _read_cord1s(self, data: bytes, n: int) -> int:
         """
         (1901,19,7) - the marker for Record 3
         """
@@ -167,7 +167,7 @@ class GEOM1(GeomCommon):
         self.increase_card_count('CORD1S', nentries)
         return n
 
-    def _read_cord2c(self, data, n):
+    def _read_cord2c(self, data: bytes, n: int) -> int:
         """
         (2001,20,9) - the marker for Record 4
         """
@@ -189,7 +189,7 @@ class GEOM1(GeomCommon):
         self.increase_card_count('CORD2C', nentries)
         return n
 
-    def _read_cord2r(self, data, n):
+    def _read_cord2r(self, data: bytes, n: int) -> int:
         """
         (2101,21,8) - the marker for Record 5
         """
@@ -213,7 +213,7 @@ class GEOM1(GeomCommon):
         self.increase_card_count('CORD2R', nentries)
         return n
 
-    def _read_cord2s(self, data, n):
+    def _read_cord2s(self, data: bytes, n: int) -> int:
         """
         (2201,22,10) - the marker for Record 6
         """
@@ -233,7 +233,7 @@ class GEOM1(GeomCommon):
         self.increase_card_count('CORD2S', nentries)
         return n
 
-    def _read_cord3g(self, data, n):
+    def _read_cord3g(self, data: bytes, n: int) -> int:
         """
         (14301,143,651) - the marker for Record 7
         .. todo:: isnt this a CORD3G, not a CORD3R ???
@@ -255,7 +255,7 @@ class GEOM1(GeomCommon):
     def _read_grid_maybe(self, data: bytes, n: int) -> int:  # pragma: no cover
         """(4501, 45, 1120001) - the marker for Record 17"""
         return len(data)
-        nfields = (len(data) - n) // 4
+        #nfields = (len(data) - n) // 4
         # nfields = 3 * 11 * 17 * 71
 
         # it's not 11, 17...
@@ -292,7 +292,7 @@ class GEOM1(GeomCommon):
         for unused_i in range(nentries):
             edata = data[n:n + ntotal]
             out = structi.unpack(edata)
-            print(out)
+            self.log.debug(out)
             n += ntotal
             continue
             (nid, cp, x1, x2, x3, cd, ps, seid) = out
@@ -320,14 +320,31 @@ class GEOM1(GeomCommon):
         self.increase_card_count('GRID', nentries - nfailed)
         return n
 
-    def _read_grid(self, data: bytes, n: int) -> int:  # 21.8 sec, 18.9
+    def _read_grid(self, data: bytes, n: int) -> int:
+        """(4501,45,1) - the marker for Record 17"""
+        ntotal_8 = 32
+        ntotal_11 = 44
+        nleftover_8 = (len(data) - n) % ntotal_8
+        nleftover_11 = (len(data) - n) % ntotal_11
+        if nleftover_8:
+            assert self.table_name == b'GEOM1N', self.table_name
+            assert nleftover_11 == 0
+            n2 = self._read_grid_11(data, n)
+        else:
+            assert nleftover_8 == 0
+            n2 = self._read_grid_8(data, n)
+        return n2
+
+    def _read_grid_8(self, data: bytes, n: int) -> int:  # 21.8 sec, 18.9
         """(4501,45,1) - the marker for Record 17"""
         structi = Struct(self._endian + b'ii3f3i')
         ntotal = 32
-        nentries = (len(data) - n) // ntotal
+        ndatai = len(data) - n
+        nentries = ndatai // ntotal
+        assert nentries > 0, nentries
         nfailed = 0
         for unused_i in range(nentries):
-            edata = data[n:n + 32]
+            edata = data[n:n + ntotal]
             out = structi.unpack(edata)
             (nid, cp, x1, x2, x3, cd, ps, seid) = out
             if self.is_debug_file:
@@ -351,10 +368,54 @@ class GEOM1(GeomCommon):
                 #self.rejects.append(str(node))
                 nfailed += 1
             n += ntotal
+        assert ndatai % ntotal == 0, f'ndatai={ndatai} ntotal={ntotal} leftover={ndatai % ntotal}'
         self.increase_card_count('GRID', nentries - nfailed)
         return n
 
-    def _read_seqgp(self, data, n):
+    def _read_grid_11(self, data: bytes, n: int) -> int:  # 21.8 sec, 18.9
+        """(4501,45,1) - the marker for Record 17"""
+        ntotal = 44
+        structi = Struct(self._endian + b'ii 3d 2ii')
+
+        ndatai = len(data) - n
+        nentries = ndatai // ntotal
+        assert ndatai % ntotal == 0
+        assert nentries > 0, nentries
+        nfailed = 0
+        for unused_i in range(nentries):
+            edata = data[n:n + ntotal]
+            out = structi.unpack(edata)
+            #cp, x1, x2, x3, cd, ps, seid
+            (nid, cp, x1, x2, x3, cd, ps, seid) = out
+            if self.is_debug_file:
+                self.binary_debug.write('  GRID=%s\n' % str(out))
+            #print(f'nid={nid}, cp={cp} x1={x1}, x2={x2}, x3={x3}, cd={cd} ps={ps}, seid={seid}')
+            assert cd == 0, cd
+            assert seid == 0, seid
+            if nid < 10000000:
+                # cd can be < 0
+                if ps == 0:
+                    ps = ''
+                node = GRID(nid, np.array([x1, x2, x3]), cp, cd, ps, seid)
+                self._type_to_id_map['GRID'].append(nid)
+                self.nodes[nid] = node
+                #if nid in self.nodes:
+                    #self.reject_lines.append(str(node))
+                #else:
+                #self.nodes[nid] = node
+                #self.add_node(node)
+            else:
+                #self.log.warning('*nid=%s cp=%s x1=%-5.2f x2=%-5.2f x3=%-5.2f cd=%-2s ps=%s '
+                                 #'seid=%s' % (nid, cp, x1, x2, x3, cd, ps, seid))
+                #node = GRID(nid, np.array([x1, x2, x3]), cp, cd, ps, seid)
+                #self.rejects.append(str(node))
+                nfailed += 1
+            n += ntotal
+        assert ndatai % ntotal == 0, f'ndatai={ndatai} ntotal={ntotal} leftover={ndatai % ntotal}'
+        self.increase_card_count('GRID', nentries - nfailed)
+        return n
+
+    def _read_seqgp(self, data: bytes, n: int) -> int:
         """(5301,53,4) - the marker for Record 27"""
         struct_2i = Struct(self._endian + b'2i')
         nentries = (len(data) - n) // 8
@@ -370,25 +431,26 @@ class GEOM1(GeomCommon):
         self.increase_card_count('SEQGP', nentries)
         return n
 
-    def _read_point(self, data, n):
+    def _read_point(self, data: bytes, n: int) -> int:
         """
         POINT(6001,60,377)
         """
         s = Struct(self._endian + b'2i3f')
-        nentries = (len(data) - n) // 20
+        ntotal = 20
+        nentries = (len(data) - n) // ntotal
         for unused_i in range(nentries):
-            edata = data[n:n + 20]  # 5*4
+            edata = data[n:n + ntotal]  # 5*4
             out = s.unpack(edata)
             # (nid, cid, x1, x2, x3) = out
             if self.is_debug_file:
                 self.binary_debug.write('  POINT=%s\n' % str(out))
             point = POINT.add_op2_data(out)
             self._add_point_object(point)
-            n += 20
+            n += ntotal
         self.increase_card_count('POINT', nentries)
         return n
 
-    #def _read_cmass2(self, data, n):
+    #def _read_cmass2(self, data: bytes, n: int) -> int:
         #struct_i4fi = Struct(self._endian + b'if4i')
         #nentries = (len(data) - n) // 24
         #for unused_i in range(nentries):
@@ -407,28 +469,29 @@ class GEOM1(GeomCommon):
         #return n
         #return len(data)
 
-    def _read_cvisc(self, data, n):
+    def _read_cvisc(self, data: bytes, n: int) -> int:
         """CVISC(3901,39,50) - the marker for Record 105"""
         struct_4i = Struct(self._endian + b'4i')
-        nentries = (len(data) - n) // 16
+        ntotal = 16  # 4*4
+        nentries = (len(data) - n) // ntotal
         for unused_i in range(nentries):
-            edata = data[n:n + 16]  # 4*4
+            edata = data[n:n + ntotal]
             out = struct_4i.unpack(edata)
             if self.is_debug_file:
                 self.binary_debug.write('  CVISC=%s\n' % str(out))
             # (eid, pid, n1, n2) = out
             element = CVISC.add_op2_data(out)
             self.add_op2_element(element)
-            n += 16
+            n += ntotal
         self.increase_card_count('CVISC', nentries)
         return n
 
 
-    def _read_extrn(self, data, n):
+    def _read_extrn(self, data: bytes, n: int) -> int:
         self.log.info('skipping EXTRN in GEOM1')
         return len(data)
 
-    def _read_feedge(self, data, n):
+    def _read_feedge(self, data: bytes, n: int) -> int:
         """
         (2901, 29, 9601)
 
@@ -477,7 +540,7 @@ class GEOM1(GeomCommon):
         self.card_count['FEEDGE'] = nelements
         return n
 
-    def _read_gmcurv(self, data, n):
+    def _read_gmcurv(self, data: bytes, n: int) -> int:
         """
         Word Name Type Description
         1 CURVID       I Curve identification number
@@ -545,7 +608,7 @@ class GEOM1(GeomCommon):
         #return len(data)
         return n
 
-    def _read_feface(self, data, n):
+    def _read_feface(self, data: bytes, n: int) -> int:
         """
         Word Name Type Description
         1 FACEID    I Face identification number
@@ -572,15 +635,15 @@ class GEOM1(GeomCommon):
         self.increase_card_count('FEFACE', nentries)
         return n
 
-    def _read_gmsurf(self, data, n):
+    def _read_gmsurf(self, data: bytes, n: int) -> int:
         self.log.info('skipping GMSURF in GEOM1')
         return len(data)
 
-    def _read_gmcord(self, data, n):
+    def _read_gmcord(self, data: bytes, n: int) -> int:
         self.log.info('skipping GMCORD in GEOM1')
         return len(data)
 
-    def _read_sebulk(self, data, n):
+    def _read_sebulk(self, data: bytes, n: int) -> int:
         """
         Record 18 -- SEBULK(1427,14,465)
 
@@ -597,34 +660,39 @@ class GEOM1(GeomCommon):
         ntotal = 32 * self.factor # 4*8
         nentries = (len(data) - n) // ntotal
         structi = Struct(mapfmt(self._endian + b'4if3i', self.size))
+
+        superelement_type_int_to_superelement_type = {
+            1 : 'PRIMARY',
+            5 : 'EXTOP2',
+            6 : 'MIRROR',
+            7 : 'FRFOP2',
+        }
+        loc_int_to_loc = {
+            1 : 'YES',
+            2 : 'NO',
+        }
+        method_int_to_method = {
+            1: 'AUTO',
+            2: 'MANUAL',
+        }
         for unused_i in range(nentries):
             edata = data[n:n + ntotal]  # 4*8
             out = structi.unpack(edata)
-            (seid, superelement_type, rseid, method, tol, loc, media, unit) = out
-            if superelement_type == 1:
-                superelement_type = 'PRIMARY'
-            elif superelement_type == 5:
-                superelement_type = 'EXTOP2'
-            elif superelement_type == 6:
-                superelement_type = 'MIRROR'
-            elif superelement_type == 7:
-                superelement_type = 'FRFOP2'
-            else:  # pragma: no cover
-                raise NotImplementedError(f'superelement_type={superelement_type} not in [PRIMARY, EXTOP2, MIRROR, FRFOP2]')
+            (seid, superelement_type_int, rseid, method_int, tol, loc_int, media, unit) = out
+            try:
+                superelement_type = superelement_type_int_to_superelement_type[superelement_type_int]
+            except KeyError:  # pragma: no cover
+                raise NotImplementedError(f'superelement_type={superelement_type_int} not in [PRIMARY, EXTOP2, MIRROR, FRFOP2]')
 
-            if loc == 1:
-                loc = 'YES'
-            elif loc == 2:
-                loc = 'NO'
-            else:  # pragma: no cover
-                raise NotImplementedError(f'loc={loc} not in [YES, NO]')
+            try:
+                loc = loc_int_to_loc[loc_int]
+            except KeyError:  # pragma: no cover
+                raise NotImplementedError(f'loc={loc_int} not in [YES, NO]')
 
-            if method == 1:
-                method = 'AUTO'
-            elif method == 2:
-                method = 'MANUAL'
-            else:  # pragma: no cover
-                raise NotImplementedError(f'method={method} not in [AUTO, MANUAL]')
+            try:
+                method = method_int_to_method[method_int]
+            except KeyError:  # pragma: no cover
+                raise NotImplementedError(f'method={method_int} not in [AUTO, MANUAL]')
 
             if self.is_debug_file:
                 self.binary_debug.write('  SEBULK=%s\n' % str(out))
@@ -632,11 +700,11 @@ class GEOM1(GeomCommon):
             sebulk = self.add_sebulk(seid, superelement_type, rseid,
                                      method=method, tol=tol, loc=loc, unitno=unit)
             sebulk.validate()
-            n += 32
+            n += 32 * self.factor
         self.increase_card_count('SEBULK', nentries)
         return n
 
-    def _read_seloc(self, data, n):
+    def _read_seloc(self, data: bytes, n: int) -> int:
         """
         Record 23 -- SELOC(827,8,457)
 
@@ -662,7 +730,7 @@ class GEOM1(GeomCommon):
         self.increase_card_count('SELOC', nentries)
         return n
 
-    def _read_sempln(self, data, n):
+    def _read_sempln(self, data: bytes, n: int) -> int:
         """
         Record 24 -- SEMPLN(927,9,458)
 
@@ -703,7 +771,7 @@ class GEOM1(GeomCommon):
         self.increase_card_count('SEMPLN', nentries)
         return n
 
-    def _read_selabel(self, data, n):
+    def _read_selabel(self, data: bytes, n: int) -> int:
         """
         Record 22 -- SELABEL(1027,10,459)
 

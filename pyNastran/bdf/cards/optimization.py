@@ -34,7 +34,7 @@ from pyNastran.bdf.bdf_interface.assign_type import (
     integer, integer_or_blank, integer_or_string, integer_string_or_blank,
     double, double_or_blank, string, string_or_blank,
     integer_double_or_blank, integer_double_string_or_blank,
-    double_string_or_blank, interpret_value)
+    double_string_or_blank, interpret_value, check_string)
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
 from pyNastran.bdf.field_writer_double import print_card_double
@@ -2452,23 +2452,47 @@ class DRESP2(OptConstraint):
 
     def _validate(self):
         assert isinstance(self.params, dict), self.params
+        if len(self.params) == 0:
+            msg = (
+                'params should be of the form: params[(index, card_type)] = values\n'
+                'For example:\n'
+                '   params = {\n'
+                "   (0, 'DRESP1'): [1, 2, 3]\n"
+                "   (1, 'DTABLE'): ['X', 'X2', 'X3']\n"
+                "   (2, 'DRESP1'): [4, 5]\n"
+                '}')
+            raise RuntimeError(msg)
 
+        ifield = 9
+        ikey = 0
         for key, values in self.params.items():
-            assert isinstance(key, tuple), 'key=%s' % str(key)
-            assert len(key) == 2, 'key=%s' % str(key)
+            nvalues = len(values)
+
+            assert isinstance(key, tuple), f'key={key}'
+            assert len(key) == 2, f'key={key}'
             iorder, name = key
-            assert isinstance(iorder, int), 'iorder=%s key=%s' % (iorder, str(key))
-            assert isinstance(name, str), 'name=%r key=%s' % (name, str(key))
+            assert isinstance(iorder, int), f'iorder={iorder} key={key}'
+            assert isinstance(name, str), f'name={name!r} key={key}'
             if name == 'DNODE':
-                assert len(values) == 2, 'name=%r must be a tuple of length 2 (nids, components); values=%s' % (name, values)
+                assert len(values) == 2, f'name={name!r} must be a tuple of length 2 (nids, components); values={values}'
                 nids, components = values
                 for nid in nids:
-                    assert isinstance(nid, int), 'name=%r nid=%r is not an int; values=%s' % (name, nid, values)
+                    assert isinstance(nid, int), f'name={name!r} nid={nid!r} is not an int; values={values}'
                 for comp in components:
-                    assert isinstance(comp, int), 'name=%r comp=%r is not an int; values=%s' % (name, comp, values)
+                    assert isinstance(comp, int), f'name={name!r} comp={comp!r} is not an int; values={values}'
+            elif name == 'DTABLE':
+                for ival, svalue in enumerate(values):
+                    fieldname = f'{key}_i={ival+1}'
+                    #assert isinstance(svalue, str), f'name={name!r} val={val!r} is not a string; values={values}'
+                    check_string(svalue, ifield, fieldname)
             else:
                 for val in values:
-                    assert isinstance(val, int), 'name=%r val=%r is not an int; values=%s' % (name, val, values)
+                    assert isinstance(val, int), f'name={name!r} val={val!r} is not an int; values={values}'
+
+            remainder = min(1, nvalues % 8)
+            dfields = (nvalues // 8 + remainder) * 8
+            ifield += dfields
+            ikey += 1
 
     @classmethod
     def add_card(cls, card, comment=''):

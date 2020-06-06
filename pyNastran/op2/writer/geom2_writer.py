@@ -1,6 +1,7 @@
 from collections import defaultdict
 from struct import pack, Struct
 
+from pyNastran.op2.errors import SixtyFourBitError
 from .geom1_writer import write_geom_header, close_geom_table
 integer_types = int
 
@@ -79,6 +80,12 @@ def write_geom2(op2, op2_ascii, obj, endian=b'<'):
         if name in etypes_to_skip:
             obj.log.warning('skipping GEOM2-%s' % name)
             continue
+
+        max_eid_id = max(eids)
+        if max_eid_id > 99999999:
+            raise SixtyFourBitError(f'64-bit OP2 writing is not supported; {name}: max eid={max_eid_id}')
+        #if max_nid > 99999999:
+            #raise SixtyFourBitError(f'64-bit OP2 writing is not supported; max SPC nid={max_nid}')
 
         #if nelements == 0:
             #continue
@@ -167,7 +174,7 @@ def _write_end_block(nbytes, itable, op2, op2_ascii):
 def _write_cbeam(obj, name, eids, nelements, itable, op2, op2_ascii, endian):
     """writes the CBEAM"""
     key = (5408, 54, 261)
-    spack = None
+    #spack = None
     nfields = 18
     nbytes = _write_intermediate_block(name, key, nfields, nelements, op2, op2_ascii)
 
@@ -211,7 +218,7 @@ def _write_cbeam(obj, name, eids, nelements, itable, op2, op2_ascii, endian):
 def _write_cbar(obj, name, eids, nelements, itable, op2, op2_ascii, endian):
     """writes the CBAR"""
     key = (2408, 24, 180)
-    spack = None
+    #spack = None
     nfields = 16
     nbytes = _write_intermediate_block(name, key, nfields, nelements, op2, op2_ascii)
 
@@ -292,7 +299,8 @@ def _write_solid(model, name, eids, nelements, itable, op2, op2_ascii, endian):
         nnodes = 15
     elif name == 'CPYRAM':
         key = (17200, 172, 1000)
-        nnodes = 13
+        # it's 13, but there's a 14th node just because...
+        nnodes = 14
     else:  # pragma: no cover
         raise NotImplementedError(name)
     nfields = nnodes + 2
@@ -473,6 +481,11 @@ def _write_cgap(eids, spack, obj, op2, op2_ascii, endian):
 def write_card(name, eids, spack, obj, op2, op2_ascii, endian):
     """writes the GEOM2 elements"""
     op2_ascii.write('GEOM2-%s\n' % name)
+
+    eid_max = max(eids)
+    if eid_max > 99999999:
+        raise SixtyFourBitError(f'64-bit OP2 writing is not supported; {name} max(eid)={eid_max}')
+
     if name == 'CHBDYP':
         _write_chbdyp(eids, spack, obj, op2, op2_ascii)
     elif name == 'CHBDYG':

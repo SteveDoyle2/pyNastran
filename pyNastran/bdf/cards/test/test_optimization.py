@@ -913,5 +913,37 @@ class TestOpt(unittest.TestCase):
         model.cross_reference()
         save_load_deck(model, xref='standard', punch=True)
 
+    def test_dtable(self):
+        """
+        tests:
+         - DTABLE
+         - DRESP2
+        """
+        log = get_logger(level='warning')
+        model = BDF(log=log)
+        model.add_grid(1, [0., 0., 0.])
+        model.add_grid(2, [1., 0., 0.])
+        model.add_grid(3, [1., 1., 0.])
+        model.add_grid(4, [0., 1., 0.])
+        default_values = {
+            'A' : 1.0,
+            'B1': 2.0,
+            'C': -3.,
+        }
+        dtable = model.add_dtable(default_values, comment='table')
+        str(dtable)
+        #print(dtable)
+        dresp_id = 42
+        label = 'cat'
+        dequation = 1000
+        region = None
+        params = {
+            (0, 'DTABLE'): ['B1', 'C', 'A'],
+        }
+        dresp2 = model.add_dresp2(dresp_id, label, dequation, region, params,
+                                  method='MIN', c1=1., c2=0.005, c3=10., validate=True, comment='')
+        str(dresp2)
+        #print(dresp2)
+
 if __name__ == '__main__':  # pragma: no cover
     unittest.main()

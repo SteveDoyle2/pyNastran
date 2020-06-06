@@ -1,5 +1,6 @@
 """defines readers for BDF objects in the OP2 DYNAMIC/DYNAMICS table"""
 from struct import unpack, Struct
+from typing import Tuple, List
 import numpy as np
 
 from pyNastran.bdf.cards.nodes import EPOINTs
@@ -76,7 +77,7 @@ class DYNAMICS(GeomCommon):
             (3201, 24, 54) : ['RCROSS', self._read_rcross],
         }
 
-    def _read_acsrce(self, data, n):
+    def _read_acsrce(self, data: bytes, n: int) -> int:
         """common method for reading NX/MSC ACSRCE"""
         n = self._read_dual_card(data, n, self._read_acsrce_nx, self._read_acsrce_msc,
                                  'ACSRCE', self._add_dload_entry)
@@ -163,7 +164,7 @@ class DYNAMICS(GeomCommon):
             loads.append(acsrce)
         return n, loads
 
-    def _read_darea(self, data, n):
+    def _read_darea(self, data: bytes, n: int) -> int:
         """
         DAREA(27,17,182) - the marker for Record 2
 
@@ -186,7 +187,7 @@ class DYNAMICS(GeomCommon):
             n += ntotal
         return n
 
-    def _read_delay(self, data, n):
+    def _read_delay(self, data: bytes, n: int) -> int:
         """
         DELAY(37,18,183) - Record 3
 
@@ -211,7 +212,7 @@ class DYNAMICS(GeomCommon):
             n += ntotal
         return n
 
-    def _read_dload(self, data, n):
+    def _read_dload(self, data: bytes, n: int) -> int:
         """
         DLOAD(57,5,123) - Record 4
 
@@ -255,9 +256,9 @@ class DYNAMICS(GeomCommon):
             istart = iend + 2
             nentries += 1
         self.increase_card_count('DLOAD', nentries)
-        return n
+        return len(data)
 
-    def _read_dphase(self, data, n):
+    def _read_dphase(self, data: bytes, n: int) -> int:
         """
         DPHASE(77,19,184) - Record 5
 
@@ -282,7 +283,7 @@ class DYNAMICS(GeomCommon):
             n += ntotal
         return n
 
-    def _read_dynred(self, data, n):
+    def _read_dynred(self, data: bytes, n: int) -> int:
         """
         DYNRED(4807,48,306)
 
@@ -327,8 +328,24 @@ class DYNAMICS(GeomCommon):
         return n
 
 
-    def _read_eigb(self, data, n):
-        """EIGB(107,1,86) - Record 7"""
+    def _read_eigb(self, data: bytes, n: int) -> int:
+        """EIGB(107,1,86) - Record 7
+
+        NX
+        Word Name Type Description
+        1 SID           I Set identification number
+        2 METHOD(2) CHAR4 Method of eigenvalue extraction
+        4 L1           RS Lower bound of eigenvalue range of interest
+        5 L2           RS Upper bound of eigenvalue range of interest
+        6 NEP           I Estimate of number of roots in positive range
+        7 NDP           I Desired number of positive roots
+        8 NDN           I Desired number of negative roots
+        9 UNDEF None
+        10 NORM(2)  CHAR4 Method for normalizing eigenvectors
+        12 G            I Grid or scalar point identification number
+        13 C            I Component number
+        14 UNDEF(5) None
+        """
         ntotal = 60 * self.factor
         nentries = (len(data) - n) // ntotal
         self.increase_card_count('EIGB', nentries)
@@ -352,7 +369,7 @@ class DYNAMICS(GeomCommon):
             n += ntotal
         return n
 
-    def _read_eigc(self, data, n):
+    def _read_eigc(self, data: bytes, n: int) -> int:
         """
         EIGC(207,2,87) - Record 8
 
@@ -528,7 +545,7 @@ class DYNAMICS(GeomCommon):
         self.increase_card_count('EIGC', nentries)
         return len(data)
 
-    def _read_eigp(self, data, n):
+    def _read_eigp(self, data: bytes, n: int) -> int:
         """
         EIGP(257,4,158) - Record 9
 
@@ -553,7 +570,7 @@ class DYNAMICS(GeomCommon):
             n += ntotal
         return n
 
-    def _read_eigr(self, data, n):
+    def _read_eigr(self, data: bytes, n: int) -> int:
         """
         EIGR(307,3,85) - Record 10
 
@@ -593,7 +610,7 @@ class DYNAMICS(GeomCommon):
         self.increase_card_count('EIGR', nentries)
         return n
 
-    def _read_eigrl(self, data, n):
+    def _read_eigrl(self, data: bytes, n: int) -> int:
         """
         EIGRL(308,8,348) - Record 11
 
@@ -657,7 +674,7 @@ class DYNAMICS(GeomCommon):
         self.increase_card_count('EIGRL', nentries)
         return n
 
-    def _read_epoint(self, data, n):
+    def _read_epoint(self, data: bytes, n: int) -> int:
         """EPOINT(707,7,124) - Record 12"""
         npoints = (len(data) - n) // 4
         fmt = self._endian + b'%ii' % npoints
@@ -670,7 +687,7 @@ class DYNAMICS(GeomCommon):
         self.increase_card_count('EPOINT', count_num=npoints)
         return n
 
-    def _read_freq(self, data, n):
+    def _read_freq(self, data: bytes, n: int) -> int:
         """FREQ(1307,13,126) - Record 13"""
         ints = np.frombuffer(data[n:], self.idtype8).copy()
         floats = np.frombuffer(data[n:], self.fdtype8).copy()
@@ -682,9 +699,9 @@ class DYNAMICS(GeomCommon):
             istart = iend + 1
             self.add_freq(sid, freqs)
         self.increase_card_count('FREQ', count_num=len(iminus1))
-        return n
+        return len(data)
 
-    def _read_freq1(self, data, n):
+    def _read_freq1(self, data: bytes, n: int) -> int:
         """
         FREQ1(1007,10,125) - Record 14
 
@@ -710,7 +727,7 @@ class DYNAMICS(GeomCommon):
         self.increase_card_count('FREQ1', nentries)
         return n
 
-    def _read_freq2(self, data, n):
+    def _read_freq2(self, data: bytes, n: int) -> int:
         """
         FREQ2(1107,11,166) - Record 15
 
@@ -734,7 +751,7 @@ class DYNAMICS(GeomCommon):
         self.increase_card_count('FREQ2', nentries)
         return n
 
-    def _read_freq3(self, data, n):
+    def _read_freq3(self, data: bytes, n: int) -> int:
         """
         FREQ3(1407,14,39) - Record 16
 
@@ -765,7 +782,7 @@ class DYNAMICS(GeomCommon):
         self.increase_card_count('FREQ3', nentries)
         return n
 
-    def _read_freq4(self, data, n):
+    def _read_freq4(self, data: bytes, n: int) -> int:
         """
         FREQ4(1507,15,40) - Record 17
 
@@ -790,7 +807,7 @@ class DYNAMICS(GeomCommon):
         self.increase_card_count('FREQ4', nentries)
         return n
 
-    def _read_freq5(self, data, n):
+    def _read_freq5(self, data: bytes, n: int) -> int:
         """
         FREQ5(1607,16,41) - Record 18
 
@@ -833,7 +850,7 @@ class DYNAMICS(GeomCommon):
             #n += ntotal
         #self.increase_card_count('FREQ5', nentries)
 
-    def _read_nrlgap(self, data, n):
+    def _read_nrlgap(self, data: bytes, n: int) -> int:
         #C:\NASA\m4\formats\git\examples\move_tpl\nlrgap2.op2
         #NLRGAP  SID     GA      GB      PLANE   TABK     TABG    TABU RADIUS
         #nlrgap  200     9       10      XY      -961     965     967     5.0
@@ -841,9 +858,9 @@ class DYNAMICS(GeomCommon):
         #ntotal = 32
         #self.show_data(data[n:])
         assert len(data) == 12 + 32, len(data)
-        return n
+        return len(data)
 
-    def _read_nlrsfd(self, data, n):
+    def _read_nlrsfd(self, data: bytes, n: int) -> int:
         """
         NLRSFD(3807,38,505)
 
@@ -894,7 +911,7 @@ class DYNAMICS(GeomCommon):
         return n
 
 
-    def _read_nolin1(self, data, n):
+    def _read_nolin1(self, data: bytes, n: int) -> int:
         """
         NOLIN1(3107,31,127)
 
@@ -929,7 +946,7 @@ class DYNAMICS(GeomCommon):
         self.increase_card_count('NOLIN1', nentries)
         return n
 
-    def _read_nolin2(self, data, n):
+    def _read_nolin2(self, data: bytes, n: int) -> int:
         """
         NOLIN2(3207,32,128)
 
@@ -965,7 +982,7 @@ class DYNAMICS(GeomCommon):
         self.increase_card_count('NOLIN2', nentries)
         return n
 
-    def _read_nolin3(self, data, n):
+    def _read_nolin3(self, data: bytes, n: int) -> int:
         """
         NOLIN3(3307,33,129)
 
@@ -998,7 +1015,7 @@ class DYNAMICS(GeomCommon):
         self.increase_card_count('NOLIN3', nentries)
         return n
 
-    def _read_nolin4(self, data, n):
+    def _read_nolin4(self, data: bytes, n: int) -> int:
         """
         NOLIN4(3407,34,130)
 
@@ -1031,13 +1048,13 @@ class DYNAMICS(GeomCommon):
         self.increase_card_count('NOLIN4', nentries)
         return n
 
-    def _read_randps(self, data, n):
+    def _read_randps(self, data: bytes, n: int) -> int:
         """common method for reading NX/MSC RLOAD1"""
         n = self._read_dual_card(data, n, self._read_randps_nx, self._read_randps_msc,
                                  'RLOAD1', self._add_dload_entry)
         return n
 
-    def _read_randps_nx(self, data, n):
+    def _read_randps_nx(self, data: bytes, n: int) -> int:
         """
         RANDPS(2107,21,195)
 
@@ -1052,7 +1069,10 @@ class DYNAMICS(GeomCommon):
 
         """
         ntotal = 28
-        nentries = (len(data) - n) // ntotal
+        ndatai = (len(data) - n)
+        nentries = ndatai // ntotal
+        assert ndatai % ntotal == 0
+        assert nentries > 0
         struc = Struct(self._endian + b'3i 2f if')
         for unused_i in range(nentries):
             edata = data[n:n+ntotal]
@@ -1069,7 +1089,7 @@ class DYNAMICS(GeomCommon):
         self.increase_card_count('RANDPS', nentries)
         return n, []
 
-    def _read_randps_msc(self, data, n):
+    def _read_randps_msc(self, data: bytes, n: int) -> int:
         """
         RANDPS(2107,21,195)
 
@@ -1092,7 +1112,10 @@ class DYNAMICS(GeomCommon):
 
         """
         ntotal = 24
-        nentries = (len(data) - n) // ntotal
+        ndatai = (len(data) - n)
+        nentries = ndatai // ntotal
+        assert ndatai % ntotal == 0
+        assert nentries > 0
         struc = Struct(self._endian + b'3i2fi')
         for unused_i in range(nentries):
             edata = data[n:n+ntotal]
@@ -1106,7 +1129,7 @@ class DYNAMICS(GeomCommon):
         self.increase_card_count('RANDPS', nentries)
         return n, []
 
-    def _read_randt1(self, data, n):
+    def _read_randt1(self, data: bytes, n: int) -> int:
         """
         RANDT1(2207,22,196)
 
@@ -1130,13 +1153,13 @@ class DYNAMICS(GeomCommon):
         self.card_count['RANDT1'] = nentries
         return n
 
-    def _read_rload1(self, data, n):
+    def _read_rload1(self, data: bytes, n: int) -> int:
         """common method for reading NX/MSC RLOAD1"""
         n = self._read_dual_card(data, n, self._read_rload1_nx, self._read_rload1_msc,
                                  'RLOAD1', self._add_dload_entry)
         return n
 
-    def _read_rload1_nx(self, data, n):
+    def _read_rload1_nx(self, data: bytes, n: int) -> int:
         """
         RLOAD1(5107,51,131) - Record 26
 
@@ -1157,6 +1180,7 @@ class DYNAMICS(GeomCommon):
         dloads = []
         ntotal = 44 * self.factor
         nentries = (len(data) - n) // ntotal
+        assert (len(data) - n) % ntotal == 0
         struc = Struct(mapfmt(self._endian + b'7i 4f', self.size))
         for unused_i in range(nentries):
             edata = data[n:n+ntotal]
@@ -1203,6 +1227,7 @@ class DYNAMICS(GeomCommon):
         dloads = []
         ntotal = 36 * self.factor
         nentries = (len(data) - n) // ntotal
+        assert (len(data) - n) % ntotal == 0
         struc = Struct(mapfmt(self._endian + b'2i 2f 3i 2f', self.size))
         for unused_i in range(nentries):
             edata = data[n:n+ntotal]
@@ -1222,7 +1247,7 @@ class DYNAMICS(GeomCommon):
             n += ntotal
         return n, dloads
 
-    def _read_rload2(self, data, n):
+    def _read_rload2(self, data: bytes, n: int) -> int:
         """common method for reading NX/MSC RLOAD2"""
         n = self._read_dual_card(data, n, self._read_rload2_nx, self._read_rload2_msc,
                                  'RLOAD2', self._add_dload_entry)
@@ -1247,7 +1272,10 @@ class DYNAMICS(GeomCommon):
         """
         dloads = []
         ntotal = 44 * self.factor
-        nentries = (len(data) - n) // ntotal
+        ndatai = len(data) - n
+        nentries = ndatai // ntotal
+        assert ndatai % ntotal == 0
+        assert nentries > 0
         struc = Struct(mapfmt(self._endian + b'7i 4f', self.size))
         for unused_i in range(nentries):
             edata = data[n:n+ntotal]
@@ -1255,8 +1283,8 @@ class DYNAMICS(GeomCommon):
             sid, darea, delayi, dphasei, tbi, tpi, load_type, delayr, dphaser, tbr, tpr = out
             if self.is_debug_file:
                 self.binary_debug.write('  RLOAD2=%s\n' % str(out))
-            assert sid > 0, (f'RLOAD2; sid={sid} darea={darea} dphasei={dphasei} delayi={delayi} '
-                             f'tbi={tbi} tpi={tpi} load_type={load_type} tau={tau} phase={phase}')
+                assert sid > 0 and darea > 0, (f'RLOAD2; sid={sid} darea={darea} dphasei={dphasei} delayi={delayi} '
+                                               f'tbi={tbi} tpi={tpi} load_type={load_type} tau={tau} phase={phase}')
 
             tb = tbi
             tp = tpi
@@ -1293,7 +1321,10 @@ class DYNAMICS(GeomCommon):
         """
         dloads = []
         ntotal = 36
-        nentries = (len(data) - n) // ntotal
+        ndatai = len(data) - n
+        nentries = ndatai // ntotal
+        assert ndatai % ntotal == 0
+        assert nentries > 0
         struc = Struct(self._endian + b'7i 2f')
         for unused_i in range(nentries):
             edata = data[n:n+ntotal]
@@ -1301,16 +1332,15 @@ class DYNAMICS(GeomCommon):
             sid, darea, dphasei, delayi, tbi, tpi, load_type, tau, phase = out
             if self.is_debug_file:
                 self.binary_debug.write('  RLOAD2=%s\n' % str(out))
-            assert sid > 0, (f'RLOAD2; sid={sid} darea={darea} dphasei={dphasei} delayi={delayi} '
-                             f'tbi={tbi} tpi={tpi} load_type={load_type} tau={tau} phase={phase}')
-
+            assert sid > 0 and darea > 0, (f'RLOAD2; sid={sid} darea={darea} dphasei={dphasei} delayi={delayi} '
+                                           f'tbi={tbi} tpi={tpi} load_type={load_type} tau={tau} phase={phase}')
             dload = RLOAD2(sid, darea, delay=delayi, dphase=dphasei, tb=tbi, tp=tpi,
                            Type=load_type, comment='')
             dloads.append(dload)
             n += ntotal
         return n, dloads
 
-    def _read_rgyro(self, data, n):
+    def _read_rgyro(self, data: bytes, n: int) -> int:
         """
         RGYRO(1507,15,40) - Record 17
 
@@ -1339,7 +1369,7 @@ class DYNAMICS(GeomCommon):
         self.increase_card_count('RGYRO', nentries)
         return n
 
-    def _read_rotord(self, data, n):
+    def _read_rotord(self, data: bytes, n: int) -> int:
         """
         ROTORD(8210, 82, 599)
 
@@ -1423,7 +1453,7 @@ class DYNAMICS(GeomCommon):
         self.increase_card_count('ROTORD', nentries)
         return n
 
-    def _read_rotorg(self, data, n):
+    def _read_rotorg(self, data: bytes, n: int) -> int:
         """
         ROTORG(8410, 84, 600)
 
@@ -1450,7 +1480,7 @@ class DYNAMICS(GeomCommon):
 
 #RSPINR
 
-    def _read_rspint(self, data, n):
+    def _read_rspint(self, data: bytes, n: int) -> int:
         """
         RSPINT(11001,110,310) - Record 31
 
@@ -1479,7 +1509,7 @@ class DYNAMICS(GeomCommon):
 
 #SEQEP(5707,57,135)
 
-    def _read_tf(self, data, n):
+    def _read_tf(self, data: bytes, n: int) -> int:
         """TF"""
         # subtract of the header (sid, nid, component, b0, b1, b2)
         # divide by 5 (nid1, component1, a0, a1, a2)
@@ -1527,7 +1557,7 @@ class DYNAMICS(GeomCommon):
             n = n3
         return n
 
-    def _read_tic(self, data, n):
+    def _read_tic(self, data: bytes, n: int) -> int:
         """
         TIC(6607,66,137)
 
@@ -1552,8 +1582,48 @@ class DYNAMICS(GeomCommon):
         return n
 
 #TIC3
+    def _read_tload1(self, data: bytes, n: int) -> int:
+        """common method for reading NX/MSC TLOAD1"""
+        n = self._read_dual_card(data, n, self._read_tload1_nx, self._read_tload1_msc,
+                                 'TLOAD1', self._add_dload_entry)
+        return n
 
-    def _read_tload1(self, data, n):
+    def _read_tload1_nx(self, data: bytes, n: int) -> Tuple[int, List[TLOAD1]]:
+        """
+        Record – TLOAD1(7107,71,138)
+
+        Word Name Type Description
+        1 SID     I Load set identification number
+        2 DAREA   I DAREA Bulk Data entry identification number
+        3 DELAYI  I DELAY Bulk Data entry identification number
+        4 TYPE    I Nature of the dynamic excitation
+        5 TID     I Identification number of TABLEDi entry that gives F(t)
+        6 DELAYR RS If DELAYI = 0, constant value for delay
+        """
+        ntotal = 24 * self.factor # 6*4
+        nentries = (len(data) - n) // ntotal
+        assert (len(data) - n) % ntotal == 0
+        assert nentries > 0, nentries
+
+        dloads = []
+        struc = Struct(mapfmt(self._endian + b'5i f', self.size))
+        for unused_i in range(nentries):
+            edata = data[n:n+ntotal]
+            out = struc.unpack(edata)
+            sid, darea, delayi, load_type, tid, delayr = out
+            if self.is_debug_file:
+                self.binary_debug.write('TLOAD1=%s\n' % str(out))
+            delay = delayi
+            if delayi == 0:
+                delay = delayr
+            dload = TLOAD1(sid, darea, tid, delay=delay, Type=load_type)
+            dloads.append(dload)
+            #self._add_dload_entry(dload)
+            n += ntotal
+        #self.increase_card_count('TLOAD1', nentries)
+        return n, dloads
+
+    def _read_tload1_msc(self, data: bytes, n: int) -> Tuple[int, List[TLOAD1]]:
         """
         TLOAD1(7107,71,138) - Record 37
 
@@ -1568,10 +1638,14 @@ class DYNAMICS(GeomCommon):
         8 T      RS Time delay (MSC)
 
         """
-        ntotal = 8*4
+        ntotal = 32 * self.factor # 8*4
         #self.show_data(data[n:], 'if')
         nentries = (len(data) - n) // ntotal
-        struc = Struct(self._endian + b'5i 3f')
+        assert (len(data) - n) % ntotal == 0
+        assert nentries > 0, nentries
+
+        dloads = []
+        struc = Struct(mapfmt(self._endian + b'5i 3f', self.size))
         for unused_i in range(nentries):
             edata = data[n:n+ntotal]
             out = struc.unpack(edata)
@@ -1583,20 +1657,36 @@ class DYNAMICS(GeomCommon):
                 delay = delayr
             dload = TLOAD1(sid, darea, tid, delay=delay, Type=load_type,
                            us0=us0, vs0=vs0)
-            self._add_dload_entry(dload)
+            #self._add_dload_entry(dload)
+            dloads.append(dload)
             n += ntotal
-        self.increase_card_count('TLOAD1', nentries)
+        #self.increase_card_count('TLOAD1', nentries)
+        return n, dloads
+
+    def _read_tload2(self, data: bytes, n: int) -> int:
+        """common method for reading NX/MSC TLOAD2"""
+        n = self._read_dual_card(data, n, self._read_tload2_nx, self._read_tload2_msc,
+                                 'TLOAD2', self._add_dload_entry)
         return n
 
-    def _read_tload2(self, data, n):
-        """TLOAD2"""
-        return self._read_tload2_nx(data, n)
-
-    def _read_tload2_nx(self, data, n):
+    def _read_tload2_nx(self, data: bytes, n: int) -> Tuple[int, List[TLOAD2]]:
         """
         TLOAD2(7207,72,139) - Record 37
 
-        NX
+        NX 2019.2
+        1 SID      I  Load set identification number
+        2 DAREA    I DAREA Bulk Data entry identification number
+        3 DELAYI   I DELAY Bulk Data entry identification number
+        4 TYPE     I Nature of the dynamic excitation
+        5 T1      RS Time constant 1
+        6 T2      RS Time constant 2
+        7 F       RS Frequency
+        8 P       RS Phase angle
+        9 C       RS Exponential coefficient
+        10 B      RS Growth coefficient
+        11 DELAYR RS If DELAYI = 0, constant value for delay
+
+        My guess...
         1 SID      I  Load set identification number
         2 DAREA    I DAREA Bulk Data entry identification number
         3 DELAYI   I DELAY Bulk Data entry identification number
@@ -1611,8 +1701,54 @@ class DYNAMICS(GeomCommon):
         12 US0    RS not documented in NX
         13 VS0    RS not documented in NX
         """
+        ntotal = 44
+        nentries = (len(data) - n) // ntotal
+        assert (len(data) - n) % ntotal == 0
+        assert nentries > 0, nentries
+
+        dloads = []
+        struc = Struct(self._endian + b'4i 7f')
+        for unused_i in range(nentries):
+            edata = data[n:n+ntotal]
+            out = struc.unpack(edata)
+            sid, darea, delayi, load_type, t1, t2, freq, p, c, growth, delayr = out
+            if self.is_debug_file:
+                self.binary_debug.write('  TLOAD2=%s\n' % str(out))
+            delay = delayi
+            if delayi == 0:
+                delay = delayr
+            dload = TLOAD2(sid, darea, delay=delay, Type=load_type, T1=t1,
+                           T2=t2, frequency=freq,
+                           phase=p, c=c, b=growth)
+            dloads.append(dload)
+            n += ntotal
+        return n, dloads
+
+    def _read_tload2_msc(self, data: bytes, n: int) -> Tuple[int, List[TLOAD2]]:
+        """
+        TLOAD2(7207,72,139) - Record 37
+
+        MSC
+        1 SID    I Load set identification number
+        2 DAREA  I DAREA Bulk Data entry identification number
+        3 DELAY  I DELAY Bulk Data entry identification number
+        4 TYPE   I Nature of the dynamic excitation
+        5 T1    RS Time constant 1
+        6 T2    RS Time constant 2
+        7 F     RS Frequency
+        8 P     RS Phase angle
+        9 C     RS Exponential coefficient
+        10 B    RS Growth coefficient
+        11 U0   RS Initial displacement factor for enforced motion
+        12 V0   RS Initial velocity factor for enforced motion
+        13 T    RS Time delay
+        """
         ntotal = 52
         nentries = (len(data) - n) // ntotal
+        assert (len(data) - n) % ntotal == 0
+        assert nentries > 0, nentries
+
+        dloads = []
         struc = Struct(self._endian + b'4i 7f 2f')
         for unused_i in range(nentries):
             edata = data[n:n+ntotal]
@@ -1627,12 +1763,11 @@ class DYNAMICS(GeomCommon):
                            T2=t2, frequency=freq,
                            phase=p, c=c, b=growth,
                            us0=us0, vs0=vs0)
-            self._add_dload_entry(dload)
+            dloads.append(dload)
             n += ntotal
-        self.increase_card_count('TLOAD2', nentries)
-        return n
+        return n, dloads
 
-    def _read_tstep(self, data, n):
+    def _read_tstep(self, data: bytes, n: int) -> int:
         """TSTEP(8307,83,142) - Record 38
 
         Word Name Type Description
@@ -1678,9 +1813,9 @@ class DYNAMICS(GeomCommon):
                 n += 12
             #print('sid=%s ntimes=%s dt=%s no=%s' % (sid, ntimes, dt, no))
             self.add_tstep(sid, ntimes, dt, no)
-        return n
+        return len(data)
 
-    def _read_tstep1(self, data, n):
+    def _read_tstep1(self, data: bytes, n: int) -> int:
         """
         Record - TSTEP1(17500,175,618)
 
@@ -1699,7 +1834,7 @@ class DYNAMICS(GeomCommon):
 
 #UNBALNC
 
-    def _read_rcross(self, data, n):
+    def _read_rcross(self, data: bytes, n: int) -> int:
         """
         """
         #C:\NASA\m4\formats\git\examples\move_tpl\rcross01.op2

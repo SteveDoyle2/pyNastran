@@ -1528,7 +1528,7 @@ class TestOP2(Tester):
             model.coords, nid_cd, stations, coord_out,
             idir=idir, itime=0, debug=True, log=model.log)
         #dd
-        plot_smt(stations, force_sum, moment_sum, show=True)
+        plot_smt(stations, force_sum, moment_sum, show=False)
 
     @unittest.skipIf(not IS_H5PY, "No h5py")
     def test_op2_solid_bending_02(self):
@@ -3054,7 +3054,7 @@ class TestOP2(Tester):
         #bdf_filename = os.path.join(MODEL_PATH, 'other', 'extse04c_cnv2_0.bdf')
         op2_filename = os.path.join(MODEL_PATH, 'other', 'extse04c_cnv2_0.op2')
         #model = read_bdf(bdf_filename, encoding='ascii', debug=False, log=log)
-        bdf_filename_out = os.path.join(MODEL_PATH, 'other', 'extse04c_cnv2_0.bdf')
+        #bdf_filename_out = os.path.join(MODEL_PATH, 'other', 'extse04c_cnv2_0.bdf')
         #model.write_bdf(bdf_filename_out)
         #os.remove(bdf_filename_out)
 

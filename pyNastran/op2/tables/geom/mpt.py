@@ -1,6 +1,7 @@
 """defines readers for BDF objects in the OP2 MPT/MPTS table"""
 #pylint: disable=C0111,C0103,C0301,W0612,R0914,R0201
 from struct import Struct
+from typing import Tuple, List
 
 from pyNastran.bdf.cards.materials import (CREEP, MAT1, MAT2, MAT3, MAT4, MAT5,
                                            MAT8, MAT9, MAT10, MAT11, MATHP)
@@ -10,7 +11,7 @@ from pyNastran.op2.tables.geom.geom_common import GeomCommon
 #from pyNastran.bdf.cards.thermal.thermal import (CHBDYE, CHBDYG, CHBDYP, PCONV, PCONVM,
                                                  #PHBDY, CONV, CONVM, RADBC)
 from pyNastran.bdf.cards.thermal.radiation import RADM
-from pyNastran.op2.op2_interface.op2_reader import mapfmt, reshape_bytes_block
+from pyNastran.op2.op2_interface.op2_reader import mapfmt # , reshape_bytes_block
 
 
 class MPT(GeomCommon):
@@ -63,7 +64,7 @@ class MPT(GeomCommon):
         self._add_structural_material_object(mat, allow_overwrites=False)
         #print(str(mat)[:-1])
 
-    def _read_creep(self, data, n):
+    def _read_creep(self, data: bytes, n: int) -> int:
         """
         CREEP(1003,10,245) - record 1
         """
@@ -83,7 +84,7 @@ class MPT(GeomCommon):
         self.card_count['CREEP'] = nmaterials
         return n
 
-    def _read_mat1(self, data, n):
+    def _read_mat1(self, data: bytes, n: int) -> int:
         """
         MAT1(103,1,77) - record 2
         """
@@ -100,7 +101,7 @@ class MPT(GeomCommon):
         self.card_count['MAT1'] = nmaterials
         return n
 
-    def _read_mat2(self, data, n):
+    def _read_mat2(self, data: bytes, n: int) -> int:
         """
         MAT2(203,2,78) - record 3
         """
@@ -131,7 +132,7 @@ class MPT(GeomCommon):
                 (mid, g1, g2, g3, g4, g5, g6, rho, aj1, aj2, aj3,
                  tref, ge, St, Sc, Ss, mcsid, *blanks) = out
                 mat = MAT2.add_op2_data(out)
-                print(mat)
+                self.log.debug(mat)
             #print("MAT2 = ",out)
 
             if 0 < mid <= 1e8:  # just a checker for out of range materials
@@ -146,7 +147,7 @@ class MPT(GeomCommon):
             self.card_count['MAT2'] = ncards
         return n
 
-    def _read_mat3(self, data, n):
+    def _read_mat3(self, data: bytes, n: int) -> int:
         """
         MAT3(1403,14,122) - record 4
         """
@@ -166,7 +167,7 @@ class MPT(GeomCommon):
         self.card_count['MAT3'] = nmaterials
         return n
 
-    def _read_mat4(self, data, n):
+    def _read_mat4(self, data: bytes, n: int) -> int:
         """
         MAT4(2103,21,234) - record 5
         """
@@ -182,7 +183,7 @@ class MPT(GeomCommon):
         self.card_count['MAT4'] = nmaterials
         return n
 
-    def _read_mat5(self, data, n):
+    def _read_mat5(self, data: bytes, n: int) -> int:
         """
         MAT5(2203,22,235) - record 6
         """
@@ -199,7 +200,7 @@ class MPT(GeomCommon):
         self.card_count['MAT5'] = nmaterials
         return n
 
-    def _read_mat8(self, data, n):
+    def _read_mat8(self, data: bytes, n: int) -> int:
         """
         MAT8(2503,25,288) - record 7
         """
@@ -216,7 +217,7 @@ class MPT(GeomCommon):
         self.card_count['MAT8'] = nmaterials
         return n
 
-    def _read_mat9(self, data, n):
+    def _read_mat9(self, data: bytes, n: int) -> int:
         """
         MAT9(2603,26,300) - record 9
         """
@@ -258,7 +259,7 @@ class MPT(GeomCommon):
                  rho, a1, a2, a3, a4, a5, a6, tref, ge,
                  blank1, blank2, blank3, blank4, *blanks) = out
                 self.show_data(data[n:n+ntotal], types='if')
-                print(blanks)
+                self.log.debug(blanks)
             assert blank1 == 0, blank1
             data_in = [mid, [g1, g2, g3, g4, g5, g6, g7, g8, g9, g10,
                              g11, g12, g13, g14, g15, g16, g17, g18, g19, g20, g21],
@@ -275,7 +276,7 @@ class MPT(GeomCommon):
         self.card_count['MAT9'] = nmaterials
         return n
 
-    def _read_mat10(self, data, n):
+    def _read_mat10(self, data: bytes, n: int) -> int:
         """
         MAT10(2801,28,365) - record 9
 
@@ -287,13 +288,15 @@ class MPT(GeomCommon):
         5 GE   RS Structural damping coefficient
 
         """
-        ntotal = 20  # 5*4
-        s = Struct(self._endian + b'i4f')
+        ntotal = 20 * self.factor # 5*4
+        s = Struct(mapfmt(self._endian + b'i4f', self.size))
         nmaterials = (len(data) - n) // ntotal
         assert nmaterials > 0, nmaterials
         for unused_i in range(nmaterials):
-            edata = data[n:n+20]
+            edata = data[n:n+ntotal]
             out = s.unpack(edata)
+            n += ntotal
+
             (mid, bulk, rho, c, ge) = out
             if self.is_debug_file:
                 self.binary_debug.write('  MAT10=%s\n' % str(out))
@@ -303,11 +306,10 @@ class MPT(GeomCommon):
             mat = MAT10.add_op2_data(out)
             assert mat.mid > 0, mat
             self.add_op2_material(mat)
-            n += 20
         self.card_count['MAT10'] = nmaterials
         return n
 
-    def _read_mat11(self, data, n):
+    def _read_mat11(self, data: bytes, n: int) -> int:
         """
         MAT11(2903,29,371)
         """
@@ -329,7 +331,7 @@ class MPT(GeomCommon):
         self.card_count['MAT11'] = nmaterials
         return n
 
-    def _read_mat11_old(self, data, n):
+    def _read_mat11_old(self, data: bytes, n: int) -> int:
         """
         MAT11(2903,29,371)
         """
@@ -352,7 +354,7 @@ class MPT(GeomCommon):
         self.card_count['MAT11'] = nmaterials
         return n
 
-    def _read_mathp(self, data, n):
+    def _read_mathp(self, data: bytes, n: int) -> int:
         """
         MATHP(4506,45,374) - Record 11
 
@@ -447,7 +449,7 @@ class MPT(GeomCommon):
         self.card_count['MATHP'] = nmaterials
         return n
 
-    def _read_mats1(self, data, n):
+    def _read_mats1(self, data: bytes, n: int) -> int:
         """
         MATS1(503,5,90) - record 12
         """
@@ -466,10 +468,11 @@ class MPT(GeomCommon):
                 self.binary_debug.write('  MATS1=%s\n' % str(out))
             mat = MATS1.add_op2_data(data_in)
             self._add_material_dependence_object(mat, allow_overwrites=False)
+            n += ntotal
         self.card_count['MATS1'] = nmaterials
         return n
 
-    def _read_matt1(self, data, n):
+    def _read_matt1(self, data: bytes, n: int) -> int:
         """
         MATT1(703,7,91)
         checked NX-10.1, MSC-2016
@@ -489,17 +492,17 @@ class MPT(GeomCommon):
         self.increase_card_count('MATT1', ncards)
         return n
 
-    def _read_matt2(self, data, n):
+    def _read_matt2(self, data: bytes, n: int) -> int:
         """
         1 MID         I Material identification number
         2 TID(15)     I TABLEMi entry identification numbers
         17        UNDEF none Not used
         """
-        ntotal = 68  # 17*4
-        s = Struct(self._endian + b'17i')
+        ntotal = 68 * self.factor # 17*4
+        s = Struct(mapfmt(self._endian + b'17i', self.size))
         nmaterials = (len(data) - n) // ntotal
         for unused_i in range(nmaterials):
-            edata = data[n:n+68]
+            edata = data[n:n+ntotal]
             out = s.unpack(edata)
             (mid, g11_table, g12_table, g13_table, g22_table,
              g23_table, g33_table, rho_table,
@@ -515,20 +518,21 @@ class MPT(GeomCommon):
                         a1_table, a2_table, a3_table, ge_table,
                         st_table, sc_table, ss_table, comment='')
             self._add_material_dependence_object(mat, allow_overwrites=False)
+            n += ntotal
         self.card_count['MATT2'] = nmaterials
         return n
 
-    def _read_matt3(self, data, n):
+    def _read_matt3(self, data: bytes, n: int) -> int:
         """
         Word Name Type Description
         1 MID     I Material identification number
         2 TID(15) I entry identification numbers
         """
-        ntotal = 64  # 16*4
-        s = Struct(self._endian + b'16i')
+        ntotal = 64 * self.factor # 16*4
+        s = Struct(mapfmt(self._endian + b'16i', self.size))
         nmaterials = (len(data) - n) // ntotal
         for unused_i in range(nmaterials):
-            edata = data[n:n+64]
+            edata = data[n:n+ntotal]
             out = s.unpack(edata)
             (mid, *tables, a, b, c, d) = out
             if self.is_debug_file:
@@ -542,10 +546,11 @@ class MPT(GeomCommon):
                      #ax_table=None, ath_table=None, az_table=None, ge_table=None,)
             mat = MATT3(mid, *tables, comment='')
             self._add_material_dependence_object(mat, allow_overwrites=False)
+            n += ntotal
         self.card_count['MATT3'] = nmaterials
         return n
 
-    def _read_matt4(self, data, n):
+    def _read_matt4(self, data: bytes, n: int) -> int:
         """
         MATT4(2303,23,237)
         checked NX-10.1, MSC-2016
@@ -556,6 +561,7 @@ class MPT(GeomCommon):
         for unused_i in range(ncards):
             edata = data[n:n + ntotal]
             out = struct_7i.unpack(edata)
+
             if self.is_debug_file:
                 self.binary_debug.write('  MATT4=%s\n' % str(out))
             #(mid, tk, tcp, null, th, tmu, thgen) = out
@@ -565,7 +571,7 @@ class MPT(GeomCommon):
         self.increase_card_count('MATT4', ncards)
         return n
 
-    def _read_matt5(self, data, n):
+    def _read_matt5(self, data: bytes, n: int) -> int:
         """
         MATT5(2403,24,238)
         checked NX-10.1, MSC-2016
@@ -588,11 +594,11 @@ class MPT(GeomCommon):
         return n
 
 # MATT8 - unused
-    def _read_matt8(self, data, n):
+    def _read_matt8(self, data: bytes, n: int) -> int:
         self.log.warning('skipping MATT8 in MPT')
         return len(data)
 
-    def _read_matt9(self, data, n):
+    def _read_matt9(self, data: bytes, n: int) -> int:
         """
         Word Name Type Description
         1 MID    I Material identification number
@@ -603,11 +609,11 @@ class MPT(GeomCommon):
         31 TGE   I TABLEMi identification number for structural damping coefficient
         32 UNDEF(4) None
         """
-        ntotal = 140  # 35*4
-        s = Struct(self._endian + b'35i')
+        ntotal = 140 * self.factor  # 35*4
+        s = Struct(mapfmt(self._endian + b'35i', self.size))
         nmaterials = (len(data) - n) // ntotal
         for unused_i in range(nmaterials):
-            edata = data[n:n+140]
+            edata = data[n:n+ntotal]
             out = s.unpack(edata)
             (mid, *tc_tables, trho, ta1, ta2, ta3, ta4, ta5, ta6, a, tge, b, c, d, e) = out
             if self.is_debug_file:
@@ -627,12 +633,13 @@ class MPT(GeomCommon):
                                  #a4_table=None, a5_table=None, a6_table=None, ge_table=None, comment='')
             mat = MATT9(mid, *tc_tables, trho, ta1, ta2, ta3, ta4, ta5, ta6, tge, comment='')
             self._add_material_dependence_object(mat, allow_overwrites=False)
+            n += ntotal
         self.card_count['MATT9'] = nmaterials
         return n
         #self.log.warning('skipping MATT9 in MPT')
         #return len(data)
 
-    def _read_matt11(self, data, n):
+    def _read_matt11(self, data: bytes, n: int) -> int:
         self.log.warning('skipping MATT11 in MPT')
         return len(data)
 
@@ -641,12 +648,12 @@ class MPT(GeomCommon):
 # MSTACK
 # NLAUTO
 
-    def _read_radbnd(self, data, n):
+    def _read_radbnd(self, data: bytes, n: int) -> int:
         self.log.info('skipping RADBND in MPT')
         return len(data)
 
 
-    def _read_radm(self, data, n):
+    def _read_radm(self, data: bytes, n: int) -> int:
         """
         RADM(8802,88,413) - record 25
         .. todo:: add object
@@ -680,19 +687,42 @@ class MPT(GeomCommon):
         self.card_count['RADM'] = nmaterials
         return n
 
-    def _read_radmt(self, data, n):
+    def _read_radmt(self, data: bytes, n: int) -> int:
         self.log.info('skipping RADMT in MPT')
         return len(data)
 
-    def _read_nlparm(self, data, n):
+    def _read_nlparm(self, data: bytes, n: int) -> int:
         """
         NLPARM(3003,30,286) - record 27
+
+        NX 2019.2
+        Word Name Type Description
+        1 SID       I Set identification number
+        2 NINC      I Number of increments
+        3 DT       RS Incremental time interval for creep analysis
+        4 KMETHOD   I Method for controlling stiffness updates
+        5 KSTEP     I Number of iterations before the stiffness update
+        6 MAXITER   I Limit on number of iterations for each load increment
+        7 CONV      I Flags to select convergence criteria
+        8 INTOUT    I Intermediate output flag
+        9 EPSU     RS Error tolerance for displacement U criterion
+        10 EPSP    RS Error tolerance for displacement P criterion
+        11 EPSW    RS Error tolerance for displacement W criterion
+        12 MAXDIV   I Limit on probable divergence conditions
+        13 MAXQN    I Maximum number of quasi-Newton correction vectors
+        14 MAXLS    I Maximum number of line searches
+        15 FSTRESS RS Fraction of effective stress
+        16 LSTOL   RS Line search tolerance
+        17 MAXBIS   I Maximum number of bisections
+        18 MAXR    RS Maximum ratio for the adjusted arc-length increment
+        19 RTOLB   RS Maximum value of incremental rotation
+
         """
         ntotal = 76  # 19*4
         s = Struct(self._endian + b'iif5i3f3iffiff')
         nentries = (len(data) - n) // ntotal
         for unused_i in range(nentries):
-            edata = data[n:n+76]
+            edata = data[n:n+ntotal]
             out = s.unpack(edata)
             #(sid,ninc,dt,kMethod,kStep,maxIter,conv,intOut,epsU,epsP,epsW,
             # maxDiv,maxQn,maxLs,fStress,lsTol,maxBisect,maxR,rTolB) = out
@@ -703,15 +733,34 @@ class MPT(GeomCommon):
         self.card_count['NLPARM'] = nentries
         return n
 
-    def _read_nlpci(self, data, n):
+    def _read_nlpci(self, data: bytes, n: int) -> int:
         self.log.info('skipping NLPCI in MPT')
         return len(data)
 
-    def _read_tstepnl(self, data, n):
-        """TSTEPNL(3103,31,337) - record 29"""
-        ntotal = 88 * self.factor  # 19*4
-        s = Struct(mapfmt(self._endian + b'iif5i3f3if3i4f', self.size))
+    def _read_tstepnl(self, data: bytes, n: int) -> int:
+        """common method to read MSC/NX TSTEPNLs"""
+        n = self._read_dual_card(data, n, self._read_tstepnl_nx, self._read_tstepnl_msc,
+                                 'TSTEPNL', self._add_tstepnl_object)
+        return n
+
+    def _read_tstepnl_nx(self, data: bytes, n: int) -> Tuple[int, List[TSTEPNL]]:
+        """
+        TSTEPNL(3103,31,337) - record 29
+
+        NX 2019.2
+        23 KDAMP    I Flags to include differential stiffness to form structural damping
+        24 KUPDATE  I Method for dynamic matrix update
+        25 KUSTEP   I Number of iterations before the stiffness update
+        26 TINTOPT  I Time integration method
+        27 GAMMA   RS Amplitude decay factor for 2nd order transient integration
+
+        """
+        ntotal = 108 * self.factor  # 27*4
+        s = Struct(mapfmt(self._endian + b'iif5i3f3if3i4f 4if', self.size))
         nentries = (len(data) - n) // ntotal
+        assert (len(data) - n) % ntotal == 0
+        assert nentries > 0, nentries
+        tstepnls = []
         for unused_i in range(nentries):
             edata = data[n:n+ntotal]
             out = s.unpack(edata)
@@ -721,8 +770,56 @@ class MPT(GeomCommon):
             if method in [4]:
                 self.log.warning('method=4; skipping TSTEPNL=%r' % str(out))
             else:
-                self._add_tstepnl_object(TSTEPNL.add_op2_data(out))
-
+                tstepnl = TSTEPNL.add_op2_data(out)
+                tstepnls.append(tstepnl)
             n += ntotal
-        self.card_count['TSTEPNL'] = nentries
-        return n
+        return n, tstepnls
+
+    def _read_tstepnl_msc(self, data: bytes, n: int) -> int:
+        """
+        TSTEPNL(3103,31,337) - record 29
+
+        MSC 2005.2
+        1 SID       I Set identification number
+        2 NDT       I Number of time steps of value DT
+        3 DT       RS Time increment
+        4 NO        I Time step interval for output
+        5 METHOD    I Method for dynamic matrix update
+        6 KSTEP     I Time step interval or number of converged bisections
+        7 MAXITER   I Limit on number of iterations
+        8 CONV      I Flags to select convergence criteria
+        9 EPSU     RS Error tolerance for displacement U criterion
+        10 EPSP    RS Error tolerance for displacement P criterion
+        11 EPSW    RS Error tolerance for displacement W criterion
+        12 MAXDIV   I Limit on probable divergence conditions
+        13 MAXQN    I Maximum number of quasi-Newton correction vectors
+        14 MAXLS    I Maximum number of line searches
+        15 FSTRESS RS Fraction of effective stress
+        16 MAXBIS   I Maximum number of bisections
+        17 ADJUST   I Time step skip factor for automatic time step adjustment
+        18 MSTEP    I Number of steps to obtain the dominant period response
+        19 RB      RS Define bounds for maintaining the same time step
+        20 MAXR    RS Maximum ratio for the adjusted arc-length increment
+        21 UTOL    RS Tolerance on displacement or temperature increment
+        22 RTOLB   RS Maximum value of incremental rotation
+
+        """
+        ntotal = 88 * self.factor  # 22*4
+        s = Struct(mapfmt(self._endian + b'iif5i3f3if3i4f', self.size))
+        nentries = (len(data) - n) // ntotal
+        assert (len(data) - n) % ntotal == 0
+        assert nentries > 0, nentries
+        tstepnls = []
+        for unused_i in range(nentries):
+            edata = data[n:n+ntotal]
+            out = s.unpack(edata)
+            #(sid,ndt,dt,no,kMethod,kStep,maxIter,conv,epsU,epsP,epsW,
+            # maxDiv,maxQn,maxLs,fStress,lsTol,maxBisect,adjust,mStep,rb,maxR,uTol,rTolB) = out
+            method = out[4]
+            if method in [4]:
+                self.log.warning('method=4; skipping TSTEPNL=%r' % str(out))
+            else:
+                tstepnl = TSTEPNL.add_op2_data(out)
+                tstepnls.append(tstepnl)
+            n += ntotal
+        return n, tstepnls

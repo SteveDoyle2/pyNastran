@@ -82,6 +82,7 @@ class FlutterResponse:
         XZ-SYMMETRY : str
             ASYMMETRIC, SYMMETRIC
             unused
+
         """
         self.make_alt = make_alt
         self.f06_units = f06_units
@@ -90,7 +91,7 @@ class FlutterResponse:
         for key in required_keys:
             assert key in f06_units, 'key=%r not in f06_units=%s' % (key, f06_units)
             assert key in out_units, 'key=%r not in out_units=%s' % (key, out_units)
-        for key in f06_units.keys():
+        for key in f06_units:
             assert key in required_keys, 'key=%r not in required_keys=%s' % (key, required_keys)
 
 
@@ -564,6 +565,7 @@ class FlutterResponse:
         Plots a kfreq vs. damping curve
 
         See ``plot_root_locus`` for arguments
+
         """
         xlabel = 'KFreq [rad]'
         ylabel1 = 'Damping'
@@ -998,6 +1000,7 @@ def _get_modes_imodes(all_modes, modes):
     elif len(modes) == 0:
         raise RuntimeError('modes = %s' % modes)
     else:
+        assert 0 not in modes, modes
         modes = np.unique(modes)
     assert 0 not in modes, modes
 

@@ -320,9 +320,9 @@ def _get_nastran_header(case: Any, dt: Union[int, float], itime: int) -> str:
     except KeyError:
         return 'Static'
 
-    if isinstance(dt, (float, np.float32)):
+    if isinstance(dt, (float, np.float32, np.float64)):
         header = ' %s = %.4E' % (code_name, dt)
-    elif isinstance(dt, (int, np.int32)):
+    elif isinstance(dt, (int, np.int32, np.int64)):
         header = ' %s = %i' % (code_name, dt)
     elif dt is None:
         return 'Static'

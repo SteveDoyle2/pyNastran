@@ -43,12 +43,10 @@ from pyNastran.bdf.cards.aero.utils import elements_from_quad, tri_cap
 def rod_faces(n1: int, n2: int, xform,
               dim1: Tuple[float, float],
               dim2: Tuple[float, float]): # validated
-    """
-    defines points in a circle with triangle based end caps
-    """
+    """defines points in a circle with triangle based end caps"""
     # 4,8,12,16,... becomes 5,9,13,17,...
-    thetas = np.radians(np.linspace(0., 360., 17))
-    ntheta = len(thetas)
+    ntheta = 17
+    thetas = np.radians(np.linspace(0., 360., ntheta))
 
     nfaces = 0
     all_faces = []
@@ -64,8 +62,7 @@ def rod_faces(n1: int, n2: int, xform,
         pointsi = xyz @ xform + nid
         points_list.append(pointsi)
 
-        # the tri_cap is made from points that aren't defined yet
-        # (the n1/n2 end points)
+        # the tri_cap buils triangles that fan out from the first node
         tris = tri_cap(ntheta)
 
         # we need to use the tolist because we're going to
@@ -88,12 +85,10 @@ def rod_faces(n1: int, n2: int, xform,
 def tube_faces(n1: int, n2: int, xform,
                dim1: Tuple[float, float],
                dim2: Tuple[float, float]):  # validated
-    """
-    defines a rod with a hole
-    """
+    """defines a rod with a hole"""
     # 4,8,12,16,... becomes 5,9,13,17,...
-    thetas = np.radians(np.linspace(0., 360., 17))
-    ntheta = len(thetas)
+    ntheta = 17
+    thetas = np.radians(np.linspace(0., 360., ntheta))
     npoints = ntheta * 2
 
     points_list1 = []
@@ -157,11 +152,12 @@ def bar_faces(n1: int, n2: int, xform,
     """
        ^y
        |
-    0----3
-    |    |
-    |    |----> z
-    |    |
-    1----2
+    0-----3
+    |     |
+    |     |----> z
+    |     |
+    1-----2
+
     """
     points_list = []
     for nid, dim in [(n1, dim1), (n2, dim2)]:
@@ -189,6 +185,7 @@ def box_faces(n1: int, n2: int, xform,
     |  5---6  |
     |         |
     1---------2
+
     """
     faces = [
         # front face
@@ -217,7 +214,6 @@ def box_faces(n1: int, n2: int, xform,
         [6, 14, 15, 7],
         [7, 15, 12, 4],
     ]
-
     points_list = []
     for nid, dim in [(n1, dim1), (n2, dim2)]:
         wbox, hbox, th, tw = dim
@@ -279,7 +275,6 @@ def i_faces(n1: int, n2: int, xform,
         [14, 15, 20, 21],
         [16, 17, 18, 19, 20, 15],
     ]
-
     points_list = []
     for nid, dim in [(n1, dim1), (n2, dim2)]:
         hall, bflange_btm, bflange_top, tweb, tflange_btm, tflange_top = dim
@@ -550,6 +545,7 @@ def chan1_faces(n1: int, n2: int, xform,
        <--> tweb
           <-----> bflange_out
        <--------> bflange
+
     """
     zsc = 0.  # TODO: consider the shear center
     faces = [
@@ -612,6 +608,7 @@ def z_faces(n1: int, n2: int, xform,
          <---> tweb
              <-----> bfoot
        <-----------> bflange
+
     """
     faces = [
         # front face
@@ -668,6 +665,7 @@ def hexa_faces(n1: int, n2: int, xform,
       2_______3       v
               <-> wtri
     <-----------> wall
+
     """
     faces = [
         # front face
@@ -836,6 +834,7 @@ def t1_faces(n1: int, n2: int, xform,
 
       bflange
     <---------->
+
     """
     faces = [
         # front face
@@ -856,7 +855,6 @@ def t1_faces(n1: int, n2: int, xform,
         [6, 14, 15, 7],
         [7, 15, 8, 0],
     ]
-
     points_list = []
     for nid, dim in [(n1, dim1), (n2, dim2)]:
         hall, bfoot, tweb, tflange = dim
@@ -879,17 +877,19 @@ def t2_faces(n1: int, n2: int, xform,
              dim1: Tuple[float, float, float, float],
              dim2: Tuple[float, float, float, float]):  # validated
     """
+       <-->  tweb
          ^y
          |
-       0--7
-       |  |
-       |  |
-    2--1  6--5
-    |        |---->z
-    3--------4
+       0--7    ^
+       |  |    | hweb
+       |  |    V
+    2--1  6--5 ^ hflange
+    |        |-|-->z
+    3--------4 v
 
       bflange
-    <---------->
+    <-------->
+
     """
     faces = [
         # front face
@@ -910,7 +910,6 @@ def t2_faces(n1: int, n2: int, xform,
         [6, 14, 15, 7],
         [7, 15, 8, 0],
     ]
-
     points_list = []
     for nid, dim in [(n1, dim1), (n2, dim2)]:
         bflange, htotal, tflange, tweb = dim
@@ -977,7 +976,6 @@ def hat_faces(n1: int, n2: int, xform,
         [10, 22, 23, 11,],
         [11, 23, 12, 0],
     ]
-
     points_list = []
     for nid, dim in [(n1, dim1), (n2, dim2)]:
         d1, d2, d3, d4 = dim

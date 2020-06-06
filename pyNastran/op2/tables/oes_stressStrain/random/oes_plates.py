@@ -253,7 +253,9 @@ class RandomPlateArray(OES_Object):
         #print(self.element_node)
         #aaa
 
-    def add_sort1(self, dt, eid, nid, fd1, oxx1, oyy1, txy1, fd2, oxx2, oyy2, txy2):
+    def add_sort1(self, dt, eid, nid,
+                  fd1, oxx1, oyy1, txy1,
+                  fd2, oxx2, oyy2, txy2):
         assert self.is_sort1, self.sort_method
         #assert self.element_node.max() == 0, self.element_node
         #if self.element_name in ['CTRIA3', 'CQUAD8']:
@@ -275,7 +277,9 @@ class RandomPlateArray(OES_Object):
         self.fiber_curvature[self.itotal] = fd2
         self.itotal += 1
 
-    def add_sort2(self, dt, eid, nid, fd1, oxx1, oyy1, txy1, fd2, oxx2, oyy2, txy2):
+    def add_sort2(self, dt, eid, nid,
+                  fd1, oxx1, oyy1, txy1,
+                  fd2, oxx2, oyy2, txy2):
         #if self.element_name == 'CTRIA3':
         #assert self.element_node.max() == 0, self.element_node
         #print(self.element_node, nid)
@@ -598,6 +602,17 @@ def get_nnodes(self):
     return nnodes
 
 class RandomPlateStressArray(RandomPlateArray, StressObject):
+    """
+    NX
+    2 FD1  RS Z1 = Fibre Distance
+    3 SX1  RS Normal in x at Z1
+    4 SY1  RS Normal in y at Z1
+    5 TXY1 RS Shear in xy at Z1
+    6 FD2  RS Z2 = Fibre Distance
+    7 SX2  RS Normal in x at Z2
+    8 SY2  RS Normal in y at Z2
+    9 TXY2 RS Shear in xy at Z2
+    """
     def __init__(self, data_code, is_sort1, isubcase, dt):
         RandomPlateArray.__init__(self, data_code, is_sort1, isubcase, dt)
         StressObject.__init__(self, data_code, isubcase)

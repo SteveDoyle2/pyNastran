@@ -97,6 +97,7 @@ class TestNastran(unittest.TestCase):
         os.remove(ugrid_filename_out)
         os.remove(skin_bdf_filename)
         os.remove(skin_bdf_filename2)
+        os.remove(skin_cart3d_filename)
 
     def test_nastran_to_stl(self):
         """tests nastran_to_stl"""

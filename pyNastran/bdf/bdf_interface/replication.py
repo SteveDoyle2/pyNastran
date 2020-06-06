@@ -79,7 +79,7 @@ def to_fields_replication(card_lines: List[str]) -> List[Optional[str]]:
                                line[32:40], line[40:48], line[48:56], line[56:64],
                                line[64:72]])
     if '*' in card_name:
-        raise ReplicationError('* found in unexpected position; %r\nlines = %s' % (card_name, card_lines))
+        raise ReplicationError(f'* found in unexpected position; {card_name!r}\nlines = {card_lines}')
 
     wiped_fields = wipe_empty_fields(fields)
     for field in fields:
@@ -88,13 +88,13 @@ def to_fields_replication(card_lines: List[str]) -> List[Optional[str]]:
             #sfield = field.replace('= ','=')
             #print('sfield=%r' % sfield)
         if ' ' in sfield:
-            raise RuntimeError('field=%r has embedded blanks\nfields=%s' % (sfield, fields))
+            raise RuntimeError(f'field={sfield!r} has embedded blanks '
+                               f'(mixed comma/space separated fields)\nfields={fields}')
     return wiped_fields
 
 def get_nrepeats(field: str, old_card: List[str], new_card: List[str]) -> int:
     """=4, =(11)"""
-    msg = 'field=%r; expected =(1), =2, ...\nold_card=%s\nnew_card=%s' % (
-        field, old_card, new_card)
+    msg = f'field={field!r}; expected =(1), =2, ...\nold_card={old_card}\nnew_card={new_card}'
     assert field[0] == '=', msg
     assert '.' not in field, msg
     assert '*' not in field, msg
@@ -113,7 +113,7 @@ def get_nrepeats(field: str, old_card: List[str], new_card: List[str]) -> int:
 
 def float_replication(field: str, old_field: str) -> float:
     """*4., *(11.5)"""
-    msg = 'field=%r; expected *(1.), *2., ..., *11.' % field
+    msg = f'field={field!r}; expected *(1.), *2., ..., *11.'
     assert field[0] == '*', msg
     assert '.' in field, msg
     assert len(field) >= 3, msg
@@ -133,7 +133,7 @@ def float_replication(field: str, old_field: str) -> float:
 
 def int_replication(field: str, old_field: str) -> int:
     """*4, *(11)"""
-    msg = 'field=%r; expected *(1), *2, ..., *11' % field
+    msg = f'field={field!r}; expected *(1), *2, ..., *11'
     assert field[0] == '*', msg
     assert '.' not in field, msg
     if '(' in field:
@@ -199,11 +199,13 @@ def repeat_cards(old_card: List[str], new_card: List[str]) -> List[List[str]]:
             old_field = _field(old_card, ifield)
             #old_field = old_card.field(ifield)
             if '.' in field:
+                assert old_field is not None, f'old_card:{old_card}\nnew_card:\n{new_card}'
                 field2 = float_replication(field, old_field)
             else:
+                assert old_field is not None, f'old_card:{old_card}\nnew_card:\n{new_card}'
                 field2 = int_replication(field, old_field)
         else:
-            msg = 'field=%r\nold_card=%s\nnew_card=%s' % (field, old_card, new_card)
+            msg = f'field={field!r}\nold_card={old_card}\nnew_card={new_card}'
             assert '(' not in field, msg
             assert '*' not in field, msg
             assert '=' not in field, msg

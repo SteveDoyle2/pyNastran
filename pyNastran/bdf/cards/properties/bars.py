@@ -173,7 +173,6 @@ class LineProperty(Property):
         return self.A
 
     def Nsm(self) -> float:
-        # type: () -> float
         """gets nonstructural mass per unit length"""
         return self.nsm
 
@@ -193,8 +192,7 @@ class LineProperty(Property):
         """gets the material density"""
         return self.mid_ref.rho
 
-    def E(self):
-        # type: () -> float
+    def E(self) -> float:
         """gets the material Young's ratio"""
         return self.mid_ref.E
 

@@ -22,6 +22,7 @@ import numpy as np
 from numpy.linalg import norm  # type: ignore
 
 if TYPE_CHECKING:  # pragma: no cover
+    from pyNastran.nptyping import NDArray3float
     from pyNastran.bdf.bdf import BDF
 from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.bdf.field_writer_8 import set_blank_if_default
@@ -1375,7 +1376,7 @@ class CylindricalCoord:
         return p
 
     @staticmethod
-    def xyz_to_coord(p):
+    def xyz_to_coord(xyz: NDArray3float):
         """
         Returns
         -------
@@ -1383,7 +1384,7 @@ class CylindricalCoord:
             the delta xyz point in the local coordinate system
 
         """
-        (x, y, z) = p
+        (x, y, z) = xyz
         theta = degrees(atan2(y, x))
         R = sqrt(x * x + y * y)
         return np.array([R, theta, z], dtype='float64')
@@ -1984,12 +1985,8 @@ class Cord1x(Coord):
         ----------
         cid : int
             the coordinate id
-        g1 : int
-            grid point 1
-        g2 : int
-            grid point 2
-        g3 : int
-            grid point 3
+        g1, g2, g3 : int
+            grid point 1, 2, 3
         comment : str; default=''
             a comment for the card
 
@@ -2479,12 +2476,8 @@ class CORD1R(Cord1x, RectangularCoord):
         ----------
         cid : int
             the coordinate id
-        g1 : int
-            grid point 1
-        g2 : int
-            grid point 2
-        g3 : int
-            grid point 3
+        g1, g2, g3 : int
+            grid point 1, 2, 3
         comment : str; default=''
             a comment for the card
 
@@ -2518,12 +2511,8 @@ class CORD1C(Cord1x, CylindricalCoord):
         ----------
         cid : int
             the coordinate id
-        g1 : int
-            grid point 1
-        g2 : int
-            grid point 2
-        g3 : int
-            grid point 3
+        g1, g2, g3 : int
+            grid point 1, 2, 3
         comment : str; default=''
             a comment for the card
 
@@ -2566,12 +2555,8 @@ class CORD1S(Cord1x, SphericalCoord):
         ----------
         cid : int
             the coordinate id
-        g1 : int
-            grid point 1
-        g2 : int
-            grid point 2
-        g3 : int
-            grid point 3
+        g1, g2, g3 : int
+            grid point 1, 2, 3
         comment : str; default=''
             a comment for the card
 

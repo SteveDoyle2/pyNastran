@@ -97,14 +97,15 @@ class OEF(OP2Common):
         """
         prefix = ''
         postfix = ''
-        if self.table_name in [b'OEF1X', b'OEF1', b'OEF2']:
+        table_name_bytes = self.table_name
+        if table_name_bytes in [b'OEF1X', b'OEF1', b'OEF2']:
             if self.thermal == 0:
                 prefix = 'force.'
             elif self.thermal == 1:
                 prefix = 'thermal_load.'
             else:
                 raise NotImplementedError(self.code_information())
-        elif self.table_name in [b'HOEF1']:
+        elif table_name_bytes in [b'HOEF1']:
             postfix = '_flux'
         #elif self.table_name in ['OESNLXR']:
             #prefix = 'sideline_'
@@ -138,7 +139,7 @@ class OEF(OP2Common):
             self.sort_bits[1] = 1 # sort2
             self.sort_bits[2] = 1 # random
             prefix = 'psd.'
-        elif self.table_name in [b'OEFRMS1', b'OEFRMS2']:
+        elif table_name_bytes in [b'OEFRMS1', b'OEFRMS2']:
             assert self.table_code in [4, 804], self.code_information()
             #self.format_code = 1
             self.sort_bits[0] = 0 # real
@@ -147,7 +148,7 @@ class OEF(OP2Common):
             self.sort_method = 1
             self._analysis_code_fmt = b'i'
             prefix = 'rms.'
-        elif self.table_name in [b'OEFNO1', b'OEFNO2']:
+        elif table_name_bytes in [b'OEFNO1', b'OEFNO2']:
             assert self.table_code in [4, 904], self.code_information()
             self.format_code = 1
             self.sort_bits[0] = 0 # real
@@ -159,15 +160,15 @@ class OEF(OP2Common):
             self._analysis_code_fmt = b'i'
             assert self.sort_method == 1, self.code_information()
             prefix = 'no.'
-        elif self.table_name in [b'OEFATO1', b'OEFATO2']:
+        elif table_name_bytes in [b'OEFATO1', b'OEFATO2']:
             assert self.table_code in [4], self.code_information()
             prefix = 'ato.'
 
-        elif self.table_name in [b'RAFCONS']:
+        elif table_name_bytes in [b'RAFCONS']:
             prefix = 'RAFCONS.'
-        elif self.table_name in [b'RAFEATC']:
+        elif table_name_bytes in [b'RAFEATC']:
             prefix = 'RAFEATC.'
-        elif self.table_name in [b'DOEF1']:
+        elif table_name_bytes in [b'DOEF1']:
             assert self.table_code in [4], self.code_information()
             if self.thermal == 0:
                 postfix = '_abs'
@@ -180,11 +181,11 @@ class OEF(OP2Common):
                 postfix = '_nrl'  # Scaled response spectra NRL
             else:
                 assert self.thermal in [2, 4, 8], self.code_information() # abs
-        elif self.table_name in [b'OEFIT']:
+        elif table_name_bytes in [b'OEFIT']:
             assert self.table_code in [25], self.code_information()
             prefix = 'failure_indices.'
             #raise NotImplementedError(self.code_information())
-        elif self.table_name in [b'OEFITSTN']: # composite failure indicies
+        elif table_name_bytes in [b'OEFITSTN']: # composite failure indicies
             assert self.table_code in [25], self.code_information()
             prefix = 'failure_indices.'
         else:
@@ -309,7 +310,6 @@ class OEF(OP2Common):
         else:
             msg = 'invalid analysis_code...analysis_code=%s' % str(self.analysis_code)
             raise RuntimeError(msg)
-
 
         self.fix_format_code()
         self._parse_thermal_code()

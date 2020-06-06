@@ -5,6 +5,7 @@ import numpy as np
 from numpy import zeros
 
 from pyNastran.utils.numpy_utils import integer_types
+from pyNastran.op2.result_objects.op2_objects import get_times_dtype
 from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import (
     StressObject, StrainObject, OES_Object)
 from pyNastran.f06.f06_formatting import write_floats_13e, _eigenvalue_header
@@ -82,16 +83,14 @@ class RealBeamArray(OES_Object):
         #print("***name=%s type=%s nnodes_per_element=%s ntimes=%s nelements=%s ntotal=%s" % (
             #self.element_name, self.element_type, nnodes_per_element, self.ntimes,
             #self.nelements, self.ntotal))
-        dtype = 'float32'
-        if isinstance(self.nonlinear_factor, integer_types):
-            dtype = 'int32'
+        dtype, idtype, fdtype = get_times_dtype(self.nonlinear_factor, self.size)
         _times = zeros(self.ntimes, dtype=dtype)
-        element_node = zeros((self.ntotal, 2), dtype='int32')
+        element_node = zeros((self.ntotal, 2), dtype=idtype)
 
         # sxc, sxd, sxe, sxf
         # smax, smin, MSt, MSc
-        xxb = zeros(self.ntotal, dtype='float32')
-        data = zeros((self.ntimes, self.ntotal, 8), dtype='float32')
+        xxb = zeros(self.ntotal, dtype=fdtype)
+        data = zeros((self.ntimes, self.ntotal, 8), dtype=fdtype)
 
         if self.load_as_h5:
             #for key, value in sorted(self.data_code.items()):
@@ -503,11 +502,9 @@ class RealNonlinearBeamArray(OES_Object):
         #print("***name=%s type=%s nnodes_per_element=%s ntimes=%s nelements=%s ntotal=%s" % (
             #self.element_name, self.element_type, nnodes_per_element, self.ntimes,
             #self.nelements, self.ntotal))
-        dtype = 'float32'
-        if isinstance(self.nonlinear_factor, integer_types):
-            dtype = 'int32'
+        dtype, idtype, fdtype = get_times_dtype(self.nonlinear_factor, self.size)
         self._times = zeros(self.ntimes, dtype=dtype)
-        self.element_node = zeros((self.ntotal, 3), dtype='int32')
+        self.element_node = zeros((self.ntotal, 3), dtype=idtype)
 
         #gridA, CA, long_CA, eqS_CA, tE_CA, eps_CA, ecs_CA,
         #       DA, long_DA, eqS_DA, tE_DA, eps_DA, ecs_DA,
@@ -518,7 +515,7 @@ class RealNonlinearBeamArray(OES_Object):
         #       EB, long_EB, eqS_EB, tE_EB, eps_EB, ecs_EB,
         #       FB, long_FB, eqS_FB, tE_FB, eps_FB, ecs_FB,
         #self.xxb = zeros(self.ntotal, dtype='float32')
-        self.data = zeros((self.ntimes, self.ntotal, 5), dtype='float32')
+        self.data = zeros((self.ntimes, self.ntotal, 5), dtype=fdtype)
 
     def get_stats(self, short=False) -> List[str]:
         if not self.is_built:

@@ -6,12 +6,13 @@ this is no longer true...but should be
 """
 from __future__ import annotations
 from collections import defaultdict
-from typing import List, TYPE_CHECKING
+from typing import List, Dict, TYPE_CHECKING
 
 import numpy as np
 from numpy.linalg import norm
 import vtk
 
+from cpylog import SimpleLogger
 from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.bdf.cards.elements.beam_connectivity import (
     rod_faces, tube_faces, chan1_faces,
@@ -22,6 +23,7 @@ from pyNastran.bdf.cards.elements.beam_connectivity import (
 from pyNastran.bdf.cards.elements.bars import rotate_v_wa_wb
 from pyNastran.gui.utils.vtk.vtk_utils import numpy_to_vtk_points, numpy_to_vtk
 if TYPE_CHECKING:  # pragma: no cover
+    from pyNastran.nptyping import NDArray3float
     from pyNastran.bdf.bdf import BDF
 
 
@@ -167,7 +169,9 @@ class NastranGeometryHelper(NastranGuiAttributes):
                             eid, line_y[0], line_y[1], line_z[1]))
         return bar_nids, bar_types, nid_release_map
 
-    def _create_bar_yz_update(self, model: BDF, node0: int, ugrid,
+    def _create_bar_yz_update(self, model: BDF,
+                              node0: int,
+                              ugrid,
                               points_list, bar_beam_eids):
         if not node0:
             return
@@ -177,7 +181,7 @@ class NastranGeometryHelper(NastranGuiAttributes):
         ugrid.SetPoints(points)
 
         gui = self.gui
-        def update_grid_function(unused_nid_map, ugrid, points, nodes):  # pragma: no cover
+        def update_grid_function(unused_nid_map, ugrid, points, nodes) -> None:  # pragma: no cover
             """custom function to update the 3d bars"""
             if not gui.settings.nastran_is_3d_bars_update:
                 return
@@ -426,13 +430,12 @@ def faces_to_element_facelist(faces, node0):
 
     return face_idlist
 
-def add_3d_bar_element(bar_type, ptype, pid_ref,
-                       n1, n2, xform,
+def add_3d_bar_element(bar_type: str, ptype: str, pid_ref,
+                       n1: NDArray3float, n2: NDArray3float, xform,
                        ugrid, node0, points_list, add_to_ugrid=True):
     """adds a 3d bar element to the unstructured grid"""
     if ptype == 'PBARL':
         dim1 = dim2 = pid_ref.dim
-        #bar_type = pid_ref.Type
     elif ptype == 'PBEAML':
         dim1 = pid_ref.dim[0, :]
         dim2 = pid_ref.dim[-1, :]
@@ -469,30 +472,37 @@ def add_3d_bar_element(bar_type, ptype, pid_ref,
     elif bar_type == 'BOX':
         faces, pointsi = box_faces(n1, n2, xform, dim1, dim2)
         face_idlist = faces_to_element_facelist(faces, node0)
+        assert pointsi.shape[0] == 16, pointsi.shape
         node0 += 16
     elif bar_type == 'L':
         faces, pointsi = l_faces(n1, n2, xform, dim1, dim2)
         face_idlist = faces_to_element_facelist(faces, node0)
+        assert pointsi.shape[0] == 12, pointsi.shape
         node0 += 12
     elif bar_type == 'CHAN':
         faces, pointsi = chan_faces(n1, n2, xform, dim1, dim2)
         face_idlist = faces_to_element_facelist(faces, node0)
+        assert pointsi.shape[0] == 16, pointsi.shape
         node0 += 16
     elif bar_type == 'CHAN1':
         faces, pointsi = chan1_faces(n1, n2, xform, dim1, dim2)
         face_idlist = faces_to_element_facelist(faces, node0)
+        assert pointsi.shape[0] == 16, pointsi.shape
         node0 += 16
     elif bar_type == 'T':
         faces, pointsi = t_faces(n1, n2, xform, dim1, dim2)
         face_idlist = faces_to_element_facelist(faces, node0)
+        assert pointsi.shape[0] == 16, pointsi.shape
         node0 += 16
     elif bar_type == 'T1':
         faces, pointsi = t1_faces(n1, n2, xform, dim1, dim2)
         face_idlist = faces_to_element_facelist(faces, node0)
+        assert pointsi.shape[0] == 16, pointsi.shape
         node0 += 16
     elif bar_type == 'T2':
         faces, pointsi = t2_faces(n1, n2, xform, dim1, dim2)
         face_idlist = faces_to_element_facelist(faces, node0)
+        assert pointsi.shape[0] == 16, pointsi.shape
         node0 += 16
     elif bar_type == 'I':
         faces, pointsi = i_faces(n1, n2, xform, dim1, dim2)
@@ -529,8 +539,10 @@ def add_3d_bar_element(bar_type, ptype, pid_ref,
     points_list.append(pointsi)
     return node0
 
-def _create_bar_types_dict(model: BDF, bar_types,
-                           bar_beam_eids, eid_map, log, scale, debug=False):
+def _create_bar_types_dict(model: BDF,
+                           bar_types: Dict[str, List[List[int], List[Any], List[Any]]],
+                           bar_beam_eids: List[int],
+                           eid_map, log: SimpleLogger, scale: float, debug: bool=False):
     node0 = 0
     found_bar_types = set()
     nid_release_map = defaultdict(list)
@@ -617,7 +629,8 @@ def _create_bar_types_dict(model: BDF, bar_types,
             #print('   zhat=%s len=%s' % (zhat, np.linalg.norm(zhat)))
             #print('   Li=%s scale=%s' % (Li, scale))
         if bar_type not in allowed_types:
-            msg = 'bar_type=%r allowed=[%s]' % (bar_type, ', '.join(allowed_types))
+            allowed_types_str = ', '.join(allowed_types)
+            msg = f'bar_type={bar_type!r} allowed=[{allowed_types_str}]'
             raise RuntimeError(msg)
 
         if bar_type in BEAM_GEOM_TYPES:

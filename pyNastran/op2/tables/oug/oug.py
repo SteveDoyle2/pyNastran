@@ -426,7 +426,7 @@ class OUG(OP2Common):
             from struct import Struct
             ntotal = 16 * self.factor  # 4*4
             nnodes = ndata // ntotal
-            fmt = mapfmt(self._endian + b'i3f', self.size)
+            fmt = mapfmt(self._endian + b'i 3f', self.size)
             struct1 = Struct(fmt)
             for inode in range(nnodes):
                 edata = data[n:n+ntotal]
@@ -440,22 +440,24 @@ class OUG(OP2Common):
 
     def _read_oug_4(self, data, ndata):
         """reads the SORT1 version of table 4 (the data table)"""
+        table_name_bytes = self.table_name
         if self.table_code == 1:   # Displacements
-            if self.table_name in [b'OUGV1', b'OUGV2',
-                                   b'ROUGV1', b'ROUGV2',
-                                   b'OUG1',
-                                   b'BOUGV1',
-                                   b'TOUGV1',
-                                   b'OUPV1', b'OUG1F']:
+            if table_name_bytes in [b'OUGV1', b'OUGV2',
+                                    b'OUG1',
+                                    b'BOUGV1',
+                                    b'OUPV1']:
                 # OUG1F - acoustic displacements?
                 #msg = 'table_name=%s table_code=%s' % (self.table_name, self.table_code)
                 #raise AssertionError(msg)
                 n = self._read_oug_displacement(data, ndata, is_cid=False)
-            elif self.table_name == b'OUGV1PAT':
+            elif table_name_bytes in [b'ROUGV1', b'ROUGV2', b'TOUGV1', b'OUGF1', b'OUGF2']:
+                self.to_nx()
+                n = self._read_oug_displacement(data, ndata, is_cid=False)
+            elif table_name_bytes == b'OUGV1PAT':
                 n = self._read_oug_displacement(data, ndata, is_cid=True)
-            elif self.table_name == b'OAG1':
+            elif table_name_bytes == b'OAG1':
                 n = self._read_oug_acceleration(data, ndata)
-            elif self.table_name == b'OCRUG':
+            elif table_name_bytes == b'OCRUG':
                 n = self._read_oug_displacement(data, ndata, is_cid=False)
             else:
                 raise NotImplementedError(self.code_information())
@@ -467,19 +469,24 @@ class OUG(OP2Common):
             n = self._read_oug_acceleration(data, ndata)
 
         elif self.table_code == 14:  # eigenvector (solution set)
-            assert self.table_name in [b'OPHSA'], self.table_name
+            assert table_name_bytes in [b'OPHSA'], self.table_name
+            self.to_nx()
             n = self._read_oug_eigenvector(data, ndata)
         elif self.table_code == 15:  # displacement (solution set)
-            assert self.table_name in [b'OUXY1', b'OUXY2'], self.table_name
+            assert table_name_bytes in [b'OUXY1', b'OUXY2'], self.table_name
+            self.to_nx()
             n = self._read_oug_displacement(data, ndata, is_cid=False)
         elif self.table_code == 16:  # velocity (solution set)
-            assert self.table_name in [b'OUXY1', b'OUXY2'], self.table_name
+            assert table_name_bytes in [b'OUXY1', b'OUXY2'], self.table_name
+            self.to_nx()
             n = self._read_oug_velocity(data, ndata)
         elif self.table_code == 17:  # acceleration (solution set)
-            assert self.table_name in [b'OUXY1', b'OUXY2'], self.table_name
+            assert table_name_bytes in [b'OUXY1', b'OUXY2'], self.table_name
+            self.to_nx()
             n = self._read_oug_acceleration(data, ndata)
         elif self.table_code == 44:   # Displacements
-            assert self.table_name in [b'OUGMC1', b'OUGMC2'], self.table_name
+            assert table_name_bytes in [b'OUGMC1', b'OUGMC2'], self.table_name
+            self.to_nx()
             n = self._read_oug_displacement(data, ndata, is_cid=False)
         else:
             raise NotImplementedError(self.code_information())
@@ -538,6 +545,7 @@ class OUG(OP2Common):
         TOUGV1/2  temperature
         OCRUG     ???
         OUG1F     acoustic displacements
+        OUGF1     acoustic displacements
 
         """
         self._setup_op2_subcase('displacement')
@@ -583,7 +591,7 @@ class OUG(OP2Common):
         elif self.table_name in [b'OCRUG']:
             result_name = 'displacements'
             assert self.thermal == 0, self.code_information()
-        elif self.table_name in [b'OUG1F']:
+        elif self.table_name in [b'OUG1F', b'OUGF1', b'OUGF2']:
             result_name = 'acoustic.displacements'  # acoustic displacements
             assert self.thermal == 0, self.code_information()
         else:  # pragma: no cover
@@ -599,7 +607,7 @@ class OUG(OP2Common):
             #storage_obj = self.displacements
             assert self.table_name in [b'BOUGV1', b'ROUGV1', b'ROUGV2', b'OUGV1', b'OUGV2',
                                        b'OUG1', b'OCRUG', b'OUGV1PAT', b'OUXY1', b'OUXY2',
-                                       b'OUG1F'], self.table_name
+                                       b'OUG1F', b'OUGF1', b'OUGF2'], self.table_name
             n = self._read_table_vectorized(data, ndata, result_name, storage_obj,
                                             RealDisplacementArray, ComplexDisplacementArray,
                                             'node', random_code=self.random_code,
@@ -651,9 +659,11 @@ class OUG(OP2Common):
             assert self.thermal in [0, 1], self.code_information()
             result_name = 'velocities'
         elif self.table_name in [b'OUXY1', b'OUXY2']:
+            self.to_nx()
             assert self.thermal == 0, self.code_information()
             result_name = 'solution_set.velocities'
         elif self.table_name in [b'ROUGV1', b'ROUGV2']:
+            self.to_nx()
             result_name = 'velocities_ROUGV1'
             assert self.thermal == 0, self.code_information()
         elif self.table_name == b'OUPV1':
@@ -708,9 +718,11 @@ class OUG(OP2Common):
             result_name = 'accelerations'
             assert self.thermal == 0, self.code_information()
         elif self.table_name in [b'OUXY1', b'OUXY2']:
+            self.to_nx()
             assert self.thermal == 0, self.code_information()
             result_name = 'solution_set.accelerations'
         elif self.table_name in [b'ROUGV1', b'ROUGV2']:
+            self.to_nx()
             result_name = 'accelerations_ROUGV1'
             assert self.thermal == 0, self.code_information()
         elif self.table_name in [b'OAGPSD1', b'OAGPSD2',
@@ -796,21 +808,30 @@ class OUG(OP2Common):
         if self.table_name in [b'OUGV1', b'OUGV2', b'BOUGV1', b'OPHIG', b'BOPHIG', b'OUG1', b'BOPHIGF']:
             self._setup_op2_subcase('VECTOR')
             result_name = 'eigenvectors'
+        elif self.table_name in [b'BOPHIGF', b'OUGF1', b'OUGF2']:
+            self._setup_op2_subcase('VECTOR')
+            result_name = 'eigenvectors'
+
         elif self.table_name == b'OPHSA':
+            self.to_nx()
             self._setup_op2_subcase('SVECTOR')
             assert self.thermal == 0, self.code_information()
             result_name = 'solution_set.eigenvectors'
 
         elif self.table_name == b'RADCONS':
+            self.to_nx()
             self._setup_op2_subcase('VECTOR')
             result_name = 'RADCONS.eigenvectors'
         elif self.table_name == b'RADEFFM':
+            self.to_nx()
             self._setup_op2_subcase('VECTOR')
             result_name = 'RADEFFM.eigenvectors'
         elif self.table_name == b'RADEATC':
+            self.to_nx()
             self._setup_op2_subcase('VECTOR')
             result_name = 'RADEATC.eigenvectors'
         elif self.table_name in [b'ROUGV1', 'ROUGV2']:
+            self.to_nx()
             self._setup_op2_subcase('VECTOR')
             result_name = 'ROUGV1.eigenvectors'
         else:  # pragma: no cover

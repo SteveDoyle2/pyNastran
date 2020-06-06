@@ -41,6 +41,8 @@ def sum_forces_moments(model, p0, loadcase_id, include_grav=False, xyz_cid0=None
         the reference point
     loadcase_id : int
         the LOAD=ID to analyze
+    cid : int; default=0
+        the coordinate system for the summation
     include_grav : bool; default=False
         includes gravity in the summation (not supported)
     xyz_cid0 : None / Dict[int] = (3, ) ndarray

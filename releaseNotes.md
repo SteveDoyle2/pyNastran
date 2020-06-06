@@ -8,6 +8,57 @@ If you have a bug/want a new feature or card, leave some feedback on the [Issue 
 
 Release Notes
 =============
+v1.3.3 (2020/6/?)
+-----------------
+This is a bug fix only release outside of:
+ - subcase.add_set_from_values(set_id, values)
+which was overly complicated to do before.
+
+BDF:
+ - More TEMPRB defaults
+ - DRESP2 now handles DTABLE properly when validate=True is used
+ - fixed PSHELL 12I/t^3 convert/scale bug
+ - TSTEPNL now handles KUPDATE (NX parameter)
+
+OP2:
+ - auto-conversion to nx for some tables
+ - added SixtyFourBitError, which is inherited from NotImplementedError
+
+OP2 Writer
+ - fixed multiple PCOMP writing bug
+ - added some 64 bit checks (64-bit writing is not supported)
+ - turns out the CPYRAM (NX) has 14 node fields (even though it has 13 nodes)
+
+OP2 Geom:
+ - fixed GRID reading from the GEOM1N table
+ - fixed PSHELL reading bug that occurs when very large property ids exist
+ - fixed MAT10 reading bug that occurs when very large material ids exist
+ - PMASS were put in self.properties, not self.properties_mass
+ - NX support (the card format is different than MSC)
+   - CTRIAX
+   - TSTEPNL
+   - TLOAD1 (also 64-bit)
+   - TLOAD2 (also 64-bit)
+   -
+
+ - multiple MATS1s now work
+ - 64 bit:
+   - multiple SEBULKs now work
+   - SPOINTs work now
+   - MAT10, MATT2, MATT3, MATT9
+   - PBARL
+
+F06 Flutter Plotter
+ - added check for mode id > 0
+ - better parsing of modes; '1,3:' is now supported
+
+GUI:
+ - supporting vtk 9
+
+minor:
+ - removal of some prints
+ - more docstrings
+ - more typing
 
 v1.3.2 (2020/4/8)
 -----------------

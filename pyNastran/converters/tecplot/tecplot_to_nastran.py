@@ -4,19 +4,25 @@ Defines:
  - tecplot_to_nastran(tecplot_filename, bdf_filename, debug=True)
 
 """
+from __future__ import annotations
+from typing import Union, List, Optional, TYPE_CHECKING
 import numpy as np
 from pyNastran.bdf.bdf import BDF
 from pyNastran.bdf.mesh_utils.remove_unused import remove_unused
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.converters.tecplot.tecplot import Tecplot, Zone, read_tecplot
+if TYPE_CHECKING:
+    from cpylog import SimpleLogger
 
 
-def tecplot_to_nastran_filename(tecplot_filename, bdf_filename, log=None, debug=True):
+def tecplot_to_nastran_filename(tecplot_filename: Union[str, Tecplot], bdf_filename: str,
+                                log: Optional[SimpleLogger]=None, debug: bool=True) -> BDF:
     """Converts a Tecplot file to Nastran."""
     return tecplot_to_nastran(tecplot_filename, bdf_filename, log=log, debug=debug)
 
 
-def tecplot_to_nastran(tecplot_filename, bdf_filename, log=None, debug=True):
+def tecplot_to_nastran(tecplot_filename: Union[str, Tecplot], bdf_filename: str,
+                       log: Optional[SimpleLogger]=None, debug: bool=True) -> None:
     """Converts a Tecplot file to Nastran."""
     if isinstance(tecplot_filename, str):
         model = read_tecplot(tecplot_filename, log=log, debug=debug)
@@ -109,7 +115,7 @@ def tecplot_to_nastran(tecplot_filename, bdf_filename, log=None, debug=True):
         remove_unused(bdf_model)
 
 
-def nastran_table_to_tecplot(bdf_model, case, variables):
+def nastran_table_to_tecplot(bdf_model: BDF, case, variables: List[str]) -> Tecplot:
     """assumes only triangles"""
     xyz = []
     tris = []
@@ -130,7 +136,10 @@ def nastran_table_to_tecplot(bdf_model, case, variables):
     tecplot_model.zones[0] = [zone]
     return tecplot_model
 
-def nastran_tables_to_tecplot_filenames(tecplot_filename_base: str, bdf_model: BDF, case, variables=None, ivars=None):
+def nastran_tables_to_tecplot_filenames(tecplot_filename_base: str,
+                                        bdf_model: BDF, case,
+                                        variables: Optional[List[str]]=None,
+                                        ivars: Optional[List[int]]=None) -> None:
     if variables is None:
         variables = case.headers
     if ivars is None:

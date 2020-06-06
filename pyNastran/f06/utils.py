@@ -172,10 +172,10 @@ def split_float_colons(string_values):
         values = None # all values
     return values
 
-def split_int_colon(modes, nmax=1000):
+def split_int_colon(modes, nmax=1000, start_value=0):
     """
     Uses numpy-ish syntax to parse a set of integers.  Values are inclusive.
-    Blanks are interpreted as 0.
+    Blanks are interpreted as 0 unless start_value is specified.
 
     Parse the following:
        1:10
@@ -183,6 +183,8 @@ def split_int_colon(modes, nmax=1000):
        :100
        1:5:2
        :5,11:15:2,10:20
+       1,3:
+
     """
     modes2 = []
     if modes is not None:
@@ -192,25 +194,39 @@ def split_int_colon(modes, nmax=1000):
             if ':' in mode:
                 smode = mode.split(':')
                 if len(smode) == 2:
+                    #start_str, stop_str = smode
                     if smode[0] == '':
-                        smode[0] = 0
+                        smode[0] = start_value
                     istart = int(smode[0])
+
                     if smode[1] == '':
                         iend = None
                         modes2 = slice(istart, nmax)
-                        assert len(smodes) == 1, smodes
+                        assert len(smode) == 2, smode
                     else:
                         iend = int(smode[1])
                         assert iend > istart, 'smode=%s; istart=%s iend=%s' % (smode, istart, iend)
                         modes2 += list(range(istart, iend + 1))
                 elif len(smode) == 3:
+                    #start_str, stop_str, step_str = smode
+                    if smode[0] == '':
+                        smode[0] = start_value
                     istart = int(smode[0])
-                    iend = int(smode[1])
-                    assert iend > istart, 'smode=%s; istart=%s iend=%s' % (smode, istart, iend)
+
+                    if smode[2] == '':
+                        smode[2] = 1
                     istep = int(smode[2])
-                    modes2 += list(range(istart, iend + 1, istep))
+
+                    if smode[1] == '':
+                        #iend = None
+                        modes2 += list(range(istart, nmax, istep))
+                    else:
+                        iend = int(smode[1]) + 1
+                        assert iend > istart, 'smode=%s; istart=%s iend=%s' % (smode, istart, iend)
+                        modes2 += list(range(istart, iend, istep))
+
                 else:
-                    raise NotImplementedError('smode=%r; len=%s' % (smode, len(smode)))
+                    raise NotImplementedError('mode=%r; len=%s' % (mode, len(smode)))
             else:
                 imode = int(mode)
                 modes2.append(imode)
