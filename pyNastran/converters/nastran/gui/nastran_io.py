@@ -94,6 +94,7 @@ from pyNastran.gui.gui_objects.displacements import ForceTableResults, Elemental
 
 
 from .wildcards import IS_H5PY, GEOM_METHODS_BDF
+from .beams3d import get_bar_nids, get_beam_sections_map, create_3d_beams
 from .geometry_helper import NastranGeometryHelper, get_material_arrays, get_suport_node_ids
 from .results_helper import NastranGuiResults, fill_responses, _get_times
 from .bdf_vectorized import add_vectorized_elements
@@ -2384,6 +2385,10 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         out = model.get_card_ids_by_card_types(card_types=card_types)
         bar_beam_eids = out['CBAR'] + out['CBEAM']
 
+        bar_pid_to_eids = get_beam_sections_map(model, bar_beam_eids)
+        bar_nids = get_bar_nids(model, bar_beam_eids)
+        #ugrid_temp = create_3d_beams(model, bar_pid_to_eids)
+
         self.bar_eids = {}
         self.bar_lines = {}
         if len(bar_beam_eids) == 0:
@@ -2392,7 +2397,8 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
 
         # TODO: this should be reworked
         bar_nids, bar_types, nid_release_map = self._get_bar_yz_arrays(
-            model, bar_beam_eids, scale, debug)
+            model, bar_beam_eids, bar_pid_to_eids,
+            scale, debug)
         self.nid_release_map = nid_release_map
 
         bar_nids = list(bar_nids)

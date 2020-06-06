@@ -32,6 +32,8 @@ def elements_from_quad(nx, ny, dtype='int32'):
 
 def tri_cap(nelements):
     """
+    The tri_cap buils triangles that fan out from the first node
+
     ::
 
       1

@@ -517,7 +517,16 @@ def _write_spc1(card_type: str, cards, unused_ncards: int, op2, op2_ascii,
         #raise NotImplementedError('SPC1; thru_flag=%s' % thru_flag)
 
     max_spc_id = max([spc.conid for spc in cards])
-    max_nid = max([max(spc.node_ids) for spc in cards])
+    try:
+        nids = [max(spc.node_ids) for spc in cards]
+    except ValueError:
+        for spc in cards:
+            try:
+                max(spc.node_ids)
+            except ValueError:
+                print(spc)
+                raise
+    max_nid = max(nids)
 
     if max_spc_id > 99999999:
         raise SixtyFourBitError(f'64-bit OP2 writing is not supported; max spc_id={max_spc_id}')
