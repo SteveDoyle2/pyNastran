@@ -1275,7 +1275,10 @@ class DYNAMICS(GeomCommon):
         """
         dloads = []
         ntotal = 44 * self.factor
-        nentries = (len(data) - n) // ntotal
+        ndatai = len(data) - n
+        nentries = ndatai // ntotal
+        assert ndatai % ntotal == 0
+        assert nentries > 0
         struc = Struct(mapfmt(self._endian + b'7i 4f', self.size))
         for unused_i in range(nentries):
             edata = data[n:n+ntotal]
@@ -1283,8 +1286,8 @@ class DYNAMICS(GeomCommon):
             sid, darea, delayi, dphasei, tbi, tpi, load_type, delayr, dphaser, tbr, tpr = out
             if self.is_debug_file:
                 self.binary_debug.write('  RLOAD2=%s\n' % str(out))
-            assert sid > 0, (f'RLOAD2; sid={sid} darea={darea} dphasei={dphasei} delayi={delayi} '
-                             f'tbi={tbi} tpi={tpi} load_type={load_type} tau={tau} phase={phase}')
+                assert sid > 0 and darea > 0, (f'RLOAD2; sid={sid} darea={darea} dphasei={dphasei} delayi={delayi} '
+                                               f'tbi={tbi} tpi={tpi} load_type={load_type} tau={tau} phase={phase}')
 
             tb = tbi
             tp = tpi
@@ -1321,9 +1324,10 @@ class DYNAMICS(GeomCommon):
         """
         dloads = []
         ntotal = 36
-        nentries = (len(data) - n) // ntotal
-        assert (len(data) - n) % ntotal == 0
-        assert nentries > 0, nentries
+        ndatai = len(data) - n
+        nentries = ndatai // ntotal
+        assert ndatai % ntotal == 0
+        assert nentries > 0
         struc = Struct(self._endian + b'7i 2f')
         for unused_i in range(nentries):
             edata = data[n:n+ntotal]
@@ -1331,9 +1335,8 @@ class DYNAMICS(GeomCommon):
             sid, darea, dphasei, delayi, tbi, tpi, load_type, tau, phase = out
             if self.is_debug_file:
                 self.binary_debug.write('  RLOAD2=%s\n' % str(out))
-            assert sid > 0, (f'RLOAD2; sid={sid} darea={darea} dphasei={dphasei} delayi={delayi} '
-                             f'tbi={tbi} tpi={tpi} load_type={load_type} tau={tau} phase={phase}')
-
+            assert sid > 0 and darea > 0, (f'RLOAD2; sid={sid} darea={darea} dphasei={dphasei} delayi={delayi} '
+                                           f'tbi={tbi} tpi={tpi} load_type={load_type} tau={tau} phase={phase}')
             dload = RLOAD2(sid, darea, delay=delayi, dphase=dphasei, tb=tbi, tp=tpi,
                            Type=load_type, comment='')
             dloads.append(dload)

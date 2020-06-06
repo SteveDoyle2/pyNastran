@@ -1159,6 +1159,8 @@ class CTRIA6(TriShell):
             t2 = None
         if t3 == -1.:
             t3 = None
+        for nid in nids:
+            assert nid >= 0, nids
         tflag = data[13]
         assert isinstance(tflag, integer_types), data
         #prepare_node_ids(nids, allow_empty_nodes=True)
@@ -1507,6 +1509,8 @@ class CTRIAR(TriShell):
         if T3 == -1.0:
             T3 = 1.0
         assert tflag in [0, 1], data
+        for nid in nids:
+            assert nid > 0, nids
         return CTRIAR(eid, pid, nids, zoffset=zoffset, theta_mcid=theta_mcid,
                       tflag=tflag, T1=T1, T2=T2, T3=T3, comment=comment)
 
@@ -1944,6 +1948,8 @@ class CSHEAR(QuadShell):
         eid = data[0]
         pid = data[1]
         nids = data[2:]
+        for nid in nids:
+            assert nid > 0, nids
         return CSHEAR(eid, pid, nids, comment=comment)
 
     def cross_reference(self, model: BDF) -> None:
@@ -2323,6 +2329,8 @@ class CQUAD4(QuadShell):
             T3 = 1.0
         if T4 == -1.0:
             T4 = 1.0
+        for nid in nids:
+            assert nid > 0, nids
         assert tflag in [0, 1], 'data=%s tflag=%s' % (data, tflag)
         return CQUAD4(eid, pid, nids, theta_mcid, zoffset,
                       tflag, T1, T2, T3, T4, comment=comment)
@@ -3620,6 +3628,8 @@ class CQUADR(QuadShell):
         if T4 == -1.0:
             T4 = 1.0
         assert tflag in [0, 1], data
+        for nid in nids:
+            assert nid > 0, nids
         return CQUADR(eid, pid, nids, theta_mcid, zoffset,
                       tflag, T1, T2, T3, T4, comment=comment)
 
@@ -4097,6 +4107,8 @@ class CQUAD(QuadShell):
             theta_mcid = 0. #  msc specific
         else:
             raise RuntimeError(f'theta_mcid is defined; data={data}')
+        for nid in nids:
+            assert nid >= 0, nids
         return CQUAD(eid, pid, nids, theta_mcid=theta_mcid, comment=comment)
 
     def cross_reference(self, model: BDF) -> None:
@@ -4387,6 +4399,8 @@ class CQUAD8(QuadShell):
         #assert isinstance(tflag, int), tflag  # None for v2001; int for post-2001
         if tflag is None: # TODO: temporary
             tflag = 0
+        for nid in nids:
+            assert nid >= 0, nids
         assert tflag in [0, 1], 'tflag=%s data=%s' % (tflag, data)
         return CQUAD8(eid, pid, nids, theta_mcid=theta_mcid, zoffset=zoffset,
                       tflag=tflag, T1=T1, T2=T2, T3=T3, T4=T4, comment=comment)
