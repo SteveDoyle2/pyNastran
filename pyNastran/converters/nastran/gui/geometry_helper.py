@@ -200,6 +200,7 @@ class NastranGeometryHelper(NastranGuiAttributes):
         if ugrid is None:
             return
 
+        gui = self.gui
         def update_grid_function(unused_nid_map, ugrid, points, nodes) -> None:  # pragma: no cover
             """custom function to update the 3d bars"""
             if not gui.settings.nastran_is_3d_bars_update:

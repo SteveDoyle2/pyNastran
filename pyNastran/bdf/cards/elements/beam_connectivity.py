@@ -204,7 +204,7 @@ def bar_faces(n1: NDArray3float, n2: NDArray3float, xform: NDArray33float,
               dim1: Tuple[float, float],
               dim2: Tuple[float, float]):  # validated
     """builds the BAR faces"""
-    points1, points2 = bar_setup(dim1, dim2)
+    unused_faces, points1, points2 = bar_setup(dim1, dim2)
     points_array = _transform_points(n1, n2, points1, points2, xform)
     return points_array
 
@@ -349,7 +349,7 @@ def i_faces(n1: NDArray3float, n2: NDArray3float, xform: NDArray33float,
             dim1: Tuple[float, float, float, float, float, float],
             dim2: Tuple[float, float, float, float, float, float]):  # validated
     """builds the I faces"""
-    faces, points1, points2 = box_setup(dim1, dim2)
+    faces, points1, points2 = i_setup(dim1, dim2)
     points_array = _transform_points(n1, n2, points1, points2, xform)
     return faces, points_array
 
