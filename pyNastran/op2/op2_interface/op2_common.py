@@ -348,9 +348,9 @@ class OP2Common(Op2Codes, F06Writer):
 
     def add_data_parameter4(self, data: bytes, var_name: str,
                             Type: bytes, field_num: int,
-                           apply_nonlinear_factor: bool=True,
-                           fix_device_code: bool=False,
-                           add_to_dict: bool=True):
+                            apply_nonlinear_factor: bool=True,
+                            fix_device_code: bool=False,
+                            add_to_dict: bool=True):
         assert len(data) == 584, len(data)
         datai = data[4 * (field_num - 1) : 4 * (field_num)]
         assert len(datai) == 4, len(datai)

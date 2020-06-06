@@ -1427,7 +1427,6 @@ def _convert_aero(model: BDF,
             elif label in ['PITCH', 'ROLL', 'YAW']:
                 ux *= angular_velocity_scale
                 scales.add('angular_velocity')
-
             uxs2.append(ux)
         trim.uxs = uxs2
 

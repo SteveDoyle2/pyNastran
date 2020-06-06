@@ -1295,10 +1295,6 @@ class EPT(GeomCommon):
             if nlayers < 0:
                 is_symmetrical = 'SYM'
                 nlayers = abs(nlayers)
-
-            #if nlayers == 0:
-                #print('nalyers=0')  # 8
-                #continue
             assert nlayers > 0, out
 
             assert 0 < nlayers < 100, 'pid=%s nlayers=%s z0=%s nms=%s sb=%s ft=%s Tref=%s ge=%s' % (

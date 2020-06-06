@@ -147,8 +147,6 @@ def nastran_tables_to_tecplot_filenames(tecplot_filename_base: str,
         ivars = np.arange(0, len(variables))
 
     tecplot_model = nastran_table_to_tecplot(bdf_model, case, variables)
-    #print(tecplot_model)
-    #print(tecplot_model.zones)
     zone = tecplot_model.zones[0]
     for itime, time in enumerate(case._times):
         if '%' in tecplot_filename_base:

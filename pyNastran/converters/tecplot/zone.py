@@ -1,6 +1,6 @@
 from __future__ import annotations
 from collections import defaultdict
-from typing import TYPE_CHECKING, TextIO, Any
+from typing import Tuple, List, Dict, TextIO, Optional, Any, TYPE_CHECKING
 
 import numpy as np
 from pyNastran.nptyping import NDArrayN3float, NDArrayN3int, NDArrayN4int

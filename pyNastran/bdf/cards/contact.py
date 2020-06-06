@@ -443,6 +443,7 @@ class BSURFS(BaseCard):
         card = self.repr_fields()
         return self.comment + print_card_8(card)
 
+
 class BCTSET(BaseCard):
     """
     3D Contact Set Definition (SOLs 101, 601 and 701 only)

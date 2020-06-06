@@ -125,6 +125,7 @@ def _eigenvalue_header(obj, header, itime: int, ntimes: int, dt):
             #dt_line = ' %14s = %12.5E %12.5Ej\n' % (name, dt.real, dt.imag)
         else:
             raise NotImplementedError(type(dt))
+            #dt_line = ' %14s = %12.5E %12.5Ej\n' % (name, dt.real, dt.imag)
         header[1] = dt_line
         codes = getattr(obj, name + 's')
         if not len(codes) == ntimes:

@@ -256,7 +256,6 @@ def split_int_colon(modes, nmax=1000, start_value=0):
     #print('modes =', list(modes))
     #if None not in modes:
         #modes.sort()
-    print(modes)
     try:
         modes.sort()
     except AttributeError:

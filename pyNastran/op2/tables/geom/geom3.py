@@ -553,7 +553,6 @@ class GEOM3(GeomCommon):
         for unused_i in range(nentries):
             edata = data[n:n + ntotal]
             out = struc.unpack(edata)
-            print(out)
             if self.is_debug_file:
                 self.binary_debug.write('  PLOADX=%s\n' % str(out))
             fields = ['PLOADX'] + list(out)

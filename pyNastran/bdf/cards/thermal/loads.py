@@ -953,6 +953,7 @@ class TEMPRB(ThermalLoad):
     +--------+------+------+------+------+------+------+------+------+
     |        |   9  |  10  |      |      |      |      |      |      |
     +--------+------+------+------+------+------+------+------+------+
+
     """
 
     type = 'TEMPRB'
@@ -1081,8 +1082,6 @@ class TEMPRB(ThermalLoad):
 
         tai = [tca, tda, tea, tfa]
         tbi = [tcb, tdb, teb, tfb]
-        print('tai =', tai)
-        print('tbi =', tbi)
         return TEMPRB(sid, ta, tb, tp1, tp2,
                       tai, tbi, eids, comment=comment)
 

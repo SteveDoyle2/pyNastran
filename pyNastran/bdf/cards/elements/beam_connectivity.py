@@ -451,7 +451,6 @@ def i1_faces(n1: NDArray3float, n2: NDArray3float, xform: NDArray33float,
     points_array = _transform_points(n1, n2, points1, points2, xform)
     return faces, points_array
 
-
 def h_setup(dim1: Tuple[float, float, float, float],
             dim2: Tuple[float, float, float, float]):
     """

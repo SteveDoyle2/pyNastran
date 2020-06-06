@@ -2068,11 +2068,6 @@ class TSTEPNL(BaseCard):
     |         | KUPDATE |        |       |        |        |       |         |      |
     +---------+---------+--------+-------+--------+--------+-------+---------+------+
 
-    TSTEPNL ID NDT DT NO KSTEP MAXITER CONV
-EPSU EPSP EPSW MAXDIV MAXQN MAXLS FSTRESS
-MAXBIS ADJUST MSTEP RB MAXR UTOL RTOLB KDAMP
-KUPDATE
-
     method = None for NX, but apparently TSTEP as well, which is not in the QRG
 
     """

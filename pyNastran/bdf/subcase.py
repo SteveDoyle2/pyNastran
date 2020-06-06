@@ -740,6 +740,7 @@ class Subcase:
             the name
 
         >>> subcase._add_data(key, value, options, param_type)
+
         """
         key = update_param_name(key)
         if key == 'ANALYSIS' and value == 'FLUT':

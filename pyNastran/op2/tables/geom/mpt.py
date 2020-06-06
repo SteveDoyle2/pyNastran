@@ -747,7 +747,7 @@ class MPT(GeomCommon):
         return len(data)
 
     def _read_tstepnl(self, data: bytes, n: int) -> int:
-        """PLOAD4(7209,72,299) - the marker for Record 20"""
+        """common method to read MSC/NX TSTEPNLs"""
         n = self._read_dual_card(data, n, self._read_tstepnl_nx, self._read_tstepnl_msc,
                                  'TSTEPNL', self._add_tstepnl_object)
         return n
