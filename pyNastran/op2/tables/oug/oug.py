@@ -730,7 +730,9 @@ class OUG(OP2Common):
                 #msg = 'table_name=%s table_code=%s' % (self.table_name, self.table_code)
                 #raise AssertionError(msg)
                 n = self._read_oug_displacement(data, ndata, is_cid=False)
-            elif table_name_bytes in [b'ROUGV1', b'ROUGV2', b'TOUGV1', b'OUGF1', b'OUGF2']:
+            elif table_name_bytes in [b'ROUGV1', b'ROUGV2', b'TOUGV1',
+                                      b'OUGF1', b'OUGF2',
+                                      b'BOUGF1', ]:
                 self.to_nx()
                 n = self._read_oug_displacement(data, ndata, is_cid=False)
             elif table_name_bytes == b'OUGV1PAT':
@@ -871,7 +873,7 @@ class OUG(OP2Common):
         elif self.table_name in [b'OCRUG']:
             result_name = 'displacements'
             assert self.thermal == 0, self.code_information()
-        elif self.table_name in [b'OUG1F', b'OUGF1', b'OUGF2']:
+        elif self.table_name in [b'OUG1F', b'OUGF1', b'OUGF2', b'BOUGF1']:
             result_name = 'acoustic.displacements'  # acoustic displacements
             assert self.thermal == 0, self.code_information()
         else:  # pragma: no cover
@@ -887,7 +889,9 @@ class OUG(OP2Common):
             #storage_obj = self.displacements
             assert self.table_name in [b'BOUGV1', b'ROUGV1', b'ROUGV2', b'OUGV1', b'OUGV2',
                                        b'OUG1', b'OCRUG', b'OUGV1PAT', b'OUXY1', b'OUXY2',
-                                       b'OUG1F', b'OUGF1', b'OUGF2'], self.table_name
+                                       b'OUG1F',
+                                       b'OUGF1', b'OUGF2',
+                                       b'BOUGF1', ], self.table_name
             n = self._read_table_vectorized(data, ndata, result_name, storage_obj,
                                             RealDisplacementArray, ComplexDisplacementArray,
                                             'node', random_code=self.random_code,

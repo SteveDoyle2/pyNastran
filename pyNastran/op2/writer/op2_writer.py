@@ -132,7 +132,9 @@ def _write_result_tables(obj: OP2, fop2, fop2_ascii, struct_3i, endian, skips: S
     table_order = [
         'OUGV1', 'OPHIG',
         'BOUGV1', 'BOPHIG', 'BOPHIGF',
-        'OUPV1', 'OUXY1', 'OUXY2', 'OPHSA', 'OUGF1',
+        'OUPV1', 'OUXY1', 'OUXY2', 'OPHSA',
+        'OUGF1',
+        'BOUGF1',
         'TOUGV1', 'OTEMP1',
         'OUG1',
         'OUGV1PAT',

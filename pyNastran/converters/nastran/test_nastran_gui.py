@@ -436,6 +436,18 @@ class TestNastranGUI(unittest.TestCase):
         test.load_nastran_geometry(op2_filename)
         test.load_nastran_results(op2_filename)
 
+    def test_aero_op2(self):
+        """tests the freedlm model (OP2 with aero)"""
+        #bdf_filename = os.path.join(MODEL_PATH, 'aero', 'freedlm', 'freedlm.bdf')
+        op2_filename = os.path.join(MODEL_PATH, 'aero', 'freedlm', 'freedlm.op2')
+        test = NastranGUI()
+        #test.log.level = 'debug'
+        #test.load_nastran_geometry(bdf_filename)
+        test.load_nastran_geometry(op2_filename)
+        test.load_nastran_results(op2_filename)
+        assert len(test.result_cases) == 218, len(test.result_cases)
+        #print(test.result_cases)
+
     def test_aero(self):
         """tests the bah_plane"""
         bdf_filename = os.path.join(MODEL_PATH, 'aero', 'bah_plane', 'bah_plane.bdf')

@@ -89,7 +89,10 @@ SORT2_TABLE_NAME_MAP = {
 }
 SORT1_TABLES = list(SORT2_TABLE_NAME_MAP.values())
 SORT1_TABLES.extend([
-    'BOUGV1', 'OUG1F',
+    'BOUGV1',
+    'OUG1F',
+    'BOUGF1',
+
 ])
 SORT2_TABLES = list(SORT2_TABLE_NAME_MAP.keys())
 
@@ -1031,7 +1034,8 @@ class RealTableArray(TableArray):
             'OQGPSD1',
             'OCRPG', 'OCRUG', 'OUG1',
             'OUGV1PAT',
-            'OUGF1', 'OQGCF1', 'OQGGF1',
+            'OUGF1',
+            'OQGCF1', 'OQGGF1',
             'RADCONS', 'RADEATC', 'RADEFFM',
         ]
         assert self.table_name in allowed_tables, self.table_name

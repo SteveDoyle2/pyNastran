@@ -865,6 +865,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
 
             b'OUGV1'   : [self._read_oug1_3, self._read_oug_4],  # displacements in nodal frame
             b'BOUGV1'  : [self._read_oug1_3, self._read_oug_4],  # OUG1 on the boundary???
+            b'BOUGF1'  : [self._read_oug1_3, self._read_oug_4],  # OUG1 on the boundary???
             b'OUGV1PAT': [self._read_oug1_3, self._read_oug_4],  # OUG1 + coord ID
             b'OUPV1'   : [self._read_oug1_3, self._read_oug_4],  # scaled response spectra - displacement
             b'TOUGV1'  : [self._read_oug1_3, self._read_oug_4],  # grid point temperature
