@@ -159,7 +159,7 @@ class AECOMP(BaseCard):
         else:
             raise NotImplementedError(self.list_type)
 
-    def safe_cross_reference(self, model):
+    def safe_cross_reference(self, model: BDF):
         msg = ', which is required by AECOMP name=%r' % self.name
         #return
         lists_ref = []
@@ -4986,8 +4986,10 @@ class SPLINE1(Spline):
                        dz=0., method='IPS', usage='BOTH',
                        nelements=10, melements=10, comment='')
 
-    def __init__(self, eid, caero, box1, box2, setg, dz=0., method='IPS',
-                 usage='BOTH', nelements=10, melements=10, comment=''):
+    def __init__(self, eid: int, caero: int, box1: int, box2: int, setg: int,
+                 dz: float=0., method: str='IPS',
+                 usage: str='BOTH', nelements: int=10,
+                 melements: int=10, comment: str=''):
         """
         Creates a SPLINE1, which defines a surface spline.
 
@@ -5138,10 +5140,11 @@ class SPLINE1(Spline):
     #def safe_set(self, setg, set_type, self.eid, xref_errors, msg=''):
         try:
             self.setg_ref = model.Set(self.setg, msg=msg)
-            #try:
-            self.setg_ref.safe_cross_reference(model, 'Node', msg=msg)
-            #except:
-                #raise
+            try:
+                self.setg_ref.safe_cross_reference(model, 'Node', msg=msg)
+            except:
+                print(self.setg_ref)
+                raise
 
             nnodes = len(self.setg_ref.ids)
             if nnodes < 3:

@@ -4626,8 +4626,9 @@ class AddCards(AddMethods):
         self._add_aeros_object(aeros)
         return aeros
 
-    def add_aero(self, velocity, cref, rho_ref, acsid=0, sym_xz=0, sym_xy=0,
-                 comment='') -> AERO:
+    def add_aero(self, velocity: float, cref: float, rho_ref: float,
+                 acsid: int=0, sym_xz: int=0, sym_xy: int=0,
+                 comment: str='') -> AERO:
         """
         Creates an AERO card
 
@@ -4704,8 +4705,10 @@ class AddCards(AddMethods):
         self._add_caero_object(caero)
         return caero
 
-    def add_caero2(self, eid, pid, igroup, p1, x12, cp=0, nsb=0, nint=0, lsb=0,
-                   lint=0, comment='') -> CAERO2:
+    def add_caero2(self, eid: int, pid: int, igroup: int, p1: List[float], x12: float,
+                   cp: int=0,
+                   nsb: int=0, nint: int=0,
+                   lsb: int=0, lint: int=0, comment: str='') -> CAERO2:
         """
         Defines a CAERO2 card, which defines a slender body
         (e.g., fuselage/wingtip tank).
@@ -4819,8 +4822,12 @@ class AddCards(AddMethods):
         self._add_paero_object(paero)
         return paero
 
-    def add_paero2(self, pid, orient, width, AR, thi, thn,
-                   lrsb=None, lrib=None, lth=None, comment='') -> PAERO2:
+    def add_paero2(self, pid: int, orient: str, width: float, AR: float,
+                   thi: List[int], thn: List[int],
+                   lrsb: Optional[int]=None,
+                   lrib: Optional[int]=None,
+                   lth: Optional[int]=None,
+                   comment: str='') -> PAERO2:
         """
         Creates a PAERO2 card, which defines additional cross-sectional
         properties for the CAERO2 geometry.
@@ -4903,9 +4910,10 @@ class AddCards(AddMethods):
         self._add_paero_object(paero)
         return paero
 
-    def add_spline1(self, eid, caero, box1, box2, setg, dz=0., method='IPS',
-                    usage='BOTH', nelements=10,
-                    melements=10, comment='') -> SPLINE1:
+    def add_spline1(self, eid: int, caero: int, box1: int, box2: int, setg: int,
+                    dz: float=0., method: str='IPS',
+                    usage: str='BOTH', nelements: int=10,
+                    melements: int=10, comment: str='') -> SPLINE1:
         """
         Creates a SPLINE1, which defines a surface spline.
 
@@ -5136,7 +5144,8 @@ class AddCards(AddMethods):
         self._add_trim_object(trim)
         return trim
 
-    def add_mkaero1(self, machs, reduced_freqs, comment='') -> MKAERO1:
+    def add_mkaero1(self, machs: List[float], reduced_freqs: List[float],
+                    comment: str='') -> MKAERO1:
         """
         Creates an MKAERO1 card, which defines a set of mach and
         reduced frequencies.
@@ -5342,36 +5351,34 @@ class AddCards(AddMethods):
         self._add_set_object(set_obj)
         return set_obj
 
-    def add_set2(self, sid, macro, sp1, sp2, ch1, ch2, zmax=.0, zmin=.0, comment='') -> SET2:
+    def add_set2(self, sid: int, macro: int,
+                 sp1: float, sp2: float,
+                 ch1: float, ch2: float,
+                 zmax: float=0.0, zmin: float=0.0,
+                 comment: str='') -> SET2:
         """
-        Creates a SET2 card, which defines a list of structural grid points in terms of aerodynamic
-        macro elements.
+        Creates a SET2 card, which defines a list of structural grid
+        points in terms of aerodynamic macro elements.
 
         Parameters
         ----------
-         sid : int
+        sid : int
             set id
         macro : int
             the aerodynamic macro element id
-        sp1 : float
-            lower span division point defining the prism containing the set
-        sp2 : float
-            higher span division point defining the prism containing the set
-        ch1 : float
-            lower chord division point defining the prism containing the set
-        ch2 : float
-            higher chord division point defining the prism containing the set
-        zmax : float; default=0.0
-            z-coordinate of top of the prism containing the set
-            a zero value implies a value of infinity
-        zmin : float; default=0.0
-            z-coordinate of top of the bottom containing the set
+        sp1 / sp2 : float
+            lower/higher span division point defining the prism containing the set
+        ch1 / ch2 : float
+            lower/higher chord division point defining the prism containing the set
+        zmax / zmin : float; default=0.0/0.0
+            z-coordinate of top/bottom of the prism containing the set
             a zero value implies a value of infinity
         comment : str; default=''
             a comment for the card
 
         """
-        set_obj = SET2(sid, macro, sp1, sp2, ch1, ch2, zmax=zmax, zmin=zmin, comment=comment)
+        set_obj = SET2(sid, macro, sp1, sp2, ch1, ch2,
+                       zmax=zmax, zmin=zmin, comment=comment)
         self._add_set_object(set_obj)
         return set_obj
 
@@ -5634,9 +5641,13 @@ class AddCards(AddMethods):
         self._add_sesuport_object(se_suport)
         return se_suport
 
-    def add_flutter(self, sid, method, density, mach, reduced_freq_velocity,
-                    imethod='L', nvalue=None,
-                    omax=None, epsilon=1.0e-3, comment='') -> FLUTTER:
+    def add_flutter(self, sid: int, method: str,
+                    density: int, mach: int, reduced_freq_velocity: int,
+                    imethod: str='L',
+                    nvalue: Optional[int]=None,
+                    omax: Optional[float]=None,
+                    epsilon: float=1.0e-3,
+                    comment: str='') -> FLUTTER:
         """
         Creates a FLUTTER card, which is required for a flutter (SOL 145)
         analysis.
@@ -5688,7 +5699,7 @@ class AddCards(AddMethods):
         self._add_flutter_object(flutter)
         return flutter
 
-    def add_flfact(self, sid, factors, comment='') -> FLFACT:
+    def add_flfact(self, sid: int, factors: List[float], comment: str='') -> FLFACT:
         """
         Creates an FLFACT card, which defines factors used for flutter
         analysis.  These factors define either:
