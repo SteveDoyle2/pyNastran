@@ -346,7 +346,7 @@ def list_intersection(L1, L2):
     return pv1[si], pv2[si]
 
 
-if __name__ == '__main__':
+if __name__ == '__main__':   # pragma: no cover
     mat1 = np.array([[7, 3], [6, 8], [4, 0], [9, 2], [1, 5]])
     mat2 = np.array([[9, 2], [1, 5], [7, 3]])
     pv1, pv2 = get_intersection(mat1, mat2)

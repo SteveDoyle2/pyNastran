@@ -137,5 +137,5 @@ class TestOUG(unittest.TestCase):
         os.remove('cdisp.op2')
         os.remove('cdisp.txt')
 
-if __name__ == '__main__':
+if __name__ == '__main__':   # pragma: no cover
     unittest.main()

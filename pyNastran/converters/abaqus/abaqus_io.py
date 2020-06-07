@@ -11,7 +11,7 @@ from pyNastran.gui.utils.vtk.vtk_utils import numpy_to_vtk
 from pyNastran.gui.gui_objects.gui_result import GuiResult, NormalResult
 #from pyNastran.gui.qt_files.result import Result
 from pyNastran.converters.abaqus.abaqus import Abaqus, get_nodes_nnodes_nelements
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     from vtk import vtkUnstructuredGrid
 
 

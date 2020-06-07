@@ -28,7 +28,7 @@ import sys
 from math import log, exp
 from typing import List, Tuple, TYPE_CHECKING
 import numpy as np
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.nptyping import NDArrayNfloat
 
 

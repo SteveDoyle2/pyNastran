@@ -151,5 +151,5 @@ def create_superelement(debug=False):
     super.add_mat1(2000, 3.0e7, None, 0.3)
     return super
 
-if __name__ == '__main__':
+if __name__ == '__main__':   # pragma: no cover
     unittest.main()

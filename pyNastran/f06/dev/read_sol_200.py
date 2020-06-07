@@ -1459,7 +1459,7 @@ def read_sol_200(f06_filename: str):
         line = lines[i].strip()
 
 
-if __name__ == '__main__':
+if __name__ == '__main__':   # pragma: no cover
     bdf_filename = 'optimize_formsc_2.f06'
     read_sol_200(bdf_filename)
 

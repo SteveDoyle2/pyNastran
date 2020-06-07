@@ -330,7 +330,7 @@ def _create_nastran_loads(model: Abaqus, nastran_model: BDF):
         #step.cloads
 
 
-if __name__ == '__main__':
+if __name__ == '__main__':   # pragma: no cover
     nastran_filename = r'C:\NASA\m4\formats\git\pyNastran\models\plate\plate.bdf'
     abaqus_inp_filename = r'C:\NASA\m4\formats\git\pyNastran\pyNastran\converters\abaqus\plate.inp'
     nastran_to_abaqus_filename(nastran_filename, abaqus_inp_filename)

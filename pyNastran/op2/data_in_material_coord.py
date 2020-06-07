@@ -13,7 +13,7 @@ from numpy.linalg import norm  # type: ignore
 
 from pyNastran.utils.numpy_utils import integer_types
 
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.bdf.bdf import BDF, GRID
     from pyNastran.op2.op2 import OP2
 
@@ -770,7 +770,7 @@ def data_in_material_coord(bdf: BDF, op2: OP2, in_place: bool=False) -> OP2:
                     new_vector.data[:, i, :] = 0
     return op2_new
 
-if __name__ == '__main__':
+if __name__ == '__main__':   # pragma: no cover
     op2_filename = r'C:\NASA\m4\formats\git\pyNastran\models\solid_bending\solid_bending_coord1.op2'
     from pyNastran.op2.op2 import read_op2
     from pyNastran.op2.op2_geom import read_op2_geom

@@ -592,5 +592,5 @@ def test_ctria3():
     #xdb_filename = os.path.join(model_path, 'pload4', 'cquad4_1subcase.xdb')
     #model = read_xdb(xdb_filename, 'quad', nsubcases=1, npload4s=6)
 
-if __name__ == '__main__':
+if __name__ == '__main__':   # pragma: no cover
     test_ctria3()

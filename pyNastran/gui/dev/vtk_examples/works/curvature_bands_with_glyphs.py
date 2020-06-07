@@ -556,7 +556,7 @@ def DisplaySurface(st):
 
     return iren
 
-if __name__ == '__main__':
+if __name__ == '__main__':   # pragma: no cover
     #iren = vtk.vtkRenderWindowInteractor()
     #iren = DisplaySurface("TORUS")
     #iren = DisplaySurface("PARAMETRIC_TORUS")

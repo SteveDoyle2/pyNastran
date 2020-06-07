@@ -1,7 +1,7 @@
 from __future__ import annotations
 from typing import Tuple, TYPE_CHECKING
 
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.bdf.bdf import Subcase
 
 def get_plot_request(subcase: Subcase, request: str) -> Tuple[str, bool, bool, bool]:

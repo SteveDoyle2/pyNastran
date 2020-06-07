@@ -11,7 +11,7 @@ from __future__ import annotations
 from typing import Dict, Optional, Any, TYPE_CHECKING
 import numpy as np
 from pyNastran.converters.abaqus.elements import Elements
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     from cpylog import SimpleLogger
 
 allowed_element_types = [

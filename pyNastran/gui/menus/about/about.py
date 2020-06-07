@@ -435,5 +435,5 @@ def main():  # pragma: no cover
     # Enter the main loop
     app.exec_()
 
-if __name__ == "__main__":
+if __name__ == '__main__':   # pragma: no cover
     main()

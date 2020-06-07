@@ -222,5 +222,5 @@ def update_with_post(fname, dirname):
         bdf_file.writelines(lines2)
     return bdf_name2
 
-if __name__ == '__main__':
+if __name__ == '__main__':   # pragma: no cover
     main()

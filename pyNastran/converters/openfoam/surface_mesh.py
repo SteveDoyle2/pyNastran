@@ -97,5 +97,5 @@ def main():
         bdf_file.write('MAT1, 1, 1.0,,0.3\n')
         bdf_file.write('ENDDATA\n')
 
-if __name__ == '__main__':
+if __name__ == '__main__':   # pragma: no cover
     main()

@@ -293,5 +293,5 @@ class TestPyBDF(unittest.TestCase):
         os.remove('main.bdf')
         os.remove('inc.inc')
 
-if __name__ == '__main__':
+if __name__ == '__main__':   # pragma: no cover
     unittest.main()

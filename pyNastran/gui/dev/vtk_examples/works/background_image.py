@@ -110,5 +110,5 @@ def main(argv):
     render_window_interactor.Start()
 
 
-if __name__ == '__main__':
+if __name__ == '__main__':   # pragma: no cover
     main(sys.argv)

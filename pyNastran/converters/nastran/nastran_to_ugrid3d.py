@@ -333,5 +333,5 @@ def main():  # pragma: no cover
                                               pshell_pids_to_remove, tol=tol)
 
 
-if __name__ == '__main__':
+if __name__ == '__main__':   # pragma: no cover
     main()

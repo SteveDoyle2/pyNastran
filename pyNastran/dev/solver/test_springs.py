@@ -1016,5 +1016,5 @@ class TestShell(unittest.TestCase):
         #os.remove(solver.f06_filename)
         #os.remove(solver.op2_filename)
 
-if __name__ == '__main__':
+if __name__ == '__main__':   # pragma: no cover
     unittest.main()

@@ -7,7 +7,7 @@ defines:
 from __future__ import annotations
 from collections import defaultdict
 from typing import Tuple, List, Optional, TYPE_CHECKING
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.bdf.bdf import BDF
 
 def free_edges(model: BDF, eids: Optional[List[int]]=None, maps=None) -> List[Tuple[int, int]]:

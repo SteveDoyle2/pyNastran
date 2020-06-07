@@ -75,5 +75,5 @@ class TestOP2New(unittest.TestCase):
         #print('d =', o2['mats']['ougv1'][0]['lambda'])
 
 
-if __name__ == '__main__':
+if __name__ == '__main__':   # pragma: no cover
     unittest.main()

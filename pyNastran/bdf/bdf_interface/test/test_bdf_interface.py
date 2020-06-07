@@ -189,5 +189,5 @@ class TestBDFInterface(unittest.TestCase):
         ]
         assert np.array_equal(mklist2, mklist2_expected), mklist2
 
-if __name__ == '__main__':
+if __name__ == '__main__':   # pragma: no cover
     unittest.main()

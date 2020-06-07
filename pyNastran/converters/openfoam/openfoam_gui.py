@@ -146,5 +146,5 @@ def main():
     window.startup(inputs)
     sys.exit(app.exec_())
 
-if __name__ == "__main__":
+if __name__ == '__main__':   # pragma: no cover
     main()

@@ -350,5 +350,5 @@ class TestOP2Writer(unittest.TestCase):
                              #skip_results=['params', ],
                              #stop_on_failure=True, debug=False)
 
-if __name__ == '__main__':
+if __name__ == '__main__':   # pragma: no cover
     unittest.main()

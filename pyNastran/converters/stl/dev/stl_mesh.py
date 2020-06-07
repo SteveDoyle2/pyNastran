@@ -236,6 +236,6 @@ def build():
     model.add_pshell(pid=100, mid1=1000, t=0.1)
     model.add_mat1(mid=1000, E=1e7, G=None, nu=0.3)
 
-if __name__ == '__main__':
+if __name__ == '__main__':   # pragma: no cover
     build()
     main()

@@ -183,5 +183,5 @@ def main():
     print("dt = %f" % (time.time() - time0))
 
 
-if __name__ == '__main__':  # op4
+if __name__ == '__main__':   # pragma: no cover
     main()

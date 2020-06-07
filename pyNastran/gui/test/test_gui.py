@@ -285,5 +285,5 @@ def main():
     #test_gui.load_nastran_results(op2_filename, None)
 
 
-if __name__ == '__main__':
+if __name__ == '__main__':   # pragma: no cover
     main()

@@ -2874,6 +2874,6 @@ def AddULVS(nas, *ses):
             nas['ulvs'][se] = formulvs(nas, se)
 
 
-if __name__ == '__main__':
+if __name__ == '__main__':   # pragma: no cover
     import doctest
     doctest.testmod()

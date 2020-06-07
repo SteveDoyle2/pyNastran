@@ -80,5 +80,5 @@ class TestDictToH5(unittest.TestCase):
         assert np.isnan(new_dict['nan']), new_dict['nan']
         #str_key_unicode_value
 
-if __name__ == '__main__':
+if __name__ == '__main__':   # pragma: no cover
     unittest.main()

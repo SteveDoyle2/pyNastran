@@ -290,5 +290,5 @@ class TestOP4New(unittest.TestCase):
             os.remove('temp.op4')
 
 
-if __name__ == '__main__':
+if __name__ == '__main__':   # pragma: no cover
     unittest.main()
