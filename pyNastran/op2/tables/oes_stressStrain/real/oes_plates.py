@@ -431,7 +431,6 @@ class RealPlateArray(OES_Object):
         ntotal = ntotali * nelements
         assert nnodes > 1, nnodes
 
-        device_code = self.device_code
         op2_ascii.write('  ntimes = %s\n' % self.ntimes)
 
         #[fiber_dist, oxx, oyy, txy, angle, majorP, minorP, ovm]

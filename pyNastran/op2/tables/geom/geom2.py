@@ -2034,7 +2034,7 @@ class GEOM2(GeomCommon):
         #if stop:
             #raise RuntimeError('theta is too large...make the quad wrong')
         #self.card_count[element.type] = nelements
-        self.to_nx()
+        #self.to_nx()  # not really an nx specific thing...
         return n, elements
 
 # CQUAD4FD

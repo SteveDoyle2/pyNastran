@@ -1,6 +1,7 @@
 """
 defines readers for BDF objects in the OP2 EDOM/EDOMS table
 """
+from struct import Struct
 from pyNastran.op2.tables.geom.geom_common import GeomCommon
 from pyNastran.op2.op2_interface.op2_reader import mapfmt, reshape_bytes_block
 
@@ -36,19 +37,19 @@ class EDOM(GeomCommon):
             #MAT10DOM(2801,28,9945)
             #MODTRAK(6006,60,477)
             (103, 1, 9944) : ['???', self._read_fake],
-            (304, 3, 276) : ['???', self._read_fake],
-            (404, 4, 277) : ['???', self._read_fake],
-            (504, 5, 246) : ['???', self._read_fake],
+            (304, 3, 276) : ['DSCONS', self._read_dscons],
+            (404, 4, 277) : ['DVAR', self._read_dvar],
+            (504, 5, 246) : ['DVSET', self._read_dvset],
 
             (4106, 41, 362) : ['DCONSTR', self._read_fake],
             #DDVAL(7000,70,563)
             #DRESP3(6700,67,433)
 
-            (504, 5, 246) : ['???', self._read_fake],
-            (504, 5, 246) : ['???', self._read_fake],
-            (504, 5, 246) : ['???', self._read_fake],
-            (504, 5, 246) : ['???', self._read_fake],
-            (504, 5, 246) : ['???', self._read_fake],
+            #(504, 5, 246) : ['???', self._read_fake],
+            #(504, 5, 246) : ['???', self._read_fake],
+            #(504, 5, 246) : ['???', self._read_fake],
+            #(504, 5, 246) : ['???', self._read_fake],
+            #(504, 5, 246) : ['???', self._read_fake],
 
             (3106, 31, 352) : ['DESVAR', self._read_desvar],
             (3206, 32, 353) : ['DLINK', self._read_fake],
@@ -75,6 +76,138 @@ class EDOM(GeomCommon):
             (6006, 60, 477) : ['???', self._read_fake],
             (7000, 70, 563) : ['DCONSTR/DDVAL?', self._read_fake],
         }
+    def _read_dvset(self, data: bytes, n: int) -> int:
+        """
+        DVSET   13013   PSHELL  4       .02     1.0     13013
+        DVSET   13016   PSHELL  4       .02     1.0     13016
+
+        (11013,  902,  9, 4, 2, 1.0,  1.0, 11013, -1)
+        (11014,  902,  9, 4, 2, 1.0,  1.0, 11014, -1)
+        (13013, 2302, 23, 4, 2, 0.02, 1.0, 13013, -1)
+        (13016, 2302, 23, 4, 2, 0.02, 1.0, 13016, -1)
+
+        MSC 2018.2
+        Word Name Type Description
+        1 VID     I
+        2 TYPE(2) I
+        4 FIELD   I
+        5 I
+        =1
+        6 PREF I
+        7 ALPHA I
+        =2
+        6 PREF RS
+        7 ALPHA RS
+        End
+        8 PID I
+        Word 8 repeats until End of Record
+        """
+        ntotal = 36
+        ndatai = len(data) - n
+        ncards = ndatai // ntotal
+        assert ndatai % ntotal == 0
+        #self.show_data(data[12:100])
+        structi = Struct(self._endian + b'iii ii ff ii')
+        for unused_i in range(ncards):
+            edata = data[n:n + ntotal]
+            #self.show_data(edata, types='ifs')
+
+            out = structi.unpack(edata)
+            dvset_id, dvset_ptype1, dvset_ptype2, four, two, mini, maxi, dvset_id2, minus1 = out
+            dvset_ptype = (dvset_ptype1, dvset_ptype2)
+            if (dvset_ptype1, dvset_ptype2) == (902, 9):
+                ptype = 'SHELL'
+            elif (dvset_ptype1, dvset_ptype2) == (2302, 23):
+                ptype = 'PROD'
+            elif (dvset_ptype1, dvset_ptype2) == (1002, 10):
+                ptype = 'PSHEAR'
+            else:
+                raise NotImplementedError(f'dvset_ptype={dvset_ptype} out={out}')
+            #print(out)
+
+            #idi, word, two_stress_three_force, idb, two_2, value, min_max = out
+            #if two_stress_three_force == 2:
+                #res_type = 'STRESS'
+            #elif two_stress_three_force == 3:
+                #res_type = 'FORCE'
+            #else:
+                #raise NotImplementedError(two_stress_three_force)
+            #assert min_max in [0, 1], min_max
+            #print(out)
+            n += ntotal
+        self.log.info(f'skipping {self.card_name} in {self.table_name}; ndata={len(data)-12}')
+        return n
+
+    def _read_dvar(self, data: bytes, n: int) -> int:
+        """
+        DVAR    13013   SPARPNL .01     13013
+
+          data = (404, 4, 277,
+          11013, 'SPARPNL ', 0.01, 11013, -1)
+
+        """
+        ntotal = 24
+        ndatai = len(data) - n
+        ncards = ndatai // ntotal
+        assert ndatai % ntotal == 0
+        structi = Struct(self._endian + b'i 8s fii')
+        for unused_i in range(ncards):
+            edata = data[n:n + ntotal]
+            #self.show_data(edata, types='ifs')
+            #(11013, b'SPRCAPS ', 0.01, 11013, -1)
+            #(11014, b'SPRCAPS ', 0.01, 11014, -1)
+            #(11015, b'SPRCAPS ', 0.01, 11015, -1)
+            #(11016, b'SPRCAPS ', 0.01, 11016, -1)
+            out = structi.unpack(edata)
+            #print(out)
+
+            #idi, word, two_stress_three_force, idb, two_2, value, min_max = out
+            #if two_stress_three_force == 2:
+                #res_type = 'STRESS'
+            #elif two_stress_three_force == 3:
+                #res_type = 'FORCE'
+            #else:
+                #raise NotImplementedError(two_stress_three_force)
+            #assert min_max in [0, 1], min_max
+            #print(out)
+            n += ntotal
+        self.log.info(f'skipping {self.card_name} in {self.table_name}; ndata={len(data)-12}')
+        return n
+
+    def _read_dscons(self, data: bytes, n: int) -> int:
+        """DSCONS
+
+        DSCONS  110131  SPRCAPS STRESS  11013   2       25000.  MAX
+        """
+        ndatai = len(data) - n
+        # !12
+        ntotal = 32
+        ncards = ndatai // ntotal
+        assert ndatai % ntotal == 0
+        structi = Struct(self._endian + b'i 8s i 2i fi')
+        for unused_i in range(ncards):
+            edata = data[n:n + ntotal]
+            #self.show_data(edata, types='ifs')
+            #(110131, b'SPRCAPS ', 2, 11013, 2, 25000.0, 0)
+            #(110132, b'SPRCAPS ', 2, 11013, 2, -25000.0, 1)
+            #(110141, b'SPRCAPS ', 2, 11014, 2, 25000.0, 0)
+            #(110142, b'SPRCAPS ', 2, 11014, 2, -25000.0, 1)
+            #(110151, b'SPRCAPS ', 2, 11015, 2, 25000.0, 0)
+            #(110152, b'SPRCAPS ', 2, 11015, 2, -25000.0, 1)
+            #(110161, b'SPRCAPS ', 2, 11016, 2, 25000.0, 0)
+            out = structi.unpack(edata)
+            idi, word, two_stress_three_force, idb, two_2, value, min_max = out
+            if two_stress_three_force == 2:
+                res_type = 'STRESS'
+            elif two_stress_three_force == 3:
+                res_type = 'FORCE'
+            else:
+                raise NotImplementedError(two_stress_three_force)
+            assert min_max in [0, 1], min_max
+            #print(out)
+            n += ntotal
+        self.log.info(f'skipping {self.card_name} in {self.table_name}; ndata={len(data)-12}')
+        return n
 
     def _read_desvar(self, data: bytes, n: int) -> int:
         """
@@ -89,7 +222,6 @@ class EDOM(GeomCommon):
         8 DDVAL    I     ID of a DDVAL entry that provides a set of allowable
                          discrete values
         """
-        from struct import Struct
         if self.size == 4:
             ntotal = 32  # 8*4
             s = Struct(self._endian + b'i8s ffff i')

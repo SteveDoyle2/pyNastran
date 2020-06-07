@@ -968,6 +968,10 @@ class AESURF(BaseCard):
         self.alid2_ref = None
         self.tqllim_ref = None
         self.tqulim_ref = None
+        assert self.ldw in {'LDW', 'NOLDW'}, self.ldw
+
+    #def validate(self):
+        #assert self.ldw in {'LDW', 'NOLDW'}, self.ldw
 
     @classmethod
     def add_card(cls, card, comment=''):

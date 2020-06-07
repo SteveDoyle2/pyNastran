@@ -7062,8 +7062,10 @@ class AddCards(AddMethods):
         self._add_monpnt_object(mondsp1)
         return mondsp1
 
-    def add_monpnt1(self, name, label, axes, aecomp_name, xyz, cp=0, cd=None,
-                    comment='') -> MONPNT1:
+    def add_monpnt1(self, name: str, label: str, axes: str, aecomp_name: str,
+                    xyz: List[float],
+                    cp: int=0,
+                    cd: Optional[int]=None, comment: str='') -> MONPNT1:
         """
         Creates a MONPNT1 card
 

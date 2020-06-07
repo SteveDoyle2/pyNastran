@@ -5104,7 +5104,8 @@ class OP2Reader:
         if hasattr(self, 'obj'):
             str(self.obj.get_stats())
 
-    def show(self, n: int, types: str='ifs', endian: Optional[str]=None):  # pragma: no cover
+    def show(self, n: int, types: str='ifs', endian: Optional[str]=None,
+             force: bool=False):  # pragma: no cover
         """
         shows the next N bytes
 
@@ -5116,16 +5117,19 @@ class OP2Reader:
             the data types to show
         endian : str; default=None -> active endian
             the data endian
+        force : bool; default=False
+            overwrite the n=2000 limiter
 
         """
         op2 = self.op2
         assert op2.n == op2.f.tell()
         data = op2.f.read(n)
-        strings, ints, floats = self.show_data(data, types=types, endian=endian)
+        strings, ints, floats = self.show_data(data, types=types, endian=endian, force=force)
         op2.f.seek(op2.n)
         return strings, ints, floats
 
-    def show_data(self, data: bytes, types: str='ifs', endian: Optional[str]=None):  # pragma: no cover
+    def show_data(self, data: bytes, types: str='ifs', endian: Optional[str]=None,
+                  force: bool=False):  # pragma: no cover
         """
         Shows a data block as various types
 
@@ -5146,14 +5150,17 @@ class OP2Reader:
             Q - unsigned long long (int; 8 bytes)
         endian : str; default=None -> auto determined somewhere else in the code
             the big/little endian {>, <}
+        force : bool; default=False
+            overwrite the n=2000 limiter
 
         .. warning:: 's' is apparently not Python 3 friendly
 
         """
         #ifsdqlILQ
-        return self._write_data(sys.stdout, data, types=types, endian=endian)
+        return self._write_data(sys.stdout, data, types=types, endian=endian, force=force)
 
-    def _write_data(self, f, data: bytes, types: str='ifs', endian: Optional[str]=None):  # pragma: no cover
+    def _write_data(self, f, data: bytes, types: str='ifs',
+                    endian: Optional[str]=None, force: bool=False):  # pragma: no cover
         """
         Useful function for seeing what's going on locally when debugging.
 
@@ -5174,10 +5181,13 @@ class OP2Reader:
             Q - unsigned long long (int; 8 bytes)
         endian : str; default=None -> auto determined somewhere else in the code
             the big/little endian {>, <}
+        force : bool; default=False
+            overwrite the n=2000 limiter
 
         """
         n = len(data)
-        if n > 2000:
+        if not force and n > 2000:
+            self.log.warning(f'limiting n={n} to 2000')
             n = 2000
         nints = n // 4
         ndoubles = n // 8
