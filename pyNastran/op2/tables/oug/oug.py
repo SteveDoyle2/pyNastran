@@ -1089,12 +1089,16 @@ class OUG(OP2Common):
         # 3: for cyclic symmetric;
         # 0: otherwise
         assert self.thermal in [0, 3], self.code_information()
-        if self.table_name in [b'OUGV1', b'OUGV2', b'BOUGV1', b'OPHIG', b'BOPHIG', b'OUG1', b'BOPHIGF']:
+        if self.table_name in [b'OUGV1', b'OUGV2', b'OUG1',
+                               b'BOUGV1',
+                               b'OPHIG', b'BOPHIG', ]:
             self._setup_op2_subcase('VECTOR')
             result_name = 'eigenvectors'
-        elif self.table_name in [b'BOPHIGF', b'OUGF1', b'OUGF2']:
+        elif self.table_name in [b'OUGF1', b'OUGF2',
+                                 b'BOUGF1',
+                                 b'BOPHIGF']:
             self._setup_op2_subcase('VECTOR')
-            result_name = 'eigenvectors'
+            result_name = 'eigenvectors_fluid'
 
         elif self.table_name == b'OPHSA':
             self.to_nx()

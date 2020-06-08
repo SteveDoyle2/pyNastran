@@ -1406,7 +1406,7 @@ class SET3(Set):
         ids = [1]
         return SET3(sid, desc, ids, comment='')
 
-    def __init__(self, sid, desc, ids, comment=''):
+    def __init__(self, sid: int, desc: str, ids: List[int], comment: str=''):
         Set.__init__(self)
         if comment:
             self.comment = comment

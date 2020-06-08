@@ -4795,8 +4795,13 @@ class AddCards(AddMethods):
         self._add_caero_object(caero)
         return caero
 
-    def add_caero5(self, eid, pid, p1, x12, p4, x43, cp=0, nspan=0, lspan=0,
-                   ntheory=0, nthick=0, comment='') -> CAERO5:
+    def add_caero5(self, eid: int, pid: int,
+                   p1: List[float], x12: float,
+                   p4: List[float], x43: float,
+                   cp: int=0,
+                   nspan: int=0, lspan: int=0,
+                   ntheory: int=0,
+                   nthick: int=0, comment: str='') -> CAERO5:
         """Creates a CAERO5 card"""
         caero = CAERO5(eid, pid, p1, x12, p4, x43, cp=cp, nspan=nspan, lspan=lspan,
                        ntheory=ntheory, nthick=nthick, comment=comment)
@@ -4902,8 +4907,11 @@ class AddCards(AddMethods):
         self._add_paero_object(paero)
         return paero
 
-    def add_paero5(self, pid, caoci, nalpha=0, lalpha=0, nxis=0, lxis=0,
-                   ntaus=0, ltaus=0, comment='') -> PAERO5:
+    def add_paero5(self, pid: int, caoci: List[float],
+                   nalpha: int=0, lalpha: int=0,
+                   nxis: int=0, lxis: int=0,
+                   ntaus: int=0, ltaus: int=0,
+                   comment='') -> PAERO5:
         """Creates a PAERO5 card"""
         paero = PAERO5(pid, caoci, nalpha=nalpha, lalpha=lalpha, nxis=nxis, lxis=lxis,
                        ntaus=ntaus, ltaus=ltaus, comment=comment)
@@ -5382,7 +5390,7 @@ class AddCards(AddMethods):
         self._add_set_object(set_obj)
         return set_obj
 
-    def add_set3(self, sid, desc, ids, comment='') -> SET3:
+    def add_set3(self, sid: int, desc: str, ids: List[int], comment: str='') -> SET3:
         """Creates a SET3 card"""
         set_obj = SET3(sid, desc, ids, comment=comment)
         self._add_set_object(set_obj)
@@ -7356,6 +7364,12 @@ class AddCards(AddMethods):
                        threshold=threshold, maxiter=maxiter, comment=comment)
         self._add_rotor_object(rotor)
         return rotor
+
+    def add_panel(self, names: List[str], set_ids: List[int]) -> None:
+        fields = ['PANEL']
+        for name, set_id in zip(names, set_ids):
+            fields.extend([name, set_id])
+        self.reject_card_lines('PANEL', print_card_8(fields).split('\n'), show_log=False)
 
     def add_cmfree(self, eid, s, s2, y, n) -> None:
         fields = ['CMFREE', eid, s, s2, y, n]

@@ -3,7 +3,7 @@ defines readers for BDF objects in the OP2 EDOM/EDOMS table
 """
 from struct import Struct
 from pyNastran.op2.tables.geom.geom_common import GeomCommon
-from pyNastran.op2.op2_interface.op2_reader import mapfmt, reshape_bytes_block
+#from pyNastran.op2.op2_interface.op2_reader import mapfmt, reshape_bytes_block
 
 
 class EDOM(GeomCommon):
@@ -93,50 +93,77 @@ class EDOM(GeomCommon):
         4 FIELD   I
         5 I
         =1
-        6 PREF I
-        7 ALPHA I
+          6 PREF I
+          7 ALPHA I
         =2
-        6 PREF RS
-        7 ALPHA RS
+          6 PREF RS
+          7 ALPHA RS
         End
         8 PID I
         Word 8 repeats until End of Record
         """
-        ntotal = 36
-        ndatai = len(data) - n
-        ncards = ndatai // ntotal
-        assert ndatai % ntotal == 0
-        #self.show_data(data[12:100])
+        #self.show_data(data[12:50], types='ifs')
         structi = Struct(self._endian + b'iii ii ff ii')
-        for unused_i in range(ncards):
-            edata = data[n:n + ntotal]
-            #self.show_data(edata, types='ifs')
 
-            out = structi.unpack(edata)
-            dvset_id, dvset_ptype1, dvset_ptype2, four, two, mini, maxi, dvset_id2, minus1 = out
-            dvset_ptype = (dvset_ptype1, dvset_ptype2)
-            if (dvset_ptype1, dvset_ptype2) == (902, 9):
-                ptype = 'SHELL'
-            elif (dvset_ptype1, dvset_ptype2) == (2302, 23):
-                ptype = 'PROD'
-            elif (dvset_ptype1, dvset_ptype2) == (1002, 10):
-                ptype = 'PSHEAR'
+        import numpy as np
+        ints = np.frombuffer(data[n:], self.idtype8).copy()
+        floats = np.frombuffer(data[n:], self.fdtype8).copy()
+        iminus1 = np.where(ints == -1)[0]
+
+        istart = [0] + list(iminus1[:-1] + 1)
+        iend = iminus1
+        for (i0, i1) in zip(istart, iend):
+            assert ints[i1] == -1, ints[i1]
+            #edata = data[n:n + ntotal]
+            #out = structi.unpack(edata)
+            #print(out)
+
+            dvset_id, dvset_ptype1, dvset_ptype2, field, flag = ints[i0:i0+5]
+            if flag == 1:
+                mini, maxi = ints[i0+5:i0+7]
+            elif flag == 2:
+                mini, maxi = floats[i0+5:i0+7]
+            elif flag == 3:
+                #print(dvset_id, dvset_ptype1, dvset_ptype2, field, flag)
+                print('  ? =', ints[i0+5:i0+7], floats[i0+5:i0+7])
+                mini, maxi = '???', '???'
             else:
-                raise NotImplementedError(f'dvset_ptype={dvset_ptype} out={out}')
-            #print(out)
+                print(dvset_id, dvset_ptype1, dvset_ptype2, field, flag)
+                raise NotImplementedError(flag)
+            pids = ints[i0+7:i1]
+            #assert field in [3, 4], field
 
-            #idi, word, two_stress_three_force, idb, two_2, value, min_max = out
-            #if two_stress_three_force == 2:
-                #res_type = 'STRESS'
-            #elif two_stress_three_force == 3:
-                #res_type = 'FORCE'
-            #else:
-                #raise NotImplementedError(two_stress_three_force)
-            #assert min_max in [0, 1], min_max
-            #print(out)
-            n += ntotal
+            dvset_ptype = (dvset_ptype1, dvset_ptype2)
+            #if dvset_ptype == (902, 9):
+                #ptype = 'PSHELL'
+            if dvset_ptype == (902, 9):
+                ptype = 'PROD'
+            elif dvset_ptype == (5402, 54):
+                ptype = 'PBEAM'
+            elif dvset_ptype == (302, 3):
+                ptype = 'PELAS'
+            elif dvset_ptype == (52, 20):
+                ptype = 'PBAR'
+            elif dvset_ptype == (402, 4):
+                ptype = 'PMASS'
+            elif dvset_ptype == (2302, 23):
+                ptype = 'PSHELL'
+            elif dvset_ptype == (1002, 10):
+                ptype = 'PSHEAR'
+            #elif dvset_ptype == (402, 4):
+                #ptype = 'PMASS'
+            #elif dvset_ptype == (402, 4):
+                #ptype = 'PMASS'
+
+            #elif dvset_ptype == (2302, 23):
+                #ptype = 'PROD'
+            #elif dvset_ptype == (1002, 10):
+                #ptype = 'PSHEAR'
+            else:
+                raise NotImplementedError(f'DVSET={dvset_id} dvset_ptype={dvset_ptype}')
+            print(dvset_id, (dvset_ptype1, dvset_ptype2), ptype, field, flag, (mini, maxi), pids)
         self.log.info(f'skipping {self.card_name} in {self.table_name}; ndata={len(data)-12}')
-        return n
+        return len(data)
 
     def _read_dvar(self, data: bytes, n: int) -> int:
         """
@@ -185,6 +212,14 @@ class EDOM(GeomCommon):
         ncards = ndatai // ntotal
         assert ndatai % ntotal == 0
         structi = Struct(self._endian + b'i 8s i 2i fi')
+        disp_stress_force_map = {
+            1 : 'DISP',
+            2 : 'STRESS',
+            3 : 'FORCE',
+            4 : 'LAMA',
+            5 : 'FREQ',
+        }
+
         for unused_i in range(ncards):
             edata = data[n:n + ntotal]
             #self.show_data(edata, types='ifs')
@@ -196,13 +231,11 @@ class EDOM(GeomCommon):
             #(110152, b'SPRCAPS ', 2, 11015, 2, -25000.0, 1)
             #(110161, b'SPRCAPS ', 2, 11016, 2, 25000.0, 0)
             out = structi.unpack(edata)
-            idi, word, two_stress_three_force, idb, two_2, value, min_max = out
-            if two_stress_three_force == 2:
-                res_type = 'STRESS'
-            elif two_stress_three_force == 3:
-                res_type = 'FORCE'
-            else:
-                raise NotImplementedError(two_stress_three_force)
+            idi, word, disp_stress_force, idb, two_2, value, min_max = out
+            try:
+                res_type = disp_stress_force_map[disp_stress_force]
+            except KeyError:
+                raise NotImplementedError(f'disp_stress_force={disp_stress_force} out={out}')
             assert min_max in [0, 1], min_max
             #print(out)
             n += ntotal

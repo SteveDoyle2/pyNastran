@@ -4,6 +4,7 @@ defines readers for BDF objects in the OP2 EDT/EDTS table
 from struct import Struct
 import numpy as np
 from pyNastran.op2.tables.geom.geom_common import GeomCommon
+from pyNastran.op2.op2_interface.op2_reader import mapfmt, reshape_bytes_block
 
 
 class EDT(GeomCommon):
@@ -26,7 +27,7 @@ class EDT(GeomCommon):
         # F:\work\pyNastran\pyNastran\master2\pyNastran\bdf\test\nx_spike\out_weld01i.op2
         # F:\work\pyNastran\examples\Dropbox\move_tpl\ac10901a_new.op2
         self._edt_map = {
-            (5201, 52, 373) : ['ACMODL', self._read_fake],
+            (5201, 52, 373) : ['ACMODL', self._read_acmodl],
             (6301, 63, 397) : ['ADAPT', self._read_fake],
             (7801, 78, 582) : ['AECOMP', self._read_aecomp],
             (7901, 79, 583) : ['AECOMPL', self._read_aecompl],
@@ -46,7 +47,7 @@ class EDT(GeomCommon):
             (4301, 43, 167) : ['CAERO2', self._read_caero2],
             (4401, 44, 168) : ['CAERO3', self._read_fake],
             (4501, 45, 169) : ['CAERO4', self._read_fake],
-            (5001, 50, 175) : ['CAERO5', self._read_fake],
+            (5001, 50, 175) : ['CAERO5', self._read_caero5],
             (6201, 62, 143) : ['CLOAD', self._read_fake],
             (6401, 64, 307) : ['CSSCHD', self._read_fake],
             (104, 1, 81) : ['DEFORM', self._read_fake],
@@ -61,16 +62,16 @@ class EDT(GeomCommon):
             (4601, 46, 170) : ['PAERO2', self._read_paero2],
             (4701, 47, 171) : ['PAERO3', self._read_fake],
             (4801, 48, 172) : ['PAERO4', self._read_fake],
-            (5101, 51, 176) : ['PAERO5', self._read_fake],
-            (5301, 53, 378) : ['PANEL', self._read_fake],
+            (5101, 51, 176) : ['PAERO5', self._read_paero5],
+            (5301, 53, 378) : ['PANEL', self._read_panel],
             (3502, 35, 268) : ['SET1', self._read_set1],
             (3602, 36, 269) : ['SET2', self._read_set2],
-            (4302, 43, 607) : ['SET3', self._read_fake],
+            (4302, 43, 607) : ['SET3', self._read_set3],
             (3302, 33, 266) : ['SPLINE1', self._read_spline1],
-            (3402, 34, 267) : ['SPLINE2', self._read_fake],
-            (4901, 49, 173) : ['SPLINE3', self._read_fake],
+            (3402, 34, 267) : ['SPLINE2', self._read_spline2],
+            (4901, 49, 173) : ['SPLINE3', self._read_spline3],
             (6501, 65, 308) : ['SPLINE4', self._read_spline4],
-            (6601, 66, 309) : ['SPLINE5', self._read_fake],
+            (6601, 66, 309) : ['SPLINE5', self._read_spline5],
             (2402, 24, 342) : ['TRIM', self._read_trim],
             (7201, 72, 573) : ['UXVEC', self._read_fake],
             (7108, 822, 51) : ['BOLT', self._read_fake],
@@ -350,17 +351,19 @@ class EDT(GeomCommon):
 
     def _read_aeros(self, data: bytes, n: int) -> int:
         """
+        AEROS(2202, 22, 340)
+
         AEROS   0       100     36.     360.    12960.
         data = (0, 100, 36.0, 360.0, 12960.0, 0, 0)
         """
-        assert len(data) == 40, len(data)
-        struct = Struct(self._endian + b'2i 3f 2i')
-        out = struct.unpack(data[12:])
+        assert len(data) == 40 * self.factor, len(data)
+        struct = Struct(mapfmt(self._endian + b'2i 3f 2i', self.size))
+        out = struct.unpack(data[n:])
         acsid, rcsid, cref, bref, sref, sym_xz, sym_xy = out
         self.add_aeros(cref, bref, sref,
                        acsid=acsid, rcsid=rcsid,
                        sym_xz=sym_xz, sym_xy=sym_xy)
-        n = 40
+        n = 40 * self.factor
         return n
 
     def _read_caero1(self, data: bytes, n: int) -> int:
@@ -392,11 +395,11 @@ class EDT(GeomCommon):
                 99.3, 21.45, -11.65, 42.86, 101.8387, 122.62, -2.69, 32.71)
 
         """
-        ntotal = 4 * 16
+        ntotal = 64 * self.factor # 4*16
         ndatai = len(data) - n
         ncards = ndatai // ntotal
         assert ndatai % ntotal == 0
-        structi = Struct(self._endian + b'8i 8f')
+        structi = Struct(mapfmt(self._endian + b'8i 8f', self.size))
         for unused_i in range(ncards):
             edata = data[n:n + ntotal]
             out = structi.unpack(edata)
@@ -431,11 +434,11 @@ class EDT(GeomCommon):
 
         data = (54000, 4020, 0, 8, 8, 0, 0, 1, -5.0, 0, 0, 40.0, 0, 0, 0, 0),
         """
-        ntotal = 64 # 4*16
+        ntotal = 64 * self.factor # 4*16
         ndatai = len(data) - n
         ncards = ndatai // ntotal
         assert ndatai % ntotal == 0
-        structi = Struct(self._endian + b'8i 4f 4i')
+        structi = Struct(mapfmt(self._endian + b'8i 4f 4i', self.size))
         for unused_i in range(ncards):
             edata = data[n:n + ntotal]
             out = structi.unpack(edata)
@@ -447,6 +450,51 @@ class EDT(GeomCommon):
                                      nsb=nsb, nint=nint,
                                      lsb=lsb, lint=lint)
             str(caero2)
+            n += ntotal
+        return n
+
+    def _read_caero5(self, data: bytes, n: int) -> int:
+        """
+        MSC 2018.2
+
+        Word Name Type Description
+        1 EID        I
+        2 PID        I
+        3 CP         I
+        4 NSPAN      I
+        5 LSPAN      I
+        6 NTHRY      I
+        7 NTHICK     I
+        8 UNDEF   none
+        9 X1        RS
+        10 Y1       RS
+        11 Z1       RS
+        12 X12      RS
+        13 X4       RS
+        14 Y4       RS
+        15 Z4       RS
+        16 X43      RS
+
+        """
+        ntotal = 64 # 4*16
+        ndatai = len(data) - n
+        ncards = ndatai // ntotal
+        assert ndatai % ntotal == 0
+        structi = Struct(self._endian + b'8i 8f')
+        for unused_i in range(ncards):
+            edata = data[n:n + ntotal]
+            out = structi.unpack(edata)
+            eid, pid, cp, nspan, lspan, ntheory, nthick, undef, x1, y1, z1, x12, x4, y4, z4, x43 = out
+            p1 = [x1, y1, z1]
+            p4 = [x4, y4, z4]
+            caero5 = self.add_caero5(eid, pid,
+                   p1, x12,
+                   p4, x43,
+                   cp=cp,
+                   nspan=nspan, lspan=lspan,
+                   ntheory=ntheory,
+                   nthick=nthick)
+            str(caero5)
             n += ntotal
         return n
 
@@ -470,11 +518,11 @@ class EDT(GeomCommon):
                 99.3, 21.45, -11.65, 42.86, 101.8387, 122.62, -2.69, 32.71)
 
         """
-        ntotal = 32 # 4 * 8
+        ntotal = 32 * self.factor # 4 * 8
         ndatai = len(data) - n
         ncards = ndatai // ntotal
         assert ndatai % ntotal == 0
-        structi = Struct(self._endian + b'8i')
+        structi = Struct(mapfmt(self._endian + b'8i', self.size))
         for unused_i in range(ncards):
             edata = data[n:n + ntotal]
             out = structi.unpack(edata)
@@ -516,11 +564,14 @@ class EDT(GeomCommon):
                 99.3, 21.45, -11.65, 42.86, 101.8387, 122.62, -2.69, 32.71)
 
         """
-        ntotal = 60 # 4 * 15
+        ntotal = 60 * self.factor # 4 * 15
         ndatai = len(data) - n
         ncards = ndatai // ntotal
         assert ndatai % ntotal == 0
-        structi = Struct(self._endian + b'i4si 2f 10i')
+        if self.size == 4:
+            structi = Struct(self._endian + b'i4si 2f 10i')
+        else:
+            structi = Struct(self._endian + b'q8sq 2d 10q')
         for unused_i in range(ncards):
             edata = data[n:n + ntotal]
             out = structi.unpack(edata)
@@ -541,6 +592,177 @@ class EDT(GeomCommon):
             str(paero2)
         return n
 
+    def _read_paero5(self, data: bytes, n: int) -> int:
+        """
+        MSC 2018.2
+
+        Word Name Type Description
+        1 PID    I
+        2 NALPHA I
+        3 LALPHA I
+        4 NXIS   I
+        5 LXIS   I
+        6 NTAUS  I
+        7 LTAUS  I
+        8 CAOCI RS
+        Word 8 repeats until End of Record
+
+        """
+        ints = np.frombuffer(data[n:], self.idtype8).copy()
+        floats = np.frombuffer(data[n:], self.fdtype8).copy()
+        iminus1 = np.where(ints == -1)[0]
+
+        istart = [0] + list(iminus1[:-1] + 1)
+        iend = iminus1
+
+        for (i0, i1) in zip(istart, iend):
+            pid, nalpha, lalpha, nxis, lxis, ntaus, ltaus = ints[i0:i0+7]
+            caoci = floats[i0+7:i1]
+            assert ints[i1] == -1, ints[i1]
+            paero5 = self.add_paero5(
+                pid, caoci,
+                nalpha=nalpha, lalpha=lalpha,
+                nxis=nxis, lxis=lxis,
+                ntaus=ntaus, ltaus=ltaus)
+            str(paero5)
+        return len(data)
+
+    def _read_panel(self, data: bytes, n: int) -> int:
+        """
+        MSC 2018.2
+
+        Word Name Type Description
+        1 NAME(2) CHAR4
+        3 SETID I
+        Words 1 through 3 repeat until End of Record
+
+        ('PANEL1', 1, -1)
+        """
+        ints = np.frombuffer(data[n:], self.idtype8).copy()
+        iminus1 = np.where(ints == -1)[0]
+
+        istart = [0] + list(iminus1[:-1] + 1)
+        iend = iminus1
+
+        for (i0, i1) in zip(istart, iend):
+            assert ints[i1] == -1, ints[i1]
+            names = []
+            set_ids = []
+            while i0 < i1:
+                name_bytes = data[n:n+8]
+                name = name_bytes.decode('latin1').rstrip()
+                set_id = ints[i0+2]
+                names.append(name)
+                set_ids.append(set_id)
+                n += 12
+                i0 += 3
+            panel = self.add_panel(names, set_ids)
+            str(panel)
+        return len(data)
+
+    def _read_acmodl(self, data: bytes, n: int) -> int:
+        """
+        MSC 2018.2
+        Word Name Type Description
+        1 INTER(2)     CHAR4 Type of structure-fluid interface:
+                             "IDENT","DIFF"-def"DIFF"
+        3 INFOR(2)     CHAR4 If INTER="DIFF", defines the type of list:
+                             "GRIDS","ELEMENTS","NONE"-def"NONE"
+        5 FSET             I SET1 ID for fluid elements or grids ID list, FSET>0 or blank
+        6 SSET             I SET1 ID for struc elements or grids ID list, SSET>0 or blank
+        7 NORMAL          RS Fluid normal tolerance - def 1.0
+        8 METHOD(2)    CHAR4 Method -def" "
+        10 SKNEPS         RS Fluid skin growth tolereance - def 0.75
+        11 DSKNEPS        RS Fluid secondary skin growth tolerance - def 0.75
+        12 INTOL          RS Tolerance of inward normal - def 0.5
+        13 ALLSSET(2)  CHAR4 coupled all structure given by SSET if "YES" - def"NO"
+        15 SRCHUNIT(2) CHAR4 Search Units:"ABS","REL"-def"REL"
+
+        NX 2019.2
+        Word Name Type Description
+        1 INTER(2)      CHAR4 IDENT or DIFF method specification
+        3 INFO(2)       CHAR4 Allowable values are ALL, ELEMENTS, PID, SET3, and NONE
+        5 FSET              I Fluid set ID
+        6 SSET              I Structure set ID
+        7 NORML            RS Outward normal search distance to detect fluid-structure interface
+        8 METHOD(2)     CHAR4 Interface calculation method
+        10 OVPLANG         RS Angular tolerance in degrees used to decide
+                              whether a fluid free face and a structural face
+                              are overlapping
+        11 SRCHUNIT(2)  CHAR4 Search unit
+        13 INTOL           RS Inward normal search distance to detect
+                              fluid-structure interface
+        14 AREAOPT          I Area option
+        15 SKNEPS          RS SKNEPS option. Only used when AREAOPT = 0
+        16 INTORD           I Integration order
+        17 CTYPE(2)     CHAR4 Coupling type (STRONG, WEAK, WEAKINT, or WEAKEXT)
+
+        strings = (b'IDENT   NONE   ,                     \x00\x00pBREL     \xcd\xccL>\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00STRONG  ',)
+        ints    = ('IDENT', 'NONE', 0,     0, 1.0e-4, AS, 60.0, 541869394, 538976288,                           0.2, 0, 0.0, 0, STRONG)
+        floats  = ('IDENT', 'NONE', 0.0, 0.0, 1.0e-4, AS, 60.0, 1.7302408291410174e-19, 1.3563156426940112e-19, 0.2, 0, 0.0, 0, STRONG)
+
+        MSC 2018.2
+        | ACMODL | INTER | INFOR   |   FSET   | SSET | NORMAL | METHOD |  SKNEPS | DSKNEPS  |
+        |        | INTOL | ALLSSET | SRCHUNIT |      |        |        |         |          |
+        # NX 2019.2
+        | ACMODL |       |  INFOR  |   FSET   | SSET | NORMAL |        | OVLPANG | SRCHUNIT |
+        |        | INTOL | AREAOP  |          |      |  CTYPE |        |         |          |
+        ACMODL,IDENT,,,,1.0-4
+
+        """
+        ntotal = 72 # 4 * 8
+        ndatai = len(data) - n
+        ncards = ndatai // ntotal
+        assert ndatai % ntotal == 0, ndatai % ntotal
+        #structi = Struct(self._endian + b'4i f 8s 8s 3i f') # msc
+        #                                                 ?  g ggg g
+        structi = Struct(self._endian + b'8s 8s 2i f 8s f 8s f ifi 8s')
+        for unused_i in range(ncards):
+            edata = data[n:n + ntotal]
+            out = structi.unpack(edata)
+            #Type of structure-fluid interface. (Character = IDENT or DIFF;
+            #inter: good
+            #olvpang: good
+            #search_unit_bytes: good
+            #ctype: good
+            #area_op: good
+            #sk_neps/olvpang;  Default=60.0
+            inter_bytes, infor_bytes, fset, sset, normal, method_bytes, olvpang, search_unit_bytes, intol, area_op, sk_neps, intord, ctype_bytes = out
+            inter = inter_bytes.decode('latin1').rstrip()
+            infor = infor_bytes.decode('latin1').rstrip()
+            method = method_bytes.decode('latin1').rstrip()
+            search_unit = search_unit_bytes.decode('latin1').rstrip()
+            ctype = ctype_bytes.decode('latin1').rstrip()
+            assert inter in ['IDEN', 'IDENT', 'DIFF'], inter
+            assert ctype in ['STRONG', 'WEAK', 'WEAKINT', 'WEAKEXT'], ctype
+            assert method in ['AS'], method
+            assert area_op in [0, 1], area_op
+            #If CTYPE = STRONG
+            #If CTYPE = WEAK
+            #print(f'inter={inter!r} infor={infor!r} fset={fset} sset={sset} normal={normal:g} method={method} olvpang={olvpang} search_unit={search_unit!r}\n'
+                  #f'intol={intol:g} area_op={area_op} sk_neps={sk_neps} intord={intord} ctype={ctype!r}')
+
+            #If SRCHUNIT = ABS, then the model units are absolute.
+            #If SRCHUNIT = REL, then the relative model units are based on element size.
+            assert search_unit in ['ABS', 'REL'], search_unit
+            #INTOL Inward normal sea
+            # set2 = self.add_set2(sid, macro, sp1, sp2, ch1, ch2, zmax, zmin)
+            acmodl = self.add_acmodl(infor, fset, sset,
+                                     normal=normal, olvpang=olvpang,
+                                     search_unit=search_unit, intol=intol,
+                                     area_op=area_op,
+                                     ctype=ctype,
+                                     method='BW',
+                                     sk_neps=sk_neps,
+                                     #dsk_neps=0.75,
+                                     #all_set='NO',
+                                     inter=inter,
+                                     nastran_version='nx')
+            #print(acmodl)
+            str(acmodl)
+            n += ntotal
+        return n
+
     def _read_aelist(self, data: bytes, n: int) -> int:
         """
         MSC 2018.2
@@ -551,8 +773,9 @@ class EDT(GeomCommon):
         Word 2 repeats until End of Record
 
         """
-        ints = np.frombuffer(data[n:], self.idtype).copy()
-        floats = np.frombuffer(data[n:], self.fdtype).copy()
+        #self.show_data(data[12:], types='if')
+        ints = np.frombuffer(data[n:], self.idtype8).copy()
+        floats = np.frombuffer(data[n:], self.fdtype8).copy()
         iminus1 = np.where(ints == -1)[0]
 
         istart = [0] + list(iminus1[:-1] + 1)
@@ -625,9 +848,57 @@ class EDT(GeomCommon):
             out = structi.unpack(edata)
             sid, macro, sp1, sp2, ch1, ch2, zmax, zmin = out
             set2 = self.add_set2(sid, macro, sp1, sp2, ch1, ch2, zmax, zmin)
+            str(set2)
             n += ntotal
         self.to_nx()
         return n
+
+    def _read_set3(self, data: bytes, n: int) -> int:
+
+        """
+        MSC 2018.2
+        Word Name Type Description
+        1 SID I
+        2 DES I Set description:
+            1=ELEM
+            2=GRID
+            3=POINT
+            4=PROP
+            5=RBEin
+            6=RBEex
+        3 ID1 I IDs of Grids, Elements, Points or Properties.
+        4 "ID1 THRU ID2" format will be EXPANDED into explicit IDs.
+        Words 3 through 4 repeat until End of Record
+
+        data = (1, 1, 190, ..., 238, -1,
+                2, 1, 71, ..., 189, -1,
+                4, 1, 309, ..., ..., 378, -1)
+        """
+        # this is setup for NX
+        ints = np.frombuffer(data[n:], self.idtype8).copy()
+        iminus1 = np.where(ints == -1)[0]
+
+        istart = [0] + list(iminus1[:-1] + 1)
+        iend = iminus1
+
+        for (i0, i1) in zip(istart, iend):
+            sid = ints[i0]
+            desc_int = ints[i0+1]
+            elements = ints[i0+2:i1].tolist()
+            if desc_int == 1:
+                desc = 'ELEM'
+            elif desc_int == 2:
+                desc = 'GRID'
+            elif desc_int == 3:
+                desc = 'PROP'
+            else:
+                raise NotImplementedError(desc_int)
+
+            assert min(elements) > 0, elements
+            assert ints[i1] == -1, ints[i1]
+            set3 = self.add_set3(sid, desc, elements)
+            str(set3)
+        return len(data)
 
     def _read_aelink(self, data: bytes, n: int) -> int:
         """
@@ -648,7 +919,10 @@ class EDT(GeomCommon):
         while n < len(data):
             edata = data[n:n+ntotal]
             aelink_id, label_bytes = struct1.unpack(edata)
+            #if self.size == 4:
             label = label_bytes.decode('latin1').rstrip()
+            #else:
+                #label = reshape_bytes_block(label_bytes).decode('latin1').rstrip()
             n += ntotal
             linking_coefficents = []
             independent_labels = []
@@ -685,7 +959,6 @@ class EDT(GeomCommon):
         iend = iminus1
 
         for (i0, i1) in zip(istart, iend):
-            sid = ints[i0]
             name_bytes = data[n+i0*4:n+i0*4+8]
             list_type_bytes = data[n+i0*4+8:n+i0*4+16]
             lists = ints[i0+4:i1].tolist()
@@ -773,6 +1046,22 @@ class EDT(GeomCommon):
                     melements=melements)
             n += ntotal
         #self.to_nx()
+        return n
+
+    def _read_spline2(self, data: bytes, n: int) -> int:
+        """reads the SPLINE2 card"""
+        spline2
+        #n = self._read_spline2_nx(data, n)
+        return n
+    def _read_spline3(self, data: bytes, n: int) -> int:
+        """reads the SPLINE3 card"""
+        spline3
+        #n = self._read_spline2_nx(data, n)
+        return n
+    def _read_spline5(self, data: bytes, n: int) -> int:
+        """reads the SPLINE4 card"""
+        spline5
+        #n = self._read_spline5_nx(data, n)
         return n
 
     def _read_spline4(self, data: bytes, n: int) -> int:
@@ -875,16 +1164,24 @@ class EDT(GeomCommon):
         2 LABEL(2) CHAR4
 
         """
-        ntotal = 12 # 4 * 8
+        ntotal = 12 * self.factor # 4 * 8
+        if self.size == 4:
+            structi = Struct(self._endian + b'i 8s')
+        else:
+            structi = Struct(self._endian + b'q 16s')
         ndatai = len(data) - n
         ncards = ndatai // ntotal
         assert ndatai % ntotal == 0
-        structi = Struct(self._endian + b'i 8s')
+
         for unused_i in range(ncards):
             edata = data[n:n + ntotal]
             out = structi.unpack(edata)
-            aestat_id, label = out
-            label = label.rstrip().decode('ascii')
+            aestat_id, label_bytes = out
+            if self.size == 4:
+                label = label_bytes.decode('latin1').rstrip()
+            else:
+                label = reshape_bytes_block(label_bytes).decode('latin1').rstrip()
+
             self.add_aestat(aestat_id, label)
             n += ntotal
         return n
@@ -951,7 +1248,7 @@ class EDT(GeomCommon):
             #edata = data[n:n + ntotal]
             #out = structi.unpack(edata)
             #aestat_id, label = out
-            #label = label.rstrip().decode('ascii')
+            #label = label.rstrip().decode('latin1')
             #self.add_aestat(aestat_id, label)
             #n += ntotal
         #return n
@@ -1021,19 +1318,27 @@ class EDT(GeomCommon):
         17 TQULIM     RS Upper deflection   Limit for the control surface as fct(q), >0, default=no limit
 
         """
-        ntotal = 68 # 4 * 17
+        ntotal = 68 *  self.factor # 4 * 17
         ndatai = len(data) - n
         ncards = ndatai // ntotal
         assert ndatai % ntotal == 0
-        struct1 = Struct(self._endian + b'i 8s 4i fi 8f')
-        struct2 = Struct(self._endian + b'i 8s 4i fi 4f4i')
+        if self.size == 4:
+            struct1 = Struct(self._endian + b'i 8s 4i fi 8f')
+            #struct2 = Struct(self._endian + b'i 8s 4i fi 4f4i')
+        else:
+            struct1 = Struct(self._endian + b'q 16s 4q dq 8d')
         for unused_i in range(ncards):
             edata = data[n:n + ntotal]
             out1 = struct1.unpack(edata)
-            out2 = struct2.unpack(edata)
+            #out2 = struct2.unpack(edata)
             (aesurf_id, label_bytes, cid1, alid1, cid2, alid2, eff, ldw_int, crefc, crefs,
              pllim, pulim, hmllim, hmulim, tqllim, tqulim) = out1
-            label = label_bytes.decode('ascii').rstrip()
+
+            if self.size == 4:
+                label = label_bytes.decode('latin1').rstrip()
+            else:
+                label = reshape_bytes_block(label_bytes).decode('latin1').rstrip()
+
             if ldw_int == 0:
                 ldw = 'LDW'
             elif ldw_int == 1:
@@ -1045,6 +1350,7 @@ class EDT(GeomCommon):
             # TODO: incorrect...too strict
             # hmllim, hmulim, tqllim, tqulim
 
+            # this is super janky
             if hmllim == 1.3563156426940112e-19:
                 hmllim = None
             if hmulim == 1.3563156426940112e-19:
@@ -1078,17 +1384,21 @@ class EDT(GeomCommon):
 
         """
         #self.show_data(data[12:], types='if')
-        ints = np.frombuffer(data[n:], self.idtype).copy()
-        floats = np.frombuffer(data[n:], self.fdtype).copy()
+        ints = np.frombuffer(data[n:], self.idtype8).copy()
+        floats = np.frombuffer(data[n:], self.fdtype8).copy()
         iminus1 = np.where(ints == -1)[0]
 
         istart = [0] + list(iminus1[:-1] + 1)
         iend = iminus1
 
         for (i0, i1) in zip(istart, iend):
+            #if i0 == i1:
+                #continue
             sid = ints[i0]
             fractions = floats[i0+1:i1]
             assert ints[i1] == -1, ints[i1]
-            self.add_aefact(sid, fractions)
+            aefact = self.add_aefact(sid, fractions)
+            #print(aefact)
+            str(aefact)
             #n += ntotal
         return len(data)
