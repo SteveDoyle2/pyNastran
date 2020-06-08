@@ -36,7 +36,7 @@ from pyNastran.bdf.cards.utils import wipe_empty_fields
 from pyNastran.bdf.cards.aero.utils import (
     points_elements_from_quad_points, create_axisymmetric_body)
 if TYPE_CHECKING:  # pragma: no cover
-    from pyNastran.bdf.bdf import BDF
+    from pyNastran.bdf.bdf import BDF, BDFCard
 
 
 class AECOMP(BaseCard):
@@ -5233,8 +5233,12 @@ class SPLINE2(Spline):
         return SPLINE2(eid, caero, box1, box2, setg,
                        dz=0.0, dtor=1.0, cid=0, dthx=0., dthy=0., usage='BOTH', comment='')
 
-    def __init__(self, eid, caero, box1, box2, setg, dz=0.0, dtor=1.0, cid=0,
-                 dthx=0., dthy=0., usage='BOTH', comment=''):
+    def __init__(self, eid: int, caero: int,
+                 box1: int, box2: int, setg: int,
+                 dz: float=0.0, dtor: float=1.0,
+                 cid: int=0,
+                 dthx: float=0.0, dthy: float=0.0,
+                 usage: str='BOTH', comment: str=''):
         """
         Creates a SPLINE2 card, which defines a beam spline.
 

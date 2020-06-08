@@ -4966,8 +4966,13 @@ class AddCards(AddMethods):
         self._add_spline_object(spline)
         return spline
 
-    def add_spline2(self, eid, caero, id1, id2, setg, dz=0.0, dtor=1.0, cid=0,
-                    dthx=0., dthy=0., usage='BOTH', comment='') -> SPLINE2:
+    def add_spline2(self, eid: int, caero: int,
+                    id1: int, id2: int, setg: int,
+                    dz: float=0.0, dtor: float=1.0,
+                    cid: int=0,
+                    dthx: float=0.0, dthy: float=0.0,
+                    usage: str='BOTH',
+                    comment: str='') -> SPLINE2:
         """
         Creates a SPLINE2 card, which defines a beam spline.
 

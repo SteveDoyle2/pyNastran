@@ -114,6 +114,8 @@ class EDT(GeomCommon):
 
     def _read_mkaero1(self, data: bytes, n: int) -> int:
         """
+        Kinda brilliant way to write the card.  Weird to parse though.
+
         data = (1.3, -1, -1, -1, -1, -1, -1, -1,
                 0.03, 0.04, 0.05, -1, -1, -1, -1, -1)
         """
@@ -339,10 +341,11 @@ class EDT(GeomCommon):
         4 RHOREF   RS
         5 SYMXZ     I
         6 SYMXY     I
+
         """
         assert len(data) == 36, len(data)
         struct = Struct(self._endian + b'i 3f 2i')
-        out = struct.unpack(data[12:])
+        out = struct.unpack(data[n:])
         acsid, velocity, cref, rho_ref, sym_xz, sym_xy = out
         self.add_aero(velocity, cref, rho_ref,
                       acsid=acsid, sym_xz=sym_xz, sym_xy=sym_xy)
@@ -355,6 +358,7 @@ class EDT(GeomCommon):
 
         AEROS   0       100     36.     360.    12960.
         data = (0, 100, 36.0, 360.0, 12960.0, 0, 0)
+
         """
         assert len(data) == 40 * self.factor, len(data)
         struct = Struct(mapfmt(self._endian + b'2i 3f 2i', self.size))
@@ -371,22 +375,22 @@ class EDT(GeomCommon):
         MSC 2018.2
 
         Word Name Type Description
-        1 EID I
-        2 PID I
-        3 CP I
-        4 NSPAN I
+        1 EID    I
+        2 PID    I
+        3 CP     I
+        4 NSPAN  I
         5 NCHORD I
-        6 LSPAN I
+        6 LSPAN  I
         7 LCHORD I
-        8 IGID I
-        9 X1 RS
-        10 Y1 RS
-        11 Z1 RS
-        12 X12 RS
-        13 X4 RS
-        14 Y4 RS
-        15 Z4 RS
-        16 X43 RS
+        8 IGID   I
+        9 X1    RS
+        10 Y1   RS
+        11 Z1   RS
+        12 X12  RS
+        13 X4   RS
+        14 Y4   RS
+        15 Z4   RS
+        16 X43  RS
 
         CAERO1  100001  100001  0       10                      24      1
         99.2956521.45381-11.654442.85999101.8387122.6196-2.6930832.70996
@@ -418,18 +422,18 @@ class EDT(GeomCommon):
         MSC 2018.2
 
         Word Name Type Description
-        1 EID    I
-        2 PID    I
-        3 CP     I
-        4 NSB    I
-        5 NINT   I
-        6 LSB    I
-        7 LINT   I
-        8 IGID   I
-        9 X1    RS
-        10 Y1   RS
-        11 Z1   RS
-        12 X12  RS
+        1 EID          I
+        2 PID          I
+        3 CP           I
+        4 NSB          I
+        5 NINT         I
+        6 LSB          I
+        7 LINT         I
+        8 IGID         I
+        9 X1          RS
+        10 Y1         RS
+        11 Z1         RS
+        12 X12        RS
         13 UNDEF(4) none
 
         data = (54000, 4020, 0, 8, 8, 0, 0, 1, -5.0, 0, 0, 40.0, 0, 0, 0, 0),
@@ -503,13 +507,13 @@ class EDT(GeomCommon):
         MSC 2018.2
 
         Word Name Type Description
-        1 PID I
-        2 B1 I
-        3 B2 I
-        4 B3 I
-        5 B4 I
-        6 B5 I
-        7 B6 I
+        1 PID      I
+        2 B1       I
+        3 B2       I
+        4 B3       I
+        5 B4       I
+        6 B5       I
+        7 B6       I
         8 UNDEF none
 
         PAERO1  100001
@@ -582,7 +586,7 @@ class EDT(GeomCommon):
             lth = [lth1, lth2]
             thi = [thi1, thi2, thi3]
             thn = [thn1, thn2, thn3]
-            orient = orient_bytes.decode('latin1').rstrip()
+            orient = cast_string(orient_bytes, self.size, encoding='latin1')
             paero2 = self.add_paero2(pid, orient, width, ar,
                                      thi, thn,
                                      lrsb=lrsb,
@@ -650,7 +654,7 @@ class EDT(GeomCommon):
             set_ids = []
             while i0 < i1:
                 name_bytes = data[n:n+8]
-                name = name_bytes.decode('latin1').rstrip()
+                name = cast_string(name_bytes, self.size, encoding='latin1')
                 set_id = ints[i0+2]
                 names.append(name)
                 set_ids.append(set_id)
@@ -728,11 +732,12 @@ class EDT(GeomCommon):
             #area_op: good
             #sk_neps/olvpang;  Default=60.0
             inter_bytes, infor_bytes, fset, sset, normal, method_bytes, olvpang, search_unit_bytes, intol, area_op, sk_neps, intord, ctype_bytes = out
-            inter = inter_bytes.decode('latin1').rstrip()
-            infor = infor_bytes.decode('latin1').rstrip()
-            method = method_bytes.decode('latin1').rstrip()
-            search_unit = search_unit_bytes.decode('latin1').rstrip()
-            ctype = ctype_bytes.decode('latin1').rstrip()
+            inter = cast_string(inter_bytes, self.size, encoding='latin1')
+            infor = cast_string(infor_bytes, self.size, encoding='latin1')
+            method = cast_string(method_bytes, self.size, encoding='latin1')
+            search_unit = cast_string(search_unit_bytes, self.size, encoding='latin1')
+            ctype = cast_string(ctype_bytes, self.size, encoding='latin1')
+
             assert inter in ['IDEN', 'IDENT', 'DIFF'], inter
             assert ctype in ['STRONG', 'WEAK', 'WEAKINT', 'WEAKEXT'], ctype
             assert method in ['AS'], method
@@ -919,10 +924,7 @@ class EDT(GeomCommon):
         while n < len(data):
             edata = data[n:n+ntotal]
             aelink_id, label_bytes = struct1.unpack(edata)
-            #if self.size == 4:
-            label = label_bytes.decode('latin1').rstrip()
-            #else:
-                #label = reshape_bytes_block(label_bytes).decode('latin1').rstrip()
+            label = cast_string(label_bytes, self.size, encoding='latin1')
             n += ntotal
             linking_coefficents = []
             independent_labels = []
@@ -930,7 +932,7 @@ class EDT(GeomCommon):
             edata = data[n:n+ntotal]
             while struct_end.unpack(edata) != (-1, -1, -1):
                 ind_label_bytes, coeff = struct2.unpack(edata)
-                ind_label = ind_label_bytes.decode('latin1').rstrip()
+                ind_label = cast_string(ind_label_bytes, self.size, encoding='latin1')
                 independent_labels.append(ind_label)
                 linking_coefficents.append(coeff)
                 n += ntotal
@@ -999,7 +1001,7 @@ class EDT(GeomCommon):
             edata = data[n:n+ntotal]
             while struct_end.unpack(edata) != (-1, -1):
                 label_bytes, = struct2.unpack(edata)
-                label = label_bytes.decode('latin1').rstrip()
+                label = cast_string(label_bytes, self.size, encoding='latin1')
                 labels.append(label)
                 n += ntotal
                 edata = data[n:n+ntotal]
@@ -1049,21 +1051,53 @@ class EDT(GeomCommon):
         return n
 
     def _read_spline2(self, data: bytes, n: int) -> int:
-        """reads the SPLINE2 card"""
-        spline2
+        """
+        Reads the SPLINE2 card
+
+        Word Name Type Description
+        1 EID   I
+        2 CAERO I
+        3 ID1   I
+        4 ID2   I
+        5 SETG  I
+        6 DZ    RS
+        7 DTOR  RS
+        8 CID   I
+        9 DTHX  RS
+        10 DTHY RS
+        11 USAGE(2) CHAR4 Usage flag: FORCE|DISP|BOTH
+
+        """
+        ntotal = 48 * self.factor # 4 * 12
+        ndatai = len(data) - n
+        ncards = ndatai // ntotal
+        #assert ndatai % ntotal == 0
+        if self.size == 4:
+            structi = Struct(self._endian + b'5i 2f i 2f 8s')
+        else:
+            structi = Struct(self._endian + b'5q 2d q 2d 16s')
+
+        for unused_i in range(ncards):
+            edata = data[n:n + ntotal]
+            out = structi.unpack(edata)
+            eid, caero, id1, id2, setg, dz, dtor, cid, dthx, dthy, usage_bytes = out
+            usage = usage_bytes.rstrip().decode('latin1')
+            spline2 = self.add_spline2(
+                eid, caero,
+                id1, id2, setg,
+                dz=dz, dtor=dtor, cid=cid,
+                dthx=dthx, dthy=dthy,
+                usage=usage)
+            str(spline2)
+            n += ntotal
         #n = self._read_spline2_nx(data, n)
         return n
+
     def _read_spline3(self, data: bytes, n: int) -> int:
         """reads the SPLINE3 card"""
         spline3
         #n = self._read_spline2_nx(data, n)
         return n
-    def _read_spline5(self, data: bytes, n: int) -> int:
-        """reads the SPLINE4 card"""
-        spline5
-        #n = self._read_spline5_nx(data, n)
-        return n
-
     def _read_spline4(self, data: bytes, n: int) -> int:
         """reads the SPLINE4 card"""
         n = self._read_spline4_nx(data, n)
@@ -1109,6 +1143,68 @@ class EDT(GeomCommon):
         self.to_nx()
         return n
 
+    def _read_spline5(self, data: bytes, n: int) -> int:
+        """reads the SPLINE6 card"""
+        n = self._read_spline5_nx(data, n)
+        return n
+
+    def _read_spline5_nx(self, data: bytes, n: int) -> int:
+        """
+        reads the SPLINE5 card
+
+        Word Name Type Description
+        1 EID            I Spline element Identification
+        2 CAERO          I Component Identifification
+        3 AELIST         I AELIST Id for boxes
+        4 SETG           I SETi Id for grids
+        5 DZ            RS Smoothing Parameter
+        6 DTORXY        RS Flexibility ratio in XY Plane
+        7 CID            I Coordinate Sys. Id. for Beam CS
+        8 DTHX          RS Smoothing/Attachment Flags for X rotations
+        9 DTHY          RS Smoothing/Attachment Flags for Y rotations
+        10 DTHZ         RS Smoothing/Attachment Flags for Z rotations
+        11 USAGE(2)  CHAR4 Usage flag: FORCE|DISP|BOTH
+        13 METHOD(2) CHAR4 Method: IPS|TPS|FPS|RIS
+        15 DTORZY       RS Flexibility ratio in ZY Plane
+        16 FTYPE         I Radial interpolation funtion fir METHOD=RIS (not in NX?)
+        17 RCORE        RS Radius of radial interpolation function     (not in NX?)
+
+        """
+
+        ntotal = 60 * self.factor # 4 * 12
+        ndatai = len(data) - n
+        ncards = ndatai // ntotal
+        assert ndatai % ntotal == 0, ndatai % ntotal
+        if self.size == 4:
+            structi = Struct(self._endian + b'4i 2f i 3f 8s8s f')
+        else:
+            asdf
+            #structi = Struct(self._endian + b'5q 2d q 2d 16s')
+
+        for unused_i in range(ncards):
+            edata = data[n:n + ntotal]
+            out = structi.unpack(edata)
+            #ftype, rcore
+            eid, caero, aelist, setg, dz, dtorxy, cid, dthx, dthy, dthz, usage_bytes, method_bytes, dtorzy = out
+            method = cast_string(method_bytes, self.size, encoding='latin1')
+            usage = cast_string(usage_bytes, self.size, encoding='latin1')
+            #print(f'eid={eid} caero={caero} aelist={aelist} setg={setg} dz={dz} dtorxy={dtorxy} cid={cid} dthx={dthx} dthy={dthy} dthz={dthz} usage={usage!r} method={method!r} dtorzy={dtorzy}')
+            assert method in ['IPS','TPS','FPS','RIS'], method
+            assert usage in ['FORCE','DISP','BOTH'], usage
+            thx = dthx
+            thy = dthy
+            dtor = dtorzy
+            spline5 = self.add_spline5(
+                eid, caero, aelist, setg, thx, thy,
+                dz=dz, dtor=dtor, cid=cid,
+                usage=usage, method=method,
+                #ftype=ftype, rcore=rcore,  # not in NX
+            )
+            str(spline5)
+            n += ntotal
+        self.to_nx()
+        return n
+
     def _read_monpnt1(self, data: bytes, n: int) -> int:
         """Reads the MONPNT1 card"""
         n = self._read_monpnt1_nx(data, n)
@@ -1142,10 +1238,10 @@ class EDT(GeomCommon):
             edata = data[n:n + ntotal]
             out = structi.unpack(edata)
             #name_bytes, label_bytes, axes, comp_bytes, cp, x, y, z, cd = out
-            name_bytes, label_bytes, axes, comp_bytes, cp, x, y, z = out
-            name = name_bytes.rstrip().decode('ascii')
-            label = label_bytes.rstrip().decode('ascii')
-            aecomp_name = comp_bytes.rstrip().decode('ascii')
+            name_bytes, label_bytes, axes, aecomp_name_bytes, cp, x, y, z = out
+            name = cast_string(name_bytes, self.size, encoding='latin1')
+            label = cast_string(label_bytes, self.size, encoding='latin1')
+            aecomp_name = cast_string(aecomp_name_bytes, self.size, encoding='latin1')
             xyz = [x, y, z]
             monpnt1 = self.add_monpnt1(name, label, axes, aecomp_name,
                                        xyz, cp=cp)
@@ -1177,11 +1273,7 @@ class EDT(GeomCommon):
             edata = data[n:n + ntotal]
             out = structi.unpack(edata)
             aestat_id, label_bytes = out
-            if self.size == 4:
-                label = label_bytes.decode('latin1').rstrip()
-            else:
-                label = reshape_bytes_block(label_bytes).decode('latin1').rstrip()
-
+            label = cast_string(label_bytes, self.size, encoding='latin1')
             self.add_aestat(aestat_id, label)
             n += ntotal
         return n
@@ -1268,13 +1360,18 @@ class EDT(GeomCommon):
         Words 5 through 7 repeat until (-1,-1,-1) occurs
 
         """
-        ntotal1 = 16 # 4 * 4
-        ntotal2 = 12 # 4 * 3
+        ntotal1 = 16 * self.factor # 4 * 4
+        ntotal2 = 12 * self.factor # 4 * 3
         #ndatai = len(data) - n
         #ncards = ndatai // ntotal
-        struct1 = Struct(self._endian + b'i 3f')
-        struct2 =Struct(self._endian + b'8sf')
-        struct_end = Struct(self._endian + b'3i')
+        if self.size == 4:
+            struct1 = Struct(self._endian + b'i 3f')
+            struct2 = Struct(self._endian + b'8sf')
+            struct_end = Struct(self._endian + b'3i')
+        else:
+            struct1 = Struct(self._endian + b'q 3d')
+            struct2 = Struct(self._endian + b'16sd')
+            struct_end = Struct(self._endian + b'3q')
         while n < len(data):
             edata = data[n:n+ntotal1]
             trim_id, mach, q, aeqr = struct1.unpack(edata)
@@ -1285,7 +1382,7 @@ class EDT(GeomCommon):
             edata = data[n:n+ntotal2]
             while struct_end.unpack(edata) != (-1, -1, -1):
                 label_bytes, ux = struct2.unpack(edata)
-                label = label_bytes.decode('latin1').rstrip()
+                label = cast_string(label_bytes, self.size, encoding='latin1')
                 labels.append(label)
                 uxs.append(ux)
                 n += ntotal2
@@ -1334,10 +1431,7 @@ class EDT(GeomCommon):
             (aesurf_id, label_bytes, cid1, alid1, cid2, alid2, eff, ldw_int, crefc, crefs,
              pllim, pulim, hmllim, hmulim, tqllim, tqulim) = out1
 
-            if self.size == 4:
-                label = label_bytes.decode('latin1').rstrip()
-            else:
-                label = reshape_bytes_block(label_bytes).decode('latin1').rstrip()
+            label = cast_string(label_bytes, self.size, encoding='latin1')
 
             if ldw_int == 0:
                 ldw = 'LDW'
@@ -1402,3 +1496,11 @@ class EDT(GeomCommon):
             str(aefact)
             #n += ntotal
         return len(data)
+
+def cast_string(name_bytes: bytes, size: int, encoding='latin1') -> str:
+    if size == 4:
+        name = name_bytes.decode(encoding).rstrip()
+    else:
+        name = reshape_bytes_block(name_bytes).decode(encoding).rstrip()
+    return name
+
