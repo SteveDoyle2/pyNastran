@@ -121,6 +121,7 @@ class EDT(GeomCommon):
 
     def _read_mkaero1(self, data: bytes, n: int) -> int:
         """
+        (3802, 38, 271)
         Kinda brilliant way to write the card.  Weird to parse though.
 
         data = (1.3, -1, -1, -1, -1, -1, -1, -1,
@@ -401,6 +402,8 @@ class EDT(GeomCommon):
 
     def _read_aero(self, data: bytes, n: int) -> int:
         """
+        (3202, 32, 265)
+
         Word Name Type Description
         1 ACSID     I
         2 VELOCITY RS
@@ -463,6 +466,7 @@ class EDT(GeomCommon):
 
     def _read_caero1(self, data: bytes, n: int) -> int:
         """
+        (3002, 30, 263)
         MSC 2018.2
 
         Word Name Type Description
@@ -600,6 +604,7 @@ class EDT(GeomCommon):
 
     def _read_paero1(self, data: bytes, n: int) -> int:
         """
+        (3102, 31, 264)
         MSC 2018.2
 
         Word Name Type Description

@@ -15,6 +15,7 @@ from .geom3_writer import write_geom3
 from .geom4_writer import write_geom4
 from .ept_writer import write_ept
 from .mpt_writer import write_mpt
+from .edt_writer import write_edt
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.op2.op2 import OP2
 
@@ -97,18 +98,26 @@ def _write_op2(fop2, fop2_ascii, obj: OP2,
     struct_3i = Struct(endian + b'3i')
     write_op2_header(obj, fop2, fop2_ascii, struct_3i, post=post, endian=endian)
 
-    if 'GEOM1' not in skips:
+    if 'GEOM1' not in skips:  # nodes
         write_geom1(fop2, fop2_ascii, obj, endian=endian)
-    if 'GEOM2' not in skips:
+    if 'GEOM2' not in skips:  # elements
         write_geom2(fop2, fop2_ascii, obj, endian=endian)
-    if 'GEOM3' not in skips:
+    if 'GEOM3' not in skips:  # constraints
         write_geom3(fop2, fop2_ascii, obj, endian=endian, nastran_format=nastran_format)
-    if 'GEOM4' not in skips:
+    if 'GEOM4' not in skips:  # loads
         write_geom4(fop2, fop2_ascii, obj, endian=endian, nastran_format=nastran_format)
-    if 'EPT' not in skips:
+    if 'EPT' not in skips:    # properties
         write_ept(fop2, fop2_ascii, obj, endian=endian)
-    if 'MPT' not in skips:
+    if 'MPT' not in skips:    # materials
         write_mpt(fop2, fop2_ascii, obj, endian=endian)
+
+    #if 'DIT' not in skips:  # tables
+        #write_dit(fop2, fop2_ascii, obj, endian=endian)
+    if 'EDT' not in skips:  # aero
+        write_edt(fop2, fop2_ascii, obj, endian=endian)
+    #if 'EDOM' not in skips:  # optimization
+        #write_edom(fop2, fop2_ascii, obj, endian=endian)
+
     #if 'DIT' not in skips:
         #write_dit(fop2, fop2_ascii, obj)
     #if 'DYNAMIC' not in skips:

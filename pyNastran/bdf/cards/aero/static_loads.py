@@ -150,6 +150,8 @@ class AEROS(Aero):
             msg += 'sym_xy=%s must be an integer; type=%s\n' % (self.sym_xy, type(self.sym_xy))
         if msg:
             raise TypeError('There are errors on the AEROS card:\n%s%s' % (msg, self))
+        assert self.sym_xz in [-1, 0, 1], self.get_stats()
+        assert self.sym_xy in [-1, 0, 1], self.get_stats()
 
     def cross_reference(self, model: BDF) -> None:
         """
