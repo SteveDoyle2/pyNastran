@@ -121,12 +121,14 @@ class AEROS(Aero):
         self.rcsid_ref = None
 
     def Acsid(self):
+        """air velocity defined as moving into the +x direction"""
         try:
             return self.acsid_ref.cid
         except AttributeError:
             return self.acsid
 
     def Rcsid(self):
+        """rigid body coordinate system"""
         try:
             return self.rcsid_ref.cid
         except AttributeError:
@@ -667,7 +669,8 @@ class TRIM(BaseCard):
             if n == ni:
                 value = self.labels[i]
                 return value
-            elif n + 1 == ni:
+
+            if n + 1 == ni:
                 value = self.uxs[i]
                 return value
 
@@ -694,7 +697,8 @@ class TRIM(BaseCard):
             if n == ni:
                 self.labels[i] = value
                 return
-            elif n + 1 == ni:
+
+            if n + 1 == ni:
                 self.uxs[i] = value
                 return
 
@@ -1104,7 +1108,7 @@ class TRIM2(TRIM):
         return TRIM2(sid, mach, q, labels, uxs, aeqr=1.0, comment='')
 
     def __init__(self, sid, mach, q, labels, uxs, aeqr=1.0, comment=''):
-        TRIM.__init__(self, sid, mach, q, labels, uxs, aeqr=1.0, comment='')
+        TRIM.__init__(self, sid, mach, q, labels, uxs, aeqr=aeqr, comment=comment)
 
     @classmethod
     def add_card(cls, card, comment=''):  # TODO: not done...

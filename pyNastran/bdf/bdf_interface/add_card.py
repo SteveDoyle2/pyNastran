@@ -4967,7 +4967,7 @@ class AddCards(AddMethods):
         return spline
 
     def add_spline2(self, eid: int, caero: int,
-                    id1: int, id2: int, setg: int,
+                    box1: int, box2: int, setg: int,
                     dz: float=0.0, dtor: float=1.0,
                     cid: int=0,
                     dthx: float=0.0, dthy: float=0.0,
@@ -4982,7 +4982,7 @@ class AddCards(AddMethods):
             spline id
         caero : int
             CAEROx id that defines the plane of the spline
-        id1 / id2 : int
+        box1 / box2 : int
             First/last box/body id that is used by the spline
         setg : int
             SETx id that defines the list of GRID points that are used
@@ -5011,14 +5011,17 @@ class AddCards(AddMethods):
             a comment for the card
 
         """
-        spline = SPLINE2(eid, caero, id1, id2, setg, dz=dz, dtor=dtor, cid=cid,
+        spline = SPLINE2(eid, caero, box1, box2, setg, dz=dz, dtor=dtor, cid=cid,
                          dthx=dthx, dthy=dthy, usage=usage, comment=comment)
         self._add_spline_object(spline)
         return spline
 
-    def add_spline3(self, eid, caero, box_id, components, nodes,
-                    displacement_components,
-                    coeffs, usage='BOTH', comment='') -> SPLINE3:
+    def add_spline3(self, eid: int, caero: int, box_id: int,
+                 components: int,
+                 nodes: List[int],
+                 displacement_components: List[int],
+                 coeffs: List[float],
+                 usage: str='BOTH', comment: str='') -> SPLINE3:
         """
         Creates a SPLINE3 card, which is useful for control surface
         constraints.
@@ -5050,7 +5053,7 @@ class AddCards(AddMethods):
            Component numbers in the displacement coordinate system.
            1-6 (GRIDs)
            0 (SPOINTs)
-        coeffs :  : List[float]
+        coeffs : List[float]
            Coefficient of the constraint relationship.
         usage : str; default=BOTH
             Spline usage flag to determine whether this spline applies

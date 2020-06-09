@@ -19,8 +19,12 @@ def write_geom3(op2, op2_ascii, obj, endian=b'<', nastran_format='nx'):
     # pedge, pface
 
     # return if no supported cards are found
+    wrong_tables = [
+        # see EDT
+        'DEFORM', 'CLOAD', # these are be in the
+    ]
     cards_to_skip = [
-        'CLOAD', 'TEMPRB',
+        'TEMPRB',
     ]
     supported_cards = [
         'FORCE', 'FORCE1', 'FORCE2', 'MOMENT', 'MOMENT1', 'MOMENT2',
@@ -33,6 +37,11 @@ def write_geom3(op2, op2_ascii, obj, endian=b'<', nastran_format='nx'):
         'TEMPD',
         'QHBDY',
     ]
+    for key in wrong_tables:
+        if key not in loads_by_type:
+            continue
+        del loads_by_type[key]
+
     is_loads = False
     for load_type in sorted(loads_by_type.keys()):
         if load_type in supported_cards:
@@ -48,6 +57,7 @@ def write_geom3(op2, op2_ascii, obj, endian=b'<', nastran_format='nx'):
     if not is_loads:
         return
     write_geom_header(b'GEOM3', op2, op2_ascii)
+
     itable = -3
     for load_type, loads in sorted(loads_by_type.items()):
         if load_type in ['SPCD']: # not a GEOM3 load

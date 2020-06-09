@@ -442,6 +442,7 @@ class EDT(GeomCommon):
 
     def _read_deform(self, data: bytes, n: int) -> int:
         """
+        (104, 1, 81)
         NX 2019.2
 
         Word Name Type Description
@@ -1145,6 +1146,10 @@ class EDT(GeomCommon):
             eid, caero, box1, box2, setg, dz, method_bytes, usage_bytes, nelements, melements = out
             method = method_bytes.rstrip().decode('ascii')
             usage = usage_bytes.rstrip().decode('ascii')
+            #if nelements == 0:
+                #nelements = None
+            #if melements == 0:
+                #melements = None
             self.add_spline1(eid, caero, box1, box2, setg,
                     dz=dz, method=method,
                     usage=usage, nelements=nelements,
@@ -1383,6 +1388,7 @@ class EDT(GeomCommon):
 
     def _read_flutter(self, data: bytes, n: int) -> int:
         """
+        (3902, 39, 272)
         MSC 2018.2
 
         Word Name Type Description
@@ -1450,6 +1456,7 @@ class EDT(GeomCommon):
 
     def _read_trim(self, data: bytes, n: int) -> int:
         """
+        (2402, 24, 342)
         MSC 2018.2
 
         Word Name Type Description

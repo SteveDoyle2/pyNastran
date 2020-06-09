@@ -4918,7 +4918,7 @@ class PAERO4(BaseCard):
     def cross_reference(self, model: BDF) -> None:
         pass
 
-    def safe_cross_reference(self, model, xref_errors):
+    def safe_cross_reference(self, model: BDF, xref_errors):
         pass
 
     def uncross_reference(self) -> None:
@@ -5045,10 +5045,11 @@ class SPLINE1(Spline):
         self.setg_ref = None
 
     def validate(self):
-        assert self.nelements > 0, 'nelements = %s' % self.nelements
-        assert self.melements > 0, 'melements = %s' % self.melements
-        assert self.box2 >= self.box1, 'box1=%s box2=%s' % (self.box1, self.box2)
         assert self.method in ['IPS', 'TPS', 'FPS'], 'method = %s' % self.method
+        if self.method == 'FPS':
+            assert self.nelements > 0, f'nelements={self.nelements} method={self.method}'
+            assert self.melements > 0, f'melements={self.melements} method={self.method}'
+        assert self.box2 >= self.box1, 'box1=%s box2=%s' % (self.box1, self.box2)
         assert self.usage in ['FORCE', 'DISP', 'BOTH'], 'usage = %s' % self.usage
 
     @classmethod
@@ -5476,9 +5477,12 @@ class SPLINE3(Spline):
         return SPLINE3(eid, caero, box_id, components, nodes, displacement_components, coeffs,
                        usage='BOTH')
 
-    def __init__(self, eid, caero, box_id, components,
-                 nodes, displacement_components, coeffs,
-                 usage='BOTH', comment=''):
+    def __init__(self, eid: int, caero: int, box_id: int,
+                 components: int,
+                 nodes: List[int],
+                 displacement_components: List[int],
+                 coeffs: List[float],
+                 usage: str='BOTH', comment: str=''):
         """
         Creates a SPLINE3 card, which is useful for control surface
         constraints.
@@ -5509,7 +5513,7 @@ class SPLINE3(Spline):
            Component numbers in the displacement coordinate system.
            1-6 (GRIDs)
            0 (SPOINTs)
-        coeffs :  : List[float]
+        coeffs : List[float]
            Coefficient of the constraint relationship.
         usage : str; default=BOTH
             Spline usage flag to determine whether this spline applies
@@ -5817,23 +5821,23 @@ class SPLINE4(Spline):
         return SPLINE4(eid, caero, aelist, setg, dz, method, usage,
                        nelements, melements, comment=comment)
 
-    def CAero(self):
+    def CAero(self) -> int:
         if self.caero_ref is not None:
             return self.caero_ref.eid
         return self.caero
 
-    def AEList(self):
+    def AEList(self) -> int:
         if self.aelist_ref is not None:
             return self.aelist_ref.sid
         return self.aelist
 
-    def Set(self):
+    def Set(self) -> int:
         if self.setg_ref is not None:
             return self.setg_ref.sid
         return self.setg
 
     @property
-    def aero_element_ids(self):
+    def aero_element_ids(self) -> List[int]:
         return self.aelist_ref.elements
 
     def cross_reference(self, model: BDF) -> None:
@@ -5863,7 +5867,7 @@ class SPLINE4(Spline):
                 raise RuntimeError(msg)
 
 
-    def safe_cross_reference(self, model, xref_errors):
+    def safe_cross_reference(self, model: BDF, xref_errors):
         """
         Cross links the card so referenced cards can be extracted directly
 

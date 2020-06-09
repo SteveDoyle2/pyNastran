@@ -552,10 +552,16 @@ class MATT2(MaterialDependenceThermal):
         if comment:
             self.comment = comment
 
+        if g12_table == 0:
+            g12_table = None
         if g13_table == 0:
             g13_table = None
+        if g22_table == 0:
+            g22_table = None
         if g23_table == 0:
             g23_table = None
+        if g33_table == 0:
+            g33_table = None
         if rho_table == 0:
             rho_table = None
 

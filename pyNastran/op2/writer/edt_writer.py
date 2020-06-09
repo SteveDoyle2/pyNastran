@@ -5,18 +5,23 @@ from struct import pack, Struct
 from typing import List, Union, TYPE_CHECKING
 
 from .geom1_writer import write_geom_header, close_geom_table
-from .geom4_writer import write_header
+from .geom4_writer import write_header, write_header_nvalues
 if TYPE_CHECKING:
     from pyNastran.bdf.cards.aero.static_loads import AEROS # , AESTAT, CSSCHD, DIVERG, TRIM, TRIM2
-    from pyNastran.bdf.cards.aero.dynamic_loads import AERO # , FLUTTER, FLFACT, MKAERO1, MKAERO2
+    from pyNastran.bdf.cards.aero.dynamic_loads import AERO, MKAERO1, FLUTTER # , FLFACT, MKAERO2
     from pyNastran.op2.op2_geom import OP2Geom, BDF
 
-def write_edt(op2, op2_ascii, model, endian=b'<'):
+def write_edt(op2, op2_ascii, model: Union[BDF, OP2Geom], endian: bytes=b'<') -> None:
     """writes the EDT/EDTS table"""
+    if not hasattr(model, 'loads'):  # OP2
+        return
     card_types = [
-        'MKAERO1',
+        'MKAERO1', # 'MKAERO2',
         'AERO', 'AEROS',
         'CAERO1', 'PAERO1',
+        #'AELIST', 'AEFACT', 'AESURF', 'AESURFS'
+        'TRIM', 'FLUTTER',
+        'DEFORM',
     ]
 
     cards_to_skip = [
@@ -28,12 +33,21 @@ def write_edt(op2, op2_ascii, model, endian=b'<'):
     #]
     out = defaultdict(list)
     # geometry
+    for unused_load_id, loads in model.loads.items():
+        for load in loads:
+            if load.type in ['DEFORM', 'CLOAD']:
+                out[load.type].append(load)
+
     for eid, caero in sorted(model.caeros.items()):
         out[caero.type].append(eid)
     for pid, paero in sorted(model.paeros.items()):
         out[paero.type].append(pid)
     for spline_id, spline in sorted(model.splines.items()):
         out[spline.type].append(spline_id)
+    for aesurf_id, aesurf in sorted(model.aesurf.items()):
+        out[aesurf.type].append(aesurf_id)
+    for aesurfs_id, aesurfs in sorted(model.aesurfs.items()):
+        out[aesurfs.type].append(aesurfs_id)
     for aelink_id, aelink in sorted(model.aelinks.items()):
         out[aelink.type].append(aelink_id)
     for name, aecomp in sorted(model.aecomps.items()):
@@ -80,18 +94,12 @@ def write_edt(op2, op2_ascii, model, endian=b'<'):
 
         #if nmaterials == 0:
             #continue
-        if name == 'CAERO1':
-            nbytes = _write_caero1(model, name, ids, ncards, op2, op2_ascii, endian)
-        elif name == 'PAERO1':
-            nbytes = _write_paero1(model, name, ids, ncards, op2, op2_ascii, endian)
-        elif name == 'MAKERO1':
-            nbytes = _write_makero1(model, name, ids, ncards, op2, op2_ascii, endian)
-        elif name == 'AERO':
-            nbytes = _write_aero(model, name, ids, ncards, op2, op2_ascii, endian)
-        elif name == 'AEROS':
-            nbytes = _write_aeros(model, name, ids, ncards, op2, op2_ascii, endian)
-        else:  # pragma: no cover
+        try:
+            func = EDT_MAP[name]
+        except KeyError:  # pragma: no cover
             raise NotImplementedError(name)
+
+        nbytes = func(model, name, ids, ncards, op2, op2_ascii, endian)
         op2.write(pack('i', nbytes))
         itable -= 1
         data = [
@@ -105,6 +113,61 @@ def write_edt(op2, op2_ascii, model, endian=b'<'):
     #print('itable', itable)
     close_geom_table(op2, op2_ascii, itable)
     #-------------------------------------
+
+def _write_trim(model: Union[BDF, OP2Geom], name: str,
+                trim_ids: List[int], ncards: int,
+                op2, op2_ascii, endian: bytes) -> int:
+    """
+    (2402, 24, 342)
+    MSC 2018.2
+
+    Word Name Type Description
+    1 ID           I
+    2 MACH        RS
+    3 Q           RS
+    4 AEQRATIO    RS
+
+    5 LABEL(2) CHAR4
+    7 UX          RS
+    Words 5 through 7 repeat until (-1,-1,-1) occurs
+
+    """
+    #struct1 = Struct(endian + b'i 3f')
+    #struct2 = Struct(endian + b'8sf')
+    #struct_end = Struct(endian + b'3i')
+    key = (2402, 24, 342)
+    #nfields = 16
+
+    nlabels_total = 0
+    for trim_id in trim_ids:
+        trim = model.trims[trim_id]
+        assert len(trim.labels) == len(trim.uxs), trim.get_stats()
+        nlabels = len(trim.labels)
+        #nuxs = len(trim.uxs)
+        nlabels_total += nlabels # + nuxs
+
+    # the *3 comes from:
+    #  - label (2 fields of 4s)
+    #  - ux
+    nvalues = 7 * ncards + nlabels_total * 3
+    nbytes = write_header_nvalues(name, nvalues, key, op2, op2_ascii)
+
+    all_data = []
+    for trim_id in trim_ids:
+        trim = model.trims[trim_id]
+        nlabels = len(trim.labels)
+        data = [trim.sid, trim.mach, trim.q, trim.aeqr]
+        for label, ux in zip(trim.labels, trim.uxs):
+            label_bytes = b'%-8s' % label.encode('latin1')
+            data.extend([label_bytes, ux])
+        data += [-1, -1, -1]
+        assert None not in data, data
+        fmt = endian + b'ifff ' + b' 8sf' * nlabels + b' 3i'
+        structi = Struct(fmt)
+        op2_ascii.write(f'  TRIM data={data}\n')
+        op2.write(structi.pack(*data))
+        all_data += data
+    return nbytes
 
 def _write_caero1(model: Union[BDF, OP2Geom], name: str,
                   caero_ids: List[int], ncards: int,
@@ -188,8 +251,54 @@ def _write_paero1(model: Union[BDF, OP2Geom], name: str,
         op2.write(structi.pack(*data))
     return nbytes
 
-def _write_makero1(model: Union[BDF, OP2Geom], name: str,
-                   mkaero1s, ncards: int,
+def _write_flutter(model: Union[BDF, OP2Geom], name: str,
+                   flutter_ids: List[int], ncards: int,
+                   op2, op2_ascii, endian: bytes) -> int:
+    """
+    (3902, 39, 272)
+    MSC 2018.2
+
+    Word Name Type Description
+    1 SID           I
+    2 METHOD(2) CHAR4
+    4 DENS          I
+    5 MACH          I
+    6 RFREQ         I
+    7 IMETH(2)  CHAR4
+    SFLG=0 (std)
+      9 NEIGN  I  nvalue
+      10 EPR  RS
+      11 SFLG  I SWEEP FLAG
+    SFLG=1 (sweep)
+      9 FMAX  RS maximum frequency
+      10 EPR  RS
+      11 SFLG  I SWEEP FLAG
+    End SFLG
+    Words 1 through max repeat until End of Record
+
+    NX:
+      data = (30, PK, 1, 2, 3, L, 3, 0.001, -1)
+    """
+    key = (3902, 39, 272)
+    nfields = 10
+    structi = Struct(endian + b'i 8s 3i 8s ifi')
+    nbytes = write_header(name, nfields, ncards, key, op2, op2_ascii)
+
+    for flutter_id in flutter_ids:
+        flutter = model.flutters[flutter_id]  # type: FLUTTER
+        #print(flutter.get_stats())
+        method = b'-%8s' % flutter.method.decode('latin1')
+        imethod = b'-%8s' % flutter.imethod.decode('latin1')
+        data = [flutter.sid, method,
+                flutter.density, flutter.mach, flutter.reduced_freq,
+                imethod, flutter.nvalue, flutter.epsilon, -1]
+        assert None not in data, data
+        op2_ascii.write(f'  FLUTTER data={data}\n')
+        op2.write(structi.pack(*data))
+    return nbytes
+
+def _write_mkaero1(model: Union[BDF, OP2Geom], name: str,
+                   mkaero1s: List[MKAERO1], ncards: int,
                    op2, op2_ascii, endian: bytes) -> int:
     """writes the MKAERO1
 
@@ -281,8 +390,47 @@ def _write_aeros(model: Union[BDF, OP2Geom], name: str,
     data = [aeroi.acsid, aeroi.rcsid,
             aeroi.cref, aeroi.bref, aeroi.sref,
             aeroi.sym_xz, aeroi.sym_xy]
-    print(data)
+    #print(data)
     assert None not in data, data
     op2_ascii.write(f'  AEROS data={data}\n')
     op2.write(spack.pack(*data))
     return nbytes
+
+def _write_deform(model: Union[BDF, OP2Geom], name: str,
+                  loads: List[AEROS], ncards: int,
+                  op2, op2_ascii, endian: bytes) -> int:
+    """
+    (104, 1, 81)
+    NX 2019.2
+
+    Word Name Type Description
+    1 SID I Deformation set identification number
+    2 EID I Element number
+    3 D RS Deformation
+
+    """
+    key = (104, 1, 81)
+    nfields = 3
+    structi = Struct(endian + b'iif')
+    nbytes = write_header(name, nfields, ncards, key, op2, op2_ascii)
+
+    for load in loads:
+        data = [load.sid, load.eid, load.deformation]
+        #flutter = model.loads[flutter_id]  # type: FLUTTER
+        #print(flutter.get_stats())
+        assert None not in data, data
+        op2_ascii.write(f'  DEFORM data={data}\n')
+        op2.write(structi.pack(*data))
+    return nbytes
+
+
+EDT_MAP = {
+    'CAERO1': _write_caero1,
+    'PAERO1': _write_paero1,
+    'MKAERO1': _write_mkaero1,
+    'AERO': _write_aero,
+    'AEROS': _write_aeros,
+    'TRIM': _write_trim,
+    'FLUTTER': _write_flutter,
+    'DEFORM': _write_deform,
+}

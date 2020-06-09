@@ -16,6 +16,9 @@ from .geom4_writer import write_geom4
 from .ept_writer import write_ept
 from .mpt_writer import write_mpt
 from .edt_writer import write_edt
+#from .edom_writer import write_edom
+#from .dit_writer import write_dit
+#from .dynamic_writer import write_dynamic
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.op2.op2 import OP2
 
@@ -111,15 +114,12 @@ def _write_op2(fop2, fop2_ascii, obj: OP2,
     if 'MPT' not in skips:    # materials
         write_mpt(fop2, fop2_ascii, obj, endian=endian)
 
-    #if 'DIT' not in skips:  # tables
-        #write_dit(fop2, fop2_ascii, obj, endian=endian)
     if 'EDT' not in skips:  # aero
         write_edt(fop2, fop2_ascii, obj, endian=endian)
     #if 'EDOM' not in skips:  # optimization
         #write_edom(fop2, fop2_ascii, obj, endian=endian)
-
-    #if 'DIT' not in skips:
-        #write_dit(fop2, fop2_ascii, obj)
+    #if 'DIT' not in skips:  # tables
+        #write_dit(fop2, fop2_ascii, obj, endian=endian)
     #if 'DYNAMIC' not in skips:
         #write_dynamic(fop2, fop2_ascii, obj)
     if 'grid_point_weight' not in skips:
@@ -273,17 +273,15 @@ def _write_result_tables(obj: OP2, fop2, fop2_ascii, struct_3i, endian, skips: S
                     itable = result.write_op2(fop2, fop2_ascii, itable, new_result,
                                               date, is_mag_phase=False, endian=endian)
                 except:
-                    print(' %s - isubcase=%s%s' % (result.__class__.__name__,
-                                                   isubcase, element_name))
+                    print(f' {result.__class__.__name__} - isubcase={isubcase}{element_name}')
                     raise
             elif hasattr(result, 'element_name'):
                 if result.element_name in ['CBAR', 'CBEND']:
                     obj.log.warning('skipping:\n%s' % result)
                     continue
             else:
-                raise NotImplementedError("  *op2 - %s not written" % (
-                    result.__class__.__name__))
-                #obj.log.warning("  *op2 - %s not written" % result.__class__.__name__)
+                raise NotImplementedError(f'  *op2 - {result.__class__.__name__} not written')
+                obj.log.warning(f'  *op2 - {result.__class__.__name__} not written')
                 #continue
 
             case_count += 1

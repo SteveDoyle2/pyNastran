@@ -1080,7 +1080,6 @@ def _log_scales(log: SimpleLogger, scale_map: Dict[str, str], scales: Set[str], 
         elif scale in keys_to_skip and scale in scales:
             scales.remove(scale)
     assert len(scales - keys_to_skip) == 0, f'scales={scales} keys_to_skip={keys_to_skip}'
-    print()
     #model.log.debug('density_scale (M/L^3) = %g' % density_scale)
     #model.log.debug('stress_scale (F/L^3) = %g' % stress_scale)
     #model.log.debug('a_scale (1/L) = %g\n' % a_scale)

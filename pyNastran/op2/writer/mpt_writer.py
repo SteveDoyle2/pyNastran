@@ -342,7 +342,7 @@ def _write_mats1(model, name, mids, nmaterials, op2, op2_ascii, endian):
                 0.0 if mat.limit1 is None else mat.limit1,
                 0.0 if mat.limit2 is None else mat.limit2,
                 a, bmat, c]
-        assert None not in data, 'MATS1 %s' % data
+        assert None not in data, f'MATS1 {data}'
         assert len(data) == nfields
         op2_ascii.write('  mid=%s data=%s\n' % (mid, data[1:]))
         op2.write(spack.pack(*data))
@@ -382,7 +382,8 @@ def _write_matt1(model, name, mids, nmaterials, op2, op2_ascii, endian):
         data = [mid, e_table, g_table, nu_table, rho_table,
                 a_table, 0, ge_table, st_table, sc_table,
                 ss_table, 0]
-        assert None not in data, 'MATT1 %s' % data
+        assert None not in data, f'MATT1 data={data}'
+        assert min(data) == 0, f'MATT1 data={data}'
         assert len(data) == nfields
         op2_ascii.write('  mid=%s data=%s\n' % (mid, data[1:]))
         op2.write(spack.pack(*data))
@@ -403,27 +404,28 @@ def _write_matt2(model, name, mids, nmaterials, op2, op2_ascii, endian):
         mat = model.MATT2[mid]
         data = [
             mat.mid,
-            mat.g11_table,
-            mat.g12_table,
-            mat.g13_table,
+            0 if mat.g11_table is None else mat.g11_table,
+            0 if mat.g12_table is None else mat.g12_table,
+            0 if mat.g13_table is None else mat.g13_table,
 
-            mat.g22_table,
-            mat.g23_table,
-            mat.g33_table,
-            mat.rho_table,
+            0 if mat.g22_table is None else mat.g22_table,
+            0 if mat.g23_table is None else mat.g23_table,
+            0 if mat.g33_table is None else mat.g33_table,
+            0 if mat.rho_table is None else mat.rho_table,
 
-            mat.a1_table,
-            mat.a2_table,
-            mat.a3_table,
+            0 if mat.a1_table is None else mat.a1_table,
+            0 if mat.a2_table is None else mat.a2_table,
+            0 if mat.a3_table is None else mat.a3_table,
             0,
 
-            mat.ge_table,
-            mat.st_table,
-            mat.sc_table,
-            mat.ss_table,
+            0 if mat.ge_table is None else mat.ge_table,
+            0 if mat.st_table is None else mat.st_table,
+            0 if mat.sc_table is None else mat.sc_table,
+            0 if mat.ss_table is None else mat.ss_table,
             0,
         ]
-        assert None not in data, data
+        assert None not in data, f'MATT2 data={data}'
+        assert min(data) == 0, f'MATT2 data={data}'
         #print('MATT2', data, len(data))
         assert len(data) == nfields, len(data)
         op2_ascii.write('  mid=%s data=%s\n' % (mid, data[1:]))
@@ -446,7 +448,8 @@ def _write_matt4(model, name, mids, nmaterials, op2, op2_ascii, endian):
 
         #(mid, tk, tcp, null, th, tmu, thgen) = out
         data = [mid, k_table, cp_table, 0, h_table, mu_table, hgen_table]
-        assert None not in data, 'MATT4 %s' % data
+        assert None not in data, f'MATT4 data={data}'
+        assert min(data) >= 0, f'MATT4 data={data}'
         assert len(data) == nfields
         op2_ascii.write('  mid=%s data=%s\n' % (mid, data[1:]))
         op2.write(spack.pack(*data))
@@ -476,7 +479,8 @@ def _write_matt5(model, name, mids, nmaterials, op2, op2_ascii, endian):
         #(mid, tk1, tk2, tk3, tk4, tk5, tk6, tcp, null, thgen) = out
         data = [mid, kxx_table, kxy_table, kxz_table, kyy_table, kyz_table, kzz_table,
                 cp_table, 0, hgen_table]
-        assert None not in data, 'MATT5 %s' % data
+        assert None not in data, f'MATT5 data={data}'
+        assert min(data) == 0, f'MATT5 data={data}'
         assert len(data) == nfields
         op2_ascii.write('  mid=%s data=%s\n' % (mid, data[1:]))
         op2.write(spack.pack(*data))
@@ -514,7 +518,8 @@ def _write_matt8(model, name, mids, nmaterials, op2, op2_ascii, endian):
             mat.f12_table,
             0,
         ]
-        assert None not in data, 'MATT8 data=%s' % data
+        assert None not in data, f'MATT8 data={data}'
+        assert min(data) == 0, f'MATT8 data={data}'
         #k_table = mat.k_table if mat.k_table is not None else 0
         #cp_table = mat.cp_table if mat.cp_table is not None else 0
         #h_table = mat.h_table if mat.h_table is not None else 0
