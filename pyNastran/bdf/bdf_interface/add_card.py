@@ -4170,7 +4170,7 @@ class AddCards(AddMethods):
         self._add_load_object(load)
         return load
 
-    def add_deform(self, sid, eid, deformation, comment='') -> DEFORM:
+    def add_deform(self, sid: int, eid: int, deformation: float, comment='') -> DEFORM:
         """
         Creates an DEFORM card, which defines applied deformation on
         a 1D elemment.  Links to the DEFORM card in the case control

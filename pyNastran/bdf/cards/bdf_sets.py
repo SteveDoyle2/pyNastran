@@ -2120,6 +2120,31 @@ class USET1(ABQSet1):
                 ids.append(idi)
         return USET1(name, ids, components, comment=comment)
 
+    @classmethod
+    def add_op2_data(cls, data, comment=''):
+        """
+        tested by gspc1.op2
+
+        for some reason, the setname is an integer and has bizarre rules
+        that I don't understand like:
+          - the setname is 1-4 characters, except if it's 'ZERO%i' % sid
+            ummm...odd
+
+        """
+        name, components, ids = data
+        #sid = data[0]
+        #nid = data[1]
+        #if sid < 0:
+            #name = 'ZERO'
+        #else:
+            #comment = 'sid=%s (???)' % sid
+            #name = 'U%i' % nid
+        #assert nid > 0, nid
+        #component = str(data[2])
+        for component in components:
+            assert component in '0123456', components
+        return USET1(name, ids, components, comment=comment)
+
     def cross_reference(self, model: BDF) -> None:
         """
         Cross links the card so referenced cards can be extracted directly

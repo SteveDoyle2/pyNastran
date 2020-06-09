@@ -50,7 +50,7 @@ class GEOM1(GeomCommon):
             (2001, 20, 9): ['CORD2C', self._read_cord2c],    # record 4
 
             #F:\work\pyNastran\pyNastran\master2\pyNastran\bdf\test\nx_spike\out_consolid31.op2
-            (2001, 20, 2220009): ['', self._read_fake],
+            (2001, 20, 2220009): ['GRIDx?', self._read_gridx],
 
             (2101, 21, 8): ['CORD2R', self._read_cord2r],    # record 5
             (2201, 22, 10): ['CORD2S', self._read_cord2s],   # record 6
@@ -96,11 +96,67 @@ class GEOM1(GeomCommon):
             (4501, 45, 1120001): ['GRID/BCT?/BOLT?', self._read_grid_maybe],  # record ???; test_ibulk
 
             # F:\work\pyNastran\pyNastran\master2\pyNastran\bdf\test\nx_spike\out_boltsold01d.op2
-            (2101, 21, 2220008) : ['', self._read_fake],
+            (2101, 21, 2220008) : ['CORDx?', self._read_fake],
 
             # nx
             #(707, 7, 124) :  ['EPOINT', self._read_epoint],  # record 12
         }
+
+    #def _read_fake_c(self, data: bytes, n: int) -> int:
+        #"""(2101, 21, 2220008)
+
+          #ints    = (20, 1, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+          #1.875, 0, 0, 0, 0, 0,
+          #1.75, 0, -1.75,
+          #50, 1, 2, 0, 0,
+          #2.565, 0, 2.565, 0,
+          #3.390625, 0,
+          #2.5625, 0, 2.5625, 0,
+          #1079590912, 0, 1076232192, 0, 1076101120, 0, 1079574528)
+          #floats  = (20, 1, 2, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+          #1.875, 0.0, 0.0, 0.0, 0.0, 0.0,
+          #1.75, 0.0, -1.75,
+          #50, 1, 2, 0.0,
+          #0.0, 2.5625, 0.0,
+          #2.5625, 0.0, 3.390625,
+          #0.0, 2.5625, 0.0,
+          #2.5625, 0.0, 3.39453125,
+          #0.0, 2.59375, 0.0,
+          #2.5625, 0.0, 3.390625)
+        #"""
+        #self.show_data(data[n:])
+        #return aaa
+
+    def _read_gridx(self, data: bytes, n: int) -> int:
+        """
+        I think this is a ROTOR coordinate system...
+
+        data = (2001, 20, 2220009,
+               100002, 2, 2, 100001,
+                   0.0, 0.0, 0.0,
+                   0.0, 0.0, 0.0,
+                   0.0, 1.875, 0.0,
+                   0.0, 0.0, 0.0,
+                   0.0, 0.0, 0.0,
+                   0.0, 0.0, 1.875)
+        """
+        #self.show_data(data, types='ifs')
+        ndatai = len(data) - n
+        s = Struct(self._endian + b'4i 18f')
+        assert ndatai == 88, ndatai
+        out = s.unpack(data[n:])
+        (aint, bint, cint, dint,
+         a1f, b1f, c1f,
+         a2f, b2f, c2f,
+         a3f, b3f, c3f,
+         a4f, b4f, c4f,
+         a5f, b5f, c5f,
+         a6f, b6f, c6f) = out
+        assert a1f + a2f + a3f + a4f + a5f + a6f == 0.0, (a1f, a2f, a3f, a4f, a5f, a6f)
+        assert b1f + b2f +       b4f + b5f + b6f == 0.0, (b1f, b2f, b4f, b5f, b6f)
+        assert c1f +       c3f +     + c5f       == 0.0, (c1f, c3f, c5f)
+        print(out)
+        return len(data)
 
     def _read_cord1c(self, data: bytes, n: int) -> int:
         """
@@ -392,8 +448,8 @@ class GEOM1(GeomCommon):
             if self.is_debug_file:
                 self.binary_debug.write('  GRID=%s\n' % str(out))
             #print(f'nid={nid}, cp={cp} x1={x1}, x2={x2}, x3={x3}, cd={cd} ps={ps}, seid={seid}')
-            assert cd == 0, cd
-            assert seid == 0, seid
+            assert cd >= 0, f'nid={nid}, cp={cp} x1({x1}, {x2}, {x3}), cd={cd} ps={ps}, seid={seid}'
+            assert seid == 0, f'nid={nid}, cp={cp} x1({x1}, {x2}, {x3}), cd={cd} ps={ps}, seid={seid}'
             if nid < 10000000:
                 # cd can be < 0
                 if ps == 0:

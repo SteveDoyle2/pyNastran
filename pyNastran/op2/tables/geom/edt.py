@@ -33,11 +33,11 @@ class EDT(GeomCommon):
             (7901, 79, 583) : ['AECOMPL', self._read_aecompl],
             (7301, 73, 574) : ['AEDW', self._read_fake],
             (4002, 40, 273) : ['AEFACT', self._read_aefact],
-            (7501, 75, 576) : ['AEFORCE', self._read_fake],
+            (7501, 75, 576) : ['AEFORCE', self._read_aeforce],
             (2602, 26, 386) : ['AELINK', self._read_aelink],
             (2302, 23, 341) : ['AELIST', self._read_aelist],
             (7001, 70, 571) : ['AEPARM', self._read_fake],
-            (7401, 74, 575) : ['AEPRESS', self._read_fake],
+            (7401, 74, 575) : ['AEPRESS', self._read_aepress],
             (3202, 32, 265) : ['AERO', self._read_aero],
             (2202, 22, 340) : ['AEROS', self._read_aeros],
             (2102, 21, 339) : ['AESTAT', self._read_aestat],
@@ -45,18 +45,18 @@ class EDT(GeomCommon):
             (7701, 77, 581) : ['AESURFS', self._read_fake],
             (3002, 30, 263) : ['CAERO1', self._read_caero1],
             (4301, 43, 167) : ['CAERO2', self._read_caero2],
-            (4401, 44, 168) : ['CAERO3', self._read_fake],
-            (4501, 45, 169) : ['CAERO4', self._read_fake],
+            (4401, 44, 168) : ['CAERO3', self._read_caero3],
+            (4501, 45, 169) : ['CAERO4', self._read_caero4],
             (5001, 50, 175) : ['CAERO5', self._read_caero5],
             (6201, 62, 143) : ['CLOAD', self._read_fake],
             (6401, 64, 307) : ['CSSCHD', self._read_fake],
-            (104, 1, 81) : ['DEFORM', self._read_fake],
+            (104, 1, 81) : ['DEFORM', self._read_deform],
             (2702, 27, 387) : ['DIVERG', self._read_fake],
             (4102, 41, 274) : ['FLFACT', self._read_flfact],
             (3902, 39, 272) : ['FLUTTER', self._read_flutter],
             (17400, 174, 616) : ['GROUP', self._read_group],
             (3802, 38, 271) : ['MKAERO1', self._read_mkaero1],
-            (3702, 37, 270) : ['MKAERO2', self._read_fake],
+            (3702, 37, 270) : ['MKAERO2', self._read_mkaero2],
             (7601, 76, 577) : ['MONPNT1', self._read_monpnt1],
             (3102, 31, 264) : ['PAERO1', self._read_paero1],
             (4601, 46, 170) : ['PAERO2', self._read_paero2],
@@ -90,6 +90,13 @@ class EDT(GeomCommon):
             #(10500, 105, 14) : ['???', self._read_fake],
             #(10500, 105, 14) : ['???', self._read_fake],
         }
+    def _read_aeforce(self, data: bytes, n: int) -> int:
+        aeforcex
+    def _read_aepress(self, data: bytes, n: int) -> int:
+        aepressx
+    def _read_mkaero2(self, data: bytes, n: int) -> int:
+        mkaero2x
+
 
     def _read_flfact(self, data: bytes, n: int) -> int:
         """
@@ -205,7 +212,22 @@ class EDT(GeomCommon):
              75, 0,
                 -5 90013, -1,
                 -1)
+
+        GROUP 10 Assembly AA4
+        META 100 RPM
+        META Optionally continue the meta data
+        GRID 1 2 3 4 5 6 7 8
+        GRID 10 THRU 20
+        GRID 100 THRU 200
+        GRID 341 THRU 360 BY 2
+        ELEM 30 THRU 40
+        PROP ALL
+          strings = (b'o\x00\x00\x00\x05\x00\x00\x00THIS IS GROUP 111   \xfe\xff\xff\xff\x05\x00\x00\x00THIS IS METADATA\xff\xff\xff\xff\xfb\xff\xff\xff\x01\x00\x00\x00\x00\x00\x00\x00\n\x00\x00\x00\xff\xff\xff\xff\xff\xff\xff\xff',)
+          ints    = (111, 5, 'THIS IS GROUP 111   ', -2, 5, 'THIS IS METADATA', -1, -5, 1, 0, 10, -1, -1)
+          floats  = (111, 5, 'THIS IS GROUP 111   ', -2, 5, 'THIS IS METADATA', -1, -5, 1, 0.0, 10, -1, -1)
         """
+        #print('reading group')
+        assert self.factor == 1, self.factor
         nentries = 0
         ints = np.frombuffer(data[12:], dtype=self.idtype)
         strs = np.frombuffer(data[12:], dtype='|S4')
@@ -221,73 +243,92 @@ class EDT(GeomCommon):
             #2 NDESC(C)     I Length of group description
             #3 GDESC(2) CHAR4 Group description
             #Word 3 repeats NDESC times
-            grid, ndesc = ints[i:i+2]
+            group_id, ndesc = ints[i:i+2]
             i += 2
             n += 8
 
-            gdesc = ''.join(stri.decode('latin1') for stri in strs[i:i+ndesc]).strip()
+            group_desc = ''.join(stri.decode('latin1') for stri in strs[i:i+ndesc]).strip()
             i += ndesc
             n += 4 * ndesc
 
             #------------------------------
             #gtype, nmeta, mdesc
             gtype = ints[i]
-            i += 1
-            n += 4
-            print(f'grid={grid} ndesc={ndesc} gdesc={gdesc!r}; gtype={gtype!r}')
+            #i += 1
+            #n += 4
+            print(f'group_id={group_id} ndesc={ndesc} group_desc={group_desc!r}; gtype={gtype!r}')
 
-            def _expand_vals(grids):
-                grids2 = []
-                for val in grids:
-                    #> 0 for ID
-                    #= 0 for THRU
-                    #= -6 for BY
-                    #= -7 for ALL
-                    if val > 0:
-                        pass
-                    elif val == 0:
-                        val = 'THRU'
-                    elif val == -6:
-                        val = 'BY'
-                    elif val == -7:
-                        val = 'ALL'
-                    else:
-                        raise NotImplementedError(f'val={val} data={grids}')
-                    grids2.append(val)
-                return grids2
+            data_dict = {
+                'meta': '',
+                'property': [],
+                'grid': [],
+                'element': [],
+            }
+            #i += 1
+            #n += 4
 
             while n < ndata:
+                #Group type
+                #-2 = Meta data
+                #-3 = Property identification numbers
+                #-4 = Grid identification numbers
+                #-5 = Element identification numbers
+                print(f'-----gtype={gtype}----')
+                #print(ints[i:])
                 if gtype == -1:
                     # end of card
                     i += 1
                     n += 4
                     break
                 elif gtype == -2:
-                    # meta-data
-                    nmeta = ints[i]
+                    assert ints[i] == -2, ints[i]
                     i += 1
                     n += 4
+
+                    # meta-data
+                    nmeta = ints[i]
+                    assert nmeta >= 0, nmeta
+                    #i += 1
+                    #n += 4
                     #print(i, nmeta)
                     #print(strs[i:i+nmeta-1])
-                    mdesc = ''.join(stri.decode('latin1') for stri in strs[i:i+nmeta-1])
-                    i += nmeta
-                    n += 4 * nmeta
-                    print(f'gtype={gtype} nmeta={nmeta} mdesc={mdesc!r}')
+                    #self.show_data(data[i*4:])
+                    istop = i+nmeta-1
+                    assert istop > i, f'i={i} nmeta={nmeta}'
+                    #print('strs[i:istop] =', strs[i:istop])
+                    #print('istop =', istop, ints[istop])
+                    #meta_desc = ''.join(stri.decode('latin1') for stri in strs[i:istop])
+                    datai = data[12+(i+1)*4:12+istop*4]
+                    meta_desc = datai.decode('latin1')
+                    data_dict['meta'] = meta_desc
+                    i += nmeta + 1
+                    n += 4 * (nmeta + 1)
+                    print(f'  gtype={gtype} nmeta={nmeta} meta_desc={meta_desc!r}')
                     #iminus1 = minus1[minus1_count+2]
                     #print('ints: ', ints[i:iminus1].tolist())
                     #minus1_count += 1
                 elif gtype == -4:
+                    assert ints[i] == -4, ints[i]
+                    i += 1
+                    n += 4
+
                     # grids
                     #iminus1 = minus1[minus1_count] # + 1
                     #print(ints[iminus1:])
                     #grids = ints[i+1:iminus1].tolist()
-
+                    #print('ints[i:]', ints[i:])
+                    assert ints[i:][0] > 0, ints[i:]
                     for j, nj in enumerate(ints[i:]):
                         if nj == -1:
                             break
                     grids = ints[i+1:i+j].tolist()
                     grids2 = _expand_vals(grids)
-                    print(f'grids = {grids2}')
+                    print(f'  grids = {grids2}')
+                    assert 'THRU' != grids2[0]
+                    assert 'BY' != grids2[0]
+                    assert 'ALL' != grids2[0]
+
+                    data_dict['grid'].append(grids2)
                     #minus1_count += 1
 
                     nstop = len(grids) + 2
@@ -296,6 +337,12 @@ class EDT(GeomCommon):
                     #i = iminus1
                     #n = iminus1 * 4
                 elif gtype == -5:
+                    assert ints[i] == -5, ints[i]
+                    i += 1
+                    n += 4
+
+                    #print(f'gtype=5 (eids); ints[{i}]={ints[i]}')
+                    #self.show_data(data[12:], types='ifs')
                     #print('data', ints[i:].tolist())
                     #GTYPE = -5 Element identification numbers
                     #NDESC+5+NMETA
@@ -305,31 +352,51 @@ class EDT(GeomCommon):
                     #= -6 for BY
                     #= -7 for ALL
                     #Word NDESC+5+NMETA repeats until -1 occurs
+                    #print('ints[i:] =', ints[i:])
+                    assert ints[i:][0] > 0, ints[i:]
                     for j, nj in enumerate(ints[i:]):
                         if nj == -1:
                             break
-                    eids = ints[i+1:i+j].tolist()
-                    eids2 = _expand_vals(eids)
-                    print(f'eids = {eids2}')
-                    nstop = len(eids) + 2
+                    eids_array = ints[i:i+j].tolist()
+                    eids2 = _expand_vals(eids_array)
+                    # print(f'  eids1 = {eids_array}')
+                    print(f'  eids2 = {eids2}')
+                    assert 'THRU' != eids2[0], eids2
+                    assert 'BY' != eids2[0], eids2
+                    assert 'ALL' != eids2[0], eids2
+                    data_dict['element'].append(eids2)
+                    nstop = len(eids_array) + 1
                     i += nstop
                     n += nstop * 4
                 else:
                     raise NotImplementedError(gtype)
                 gtype = ints[i]
-                print(f'***gtype={gtype} (ndata-n)={(ndata-n)}')
-                if gtype == -1 and (ndata - n) == 4:
-                    print('break')
+                assert gtype <= -1, ints[i]
+                #print(f'***gtype={gtype} (ndata-n)={(ndata-n)}')
+                #print('---------------')
+                #if gtype == -1 and (ndata - n) == 4:
+                    #print('break')
                     #minus1_count += 1
-                    i += 1
-                    n += 4
-                    break
+                    #i += 1
+                    #n += 4
+                    #break
+            #grid=1 ndesc=4 group_desc='GROUP(1)_ELAR'
+            # $ROUP         ID         DESC
+            # GROUP          1Group(1)_elar                                           +
+            # $           TYPE     ID1  "THRU"     ID2
+            # +           ELEM      21    THRU      36
+            print(data_dict)
+            #self.add_group(group_id, group_desc, data_dict)
                 #i += 1
                 #n += 4
             #assert ints[i] == -1, ints[i:]
             self.log.warning(f'skipping GROUP in {self.table_name}')
+            nentries += 1
             #self.add_rgyro(sid, asynci, refrot, unit, speed_low, speed_high, speed)
+
+        assert n == len(data), f'n={n} ndata={len(data)}'
         self.increase_card_count('GROUP', nentries)
+        assert nentries > 0, nentries
         return n
 
     def _read_aero(self, data: bytes, n: int) -> int:
@@ -368,6 +435,30 @@ class EDT(GeomCommon):
                        acsid=acsid, rcsid=rcsid,
                        sym_xz=sym_xz, sym_xy=sym_xy)
         n = 40 * self.factor
+        return n
+
+    def _read_deform(self, data: bytes, n: int) -> int:
+        """
+        NX 2019.2
+
+        Word Name Type Description
+        1 SID I Deformation set identification number
+        2 EID I Element number
+        3 D RS Deformation
+
+        """
+        ntotal = 12 # 4*3
+        ndatai = len(data) - n
+        ncards = ndatai // ntotal
+        assert ndatai % ntotal == 0
+        structi = Struct(mapfmt(self._endian + b'2i f', self.size))
+        for unused_i in range(ncards):
+            edata = data[n:n + ntotal]
+            out = structi.unpack(edata)
+            sid, eid, deformation = out
+            deform = self.add_deform(sid, eid, deformation)
+            str(deform)
+            n += ntotal
         return n
 
     def _read_caero1(self, data: bytes, n: int) -> int:
@@ -456,6 +547,11 @@ class EDT(GeomCommon):
             str(caero2)
             n += ntotal
         return n
+
+    def _read_caero3(self, data: bytes, n: int) -> int:
+        caero3x
+    def _read_caero4(self, data: bytes, n: int) -> int:
+        caero4x
 
     def _read_caero5(self, data: bytes, n: int) -> int:
         """
@@ -714,13 +810,15 @@ class EDT(GeomCommon):
         ACMODL,IDENT,,,,1.0-4
 
         """
-        ntotal = 72 # 4 * 8
+        ntotal = 72 *  self.factor # 4 * 8
         ndatai = len(data) - n
         ncards = ndatai // ntotal
         assert ndatai % ntotal == 0, ndatai % ntotal
         #structi = Struct(self._endian + b'4i f 8s 8s 3i f') # msc
-        #                                                 ?  g ggg g
-        structi = Struct(self._endian + b'8s 8s 2i f 8s f 8s f ifi 8s')
+        if self.size == 4:
+            structi = Struct(self._endian + b'8s 8s 2i f 8s f 8s f ifi 8s')
+        else:
+            structi = Struct(self._endian + b'16s 16s 2q d 16s d 16s d qdq 16s')
         for unused_i in range(ncards):
             edata = data[n:n + ntotal]
             out = structi.unpack(edata)
@@ -1503,4 +1601,25 @@ def cast_string(name_bytes: bytes, size: int, encoding='latin1') -> str:
     else:
         name = reshape_bytes_block(name_bytes).decode(encoding).rstrip()
     return name
+
+
+def _expand_vals(grids):
+    grids2 = []
+    for val in grids:
+        #> 0 for ID
+        #= 0 for THRU
+        #= -6 for BY
+        #= -7 for ALL
+        if val > 0:
+            pass
+        elif val == 0:
+            val = 'THRU'
+        elif val == -6:
+            val = 'BY'
+        elif val == -7:
+            val = 'ALL'
+        else:
+            raise NotImplementedError(f'val={val} data={grids}')
+        grids2.append(val)
+    return grids2
 
