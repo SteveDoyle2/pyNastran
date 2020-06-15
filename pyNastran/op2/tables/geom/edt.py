@@ -226,6 +226,7 @@ class EDT(GeomCommon):
           strings = (b'o\x00\x00\x00\x05\x00\x00\x00THIS IS GROUP 111   \xfe\xff\xff\xff\x05\x00\x00\x00THIS IS METADATA\xff\xff\xff\xff\xfb\xff\xff\xff\x01\x00\x00\x00\x00\x00\x00\x00\n\x00\x00\x00\xff\xff\xff\xff\xff\xff\xff\xff',)
           ints    = (111, 5, 'THIS IS GROUP 111   ', -2, 5, 'THIS IS METADATA', -1, -5, 1, 0, 10, -1, -1)
           floats  = (111, 5, 'THIS IS GROUP 111   ', -2, 5, 'THIS IS METADATA', -1, -5, 1, 0.0, 10, -1, -1)
+
         """
         #print('reading group')
         assert self.factor == 1, self.factor

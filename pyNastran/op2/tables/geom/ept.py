@@ -378,7 +378,6 @@ class EPT(GeomCommon):
         #print(self.show_ndata(80))
         ndata = len(data)
 
-        #while n < ntotal:
         while ndata - n > ntotal:
             edata = data[n:n+ntotal]
             n += ntotal
@@ -1199,6 +1198,7 @@ class EPT(GeomCommon):
                                   8, 4572414629676717179, 0, 1,
                                   8, 4572414629676717179, 0, 1,
                                -1, -1, -1, -1)
+
         """
         self.to_nx()
         #self.show_data(data[12:], types='ifs')

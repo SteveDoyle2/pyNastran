@@ -2464,7 +2464,6 @@ class RealPlateForceArray(RealForceObject):  # 33-CQUAD4, 74-CTRIA3
             self._write_table_header(op2, op2_ascii, date)
             itable = -3
 
-        print(self.get_stats())
         #if 'CTRIA3' in self.element_name:
             #nnodes = 3
         #elif 'CQUAD4' in self.element_name:

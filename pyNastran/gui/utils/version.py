@@ -77,6 +77,7 @@ def check_for_newer_version(version_current: Optional[str]=None,
         '1.4.0+dev.5378fd363'
     is_newer : bool
         is there a newer version
+
     """
     is_newer = False
     if version_current is None:
@@ -100,8 +101,6 @@ def check_for_newer_version(version_current: Optional[str]=None,
     #print('tuple_current_version = %s' % str(tuple_current_version))  # (0,8,0)
 
     # (1, 0, 0) (1, 3, 2) True
-
-
     is_self_newer = tuple_current_version > tuple_latest_version
     is_newer_release_version = tuple_current_version < tuple_latest_version
     is_newer_dev_version = is_dev and (tuple_current_version <= tuple_latest_version)

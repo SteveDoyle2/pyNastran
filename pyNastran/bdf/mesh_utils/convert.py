@@ -544,7 +544,7 @@ def _convert_properties(model: BDF,
         'force': 'force_scale (F) = %g' % force_scale,
         'moment': 'force_scale (F*L) = %g' % moment_scale,
         'stiffness': 'stiffness_scale (F/L) = %g' % stiffness_scale,
-        'damping': 'damping_scale (F/L) = %g' % damping_scale,
+        'damping': 'damping_scale (F/V) = %g' % damping_scale,
         'stress': 'stress_scale (F/L^2) = %g' % stress_scale,
         'velocity' : 'velocity_scale (L/T) = %g' % velocity_scale,
         'area_moi/length': 'area_moi/length (L^3) = %g' % area_moi_length,
@@ -552,9 +552,8 @@ def _convert_properties(model: BDF,
 
     #log.debug('nsm_bar_scale (M/L) = %g' % nsm_bar_scale)
     #log.debug('nsm_plate_scale (M/L^2) = %g' % nsm_plate_scale)
-
     #log.debug('stiffness_scale (F/L) = %g' % stiffness_scale)
-    #log.debug('damping_scale (F/L) = %g' % damping_scale)
+    #log.debug('damping_scale (F/V) = %g' % damping_scale)
     #log.debug('stress_scale (F/L^2) = %g\n' % stress_scale)
 
     skip_properties = {
@@ -1356,10 +1355,10 @@ def _convert_aero(model: BDF,
     angular_velocity_scale = 1 / time_scale  # rad/s
 
     model.log.debug('--Aero Scales--')
-    #model.log.debug('area_scale = %s' % area_scale)
-    #model.log.debug('velocity_scale = %s' % velocity_scale)
-    #model.log.debug('pressure_scale = %s' % pressure_scale)
-    #model.log.debug('density_scale = %s\n' % density_scale)
+    #model.log.debug('area_scale (L^2) = %s' % area_scale)
+    #model.log.debug('velocity_scale (L/T) = %s' % velocity_scale)
+    #model.log.debug('pressure_scale (F/L^2) = %s' % pressure_scale)
+    #model.log.debug('density_scale (F/L^3) = %s\n' % density_scale)
     scales = set([])
     scale_map = {
         'area' : 'area_scale (L^2) = %g' % area_scale,
@@ -1538,7 +1537,6 @@ def _convert_optimization(model: BDF,
     #time_scale = 1.
     #area_scale = xyz_scale ** 2
     #inertia_scale = xyz_scale ** 4
-    #force_scale = force_scale
     #velocity_scale = xyz_scale / time_scale
     pressure_scale = force_scale / xyz_scale ** 2
     #stiffness_scale = force_scale / xyz_scale
@@ -1591,7 +1589,7 @@ def _convert_optimization(model: BDF,
         #print('------------')
         #print(dvprel)
 
-def _convert_dconstr(model: BDF, dconstr: DCONSTR, pressure_scale: Set[int]) -> None:
+def _convert_dconstr(model: BDF, dconstr: DCONSTR, pressure_scale: float) -> None:
     """helper for ``_convert_optimization``"""
     otype = dconstr.type
     if otype == 'DCONSTR':

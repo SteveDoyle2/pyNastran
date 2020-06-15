@@ -187,7 +187,6 @@ class RandomPlateArray(OES_Object):
     def __eq__(self, table):  # pragma: no cover
         assert self.is_sort1 == table.is_sort1
         self._eq_header(table)
-        #print(self.element_node.tolist())
         assert self.element_node[:, 0].min() > 0, self.element_node
         assert table.element_node[:, 0].min() > 0, table.element_node
         if not np.array_equal(self.element_node, table.element_node):

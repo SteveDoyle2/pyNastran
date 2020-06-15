@@ -721,9 +721,8 @@ class MPT(GeomCommon):
                   sid nic dt   km ks max con int  epu   epp   epw   mx mx  mx fstr  lso  mx mx    rtolb
         ints    = (1, 10, 0,   1, 5, 25, -1, 0,   0.01, 0.01, 0.01, 3, 25, 4, 0.20, 0.5, 5, 20.0, 20.0, 0)
         floats  = (1, 10, 0.0, 1, 5, 25, -1, 0.0, 0.01, 0.01, 0.01, 3, 25, 4, 0.20, 0.5, 5, 20.0, 20.0, 0.0)
+
         """
-        #print(len(data[12:]))
-        #self.show_data(data[12:], types='if')
         ntotal = 76 * self.factor  # 19*4
         s = Struct(mapfmt(self._endian + b'iif5i3f3iffiff', self.size))
         ndatai = len(data) - n
