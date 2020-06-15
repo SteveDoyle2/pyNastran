@@ -1201,7 +1201,6 @@ class EPT(GeomCommon):
 
         """
         self.to_nx()
-        #self.show_data(data[12:], types='ifs')
         nproperties = 0
         s1 = Struct(mapfmt(self._endian + b'2i3fi2f', self.size))
         ntotal1 = 32 * self.factor

@@ -45,6 +45,7 @@ def cmd_line_plot_flutter(argv=None, plot=True, show=True, log=None):
         '  --density        plot density\n'
         '  --mach           plot Mach number\n'
         '  --alt            plot altitude\n'
+        '  --q              plot dynamic pressure\n'
         '\n'
         'Units:\n'
         '  --in_units IN    Selects the input unit system\n'
@@ -125,7 +126,6 @@ def cmd_line_plot_flutter(argv=None, plot=True, show=True, log=None):
         plot_type = 'q'
     else:
         sys.stderr.write('plot_type assumed to be --tas\n')
-        #raise NotImplementedError(data)
 
     plot_kfreq_damping = data['--kfreq']
     plot_root_locus = data['--rootlocus']

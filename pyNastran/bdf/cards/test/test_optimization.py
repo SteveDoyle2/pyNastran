@@ -411,7 +411,24 @@ class TestOpt(unittest.TestCase):
         grid.nid = 200
         assert '200' in str(dresp3), dresp3
 
-        save_load_deck(model, run_convert=False)
+        # DCONADD (45) is part of dconstrs
+        dconstr_keys = list(model.dconstrs.keys())
+        dconstr_keys.sort()
+        assert dconstr_keys == [42, 45, 1001, 1002, 1003], f'actual={dconstr_keys}'
+
+        model2 = save_load_deck(model, run_convert=False)
+
+        # DCONADD (45) is not part of self.dconstrs
+        dconstr_keys = list(model.dconstrs.keys())
+        dconstr_keys.sort()
+        assert dconstr_keys == [42, 45, 1001, 1002, 1003], f'actual={dconstr_keys}'
+
+        # 42 is a free DCONSTR
+        dconaddi = model2.dconstrs[45][0]
+        dconstr_subkeys = dconaddi.dconstrs
+        dconstr_subkeys.sort()
+        assert dconaddi.dconstrs == dconstrs, f'model2.dconadds={model2.dconadds}'
+        assert dconstr_subkeys == [1001, 1002, 1003], f'actual={dconstr_subkeys}'
 
     def test_dvprel1_02(self):
         model = BDF()
