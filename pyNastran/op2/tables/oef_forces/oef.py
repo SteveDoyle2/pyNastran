@@ -16,10 +16,13 @@ FLUX             HOEF1         Element heat flux
 
 """
 from struct import Struct
-from pyNastran.op2.op2_interface.op2_reader import mapfmt
+from typing import Any
+from typing import Any
+
 import numpy as np
 from numpy import frombuffer, vstack, sin, cos, radians, array, hstack, zeros
 
+from pyNastran.op2.op2_interface.op2_reader import mapfmt
 from pyNastran.op2.tables.utils import get_eid_dt_from_eid_device
 from pyNastran.op2.op2_helper import polar_to_real_imag
 from pyNastran.op2.op2_interface.op2_common import OP2Common

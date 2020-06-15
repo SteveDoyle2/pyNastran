@@ -1,6 +1,7 @@
 # pylint: disable=C0301,W0201
 import copy
 from struct import Struct, unpack
+from typing import Tuple, Dict, Union, Any
 
 import numpy as np
 

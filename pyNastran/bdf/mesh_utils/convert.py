@@ -187,7 +187,7 @@ def scale_model(model, xyz_scale, mass_scale, time_scale, weight_scale, gravity_
         _convert_loads(model, xyz_scale, time_scale, weight_scale, temperature_scale)
     #_convert_sets(model)
     if convert_optimization:
-        _convert_optimization(model, xyz_scale, mass_scale, weight_scale)
+        _convert_optimization(model, xyz_scale, mass_scale, weight_scale, time_scale)
 
 
 def _set_wtmass(model: BDF, gravity_scale: float) -> None:
@@ -1413,7 +1413,7 @@ def _convert_optimization(model: BDF,
 
     for unused_key, dvprel in model.dvprels.items():
         if dvprel.type == 'DVPREL1':
-            scale = _convert_dvprel1(dvprel, xyz_scale, mass_scale, weight_scale)
+            scale = _convert_dvprel1(dvprel, xyz_scale, mass_scale, weight_scale, time_scale)
             desvars = dvprel.dvids_ref
             assert len(desvars) == 1, len(desvars)
             _convert_desvars(desvars, scale)
@@ -1476,9 +1476,11 @@ def _convert_dvcrel1(dvcrel: Union[DVCREL1, DVCREL2], xyz_scale: float) -> float
         raise NotImplementedError(dvcrel)
     return scale
 
-def _convert_dvprel1(dvprel, xyz_scale, mass_scale, weight_scale):
+def _convert_dvprel1(dvprel, xyz_scale: float,
+                     mass_scale: float,
+                     weight_scale: float,
+                     time_scale: float) -> float:
     """helper for ``_convert_optimization``"""
-    time_scale = 1.
     area_scale = xyz_scale ** 2
     inertia_scale = xyz_scale ** 4
     force_scale = weight_scale

@@ -14,6 +14,10 @@ This is a bug fix only release outside of:
  - subcase.add_set_from_values(set_id, values)
 which was overly complicated to do before.
 
+Versions:
+ - adding support for vtk 9 (GUI)
+ - adding support for nptyping 1.1
+
 BDF:
  - More TEMPRB defaults
  - DRESP2 now handles DTABLE properly when validate=True is used
@@ -42,6 +46,7 @@ OP2 Geom:
  - fixing USET1 reading
  - PMASS were put in self.properties, not self.properties_mass
  - MATT2 tables properly handle table_ids=0 now
+ - DEFORM and CLOAD are not the GEOM3/loads table
  - NX support (the card format is different than MSC)
    - CTRIAX
    - TSTEPNL
@@ -59,9 +64,6 @@ OP2 Geom:
 F06 Flutter Plotter
  - added check for mode id > 0
  - better parsing of modes; '1,3:' is now supported
-
-GUI:
- - supporting vtk 9
 
 minor:
  - removal of some prints
