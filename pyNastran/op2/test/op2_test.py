@@ -191,10 +191,7 @@ def main():
     msg = "Usage:  "
     #is_release = False
     is_dev = 'dev' in ver
-    if is_dev:
-        msg += "op2_test [-r] [-s] [-c] [-u] [-t] [-g] [-n] [-f] [-o] [-h] [-d] [-b] [--safe] [--skip_dataframe] [--nocombine]\n"
-    else:
-        msg += "op2_test [-r] [-s] [-c] [-u] [-t] [-g] [-n] [-f] [-h] [-d] [-b] [--safe] [--skip_dataframe]\n"
+    msg += "op2_test [-r] [-s] [-c] [-u] [-t] [-g] [-n] [-f] [-o] [-h] [-d] [-b] [--safe] [--skip_dataframe] [--nocombine]\n"
     msg += "        op2_test -h | --help\n"
     msg += "        op2_test -v | --version\n"
     msg += "\n"
@@ -212,12 +209,10 @@ def main():
     # n is for NAS
     msg += "  -n, --write_bdf        Writes the bdf to fem.test_op2.bdf (default=False)\n"
     msg += "  -f, --write_f06        Writes the f06 to fem.test_op2.f06\n"
-    if is_dev:
-        msg += "  -o, --write_op2        Writes the op2 to fem.test_op2.op2\n"
+    msg += "  -o, --write_op2        Writes the op2 to fem.test_op2.op2\n"
     msg += "  -h, --write_hdf5       Writes the hdf5 to fem.test_op2.h5\n"
     msg += "  --skip_dataframe       Disables pandas dataframe building; [default: False]\n"
-    if is_dev:
-        msg += "  --nocombine            Disables case combination\n"
+    msg += "  --nocombine            Disables case combination\n"
     msg += "  -s, --save_cases       Disables saving of the cases (default=False)\n"
     msg += "  --safe                 Safe cross-references BDF (default=False)\n"
     #msg += "  -z, --is_mag_phase    F06 Writer writes Magnitude/Phase instead of\n"
@@ -234,9 +229,7 @@ def main():
     make_geom = data['--geometry']
     write_bdf = data['--write_bdf']
     write_f06 = data['--write_f06']
-    write_op2 = False
-    if is_dev:
-        write_op2 = data['--write_op2']
+    write_op2 = data['--write_op2']
     write_hdf5 = data['--write_hdf5']
     save_cases = not data['--save_cases']
     short_stats = data['--short_stats']

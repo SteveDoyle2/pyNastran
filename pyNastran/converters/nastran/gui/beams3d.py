@@ -18,7 +18,7 @@ def faces_to_element_facelist(faces: Any, node0: int) -> vtk.vtkIdList:
         [face_idlist.InsertNextId(i + node0) for i in face]
     return face_idlist
 
-def get_bar_type(ptype, pid_ref):
+def get_bar_type(ptype: str, pid_ref):
     """helper method for _get_bar_yz_arrays"""
     if ptype in ['PBAR', 'PBEAM']:
         bar_type = 'bar'

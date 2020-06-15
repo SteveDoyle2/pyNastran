@@ -534,7 +534,6 @@ def get_test_op2_data(argv):
         # just set the defaults for these so we don't need special code later
         data['--profile'] = False
         data['--write_xlsx'] = False
-        data['--write_op2'] = False
         data['--nocombine'] = False
         data['--nasa95'] = False
 
