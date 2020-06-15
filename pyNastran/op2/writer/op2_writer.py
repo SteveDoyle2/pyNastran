@@ -132,7 +132,9 @@ def _write_result_tables(obj: OP2, fop2, fop2_ascii, struct_3i, endian, skips: S
     table_order = [
         'OUGV1', 'OPHIG',
         'BOUGV1', 'BOPHIG', 'BOPHIGF',
-        'OUPV1', 'OUXY1', 'OUXY2', 'OPHSA', 'OUGF1',
+        'OUPV1', 'OUXY1', 'OUXY2', 'OPHSA',
+        'OUGF1',
+        'BOUGF1',
         'TOUGV1', 'OTEMP1',
         'OUG1',
         'OUGV1PAT',
@@ -262,16 +264,14 @@ def _write_result_tables(obj: OP2, fop2, fop2_ascii, struct_3i, endian, skips: S
                     itable = result.write_op2(fop2, fop2_ascii, itable, new_result,
                                               date, is_mag_phase=False, endian=endian)
                 except:
-                    print(' %s - isubcase=%s%s' % (result.__class__.__name__,
-                                                   isubcase, element_name))
+                    print(f' {result.__class__.__name__} - isubcase={isubcase}{element_name}')
                     raise
             elif hasattr(result, 'element_name'):
                 if result.element_name in ['CBAR', 'CBEND']:
                     obj.log.warning('skipping:\n%s' % result)
                     continue
             else:
-                raise NotImplementedError("  *op2 - %s not written" % (
-                    result.__class__.__name__))
+                raise NotImplementedError(f'  *op2 - {result.__class__.__name__} not written')
                 #obj.log.warning("  *op2 - %s not written" % result.__class__.__name__)
                 #continue
 

@@ -4,6 +4,7 @@ defines readers for BDF objects in the OP2 GEOM1/GEOM1S table
 #pylint: disable=C0301,C0103,W0612,R0914,C0326
 from struct import Struct
 import numpy as np
+from typing import Tuple, Union
 
 from pyNastran.bdf.cards.nodes import GRID, POINT, SEQGP
 #from pyNastran.bdf.cards.parametric.geometry import FEFACE
@@ -322,16 +323,9 @@ class GEOM1(GeomCommon):
 
     def _read_grid(self, data: bytes, n: int) -> int:
         """(4501,45,1) - the marker for Record 17"""
-        ntotal_8 = 32
-        ntotal_11 = 44
-        nleftover_8 = (len(data) - n) % ntotal_8
-        nleftover_11 = (len(data) - n) % ntotal_11
-        if nleftover_8:
-            assert self.table_name == b'GEOM1N', self.table_name
-            assert nleftover_11 == 0
+        if self.table_name == b'GEOM1N' and self.factor == 1:
             n2 = self._read_grid_11(data, n)
         else:
-            assert nleftover_8 == 0
             n2 = self._read_grid_8(data, n)
         return n2
 
@@ -390,8 +384,8 @@ class GEOM1(GeomCommon):
             if self.is_debug_file:
                 self.binary_debug.write('  GRID=%s\n' % str(out))
             #print(f'nid={nid}, cp={cp} x1={x1}, x2={x2}, x3={x3}, cd={cd} ps={ps}, seid={seid}')
-            assert cd == 0, cd
-            assert seid == 0, seid
+            assert cd >= 0, f'nid={nid}, cp={cp} x1({x1}, {x2}, {x3}), cd={cd} ps={ps}, seid={seid}'
+            assert seid == 0, f'nid={nid}, cp={cp} x1({x1}, {x2}, {x3}), cd={cd} ps={ps}, seid={seid}'
             if nid < 10000000:
                 # cd can be < 0
                 if ps == 0:

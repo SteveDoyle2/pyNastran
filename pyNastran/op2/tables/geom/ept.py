@@ -21,7 +21,7 @@ from pyNastran.bdf.cards.properties.springs import PELAS, PELAST
 from pyNastran.bdf.cards.thermal.thermal import PCONV, PHBDY, PCONVM
 # PCOMPG, PBUSH1D, PBEAML, PBEAM3
 from pyNastran.op2.tables.geom.geom_common import GeomCommon
-from pyNastran.op2.op2_interface.op2_reader import mapfmt # , reshape_bytes_block
+from pyNastran.op2.op2_interface.op2_reader import mapfmt, reshape_bytes_block
 
 
 class EPT(GeomCommon):
@@ -1131,6 +1131,14 @@ class EPT(GeomCommon):
         return n, props
 
     def _read_pcomp(self, data: bytes, n: int) -> int:
+        """PCOMP(2706,27,287) - the marker for Record 22"""
+        if self.size == 4:
+            n2 = self._read_pcomp_32_bit(data, n)
+        else:
+            n2 = self._read_pcomp_64_bit(data, n)
+        return n2
+
+    def _read_pcomp_64_bit(self, data: bytes, n: int) -> int:
         """
         PCOMP(2706,27,287) - the marker for Record 22
 
@@ -1176,16 +1184,86 @@ class EPT(GeomCommon):
             1, 0.11, 0, 1,
             1, 0.11, 0, 1,
           -1, -1, -1, -1)
+
+          doubles (float64) = (5e-324, 0.0, -0.005, 0.0, 0.0, 0.0, 0.0, 0.0,
+                               4e-323, 0.005, 0.0, 5e-324,
+                               4e-323, 0.005, 0.0, 5e-324,
+                               nan, nan, nan, nan)
+          long long (int64) = (1, 0, -4650957407178058629, 0, 0, 0, 0, 0,
+                                  8, 4572414629676717179, 0, 1,
+                                  8, 4572414629676717179, 0, 1,
+                               -1, -1, -1, -1)
+
         """
+        self.to_nx()
         nproperties = 0
         s1 = Struct(mapfmt(self._endian + b'2i3fi2f', self.size))
         ntotal1 = 32 * self.factor
-        #if self.size == 4:
-            #s1 = Struct(self._endian + b'2i 3f i 2f')
-            #ntotal1 = 32
-        #else:
-            #s1 = Struct(self._endian + b'iq 3d q 2d')
-            #ntotal1 = 60
+        s2 = Struct(mapfmt(self._endian + b'i2fi', self.size))
+
+        four_minus1 = Struct(mapfmt(self._endian + b'4i', self.size))
+
+        ndata = len(data)
+        ntotal2 = 16 * self.factor
+
+        while n < (ndata - ntotal1):
+            out = s1.unpack(data[n:n+ntotal1])
+            (pid, nlayers, z0, nsm, sb, ft, tref, ge) = out
+            if self.binary_debug:
+                self.binary_debug.write(f'PCOMP pid={pid} nlayers={nlayers} z0={z0} nsm={nsm} '
+                                        f'sb={sb} ft={ft} Tref={tref} ge={ge}')
+            assert isinstance(nlayers, int), out
+            #print(f'PCOMP pid={pid} nlayers={nlayers} z0={z0} nsm={nsm} '
+                  #f'sb={sb} ft={ft} Tref={tref} ge={ge}')
+            n += ntotal1
+
+            # None, 'SYM', 'MEM', 'BEND', 'SMEAR', 'SMCORE', 'NO'
+            is_symmetrical = 'NO'
+            #if nlayers < 0:
+                #is_symmetrical = 'SYM'
+                #nlayers = abs(nlayers)
+
+            mids = []
+            T = []
+            thetas = []
+            souts = []
+
+            edata2 = data[n:n+ntotal2]
+            idata = four_minus1.unpack(edata2)
+            while idata != (-1, -1, -1, -1):
+                (mid, t, theta, sout) = s2.unpack(edata2)
+                mids.append(mid)
+                T.append(t)
+                thetas.append(theta)
+                souts.append(sout)
+                if self.is_debug_file:
+                    self.binary_debug.write(f'      mid={mid} t={t} theta={theta} sout={sout}\n')
+                n += ntotal2
+                #print(f'      mid={mid} t={t} theta={theta} sout={sout}')
+                edata2 = data[n:n+ntotal2]
+                idata = four_minus1.unpack(edata2)
+
+            if self.size == 4:
+                assert 0 < nlayers < 100, 'pid=%s nlayers=%s z0=%s nms=%s sb=%s ft=%s Tref=%s ge=%s' % (
+                    pid, nlayers, z0, nsm, sb, ft, tref, ge)
+            else:
+                assert nlayers == 0, nlayers
+                nlayers = len(mids)
+
+            data_in = [
+                pid, z0, nsm, sb, ft, tref, ge,
+                is_symmetrical, mids, T, thetas, souts]
+            prop = PCOMP.add_op2_data(data_in)
+            self._add_op2_property(prop)
+            nproperties += 1
+            n += ntotal2
+        return n
+
+    def _read_pcomp_32_bit(self, data: bytes, n: int) -> int:  # pragma: no cover
+        """PCOMP(2706,27,287) - the marker for Record 22"""
+        nproperties = 0
+        s1 = Struct(mapfmt(self._endian + b'2i3fi2f', self.size))
+        ntotal1 = 32 * self.factor
         s2 = Struct(mapfmt(self._endian + b'i2fi', self.size))
 
         ndata = len(data)
@@ -1228,6 +1306,7 @@ class EPT(GeomCommon):
                 if self.is_debug_file:
                     self.binary_debug.write(f'      mid={mid} t={t} theta={theta} sout={sout}\n')
                 n += ntotal2
+                #print(f'      mid={mid} t={t} theta={theta} sout={sout}\n')
 
             data_in = [
                 pid, z0, nsm, sb, ft, tref, ge,

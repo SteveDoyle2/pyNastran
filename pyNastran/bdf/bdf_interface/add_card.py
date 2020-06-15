@@ -4158,7 +4158,7 @@ class AddCards(AddMethods):
         self._add_load_object(load)
         return load
 
-    def add_deform(self, sid, eid, deformation, comment='') -> DEFORM:
+    def add_deform(self, sid: int, eid: int, deformation: float, comment='') -> DEFORM:
         """
         Creates an DEFORM card, which defines applied deformation on
         a 1D elemment.  Links to the DEFORM card in the case control
@@ -4614,8 +4614,9 @@ class AddCards(AddMethods):
         self._add_aeros_object(aeros)
         return aeros
 
-    def add_aero(self, velocity, cref, rho_ref, acsid=0, sym_xz=0, sym_xy=0,
-                 comment='') -> AERO:
+    def add_aero(self, velocity: float, cref: float, rho_ref: float,
+                 acsid: int=0, sym_xz: int=0, sym_xy: int=0,
+                 comment: str='') -> AERO:
         """
         Creates an AERO card
 
@@ -4692,8 +4693,10 @@ class AddCards(AddMethods):
         self._add_caero_object(caero)
         return caero
 
-    def add_caero2(self, eid, pid, igroup, p1, x12, cp=0, nsb=0, nint=0, lsb=0,
-                   lint=0, comment='') -> CAERO2:
+    def add_caero2(self, eid: int, pid: int, igroup: int, p1: List[float], x12: float,
+                   cp: int=0,
+                   nsb: int=0, nint: int=0,
+                   lsb: int=0, lint: int=0, comment: str='') -> CAERO2:
         """
         Defines a CAERO2 card, which defines a slender body
         (e.g., fuselage/wingtip tank).
@@ -4780,8 +4783,13 @@ class AddCards(AddMethods):
         self._add_caero_object(caero)
         return caero
 
-    def add_caero5(self, eid, pid, p1, x12, p4, x43, cp=0, nspan=0, lspan=0,
-                   ntheory=0, nthick=0, comment='') -> CAERO5:
+    def add_caero5(self, eid: int, pid: int,
+                   p1: List[float], x12: float,
+                   p4: List[float], x43: float,
+                   cp: int=0,
+                   nspan: int=0, lspan: int=0,
+                   ntheory: int=0,
+                   nthick: int=0, comment: str='') -> CAERO5:
         """Creates a CAERO5 card"""
         caero = CAERO5(eid, pid, p1, x12, p4, x43, cp=cp, nspan=nspan, lspan=lspan,
                        ntheory=ntheory, nthick=nthick, comment=comment)
@@ -4807,8 +4815,12 @@ class AddCards(AddMethods):
         self._add_paero_object(paero)
         return paero
 
-    def add_paero2(self, pid, orient, width, AR, thi, thn,
-                   lrsb=None, lrib=None, lth=None, comment='') -> PAERO2:
+    def add_paero2(self, pid: int, orient: str, width: float, AR: float,
+                   thi: List[int], thn: List[int],
+                   lrsb: Optional[int]=None,
+                   lrib: Optional[int]=None,
+                   lth: Optional[int]=None,
+                   comment: str='') -> PAERO2:
         """
         Creates a PAERO2 card, which defines additional cross-sectional
         properties for the CAERO2 geometry.
@@ -4883,17 +4895,21 @@ class AddCards(AddMethods):
         self._add_paero_object(paero)
         return paero
 
-    def add_paero5(self, pid, caoci, nalpha=0, lalpha=0, nxis=0, lxis=0,
-                   ntaus=0, ltaus=0, comment='') -> PAERO5:
+    def add_paero5(self, pid: int, caoci: List[float],
+                   nalpha: int=0, lalpha: int=0,
+                   nxis: int=0, lxis: int=0,
+                   ntaus: int=0, ltaus: int=0,
+                   comment='') -> PAERO5:
         """Creates a PAERO5 card"""
         paero = PAERO5(pid, caoci, nalpha=nalpha, lalpha=lalpha, nxis=nxis, lxis=lxis,
                        ntaus=ntaus, ltaus=ltaus, comment=comment)
         self._add_paero_object(paero)
         return paero
 
-    def add_spline1(self, eid, caero, box1, box2, setg, dz=0., method='IPS',
-                    usage='BOTH', nelements=10,
-                    melements=10, comment='') -> SPLINE1:
+    def add_spline1(self, eid: int, caero: int, box1: int, box2: int, setg: int,
+                    dz: float=0., method: str='IPS',
+                    usage: str='BOTH', nelements: int=10,
+                    melements: int=10, comment: str='') -> SPLINE1:
         """
         Creates a SPLINE1, which defines a surface spline.
 
@@ -4938,8 +4954,13 @@ class AddCards(AddMethods):
         self._add_spline_object(spline)
         return spline
 
-    def add_spline2(self, eid, caero, id1, id2, setg, dz=0.0, dtor=1.0, cid=0,
-                    dthx=0., dthy=0., usage='BOTH', comment='') -> SPLINE2:
+    def add_spline2(self, eid: int, caero: int,
+                    id1, id2, setg: int,
+                    dz: float=0.0, dtor: float=1.0,
+                    cid: int=0,
+                    dthx: float=0.0, dthy: float=0.0,
+                    usage: str='BOTH',
+                    comment: str='') -> SPLINE2:
         """
         Creates a SPLINE2 card, which defines a beam spline.
 
@@ -4983,9 +5004,12 @@ class AddCards(AddMethods):
         self._add_spline_object(spline)
         return spline
 
-    def add_spline3(self, eid, caero, box_id, components, nodes,
-                    displacement_components,
-                    coeffs, usage='BOTH', comment='') -> SPLINE3:
+    def add_spline3(self, eid: int, caero: int, box_id: int,
+                 components: int,
+                 nodes: List[int],
+                 displacement_components: List[int],
+                 coeffs: List[float],
+                 usage: str='BOTH', comment: str='') -> SPLINE3:
         """
         Creates a SPLINE3 card, which is useful for control surface
         constraints.
@@ -5017,7 +5041,7 @@ class AddCards(AddMethods):
            Component numbers in the displacement coordinate system.
            1-6 (GRIDs)
            0 (SPOINTs)
-        coeffs :  : List[float]
+        coeffs : List[float]
            Coefficient of the constraint relationship.
         usage : str; default=BOTH
             Spline usage flag to determine whether this spline applies
@@ -5124,7 +5148,8 @@ class AddCards(AddMethods):
         self._add_trim_object(trim)
         return trim
 
-    def add_mkaero1(self, machs, reduced_freqs, comment='') -> MKAERO1:
+    def add_mkaero1(self, machs: List[float], reduced_freqs: List[float],
+                    comment: str='') -> MKAERO1:
         """
         Creates an MKAERO1 card, which defines a set of mach and
         reduced frequencies.
@@ -5330,40 +5355,38 @@ class AddCards(AddMethods):
         self._add_set_object(set_obj)
         return set_obj
 
-    def add_set2(self, sid, macro, sp1, sp2, ch1, ch2, zmax=.0, zmin=.0, comment='') -> SET2:
+    def add_set2(self, sid: int, macro: int,
+                 sp1: float, sp2: float,
+                 ch1: float, ch2: float,
+                 zmax: float=0.0, zmin: float=0.0,
+                 comment: str='') -> SET2:
         """
-        Creates a SET2 card, which defines a list of structural grid points in terms of aerodynamic
-        macro elements.
+        Creates a SET2 card, which defines a list of structural grid
+        points in terms of aerodynamic macro elements.
 
         Parameters
         ----------
-         sid : int
+        sid : int
             set id
         macro : int
             the aerodynamic macro element id
-        sp1 : float
-            lower span division point defining the prism containing the set
-        sp2 : float
-            higher span division point defining the prism containing the set
-        ch1 : float
-            lower chord division point defining the prism containing the set
-        ch2 : float
-            higher chord division point defining the prism containing the set
-        zmax : float; default=0.0
-            z-coordinate of top of the prism containing the set
-            a zero value implies a value of infinity
-        zmin : float; default=0.0
-            z-coordinate of top of the bottom containing the set
+        sp1 / sp2 : float
+            lower/higher span division point defining the prism containing the set
+        ch1 / ch2 : float
+            lower/higher chord division point defining the prism containing the set
+        zmax / zmin : float; default=0.0/0.0
+            z-coordinate of top/bottom of the prism containing the set
             a zero value implies a value of infinity
         comment : str; default=''
             a comment for the card
 
         """
-        set_obj = SET2(sid, macro, sp1, sp2, ch1, ch2, zmax=zmax, zmin=zmin, comment=comment)
+        set_obj = SET2(sid, macro, sp1, sp2, ch1, ch2,
+                       zmax=zmax, zmin=zmin, comment=comment)
         self._add_set_object(set_obj)
         return set_obj
 
-    def add_set3(self, sid, desc, ids, comment='') -> SET3:
+    def add_set3(self, sid: int, desc: str, ids: List[int], comment: str='') -> SET3:
         """Creates a SET3 card"""
         set_obj = SET3(sid, desc, ids, comment=comment)
         self._add_set_object(set_obj)
@@ -5622,9 +5645,13 @@ class AddCards(AddMethods):
         self._add_sesuport_object(se_suport)
         return se_suport
 
-    def add_flutter(self, sid, method, density, mach, reduced_freq_velocity,
-                    imethod='L', nvalue=None,
-                    omax=None, epsilon=1.0e-3, comment='') -> FLUTTER:
+    def add_flutter(self, sid: int, method: str,
+                    density: int, mach: int, reduced_freq_velocity: int,
+                    imethod: str='L',
+                    nvalue: Optional[int]=None,
+                    omax: Optional[float]=None,
+                    epsilon: float=1.0e-3,
+                    comment: str='') -> FLUTTER:
         """
         Creates a FLUTTER card, which is required for a flutter (SOL 145)
         analysis.
@@ -5676,7 +5703,7 @@ class AddCards(AddMethods):
         self._add_flutter_object(flutter)
         return flutter
 
-    def add_flfact(self, sid, factors, comment='') -> FLFACT:
+    def add_flfact(self, sid: int, factors: List[float], comment: str='') -> FLFACT:
         """
         Creates an FLFACT card, which defines factors used for flutter
         analysis.  These factors define either:
@@ -7050,8 +7077,10 @@ class AddCards(AddMethods):
         self._add_monpnt_object(mondsp1)
         return mondsp1
 
-    def add_monpnt1(self, name, label, axes, aecomp_name, xyz, cp=0, cd=None,
-                    comment='') -> MONPNT1:
+    def add_monpnt1(self, name: str, label: str, axes: str, aecomp_name: str,
+                    xyz: List[float],
+                    cp: int=0,
+                    cd: Optional[int]=None, comment: str='') -> MONPNT1:
         """
         Creates a MONPNT1 card
 

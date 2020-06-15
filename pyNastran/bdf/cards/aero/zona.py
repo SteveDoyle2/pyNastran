@@ -1028,6 +1028,7 @@ class AEROZ(Aero):
             sym_xz = 1
         else:
             raise NotImplementedError(self.sym_xz)
+        assert sym_xz in [0, 1], sym_xz
         aeros = AEROS(cref, bref, sref, acsid=acsid, rcsid=0, sym_xz=sym_xz, sym_xy=0,
                       comment=str(self))
 

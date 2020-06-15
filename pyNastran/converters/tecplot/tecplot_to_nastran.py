@@ -11,7 +11,7 @@ from pyNastran.bdf.bdf import BDF
 from pyNastran.bdf.mesh_utils.remove_unused import remove_unused
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.converters.tecplot.tecplot import Tecplot, Zone, read_tecplot
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     from cpylog import SimpleLogger
 
 

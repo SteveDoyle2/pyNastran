@@ -557,6 +557,6 @@ def _qt_key_to_key_sym(key):
     return _keysyms[key]
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':   # pragma: no cover
     #print(PyQtImpl)
     QVTKRenderWidgetConeExample()

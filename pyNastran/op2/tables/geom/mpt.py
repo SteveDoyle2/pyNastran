@@ -717,9 +717,14 @@ class MPT(GeomCommon):
         18 MAXR    RS Maximum ratio for the adjusted arc-length increment
         19 RTOLB   RS Maximum value of incremental rotation
 
+        ndata = 80:
+                  sid nic dt   km ks max con int  epu   epp   epw   mx mx  mx fstr  lso  mx mx    rtolb
+        ints    = (1, 10, 0,   1, 5, 25, -1, 0,   0.01, 0.01, 0.01, 3, 25, 4, 0.20, 0.5, 5, 20.0, 20.0, 0)
+        floats  = (1, 10, 0.0, 1, 5, 25, -1, 0.0, 0.01, 0.01, 0.01, 3, 25, 4, 0.20, 0.5, 5, 20.0, 20.0, 0.0)
+
         """
-        ntotal = 76  # 19*4
-        s = Struct(self._endian + b'iif5i3f3iffiff')
+        ntotal = 76 * self.factor  # 19*4
+        s = Struct(mapfmt(self._endian + b'iif5i3f3iffiff', self.size))
         nentries = (len(data) - n) // ntotal
         for unused_i in range(nentries):
             edata = data[n:n+ntotal]
@@ -775,7 +780,7 @@ class MPT(GeomCommon):
             n += ntotal
         return n, tstepnls
 
-    def _read_tstepnl_msc(self, data: bytes, n: int) -> int:
+    def _read_tstepnl_msc(self, data: bytes, n: int) -> Tuple[int, List[TSTEPNL]]:
         """
         TSTEPNL(3103,31,337) - record 29
 

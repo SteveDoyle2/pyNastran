@@ -79,7 +79,7 @@ def cmd_line_plot_flutter(argv=None, plot=True, show=True, log=None):
         base = os.path.splitext(f06_filename)[0]
         f06_filename = base + '.f06'
 
-    modes = split_int_colon(data['--modes'])
+    modes = split_int_colon(data['--modes'], start_value=1)
 
     xlim = [None, None]
     if data['--xlim']:

@@ -19,6 +19,11 @@ BDF:
  - DRESP2 now handles DTABLE properly when validate=True is used
  - fixed PSHELL 12I/t^3 convert/scale bug
  - TSTEPNL now handles KUPDATE (NX parameter)
+ - fixing SET2 safe-xref
+ - fixin SPLINE1 validate
+ - fixing TRIM2 aeqr setting bug
+ - fixing ACMODL for NX
+ - MAT8 now supports temperature scaling
 
 OP2:
  - auto-conversion to nx for some tables
@@ -28,25 +33,28 @@ OP2 Writer
  - fixed multiple PCOMP writing bug
  - added some 64 bit checks (64-bit writing is not supported)
  - turns out the CPYRAM (NX) has 14 node fields (even though it has 13 nodes)
+ - fixed symmetric PCOMP writing
 
 OP2 Geom:
  - fixed GRID reading from the GEOM1N table
  - fixed PSHELL reading bug that occurs when very large property ids exist
  - fixed MAT10 reading bug that occurs when very large material ids exist
+ - fixing USET1 reading
  - PMASS were put in self.properties, not self.properties_mass
+ - MATT2 tables properly handle table_ids=0 now
  - NX support (the card format is different than MSC)
    - CTRIAX
    - TSTEPNL
    - TLOAD1 (also 64-bit)
    - TLOAD2 (also 64-bit)
-   -
-
  - multiple MATS1s now work
  - 64 bit:
    - multiple SEBULKs now work
    - SPOINTs work now
    - MAT10, MATT2, MATT3, MATT9
+   - supporting alternate 64-bit PCOMP
    - PBARL
+   - NLPARM
 
 F06 Flutter Plotter
  - added check for mode id > 0

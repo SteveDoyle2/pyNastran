@@ -92,5 +92,5 @@ class TestShabp(unittest.TestCase):
         #test.on_load_results(shabp_outfilename)
 
 
-if __name__ == '__main__':
+if __name__ == '__main__':   # pragma: no cover
     unittest.main()

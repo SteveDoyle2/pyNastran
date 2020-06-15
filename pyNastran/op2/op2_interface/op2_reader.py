@@ -4631,7 +4631,7 @@ class OP2Reader:
         self.read_3_markers([-2, 1, 0])
         if self.is_debug_file:
             self.binary_debug.write('---markers = [-2, 1, 0]---\n')
-        data, ndata = self._read_record_ndata()
+        data, ndata = self._read_record_ndata4()
 
         subtable_name = self.get_subtable_name4(op2, data, ndata)
         op2.subtable_name = subtable_name

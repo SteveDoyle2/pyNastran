@@ -36,7 +36,7 @@ from pyNastran.bdf.cards.utils import wipe_empty_fields
 from pyNastran.bdf.cards.aero.utils import (
     points_elements_from_quad_points, create_axisymmetric_body)
 if TYPE_CHECKING:  # pragma: no cover
-    from pyNastran.bdf.bdf import BDF
+    from pyNastran.bdf.bdf import BDF, BDFCard
 
 
 class AECOMP(BaseCard):
@@ -159,7 +159,7 @@ class AECOMP(BaseCard):
         else:
             raise NotImplementedError(self.list_type)
 
-    def safe_cross_reference(self, model):
+    def safe_cross_reference(self, model: BDF):
         msg = ', which is required by AECOMP name=%r' % self.name
         #return
         lists_ref = []
@@ -968,6 +968,10 @@ class AESURF(BaseCard):
         self.alid2_ref = None
         self.tqllim_ref = None
         self.tqulim_ref = None
+        assert self.ldw in {'LDW', 'NOLDW'}, self.ldw
+
+    #def validate(self):
+        #assert self.ldw in {'LDW', 'NOLDW'}, self.ldw
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -4914,7 +4918,7 @@ class PAERO4(BaseCard):
     def cross_reference(self, model: BDF) -> None:
         pass
 
-    def safe_cross_reference(self, model, xref_errors):
+    def safe_cross_reference(self, model: BDF, xref_errors):
         pass
 
     def uncross_reference(self) -> None:
@@ -4982,8 +4986,10 @@ class SPLINE1(Spline):
                        dz=0., method='IPS', usage='BOTH',
                        nelements=10, melements=10, comment='')
 
-    def __init__(self, eid, caero, box1, box2, setg, dz=0., method='IPS',
-                 usage='BOTH', nelements=10, melements=10, comment=''):
+    def __init__(self, eid: int, caero: int, box1: int, box2: int, setg: int,
+                 dz: float=0., method: str='IPS',
+                 usage: str='BOTH', nelements: int=10,
+                 melements: int=10, comment: str=''):
         """
         Creates a SPLINE1, which defines a surface spline.
 
@@ -5039,10 +5045,11 @@ class SPLINE1(Spline):
         self.setg_ref = None
 
     def validate(self):
-        assert self.nelements > 0, 'nelements = %s' % self.nelements
-        assert self.melements > 0, 'melements = %s' % self.melements
-        assert self.box2 >= self.box1, 'box1=%s box2=%s' % (self.box1, self.box2)
         assert self.method in ['IPS', 'TPS', 'FPS'], 'method = %s' % self.method
+        if self.method == 'FPS':
+            assert self.nelements > 0, f'nelements={self.nelements} method={self.method}'
+            assert self.melements > 0, f'melements={self.melements} method={self.method}'
+        assert self.box2 >= self.box1, 'box1=%s box2=%s' % (self.box1, self.box2)
         assert self.usage in ['FORCE', 'DISP', 'BOTH'], 'usage = %s' % self.usage
 
     @classmethod
@@ -5134,10 +5141,11 @@ class SPLINE1(Spline):
     #def safe_set(self, setg, set_type, self.eid, xref_errors, msg=''):
         try:
             self.setg_ref = model.Set(self.setg, msg=msg)
-            #try:
-            self.setg_ref.safe_cross_reference(model, 'Node', msg=msg)
-            #except:
-                #raise
+            try:
+                self.setg_ref.safe_cross_reference(model, 'Node', msg=msg)
+            except:
+                print(self.setg_ref)
+                raise
 
             nnodes = len(self.setg_ref.ids)
             if nnodes < 3:
@@ -5226,8 +5234,12 @@ class SPLINE2(Spline):
         return SPLINE2(eid, caero, box1, box2, setg,
                        dz=0.0, dtor=1.0, cid=0, dthx=0., dthy=0., usage='BOTH', comment='')
 
-    def __init__(self, eid, caero, box1, box2, setg, dz=0.0, dtor=1.0, cid=0,
-                 dthx=0., dthy=0., usage='BOTH', comment=''):
+    def __init__(self, eid: int, caero: int,
+                 box1: int, box2: int, setg: int,
+                 dz: float=0.0, dtor: float=1.0,
+                 cid: int=0,
+                 dthx: float=0.0, dthy: float=0.0,
+                 usage: str='BOTH', comment: str=''):
         """
         Creates a SPLINE2 card, which defines a beam spline.
 
@@ -5465,9 +5477,12 @@ class SPLINE3(Spline):
         return SPLINE3(eid, caero, box_id, components, nodes, displacement_components, coeffs,
                        usage='BOTH')
 
-    def __init__(self, eid, caero, box_id, components,
-                 nodes, displacement_components, coeffs,
-                 usage='BOTH', comment=''):
+    def __init__(self, eid: int, caero: int, box_id: int,
+                 components: int,
+                 nodes: List[int],
+                 displacement_components: List[int],
+                 coeffs: List[float],
+                 usage: str='BOTH', comment: str=''):
         """
         Creates a SPLINE3 card, which is useful for control surface
         constraints.
@@ -5498,7 +5513,7 @@ class SPLINE3(Spline):
            Component numbers in the displacement coordinate system.
            1-6 (GRIDs)
            0 (SPOINTs)
-        coeffs :  : List[float]
+        coeffs : List[float]
            Coefficient of the constraint relationship.
         usage : str; default=BOTH
             Spline usage flag to determine whether this spline applies
@@ -5806,23 +5821,23 @@ class SPLINE4(Spline):
         return SPLINE4(eid, caero, aelist, setg, dz, method, usage,
                        nelements, melements, comment=comment)
 
-    def CAero(self):
+    def CAero(self) -> int:
         if self.caero_ref is not None:
             return self.caero_ref.eid
         return self.caero
 
-    def AEList(self):
+    def AEList(self) -> int:
         if self.aelist_ref is not None:
             return self.aelist_ref.sid
         return self.aelist
 
-    def Set(self):
+    def Set(self) -> int:
         if self.setg_ref is not None:
             return self.setg_ref.sid
         return self.setg
 
     @property
-    def aero_element_ids(self):
+    def aero_element_ids(self) -> List[int]:
         return self.aelist_ref.elements
 
     def cross_reference(self, model: BDF) -> None:
@@ -5852,7 +5867,7 @@ class SPLINE4(Spline):
                 raise RuntimeError(msg)
 
 
-    def safe_cross_reference(self, model, xref_errors):
+    def safe_cross_reference(self, model: BDF, xref_errors):
         """
         Cross links the card so referenced cards can be extracted directly
 

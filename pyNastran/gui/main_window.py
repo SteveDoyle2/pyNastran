@@ -50,6 +50,7 @@ def get_stylesheet():
         #stylesheet = mapper[qt_version]()
     return stylesheet
 
+
 class MainWindow(GuiCommon, NastranIO):
     """
     The MainWindow class combines the base GuiCommon class with all the functionality

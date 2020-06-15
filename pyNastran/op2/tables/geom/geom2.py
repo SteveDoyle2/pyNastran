@@ -2063,8 +2063,8 @@ class GEOM2(GeomCommon):
         17 TFLAG  I Relative thickness flag
         """
         ntotal = 68 * self.factor # 17*4
-        ndatai = (len(data) - n)
-        nelements = (len(data) - n) // ntotal
+        ndatai = len(data) - n
+        nelements = ndatai // ntotal
         assert ndatai % ntotal == 0
         s = Struct(mapfmt(self._endian + b'10i 6f i', self.size))
         elements = []

@@ -225,9 +225,8 @@ def main():
     nlayers = 5
     bdf_filename = 'threePlugs_volume.bdf'
     cart3d.project(bdf_filename, x0, growth_rate=1.3, nlayers=nlayers)
-
     #cart3d.write_bdf(bdf_filename)
 
 
-if __name__ == '__main__':
+if __name__ == '__main__':   # pragma: no cover
     main()

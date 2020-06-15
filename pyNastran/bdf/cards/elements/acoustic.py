@@ -758,7 +758,8 @@ class ACMODL(Element):
                            self.sk_neps, self.dsk_neps, self.intol,
                            self.all_set, self.search_unit, ]
         else:
-            raise NotImplementedError(self.nastran_version)
+            list_fields = ['ACMODL', None, self.infor, self.fset, self.sset, self.normal, None, self.olvpang, self.search_unit,
+                           self.intol, self.area_op, None, None, self.ctype]
             #list_fields = [
                 #'ACMODL', self.pid, synth, self.tid_resistance, self.tid_reactance, self.tid_weight,
                 #None, self.cutfr, self.b, self.k, self.m]

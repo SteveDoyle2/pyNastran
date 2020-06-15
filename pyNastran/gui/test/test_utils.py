@@ -76,6 +76,47 @@ class GuiUtils(unittest.TestCase):
 
 
 
+    def test_check_version_fake(self):
+        """
+        Tests ``check_for_newer_version``
+
+        we're faking the version for the purpose of the test
+        """
+        # no dev versions
+        version_current_test = '1.0.0'
+        version_latest_test = '1.1.0'
+        version_latest, version_current, is_newer = check_for_newer_version(
+            version_current=version_current_test,
+            version_latest=version_latest_test,
+            quiet=True)
+        #print(version_latest, version_current, is_newer)
+        assert version_current == version_current_test
+        assert version_latest == version_latest_test
+        assert is_newer is True, (version_latest, version_current, is_newer)
+
+        # ------------------------
+        # a bigger number version takes priority
+        version_current_test = '1.4.0+dev.5378fd363'
+        version_latest_test = '1.0.0'
+        (version_latest, version_current, is_newer) = check_for_newer_version(
+            version_current=version_current_test,
+            version_latest=version_latest_test,
+            quiet=True)
+        assert version_current == version_current_test
+        assert version_latest == version_latest_test
+        assert is_newer is False, (version_latest, version_current, is_newer)
+        # ------------------------
+        # a dev version is newer than a non-dev version
+        version_current_test = '1.4.0+dev.5378fd363'
+        version_latest_test = '1.4.0'
+        (version_latest, version_current, is_newer) = check_for_newer_version(
+            version_current=version_current_test,
+            version_latest=version_latest_test,
+            quiet=True)
+        assert version_current == version_current_test
+        assert version_latest == version_latest_test
+        assert is_newer is True, (version_latest, version_current, is_newer)
+
     def test_check_version(self):
         """tests ``check_for_newer_version``"""
         unused_version_latest, unused_version_current, is_newer = check_for_newer_version(

@@ -5,7 +5,7 @@ from typing import Tuple, List, Dict, TextIO, Optional, Any, TYPE_CHECKING
 import numpy as np
 from pyNastran.nptyping import NDArrayN3float, NDArrayN3int, NDArrayN4int
 
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     from cpylog import SimpleLogger
 
 class CaseInsensitiveDict(dict):

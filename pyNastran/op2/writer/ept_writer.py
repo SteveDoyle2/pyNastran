@@ -54,6 +54,7 @@ def write_ept(op2, op2_ascii, obj, endian=b'<'):
         if name in skip_properties:  # pragma: no cover
             obj.log.warning('skipping EPT-%s' % name)
             continue
+        #obj.log.debug('writing EPT-%s' % name)
 
         #print('EPT', itable, name)
         if name == 'PBARL':
@@ -538,7 +539,10 @@ def write_pcomp(name, pids, itable, op2, op2_ascii, obj, endian=b'<'):
         #(pid, mid, a, j, c, nsm) = out
         prop = obj.properties[pid]
         #(pid, nlayers, z0, nsm, sb, ft, Tref, ge) = out # 8
-        nlayers += prop.nplies
+
+        # prop.nplies is total
+        nplies = len(prop.mids)
+        nlayers += nplies
 
     nvalues = 8 * nproperties + (4  * nlayers) + 3 # +3 comes from the keys
     nbytes = nvalues * 4
@@ -558,7 +562,6 @@ def write_pcomp(name, pids, itable, op2, op2_ascii, obj, endian=b'<'):
     s2 = Struct(endian + b'i2fi')
     for pid in sorted(pids):
         prop = obj.properties[pid]
-        #print(prop.get_stats())
 
         if prop.ft is None:
             ft = 0
@@ -571,12 +574,17 @@ def write_pcomp(name, pids, itable, op2, op2_ascii, obj, endian=b'<'):
         elif prop.ft == 'STRN':
             ft = 4
         else:
-            raise RuntimeError('unsupported ft.  pid=%s ft=%r.'
-                               '\nPCOMP = %s' % (pid, prop.ft, prop))
+            raise RuntimeError(f'unsupported ft.  pid={pid} ft={prop.ft!r}.'
+                               f'\nPCOMP = {prop}')
 
         #is_symmetric = True
+        # nplies is total
+        nplies = len(prop.mids)
         symmetric_factor = 1
-        data = [pid, symmetric_factor * prop.nplies, prop.z0,
+        if nplies != prop.nplies:
+            assert nplies * 2 == prop.nplies
+            symmetric_factor = -1
+        data = [pid, symmetric_factor * nplies, prop.z0,
                 prop.nsm, prop.sb, ft, prop.tref, prop.ge]
         op2.write(s1.pack(*data))
         op2_ascii.write(str(data) + '\n')
@@ -587,8 +595,8 @@ def write_pcomp(name, pids, itable, op2, op2_ascii, obj, endian=b'<'):
             elif sout == 'YES':
                 sout = 1
             else:
-                raise RuntimeError('unsupported sout.  sout=%r and must be 0 or 1.'
-                                   '\nPCOMP = %s' % (sout, data))
+                raise RuntimeError(f'unsupported sout.  sout={sout!r} and must be 0 or 1.'
+                                   f'\nPCOMP = {data}')
             data2 = [mid, t, theta, sout]
             op2.write(s2.pack(*data2))
             op2_ascii.write(str(data2) + '\n')

@@ -7,7 +7,7 @@ Defines:
 
 """
 from __future__ import annotations
-from typing import Tuple, Dict, TYPE_CHECKING
+from typing import Tuple, Dict, Optional, TYPE_CHECKING
 from math import radians, sin, cos
 import numpy as np
 from numpy import array, cross, allclose, mean
@@ -16,13 +16,17 @@ from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.bdf.utils import get_xyz_cid0_dict
 from pyNastran.bdf.cards.loads.static_loads import update_pload4_vector
 if TYPE_CHECKING:  # pragma: no cover
+    from pyNastran.nptyping import NDArray3float
     from pyNastran.bdf.bdf import BDF, Subcase
 
 
 def isnan(value):
     return value is None or np.isnan(value)
 
-def sum_forces_moments(model, p0, loadcase_id, include_grav=False, xyz_cid0=None):
+def sum_forces_moments(model: BDF, p0: np.ndarray, loadcase_id: int,
+                       include_grav: bool=False,
+                       xyz_cid0: Optional[Dict[int, NDArray3float]]=None,
+                       ) -> Tuple[NDArray3float, NDArray3float]:
     """
     Sums applied forces & moments about a reference point p0 for all
     load cases.
@@ -63,6 +67,7 @@ def sum_forces_moments(model, p0, loadcase_id, include_grav=False, xyz_cid0=None
     Pressure acts in the normal direction per model/real/loads.bdf and loads.f06
 
     """
+    cid = 0
     if not isinstance(loadcase_id, integer_types):
         raise RuntimeError('loadcase_id must be an integer; loadcase_id=%r' % loadcase_id)
 
@@ -315,8 +320,11 @@ def _pload1_bar_beam(model, unused_loadcase_id, load, elem, scale, xyz, F, M, p)
                        F, M, p)
     return
 
-def sum_forces_moments_elements(model, p0, loadcase_id, eids, nids,
-                                include_grav=False, xyz_cid0=None):
+def sum_forces_moments_elements(model: BDF, p0: int, loadcase_id: int,
+                                eids: List[int], nids: List[int],
+                                include_grav: bool=False,
+                                xyz_cid0: Optional[Dict[int, NDArray3float]]=None,
+                                ) -> Tuple[NDArray3float, NDArray3float]:
     """
     Sum the forces/moments based on a list of nodes and elements.
 
@@ -388,6 +396,7 @@ def sum_forces_moments_elements(model, p0, loadcase_id, eids, nids,
     .. todo:: not done...
 
     """
+    cid = 0
     if not isinstance(loadcase_id, integer_types):
         raise RuntimeError('loadcase_id must be an integer; loadcase_id=%r' % loadcase_id)
     p = _get_load_summation_point(model, p0, cid=0)

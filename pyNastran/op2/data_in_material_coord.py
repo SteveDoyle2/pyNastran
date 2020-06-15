@@ -13,7 +13,7 @@ from numpy.linalg import norm  # type: ignore
 
 from pyNastran.utils.numpy_utils import integer_types
 
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.bdf.bdf import BDF
     from pyNastran.op2.op2 import OP2
 

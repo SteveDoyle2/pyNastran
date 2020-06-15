@@ -1,5 +1,7 @@
 #pylint disable=C0301
+from struct import Struct, pack
 from abc import abstractmethod
+import inspect
 from typing import List
 
 import numpy as np
@@ -1115,8 +1117,6 @@ class RealRodForceArray(RealForceObject):
     def write_op2(self, op2, op2_ascii, itable, new_result,
                   date, is_mag_phase=False, endian='>'):
         """writes an OP2"""
-        import inspect
-        from struct import Struct, pack
         frame = inspect.currentframe()
         call_frame = inspect.getouterframes(frame, 2)
         op2_ascii.write('%s.write_op2: %s\n' % (self.__class__.__name__, call_frame[1][3]))
@@ -1459,8 +1459,6 @@ class RealCBeamForceArray(RealForceObject):
     def write_op2(self, op2, op2_ascii, itable, new_result,
                   date, is_mag_phase=False, endian='>'):
         """writes an OP2"""
-        import inspect
-        from struct import Struct, pack
         frame = inspect.currentframe()
         call_frame = inspect.getouterframes(frame, 2)
         op2_ascii.write('%s.write_op2: %s\n' % (self.__class__.__name__, call_frame[1][3]))
@@ -2340,8 +2338,6 @@ class RealPlateForceArray(RealForceObject):  # 33-CQUAD4, 74-CTRIA3
     def write_op2(self, op2, op2_ascii, itable, new_result,
                   date, is_mag_phase=False, endian='>'):
         """writes an OP2"""
-        import inspect
-        from struct import Struct, pack
         frame = inspect.currentframe()
         call_frame = inspect.getouterframes(frame, 2)
         op2_ascii.write('%s.write_op2: %s\n' % (self.__class__.__name__, call_frame[1][3]))
@@ -2375,6 +2371,7 @@ class RealPlateForceArray(RealForceObject):  # 33-CQUAD4, 74-CTRIA3
         eids_device = eids * 10 + self.device_code
 
         nelements = len(eids)
+        assert nelements > 0, eids
         #print('nelements =', nelements)
         # 21 = 1 node, 3 principal, 6 components, 9 vectors, 2 p/ovm
         #ntotal = ((nnodes * 21) + 1) + (nelements * 4)
@@ -2383,7 +2380,7 @@ class RealPlateForceArray(RealForceObject):  # 33-CQUAD4, 74-CTRIA3
         ntotal = ntotali * nelements
 
         #print('shape = %s' % str(self.data.shape))
-        assert nnodes > 1, nnodes
+        #assert nnodes > 1, nnodes
         #assert self.ntimes == 1, self.ntimes
 
         #device_code = self.device_code
@@ -2749,8 +2746,6 @@ class RealPlateBilinearForceArray(RealForceObject):  # 144-CQUAD4
     def write_op2(self, op2, op2_ascii, itable, new_result,
                   date, is_mag_phase=False, endian='>'):
         """writes an OP2"""
-        import inspect
-        from struct import Struct, pack
         frame = inspect.currentframe()
         call_frame = inspect.getouterframes(frame, 2)
         op2_ascii.write('%s.write_op2: %s\n' % (self.__class__.__name__, call_frame[1][3]))
@@ -3094,8 +3089,6 @@ class RealCBarFastForceArray(RealForceObject):
     def write_op2(self, op2, op2_ascii, itable, new_result,
                   date, is_mag_phase=False, endian='>'):
         """writes an OP2"""
-        import inspect
-        from struct import Struct, pack
         frame = inspect.currentframe()
         call_frame = inspect.getouterframes(frame, 2)
         op2_ascii.write('%s.write_op2: %s\n' % (self.__class__.__name__, call_frame[1][3]))
@@ -3615,8 +3608,6 @@ class RealCBar100ForceArray(RealForceObject):  # 100-CBAR
     def write_op2(self, op2, op2_ascii, itable, new_result,
                   date, is_mag_phase=False, endian='>'):
         """writes an OP2"""
-        import inspect
-        from struct import Struct, pack
         frame = inspect.currentframe()
         call_frame = inspect.getouterframes(frame, 2)
         op2_ascii.write('%s.write_op2: %s\n' % (self.__class__.__name__, call_frame[1][3]))
@@ -4876,8 +4867,6 @@ class RealForceMomentArray(RealForceObject):
     def write_op2(self, op2, op2_ascii, itable, new_result,
                   date, is_mag_phase=False, endian='>'):
         """writes an OP2"""
-        import inspect
-        from struct import Struct, pack
         frame = inspect.currentframe()
         call_frame = inspect.getouterframes(frame, 2)
         op2_ascii.write('%s.write_op2: %s\n' % (self.__class__.__name__, call_frame[1][3]))

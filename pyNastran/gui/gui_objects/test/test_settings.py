@@ -58,5 +58,5 @@ class TestSettings(unittest.TestCase):
         value = autotype_value((1.1, 2.2, 3.3), float)
         assert allclose(value, (1.1, 2.2, 3.3))
 
-if __name__ == '__main__':
+if __name__ == '__main__':   # pragma: no cover
     unittest.main()

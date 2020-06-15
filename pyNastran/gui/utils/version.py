@@ -52,6 +52,7 @@ def get_latest_version_from_data(data: str) -> Tuple[Optional[str], List[str]]:
     return version_latest
 
 def check_for_newer_version(version_current: Optional[str]=None,
+                            version_latest: Optional[str]=None,
                             quiet=False) -> Tuple[Optional[str], Optional[str], bool]:
     """
     Checks to see if a newer version of pyNastran has been released.
@@ -61,19 +62,32 @@ def check_for_newer_version(version_current: Optional[str]=None,
         0.7.2
     and compares that to the current version.
 
+    Returns
+    -------
+    version_latest : str
+        the latest version found
+        '1.3.2'
+    version_current : str
+        the current version (may be a dev version)
+        '1.3.2'
+        '1.4.0+dev.5378fd363'
+    is_newer : bool
+        is there a newer version
+
     """
     is_newer = False
     if version_current is None:
         version_current = pyNastran.__version__
-    target_url = 'https://raw.githubusercontent.com/SteveDoyle2/pyNastran/master/latest.txt'
-    data, is_failed = get_data_from_website(target_url)
-    if is_failed:
-        return None, None, is_newer
 
-    version_latest = get_latest_version_from_data(data)  # type: ignore
     if version_latest is None:
-        raise RuntimeError("can't parse website")
-        #return None, None, is_newer
+        target_url = 'https://raw.githubusercontent.com/SteveDoyle2/pyNastran/master/latest.txt'
+        data, is_failed = get_data_from_website(target_url)
+        if is_failed:
+            return None, None, is_newer
+        version_latest = get_latest_version_from_data(data)  # type: ignore
+        if version_latest is None:
+            raise RuntimeError("can't parse website")
+            #return None, None, is_newer
 
     is_dev = 'dev' in version_current
     tuple_current_version = split_version(version_current, 'current')
@@ -82,8 +96,14 @@ def check_for_newer_version(version_current: Optional[str]=None,
     #print('tuple_latest_version = %s' % str(tuple_latest_version))  # (0,7,2)
     #print('tuple_current_version = %s' % str(tuple_current_version))  # (0,8,0)
 
-    if (tuple_current_version < tuple_latest_version or
-            (is_dev and tuple_current_version == tuple_latest_version)):
+    # (1, 0, 0) (1, 3, 2) True
+    is_self_newer = tuple_current_version > tuple_latest_version
+    is_newer_release_version = tuple_current_version < tuple_latest_version
+    is_newer_dev_version = is_dev and (tuple_current_version <= tuple_latest_version)
+
+    if is_self_newer:
+        pass
+    elif is_newer_release_version or is_newer_dev_version:
         msg = 'pyNastran %s is now availible; current=%s' % (version_latest, version_current)
 
         if not quiet:  # pragma: no cover

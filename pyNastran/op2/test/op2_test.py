@@ -252,5 +252,5 @@ def main():
         write_hdf5=write_hdf5, short_stats=short_stats,
         build_pandas=build_pandas, compare=compare, debug=debug)
 
-if __name__ == '__main__':
+if __name__ == '__main__':   # pragma: no cover
     main()

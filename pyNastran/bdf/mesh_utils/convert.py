@@ -4,14 +4,19 @@ defines:
  - convert(model, units_to, units=None)
 
 """
-from typing import Tuple, Optional
+from __future__ import annotations
+from typing import Tuple, Optional, TYPE_CHECKING
 
 import numpy as np
 from pyNastran.bdf.cards.base_card import break_word_by_trailing_parentheses_integer_ab
 from pyNastran.bdf.bdf import read_bdf
+if TYPE_CHECKING:  # pragma: no cover
+    from cpylog import SimpleLogger
+    from pyNastran.bdf.bdf import (BDF, DVCREL1, DVCREL2, DCONSTR,
+                                   PBAR, PBEAM, PBEAM3, PBUSH, PBUSH1D)
 
 
-def convert(model, units_to, units=None):
+def convert(model: BDF, units_to: List[str], units: Optional[List[str]]=None) -> None:
     """
     Converts a model from a set of defined units
 
@@ -44,8 +49,9 @@ def convert(model, units_to, units=None):
     scale_model(model, xyz_scale, mass_scale, time_scale, weight_scale, gravity_scale)
 
 
-def scale_by_terms(bdf_filename, terms, scales, bdf_filename_out=None,
-                   encoding=None, log=None, debug=True):
+def scale_by_terms(bdf_filename: Union[BDF, str], terms: List[float], scales: List[float],
+                   bdf_filename_out: Optional[str]=None,
+                   encoding: Optional[str]=None, log=None, debug: bool=True) -> BDF:
     """
     Scales a BDF based on factors for 3 of the 6 independent terms
 
@@ -184,7 +190,7 @@ def scale_model(model, xyz_scale, mass_scale, time_scale, weight_scale, gravity_
         _convert_optimization(model, xyz_scale, mass_scale, weight_scale)
 
 
-def _set_wtmass(model, gravity_scale):
+def _set_wtmass(model: BDF, gravity_scale: float) -> None:
     """
     set the PARAM,WTMASS
 
@@ -221,7 +227,7 @@ def _set_wtmass(model, gravity_scale):
         model.add_card(card, 'PARAM')
     model.log.debug('wtmass = %s' % weight_mass)
 
-def _convert_nodes(model, xyz_scale):
+def _convert_nodes(model: BDF, xyz_scale: bool) -> None:
     """
     Converts the nodes
 
@@ -236,7 +242,7 @@ def _convert_nodes(model, xyz_scale):
             # only scale R
             node.xyz[0] *= xyz_scale
 
-def _convert_coordinates(model, xyz_scale):
+def _convert_coordinates(model: BDF, xyz_scale: float) -> None:
     """
     Converts the coordinate systems
 
@@ -275,7 +281,11 @@ def _convert_coordinates(model, xyz_scale):
         #else:
             #raise NotImplementedError(coord)
 
-def _convert_elements(model, xyz_scale, time_scale, mass_scale, weight_scale):
+def _convert_elements(model: BDF,
+                      xyz_scale: float,
+                      time_scale: float,
+                      mass_scale: float,
+                      weight_scale: float) -> None:
     """
     Converts the elements
 
@@ -450,8 +460,12 @@ def _convert_elements(model, xyz_scale, time_scale, mass_scale, weight_scale):
         else:
             raise NotImplementedError(elem)
 
-def _convert_properties(model, xyz_scale, time_scale, mass_scale, weight_scale,
-                        temperature_scale):
+def _convert_properties(model: BDF,
+                        xyz_scale: float,
+                        time_scale: float,
+                        mass_scale: float,
+                        weight_scale: float,
+                        temperature_scale: float) -> None:
     """
     Converts the properties
 
@@ -478,13 +492,20 @@ def _convert_properties(model, xyz_scale, time_scale, mass_scale, weight_scale,
     stiffness_scale = force_scale / xyz_scale
     damping_scale = force_scale / velocity_scale
     stress_scale = force_scale / xyz_scale ** 2
+    area_moi_length = area_moi_scale / xyz_scale
 
-    model.log.debug('--Property Scales--')
-    model.log.debug('nsm_bar_scale (1/L) = %g' % nsm_bar_scale)
-    model.log.debug('nsm_plate_scale (1/L^2) = %g' % nsm_plate_scale)
-    model.log.debug('stiffness_scale = %g' % stiffness_scale)
-    model.log.debug('damping_scale = %g' % damping_scale)
-    model.log.debug('stress_scale = %g\n' % stress_scale)
+    # I, to the bending moment of inertia of a homogeneous shell, T3/12.
+    # t^3 has a factor of L^3, so for a factor of 1
+    # This is always 1.0.
+    #plate_inertia = 1.
+
+    log = model.log
+    log.debug('--Property Scales--')
+    log.debug('nsm_bar_scale (M/L) = %g' % nsm_bar_scale)
+    log.debug('nsm_plate_scale (M/L^2) = %g' % nsm_plate_scale)
+    log.debug('stiffness_scale (F/L) = %g' % stiffness_scale)
+    log.debug('damping_scale (F/V) = %g' % damping_scale)
+    log.debug('stress_scale (F/L^2) = %g\n' % stress_scale)
 
     skip_properties = {
         'PSOLID', 'PLSOLID', 'PLPLANE', 'PIHEX',
@@ -554,7 +575,7 @@ def _convert_properties(model, xyz_scale, time_scale, mass_scale, weight_scale,
             prop.nsm *= nsm_bar_scale
 
         elif prop_type == 'PBUSH':
-            _convert_pbush(prop, velocity_scale, mass_scale, stiffness_scale)
+            _convert_pbush(prop, velocity_scale, mass_scale, stiffness_scale, log)
         elif prop.type == 'PBUSH1D':
             _convert_pbush1d(model, prop, xyz_scale, area_scale,
                              mass_scale, damping_scale, stiffness_scale)
@@ -571,7 +592,7 @@ def _convert_properties(model, xyz_scale, time_scale, mass_scale, weight_scale,
             if prop.t1 is not None:
                 prop.t1 *= xyz_scale
             if prop.i is not None:
-                prop.i *= area_moi_scale / xyz_scale
+                prop.i *= area_moi_length
             if prop.t2 is not None:
                 prop.t2 *= xyz_scale
             prop.nsm *= nsm_plate_scale
@@ -619,7 +640,11 @@ def _convert_properties(model, xyz_scale, time_scale, mass_scale, weight_scale,
         else:
             raise NotImplementedError(f'{prop.get_stats()}\n{prop}')
 
-def _convert_pbar(prop, xyz_scale, area_scale, area_moi_scale, nsm_bar_scale):
+def _convert_pbar(prop: PBAR,
+                  xyz_scale: float,
+                  area_scale: float,
+                  area_moi_scale: float,
+                  nsm_bar_scale: float) -> None:
     """converts a PBAR"""
     prop.A *= area_scale
     prop.i1 *= area_moi_scale
@@ -636,7 +661,11 @@ def _convert_pbar(prop, xyz_scale, area_scale, area_moi_scale, nsm_bar_scale):
     prop.f1 *= xyz_scale
     prop.f2 *= xyz_scale
 
-def _convert_pbeam(prop, xyz_scale, area_scale, area_moi_scale, nsm_bar_scale):
+def _convert_pbeam(prop: PBEAM,
+                   xyz_scale: float,
+                   area_scale: float,
+                   area_moi_scale: float,
+                   nsm_bar_scale: float) -> None:
     """converts a PBEAM"""
     prop.A *= area_scale
     prop.i1 *= area_moi_scale
@@ -662,7 +691,11 @@ def _convert_pbeam(prop, xyz_scale, area_scale, area_moi_scale, nsm_bar_scale):
     prop.n1b *= xyz_scale
     prop.n2b *= xyz_scale
 
-def _convert_pbeam3(prop, xyz_scale, area_scale, area_moi_scale, nsm_bar_scale):
+def _convert_pbeam3(prop: PBEAM3,
+                    xyz_scale: float,
+                    area_scale: float,
+                    area_moi_scale: float,
+                    nsm_bar_scale: float) -> None:
     """converts a PBEAM3"""
     prop.A = [areai * area_scale for areai in prop.A]
     # cw
@@ -694,7 +727,11 @@ def _convert_pbeam3(prop, xyz_scale, area_scale, area_moi_scale, nsm_bar_scale):
     #nz
     # w
 
-def _convert_pbush(prop, velocity_scale, mass_scale, stiffness_scale):
+def _convert_pbush(prop: PBUSH,
+                   velocity_scale: float,
+                   mass_scale: float,
+                   stiffness_scale: float,
+                   log: SimpleLogger) -> None:
     # can be length=0
     #assert len(prop.Ki) == 6, prop.Ki
     #assert len(prop.Bi) == 6, prop.Bi
@@ -707,7 +744,7 @@ def _convert_pbush(prop, velocity_scale, mass_scale, stiffness_scale):
             prop.Bi = [bi*velocity_scale if bi is not None else None
                        for bi in prop.Bi]
         elif var == 'RCV':
-            model.log.warning('Skipping RCV for PBUSH %i' % prop.pid)
+            log.warning('Skipping RCV for PBUSH %i' % prop.pid)
         elif var == 'GE':
             pass
         else:  # pragma: no cover
@@ -723,8 +760,13 @@ def _convert_pbush(prop, velocity_scale, mass_scale, stiffness_scale):
         #lumped mass of the CBUSH
         #This is an MSC only parameter.
 
-def _convert_pbush1d(model, prop, xyz_scale, area_scale, mass_scale, damping_scale,
-                     stiffness_scale):
+def _convert_pbush1d(model: BDF,
+                     prop: PBUSH1D,
+                     xyz_scale: float,
+                     area_scale: float,
+                     mass_scale: float,
+                     damping_scale: float,
+                     stiffness_scale: float) -> None:
     prop.c *= damping_scale # Viscous damping (force/velocity)
     prop.k *= stiffness_scale
     prop.m *= mass_scale
@@ -785,7 +827,11 @@ def _convert_pbush1d(model, prop, xyz_scale, area_scale, mass_scale, damping_sca
     #damper_type : None
     #type   : 'PBUSH1D'
 
-def _convert_materials(model, xyz_scale, mass_scale, weight_scale, temperature_scale):
+def _convert_materials(model: BDF,
+                       xyz_scale: float,
+                       mass_scale: float,
+                       weight_scale: float,
+                       temperature_scale: float) -> None:
     """
     Converts the materials
 
@@ -802,8 +848,8 @@ def _convert_materials(model, xyz_scale, mass_scale, weight_scale, temperature_s
     a_scale = 1. / temperature_scale # thermal expansion
 
     model.log.debug('--Material Scales--')
-    model.log.debug('density_scale (L^3)= %g' % density_scale)
-    model.log.debug('stress_scale = %g\n' % stress_scale)
+    model.log.debug('density_scale (M/L^3)= %g' % density_scale)
+    model.log.debug('stress_scale (F/L^2) = %g\n' % stress_scale)
 
     for mat in model.materials.values():
         mat_type = mat.type
@@ -878,6 +924,7 @@ def _convert_materials(model, xyz_scale, mass_scale, weight_scale, temperature_s
             mat.Yt *= stress_scale
             mat.Yc *= stress_scale
             mat.S *= stress_scale
+            mat.tref *= temperature_scale
 
         elif mat_type == 'MAT9':
             mat.G11 *= stress_scale
@@ -931,7 +978,7 @@ def _convert_materials(model, xyz_scale, mass_scale, weight_scale, temperature_s
         else:
             raise NotImplementedError(mat)
 
-def _convert_constraints(model, xyz_scale):
+def _convert_constraints(model: BDF, xyz_scale: float) -> None:
     """
     Converts the spc/mpcs
 
@@ -950,7 +997,11 @@ def _convert_constraints(model, xyz_scale):
             else:
                 raise NotImplementedError(spc)
 
-def _get_dload_scale(dload, xyz_scale, velocity_scale, accel_scale, force_scale):
+def _get_dload_scale(dload,
+                     xyz_scale: float,
+                     velocity_scale: float,
+                     accel_scale: float,
+                     force_scale: float) -> None:
     """
     LOAD asssumes force
     """
@@ -966,7 +1017,11 @@ def _get_dload_scale(dload, xyz_scale, velocity_scale, accel_scale, force_scale)
         raise RuntimeError(dload)
     return scale
 
-def _convert_loads(model, xyz_scale, time_scale, weight_scale, temperature_scale):
+def _convert_loads(model: BDF,
+                   xyz_scale: float,
+                   time_scale: float,
+                   weight_scale: float,
+                   temperature_scale: float) -> None:
     """
     Converts the loads
 
@@ -984,9 +1039,9 @@ def _convert_loads(model, xyz_scale, time_scale, weight_scale, temperature_scale
 
     frequency_scale = 1. / time_scale
     force_scale = weight_scale
-    moment_scale = xyz_scale * weight_scale
-    pressure_scale = weight_scale / xyz_scale ** 2
-    accel_scale = weight_scale / xyz_scale
+    moment_scale = xyz_scale * force_scale
+    pressure_scale = force_scale / xyz_scale ** 2
+    accel_scale = force_scale / xyz_scale
     velocity_scale = xyz_scale / time_scale
 
     model.log.debug('--Load Scales--')
@@ -1067,12 +1122,10 @@ def _convert_loads(model, xyz_scale, time_scale, weight_scale, temperature_scale
                 load.mag *= force_scale
             elif load_type in ['MOMENT', 'MOMENT1', 'MOMENT2']:
                 load.mag *= moment_scale
-            elif load_type == 'GRAV':
+            elif load_type in {'GRAV', 'ACCEL1'}:
                 load.scale *= accel_scale
             elif load_type == 'ACCEL':
                 load.vals *= accel_scale
-            elif load_type == 'ACCEL1':
-                load.scale *= accel_scale
             elif load_type == 'PLOAD':
                 load.pressure *= pressure_scale
             elif load_type == 'PLOAD1':
@@ -1133,7 +1186,10 @@ def _convert_loads(model, xyz_scale, time_scale, weight_scale, temperature_scale
             else:
                 raise NotImplementedError(f'{load.get_stats()}\n{load}')
 
-def _convert_aero(model, xyz_scale, time_scale, weight_scale):
+def _convert_aero(model: BDF,
+                  xyz_scale: float,
+                  time_scale: float,
+                  weight_scale: float) -> None:
     """
     Converts the aero cards
       - CAEROx, PAEROx, SPLINEx, AECOMP, AELIST, AEPARAM, AESURF
@@ -1154,18 +1210,19 @@ def _convert_aero(model, xyz_scale, time_scale, weight_scale):
     area_scale = xyz_scale ** 2
     velocity_scale = xyz_scale / time_scale
     acceleration_scale = xyz_scale / time_scale ** 2
-    moment_scale = weight_scale * xyz_scale
-    pressure_scale = weight_scale / xyz_scale ** 2
-    density_scale = weight_scale / xyz_scale ** 3
+    force_scale = weight_scale
+    moment_scale = force_scale * xyz_scale
+    pressure_scale = force_scale / xyz_scale ** 2
+    density_scale = force_scale / xyz_scale ** 3
 
     angular_acceleration_scale = 1 / time_scale ** 2  # rad/s^2
     angular_velocity_scale = 1 / time_scale  # rad/s
 
     model.log.debug('--Aero Scales--')
-    model.log.debug('area_scale = %s' % area_scale)
-    model.log.debug('velocity_scale = %s' % velocity_scale)
-    model.log.debug('pressure_scale = %s' % pressure_scale)
-    model.log.debug('density_scale = %s\n' % density_scale)
+    model.log.debug('area_scale (L^2) = %s' % area_scale)
+    model.log.debug('velocity_scale (L/T) = %s' % velocity_scale)
+    model.log.debug('pressure_scale (F/L^2) = %s' % pressure_scale)
+    model.log.debug('density_scale (F/^3) = %s\n' % density_scale)
 
     if model.aero:
         model.aero.cref *= xyz_scale
@@ -1266,7 +1323,7 @@ def _convert_aero(model, xyz_scale, time_scale, weight_scale):
         flfact = model.flfacts[flfact_id]
         flfact.factors *= velocity_scale
 
-def _scale_caero(caero, xyz_scale, xyz_aefacts):
+def _scale_caero(caero, xyz_scale: float, xyz_aefacts) -> None:
     try:
         if caero.type == 'CAERO1':
             caero.p1 *= xyz_scale
@@ -1302,7 +1359,11 @@ def _scale_caero(caero, xyz_scale, xyz_aefacts):
         print(caero.get_stats())
         raise
 
-def _convert_optimization(model, xyz_scale, mass_scale, weight_scale):
+def _convert_optimization(model: BDF,
+                          xyz_scale: float,
+                          mass_scale: float,
+                          weight_scale: float,
+                          time_scale: float) -> None:
     """
     Converts the optimization objects
 
@@ -1312,9 +1373,9 @@ def _convert_optimization(model, xyz_scale, mass_scale, weight_scale):
     #time_scale = 1.
     #area_scale = xyz_scale ** 2
     #inertia_scale = xyz_scale ** 4
-    #force_scale = weight_scale
+    force_scale = weight_scale
     #velocity_scale = xyz_scale / time_scale
-    pressure_scale = weight_scale / xyz_scale ** 2
+    pressure_scale = force_scale / xyz_scale ** 2
     #stiffness_scale = force_scale / xyz_scale
     #damping_scale = force_scale / velocity_scale
     #for key, deqatn in model.dequations.items():
@@ -1365,7 +1426,7 @@ def _convert_optimization(model, xyz_scale, mass_scale, weight_scale):
         #print('------------')
         #print(dvprel)
 
-def _convert_dconstr(model, dconstr, pressure_scale):
+def _convert_dconstr(model: BDF, dconstr: DCONSTR, pressure_scale: float) -> None:
     """helper for ``_convert_optimization``"""
     otype = dconstr.type
     if otype == 'DCONSTR':
@@ -1403,7 +1464,7 @@ def _convert_dconstr(model, dconstr, pressure_scale):
     else:
         raise NotImplementedError(dconstr)
 
-def _convert_dvcrel1(dvcrel, xyz_scale):
+def _convert_dvcrel1(dvcrel: Union[DVCREL1, DVCREL2], xyz_scale: float) -> float:
     """helper for ``_convert_optimization``"""
     element_type = dvcrel.element_type
     if element_type == 'CBUSH':
@@ -1422,8 +1483,8 @@ def _convert_dvprel1(dvprel, xyz_scale, mass_scale, weight_scale):
     inertia_scale = xyz_scale ** 4
     force_scale = weight_scale
     velocity_scale = xyz_scale / time_scale
-    #pressure_scale = weight_scale / xyz_scale ** 2
-    stress_scale = weight_scale / xyz_scale ** 2
+    #pressure_scale = force_scale / xyz_scale ** 2
+    stress_scale = force_scale / xyz_scale ** 2
     stiffness_scale = force_scale / xyz_scale
     damping_scale = force_scale / velocity_scale
 
@@ -1653,7 +1714,8 @@ def convert_length(length_from, length_to):
     return xyz_scale, gravity_scale_length
 
 
-def convert_mass(mass_from, mass_to, log):
+def convert_mass(mass_from: str, mass_to: str,
+                 log: SimpleLogger) -> Tuple[float, float, float]:
     """
     determines the mass, weight, gravity scale factor
 
@@ -1740,8 +1802,8 @@ def convert_mass(mass_from, mass_to, log):
         #gravity_scale_mass /= gravity_english_in # in/s^2 to m/s^2
 
     else:
-        raise NotImplementedError('mass from unit=%r; '
-                                  'expected=[g, kg, Mg, lbm, slug, slinch]' % mass_from)
+        raise NotImplementedError(f'mass from unit={mass_from!r}; '
+                                  'expected=[g, kg, Mg, lbm, slug, slinch]')
 
     # convert from kg
     if mass_to == 'kg':
@@ -1770,8 +1832,8 @@ def convert_mass(mass_from, mass_to, log):
         #mass_scale /= 175.126836
         #gravity_scale_mass *= gravity_english_in # in/s^2 to m/s^2
     else:
-        raise NotImplementedError('mass to unit=%r; '
-                                  'expected=[g, kg, Mg, lbm, slug, slinch]' % mass_to)
+        raise NotImplementedError(f'mass to unit={mass_to!r}; '
+                                  'expected=[g, kg, Mg, lbm, slug, slinch]')
 
     #print("weight_scale = ", mass_from, mass_to, weight_scale)
     return mass_scale, weight_scale, gravity_scale_mass

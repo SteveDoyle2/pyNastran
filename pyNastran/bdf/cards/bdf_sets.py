@@ -46,7 +46,8 @@ from pyNastran.bdf.cards.base_card import (
 from pyNastran.bdf.cards.collpase_card import collapse_thru, condense, build_thru_packs
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.bdf_interface.assign_type import (
-    integer, double, integer_or_blank, integer_or_string,
+    integer, double, double_or_blank,
+    integer_or_blank, integer_or_string,
     parse_components, components_or_blank as fcomponents_or_blank,
     fields, string, integer_string_or_blank,
 )
@@ -1227,7 +1228,6 @@ class SET2(Set):
     - SPLINEi
 
     """
-
     type = 'SET2'
 
     @classmethod
@@ -1240,14 +1240,20 @@ class SET2(Set):
         ch2 = 1.
         return SET2(sid, macro, sp1, sp2, ch1, ch2, comment='')
 
-    def __init__(self, sid, macro, sp1, sp2, ch1, ch2, zmax=.0, zmin=.0, comment=''):
+    def __init__(self, sid: int, macro: int,
+                 sp1: float, sp2: float,
+                 ch1: float, ch2: float,
+                 zmax: float=0.0, zmin: float=0.0,
+                 comment: str='') -> SET2:
         """
         Creates a SET2 card, which sefines a list of structural
         grid points in terms of aerodynamic macro elements.
 
         Remarks:
 
-        - Points exactly on the boundary may be missed; therefore, to get all the grid points within the area of the macro element, SP1=-.01, SP2=1.01, etc. should be used.
+        - Points exactly on the boundary may be missed; therefore, to
+          get all the grid points within the area of the macro element,
+          SP1=-0.01, SP2=1.01, etc. should be used.
 
         - Use DIAG 18 to print the internal grid Ids found.
 
@@ -1256,23 +1262,14 @@ class SET2(Set):
         sid : int
             set id
         macro : int
-            the aerodynamic macro element id (CAEROi element id)
-        sp1 : float
-            lower span division point defining the prism containing the set
-        sp2 : float
-            higher span division point defining the prism containing the set
-        ch1 : float
-            lower chord division point defining the prism containing the set
-        ch2 : float
-            higher chord division point defining the prism containing the set
-        zmax : float; default=0.0
-            z-coordinate of top of the prism containing the set
+            the aerodynamic macro element id
+        sp1 / sp2 : float
+            lower/higher span division point defining the prism containing the set
+        ch1 / ch2 : float
+            lower/higher chord division point defining the prism containing the set
+        zmax / zmin : float; default=0.0/0.0
+            z-coordinate of top/bottom of the prism containing the set
             a zero value implies a value of infinity
-        zmin : float; default=0.0
-            z-coordinate of top of the bottom containing the set
-            a zero value implies a value of infinity
-        comment : str; default=''
-            a comment for the card
 
         """
         Set.__init__(self)
@@ -1316,15 +1313,16 @@ class SET2(Set):
         sp2 = double(card, 4, 'sp2')
         ch1 = double(card, 5, 'ch1')
         ch2 = double(card, 6, 'ch2')
-        zmax = double(card, 7, 'zmax') if len(card) > 7 else 0.0
-        zmin = double(card, 8, 'zmin') if len(card) > 8 else 0.0
+        zmax = double_or_blank(card, 7, 'zmax', 0.0)
+        zmin = double_or_blank(card, 8, 'zmin', 0.0)
 
         return SET2(sid, macro, sp1, sp2, ch1, ch2, zmax=zmax, zmin=zmin, comment=comment)
 
     def raw_fields(self):
-        return ['SET2', self.sid, self.macro, self.sp1, self.sp2, self.ch1, self.ch2, self.zmax, self.zmin]
+        return ['SET2', self.sid, self.macro, self.sp1, self.sp2,
+                self.ch1, self.ch2, self.zmax, self.zmin]
 
-    def cross_reference_set(self, model, xref_type, msg=''):
+    def cross_reference_set(self, model, xref_type: str, msg=''):
         """
         Cross links the card so referenced cards can be extracted directly
 
@@ -1336,21 +1334,31 @@ class SET2(Set):
             {'MACRO'} i.e. the CAEROi elements
 
         """
-        msg = ', which is required by SET2 sid=%s%s' % (self.sid, msg)
+        msg = f', which is required by SET2 sid={self.sid}{msg}'
         if xref_type == 'MACRO':
             self.macro_ref = model.CAero(self.macro, msg=msg)
         else:
-            raise NotImplementedError("xref_type=%r and must be ['MACRO']" % xref_type)
+            raise NotImplementedError(f"xref_type={xref_type!r} and must be ['MACRO']")
         self.xref_type = xref_type
 
-    def safe_cross_reference(self, model, xref_errors):
-        self.cross_reference_set(model)
+    def get_ids(self):
+        return []
+
+    def safe_cross_reference(self, model, xref_type: str, msg=''):
+        msg = f', which is required by SET2 sid={self.sid}{msg}'
+        if xref_type == 'MACRO':
+            self.macro_ref = model.CAero(self.macro, msg=msg)
+        else:
+            model.log.error(f"xref_type={xref_type!r} and must be ['MACRO']")
+            return
+        self.xref_type = xref_type
+        #self.cross_reference_set(model, xref_errors, msg=msg)
 
     def uncross_reference(self):
         if self.xref_type == 'MACRO':
             self.xref_type = None
         else:
-            raise NotImplementedError("xref_type=%r and must be 'MACRO'" % self.xref_type)
+            raise NotImplementedError(f"xref_type={xref_type!r} and must be ['MACRO']")
         self.macro_ref = None
 
 
@@ -1398,7 +1406,7 @@ class SET3(Set):
         ids = [1]
         return SET3(sid, desc, ids, comment='')
 
-    def __init__(self, sid, desc, ids, comment=''):
+    def __init__(self, sid: int, desc: str, ids: List[int], comment: str=''):
         Set.__init__(self)
         if comment:
             self.comment = comment
@@ -2110,6 +2118,31 @@ class USET1(ABQSet1):
             if idi:
                 i += 1
                 ids.append(idi)
+        return USET1(name, ids, components, comment=comment)
+
+    @classmethod
+    def add_op2_data(cls, data, comment=''):
+        """
+        tested by gspc1.op2
+
+        for some reason, the setname is an integer and has bizarre rules
+        that I don't understand like:
+          - the setname is 1-4 characters, except if it's 'ZERO%i' % sid
+            ummm...odd
+
+        """
+        name, components, ids = data
+        #sid = data[0]
+        #nid = data[1]
+        #if sid < 0:
+            #name = 'ZERO'
+        #else:
+            #comment = 'sid=%s (???)' % sid
+            #name = 'U%i' % nid
+        #assert nid > 0, nid
+        #component = str(data[2])
+        for component in components:
+            assert component in '0123456', components
         return USET1(name, ids, components, comment=comment)
 
     def cross_reference(self, model: BDF) -> None:

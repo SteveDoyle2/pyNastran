@@ -1254,35 +1254,43 @@ class GEOM4(GeomCommon):
                           110046, 110047, 110048, 110049, -1,
             # sid, comp, thru_flag, ???
             12, 12345, 0, -1)
+
+        data =(2110, 21, 194,
+               2.0, 123456, 0, 44, 45, 48, 49, -1)
         """
+        assert self.factor == 1, self.factor
         nentries = 0
         size = self.size
-        nints = (len(data) - n) // size
-        fmti = mapfmt(self._endian + b'%ii' % nints, size)
-        idata = unpack(fmti, data[n:])
+        ints = np.frombuffer(data[n:], self.idtype8).copy()
+        floats = np.frombuffer(data[n:], self.fdtype8).copy()
         i = 0
-        #print('idata = %s' % idata)
-        nidata = len(idata)
-        struct_4s = Struct(mapfmt('4s', size))  # TODO: maybe this doesn't change for 64-bit?
+        #print('ints = %s' % ints)
+        nidata = len(ints)
         while i < nidata:
             sname = data[n+i*size : n+(i+1)*size]
-            sname_str = struct_4s.unpack(sname)
+            sname_str = 'U%i' % int(floats[i])
             #print('sname_str = %r' % sname_str)
-            comp, thru_flag = idata[i+1:i+3]
+            #print('sname_str2 = %r' % sname_str2)
+
+            comp, thru_flag = ints[i+1:i+3]
+            comp_str = str(comp)
+            for comp_stri in comp_str:
+                assert comp_stri in '123456', comp_str
             i += 3
+            assert thru_flag in [0, 1, 2], ints[:i+5]
             if thru_flag == 0:  # repeat 4 to end
-                nid = idata[i]
+                nid = ints[i]
                 nids = [nid]
                 i += 1
                 if i == nidata:
                     break
-                while idata[i] != -1:
-                    nid = idata[i]
+                while ints[i] != -1:
+                    nid = ints[i]
                     nids.append(nid)
                     i += 1
                 i += 1
             elif thru_flag == 1:
-                n1, n2 = idata[i:i+2]
+                n1, n2 = ints[i:i+2]
                 nids = list(range(n1, n2+1))
                 i += 2
             else:
@@ -1292,10 +1300,10 @@ class GEOM4(GeomCommon):
                 self.binary_debug.write('USET1: sname=%s comp=%s thru_flag=%s' % (
                     sname_str, comp, thru_flag))
                 self.binary_debug.write('   nids=%s\n' % str(nids))
-            #print('SPC1: sid=%s comp=%s thru_flag=%s' % (
+            #print('USET1: sid=%s comp=%s thru_flag=%s' % (
             #    sid, comp, thru_flag))
             #print('   nids=%s\n' % str(nids))
-            in_data = [sname_str, comp, nids]
+            in_data = [sname_str, comp_str, nids]
             #print(in_data)
 
             constraint = USET1.add_op2_data(in_data)

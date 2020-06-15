@@ -1678,5 +1678,5 @@ def main2():  # pragma: no cover
         plt.read_tecplot(tecplot_filename)
         plt.write_tecplot('processor_%i.plt' % iprocessor)
 
-if __name__ == '__main__':
+if __name__ == '__main__':   # pragma: no cover
     main()

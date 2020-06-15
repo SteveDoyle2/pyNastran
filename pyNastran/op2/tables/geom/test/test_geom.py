@@ -1,4 +1,5 @@
 #pylint: disable=R0201
+import struct
 import unittest
 import numpy as np
 from pyNastran.op2.op2_geom import OP2Geom
@@ -67,6 +68,19 @@ class TestOP2GeomUnit(unittest.TestCase):
         rbes = read_rbe3s_from_idata_fdata(
             model, np.array(data, dtype='int32'), np.array(data, dtype='float32'))
         assert len(rbes) == 2, rbes
+
+    def test_uset1(self):
+        """tests USET1"""
+        op2 = OP2Geom(make_geom=True, debug=False, log=None, debug_file=None, mode='msc')
+        op2.op2_reader.factor = 1
+        op2.idtype = 'int32'
+        op2.idtype8 = 'int32'
+        op2.fdtype8 = 'float32'
+        op2._uendian = '<'
+        data = (2110, 21, 194,
+                2.0, 123456, 0, 44, 45, 48, 49, -1)
+        data_bytes = struct.pack(b'3i f 7i', *data)
+        op2._read_uset1(data_bytes, 12)
 
 if __name__ == '__main__':  # pragma: no cover
     unittest.main()
