@@ -22,6 +22,7 @@ from pyNastran.bdf.cards.elements.beam_connectivity import (
 )
 from pyNastran.bdf.cards.elements.bars import rotate_v_wa_wb
 from pyNastran.gui.utils.vtk.vtk_utils import numpy_to_vtk_points, numpy_to_vtk
+from .beams3d import faces_to_element_facelist, get_bar_type
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.nptyping import NDArray3float
     from pyNastran.bdf.bdf import BDF
@@ -98,7 +99,8 @@ class NastranGeometryHelper(NastranGuiAttributes):
     def __init__(self):
         super(NastranGeometryHelper, self).__init__()
 
-    def _get_bar_yz_arrays(self, model: BDF, bar_beam_eids: List[int],
+    def _get_bar_yz_arrays(self, model: BDF,
+                           bar_beam_eids: List[int],
                            scale: float, debug: bool) -> None:
         lines_bar_y = []
         lines_bar_z = []
@@ -172,7 +174,8 @@ class NastranGeometryHelper(NastranGuiAttributes):
     def _create_bar_yz_update(self, model: BDF,
                               node0: int,
                               ugrid,
-                              points_list, bar_beam_eids):
+                              points_list,
+                              bar_beam_eids: List[int]) -> None:
         if not node0:
             return
         assert len(points_list), points_list
@@ -195,7 +198,7 @@ class NastranGeometryHelper(NastranGuiAttributes):
                 assert not isinstance(pid_ref, integer_types), elem
 
                 ptype = pid_ref.type
-                bar_type = _get_bar_type(ptype, pid_ref)
+                bar_type = get_bar_type(ptype, pid_ref)
 
                 #nids = elem.nodes
                 (nid1, nid2) = elem.node_ids
@@ -257,22 +260,6 @@ def _apply_points_list(points_list, ugrid):
         points_array = _make_points_array(points_list)
         points = numpy_to_vtk_points(points_array)
         ugrid.SetPoints(points)
-
-def _get_bar_type(ptype, pid_ref):
-    """helper method for _get_bar_yz_arrays"""
-    if ptype in ['PBAR', 'PBEAM']:
-        bar_type = 'bar'
-    #if ptype == 'PBAR':
-        #bar_type = 'pbar'
-    #elif ptype == 'PBEAM':
-        #bar_type = 'pbeam'
-    elif ptype in ['PBARL', 'PBEAML']:
-        bar_type = pid_ref.Type
-    elif ptype == 'PBCOMP':
-        bar_type = 'pbcomp'
-    else:  # pragma: no cover
-        raise NotImplementedError(pid_ref)
-    return bar_type
 
 #def get_bar_yz_transform(v, ihat, eid, n1, n2, nid1, nid2, i, Li):
     #"""helper method for _get_bar_yz_arrays"""
@@ -412,23 +399,6 @@ def get_material_arrays(model, mids):
         speed_of_sound[i] = speed_of_soundi
     return has_mat8, has_mat11, e11, e22, e33
 
-
-def faces_to_element_facelist(faces, node0):
-    """creates a series of faces for the custom elements"""
-    face_idlist = vtk.vtkIdList()
-
-    nfaces = len(faces)
-    face_idlist.InsertNextId(nfaces) # Number faces that make up the cell.
-    for face in faces: # Loop over all the faces
-        #print(face)
-        face_idlist.InsertNextId(len(face)) # Number of points in face
-
-        # Insert the pointIds for the face
-        #for i in face:
-            #face_idlist.InsertNextId(i + node0)
-        [face_idlist.InsertNextId(i + node0) for i in face]
-
-    return face_idlist
 
 def add_3d_bar_element(bar_type: str, ptype: str, pid_ref,
                        n1: NDArray3float, n2: NDArray3float, xform,
@@ -573,7 +543,7 @@ def _create_bar_types_dict(model: BDF,
         assert not isinstance(pid_ref, integer_types), elem
 
         ptype = pid_ref.type
-        bar_type = _get_bar_type(ptype, pid_ref)
+        bar_type = get_bar_type(ptype, pid_ref)
 
         if debug:  # pragma: no cover
             print('%s' % elem)

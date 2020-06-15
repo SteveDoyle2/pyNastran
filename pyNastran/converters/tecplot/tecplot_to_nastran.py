@@ -132,8 +132,9 @@ def nastran_table_to_tecplot(bdf_model: BDF, case, variables: List[str]) -> Tecp
     zone.tri_elements = tris = np.array(tris, dtype='int32') + 1
 
     tecplot_model.title = ('%s; %s' % (case.title, case.subtitle)).strip(' ;')
+    zone.headers_dict['VARIABLES'] = variables
     zone.variables = variables
-    tecplot_model.zones[0] = [zone]
+    tecplot_model.zones = [zone]
     return tecplot_model
 
 def nastran_tables_to_tecplot_filenames(tecplot_filename_base: str,
@@ -146,6 +147,7 @@ def nastran_tables_to_tecplot_filenames(tecplot_filename_base: str,
         ivars = np.arange(0, len(variables))
 
     tecplot_model = nastran_table_to_tecplot(bdf_model, case, variables)
+    zone = tecplot_model.zones[0]
     for itime, time in enumerate(case._times):
         if '%' in tecplot_filename_base:
             tecplot_filename = tecplot_filename_base % time
@@ -154,7 +156,6 @@ def nastran_tables_to_tecplot_filenames(tecplot_filename_base: str,
 
         # you can't combine the two lines or it transposes it...
         nodal_results = case.data[itime, :, :]
-        zone = tecplot_model.zones[0]
         zone.nodal_results = nodal_results[:, ivars]
         tecplot_model.write_tecplot(
             tecplot_filename, res_types=None, adjust_nids=False)

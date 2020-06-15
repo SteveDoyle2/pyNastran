@@ -206,7 +206,7 @@ def get_sort_method_from_table_name(table_name):
         try:
             sort_method = int(table_num)
         except ValueError:
-            print('error determining sort_method: table_name=%r' % table_name_str)
+            print(f'error determining sort_method: table_name={table_name_str} type={type(table_name)}')
             raise
     return sort_method
 

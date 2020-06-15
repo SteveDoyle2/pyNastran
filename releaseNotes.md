@@ -40,7 +40,7 @@ OP2 Writer
  - fixed symmetric PCOMP writing
 
 OP2 Geom:
- - fixed GRID reading from the GEOM1N table
+ - fixed GRID, CORD2x reading from the GEOM1N table
  - fixed PSHELL reading bug that occurs when very large property ids exist
  - fixed MAT10 reading bug that occurs when very large material ids exist
  - fixing USET1 reading
@@ -69,6 +69,7 @@ minor:
  - removal of some prints
  - more docstrings
  - more typing
+ - fixing Tecplot to Nastran converter
 
 v1.3.2 (2020/4/8)
 -----------------

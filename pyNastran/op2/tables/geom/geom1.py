@@ -172,52 +172,60 @@ class GEOM1(GeomCommon):
         """
         (2001,20,9) - the marker for Record 4
         """
-        ntotal = 52 * self.factor # 13*4
-        s = Struct(mapfmt(self._endian + b'4i9f', self.size))
-        nentries = (len(data) - n) // ntotal
-        for unused_i in range(nentries):
-            edata = data[n:n + ntotal]
-            out = s.unpack(edata)
-            (cid, two1, two2, rid, a1, a2, a3, b1, b2, b3, c1, c2, c3) = out
-            assert two1 == 2, two1
-            assert two2 == 2, two2
-            data_in = [cid, rid, a1, a2, a3, b1, b2, b3, c1, c2, c3]
-            coord = CORD2C.add_op2_data(data_in)
-            if self.is_debug_file:
-                self.binary_debug.write('  CORD2C=%s\n' % str(out))
-            self._add_coord_object(coord, allow_overwrites=False)
-            n += ntotal
-        self.increase_card_count('CORD2C', nentries)
-        return n
+        if self.table_name == b'GEOM1N' and self.factor == 1:
+            n2 = self._read_cord2x_22(data, n, 'CORD2C', CORD2C, (2, 2))
+        else:
+            n2 = self._read_cord2x_13(data, n, 'CORD2C', CORD2C, (2, 2))
+        return n2
 
     def _read_cord2r(self, data: bytes, n: int) -> int:
         """
         (2101,21,8) - the marker for Record 5
         """
-        ntotal = 52 * self.factor # 13*4
-        s = Struct(mapfmt(self._endian + b'4i9f', self.size))
-        nentries = (len(data) - n) // ntotal
-        for unused_i in range(nentries):
-            edata = data[n:n + ntotal]
-            (cid, one, two, rid, a1, a2, a3, b1, b2, b3, c1,
-             c2, c3) = s.unpack(edata)
-            assert one == 1, one
-            assert two == 2, two
-            data_in = [cid, rid, a1, a2, a3, b1, b2, b3, c1, c2, c3]
-            #print("cid=%s rid=%s a1=%s a2=%s a3=%s b1=%s b2=%s b3=%s c1=%s c2=%s c3=%s" %
-                  #(cid, rid, a1, a2, a3, b1, b2, b3, c1, c2, c3))
-            if self.is_debug_file:
-                self.binary_debug.write('  CORD2R=%s\n' % data_in)
-            coord = CORD2R.add_op2_data(data_in)
-            self._add_coord_object(coord, allow_overwrites=False)
-            n += ntotal
-        self.increase_card_count('CORD2R', nentries)
-        return n
+        if self.table_name == b'GEOM1N' and self.factor == 1:
+            n2 = self._read_cord2x_22(data, n, 'CORD2R', CORD2R, (1, 2))
+        else:
+            n2 = self._read_cord2x_13(data, n, 'CORD2R', CORD2R, (1, 2))
+        return n2
 
     def _read_cord2s(self, data: bytes, n: int) -> int:
         """
         (2201,22,10) - the marker for Record 6
         """
+        if self.table_name == b'GEOM1N' and self.factor == 1:
+            n2 = self._read_cord2x_22(data, n, 'CORD2S', CORD2S, (3, 2))
+        else:
+            n2 = self._read_cord2x_13(data, n, 'CORD2S', CORD2S, (3, 2))
+        return n2
+
+    def _read_cord2x_22(self, data: bytes, n: int,
+                        coord_name: str,
+                        coord_cls: Union[CORD2R, CORD2C, CORD2S],
+                        flags: Tuple[int, int]) -> int:
+        """
+        (2201,22,10) - the marker for Record 6
+        """
+        ntotal = 88 # 22*4
+        s = Struct(self._endian + b'4i9d')
+        nentries = (len(data) - n) // ntotal
+        for unused_i in range(nentries):
+            edata = data[n:n + ntotal]
+            out = s.unpack(edata)
+            (cid, sixty5, eight, rid, a1, a2, a3, b1, b2, b3, c1, c2, c3) = out
+            data_in = [cid, rid, a1, a2, a3, b1, b2, b3, c1, c2, c3]
+            assert (sixty5, eight) == flags, f'(sixty5,eight)={(sixty5, eight)} flags={flags}'
+            if self.is_debug_file:
+                self.binary_debug.write(f'  {coord_name}={out}\n')
+            coord = coord_cls.add_op2_data(data_in)
+            self._add_coord_object(coord, allow_overwrites=False)
+            n += ntotal
+        self.increase_card_count(coord_name, nentries)
+        return n
+
+    def _read_cord2x_13(self, data: bytes, n: int,
+                        coord_name: str,
+                        coord_cls: Union[CORD2R, CORD2C, CORD2S],
+                        flags: Tuple[int, int]) -> int:
         ntotal = 52 * self.factor # 13*4
         s = Struct(mapfmt(self._endian + b'4i9f', self.size))
         nentries = (len(data) - n) // ntotal
@@ -227,11 +235,11 @@ class GEOM1(GeomCommon):
             (cid, sixty5, eight, rid, a1, a2, a3, b1, b2, b3, c1, c2, c3) = out
             data_in = [cid, rid, a1, a2, a3, b1, b2, b3, c1, c2, c3]
             if self.is_debug_file:
-                self.binary_debug.write('  CORD2S=%s\n' % str(out))
-            coord = CORD2S.add_op2_data(data_in)
+                self.binary_debug.write(f'  {coord_name}={out}\n')
+            coord = coord_cls.add_op2_data(data_in)
             self._add_coord_object(coord, allow_overwrites=False)
             n += ntotal
-        self.increase_card_count('CORD2S', nentries)
+        self.increase_card_count(coord_name, nentries)
         return n
 
     def _read_cord3g(self, data: bytes, n: int) -> int:

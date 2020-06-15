@@ -10,6 +10,12 @@ defines:
 #matplotlib.use(matplotlib_backend)
 #from pyNastran.gui.qt_version import qt_version
 
+PLOT_TYPES = '[--eas|--tas]'
+USAGE = (
+    'Usage:\n'
+    '  f06 plot_145 F06_FILENAME [--noline] [--modes MODES] [--subcases SUB] [--xlim XLIM] [--ylimdamp DAMP] [--ylimfreq FREQ]'
+    f'{PLOT_TYPES} [--kfreq] [--rootlocus] [--in_units IN] [--out_units OUT] [--nopoints] [--export] [--f06]\n'
+)
 def cmd_line_plot_flutter(argv=None, plot=True, show=True, log=None):
     """the interface to ``f06 plot_145`` on the command line"""
     import sys
@@ -20,9 +26,7 @@ def cmd_line_plot_flutter(argv=None, plot=True, show=True, log=None):
     if argv is None:
         argv = sys.argv
     msg = (
-        'Usage:\n'
-        '  f06 plot_145 F06_FILENAME [--noline] [--modes MODES] [--subcases SUB] [--xlim XLIM] [--ylimdamp DAMP] [--ylimfreq FREQ]'
-        '[--eas|--tas] [--kfreq] [--rootlocus] [--in_units IN][--out_units OUT] [--nopoints] [--export] [--f06]\n'
+        USAGE +
         '  f06 plot_145 -h | --help\n'
         '  f06 plot_145 -v | --version\n'
         '\n'
@@ -106,6 +110,10 @@ def cmd_line_plot_flutter(argv=None, plot=True, show=True, log=None):
     plot_type = 'tas'
     if data['--eas']:
         plot_type = 'eas'
+    elif data['--tas']:
+        plot_type = 'tas'
+    else:
+        sys.stderr.write('plot_type assumed to be --tas\n')
 
     plot_kfreq_damping = data['--kfreq']
     plot_root_locus = data['--rootlocus']
@@ -249,9 +257,7 @@ def cmd_line(argv=None, plot=True, show=True, log=None):
         argv = sys.argv
 
     msg = (
-        'Usage:\n'
-        '  f06 plot_145 F06_FILENAME [--noline] [--modes MODES] [--subcases SUB] [--xlim FREQ] [--ylimdamp DAMP] '
-        '[--eas|--tas] [--kfreq] [--rootlocus] [--export]\n'
+        USAGE +
         '\n'
         '  f06 plot_145 -h | --help\n'
         '  f06 -v | --version\n'

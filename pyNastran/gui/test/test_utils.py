@@ -117,14 +117,17 @@ class GuiUtils(unittest.TestCase):
         assert version_latest == version_latest_test
         assert is_newer is True, (version_latest, version_current, is_newer)
 
-    def test_check_version(self):
-        """tests ``check_for_newer_version``"""
+    def test_check_version_actual(self):
+        """tests ``check_for_newer_version`` with actual data"""
         version_latest, version_current, is_newer = check_for_newer_version(
             '1.0.0', quiet=True)
         assert is_newer is True, (version_latest, version_current, is_newer)
 
         # current/dev release version -> False
-        version_latest, version_current, is_newer = check_for_newer_version(quiet=True)
+        (version_latest, version_current, is_newer) = check_for_newer_version(
+            version_current=None,
+            version_latest=None,
+            quiet=True)
         assert is_newer is False, (version_latest, version_current, is_newer)
 
     def test_gui_csv_01(self):

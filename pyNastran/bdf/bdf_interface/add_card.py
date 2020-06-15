@@ -163,8 +163,6 @@ CARD_MAP = {
     'BFRIC' : BFRIC,
 
     #'BGADD', 'BGSET', 'BOLT', 'BOLTFOR'
-    #'BGADD' : Crash, None),
-    #'BGSET' : Crash, None),
     #'BOLT' : Crash, None),
     #'BOLTFOR' : Crash, None),
 
@@ -630,10 +628,12 @@ CARD_MAP = {
     'DMIG_UACCEL' : DMIG_UACCEL,
 
     'BCRPARA' : BCRPARA,
-    'BCTADD' : BCTADD,
-    'BCTPARA' : BCTPARA,
     'BSURF' : BSURF,
     'BSURFS' : BSURFS,
+
+    # nx contact
+    'BCTADD' : BCTADD,
+    'BCTPARA' : BCTPARA,
 
     'RADCAV' : RADCAV,
     'RADLST' : RADLST,

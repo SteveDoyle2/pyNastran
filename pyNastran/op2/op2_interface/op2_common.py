@@ -18,6 +18,14 @@ from pyNastran.op2.op2_interface.op2_codes import (
 
 from pyNastran.op2.errors import SortCodeError, MultipleSolutionNotImplementedError
 
+NX_TABLES = [
+    501, 510, 511,
+    601, 610, 611,
+    701, 710, 711,
+    801, 810, 811,
+    901, 910, 911
+]
+
 class OP2Common(Op2Codes, F06Writer):
     def __init__(self):
         Op2Codes.__init__(self)
@@ -1723,8 +1731,12 @@ class OP2Common(Op2Codes, F06Writer):
         self.data_code['isubcase'] = self.isubcase
         #self.subcases.add(self.isubcase)  # set notation
 
+        table_code = tCode % 1000
+        if table_code in NX_TABLES:
+            self.to_nx()
+
         #: the type of result being processed
-        self.table_code = tCode % 1000
+        self.table_code = table_code
         self.data_code['table_code'] = self.table_code
         self.data_code['tCode'] = self.tCode
 
