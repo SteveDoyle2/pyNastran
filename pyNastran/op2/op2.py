@@ -572,6 +572,7 @@ class OP2(OP2_Scalar, OP2Writer):
         self.create_objects_from_matrices()
         self.combine_results(combine=combine)
         self.log.debug('finished reading op2')
+        str(self.op2_results)
 
     def create_objects_from_matrices(self) -> None:
         """
@@ -582,8 +583,7 @@ class OP2(OP2_Scalar, OP2Writer):
         """
         #assert len(self._frequencies) > 0, self._frequencies
         if 'MP3F' in self.matrices:
-            self.monitor3 = MONPNT3(self._frequencies, self.matrices['MP3F'])
-
+            self.op2_results.monitor3 = MONPNT3(self._frequencies, self.matrices['MP3F'])
         # these are totally wrong...it doesn't go by component;
         # it goes by inertial, external, flexibility, etc.
         if 'PERF' in self.matrices:
@@ -592,7 +592,7 @@ class OP2(OP2_Scalar, OP2Writer):
                 # :)       ?       :)      :)      ?       ?
                 #'PMRF', 'AFRF', 'PFRF', 'PGRF', 'AGRF', 'PERF', ])
 
-            self.monitor1 = MONPNT1(
+            self.op2_results.monitor1 = MONPNT1(
                 self._frequencies, self.matrices,
                 #  :)       ?       :)      :)2     ?       ?
                 ['PMRF', 'PERF', 'PFRF', 'AGRF', 'PGRF', 'AFRF', ])
@@ -692,11 +692,6 @@ class OP2(OP2_Scalar, OP2Writer):
                     self.log.error('build_dataframe is broken for %s' % class_name)
                     raise
 
-    def load_hdf5(self, hdf5_filename: str, combine: bool=True) -> None:  # praga: no cover
-        """Loads an h5 file into an OP2 object"""
-        self.deprecated('load_hdf5', 'load_hdf5_filename', '1.2')
-        return self.load_hdf5_filename(hdf5_filename, combine=True)
-
     def load_hdf5_filename(self, hdf5_filename: str, combine: bool=True) -> None:
         """
         Loads an h5 file into an OP2 object
@@ -738,11 +733,6 @@ class OP2(OP2_Scalar, OP2Writer):
         debug = False
         load_op2_from_hdf5_file(self, h5_file, self.log, debug=debug)
         self.combine_results(combine=combine)
-
-    def export_hdf5(self, hdf5_filename: str) -> None:
-        """Converts the OP2 objects into hdf5 object"""
-        self.deprecated('export_hdf5', 'export_hdf5_filename', '1.2')
-        return self.export_hdf5_filename(hdf5_filename)
 
     def export_hdf5_filename(self, hdf5_filename: str) -> None:
         """

@@ -504,32 +504,6 @@ class AELINK(BaseCard):
         #: an ID=0 is applicable to the global subcase, ID=1 only subcase 1
         self.aelink_id = aelink_id
 
-    @property
-    def Cis(self):
-        self.deprecated('Cis', 'linking_coefficents', '1.2')
-        return self.linking_coefficents
-    @Cis.setter
-    def Cis(self, linking_coefficents):
-        self.deprecated('Cis', 'linking_coefficents', '1.2')
-        self.linking_coefficents = linking_coefficents
-
-    def object_attributes(self, mode='public', keys_to_skip=None,
-                          filter_properties=False):
-        """.. seealso:: `pyNastran.utils.object_methods(...)`"""
-        if keys_to_skip is None:
-            keys_to_skip = []
-        my_keys_to_skip = ['Cis']
-        return BaseCard.object_attributes(self, mode=mode,
-                                          keys_to_skip=keys_to_skip+my_keys_to_skip,
-                                          filter_properties=filter_properties)
-
-    def object_methods(self, mode='public', keys_to_skip=None):
-        """.. seealso:: `pyNastran.utils.object_methods(...)`"""
-        if keys_to_skip is None:
-            keys_to_skip = []
-        my_keys_to_skip = ['Cis']
-        return BaseCard.object_methods(self, mode=mode, keys_to_skip=keys_to_skip+my_keys_to_skip)
-
     def validate(self):
         if len(self.independent_labels) != len(self.linking_coefficents):
             msg = 'nlabels=%s nci=%s\nindependent_labels=%s linking_coefficents=%s\n%s' % (
@@ -1031,14 +1005,6 @@ class AESURF(BaseCard):
         if self.alid2_ref is not None:
             return self.alid2_ref.sid
         return self.alid2
-
-    #def AELIST_id1(self):
-        #self.deprecated('AESURF.AELIST_id1()', 'AESURF.aelist_id1()', '1.1')
-        #return self.aelist_id1()
-
-    #def AELIST_id2(self):
-        #self.deprecated('AESURF.AELIST_id2()', 'AESURF.aelist_id2()', '1.1')
-        #return self.aelist_id2()
 
     def cross_reference(self, model: BDF) -> None:
         """
@@ -4199,45 +4165,6 @@ class PAERO1(BaseCard):
         """
         self.caero_body_ids[n - 1] = value
 
-    def object_attributes(self, mode='public', keys_to_skip=None, filter_properties=False):
-        """
-        List the names of attributes of a class as strings. Returns public
-        attributes as default.
-
-        Parameters
-        ----------
-        mode : str
-            defines what kind of attributes will be listed
-            * 'public' - names that do not begin with underscore
-            * 'private' - names that begin with single underscore
-            * 'both' - private and public
-            * 'all' - all attributes that are defined for the object
-        keys_to_skip : List[str]; default=None -> []
-            names to not consider to avoid deprecation warnings
-
-        Returns
-        -------
-        attribute_names : List[str]
-            sorted list of the names of attributes of a given type or None
-            if the mode is wrong
-
-        """
-        if keys_to_skip is None:
-            keys_to_skip = []
-        my_keys_to_skip = ['Bi']
-        return object_attributes(self, mode=mode, keys_to_skip=keys_to_skip+my_keys_to_skip,
-                                 filter_properties=filter_properties)
-
-    @property
-    def Bi(self):
-        self.deprecated('Bi', 'caero_body_ids', '1.2')
-        return self.caero_body_ids
-
-    @Bi.setter
-    def Bi(self, Bi):
-        self.deprecated('Bi', 'caero_body_ids', '1.2')
-        self.caero_body_ids = Bi
-
     @classmethod
     def _init_from_empty(cls):
         pid = 1
@@ -4302,10 +4229,6 @@ class PAERO1(BaseCard):
     def uncross_reference(self) -> None:
         """Removes cross-reference links"""
         pass
-
-    def Bodies(self):
-        self.deprecated('Bodies', 'N/A', '1.2')
-        return self.Bi
 
     def raw_fields(self):
         """

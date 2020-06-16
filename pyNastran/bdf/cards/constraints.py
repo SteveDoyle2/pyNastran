@@ -439,20 +439,6 @@ class MPC(Constraint):
 
         self.nodes_ref = None
 
-    def object_attributes(self, mode='public', keys_to_skip=None,
-                          filter_properties=False):
-        """.. seealso:: `pyNastran.utils.object_attributes(...)`"""
-        if keys_to_skip is None:
-            keys_to_skip = []
-        my_keys_to_skip = ['gids_ref', 'gids', 'constraints', 'enforced']
-        return super(Constraint, self).object_attributes(mode=mode, keys_to_skip=keys_to_skip+my_keys_to_skip,
-                                                         filter_properties=filter_properties)
-
-    def object_methods(self, mode='public', keys_to_skip=None):
-        """.. seealso:: `pyNastran.utils.object_methods(...)`"""
-        my_keys_to_skip = ['gids_ref', 'gids', 'constraints', 'enforced']
-        return super(Constraint, self).object_methods(mode=mode, keys_to_skip=keys_to_skip+my_keys_to_skip)
-
     def validate(self):
         assert isinstance(self.nodes, list), type(self.nodes)
         assert isinstance(self.components, list), type(self.components)
@@ -532,44 +518,6 @@ class MPC(Constraint):
         components = [str(component) for component in data[2]]
         enforced = data[3]
         return MPC(conid, nodes, components, enforced, comment=comment)
-
-    @property
-    def constraints(self):
-        self.deprecated('constraints', 'components', '1.2')
-        return self.components
-    @constraints.setter
-    def constraints(self, constraints):
-        self.deprecated('constraints', 'components', '1.2')
-        self.components = constraints
-
-    @property
-    def enforced(self):
-        self.deprecated('enforced', 'coefficients', '1.2')
-        return self.coefficients
-    @enforced.setter
-    def enforced(self, enforced):
-        self.deprecated('enforced', 'coefficients', '1.2')
-        self.coefficients = enforced
-
-    @property
-    def gids_ref(self):
-        self.deprecated('gids_ref', 'nodes_ref', '1.2')
-        return self.nodes_ref
-
-    @gids_ref.setter
-    def gids_ref(self, nodes_ref):
-        self.deprecated('gids_ref', 'nodes_ref', '1.2')
-        self.nodes_ref = nodes_ref
-
-    @property
-    def gids(self):
-        self.deprecated('gids', 'nodes', '1.2')
-        return self.nodes
-
-    @gids.setter
-    def gids(self, nodes):
-        self.deprecated('gids', 'nodes', '1.2')
-        self.nodes = nodes
 
     @property
     def node_ids(self):
@@ -731,22 +679,6 @@ class SPC(Constraint):
         self.enforced = enforced
         self.nodes_ref = None
 
-    def object_attributes(self, mode='public', keys_to_skip=None,
-                          filter_properties=False):
-        """.. seealso:: `pyNastran.utils.object_attributes(...)`"""
-        my_keys_to_skip = ['gids_ref', 'gids']
-        if keys_to_skip is None:
-            keys_to_skip = []
-        return Constraint.object_attributes(self, mode=mode, keys_to_skip=keys_to_skip+my_keys_to_skip,
-                                            filter_properties=filter_properties)
-
-    def object_methods(self, mode='public', keys_to_skip=None):
-        """.. seealso:: `pyNastran.utils.object_methods(...)`"""
-        my_keys_to_skip = ['gids_ref', 'gids']
-        if keys_to_skip is None:
-            keys_to_skip = []
-        return Constraint.object_methods(self, mode=mode, keys_to_skip=keys_to_skip+my_keys_to_skip)
-
     def validate(self):
         assert isinstance(self.nodes, list), self.nodes
         assert isinstance(self.components, list), self.components
@@ -832,26 +764,6 @@ class SPC(Constraint):
     @constraints.setter
     def constraints(self, constraints):
         self.components = constraints
-
-    @property
-    def gids_ref(self):
-        self.deprecated('gids_ref', 'nodes_ref', '1.2')
-        return self.nodes_ref
-
-    @gids_ref.setter
-    def gids_ref(self, nodes_ref):
-        self.deprecated('gids_ref', 'nodes_ref', '1.2')
-        self.nodes_ref = nodes_ref
-
-    @property
-    def gids(self):
-        self.deprecated('gids', 'nodes', '1.2')
-        return self.nodes
-
-    @gids.setter
-    def gids(self, nodes):
-        self.deprecated('gids', 'nodes', '1.2')
-        self.nodes = nodes
 
     @property
     def node_ids(self):
@@ -1185,16 +1097,6 @@ class SPC1(Constraint):
         for nid in nodes:
             assert nid > 0, data
         return SPC1(conid, components, nodes, comment=comment)
-
-    @property
-    def constraints(self):
-        self.deprecated('constraints', 'components', '1.2')
-        return self.components
-
-    @constraints.setter
-    def constraints(self, constraints):
-        self.deprecated('constraints', 'components', '1.2')
-        self.components = constraints
 
     @property
     def node_ids(self):
