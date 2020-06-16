@@ -3150,11 +3150,9 @@ class DCONADD(OptConstraint):
             dconstrs_actual = set(list(model.dconstrs.keys()))
             dconstrs_missing_set = set(self.dconstr_ids) - dconstrs_actual
             if len(dconstrs_missing_set):
-                #dconstrs_missing_str = ','.join(str(val) for val in dconstrs_missing_str)
                 raise KeyError(f'The following DCONSTRs are missing which are required by:\n{self}'
                                f'DCONSTRs={dconstrs_missing_set}')
             raise
-            #assert len(dconstrs_missing_set), dconstrs_missing_set
 
     def uncross_reference(self) -> None:
         """Removes cross-reference links"""

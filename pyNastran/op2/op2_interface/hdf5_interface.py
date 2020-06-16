@@ -30,6 +30,7 @@ from pyNastran.op2.tables.opg_appliedLoads.opg_load_vector import (
     RealLoadVectorArray, ComplexLoadVectorArray,
     RealTemperatureVectorArray,
 )
+from pyNastran.op2.tables.oqg_constraintForces.oqg_contact_forces import RealContactForcesArray
 from pyNastran.op2.tables.oqg_constraintForces.oqg_thermal_gradient_and_flux import (
     #RealTemperatureGradientAndFlux,
     RealTemperatureGradientAndFluxArray)
@@ -142,6 +143,7 @@ TABLE_OBJ_MAP = {
     'displacement_scaled_response_spectra_abs' : (RealDisplacementArray, ComplexDisplacementArray),
     'displacement_scaled_response_spectra_nrl' : (RealDisplacementArray, ComplexDisplacementArray),
     'displacement_scaled_response_spectra_srss' : (RealDisplacementArray, ComplexDisplacementArray),
+    'acoustic.displacements' : (ComplexDisplacementArray, ),
 
     'velocities' : (RealVelocityArray, ComplexVelocityArray, RealThermalVelocityVectorArray),
     'no.velocities' : (RealVelocityArray, ComplexVelocityArray),
@@ -904,6 +906,9 @@ TABLE_OBJ_MAP = {
     'grid_point_stresses_volume_principal' : (GridPointStressesVolumePrincipalArray, ),
     'grid_point_stress_discontinuities' : (GridPointStressesSurfaceDiscontinutiesArray, ),
 
+    'contact_forces' : (RealContactForcesArray, ),
+    'glue_forces' : (RealContactForcesArray, ),
+
     # ----------------------------------------------------------
     'thermal_load.conv_thermal_load' : (RealConvHeatFluxArray,),
 
@@ -1288,7 +1293,7 @@ def load_op2_from_hdf5_file(model, h5_file, log, debug=False):
                         continue
                     slot = getattr(model, result_name)  # get model.eigenvalues
                     slot[obj.title] = obj
-                    log.debug('  loaded %r' % result_name)
+                    log.debug('  loaded {result_name!r}')
                 elif result_name == 'grid_point_weight':
                     h5_result = h5_subcase.get(result_name)
                     obj = _load_grid_point_weight(h5_result)
@@ -1296,12 +1301,12 @@ def load_op2_from_hdf5_file(model, h5_file, log, debug=False):
 
                 elif result_name in TABLE_OBJ_KEYS:
                     if debug:
-                        log.debug('  %s:' % result_name)
+                        log.debug(f'  {result_name}:')
                     objs = TABLE_OBJ_MAP[result_name]
                     #real_obj, complex_obj = objs
                     h5_result = h5_subcase.get(result_name)
                     if objs is None:
-                        log.warning('  skipping %s...' % result_name)
+                        log.warning(f'  skipping {result_name}...')
                         continue
                     obj = _load_table(result_name, h5_result, objs, log=log, debug=debug)
                     if obj is None:

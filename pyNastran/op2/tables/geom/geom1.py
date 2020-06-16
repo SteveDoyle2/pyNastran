@@ -153,7 +153,7 @@ class GEOM1(GeomCommon):
          a5f, b5f, c5f,
          a6f, b6f, c6f) = out
         assert a1f + a2f + a3f + a4f + a5f + a6f == 0.0, (a1f, a2f, a3f, a4f, a5f, a6f)
-        assert b1f + b2f +       b4f + b5f + b6f == 0.0, (b1f, b2f, b4f, b5f, b6f)
+        assert b1f + b2f +       b4f +       b6f == 0.0, (b1f, b2f, b4f, b6f)
         assert c1f +       c3f +     + c5f       == 0.0, (c1f, c3f, c5f)
         print(out)
         return len(data)

@@ -828,6 +828,7 @@ class GEOM4(GeomCommon):
         3 C     I    Component numbers
         4 UNDEF none Not used
         5 D     RX   Enforced displacement
+
         """
         ntotal = 20
         nentries = (len(data) - n) // ntotal
@@ -838,7 +839,7 @@ class GEOM4(GeomCommon):
         constraints = []
         struc = Struct(self._endian + b'iiiif')
         for unused_i in range(nentries):
-            edata = data[n:n + 20]
+            edata = data[n:n + ntotal]
             (sid, nid, comp, xxx, dx) = struc.unpack(edata)
             assert xxx == 0, xxx
             if self.is_debug_file:
@@ -847,7 +848,7 @@ class GEOM4(GeomCommon):
             assert comp != 7, 'SPC-MSC sid=%s id=%s comp=%s dx=%s\n' % (sid, nid, comp, dx)
             constraint = SPC.add_op2_data([sid, nid, comp, dx])
             constraints.append(constraint)
-            n += 20
+            n += ntotal
         return n, constraints
 
     def _read_spc_nx(self, data, n):
@@ -857,12 +858,14 @@ class GEOM4(GeomCommon):
         2 ID  I  Grid or scalar point identification number
         3 C   I  Component numbers
         4 D   RS Enforced displacement
+
         """
         msg = ''
         ntotal = 16 * self.factor
-        nentries = (len(data) - n) // ntotal
+        ndatai = len(data) - n
+        nentries = ndatai // ntotal
         assert nentries > 0, nentries
-        assert (len(data) - n) % ntotal == 0
+        assert ndatai % ntotal == 0
         #self.show_data(data, types='if')
 
         struc = Struct(mapfmt(self._endian + b'iiif', self.size))
@@ -905,7 +908,7 @@ class GEOM4(GeomCommon):
             n += ntotal
         #if msg:
             #self.log.warning('Invalid Node IDs; skipping\n' + msg)
-        self.to_nx()
+        #self.to_nx()
         return n, constraints
 
     def _read_spcoff1(self, data: bytes, n: int) -> int:
@@ -936,6 +939,7 @@ class GEOM4(GeomCommon):
         3 ID1 I First grid or scalar point identification number
         4 ID2 I Second grid or scalar point identification number
         End THRUFLAG
+
         """
         #nentries = 0
         #nints = (len(data) - n) // 4
@@ -1004,6 +1008,7 @@ class GEOM4(GeomCommon):
         [123456, 456, 1, 5, 13,
          123456, 123456, 0, 22, 23, 24, 25, -1]
         TestOP2.test_op2_solid_shell_bar_01_geom
+
         """
         #nentries = 0
         #nints = (len(data) - n) // 4
@@ -1099,6 +1104,7 @@ class GEOM4(GeomCommon):
         3 C     I    Component numbers
         4 UNDEF none Not used
         5 D     RX   Enforced displacement
+
         """
         struct_4if = Struct(self._endian + b'4if')
         ntotal = 20 # 5*4
@@ -1207,6 +1213,7 @@ class GEOM4(GeomCommon):
         """
         USET(2010,20,193) - Record 63
         (sid, nid, comp), ...
+
         """
         struct_3i = Struct(mapfmt(self._endian + b'3i', self.size))
         ntotal = 12 * self.factor
@@ -1240,6 +1247,7 @@ class GEOM4(GeomCommon):
          2006, -1,
          2007, -1,
          2008, -1)
+
         """
         #C:\NASA\m4\formats\git\examples\move_tpl\fsp11j.op2
         self.show_data(data)
@@ -1257,6 +1265,7 @@ class GEOM4(GeomCommon):
 
         data =(2110, 21, 194,
                2.0, 123456, 0, 44, 45, 48, 49, -1)
+
         """
         assert self.factor == 1, self.factor
         nentries = 0
@@ -1374,6 +1383,7 @@ def read_rbe3s_from_idata_fdata(self, idata, fdata):
             41212   41221   -.25    123     41200   41202   41220   41222
     RBE3    408             4       456     1.0     123     41201   41210
             41212   41221   +.25    123     41200   41202   41220   41222
+
     """
     # C:\Users\sdoyle\Dropbox\move_tpl\ecbep1.op2
     rbe3s = []
@@ -1557,6 +1567,7 @@ def _read_spcadd_mpcadd(model, card_name, datai):
         the data array; cannot be a List[int]
         [2  1 10 -1]
         [3  1 -1]
+
     """
     if model.is_debug_file:
         model.binary_debug.write('  %s - %s' % (card_name, str(datai)))

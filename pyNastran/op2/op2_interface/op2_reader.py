@@ -833,12 +833,11 @@ class OP2Reader:
         #print(self.show_data(data, types='ifsqd'))
         # 101, 466286, 15,      1, 1, 180, 0
         # 101, 466286, ncoords, 1, 1, 180, 0
-        if self.size == 4:
-            factor = 1
+        factor = self.factor
+        #if self.size == 4:
             #idtype = 'int32'
             #fdtype = 'float32'
-        else:
-            factor = 2
+        #else:
             #idtype = 'int64'
             #fdtype = 'float64'
         assert len(data) == 28 * factor, len(data)
@@ -853,6 +852,10 @@ class OP2Reader:
         coord_type_map = {
             1 : 'CORD2R',
             2 : '???',
+            3 : 'CORD2S',
+            5 : 'GMSURF',
+            7 : '???',
+            8 : '???',
         }
         #1. Coordinate system type:
         #- 0 = unknown (seriously?)
@@ -877,7 +880,7 @@ class OP2Reader:
             itable -= 1
         markers = self.get_nmarkers(1, rewind=False)
 
-        if not is_geometry or self.read_mode == 1 or b'GEOM1' in op2.table_names:
+        if not is_geometry: # or self.read_mode == 1 or b'GEOM1' in op2.table_names:
             return
         nblocks = len(blocks)
         if nblocks == 1:
@@ -926,25 +929,37 @@ class OP2Reader:
                 assert len(zaxis) == 3, zaxis
                 assert len(xzplane) == 3, xzplane
                 if coord_type_int == 1:
-                    self.op2.add_cord2r(cid, rid=0,
-                                        origin=origin, zaxis=zaxis, xzplane=xzplane,
-                                        comment='')
+                    coord = self.op2.add_cord2r(cid, rid=0,
+                                                origin=origin, zaxis=zaxis, xzplane=xzplane,
+                                                comment='')
                 elif coord_type_int == 2:
-                    self.op2.add_cord2c(cid, rid=0,
-                                        origin=origin, zaxis=zaxis, xzplane=xzplane,
-                                        comment='')
+                    coord = self.op2.add_cord2c(cid, rid=0,
+                                                origin=origin, zaxis=zaxis, xzplane=xzplane,
+                                                comment='')
                 elif coord_type_int == 3:
-                    self.op2.add_cord2s(cid, rid=0,
-                                        origin=origin, zaxis=zaxis, xzplane=xzplane,
-                                        comment='')
+                    coord = self.op2.add_cord2s(cid, rid=0,
+                                                origin=origin, zaxis=zaxis, xzplane=xzplane,
+                                                comment='')
+                elif coord_type_int == 5:
+                    #- 7 = convective coordinate system defined on a FEFACE
+                    print('COORD_GMSURF', cid, origin, zaxis, xzplane)
+                    coord = None
+                elif coord_type_int == 7:
+                    #- 7 = convective coordinate system defined on a FEFACE
+                    print('COORD_FEFACE', cid, origin, zaxis, xzplane)
+                    coord = None
+                elif coord_type_int == 8:
+                    #- 7 = convective coordinate system defined on a FEFACE
+                    print('COORD_???', cid, origin, zaxis, xzplane)
+                    coord = None
                 else:  # pragma: no cover
-                    raise NotImplementedError('coord_type_int=%s' % coord_type_int)
-
+                    raise NotImplementedError(f'coord_type_int={coord_type_int}')
+                str(coord)
         elif nblocks == 2:
             # cstm style
             #block4 - 4 values  - cid, type, int_index, double_index
             #block5 - 12 values - ox, oy, oz, T11, T12, T13, T21, T22, T23, T31, T32, T33
-            ints = np.frombuffer(blocks[0], dtype='int32')
+            ints = np.frombuffer(blocks[0], dtype=self.op2.idtype8)
             doubles = np.frombuffer(blocks[1], dtype='float64')
             nints = len(ints)
             ndoubles = len(doubles)
@@ -971,13 +986,22 @@ class OP2Reader:
                 assert len(zaxis) == 3, zaxis
                 assert len(xzplane) == 3, xzplane
                 if cid_type == 1:
-                    self.op2.add_cord2r(cid, rid=0,
-                                        origin=origin, zaxis=zaxis, xzplane=xzplane,
-                                        comment='')
+                    coord = self.op2.add_cord2r(cid, rid=0,
+                                                origin=origin, zaxis=zaxis, xzplane=xzplane,
+                                                comment='')
+                elif cid_type == 2:
+                    coord = self.op2.add_cord2c(cid, rid=0,
+                                                origin=origin, zaxis=zaxis, xzplane=xzplane,
+                                                comment='')
+                elif cid_type == 3:
+                    coord = self.op2.add_cord2s(cid, rid=0,
+                                                origin=origin, zaxis=zaxis, xzplane=xzplane,
+                                                comment='')
                 else:  # pragma: no cover
-                    raise NotImplementedError('coord_type_int=%s' % coord_type_int)
+                    raise NotImplementedError(f'cid_type={cid_type}')
+                str(coord)
         else:  # pragma: no cover
-            raise NotImplementedError('nCSTM blocks=%s (not 1 or 2)' % nblocks)
+            raise NotImplementedError(f'nCSTM blocks={nblocks} (not 1 or 2)')
 
         #print(self.op2.coords)
 
@@ -1681,7 +1705,7 @@ class OP2Reader:
 
         op2 = self.op2
         op2.table_name = self._read_table_name(rewind=False)
-        self.log.debug('table_name = %r' % op2.table_name)
+        #self.log.debug('table_name = %r' % op2.table_name)
         if self.is_debug_file:
             self.binary_debug.write('read_geom_table - %s\n' % op2.table_name)
 
@@ -1807,7 +1831,7 @@ class OP2Reader:
         op2 = self.op2
         table_name = self._read_table_name(rewind=False)
         op2.table_name = table_name
-        self.log.debug('table_name = %r' % table_name)
+        #self.log.debug('table_name = %r' % table_name)
         if self.is_debug_file:
             self.binary_debug.write('read_gpdt - %s\n' % table_name)
 

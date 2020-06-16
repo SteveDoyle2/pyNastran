@@ -801,14 +801,17 @@ class SPC(Constraint):
             a comment for the card
 
         """
-        conid = data[0]
+        spc_id = data[0]
         nodes = [data[1]]
         components_str = sorted(str(data[2]))
         components = int(''.join(components_str))
 
+        assert spc_id > 0, data
+        for i, nid in enumerate(nodes):
+            assert nodes[0] > 0, f'nodes={nodes} nodes[{i}]={nid}; data={data}'
         assert 0 <= components <= 123456, data
         enforced = [data[3]]
-        assert conid > 0, data
+        assert spc_id > 0, data
         assert nodes[0] > 0, data
         components_str = str(components)
         assert len(components_str) <= 6, data
@@ -820,7 +823,7 @@ class SPC(Constraint):
         #else:
             #raise RuntimeError('SPC; components=%s data=%s' % (components, data))
         #assert 0 < components[0] > 1000, data
-        return SPC(conid, nodes, components, enforced, comment=comment)
+        return SPC(spc_id, nodes, components, enforced, comment=comment)
 
     @property
     def constraints(self):
