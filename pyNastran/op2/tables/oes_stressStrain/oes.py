@@ -6011,13 +6011,13 @@ class OES(OP2Common):
                 obj._times[obj.itime] = dt
 
                 if obj.itime == 0:
-                    ints = frombuffer(data, dtype=self.idtype).reshape(nelements, 11).copy()
+                    ints = frombuffer(data, dtype=self.idtype8).reshape(nelements, 11).copy()
                     eids = ints[:, 0] // 10
                     nids = ints[:, 1]
                     obj.element_layer[istart:iend, 0] = eids
                     obj.element_layer[istart:iend, 1] = nids
 
-                floats = frombuffer(data, dtype=self.fdtype).reshape(nelements, 11)
+                floats = frombuffer(data, dtype=self.fdtype8).reshape(nelements, 11)
                 #[o1, o2, t12, t1z, t2z, angle, major, minor, ovm]
                 obj.data[obj.itime, istart:iend, :] = floats[:, 2:].copy()
             else:
@@ -6775,10 +6775,10 @@ class OES(OP2Common):
                 obj._times[obj.itime] = dt
 
                 if obj.itime == 0:
-                    ints = frombuffer(data, dtype=self.idtype).reshape(nelements, 7).copy()
+                    ints = frombuffer(data, dtype=self.idtype8).reshape(nelements, 7).copy()
                     eids = ints[:, 0] // 10
                     obj.element[istart:iend] = eids
-                floats = frombuffer(data, dtype=self.fdtype).reshape(nelements, 7)
+                floats = frombuffer(data, dtype=self.fdtype8).reshape(nelements, 7)
                 #[axial_stress, equiv_stress, total_strain,
                 # eff_plastic_creep_strain, eff_creep_strain, linear_torsional_stresss]
                 obj.data[obj.itime, istart:iend, :] = floats[:, 1:].copy()

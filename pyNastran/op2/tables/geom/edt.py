@@ -2,6 +2,8 @@
 defines readers for BDF objects in the OP2 EDT/EDTS table
 """
 from struct import Struct
+from typing import Tuple, Any
+
 import numpy as np
 from pyNastran.op2.tables.geom.geom_common import GeomCommon
 from pyNastran.op2.op2_interface.op2_reader import mapfmt, reshape_bytes_block
@@ -227,12 +229,25 @@ class EDT(GeomCommon):
           ints    = (111, 5, 'THIS IS GROUP 111   ', -2, 5, 'THIS IS METADATA', -1, -5, 1, 0, 10, -1, -1)
           floats  = (111, 5, 'THIS IS GROUP 111   ', -2, 5, 'THIS IS METADATA', -1, -5, 1, 0.0, 10, -1, -1)
 
+        # double
+        FLEXIBLE SLIDER(1)
+          doubles (float64) = (1, 5, 6.03e-154, 6.08e-154, 6.01-154, 6.01e-154, 6.04e-154,
+          -4, 14, -1, -1, 2, 6, 23e-154, 6.08e-154, 6.82e-154, 6.9e-154, 6.3e-154, 6.0e-154,
+          -5, 1, 0.0, 10, -1, -1)
+          long long (int64) = (1, 5, 234137606, 231102857, 23148032, 955957572, 231888857,
+          -4, 14, -1, -1, 2, 6, 2413766, 742102857, 231216032, 23997572, 23192817, 23453545,
+          -5, 1, 0,   10, -1, -1)
         """
         #print('reading group')
-        assert self.factor == 1, self.factor
+        #assert self.factor == 1, self.factor
         nentries = 0
-        ints = np.frombuffer(data[12:], dtype=self.idtype)
-        strs = np.frombuffer(data[12:], dtype='|S4')
+        ints = np.frombuffer(data[n:], dtype=self.idtype8)
+        if self.factor == 1:
+            strs = np.frombuffer(data[n:], dtype='|S4')
+        else:
+            self.show_data(data[n:], types='qds')
+            strs = np.frombuffer(data[n:], dtype='|S8')
+        size = self.size
         #print(ints)
         #print(strs)
 
@@ -249,7 +264,11 @@ class EDT(GeomCommon):
             i += 2
             n += 8
 
-            group_desc = ''.join(stri.decode('latin1') for stri in strs[i:i+ndesc]).strip()
+            if self.factor == 1:
+                group_desc = ''.join(stri.decode('latin1') for stri in strs[i:i+ndesc]).strip()
+            else:
+                group_desc_bytes = reshape_bytes_block(b''.join(strs[i:i+ndesc]))
+                group_desc = group_desc_bytes.decode('latin1').rstrip()
             i += ndesc
             n += 4 * ndesc
 
@@ -280,12 +299,12 @@ class EDT(GeomCommon):
                 if gtype == -1:
                     # end of card
                     i += 1
-                    n += 4
+                    n += size
                     break
                 elif gtype == -2:
                     assert ints[i] == -2, ints[i]
                     i += 1
-                    n += 4
+                    n += size
 
                     # meta-data
                     nmeta = ints[i]
@@ -300,48 +319,27 @@ class EDT(GeomCommon):
                     #print('strs[i:istop] =', strs[i:istop])
                     #print('istop =', istop, ints[istop])
                     #meta_desc = ''.join(stri.decode('latin1') for stri in strs[i:istop])
-                    datai = data[12+(i+1)*4:12+istop*4]
+                    datai = data[n+(i+1)*size:n+istop*size]
                     meta_desc = datai.decode('latin1')
                     data_dict['meta'] = meta_desc
                     i += nmeta + 1
-                    n += 4 * (nmeta + 1)
+                    n += size * (nmeta + 1)
                     print(f'  gtype={gtype} nmeta={nmeta} meta_desc={meta_desc!r}')
                     #iminus1 = minus1[minus1_count+2]
                     #print('ints: ', ints[i:iminus1].tolist())
                     #minus1_count += 1
+                elif gtype == -3:
+                    assert ints[i] == -3, ints[i]
+                    i, n, props = _read_group_elem_prop_nids(ints, i, n, size)
+                    data_dict['prop'].append(props)
                 elif gtype == -4:
                     assert ints[i] == -4, ints[i]
-                    i += 1
-                    n += 4
-
-                    # grids
-                    #iminus1 = minus1[minus1_count] # + 1
-                    #print(ints[iminus1:])
-                    #grids = ints[i+1:iminus1].tolist()
-                    #print('ints[i:]', ints[i:])
-                    assert ints[i:][0] > 0, ints[i:]
-                    for j, nj in enumerate(ints[i:]):
-                        if nj == -1:
-                            break
-                    grids = ints[i+1:i+j].tolist()
-                    grids2 = _expand_vals(grids)
-                    print(f'  grids = {grids2}')
-                    assert 'THRU' != grids2[0]
-                    assert 'BY' != grids2[0]
-                    assert 'ALL' != grids2[0]
-
-                    data_dict['grid'].append(grids2)
-                    #minus1_count += 1
-
-                    nstop = len(grids) + 2
-                    i += nstop
-                    n += nstop * 4
-                    #i = iminus1
-                    #n = iminus1 * 4
+                    i, n, grids = _read_group_elem_prop_nids(ints, i, n, size)
+                    data_dict['grid'].append(grids)
                 elif gtype == -5:
                     assert ints[i] == -5, ints[i]
                     i += 1
-                    n += 4
+                    n += size
 
                     #print(f'gtype=5 (eids); ints[{i}]={ints[i]}')
                     #self.show_data(data[12:], types='ifs')
@@ -369,7 +367,7 @@ class EDT(GeomCommon):
                     data_dict['element'].append(eids2)
                     nstop = len(eids_array) + 1
                     i += nstop
-                    n += nstop * 4
+                    n += nstop * self.size
                 else:
                     raise NotImplementedError(gtype)
                 gtype = ints[i]
@@ -1636,3 +1634,34 @@ def _expand_vals(grids):
         grids2.append(val)
     return grids2
 
+
+def _read_group_elem_prop_nids(ints, i, n, size) -> Tuple[int, int, Any]:
+    """helper for _read_group"""
+    i += 1
+    n += size
+
+    # grids
+    #iminus1 = minus1[minus1_count] # + 1
+    #print(ints[iminus1:])
+    #grids = ints[i+1:iminus1].tolist()
+    #print('ints[i:]', ints[i:])
+    assert ints[i:][0] > 0, ints[i:]
+    for j, nj in enumerate(ints[i:]):
+        if nj == -1:
+            break
+    grids = ints[i+1:i+j].tolist()
+    print('grids', grids)
+    grids2 = _expand_vals(grids)
+    print(f'  grids = {grids2}')
+    assert 'THRU' != grids2[0]
+    assert 'BY' != grids2[0]
+    assert 'ALL' != grids2[0]
+
+    #minus1_count += 1
+
+    nstop = len(grids) + 2
+    i += nstop
+    n += nstop * size
+    #i = iminus1
+    #n = iminus1 * 4
+    return grids2
