@@ -6858,8 +6858,10 @@ class AddCards(AddMethods):
         self._add_dvprel_object(dvprel)
         return dvprel
 
-    def add_dvmrel1(self, oid, mat_type, mid, mp_name, dvids, coeffs,
-                    mp_min=None, mp_max=1e20, c0=0., validate=True, comment='') -> DVMREL1:
+    def add_dvmrel1(self, oid: int, mat_type: str, mid: int, mp_name: str,
+                    dvids: List[int], coeffs: List[float],
+                    mp_min: Optional[float]=None, mp_max: float=1e20, c0: float=0.,
+                    validate: bool=True, comment: str='') -> DVMREL1:
         """
         Creates a DVMREL1 card
 

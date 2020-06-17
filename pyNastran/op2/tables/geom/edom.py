@@ -39,7 +39,7 @@ class EDOM(GeomCommon):
             #MAT1DOM(103,1,9944)
             #MAT10DOM(2801,28,9945)
             #MODTRAK(6006,60,477)
-            (103, 1, 9944) : ['???', self._read_fake],
+            (103, 1, 9944) : ['MAT1DOM', self._read_mat1dom],
             (304, 3, 276) : ['DSCONS', self._read_dscons],
             (404, 4, 277) : ['DVAR', self._read_dvar],
             (504, 5, 246) : ['DVSET', self._read_dvset],
@@ -75,12 +75,28 @@ class EDOM(GeomCommon):
             #DRESP3(6700,67,433)
             (6100, 61, 429) : ['DVCREL1', self._read_fake],
             (6200, 62, 430) : ['DVCREL2', self._read_fake],
-            (6300, 63, 431) : ['DVMREL1', self._read_fake],
+            (6300, 63, 431) : ['DVMREL1', self._read_dvmrel1],
             (6400, 64, 432) : ['DVMREL2', self._read_fake],
             (6006, 60, 477) : ['???', self._read_fake],
             (7000, 70, 563) : ['DCONSTR/DDVAL?', self._read_fake],
         }
 
+    def _read_mat1dom(self, data: bytes, n: int) -> int:
+        """
+        If one or more properties from a MAT1 entry are used as design
+        variables, the MAT1DOM record is written to the EDOM data block.
+        This is different than the MAT1 record in the MPT data block.
+
+        Word Name Type Description
+        1 MID  I MAT1 identification number
+        2 FTE  I Format code for Young’s modulus
+        3 FTG  I Format code for shear modulus
+        4 FTNU I Format code for Poisson’s ratio
+
+        (2, 2, 0, 2)
+        """
+        assert len(data) == 28, len(data)
+        return len(data)
 
     def _read_dvgrid(self, data: bytes, n: int) -> int:
         """
@@ -185,6 +201,57 @@ class EDOM(GeomCommon):
                                       p_min=pmin, p_max=pmax, c0=c0,
                                       validate=True)
             dvprel.write_card_16()
+            n += (i1 - i0 + 1) * size
+        return n
+
+    def _read_dvmrel1(self, data: bytes, n: int) -> int:
+        """
+        Design variable to material relation.
+        Word Name Type Description
+        1 ID            I Unique identification number
+        2 TYPE(2)   CHAR4 Name of a material property entry
+        4 MID           I Material identification number
+        5 FID           I Entry is 0
+        6 MPMIN        RS Minimum value allowed for this property
+        7 MPMAX        RS Maximum value allowed for this property
+        8 C0           RS Constant term of relation
+        9 MPNAME(2) CHAR4 Name of material property
+        11 DVIDi        I DESVAR entry identification number
+        12 COEFi       RS Coefficient of linear relation
+        Words 11 and 12 repeat until -1 occurs
+        """
+        ints = np.frombuffer(data[n:], self.idtype8).copy()
+        floats = np.frombuffer(data[n:], self.fdtype8).copy()
+        iminus1 = np.where(ints == -1)[0]
+
+        istart = [0] + list(iminus1[:-1] + 1)
+        iend = iminus1
+        size = self.size
+        for (i0, i1) in zip(istart, iend):
+            #self.show_data(data[n+i0*size:n+i1*size], types='ifs')
+            assert ints[i1] == -1, ints[i1]
+            dvmrel_id = ints[i0]
+            mat_type_bytes = data[n+size:n+3*size]
+            mid = ints[i0+3]
+            mp_name_bytes = data[n+8*size:n+10*size]
+            if size == 4:
+                mat_type = mat_type_bytes.decode('latin1').rstrip()
+                mp_name = mp_name_bytes.decode('latin1').rstrip()
+            else:
+                mat_type = reshape_bytes_block(mat_type_bytes).decode('latin1').rstrip()
+                mp_name = reshape_bytes_block(mp_name_bytes).decode('latin1').rstrip()
+            pid, fid = ints[i0+3:i0+5]
+            mp_min, mp_max, c0 = floats[i0+5:i0+8]
+            assert fid == 0, (dvmrel_id, mid, mat_type_bytes, mp_name, pid, fid)
+            #print(dvmrel_id, mid, mat_type_bytes, mp_name, pid, fid)
+
+            desvar_ids = ints[i0+10:i1:2]
+            coeffs = floats[i0+11:i1:2]
+            dvmrel = self.add_dvmrel1(dvmrel_id, mat_type, mid, mp_name,
+                                      desvar_ids, coeffs,
+                                      mp_min=mp_min, mp_max=mp_max, c0=c0,
+                                      validate=True)
+            dvmrel.write_card_16()
             n += (i1 - i0 + 1) * size
         return n
 

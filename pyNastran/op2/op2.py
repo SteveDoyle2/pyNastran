@@ -650,7 +650,8 @@ class OP2(OP2_Scalar, OP2Writer):
                     raise NotImplementedError()
                     #continue
 
-        skip_pandas = ['params', 'gpdt', 'bgpdt', 'eqexin', 'grid_point_weight', 'psds']
+        skip_pandas = ['params', 'gpdt', 'bgpdt', 'eqexin', 'grid_point_weight', 'psds',
+                       'monitor1', 'monitor3']
         for result_type in result_types:
             if result_type in skip_pandas or result_type.startswith('responses.'):
                 #self.log.debug('skipping %s' % result_type)

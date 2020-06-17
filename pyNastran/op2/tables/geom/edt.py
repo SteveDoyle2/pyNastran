@@ -450,7 +450,7 @@ class EDT(GeomCommon):
         3 D RS Deformation
 
         """
-        ntotal = 12 # 4*3
+        ntotal = 12 * self.factor # 4*3
         ndatai = len(data) - n
         ncards = ndatai // ntotal
         assert ndatai % ntotal == 0

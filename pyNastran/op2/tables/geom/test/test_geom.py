@@ -74,6 +74,7 @@ class TestOP2GeomUnit(unittest.TestCase):
         op2 = OP2Geom(make_geom=True, debug=False, log=None, debug_file=None, mode='msc')
         op2.op2_reader.factor = 1
         op2.idtype = 'int32'
+        op2.idtype8 = 'int32'
         op2._uendian = '<'
         data = (17400, 174, 616,
                 55, 0,
