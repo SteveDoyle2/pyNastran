@@ -20,6 +20,7 @@ from pyNastran.op2.tables.geom.ept import EPT
 from pyNastran.op2.tables.geom.mpt import MPT
 from pyNastran.op2.tables.geom.edt import EDT
 from pyNastran.op2.tables.geom.edom import EDOM
+from pyNastran.op2.tables.geom.contact import CONTACT
 
 from pyNastran.op2.tables.geom.dit import DIT
 from pyNastran.op2.tables.geom.dynamics import DYNAMICS
@@ -107,7 +108,7 @@ def read_op2_geom(op2_filename: Optional[str]=None,
     return model
 
 
-class OP2GeomCommon(OP2, GEOM1, GEOM2, GEOM3, GEOM4, EPT, MPT, EDT, EDOM, DIT, DYNAMICS, AXIC):
+class OP2GeomCommon(OP2, GEOM1, GEOM2, GEOM3, GEOM4, EPT, MPT, EDT, EDOM, CONTACT, DIT, DYNAMICS, AXIC):
     """interface for the OP2Geom class for to loading subclasses"""
     def __init__(self, make_geom: bool=True,
                  debug: bool=False, log: Any=None, debug_file: Optional[str]=None, mode: Optional[str]=None):
@@ -138,36 +139,13 @@ class OP2GeomCommon(OP2, GEOM1, GEOM2, GEOM3, GEOM4, EPT, MPT, EDT, EDOM, DIT, D
         MPT.__init__(self)
         EDT.__init__(self)
         EDOM.__init__(self)
+        CONTACT.__init__(self)
         DIT.__init__(self)
         DYNAMICS.__init__(self)
         AXIC.__init__(self)
 
         OP2.__init__(self, debug=debug, log=log, debug_file=debug_file, mode=mode)
         self.make_geom = True
-
-        # F:\work\pyNastran\pyNastran\master2\pyNastran\bdf\test\nx_spike\out_boltsold11b.op2
-        # F:\work\pyNastran\pyNastran\master2\pyNastran\bdf\test\nx_spike\out_conedg01b.op2
-        # F:\work\pyNastran\pyNastran\master2\pyNastran\bdf\test\nx_spike\out_conprop06.op2
-        # F:\work\pyNastran\pyNastran\master2\pyNastran\bdf\test\nx_spike\out_glueac103a.op2
-        # F:\work\pyNastran\pyNastran\master2\pyNastran\bdf\test\nx_spike\out_conedg01s.op2
-        # F:\work\pyNastran\pyNastran\master2\pyNastran\bdf\test\nx_spike\out_sline5.op2
-        self._contact_map = {
-            (224, 2, 436) : ['???', self._read_fake],
-            (724, 7, 441) : ['???', self._read_fake],
-            (1224, 12, 446) : ['???', self._read_fake],
-            (7110, 71, 588) : ['???', self._read_fake],
-            (7210, 72, 589) : ['???', self._read_fake],
-            (7410, 74, 591) : ['???', self._read_fake],
-            (7510, 75, 592) : ['???', self._read_fake],
-            (7710, 77, 594) : ['???', self._read_fake],
-            (8110, 81, 598) : ['???', self._read_fake],
-            (8301, 83, 605) : ['???', self._read_fake],
-            (8710, 87, 449) : ['???', self._read_fake],
-            (8810, 88, 603) : ['???', self._read_fake],
-            (8920, 89, 614) : ['???', self._read_fake],
-            (124, 1, 435) : ['???', self._read_fake],
-            (424, 4, 438) : ['???', self._read_fake],
-        }
 
         # F:\work\pyNastran\examples\Dropbox\move_tpl\beamp10.op2
         # F:\work\pyNastran\examples\Dropbox\move_tpl\ifsr22r.op2
@@ -217,8 +195,7 @@ class OP2GeomCommon(OP2, GEOM1, GEOM2, GEOM3, GEOM4, EPT, MPT, EDT, EDOM, DIT, D
             n += 72
         return n
 
-    def save(self, obj_filename='model.obj', unxref=True):
-        # type: (str, bool) -> None
+    def save(self, obj_filename: str='model.obj', unxref: bool=True) -> None:
         """Saves a pickleable object"""
         #del self.log
         #del self._card_parser, self._card_parser_prepare
@@ -276,14 +253,6 @@ class OP2GeomCommon(OP2, GEOM1, GEOM2, GEOM3, GEOM4, EPT, MPT, EDT, EDOM, DIT, D
         table_mapper[b'DITS'] = [self._read_dit_4, self._read_dit_4]
         return table_mapper
 
-
-    def _read_contact_4(self, data, ndata):
-        """
-        reads the CONTACT/CONTACTS table
-        Table of Bulk Data entry related to surface contact
-
-        """
-        return self._read_geom_4(self._contact_map, data, ndata)
 
     def _read_viewtb_4(self, data, ndata):
         """

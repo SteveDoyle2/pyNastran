@@ -2,8 +2,11 @@
 defines readers for BDF objects in the OP2 EDOM/EDOMS table
 """
 from struct import Struct
+from typing import Union
+import numpy as np
+
 from pyNastran.op2.tables.geom.geom_common import GeomCommon
-#from pyNastran.op2.op2_interface.op2_reader import mapfmt, reshape_bytes_block
+from pyNastran.op2.op2_interface.op2_reader import mapfmt, reshape_bytes_block
 
 
 class EDOM(GeomCommon):
@@ -53,16 +56,17 @@ class EDOM(GeomCommon):
 
             (3106, 31, 352) : ['DESVAR', self._read_desvar],
             (3206, 32, 353) : ['DLINK', self._read_fake],
-            (3306, 33, 354) : ['DVPREL1', self._read_fake],
+            (3306, 33, 354) : ['DVPREL1', self._read_dvprel1],
             (3406, 34, 355) : ['DVPREL2', self._read_fake],
             #DOPTPRM(4306,43,364)
             (3706, 37, 358) : ['DTABLE', self._read_fake],
+            #(3806, 38, 359) : ['DRESP1', self._read_dresp1],
             (3806, 38, 359) : ['DRESP1', self._read_fake],
             (3906, 39, 360) : ['DRESP2', self._read_fake],
             (4106, 41, 362) : ['DCONSTR', self._read_fake],
             (4206, 42, 363) : ['DSCREEN', self._read_fake],
             (4306, 43, 364) : ['DOPTPRM', self._read_fake],
-            (4406, 44, 372) : ['DVGRID', self._read_fake],
+            (4406, 44, 372) : ['DVGRID', self._read_dvgrid],
             #DVSHAP(5006,50,470)
             (5106, 51, 471) : ['DCONADD', self._read_fake],
             #DVBSHAP(5806,58,474)
@@ -76,6 +80,726 @@ class EDOM(GeomCommon):
             (6006, 60, 477) : ['???', self._read_fake],
             (7000, 70, 563) : ['DCONSTR/DDVAL?', self._read_fake],
         }
+
+
+    def _read_dvgrid(self, data: bytes, n: int) -> int:
+        """
+        Design variable to grid point relation.
+        Word Name Type Description
+        1 DVID   I DESVAR entry identification number
+        2 GID    I Grid point or geometric point identification number
+        3 CID    I Coordinate system identification number
+        4 COEFF RS Multiplier of the vector defined by N(3)
+        5 N1    RS Component of the vector measured in the coordinate system defined by CID
+        6 N2    RS Component of the vector measured in the coordinate system defined by CID
+        7 N3    RS Component of the vector measured in the coordinate system defined by CID
+
+        """
+        ntotal = 28 * self.factor # 7*4
+        struct1 = Struct(mapfmt(self._endian + b'3i 4f', self.size))
+
+        ncards = (len(data) - n) // ntotal
+        for unused_i in range(ncards):
+            edata = data[n:n + ntotal]
+            dvgrid_id, nid, cid, coeff, *dxyz = struct1.unpack(edata)
+            assert len(dxyz) == 3, dxyz
+
+            dvgrid = self.add_dvgrid(dvgrid_id, nid, dxyz,
+                                     cid=cid, coeff=coeff)
+            dvgrid.write_card_16()
+            n += ntotal
+        return n
+
+    def _read_dvprel1(self, data: bytes, n: int) -> int:
+        """
+        Word Name Type Description
+        1 ID          I Unique identification number
+        2 TYPE(2) CHAR4 Name of a property entry
+        4 PID         I Property entry identification number
+        5 FID         I FID number input. Otherwise, either 0 if property
+                        name is input, or frequency (RS) if entry is for
+                        frequency dependent property. (See Words 9 and 10)
+        6 PMIN       RS Minimum value allowed for this property
+        7 PMAX       RS Maximum value allowed for this property
+        8 C0         RS Constant term of relation
+        9 PNAME1  CHAR4 First word of property name, if any, or blanks if
+                        FID number is nonzero in Word 5
+        10 PNAME2 CHAR4 Second word of property name, if any. Otherwise,
+                        either blanks if FID number is nonzero in Word 5,
+                        or frequency (RS) if entry is for frequency
+                        dependent property. (See Word 5)
+        11 DVIDi I DESVAR entry identification number
+        12 COEFi RS Coefficient of linear relation
+        Words 11 and 12 repeat until -1 occurs
+        """
+        ints = np.frombuffer(data[n:], self.idtype8).copy()
+        floats = np.frombuffer(data[n:], self.fdtype8).copy()
+        iminus1 = np.where(ints == -1)[0]
+
+        #if self.size == 4:
+            #struct1 = Struct(self._endian + b'i 8s i')
+            #strs = np.frombuffer(data[n:], dtype='|S4')
+        #else:
+            #struct1 = Struct(self._endian + b'q 16s q')
+            #strs = np.frombuffer(data[n:], dtype='|S8')
+        #6i
+        #ntotal1 = 16 * self.factor # 4*4
+
+        istart = [0] + list(iminus1[:-1] + 1)
+        iend = iminus1
+        size = self.size
+        for (i0, i1) in zip(istart, iend):
+            #self.show_data(data[n+i0*size:n+i1*size], types='ifs')
+            assert ints[i1] == -1, ints[i1]
+            #print(i0, i1)
+            dvprel_id = ints[i0]
+            type_bytes = data[n+size:n+3*size]
+            property_name_bytes = data[n+8*size:n+10*size]
+            if size == 4:
+                prop_type = type_bytes.decode('latin1').rstrip()
+            else:
+                prop_type = reshape_bytes_block(type_bytes).decode('latin1').rstrip()
+            pid, fid = ints[i0+3:i0+5]
+            pmin, pmax, c0 = floats[i0+5:i0+8]
+            if fid == 0:
+                fid = None
+                if size == 4:
+                    fid = property_name_bytes.decode('latin1').rstrip()
+                else:
+                    fid = reshape_bytes_block(property_name_bytes).decode('latin1').rstrip()
+
+            # fid = fidi
+            #print(dvprel_id, prop_type, pid, fid, (pmin, pmax, c0))
+            desvar_ids = ints[i0+10:i1:2]
+            coeffs = floats[i0+11:i1:2]
+            # 2 TYPE(2) CHAR4 Name of a property entry
+            # 4 PID         I Property entry identification number
+            # 5 FID         I FID number input. Otherwise, either 0 if property
+            #                 name is input, or frequency (RS) if entry is for
+            #                 frequency dependent property. (See Words 9 and 10)
+            # 6 PMIN       RS Minimum value allowed for this property
+            # 7 PMAX       RS Maximum value allowed for this property
+            # 8 C0         RS Constant term of relation
+            dvprel = self.add_dvprel1(dvprel_id, prop_type, pid, fid,
+                                      desvar_ids, coeffs,
+                                      p_min=pmin, p_max=pmax, c0=c0,
+                                      validate=True)
+            dvprel.write_card_16()
+            n += (i1 - i0 + 1) * size
+        return n
+
+    def _read_dresp1(self, data: bytes, n: int) -> int:
+        """
+        Word Name Type Description
+        1 ID           I Unique entry identifier
+        2 LABEL(2) CHAR4 User-defined label
+        4 FLAG         I Flag indicating response type
+        FLAG = 1 WEIGHT
+          5 UNDEF(2) None
+          7 REGION I Region identifier for constraint screening
+          8 ATTA   I Response attribute (-10 for DWEIGHT which is the topology optimization design weight
+          9 ATTB   I Response attribute
+          10 MONE  I Entry is -1
+        FLAG = 2 VOLUME
+          5 UNDEF(2) None
+          7 REGION I Region identifier for constraint screening
+          8 ATTA   I Response attribute
+          9 ATTB   I Response attribute
+          10 MONE  I Entry is -1
+        FLAG = 3 LAMA
+          5 UNDEF(2) None
+          7 REGION I Region identifier for constraint screening
+          8 ATTA   I Response attribute
+          9 ATTB   I Response attribute
+          10 MONE  I Entry is -1
+        FLAG = 4 EIGN
+          5 UNDEF(2) None
+          7 REGION I Region identifier for constraint screening
+          8 ATTA   I Response attribute
+          9 ATTB   I Response attribute
+          10 MONE  I Entry is -1
+        FLAG = 5 DISP
+          5 UNDEF(2) None
+          7 REGION I Region identifier for constraint screening
+          8 ATTA   I Response attribute
+          9 ATTB   I Response attribute
+          10 ATTi  I Grid point IDs
+          Word 10 repeats until -1 occurs
+        FLAG = 6 STRESS
+          5 PTYPE(2) CHAR4 Element flag (ELEM) or property entry name
+          7 REGION I Region identifier for constraint screening
+          8 ATTA   I Response attribute
+          9 ATTB   I Response attribute
+          10 ATTi  I Element numbers (if Word 5 is ELEM) or property IDs
+          Word 10 repeats until -1 occurs
+        FLAG = 7 STRAIN
+          5 PTYPE(2) CHAR4 Element flag (ELEM) or property entry name
+          7 REGION I Region identifier for constraint screening
+          8 ATTA   I Response attribute
+          9 ATTB   I Response attribute
+          10 ATTi  I Element numbers (if Word 5 is ELEM) or property IDs
+          Word 10 repeats until -1 occurs
+        FLAG = 8 FORCE
+          5 PTYPE(2) CHAR4 Element flag (ELEM) or property entry name
+          7 REGION I Region identifier for constraint screening
+          8 ATTA   I Response attribute
+          9 ATTB   I Response attribute
+          10 ATTi  I Element numbers (if Word 5 is ELEM) or property IDs
+          Word 10 repeats until -1 occurs
+        FLAG = 9 CFAILURE
+          5 PTYPE(2) CHAR4 Element flag (ELEM) or composite property entry name
+          7 REGION I Region identifier for constraint screening
+          8 ATTA   I Response attribute
+          9 ATTB   I Response attribute
+          10 ATTi I Element numbers (if Word 5 is ELEM) or composite property IDs
+          Word 10 repeats until -1 occurs
+        FLAG = 10 CSTRESS
+          5 PTYPE(2) CHAR4 Element flag (ELEM) or composite property entry name
+          7 REGION I Region identifier for constraint screening
+          8 ATTA I Response attribute
+          9 ATTB I Response attribute
+          10 ATTi I Element numbers (if Word 5 is ELEM) or composite property IDs
+          Word 10 repeats until -1 occurs
+        FLAG = 11 CSTRAIN
+          5 PTYPE(2) CHAR4 Element flag (ELEM) or composite property entry
+          name
+          7 REGION I Region identifier for constraint screening
+          8 ATTA   I Response attribute
+          9 ATTB   I Response attribute
+          10 ATTi  I Element numbers (if Word 5 is ELEM) or composite property IDs
+          Word 10 repeats until -1 occurs
+        FLAG = 12 FREQ
+          5 UNDEF(2) None
+          7 REGION I Region identifier for constraint screening
+          8 ATTA   I Response attribute
+          9 ATTB   I Response attribute
+          10 MONE  I Entry is -1
+        FLAG = 13 SPCFORCE
+          5 UNDEF(2) None
+          7 REGION I Region identifier for constraint screening
+          8 ATTA   I Response attribute
+          9 ATTB   I Response attribute
+          10 ATTi  I Grid point IDs
+          Word 10 repeats until -1 occurs
+        FLAG = 14 ESE
+          5 PTYPE(2) CHAR4 Element flag (ELEM) or property entry name
+          7 REGION I Region identifier for constraint screening
+          8 ATTA   I Response attribute
+          9 ATTB   I Response attribute
+          10 ATTi  I Element numbers (if Word 5 is ELEM) or property IDs
+          Word 10 repeats until -1 occurs
+        FLAG = 15 CEIG
+          5 UNDEF(2) None
+          7 REGION I Region identifier for constraint screening
+          8 ATTA I Response attribute
+          9 ATTB I Response attribute
+          10 MONE I Entry is -1
+        FLAG = 17 Compliance
+          5 UNDEF(2) None
+          7 UNDEF I Reserved for SEID for compliance DRESP1
+          8 UNDEF(2) None
+          10 MONE I Entry is -1
+        FLAG = 19 ERP
+          5 UNDEF(2) None
+          7 REGION I Region identifier
+          8 ATTA   I Response attribute
+          9 ATTB   I Frequency or real code for character input, or -1=spawn)
+          10 ATTi  I Panel SET3 IDs
+          Word 10 repeats until -1 occurs
+        FLAG = 20 FRDISP
+          5 UNDEF(2) None
+          7 REGION I Region identifier for constraint screening
+          8 ATTA   I Response attribute
+          9 ATTB  RS Frequency value; -1 (integer) spawn for all
+          frequencies in set; -1.10000E+08 for SUM;
+          -1.20000E+08 for AVG; -1.30000E+08 for SSQ;
+          -1.40000E+08 for RSS; -1.50000E+08 for MAX;
+          -1.60000E+08 for MIN
+          10 ATTi I Grid point IDs
+          Word 10 repeats until -1 occurs
+        FLAG = 21 FRVELO
+          5 UNDEF(2) None
+          7 REGION I Region identifier for constraint screening
+          8 ATTA   I Response attribute
+          9 ATTB  RS Frequency value; -1 (integer) spawn for all
+          frequencies in set; -1.10000E+08 for SUM;
+          -1.20000E+08 for AVG; -1.30000E+08 for SSQ;
+          -1.40000E+08 for RSS; -1.50000E+08 for MAX;
+          -1.60000E+08 for MIN
+          10 ATTi I Grid point IDs
+          Word 10 repeats until -1 occurs
+        FLAG = 22 FRACCL
+          5 UNDEF(2) None
+          7 REGION I Region identifier for constraint screening
+          8 ATTA   I Response attribute
+          9 ATTB  RS Frequency value; -1 (integer) spawn for all
+          frequencies in set; -1.10000E+08 for SUM;
+          -1.20000E+08 for AVG; -1.30000E+08 for SSQ;
+          -1.40000E+08 for RSS; -1.50000E+08 for MAX;
+          -1.60000E+08 for MIN
+          10 ATTi I Grid point IDs
+          Word 10 repeats until -1 occurs
+        FLAG = 23 FRSPCF
+          5 UNDEF(2) None
+          7 REGION I Region identifier for constraint screening
+          8 ATTA   I Response attribute
+          9 ATTB  RS Frequency value; -1 (integer) spawn for all
+          frequencies in set; -1.10000E+08 for SUM;
+          -1.20000E+08 for AVG; -1.30000E+08 for SSQ;
+          -1.40000E+08 for RSS; -1.50000E+08 for MAX;
+          -1.60000E+08 for MIN
+          10 ATTi I Grid point IDs
+          Word 10 repeats until -1 occurs
+        FLAG = 24 FRSTRE
+          5 PTYPE(2) CHAR4 Element flag (ELEM) or property entry name
+          7 REGION I Region identifier for constraint screening
+          8 ATTA   I Response attribute
+          9 ATTB  RS Frequency value; -1 (integer) spawn for all
+          frequencies in set; -1.10000E+08 for SUM;
+          -1.20000E+08 for AVG; -1.30000E+08 for SSQ;
+          -1.40000E+08 for RSS; -1.50000E+08 for MAX;
+          -1.60000E+08 for MIN
+          10 ATTi I Element numbers (if Word 5 is ELEM) or property IDs
+          Word 10 repeats until -1 occurs
+        FLAG = 25 FRFORC
+          5 PTYPE(2) CHAR4 Element flag (ELEM) or property entry name
+          7 REGION I Region identifier for constraint screening
+          8 ATTA I Response attribute
+          9 ATTB RS Frequency value; -1 (integer) spawn for all
+          frequencies in set; -1.10000E+08 for SUM;
+          -1.20000E+08 for AVG; -1.30000E+08 for SSQ;
+          -1.40000E+08 for RSS; -1.50000E+08 for MAX;
+          -1.60000E+08 for MIN
+          10 ATTi I Element numbers (if Word 5 is ELEM) or property IDs
+          Word 10 repeats until -1 occurs
+        FLAG = 26 RMSDISP
+          5 UNDEF(2) None
+          7 REGION I Region identifier for constraint screening
+          8 ATTA I Response attribute
+          9 ATTB I Random ID
+          10 ATTi I Grid point IDs
+          Word 10 repeats until -1 occurs
+        FLAG = 27 RMSVELO
+          5 UNDEF(2) None
+          7 REGION I Region identifier for constraint screening
+          8 ATTA I Response attribute
+          9 ATTB I Random ID
+          10 ATTi I Grid point IDs
+          Word 10 repeats until -1 occurs
+        FLAG = 28 RMSACCL
+          5 UNDEF(2) None
+          7 REGION I Region identifier for constraint screening
+          8 ATTA I Response attribute
+          9 ATTB I Random ID
+          10 ATTi I Grid point IDs
+          Word 10 repeats until -1 occurs
+        FLAG = 29 PSDDISP
+          5 UNDEF None
+          6 PTYPE I Random ID
+          7 REGION I Region identifier for constraint screening
+          8 ATTA I Response attribute
+          9 ATTB RS Frequency value; -1 (integer) spawn for all
+          frequencies in set; -1.10000E+08 for SUM;
+          -1.20000E+08 for AVG; -1.30000E+08 for SSQ;
+          -1.40000E+08 for RSS; -1.50000E+08 for MAX;
+          -1.60000E+08 for MIN
+          10 ATTi I Grid point IDs
+          Word 10 repeats until -1 occurs
+        FLAG = 30 PSDVELO
+          5 UNDEF None
+          6 PTYPE I Random ID
+          7 REGION I Region identifier for constraint screening
+          8 ATTA I Response attribute
+          9 ATTB RS Frequency value; -1 (integer) spawn for all
+          frequencies in set; -1.10000E+08 for SUM;
+          -1.20000E+08 for AVG; -1.30000E+08 for SSQ;
+          -1.40000E+08 for RSS; -1.50000E+08 for MAX;
+          -1.60000E+08 for MIN
+          10 ATTi I Grid point IDs
+          Word 10 repeats until -1 occurs
+        FLAG = 31 PSDACCL
+          5 UNDEF None
+          6 PTYPE I Random ID
+          7 REGION I Region identifier for constraint screening
+          8 ATTA I Response attribute
+          9 ATTB RS Frequency value; -1 (integer) spawn for all
+          frequencies in set; -1.10000E+08 for SUM;
+          -1.20000E+08 for AVG; -1.30000E+08 for SSQ;
+          -1.40000E+08 for RSS; -1.50000E+08 for MAX;
+          -1.60000E+08 for MIN
+          10 ATTi I Grid point IDs
+          Word 10 repeats until -1 occurs
+
+        FLAG = 60 TDISP
+          5 UNDEF(2) None
+          7 REGION I Region identifier for constraint screening
+          8 ATTA I Response attribute
+          9 ATTB RS Time value; -1 (integer) spawn for all time steps
+          in set; -1.10000E+08 for SUM; -1.20000E+08 for
+          AVG; -1.30000E+08 for SSQ; -1.40000E+08 for
+          RSS; -1.50000E+08 for MAX; -1.60000E+08 for MIN
+          10 ATTi I Grid point IDs
+          Word 10 repeats until -1 occurs
+        FLAG = 61 TVELO
+          5 UNDEF(2) None
+          7 REGION I Region identifier for constraint screening
+          8 ATTA I Response attribute
+          9 ATTB RS Time value; -1 (integer) spawn for all time steps
+          in set; -1.10000E+08 for SUM; -1.20000E+08 for
+          AVG; -1.30000E+08 for SSQ; -1.40000E+08 for
+          RSS; -1.50000E+08 for MAX; -1.60000E+08 for MIN
+          10 ATTi I Grid point IDs
+          Word 10 repeats until -1 occurs
+        FLAG = 62 TACCL
+
+        """
+        flag_to_resp = {
+            1 : 'WEIGHT',
+            2 : 'VOLUME',
+            3 : 'LAMA',
+            4 : 'EIGN',
+            5 : 'DISP',
+            6 : 'STRESS',
+            7 : 'STRAIN',
+            8 : 'FORCE',
+            9 : 'CFAILURE',
+            10 : 'CSTRESS',
+            11 : 'CSTRAIN',
+            12 : 'FREQ',
+            13 : 'SPCFORCE',
+            14 : 'ESE',
+            15 : 'CEIG',
+            17 : 'Compliance',
+            19 : 'ERP',
+            20: 'FRDISP',
+            21: 'FRVELO',
+            22: 'FRACCL',
+            23: 'FRSPCF',
+            24: 'FRSTRE',
+            25: 'FRFORC',
+            26: 'RMSDISP',
+            27: 'RMSVELO',
+            28: 'RMSACCL',
+            29: 'PSDDISP',
+            30: 'PSDVELO',
+            31: 'PSDACCL',
+
+            60 : 'TDISP',
+            61 : 'TVELO',
+            62 : 'TACCL',
+        }
+
+        #self.show_data(data[n:], types='qds')
+        ints = np.frombuffer(data[n:], self.idtype8).copy()
+        floats = np.frombuffer(data[n:], self.fdtype8).copy()
+        iminus1 = np.where(ints == -1)[0]
+
+        #if self.size == 4:
+            #struct1 = Struct(self._endian + b'i 8s i')
+            #strs = np.frombuffer(data[n:], dtype='|S4')
+        #else:
+            #struct1 = Struct(self._endian + b'q 16s q')
+            #strs = np.frombuffer(data[n:], dtype='|S8')
+        #6i
+        #ntotal1 = 16 * self.factor # 4*4
+
+        istart = [0] + list(iminus1[:-1] + 1)
+        iend = iminus1
+        size = self.size
+
+        def _pick_attbi_attbf(attbi: int, attbf: float) -> Union[float, str]:
+            """
+            9 ATTB  RS Frequency value; -1 (integer) spawn for all
+            frequencies in set; -1.10000E+08 for SUM;
+            -1.20000E+08 for AVG; -1.30000E+08 for SSQ;
+            -1.40000E+08 for RSS; -1.50000E+08 for MAX;
+            -1.60000E+08 for MIN
+
+            """
+            if attbi == -1:
+                attb = 'ALL'
+            else:
+                attb = attbf
+                assert attb > -1.0e+8, attb
+                #print(attbf)
+                #ddd
+            return attb
+
+        for (i0, i1) in zip(istart, iend):
+            assert ints[i1] == -1, ints[i1]
+            #print(i0, i1)
+            dresp_id = ints[i0]
+            label_bytes = data[n+size:n+3*size]
+            label = reshape_bytes_block(label_bytes).decode('latin1').rstrip()
+            flag = ints[i0+3]
+            response_type = flag_to_resp[flag]
+            #print(dresp_id, flag, label)
+            if flag == 1:
+                # WEIGHT
+                # 5 UNDEF(2) None
+                # 7 REGION I Region identifier for constraint screening
+                # 8 ATTA   I Response attribute (-10 for DWEIGHT which is the topology optimization design weight
+                # 9 ATTB   I Response attribute
+                # 10 MONE  I Entry is -1
+                region, atta, attb = ints[i0+6:i0+9]
+                property_type = None
+                #response_type = 'WEIGHT'
+                assert atta == 33, atta
+                assert attb == -9999, attb
+                atta = None
+                attb = None
+                atti = None
+            elif flag == 2:
+                # FLAG = 2 VOLUME
+                #   5 UNDEF(2) None
+                #   7 REGION I Region identifier for constraint screening
+                #   8 ATTA   I Response attribute
+                #   9 ATTB   I Response attribute
+                #   10 MONE  I Entry is -1
+                property_type = None
+                region, atta, attb = ints[i0+6:i0+9]
+                atti = None
+                attb = None
+            elif flag == 3:
+                # FLAG = 3 LAMA
+                #   5 UNDEF(2) None
+                #   7 REGION I Region identifier for constraint screening
+                #   8 ATTA   I Response attribute
+                #   9 ATTB   I Response attribute
+                #   10 MONE  I Entry is -1
+                print(response_type, ints[i0+6:i1], floats[i0+6:i1])
+                region, atta, attb = ints[i0+6:i0+9]
+                property_type = None
+                #response_type = 'EIGN'
+                assert atta == 1, atta
+                assert attb == 0, attb
+                atti = None
+
+            elif flag == 4:
+                # FLAG = 4 EIGN
+                #   5 UNDEF(2) None
+                #   7 REGION I Region identifier for constraint screening
+                #   8 ATTA   I Response attribute
+                #   9 ATTB   I Response attribute
+                #   10 MONE  I Entry is -1
+                region, atta, attb = ints[i0+6:i0+9]
+                property_type = None
+                #response_type = 'EIGN'
+                #assert atta == 1, atta
+                assert attb == 0, attb
+                atti = None
+                #atta = None
+                #attb = None
+            elif flag == 5:
+                # DISP
+                # 5 UNDEF(2) None
+                # 7 REGION I Region identifier for constraint screening
+                # 8 ATTA   I Response attribute
+                # 9 ATTB   I Response attribute
+                # 10 ATTi  I Grid point IDs
+                # Word 10 repeats until -1 occurs
+                property_type = None
+                response_type = 'DISP'
+                region, atta, attb = ints[i0+6:i0+9]
+                atti = ints[i0+9:i1].tolist()
+
+            elif flag in [6, 7, 11]:
+                # FLAG = 6 STRESS
+                #  5 PTYPE(2) CHAR4 Element flag (ELEM) or property entry name
+                #  7 REGION I Region identifier for constraint screening
+                #  8 ATTA   I Response attribute
+                #  9 ATTB   I Response attribute
+                #  10 ATTi  I Element numbers (if Word 5 is ELEM) or property IDs
+                #  Word 10 repeats until -1 occurs
+                property_type_bytes = data[n+4*size:n+6*size]
+                if self.size == 4:
+                    property_type = property_type_bytes.decode('latin1').rstrip()
+                else:
+                    property_type = reshape_bytes_block(property_type_bytes).decode('latin1').rstrip()
+                region, atta, attb = ints[i0+6:i0+9]
+                atti = ints[i0+9:i1].tolist()
+                #print('ptype =', property_type)
+                #print('region =', region)
+                #print(atta, attb, atti)
+                #response_type = 'STRESS'
+            #elif flag == 7:
+                # FLAG = 7 STRAIN
+                #   5 PTYPE(2) CHAR4 Element flag (ELEM) or property entry name
+                #   7 REGION I Region identifier for constraint screening
+                #   8 ATTA   I Response attribute
+                #   9 ATTB   I Response attribute
+                #   10 ATTi  I Element numbers (if Word 5 is ELEM) or property IDs
+                #   Word 10 repeats until -1 occurs
+            #elif flag == 11:
+                # FLAG = 11 CSTRAIN
+                #   5 PTYPE(2) CHAR4 Element flag (ELEM) or composite property entry name
+                #   7 REGION I Region identifier for constraint screening
+                #   8 ATTA   I Response attribute
+                #   9 ATTB   I Response attribute
+                #   10 ATTi  I Element numbers (if Word 5 is ELEM) or composite property IDs
+                #   Word 10 repeats until -1 occurs
+
+            elif flag == 12:
+                # FLAG = 12 FREQ
+                #   5 UNDEF(2) None
+                #   7 REGION I Region identifier for constraint screening
+                #   8 ATTA   I Response attribute
+                #   9 ATTB   I Response attribute
+                #   10 MONE  I Entry is -1
+                property_type = None
+                region, atta, attb = ints[i0+6:i0+9]
+                atti = None
+            elif flag == 15:
+                # FLAG = 15 CEIG
+                #   5 UNDEF(2) None
+                #   7 REGION I Region identifier for constraint screening
+                #   8 ATTA I Response attribute
+                #   9 ATTB I Response attribute
+                #   10 MONE I Entry is -1
+                #print(ints[i0+6:i1])
+                #print(floats[i0+6:i1])
+                property_type = None
+                region, atta, attb = ints[i0+6:i0+9]
+                atti = None
+            elif flag == 19:
+                # FLAG = 19 ERP
+                #   5 UNDEF(2) None
+                #   7 REGION I Region identifier
+                #   8 ATTA   I Response attribute
+                #   9 ATTB   I Frequency or real code for character input, or -1=spawn)
+                #   10 ATTi  I Panel SET3 IDs
+                #   Word 10 repeats until -1 occurs
+                property_type = None
+                region, atta, attb = ints[i0+6:i0+9]
+                atti = ints[i0+9:i1].tolist()
+
+            elif flag == 20:
+                property_type = None
+                # FLAG = 20 FRDISP
+                #   5 UNDEF(2) None
+                #   7 REGION I Region identifier for constraint screening
+                #   8 ATTA   I Response attribute
+                #   9 ATTB  RS Frequency value; -1 (integer) spawn for all
+                #   frequencies in set; -1.10000E+08 for SUM;
+                #   -1.20000E+08 for AVG; -1.30000E+08 for SSQ;
+                #   -1.40000E+08 for RSS; -1.50000E+08 for MAX;
+                #   -1.60000E+08 for MIN
+                #   10 ATTi I Grid point IDs
+                #   Word 10 repeats until -1 occurs
+                #print(ints[i0+5:i1])
+                #print(floats[i0+5:i1])
+                #print(ints[i0+6:i1])
+                #print(floats[i0+6:i1])
+                region, atta, attbi = ints[i0+6:i0+9]
+                attbf = floats[i0+8]
+                atti = ints[i0+9:i1].tolist()
+
+                attb = _pick_attbi_attbf(attbi, attbf)
+                #print(region, atta, attb, atti)
+            elif flag == 22:
+                # FLAG = 22 FRACCL
+                #   5 UNDEF(2) None
+                #   7 REGION I Region identifier for constraint screening
+                #   8 ATTA   I Response attribute
+                #   9 ATTB  RS Frequency value; -1 (integer) spawn for all
+                #   frequencies in set; -1.10000E+08 for SUM;
+                #   -1.20000E+08 for AVG; -1.30000E+08 for SSQ;
+                #   -1.40000E+08 for RSS; -1.50000E+08 for MAX;
+                #   -1.60000E+08 for MIN
+                #   10 ATTi I Grid point IDs
+                #   Word 10 repeats until -1 occurs
+                property_type = None
+                region, atta, attbi = ints[i0+6:i0+9]
+                attbf = floats[i0+8]
+                attb = _pick_attbi_attbf(attbi, attbf)
+                atti = ints[i0+9:i1].tolist()
+
+            elif flag in [24, 25]:
+                # FLAG = 24 FRSTRE
+                #   5 PTYPE(2) CHAR4 Element flag (ELEM) or property entry name
+                #   7 REGION I Region identifier for constraint screening
+                #   8 ATTA   I Response attribute
+                #   9 ATTB  RS Frequency value; -1 (integer) spawn for all
+                #   frequencies in set; -1.10000E+08 for SUM;
+                #   -1.20000E+08 for AVG; -1.30000E+08 for SSQ;
+                #   -1.40000E+08 for RSS; -1.50000E+08 for MAX;
+                #   -1.60000E+08 for MIN
+                #   10 ATTi I Element numbers (if Word 5 is ELEM) or property IDs
+                #   Word 10 repeats until -1 occurs
+                property_type_bytes = data[n+4*size:n+6*size]
+                if self.size == 4:
+                    property_type = property_type_bytes.decode('latin1').rstrip()
+                else:
+                    property_type = reshape_bytes_block(property_type_bytes).decode('latin1').rstrip()
+
+                region, atta, attbi = ints[i0+6:i0+9]
+                attbf = floats[i0+8]
+                attb = _pick_attbi_attbf(attbi, attbf)
+                atti = ints[i0+9:i1].tolist()
+                #print(property_type, region, atta, attb, atti)
+            #elif flag == 25:
+                # FRDISP
+                # 5 PTYPE(2) CHAR4 Element flag (ELEM) or property entry name
+                # 7 REGION I Region identifier for constraint screening
+                # 8 ATTA   I Response attribute
+                # 9 ATTB  RS Frequency value; -1 (integer) spawn for all
+                # frequencies in set; -1.10000E+08 for SUM;
+                # -1.20000E+08 for AVG; -1.30000E+08 for SSQ;
+                # -1.40000E+08 for RSS; -1.50000E+08 for MAX;
+                # -1.60000E+08 for MIN
+                # 10 ATTi I Element numbers (if Word 5 is ELEM) or property IDs
+                # Word 10 repeats until -1 occurs
+            elif flag == 29:
+                #FLAG = 29 PSDDISP
+                #  5 UNDEF None
+                #  6 PTYPE  I Random ID
+                #  7 REGION I Region identifier for constraint screening
+                #  8 ATTA   I Response attribute
+                #  9 ATTB  RS Frequency value; -1 (integer) spawn for all
+                #  frequencies in set; -1.10000E+08 for SUM;
+                #  -1.20000E+08 for AVG; -1.30000E+08 for SSQ;
+                #  -1.40000E+08 for RSS; -1.50000E+08 for MAX;
+                #  -1.60000E+08 for MIN
+                #  10 ATTi I Grid point IDs
+                #  Word 10 repeats until -1 occurs
+                property_type, region, atta, attbi = ints[i0+5:i0+9]
+                print(ints[i0+4:i1+5])
+                print(floats[i0+4:i1+5])
+                attbf = floats[i0+8]
+                attb = _pick_attbi_attbf(attbi, attbf)
+                atti = ints[i0+9:i1].tolist()
+            else:
+                raise NotImplementedError(flag)
+
+            print(response_type)
+            if atta == 0:
+                atta = None
+            if attb == 0:
+                attb = None
+            if atta is not None:
+                atta = int(atta)
+
+            print(dresp_id, label,
+                  response_type, property_type, region,
+                  atta, attb, atti)
+            dresp1 = self.add_dresp1(dresp_id, label,
+                                     response_type, property_type, region,
+                                     atta, attb, atti, validate=True)
+            dresp1.write_card_16()
+            n += (i1 - i0 + 1) * self.size
+            del dresp_id, label, response_type, property_type, region, atta, attb, atti
+
+        #for i in range(10):
+            #edata = data[n:n+ntotal1]
+            #dresp1_id, label_bytes, flag = struct1.unpack(edata)
+            ##, undef1, undef2, atta, attb, mone
+            #label = reshape_bytes_block(label_bytes).decode('latin1').rstrip()
+            #print(dresp1_id, label, flag)
+            #sss
+            #self.show_data
+        #ddd
+        return n
+
     def _read_dvset(self, data: bytes, n: int) -> int:
         """
         DVSET   13013   PSHELL  4       .02     1.0     13013

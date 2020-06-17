@@ -907,16 +907,6 @@ class SPCD(Load):
         return SPCD(sid, nodes, components, enforced, comment=comment)
 
     @property
-    def constraints(self):
-        self.deprecated('constraints', 'components', '1.2')
-        return self.components
-
-    @constraints.setter
-    def constraints(self, constraints):
-        self.deprecated('constraints', 'components', '1.2')
-        self.components = constraints
-
-    @property
     def node_ids(self):
         if self.nodes_ref is None:
             return self.nodes

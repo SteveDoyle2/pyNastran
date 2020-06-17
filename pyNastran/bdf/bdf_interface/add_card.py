@@ -6575,8 +6575,12 @@ class AddCards(AddMethods):
         self._add_topvar_object(topvar)
         return topvar
 
-    def add_dresp1(self, dresp_id, label, response_type, property_type, region,
-                   atta, attb, atti, validate=True, comment='') -> DRESP1:
+    def add_dresp1(self, dresp_id: int, label: str,
+                   response_type: str, property_type: str, region: str,
+                   atta: Union[int, float, str, None],
+                   attb: Union[int, float, str, None],
+                   atti: List[Union[int, float, str]],
+                   validate: bool=True, comment: str='') -> DRESP1:
         """
         Creates a DRESP1 card.
 
@@ -6773,8 +6777,11 @@ class AddCards(AddMethods):
         self._add_dvcrel_object(dvcrel)
         return dvcrel
 
-    def add_dvprel1(self, oid, prop_type, pid, pname_fid, dvids, coeffs,
-                    p_min=None, p_max=1e20, c0=0.0, validate=True, comment='') -> DVPREL1:
+    def add_dvprel1(self, oid: int, prop_type: str, pid: int, pname_fid: Union[int, str],
+                    dvids: List[int],
+                    coeffs: List[float],
+                    p_min=None, p_max: float=1e20, c0: float=0.0,
+                    validate: bool=True, comment: str='') -> DVPREL1:
         """
         Creates a DVPREL1 card
 
@@ -6928,7 +6935,8 @@ class AddCards(AddMethods):
         self._add_dvmrel_object(dvmrel)
         return dvmrel
 
-    def add_dvgrid(self, dvid, nid, dxyz, cid=0, coeff=1.0, comment='') -> DVGRID:
+    def add_dvgrid(self, dvid: int, nid: int, dxyz: NDArray3float,
+                   cid: int=0, coeff: float=1.0, comment: str='') -> DVGRID:
         """
         Creates a DVGRID card
 

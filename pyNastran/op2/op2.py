@@ -604,10 +604,16 @@ class OP2(OP2_Scalar, OP2Writer):
 
         result_types = self.get_table_types()
         for result_type in result_types:
-            if result_type in ['params', 'gpdt', 'bgpdt', 'eqexin', 'psds'] or result_type.startswith('responses.'):
+            if result_type in ['params', 'gpdt', 'bgpdt', 'eqexin', 'psds', 'monitor1', 'monitor3'] or result_type.startswith('responses.'):
                 continue
             result = self.get_result(result_type)
-            for obj in result.values():
+            try:
+                values = result.values()
+            except AttributeError:
+                self.log.error('result_type = %s' % result_type)
+                raise
+
+            for obj in values:
                 if hasattr(obj, 'finalize'):
                     obj.finalize()
                 elif hasattr(obj, 'tCode') and not obj.is_sort1:
@@ -793,14 +799,18 @@ class OP2(OP2_Scalar, OP2Writer):
         """
         self.combine = combine
         result_types = self.get_table_types()
-        results_to_skip = ['bgpdt', 'gpdt', 'eqexin', 'grid_point_weight', 'psds']
+        results_to_skip = ['bgpdt', 'gpdt', 'eqexin', 'grid_point_weight', 'psds', 'monitor1', 'monitor3']
 
         # set subcase_key
         for result_type in result_types:
             if result_type in results_to_skip or result_type.startswith('responses.'):
                 continue
             result = self.get_result(result_type)
-            case_keys = sorted(result.keys())
+            try:
+                case_keys = sorted(result.keys())
+            except AttributeError:
+                self.log.error(f'result_type = {result_type}')
+                raise
             # unique_isubcases = []  # List[int]
             for case_key in case_keys:
                 #print('case_key =', case_key)
@@ -917,12 +927,17 @@ class OP2(OP2_Scalar, OP2Writer):
 
         subcase_key2 = {}
         not_results = ['eigenvalues', 'eigenvalues_fluid', 'params', 'gpdt', 'bgpdt',
-                       'eqexin', 'desvars', 'grid_point_weight', 'psds']
+                       'eqexin', 'desvars', 'grid_point_weight', 'psds', 'monitor1', 'monitor3']
         for result_type in result_types:
             if result_type in not_results or result_type.startswith('responses.'):
                 continue
             result = self.get_result(result_type)
-            case_keys = list(result.keys())
+            try:
+                case_keys = list(result.keys())
+            except AttributeError:
+                self.log.error('result_type = %s' % result_type)
+                raise
+
             try:
                 case_keys = sorted(case_keys)  # TODO: causes DeprecationWarning
             except TypeError:

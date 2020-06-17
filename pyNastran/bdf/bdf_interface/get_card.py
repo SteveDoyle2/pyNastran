@@ -916,14 +916,6 @@ class GetCard(GetMethods):
             return output, etype_to_eids_pids_nids
         return output, None
 
-    def get_element_nodes_by_element_type(self, dtype='int32', solids=None):
-        # type: (str, bool) -> Any
-        """see ``get_elements_properties_nodes_by_element_type``"""
-        self.deprecated('get_element_nodes_by_element_type',
-                        'get_elements_properties_nodes_by_element_type', '1.2')
-        return self.get_elements_properties_nodes_by_element_type(
-            dtype=dtype, solids=solids)
-
     def _upcast_int_dtype(self, dtype: str) -> str:
         """helper for 64-bit integers"""
         if dtype == 'int32' and len(self.nodes) and max(self.nodes) > 2147483647:

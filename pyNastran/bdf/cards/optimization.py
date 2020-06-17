@@ -1496,7 +1496,7 @@ def _validate_dresp_property_none(property_type, response_type, atta, attb, atti
         for attai in atta:
             assert atta in '123456', msg  # 8???
         _blank_or_mode(attb, msg)
-        assert len(atti) == 1, msg
+        #assert len(atti) == 1, msg
 
     elif response_type in ['FRDISP', 'FRVELO', 'FRACCL', 'FRSPCF']:  # frequency displacement
         assert atta in [1, 2, 3, 4, 5, 7, 8, 9], msg
