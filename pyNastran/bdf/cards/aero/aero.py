@@ -1032,14 +1032,6 @@ class AESURF(BaseCard):
             return self.alid2_ref.sid
         return self.alid2
 
-    #def AELIST_id1(self):
-        #self.deprecated('AESURF.AELIST_id1()', 'AESURF.aelist_id1()', '1.1')
-        #return self.aelist_id1()
-
-    #def AELIST_id2(self):
-        #self.deprecated('AESURF.AELIST_id2()', 'AESURF.aelist_id2()', '1.1')
-        #return self.aelist_id2()
-
     def cross_reference(self, model: BDF) -> None:
         """
         Cross links the card so referenced cards can be extracted directly

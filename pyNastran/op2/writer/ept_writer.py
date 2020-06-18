@@ -143,7 +143,7 @@ def write_ept(op2, op2_ascii, obj, endian=b'<'):
             obj.log.warning('skipping PIHEX')
             continue
         else:
-            obj.log.warning('skipping %s' % name)
+            obj.log.warning(f'skipping {name}')
             continue
         #else:  # pragma: no cover
             #raise NotImplementedError(name)

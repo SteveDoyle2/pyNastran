@@ -1,3 +1,5 @@
+from typing import Dict, Any
+
 from pyNastran.op2.op2_interface.random_results import (
     RADCONS, RAECONS, RASCONS, RAPCONS, RAFCONS, RAGCONS, RANCONS,
     RADEATC, RAEEATC, RASEATC, RAPEATC, RAFEATC, RAGEATC, RANEATC,
@@ -55,8 +57,9 @@ class Results:
         self.RAPEATC = RAPEATC() # composite stress
         self.RANEATC = RANEATC() # strain energy
 
-    def get_sum_objects_map(self):
+    def _get_sum_objects_map(self):
         sum_objs = {
+            'acoustic' : self.acoustic,
             'responses' : self.responses,
             'force' : self.force,
             'thermal_load' : self.thermal_load,
@@ -79,7 +82,7 @@ class Results:
         }
         return sum_objs
 
-    def get_sum_objects(self):
+    def _get_sum_objects(self):
         sum_objs = [
             self.acoustic,
             self.responses,
@@ -95,13 +98,50 @@ class Results:
         ]
         return sum_objs
 
+    def _get_base_objects_map(self) -> Dict[str, Any]:
+        """gets only the objects that are do not contain sub-objects"""
+        base_names = ['eqexin', 'gpdt', 'bgpdt', 'psds']
+        base_objs_map = {}
+        for base_name in base_names:
+            obj = getattr(self, base_name)
+            if obj:
+                base_objs_map[base_name] = obj
+        return base_objs_map
+
     def get_table_types(self):
         """combines all the table_types from all objects and sub-objects"""
         base = ['eqexin', 'gpdt', 'bgpdt', 'psds', ]
-        sum_objs = self.get_sum_objects()
+        sum_objs = self._get_sum_objects()
         for objs in sum_objs:
             base.extend(objs.get_table_types())
         return base
+
+    def __repr__(self):
+        msg = 'Results:\n'
+
+        # all these objects have data
+        base_obj_map = self._get_base_objects_map()
+        sum_obj_map = self._get_sum_objects_map()
+
+        for key, obj in base_obj_map.items():
+            msg += f'  {key}\n'
+
+        for key, obj in sum_obj_map.items():
+            sub_results = obj.get_table_types()
+
+            msgi = ''
+            for sub_result in sub_results:
+                unused_base, sub_result2 = sub_result.split('.')
+                res = getattr(obj, sub_result2)
+                if res is None or res == {}:
+                    continue
+                msgi += f'    {sub_result2}\n'
+                #msg += f'  {key}\n'
+            if msgi:
+                msg += f'  {key}:\n'
+                msg += msgi
+        return msg
+
 
 class SolutionSet:
     def __init__(self):

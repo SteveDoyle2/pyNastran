@@ -3,6 +3,7 @@ defines readers for BDF objects in the OP2 EPT/EPTS table
 """
 #pylint: disable=C0103,R0914
 from struct import unpack, Struct
+from typing import Tuple, List
 
 import numpy as np
 
@@ -743,6 +744,7 @@ class EPT(GeomCommon):
         ntotal = 104  # 26*4
         struct1 = Struct(self._endian + b'2i 4f i 18f f')  # delta_n is a float, not an integer
         nproperties = (len(data) - n) // ntotal
+        assert (len(data) - n) % ntotal == 0
         assert nproperties > 0, 'table=%r len=%s' % (self.table_name, len(data) - n)
         properties = []
         for unused_i in range(nproperties):
@@ -822,6 +824,7 @@ class EPT(GeomCommon):
         ntotal = 132  # 33*4
         struct1 = Struct(self._endian + b'2i 4f i 21f i 4f')
         nproperties = (len(data) - n) // ntotal
+        assert (len(data) - n) % ntotal == 0
         assert nproperties > 0, 'table=%r len=%s' % (self.table_name, len(data) - n)
         properties = []
         for unused_i in range(nproperties):
@@ -1069,8 +1072,8 @@ class EPT(GeomCommon):
         ndata = (len(data) - n) // self.factor
 
         if ndata % 100 == 0 and ndata % 80 == 0:
-            self.log.info(f"skipping PBUSHT in EPT because nfields={ndata//4}, which is "
-                          'nproperties*25 or nproperties*20')
+            self.log.warning(f"skipping PBUSHT in EPT because nfields={ndata//4}, which is "
+                             'nproperties*25 or nproperties*20')
             return len(data), []
         if ndata % 100 == 0:
             n, props = self._read_pbusht_100(data, n)
@@ -1131,14 +1134,24 @@ class EPT(GeomCommon):
         return n, props
 
     def _read_pcomp(self, data: bytes, n: int) -> int:
-        """PCOMP(2706,27,287) - the marker for Record 22"""
+        """PCOMP(2706,27,287) - the marker for Record 22
+
+        standard:
+          EPTS; 64-bit: C:\MSC.Software\simcenter_nastran_2019.2\tpl_post1\cqrdbxdra3lg.op2
+        """
         if self.size == 4:
-            n2 = self._read_pcomp_32_bit(data, n)
+            n2, props = self._read_pcomp_32_bit(data, n)
+            nproperties = len(props)
+            for prop in props:
+                self._add_op2_property(prop)
+            self.card_count['PCOMP'] = nproperties
         else:
-            n2 = self._read_pcomp_64_bit(data, n)
+            n2 = self._read_dual_card(data, n, self._read_pcomp_32_bit,
+                                      self._read_pcomp_64_bit,
+                                      'PCOMP', self._add_op2_property)
         return n2
 
-    def _read_pcomp_64_bit(self, data: bytes, n: int) -> int:
+    def _read_pcomp_64_bit(self, data: bytes, n: int) -> Tuple[int, List[PCOMP]]:
         """
         PCOMP(2706,27,287) - the marker for Record 22
 
@@ -1202,13 +1215,13 @@ class EPT(GeomCommon):
         s2 = Struct(mapfmt(self._endian + b'i2fi', self.size))
 
         four_minus1 = Struct(mapfmt(self._endian + b'4i', self.size))
-
         ndata = len(data)
         ntotal2 = 16 * self.factor
-
+        props = []
         while n < (ndata - ntotal1):
             out = s1.unpack(data[n:n+ntotal1])
             (pid, nlayers, z0, nsm, sb, ft, tref, ge) = out
+            assert pid > 0
             if self.binary_debug:
                 self.binary_debug.write(f'PCOMP pid={pid} nlayers={nlayers} z0={z0} nsm={nsm} '
                                         f'sb={sb} ft={ft} Tref={tref} ge={ge}')
@@ -1227,7 +1240,6 @@ class EPT(GeomCommon):
             T = []
             thetas = []
             souts = []
-
             edata2 = data[n:n+ntotal2]
             idata = four_minus1.unpack(edata2)
             while idata != (-1, -1, -1, -1):
@@ -1254,12 +1266,12 @@ class EPT(GeomCommon):
                 pid, z0, nsm, sb, ft, tref, ge,
                 is_symmetrical, mids, T, thetas, souts]
             prop = PCOMP.add_op2_data(data_in)
-            self._add_op2_property(prop)
             nproperties += 1
             n += ntotal2
-        return n
+            props.append(prop)
+        return n, props
 
-    def _read_pcomp_32_bit(self, data: bytes, n: int) -> int:  # pragma: no cover
+    def _read_pcomp_32_bit(self, data: bytes, n: int) -> Tuple[int, List[PCOMP]]:  # pragma: no cover
         """PCOMP(2706,27,287) - the marker for Record 22"""
         nproperties = 0
         s1 = Struct(mapfmt(self._endian + b'2i3fi2f', self.size))
@@ -1268,9 +1280,12 @@ class EPT(GeomCommon):
 
         ndata = len(data)
         ntotal2 = 16 * self.factor
+        props = []
         while n < (ndata - ntotal1):
             out = s1.unpack(data[n:n+ntotal1])
             (pid, nlayers, z0, nsm, sb, ft, tref, ge) = out
+            assert pid > 0
+
             if self.binary_debug:
                 self.binary_debug.write(f'PCOMP pid={pid} nlayers={nlayers} z0={z0} nsm={nsm} '
                                         f'sb={sb} ft={ft} Tref={tref} ge={ge}')
@@ -1300,6 +1315,8 @@ class EPT(GeomCommon):
             for unused_ilayer in range(nlayers):
                 (mid, t, theta, sout) = s2.unpack(data[n:n+ntotal2])
                 mids.append(mid)
+                assert mid > 0
+
                 T.append(t)
                 thetas.append(theta)
                 souts.append(sout)
@@ -1312,10 +1329,9 @@ class EPT(GeomCommon):
                 pid, z0, nsm, sb, ft, tref, ge,
                 is_symmetrical, mids, T, thetas, souts]
             prop = PCOMP.add_op2_data(data_in)
-            self._add_op2_property(prop)
+            props.append(prop)
             nproperties += 1
-        self.card_count['PCOMP'] = nproperties
-        return n
+        return n, props
 
     def _read_pcompg(self, data: bytes, n: int) -> int:
         """

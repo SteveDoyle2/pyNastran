@@ -636,8 +636,6 @@ class MPT(GeomCommon):
             n += ntotal
         self.card_count['MATT9'] = nmaterials
         return n
-        #self.log.warning('skipping MATT9 in MPT')
-        #return len(data)
 
     def _read_matt11(self, data: bytes, n: int) -> int:
         self.log.warning('skipping MATT11 in MPT')
@@ -725,7 +723,10 @@ class MPT(GeomCommon):
         """
         ntotal = 76 * self.factor  # 19*4
         s = Struct(mapfmt(self._endian + b'iif5i3f3iffiff', self.size))
-        nentries = (len(data) - n) // ntotal
+        ndatai = len(data) - n
+        nentries = ndatai // ntotal
+        assert nentries > 0
+        #assert ndatai % ntotal == 0
         for unused_i in range(nentries):
             edata = data[n:n+ntotal]
             out = s.unpack(edata)

@@ -80,7 +80,7 @@ def write_mpt(op2, op2_ascii, model, endian=b'<'):
         #model.log.debug('MPT %s %s' % (name, mids))
         nmaterials = len(mids)
         if name in materials_to_skip:
-            model.log.warning('skipping MPT-%s' % name)
+            model.log.warning(f'skipping MPT-{name}')
             continue
 
         #if nmaterials == 0:

@@ -490,10 +490,6 @@ class AddMethods(BDFAttributes):
         self.dequations[key] = deqatn
         self._type_to_id_map[deqatn.type].append(key)
 
-    #def add_property(self, prop, allow_overwrites: bool=False) -> None:
-        #"""deprecated"""
-        #return self._add_property_object(prop, allow_overwrites)
-
     def _add_acoustic_property_object(self, prop: PACABS) -> None:
         self._add_property_object(prop)
 
@@ -761,6 +757,7 @@ class AddMethods(BDFAttributes):
         -----
         May be removed in the future.  Are CREEP cards materials?
         They have an MID, but reference structural materials.
+
         """
         key = material.mid
         if key in self.thermal_materials and not allow_overwrites:
@@ -771,14 +768,9 @@ class AddMethods(BDFAttributes):
             self.creep_materials[key] = material
             self._type_to_id_map[material.type].append(key)
 
-    #def add_coord(self, coord, allow_overwrites: bool=False) -> None:
-        #"""deprecated"""
-        #self._add_coord_object(coord, allow_overwrites)
-
     def _add_coord_object(self, coord: Union[CORD1R, CORD1C, CORD1S,
                                              CORD2R, CORD2C, CORD2S], # CORD3G
                           allow_overwrites: bool=False) -> None:
-        # type: (Any, bool) -> None
         """adds a CORDx object"""
         key = coord.cid
         assert coord.cid > -1, 'cid=%s coord=\n%s' % (key, coord)

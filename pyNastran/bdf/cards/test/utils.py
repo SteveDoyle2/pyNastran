@@ -26,12 +26,12 @@ try:
 except ImportError:  # pragma: no cover
     IS_H5PY = False
 
-def save_load_deck(model, xref='standard', punch=True, run_remove_unused=True,
+def save_load_deck(model: BDF, xref='standard', punch=True, run_remove_unused=True,
                    run_convert=True, run_renumber=True, run_mirror=True,
                    run_save_load=True, run_quality=True, write_saves=True,
                    run_save_load_hdf5=True, run_mass_properties=True, run_loads=True,
                    run_test_bdf=True, run_op2_writer=True, run_op2_reader=True,
-                   op2_log_level: str='warning'):
+                   op2_log_level: str='warning') -> BDF:
     """writes, re-reads, saves an obj, loads an obj, and returns the deck"""
     if os.path.exists('junk.bdf'):
         os.remove('junk.bdf')

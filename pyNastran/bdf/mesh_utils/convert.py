@@ -153,17 +153,22 @@ def _scale_term(name: str,
     msg = msg.strip('* ')
     return value, msg
 
-def scale_model(model, xyz_scale, mass_scale, time_scale, weight_scale, gravity_scale,
-                convert_nodes=True, convert_elements=True,
-                convert_properties=True, convert_materials=True,
-                convert_aero=True, convert_constraints=True,
-                convert_loads=True, convert_optimization=True):
+def scale_model(model: BDF,
+                xyz_scale: float,
+                mass_scale: float,
+                time_scale: float,
+                weight_scale: float,
+                gravity_scale: float,
+                convert_nodes: bool=True, convert_elements: bool=True,
+                convert_properties: bool=True, convert_materials: bool=True,
+                convert_aero: bool=True, convert_constraints: bool=True,
+                convert_loads: bool=True, convert_optimization: bool=True):
     """Performs the model scaling"""
-    model.log.debug('xyz_scale = %s' % xyz_scale)
-    model.log.debug('mass_scale = %s' % mass_scale)
-    model.log.debug('time_scale = %s' % time_scale)
-    model.log.debug('weight_scale = %s' % weight_scale)
-    model.log.debug('gravity_scale = %s' % gravity_scale)
+    model.log.debug('L, xyz_scale = %g' % xyz_scale)
+    model.log.debug('M, mass_scale = %g' % mass_scale)
+    model.log.debug('T, time_scale = %g' % time_scale)
+    model.log.debug('F, weight_scale = %g' % weight_scale)
+    model.log.debug('G, gravity_scale = %g' % gravity_scale)
     temperature_scale = 1.
     _set_wtmass(model, gravity_scale)
 

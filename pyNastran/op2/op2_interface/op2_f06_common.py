@@ -1359,7 +1359,7 @@ def _get_op2_stats_short(model: OP2, table_types: List[str], log) -> List[str]:
         #table_type_print = ''
         if table_type in handled_previously:
             continue
-        elif table_type in ['gpdt', 'bgpdt', 'eqexin'] or table_type.startswith('responses.'):
+        if table_type in ['gpdt', 'bgpdt', 'eqexin'] or table_type.startswith('responses.'):
             obj = model.get_result(table_type)
             if obj is None:
                 continue
@@ -1370,7 +1370,13 @@ def _get_op2_stats_short(model: OP2, table_types: List[str], log) -> List[str]:
         # # and not table_type.startswith('responses.')
         table_type_print = 'op2_results.' + table_type if '.' in table_type else table_type
         table = model.get_result(table_type)
-        for isubcase, subcase in sorted(table.items(), key=_compare):
+        try:
+            sorted_tables = sorted(table.items(), key=_compare)
+        except AttributeError:
+            log.warning(f'table_type={table_type}; type(table)={type(table)}')
+            raise
+
+        for isubcase, subcase in sorted_tables:
             class_name = subcase.__class__.__name__
             if class_name in no_data_classes:
                 msg.append('%s[%r]\n' % (table_type_print, isubcase))
@@ -1401,7 +1407,7 @@ def _get_op2_stats_full(model: OP2, table_types: List[str], log):
         table = model.get_result(table_type)
         if table_type in handled_previously:
             continue
-        elif table_type in ['gpdt', 'bgpdt', 'eqexin'] or table_type.startswith('responses.'):
+        if table_type in ['gpdt', 'bgpdt', 'eqexin'] or table_type.startswith('responses.'):
             obj = model.get_result(table_type)
             if obj is None:
                 continue
@@ -1432,7 +1438,7 @@ def _get_op2_stats_full(model: OP2, table_types: List[str], log):
                     msg.append(msgi)
                     raise RuntimeError(msgi)
         except:
-            log.warning('type(table)=%s' % type(table))
+            log.warning(f'table_type={table_type}; type(table)={type(table)}')
             log.warning(str(table))
             raise
     return msg

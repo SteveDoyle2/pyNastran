@@ -217,8 +217,7 @@ class OP2GeomCommon(OP2, GEOM1, GEOM2, GEOM3, GEOM4, EPT, MPT, EDT, EDOM, DIT, D
             n += 72
         return n
 
-    def save(self, obj_filename='model.obj', unxref=True):
-        # type: (str, bool) -> None
+    def save(self, obj_filename: str='model.obj', unxref: bool=True) -> None:
         """Saves a pickleable object"""
         #del self.log
         #del self._card_parser, self._card_parser_prepare

@@ -21,17 +21,29 @@ Versions:
 BDF:
  - More TEMPRB defaults
  - DRESP2 now handles DTABLE properly when validate=True is used
- - fixed PSHELL 12I/t^3 convert/scale bug
  - TSTEPNL now handles KUPDATE (NX parameter)
  - fixing SET2 safe-xref
- - fixin SPLINE1 validate
- - fixing TRIM2 aeqr setting bug
- - fixing ACMODL for NX
- - MAT8 now supports temperature scaling
+ - fixing SPLINE1 validate
+ - fixing TRIM2 aeqr setting bug (was defaulted to 1.0)
+ - fixing ACMODL for NX (didn't support writing)
+ - fixed DCONADD bug (added the dconadd_id to the summation)
+ - convert:
+   - MAT8 now supports temperature scaling
+   - fixed major PSHELL 12I/t^3 convert/scale bug
+ - optimization checks:
+   - DRESP1 DISP no longer limited to 1 node
+   - DVMREL1/2 - MAT8 now supports E2, G12, G2Z, RHO, A1, A2
+   - DVPREL1/2 - PLEAS now supports S1/5
+   - DVPREL1/2 - PSHELL now supports Z1, Z2
+   - DVPREL1/2 - PCOMP now supports NSM/4
+   - DVPREL1/2 - PSHEAR now supports NSM/5
 
 OP2:
  - auto-conversion to nx for some tables
  - added SixtyFourBitError, which is inherited from NotImplementedError
+    - mainly used for op2 geometry and op2 writing
+ - adding op2_results repr method
+ - Convergence object has better repr
 
 OP2 Writer
  - fixed multiple PCOMP writing bug
@@ -47,7 +59,9 @@ OP2 Geom:
  - PMASS were put in self.properties, not self.properties_mass
  - MATT2 tables properly handle table_ids=0 now
  - DEFORM and CLOAD are not the GEOM3/loads table
+ - corrected SPC to NX bug
  - NX support (the card format is different than MSC)
+   - PENTA (doesn't exist in MSC)
    - CTRIAX
    - TSTEPNL
    - TLOAD1 (also 64-bit)

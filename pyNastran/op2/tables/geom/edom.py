@@ -36,20 +36,20 @@ class EDOM(GeomCommon):
             #MAT1DOM(103,1,9944)
             #MAT10DOM(2801,28,9945)
             #MODTRAK(6006,60,477)
-            (103, 1, 9944) : ['???', self._read_fake],
-            (304, 3, 276) : ['???', self._read_fake],
-            (404, 4, 277) : ['???', self._read_fake],
-            (504, 5, 246) : ['???', self._read_fake],
+            (103, 1, 9944) : ['MAT1DOM', self._read_fake],
+            (304, 3, 276) : ['DSCONS', self._read_fake],
+            (404, 4, 277) : ['DVAR', self._read_fake],
+            (504, 5, 246) : ['DVSET', self._read_fake],
 
             (4106, 41, 362) : ['DCONSTR', self._read_fake],
             #DDVAL(7000,70,563)
             #DRESP3(6700,67,433)
 
-            (504, 5, 246) : ['???', self._read_fake],
-            (504, 5, 246) : ['???', self._read_fake],
-            (504, 5, 246) : ['???', self._read_fake],
-            (504, 5, 246) : ['???', self._read_fake],
-            (504, 5, 246) : ['???', self._read_fake],
+            #(504, 5, 246) : ['???', self._read_fake],
+            #(504, 5, 246) : ['???', self._read_fake],
+            #(504, 5, 246) : ['???', self._read_fake],
+            #(504, 5, 246) : ['???', self._read_fake],
+            #(504, 5, 246) : ['???', self._read_fake],
 
             (3106, 31, 352) : ['DESVAR', self._read_desvar],
             (3206, 32, 353) : ['DLINK', self._read_fake],
@@ -59,7 +59,6 @@ class EDOM(GeomCommon):
             (3706, 37, 358) : ['DTABLE', self._read_fake],
             (3806, 38, 359) : ['DRESP1', self._read_fake],
             (3906, 39, 360) : ['DRESP2', self._read_fake],
-            (4106, 41, 362) : ['DCONSTR', self._read_fake],
             (4206, 42, 363) : ['DSCREEN', self._read_fake],
             (4306, 43, 364) : ['DOPTPRM', self._read_fake],
             (4406, 44, 372) : ['DVGRID', self._read_fake],

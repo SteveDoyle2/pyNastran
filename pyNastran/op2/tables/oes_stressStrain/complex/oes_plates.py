@@ -287,7 +287,8 @@ class ComplexPlateArray(OES_Object):
 
         #print("ntimes=%s nelements=%s ntotal=%s" % (self.ntimes, self.nelements, self.ntotal))
         dtype, idtype, cfdtype = get_complex_times_dtype(self.nonlinear_factor, self.size)
-        self._times = zeros(self.ntimes, dtype=dtype)
+        ntimes = self.ntimes
+        self._times = zeros(ntimes, dtype=dtype)
         #self.ntotal = self.nelements * nnodes
 
         # TODO: could be more efficient by using nelements for cid
@@ -302,14 +303,15 @@ class ComplexPlateArray(OES_Object):
                 #self.nelements * nnodes, self.ntotal)
             #raise RuntimeError(msg)
 
-        self.fiber_curvature = zeros(self.ntotal, 'float32')
+        nlayers = self.ntotal
+        self.fiber_curvature = zeros(nlayers, 'float32')
 
         if self.has_von_mises:
             # [oxx, oyy, txy, ovm]
-            self.data = zeros((self.ntimes, self.ntotal, 4), dtype=cfdtype)
+            self.data = zeros((ntimes, nlayers, 4), dtype=cfdtype)
         else:
             # [oxx, oyy, txy]
-            self.data = zeros((self.ntimes, self.ntotal, 3), 'complex64')
+            self.data = zeros((ntimes, nlayers, 3), 'complex64')
 
     def build_dataframe(self) -> None:
         """creates a pandas dataframe"""
@@ -381,7 +383,8 @@ class ComplexPlateArray(OES_Object):
                 raise ValueError(msg)
         return True
 
-    def add_sort1(self, dt, eid, node_id, fdr, oxx, oyy, txy) -> None:
+    def add_sort1(self, dt, eid, node_id,
+                  fdr, oxx, oyy, txy) -> None:
         assert isinstance(eid, integer_types) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
         self._times[self.itime] = dt
         #print(self.element_types2, element_type, self.element_types2.dtype)
@@ -394,7 +397,8 @@ class ComplexPlateArray(OES_Object):
         #self.ielement += 1
         self.itotal += 1
 
-    def add_ovm_sort1(self, dt, eid, node_id, fdr, oxx, oyy, txy, ovm) -> None:
+    def add_ovm_sort1(self, dt, eid, node_id,
+                      fdr, oxx, oyy, txy, ovm) -> None:
         assert isinstance(eid, integer_types) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
         self._times[self.itime] = dt
         #print(self.element_types2, element_type, self.element_types2.dtype)

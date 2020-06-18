@@ -819,13 +819,14 @@ class Convergence:
 
     def __repr__(self):
         msg = 'Convergence()\n'
-        msg += '  shape=(%s, %s)\n' % (self.n, self.ndesign_variables)
         msg += '  design_iter = %s\n' % self.design_iter
         msg += '  icovergence = %s\n' % self.iconvergence
         msg += '  conv_result = %s\n' % self.conv_result
         msg += '  obj_initial = %s\n' % self.obj_initial
+        msg += '  obj_final = %s\n' % self.obj_final
         msg += '  constraint_max = %s\n' % self.constraint_max
         msg += '  row_constraint_max = %s\n' % self.row_constraint_max
+        msg += f'  desvar_values; shape=({self.n}, {self.ndesign_variables}):\n{self.desvar_values}'
         return msg
 
     def get_stats(self, short=False):

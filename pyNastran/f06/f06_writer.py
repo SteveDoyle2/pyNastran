@@ -193,7 +193,7 @@ class F06Writer(OP2_F06_Common):
 
         self._results = ResultSet(
             self.get_all_results(),
-            self.op2_results.get_sum_objects_map(),
+            self.op2_results._get_sum_objects_map(),
             self.log)
 
     def get_all_results(self) -> List[str]:

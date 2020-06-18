@@ -1778,7 +1778,8 @@ class OP2_Scalar(LAMA, ONR, OGPF,
                 )
                 raise NotImplementedError(msg)
 
-            table_name = op2_reader._read_table_name(rewind=True, stop_on_failure=False)
+            table_name = op2_reader._read_table_name(last_table_name=table_name,
+                                                     rewind=True, stop_on_failure=False)
         return table_names
 
     def set_additional_generalized_tables_to_read(self, tables):

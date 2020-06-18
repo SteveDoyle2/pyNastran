@@ -1809,7 +1809,8 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
 
         # TODO: this should be reworked
         bar_nids, bar_types, nid_release_map = self._get_bar_yz_arrays(
-            model, bar_beam_eids, scale, debug)
+            model, bar_beam_eids,
+            scale, debug)
         self.nid_release_map = nid_release_map
 
         bar_nids = list(bar_nids)

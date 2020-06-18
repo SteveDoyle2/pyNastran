@@ -777,10 +777,6 @@ class GEOM2(GeomCommon):
             n += ntotal
         self.card_count['CBUSH1D'] = nelements
         return n
-        #self.log.info('skipping CBUSH1D in GEOM2')
-        #if self.is_debug_file:
-            #self.binary_debug.write('skipping CBUSH1D in GEOM2\n')
-        #return len(data)
 
     def _read_ccone(self, data: bytes, n: int) -> int:
         """
@@ -1746,7 +1742,8 @@ class GEOM2(GeomCommon):
                 elem = CPYRAM5.add_op2_data(data_in)
             self.add_op2_element(elem)
             n += ntotal
-        self.card_count['CPENTA'] = nelements
+        self.card_count['CPYRAM'] = nelements
+        self.to_nx()
         return n
 
 # CPENP
