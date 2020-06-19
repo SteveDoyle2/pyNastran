@@ -94,7 +94,7 @@ class EPT(GeomCommon):
 
             # NX-specific
             (3601, 36, 55) : ['PFAST', self._read_pfast_nx],  # NX-specific
-            (3801, 38, 979) : ['PPLANE', self._read_fake],
+            (3801, 38, 979) : ['PPLANE', self._read_pplane],
             (11801, 118, 560) : ['PWELD', self._read_fake],
             (3401, 34, 993) : ['NSMADD', self._read_fake],
         }
@@ -1075,8 +1075,8 @@ class EPT(GeomCommon):
         ndata = (len(data) - n) // self.factor
 
         if ndata % 100 == 0 and ndata % 80 == 0:
-            self.log.info(f"skipping PBUSHT in EPT because nfields={ndata//4}, which is "
-                          'nproperties*25 or nproperties*20')
+            self.log.warning(f"skipping PBUSHT in EPT because nfields={ndata//4}, which is "
+                             'nproperties*25 or nproperties*20')
             return len(data), []
         if ndata % 100 == 0:
             n, props = self._read_pbusht_100(data, n)
@@ -1739,6 +1739,41 @@ class EPT(GeomCommon):
     def _read_pints(self, data: bytes, n: int) -> int:
         self.log.info('skipping PINTS in EPT')
         return len(data)
+
+    def _read_pplane(self, data: bytes, n: int) -> int:
+        """
+        RECORD – PPLANE(3801,38,979)
+        Word Name Type Description
+        1 PID    I Property identification number
+        2 MID    I Material identification number
+        3 T     RS Default membrane thickness for Ti on the connection entry
+        4 NSM   RS Nonstructural mass per unit area
+        5 FOROPT I Formulation option number
+        6 CSOPT  I Reserved for coordinate system definition of plane
+        7 UNDEF(2) None
+
+        ints    = (1, 1, 1.0, 0,   0,   0,   0,   0,   2, 2, 1.0, 0, 0, 0, 0, 0)
+        floats  = (1, 1, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 2, 2, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0)
+        """
+        ntotal = 32 * self.factor # 8*4
+        struct1 = Struct(mapfmt(self._endian + b'2i 2f 4i', self.size))
+
+        ndatai = len(data) - n
+        nentries = ndatai // ntotal
+        assert ndatai % ntotal == 0
+        for unused_i in range(nentries):
+            out = struct1.unpack(data[n:n+ntotal])
+            pid, mid, t, nsm, foropt, csopt = out[:6]
+            #print(out)
+            assert csopt == 0, csopt
+            pplane = self.add_pplane(pid, mid, t=t, nsm=nsm,
+                                     formulation_option=foropt)
+            pplane.validate()
+            #print(pplane)
+            str(pplane)
+            n += ntotal
+        self.card_count['PLPLANE'] = nentries
+        return n
 
     def _read_plplane(self, data: bytes, n: int) -> int:
         """

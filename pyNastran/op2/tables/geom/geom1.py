@@ -71,7 +71,7 @@ class GEOM1(GeomCommon):
             # 17 - GRID  (above)
             (1527, 15, 466): ['SEBNDRY', self._read_fake],  # record 18
             (1427, 14, 465): ['SEBULK',  self._read_sebulk],  # record 19 - superelements/see103q4.op2
-            (427,   4, 453): ['SECONCT', self._read_fake],  # record 20
+            (427,   4, 453): ['SECONCT', self._read_seconct],  # record 20
 
             (7902, 79, 302): ['SEELT',   self._read_fake],  # record 21
             (527,  72, 454): ['SEEXCLD', self._read_fake],  # record 22
@@ -83,7 +83,7 @@ class GEOM1(GeomCommon):
             (5401, 54, 305): ['SEQSEP',  self._read_fake],  # record 28
             (5601, 56, 296): ['SESET',   self._read_fake],  # record 29
             (1227, 12, 462): ['SETREE',  self._read_fake],  # record 30
-            (5678, 71, 475): ['SNORM',   self._read_fake],  # record 31
+            (5678, 71, 475): ['SNORM',   self._read_snorm],  # record 31
             (5701, 57, 323): ['CSUPER1', self._read_fake],  # record 32
 
             (5801,   58, 324): ['SUPUP', self._read_fake],  # record 33 - CSUPUP in NX; SUPUP in MSC
@@ -157,6 +157,92 @@ class GEOM1(GeomCommon):
         assert c1f +       c3f +     + c5f       == 0.0, (c1f, c3f, c5f)
         print(out)
         return len(data)
+
+    def _read_snorm(self, data: bytes, n: int) -> int:
+        """
+        Record – SNORM(5678,71,475)
+        Word Name Type Description
+        1 GID I Grid point identification number
+        2 CID I Coordinate system identification number
+        3 N1 RS Normal component in direction 1 of CID
+        4 N2 RS Normal component in direction 2 of CID
+        5 N3 RS Normal component in direction 3 of CID
+
+        ints    = (-1059, 101000001, 0, 0, 0)
+        floats  = (nan, 2.5040420265274087e-35, 0.0, 0.0, 0.0)
+        """
+        structi = Struct(self._endian + b'2i 3f')
+        ntotal = 20
+        ndatai = len(data) - n
+        nentries = ndatai // ntotal
+        assert nentries > 0, nentries
+        nfailed = 0
+        for unused_i in range(nentries):
+            edata = data[n:n + ntotal]
+            out = structi.unpack(edata)
+            (nid, cid, n1, n2, n3) = out
+            normal = [n1, n2, n3]
+            n += ntotal
+            if nid < 0:
+                self.log.warning(f'skipping SNORM nid={nid} cid={cid} normal={normal}')
+                continue
+            snorm = self.add_snorm(nid, normal, cid=cid)
+            snorm.write_card_16()
+        return n
+
+    def _read_seconct(self, data: bytes, n: int) -> int:
+        """
+        Record – SECONCT(427,4,453)
+
+        Word Name Type Description
+        1 SEIDA I Superelement A identification number
+        2 SEIDB I Superelement B identification number
+        3 TOL  RS Location tolerance
+        4 LOC   I Coincident location check option: yes=1 or no=2
+        5 UNDEF(4) None
+        9  GA I Grid point identification number in SEIDA
+        10 GB I Grid point identification number in SEIDB
+        Words 9 through 10 repeat until (-1,-1) occurs
+
+        """
+        n0 = n
+        ints = np.frombuffer(data[n:], self.idtype8).copy()
+        floats = np.frombuffer(data[n:], self.fdtype8).copy()
+        iminus1 = np.where(ints == -1)[0]
+        iminus1_start = iminus1[::2]
+        iminus1_end = iminus1[1::2]
+
+        ncards = 0
+        istart = [0] + list(iminus1_end + 1)
+        iend = iminus1_start
+        size = self.size
+        for (i0, i1) in zip(istart, iend):
+            assert ints[i1] == -1, ints[i1]
+            seid_a, seid_b = ints[i0:i0+2]
+            tol = floats[i0+2]
+            loc_int = ints[i0+3]
+            gab = ints[i0+4:i1]
+            nrows = len(gab) // 2
+            gab = gab.reshape(nrows, 2)
+            nodes_a = gab[:, 0]
+            nodes_b = gab[:, 1]
+
+            # yes=1 or no=2
+            if loc_int == 1:
+                loc = 'YES'
+            elif loc_int == 2:
+                loc = 'NO'
+            else:
+                raise NotImplementedError(loc_int)
+
+            seconct = self.add_seconct(seid_a, seid_b, tol, loc,
+                                       nodes_a, nodes_b)
+            #print(seconct)
+            str(seconct)
+            n += (i1 - i0 + 2) * size
+            ncards += 1
+        self.card_count['SECONCT'] = ncards
+        return n
 
     def _read_cord1c(self, data: bytes, n: int) -> int:
         """
@@ -546,7 +632,33 @@ class GEOM1(GeomCommon):
 
 
     def _read_extrn(self, data: bytes, n: int) -> int:
-        self.log.info('skipping EXTRN in GEOM1')
+        """
+        Record – EXTRN(1627,16,463)
+        Word Name Type Description
+        1 GID I Grid point identification numbers to connect external SE
+        2 C   I Component numbers
+        Words 1 through 2 repeat until (-1,-1) occurs
+
+        (1, 123456, 2, 123456, 3, 123456, 4, 123456, 100001, 1, 100002, 1, 100003, 1, 100004, 1,
+        -1, -1)
+        """
+        #Partitioned External Superelement Connection
+        #Defines a boundary connection for an external superelement.
+        ints = np.frombuffer(data[n:], self.idtype8).copy()
+        iminus1 = np.where(ints == -1)[0]
+        iminus1_start = iminus1[::2]
+        iminus1_end = iminus1[1::2]
+
+        ncards = 0
+        istart = [0] + list(iminus1_end + 1)
+        iend = iminus1_start
+        size = self.size
+        for (i0, i1) in zip(istart, iend):
+            assert ints[i1] == -1, ints[i1]
+            nids = ints[i0:i1:2].tolist()
+            comps = ints[i0+1:i1:2].tolist()
+            self.add_extrn(nids, comps)
+            assert len(nids) == len(comps)
         return len(data)
 
     def _read_feedge(self, data: bytes, n: int) -> int:

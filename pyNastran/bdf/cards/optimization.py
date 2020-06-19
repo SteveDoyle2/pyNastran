@@ -117,7 +117,7 @@ def validate_dvmrel(validate, mat_type, mp_name):
     elif mat_type == 'MAT3':
         assert mp_name in ['EX', 'ETH', 'EZ', 'NUTH', 'NUXTH', 'NUTHZ', 'NUZX', 'RHO'], msg
     elif mat_type == 'MAT8':
-        assert mp_name in ['E1', 'G1Z', 'NU12'], msg
+        assert mp_name in ['E1', 'E2', 'G12', 'G1Z', 'G2Z', 'NU12', 'RHO', 'A1', 'A2'], msg
     elif mat_type == 'MAT9':
         assert mp_name in ['G11', 'G22', 'G33', 'G44', 'G55', 'G66', 'RHO'], msg
     elif mat_type == 'MAT10':
@@ -150,8 +150,10 @@ def validate_dvprel(prop_type, pname_fid, validate):
             pname_fid = 'K1'
         elif pname_fid in ['GE1', 4]:
             pname_fid = 'GE1'
+        elif pname_fid in ['S1', 5]:
+            pname_fid = 'S1'
         else:
-            raise NotImplementedError('PELAST pname_fid=%r is invalid' % pname_fid)
+            raise NotImplementedError('PELAS pname_fid=%r is invalid' % pname_fid)
 
     elif prop_type == 'PELAST':
         if pname_fid in ['TKID', 3]:
@@ -261,6 +263,14 @@ def validate_dvprel(prop_type, pname_fid, validate):
             pass
         elif pname_fid in [8]:  # TS/T doesn't support strings?
             pass
+        elif pname_fid in ['Z1', 12]:
+            # TODO: is this right?
+            # definitely not MID4...
+            pname_fid = 'Z1'
+        elif pname_fid in ['Z2', 13]:
+            # TODO: is this right?
+            # definitely not MID4...
+            pname_fid = 'Z2'
         else:
             allowed = ("['T', 4, \n"
                        "6 # 12I/T^3, \n"
@@ -272,7 +282,7 @@ def validate_dvprel(prop_type, pname_fid, validate):
         #assert pname_fid in ['T', 4, 6], msg
     elif prop_type == 'PCOMP':
         if isinstance(pname_fid, str):
-            if pname_fid in ['Z0', 'SB', 'TREF', 'GE']:
+            if pname_fid in ['Z0', 'SB', 'TREF', 'GE', 'NSM']:
                 pass
             else:
                 word, num = break_word_by_trailing_integer(pname_fid)
@@ -280,7 +290,11 @@ def validate_dvprel(prop_type, pname_fid, validate):
                     raise RuntimeError('word=%r\n%s' % (word, msg))
                 int(num)
         else:
-            assert pname_fid in valid_pcomp_codes, msg
+            if pname_fid == 4:
+                pname_fid = 'NSM'
+            else:
+                #PID Z0 NSM SB FT TREF GE LAM
+                assert pname_fid in valid_pcomp_codes, msg
     elif prop_type == 'PCOMPG':
         #if pname_fid in ['T', 4]:
             #pname_fid = 'T'
@@ -348,6 +362,8 @@ def validate_dvprel(prop_type, pname_fid, validate):
     elif prop_type == 'PSHEAR':
         if pname_fid in ['T', 4]:
             pname_fid = 'T'
+        elif pname_fid in ['NSM', 5]:
+            pname_fid = 'NSM'
         else:
             raise NotImplementedError('PSHEAR pname_fid=%r is invalid' % pname_fid)
 
@@ -5632,6 +5648,10 @@ def get_dvprel_key(dvprel, prop=None):
         if var_to_change in ['TKID']:
             pass
         elif isinstance(var_to_change, int):  # pragma: no cover
+            #if var_to_change == 5:
+                # PID TKID TGEID TKNID
+                #var_to_change = 'TKNID'
+            #else:
             msg = 'prop_type=%r pname/fid=%s is not supported' % (prop_type, var_to_change)
         else:  # pragma: no cover
             msg = 'prop_type=%r pname/fid=%r is not supported' % (prop_type, var_to_change)

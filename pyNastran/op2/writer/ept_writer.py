@@ -143,7 +143,7 @@ def write_ept(op2, op2_ascii, obj, endian=b'<'):
             obj.log.warning('skipping PIHEX')
             continue
         else:
-            obj.log.warning('skipping %s' % name)
+            obj.log.warning(f'skipping {name}')
             continue
         #else:  # pragma: no cover
             #raise NotImplementedError(name)
@@ -560,7 +560,6 @@ def write_pcomp(name, pids, itable, op2, op2_ascii, obj, endian=b'<'):
 
     s1 = Struct(endian + b'2i3fi2f')
     s2 = Struct(endian + b'i2fi')
-    data_all = []
     for pid in sorted(pids):
         prop = obj.properties[pid]
 
@@ -589,7 +588,7 @@ def write_pcomp(name, pids, itable, op2, op2_ascii, obj, endian=b'<'):
                 prop.nsm, prop.sb, ft, prop.tref, prop.ge]
         op2.write(s1.pack(*data))
         op2_ascii.write(str(data) + '\n')
-        data_all += data
+
         for (mid, t, theta, sout) in zip(prop.mids, prop.thicknesses, prop.thetas, prop.souts):
             if sout == 'NO':
                 sout = 0
@@ -601,9 +600,7 @@ def write_pcomp(name, pids, itable, op2, op2_ascii, obj, endian=b'<'):
             data2 = [mid, t, theta, sout]
             op2.write(s2.pack(*data2))
             op2_ascii.write(str(data2) + '\n')
-            data_all += data2
-    ndatai = (len(data_all)*4 + 12) // 4 # 12 for the 3 keys
-    assert ndatai == nbytes // 4, f'ndata={ndatai} nbytes={nbytes//4}'
+
 
     #data_in = [
         #pid, z0, nsm, sb, ft, Tref, ge,

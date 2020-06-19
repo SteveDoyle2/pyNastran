@@ -1402,7 +1402,7 @@ def _get_times(model, key):
             continue
 
         table = model.get_result(table_type)
-        if len(table) == 0:
+        if table is None or len(table) == 0:
             continue
         #print(key, table, type(table))
 

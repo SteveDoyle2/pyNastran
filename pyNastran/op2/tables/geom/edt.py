@@ -392,7 +392,6 @@ class EDT(GeomCommon):
             #assert ints[i] == -1, ints[i:]
             self.log.warning(f'skipping GROUP in {self.table_name}')
             nentries += 1
-            #self.add_rgyro(sid, asynci, refrot, unit, speed_low, speed_high, speed)
 
         assert n == len(data), f'n={n} ndata={len(data)}'
         self.increase_card_count('GROUP', nentries)

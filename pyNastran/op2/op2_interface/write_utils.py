@@ -72,7 +72,7 @@ def export_to_hdf5(self, group, log):
         if value is None:
             continue
         elif isinstance(value, dict):
-            log.warning('HDF5: skipping name=%r value=%s' % (name, value))
+            log.warning(f'HDF5: skipping name={name!r} value={value:d}')
             continue
         elif isinstance(value, sp.coo.coo_matrix):
             # F:\work\pyNastran\pyNastran\master2\pyNastran\bdf\test\nx_spike\out_bsh111svd2.op2

@@ -1396,7 +1396,7 @@ class RealCBeamForceArray(RealForceObject):
             #else:
                 #self._write_sort1_as_sort2(f06_file, page_num, page_stamp, header, msg_temp)
         else:
-            print('skipping %s because its sort2' % self.__class__.__name__)
+            print(f'skipping {self.__class__.__name__} because its sort2')
             #assert self.is_sort1 is True, str(self)
         return page_num - 1
 

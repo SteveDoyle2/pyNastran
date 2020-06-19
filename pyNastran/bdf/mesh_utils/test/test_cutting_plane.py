@@ -1,6 +1,7 @@
 """defines cutting plane tests"""
 import os
 from itertools import count
+from typing import Tuple, Any
 import unittest
 import numpy as np
 #import PySide
@@ -84,135 +85,9 @@ class TestCuttingPlane(unittest.TestCase):
         else:  #  pragma: no cover
             bdf_filename = r'C:\NASA\asm\all_modes_mach_0.85\flutter.bdf'  # ymax=1160.601
         normal_plane = np.array([0., 1., 0.])
-
-        model = read_bdf(bdf_filename, log=log)
-        model2 = read_bdf(bdf_filename, log=log)
-
-        # initialize theta
-        thetas = {}
-        for eid in model.elements:
-            #  theta, Ex, Ey, Gxy
-            thetas[eid] = (0., 0., 0., 0.)
-
-        #p1 = np.array([466.78845, 735.9053, 0.0])
-        #p2 = np.array([624.91345, 639.68896, -0.99763656])
-        #dx = p2 - p1
-        ytol = 2.
-        nodal_result = None
-        plane_bdf_filenames = []
-        y = []
-        A = []
-        I = []
-        EI = []
-        avg_centroid = []
-
-        for i in range(2000):
-            if is_bwb:
-                dy = 100. * i + 1.  #  bwb
-                coord = CORD2R(1, rid=0, origin=[0., dy, 0.], zaxis=[0., dy, 1], xzplane=[1., dy, 0.])
-            else:  #  pragma: no cover
-                dy = 4. * i + 1.  #  CRM
-                coord = CORD2R(1, rid=0, origin=[0., dy, 0.], zaxis=[0., dy, 1], xzplane=[1., dy, 0.])
-                #origin = np.array([0., dy, 0.])
-                #xzplane = origin + dx
-                #xzplane = np.array([1., dy, 0.])
-                #coord = CORD2R.add_axes(cid, rid=0, origin=p1, xaxis=p2-p1, yaxis=None, zaxis=None,
-                                         #xyplane=None, yzplane=None, xzplane=None, comment='')
-                print(coord)
-            model.coords[1] = coord
-            plane_bdf_filename = 'plane_face_%i.bdf' % i
-            cut_face_filename = 'cut_face_%i.csv' % i
-            if os.path.exists(cut_face_filename):
-                os.remove(cut_face_filename)
-            try:
-                out = cut_face_model_by_coord(
-                    model2, coord, ytol,
-                    nodal_result, plane_atol=1e-5, skip_cleanup=True,
-                    #csv_filename=cut_face_filename,
-                    csv_filename=None,
-                    #plane_bdf_filename=None)
-                    plane_bdf_filename=plane_bdf_filename, plane_bdf_offset=dy)
-            except RuntimeError:
-                # incorrect ivalues=[0, 1, 2]; dy=771. for CRM
-                continue
-            unused_unique_geometry_array, unused_unique_results_array, rods = out
-
-            if not os.path.exists(plane_bdf_filename):
-                break
-            plane_bdf_filenames.append(plane_bdf_filename)
-            # eid, nid, inid1, inid2
-            #print(unique_geometry_array)
-            #moi_filename = 'amoi_%i.bdf' % i
-            moi_filename = None
-            out = calculate_area_moi(model, rods, normal_plane, thetas, moi_filename=moi_filename)
-            #print(out)
-            Ai, Ii, EIi, avg_centroidi = out
-            y.append(dy)
-            A.append(Ai)
-            I.append(Ii)
-            EI.append(EIi)
-            avg_centroid.append(avg_centroidi)
-            #break
-
-
-        with open('thetas.csv', 'w') as csv_filename:
-            csv_filename.write('# eid(%i),theta,Ex,Ey,Gxy\n')
-            for eid, (theta, Ex, Ey, Gxy) in sorted(thetas.items()):
-                csv_filename.write('%i,%f,%f,%f,%f\n' % (eid, theta, Ex, Ey, Gxy))
-
-        y = np.array(y, dtype='float64')
-        A = np.array(A, dtype='float64')
-        I = np.array(I, dtype='float64')
-        EI = np.array(EI, dtype='float64')
-        avg_centroid = np.array(avg_centroid, dtype='float64')
-
-        inid = 1
-        beam_model = BDF(debug=False)
-        avg_centroid[:, 1] = y
-
-        # wrong
-        mid = 1
-        E = 3.0e7
-        G = None
-        nu = 0.3
-        model.add_mat1(mid, E, G, nu, rho=0.1)
-
-        Ix = I[:, 0]
-        Iy = I[:, 1]
-        Ixy = I[:, 2]
-        J = Ix + Iy
-        #i1, i2, i12 = Ix, Iy, Ixy
-        for inid, xyz in enumerate(avg_centroid):
-            beam_model.add_grid(inid+1, xyz)
-        for eid in range(1, len(A)):
-            pid = eid
-            nids = [eid, eid + 1]
-            x = [1., 0., 0.]
-            g0 = None
-            beam_model.add_cbeam(eid, pid, nids, x, g0, offt='GGG', bit=None,
-                                 pa=0, pb=0, wa=None, wb=None, sa=0, sb=0, comment='')
-
-            # j = i1 + i2
-            so = ['YES', 'YES']
-            xxb = [0., 1.]
-            area = [A[eid-1], A[eid]]
-            i1 = [Ix[eid-1], Ix[eid]]
-            i2 = [Iy[eid-1], Iy[eid]]
-            i12 = [Ixy[eid-1], Ixy[eid]]
-            j = [J[eid-1], J[eid]]
-            beam_model.add_pbeam(pid, mid, xxb, so, area, i1, i2, i12, j, nsm=None,
-                                 c1=None, c2=None, d1=None, d2=None, e1=None, e2=None, f1=None, f2=None,
-                                 k1=1., k2=1., s1=0., s2=0., nsia=0., nsib=None, cwa=0., cwb=None,
-                                 m1a=0., m2a=0., m1b=None, m2b=None,
-                                 n1a=0., n2a=0., n1b=None, n2b=None,
-                                 comment='')
-        beam_model.write_bdf('equivalent_beam_model.bdf')
-
-        X = np.vstack([y, A]).T
-        Y = np.hstack([X, I, EI, avg_centroid])
-        header = 'y, A, Ix, Iz, Ixz, Ex*Ix, Ex*Iz, Ex*Ixz, xcentroid, ycentroid, zcentroid'
-        np.savetxt('cut_data_vs_span.csv', Y, header=header, delimiter=',')
-
+        y, A, I, EI, avg_centroid, plane_bdf_filenames = cut_and_plot_moi(
+            bdf_filename, normal_plane, log,
+            plot=True, show=True)
 
         show = True
         #show = False
@@ -477,7 +352,149 @@ class TestCuttingPlane(unittest.TestCase):
         assert np.array_equal(iedges, [[0, 1, 2, 3, 0], [4, 5, 6, 7, 4]]), 'iedges=%s' % iedges
 
 
-def plot_inertia(y, A, I, EI, avg_centroid, ifig=1, show=True):
+def cut_and_plot_moi(bdf_filename: str, normal_plane: np.ndarray, log: SimpleLogger,
+                     ytol: float=2.0, ncuts: int=2000, dirname: str='',
+                     plot: bool=True, show: bool=False) -> Tuple[Any, Any, Any, Any, Any]: # y, A, I, EI, avg_centroid
+    model = read_bdf(bdf_filename, log=log)
+    model2 = read_bdf(bdf_filename, log=log)
+
+    # initialize theta
+    thetas = {}
+    for eid in model.elements:
+        #  theta, Ex, Ey, Gxy
+        thetas[eid] = (0., 0., 0., 0.)
+
+    #p1 = np.array([466.78845, 735.9053, 0.0])
+    #p2 = np.array([624.91345, 639.68896, -0.99763656])
+    #dx = p2 - p1
+    ytol = 2.
+    nodal_result = None
+    plane_bdf_filenames = []
+    y = []
+    A = []
+    I = []
+    EI = []
+    avg_centroid = []
+
+    is_bwb = True
+    for i in range(ncuts):
+        if is_bwb:
+            dy = 100. * i + 1.  #  bwb
+            coord = CORD2R(1, rid=0, origin=[0., dy, 0.], zaxis=[0., dy, 1], xzplane=[1., dy, 0.])
+        else:  #  pragma: no cover
+            dy = 4. * i + 1.  #  CRM
+            coord = CORD2R(1, rid=0, origin=[0., dy, 0.], zaxis=[0., dy, 1], xzplane=[1., dy, 0.])
+            #origin = np.array([0., dy, 0.])
+            #xzplane = origin + dx
+            #xzplane = np.array([1., dy, 0.])
+            #coord = CORD2R.add_axes(cid, rid=0, origin=p1, xaxis=p2-p1, yaxis=None, zaxis=None,
+                                     #xyplane=None, yzplane=None, xzplane=None, comment='')
+            print(coord)
+        model.coords[1] = coord
+        plane_bdf_filename = os.path.join(dirname, f'plane_face_{i:d}.bdf')
+        cut_face_filename = os.path.join(dirname, f'cut_face_{i:d}.csv')
+        if os.path.exists(cut_face_filename):
+            os.remove(cut_face_filename)
+        try:
+            out = cut_face_model_by_coord(
+                model2, coord, ytol,
+                nodal_result, plane_atol=1e-5, skip_cleanup=True,
+                #csv_filename=cut_face_filename,
+                csv_filename=None,
+                #plane_bdf_filename=None)
+                plane_bdf_filename=plane_bdf_filename, plane_bdf_offset=dy)
+        except RuntimeError:
+            # incorrect ivalues=[0, 1, 2]; dy=771. for CRM
+            continue
+        unused_unique_geometry_array, unused_unique_results_array, rods = out
+
+        if not os.path.exists(plane_bdf_filename):
+            break
+        plane_bdf_filenames.append(plane_bdf_filename)
+        # eid, nid, inid1, inid2
+        #print(unique_geometry_array)
+        #moi_filename = 'amoi_%i.bdf' % i
+        moi_filename = None
+        out = calculate_area_moi(model, rods, normal_plane, thetas, moi_filename=moi_filename)
+        #print(out)
+        Ai, Ii, EIi, avg_centroidi = out
+        y.append(dy)
+        A.append(Ai)
+        I.append(Ii)
+        EI.append(EIi)
+        avg_centroid.append(avg_centroidi)
+        #break
+
+    thetas_csv_filename = os.path.join(dirname, 'thetas.csv')
+
+    with open(thetas_csv_filename, 'w') as csv_filename:
+        csv_filename.write('# eid(%i),theta,Ex,Ey,Gxy\n')
+        for eid, (theta, Ex, Ey, Gxy) in sorted(thetas.items()):
+            csv_filename.write('%i,%f,%f,%f,%f\n' % (eid, theta, Ex, Ey, Gxy))
+
+    y = np.array(y, dtype='float64')
+    A = np.array(A, dtype='float64')
+    I = np.array(I, dtype='float64')
+    EI = np.array(EI, dtype='float64')
+    avg_centroid = np.array(avg_centroid, dtype='float64')
+
+    inid = 1
+    beam_model = BDF(debug=False)
+    avg_centroid[:, 1] = y
+
+    # wrong
+    mid = 1
+    E = 3.0e7
+    G = None
+    nu = 0.3
+    model.add_mat1(mid, E, G, nu, rho=0.1)
+
+    Ix = I[:, 0]
+    Iy = I[:, 1]
+    Ixy = I[:, 2]
+    J = Ix + Iy
+    #i1, i2, i12 = Ix, Iy, Ixy
+    for inid, xyz in enumerate(avg_centroid):
+        beam_model.add_grid(inid+1, xyz)
+    for eid in range(1, len(A)):
+        pid = eid
+        nids = [eid, eid + 1]
+        x = [1., 0., 0.]
+        g0 = None
+        beam_model.add_cbeam(eid, pid, nids, x, g0, offt='GGG', bit=None,
+                             pa=0, pb=0, wa=None, wb=None, sa=0, sb=0, comment='')
+
+        # j = i1 + i2
+        so = ['YES', 'YES']
+        xxb = [0., 1.]
+        area = [A[eid-1], A[eid]]
+        i1 = [Ix[eid-1], Ix[eid]]
+        i2 = [Iy[eid-1], Iy[eid]]
+        i12 = [Ixy[eid-1], Ixy[eid]]
+        j = [J[eid-1], J[eid]]
+        beam_model.add_pbeam(pid, mid, xxb, so, area, i1, i2, i12, j, nsm=None,
+                             c1=None, c2=None, d1=None, d2=None, e1=None, e2=None, f1=None, f2=None,
+                             k1=1., k2=1., s1=0., s2=0., nsia=0., nsib=None, cwa=0., cwb=None,
+                             m1a=0., m2a=0., m1b=None, m2b=None,
+                             n1a=0., n2a=0., n1b=None, n2b=None,
+                             comment='')
+
+    beam_model_bdf_filename = os.path.join(dirname, 'equivalent_beam_model.bdf')
+    beam_model.write_bdf(beam_model_bdf_filename)
+
+    X = np.vstack([y, A]).T
+    Y = np.hstack([X, I, EI, avg_centroid])
+    header = 'y, A, Ix, Iz, Ixz, Ex*Ix, Ex*Iz, Ex*Ixz, xcentroid, ycentroid, zcentroid'
+    cut_data_span_filename = os.path.join(dirname, 'cut_data_vs_span.csv')
+    np.savetxt(cut_data_span_filename, Y, header=header, delimiter=',')
+
+    if plot or show:
+        plot_inertia(y, A, I, EI, avg_centroid, show=show, dirname=dirname)
+    else:
+        plane_bdf_filenames = []
+    return y, A, I, EI, avg_centroid, plane_bdf_filenames
+
+def plot_inertia(y, A, I, EI, avg_centroid, ifig: int=1, show: bool=True, dirname: str=''):
     """hepler method for test"""
     #plt.plot(y, I[:, 0] / I[:, 0].max(), 'ro-', label='Qxx')
     #plt.plot(y, I[:, 1] / I[:, 1].max(), 'bo-', label='Qyy')

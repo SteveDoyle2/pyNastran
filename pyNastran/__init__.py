@@ -1,16 +1,13 @@
-import os
-import sys
-
-
 # this variable is automatically set by the .spec file; should be False
 is_pynastrangui_exe = False
 is_installed = False
 if is_pynastrangui_exe or is_installed:
     # pyInstaller
-    from pyNastran.version import __version__, __releaseDate__
+    from pyNastran.version import __version__, __releaseDate__, __releaseDate2__
 else:
+    import os
+    import sys
     import subprocess
-
     # this is still a requirement, but disabling it so readthedocs works
     if sys.version_info < (3, 7):  # pragma: no cover
         IMAJOR, MINOR1, MINOR2 = sys.version_info[:3]

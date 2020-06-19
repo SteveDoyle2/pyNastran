@@ -2,11 +2,13 @@
 defines readers for BDF objects in the OP2 EDOM/EDOMS table
 """
 from struct import Struct
-from typing import Union
+from typing import Tuple, List, Union
 import numpy as np
 
 from pyNastran.op2.tables.geom.geom_common import GeomCommon
 from pyNastran.op2.op2_interface.op2_reader import mapfmt, reshape_bytes_block
+#if TYPE_CHECKING:
+from pyNastran.bdf.cards.optimization import DVPREL1, DVPREL2, DVMREL2
 
 
 class EDOM(GeomCommon):
@@ -44,7 +46,7 @@ class EDOM(GeomCommon):
             (404, 4, 277) : ['DVAR', self._read_dvar],
             (504, 5, 246) : ['DVSET', self._read_dvset],
 
-            (4106, 41, 362) : ['DCONSTR', self._read_fake],
+            (4106, 41, 362) : ['DCONSTR', self._read_dconstr],
             #DDVAL(7000,70,563)
             #DRESP3(6700,67,433)
 
@@ -57,15 +59,14 @@ class EDOM(GeomCommon):
             (3106, 31, 352) : ['DESVAR', self._read_desvar],
             (3206, 32, 353) : ['DLINK', self._read_fake],
             (3306, 33, 354) : ['DVPREL1', self._read_dvprel1],
-            (3406, 34, 355) : ['DVPREL2', self._read_fake],
+            (3406, 34, 355) : ['DVPREL2', self._read_dvprel2],
             #DOPTPRM(4306,43,364)
-            (3706, 37, 358) : ['DTABLE', self._read_fake],
+            (3706, 37, 358) : ['DTABLE', self._read_dtable],
             #(3806, 38, 359) : ['DRESP1', self._read_dresp1],
             (3806, 38, 359) : ['DRESP1', self._read_fake],
             (3906, 39, 360) : ['DRESP2', self._read_fake],
-            (4106, 41, 362) : ['DCONSTR', self._read_fake],
             (4206, 42, 363) : ['DSCREEN', self._read_fake],
-            (4306, 43, 364) : ['DOPTPRM', self._read_fake],
+            (4306, 43, 364) : ['DOPTPRM', self._read_doptprm],
             (4406, 44, 372) : ['DVGRID', self._read_dvgrid],
             #DVSHAP(5006,50,470)
             (5106, 51, 471) : ['DCONADD', self._read_fake],
@@ -76,10 +77,250 @@ class EDOM(GeomCommon):
             (6100, 61, 429) : ['DVCREL1', self._read_fake],
             (6200, 62, 430) : ['DVCREL2', self._read_fake],
             (6300, 63, 431) : ['DVMREL1', self._read_dvmrel1],
-            (6400, 64, 432) : ['DVMREL2', self._read_fake],
+            (6400, 64, 432) : ['DVMREL2', self._read_dvmrel2],
             (6006, 60, 477) : ['???', self._read_fake],
             (7000, 70, 563) : ['DCONSTR/DDVAL?', self._read_fake],
         }
+
+    def _read_dconstr(self, data: bytes, n: int) -> int:
+        """
+        Record – DCONSTR(4106,41,362)
+        Design constraints.
+        Word Name Type Description
+        1 DCID    I Design constraint set identification number
+        2 RID     I DRESPi entry identification number
+        3 LALLOW RS Lower bound on the response quantity. Undefined if
+                    LTID is nonzero
+        4 UALLOW RS Upper bound on the response quantity. Undefined if
+                    UTID is nonzero
+        5 LOWFQ  RS Low end of frequency range in Hz
+        6 HIGHFQ RS High end of frequency range in Hz
+        7 LTID    I Identification number of TABLEDi entry giving lower
+                    bound on the response quantity as a function of
+                    frequency or 0 if not specified
+        8 UTID    I Identification number of TABLEDi entry giving upper
+                    bound on the response quantity as a function of
+                    frequency or 0 if not specified
+
+        data  = (50, 2, 0.0016, 0.0018, 0.0, 1.0e+20, 0, 0)
+
+        """
+        ntotal = 32 * self.factor # 8 * 4
+        struct1 = Struct(mapfmt(self._endian + b'ii 4f ii', self.size))
+        ndatai = len(data) - n
+        ncards = ndatai // ntotal
+
+        for unused_icard in range(ncards):
+            edata = data[n:n+ntotal]
+            out = struct1.unpack(edata)
+            oid, dresp_id, lallow, uallow, lowfq, highfq, ltid, utid = out
+            #print(oid, dresp_id, lallow, uallow, lowfq, highfq, ltid, utid)
+            lid = ltid if ltid != 0 else lallow
+            uid = utid if utid != 0 else uallow
+            dconstr = self.add_dconstr(oid, dresp_id, lid=lid, uid=uid,
+                                       lowfq=lowfq, highfq=highfq)
+            dconstr.validate()
+            str(dconstr)
+            #print(dconstr)
+            n += ntotal
+        return n
+
+    def _read_doptprm(self, data: bytes, n: int) -> int:
+        """
+        Record – DOPTPRM(4306,43,364)
+        Design optimization parameters.
+
+        Word Name Type Description
+        1 APRCOD   I Approximation method
+        2 IPRINT   I Print control during approximate optimization phase with DOT
+        3 DESMAX   I Maximum number of design cycles
+        4 METHOD   I DOT optimization method
+        5 DELP    RS Fractional change allowed in each property during any
+                     optimization design cycle
+        6 DPMIN   RS Minimum move limit imposed
+        7 PTOL    RS Maximum tolerance on differences allowed between the
+                     property values on property entries and the property
+                     values calculated from the design variable values on
+                     the DESVAR entry
+        8 CONV1   RS Relative objective function convergence criterion
+        9 CONV2   RS Absolute objective function convergence criterion
+        10 GMAX   RS Maximum constraint violation allowed at the
+                     converged optimum
+        11 DELX   RS Fractional change allowed in each design variable
+                     during any optimization cycle
+        12 DXMIN  RS Minimum absolute limit on design variable move
+        13 DELB   RS Relative finite difference move parameter
+        14 GSCAL  RS Constraint normalization factor
+        15 CONVDV RS Relative convergence criterion on design variables
+        16 CONVPR RS Relative convergence criterion on properties
+
+        17 P1      I Design cycles in which output is printed
+        18 P2      I Items to be printed at the design cycles defined
+                     by P1
+        19 CT     RS Constraint tolerance
+        20 CTMIN  RS Constraint violation threshold
+        21 DABOBJ RS DOT absolute objective function convergence criterion
+        22 DELOBJ RS DOT relative objective function convergence criterion
+        23 DOBJ1  RS DOT 1–D search absolute objective limit
+        24 DOBJ2  RS DOT 1–D search relative objective limit
+        25 DX1    RS DOT 1–D search absolute DV limit
+        26 DX2    RS DOT 1–D search relative DV limit
+        27 ISCAL   I Design variables are rescaled every ISCAL iterations
+        28 ITMAX   I Maximum DOT MFD iterations per cycle
+        29 ITRMOP  I Maximum consecutive DOT MFD iterations at convergence
+        30 IWRITE  I File number for DOT optimizer printout
+        31 IGMAX   I Active constraint counter
+
+        32 JTMAX   I Maximum DOT SLP iterations per cycle
+        33 ITRMST  I Maximum consecutive DOT SLP iterations at convergence
+        34 JPRINT  I SLP subproblem print within DOT
+        35 IPRNT1  I Print scaling factors for design variable vector within DOT
+        36 IPRNT2  I DOT 1–D search or miscellaneous information print
+        37 JWRITE  I File number on which iteration history is written within DOT
+        38 STPSCL RS Scale factor for shape finite difference step sizes
+                     applied to all shape design variables
+        39 FSDMAX  I Number of FSD cycles to be performed
+        40 FSDALP RS Relaxation parameter applied in FSD
+        41 DISCOD  I Discrete processing method code
+        42 DISBEG  I Design cycle ID for discrete variable processing initiation
+        43 PLVIOL  I Flag for handling property limit violation
+        44 P2RSET  I ID of a SET1 entry listing constrained responses to
+                     be printed if retained
+        45 EDVOUT RS Fraction of DVEREL1 DESVARs to be output in f06 file
+        46 MXCRTRSP I Flag to handle CSV output
+
+        """
+        #if self.size == 4:
+        ntotal = 184 * self.factor # 46 * 4
+        struct1 = Struct(mapfmt(self._endian + b'4i 12f 2i 8f 11i f i f 4i f i', self.size))
+        ndatai = len(data) - n
+        ncards = ndatai // ntotal
+
+        for unused_icard in range(ncards):
+            edata = data[n:n+ntotal]
+            out = struct1.unpack(edata)
+            (aprcod, iprint, desmax, method, # ints
+             delp, dpmin, ptol, conv1, conv2, gmax, delx, dxmin, delb, gscal, convdv, convpr, # floats
+             p1, p2, # ints
+             ct, ctmin, dabobj, delobj, dobj1, dobj2, dx1, dx2, # floats
+             iscal, itmax, itrmop, iwrite, igmax, jtmax, itrmst, jprint, iprnt1, iprnt2, jwrite, # ints
+             stpscl, # float
+             fsdmax, # int
+             fsdalp, # float
+             discod, disbeg, plviol, p2rset, # ints
+             edvout, # float
+             mxcrtrsp) = out # int
+            params = {
+                # ints
+                'APRCOD' : aprcod,
+                'IPRINT' : iprint,
+                'DESMAX' : desmax,
+                'METHOD' : method,
+                # floats
+                'DELP' : delp,
+                'DPMIN' : dpmin,
+                'PTOL' : ptol,
+                'CONV1' : conv1,
+                'CONV2' : conv2,
+                'GMAX' : gmax,
+                'DELX' : delx,
+                'DXMIN' : dxmin,
+                'DELB' : delb,
+                'GSCAL' : gscal,
+                'CONVDV' : convdv,
+                'CONVPR' : convpr,
+                #  ints
+                'P1' : p1,
+                'P2' : p2,
+                # floats
+                'CT' : ct,
+                'CTMIN' : ctmin,
+                'DABOBJ' : dabobj,
+                'DELOBJ' : delobj,
+                'DOBJ1' : dobj1,
+                'DOBJ2' : dobj2,
+                'DX1' : dx1,
+                'DX2' : dx2,
+                # ints
+                'ISCAL' : iscal,
+                'ITMAX' : itmax,
+                'ITRMOP' : itrmop,
+                'IWRITE' : iwrite,
+                'IGMAX' : igmax,
+                'JTMAX' : jtmax,
+                'ITRMST' : itrmst,
+                'JPRINT' : jprint,
+                'IPRNT1' : iprnt1,
+                'IPRNT2' : iprnt2,
+                'JWRITE' : jwrite,
+                'STPSCL' : stpscl, # float
+                'FSDMAX' : fsdmax,
+                'FSDALP' : fsdalp, # float
+                'DISCOD' : discod,
+                'DISBEG' : disbeg,
+                'PLVIOL' : plviol,
+                'P2RSET' : p2rset,
+                'EDVOUT' : edvout, # float
+                'MXCRTRSP' : mxcrtrsp,
+            }
+            doptprm = self.add_doptprm(params)
+            for key, default_value in doptprm.defaults.items():
+                if default_value is None:
+                    continue
+                if key not in params:
+                    continue
+                value_actual = params[key]
+                assert isinstance(default_value, type(value_actual)), f'key={key!r} value={default_value!r} value_actual={value_actual!r}'
+                if value_actual == default_value:
+                    del doptprm.params[key]
+            str(doptprm)
+            n += ntotal
+        self.card_count['DOPTPRM'] = ncards
+        return n
+
+    def _read_dtable(self, data: bytes, n: int) -> int:
+        """
+        Record – DTABLE(3706,37,358)
+        Table constants.
+        Word Name Type Description
+        1 LABLi(2) CHAR4 Label for the constant
+        3 VALUi       RS Value of the constant
+        Words 1 thru 3 repeat until -1 occurs
+        """
+        if self.size == 4:
+            struct1 = Struct(self._endian + b'8s f')
+        else:
+            aaa
+
+        ints = np.frombuffer(data[n:], self.idtype8).copy()
+        #floats = np.frombuffer(data[n:], self.fdtype8).copy()
+        iminus1 = np.where(ints == -1)[0]
+        size = self.size
+
+        ncards = 0
+        istart = [0] + list(iminus1[:-1] + 1)
+        iend = iminus1
+        size = self.size
+        ntotal = 12 * self.factor # 3*4
+        for (i0, i1) in zip(istart, iend):
+            assert ints[i1] == -1, ints[i1]
+
+            default_values = {}
+            nfields = (i1 - i0) // 3
+            for unused_i in range(nfields):
+                edata = data[n:n+ntotal]
+                key_bytes, value = struct1.unpack(edata)
+                if size == 4:
+                    key = key_bytes.decode('latin1').rstrip()
+                default_values[key] = value
+                n += ntotal
+                assert n <= len(data), n
+            dtable = self.add_dtable(default_values)
+            str(dtable)
+            n += size
+            ncards += 1
+        self.card_count['DTABLE'] = ncards
+        return n
 
     def _read_mat1dom(self, data: bytes, n: int) -> int:
         """
@@ -152,22 +393,12 @@ class EDOM(GeomCommon):
         floats = np.frombuffer(data[n:], self.fdtype8).copy()
         iminus1 = np.where(ints == -1)[0]
 
-        #if self.size == 4:
-            #struct1 = Struct(self._endian + b'i 8s i')
-            #strs = np.frombuffer(data[n:], dtype='|S4')
-        #else:
-            #struct1 = Struct(self._endian + b'q 16s q')
-            #strs = np.frombuffer(data[n:], dtype='|S8')
-        #6i
-        #ntotal1 = 16 * self.factor # 4*4
-
+        ncards = 0
         istart = [0] + list(iminus1[:-1] + 1)
         iend = iminus1
         size = self.size
         for (i0, i1) in zip(istart, iend):
-            #self.show_data(data[n+i0*size:n+i1*size], types='ifs')
             assert ints[i1] == -1, ints[i1]
-            #print(i0, i1)
             dvprel_id = ints[i0]
             type_bytes = data[n+size:n+3*size]
             property_name_bytes = data[n+8*size:n+10*size]
@@ -196,12 +427,20 @@ class EDOM(GeomCommon):
             # 6 PMIN       RS Minimum value allowed for this property
             # 7 PMAX       RS Maximum value allowed for this property
             # 8 C0         RS Constant term of relation
-            dvprel = self.add_dvprel1(dvprel_id, prop_type, pid, fid,
-                                      desvar_ids, coeffs,
-                                      p_min=pmin, p_max=pmax, c0=c0,
-                                      validate=True)
+            dvprel = DVPREL1(dvprel_id, prop_type, pid, fid,
+                             desvar_ids, coeffs,
+                             p_min=pmin, p_max=pmax, c0=c0,
+                             validate=True)
+            if dvprel_id in self.dvprels:
+                dvprel_old = self.dvprels[dvprel_id]
+                if dvprel == dvprel_old:
+                    pass
+                else:
+                    self._add_dvprel_object(dvprel)
+                    ncards += 1
             dvprel.write_card_16()
             n += (i1 - i0 + 1) * size
+        self.card_count['DVPREL1'] = ncards
         return n
 
     def _read_dvmrel1(self, data: bytes, n: int) -> int:
@@ -252,6 +491,181 @@ class EDOM(GeomCommon):
                                       mp_min=mp_min, mp_max=mp_max, c0=c0,
                                       validate=True)
             dvmrel.write_card_16()
+            n += (i1 - i0 + 1) * size
+        return n
+
+    def _read_dvprel2(self, data: bytes, n: int) -> int:
+        """
+        Record – DVPREL2(3406,34,355)
+        Design variable to property relation based on a user-supplied equation.
+
+        Word Name Type Description
+        1 ID          I Unique identification number
+        2 TYPE(2) CHAR4 Name of a property entry
+        4 PID         I Property entry identification number
+        5 FID         I FID number input. Otherwise, either 0 if property
+                        name is input, or frequency (RS) if entry is for
+                        frequency dependent property. (See Words 9 and 10)
+        6 PMIN       RS Minimum value allowed for this property
+        7 PMAX       RS Maximum value allowed for this property
+        8 EQID        I DEQATN entry identification number
+        9 PNAME1  CHAR4 First word of property name, if any, or blanks if
+                        FID number is nonzero in Word 5
+        10 PNAME2 CHAR4 Second word of property name, if any. Otherwise,
+                        either blanks if FID number is nonzero in Word 5,
+                        or frequency (RS) if entry is for frequency
+                        dependent property. (See Word 5)
+        11 FLAG I DESVAR/DTABLE
+        FLAG = 1000 DESVAR
+          12 DVIDi I A DESVAR entry identification number
+          Word 12 repeats until -1000
+        FLAG = 2000 DTABLE
+          12 LABLi(2) CHAR4 Label for a constant on the DTABLE entry
+          Words 12 and 13 repeat until -2000
+        End flag when -1 occurs
+
+        data = (2, PROD, 101, 4, -1.0e+35, 1.0e+20, 2, '', 1000, 2, -1000,
+                                                           2000, L1, -2000)
+        """
+        #return  self._read_dvxrel2(data, n, DVPREL2)
+
+        n0 = n
+        ints = np.frombuffer(data[n:], self.idtype8).copy()
+        floats = np.frombuffer(data[n:], self.fdtype8).copy()
+        iminus1 = np.where(ints == -1)[0]
+
+        istart = [0] + list(iminus1[:-1] + 1)
+        iend = iminus1
+        size = self.size
+        for (i0, i1) in zip(istart, iend):
+            #self.show_data(data[n+i0*size:n+i1*size], types='ifs')
+            assert ints[i1] == -1, ints[i1]
+            dvprel_id = ints[i0]
+            prop_type_bytes = data[n0+(i0+1)*size:n0+(i0+3)*size]
+            pid, fid = ints[i0+3:i0+5]
+            p_min, p_max = floats[i0+5:i0+7]
+            deqation = ints[i0+7]
+
+            #data[n0+iflag*size:n0+(iflag+1)*size])
+            prop_name_bytes = data[n0+(i0+8)*size:n0+(i0+10)*size]
+
+            if size == 4:
+                prop_type = prop_type_bytes.decode('latin1').rstrip()
+                prop_name = prop_name_bytes.decode('latin1').rstrip()
+            else:
+                asdf
+            if prop_name_bytes == b'        ':
+                assert fid != 0
+                pname_fid = fid
+            else:
+                assert fid == 0, f'fid={fid} prop_name_bytes={prop_name_bytes}'
+
+            #print(dvprel_id, prop_type, pid, pname_fid, deqation)
+            iend, dvids, labels = _read_dvxrel2_flag(data, n0, i0, i1, size, ints)
+
+            #print(dvids, labels)
+            dvprel = self.add_dvprel2(dvprel_id, prop_type, pid,
+                                      pname_fid, deqation,
+                                      dvids=dvids,
+                                      labels=labels,
+                                      p_min=p_min, p_max=p_max,
+                                      validate=True)
+            dvprel.validate()
+            #print(dvprel)
+            #print('--------------------')
+
+            dvprel.write_card_16()
+            n += (i1 - i0 + 1) * size
+        return n
+
+    def _read_dvmrel2(self, data: bytes, n: int) -> int:
+        """
+        Record – DVMREL2(6400,64,432)
+        Design variable to material relation based on a user-supplied equation.
+        Word Name Type Description
+        1 ID            I Unique identification number
+        2 TYPE(2)   CHAR4 Name of a material property entry
+        4 MID           I Material identification number
+        5 FID           I Entry is 0
+        6 MPMIN        RS Minimum value allowed for this property
+        7 MPMAX        RS Maximum value allowed for this property
+        8 EQID          I DEQATN entry identification number
+        9 MPNAME(2) CHAR4 Name of material property
+        11 FLAG         I DESVAR/DTABLE
+        FLAG = 1000 DESVAR
+          12 DVIDi I A DESVAR entry identification number
+          Word 12 repeats until -1000
+        FLAG = 2000 DTABLE
+          12 LABLi(2) CHAR4 Label for a constant on the DTABLE entry
+          Words 12 and 13 repeat until -2000
+        End flag when -1 occurs
+
+        """
+        cls = DVMREL2
+        #return  self._read_dvxrel2(data, n, DVMREL2)
+
+    #def _read_dvxrel2(self, data: bytes, n: int, cls) -> int:
+        n0 = n
+        ints = np.frombuffer(data[n:], self.idtype8).copy()
+        floats = np.frombuffer(data[n:], self.fdtype8).copy()
+        iminus1 = np.where(ints == -1)[0]
+
+        istart = [0] + list(iminus1[:-1] + 1)
+        iend = iminus1
+        size = self.size
+        for (i0, i1) in zip(istart, iend):
+            #self.show_data(data[n+i0*size:n+i1*size], types='ifs')
+            assert ints[i1] == -1, ints[i1]
+            dvmrel_id = ints[i0]
+            mat_type_bytes = data[n0+(i0+1)*size:n0+(i0+3)*size]
+            mid, fid = ints[i0+3:i0+5]
+            mp_min, mp_max = floats[i0+5:i0+7]
+            deqation = ints[i0+7]
+
+            #data[n0+iflag*size:n0+(iflag+1)*size])
+            mp_name_bytes = data[n0+(i0+8)*size:n0+(i0+10)*size]
+
+            if size == 4:
+                mat_type = mat_type_bytes.decode('latin1').rstrip()
+                mp_name = mp_name_bytes.decode('latin1').rstrip()
+            else:
+                asdf
+            if mp_name_bytes == b'        ':
+                assert fid != 0
+                mpname_fid = fid
+            else:
+                assert fid == 0, f'fid={fid} mp_name_bytes={mp_name_bytes}'
+
+            #print(dvmrel_id, mat_type, (mid, fid), (mp_min, mp_max), deqation, mp_name, flag)
+            iend, dvids, labels = _read_dvxrel2_flag(data, n0, i0, i1, size, ints)
+
+            #labels = labels.
+            #print(dvids, labels)
+            card_name = cls.type
+            if card_name == 'DVPREL2':
+                pid = mid
+                dvprel_id = dvmrel_id
+                prop_type = mat_type
+                pname_fid = mp_name
+                dvxrel = self.add_dvprel2(dvprel_id, prop_type, pid,
+                                          pname_fid, deqation,
+                                          dvids=dvids,
+                                          labels=labels,
+                                          p_min=mp_min, p_max=mp_max,
+                                          validate=True)
+
+            elif card_name == 'DVMREL2':
+                dvxrel = self.add_dvmrel2(dvmrel_id, mat_type, mid, mp_name,
+                                          deqation,
+                                          dvids=dvids,
+                                          labels=labels,
+                                          mp_min=mp_min, mp_max=mp_max,
+                                          validate=True)
+            dvxrel.validate()
+            #print(dvxrel)
+            #print('--------------------')
+
+            dvxrel.write_card_16()
             n += (i1 - i0 + 1) * size
         return n
 
@@ -1076,3 +1490,58 @@ class EDOM(GeomCommon):
             #print(desvar)
         self.card_count['DESVAR'] = ncards
         return n
+
+def _read_dvxrel2_flag(data: bytes, n0: int,
+                       i0: int, i1: int,
+                       size: int,
+                       ints: np.ndarray) -> Tuple[List[int], List[str]]:
+    """reads the DVxREL2 flag table"""
+    flag = ints[i0+10]
+    #print(ints[i0+11:])
+    #print(floats[i0+11:])
+    assert flag in [1000, 2000], flag
+
+    iflag = i0 + 10
+    dvids = []
+    labels = []
+    flags_found = []
+    while flag != -1:
+        flags_found.append(flag)
+        #print(f'i0={i0} iflag={iflag} i1={i1}')
+        flag2 = ints[iflag]
+        assert flag == flag2
+        flag_test, = Struct(b'i').unpack(data[n0+iflag*size:n0+(iflag+1)*size])
+        assert flag == flag_test, f'flag={flag} flag_test={flag_test}; n={n}'
+        if flag == 1000:
+            assert ints[iflag] == 1000, ints[iflag]
+            #print('  ', ints[iflag:i1])
+            iend = np.where(ints[iflag+1:i1] == -1000)[0][0] + (iflag+1)
+            dvids = ints[iflag+1:iend].tolist()
+            assert ints[iend] == -1000, ints[iflag+1:i1]
+        elif flag == 2000:
+            #print('  ', ints[iflag:i1])
+            iend = np.where(ints[iflag+1:i1] == -2000)[0][0] + (iflag+1)
+            assert ints[iflag] == 2000, ints[iflag]
+            assert ints[iend] == -2000, ints[iflag+1:i1]
+
+            labels_bytes = data[n0+(iflag+1)*size:n0+iend*size]
+            labels_bytes2 = data[n0+(iflag+1)*size:n0+(iend+1)*size]
+            #print('labels_bytes =', labels_bytes)
+            nbytes = len(labels_bytes)
+            nlabels = nbytes // 8
+            assert nbytes % 8 == 0
+            assert nlabels > 0, nlabels
+            for ilabel in range(nlabels):
+                #print(ilabel*size*2, (ilabel+2)*size)
+                labels_bytesi = labels_bytes[ilabel*size*2:(ilabel+2)*size]
+                label = labels_bytesi.decode('latin1').rstrip()
+                assert 1 <= len(str(label)) <= 8, f'label={label}; labels_bytesi={labels_bytesi} labels_bytes={labels_bytes2}'
+                labels.append(label)
+            #print(labels)
+        else:
+            raise RuntimeError(flag)
+        iflag = iend + 1
+        flag = ints[iflag]
+        #print(f'\nflag={flag}')
+    assert len(flags_found) in [1, 2], flags_found
+    return iend, dvids, labels

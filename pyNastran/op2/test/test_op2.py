@@ -389,7 +389,6 @@ def run_op2(op2_filename: str, make_geom: bool=False, combine: bool=True,
             raise
         is_passed = True
     except FatalError:  # this block should be commented
-        #log.error('Fatal Error')
         #if stop_on_failure:
             #raise
         if not dev:
@@ -535,7 +534,6 @@ def get_test_op2_data(argv):
         # just set the defaults for these so we don't need special code later
         data['--profile'] = False
         data['--write_xlsx'] = False
-        data['--write_op2'] = False
         data['--nocombine'] = False
         data['--nasa95'] = False
 

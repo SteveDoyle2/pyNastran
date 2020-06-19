@@ -8,6 +8,7 @@ from typing import Optional, List, Dict, Union, Any
 import numpy as np
 
 from pyNastran.nptyping import NDArray3float
+from pyNastran.bdf.field_writer import print_card_
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.bdf_interface.add_methods import AddMethods
 
@@ -2461,7 +2462,8 @@ class AddCards(AddMethods):
         self._add_element_object(elem)
         return elem
 
-    def add_pshear(self, pid, mid, t, nsm=0., f1=0., f2=0., comment='') -> PSHEAR:
+    def add_pshear(self, pid: int, mid: int, t: float, nsm: float=0.,
+                   f1: float=0., f2: float=0., comment: str='') -> PSHEAR:
         """
         Creates a PSHEAR card
 
@@ -2731,7 +2733,7 @@ class AddCards(AddMethods):
         self._add_element_object(elem)
         return elem
 
-    def add_snorm(self, nid, normal, cid=0, comment='') -> SNORM:
+    def add_snorm(self, nid: int, normal: List[float], cid: int=0, comment: str='') -> SNORM:
         snorm = SNORM(nid, normal, cid=cid, comment=comment)
         self._add_normal_object(snorm)
         return snorm
@@ -2896,8 +2898,8 @@ class AddCards(AddMethods):
         self._add_property_object(prop)
         return prop
 
-    def add_pplane(self, pid, mid, t=0., nsm=0., formulation_option=0,
-                   comment='') -> PPLANE:
+    def add_pplane(self, pid: int, mid: int, t: float=0.0, nsm: float=0.0,
+                   formulation_option: int=0, comment: str='') -> PPLANE:
         """Creates a PPLANE card"""
         prop = PPLANE(pid, mid, t=t, nsm=nsm, formulation_option=formulation_option,
                       comment=comment)
@@ -6017,7 +6019,7 @@ class AddCards(AddMethods):
         self._add_aeparm_object(aeparm)
         return aeparm
 
-    def add_dtable(self, default_values, comment='') -> DTABLE:
+    def add_dtable(self, default_values: Dict[str, float], comment='') -> DTABLE:
         """
         Creates a DTABLE card
 
@@ -6817,9 +6819,12 @@ class AddCards(AddMethods):
         self._add_dvprel_object(dvprel)
         return dvprel
 
-    def add_dvprel2(self, oid, prop_type, pid, pname_fid, deqation,
-                    dvids=None, labels=None, p_min=None, p_max=1e20,
-                    validate=True, comment='') -> DVPREL2:
+    def add_dvprel2(self, oid: int, prop_type: str, pid: int,
+                    pname_fid: Union[int, str], deqation: int,
+                    dvids: List[int]=None,
+                    labels: List[str]=None,
+                    p_min: Optional[float]=None, p_max: float=1.0e20,
+                    validate: bool=True, comment: str='') -> DVPREL2:
         """
         Creates a DVPREL2 card
 
@@ -6896,8 +6901,12 @@ class AddCards(AddMethods):
         self._add_dvmrel_object(dvmrel)
         return dvmrel
 
-    def add_dvmrel2(self, oid, mat_type, mid, mp_name, deqation, dvids, labels,
-                    mp_min=None, mp_max=1e20, validate=True, comment='') -> DVMREL2:
+    def add_dvmrel2(self, oid: int, mat_type: str, mid: int, mp_name: str,
+                    deqation: int,
+                    dvids: List[int],
+                    labels: List[str],
+                    mp_min: Optional[float]=None, mp_max: float=1e20,
+                    validate: bool=True, comment: str='') -> DVMREL2:
         """
         Creates a DVMREL2 card
 
@@ -6997,8 +7006,8 @@ class AddCards(AddMethods):
         self._add_dlink_object(dlink)
         return dlink
 
-    def add_dconstr(self, oid, dresp_id, lid=-1.e20, uid=1.e20, lowfq=0.,
-                    highfq=1.e20, comment='') -> DCONSTR:
+    def add_dconstr(self, oid: int, dresp_id: int, lid: float=-1.e20, uid: float=1.e20,
+                    lowfq: float=0.0, highfq: float=1.e20, comment: str='') -> DCONSTR:
         """
         Creates a DCONSTR card
 
@@ -7027,7 +7036,7 @@ class AddCards(AddMethods):
         self._add_dconstr_object(dconadd)
         return dconadd
 
-    def add_doptprm(self, params, comment='') -> DOPTPRM:
+    def add_doptprm(self, params: Dict[str, Union[int, float]], comment='') -> DOPTPRM:
         """Creates a DOPTPRM card"""
         doptprm = DOPTPRM(params, comment=comment)
         self._add_doptprm_object(doptprm)
@@ -7382,6 +7391,12 @@ class AddCards(AddMethods):
                        threshold=threshold, maxiter=maxiter, comment=comment)
         self._add_rotor_object(rotor)
         return rotor
+
+    def add_extrn(self, nids: List[int], comps: List[str]):
+        fields = ['EXTRN']
+        for nid, comp in zip(nids, comps):
+            fields.extend([nid, comp])
+        self.reject_card_lines('EXTRN', print_card_(fields).split('\n'), show_log=False)
 
     def add_panel(self, names: List[str], set_ids: List[int]) -> None:
         fields = ['PANEL']
@@ -8042,8 +8057,10 @@ class AddCards(AddMethods):
         self._add_sebulk_object(sebulk)
         return sebulk
 
-    def add_seconct(self, seid_a, seid_b, tol, loc, nodes_a, nodes_b, comment='') -> SECONCT:
-        seconct = SECONCT(seid_a, seid_b, tol, loc, nodes_a, nodes_b, comment=comment)
+    def add_seconct(self, seid_a: int, seid_b: int, tol: float, loc: str,
+                    nodes_a: List[int], nodes_b: List[int], comment: str='') -> SECONCT:
+        seconct = SECONCT(seid_a, seid_b, tol, loc, nodes_a, nodes_b,
+                          comment=comment)
         self._add_seconct_object(seconct)
         return seconct
 

@@ -636,8 +636,6 @@ class MPT(GeomCommon):
             n += ntotal
         self.card_count['MATT9'] = nmaterials
         return n
-        #self.log.warning('skipping MATT9 in MPT')
-        #return len(data)
 
     def _read_matt11(self, data: bytes, n: int) -> int:
         self.log.warning('skipping MATT11 in MPT')

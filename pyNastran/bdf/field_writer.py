@@ -33,3 +33,13 @@ def print_card(fields, size=8, is_double=False):
     elif is_double:
         return print_card_double(fields)
     return print_card_16(fields)
+
+def print_card_(fields, size=8, is_double=False):
+    if size == 8:
+        try:
+            return print_card_8(fields)
+        except RuntimeError:
+            return print_card_double(fields)
+    elif is_double:
+        return print_card_double(fields)
+    return print_card_16(fields)

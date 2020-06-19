@@ -452,7 +452,7 @@ class F06Writer(OP2_F06_Common):
     def write_matrices(self, f06, matrix_filename, page_stamp, page_num, quiet=True):
         """writes the f06 matrices"""
         if len(self.matrices):
-            if hasattr(self, 'monitor1'):
+            if self.monitor1 is not None:
                 page_num = self.monitor1.write(f06, page_stamp=page_stamp, page_num=page_num)
                 self.log.debug('MONPNT1 from [PMRF, PERF, PFRF, AGRF]')
 
@@ -570,7 +570,7 @@ class F06Writer(OP2_F06_Common):
                       '\n', ' \n']
         header = copy.deepcopy(header_old)
         unallowed_results = ['eigenvectors', 'eigenvalues', 'params', 'gpdt', 'bgpdt', 'eqexin',
-                             'grid_point_weight', 'psds']
+                             'grid_point_weight', 'psds', 'monitor1', 'monitor3']
         res_types = list(self.get_result(table_type) for table_type in sorted(self.get_table_types())
                          if table_type not in unallowed_results and not table_type.startswith('responses.'))
 
