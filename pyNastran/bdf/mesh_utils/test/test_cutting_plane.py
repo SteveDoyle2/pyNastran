@@ -488,7 +488,7 @@ def cut_and_plot_moi(bdf_filename: str, normal_plane: np.ndarray, log: SimpleLog
     cut_data_span_filename = os.path.join(dirname, 'cut_data_vs_span.csv')
     np.savetxt(cut_data_span_filename, Y, header=header, delimiter=',')
 
-    if plot or show:
+    if IS_MATPLOTLIB and (plot or show):
         plot_inertia(y, A, I, EI, avg_centroid, show=show, dirname=dirname)
     else:
         plane_bdf_filenames = []
