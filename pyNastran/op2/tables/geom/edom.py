@@ -57,7 +57,7 @@ class EDOM(GeomCommon):
             #(504, 5, 246) : ['???', self._read_fake],
 
             (3106, 31, 352) : ['DESVAR', self._read_desvar],
-            (3206, 32, 353) : ['DLINK', self._read_fake],
+            (3206, 32, 353) : ['DLINK', self._read_dlink],
             (3306, 33, 354) : ['DVPREL1', self._read_dvprel1],
             (3406, 34, 355) : ['DVPREL2', self._read_dvprel2],
             #DOPTPRM(4306,43,364)
@@ -1327,17 +1327,19 @@ class EDOM(GeomCommon):
 
             dvset_id, dvset_ptype1, dvset_ptype2, field, flag = ints[i0:i0+5]
             if flag == 1:
-                mini, maxi = ints[i0+5:i0+7]
+                pref, alpha = ints[i0+5:i0+7]
+                flag1
             elif flag == 2:
-                mini, maxi = floats[i0+5:i0+7]
+                pref, alpha = floats[i0+5:i0+7]
             elif flag == 3:
                 #print(dvset_id, dvset_ptype1, dvset_ptype2, field, flag)
                 print('  ? =', ints[i0+5:i0+7], floats[i0+5:i0+7])
-                mini, maxi = '???', '???'
+                pref, alpha = '???', '???'
+                flag3
             else:
                 print(dvset_id, dvset_ptype1, dvset_ptype2, field, flag)
                 raise NotImplementedError(flag)
-            pids = ints[i0+7:i1]
+            pids = ints[i0+7:i1].tolist()
             #assert field in [3, 4], field
 
             dvset_ptype = (dvset_ptype1, dvset_ptype2)
@@ -1368,8 +1370,9 @@ class EDOM(GeomCommon):
                 #ptype = 'PSHEAR'
             else:
                 raise NotImplementedError(f'DVSET={dvset_id} dvset_ptype={dvset_ptype}')
-            print(dvset_id, (dvset_ptype1, dvset_ptype2), ptype, field, flag, (mini, maxi), pids)
-        self.log.info(f'skipping {self.card_name} in {self.table_name}; ndata={len(data)-12}')
+            #print(dvset_id, ptype, field, flag, (pref, alpha), pids)
+            self.add_dvset(dvset_id, ptype, field, pref, pids, alpha=alpha)
+        #self.log.info(f'skipping {self.card_name} in {self.table_name}; ndata={len(data)-12}')
         return len(data)
 
     def _read_dvar(self, data: bytes, n: int) -> int:
@@ -1393,19 +1396,14 @@ class EDOM(GeomCommon):
             #(11015, b'SPRCAPS ', 0.01, 11015, -1)
             #(11016, b'SPRCAPS ', 0.01, 11016, -1)
             out = structi.unpack(edata)
-            #print(out)
+            bid, label_bytes, deltab, vid, minus1 = out
+            assert minus1 == -1, out
 
-            #idi, word, two_stress_three_force, idb, two_2, value, min_max = out
-            #if two_stress_three_force == 2:
-                #res_type = 'STRESS'
-            #elif two_stress_three_force == 3:
-                #res_type = 'FORCE'
-            #else:
-                #raise NotImplementedError(two_stress_three_force)
-            #assert min_max in [0, 1], min_max
-            #print(out)
+            assert isinstance(deltab, float), deltab
+            label = label_bytes.decode('latin1').rstrip()
+            vids = [vid]
+            self.add_dvar(bid, label, vids, deltab=deltab)
             n += ntotal
-        self.log.info(f'skipping {self.card_name} in {self.table_name}; ndata={len(data)-12}')
         return n
 
     def _read_dscons(self, data: bytes, n: int) -> int:
@@ -1419,7 +1417,7 @@ class EDOM(GeomCommon):
         ncards = ndatai // ntotal
         assert ndatai % ntotal == 0
         structi = Struct(self._endian + b'i 8s i 2i fi')
-        disp_stress_force_map = {
+        constraint_map = {
             1 : 'DISP',
             2 : 'STRESS',
             3 : 'FORCE',
@@ -1438,15 +1436,68 @@ class EDOM(GeomCommon):
             #(110152, b'SPRCAPS ', 2, 11015, 2, -25000.0, 1)
             #(110161, b'SPRCAPS ', 2, 11016, 2, 25000.0, 0)
             out = structi.unpack(edata)
-            idi, word, disp_stress_force, idb, two_2, value, min_max = out
+            dscid, label_bytes, constraint_int, nid_eid, comp, limit, min_max = out
+            label = label_bytes.decode('latin1').rstrip()
             try:
-                res_type = disp_stress_force_map[disp_stress_force]
+                constraint_type = constraint_map[constraint_int]
             except KeyError:
                 raise NotImplementedError(f'disp_stress_force={disp_stress_force} out={out}')
             assert min_max in [0, 1], min_max
-            #print(out)
+            out = list(out)
+
+            #print(dscid, label, constraint_type, nid_eid, comp, limit, min_max)
+            if min_max == 0:
+                opt = 'MAX'
+            elif min_max == 1:
+                opt = 'MIN'
+
+            layer_id = 1
+            self.add_dscons(dscid, label, constraint_type, nid_eid, comp,
+                            limit=limit, opt=opt, layer_id=layer_id)
+
             n += ntotal
-        self.log.info(f'skipping {self.card_name} in {self.table_name}; ndata={len(data)-12}')
+        return n
+
+    def _read_dlink(self, data: bytes, n: int) -> int:
+        """
+        DLINK(3206,32,353)
+
+        Word Name Type Description
+        1 ID     I
+        2 DVID   I
+        3 C0    RS
+        4 CMULT RS
+        5 INDV   I
+        6 C     RS
+        Words 5 through 6 repeat until End of Record
+
+        ints    = (1, 2, 0,   1.0, 1, 1.0, -1)
+        floats  = (1, 2, 0.0, 1.0, 1, 1.0, nan)
+        """
+        ints = np.frombuffer(data[n:], self.idtype8).copy()
+        floats = np.frombuffer(data[n:], self.fdtype8).copy()
+        iminus1 = np.where(ints == -1)[0]
+
+        ncards = 0
+        istart = [0] + list(iminus1[:-1] + 1)
+        iend = iminus1
+        for (i0, i1) in zip(istart, iend):
+            assert ints[i1] == -1, ints[i1]
+            dlink_id, dependent_desvar = ints[i0:i0+2]
+            c0, cmult = floats[i0+2:i0+4]
+            independent_desvars = ints[i0+4:i1:2]
+            coeffs = floats[i0+5:i1:2]
+            #print(dlink_id, dependent_desvar, c0, cmult)
+            #print(independent_desvars, coeffs)
+            assert len(independent_desvars) == len(coeffs)
+            assert len(independent_desvars) > 0, independent_desvars
+            dlink = self.add_dlink(dlink_id, dependent_desvar,
+                                   independent_desvars,
+                                   coeffs,
+                                   c0=c0, cmult=cmult)
+            #print(dlink)
+            str(dlink)
+            n += (i1 - i0 + 1) * self.size
         return n
 
     def _read_desvar(self, data: bytes, n: int) -> int:

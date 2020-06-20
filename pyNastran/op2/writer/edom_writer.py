@@ -51,6 +51,8 @@ def write_edom(op2, op2_ascii, model: Union[BDF, OP2Geom], endian: bytes=b'<') -
         out[dvmrel.type].append(dvmrel_id)
     for dvcrel_id, dvcrel in sorted(model.dvcrels.items()):
         out[dvcrel.type].append(dvcrel_id)
+    for dlink_id, dlink in sorted(model.dlinks.items()):
+        out[dlink.type].append(dlink_id)
     for dvgrid_id, dvgrid in sorted(model.dvgrids.items()):
         out['DVGRID'].append(dvgrid_id)
     if model.doptprm:

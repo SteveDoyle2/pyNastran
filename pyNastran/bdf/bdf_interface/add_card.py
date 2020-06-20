@@ -6977,8 +6977,10 @@ class AddCards(AddMethods):
         self._add_ddval_object(ddval)
         return ddval
 
-    def add_dlink(self, oid, dependent_desvar,
-                  independent_desvars, coeffs, c0=0., cmult=1., comment='') -> DLINK:
+    def add_dlink(self, oid: int, dependent_desvar: int,
+                  independent_desvars: List[int],
+                  coeffs: List[float],
+                  c0: float=0.0, cmult: float=1.0, comment: str='') -> DLINK:
         """
         Creates a DLINK card, which creates a variable that is a lienar
         ccombination of other design variables
@@ -7391,6 +7393,76 @@ class AddCards(AddMethods):
                        threshold=threshold, maxiter=maxiter, comment=comment)
         self._add_rotor_object(rotor)
         return rotor
+
+    def add_dscons(self, dscid: int, label: str, constraint_type: str,
+                   nid_eid: int, comp: int,
+                   limit: float=0.0, opt: str='MAX', layer_id: int=1):
+        """
+        Design Constraint
+        Defines a design constraint in design sensitivity analysis
+        (original DSA). See the MSC.Nastran Reference Manual, Chapter 15.
+
+        | DSCONS | DSCID |  LABEL | TYPE | ID | COMP | LIMIT | OPT | LAMNO |
+        | DSCONS |   21  | G101DX | DISP |  4 |   1  |  0.06 | MAX |   6   |
+        """
+        assert opt in ['MIN', 'MAX'], opt
+        assert isinstance(limit, float), limit
+        assert isinstance(layer_id, int), layer_id
+        fields = ['DSCONS', dscid, label, nid_eid, comp, limit, opt, layer_id]
+        self.reject_card_lines('DSCONS', print_card_(fields).split('\n'), show_log=False)
+
+    def add_dvset(self, vid: int, dv_type: str, field: int, pref: float, pids: List[float],
+                  alpha: float=1.0):
+        """
+        Design Variable Set Property
+
+        Defines a set of element properties that vary in a fixed relation
+        to a design variable for design sensitivity analysis (original DSA).
+        See the MSC.Nastran Reference Manual, Chapter 15.
+
+        | DVSET | VID  |  TYPE  | FIELD | PREF | ALPHA | PIDl | PID2 | PID3 |
+        |       | PID4 |  PID5  |  etc. |      |       |      |      |      |
+        | DVSET |  21  | PSHELL |   4   | 0.20 |  1.0  |  99  |  101 |  110 |
+        |       |  111 |   122  |       |      |       |      |      |      |
+
+        | DVSET |  VID |  TYPE  | FIELD | PREF | ALPHA | PID  | THRU | PID2 |
+        | DVSET |  21  | PSHELL |   4   | 0.20 |  1.0  |  101 | THRU |  105 |
+        | DVSET |  VID |  TYPE  | FIELD | MIDV |       | PIDl | PID2 | PID3 |
+        | DVSET |  21  | PSHELL |   3   | 134  |       |  87  |  101 |      |
+        MSC 2001
+        """
+        fields = ['DVSET', vid, dv_type, field, pref, alpha] + pids
+        self.reject_card_lines('DVSET', print_card_(fields).split('\n'), show_log=False)
+
+    def add_dvar(self, bid: int, label: str, vids: List[float], deltab: float=0.02):
+        """
+        Design Variable
+
+        Defines a design variable for design sensitivity analysis
+        (original DSA) described in the MSC.Nastran Reference Manual,
+        Chapter 15.
+
+        | DVAR |  BID |  LABEL | DELTAB | VID1 | VID2 | VID3 | VID4 | VID5 |
+        |      | VID6 |  etc.  |        |      |      |      |      |      |
+        | DVAR |  10  | LFDOOR |  0.01  |   2  |   4  |   5  |   6  |   9  |
+        |      |  10  |        |        |      |      |      |      |      |
+        MSC 2001
+
+        Parameters
+        ----------
+        BID : int
+            Design variable identification number. Must be unique for all DVAR.
+        LABEL : str
+            Label used to describe variable in output.
+        DELTAB : float; default=0.02
+            The change in the dimensionless design variable B to be used in the
+            calculation of the design sensitivity coefficients.
+        VIDi : List[int]
+            Identification number of DVSET entry.
+
+        """
+        fields = ['DVAR', bid, label, deltab] + vids
+        self.reject_card_lines('DVAR', print_card_(fields).split('\n'), show_log=False)
 
     def add_extrn(self, nids: List[int], comps: List[str]):
         fields = ['EXTRN']
