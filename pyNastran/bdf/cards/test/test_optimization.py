@@ -273,10 +273,23 @@ class TestOpt(unittest.TestCase):
         dvprel2 = model.add_dvprel2(dvprel2_id, prop_type, pid, pname_fid, deqation,
                                     dvids, labels, p_min=None, p_max=p_max,
                                     validate=True, comment='dvprel2')
-
         equation_id = 100
         eqs = ['fstress(x) = x + 10.']
         model.add_deqatn(equation_id, eqs, comment='deqatn')
+
+        deqation2 = 101
+        dvprel2b_id = dvprel1_id + 2
+        labels = ['CAT']
+        dvprel2b = model.add_dvprel2(dvprel2b_id, prop_type, pid, pname_fid, deqation2,
+                                     dvids, labels, p_min=None, p_max=p_max,
+                                     validate=True, comment='dvprel2')
+        equation_id = 101
+        eqs = ['fstress(x,y) = x * y + 10.']
+        model.add_deqatn(equation_id, eqs, comment='deqatn')
+        default_values = {'CAT': 42.0}
+        model.add_dtable(default_values, comment='dtable')
+
+
         #print(deqatn.object_attributes())
         #print(deqatn.func_str)
         #print(deqatn)

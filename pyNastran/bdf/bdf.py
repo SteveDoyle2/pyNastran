@@ -2691,7 +2691,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
         return card_obj
 
     def add_card(self, card_lines: List[str], card_name: str,
-                       comment: str='', ifile=None, is_list: bool=True, has_none: bool=True) -> Any:
+                 comment: str='', ifile=None, is_list: bool=True, has_none: bool=True) -> Any:
         """
         Adds a card object to the BDF object.
 

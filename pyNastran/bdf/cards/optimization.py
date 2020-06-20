@@ -513,6 +513,15 @@ class DVXREL2(BaseCard):
             return self.dvids
         return [desvar.desvar_id for desvar in self.dvids_ref]
 
+    def _check_args(self):
+        """checks the number of DEQATN args"""
+        nargs = len(self.dvids) + len(self.labels)
+        if self.dequation_ref.nargs != nargs:
+            msg = (f'nargs_expected={self.dequation_ref.nargs}; actual={nargs}\n'
+                   f'desvars={self.dvids}; n={len(self.dvids)}\n'
+                   f'labels={self.labels}; n={len(self.labels)}\n{self.dequation_ref}{self}')
+            raise RuntimeError(msg)
+
 
 class DCONSTR(OptConstraint):
     """
@@ -3751,6 +3760,7 @@ class DVCREL2(DVXREL2):
         self.dvids_ref = [model.Desvar(dvid, msg) for dvid in self.dvids]
         self.dequation_ref = model.DEQATN(self.dequation, msg=msg)
         assert self.eid_ref.type in self.allowed_elements, self.eid.type
+        self._check_args()
         self.dtable_ref = {}
 
     def uncross_reference(self) -> None:
@@ -4332,6 +4342,7 @@ class DVMREL2(DVXREL2):
             raise NotImplementedError('mat_type=%r is not supported' % self.mat_type)
         self.dvids_ref = [model.Desvar(dvid, msg) for dvid in self.dvids]
         self.dequation_ref = model.DEQATN(self.dequation, msg=msg)
+        self._check_args()
 
         #assert self.pid_ref.type not in ['PBEND', 'PBARL', 'PBEAML'], self.pid
 
@@ -4998,6 +5009,7 @@ class DVPREL2(DVXREL2):
         self.pid_ref = self._get_property(model, self.pid, msg=msg)
         self.dvids_ref = [model.Desvar(dvid, msg) for dvid in self.dvids]
         self.dequation_ref = model.DEQATN(self.dequation, msg=msg)
+        self._check_args()
 
     def _get_property(self, model, pid, msg=''):
         assert isinstance(self.pid, int), type(self.pid)

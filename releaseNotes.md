@@ -9,8 +9,8 @@ If you have a bug/want a new feature or card, leave some feedback on the [Issue 
 Release Notes
 =============
 
-v1.3.3 (2020/?/?)
------------------
+v1.4 (2020/?/?)
+---------------
 Programmatics:
  - Supports Python 3.7 and 3.8
  - Dropping Python 2.7 and 3.6 support
@@ -19,6 +19,8 @@ Programmatics:
 BDF:
  - new cards:
    - BGSET, BGADD, BCTPARM
+ - convert:
+   - now supports A/acceleration, V/velocity
 
 OP2:
  - improved NX 64-bit support
@@ -30,7 +32,93 @@ OP2:
    - glue_forces
    - contact_tractions_and_pressures
    - contact_forces
- -
+
+OP2 Geom:
+ - added many aero (EDT) and optimization (EDOM) cards
+
+F06 Flutter Plotter:
+ - supports --mach, --q, --alt on the x-axis
+
+GUI:
+ - faster 3d bar visualization
+
+v1.3.3 (2020/6/?)
+-----------------
+This is a bug fix only release outside of:
+ - subcase.add_set_from_values(set_id, values)
+which was overly complicated to do before.
+
+Versions:
+ - adding support for vtk 9 (GUI)
+ - adding support for nptyping 1.1
+
+BDF:
+ - More TEMPRB defaults
+ - DRESP2 now handles DTABLE properly when validate=True is used
+ - TSTEPNL now handles KUPDATE (NX parameter)
+ - fixing SET2 safe-xref
+ - fixing SPLINE1 validate
+ - fixing TRIM2 aeqr setting bug (was defaulted to 1.0)
+ - fixing ACMODL for NX (didn't support writing)
+ - fixed DCONADD bug (added the dconadd_id to the summation)
+ - DEQATN now checks that the function name is not an argument
+ - convert:
+   - MAT8 now supports temperature scaling
+   - fixed major PSHELL 12I/t^3 convert/scale bug
+ - optimization checks:
+   - DRESP1 DISP no longer limited to 1 node
+   - DVMREL1/2 - MAT8 now supports E2, G12, G2Z, RHO, A1, A2
+   - DVPREL1/2 - PLEAS now supports S1/5
+   - DVPREL1/2 - PSHELL now supports Z1, Z2
+   - DVPREL1/2 - PCOMP now supports NSM/4
+   - DVPREL1/2 - PSHEAR now supports NSM/5
+
+OP2:
+ - auto-conversion to nx for some tables
+ - added SixtyFourBitError, which is inherited from NotImplementedError
+    - mainly used for op2 geometry and op2 writing
+ - adding op2_results repr method
+ - Convergence object has better repr
+
+OP2 Writer:
+ - fixed multiple PCOMP writing bug
+ - added some 64 bit checks (64-bit writing is not supported)
+ - turns out the CPYRAM (NX) has 14 node fields (even though it has 13 nodes)
+ - fixed symmetric PCOMP writing
+
+OP2 Geom:
+ - fixed GRID, CORD2x reading from the GEOM1N table
+ - fixed PSHELL reading bug that occurs when very large property ids exist
+ - fixed MAT10 reading bug that occurs when very large material ids exist
+ - fixing USET1 reading
+ - PMASS were put in self.properties, not self.properties_mass
+ - MATT2 tables properly handle table_ids=0 now
+ - DEFORM and CLOAD are not the GEOM3/loads table
+ - corrected SPC to NX bug
+ - NX support (the card format is different than MSC)
+   - PENTA (doesn't exist in MSC)
+   - CTRIAX
+   - TSTEPNL
+   - TLOAD1 (also 64-bit)
+   - TLOAD2 (also 64-bit)
+ - multiple MATS1s now work
+ - 64 bit:
+   - multiple SEBULKs now work
+   - SPOINTs work now
+   - MAT10, MATT2, MATT3, MATT9
+   - supporting alternate 64-bit PCOMP
+   - PBARL
+   - NLPARM
+
+F06 Flutter Plotter
+ - added check for mode id > 0
+ - better parsing of modes; '1,3:' is now supported
+
+minor:
+ - removal of some prints
+ - more docstrings
+ - more typing
+ - fixing Tecplot to Nastran converter
 
 v1.3.2 (2020/4/8)
 -----------------

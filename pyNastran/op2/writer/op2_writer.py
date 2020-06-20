@@ -16,7 +16,7 @@ from .geom4_writer import write_geom4
 from .ept_writer import write_ept
 from .mpt_writer import write_mpt
 from .edt_writer import write_edt
-#from .edom_writer import write_edom
+from .edom_writer import write_edom
 #from .dit_writer import write_dit
 #from .dynamic_writer import write_dynamic
 if TYPE_CHECKING:  # pragma: no cover
@@ -116,8 +116,8 @@ def _write_op2(fop2, fop2_ascii, obj: OP2,
 
     if 'EDT' not in skips:  # aero
         write_edt(fop2, fop2_ascii, obj, endian=endian)
-    #if 'EDOM' not in skips:  # optimization
-        #write_edom(fop2, fop2_ascii, obj, endian=endian)
+    if 'EDOM' not in skips:  # optimization
+        write_edom(fop2, fop2_ascii, obj, endian=endian)
     #if 'DIT' not in skips:  # tables
         #write_dit(fop2, fop2_ascii, obj, endian=endian)
     #if 'DYNAMIC' not in skips:
