@@ -3,8 +3,10 @@ defines readers for BDF objects in the OP2 GEOM1/GEOM1S table
 """
 #pylint: disable=C0301,C0103,W0612,R0914,C0326
 from struct import Struct
-import numpy as np
+from collections import defaultdict
 from typing import Tuple, Union
+
+import numpy as np
 
 from pyNastran.bdf.cards.nodes import GRID, POINT, SEQGP
 #from pyNastran.bdf.cards.parametric.geometry import FEFACE
@@ -81,7 +83,7 @@ class GEOM1(GeomCommon):
             (1327, 13, 464): ['SENQSET', self._read_fake],  # record 26
             # 27 - SEQGP (above)
             (5401, 54, 305): ['SEQSEP',  self._read_fake],  # record 28
-            (5601, 56, 296): ['SESET',   self._read_fake],  # record 29
+            (5601, 56, 296): ['SESET',   self._read_seset],  # record 29
             (1227, 12, 462): ['SETREE',  self._read_fake],  # record 30
             (5678, 71, 475): ['SNORM',   self._read_snorm],  # record 31
             (5701, 57, 323): ['CSUPER1', self._read_fake],  # record 32
@@ -157,6 +159,82 @@ class GEOM1(GeomCommon):
         assert c1f +       c3f +     + c5f       == 0.0, (c1f, c3f, c5f)
         print(out)
         return len(data)
+
+    def _read_seset(self, data: bytes, n: int) -> int:
+        """
+        Record 30 -- SESET(5601,56,296)
+
+        Word Name Type Description
+        1 SEID I Superelement identification number
+        2 G    I Grid or scalar point identification number
+        Word 2 repeats until End of Record
+
+        data = (
+            1, 33, 34, 37, 38, -1,
+            1, 93, -98, -1,
+            7, 1, -8, -1)
+
+        SESET SEID G1 G2 G3 G4 G5 G6 G7
+
+        This card is straight nonsense...
+        When you have nodes [-8, 1], it means:
+          1, THRU, 8
+
+        The subsequent case can be [-50, -8, 1, 45].
+        Well, we saw the 1,THRU,8 already, so we filter that out and:
+          [-50, 45]
+
+        is leftover, so we turn that into:
+          1, THRU, 8
+          45, THRU, 50
+
+        """
+        ints = np.frombuffer(data[n:], self.idtype8).copy()
+        iminus1 = np.where(ints == -1)[0]
+        iminus1_start = iminus1[::2]
+        iminus1_end = iminus1[1::2]
+
+        ncards = 0
+        istart = [0] + list(iminus1_end + 1)
+        iend = iminus1_start
+        size = self.size
+        set_ids_helper = defaultdict(set)
+        set_ids = defaultdict(set)
+        for (i0, i1) in zip(istart, iend):
+            assert ints[i1] == -1, ints[i1]
+            seid, *nids = ints[i0:i1]
+            #print('*', seid, nids)
+            if seid not in set_ids_helper and min(nids) > 0:
+                set_ids_helper[seid].update(set(nids))
+                set_ids[seid].update(set(nids))
+                #continue
+            else:
+                #print(seid, nids, set_ids_helper[seid])
+                diff = list(set(nids).difference(set_ids_helper[seid]))
+                diff.sort()
+                assert len(diff) == 2, diff
+
+                # -10, 1  -> 1,THRU,10
+                max_value, min_value = diff
+                nids_new = list(range(min_value, -max_value+1))
+                assert min(nids_new) > 0, nids_new
+                set_ids[seid].update(set(nids_new))
+
+                #print(seid, set_ids[seid])
+                #print(seid, nids, diff, nids_new)
+                set_ids_helper[seid].update(set(nids))
+            n += (i1 - i0 + 1) * size
+
+        ncards += len(set_ids)
+        for seid, nids in sorted(set_ids.items()):
+            nids = list(nids)
+            nids.sort()
+            assert min(nids) > 0, nids
+            seset = self.add_seset(seid, nids)
+            str(seset)
+            #print(seset)
+        self.card_count['SESET'] = ncards
+        return n
 
     def _read_snorm(self, data: bytes, n: int) -> int:
         """

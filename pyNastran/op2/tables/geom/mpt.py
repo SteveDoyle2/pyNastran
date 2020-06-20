@@ -637,9 +637,123 @@ class MPT(GeomCommon):
         self.card_count['MATT9'] = nmaterials
         return n
 
+    def junk_read_mat11(self, data: bytes, n: int) -> int:
+        """
+        Solid element orthotropic material property definition.
+        Defines the material properties for a 3-D orthotropic material for
+        isoparametric solid elements.
+
+        Word Name Type Description
+
+        1 MID I Material identification number
+        2 E1 RS Modulus of elasticity in the longitudinal direction or 1-direction
+        3 E2 RS Modulus of elasticity in the lateral direction or 2-direction
+        4 E3 RS Modulus of elasticity in the thickness direction or 3-direction
+        5 NU12 RS Poisson's ratio (ε2/ε1 for uniaxial loading in the 1-direction)
+        6 NU13 RS Poisson's ratio (ε3/ε1 for uniaxial loading in the 1-direction)
+        7 NU23 RS Poisson's ratio (ε3/ε2 for uniaxial loading in the 2-direction)
+        8 G12 RS In-plane shear modulus
+        9 G13 RS Transverse shear modulus for shear in the 1–3 plane
+        10 G23 RS Transverse shear modulus for shear in the 2–3 plane
+        11 RHO RS Mass density
+        12 A1 RS Thermal expansion coefficient in the longitudinal direction
+        13 A2 RS Thermal expansion coefficient in the lateral direction
+        14 A3 RS Thermal expansion coefficient in the thickness direction
+        15 TREF RS Reference temperature for calculation of thermal loads
+        16 GE RS Structural damping coefficient
+        17 UNDEF(16) None
+
+        """
+        ntotal = 128 # 32*4
+        struct1 = Struct(mapfmt(self._endian + b'i 15f 4f 12i', self.size))
+        nmaterials = (len(data) - n) // ntotal
+        for unused_i in range(nmaterials):
+            edata = data[n:n+ntotal]
+            out = struct1.unpack(edata)
+            mid, e1, e2, e3, nu12, nu13, nu23, g12, g13, g23, rho, a1, a2, a3, tref, ge, *other = out
+            if self.is_debug_file:
+                self.binary_debug.write('  MATT11=%s\n' % str(out))
+            print(mid, e1, e2, e3, nu12, nu13, nu23, g12, g13, g23, rho, a1, a2, a3, tref, ge)
+            #assert a == 0, out
+            #assert b == 0, out
+            #assert c == 0, out
+            #assert d == 0, out
+            #assert e == 0, out
+            #MATT9(mid, g11_table=None, g12_table=None, g13_table=None, g14_table=None,
+                                 #g15_table=None, g16_table=None, g22_table=None, g23_table=None,
+                                 #g24_table=None, g25_table=None, g26_table=None, g33_table=None,
+                                 #g34_table=None, g35_table=None, g36_table=None, g44_table=None,
+                                 #g45_table=None, g46_table=None, g55_table=None, g56_table=None,
+                                 #g66_table=None, rho_table=None,
+                                 #a1_table=None, a2_table=None, a3_table=None,
+                                 #a4_table=None, a5_table=None, a6_table=None, ge_table=None, comment='')
+            #mat = MATT11(mid, *tc_tables, trho, ta1, ta2, ta3, ta4, ta5, ta6, tge, comment='')
+            #self._add_material_dependence_object(mat, allow_overwrites=False)
+            n += ntotal
+        self.card_count['MAT11'] = nmaterials
+        self.log.warning('skipping MAT11 in MPT')
+        return n
+
     def _read_matt11(self, data: bytes, n: int) -> int:
+        """
+        Record – MATT11(3303,33,988)
+        Solid orthotropic material temperature dependence.
+        Defines the temperature dependent material property for a
+        3D orthotropic material for isoparametric solid elements.
+
+        Word Name Type Description
+
+        1 MID   I Material identification number
+        2 TE1   I TABLEMi ID for modulus of elasticity in the 1-direction
+        3 TE2   I TABLEMi ID for modulus of elasticity in the 2-direction
+        4 TE3   I TABLEMi ID for modulus of elasticity in the 3-direction
+        5 TNU12 I TABLEMi ID for Poisson's ratio (ε2/ε1 for uniaxial loading in the 1-direction)
+        6 TNU13 I TABLEMi ID for Poisson's ratio (ε3/ε1 for uniaxial loading in the 1-direction)
+        7 TNU23 I TABLEMi ID for Poisson's ratio (ε3/ε2 for uniaxial loading in the 2-direction)
+        8 TRHO  I TABLEMi ID for mass density
+        9 TG12  I TABLEMi ID for shear modulus in 1–2 plane
+        10 TG13 I TABLEMi ID for shear modulus in 1–3 plane
+        11 TG23 I TABLEMi ID for shear modulus in 2–3 plane
+        12 TA1  I TABLEMi ID for thermal expansion coefficient in the 1-direction
+        13 TA2  I TABLEMi ID for thermal expansion coefficient in the 2-direction
+        14 TA3  I TABLEMi ID for thermal expansion coefficient in the 3-direction
+        15 UNDEF None
+        16 TGE RS TABLEMi ID for structural damping coefficient
+        17 UNDEF(16) None
+        ints = (1, 10, 20, 20, 30, 30, 30, 40, 40, 50, 60, 70, 70, 70, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
+        """
+        ntotal = 128 # 32*4
+        #self.show_data(data[n:], types='if')
+        struct1 = Struct(mapfmt(self._endian + b'32i', self.size))
+        nmaterials = (len(data) - n) // ntotal
+        for unused_i in range(nmaterials):
+            edata = data[n:n+ntotal]
+            out = struct1.unpack(edata)
+            mid, te1, te2, te3, tnu12, tnu13, tnu23, trho, tg12, tg13, tg23, ta1, ta2, ta3, blank, tge, *other = out
+            if self.is_debug_file:
+                self.binary_debug.write('  MATT11=%s\n' % str(out))
+            #print(mid, te1, te2, te3, tnu12, tnu13, tnu23, trho, tg12, tg13, tg23, ta1, ta2, ta3, blank, tge)
+            assert min(other) == 0, other
+            assert max(other) == 0, other
+            #assert a == 0, out
+            #assert b == 0, out
+            #assert c == 0, out
+            #assert d == 0, out
+            #assert e == 0, out
+            #MATT9(mid, g11_table=None, g12_table=None, g13_table=None, g14_table=None,
+                                 #g15_table=None, g16_table=None, g22_table=None, g23_table=None,
+                                 #g24_table=None, g25_table=None, g26_table=None, g33_table=None,
+                                 #g34_table=None, g35_table=None, g36_table=None, g44_table=None,
+                                 #g45_table=None, g46_table=None, g55_table=None, g56_table=None,
+                                 #g66_table=None, rho_table=None,
+                                 #a1_table=None, a2_table=None, a3_table=None,
+                                 #a4_table=None, a5_table=None, a6_table=None, ge_table=None, comment='')
+            #mat = MATT11(mid, *tc_tables, trho, ta1, ta2, ta3, ta4, ta5, ta6, tge, comment='')
+            #self._add_material_dependence_object(mat, allow_overwrites=False)
+            n += ntotal
+        self.card_count['MATT11'] = nmaterials
         self.log.warning('skipping MATT11 in MPT')
-        return len(data)
+        return n
 
 # MBOLT
 # MBOLTUS

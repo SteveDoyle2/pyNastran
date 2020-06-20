@@ -1187,7 +1187,8 @@ class AddCards(AddMethods):
         self._add_nsm_object(nsm)
         return nsm
 
-    def add_nsml(self, sid: int, nsm_type: str, pid_eid: int, value: float, comment: str='') -> NSML:
+    def add_nsml(self, sid: int, nsm_type: str, pid_eid: int, value: float,
+                 comment: str='') -> NSML:
         """
         Creates an NSML card, which defines lumped non-structural mass
 
@@ -1226,7 +1227,8 @@ class AddCards(AddMethods):
             nsms.append(nsm)
         return nsms
 
-    def add_nsml1(self, sid: int, nsm_type: str, value: float, ids: List[int], comment: str='') -> NSML1:
+    def add_nsml1(self, sid: int, nsm_type: str, value: float, ids: List[int],
+                  comment: str='') -> NSML1:
         """
         Creates an NSML1 card, which defines lumped non-structural mass
 

@@ -63,15 +63,15 @@ class EPT(GeomCommon):
             (2606, 26, 289): ['VIEW', self._read_view],     # record 62 - not done
             (3201, 32, 991) : ['NSM', self._read_fake],  # record
             (3301, 33, 992) : ['NSM1', self._read_fake],  # record
-            (3701, 37, 995) : ['NSML1', self._read_fake],    # record
+            (3701, 37, 995) : ['NSML1', self._read_nsml1_nx],    # record
+            (3601, 36, 62): ['NSML1', self._read_nsml1_msc],  # record 7
             (15006, 150, 604): ['PCOMPG', self._read_pcompg],  # record
 
             (702, 7, 38): ['PBUSHT', self._read_pbusht],  # record 1
             (3301, 33, 56): ['NSM1', self._read_fake],  # record 3
             (3401, 34, 57) : ['NSMADD', self._read_fake],    # record 5
             (3501, 35, 58): ['NSML', self._read_fake],  # record 6
-            (3501, 35, 994) : ['NSM?', self._read_fake],
-            (3601, 36, 62): ['NSML1', self._read_fake],  # record 7
+            (3501, 35, 994) : ['NSML', self._read_nsml],
             (1502, 15, 36): ['PAABSF', self._read_fake],  # record 8
             (8300, 83, 382): ['PACABS', self._read_fake],  # record 9
             (8500, 85, 384): ['PACBAR', self._read_fake],  # record 10
@@ -131,6 +131,173 @@ class EPT(GeomCommon):
         self._add_convection_property_object(prop)
 
 # HGSUPPR
+
+    def _read_nsml(self, data: bytes, n: int) -> int:
+        """
+        NX 2019.2
+        RECORD – NSML(3501, 35, 994)
+
+        Defines a set of lumped nonstructural mass by ID.
+        Word Name Type Description
+        1 SID         I Set identification number
+        2 PROP(2) CHAR4 Set of properties or elements
+        4 ID          I Property of element identification number
+        5 VALUE      RS Lumped nonstructural mass value
+        Words 4 and 5 repeat until -1 occurs
+
+          ints    = (3, ELEMENT, 0,   200, 0.7, -1, 4, PSHELL, 0, 6401, 4.2, -1)
+          floats  = (3, ELEMENT, 0.0, 200, 0.7, -1, 4, PSHELL, 0.0, 6401, 4.2, -1)
+
+        """
+        n0 = n
+        #self.show_data(data[n:])
+        ints = np.frombuffer(data[n:], self.idtype8).copy()
+        floats = np.frombuffer(data[n:], self.fdtype8).copy()
+        iminus1 = np.where(ints == -1)[0]
+        istart = [0] + list(iminus1[:-1] + 1)
+        iend = iminus1
+        #print(istart, iend)
+
+        ncards = 0
+        istart = [0] + list(iend + 1)
+        size = self.size
+        for (i0, i1) in zip(istart, iend):
+            #data = (4, ELEMENT, 2.1, 1, 3301, -1, -2)
+            assert ints[i1] == -1, ints[i1]
+            sid = ints[i0]
+            prop_bytes = data[n0+(i0+1)*size:n0+(i0+3)*size]
+            print(sid, prop_bytes)
+            ids = ints[i0+4:i1:2].tolist()
+            values = floats[i0+5:i1:2].tolist()
+            print(ids, values)
+            assert len(ids) == len(values)
+            nsm_type = prop_bytes.decode('latin1').rstrip()
+            nsml = self.add_nsml(sid, nsm_type, ids, values)
+            #print(nsml)
+            str(nsml)
+            n += (i1 - i0 + 1) * size
+
+        return n
+
+    def _read_nsml1_nx(self, data: bytes, n: int) -> int:
+        """
+        NSML1(3701, 37, 995)
+        Alternate form of NSML entry. Defines lumped nonstructural mass entries by VALUE, ID list.
+
+        Word Name Type Description
+        1 SID      I Set identification number
+        2 PROP CHAR4 Set of properties
+        3 TYPE CHAR4 Set of elements
+        4 VALUE   RS Lumped nonstructural mass value
+        5 SPECOPT  I Specification option
+        SPECOPT=1 By IDs
+          6 ID I Property of element identification number
+          Word 6 repeats until -1 occurs
+        SPECOPT=2 All
+          6 ALL(2) CHAR4 Keyword ALL
+          Words 6 and 7 repeat until -1 occurs
+        SPECOPT=3 Thru range
+          6 ID1         I Starting identification number
+          7 THRU(2) CHAR4 Keyword THRU
+          9 ID2         I Ending identification number
+          Words 6 through 9 repeat until -1 occurs
+        SPECOPT=4 Thru range with by
+          6 ID1         I Starting identification number
+          7 THRU(2) CHAR4 Keyword THRU
+          9 ID2         I Ending identification number
+          10 BY(2)  CHAR4 Keyword BY
+          12 N I Increment
+          Words 6 through 12 repeat until -1 occurs
+        """
+        n0 = n
+        #self.show_data(data[n:])
+        ints = np.frombuffer(data[n:], self.idtype8).copy()
+        floats = np.frombuffer(data[n:], self.fdtype8).copy()
+        iminus2 = np.where(ints == -2)[0]
+        istart = [0] + list(iminus2[:-1] + 1)
+        iend = iminus2
+        #print(istart, iend)
+
+        ncards = 0
+        istart = [0] + list(iend + 1)
+        size = self.size
+        for (i0, i1) in zip(istart, iend):
+            #data = (4, ELEMENT, 2.1, 1, 3301, -1, -2)
+            assert ints[i1] == -2, ints[i1]
+            sid = ints[i0]
+            nsm_type = data[n0+(i0+1)*size:n0+(i0+2)*size].decode('latin1').rstrip()
+            value = float(floats[i0+3])
+            spec_opt = ints[i0+4]
+            #print(sid, nsm_type, value, spec_opt)
+
+            iminus1 = i0 + np.where(ints[i0:i1] == -1)[0]
+            #print('-1', iminus1)
+            #print('-2', iminus2)
+            istart2 = [i0 + 5] + list(iminus1[:-1] + 1)
+            iend2 = iminus1
+            #print(istart2, iend2)
+
+            if spec_opt == 1:
+                # 6 ID I Property of element identification number
+                for istarti, iendi in zip(istart2, iend2):
+                    ivalues = list(range(istarti, iendi))
+                    #print('ivalues =', ivalues)
+                    pid_eids = ints[ivalues].tolist()
+                    #print('pids =', pid_eids)
+            else:
+                raise NotImplementedError(spec_opt)
+            if nsm_type == 'ELEM':
+                nsm_type = 'ELEMENT'
+            #for pid_eid in pid_eids:
+            #nsml = self.add_nsml1(sid, nsm_type, pid_eids, [value])
+            nsml1 = self.add_nsml1(sid, nsm_type, value, pid_eids)
+            str(nsml1)
+            n += (i1 - i0 + 1) * size
+            ncards += 1
+        self.card_count['NSML'] = ncards
+
+        return n
+
+    def _read_nsml1_msc(self, data: bytes, n: int) -> int:
+        """
+        NSML1(3601, 36, 62)
+
+        Word Name Type Description
+        1 SID      I Set identification number
+        2 PROP CHAR4 Set of property or elements
+        3 VALUE   RS Lumped nonstructural mass value
+        4 SPECOPT  I Specification option
+        SPECOPT=1 By IDs
+          5 IDs , =FLG1LIST in ixidlst.prm
+          6 ID I Property or element ID
+          Word 6 repeats until End of Record
+        SPECOPT=2 means ALL, =FLG1ALL in ixidlst.prm
+          5 ALL(2) CHAR4 Keyword ALL
+          Words 5 through 6 repeat until End of Record
+        SPECOPT=3 means THRU range, =FLG1THRU in ixidlst.prm
+          5 ID1 I Starting ID
+          6 THRU(2) CHAR4 Keyword THRU
+          8 ID2 I Ending ID
+          Words 5 through 8 repeat until End of Record
+        SPECOPT=4 means THRU range with BY, =FLG1THBY in ixidlst.prm
+          5 ID1 I Starting ID
+          6 THRU(2) CHAR4 Keyword THRU
+          8 ID2 I Ending ID
+          9 BY(2) CHAR4 Keyword BY
+          11 N I Increment
+          Words 5 through 11 repeat until End of Record
+        End SPECOPT
+        Words 4 through max repeat until End of Record
+
+        C:\MSC.Software\simcenter_nastran_2019.2\tpl_post2\elsum15.op2
+
+        data = (4, ELEMENT, 2.1, 1, 3301, -1, -2)
+
+        """
+        self.log.info(f'skipping {self.card_name} in {self.table_name}; ndata={len(data)-12}')
+        #self.show_data(data[n:], types='ifs')
+        #bbb
+        return len(data)
 
     def _read_nsm(self, data: bytes, n: int) -> int:
         """NSM"""
