@@ -17,3 +17,6 @@ class MixedVersionCard(RuntimeError):
 
 class SixtyFourBitError(NotImplementedError):
     pass
+
+class OverwriteTableError(RuntimeError):
+    pass

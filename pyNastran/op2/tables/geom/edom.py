@@ -7,6 +7,8 @@ import numpy as np
 
 from pyNastran.op2.tables.geom.geom_common import GeomCommon
 from pyNastran.op2.op2_interface.op2_reader import mapfmt, reshape_bytes_block
+from .utils import get_minus1_start_end
+
 #if TYPE_CHECKING:
 from pyNastran.bdf.cards.optimization import DVPREL1, DVPREL2, DVMREL2
 
@@ -271,7 +273,9 @@ class EDOM(GeomCommon):
                     continue
                 value_actual = params[key]
                 assert isinstance(default_value, type(value_actual)), f'key={key!r} value={default_value!r} value_actual={value_actual!r}'
-                if value_actual == default_value:
+                if isinstance(value_actual, int) and value_actual == default_value:
+                    del doptprm.params[key]
+                elif isinstance(default_value, float) and np.allclose(value_actual, default_value):
                     del doptprm.params[key]
             str(doptprm)
             n += ntotal
@@ -295,12 +299,9 @@ class EDOM(GeomCommon):
 
         ints = np.frombuffer(data[n:], self.idtype8).copy()
         #floats = np.frombuffer(data[n:], self.fdtype8).copy()
-        iminus1 = np.where(ints == -1)[0]
-        size = self.size
+        istart, iend = get_minus1_start_end(ints)
 
         ncards = 0
-        istart = [0] + list(iminus1[:-1] + 1)
-        iend = iminus1
         size = self.size
         ntotal = 12 * self.factor # 3*4
         for (i0, i1) in zip(istart, iend):
@@ -462,10 +463,7 @@ class EDOM(GeomCommon):
         """
         ints = np.frombuffer(data[n:], self.idtype8).copy()
         floats = np.frombuffer(data[n:], self.fdtype8).copy()
-        iminus1 = np.where(ints == -1)[0]
-
-        istart = [0] + list(iminus1[:-1] + 1)
-        iend = iminus1
+        istart, iend = get_minus1_start_end(ints)
         size = self.size
         for (i0, i1) in zip(istart, iend):
             #self.show_data(data[n+i0*size:n+i1*size], types='ifs')
@@ -510,10 +508,10 @@ class EDOM(GeomCommon):
         6 PMIN       RS Minimum value allowed for this property
         7 PMAX       RS Maximum value allowed for this property
         8 EQID        I DEQATN entry identification number
-        9 PNAME1  CHAR4 First word of property name, if any, or blanks if
-                        FID number is nonzero in Word 5
+        9 PNAME1  CHAR4 First word of property name, if any, or blank if
+                        FID number is nonzero (Word 5)
         10 PNAME2 CHAR4 Second word of property name, if any. Otherwise,
-                        either blanks if FID number is nonzero in Word 5,
+                        either blanks if FID number is nonzero (See Word 5),
                         or frequency (RS) if entry is for frequency
                         dependent property. (See Word 5)
         11 FLAG I DESVAR/DTABLE
@@ -533,10 +531,7 @@ class EDOM(GeomCommon):
         n0 = n
         ints = np.frombuffer(data[n:], self.idtype8).copy()
         floats = np.frombuffer(data[n:], self.fdtype8).copy()
-        iminus1 = np.where(ints == -1)[0]
-
-        istart = [0] + list(iminus1[:-1] + 1)
-        iend = iminus1
+        istart, iend = get_minus1_start_end(ints)
         size = self.size
         for (i0, i1) in zip(istart, iend):
             #self.show_data(data[n+i0*size:n+i1*size], types='ifs')
@@ -975,8 +970,7 @@ class EDOM(GeomCommon):
         #self.show_data(data[n:], types='qds')
         ints = np.frombuffer(data[n:], self.idtype8).copy()
         floats = np.frombuffer(data[n:], self.fdtype8).copy()
-        iminus1 = np.where(ints == -1)[0]
-
+        istart, iend = get_minus1_start_end(ints)
         #if self.size == 4:
             #struct1 = Struct(self._endian + b'i 8s i')
             #strs = np.frombuffer(data[n:], dtype='|S4')
@@ -986,8 +980,6 @@ class EDOM(GeomCommon):
         #6i
         #ntotal1 = 16 * self.factor # 4*4
 
-        istart = [0] + list(iminus1[:-1] + 1)
-        iend = iminus1
         size = self.size
 
         def _pick_attbi_attbf(attbi: int, attbf: float) -> Union[float, str]:
@@ -1308,17 +1300,53 @@ class EDOM(GeomCommon):
         End
         8 PID I
         Word 8 repeats until End of Record
+
+        data = (
+            41, 902,    9, 4, 2, 1.0, 1.0, 21, -1,
+            42, 302,    3, 5, 2, 1.0, 1.0, 22, -1,
+            43, 902,    9, 4, 2, 1.0, 1.0, 23, -1,
+            44, 902,    9, 4, 2, 1.0, 1.0, 24, -1,
+            45, 302,    3, 5, 2, 1.0, 1.0, 25, -1,
+            46, 902,    9, 4, 2, 1.0, 1.0, 26, -1,
+            47, 52,    20, 4, 2, 1.0, 1.0, 27, -1,
+            48, 5402,  54, -7, 2, 1.0, 1.0, 28, -1,
+            48, 5402,  54, -167, 2, 1.0, 1.0, 28, -1,
+            49, 5402,  54, -7, 2, 1.0, 1.0, 29, -1,
+            49, 5402,  54, -167, 2, 1.0, 1.0, 29, -1,
+            50, 52,    20, 4, 2, 1.0, 1.0, 30, -1,
+            99, 52,    20, 3, 1, 91, 0/0.0, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, -1,
+            99, 5402,  54, 3, 1, 91, 0/0.0, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, -1,
+            99, 902,    9, 3, 1, 91, 0/0.0, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, -1,
+            100, 402,   4, 3, 3, 538976288,              1.0, 100, -1,   ??? PMASS,None,None
+            100, 402,   4, 3, 3, 1.3563156426940112e-19, 1.0, 100, -1,  ???
+            410, 902,   9, 4, 2, 1.0, -1.0, 21, -1,
+            430, 902,   9, 4, 2, 1.0, -1.0, 23, -1,
+            440, 902,   9, 4, 2, 1.0, -1.0, 24, -1,
+            460, 902,   9, 4, 2, 1.0, -1.0, 26, -1,
+            470, 52,   20, 4, 2, 1.0, -1.0, 27, -1,
+            480, 5402, 54, -7, 2, 1.0, -1.0, 28, -1,
+            480, 5402, 54, -167, 2, 1.0, -1.0, 28, -1,
+            490, 5402, 54, -7, 2, 1.0, -1.0, 29, -1,
+            490, 5402, 54, -167, 2, 1.0, -1.0, 29, -1,
+            500, 52,   20, 4, 2, 1.0, -1.0, 30, -1,
+            999, 52,   20, 3, 1, 91, 0/0.0, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, -1,
+
+            )
+
+        999, 302, 3, 3, 3, 538976288, 1.0, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, -1,  ???
+        999, 302, 3, 3, 3, 1.3563156426940112e-19, 1.0, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, -1,  ???
+
+        999, 5402, 54, 3, 1, 91, 0/0.0, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, -1,
+        999, 902, 9, 3, 1, 91, 0/0.0, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, -1)
         """
         #self.show_data(data[12:50], types='ifs')
+        n0 = n
+        size = self.size
         structi = Struct(self._endian + b'iii ii ff ii')
 
-        import numpy as np
         ints = np.frombuffer(data[n:], self.idtype8).copy()
         floats = np.frombuffer(data[n:], self.fdtype8).copy()
-        iminus1 = np.where(ints == -1)[0]
-
-        istart = [0] + list(iminus1[:-1] + 1)
-        iend = iminus1
+        istart, iend = get_minus1_start_end(ints)
         for (i0, i1) in zip(istart, iend):
             assert ints[i1] == -1, ints[i1]
             #edata = data[n:n + ntotal]
@@ -1328,14 +1356,15 @@ class EDOM(GeomCommon):
             dvset_id, dvset_ptype1, dvset_ptype2, field, flag = ints[i0:i0+5]
             if flag == 1:
                 pref, alpha = ints[i0+5:i0+7]
-                flag1
             elif flag == 2:
                 pref, alpha = floats[i0+5:i0+7]
             elif flag == 3:
                 #print(dvset_id, dvset_ptype1, dvset_ptype2, field, flag)
-                print('  ? =', ints[i0+5:i0+7], floats[i0+5:i0+7])
-                pref, alpha = '???', '???'
-                flag3
+                #print('  ? =', ints[i0+5:i0+7], floats[i0+5:i0+7], data[n0+(i0+4)*size:n0+(i0+7)*size])
+                #pref, alpha = '???', '???'
+                pref = None
+                alpha = None
+                #flag3
             else:
                 print(dvset_id, dvset_ptype1, dvset_ptype2, field, flag)
                 raise NotImplementedError(flag)
@@ -1370,10 +1399,11 @@ class EDOM(GeomCommon):
                 #ptype = 'PSHEAR'
             else:
                 raise NotImplementedError(f'DVSET={dvset_id} dvset_ptype={dvset_ptype}')
-            #print(dvset_id, ptype, field, flag, (pref, alpha), pids)
+            #print(dvset_id, (ptype, field), flag, (pref, alpha), pids)
             self.add_dvset(dvset_id, ptype, field, pref, pids, alpha=alpha)
+            n += (i1 - i0 + 1) * size
         #self.log.info(f'skipping {self.card_name} in {self.table_name}; ndata={len(data)-12}')
-        return len(data)
+        return n
 
     def _read_dvar(self, data: bytes, n: int) -> int:
         """
@@ -1476,11 +1506,7 @@ class EDOM(GeomCommon):
         """
         ints = np.frombuffer(data[n:], self.idtype8).copy()
         floats = np.frombuffer(data[n:], self.fdtype8).copy()
-        iminus1 = np.where(ints == -1)[0]
-
-        ncards = 0
-        istart = [0] + list(iminus1[:-1] + 1)
-        iend = iminus1
+        istart, iend = get_minus1_start_end(ints)
         for (i0, i1) in zip(istart, iend):
             assert ints[i1] == -1, ints[i1]
             dlink_id, dependent_desvar = ints[i0:i0+2]

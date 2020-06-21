@@ -1182,7 +1182,7 @@ class AddCards(AddMethods):
             a comment for the card
 
         """
-        assert isinstance(value, float)
+        assert isinstance(value, (float, str)), f'value={value} type={type(value)}'
         nsm = NSM1(sid, nsm_type, value, ids, comment=comment)
         self._add_nsm_object(nsm)
         return nsm
@@ -2932,27 +2932,42 @@ class AddCards(AddMethods):
         self._add_element_object(elem)
         return elem
 
-    def add_cplsts3(self, eid, pid, nids, theta=0.0, comment='') -> CPLSTS3:
+    def add_cplsts3(self, eid, pid, nids, theta=0.0,
+                    tflag=0, T1=None, T2=None, T3=None, comment='') -> CPLSTS3:
         """Creates a CPLSTS3 card"""
-        elem = CPLSTS3(eid, pid, nids, theta=theta, comment=comment)
+        elem = CPLSTS3(eid, pid, nids, theta=theta,
+                       tflag=tflag, T1=T1, T2=T2, T3=T3, comment=comment)
         self._add_element_object(elem)
         return elem
 
-    def add_cplsts4(self, eid, pid, nids, theta=0.0, comment='') -> CPLSTS4:
+    def add_cplsts4(self, eid, pid, nids, theta=0.0,
+                    tflag=0, T1=None, T2=None, T3=None, T4=None, comment='') -> CPLSTS4:
         """Creates a CPLSTS4 card"""
-        elem = CPLSTS4(eid, pid, nids, theta=theta, comment=comment)
+        elem = CPLSTS4(eid, pid, nids, theta=theta,
+                       tflag=tflag, T1=T1, T2=T2, T3=T3, T4=T4, comment=comment)
         self._add_element_object(elem)
         return elem
 
-    def add_cplsts6(self, eid, pid, nids, theta=0.0, comment='') -> CPLSTS6:
+    def add_cplsts6(self, eid, pid, nids, theta=0.0,
+                    tflag=0,
+                    T1=None, T2=None, T3=None,
+                    T4=None, T5=None, T6=None,
+                    comment='') -> CPLSTS6:
         """Creates a CPLSTS6 card"""
         elem = CPLSTS6(eid, pid, nids, theta=theta, comment=comment)
         self._add_element_object(elem)
         return elem
 
-    def add_cplsts8(self, eid, pid, nids, theta=0.0, comment='') -> CPLSTS8:
+    def add_cplsts8(self, eid, pid, nids, theta=0.0,
+                    tflag=0,
+                    T1=None, T2=None, T3=None, T4=None,
+                    T5=None, T6=None, T7=None, T8=None, comment='') -> CPLSTS8:
         """Creates a CPLSTS8 card"""
-        elem = CPLSTS8(eid, pid, nids, theta=theta, comment=comment)
+        elem = CPLSTS8(eid, pid, nids, theta=theta,
+                       tflag=tflag,
+                       T1=T1, T2=T2, T3=T3, T4=T4,
+                       T5=T5, T6=T6, T7=T7, T8=T8,
+                       comment=comment)
         self._add_element_object(elem)
         return elem
 

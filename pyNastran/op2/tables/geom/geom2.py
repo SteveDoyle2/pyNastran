@@ -133,14 +133,14 @@ class GEOM2(GeomCommon):
             #(16500, 165, 9987): ['CPENT15F', self._read_fake],
             #(16000, 160, 9988): ['CPENT6FD', self._read_fake],
             #(11901, 119, 908): ['CPENTCZ', self._read_fake],
-            (1701, 17, 980): ['CPLSTN3', self._read_fake_nx],
-            (5701, 57, 981): ['CPLSTN4', self._read_fake_nx],
-            (5801, 58, 982): ['CPLSTN6', self._read_fake_nx],
-            (7201, 72, 983): ['CPLSTN8', self._read_fake_nx],
-            (8801, 88, 984): ['CPLSTS3', self._read_fake_nx],
-            (8401, 84, 985): ['CPLSTS4', self._read_fake_nx],
-            (1801, 18, 986): ['CPLSTS6', self._read_fake_nx],
-            (3601, 36, 987): ['CPLSTS8', self._read_fake_nx],
+            (1701, 17, 980): ['CPLSTN3', self._read_cplstn3],
+            (5701, 57, 981): ['CPLSTN4', self._read_cplstn4],
+            (5801, 58, 982): ['CPLSTN6', self._read_cplstn6],
+            (7201, 72, 983): ['CPLSTN8', self._read_cplstn8],
+            (8801, 88, 984): ['CPLSTS3', self._read_cplsts3],
+            (8401, 84, 985): ['CPLSTS4', self._read_cplsts4],
+            (1801, 18, 986): ['CPLSTS6', self._read_cplsts6],
+            (3601, 36, 987): ['CPLSTS8', self._read_cplsts8],
             (17200, 172, 1000) : ['CPYRAM', self._read_cpyram], # nx-specific
             #(14400, 144, 9908): ['CPYRAMF', self._read_fake], # nx-specific
             (25700, 257, 9948) : ['CPYRA5FD', self._read_cpyram], # nx-specific
@@ -1715,6 +1715,326 @@ class GEOM2(GeomCommon):
             n += 28
             elements.append(elem)
         return elements, n
+
+    def _read_cplsts3(self, data: bytes, n: int) -> int:
+        """
+        RECORD – CPLSTS3(8801,88,984)
+        Word Name Type Description
+        1 EID  I Element identification number
+        2 PID  I Property identification number
+        3 G(3) I Grid point identification numbers of connection points
+        6 UNDEF None
+        7 THETA RS Material property orientation angle or coordinate system ID
+        8 UNDEF(4) None
+        12 TFLAG I Flag signifying meaning of T(3) values
+        13 T(3) RS Membrane thickness of element at grid points
+        16 UNDEF None
+        """
+        #self.show_data(data[n:], types='if')
+        self.to_nx()
+        ntotal = 64 * self.factor  # 16*4
+        struct_16i = Struct(mapfmt(self._endian + b'6i f 4i i3f i', self.size))
+        ndatai = len(data)
+        nelements = (ndatai - n) // ntotal
+        leftover = (ndatai - n) % ntotal
+        assert leftover == 0, leftover
+        for unused_i in range(nelements):
+            edata = data[n:n + ntotal]
+            out = struct_16i.unpack(edata)
+            if self.is_debug_file:
+                self.binary_debug.write('  CPLSTS3=%s\n' % str(out))
+            (eid, pid, n1, n2, n3, undef6, theta, undef8, undef9, undef10, undef11,
+             tflag, t1, t2, t3, undef16) = out
+            #print(eid, pid, (n1, n2, n3), theta,
+                  #tflag, t1, t2, t3)
+            nids = [n1, n2, n3]
+            undefs = (undef6, undef8, undef9, undef10, undef11, undef16)
+            assert min(undefs) == 0
+            assert max(undefs) == 0
+            cplsts3 = self.add_cplsts3(eid, pid, nids, theta=theta,
+                                       tflag=tflag, T1=t1, T2=t2, T3=t3)
+            str(cplsts3)
+            n += ntotal
+        return n
+
+    def _read_cplsts4(self, data: bytes, n: int) -> int:
+        """
+        RECORD – CPLSTS4(8401,84,985)
+
+        Word Name Type Description
+        1 EID  I Element identification number
+        2 PID  I Property identification number
+        3 G(4) I Grid point identification numbers of connection points
+        7 THETA RS Material property orientation angle or coordinate system ID
+        8 UNDEF(4) None
+        12 TFLAG I Flag signifying meaning of T(4) values
+        13 T(4) RS Membrane thickness of element at grid points
+        """
+        self.to_nx()
+        ntotal = 64 * self.factor  # 16*4
+        struct_16i = Struct(mapfmt(self._endian + b'6i f 4i i4f', self.size))
+        ndatai = len(data)
+        nelements = (ndatai - n) // ntotal
+        leftover = (ndatai - n) % ntotal
+        assert leftover == 0, leftover
+        for unused_i in range(nelements):
+            edata = data[n:n + ntotal]
+            out = struct_16i.unpack(edata)
+            if self.is_debug_file:
+                self.binary_debug.write('  CPLSTS4=%s\n' % str(out))
+            (eid, pid, n1, n2, n3, n4, theta, undef8, undef9, undef10, undef11,
+             tflag, t1, t2, t3, t4) = out
+            #print(eid, pid, (n1, n2, n3), theta,
+                  #tflag, t1, t2, t3)
+            nids = [n1, n2, n3, n4]
+            undefs = (undef8, undef9, undef10, undef11)
+            assert min(undefs) == 0, undefs
+            assert max(undefs) == 0, undefs
+            cplsts4 = self.add_cplsts4(eid, pid, nids, theta=theta,
+                                       tflag=tflag, T1=t1, T2=t2, T3=t3, T4=t4)
+            str(cplsts4)
+            n += ntotal
+        return n
+
+    def _read_cplsts6(self, data: bytes, n: int) -> int:
+        """
+        RECORD – CPLSTS6(1801,18,986)
+        Word Name Type Description
+        1 EID  I Element identification number
+        2 PID  I Property identification number
+        3 G(6) I Grid point identification numbers of connection points
+        9 UNDEF(2) None
+        11 THETA RS Material property orientation angle or coordinate system ID
+        12 TFLAG I Flag signifying meaning of T(3) values
+        13 TC(3) RS Membrane thickness of element at corner grid points
+        16 UNDEF(5) None
+        21 TM(3) RS Membrane thickness of element at mid-side grid points 24 UNDEF None
+        """
+        #1728 / 4 = 432
+        #432 = 16 * 27
+        self.to_nx()
+        struct_16i = Struct(mapfmt(self._endian + b'2i 8i fi 4f 4i 4f', self.size))
+        ntotal = 96 * self.factor  # 24*4
+        #ntotal = 128 * self.factor  # 16*4
+        #struct_16i = Struct(mapfmt(self._endian + b'2i 8i f i4f 4i 4f', self.size))
+        ndatai = len(data) - n
+        nelements = ndatai // ntotal
+        leftover = ndatai % ntotal
+        assert leftover == 0, leftover
+        for unused_i in range(nelements):
+            edata = data[n:n + ntotal]
+            #self.show_data(edata, types='if')
+            out = struct_16i.unpack(edata)
+
+            if self.is_debug_file:
+                self.binary_debug.write('  CPLSTS6=%s\n' % str(out))
+            (eid, pid, n1, n2, n3, n4, n5, n6, undef7, undef8, theta,
+             tflag, t1, t2, t3, zero1, zero2, zero3, zero4, zero5, t4, t5, t6, undef8b) = out
+            nids = [n1, n2, n3, n4, n5, n6]
+            undef = (zero1, zero2, zero3, zero4, zero5, undef7, undef8, undef8b)
+            #print(eid, pid, nids, theta,
+                  #(tflag, t1, t2, t3, t4, t5, t6), undef)
+            assert min(nids) >= 0, nids
+            assert min(t1, t2, t3, t4, t5, t6) == -1.0, (t1, t2, t3, t4, t5, t6)
+            assert max(t1, t2, t3, t4, t5, t6) == -1.0, (t1, t2, t3, t4, t5, t6)
+            cplsts6 = self.add_cplsts6(eid, pid, nids, theta=theta,
+                                       tflag=tflag,
+                                       T1=t1, T2=t2, T3=t3, T4=t4,
+                                       T5=t5, T6=t6)
+            #print(cplsts6)
+            str(cplsts6)
+            n += ntotal
+        return n
+
+    def _read_cplsts8(self, data: bytes, n: int) -> int:
+        """
+        RECORD – CPLSTS8(3601,36,987)
+
+        Word Name Type Description
+        1 EID     I Element identification number
+        2 PID     I Property identification number
+        3 G(8)    I Grid point identification numbers of connection points
+        11 THETA RS Material property orientation angle or coordinate system ID
+        12 TFLAG  I Flag signifying meaning of T(4) values
+        13 TC(4) RS Membrane thickness of element at corner grid points
+        17 UNDEF(4) None
+        21 TM(4) RS Membrane
+
+        64:
+          ints    = (39, 4, 43, 41, 114, 115, 54, 55, 116, 56, 0, 0,     -1.0, -1.0, -1.0, -1.0)
+          floats  = (39, 4, 43, 41, 114, 115, 54, 55, 116, 56, 0.0, 0.0, -1.0, -1.0, -1.0, -1.0)
+        """
+        self.to_nx()
+        struct_16i = Struct(mapfmt(self._endian + b'2i 8i fi 4f 4i 4f', self.size))
+        ntotal = 96 * self.factor  # 24*4
+        ndatai = len(data) - n
+        nelements = ndatai // ntotal
+        leftover = ndatai % ntotal
+        assert leftover == 0, leftover
+        for unused_i in range(nelements):
+            edata = data[n:n + ntotal]
+            out = struct_16i.unpack(edata)
+
+            if self.is_debug_file:
+                self.binary_debug.write('  CPLSTS8=%s\n' % str(out))
+            (eid, pid, n1, n2, n3, n4, n5, n6, n7, n8, theta,
+             tflag, t1, t2, t3, t4, zero1, zero2, zero3, zero4, t5, t6, t7, t8) = out
+            nids = [n1, n2, n3, n4, n5, n6, n7, n8]
+            #print(eid, pid, nids, theta,
+                  #(tflag, t1, t2, t3, t4, t5, t6, t7, t8))
+            assert min(nids) >= 0, nids
+            assert min(t5, t6, t7, t8) == -1.0, (t5, t6, t7, t8)
+            assert max(t5, t6, t7, t8) == -1.0, (t5, t6, t7, t8)
+            cplsts8 = self.add_cplsts8(eid, pid, nids, theta=theta,
+                                       tflag=tflag,
+                                       T1=t1, T2=t2, T3=t3, T4=t4,
+                                       T5=t5, T6=t6, T7=t7, T8=t8)
+            #print(cplsts8)
+            str(cplsts8)
+            n += ntotal
+        return n
+
+    def _read_cplstn3(self, data: bytes, n: int) -> int:
+        """
+        RECORD – CPLSTN3(1701,17,980)
+
+        Word Name Type Description
+        1 EID    I Element identification number
+        2 PID    I Property identification number
+        3 G(3)   I Grid point identification numbers of connection points
+        6 THETA RS Material property orientation angle or coordinate system ID
+        7 UNDEF(10) None
+
+        """
+        self.to_nx()
+        struct_16i = Struct(mapfmt(self._endian + b'2i 3i f 10i', self.size))
+        ntotal = 64 * self.factor  # 16*4
+        ndatai = len(data) - n
+        nelements = ndatai // ntotal
+        leftover = ndatai % ntotal
+        assert leftover == 0, leftover
+        for unused_i in range(nelements):
+            edata = data[n:n + ntotal]
+            out = struct_16i.unpack(edata)
+
+            if self.is_debug_file:
+                self.binary_debug.write('  CPLSTN3=%s\n' % str(out))
+            (eid, pid, n1, n2, n3, theta, *undef) = out
+            nids = [n1, n2, n3]
+            assert min(nids) > 0, nids
+            assert min(undef) == 0, undef
+            assert max(undef) == 0, undef
+            cplstn3 = self.add_cplstn3(eid, pid, nids, theta=theta)
+            #print(cplstn3)
+            str(cplstn3)
+            n += ntotal
+        return n
+
+    def _read_cplstn4(self, data: bytes, n: int) -> int:
+        """
+        RECORD – CPLSTN4(5701,57,981)
+        Word Name Type Description
+        1 EID    I Element identification number
+        2 PID    I Property identification number
+        3 G(4)   I Grid point identification numbers of connection points
+        7 THETA RS Material property orientation angle or coordinate system ID
+        8 UNDEF(9) None
+
+        """
+        self.to_nx()
+        struct_16i = Struct(mapfmt(self._endian + b'2i 4i f 9i', self.size))
+        ntotal = 64 * self.factor  # 16*4
+        ndatai = len(data) - n
+        nelements = ndatai // ntotal
+        leftover = ndatai % ntotal
+        assert leftover == 0, leftover
+        for unused_i in range(nelements):
+            edata = data[n:n + ntotal]
+            out = struct_16i.unpack(edata)
+
+            if self.is_debug_file:
+                self.binary_debug.write('  CPLSTN4=%s\n' % str(out))
+            (eid, pid, n1, n2, n3, n4, theta, *undef) = out
+            nids = [n1, n2, n3, n4]
+            assert min(nids) > 0, nids
+            assert min(undef) == 0, undef
+            assert max(undef) == 0, undef
+            cplstn4 = self.add_cplstn4(eid, pid, nids, theta=theta)
+            #print(cplstn4)
+            str(cplstn4)
+            n += ntotal
+        return n
+
+    def _read_cplstn6(self, data: bytes, n: int) -> int:
+        """
+        RECORD – CPLSTN6(5801,58,982)
+
+        Word Name Type Description
+        1 EID  I Element identification number
+        2 PID  I Property identification number
+        3 G(6) I Grid point identification numbers of connection points
+        9 THETA RS Material property orientation angle or coordinate system ID
+        10 UNDEF(7) None
+
+        """
+        self.to_nx()
+        struct_16i = Struct(mapfmt(self._endian + b'2i 6i f 7i', self.size))
+        ntotal = 64 * self.factor  # 16*4
+        ndatai = len(data) - n
+        nelements = ndatai // ntotal
+        leftover = ndatai % ntotal
+        assert leftover == 0, leftover
+        for unused_i in range(nelements):
+            edata = data[n:n + ntotal]
+            out = struct_16i.unpack(edata)
+
+            if self.is_debug_file:
+                self.binary_debug.write('  CPLSTN6=%s\n' % str(out))
+            (eid, pid, n1, n2, n3, n4, n5, n6, theta, *undef) = out
+            nids = [n1, n2, n3, n4, n5, n6]
+            assert min(nids) > 0, nids
+            assert min(undef) == 0, undef
+            assert max(undef) == 0, undef
+            cplstn6 = self.add_cplstn6(eid, pid, nids, theta=theta)
+            #print(cplstn6)
+            str(cplstn6)
+            n += ntotal
+        return n
+
+    def _read_cplstn8(self, data: bytes, n: int) -> int:
+        """
+        RECORD – CPLSTN8(7201,72,983)
+
+        Word Name Type Description
+        1 EID     I Element identification number
+        2 PID     I Property identification number
+        3 G(8)    I Grid point identification numbers of connection points
+        11 THETA RS Material property orientation angle or coordinate system ID
+        12 UNDEF(5) None
+
+        """
+        self.to_nx()
+        struct_16i = Struct(mapfmt(self._endian + b'2i 8i f 5i', self.size))
+        ntotal = 64 * self.factor  # 16*4
+        ndatai = len(data) - n
+        nelements = ndatai // ntotal
+        leftover = ndatai % ntotal
+        assert leftover == 0, leftover
+        for unused_i in range(nelements):
+            edata = data[n:n + ntotal]
+            out = struct_16i.unpack(edata)
+
+            if self.is_debug_file:
+                self.binary_debug.write('  CPLSTN8=%s\n' % str(out))
+            (eid, pid, n1, n2, n3, n4, n5, n6, n7, n8, theta, *undef) = out
+            nids = [n1, n2, n3, n4, n5, n6, n7, n8]
+            assert min(nids) > 0, nids
+            assert min(undef) == 0, undef
+            assert max(undef) == 0, undef
+            cplstn8 = self.add_cplstn8(eid, pid, nids, theta=theta)
+            str(cplstn8)
+            n += ntotal
+        return n
 
     def _read_cpyram(self, data: bytes, n: int) -> int:
         """

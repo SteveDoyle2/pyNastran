@@ -19,6 +19,7 @@ from pyNastran.bdf.cards.elements.damper import CVISC
 #from pyNastran.bdf.cards.elements.mass import CMASS2
 from pyNastran.op2.tables.geom.geom_common import GeomCommon
 from pyNastran.op2.op2_interface.op2_reader import mapfmt, reshape_bytes_block
+from .utils import get_minus1_start_end
 
 
 class GEOM1(GeomCommon):
@@ -75,7 +76,7 @@ class GEOM1(GeomCommon):
             (1427, 14, 465): ['SEBULK',  self._read_sebulk],  # record 19 - superelements/see103q4.op2
             (427,   4, 453): ['SECONCT', self._read_seconct],  # record 20
 
-            (7902, 79, 302): ['SEELT',   self._read_fake],  # record 21
+            (7902, 79, 302): ['SEELT',   self._read_seelt],  # record 21
             (527,  72, 454): ['SEEXCLD', self._read_fake],  # record 22
             (1027, 10, 459): ['SELABEL', self._read_selabel],  # record 23 - superelements/see103q4.op2
             (827,   8, 457): ['SELOC',   self._read_seloc],  # record 24 - superelements/see103q4.op2
@@ -160,6 +161,38 @@ class GEOM1(GeomCommon):
         print(out)
         return len(data)
 
+    def _read_seelt(self, data: bytes, n: int) -> int:
+        """
+        Record – SEELT(7902,79,302)
+        Word Name Type Description
+        1 SEID I Superelement identification number
+        2 EID  I Element identification number
+        Word 2 repeats until End of Record
+
+        data = (
+            5, 24, -1,
+            66, 662001, 662003, 662007, 662019, -1,
+            67, 672001, 672008, 672015, -1,
+            68, 682001, 682019, -1)
+
+        """
+        ints = np.frombuffer(data[n:], self.idtype8).copy()
+        istart, iend = get_minus1_start_end(ints)
+        ncards = 0
+
+        size = self.size
+        di = 0
+        for (i0, i1) in zip(istart, iend):
+            assert ints[i1] == -1, ints[i1]
+            seid, *eids = ints[i0:i1]
+
+            seelt = self.add_seelt(seid, eids)
+            str(seelt)
+            n += (i1 - i0 + 1) * size
+            ncards += 1
+            self.card_count['SEELT'] = ncards
+        return n
+
     def _read_seset(self, data: bytes, n: int) -> int:
         """
         Record 30 -- SESET(5601,56,296)
@@ -190,23 +223,23 @@ class GEOM1(GeomCommon):
 
         """
         ints = np.frombuffer(data[n:], self.idtype8).copy()
-        iminus1 = np.where(ints == -1)[0]
-        iminus1_start = iminus1[::2]
-        iminus1_end = iminus1[1::2]
+        istart, iend = get_minus1_start_end(ints)
 
         ncards = 0
-        istart = [0] + list(iminus1_end + 1)
-        iend = iminus1_start
         size = self.size
         set_ids_helper = defaultdict(set)
         set_ids = defaultdict(set)
+        di = 0
         for (i0, i1) in zip(istart, iend):
             assert ints[i1] == -1, ints[i1]
             seid, *nids = ints[i0:i1]
             #print('*', seid, nids)
-            if seid not in set_ids_helper and min(nids) > 0:
+            if min(nids) > 0:
                 set_ids_helper[seid].update(set(nids))
                 set_ids[seid].update(set(nids))
+            #if seid not in set_ids_helper and min(nids) > 0:
+                #set_ids_helper[seid].update(set(nids))
+                #set_ids[seid].update(set(nids))
                 #continue
             else:
                 #print(seid, nids, set_ids_helper[seid])
@@ -224,6 +257,9 @@ class GEOM1(GeomCommon):
                 #print(seid, nids, diff, nids_new)
                 set_ids_helper[seid].update(set(nids))
             n += (i1 - i0 + 1) * size
+            di += (i1 - i0 + 1)
+            assert i1 +1 == di, f'di={di} i1+1={i1+1} nints={len(ints)}'
+        assert i1+1 == len(ints), f'i1+1={i1+1} nints={len(ints)}'
 
         ncards += len(set_ids)
         for seid, nids in sorted(set_ids.items()):
@@ -234,6 +270,7 @@ class GEOM1(GeomCommon):
             str(seset)
             #print(seset)
         self.card_count['SESET'] = ncards
+        assert n == len(data), f'factor={self.factor} size={size} n={n} ndata={len(data)}'
         return n
 
     def _read_snorm(self, data: bytes, n: int) -> int:

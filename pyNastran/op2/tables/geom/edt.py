@@ -7,7 +7,7 @@ from typing import Tuple, Any
 import numpy as np
 from pyNastran.op2.tables.geom.geom_common import GeomCommon
 from pyNastran.op2.op2_interface.op2_reader import mapfmt, reshape_bytes_block
-
+from .utils import get_minus1_start_end
 
 class EDT(GeomCommon):
     """defines methods for reading aero and element deformations"""
@@ -108,10 +108,7 @@ class EDT(GeomCommon):
         """
         ints = np.frombuffer(data[n:], self.idtype).copy()
         floats = np.frombuffer(data[n:], self.fdtype).copy()
-        iminus1 = np.where(ints == -1)[0]
-
-        istart = [0] + list(iminus1[:-1] + 1)
-        iend = iminus1
+        istart, iend = get_minus1_start_end(ints)
 
         for (i0, i1) in zip(istart, iend):
             sid = ints[i0]
@@ -714,10 +711,7 @@ class EDT(GeomCommon):
         """
         ints = np.frombuffer(data[n:], self.idtype8).copy()
         floats = np.frombuffer(data[n:], self.fdtype8).copy()
-        iminus1 = np.where(ints == -1)[0]
-
-        istart = [0] + list(iminus1[:-1] + 1)
-        iend = iminus1
+        istart, iend = get_minus1_start_end(ints)
 
         for (i0, i1) in zip(istart, iend):
             pid, nalpha, lalpha, nxis, lxis, ntaus, ltaus = ints[i0:i0+7]
@@ -743,10 +737,7 @@ class EDT(GeomCommon):
         ('PANEL1', 1, -1)
         """
         ints = np.frombuffer(data[n:], self.idtype8).copy()
-        iminus1 = np.where(ints == -1)[0]
-
-        istart = [0] + list(iminus1[:-1] + 1)
-        iend = iminus1
+        istart, iend = get_minus1_start_end(ints)
 
         for (i0, i1) in zip(istart, iend):
             assert ints[i1] == -1, ints[i1]
@@ -883,10 +874,7 @@ class EDT(GeomCommon):
         #self.show_data(data[12:], types='if')
         ints = np.frombuffer(data[n:], self.idtype8).copy()
         floats = np.frombuffer(data[n:], self.fdtype8).copy()
-        iminus1 = np.where(ints == -1)[0]
-
-        istart = [0] + list(iminus1[:-1] + 1)
-        iend = iminus1
+        istart, iend = get_minus1_start_end(ints)
 
         for (i0, i1) in zip(istart, iend):
             sid = ints[i0]
@@ -908,10 +896,7 @@ class EDT(GeomCommon):
 
         """
         ints = np.frombuffer(data[n:], self.idtype8).copy()
-        iminus1 = np.where(ints == -1)[0]
-
-        istart = [0] + list(iminus1[:-1] + 1)
-        iend = iminus1
+        istart, iend = get_minus1_start_end(ints)
 
         for (i0, i1) in zip(istart, iend):
             sid = ints[i0]
@@ -983,10 +968,7 @@ class EDT(GeomCommon):
         """
         # this is setup for NX
         ints = np.frombuffer(data[n:], self.idtype8).copy()
-        iminus1 = np.where(ints == -1)[0]
-
-        istart = [0] + list(iminus1[:-1] + 1)
-        iend = iminus1
+        istart, iend = get_minus1_start_end(ints)
 
         for (i0, i1) in zip(istart, iend):
             sid = ints[i0]
@@ -1057,10 +1039,7 @@ class EDT(GeomCommon):
         """
         ints = np.frombuffer(data[n:], self.idtype).copy()
         #floats = np.frombuffer(data[n:], self.fdtype).copy()
-        iminus1 = np.where(ints == -1)[0]
-
-        istart = [0] + list(iminus1[:-1] + 1)
-        iend = iminus1
+        istart, iend = get_minus1_start_end(ints)
 
         for (i0, i1) in zip(istart, iend):
             name_bytes = data[n+i0*4:n+i0*4+8]
@@ -1412,10 +1391,7 @@ class EDT(GeomCommon):
         """
         ints = np.frombuffer(data[n:], self.idtype).copy()
         floats = np.frombuffer(data[n:], self.fdtype).copy()
-        iminus1 = np.where(ints == -1)[0]
-
-        istart = [0] + list(iminus1[:-1] + 1)
-        iend = iminus1
+        istart, iend = get_minus1_start_end(ints)
 
         for (i0, i1) in zip(istart, iend):
             sid = ints[i0]
@@ -1585,13 +1561,9 @@ class EDT(GeomCommon):
         )
 
         """
-        #self.show_data(data[12:], types='if')
         ints = np.frombuffer(data[n:], self.idtype8).copy()
         floats = np.frombuffer(data[n:], self.fdtype8).copy()
-        iminus1 = np.where(ints == -1)[0]
-
-        istart = [0] + list(iminus1[:-1] + 1)
-        iend = iminus1
+        istart, iend = get_minus1_start_end(ints)
 
         for (i0, i1) in zip(istart, iend):
             #if i0 == i1:

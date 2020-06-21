@@ -975,14 +975,14 @@ class CPLSTN3(CPLSTx3):
         msg = ('CPLSTN3 %8i%8i%8i%8i%8i%8s\n' % tuple(data))
         return self.comment + msg
 
-class CPLSTS3(CPLSTx3):
-    type = 'CPLSTS3'
+#class CPLSTS3(CPLSTx3):
+    #type = 'CPLSTS3'
 
-    def write_card(self, size: int=8, is_double: bool=False) -> str:
-        nodes = self.node_ids
-        data = [self.eid, self.Pid()] + nodes + [self.theta]
-        msg = ('CPLSTS3 %8i%8i%8i%8i%8i%8s\n' % tuple(data))
-        return self.comment + msg
+    #def write_card(self, size: int=8, is_double: bool=False) -> str:
+        #nodes = self.node_ids
+        #data = [self.eid, self.Pid()] + nodes + [self.theta]
+        #msg = ('CPLSTS3 %8i%8i%8i%8i%8i%8s\n' % tuple(data))
+        #return self.comment + msg
 
 class CTRIA6(TriShell):
     """
@@ -2961,13 +2961,211 @@ class CPLSTx4(QuadShell):
 
 
 class CPLSTS4(CPLSTx4):
+    """
+    +---------+-------+-------+----+-------+----+-------+-------+------+
+    |    1    |   2   |   3   |  4 |   5   |  6 |   7   |   8   |   9  |
+    +=========+=======+=======+====+=======+====+=======+=======+======+
+    | CPLSTS4 |  EID  |  PID  | N1 |   N2  | N3 |   N4  | THETA |      |
+    +---------+-------+-------+----+-------+----+-------+-------+------+
+    |         |       |       |    | TFLAG | T1 |   T2  |   T3  |  T4  |
+    +---------+-------+-------+----+-------+----+-------+-------+------+
+
+    """
     type = 'CPLSTS4'
 
+    def __init__(self, eid, pid, nids,
+                 theta=0.0, tflag=0, T1=1.0, T2=1.0, T3=1.0, T4=1.0, comment=''):
+        TriShell.__init__(self)
+        if comment:
+            self.comment = comment
+        self.eid = eid
+        self.pid = pid
+        assert len(nids) == 4, nids
+        self.nodes = self.prepare_node_ids(nids)
+        self.theta = theta
+        self.tflag = tflag
+        self.T1 = T1
+        self.T2 = T2
+        self.T3 = T3
+        self.T4 = T4
+        self.nodes = self.prepare_node_ids(nids)
+        assert len(self.nodes) == 4
+
+    def validate(self):
+        assert len(set(self.nodes)) == 4, 'nodes=%s; n=%s\n%s' % (self.nodes, len(set(self.nodes)), str(self))
+
+    def Mass(self) -> float:
+        return 0.
+
+    @classmethod
+    def add_card(cls, card, comment=''):
+        """
+        Adds a CPLSTS3 card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+
+        """
+        #: Element ID
+        eid = integer(card, 1, 'eid')
+        #: Property ID
+        pid = integer_or_blank(card, 2, 'pid', eid)
+
+        nids = [
+            integer(card, 3, 'n1'),
+            integer(card, 4, 'n2'),
+            integer(card, 5, 'n3'),
+        ]
+        if len(card) > 5:
+            theta = double_or_blank(card, 6, 'theta', 0.0)
+            blank(card, 8, 'blank')
+            blank(card, 9, 'blank')
+
+            tflag = integer_or_blank(card, 10, 'tflag', 0)
+            T1 = double_or_blank(card, 11, 'T1')
+            T2 = double_or_blank(card, 12, 'T2')
+            T3 = double_or_blank(card, 13, 'T3')
+            T4 = double_or_blank(card, 14, 'T3')
+            assert len(card) <= 14, 'len(CPLSTS4 card) = %i\ncard=%s' % (len(card), card)
+        else:
+            theta = 0.0
+            tflag = 0
+            T1 = 1.0
+            T2 = 1.0
+            T3 = 1.0
+            T4 = 1.0
+        return CPLSTS4(eid, pid, nids, theta,
+                       tflag=tflag, T1=T1, T2=T2, T3=T3, T4=T4,
+                       comment=comment)
+
+    def cross_reference(self, model: BDF) -> None:
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+
+        """
+        msg = ', which is required by CPLSTS4 eid=%s' % self.eid
+        self.nodes_ref = model.Nodes(self.node_ids, msg=msg)
+        self.pid_ref = model.Property(self.pid, msg=msg)
+
+    def safe_cross_reference(self, model, xref_errors):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+
+        """
+        msg = ', which is required by CPLSTS4 eid=%s' % self.eid
+        self.nodes_ref = model.Nodes(self.node_ids, msg=msg)
+        self.pid_ref = model.safe_property(self.pid, self.eid, xref_errors, msg=msg)
+
+    def uncross_reference(self) -> None:
+        """Removes cross-reference links"""
+        self.nodes = self.node_ids
+        self.pid = self.Pid()
+        self.nodes_ref = None
+        self.pid_ref = None
+
+    def _verify(self, xref):
+        eid = self.eid
+        pid = self.Pid()
+        nids = self.node_ids
+        unused_edges = self.get_edge_ids()
+
+        assert isinstance(eid, integer_types)
+        assert isinstance(pid, integer_types)
+        for i, nid in enumerate(nids):
+            assert isinstance(nid, integer_types), 'nid%i is not an integer; nid=%s' %(i, nid)
+
+        #if xref:
+            #assert self.pid_ref.type in ['PSHELL', 'PCOMP', 'PCOMPG', 'PLPLANE'], 'pid=%i self.pid_ref.type=%s' % (pid, self.pid_ref.type)
+            #if not self.pid_ref.type in ['PLPLANE']:
+                #t = self.Thickness()
+                #assert isinstance(t, float), 'thickness=%r' % t
+                #mass = self.Mass()
+                #assert isinstance(mass, float), 'mass=%r' % mass
+            #a, c, n = self.AreaCentroidNormal()
+            #assert isinstance(a, float), 'Area=%r' % a
+            #for i in range(3):
+                #assert isinstance(c[i], float)
+                #assert isinstance(n[i], float)
+
+    def flip_normal(self):
+        """
+        Flips normal of element.
+
+        ::
+
+               1           1
+              * *   -->   * *
+             *   *       *   *
+            2-----3     3-----2
+
+        """
+        (n1, n2, n3) = self.nodes
+        self.nodes = [n1, n3, n2]
+        if self.nodes_ref is not None:
+            (n1, n2, n3) = self.nodes_ref
+            self.nodes_ref = [n1, n3, n2]
+
+    def _get_repr_defaults(self):
+        tflag = set_blank_if_default(self.tflag, 0)
+        theta = set_blank_if_default(self.theta, 0.0)
+
+        T1 = set_blank_if_default(self.T1, 1.0)
+        T2 = set_blank_if_default(self.T2, 1.0)
+        T3 = set_blank_if_default(self.T3, 1.0)
+        T4 = set_blank_if_default(self.T4, 1.0)
+        return (theta, tflag, T1, T2, T3, T4)
+
+    @property
+    def node_ids(self):
+        return self._node_ids(nodes=self.nodes_ref, allow_empty_nodes=False)
+
+    def raw_fields(self):
+        list_fields = (['CPLSTS4', self.eid, self.Pid()] + self.node_ids +
+                       [self.theta, None, None] +
+                       [None, self.tflag, self.T1, self.T2, self.T3, self.T4])
+        return list_fields
+
+    def repr_fields(self):
+        (theta, tflag, T1, T2, T3, T4) = self._get_repr_defaults()
+        list_fields = (['CPLSTS4', self.eid, self.Pid()] + self.node_ids +
+                       [theta, None, None] + [None, tflag, T1, T2, T3, T4])
+        return list_fields
+
     def write_card(self, size: int=8, is_double: bool=False) -> str:
+        (theta, tflag, T1, T2, T3, T4) = self._get_repr_defaults()
+
+        T1 = set_blank_if_default(self.T1, 1.0)
+        T2 = set_blank_if_default(self.T2, 1.0)
+        T3 = set_blank_if_default(self.T3, 1.0)
+
         nodes = self.node_ids
-        data = [self.eid, self.Pid()] + nodes + [print_float_8(self.theta)]
-        msg = ('CPLSTS4 %8i%8i%8i%8i%8i%8i%8s\n' % tuple(data))
-        return self.comment + msg
+        row2_data = [theta, '', tflag, T1, T2, T3, T4]
+        row2 = [print_field_8(field) for field in row2_data]
+        data = [self.eid, self.Pid()] + nodes + row2
+        aaa
+        msg = ('CPLSTS4 %8i%8i%8i%8i%8i%8s%8s\n'
+               '                %8s%8s%8s%8s\n' % tuple(data))
+        return self.comment + msg.rstrip() + '\n'
+
+    #def write_card(self, size: int=8, is_double: bool=False) -> str:
+        #nodes = self.node_ids
+        #data = [self.eid, self.Pid()] + nodes + [print_float_8(self.theta)]
+        #msg = ('CPLSTS4 %8i%8i%8i%8i%8i%8i%8s\n' % tuple(data))
+        #return self.comment + msg
 
 
 class CPLSTN4(CPLSTx4):
@@ -3460,6 +3658,30 @@ class CPLSTx8(QuadShell):
 
 class CPLSTS8(CPLSTx8):
     type = 'CPLSTS8'
+    def __init__(self, eid, pid, nids,
+                 theta=0.0, tflag=0,
+                 T1=1.0, T2=1.0, T3=1.0, T4=1.0,
+                 T5=1.0, T6=1.0, T7=1.0, T8=1.0, comment=''):
+        TriShell.__init__(self)
+        if comment:
+            self.comment = comment
+        self.eid = eid
+        self.pid = pid
+        assert len(nids) == 8, nids
+        self.nodes = self.prepare_node_ids(nids)
+        self.theta = theta
+        self.tflag = tflag
+        self.T1 = T1
+        self.T2 = T2
+        self.T3 = T3
+        self.T4 = T4
+        self.T5 = T5
+        self.T6 = T6
+        self.T7 = T7
+        self.T8 = T8
+        self.nodes = self.prepare_node_ids(nids)
+        assert len(self.nodes) == 8
+
 
 class CPLSTN8(CPLSTx8):
     type = 'CPLSTN8'
@@ -3749,6 +3971,7 @@ class CQUADR(QuadShell):
         #assert msg == msg2, '\n%s---\n%s\n%r\n%r' % (msg, msg2, msg, msg2)
         return msg
 
+
 class CPLSTS3(TriShell):
     """
     +---------+-------+-------+----+----+----+-------+-------+-----+
@@ -3850,7 +4073,7 @@ class CPLSTS3(TriShell):
             T1 = double_or_blank(card, 11, 'T1')
             T2 = double_or_blank(card, 12, 'T2')
             T3 = double_or_blank(card, 13, 'T3')
-            assert len(card) <= 14, 'len(CTRIA3 card) = %i\ncard=%s' % (len(card), card)
+            assert len(card) <= 14, 'len(CPLSTS3 card) = %i\ncard=%s' % (len(card), card)
         else:
             theta = 0.0
             tflag = 0

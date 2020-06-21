@@ -265,7 +265,7 @@ def _write_dvprel2(model: Union[BDF, OP2Geom], name: str,
             fid = 0
             pname = dvprel.pname_fid
         else:
-            fmt = 'i 8s 2i 2fi ii'
+            fmt = b'i 8s 2i 2fi 8s'
             fid = dvprel.pname_fid
             pname = ''
 
@@ -375,7 +375,7 @@ def _write_dvmrel2(model: Union[BDF, OP2Geom], name: str,
     assert len(data_all) == ndata, f'ndata={len(data_all)} nvalues={ndata}'
     return nbytes
 
-def _write_dvxrel2_flag(dvxrel2: Union[DVPREL2, DVMREL2], data: List[Any]):
+def _write_dvxrel2_flag(dvxrel2: Union[DVPREL2, DVMREL2], data: List[Any]) -> bytes:
     """writes the DVxREL2 flag table"""
     fmt = b''
     ndesvars = len(dvxrel2.dvids)

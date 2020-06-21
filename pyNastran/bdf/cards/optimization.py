@@ -1097,66 +1097,107 @@ class DDVAL(OptConstraint):
         return self.comment + print_card_16(card)
 
 
+DOPTPRM_INTS = set([])
+DOPTPRM_FLOATS = {
+    'DABOBJ', 'DOBJ2', 'DX2',
+}
+DOPTPRM_INT_FLOATS = set([])
+DOPTPRM_DEFAULTS = {
+    'APRCOD' : 2,
+    'AUTOSE' : 0,
+    #'CONV1' : 0.001,
+    'CONV1' : 0.0001,  # NX 2019.2
+    'CONV2' : 1e-20,
+    'CONVDV' : 0.001,  # 0.0001 for topology optimization
+    'CONVPR' : 0.001,
+    'CT' : -0.03,
+    'CTMIN' : 0.003,
+    'DELB' : 0.0001,
+    'DELP' : 0.2,
+    'DELX' : 0.5,  # 0.2 for topology optimization
+    'DLXESL' : 0.5,
+    'DESMAX' : 5,  # 30 for topology optimization
+    'DELOBJ' : 0.001,
+    'DOBJ1' : 0.1,
+    'DOBJ2' : None,
+    'DX1' : 0.01,
+    'DX2' : None,
+    'DISCOD' : 1,
+    'DISBEG' : 0,
+    'DPMAX' : 0.5,
+    'DPMIN' : 0.01,
+    'DRATIO' : 0.1,
+    'DSMXESL' : 20,
+    'DXMAX' : 1.0,
+    'DXMIN' : 0.05,  # 1e-5 for topology optimization
+    'DPMIN' : 0.01,
+
+    'ETA1' : 0.01,
+    'ETA2' : 0.25,
+    'ETA3' : 0.7,
+    'EDVOUT': 0.001,
+    'FSDALP' : 0.9,
+    'FSDMAX' : 0,
+    'GMAX' : 0.005,
+    'GSCAL' : 0.001,
+
+    'IGMAX' : 0,
+    'IPRINT' : 0,
+    'IPRNT1': 0,
+    'IPRNT2': 0,
+    'ISCAL' : 0,
+    'ITMAX': 40,
+    'ITRMOP': 2,
+    'ITRMST': 2,
+    'IWRITE': 6, # or system(2)
+
+    'JPRINT': 0,
+    'JTMAX': 20,
+    'JWRITE': 0,
+
+    'MXCRTRSP': 5,
+    #'METHOD' : 0, # ???
+    'METHOD' : 1, # NX 2019
+
+    'NASPRO' : 0,
+    'OBJMOD' : 0,
+    'OPTCOD' : 0,
+    'P1' : 0,
+    'P2' : 1,
+
+    'P2CALL' : None,  #: .. todo:: DEFAULT PRINTS ALL???
+    'P2CBL' : None,   #: .. todo:: DEFAULT PRINTS ALL???
+    'P2CC' : None,    #: .. todo:: DEFAULT PRINTS ALL???
+    'P2CDDV' : None,  #: .. todo:: DEFAULT PRINTS ALL???
+    'P2CM' : None,    #: .. todo:: DEFAULT PRINTS ALL???
+    'P2CP' : None,    #: .. todo:: DEFAULT PRINTS ALL???
+    'P2CR' : None,    #: .. todo:: DEFAULT PRINTS ALL???
+    'P2RSET' : 0,     # default=0 -> ALL
+    'PENAL' : 0.0,
+    'PLVIOL' : 0,
+    'PTOL' : 1e35,
+    'STPSCL' : 1.0,
+    'TCHECK' : -1,
+    'TDMIN' : None,  #: .. todo:: ???
+    'TREGION' : 0,
+    'UPDFAC1' : 2.0,
+    'UPDFAC2' : 0.5,
+}
+
+for key, value in DOPTPRM_DEFAULTS.items():
+    if isinstance(value, int):
+        DOPTPRM_INTS.add(key)
+    elif isinstance(value, float):
+        DOPTPRM_FLOATS.add(key)
+    elif value is None:
+        DOPTPRM_INT_FLOATS.add(key)
+    else:
+        raise RuntimeError((key, value))
+
 class DOPTPRM(OptConstraint):
     """causes a Nastran core dump if FSDMAX is nonzero and there is no stress case"""
     type = 'DOPTPRM'
-    defaults = {
-        'APRCOD' : 2,
-        'AUTOSE' : 0,
-        'CONV1' : 0.001,
-        'CONV2' : 1e-20,
-        'CONVDV' : 0.001,  # 0.0001 for topology optimization
-        'CONVPR' : 0.001,
-        'CT' : -0.03,
-        'CTMIN' : 0.003,
-        'DELB' : 0.0001,
-        'DELP' : 0.2,
-        'DELX' : 0.5,  # 0.2 for topology optimization
-        'DLXESL' : 0.5,
-        'DESMAX' : 5,  # 30 for topology optimization
-        'DISCOD' : 1,
-        'DISBEG' : 0,
-        'DPMAX' : 0.5,
-        'DPMIN' : 0.01,
-        'DRATIO' : 0.1,
-        'DSMXESL' : 20,
-        'DXMAX' : 1.0,
-        'DXMIN' : 0.05,  # 1e-5 for topology optimization
-        'ETA1' : 0.01,
-        'ETA2' : 0.25,
-        'ETA3' : 0.7,
-        'FSDALP' : 0.9,
-        'FSDMAX' : 0,
-        'GMAX' : 0.005,
-        'GSCAL' : 0.001,
-        'IGMAX' : 0,
-        'IPRINT' : 0,
-        'ISCAL' : 0,
-        'METHOD' : 0,
-        'NASPRO' : 0,
-        'OBJMOD' : 0,
-        'OPTCOD' : 0,
-        'P1' : 0,
-        'P2' : 1,
-
-        'P2CALL' : None,  #: .. todo:: DEFAULT PRINTS ALL???
-        'P2CBL' : None,   #: .. todo:: DEFAULT PRINTS ALL???
-        'P2CC' : None,    #: .. todo:: DEFAULT PRINTS ALL???
-        'P2CDDV' : None,  #: .. todo:: DEFAULT PRINTS ALL???
-        'P2CM' : None,    #: .. todo:: DEFAULT PRINTS ALL???
-        'P2CP' : None,    #: .. todo:: DEFAULT PRINTS ALL???
-        'P2CR' : None,    #: .. todo:: DEFAULT PRINTS ALL???
-        'P2RSET' : None,  #: .. todo:: DEFAULT PRINTS ALL???
-        'PENAL' : 0.0,
-        'PLVIOL' : 0,
-        'PTOL' : 1e35,
-        'STPSCL' : 1.0,
-        'TCHECK' : -1,
-        'TDMIN' : None,  #: .. todo:: ???
-        'TREGION' : 0,
-        'UPDFAC1' : 2.0,
-        'UPDFAC2' : 0.5,
-        }
+    defaults = DOPTPRM_DEFAULTS
 
     @classmethod
     def _init_from_empty(cls):
@@ -1209,7 +1250,16 @@ class DOPTPRM(OptConstraint):
                 continue
             if param in cls.defaults:
                 default_value = cls.defaults[param]
-            val = integer_double_string_or_blank(card, i + 2, '%s_value' % param, default_value)
+
+            if param in DOPTPRM_INTS:
+                val = integer_or_blank(card, i + 2, '%s_value' % param, default_value)
+            elif param in DOPTPRM_FLOATS:
+                val = double_or_blank(card, i + 2, '%s_value' % param, default_value)
+            elif param in DOPTPRM_INT_FLOATS:
+                val = integer_double_string_or_blank(card, i + 2, '%s_value' % param, default_value)
+            else:
+                #raise NotImplementedError(f'param={param} value={card[i+2]}')
+                val = integer_double_string_or_blank(card, i + 2, '%s_value' % param, default_value)
             params[param] = val
         return DOPTPRM(params, comment=comment)
 

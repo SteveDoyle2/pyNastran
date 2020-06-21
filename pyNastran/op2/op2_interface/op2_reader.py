@@ -139,6 +139,7 @@ class OP2Reader:
             b'SDF' : self.read_sdf,
             b'IBULK' : self.read_ibulk,
             b'ICASE' : self.read_icase,
+            b'XCASECC': self.read_xcasecc,
             b'CDDATA' : self.read_cddata,
             b'CMODEXT' : self._read_cmodext,
 
@@ -2300,6 +2301,76 @@ class OP2Reader:
             with open(bulk_filename, 'a') as bdf_file:
                 bdf_file.writelines(lines)
         self._case_control_lines = lines
+
+    def read_xcasecc(self):
+        """
+        Poorly reads the XCASECC table.
+        It's somehow aero related...
+
+        C:\MSC.Software\simcenter_nastran_2019.2\tpl_post1\z402cbush1d_02a.op2
+        word1 = b'XCASECC '
+        word2 = (
+            b'                                                                                                                                                                                                                                                                 '
+            b'SUBCASE - NONLINEAR IMPLICIT                                                                           '
+            b'SUBCASE 1               '
+        word3 = b'AEROSG2D'
+        word4 = b'YES '
+        """
+        op2 = self.op2
+        size = self.size
+        op2.table_name = self._read_table_name(rewind=False)
+        if self.is_debug_file:
+            self.binary_debug.write('read_geom_table - %s\n' % op2.table_name)
+        self.read_markers([-1])
+        if self.is_debug_file:
+            self.binary_debug.write('---markers = [-1]---\n')
+
+        if self.read_mode == 1:
+            #(103, 1, 0, 1200, 0, 0, 0)
+            data = self._skip_record()
+
+            self.read_3_markers([-2, 1, 0])
+            data = self._skip_record()
+
+            self.read_3_markers([-3, 1, 0])
+            data = self._skip_record()
+        else:
+            #(103, 1, 0, 1200, 0, 0, 0)
+            data = self._read_record()
+            self.show_data(data, types='q', endian=None, force=False)
+
+            self.read_3_markers([-2, 1, 0])
+            data = self._read_record()
+            word1 = reshape_bytes_block(data)
+            print(word1)
+            print('word1 =', word1)
+
+            self.read_3_markers([-3, 1, 0])
+            data = self._read_record()
+            # (1, 0, 101, 0, 0, 0, 0, 0, 0, 0, 0, 0, 301, 0, 0, 0, -1, 2, 1, -1, 2, 1, -1, 2, 1, -1, 2, 1, -1, 2, 1, -1, 2, 1, -1, 2, 1, 100)
+            #self.show_data(data[:38*size], types='q', endian=None, force=False)
+            word2 = reshape_bytes_block(data[38*size:134*size])
+            print('word2 =', word2)
+
+            # ints = (0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, -1,
+            #         0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1200, -1,
+            #         2, 1, 0, 0, 0, 0, 0, 0, -1, 0, 0, 0, -1, -1, -1, -1,
+            #         0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1, 1, -1,
+            #         0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1, -1,
+            #         0, 0, 0, 0, 0, 0, 0, 0, 0, 402, 129, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1,
+            #         2, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0)
+            # self.show_data(data[134*size:283*size], types='qd', endian=None, force=False)
+            word3 = reshape_bytes_block(data[283*size:285*size])
+            print('word3 =', word3)
+
+            #self.show_data(data[285*size:518*size], types='qd', endian=None, force=False)
+
+            word4 = reshape_bytes_block(data[518*size:519*size])
+            print('word4 =', word4)
+            # (0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1, 0, -1, -1, -1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
+            #self.show_data(data[519*size:], types='qd', endian=None, force=True)
+
+        self.read_3_markers([-4, 1, 0, 0])
 
     def read_cddata(self):
         """Cambell diagram summary"""
@@ -5224,7 +5295,7 @@ class OP2Reader:
             endian = self._uendian
             assert endian is not None, endian
 
-        f.write(f'\nndata = {len(data)}:\n')
+        f.write(f'\nndata = {n}:\n')
         for typei in types:
             assert typei in 'sifdq lILQ', f'type={typei!r} is invalid; use sifdq lILQ'
 

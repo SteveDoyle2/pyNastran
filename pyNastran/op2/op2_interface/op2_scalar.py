@@ -618,6 +618,65 @@ class OP2_Scalar(LAMA, ONR, OGPF,
 
         # MSC table mapper
         table_mapper = {
+            # -----------------------------------------------------------
+            # geometry
+            b'GEOM1' : [self._table_passer, self._table_passer], # GEOM1-Geometry-related bulk data
+            b'GEOM2' : [self._table_passer, self._table_passer], # GEOM2-element connectivity and SPOINT-related data
+            b'GEOM3' : [self._table_passer, self._table_passer], # GEOM3-Static and thermal loads
+            b'GEOM4' : [self._table_passer, self._table_passer], # GEOM4-constraints, DOF membership entries, MPC, and R-type element data
+
+            # superelements
+            b'GEOM1S' : [self._table_passer, self._table_passer],  # GEOMx + superelement
+            b'GEOM2S' : [self._table_passer, self._table_passer],
+            b'GEOM3S' : [self._table_passer, self._table_passer],
+            b'GEOM4S' : [self._table_passer, self._table_passer],
+
+            b'GEOM1VU' : [self._table_passer, self._table_passer],
+            b'GEOM2VU' : [self._table_passer, self._table_passer],
+            b'BGPDTVU' : [self._table_passer, self._table_passer],
+
+            b'GEOM1N' : [self._table_passer, self._table_passer],
+            b'GEOM2N' : [self._table_passer, self._table_passer],
+            b'GEOM3N' : [self._table_passer, self._table_passer],
+            b'GEOM4N' : [self._table_passer, self._table_passer],
+
+            b'GEOM1OLD' : [self._table_passer, self._table_passer],
+            b'GEOM2OLD' : [self._table_passer, self._table_passer],
+            b'GEOM3OLD' : [self._table_passer, self._table_passer],
+            b'GEOM4OLD' : [self._table_passer, self._table_passer],
+
+            b'EPT' : [self._table_passer, self._table_passer],  # elements
+            b'EPTS' : [self._table_passer, self._table_passer],  # elements - superelements
+            b'EPTOLD' : [self._table_passer, self._table_passer],
+
+            b'MPT' : [self._table_passer, self._table_passer],  # materials
+            b'MPTS' : [self._table_passer, self._table_passer],  # materials - superelements
+
+            b'DYNAMIC' : [self._table_passer, self._table_passer],
+            b'DYNAMICS' : [self._table_passer, self._table_passer],
+            b'DIT' : [self._table_passer, self._table_passer],
+            b'DITS' : [self._table_passer, self._table_passer],
+
+            # this comment may refer to CSTM?
+            #F:\work\pyNastran\examples\Dropbox\pyNastran\bdf\cards\test\test_mass_01.op2
+            #F:\work\pyNastran\examples\matpool\gpsc1.op2
+            b'AXIC': [self._table_passer, self._table_passer],
+
+
+            # EDT - aero cards
+            #       element deformation, aerodynamics, p-element, divergence analysis,
+            #       and iterative solver input (includes SET1 entries)
+            b'EDT' : [self._table_passer, self._table_passer],
+            b'EDTS' : [self._table_passer, self._table_passer],
+
+            # contact/glue
+            b'CONTACT' : [self._table_passer, self._table_passer],
+            b'CONTACTS' : [self._table_passer, self._table_passer],
+
+            b'EDOM' : [self._table_passer, self._table_passer],     # optimization
+            b'VIEWTB' : [self._table_passer, self._table_passer],   # view elements
+            # =========================end geom passers=========================
+
             # per NX
             b'OESVM1' : [self._read_oes1_3, self._read_oes1_4],    # isat_random
             b'OESVM1C' : [self._read_oes1_3, self._read_oes1_4],   # isat_random
@@ -691,11 +750,6 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             #b'TOL': [self._table_passer, self._table_passer],
 
             b'MATPOOL': [self._table_passer, self._table_passer], # DMIG bulk data entries
-
-            # this comment may refer to CSTM?
-            #F:\work\pyNastran\examples\Dropbox\pyNastran\bdf\cards\test\test_mass_01.op2
-            #F:\work\pyNastran\examples\matpool\gpsc1.op2
-            b'AXIC': [self._table_passer, self._table_passer],
 
             b'RSOUGV1': [self._table_passer, self._table_passer],
             b'RESOES1': [self._table_passer, self._table_passer],
@@ -828,7 +882,6 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             b'OSTR1THC' : [self._table_passer, self._table_passer], # ????
             b'OSTR1CR' : [self._table_passer, self._table_passer], # ????
             #b'OEFIIP'
-            b'XCASECC' : [self._table_passer, self._table_passer], # ????
 
             # special nonlinear tables
             # OESNLBR - Slideline stresses
@@ -989,47 +1042,6 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             b'LAMAS' : [self._read_real_eigenvalue_3, self._read_real_eigenvalue_4],         # eigenvalues-structure
             b'LAMAF' : [self._read_real_eigenvalue_3, self._read_real_eigenvalue_4],         # eigenvalues-fluid
 
-            # ===========================geom passers===========================
-            # geometry
-            b'GEOM1' : [self._table_passer, self._table_passer], # GEOM1-Geometry-related bulk data
-            b'GEOM2' : [self._table_passer, self._table_passer], # GEOM2-element connectivity and SPOINT-related data
-            b'GEOM3' : [self._table_passer, self._table_passer], # GEOM3-Static and thermal loads
-            b'GEOM4' : [self._table_passer, self._table_passer], # GEOM4-constraints, DOF membership entries, MPC, and R-type element data
-
-            # superelements
-            b'GEOM1S' : [self._table_passer, self._table_passer],  # GEOMx + superelement
-            b'GEOM2S' : [self._table_passer, self._table_passer],
-            b'GEOM3S' : [self._table_passer, self._table_passer],
-            b'GEOM4S' : [self._table_passer, self._table_passer],
-
-            b'GEOM1VU' : [self._table_passer, self._table_passer],
-            b'GEOM2VU' : [self._table_passer, self._table_passer],
-            b'BGPDTVU' : [self._table_passer, self._table_passer],
-
-            b'GEOM1N' : [self._table_passer, self._table_passer],
-            b'GEOM2N' : [self._table_passer, self._table_passer],
-            b'GEOM3N' : [self._table_passer, self._table_passer],
-            b'GEOM4N' : [self._table_passer, self._table_passer],
-
-            b'GEOM1OLD' : [self._table_passer, self._table_passer],
-            b'GEOM2OLD' : [self._table_passer, self._table_passer],
-            b'GEOM3OLD' : [self._table_passer, self._table_passer],
-            b'GEOM4OLD' : [self._table_passer, self._table_passer],
-
-            b'EPT' : [self._table_passer, self._table_passer],  # elements
-            b'EPTS' : [self._table_passer, self._table_passer],  # elements - superelements
-            b'EPTOLD' : [self._table_passer, self._table_passer],
-
-            b'MPT' : [self._table_passer, self._table_passer],  # materials
-            b'MPTS' : [self._table_passer, self._table_passer],  # materials - superelements
-
-            b'DYNAMIC' : [self._table_passer, self._table_passer],
-            b'DYNAMICS' : [self._table_passer, self._table_passer],
-            b'DIT' : [self._table_passer, self._table_passer],
-            b'DITS' : [self._table_passer, self._table_passer],
-            b'AXIC' : [self._table_passer, self._table_passer],
-            # =========================end geom passers=========================
-
             # ===passers===
             #b'EQEXIN': [self._table_passer, self._table_passer],
             #b'EQEXINS': [self._table_passer, self._table_passer],
@@ -1043,26 +1055,20 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             b'PVTS' : [self._read_pvto_3, self._read_pvto_4], # ???
             b'PVT0' : [self._read_pvto_3, self._read_pvto_4],  # user parameter value table
             b'TOLD' : [self._table_passer, self._table_passer],
-            b'CASECC' : [self._table_passer, self._table_passer],  # case control deck
+            #b'CASECC' : [self._table_passer, self._table_passer],  # case control deck
+            #b'XCASECC' : [self._table_passer, self._table_passer], # ???
 
             b'STDISP' : [self._table_passer, self._table_passer], # matrix?
             b'AEDISP' : [self._table_passer, self._table_passer], # matrix?
             #b'TOLB2' : [self._table_passer, self._table_passer], # matrix?
 
-            # EDT - element deformation, aerodynamics, p-element, divergence analysis,
-            #       and iterative solver input (includes SET1 entries)
-            b'EDT' : [self._table_passer, self._table_passer],
-            b'EDTS' : [self._table_passer, self._table_passer],
-
             b'FOL' : [self._table_passer, self._table_passer],
             b'PERF' : [self._table_passer, self._table_passer],
-            b'VIEWTB' : [self._table_passer, self._table_passer],   # view elements
 
             # DSCMCOL - Correlation table for normalized design sensitivity coefficient matrix.
             #           Output by DSTAP2.
             # DBCOPT - Design optimization history table for
-            b'CONTACT' : [self._table_passer, self._table_passer],
-            b'CONTACTS' : [self._table_passer, self._table_passer],
+
             b'OEKE1' : [self._table_passer, self._table_passer],
             #b'DSCMCOL' : [self._table_passer, self._table_passer],
             #b'DBCOPT' : [self._table_passer, self._table_passer],
@@ -1107,8 +1113,6 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             #b'OMM2' : [self._table_passer, self._table_passer],  # max/min table - kinda useless
             b'ERRORN' : [self._table_passer, self._table_passer],  # p-element error summary table
             #==================================
-
-            b'EDOM' : [self._table_passer, self._table_passer],
             b'OUG2T' : [self._table_passer, self._table_passer],
 
             # acceleration

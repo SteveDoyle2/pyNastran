@@ -23,6 +23,7 @@ from pyNastran.bdf.cards.thermal.thermal import PCONV, PHBDY, PCONVM
 # PCOMPG, PBUSH1D, PBEAML, PBEAM3
 from pyNastran.op2.tables.geom.geom_common import GeomCommon
 from pyNastran.op2.op2_interface.op2_reader import mapfmt, reshape_bytes_block
+from .utils import get_minus1_start_end
 
 
 class EPT(GeomCommon):
@@ -61,8 +62,8 @@ class EPT(GeomCommon):
             (1802, 18, 31): ['PVISC', self._read_pvisc],    # record 59
             (10201, 102, 400): ['PVAL', self._read_pval],   # record 58 - not done
             (2606, 26, 289): ['VIEW', self._read_view],     # record 62 - not done
-            (3201, 32, 991) : ['NSM', self._read_fake],  # record
-            (3301, 33, 992) : ['NSM1', self._read_fake],  # record
+            (3201, 32, 991) : ['NSM', self._read_nsm_2],  # record
+            (3301, 33, 992) : ['NSM1', self._read_nsm1],  # record
             (3701, 37, 995) : ['NSML1', self._read_nsml1_nx],    # record
             (3601, 36, 62): ['NSML1', self._read_nsml1_msc],  # record 7
             (15006, 150, 604): ['PCOMPG', self._read_pcompg],  # record
@@ -96,7 +97,7 @@ class EPT(GeomCommon):
             (3601, 36, 55) : ['PFAST', self._read_pfast_nx],  # NX-specific
             (3801, 38, 979) : ['PPLANE', self._read_pplane],
             (11801, 118, 560) : ['PWELD', self._read_fake],
-            (3401, 34, 993) : ['NSMADD', self._read_fake],
+            (3401, 34, 993) : ['NSMADD', self._read_nsmadd],
         }
 
     def _add_op2_property(self, prop):
@@ -153,30 +154,59 @@ class EPT(GeomCommon):
         #self.show_data(data[n:])
         ints = np.frombuffer(data[n:], self.idtype8).copy()
         floats = np.frombuffer(data[n:], self.fdtype8).copy()
-        iminus1 = np.where(ints == -1)[0]
-        istart = [0] + list(iminus1[:-1] + 1)
-        iend = iminus1
-        #print(istart, iend)
+        istart, iend = get_minus1_start_end(ints)
 
         ncards = 0
-        istart = [0] + list(iend + 1)
         size = self.size
         for (i0, i1) in zip(istart, iend):
             #data = (4, ELEMENT, 2.1, 1, 3301, -1, -2)
             assert ints[i1] == -1, ints[i1]
             sid = ints[i0]
             prop_bytes = data[n0+(i0+1)*size:n0+(i0+3)*size]
-            print(sid, prop_bytes)
+            #print(sid, prop_bytes)
             ids = ints[i0+4:i1:2].tolist()
             values = floats[i0+5:i1:2].tolist()
-            print(ids, values)
+            #print(ids, values)
             assert len(ids) == len(values)
             nsm_type = prop_bytes.decode('latin1').rstrip()
             nsml = self.add_nsml(sid, nsm_type, ids, values)
             #print(nsml)
             str(nsml)
             n += (i1 - i0 + 1) * size
+            ncards += 1
+        self.card_count['NSML'] = ncards
+        return n
 
+    def _read_nsmadd(self, data: bytes, n: int) -> int:
+        """
+        NX 2019.2
+        (3401, 34, 993)
+
+        RECORD – NSMADD(3401,34,993)
+        Combines the nonstructural mass inputs.
+
+        Word Name Type Description
+        1 SID I Set identification number
+        2 ID  I Set of properties or elements
+        Word 2 repeats until End of Record
+
+        (1, 2, 3, 4, -1)
+        """
+        ints = np.frombuffer(data[n:], self.idtype8).copy()
+        istart, iend = get_minus1_start_end(ints)
+
+        ncards = 0
+        istart = [0] + list(iend + 1)
+        size = self.size
+        for (i0, i1) in zip(istart, iend):
+            assert ints[i1] == -1, ints[i1]
+            sid, *nsms = ints[i0:i1]
+            nsmadd = self.add_nsmadd(sid, nsms)
+            #print(nsmadd)
+            str(nsmadd)
+            n += (i1 - i0 + 1) * size
+            ncards += 1
+        self.card_count['NSMADD'] = ncards
         return n
 
     def _read_nsml1_nx(self, data: bytes, n: int) -> int:
@@ -208,6 +238,7 @@ class EPT(GeomCommon):
           10 BY(2)  CHAR4 Keyword BY
           12 N I Increment
           Words 6 through 12 repeat until -1 occurs
+
         """
         n0 = n
         #self.show_data(data[n:])
@@ -255,7 +286,6 @@ class EPT(GeomCommon):
             n += (i1 - i0 + 1) * size
             ncards += 1
         self.card_count['NSML'] = ncards
-
         return n
 
     def _read_nsml1_msc(self, data: bytes, n: int) -> int:
@@ -299,10 +329,157 @@ class EPT(GeomCommon):
         #bbb
         return len(data)
 
+    def _read_nsm1(self, data: bytes, n: int) -> int:
+        """
+        NSM1(3301, 33, 992)
+
+        Defines the properties of a nonstructural mass.
+        Word Name Type Description
+        1 SID      I Set identification number
+        2 PROP CHAR4 Set of properties
+        3 TYPE CHAR4 Set of elements
+        4 ORIGIN   I Entry origin
+        5 VALUE   RS Nonstructural mass value
+        6 SPECOPT  I Specification option
+        SPECOPT=1 By IDs
+          7 ID I
+          Word 7 repeats until -1 occurs
+        SPECOPT=2 All
+          7 ALL(2) CHAR4
+          Words 7 and 8 repeat until -1 occurs
+        SPECOPT=3 Thru range
+          7 ID          I
+          8 THRU(2) CHAR4
+          10 ID         I
+          Words 7 through 10 repeat until -1 occurs
+        SPECOPT=4 Thru range with by
+          7 ID I
+          8 THRU(2) CHAR4
+          10 ID        I
+          11 BY(2) CHAR4
+          13 N         I
+          Words 7 through 13 repeat until -1 occurs
+
+        data = (3, PCOMP,   0, 0.37, 2, ALL, -1,
+                4, ELEMENT, 2, 2.1, 1, 3301, -1)
+
+        """
+        #self.show_data(data[n:], types='ifs')
+        n0 = n
+        #self.show_data(data[n:])
+        ints = np.frombuffer(data[n:], self.idtype8).copy()
+        floats = np.frombuffer(data[n:], self.fdtype8).copy()
+        istart, iend = get_minus1_start_end(ints)
+
+        ncards = 0
+        size = self.size
+        for (i0, i1) in zip(istart, iend):
+            assert ints[i1] == -1, ints[i1]
+            # 1 SID      I Set identification number
+            sid = ints[i0]
+
+            # 2 PROP CHAR4 Set of properties
+            # 3 TYPE CHAR4 Set of elements
+            # 4 ORIGIN   I Entry origin
+            # 5 VALUE   RS Nonstructural mass value
+            # 6 SPECOPT  I Specification option
+            nsm_type = data[n0+(i0+1)*size:n0+(i0+3)*size].decode('latin1').rstrip()
+            zero_two = ints[i0+3]
+            value = float(floats[i0+4])
+            spec_opt = ints[i0+5]
+            assert zero_two in [0, 2], zero_two
+            #nii = 6
+            #print(ints[i0+nii:i1])
+            #print(floats[i0+nii:i1])
+            #print(sid, nsm_type, value, spec_opt)
+
+            iminus1 = i0 + np.where(ints[i0:i1] == -1)[0]
+            #print('-1', iminus1)
+            #print('-2', iminus2)
+            istart2 = [i0 + 5] + list(iminus1[:-1] + 1)
+            iend2 = iminus1
+            #print(istart2, iend2)
+
+            if spec_opt == 1:
+                # 7 ID I
+                ids = ints[i0+6:i1]
+            elif spec_opt == 2:
+                word = data[n0+(i0+6)*size:n0+i1*size]
+                ids = word
+            else:
+                raise NotImplementedError(spec_opt)
+            #print(sid, nsm_type, zero_two, value, ids)
+            #if nsm_type == 'ELEM':
+                #nsm_type = 'ELEMENT'
+            #for pid_eid in pid_eids:
+            #nsml = self.add_nsml1(sid, nsm_type, pid_eids, [value])
+            nsm1 = self.add_nsm1(sid, nsm_type, value, ids)
+            #print(nsm1)
+            str(nsm1)
+            n += (i1 - i0 + 1) * size
+            ncards += 1
+        self.card_count['NSM1'] = ncards
+        return n
+
     def _read_nsm(self, data: bytes, n: int) -> int:
         """NSM"""
         n = self._read_dual_card(data, n, self._read_nsm_nx, self._read_nsm_msc,
                                  'NSM', self._add_nsm_object)
+        return n
+
+    def _read_nsm_2(self, data: bytes, n: int) -> int:
+        """
+        NX 2019.2
+        NSM(3201, 32, 991)
+
+        RECORD – NSM(3201,32,991)
+        Defines the properties of a nonstructural mass.
+
+        Word Name Type Description
+        1 SID      I Set identification number
+        2 PROP CHAR4 Set of properties
+        3 TYPE CHAR4 Set of elements   <---- not right...it's an integer and not used...
+        4 ID       I Property or element identification number
+        5 VALUE   RS Nonstructural mass value
+        Words 5 through 6 repeat until End of Record
+
+        NSM,2,conrod,1007,0.3
+
+        data    = (2, CONROD,  0, 1007, 0.3, -1,
+                   2, ELEMENT, 0,  200, 0.20, -1,
+                   3, PSHELL,  0, 3301, 0.20, -1,
+                   3, ELEMENT, 2,  200, 1.0, -1,
+                   4, PSHELL,  2, 6401, 4.2, -1)
+        """
+        n0 = n
+        #self.show_data(data[n:])
+        ints = np.frombuffer(data[n:], self.idtype8).copy()
+        floats = np.frombuffer(data[n:], self.fdtype8).copy()
+        istart, iend = get_minus1_start_end(ints)
+
+        ncards = 0
+        size = self.size
+        for (i0, i1) in zip(istart, iend):
+            #data = (4, ELEMENT, 2.1, 1, 3301, -1, -2)
+            assert ints[i1] == -1, ints[i1]
+            sid = ints[i0]
+            prop_type = data[n0+(i0+1)*size:n0+(i0+3)*size]
+            elem_type = data[n0+(i0+3)*size:n0+(i0+4)*size]
+            nsm_type = prop_type.decode('latin1').rstrip()
+            dunno_int = ints[i0+3]
+            #print(ints[i0+4:i1])
+            #print(floats[i0+4:i1])
+            ids = ints[i0+4:i1:2].tolist()
+            values = floats[i0+5:i1:2].tolist()
+            assert len(ids) == len(values)
+            assert dunno_int in [0, 2], (sid, prop_type, (ints[i0+3], floats[i0+4]), ids, values)
+            #print(sid, prop_type, (ints[i0+3], floats[i0+4]), ids, values)
+            nsm = self.add_nsm(sid, nsm_type, ids, values)
+            #print(nsm[0])
+            str(nsm)
+            n += (i1 - i0 + 1) * size
+            ncards += 1
+        self.card_count['NSM'] = ncards
         return n
 
     def _read_nsm_msc(self, data: bytes, n: int) -> int:
@@ -314,14 +491,14 @@ class EPT(GeomCommon):
         2 PROP  CHAR4 Set of property or elements
         3 ID        I Property or element identification number
         4 VALUE    RS Nonstructural mass value
-        ORIGIN =0 NSM Bulk Data entry
-        5 ID I Property or element ID
-        6 VALUE RS Nonstructural mass value
-        Words 5 through 6 repeat until End of Record
-        ORIGIN =2 NSML Bulk Data entry
-        5 ID I Property or element ID
-        6 VALUE RS Nonstructural mass value
-        Words 5 through 6 repeat until End of Record
+        ORIGIN=0 NSM Bulk Data entry
+          5 ID I Property or element ID
+          6 VALUE RS Nonstructural mass value
+          Words 5 through 6 repeat until End of Record
+        ORIGIN=2 NSML Bulk Data entry
+          5 ID I Property or element ID
+          6 VALUE RS Nonstructural mass value
+          Words 5 through 6 repeat until End of Record
         Words 3 through 4 repeat until End of Record
         """
         properties = []
@@ -382,26 +559,7 @@ class EPT(GeomCommon):
         ints = np.frombuffer(data[n:], self.idtype).copy()
         floats = np.frombuffer(data[n:], self.fdtype).copy()
 
-        def break_by_minus1(idata):
-            """helper for ``read_nsm_nx``"""
-            i1 = 0
-            i = 0
-            i2 = None
-            packs = []
-            for idatai in idata:
-                #print('data[i:] = ', data[i:])
-                if idatai == -1:
-                    i2 = i
-                    packs.append((i1, i2))
-                    i1 = i2 + 1
-                    i += 1
-                    continue
-                i += 1
-            #print(packs)
-            return packs
-        idata = np.frombuffer(data[n:], self.idtype).copy()
-        unused_fdata = np.frombuffer(data[n:], self.fdtype).copy()
-        unused_packs = break_by_minus1(idata)
+        unused_packs = break_by_minus1(ints)
         #for pack in packs:
             #print(pack)
 
@@ -628,7 +786,8 @@ class EPT(GeomCommon):
 
         ndata = len(data)
         #print(ntotal1, ntotal2)
-        self.show_data(data[12*self.factor:], types='qd')
+        if self.factor == 2:
+            self.show_data(data[12*self.factor:], types='qd')
         #print(len(data[12*self.factor:]))
         while n < ndata:
             self.log.debug(f"n={n} ndata={ndata}")
@@ -669,7 +828,9 @@ class EPT(GeomCommon):
                     data2.append((xi, yi, ci, mid))
                     n += ntotal2
             else:
-                raise NotImplementedError('PBCOMP nsections=%r' % nsections)
+                self.log.error(f'PBCOMP={data1[0]} has no sections; check your bdf')
+                return n
+                #raise NotImplementedError('PBCOMP nsections=%r' % nsections)
 
             if self.is_debug_file:
                 self.binary_debug.write('     PBCOMP: %s\n' % str([data1, data2]))
@@ -837,10 +998,7 @@ class EPT(GeomCommon):
         #floats = np.frombuffer(data[n:], self._uendian + 'f').copy()
         ints = np.frombuffer(data[n:], self.idtype8).copy()
         floats = np.frombuffer(data[n:], self.fdtype8).copy()
-        iminus1 = np.where(ints == -1)[0]
-
-        istart = [0] + list(iminus1[:-1] + 1)
-        iend = iminus1
+        istart, iend = get_minus1_start_end(ints)
 
         size = self.size
         nproperties = len(istart)
@@ -2093,8 +2251,8 @@ class EPT(GeomCommon):
                     self.log.warning('Fake PSHELL (skipping):\n%s' % propi)
                     nproperties -= 1
                     continue
-                assert propi.type in ['PCOMP', 'PCOMPG'], propi.get_stats()
-                self.log.warning(f'PSHELL is also PCOMP (skipping PSHELL):\n{propi}{prop}')
+                #assert propi.type in ['PCOMP', 'PCOMPG'], propi.get_stats()
+                self.log.error(f'PSHELL is also {propi.type} (skipping PSHELL):\n{propi}{prop}')
                 nproperties -= 1
                 continue
 
@@ -2262,3 +2420,21 @@ class EPT(GeomCommon):
     def _read_view3d(self, data: bytes, n: int) -> int:
         self.log.info('skipping VIEW3D in EPT')
         return len(data)
+
+def break_by_minus1(idata):
+    """helper for ``read_nsm_nx``"""
+    i1 = 0
+    i = 0
+    i2 = None
+    packs = []
+    for idatai in idata:
+        #print('data[i:] = ', data[i:])
+        if idatai == -1:
+            i2 = i
+            packs.append((i1, i2))
+            i1 = i2 + 1
+            i += 1
+            continue
+        i += 1
+    #print(packs)
+    return packs
