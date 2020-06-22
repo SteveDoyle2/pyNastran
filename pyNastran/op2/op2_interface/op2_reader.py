@@ -139,7 +139,9 @@ class OP2Reader:
             b'SDF' : self.read_sdf,
             b'IBULK' : self.read_ibulk,
             b'ICASE' : self.read_icase,
+            b'CASECC': self.read_casecc,
             b'XCASECC': self.read_xcasecc,
+
             b'CDDATA' : self.read_cddata,
             b'CMODEXT' : self._read_cmodext,
 
@@ -2302,6 +2304,48 @@ class OP2Reader:
                 bdf_file.writelines(lines)
         self._case_control_lines = lines
 
+    def read_casecc(self):
+        """reads the CASECC table"""
+        op2 = self.op2
+        size = self.size
+        op2.table_name = self._read_table_name(rewind=False)
+        if self.is_debug_file:
+            self.binary_debug.write('read_geom_table - %s\n' % op2.table_name)
+        self.read_markers([-1])
+        if self.is_debug_file:
+            self.binary_debug.write('---markers = [-1]---\n')
+
+        # (101, 1, 0, 1237, 0, 0, 0)
+        data = self._read_record()
+        #self.show_data(data, types='q', endian=None, force=False)
+
+        self.read_3_markers([-2, 1, 0])
+        data = self._read_record()
+        #self.show_data(data, types='dqs', endian=None, force=False)
+
+        #self.read_3_markers([-3, 1, 0])
+        #data = self._read_record()
+
+        itable = -3
+        self.read_3_markers([itable, 1, 0])
+        marker = self.get_marker1(rewind=True, macro_rewind=False)
+
+        from pyNastran.op2.tables.geom.subcase import set_casecc
+        while marker != 0:
+            itable -= 1
+            data = self._read_record()
+            #print(itable, len(data))
+            try:
+                subcase = set_casecc(data, op2.idtype8, op2.fdtype8, size=size)
+                self.op2.case_control_deck.subcases[subcase.id] = subcase
+                #print(subcase)
+            except:
+                pass
+            self.read_3_markers([itable, 1, 0])
+            marker = self.get_marker1(rewind=True, macro_rewind=False)
+
+        marker = self.get_marker1(rewind=False, macro_rewind=False)
+
     def read_xcasecc(self):
         """
         Poorly reads the XCASECC table.
@@ -2335,40 +2379,29 @@ class OP2Reader:
             self.read_3_markers([-3, 1, 0])
             data = self._skip_record()
         else:
+            from pyNastran.op2.tables.geom.subcase import set_casecc
             #(103, 1, 0, 1200, 0, 0, 0)
             data = self._read_record()
-            self.show_data(data, types='q', endian=None, force=False)
 
             self.read_3_markers([-2, 1, 0])
             data = self._read_record()
-            word1 = reshape_bytes_block(data)
-            print(word1)
-            print('word1 =', word1)
+            #word1 = reshape_bytes_block(data)
+            #print('word1 =', word1)
 
             self.read_3_markers([-3, 1, 0])
             data = self._read_record()
-            # (1, 0, 101, 0, 0, 0, 0, 0, 0, 0, 0, 0, 301, 0, 0, 0, -1, 2, 1, -1, 2, 1, -1, 2, 1, -1, 2, 1, -1, 2, 1, -1, 2, 1, -1, 2, 1, 100)
-            #self.show_data(data[:38*size], types='q', endian=None, force=False)
-            word2 = reshape_bytes_block(data[38*size:134*size])
-            print('word2 =', word2)
+            subcase = set_casecc(data, op2.idtype8, op2.fdtype8, size=size)
+            self.op2.case_control_deck.subcases[subcase.id] = subcase
+            #print(subcase)
+            if size == 8:
+                word2 = reshape_bytes_block(data[38*size:134*size])
+                #print('word2 =', word2)
 
-            # ints = (0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, -1,
-            #         0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1200, -1,
-            #         2, 1, 0, 0, 0, 0, 0, 0, -1, 0, 0, 0, -1, -1, -1, -1,
-            #         0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1, 1, -1,
-            #         0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1, -1,
-            #         0, 0, 0, 0, 0, 0, 0, 0, 0, 402, 129, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1,
-            #         2, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0)
-            # self.show_data(data[134*size:283*size], types='qd', endian=None, force=False)
-            word3 = reshape_bytes_block(data[283*size:285*size])
-            print('word3 =', word3)
+                word3 = reshape_bytes_block(data[283*size:285*size])
+                #print('word3 =', word3)
 
-            #self.show_data(data[285*size:518*size], types='qd', endian=None, force=False)
-
-            word4 = reshape_bytes_block(data[518*size:519*size])
-            print('word4 =', word4)
-            # (0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1, 0, -1, -1, -1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
-            #self.show_data(data[519*size:], types='qd', endian=None, force=True)
+                word4 = reshape_bytes_block(data[518*size:519*size])
+                #print('word4 =', word4)
 
         self.read_3_markers([-4, 1, 0, 0])
 
@@ -5980,4 +6013,3 @@ def update_op2_datacode(op2, data_code_old):
         if key == 'size':
             continue
         setattr(op2, key, value)
-

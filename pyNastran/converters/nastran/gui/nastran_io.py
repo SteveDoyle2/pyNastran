@@ -1397,6 +1397,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
 
         j = 0
         nid_map = self.gui.nid_map
+        idtype = nid_cp_cd.dtype
         nid_to_pid_map, icase, cases, form = self.map_elements(
             xyz_cid0, nid_cp_cd, nid_map, model, j, dim_max,
             plot=plot, xref_loads=xref_loads)
@@ -1411,7 +1412,8 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
 
         geometry_names = []
         if self.make_spc_mpc_supports and xref_nodes:
-            geometry_names = self.set_spc_mpc_suport_grid(model, nid_to_pid_map)
+            geometry_names = self.set_spc_mpc_suport_grid(model, nid_to_pid_map,
+                                                          idtype)
 
         if xref_nodes and self.gui.settings.nastran_is_bar_axes:
             icase = self._fill_bar_yz(dim_max, model, icase, cases, form)
@@ -2164,7 +2166,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                 self.gui.log_info("skipping %s" % element.type)
         alt_grid.SetPoints(points)
 
-    def set_spc_mpc_suport_grid(self, model, nid_to_pid_map):
+    def set_spc_mpc_suport_grid(self, model, nid_to_pid_map, idtype):
         """
         for each subcase, make secondary actors including:
          - spc_id=spc_id
@@ -2235,7 +2237,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
             lines2 = list(lines)
             mpc_names += self._fill_dependent_independent(
                 mpc_id, model, lines2,
-                depname, indname, linename)
+                depname, indname, linename, idtype)
 
         if 0:  # pragma: no cover
             for subcase_id, subcase in sorted(model.subcases.items()):
@@ -2269,7 +2271,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                             linename = 'mpc_id=%i_lines' % mpc_id
                             mpc_names += self._fill_dependent_independent(
                                 mpc_id, model, lines2,
-                                depname, indname, linename)
+                                depname, indname, linename, idtype)
 
                 # SUPORTs are node/dofs that deconstrained to allow rigid body motion
                 # SUPORT1s are subcase-specific SUPORT cards
@@ -2307,7 +2309,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
             linename = 'rigid_lines'
             mpc_names += self._fill_dependent_independent(
                 mpc_id, model, rigid_lines,
-                depname, indname, linename)
+                depname, indname, linename, idtype)
 
         geometry_names = spc_names + mpc_names + suport_names
         return geometry_names
@@ -2495,7 +2497,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         grid.SetPoints(points)
 
     def _fill_dependent_independent(self, unused_mpc_id, model, lines,
-                                    depname, indname, linename):
+                                    depname, indname, linename, idtype):
         """creates the mpc actors"""
         if not lines:
             return []
@@ -2514,7 +2516,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         for line in lines:
             if line not in lines2:
                 lines2.append(line)
-        lines = np.array(lines2, dtype='int32')
+        lines = np.array(lines2, dtype=idtype)
         dependent = (lines[:, 0])
         independent = np.unique(lines[:, 1])
         self.dependents_nodes.update(dependent)
@@ -3699,7 +3701,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         # set to True to enable elementIDs as a result
         eids_set = True
         if eids_set and nelements:
-            eids = np.zeros(nelements, dtype='int32')
+            eids = np.zeros(nelements, dtype=nid_cp_cd.dtype)
             eid_map = self.gui.eid_map
             for (eid, eid2) in eid_map.items():
                 eids[eid2] = eid
@@ -4334,6 +4336,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
 
                 eid_to_nid_map[eid] = node_ids[:5]
 
+                #if min(node_ids) > 0:
                 elem.GetPointIds().SetId(0, nid_map[node_ids[0]])
                 elem.GetPointIds().SetId(1, nid_map[node_ids[1]])
                 elem.GetPointIds().SetId(2, nid_map[node_ids[2]])

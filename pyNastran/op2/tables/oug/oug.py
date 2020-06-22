@@ -798,7 +798,7 @@ class OUG(OP2Common):
         #"""
         #raise NotImplementedError()
 
-    def _setup_op2_subcase(self, word):
+    def _setup_op2_subcase(self, word: str) -> None:
         """
         Parameters
         ----------
