@@ -270,8 +270,6 @@ class GEOM4(GeomCommon):
                 if self.is_debug_file:
                     self.binary_debug.write('  %s=%s\n' % (card_name, str(out)))
 
-                #assert -1 not in nids, (seid, components, nids.tolist())
-
                 self._add_superset_card(cls, card_name, add_method, outi)
 
                 #seid = data[0]
