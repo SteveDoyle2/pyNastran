@@ -7,7 +7,7 @@ Defines:
 
 """
 from __future__ import annotations
-from typing import Tuple, Dict, Optional, TYPE_CHECKING
+from typing import Tuple, List, Dict, Optional, TYPE_CHECKING
 from math import radians, sin, cos
 import numpy as np
 from numpy import array, cross, allclose, mean
@@ -704,7 +704,7 @@ def _pload4_elements(loadcase_id, load, scale, eids, xyz, F, M, p):
         M += mi
     return F, M
 
-def _get_pload4_area_centroid_normal_nface(loadcase_id, load, elem, xyz):
+def _get_pload4_area_centroid_normal_nface(loadcase_id: int, load: PLOAD4, elem, xyz):
     """gets the nodes, area, face_centroid, normal, and nface"""
     etype = elem.type
     if etype in ['CTRIA3', 'CTRIA6', 'CTRIAR',]:

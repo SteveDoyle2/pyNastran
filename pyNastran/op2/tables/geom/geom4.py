@@ -234,6 +234,7 @@ class GEOM4(GeomCommon):
             thru_check = True
 
         in_data = [seid, components, nids]
+        assert -1 not in nids, (seid, components, nids.tolist())
         card = cls.add_op2_data(in_data)
         add_method(card)
         self.increase_card_count(card_name, 1)
@@ -265,12 +266,11 @@ class GEOM4(GeomCommon):
             #print(i, j)
             for ii, jj in zip(i, j):
                 outi = out[ii:jj]
-                #print(outi)
                 assert -1 not in outi, outi
                 if self.is_debug_file:
                     self.binary_debug.write('  %s=%s\n' % (card_name, str(out)))
 
-                self._add_superset_card(cls, card_name, add_method, out)
+                self._add_superset_card(cls, card_name, add_method, outi)
 
                 #seid = data[0]
                 #components = data[1]
@@ -783,6 +783,15 @@ class GEOM4(GeomCommon):
                  6, 0, 0, 600)
         SEQSET1=[1   0   1 101 112
                  2   0   1 113 124]
+
+        data = (
+             1, 0, 0, 700, -1,
+             2, 0, 0, 200, -1,
+             3, 0, 0, 300, -1,
+             4, 0, 0, 400, -1,
+             5, 0, 0, 500, -1,
+             6, 0, 0, 600, -1)
+
         """
         return self._read_superxset1(data, n, 'SEQSET1', SEQSET1, self._add_seqset_object,
                                      debug=True)

@@ -5,11 +5,13 @@ from struct import pack
 from typing import List, Tuple
 import numpy as np
 
+from cpylog import SimpleLogger
 from pyNastran import is_release
 from pyNastran.utils import object_attributes, object_methods
 from pyNastran.utils.numpy_utils import integer_types
 
 #from pyNastran.utils import list_print
+from pyNastran.op2.errors import OverwriteTableError
 from pyNastran.op2.op2_interface.op2_codes import Op2Codes, get_sort_method_from_table_name
 from pyNastran.op2.op2_interface.write_utils import write_table_header, export_to_hdf5
 
@@ -311,7 +313,7 @@ class ScalarObject(BaseScalarObject):
             #print(self.data_code)
             msg = 'old_table_name=%r new_table_name=%r' % (
                 self.table_name, self.data_code['table_name'])
-            raise RuntimeError(msg)
+            raise OverwriteTableError(msg)
         for key, value in sorted(self.data_code.items()):
             if isinstance(value, bytes):
                 print("  key=%s value=%s; value is bytes" % (key, value))

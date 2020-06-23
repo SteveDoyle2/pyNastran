@@ -25,7 +25,8 @@ except ImportError:
 #warnings.filterwarnings('error', category=UnicodeWarning)
 
 import pyNastran
-from pyNastran.op2.op2 import OP2, FatalError, SixtyFourBitError
+from pyNastran.op2.op2 import (
+    OP2, FatalError, SixtyFourBitError, OverwriteTableError)
 #SortCodeError, DeviceCodeError, FortranMarkerError
 
 from pyNastran.op2.op2_geom import OP2Geom, DuplicateIDsError

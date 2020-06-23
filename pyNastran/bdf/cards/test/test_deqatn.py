@@ -5,7 +5,7 @@ from io import StringIO
 import numpy as np
 
 #import pyNastran
-from pyNastran.bdf.bdf import BDF
+from pyNastran.bdf.bdf import BDF, DEQATN
 from pyNastran.bdf.cards.test.utils import save_load_deck
 
 
@@ -488,6 +488,16 @@ class TestDEQATN(unittest.TestCase):
             'DEQATN  121     A(B,H) = B*H            $  ...equations for'
         ]
         model.add_card(deqatn_card, 'DEQATN', is_list=False)
+
+    def test_deqatn_bad_1(self):
+        """checks that a function name is not an argument"""
+        model = BDF(debug=None)
+        card = ["DEQATN      1000 A(a,b)=1"]
+        model.add_card(card, "DEQATN")
+        deqatn = model.dequations[1000]
+        with self.assertRaises(RuntimeError):
+            deqatn.cross_reference(model)
+        #print(model.dequations[1000].func_str)
 
 if __name__ == '__main__':  # pragma: no cover
     unittest.main()

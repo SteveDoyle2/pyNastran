@@ -6,7 +6,7 @@ from typing import Tuple, Dict, Union, Any
 import numpy as np
 
 from pyNastran import is_release
-from pyNastran.op2.errors import FatalError
+from pyNastran.op2.errors import OverwriteTableError
 from pyNastran.f06.f06_writer import F06Writer
 from pyNastran.op2.op2_helper import polar_to_real_imag
 from pyNastran.op2.op2_interface.utils import (
@@ -2151,7 +2151,7 @@ class OP2Common(Op2Codes, F06Writer):
                     print(self.obj)
                     msg = 'obj.table_name=%s table_name=%s; this shouldnt happen for read_mode=2' %  (
                         self.obj.table_name, self.table_name)
-                    raise TypeError(msg)
+                    raise OverwriteTableError(msg)
 
                 #obj.update_data_code(self.data_code)
                 try:

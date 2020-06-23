@@ -3,8 +3,9 @@ defines readers for BDF objects in the OP2 GEOM1/GEOM1S table
 """
 #pylint: disable=C0301,C0103,W0612,R0914,C0326
 from struct import Struct
-import numpy as np
 from typing import Tuple, Union
+
+import numpy as np
 
 from pyNastran.bdf.cards.nodes import GRID, POINT, SEQGP
 #from pyNastran.bdf.cards.parametric.geometry import FEFACE

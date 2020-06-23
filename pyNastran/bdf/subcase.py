@@ -702,7 +702,7 @@ class Subcase:
             )
             raise TypeError(msg)
 
-    def add(self, key, value, options, param_type):
+    def add(self, key: str, value: Any, options: List[Any], param_type: str):
         self._validate_param_type(param_type)
         self._add_data(key, value, options, param_type)
 
@@ -731,7 +731,7 @@ class Subcase:
         assert isinstance(values, list), values
         self.params[key] = [values, set_id, param_type]
 
-    def _add_data(self, key, value, options, param_type):
+    def _add_data(self, key: str, value: Any, options: List[Any], param_type: str):
         """
         Adds the data to the subcase  in the KEY(OPTIONS)=VALUE style.
 
@@ -758,7 +758,7 @@ class Subcase:
             (key, value, options) = self._simplify_data(key, value, options, param_type)
             self.params[key] = [value, options, param_type]
 
-    def _simplify_data(self, key, value, options, param_type):
+    def _simplify_data(self, key: str, value: Any, options: List[Any], param_type: str):
         if param_type == 'SET-type':
             #print("adding isubcase=%s key=%r value=%r options=%r "
                   #"param_type=%r" % (self.id, key, value, options, param_type))

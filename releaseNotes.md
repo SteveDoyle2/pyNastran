@@ -16,7 +16,7 @@ which was overly complicated to do before.
 
 Versions:
  - adding support for vtk 9 (GUI)
- - adding support for nptyping 1.1
+ - don't allow nptyping 1.1.0
 
 BDF:
  - More TEMPRB defaults
@@ -27,6 +27,7 @@ BDF:
  - fixing TRIM2 aeqr setting bug (was defaulted to 1.0)
  - fixing ACMODL for NX (didn't support writing)
  - fixed DCONADD bug (added the dconadd_id to the summation)
+ - DEQATN now checks that the function name is not an argument
  - convert:
    - MAT8 now supports temperature scaling
    - fixed major PSHELL 12I/t^3 convert/scale bug
@@ -45,7 +46,7 @@ OP2:
  - adding op2_results repr method
  - Convergence object has better repr
 
-OP2 Writer
+OP2 Writer:
  - fixed multiple PCOMP writing bug
  - added some 64 bit checks (64-bit writing is not supported)
  - turns out the CPYRAM (NX) has 14 node fields (even though it has 13 nodes)

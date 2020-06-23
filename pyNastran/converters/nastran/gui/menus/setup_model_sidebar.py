@@ -1,5 +1,6 @@
 import os
 import sys
+#from functools import partial
 
 # kills the program when you hit Cntl+C from the command line
 import signal
@@ -33,7 +34,16 @@ def build_form_from_model(model):
     ngrids = len(nids)
     nspoints = len(spoints)
     nnodes = ngrids + nspoints
-    nid_type = np.zeros((nnodes, 2), dtype='int32')
+    idtype = 'int32'
+    max_nid = 0
+    if ngrids:
+        max_nid = max(nids)
+    if nspoints:
+        max_nid = max(max_nid, max(spoints))
+    if max_nid > 100000000:
+        idtype = 'int64'
+
+    nid_type = np.zeros((nnodes, 2), dtype=idtype)
     nid_type[:ngrids, 0] = nids
     nid_type[:ngrids, 1] = 0 # grid
     nid_type[ngrids:ngrids+nspoints, 0] = spoints
@@ -154,7 +164,6 @@ class ModelSidebar(Sidebar):
         self.parent2 = parent
         self.nastran_io = nastran_io
 
-        from functools import partial
         right_click_actions = [
             ('Print...', self.on_print, True),
             ('Stats...', self.on_stats, True),

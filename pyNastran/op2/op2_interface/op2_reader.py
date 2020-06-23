@@ -5100,7 +5100,7 @@ class OP2Reader:
             endian = self._uendian
             assert endian is not None, endian
 
-        f.write(f'\nndata = {len(data)}:\n')
+        f.write(f'\nndata = {n}:\n')
         for typei in types:
             assert typei in 'sifdq lILQ', f'type={typei!r} is invalid; use sifdq lILQ'
 
@@ -5785,4 +5785,3 @@ def update_op2_datacode(op2, data_code_old):
         if key == 'size':
             continue
         setattr(op2, key, value)
-

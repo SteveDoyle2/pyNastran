@@ -1169,12 +1169,13 @@ class AddCards(AddMethods):
             a comment for the card
 
         """
-        assert isinstance(value, float)
+        assert isinstance(value, (float, str)), f'value={value} type={type(value)}'
         nsm = NSM1(sid, nsm_type, value, ids, comment=comment)
         self._add_nsm_object(nsm)
         return nsm
 
-    def add_nsml(self, sid: int, nsm_type: str, pid_eid: int, value: float, comment: str='') -> NSML:
+    def add_nsml(self, sid: int, nsm_type: str, pid_eid: int, value: float,
+                 comment: str='') -> NSML:
         """
         Creates an NSML card, which defines lumped non-structural mass
 
@@ -1213,7 +1214,8 @@ class AddCards(AddMethods):
             nsms.append(nsm)
         return nsms
 
-    def add_nsml1(self, sid: int, nsm_type: str, value: float, ids: List[int], comment: str='') -> NSML1:
+    def add_nsml1(self, sid: int, nsm_type: str, value: float, ids: List[int],
+                  comment: str='') -> NSML1:
         """
         Creates an NSML1 card, which defines lumped non-structural mass
 
@@ -6964,8 +6966,10 @@ class AddCards(AddMethods):
         self._add_ddval_object(ddval)
         return ddval
 
-    def add_dlink(self, oid, dependent_desvar,
-                  independent_desvars, coeffs, c0=0., cmult=1., comment='') -> DLINK:
+    def add_dlink(self, oid: int, dependent_desvar: int,
+                  independent_desvars: List[int],
+                  coeffs: List[float],
+                  c0: float=0.0, cmult: float=1.0, comment: str='') -> DLINK:
         """
         Creates a DLINK card, which creates a variable that is a lienar
         ccombination of other design variables

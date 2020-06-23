@@ -2953,6 +2953,16 @@ class CPLSTx4(QuadShell):
 
 
 class CPLSTS4(CPLSTx4):
+    """
+    +---------+-------+-------+----+-------+----+-------+-------+------+
+    |    1    |   2   |   3   |  4 |   5   |  6 |   7   |   8   |   9  |
+    +=========+=======+=======+====+=======+====+=======+=======+======+
+    | CPLSTS4 |  EID  |  PID  | N1 |   N2  | N3 |   N4  | THETA |      |
+    +---------+-------+-------+----+-------+----+-------+-------+------+
+    |         |       |       |    | TFLAG | T1 |   T2  |   T3  |  T4  |
+    +---------+-------+-------+----+-------+----+-------+-------+------+
+
+    """
     type = 'CPLSTS4'
 
     def write_card(self, size: int=8, is_double: bool=False) -> str:
@@ -3739,6 +3749,7 @@ class CQUADR(QuadShell):
         #assert msg == msg2, '\n%s---\n%s\n%r\n%r' % (msg, msg2, msg, msg2)
         return msg
 
+
 class CPLSTS3(TriShell):
     """
     +---------+-------+-------+----+----+----+-------+-------+-----+
@@ -3840,7 +3851,7 @@ class CPLSTS3(TriShell):
             T1 = double_or_blank(card, 11, 'T1')
             T2 = double_or_blank(card, 12, 'T2')
             T3 = double_or_blank(card, 13, 'T3')
-            assert len(card) <= 14, 'len(CTRIA3 card) = %i\ncard=%s' % (len(card), card)
+            assert len(card) <= 14, 'len(CPLSTS3 card) = %i\ncard=%s' % (len(card), card)
         else:
             theta = 0.0
             tflag = 0

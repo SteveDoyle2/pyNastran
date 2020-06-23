@@ -260,7 +260,7 @@ class DEQATN(BaseCard):  # needs work...
         if self.dtable is not None:
             default_values = self.dtable_ref.default_values
         func_name, nargs, func_str = fortran_to_python(
-            self.eqs, default_values, str(self))
+            self.equation_id, self.eqs, default_values, str(self))
         self.func_str = func_str
         self.func_name = func_name
         try:
@@ -537,7 +537,10 @@ def split_to_equations(lines):
             equation_lines.append(line)
     return equation_lines
 
-def fortran_to_python(lines, default_values, comment=''):
+def fortran_to_python(deqatn_id: int,
+                      lines: List[str],
+                      default_values: Dict[str, Union[float, np.ndarray]],
+                      comment: str='') -> Tuple[str, int, str]:
     """
     Creates the python function
 
@@ -547,6 +550,15 @@ def fortran_to_python(lines, default_values, comment=''):
         the equations to write broken up by statement
     default_values : dict[name] = value
         the default values from the DTABLE card
+
+    Returns
+    -------
+    func_name : str
+        the name of the function
+    nargs : int
+        the number of variables to the function
+    func_msg : str
+        the python function
 
     def f(x, y=10.):
         '''
@@ -612,6 +624,9 @@ def fortran_to_python(lines, default_values, comment=''):
 
     func_msg += '    return %s' % f
     #print(func_msg)
+    if func_name in variables:
+        raise RuntimeError(f'The function name {func_name!r} for DEQATN,{deqatn_id:d} '
+                           f'must not also be an argument; arguments={variables}')
     nargs = len(variables)
     return func_name, nargs, func_msg
 

@@ -70,7 +70,7 @@ class EPT(GeomCommon):
             (3301, 33, 56): ['NSM1', self._read_fake],  # record 3
             (3401, 34, 57) : ['NSMADD', self._read_fake],    # record 5
             (3501, 35, 58): ['NSML', self._read_fake],  # record 6
-            (3501, 35, 994) : ['NSM?', self._read_fake],
+            (3501, 35, 994) : ['NSML', self._read_fake],
             (3601, 36, 62): ['NSML1', self._read_fake],  # record 7
             (1502, 15, 36): ['PAABSF', self._read_fake],  # record 8
             (8300, 83, 382): ['PACABS', self._read_fake],  # record 9
@@ -147,14 +147,14 @@ class EPT(GeomCommon):
         2 PROP  CHAR4 Set of property or elements
         3 ID        I Property or element identification number
         4 VALUE    RS Nonstructural mass value
-        ORIGIN =0 NSM Bulk Data entry
-        5 ID I Property or element ID
-        6 VALUE RS Nonstructural mass value
-        Words 5 through 6 repeat until End of Record
-        ORIGIN =2 NSML Bulk Data entry
-        5 ID I Property or element ID
-        6 VALUE RS Nonstructural mass value
-        Words 5 through 6 repeat until End of Record
+        ORIGIN=0 NSM Bulk Data entry
+          5 ID I Property or element ID
+          6 VALUE RS Nonstructural mass value
+          Words 5 through 6 repeat until End of Record
+        ORIGIN=2 NSML Bulk Data entry
+          5 ID I Property or element ID
+          6 VALUE RS Nonstructural mass value
+          Words 5 through 6 repeat until End of Record
         Words 3 through 4 repeat until End of Record
         """
         properties = []
@@ -458,7 +458,8 @@ class EPT(GeomCommon):
 
         ndata = len(data)
         #print(ntotal1, ntotal2)
-        self.show_data(data[12*self.factor:], types='qd')
+        if self.factor == 2:
+            self.show_data(data[12*self.factor:], types='qd')
         #print(len(data[12*self.factor:]))
         while n < ndata:
             self.log.debug(f"n={n} ndata={ndata}")

@@ -2686,7 +2686,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
         return card_obj
 
     def add_card(self, card_lines: List[str], card_name: str,
-                       comment: str='', ifile=None, is_list: bool=True, has_none: bool=True) -> Any:
+                 comment: str='', ifile=None, is_list: bool=True, has_none: bool=True) -> Any:
         """
         Adds a card object to the BDF object.
 
@@ -3117,9 +3117,6 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
         [2]
 
         """
-        nids_cd_transform = defaultdict(list)  # type: Dict[int, np.ndarray]
-        nids_cp_transform = defaultdict(list)  # type: Dict[int, np.ndarray]
-
         nnodes = len(self.nodes)
         nspoints = 0
         nepoints = 0
@@ -3139,40 +3136,20 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
                 nnodes, nspoints, nepoints, nrings)
             raise ValueError(msg)
 
-        i = 0
-        nxyz = nnodes + nspoints + nepoints + ngridb
-        xyz_cp = np.zeros((nxyz, 3), dtype=fdtype)
-        nid_cp_cd = np.zeros((nxyz, 3), dtype=idtype)
-        for nid, node in sorted(self.nodes.items()):
-            cd = node.Cd()
-            cp = node.Cp()
-            nids_cp_transform[cp].append(nid)
-            nids_cd_transform[cd].append(nid)
-            nid_cp_cd[i, :] = [nid, cp, cd]
-            xyz_cp[i, :] = node.xyz
-            i += 1
-        if nspoints:
-            for nid in sorted(spoints):
-                nid_cp_cd[i, 0] = nid
-                i += 1
-        if nepoints:
-            for nid in sorted(epoints):
-                nid_cp_cd[i, 0] = nid
-                i += 1
-        if ngridb:
-            for nid, node in sorted(self.gridb.items()):
-                phi = node.phi
-                cd = node.cd
-                ringfl_id = node.ringfl
-                ringfl = self.ringfl[ringfl_id]
-                x = ringfl.xa  ## TODO: what about xb?
-                y = phi  ## TODO: is this really phi?
-                z = 0.
-                axif = self.axif
-                cp = axif.cid
-                nid_cp_cd[i, :] = [nid, cp, cd]
-                xyz_cp[i, :] = [x, y, z]
-                i += 1
+        if idtype == 'int32':
+            try:
+                out = _set_nodes(self, spoints, epoints,
+                                 nnodes, nspoints, nepoints, ngridb,
+                                 idtype, fdtype)
+            except OverflowError:
+                out = _set_nodes(self, spoints, epoints,
+                                 nnodes, nspoints, nepoints, ngridb,
+                                 'int64', fdtype)
+        else:
+            out = _set_nodes(self, spoints, epoints,
+                             nnodes, nspoints, nepoints, ngridb,
+                             idtype, fdtype)
+        nid_cp_cd, xyz_cp, nids_cd_transform, nids_cp_transform = out
 
         if sort_ids:
             nids = nid_cp_cd[:, 0]
@@ -4546,6 +4523,50 @@ def _check_replicated_cards(replicated_cards):
             assert replicated_card != replicated_card_old
             replicated_card_old = replicated_card
         raise
+
+
+def _set_nodes(model: BDF,
+               spoints, epoints,
+               nnodes: int, nspoints: int, nepoints: int, ngridb: int,
+               idtype, fdtype):
+    """helper method for ``get_displacement_index_xyz_cp_cd``"""
+    i = 0
+    nids_cd_transform = defaultdict(list)  # type: Dict[int, np.ndarray]
+    nids_cp_transform = defaultdict(list)  # type: Dict[int, np.ndarray]
+    nxyz = nnodes + nspoints + nepoints + ngridb
+    xyz_cp = np.zeros((nxyz, 3), dtype=fdtype)
+    nid_cp_cd = np.zeros((nxyz, 3), dtype=idtype)
+    for nid, node in sorted(model.nodes.items()):
+        cd = node.Cd()
+        cp = node.Cp()
+        nids_cp_transform[cp].append(nid)
+        nids_cd_transform[cd].append(nid)
+        nid_cp_cd[i, :] = [nid, cp, cd]
+        xyz_cp[i, :] = node.xyz
+        i += 1
+    if nspoints:
+        for nid in sorted(spoints):
+            nid_cp_cd[i, 0] = nid
+            i += 1
+    if nepoints:
+        for nid in sorted(epoints):
+            nid_cp_cd[i, 0] = nid
+            i += 1
+    if ngridb:
+        for nid, node in sorted(model.gridb.items()):
+            phi = node.phi
+            cd = node.cd
+            ringfl_id = node.ringfl
+            ringfl = model.ringfl[ringfl_id]
+            x = ringfl.xa  ## TODO: what about xb?
+            y = phi  ## TODO: is this really phi?
+            z = 0.
+            axif = model.axif
+            cp = axif.cid
+            nid_cp_cd[i, :] = [nid, cp, cd]
+            xyz_cp[i, :] = [x, y, z]
+            i += 1
+    return nid_cp_cd, xyz_cp, nids_cd_transform, nids_cp_transform
 
 def _bool(value):
     """casts a lower string to a booean"""
