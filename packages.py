@@ -202,11 +202,11 @@ def get_package_requirements(is_gui=True, add_vtk_qt=True, python_version=None, 
             #all_reqs['nptyping'] = str_version(iver)
             #if iver < [1, 0, 1]:
                 #print("nptyping.__version__ = %r < '1.0.0'" % nptyping.__version__)
-            all_reqs['nptyping'] = '>= 1.0.1'
-            install_requires.append('nptyping >= 1.0.1')
+            all_reqs['nptyping'] = '>= 1.0.1, !=1.1.0'
+            install_requires.append('nptyping >= 1.0.1, !=1.1.0')
         except ImportError:
             all_reqs['nptyping'] = '>= 1.0.1'
-            install_requires.append('nptyping >= 1.0.1')  # 1.0.1 used
+            install_requires.append('nptyping >= 1.0.1, !=1.1.0')  # 1.0.1 used
 
     if bdist:
         all_reqs['docopt-ng'] = '>= 0.7.2'
