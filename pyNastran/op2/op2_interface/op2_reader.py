@@ -2336,7 +2336,8 @@ class OP2Reader:
             data = self._read_record()
             #print(itable, len(data))
             try:
-                subcase = set_casecc(data, op2.idtype8, op2.fdtype8, size=size)
+                subcase = set_casecc(self, data, op2.idtype8, op2.fdtype8, size=size,
+                                     nastran_format=self.op2._nastran_format)
                 self.op2.case_control_deck.subcases[subcase.id] = subcase
                 #print(subcase)
             except:
@@ -2390,7 +2391,8 @@ class OP2Reader:
 
             self.read_3_markers([-3, 1, 0])
             data = self._read_record()
-            subcase = set_casecc(data, op2.idtype8, op2.fdtype8, size=size)
+            subcase = set_casecc(self, data, op2.idtype8, op2.fdtype8, size=size,
+                                 nastran_format=self.op2._nastran_format)
             self.op2.case_control_deck.subcases[subcase.id] = subcase
             #print(subcase)
             if size == 8:

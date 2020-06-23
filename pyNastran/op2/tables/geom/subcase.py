@@ -2,7 +2,8 @@ import numpy as np
 from pyNastran.bdf.subcase import Subcase
 from pyNastran.op2.op2_interface.op2_reader import reshape_bytes_block
 
-def set_casecc(data: bytes, idtype: str, fdtype: str, size: int=4):
+def set_casecc(self, data: bytes, idtype: str, fdtype: str, size: int=4,
+               nastran_format='nx'):
     """
     Word Name Type Description
     subcase, mpc, spc, load, method_structure, deform, temp_load, temp_mat_init, tic, nlload_set, nlload_media, nlload_format, dload, freq, tfl = ints[:15]
@@ -628,6 +629,10 @@ def set_casecc(data: bytes, idtype: str, fdtype: str, size: int=4):
     Words LCC+5 through max repeat until NANQ occurs
     Words LCC+5 through LCC+15 repeat until End of Record
     """
+    if nastran_format == 'optistruct':
+        raise NotImplementedError(nastran_format)
+        #self.show_data(data, types='ifs')
+    #print('nastran_format =', nastran_format)
     ints = np.frombuffer(data, dtype=idtype).copy()
     floats = np.frombuffer(data, dtype=fdtype).copy()
     #print(len(ints[15:31]))
@@ -652,6 +657,7 @@ def set_casecc(data: bytes, idtype: str, fdtype: str, size: int=4):
     title_bytes = title_subtitle_label[:32*size]
     subtitle_bytes = title_subtitle_label[32*size:64*size]
     label_bytes = title_subtitle_label[64*size:]
+    #print(f'title = {title_subtitle_label!r}')
     #--------
     (stpltflag, ax_sym_set, nharmonics, tstrv) = ints[134:138]
     #self.show_data(data[133*size:158*size], types='sdq')
@@ -765,10 +771,15 @@ def set_casecc(data: bytes, idtype: str, fdtype: str, size: int=4):
         label = label_bytes.decode('latin1').strip()
         aeconfig = aeconfig_bytes.decode('latin1').strip()
         analysis = analysis_bytes # .decode('latin1').strip()
-
+    assert r'\x00' not in str(title), f'{title}'
+    assert r'\x00' not in str(subtitle), f'{subtitle}'
+    assert r'\x00' not in str(label), f'{label}'
     title = title[:58].rstrip()
     subtitle = subtitle[:55].rstrip()
     label = label[:58].rstrip()
+    #print(f'title    = {title!r}')
+    #print(f'subtitle = {subtitle!r}')
+    #print(f'label    = {label!r}')
 
     if analysis == b'\x00\x00\x00\x00':
         analysis_str = ''
