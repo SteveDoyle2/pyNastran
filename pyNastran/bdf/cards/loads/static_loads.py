@@ -2997,7 +2997,7 @@ class PLOAD4(Load):
             return self.comment + print_card_8(card)
         return self.comment + print_card_16(card)
 
-def update_pload4_vector(pload4, normal, cid):
+def update_pload4_vector(pload4: PLOAD4, normal, cid: int):
     """helper method"""
     if np.abs(pload4.nvector).max() == 0.:
         # element surface normal
@@ -3011,7 +3011,7 @@ def update_pload4_vector(pload4, normal, cid):
     return normal
 
 
-def normalize(self, msg=''):
+def normalize(self, msg: str=''):
     """
     adjust the vector to a unit length
     scale up the magnitude of the vector
