@@ -7,7 +7,7 @@ Defines:
 
 """
 from __future__ import annotations
-from typing import Tuple, Dict, Optional, TYPE_CHECKING
+from typing import Tuple, List, Dict, Optional, TYPE_CHECKING
 from math import radians, sin, cos
 import numpy as np
 from numpy import array, cross, allclose, mean
