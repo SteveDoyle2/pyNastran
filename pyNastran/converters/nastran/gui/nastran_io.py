@@ -6020,7 +6020,12 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
 
             if ext == '.op2':
                 op2_filename = results_filename
-                model = OP2(log=log, debug=True)
+                try:
+                    mode = self.model.nastran_format
+                except AttributeError:
+                    mode = None
+
+                model = OP2(log=log, mode=mode, debug=True)
                 model.IS_TESTING = False
 
                 if 0:  # pragma: no cover

@@ -1,3 +1,4 @@
+$ pyNastran: version=nasa95
 ID WINGBOX,V3-A
 APP DISPLACEMENT
 SOL 1

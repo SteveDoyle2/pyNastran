@@ -183,7 +183,7 @@ class OP2Reader:
             b'OBG1': self.read_obc1,
         }
 
-    def read_nastran_version(self, mode):
+    def read_nastran_version(self, mode: str):
         """reads the version header"""
         #try:
         op2 = self.op2

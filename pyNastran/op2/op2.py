@@ -85,6 +85,7 @@ class OP2(OP2_Scalar, OP2Writer):
         self.ask = False
         self.post = None
         self.table_count = defaultdict(int)
+        self._set_mode(mode)
 
     def __del__(self) -> None:
         if hasattr(self, 'h5_file') and self.h5_file is not None:
@@ -326,6 +327,21 @@ class OP2(OP2_Scalar, OP2Writer):
             self.log.warning(f'key={key} table_type={table_type!r} are not equal; class_name={aname!r}')
             return False
         return True
+
+    def _set_mode(self, mode: str):
+        """explicitly set the format"""
+        if mode is None:
+            return
+        # elif mode == 'msc':
+            # self.set_as_msc()
+        # elif mode == 'nx':
+            # self.set_as_nx()
+        # elif mode == 'autodesk':
+            # self.set_as_autodesk()
+        if mode == 'nasa95':
+            self.set_as_nasa95()
+        # else:
+            # raise NotImplementedError(f'mode={mode!r} must be msc, nx, autodesk, or nasa95.')
 
     def set_mode(self, mode: str) -> None:
         """
@@ -1257,7 +1273,7 @@ def read_op2(op2_filename: Optional[str]=None,
         (.. seealso:: import logging)
     mode : str; default=None -> 'msc'
         the version of the Nastran you're using
-        {nx, msc, autodesk, optistruct}
+        {nx, msc, autodesk, optistruct, nasa95}
     debug_file : str; default=None (No debug)
         sets the filename that will be written to
     encoding : str

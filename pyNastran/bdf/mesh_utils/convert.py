@@ -60,8 +60,8 @@ def scale_by_terms(bdf_filename: Union[BDF, str], terms: List[float], scales: Li
     bdf_filename : str / BDF()
         a BDF filename
     terms : List[str]; length=3
-        the names {M, L, T, F, P, V, A}
-        mass, length, time, force, pressure, velocity
+        the names {M, L, T, F, P, V, A, rho}
+        mass, length, time, force, pressure, velocity, mass_density
     scales : List[float]; length=3
         the scaling factors
     bdf_filename_out : str; default=None

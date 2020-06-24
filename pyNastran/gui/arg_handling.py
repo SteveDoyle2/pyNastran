@@ -191,7 +191,7 @@ def run_argparse(argv):
     if not pyNastran.is_pynastrangui_exe:
         arg_msg += '  --noupdate     disables the update check\n'
         arg_msg += '  --test         temporary dev mode (default=False)\n'
-        arg_msg += '  --qt QT        sets the qt version (default=QT_API)\n'
+        arg_msg += '  --qt QT        sets the qt version (pyqt5, pyside2; default=QT_API)\n'
         arg_msg += '  --plugin       disables the format check\n'
     arg_msg += '  --log LOG      disables HTML logging; prints to the screen\n'
     arg_msg += '\n'

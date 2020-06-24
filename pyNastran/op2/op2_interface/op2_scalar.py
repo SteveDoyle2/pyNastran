@@ -44,7 +44,7 @@ Defines the sub-OP2 class.  This should never be called outisde of the OP2 class
 import os
 from struct import Struct, unpack
 from collections import defaultdict
-from typing import List, Tuple, Dict, Union, Any
+from typing import List, Tuple, Dict, Union, Optional, Any
 
 from numpy import array
 import numpy as np
@@ -1527,7 +1527,11 @@ class OP2_Scalar(LAMA, ONR, OGPF,
         self.is_debug_file, self.binary_debug = create_binary_debug(
             self.op2_filename, self.debug_file, self.log)
 
-    def read_op2(self, op2_filename=None, combine=False, load_as_h5=False, h5_file=None, mode=None):
+    def read_op2(self, op2_filename=None,
+                 combine: bool=False,
+                 load_as_h5: bool=False,
+                 h5_file=None,
+                 mode: Optional[str]=None) -> None:
         """
         Starts the OP2 file reading
 
