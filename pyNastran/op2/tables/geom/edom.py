@@ -6,12 +6,18 @@ from typing import Tuple, List, Union
 import numpy as np
 
 from pyNastran.op2.tables.geom.geom_common import GeomCommon
-from pyNastran.op2.op2_interface.op2_reader import mapfmt, reshape_bytes_block
+from pyNastran.op2.op2_interface.op2_reader import mapfmt, reshape_bytes_block, reshape_bytes_block_size
 from .utils import get_minus1_start_end
 
 #if TYPE_CHECKING:
 from pyNastran.bdf.cards.optimization import DVPREL1, DVPREL2, DVMREL2
-
+DSCREEN_INT_TO_RTYPE = {
+    3 : 'LAMA',
+    4 : 'EIGN',
+    5 : 'DISP',
+    6 : 'STRESS',
+}
+DSCREEN_RTYPE_TO_INT = {value: key for key, value in DSCREEN_INT_TO_RTYPE.items()}
 
 class EDOM(GeomCommon):
     """defines methods for reading op2 properties"""
@@ -67,7 +73,7 @@ class EDOM(GeomCommon):
             #(3806, 38, 359) : ['DRESP1', self._read_dresp1],
             (3806, 38, 359) : ['DRESP1', self._read_fake],
             (3906, 39, 360) : ['DRESP2', self._read_fake],
-            (4206, 42, 363) : ['DSCREEN', self._read_fake],
+            (4206, 42, 363) : ['DSCREEN', self._read_dscreen],
             (4306, 43, 364) : ['DOPTPRM', self._read_doptprm],
             (4406, 44, 372) : ['DVGRID', self._read_dvgrid],
             #DVSHAP(5006,50,470)
@@ -125,6 +131,70 @@ class EDOM(GeomCommon):
             str(dconstr)
             #print(dconstr)
             n += ntotal
+        return n
+
+    def _read_dscreen(self, data: bytes, n: int) -> int:
+        """
+        DSCREEN(4206, 42, 363)
+        Design constraint screening data.
+
+        Word Name Type Description
+        1 RTYPE I Response type for which the screening criteria apply
+        2 TRS  RS Truncation threshold
+        3 NSTR  I Maximum number of constraints to be retained per region per load case
+
+        data = (5, -0.70, 10)
+        """
+        ntotal = 12 * self.factor # 3*4
+        struct1 = Struct(mapfmt(self._endian + b'ifi', self.size))
+        ndatai = len(data) - n
+        ncards = ndatai // ntotal
+
+        msg = ''
+        for unused_icard in range(ncards):
+            edata = data[n:n+ntotal]
+            out = struct1.unpack(edata)
+            rtype_int, trs, nstr = out
+            n += ntotal
+
+            if rtype_int in DSCREEN_INT_TO_RTYPE:
+                rtype = DSCREEN_INT_TO_RTYPE[rtype_int]
+            elif rtype_int == 7:  # STRAIN/FORCE/EQUA?
+                # C:\MSC.Software\simcenter_nastran_2019.2\tpl_post1\mereiglc.op2
+                #DSCREEN,DISP,-1000.0,20
+                #DSCREEN,STRESS,-1000.0,20
+                #DSCREEN,STRAIN,-1000.0,20
+                #DSCREEN,FORCE,-1000.0,20
+                #DSCREEN,EQUA,-1000.0,20
+                #DSCREEN,EIGN,-1000.0
+                #DSCREEN,LAMA,-1000.0
+
+                rtype = 'STRAIN?'
+                msg += f'rtype_int={rtype_int}? trs={trs} nstr={nstr}\n'
+                continue
+            elif rtype_int == 8:  # STRAIN/FORCE/EQUA?
+                rtype = 'FORCE?'
+                msg += f'rtype_int={rtype_int}? trs={trs} nstr={nstr}\n'
+                continue
+            elif rtype_int == 91:  # STRAIN/FORCE/EQUA?
+                rtype = 'EQUA?'
+                #DSCREEN,FORCE,-1000.0,20
+                #DSCREEN,EQUA,-1000.0,20
+                msg += f'rtype_int={rtype_int}? trs={trs} nstr={nstr}\n'
+                continue
+            else:
+                rtype = "?"
+                msg += f'rtype_int={rtype_int}? trs={trs} nstr={nstr}\n'
+                continue
+                #raise NotImplementedError(f'rtype_int={rtype_int}? trs={trs} nstr={nstr}')
+            dscreen = self.add_dscreen(rtype, trs=trs, nstr=nstr)
+            dscreen.validate()
+            str(dscreen)
+            #print(dscreen.rstrip())
+        if msg:
+            msg2 = 'Error reading DSCREEN\n' + msg
+            self.log.error(msg2)
+            #raise RuntimeError(msg2)
         return n
 
     def _read_doptprm(self, data: bytes, n: int) -> int:
@@ -404,18 +474,12 @@ class EDOM(GeomCommon):
             dvprel_id = ints[i0]
             type_bytes = data[n+size:n+3*size]
             property_name_bytes = data[n+8*size:n+10*size]
-            if size == 4:
-                prop_type = type_bytes.decode('latin1').rstrip()
-            else:
-                prop_type = reshape_bytes_block(type_bytes).decode('latin1').rstrip()
+            prop_type = reshape_bytes_block_size(type_bytes, size=size)
+
             pid, fid = ints[i0+3:i0+5]
             pmin, pmax, c0 = floats[i0+5:i0+8]
             if fid == 0:
-                fid = None
-                if size == 4:
-                    fid = property_name_bytes.decode('latin1').rstrip()
-                else:
-                    fid = reshape_bytes_block(property_name_bytes).decode('latin1').rstrip()
+                fid = reshape_bytes_block_size(property_name_bytes, size=size)
 
             # fid = fidi
             #print(dvprel_id, prop_type, pid, fid, (pmin, pmax, c0))
@@ -472,12 +536,8 @@ class EDOM(GeomCommon):
             mat_type_bytes = data[n+size:n+3*size]
             mid = ints[i0+3]
             mp_name_bytes = data[n+8*size:n+10*size]
-            if size == 4:
-                mat_type = mat_type_bytes.decode('latin1').rstrip()
-                mp_name = mp_name_bytes.decode('latin1').rstrip()
-            else:
-                mat_type = reshape_bytes_block(mat_type_bytes).decode('latin1').rstrip()
-                mp_name = reshape_bytes_block(mp_name_bytes).decode('latin1').rstrip()
+            mat_type = reshape_bytes_block_size(mat_type_bytes, size=size)
+            mp_name = reshape_bytes_block_size(mp_name_bytes, size=size)
             pid, fid = ints[i0+3:i0+5]
             mp_min, mp_max, c0 = floats[i0+5:i0+8]
             assert fid == 0, (dvmrel_id, mid, mat_type_bytes, mp_name, pid, fid)
@@ -1000,12 +1060,13 @@ class EDOM(GeomCommon):
                 #ddd
             return attb
 
+        size = self.size
         for (i0, i1) in zip(istart, iend):
             assert ints[i1] == -1, ints[i1]
             #print(i0, i1)
             dresp_id = ints[i0]
             label_bytes = data[n+size:n+3*size]
-            label = reshape_bytes_block(label_bytes).decode('latin1').rstrip()
+            label = reshape_bytes_block_size(label_bytes, size=size)
             flag = ints[i0+3]
             response_type = flag_to_resp[flag]
             #print(dresp_id, flag, label)
@@ -1087,10 +1148,7 @@ class EDOM(GeomCommon):
                 #  10 ATTi  I Element numbers (if Word 5 is ELEM) or property IDs
                 #  Word 10 repeats until -1 occurs
                 property_type_bytes = data[n+4*size:n+6*size]
-                if self.size == 4:
-                    property_type = property_type_bytes.decode('latin1').rstrip()
-                else:
-                    property_type = reshape_bytes_block(property_type_bytes).decode('latin1').rstrip()
+                property_type = reshape_bytes_block_size(property_type_bytes, size=size)
                 region, atta, attb = ints[i0+6:i0+9]
                 atti = ints[i0+9:i1].tolist()
                 #print('ptype =', property_type)
@@ -1202,10 +1260,7 @@ class EDOM(GeomCommon):
                 #   10 ATTi I Element numbers (if Word 5 is ELEM) or property IDs
                 #   Word 10 repeats until -1 occurs
                 property_type_bytes = data[n+4*size:n+6*size]
-                if self.size == 4:
-                    property_type = property_type_bytes.decode('latin1').rstrip()
-                else:
-                    property_type = reshape_bytes_block(property_type_bytes).decode('latin1').rstrip()
+                property_type = reshape_bytes_block_size(property_type_bytes, size=size)
 
                 region, atta, attbi = ints[i0+6:i0+9]
                 attbf = floats[i0+8]

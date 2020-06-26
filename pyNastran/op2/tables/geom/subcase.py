@@ -1,6 +1,7 @@
 import numpy as np
 from pyNastran.bdf.subcase import Subcase
-from pyNastran.op2.op2_interface.op2_reader import reshape_bytes_block
+from pyNastran.op2.op2_interface.op2_reader import reshape_bytes_block # , reshape_bytes_block_size
+
 
 def set_casecc(self, data: bytes, idtype: str, fdtype: str, size: int=4,
                nastran_format='nx'):
@@ -759,6 +760,11 @@ def set_casecc(self, data: bytes, idtype: str, fdtype: str, size: int=4,
     assert sort_flag in [0, 1, 2, 3], sort_flag  # 3
     #assert rand_bit in [0], rand_bit
 
+    #title = reshape_bytes_block_size(title_bytes, size=size)
+    #subtitle = reshape_bytes_block_size(subtitle_bytes, size=size)
+    #label = reshape_bytes_block_size(label_bytes, size=size)
+    #aeconfig = reshape_bytes_block_size(aeconfig_bytes, size=size)
+    #analysis = reshape_bytes_block_size(analysis_bytes, size=size)
     if size == 8:
         title = reshape_bytes_block(title_bytes).decode('latin1').strip()
         subtitle = reshape_bytes_block(subtitle_bytes).decode('latin1').strip()

@@ -22,7 +22,8 @@ from pyNastran.bdf.cards.properties.springs import PELAS, PELAST
 from pyNastran.bdf.cards.thermal.thermal import PCONV, PHBDY, PCONVM
 # PCOMPG, PBUSH1D, PBEAML, PBEAM3
 from pyNastran.op2.tables.geom.geom_common import GeomCommon
-from pyNastran.op2.op2_interface.op2_reader import mapfmt, reshape_bytes_block
+from pyNastran.op2.op2_interface.op2_reader import (
+    mapfmt, reshape_bytes_block, reshape_bytes_block_size)
 from .utils import get_minus1_start_end
 
 
@@ -694,8 +695,9 @@ class EPT(GeomCommon):
             #'MLO TUBE' : 2,
         }  # for GROUP="MSCBML0"
 
+        size = self.size
         ntotal = 28 * self.factor  # 7*4 - ROD - shortest entry...could be buggy... # TODO fix this
-        if self.size == 4:
+        if size == 4:
             struct1 = Struct(self._endian + b'2i 8s 8s f')
         else:
             struct1 = Struct(self._endian + b'2q 16s 16s d')
@@ -715,12 +717,8 @@ class EPT(GeomCommon):
                     pid, mid, group, beam_type, value))
                 raise RuntimeError('bad parsing...')
 
-            if self.size == 4:
-                beam_type = beam_type.strip().decode('latin1')
-                group = group.strip().decode('latin1')
-            else:
-                beam_type = reshape_bytes_block(beam_type).strip().decode('latin1')
-                group = reshape_bytes_block(group).strip().decode('latin1')
+            beam_type = reshape_bytes_block_size(beam_type, size=size)
+            group = reshape_bytes_block_size(group, size=size)
             data_in = [pid, mid, group, beam_type, value]
 
             expected_length = valid_types[beam_type]

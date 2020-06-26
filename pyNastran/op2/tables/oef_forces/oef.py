@@ -22,7 +22,7 @@ import numpy as np
 from numpy import frombuffer, vstack, sin, cos, radians, array, hstack, zeros
 
 from pyNastran.op2.op2_interface.function_codes import func1, func7
-from pyNastran.op2.op2_interface.op2_reader import mapfmt, reshape_bytes_block
+from pyNastran.op2.op2_interface.op2_reader import mapfmt, reshape_bytes_block_strip
 from pyNastran.op2.tables.utils import get_eid_dt_from_eid_device
 from pyNastran.op2.op2_helper import polar_to_real_imag
 from pyNastran.op2.op2_interface.op2_common import OP2Common
@@ -4047,15 +4047,17 @@ def oef_shells_composite_real_9(self, data: bytes,
                                 nelements: int, ntotal: int,
                                 dt: Any) -> int:
     n = 0
-    if self.size == 4:
+    size = self.size
+    if size == 4:
         #                                5 6  7 8-i/f 9
         s1 = Struct(self._endian + b'i8sif 4s f i     4s')
         s2 = Struct(self._endian + b'i8sif 4s f f     4s')
-    elif self.size == 8:
+    elif size == 8:
         s1 = Struct(self._endian + b'q16sqd 8s d q     8s')
         s2 = Struct(self._endian + b'q16sqd 8s d d     8s')
     else:  # pragma: no cover
-        raise RuntimeError(self.size)
+        raise RuntimeError(size)
+
     eid_old = None
     for unused_i in range(nelements):
         #2 THEORY(2) CHAR4 Theory
@@ -4081,15 +4083,9 @@ def oef_shells_composite_real_9(self, data: bytes,
          #max_of_fb_fp_for_all_plies
         ) = out
 
-        failure_flag = failure_flagb.decode('latin1').strip()
-        if self.size == 8:
-            failure_theory = reshape_bytes_block(failure_theoryb).decode('latin1').strip()
-            flag = reshape_bytes_block(flagb).decode('latin1').strip()
-            failure_flag = reshape_bytes_block(failure_flagb).decode('latin1').strip()
-        else:
-            failure_theory = failure_theoryb.decode('latin1').strip()
-            flag = flagb.decode('latin1').strip()
-            failure_flag = failure_flagb.decode('latin1').strip()
+        failure_theory = reshape_bytes_block_strip(failure_theoryb, size=size)
+        flag = reshape_bytes_block_strip(flagb, size=size)
+        failure_flag = reshape_bytes_block_strip(failure_flagb, size=size)
 
         if max_value == -1:
             max_value = np.nan
@@ -4105,8 +4101,8 @@ def oef_shells_composite_real_9(self, data: bytes,
                   #f'  ply_id={ply_id} failure_stress_for_ply={failure_stress_for_ply} '
                   #f'flag={flag} interlaminar_stress={interlaminar_stress} max_value={max_value} failure_flag={failure_flag}')
             eid_old = eid
-        assert flag in ['', '-1', '-2', '-12', 'IN'], f'flag={flag} flagb={flagb}'
-        assert failure_theory in ['TSAI-WU', 'STRAIN', 'HILL', 'HOFFMAN', ''], 'failure_theory=%r' % failure_theory
+        assert flag in ['', '-1', '-2', '-12', 'IN'], f'flag={flag!r} flagb={flagb!r}'
+        assert failure_theory in ['TSAI-WU', 'STRAIN', 'HILL', 'HOFFMAN', ''], 'failure_theory={failure_theory!r}'
         assert  failure_flag in ['', '***'], 'failure_flag=%r' % failure_flag
         obj.add_sort1(dt, eid, failure_theory, ply_id, failure_stress_for_ply, flag,
                       interlaminar_stress, max_value, failure_flag)

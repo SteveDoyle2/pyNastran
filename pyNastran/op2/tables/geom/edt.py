@@ -6,7 +6,7 @@ from typing import Tuple, Any
 
 import numpy as np
 from pyNastran.op2.tables.geom.geom_common import GeomCommon
-from pyNastran.op2.op2_interface.op2_reader import mapfmt, reshape_bytes_block
+from pyNastran.op2.op2_interface.op2_reader import mapfmt, reshape_bytes_block, reshape_bytes_block_size
 from .utils import get_minus1_start_end
 
 class EDT(GeomCommon):
@@ -261,11 +261,12 @@ class EDT(GeomCommon):
             i += 2
             n += 8
 
-            if self.factor == 1:
-                group_desc = ''.join(stri.decode('latin1') for stri in strs[i:i+ndesc]).strip()
-            else:
-                group_desc_bytes = reshape_bytes_block(b''.join(strs[i:i+ndesc]))
-                group_desc = group_desc_bytes.decode('latin1').rstrip()
+            group_desc = reshape_bytes_block_size(b''.join(strs[i:i+ndesc]), size=size)
+            #if self.factor == 1:
+                #group_desc = ''.join(stri.decode('latin1') for stri in strs[i:i+ndesc]).strip()
+            #else:
+                #group_desc_bytes = reshape_bytes_block(b''.join(strs[i:i+ndesc]))
+                #group_desc = group_desc_bytes.decode('latin1').rstrip()
             i += ndesc
             n += 4 * ndesc
 
@@ -683,7 +684,7 @@ class EDT(GeomCommon):
             lth = [lth1, lth2]
             thi = [thi1, thi2, thi3]
             thn = [thn1, thn2, thn3]
-            orient = cast_string(orient_bytes, self.size, encoding='latin1')
+            orient = reshape_bytes_block_size(orient_bytes, self.size)
             paero2 = self.add_paero2(pid, orient, width, ar,
                                      thi, thn,
                                      lrsb=lrsb,
@@ -745,7 +746,7 @@ class EDT(GeomCommon):
             set_ids = []
             while i0 < i1:
                 name_bytes = data[n:n+8]
-                name = cast_string(name_bytes, self.size, encoding='latin1')
+                name = reshape_bytes_block_size(name_bytes, self.size)
                 set_id = ints[i0+2]
                 names.append(name)
                 set_ids.append(set_id)
@@ -825,11 +826,11 @@ class EDT(GeomCommon):
             #area_op: good
             #sk_neps/olvpang;  Default=60.0
             inter_bytes, infor_bytes, fset, sset, normal, method_bytes, olvpang, search_unit_bytes, intol, area_op, sk_neps, intord, ctype_bytes = out
-            inter = cast_string(inter_bytes, self.size, encoding='latin1')
-            infor = cast_string(infor_bytes, self.size, encoding='latin1')
-            method = cast_string(method_bytes, self.size, encoding='latin1')
-            search_unit = cast_string(search_unit_bytes, self.size, encoding='latin1')
-            ctype = cast_string(ctype_bytes, self.size, encoding='latin1')
+            inter = reshape_bytes_block_size(inter_bytes, self.size)
+            infor = reshape_bytes_block_size(infor_bytes, self.size)
+            method = reshape_bytes_block_size(method_bytes, self.size)
+            search_unit = reshape_bytes_block_size(search_unit_bytes, self.size)
+            ctype = reshape_bytes_block_size(ctype_bytes, self.size)
 
             assert inter in ['IDEN', 'IDENT', 'DIFF'], inter
             assert ctype in ['STRONG', 'WEAK', 'WEAKINT', 'WEAKEXT'], ctype
@@ -1008,7 +1009,7 @@ class EDT(GeomCommon):
         while n < len(data):
             edata = data[n:n+ntotal]
             aelink_id, label_bytes = struct1.unpack(edata)
-            label = cast_string(label_bytes, self.size, encoding='latin1')
+            label = reshape_bytes_block_size(label_bytes, self.size)
             n += ntotal
             linking_coefficents = []
             independent_labels = []
@@ -1016,14 +1017,15 @@ class EDT(GeomCommon):
             edata = data[n:n+ntotal]
             while struct_end.unpack(edata) != (-1, -1, -1):
                 ind_label_bytes, coeff = struct2.unpack(edata)
-                ind_label = cast_string(ind_label_bytes, self.size, encoding='latin1')
+                ind_label = reshape_bytes_block_size(ind_label_bytes, self.size)
                 independent_labels.append(ind_label)
                 linking_coefficents.append(coeff)
                 n += ntotal
                 edata = data[n:n+ntotal]
             n += ntotal
-            self.add_aelink(aelink_id, label,
-                            independent_labels, linking_coefficents)
+            aelink = self.add_aelink(aelink_id, label,
+                                     independent_labels, linking_coefficents)
+            str(aelink)
         return len(data)
 
     def _read_aecomp(self, data: bytes, n: int) -> int:
@@ -1082,7 +1084,7 @@ class EDT(GeomCommon):
             edata = data[n:n+ntotal]
             while struct_end.unpack(edata) != (-1, -1):
                 label_bytes, = struct2.unpack(edata)
-                label = cast_string(label_bytes, self.size, encoding='latin1')
+                label = reshape_bytes_block_size(label_bytes, self.size)
                 labels.append(label)
                 n += ntotal
                 edata = data[n:n+ntotal]
@@ -1127,10 +1129,11 @@ class EDT(GeomCommon):
                 #nelements = None
             #if melements == 0:
                 #melements = None
-            self.add_spline1(eid, caero, box1, box2, setg,
-                    dz=dz, method=method,
-                    usage=usage, nelements=nelements,
-                    melements=melements)
+            spline1 = self.add_spline1(eid, caero, box1, box2, setg,
+                                       dz=dz, method=method,
+                                       usage=usage, nelements=nelements,
+                                       melements=melements)
+            str(spline1)
             n += ntotal
         #self.to_nx()
         return n
@@ -1271,8 +1274,8 @@ class EDT(GeomCommon):
             out = structi.unpack(edata)
             #ftype, rcore
             eid, caero, aelist, setg, dz, dtorxy, cid, dthx, dthy, dthz, usage_bytes, method_bytes, dtorzy = out
-            method = cast_string(method_bytes, self.size, encoding='latin1')
-            usage = cast_string(usage_bytes, self.size, encoding='latin1')
+            method = reshape_bytes_block_size(method_bytes, self.size)
+            usage = reshape_bytes_block_size(usage_bytes, self.size)
             #print(f'eid={eid} caero={caero} aelist={aelist} setg={setg} dz={dz} dtorxy={dtorxy} cid={cid} dthx={dthx} dthy={dthy} dthz={dthz} usage={usage!r} method={method!r} dtorzy={dtorzy}')
             assert method in ['IPS','TPS','FPS','RIS'], method
             assert usage in ['FORCE','DISP','BOTH'], usage
@@ -1324,9 +1327,9 @@ class EDT(GeomCommon):
             out = structi.unpack(edata)
             #name_bytes, label_bytes, axes, comp_bytes, cp, x, y, z, cd = out
             name_bytes, label_bytes, axes, aecomp_name_bytes, cp, x, y, z = out
-            name = cast_string(name_bytes, self.size, encoding='latin1')
-            label = cast_string(label_bytes, self.size, encoding='latin1')
-            aecomp_name = cast_string(aecomp_name_bytes, self.size, encoding='latin1')
+            name = reshape_bytes_block_size(name_bytes, self.size)
+            label = reshape_bytes_block_size(label_bytes, self.size)
+            aecomp_name = reshape_bytes_block_size(aecomp_name_bytes, self.size)
             xyz = [x, y, z]
             monpnt1 = self.add_monpnt1(name, label, axes, aecomp_name,
                                        xyz, cp=cp)
@@ -1358,8 +1361,9 @@ class EDT(GeomCommon):
             edata = data[n:n + ntotal]
             out = structi.unpack(edata)
             aestat_id, label_bytes = out
-            label = cast_string(label_bytes, self.size, encoding='latin1')
-            self.add_aestat(aestat_id, label)
+            label = reshape_bytes_block_size(label_bytes, self.size)
+            aestat = self.add_aestat(aestat_id, label)
+            str(aestat)
             n += ntotal
         return n
 
@@ -1466,7 +1470,7 @@ class EDT(GeomCommon):
             edata = data[n:n+ntotal2]
             while struct_end.unpack(edata) != (-1, -1, -1):
                 label_bytes, ux = struct2.unpack(edata)
-                label = cast_string(label_bytes, self.size, encoding='latin1')
+                label = reshape_bytes_block_size(label_bytes, self.size)
                 labels.append(label)
                 uxs.append(ux)
                 n += ntotal2
@@ -1515,7 +1519,7 @@ class EDT(GeomCommon):
             (aesurf_id, label_bytes, cid1, alid1, cid2, alid2, eff, ldw_int, crefc, crefs,
              pllim, pulim, hmllim, hmulim, tqllim, tqulim) = out1
 
-            label = cast_string(label_bytes, self.size, encoding='latin1')
+            label = reshape_bytes_block_size(label_bytes, self.size)
 
             if ldw_int == 0:
                 ldw = 'LDW'
@@ -1576,13 +1580,6 @@ class EDT(GeomCommon):
             str(aefact)
             #n += ntotal
         return len(data)
-
-def cast_string(name_bytes: bytes, size: int, encoding='latin1') -> str:
-    if size == 4:
-        name = name_bytes.decode(encoding).rstrip()
-    else:
-        name = reshape_bytes_block(name_bytes).decode(encoding).rstrip()
-    return name
 
 
 def _expand_vals(grids):

@@ -5999,6 +5999,20 @@ def reshape_bytes_block(block: bytes) -> bytes:
     block2 = b''.join([block[8*i:8*i+4] for i in range(nwords)])
     return block2
 
+def reshape_bytes_block_size(name_bytes: bytes, size: int=4):
+    if size == 4:
+        name_str = name_bytes.decode('latin1').rstrip()
+    else:
+        name_str = reshape_bytes_block(name_bytes).decode('latin1').rstrip()
+    return name_str
+
+def reshape_bytes_block_strip(name_bytes: bytes, size: int=4):
+    if size == 4:
+        name_str = name_bytes.decode('latin1').strip()
+    else:
+        name_str = reshape_bytes_block(name_bytes).decode('latin1').strip()
+    return name_str
+
 def mapfmt(fmt: bytes, size: int) -> bytes:
     if size == 4:
         return fmt

@@ -3218,7 +3218,7 @@ class DCONADD(OptConstraint):
             the BDF object
 
         """
-        msg = f'which is required by DCONADD={self.oid} and must reference a DCONSTR'
+        #msg = f'which is required by DCONADD={self.oid} and must reference a DCONSTR'
         try:
             self.dconstrs_ref = [model.dconstrs[oid] for oid in self.dconstr_ids]
         except:
@@ -3273,6 +3273,16 @@ class DCONADD(OptConstraint):
 
 
 class DSCREEN(OptConstraint):
+    """
+    +---------+-------+-------+------+
+    |    1    |   2   |   3   |   4  |
+    +=========+=======+=======+======+
+    | DSCREEN | RTYPE |  TRS  | NSTR |
+    +---------+-------+-------+------+
+    | DSCREEN |  DISP | -0.3  | NSTR |
+    +---------+-------+-------+------+
+
+    """
     type = 'DSCREEN'
 
     @classmethod
@@ -3288,9 +3298,9 @@ class DSCREEN(OptConstraint):
         ----------
         rtype : str
             Response type for which the screening criteria apply
-        trs : float
+        trs : float; default=-0.5
             Truncation threshold
-        nstr : int
+        nstr : int; default=20
             Maximum number of constraints to be retained per region per
             load case
         comment : str; default=''

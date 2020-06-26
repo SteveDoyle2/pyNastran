@@ -2,10 +2,12 @@
 from __future__ import annotations
 from collections import defaultdict
 from struct import pack, Struct
-from typing import List, Union, TYPE_CHECKING
+from typing import List, Union, Any, TYPE_CHECKING
 
+from pyNastran.op2.tables.geom.edom import DSCREEN_RTYPE_TO_INT
 from .geom1_writer import write_geom_header, close_geom_table
 from .geom4_writer import write_header, write_header_nvalues
+
 if TYPE_CHECKING:
     from pyNastran.bdf.cards.optimization import DVPREL2, DVMREL2, DTABLE
     #from pyNastran.bdf.cards.aero.static_loads import AEROS # , AESTAT, CSSCHD, DIVERG, TRIM, TRIM2
@@ -20,7 +22,7 @@ def write_edom(op2, op2_ascii, model: Union[BDF, OP2Geom], endian: bytes=b'<') -
     card_types = [
         'DESVAR', 'DCONSTR',
         'DVMREL2', 'DVPREL2',
-        'DTABLE',
+        'DTABLE', 'DSCREEN',
     ]
 
     cards_to_skip = [
@@ -31,10 +33,11 @@ def write_edom(op2, op2_ascii, model: Union[BDF, OP2Geom], endian: bytes=b'<') -
 
         'DLINK',
         'DVGRID',
-        'DSCREEN',
     ]
     out = defaultdict(list)
 
+    for rtype, dscreen in sorted(model.dscreen.items()):
+        out[dscreen.type].append(dscreen)
     for desvar_id, desvar in sorted(model.desvars.items()):
         out[desvar.type].append(desvar_id)
     for oid, dresp in sorted(model.dresps.items()):
@@ -101,6 +104,34 @@ def write_edom(op2, op2_ascii, model: Union[BDF, OP2Geom], endian: bytes=b'<') -
     #print('itable', itable)
     close_geom_table(op2, op2_ascii, itable)
     #-------------------------------------
+
+def _write_dscreen(model: Union[BDF, OP2Geom], name: str,
+                   dscreens: List[Any], ncards: int,
+                   op2, op2_ascii, endian: bytes) -> int:
+    """
+    DSCREEN(4206, 42, 363)
+    Design constraint screening data.
+
+    Word Name Type Description
+    1 RTYPE I Response type for which the screening criteria apply
+    2 TRS  RS Truncation threshold
+    3 NSTR  I Maximum number of constraints to be retained per region per load case
+
+    data = (5, -0.70, 10)
+    """
+    key = (4206, 42, 363)
+    structi = Struct(endian + b'ifi')
+
+    nvalues = 3 * ncards
+    nbytes = write_header_nvalues(name, nvalues, key, op2, op2_ascii)
+
+    for dscreen in dscreens:
+        rtype_int = DSCREEN_RTYPE_TO_INT[dscreen.rtype]
+        data = [rtype_int, dscreen.trs, dscreen.nstr]
+        assert None not in data, data
+        op2_ascii.write(f'  DSCREEN data={data}\n')
+        op2.write(structi.pack(*data))
+    return nbytes
 
 def _write_desvar(model: Union[BDF, OP2Geom], name: str,
                   desvar_ids: List[int], ncards: int,
@@ -445,7 +476,7 @@ EDOM_MAP = {
     #'DLINK': _write_dlink,
     #'DESVAR': _write_desvar,
     #'DVGRID': _write_dvgrid,
-    #'DSCREEN': _write_dscreen,
+    'DSCREEN': _write_dscreen,
 
     #(3206, 32, 353) : ['DLINK', self._read_fake],
     #(3306, 33, 354) : ['DVPREL1', self._read_dvprel1],

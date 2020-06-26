@@ -7061,7 +7061,7 @@ class AddCards(AddMethods):
         self._add_doptprm_object(doptprm)
         return doptprm
 
-    def add_dscreen(self, rtype, trs=-0.5, nstr=20, comment='') -> DSCREEN:
+    def add_dscreen(self, rtype: str, trs=-0.5, nstr=20, comment='') -> DSCREEN:
         """
         Creates a DSCREEN object
 

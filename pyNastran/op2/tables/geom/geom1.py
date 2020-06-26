@@ -267,7 +267,7 @@ class GEOM1(GeomCommon):
             nids.sort()
             assert min(nids) > 0, nids
             seset = self.add_seset(seid, nids)
-            str(seset)
+            seset.write_card_16()
             #print(seset)
         self.card_count['SESET'] = ncards
         assert n == len(data), f'factor={self.factor} size={size} n={n} ndata={len(data)}'
