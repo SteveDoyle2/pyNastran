@@ -85,7 +85,8 @@ class RandomCompositePlateArray(OES_Object):
         self.element_layer = zeros((self.ntotal, 2), dtype='int32')
 
         #[o11, o22, t12, t1z, t2z, angle, major, minor, ovm]
-        self.data = zeros((self.ntimes, self.ntotal, 9), dtype='float32')
+        nresults = 9
+        self.data = zeros((self.ntimes, self.ntotal, nresults), dtype='float32')
 
     def build_dataframe(self):
         """

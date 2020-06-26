@@ -1007,7 +1007,7 @@ class BDFAttributes:
     @nastran_format.setter
     def nastran_format(self, nastran_format: str) -> None:
         fmt_lower = nastran_format.lower().strip()
-        if fmt_lower not in ['nx', 'msc', 'zona']:
+        if fmt_lower not in ['nx', 'msc', 'zona', 'nasa95']:
             raise RuntimeError(nastran_format)
         self._nastran_format = fmt_lower
 

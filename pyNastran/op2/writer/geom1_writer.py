@@ -16,6 +16,10 @@ def write_geom1(op2, op2_ascii, obj, endian=b'<'):
     itable = -3
 
     if nnodes:
+        max_nid = max(obj.nodes)
+        if max_nid > 99999999:  #  is the max 2147483647?  2^31-1
+            raise SixtyFourBitError(f'64-bit OP2 writing is not supported; max GRID nid={max_nid}')
+
         #nvalues = nnodes * 8
         #nbytes = nvalues * 4
         #assert nnodes == 72, nnodes

@@ -76,11 +76,11 @@ def atan2h(x, y):
     #return np.arctanh(x, y)
     raise NotImplementedError()
 
-def invdb(dbi, pref):
+def invdb(dbi: float, pref: float) -> float:
     """inverse Db"""
     return 10. ** (dbi / 20. + log(pref))
 
-def dba(p, pref, f):
+def dba(p: float, pref: float, f: float) -> float:
     """
     sound pressure in decibels (perceived)
 
@@ -102,7 +102,7 @@ def dba(p, pref, f):
     ta1, ta2 = _get_ta(f)
     return 20. * log(p / pref) + 10 * log(ta1) + 10. * log(ta2)
 
-def invdba(dbai, pref, f):
+def invdba(dbai: float, pref: float, f: float) -> float:
     """
     Inverse Dba
 
@@ -125,7 +125,7 @@ def invdba(dbai, pref, f):
     #dbai = dba(p, pref, f)
     return 10. ** ((dbai - 10. * log(ta1) - 10. * log(ta2))/20)
 
-def _get_ta(f):
+def _get_ta(f: float) -> float:
     """gets the factors for dba, invdba"""
     k1 = 2.242882e16
     k3 = 1.562339
@@ -140,6 +140,7 @@ def _get_ta(f):
 # we'll add _ to the beginning of these variables
 BUILTINS = ['del', 'eval', 'yield', 'async', 'await', 'property',
             'slice', 'filter', 'map']
+
 
 class DEQATN(BaseCard):  # needs work...
     """
@@ -201,7 +202,7 @@ class DEQATN(BaseCard):  # needs work...
         return DEQATN(equation_id, eqs, comment='')
 
     @classmethod
-    def add_card(cls, card, comment=''):
+    def add_card(cls, card: List[str], comment: str=''):
         """
         Adds a DEQATN card from ``BDF.add_card(...)``
 
@@ -242,7 +243,7 @@ class DEQATN(BaseCard):  # needs work...
         eqs = lines_to_eqs(eqs_temp)
         return DEQATN(equation_id, eqs, comment=comment)
 
-    def _setup_equation(self):
+    def _setup_equation(self) -> None:
         """
         creates an executable equation object from self.eqs
 
@@ -291,7 +292,7 @@ class DEQATN(BaseCard):  # needs work...
         self.dtable_ref = self.dtable
         self._setup_equation()
 
-    def safe_cross_reference(self, model):
+    def safe_cross_reference(self, model: BDF) -> None:
         self.cross_reference(model)
 
     def uncross_reference(self) -> None:
@@ -304,10 +305,10 @@ class DEQATN(BaseCard):  # needs work...
         del self.nargs
         del self.dtable, self.dtable_ref
 
-    def _verify(self, xref):
+    def _verify(self, xref: bool) -> None:
         pass
 
-    def evaluate(self, *args):
+    def evaluate(self, *args) -> float:
         """Makes a call to self.func"""
         #args2 = args[:self.nargs]
         #print('args =', args2)
@@ -319,10 +320,10 @@ class DEQATN(BaseCard):  # needs work...
         return self.func(*args)
         #self.func(*args)
 
-    def raw_fields(self):
+    def raw_fields(self) -> List[str]:
         return [self.write_card()]
 
-    def repr_fields(self):
+    def repr_fields(self) -> List[str]:
         return self.raw_fields()
 
     def write_card(self, size: int=8, is_double: bool=False) -> str:
@@ -338,20 +339,22 @@ class DEQATN(BaseCard):  # needs work...
         #print(msg)
         return msg
 
-def lines_to_eqs(eqs_in):
+def lines_to_eqs(eqs_in: List[str]) -> List[str]:
     """splits the equations"""
     eqs_wrapped = _split_equations_by_semicolon(eqs_in)
     eqs = _join_wrapped_equation_lines(eqs_in, eqs_wrapped)
     assert len(eqs) > 0, eqs
     return eqs
 
-def _split_equations_by_semicolon(eqs_in):
+def _split_equations_by_semicolon(eqs_in: List[str]) -> List[str]:
     """helper for ``lines_to_eqs``"""
     eqs_temp_out = []
-    nstart = 0
     nchars = 72 - 16
-    for eq in eqs_in:
-        eq2 = eq[nstart:nchars].strip(' \t\n')
+    for iline, eq in enumerate(eqs_in):
+        if iline == 0:
+            eq2 = eq[:nchars].strip(' \t\n')
+        else:
+            eq2 = eq.expandtabs()[8:nchars].strip(' \t\n')
 
         semicolon = ';' if eq2.rstrip().endswith(';') else ''
         eq2 = eq2.rstrip(' \t;')
@@ -373,7 +376,6 @@ def _split_equations_by_semicolon(eqs_in):
             #print('check_line = %r' % (check_line))
             #_check_for_valid_line(check_line, eq)
             eqs_temp_out.append(check_line)
-        nstart = 8
         nchars = 72
     return eqs_temp_out
 
@@ -385,14 +387,14 @@ def _split_equations_by_semicolon(eqs_in):
             #'full_line=%r' % (check_line, full_line))
         #raise SyntaxError(msg)
 
-def _join_wrapped_equation_lines(unused_eqs_temp_in, eqs_temp):
+def _join_wrapped_equation_lines(unused_eqs_temp_in, eqs_temp: List[str]) -> List[str]:
     """helper for ``lines_to_eqs``"""
     eqs = []
     neqs = len(eqs_temp)
     is_join = False
     eqi = ''
     for i, eq in enumerate(eqs_temp):
-        #print('i=%s join=%s eq=%r' % (i, is_join, eq))
+        #print(f'i={i} join={is_join} eq={eq!r}')
         if is_join:
             eq = eqi.rstrip() + eq.lstrip()
         eqi = eq.strip().replace(' ', '')

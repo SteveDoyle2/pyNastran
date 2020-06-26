@@ -345,6 +345,27 @@ class TestDEQATN(unittest.TestCase):
         s.getvalue()
         s.close()
 
+    def test_deqatn_9_tab(self):
+        model = BDF(debug=None)
+        card = [
+            'deqatn  2       f(x,y,z)= 1.;',
+            '\tL=1+2+3+',
+            '\t+ 4/min(1,2);',
+            '\tb= 4.;',
+            '\th= 2.;',
+            '\tt1= 200.;',
+            '\tt2= 300.;',
+            '\tt=t1*(L-x)/L+t2*x/L',
+            '        +4'
+        ]
+        model.add_card(card, 'DEQATN', is_list=False)
+        model.cross_reference()
+
+        s = StringIO()
+        model.write_bdf(s, close=False)
+        s.getvalue()
+        s.close()
+
     def test_deqatn_10(self):
         """
         based off nast/tpl/ptdmi1.dat

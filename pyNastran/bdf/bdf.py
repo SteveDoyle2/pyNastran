@@ -3946,7 +3946,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
 
             # key/value are lowercase
             if key == 'version':
-                assert value.lower() in ['msc', 'nx', 'zona'], 'version=%r is not supported' % value
+                assert value.lower() in ['msc', 'nx', 'zona', 'nasa95'], f'version={value!r} is not supported'
                 self.nastran_format = value
             elif key == 'encoding':
                 self._encoding = value

@@ -549,6 +549,7 @@ def get_plate_stress_strains(eids, cases, model: OP2, times, key, icase,
             'omax' : '蟽max',
             'omin' : '蟽min',
             'von_mises' : '蟽 von Mises',
+            'max_shear' : '蟿max',
         }
     else:
         #sigma = '系'
@@ -562,6 +563,7 @@ def get_plate_stress_strains(eids, cases, model: OP2, times, key, icase,
             'emax' : '系max',
             'emin' : '系min',
             'von_mises' : '系 von Mises',
+            'max_shear' : '頎淀痪max',
         }
     methods = [method_map[headeri] for headeri in case_headers]
     #if 'Mises' in methods:

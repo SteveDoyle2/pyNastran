@@ -215,26 +215,7 @@ class EPT(GeomCommon):
         ints = np.frombuffer(data[n:], self.idtype).copy()
         floats = np.frombuffer(data[n:], self.fdtype).copy()
 
-        def break_by_minus1(idata):
-            """helper for ``read_nsm_nx``"""
-            i1 = 0
-            i = 0
-            i2 = None
-            packs = []
-            for idatai in idata:
-                #print('data[i:] = ', data[i:])
-                if idatai == -1:
-                    i2 = i
-                    packs.append((i1, i2))
-                    i1 = i2 + 1
-                    i += 1
-                    continue
-                i += 1
-            #print(packs)
-            return packs
-        idata = np.frombuffer(data[n:], self.idtype).copy()
-        unused_fdata = np.frombuffer(data[n:], self.fdtype).copy()
-        unused_packs = break_by_minus1(idata)
+        unused_packs = break_by_minus1(ints)
         #for pack in packs:
             #print(pack)
 
@@ -369,8 +350,9 @@ class EPT(GeomCommon):
             #'MLO TUBE' : 2,
         }  # for GROUP="MSCBML0"
 
+        size = self.size
         ntotal = 28 * self.factor  # 7*4 - ROD - shortest entry...could be buggy... # TODO fix this
-        if self.size == 4:
+        if size == 4:
             struct1 = Struct(self._endian + b'2i 8s 8s f')
         else:
             struct1 = Struct(self._endian + b'2q 16s 16s d')
@@ -2058,3 +2040,21 @@ class EPT(GeomCommon):
     def _read_view3d(self, data: bytes, n: int) -> int:
         self.log.info('skipping VIEW3D in EPT')
         return len(data)
+
+def break_by_minus1(idata):
+    """helper for ``read_nsm_nx``"""
+    i1 = 0
+    i = 0
+    i2 = None
+    packs = []
+    for idatai in idata:
+        #print('data[i:] = ', data[i:])
+        if idatai == -1:
+            i2 = i
+            packs.append((i1, i2))
+            i1 = i2 + 1
+            i += 1
+            continue
+        i += 1
+    #print(packs)
+    return packs
