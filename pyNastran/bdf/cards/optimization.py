@@ -3287,7 +3287,7 @@ class DSCREEN(OptConstraint):
 
     @classmethod
     def _init_from_empty(cls):
-        rtype = 'cat'
+        rtype = 'DISP'
         return DSCREEN(rtype, trs=-0.5, nstr=20, comment='')
 
     def __init__(self, rtype, trs=-0.5, nstr=20, comment=''):
@@ -3318,6 +3318,10 @@ class DSCREEN(OptConstraint):
         #: Maximum number of constraints to be retained per region per load
         #: case. (Integer > 0; Default = 20)
         self.nstr = nstr
+        #assert rtype in ['DISP', 'STRESS', 'STRAIN', 'EQUA', 'FORCE', 'CSTRESS', 'CFAILURE',
+                         #'TDISP', 'TVELO', 'TACCL', 'TSTRE', 'TFORC',
+                         #'FRDISP', 'FRVELO', 'FRACCL', 'FRSTRE', 'FRSPCF',
+                         #'CEIG', 'LAMA', 'EIGN', 'VOLUME', 'DRESP3', 'WEIGHT'], str(self)
 
     @classmethod
     def add_card(cls, card, comment=''):

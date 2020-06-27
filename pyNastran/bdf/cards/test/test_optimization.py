@@ -358,7 +358,7 @@ class TestOpt(unittest.TestCase):
         dconstrs = [1001, 1002, 1003]
         dconadd = model.add_dconadd(oid, dconstrs, comment='dconadd')
 
-        dscreen = model.add_dscreen('dunno', comment='dscreen')
+        dscreen = model.add_dscreen('DISP', comment='dscreen')
         dscreen.raw_fields()
 
         #print(dresp3)
