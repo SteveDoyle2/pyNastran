@@ -189,7 +189,7 @@ GEOM_TABLES = { # no analysis code
     'DBCOPT', 'DSCMCOL', 'DESCYC', 'R1TABRG',
 }
 
-def get_sort_method_from_table_name(table_name):
+def get_sort_method_from_table_name(table_name: bytes) -> int:
     """helper method"""
     if table_name in SORT1_TABLES:
         sort_method = 1
@@ -295,19 +295,7 @@ class Op2Codes:
         if hasattr(self, 'element_type'):
             element_type = self.element_type
 
-        format_word = '???'
-        if format_code == 1:
-            format_word = "Real"
-        elif format_code == 2:
-            format_word = "Real/Imaginary"
-        elif format_code == 3:
-            format_word = "Magnitude/Phase"
-        else:
-            format_word = '\n%18s1 - Real\n' % ''
-            format_word += '%18s2 - Real/Imaginary\n' % ''
-            format_word += '%18s3 - Magnitude/Phase\n' % ''
-            #msg = 'unsupported format_code:  format_code=%s\n' % format_code
-            #raise InvalidFormatCodeError(msg)
+        format_word = get_format_word(format_code)
 
         if self.sort_bits[0] == 0:
             sort_word1 = 'Real'
@@ -373,8 +361,10 @@ class Op2Codes:
         msg += "  table_code    = %-3s %s-%s\n" % (self_table_code, self.table_name_str, table)
         msg += "  format_code   = %-3s %s\n" % (format_code, format_word)
 
-        msg += "  sort_method   = %s\n" % self.sort_method
-        msg += "  sort_code     = %s\n" % self.sort_code
+        msg += (
+            f'  sort_method   = {self.sort_method}\n'
+            f'  sort_code     = {self.sort_code}\n'
+        )
         msg += "    sort_bits   = (%s, %s, %s)\n" % tuple(self.sort_bits)
         msg += "    data_format = %-3s %s\n" % (self.sort_bits[0], sort_word1)
         msg += "    sort_type   = %-3s %s\n" % (self.sort_bits[1], sort_word2)
@@ -553,7 +543,7 @@ class Op2Codes:
                 try:
                     is_sort2_table = int(table_name[-1]) == 2
                 except ValueError:
-                    raise ValueError('is this SORT1/2?  table_name=%r' % table_name)
+                    raise ValueError(f'is this SORT1/2?  table_name={table_name!r}')
         return is_sort2_table
 
     def update_t_code(self) -> None:
@@ -656,49 +646,31 @@ class Op2Codes:
 
     #----
 
+SCODE_MAP = {
+    # word, stress_bits_expected
+    0 : ('Coordinate Element - Stress Max Shear (Octahedral)',       [0, 0, 0, 0, 0]),
+    14: ('Coordinate Element - Strain Fiber Max Shear (Octahedral)', [0, 1, 1, 1, 0]),
+
+    1: ('Coordinate Element - Stress von Mises',                         [0, 0, 0, 0, 1]),
+    10: ('Coordinate Element - Strain Curvature Max Shear (Octahedral)', [0, 1, 0, 1, 0]),
+
+    11: ('Coordinate Element - Strain Curvature von Mises', [0, 1, 0, 1, 1]),
+    15: ('Coordinate Element - Strain Fiber von Mises',     [0, 1, 1, 1, 1]),
+
+    16: ('Coordinate Material - Stress Max Shear (Octahedral)', [1, 0, 0, 0, 0]),
+    17: ('Coordinate Material - Stress von Mises',              [1, 0, 0, 0, 1]),
+
+    26: ('Coordinate Material - Strain Curvature Max Shear', [1, 1, 0, 1, 0]),
+    30: ('Coordinate Material - Strain Fiber Max Shear (Octahedral)', [1, 1, 1, 1, 0]),
+
+    27: ('Coordinate Material - Strain Curvature von Mises', (1, 1, 0, 1, 1)),
+    31: ('Coordinate Material - Strain Fiber von Mises', (1, 1, 1, 1, 1)),
+}
+
 def get_scode_word(s_code: int, stress_bits: List[int]) -> str:
-    if s_code == 0:
-        s_word = 'Coordinate Element - Stress Max Shear (Octahedral)'
-        assert stress_bits == [0, 0, 0, 0, 0], stress_bits
-    elif s_code == 14:
-        s_word = 'Coordinate Element - Strain Fiber Max Shear (Octahedral)'
-        assert stress_bits == [0, 1, 1, 1, 0], stress_bits
-
-    elif s_code == 1:
-        s_word = 'Coordinate Element - Stress von Mises'
-        assert stress_bits == [0, 0, 0, 0, 1], stress_bits
-    elif s_code == 10:
-        s_word = 'Coordinate Element - Strain Curvature Max Shear (Octahedral)'
-        assert stress_bits == [0, 1, 0, 1, 0], stress_bits
-
-    elif s_code == 11:
-        s_word = 'Coordinate Element - Strain Curvature von Mises'
-        assert stress_bits == [0, 1, 0, 1, 1], stress_bits
-    elif s_code == 15:
-        s_word = 'Coordinate Element - Strain Fiber von Mises'
-        assert stress_bits == [0, 1, 1, 1, 1], stress_bits
-
-    elif s_code == 16:
-        s_word = 'Coordinate Material - Stress Max Shear (Octahedral)'
-        assert stress_bits == [1, 0, 0, 0, 0], stress_bits
-    elif s_code == 17:
-        s_word = 'Coordinate Material - Stress von Mises'
-        assert stress_bits == [1, 0, 0, 0, 1], stress_bits
-
-    elif s_code == 26:
-        s_word = 'Coordinate Material - Strain Curvature Max Shear'
-        assert stress_bits == [1, 1, 0, 1, 0], stress_bits
-    elif s_code == 30:
-        s_word = 'Coordinate Material - Strain Fiber Max Shear (Octahedral)'
-        assert stress_bits == [1, 1, 1, 1, 0], stress_bits
-
-    elif s_code == 27:
-        s_word = 'Coordinate Material - Strain Curvature von Mises'
-        assert stress_bits == (1, 1, 0, 1, 1), stress_bits
-    elif s_code == 31:
-        s_word = 'Coordinate Material - Strain Fiber von Mises'
-        assert stress_bits == (1, 1, 1, 1, 1), stress_bits
-    else:
+    try:
+        s_word, stress_bits_expected = SCODE_MAP[s_code]
+    except KeyError:
         #s_word = 'Stress or Strain - UNDEFINED'
         s_word = '???'
     return s_word
@@ -794,3 +766,19 @@ def _adjust_table_code(table_code: int) -> int:
     elif table_code in [901, 910, 911]:
         table_code -= 900
     return table_code
+
+def get_format_word(format_code: int) -> str:
+    format_word = '???'
+    if format_code == 1:
+        format_word = 'Real'
+    elif format_code == 2:
+        format_word = 'Real/Imaginary'
+    elif format_code == 3:
+        format_word = 'Magnitude/Phase'
+    else:
+        format_word = '\n%18s1 - Real\n' % ''
+        format_word += '%18s2 - Real/Imaginary\n' % ''
+        format_word += '%18s3 - Magnitude/Phase\n' % ''
+        #msg = 'unsupported format_code:  format_code=%s\n' % format_code
+        #raise InvalidFormatCodeError(msg)
+    return format_word

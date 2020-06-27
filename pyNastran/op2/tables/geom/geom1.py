@@ -340,8 +340,8 @@ class GEOM1(GeomCommon):
 
     def _read_grid_8(self, data: bytes, n: int) -> int:  # 21.8 sec, 18.9
         """(4501,45,1) - the marker for Record 17"""
-        structi = Struct(self._endian + b'ii3f3i')
-        ntotal = 32
+        structi = Struct(mapfmt(self._endian + b'ii3f3i', self.size))
+        ntotal = 32 * self.factor
         ndatai = len(data) - n
         nentries = ndatai // ntotal
         assert nentries > 0, nentries
@@ -352,24 +352,24 @@ class GEOM1(GeomCommon):
             (nid, cp, x1, x2, x3, cd, ps, seid) = out
             if self.is_debug_file:
                 self.binary_debug.write('  GRID=%s\n' % str(out))
-            if nid < 10000000:
-                # cd can be < 0
-                if ps == 0:
-                    ps = ''
-                node = GRID(nid, np.array([x1, x2, x3]), cp, cd, ps, seid)
-                self._type_to_id_map['GRID'].append(nid)
-                self.nodes[nid] = node
-                #if nid in self.nodes:
-                    #self.reject_lines.append(str(node))
-                #else:
-                #self.nodes[nid] = node
-                #self.add_node(node)
-            else:
+            #if nid < 10000000:
+            # cd can be < 0
+            if ps == 0:
+                ps = ''
+            node = GRID(nid, np.array([x1, x2, x3]), cp, cd, ps, seid)
+            self._type_to_id_map['GRID'].append(nid)
+            self.nodes[nid] = node
+            #if nid in self.nodes:
+                #self.reject_lines.append(str(node))
+            #else:
+            #self.nodes[nid] = node
+            #self.add_node(node)
+            #else:
                 #self.log.warning('*nid=%s cp=%s x1=%-5.2f x2=%-5.2f x3=%-5.2f cd=%-2s ps=%s '
                                  #'seid=%s' % (nid, cp, x1, x2, x3, cd, ps, seid))
                 #node = GRID(nid, np.array([x1, x2, x3]), cp, cd, ps, seid)
                 #self.rejects.append(str(node))
-                nfailed += 1
+                #nfailed += 1
             n += ntotal
         assert ndatai % ntotal == 0, f'ndatai={ndatai} ntotal={ntotal} leftover={ndatai % ntotal}'
         self.increase_card_count('GRID', nentries - nfailed)

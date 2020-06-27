@@ -347,7 +347,7 @@ def write_set(set_id: int, values: List[int], spaces: str='') -> str:
 
     """
     values.sort()
-    starter = 'SET %s = ' % (set_id)
+    starter = f'SET {set_id:d} = '
     msg2 = spaces + starter
 
     msg = ''

@@ -14,9 +14,10 @@ This is a bug fix only release outside of:
  - subcase.add_set_from_values(set_id, values)
 which was overly complicated to do before.
 
-Versions:
+Requirements/Packages:
  - adding support for vtk 9 (GUI)
  - don't allow nptyping 1.1.0
+ - support for NX 2019.0, 2019.1
 
 BDF:
  - More TEMPRB defaults
@@ -27,7 +28,8 @@ BDF:
  - fixing TRIM2 aeqr setting bug (was defaulted to 1.0)
  - fixing ACMODL for NX (didn't support writing)
  - fixed DCONADD bug (added the dconadd_id to the summation)
- - DEQATN now checks that the function name is not an argument
+ - DEQATN now checks that the function name is not an argument\
+ - DEQATN now supports tabs on line continuation lines
  - convert:
    - MAT8 now supports temperature scaling
    - fixed major PSHELL 12I/t^3 convert/scale bug
@@ -69,6 +71,8 @@ OP2 Geom:
    - TLOAD2 (also 64-bit)
  - multiple MATS1s now work
  - 64 bit:
+   - IBULK/ICASE support
+   - large GRID support
    - multiple SEBULKs now work
    - SPOINTs work now
    - MAT10, MATT2, MATT3, MATT9
@@ -85,6 +89,9 @@ minor:
  - more docstrings
  - more typing
  - fixing Tecplot to Nastran converter
+
+GUI:
+ - supporting max shear in plate stress/strain
 
 v1.3.2 (2020/4/8)
 -----------------

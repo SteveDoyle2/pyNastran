@@ -1043,7 +1043,7 @@ class Subcase:
         if self.id == 0:
             msg = str(self)
         else:
-            msg = 'SUBCASE %s\n' % self.id
+            msg = f'SUBCASE {self.id:d}\n'
             nparams = 0
             for (key, param) in self.subcase_sorted(self.params.items()):
                 if key in subcase0.params and subcase0.params[key] == param:
@@ -1064,7 +1064,7 @@ class Subcase:
                           #"param_type=%r" % (key, value, options, param_type))
                     msg += self.print_param(key, param)
                     nparams += 1
-                assert nparams > 0, 'No subcase parameters are defined for isubcase=%s...' % self.id
+                assert nparams > 0, f'No subcase parameters are defined for isubcase={self.id:d}...'
 
         return msg
 
@@ -1136,7 +1136,7 @@ class Subcase:
         #msg = "-------SUBCASE %s-------\n" %(self.id)
         msg = ''
         if self.id > 0:
-            msg += 'SUBCASE %s\n' % self.id
+            msg += f'SUBCASE {self.id:d}\n'
 
         nparams = 0
         for key, param in self.subcase_sorted(self.params.items()):
@@ -1145,7 +1145,7 @@ class Subcase:
             msg += self.print_param(key, param)
             nparams += 1
         if self.id > 0:
-            assert nparams > 0, 'No subcase parameters are defined for isubcase=%s...' % self.id
+            assert nparams > 0, f'No subcase parameters are defined for isubcase={self.id:d}...'
         return msg
 
 def _load_hdf5_param(group, key, encoding):

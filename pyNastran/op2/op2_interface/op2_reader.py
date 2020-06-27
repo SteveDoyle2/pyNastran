@@ -94,6 +94,13 @@ class OP2Reader:
         self.h5_file = None
         self.size = 4
 
+        # Hack to dump the IBULK/CASECC decks in reverse order
+        # It's in reverse because that's how Nastran writes it.
+        #
+        # We could write it correctly, but there's a chance the
+        # deck could crash.
+        self._dump_deck = False
+
         self.op2 = op2  # type: OP2
 
         self.mapped_tables = {
@@ -2078,12 +2085,20 @@ class OP2Reader:
 
         unused_markers = self.get_nmarkers(1, rewind=True)
 
-        save_lines = False
-        write_deck = False
-        bulk_filename = 'bulk.test_op2.bdf'
-        self._read_deck_section(bulk_filename, save_lines,
-                                write_deck, mode='a',
-                                read_mode=2)
+        if self._dump_deck:
+            write_deck = True
+            bulk_filename = 'bulk.test_op2.bdf'
+            save_lines = False
+            self._read_deck_section(bulk_filename, save_lines,
+                                    write_deck, mode='w',
+                                    read_mode=1)
+        else:
+            save_lines = False
+            write_deck = False
+            bulk_filename = 'bulk.test_op2.bdf'
+            self._read_deck_section(bulk_filename, save_lines,
+                                    write_deck, mode='a',
+                                    read_mode=2)
 
 
     def _read_deck_section(self, deck_filename: str, save_lines: bool,
@@ -2095,6 +2110,7 @@ class OP2Reader:
                                'one or more must be False')
 
         lines = []
+        size = self.size
         if write_deck and self.read_mode == read_mode:
             with open(deck_filename, mode) as bdf_file:  # pragma: no cover
                 while 1:
@@ -2105,8 +2121,8 @@ class OP2Reader:
                         # table is literally just an unsorted echo of the
                         # BULK/CASE data table in the BDF
                         data = self._read_record()
-                        line = unpack('%is' % len(data), data)[0].replace(b'\xff', b'')
-                        bdf_file.write(line.decode(self._encoding) + '\n')
+                        line = reshape_bytes_block_size(data.replace(b'\xff', b' '), size=size)
+                        bdf_file.write(line + '\n')
                     elif nfields == 0:
                         #op2.show_ndata(100, types='ifs')
                         break
@@ -2123,8 +2139,8 @@ class OP2Reader:
                     # table is literally just an unsorted echo of the
                     # BULK data table in the BDF
                     data = self._read_record()
-                    line = unpack('%is' % len(data), data)[0].replace(b'\xff', b'')
-                    lines.append(line.decode(self._encoding) + '\n')
+                    line = reshape_bytes_block_size(data.replace(b'\xff', b' '), size=size)
+                    lines.append(line + '\n')
                 elif nfields == 0:
                     #op2.show_ndata(100, types='ifs')
                     break
@@ -2175,6 +2191,9 @@ class OP2Reader:
         lines = self._read_deck_section(bulk_filename, save_lines,
                                         write_deck=write_deck, mode='w',
                                         read_mode=1)
+        if self._dump_deck:
+            with open(bulk_filename, 'a') as bdf_file:
+                bdf_file.writelines(lines)
         self._case_control_lines = lines
 
     def read_cddata(self):
@@ -5718,7 +5737,9 @@ def _parse_nastran_version(data, version, encoding, log):
 
 def _parse_nastran_version_16(data: bytes, version: bytes, encoding: str, log) -> str:
     """parses an 8 character version string"""
-    if version == b'NX20    19.2':
+    if version in [b'NX20    19.0',
+                   b'NX20    19.1',
+                   b'NX20    19.2']:
         mode = 'nx'
     else:
         raise RuntimeError('unknown version=%r' % version)

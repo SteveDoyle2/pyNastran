@@ -1,3 +1,4 @@
+# encoding: utf-8
 from __future__ import annotations
 from typing import TYPE_CHECKING
 import numpy as np
@@ -563,7 +564,7 @@ def get_plate_stress_strains(eids, cases, model: OP2, times, key, icase,
             'emax' : 'œµmax',
             'emin' : 'œµmin',
             'von_mises' : 'œµ von Mises',
-            'max_shear' : 'Ì†µÌªæmax',
+            'max_shear' : 'ùõæmax',
         }
     methods = [method_map[headeri] for headeri in case_headers]
     #if 'Mises' in methods:

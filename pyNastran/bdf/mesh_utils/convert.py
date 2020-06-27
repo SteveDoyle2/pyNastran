@@ -1227,7 +1227,7 @@ def _convert_aero(model: BDF,
     model.log.debug('area_scale (L^2) = %s' % area_scale)
     model.log.debug('velocity_scale (L/T) = %s' % velocity_scale)
     model.log.debug('pressure_scale (F/L^2) = %s' % pressure_scale)
-    model.log.debug('density_scale (F/^3) = %s\n' % density_scale)
+    model.log.debug('density_scale (F/L^3) = %s\n' % density_scale)
 
     if model.aero:
         model.aero.cref *= xyz_scale

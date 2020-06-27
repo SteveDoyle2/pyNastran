@@ -432,7 +432,7 @@ def _join_wrapped_equation_lines(unused_eqs_temp_in, eqs_temp: List[str]) -> Lis
         eqs.append(eqi)
     return eqs
 
-def split_equations(lines):
+def split_equations(lines: List[str]) -> List[str]:
     """takes an overbounded DEQATN card and shortens it"""
     # first line must be < 56
     # second line may be < 64
@@ -449,7 +449,8 @@ def split_equations(lines):
     lines2[-1] = lines2[-1][:-1]
     return lines2
 
-def _split_equation(lines_out, line, n, isplit=0):
+def _split_equation(lines_out: List[str], line: str, n: int,
+                    isplit: int=0) -> List[str]:
     """
     Takes an overbounded DEQATN line and shortens it using recursion
 
@@ -510,7 +511,7 @@ def _split_equation(lines_out, line, n, isplit=0):
     lines_out = _split_equation(lines_out, line[i:], n, isplit+1)
     return lines_out
 
-def fortran_to_python_short(line, unused_default_values):
+def fortran_to_python_short(line: str, unused_default_values: Any) -> Any:
     """the function used by the DRESP2"""
     func_str = 'def func(args):\n'
     func_str += '    return %s(args)\n' % line.strip()
@@ -518,7 +519,7 @@ def fortran_to_python_short(line, unused_default_values):
     exec(func_str, globals(), local_dict)
     return local_dict['func']
 
-def split_to_equations(lines):
+def split_to_equations(lines: List[str]) -> List[str]:
     """
     Splits a line like::
 
@@ -633,7 +634,9 @@ def fortran_to_python(deqatn_id: int,
     return func_name, nargs, func_msg
 
 
-def write_function_header(func_header, eq, default_values, comment=''):
+def write_function_header(func_header: str, eq: str,
+                          default_values: Dict[str, float],
+                          comment: str='') -> Tuple[str, str, List[str]]:
     """
     initializes the python function
 
@@ -738,7 +741,8 @@ def write_function_header(func_header, eq, default_values, comment=''):
     msg += '    %s = %s\n' % (func_name, eq)
     return func_name, msg, variables
 
-def _write_function_line(func_name, variables, default_values):
+def _write_function_line(func_name: str, variables: List[str],
+                         default_values: Dict[str, float]) -> str:
     """writes the ``def f(x, y, z=1.):`` part of the function"""
     vals = []
     is_default = False
@@ -760,14 +764,14 @@ def _write_function_line(func_name, variables, default_values):
     msg = 'def %s(%s):\n' % (func_name, vals2)
     return msg
 
-def _write_comment(comment):
+def _write_comment(comment: str) -> str:
     """writes the deqatn to the comment block"""
     lines = comment.split('\n')
     msgi = '\n    '.join(lines)
     msg = '    """\n    %s"""\n' % msgi
     return msg
 
-def _write_variables(variables):
+def _write_variables(variables: List[str]) -> str:
     """type checks the inputs"""
     msg = '    try:\n'
     for var in variables:

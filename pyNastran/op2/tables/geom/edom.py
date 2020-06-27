@@ -78,6 +78,7 @@ class EDOM(GeomCommon):
 
     def _read_desvar(self, data: bytes, n: int) -> int:
         """
+        (3106, 31, 352)
         Word Name  Type  Description
         1 ID       I     Unique design variable identification number
         2 LABEL(2) CHAR4 User-supplied name for printing purposes
@@ -91,15 +92,15 @@ class EDOM(GeomCommon):
         """
         if self.size == 4:
             ntotal = 32  # 8*4
-            s = Struct(self._endian + b'i8s ffff i')
+            structi = Struct(self._endian + b'i8s ffff i')
         else:
             ntotal = 64
-            s = Struct(self._endian + b'q16s dddd q')
+            structi = Struct(self._endian + b'q16s dddd q')
 
         ncards = (len(data) - n) // ntotal
         for unused_i in range(ncards):
             edata = data[n:n + ntotal]
-            desvar_id, blabel, xinit, xlb, xub, delx, ddval = s.unpack(edata)
+            desvar_id, blabel, xinit, xlb, xub, delx, ddval = structi.unpack(edata)
             label = blabel.decode('ascii')
             if delx == 0:
                 delx = None

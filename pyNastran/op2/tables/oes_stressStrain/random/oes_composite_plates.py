@@ -84,9 +84,14 @@ class RandomCompositePlateArray(OES_Object):
 
         self.element_layer = zeros((self.ntotal, 2), dtype='int32')
 
-        #[o11, o22, t12, t1z, t2z, angle, major, minor, ovm]
         nresults = 9
+        #[o11, o22, t12, t1z, t2z, angle, major, minor, ovm]; 9
         self.data = zeros((self.ntimes, self.ntotal, nresults), dtype='float32')
+
+    @property
+    def has_von_mises(self):
+        """what is the form of the table (NX includes Von Mises)"""
+        return True
 
     def build_dataframe(self):
         """

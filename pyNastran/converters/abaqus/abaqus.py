@@ -1,6 +1,7 @@
 """Defines the Abaqus class"""
+from typing import List
 import numpy as np
-from cpylog import get_logger2
+from cpylog import get_logger2, SimpleLogger
 from pyNastran.converters.abaqus.abaqus_cards import (
     Assembly, Material, Part, SolidSection, allowed_element_types)
 
@@ -248,7 +249,7 @@ class Abaqus:
         for unused_mat_name, mat in sorted(self.materials.items()):
             self.log.debug(str(mat))
 
-    def read_material(self, lines, iline, word):
+    def read_material(self, lines: List[str], iline: int, word: str) -> Material:
         """reads a Material card"""
         param_map = get_param_map(iline, word, required_keys=['name'])
         #print(param_map)
@@ -259,6 +260,7 @@ class Abaqus:
         word = word_line.strip('*').lower()
         unused_allowed_words = ['elastic']
         unallowed_words = [
+            'shell section', 'solid section',
             'material', 'step', 'boundary', 'amplitude', 'surface interaction',
             'assembly']
         iline += 1
@@ -290,7 +292,7 @@ class Abaqus:
                         assert len(sline) == 3, sline
                         self.log.debug('  traction material')
                     else:
-                        raise NotImplementedError(mat_type)
+                        raise NotImplementedError(f'mat_type={mat_type!r}')
                 iline += 1
             elif word.startswith('plastic'):
                 key = 'plastic'
@@ -451,7 +453,7 @@ class Abaqus:
                 raise NotImplementedError(msg)
 
             if key in sections:
-                msg = 'key=%r already defined for Material name=%r' % (key, name)
+                msg = f'key={key!r} already defined for Material name={name!r}'
                 self.log.warning(msg)
                 #raise RuntimeError(msg)
             sections[key] = data_lines
@@ -473,7 +475,8 @@ class Abaqus:
             if is_broken:
                 iline -= 1
                 break
-        material = Material(name, sections=sections, density=density,
+        material = Material(name, sections=sections,
+                            density=density,
                             ndepvars=ndepvars, ndelete=ndelete)
         iline -= 1
         return iline, line0, material
@@ -826,8 +829,8 @@ class Abaqus:
         self.log.debug('  end of step %i...' % istep)
         return iline, line0
 
-    def write(self, abqaqus_filename_out, is_2d=False):
-        self.log.info('writing %r' % abqaqus_filename_out)
+    def write(self, abaqus_filename_out, is_2d=False):
+        self.log.info('writing %r' % abaqus_filename_out)
         #self.parts = {}
         #self.boundaries = {}
         #self.materials = {}
@@ -837,7 +840,7 @@ class Abaqus:
         #self.steps = {}
         #self.heading = None
         #self.preprint = None
-        with open(abqaqus_filename_out, 'w') as abq_file:
+        with open(abaqus_filename_out, 'w') as abq_file:
             self.log.debug("  nparts = %s" % len(self.parts))
             self.log.debug("  nmaterials = %s" % len(self.materials))
             if self.assembly is not None:
@@ -915,7 +918,8 @@ def read_solid_section(line0, lines, iline, log):
     solid_section = SolidSection(params_map, data_lines, log)
     return iline, solid_section
 
-def read_hourglass_stiffness(line0, lines, iline, log):
+def read_hourglass_stiffness(line0: str, lines: List[str], iline: int,
+                             log: SimpleLogger) -> None:
     """reads *hourglass stiffness"""
     # TODO: skips header parsing
     #iline += 1

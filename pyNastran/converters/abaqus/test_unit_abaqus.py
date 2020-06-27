@@ -16,7 +16,7 @@ class TestAbaqus(unittest.TestCase):
         model.write('spike.inp')
         os.remove('spike.inp')
 
-        abaqus_filename = os.path.join(MODEL_PATH, 'abaqus.inp')
+        abaqus_filename = os.path.join(MODEL_PATH, 'abaqus_out.inp')
         with open(abaqus_filename, 'w') as abaqus_file:
             abaqus_file.writelines('\n'.join(lines))
 

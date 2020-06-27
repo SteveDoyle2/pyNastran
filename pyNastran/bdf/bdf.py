@@ -605,6 +605,8 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             self.set_as_nx()
         elif mode == 'zona':
             self.set_as_zona()
+        elif mode == 'nasa95':
+            self.set_as_nasa95()
         else:  # pragma: no cover
             msg = 'mode=%r is not supported; modes=[msc, nx, zona]' % self._nastran_format
             raise NotImplementedError(msg)

@@ -17,12 +17,11 @@ FLUX             HOEF1         Element heat flux
 """
 from struct import Struct
 from typing import Any
-from typing import Any
 
 import numpy as np
 from numpy import frombuffer, vstack, sin, cos, radians, array, hstack, zeros
 
-from pyNastran.op2.op2_interface.op2_reader import mapfmt
+from pyNastran.op2.op2_interface.op2_reader import mapfmt, reshape_bytes_block_strip
 from pyNastran.op2.tables.utils import get_eid_dt_from_eid_device
 from pyNastran.op2.op2_helper import polar_to_real_imag
 from pyNastran.op2.op2_interface.op2_common import OP2Common
@@ -120,10 +119,10 @@ class OEF(OP2Common):
             #prefix = 'strength_ratio.'
         #elif self.table_name in ['OESCP', 'OESTRCP']:
             #pass # TODO: update
-        elif self.table_name in [b'OEFCRM1']:
+        elif table_name_bytes in [b'OEFCRM1']:
             assert self.table_code in [4, 504], self.code_information()
             prefix = 'crm.'
-        elif self.table_name in [b'OEFCRM2']:
+        elif table_name_bytes in [b'OEFCRM2']:
             assert self.table_code in [4, 504], self.code_information()
             # sort2, random
             self.format_code = 1 # real
@@ -132,10 +131,10 @@ class OEF(OP2Common):
             self.sort_bits[2] = 1 # random
             self.sort_method = 2
             prefix = 'crm.'
-        elif self.table_name in [b'OEFPSD1']:
+        elif table_name_bytes in [b'OEFPSD1']:
             assert self.table_code in [4, 604], self.code_information()
             prefix = 'psd.'
-        elif self.table_name in [b'OEFPSD2']:
+        elif table_name_bytes in [b'OEFPSD2']:
             assert self.table_code in [4, 604], self.code_information()
             self.format_code = 1
             self.sort_bits[0] = 0 # real
@@ -1676,29 +1675,8 @@ class OEF(OP2Common):
                 obj.itotal = itotal2
                 obj.ielement = ielement2
             else:
-                s1 = self.struct_i
-                s2 = Struct(self._endian + b'i8f')  # 36
-                for unused_i in range(nelements):
-                    edata = data[n:n+4]
-                    eid_device, = s1.unpack(edata)
-                    eid, dt = get_eid_dt_from_eid_device(
-                        eid_device, self.nonlinear_factor, self.sort_method)
-                    n += 4
-
-                    for istation in range(11):
-                        edata = data[n:n+36]
-                        out = s2.unpack(edata)
-                        if self.is_debug_file:
-                            self.binary_debug.write('OEF_Beam - %s\n' % (str(out)))
-                        (nid, sd, bm1, bm2, ts1, ts2, af, ttrq, wtrq) = out
-
-                        if istation == 0:  # isNewElement
-                            obj.add_new_element_sort1(
-                                dt, eid, nid, sd, bm1, bm2, ts1, ts2, af, ttrq, wtrq)
-                        elif sd > 0.:
-                            obj.add_sort1(
-                                dt, eid, nid, sd, bm1, bm2, ts1, ts2, af, ttrq, wtrq)
-                        n += 36
+                n = oef_cbeam_real_100(self, data, obj,
+                                       nelements, ntotal, dt)
         elif self.format_code in [2, 3] and self.num_wide == 177: # imag
             slot = self.get_result(result_name)
             ntotal = 708 * self.factor # 177*4
@@ -1756,7 +1734,7 @@ class OEF(OP2Common):
 
                 ntotal = 708 * self.factor # (16*11+1)*4 = 177*4
                 nelements = ndata // ntotal
-                n = oef_cbeam_imag(self, data, obj, nelements, ntotal, is_magnitude_phase)
+                n = oef_cbeam_imag_177(self, data, obj, nelements, ntotal, is_magnitude_phase)
         else:
             msg = self.code_information()
             print(msg)
@@ -2563,6 +2541,7 @@ class OEF(OP2Common):
         98 - CTRIA6 (composite)
         232 - CQUADR
         233 - CTRIAR
+
         """
         if self.element_type == 95:
             result_name = prefix + 'cquad4_composite_force' + postfix
@@ -2598,8 +2577,6 @@ class OEF(OP2Common):
                 return nelements * self.num_wide * 4, None, None
 
             obj = self.obj
-
-            ntotal = 36
             nelements = ndata // ntotal
 
 
@@ -2612,79 +2589,7 @@ class OEF(OP2Common):
                 ##self.binary_debug.write('  #nodeji = [eid, ilayer, o1, o2, t12, t1z, t2z, angle, major, minor, ovm)]\n')
                 #self.binary_debug.write('  nelements=%i; nnodes=1 # centroid\n' % nelements)
 
-            #                                5 6  7 8-i/f 9
-            s1 = Struct(self._endian + b'i8sif 4s f i     4s')
-            s2 = Struct(self._endian + b'i8sif 4s f f     4s')
-            eid_old = None
-            for unused_i in range(nelements):
-                #2 THEORY(2) CHAR4 Theory
-                #4 LAMID     I Lamina number
-                #5 FP       RS Failure index for direct stresses
-                #6 FM       RS Failure mode for maximum strain theory
-                #7 FB       RS Failure index for interlaminar shear stress or -1
-                #8 FMAX     RS Maximum of FP and FB or -1.
-                #9 FFLAG CHAR4 Failure flag
-                edata = data[n:n+ntotal]  # 4*9
-                out = s1.unpack(edata)
-
-                # failure_stress_for_ply = failure_strain_for_ply = failure_index_for_ply???
-                # i    8s               i      f
-                (eid, failure_theoryb, ply_id, failure_stress_for_ply,
-                 # 4s   7-f/i                8-f/i      9-4s
-                 flagb, interlaminar_stress, max_value, failure_flagb,
-                 #failure_index_for_bonding,
-                 #failure_index_for_element,
-                 #flag,
-                 #direct_stress_or_strain,
-                 #interlaminar_stress,
-                 #max_of_fb_fp_for_all_plies
-                ) = out
-                failure_theory = failure_theoryb.decode('latin1').strip()
-                flag = flagb.decode('latin1').strip()
-                failure_flag = failure_flagb.decode('latin1').strip()
-
-                if max_value == -1:
-                    max_value = np.nan
-                else:
-                    max_value = s2.unpack(edata)[6]
-
-                if eid == -1:
-                    #print(f'  ply_id={ply_id} failure_stress_for_ply={failure_stress_for_ply} '
-                          #f'flag={flag} interlaminar_stress={interlaminar_stress} max_value={max_value} failure_flag={failure_flag}')
-                    eid = eid_old
-                else:
-                    #print(f"eid={eid} ft='{failure_theory}'\n"
-                          #f'  ply_id={ply_id} failure_stress_for_ply={failure_stress_for_ply} '
-                          #f'flag={flag} interlaminar_stress={interlaminar_stress} max_value={max_value} failure_flag={failure_flag}')
-                    eid_old = eid
-                assert flag in ['', '-1', '-2', '-12', 'IN'], 'flag=%r' % flag
-                assert failure_theory in ['TSAI-WU', 'STRAIN', 'HILL', 'HOFFMAN', ''], 'failure_theory=%r' % failure_theory
-                assert  failure_flag in ['', '***'], 'failure_flag=%r' % failure_flag
-                obj.add_sort1(dt, eid, failure_theory, ply_id, failure_stress_for_ply, flag,
-                              interlaminar_stress, max_value, failure_flag)
-                n += 36
-
-            #s = Struct(self._endian + b'i8si4f4s')
-            #for i in range(nelements):
-                #if i % 10000 == 0:
-                    #print 'i = ', i
-                #edata = data[n:n+ntotal]  # 4*9
-                #out = s.unpack(edata)
-                #(eid_device, theory, lamid, failure_index_direct_stress, failure_mode_max_shear,
-                         #failure_index_interlaminar_shear, fmax, failure_flag) = out
-                #eid, dt = get_eid_dt_from_eid_device(
-                    #eid_device, self.nonlinear_factor, self.sort_method)
-                #if self.is_debug_file:
-                    #if eid > 0:
-                        #self.binary_debug.write('  eid=%i; C=[%s]\n' % (', '.join(['%r' % di for di in out]) ))
-                    #else:
-                        #self.binary_debug.write('      %s  C=[%s]\n' % (' ' * len(str(eid)), ', '.join(['%r' % di for di in out]) ))
-
-                #if eid > 0:
-                    #obj.add_new_eid_sort1(eType, dt, eid, o1, o2, t12, t1z, t2z, angle, major, minor, ovm)
-                #else:
-                    #obj.add_sort1(dt, eid, o1, o2, t12, t1z, t2z, angle, major, minor, ovm)
-                #n += ntotal
+            n = oef_shells_composite_real_9(self, data, obj, nelements, ntotal, dt)
         else:  # pragma: no cover
             msg = self.code_information()
             print(msg)
@@ -3936,7 +3841,39 @@ def oef_cbar_imag(self, data, obj: ComplexCBarForceArray, nelements, ntotal, is_
         n += ntotal
     return n
 
-def oef_cbeam_imag(self, data, obj: ComplexCBeamForceArray, nelements, ntotal, is_magnitude_phase) -> int:
+def oef_cbeam_real_100(self, data: bytes, obj: RealCBeamForceArray,
+                       nelements: int, ntotal: int, dt: Any) -> int:
+    n = 0
+    ntotal1 = 4
+    ntotal2 = 36
+    s1 = self.struct_i
+    s2 = Struct(self._endian + b'i8f')  # 36
+    sort_method = self.sort_method
+    for unused_i in range(nelements):
+        edata = data[n:n+ntotal1]
+        eid_device, = s1.unpack(edata)
+        eid, dt = get_eid_dt_from_eid_device(
+            eid_device, self.nonlinear_factor, sort_method)
+        n += ntotal1
+
+        for istation in range(11):
+            edata = data[n:n+ntotal2]
+            out = s2.unpack(edata)
+            if self.is_debug_file:
+                self.binary_debug.write('OEF_Beam - %s\n' % (str(out)))
+            (nid, sd, bm1, bm2, ts1, ts2, af, ttrq, wtrq) = out
+
+            if istation == 0:  # isNewElement
+                obj.add_new_element_sort1(
+                    dt, eid, nid, sd, bm1, bm2, ts1, ts2, af, ttrq, wtrq)
+            elif sd > 0.:
+                obj.add_sort1(
+                    dt, eid, nid, sd, bm1, bm2, ts1, ts2, af, ttrq, wtrq)
+            n += ntotal2
+    return n
+
+def oef_cbeam_imag_177(self, data, obj: ComplexCBeamForceArray,
+                       nelements, ntotal, is_magnitude_phase) -> int:
     n = 0
     #s1 = self.struct_i
     ntotal1 = 4 * self.factor
@@ -3989,4 +3926,86 @@ def oef_cbeam_imag(self, data, obj: ComplexCBeamForceArray, nelements, ntotal, i
                 ## don't add this field
                 #pass
                 #raise RuntimeError('CBEAM error; i=%s sd=%s' % (i, sd))
+    return n
+
+def oef_shells_composite_real_9(self, data: bytes,
+                                obj,
+                                nelements: int, ntotal: int,
+                                dt: Any) -> int:
+    n = 0
+    size = self.size
+    #                                5 6  7 8-i/f 9
+    s1 = Struct(self._endian + b'i8sif 4s f i     4s')
+    s2 = Struct(self._endian + b'i8sif 4s f f     4s')
+    eid_old = None
+    for unused_i in range(nelements):
+        #2 THEORY(2) CHAR4 Theory
+        #4 LAMID     I Lamina number
+        #5 FP       RS Failure index for direct stresses
+        #6 FM       RS Failure mode for maximum strain theory
+        #7 FB       RS Failure index for interlaminar shear stress or -1
+        #8 FMAX     RS Maximum of FP and FB or -1.
+        #9 FFLAG CHAR4 Failure flag
+        edata = data[n:n+ntotal]  # 4*9
+        out = s1.unpack(edata)
+
+        # failure_stress_for_ply = failure_strain_for_ply = failure_index_for_ply???
+        # i    8s               i      f
+        (eid, failure_theoryb, ply_id, failure_stress_for_ply,
+         # 4s   7-f/i                8-f/i      9-4s
+         flagb, interlaminar_stress, max_value, failure_flagb,
+         #failure_index_for_bonding,
+         #failure_index_for_element,
+         #flag,
+         #direct_stress_or_strain,
+         #interlaminar_stress,
+         #max_of_fb_fp_for_all_plies
+        ) = out
+
+        failure_theory = reshape_bytes_block_strip(failure_theoryb, size=size)
+        flag = reshape_bytes_block_strip(flagb, size=size)
+        failure_flag = reshape_bytes_block_strip(failure_flagb, size=size)
+
+        if max_value == -1:
+            max_value = np.nan
+        else:
+            max_value = s2.unpack(edata)[6]
+
+        if eid == -1:
+            #print(f'  ply_id={ply_id} failure_stress_for_ply={failure_stress_for_ply} '
+                  #f'flag={flag} interlaminar_stress={interlaminar_stress} max_value={max_value} failure_flag={failure_flag}')
+            eid = eid_old
+        else:
+            #print(f"eid={eid} ft='{failure_theory}'\n"
+                  #f'  ply_id={ply_id} failure_stress_for_ply={failure_stress_for_ply} '
+                  #f'flag={flag} interlaminar_stress={interlaminar_stress} max_value={max_value} failure_flag={failure_flag}')
+            eid_old = eid
+        assert flag in ['', '-1', '-2', '-12', 'IN'], f'flag={flag!r} flagb={flagb!r}'
+        assert failure_theory in ['TSAI-WU', 'STRAIN', 'HILL', 'HOFFMAN', ''], 'failure_theory={failure_theory!r}'
+        assert  failure_flag in ['', '***'], 'failure_flag=%r' % failure_flag
+        obj.add_sort1(dt, eid, failure_theory, ply_id, failure_stress_for_ply, flag,
+                      interlaminar_stress, max_value, failure_flag)
+        n += ntotal
+
+    #s = Struct(self._endian + b'i8si4f4s')
+    #for i in range(nelements):
+        #if i % 10000 == 0:
+            #print 'i = ', i
+        #edata = data[n:n+ntotal]  # 4*9
+        #out = s.unpack(edata)
+        #(eid_device, theory, lamid, failure_index_direct_stress, failure_mode_max_shear,
+                 #failure_index_interlaminar_shear, fmax, failure_flag) = out
+        #eid, dt = get_eid_dt_from_eid_device(
+            #eid_device, self.nonlinear_factor, self.sort_method)
+        #if self.is_debug_file:
+            #if eid > 0:
+                #self.binary_debug.write('  eid=%i; C=[%s]\n' % (', '.join(['%r' % di for di in out]) ))
+            #else:
+                #self.binary_debug.write('      %s  C=[%s]\n' % (' ' * len(str(eid)), ', '.join(['%r' % di for di in out]) ))
+
+        #if eid > 0:
+            #obj.add_new_eid_sort1(eType, dt, eid, o1, o2, t12, t1z, t2z, angle, major, minor, ovm)
+        #else:
+            #obj.add_sort1(dt, eid, o1, o2, t12, t1z, t2z, angle, major, minor, ovm)
+        #n += ntotal
     return n
