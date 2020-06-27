@@ -9,7 +9,7 @@ from pyNastran.op2.tables.geom.geom_common import GeomCommon
 from pyNastran.op2.op2_interface.op2_reader import mapfmt, reshape_bytes_block, reshape_bytes_block_size
 from .utils import get_minus1_start_end
 
-#if TYPE_CHECKING:
+#if TYPE_CHECKING:  # pragma: no cover
 from pyNastran.bdf.cards.optimization import DVPREL1, DVPREL2, DVMREL2
 DSCREEN_INT_TO_RTYPE = {
     3 : 'LAMA',

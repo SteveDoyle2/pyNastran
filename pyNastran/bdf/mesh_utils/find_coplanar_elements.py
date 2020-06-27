@@ -3,7 +3,7 @@ from typing import List, Union, Optional, TYPE_CHECKING
 
 import numpy as np
 from pyNastran.bdf.mesh_utils.internal_utils import get_bdf_model
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.bdf.bdf import BDF
 
 

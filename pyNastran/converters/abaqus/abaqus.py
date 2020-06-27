@@ -1179,7 +1179,7 @@ def read_shell_section(line0: str, lines: List[str], iline: int,
     return iline, shell_section
 
 def read_hourglass_stiffness(line0: str, lines: List[str], iline: int,
-                             log: SimpleLogger) -> SolidSection:
+                             log: SimpleLogger) -> None:
     """reads *hourglass stiffness"""
     # TODO: skips header parsing
     #iline += 1

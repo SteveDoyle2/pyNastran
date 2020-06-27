@@ -5949,7 +5949,8 @@ def _parse_nastran_version(data, version, encoding, log):
 
 def _parse_nastran_version_16(data: bytes, version: bytes, encoding: str, log) -> str:
     """parses an 8 character version string"""
-    if version in [b'NX20    19.1',
+    if version in [b'NX20    19.0',
+                   b'NX20    19.1',
                    b'NX20    19.2']:
         mode = 'nx'
     else:

@@ -4873,7 +4873,7 @@ class OES(OP2Common):
             else:
                 if is_vectorized and self.use_vector:  # pragma: no cover
                     self.log.debug('vectorize CQUAD4-33 random numwide=9 SORT%s' % self.sort_method)
-                n = oes_quad4_33_random_9(self, data, obj, nelements, ntotal)
+                n = oes_cquad4_33_random_9(self, data, obj, nelements, ntotal)
 
         elif result_type in [1, 2] and self.num_wide == 11: # random
             #2 FD1 RS Z1 = Fibre Distance
@@ -4983,8 +4983,8 @@ class OES(OP2Common):
                 if is_vectorized and self.use_vector:  # pragma: no cover
                     self.log.debug('vectorize CQUAD4-33 complex '
                                    f'{self.table_name_str} SORT{self.sort_method}')
-                n = oes_quad4_33_complex_17(self, data, obj, nelements, ntotal,
-                                            is_magnitude_phase)
+                n = oes_cquad4_33_complex_17(self, data, obj, nelements, ntotal,
+                                             is_magnitude_phase)
 
         else:  # pragma: no cover
             raise RuntimeError(self.code_information())
@@ -5692,7 +5692,7 @@ class OES(OP2Common):
                 if is_vectorized and self.use_vector:  # pragma: no cover
                     self.log.debug('vectorize CQUAD4-144/CQUAD8... random SORT%s' % self.sort_method)
                 #numwide_random = 2 + 9 * nnodes_all
-                n = oes_quad4_144_random(self, data, obj, nelements, ntotal, nnodes, ndata)
+                n = oes_cquad4_144_random(self, data, obj, nelements, ntotal, nnodes, ndata)
 
             #if self.read_mode == 1:
                 #msg = ''
@@ -7843,10 +7843,10 @@ class OES(OP2Common):
             obj.element[ielement:ielement2] = eids
 
 
-def oes_quad4_33_complex_17(self, data: bytes,
-                            obj: Union[ComplexPlateStressArray, ComplexPlateStrainArray],
-                            nelements: int, ntotal: int,
-                            is_magnitude_phase: bool) -> int:
+def oes_cquad4_33_complex_17(self, data: bytes,
+                             obj: Union[ComplexPlateStressArray, ComplexPlateStrainArray],
+                             nelements: int, ntotal: int,
+                             is_magnitude_phase: bool) -> int:
     """
     OESVM1/2 - Table of element stresses or strains with von Mises
     OSTRVM1/2  for frequency response results.
@@ -7928,7 +7928,7 @@ def oes_quad4_33_complex_17(self, data: bytes,
 
 def oes_cbeam_real_111(self, data: bytes,
                        obj: Union[RealBeamStressArray, RealBeamStrainArray],
-                       nelements: int, ntotal: int, dt) -> int:
+                       nelements: int, ntotal: int, dt: Any) -> int:
     n = 0
     nnodes = 10  # 11-1
     n1 = 44 * self.factor
@@ -7959,7 +7959,7 @@ def oes_cbeam_real_111(self, data: bytes,
             obj.add_sort1(dt, eid, *out)
     return n
 
-def oes_cbar100_real_10(self, data, obj, nelements, ntotal, dt):
+def oes_cbar100_real_10(self, data: bytes, obj, nelements: int, ntotal: int, dt: Any) -> int:
     n = 0
     struct1 = Struct(self._endian + mapfmt(self._analysis_code_fmt + b'9f', self.size))
     for i in range(nelements):
@@ -7977,9 +7977,9 @@ def oes_cbar100_real_10(self, data, obj, nelements, ntotal, dt):
     return n
 
 def oes_cbeam_complex_111(self, data: bytes,
-                            obj: Union[ComplexBeamStressArray, ComplexBeamStrainArray],
-                            nelements: int, nnodes: int, ntotal: int,
-                            is_magnitude_phase: bool) -> int:
+                          obj: Union[ComplexBeamStressArray, ComplexBeamStrainArray],
+                          nelements: int, nnodes: int, ntotal: int,
+                          is_magnitude_phase: bool) -> int:
     n = 0
     itotal = obj.itotal
     n1 = 44
@@ -8044,7 +8044,7 @@ def oes_cbeam_complex_111(self, data: bytes,
 
 def oes_cbeam_random_67(self, data: bytes,
                         obj: Union[RandomBeamStressArray, RandomBeamStrainArray],
-                        nelements: int, nnodes: int, ntotal: int, dt) -> int:
+                        nelements: int, nnodes: int, ntotal: int, dt: Any) -> int:
     n = 0
     n1 = 28
     n2 = 24 # 6*4
@@ -8256,9 +8256,9 @@ def oes_cquad4_complex_57(self,
     #ntotal = None
     return n
 
-def oes_quad4_33_random_9(self, data: bytes,
-                          obj: Union[RandomPlateStressArray, RandomPlateStrainArray],
-                          nelements: int, ntotal: int) -> int:
+def oes_cquad4_33_random_9(self, data: bytes,
+                           obj: Union[RandomPlateStressArray, RandomPlateStrainArray],
+                           nelements: int, ntotal: int) -> int:
     n = 0
     if self.sort_method == 1:
         #print('cquad33_9 - SORT1')
@@ -8541,8 +8541,9 @@ def oes_ctria3_random_11(self, data: bytes,
             n += ntotal
     return n
 
-def oes_cquad4_144_real(self, data, ndata, obj: RealPlateStrainArray,
-                        ntotal: int, nelements: int, nnodes: int, dt) -> int:
+def oes_cquad4_144_real(self, data: bytes, ndata: int,
+                        obj: RealPlateStrainArray,
+                        ntotal: int, nelements: int, nnodes: int, dt: Any) -> int:
     n = 0
     if self.size == 4:
         center_format = self._endian + self._analysis_code_fmt + b'4si16f'
@@ -8608,9 +8609,9 @@ def oes_cquad4_144_real(self, data, ndata, obj: RealPlateStrainArray,
             n += n68
     return n
 
-def oes_quad4_144_random(self, data: bytes,
-                         obj: Union[RandomPlateStressArray, RandomPlateStrainArray],
-                         nelements: int, ntotal: int, nnodes: int, ndata: int) -> int:
+def oes_cquad4_144_random(self, data: bytes,
+                          obj: Union[RandomPlateStressArray, RandomPlateStrainArray],
+                          nelements: int, ntotal: int, nnodes: int, ndata: int) -> int:
     n = 0
     center_format = self._endian + self._analysis_code_fmt + b'4s i8f'
     node_format = self._endian + b'i8f'

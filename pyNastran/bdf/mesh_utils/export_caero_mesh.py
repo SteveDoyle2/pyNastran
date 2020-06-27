@@ -5,9 +5,9 @@ defines:
 """
 from __future__ import annotations
 import math
-import typing
+from typing import TYPE_CHECKING
 
-if typing.TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.bdf.bdf import BDF
 from pyNastran.bdf.field_writer_8 import print_card_8
 

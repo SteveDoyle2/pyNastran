@@ -3926,7 +3926,7 @@ def oef_cbar_imag(self, data, obj: ComplexCBarForceArray, nelements, ntotal, is_
     return n
 
 def oef_cbeam_real_100(self, data: bytes, obj: RealCBeamForceArray,
-                       nelements: int, ntotal: int, dt):
+                       nelements: int, ntotal: int, dt: Any) -> int:
     n = 0
     ntotal1 = 4 * self.factor
     ntotal2 = 36 * self.factor
