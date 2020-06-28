@@ -92,7 +92,7 @@ This is a bug fix only release outside of:
 
      .. code-block:: python
 
-        >>> model = subcase.add_set_from_values(set_id, values)
+        >>> subcase.add_set_from_values(set_id, values)
 
 which was overly complicated to do before.
 
