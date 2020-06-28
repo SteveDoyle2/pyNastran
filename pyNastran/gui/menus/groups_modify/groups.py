@@ -13,8 +13,8 @@ from pyNastran.bdf.cards.collpase_card import collapse_colon_packs
 
 
 class Group:
-    def __init__(self, name, element_str, elements_pound, editable=True):
-        # type: (str, str, int, bool) -> None
+    def __init__(self, name: str, element_str: str, elements_pound: int,
+                 editable: bool=True) -> None:
         """
         Creates an element group
 
@@ -55,8 +55,7 @@ class Group:
         assert isinstance(eids, ndarray), eids
         self.element_str = _get_collapsed_text(eids).strip()
 
-    def __repr__(self):
-        # type: () -> str
+    def __repr__(self) -> str:
         msg = 'Group:\n'
         msg += '  name: %s\n' % self.name
         msg += '  editable: %s\n' % self.editable
@@ -68,8 +67,8 @@ class Group:
 
 
 class NodeGroup:
-    def __init__(self, name, node_str, nodes_pound, editable=True):
-        # type: (str, str, int, bool) -> None
+    def __init__(self, name: str, node_str: str,
+                 nodes_pound: int, editable: bool=True) -> None:
         """
         Creates a node group
 
@@ -109,8 +108,7 @@ class NodeGroup:
         assert isinstance(nids, ndarray), nids
         self.node_str = _get_collapsed_text(nids).strip()
 
-    def __repr__(self):
-        # type: () -> str
+    def __repr__(self) -> str:
         msg = 'NodeGroup:\n'
         msg += '  name: %s\n' % self.name
         msg += '  editable: %s\n' % self.editable

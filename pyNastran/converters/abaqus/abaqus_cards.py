@@ -5,7 +5,11 @@ defines:
  - Part
 
 """
+from __future__ import annotations
+from typing import Dict, Optional, Any, TYPE_CHECKING
 import numpy as np
+if TYPE_CHECKING:  # pragma: no cover
+    from cpylog import SimpleLogger
 
 allowed_element_types = [
     'r2d2', 'conn2d2',
@@ -18,7 +22,8 @@ allowed_element_types = [
 
 class SolidSection:
     """a SolidSection defines depth and a material"""
-    def __init__(self, param_map, data_lines, log):
+    def __init__(self, param_map, data_lines,
+                 log: SimpleLogger):
         self.param_map = param_map
         self.data_lines = data_lines
         self.material = param_map['material']
@@ -48,7 +53,11 @@ class SolidSection:
 
 class Material:
     """a Material object is a series of nodes & elements (of various types)"""
-    def __init__(self, name, sections, density=None, ndepvars=None, ndelete=None):
+    def __init__(self, name: str,
+                 sections: Dict[str, float],
+                 density: Optional[float]=None,
+                 ndepvars: Optional[int]=None,
+                 ndelete: Optional[int]=None):
         self.name = name
         self.density = density
 
@@ -66,7 +75,7 @@ class Material:
             #self.user_material = sections['user_material']
         self.sections = sections
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         """prints a summary for the material"""
         msg = 'Material(\n'
         msg += '  name=%r,\n' % self.name
@@ -75,33 +84,35 @@ class Material:
         msg += ')\n'
         return msg
 
-    def write(self, abq_file):
-        #*Material, name=Glassy828DEA
-        #*Density
-        #1180.,
-        #*Elastic
-            #2.14078e+09, 0.42718
-        #*Material, name=MAT1_828DEA_Dam
-        #*Density
-        #1180.,
-        #*Depvar, delete=4
-            #20,
-        #*User Material, constants=16
-        #** K      CTELIN      C10          C01       DAM_FORM   FUNC_FORM     EVOLF         EVMF
-            #3.2e+09, 5.667e-05,  3.75e+08,        0.,        2.,        1.,    50000.,      0.05
-            #**EVM0ISO    EVM0VOL      EVM0VM DAM_METHOD      ALPHA         A          B          C
-                #0.,       0.5,       0.5,        1.,        0.,        0.,       0.5,       0.6
-        #*Material, name=Steel
-        #*Density
-        #7800.,
-        #*Elastic
-            #2e+11, 0.3
+    def write(self, abq_file) -> None:
+        """
+        *Material, name=Glassy828DEA
+        *Density
+        1180.,
+        *Elastic
+            2.14078e+09, 0.42718
+        *Material, name=MAT1_828DEA_Dam
+        *Density
+        1180.,
+        *Depvar, delete=4
+            20,
+        *User Material, constants=16
+        ** K      CTELIN      C10          C01       DAM_FORM   FUNC_FORM     EVOLF         EVMF
+            3.2e+09, 5.667e-05,  3.75e+08,        0.,        2.,        1.,    50000.,      0.05
+            **EVM0ISO    EVM0VOL      EVM0VM DAM_METHOD      ALPHA         A          B          C
+                0.,       0.5,       0.5,        1.,        0.,        0.,       0.5,       0.6
+        *Material, name=Steel
+        *Density
+        7800.,
+        *Elastic
+            2e+11, 0.3
+        """
         abq_file.write('*Material, name=%s\n' % write_name(self.name))
-        if self.density:
-            abq_file.write('*Density\n  %s,\n' % self.density)
+        if self.density is not None:
+            abq_file.write(f'*Density\n  {self.density},\n')
         if self.ndepvars:
             ndelete = '' if self.ndelete is None else ', delete=%s' % self.ndelete
-            abq_file.write('*Depvar%s\n  %s,\n' % (ndelete, self.ndepvars))
+            abq_file.write(f'*Depvar{ndelete}\n  {self.ndepvars},\n')
         if self.user_material:
             nconstants = ''
             abq_file.write('*User Material%s\n  %s,\n' % (nconstants, self.user_material))
@@ -131,8 +142,14 @@ class Assembly:
 
 class Part:
     """a Part object is a series of nodes & elements (of various types)"""
-    def __init__(self, name, nids, nodes, element_types, node_sets, element_sets,
-                 solid_sections, log):
+    def __init__(self, name: str,
+                 nids: np.ndarray,
+                 nodes: np.ndarray,
+                 element_types: Dict[str, np.ndarray],
+                 node_sets: Dict[str, np.ndarray],
+                 element_sets: Dict[str, np.ndarray],
+                 solid_sections: List[SolidSection],
+                 log: SimpleLogger):
         """
         creates a Part object
 

@@ -152,20 +152,20 @@ class OP2GeomCommon(OP2, GEOM1, GEOM2, GEOM3, GEOM4, EPT, MPT, EDT, EDOM, DIT, D
         # F:\work\pyNastran\pyNastran\master2\pyNastran\bdf\test\nx_spike\out_conedg01s.op2
         # F:\work\pyNastran\pyNastran\master2\pyNastran\bdf\test\nx_spike\out_sline5.op2
         self._contact_map = {
-            (224, 2, 436) : ['???', self._read_fake],
-            (724, 7, 441) : ['???', self._read_fake],
-            (1224, 12, 446) : ['???', self._read_fake],
-            (7110, 71, 588) : ['???', self._read_fake],
-            (7210, 72, 589) : ['???', self._read_fake],
-            (7410, 74, 591) : ['???', self._read_fake],
-            (7510, 75, 592) : ['???', self._read_fake],
-            (7710, 77, 594) : ['???', self._read_fake],
-            (8110, 81, 598) : ['???', self._read_fake],
-            (8301, 83, 605) : ['???', self._read_fake],
+            (7110, 71, 588) : ['BSURFS', self._read_fake],
+            (724, 7, 441) : ['BSURF', self._read_fake],
+            (224, 2, 436) : ['BLSEG', self._read_fake],
+            (1224, 12, 446) : ['BGSET', self._read_fake],
+            (7210, 72, 589) : ['BCPROP', self._read_fake],
+            (7410, 74, 591) : ['BCTSET', self._read_fake],
+            (7510, 75, 592) : ['BCTADD', self._read_fake],
+            (8810, 88, 603) : ['BGADD', self._read_fake],
+            (8920, 89, 614) : ['BEDGE', self._read_fake],
+            (124, 1, 435) : ['BCONP', self._read_fake],
+            (7710, 77, 594) : ['BCRPARA', self._read_fake],
+            (8110, 81, 598) : ['BCTPARM', self._read_fake],
+            (8301, 83, 605) : ['BCPROPS', self._read_fake],
             (8710, 87, 449) : ['???', self._read_fake],
-            (8810, 88, 603) : ['???', self._read_fake],
-            (8920, 89, 614) : ['???', self._read_fake],
-            (124, 1, 435) : ['???', self._read_fake],
             (424, 4, 438) : ['???', self._read_fake],
         }
 

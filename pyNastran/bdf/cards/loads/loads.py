@@ -365,8 +365,7 @@ class LSEQ(BaseCard):  # Requires LOADSET in case control deck
         self.lid_ref = None
         self.tid_ref = None
 
-    def LoadID(self, lid):
-        # type: (int) -> int
+    def LoadID(self, lid: int) -> int:
         if isinstance(lid, list):
             sid = self.LoadID(lid[0])
         elif isinstance(lid, integer_types):
@@ -375,12 +374,10 @@ class LSEQ(BaseCard):  # Requires LOADSET in case control deck
             sid = lid.sid
         return sid
 
-    def get_loads(self):
-        # type: () -> Any
+    def get_loads(self) -> Any:
         return self.lid_ref
 
-    def Lid(self):
-        # type: () -> int
+    def Lid(self) -> int:
         if self.lid_ref is not None:
             return self.LoadID(self.lid_ref)
         return self.lid

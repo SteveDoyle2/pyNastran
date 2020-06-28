@@ -516,7 +516,7 @@ class BDFMethods(BDFAttributes):
                            loadcase_id: int,
                            cid: int=0,
                            include_grav: bool=False,
-                           xyz_cid0: Union[None, Dict[int, np.ndarray]]=None) -> Tuple[np.ndarray, np.ndarray]:
+                           xyz_cid0: Union[None, Dict[int, NDArray3float]]=None) -> Tuple[np.ndarray, np.ndarray]:
         """
         Sums applied forces & moments about a reference point p0 for all
         load cases.

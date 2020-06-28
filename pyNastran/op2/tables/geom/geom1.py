@@ -491,6 +491,16 @@ class GEOM1(GeomCommon):
 
 
     def _read_extrn(self, data: bytes, n: int) -> int:
+        """
+        Record - EXTRN(1627,16,463)
+        Word Name Type Description
+        1 GID I Grid point identification numbers to connect external SE
+        2 C   I Component numbers
+        Words 1 through 2 repeat until (-1,-1) occurs
+
+        (1, 123456, 2, 123456, 3, 123456, 4, 123456, 100001, 1, 100002, 1, 100003, 1, 100004, 1,
+        -1, -1)
+        """
         self.log.info('skipping EXTRN in GEOM1')
         return len(data)
 

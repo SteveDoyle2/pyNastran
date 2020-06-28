@@ -217,7 +217,6 @@ class PROD(Property):
 
     def uncross_reference(self) -> None:
         """Removes cross-reference links"""
-        # type: () -> None
         self.mid = self.Mid()
         self.mid_ref = None
 

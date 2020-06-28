@@ -93,8 +93,8 @@ class ZONA:
         return object_attributes(self, mode=mode, keys_to_skip=keys_to_skip+my_keys_to_skip,
                                  filter_properties=filter_properties)
 
-    def object_methods(self, mode='public', keys_to_skip=None):
-        # type: (str, Optional[List[str]]) -> List[str]
+    def object_methods(self, mode: str='public',
+                       keys_to_skip: Optional[List[str]]=None) -> List[str]:
         """
         List the names of methods of a class as strings. Returns public methods
         as default.
@@ -186,8 +186,7 @@ class ZONA:
             'TRIMVAR', 'TRIMLNK', 'FLUTTER']
         self.model.cards_to_read.update(set(cards))
 
-    def _add_panlst_object(self, panlst):
-        # type: (Any) -> None
+    def _add_panlst_object(self, panlst: Union[PANLST1, PANLST3]) -> None:
         """adds an PANLST1/PANLST2/PANLST3 object"""
         assert panlst.eid not in self.panlsts
         assert panlst.eid > 0
@@ -195,8 +194,7 @@ class ZONA:
         self.panlsts[key] = panlst
         self.model._type_to_id_map[panlst.type].append(key)
 
-    def _add_pafoil_object(self, pafoil):
-        # type: (Any) -> None
+    def _add_pafoil_object(self, pafoil: PAFOIL7) -> None:
         """adds an PAFOIL7/PAFOIL8 object"""
         assert pafoil.pid not in self.pafoil
         assert pafoil.pid > 0
@@ -204,8 +202,7 @@ class ZONA:
         self.pafoil[key] = pafoil
         self.model._type_to_id_map[pafoil.type].append(key)
 
-    def _add_aesurfz_object(self, aesurf):
-        # type: (Any) -> None
+    def _add_aesurfz_object(self, aesurf: AESURFZ) -> None:
         """adds an AESURFZ object"""
         key = aesurf.aesid
         model = self.model
@@ -214,8 +211,7 @@ class ZONA:
         model.aesurf[key] = aesurf
         model._type_to_id_map[aesurf.type].append(key)
 
-    def _add_mkaeroz_object(self, mkaeroz):
-        # type: (Any) -> None
+    def _add_mkaeroz_object(self, mkaeroz: MKAEROZ) -> None:
         """adds an MKAEROZ object"""
         assert mkaeroz.sid not in self.mkaeroz
         assert mkaeroz.sid > 0
@@ -223,8 +219,7 @@ class ZONA:
         self.mkaeroz[key] = mkaeroz
         self.model._type_to_id_map[mkaeroz.type].append(key)
 
-    def _add_trimvar_object(self, trimvar):
-        # type: (Any) -> None
+    def _add_trimvar_object(self, trimvar: TRIMVAR) -> None:
         """adds an TRIMVAR object"""
         assert trimvar.var_id not in self.trimvar
         assert trimvar.var_id > 0
@@ -232,8 +227,7 @@ class ZONA:
         self.trimvar[key] = trimvar
         self.model._type_to_id_map[trimvar.type].append(key)
 
-    def _add_trimlnk_object(self, trimlnk):
-        # type: (Any) -> None
+    def _add_trimlnk_object(self, trimlnk: TRIMLNK) -> None:
         """adds an TRIMLNK object"""
         assert trimlnk.link_id not in self.trimlnk
         assert trimlnk.link_id > 0

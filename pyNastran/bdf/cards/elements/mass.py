@@ -36,19 +36,16 @@ class PointMassElement(Element):
     def __init__(self):
         Element.__init__(self)
 
-    def repr_fields(self):
-        # type: () -> List[Optional[int, float, str]]
+    def repr_fields(self) -> List[Optional[int, float, str]]:
         return self.raw_fields()
 
     def write_card(self, size: int=8, is_double: bool=False) -> str:
-        # type: (int, bool) -> str
         card = self.repr_fields()
         if size == 8:
             return self.comment + print_card_8(card)
         return self.comment + print_card_16(card)
 
-    def write_card_16(self, is_double=False):
-        # type: (bool) -> str
+    def write_card_16(self, is_double: bool=False) -> str:
         card = self.repr_fields()
         return self.comment + print_card_16(card)
 

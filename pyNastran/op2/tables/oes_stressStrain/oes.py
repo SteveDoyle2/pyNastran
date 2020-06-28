@@ -4860,6 +4860,7 @@ class OES(OP2Common):
         else:  # pragma: no cover
             raise RuntimeError(self.code_information())
         assert self.obj.element_name == self.element_name, self.obj
+        assert n > 0
         return n, nelements, ntotal
 
     def _oes_ctria3(self, data, ndata, dt, is_magnitude_phase, prefix, postfix):

@@ -3929,7 +3929,7 @@ def oef_cbeam_imag_177(self, data, obj: ComplexCBeamForceArray,
     return n
 
 def oef_shells_composite_real_9(self, data: bytes,
-                                obj,
+                                obj: FailureIndicesArray,
                                 nelements: int, ntotal: int,
                                 dt: Any) -> int:
     n = 0
