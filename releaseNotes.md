@@ -8,8 +8,8 @@ If you have a bug/want a new feature or card, leave some feedback on the [Issue 
 
 Release Notes
 =============
-v1.3.3 (2020/6/?)
------------------
+v1.3.3 (2020/6/28)
+------------------
 This is a bug fix only release outside of:
  - subcase.add_set_from_values(set_id, values)
 which was overly complicated to do before.
@@ -85,9 +85,6 @@ F06 Flutter Plotter
  - better parsing of modes; '1,3:' is now supported
 
 minor:
- - removal of some prints
- - more docstrings
- - more typing
  - fixing Tecplot to Nastran converter
 
 GUI:

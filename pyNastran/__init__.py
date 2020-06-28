@@ -16,8 +16,8 @@ else:
             IMAJOR, MINOR1, MINOR2))
 
     __version__ = '1.3.3'
-    __releaseDate__ = '2020/6/xx'
-    __releaseDate2__ = 'JUNE XX, 2020'
+    __releaseDate__ = '2020/6/28'
+    __releaseDate2__ = 'JUNE 28, 2020'
 
 __author__ = 'Steven Doyle'
 __email__ = 'mesheb82@gmail.com'
