@@ -43,7 +43,7 @@
 v1.3.3
 ------
 
-`Download GUI <https://sourceforge.net/projects/pynastran/files/?source=navbar>`_ (latest is from 2020/4/8)
+`Download GUI <https://sourceforge.net/projects/pynastran/files/?source=navbar>`_ (latest is from 2020/6/28)
 
 Also, check out the:
 
@@ -76,6 +76,8 @@ commercial program.
 News
 ====
 
+Check out this blog post covering `Flutter Analysis in pyNastran <https://www.m4-engineering.com/flutter-analysis-with-pynastran/>`_
+
 Release Notes
 =============
 
@@ -85,8 +87,13 @@ pyNastran v1.3.3 has been released (2020/6/28)
 v1.3.3 (2020/6/28)
 ------------------
 This is a bug fix only release outside of:
- - subcase.add_set_from_values(set_id, values)
+
+     .. code-block:: python
+
+        >>> model = subcase.add_set_from_values(set_id, values)
+
 which was overly complicated to do before.
+
 
 Programmatics:
 
@@ -100,49 +107,7 @@ Programmatics:
 
 * support for NX 2019.0, 2019.1
 
-BDF:
- - More TEMPRB defaults
- - DRESP2 now handles DTABLE properly when validate=True is used
- - TSTEPNL now handles KUPDATE (NX parameter)
- - fixing SET2 safe-xref
- - fixing SPLINE1 validate
- - fixing TRIM2 aeqr setting bug (was defaulted to 1.0)
- - fixing ACMODL for NX (didn't support writing)
- - fixed DCONADD bug (added the dconadd_id to the summation)
- - DEQATN now checks that the function name is not an argument
- - DEQATN now supports tabs on line continuation lines
- - convert:
-   - MAT8 now supports temperature scaling
-   - fixed major PSHELL 12I/t^3 convert/scale bug
- - improved optimization support
-
-OP2:
- - auto-conversion to NX for some tables
- - added SixtyFourBitError, which is inherited from NotImplementedError
-    - mainly used for op2 geometry and op2 writing
- - adding op2_results repr method
- - Convergence object has better repr
-
-OP2 Writer:
- - fixed multiple PCOMP writing bug
- - fixed symmetric PCOMP writing
- - added some 64 bit checks (64-bit writing is not supported)
- - turns out the CPYRAM (NX) has 14 node fields (even though it has 13 nodes)
-
-OP2 Geom:
- - various fixes
- - much improved NX detection
- - much improved 64 bit support
-
-F06 Flutter Plotter
- - added check for mode id > 0
- - better parsing of modes; '1,3:' is now supported
-
-minor:
- - fixing Tecplot to Nastran converter
-
-GUI:
- - supporting max shear in plate stress/strain
+See pyNastran `v1.3.3 release notes <https://github.com/SteveDoyle2/pyNastran/releases/tag/v1.3.3>`_ for details on the 54 bug fixes.  Not too bad for 2.5 months!
 
 
 pyNastran v1.3.2 has been released (2020/4/8)
@@ -154,8 +119,6 @@ There is now support for writing OP2 files!  They're difficult to create from sc
 but modifying an existing one isn't difficult.  This includes geometry support.
 
 In addition, many new OP2 results have been added.  Modern NX Nastran should work much better.
-
-Better yet, check out this blog post covering `Flutter Analysis in pyNastran <https://www.m4-engineering.com/flutter-analysis-with-pynastran/>`_
 
 Programmatics:
 
@@ -417,7 +380,11 @@ Known issues:
 Older Releases
 --------------
  - pyNastran `v1.2.0 release notes <https://github.com/SteveDoyle2/pyNastran/releases/tag/v.1.2.0>`_ (2019/5/21)
+ 
  - pyNastran `v1.1.0 release notes <https://github.com/SteveDoyle2/pyNastran/releases/tag/v1.1.0>`_ (2018/6/26)
+ 
  - pyNastran `v1.0.0 release notes <https://github.com/SteveDoyle2/pyNastran/releases/tag/v1.0.0>`_ (2017/5/25)
+ 
  - pyNastran `v0.8.0 release notes <https://github.com/SteveDoyle2/pyNastran/releases/tag/v0.8.0>`_ (2016/8/21)
+ 
  - pyNastran `v0.7.2 release notes <https://github.com/SteveDoyle2/pyNastran/releases/tag/v0.7.2>`_ (2015/4/25)
