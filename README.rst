@@ -117,7 +117,7 @@ pyNastran v1.3.2 has been released (2020/4/8)
 
 With Python 2 now officially dead, it's time for a new killer feature to get the last few people to switch.
 
-There is now support for writing OP2 files!  They're difficult to create from scratch, 
+There is now support for writing OP2 files!  They're difficult to create from scratch,
 but modifying an existing one isn't difficult.  This includes geometry support.
 
 In addition, many new OP2 results have been added.  Modern NX Nastran should work much better.

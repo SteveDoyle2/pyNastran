@@ -20,9 +20,9 @@
 [![Requirements Status](https://img.shields.io/requires/github/SteveDoyle2/pyNastran/master.svg)](https://requires.io/github/SteveDoyle2/pyNastran/requirements/?branch=master)	|
 --->
 
-### v1.3.2
+### v1.3.3
 
-[Download GUI](https://sourceforge.net/projects/pynastran/files/?source=navbar) (latest is from 2020/4/8)
+[Download GUI](https://sourceforge.net/projects/pynastran/files/?source=navbar) (latest is from 2020/6/28)
 
 Also, check out the:
   * [Discussion forum](http://groups.google.com/group/pynastran-discuss) (intended for questions about the latest release)
@@ -60,6 +60,26 @@ commercial program.
 This should be hidden...
 
 --->
+### v1.3.3 (2020/6/28)
+
+This is a bug fix only release outside of:
+      ```python
+     >>> subcase.add_set_from_values(set_id, values)
+     ```
+
+which was overly complicated to do before.
+
+
+Programmatics:
+ - Supports Python 3.7 and 3.8
+ - GUI is compatible with PyQt5 and PySide2 and VTK 7-9
+ - improved testing of old versions of packages
+ - updated nptyping requirements
+ - support for NX 2019.0, 2019.1
+
+See pyNastran `v1.3.3 release notes <https://github.com/SteveDoyle2/pyNastran/releases/tag/v1.3.3>`_ for details on the 54 bug fixes.  Not too bad for 2.5 months!
+
+
 ### pyNastran v1.3.2 has been released (2020/4/8)
 
 With Python 2 now officially dead, it's time for a new killer feature to get the last few people to switch.
