@@ -456,7 +456,7 @@ class CTRIA6v(ShellElement):
         if comment:
             self.comment[eid] = _format_comment(comment)
 
-    def add_card(self, card, comment=''):
+    def add_card(self, card: Any, comment: str=''):
         # type: (Any, str) -> CTRIA3
         """
         Adds a CTRIA6 card from ``BDF.add_card(...)``

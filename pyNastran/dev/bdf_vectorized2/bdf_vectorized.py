@@ -1,3 +1,4 @@
+from typing import Optional, Any
 import numpy as np
 
 from pyNastran.bdf.bdf import BDF_, LOAD
@@ -148,8 +149,7 @@ class BDF(BDF_):
 
         self._update_card_parser()
 
-    def clear_attributes(self):
-        # type: () -> None
+    def clear_attributes(self) -> None:
         """removes the attributes from the model"""
         self.log.info('clearing vectorized BDF model')
         #self.__init_attributes()
@@ -710,13 +710,15 @@ class BDF(BDF_):
         #"""
         #BDF_._write_nodes(self, bdf_file, size=size, is_double=is_double)
 
-    def _write_grids(self, bdf_file, size=8, is_double=False, is_long_ids=None):
-        # type: (Any, int, bool, Optional[bool]) -> None
+    def _write_grids(self, bdf_file: Any,
+                     size: int=8, is_double: bool=False,
+                     is_long_ids: Optional[bool]=None) -> None:
         """Writes the GRID-type cards"""
         self.nodes.write_card(size=size, is_double=is_double, bdf_file=bdf_file)
 
-    def _write_elements_interspersed(self, bdf_file, size=8, is_double=False, is_long_ids=None):
-        # type: (Any, int, bool, Optional[bool]) -> None
+    def _write_elements_interspersed(self, bdf_file: Any,
+                                     size: int=8, is_double: bool=False,
+                                     is_long_ids: Optional[bool]=None) -> None:
         """spoofed method"""
         self._write_elements(bdf_file, size=size, is_double=is_double, is_long_ids=is_long_ids)
         self._write_properties(bdf_file, size=size, is_double=is_double, is_long_ids=is_long_ids)
@@ -774,8 +776,8 @@ class BDF(BDF_):
         assert len(self.tempds) == 0, self.tempds
         self._write_dloads(bdf_file, size=size, is_double=is_double, is_long_ids=is_long_ids)
 
-    def get_displacement_index_xyz_cp_cd(self, fdtype='float64', idtype='int32', sort_ids=True):
-        # type: (str, str, bool) -> Any
+    def get_displacement_index_xyz_cp_cd(self, fdtype: str='float64', idtype: str='int32',
+                                         sort_ids: bool=True) -> Any:
         """
         Get index and transformation matricies for nodes with
         their output in coordinate systems other than the global.

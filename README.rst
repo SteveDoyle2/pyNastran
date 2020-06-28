@@ -42,10 +42,10 @@
 .. comments
    #-----------------------------------------------------------------
 
-v1.3.2
+v1.3.3
 ------
 
-`Download GUI <https://sourceforge.net/projects/pynastran/files/?source=navbar>`_ (latest is from 2020/4/8)
+`Download GUI <https://sourceforge.net/projects/pynastran/files/?source=navbar>`_ (latest is from 2020/6/28)
 
 Also, check out the:
 
@@ -78,6 +78,40 @@ commercial program.
 News
 ====
 
+Check out this blog post covering `Flutter Analysis in pyNastran <https://www.m4-engineering.com/flutter-analysis-with-pynastran/>`_
+
+Release Notes
+=============
+
+pyNastran v1.3.3 has been released (2020/6/28)
+----------------------------------------------
+
+v1.3.3 (2020/6/28)
+------------------
+This is a bug fix only release outside of:
+
+     .. code-block:: python
+
+        >>> model = subcase.add_set_from_values(set_id, values)
+
+which was overly complicated to do before.
+
+
+Programmatics:
+
+* Supports Python 3.7 and 3.8
+ 
+* GUI is compatible with PyQt5 and PySide2 and VTK 7-9
+ 
+* improved testing of old versions of packages
+
+* updated nptyping requirements
+
+* support for NX 2019.0, 2019.1
+
+See pyNastran `v1.3.3 release notes <https://github.com/SteveDoyle2/pyNastran/releases/tag/v1.3.3>`_ for details on the 54 bug fixes.  Not too bad for 2.5 months!
+
+
 pyNastran v1.3.2 has been released (2020/4/8)
 ---------------------------------------------
 
@@ -87,8 +121,6 @@ There is now support for writing OP2 files!  They're difficult to create from sc
 but modifying an existing one isn't difficult.  This includes geometry support.
 
 In addition, many new OP2 results have been added.  Modern NX Nastran should work much better.
-
-Better yet, check out this blog post covering `Flutter Analysis in pyNastran <https://www.m4-engineering.com/flutter-analysis-with-pynastran/>`_
 
 Programmatics:
 
@@ -347,31 +379,14 @@ Known issues:
  - Transient Pandas Dataframes will fail for newer versions of numpy/pandas.
    If anyone knows how to use a MultiIndex, this is probably pretty easy to fix.
 
-pyNastran v1.2.0 has been released (2019/5/21)
-----------------------------------------------
-
-This result has been superseeded by 1.2.1.  See release notes for details.
-
-pyNastran v1.1.0 has been released (2018/6/26)
-----------------------------------------------
-
-See `v1.1.0 <https://github.com/SteveDoyle2/pyNastran/releases/tag/v1.1.0>`_ for information regarding enhancements.
-
-pyNastran v1.0.0 has been released (2017/5/25)
-----------------------------------------------
-
-See `v1.0.0 <https://github.com/SteveDoyle2/pyNastran/releases/tag/v1.0.0>`_ for information regarding enhancements.
-
-pyNastran v0.8.0 has been released (2016/8/21)
-----------------------------------------------
-See `v0.8.0 <https://github.com/SteveDoyle2/pyNastran/releases/tag/v0.8.0>`_ for information regarding enhancements.
-
-pyNastran v0.7.2 has been Released (2015/4/25)
-----------------------------------------------
-See `v0.7.2 <https://github.com/SteveDoyle2/pyNastran/releases>`_ for information regarding enhancements.
-
-Version 0.6.1 has been released (2013/6)
-----------------------------------------
-**Version 0.6** improves BDF reading.  The reader is more robust and also requires proper BDF field formatting (e.g. a integer field can't be a float).  Additionally, cards also have a comment() method.
-
-Marcin Gąsiorek participated in the latest pyNastran under the European Space Agency's (ESA) "Summer of Code In Space" `SOCIS <http://sophia.estec.esa.int/socis2012/?q=node/13>`_ program.  The program provides a stipend to students to work on open-source projects.  He did a great job of simplifying code and creating nicer documentation.
+Older Releases
+--------------
+ - pyNastran `v1.2.0 release notes <https://github.com/SteveDoyle2/pyNastran/releases/tag/v.1.2.0>`_ (2019/5/21)
+ 
+ - pyNastran `v1.1.0 release notes <https://github.com/SteveDoyle2/pyNastran/releases/tag/v1.1.0>`_ (2018/6/26)
+ 
+ - pyNastran `v1.0.0 release notes <https://github.com/SteveDoyle2/pyNastran/releases/tag/v1.0.0>`_ (2017/5/25)
+ 
+ - pyNastran `v0.8.0 release notes <https://github.com/SteveDoyle2/pyNastran/releases/tag/v0.8.0>`_ (2016/8/21)
+ 
+ - pyNastran `v0.7.2 release notes <https://github.com/SteveDoyle2/pyNastran/releases/tag/v0.7.2>`_ (2015/4/25)

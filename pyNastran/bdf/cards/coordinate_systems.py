@@ -1911,8 +1911,7 @@ class Cord2x(Coord):
             return self.comment + print_card_double(card)
         return self.comment + print_card_16(card)
 
-    def write_card_16(self, is_double=False):
-        # type: (bool) -> str
+    def write_card_16(self, is_double: bool=False) -> str:
         """Writes a CORD2x card in 16-field format"""
         card = self.repr_fields()
         if is_double:
@@ -2199,8 +2198,7 @@ class Cord1x(Coord):
         card = self.repr_fields()
         return self.comment + print_card_8(card)
 
-    def write_card_16(self, is_double=False):
-        # type: (bool) -> str
+    def write_card_16(self, is_double: bool=False) -> str:
         """Writes a CORD1x card in 16-field format"""
         card = self.repr_fields()
         if is_double:

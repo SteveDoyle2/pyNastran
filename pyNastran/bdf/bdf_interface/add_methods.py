@@ -201,7 +201,6 @@ class AddMethods(BDFAttributes):
             self._type_to_id_map[param.type].append(key)
 
     def _add_node_object(self, node: Union[GRID], allow_overwrites: bool=False) -> None:
-        # type: (Any, bool) -> None
         """adds a GRID card"""
         key = node.nid
         if key in self.nodes and not allow_overwrites:
@@ -272,7 +271,6 @@ class AddMethods(BDFAttributes):
             self._type_to_id_map[point.type].append(key)
 
     def _add_spoint_object(self, spoints: SPOINTs) -> None:
-        # type: (Any) -> None
         """adds an SPOINT card"""
         comment = spoints.comment
         if hasattr(spoints, 'ifile'):
@@ -293,7 +291,6 @@ class AddMethods(BDFAttributes):
                 self.spoints[nid] = spoint
 
     def _add_epoint_object(self, epoints: EPOINTs) -> None:
-        # type: (Any) -> None
         """adds an EPOINT card"""
         comment = epoints.comment
         for nid in epoints.points:
@@ -698,7 +695,6 @@ class AddMethods(BDFAttributes):
     def _add_structural_material_object(self, material: Union[MAT1, MAT2, MAT3, MAT8, MAT9,
                                                               MAT10, MAT11, MAT3D, MATG],
                                         allow_overwrites: bool=False) -> None:
-        # type: (Any, bool) -> None
         """adds an MAT1, MAT2, MAT8 object"""
         key = material.mid
         assert key > 0, 'mid=%s material=\n%s' % (key, material)
@@ -711,7 +707,6 @@ class AddMethods(BDFAttributes):
 
     def _add_thermal_material_object(self, material: Union[MAT4, MAT5],
                                      allow_overwrites: bool=False) -> None:
-        # type: (Any, bool) -> None
         """adds an MAT4, MAT5 object"""
         key = material.mid
         assert key > 0, 'mid=%s material=\n%s' % (key, material)
@@ -913,7 +908,6 @@ class AddMethods(BDFAttributes):
             self._type_to_id_map[snorm.type].append(key)
 
     def _add_convection_property_object(self, prop: Union[PCONV, PCONVM]) -> None:
-        # type: (Any) -> None
         key = prop.pconid
         assert key > 0, key
         assert key not in self.convection_properties, key
@@ -1214,7 +1208,6 @@ class AddMethods(BDFAttributes):
         self._type_to_id_map[monitor_point.type].append(len(self.monitor_points) - 1)
 
     def _add_spline_object(self, spline: Union[SPLINE1, SPLINE2, SPLINE3, SPLINE4, SPLINE5]) -> None:
-        # type: (Any) -> None
         """adds an SPLINE1/SPLINE2/SPLINE3/SPLINE4/SPLINE5 object"""
         key = spline.eid
         assert spline.eid not in self.splines, f'\nspline={spline}\n%sold_spline=\n{self.splines[key]}'

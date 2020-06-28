@@ -934,7 +934,6 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
 
     def _set_pybdf_attributes(self, obj: BDFInputPy,
                               save_file_structure: bool=False) -> None:
-        # type: (BDFInputPy, bool) -> None
         """common method for all functions that use BDFInputPy"""
         # these are include line pairs
         #print(obj.include_lines)
@@ -1247,8 +1246,8 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
                 if is_error and self._stop_on_xref_error:
                     raise CrossReferenceError(msg.rstrip())
 
-    def get_bdf_cards(self, bulk_data_lines, bulk_data_ilines=None):
-        # type: (List[str], Optional[Any]) -> Any, Any, Any
+    def get_bdf_cards(self, bulk_data_lines: List[str],
+                      bulk_data_ilines: Optional[Any]=None) -> Tuple[Any, Any, Any]:
         """Parses the BDF lines into a list of card_lines"""
         if bulk_data_ilines is None:
             bulk_data_ilines = np.zeros((len(bulk_data_lines), 2), dtype='int32')
@@ -3789,8 +3788,9 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             raise RuntimeError(card)
         return cards
 
-    def _parse_cards(self, cards_list, cards_dict, card_count):
-        # type: (List[List[str]], Dict[str, List[str]], Dict[str, int]) -> None
+    def _parse_cards(self, cards_list: List[List[str]],
+                     cards_dict: Dict[str, List[str]],
+                     card_count: Dict[str, int]) -> None:
         """creates card objects and adds the parsed cards to the deck"""
         # we don't want replication markers in the card_count
         card_names_to_remove = (card_name for card_name in list(card_count.keys())
@@ -4187,8 +4187,9 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
         class_instance = self._add_card_helper_hdf5(card_obj, card_name, card_name, comment)
         return class_instance
 
-    def _add_card_helper_hdf5(self, card_obj, card, card_name, comment=''):
-        # type: (BDFCard, List[str], str, str) -> None
+    def _add_card_helper_hdf5(self, card_obj: BDFCard,
+                              card: List[str],
+                              card_name: str, comment: str='') -> None:
         """
         Adds a card object to the BDF object.
 

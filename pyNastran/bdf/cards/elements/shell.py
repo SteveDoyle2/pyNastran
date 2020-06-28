@@ -39,6 +39,7 @@ from pyNastran.bdf.field_writer_16 import print_card_16, print_field_16
 from pyNastran.bdf.cards.utils import wipe_empty_fields
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.bdf.bdf import BDF
+    from pyNastran.nptyping import NDArray3float
 
 __all__ = ['CTRIA3', 'CTRIA6', 'CSHEAR',
            'CQUAD', 'CQUAD4', 'CQUAD8', 'CQUADR',
@@ -671,8 +672,7 @@ class CTRIA3(TriShell):
         self.nodes_ref = None
         self.theta_mcid_ref = None
 
-    def _verify(self, xref):
-        # type: (bool) -> None
+    def _verify(self, xref: bool) -> None:
         eid = self.eid
         pid = self.Pid()
         nids = self.node_ids
@@ -743,8 +743,7 @@ class CTRIA3(TriShell):
         return theta_mcid, zoffset, tflag, T1, T2, T3
 
     @property
-    def node_ids(self):
-        # type: () -> List[int]
+    def node_ids(self) -> List[int]:
         return self._node_ids(nodes=self.nodes_ref, allow_empty_nodes=False)
 
     def raw_fields(self):
@@ -1991,14 +1990,12 @@ class CSHEAR(QuadShell):
         (n1, n2, n3, n4) = self.get_node_positions()
         return _normal(n1 - n3, n2 - n4)
 
-    def AreaCentroidNormal(self):
-        # type: () -> Tuple[np.ndarray, np.ndarray, np.ndarray]
+    def AreaCentroidNormal(self) -> Tuple[NDArray3float, NDArray3float, NDArray3float]:
         (area, centroid) = self.AreaCentroid()
         normal = self.Normal()
         return (area, centroid, normal)
 
-    def AreaCentroid(self):
-        # type: () -> Tuple[np.ndarray, np.ndarray]
+    def AreaCentroid(self) -> Tuple[NDArray3float, NDArray3float]:
         r"""
         ::
           1-----2
@@ -2030,18 +2027,15 @@ class CSHEAR(QuadShell):
         centroid = (n1 + n2 + n3 + n4) / 4.
         return(area, centroid)
 
-    def Centroid(self):
-        # type: () -> np.ndarray
+    def Centroid(self) -> NDArray3float:
         (n1, n2, n3, n4) = self.get_node_positions()
         centroid = (n1 + n2 + n3 + n4) / 4.
         return centroid
 
-    def center_of_mass(self):
-        # type: () -> np.ndarray
+    def center_of_mass(self) -> NDArray3float:
         return self.Centroid()
 
-    def _verify(self, xref):
-        # type: (bool) -> None
+    def _verify(self, xref: bool) -> None:
         eid = self.eid
         pid = self.Pid()
         nids = self.node_ids
@@ -2092,21 +2086,18 @@ class CSHEAR(QuadShell):
             self.nodes_ref = [n1, n4, n3, n2]
 
     @property
-    def node_ids(self):
-        # type: () -> List[int]
+    def node_ids(self) -> List[int]:
         return self._node_ids(nodes=self.nodes_ref, allow_empty_nodes=False)
 
     @node_ids.setter
     def node_ids(self, value):
         raise ValueError("You cannot set node IDs like this...modify the node objects")
 
-    def raw_fields(self):
-        # type: () -> List[Union[str, int]]
+    def raw_fields(self) -> List[Union[str, int]]:
         list_fields = ['CSHEAR', self.eid, self.Pid()] + self.node_ids
         return list_fields
 
-    def repr_fields(self):
-        # type: () -> List[Union[str, int]]
+    def repr_fields(self) -> List[Union[str, int]]:
         return self.raw_fields()
 
     def write_card(self, size: int=8, is_double: bool=False) -> str:

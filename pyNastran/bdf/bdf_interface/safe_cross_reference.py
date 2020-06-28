@@ -5,7 +5,7 @@ Safe cross-referencing skips failed xref's
 
 """
 from collections import defaultdict
-from typing import List, Dict, Any
+from typing import Tuple, List, Any
 
 import numpy as np
 from numpy import zeros, argsort, arange, array_equal
@@ -16,8 +16,7 @@ class SafeXrefMesh(XrefMesh):
     """
     Links up the various cards in the BDF.
     """
-    def __init__(self):
-        # type: () -> None
+    def __init__(self) -> None:
         """The main BDF class defines all the parameters that are used."""
         XrefMesh.__init__(self)
 
@@ -94,8 +93,7 @@ class SafeXrefMesh(XrefMesh):
                 xref_sets=xref_sets, xref_optimization=xref_optimization,
                 word=' (Superelement %i)' % super_id)
 
-    def _safe_cross_reference_constraints(self):
-        # type: () -> None
+    def _safe_cross_reference_constraints(self) -> None:
         """
         Links the SPCADD, SPC, SPCAX, SPCD, MPCADD, MPC, SUPORT,
         SUPORT1, SESUPORT cards.
@@ -126,8 +124,7 @@ class SafeXrefMesh(XrefMesh):
         for se_suport in self.se_suport:
             se_suport.safe_cross_reference(self)
 
-    def _safe_cross_reference_aero(self):
-        # type: () -> None
+    def _safe_cross_reference_aero(self) -> None:
         """
         Links up all the aero cards
           - CAEROx, PAEROx, SPLINEx, AECOMP, AELIST, AEPARAM, AESTAT, AESURF, AESURFS
@@ -224,8 +221,7 @@ class SafeXrefMesh(XrefMesh):
             #'AESTAT',   ## aestats
             #'AESURF',  ## aesurfs
 
-    def _safe_cross_reference_elements(self):
-        # type: () -> None
+    def _safe_cross_reference_elements(self) -> None:
         """
         Links the elements to nodes, properties (and materials depending on
         the card).
@@ -318,8 +314,7 @@ class SafeXrefMesh(XrefMesh):
         for unused_key, tic in self.tics.items():
             tic.safe_cross_reference(self, xref_errors)
 
-    def _safe_cross_reference_optimization(self):
-        # type: () -> None
+    def _safe_cross_reference_optimization(self) -> None:
         """cross references the optimization objects"""
         #self._cross_reference_optimization()
         #return
@@ -377,8 +372,7 @@ class SafeXrefMesh(XrefMesh):
             self.log.warning('Nodes %s are missing%s' % (str(missing_nodes), msg))
         return nodes, missing_nodes
 
-    def safe_get_nodes(self, nids, msg=''):
-        # type: (List[int], bool) -> (List[Any], str)
+    def safe_get_nodes(self, nids: List[int], msg: str='') -> Tuple[List[Any], str]:
         """safe xref version of self.Nodes(nid, msg='')"""
         nodes = []
         error_nodes = []

@@ -14,6 +14,9 @@ class RealContactForcesArray(RealTableArray):
         #'      POINT ID.   TYPE          T1             T2             T3             R1             R2             R3\n']
         if self.table_name in ['OQGCF1']:
             pass
+        elif self.table_name in ['OQGGF1']:
+            # glue
+            pass
         #elif self.table_name in ['OQGATO1', 'OQGATO2']:
             #words += ['                                                 ( AUTO-CORRELATION FUNCTION )']
         #elif self.table_name in ['OQGPSD1', 'OQGPSD2']:

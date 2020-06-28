@@ -15,6 +15,7 @@ from pyNastran.bdf.field_writer_double import print_scientific_double
 from pyNastran.bdf.cards.base_card import _format_comment
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.bdf.bdf import BDF
+    from pyNastran.nptyping import NDArrayN3int, NDArrayN3float, NDArrayNint
 
 
 class Nodes:
@@ -57,8 +58,11 @@ class Nodes:
         inid = np.searchsorted(self.nid, nid)
         return self[inid]
 
-    def get_displacement_index_xyz_cp_cd(self, fdtype='float64', idtype='int32'):
-        # type: (str, str, bool) -> Any
+    def get_displacement_index_xyz_cp_cd(self,
+                                         fdtype: str='float64',
+                                         idtype: str='int32') -> Tuple[Dict[int, NDArrayNint],
+                                                                       Dict[int, NDArrayNint],
+                                                                       NDArrayN3float, NDArrayN3int]:
         """
         Get index and transformation matricies for nodes with
         their output in coordinate systems other than the global.
@@ -429,8 +433,7 @@ class GRIDv:
         else:
             return self.write_card_16(is_double, bdf_file=bdf_file)
 
-    def write_card_8(self, bdf_file=None):
-        # type: () -> str
+    def write_card_8(self, bdf_file=None) -> str:
         """
         Writes a GRID card in 8-field format
         """

@@ -41,6 +41,7 @@ from pyNastran.bdf.bdf_interface.assign_type import (
 from pyNastran.bdf.cards.utils import wipe_empty_fields
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.bdf.bdf import BDF
+    from pyNastran.bdf.bdf_interface.bdf_card import BDFCard
 
 
 class AECOMP(BaseCard):
@@ -71,8 +72,8 @@ class AECOMP(BaseCard):
     type = 'AECOMP'
     allowed_list_types = ['SET1', 'AELIST', 'CAERO']
 
-    def __init__(self, name, list_type, lists, comment=''):
-        # type: (str, List[str], Union[int, List[int]], str) -> None
+    def __init__(self, name: str, list_type: List[str],
+                 lists: Union[int, List[int]], comment: str='') -> None:
         """
         Creates an AECOMP card
 
@@ -104,8 +105,7 @@ class AECOMP(BaseCard):
             raise RuntimeError(msg)
 
     @classmethod
-    def add_card(cls, card, comment=''):
-        # type: (Any, str) -> AECOMP
+    def add_card(cls, card: BDFCard, comment: str=''):
         """
         Adds an AECOMP card from ``BDF.add_card(...)``
 

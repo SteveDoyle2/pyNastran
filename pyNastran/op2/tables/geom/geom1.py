@@ -748,7 +748,7 @@ class GEOM1(GeomCommon):
 
     def _read_extrn(self, data: bytes, n: int) -> int:
         """
-        Record – EXTRN(1627,16,463)
+        Record - EXTRN(1627,16,463)
         Word Name Type Description
         1 GID I Grid point identification numbers to connect external SE
         2 C   I Component numbers

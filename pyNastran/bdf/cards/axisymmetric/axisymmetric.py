@@ -241,8 +241,8 @@ class RINGFL(BaseCard):
         xb = 2.
         return RINGFL(ringfl, xa, xb, comment='')
 
-    def __init__(self, ringfl, xa, xb, comment=''):  # this card has missing fields
-        # type: (int, float, float, Optional[str], str) -> None
+    def __init__(self, ringfl: int, xa: float, xb: float,
+                 comment: str='') -> None:  # this card has missing fields
         """
         Creates the RINGFL card
         """
