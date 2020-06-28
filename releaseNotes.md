@@ -42,8 +42,8 @@ F06 Flutter Plotter:
 GUI:
  - faster 3d bar visualization
 
-v1.3.3 (2020/6/?)
------------------
+v1.3.3 (2020/6/28)
+------------------
 This is a bug fix only release outside of:
  - subcase.add_set_from_values(set_id, values)
 which was overly complicated to do before.
