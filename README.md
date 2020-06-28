@@ -60,7 +60,7 @@ commercial program.
 This should be hidden...
 
 --->
-### v1.3.3 (2020/6/28)
+### v1.3.3 has been released (2020/6/28)
 
 This is a bug fix only release outside of:
       ```python
