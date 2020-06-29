@@ -1,5 +1,6 @@
 #pylint disable=C0301
 from struct import Struct, pack
+import warnings
 from abc import abstractmethod
 import inspect
 from typing import List
@@ -1240,7 +1241,10 @@ class RealCBeamForceArray(RealForceObject):
                                                                            self.nelements, nnodes,
                                                                            self.nelements * nnodes,
                                                                            self.ntotal)
-            raise RuntimeError(msg)
+            if self.size == 4:
+                raise RuntimeError(msg)
+            else:
+                warnings.warn(msg)
         #[sd, bm1, bm2, ts1, ts2, af, ttrq, wtrq]
         self.data = zeros((self.ntimes, self.ntotal, 8), fdtype)
 

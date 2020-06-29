@@ -162,6 +162,12 @@ class ScalarObject(BaseScalarObject):
 
         #--------------------------------
         self.data_frame = None
+
+        # word size:
+        #  32-bit: 4
+        #  64-bit: 8
+        self.size = 4
+
         # the nonlinear factor; None=static; float=transient
         self.dt = None
         # the number of time steps

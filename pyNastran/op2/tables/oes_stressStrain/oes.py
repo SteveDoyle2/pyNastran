@@ -6480,17 +6480,17 @@ class OES(OP2Common):
                 obj_vector_real = RealBushStrainArray
 
             assert self.num_wide == 7, "num_wide=%s not 7" % self.num_wide
-            ntotal = 28  # 4*7
+            ntotal = 28 * self.factor # 4*7
 
             nelements = ndata // ntotal
             auto_return, is_vectorized = self._create_oes_object4(
                 nelements, result_name, slot, obj_vector_real)
             if auto_return:
-                return nelements * self.num_wide * 4, None, None
+                return nelements * ntotal, None, None
             obj = self.obj
 
             if self.use_vector and is_vectorized and self.sort_method == 1:
-                n = nelements * self.num_wide * 4
+                n = nelements * ntotal
 
                 istart = obj.ielement
                 iend = istart + nelements
@@ -6498,23 +6498,12 @@ class OES(OP2Common):
 
                 self.obj_set_element(obj, istart, iend, data, nelements)
 
-                floats = frombuffer(data, dtype=self.fdtype).reshape(nelements, 7)
+                floats = frombuffer(data, dtype=self.fdtype8).reshape(nelements, 7)
                 #[tx, ty, tz, rx, ry, rz]
                 obj.data[obj.itime, istart:iend, :] = floats[:, 1:].copy()
             else:
-                struct1 = Struct(self._endian + self._analysis_code_fmt + b'6f')
-                for unused_i in range(nelements):
-                    edata = data[n:n + ntotal]
-                    out = struct1.unpack(edata)  # num_wide=7
-                    if self.is_debug_file:
-                        self.binary_debug.write('CBUSH-102 - %s\n' % str(out))
-
-                    (eid_device, tx, ty, tz, rx, ry, rz) = out
-                    eid, dt = get_eid_dt_from_eid_device(
-                        eid_device, self.nonlinear_factor, self.sort_method)
-
-                    obj.add_sort1(dt, eid, tx, ty, tz, rx, ry, rz)
-                    n += ntotal
+                n = oes_cbush_real_7(self, data, obj,
+                                     nelements, ntotal, dt)
         elif result_type == 1 and self.num_wide == 13:  # imag
             if self.is_stress:
                 obj_complex = ComplexCBushStressArray
@@ -6606,16 +6595,16 @@ class OES(OP2Common):
                 #self.create_transient_object(self.cbush1d_stress_strain, Bush1DStrain)  # undefined
                 raise NotImplementedError('cbush1d_stress_strain; numwide=8')
 
-            ntotal = 32  # 4*8
+            ntotal = 32 * self.factor # 4*8
             nelements = ndata // ntotal
             auto_return, is_vectorized = self._create_oes_object4(
                 nelements, result_name, slot, obj_vector_real)
             if auto_return:
-                return nelements * self.num_wide * 4, None, None
+                return nelements * ntotal, None, None
 
             obj = self.obj
             if self.use_vector and is_vectorized and self.sort_method == 1:
-                n = nelements * self.num_wide * 4
+                n = nelements * ntotal
 
                 itotal = obj.itotal
                 itotal2 = itotal + nelements
@@ -6638,7 +6627,7 @@ class OES(OP2Common):
             else:
                 struct1 = Struct(self._endian + self._analysis_code_fmt + b'6fi')
                 for unused_i in range(nelements):
-                    edata = data[n:n + 32]
+                    edata = data[n:n + ntotal]
                     out = struct1.unpack(edata)  # num_wide=25
                     if self.is_debug_file:
                         self.binary_debug.write('CBUSH1D-40 - %s\n' % (str(out)))
@@ -8788,4 +8777,23 @@ def oes_cbar_complex_19(self,
         obj.add_new_eid_sort1(dt, eid,
                               s1a, s2a, s3a, s4a, axial,
                               s1b, s2b, s3b, s4b)
+    return n
+
+def oes_cbush_real_7(self, data: bytes,
+                     obj: Union[RealBushStressArray, RealBushStrainArray],
+                     nelements: int, ntotal: int, dt) -> int:
+    n = 0
+    struct1 = Struct(self._endian + mapfmt(self._analysis_code_fmt + b'6f', self.size))
+    for unused_i in range(nelements):
+        edata = data[n:n + ntotal]
+        out = struct1.unpack(edata)  # num_wide=7
+        if self.is_debug_file:
+            self.binary_debug.write('CBUSH-102 - %s\n' % str(out))
+
+        (eid_device, tx, ty, tz, rx, ry, rz) = out
+        eid, dt = get_eid_dt_from_eid_device(
+            eid_device, self.nonlinear_factor, self.sort_method)
+
+        obj.add_sort1(dt, eid, tx, ty, tz, rx, ry, rz)
+        n += ntotal
     return n
