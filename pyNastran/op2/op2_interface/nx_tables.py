@@ -2,7 +2,8 @@ from collections import Counter
 from typing import List, Dict
 import numpy as np
 
-NX_VERSIONS = ['8.0', '8.5', '9.1', '10.1', '11.0', '11.0.1', '12.0', '12.0.2', '2019.2']
+NX_VERSIONS = ['8.0', '8.5', '9.1', '10.1', '11.0', '11.0.1', '12.0', '12.0.2',
+               '2019.0', '2019.1', '2019.2']
 
 NX_ELEMENTS = {
     0 : 'GRID',
@@ -856,7 +857,8 @@ NX_TABLE_CONTENT = {
     #
     # nx 2019.2
     #
-    504 : b'OEFCRM1 - Cumulative Root Mean Square output',
+    504 : 'OEFCRM1 - Cumulative Root Mean Square output',
+    505 : 'OSTRCRM1 - Cumulative Root Mean Square output',
     604 : 'OEFPSD2 - ???',
     605 : 'OSTPSD2C - ???',
     804 : 'OEFRMS1 - ???',

@@ -223,6 +223,7 @@ class RandomShearStrainArray(RandomShearArray, StrainObject):
         return headers
 
     def get_f06_header(self):
+        assert self.table_name in [], self.table_name
         msg = [
             '                                     S T R A I N S   I N   S H E A R   P A N E L S      ( C S H E A R )\n'
             '      ELEMENT            MAX            AVG        ELEMENT            MAX            AVG \n'

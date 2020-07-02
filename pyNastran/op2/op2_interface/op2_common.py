@@ -2202,8 +2202,8 @@ class OP2Common(Op2Codes, F06Writer):
                 try:
                     self.obj = slot[self.code] # if this is failing, you probably set obj_vector to None...
                 except KeyError:
-                    msg = 'Could not find key=%s in result=%r\n' % (self.code, result_name)
-                    msg += "There's probably an extra check for read_mode=1...%s" % result_name
+                    msg = f'Could not find key={self.code} in result={result_name!r}\n'
+                    msg += f"There's probably an extra check for read_mode=1...{result_name}"
                     self.log.error(msg)
                     raise
                 if not self.obj.table_name == self.table_name.decode('utf-8'):
@@ -2225,7 +2225,7 @@ class OP2Common(Op2Codes, F06Writer):
         else:
             auto_return = True
 
-        assert is_vectorized, '%r is not vectorized; obj=%s' % (result_name, obj_vector)
+        assert is_vectorized, f'{result_name!r} is not vectorized; obj={obj_vector}'
         return auto_return, is_vectorized
 
     def _is_vectorized(self, obj_vector):
@@ -2325,7 +2325,7 @@ def _cast_nonlinear_factor(value):
     elif isinstance(value, (np.int32, np.float32)):  # pragma: no cover
         pass
     else: # pragma: no cover
-        raise NotImplementedError('value=%s type=%s' % (value, type(value)))
+        raise NotImplementedError(f'value={value} type={type(value)}')
     return value
 
 def _function1(value):

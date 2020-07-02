@@ -235,6 +235,7 @@ INT_PARAMS_1 = {
     b'PEDGEP', b'ACMSPROC', b'ACMSSEID', b'ACOUS', b'ACOUSTIC', b'ADJFLG',
     b'ADJLDF', b'AEDBCP', b'AESRNDM', b'ARCSIGNS', b'ATVUSE', b'BADMESH', b'BCHNG',
     b'BCTABLE', b'ROTCSV', b'ROTGPF', b'BEARDMP', b'BEARFORC', b'BOV', b'OP2FMT',
+    b'LRDISP',
 
     # ???
     b'CHKSEC', b'CMSMETH', b'CNTNSUB', b'CNTSCL', b'CNTSTPS', b'CONCHG',

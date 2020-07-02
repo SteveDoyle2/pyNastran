@@ -121,7 +121,7 @@ class FortranFormat:
         they have obj.itime which is their table3 counter
         """
         if not(hasattr(self, 'obj') and hasattr(self.obj, 'itime')):
-            #print('self.obj.name=%r doesnt have itime' % self.obj.__class__.__name__)
+            #print(f'self.obj.name={self.obj.__class__.__name__!r} doesnt have itime')
             return
         #ntotal = record_len // (self.num_wide * 4) * self._data_factor
 
@@ -162,12 +162,12 @@ class FortranFormat:
             # can it happen any other time?
             #
             # yup, when you have sort2...
-            msga = 'self.obj.name=%r has itime' % self.obj.__class__.__name__
+            msga = f'self.obj.name={self.obj.__class__.__name__!r} has itime'
             self.log.debug(msga)
             msgb = 'ntotal=%s shape=%s shape[1]=%s _data_factor=%s\n' % (
                 self.obj.ntotal, str(self.obj.data.shape),
                 self.obj.data.shape[1], self._data_factor)
-            msgb += 'obj._ntotals=%s' % self.obj._ntotals
+            msgb += f'obj._ntotals={self.obj._ntotals}'
             self.log.error(msgb)
             raise RuntimeError(msga + '\n' + msgb)
 
@@ -193,8 +193,10 @@ class FortranFormat:
                 #raise RuntimeError(msg)
             self.obj._reset_indices()
             self.obj.ntimes += 1
-            ntotal = record_len // (self.num_wide * 4) * self._data_factor
-
+            #ntotal = record_len // (self.num_wide * 4) * self._data_factor
+            ntotal = record_len // (self.num_wide * self.size) * self._data_factor
+            #if self._data_factor == 2 and self.num_wide == 77:
+                #print(f'record_len={record_len} num_wide={self.num_wide}')
             # this has a problem with XYPLOT data if there is a result
             #    request in the same format (e.g. OESNLXD/OES1X1 tables
             #    if they both have the same element ID)

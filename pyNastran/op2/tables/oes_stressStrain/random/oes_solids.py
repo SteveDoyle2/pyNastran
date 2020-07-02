@@ -8,6 +8,7 @@ from numpy import zeros, where, searchsorted
 from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import StressObject, StrainObject, OES_Object
 from pyNastran.f06.f06_formatting import write_floats_13e, _eigenvalue_header
+from pyNastran.op2.result_objects.op2_objects import get_times_dtype
 
 
 class RandomSolidArray(OES_Object):
@@ -50,14 +51,22 @@ class RandomSolidArray(OES_Object):
         self.is_built = True
 
         #print("ntimes=%s nelements=%s ntotal=%s" % (self.ntimes, self.nelements, self.ntotal))
-        dtype = 'float32'
-        if isinstance(self.nonlinear_factor, integer_types):
-            dtype = 'int32'
-        self._times = zeros(self.ntimes, dtype=dtype)
+        dtype, idtype, fdtype = get_times_dtype(self.nonlinear_factor, self.size)
+        if self.is_sort1:
+            ntimes = self.ntimes
+            nelements = self.nelements
+            ntotal = self.ntotal
+        else:
+            nelements = self.ntimes
+            ntimes = self.nelements
+            ntotal = self.ntotal
+            dtype = self._get_analysis_code_dtype()
+
+        self._times = zeros(ntimes, dtype=dtype)
 
         # TODO: could be more efficient by using nelements for cid
-        self.element_node = zeros((self.ntotal, 2), dtype='int32')
-        self.element_cid = zeros((self.nelements, 2), dtype='int32')
+        self.element_node = zeros((ntotal, 2), dtype='int32')
+        self.element_cid = zeros((nelements, 2), dtype='int32')
 
         #if self.element_name == 'CTETRA':
             #nnodes = 4
@@ -289,8 +298,8 @@ class RandomSolidStrainArray(RandomSolidArray, StrainObject):
         return headers
 
 def _get_solid_msgs(self):
+    assert self.table_name in ['OESATO1', 'OSTRATO1'], self.table_name
     if self.is_stress:
-
         base_msg = [
             '0                CORNER        ------CENTER AND CORNER POINT STRESSES---------       DIR.  COSINES       MEAN                   \n',
             '  ELEMENT-ID    GRID-ID        NORMAL              SHEAR             PRINCIPAL       -A-  -B-  -C-     PRESSURE       \n']

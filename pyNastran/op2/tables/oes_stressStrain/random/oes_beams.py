@@ -287,6 +287,7 @@ class RandomBeamStressArray(RandomBeamArray, StressObject):
         else:
             raise NotImplementedError(self.element_type)
 
+        assert self.table_name in ['OESXNO1', 'OESXRMS1', 'OESATO2'], self.table_name
         msg = [
             '                                  S T R E S S E S   I N   B E A M   E L E M E N T S        ( C B E A M )\n',
             '                    STAT DIST/\n',
@@ -313,6 +314,7 @@ class RandomBeamStrainArray(RandomBeamArray, StrainObject):
         else:
             raise NotImplementedError(self.element_type)
 
+        assert self.table_name in ['OSTRNO1', 'OSTRRMS1', 'OSTRATO2'], self.table_name
         msg = [
             '                                  S T R A I N S   I N   B E A M   E L E M E N T S        ( C B E A M )\n',
             '                    STAT DIST/\n',

@@ -2,7 +2,7 @@
 import copy
 from itertools import count
 from struct import pack
-from typing import List, Tuple
+from typing import Tuple, List, Union
 import numpy as np
 
 from cpylog import SimpleLogger
@@ -22,6 +22,12 @@ GRID_TYPE_INT_TO_STR = {
     4 : 'M', # MODAL POINT
     7 : 'L', # RIGID POINT (e.g. RBE3)
     0 : 'H', # SECTOR/HARMONIC/RING POINT
+}
+GRID_TYPE_TO_STR_MAP = {
+    'G' : 1, # GRID
+    'S' : 2, # SPOINT
+    'L' : 7, # RIGID POINT (e.g. RBE3)
+    'H' : 0, # SECTOR/HARMONIC/RING POINT
 }
 
 class BaseScalarObject(Op2Codes):
@@ -98,7 +104,7 @@ class BaseScalarObject(Op2Codes):
         """creates a pandas dataframe"""
         print('build_dataframe is not implemented in %s' % self.__class__.__name__)
 
-    def export_to_hdf5(self, group, log) -> None:
+    def export_to_hdf5(self, group, log: SimpleLogger) -> None:
         """exports the object to HDF5 format"""
         export_to_hdf5(self, group, log)
 
@@ -223,7 +229,7 @@ class ScalarObject(BaseScalarObject):
         #raise NotImplementedError(str(self.get_stats()))
         return False
 
-    def _eq_header(self, table):
+    def _eq_header(self, table) -> None:
         is_nan = (self.nonlinear_factor is not None and
                   np.isnan(self.nonlinear_factor) and
                   np.isnan(table.nonlinear_factor))
@@ -313,7 +319,7 @@ class ScalarObject(BaseScalarObject):
         """alternate way to get the dataframe"""
         return self.data_frame
 
-    def apply_data_code(self):
+    def apply_data_code(self) -> None:
         #print(self.__class__.__name__)
         if self.table_name is not None and self.table_name != self.data_code['table_name']:
             #print(self.data_code)
@@ -326,7 +332,7 @@ class ScalarObject(BaseScalarObject):
             self.__setattr__(key, value)
             #print("  key=%s value=%s" % (key, value))
 
-    def get_data_code(self, prefix='  '):
+    def get_data_code(self, prefix: str='  ') -> List[str]:
         msg = ''
         if 'data_names' not in self.data_code:
             return ['']
@@ -447,21 +453,15 @@ class ScalarObject(BaseScalarObject):
         try:
             grid_type_str = GRID_TYPE_INT_TO_STR[grid_type]
         except KeyError:
-            raise RuntimeError('grid_type=%s' % grid_type)
+            raise RuntimeError(f'grid_type={grid_type!r}')
         return grid_type_str
 
     def cast_grid_type(self, grid_type_str):
         """converts a grid_type string to an integer"""
-        if grid_type_str == 'G':
-            grid_type = 1  # GRID
-        elif grid_type_str == 'S':
-            grid_type = 2  # SPOINT
-        elif grid_type_str == 'L':
-            grid_type = 7  # RIGID POINT (e.g. RBE3)
-        elif grid_type_str == 'H':
-            grid_type = 0  # SECTOR/HARMONIC/RING POINT
-        else:
-            raise RuntimeError('grid_type=%r' % grid_type_str)
+        try:
+            grid_type = GRID_TYPE_TO_STR_MAP[grid_type_str]
+        except KeyError:
+            raise RuntimeError(f'grid_type={grid_type_str!r}')
         return grid_type
 
     def update_dt(self, data_code, unused_dt):
@@ -780,7 +780,7 @@ class BaseElement(ScalarObject):
         #print(data_frame)
         return data_frame
 
-def get_times_dtype(nonlinear_factor, size):
+def get_times_dtype(nonlinear_factor: Union[int, float], size: int) -> Tuple[str, str, str]:
     dtype = 'float'
     if isinstance(nonlinear_factor, integer_types):
         dtype = 'int'
@@ -795,7 +795,7 @@ def get_times_dtype(nonlinear_factor, size):
         idtype = 'int64'
     return dtype, idtype, fdtype
 
-def get_complex_times_dtype(nonlinear_factor, size):
+def get_complex_times_dtype(nonlinear_factor: Union[int, float], size: int) -> Tuple[str, str, str]:
     dtype = 'float'
     if isinstance(nonlinear_factor, integer_types):
         dtype = 'int'
@@ -810,7 +810,7 @@ def get_complex_times_dtype(nonlinear_factor, size):
         idtype = 'int64'
     return dtype, idtype, cfdtype
 
-def _check_element(table1: BaseElement, table2: BaseElement, log: SimpleLogger):
+def _check_element(table1: BaseElement, table2: BaseElement, log: SimpleLogger) -> None:
     """checks the ``element_node`` variable"""
     if not hasattr(table1, 'element'):
         return
@@ -833,7 +833,7 @@ def _check_element(table1: BaseElement, table2: BaseElement, log: SimpleLogger):
     if eid_min <= 0:
         if nshape == 1:
             msg = (f'{table1}\ntable_name={table1.table_name}\n'
-                      f'eids={element.tolist()}.min = {eid_min}')
+                      f'eids={element}.min = {eid_min}')
             log.error(msg)
         else:
             if table1.table_name not in ['ONRGY1', 'ONRGY2']:
@@ -841,10 +841,10 @@ def _check_element(table1: BaseElement, table2: BaseElement, log: SimpleLogger):
                 for i, eidsi in enumerate(element):
                     eid_min = eidsi.min()
                     if eid_min <= 0:
-                        msg += f'{table1}\neids[{i}]={eidsi.tolist()}.min = {eid_min}\n'
+                        msg += f'{table1}\neids[{i}]={eidsi}.min = {eid_min}\n'
                 log.error(msg)
 
-def _check_element_node(table1: BaseElement, table2: BaseElement, log: SimpleLogger):
+def _check_element_node(table1: BaseElement, table2: BaseElement, log: SimpleLogger) -> None:
     """checks the ``element_node`` variable"""
     if not hasattr(table1, 'element_node'):
         return
@@ -870,4 +870,5 @@ def _check_element_node(table1: BaseElement, table2: BaseElement, log: SimpleLog
 
     eids = table1.element_node[:, 0]
     if eids.min() <= 0:
-        log.error(f'{table1}\neids={eids}.min = {eids.min()}')
+        log.error(f'{table1}\neids={eids}.min={eids.min()}; n={len(eids)}')
+        raise ValueError(f'{table1}\neids={eids}.min={eids.min()}; n={len(eids)}')

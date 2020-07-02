@@ -1478,7 +1478,7 @@ class OEF(OP2Common):
             nelements, self.element_type, self.element_name, self.num_wide)
         #assert ndata % ntotal == 0, '%s n=%s nwide=%s len=%s ntotal=%s' % (self.element_name, ndata % ntotal, ndata % self.num_wide, ndata, ntotal)
         assert self.num_wide * 4 * self.factor == ntotal, 'numwide*4=%s ntotal=%s' % (self.num_wide*4, ntotal)
-        assert n > 0, n
+        assert n is not None and n > 0, self.code_information()
         return n
 
     def _oef_crod(self, data, ndata, dt, is_magnitude_phase,
@@ -1528,10 +1528,10 @@ class OEF(OP2Common):
                 ielement2 = obj.itotal + nelements
                 itotal2 = ielement2
 
-                floats = frombuffer(data, dtype=self.fdtype).reshape(nelements, 3)
+                floats = frombuffer(data, dtype=self.fdtype8).reshape(nelements, 3)
                 obj._times[obj.itime] = dt
                 if obj.itime == 0:
-                    ints = frombuffer(data, dtype=self.idtype).reshape(nelements, 3)
+                    ints = frombuffer(data, dtype=self.idtype8).reshape(nelements, 3)
                     eids = ints[:, 0] // 10
                     assert eids.min() > 0, eids.min()
                     obj.element[itotal:itotal2] = eids
@@ -3721,7 +3721,7 @@ class OEF(OP2Common):
                 obj._times[obj.itime] = dt
 
                 if obj.itime == 0:
-                    ints = frombuffer(data, dtype=self.idtype).reshape(nelements, 32).copy()
+                    ints = frombuffer(data, dtype=self.idtype8).reshape(nelements, 32).copy()
 
                     eids = ints[:, 0] // 10
                     eids2 = np.repeat(eids, 2)
@@ -3736,7 +3736,7 @@ class OEF(OP2Common):
                     obj.parent_coord[ielement:ielement2, 1] = parent
                     obj.parent_coord[ielement:ielement2, 1] = coord
 
-                floats = frombuffer(data, dtype=self.fdtype).reshape(nelements, 32)[:, 4:]
+                floats = frombuffer(data, dtype=self.fdtype8).reshape(nelements, 32)[:, 4:]
                 assert floats.shape[1] == 28, floats.shape
                 # skipping [form1, form2]
                 floats2 = floats.reshape(nelements*2, 14)
@@ -4146,7 +4146,7 @@ def oef_celas_cdamp_real_2(self, data: bytes,
     return n
 
 def oef_cshear_real_17(self, data: bytes,
-                       obj: RealViscForceArray,
+                       obj: RealCShearForceArray,
                        nelements: int, ntotal: int, dt: Any) -> int:
     n = 0
     s = Struct(self._endian + mapfmt(self._analysis_code_fmt + b'16f', self.size))
@@ -4170,3 +4170,4 @@ def oef_cshear_real_17(self, data: bytes,
                       f41, f21, f12, f32, f23, f43, f34,
                       f14, kf1, s12, kf2, s23, kf3, s34, kf4, s41)
         n += ntotal
+    return n

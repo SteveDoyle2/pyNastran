@@ -44,7 +44,7 @@ class ComplexTriaxStressArray(OES_Object):
 
     @property
     def nnodes_per_element(self) -> int:
-        return 1
+        return 4 # CTRIAX6 = centroid + 3
 
     def _reset_indices(self) -> None:
         self.itotal = 0
@@ -59,10 +59,12 @@ class ComplexTriaxStressArray(OES_Object):
         #self.names = []
         #self.nelements //= nnodes
         self.nelements //= self.ntimes
+        #print('****nelements =', self.nelements, self.ntotal, self.element_name)
         #print('element_type=%r ntimes=%s nelements=%s nnodes=%s ntotal=%s subtitle=%s' % (
             #self.element_type, self.ntimes, self.nelements, nnodes, self.ntotal, self.subtitle))
 
-        self.ntotal = self.nelements * nnodes * 2
+        nlayers = 1
+        self.ntotal = self.nelements * nnodes# * 2
         #self.ntotal
         self.itime = 0
         self.ielement = 0
@@ -75,12 +77,14 @@ class ComplexTriaxStressArray(OES_Object):
         #self.ntotal = self.nelements * nnodes
 
         # TODO: could be more efficient by using nelements for cid
-        self.element_node = zeros((self.ntotal, 2), 'int32')
+        dtype, idtype, cfdtype = get_complex_times_dtype(self.nonlinear_factor, self.size)
+        self.eids = zeros(self.ntotal, dtype=idtype)
+        self.element_node = zeros((self.ntotal, 2), idtype)
         #self.element_cid = zeros((self.nelements, 2), 'int32')
 
         # the number is messed up because of the offset for the element's properties
 
-        if not self.nelements * nnodes * 2 == self.ntotal:
+        if not self.nelements * nnodes * nlayers == self.ntotal:
             msg = 'ntimes=%s nelements=%s nnodes=%s ne*nn=%s ntotal=%s' % (
                 self.ntimes, self.nelements, nnodes, self.nelements * nnodes, self.ntotal)
             raise RuntimeError(msg)
@@ -181,27 +185,22 @@ class ComplexTriaxStressArray(OES_Object):
                 raise ValueError(msg)
         return True
 
-    def add_new_eid_sort1(self, dt, eid, node_id, fdr, oxx, oyy, txy):
-        self.add_eid_sort1(dt, eid, node_id, fdr, oxx, oyy, txy)
+    def add_element_sort1(self, dt, eid):
+        self._times[self.itime] = dt
+        self.eids[self.ielement] = eid
+        self.ielement += 1
+        #print('eid =', eid)
 
     def add_sort1(self, dt, eid, loc, rs, azs, As, ss):
         """unvectorized method for adding SORT1 transient data"""
-        self.add_eid_sort1(dt, eid, loc, rs, azs, As, ss)
-
-    def add_new_node_sort1(self, dt, eid, gridc, fdr, oxx, oyy, txy):
-        self.add_eid_sort1(dt, eid, gridc, fdr, oxx, oyy, txy)
-
-    def add_eid_sort1(self, dt, eid, loc, rs, azs, As, ss):
         assert isinstance(eid, integer_types) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
-        self._times[self.itime] = dt
         #print(self.element_types2, element_type, self.element_types2.dtype)
-        #print('itotal=%s dt=%s eid=%s nid=%-5s oxx=%s' % (self.itotal, dt, eid, node_id, oxx))
+        #print('itotal=%s dt=%s eid=%s loc=%-5s rs=%s' % (self.itotal, dt, eid, loc, rs))
 
         # dt, eid, loc, rs, azs, As, ss
-
         assert isinstance(eid, int), eid
         #self.data[self.itime, self.itotal] = [oxx, oyy, txy]
-        #self.element_node[self.itotal, :] = [eid, node_id]  # 0 is center
+        self.element_node[self.itotal, :] = [eid, 0]  # 0 is center
         #self.fiber_curvature[self.itotal] = fdr
         #self.ielement += 1
         self.itotal += 1
@@ -270,6 +269,8 @@ class ComplexPlateArray(OES_Object):
         if not hasattr(self, 'subtitle'):
             self.subtitle = self.data_code['subtitle']
         nnodes = self.nnodes_per_element
+        #print(self._ntotals, self.ntotal)
+        #print(self.code_information())
 
         #self.names = []
         #self.nelements //= nnodes
@@ -277,7 +278,7 @@ class ComplexPlateArray(OES_Object):
         #print('element_type=%r ntimes=%s nelements=%s nnodes=%s ntotal=%s subtitle=%s' % (
             #self.element_type, self.ntimes, self.nelements, nnodes, self.ntotal, self.subtitle))
 
-        self.ntotal = self.nelements * nnodes * 2
+        #self.ntotal = self.nelements * nnodes * 2
         #self.ntotal
         self.itime = 0
         self.ielement = 0
@@ -289,18 +290,26 @@ class ComplexPlateArray(OES_Object):
         dtype, idtype, cfdtype = get_complex_times_dtype(self.nonlinear_factor, self.size)
 
         if self.is_sort1:
-            nelements = self.nelements
             ntimes = self.ntimes
-            nlayers = self.ntotal
+            if self.has_von_mises:
+                nelements = self.ntotal
+                nlayers = self.ntotal
+            else:
+                nelements = self.ntotal # // (2 * nnodes) # neids=actual number of elements
+                nlayers = self.ntotal * self.nnodes_per_element
             #nx = ntimes
             #ny = self.ntotal
-            #print("ntimes=%s nlayers=%s" % (ntimes, nlayers))
+            #print(f"  SORT1: ntimes={ntimes} nelements={nelements} nlayers={nlayers}")
         if self.is_sort2:
-            #unused_ntotal = self.ntotal
-            nelements = self.ntimes
-            #print('self.nnodes_per_element =', self.nnodes_per_element)
-            nlayers = nelements * 2 * self.nnodes_per_element
-            ntimes = self.ntotal
+            if self.has_von_mises:
+                nelements = self.ntimes
+                nlayers = nelements * 2 * self.nnodes_per_element
+                ntimes = self.ntotal
+            else:
+                nelements = self.ntimes
+                nlayers = nelements * 2 * self.nnodes_per_element
+                ntimes = self.ntotal
+            #print(f"  SORT2: ntimes={ntimes} nelements={nelements} nlayers={nlayers}")
         #print("nelements=%s nlayers=%s ntimes=%s" % (nelements, nlayers, ntimes))
 
         self._times = zeros(ntimes, dtype=dtype)
@@ -324,11 +333,12 @@ class ComplexPlateArray(OES_Object):
         else:
             # [oxx, oyy, txy]
             nelement_nodes = nlayers
-            self.data = zeros((ntimes, nlayers, 3), 'complex64')
+            self.data = zeros((ntimes, nlayers, 3), dtype=cfdtype)
 
         # TODO: could be more efficient by using nelements for cid
         self.element_node = zeros((nelement_nodes, 2), dtype=idtype)
         #self.element_cid = zeros((self.nelements, 2), 'int32')
+        #print(self.data.shape, self.element_node.shape)
 
     def build_dataframe(self) -> None:
         """creates a pandas dataframe"""
@@ -536,8 +546,8 @@ class ComplexPlateArray(OES_Object):
         msg.append('  eType, cid\n')
         msg.append('  data: [ntimes, nnodes, 3] where 3=[%s]\n' % str(', '.join(self._get_headers())))
         msg.append('  element_node.shape = %s\n' % str(self.element_node.shape).replace('L', ''))
-        msg.append('  data.shape = %s\n' % str(self.data.shape).replace('L', ''))
-        msg.append('  %s\n' % self.element_name)
+        msg.append(f'  data.shape = {self.data.shape}\n')
+        msg.append(f'  {self.element_name}-{self.element_type}\n')
         msg += self.get_data_code()
         return msg
 

@@ -75,8 +75,16 @@ class RealPlateArray(OES_Object):
         assert self.ntimes > 0, 'ntimes=%s' % self.ntimes
         assert self.nelements > 0, 'nelements=%s' % self.nelements
         assert self.ntotal > 0, 'ntotal=%s' % self.ntotal
+
+        #nnodes = 2
+        #ntotal = 99164
+        # 99164 / 2 = 49582
+        # nelements = 49582
+        # nnodes = 49582 * 2 = 99164
+
         #self.names = []
 
+        #factor = self.size // 4
         nnodes_per_element = self.nnodes_per_element
 
         #print('nnodes_per_element[%s, %s] = %s' % (
@@ -84,6 +92,7 @@ class RealPlateArray(OES_Object):
         self.nnodes = nnodes_per_element
         #self.nelements //= nnodes_per_element
         self.nelements //= self.ntimes
+        #self.ntotal //= factor
         self.itime = 0
         self.ielement = 0
         self.itotal = 0
@@ -97,10 +106,10 @@ class RealPlateArray(OES_Object):
         dtype, idtype, fdtype = get_times_dtype(self.nonlinear_factor, self.size)
 
         _times = np.zeros(self.ntimes, dtype=dtype)
-        element_node = np.zeros((self.ntotal, 2), dtype=idtype)
+        element_node = np.zeros((self.nelements, 2), dtype=idtype)
 
         #[fiber_dist, oxx, oyy, txy, angle, majorP, minorP, ovm]
-        data = np.zeros((self.ntimes, self.ntotal, 8), dtype=fdtype)
+        data = np.zeros((self.ntimes, self.nelements, 8), dtype=fdtype)
         if self.load_as_h5:
             #for key, value in sorted(self.data_code.items()):
                 #print(key, value)
@@ -112,6 +121,7 @@ class RealPlateArray(OES_Object):
             self._times = _times
             self.element_node = element_node
             self.data = data
+        #print(self.element_node.shape, self.data.shape)
 
     def build_dataframe(self):
         """creates a pandas dataframe"""
@@ -218,32 +228,36 @@ class RealPlateArray(OES_Object):
                     raise ValueError(msg)
         return True
 
-    def add_new_eid_sort1(self, dt, eid, node_id, fiber_dist, oxx, oyy, txy, angle,
-                          major_principal, minor_principal, ovm):
+    def add_new_eid_sort1(self, dt, eid, node_id,
+                          fiber_dist1, oxx1, oyy1, txy1, angle1, major_principal1, minor_principal1, ovm1,
+                          fiber_dist2, oxx2, oyy2, txy2, angle2, major_principal2, minor_principal2, ovm2):
         assert isinstance(eid, integer_types), eid
         assert isinstance(node_id, integer_types), node_id
         self._times[self.itime] = dt
         #assert self.itotal == 0, oxx
         self.element_node[self.itotal, :] = [eid, node_id]
-        self.data[self.itime, self.itotal, :] = [fiber_dist, oxx, oyy, txy, angle,
-                                                 major_principal, minor_principal, ovm]
-        self.itotal += 1
-        self.ielement += 1
+        self.element_node[self.itotal+1, :] = [eid, node_id]
+        self.data[self.itime, self.itotal, :] = [fiber_dist1, oxx1, oyy1, txy1, angle1,
+                                                 major_principal1, minor_principal1, ovm1]
+        self.data[self.itime, self.itotal+1, :] = [fiber_dist2, oxx2, oyy2, txy2, angle2,
+                                                   major_principal2, minor_principal2, ovm2]
+        self.itotal += 2
+        self.ielement += 2
 
-    def add_new_node_sort1(self, dt, eid, node_id, fiber_dist, oxx, oyy, txy, angle,
-                           major_principal, minor_principal, ovm):
-        self.add_sort1(dt, eid, node_id, fiber_dist, oxx, oyy, txy, angle,
-                       major_principal, minor_principal, ovm)
-
-    def add_sort1(self, dt, eid, node_id, fiber_dist, oxx, oyy, txy, angle,
-                  major_principal, minor_principal, ovm):
+    def add_sort1(self, dt, eid, node_id,
+                  fiber_dist1, oxx1, oyy1, txy1, angle1, major_principal1, minor_principal1, ovm1,
+                  fiber_dist2, oxx2, oyy2, txy2, angle2, major_principal2, minor_principal2, ovm2):
         assert eid is not None, eid
         assert isinstance(eid, integer_types) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
         assert isinstance(node_id, integer_types), node_id
         self.element_node[self.itotal, :] = [eid, node_id]
-        self.data[self.itime, self.itotal, :] = [fiber_dist, oxx, oyy, txy, angle,
-                                                 major_principal, minor_principal, ovm]
-        self.itotal += 1
+        self.element_node[self.itotal+1, :] = [eid, node_id]
+        self.data[self.itime, self.itotal, :] = [fiber_dist1, oxx1, oyy1, txy1, angle1,
+                                                 major_principal1, minor_principal1, ovm1]
+        self.data[self.itime, self.itotal+1, :] = [fiber_dist2, oxx2, oyy2, txy2, angle2,
+                                                   major_principal2, minor_principal2, ovm2]
+        self.itotal += 2
+        #self.ielement += 2
 
     def get_stats(self, short=False) -> List[str]:
         if not self.is_built:
@@ -438,7 +452,8 @@ class RealPlateArray(OES_Object):
         op2_ascii.write('  #                        fd2, sx2, sy2, txy2, angle2, major2, minor2, vm2,]\n')
 
         if self.is_sort1:
-            struct1 = Struct(endian + b'i16f')
+            struct_i8f = Struct(endian + b'i8f')
+            struct_8f = Struct(endian + b'8f')
         else:
             raise NotImplementedError('SORT2')
 
@@ -498,7 +513,7 @@ class RealPlateArray(OES_Object):
                             eid, cen_word_ascii, fdi, oxxi, oyyi, txyi, anglei, major, minor, ovmi))
                     elif ilayer == 0:
                         data = [nid, fdi, oxxi, oyyi, txyi, anglei, major, minor, ovmi]
-                        op2.write(pack('i 8f', *data))
+                        op2.write(pack('i8f', *data))
                         op2_ascii.write('   %8s %8i  %-13s  %-13s %-13s %-13s   %8.4f  %-13s %-13s %s\n' % (
                             '', nid, fdi, oxxi, oyyi, txyi, anglei, major, minor, ovmi))
                     elif ilayer == 1:

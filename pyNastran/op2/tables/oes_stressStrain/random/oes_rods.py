@@ -5,6 +5,7 @@ from numpy import zeros, searchsorted, allclose
 from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import (
     StressObject, StrainObject, OES_Object, SORT2_TABLE_NAME_MAP)
+from pyNastran.op2.result_objects.op2_objects import get_times_dtype
 from pyNastran.f06.f06_formatting import write_floats_13e, _eigenvalue_header #, get_key0
 
 
@@ -48,25 +49,38 @@ class RandomRodArray(OES_Object):
         self.itime = 0
         self.ielement = 0
         self.itotal = 0
+
+        if self.is_sort1:
+            pass
+        else:
+            self.nelements, self.ntimes = self.ntimes, self.nelements
+
         #self.ntimes = 0
         #self.nelements = 0
         self.is_built = True
 
         #print("ntimes=%s nelements=%s ntotal=%s" % (self.ntimes, self.nelements, self.ntotal))
-        dtype = 'float32'
-        if isinstance(self.nonlinear_factor, integer_types):
-            dtype = 'int32'
-        self.build_data(self.ntimes, self.nelements, dtype)
 
-    def build_data(self, ntimes, nelements, dtype):
+        dtype, idtype, fdtype = get_times_dtype(self.nonlinear_factor, self.size)
+        if self.is_sort1:
+            ntimes = self.ntimes
+            nelements = self.ntotal
+        else:
+            nelements = self.ntimes
+            ntimes = self.ntotal
+            dtype = self._get_analysis_code_dtype()
+
+        self.build_data(ntimes, nelements, dtype, idtype=idtype, fdtype=fdtype)
+
+    def build_data(self, ntimes, nelements, dtype, idtype='int32', fdtype='float32'):
         """actually performs the build step"""
-        self.ntimes = ntimes
-        self.nelements = nelements
+        #self.ntimes = ntimes
+        #self.nelements = nelements
         self._times = zeros(ntimes, dtype=dtype)
-        self.element = zeros(nelements, dtype='int32')
+        self.element = zeros(nelements, dtype=idtype)
 
         #[axial, torsion]
-        self.data = zeros((ntimes, nelements, 2), dtype='float32')
+        self.data = zeros((ntimes, nelements, 2), dtype=fdtype)
 
     def build_dataframe(self):
         """creates a pandas dataframe"""
@@ -143,6 +157,16 @@ class RandomRodArray(OES_Object):
         self.element[self.ielement] = eid
         self.data[self.itime, self.ielement, :] = [axial, torsion]
         self.ielement += 1
+
+    def add_sort2(self, dt, eid, axial, torsion):
+        itime, ielement = self._get_sort2_itime_ielement_from_itotal()
+        #print(f'dt={dt} eid={eid}')
+        #print(self._times.shape)
+        self._times[itime] = dt
+        self.element[ielement] = eid
+        self.data[itime, ielement, :] = [axial, torsion]
+        self.ielement += 1
+        #print(self._times, type(self._times[0]), self.element)
 
     def get_stats(self, short=False) -> List[str]:
         if not self.is_built:

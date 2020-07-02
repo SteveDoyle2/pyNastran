@@ -39,11 +39,11 @@ class ForceObject(BaseElement):
         self._times = None
         BaseElement.__init__(self, data_code, isubcase, apply_data_code=apply_data_code)
 
-    def finalize(self):
+    def finalize(self) -> None:
         """it's required that the object be in SORT1"""
         self.set_as_sort1()
 
-    def set_as_sort1(self):
+    def set_as_sort1(self) -> None:
         """the data is in SORT1, but the flags are wrong"""
         if self.is_sort1:
             return
@@ -52,7 +52,7 @@ class ForceObject(BaseElement):
         self.sort_method = 1
         assert self.is_sort1 is True, self.is_sort1
 
-    def _reset_indices(self):
+    def _reset_indices(self) -> None:
         self.itotal = 0
         self.ielement = 0
 
@@ -226,11 +226,11 @@ class RealForceObject(ForceObject):
         ForceObject.__init__(self, data_code, isubcase, apply_data_code=apply_data_code)
 
     @property
-    def is_real(self):
+    def is_real(self) -> bool:
         return True
 
     @property
-    def is_complex(self):
+    def is_complex(self) -> bool:
         return False
 
 
@@ -943,14 +943,12 @@ class RealRodForceArray(RealForceObject):
         self.ntimes = ntimes
         self.nelements = nelements
         #self.ntotal = ntimes * nelements
-        dtype = 'float32'
-        if isinstance(self.nonlinear_factor, integer_types):
-            dtype = 'int32'
+        dtype, idtype, fdtype = get_times_dtype(self.nonlinear_factor, self.size)
         self._times = zeros(ntimes, dtype=dtype)
-        self.element = zeros(nelements, dtype='int32')
+        self.element = zeros(nelements, dtype=idtype)
 
         #[axial_force, torque]
-        self.data = zeros((ntimes, nelements, 2), dtype='float32')
+        self.data = zeros((ntimes, nelements, 2), dtype=fdtype)
 
     def build_dataframe(self):
         """creates a pandas dataframe"""
@@ -1631,9 +1629,7 @@ class RealCShearForceArray(RealForceObject):
         self.is_built = True
 
         #print("ntimes=%s nelements=%s ntotal=%s" % (self.ntimes, self.nelements, self.ntotal))
-        dtype = 'float32'
-        if isinstance(self.nonlinear_factor, integer_types):
-            dtype = 'int32'
+        dtype, idtype, fdtype = get_times_dtype(self.nonlinear_factor, self.size)
         self._times = zeros(self.ntimes, dtype=dtype)
         self.element = zeros(self.nelements, dtype='int32')
 
@@ -2011,9 +2007,7 @@ class RealViscForceArray(RealForceObject):  # 24-CVISC
         self.is_built = True
 
         #print("ntimes=%s nelements=%s ntotal=%s" % (self.ntimes, self.nelements, self.ntotal))
-        dtype = 'float32'
-        if isinstance(self.nonlinear_factor, integer_types):
-            dtype = 'int32'
+        dtype, idtype, fdtype = get_times_dtype(self.nonlinear_factor, self.size)
         self._times = zeros(self.ntimes, dtype=dtype)
         self.element = zeros(self.nelements, dtype='int32')
 
@@ -2599,9 +2593,7 @@ class RealPlateBilinearForceArray(RealForceObject):  # 144-CQUAD4
         self.is_built = True
 
         #print("ntimes=%s nelements=%s ntotal=%s" % (self.ntimes, self.nelements, self.ntotal))
-        dtype = 'float32'
-        if isinstance(self.nonlinear_factor, integer_types):
-            dtype = 'int32'
+        dtype, idtype, fdtype = get_times_dtype(self.nonlinear_factor, self.size)
         self._times = zeros(self.ntimes, dtype=dtype)
         self.element_node = zeros((self.ntotal, 2), dtype='int32')
 
@@ -3405,9 +3397,7 @@ class RealConeAxForceArray(RealForceObject):
         self.is_built = True
 
         #print("ntimes=%s nelements=%s ntotal=%s" % (self.ntimes, self.nelements, self.ntotal))
-        dtype = 'float32'
-        if isinstance(self.nonlinear_factor, integer_types):
-            dtype = 'int32'
+        dtype, idtype, fdtype = get_times_dtype(self.nonlinear_factor, self.size)
         self._times = zeros(self.ntimes, dtype=dtype)
         self.element = zeros(self.nelements, dtype='int32')
 
@@ -3593,9 +3583,7 @@ class RealCBar100ForceArray(RealForceObject):  # 100-CBAR
         self.is_built = True
 
         #print("ntimes=%s nelements=%s ntotal=%s" % (self.ntimes, self.nelements, self.ntotal))
-        dtype = 'float32'
-        if isinstance(self.nonlinear_factor, integer_types):
-            dtype = 'int32'
+        dtype, idtype, fdtype = get_times_dtype(self.nonlinear_factor, self.size)
         self._times = zeros(self.ntimes, dtype=dtype)
         self.element = zeros(self.nelements, dtype='int32')
 
@@ -3894,9 +3882,7 @@ class RealCGapForceArray(RealForceObject):  # 38-CGAP
         self.is_built = True
 
         #print("ntimes=%s nelements=%s ntotal=%s" % (self.ntimes, self.nelements, self.ntotal))
-        dtype = 'float32'
-        if isinstance(self.nonlinear_factor, integer_types):
-            dtype = 'int32'
+        dtype, idtype, fdtype = get_times_dtype(self.nonlinear_factor, self.size)
         self._times = zeros(self.ntimes, dtype=dtype)
         self.element = zeros(self.nelements, dtype='int32')
 
@@ -4074,9 +4060,7 @@ class RealBendForceArray(RealForceObject):  # 69-CBEND
         self.is_built = True
 
         #print("ntimes=%s nelements=%s ntotal=%s" % (self.ntimes, self.nelements, self.ntotal))
-        dtype = 'float32'
-        if isinstance(self.nonlinear_factor, integer_types):
-            dtype = 'int32'
+        dtype, idtype, fdtype = get_times_dtype(self.nonlinear_factor, self.size)
         self._times = zeros(self.ntimes, dtype=dtype)
         self.element_node = zeros((self.nelements, 3), dtype='int32')
 
@@ -4544,9 +4528,7 @@ class RealCBeamForceVUArray(RealForceObject):  # 191-VUBEAM
         self.is_built = True
 
         #print("ntimes=%s nelements=%s ntotal=%s" % (self.ntimes, self.nelements, self.ntotal))
-        dtype = 'float32'
-        if isinstance(self.nonlinear_factor, integer_types):
-            dtype = 'int32'
+        dtype, idtype, fdtype = get_times_dtype(self.nonlinear_factor, self.size)
         self._times = zeros(self.ntimes, dtype=dtype)
         self.element_node = zeros((self.ntotal, 2), dtype='int32')
         self.parent_coord = zeros((self.ntotal, 2), dtype='int32')
@@ -4803,9 +4785,7 @@ class RealForceMomentArray(RealForceObject):
         self.is_built = True
 
         #print("ntimes=%s nelements=%s ntotal=%s" % (self.ntimes, self.nelements, self.ntotal))
-        dtype = 'float32'
-        if isinstance(self.nonlinear_factor, integer_types):
-            dtype = 'int32'
+        dtype, idtype, fdtype = get_times_dtype(self.nonlinear_factor, self.size)
         self._times = zeros(self.ntimes, dtype=dtype)
         self.element = zeros(self.nelements, dtype='int32')
 

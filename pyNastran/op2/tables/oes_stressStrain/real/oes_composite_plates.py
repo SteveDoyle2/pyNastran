@@ -170,7 +170,7 @@ class RealCompositePlateArray(OES_Object):
         assert self.is_sort1 == table.is_sort1
         self._eq_header(table)
         if not np.array_equal(self.element_layer, table.element_layer):
-            assert self.element_node.shape == table.element_layer.shape, 'element_layer shape=%s table.shape=%s' % (
+            assert self.element_layer.shape == table.element_layer.shape, 'element_layer shape=%s table.shape=%s' % (
                 self.element_layer.shape, table.element_layer.shape)
             msg = 'table_name=%r class_name=%s\n' % (self.table_name, self.__class__.__name__)
             msg += '%s\n' % str(self.code_information())

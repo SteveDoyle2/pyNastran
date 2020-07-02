@@ -1,3 +1,4 @@
+from typing import Tuple
 import numpy as np
 from pyNastran.op2.result_objects.op2_objects import BaseElement
 from pyNastran.op2.op2_interface.write_utils import set_table3_field
@@ -51,6 +52,20 @@ class OES_Object(BaseElement):
         """it's required that the object be in SORT1"""
         self.set_as_sort1()
 
+    def _get_sort2_itime_ielement_from_itotal(self) -> Tuple[int, int]:
+        #print(f'itime={self.itime} ielement={self.ielement} nelements={self.nelements}') # self.itotal
+        #itime = self.itotal % self.nelements
+        #ielement = self.itime
+        #print(f'itime={itime} ielement={ielement} nelements={self.nelements}') # self.itotal
+        #itime = self.itotal % self.nelements
+        #return itime, ielement
+        # ------------------
+        itime = self.ielement
+        #itotal = self.itotal
+        ielement = self.itime
+        print(f'itime={self.itime} ielement={self.ielement} nelements={self.nelements}') # self.itotal
+        return itime, ielement
+
     def set_as_sort1(self):
         """the data is in SORT1, but the flags are wrong"""
         if self.is_sort1:
@@ -59,6 +74,36 @@ class OES_Object(BaseElement):
         self.sort_bits[1] = 0 # sort1
         self.sort_method = 1
         assert self.is_sort1 is True, self.is_sort1
+        self._update_time_word()
+
+    def _get_analysis_code_dtype(self) -> str:
+        if self.analysis_code in [5, 6]:
+            if self.size == 4:
+                dtype = 'float32'
+            else:
+                dtype = 'float64'
+        else:
+            raise NotImplementedError(self.data_code)
+        return dtype
+
+    def _update_time_word(self):
+        if self.analysis_code == 5:
+            name = 'freq'
+        elif self.analysis_code == 6:
+            name = 'dt'
+        else:
+            raise NotImplementedError(self.data_code)
+        names = name + 's'
+        self.data_code['name'] = name
+        self.data_code['data_names'][0] = name
+        del self.element_id, self.element_ids
+        #print('timesA =', self._times)
+        old_times = self._times
+        setattr(self, names, self._times)
+        #print('timesB =', self._times)
+        if len(self._times) > 1:
+            assert self._times.min() != self._times.max(), f'old_times={old_times} -> times={self._times}\n{self.code_information()}'
+        #print(self.object_attributes())
 
     @property
     def is_curvature(self) -> bool:

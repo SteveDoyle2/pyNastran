@@ -294,7 +294,10 @@ class OP2Reader:
         """
         # C:\MSC.Software\simcenter_nastran_2019.2\tpl_post1\extse04c_cnv1_0.op2
         # C:\MSC.Software\simcenter_nastran_2019.2\tpl_post2\extse04c_cnv1_0.op2
-        if self.read_mode == 2:
+        # C:\MSC.Software\simcenter_nastran_2019.2\tpl_post1\atv005mat.op2
+        op2 = self.op2
+        self.xsop2dir_names = []
+        if self.read_mode == 1:
             table_name = self._read_table_name(rewind=True)
             self._skip_table(table_name, warn=False)
             return
@@ -305,33 +308,42 @@ class OP2Reader:
         self.read_markers([-1])
         # (101, 14, 0, 0, 0, 0, 0)
         data = self._read_record()
+        values = np.frombuffer(data, dtype=op2.idtype8)
+        ntables = values[1]
+        #assert ntables == 7, values
 
         #self.read_3_markers([-2, 1, 0])
         #data = self._read_record()
 
         itable = -2
         self.read_3_markers([itable, 1, 0])
-        marker = self.get_marker1(rewind=True, macro_rewind=False)
+        #marker = self.get_marker1(rewind=True, macro_rewind=False)
         if self.size == 4:
             struct_8s = Struct(self._endian + b'8s')
-            while marker != 0:
+            for unused_i in range(ntables + 1):
+            #while marker != 0:
                 itable -= 1
                 data = self._read_record()
-                name = struct_8s.unpack(data)[0]
-                self.log.warning(name)
+                name = struct_8s.unpack(data)[0].decode('latin1').rstrip()
+                self.log.warning(f'{len(self.xsop2dir_names)} {name}')
                 self.read_3_markers4([itable, 1, 0])
-                marker = self.get_marker1_4(rewind=True, macro_rewind=False)
+                #marker = self.get_marker1_4(rewind=True, macro_rewind=False)
+                self.xsop2dir_names.append(name)
         else:
             struct_16s = Struct(self._endian + b'16s')
-            while marker != 0:
+            for unused_i in range(ntables + 1):
+            #while marker != 0:
                 itable -= 1
                 data = self._read_record()
                 name = struct_16s.unpack(data)[0]
-                name = reshape_bytes_block(name)
-                self.log.warning(name)
+                name = reshape_bytes_block(name).decode('latin1').rstrip()
+                self.log.warning(f'{len(self.xsop2dir_names)} {name}')
                 self.read_3_markers([itable, 1, 0])
-                marker = self.get_marker1_8(rewind=True, macro_rewind=False)
+                #marker = self.get_marker1_8(rewind=True, macro_rewind=False)
+                self.xsop2dir_names.append(name)
         self.read_markers([0])
+        #self.log.warning(f'XSOP2DIR itable={itable}')
+        # (101, 14, 0, 0, 0, 0, 0)
         #b'XSOP2DIR',
         #b'PVT0    '
         #b'GEOM1EX '
@@ -1231,8 +1243,9 @@ class OP2Reader:
         """
         # C:\MSC.Software\simcenter_nastran_2019.2\tpl_post1\extse04c_cnv1_0.op2
         op2 = self.op2
+        #ddd
         op2.table_name = self._read_table_name(rewind=False)
-        self.log.debug('table_name = %r' % op2.table_name)
+        #self.log.debug('table_name = %r' % op2.table_name)
         if self.is_debug_file:
             self.binary_debug.write('_read_geom_table - %s\n' % op2.table_name)
         self.read_markers([-1])
@@ -1245,45 +1258,9 @@ class OP2Reader:
             self.binary_debug.write('---marker0 = %s---\n' % markers)
 
         self.read_3_markers([-2, 1, 0])
-        data, ndata = self._read_record_ndata()
-        if self.size == 4:
-            if ndata == 8:
-                #self.show_data(data, types='ifs', endian=None)
-                name, = Struct(self._endian + b'8s').unpack(data)
-                #print(name, 8)
-            elif ndata == 16:
-                name, int1, int2 = Struct(self._endian + b'8s 2i').unpack(data)
-                #name = name.decode(self._encoding)
-                #print(name, int1, int2, 16)
-            elif ndata == 28:
-                #self.show_data(data)
-                name1, int1, name2, int2 = Struct(self._endian + b'8s i 12s i').unpack(data)
-                #print(name1, int1, name2, int2, 28)
-            else:
-                self.show_data(data, types='ifs')
-                raise NotImplementedError(ndata)
-        elif self.size == 8:
-            if ndata == 16:
-                name, = Struct(self._endian + b'16s').unpack(data)
-                name = reshape_bytes_block(name)
-            elif ndata == 32:
-                name, int1, int2 = Struct(self._endian + b'16s 2q').unpack(data)
-                name = reshape_bytes_block(name)
-            elif ndata == 56:
-                self.show_data(data, types='ifsd')
-                name1, int1, name2, int2 = Struct(self._endian + b'16s q 24s q').unpack(data)
-                name1 = reshape_bytes_block(name1)
-                name2 = reshape_bytes_block(name2)
-            else:
-                self.show_data(data, types='ifsdq')
-                raise NotImplementedError(ndata)
-        else:
-            self.show_data(data, types='ifsdq')
-            raise NotImplementedError(ndata)
-
-        if 1: # old
-            #self.show(200)
-            marker = -3
+        marker = -3
+        if self.read_mode == 1:
+            data = self._skip_record()
             while 1:
                 #print('====================')
                 #print(f'***reading {marker}')
@@ -1292,70 +1269,231 @@ class OP2Reader:
                 except FortranMarkerError:
                     #op2.show_ndata(100)
                     raise
-
-                nfields1 = self.get_marker1(rewind=True)
-                if nfields1 == 0:
-                    nfields1 = self.get_marker1(rewind=False)
-                elif nfields1 == 1:
-                    #data, ndata = self._read_record_ndata()
-                    nfields1 = self.read_markers([1])
-
-                    nfields_test = self.get_marker1(rewind=True)
-                    while nfields_test > 0:
-                        nfields = self.get_marker1(rewind=False)
-                        block = self.read_block()
-                        nblock = len(block)
-                        ndouble = (nblock - 4) // 8
-                        fmt = mapfmt(self._endian + b'i%dd' % (ndouble), self.size)
-                        #out = Struct(self._endian + b'i 3d').unpack(block)
-                        out = Struct(fmt).unpack(block)
-                        #print(out, nblock)
-                        nfields_test = self.get_marker1(rewind=True)
-                    #print('-------')
-                    #print(f'end of marker={marker}')
-                    marker -= 1
-                    #marker = self.get_marker1(rewind=True)
-                    continue
-                else:
-                    raise RuntimeError('EXTDB error')
-
-                #op2.show_ndata(100)
                 nfields = self.get_marker1(rewind=True)
-                #print('nfields =', nfields)
                 if nfields == 0:
-                    #print('breaking...')
-                    #self.show(200)
                     break
-                #elif nfields == 3:
-                    #data = self._read_record()
-                    #self.show(200, types='ifs', endian=None)
-                    #aaa
                 data, ndata = self._read_record_ndata()
-                if ndata == 12:
-                    name, int1, int2 = Struct(self._endian + b'4s 2i').unpack(data)
-                    # b'\xff\xff\x00\x00' 65535 25535 12 ???
-                    #print(name, int1, int2, 12)
-                    #self.show_data(data)
-                    #self.show_data(data)
-                elif ndata > 99:
-                    pass
-                else:
-                    self.log.warning(f'EXTDB; ndata={ndata}')
-                    self.show_data(data, types=mapfmt_str('if', self.size))
-                marker -= 1
-                #print('--------------------')
-            unused_marker_end = self.get_marker1(rewind=False)
             return
+
+        # drop XSOP2DIR and PVT0
+        iextdb = op2.table_count[b'EXTDB'] + 1
+        xsop2dir_name = self.xsop2dir_names[iextdb]
+        if self.read_mode == 2:
+            data, ndata = self._read_record_ndata()
+            name = ''
+            name1 = ''
+            name2 = ''
+            if self.size == 4:
+                if ndata == 8:
+                    #self.show_data(data, types='ifs', endian=None)
+                    name, = Struct(self._endian + b'8s').unpack(data)
+                    name = name.decode('latin1').rstrip()
+                    self.log.info(f'A: name={name!r} -> {xsop2dir_name!r}')
+                    #print(name, 8)
+                elif ndata == 16:
+                    name, int1, int2 = Struct(self._endian + b'8s 2i').unpack(data)
+                    name = name.decode('latin1').rstrip()
+                    #name = name.decode(self._encoding)
+                    #print(name, int1, int2, 16)
+                    self.log.info(f'B: name={name!r} -> {xsop2dir_name!r} int1={int1} int2={int2}')
+                elif ndata == 28:
+                    #self.show_data(data)
+                    name1, int1, name2, int2 = Struct(self._endian + b'8s i 12s i').unpack(data)
+                    name1 = name1.decode('latin1').rstrip()
+                    name2 = name2.decode('latin1').rstrip()
+                    self.log.info(f'C: name1={name1!r} -> {xsop2dir_name!r} int1={int1} name2={name2!r} int2={int2}')
+                    #print(name1, int1, name2, int2, 28)
+                else:
+                    self.show_data(data, types='ifs')
+                    raise NotImplementedError(ndata)
+
+            else:
+                if ndata == 16:
+                    name, = Struct(self._endian + b'16s').unpack(data)
+                    name = reshape_bytes_block(name).decode('latin1').strip()
+                    self.log.info(f'A: name={name!r} -> {xsop2dir_name}')
+                elif ndata == 32:
+                    name, int1, int2 = Struct(self._endian + b'16s 2q').unpack(data)
+                    name = reshape_bytes_block(name).decode('latin1').strip()
+                    self.log.info(f'B: name={name!r} -> {xsop2dir_name} int1={int1} int2={int2}')
+                elif ndata == 56:
+                    # (PHIP, 7, REAL, 1)
+                    #self.show_data(data, types='ifsdq')
+                    name1, int1, name2, int2 = Struct(self._endian + b'16s q 24s q').unpack(data)
+                    name1 = reshape_bytes_block(name1).decode('latin1').strip()
+                    name2 = reshape_bytes_block(name2).decode('latin1').strip()
+                    self.log.info(f'C: name1={name1!r} -> {xsop2dir_name} int1={int1} name2={name2!r} int2={int2}')
+                else:
+                    self.show_data(data, types='ifsdq')
+                    raise NotImplementedError(ndata)
+
+        #self.show(200)
+        while 1:
+            #print('====================')
+            #print(f'***reading {marker}')
+            try:
+                self.read_markers([marker, 1])
+            except FortranMarkerError:
+                #op2.show_ndata(100)
+                raise
+
+            nfields1 = self.get_marker1(rewind=True)
+            if nfields1 == 0:
+                nfields1 = self.get_marker1(rewind=False)
+            elif nfields1 == 1:
+                #data, ndata = self._read_record_ndata()
+                nfields1 = self.read_markers([1])
+
+                nfields_test = self.get_marker1(rewind=True)
+                while nfields_test > 0:
+                    nfields = self.get_marker1(rewind=False)
+                    block = self.read_block()
+                    nblock = len(block)
+                    ndouble = (nblock - 4) // 8
+                    fmt = mapfmt(self._endian + b'i%dd' % (ndouble), self.size)
+                    out = Struct(fmt).unpack(block)
+                    #print(out, nblock)
+                    nfields_test = self.get_marker1(rewind=True)
+                #print('-------')
+                #print(f'end of marker={marker}')
+                marker -= 1
+                #marker = self.get_marker1(rewind=True)
+                continue
+            else:
+                raise RuntimeError('EXTDB error')
+
+            #op2.show_ndata(100)
+            nfields = self.get_marker1(rewind=True)
+            #print('nfields =', nfields)
+            if nfields == 0:
+                #if self.read_mode == 2:
+                    #self.log.warning('breaking...')
+                #self.show(200)
+                break
+            # ----------------------------------------------------------------------
+
+            data, ndata = self._read_record_ndata()
+            if self.read_mode == 2:
+                self.log.warning('--B--')
+                if self.size == 4:
+                    if ndata == 12:
+                        name, int1, int2 = Struct(self._endian + b'4s 2i').unpack(data)
+                        # b'\xff\xff\x00\x00' 65535 25535 12 ???
+                        #print(name, int1, int2, 12)
+                        #self.show_data(data)
+                        #self.show_data(data)
+                    elif ndata < 99:
+                        # ndata=84
+                        # (1627, 16, 463,
+                        #  1, 123456, 2, 123456, 3, 123456, 4, 123456, 100001, 1, 100002, 1, 100003, 1, 100004, 1, -1, -1)
+                        self.show_data(data[12:], types='i')
+
+                    elif name == 'GEOM1':
+                        _read_extdb_geom1(self, data, self._endian)
+                    elif name == 'IGEOM2X':
+                        #print('marker =', marker)
+                        if marker == -3:
+                            # (2958, 51, 177) ???
+                            # igeom2x = 144???
+                            #
+                            # ints = (2958, 51, 177,
+                            #         1, 1, 49, 60, 61, 50, 0,   0,   0,   0,   -1.0, -1.0, -1.0, -1.0,
+                            #         2, 1, 50, 61, 62, 51, 0, 0, 0, 0, -1.0, -1.0, -1.0, -1.0,
+                            #         3, 1, 51, 62, 63, 52, 0, 0, 0, 0, -1.0, -1.0, -1.0, -1.0, ...)
+                            #self.show_data(data, types='ifs')
+                            structi = Struct(self._endian + b'6i  4i 4f')
+                            out = op2.struct_3i.unpack(data[:12])
+                            assert out == (2958, 51, 177), out
+                            #print(out)
+                            n = 12
+                            #igeom2x = 0
+                            while n < len(data):
+                                edata = data[n:n+56]
+                                #self.show_data(edata, types='if')
+                                out = structi.unpack(edata)
+                                print(out)
+                                n += 56
+                                if n > 200:
+                                    self.log.info(f'  breaking n={n}')
+                                    break
+                                #igeom2x += 1
+                            #print('igeom2x =', igeom2x)
+                        elif marker == -4:
+                            #5551, 49, 105
+                            # self.show_data(data, types='i')
+                            ints = np.frombuffer(data, dtype=op2.idtype8)
+                            assert np.array_equal(ints[:3], [5551, 49, 105]), ints[:3]
+                            #print(len(ints) - 3)  # 500...????
+                            print(ints.tolist())
+                            #bbb
+                        else:
+                            print('marker =', marker)
+                            asdf
+
+                    elif name1 in ['TES', 'PHIP']:
+                        _read_extdb_phip(self, marker, data, self._endian, 'i', op2.idtype8)
+
+                    elif name == 'GEOM4':
+                        self.show_data(data, types='i')
+
+                    elif name == 'EXTDB':
+                        _read_extdb_extdb(self, data, self._endian, 'int32')
+                    #else:
+                        #print('marker =', marker)
+                        #self.show_data(data, types='ifs')
+                    else:
+                        raise NotImplementedError(f'name={name} name1={name1} name2={name2}')
+                else:
+                    if ndata == 24:
+                        ints = Struct(self._endian + b'3q').unpack(data)
+                        assert ints == (65535, 65535, 65535), ints
+                    elif ndata == 56:
+                        name, = Struct(self._endian + b'16s').unpack(data[:16])
+                        self.log.warning(name)
+                        self.show_data(data[16:], types='ifsqd', force=True)
+                    elif name == 'GEOM1':
+                        # _read_extdb_geom1(self, data, self._endian)
+                        self.show_data(data, types='q')
+                    elif name == 'GEOM2':
+                        self.show_data(data, types='q')
+                    elif name == 'GEOM4':
+                        self.show_data(data, types='q')
+                    elif name == 'EXTDB':
+                        _read_extdb_extdb(self, data, self._endian, 'int64')
+
+                    elif name1 == 'PHIP':
+                        _read_extdb_phip(self, marker, data, self._endian, 'q', op2.idtype8)
+
+                    else:
+                        self.log.warning(f'EXTDB; name={name!r} name1={name1!r} ndata={ndata}')
+                        aaa
+                        self.show_data(data, types='sqd')
+                    #elif ndata > 99:
+                        #pass
+                    #else:
+                        #self.log.warning(f'EXTDB; ndata={ndata}')
+                        #self.show_data(data, types=mapfmt_str('i', self.size))
+            marker -= 1
+            #print('--------------------')
+        unused_marker_end = self.get_marker1(rewind=False)
+        #aa
+        #if self.read_mode == 2:
+            #self.log.warning('returning...')
+        return
 
     def read_descyc(self):
         """reads the DESCYC table"""
         op2 = self.op2
+
+        # TODO: I think this is used to handle optimization
+        op2._count += 1
+
         #op2.log.debug("table_name = %r" % op2.table_name)
         op2.table_name = self._read_table_name(rewind=False)
         self.read_markers([-1])
         data = self._read_record()
         fmt = mapfmt(self._endian + b'7i', self.size)
-        ints = Struct(fmt).unpack(data)
+        unused_ints = Struct(fmt).unpack(data)
         self.read_3_markers([-2, 1, 0])
         data = self._read_record()
         if self.size == 4:
@@ -2029,7 +2167,6 @@ class OP2Reader:
                         #bad.append(i)
                 #if bad:
                     #print(nvalues, bad)
-                    #asdf
                 #self.show_data(data, types='ifqd')
                 nrows = (nvalues - 2) // 7
                 #print(nrows)
@@ -6032,3 +6169,329 @@ def update_op2_datacode(op2, data_code_old):
         if key == 'size':
             continue
         setattr(op2, key, value)
+
+def _read_extdb_extdb(self, data: bytes, endian: bytes, idtype: str) -> None:
+    #TODO: needs work...
+    # ints    = (0, 6, 2, 2, 0, 0, 1018, 1, 1, 1, 1, 725010254, 1099302303, -1, -1)
+    # strings = (b'r\x00\x00\x00\x01\x00\x00\x00x\x00\x00\x00EXTDB   \x00\x00\x00\x00\x06\x00\x00\x00\x02\x00\x00\x00\x02\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\xfa\x03\x00\x00\x01\x00\x00\x00\x01\x00\x00\x00\x01\x00\x00\x00\x01\x00\x00\x00N\xc76+\x9f\x05\x86A\xff\xff\xff\xff\xff\xff\xff\xff\x01\x00\x00\x00\x02\x00\x00\x00\x01\x00\x00\x00\x01\x00\x00\x00\xee\x92\x91Z',)
+    # ints    = (114, 1, 120, EXTDB, 0, 6, 2, 2, 0, 0, 1018, 1, 1, 1, 1, 725010254, 1099302303, -1, -1, 1, 2, 1, 1, 1519489774)
+    # floats  = (114, 1, 120, EXTDB, 0.0, 8.407790785948902e-45, 2.802596928649634e-45, 2.802596928649634e-45, 0.0, 0.0, 1.4265218366826638e-42, 1.401298464324817e-45, 1.401298464324817e-45, 1.401298464324817e-45, 1.401298464324817e-45, 6.493597977039189e-13, 16.752744674682617, nan, nan, 1.401298464324817e-45, 2.802596928649634e-45, 1.401298464324817e-45, 1.401298464324817e-45, 2.048771126145843e+16)
+    size = self.size
+    factor = self.factor
+    nameb = data[12*factor:20*factor]
+    print(nameb)
+    #self.show_data(data[20:4000], types='if', force=True)
+    structi = Struct(mapfmt(endian + b'11i 2i 2i', self.size))
+    ints = np.frombuffer(data[20*factor:], dtype=idtype)
+    iminus1 = np.where(ints == -1)[0]
+    i2 = np.where(iminus1[:-1] + 1 == iminus1[1:])[0]
+    #print(iminus1.tolist())
+    #print(i2)
+    istart = [0] + (iminus1[i2] + 1).tolist()# [:-1]
+    iend = iminus1[i2]
+    #print(istart, len(istart))
+    #print(iend, len(iend))
+
+    n = 20 * factor
+    structi2 = Struct(mapfmt(endian + b'ii d', self.size))
+    for i0, i1 in zip(istart, iend):
+        #print(n, i0, i1)
+        # inputs = (0, 6, 2, 2, 0, 0,
+        #           1018, 1, 1, 1, 1, 725010254, 1099302303, -1, -1
+        # ints = (  0, 9, 2, 2, 0, 0, 1, 1, 1, # ???
+        #          1, 1, 0, 1.875,
+        #          1, 2, 0, 1.875,
+        #          1, 3, 0, 1.875,
+        #          1, 4, 0, 1.875,
+        #          1, 5, 0, 1.875,
+        #          1, 6, 0, 1.875,
+
+        #          2, 1, 0, 1.875,
+        #          2, 2, 0, 1.875,
+        #          2, 3, 0, 1.875,
+        #          2, 4, 0, 1.875,
+        #          2, 5, 0, 1.875,
+        #          2, 6, 0, 1.875,
+
+        #          3, 1, 0, 1.875,
+        #          3, 2, 0, 1.875,
+        #          3, 3, 0, 1.875,
+        #          3, 4, 0, 1.875,
+        #          3, 5, 0, 1.875,
+        #          3, 6, 0, 1.875,
+
+        #          4, 1, 0, 1.875,
+        #          4, 2, 0, 1.875,
+        #          4, 3, 0, 1.875,
+        #          4, 4, 0, 1.875,
+        #          4, 5, 0, 1.875,
+        #          4, 6, 0, 1.875,
+        #          100001, 0, 0, 1.875,
+        #          100002, 0, 0, 1.875,
+        #          100003, 0, 0, 1.875,
+        #          100004, 0, 0, 1.875)
+        #self.show_data(data, types='ifqsd', force=True)
+        edata = data[n+i0*size:n+i1*size]
+        if len(edata) == 0:
+            break
+        #print(len(edata))
+
+        niii, = Struct(mapfmt(self._endian + b'i', self.size)).unpack(edata[4*factor:8*factor])
+        n2 = niii * 4
+        #self.show_data(edata, types='ifqd')
+        # 0, 6, 2, 2, 0, 0,
+        # 1018...
+        len_edata = len(edata) - n2
+        if len_edata % 16 == 0:
+            #print(niii)
+            #print('n2 =', n2)
+            #print('len(edata) ', len(edata))
+            while n2 < len(edata):
+                edata2 = edata[n2:n2+16]
+                assert len(edata2) == 16, len(edata2)
+                #self.show_data(edata2, types='ifqd')
+
+                out = structi2.unpack(edata2)
+                print(out)
+                n2 += 16
+                if n2 > 80:
+                    self.log.info(f'  breaking n2={n2}')
+                    break
+            #n += (i1 - i0 + 1) * 4
+        #else:
+            #self.show_data(edata, types='if')
+    return
+
+def _read_extdb_geom1(self, data: bytes, endian: bytes):
+    #  ndata=188
+    #ints    = (4501, 45, 1120001,
+    #           1, 0, 2147448983, 1068813674, -2147405407, 1070820344, 0, 0, 0, 0, 0,
+    #           2, 0, 187797,     1073199421, -536792572,  1081262756, 0, 0, 0, 0, 0,
+    #           3, 0, 1073728080, 1081259753, -2147405407, 1070820344, 0, 0, 0, 0, 0,
+    #           4, 0, 1073728080, 1081259753, -536792572,  1081262756, 0, 0, 0, 0, 0)
+    #floats  = (4501, 45, 1120001,
+    #           1, 0.0, nan, 1.4125187397003174, -1.0963899314723801e-40, 1.6517324447631836, 0.0, 0.0, 0.0, 0.0, 0.0,
+    #           2, 0.0, 2.6315964770480767e-40, 1.9353405237197876, -3.723803111109899e+19, 3.7931299209594727, 0.0, 0.0, 0.0, 0.0, 0.0,
+    #           4, 0.0, 1.998361587524414, 3.7924139499664307, -1.0963899314723801e-40, 1.6517324447631836, 0.0, 0.0, 0.0, 0.0, 0.0,
+    #           4, 0.0, 1.998361587524414, 3.7924139499664307, -3.723803111109899e+19, 3.7931299209594727, 0.0, 0.0, 0.0, 0.0, 0.0)
+    #self.show_data(data, types='if')
+
+    # ints    = (5, 0, 466334723,              1070160292, -12985232, 1077496508, 0, 0, 0, 0, 0)
+    # floats  = (4, 0, 3.3699862716357883e-22, 1.5730481147766113, -2.470517561589627e+38, 2.895186424255371,  0, 0, 0, 0, 0)
+    structi = Struct(mapfmt(endian + b'2i if i f   5i', self.size))
+    self.show_data(data, types='qdf')
+    # ints = (1627, 16, 463,
+    #         80000020007, 123456,
+    #         80000020008, 123456,
+    #         80000020065, 123456,
+    #         80000020066, 123456,
+    #         80000020067, 123456,
+    #         80000120001, 1,
+    #         80000120002, 1,
+    #         80000120003, 1,
+    #         80000120004, 1,
+    #         80000120005, 1, 80000120006, 1, 80000120007, 1, 80000120008, 1, 80000120009, 1, 80000120010, 1, 80000120011, 1, 80000120012, 1,
+    #         -1, -1)
+    factor = self.factor
+    n = 12 * factor
+    while n < len(data):
+        edata = data[n:n+44*factor]
+        #self.show_data(edata, types='if')
+        out = structi.unpack(edata)
+        print(out)
+        n += 44*factor
+        if n > 200*factor:
+            self.log.info(f'  breaking n={n}')
+            break
+    return
+
+
+def _read_extdb_phip(self, marker: int,
+                     data: bytes, endian: bytes,
+                     int_type: str, idtype: str):
+    #   ints    = (1, 0, 2, 0, 3, 0, 4, 0, 5, 0, 6, 0, 7, 0, 8, 0, 9, 0,
+    #              10, 0, 11, 0, 12, 0, 13, 0, 14, 0, 15, 0, 16, 0, 17, 0, 18, 0, 19, 0,
+    #              20, 0, 21, 0, 22, 0, 23, 0, 24, 0, 25, 0, 26, 0, 27, 0, 28, 0)
+    factor = self.factor
+    if marker == -3:
+
+        self.show_data(data, types=int_type)
+    elif marker == -4:
+        #data = (
+        #    'TYPE  IDCOMP ROW    TYPE  IDCOMP ROW',
+        #    1, 1, 6, 1, 0,
+        #    1, 2, 6, 7, 0,
+        # ...
+        #    1, 168, 6, 1003, 0,
+        #    1, 169, 6, 1009, 0,
+        #    2, 100001, 6, 1015, 0,
+        #    2, 100002, 6, 1021, 0,
+        #    2, 100003, 6, 1027, 0,
+        #    2, 100004, 6, 1033, 0)
+        word = data[:40*factor].decode('latin1')
+        print(f'word = {word!r}')
+        self.log.info(f'itable = {marker}')
+
+        ints = np.frombuffer(data[40*factor:], dtype=idtype)
+        nints = len(ints)
+        ints2 = ints.reshape(nints//5, 5).copy()
+        print(ints2)
+    elif marker == -5:
+        # 33      1       -2.500002.500000
+        # 33      2       -2.500002.500000
+        # 33      3       -2.500002.500000
+        # 33      4       -2.500002.500000
+        # 33      5       -2.500002.500000
+        # 33      6       -2.500002.500000
+        # 33      7       -2.500002.500000
+        # 33      8       -2.500002.500000
+        # 33      9       -2.500002.500000
+        # 33      10      -2.500002.500000
+        # 33      11      -2.500002.500000
+        # 33      12      -2.500002.500000
+        # 33      13      -2.500002.500000
+        # 33      14      -2.500002.500000
+        # 33      15      -2.500002.500000
+        # 33      16      -2.500002.500000
+        # 33      17      -2.500002.500000
+        # 33      18      -2.500002.500000
+        # 33      19      -2.500002.500000
+        # 33      20      -2.500002.500000
+        # 33      21      -2.500002.500000
+        # 33      22      -2.500002.500000
+        # 33      23      -2.500002.500000
+        # 33      24      -2.500002.500000
+        # 33      25      -2.500002.500000
+        # 33      26      -2.500002.500000
+        # 33      27      -2.500002.500000
+        # 33      28      -2.500002.500000
+        # 33      29      -2.500002.500000
+        # 33      30      -2.500002.500000
+        # 33      31      -2.500002.500000
+        # 33      32      -2.500002.500000
+        # 33      33      -2.500002.500000
+        # 33      34      -2.500002.500000
+        # 33      35      -2.500002.500000
+        # 33      36      -2.500002.500000
+        # 33      37      -2.500002.500000
+        # 33      38      -2.500002.500000
+        # 33      39      -2.500002.500000
+        # 33      40      -2.500002.500000
+        # 33      41      -2.500002.500000
+        # 33      42      -2.500002.500000
+        # 33      43      -2.500002.500000
+        # 33      44      -2.500002.500000
+        # 33      45      -2.500002.500000
+        # 33      46      -2.500002.500000
+        # 33      47      -2.500002.500000
+        # 33      48      -2.500002.500000
+        # 33      49      -2.500002.500000
+        # 33      50      -2.500002.500000
+        # 33      51      -2.500002.500000
+        # 33      52      -2.500002.500000
+        # 33      53      -2.500002.500000
+        # 33      54      -2.500002.500000
+        # 33      55      -2.500002.500000
+        # 33      56      -2.500002.500000
+        # 33      57      -2.500002.500000
+        # 33      58      -2.500002.500000
+        # 33      59      -2.500002.500000
+        # 33      60      -2.500002.500000
+        # 33      61      -2.500002.500000
+        # 33      62      -2.500002.500000
+        # 33      63      -2.500002.500000
+        # 33      64      -2.500002.500000
+        # 33      65      -2.500002.500000
+        # 33      66      -2.500002.500000
+        # 33      67      -2.500002.500000
+        # 33      68      -2.500002.500000
+        # 33      69      -2.500002.500000
+        # 33      70      -2.500002.500000
+        # 33      71      -2.500002.500000
+        # 33      72      -2.500002.500000
+        # 33      73      -2.500002.500000
+        # 33      74      -2.500002.500000
+        # 33      75      -2.500002.500000
+        # 33      76      -2.500002.500000
+        # 33      77      -2.500002.500000
+        # 33      78      -2.500002.500000
+        # 33      79      -2.500002.500000
+        # 33      80      -2.500002.500000
+        # 33      81      -2.500002.500000
+        # 33      82      -2.500002.500000
+        # 33      83      -2.500002.500000
+        # 33      84      -2.500002.500000
+        # 33      85      -2.500002.500000
+        # 33      86      -2.500002.500000
+        # 33      87      -2.500002.500000
+        # 33      88      -2.500002.500000
+        # 33      89      -2.500002.500000
+        # 33      90      -2.500002.500000
+        # 33      91      -2.500002.500000
+        # 33      92      -2.500002.500000
+        # 33      93      -2.500002.500000
+        # 33      94      -2.500002.500000
+        # 33      95      -2.500002.500000
+        # 33      96      -2.500002.500000
+        # 33      97      -2.500002.500000
+        # 33      98      -2.500002.500000
+        # 33      99      -2.500002.500000
+        # 33      100     -2.500002.500000
+        # 33      101     -2.500002.500000
+        # 33      102     -2.500002.500000
+        # 33      103     -2.500002.500000
+        # 33      104     -2.500002.500000
+        # 33      105     -2.500002.500000
+        # 33      106     -2.500002.500000
+        # 33      107     -2.500002.500000
+        # 33      108     -2.500002.500000
+        # 33      109     -2.500002.500000
+        # 33      110     -2.500002.500000
+        # 33      111     -2.500002.500000
+        # 33      112     -2.500002.500000
+        # 33      113     -2.500002.500000
+        # 33      114     -2.500002.500000
+        # 33      115     -2.500002.500000
+        # 33      116     -2.500002.500000
+        # 33      117     -2.500002.500000
+        # 33      118     -2.500002.500000
+        # 33      119     -2.500002.500000
+        # 33      120     -2.500002.500000
+        # 33      121     -2.500002.500000
+        # 33      122     -2.500002.500000
+        # 33      123     -2.500002.500000
+        # 33      124     -2.500002.500000
+        # 33      125     -2.500002.500000
+        # 33      126     -2.500002.500000
+        # 33      127     -2.500002.500000
+        # 33      128     -2.500002.500000
+        # 33      129     -2.500002.500000
+        # 33      130     -2.500002.500000
+        # 33      131     -2.500002.500000
+        # 33      132     -2.500002.500000
+        # 33      133     -2.500002.500000
+        # 33      134     -2.500002.500000
+        # 33      135     -2.500002.500000
+        # 33      136     -2.500002.500000
+        # 33      137     -2.500002.500000
+        # 33      138     -2.500002.500000
+        # 33      139     -2.500002.500000
+        # 33      140     -2.500002.500000
+        # 33      141     -2.500002.500000
+        # 33      142     -2.500002.500000
+        # 33      143     -2.500002.500000
+        # 33      144     -2.500002.500000
+        ndata = len(data)
+        ntotali = 32
+        nrows = ndata // ntotali
+        #self.show_data(data, types='s', force=True)
+        for irow in range(nrows):
+            out = data[irow*ntotali:(irow+1)*ntotali]
+            if irow > 5:
+                self.log.info(f'  breaking irow={irow}')
+                break
+            print(out)
+    elif marker == -5:
+        self.show_data(data, types='ifs', force=True)
+        aaa
+    return

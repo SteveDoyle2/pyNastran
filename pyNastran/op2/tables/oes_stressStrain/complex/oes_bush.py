@@ -305,6 +305,10 @@ class ComplexCBushStressArray(ComplexCBushArray, StressObject):
         ComplexCBushArray.__init__(self, data_code, is_sort1, isubcase, dt)
         StressObject.__init__(self, data_code, isubcase)
 
+    @property
+    def nnodes_per_element(self) -> int:
+        return 1
+
     def get_headers(self) -> List[str]:
         headers = ['tx', 'ty', 'tz', 'rx', 'ry', 'rz']
         return headers

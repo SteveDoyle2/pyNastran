@@ -787,7 +787,6 @@ class RealConvHeatFluxArray(BaseElement):  # 107-CHBDYE 108-CHBDYG 109-CHBDYP
                 #column_values, column_names,
                 #headers, self.element, self.data)
             #print(data_frame)
-            #asdf
             data_frame = pd.Panel(self.data, items=column_values,
                                   major_axis=element_node,
                                   minor_axis=headers).to_frame()

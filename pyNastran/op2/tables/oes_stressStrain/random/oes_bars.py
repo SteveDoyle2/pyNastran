@@ -7,6 +7,7 @@ from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import (
     StressObject, StrainObject, OES_Object)
 from pyNastran.f06.f06_formatting import write_floats_13e, _eigenvalue_header
 from pyNastran.utils.numpy_utils import integer_types
+from pyNastran.op2.result_objects.op2_objects import get_times_dtype
 
 #oxx = 0. # max from bending and axial
 #txz = 1. # from transverse shear; txz=Vz/(Kz*A)
@@ -78,15 +79,22 @@ class RandomBarArray(OES_Object):
 
         #print("***name=%s type=%s nnodes_per_element=%s ntimes=%s nelements=%s ntotal=%s" % (
             #self.element_name, self.element_type, nnodes_per_element, self.ntimes, self.nelements, self.ntotal))
-        dtype = 'float32'
-        if isinstance(self.nonlinear_factor, integer_types):
-            dtype = 'int32'
-        self._times = zeros(self.ntimes, dtype=dtype)
-        self.element = zeros(self.ntotal, dtype='int32')
+
+        dtype, idtype, fdtype = get_times_dtype(self.nonlinear_factor, self.size)
+        if self.is_sort1:
+            ntimes = self.ntimes
+            nelements = self.ntotal
+        else:
+            nelements = self.ntimes
+            ntimes = self.ntotal
+            dtype = self._get_analysis_code_dtype()
+
+        self._times = zeros(ntimes, dtype=dtype)
+        self.element = zeros(nelements, dtype='int32')
 
         #[s1a, s2a, s3a, s4a, axial,
         # s1b, s2b, s3b, s4b]
-        self.data = zeros((self.ntimes, self.ntotal, 9), dtype='float32')
+        self.data = zeros((ntimes, nelements, 9), dtype='float32')
 
     def build_dataframe(self):
         """creates a pandas dataframe"""
@@ -145,6 +153,17 @@ class RandomBarArray(OES_Object):
         self.element[self.itotal] = eid
         self.data[self.itime, self.itotal, :] = [s1a, s2a, s3a, s4a, axial,
                                                  s1b, s2b, s3b, s4b]
+        self.itotal += 1
+        self.ielement += 1
+
+    def add_new_eid_sort2(self, dt, eid,
+                          s1a, s2a, s3a, s4a, axial,
+                          s1b, s2b, s3b, s4b):
+        itime, ielement = self._get_sort2_itime_ielement_from_itotal()
+        self._times[itime] = dt
+        self.element[ielement] = eid
+        self.data[itime, ielement, :] = [s1a, s2a, s3a, s4a, axial,
+                                         s1b, s2b, s3b, s4b]
         self.itotal += 1
         self.ielement += 1
 

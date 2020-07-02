@@ -2,6 +2,11 @@ from typing import List
 import numpy as np
 from pyNastran.utils import object_attributes
 
+def write_float_10e(val: float) -> str:
+    v2 = '%10.3E' % val
+    if v2 in (' 0.000E+00', '-0.000E+00'):
+        v2 = ' 0.0'
+    return v2
 
 def write_float_11e(val: float) -> str:
     """writes a Nastran formatted 11.4 float"""

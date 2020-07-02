@@ -6,7 +6,7 @@ from numpy import zeros
 from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import (
     StressObject, StrainObject, OES_Object)
-from pyNastran.f06.f06_formatting import write_float_13e
+from pyNastran.f06.f06_formatting import write_float_13e, write_float_10e, _eigenvalue_header
 
 BASIC_TABLES = {
     'OESATO1', 'OESCRM1', 'OESPSD1', 'OESRMS1', 'OESNO1',
@@ -54,6 +54,7 @@ class RandomPlateArray(OES_Object):
         """sizes the vectorized attributes of the ComplexPlateArray"""
         if not hasattr(self, 'subtitle'):
             self.subtitle = self.data_code['subtitle']
+
         nnodes = self.nnodes_per_element
 
         #self.names = []
@@ -70,42 +71,75 @@ class RandomPlateArray(OES_Object):
             # old
             #ntimes = self.ntimes
             #nelements = self.nelements
+            if self.has_von_mises:
+                #print('self._ntotals =', self._ntotals)
+                ntimes = len(self._ntotals)
+                ntotal = self._ntotals[0]
 
-            ntimes = len(self._ntotals)
-            ntotal = self._ntotals[0]
-            nelements = ntotal // 2
+                # nelements is the number of physical elements
+                nelements = ntotal // 2
 
-            #ntotal = self.ntotal
-            nx = ntimes
-            ny = nelements * 2
-            nlayers = nelements * 2 * nnodes
+                # there are nlayers_per_nnode
+                nlayers_per_nnode = 2
+
+                # there are nnodes per element; nnodes
+                # thus nlayers
+                nlayers = nelements * nlayers_per_nnode * nnodes
+                assert nlayers == ntotal, f'nlayers={nlayers} ntotal={ntotal}'
+                assert nlayers == 2, nlayers
+
+                # we also have nelements_nnodes, which is used in:
+                #  - elmement_node
+                nelements_nnodes = nelements * nnodes
+            else:
+                ntimes = len(self._ntotals)
+                ntotal = self._ntotals[0]
+                nelements = ntotal // 2
+
+                #ntotal = self.ntotal
+                #ny = nelements * 2
+                nelements_nnodes = nelements * 2
+                nlayers = nelements * 2 * nnodes
+                assert nlayers == ntotal, f'nlayers={nlayers} ntotal={ntotal}'
+            #nx = ntimes
+            #ny = nelements_nnodes
             #ntotal = nelements * 2
             #if self.element_name in ['CTRIA3', 'CQUAD8']:
             #print(f"SORT1 ntimes={ntimes} nelements={nelements} ntotal={ntotal}")
         elif self.is_sort2:
-            # ntotal=164
-            # len(_ntotals) = 4580 -> nelements=4580
-            # nfreqs=82
-            # flip this to sort1?
-            #ntimes = self.ntotal
-            #nnodes = self.ntimes
-            #ntotal = nnodes
-            #nelements = self.ntimes
-            #ntimes = self.nelements # // nelements
-            #ntotal = self.ntotal
-            nelements = len(self._ntotals)
-            ntotal = self._ntotals[0]
-            ntimes = ntotal // 2 // nnodes
+            if self.has_von_mises:
+                #print('self._ntotals', self._ntotals)
+                nelements = len(self._ntotals)
+                ntotal = self._ntotals[0]
+                ntimes = ntotal // 2 // nnodes
 
-            #print(self._ntotals)
-            ntotal = self._ntotals[0]
-            #nelements = len(self._ntotals)
-            #ntimes = ntotal // 2
-            #ntimes, nelements = nelements_real, ntimes_real
-            #ntotal = self.ntotal
-            nlayers = nelements * 2 * nnodes
-            ny = nlayers # nelements * 2 * nnodes
-            nx = ntimes
+                #print(self._ntotals)
+                ntotal = self._ntotals[0]
+                nlayers = nelements * 2 * nnodes
+            else:
+                # ntotal=164
+                # len(_ntotals) = 4580 -> nelements=4580
+                # nfreqs=82
+                # flip this to sort1?
+                #ntimes = self.ntotal
+                #nnodes = self.ntimes
+                #ntotal = nnodes
+                #nelements = self.ntimes
+                #ntimes = self.nelements # // nelements
+                #ntotal = self.ntotal
+                nelements = len(self._ntotals)
+                ntotal = self._ntotals[0]
+                ntimes = ntotal // 2 // nnodes
+
+                #print(self._ntotals)
+                ntotal = self._ntotals[0]
+                #nelements = len(self._ntotals)
+                #ntimes = ntotal // 2
+                #ntimes, nelements = nelements_real, ntimes_real
+                #ntotal = self.ntotal
+                nlayers = nelements * 2 * nnodes
+            #ny = nlayers
+            #nx = ntimes
             #if self.element_name in ['CTRIA3', 'CQUAD8']:
             #if self.element_name in ['CQUAD4']:
                 #print(f"SORT2 ntimes={ntimes} nelements={nelements} ntotal={ntotal} nnodes={nnodes} nlayers={nlayers}")
@@ -120,21 +154,27 @@ class RandomPlateArray(OES_Object):
         #print('ntotal=%s ntimes=%s nelements=%s' % (self.ntotal, self.ntimes, self.nelements))
 
         #print("ntimes=%s nelements=%s ntotal=%s" % (self.ntimes, self.nelements, self.ntotal))
-        self.build_data(ntimes, nelements, nlayers, nnodes, ntotal, nx, ny, self._times_dtype)
+        self.build_data(ntimes, nelements, nlayers, nnodes, self._times_dtype)
+        #print(''.join(self.get_stats()))
+        #try:
+            #name = self.data_code['name']
+        #except KeyError:
+            #print(''.join(self.get_stats()))
+            #raise
 
-    def build_data(self, ntimes, nelements, nlayers, nnodes, ntotal, nx, ny, dtype):
+    def build_data(self, ntimes, nelements, nlayers, nnodes, dtype):
         """actually performs the build step"""
         self.ntimes = ntimes
         self.nelements = nelements
         #ntotal = nelements * 2
-        self.ntotal = ntotal
+        self.ntotal = nlayers
         #_times = zeros(ntimes, dtype=dtype)
         #element = zeros(nelements, dtype='int32')
 
         self._times = zeros(ntimes, dtype)
         #self.ntotal = self.nelements * nnodes
 
-        #print(f'nelements={nelements} nlayers={nlayers} ntimes={ntimes} ntotal={ntotal}')
+        #print(f'***nelements={nelements} nlayers={nlayers} ntimes={ntimes}')
         self.element_node = zeros((nlayers, 2), 'int32')
 
         # the number is messed up because of the offset for the element's properties
@@ -152,7 +192,7 @@ class RandomPlateArray(OES_Object):
             nresults += 1
         #print('has_vm =', self.has_von_mises)
         #print(f'ntimes={self.ntimes} nelements={self.nelements} ntotal={self.ntotal}')
-        self.data = zeros((nx, ny, nresults), 'float32')
+        self.data = zeros((ntimes, nlayers, nresults), 'float32')
 
     def build_dataframe(self):
         """creates a pandas dataframe"""
@@ -252,7 +292,6 @@ class RandomPlateArray(OES_Object):
         #print(self.get_stats())
         #print(self._times, self._times.dtype)
         #print(self.element_node)
-        #aaa
 
     def add_sort1(self, dt, eid, nid,
                   fd1, oxx1, oyy1, txy1,
@@ -341,7 +380,8 @@ class RandomPlateArray(OES_Object):
         self._times[self.itime] = dt
         #print(self.element_types2, element_type, self.element_types2.dtype)
         #if self.element_name == 'CTRIA3':
-        #print('%s itotal=%s dt=%s eid=%s nid=%-5s oxx=%s' % (self.element_name, self.itotal, dt, eid, nid, oxx1))
+        #print('%s itotal=%s dt=%s eid=%s nid=%-5s oxx=%s' % (
+            #self.element_name, self.itotal, dt, eid, nid, oxx1))
 
         assert isinstance(eid, integer_types) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
         self.data[self.itime, self.itotal, :] = [oxx1, oyy1, txy1, ovm1]
@@ -350,6 +390,7 @@ class RandomPlateArray(OES_Object):
         #self.ielement += 1
         self.itotal += 1
 
+        #print(self.data.shape)
         self.data[self.itime, self.itotal, :] = [oxx2, oyy2, txy2, ovm2]
         self.element_node[self.itotal, :] = [eid, nid]  # 0 is center
         self.fiber_curvature[self.itotal] = fd2
@@ -397,31 +438,37 @@ class RandomPlateArray(OES_Object):
                   page_num=1, is_mag_phase=False, is_sort1=True):
         if header is None:
             header = []
-        msg_temp, unused_nnodes, unused_is_bilinear = _get_plate_msg(self, is_mag_phase, is_sort1)
+        #print(self.table_name, type(self.table_name))
+        has_von_mises = self.has_von_mises
+        msg_temp, unused_nnodes, unused_is_bilinear = _get_plate_msg(self, is_mag_phase, is_sort1, has_von_mises)
 
         ntimes = self.data.shape[0]
         for itime in range(ntimes):
             dt = self._times[itime]
 
-            dt_line = ' %14s = %12.5E\n' % (self.data_code['name'], dt)
-            header[1] = dt_line
-            msg = header + msg_temp
-            f06_file.write('\n'.join(msg))
+            header = _eigenvalue_header(self, header, itime, ntimes, dt)
+            f06_file.write(''.join(header + msg_temp))
+            #dt_line = ' %14s = %12.5E\n' % (self.data_code['name'], dt)
+            #header[1] = dt_line
+            #msg = header + msg_temp
+            #f06_file.write('\n'.join(msg))
 
             if self.element_type == 144: # CQUAD4 bilinear
-                self._write_f06_quad4_bilinear_transient(f06_file, itime)
+                self._write_f06_quad4_bilinear_transient(f06_file, itime, 4, has_von_mises)
             elif self.element_type == 33:  # CQUAD4 linear
+                #assert has_von_mises is False, has_von_mises
                 self._write_f06_tri3_transient(f06_file, itime)
             elif self.element_type == 74: # CTRIA3
+                #assert has_von_mises is False, has_von_mises
                 self._write_f06_tri3_transient(f06_file, itime)
             elif self.element_type == 64:  #CQUAD8
-                self._write_f06_quad4_bilinear_transient(f06_file, itime)
+                self._write_f06_quad4_bilinear_transient(f06_file, itime, 8, has_von_mises)
             elif self.element_type == 82:  # CQUADR
-                self._write_f06_quad4_bilinear_transient(f06_file, itime)
+                self._write_f06_quad4_bilinear_transient(f06_file, itime, 4, has_von_mises)
             elif self.element_type == 70:  # CTRIAR
-                self._write_f06_quad4_bilinear_transient(f06_file, itime)
+                self._write_f06_quad4_bilinear_transient(f06_file, itime, 6, has_von_mises)
             elif self.element_type == 75:  # CTRIA6
-                self._write_f06_quad4_bilinear_transient(f06_file, itime)
+                self._write_f06_quad4_bilinear_transient(f06_file, itime, 6, has_von_mises)
             else:
                 raise NotImplementedError('name=%r type=%s' % (self.element_name, self.element_type))
 
@@ -457,7 +504,7 @@ class RandomPlateArray(OES_Object):
                     '', sfd, soxx, soyy, stxy))
             ilayer0 = not ilayer0
 
-    def _write_f06_quad4_bilinear_transient(self, f06_file, itime):
+    def _write_f06_quad4_bilinear_transient(self, f06_file, itime: int, nnodes: int, has_von_mises: bool) -> None:
         """
         CQUAD4 bilinear
         CQUAD8
@@ -472,21 +519,42 @@ class RandomPlateArray(OES_Object):
         eids = self.element_node[:, 0]
         nids = self.element_node[:, 1]
 
-        ilayer0 = True
-        for eid, nid, fd, doxx, doyy, dtxy in zip(eids, nids, fds, oxx, oyy, txy):
-            sfd = write_float_13e(fd)
-            soxx = write_float_13e(doxx)
-            soyy = write_float_13e(doyy)
-            stxy = write_float_13e(dtxy)
+        if has_von_mises:
+            ilayer0 = True
+            ovm = self.data[itime, :, 3]
+         #   ELEMENT-ID  GRID ID   DISTANCE         NORMAL-X        NORMAL-Y           SHEAR-XY          VON MISES'
+         #0           2  CEN/4  -1.270000E-03      1.701E+08       3.299E+07          1.053E+07          1.573E+08'
+         #                       1.270000E-03      1.701E+08       3.299E+07          1.053E+07          1.573E+08'
 
-            if ilayer0:    # TODO: assuming 2 layers?
-                f06_file.write('0  %-13s  %6s   %-13s  %-13s  %s\n' % (
-                    eid, sfd, soxx, soyy, stxy))
-            else:
-                f06_file.write('   %-13s  %6s   %-13s  %-13s  %s\n' % (
-                    '', sfd, soxx, soyy, stxy))
-            ilayer0 = not ilayer0
+            for eid, nid, fd, doxx, doyy, dtxy, dovm in zip(eids, nids, fds, oxx, oyy, txy, ovm):
+                sfd = write_float_13e(fd)
+                soxx = write_float_10e(doxx)
+                soyy = write_float_10e(doyy)
+                stxy = write_float_10e(dtxy)
+                sovm = write_float_10e(dovm)
 
+                if ilayer0:    # TODO: assuming 2 layers?
+                    f06_file.write('0  %10s  CEN/%i  %13s     %-10s      %-10s         %-10s         %s\n' % (
+                        eid, nnodes, sfd, soxx, soyy, stxy, sovm))
+                else:
+                    f06_file.write('   %-10s         %13s     %-10s      %-10s         %-10s         %s\n\n' % (
+                        '', sfd, soxx, soyy, stxy, sovm))
+                ilayer0 = not ilayer0
+        else:
+            ilayer0 = True
+            for eid, nid, fd, doxx, doyy, dtxy in zip(eids, nids, fds, oxx, oyy, txy):
+                sfd = write_float_13e(fd)
+                soxx = write_float_13e(doxx)
+                soyy = write_float_13e(doyy)
+                stxy = write_float_13e(dtxy)
+
+                if ilayer0:    # TODO: assuming 2 layers?
+                    f06_file.write('0  %-13s  %6s   %-13s  %-13s  %s\n' % (
+                        eid, sfd, soxx, soyy, stxy))
+                else:
+                    f06_file.write('   %-13s  %6s   %-13s  %-13s  %s\n' % (
+                        '', sfd, soxx, soyy, stxy))
+                ilayer0 = not ilayer0
     @property
     def has_von_mises(self):
         """what is the form of the table (NX includes Von Mises)"""
@@ -499,96 +567,185 @@ class RandomPlateArray(OES_Object):
             raise NotImplementedError(msg)
         return has_von_mises
 
-def _get_plate_msg(self, is_mag_phase=True, is_sort1=True):
+def _get_plate_msg(self, is_mag_phase=True, is_sort1=True, has_von_mises: bool=False):
     #if self.is_von_mises:
         #von_mises = 'VON MISES'
     #else:
         #von_mises = 'MAX SHEAR'
 
-    if self.is_stress:
-        if self.is_fiber_distance:
-            grid_msg_temp = ['    ELEMENT              FIBER                                  - STRESSES IN ELEMENT  COORDINATE SYSTEM -\n',
-                             '      ID      GRID-ID   DISTANCE                 NORMAL-X                        NORMAL-Y                       SHEAR-XY\n']
-            fiber_msg_temp = ['  ELEMENT       FIBRE                                     - STRESSES IN ELEMENT  COORDINATE SYSTEM -\n',
-                              '    ID.        DISTANCE                  NORMAL-X                          NORMAL-Y                         SHEAR-XY\n']
+    if has_von_mises:
+        if self.is_stress:
+            if self.is_fiber_distance:
+                vm_msg_temp = [
+                    '                      FIBER                                   - STRESSES IN ELEMENT  COORDINATE SYSTEM -\n'
+                    '   ELEMENT-ID  GRID ID   DISTANCE         NORMAL-X        NORMAL-Y           SHEAR-XY          VON MISES\n'
+                ]
+                msg_temp = ['  ELEMENT       FIBRE                                     - STRESSES IN ELEMENT  COORDINATE SYSTEM -\n',
+                                  '    ID.       CURVATURE                  NORMAL-X                          NORMAL-Y                         SHEAR-XY\n']
+            else:
+                raise NotImplementedError('stress no fiber')
         else:
-            grid_msg_temp = ['    ELEMENT              FIBRE                                  - STRESSES IN ELEMENT  COORDINATE SYSTEM -\n',
-                             '      ID      GRID-ID   CURVATURE                NORMAL-X                        NORMAL-Y                       SHEAR-XY\n']
-            fiber_msg_temp = ['  ELEMENT       FIBRE                                     - STRESSES IN ELEMENT  COORDINATE SYSTEM -\n',
-                              '    ID.       CURVATURE                  NORMAL-X                          NORMAL-Y                         SHEAR-XY\n']
+            if self.is_fiber_distance:
+                raise NotImplementedError('strain fiber')
+            else:
+                raise NotImplementedError('strain no fiber')
     else:
-        if self.is_fiber_distance:
-            grid_msg_temp = ['    ELEMENT              FIBER                                  - STRAINS IN ELEMENT  COORDINATE SYSTEM -\n',
-                             '      ID      GRID-ID   DISTANCE                 NORMAL-X                        NORMAL-Y                       SHEAR-XY\n']
-            fiber_msg_temp = ['  ELEMENT       FIBRE                                     - STRAINS IN ELEMENT  COORDINATE SYSTEM -\n',
-                              '    ID.        DISTANCE                  NORMAL-X                          NORMAL-Y                         SHEAR-XY\n']
+        if self.is_stress:
+            if self.is_fiber_distance:
+                vm_msg_temp = ['    ELEMENT              FIBER                                  - STRESSES IN ELEMENT  COORDINATE SYSTEM -\n',
+                               '      ID      GRID-ID   DISTANCE                 NORMAL-X                        NORMAL-Y                       SHEAR-XY\n']
+                msg_temp = ['  ELEMENT       FIBRE                                     - STRESSES IN ELEMENT  COORDINATE SYSTEM -\n',
+                            '    ID.        DISTANCE                  NORMAL-X                          NORMAL-Y                         SHEAR-XY\n']
+            else:
+                vm_msg_temp = ['    ELEMENT              FIBRE                                  - STRESSES IN ELEMENT  COORDINATE SYSTEM -\n',
+                               '      ID      GRID-ID   CURVATURE                NORMAL-X                        NORMAL-Y                       SHEAR-XY\n']
+                msg_temp = ['  ELEMENT       FIBRE                                     - STRESSES IN ELEMENT  COORDINATE SYSTEM -\n',
+                            '    ID.       CURVATURE                  NORMAL-X                          NORMAL-Y                         SHEAR-XY\n']
         else:
-            grid_msg_temp = ['    ELEMENT              FIBRE                                  - STRAINS IN ELEMENT  COORDINATE SYSTEM -\n',
-                             '      ID      GRID-ID   CURVATURE                NORMAL-X                        NORMAL-Y                       SHEAR-XY\n']
-            fiber_msg_temp = ['  ELEMENT       FIBRE                                     - STRAINS IN ELEMENT  COORDINATE SYSTEM -\n',
-                              '    ID.       CURVATURE                  NORMAL-X                          NORMAL-Y                         SHEAR-XY\n']
+            if self.is_fiber_distance:
+                vm_msg_temp = ['    ELEMENT              FIBER                                  - STRAINS IN ELEMENT  COORDINATE SYSTEM -\n',
+                               '      ID      GRID-ID   DISTANCE                 NORMAL-X                        NORMAL-Y                       SHEAR-XY\n']
+                msg_temp = ['  ELEMENT       FIBRE                                     - STRAINS IN ELEMENT  COORDINATE SYSTEM -\n',
+                            '    ID.        DISTANCE                  NORMAL-X                          NORMAL-Y                         SHEAR-XY\n']
+            else:
+                vm_msg_temp = ['    ELEMENT              FIBRE                                  - STRAINS IN ELEMENT  COORDINATE SYSTEM -\n',
+                               '      ID      GRID-ID   CURVATURE                NORMAL-X                        NORMAL-Y                       SHEAR-XY\n']
+                msg_temp = ['  ELEMENT       FIBRE                                     - STRAINS IN ELEMENT  COORDINATE SYSTEM -\n',
+                            '    ID.       CURVATURE                  NORMAL-X                          NORMAL-Y                         SHEAR-XY\n']
 
 
-    if is_mag_phase:
-        mag_real = ['                                                         (MAGNITUDE/PHASE)\n \n']
-    else:
-        mag_real = ['                                                          (REAL/IMAGINARY)\n', ' \n']
-
+    #if is_mag_phase:
+        #mag_real = ['                                                         (MAGNITUDE/PHASE)\n \n']
+    #else:
+        #mag_real = ['                                                          (REAL/IMAGINARY)\n', ' \n']
     ## TODO: validation on header formatting...
 
     if self.is_stress:
-        cquad4_bilinear = ['                C O M P L E X   S T R E S S E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 4 )        OPTION = BILIN  \n \n']
-        cquad4_linear = ['                C O M P L E X   S T R E S S E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 4 )\n']  # good
-        cquad8 = ['                C O M P L E X   S T R E S S E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 8 )\n']
-        cquadr = ['                C O M P L E X   S T R E S S E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D R )\n']
-        ctria3 = ['                   C O M P L E X   S T R E S S E S   I N   T R I A N G U L A R   E L E M E N T S   ( T R I A 3 )\n']  # good
-        ctria6 = ['                   C O M P L E X   S T R E S S E S   I N   T R I A N G U L A R   E L E M E N T S   ( T R I A 6 )\n']
-        ctriar = ['                   C O M P L E X   S T R E S S E S   I N   T R I A N G U L A R   E L E M E N T S   ( T R I A R )\n']
+        cquad4_bilinear = ['                C O M P L E X   S T R E S S E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 4 )        OPTION = BILIN  \n']
+        cquad4_linear = ['                S T R E S S E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 4 )\n']  # good
+        cquad8 = ['                S T R E S S E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 8 )\n']
+        cquadr = ['                S T R E S S E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D R )\n']
+        ctria3 = ['                   S T R E S S E S   I N   T R I A N G U L A R   E L E M E N T S   ( T R I A 3 )\n']  # good
+        ctria6 = ['                   S T R E S S E S   I N   T R I A N G U L A R   E L E M E N T S   ( T R I A 6 )\n']
+        ctriar = ['                   S T R E S S E S   I N   T R I A N G U L A R   E L E M E N T S   ( T R I A R )\n']
     else:
-        cquad4_bilinear = ['                C O M P L E X   S T R A I N S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 4 )        OPTION = BILIN  \n \n']
-        cquad4_linear = ['                C O M P L E X   S T R A I N S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 4 )\n']
-        cquad8 = ['                C O M P L E X   S T R A I N S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 8 )\n']
-        cquadr = ['                C O M P L E X   S T R A I N S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D R )\n']
-        ctria3 = ['                C O M P L E X   S T R A I N S   I N   T R I A N G U L A R   E L E M E N T S   ( T R I A 3 )\n']
-        ctria6 = ['                C O M P L E X   S T R A I N S   I N   T R I A N G U L A R   E L E M E N T S   ( T R I A 6 )\n']
-        ctriar = ['                C O M P L E X   S T R A I N S   I N   T R I A N G U L A R   E L E M E N T S   ( T R I A R )\n']
+        cquad4_bilinear = ['                S T R A I N S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 4 )        OPTION = BILIN  \n']
+        cquad4_linear = ['                S T R A I N S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 4 )\n']
+        cquad8 = ['                S T R A I N S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 8 )\n']
+        cquadr = ['                S T R A I N S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D R )\n']
+        ctria3 = ['                S T R A I N S   I N   T R I A N G U L A R   E L E M E N T S   ( T R I A 3 )\n']
+        ctria6 = ['                S T R A I N S   I N   T R I A N G U L A R   E L E M E N T S   ( T R I A 6 )\n']
+        ctriar = ['                S T R A I N S   I N   T R I A N G U L A R   E L E M E N T S   ( T R I A R )\n']
 
-    msg = []
+    #msg = []
     is_bilinear = False
     if self.element_type == 144: # CQUAD4
         is_bilinear = True
-        msg += cquad4_linear + mag_real + grid_msg_temp
+        #msg += cquad4_linear + mag_real + grid_msg_temp
+        msg0 = cquad4_linear
     elif self.element_type == 33: # CQUAD4
         is_bilinear = False
-        msg += cquad4_bilinear + mag_real + fiber_msg_temp
+        #msg += cquad4_bilinear + mag_real + fiber_msg_temp
+        msg0 = cquad4_bilinear
     elif self.element_type == 64:  #CQUAD8
-        msg += cquad8 + mag_real + grid_msg_temp
+        #msg += cquad8 + mag_real + grid_msg_temp
+        msg0 = cquad8
         is_bilinear = True
     elif self.element_type == 82:  # CQUADR
-        msg += cquadr + mag_real + grid_msg_temp
+        #msg += cquadr + mag_real + grid_msg_temp
+        msg0 = cquadr
         is_bilinear = True
 
     elif self.element_type == 74: # CTRIA3
-        msg += ctria3 + mag_real + fiber_msg_temp
+        #msg += ctria3 + mag_real + fiber_msg_temp
+        msg0 = ctria3
     elif self.element_type == 75:  # CTRIA6
-        msg += ctria6 + mag_real + grid_msg_temp
+        #msg += ctria6 + mag_real + grid_msg_temp
+        msg0 = ctria6
         is_bilinear = True
     elif self.element_type == 70:  # CTRIAR
-        msg += ctriar + mag_real + grid_msg_temp
+        #msg += ctriar + mag_real + grid_msg_temp
+        msg0 = ctriar
         is_bilinear = True
     else:
         raise NotImplementedError('name=%r type=%s' % (self.element_name, self.element_type))
+    msgi = msg0
 
     nnodes = get_nnodes(self)
-    msg = [
-        '                         S T R E S S E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 4 )\n'
-        '                                             ( POWER SPECTRAL DENSITY FUNCTION )\n'
-        ' \n'
-        '                    FIBER                                     - STRESSES IN ELEMENT  COORDINATE SYSTEM -\n'
-        '    FREQUENCY      DISTANCE                  NORMAL-X                          NORMAL-Y                         SHEAR-XY\n'
-        #'0  2.000000E+01 -5.000000E-02              1.925767E-05                      1.404795E-04                     1.097896E-03'
-        #'                 5.000000E-02              1.925766E-05                      1.404794E-04                     1.097896E-03'
-    ]
+    # TODO: STRESSES IN ELEMENT  COORDINATE SYSTEM???
+    if has_von_mises:
+        if self.table_name in ['OESXNO1']: # ['OESXNO1', 'OSTRNO1']:
+            assert self.is_fiber_distance, self.is_fiber_distance
+            msg = msgi + [
+                #'                         S T R E S S E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 4 )        OPTION = BILIN  '
+                '                                                ( NUMBER OF ZERO CROSSINGS )\n'
+                ' \n'
+                #'                      FIBER                                   - STRESSES IN ELEMENT  COORDINATE SYSTEM -\n'
+                #'   ELEMENT-ID  GRID ID   DISTANCE         NORMAL-X        NORMAL-Y           SHEAR-XY          VON MISES\n'
+                #'0           2  CEN/4  -1.270000E-03      6.203E+01       6.696E+01          5.202E+01          6.158E+01'
+                #'                       1.270000E-03      6.203E+01       6.696E+01          5.202E+01          6.158E+01'
+            ] + vm_msg_temp
+        elif self.table_name in ['OESXRMS1']:
+            assert self.is_fiber_distance, self.is_fiber_distance
+            msg = msgi + [
+                #'                         S T R E S S E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 4 )        OPTION = BILIN  '
+                '                                    ( ROOT MEAN SQUARE; RMSSF SCALE FACTOR =  X.XXE+XX )\n'
+                ' \n'
+                #'                      FIBER                                   - STRESSES IN ELEMENT  COORDINATE SYSTEM -\n'
+                #'   ELEMENT-ID  GRID ID   DISTANCE         NORMAL-X        NORMAL-Y           SHEAR-XY          VON MISES\n'
+                #'0           2  CEN/4  -1.270000E-03      1.701E+08       3.299E+07          1.053E+07          1.573E+08'
+                #'                       1.270000E-03      1.701E+08       3.299E+07          1.053E+07          1.573E+08'
+            ] + vm_msg_temp
+        else:
+            raise NotImplementedError(self.table_name)
+        #print(msg)
+    else:
+        if self.table_name in ['OESPSD1', 'OSTRPSD1']:
+            #assert self.is_fiber_distance, self.table_name
+            msg = msgi + [
+                #'                         S T R E S S E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 4 )\n'
+                '                                                ( POWER SPECTRAL DENSITY FUNCTION )\n'
+                ' \n'
+                #'                    FIBER                                     - STRESSES IN ELEMENT  COORDINATE SYSTEM -\n'
+                #'    FREQUENCY      DISTANCE                  NORMAL-X                          NORMAL-Y                         SHEAR-XY\n'
+                #'0  2.000000E+01 -5.000000E-02              1.925767E-05                      1.404795E-04                     1.097896E-03'
+                #'                 5.000000E-02              1.925766E-05                      1.404794E-04                     1.097896E-03'
+            ] + vm_msg_temp
+        elif self.table_name in ['OESNO1', 'OSTRNO1']:
+            #assert self.is_fiber_distance is False, self.table_name
+            msg = msgi + [
+                #'                           S T R A I N S   I N   Q U A D R I L A T E R A L   E L E M E N T S     ( Q U A D 4 )        OPTION = BILIN  '
+                '                                                ( NUMBER OF ZERO CROSSINGS )\n'
+                ' \n'
+                #'                      STRAIN                                  -  STRAINS IN ELEMENT  COORDINATE SYSTEM -\n'
+                #'   ELEMENT-ID  GRID ID   CURVATURE               NORMAL-X                       NORMAL-Y                          SHEAR-XY\n'
+                #'0           2  CEN/4   0.0                     5.492230E+02                   5.786333E+02                      5.789550E+02'
+                #'                      -1.000000E+00            6.206278E+01                   5.312986E+01                      5.217435E+01'
+            ] + vm_msg_temp
+        elif self.table_name in ['OESRMS1', 'OSTRRMS1']:  # OESRMS1
+            #assert self.is_fiber_distance is False, self.table_name
+            msg = msgi + [
+                #'                           S T R A I N S   I N   Q U A D R I L A T E R A L   E L E M E N T S     ( Q U A D 4 )        OPTION = BILIN  '
+                '                                    ( ROOT MEAN SQUARE; RMSSF SCALE FACTOR =  X.XXE+XX )\n'
+                ' \n'
+                #'                      STRAIN                                  -  STRAINS IN ELEMENT  COORDINATE SYSTEM -\n'
+                #'   ELEMENT-ID  GRID ID   CURVATURE               NORMAL-X                       NORMAL-Y                          SHEAR-XY\n'
+                #'0           2  CEN/4   0.0                     1.728666E-16                   3.661332E-16                      3.067126E-15'
+                #'                      -1.000000E+00            6.043902E-01                   6.198736E-02                      1.028200E-01'
+            ] + vm_msg_temp
+        elif self.table_name in ['OSTRCRM1', 'OESCRM1']:
+            msg = msgi + [
+                '                               ( CUMULATIVE ROOT MEAN SQUARE; RMSSF SCALE FACTOR =  X.XXE+XX )\n'
+                ' \n'
+                ] + msg_temp
+        elif self.table_name in ['OSTRATO1']:
+            msg = msgi + [
+                '                                    ( ATO ? )\n'
+                ' \n'
+                ] + msg_temp
+        else:
+            raise NotImplementedError(self.table_name)
+
     return msg, nnodes, is_bilinear
 
 def get_nnodes(self):
@@ -627,6 +784,7 @@ class RandomPlateStressArray(RandomPlateArray, StressObject):
 
     def get_headers(self) -> List[str]:
         return self._get_headers()
+
 
 class RandomPlateStrainArray(RandomPlateArray, StrainObject):
     def __init__(self, data_code, is_sort1, isubcase, dt):

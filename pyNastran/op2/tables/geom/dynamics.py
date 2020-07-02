@@ -632,7 +632,18 @@ class DYNAMICS(GeomCommon):
         14 FI    RS Frequency at the upper boundary of the i-th segment
         Word 14 repeats NUMS times
 
+        I think the EIGRL is just a bizarre card that adds 0s when there are
+        blank lines after the card...
+        # optistruct
+        'EIGRL          5                      10                            MASS'
+
+          strings   = (b'5 0   0 \n\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00MASS
+                                                                                 0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0',)
+            ints    = (5, 0,   0,   10, 0,   0,   0,   0,   0,   1397965133,     0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0)
+            floats  = (5, 0.0, 0.0, 10, 0.0, 0.0, 0.0, 0.0, 0.0, 907333664768.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0)
+
         """
+        #self.show_data(data[n:], types='ifs')
         ndata = len(data)
         if self.size == 4:
             s = Struct('i 2f 3i f 2i 8s f i')
@@ -644,13 +655,30 @@ class DYNAMICS(GeomCommon):
             types = 'qds'
 
         nentries = 0
+        is_none = False
         while n < ndata:
             #edata = data[n:n+46] # 11*4+2 = 46
             edata = data[n:n+nbytes] # 13*4 = 52
             out = s.unpack(edata)
             sid, v1, v2, nd, msglvl, maxset, shfscl, flag1, flag2, norm, alpha, nums = out
             norm = norm.decode('latin1').rstrip('\x00 ')
-            if nums != 538976288:
+            #print('self._nastran_format =', self._nastran_format)
+            if nums == 0: # and self._nastran_format == 'nx':
+                self.log.warning(f'sid={sid} v1={v1} v2={v2} nd={nd} msglvl={msglvl} maxset={maxset} '
+                                 f'shfscl={shfscl} flag1={flag1} flag2={flag2} norm={norm} alpha={alpha} nums={nums}')
+                nums = None
+                is_none = True
+
+            if nums is None:
+                nums = 14
+                nums_total = nums * 4
+                edata2 = data[n+nbytes:n+nbytes+nums_total]
+                self.show_data(edata2, types=types)
+                fi = unpack(mapfmt('%if' % nums, self.size), edata2)
+                print(out, fi)
+                #nbytes += nums_total
+
+            elif nums != 538976288:
                 self.log.warning(f'sid={sid} v1={v1} v2={v2} nd={nd} msglvl={msglvl} maxset={maxset} '
                                  f'shfscl={shfscl} flag1={flag1} flag2={flag2} norm={norm} alpha={alpha} nums={nums}')
                 assert nums < 10000, nums
@@ -675,6 +703,8 @@ class DYNAMICS(GeomCommon):
                 n += nbytes + nums * 4
             nentries += 1
         self.increase_card_count('EIGRL', nentries)
+        if is_none:
+            assert n == len(data), f'n={n} ndata={len(data)}'
         return n
 
     def _read_epoint(self, data: bytes, n: int) -> int:
