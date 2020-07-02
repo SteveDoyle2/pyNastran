@@ -69,6 +69,11 @@ class OES_Object(BaseElement):
     def set_as_sort1(self):
         """the data is in SORT1, but the flags are wrong"""
         if self.is_sort1:
+            #if self.analysis_code == 1:
+                #self.nonlinear_factor = np.nan
+                #print(self.data_code)
+                #print(self._times, type(self._times))
+                #aaa
             return
         self.table_name = SORT2_TABLE_NAME_MAP[self.table_name]
         self.sort_bits[1] = 0 # sort1
@@ -87,12 +92,22 @@ class OES_Object(BaseElement):
         return dtype
 
     def _update_time_word(self):
-        if self.analysis_code == 5:
-            name = 'freq'
-        elif self.analysis_code == 6:
-            name = 'dt'
+        if self.analysis_code == 1:
+            name = 'lsdvmn'
+            self._times = np.full(1, np.nan, dtype=self.data.dtype)
+            self.nonlinear_factor = self._times[0]
         else:
-            raise NotImplementedError(self.data_code)
+            name = self.analysis_method
+            #_analysis_code_fmt
+        #if self.analysis_code == 5:
+            #name = 'freq'
+        #elif self.analysis_code == 6:
+            #name = 'dt'
+        #elif self.analysis_code == 10:
+            #name = 'dt'
+        #else:
+            #raise NotImplementedError(self.data_code)
+
         names = name + 's'
         self.data_code['name'] = name
         self.data_code['data_names'][0] = name
@@ -101,8 +116,11 @@ class OES_Object(BaseElement):
         old_times = self._times
         setattr(self, names, self._times)
         #print('timesB =', self._times)
-        if len(self._times) > 1:
-            assert self._times.min() != self._times.max(), f'old_times={old_times} -> times={self._times}\n{self.code_information()}'
+        if self.analysis_code == 1:
+            assert len(self._times) == 1, self.data.shape
+        elif len(self._times) > 1:
+            class_name = self.__class__.__name__
+            assert self._times.min() != self._times.max(), f'{class_name}: old_times={old_times} -> times={self._times}; data.shape={self.data.shape}\n{self.code_information()}'
         #print(self.object_attributes())
 
     @property

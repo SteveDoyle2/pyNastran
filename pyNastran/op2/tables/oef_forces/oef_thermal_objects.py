@@ -183,7 +183,7 @@ class Real1DHeatFluxArray(BaseElement):
         n = len(headers)
         msg.append('  data: [%s, nelements, %i] where %i=[%s]\n' % (
             ntimes_word, n, n, str(', '.join(headers))))
-        msg.append('  data.shape = %s\n' % str(self.data.shape).replace('L', ''))
+        msg.append(f'  data.shape = {self.data.shape}\n')
         #msg.append('  element type: %s\n' % self.element_type)
         #msg.append('  element name: %s\n  ' % self.element_name)
         msg += self.get_data_code()
@@ -390,7 +390,7 @@ class RealHeatFluxVU3DArray(BaseElement):
         n = len(headers)
         msg.append('  data: [%s, nelements, %i] where %i=[%s]\n' % (
             ntimes_word, n, n, str(', '.join(headers))))
-        msg.append('  data.shape = %s\n' % str(self.data.shape).replace('L', ''))
+        msg.append(f'  data.shape = {self.data.shape}\n')
         msg.append('  element type: %s\n' % self.element_type)
         msg.append('  element name: %s\n' % self.element_name)
         msg += self.get_data_code()
@@ -609,7 +609,7 @@ class RealHeatFluxVUBeamArray(BaseElement):  # 191-VUBEAM
         n = len(headers)
         msg.append('  data: [%s, nelements, %i] where %i=[%s]\n' % (
             ntimes_word, n, n, str(', '.join(headers))))
-        msg.append('  data.shape = %s\n' % str(self.data.shape).replace('L', ''))
+        msg.append(f'  data.shape = {self.data.shape}\n')
         msg.append('  element type: %s\n' % self.element_type)
         msg.append('  element name: %s\n' % self.element_name)
         msg += self.get_data_code()
@@ -883,7 +883,7 @@ class RealConvHeatFluxArray(BaseElement):  # 107-CHBDYE 108-CHBDYG 109-CHBDYP
         n = len(headers)
         msg.append('  data: [%s, nelements, %i] where %i=[%s]\n' % (
             ntimes_word, n, n, str(', '.join(headers))))
-        msg.append('  data.shape = %s\n' % str(self.data.shape).replace('L', ''))
+        msg.append(f'  data.shape = {self.data.shape}\n')
         msg.append('  element type: %s\n' % self.element_type)
         msg.append('  element name: %s\n' % self.element_name)
         msg += self.get_data_code()
@@ -1105,7 +1105,7 @@ class RealChbdyHeatFluxArray(BaseElement):  # 107-CHBDYE 108-CHBDYG 109-CHBDYP
         headers = self.get_headers()
         n = len(headers)
         msg.append('  data: [%s, nelements, %i] where %i=[%s]\n' % (ntimes_word, n, n, str(', '.join(headers))))
-        msg.append('  data.shape = %s\n' % str(self.data.shape).replace('L', ''))
+        msg.append(f'  data.shape = {self.data.shape}\n')
         #msg.append('  element type: %s\n' % self.element_type)
         #msg.append('  element name: %s\n' % self.element_name)
         msg += self.get_data_code()

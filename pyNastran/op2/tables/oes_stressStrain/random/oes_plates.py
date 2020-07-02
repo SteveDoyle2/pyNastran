@@ -428,8 +428,8 @@ class RandomPlateArray(OES_Object):
             msg.append(f'  type={self.class_name} nelements={nelements:d} nnodes={nnodes:d} {self.table_name}\n')
         msg.append('  eType, cid\n')
         msg.append('  data: [ntimes, nnodes, 3] where 3=[%s]\n' % str(', '.join(self._get_headers())))
-        msg.append('  element_node.shape = %s\n' % str(self.element_node.shape).replace('L', ''))
-        msg.append('  data.shape = %s\n' % str(self.data.shape).replace('L', ''))
+        msg.append(f'  element_node.shape = {self.element_node.shape}\n')
+        msg.append(f'  data.shape = {self.data.shape}\n')
         msg.append('  %s\n' % self.element_name)
         msg += self.get_data_code()
         return msg

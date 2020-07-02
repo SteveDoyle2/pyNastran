@@ -113,9 +113,9 @@ class GridPointSurfaceStressesArray(ScalarObject):
         headers = self.get_headers()
         n = len(headers)
         msg.append('  data: [%s, nelements, %i] where %i=[%s]\n' % (ntimes_word, n, n, str(', '.join(headers))))
-        msg.append('  node_element.shape = %s\n' % str(self.node_element.shape).replace('L', ''))
-        msg.append('  location.shape = %s\n' % str(self.location.shape).replace('L', ''))
-        msg.append('  data.shape = %s\n' % str(self.data.shape).replace('L', ''))
+        msg.append(f'  node_element.shape = {self.node_element.shape}\n')
+        msg.append(f'  location.shape = {self.location.shape}\n')
+        msg.append(f'  data.shape = {self.data.shape}\n')
         msg += self.get_data_code()
         return msg
 
@@ -322,9 +322,9 @@ class GridPointStressesVolumePrincipalArray(ScalarObject):
         headers = self.get_headers()
         n = len(headers)
         msg.append('  data: [%s, nelements, %i] where %i=[%s]\n' % (ntimes_word, n, n, str(', '.join(headers))))
-        msg.append('  node.shape = %s\n' % str(self.node.shape).replace('L', ''))
-        msg.append('  location.shape = %s\n' % str(self.location.shape).replace('L', ''))
-        msg.append('  data.shape = %s\n' % str(self.data.shape).replace('L', ''))
+        msg.append(f'  node.shape = {self.node.shape}\n')
+        msg.append(f'  location.shape = {self.location.shape}\n')
+        msg.append(f'  data.shape = {self.data.shape}\n')
         msg += self.get_data_code()
         return msg
 
@@ -412,9 +412,9 @@ class GridPointStressesVolumeDirectArray(ScalarObject):
         headers = self.get_headers()
         n = len(headers)
         msg.append('  data: [%s, nelements, %i] where %i=[%s]\n' % (ntimes_word, n, n, str(', '.join(headers))))
-        msg.append('  node.shape = %s\n' % str(self.node.shape).replace('L', ''))
-        msg.append('  location.shape = %s\n' % str(self.location.shape).replace('L', ''))
-        msg.append('  data.shape = %s\n' % str(self.data.shape).replace('L', ''))
+        msg.append(f'  node.shape = {self.node.shape}\n')
+        msg.append(f'  location.shape = {self.location.shape}\n')
+        msg.append(f'  data.shape = {self.data.shape}\n')
         msg += self.get_data_code()
         return msg
 
@@ -605,9 +605,9 @@ class GridPointStressesSurfaceDiscontinutiesArray(ScalarObject): # tCode=35
         headers = self.get_headers()
         n = len(headers)
         msg.append('  data: [%s, nelements, %i] where %i=[%s]\n' % (ntimes_word, n, n, str(', '.join(headers))))
-        msg.append('  node.shape = %s\n' % str(self.node.shape).replace('L', ''))
-        msg.append('  location.shape = %s\n' % str(self.location.shape).replace('L', ''))
-        msg.append('  data.shape = %s\n' % str(self.data.shape).replace('L', ''))
+        msg.append(f'  node.shape = {self.node.shape}\n')
+        msg.append(f'  location.shape = {self.location.shape}\n')
+        msg.append(f'  data.shape = {self.data.shape}\n')
         msg += self.get_data_code()
         return msg
 

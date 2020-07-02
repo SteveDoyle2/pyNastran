@@ -7516,75 +7516,42 @@ def oes_cquad4_33_complex_17(self, data: bytes,
     n = 0
     struct1 = Struct(mapfmt(self._endian + self._analysis_code_fmt + b'16f', self.size))
     cen = 0 # CEN/4
-    if self.sort_method == 1:
-        for unused_i in range(nelements):
-            edata = data[n:n+ntotal]
-            out = struct1.unpack(edata)
+    add_ovm_sort_x = getattr(obj, 'add_ovm_sort' + str(self.sort_method))
 
-            (eid_device,
-             fd1, sx1r, sx1i, sy1r, sy1i, txy1r, txy1i, von_mises1,
-             fd2, sx2r, sx2i, sy2r, sy2i, txy2r, txy2i, von_mises2) = out
+    for unused_i in range(nelements):
+        edata = data[n:n+ntotal]
+        out = struct1.unpack(edata)
 
-            eid, dt = get_eid_dt_from_eid_device(
-                eid_device, self.nonlinear_factor, self.sort_method)
-            if self.is_debug_file:
-                self.binary_debug.write('  eid=%i C=[%s]\n' % (
-                    eid, ', '.join(['%r' % di for di in out])))
+        (eid_device,
+         fd1, sx1r, sx1i, sy1r, sy1i, txy1r, txy1i, von_mises1,
+         fd2, sx2r, sx2i, sy2r, sy2i, txy2r, txy2i, von_mises2) = out
 
-            if is_magnitude_phase:
-                sx1 = polar_to_real_imag(sx1r, sx1i)
-                sx2 = polar_to_real_imag(sx2r, sx2i)
-                sy1 = polar_to_real_imag(sy1r, sy1i)
-                sy2 = polar_to_real_imag(sy2r, sy2i)
-                txy1 = polar_to_real_imag(txy1r, txy1i)
-                txy2 = polar_to_real_imag(txy2r, txy2i)
-            else:
-                sx1 = complex(sx1r, sx1i)
-                sx2 = complex(sx2r, sx2i)
-                sy1 = complex(sy1r, sy1i)
-                sy2 = complex(sy2r, sy2i)
-                txy1 = complex(txy1r, txy1i)
-                txy2 = complex(txy2r, txy2i)
-            #print(dt, eid, cen, sx1, sy1, txy1, max_shear1)
-            #print(dt, eid, cen, sx2, sy2, txy2, max_shear2)
-            obj.add_ovm_sort1(dt, eid, cen,
-                              fd1, sx1, sy1, txy1, von_mises1,
-                              fd2, sx2, sy2, txy2, von_mises1)
-            n += ntotal
-    else:
-        for unused_i in range(nelements):
-            edata = data[n:n+ntotal]
-            out = struct1.unpack(edata)
-            (eid_device,
-             fd1, sx1r, sx1i, sy1r, sy1i, txy1r, txy1i, von_mises1,
-             fd2, sx2r, sx2i, sy2r, sy2i, txy2r, txy2i, von_mises2) = out
+        eid, dt = get_eid_dt_from_eid_device(
+            eid_device, self.nonlinear_factor, self.sort_method)
+        if self.is_debug_file:
+            self.binary_debug.write('  eid=%i C=[%s]\n' % (
+                eid, ', '.join(['%r' % di for di in out])))
 
-            eid, dt = get_eid_dt_from_eid_device(
-                eid_device, self.nonlinear_factor, self.sort_method)
-            if self.is_debug_file:
-                self.binary_debug.write('  eid=%i C=[%s]\n' % (
-                    eid, ', '.join(['%r' % di for di in out])))
-
-            if is_magnitude_phase:
-                sx1 = polar_to_real_imag(sx1r, sx1i)
-                sx2 = polar_to_real_imag(sx2r, sx2i)
-                sy1 = polar_to_real_imag(sy1r, sy1i)
-                sy2 = polar_to_real_imag(sy2r, sy2i)
-                txy1 = polar_to_real_imag(txy1r, txy1i)
-                txy2 = polar_to_real_imag(txy2r, txy2i)
-            else:
-                sx1 = complex(sx1r, sx1i)
-                sx2 = complex(sx2r, sx2i)
-                sy1 = complex(sy1r, sy1i)
-                sy2 = complex(sy2r, sy2i)
-                txy1 = complex(txy1r, txy1i)
-                txy2 = complex(txy2r, txy2i)
-            #print(dt, eid, cen, sx1, sy1, txy1, max_shear1)
-            #print(dt, eid, cen, sx2, sy2, txy2, max_shear2)
-            obj.add_ovm_sort2(dt, eid, cen,
-                              fd1, sx1, sy1, txy1, von_mises1,
-                              fd2, sx2, sy2, txy2, von_mises1)
-            n += ntotal
+        if is_magnitude_phase:
+            sx1 = polar_to_real_imag(sx1r, sx1i)
+            sx2 = polar_to_real_imag(sx2r, sx2i)
+            sy1 = polar_to_real_imag(sy1r, sy1i)
+            sy2 = polar_to_real_imag(sy2r, sy2i)
+            txy1 = polar_to_real_imag(txy1r, txy1i)
+            txy2 = polar_to_real_imag(txy2r, txy2i)
+        else:
+            sx1 = complex(sx1r, sx1i)
+            sx2 = complex(sx2r, sx2i)
+            sy1 = complex(sy1r, sy1i)
+            sy2 = complex(sy2r, sy2i)
+            txy1 = complex(txy1r, txy1i)
+            txy2 = complex(txy2r, txy2i)
+        #print(dt, eid, cen, sx1, sy1, txy1, max_shear1)
+        #print(dt, eid, cen, sx2, sy2, txy2, max_shear2)
+        add_ovm_sort_x(dt, eid, cen,
+                       fd1, sx1, sy1, txy1, von_mises1,
+                       fd2, sx2, sy2, txy2, von_mises2)
+        n += ntotal
     return n
 
 def oes_cbeam_real_111(self, data: bytes,
@@ -8035,6 +8002,7 @@ def oes_quad4_33_real_17(self, data: bytes,
     n = 0
     cen = 0 # CEN/4
     #assert self.sort_method == 1, self.code_information()
+    add_new_eid_sort_x = getattr(obj, 'add_new_eid_sort' + str(self.sort_method))
     fmt = mapfmt(self._endian + self._analysis_code_fmt + b'16f', self.size)
     struct1 = Struct(fmt)
     #print('**nelements =', nelements, nelements*2, obj.ntotal)
@@ -8052,7 +8020,7 @@ def oes_quad4_33_real_17(self, data: bytes,
             self.binary_debug.write('  eid=%i C=[%s]\n' % (
                 eid, ', '.join(['%r' % di for di in out])))
 
-        obj.add_new_eid_sort1(
+        add_new_eid_sort_x(
             dt, eid, cen,
             fd1, sx1, sy1, txy1, angle1, major1, minor1, max_shear1,
             fd2, sx2, sy2, txy2, angle2, major2, minor2, max_shear2)

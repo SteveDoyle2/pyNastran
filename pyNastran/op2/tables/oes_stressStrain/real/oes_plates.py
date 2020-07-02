@@ -231,6 +231,7 @@ class RealPlateArray(OES_Object):
     def add_new_eid_sort1(self, dt, eid, node_id,
                           fiber_dist1, oxx1, oyy1, txy1, angle1, major_principal1, minor_principal1, ovm1,
                           fiber_dist2, oxx2, oyy2, txy2, angle2, major_principal2, minor_principal2, ovm2):
+        sss
         assert isinstance(eid, integer_types), eid
         assert isinstance(node_id, integer_types), node_id
         self._times[self.itime] = dt
@@ -288,9 +289,9 @@ class RealPlateArray(OES_Object):
         n = len(headers)
         msg.append('  data: [%s, ntotal, %i] where %i=[%s]\n' % (ntimes_word, n, n,
                                                                  str(', '.join(headers))))
-        msg.append('  element_node.shape = %s\n' % str(self.element_node.shape).replace('L', ''))
-        msg.append('  data.shape=%s\n' % str(self.data.shape).replace('L', ''))
-        msg.append('  element type: %s\n' % self.element_name)
+        msg.append(f'  element_node.shape = {self.element_node.shape}\n')
+        msg.append(f'  data.shape={self.data.shape}\n')
+        msg.append(f'  element type: {self.element_name}\n')
         msg.append('  s_code: %s\n' % self.s_code)
         msg += self.get_data_code()
         return msg
@@ -429,8 +430,8 @@ class RealPlateArray(OES_Object):
         cen_word_ascii = 'CEN/%i' % nnodes
         cen_word = b'CEN/%i' % nnodes
 
-        #msg.append('  element_node.shape = %s\n' % str(self.element_node.shape).replace('L', ''))
-        #msg.append('  data.shape=%s\n' % str(self.data.shape).replace('L', ''))
+        #msg.append(f'  element_node.shape = {self.element_node.shape}\n')
+        #msg.append(f'  data.shape={self.data.shape}\n')
 
         eids = self.element_node[:, 0]
         nids = self.element_node[:, 1]

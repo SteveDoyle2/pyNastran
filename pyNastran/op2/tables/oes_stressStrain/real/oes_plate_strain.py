@@ -145,9 +145,9 @@ class RealCPLSTRNPlateArray(OES_Object):
         n = len(headers)
         msg.append('  data: [%s, ntotal, %i] where %i=[%s]\n' % (ntimes_word, n, n,
                                                                  str(', '.join(headers))))
-        msg.append('  element.shape = %s\n' % str(self.element.shape).replace('L', ''))
+        msg.append(f'  element.shape = {self.element.shape}\n')
         msg.append('  data.shape=%s\n' % str(self.data.shape))
-        msg.append('  element type: %s\n' % self.element_name)
+        msg.append(f'  element type: {self.element_name}\n')
         msg += self.get_data_code()
         return msg
 

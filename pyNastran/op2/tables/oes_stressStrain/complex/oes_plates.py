@@ -120,8 +120,8 @@ class ComplexTriaxStressArray(OES_Object):
                 self.__class__.__name__, nelements, nnodes, self.table_name))
         msg.append('  eType, cid\n')
         msg.append('  data: [ntimes, nnodes, 3] where 3=[%s]\n' % str(', '.join(self._get_headers())))
-        msg.append('  element_node.shape = %s\n' % str(self.element_node.shape).replace('L', ''))
-        msg.append('  data.shape = %s\n' % str(self.data.shape).replace('L', ''))
+        msg.append(f'  element_node.shape = {self.element_node.shape}\n')
+        msg.append(f'  data.shape = {self.data.shape}\n')
         msg.append('  %s\n' % self.element_name)
         msg += self.get_data_code()
         return msg
@@ -296,18 +296,19 @@ class ComplexPlateArray(OES_Object):
                 nlayers = self.ntotal
             else:
                 nelements = self.ntotal # // (2 * nnodes) # neids=actual number of elements
-                nlayers = self.ntotal * self.nnodes_per_element
+                nlayers = self.ntotal * nnodes
             #nx = ntimes
             #ny = self.ntotal
             #print(f"  SORT1: ntimes={ntimes} nelements={nelements} nlayers={nlayers}")
         if self.is_sort2:
             if self.has_von_mises:
+                print(self._ntotals)
                 nelements = self.ntimes
-                nlayers = nelements * 2 * self.nnodes_per_element
+                nlayers = nelements * 2 * nnodes
                 ntimes = self.ntotal
             else:
                 nelements = self.ntimes
-                nlayers = nelements * 2 * self.nnodes_per_element
+                nlayers = nelements * 2 * nnodes
                 ntimes = self.ntotal
             #print(f"  SORT2: ntimes={ntimes} nelements={nelements} nlayers={nlayers}")
         #print("nelements=%s nlayers=%s ntimes=%s" % (nelements, nlayers, ntimes))
@@ -544,8 +545,11 @@ class ComplexPlateArray(OES_Object):
             msg.append('  type=%s nelements=%i nnodes=%i; table_name=%r\n' % (
                 self.__class__.__name__, nelements, nnodes, self.table_name))
         msg.append('  eType, cid\n')
-        msg.append('  data: [ntimes, nnodes, 3] where 3=[%s]\n' % str(', '.join(self._get_headers())))
-        msg.append('  element_node.shape = %s\n' % str(self.element_node.shape).replace('L', ''))
+        headers = self._get_headers()
+        nheaders = len(headers)
+        headers_str = ', '.join(headers)
+        msg.append(f'  data: [ntimes, nnodes, {nheaders}] where {nheaders}=[{headers_str}]\n')
+        msg.append(f'  element_node.shape = {self.element_node.shape}\n')
         msg.append(f'  data.shape = {self.data.shape}\n')
         msg.append(f'  {self.element_name}-{self.element_type}\n')
         msg += self.get_data_code()
@@ -667,8 +671,8 @@ class ComplexPlateArray(OES_Object):
         #cen_word_ascii = 'CEN/%i' % nnodes
         #cen_word = b'CEN/%i' % nnodes
 
-        #msg.append('  element_node.shape = %s\n' % str(self.element_node.shape).replace('L', ''))
-        #msg.append('  data.shape=%s\n' % str(self.data.shape).replace('L', ''))
+        #msg.append(f'  element_node.shape = {self.element_node.shape}\n')
+        #msg.append(f'  data.shape={self.data.shape}\n')
 
         eids = self.element_node[:, 0]
         #nids = self.element_node[:, 1]
