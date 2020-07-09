@@ -408,7 +408,7 @@ class FailureIndicesArray(RealForceObject):
         n = len(headers)
         msg.append('  data: [%s, nelements, %i] where %i=[%s]\n' % (ntimes_word, n, n, str(', '.join(headers))))
         msg.append(f'  data.shape = {self.data.shape}\n')
-        msg.append(f'  element type: {self.element_name}\n')
+        msg.append(f'  element type: {self.element_name}-{self.element_type}\n')
         msg += self.get_data_code()
         return msg
 
@@ -648,7 +648,7 @@ class RealSpringDamperForceArray(RealForceObject):
             ntimes_word, n, n, str(', '.join(headers))))
         msg.append(f'  data.shape = {self.data.shape}\n')
         msg.append(f'  element.shape = {self.element.shape}\n')
-        msg.append(f'  element type: {self.element_name}\n')
+        msg.append(f'  element type: {self.element_name}-{self.element_type}\n')
         msg += self.get_data_code()
         return msg
 
@@ -2353,7 +2353,7 @@ class RealPlateForceArray(RealForceObject):  # 33-CQUAD4, 74-CTRIA3
         msg.append('  data: [%s, nelements, %i] where %i=[%s]\n' % (ntimes_word, n, n, str(', '.join(headers))))
         msg.append(f'  data.shape = {self.data.shape}\n')
         msg.append(f'  element.shape = {self.element.shape}\n')
-        msg.append(f'  element type: {self.element_name}\n')
+        msg.append(f'  element type: {self.element_name}-{self.element_type}\n')
         msg += self.get_data_code()
         return msg
 
@@ -2727,7 +2727,7 @@ class RealPlateBilinearForceArray(RealForceObject):  # 144-CQUAD4
         msg.append('  data: [%s, ntotal, %i] where %i=[%s]\n' % (ntimes_word, n, n, str(', '.join(headers))))
         msg.append(f'  data.shape = {self.data.shape}\n')
         msg.append(f'  element_node.shape = {self.element_node.shape}\n')
-        msg.append(f'  element type: {self.element_name}\n')
+        msg.append(f'  element type: {self.element_name}-{self.element_type}\n')
         msg += self.get_data_code()
         return msg
 
@@ -5226,7 +5226,7 @@ class RealForceVU2DArray(RealForceObject):  # 189-VUQUAD, 190-VUTRIA
         msg.append('  data: [%s, nelements, %i] where %i=[%s]\n' % (ntimes_word, n, n, str(', '.join(headers))))
         msg.append(f'  data.shape = {self.data.shape}\n')
         msg.append(f'  element_node.shape = {self.element_node.shape}\n')
-        msg.append(f'  element type: {self.element_name}\n')
+        msg.append(f'  element type: {self.element_name}-{self.element_type}\n')
         msg += self.get_data_code()
         return msg
 

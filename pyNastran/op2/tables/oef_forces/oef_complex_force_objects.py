@@ -3838,7 +3838,7 @@ class ComplexCBeamForceVUArray(BaseElement):  # 191-VUBEAM
                                                                  str(', '.join(headers))))
         msg.append(f'  element_node.shape = {self.element_node.shape}\n')
         msg.append(f'  data.shape={self.data.shape}\n')
-        msg.append(f'  element type: {self.element_name}\n')
+        msg.append(f'  element type: {self.element_name}-{self.element_type}\n')
         msg += self.get_data_code()
         return msg
 

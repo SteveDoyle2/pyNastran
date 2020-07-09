@@ -239,7 +239,7 @@ class RealBeamArray(OES_Object):
         msg.append(f'  element_node.shape = {self.element_node.shape}\n')
         msg.append(f'  xxb.shape = {self.xxb.shape}\n')
         msg.append(f'  data.shape = {self.data.shape}\n')
-        msg.append(f'  element type: {self.element_name}\n')
+        msg.append(f'  element type: {self.element_name}-{self.element_type}\n')
         msg += self.get_data_code()
         return msg
 
@@ -548,7 +548,7 @@ class RealNonlinearBeamArray(OES_Object):
         msg.append('  data: [%s, ntotal, %i] where %i=[%s]\n' % (
             ntimes_word, n, n, str(', '.join(headers))))
         msg.append(f'  data.shape = {self.data.shape}\n')
-        msg.append(f'  element type: {self.element_name}\n')
+        msg.append(f'  element type: {self.element_name}-{self.element_type}\n')
         msg += self.get_data_code()
         return msg
 

@@ -249,7 +249,7 @@ def validate_dvprel(prop_type, pname_fid, validate):
     elif prop_type == 'PBEAML':
         options = [
             'DIM1', 'DIM2', 'DIM3', 'DIM4', 'DIM5', 'DIM6', 'DIM7', 'DIM8', 'DIM9', 'DIM10',
-            'DIM1(A)',
+            'DIM1(A)', 'DIM2(A)',
             'DIM1(B)', 'DIM2(B)', 'I1(B)', 'I2(B)',
             'NSM'] # 'DIM(B)'
         _check_dvprel_options(pname_fid, prop_type, options)

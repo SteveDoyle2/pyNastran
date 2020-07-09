@@ -1263,7 +1263,6 @@ class GEOM4(GeomCommon):
         """
         #C:\NASA\m4\formats\git\examples\move_tpl\fsp11j.op2
         self.show_data(data)
-        #sss
 
     def _read_uset1(self, data: bytes, n: int) -> int:
         """USET1(2110,21,194) - Record 65

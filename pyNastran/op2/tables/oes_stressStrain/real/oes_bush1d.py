@@ -199,7 +199,7 @@ class RealBush1DStressArray(OES_Object):
         msg.append(f'  element.shape = {self.element.shape}\n')
         msg.append(f'  is_failed.shape = {self.is_failed.shape}\n')
         msg.append(f'  data.shape = {self.data.shape}\n')
-        msg.append(f'  element type: {self.element_name}\n')
+        msg.append(f'  element type: {self.element_name}-{self.element_type}\n')
         msg += self.get_data_code()
         return msg
 

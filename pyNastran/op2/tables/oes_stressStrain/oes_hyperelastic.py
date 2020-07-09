@@ -230,7 +230,7 @@ class HyperelasticQuadArray(OES_Object):
                                                                  str(', '.join(headers))))
         msg.append(f'  element_node.shape = {self.element_node.shape}\n')
         msg.append(f'  data.shape={self.data.shape}\n')
-        msg.append(f'  element type: {self.element_name}\n')
+        msg.append(f'  element type: {self.element_name}-{self.element_type}\n')
         msg.append('  s_code: %s\n' % self.s_code)
         msg += self.get_data_code()
         return msg
