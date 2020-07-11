@@ -28,6 +28,10 @@ class NonlinearGapStressArray(OES_Object):
         return False
 
     @property
+    def is_stress(self) -> bool:
+        return True
+
+    @property
     def nnodes_per_element(self) -> int:
         return 1
 

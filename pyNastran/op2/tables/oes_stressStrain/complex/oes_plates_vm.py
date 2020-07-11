@@ -10,16 +10,16 @@ from pyNastran.op2.result_objects.op2_objects import get_complex_times_dtype
 from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import StressObject, StrainObject, OES_Object
 from pyNastran.f06.f06_formatting import write_imag_floats_13e, write_float_13e
 
-BASIC_TABLES = {
-    'OES1X', 'OES1',
-    'OES2',
-    'OSTR1X',
-}
-VM_TABLES = {'OESVM1', 'OESVM2',
-             'OSTRVM1', 'OSTRVM2'}
+#BASIC_TABLES = {
+    #'OES1X', 'OES1',
+    #'OES2',
+    #'OSTR1X',
+#}
+#VM_TABLES = {'OESVM1', 'OESVM2',
+             #'OSTRVM1', 'OSTRVM2'}
 
 
-class ComplexPlateArray(OES_Object):
+class ComplexPlateVMArray(OES_Object):
     r"""
        ELEMENT      FIBER                                     - STRESSES IN ELEMENT  COORDINATE SYSTEM -
           ID.       DISTANCE              NORMAL-X                       NORMAL-Y                      SHEAR-XY               VON MISES
@@ -90,20 +90,22 @@ class ComplexPlateArray(OES_Object):
         #print("ntimes=%s nelements=%s ntotal=%s" % (self.ntimes, self.nelements, self.ntotal))
         dtype, idtype, cfdtype = get_complex_times_dtype(self.nonlinear_factor, self.size)
 
+        # nelements is the actual number of elements
         if self.is_sort1:
             ntimes = self.ntimes
-            nelements = self.ntotal # // (2 * nnodes) # neids=actual number of elements
-            nlayers = self.ntotal * nnodes
+            nelements = self.ntotal // 2
+            nlayers = self.ntotal
             #nx = ntimes
             #ny = self.ntotal
-            print(f'  SORT1: ntimes={ntimes} nelements={nelements} nlayers={nlayers} {self.element_name}-{self.element_type}')
+            #print(f'  SORT1: ntimes={ntimes} nelements={nelements} nlayers={nlayers} {self.element_name}-{self.element_type}')
             #if self.element_type == 74:
                 #aasdf
         elif self.is_sort2:
+            #print(self._ntotals)
             nelements = self.ntimes
             nlayers = nelements * 2 * nnodes
             ntimes = self.ntotal
-            print(f'  SORT2: ntimes={ntimes} nelements={nelements} nlayers={nlayers} {self.element_name}-{self.element_type}')
+            #print(f'  SORT2: ntimes={ntimes} nelements={nelements} nlayers={nlayers} {self.element_name}-{self.element_type}')
         #print("nelements=%s nlayers=%s ntimes=%s" % (nelements, nlayers, ntimes))
 
         self._times = zeros(ntimes, dtype=dtype)
@@ -119,9 +121,10 @@ class ComplexPlateArray(OES_Object):
 
         self.fiber_curvature = zeros(nlayers, 'float32')
 
-        # [oxx, oyy, txy]
-        nelement_nodes = nlayers
-        self.data = zeros((ntimes, nlayers, 3), dtype=cfdtype)
+        nelement_nodes = nelements * 2
+        #nelement_nodes = nelements
+        # [oxx, oyy, txy, ovm]
+        self.data = zeros((ntimes, nlayers, 4), dtype=cfdtype)
 
         # TODO: could be more efficient by using nelements for cid
         self.element_node = zeros((nelement_nodes, 2), dtype=idtype)
@@ -199,64 +202,8 @@ class ComplexPlateArray(OES_Object):
         return True
 
     def add_sort1(self, dt, eid, node_id,
-                  fdr1, oxx1, oyy1, txy1,
-                  fdr2, oxx2, oyy2, txy2) -> None:
-        assert isinstance(eid, integer_types) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
-        self._times[self.itime] = dt
-        #print(self.element_types2, element_type, self.element_types2.dtype)
-        #print('itotal=%s dt=%s eid=%s nid=%-5s oxx=%s' % (self.itotal, dt, eid, node_id, oxx))
-        assert isinstance(node_id, int), node_id
-        self.data[self.itime, self.itotal] = [oxx1, oyy1, txy1]
-        self.element_node[self.itotal, :] = [eid, node_id]  # 0 is center
-        self.fiber_curvature[self.itotal] = fdr1
-        self.itotal += 1
-
-        self.data[self.itime, self.itotal] = [oxx2, oyy2, txy2]
-        self.element_node[self.itotal, :] = [eid, node_id]  # 0 is center
-        self.fiber_curvature[self.itotal] = fdr2
-        self.itotal += 1
-        #self.ielement += 1
-
-    def add_sort2(self, dt, eid, nid,
-                  fd1, oxx1, oyy1, txy1,
-                  fd2, oxx2, oyy2, txy2) -> None:
-        nnodes = self.nnodes_per_element
-        itime = self.ielement // nnodes
-        inid = self.ielement % nnodes
-        #itotal = self.itotal
-        ielement = self.itime
-        #print(f'itime={itime} eid={eid} nid={nid}; inid={inid} ielement={ielement}')
-
-        #ibase = 2 * ielement # ctria3/cquad4-33
-        ibase = 2 * (ielement * nnodes + inid)
-        ie_upper = ibase
-        ie_lower = ibase + 1
-
-        debug = False
-        self._times[itime] = dt
-        #print(self.element_types2, element_type, self.element_types2.dtype)
-
-        #itime = self.ielement
-        #itime = self.itime
-        #ielement = self.itime
-        assert isinstance(eid, integer_types) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
-
-        if itime == 0:
-            self.element_node[ie_upper, :] = [eid, nid]  # 0 is center
-            self.element_node[ie_lower, :] = [eid, nid]  # 0 is center
-            self.fiber_curvature[ie_upper] = fd1
-            self.fiber_curvature[ie_lower] = fd2
-        self.data[itime, ie_upper, :] = [oxx1, oyy1, txy1]
-        self.data[itime, ie_lower, :] = [oxx2, oyy2, txy2]
-
-        self.itotal += 2
-        self.ielement += 1
-        if debug:
-            print(self.element_node)
-
-    def add_ovm_sort1(self, dt, eid, node_id,
-                      fdr1, oxx1, oyy1, txy1, ovm1,
-                      fdr2, oxx2, oyy2, txy2, ovm2) -> None:
+                  fdr1, oxx1, oyy1, txy1, ovm1,
+                  fdr2, oxx2, oyy2, txy2, ovm2) -> None:
         assert isinstance(eid, integer_types) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
         self._times[self.itime] = dt
         #print(self.element_types2, element_type, self.element_types2.dtype)
@@ -275,9 +222,9 @@ class ComplexPlateArray(OES_Object):
         #self.ielement += 1
         self.itotal += 1
 
-    def add_ovm_sort2(self, dt, eid, nid,
-                      fd1, oxx1, oyy1, txy1, ovm1,
-                      fd2, oxx2, oyy2, txy2, ovm2):
+    def add_sort2(self, dt, eid, nid,
+                  fd1, oxx1, oyy1, txy1, ovm1,
+                  fd2, oxx2, oyy2, txy2, ovm2):
         nnodes = self.nnodes_per_element
         itime = self.ielement // nnodes
         inid = self.ielement % nnodes
@@ -526,18 +473,20 @@ class ComplexPlateArray(OES_Object):
 
             ilayer0 = True
             nwide = 0
-
-            for eid_device, eid, node, fd, doxx, doyy, dtxy in zip(eids_device, eids, nodes, fds, oxx, oyy, txy):
+            ovm = self.data[itime, :, 3]
+            for eid_device, eid, node, fd, doxx, doyy, dtxy, dovm in zip(eids_device, eids, nodes, fds, oxx, oyy, txy, ovm):
                 if node == 0 and ilayer0:
                     data = [eid_device, b'CEN/', node, fd,
-                            doxx.real, doxx.imag, doyy.real, doyy.imag, dtxy.real, dtxy.imag]
+                            doxx.real, doxx.imag, doyy.real, doyy.imag, dtxy.real, dtxy.imag,
+                            dovm.real]
                     op2.write(struct1.pack(*data))
                     op2_ascii.write('eid=%s node=%s data=%s' % (eid, node, str(data[2:])))
                     #f06_file.write('0  %8i %8s  %-13s   %-13s / %-13s   %-13s / %-13s   %-13s / %s\n' % (
                         #eid, cen, fdr, oxxr, oxxi, oyyr, oyyi, txyr, txyi))
                 elif ilayer0:    # TODO: assuming 2 layers?
                     data = [node, fd,
-                            doxx.real, doxx.imag, doyy.real, doyy.imag, dtxy.real, dtxy.imag]
+                            doxx.real, doxx.imag, doyy.real, doyy.imag, dtxy.real, dtxy.imag,
+                            dovm.real]
                     op2.write(struct2.pack(*data))
                     op2_ascii.write('  node=%s data=%s' % (node, str(data[2:])))
                     #f06_file.write('   %8s %8i  %-13s   %-13s / %-13s   %-13s / %-13s   %-13s / %s\n' % (
@@ -551,7 +500,6 @@ class ComplexPlateArray(OES_Object):
                         #'', '', fdr, oxxr, oxxi, oyyr, oyyi, txyr, txyi))
                 ilayer0 = not ilayer0
                 nwide += len(data)
-
             assert nwide == ntotal, "nwide=%s ntotal=%s" % (nwide, ntotal)
             itable -= 1
             header = [4 * ntotal,]
@@ -562,8 +510,8 @@ class ComplexPlateArray(OES_Object):
 
     def _write_op2_ctria3(self, op2, op2_ascii, new_result, itable,
                           ntotal, eids_device) -> int:
-        struct1 = Struct(b'i 7f')
-        struct2 = Struct(b'7f')
+        struct1 = Struct(b'i 8f')
+        struct2 = Struct(b'8f')
         for itime in range(self.ntimes):
             self._write_table_3(op2, op2_ascii, new_result, itable, itime)
             # record 4
@@ -719,26 +667,26 @@ def get_nnodes(self):
         raise NotImplementedError('name=%r type=%s' % (self.element_name, self.element_type))
     return nnodes
 
-class ComplexPlateStressArray(ComplexPlateArray, StressObject):
+class ComplexPlateVMStressArray(ComplexPlateVMArray, StressObject):
     def __init__(self, data_code, is_sort1, isubcase, dt):
-        ComplexPlateArray.__init__(self, data_code, is_sort1, isubcase, dt)
+        ComplexPlateVMArray.__init__(self, data_code, is_sort1, isubcase, dt)
         StressObject.__init__(self, data_code, isubcase)
 
     def _get_headers(self):
-        headers = ['oxx', 'oyy', 'txy']
+        headers = ['oxx', 'oyy', 'txy', 'ovm']
         return headers
 
     def get_headers(self) -> List[str]:
         return self._get_headers()
 
-class ComplexPlateStrainArray(ComplexPlateArray, StrainObject):
+class ComplexPlateVMStrainArray(ComplexPlateVMArray, StrainObject):
     def __init__(self, data_code, is_sort1, isubcase, dt):
-        ComplexPlateArray.__init__(self, data_code, is_sort1, isubcase, dt)
+        ComplexPlateVMArray.__init__(self, data_code, is_sort1, isubcase, dt)
         StrainObject.__init__(self, data_code, isubcase)
         assert self.is_strain, self.stress_bits
 
     def _get_headers(self):
-        headers = ['exx', 'eyy', 'exy']
+        headers = ['exx', 'eyy', 'exy', 'evm']
         return headers
 
     def get_headers(self) -> List[str]:

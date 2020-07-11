@@ -87,7 +87,7 @@ class RealPlateArray(OES_Object):
         #factor = self.size // 4
         nnodes_per_element = self.nnodes_per_element
         #print(self.code_information())
-        print('nnodes_per_element =', nnodes_per_element)
+        #print('nnodes_per_element =', nnodes_per_element)
         nlayers_per_element = 2 * nnodes_per_element
 
         #print('nnodes_per_element[%s, %s] = %s' % (
@@ -116,7 +116,7 @@ class RealPlateArray(OES_Object):
             ntimes = self.nelements
             #print(self.code_information())
             nlayers = self._ntotals[0] * nlayers_per_element
-            print('***', self.element_name, nlayers)
+            #print('***', self.element_name, nlayers)
             #assert nelements == 4, self.ntimes
             #nelements = 4
             #nelements = = self.ntimes // 2

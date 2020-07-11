@@ -149,11 +149,11 @@ class OES_Object(BaseElement):
         return True if self.stress_bits[4] == 0 else False
 
     def _get_headers(self):
-        raise NotImplementedError('overwrite this')
+        raise NotImplementedError(f'overwrite this {self.class_name}')
 
     @property
     def is_stress(self):
-        raise NotImplementedError('overwrite this')
+        raise NotImplementedError(f'overwrite this in {self.class_name}')
 
     def _write_table_3(self, op2, op2_ascii, new_result, itable, itime): #, itable=-3, itime=0):
         import inspect

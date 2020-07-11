@@ -56,7 +56,10 @@ from pyNastran.op2.tables.oes_stressStrain.complex.oes_beams import ComplexBeamS
 from pyNastran.op2.tables.oes_stressStrain.complex.oes_bush import (ComplexCBushStressArray, ComplexCBushStrainArray)
 from pyNastran.op2.tables.oes_stressStrain.complex.oes_bush1d import ComplexCBush1DStressArray
 from pyNastran.op2.tables.oes_stressStrain.complex.oes_plates import (
-    ComplexPlateStressArray, ComplexPlateStrainArray, ComplexTriaxStressArray)
+    ComplexPlateStressArray, ComplexPlateStrainArray)
+from pyNastran.op2.tables.oes_stressStrain.complex.oes_plates_vm import (
+    ComplexPlateVMStressArray, ComplexPlateVMStrainArray)
+from pyNastran.op2.tables.oes_stressStrain.complex.oes_triax import ComplexTriaxStressArray
 from pyNastran.op2.tables.oes_stressStrain.complex.oes_rods import ComplexRodStressArray, ComplexRodStrainArray
 from pyNastran.op2.tables.oes_stressStrain.complex.oes_shear import ComplexShearStressArray, ComplexShearStrainArray
 from pyNastran.op2.tables.oes_stressStrain.complex.oes_solids import ComplexSolidStressArray, ComplexSolidStrainArray
@@ -2870,7 +2873,7 @@ class OES(OP2Common):
                 if is_vectorized and self.use_vector:  # pragma: no cover
                     self.log.debug('vectorize CSolid imag SORT%s' % self.sort_method)
                 n = oes_csolid_complex(self, data, obj,
-                                       nelements, nnodes,
+                                       nelements, # nnodes,
                                        element_name, nnodes_expected,
                                        is_magnitude_phase)
 
@@ -4736,9 +4739,9 @@ class OES(OP2Common):
             # von Mises stress output in SORT1 format.
             element_id = self.nonlinear_factor
             if self.is_stress:  # TODO: add new complex type
-                obj_vector_complex = ComplexPlateStressArray
+                obj_vector_complex = ComplexPlateVMStressArray
             else:
-                obj_vector_complex = ComplexPlateStrainArray
+                obj_vector_complex = ComplexPlateVMStrainArray
             self.data_code['nonlinear_factor'] = element_id
 
             if self._results.is_not_saved(result_name):
@@ -4773,8 +4776,8 @@ class OES(OP2Common):
                 if is_vectorized and self.use_vector:  # pragma: no cover
                     self.log.debug('vectorize CQUAD4-33 complex '
                                    f'{self.table_name_str} SORT{self.sort_method}')
-                n = oes_cquad4_33_complex_17(self, data, obj, nelements, ntotal,
-                                             is_magnitude_phase)
+                n = oes_cquad4_33_complex_vm_17(self, data, obj, nelements, ntotal,
+                                                is_magnitude_phase)
 
         else:  # pragma: no cover
             raise RuntimeError(self.code_information())
@@ -4817,7 +4820,13 @@ class OES(OP2Common):
         self._results._found_result(result_name)
 
         slot = self.get_result(result_name)
-        #print(result_name, self.format_code, self.num_wide)
+        #print(self.element_name, result_name, self.format_code, self.num_wide)
+        table_names = [
+            b'OES2', b'OES1X1',
+            b'OSTR1X',
+            b'OESVM1', b'OESVM2', b'OSTRVM1', b'OSTRVM2',
+        ]
+        assert self.table_name in table_names, self.table_name
         if self.format_code in [1, 3] and self.num_wide == 17:  # real
             ntotal = 68 * self.factor # 4*17
             nelements = ndata // ntotal
@@ -4956,9 +4965,9 @@ class OES(OP2Common):
 
             element_id = self.nonlinear_factor
             if self.is_stress:  # TODO: add new complex type
-                obj_vector_complex = ComplexPlateStressArray
+                obj_vector_complex = ComplexPlateVMStressArray
             else:
-                obj_vector_complex = ComplexPlateStrainArray
+                obj_vector_complex = ComplexPlateVMStrainArray
             self.data_code['nonlinear_factor'] = element_id
 
             if self._results.is_not_saved(result_name):
@@ -5456,6 +5465,11 @@ class OES(OP2Common):
             nelements = None
             ntotal = None
         elif result_type == 2 and self.num_wide in [57] and self.table_name in [b'OESXRMS1', b'OESXNO1']:  # CQUAD8
+            if self.is_stress:
+                obj_vector_random = RandomPlateVMStressArray
+            else:
+                obj_vector_random = RandomPlateVMStrainArray
+
             #C:\MSC.Software\simcenter_nastran_2019.2\tpl_post2\tr1081x.op2
             #msg = 'skipping random CQUAD8; numwide=57'
 
@@ -5472,7 +5486,7 @@ class OES(OP2Common):
                 return nelements * ntotal, None, None
 
             obj = self.obj
-            n = oes_cquad4_complex_57(self, data, self.obj, nelements, ntotal, dt, is_magnitude_phase)
+            n = oes_cquad4_complex_vm_57(self, data, self.obj, nelements, ntotal, dt, is_magnitude_phase)
         else:  # pragma: no cover
             raise RuntimeError(self.code_information())
         return n, nelements, ntotal
@@ -7504,10 +7518,10 @@ class OES(OP2Common):
             obj.element[ielement:ielement2] = eids
 
 
-def oes_cquad4_33_complex_17(self, data: bytes,
-                             obj: Union[ComplexPlateStressArray, ComplexPlateStrainArray],
-                             nelements: int, ntotal: int,
-                             is_magnitude_phase: bool) -> int:
+def oes_cquad4_33_complex_vm_17(self, data: bytes,
+                                obj: Union[ComplexPlateVMStressArray, ComplexPlateVMStrainArray],
+                                nelements: int, ntotal: int,
+                                is_magnitude_phase: bool) -> int:
     """
     OESVM1/2 - Table of element stresses or strains with von Mises
     OSTRVM1/2  for frequency response results.
@@ -7517,7 +7531,7 @@ def oes_cquad4_33_complex_17(self, data: bytes,
     n = 0
     struct1 = Struct(mapfmt(self._endian + self._analysis_code_fmt + b'16f', self.size))
     cen = 0 # CEN/4
-    add_ovm_sort_x = getattr(obj, 'add_ovm_sort' + str(self.sort_method))
+    add_sort_x = getattr(obj, 'add_sort' + str(self.sort_method))
 
     for unused_i in range(nelements):
         edata = data[n:n+ntotal]
@@ -7549,9 +7563,9 @@ def oes_cquad4_33_complex_17(self, data: bytes,
             txy2 = complex(txy2r, txy2i)
         #print(dt, eid, cen, sx1, sy1, txy1, max_shear1)
         #print(dt, eid, cen, sx2, sy2, txy2, max_shear2)
-        add_ovm_sort_x(dt, eid, cen,
-                       fd1, sx1, sy1, txy1, von_mises1,
-                       fd2, sx2, sy2, txy2, von_mises2)
+        add_sort_x(dt, eid, cen,
+                   fd1, sx1, sy1, txy1, von_mises1,
+                   fd2, sx2, sy2, txy2, von_mises2)
         n += ntotal
     return n
 
@@ -7804,12 +7818,12 @@ def oes_cquad4_33_complex_15(self,
                        fd2, sx2, sy2, txy2)
     return n
 
-def oes_cquad4_complex_57(self,
-                          data: bytes,
-                          obj: Union[ComplexPlateStressArray, ComplexPlateStrainArray],
-                          nelements: int, ntotal: int,
-                          dt,
-                          is_magnitude_phase: bool) -> int:
+def oes_cquad4_complex_vm_57(self,
+                             data: bytes,
+                             obj: Union[ComplexPlateVMStressArray, ComplexPlateVMStrainArray],
+                             nelements: int, ntotal: int,
+                             dt,
+                             is_magnitude_phase: bool) -> int:
     #ntotal = 228 # 57*4
     n = 0
     cen = 0
@@ -7833,9 +7847,9 @@ def oes_cquad4_complex_57(self,
         eid, dt = get_eid_dt_from_eid_device(
             eid_device, self.nonlinear_factor, self.sort_method)
         #print(eid, cen)
-        obj.add_ovm_sort1(dt, eid, cen,
-                          fd1, ox2, oy2, txy2, vm1,
-                          fd2, ox2, oy2, txy2, vm2)
+        obj.add_sort1(dt, eid, cen,
+                      fd1, ox2, oy2, txy2, vm1,
+                      fd2, ox2, oy2, txy2, vm2)
         ni += 52
         #print(eid, grid1,
               #fd1, ox1, oy1, txy1, vm1,
@@ -7850,9 +7864,9 @@ def oes_cquad4_complex_57(self,
             #print(grid,
                   #fd1, ox1, oy1, txy1, vm1,
                   #fd2, ox2, oy2, txy2, vm2)
-            obj.add_ovm_sort1(dt, eid, grid,
-                              fd1, ox2, oy2, txy2, vm1,
-                              fd2, ox2, oy2, txy2, vm2)
+            obj.add_sort1(dt, eid, grid,
+                          fd1, ox2, oy2, txy2, vm1,
+                          fd2, ox2, oy2, txy2, vm2)
 
         n += 228
         #print()
@@ -7981,6 +7995,8 @@ def oes_ctria3_real_17(self, data: bytes,
     cen = 0 # 'CEN/3'
     #assert self.sort_method == 1, self.code_information()
 
+    add_new_eid_sort_x = getattr(obj, 'add_new_eid_sort' + str(self.sort_method))
+    #print(add_new_eid_sort_x)
     struct1 = Struct(self._endian + mapfmt(self._analysis_code_fmt + b'16f', self.size))
     #print('nelements =', nelements, nelements*2, obj.ntotal)
     for unused_i in range(nelements):
@@ -7994,10 +8010,12 @@ def oes_ctria3_real_17(self, data: bytes,
         if self.is_debug_file:
             self.binary_debug.write('  OES CTRIA3-74 - eid=%i; C=[%s]\n' % (
                 eid, ', '.join(['%r' % di for di in out])))
+        #print('  OES CTRIA3-74 - eid=%i; C=[%s]\n' % (
+            #eid, ', '.join(['%r' % di for di in out])))
 
-        obj.add_new_eid_sort1(dt, eid, cen,
-                              fd1, sx1, sy1, txy1, angle1, major1, minor1, vm1,
-                              fd2, sx2, sy2, txy2, angle2, major2, minor2, vm2)
+        add_new_eid_sort_x(dt, eid, cen,
+                           fd1, sx1, sy1, txy1, angle1, major1, minor1, vm1,
+                           fd2, sx2, sy2, txy2, angle2, major2, minor2, vm2)
         n += ntotal
     return n
 
@@ -8034,7 +8052,7 @@ def oes_quad4_33_real_17(self, data: bytes,
 
 def oes_ctria3_complex_vm_17(self,
                              data: bytes,
-                             obj: Union[ComplexPlateStressArray, ComplexPlateStrainArray],
+                             obj: Union[ComplexPlateVMStressArray, ComplexPlateVMStrainArray],
                              nelements: int, ntotal: int,
                              dt,
                              is_magnitude_phase: bool) -> int:
@@ -8051,13 +8069,17 @@ def oes_ctria3_complex_vm_17(self,
     n = 0
     cen = 0
     struct1 = Struct(mapfmt(self._endian + self._analysis_code_fmt + b'16f', self.size))
-    add_ovm_sort_x = getattr(obj, 'add_ovm_sort' + str(self.sort_method))
+    add_sort_x = getattr(obj, 'add_sort' + str(self.sort_method))
 
     for unused_i in range(nelements):
         edata = data[n:n + ntotal]
         out = struct1.unpack(edata)
-        (eid, fd1, oxx1r, oxx1i, oyy1r, oyy1i, txy1r, txy1i, ovm1,
-              fd2, oxx2r, oxx2i, oyy2r, oyy2i, txy2r, txy2i, ovm2, ) = out
+        (eid_device, fd1, oxx1r, oxx1i, oyy1r, oyy1i, txy1r, txy1i, ovm1,
+                     fd2, oxx2r, oxx2i, oyy2r, oyy2i, txy2r, txy2i, ovm2, ) = out
+
+        eid, dt = get_eid_dt_from_eid_device(
+            eid_device, self.nonlinear_factor, self.sort_method)
+
         if is_magnitude_phase:
             oxx1 = polar_to_real_imag(oxx1r, oxx1i)
             oxx2 = polar_to_real_imag(oxx2r, oxx2i)
@@ -8074,9 +8096,9 @@ def oes_ctria3_complex_vm_17(self,
             txy2 = complex(txy2r, txy2i)
         #print(dt, eid, cen, sx1, sy1, txy1, max_shear1)
         #print(dt, eid, cen, sx2, sy2, txy2, max_shear2)
-        add_ovm_sort_x(dt, eid, cen,
-                       fd1, oxx1, oyy1, txy1, ovm1,
-                       fd2, oxx2, oyy2, txy2, ovm2)
+        add_sort_x(dt, eid, cen,
+                   fd1, oxx1, oyy1, txy1, ovm1,
+                   fd2, oxx2, oyy2, txy2, ovm2)
         n += ntotal
 
     #msg = self.code_information()
@@ -8569,7 +8591,7 @@ def oes_csolid_real(self, data: bytes,
 
 def oes_csolid_complex(self, data: bytes,
                        obj: Union[ComplexSolidStressArray, ComplexSolidStrainArray],
-                       nelements: int, nnodes: int,
+                       nelements: int, # nnodes: int,
                        element_name: str, nnodes_expected: int,
                        is_magnitude_phase: bool) -> int:
     n = 0

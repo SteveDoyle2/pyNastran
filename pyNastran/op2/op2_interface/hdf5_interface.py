@@ -63,7 +63,9 @@ from pyNastran.op2.tables.oes_stressStrain.complex.oes_bars import ComplexBarStr
 from pyNastran.op2.tables.oes_stressStrain.complex.oes_beams import ComplexBeamStressArray, ComplexBeamStrainArray
 from pyNastran.op2.tables.oes_stressStrain.complex.oes_bush import ComplexCBushStressArray, ComplexCBushStrainArray
 from pyNastran.op2.tables.oes_stressStrain.complex.oes_bush1d import ComplexCBush1DStressArray
-from pyNastran.op2.tables.oes_stressStrain.complex.oes_plates import ComplexPlateStressArray, ComplexPlateStrainArray, ComplexTriaxStressArray
+from pyNastran.op2.tables.oes_stressStrain.complex.oes_plates import ComplexPlateStressArray, ComplexPlateStrainArray
+from pyNastran.op2.tables.oes_stressStrain.complex.oes_plates_vm import ComplexPlateVMStressArray, ComplexPlateVMStrainArray
+from pyNastran.op2.tables.oes_stressStrain.complex.oes_triax import ComplexTriaxStressArray
 from pyNastran.op2.tables.oes_stressStrain.complex.oes_rods import ComplexRodStressArray, ComplexRodStrainArray
 from pyNastran.op2.tables.oes_stressStrain.complex.oes_shear import ComplexShearStressArray, ComplexShearStrainArray
 from pyNastran.op2.tables.oes_stressStrain.complex.oes_solids import ComplexSolidStressArray, ComplexSolidStrainArray
@@ -479,7 +481,9 @@ TABLE_OBJ_MAP = {
     'rms.cbeam_force' : (RealCBeamForceArray, ),
     'no.cbeam_force' : (RealCBeamForceArray, ),
 
-    'cquad4_stress' : (RealPlateStressArray, ComplexPlateStressArray),
+    'cquad4_stress' : (RealPlateStressArray, ComplexPlateStressArray,
+                       # ComplexPlateVMStressArray,
+                       ),
     'ato.cquad4_stress' : (RandomPlateStressArray, ),
     'crm.cquad4_stress' : (RandomPlateStressArray, ),
     'psd.cquad4_stress' : (RandomPlateStressArray, ),
