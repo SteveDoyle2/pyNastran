@@ -23,8 +23,10 @@ from pyNastran.bdf.cards.coordinate_systems import CORD2R
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.bdf.bdf import BDF
     from pyNastran.bdf.cards.coordinate_systems import Coord
+    from pyNastran.nptyping import NDArrayNint, NDArray3float
 
-def get_nid_cd_xyz_cid0(model: BDF):
+def get_nid_cd_xyz_cid0(model: BDF) -> Tuple[NDArrayNint, NDArrayNint,
+                                             Dict[int, NDArrayNint], NDArray3float]:
     out = model.get_displacement_index_xyz_cp_cd()
     icd_transform, icp_transform, xyz_cp, nid_cp_cd = out
     nids = nid_cp_cd[:, 0]
@@ -34,7 +36,7 @@ def get_nid_cd_xyz_cid0(model: BDF):
         cid=0)
     return nids, nid_cd, icd_transform, xyz_cid0
 
-def get_element_centroids(model: BDF) -> Tuple[np.array, np.array]:
+def get_element_centroids(model: BDF) -> Tuple[NDArrayNint, NDArray3float]:
     """gets the element ids and their centroids"""
     eids = []
     element_centroids_cid0 = []
@@ -50,7 +52,7 @@ def get_element_centroids(model: BDF) -> Tuple[np.array, np.array]:
 def get_stations(model: BDF, p1, p2, p3, zaxis,
                  method: str='Z-Axis Projection',
                  cid_p1: int=0, cid_p2: int=0, cid_p3: int=0, cid_zaxis: int=0,
-                 idir: int=0, nplanes: int=20):
+                 idir: int=0, nplanes: int=20) -> Tuple[NDArray3float, NDArray3float, ]:
     """
     Gets the axial stations
 
@@ -64,7 +66,7 @@ def get_stations(model: BDF, p1, p2, p3, zaxis,
         defines the XZ plane for the shears/moments
     zaxis: (3,) float ndarray
         the direction of the z-axis
-    cid_p1 / cid_p2 / cid_p3
+    cid_p1 / cid_p2 / cid_p3 : int
         the coordinate systems for p1, p2, and p3
     method : str
         'Z-Axis Projection'
@@ -73,6 +75,19 @@ def get_stations(model: BDF, p1, p2, p3, zaxis,
        'CORD2R' : typical
     idir : int; default=0
         the direction of the step direction
+
+    Returns
+    -------
+    xyz1 / xyz2 / xyz3 : (3,) float ndarray
+        the 1=starting 2=ending, 3=normal coordinates of the
+        coordinate frames to create in the cid=0 frame
+    i / k : (3,) float ndarray
+        the i and k vectors of the coordinate system
+    coord_out : Coord
+        the generated coordinate system
+    stations : (n,) float ndarray
+        ???
+
     """
     # define a local coordinate system
     xyz1, xyz2, unused_z_global, i, k, origin, zaxis, xzplane = _p1_p2_zaxis_to_cord2r(
@@ -969,7 +984,7 @@ def _is_dot(ivalues, percent_values, plane_atol):
     #print('%s; percents=%s is_dot=%s' % (dot_type, percent_array, is_dot))
     return is_dot
 
-def calculate_area_moi(model: BDF, rods, normal_plane, thetas, moi_filename=None):
+def calculate_area_moi(model: BDF, rods, normal_plane, thetas, moi_filename=None) -> Tuple[Any, Any, Any, Any]:
     """
     Parameters
     ----------
@@ -993,7 +1008,9 @@ def calculate_area_moi(model: BDF, rods, normal_plane, thetas, moi_filename=None
     -------
     total_area
     Isum
+    Jsum
     EIsum
+    GJsum
     avg_centroid
     """
     rod_elements, rod_nids, rod_xyzs = rods
@@ -1010,19 +1027,92 @@ def calculate_area_moi(model: BDF, rods, normal_plane, thetas, moi_filename=None
     length = np.linalg.norm(xyz2 - xyz1, axis=1)
     assert len(length) == neids
 
+    centroid, area, thickness, E = get_element_inertias(model, normal_plane, thetas,
+                                                        eids, length, centroid)
+
+    # [Ixx, Iyy, Izz, Ixy, Iyz, Ixz]
+    I = np.zeros((len(area), 6), dtype='float64') # type: np.ndarray
+
+    # (Ex, Ey, Gxy)
+    Ex = E[:, 0]
+
+    total_area = area.sum()
+    avg_centroid = (centroid * area[:, np.newaxis]) .sum(axis=0) / total_area
+    assert len(avg_centroid) == 3, len(avg_centroid)
+    # y corresponds to the station in the plane of the coordinate system
+    # and is 0. because we're in the local plane
+    x = centroid[:, 0] - avg_centroid[0]
+    y = centroid[:, 1] - avg_centroid[1]
+    z = centroid[:, 2] - avg_centroid[2]
+
+    I[:, 0] = area * (x * x)  # Ixx
+    I[:, 1] = area * (y * y)  # Iyy
+    I[:, 2] = area * (z * z)  # Izz
+    I[:, 3] = area * (x * y)  # Ixy
+    I[:, 4] = area * (y * z)  # Iyz
+    I[:, 5] = area * (x * z)  # Ixz
+
+    Isum = I.sum(axis=0)
+    ExIsum = (Ex[:, np.newaxis] * I).sum(axis=0)
+    assert len(Isum) == 6, len(Isum)
+
+    if moi_filename:
+        eid_filename = 'eid_file.csv'
+        with open(moi_filename, 'w') as bdf_file, open(eid_filename, 'w') as eid_file:
+            bdf_file.write('$ pyNastran: punch=True\n')
+            bdf_file.write('MAT1,1,3.0e7,,0.3\n')
+            nid0 = max(n1.max(), n2.max()) + 1
+            conm2 = ['CONM2', 1, nid0]
+            grid = ['GRID', nid0, 0, avg_centroid[0], avg_centroid[2], 0.]
+            bdf_file.write(print_card_8(grid))
+            bdf_file.write(print_card_8(conm2))
+            eidi = 1
+            mid = 1
+
+            fmt = ('%s,' * 7)[:-1] + '\n'
+            eid_file.write('# eid(%i),pid(%i),area,thickness,Ixx,Izz,Ixz\n')
+            for eid, n1i, n2i, xyz1i, xyz2i, lengthi, thicknessi, areai, centroidi, Ii, Ei in zip(
+                    eids, n1, n2, xyz1, xyz2, length, thickness, area, centroid, I, E):
+                actual_eid = abs(eid)
+
+                assert nid0 not in [n1i, n2i], (n1i, n2i)
+                pidi = actual_eid
+                #pid = eidi
+                grid1 = ['GRID', n1i, None] + xyz1i.tolist()
+                grid2 = ['GRID', n2i, None] + xyz2i.tolist()
+                #crod = ['CROD', eidi, pid, n1i, n2i]
+                A, J, nsm = Ii
+                #prod = ['PROD', pid, mid, A, J, 0., nsm]
+                assert eidi > 0, eidi
+                conrod = ['CONROD', eidi, n1i, n2i, mid, A, J, 0., nsm]
+                bdf_file.write(print_card_8(grid1))
+                bdf_file.write(print_card_8(grid2))
+                #bdf_file.write(print_card_8(crod))
+                #bdf_file.write(print_card_8(prod))
+                bdf_file.write(print_card_8(conrod))
+                eidi += 1
+                #PID | MID |  A  |  J  |  C  | NSM
+                eid_file.write(fmt % (eidi, pidi, areai, thicknessi, Ii[0], Ii[1], Ii[2]))
+
+    return total_area, Isum, ExIsum, avg_centroid
+
+def get_element_inertias(model: BDF, normal_plane,
+                         thetas, eids, length, centroid):
+    normal_plane_vector = normal_plane.copy().reshape((3, 1))
     cg = []
     area = []
     thickness = []
     E = []
-    normal_plane_vector = normal_plane.copy().reshape((3, 1))
+
     for eid, lengthi, centroidi in zip(eids, length, centroid):
+        #print(eid, lengthi)
         element = model.elements[eid]
         if element.type in ['CTRIA3', 'CQUAD4']:
             prop = element.pid_ref
             element = model.elements[eid]
             pid_ref = element.pid_ref
             thicknessi = element.Thickness()
-            centroid, imat, jmat, normal = element.material_coordinate_system()
+            centroid, imat, unused_jmat, normal = element.material_coordinate_system()
             n1, n2, n3 = normal
             n12 = n1 * n2
             n13 = n1 * n3
@@ -1080,6 +1170,8 @@ def calculate_area_moi(model: BDF, rods, normal_plane, thetas, moi_filename=None
 
                 # equivalent compliance matrix
                 S = thicknessi * Ainv
+                #print(S[0, 0], S[1, 1], S[2, 2])
+
                 # these are on the main diagonal
                 Ex = 1. / S[0, 0]
                 Ey = 1. / S[1, 1]
@@ -1099,58 +1191,4 @@ def calculate_area_moi(model: BDF, rods, normal_plane, thetas, moi_filename=None
     area = np.array(area, dtype='float64')
     thickness = np.array(thickness, dtype='float64')
     E = np.array(E, dtype='float64')
-    I = np.zeros((len(area), 3), dtype='float64') # type: np.ndarray
-
-    # (Ex, Ey, Gxy)
-    Ex = E[:, 0]
-
-    total_area = area.sum()
-    avg_centroid = (centroid * area[:, np.newaxis]) .sum(axis=0) / total_area
-    assert len(avg_centroid) == 3, len(avg_centroid)
-    # y corresponds to the station in the plane of the coordinate system
-    # and is 0. because we're in the local plane
-    x = centroid[:, 0] - avg_centroid[0]
-    z = centroid[:, 2] - avg_centroid[2]
-    I[:, 0] = area * (x * x)  # Ixx
-    I[:, 1] = area * (z * z)  # Izz
-    I[:, 2] = area * (x * z)  # Ixz
-    Isum = I.sum(axis=0)
-    EIsum = (Ex[:, np.newaxis] * I).sum(axis=0)
-    assert len(Isum) == 3, len(Isum)
-    if moi_filename:
-        eid_filename = 'eid_file.csv'
-        with open(moi_filename, 'w') as bdf_file, open(eid_filename, 'w') as eid_file:
-            bdf_file.write('$ pyNastran: punch=True\n')
-            bdf_file.write('MAT1,1,3.0e7,,0.3\n')
-            nid0 = max(n1.max(), n2.max()) + 1
-            conm2 = ['CONM2', 1, nid0]
-            grid = ['GRID', nid0, 0, avg_centroid[0], avg_centroid[2], 0.]
-            bdf_file.write(print_card_8(grid))
-            bdf_file.write(print_card_8(conm2))
-            eidi = 1
-            mid = 1
-
-            fmt = ('%s,' * 7)[:-1] + '\n'
-            eid_file.write('# eid(%i),pid(%i),area,thickness,Ixx,Izz,Ixz\n')
-            for eid, n1i, n2i, xyz1i, xyz2i, lengthi, thicknessi, areai, centroidi, Ii, Ei in zip(
-                    eids, n1, n2, xyz1, xyz2, length, thickness, area, centroid, I, E):
-                actual_eid = abs(eid)
-
-                assert nid0 not in [n1i, n2i], (n1i, n2i)
-                pidi = actual_eid
-                #pid = eidi
-                grid1 = ['GRID', n1i, None] + xyz1i.tolist()
-                grid2 = ['GRID', n2i, None] + xyz2i.tolist()
-                #crod = ['CROD', eidi, pid, n1i, n2i]
-                A, J, nsm = Ii
-                #prod = ['PROD', pid, mid, A, J, 0., nsm]
-                conrod = ['CONROD', eidi, n1i, n2i, mid, A, J, 0., nsm]
-                bdf_file.write(print_card_8(grid1))
-                bdf_file.write(print_card_8(grid2))
-                #bdf_file.write(print_card_8(crod))
-                #bdf_file.write(print_card_8(prod))
-                bdf_file.write(print_card_8(conrod))
-                eidi += 1
-                #PID | MID |  A  |  J  |  C  | NSM
-                eid_file.write(fmt % (eidi, pidi, areai, thicknessi, Ii[0], Ii[1], Ii[2]))
-    return total_area, Isum, EIsum, avg_centroid
+    return centroid, area, thickness, E

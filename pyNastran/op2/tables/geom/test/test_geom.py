@@ -125,5 +125,142 @@ class TestOP2GeomUnit(unittest.TestCase):
         data_bytes = struct.pack(b'3i f 7i', *data)
         op2._read_uset1(data_bytes, 12)
 
+
+        data_bytes = struct.pack(b'3i f 7i', *data)
+        op2._read_uset1(data_bytes, 12)
+
+    def test_nsml1_nx(self):
+        """tests NSML1-NX"""
+        op2 = OP2Geom(make_geom=True, debug=False, log=None, debug_file=None, mode='msc')
+        op2.idtype8 = 'int32'
+        op2.fdtype8 = 'float32'
+        op2._uendian = '<'
+
+        fmt1 = (b'<3i ' +
+                b'i 8s f ' + b'2i8s2i ' * 4 + b' i ' +
+                b'i 8s f ' + b'2i8s2i ' * 7 + b' i')
+        data = (
+            3701, 37, 995,
+            1, b'ELEMENT ', 466.2,
+            3, 249311, b'THRU    ', 250189, -1,
+            3, 250656, b'THRU    ', 251905, -1,
+            3, 270705, b'THRU    ', 275998, -1,
+            3, 332687, b'THRU    ', 334734, -1,
+            -2,
+
+            2, b'ELEMENT ', 77.7,
+            3, 225740, b'THRU    ', 227065, -1,
+            3, 227602, b'THRU    ', 228898, -1,
+            3, 229435, b'THRU    ', 230743, -1,
+            3, 231280, b'THRU    ', 233789, -1,
+
+            3, 233922, b'THRU    ', 235132, -1,
+            3, 235265, b'THRU    ', 236463, -1,
+            3, 338071, b'THRU    ', 341134, -1,
+            -2)
+        data_bytes = struct.pack(fmt1, *data)
+        op2._read_nsml1_nx(data_bytes, 12)
+
+    def test_seelt(self):
+        op2 = OP2Geom(make_geom=True, debug=False, log=None, debug_file=None, mode='msc')
+        op2.idtype8 = 'int32'
+        #op2.fdtype8 = 'float32'
+        #op2._uendian = '<'
+
+        data = (
+            7902, 79, 302,
+            5, 24, -1,
+            66, 662001, 662003, 662007, 662019, -1,
+            67, 672001, 672008, 672015, -1,
+            68, 682001, 682019, -1)
+        fmt1 = b'i' * len(data)
+        data_bytes = struct.pack(fmt1, *data)
+        op2._read_seelt(data_bytes, 12)
+
+    def test_seset(self):
+        op2 = OP2Geom(make_geom=True, debug=False, log=None, debug_file=None, mode='msc')
+        op2.idtype8 = 'int32'
+        data = (
+            5601, 56, 296,
+            1, 33, 34, 37, 38, -1,
+            1, 93, -98, -1,
+            7, 1, -8, -1)
+        fmt1 = b'i' * len(data)
+        data_bytes = struct.pack(fmt1, *data)
+        op2._read_seset(data_bytes, 12)
+
+    def test_snorm(self):
+        op2 = OP2Geom(make_geom=True, debug=False, log=None, debug_file=None, mode='msc')
+        #op2.idtype8 = 'int32'
+        op2._endian = b'<'
+        data = (5678, 71, 475,
+                1059, 10, 0.0, 0.2, 0.0,
+                -1059, 101000001, 0.0, 0.2, 0.0,
+                )
+        fmt1 = b'3i ' + b'2i3f ' * 2
+        data_bytes = struct.pack(fmt1, *data)
+        op2._read_snorm(data_bytes, 12)
+
+    def test_read_grid_8(self):
+        op2 = OP2Geom(make_geom=True, debug=False, log=None, debug_file=None, mode='msc')
+        op2._endian = b'<'
+        op2.op2_reader.factor = 1
+        data = (
+            4501, 45, 1,
+            # nid, cp, x1, x2, x3, cd, ps, seid
+            1, 0, 1., 0., 0., 1, 0, 0,
+            2, 0, 2., 0., 0., 1, 0, 0,
+            3, 0, 3., 0., 0., 1, 0, 0,
+        )
+        fmt = b'<3i ' + b'2i 3f 3i ' * 3
+        data_bytes3 = struct.pack(fmt, *data)
+        assert len(data_bytes3) == 108, len(data_bytes3)
+
+        op2.table_name = b'GEOM1'
+        op2._read_grid(data_bytes3, 12)
+
+        op2.table_name = b'GEOM1N'
+        with self.assertRaises(AssertionError):
+            op2._read_grid(data_bytes3, 12)
+
+        #-----------------------------------
+    def test_read_grid_11(self):
+        op2 = OP2Geom(make_geom=True, debug=False, log=None, debug_file=None, mode='msc')
+        op2._endian = b'<'
+        op2.op2_reader.factor = 1
+        data = (
+            4501, 45, 1,
+            # nid, cp, x1, x2, x3, cd, ps, seid
+            1, 0, 1., 0., 0., 1, 0, 0,
+            2, 0, 2., 0., 0., 1, 0, 0,
+            3, 0, 3., 0., 0., 1, 0, 0,
+        )
+        fmt = b'<3i ' + b'2i 3d 3i ' * 3
+        data_bytes = struct.pack(fmt, *data)
+        assert len(data_bytes) == 144, len(data_bytes)
+
+        op2.table_name = b'GEOM1'
+        with self.assertRaises(AssertionError):
+            op2._read_grid(data_bytes, 12)
+
+        op2.table_name = b'GEOM1N'
+        op2._read_grid(data_bytes, 12)
+
+    def test_extrn(self):
+        """reads an EXTRN"""
+        op2 = OP2Geom(make_geom=True, debug=False, log=None, debug_file=None, mode='msc')
+        op2.idtype8 = 'int32'
+        #op2.fdtype8 = 'float32'
+        #op2._uendian = '<'
+
+        data = (
+            1627, 16, 463,
+            1, 123456, 2, 123456, 3, 123456, 4, 123456, 100001, 1, 100002, 1, 100003, 1, 100004, 1,
+            -1, -1)
+        fmt1 = b'i' * len(data)
+        data_bytes = struct.pack(fmt1, *data)
+        op2._read_extrn(data_bytes, 12)
+
+
 if __name__ == '__main__':  # pragma: no cover
     unittest.main()

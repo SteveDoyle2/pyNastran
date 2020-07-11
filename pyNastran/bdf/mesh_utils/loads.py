@@ -1076,15 +1076,16 @@ def _Fg_vector_from_loads(model: BDF, loads, ndof_per_grid: int, ndof: int,
     Fg = np.zeros([ndof], dtype=fdtype)
     skipped_load_types = set([])
     not_static_loads = []
+    show_force_warning = True
     for load in loads:
         loadtype = load.type
         if load.type in ['FORCE', 'MOMENT']:
             offset = 1 if load.type[0] == 'F' else 4
-            _add_force(Fg, dof_map, model, load, offset, ndof_per_grid, cid=load.cid)
+            show_force_warning = _add_force(Fg, dof_map, model, load, offset, ndof_per_grid, cid=load.cid, show_warning=show_force_warning)
         elif load.type in ['FORCE1', 'MOMENT1',
                            'FORCE2', 'MOMENT2']:
             offset = 1 if load.type[0] == 'F' else 4
-            _add_force(Fg, dof_map, model, load, offset, ndof_per_grid, cid=0)
+            show_force_warning = _add_force(Fg, dof_map, model, load, offset, ndof_per_grid, cid=0, show_warning=show_force_warning)
 
         elif loadtype == 'SLOAD':
             for nid, mag in zip(load.nodes, load.mags):
@@ -1114,7 +1115,7 @@ def _force_to_local(cd_ref, vector):
 
 
 def _add_force(Fg: np.ndarray, dof_map: Dict[Tuple[int, int], int], model: BDF,
-               load, offset: int, ndof_per_grid: int, cid: int=0):
+               load, offset: int, ndof_per_grid: int, cid: int=0, show_warning: bool=True):
     """adds the FORCE/MOMENT loads to Fg"""
     #cid = load.cid
     nid = load.node
@@ -1126,7 +1127,9 @@ def _add_force(Fg: np.ndarray, dof_map: Dict[Tuple[int, int], int], model: BDF,
         fglobal = load.mag * load.xyz
     elif node_ref.cd != cid:
         fbasic = load.to_global()
-        model.log.warning(f'differing cid & cd is not supported; cid={cid} cd={node_ref.cd}')
+        if show_warning:
+            model.log.warning(f'differing cid & cd is not supported; cid={cid} cd={node_ref.cd}')
+            show_warning = False
         cd_ref = node_ref.cd_ref
         Tbg = cd_ref.beta()
         fglobal = _force_to_local(cd_ref, fbasic)
@@ -1174,3 +1177,4 @@ def _add_force(Fg: np.ndarray, dof_map: Dict[Tuple[int, int], int], model: BDF,
     for dof in range(3):
         irow = dof_map[(nid, dof+offset)]
         Fg[irow] += fglobal[dof]
+    return show_warning

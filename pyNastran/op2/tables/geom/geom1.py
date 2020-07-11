@@ -596,7 +596,7 @@ class GEOM1(GeomCommon):
 
     def _read_grid_8(self, data: bytes, n: int) -> int:  # 21.8 sec, 18.9
         """(4501,45,1) - the marker for Record 17"""
-        structi = Struct(mapfmt(self._endian + b'ii3f3i', self.size))
+        structi = Struct(mapfmt(self._endian + b'ii 3f 3i', self.size))
         ntotal = 32 * self.factor
         ndatai = len(data) - n
         nentries = ndatai // ntotal
@@ -634,12 +634,13 @@ class GEOM1(GeomCommon):
     def _read_grid_11(self, data: bytes, n: int) -> int:  # 21.8 sec, 18.9
         """(4501,45,1) - the marker for Record 17"""
         ntotal = 44
-        structi = Struct(self._endian + b'ii 3d 2ii')
+        structi = Struct(self._endian + b'ii 3d 3i')
 
         ndatai = len(data) - n
         nentries = ndatai // ntotal
-        assert ndatai % ntotal == 0
-        assert nentries > 0, nentries
+        #print(f'len(data)={len(data)} ndatai={ndatai} ntotal={ntotal} nentries={nentries}')
+        assert ndatai % ntotal == 0, f'len(data)={len(data)} ndatai={ndatai} ntotal={ntotal} nentries={nentries}'
+        assert nentries > 0, f'len(data)={len(data)} ndatai={ndatai} ntotal={ntotal} nentries={nentries}'
         nfailed = 0
         for unused_i in range(nentries):
             edata = data[n:n + ntotal]
@@ -648,14 +649,15 @@ class GEOM1(GeomCommon):
             (nid, cp, x1, x2, x3, cd, ps, seid) = out
             if self.is_debug_file:
                 self.binary_debug.write('  GRID=%s\n' % str(out))
-            #print(f'nid={nid}, cp={cp} x1={x1}, x2={x2}, x3={x3}, cd={cd} ps={ps}, seid={seid}')
-            assert cd >= 0, f'nid={nid}, cp={cp} x1({x1}, {x2}, {x3}), cd={cd} ps={ps}, seid={seid}'
-            assert seid == 0, f'nid={nid}, cp={cp} x1({x1}, {x2}, {x3}), cd={cd} ps={ps}, seid={seid}'
+            #print(f'nid={nid}, cp={cp} x=({x1}, {x2}, {x3}), cd={cd} ps={ps}, seid={seid}')
+            assert cd >= 0, f'nid={nid}, cp={cp} x=({x1}, {x2}, {x3}), cd={cd} ps={ps}, seid={seid}'
+            assert seid == 0, f'nid={nid}, cp={cp} x=({x1}, {x2}, {x3}), cd={cd} ps={ps}, seid={seid}'
             if nid < 10000000:
                 # cd can be < 0
                 if ps == 0:
                     ps = ''
                 node = GRID(nid, np.array([x1, x2, x3]), cp, cd, ps, seid)
+                #print(node)
                 self._type_to_id_map['GRID'].append(nid)
                 self.nodes[nid] = node
                 #if nid in self.nodes:
@@ -754,7 +756,15 @@ class GEOM1(GeomCommon):
         2 C   I Component numbers
         Words 1 through 2 repeat until (-1,-1) occurs
 
-        (1, 123456, 2, 123456, 3, 123456, 4, 123456, 100001, 1, 100002, 1, 100003, 1, 100004, 1,
+        (1627, 16, 463,
+         1, 123456,
+         2, 123456,
+         3, 123456,
+         4, 123456,
+         100001, 1,
+         100002, 1,
+         100003, 1,
+         100004, 1,
         -1, -1)
         """
         #Partitioned External Superelement Connection
@@ -772,6 +782,10 @@ class GEOM1(GeomCommon):
             assert ints[i1] == -1, ints[i1]
             nids = ints[i0:i1:2].tolist()
             comps = ints[i0+1:i1:2].tolist()
+            #print(nids)
+            #print(comps)
+            for c in comps:
+                assert c in [1, 2, 3, 4, 5, 6, 123456], f'nids={nids} comps={comps}'
             self.add_extrn(nids, comps)
             assert len(nids) == len(comps)
         return len(data)

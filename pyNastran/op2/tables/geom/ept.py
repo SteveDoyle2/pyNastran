@@ -240,7 +240,40 @@ class EPT(GeomCommon):
           12 N I Increment
           Words 6 through 12 repeat until -1 occurs
 
+        data = (
+            3701, 37, 995,
+            1, ELEMENT, 466.2,
+            3, 249311, THRU, 250189, -1,
+            3, 250656, THRU, 251905, -1,
+            3, 270705, THRU, 275998, -1,
+            3, 332687, THRU, 334734, -1,
+            -2,
+
+            2, ELEMENT, 77.7,
+            3, 225740, THRU 227065, -1,
+            3, 227602, THRU, 228898, -1,
+            3, 229435, THRU, 230743, -1,
+            3, 231280, THRU, 233789, -1,
+            3, 233922, THRU, 235132, -1,
+            3, 235265, THRU, 236463, -1,
+            3, 338071, THRU, 341134, -1, -2)
         """
+        #ints    = (1, ELEMENT, 466.2,
+        #           3, 249311, THRU, 250189, -1,
+        #           3, 250656, THRU, 251905, -1,
+        #           3, 270705, THRU, 275998, -1,
+        #           3, 332687, THRU, 334734, -1,
+        #           -2,
+        #
+        #           2, ELEMENT, 77.7,
+        #           3, 225740, THRU 227065, -1,
+        #           3, 227602, THRU, 228898, -1,
+        #           3, 229435, THRU, 230743, -1,
+        #           3, 231280, THRU, 233789, -1,
+        #           3, 233922, THRU, 235132, -1,
+        #           3, 235265, THRU, 236463, -1,
+        #           3, 338071, THRU, 341134, -1, -2)
+
         n0 = n
         #self.show_data(data[n:])
         ints = np.frombuffer(data[n:], self.idtype8).copy()
@@ -249,6 +282,8 @@ class EPT(GeomCommon):
         istart = [0] + list(iminus2[:-1] + 1)
         iend = iminus2
         #print(istart, iend)
+        assert len(data[n:]) > 12, data[n:]
+        #self.show_data(data[n:], types='ifs')
 
         ncards = 0
         istart = [0] + list(iend + 1)
@@ -259,30 +294,45 @@ class EPT(GeomCommon):
             sid = ints[i0]
             nsm_type = data[n0+(i0+1)*size:n0+(i0+2)*size].decode('latin1').rstrip()
             value = float(floats[i0+3])
-            spec_opt = ints[i0+4]
-            #print(sid, nsm_type, value, spec_opt)
+            #print(f'sid={sid} nsm_type={nsm_type} value={value}')
 
             iminus1 = i0 + np.where(ints[i0:i1] == -1)[0]
             #print('-1', iminus1)
             #print('-2', iminus2)
-            istart2 = [i0 + 5] + list(iminus1[:-1] + 1)
+            istart2 = [i0 + 4] + list(iminus1[:-1] + 1)
             iend2 = iminus1
             #print(istart2, iend2)
 
-            if spec_opt == 1:
-                # 6 ID I Property of element identification number
-                for istarti, iendi in zip(istart2, iend2):
+            for istarti, iendi in zip(istart2, iend2):
+                #print(istarti, iendi)
+                spec_opt = ints[istarti] # 4
+                #print(f'ints[{istarti}] = spec_opt = {spec_opt}')
+                if spec_opt == 1:
+                    # 6 ID I Property of element identification number
+
                     ivalues = list(range(istarti, iendi))
                     #print('ivalues =', ivalues)
                     pid_eids = ints[ivalues].tolist()
-                    #print('pids =', pid_eids)
-            else:
-                raise NotImplementedError(spec_opt)
+                    #print('pid_eids =', pid_eids)
+                elif spec_opt == 3:
+                    # datai = (3, 249311, 'THRU    ', 250189)
+                    #print(f'i0={i0}')
+                    #datai = data[n0+(i0+6)*size:n0+i1*size]
+                    #self.show_data(datai)
+                    ids = ints[istarti:iendi]
+                    istart = ids[1]
+                    iend = ids[-1]
+                    pid_eids = list(range(istart, iend+1))
+                else:
+                    raise NotImplementedError(spec_opt)
+
             if nsm_type == 'ELEM':
                 nsm_type = 'ELEMENT'
             #for pid_eid in pid_eids:
             #nsml = self.add_nsml1(sid, nsm_type, pid_eids, [value])
+            assert len(pid_eids) > 0, pid_eids
             nsml1 = self.add_nsml1(sid, nsm_type, value, pid_eids)
+            #print(nsml1)
             str(nsml1)
             n += (i1 - i0 + 1) * size
             ncards += 1
@@ -407,6 +457,13 @@ class EPT(GeomCommon):
             elif spec_opt == 2:
                 word = data[n0+(i0+6)*size:n0+i1*size]
                 ids = word
+            elif spec_opt == 3:  # thru
+                # datai = (249311, 'THRU    ', 250189)
+                #datai = data[n0+(i0+6)*size:n0+i1*size]
+                ids = ints[i0+6:i1]
+                istart = ids[0]
+                iend = ids[-1]
+                ids = list(range(istart, iend+1))
             else:
                 raise NotImplementedError(spec_opt)
             #print(sid, nsm_type, zero_two, value, ids)

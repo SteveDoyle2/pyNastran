@@ -1325,7 +1325,6 @@ class EDOM(GeomCommon):
             ##, undef1, undef2, atta, attb, mone
             #label = reshape_bytes_block(label_bytes).decode('latin1').rstrip()
             #print(dresp1_id, label, flag)
-            #sss
             #self.show_data
         #ddd
         return n

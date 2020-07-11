@@ -1,7 +1,7 @@
 # coding: utf-8
 #pylint disable=C0103
 from itertools import count
-from typing import List
+from typing import Tuple, List
 import numpy as np
 
 from pyNastran.utils.numpy_utils import integer_types
@@ -50,7 +50,7 @@ class RealPlateArray(OES_Object):
         elif self.element_type == 75:  # CTRIA6
             nnodes_per_element = 4
         else:
-            raise NotImplementedError('name=%r type=%s' % (self.element_name, self.element_type))
+            raise NotImplementedError(f'name={self.element_name!r} type={self.element_type}')
         return nnodes_per_element
 
     def _reset_indices(self):
@@ -86,6 +86,9 @@ class RealPlateArray(OES_Object):
 
         #factor = self.size // 4
         nnodes_per_element = self.nnodes_per_element
+        #print(self.code_information())
+        print('nnodes_per_element =', nnodes_per_element)
+        nlayers_per_element = 2 * nnodes_per_element
 
         #print('nnodes_per_element[%s, %s] = %s' % (
             #self.isubcase, self.element_type, nnodes_per_element))
@@ -105,11 +108,23 @@ class RealPlateArray(OES_Object):
             #self.nelements, self.ntotal))
         dtype, idtype, fdtype = get_times_dtype(self.nonlinear_factor, self.size)
 
-        _times = np.zeros(self.ntimes, dtype=dtype)
-        element_node = np.zeros((self.nelements, 2), dtype=idtype)
+        if self.is_sort1:
+            ntimes = self.ntimes
+            nlayers = self.nelements
+        else:
+            print(self.ntimes, self.nelements, self.ntotal, self._ntotals)
+            ntimes = self.nelements
+            #print(self.code_information())
+            nlayers = self._ntotals[0] * nlayers_per_element
+            print('***', self.element_name, nlayers)
+            #assert nelements == 4, self.ntimes
+            #nelements = 4
+            #nelements = = self.ntimes // 2
+        _times = np.zeros(ntimes, dtype=dtype)
+        element_node = np.zeros((nlayers, 2), dtype=idtype)
 
         #[fiber_dist, oxx, oyy, txy, angle, majorP, minorP, ovm]
-        data = np.zeros((self.ntimes, self.nelements, 8), dtype=fdtype)
+        data = np.zeros((ntimes, nlayers, 8), dtype=fdtype)
         if self.load_as_h5:
             #for key, value in sorted(self.data_code.items()):
                 #print(key, value)
@@ -231,7 +246,6 @@ class RealPlateArray(OES_Object):
     def add_new_eid_sort1(self, dt, eid, node_id,
                           fiber_dist1, oxx1, oyy1, txy1, angle1, major_principal1, minor_principal1, ovm1,
                           fiber_dist2, oxx2, oyy2, txy2, angle2, major_principal2, minor_principal2, ovm2):
-        sss
         assert isinstance(eid, integer_types), eid
         assert isinstance(node_id, integer_types), node_id
         self._times[self.itime] = dt
@@ -257,6 +271,85 @@ class RealPlateArray(OES_Object):
                                                  major_principal1, minor_principal1, ovm1]
         self.data[self.itime, self.itotal+1, :] = [fiber_dist2, oxx2, oyy2, txy2, angle2,
                                                    major_principal2, minor_principal2, ovm2]
+        self.itotal += 2
+        #self.ielement += 2
+
+    def _get_sort2_itime_ilower_iupper_from_itotal(self, dt, eid: int, nid: int) -> Tuple[int, int, int]:
+        # the monotonic element index (no duplicates)
+        ielement = self.itime
+
+        itime = self.itime
+        #ie_upper = self.ielement
+        #ie_lower = self.ielement + 1
+        itotal = self.itotal
+        #inid = 0
+        nnodes = self.nnodes_per_element
+        #itime = self.ielement // nnodes
+
+        ilayer = self.itotal % 2 == 0 # 0/1
+        inid = self.itotal // 2
+        #inid = self.ielement % nnodes
+        #itotal = self.itotal
+        #if itime >= self.data.shape[0]:# or itotal >= self.element_node.shape[0]:
+        ielement = self.itime
+        if self.element_name == 'CQUAD8':
+            print(f'*SORT2 {self.element_name}: itime={itime} ielement={ielement} ilayer={ilayer}  inid={inid} itotal={itotal} dt={dt} eid={eid} nid={nid}')
+            print(f'*SORT2 {self.element_name}: itime={itime} ielement={ielement} ilayer=False inid={inid} itotal={itotal+1} dt={dt} eid={eid} nid={nid}')
+            #print(self.data.shape)
+            #print(self.element_node.shape)
+        #else:
+        #aaa
+        #print(itime, inid, ielement)
+
+        #ibase = 2 * ielement # ctria3/cquad4-33
+        ibase = 2 * (ielement * nnodes + inid)
+        ie_upper = ibase
+        ie_lower = ibase + 1
+
+        #if self.element_name == 'CTRIAR': # and self.table_name == 'OESATO2':
+        debug = False
+        if self.element_name == 'CTRIAR': # and self.table_name in ['OSTRRMS1', 'OSTRRMS2']:
+            debug = True
+        if debug:
+            print(f'SORT2 {self.table_name} {self.element_name}: itime={itime} ie_upper={ie_upper} ielement={self.itime} inid={inid} nid={nid} itotal={itotal} dt={dt} eid={eid} nid={nid}')
+            print(f'SORT2 {self.table_name} {self.element_name}: itime={itime} ie_lower={ie_lower} ielement={self.itime} inid={inid} nid={nid} itotal={itotal+1} dt={dt} eid={eid} nid={nid}')
+        return itime, ie_upper, ie_lower
+
+    def add_new_eid_sort2(self, dt, eid, node_id,
+                          fiber_dist1, oxx1, oyy1, txy1, angle1, major_principal1, minor_principal1, ovm1,
+                          fiber_dist2, oxx2, oyy2, txy2, angle2, major_principal2, minor_principal2, ovm2):
+        assert isinstance(eid, integer_types), eid
+        assert isinstance(node_id, integer_types), node_id
+        #itime, itotal = self._get_sort2_itime_ielement_from_itotal()
+        itime, ie_upper, ie_lower = self._get_sort2_itime_ilower_iupper_from_itotal(dt, eid, node_id)
+        self._times[itime] = dt
+        print(f'itime={itime} -> dt={dt};   ie_upper={ie_upper} -> eid={eid}')
+        #assert self.itotal == 0, oxx
+        #if itime == 0:
+            #self.element_node[ie_upper, :] = [eid, node_id]  # 0 is center
+            #self.element_node[ie_lower, :] = [eid, node_id]  # 0 is center
+        #self.data[self.itime, ie_upper, :] = [fiber_dist1, oxx1, oyy1, txy1, angle1,
+                                              #major_principal1, minor_principal1, ovm1]
+        #self.data[self.itime, ie_lower, :] = [fiber_dist2, oxx2, oyy2, txy2, angle2,
+                                              #major_principal2, minor_principal2, ovm2]
+        self.itotal += 2
+        #self.ielement += 1
+
+    def add_sort2(self, dt, eid, node_id,
+                  fiber_dist1, oxx1, oyy1, txy1, angle1, major_principal1, minor_principal1, ovm1,
+                  fiber_dist2, oxx2, oyy2, txy2, angle2, major_principal2, minor_principal2, ovm2):
+        assert eid is not None, eid
+        assert isinstance(eid, integer_types) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
+        assert isinstance(node_id, integer_types), node_id
+        itime, ie_upper, ie_lower = self._get_sort2_itime_ilower_iupper_from_itotal(dt, eid, node_id)
+        print(f'itime={itime} -> dt={dt};   ie_upper={ie_upper} -> eid={eid}')
+        print(self.element_node.shape)
+        self.element_node[ie_upper, :] = [eid, node_id]
+        self.element_node[ie_lower, :] = [eid, node_id]
+        self.data[itime, ie_upper, :] = [fiber_dist1, oxx1, oyy1, txy1, angle1,
+                                       major_principal1, minor_principal1, ovm1]
+        self.data[itime, ie_lower, :] = [fiber_dist2, oxx2, oyy2, txy2, angle2,
+                                         major_principal2, minor_principal2, ovm2]
         self.itotal += 2
         #self.ielement += 2
 
@@ -291,8 +384,8 @@ class RealPlateArray(OES_Object):
                                                                  str(', '.join(headers))))
         msg.append(f'  element_node.shape = {self.element_node.shape}\n')
         msg.append(f'  data.shape={self.data.shape}\n')
-        msg.append(f'  element type: {self.element_name}\n')
-        msg.append('  s_code: %s\n' % self.s_code)
+        msg.append(f'  element type: {self.element_name}-{self.element_type}\n')
+        msg.append(f'  s_code: {self.s_code}\n')
         msg += self.get_data_code()
         return msg
 

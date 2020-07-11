@@ -68,6 +68,7 @@ from pyNastran.op2.tables.oes_stressStrain.random.oes_bars import RandomBarStres
 from pyNastran.op2.tables.oes_stressStrain.random.oes_beams import RandomBeamStressArray, RandomBeamStrainArray
 from pyNastran.op2.tables.oes_stressStrain.random.oes_bend import RandomBendStressArray, RandomBendStrainArray
 from pyNastran.op2.tables.oes_stressStrain.random.oes_plates import RandomPlateStressArray, RandomPlateStrainArray
+from pyNastran.op2.tables.oes_stressStrain.random.oes_plates_vm import RandomPlateStressVMArray, RandomPlateStrainVMArray
 from pyNastran.op2.tables.oes_stressStrain.random.oes_solids import RandomSolidStressArray, RandomSolidStrainArray
 from pyNastran.op2.tables.oes_stressStrain.random.oes_shear import RandomShearStressArray, RandomShearStrainArray
 from pyNastran.op2.tables.oes_stressStrain.random.oes_composite_plates import RandomCompositePlateStressArray, RandomCompositePlateStrainArray
@@ -4478,12 +4479,12 @@ class OES(OP2Common):
                 obj.data[obj.itime, itotal:itotal2, :] = floats1.copy()
                 obj.itotal = itotal2
                 obj.ielement = ielement2
-                assert obj.element_node[:, 0].min() > 0, obj.element_node[:, 0]
             else:
                 if is_vectorized and self.use_vector:  # pragma: no cover
                     self.log.debug(f'vectorize {self.element_name}-{self.element_type} real '
                                    f'SORT{self.sort_method}')
                 n = oes_quad4_33_real_17(self, data, obj, ntotal, nelements, dt)
+            if self.is_sort1:
                 assert obj.element_node[:, 0].min() > 0, obj.element_node[:, 0].shape
 
         elif result_type == 1 and self.num_wide == 15:  # imag
@@ -4678,9 +4679,9 @@ class OES(OP2Common):
 
             element_id = self.nonlinear_factor
             if self.is_stress:
-                obj_vector_random = RandomPlateStressArray
+                obj_vector_random = RandomPlateStressVMArray
             else:
-                obj_vector_random = RandomPlateStrainArray
+                obj_vector_random = RandomPlateStrainVMArray
             self.data_code['nonlinear_factor'] = element_id
 
             if self._results.is_not_saved(result_name):
@@ -4728,7 +4729,7 @@ class OES(OP2Common):
                 obj.itotal = itotal2
                 obj.ielement = ielement2
             else:
-                n = oes_cquad4_33_random_11(self, data, obj, nelements, ntotal)
+                n = oes_cquad4_33_random_vm_11(self, data, obj, nelements, ntotal)
 
         elif result_type == 1 and self.num_wide == 17 and self.table_name in [b'OESVM1', b'OESVM2', b'OSTRVM1', b'OSTRVM2']: # freq
             # Table of element stresses for frequency response analysis that includes
@@ -4859,12 +4860,12 @@ class OES(OP2Common):
                 obj._times[obj.itime] = dt
                 obj.itotal += nlayers
                 n = nbytes
-                assert obj.element_node[:, 0].min() > 0, obj.element_node[:, 0]
             else:
                 if is_vectorized and self.use_vector:  # pragma: no cover
                     self.log.debug('vectorize CTRIA3 real SORT%s' % self.sort_method)
                 n = oes_ctria3_real_17(self, data, obj,
                                        ntotal, nelements, dt)
+            if self.is_sort1:
                 assert obj.element_node[:, 0].min() > 0, obj.element_node[:, 0]
 
         elif self.format_code in [2, 3] and self.num_wide == 15:  # imag
@@ -4988,8 +4989,8 @@ class OES(OP2Common):
             #    ID.        DISTANCE              NORMAL-X                       NORMAL-Y                      SHEAR-XY               VON MISES
             #0       1  -4.359080E+00  -1.391918E+00 /  2.474756E-03  -1.423926E+00 /  2.530494E-03   2.655153E-02 / -5.158625E-05   1.408948E+00
             #            4.359080E+00   1.391918E+00 / -2.474756E-03   1.423926E+00 / -2.530494E-03  -2.655153E-02 /  5.158625E-05   1.408948E+00
-            n = oes_ctria3_complex_17(self, data, obj, nelements, ntotal, dt,
-                                      is_magnitude_phase)
+            n = oes_ctria3_complex_vm_17(self, data, obj, nelements, ntotal, dt,
+                                         is_magnitude_phase)
             assert n is not None, n
 
         elif self.format_code in [1, 2, 3] and self.num_wide == 11: # random; CTRIA3
@@ -5007,9 +5008,9 @@ class OES(OP2Common):
 
             element_id = self.nonlinear_factor
             if self.is_stress:
-                obj_vector_random = RandomPlateStressArray
+                obj_vector_random = RandomPlateStressVMArray
             else:
-                obj_vector_random = RandomPlateStrainArray
+                obj_vector_random = RandomPlateStrainVMArray
             self.data_code['nonlinear_factor'] = element_id
 
             if self._results.is_not_saved(result_name):
@@ -5059,7 +5060,7 @@ class OES(OP2Common):
             else:
                 if is_vectorized and self.use_vector and obj.itime == 0:  # pragma: no cover
                     self.log.debug('vectorize CTRIA3 random numwide=11 SORT%s' % self.sort_method)
-                n = oes_ctria3_random_11(self, data, obj, nelements, ntotal)
+                n = oes_ctria3_random_vm_11(self, data, obj, nelements, ntotal)
 
         elif self.format_code in [1, 2] and self.num_wide == 9: # random MSC stress/strain; CTRIA3
             # _oes_cquad4 is the same as _oes_ctria3
@@ -5281,6 +5282,7 @@ class OES(OP2Common):
 
                 n = oes_cquad4_144_real(self, data, ndata, obj,
                                         nelements, nnodes, dt)
+            if self.is_sort1:
                 assert obj.element_node[:, 0].min() > 0, obj.element_node[:, 0]
 
         elif result_type == 1 and self.num_wide == numwide_imag:  # complex
@@ -5597,7 +5599,6 @@ class OES(OP2Common):
                     eids = ints[:, 0] // 10
                     #eids2 = vstack([eids, eids]).T.ravel()
                     #print(eids.tolist())
-                    #sss
                     obj.element[ielement:ielement2] = eids  # 150
                      #print(obj.element_node[:10, :])
 
@@ -7644,6 +7645,7 @@ def oes_cbeam_complex_111(self, data: bytes,
     else:
         s2 = Struct(self._endian + b'q9d')
 
+    add_sort_x = getattr(obj, 'add_sort' + str(self.sort_method))
     for unused_i in range(nelements):
         edata = data[n:n+n1]
         n += n1
@@ -7669,8 +7671,8 @@ def oes_cbeam_complex_111(self, data: bytes,
             exe = complex(exer, exei)
             exf = complex(exfr, exfi)
 
-        obj.add_sort1(dt, eid, grid, sd,
-                      exc, exd, exe, exf)
+        add_sort_x(dt, eid, grid, sd,
+                   exc, exd, exe, exf)
 
         for unused_inode in range(nnodes):
             edata = data[n:n+n2]
@@ -7691,8 +7693,8 @@ def oes_cbeam_complex_111(self, data: bytes,
                 exe = complex(exer, exei)
                 exf = complex(exfr, exfi)
 
-            obj.add_sort1(dt, eid, grid, sd,
-                          exc, exd, exe, exf)
+            add_sort_x(dt, eid, grid, sd,
+                       exc, exd, exe, exf)
             if self.is_debug_file:
                 self.binary_debug.write('CBEAM-2 - eid=%i out2=%s\n' % (eid, str(out2)))
     return n
@@ -7705,6 +7707,7 @@ def oes_cbeam_random_67(self, data: bytes,
     n2 = 24 # 6*4
     s1 = Struct(self._endian + self._analysis_code_fmt + b'i5f')
     s2 = Struct(self._endian + b'i5f')
+    add_sort_x = getattr(obj, 'add_sort' + str(self.sort_method))
     for unused_i in range(nelements):
         edata = data[n:n+n1]
         n += n1
@@ -7725,7 +7728,7 @@ def oes_cbeam_random_67(self, data: bytes,
             n += n2
             out = s2.unpack(edata)
             # (grid, sd, sxc, sxd, sxe, sxf, smax, smin, mst, msc) = out
-            obj.add_sort1(dt, eid, *out)
+            add_sort_x(dt, eid, *out)
     return n
 
 def oes_cquad4_33_complex_15(self,
@@ -7768,9 +7771,9 @@ def oes_cquad4_33_complex_15(self,
             txy1 = complex(txy1r, txy1i)
             txy2 = complex(txy2r, txy2i)
 
-        obj.add_sort1(dt, eid, cen,
-                      fd1, sx1, sy1, txy1,
-                      fd2, sx2, sy2, txy2)
+        add_sort_x(dt, eid, cen,
+                   fd1, sx1, sy1, txy1,
+                   fd2, sx2, sy2, txy2)
 
         for unused_inode in range(nnodes):  # nodes pts
             edata = data[n:n+ntotal]  # 4*15=60
@@ -7876,6 +7879,8 @@ def oes_cquad4_144_complex_77(self,
 
     ntotal1 = 8 * self.factor
     ntotal2 = 60 * self.factor  # 4*15
+
+    add_sort_x = getattr(obj, 'add_sort' + str(self.sort_method))
     for unused_i in range(nelements):
         (eid_device, _) = s1.unpack(data[n:n+ntotal1])
         n += ntotal1
@@ -7907,9 +7912,9 @@ def oes_cquad4_144_complex_77(self,
             txy1 = complex(txy1r, txy1i)
             txy2 = complex(txy2r, txy2i)
 
-        obj.add_sort1(dt, eid, grid_center,
-                      fd1, sx1, sy1, txy1,
-                      fd2, sx2, sy2, txy2)
+        add_sort_x(dt, eid, grid_center,
+                   fd1, sx1, sy1, txy1,
+                   fd2, sx2, sy2, txy2)
 
         for unused_node_id in range(nnodes):  # nodes pts
             edata = data[n:n + ntotal2]
@@ -7936,9 +7941,9 @@ def oes_cquad4_144_complex_77(self,
                 txy1 = complex(txy1r, txy1i)
                 txy2 = complex(txy2r, txy2i)
 
-            obj.add_sort1(dt, eid, grid,
-                          fd1, sx1, sy1, txy1,
-                          fd2, sx2, sy2, txy2)
+            add_sort_x(dt, eid, grid,
+                       fd1, sx1, sy1, txy1,
+                       fd2, sx2, sy2, txy2)
     return n
 
 def oes_cquad4_33_random_9(self, data: bytes,
@@ -8027,12 +8032,12 @@ def oes_quad4_33_real_17(self, data: bytes,
         n += ntotal
     return n
 
-def oes_ctria3_complex_17(self,
-                          data: bytes,
-                          obj: Union[ComplexPlateStressArray, ComplexPlateStrainArray],
-                          nelements: int, ntotal: int,
-                          dt,
-                          is_magnitude_phase: bool) -> int:
+def oes_ctria3_complex_vm_17(self,
+                             data: bytes,
+                             obj: Union[ComplexPlateStressArray, ComplexPlateStrainArray],
+                             nelements: int, ntotal: int,
+                             dt,
+                             is_magnitude_phase: bool) -> int:
     """
     #                   C O M P L E X   S T R E S S E S   I N   T R I A N G U L A R   E L E M E N T S   ( T R I A 3 )
     #                                                          (REAL/IMAGINARY)
@@ -8108,13 +8113,13 @@ def oes_ctria3_random_9(self, data: bytes,
         n += ntotal
     return n
 
-def oes_cquad4_33_random_11(self, data: bytes,
-                            obj: Union[RandomPlateStressArray, RandomPlateStrainArray],
-                            nelements: int, ntotal: int) -> int:
+def oes_cquad4_33_random_vm_11(self, data: bytes,
+                               obj: Union[RandomPlateStressVMArray, RandomPlateStrainVMArray],
+                               nelements: int, ntotal: int) -> int:
     struct1 = Struct(self._endian + self._analysis_code_fmt + b'10f')
     cen = 0 # CEN/4
     n = 0
-    add_ovm_sort_x = getattr(obj, 'add_ovm_sort' + str(self.sort_method))
+    add_sort_x = getattr(obj, 'add_sort' + str(self.sort_method))
     for unused_i in range(nelements):
         edata = data[n:n+ntotal]
         out = struct1.unpack(edata)
@@ -8131,19 +8136,19 @@ def oes_cquad4_33_random_11(self, data: bytes,
             self.binary_debug.write('  eid=%i C=[%s]\n' % (
                 eid, ', '.join(['%r' % di for di in out])))
 
-        add_ovm_sort_x(dt, eid, cen,
-                       fd1, sx1, sy1, txy1, ovm1,
-                       fd2, sx2, sy2, txy2, ovm2)
+        add_sort_x(dt, eid, cen,
+                   fd1, sx1, sy1, txy1, ovm1,
+                   fd2, sx2, sy2, txy2, ovm2)
         n += ntotal
     return n
 
-def oes_ctria3_random_11(self, data: bytes,
-                         obj: Union[RandomPlateStressArray, RandomPlateStrainArray],
-                         nelements: int, ntotal: int) -> int:
+def oes_ctria3_random_vm_11(self, data: bytes,
+                            obj: Union[RandomPlateStressArray, RandomPlateStrainArray],
+                            nelements: int, ntotal: int) -> int:
     n = 0
     struct1 = Struct(self._endian + self._analysis_code_fmt + b'10f')
 
-    add_ovm_sort_x = getattr(obj, 'add_ovm_sort' + str(self.sort_method))
+    add_sort_x = getattr(obj, 'add_sort' + str(self.sort_method))
     cen = 0 # CEN/4
     for unused_i in range(nelements):
         edata = data[n:n+ntotal]
@@ -8162,9 +8167,9 @@ def oes_ctria3_random_11(self, data: bytes,
             self.binary_debug.write('  eid=%i C=[%s]\n' % (
                 eid, ', '.join(['%r' % di for di in out])))
 
-        add_ovm_sort_x(dt, eid, cen,
-                       fd1, sx1, sy1, txy1, ovm1,
-                       fd2, sx2, sy2, txy2, ovm2)
+        add_sort_x(dt, eid, cen,
+                  fd1, sx1, sy1, txy1, ovm1,
+                  fd2, sx2, sy2, txy2, ovm2)
         n += ntotal
     return n
 
@@ -8181,6 +8186,8 @@ def oes_cquad4_144_real(self, data: bytes, ndata: int,
     cs = Struct(center_format)
     ns = Struct(node_format)
 
+    add_new_eid_sort_x = getattr(obj, 'add_new_eid_sort' + str(self.sort_method))
+    add_sort_x = getattr(obj, 'add_sort' + str(self.sort_method))
     if self.is_debug_file:
         self.binary_debug.write(
             '  [cap, element1, element2, ..., cap]\n'
@@ -8209,10 +8216,9 @@ def oes_cquad4_144_real(self, data: bytes, ndata: int,
         #print(out[:3])
         if self.is_debug_file:
             self.binary_debug.write('  eid=%i; C=[%s]\n' % (eid, ', '.join(['%r' % di for di in out])))
-
-        obj.add_new_eid_sort1(dt, eid, grid_center,
-                              fd1, sx1, sy1, txy1, angle1, major1, minor1, vm1,
-                              fd2, sx2, sy2, txy2, angle2, major2, minor2, vm2)
+        add_new_eid_sort_x(dt, eid, grid_center,
+                           fd1, sx1, sy1, txy1, angle1, major1, minor1, vm1,
+                           fd2, sx2, sy2, txy2, angle2, major2, minor2, vm2)
         n += n76
         for inode in range(nnodes):
             out = ns.unpack(data[n:n + n68])
@@ -8228,9 +8234,9 @@ def oes_cquad4_144_real(self, data: bytes, ndata: int,
             assert isinstance(grid, int), grid
             assert grid > 0, grid
 
-            obj.add_sort1(dt, eid, grid,
-                          fd1, sx1, sy1, txy1, angle1, major1, minor1, vm1,
-                          fd2, sx2, sy2, txy2, angle2, major2, minor2, vm2)
+            add_sort_x(dt, eid, grid,
+                       fd1, sx1, sy1, txy1, angle1, major1, minor1, vm1,
+                       fd2, sx2, sy2, txy2, angle2, major2, minor2, vm2)
             n += n68
     return n
 
@@ -8417,6 +8423,7 @@ def oes_cbush_real_7(self, data: bytes,
                      nelements: int, ntotal: int, dt) -> int:
     n = 0
     struct1 = Struct(self._endian + mapfmt(self._analysis_code_fmt + b'6f', self.size))
+    add_sort_x = getattr(obj, 'add_sort' + str(self.sort_method))
     for unused_i in range(nelements):
         edata = data[n:n + ntotal]
         out = struct1.unpack(edata)  # num_wide=7
@@ -8427,7 +8434,7 @@ def oes_cbush_real_7(self, data: bytes,
         eid, dt = get_eid_dt_from_eid_device(
             eid_device, self.nonlinear_factor, self.sort_method)
 
-        obj.add_sort1(dt, eid, tx, ty, tz, rx, ry, rz)
+        add_sort_x(dt, eid, tx, ty, tz, rx, ry, rz)
         n += ntotal
     return n
 
@@ -8442,6 +8449,7 @@ def oes_ctriax_complex_37(self,
     s1 = Struct(self._endian + mapfmt(self._analysis_code_fmt + b'i8f', self.size)) # 10*4 = 40
     s2 = Struct(self._endian + mapfmt(b'i8f', self.size))  #  9*4 = 36
 
+    add_sort_x = getattr(obj, 'add_sort' + str(self.sort_method))
     for unused_i in range(nelements):
         out = s1.unpack(data[n:n + ntotal1])
         (eid_device, loc, rsr, rsi, azsr, azsi, Asr, Asi, ssr, ssi) = out
@@ -8483,7 +8491,7 @@ def oes_ctriax_complex_37(self,
                 azs = complex(azsr, azsi)
                 As = complex(Asr, Asi)
                 ss = complex(ssr, ssi)
-            obj.add_sort1(dt, eid, loc, rs, azs, As, ss)
+            add_sort_x(dt, eid, loc, rs, azs, As, ss)
             n += ntotal2  # 4*8
     return n
 

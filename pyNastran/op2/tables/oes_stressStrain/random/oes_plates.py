@@ -8,13 +8,13 @@ from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import (
     StressObject, StrainObject, OES_Object)
 from pyNastran.f06.f06_formatting import write_float_13e, write_float_10e, _eigenvalue_header
 
-BASIC_TABLES = {
-    'OESATO1', 'OESCRM1', 'OESPSD1', 'OESRMS1', 'OESNO1',
-    'OESATO2', 'OESCRM2', 'OESPSD2', 'OESRMS2', 'OESNO2',
-    'OSTRATO1', 'OSTRCRM1', 'OSTRPSD1', 'OSTRRMS1', 'OSTRNO1',
-    'OSTRATO2', 'OSTRCRM2', 'OSTRPSD2', 'OSTRRMS2', 'OSTRNO2',
-}
-VM_TABLES = {'OESXRMS1', 'OESXNO1'}
+#BASIC_TABLES = {
+    #'OESATO1', 'OESCRM1', 'OESPSD1', 'OESRMS1', 'OESNO1',
+    #'OESATO2', 'OESCRM2', 'OESPSD2', 'OESRMS2', 'OESNO2',
+    #'OSTRATO1', 'OSTRCRM1', 'OSTRPSD1', 'OSTRRMS1', 'OSTRNO1',
+    #'OSTRATO2', 'OSTRCRM2', 'OSTRPSD2', 'OSTRRMS2', 'OSTRNO2',
+#}
+#VM_TABLES = {'OESXRMS1', 'OESXNO1'}
 
 
 class RandomPlateArray(OES_Object):
@@ -71,73 +71,42 @@ class RandomPlateArray(OES_Object):
             # old
             #ntimes = self.ntimes
             #nelements = self.nelements
-            if self.has_von_mises:
-                #print('self._ntotals =', self._ntotals)
-                ntimes = len(self._ntotals)
-                ntotal = self._ntotals[0]
+            ntimes = len(self._ntotals)
+            ntotal = self._ntotals[0]
+            nelements = ntotal // 2
 
-                # nelements is the number of physical elements
-                nelements = ntotal // 2
-
-                # there are nlayers_per_nnode
-                nlayers_per_nnode = 2
-
-                # there are nnodes per element; nnodes
-                # thus nlayers
-                nlayers = nelements * nlayers_per_nnode * nnodes
-                assert nlayers == ntotal, f'nlayers={nlayers} ntotal={ntotal}'
-                assert nlayers == 2, nlayers
-
-                # we also have nelements_nnodes, which is used in:
-                #  - elmement_node
-                nelements_nnodes = nelements * nnodes
-            else:
-                ntimes = len(self._ntotals)
-                ntotal = self._ntotals[0]
-                nelements = ntotal // 2
-
-                #ntotal = self.ntotal
-                #ny = nelements * 2
-                nelements_nnodes = nelements * 2
-                nlayers = nelements * 2 * nnodes
-                assert nlayers == ntotal, f'nlayers={nlayers} ntotal={ntotal}'
+            #ntotal = self.ntotal
+            #ny = nelements * 2
+            nelements_nnodes = nelements * 2
+            nlayers = nelements * 2 * nnodes
+            assert nlayers == ntotal, f'nlayers={nlayers} ntotal={ntotal}'
             #nx = ntimes
             #ny = nelements_nnodes
             #ntotal = nelements * 2
             #if self.element_name in ['CTRIA3', 'CQUAD8']:
             #print(f"SORT1 ntimes={ntimes} nelements={nelements} ntotal={ntotal}")
         elif self.is_sort2:
-            if self.has_von_mises:
-                #print('self._ntotals', self._ntotals)
-                nelements = len(self._ntotals)
-                ntotal = self._ntotals[0]
-                ntimes = ntotal // 2 // nnodes
+            # ntotal=164
+            # len(_ntotals) = 4580 -> nelements=4580
+            # nfreqs=82
+            # flip this to sort1?
+            #ntimes = self.ntotal
+            #nnodes = self.ntimes
+            #ntotal = nnodes
+            #nelements = self.ntimes
+            #ntimes = self.nelements # // nelements
+            #ntotal = self.ntotal
+            nelements = len(self._ntotals)
+            ntotal = self._ntotals[0]
+            ntimes = ntotal // 2 // nnodes
 
-                #print(self._ntotals)
-                ntotal = self._ntotals[0]
-                nlayers = nelements * 2 * nnodes
-            else:
-                # ntotal=164
-                # len(_ntotals) = 4580 -> nelements=4580
-                # nfreqs=82
-                # flip this to sort1?
-                #ntimes = self.ntotal
-                #nnodes = self.ntimes
-                #ntotal = nnodes
-                #nelements = self.ntimes
-                #ntimes = self.nelements # // nelements
-                #ntotal = self.ntotal
-                nelements = len(self._ntotals)
-                ntotal = self._ntotals[0]
-                ntimes = ntotal // 2 // nnodes
-
-                #print(self._ntotals)
-                ntotal = self._ntotals[0]
-                #nelements = len(self._ntotals)
-                #ntimes = ntotal // 2
-                #ntimes, nelements = nelements_real, ntimes_real
-                #ntotal = self.ntotal
-                nlayers = nelements * 2 * nnodes
+            #print(self._ntotals)
+            ntotal = self._ntotals[0]
+            #nelements = len(self._ntotals)
+            #ntimes = ntotal // 2
+            #ntimes, nelements = nelements_real, ntimes_real
+            #ntotal = self.ntotal
+            nlayers = nelements * 2 * nnodes
             #ny = nlayers
             #nx = ntimes
             #if self.element_name in ['CTRIA3', 'CQUAD8']:
@@ -186,13 +155,9 @@ class RandomPlateArray(OES_Object):
         self.fiber_curvature = zeros(nlayers, 'float32')
 
         # [oxx, oyy, txy]
-        nresults = 3
-        if self.has_von_mises:
-            # ovm
-            nresults += 1
         #print('has_vm =', self.has_von_mises)
         #print(f'ntimes={self.ntimes} nelements={self.nelements} ntotal={self.ntotal}')
-        self.data = zeros((ntimes, nlayers, nresults), 'float32')
+        self.data = zeros((ntimes, nlayers, 3), 'float32')
 
     def build_dataframe(self):
         """creates a pandas dataframe"""
@@ -222,7 +187,7 @@ class RandomPlateArray(OES_Object):
             names=names,
         )
         #print(data_frame)
-        #self.dataframe = data_frame
+        self.dataframe = data_frame
 
     def __eq__(self, table):  # pragma: no cover
         assert self.is_sort1 == table.is_sort1
@@ -317,12 +282,7 @@ class RandomPlateArray(OES_Object):
         self.fiber_curvature[self.itotal] = fd2
         self.itotal += 1
 
-    def add_sort2(self, dt, eid, nid,
-                  fd1, oxx1, oyy1, txy1,
-                  fd2, oxx2, oyy2, txy2):
-        #if self.element_name == 'CTRIA3':
-        #assert self.element_node.max() == 0, self.element_node
-        #print(self.element_node, nid)
+    def _get_sort2_itime_ilower_iupper_from_itotal(self):
         nnodes = self.nnodes_per_element
         itime = self.ielement // nnodes
         inid = self.ielement % nnodes
@@ -346,7 +306,15 @@ class RandomPlateArray(OES_Object):
             #debug = True
             #print(f'SORT2 {self.table_name} {self.element_name}: itime={itime} ie_upper={ie_upper} ielement={self.itime} inid={inid} nid={nid} itotal={itotal} dt={dt} eid={eid} nid={nid} fd={fd1:.2f} oxx={oxx1:.2f}')
             #print(f'SORT2 {self.table_name} {self.element_name}: itime={itime} ie_lower={ie_lower} ielement={self.itime} inid={inid} nid={nid} itotal={itotal+1} dt={dt} eid={eid} nid={nid} fd={fd2:.2f} oxx={oxx2:.2f}')
+        return itime, ie_upper, ie_lower
 
+    def add_sort2(self, dt, eid, nid,
+                  fd1, oxx1, oyy1, txy1,
+                  fd2, oxx2, oyy2, txy2):
+        #if self.element_name == 'CTRIA3':
+        #assert self.element_node.max() == 0, self.element_node
+        #print(self.element_node, nid)
+        itime, ie_upper, ie_lower = self._get_sort2_itime_ilower_iupper_from_itotal()
         self._times[itime] = dt
         #print(self.element_types2, element_type, self.element_types2.dtype)
 
@@ -368,6 +336,7 @@ class RandomPlateArray(OES_Object):
 
         self.itotal += 2
         self.ielement += 1
+        debug = False
         if debug:
             print(self.element_node)
     #---------------------------------------------------------------------------
@@ -555,17 +524,7 @@ class RandomPlateArray(OES_Object):
                     f06_file.write('   %-13s  %6s   %-13s  %-13s  %s\n' % (
                         '', sfd, soxx, soyy, stxy))
                 ilayer0 = not ilayer0
-    @property
-    def has_von_mises(self):
-        """what is the form of the table (NX includes Von Mises)"""
-        if self.table_name in BASIC_TABLES:  # no von mises
-            has_von_mises = False
-        elif self.table_name in VM_TABLES:
-            has_von_mises = True
-        else:
-            msg = 'self.table_name=%s self.table_name_str=%s' % (self.table_name, self.table_name_str)
-            raise NotImplementedError(msg)
-        return has_von_mises
+
 
 def _get_plate_msg(self, is_mag_phase=True, is_sort1=True, has_von_mises: bool=False):
     #if self.is_von_mises:
@@ -573,45 +532,28 @@ def _get_plate_msg(self, is_mag_phase=True, is_sort1=True, has_von_mises: bool=F
     #else:
         #von_mises = 'MAX SHEAR'
 
-    if has_von_mises:
-        if self.is_stress:
-            if self.is_fiber_distance:
-                vm_msg_temp = [
-                    '                      FIBER                                   - STRESSES IN ELEMENT  COORDINATE SYSTEM -\n'
-                    '   ELEMENT-ID  GRID ID   DISTANCE         NORMAL-X        NORMAL-Y           SHEAR-XY          VON MISES\n'
-                ]
-                msg_temp = ['  ELEMENT       FIBRE                                     - STRESSES IN ELEMENT  COORDINATE SYSTEM -\n',
-                                  '    ID.       CURVATURE                  NORMAL-X                          NORMAL-Y                         SHEAR-XY\n']
-            else:
-                raise NotImplementedError('stress no fiber')
+    if self.is_stress:
+        if self.is_fiber_distance:
+            vm_msg_temp = ['    ELEMENT              FIBER                                  - STRESSES IN ELEMENT  COORDINATE SYSTEM -\n',
+                           '      ID      GRID-ID   DISTANCE                 NORMAL-X                        NORMAL-Y                       SHEAR-XY\n']
+            msg_temp = ['  ELEMENT       FIBRE                                     - STRESSES IN ELEMENT  COORDINATE SYSTEM -\n',
+                        '    ID.        DISTANCE                  NORMAL-X                          NORMAL-Y                         SHEAR-XY\n']
         else:
-            if self.is_fiber_distance:
-                raise NotImplementedError('strain fiber')
-            else:
-                raise NotImplementedError('strain no fiber')
+            vm_msg_temp = ['    ELEMENT              FIBRE                                  - STRESSES IN ELEMENT  COORDINATE SYSTEM -\n',
+                           '      ID      GRID-ID   CURVATURE                NORMAL-X                        NORMAL-Y                       SHEAR-XY\n']
+            msg_temp = ['  ELEMENT       FIBRE                                     - STRESSES IN ELEMENT  COORDINATE SYSTEM -\n',
+                        '    ID.       CURVATURE                  NORMAL-X                          NORMAL-Y                         SHEAR-XY\n']
     else:
-        if self.is_stress:
-            if self.is_fiber_distance:
-                vm_msg_temp = ['    ELEMENT              FIBER                                  - STRESSES IN ELEMENT  COORDINATE SYSTEM -\n',
-                               '      ID      GRID-ID   DISTANCE                 NORMAL-X                        NORMAL-Y                       SHEAR-XY\n']
-                msg_temp = ['  ELEMENT       FIBRE                                     - STRESSES IN ELEMENT  COORDINATE SYSTEM -\n',
-                            '    ID.        DISTANCE                  NORMAL-X                          NORMAL-Y                         SHEAR-XY\n']
-            else:
-                vm_msg_temp = ['    ELEMENT              FIBRE                                  - STRESSES IN ELEMENT  COORDINATE SYSTEM -\n',
-                               '      ID      GRID-ID   CURVATURE                NORMAL-X                        NORMAL-Y                       SHEAR-XY\n']
-                msg_temp = ['  ELEMENT       FIBRE                                     - STRESSES IN ELEMENT  COORDINATE SYSTEM -\n',
-                            '    ID.       CURVATURE                  NORMAL-X                          NORMAL-Y                         SHEAR-XY\n']
+        if self.is_fiber_distance:
+            vm_msg_temp = ['    ELEMENT              FIBER                                  - STRAINS IN ELEMENT  COORDINATE SYSTEM -\n',
+                           '      ID      GRID-ID   DISTANCE                 NORMAL-X                        NORMAL-Y                       SHEAR-XY\n']
+            msg_temp = ['  ELEMENT       FIBRE                                     - STRAINS IN ELEMENT  COORDINATE SYSTEM -\n',
+                        '    ID.        DISTANCE                  NORMAL-X                          NORMAL-Y                         SHEAR-XY\n']
         else:
-            if self.is_fiber_distance:
-                vm_msg_temp = ['    ELEMENT              FIBER                                  - STRAINS IN ELEMENT  COORDINATE SYSTEM -\n',
-                               '      ID      GRID-ID   DISTANCE                 NORMAL-X                        NORMAL-Y                       SHEAR-XY\n']
-                msg_temp = ['  ELEMENT       FIBRE                                     - STRAINS IN ELEMENT  COORDINATE SYSTEM -\n',
-                            '    ID.        DISTANCE                  NORMAL-X                          NORMAL-Y                         SHEAR-XY\n']
-            else:
-                vm_msg_temp = ['    ELEMENT              FIBRE                                  - STRAINS IN ELEMENT  COORDINATE SYSTEM -\n',
-                               '      ID      GRID-ID   CURVATURE                NORMAL-X                        NORMAL-Y                       SHEAR-XY\n']
-                msg_temp = ['  ELEMENT       FIBRE                                     - STRAINS IN ELEMENT  COORDINATE SYSTEM -\n',
-                            '    ID.       CURVATURE                  NORMAL-X                          NORMAL-Y                         SHEAR-XY\n']
+            vm_msg_temp = ['    ELEMENT              FIBRE                                  - STRAINS IN ELEMENT  COORDINATE SYSTEM -\n',
+                           '      ID      GRID-ID   CURVATURE                NORMAL-X                        NORMAL-Y                       SHEAR-XY\n']
+            msg_temp = ['  ELEMENT       FIBRE                                     - STRAINS IN ELEMENT  COORDINATE SYSTEM -\n',
+                        '    ID.       CURVATURE                  NORMAL-X                          NORMAL-Y                         SHEAR-XY\n']
 
 
     #if is_mag_phase:
@@ -673,78 +615,51 @@ def _get_plate_msg(self, is_mag_phase=True, is_sort1=True, has_von_mises: bool=F
 
     nnodes = get_nnodes(self)
     # TODO: STRESSES IN ELEMENT  COORDINATE SYSTEM???
-    if has_von_mises:
-        if self.table_name in ['OESXNO1']: # ['OESXNO1', 'OSTRNO1']:
-            assert self.is_fiber_distance, self.is_fiber_distance
-            msg = msgi + [
-                #'                         S T R E S S E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 4 )        OPTION = BILIN  '
-                '                                                ( NUMBER OF ZERO CROSSINGS )\n'
-                ' \n'
-                #'                      FIBER                                   - STRESSES IN ELEMENT  COORDINATE SYSTEM -\n'
-                #'   ELEMENT-ID  GRID ID   DISTANCE         NORMAL-X        NORMAL-Y           SHEAR-XY          VON MISES\n'
-                #'0           2  CEN/4  -1.270000E-03      6.203E+01       6.696E+01          5.202E+01          6.158E+01'
-                #'                       1.270000E-03      6.203E+01       6.696E+01          5.202E+01          6.158E+01'
-            ] + vm_msg_temp
-        elif self.table_name in ['OESXRMS1']:
-            assert self.is_fiber_distance, self.is_fiber_distance
-            msg = msgi + [
-                #'                         S T R E S S E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 4 )        OPTION = BILIN  '
-                '                                    ( ROOT MEAN SQUARE; RMSSF SCALE FACTOR =  X.XXE+XX )\n'
-                ' \n'
-                #'                      FIBER                                   - STRESSES IN ELEMENT  COORDINATE SYSTEM -\n'
-                #'   ELEMENT-ID  GRID ID   DISTANCE         NORMAL-X        NORMAL-Y           SHEAR-XY          VON MISES\n'
-                #'0           2  CEN/4  -1.270000E-03      1.701E+08       3.299E+07          1.053E+07          1.573E+08'
-                #'                       1.270000E-03      1.701E+08       3.299E+07          1.053E+07          1.573E+08'
-            ] + vm_msg_temp
-        else:
-            raise NotImplementedError(self.table_name)
-        #print(msg)
+    if self.table_name in ['OESPSD1', 'OSTRPSD1']:
+        #assert self.is_fiber_distance, self.table_name
+        msg = msgi + [
+            #'                         S T R E S S E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 4 )\n'
+            '                                                ( POWER SPECTRAL DENSITY FUNCTION )\n'
+            ' \n'
+            #'                    FIBER                                     - STRESSES IN ELEMENT  COORDINATE SYSTEM -\n'
+            #'    FREQUENCY      DISTANCE                  NORMAL-X                          NORMAL-Y                         SHEAR-XY\n'
+            #'0  2.000000E+01 -5.000000E-02              1.925767E-05                      1.404795E-04                     1.097896E-03'
+            #'                 5.000000E-02              1.925766E-05                      1.404794E-04                     1.097896E-03'
+        ] + vm_msg_temp
+    elif self.table_name in ['OESNO1', 'OSTRNO1']:
+        #assert self.is_fiber_distance is False, self.table_name
+        msg = msgi + [
+            #'                           S T R A I N S   I N   Q U A D R I L A T E R A L   E L E M E N T S     ( Q U A D 4 )        OPTION = BILIN  '
+            '                                                ( NUMBER OF ZERO CROSSINGS )\n'
+            ' \n'
+            #'                      STRAIN                                  -  STRAINS IN ELEMENT  COORDINATE SYSTEM -\n'
+            #'   ELEMENT-ID  GRID ID   CURVATURE               NORMAL-X                       NORMAL-Y                          SHEAR-XY\n'
+            #'0           2  CEN/4   0.0                     5.492230E+02                   5.786333E+02                      5.789550E+02'
+            #'                      -1.000000E+00            6.206278E+01                   5.312986E+01                      5.217435E+01'
+        ] + vm_msg_temp
+    elif self.table_name in ['OESRMS1', 'OSTRRMS1']:  # OESRMS1
+        #assert self.is_fiber_distance is False, self.table_name
+        msg = msgi + [
+            #'                           S T R A I N S   I N   Q U A D R I L A T E R A L   E L E M E N T S     ( Q U A D 4 )        OPTION = BILIN  '
+            '                                    ( ROOT MEAN SQUARE; RMSSF SCALE FACTOR =  X.XXE+XX )\n'
+            ' \n'
+            #'                      STRAIN                                  -  STRAINS IN ELEMENT  COORDINATE SYSTEM -\n'
+            #'   ELEMENT-ID  GRID ID   CURVATURE               NORMAL-X                       NORMAL-Y                          SHEAR-XY\n'
+            #'0           2  CEN/4   0.0                     1.728666E-16                   3.661332E-16                      3.067126E-15'
+            #'                      -1.000000E+00            6.043902E-01                   6.198736E-02                      1.028200E-01'
+        ] + vm_msg_temp
+    elif self.table_name in ['OSTRCRM1', 'OESCRM1']:
+        msg = msgi + [
+            '                               ( CUMULATIVE ROOT MEAN SQUARE; RMSSF SCALE FACTOR =  X.XXE+XX )\n'
+            ' \n'
+            ] + msg_temp
+    elif self.table_name in ['OSTRATO1']:
+        msg = msgi + [
+            '                                    ( ATO ? )\n'
+            ' \n'
+            ] + msg_temp
     else:
-        if self.table_name in ['OESPSD1', 'OSTRPSD1']:
-            #assert self.is_fiber_distance, self.table_name
-            msg = msgi + [
-                #'                         S T R E S S E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 4 )\n'
-                '                                                ( POWER SPECTRAL DENSITY FUNCTION )\n'
-                ' \n'
-                #'                    FIBER                                     - STRESSES IN ELEMENT  COORDINATE SYSTEM -\n'
-                #'    FREQUENCY      DISTANCE                  NORMAL-X                          NORMAL-Y                         SHEAR-XY\n'
-                #'0  2.000000E+01 -5.000000E-02              1.925767E-05                      1.404795E-04                     1.097896E-03'
-                #'                 5.000000E-02              1.925766E-05                      1.404794E-04                     1.097896E-03'
-            ] + vm_msg_temp
-        elif self.table_name in ['OESNO1', 'OSTRNO1']:
-            #assert self.is_fiber_distance is False, self.table_name
-            msg = msgi + [
-                #'                           S T R A I N S   I N   Q U A D R I L A T E R A L   E L E M E N T S     ( Q U A D 4 )        OPTION = BILIN  '
-                '                                                ( NUMBER OF ZERO CROSSINGS )\n'
-                ' \n'
-                #'                      STRAIN                                  -  STRAINS IN ELEMENT  COORDINATE SYSTEM -\n'
-                #'   ELEMENT-ID  GRID ID   CURVATURE               NORMAL-X                       NORMAL-Y                          SHEAR-XY\n'
-                #'0           2  CEN/4   0.0                     5.492230E+02                   5.786333E+02                      5.789550E+02'
-                #'                      -1.000000E+00            6.206278E+01                   5.312986E+01                      5.217435E+01'
-            ] + vm_msg_temp
-        elif self.table_name in ['OESRMS1', 'OSTRRMS1']:  # OESRMS1
-            #assert self.is_fiber_distance is False, self.table_name
-            msg = msgi + [
-                #'                           S T R A I N S   I N   Q U A D R I L A T E R A L   E L E M E N T S     ( Q U A D 4 )        OPTION = BILIN  '
-                '                                    ( ROOT MEAN SQUARE; RMSSF SCALE FACTOR =  X.XXE+XX )\n'
-                ' \n'
-                #'                      STRAIN                                  -  STRAINS IN ELEMENT  COORDINATE SYSTEM -\n'
-                #'   ELEMENT-ID  GRID ID   CURVATURE               NORMAL-X                       NORMAL-Y                          SHEAR-XY\n'
-                #'0           2  CEN/4   0.0                     1.728666E-16                   3.661332E-16                      3.067126E-15'
-                #'                      -1.000000E+00            6.043902E-01                   6.198736E-02                      1.028200E-01'
-            ] + vm_msg_temp
-        elif self.table_name in ['OSTRCRM1', 'OESCRM1']:
-            msg = msgi + [
-                '                               ( CUMULATIVE ROOT MEAN SQUARE; RMSSF SCALE FACTOR =  X.XXE+XX )\n'
-                ' \n'
-                ] + msg_temp
-        elif self.table_name in ['OSTRATO1']:
-            msg = msgi + [
-                '                                    ( ATO ? )\n'
-                ' \n'
-                ] + msg_temp
-        else:
-            raise NotImplementedError(self.table_name)
+        raise NotImplementedError(self.table_name)
 
     return msg, nnodes, is_bilinear
 
@@ -774,12 +689,9 @@ class RandomPlateStressArray(RandomPlateArray, StressObject):
     def __init__(self, data_code, is_sort1, isubcase, dt):
         RandomPlateArray.__init__(self, data_code, is_sort1, isubcase, dt)
         StressObject.__init__(self, data_code, isubcase)
-        str(self.has_von_mises)
 
     def _get_headers(self):
         headers = ['oxx', 'oyy', 'txy']
-        if self.has_von_mises:
-            headers.append('ovm')
         return headers
 
     def get_headers(self) -> List[str]:
@@ -790,13 +702,10 @@ class RandomPlateStrainArray(RandomPlateArray, StrainObject):
     def __init__(self, data_code, is_sort1, isubcase, dt):
         RandomPlateArray.__init__(self, data_code, is_sort1, isubcase, dt)
         StrainObject.__init__(self, data_code, isubcase)
-        str(self.has_von_mises)
         assert self.is_strain, self.stress_bits
 
     def _get_headers(self):
         headers = ['exx', 'eyy', 'exy']
-        if self.has_von_mises:
-            headers.append('evm')
         return headers
 
     def get_headers(self) -> List[str]:
