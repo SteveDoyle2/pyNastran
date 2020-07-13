@@ -73,8 +73,10 @@ from pyNastran.bdf.cards.elements.shell import (
     CTRIA3, CTRIA6, CTRIAR,
     CPLSTN3, CPLSTN4, CPLSTN6, CPLSTN8,
     CPLSTS3, CPLSTS4, CPLSTS6, CPLSTS8,
-    SNORM)
-from .cards.properties.shell import PSHELL, PCOMP, PCOMPG, PSHEAR, PLPLANE, PPLANE
+    SNORM,
+    # nastran 95
+    CTRSHL)
+from .cards.properties.shell import PSHELL, PCOMP, PCOMPG, PSHEAR, PLPLANE, PPLANE, PTRSHL
 from .cards.elements.acoustic import (
     CHACAB, CAABSF, CHACBR, PACABS, PAABSF, PACBAR, ACMODL)
 from .cards.elements.bush import CBUSH, CBUSH1D, CBUSH2D
@@ -318,6 +320,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             'CTRIA3', 'CTRIA6', 'CTRIAR',
             'CQUAD4', 'CQUAD8', 'CQUADR', 'CQUAD',
             'CTRAX3', 'CTRAX6', 'CTRIAX', 'CTRIAX6', 'CQUADX', 'CQUADX4', 'CQUADX8',
+            'CTRSHL',
             'SNORM',
 
             'CPLSTN3', 'CPLSTN4', 'CPLSTN6', 'CPLSTN8', # plate strain
@@ -348,7 +351,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             'PBEAML', 'PBMSECT', # not fully supported
             'PBEAM3',  # v1.3
 
-            'PSHELL', 'PCOMP', 'PCOMPG', 'PSHEAR',
+            'PSHELL', 'PCOMP', 'PCOMPG', 'PSHEAR', 'PTRSHL',
             'PSOLID', 'PLSOLID', 'PVISC', 'PRAC2D', 'PRAC3D',
             'PIHEX', 'PCOMPS',
             # PQUAD4
@@ -1856,6 +1859,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             'CBEND' : (CBEND, self._add_element_object),
             'PBEND' : (PBEND, self._add_property_object),
 
+            'CTRSHL' : (CTRSHL, self._add_element_object),
             'CTRIA3' : (CTRIA3, self._add_element_object),
             'CQUAD4' : (CQUAD4, self._add_element_object),
             'CQUAD' : (CQUAD, self._add_element_object),
@@ -1874,6 +1878,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             'PCOMP' : (PCOMP, self._add_property_object),
             'PCOMPG' : (PCOMPG, self._add_property_object),
             'PSHELL' : (PSHELL, self._add_property_object),
+            'PTRSHL' : (PTRSHL, self._add_property_object),
             'PLPLANE' : (PLPLANE, self._add_property_object),
             'CPLSTN3' : (CPLSTN3, self._add_element_object),
             'CPLSTN4' : (CPLSTN4, self._add_element_object),

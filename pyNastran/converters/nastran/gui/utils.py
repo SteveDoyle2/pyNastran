@@ -130,6 +130,7 @@ def build_offset_normals_dims(model: BDF, eid_map: Dict[int, int], nelements: in
         'CQUAD' : 9, 'CQUADX' : 9,
         'CPLSTN3': 3, 'CPLSTN4': 4, 'CPLSTN6': 6, 'CPLSTN8': 8,
         'CPLSTS3': 3, 'CPLSTS4': 4, 'CPLSTS6': 6, 'CPLSTS8': 8,
+        'CTRSHL': 6,
     }
     for eid, element in sorted(model.elements.items()):
         etype = element.type
@@ -165,7 +166,7 @@ def build_offset_normals_dims(model: BDF, eid_map: Dict[int, int], nelements: in
                     z0 = prop.z1
                 elif ptype in ['PCOMP', 'PCOMPG']:
                     z0 = prop.z0
-                elif ptype == 'PLPLANE':
+                elif ptype in ['PLPLANE', 'PTRSHL']: # ? PTRSHL
                     z0 = 0.
                 elif ptype in ['PSHEAR', 'PSOLID', 'PLSOLID', 'PPLANE']:
                     z0 = np.nan
@@ -345,6 +346,7 @@ def _build_map_centroidal_result(model: BDF, nid_map: Dict[int, int]) -> None:
         'CGAP', 'CFAST', 'CVISC', 'CBUSH', 'CBUSH1D', 'CBUSH2D',
         'CPLSTN3', 'CPLSTN4', 'CPLSTN6', 'CPLSTN8',
         'CPLSTS3', 'CPLSTS4', 'CPLSTS6', 'CPLSTS8',
+        'CTRSHL',
     }
 
     springs_dampers = {'CELAS1', 'CELAS2', 'CELAS3', 'CELAS4',
@@ -361,6 +363,7 @@ def _build_map_centroidal_result(model: BDF, nid_map: Dict[int, int]) -> None:
         'CTRIAX' : (3, 6),
         'CQUADX8' : (4, 8),
         'CTRIAX6' : (3, 6),
+        'CTRSHL' : (6, 6),
     }
     #['CTRIA6', 'CQUAD8', 'CHEXA', 'CTETRA', 'CPENTA', 'CPYRAM', 'CQUADX', 'CTRIAX']
     etypes_mixed_nodes = set(list(nnodes_map.keys()))

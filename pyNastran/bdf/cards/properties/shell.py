@@ -2614,3 +2614,238 @@ def get_2d_plate_transform(theta):
         #[-ct * st, ct * st, ct2 - st2],
     #])
     return T
+
+class PTRSHL(Property):
+    """
+    +--------+-------+------+--------+------+----------+------+------+---------+
+    |   1    |   2   |   3  |    4   |  5   |    6     |   7  |  8   |    9    |
+    +========+=======+======+========+======+==========+======+======+=========+
+    | PSHELL |  PID  | MID1 |   T    | MID2 | 12I/T**3 | MID3 | TS/T |   NSM   |
+    +--------+-------+------+--------+------+----------+------+------+---------+
+    |        |  Z1   |  Z2  |  MID4  |      |          |      |      |         |
+    +--------+-------+------+--------+------+----------+------+------+---------+
+    | PSHELL | 41111 |  1   | 1.0000 |  1   |          |   1  |      | 0.02081 |
+    +--------+-------+------+--------+------+----------+------+------+---------+
+    """
+    type = 'PTRSHL'
+
+    def __init__(self, pid, mid, comment=''):
+        """
+        Creates a PTRSHL card
+
+        Parameters
+        ----------
+        pid : int
+            property id
+        mid : int; default=None
+            defines membrane material
+
+        """
+        Property.__init__(self)
+        if comment:
+            self.comment = comment
+
+        #: Property ID
+        self.pid = pid
+        self.mid = mid
+
+        #: thickness
+        t = 1.
+        self.t = t
+
+        self.mid_ref = None
+
+    @classmethod
+    def add_card(cls, card, comment=''):
+        """
+        Adds a PTRSHL card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+
+        """
+        pid = integer(card, 1, 'pid')
+        mid = integer_or_blank(card, 2, 'mid1')
+        t = double(card, 3, 't')
+
+        t4 = integer_or_blank(card, 4, 't4')  # int?
+        t5 = double(card, 5, 't5')
+        t6 = integer(card, 6, 't6')
+        t7 = double(card, 7, 't7')
+        t8 = integer_or_blank(card, 8, 't8')  # int?
+        t9 = double(card, 9, 't9')
+        #t10 = double(card, 10, 't10')
+
+        #mid2 = integer_or_blank(card, 4, 'mid2')
+        #twelveIt3 = double_or_blank(card, 5, '12*I/t^3', 1.0)  # poor name
+        #mid3 = integer_or_blank(card, 6, 'mid3')
+        #tst = double_or_blank(card, 7, 'ts/t', 0.833333)
+        #nsm = double_or_blank(card, 8, 'nsm', 0.0)
+
+        #if t is not None:
+            #t_over_2 = t / 2.
+            #z1 = double_or_blank(card, 9, 'z1', -t_over_2)
+            #z2 = double_or_blank(card, 10, 'z2', t_over_2)
+        #else:
+            #z1 = double_or_blank(card, 9, 'z1')
+            #z2 = double_or_blank(card, 10, 'z2')
+        #mid4 = integer_or_blank(card, 11, 'mid4')
+
+        assert len(card) <= 10, 'len(PTRSHL card) = %i\ncard=%s' % (len(card), card)
+        return PTRSHL(pid, mid, comment=comment)
+
+    def _verify(self, xref):
+        pid = self.Pid()
+        mid = self.Mid()
+
+        assert isinstance(pid, integer_types), 'pid=%r' % pid
+        assert isinstance(mid, integer_types), 'mid=%r' % mid
+        mids = [self.mid]
+        unused_material_ids = self.material_ids
+        assert len(mids) > 0
+        if xref:
+            assert isinstance(self.mid_ref, Material), 'mid=%r' % self.mid_ref
+
+            mids_ref = [self.mid1_ref, self.mid2_ref, self.mid3_ref, self.mid4_ref]
+            for i, mid_ref in enumerate(mids_ref):
+                if mid_ref is None or mid_ref == 0:
+                    continue
+                if i == 1: # mid2
+                    if isinstance(mid_ref, integer_types):
+                        assert mid_ref == -1, mid_ref
+                        continue
+                assert isinstance(mid_ref, Material), 'mid_ref=%r' % mid_ref
+                if mid_ref.type == 'MAT1':
+                    E = mid_ref.E()
+                    G = mid_ref.G()
+                    nu = mid_ref.Nu()
+                    rho = mid_ref.Rho()
+                    assert isinstance(E, float), 'E=%r' % E
+                    assert isinstance(G, float), 'G=%r' % G
+                    assert isinstance(nu, float), 'nu=%r' % nu
+                    assert isinstance(rho, float), 'rho=%r' % rho
+                elif mid_ref.type in ['MAT2', 'MAT4', 'MAT5', 'MAT8']:
+                    pass
+                #elif mid_ref.type == 'MAT2':
+                    #pass
+                #elif mid_ref.type == 'MAT4':
+                    #pass
+                #elif mid_ref.type == 'MAT5':
+                    #pass
+                #elif mid_ref.type == 'MAT8':
+                    #pass
+                else:
+                    raise NotImplementedError('PSHELL: pid=%s mid_ref.type=%s' % (
+                        self.pid, mid_ref.type))
+
+            t = self.Thickness()
+            nsm = self.Nsm()
+            mpa = self.MassPerArea()
+            assert isinstance(t, float), 't=%r' % t
+            assert isinstance(nsm, float), 'nsm=%r' % nsm
+            assert isinstance(mpa, float), 'mass_per_area=%r' % mpa
+
+    def materials(self):
+        """returns the material objects referenced by the shell"""
+        materials = [self.mid_ref]
+        return materials
+
+    @property
+    def material_ids(self):
+        """returns the material ids"""
+        return [self.Mid()]
+
+    def Mid(self):
+        """returns the extension material id"""
+        if self.mid_ref is not None:
+            return self.mid_ref.mid
+        return self.mid
+
+    def Thickness(self, tflag=1, tscales=None):
+        """returns the thickness of the element"""
+        return 0.0
+        t0 = self.t
+        if tscales is not None:
+            nt = len(tscales)
+            if tflag == 0: # absolute
+                thickness = sum([ti if ti is not None else t0 for ti in tscales]) / nt
+            elif tflag == 1: # relative
+                thickness = sum([ti * t0 if ti is not None else t0 for ti in tscales]) / nt
+            else:
+                raise RuntimeError('tflag=%r and must be 0/1' % tflag)
+            #print('t0 = %s' % t0)
+            #print('  tscales = %s' % tscales)
+            #print('  nt = %s' % nt)
+            #print('  thickness = %s' % thickness)
+            return thickness
+        else:
+            thickness = t0
+        return thickness
+
+    def Rho(self):
+        """returns the material density"""
+        return 0.0
+        return self.mid_ref.rho
+
+    def Nsm(self):
+        """returns the non-structural mass"""
+        return 0.0
+        return self.nsm
+
+    def MassPerArea(self, tflag=1, tscales=None):
+        """
+        Calculates mass per area.
+
+        .. math:: \frac{m}{A} = nsm + \rho t"""
+        return 0.0
+        mid_ref = self.mid_ref
+        rho = mid_ref.Rho()  # fails if mid1=None and mid2=None
+
+        thickness = self.Thickness(tflag=tflag, tscales=tscales)
+        try:
+            mass_per_area = self.nsm + rho * thickness
+        except:
+            print("nsm=%s rho=%s t=%s" % (self.nsm, rho, self.t))
+            raise
+        return mass_per_area
+
+    def cross_reference(self, model: BDF) -> None:
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+
+        """
+        msg = ', which is required by PTRSHL pid=%s' % self.pid
+        if self.mid:
+            self.mid_ref = model.Material(self.mid, msg)
+
+    def uncross_reference(self) -> None:
+        """Removes cross-reference links"""
+        pass
+        #self.mid1 = self.Mid1()
+        #self.mid1_ref = None
+
+    def raw_fields(self):
+        list_fields = ['PTRSHL', self.pid, self.mid]
+        return list_fields
+
+    def repr_fields(self):
+        # $PTRSHL  9       5       2.0             2.4953485       .666667         +PT7
+        # $+PT7    1.294828                                                        +PT8
+        # $+PT8
+        list_fields = ['PTRSHL', self.pid, self.mid]
+        return list_fields
+
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
+        card = self.repr_fields()
+        if size == 8:
+            return self.comment + print_card_8(card)
+        return self.comment + print_card_16(card)

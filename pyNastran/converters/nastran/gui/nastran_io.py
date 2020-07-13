@@ -61,6 +61,7 @@ from pyNastran.bdf.bdf import (BDF,
                                CTRIA3, CTRIA6, CTRIAR,
                                CPLSTN3, CPLSTN4, CPLSTN6, CPLSTN8,
                                CPLSTS3, CPLSTS4, CPLSTS6, CPLSTS8,
+                               CTRSHL,
                                CTRAX3, CTRIAX6, CTRIAX, #CTRAX6,
                                CQUADX4, CQUADX8, CQUADX,
                                CONM2)
@@ -2905,7 +2906,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                 nnodes = 4
                 dim = 2
 
-            elif etype == 'CTRIA6':
+            elif etype in ['CTRIA6']:
                 nids = elem.nodes
                 pid = elem.pid
                 if None in nids:
@@ -3819,6 +3820,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
 
         No element quality
         """
+        print('_map_elements1_no_quality')
         assert nid_map is not None
         min_interior_angle = None
         max_interior_angle = None
@@ -4068,6 +4070,47 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                 elem.GetPointIds().SetId(1, n2)
                 elem.GetPointIds().SetId(2, n3)
                 eid_to_nid_map[eid] = [node_ids[0], node_ids[2], node_ids[4]]
+
+                grid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
+
+            elif isinstance(element, CTRSHL):
+                # the CTRIAX6 is not a standard second-order triangle
+                #
+                # 5
+                # |\
+                # |  \
+                # 6    4
+                # |     \
+                # |       \
+                # 1----2----3
+                #
+                #material_coord[i] = element.theta # TODO: no mcid
+                # midside nodes are required, nodes out of order
+                node_ids = element.node_ids
+                pid = element.Pid()
+                for nid in node_ids:
+                    if nid is not None:
+                        nid_to_pid_map[nid].append(pid)
+
+                if None not in node_ids and 0:
+                    elem = vtkQuadraticTriangle()
+                    elem.GetPointIds().SetId(3, nid_map[node_ids[1]])
+                    elem.GetPointIds().SetId(4, nid_map[node_ids[3]])
+                    elem.GetPointIds().SetId(5, nid_map[node_ids[5]])
+                else:
+                    elem = vtkTriangle()
+
+                n1 = nid_map[node_ids[0]]
+                n2 = nid_map[node_ids[2]]
+                n3 = nid_map[node_ids[4]]
+                #p1 = xyz_cid0[n1, :]
+                #p2 = xyz_cid0[n2, :]
+                #p3 = xyz_cid0[n3, :]
+                elem.GetPointIds().SetId(0, n1)
+                elem.GetPointIds().SetId(1, n2)
+                elem.GetPointIds().SetId(2, n3)
+                eid_to_nid_map[eid] = [node_ids[0], node_ids[2], node_ids[4]]
+
                 grid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
 
             elif isinstance(element, (CQUAD4, CSHEAR, CQUADR, CPLSTN4, CPLSTS4, CQUADX4)):
@@ -4956,7 +4999,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                 elem.GetPointIds().SetId(1, n2)
                 elem.GetPointIds().SetId(2, n3)
                 grid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
-            elif isinstance(element, CTRIAX6):
+            elif isinstance(element, (CTRIAX6, CTRSHL)):
                 # the CTRIAX6 is not a standard second-order triangle
                 #
                 # 5

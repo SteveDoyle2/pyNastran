@@ -57,7 +57,7 @@ class GridPointSurfaceStressesArray(ScalarObject):
         #self.names = []
         self.nelements //= self.ntimes
 
-        dtype, idtype, fdtype = get_times_dtype(self.nonlinear_factor, self.size)
+        dtype, idtype, fdtype = get_times_dtype(self.nonlinear_factor, self.size, self.analysis_fmt)
         self.node_element = np.zeros((self.ntotal, 2), dtype=idtype)
         #oxx, oyy, txy, angle, major, minor, ovm
         self.data = np.zeros((self.ntimes, self.nelements, 8), dtype=fdtype)
@@ -289,7 +289,7 @@ class GridPointStressesVolumePrincipalArray(ScalarObject):
         assert self.ntotal > 0, 'ntotal=%s' % self.ntotal
         self.nelements //= self.ntimes
 
-        dtype, idtype, fdtype = get_times_dtype(self.nonlinear_factor, self.size)
+        dtype, idtype, fdtype = get_times_dtype(self.nonlinear_factor, self.size, self.analysis_fmt)
         self.node = np.zeros(self.ntotal, dtype=idtype)
         #lxa, lxb, lxc, lya, lyb, lyc, lza, lzb, lzc, sa, sb, sc, epr, ovm
         self.data = np.zeros((self.ntimes, self.ntotal, 14), dtype=fdtype)
@@ -380,7 +380,7 @@ class GridPointStressesVolumeDirectArray(ScalarObject):
         assert self.ntotal > 0, 'ntotal=%s' % self.ntotal
         self.nelements //= self.ntimes
 
-        dtype, idtype, fdtype = get_times_dtype(self.nonlinear_factor, self.size)
+        dtype, idtype, fdtype = get_times_dtype(self.nonlinear_factor, self.size, self.analysis_fmt)
         self.node = np.zeros(self.ntotal, dtype=idtype)
         #oxx, oyy, txy, angle, major, minor, ovm
         self.data = np.zeros((self.ntimes, self.ntotal, 8), dtype=fdtype)

@@ -434,6 +434,134 @@ def _material_coordinate_system(element, normal, xyz1, xyz2):
     return imat, jmat
 
 
+class CTRSHL(TriShell):
+    """
+    +--------+-------+-------+----+----+----+------------+---------+
+    |   1    |   2   |   3   |  4 |  5 |  6 |     7      |    8    |
+    +========+=======+=======+=====+===+====+============+=========+
+    | CTRIA3 |  EID  |  PID  | N1 | N2 | N3 | THETA/MCID | ZOFFSET |
+    +--------+-------+-------+----+----+----+------------+---------+
+
+    """
+    type = 'CTRSHL'
+    def __init__(self, eid: int, pid: int, nids: List[int],
+                 theta: float,
+                 comment: str='') -> None:
+        """
+        Creates a CTRIA3 card
+
+        Parameters
+        ----------
+        eid : int
+            element id
+        pid : int
+            property id (PSHELL/PCOMP/PCOMPG)
+        nids : List[int, int, int]
+            node ids
+        comment : str; default=''
+            a comment for the card
+
+        """
+        TriShell.__init__(self)
+        if comment:
+            self.comment = comment
+        self.eid = eid
+        self.pid = pid
+        self.theta = theta
+        assert len(nids) == 6, nids
+        self.nodes = self.prepare_node_ids(nids)
+        assert len(self.nodes) == 6
+        self.theta_ref = None  # type: Optional[Any]
+
+    def validate(self):
+        assert len(set(self.nodes)) == 6, 'nodes=%s; n=%s\n%s' % (self.nodes, len(set(self.nodes)), str(self))
+
+    @classmethod
+    def add_card(cls, card, comment=''):
+        # type: (Any, str) -> CTRSHL
+        """
+        Adds a CTRSHL card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+
+        """
+        #: Element ID
+        eid = integer(card, 1, 'eid')
+        #: Property ID
+        pid = integer_or_blank(card, 2, 'pid', eid)
+
+        nids = [
+            integer(card, 3, 'n1'),
+            integer(card, 4, 'n2'),
+            integer(card, 5, 'n3'),
+            integer(card, 6, 'n4'),
+            integer(card, 7, 'n5'),
+            integer(card, 8, 'n6'),
+        ]
+        theta = double_or_blank(card, 9, 'theta', 0.0)
+        if len(card) > 6:
+            assert len(card) <= 9, f'len(CTRSHL card) = {len(card):d}\ncard={card}'
+
+        return CTRSHL(eid, pid, nids, theta=theta, comment=comment)
+
+    def cross_reference(self, model: BDF) -> None:
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+
+        """
+        msg = ', which is required by CTRSHL eid=%s' % self.eid
+        self.nodes_ref = model.Nodes(self.node_ids, msg=msg)
+        self.pid_ref = model.Property(self.Pid(), msg=msg)
+        #if isinstance(self.theta_mcid, integer_types):
+            #self.theta_mcid_ref = model.Coord(self.theta_mcid, msg=msg)
+
+    def safe_cross_reference(self, model, xref_errors):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+
+        """
+        msg = ', which is required by CTRSHL eid=%s' % self.eid
+        self.nodes_ref = model.Nodes(self.nodes, msg=msg)
+        self.pid_ref = model.safe_property(self.pid, self.eid, xref_errors, msg=msg)
+        #if isinstance(self.theta_mcid, integer_types):
+            #self.theta_mcid_ref = model.safe_coord(self.theta_mcid, self.eid, xref_errors, msg=msg)
+
+    @property
+    def node_ids(self):
+        return self._node_ids(nodes=self.nodes_ref, allow_empty_nodes=True)
+
+    def raw_fields(self):
+        list_fields = ['CTRSHL', self.eid, self.Pid()] + self.node_ids + [self.theta]
+        return list_fields
+
+    def repr_fields(self):
+        list_fields = ['CTRSHL', self.eid, self.Pid()] + self.node_ids + [self.theta]
+        return list_fields
+
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
+        card = wipe_empty_fields(self.repr_fields())
+        if size == 8 or len(card) == 8: # to last node
+            msg = self.comment + print_card_8(card)
+        else:
+            msg = self.comment + print_card_16(card)
+        return msg
+
+
 class CTRIA3(TriShell):
     """
     +--------+-------+-------+----+----+----+------------+---------+
@@ -502,9 +630,13 @@ class CTRIA3(TriShell):
         h5_file.create_dataset('zoffset', data=zoffsets)
         #self.tflag = tflag
 
-    def __init__(self, eid, pid, nids, zoffset=0., theta_mcid=0.0,
-                 tflag=0, T1=None, T2=None, T3=None, comment=''):
-        # (int, int, List[int], float, Union[int, float], int, Optional[float], Optional[float], Optional[float], str) -> None
+    def __init__(self, eid: int, pid: int, nids: List[int],
+                 zoffset: float=0., theta_mcid: Union[int, float]=0.0,
+                 tflag: int=0,
+                 T1: Optional[float]=None,
+                 T2: Optional[float]=None,
+                 T3: Optional[float]=None,
+                 comment: str='') -> None:
         """
         Creates a CTRIA3 card
 
