@@ -3728,13 +3728,19 @@ class ComplexCBeamForceVUArray(BaseElement):  # 191-VUBEAM
 
         #print("***name=%s type=%s nnodes_per_element=%s ntimes=%s nelements=%s ntotal=%s" % (
             #self.element_name, self.element_type, nnodes_per_element, self.ntimes, self.nelements, self.ntotal))
+        if self.is_sort1:
+            ntimes = self.ntimes
+            ntotal = self.ntotal
+        else:
+            ntimes = self.ntotal
+            ntotal = self.ntimes
         dtype, idtype, cfdtype = get_complex_times_dtype(self.nonlinear_factor, self.size)
-        self._times = np.zeros(self.ntimes, dtype=dtype)
-        self.element_node = np.zeros((self.ntotal, 2), dtype=idtype)
-        self.parent_coord = np.zeros((self.ntotal, 2), dtype=idtype)
+        self._times = np.zeros(ntimes, dtype=dtype)
+        self.element_node = np.zeros((ntotal, 2), dtype=idtype)
+        self.parent_coord = np.zeros((ntotal, 2), dtype=idtype)
 
         #[xxb, force_x, shear_y, shear_z, torsion, bending_y, bending_z]
-        self.data = np.zeros((self.ntimes, self.ntotal, 7), dtype=cfdtype)
+        self.data = np.zeros((ntimes, ntotal, 7), dtype=cfdtype)
 
     #def build_dataframe(self):
         #"""creates a pandas dataframe"""
@@ -4046,12 +4052,17 @@ class ComplexForceVU_2DArray(BaseElement):  # 189-VUQUAD,190-VUTRIA
 
         #print("ntimes=%s nelements=%s ntotal=%s" % (self.ntimes, self.nelements, self.ntotal))
         dtype, idtype, cfdtype = get_complex_times_dtype(self.nonlinear_factor, self.size)
-        self._times = zeros(self.ntimes, dtype=dtype)
-        self.element_node = zeros((self.nelements, 2), dtype=idtype)
+        if self.is_sort1:
+            ntimes = self.ntimes
+            nelements = self.nelements
+            #print(f'ntimes={ntimes} nelements={nelements}')
+
+        self._times = zeros(ntimes, dtype=dtype)
+        self.element_node = zeros((nelements, 2), dtype=idtype)
 
         #[membrane_x, membrane_y, membrane_xy, bending_x, bending_y, bending_xy,
         # shear_yz, shear_xz]
-        self.data = zeros((self.ntimes, self.nelements, 8), dtype=cfdtype)
+        self.data = zeros((ntimes, nelements, 8), dtype=cfdtype)
 
     def get_headers(self) -> List[str]:
         headers = [

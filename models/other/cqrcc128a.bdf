@@ -1,0 +1,268 @@
+$
+$  THIS DECK TESTS SORT2 OUTPUT FOR:
+$  1. SOLID ELEMENT STRAINS
+$  2. HENCKY- DROPPED FROM COLUMN LABEL FOR VON MISES STRESS
+$  3. VON MISES IS NOW DEFAULT OUTPUT FOR SHELLS AND SOLIDS
+$     INSTEAD OF MAX SHEAR AND OCTAHEDRAL, RESPECTIVELY.
+$
+TIME  5
+SOL 61
+CEND
+TITLE=  VON MISES STRESS AND STRAIN OUTPUT FORMATS             CC128A
+LABEL=  SORT2 OUTPUT
+ECHO=BOTH
+SEALL=ALL
+SPC = 12
+STRESS(SORT2) =ALL
+STRAIN(SORT2) =ALL
+SEFINAL=1 $ 26 SEP 79
+SUBCASE 1
+SUBTITLE = STATIC LOAD
+LOAD = 1
+$ LAST MODIFIED 17-SEP-1985
+BEGIN BULK
+DEFORM,4,101,.05 $
+=,=,107,= $
+=,=,301,= $
+=,=,307,= $
+=,=,1001,= $
+=,=,1007,= $
+=,=,3401,= $
+=,=,3403,= $
+=,=,3410,= $
+=,=,200,= $
+$
+$               C O M M O N   D A T A   T O   A L L   P R O B L E M S
+PARAM,  BAILOUT, -1 $ CONTINUE IF BADLY CONDITIONED
+PARAM,  NEWSEQ, 3
+PARAM,  MPCX, 0
+PARAM,  SUPER, 0
+PARAM       POST      -1
+PARAM,  PROUT, 1
+$
+$PLFACT  1       0.2     0.6     1.0
+$ OBSOLETE CARD MSC/61
+$DSFACT  1       -1.0
+$ OBSOLETE CARD MSC/61
+CORD2C  1       0       3.0     -1.0    0.0     9.0     -1.0    0.0     +CORD2C
++CORD2C 9.0     0.0     -1.0
+$
+CORD2R  2       0       0.0     -2.0    0.0     1.011234-2.0    0.0     +CORD2R
++CORD2R 0.0     0.0     0.0
+$
+CORD2S  3       1       3.0     225.0   0.0     3.0     225.0   1.234567+CORD2S
++CORD2S 3.0     -45.0   3.0
+$
+GRAV    3               1.0     1.0     1.0     1.0
+TEMPD   1       100.0
+TEMPD   2       200.0
+$$
+MAT1    1       1.      .8      .1      .05     .001    100.    .01     +MAT11
++MAT11  2.0     3.0     4.0
+MATT1   1       2                               3                       +MATT1
++MATT1  4       5       6
+MAT1    2       1.0E+7          0.3     .05     .001    100.0   .01     +MAT1-2
++MAT1-2 1000.   2000.   3000.
+MATT1   2                                       3                       +MATT1-2
++MATT1-2 2      2
+MAT4    1       1.23    4.56
+MAT4    2       3.45    6.78
+MATT4   1       3
+MATT4   2       5
+$$
+TABLEM1 2                                                               +TABLE-2
++TABLE-2 0.0    1.0     150.0   1.0     150.    0.5     300.    0.5     +TABL-2
++TABL-2 ENDT    ENDT
+TABLEM2 3       100.0                                                   +TABLE-3
++TABLE-3 0.0    0.1     50.0    0.1     50.0    0.5     150.0   0.5     +TABL-3
++TABL-3 200.0   10.0            ENDT
+TABLEM3 4       100.0   2.0                                             +TABLE-4
++TABLE-4 0.0    0.1     25.0    .1      25.0    2.0     75.0    2.0     +TABL-4
++TABL-4 300.0   .00001  ENDT
+TABLEM4 5       100.0   100.    2.0     10.00                           +TABLE-5
++TABLE-5                                2.0     ENDT
+TABLEM4 6       0.0     100.    0.0     100.00                          +TABLE-6
++TABLE-6 1.0            .25     ENDT
+$$
+PARAM   GRDPNT  0
+PARAM   NT      1
+PARAM   TINY    0.
+PARAM   IRES    1
+PARAM   COUPMASS1
+PARAM,  AUTOSPC,YES
+PARAM,  COMPARE,1 $ PROCESS SELECTED S.E., THEN ENTIRE MODEL, DMAP0
+PARAM,  PNCHDB, 1 $ PUNCH FROM DATA BASE, DMAP0
+PARAM,  GPECT,  1 $ GRID-ELEMENT CONNECTIVITY.  MG 21 OCT 80
+PARAM,  NOELOP, 1 $ SUM OF FORCES.  MG 21 OCT 1980
+PARAM,  NOGPF,  -1 $ SUPPRESS GPFO OUTPUT.  LOOK AT ELOP INSTEAD.  MG
+$$
+$ SPCS TO BE SELECTED FOR RF 1 THRU 12
+SPCADD  12      1       2
+$ SPCS TO BE SELECTED FOR RF 51,53 AND 59
+SPCADD  13      1       3
+$$
+FREQ1   10      0.0     1.0     1
+RLOAD2  11      12                      14
+TABLED1 14                                                              +TABD4.1
++TABD4.1-1.0    1.0001  2.0     1.0001  ENDT
+$+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+CQUADR  3301    3301    3301    3302    3303    3304    0.
+GRID    3301    0       0.0     0.0     0.0
+GRID    3302    0       1.0     0.0     0.0
+GRID    3303    0       1.0     1.0     0.0
+GRID    3304    0       0.0     1.0     0.0
+SPC1    1       1256    3302    3303
+SPC1    1       123456  3301    3304
+FORCE   1       3302    0       1.0     0.0     0.0     1.0
+FORCE   1       3303    0       1.0     0.0     0.0     1.0
+DAREA   12      3302    3       1.0     3303    3       1.0
+PSHELL  3301    1       1.0     1       120.0   1       1.0     0.5     +QUADR1
++QUADR1 0.2     -0.3
+$
+CQUADR  3313    3313    3313    3314    3315    3316    382.5           +QUADR2
++QUADR2                 .63     .67             .53
+GRID    3313    3       3.0     90.     0.      3       123456
+GRID    3314    3       3.0     90.     60.     2       123456
+GRID    3315    3       3.0     40.     60.     1       4
+GRID    3316    3       3.0     30.     0.      0       5
+FORCE   1       3315    2       3.14159 0.      2.71828 0.
+DAREA   12      3315    3       1.73205
+PSHELL  3313    1       .618034 2               1               .30103  +QUADR3
++QUADR3 0.
+$
+$+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+$
+$               TETRA                       ELEMENT NO. 39
+$
+CTETRA  3901    3901    3901    3902    3903    3904
+GRID    3901    0       0.0     0.0     0.0     0       456
+GRID    3902    0       2.0     0.0     0.0     0       456
+GRID    3903    0       1.0     1.7320510.0     0       1456            6/20/72
+GRID    3904    0       1.0     .5773503+1.0    0       456
+PSOLID  3901    1
+SPC1    1       3       3901    3902    3903
+SPC1    1       12      3904
+FORCE   1       3904    0       1.0     0.0     0.0     1.0
+DAREA   12      3904    3       1.0
+$
+$+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+$
+$               QUAD8                      ELEMENT NO. 64
+$
+CQUAD8  6401    6401    6401    6402    6403    6404    6405    6406    +Q81
++Q81    6407    6408
+GRID    6401    0       0.0     0.0     0.0
+GRID    6402    0       1.0     0.0     0.0
+GRID    6403    0       1.0     1.0     0.0
+GRID    6404    0       0.0     1.0     0.0
+GRID    6405    0       0.5     0.0     0.0
+GRID    6406    0       1.0     0.5     0.0
+GRID    6407    0       0.5     1.0     0.0
+GRID    6408    0       0.0     0.5     0.0
+SPC1    1       1256    6402    6403
+SPC1    1       123456  6401    6408    6404
+SPC1    1       6       6405    6406    6407
+FORCE   1       6402    0       1.0     0.0     0.0     1.0
+FORCE   1       6406    0       1.0     0.0     0.0     1.0
+FORCE   1       6403    0       1.0     0.0     0.0     1.0
+DAREA   12      6402    3       1.0     6403    3       1.0
+PSHELL  6401    1       1.0     1       120.    1       1.0     0.5     +QUAD81
++QUAD81 0.2     -0.3
+$
+CQUAD8  6413    6413    6413    6414    6415    6416    6417    6418    +Q82
++Q82    6419    6420    .63     .67             .53     382.5
+GRID    6413    3       3.0     90.     0.      3       123456
+GRID    6414    3       3.0     90.     60.     2       123456
+GRID    6415    3       3.0     40.     60.     1       4
+GRID    6416    3       3.0     30.     0.      0       5
+GRID    6417    3       3.0     90.     30.     3       123456
+$ X2 CHANGED FROM 75. TO 30. FOR MSC/61.  MG 21 OCT 80
+GRID    6418    3       3.0     65.     60.     1       4
+GRID    6419    3       3.0     35.     30.     0       5
+GRID    6420    3       3.0     60.     0.      0       5
+FORCE   1       6415    2       3.14159 0.      2.71828 0.
+DAREA   12      6415    3       1.73205
+PSHELL  6413    1       .618034 2               1                       +QUAD83
++QUAD83 0.
+$$
+$+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+$
+$               HEXA                    ELEMENT NO.67
+$
+$
+CHEXA   6701    6701    6701    6702    6703    6704    6705    6706    +C6701
++C6701  6707    6708
+GRID    6701    0       0.0     0.0     0.      0       456
+GRID    6702    0       0.0     .08     0.      0       456
+GRID    6703    0       0.0     .08     .1      0       456
+GRID    6704    0       0.0     0.      .1      0       456
+GRID    6705    0       1.0     0.      0.      0       456
+GRID    6706    0       1.0     .08     0.      0       456
+GRID    6707    0       1.0     .08     .1      0       456
+GRID    6708    0       1.0     0.      .1      0       456
+PSOLID  6701    2       0       2
+SPC1    1       123     6701    THRU    6704
+FORCE   1       6705    0       .25     0.      0.      -1.
+FORCE   1       6706    0       .25     0.      0.      -1.
+FORCE   1       6707    0       .25     0.      0.      -1.
+FORCE   1       6708    0       .25     0.      0.      -1.
+PLOAD4  1       6701    -125.                           6701    6703
+$
+$+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+$
+$               PENTA                   ELEMENT NO. 68
+$
+CPENTA  6801    6801    6801    6802    6803    6804    6805    6806
+GRID    6801            .1      .1      -1.             456
+GRID    6802            .1      -.1     -1.             456
+GRID    6803            -.1     0.      -1.             456
+GRID    6804            .1      .1      1.              456
+GRID    6805            .1      -.1     1.              456
+GRID    6806            -.1     0.      1.              456
+SPC1    1       123     6801    6802    6803
+FORCE   1       6804    0       .3333   0.      0.      1.
+FORCE   1       6805    0       .3333   0.      0.      1.
+FORCE   1       6806    0       .3333   0.      0.      1.
+PSOLID  6801    2       0       2
+PLOAD4  1       6801    110.                            6801    6805
+DAREA   12      6804    1       1.0
+$+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+$
+$               TRIAR                   ELEMENT NO. 74
+$
+CTRIAR  7451    7451    7451    7452    7453    0.0
+GRID    7451    0       0.0     0.0     0.0
+GRID    7452    0       1.0     0.0     0.0
+GRID    7453    0       0.5     1.0     0.0
+SPC1    1       6       7453
+SPC1    1       123456  7451    7452
+FORCE2  1       7453    1.0     7451    7452    7452    7453
+DAREA   12      7453    3       1.0
+$
+CTRIAR  7460    7451    7460    7461    7462    0.0
+GRID    7460    3       1.0     90.     45.     3       123456
+GRID    7461     3      1.41421445.     45.     3       123456
+GRID    7462    3       2.06155375.9637645.     3       6
+FORCE2  1       7462    1.0     7460    7461    7460    7462
+DAREA   12      7462    3       1.0
+PSHELL  7451    1       .1      1       10.+6   1       1.0
+$
+$
+$+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+$
+$         TRIA6                     ELEMENT NO. 75
+$
+CTRIA6  7501    7501    7501    7502    7503    7504    7505    7506
+GRID    7501    0       0.0     0.0     0.0
+GRID    7502    0       1.0     0.0     0.0
+GRID    7503    0       0.0     1.0     0.0
+GRID    7504    0       0.5     0.0     0.0
+GRID    7505    0       0.5     0.5     0.0
+GRID    7506    0       0.0     0.5     0.0
+SPC1    1       123456  7501    7506    7503
+SPC1    1       1246    7502
+SPC1    1       6       7505    7504
+FORCE   1       7502    0       1.0     0.      0.0     1.0
+DAREA   12      7502    3       1.0
+PSHELL  7501    1       .1      1       10.+6   1       1.0
+ENDDATA

@@ -81,11 +81,18 @@ class RealCompositePlateArray(OES_Object):
         if isinstance(self.nonlinear_factor, integer_types):
             dtype = 'int32'
 
-        _times = zeros(self.ntimes, dtype=dtype)
-        element_layer = zeros((self.ntotal, 2), dtype='int32')
+        if self.is_sort1:
+            ntimes = self.ntimes
+            ntotal = self.ntotal
+        else:
+            ntimes = self.ntotal
+            ntotal = self.ntimes
+
+        _times = zeros(ntimes, dtype=dtype)
+        element_layer = zeros((ntotal, 2), dtype='int32')
 
         #[o11, o22, t12, t1z, t2z, angle, major, minor, ovm]
-        data = zeros((self.ntimes, self.ntotal, 9), dtype='float32')
+        data = zeros((ntimes, ntotal, 9), dtype='float32')
 
         if self.load_as_h5:
             #for key, value in sorted(self.data_code.items()):
@@ -208,7 +215,7 @@ class RealCompositePlateArray(OES_Object):
                     raise ValueError(msg)
         return True
 
-    def add_new_eid_sort1(self, etype, dt, eid, layer, o11, o22, t12, t1z, t2z,
+    def add_eid_sort1(self, etype, dt, eid, layer, o11, o22, t12, t1z, t2z,
                           angle, major, minor, ovm):
         self._times[self.itime] = dt
         self.element_layer[self.itotal, :] = [eid, layer]
@@ -223,6 +230,28 @@ class RealCompositePlateArray(OES_Object):
         assert isinstance(eid, integer_types) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
         self.element_layer[self.itotal, :] = [eid, layer]
         self.data[self.itime, self.itotal, :] = [o11, o22, t12, t1z, t2z, angle, major, minor, ovm]
+        self.itotal += 1
+
+    def add_eid_sort2(self, etype, dt, eid, layer, o11, o22, t12, t1z, t2z,
+                          angle, major, minor, ovm):
+        itime = self.itotal
+        itotal = self.itime
+        self._times[itime] = dt
+        self.element_layer[itotal, :] = [eid, layer]
+        self.data[itime, itotal, :] = [o11, o22, t12, t1z, t2z, angle, major, minor, ovm]
+        self.itotal += 1
+        self.ielement += 1
+
+    def add_sort2(self, dt, eid, layer, o11, o22, t12, t1z, t2z, angle,
+                  major, minor, ovm):
+        """unvectorized method for adding SORT2 transient data"""
+        assert eid is not None
+        assert isinstance(eid, integer_types) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
+        itime = self.itotal
+        itotal = self.itime
+        self._times[itime] = dt
+        #self.element_layer[itotal, :] = [eid, layer]
+        self.data[self.itime, itotal, :] = [o11, o22, t12, t1z, t2z, angle, major, minor, ovm]
         self.itotal += 1
 
     def get_stats(self, short=False) -> List[str]:

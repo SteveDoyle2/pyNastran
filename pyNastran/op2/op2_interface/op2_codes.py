@@ -289,6 +289,36 @@ class Op2Codes:
         """
         return ''
 
+    @property
+    def analysis_fmt(self):
+        """
+        ANALYSIS_CODE_MAP = {
+            1 : "Statics",
+            2 : "Normal modes or buckling (real eigenvalues)",
+            3 : "Differential Stiffness 0 - obsolete",
+            4 : "Differential Stiffness 1 - obsolete",
+            5 : "Frequency",
+            6 : "Transient",
+            7 : "Pre-buckling",
+            8 : "Post-buckling",
+            9 : "Complex eigenvalues",
+            10 : "Nonlinear statics",
+            11 : "Geometric nonlinear statics",
+        }
+        """
+        #if self.analysis_code in [1]:
+            #fmts = ('int32', 'int64')
+        if self.analysis_code in [1, 2, 5, 6, 8, 10]:
+            # [modes, freq, transient, post-buckling, nonlinear statics]
+            fmts = ('float32', 'float64')
+        elif self.analysis_code in [1, 7]:
+            # [static, ???]
+            fmts = ('int32', 'int64')
+        else:
+            raise NotImplementedError(self.code_information())
+        index = self.size // 4 - 1  # factir is size/4 -> subtract 1
+        return fmts[index]
+
     def code_information(self, include_time: bool=True) -> str:
         """
         prints the general table information

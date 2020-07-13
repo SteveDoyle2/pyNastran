@@ -42,19 +42,18 @@ class RandomPlateVMArray(OES_Object):
     def is_complex(self) -> bool:
         return True
 
+    def _reset_indices(self) -> None:
+        self.itotal = 0
+        self.ielement = 0
+
     @property
     def nnodes_per_element(self) -> int:
         return get_nnodes(self)
 
-    def _reset_indices(self):
-        self.itotal = 0
-        self.ielement = 0
-
-    def build(self):
+    def build(self) -> None:
         """sizes the vectorized attributes of the ComplexPlateArray"""
         if not hasattr(self, 'subtitle'):
             self.subtitle = self.data_code['subtitle']
-
         nnodes = self.nnodes_per_element
 
         #self.names = []
@@ -66,7 +65,6 @@ class RandomPlateVMArray(OES_Object):
         #if self.element_name == 'CTRIA3':
         #print('element_type=%r ntimes=%s nelements=%s ntotal=%s subtitle=%s' % (
             #self.element_type, self.ntimes, self.nelements, self.ntotal, self.subtitle))
-        #print(self)
         if self.is_sort1:
             # old
             #ntimes = self.ntimes
@@ -137,7 +135,7 @@ class RandomPlateVMArray(OES_Object):
         #_times = zeros(ntimes, dtype=dtype)
         #element = zeros(nelements, dtype='int32')
 
-        self._times = zeros(ntimes, dtype)
+        self._times = zeros(ntimes, dtype=dtype)
         #self.ntotal = self.nelements * nnodes
 
         #print(f'***nelements={nelements} nlayers={nlayers} ntimes={ntimes}')
@@ -155,7 +153,7 @@ class RandomPlateVMArray(OES_Object):
         #print(f'ntimes={self.ntimes} nelements={self.nelements} ntotal={self.ntotal}')
         self.data = zeros((ntimes, nlayers, 4), 'float32')
 
-    def build_dataframe(self):
+    def build_dataframe(self) -> None:
         """creates a pandas dataframe"""
         import pandas as pd
         headers = self.get_headers()
@@ -183,7 +181,7 @@ class RandomPlateVMArray(OES_Object):
             names=names,
         )
         #print(data_frame)
-        self.dataframe = data_frame
+        self.data_frame = data_frame
 
     def __eq__(self, table):  # pragma: no cover
         assert self.is_sort1 == table.is_sort1
@@ -329,14 +327,14 @@ class RandomPlateVMArray(OES_Object):
         ntimes = self.ntimes
         nnodes = self.element_node.shape[0]
         #ntotal = self.ntotal
-
         msg = []
         if self.nonlinear_factor not in (None, np.nan):  # transient
             msg.append(f'  type={self.class_name} ntimes={ntimes} nelements={nelements:d} nnodes={nnodes:d} table_name={self.table_name}\n')
         else:
             msg.append(f'  type={self.class_name} nelements={nelements:d} nnodes={nnodes:d} {self.table_name}\n')
         msg.append('  eType, cid\n')
-        msg.append('  data: [ntimes, nnodes, 4] where 4=[%s]\n' % str(', '.join(self._get_headers())))
+        headers = self._get_headers()
+        msg.append('  data: [ntimes, nnodes, 4] where 4=[%s]\n' % str(', '.join(headers)))
         msg.append(f'  element_node.shape = {self.element_node.shape}\n')
         msg.append(f'  data.shape = {self.data.shape}\n')
         msg.append('  %s\n' % self.element_name)
@@ -394,7 +392,6 @@ class RandomPlateVMArray(OES_Object):
         txy = self.data[itime, :, 2]
 
         eids = self.element_node[:, 0]
-        #nids = self.element_node[:, 1]
 
         ilayer0 = True
         for eid, fd, oxx, oyy, txy in zip(eids, fds, oxx, oyy, txy):
@@ -555,13 +552,13 @@ def get_nnodes(self):
         nnodes = 4 + 1 # centroid
     elif self.element_type in [70, 75]:   #???, CTRIA6
         nnodes = 3 + 1 # centroid
-    elif self.element_type in [144, 74, 33]:  # CTRIA3, CQUAD4 linear
+    elif self.element_type in [33, 74, 144]:  # CTRIA3, CQUAD4 linear
         nnodes = 1
     else:
         raise NotImplementedError('name=%r type=%s' % (self.element_name, self.element_type))
     return nnodes
 
-class RandomPlateStressVMArray(RandomPlateVMArray, StressObject):
+class RandomPlateVMStressArray(RandomPlateVMArray, StressObject):
     """
     NX
     2 FD1  RS Z1 = Fibre Distance
@@ -585,7 +582,7 @@ class RandomPlateStressVMArray(RandomPlateVMArray, StressObject):
         return self._get_headers()
 
 
-class RandomPlateStrainVMArray(RandomPlateVMArray, StrainObject):
+class RandomPlateVMStrainArray(RandomPlateVMArray, StrainObject):
     def __init__(self, data_code, is_sort1, isubcase, dt):
         RandomPlateVMArray.__init__(self, data_code, is_sort1, isubcase, dt)
         StrainObject.__init__(self, data_code, isubcase)

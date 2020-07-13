@@ -335,9 +335,9 @@ class RandomPlateArray(OES_Object):
 
         self.itotal += 2
         self.ielement += 1
-        debug = False
-        if debug:
-            print(self.element_node)
+        #debug = False
+        #if debug:
+            #print(self.element_node)
     #---------------------------------------------------------------------------
 
     def add_ovm_sort1(self, dt, eid, nid,

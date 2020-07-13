@@ -619,6 +619,8 @@ class EDT(GeomCommon):
         data = (100001, 100001, 0, 10, 0, 0, 24, 1,
                 99.3, 21.45, -11.65, 42.86, 101.8387, 122.62, -2.69, 32.71)
 
+        C:\MSC.Software\simcenter_nastran_2019.2\tpl_post1\adb144_2.op2
+        PAERO1      1000   74000   74510   84610
         """
         ntotal = 32 * self.factor # 4 * 8
         ndatai = len(data) - n
@@ -634,8 +636,9 @@ class EDT(GeomCommon):
                 if body != 0:
                     caero_body_ids.append(body)
             paero1 = self.add_paero1(pid, caero_body_ids=caero_body_ids)
-            if caero_body_ids:
-                self.log.warning(str(paero1))
+            str(paero1)
+            #if caero_body_ids:
+                #self.log.warning(str(paero1))
             n += ntotal
         return n
 

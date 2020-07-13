@@ -66,7 +66,7 @@ class RealNonlinearRodArray(OES_Object): # 89-CRODNL, 92-CONRODNL
         self.is_built = True
 
         #print("ntimes=%s nelements=%s ntotal=%s" % (self.ntimes, self.nelements, self.ntotal))
-        dtype, idtype, fdtype = get_times_dtype(self.nonlinear_factor, self.size)
+        dtype, idtype, fdtype = get_times_dtype(self.nonlinear_factor, self.size, self.analysis_fmt)
         self._times = zeros(self.ntimes, dtype=dtype)
         self.element = zeros(self.nelements, dtype=idtype)
 

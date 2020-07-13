@@ -83,7 +83,7 @@ class RealBeamArray(OES_Object):
         #print("***name=%s type=%s nnodes_per_element=%s ntimes=%s nelements=%s ntotal=%s" % (
             #self.element_name, self.element_type, nnodes_per_element, self.ntimes,
             #self.nelements, self.ntotal))
-        dtype, idtype, fdtype = get_times_dtype(self.nonlinear_factor, self.size)
+        dtype, idtype, fdtype = get_times_dtype(self.nonlinear_factor, self.size, self.analysis_fmt)
         _times = zeros(self.ntimes, dtype=dtype)
         element_node = zeros((self.ntotal, 2), dtype=idtype)
 
@@ -502,7 +502,7 @@ class RealNonlinearBeamArray(OES_Object):
         #print("***name=%s type=%s nnodes_per_element=%s ntimes=%s nelements=%s ntotal=%s" % (
             #self.element_name, self.element_type, nnodes_per_element, self.ntimes,
             #self.nelements, self.ntotal))
-        dtype, idtype, fdtype = get_times_dtype(self.nonlinear_factor, self.size)
+        dtype, idtype, fdtype = get_times_dtype(self.nonlinear_factor, self.size, self.analysis_fmt)
         self._times = zeros(self.ntimes, dtype=dtype)
         self.element_node = zeros((self.ntotal, 3), dtype=idtype)
 

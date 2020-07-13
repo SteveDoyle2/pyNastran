@@ -51,11 +51,8 @@ class RealBushArray(OES_Object):
         assert self.nelements > 0, 'nelements=%s' % self.nelements
         assert self.ntotal > 0, 'ntotal=%s' % self.ntotal
 
-        if self.element_type == 102:
-            #nnodes_per_element = 1
-            pass
-        else:
-            raise NotImplementedError(self.element_type)
+        assert self.element_type == 102, self.element_type
+        #nnodes_per_element = 1
 
         # buggy MSC 2005 (was this ever fixed?)
         # NX doesn't have this bug
@@ -71,12 +68,20 @@ class RealBushArray(OES_Object):
 
         #print("***name=%s type=%s nnodes_per_element=%s ntimes=%s nelements=%s ntotal=%s" % (
             #self.element_name, self.element_type, nnodes_per_element, self.ntimes, self.nelements, self.ntotal))
-        dtype, idtype, fdtype = get_times_dtype(self.nonlinear_factor, self.size)
-        _times = zeros(self.ntimes, dtype=dtype)
-        element = zeros(self.ntotal, dtype=idtype)
+        dtype, idtype, fdtype = get_times_dtype(self.nonlinear_factor, self.size, self.analysis_fmt)
 
         # [tx, ty, tz, rx, ry, rz]
-        data = zeros((self.ntimes, self.ntotal, 6), dtype=fdtype)
+        if self.is_sort1:
+            ntimes = self.ntimes
+            ntotal = self.ntotal
+        else:
+            ntimes = self.ntotal
+            ntotal = self.ntimes
+            #print('BUSH SORT2:', ntimes, ntotal)
+
+        _times = zeros(ntimes, dtype=dtype)
+        element = zeros(ntotal, dtype=idtype)
+        data = zeros((ntimes, ntotal, 6), dtype=fdtype)
 
         if self.load_as_h5:
             #for key, value in sorted(self.data_code.items()):
@@ -170,6 +175,18 @@ class RealBushArray(OES_Object):
         self._times[self.itime] = dt
         self.element[self.itotal] = eid
         self.data[self.itime, self.itotal, :] = [tx, ty, tz, rx, ry, rz]
+        self.itotal += 1
+        self.ielement += 1
+
+    def add_sort2(self, dt, eid, tx, ty, tz, rx, ry, rz):
+        """unvectorized method for adding SORT1 transient data"""
+        assert isinstance(eid, integer_types) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
+        itime = self.ielement
+        itotal = self.itime
+        #print(f'dt={dt} eid={eid}; itime={itime}; itotal={itotal}')
+        self._times[itime] = dt
+        self.element[itotal] = eid
+        self.data[itime, itotal, :] = [tx, ty, tz, rx, ry, rz]
         self.itotal += 1
         self.ielement += 1
 

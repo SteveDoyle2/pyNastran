@@ -7,7 +7,7 @@ import numpy as np
 from numpy import zeros, where, searchsorted
 from numpy.linalg import eigh  # type: ignore
 
-from pyNastran.utils.numpy_utils import integer_types, float_types
+from pyNastran.utils.numpy_utils import float_types
 from pyNastran.f06.f06_formatting import write_floats_13e, _eigenvalue_header
 from pyNastran.op2.result_objects.op2_objects import get_times_dtype
 from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import StressObject, StrainObject, OES_Object
@@ -114,13 +114,27 @@ class RealSolidArray(OES_Object):
         #self.nelements = 0
         self.is_built = True
 
-        #print("ntimes=%s nelements=%s ntotal=%s" % (self.ntimes, self.nelements, self.ntotal))
-        dtype, idtype, fdtype = get_times_dtype(self.nonlinear_factor, self.size)
-        _times = zeros(self.ntimes, dtype=dtype)
+        dtype, idtype, fdtype = get_times_dtype(self.nonlinear_factor, self.size, self.analysis_fmt)
+
+        if self.is_sort1:
+            ntimes = self.ntimes
+            ntotal = self.ntotal
+            nelements = self.nelements
+        else:
+            #print(f'ntimes={self.ntimes} nelements={self.nelements} ntotal={self.ntotal}')
+            ntimes = self.nelements
+            ntotal = self.ntotal
+            nelements = self.ntimes
+            #print(f'ntimes={ntimes} nelements={nelements} ntotal={ntotal}')
+        #self.ntimes = ntimes
+        #self.ntotal = ntotal
+        #self.nelements = nelements
+
+        _times = zeros(ntimes, dtype=dtype)
 
         # TODO: could be more efficient by using nelements for cid
-        element_node = zeros((self.ntotal, 2), dtype=idtype)
-        element_cid = zeros((self.nelements, 2), dtype=idtype)
+        element_node = zeros((ntotal, 2), dtype=idtype)
+        element_cid = zeros((nelements, 2), dtype=idtype)
 
         #if self.element_name == 'CTETRA':
             #nnodes = 4
@@ -131,7 +145,7 @@ class RealSolidArray(OES_Object):
         #self.element_node = zeros((self.ntotal, nnodes, 2), 'int32')
 
         #[oxx, oyy, ozz, txy, tyz, txz, o1, o2, o3, ovmShear]
-        data = zeros((self.ntimes, self.ntotal, 10), fdtype)
+        data = zeros((ntimes, ntotal, 10), fdtype)
         self.nnodes = element_node.shape[0] // self.nelements
         #self.data = zeros((self.ntimes, self.nelements, nnodes+1, 10), 'float32')
 
@@ -180,7 +194,7 @@ class RealSolidArray(OES_Object):
         assert cid >= -1, cid
         assert eid >= 0, eid
 
-        #print "dt=%s eid=%s eType=%s" %(dt,eid,eType)
+        #print(f'dt={dt} eid={eid}')
         self._times[self.itime] = dt
         self.element_node[self.itotal, :] = [eid, 0]  # 0 is center
 
@@ -201,6 +215,111 @@ class RealSolidArray(OES_Object):
         self.element_cid[self.ielement, :] = [eid, cid]
         self.itotal += 1
         self.ielement += 1
+
+    def add_node_sort1(self, dt, eid, unused_inode, node_id,
+                       oxx, oyy, ozz, txy, tyz, txz, o1, o2, o3,
+                       unused_acos, unused_bcos, unused_ccos, unused_pressure, ovm):
+        # skipping aCos, bCos, cCos, pressure
+        omax_mid_min = [o1, o2, o3]
+        omin = min(omax_mid_min)
+        omax_mid_min.remove(omin)
+
+        omax = max(omax_mid_min)
+        omax_mid_min.remove(omax)
+
+        omid = omax_mid_min[0]
+        self.data[self.itime, self.itotal, :] = [oxx, oyy, ozz, txy, tyz, txz, omax, omid, omin, ovm]
+        #print('data[%s, %s, :] = %s' % (self.itime, self.itotal, str(self.data[self.itime, self.itotal, :])))
+
+        #self.data[self.itime, self.ielement-1, self.inode, :] = [oxx, oyy, ozz, txy, tyz, txz, o1, o2, o3, ovm]
+
+        #print('eid=%i node_id=%i exx=%s' % (eid, node_id, str(oxx)))
+        self.element_node[self.itotal, :] = [eid, node_id]
+        #self.element_node[self.ielement-1, self.inode-1, :] = [eid, node_id]
+        self.itotal += 1
+
+    def add_eid_sort2(self, unused_etype, cid, dt, eid, unused_node_id,
+                      oxx, oyy, ozz, txy, tyz, txz, o1, o2, o3,
+                      unused_acos, unused_bcos, unused_ccos, unused_pressure, ovm):
+        #itime = self.ielement
+        #ielement = self.itotal
+        #itotal = self.itime
+        #print(self.ntimes, self.nelements, self.ntotal, self.nnodes)
+        itime = self.itotal // self.nnodes
+        ielement = self.itime
+        itotal = self.itotal
+        assert cid >= -1, cid
+        assert eid >= 0, eid
+
+        #try:
+        self._times[itime] = dt
+            #print(f'dt={dt} eid={eid} ielement={ielement} -> itime={itime} itotal={itotal}')
+        #except IndexError:
+            #print(f'*dt={dt} eid={eid} ielement={ielement} -> itime={itime} itotal={itotal}')
+            #self.itime += 1
+            #self.ielement += 1
+            #return
+        self.element_node[itotal, :] = [eid, 0]  # 0 is center
+
+        omax_mid_min = [o1, o2, o3]
+        omin = min(omax_mid_min)
+        omax_mid_min.remove(omin)
+
+        omax = max(omax_mid_min)
+        omax_mid_min.remove(omax)
+
+        omid = omax_mid_min[0]
+        self.data[itime, itotal, :] = [oxx, oyy, ozz, txy, tyz, txz, omax, omid, omin, ovm]
+
+        #print('element_cid[%i, :] = [%s, %s]' % (self.ielement, eid, cid))
+        #if self.ielement == self.nelements:
+            #self.ielement = 0
+        self.element_cid[ielement, :] = [eid, cid]
+        #self.itime += 1
+        self.itotal += 1
+        self.ielement += 1
+        #print('self._times', self._times)
+
+    def add_node_sort2(self, dt, eid, unused_inode, node_id,
+                       oxx, oyy, ozz, txy, tyz, txz, o1, o2, o3,
+                       unused_acos, unused_bcos, unused_ccos, unused_pressure, ovm):
+        #ielement = self.ielement
+        #itotal = self.itotal
+        #itime = self.itime
+        #itime=0 ielement=1 itotal=1
+        #itime=0 ielement=1 itotal=2
+        #itime=0 ielement=1 itotal=3
+        #itime=0 ielement=1 itotal=4
+
+        #ielement = self.ielement
+        #itime = (self.itime - 1) % self.nelements
+        #itime = self.itime - 1
+        nnodes = self.nnodes
+        itime = self.itotal // nnodes
+        itotal = self.itotal
+        #ielement = self.ielement - 1
+        #ielement = self.itime
+        #inode = self.itotal % nnodes
+        #itotal2 = (self.ielement - 1) * nnodes + inode
+        #print(f'  itime={itime} itotal={itotal}; nid={node_id}; '
+              #f'ielement={ielement} inode={inode} -> itotal2={itotal2}')
+
+        # skipping aCos, bCos, cCos, pressure
+        omax_mid_min = [o1, o2, o3]
+        omin = min(omax_mid_min)
+        omax_mid_min.remove(omin)
+
+        omax = max(omax_mid_min)
+        omax_mid_min.remove(omax)
+
+        omid = omax_mid_min[0]
+        self.data[itime, itotal, :] = [oxx, oyy, ozz, txy, tyz, txz, omax, omid, omin, ovm]
+        #print('data[%s, %s, :] = %s' % (self.itime, self.itotal, str(self.data[self.itime, self.itotal, :])))
+
+        #print('eid=%i node_id=%i exx=%s' % (eid, node_id, str(oxx)))
+        self.element_node[itotal, :] = [eid, node_id]
+        #self.element_node[ielement-1, inode-1, :] = [eid, node_id]
+        self.itotal += 1
 
     def __eq__(self, table):  # pragma: no cover
         assert self.is_sort1 == table.is_sort1
@@ -233,28 +352,6 @@ class RealSolidArray(OES_Object):
                 if i > 0:
                     raise ValueError(msg)
         return True
-
-    def add_node_sort1(self, dt, eid, unused_inode, node_id,
-                       oxx, oyy, ozz, txy, tyz, txz, o1, o2, o3,
-                       unused_acos, unused_bcos, unused_ccos, unused_pressure, ovm):
-        # skipping aCos, bCos, cCos, pressure
-        omax_mid_min = [o1, o2, o3]
-        omin = min(omax_mid_min)
-        omax_mid_min.remove(omin)
-
-        omax = max(omax_mid_min)
-        omax_mid_min.remove(omax)
-
-        omid = omax_mid_min[0]
-        self.data[self.itime, self.itotal, :] = [oxx, oyy, ozz, txy, tyz, txz, omax, omid, omin, ovm]
-        #print('data[%s, %s, :] = %s' % (self.itime, self.itotal, str(self.data[self.itime, self.itotal, :])))
-
-        #self.data[self.itime, self.ielement-1, self.inode, :] = [oxx, oyy, ozz, txy, tyz, txz, o1, o2, o3, ovm]
-
-        #print('eid=%i node_id=%i exx=%s' % (eid, node_id, str(oxx)))
-        self.element_node[self.itotal, :] = [eid, node_id]
-        #self.element_node[self.ielement-1, self.inode-1, :] = [eid, node_id]
-        self.itotal += 1
 
     @property
     def nnodes_per_element(self) -> int:

@@ -1,6 +1,9 @@
+import sys
 from typing import List
+
 import numpy as np
 from numpy import zeros, unique, array_equal, empty
+
 from pyNastran.op2.result_objects.op2_objects import BaseElement, get_times_dtype
 from pyNastran.f06.f06_formatting import (
     write_floats_13e, _eigenvalue_header, write_imag_floats_13e)
@@ -201,7 +204,7 @@ class RealGridPointForcesArray(GridPointForces):
 
         #print("***name=%s ntimes=%s ntotal=%s" % (
             #self.element_names, self.ntimes, self.ntotal))
-        dtype, idtype, fdtype = get_times_dtype(self.nonlinear_factor, self.size)
+        dtype, idtype, fdtype = get_times_dtype(self.nonlinear_factor, self.size, self.analysis_fmt)
         self._times = zeros(self.ntimes, dtype=dtype)
 
         assert self.ntotal < 2147483647, self.ntotal # max int
@@ -1212,7 +1215,7 @@ class ComplexGridPointForcesArray(GridPointForces):
         #print("***name=%s type=%s nnodes_per_element=%s ntimes=%s nelements=%s ntotal=%s" % (
             #self.element_names, self.element_type, nnodes_per_element,
             #self.ntimes, self.nelements, self.ntotal))
-        dtype, idtype, fdtype = get_times_dtype(self.nonlinear_factor, self.size)
+        dtype, idtype, fdtype = get_times_dtype(self.nonlinear_factor, self.size, self.analysis_fmt)
 
         self._times = zeros(self.ntimes, dtype=dtype)
 
@@ -1340,8 +1343,7 @@ class ComplexGridPointForcesArray(GridPointForces):
                 msg += '%s\n' % str(self.code_information())
                 i = 0
                 for itime in range(self.ntimes):
-                    print('is_unique =', self.is_unique)
-                    import sys
+                    #print('is_unique =', self.is_unique)
                     sys.stdout.flush()
                     for ie, e in enumerate(self.node_element[itime, :, :]):
                         print(e)

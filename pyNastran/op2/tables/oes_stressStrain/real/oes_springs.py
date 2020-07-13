@@ -188,7 +188,7 @@ class RealSpringArray(OES_Object):
         self.ntimes = ntimes
         self.nelements = nelements
         _times = zeros(ntimes, dtype=dtype)
-        dtype, idtype, fdtype = get_times_dtype(self.nonlinear_factor, self.size)
+        dtype, idtype, fdtype = get_times_dtype(self.nonlinear_factor, self.size, self.analysis_fmt)
         element = zeros(nelements, dtype=idtype)
 
         #[stress]

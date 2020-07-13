@@ -21,6 +21,7 @@ Defines:
 """
 import re
 from copy import deepcopy
+from typing import List, Union
 
 
 class ResultSet:
@@ -46,13 +47,14 @@ class ResultSet:
         # the set of results to be saved
         self.saved = deepcopy(self.allowed)
         self.results_map = results_map
+        #print(results_map)
 
-    def is_saved(self, result):
+    def is_saved(self, result: str) -> bool:
         """checks to see if a result is saved"""
         if result not in self.allowed:
             #allowed2 = list(self.allowed)
             #allowed2.sort()
-            msg = "result=%r is invalid; the name changed or it's a typo.\n" % result
+            msg = f"result={result!r} is invalid; the name changed or it's a typo.\n"
             if '.' in result:
                 base, end = result.split('.', 1)
                 #print(base, end)
@@ -71,40 +73,76 @@ class ResultSet:
         #self.log.debug('    %s was skipped' % result)
         return False
 
-    def is_not_saved(self, result):
+    def is_not_saved(self, result: str) -> None:
         """checks to see if a result is saved"""
         return not self.is_saved(result)
 
-    def clear(self):
+    def clear(self) -> None:
         """clears all the results"""
         self.saved.clear()
 
-    def add(self, results):
+    def add(self, results: List[str])  -> List[str]:
         """addds a list/str of results"""
         all_matched_results = self._get_matched_results(results)
+        added = []
         for result in all_matched_results:
             if result not in self.saved:
                 self.saved.add(result)
+                added.append(result)
+        return added
 
-    def remove(self, results):
+    def remove(self, results: List[str]) -> List[str]:
         """removes a list/str of results"""
         all_matched_results = self._get_matched_results(results)
+        removed = []
         for result in all_matched_results:
             if result in self.saved:
                 self.saved.remove(result)
+                removed.append(result)
         #disable_set = set(results)
         #self.saved.difference(disable_set)
+        return removed
 
-    def _get_matched_results(self, results):
+    def _get_matched_results(self, results: Union[str, List[str]]) -> List[str]:
         """handles expansion of regexs"""
         if isinstance(results, str):
             results = [results]
         all_matched_results = []
         for result in results:
+            if result in self.allowed:
+                all_matched_results.append(result)
+                continue
+            #if
             # tack on a word boundary if we have a * at the beginning of the regex
-            resulti = r'\w' + result if result.startswith('*') else result
+            #resulti = r'\w' + result if not result.startswith('*') else result  # old
+
+            if '\b' in result:
+                resulti = result
+                #print(f'A: resulti = {resulti}')
+            else:
+                if '*' not in result:
+                    resulti = f'\w{result}\w'
+                    #print(f'B: resulti = {resulti!r}')
+                else:
+                    wdot = '\w.'  # \w or \.
+                    if result.startswith('*') and result.endswith('*'):
+                        #wdot = '\w'  # works
+                        resulti = f'{wdot}{result}'
+                        if result[-2] != '.':
+                            resulti = f'{resulti[:-1]}.*'
+                        #print(f'C: resulti = {resulti!r}')
+                    elif result.startswith('*'):
+                        resulti = f'{wdot}{result}'
+                        #print(f'D: resulti = {resulti!r}')
+                    else:  # endswith
+                        resulti = result
+                        if result[-2] != '.':
+                            resulti = f'{result[:-1]}.*'
+                        #print(f'E: resulti = {resulti!r}')
+
             regex = re.compile(resulti)
             matched_results = list(filter(regex.match, self.allowed))
+            #print('matched_results =', matched_results)
             if len(matched_results) == 0:
                 #allowed = list(self.allowed)
                 #allowed.sort()
@@ -115,26 +153,26 @@ class ResultSet:
             all_matched_results.extend(matched_results)
         return all_matched_results
 
-    def _found_result(self, result):
+    def _found_result(self, result: str) -> None:
         if result not in self.allowed:
-            msg = "result=%r is invalid; the name changed or it's a typo" % result
+            msg = f"result={result!r} is invalid; the name changed or it's a typo"
             raise RuntimeError(msg) # check line ~640 in op2_f06_common.py if this is a new result
         self.found.add(result)
 
-    def update(self, results):
+    def update(self, results: List[str]) -> None:
         for result in results:
             self.add(result)
 
     #def add_found_result(self, result):
         #pass
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         """defines the repr"""
         msg = 'ResultSet:\n'
         msg += ' results:\n'
         for result in sorted(self.allowed):
             if result in self.saved:
-                msg += '  %s\n' % result
+                msg += f'  {result}\n'
             else:
-                msg += '  %s (disabled)\n' % result
+                msg += f'  {result} (disabled)\n'
         return msg

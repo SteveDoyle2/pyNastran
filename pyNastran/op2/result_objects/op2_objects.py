@@ -780,7 +780,8 @@ class BaseElement(ScalarObject):
         #print(data_frame)
         return data_frame
 
-def get_times_dtype(nonlinear_factor: Union[int, float], size: int) -> Tuple[str, str, str]:
+def get_times_dtype(nonlinear_factor: Union[int, float], size: int,
+                    analysis_code_fmt=None) -> Tuple[str, str, str]:
     dtype = 'float'
     if isinstance(nonlinear_factor, integer_types):
         dtype = 'int'
@@ -793,6 +794,10 @@ def get_times_dtype(nonlinear_factor: Union[int, float], size: int) -> Tuple[str
         dtype += '64'
         fdtype = 'float64'
         idtype = 'int64'
+
+    if analysis_code_fmt:
+        dtype = analysis_code_fmt
+        return dtype, idtype, fdtype
     return dtype, idtype, fdtype
 
 def get_complex_times_dtype(nonlinear_factor: Union[int, float], size: int) -> Tuple[str, str, str]:
@@ -870,5 +875,7 @@ def _check_element_node(table1: BaseElement, table2: BaseElement, log: SimpleLog
 
     eids = table1.element_node[:, 0]
     if eids.min() <= 0:
+        print(table1.element_node)
+        print(table2.element_node)
         log.error(f'{table1}\neids={eids}.min={eids.min()}; n={len(eids)}')
         raise ValueError(f'{table1}\neids={eids}.min={eids.min()}; n={len(eids)}')

@@ -110,7 +110,7 @@ class RealNonlinearPlateArray(OES_Object):
 
         #print("***name=%s type=%s nnodes_per_element=%s ntimes=%s nelements=%s ntotal=%s" % (
             #self.element_name, self.element_type, nnodes_per_element, self.ntimes, self.nelements, self.ntotal))
-        dtype, idtype, fdtype = get_times_dtype(self.nonlinear_factor, self.size)
+        dtype, idtype, fdtype = get_times_dtype(self.nonlinear_factor, self.size, self.analysis_fmt)
         self._times = np.zeros(self.ntimes, dtype=dtype)
         self.element = np.zeros(self.nelements, dtype=idtype)
 

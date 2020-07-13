@@ -44,7 +44,7 @@ class ComplexBeamArray(OES_Object):
         """sizes the vectorized attributes of the ComplexCBeamArray"""
         #print('ntimes=%s nelements=%s ntotal=%s subtitle=%s' % (
             #self.ntimes, self.nelements, self.ntotal, self.subtitle))
-        nnodes = 1
+        #nnodes = 1
 
         #self.names = []
         #self.nelements //= nnodes
@@ -57,12 +57,21 @@ class ComplexBeamArray(OES_Object):
         #print('ntotal=%s ntimes=%s nelements=%s' % (self.ntotal, self.ntimes, self.nelements))
         #print("ntimes=%s nelements=%s ntotal=%s" % (self.ntimes, self.nelements, self.ntotal))
         dtype, idtype, cfdtype = get_complex_times_dtype(self.nonlinear_factor, self.size)
-        self._times = zeros(self.ntimes, dtype)
         #self.element = array(self.nelements, dtype='|S8')
 
         #self.ntotal = self.nelements * nnodes
-        self.element_node = zeros((self.ntotal, 2), idtype)
-        self.sd = zeros(self.ntotal, 'float32')
+        if self.is_sort1 == 1:
+            ntimes = self.ntimes
+            ntotal = self.ntotal
+        else:
+            ntimes = self.ntotal
+            ntotal = self.ntimes
+            #print(f'complex beam: ntimes={ntimes} ntotal={ntotal}')
+
+        # ntotal is nelements
+        self._times = zeros(ntimes, dtype)
+        self.element_node = zeros((ntotal, 2), idtype)
+        self.sd = zeros(ntotal, 'float32')
 
         # the number is messed up because of the offset for the element's properties
         #if self.nelements * nnodes != self.ntotal:
@@ -73,7 +82,7 @@ class ComplexBeamArray(OES_Object):
             #raise RuntimeError(msg)
 
         #[sxc, sxd, sxe, sxf]
-        self.data = zeros((self.ntimes, self.ntotal, 4), cfdtype)
+        self.data = zeros((ntimes, ntotal, 4), cfdtype)
 
     def finalize(self):
         #enode_sum = self.element_node.sum(axis=1)
@@ -151,6 +160,22 @@ class ComplexBeamArray(OES_Object):
         self.data[self.itime, self.itotal, :] = [exc, exd, exe, exf]
 
         self._times[self.itime] = dt
+        self.itotal += 1
+
+
+    def add_sort2(self, dt, eid, grid, sd,
+                  exc, exd, exe, exf):
+        """adss the non-vectorized data"""
+        assert isinstance(eid, integer_types) and eid > 0, f'dt={dt} eid={eid} grid={grid}'
+        assert isinstance(eid, integer_types) and grid >= 0, f'dt={dt} eid={eid} grid={grid}'
+        itotal = self.itime
+        itime = self.itotal
+        #print(f'dt={dt} eid={eid} itime={itime} itotal={itotal}')
+        self.element_node[itotal] = [eid, grid]
+        self.sd[itotal] = sd
+        self.data[itime, itotal, :] = [exc, exd, exe, exf]
+
+        self._times[itime] = dt
         self.itotal += 1
 
     def get_stats(self, short=False) -> List[str]:
@@ -436,7 +461,7 @@ class ComplexBeamStressArray(ComplexBeamArray, StressObject):
         StressObject.__init__(self, data_code, isubcase)
 
     def get_headers(self) -> List[str]:
-        headers = ['sxc', 'sxd', 'sxe', 'sxf', ]
+        headers = ['sxc', 'sxd', 'sxe', 'sxf']
         return headers
 
 class ComplexBeamStrainArray(ComplexBeamArray, StrainObject):
@@ -445,5 +470,5 @@ class ComplexBeamStrainArray(ComplexBeamArray, StrainObject):
         StrainObject.__init__(self, data_code, isubcase)
 
     def get_headers(self) -> List[str]:
-        headers = ['exc', 'exd', 'exe', 'exf', ]
+        headers = ['exc', 'exd', 'exe', 'exf']
         return headers

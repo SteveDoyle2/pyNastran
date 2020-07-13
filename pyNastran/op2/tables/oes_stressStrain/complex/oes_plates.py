@@ -96,14 +96,14 @@ class ComplexPlateArray(OES_Object):
             nlayers = self.ntotal * nnodes
             #nx = ntimes
             #ny = self.ntotal
-            print(f'  SORT1: ntimes={ntimes} nelements={nelements} nlayers={nlayers} {self.element_name}-{self.element_type}')
+            #print(f'  SORT1: ntimes={ntimes} nelements={nelements} nlayers={nlayers} {self.element_name}-{self.element_type}')
             #if self.element_type == 74:
                 #aasdf
         elif self.is_sort2:
             nelements = self.ntimes
             nlayers = nelements * 2 * nnodes
             ntimes = self.ntotal
-            print(f'  SORT2: ntimes={ntimes} nelements={nelements} nlayers={nlayers} {self.element_name}-{self.element_type}')
+            #print(f'  SORT2: ntimes={ntimes} nelements={nelements} nlayers={nlayers} {self.element_name}-{self.element_type}')
         #print("nelements=%s nlayers=%s ntimes=%s" % (nelements, nlayers, ntimes))
 
         self._times = zeros(ntimes, dtype=dtype)
@@ -232,7 +232,7 @@ class ComplexPlateArray(OES_Object):
         ie_upper = ibase
         ie_lower = ibase + 1
 
-        debug = False
+        #debug = False
         self._times[itime] = dt
         #print(self.element_types2, element_type, self.element_types2.dtype)
 
@@ -251,8 +251,8 @@ class ComplexPlateArray(OES_Object):
 
         self.itotal += 2
         self.ielement += 1
-        if debug:
-            print(self.element_node)
+        #if debug:
+            #print(self.element_node)
 
     def add_ovm_sort1(self, dt, eid, node_id,
                       fdr1, oxx1, oyy1, txy1, ovm1,
@@ -290,7 +290,7 @@ class ComplexPlateArray(OES_Object):
         ie_upper = ibase
         ie_lower = ibase + 1
 
-        debug = False
+        #debug = False
         self._times[itime] = dt
         #print(self.element_types2, element_type, self.element_types2.dtype)
 
@@ -309,8 +309,8 @@ class ComplexPlateArray(OES_Object):
 
         self.itotal += 2
         self.ielement += 1
-        if debug:
-            print(self.element_node)
+        #if debug:
+            #print(self.element_node)
 
     def get_stats(self, short: bool=False) -> List[str]:
         if not self.is_built:

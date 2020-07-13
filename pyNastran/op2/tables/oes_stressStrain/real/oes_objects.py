@@ -113,9 +113,12 @@ class OES_Object(BaseElement):
         self.data_code['data_names'][0] = name
         del self.element_id, self.element_ids
         #print('timesA =', self._times)
-        old_times = self._times
-        setattr(self, names, self._times)
-        #print('timesB =', self._times)
+        old_times = None
+        if 0:
+            old_times = self._times
+            setattr(self, names, self._times)
+            #print('timesB =', self._times)
+
         if self.analysis_code == 1:
             assert len(self._times) == 1, self.data.shape
         elif len(self._times) > 1:

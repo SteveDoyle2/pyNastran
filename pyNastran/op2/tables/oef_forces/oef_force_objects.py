@@ -51,6 +51,7 @@ class ForceObject(BaseElement):
         self.sort_bits[1] = 0 # sort1
         self.sort_method = 1
         assert self.is_sort1 is True, self.is_sort1
+        #self._update_time_word()
 
     def _reset_indices(self) -> None:
         self.itotal = 0
@@ -310,7 +311,7 @@ class FailureIndicesArray(RealForceObject):
         self.is_built = True
 
         #print("ntimes=%s nelements=%s ntotal=%s" % (self.ntimes, self.nelements, self.ntotal))
-        dtype, idtype, fdtype = get_times_dtype(self.nonlinear_factor, self.size)
+        dtype, idtype, fdtype = get_times_dtype(self.nonlinear_factor, self.size, self.analysis_fmt)
 
         self._times = zeros(self.ntimes, dtype=dtype)
         self.failure_theory = np.full(self.nelements, '', dtype='U8')
@@ -511,7 +512,7 @@ class RealSpringDamperForceArray(RealForceObject):
         self.is_built = True
 
         #print("ntimes=%s nelements=%s ntotal=%s" % (self.ntimes, self.nelements, self.ntotal))
-        dtype, idtype, fdtype = get_times_dtype(self.nonlinear_factor, self.size)
+        dtype, idtype, fdtype = get_times_dtype(self.nonlinear_factor, self.size, self.analysis_fmt)
         self.build_data(self.ntimes, self.nelements, dtype, idtype, fdtype)
 
     def build_data(self, ntimes, nelements, dtype, idtype, fdtype):
@@ -943,7 +944,7 @@ class RealRodForceArray(RealForceObject):
         self.ntimes = ntimes
         self.nelements = nelements
         #self.ntotal = ntimes * nelements
-        dtype, idtype, fdtype = get_times_dtype(self.nonlinear_factor, self.size)
+        dtype, idtype, fdtype = get_times_dtype(self.nonlinear_factor, self.size, self.analysis_fmt)
         self._times = zeros(ntimes, dtype=dtype)
         self.element = zeros(nelements, dtype=idtype)
 
@@ -1228,7 +1229,7 @@ class RealCBeamForceArray(RealForceObject):
         #print('ntotal=%s ntimes=%s nelements=%s' % (self.ntotal, self.ntimes, self.nelements))
 
         #print("ntimes=%s nelements=%s ntotal=%s" % (self.ntimes, self.nelements, self.ntotal))
-        dtype, idtype, fdtype = get_times_dtype(self.nonlinear_factor, self.size)
+        dtype, idtype, fdtype = get_times_dtype(self.nonlinear_factor, self.size, self.analysis_fmt)
         self._times = zeros(self.ntimes, dtype)
         self.element = zeros(self.ntotal, idtype)
         self.element_node = zeros((self.ntotal, 2), idtype)
@@ -1629,7 +1630,7 @@ class RealCShearForceArray(RealForceObject):
         self.is_built = True
 
         #print("ntimes=%s nelements=%s ntotal=%s" % (self.ntimes, self.nelements, self.ntotal))
-        dtype, idtype, fdtype = get_times_dtype(self.nonlinear_factor, self.size)
+        dtype, idtype, fdtype = get_times_dtype(self.nonlinear_factor, self.size, self.analysis_fmt)
         self._times = zeros(self.ntimes, dtype=dtype)
         self.element = zeros(self.nelements, dtype='int32')
 
@@ -2007,7 +2008,7 @@ class RealViscForceArray(RealForceObject):  # 24-CVISC
         self.is_built = True
 
         #print("ntimes=%s nelements=%s ntotal=%s" % (self.ntimes, self.nelements, self.ntotal))
-        dtype, idtype, fdtype = get_times_dtype(self.nonlinear_factor, self.size)
+        dtype, idtype, fdtype = get_times_dtype(self.nonlinear_factor, self.size, self.analysis_fmt)
         self._times = zeros(self.ntimes, dtype=dtype)
         self.element = zeros(self.nelements, dtype='int32')
 
@@ -2230,7 +2231,7 @@ class RealPlateForceArray(RealForceObject):  # 33-CQUAD4, 74-CTRIA3
         self.is_built = True
 
         #print("ntimes=%s nelements=%s ntotal=%s" % (self.ntimes, self.nelements, self.ntotal))
-        dtype, idtype, fdtype = get_times_dtype(self.nonlinear_factor, self.size)
+        dtype, idtype, fdtype = get_times_dtype(self.nonlinear_factor, self.size, self.analysis_fmt)
         self._times = zeros(self.ntimes, dtype=dtype)
         self.element = zeros(self.ntotal, dtype=idtype)
 
@@ -2593,7 +2594,7 @@ class RealPlateBilinearForceArray(RealForceObject):  # 144-CQUAD4
         self.is_built = True
 
         #print("ntimes=%s nelements=%s ntotal=%s" % (self.ntimes, self.nelements, self.ntotal))
-        dtype, idtype, fdtype = get_times_dtype(self.nonlinear_factor, self.size)
+        dtype, idtype, fdtype = get_times_dtype(self.nonlinear_factor, self.size, self.analysis_fmt)
         self._times = zeros(self.ntimes, dtype=dtype)
         self.element_node = zeros((self.ntotal, 2), dtype='int32')
 
@@ -3048,7 +3049,7 @@ class RealCBarFastForceArray(RealForceObject):
         self.nelements = nelements
         self.ntotal = ntotal
         #print(f"*ntimes={ntimes} nelements={nelements} ntotal={ntotal} data_names={self.data_names}")
-        unused_dtype, idtype, fdtype = get_times_dtype(self.nonlinear_factor, self.size)
+        unused_dtype, idtype, fdtype = get_times_dtype(self.nonlinear_factor, self.size, self.analysis_fmt)
         self._times = zeros(ntimes, dtype=dtype)
         self.element = zeros(nelements, dtype=idtype)
 
@@ -3397,7 +3398,7 @@ class RealConeAxForceArray(RealForceObject):
         self.is_built = True
 
         #print("ntimes=%s nelements=%s ntotal=%s" % (self.ntimes, self.nelements, self.ntotal))
-        dtype, idtype, fdtype = get_times_dtype(self.nonlinear_factor, self.size)
+        dtype, idtype, fdtype = get_times_dtype(self.nonlinear_factor, self.size, self.analysis_fmt)
         self._times = zeros(self.ntimes, dtype=dtype)
         self.element = zeros(self.nelements, dtype='int32')
 
@@ -3583,7 +3584,7 @@ class RealCBar100ForceArray(RealForceObject):  # 100-CBAR
         self.is_built = True
 
         #print("ntimes=%s nelements=%s ntotal=%s" % (self.ntimes, self.nelements, self.ntotal))
-        dtype, idtype, fdtype = get_times_dtype(self.nonlinear_factor, self.size)
+        dtype, idtype, fdtype = get_times_dtype(self.nonlinear_factor, self.size, self.analysis_fmt)
         self._times = zeros(self.ntimes, dtype=dtype)
         self.element = zeros(self.nelements, dtype='int32')
 
@@ -3882,7 +3883,7 @@ class RealCGapForceArray(RealForceObject):  # 38-CGAP
         self.is_built = True
 
         #print("ntimes=%s nelements=%s ntotal=%s" % (self.ntimes, self.nelements, self.ntotal))
-        dtype, idtype, fdtype = get_times_dtype(self.nonlinear_factor, self.size)
+        dtype, idtype, fdtype = get_times_dtype(self.nonlinear_factor, self.size, self.analysis_fmt)
         self._times = zeros(self.ntimes, dtype=dtype)
         self.element = zeros(self.nelements, dtype='int32')
 
@@ -4060,7 +4061,7 @@ class RealBendForceArray(RealForceObject):  # 69-CBEND
         self.is_built = True
 
         #print("ntimes=%s nelements=%s ntotal=%s" % (self.ntimes, self.nelements, self.ntotal))
-        dtype, idtype, fdtype = get_times_dtype(self.nonlinear_factor, self.size)
+        dtype, idtype, fdtype = get_times_dtype(self.nonlinear_factor, self.size, self.analysis_fmt)
         self._times = zeros(self.ntimes, dtype=dtype)
         self.element_node = zeros((self.nelements, 3), dtype='int32')
 
@@ -4290,7 +4291,7 @@ class RealSolidPressureForceArray(RealForceObject):  # 77-PENTA_PR,78-TETRA_PR
         self.is_built = True
 
         #print("ntimes=%s nelements=%s ntotal=%s" % (self.ntimes, self.nelements, self.ntotal))
-        dtype, idtype, fdtype = get_times_dtype(self.nonlinear_factor, self.size)
+        dtype, idtype, fdtype = get_times_dtype(self.nonlinear_factor, self.size, self.analysis_fmt)
         self._times = zeros(self.ntimes, dtype=dtype)
         self.element = zeros(self.nelements, dtype=idtype)
 
@@ -4528,7 +4529,7 @@ class RealCBeamForceVUArray(RealForceObject):  # 191-VUBEAM
         self.is_built = True
 
         #print("ntimes=%s nelements=%s ntotal=%s" % (self.ntimes, self.nelements, self.ntotal))
-        dtype, idtype, fdtype = get_times_dtype(self.nonlinear_factor, self.size)
+        dtype, idtype, fdtype = get_times_dtype(self.nonlinear_factor, self.size, self.analysis_fmt)
         self._times = zeros(self.ntimes, dtype=dtype)
         self.element_node = zeros((self.ntotal, 2), dtype='int32')
         self.parent_coord = zeros((self.ntotal, 2), dtype='int32')
@@ -4785,7 +4786,7 @@ class RealForceMomentArray(RealForceObject):
         self.is_built = True
 
         #print("ntimes=%s nelements=%s ntotal=%s" % (self.ntimes, self.nelements, self.ntotal))
-        dtype, idtype, fdtype = get_times_dtype(self.nonlinear_factor, self.size)
+        dtype, idtype, fdtype = get_times_dtype(self.nonlinear_factor, self.size, self.analysis_fmt)
         self._times = zeros(self.ntimes, dtype=dtype)
         self.element = zeros(self.nelements, dtype='int32')
 
@@ -5129,7 +5130,7 @@ class RealForceVU2DArray(RealForceObject):  # 189-VUQUAD, 190-VUTRIA
         self.is_built = True
 
         #print("ntimes=%s nelements=%s ntotal=%s" % (self.ntimes, self.nelements, self.ntotal))
-        dtype, idtype, fdtype = get_times_dtype(self.nonlinear_factor, self.size)
+        dtype, idtype, fdtype = get_times_dtype(self.nonlinear_factor, self.size, self.analysis_fmt)
         self._times = zeros(self.ntimes, dtype=dtype)
         self.element_node = zeros((self.ntotal, 2), dtype=idtype)
 

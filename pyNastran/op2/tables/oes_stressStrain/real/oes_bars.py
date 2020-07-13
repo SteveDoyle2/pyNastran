@@ -121,14 +121,24 @@ class RealBarArray(OES_Object):
 
         #print("***name=%s type=%s nnodes_per_element=%s ntimes=%s nelements=%s ntotal=%s" % (
             #self.element_name, self.element_type, nnodes_per_element, self.ntimes, self.nelements, self.ntotal))
-        dtype, idtype, fdtype = get_times_dtype(self.nonlinear_factor, self.size)
+        dtype, idtype, fdtype = get_times_dtype(self.nonlinear_factor, self.size, self.analysis_fmt)
 
-        _times = zeros(self.ntimes, dtype=dtype)
-        element = zeros(self.ntotal, dtype=idtype)
+        if self.is_sort1:
+            ntimes = self.ntimes
+            ntotal = self.ntotal  # nelements
+        else:
+            #print("***name=%s type=%s ntimes=%s nelements=%s ntotal=%s" % (
+                #self.element_name, self.element_type, self.ntimes, self.nelements, self.ntotal))
+            ntotal = self.ntimes  # nelements
+            ntimes = self.ntotal
+            #ss
+
+        _times = zeros(ntimes, dtype=dtype)
+        element = zeros(ntotal, dtype=idtype)
 
         #[s1a, s2a, s3a, s4a, axial, smaxa, smina, MS_tension,
         # s1b, s2b, s3b, s4b,        sminb, sminb, MS_compression]
-        data = zeros((self.ntimes, self.ntotal, 15), dtype=fdtype)
+        data = zeros((ntimes, ntotal, 15), dtype=fdtype)
         if self.load_as_h5:
             #for key, value in sorted(self.data_code.items()):
                 #print(key, value)
@@ -196,12 +206,26 @@ class RealBarArray(OES_Object):
     def add_new_eid_sort1(self, dt, eid,
                           s1a, s2a, s3a, s4a, axial, smaxa, smina, MSt,
                           s1b, s2b, s3b, s4b, smaxb, sminb, MSc):
-
         assert isinstance(eid, integer_types)
         self._times[self.itime] = dt
         self.element[self.itotal] = eid
         self.data[self.itime, self.itotal, :] = [s1a, s2a, s3a, s4a, axial, smaxa, smina, MSt,
                                                  s1b, s2b, s3b, s4b,        smaxb, sminb, MSc]
+        self.itotal += 1
+        self.ielement += 1
+
+    def add_new_eid_sort2(self, dt, eid,
+                          s1a, s2a, s3a, s4a, axial, smaxa, smina, MSt,
+                          s1b, s2b, s3b, s4b, smaxb, sminb, MSc):
+        #print(self.itime, self.itotal)  # itotal=ielement
+        assert isinstance(eid, integer_types)
+        ielement = self.itime
+        itime = self.ielement
+        #print(itime, dt, self._times.dtype)
+        self._times[itime] = dt
+        self.element[ielement] = eid
+        self.data[itime, ielement, :] = [s1a, s2a, s3a, s4a, axial, smaxa, smina, MSt,
+                                         s1b, s2b, s3b, s4b,        smaxb, sminb, MSc]
         self.itotal += 1
         self.ielement += 1
 

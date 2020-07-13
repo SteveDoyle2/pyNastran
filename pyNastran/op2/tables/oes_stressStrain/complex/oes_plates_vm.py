@@ -237,7 +237,7 @@ class ComplexPlateVMArray(OES_Object):
         ie_upper = ibase
         ie_lower = ibase + 1
 
-        debug = False
+        #debug = False
         self._times[itime] = dt
         #print(self.element_types2, element_type, self.element_types2.dtype)
 
@@ -256,8 +256,8 @@ class ComplexPlateVMArray(OES_Object):
 
         self.itotal += 2
         self.ielement += 1
-        if debug:
-            print(self.element_node)
+        #if debug:
+            #print(self.element_node)
 
     def get_stats(self, short: bool=False) -> List[str]:
         if not self.is_built:
@@ -338,7 +338,6 @@ class ComplexPlateVMArray(OES_Object):
         txy = self.data[itime, :, 2]
 
         eids = self.element_node[:, 0]
-        #nodes = self.element_node[:, 1]
 
         ilayer0 = True
         for eid, fd, doxx, doyy, dtxy in zip(eids, fds, oxx, oyy, txy):
@@ -661,7 +660,7 @@ def get_nnodes(self):
         nnodes = 4 + 1 # centroid
     elif self.element_type in [70, 75]:   #???, CTRIA6
         nnodes = 3 + 1 # centroid
-    elif self.element_type in [74, 33, 227, 228]:  # CTRIA3, CQUAD4 linear, CQUADR linear, CQUADR linear
+    elif self.element_type in [33, 74, 227, 228]:  # CTRIA3, CQUAD4 linear, CQUADR linear, CQUADR linear
         nnodes = 1
     else:
         raise NotImplementedError('name=%r type=%s' % (self.element_name, self.element_type))
@@ -678,6 +677,7 @@ class ComplexPlateVMStressArray(ComplexPlateVMArray, StressObject):
 
     def get_headers(self) -> List[str]:
         return self._get_headers()
+
 
 class ComplexPlateVMStrainArray(ComplexPlateVMArray, StrainObject):
     def __init__(self, data_code, is_sort1, isubcase, dt):

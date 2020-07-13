@@ -2145,6 +2145,7 @@ class OP2Common(Op2Codes, F06Writer):
         ----------
         nelements :  int
             the number of elements to preallocate for vectorization
+            of the main self.data attribute
         result_name : str
             the name of the dictionary to store the object in (e.g. 'displacements')
         slot : dict[(int, int, str)=obj
@@ -2181,6 +2182,7 @@ class OP2Common(Op2Codes, F06Writer):
         auto_return = False
         #is_vectorized = True
         is_vectorized = self._is_vectorized(obj_vector)
+        assert obj_vector is not None
         #print("vectorized...read_mode=%s...%s; %s" % (self.read_mode, result_name, is_vectorized))
 
         if is_vectorized:
@@ -2224,6 +2226,7 @@ class OP2Common(Op2Codes, F06Writer):
                 auto_return = True
         else:
             auto_return = True
+            raise RuntimeError('removal of non-vectorized option')
 
         assert is_vectorized, f'{result_name!r} is not vectorized; obj={obj_vector}'
         return auto_return, is_vectorized

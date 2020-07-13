@@ -2421,42 +2421,9 @@ class OEF(OP2Common):
                 #[mx, my, mxy, bmx, bmy, bmxy, tx, ty]
                 obj.data[obj.itime, istart:iend, :] = results
             else:
+                n = oef_cquad4_144_real_9(self, data, obj,
+                                          nelements, nnodes)
 
-                n44 = 44 * self.factor
-                n36 = 36 * self.factor
-                if self.size == 4:
-                    fmt1 = self._endian + b'i4si8f'  # 8+36
-                    fmt2 = self._endian + b'i8f' # 36
-                else:
-                    fmt1 = self._endian + b'q8sq8d'
-                    fmt2 = self._endian + b'q8d'
-                s1 = Struct(fmt1)
-                s2 = Struct(fmt2)
-
-                for unused_i in range(nelements):
-                    edata = data[n:n + n44]
-
-                    out = s1.unpack(edata)
-                    if self.is_debug_file:
-                        self.binary_debug.write('OEF_Plate2-%s - %s\n' % (self.element_type, str(out)))
-                    (eid_device, term, _nid, mx, my, mxy, bmx, bmy, bmxy, tx, ty) = out
-                    #term= 'CEN\'
-                    #_nid = 4
-                    # -> CEN/4
-                    nid = 0
-                    eid, dt = get_eid_dt_from_eid_device(
-                        eid_device, self.nonlinear_factor, self.sort_method)
-                    obj.add_sort1(dt, eid, term, nid, mx, my, mxy, bmx, bmy, bmxy, tx, ty)
-                    n += n44
-                    for unused_j in range(nnodes):
-                        edata = data[n : n + n36]
-                        out = s2.unpack(edata)
-                        if self.is_debug_file:
-                            self.binary_debug.write('    %s\n' % (str(out)))
-                        (nid, mx, my, mxy, bmx, bmy, bmxy, tx, ty) = out
-                        assert nid > 0, 'nid=%s' % nid
-                        obj.add_sort1(dt, eid, term, nid, mx, my, mxy, bmx, bmy, bmxy, tx, ty)
-                        n += n36
         elif self.format_code in [2, 3] and self.num_wide == numwide_imag: # complex
             ntotal = numwide_imag * 4 * self.factor
             nelements = ndata // ntotal
@@ -2499,82 +2466,10 @@ class OEF(OP2Common):
                 obj.itotal = itotal2
                 obj.ielement = ielement2
             else:
-                if self.size == 4:
-                    s1 = Struct(self._endian + b'i4s17f')  # 2+17=19 * 4 = 76
-                    s2 = Struct(self._endian + b'i16f')  # 17 * 4 = 68
-                else:
-                    s1 = Struct(self._endian + b'q8s17d')  # 2+17=19 * 4 = 768
-                    s2 = Struct(self._endian + b'q16d')  # 17 * 4 = 68
-                ntotal = (8 + (nnodes + 1) * 68) * self.factor
-                ntotal1 = 76 * self.factor
-                ntotal2 = 68 * self.factor
+                n = oef_cquad4_imag_17(self, data, ndata, obj,
+                                       nelements, nnodes,
+                                       is_magnitude_phase)
 
-                nelements = ndata // ntotal
-                obj = self.obj
-                for unused_i in range(nelements):
-                    edata = data[n:n + ntotal1]
-                    n += ntotal1
-
-                    out = s1.unpack(edata)
-                    if self.is_debug_file:
-                        self.binary_debug.write('OEF_Plate2-%s - %s\n' % (self.element_type, str(out)))
-                    (eid_device, term, nid,
-                     mxr, myr, mxyr, bmxr, bmyr, bmxyr, txr, tyr,
-                     mxi, myi, mxyi, bmxi, bmyi, bmxyi, txi, tyi) = out
-                    #term = 'CEN\'
-
-                    eid, dt = get_eid_dt_from_eid_device(
-                        eid_device, self.nonlinear_factor, self.sort_method)
-                    if is_magnitude_phase:
-                        mx = polar_to_real_imag(mxr, mxi)
-                        my = polar_to_real_imag(myr, myi)
-                        mxy = polar_to_real_imag(mxyr, mxyi)
-                        bmx = polar_to_real_imag(bmxr, bmxi)
-                        bmy = polar_to_real_imag(bmyr, bmyi)
-                        bmxy = polar_to_real_imag(bmxyr, bmxyi)
-                        tx = polar_to_real_imag(txr, txi)
-                        ty = polar_to_real_imag(tyr, tyi)
-                    else:
-                        mx = complex(mxr, mxi)
-                        my = complex(myr, myi)
-                        mxy = complex(mxyr, mxyi)
-                        bmx = complex(bmxr, bmxi)
-                        bmy = complex(bmyr, bmyi)
-                        bmxy = complex(bmxyr, bmxyi)
-                        tx = complex(txr, txi)
-                        ty = complex(tyr, tyi)
-                    obj.add_new_element_sort1(dt, eid, term, nid, mx, my, mxy,
-                                              bmx, bmy, bmxy, tx, ty)
-
-                    for unused_j in range(nnodes):  # .. todo:: fix crash...
-                        edata = data[n:n+ntotal2]
-                        n += ntotal2
-                        out = s2.unpack(edata)
-                        (nid,
-                         mxr, myr, mxyr, bmxr, bmyr, bmxyr, txr, tyr,
-                         mxi, myi, mxyi, bmxi, bmyi, bmxyi, txi, tyi) = out
-                        if is_magnitude_phase:
-                            mx = polar_to_real_imag(mxr, mxi)
-                            my = polar_to_real_imag(myr, myi)
-                            mxy = polar_to_real_imag(mxyr, mxyi)
-                            bmx = polar_to_real_imag(bmxr, bmxi)
-                            bmy = polar_to_real_imag(bmyr, bmyi)
-                            bmxy = polar_to_real_imag(bmxyr, bmxyi)
-                            tx = polar_to_real_imag(txr, txi)
-                            ty = polar_to_real_imag(tyr, tyi)
-                        else:
-                            mx = complex(mxr, mxi)
-                            my = complex(myr, myi)
-                            mxy = complex(mxyr, mxyi)
-                            bmx = complex(bmxr, bmxi)
-                            bmy = complex(bmyr, bmyi)
-                            bmxy = complex(bmxyr, bmxyi)
-                            tx = complex(txr, txi)
-                            ty = complex(tyr, tyi)
-                        if self.is_debug_file:
-                            self.binary_debug.write('OEF_Plate2 - eid=%i nid=%s out=%s\n' % (
-                                eid, nid, str(out)))
-                        obj.add_sort1(dt, eid, nid, mx, my, mxy, bmx, bmy, bmxy, tx, ty)
         else:  # pragma: no cover
             raise RuntimeError(self.code_information())
             #msg = self.code_information()
@@ -3482,7 +3377,10 @@ class OEF(OP2Common):
                 return ndata, None, None
             self._results._found_result(result_name)
 
-            ntotal = numwide_imag #6 + 25 * nnodes; nnodes=[3, 4]
+            ntotal = numwide_imag * self.size #6 + 25 * nnodes; nnodes=[3, 4]
+            ntotal2 = (24 + 100 * nnodes) * self.factor
+            assert ntotal == ntotal2
+            #print(self.code_information())
             nelements = ndata // ntotal
             assert ndata % ntotal == 0
 
@@ -3491,75 +3389,19 @@ class OEF(OP2Common):
                 nlayers, result_name, slot, ComplexForceVU_2DArray)
             if auto_return:
                 self._data_factor = nnodes  # number of "layers" for an element
-                return nelements * self.num_wide * 4, None, None
+                return nelements * ntotal, None, None
 
             obj = self.obj
+
             #print('dt=%s, itime=%s' % (obj.itime, dt))
             is_vectorized = False
             if self.use_vector and is_vectorized and self.sort_method == 1:
                 raise NotImplementedError()
             else:
-                ntotal = (24 + 100 * nnodes) * self.factor
-                if self.size == 4:
-                    s1 = Struct(self._endian + b'iii4sii')
-                else:
-                    s1 = Struct(self._endian + b'qqq8sqq')
-                s2 = Struct(mapfmt(self._endian + b'i3f3i5fi3f3i5fi', self.size))
-                nelements = ndata // ntotal
-                ntotal1 = 24 * self.factor # 6*4
-                ntotal2 = 100 * self.factor # 13*4
-                for unused_i in range(nelements):
-                    edata = data[n:n+ntotal1]
-                    n += ntotal1
+                n = oef_vu_shell_imag(self, data, obj,
+                                      nelements, nnodes, ntotal,
+                                      etype, is_magnitude_phase)
 
-                    out = s1.unpack(edata)
-                    if self.is_debug_file:
-                        self.binary_debug.write('OEF_Force_%s-%s - %s\n' % (
-                            etype, self.element_type, str(out)))
-                    (eid_device, parent, coord, icord, theta, _) = out
-
-                    eid, dt = get_eid_dt_from_eid_device(
-                        eid_device, self.nonlinear_factor, self.sort_method)
-
-                    vugrids = []
-                    forces = []
-                    for unused_j in range(nnodes):
-                        edata = data[n:n+ntotal2]
-                        n += ntotal2
-                        out = s2.unpack(edata)
-                        if self.is_debug_file:
-                            self.binary_debug.write('OEF_Force_%s-%s - %s\n' % (
-                                etype, self.element_type, str(out)))
-                        [vugrid, mfxr, mfyr, mfxyr, unused_ai1, unused_bi1, unused_ci1,
-                         bmxr, bmyr, bmxyr, syzr, szxr, unused_di1,
-                         mfxi, mfyi, mfxyi, unused_ai2, unused_bi2, unused_ci2,
-                         bmxi, bmyi, bmxyi, syzi, szxi, unused_di2] = out
-
-                        if is_magnitude_phase:
-                            mfx = polar_to_real_imag(mfxr, mfxi)
-                            mfy = polar_to_real_imag(mfyr, mfyi)
-                            mfxy = polar_to_real_imag(mfxyr, mfxyi)
-                            bmx = polar_to_real_imag(bmxr, bmxi)
-                            bmy = polar_to_real_imag(bmyr, bmyi)
-                            bmxy = polar_to_real_imag(bmxyr, bmxyi)
-                            syz = polar_to_real_imag(syzr, syzi)
-                            szx = polar_to_real_imag(szxr, szxi)
-                        else:
-                            mfx = complex(mfxr, mfxi)
-                            mfy = complex(mfyr, mfyi)
-                            mfxy = complex(mfxyr, mfxyi)
-                            bmx = complex(bmxr, bmxi)
-                            bmy = complex(bmyr, bmyi)
-                            bmxy = complex(bmxyr, bmxyi)
-                            syz = complex(syzr, syzi)
-                            szx = complex(szxr, szxi)
-                        vugrids.append(vugrid)
-                        forcei = [mfx, mfy, mfxy, bmx, bmy, bmxy, syz, szx]
-                        forces.append(forcei)
-
-                    #data_in = [vugrid,mfxr,mfyr,mfxyr,bmxr,bmyr,bmxyr,syzr,szxr,
-                                     #mfxi,mfyi,mfxyi,bmxi,bmyi,bmxyi,syzi,szxi]
-                    obj.add_sort1(nnodes, dt, eid, parent, coord, icord, theta, vugrids, forces)
         else:  # pragma: no cover
             raise RuntimeError(self.code_information())
             #msg = self.code_information()
@@ -3748,56 +3590,10 @@ class OEF(OP2Common):
                 obj.data[obj.itime, itotal:itotal2, 1:] = real_imag
             else:
                 nnodes = 2
-                if self.size == 4:
-                    s1 = Struct(self._endian + b'i2i4s')
-                else:
-                    s1 = Struct(self._endian + b'q2q8s')
-                s2 = Struct(mapfmt(self._endian + b'i13f', self.size))
-                n = 0
-                obj._times[obj.itime] = dt
-                ntotal1 = 16 * self.factor  # 4*4
-                ntotal2 = 56 * self.factor  # 14*4
-                for unused_i in range(nelements):
-                    edata = data[n:n+ntotal1]
-                    n += ntotal1
-
-                    out = s1.unpack(edata)
-                    if self.is_debug_file:
-                        self.binary_debug.write('OEF_Force_191-%s - %s\n' % (
-                            self.element_type, str(out)))
-                    (eid_device, parent, coord, icord) = out
-
-                    eid, dt = get_eid_dt_from_eid_device(
-                        eid_device, self.nonlinear_factor, self.sort_method)
-
-                    unused_forces = []
-                    for unused_i in range(nnodes):
-                        edata = data[n:n+ntotal2]
-                        n += ntotal2
-                        out = s2.unpack(edata)
-                        if self.is_debug_file:
-                            self.binary_debug.write('%s\n' % str(out))
-                        [vugrid, posit,
-                         force_xr, shear_yr, shear_zr, torsionr, bending_yr, bending_zr,
-                         force_xi, shear_yi, shear_zi, torsioni, bending_yi, bending_zi] = out
-
-                        if is_magnitude_phase:
-                            force_x = polar_to_real_imag(force_xr, force_xi)
-                            shear_y = polar_to_real_imag(shear_yr, shear_yi)
-                            shear_z = polar_to_real_imag(shear_zr, shear_zi)
-                            torsion = polar_to_real_imag(torsionr, torsioni)
-                            bending_y = polar_to_real_imag(bending_yr, bending_yi)
-                            bending_z = polar_to_real_imag(bending_zr, bending_zi)
-                        else:
-                            force_x = complex(force_xr, force_xi)
-                            shear_y = complex(shear_yr, shear_yi)
-                            shear_z = complex(shear_zr, shear_zi)
-                            torsion = complex(torsionr, torsioni)
-                            bending_y = complex(bending_yr, bending_yi)
-                            bending_z = complex(bending_zr, bending_zi)
-
-                        obj._add_sort1(dt, eid, parent, coord, icord,
-                                       vugrid, posit, force_x, shear_y, shear_z, torsion, bending_y, bending_z)
+                n = oef_vu_beam_imag(self, data,
+                                     obj,
+                                     nelements, nnodes, ntotal, dt,
+                                     is_magnitude_phase)
         else:  # pragma: no cover
             raise RuntimeError(self.code_information())
             #msg = self.code_information()
@@ -3845,6 +3641,7 @@ def oef_cbar_imag_17(self, data: bytes,
     n = 0
 
     fmt = mapfmt(self._endian + self._analysis_code_fmt + b'16f', self.size)
+    #add_sort_x = getattr(obj, 'add_sort' + str(self.sort_method))
     s = Struct(fmt)
     for unused_i in range(nelements):
         edata = data[n:n + ntotal]
@@ -4170,4 +3967,260 @@ def oef_cshear_real_17(self, data: bytes,
                       f41, f21, f12, f32, f23, f43, f34,
                       f14, kf1, s12, kf2, s23, kf3, s34, kf4, s41)
         n += ntotal
+    return n
+
+def oef_cquad4_144_real_9(self, data: bytes,
+                          obj: RealPlateBilinearForceArray,
+                          nelements: int, nnodes: int) -> int:
+    n = 0
+    n44 = 44 * self.factor
+    n36 = 36 * self.factor
+    if self.size == 4:
+        fmt1 = self._endian + b'i4si8f'  # 8+36
+        fmt2 = self._endian + b'i8f' # 36
+    else:
+        fmt1 = self._endian + b'q8sq8d'
+        fmt2 = self._endian + b'q8d'
+    s1 = Struct(fmt1)
+    s2 = Struct(fmt2)
+
+    for unused_i in range(nelements):
+        edata = data[n:n + n44]
+
+        out = s1.unpack(edata)
+        if self.is_debug_file:
+            self.binary_debug.write('OEF_Plate2-%s - %s\n' % (self.element_type, str(out)))
+        (eid_device, term, _nid, mx, my, mxy, bmx, bmy, bmxy, tx, ty) = out
+        #term= 'CEN\'
+        #_nid = 4
+        # -> CEN/4
+        nid = 0
+        eid, dt = get_eid_dt_from_eid_device(
+            eid_device, self.nonlinear_factor, self.sort_method)
+        obj.add_sort1(dt, eid, term, nid, mx, my, mxy, bmx, bmy, bmxy, tx, ty)
+        n += n44
+        for unused_j in range(nnodes):
+            edata = data[n : n + n36]
+            out = s2.unpack(edata)
+            if self.is_debug_file:
+                self.binary_debug.write('    %s\n' % (str(out)))
+            (nid, mx, my, mxy, bmx, bmy, bmxy, tx, ty) = out
+            assert nid > 0, 'nid=%s' % nid
+            obj.add_sort1(dt, eid, term, nid, mx, my, mxy, bmx, bmy, bmxy, tx, ty)
+            n += n36
+    return n
+
+def oef_cquad4_imag_17(self, data: bytes, ndata: int,
+                       obj: ComplexPlate2ForceArray,
+                       nelements: int, nnodes: int,
+                       is_magnitude_phase: bool) -> int:
+    n = 0
+    if self.size == 4:
+        s1 = Struct(self._endian + b'i4s17f')  # 2+17=19 * 4 = 76
+        s2 = Struct(self._endian + b'i16f')  # 17 * 4 = 68
+    else:
+        s1 = Struct(self._endian + b'q8s17d')  # 2+17=19 * 4 = 768
+        s2 = Struct(self._endian + b'q16d')  # 17 * 4 = 68
+    ntotal = (8 + (nnodes + 1) * 68) * self.factor
+    ntotal1 = 76 * self.factor
+    ntotal2 = 68 * self.factor
+
+    nelements = ndata // ntotal
+    obj = self.obj
+    for unused_i in range(nelements):
+        edata = data[n:n + ntotal1]
+        n += ntotal1
+
+        out = s1.unpack(edata)
+        if self.is_debug_file:
+            self.binary_debug.write('OEF_Plate2-%s - %s\n' % (self.element_type, str(out)))
+        (eid_device, term, nid,
+         mxr, myr, mxyr, bmxr, bmyr, bmxyr, txr, tyr,
+         mxi, myi, mxyi, bmxi, bmyi, bmxyi, txi, tyi) = out
+        #term = 'CEN\'
+
+        eid, dt = get_eid_dt_from_eid_device(
+            eid_device, self.nonlinear_factor, self.sort_method)
+        if is_magnitude_phase:
+            mx = polar_to_real_imag(mxr, mxi)
+            my = polar_to_real_imag(myr, myi)
+            mxy = polar_to_real_imag(mxyr, mxyi)
+            bmx = polar_to_real_imag(bmxr, bmxi)
+            bmy = polar_to_real_imag(bmyr, bmyi)
+            bmxy = polar_to_real_imag(bmxyr, bmxyi)
+            tx = polar_to_real_imag(txr, txi)
+            ty = polar_to_real_imag(tyr, tyi)
+        else:
+            mx = complex(mxr, mxi)
+            my = complex(myr, myi)
+            mxy = complex(mxyr, mxyi)
+            bmx = complex(bmxr, bmxi)
+            bmy = complex(bmyr, bmyi)
+            bmxy = complex(bmxyr, bmxyi)
+            tx = complex(txr, txi)
+            ty = complex(tyr, tyi)
+        obj.add_new_element_sort1(dt, eid, term, nid, mx, my, mxy,
+                                  bmx, bmy, bmxy, tx, ty)
+
+        for unused_j in range(nnodes):  # .. todo:: fix crash...
+            edata = data[n:n+ntotal2]
+            n += ntotal2
+            out = s2.unpack(edata)
+            (nid,
+             mxr, myr, mxyr, bmxr, bmyr, bmxyr, txr, tyr,
+             mxi, myi, mxyi, bmxi, bmyi, bmxyi, txi, tyi) = out
+            if is_magnitude_phase:
+                mx = polar_to_real_imag(mxr, mxi)
+                my = polar_to_real_imag(myr, myi)
+                mxy = polar_to_real_imag(mxyr, mxyi)
+                bmx = polar_to_real_imag(bmxr, bmxi)
+                bmy = polar_to_real_imag(bmyr, bmyi)
+                bmxy = polar_to_real_imag(bmxyr, bmxyi)
+                tx = polar_to_real_imag(txr, txi)
+                ty = polar_to_real_imag(tyr, tyi)
+            else:
+                mx = complex(mxr, mxi)
+                my = complex(myr, myi)
+                mxy = complex(mxyr, mxyi)
+                bmx = complex(bmxr, bmxi)
+                bmy = complex(bmyr, bmyi)
+                bmxy = complex(bmxyr, bmxyi)
+                tx = complex(txr, txi)
+                ty = complex(tyr, tyi)
+            if self.is_debug_file:
+                self.binary_debug.write('OEF_Plate2 - eid=%i nid=%s out=%s\n' % (
+                    eid, nid, str(out)))
+            obj.add_sort1(dt, eid, nid, mx, my, mxy, bmx, bmy, bmxy, tx, ty)
+    return n
+
+def oef_vu_shell_imag(self, data: bytes,
+                       obj: ComplexForceVU_2DArray,
+                       nelements: int, nnodes: int, ntotal: int,
+                       etype: str,
+                       is_magnitude_phase: bool) -> int:
+    """
+    189-VUQUAD
+    190-VUTRIA
+
+    """
+    n = 0
+    if self.size == 4:
+        s1 = Struct(self._endian + b'iii4sii')
+    else:
+        s1 = Struct(self._endian + b'qqq8sqq')
+    s2 = Struct(mapfmt(self._endian + b'i3f3i5fi3f3i5fi', self.size))
+    ntotal1 = 24 * self.factor # 6*4
+    ntotal2 = 100 * self.factor # 13*4
+    assert ntotal == ntotal1 + ntotal2 * nnodes, f'ntotal={ntotal}; ntotal1={ntotal1} ntotal2={ntotal2} -> {ntotal1+ntotal2}'
+
+    assert self.sort_method == 1
+    for unused_i in range(nelements):
+        edata = data[n:n+ntotal1]
+        n += ntotal1
+
+        out = s1.unpack(edata)
+        if self.is_debug_file:
+            self.binary_debug.write('OEF_Force_%s-%s - %s\n' % (
+                etype, self.element_type, str(out)))
+        (eid_device, parent, coord, icord, theta, _) = out
+        eid, dt = get_eid_dt_from_eid_device(
+            eid_device, self.nonlinear_factor, self.sort_method)
+        #print(f'eid={eid} dt={dt}')
+
+        vugrids = []
+        forces = []
+        for unused_j in range(nnodes):
+            edata = data[n:n+ntotal2]
+            n += ntotal2
+            out = s2.unpack(edata)
+            if self.is_debug_file:
+                self.binary_debug.write('OEF_Force_%s-%s - %s\n' % (
+                    etype, self.element_type, str(out)))
+            [vugrid, mfxr, mfyr, mfxyr, unused_ai1, unused_bi1, unused_ci1,
+             bmxr, bmyr, bmxyr, syzr, szxr, unused_di1,
+             mfxi, mfyi, mfxyi, unused_ai2, unused_bi2, unused_ci2,
+             bmxi, bmyi, bmxyi, syzi, szxi, unused_di2] = out
+
+            if is_magnitude_phase:
+                mfx = polar_to_real_imag(mfxr, mfxi)
+                mfy = polar_to_real_imag(mfyr, mfyi)
+                mfxy = polar_to_real_imag(mfxyr, mfxyi)
+                bmx = polar_to_real_imag(bmxr, bmxi)
+                bmy = polar_to_real_imag(bmyr, bmyi)
+                bmxy = polar_to_real_imag(bmxyr, bmxyi)
+                syz = polar_to_real_imag(syzr, syzi)
+                szx = polar_to_real_imag(szxr, szxi)
+            else:
+                mfx = complex(mfxr, mfxi)
+                mfy = complex(mfyr, mfyi)
+                mfxy = complex(mfxyr, mfxyi)
+                bmx = complex(bmxr, bmxi)
+                bmy = complex(bmyr, bmyi)
+                bmxy = complex(bmxyr, bmxyi)
+                syz = complex(syzr, syzi)
+                szx = complex(szxr, szxi)
+            vugrids.append(vugrid)
+            forcei = [mfx, mfy, mfxy, bmx, bmy, bmxy, syz, szx]
+            forces.append(forcei)
+
+        #data_in = [vugrid,mfxr,mfyr,mfxyr,bmxr,bmyr,bmxyr,syzr,szxr,
+                         #mfxi,mfyi,mfxyi,bmxi,bmyi,bmxyi,syzi,szxi]
+        obj.add_sort1(nnodes, dt, eid, parent, coord, icord, theta, vugrids, forces)
+    return n
+
+def oef_vu_beam_imag(self, data: bytes,
+                     obj: ComplexCBeamForceVUArray,
+                     nelements: int, nnodes: int, ntotal: int, dt: Any,
+                     is_magnitude_phase: bool) -> int:
+    n = 0
+    if self.size == 4:
+        s1 = Struct(self._endian + b'i2i4s')
+    else:
+        s1 = Struct(self._endian + b'q2q8s')
+    s2 = Struct(mapfmt(self._endian + b'i13f', self.size))
+    n = 0
+    obj._times[obj.itime] = dt
+    ntotal1 = 16 * self.factor  # 4*4
+    ntotal2 = 56 * self.factor  # 14*4
+    for unused_i in range(nelements):
+        edata = data[n:n+ntotal1]
+        n += ntotal1
+
+        out = s1.unpack(edata)
+        if self.is_debug_file:
+            self.binary_debug.write('OEF_Force_191-%s - %s\n' % (
+                self.element_type, str(out)))
+        (eid_device, parent, coord, icord) = out
+
+        eid, dt = get_eid_dt_from_eid_device(
+            eid_device, self.nonlinear_factor, self.sort_method)
+
+        unused_forces = []
+        for unused_i in range(nnodes):
+            edata = data[n:n+ntotal2]
+            n += ntotal2
+            out = s2.unpack(edata)
+            if self.is_debug_file:
+                self.binary_debug.write('%s\n' % str(out))
+            [vugrid, posit,
+             force_xr, shear_yr, shear_zr, torsionr, bending_yr, bending_zr,
+             force_xi, shear_yi, shear_zi, torsioni, bending_yi, bending_zi] = out
+
+            if is_magnitude_phase:
+                force_x = polar_to_real_imag(force_xr, force_xi)
+                shear_y = polar_to_real_imag(shear_yr, shear_yi)
+                shear_z = polar_to_real_imag(shear_zr, shear_zi)
+                torsion = polar_to_real_imag(torsionr, torsioni)
+                bending_y = polar_to_real_imag(bending_yr, bending_yi)
+                bending_z = polar_to_real_imag(bending_zr, bending_zi)
+            else:
+                force_x = complex(force_xr, force_xi)
+                shear_y = complex(shear_yr, shear_yi)
+                shear_z = complex(shear_zr, shear_zi)
+                torsion = complex(torsionr, torsioni)
+                bending_y = complex(bending_yr, bending_yi)
+                bending_z = complex(bending_zr, bending_zi)
+
+            obj._add_sort1(dt, eid, parent, coord, icord,
+                           vugrid, posit, force_x, shear_y, shear_z, torsion, bending_y, bending_z)
     return n

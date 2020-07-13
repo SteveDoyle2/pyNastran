@@ -106,20 +106,39 @@ class RealPlateArray(OES_Object):
         #print("***name=%s type=%s nnodes_per_element=%s ntimes=%s nelements=%s ntotal=%s" % (
             #self.element_name, self.element_type, nnodes_per_element, self.ntimes,
             #self.nelements, self.ntotal))
-        dtype, idtype, fdtype = get_times_dtype(self.nonlinear_factor, self.size)
+        dtype, idtype, fdtype = get_times_dtype(self.nonlinear_factor, self.size, self.analysis_fmt)
 
         if self.is_sort1:
             ntimes = self.ntimes
             nlayers = self.nelements
         else:
-            print(self.ntimes, self.nelements, self.ntotal, self._ntotals)
-            ntimes = self.nelements
-            #print(self.code_information())
-            nlayers = self._ntotals[0] * nlayers_per_element
+            # NUMBER OF CQUAD4   ELEMENTS =      956
+            # NUMBER OF CTRIA3   ELEMENTS =       27
+            #***nelments=956 nlayers_per_element=2 ntimes=201 nlayers=1912
+            #***nelments=27  nlayers_per_element=2 ntimes=201
+
+            #print(self.ntimes, self.nelements, self.ntotal, self._ntotals)
+            nelements = self.ntimes # good
+            ntimes = self._ntotals[0] // nlayers_per_element
+            nlayers = nelements * nlayers_per_element
+            #print(f'***nelments={nelements} nlayers_per_element={nlayers_per_element} ntimes={ntimes} -> nlayers={nlayers}')
+            #nelements = self._ntotals[0]  # good
+            #nlayers += 1
+            #ntimes = nlayers // nelements
+            assert nlayers % nelements == 0
             #print('***', self.element_name, nlayers)
             #assert nelements == 4, self.ntimes
             #nelements = 4
             #nelements = = self.ntimes // 2
+            #print(f'ntimes={ntimes} nelements={nelements} nlayers={nlayers}; '
+                  #f'nlayers_per_element={nlayers_per_element}')
+            #bbb
+            #assert ntimes == 1, ntimes
+            #print(self.code_information())
+
+        if self.analysis_code == 1:
+            #ntimes = 1
+            assert ntimes == 1, self.code_information()
         _times = np.zeros(ntimes, dtype=dtype)
         element_node = np.zeros((nlayers, 2), dtype=idtype)
 
@@ -274,11 +293,15 @@ class RealPlateArray(OES_Object):
         self.itotal += 2
         #self.ielement += 2
 
-    def _get_sort2_itime_ilower_iupper_from_itotal(self, dt, eid: int, nid: int) -> Tuple[int, int, int]:
+    def _get_sort2_itime_ilower_iupper_from_itotal(self, dt, eid: int, nid: int,
+                                                   debug=False) -> Tuple[int, int, int]:
+        ntimes = self.data.shape[0]
+
         # the monotonic element index (no duplicates)
         ielement = self.itime
 
-        itime = self.itime
+        # itime = self.itime
+        itime = self.ielement
         #ie_upper = self.ielement
         #ie_lower = self.ielement + 1
         itotal = self.itotal
@@ -287,14 +310,27 @@ class RealPlateArray(OES_Object):
         #itime = self.ielement // nnodes
 
         ilayer = self.itotal % 2 == 0 # 0/1
-        inid = self.itotal // 2
+        ielement_inid = self.itotal // ntimes
+        inid = self.itotal // (2 * ntimes)
+        if self.element_type in [33, 74, 227, 228]:
+            #  CQUAD4-33, CTRIA3-74, CTRIAR-227, CQUADR-228
+            assert inid == 0, (self.element_name, self.element_type, inid)
+            #print('inid', inid)
+        elif self.element_type in [64, 144]:  # CQUAD8, CQUAD4-144
+            assert inid in (0, 1, 2, 3, 4), (self.element_name, self.element_type, inid)
+        elif self.element_type == 75:  # CQUAD8
+            assert inid in (0, 1, 2, 3), (self.element_name, self.element_type, inid)
+        else:
+            raise NotImplementedError((self.element_name, self.element_type, inid))
+
+
         #inid = self.ielement % nnodes
         #itotal = self.itotal
         #if itime >= self.data.shape[0]:# or itotal >= self.element_node.shape[0]:
         ielement = self.itime
-        if self.element_name == 'CQUAD8':
-            print(f'*SORT2 {self.element_name}: itime={itime} ielement={ielement} ilayer={ilayer}  inid={inid} itotal={itotal} dt={dt} eid={eid} nid={nid}')
-            print(f'*SORT2 {self.element_name}: itime={itime} ielement={ielement} ilayer=False inid={inid} itotal={itotal+1} dt={dt} eid={eid} nid={nid}')
+        #if self.element_name == 'CQUAD8':
+            #print(f'*SORT2 {self.element_name}: itime={itime} ielement={ielement} ilayer={ilayer}  inid={inid} itotal={itotal} dt={dt} eid={eid} nid={nid}')
+            #print(f'*SORT2 {self.element_name}: itime={itime} ielement={ielement} ilayer=False inid={inid} itotal={itotal+1} dt={dt} eid={eid} nid={nid}')
             #print(self.data.shape)
             #print(self.element_node.shape)
         #else:
@@ -302,17 +338,20 @@ class RealPlateArray(OES_Object):
         #print(itime, inid, ielement)
 
         #ibase = 2 * ielement # ctria3/cquad4-33
+        if debug:
+            print(f'ielement={ielement} nnodes={nnodes} inid={inid}')
         ibase = 2 * (ielement * nnodes + inid)
+        #ibase = ielement_inid
         ie_upper = ibase
         ie_lower = ibase + 1
 
         #if self.element_name == 'CTRIAR': # and self.table_name == 'OESATO2':
-        debug = False
-        if self.element_name == 'CTRIAR': # and self.table_name in ['OSTRRMS1', 'OSTRRMS2']:
-            debug = True
-        if debug:
-            print(f'SORT2 {self.table_name} {self.element_name}: itime={itime} ie_upper={ie_upper} ielement={self.itime} inid={inid} nid={nid} itotal={itotal} dt={dt} eid={eid} nid={nid}')
-            print(f'SORT2 {self.table_name} {self.element_name}: itime={itime} ie_lower={ie_lower} ielement={self.itime} inid={inid} nid={nid} itotal={itotal+1} dt={dt} eid={eid} nid={nid}')
+        #debug = False
+        #if self.element_name == 'CTRIAR': # and self.table_name in ['OSTRRMS1', 'OSTRRMS2']:
+            #debug = True
+        #if debug:
+            #print(f'SORT2 {self.table_name} {self.element_name}: itime={itime} ie_upper={ie_upper} ielement={self.itime} inid={inid} nid={nid} itotal={itotal} dt={dt} eid={eid} nid={nid}')
+            #print(f'SORT2 {self.table_name} {self.element_name}: itime={itime} ie_lower={ie_lower} ielement={self.itime} inid={inid} nid={nid} itotal={itotal+1} dt={dt} eid={eid} nid={nid}')
         return itime, ie_upper, ie_lower
 
     def add_new_eid_sort2(self, dt, eid, node_id,
@@ -321,13 +360,22 @@ class RealPlateArray(OES_Object):
         assert isinstance(eid, integer_types), eid
         assert isinstance(node_id, integer_types), node_id
         #itime, itotal = self._get_sort2_itime_ielement_from_itotal()
+
+
         itime, ie_upper, ie_lower = self._get_sort2_itime_ilower_iupper_from_itotal(dt, eid, node_id)
-        self._times[itime] = dt
-        print(f'itime={itime} -> dt={dt};   ie_upper={ie_upper} -> eid={eid}')
-        #assert self.itotal == 0, oxx
-        #if itime == 0:
-            #self.element_node[ie_upper, :] = [eid, node_id]  # 0 is center
-            #self.element_node[ie_lower, :] = [eid, node_id]  # 0 is center
+        try:
+            #print(f'SORT2: itime={itime} -> dt={dt};   ie_upper={ie_upper} -> eid={eid} ({self.element_name})')
+            self._times[itime] = dt
+            #assert self.itotal == 0, oxx
+            #if itime == 0:
+            self.element_node[ie_upper, :] = [eid, node_id]  # 0 is center
+            self.element_node[ie_lower, :] = [eid, node_id]  # 0 is center
+        except:
+            itime, ie_upper, ie_lower = self._get_sort2_itime_ilower_iupper_from_itotal(
+                dt, eid, node_id, debug=True)
+            print(f'SORT2: itime={itime} -> dt={dt};   ie_upper={ie_upper} -> eid={eid} ({self.element_name})')
+            raise
+        #print(self.element_node)
         #self.data[self.itime, ie_upper, :] = [fiber_dist1, oxx1, oyy1, txy1, angle1,
                                               #major_principal1, minor_principal1, ovm1]
         #self.data[self.itime, ie_lower, :] = [fiber_dist2, oxx2, oyy2, txy2, angle2,
@@ -342,10 +390,12 @@ class RealPlateArray(OES_Object):
         assert isinstance(eid, integer_types) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
         assert isinstance(node_id, integer_types), node_id
         itime, ie_upper, ie_lower = self._get_sort2_itime_ilower_iupper_from_itotal(dt, eid, node_id)
-        print(f'itime={itime} -> dt={dt};   ie_upper={ie_upper} -> eid={eid}')
-        print(self.element_node.shape)
+        #print(f'SORT2b: itime={itime} -> dt={dt};   ie_upper={ie_upper} -> eid={eid} nid={node_id}')
+        #print(self.element_node.shape)
+        #if itime == 0:
         self.element_node[ie_upper, :] = [eid, node_id]
         self.element_node[ie_lower, :] = [eid, node_id]
+        #print(self.element_node.tolist())
         self.data[itime, ie_upper, :] = [fiber_dist1, oxx1, oyy1, txy1, angle1,
                                        major_principal1, minor_principal1, ovm1]
         self.data[itime, ie_lower, :] = [fiber_dist2, oxx2, oyy2, txy2, angle2,
