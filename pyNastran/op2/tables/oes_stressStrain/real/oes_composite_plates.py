@@ -77,9 +77,7 @@ class RealCompositePlateArray(OES_Object):
         self.itotal = 0
         self.is_built = True
 
-        dtype = 'float32'
-        if isinstance(self.nonlinear_factor, integer_types):
-            dtype = 'int32'
+        dtype, idtype, fdtype = get_times_dtype(self.nonlinear_factor, self.size, self.analysis_fmt)
 
         if self.is_sort1:
             ntimes = self.ntimes

@@ -2,8 +2,8 @@ from typing import List
 import numpy as np
 from numpy import zeros, allclose
 
-from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import StressObject, StrainObject, OES_Object
+from pyNastran.op2.result_objects.op2_objects import get_times_dtype
 from pyNastran.f06.f06_formatting import _eigenvalue_header #, get_key0
 
 
@@ -25,6 +25,10 @@ class RandomShearArray(OES_Object):
     @property
     def is_complex(self):
         return False
+
+    @property
+    def nnodes_per_element(self) -> int:
+        return 1
 
     def _reset_indices(self):
         self.itotal = 0
@@ -52,14 +56,19 @@ class RandomShearArray(OES_Object):
         self.is_built = True
 
         #print("ntimes=%s nelements=%s ntotal=%s" % (self.ntimes, self.nelements, self.ntotal))
-        dtype = 'float32'
-        if isinstance(self.nonlinear_factor, integer_types):
-            dtype = 'int32'
-        self._times = zeros(self.ntimes, dtype=dtype)
-        self.element = zeros(self.nelements, dtype='int32')
+        if self.is_sort1:
+            ntimes = self.ntimes
+            nelements = self.nelements
+        else:
+            ntimes = self.nelements
+            nelements = self.ntimes
+
+        dtype, idtype, fdtype = get_times_dtype(self.nonlinear_factor, self.size, self.analysis_fmt)
+        self._times = zeros(ntimes, dtype=dtype)
+        self.element = zeros(nelements, dtype='int32')
 
         # [max_shear, avg_shear]
-        self.data = zeros((self.ntimes, self.ntotal, 2), dtype='float32')
+        self.data = zeros((ntimes, nelements, 2), dtype='float32')
 
     def build_dataframe(self):
         """creates a pandas dataframe"""
@@ -118,6 +127,19 @@ class RandomShearArray(OES_Object):
         self._times[self.itime] = dt
         self.element[self.ielement] = eid
         self.data[self.itime, self.ielement, :] = [max_shear, avg_shear]
+        self.ielement += 1
+
+    def add_sort2(self, dt, eid, max_shear, avg_shear):
+        """
+        ELEMENT            MAX            AVG       ELEMENT            MAX            AVG
+          ID.             SHEAR          SHEAR        ID.             SHEAR          SHEAR
+            328        1.721350E+03   1.570314E+03
+        """
+        itime = self.ielement
+        ielement = self.itotal
+        self._times[itime] = dt
+        self.element[ielement] = eid
+        self.data[itime, ielement, :] = [max_shear, avg_shear]
         self.ielement += 1
 
     def get_stats(self, short=False) -> List[str]:

@@ -4,6 +4,7 @@ import numpy as np
 from numpy import zeros
 
 from pyNastran.utils.numpy_utils import integer_types
+from pyNastran.op2.result_objects.op2_objects import get_times_dtype
 from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import (
     StressObject, StrainObject, OES_Object)
 from pyNastran.f06.f06_formatting import write_floats_13e, _eigenvalue_header
@@ -77,25 +78,31 @@ class RandomBeamArray(OES_Object):
         #print("***name=%s type=%s nnodes_per_element=%s ntimes=%s nelements=%s ntotal=%s" % (
             #self.element_name, self.element_type, nnodes_per_element, self.ntimes,
             #self.nelements, self.ntotal))
-        dtype = 'float32'
-        if isinstance(self.nonlinear_factor, integer_types):
-            dtype = 'int32'
-        self._times = zeros(self.ntimes, dtype=dtype)
-        self.element_node = zeros((self.ntotal, 2), dtype='int32')
+        dtype, idtype, fdtype = get_times_dtype(self.nonlinear_factor, self.size, self.analysis_fmt)
+
+        if self.is_sort1:
+            ntimes = self.ntimes
+            ntotal = self.ntotal
+        else:
+            ntimes = self.ntotal
+            ntotal = self.ntimes
+
+        self._times = zeros(ntimes, dtype=dtype)
+        self.element_node = zeros((ntotal, 2), dtype='int32')
 
         # sxc, sxd, sxe, sxf
-        self.xxb = zeros(self.ntotal, dtype='float32')
-        self.data = zeros((self.ntimes, self.ntotal, 4), dtype='float32')
+        self.xxb = zeros(ntotal, dtype='float32')
+        self.data = zeros((ntimes, ntotal, 4), dtype='float32')
 
-    def finalize(self):
-        sd = self.data[0, :, 0].real
-        i_sd_zero = np.where(sd != 0.0)[0]
-        i_node_zero = np.where(self.element_node[:, 1] != 0)[0]
-        assert i_node_zero.max() > 0, 'CBEAM element_node hasnt been filled'
-        i = np.union1d(i_sd_zero, i_node_zero)
-        #self.element = self.element[i]
-        self.element_node = self.element_node[i, :]
-        self.data = self.data[:, i, :]
+    #def finalize(self):
+        #sd = self.data[0, :, 0].real
+        #i_sd_zero = np.where(sd != 0.0)[0]
+        #i_node_zero = np.where(self.element_node[:, 1] != 0)[0]
+        #assert i_node_zero.max() > 0, 'CBEAM element_node hasnt been filled'
+        #i = np.union1d(i_sd_zero, i_node_zero)
+        ##self.element = self.element[i]
+        #self.element_node = self.element_node[i, :]
+        #self.data = self.data[:, i, :]
 
     def build_dataframe(self):
         """creates a pandas dataframe"""
@@ -154,7 +161,7 @@ class RandomBeamArray(OES_Object):
                 raise ValueError(msg)
         return True
 
-    def add_new_eid_sort1(self, dt, eid, grid, sd, sxc, sxd, sxe, sxf):
+    def add_eid_sort1(self, dt, eid, grid, sd, sxc, sxd, sxe, sxf):
         assert isinstance(eid, integer_types), eid
         assert eid >= 0, eid
         self._times[self.itime] = dt
@@ -170,6 +177,28 @@ class RandomBeamArray(OES_Object):
         self.element_node[self.itotal, :] = [eid, grid]
         self.xxb[self.itotal] = sd
         self.data[self.itime, self.itotal, :] = [sxc, sxd, sxe, sxf]
+        self.itotal += 1
+
+    def add_eid_sort2(self, dt, eid, grid, sd, sxc, sxd, sxe, sxf):
+        assert isinstance(eid, integer_types), eid
+        assert eid >= 0, eid
+        itotal = self.itime
+        itime = self.itotal
+        self._times[itime] = dt
+        self.element_node[itotal] = [eid, grid]
+        self.xxb[itotal] = sd
+        self.data[itime, itotal, :] = [sxc, sxd, sxe, sxf]
+        self.itotal += 1
+        self.ielement += 1
+
+    def add_sort2(self, dt, eid, grid, sd, sxc, sxd, sxe, sxf):
+        """unvectorized method for adding SORT2 transient data"""
+        assert isinstance(eid, integer_types) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
+        itotal = self.itime
+        itime = self.itotal
+        self.element_node[itotal, :] = [eid, grid]
+        self.xxb[itotal] = sd
+        self.data[itime, itotal, :] = [sxc, sxd, sxe, sxf]
         self.itotal += 1
 
     def get_stats(self, short=False) -> List[str]:
@@ -287,7 +316,7 @@ class RandomBeamStressArray(RandomBeamArray, StressObject):
         else:
             raise NotImplementedError(self.element_type)
 
-        assert self.table_name in ['OESXNO1', 'OESXRMS1', 'OESATO2'], self.table_name
+        assert self.table_name in ['OESXNO1', 'OESXRMS1', 'OESATO2', 'OESATO1', 'OESCRM1', 'OESPSD1'], f'table_name={self.table_name!r}'
         msg = [
             '                                  S T R E S S E S   I N   B E A M   E L E M E N T S        ( C B E A M )\n',
             '                    STAT DIST/\n',
@@ -314,7 +343,7 @@ class RandomBeamStrainArray(RandomBeamArray, StrainObject):
         else:
             raise NotImplementedError(self.element_type)
 
-        assert self.table_name in ['OSTRNO1', 'OSTRRMS1', 'OSTRATO2'], self.table_name
+        assert self.table_name in ['OSTRNO1', 'OSTRRMS1', 'OSTRATO2', 'OSTRATO1', 'OSTRCRM1', 'OSTRPSD1'], self.table_name
         msg = [
             '                                  S T R A I N S   I N   B E A M   E L E M E N T S        ( C B E A M )\n',
             '                    STAT DIST/\n',

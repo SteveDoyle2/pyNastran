@@ -924,6 +924,10 @@ class ComplexViscForceArray(BaseElement):
         headers = ['axial_force', 'torque']
         return headers
 
+    @property
+    def nnodes_per_element(self) -> int:
+        return 1
+
     #def get_headers(self):
         #headers = ['axial', 'torque']
         #return headers

@@ -63,7 +63,7 @@ class OES_Object(BaseElement):
         itime = self.ielement
         #itotal = self.itotal
         ielement = self.itime
-        print(f'itime={self.itime} ielement={self.ielement} nelements={self.nelements}') # self.itotal
+        #print(f'itime={self.itime} ielement={self.ielement} nelements={self.nelements}') # self.itotal
         return itime, ielement
 
     def set_as_sort1(self):
@@ -75,6 +75,7 @@ class OES_Object(BaseElement):
                 #print(self._times, type(self._times))
                 #aaa
             return
+        #print(f'{self.class_name}-{self.table_name}')
         self.table_name = SORT2_TABLE_NAME_MAP[self.table_name]
         self.sort_bits[1] = 0 # sort1
         self.sort_method = 1
@@ -98,6 +99,7 @@ class OES_Object(BaseElement):
             self.nonlinear_factor = self._times[0]
         else:
             name = self.analysis_method
+            #print(f'name = {name}\n')
             #_analysis_code_fmt
         #if self.analysis_code == 5:
             #name = 'freq'
@@ -114,7 +116,7 @@ class OES_Object(BaseElement):
         del self.element_id, self.element_ids
         #print('timesA =', self._times)
         old_times = None
-        if 0:
+        if 1:
             old_times = self._times
             setattr(self, names, self._times)
             #print('timesB =', self._times)

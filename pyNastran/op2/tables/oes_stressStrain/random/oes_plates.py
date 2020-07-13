@@ -630,7 +630,7 @@ def _get_plate_msg(self, is_mag_phase=True, is_sort1=True, has_von_mises: bool=F
             '                               ( CUMULATIVE ROOT MEAN SQUARE; RMSSF SCALE FACTOR =  X.XXE+XX )\n'
             ' \n'
             ] + msg_temp
-    elif self.table_name in ['OSTRATO1']:
+    elif self.table_name in ['OESATO1', 'OSTRATO1']:
         msg = msgi + [
             '                                    ( ATO ? )\n'
             ' \n'

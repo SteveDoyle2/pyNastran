@@ -2328,9 +2328,8 @@ class OES(OP2Common):
             else:
                 if is_vectorized and self.use_vector:  # pragma: no cover
                     self.log.debug('vectorize CBEAM random SORT%s' % self.sort_method)
-                n = oes_cbeam_random_67(self, data,
-                                       obj,
-                                       nelements, nnodes, dt)
+                n = oes_cbeam_random_67(self, data, obj,
+                                        nelements, nnodes, dt)
 
         elif result_type == 1 and self.num_wide in [67] and table_name_bytes in [b'OESXNO1']:  # CBEAM
             # C:\MSC.Software\simcenter_nastran_2019.2\tpl_post2\tr1081x.op2
@@ -2486,18 +2485,9 @@ class OES(OP2Common):
             else:
                 if is_vectorized and self.use_vector:  # pragma: no cover
                     self.log.debug('vectorize CSHEAR random SORT%s' % self.sort_method)
-                struct1 = Struct(self._endian + self._analysis_code_fmt + b'2f')
-                for unused_i in range(nelements):
-                    edata = data[n:n + ntotal]
-                    out = struct1.unpack(edata)  # num_wide=5
-                    if self.is_debug_file:
-                        self.binary_debug.write('CSHEAR-4 - %s\n' % str(out))
+                n = oes_cshear_random_3(self, data, obj,
+                                        nelements, ntotal)
 
-                    (eid_device, max_strain, avg_strain) = out
-                    eid, dt = get_eid_dt_from_eid_device(
-                        eid_device, self.nonlinear_factor, self.sort_method)
-                    obj.add_sort1(dt, eid, max_strain, avg_strain)
-                    n += ntotal
         else:  # pragma: no cover
             raise RuntimeError(self.code_information())
         return n, nelements, ntotal
@@ -2825,7 +2815,7 @@ class OES(OP2Common):
                 obj.ielement = itotali
             else:
                 if is_vectorized and self.use_vector:  # pragma: no cover
-                    self.log.debug('vectorize CSolid real SORT%s' % self.sort_method)
+                    self.log.debug(f'vectorize CSolid real SORT{self.sort_method}')
                 n = oes_csolid_real(self, data, obj,
                                     nelements, dt,
                                     element_name, nnodes_expected,
@@ -2880,20 +2870,24 @@ class OES(OP2Common):
                 obj.ielement = ielement2
             else:
                 if is_vectorized and self.use_vector:  # pragma: no cover
-                    self.log.debug('vectorize CSolid imag SORT%s' % self.sort_method)
+                    self.log.debug(f'vectorize CSolid imag SORT{self.sort_method}')
                 n = oes_csolid_complex(self, data, obj,
                                        nelements, # nnodes,
                                        element_name, nnodes_expected,
                                        is_magnitude_phase)
 
         elif self.format_code == 1 and self.num_wide == numwide_random: # random
+            if not self.is_sort1:
+                self.log.debug(f'support CSolid random SORT{self.sort_method}')
+                return ndata, None, None
+
             ntotal = numwide_random * 4
             nelements = ndata // ntotal
             assert ndata % ntotal == 0, ndata
             auto_return, is_vectorized = self._create_oes_object4(
                 nelements, result_name, slot, obj_vector_random)
             if auto_return:
-                return nelements * self.num_wide * 4, None, None
+                return nelements * ntotal, None, None
 
             obj = self.obj
             if self.use_vector and is_vectorized and 0:  # pragma: no cover
@@ -2960,7 +2954,7 @@ class OES(OP2Common):
                 obj.ielement = itotali
             else:
                 if is_vectorized and self.use_vector and obj.itime == 0:  # pragma: no cover
-                    self.log.debug('vectorize CSolid random SORT%s' % self.sort_method)
+                    self.log.debug(f'vectorize CSolid random SORT{self.sort_method}')
                 n = oes_csolid_random(self, data, obj, nelements,
                                       element_name, nnodes_expected,
                                       preline1, preline2)
@@ -4836,6 +4830,8 @@ class OES(OP2Common):
             b'OES1', b'OES1X', b'OES1X1', b'OSTR1X',
             b'OES2', b'OSTR2',
             b'OESVM1', b'OESVM2', b'OSTRVM1', b'OSTRVM2',
+            b'OESPSD2', b'OESATO2', b'OESCRM2',
+            b'OSTRPSD2', b'OSTRATO2', b'OSTRCRM2',
         ]
         assert self.table_name in table_names, self.table_name
         sort_method = self.sort_method
@@ -7760,6 +7756,7 @@ def oes_cbeam_random_67(self, data: bytes,
     s1 = Struct(self._endian + self._analysis_code_fmt + b'i5f')
     s2 = Struct(self._endian + b'i5f')
     add_sort_x = getattr(obj, 'add_sort' + str(self.sort_method))
+    add_eid_sort_x = getattr(obj, 'add_eid_sort' + str(self.sort_method))
     for unused_i in range(nelements):
         edata = data[n:n+n1]
         n += n1
@@ -7773,7 +7770,7 @@ def oes_cbeam_random_67(self, data: bytes,
             self.binary_debug.write('CBEAM-2 - eid=%i out=%s\n' % (eid, str(out)))
 
         #(grid, sd, sxc, sxd, sxe, sxf, smax, smin, mst, msc) = out
-        obj.add_new_eid_sort1(dt, eid, *out[1:])
+        add_eid_sort_x(dt, eid, *out[1:])
 
         for unused_inode in range(nnodes):
             edata = data[n:n+n2]
@@ -8570,7 +8567,7 @@ def oes_cbar_random_10(self, data: bytes,
     #print(self.code_information())
     #print('self._analysis_code_fmt =', self._analysis_code_fmt)
     struct1 = Struct(self._endian + self._analysis_code_fmt + b'9f')
-    add_sort_x = getattr(obj, 'add_new_eid_sort' + str(self.sort_method))
+    add_sort_x = getattr(obj, 'add_sort' + str(self.sort_method))
 
     #self.log.info('self.nonlinear_factor = %s' % self.nonlinear_factor)
     #assert self.sort_method == 2, self.code_information()
@@ -8911,4 +8908,24 @@ def oes_comp_shell_real_11(self, data: bytes, ndata: int,
                        t12, t1z, t2z, angle, major, minor, ovm)
         eid_old = eid
         n += 44
+    return n
+
+def oes_cshear_random_3(self, data: bytes,
+                        obj: Union[RandomShearStressArray, RandomShearStrainArray],
+                        nelements: int, ntotal: int) -> int:
+    n = 0
+    add_sort_x = getattr(obj, 'add_sort' + str(self.sort_method))
+    struct1 = Struct(self._endian + self._analysis_code_fmt + b'2f')
+    for unused_i in range(nelements):
+        edata = data[n:n + ntotal]
+        out = struct1.unpack(edata)  # num_wide=5
+        if self.is_debug_file:
+            self.binary_debug.write('CSHEAR-4 - %s\n' % str(out))
+
+        (eid_device, max_strain, avg_strain) = out
+        eid, dt = get_eid_dt_from_eid_device(
+            eid_device, self.nonlinear_factor, self.sort_method)
+        print(eid, dt)
+        add_sort_x(dt, eid, max_strain, avg_strain)
+        n += ntotal
     return n

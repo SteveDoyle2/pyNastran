@@ -810,9 +810,7 @@ class ComplexStrainEnergyArray(BaseElement):
         self.is_built = True
 
         #print("ntimes=%s nelements=%s ntotal=%s" % (self.ntimes, self.nelements, self.ntotal))
-        dtype = 'float32'
-        if isinstance(self.nonlinear_factor, integer_types):
-            dtype = 'int32'
+        dtype, idtype, fdtype = get_times_dtype(self.nonlinear_factor, self.size, self.analysis_fmt)
         self.build_data(dtype)
 
     def build_data(self, dtype):

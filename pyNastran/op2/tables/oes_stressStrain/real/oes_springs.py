@@ -176,11 +176,7 @@ class RealSpringArray(OES_Object):
         self.is_built = True
 
         #print("ntimes=%s nelements=%s ntotal=%s" % (self.ntimes, self.nelements, self.ntotal))
-        float_fmt = 'float32' if self.size == 4 else 'float64'
-        dtype = float_fmt
-        if isinstance(self.nonlinear_factor, integer_types):
-            int_fmt = 'int32' if self.size == 4 else 'int64'
-            dtype = int_fmt
+        dtype, unused_idtype, unused_fdtype = get_times_dtype(self.nonlinear_factor, self.size, self.analysis_fmt)
         self.build_data(self.ntimes, self.nelements, dtype)
 
     def build_data(self, ntimes, nelements, dtype):
@@ -584,9 +580,7 @@ class RealNonlinearSpringStressArray(OES_Object):
         self.is_built = True
 
         #print("ntimes=%s nelements=%s ntotal=%s" % (self.ntimes, self.nelements, self.ntotal))
-        dtype = 'float32'
-        if isinstance(self.nonlinear_factor, integer_types):
-            dtype = 'int32'
+        dtype, idtype, fdtype = get_times_dtype(self.nonlinear_factor, self.size, self.analysis_fmt)
         _times = zeros(self.ntimes, dtype=dtype)
         element = zeros(self.nelements, dtype='int32')
 

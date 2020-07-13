@@ -87,7 +87,7 @@ class RandomBarArray(OES_Object):
         else:
             nelements = self.ntimes
             ntimes = self.ntotal
-            dtype = self._get_analysis_code_dtype()
+            #dtype = self._get_analysis_code_dtype()
 
         self._times = zeros(ntimes, dtype=dtype)
         self.element = zeros(nelements, dtype='int32')
@@ -143,9 +143,9 @@ class RandomBarArray(OES_Object):
                 raise ValueError(msg)
         return True
 
-    def add_new_eid_sort1(self, dt, eid,
-                          s1a, s2a, s3a, s4a, axial,
-                          s1b, s2b, s3b, s4b):
+    def add_sort1(self, dt, eid,
+                  s1a, s2a, s3a, s4a, axial,
+                  s1b, s2b, s3b, s4b):
 
         assert isinstance(eid, integer_types)
         assert eid > 0, eid
@@ -156,9 +156,9 @@ class RandomBarArray(OES_Object):
         self.itotal += 1
         self.ielement += 1
 
-    def add_new_eid_sort2(self, dt, eid,
-                          s1a, s2a, s3a, s4a, axial,
-                          s1b, s2b, s3b, s4b):
+    def add_sort2(self, dt, eid,
+                  s1a, s2a, s3a, s4a, axial,
+                  s1b, s2b, s3b, s4b):
         itime, ielement = self._get_sort2_itime_ielement_from_itotal()
         self._times[itime] = dt
         self.element[ielement] = eid

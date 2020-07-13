@@ -2,9 +2,8 @@ from typing import List
 import numpy as np
 from numpy import zeros, searchsorted, allclose
 
-from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import (
-    StressObject, StrainObject, OES_Object, SORT2_TABLE_NAME_MAP)
+    StressObject, StrainObject, OES_Object)
 from pyNastran.op2.result_objects.op2_objects import get_times_dtype
 from pyNastran.f06.f06_formatting import write_floats_13e, _eigenvalue_header #, get_key0
 
@@ -51,24 +50,19 @@ class RandomRodArray(OES_Object):
         self.itotal = 0
 
         if self.is_sort1:
-            pass
-        else:
-            self.nelements, self.ntimes = self.ntimes, self.nelements
-
-        #self.ntimes = 0
-        #self.nelements = 0
-        self.is_built = True
-
-        #print("ntimes=%s nelements=%s ntotal=%s" % (self.ntimes, self.nelements, self.ntotal))
-
-        dtype, idtype, fdtype = get_times_dtype(self.nonlinear_factor, self.size, self.analysis_fmt)
-        if self.is_sort1:
             ntimes = self.ntimes
             nelements = self.ntotal
         else:
             nelements = self.ntimes
             ntimes = self.ntotal
             dtype = self._get_analysis_code_dtype()
+
+        #self.ntimes = 0
+        #self.nelements = 0
+        self.is_built = True
+
+        #print("ntimes=%s nelements=%s ntotal=%s" % (self.ntimes, self.nelements, self.ntotal))
+        dtype, idtype, fdtype = get_times_dtype(self.nonlinear_factor, self.size, self.analysis_fmt)
 
         self.build_data(ntimes, nelements, dtype, idtype=idtype, fdtype=fdtype)
 
@@ -177,8 +171,8 @@ class RandomRodArray(OES_Object):
             ]
 
         ntimes, nelements, _ = self.data.shape
-        assert self.ntimes == ntimes, 'ntimes=%s expected=%s' % (self.ntimes, ntimes)
-        assert self.nelements == nelements, 'nelements=%s expected=%s' % (self.nelements, nelements)
+        #assert self.ntimes == ntimes, 'ntimes=%s expected=%s' % (self.ntimes, ntimes)
+        #assert self.nelements == nelements, 'nelements=%s expected=%s' % (self.nelements, nelements)
 
         msg = []
         if self.nonlinear_factor not in (None, np.nan):  # transient

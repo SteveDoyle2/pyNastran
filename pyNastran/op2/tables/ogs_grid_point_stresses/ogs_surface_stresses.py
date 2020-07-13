@@ -574,9 +574,7 @@ class GridPointStressesSurfaceDiscontinutiesArray(ScalarObject): # tCode=35
         #oxx, oyy, ozz, txy, pressure
         self.data = np.zeros((self.ntimes, self.ntotal, 5), dtype='float32')
         self.location = np.empty(self.ntotal, dtype='U8')
-        dtype = 'float32'
-        if isinstance(self.nonlinear_factor, integer_types):
-            dtype = 'int32'
+        dtype, idtype, fdtype = get_times_dtype(self.nonlinear_factor, self.size, self.analysis_fmt)
 
         self._times = np.zeros(self.ntimes, dtype=dtype)
         self.is_built = True

@@ -5,7 +5,7 @@ from typing import List
 import numpy as np
 from numpy import zeros, allclose
 
-from pyNastran.utils.numpy_utils import integer_types
+from pyNastran.op2.result_objects.op2_objects import get_times_dtype
 from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import StressObject, StrainObject, OES_Object
 from pyNastran.f06.f06_formatting import _eigenvalue_header #, get_key0
 
@@ -59,9 +59,7 @@ class RealShearArray(OES_Object):
         self.is_built = True
 
         #print("ntimes=%s nelements=%s ntotal=%s" % (self.ntimes, self.nelements, self.ntotal))
-        dtype = 'float32'
-        if isinstance(self.nonlinear_factor, integer_types):
-            dtype = 'int32'
+        dtype, idtype, fdtype = get_times_dtype(self.nonlinear_factor, self.size, self.analysis_fmt)
         _times = zeros(self.ntimes, dtype=dtype)
         element = zeros(self.nelements, dtype='int32')
 

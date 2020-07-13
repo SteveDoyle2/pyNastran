@@ -4,6 +4,7 @@ import numpy as np
 from numpy import zeros
 
 from pyNastran.utils.numpy_utils import integer_types
+from pyNastran.op2.result_objects.op2_objects import get_times_dtype
 from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import (
     StressObject, StrainObject, OES_Object)
 from pyNastran.f06.f06_formatting import write_floats_13e, _eigenvalue_header
@@ -79,9 +80,7 @@ class RandomBendArray(OES_Object):
         #print("***name=%s type=%s nnodes_per_element=%s ntimes=%s nelements=%s ntotal=%s" % (
             #self.element_name, self.element_type, nnodes_per_element, self.ntimes,
             #self.nelements, self.ntotal))
-        dtype = 'float32'
-        if isinstance(self.nonlinear_factor, integer_types):
-            dtype = 'int32'
+        dtype, idtype, fdtype = get_times_dtype(self.nonlinear_factor, self.size, self.analysis_fmt)
         self._times = zeros(self.ntimes, dtype=dtype)
         self.element_node = zeros((self.ntotal, 2), dtype='int32')
 

@@ -7,6 +7,7 @@ from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.op2.result_objects.op2_objects import BaseElement
 from pyNastran.f06.f06_formatting import (
     write_float_13e, write_floats_13e, _eigenvalue_header)
+from pyNastran.op2.result_objects.op2_objects import get_times_dtype
 from pyNastran.op2.result_objects.element_table_object import RealElementTableArray
 
 
@@ -70,9 +71,7 @@ class Real1DHeatFluxArray(BaseElement):
         self.is_built = True
 
         #print("ntimes=%s nelements=%s ntotal=%s" % (self.ntimes, self.nelements, self.ntotal))
-        dtype = 'float32'
-        if isinstance(self.nonlinear_factor, integer_types):
-            dtype = 'int32'
+        dtype, idtype, fdtype = get_times_dtype(self.nonlinear_factor, self.size, self.analysis_fmt)
         self._times = np.zeros(self.ntimes, dtype=dtype)
         self.element = np.zeros(self.nelements, dtype='int32')
         self.element_data_type = np.empty(self.nelements, dtype='|U8')
@@ -267,9 +266,7 @@ class RealHeatFluxVU3DArray(BaseElement):
         self.is_built = True
 
         #print("ntimes=%s nelements=%s ntotal=%s" % (self.ntimes, self.nelements, self.ntotal))
-        dtype = 'float32'
-        if isinstance(self.nonlinear_factor, integer_types):
-            dtype = 'int32'
+        dtype, idtype, fdtype = get_times_dtype(self.nonlinear_factor, self.size, self.analysis_fmt)
         self._times = np.zeros(self.ntimes, dtype=dtype)
         self.element_parent = np.zeros((self.nelements, 2), dtype='int32')
 
@@ -484,9 +481,7 @@ class RealHeatFluxVUBeamArray(BaseElement):  # 191-VUBEAM
         self.is_built = True
 
         #print("ntimes=%s nelements=%s ntotal=%s" % (self.ntimes, self.nelements, self.ntotal))
-        dtype = 'float32'
-        if isinstance(self.nonlinear_factor, integer_types):
-            dtype = 'int32'
+        dtype, idtype, fdtype = get_times_dtype(self.nonlinear_factor, self.size, self.analysis_fmt)
         self._times = np.zeros(self.ntimes, dtype=dtype)
         self.element_parent_coord = np.zeros((self.nelements, 3), dtype='int32')
 
@@ -762,9 +757,7 @@ class RealConvHeatFluxArray(BaseElement):  # 107-CHBDYE 108-CHBDYG 109-CHBDYP
         self.is_built = True
 
         #print("ntimes=%s nelements=%s ntotal=%s" % (self.ntimes, self.nelements, self.ntotal))
-        dtype = 'float32'
-        if isinstance(self.nonlinear_factor, integer_types):
-            dtype = 'int32'
+        dtype, idtype, fdtype = get_times_dtype(self.nonlinear_factor, self.size, self.analysis_fmt)
         self._times = np.zeros(self.ntimes, dtype=dtype)
         self.element_node = np.zeros((self.nelements, 2), dtype='int32')
 
@@ -985,9 +978,7 @@ class RealChbdyHeatFluxArray(BaseElement):  # 107-CHBDYE 108-CHBDYG 109-CHBDYP
         self.is_built = True
 
         #print("ntimes=%s nelements=%s ntotal=%s" % (self.ntimes, self.nelements, self.ntotal))
-        dtype = 'float32'
-        if isinstance(self.nonlinear_factor, integer_types):
-            dtype = 'int32'
+        dtype, idtype, fdtype = get_times_dtype(self.nonlinear_factor, self.size, self.analysis_fmt)
         self._times = np.zeros(self.ntimes, dtype=dtype)
         self.element = np.zeros(self.nelements, dtype='int32')
         self.element_type = np.empty(self.nelements, dtype='|U8')
