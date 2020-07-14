@@ -94,7 +94,7 @@ class CompositeShellProperty(Property):
         mids_ref = []
         for iply in range(len(self.thicknesses)):
             mid = self.mids[iply]
-            msg = ', which is required by %s pid=%s iply=%s' % (self.type, self.pid, iply)
+            msg = f', which is required by {self.type} pid={self.pid:d} iply={iply:d}'
             mids_ref.append(model.Material(mid, msg))
         self.mids_ref = mids_ref
 
@@ -103,7 +103,7 @@ class CompositeShellProperty(Property):
         try:
             z2 = z1 + t
         except TypeError:
-            msg = 'Type=%s z1=%s t=%s; z2=z1+t is undefined' % (self.type, z1, t)
+            msg = f'Type={self.type} z1={z1} t={t}; z2=z1+t is undefined'
             raise TypeError(msg)
         if not ((-1.5*t <= z1 <= 1.5*t) or (-1.5*t <= z2 <= 1.5*t)):
             msg = '%s pid=%s midsurface: z1=%s z2=%s t=%s not in range of -1.5t < zi < 1.5t' % (
@@ -527,7 +527,7 @@ class CompositeShellProperty(Property):
                 return 2. * mass_per_area + self.nsm
             return mass_per_area + self.nsm
         else:
-            assert isinstance(iply, integer_types), 'iply must be an integer; iply=%r' % iply
+            assert isinstance(iply, integer_types), f'iply must be an integer; iply={iply!r}'
             #rho = self.get_density(iply)
             rho = rhos[iply]
             t = self.thicknesses[iply]
@@ -554,7 +554,7 @@ class CompositeShellProperty(Property):
                 thickness_total = self.get_thickness()
                 mass_per_area = t * (rho + self.nsm / thickness_total)
             else:
-                raise NotImplementedError('method=%r is not supported' % method)
+                raise NotImplementedError(f'method={method!r} is not supported')
             return mass_per_area
 
     def get_mass_per_area_structure(self, rhos: List[float]) -> float:
@@ -628,7 +628,7 @@ class PCOMP(CompositeShellProperty):
             elif word == 'THETA':
                 self.thetas[num - 1] = value
             else:
-                raise RuntimeError('pid=%s pname_fid=%r word=%s\n' % (self.pid, pname_fid, word))
+                raise RuntimeError(f'pid={self.pid} pname_fid={pname_fid!r} word={word}\n')
         else:
             raise NotImplementedError('property_type=%r has not implemented %r in pname_map' % (
                 self.type, pname_fid))
@@ -650,17 +650,17 @@ class PCOMP(CompositeShellProperty):
             self.ge = value
             return
 
-        assert n > 0, 'PCOMP pid=%s; negative indicies are not supported (pname_fid=%r)' % (self.pid, n)
+        assert n > 0, f'PCOMP pid={self.pid}; negative indicies are not supported (pname_fid={n!r})'
         nnew = n - 10
         if nnew <= 0:
-            raise KeyError('Field %r=%r is an invalid %s entry.' % (n, value, self.type))
+            raise KeyError(f'Field {n!r}={value!r} is an invalid {self.type} entry.')
 
         # the + 1 is to tell us we're on row 1 at minimum (not row 0)
         irow = n // 10
         irow_start = irow * 10 + 2
         offset = n - irow_start
         if offset < 0:
-            raise RuntimeError('field=%s is invalid for the PCOMP' % n)
+            raise RuntimeError(f'field={n} is invalid for the PCOMP')
 
         irow_layer = irow - 1
         ilayer = irow_layer * 2 + offset // 4
@@ -674,10 +674,10 @@ class PCOMP(CompositeShellProperty):
         try:
             ply = self.plies[iply]
         except IndexError:
-            msg = 'PCOMP pid=%s; n=%s nnew=%s ilayer=%s slot=%r\n' % (
-                self.pid, n, nnew, ilayer, slot)
-            msg += ('On PCOMP pid=%r, ply %i is not defined.  '
-                    'iply_min=0; iply_max=%i' % (self.pid, ilayer, len(self.plies)))
+            msg = (
+                f'PCOMP pid={self.pid}; n={n} nnew={nnew} ilayer={ilayer} slot={slot!r}\n'
+                f'On PCOMP pid={self.pid!r}, ply {ilayer:d} is not defined.  '
+                f'iply_min=0; iply_max={len(self.plies):d}')
             raise IndexError(msg)
 
         if slot == 0:
@@ -786,7 +786,7 @@ class PCOMP(CompositeShellProperty):
         self.z0 = z0
 
     def validate(self):
-        assert self.ft in ['HILL', 'HOFF', 'TSAI', 'STRN', 0.0, None], 'ft=%r' % self.ft
+        assert self.ft in ['HILL', 'HOFF', 'TSAI', 'STRN', 0.0, None], f'ft={self.ft!r}'
 
         # 'NO' is not an option!
         allowed_lam = [None, 'SYM', 'MEM', 'BEND', 'SMEAR', 'SMCORE']
@@ -1261,12 +1261,12 @@ class PCOMPG(CompositeShellProperty):
         elif slot == 5:
             self.thetas[ilayer] = value
         else:
-            raise NotImplementedError('On PCOMPG: cannot update n=%s; slot=%i\n'
+            raise NotImplementedError(f'On PCOMPG: cannot update n={n}; slot={slot:d}\n'
                                       '  slot=2: Global Ply ID\n'
                                       '  slot=3: Material ID\n'
                                       '  slot=4: Thickness\n'
                                       '  slot=5: Theta\n'
-                                      '  slot=6: SOUT\n' % (n, slot))
+                                      '  slot=6: SOUT\n')
             #ply[slot] = value
 
         #for mid, t, theta, sout, global_ply_id in zip(self.mids, self.thicknesses,
@@ -1292,8 +1292,20 @@ class PCOMPG(CompositeShellProperty):
                       thetas=None, souts=None, nsm=0.0, sb=0.0, ft=None,
                       tref=0.0, ge=0.0, lam=None, z0=None, comment='')
 
-    def __init__(self, pid, global_ply_ids, mids, thicknesses, thetas=None, souts=None,
-                 nsm=0.0, sb=0.0, ft=None, tref=0.0, ge=0.0, lam=None, z0=None, comment=''):
+    def __init__(self, pid: int,
+                 global_ply_ids: List[int],
+                 mids: List[int],
+                 thicknesses: List[float],
+                 thetas: Optional[List[float]]=None,
+                 souts: Optional[List[str]]=None,
+                 nsm: float=0.0,
+                 sb: float=0.0,
+                 ft: Optional[str]=None,
+                 tref: float=0.0,
+                 ge: float=0.0,
+                 lam: Optional[str]=None,
+                 z0: Optional[float]=None,
+                 comment: str=''):
         """
         Creates a PCOMPG card
 
@@ -2615,21 +2627,34 @@ def get_2d_plate_transform(theta):
     #])
     return T
 
+
 class PTRSHL(Property):
     """
-    +--------+-------+------+--------+------+----------+------+------+---------+
-    |   1    |   2   |   3  |    4   |  5   |    6     |   7  |  8   |    9    |
-    +========+=======+======+========+======+==========+======+======+=========+
-    | PSHELL |  PID  | MID1 |   T    | MID2 | 12I/T**3 | MID3 | TS/T |   NSM   |
-    +--------+-------+------+--------+------+----------+------+------+---------+
-    |        |  Z1   |  Z2  |  MID4  |      |          |      |      |         |
-    +--------+-------+------+--------+------+----------+------+------+---------+
-    | PSHELL | 41111 |  1   | 1.0000 |  1   |          |   1  |      | 0.02081 |
-    +--------+-------+------+--------+------+----------+------+------+---------+
+    +--------+-------+-------+-------+-------+-------+-------+-------+-------+
+    |    1   |   2   |   3   |   4   |   5   |   6   |   7   |   8   |   9   |
+    +========+=======+=======+=======+=======+=======+=======+=======+=======+
+    | PTRSHL |  PID  |  MID1 |   T1  |   T3  |   T5  |  MID2 |   I1  |   I3  |
+    +--------+-------+-------+-------+-------+-------+-------+-------+-------+
+    |        |   I5  |  MID3 |  TS1  |  TS3  |  TS5  |  NSM  |  Z11  |  Z21  |
+    +--------+-------+-------+-------+-------+-------+-------+-------+-------+
+    |        |  Z13  |  Z23  |  Z15  |  Z25  |       |       |       |       |
+    +--------+-------+-------+-------+-------+-------+-------+-------+-------+
+    | PTRSHL |   10  |   20  |   3.0 |   6.0 |   4.0 |   30  |  2.25 |  18.0 |
+    +--------+-------+-------+-------+-------+-------+-------+-------+-------+
+    |        |  5.33 |   40  |  2.5  |  5.0  |  3.5  |  50.0 |  1.5  | -1.5  |
+    +--------+-------+-------+-------+-------+-------+-------+-------+-------+
+    |        |  3.0  | -3.0  |  2.0  | -2.0  |       |       |       |       |
+    +--------+-------+-------+-------+-------+-------+-------+-------+-------+
+
     """
     type = 'PTRSHL'
 
-    def __init__(self, pid, mid, comment=''):
+    def __init__(self, pid: int,
+                 mid1: int, t: List[float],
+                 mid2: int, I: List[float],
+                 mid3: int, ts: List[float],
+                 nsm: float, z: List[float],
+                 comment: str=''):
         """
         Creates a PTRSHL card
 
@@ -2637,8 +2662,26 @@ class PTRSHL(Property):
         ----------
         pid : int
             property id
-        mid : int; default=None
+        mid1 : int; default=None
             defines membrane material
+        T1 / T3 / T5 : float
+            Thickness at vertices 1, 3, and 5 of the element, respectively
+        mid2 : int
+            Material identification number for bending; mid2 > 0
+        I1 / I3 / I5 : float
+            Area moments of inertia per unit width at the vertices 1, 3, and 5
+            of the element, respectively (Real >= 0.0).
+        mid3 : int
+            Material identification number for transverse shear; mid3 >= 0
+        ts1 / ts3 / ts5 : float
+            Transverse shear thickness at the vertices 1, 3, and 5 of the
+            element, respectively (Real >= 0.0).
+        nsm : float
+            Nonstructural mass per unit area (Real)
+        Z11, Z21, Z13, Z23, Z15, Z25 : float
+            Fiber distances for stress computation at grid points
+            G1, G3, and G5 respectively, positive according to the
+            right-hand sequence defined on the CTRSHL card (Real >= 0.0).
 
         """
         Property.__init__(self)
@@ -2647,13 +2690,25 @@ class PTRSHL(Property):
 
         #: Property ID
         self.pid = pid
-        self.mid = mid
+        self.mid1 = mid1
+        self.mid2 = mid2
+        self.mid3 = mid3
 
-        #: thickness
-        t = 1.
+        #: thickness (T1, T3, T5)
         self.t = t
 
-        self.mid_ref = None
+        #: thickness (TS1, TS3, TS5)
+        self.ts = ts
+
+        #: inertia (I1, I3, I5)
+        self.I = I
+
+        self.nsm = nsm
+
+        self.mid1_ref = None
+        self.mid2_ref = None
+        self.mid3_ref = None
+        #self.mid4_ref = None
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -2669,16 +2724,26 @@ class PTRSHL(Property):
 
         """
         pid = integer(card, 1, 'pid')
-        mid = integer_or_blank(card, 2, 'mid1')
-        t = double(card, 3, 't')
-
-        t4 = integer_or_blank(card, 4, 't4')  # int?
-        t5 = double(card, 5, 't5')
-        t6 = integer(card, 6, 't6')
-        t7 = double(card, 7, 't7')
-        t8 = integer_or_blank(card, 8, 't8')  # int?
-        t9 = double(card, 9, 't9')
-        #t10 = double(card, 10, 't10')
+        mid1 = integer_or_blank(card, 2, 'mid1')
+        t = [
+            double_or_blank(card, 3, 't1', 0.0),
+            double_or_blank(card, 4, 't3', 0.0),
+            double_or_blank(card, 5, 't5', 0.0),
+        ]
+        mid2 = integer(card, 6, 't6')
+        I = [
+            double_or_blank(card, 7, 'I1', 0.0),
+            double_or_blank(card, 8, 'I3', 0.0),
+            double_or_blank(card, 9, 'I5', 0.0),
+        ]
+        mid3 = integer(card, 10, 't6')
+        ts = [
+            double_or_blank(card, 11, 'I1', 0.0),
+            double_or_blank(card, 12, 'I3', 0.0),
+            double_or_blank(card, 13, 'I5', 0.0),
+        ]
+        nsm = double_or_blank(card, 14, 'nsm', 0.0)
+        z = []
 
         #mid2 = integer_or_blank(card, 4, 'mid2')
         #twelveIt3 = double_or_blank(card, 5, '12*I/t^3', 1.0)  # poor name
@@ -2696,7 +2761,12 @@ class PTRSHL(Property):
         #mid4 = integer_or_blank(card, 11, 'mid4')
 
         assert len(card) <= 10, 'len(PTRSHL card) = %i\ncard=%s' % (len(card), card)
-        return PTRSHL(pid, mid, comment=comment)
+        return PTRSHL(pid,
+                      mid1, t,
+                      mid2, I,
+                      mid3, ts,
+                      nsm, z,
+                      comment=comment)
 
     def _verify(self, xref):
         pid = self.Pid()
@@ -2760,40 +2830,36 @@ class PTRSHL(Property):
         return [self.Mid()]
 
     def Mid(self):
+        return self.Mid1()
+
+    def Mid1(self):
         """returns the extension material id"""
-        if self.mid_ref is not None:
-            return self.mid_ref.mid
-        return self.mid
+        if self.mid1_ref is not None:
+            return self.mid1_ref.mid
+        return self.mid1
+
+    def Mid2(self):
+        """returns the bending material id"""
+        if self.mid2_ref is not None:
+            return self.mid2_ref.mid
+        return self.mid2
+
+    def Mid3(self):
+        if self.mid3_ref is not None:
+            return self.mid3_ref.mid
+        return self.mid3
 
     def Thickness(self, tflag=1, tscales=None):
         """returns the thickness of the element"""
-        return 0.0
-        t0 = self.t
-        if tscales is not None:
-            nt = len(tscales)
-            if tflag == 0: # absolute
-                thickness = sum([ti if ti is not None else t0 for ti in tscales]) / nt
-            elif tflag == 1: # relative
-                thickness = sum([ti * t0 if ti is not None else t0 for ti in tscales]) / nt
-            else:
-                raise RuntimeError('tflag=%r and must be 0/1' % tflag)
-            #print('t0 = %s' % t0)
-            #print('  tscales = %s' % tscales)
-            #print('  nt = %s' % nt)
-            #print('  thickness = %s' % thickness)
-            return thickness
-        else:
-            thickness = t0
-        return thickness
+        return np.mean(self.t)
+
 
     def Rho(self):
         """returns the material density"""
-        return 0.0
         return self.mid_ref.rho
 
     def Nsm(self):
         """returns the non-structural mass"""
-        return 0.0
         return self.nsm
 
     def MassPerArea(self, tflag=1, tscales=None):
@@ -2801,11 +2867,10 @@ class PTRSHL(Property):
         Calculates mass per area.
 
         .. math:: \frac{m}{A} = nsm + \rho t"""
-        return 0.0
         mid_ref = self.mid_ref
         rho = mid_ref.Rho()  # fails if mid1=None and mid2=None
 
-        thickness = self.Thickness(tflag=tflag, tscales=tscales)
+        thickness = self.Thickness()
         try:
             mass_per_area = self.nsm + rho * thickness
         except:

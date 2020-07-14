@@ -159,14 +159,14 @@ class RealGridPointForcesArray(GridPointForces):
         self.format_code = 1
 
     @property
-    def is_real(self):
+    def is_real(self) -> bool:
         return True
 
     @property
-    def is_complex(self):
+    def is_complex(self) -> bool:
         return False
 
-    def _reset_indices(self):
+    def _reset_indices(self) -> None:
         self.itotal = 0
         #self.ielement = 0
 
@@ -730,9 +730,11 @@ class RealGridPointForcesArray(GridPointForces):
         #print(f'xmin={x_centroid.min()} xmax={x_centroid.max()} (centroids)')
         #print(f'xmin={x_coord.min()} xmax={x_coord.max()}')
 
+        fdtype = xyz_cid0.dtype
+
         eids = np.unique(eids)
-        force_sum = zeros((nstations, 3), dtype='float32')
-        moment_sum = zeros((nstations, 3), dtype='float32')
+        force_sum = zeros((nstations, 3), dtype=fdtype)
+        moment_sum = zeros((nstations, 3), dtype=fdtype)
 
         for istation, station in enumerate(stations):
             # we're picking the elements on one side of the centroid
@@ -806,9 +808,9 @@ class RealGridPointForcesArray(GridPointForces):
         if not self.is_built:
             return [
                 '<%s>\n' % self.__class__.__name__,
-                '  ntimes: %i\n' % self.ntimes,
-                '  ntotal: %i\n' % self.ntotal,
-                '  _ntotals: %s\n' % self._ntotals,
+                f'  ntimes: {self.ntimes:d}\n',
+                f'  ntotal: {self.ntotal:d}\n',
+                f'  _ntotals: {self._ntotals}\n',
             ]
 
         #nelements = self.nelements
@@ -822,13 +824,13 @@ class RealGridPointForcesArray(GridPointForces):
             msgi = '  type=%s ntimes=%i nelements=%i ntotal=%i\n' % (
                 self.__class__.__name__, ntimes, nelements, ntotal)
             if self.ntotal != min(self._ntotals):
-                msgi += '  _ntotals=%s\n' % (self._ntotals)
+                msgi += f'  _ntotals={self._ntotals}\n'
             ntimes_word = 'ntimes'
         else:
             msgi = '  type=%s nelements=%i total=%i\n' % (
                 self.__class__.__name__, nelements, ntotal)
             if self.ntotal != min(self._ntotals):
-                msgi += '  _ntotals=%s\n' % (self._ntotals)
+                msgi += f'  _ntotals={self._ntotals}\n'
             ntimes_word = '1'
         msg.append(msgi)
         headers = self.get_headers()
@@ -1055,7 +1057,7 @@ class RealGridPointForcesArray(GridPointForces):
         from struct import Struct, pack
         frame = inspect.currentframe()
         call_frame = inspect.getouterframes(frame, 2)
-        op2_ascii.write('%s.write_op2: %s\n' % (self.__class__.__name__, call_frame[1][3]))
+        op2_ascii.write(f'{self.__class__.__name__}.write_op2: {call_frame[1][3]}\n')
 
         if itable == -1:
             self._write_table_header(op2, op2_ascii, date)
@@ -1081,7 +1083,7 @@ class RealGridPointForcesArray(GridPointForces):
         #assert self.ntimes == 1, self.ntimes
 
         #device_code = self.device_code
-        op2_ascii.write('  ntimes = %s\n' % self.ntimes)
+        op2_ascii.write(f'  ntimes = {self.ntimes}\n')
 
         #fmt = '%2i %6f'
         #print('ntotal=%s' % (ntotal))
@@ -1122,8 +1124,8 @@ class RealGridPointForcesArray(GridPointForces):
                       4 * ntotal]
             op2.write(pack('%ii' % len(header), *header))
             op2_ascii.write('r4 [4, 0, 4]\n')
-            op2_ascii.write('r4 [4, %s, 4]\n' % (itable))
-            op2_ascii.write('r4 [4, %i, 4]\n' % (4 * ntotal))
+            op2_ascii.write(f'r4 [4, {itable:d}, 4]\n')
+            op2_ascii.write(f'r4 [4, {4 * ntotal:d}, 4]\n')
 
             #zero = ' '
             ntotal = self._ntotals[itime]
@@ -1167,14 +1169,14 @@ class ComplexGridPointForcesArray(GridPointForces):
         #self.nnodes = None
 
     @property
-    def is_real(self):
+    def is_real(self) -> bool:
         return False
 
     @property
-    def is_complex(self):
+    def is_complex(self) -> bool:
         return True
 
-    def _reset_indices(self):
+    def _reset_indices(self) -> None:
         self.itotal = 0
         #self.ielement = 0
 
@@ -1416,8 +1418,8 @@ class ComplexGridPointForcesArray(GridPointForces):
         if not self.is_built:
             return [
                 '<%s>\n' % self.__class__.__name__,
-                '  ntimes: %i\n' % self.ntimes,
-                '  ntotal: %i\n' % self.ntotal,
+                f'  ntimes: {self.ntimes:d}\n',
+                f'  ntotal: {self.ntotal:d}\n',
             ]
 
         #nelements = self.nelements
@@ -1635,7 +1637,7 @@ class ComplexGridPointForcesArray(GridPointForces):
         from struct import Struct, pack
         frame = inspect.currentframe()
         call_frame = inspect.getouterframes(frame, 2)
-        op2_ascii.write('%s.write_op2: %s\n' % (self.__class__.__name__, call_frame[1][3]))
+        op2_ascii.write(f'{self.__class__.__name__}.write_op2: {call_frame[1][3]}\n')
 
         if itable == -1:
             self._write_table_header(op2, op2_ascii, date)
@@ -1653,7 +1655,7 @@ class ComplexGridPointForcesArray(GridPointForces):
         #print('shape = %s' % str(self.data.shape))
 
         #device_code = self.device_code
-        op2_ascii.write('  ntimes = %s\n' % self.ntimes)
+        op2_ascii.write(f'  ntimes = {self.ntimes}\n')
 
         #fmt = '%2i %6f'
         #print('ntotal=%s' % (ntotal))
@@ -1694,8 +1696,8 @@ class ComplexGridPointForcesArray(GridPointForces):
                       4 * ntotal]
             op2.write(pack('%ii' % len(header), *header))
             op2_ascii.write('r4 [4, 0, 4]\n')
-            op2_ascii.write('r4 [4, %s, 4]\n' % (itable))
-            op2_ascii.write('r4 [4, %i, 4]\n' % (4 * ntotal))
+            op2_ascii.write(f'r4 [4, {itable:d}, 4]\n')
+            op2_ascii.write(f'r4 [4, {4 * ntotal:d}, 4]\n')
 
             #zero = ' '
             ntotal = self._ntotals[itime]

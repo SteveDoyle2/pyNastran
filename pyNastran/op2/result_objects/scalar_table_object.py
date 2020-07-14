@@ -108,8 +108,8 @@ class ScalarTableArray(ScalarObject):  # displacement style table
         if not self.is_built:
             return [
                 '<%s>; table_name=%r\n' % (self.__class__.__name__, self.table_name),
-                '  ntimes: %i\n' % self.ntimes,
-                '  ntotal: %i\n' % self.ntotal,
+                f'  ntimes: {self.ntimes:d}\n',
+                f'  ntotal: {self.ntotal:d}\n',
             ]
         #ngrids = len(self.gridTypes)
         if short:
@@ -160,7 +160,7 @@ class ScalarTableArray(ScalarObject):  # displacement style table
     def get_headers(self) -> List[str]:
         return self._get_headers()
 
-    def _reset_indices(self):
+    def _reset_indices(self) -> None:
         self.itotal = 0
 
     def build(self):
@@ -378,14 +378,14 @@ class RealScalarTableArray(ScalarTableArray):  # temperature style table
         ScalarTableArray.__init__(self, data_code, is_sort1, isubcase, dt)
 
     @property
-    def is_real(self):
+    def is_real(self) -> bool:
         return True
 
     @property
-    def is_complex(self):
+    def is_complex(self) -> bool:
         return False
 
-    def data_type(self):
+    def data_type(self) -> str:
         return 'float32'
 
     def _write_table_3(self, op2_file, fascii, new_result, itable=-3, itime=0):

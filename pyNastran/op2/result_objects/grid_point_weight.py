@@ -302,7 +302,7 @@ class GridPointWeight:
 
         frame = inspect.currentframe()
         call_frame = inspect.getouterframes(frame, 2)
-        op2_ascii.write('%s.write_op2: %s\n' % (self.__class__.__name__, call_frame[1][3]))
+        op2_ascii.write(f'{self.__class__.__name__}.write_op2: {call_frame[1][3]}\n')
 
         subtable_name = b'OGPWG'
         if itable == -1:
@@ -350,7 +350,7 @@ class GridPointWeight:
                   4*ntotal]
         op2_file.write(pack(b'%ii' % len(header), *header))
         op2_ascii.write('r4 [4, 0, 4]\n')
-        op2_ascii.write('r4 [4, %s, 4]\n' % (itable))
+        op2_ascii.write(f'r4 [4, {itable:d}, 4]\n')
         op2_ascii.write('r4 [4, %i, 4]\n' % (4*ntotal))
 
         # -------------------------------------------------------

@@ -29,7 +29,7 @@ Overview
     - GUI: range of choices
 
       - PyQt5/PySide2
-      - VTK 7/8
+      - VTK 7-9
 
     - logging using **cpylog**
 
@@ -70,7 +70,7 @@ BDF Reader/Writer
    - nodal equivalencing
    - mesh quality
 
-     - aspect ratio, taper ratio, skew, min/max interior angle
+     - aspect ratio, taper ratio, skew, min/max interior angle, warp angle
      - quad collapsing
      - element deletion
    - deck merging
@@ -460,8 +460,8 @@ BDF Reader/Writer
 
 
 
-OP4 Reader
-==========
+OP4 Reader/Writer
+=================
  - For matrices, the OP2 is preffered.  It's simply faster.
  - Types:
 
@@ -472,8 +472,8 @@ OP4 Reader
    - Single/Double Precision
  - ASCII writer
 
-OP2 Reader / F06 Writer
-=======================
+OP2 Reader / OP2 Writer / F06 Writer
+====================================
 - Supported Nastran versions:
 
   - MSC Nastran
@@ -488,18 +488,21 @@ OP2 Reader / F06 Writer
 - Input/Output:
 
   - Very fast OP2 reader (up to 500 MB/sec with an SSD)
-  - Memory efficient
-  - support directly loading into HDF5 for very large models
+    - Memory efficient
+    - support directly loading into HDF5 for very large models
   - HDF5 export/import support for MATLAB integration
   - pandas support (results & matrices)
-  - F06 writing
-  - Most fatal errors caught (BDF input errors not caught)
+  - OP2/F06 writing
+  - Most fatal errors caught (geometry input errors not caught)
   - geometry can be read directly from op2 (it's not perfect, but it's much faster)
 
 - Operations:
 
   - transform displacement/eigenvectors/spc/mpc/applied loads to global coordinate system
   - transform stresses/forces to material coordinate system
+  - grid point forces:
+    - freebody loads
+    - interface loads
 
 - Supports:
 
@@ -1086,7 +1089,7 @@ The OP2.Results() are accessed using model.results. as a prefix
    - ctria3_strain_energy
    - cquad4_strain_energy
 
-All of these results have the same outputs (shown under model.results.crm).  
+All of these results have the same outputs (shown under model.results.crm).
 For example, model.results.ato.displacements, model.results.crm.displacements.
  - ato # AutoCorrelationObjects()
  - psd # PowerSpectralDensityObjects()

@@ -39,7 +39,7 @@ class RealBush1DStressArray(OES_Object):
             raise NotImplementedError(self.element_type)
         return nnodes_per_element
 
-    def _reset_indices(self):
+    def _reset_indices(self) -> None:
         self.itotal = 0
         self.ielement = 0
 
@@ -172,8 +172,8 @@ class RealBush1DStressArray(OES_Object):
     def get_stats(self, short=False) -> List[str]:
         if not self.is_built:
             return ['<%s>\n' % self.__class__.__name__,
-                    '  ntimes: %i\n' % self.ntimes,
-                    '  ntotal: %i\n' % self.ntotal,
+                    f'  ntimes: {self.ntimes:d}\n',
+                    f'  ntotal: {self.ntotal:d}\n',
                     ]
 
         nelements = self.ntotal

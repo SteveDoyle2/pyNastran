@@ -4,6 +4,7 @@ from typing import List
 import numpy as np
 
 from pyNastran.utils.numpy_utils import integer_types
+from pyNastran.op2.result_objects.op2_objects import get_times_dtype
 from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import (
     StressObject, StrainObject, OES_Object)
 from pyNastran.f06.f06_formatting import write_floats_13e, write_floats_8p1e
@@ -31,14 +32,14 @@ class RealBendArray(OES_Object):
             #raise NotImplementedError('SORT2')
 
     @property
-    def is_real(self):
+    def is_real(self) -> bool:
         return False
 
     @property
-    def is_complex(self):
+    def is_complex(self) -> bool:
         return True
 
-    def _reset_indices(self):
+    def _reset_indices(self) -> None:
         self.itotal = 0
         self.ielement = 0
 
@@ -56,7 +57,6 @@ class RealBendArray(OES_Object):
         #self.names = []
         #self.nelements //= nnodes
         self.nelements //= self.ntimes
-        self.ntotal = self.nelements * nnodes * 2
         #self.ntotal
         self.itime = 0
         self.ielement = 0
@@ -64,11 +64,23 @@ class RealBendArray(OES_Object):
         self.is_built = True
         #print('ntotal=%s ntimes=%s nelements=%s' % (self.ntotal, self.ntimes, self.nelements))
 
-        #print("ntimes=%s nelements=%s ntotal=%s" % (self.ntimes, self.nelements, self.ntotal))
-        self._times = np.zeros(self.ntimes, 'float32')
+        self.ntotal = self.nelements * nnodes * 2
+        if self.is_sort1:
+            ntimes = self.ntimes
+            ntotal = self.ntotal
+        else:
+            #print("ntimes=%s nelements=%s ntotal=%s nnodes=%s" % (self.ntimes, self.nelements, self.ntotal, nnodes))
+            ntimes = self.ntotal
+            ntotal = self.nelements // 2
+            #self.ntotal = ntotal
+            #print("**BEND: ntimes=%s ntotal=%s" % (ntimes, ntotal))
+        #self.ntotal = nelements * nnodes * 2
+
+        dtype, idtype, fdtype = get_times_dtype(self.nonlinear_factor, self.size, self.analysis_fmt)
+        self._times = np.zeros(ntimes, dtype=dtype)
         #self.ntotal = self.nelements * nnodes
 
-        self.element_node = np.zeros((self.ntotal, 2), 'int32')
+        self.element_node = np.zeros((ntotal, 2), dtype=idtype)
 
         # the number is messed up because of the offset for the element's properties
         if not self.nelements * nnodes * 2 == self.ntotal:
@@ -78,7 +90,7 @@ class RealBendArray(OES_Object):
             raise RuntimeError(msg)
 
         # [angle, sc, sd, se, sf, omax, omin, mst, msc]
-        self.data = np.zeros((self.ntimes, self.ntotal, 9), 'float32')
+        self.data = np.zeros((ntimes, ntotal, 9), dtype=fdtype)
 
     #def build_dataframe(self):
         #"""creates a pandas dataframe"""
@@ -136,12 +148,24 @@ class RealBendArray(OES_Object):
         #self.ielement += 1
         self.itotal += 1
 
+    def add_sort2(self, dt, eid, grid, angle, sc, sd, se, sf, omax, omin, mst, msc):
+        """unvectorized method for adding SORT2 transient data"""
+        assert isinstance(eid, integer_types) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
+        itime = self.itotal
+        itotal = self.itime
+        self._times[itime] = dt
+        #print(f'itime={itime} itotal={itotal}; data.shape={self.data.shape}')
+        self.data[itime, itotal, :] = [angle, sc, sd, se, sf, omax, omin, mst, msc]
+        self.element_node[itotal] = [eid, grid]
+        #self.ielement += 1
+        self.itotal += 1
+
     def get_stats(self, short=False) -> List[str]:
         if not self.is_built:
             return [
                 '<%s>\n' % self.__class__.__name__,
-                '  ntimes: %i\n' % self.ntimes,
-                '  ntotal: %i\n' % self.ntotal,
+                f'  ntimes: {self.ntimes:d}\n',
+                f'  ntotal: {self.ntotal:d}\n',
             ]
 
         nelements = self.nelements
@@ -154,10 +178,10 @@ class RealBendArray(OES_Object):
                        % (self.__class__.__name__, ntimes, nelements, nnodes))
         else:
             msg.append('  type=%s nelements=%i nnodes=%i\n' % (self.__class__.__name__, nelements, nnodes))
-        msg.append('  data: [ntimes, nnodes, 5] where 5=[%s]\n' % str(', '.join(self._get_headers())))
+        msg.append('  data: [ntimes, nnodes, 9] where 9=[%s]\n' % str(', '.join(self._get_headers())))
         msg.append(f'  element_node.shape = {self.element_node.shape}\n')
         msg.append(f'  data.shape = {self.data.shape}\n')
-        msg.append('  %s\n' % self.element_name)
+        msg.append(f'  {self.element_name}-{self.element_type}\n')
         msg += self.get_data_code()
         return msg
 

@@ -4830,8 +4830,9 @@ class OES(OP2Common):
             b'OES1', b'OES1X', b'OES1X1', b'OSTR1X',
             b'OES2', b'OSTR2',
             b'OESVM1', b'OESVM2', b'OSTRVM1', b'OSTRVM2',
-            b'OESPSD2', b'OESATO2', b'OESCRM2',
-            b'OSTRPSD2', b'OSTRATO2', b'OSTRCRM2',
+            b'OESPSD2', b'OESATO2', b'OESCRM2', b'OESXNO1', b'OESXRMS1',
+            b'OSTRPSD2', b'OSTRATO2', b'OSTRCRM2', b'OSTRNO1', b'OSTRRMS1',
+
         ]
         assert self.table_name in table_names, self.table_name
         sort_method = self.sort_method
@@ -6707,15 +6708,16 @@ class OES(OP2Common):
             nelements = ndata // ntotal
             assert ndata % ntotal == 0, 'ndata=%s ntotal=%s nelements=%s error=%s' % (ndata, ntotal, nelements, ndata % ntotal)
 
+            #nlayers = nelements * 2
             auto_return, is_vectorized = self._create_oes_object4(
                 nelements, result_name, slot, obj_vector_real)
             if auto_return:
-                return nelements * self.num_wide * 4, None, None
+                return nelements * ntotal, None, None
 
             obj = self.obj
             assert obj is not None
             if self.use_vector and is_vectorized and self.sort_method == 1 and 0:
-                n = nelements * 4 * self.num_wide
+                n = nelements * ntotal
                 itotal = obj.ielement
                 ielement2 = obj.itotal + nelements
                 itotal2 = ielement2
@@ -6734,28 +6736,8 @@ class OES(OP2Common):
                 obj.itotal = itotal2
                 obj.ielement = ielement2
             else:
-                ntotali = 40
-                struct1 = Struct(self._endian + self._analysis_code_fmt)
-                struct2 = Struct(self._endian + b'i9f')
-
-                for unused_i in range(nelements):
-                    edata = data[n:n + 4]
-                    eid_device, = struct1.unpack(edata)
-                    eid, dt = get_eid_dt_from_eid_device(
-                        eid_device, self.nonlinear_factor, self.sort_method)
-
-                    n += 4
-                    for unused_i in range(2):
-                        edata = data[n:n + ntotali]
-                        out = struct2.unpack(edata)
-                        if self.is_debug_file:
-                            self.binary_debug.write('BEND-69 - eid=%s %s\n' % (eid, str(out)))
-                        #print('BEND-69 - eid=%s %s\n' % (eid, str(out)))
-
-                        (grid, angle, sc, sd, se, sf, omax, omin, mst, msc) = out
-
-                        obj.add_sort1(dt, eid, grid, angle, sc, sd, se, sf, omax, omin, mst, msc)
-                        n += ntotali
+                n = oes_cbend_real_21(self, data, obj,
+                                      nelements, ntotal, dt)
 
             #msg = ''
             #if self.read_mode == 2:
@@ -8928,4 +8910,34 @@ def oes_cshear_random_3(self, data: bytes,
         print(eid, dt)
         add_sort_x(dt, eid, max_strain, avg_strain)
         n += ntotal
+    return n
+
+def oes_cbend_real_21(self, data: bytes,
+                      obj: Union[RealBendStressArray, RealBendStrainArray],
+                      nelements: int, ntotal: int, dt) -> int:
+    n = 0
+    ntotali = 40
+    struct1 = Struct(self._endian + self._analysis_code_fmt)
+    struct2 = Struct(self._endian + b'i9f')
+    add_sort_x = getattr(obj, 'add_sort' + str(self.sort_method))
+
+    #print('ntimes =', nelements)
+    for unused_i in range(nelements):
+        edata = data[n:n + 4]
+        eid_device, = struct1.unpack(edata)
+        eid, dt = get_eid_dt_from_eid_device(
+            eid_device, self.nonlinear_factor, self.sort_method)
+
+        n += 4
+        for unused_i in range(2):
+            edata = data[n:n + ntotali]
+            out = struct2.unpack(edata)
+            if self.is_debug_file:
+                self.binary_debug.write('BEND-69 - eid=%s %s\n' % (eid, str(out)))
+            #print('BEND-69 - eid=%s %s\n' % (eid, str(out)))
+
+            (grid, angle, sc, sd, se, sf, omax, omin, mst, msc) = out
+
+            add_sort_x(dt, eid, grid, angle, sc, sd, se, sf, omax, omin, mst, msc)
+            n += ntotali
     return n

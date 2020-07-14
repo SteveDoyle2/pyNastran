@@ -496,12 +496,12 @@ class NastranMatrix(BaseCard):
         return get_matrix(self, is_sparse=is_sparse, apply_symmetry=apply_symmetry)
 
     @property
-    def is_real(self):
+    def is_real(self) -> bool:
         """real vs. complex attribute"""
         return not self.is_complex
 
     @property
-    def is_complex(self):
+    def is_complex(self) -> bool:
         """real vs. complex attribute"""
         if self.tin in [1, 2]: # real
             return False
@@ -1019,14 +1019,14 @@ class DMIAX(BaseCard):
         _export_dmiax_to_hdf5(h5_file, model, model.dmiax, encoding)
 
     @property
-    def is_real(self):
+    def is_real(self) -> bool:
         """is the matrix real?"""
         if self.tin in [1, 2]:
             return True
         return False
 
     @property
-    def is_complex(self):
+    def is_complex(self) -> bool:
         """is the matrix complex"""
         return not self.is_real
 
@@ -1834,12 +1834,12 @@ class DMI(NastranMatrix):
                     raise NotImplementedError()
 
     @property
-    def is_real(self):
+    def is_real(self) -> bool:
         """real vs. complex attribute"""
         return not self.is_complex
 
     @property
-    def is_complex(self):
+    def is_complex(self) -> bool:
         """real vs. complex attribute"""
         if self.tin in [3, 4]:
             return True

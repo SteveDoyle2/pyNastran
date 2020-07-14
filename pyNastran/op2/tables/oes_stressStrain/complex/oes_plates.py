@@ -10,13 +10,13 @@ from pyNastran.op2.result_objects.op2_objects import get_complex_times_dtype
 from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import StressObject, StrainObject, OES_Object
 from pyNastran.f06.f06_formatting import write_imag_floats_13e, write_float_13e
 
-BASIC_TABLES = {
-    'OES1X', 'OES1',
-    'OES2',
-    'OSTR1X',
-}
-VM_TABLES = {'OESVM1', 'OESVM2',
-             'OSTRVM1', 'OSTRVM2'}
+#BASIC_TABLES = {
+    #'OES1X', 'OES1',
+    #'OES2',
+    #'OSTR1X',
+#}
+#VM_TABLES = {'OESVM1', 'OESVM2',
+             #'OSTRVM1', 'OSTRVM2'}
 
 
 class ComplexPlateArray(OES_Object):
@@ -119,8 +119,8 @@ class ComplexPlateArray(OES_Object):
 
         self.fiber_curvature = zeros(nlayers, 'float32')
 
-        # [oxx, oyy, txy]
         nelement_nodes = nlayers
+        # [oxx, oyy, txy]
         self.data = zeros((ntimes, nlayers, 3), dtype=cfdtype)
 
         # TODO: could be more efficient by using nelements for cid
@@ -142,15 +142,6 @@ class ComplexPlateArray(OES_Object):
     def __eq__(self, table):  # pragma: no cover
         assert self.is_sort1 == table.is_sort1
         self._eq_header(table)
-        if not np.array_equal(self.element_node, table.element_node):
-            assert self.element_node.shape == table.element_node.shape, 'shape=%s element_node.shape=%s' % (
-                self.element_node.shape, table.element_node.shape)
-            msg = 'table_name=%r class_name=%s\n' % (self.table_name, self.__class__.__name__)
-            msg += '%s\nEid, Nid\n' % str(self.code_information())
-            for (eid1, nid1), (eid2, nid2) in zip(self.element_node, table.element_node):
-                msg += '(%s, %s), (%s, %s)\n' % (eid1, nid1, eid2, nid2)
-            print(msg)
-            raise ValueError(msg)
         if not np.array_equal(self.data, table.data):
             msg = 'table_name=%r class_name=%s\n' % (self.table_name, self.__class__.__name__)
             msg += '%s\n' % str(self.code_information())
@@ -205,6 +196,7 @@ class ComplexPlateArray(OES_Object):
         self._times[self.itime] = dt
         #print(self.element_types2, element_type, self.element_types2.dtype)
         #print('itotal=%s dt=%s eid=%s nid=%-5s oxx=%s' % (self.itotal, dt, eid, node_id, oxx))
+
         assert isinstance(node_id, int), node_id
         self.data[self.itime, self.itotal] = [oxx1, oyy1, txy1]
         self.element_node[self.itotal, :] = [eid, node_id]  # 0 is center
@@ -254,70 +246,12 @@ class ComplexPlateArray(OES_Object):
         #if debug:
             #print(self.element_node)
 
-    def add_ovm_sort1(self, dt, eid, node_id,
-                      fdr1, oxx1, oyy1, txy1, ovm1,
-                      fdr2, oxx2, oyy2, txy2, ovm2) -> None:
-        assert isinstance(eid, integer_types) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
-        self._times[self.itime] = dt
-        #print(self.element_types2, element_type, self.element_types2.dtype)
-        #print('itotal=%s dt=%s eid=%s nid=%-5s oxx=%s' % (self.itotal, dt, eid, node_id, oxx))
-
-        assert isinstance(node_id, int), node_id
-        self.data[self.itime, self.itotal] = [oxx1, oyy1, txy1, ovm1]
-        self.element_node[self.itotal, :] = [eid, node_id]  # 0 is center
-        self.fiber_curvature[self.itotal] = fdr1
-        #self.ielement += 1
-        self.itotal += 1
-
-        self.data[self.itime, self.itotal] = [oxx2, oyy2, txy2, ovm2]
-        self.element_node[self.itotal, :] = [eid, node_id]  # 0 is center
-        self.fiber_curvature[self.itotal] = fdr2
-        #self.ielement += 1
-        self.itotal += 1
-
-    def add_ovm_sort2(self, dt, eid, nid,
-                      fd1, oxx1, oyy1, txy1, ovm1,
-                      fd2, oxx2, oyy2, txy2, ovm2):
-        nnodes = self.nnodes_per_element
-        itime = self.ielement // nnodes
-        inid = self.ielement % nnodes
-        #itotal = self.itotal
-        ielement = self.itime
-        #print(f'itime={itime} eid={eid} nid={nid}; inid={inid} ielement={ielement}')
-
-        #ibase = 2 * ielement # ctria3/cquad4-33
-        ibase = 2 * (ielement * nnodes + inid)
-        ie_upper = ibase
-        ie_lower = ibase + 1
-
-        #debug = False
-        self._times[itime] = dt
-        #print(self.element_types2, element_type, self.element_types2.dtype)
-
-        #itime = self.ielement
-        #itime = self.itime
-        #ielement = self.itime
-        assert isinstance(eid, integer_types) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
-
-        if itime == 0:
-            self.element_node[ie_upper, :] = [eid, nid]  # 0 is center
-            self.element_node[ie_lower, :] = [eid, nid]  # 0 is center
-            self.fiber_curvature[ie_upper] = fd1
-            self.fiber_curvature[ie_lower] = fd2
-        self.data[itime, ie_upper, :] = [oxx1, oyy1, txy1, ovm1]
-        self.data[itime, ie_lower, :] = [oxx2, oyy2, txy2, ovm2]
-
-        self.itotal += 2
-        self.ielement += 1
-        #if debug:
-            #print(self.element_node)
-
     def get_stats(self, short: bool=False) -> List[str]:
         if not self.is_built:
             return [
                 '<%s>\n' % self.__class__.__name__,
-                '  ntimes: %i\n' % self.ntimes,
-                '  ntotal: %i\n' % self.ntotal,
+                f'  ntimes: {self.ntimes:d}\n',
+                f'  ntotal: {self.ntotal:d}\n',
             ]
 
         nelements = self.nelements
@@ -447,7 +381,7 @@ class ComplexPlateArray(OES_Object):
         from struct import Struct, pack
         frame = inspect.currentframe()
         call_frame = inspect.getouterframes(frame, 2)
-        op2_ascii.write('%s.write_op2: %s\n' % (self.__class__.__name__, call_frame[1][3]))
+        op2_ascii.write(f'{self.__class__.__name__}.write_op2: {call_frame[1][3]}\n')
 
         if itable == -1:
             self._write_table_header(op2, op2_ascii, date)
@@ -479,7 +413,7 @@ class ComplexPlateArray(OES_Object):
         #assert self.ntimes == 1, self.ntimes
 
         #device_code = self.device_code
-        op2_ascii.write('  ntimes = %s\n' % self.ntimes)
+        op2_ascii.write(f'  ntimes = {self.ntimes}\n')
 
         #fmt = '%2i %6f'
         #print('ntotal=%s' % (ntotal))
@@ -495,7 +429,7 @@ class ComplexPlateArray(OES_Object):
         else:
             raise NotImplementedError('SORT2')
 
-        op2_ascii.write('nelements=%i\n' % nelements)
+        op2_ascii.write(f'nelements={nelements:d}\n')
         if nnodes == 1: # CTRIA3 centroid
             itable = self._write_op2_ctria3(
                 op2, op2_ascii, new_result, itable,
@@ -513,8 +447,8 @@ class ComplexPlateArray(OES_Object):
                       4 * ntotal]
             op2.write(pack('%ii' % len(header), *header))
             op2_ascii.write('r4 [4, 0, 4]\n')
-            op2_ascii.write('r4 [4, %s, 4]\n' % (itable))
-            op2_ascii.write('r4 [4, %i, 4]\n' % (4 * ntotal))
+            op2_ascii.write(f'r4 [4, {itable:d}, 4]\n')
+            op2_ascii.write(f'r4 [4, {4 * ntotal:d}, 4]\n')
 
             fds = self.fiber_curvature
             oxx = self.data[itime, :, 0]
@@ -552,7 +486,7 @@ class ComplexPlateArray(OES_Object):
                 ilayer0 = not ilayer0
                 nwide += len(data)
 
-            assert nwide == ntotal, "nwide=%s ntotal=%s" % (nwide, ntotal)
+            assert nwide == ntotal, f'nwide={nwide} ntotal={ntotal}'
             itable -= 1
             header = [4 * ntotal,]
             op2.write(pack('i', *header))
@@ -575,8 +509,8 @@ class ComplexPlateArray(OES_Object):
                       4 * ntotal]
             op2.write(pack('%ii' % len(header), *header))
             op2_ascii.write('r4 [4, 0, 4]\n')
-            op2_ascii.write('r4 [4, %s, 4]\n' % (itable))
-            op2_ascii.write('r4 [4, %i, 4]\n' % (4 * ntotal))
+            op2_ascii.write(f'r4 [4, {itable:d}, 4]\n')
+            op2_ascii.write(f'r4 [4, {4 * ntotal:d}, 4]\n')
 
             fds = self.fiber_curvature
             oxx = self.data[itime, :, 0]
@@ -703,7 +637,7 @@ def _get_plate_msg(self, is_mag_phase=True, is_sort1=True) -> Tuple[List[str], i
         msg += cquadr + mag_real + grid_msg_temp
         is_bilinear = False
     else:
-        raise NotImplementedError('name=%r type=%s' % (self.element_name, self.element_type))
+        raise NotImplementedError(f'name={self.element_name!r} type={self.element_type}')
 
     nnodes = get_nnodes(self)
     return msg, nnodes, is_bilinear
@@ -713,10 +647,10 @@ def get_nnodes(self):
         nnodes = 4 + 1 # centroid
     elif self.element_type in [70, 75]:   #???, CTRIA6
         nnodes = 3 + 1 # centroid
-    elif self.element_type in [74, 33, 227, 228]:  # CTRIA3, CQUAD4 linear, CQUADR linear, CQUADR linear
+    elif self.element_type in [33, 74, 227, 228]:  # CTRIA3, CQUAD4 linear, CQUADR linear, CQUADR linear
         nnodes = 1
     else:
-        raise NotImplementedError('name=%r type=%s' % (self.element_name, self.element_type))
+        raise NotImplementedError(f'name={self.element_name!r} type={self.element_type}')
     return nnodes
 
 class ComplexPlateStressArray(ComplexPlateArray, StressObject):
@@ -730,6 +664,7 @@ class ComplexPlateStressArray(ComplexPlateArray, StressObject):
 
     def get_headers(self) -> List[str]:
         return self._get_headers()
+
 
 class ComplexPlateStrainArray(ComplexPlateArray, StrainObject):
     def __init__(self, data_code, is_sort1, isubcase, dt):

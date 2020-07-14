@@ -18,7 +18,7 @@ class AppliedLoadsVectorArray(ScalarObject):
     def data_type(self):
         raise NotImplementedError()
 
-    def _reset_indices(self):
+    def _reset_indices(self) -> None:
         self.itotal = 0
 
     def build(self):
@@ -32,8 +32,8 @@ class AppliedLoadsVectorArray(ScalarObject):
         if not self.is_built:
             return [
                 '<%s>\n' % self.__class__.__name__,
-                '  ntimes: %i\n' % self.ntimes,
-                '  ntotal: %i\n' % self.ntotal,
+                f'  ntimes: {self.ntimes:d}\n',
+                f'  ntotal: {self.ntotal:d}\n',
             ]
         #ngrids = len(self.gridTypes)
         msg = []
@@ -71,7 +71,7 @@ class RealAppliedLoadsVectorArray(AppliedLoadsVectorArray):
     def __init__(self, data_code, is_sort1, isubcase, dt):
         AppliedLoadsVectorArray.__init__(self, data_code, isubcase, dt)
 
-    def data_type(self):
+    def data_type(self) -> str:
         raise 'float32'
 
     def write_f06(self, f06_file, header=None, page_stamp='PAGE %s',
@@ -115,7 +115,7 @@ class ComplexAppliedLoadsVectorArray(AppliedLoadsVectorArray):
     def __init__(self, data_code, is_sort1, isubcase, dt):
         AppliedLoadsVectorArray.__init__(self, data_code, isubcase, dt)
 
-    def data_type(self):
+    def data_type(self) -> str:
         raise 'float32'
 
     def write_f06(self, f06_file, header=None, page_stamp='PAGE %s',

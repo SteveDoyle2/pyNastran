@@ -55,7 +55,7 @@ class RealNonlinearPlateArray(OES_Object):
             raise NotImplementedError('name=%r type=%s' % (self.element_name, self.element_type))
         return nnodes_per_element
 
-    def _reset_indices(self):
+    def _reset_indices(self) -> None:
         self.itotal = 0
         self.ielement = 0
 
@@ -275,8 +275,8 @@ class RealNonlinearPlateArray(OES_Object):
         if not self.is_built:
             return [
                 '<%s>\n' % self.__class__.__name__,
-                '  ntimes: %i\n' % self.ntimes,
-                '  ntotal: %i\n' % self.ntotal,
+                f'  ntimes: {self.ntimes:d}\n',
+                f'  ntotal: {self.ntotal:d}\n',
             ]
 
         nelements = self.nelements
@@ -453,7 +453,7 @@ class RealNonlinearSolidArray(OES_Object):
             raise NotImplementedError('name=%r type=%s' % (self.element_name, self.element_type))
         return nnodes_per_element
 
-    def _reset_indices(self):
+    def _reset_indices(self) -> None:
         self.itotal = 0
         self.ielement = 0
 
@@ -605,8 +605,8 @@ class RealNonlinearSolidArray(OES_Object):
         if not self.is_built:
             return [
                 '<%s>\n' % self.__class__.__name__,
-                '  ntimes: %i\n' % self.ntimes,
-                '  ntotal: %i\n' % self.ntotal,
+                f'  ntimes: {self.ntimes:d}\n',
+                f'  ntotal: {self.ntotal:d}\n',
             ]
 
         nelements = self.nelements

@@ -290,8 +290,8 @@ class RealContactTractionAndPressureArray(ScalarObject):  # displacement style t
         if not self.is_built:
             return [
                 '<%s>; table_name=%r\n' % (self.__class__.__name__, self.table_name),
-                '  ntimes: %i\n' % self.ntimes,
-                '  ntotal: %i\n' % self.ntotal,
+                f'  ntimes: {self.ntimes:d}\n',
+                f'  ntotal: {self.ntotal:d}\n',
             ]
         #ngrids = len(self.gridTypes)
         if short:
@@ -342,7 +342,7 @@ class RealContactTractionAndPressureArray(ScalarObject):  # displacement style t
     def get_headers(self) -> List[str]:
         return self._get_headers()
 
-    def _reset_indices(self):
+    def _reset_indices(self) -> None:
         self.itotal = 0
 
     def build(self):
@@ -741,14 +741,14 @@ class RealContactTractionAndPressureArray(ScalarObject):  # displacement style t
         return obj
 
     @property
-    def is_real(self):
+    def is_real(self) -> bool:
         return True
 
     @property
-    def is_complex(self):
+    def is_complex(self) -> bool:
         return False
 
-    def data_type(self):
+    def data_type(self) -> str:
         return 'float32'
 
     def write_op2(self, op2_file, fascii, itable, new_result,

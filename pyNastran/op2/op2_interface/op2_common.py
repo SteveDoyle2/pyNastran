@@ -2008,12 +2008,12 @@ class OP2Common(Op2Codes, F06Writer):
         return sort_method
 
     @property
-    def is_real(self):
+    def is_real(self) -> bool:
         unused_sort_method, is_real, unused_is_random = self._table_specs()
         return is_real
 
     @property
-    def is_complex(self):
+    def is_complex(self) -> bool:
         return not self.is_real
 
     @property

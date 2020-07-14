@@ -99,7 +99,7 @@ class OES_Object(BaseElement):
             self.nonlinear_factor = self._times[0]
         else:
             name = self.analysis_method
-            #print(f'name = {name}\n')
+            #print(f'\n{self.class_name}: name = {name}')
             #_analysis_code_fmt
         #if self.analysis_code == 5:
             #name = 'freq'
@@ -113,6 +113,7 @@ class OES_Object(BaseElement):
         names = name + 's'
         self.data_code['name'] = name
         self.data_code['data_names'][0] = name
+        #print(self.element_ids)
         del self.element_id, self.element_ids
         #print('timesA =', self._times)
         old_times = None
