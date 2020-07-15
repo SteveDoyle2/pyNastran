@@ -91,7 +91,7 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
         self._active_background_image = None
         self.reset_settings = False
         self.fmts = fmt_order
-        self.base_window_title = "pyNastran v%s"  % pyNastran.__version__
+        self.base_window_title = f'pyNastran v{pyNastran.__version__}'
 
         #defaults
         self.wildcard_delimited = 'Delimited Text (*.txt; *.dat; *.csv)'
@@ -154,8 +154,8 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
         self.window_title = self.base_window_title
 
         #=========== Results widget ===================
-        self.res_dock = QDockWidget("Results", self)
-        self.res_dock.setObjectName("results_obj")
+        self.res_dock = QDockWidget('Results', self)
+        self.res_dock.setObjectName('results_obj')
         #self.res_widget = QtGui.QTextEdit()
         #self.res_widget.setReadOnly(True)
         #self.res_dock.setWidget(self.res_widget)
@@ -207,7 +207,7 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
 
         if self.execute_python:
             self.python_dock_widget = PythonConsoleWidget(self)
-            self.python_dock_widget.setObjectName("python_console")
+            self.python_dock_widget.setObjectName('python_console')
             self.addDockWidget(QtCore.Qt.BottomDockWidgetArea, self.python_dock_widget)
 
     def _on_execute_python_button(self, clear=False):
@@ -614,10 +614,10 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
                                      checkables=checkables)
 
         self.actions['toolbar'] = self.toolbar.toggleViewAction()
-        self.actions['toolbar'].setStatusTip("Show/Hide application toolbar")
+        self.actions['toolbar'].setStatusTip('Show/Hide application toolbar')
 
         self.actions['reswidget'] = self.res_dock.toggleViewAction()
-        self.actions['reswidget'].setStatusTip("Show/Hide results selection")
+        self.actions['reswidget'].setStatusTip('Show/Hide results selection')
         return self.actions
 
     def _prepare_actions_helper(self, icon_path, tools, actions, checkables=None):
@@ -635,7 +635,7 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
                 continue
 
             if icon is None:
-                print("missing_icon = %r!!!" % name)
+                print(f'missing_icon = {name!r}!!!')
                 ico = None
             else:
                 ico = QtGui.QIcon()
@@ -777,7 +777,7 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
 
         fmt = os.path.splitext(image_filename)[1].lower()
         if fmt not in ['.jpg', '.jpeg', '.png', '.tif', '.tiff', '.bmp']:
-            msg = 'invalid image type=%r; filename=%r' % (fmt, image_filename)
+            msg = f'invalid image type={fmt!r}; filename={image_filename!r}'
             raise NotImplementedError(msg)
 
         #image_reader = vtk.vtkJPEGReader()
@@ -803,11 +803,10 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
         #elif fmt == '.ps': # doesn't exist?
             #self.image_reader = vtk.vtkPostScriptReader()
         else:
-            raise NotImplementedError('invalid image type=%r; filename=%r' % (
-                fmt, image_filename))
+            raise NotImplementedError(f'invalid image type={fmt!r}; filename={image_filename!r}')
 
         if not self.image_reader.CanReadFile(image_filename):
-            print("Error reading file %s" % image_filename)
+            print(f'Error reading file {image_filename}')
             return
 
         self.image_reader.SetFileName(image_filename)
@@ -1325,8 +1324,8 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
 
     def update_menu_bar(self):
         # the format we're switching to
-        method_new = '_create_%s_tools_and_menu_items' % self.format
-        method_cleanup = '_cleanup_%s_tools_and_menu_items' % self.menu_bar_format
+        method_new = f'_create_{self.format}_tools_and_menu_items'
+        method_cleanup = f'_cleanup_{self.menu_bar_format}_tools_and_menu_items'
 
         # the current state of the format
         #method_new = '_create_%s_tools_and_menu_items' % self.menu_bar_format
@@ -1337,7 +1336,7 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
             self._update_menu_bar_to_format(self.format, method_new)
         else:
             if not pyNastran.is_pynastrangui_exe:  # pragma: no cover
-                print('need to add %r' % method_new)
+                print(f'need to add {method_new!r}')
             if self.menu_bar_format != self.format:
                 if hasattr(self, method_cleanup):
                 #if hasattr(self, method_old):
@@ -1366,7 +1365,7 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
         4.  create main vtk actors
         5.  shows the Qt window
         """
-        assert self.fmts != [], 'supported_formats=%s' % self.supported_formats
+        assert self.fmts != [], f'supported_formats={self.supported_formats}'
         self.start_logging()
         settings = QtCore.QSettings()
         self.create_vtk_actors()
@@ -1387,7 +1386,7 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
             self.res_dock.toggleViewAction()
         self.init_cell_picker()
 
-        unused_main_window_state = settings.value("mainWindowState")
+        unused_main_window_state = settings.value('mainWindowState')
         self.create_corner_axis()
         #-------------
         # loading
@@ -1435,9 +1434,9 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
         cell_id = picker.GetCellId()
         select_point = picker.GetSelectionPoint()  # get x,y pixel coordinate
 
-        self.log_info("world_position = %s" % str(world_position))
-        self.log_info("cell_id = %s" % cell_id)
-        self.log_info("select_point = %s" % str(select_point))
+        self.log_info('world_position = %s' % str(world_position))
+        self.log_info(f'cell_id = {cell_id}')
+        self.log_info('select_point = %s' % str(select_point))
 
     def _on_node_picker(self, unused_a):
         self.vtk_interactor.SetPicker(self.node_picker)
@@ -1447,7 +1446,7 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
         select_point = picker.GetSelectionPoint()  # get x,y pixel coordinate
 
         self.log_info("world_position = %s" % str(world_position))
-        self.log_info("node_id = %s" % node_id)
+        self.log_info(f'node_id = {node_id}')
         self.log_info("select_point = %s" % str(select_point))
 
     #def on_cell_picker(self):
@@ -1485,8 +1484,10 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
                  min_value=None, max_value=None,
                  animate_scale=True, animate_phase=False, animate_time=False,
                  icase_fringe=None, icase_disp=None, icase_vector=None,
-                 animate_fringe=False, animate_vector=False,
-                 icase_start=None, icase_end=None, icase_delta=None,
+                 animate_fringe=False, animate_disp=True, animate_vector=False,
+                 icase_fringe_start=None, icase_fringe_end=None, icase_fringe_delta=None,
+                 icase_disp_start=None, icase_disp_end=None, icase_disp_delta=None,
+                 icase_vector_start=None, icase_vector_end=None, icase_vector_delta=None,
                  time=2.0, animation_profile='0 to scale',
                  nrepeat=0, fps=30, magnify=1,
                  make_images=True, delete_images=False, make_gif=True, stop_animation=False,
@@ -1596,6 +1597,7 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
          - time should be two-sided
          - analysis_time should be one-sided
          - set onesided=False
+
         """
         if stop_animation:
             self.stop_animation()
@@ -1603,11 +1605,17 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
 
         is_failed = True
         try:
+            if not(animate_fringe or animate_disp or animate_vector):
+                msg = 'Either animate_fringe, animate_disp or animate_vector must be True'
+                raise ValueError(msg)
+
             out = setup_animation(
                 scale, istep=istep,
                 animate_scale=animate_scale, animate_phase=animate_phase, animate_time=animate_time,
                 icase_fringe=icase_fringe, icase_disp=icase_disp, icase_vector=icase_vector,
-                icase_start=icase_start, icase_end=icase_end, icase_delta=icase_delta,
+                icase_fringe_start=icase_fringe_start, icase_fringe_end=icase_fringe_end, icase_fringe_delta=icase_fringe_delta,
+                icase_disp_start=icase_disp_start, icase_disp_end=icase_disp_end, icase_disp_delta=icase_disp_delta,
+                icase_vector_start=icase_vector_start, icase_vector_end=icase_vector_end, icase_vector_delta=icase_vector_delta,
                 time=time, animation_profile=animation_profile,
                 fps=fps, animate_in_gui=animate_in_gui)
         except (AssertionError, ValueError, RuntimeError, NotImplementedError) as error:
@@ -1619,14 +1627,19 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
          analysis_time, onesided, unused_endpoint) = out
 
         if animate_time:
-            icase_msg = '         icase_start=%s, icase_end=%s, icase_delta=%s,\n' % (
-                icase_start, icase_end, icase_delta,)
+            icase_msg = (
+                '         icase_fringe_start=%s, icase_fringe_end=%s, icase_fringe_delta=%s,\n'
+                '         icase_disp_start=%s, icase_disp_end=%s, icase_disp_delta=%s,\n'
+                '         icase_vector_start=%s, icase_vector_end=%s, icase_vector_delta=%s,\n' % (
+                icase_fringe_start, icase_fringe_end, icase_fringe_delta,
+                icase_disp_start, icase_disp_end, icase_disp_delta,
+                icase_vector_start, icase_vector_end, icase_vector_delta))
         else:
             icase_msg = (
                 '         icase_fringe=%s, icase_disp=%s, icase_vector=%s, \n'
-                '         animate_fringe=%s, animate_vector=%s, \n' % (
+                '         animate_fringe=%s, animate_disp=%s, animate_vector=%s, \n' % (
                     icase_fringe, icase_disp, icase_vector,
-                    animate_fringe, animate_vector,
+                    animate_fringe, animate_disp, animate_vector,
                 ))
 
         #animate_in_gui = True
@@ -1741,7 +1754,7 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
         """applies the animation update callback"""
         #print('icase_fringe=%r icase_fringe0=%r' % (icase_fringe, icase_fringe0))
         arrow_scale = None  # self.glyph_scale_factor * scale
-        icase_vector = None
+        #icase_vector = None
         is_legend_shown = self.scalar_bar.is_shown
         if icase_disp != icase_disp0:
             # apply the fringe
@@ -1761,7 +1774,7 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
                 self.show_legend()
 
             if not is_valid:
-                self.log_error('Invalid Fringe Case %i' % icase_fringe)
+                self.log_error(f'Invalid Fringe Case {icase_fringe:d}')
                 return False
 
         is_valid = self.animation_update_fringe(
@@ -1769,19 +1782,20 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
         if not is_valid:
             return is_valid
 
-        try:
-            # apply the deflection
-            self.update_grid_by_icase_scale_phase(icase_disp, scale, phase=phase)
-        except(AttributeError, KeyError):
-            self.log_error('Invalid Displacement Case %i' % icase_disp)
-            return False
+        if icase_disp is not None:
+            try:
+                # apply the deflection
+                self.update_grid_by_icase_scale_phase(icase_disp, scale, phase=phase)
+            except(AttributeError, KeyError):
+                self.log_error(f'Invalid Displacement Case {icase_disp:d}')
+                return False
 
         if icase_vector is not None and icase_vector != icase_vector0:
             try:
                 # apply the nodal forces
                 self.update_forces_by_icase_scale_phase(icase_vector, arrow_scale, phase=phase)
             except(AttributeError, KeyError):
-                self.log_error('Invalid Vector Case %i' % icase_vector)
+                self.log_error(f'Invalid Vector Case {icase_vector:d}')
                 return False
         is_valid = True
         return is_valid
@@ -2120,7 +2134,7 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
                                           QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
             if result == QMessageBox.Yes:
                 self.log_widget.clear()
-                self.log_command('clear_application_log(force=%s)' % force)
+                self.log_command(f'clear_application_log(force={force})')
 
     #---------------------------------------------------------------------------------------
     # PICKER
@@ -2148,14 +2162,14 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
 
     #---------------------------------------------------------------------------------------
     def on_set_anti_aliasing(self, scale=0):
-        assert isinstance(scale, int), 'scale=%r; type=%r' % (scale, type(scale))
+        assert isinstance(scale, int), f'scale={scale!r}; type={type(scale)}'
         renwin = self.render_window
         renwin.LineSmoothingOn()
         renwin.PolygonSmoothingOn()
         renwin.PointSmoothingOn()
         renwin.SetMultiSamples(scale)
         self.vtk_interactor.Render()
-        self.log_command('on_set_anti_aliasing(%r)' % (scale))
+        self.log_command(f'on_set_anti_aliasing({scale!r})')
 
     #---------------------------------------------------------------------------------------
 

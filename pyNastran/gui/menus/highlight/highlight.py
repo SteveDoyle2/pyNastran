@@ -4,7 +4,7 @@ The highlight menu handles:
  - Preferences
 
 """
-from typing import List
+from typing import Tuple, List
 import numpy as np
 
 from qtpy import QtGui
@@ -48,6 +48,13 @@ class HighlightWindow(PyDialog):
         """
         Saves the data members from data and
         performs type checks
+
+        Parameters
+        ----------
+        menu_type : str
+            'highlight'
+            'mark'
+
         """
         PyDialog.__init__(self, data, win_parent)
         gui = win_parent
@@ -421,7 +428,8 @@ class HighlightWindow(PyDialog):
 
 
 def create_node_labels(point_id_filter: vtk.vtkIdFilter,
-                       grid: vtk.vtkUnstructuredGrid, rend: vtk.vtkRenderer,
+                       grid: vtk.vtkUnstructuredGrid,
+                       rend: vtk.vtkRenderer,
                        label_size: float=10.0):
     """creates the node labels"""
     # filter inner points, so only surface points will be available
@@ -449,8 +457,8 @@ def create_node_labels(point_id_filter: vtk.vtkIdFilter,
     return label_actor
 
 def create_highlighted_actors(gui, grid: vtk.vtkUnstructuredGrid,
-                              all_nodes=None, nodes=None, set_node_scalars=True,
-                              all_elements=None, elements=None, set_element_scalars=True,
+                              all_nodes=None, nodes=None, set_node_scalars: bool=True,
+                              all_elements=None, elements=None, set_element_scalars: bool=True,
                               add_actors: bool=False) -> List[vtk.vtkLODActor]:
     """creates nodes & element highlighted objects"""
     actors = []
@@ -501,7 +509,10 @@ def check_float(cell):
     value = float(text)
     return value, True
 
-def create_color_menu(parent, win_parent, title, color_edit, rgb_color_ints, func_name):
+def create_color_menu(parent, win_parent, title: str,
+                      color_edit: QPushButtonColor,
+                      rgb_color_ints: List[int],
+                      func_name: str):
     """helper method for ``on_background_color`` and ``on_background_color2``"""
     passed, rgb_color_ints, rgb_color_floats = _pop_color_dialog(
         parent, color_edit, rgb_color_ints, title)
@@ -512,7 +523,9 @@ def create_color_menu(parent, win_parent, title, color_edit, rgb_color_ints, fun
             func_background_color(rgb_color_floats)
     return passed, rgb_color_ints, rgb_color_floats
 
-def _pop_color_dialog(parent, color_edit, rgb_color_ints, title):
+def _pop_color_dialog(parent,
+                      color_edit: QPushButtonColor,
+                      rgb_color_ints: List[int], title: str) -> Tuple[bool, List[int], List[float]]:
     """pops a color dialog"""
     col = QColorDialog.getColor(QtGui.QColor(*rgb_color_ints), parent, title)
     if not col.isValid():

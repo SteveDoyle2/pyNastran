@@ -1,3 +1,4 @@
+"""requires qtpy"""
 import unittest
 
 from qtpy.QtWidgets import QApplication

@@ -126,7 +126,7 @@ class OES_Object(BaseElement):
             assert len(self._times) == 1, self.data.shape
         elif len(self._times) > 1:
             class_name = self.__class__.__name__
-            assert self._times.min() != self._times.max(), f'{class_name}: old_times={old_times} -> times={self._times}; data.shape={self.data.shape}\n{self.code_information()}'
+            #assert self._times.min() != self._times.max(), f'{class_name}: old_times={old_times} -> times={self._times}; data.shape={self.data.shape}\n{self.code_information()}'
         #print(self.object_attributes())
 
     @property

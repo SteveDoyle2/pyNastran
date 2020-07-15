@@ -1,3 +1,4 @@
+"""requires qtpy"""
 import os
 import unittest
 from qtpy import QtGui

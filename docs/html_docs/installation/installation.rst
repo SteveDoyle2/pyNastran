@@ -8,7 +8,7 @@ Installation From Release
 
 pyNastran is an easy package to install once you have the required Python
 modules.  It's a pure Python package so you shouldn't have too many problems.
-Just type:
+Just type on the command line:
 
 ``pip install pyNastran``
 
@@ -23,44 +23,45 @@ Packages
 --------
 pyNastran is tested against a range of package versions (lowest to highest
 based on availbility), so should work.  The recommended set of packages are:
+
  * **Required**:
 
    * numpy >= 1.14
    * scipy >= 1.0
    * cpylog >= 1.4.0
-   * docopt-ng == 0.7.2    **(required for command line tools)**
+   * docopt-ng == 0.7.2   **(required for command line tools)**
 
  * **Optional**:
 
    * colorama >= 0.3.9    **(colored logging)**
-   * pandas ???
+   * pandas >= 0.25
    * matplotlib >= 2.2.4  **(plotting)**
    * h5py >= 2.8.0        **(HDF5 support)**
 
  * **GUI**:
 
-   * vtk 7.1.1 or 8.1.1
+   * vtk >= 7  (vtk==9 is somewhat buggy)
    * qtpy >= 1.4.0
    * Qt **(pick one)**
 
      * PyQt5 >= 5.9.2
      * PySide2 >= 5.11.2
-   * QScintilla >= ??? **(optional for fancy scripting)**
-   * pygments >= 2.2.0 **(optional for fancy scripting)**
-   * imageio >= 2.4.1 **(optional for animation support)**
+   * QScintilla >= ??? **(optional for fancy scripting; PyQt5 only)**
+   * pygments >= 2.2.0 **(optional for fancy scripting; PyQt5 only)**
+   * imageio >= 2.4.1  **(optional for animation support)**
 
-***********************************************
-Install Procedure - From Anaconda (recommended)
-***********************************************
+***************************************************
+Install Procedure - From Anaconda (not recommended)
+***************************************************
 Base functionality:
  * `64-bit Python <https://www.python.org/downloads/>`_
  * ``pip install numpy``
  * ``pip install scipy``
- * ``pip install docopt-ng``   **(required for command line tools)**
- * ``pip install pandas``   **(optional)**
+ * ``pip install pandas``     **(optional)**
  * ``pip install h5py``       **(optional for HDF5 support)**
  * ``pip install matplotlib`` **(optional for plotting)**
  * ``pip install colorama``   **(optional for colored logging)**
+ * ``pip install docopt-ng``   **(required for command line tools)**
  * ``pip install cpylog``
  * ``pip install pyNastran``
 
@@ -74,6 +75,22 @@ For **optional** GUI support:
 
  * Additional source for `Windows binaries <http://www.lfd.uci.edu/~gohlke/pythonlibs/>`_
 
+****************************************************************
+Install Procedure - From Anaconda (not recommended and untested)
+****************************************************************
+
+You've been warned, but in general Anaconda doesn't work well with pip.  You need to be very careful with using ``pip`` instead of ``conda``.  In general, it's best to always use conda first and pip only if conda fails.
+
+  - `64-bit Python <https://www.anaconda.com/products/individual>`_
+ * ``conda install numpy``
+ * ``conda install scipy``
+ * ``conda install pandas``   **(optional)**
+ * ``conda install h5py``       **(optional for HDF5 support)**
+ * ``conda install matplotlib`` **(optional for plotting)**
+ * ``conda install colorama``   **(optional for colored logging)**
+ * ``pip install docopt-ng``   **(required for command line tools)**
+ * ``pip install cpylog``
+ * ``pip install pyNastran``
 
 Use Web docs
 ------------
@@ -83,8 +100,8 @@ See `docs <https://pynastran-git.readthedocs.io/en/latest/>`_
 Installation From Source
 -------------------------
 
-pyNastran is an easy package to install once you have the required Python
-modules.  It's a pure Python package so you shouldn't have too many problems.
+pyNastran is meant to an easy package to install once you have the required Python modules.
+It's a pure Python package so you shouldn't have too many problems.
 
 Installing from source is recommened if:
  - You want the most recent version (see installation.rst-master)
@@ -125,7 +142,7 @@ Install Git
 
 Install pyNastran
 =================
-There are two ways to install the 1.2 (master/dev) version of pyNastran
+There are two ways to install the master/dev version of pyNastran
 
  1. Download the most recent `zip version <https://github.com/SteveDoyle2/pyNastran/archive/master.zip>`_
 

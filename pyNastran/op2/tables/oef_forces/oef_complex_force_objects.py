@@ -4059,7 +4059,10 @@ class ComplexForceVU_2DArray(BaseElement):  # 189-VUQUAD,190-VUTRIA
         if self.is_sort1:
             ntimes = self.ntimes
             nelements = self.nelements
-            #print(f'ntimes={ntimes} nelements={nelements}')
+        else:
+            nelements = self.ntimes
+            ntimes = self.nelements
+            print(f'SORT2: ntimes={ntimes} nelements={nelements}')
 
         self._times = zeros(ntimes, dtype=dtype)
         self.element_node = zeros((nelements, 2), dtype=idtype)
@@ -4096,3 +4099,20 @@ class ComplexForceVU_2DArray(BaseElement):  # 189-VUQUAD,190-VUTRIA
 #'0       100    CEN/8  0.0           0.0           0.0           0.0           0.0           0.0          -3.492460E-10 -1.368206E-09'
 #'                      0.0           0.0           0.0           0.0           0.0           0.0           2.910383E-11  5.088840E-10'
 #''
+
+    def add_sort2(self, nnodes, dt, eid, parent, coord, icord, theta, vugrids, forces):
+        """unvectorized method for adding SORT2 transient data"""
+        assert isinstance(eid, integer_types) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
+        itime = self.ielement
+        ielement = self.itime
+        self._times[itime] = dt
+
+        #self.parent[eid] = parent
+        #self.coord[eid] = coord
+        #self.icord[eid] = icord
+        #self.theta[eid] = theta
+        for vugrid, force in zip(vugrids, forces):
+            self.element_node[ielement, :] = [eid, vugrid]
+            self.data[itime, ielement, :] = force
+            itime += 1
+        self.ielement = itime

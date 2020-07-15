@@ -4113,7 +4113,8 @@ def oef_vu_shell_imag(self, data: bytes,
     ntotal2 = 100 * self.factor # 13*4
     assert ntotal == ntotal1 + ntotal2 * nnodes, f'ntotal={ntotal}; ntotal1={ntotal1} ntotal2={ntotal2} -> {ntotal1+ntotal2}'
 
-    assert self.sort_method == 1
+    add_sort_x = getattr(obj, 'add_sort' + str(self.sort_method))
+    #assert self.sort_method == 1
     for unused_i in range(nelements):
         edata = data[n:n+ntotal1]
         n += ntotal1
@@ -4165,7 +4166,7 @@ def oef_vu_shell_imag(self, data: bytes,
 
         #data_in = [vugrid,mfxr,mfyr,mfxyr,bmxr,bmyr,bmxyr,syzr,szxr,
                          #mfxi,mfyi,mfxyi,bmxi,bmyi,bmxyi,syzi,szxi]
-        obj.add_sort1(nnodes, dt, eid, parent, coord, icord, theta, vugrids, forces)
+        add_sort_x(nnodes, dt, eid, parent, coord, icord, theta, vugrids, forces)
     return n
 
 def oef_vu_beam_imag(self, data: bytes,

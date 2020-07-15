@@ -1,3 +1,4 @@
+"""requires qtpy"""
 import unittest
 from pyNastran.gui.menus.about.about import get_packages, get_version, get_shortcuts
 

@@ -5,10 +5,11 @@ defines:
 from pyNastran.gui.qt_version import qt_int as qt_version
 from qtpy import QtCore
 from qtpy.QtWidgets import (
-    QLabel, QLineEdit, QPushButton, QGridLayout, QApplication, QHBoxLayout, QVBoxLayout)
+    QLabel, QLineEdit, QPushButton, QGridLayout, QApplication, QVBoxLayout)
 
-from pyNastran.gui.utils.qt.pydialog import PyDialog, check_float
-from pyNastran.gui.menus.menu_utils import eval_float_from_string
+from pyNastran.gui.utils.qt.pydialog import PyDialog
+from pyNastran.gui.utils.qt.checks.qlineedit import check_float
+
 
 class ClippingPropertiesWindow(PyDialog):
     """

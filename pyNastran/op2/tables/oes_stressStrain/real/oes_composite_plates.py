@@ -88,10 +88,10 @@ class RealCompositePlateArray(OES_Object):
             ntotal = self.ntimes
 
         _times = zeros(ntimes, dtype=dtype)
-        element_layer = zeros((ntotal, 2), dtype='int32')
+        element_layer = zeros((ntotal, 2), dtype=idtype)
 
         #[o11, o22, t12, t1z, t2z, angle, major, minor, ovm]
-        data = zeros((ntimes, ntotal, 9), dtype='float32')
+        data = zeros((ntimes, ntotal, 9), dtype=fdtype)
 
         if self.load_as_h5:
             #for key, value in sorted(self.data_code.items()):

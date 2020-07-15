@@ -41,7 +41,7 @@ class RealCPLSTRNPlateArray(OES_Object):
             #return False
         #elif self.element_type in [144, 64, 82, 70, 75]:  # CQUAD4
             #return True
-        raise NotImplementedError('name=%s type=%s' % (self.element_name, self.element_type))
+        raise NotImplementedError(f'name={self.element_name} type={self.element_type}')
 
     def build(self):
         """sizes the vectorized attributes of the RealCPLSTRNPlateArray"""
@@ -341,5 +341,5 @@ def _get_clpstsn_msg(self):
         #is_bilinear = True
         cen = 'CEN/3'
     else:
-        raise NotImplementedError('name=%s type=%s' % (self.element_name, self.element_type))
+        raise NotImplementedError(f'name={self.element_name} type={self.element_type}')
     return msg, nnodes, cen

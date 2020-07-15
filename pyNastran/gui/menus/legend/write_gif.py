@@ -6,7 +6,7 @@ Defines:
 
 """
 import os
-from typing import List
+from typing import Tuple, List
 
 import numpy as np
 try:
@@ -32,7 +32,11 @@ if IS_IMAGEIO:
 def setup_animation(scale, istep=None,
                     animate_scale=True, animate_phase=False, animate_time=False,
                     icase_fringe=None, icase_disp=None, icase_vector=None,
-                    icase_start=None, icase_end=None, icase_delta=None,
+
+                    icase_fringe_start=None, icase_fringe_end=None, icase_fringe_delta=None,
+                    icase_disp_start=None, icase_disp_end=None, icase_disp_delta=None,
+                    icase_vector_start=None, icase_vector_end=None, icase_vector_delta=None,
+
                     time=2.0, animation_profile='0 to scale',
                     fps=30, animate_in_gui=False):
     """
@@ -74,15 +78,16 @@ def setup_animation(scale, istep=None,
             scale,
             icase_fringe, icase_disp, icase_vector,
             time, fps)
-        phases, icases_fringe, icases_disp, icases_vector, isteps, scales, analysis_time, fps = out
+        phases, icases_fringe, icases_disp, icases_vector, isteps, scales, analysis_time = out
     elif animate_time:
         onesided = True
         is_symmetric = False
         endpoint = True
         out = setup_animate_time(
-            scale, time,
-            icase_start, icase_end, icase_delta,
-            fps)
+            scale, time, fps,
+            icase_fringe_start, icase_fringe_end, icase_fringe_delta,
+            icase_disp_start, icase_disp_end, icase_disp_delta,
+            icase_vector_start, icase_vector_end, icase_vector_delta)
         icases_fringe, icases_disp, icases_vector, isteps, scales, analysis_time, fps = out
     else:
         raise NotImplementedError('animate_scale=%s animate_phase=%s animate_time=%s' % (
@@ -102,7 +107,7 @@ def setup_animation(scale, istep=None,
             # double the number of frames
             # drop the duplicate end frame if necessary
     if istep is not None:
-        assert isinstance(istep, integer_types), 'istep=%r' % istep
+        assert isinstance(istep, integer_types), f'istep={istep!r}'
         scales = (scales2[istep],)
         phases = (phases2[istep],)
         isteps = (istep,)
@@ -130,18 +135,7 @@ def fix_nframes(nframes, profile):
         nframes = 4 * (nframes_div_4 + 1) + 1
     return nframes
 
-def setup_animate_scale(scale, icase_fringe, icase_disp, icase_vector, time, profile, fps):
-    """
-    Gets the inputs for a displacement scale/real modal animation
-
-    A onesided animation is an animation that:
-     - does not need to loop back on itself because it ends back at the
-       start point
-     - is symmetric
-
-    We want to set it to true because if an animation is onesided, we can skip
-    making half the images.
-    """
+def _get_scale_profile_info(profile: str) -> Tuple[bool, bool, bool]:
     if isinstance(profile, str):
         profile = profile.lower()
         if profile == '0 to scale':
@@ -183,19 +177,33 @@ def setup_animate_scale(scale, icase_fringe, icase_disp, icase_vector, time, pro
             is_symmetric = False
         else:
             msg = (
-                "profile=%r is not supported:\n"
+                f'profile={profile!r} is not supported:\n'
                 "  '0 to scale'\n"
                 "   '0 to scale to 0'\n"
                 "  '-scale to scale'\n"
                 "  '-scale to scale to -scale'\n"
                 "  '0 to scale to -scale to 0'\n"
                 "  'sinusoidal: 0 to scale to -scale to 0'\n"
-                "  'sinusoidal: scale to -scale to scale'\n"
-                % profile)
+                "  'sinusoidal: scale to -scale to scale'\n")
             raise NotImplementedError(msg.rstrip())
     else:
-        msg = 'profile=%r is not supported' % profile
+        msg = f'profile={profile!r} is not supported'
         raise NotImplementedError(msg)
+    return onesided, endpoint, is_symmetric
+
+def setup_animate_scale(scale, icase_fringe, icase_disp, icase_vector, time, profile, fps):
+    """
+    Gets the inputs for a displacement scale/real modal animation
+
+    A onesided animation is an animation that:
+     - does not need to loop back on itself because it ends back at the
+       start point
+     - is symmetric
+
+    We want to set it to true because if an animation is onesided, we can skip
+    making half the images.
+    """
+    onesided, endpoint, is_symmetric = _get_scale_profile_info(profile)
 
     analysis_time = get_analysis_time(time, onesided)
     #fps = fix_nframes(fps, profile)
@@ -255,27 +263,26 @@ def setup_animate_scale(scale, icase_fringe, icase_disp, icase_vector, time, pro
 
         else:
             msg = (
-                "profile=%r is not:\n"
+                f'profile={profile!r} is not:\n'
                 "  '0 to scale'\n"
                 "  '0 to scale to 0'\n"
                 "  '-scale to scale'\n"
                 "  '-scale to scale to -scale'\n"
                 "  '0 to scale to -scale to 0'\n"
                 "  'sinusoidal: 0 to scale to -scale to 0'\n"
-                "  'sinusoidal: scale to -scale to scale'\n"
-                % profile)
+                "  'sinusoidal: scale to -scale to scale'\n")
             raise NotImplementedError(msg.rstrip())
     #elif isinstance(profile, list):
         #yp = np.array(profile)
         #xp = np.linspace(0., nframes_interp, num=len(yp), endpoint=True, dtype='float64')
     else:
-        msg = 'profile=%r is not supported' % profile
+        msg = f'profile={profile!r} is not supported'
         raise NotImplementedError(msg)
 
     icases_fringe = icase_fringe
     icases_disp = icase_disp
     icases_vector = icase_vector
-    assert len(scales) == len(isteps), 'nscales=%s nsteps=%s' % (len(scales), len(isteps))
+    assert len(scales) == len(isteps), f'nscales={len(scales):d} nsteps={len(isteps):d}'
     #assert len(scales) == nframes, 'len(scales)=%s nframes=%s' % (len(scales), nframes)
 
     # TODO: this can hit
@@ -287,7 +294,9 @@ def setup_animate_scale(scale, icase_fringe, icase_disp, icase_vector, time, pro
     )
     return out
 
-def setup_animate_phase(scale, icase_fringe, icase_disp, icase_vector, time, fps):
+def setup_animate_phase(scale: float,
+                        icase_fringe: int, icase_disp: int, icase_vector: int,
+                        time: float, fps: int):
     """Gets the inputs for a phase animation"""
     nframes = int(time * fps)
     icases_fringe = icase_fringe
@@ -296,25 +305,49 @@ def setup_animate_phase(scale, icase_fringe, icase_disp, icase_vector, time, fps
     phases = np.linspace(0., 360., num=nframes, endpoint=False)
     isteps = np.linspace(0, nframes, num=nframes, endpoint=False, dtype='int32')
     scales = [scale] * len(isteps)
-    assert len(phases) == len(isteps), 'nphases=%s nsteps=%s' % (len(phases), len(isteps))
-    assert len(scales) == len(isteps), 'nscales=%s nsteps=%s' % (len(scales), len(isteps))
+    assert len(phases) == len(isteps), f'nphases={len(phases):d} nsteps={len(isteps):d}'
+    assert len(scales) == len(isteps), f'nscales={len(scales):d} nsteps={len(isteps):d}'
     #assert len(phases) == nframes, 'len(phases)=%s nframes=%s' % (len(phases), nframes)
 
     icases_fringe = icase_fringe
     icases_disp = icase_disp
     icases_vector = icase_vector
-    return phases, icases_fringe, icases_disp, icases_vector, isteps, scales, time, fps
+    return phases, icases_fringe, icases_disp, icases_vector, isteps, scales, time
 
-def setup_animate_time(scale, time,
-                       icase_start, icase_end, icase_delta,
-                       fps):
+def setup_animate_time(scale: float, time: float, fps: int,
+                       icase_fringe_start=None, icase_fringe_end=None, icase_fringe_delta=None,
+                       icase_disp_start=None, icase_disp_end=None, icase_disp_delta=None,
+                       icase_vector_start=None, icase_vector_end=None, icase_vector_delta=None):
     """Gets the inputs for a transient animation"""
     analysis_time = time
-    assert isinstance(icase_start, integer_types), 'icase_start=%s' % icase_start
-    assert isinstance(icase_end, integer_types), 'icase_end=%s' % icase_end
-    assert isinstance(icase_start, integer_types), 'icase_delta=%s' % icase_delta
-    icases_disp = np.arange(icase_start, icase_end+1, icase_delta)
-    icases_fringe = icases_disp
+    icases_tuple = [
+        ('fringe', icase_fringe_start, icase_fringe_end, icase_fringe_delta),
+        ('disp', icase_disp_start, icase_disp_end, icase_disp_delta),
+        ('vector', icase_vector_start, icase_vector_end, icase_vector_delta),
+    ]
+    icases = {}
+    for (name, icase_start, icase_end, icase_delta) in icases_tuple:
+        if icase_start is None:
+            continue
+        assert isinstance(icase_start, integer_types), f'icase_start={icase_start:d}; type={type(icase_start)}'
+        assert isinstance(icase_end, integer_types), f'icase_end={icase_end:d}; type={type(icase_end)}'
+        assert isinstance(icase_delta, integer_types), f'icase_delta={icase_delta:d}; type={type(icase_delta)}'
+        icases[name] = np.arange(icase_start, icase_end+1, icase_delta)
+
+    icases_disp = icases.get('disp', [])
+    icases_fringe = icases.get('fringe', [])
+    icases_vector = icases.get('vector', [])
+
+    # a fringe is always available
+    if icase_fringe_start is None:
+        if icase_disp_start is not None:
+            icases_fringe = icases_disp
+        elif icase_vector_start is not None:
+            icases_fringe = icases_vector
+    if len(icases_disp) == 0:
+        icases_disp = None
+    if len(icases_vector) == 0:
+        icases_vector = None
 
     #min_value = 0.
     #max_value = 1.46862
@@ -330,18 +363,17 @@ def setup_animate_time(scale, time,
     # our scale will be constant
     # phases is just None b/c time is real
     scales = [scale] * nfiles
-    if len(icases_disp) != nfiles:
-        msg = 'len(icases)=%s nfiles=%s' % (len(icases_disp), nfiles)
+    if len(icases_fringe) != nfiles:
+        msg = f'len(icases)={len(icases_fringe):d} nfiles={nfiles}'
         raise ValueError(msg)
-    if len(scales) != len(icases_disp):
-        msg = 'nscales=%s len(icases_disp)=%s' % (len(scales), len(icases_disp))
+    if len(scales) != len(icases_fringe):
+        msg = f'nscales={len(scales):d} len(icases_fringe)={len(icases_fringe):d}'
         raise ValueError(msg)
 
     # TODO: this isn't maintained...
     #assert nframes == nfiles, 'nframes=%s nfiles=%s' % (nframes, nfiles)
 
     isteps = np.linspace(0, nfiles, num=nfiles, endpoint=True, dtype='int32')
-    icases_vector = None
     return icases_fringe, icases_disp, icases_vector, isteps, scales, analysis_time, fps
 
 def get_analysis_time(time, onesided=True):
@@ -366,7 +398,8 @@ def get_analysis_time(time, onesided=True):
     return analysis_time
 
 def update_animation_inputs(phases, icases_fringe, icases_disp, icases_vector,
-                            isteps, scales, analysis_time, fps):
+                            isteps: List[int], scales: List[float],
+                            analysis_time: float, fps: int):
     """
     Simplifies the format of phases, icases, steps, scales to make them
     into ndarrays of the correct length.
@@ -384,46 +417,42 @@ def update_animation_inputs(phases, icases_fringe, icases_disp, icases_vector,
         we can analyze pictures [1, 3, 4] by providing a subset
     scales : List[float]
         the displacement scale factor; true scale
+    analysis_time: float
+        used for logging
+    fps : int
+        used for logging
     """
     if phases is not None:
         pass
     elif phases is None:
         phases = [0.] * len(scales)
     else:
-        raise RuntimeError('phases=%r' % phases)
-
-    # icase_disp must not be None
-    if isinstance(icases_disp, integer_types):
-        icases_disp = [icases_disp] * len(scales)
+        raise RuntimeError(f'phases={phases!r}')
 
     if icases_fringe is None or isinstance(icases_fringe, integer_types):
         icases_fringe = [icases_fringe] * len(scales)
+    if icases_disp is None or isinstance(icases_disp, integer_types):
+        icases_disp = [icases_disp] * len(scales)
     if icases_vector is None or isinstance(icases_vector, integer_types):
         icases_vector = [icases_vector] * len(scales)
 
+    if not(len(icases_disp) or len(icases_fringe) or len(icases_vector)):
+        raise RuntimeError('No displacement, fringe, or vector cases have been defined')
 
     assert icases_fringe is not None
     if len(icases_fringe) != len(scales):
-        msg = 'ncases_fringe=%s nscales=%s' % (len(icases_fringe), len(scales))
-        #print(msg)
-        raise ValueError(msg)
+        raise ValueError(f'ncases_fringe={len(icases_fringe):d} nscales={len(scales):d}')
 
     assert icases_disp is not None
     if len(icases_disp) != len(scales):
-        msg = 'ncases_disp=%s nscales=%s' % (len(icases_disp), len(scales))
-        #print(msg)
-        raise ValueError(msg)
+        raise ValueError(f'ncases_disp={len(icases_disp)} nscales={len(scales)}')
 
     assert icases_vector is not None
     if len(icases_vector) != len(scales):
-        msg = 'ncases_vector=%s nscales=%s' % (len(icases_vector), len(scales))
-        #print(msg)
-        raise ValueError(msg)
+        raise ValueError(f'ncases_vector={len(icases_vector):d} nscales={len(scales):d}')
 
     if len(icases_fringe) != len(phases):
-        msg = 'ncases_fringe=%s nphases=%s' % (len(icases_fringe), len(phases))
-        #print(msg)
-        raise ValueError(msg)
+        raise ValueError(f'ncases_fringe={len(icases_fringe):d} nphases={len(phases):d}')
 
     if isteps is None:
         isteps = np.linspace(0, len(scales), endpoint=False, dtype='int32')
@@ -435,7 +464,7 @@ def update_animation_inputs(phases, icases_fringe, icases_disp, icases_vector,
         print(msg)
         raise ValueError(msg)
     #print('scales=%s' % scales)
-    assert isinstance(isteps[0], integer_types), 'isteps=%s, must be integers' % isteps
+    assert isinstance(isteps[0], integer_types), f'isteps={isteps}, must be integers'
 
     phases2 = np.array(phases)
     icases_fringe2 = np.array(icases_fringe)
@@ -445,7 +474,8 @@ def update_animation_inputs(phases, icases_fringe, icases_disp, icases_vector,
     scales2 = np.array(scales)
     return phases2, icases_fringe2, icases_disp2, icases_vector2, isteps2, scales2
 
-def make_symmetric(scales, phases, icases_fringe, icases_disp, icases_vector, isteps, is_symmetric, endpoint):
+def make_symmetric(scales, phases, icases_fringe, icases_disp, icases_vector,
+                   isteps, is_symmetric, endpoint):
     """
     Chop the frames in half at the middle frame
 
@@ -611,7 +641,7 @@ def write_gif(gif_filename: str, png_filenames: List[str], time: float=2.0,
             imageio.mimsave(gif_filename, images, duration=duration,
                             loop=nrepeat)
         except IOError:  # file is open
-            raise IOError('%s is likely open' % gif_filename)
+            raise IOError(f'{gif_filename} is likely open')
 
     if delete_images:
         remove_files(png_filenames)

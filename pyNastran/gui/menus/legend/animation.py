@@ -3,8 +3,10 @@ defines:
  - AnimationWindow
 
 """
+from __future__ import annotations
 import os
 from collections import OrderedDict
+from typing import TYPE_CHECKING
 
 from qtpy.QtCore import Qt
 from qtpy.QtWidgets import (
@@ -14,9 +16,9 @@ from qtpy.QtWidgets import (
     QCheckBox, QGroupBox, QComboBox, QFileDialog)
 from qtpy.compat import getexistingdirectory
 
-from pyNastran.gui.utils.qt.pydialog import (
-    PyDialog, check_int, check_float, check_name_str, check_path,
-    set_combo_box_text)
+from pyNastran.gui.utils.qt.pydialog import PyDialog, set_combo_box_text
+from pyNastran.gui.utils.qt.checks.qlineedit import (
+    check_int, check_float, check_name_str, check_path)
 from pyNastran.gui.utils.qt.dialogs import open_file_dialog
 from pyNastran.gui.menus.results_sidebar import ResultsWindow
 from pyNastran.gui.menus.results_sidebar_utils import (
@@ -24,7 +26,8 @@ from pyNastran.gui.menus.results_sidebar_utils import (
 )
 
 from pyNastran.gui.menus.legend.write_gif import IS_IMAGEIO
-
+if TYPE_CHECKING:
+    from pyNastran.gui.main_window import MainWindow
 
 ANIMATION_PROFILES = [
     #'0 to Scale',
@@ -38,7 +41,7 @@ ANIMATION_PROFILES = [
 #ANIMATION_PROFILES['-Scale to Scale to -Scale'] = [-1., 1., -1.]
 #ANIMATION_PROFILES['CSV Profile  (not supported)'] = None
 
-IS_TIME_FRINGE = False
+IS_TIME_FRINGE = True
 HIDE_WHEN_INACTIVE = False
 IS_RESULTS_SELECTOR = True
 class AnimationWindow(PyDialog):
@@ -116,7 +119,7 @@ class AnimationWindow(PyDialog):
         self.set_connections()
 
         self.is_gui = False
-        self.gui = None
+        self.gui = None  # type: MainWindow
         if hasattr(self.win_parent, '_updated_legend'):
             self.win_parent.is_animate_open = True
             self.is_gui = True
@@ -140,6 +143,9 @@ class AnimationWindow(PyDialog):
         self.icase_disp_end_edit.setRange(0, icase_max)
         self.icase_disp_delta_edit.setRange(1, icase_max)
 
+        self.icase_vector_start_edit.setRange(0, icase_max)
+        self.icase_vector_end_edit.setRange(0, icase_max)
+        self.icase_vector_delta_edit.setRange(1, icase_max)
 
         self.on_update_min_max_defaults()
 
@@ -152,8 +158,7 @@ class AnimationWindow(PyDialog):
         #icase_max = 1000
 
         self.checkbox_fringe = QCheckBox('Animate')
-        self.checkbox_fringe.setToolTip(
-            'Animate the fringe in addition to the deflection')
+        self.checkbox_fringe.setToolTip('Animate the fringe')
         #self.checkbox_disp = QCheckBox('Animate')
         self.checkbox_fringe.setEnabled(False)
 
@@ -167,6 +172,12 @@ class AnimationWindow(PyDialog):
             'Case Number for the Scale/Phase Animation Type.\n'
             'Defaults to the result you had shown when you clicked "Create Animation".\n'
             'iCase can be seen by clicking "Apply" on a result.')
+
+        self.checkbox_disp = QCheckBox('Animate')
+        self.checkbox_disp.setToolTip('Animate the displacement')
+        self.checkbox_disp.setChecked(True)
+        #self.checkbox_disp = QCheckBox('Animate')
+        #self.checkbox_disp.setEnabled(False)
 
         self.icase_disp_label = QLabel("iCase (Disp):")
         self.icase_disp_edit = QSpinBox(self)
@@ -235,63 +246,82 @@ class AnimationWindow(PyDialog):
 
         #-----------------
         # Time plot
-        self.fringe_label = QLabel("Fringe")
+        self.fringe_label = QLabel('Fringe')
 
         self.icase_fringe_start_edit = QSpinBox(self)
         #self.icase_fringe_start_edit.setRange(0, icase_max)
         self.icase_fringe_start_edit.setSingleStep(1)
         self.icase_fringe_start_edit.setValue(self._icase_fringe)
-        self.icase_fringe_start_button = QPushButton("Default")
+        self.icase_fringe_start_button = QPushButton('Default')
 
         self.icase_fringe_end_edit = QSpinBox(self)
         #self.icase_fringe_end_edit.setRange(0, icase_max)
         self.icase_fringe_end_edit.setSingleStep(1)
         self.icase_fringe_end_edit.setValue(self._icase_fringe)
-        self.icase_fringe_end_button = QPushButton("Default")
+        self.icase_fringe_end_button = QPushButton('Default')
 
         self.icase_fringe_delta_edit = QSpinBox(self)
         #self.icase_fringe_delta_edit.setRange(1, icase_max)
         self.icase_fringe_delta_edit.setSingleStep(1)
         self.icase_fringe_delta_edit.setValue(1)
-        self.icase_fringe_delta_button = QPushButton("Default")
+        self.icase_fringe_delta_button = QPushButton('Default')
 
-        self.displacement_label = QLabel("Displacement")
-        self.icase_start = QLabel("iCase Start:")
+        self.displacement_label = QLabel('Displacement')
+        self.icase_start = QLabel('iCase Start:')
         self.icase_disp_start_edit = QSpinBox(self)
         #self.icase_disp_start_edit.setRange(0, icase_max)
         self.icase_disp_start_edit.setSingleStep(1)
         self.icase_disp_start_edit.setValue(self._icase_fringe)
-        self.icase_disp_start_button = QPushButton("Default")
+        self.icase_disp_start_button = QPushButton('Default')
 
-        self.icase_end_label = QLabel("iCase End:")
+        self.icase_end_label = QLabel('iCase End:')
         self.icase_disp_end_edit = QSpinBox(self)
         #self.icase_disp_end_edit.setRange(0, icase_max)
         self.icase_disp_end_edit.setSingleStep(1)
         self.icase_disp_end_edit.setValue(self._icase_fringe)
-        self.icase_disp_end_button = QPushButton("Default")
+        self.icase_disp_end_button = QPushButton('Default')
 
-        self.icase_delta_label = QLabel("iCase Delta:")
+        self.icase_delta_label = QLabel('iCase Delta:')
         self.icase_disp_delta_edit = QSpinBox(self)
         #self.icase_disp_delta_edit.setRange(1, icase_max)
         self.icase_disp_delta_edit.setSingleStep(1)
         self.icase_disp_delta_edit.setValue(1)
-        self.icase_disp_delta_button = QPushButton("Default")
+        self.icase_disp_delta_button = QPushButton('Default')
+
+        self.icase_vector_start_edit = QSpinBox(self)
+        self.icase_vector_end_edit = QSpinBox(self)
+        self.icase_vector_delta_edit = QSpinBox(self)
+        self.icase_vector_start_edit.hide()
+        self.icase_vector_end_edit.hide()
+        self.icase_vector_delta_edit.hide()
+        #----------------------------------------
+        self.time_animate_label = QLabel('Animate:')
+        self.time_checkbox_fringe = QCheckBox(self)
+        self.time_checkbox_disp = QCheckBox(self)
+        self.time_checkbox_vector = QCheckBox(self)
+        self.time_checkbox_disp.setChecked(True)
+
+        self.time_animate_label.setEnabled(False)
+        self.time_checkbox_fringe.setEnabled(False)
+        self.time_checkbox_disp.setEnabled(False)
+        self.time_checkbox_vector.setEnabled(False)
+
 
         self.min_value_enable = QCheckBox()
-        self.min_value_label = QLabel("Min Value:")
+        self.min_value_label = QLabel('Min Fringe:')
         self.min_value_edit = QLineEdit('')
         #self.min_value_edit.setRange(1, 1000)
         #self.min_value_edit.setSingleStep(1)
         #self.min_value_edit.setValue(1)
-        self.min_value_button = QPushButton("Default")
+        self.min_value_button = QPushButton('Default')
 
         self.max_value_enable = QCheckBox()
-        self.max_value_label = QLabel("Max Value:")
+        self.max_value_label = QLabel('Max Fringe:')
         self.max_value_edit = QLineEdit('')
         #self.min_value_edit.setRange(1, 1000)  # TODO: update 1000
         #self.min_value_edit.setSingleStep(1)
         #self.min_value_edit.setValue(1)
-        self.max_value_button = QPushButton("Default")
+        self.max_value_button = QPushButton('Default')
 
         # TODO: enable this (uncomment) ------------------------------------------
         #self.min_value_enable.hide()
@@ -340,11 +370,11 @@ class AnimationWindow(PyDialog):
             self.gif_button.setEnabled(False)
 
         # scale / phase
-        if 1: # pragma: no cover
-            self.animate_scale_radio = QRadioButton("Animate Scale")
-            self.animate_phase_radio = QRadioButton("Animate Phase")
-            self.animate_time_radio = QRadioButton("Animate Time")
-            self.animate_freq_sweeep_radio = QRadioButton("Animate Frequency Sweep")
+        if 0: # pragma: no cover
+            self.animate_scale_radio = QRadioButton('Animate Scale')
+            self.animate_phase_radio = QRadioButton('Animate Phase')
+            self.animate_time_radio = QRadioButton('Animate Time')
+            self.animate_freq_sweeep_radio = QRadioButton('Animate Frequency Sweep')
             self.animate_scale_radio.setToolTip(
                 'Animates the scale factor based on the "Animation Type"')
             self.animate_time_radio.setToolTip('Animates the time/load/mode step')
@@ -360,7 +390,7 @@ class AnimationWindow(PyDialog):
                                                     '(only for complex results)')
                 msg += 'Phase : Animates the phase angle (only for complex results)\n'
             else:
-                self.animate_phase_radio.setToolTip("Animates the phase angle")
+                self.animate_phase_radio.setToolTip('Animates the phase angle')
                 msg += 'Phase : Animates the phase angle\n'
             msg += (
                 'Time : Animates the time/load/mode step\n'
@@ -387,7 +417,7 @@ class AnimationWindow(PyDialog):
                 '(not supported)\n'
             )
 
-        self.animation_type = QLabel("Animation Type:")
+        self.animation_type = QLabel('Animation Type:')
         animation_type = OrderedDict()
         #scale_msg = 'Scale\n'
         #phase_msg = 'Phase\n'
@@ -403,7 +433,7 @@ class AnimationWindow(PyDialog):
             self.animation_types.append('Animate Phase')
         self.animation_types.append('Animate Time')
 
-        self.animation_profile_label = QLabel("Animation Profile:")
+        self.animation_profile_label = QLabel('Animation Profile:')
 
         self.animation_profile_edit = QComboBox()
         for animation_profile in ANIMATION_PROFILES:
@@ -417,7 +447,7 @@ class AnimationWindow(PyDialog):
         #self.animation_type_edit.setToolTip('The profile for a scaled GIF')
         self.animation_type_edit.setToolTip(msg.rstrip())
 
-        self.csv_profile_label = QLabel("CSV profile:")
+        self.csv_profile_label = QLabel('CSV profile:')
         self.csv_profile_edit = QLineEdit()
         self.csv_profile_browse_button = QPushButton('Browse')
         self.csv_profile_edit.setToolTip(
@@ -431,11 +461,11 @@ class AnimationWindow(PyDialog):
         #horizontal_vertical_group.addButton(self.animate_freq_sweeep_radio)
 
         # animate in gui
-        self.animate_in_gui_checkbox = QCheckBox("Animate In GUI?")
+        self.animate_in_gui_checkbox = QCheckBox('Animate In GUI?')
         self.animate_in_gui_checkbox.setChecked(True)
 
         # make images
-        self.make_images_checkbox = QCheckBox("Make images?")
+        self.make_images_checkbox = QCheckBox('Make images?')
         self.make_images_checkbox.setChecked(True)
 
         # make images
@@ -443,13 +473,13 @@ class AnimationWindow(PyDialog):
         self.overwrite_images_checkbox.setChecked(True)
 
         # delete images when finished
-        self.delete_images_checkbox = QCheckBox("Delete images when finished?")
+        self.delete_images_checkbox = QCheckBox('Delete images when finished?')
         self.delete_images_checkbox.setChecked(True)
 
         # endless loop
-        self.repeat_checkbox = QCheckBox("Repeat?")
+        self.repeat_checkbox = QCheckBox('Repeat?')
         self.repeat_checkbox.setChecked(True)
-        self.repeat_checkbox.setToolTip("Repeating creates an infinitely looping gif")
+        self.repeat_checkbox.setToolTip('Repeating creates an infinitely looping gif')
 
         # endless loop
         self.make_gif_checkbox = QCheckBox("Make Gif?")
@@ -461,10 +491,10 @@ class AnimationWindow(PyDialog):
             self.make_gif_checkbox.setToolTip('imageio is not available; install it')
 
         # bottom buttons
-        self.step_button = QPushButton("Step")
-        self.wipe_button = QPushButton("Wipe Deformed Shape")
-        self.stop_button = QPushButton("Stop")
-        self.run_button = QPushButton("Run")
+        self.step_button = QPushButton('Step')
+        self.wipe_button = QPushButton('Wipe Deformed Shape')
+        self.stop_button = QPushButton('Stop')
+        self.run_button = QPushButton('Run')
 
         self.step_button.setToolTip('Steps through the animation (for testing)')
         self.wipe_button.setToolTip('Removes the existing "deflecton" from the animation')
@@ -512,6 +542,10 @@ class AnimationWindow(PyDialog):
         self.max_value_button.clicked.connect(self.on_max_value_default)
         self.icase_disp_start_button.clicked.connect(self.on_update_min_max_defaults)
 
+        self.time_checkbox_disp.clicked.connect(self.on_time_checkbox_disp)
+        self.time_checkbox_fringe.clicked.connect(self.on_time_checkbox_fringe)
+        self.time_checkbox_vector.clicked.connect(self.on_time_checkbox_vector)
+
         #self.animate_scale_radio.clicked.connect(self.on_animate_scale)
         #self.animate_phase_radio.clicked.connect(self.on_animate_phase)
         #self.animate_time_radio.clicked.connect(self.on_animate_time)
@@ -523,6 +557,31 @@ class AnimationWindow(PyDialog):
         self.animate_in_gui_checkbox.clicked.connect(self.on_animate_in_gui)
         self.animate_in_gui_checkbox.setChecked(True)
         self.on_animate_in_gui()
+
+
+    def on_time_checkbox_disp(self):
+        is_enabled = self.time_checkbox_disp.isEnabled()
+        if not is_enabled:
+            return
+
+        enable = self.time_checkbox_disp.isChecked()
+        enable_disable_objects([
+            #self.icase_disp_start_button, self.icase_disp_end_button,
+            self.icase_disp_start_edit, self.icase_disp_end_edit,
+            self.icase_disp_delta_edit], enable=enable)
+
+    def on_time_checkbox_fringe(self):
+        is_enabled = self.time_checkbox_disp.isEnabled()
+        if not is_enabled:
+            return
+        enable = self.time_checkbox_fringe.isChecked()
+        enable_disable_objects([
+            #self.icase_fringe_start_button, self.icase_fringe_end_button,
+            self.icase_fringe_start_edit, self.icase_fringe_end_edit,
+            self.icase_fringe_delta_edit], enable=enable)
+
+    def on_time_checkbox_vector(self):
+        raise NotImplementedError()
 
     def on_checkbox_vector(self):
         is_enabled = self.checkbox_vector.isEnabled()
@@ -642,6 +701,8 @@ class AnimationWindow(PyDialog):
             self.checkbox_fringe.setVisible(not enabled)
             self.icase_fringe_label.setVisible(not enabled)
             self.icase_fringe_edit.setVisible(not enabled)
+
+            self.checkbox_disp.setVisible(not enabled)
             self.icase_disp_label.setVisible(not enabled)
             self.icase_disp_edit.setVisible(not enabled)
             self.icase_vector_label.setVisible(not enabled)
@@ -658,22 +719,29 @@ class AnimationWindow(PyDialog):
         self.fringe_label.setEnabled(enabled)
 
         self.icase_start.setEnabled(enabled)
-        self.icase_disp_start_edit.setEnabled(enabled)
-        self.icase_disp_start_button.setEnabled(enabled)
-        self.icase_fringe_start_edit.setEnabled(enabled)
-        self.icase_fringe_start_button.setEnabled(enabled)
+        enabled_disp = enabled and self.time_checkbox_disp.isChecked()
+        enabled_fringe = enabled and self.time_checkbox_fringe.isChecked()
+        self.icase_disp_start_edit.setEnabled(enabled_disp)
+        self.icase_disp_start_button.setEnabled(enabled_disp)
+        self.icase_fringe_start_edit.setEnabled(enabled_fringe)
+        self.icase_fringe_start_button.setEnabled(enabled_fringe)
 
         self.icase_end_label.setEnabled(enabled)
-        self.icase_disp_end_edit.setEnabled(enabled)
-        self.icase_disp_end_button.setEnabled(enabled)
-        self.icase_fringe_end_edit.setEnabled(enabled)
-        self.icase_fringe_end_button.setEnabled(enabled)
+        self.icase_disp_end_edit.setEnabled(enabled_disp)
+        self.icase_disp_end_button.setEnabled(enabled_disp)
+        self.icase_fringe_end_edit.setEnabled(enabled_fringe)
+        self.icase_fringe_end_button.setEnabled(enabled_fringe)
 
         self.icase_delta_label.setEnabled(enabled)
-        self.icase_disp_delta_edit.setEnabled(enabled)
-        self.icase_disp_delta_button.setEnabled(enabled)
-        self.icase_fringe_delta_edit.setEnabled(enabled)
-        self.icase_fringe_delta_button.setEnabled(enabled)
+        self.icase_disp_delta_edit.setEnabled(enabled_disp)
+        self.icase_disp_delta_button.setEnabled(enabled_disp)
+        self.icase_fringe_delta_edit.setEnabled(enabled_fringe)
+        self.icase_fringe_delta_button.setEnabled(enabled_fringe)
+
+        self.time_animate_label.setEnabled(enabled)
+        self.time_checkbox_fringe.setEnabled(enabled)
+        self.time_checkbox_disp.setEnabled(enabled)
+        self.time_checkbox_vector.setEnabled(enabled)
 
         #-----------------------------------------------------------------------
         is_min_enabled = self.min_value_enable.isChecked()
@@ -704,6 +772,7 @@ class AnimationWindow(PyDialog):
 
         self.icase_disp_label.setEnabled(not enabled)
         self.icase_disp_edit.setEnabled(not enabled)
+        self.checkbox_disp.setEnabled(not enabled)
 
         self.icase_vector_label.setEnabled(not enabled)
         self.icase_vector_edit.setEnabled(not enabled)
@@ -825,7 +894,7 @@ class AnimationWindow(PyDialog):
 
         grid.addWidget(self.icase_disp_label, irow, 0)
         grid.addWidget(self.icase_disp_edit, irow, 1)
-        #grid.addWidget(self.checkbox_disp, irow, 2)
+        grid.addWidget(self.checkbox_disp, irow, 2)
         irow += 1
 
         grid.addWidget(self.icase_vector_label, irow, 0)
@@ -879,28 +948,34 @@ class AnimationWindow(PyDialog):
             self.icase_fringe_end_edit.hide()
             self.icase_fringe_delta_button.hide()
 
-        grid_time.addWidget(self.displacement_label, jrow, 1)
-        grid_time.addWidget(self.fringe_label, jrow, 2)
+        grid_time.addWidget(self.fringe_label, jrow, 1)
+        grid_time.addWidget(self.displacement_label, jrow, 2)
         jrow += 1
 
         grid_time.addWidget(self.icase_start, jrow, 0)
-        grid_time.addWidget(self.icase_disp_start_edit, jrow, 1)
-        grid_time.addWidget(self.icase_fringe_start_edit, jrow, 2)
+        grid_time.addWidget(self.icase_fringe_start_edit, jrow, 1)
+        grid_time.addWidget(self.icase_disp_start_edit, jrow, 2)
         #grid_time.addWidget(self.icase_disp_start_button, jrow, 2)
         jrow += 1
 
         grid_time.addWidget(self.icase_end_label, jrow, 0)
-        grid_time.addWidget(self.icase_disp_end_edit, jrow, 1)
-        grid_time.addWidget(self.icase_fringe_end_edit, jrow, 2)
+        grid_time.addWidget(self.icase_fringe_end_edit, jrow, 1)
+        grid_time.addWidget(self.icase_disp_end_edit, jrow, 2)
         #grid_time.addWidget(self.icase_end_button, jrow, 2)
         jrow += 1
 
         grid_time.addWidget(self.icase_delta_label, jrow, 0)
-        grid_time.addWidget(self.icase_disp_delta_edit, jrow, 1)
-        grid_time.addWidget(self.icase_fringe_delta_edit, jrow, 2)
+        grid_time.addWidget(self.icase_fringe_delta_edit, jrow, 1)
+        grid_time.addWidget(self.icase_disp_delta_edit, jrow, 2)
         #grid_time.addWidget(self.icase_delta_button, jrow, 2)
         jrow += 1
 
+        grid_time.addWidget(self.time_animate_label, jrow, 0)
+        grid_time.addWidget(self.time_checkbox_fringe, jrow, 1)
+        grid_time.addWidget(self.time_checkbox_disp, jrow, 2)
+        grid_time.addWidget(self.time_checkbox_vector, jrow, 3)
+        self.time_checkbox_vector.hide()
+        jrow += 1
 
         hbox_min = QHBoxLayout()
         hbox_min.addWidget(self.min_value_enable)
@@ -1093,15 +1168,9 @@ class AnimationWindow(PyDialog):
                 gifbase = gifbase[:-4]
             gif_filename = os.path.join(output_dir, gifbase + '.gif')
 
-        animate_fringe = self.checkbox_fringe.isChecked()
-        animate_vector = self.checkbox_vector.isChecked()
-
-        animate_scale = self.animate_scale_radio.isChecked()
-        animate_phase = self.animate_phase_radio.isChecked()
-        animate_time = self.animate_time_radio.isChecked()
-
-        if not self.checkbox_vector.isEnabled():
-            icase_vector = None
+        #animate_scale = self.animate_scale_radio.isChecked()
+        #animate_phase = self.animate_phase_radio.isChecked()
+        #animate_time = self.animate_time_radio.isChecked()
 
         animate_scale = False
         animate_phase = False
@@ -1115,14 +1184,44 @@ class AnimationWindow(PyDialog):
         else:
             raise NotImplementedError(self._animate_type)
 
+        if animate_time:
+            animate_fringe = self.time_checkbox_fringe.isChecked()
+            animate_disp = self.time_checkbox_disp.isChecked()
+            animate_vector = self.time_checkbox_vector.isChecked()
+        else:
+            animate_fringe = self.checkbox_fringe.isChecked()
+            animate_disp = self.checkbox_disp.isChecked()
+            animate_vector = self.checkbox_vector.isChecked()
+
+        if not self.checkbox_vector.isEnabled():
+            icase_vector = None
+            animate_vector = False
+
+        if not (animate_disp or animate_vector):
+            scale = 1.0  # faking it because scaling doesn't matter
+
         make_images = self.make_images_checkbox.isChecked()
         delete_images = self.delete_images_checkbox.isChecked()
         make_gif = self.make_gif_checkbox.isChecked()
         animation_profile = str(self.animation_profile_edit.currentText())
 
-        icase_disp_start = self.icase_disp_start_edit.value()
-        icase_disp_end = self.icase_disp_end_edit.value()
-        icase_disp_delta = self.icase_disp_delta_edit.value()
+        icase_fringe_start = icase_fringe_end = icase_fringe_delta = None
+        if animate_time and animate_fringe:
+            icase_fringe_start = self.icase_fringe_start_edit.value()
+            icase_fringe_end = self.icase_fringe_end_edit.value()
+            icase_fringe_delta = self.icase_fringe_delta_edit.value()
+
+        icase_disp_start = icase_disp_end = icase_disp_delta = None
+        if animate_time and animate_disp:
+            icase_disp_start = self.icase_disp_start_edit.value()
+            icase_disp_end = self.icase_disp_end_edit.value()
+            icase_disp_delta = self.icase_disp_delta_edit.value()
+
+        icase_vector_start = icase_vector_end = icase_vector_delta = None
+        if animate_time and animate_vector:
+            icase_vector_start = self.icase_vector_start_edit.value()
+            icase_vector_end = self.icase_vector_end_edit.value()
+            icase_vector_delta = self.icase_vector_delta_edit.value()
 
         bool_repeat = self.repeat_checkbox.isChecked()  # TODO: change this to an integer
         if bool_repeat:
@@ -1132,13 +1231,20 @@ class AnimationWindow(PyDialog):
         #self.out_data['is_shown'] = self.show_radio.isChecked()
         #icase = self._icase
 
+        #print(f'icase_fringe_start={icase_fringe_start} icase_fringe_end={icase_fringe_end} icase_fringe_delta={icase_fringe_delta}')
+        #print(f'icase_disp_start={icase_disp_start} icase_disp_end={icase_disp_end} icase_disp_delta={icase_disp_delta}')
+        #print(f'icase_vector_start={icase_vector_start} icase_vector_end={icase_vector_end} icase_vector_delta={icase_vector_delta}')
         if self.is_gui:
             self.gui.make_gif(
                 gif_filename, scale, istep=istep,
                 animate_scale=animate_scale, animate_phase=animate_phase, animate_time=animate_time,
                 icase_fringe=icase_fringe, icase_disp=icase_disp, icase_vector=icase_vector,
-                animate_fringe=animate_fringe, animate_vector=animate_vector,
-                icase_start=icase_disp_start, icase_end=icase_disp_end, icase_delta=icase_disp_delta,
+                animate_fringe=animate_fringe, animate_disp=animate_disp, animate_vector=animate_vector,
+
+                icase_fringe_start=icase_fringe_start, icase_fringe_end=icase_fringe_end, icase_fringe_delta=icase_fringe_delta,
+                icase_disp_start=icase_disp_start, icase_disp_end=icase_disp_end, icase_disp_delta=icase_disp_delta,
+                icase_vector_start=icase_vector_start, icase_vector_end=icase_vector_end, icase_vector_delta=icase_vector_delta,
+
                 time=time, animation_profile=animation_profile,
                 nrepeat=nrepeat, fps=fps, magnify=magnify,
                 make_images=make_images, delete_images=delete_images, make_gif=make_gif,
@@ -1212,6 +1318,9 @@ class AnimationWindow(PyDialog):
         self.out_data['close'] = True
         self.close()
 
+def enable_disable_objects(qt_objects, enable=True):
+    for obj in qt_objects:
+        obj.setEnabled(enable)
 
 def main(): # pragma: no cover
     """test example for AnimationWindow"""

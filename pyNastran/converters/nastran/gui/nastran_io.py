@@ -4544,7 +4544,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                     grid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
                 elif element.surface_type in ['AREA3', 'AREA6']:
                     eid_to_nid_map[eid] = node_ids[:3]
-                    if element.Type == 'AREA3' or None in node_ids:
+                    if element.surface_type == 'AREA3' or None in node_ids:
                         elem = vtkTriangle()
                     else:
                         elem = vtkQuadraticTriangle()

@@ -13,9 +13,11 @@ from qtpy.QtWidgets import (
 
 from pyNastran.utils.numpy_utils import float_types
 from pyNastran.gui.utils.colormaps import colormap_keys
-from pyNastran.gui.utils.qt.pydialog import (
-    PyDialog, check_float, check_format, check_name_str,
+from pyNastran.gui.utils.qt.pydialog import PyDialog
+from pyNastran.gui.utils.qt.checks.qlineedit import (
+    check_float, check_format, check_name_str,
     check_positive_int_or_blank)
+
 from pyNastran.gui.qt_version import qt_int as qt_version
 
 ANIMATE_TOOLTIP_OFF = 'This must be a displacement-like result to animate'

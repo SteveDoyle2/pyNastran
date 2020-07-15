@@ -379,6 +379,7 @@ def run_op2(op2_filename: str, make_geom: bool=False, combine: bool=True,
             #raise
         if not dev:
             raise
+        print(f'{op2_filename} is missing/is not binary')
         is_passed = True
     #except UnicodeDecodeError:  # this block should be commented
         #is_passed = True

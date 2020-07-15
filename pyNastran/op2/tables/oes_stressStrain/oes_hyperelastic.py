@@ -50,7 +50,7 @@ class HyperelasticQuadArray(OES_Object):
         #elif self.element_type in [144, 64, 82, 70, 75]:  # CQUAD4
             #return True
         #else:
-            #raise NotImplementedError('name=%s type=%s' % (self.element_name, self.element_type))
+            #raise NotImplementedError(f'name={self.element_name} type={self.element_type}')
 
     def build(self):
         """sizes the vectorized attributes of the HyperelasticQuadArray"""
@@ -320,5 +320,5 @@ class HyperelasticQuadArray(OES_Object):
             #nnodes = 3
             #is_bilinear = True
         #else:
-            #raise NotImplementedError('name=%s type=%s' % (self.element_name, self.element_type))
+            #raise NotImplementedError(f'name={self.element_name} type={self.element_type}')
         #return nnodes, is_bilinear

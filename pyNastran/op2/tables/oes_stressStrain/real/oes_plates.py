@@ -1,6 +1,7 @@
 # coding: utf-8
 #pylint disable=C0103
 from itertools import count
+import warnings
 from typing import Tuple, List
 import numpy as np
 
@@ -66,7 +67,7 @@ class RealPlateArray(OES_Object):
         elif self.element_type in [144, 64, 82, 70, 75]:  # CQUAD4
             return True
         else:
-            raise NotImplementedError('name=%s type=%s' % (self.element_name, self.element_type))
+            raise NotImplementedError(f'name={self.element_name} type={self.element_type}')
 
     def build(self):
         """sizes the vectorized attributes of the RealPlateArray"""
@@ -138,7 +139,13 @@ class RealPlateArray(OES_Object):
 
         if self.analysis_code == 1:
             #ntimes = 1
-            assert ntimes == 1, self.code_information()
+            if ntimes != 1:
+                # C:\MSC.Software\simcenter_nastran_2019.2\tpl_post1\acc002.op2
+                warnings.warn(f'ntimes != 1; {self.element_name}-{self.element_type}\n'
+                              f'ntimes={ntimes} _ntotals={self._ntotals} '
+                              f'sort_method={self.sort_method} nlayers_per_element={nlayers_per_element} nlayers={nlayers}')
+
+        assert nlayers >= 2, self.code_information()
         _times = np.zeros(ntimes, dtype=dtype)
         element_node = np.zeros((nlayers, 2), dtype=idtype)
 
@@ -547,7 +554,7 @@ class RealPlateArray(OES_Object):
             nnodes = 4
             is_bilinear = False
         else:
-            raise NotImplementedError('name=%s type=%s' % (self.element_name, self.element_type))
+            raise NotImplementedError(f'name={self.element_name} type={self.element_type}')
         return nnodes, is_bilinear
 
     def write_op2(self, op2, op2_ascii, itable, new_result,
@@ -570,7 +577,7 @@ class RealPlateArray(OES_Object):
         else:
             nnodes_all = nnodes
         #print("nnodes_all =", nnodes_all)
-        cen_word_ascii = 'CEN/%i' % nnodes
+        cen_word_ascii = f'CEN/{nnodes:d}'
         cen_word = b'CEN/%i' % nnodes
 
         #msg.append(f'  element_node.shape = {self.element_node.shape}\n')
@@ -637,12 +644,12 @@ class RealPlateArray(OES_Object):
                     if ilayer == 0:
                         #print([eid, fdi, oxxi, oyyi, txyi, anglei, major, minor, ovmi])
                         data = [eid_device, fdi, oxxi, oyyi, txyi, anglei, major, minor, ovmi]
-                        op2.write(pack('i8f', *data))
+                        op2.write(struct_i8f.pack(*data))
                         op2_ascii.write('eid=%s ilayer=0 data=%s' % (eid, str(data[1:])))
 
                     else:
                         data = [fdi, oxxi, oyyi, txyi, anglei, major, minor, ovmi]
-                        op2.write(pack('8f', *data))
+                        op2.write(struct_8f.pack(*data))
                         op2_ascii.write('eid=%s ilayer=1 data=%s' % (eid, str(data[1:])))
                     #print('eid=%-2s ilayer=%s data=%s' % (eid_device, ilayer, str(data[1:])))
 
@@ -794,5 +801,5 @@ def _get_plate_msg(self):
         nnodes = 3
         cen = 'CEN/3'
     else:  # pragma: no cover
-        raise NotImplementedError('name=%s type=%s' % (self.element_name, self.element_type))
+        raise NotImplementedError(f'name={self.element_name} type={self.element_type}')
     return msg, nnodes, cen

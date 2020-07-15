@@ -190,7 +190,7 @@ class GuiUtils(unittest.TestCase):
             scale, istep=None,
             animate_scale=True, animate_phase=False, animate_time=False,
             icase_disp=42,
-            icase_start=None, icase_end=None, icase_delta=None,
+            icase_disp_start=None, icase_disp_end=None, icase_disp_delta=None,
             time=1.0, animation_profile='0 to scale',
             fps=5)
         phases, icases_fringe, icases_disp, icases_vector, isteps, scales, analysis_time, onesided, endpoint = out
@@ -209,7 +209,7 @@ class GuiUtils(unittest.TestCase):
             scale, istep=None,
             animate_scale=True, animate_phase=False, animate_time=False,
             icase_disp=42,
-            icase_start=None, icase_end=None, icase_delta=None,
+            icase_disp_start=None, icase_disp_end=None, icase_disp_delta=None,
             time=1.0, animation_profile='0 to scale to 0',
             fps=11)
         phases, icases_fringe, icases_disp, icases_vector, isteps, scales, analysis_time, onesided, endpoint = out
@@ -228,7 +228,7 @@ class GuiUtils(unittest.TestCase):
             scale, istep=None,
             animate_scale=True, animate_phase=False, animate_time=False,
             icase_disp=42,
-            icase_start=None, icase_end=None, icase_delta=None,
+            icase_disp_start=None, icase_disp_end=None, icase_disp_delta=None,
             time=1.0, animation_profile='0 to scale to 0',
             fps=10)
         phases, icases_fringe, icases_disp, icases_vector, isteps, scales, analysis_time, onesided, endpoint = out
@@ -247,7 +247,7 @@ class GuiUtils(unittest.TestCase):
             scale, istep=None,
             animate_scale=True, animate_phase=False, animate_time=False,
             icase_disp=42,
-            icase_start=None, icase_end=None, icase_delta=None,
+            icase_disp_start=None, icase_disp_end=None, icase_disp_delta=None,
             time=1.0, animation_profile='-scale to scale',
             fps=5)
         phases, icases_fringe, icases_disp, icases_vector, isteps, scales, analysis_time, onesided, endpoint = out
@@ -266,7 +266,7 @@ class GuiUtils(unittest.TestCase):
             scale, istep=None,
             animate_scale=True, animate_phase=False, animate_time=False,
             icase_disp=42,
-            icase_start=None, icase_end=None, icase_delta=None,
+            icase_disp_start=None, icase_disp_end=None, icase_disp_delta=None,
             time=1.0, animation_profile='-scale to scale to -scale',
             fps=11)
         phases, icases_fringe, icases_disp, icases_vector, isteps, scales, analysis_time, onesided, endpoint = out
@@ -285,7 +285,7 @@ class GuiUtils(unittest.TestCase):
             scale, istep=None,
             animate_scale=True, animate_phase=False, animate_time=False,
             icase_disp=42,
-            icase_start=None, icase_end=None, icase_delta=None,
+            icase_disp_start=None, icase_disp_end=None, icase_disp_delta=None,
             time=1.0, animation_profile='-scale to scale to -scale',
             fps=10)
         phases, icases_fringe, icases_disp, icases_vector, isteps, scales, analysis_time, onesided, endpoint = out
@@ -305,7 +305,7 @@ class GuiUtils(unittest.TestCase):
             scale, istep=None,
             animate_scale=True, animate_phase=False, animate_time=False,
             icase_disp=42,
-            icase_start=None, icase_end=None, icase_delta=None,
+            icase_disp_start=None, icase_disp_end=None, icase_disp_delta=None,
             time=1.0, animation_profile='-scale to scale to -scale',
             fps=1)
         phases, icases_fringe, icases_disp, icases_vector, isteps, scales, analysis_time, onesided, endpoint = out
@@ -327,7 +327,7 @@ class GuiUtils(unittest.TestCase):
                 scale, istep=None,
                 animate_scale=True, animate_phase=False, animate_time=False,
                 icase_disp=42,
-                icase_start=None, icase_end=None, icase_delta=None,
+                icase_disp_start=None, icase_disp_end=None, icase_disp_delta=None,
                 time=1.0, animation_profile='0 to scale to -scale to 0',
                 fps=5, )
             phases, icases_fringe, icases_disp, icases_vector, isteps, scales, analysis_time, onesided, endpoint = out
@@ -352,7 +352,7 @@ class GuiUtils(unittest.TestCase):
             scale, istep=None,
             animate_scale=True, animate_phase=False, animate_time=False,
             icase_disp=42,
-            icase_start=None, icase_end=None, icase_delta=None,
+            icase_disp_start=None, icase_disp_end=None, icase_disp_delta=None,
             time=1.0, animation_profile='0 to scale to -scale to 0',
             fps=7, animate_in_gui=True)
         phases, icases_fringe, icases_disp, icases_vector, isteps, scales, analysis_time, onesided, endpoint = out
@@ -385,7 +385,7 @@ class GuiUtils(unittest.TestCase):
             scale, istep=None,
             animate_scale=True, animate_phase=False, animate_time=False,
             icase_disp=42,
-            icase_start=None, icase_end=None, icase_delta=None,
+            icase_disp_start=None, icase_disp_end=None, icase_disp_delta=None,
             time=2.0, animation_profile='0 to scale to -scale to 0',
             fps=7, animate_in_gui=True)
         phases, icases_fringe, icases_disp, icases_vector, isteps, scales, analysis_time, onesided, endpoint = out
@@ -415,7 +415,7 @@ class GuiUtils(unittest.TestCase):
                 scale, istep=None,
                 animate_scale=True, animate_phase=False, animate_time=False,
                 icase_disp=42,
-                icase_start=None, icase_end=None, icase_delta=None,
+                icase_disp_start=None, icase_disp_end=None, icase_disp_delta=None,
                 time=2.0, animation_profile='sinusoidal: 0 to scale to -scale to 0',
                 fps=5)
             phases, icases_fringe, icases_disp, icases_vector, isteps, scales, analysis_time, onesided, endpoint = out
@@ -439,7 +439,7 @@ class GuiUtils(unittest.TestCase):
                 scale, istep=None,
                 animate_scale=False, animate_phase=False, animate_time=False,
                 icase_disp=42,
-                icase_start=None, icase_end=None, icase_delta=None,
+                icase_disp_start=None, icase_disp_end=None, icase_disp_delta=None,
                 time=2.0, animation_profile='-scale to scale',
                 fps=30)
 
@@ -450,7 +450,7 @@ class GuiUtils(unittest.TestCase):
             scale, istep=None,
             animate_scale=False, animate_phase=True, animate_time=False,
             icase_disp=42,
-            icase_start=None, icase_end=None, icase_delta=None,
+            icase_disp_start=None, icase_disp_end=None, icase_disp_delta=None,
             time=2.0, #animation_profile='0 to scale',
             fps=30)
         phases, icases_fringe, icases_disp, icases_vector, isteps, scales, analysis_time, onesided, endpoint = out
@@ -460,18 +460,94 @@ class GuiUtils(unittest.TestCase):
         assert np.allclose(phases[0], 0.), phases
         assert np.allclose(phases[-1], 354.), phases
 
-    def test_animation_time_1(self):
+    def test_animation_time_disp(self):
+        """time plot"""
+        scale = 1.0
+        with self.assertRaises(RuntimeError):
+            setup_animation(
+                scale, istep=None,
+                animate_scale=False, animate_phase=False, animate_time=True,
+                icase_disp=42,
+                icase_disp_start=None, icase_disp_end=None, icase_disp_delta=None,
+                time=2.0, #animation_profile='0 to scale',
+                fps=30)
+
+        out = setup_animation(
+            scale, istep=None,
+            animate_scale=False, animate_phase=False, animate_time=True,
+            icase_disp=42,
+            icase_disp_start=1, icase_disp_end=10, icase_disp_delta=2,
+            time=2.0, #animation_profile='0 to scale',
+            fps=30)
+        phases, icases_fringe, icases_disp, icases_vector, isteps, scales, analysis_time, onesided, endpoint = out
+        assert np.array_equal(icases_disp, [1, 3, 5, 7, 9]), icases_disp
+        assert len(np.unique(scales)) == 1, scales
+        assert len(np.unique(isteps)) > 1, isteps
+        assert len(np.unique(phases)) == 1, phases
+        assert np.allclose(analysis_time, 2.0), analysis_time
+        assert np.allclose(phases.max(), 0.), phases
+
+    def test_animation_time_fringe(self):
+        """time plot"""
+        scale = 1.0
+        with self.assertRaises(ValueError):
+            # ncases_disp=10 nscales=5
+            setup_animation(
+                scale, istep=None,
+                animate_scale=False, animate_phase=False, animate_time=True,
+                icase_disp=42,
+                icase_disp_start=11, icase_disp_end=20, icase_disp_delta=1,
+                icase_fringe_start=1, icase_fringe_end=10, icase_fringe_delta=2,
+                time=2.0, #animation_profile='0 to scale',
+                fps=30)
+
+        out = setup_animation(
+            scale, istep=None,
+            animate_scale=False, animate_phase=False, animate_time=True,
+            icase_disp=42,
+            icase_disp_start=11, icase_disp_end=20, icase_disp_delta=2,
+            icase_fringe_start=1, icase_fringe_end=10, icase_fringe_delta=2,
+            time=2.0, #animation_profile='0 to scale',
+            fps=30)
+        phases, icases_fringe, icases_disp, icases_vector, isteps, scales, analysis_time, onesided, endpoint = out
+        assert np.array_equal(icases_fringe, [1, 3, 5, 7, 9]), icases_fringe
+        assert np.array_equal(icases_disp, [11, 13, 15, 17, 19]), icases_fringe
+        assert len(np.unique(scales)) == 1, scales
+        assert len(np.unique(isteps)) > 1, isteps
+        assert len(np.unique(phases)) == 1, phases
+        assert np.allclose(analysis_time, 2.0), analysis_time
+        assert np.allclose(phases.max(), 0.), phases
+
+    def test_animation_time_fringe_disp(self):
         """time plot"""
         scale = 1.0
         out = setup_animation(
             scale, istep=None,
             animate_scale=False, animate_phase=False, animate_time=True,
             icase_disp=42,
-            icase_start=1, icase_end=10, icase_delta=2,
+            icase_fringe_start=1, icase_fringe_end=10, icase_fringe_delta=2,
             time=2.0, #animation_profile='0 to scale',
             fps=30)
         phases, icases_fringe, icases_disp, icases_vector, isteps, scales, analysis_time, onesided, endpoint = out
-        assert np.array_equal(icases_disp, [1, 3, 5, 7, 9]), icases_disp
+        assert np.array_equal(icases_fringe, [1, 3, 5, 7, 9]), icases_fringe
+        assert len(np.unique(scales)) == 1, scales
+        assert len(np.unique(isteps)) > 1, isteps
+        assert len(np.unique(phases)) == 1, phases
+        assert np.allclose(analysis_time, 2.0), analysis_time
+        assert np.allclose(phases.max(), 0.), phases
+
+    def test_animation_time_vector(self):
+        """time plot"""
+        scale = 1.0
+        out = setup_animation(
+            scale, istep=None,
+            animate_scale=False, animate_phase=False, animate_time=True,
+            icase_disp=42,
+            icase_vector_start=1, icase_vector_end=10, icase_vector_delta=2,
+            time=2.0, #animation_profile='0 to scale',
+            fps=30)
+        phases, icases_fringe, icases_disp, icases_vector, isteps, scales, analysis_time, onesided, endpoint = out
+        assert np.array_equal(icases_vector, [1, 3, 5, 7, 9]), icases_vector
         assert len(np.unique(scales)) == 1, scales
         assert len(np.unique(isteps)) > 1, isteps
         assert len(np.unique(phases)) == 1, phases
@@ -595,3 +671,4 @@ def assert_array(actual_array, expected_array, name):
 
 if __name__ == '__main__':  # pragma: no cover
     unittest.main()
+

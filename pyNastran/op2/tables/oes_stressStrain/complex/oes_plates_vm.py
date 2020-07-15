@@ -66,7 +66,13 @@ class ComplexPlateVMArray(OES_Object):
         #return self.nnodes_per_element()
 
     def build(self) -> None:
-        """sizes the vectorized attributes of the ComplexPlateArray"""
+        """sizes the vectorized attributes of the ComplexPlateArray
+
+        SORT1:
+         - etype   ndata numwide size  -> nelements     nnodes nlayers
+         - CQUAD8  1044  87      4        1044/(4*87)=3 5      3*5=15  C:\MSC.Software\simcenter_nastran_2019.2\tpl_post2\tr1081x.op2
+         -
+        """
         if not hasattr(self, 'subtitle'):
             self.subtitle = self.data_code['subtitle']
         nnodes = self.nnodes_per_element
@@ -104,8 +110,8 @@ class ComplexPlateVMArray(OES_Object):
             #print(self._ntotals)
             nelements = self.ntimes
             nlayers = nelements * 2 * nnodes
-            ntimes = self.ntotal
-            #print(f'  SORT2: ntimes={ntimes} nelements={nelements} nlayers={nlayers} {self.element_name}-{self.element_type}')
+            ntimes = self.ntotal // (2 * nnodes)
+            #print(f'  SORT2: ntimes={ntimes} nelements={nelements} nnodes={nnodes} nlayers={nlayers} {self.element_name}-{self.element_type}')
         #print("nelements=%s nlayers=%s ntimes=%s" % (nelements, nlayers, ntimes))
 
         self._times = zeros(ntimes, dtype=dtype)
@@ -220,7 +226,7 @@ class ComplexPlateVMArray(OES_Object):
         inid = self.ielement % nnodes
         #itotal = self.itotal
         ielement = self.itime
-        #print(f'itime={itime} eid={eid} nid={nid}; inid={inid} ielement={ielement}')
+        #print(f'itime={itime} eid={eid} nid={nid}; inid={inid} ielement={ielement} - {self.element_name}-{self.element_type}')
 
         #ibase = 2 * ielement # ctria3/cquad4-33
         ibase = 2 * (ielement * nnodes + inid)
@@ -236,13 +242,14 @@ class ComplexPlateVMArray(OES_Object):
         #ielement = self.itime
         assert isinstance(eid, integer_types) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
 
-        if itime == 0:
-            self.element_node[ie_upper, :] = [eid, nid]  # 0 is center
-            self.element_node[ie_lower, :] = [eid, nid]  # 0 is center
-            self.fiber_curvature[ie_upper] = fd1
-            self.fiber_curvature[ie_lower] = fd2
-        self.data[itime, ie_upper, :] = [oxx1, oyy1, txy1, ovm1]
-        self.data[itime, ie_lower, :] = [oxx2, oyy2, txy2, ovm2]
+        if 1:
+            if itime == 0:
+                self.element_node[ie_upper, :] = [eid, nid]  # 0 is center
+                self.element_node[ie_lower, :] = [eid, nid]  # 0 is center
+                self.fiber_curvature[ie_upper] = fd1
+                self.fiber_curvature[ie_lower] = fd2
+            self.data[itime, ie_upper, :] = [oxx1, oyy1, txy1, ovm1]
+            self.data[itime, ie_lower, :] = [oxx2, oyy2, txy2, ovm2]
 
         self.itotal += 2
         self.ielement += 1

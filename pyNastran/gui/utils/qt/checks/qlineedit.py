@@ -1,5 +1,8 @@
 import os
 
+QLINE_EDIT_BASIC = 'QLineEdit{background: white;}'
+QLINE_EDIT_ERROR = 'QLineEdit{background: red;}'
+
 def check_path(cell):
     """verifies that the path exists"""
     path, passed = check_name_str(cell)
@@ -7,9 +10,9 @@ def check_path(cell):
         return None, False
 
     if not os.path.exists(path):
-        cell.setStyleSheet("QLineEdit{background: red;}")
+        cell.setStyleSheet(QLINE_EDIT_ERROR)
         return None, False
-    cell.setStyleSheet("QLineEdit{background: white;}")
+    cell.setStyleSheet(QLINE_EDIT_BASIC)
     return path, True
 
 def check_save_path(cell):

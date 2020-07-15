@@ -51,7 +51,13 @@ class RandomPlateVMArray(OES_Object):
         return get_nnodes(self)
 
     def build(self) -> None:
-        """sizes the vectorized attributes of the ComplexPlateArray"""
+        """sizes the vectorized attributes of the RandomPlateVMArray
+
+        SORT1:
+         - etype   ndata numwide size  -> nelements     nnodes nlayers
+         - CQUAD8  912   57      4        912/(4*57)=4  5      4*5=20  C:\MSC.Software\simcenter_nastran_2019.2\tpl_post2\tr1081x.op2
+         -
+        """
         if not hasattr(self, 'subtitle'):
             self.subtitle = self.data_code['subtitle']
         nnodes = self.nnodes_per_element
@@ -63,13 +69,13 @@ class RandomPlateVMArray(OES_Object):
         #self.nelements //= self.ntimes
         #self.ntotal = self.nelements # * 2
         #if self.element_name == 'CTRIA3':
-        #print('element_type=%r ntimes=%s nelements=%s ntotal=%s subtitle=%s' % (
-            #self.element_type, self.ntimes, self.nelements, self.ntotal, self.subtitle))
+        print('element_type=%r ntimes=%s nelements=%s ntotal=%s subtitle=%s' % (
+            self.element_type, self.ntimes, self.nelements, self.ntotal, self.subtitle))
         if self.is_sort1:
             # old
             #ntimes = self.ntimes
             #nelements = self.nelements
-            #print('self._ntotals =', self._ntotals)
+            print('self._ntotals =', self._ntotals)
             ntimes = len(self._ntotals)
             ntotal = self._ntotals[0]
 
@@ -83,16 +89,15 @@ class RandomPlateVMArray(OES_Object):
             # thus nlayers
             nlayers = nelements * nlayers_per_nnode * nnodes
             assert nlayers == ntotal, f'nlayers={nlayers} ntotal={ntotal}'
-            assert nlayers == 2, nlayers
+            #assert nlayers == 2, nlayers
 
             # we also have nelements_nnodes, which is used in:
             #  - elmement_node
             nelements_nnodes = nelements * nnodes
-            #nx = ntimes
-            #ny = nelements_nnodes
             #ntotal = nelements * 2
             #if self.element_name in ['CTRIA3', 'CQUAD8']:
-            #print(f"SORT1 ntimes={ntimes} nelements={nelements} ntotal={ntotal}")
+            print(f"***SORT1 ntimes={ntimes} nelements={nelements} ntotal={ntotal} nlayers={nlayers}")
+            #ddd
         elif self.is_sort2:
             #print('self._ntotals', self._ntotals)
             nelements = len(self._ntotals)
@@ -102,8 +107,6 @@ class RandomPlateVMArray(OES_Object):
             #print(self._ntotals)
             ntotal = self._ntotals[0]
             nlayers = nelements * 2 * nnodes
-            #ny = nlayers
-            #nx = ntimes
             #if self.element_name in ['CTRIA3', 'CQUAD8']:
             #if self.element_name in ['CQUAD4']:
                 #print(f"SORT2 ntimes={ntimes} nelements={nelements} ntotal={ntotal} nnodes={nnodes} nlayers={nlayers}")
