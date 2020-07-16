@@ -1466,8 +1466,8 @@ class OP2Reader:
 
                     else:
                         self.log.warning(f'EXTDB; name={name!r} name1={name1!r} ndata={ndata}')
-                        aaa
-                        self.show_data(data, types='sqd')
+                        #aaa
+                        #self.show_data(data, types='sqd')
                     #elif ndata > 99:
                         #pass
                     #else:
@@ -2090,7 +2090,7 @@ class OP2Reader:
         op2 = self.op2
         table_name = self._read_table_name(rewind=False)
         op2.table_name = table_name
-        self.log.debug('table_name = %r' % table_name)
+        #self.log.debug('table_name = %r' % table_name)
         if self.is_debug_file:
             self.binary_debug.write('read_bgpdt - %s\n' % table_name)
 
@@ -4847,6 +4847,7 @@ class OP2Reader:
         if self.is_debug_file and debug:
             self.binary_debug.write('read_record - marker = [4, %i, 4]; macro_rewind=%s\n' % (
                 marker0, macro_rewind))
+        #self.show(1000, types='ifs', endian=None, force=False)
         record, nrecord = self._skip_block_ndata()
 
         if self.is_debug_file and debug:
@@ -5227,6 +5228,7 @@ class OP2Reader:
 
         # while the subtables aren't done
         while markers[0] != 0:
+            #print(markers)
             op2.is_start_of_subtable = True
             if self.is_debug_file:
                 self.binary_debug.write('***isubtable = %i\n' % op2.isubtable)
@@ -5302,6 +5304,7 @@ class OP2Reader:
 
         oes_nl = [b'OESNLXD', b'OESNL1X', b'OESNLXR']
         factor = self.factor
+        #print('record_len =', record_len)
         if record_len == 584 * factor:  # table3 has a length of 584
             if op2.table_name in oes_nl and hasattr(op2, 'num_wide') and op2.num_wide == 146:
                 data_code_old = deepcopy(op2.data_code)

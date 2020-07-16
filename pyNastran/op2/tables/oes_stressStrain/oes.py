@@ -82,6 +82,7 @@ from pyNastran.op2.tables.oes_stressStrain.oes_hyperelastic import (
     HyperelasticQuadArray)
 from pyNastran.op2.tables.oes_stressStrain.oes_nonlinear import RealNonlinearPlateArray, RealNonlinearSolidArray
 
+NX_TABLES_BYTES = [b'OESVM1', b'OESVM2']
 
 class OES(OP2Common):
     """
@@ -279,10 +280,13 @@ class OES(OP2Common):
         """
         Reads the Stress Table 4
         """
+        if self.table_name in NX_TABLES_BYTES:
+            self.to_nx()
+
         #assert self.isubtable == -4, self.isubtable
         #if self.is_debug_file:
             #self.binary_debug.write('  element_name = %r\n' % self.element_name)
-        #print "element_name =", self.element_name
+        #print("element_name =", self.element_name)
         assert isinstance(self.format_code, int), self.format_code
         assert self.is_stress is True, self.code_information()
         self.data_code['is_stress_flag'] = True
@@ -328,6 +332,8 @@ class OES(OP2Common):
         """
         Reads the Stress Table 4
         """
+        if self.table_name in NX_TABLES_BYTES:
+            self.to_nx()
         #assert self.isubtable == -4, self.isubtable
         #if self.is_debug_file:
             #self.binary_debug.write('  element_name = %r\n' % self.element_name)
@@ -492,6 +498,8 @@ class OES(OP2Common):
         """
         Reads the Strain Table 4
         """
+        if self.table_name in NX_TABLES_BYTES:
+            self.to_nx()
         #assert self.isubtable == -4, self.isubtable
         #if self.is_debug_file:
             #self.binary_debug.write('  element_name = %r\n' % self.element_name)
@@ -508,6 +516,8 @@ class OES(OP2Common):
         """
         Reads the Strain Table 4
         """
+        if self.table_name in NX_TABLES_BYTES:
+            self.to_nx()
         #assert self.isubtable == -4, self.isubtable
         #if self.is_debug_file:
             #self.binary_debug.write('  element_name = %r\n' % self.element_name)
@@ -1742,6 +1752,28 @@ class OES(OP2Common):
             return self._not_implemented_or_skip(data, ndata, msg)
         if nelements is None:
             return n
+
+        if self.read_mode == 2:
+            if self.is_sort1:
+                obj = self.obj
+                if obj is None:
+                    raise RuntimeError('obj is None...\n' + self.code_information())
+                if hasattr(obj, 'element_node'):
+                    eids = obj.element_node[:, 0]
+                elif hasattr(obj, 'element_layer'):
+                    eids = obj.element_layer[:, 0]
+                elif hasattr(obj, 'element'):
+                    eids = obj.element
+                else:
+                    print(self.code_information())
+                    raise RuntimeError(''.join(obj.get_stats()))
+                if eids.min() <= 0:
+                    #print(obj.code_information())
+                    print(''.join(obj.get_stats()))
+                    raise RuntimeError(eids)
+
+            #else:
+                #assert._times
         assert ndata > 0, ndata
         assert nelements > 0, f'nelements={nelements} element_type={self.element_type} element_name={self.element_name!r}'
         #assert ndata % ntotal == 0, '%s n=%s nwide=%s len=%s ntotal=%s' % (self.element_name, ndata % ntotal, ndata % self.num_wide, ndata, ntotal)
@@ -1751,34 +1783,6 @@ class OES(OP2Common):
 
         #if self.is_sort2:
             #assert len(np.unique(self.obj._times)) == len(self.obj._times), f'{self.obj._times.tolist()}\n{self.code_information()}'
-        return n
-
-    def oesrt_cquad4_95(self, data: bytes, ndata: int) -> int:
-        """unsupported element"""
-        assert self.num_wide == 9, "num_wide=%s not 9" % self.num_wide
-        ntotal = 36  # 4*9
-        #oesrt_cquad4_95
-
-        n = 0
-        struct1 = Struct(self._endian + self._analysis_code_fmt + b'8si3fi4s')
-        nelements = ndata // ntotal
-        #obj = self.obj
-        for unused_i in range(nelements):
-            edata = data[n:n + ntotal]
-            out = struct1.unpack(edata)  # num_wide=9
-            if self.is_debug_file:
-                self.binary_debug.write('CQUAD4-95 - %s\n' % str(out))
-            #eid, failure, ply, failureIndexPly, failureIndexBonding, failureIndexMax, flag
-            # 3,TSAIWU,1,8.5640,0.0,None
-
-            (eid, failure, ply, strength_ratio_ply, failure_index_bonding, strength_ratio_bonding, flag, flag2) = out
-            #strength_ratio_ply
-            #print("eid=%s failure=%r ply=%s failureIndexPly=%s  failure_index_bonding=%s strength_ratio_bonding=%s flag=%s flag2=%s" % (
-            #    eid, failure.strip(), ply, failureIndexPly, failure_index_bonding, strength_ratio_bonding, flag, flag2))
-            #print("eid=%s strength_ratio_ply=%g failure_index_bonding=%s strength_ratio_bonding=%s" % (
-                #eid, strength_ratio_ply, failure_index_bonding, strength_ratio_bonding))
-            #obj.add_new_eid(element_name, dt, eid, force, stress)
-            n += ntotal
         return n
 
     def _create_nodes_object(self, nnodes, result_name, slot, obj_vector):
@@ -3757,6 +3761,7 @@ class OES(OP2Common):
                                                    #sxx, syy, szz, txy, tyz, txz, ovm)
                         n += 80
             self.log.warning(f'skipping {self.table_name_str}: {self.element_name}-{self.element_type} linear hyperelastic cosine {word}')
+            return n, None, None
         else:  # pragma: no cover
             raise RuntimeError(self.code_information())
         assert n == ntotal * nelements, f'n={n} ntotal={ntotal*nelements}'
@@ -4259,6 +4264,7 @@ class OES(OP2Common):
                                                    sxx, syy, szz, txy, tyz, txz, ovm)
                         n += 60
             self.log.warning(f'skipping {self.table_name_str}: {self.element_name}-{self.element_type} nonlinear hyperelastic {word}')
+            return n, None, None
         else:  # pragma: no cover
             raise RuntimeError(self.code_information() +
                                '\nnumwide real=%s imag=%s random=%s' % (
@@ -5247,6 +5253,7 @@ class OES(OP2Common):
         # CQUAD4 ???=
         sort_method = self.sort_method
         element_name_type = f'{self.element_name}-{self.element_type}'
+        #print(self.code_information())
         if result_type == 0 and self.num_wide == numwide_real:  # real
             ntotal = 4 * (2 + 17 * nnodes_all) * self.factor
             nelements = ndata // ntotal
@@ -5315,6 +5322,11 @@ class OES(OP2Common):
             #assert self.num_wide * 4 == ntotal, 'numwide*4=%s ntotal=%s' % (self.num_wide*4, ntotal)
             nelements = ndata // ntotal
             nlayers = nelements * 2 * nnodes_all
+            #print(element_name_type)
+            #print('ndata', ndata)
+            #print('ntotal', ntotal)
+            #print('nelements', nelements)
+            #print('nlayers', nlayers)
 
             auto_return, is_vectorized = self._create_oes_object4(
                 nlayers, result_name, slot, obj_vector_complex)
@@ -5937,7 +5949,7 @@ class OES(OP2Common):
             ntotal = 44 * self.factor
             nelements = ndata // ntotal
             if self.read_mode == 1:
-                return nelements * self.num_wide * 4, None, None
+                return nelements * ntotal, None, None
 
             struct1 = Struct(self._endian + self._analysis_code_fmt + b'i9f')
             for unused_i in range(nelements):
@@ -5953,14 +5965,18 @@ class OES(OP2Common):
                     #self.binary_debug.write('%s-%s - (%s) + %s\n' % (self.element_name, self.element_type, eid_device, str(out)))
                 #obj.add_new_eid_sort1(dt, eid, theory, lamid, fp, fm, fb, fmax, fflag)
                 n += ntotal
+            return nelements * ntotal, None, None
+
         elif result_type == 0 and self.num_wide == 9 and table_name == b'OESRT':
             # strength_ratio.cquad4_composite_stress
             ntotal = 36 * self.factor
             nelements = ndata // ntotal
             if self.read_mode == 1:
-                return nelements * self.num_wide * 4, None, None
+                return nelements * ntotal, None, None
 
             # not 100%
+            self.log.warning(f'skipping oes_shell_composite; {self.element_name}-{self.element_type} '
+                             f'(numwide={self.num_wide}) {self.table_name_str}')
             struct1 = Struct(self._endian + self._analysis_code_fmt + b' 8s i 3f if')
             for unused_i in range(nelements):
                 edata = data[n:n+ntotal]
@@ -5968,7 +5984,8 @@ class OES(OP2Common):
                 out = struct1.unpack(edata)
                 #print(out)
 
-                #(eid_device, failure_theory, ply_id, ratio_ply, ratio_bonding, ratio_element, seven, eight, nine) = out
+                #(eid_device, failure_theory, ply_id, strength_ratio_ply, failure_index_bonding, strength_ratio_bonding, flag, flag2) = out
+                #(eid_device, failure_theory, ply_id, ratio_ply,          ratio_bonding,         ratio_element,          seven, eight, nine) = out
                 #eid, dt = get_eid_dt_from_eid_device(
                     #eid_device, self.nonlinear_factor, sort_method)
                 #print(eid, out)
@@ -5977,6 +5994,7 @@ class OES(OP2Common):
                     #self.binary_debug.write('%s-%s - (%s) + %s\n' % (self.element_name, self.element_type, eid_device, str(out)))
                 #obj.add_new_eid_sort1(dt, eid, theory, lamid, fp, fm, fb, fmax, fflag)
                 n += ntotal
+            return nelements * ntotal, None, None
         elif result_type == 1 and self.num_wide == 13 and table_name in [b'OESVM1C', b'OSTRVM1C']:
             is_vectorized = False
             if is_vectorized and self.use_vector:  # pragma: no cover
@@ -7187,6 +7205,8 @@ class OES(OP2Common):
         # 145-VUHEXA  (8 nodes)
         # 146-VUPENTA (6 nodes)
         # 147-VUTETRA (4 nodes)
+        self.log.warning(f'skipping oes_vu_solid; {self.element_name}-{self.element_type} '
+                         f'(numwide={self.num_wide})')
         if self.element_type == 147:
             etype = 'VUTETRA'
             nnodes = 4
@@ -7218,21 +7238,26 @@ class OES(OP2Common):
                 s1 = self.struct_2i
                 s2 = Struct(self._endian + b'i11f')
                 nelements = ndata // ntotal  # 2+16*9 = 146 -> 146*4 = 584
+
+                ntotal1 = 8 * self.factor
+                ntotal2 = 48 * self.factor
                 for unused_i in range(nelements):
-                    edata = data[n:n+8]
+                    edata = data[n:n+ntotal1]
                     out = s1.unpack(edata)
                     (eid_device, parent_id) = out
                     eid, dt = get_eid_dt_from_eid_device(
                         eid_device, self.nonlinear_factor, self.sort_method)
 
                     for unused_j in range(nnodes):
-                        edata = data[n:n+48]
+                        edata = data[n:n+ntotal2]
                         out = s2.unpack(edata)
                         if self.is_debug_file:
                             self.binary_debug.write('%s-%s - %s\n' % (etype, self.element_type, str(out)))
                         assert len(out) == 12
                         (grid, xnorm, ynorm, znorm, txy, tyz, txz,
                          prin1, prin2, prin3, smean, vono_roct) = out
+                        del grid, xnorm, ynorm, znorm, txy, tyz, txz
+                        del prin1, prin2, prin3, smean, vono_roct
                 n = ndata
             elif self.num_wide == numwide_b:
                 ntotal = numwide_b * 4
@@ -7243,7 +7268,7 @@ class OES(OP2Common):
                 nelements = ndata // ntotal
                 n = nelements * ntotal
             else:
-                msg = 'numwide=%s A=%s B=%s C=%s' % (self.num_wide, numwide_a, numwide_b, numwide_c)
+                msg = f'numwide={self.num_wide} A={numwide_a} B={numwide_b} C={numwide_c}'
                 raise RuntimeError(self.code_information() + msg)
         else:
             raise RuntimeError(self.code_information())
@@ -7251,6 +7276,7 @@ class OES(OP2Common):
             #msg = self.code_information()
             #raise RuntimeError(msg)
             #return self._not_implemented_or_skip(data, ndata, msg), None, None
+        return ndata, None, None
         return n, nelements, ntotal
 
     def _oes_hyperelastic_quad(self, data, ndata, dt, unused_is_magnitude_phase,
@@ -7434,10 +7460,18 @@ class OES(OP2Common):
                                    #dummy3, dummy4, dummy5,
                                    #bcx, bcy, bcxy, tyz, tzx,
                                    #dummy6, dummy7, dummy8)
+            nelements = None
+            ntotal = None
+            self.log.warning(f'skipping oes_vu_quad; {self.element_name}-{self.element_type} '
+                             f'(numwide={self.num_wide})')
         elif result_type == 1 and self.num_wide == numwide_imag:
             ntotal = (numwide_imag * 4) * self.factor
             nelements = ndata // ntotal
             n = nelements * ntotal
+            nelements = None
+            ntotal = None
+            self.log.warning(f'skipping oes_vu_quad; {self.element_name}-{self.element_type} '
+                             f'(numwide={self.num_wide})')
         else:
             raise RuntimeError(self.code_information())
             #msg = 'numwide=%s' % self.num_wide
@@ -9074,7 +9108,7 @@ def oes_cshear_random_3(self, data: bytes,
         (eid_device, max_strain, avg_strain) = out
         eid, dt = get_eid_dt_from_eid_device(
             eid_device, self.nonlinear_factor, self.sort_method)
-        print(eid, dt)
+        #print(eid, dt)
         add_sort_x(dt, eid, max_strain, avg_strain)
         n += ntotal
     return n
@@ -9107,4 +9141,33 @@ def oes_cbend_real_21(self, data: bytes,
 
             add_sort_x(dt, eid, grid, angle, sc, sd, se, sf, omax, omin, mst, msc)
             n += ntotali
+    return n
+
+
+def oesrt_cquad4_95(self, data: bytes, ndata: int) -> int:
+    """unsupported element"""
+    assert self.num_wide == 9, "num_wide=%s not 9" % self.num_wide
+    ntotal = 36  # 4*9
+    #oesrt_cquad4_95
+
+    n = 0
+    struct1 = Struct(self._endian + self._analysis_code_fmt + b'8si3fi4s')
+    nelements = ndata // ntotal
+    #obj = self.obj
+    for unused_i in range(nelements):
+        edata = data[n:n + ntotal]
+        out = struct1.unpack(edata)  # num_wide=9
+        if self.is_debug_file:
+            self.binary_debug.write('CQUAD4-95 - %s\n' % str(out))
+        #eid, failure, ply, failureIndexPly, failureIndexBonding, failureIndexMax, flag
+        # 3,TSAIWU,1,8.5640,0.0,None
+
+        (eid, failure, ply, strength_ratio_ply, failure_index_bonding, strength_ratio_bonding, flag, flag2) = out
+        #strength_ratio_ply
+        #print("eid=%s failure=%r ply=%s failureIndexPly=%s  failure_index_bonding=%s strength_ratio_bonding=%s flag=%s flag2=%s" % (
+        #    eid, failure.strip(), ply, failureIndexPly, failure_index_bonding, strength_ratio_bonding, flag, flag2))
+        #print("eid=%s strength_ratio_ply=%g failure_index_bonding=%s strength_ratio_bonding=%s" % (
+            #eid, strength_ratio_ply, failure_index_bonding, strength_ratio_bonding))
+        #obj.add_new_eid(element_name, dt, eid, force, stress)
+        n += ntotal
     return n

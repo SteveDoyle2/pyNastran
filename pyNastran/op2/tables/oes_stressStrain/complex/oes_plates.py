@@ -66,7 +66,14 @@ class ComplexPlateArray(OES_Object):
         #return self.nnodes_per_element()
 
     def build(self) -> None:
-        """sizes the vectorized attributes of the ComplexPlateArray"""
+        """sizes the vectorized attributes of the ComplexPlateArray
+
+        C:\MSC.Software\simcenter_nastran_2019.2\tpl_post1\cqrdbx111.op2
+        name;      nelements  numwide ndata size ntotal     nelements     nnodes nlayers
+        CQUADR-82  6          77      1848  4    4*77=308 1848/308=6      5      2*5*6=60
+        CTRIAR-70  9          62      2232  4    4*62=248 2232/248=9      4      2*9*4=72
+
+        """
         if not hasattr(self, 'subtitle'):
             self.subtitle = self.data_code['subtitle']
         nnodes = self.nnodes_per_element
@@ -93,7 +100,7 @@ class ComplexPlateArray(OES_Object):
         if self.is_sort1:
             ntimes = self.ntimes
             nelements = self.ntotal # // (2 * nnodes) # neids=actual number of elements
-            nlayers = self.ntotal * nnodes
+            nlayers = self.ntotal
             #nx = ntimes
             #ny = self.ntotal
             #print(f'  SORT1: ntimes={ntimes} nelements={nelements} nlayers={nlayers} {self.element_name}-{self.element_type}')

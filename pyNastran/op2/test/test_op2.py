@@ -30,6 +30,7 @@ from pyNastran.op2.op2 import (
 #SortCodeError, DeviceCodeError, FortranMarkerError
 
 from pyNastran.op2.op2_geom import OP2Geom, DuplicateIDsError
+from pyNastran.utils import is_binary_file
 
 
 def parse_table_names_from_f06(f06_filename):
@@ -74,18 +75,21 @@ def run_lots_of_files(files, make_geom: bool=True, combine: bool=True,
     npassed = 0
     #t0 = time.time()
     for i, op2file in enumerate(files[nstart:nstop], nstart):  # 149
+        if not is_binary_file(op2file):
+            continue
+
         basename = os.path.basename(op2file)
         #if basename not in skip_files and not basename.startswith('acms') and i not in nskip:
-        sys.stderr.write('%s file=%s\n' % (i, op2file))
+        sys.stderr.write(f'{i} file={op2file}\n')
         if basename not in skip_files and '#' not in op2file:
             print("%" * 80)
-            print('file=%s\n' % op2file)
+            print(f'file={op2file}\n')
             #n = '%s ' % i
             ntotal += 1
 
             is_passed = True
             for binary_debugi in binary_debug:
-                print('------running binary_debug=%s------' % binary_debugi)
+                print(f'------running binary_debug={binary_debugi}------')
                 is_passedi = run_op2(op2file, make_geom=make_geom, combine=combine,
                                      write_bdf=write_bdf, write_f06=write_f06, write_op2=write_op2,
                                      is_mag_phase=False,
@@ -106,7 +110,7 @@ def run_lots_of_files(files, make_geom: bool=True, combine: bool=True,
                     break
 
             if not is_passed:
-                sys.stderr.write('**file=%s\n' % op2file)
+                sys.stderr.write(f'**file={op2file}\n')
                 failed_cases.append(op2file)
                 nfailed += 1
             else:
@@ -223,7 +227,7 @@ def run_op2(op2_filename: str, make_geom: bool=False, combine: bool=True,
     else:
         sort_methods = is_sort2
 
-    assert '.op2' in op2_filename.lower(), 'op2_filename=%s is not an OP2' % op2_filename
+    assert '.op2' in op2_filename.lower(), f'op2_filename={op2_filename} is not an OP2'
     is_passed = False
 
     fname_base = os.path.splitext(op2_filename)[0]
@@ -336,7 +340,7 @@ def run_op2(op2_filename: str, make_geom: bool=False, combine: bool=True,
             if delete_op2:
                 remove_file(op2_filename2)
 
-        if debug_file is not None and delete_debug_out:
+        if debug_file is not None and delete_debug_out and os.path.exists(debug_file):
             os.remove(debug_file)
 
         #table_names_f06 = parse_table_names_from_F06(op2.f06FileName)
@@ -380,6 +384,7 @@ def run_op2(op2_filename: str, make_geom: bool=False, combine: bool=True,
         if not dev:
             raise
         print(f'{op2_filename} is missing/is not binary')
+        raise
         is_passed = True
     #except UnicodeDecodeError:  # this block should be commented
         #is_passed = True

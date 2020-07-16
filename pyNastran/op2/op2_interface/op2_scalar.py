@@ -52,7 +52,7 @@ from cpylog import get_logger
 
 from pyNastran import is_release, __version__
 from pyNastran.f06.errors import FatalError
-from pyNastran.op2.op2_interface.op2_reader import OP2Reader, mapfmt, reshape_bytes_block
+from pyNastran.op2.op2_interface.op2_reader import OP2Reader, reshape_bytes_block
 from pyNastran.bdf.cards.params import PARAM
 
 #============================
@@ -203,6 +203,7 @@ MATRIX_TABLES = NX_MATRIX_TABLES + MSC_MATRIX_TABLES + AUTODESK_MATRIX_TABLES + 
 # TODO: these are weird...
 #   RPOSTS1, MAXRATI, RESCOMP, PDRMSG
 INT_PARAMS_1 = {
+    b'OMODES',
     b'POST', b'OPPHIPA', b'OPPHIPB', b'GRDPNT', b'RPOSTS1', b'BAILOUT',
     b'COUPMASS', b'CURV', b'INREL', b'MAXRATI', b'OG',
     b'S1AM', b'S1M', b'DDRMM', b'MAXIT', b'PLTMSG', b'LGDISP', b'NLDISP',
@@ -1348,7 +1349,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
         """unused"""
         raise RuntimeError(self.read_mode)
 
-    def _read_pvto_4(self, data, ndata):
+    def _read_pvto_4(self, data, ndata: int) -> int:
         """reads PARAM cards"""
         if self.read_mode == 2:
             return ndata
@@ -1452,7 +1453,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
                     #print(i*xword+24, i*8+i*8+24)
                     #print(i*xword+16, (i+4)*8)
                 self.log.error('%r' % word)
-                raise NotImplementedError('%r is not a supported PARAM' % word)
+                raise NotImplementedError(f'{word!r} is not a supported PARAM')
 
             key = word.decode('latin1')
             param = PARAM(key, [value], comment='')
@@ -1465,12 +1466,12 @@ class OP2_Scalar(LAMA, ONR, OGPF,
         """testing function"""
         if ndata > 0:
             raise RuntimeError('this should never be called...'
-                               'table_name=%r len(data)=%s' % (self.table_name, ndata))
+                               'table_name={self.table_name!r} len(data)={ndata}')
 
     def _table_crasher(self, data, ndata):
         """auto-table crasher"""
         if self.is_debug_file:
-            self.binary_debug.write('  crashing table = %s\n' % self.table_name)
+            self.binary_debug.write(f'  crashing table = {self.table_name}\n')
             raise NotImplementedError(self.table_name)
         return ndata
 
@@ -1482,18 +1483,18 @@ class OP2_Scalar(LAMA, ONR, OGPF,
     def _table_passer(self, data, ndata: int):
         """auto-table skipper"""
         if self.is_debug_file:
-            self.binary_debug.write('  skipping table = %s\n' % self.table_name)
+            self.binary_debug.write(f'  skipping table = {self.table_name}\n')
         if self.table_name not in GEOM_TABLES and self.isubtable > -4:
-            self.log.warning('    skipping table: %s' % self.table_name_str)
+            self.log.warning(f'    skipping table: {self.table_name_str}')
         if not is_release and self.isubtable > -4:
             if self.table_name in GEOM_TABLES and not self.make_geom:
                 pass
             else:
-                print('dont skip table %r' % self.table_name_str)
-                raise RuntimeError('dont skip table %r' % self.table_name_str)
+                print(f'dont skip table {self.table_name_str!r}')
+                raise RuntimeError(f'dont skip table {self.table_name_str!r}')
         return ndata
 
-    def _validate_op2_filename(self, op2_filename):
+    def _validate_op2_filename(self, op2_filename: Optional[str]) -> str:
         """
         Pops a GUI if the op2_filename hasn't been set.
 
@@ -1584,11 +1585,11 @@ class OP2_Scalar(LAMA, ONR, OGPF,
 
         if self.read_mode != 2:
             op2_filename = self._validate_op2_filename(op2_filename)
-            self.log.info('op2_filename = %r' % op2_filename)
+            self.log.info(f'op2_filename = {op2_filename!r}')
             if not is_binary_file(op2_filename):
                 if os.path.getsize(op2_filename) == 0:
-                    raise IOError('op2_filename=%r is empty.' % op2_filename)
-                raise IOError('op2_filename=%r is not a binary OP2.' % op2_filename)
+                    raise IOError(f'op2_filename={op2_filename!r} is empty.')
+                raise IOError(f'op2_filename={op2_filename!r} is not a binary OP2.')
 
         self._create_binary_debug()
         self._setup_op2()
@@ -1698,6 +1699,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             flag_data = self.f.read(20)
             self.f.seek(0)
 
+            #(4, 3, 4, 24) ???
             #(8, 3, 0, 8, 24)
             little_data = unpack(b'<5i', flag_data)
             big_data = unpack(b'>5i', flag_data)
@@ -1705,7 +1707,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
                 self._uendian = '>'
                 self._endian = b'>'
                 size = big_data[0]
-            elif little_data[0] in [4, 8] or 1:
+            elif little_data[0] in [4, 8]:
                 self._uendian = '<'
                 self._endian = b'<'
                 size = little_data[0]

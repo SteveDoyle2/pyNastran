@@ -16,7 +16,7 @@ class ComplexShearArray(OES_Object):
     """
     def __init__(self, data_code, is_sort1, isubcase, dt):
         OES_Object.__init__(self, data_code, isubcase, apply_data_code=False)   ## why???
-        self.element_node = None
+        #self.element_node = None
         #self.code = [self.format_code, self.sort_code, self.s_code]
 
         #self.ntimes = 0  # or frequency/mode

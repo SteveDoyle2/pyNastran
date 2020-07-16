@@ -2229,6 +2229,7 @@ class OP2Common(Op2Codes, F06Writer):
             raise RuntimeError('removal of non-vectorized option')
 
         assert is_vectorized, f'{result_name!r} is not vectorized; obj={obj_vector}'
+        #print(self.code)
         return auto_return, is_vectorized
 
     def _is_vectorized(self, obj_vector):
@@ -2300,8 +2301,8 @@ class OP2Common(Op2Codes, F06Writer):
         self.op2_reader.size = size
         self.op2_reader.factor = size // 4
 
-    def del_structs(self):
-        """deepcopy(OP2) fails on Python 3.6 without doing this"""
+    def del_structs(self) -> None:
+        """deepcopy(OP2) fails without doing this"""
         del self.fdtype, self.idtype, self.double_dtype, self.long_dtype
         if hasattr(self, 'struct_2q'):
             del self.struct_i, self.struct_2q, self.struct_16s, self.struct_16s_q
@@ -2331,35 +2332,35 @@ def _cast_nonlinear_factor(value):
         raise NotImplementedError(f'value={value} type={type(value)}')
     return value
 
-def _function1(value):
+def _function1(value: int) -> int:
     """function1(value)"""
     if value // 1000 in [2, 3, 6]:
         return 2
     return 1
 
-def _function2(value):
+def _function2(value: int) -> int:
     """function2(value)"""
     return value % 100
 
-def _function3(value):
+def _function3(value: int) -> int:
     """function3(value)"""
     return value % 1000
 
-def _function4(value):
+def _function4(value: int) -> int:
     """function4(value)"""
     return value // 10
 
-def _function5(value):
+def _function5(value: int) -> int:
     """function5(value)"""
     return value % 10
 
-def _function6(value):
+def _function6(value: int) -> int:
     """weird..."""
     if value != 8:
         return 0
     return 1
 
-def _function7(value):
+def _function7(value: int) -> int:
     """function7(value)"""
     if value in [0, 2]:
         out = 0
