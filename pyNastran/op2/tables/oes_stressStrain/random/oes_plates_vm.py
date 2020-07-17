@@ -4,6 +4,7 @@ import numpy as np
 from numpy import zeros
 
 from pyNastran.utils.numpy_utils import integer_types
+from pyNastran.op2.result_objects.op2_objects import get_times_dtype
 from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import (
     StressObject, StrainObject, OES_Object)
 from pyNastran.f06.f06_formatting import write_float_13e, write_float_10e, _eigenvalue_header
@@ -69,18 +70,19 @@ class RandomPlateVMArray(OES_Object):
         #self.nelements //= self.ntimes
         #self.ntotal = self.nelements # * 2
         #if self.element_name == 'CTRIA3':
-        print('element_type=%r ntimes=%s nelements=%s ntotal=%s subtitle=%s' % (
-            self.element_type, self.ntimes, self.nelements, self.ntotal, self.subtitle))
         if self.is_sort1:
+            #print('element_type=%s-%s ntimes=%s nelements=%s ntotal=%s subtitle=%s' % (
+                #self.element_name, self.element_type,
+                #self.ntimes, self.nelements, self.ntotal, self.subtitle))
             # old
             #ntimes = self.ntimes
             #nelements = self.nelements
-            print('self._ntotals =', self._ntotals)
+            #print('self._ntotals =', self._ntotals)
             ntimes = len(self._ntotals)
             ntotal = self._ntotals[0]
 
             # nelements is the number of physical elements
-            nelements = ntotal // 2
+            nelements = ntotal // (2 * nnodes)
 
             # there are nlayers_per_nnode
             nlayers_per_nnode = 2
@@ -88,15 +90,14 @@ class RandomPlateVMArray(OES_Object):
             # there are nnodes per element; nnodes
             # thus nlayers
             nlayers = nelements * nlayers_per_nnode * nnodes
-            assert nlayers == ntotal, f'nlayers={nlayers} ntotal={ntotal}'
-            #assert nlayers == 2, nlayers
 
             # we also have nelements_nnodes, which is used in:
             #  - elmement_node
             nelements_nnodes = nelements * nnodes
             #ntotal = nelements * 2
             #if self.element_name in ['CTRIA3', 'CQUAD8']:
-            print(f"***SORT1 ntimes={ntimes} nelements={nelements} ntotal={ntotal} nlayers={nlayers}")
+            #print(f"***SORT1 ntimes={ntimes} nelements={nelements} nnodes={nnodes} ntotal={ntotal} nlayers={nlayers}")
+            assert nlayers == ntotal, f'SORT1 nlayers={nlayers} ntotal={ntotal}'
             #ddd
         elif self.is_sort2:
             #print('self._ntotals', self._ntotals)
@@ -109,7 +110,8 @@ class RandomPlateVMArray(OES_Object):
             nlayers = nelements * 2 * nnodes
             #if self.element_name in ['CTRIA3', 'CQUAD8']:
             #if self.element_name in ['CQUAD4']:
-                #print(f"SORT2 ntimes={ntimes} nelements={nelements} ntotal={ntotal} nnodes={nnodes} nlayers={nlayers}")
+            #print(f'SORT2 element_type={self.element_name}-{self.element_type} '
+                  #'ntimes={ntimes} nelements={nelements} ntotal={ntotal} nnodes={nnodes} nlayers={nlayers}')
         else:  # pragma: no cover
             raise RuntimeError('expected sort1/sort2\n%s' % self.code_information())
 
@@ -118,6 +120,8 @@ class RandomPlateVMArray(OES_Object):
         self.ielement = 0
         self.itotal = 0
         self.is_built = True
+        dtype, idtype, fdtype = get_times_dtype(self.nonlinear_factor, self.size, self.analysis_fmt)
+
         #print('ntotal=%s ntimes=%s nelements=%s' % (self.ntotal, self.ntimes, self.nelements))
 
         #print("ntimes=%s nelements=%s ntotal=%s" % (self.ntimes, self.nelements, self.ntotal))

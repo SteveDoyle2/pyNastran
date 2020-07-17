@@ -234,11 +234,16 @@ class OP2GeomCommon(OP2, GEOM1, GEOM2, GEOM3, GEOM4, EPT, MPT, EDT, EDOM, CONTAC
         table_mapper[b'GEOM2OLD'] = [self._read_geom2_4, self._read_geom2_4]
         table_mapper[b'GEOM3OLD'] = [self._read_geom3_4, self._read_geom3_4]
         table_mapper[b'GEOM4OLD'] = [self._read_geom4_4, self._read_geom4_4]
-        table_mapper[b'EDOM'] = [self._read_edom4_4, self._read_edom4_4]
+
+        table_mapper[b'GEOM1ATV'] = [self._read_geom1_4, self._read_geom1_4]
+        table_mapper[b'GEOM2ATV'] = [self._read_geom2_4, self._read_geom2_4]
+
+        table_mapper[b'EDOM'] = [self._read_edom4_4, self._read_edom4_4]  # optimization
 
         table_mapper[b'EPT'] = [self._read_ept_4, self._read_ept_4]
         table_mapper[b'EPTS'] = [self._read_ept_4, self._read_ept_4]
         table_mapper[b'EPTOLD'] = [self._read_ept_4, self._read_ept_4]
+        table_mapper[b'EPTATV'] = [self._read_ept_4, self._read_ept_4]
 
         table_mapper[b'MPT'] = [self._read_mpt_4, self._read_mpt_4]
         table_mapper[b'MPTS'] = [self._read_mpt_4, self._read_mpt_4]

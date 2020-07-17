@@ -1375,10 +1375,10 @@ class OES(OP2Common):
 
         if self.is_stress:
             result_name = 'stress'
-            stress_name = 'STRESS'
+            #stress_name = 'STRESS'
         else:
             result_name = 'strain'
-            stress_name = 'STRAIN'
+            #stress_name = 'STRAIN'
 
         if self._results.is_not_saved(result_name):
             return ndata
@@ -3013,12 +3013,55 @@ class OES(OP2Common):
                 #self.num_wide, numwide_real, numwide_imag, numwide_random)
             #return self._not_implemented_or_skip(data, ndata, msg)
         elif self.format_code in [1, 2] and self.num_wide == 67:  # CHEXA
+            #44 = 5 * 8 + 4  (TETRA)
+            #52 = 6 * 8 + 4  (PYRAM)
+            #60 = 7 * 8 + 4  (PENTA)
+            #76 = 9 * 8 + 4  (HEXA)
             msg = 'skipping random CHEXA; numwide=67'
+            #print(self.code_information())
+            #asdf
             n = self._not_implemented_or_skip(data, ndata, msg)
             nelements = None
             ntotal = None
-
         elif self.format_code in [1, 2, 3] and self.num_wide in [60] and self.table_name in [b'OESXRMS1', b'OESXNO1']:  # CPENTA
+            # bad
+            #if self.read_mode == 2:
+                #ints    = (68011, 0, 805.28, 6,
+                           #0,   0, 0, 0, 0, 0, 0, 0,
+                           #120000, 0, 0, 0, 0, 0, 0, 0,
+                           #120001, 0, 0, 0, 0, 0, 0, 0,
+                           #120010, 0, 0, 0, 0, 0, 0, 0,
+                           #120100, 0, 0, 0, 0, 0, 0, 0,
+                           #120101, 0, 0, 0, 0, 0, 0, 0,
+                           #120110, 0, 0, 0, 0, 0, 0, 0,
+
+                           #68111, 0, 1145655879, 15,
+                           #0,      1080284864, 1080296481, 1080284990, 1080279426, 1080285072, 1080285570, 1080285750,
+                           #130000, 1080285656, 1080285656, 1080285656, 1080285162, 1080287537, 1080285308, 1080285794,
+                           #130002, 1080285656, 1080285656, 1080285656, 1080284551, 1080287537, 1080285308, 1080285794,
+                           #130020, 1080285656, 1080285656, 1080285656, 1080289401, 1080287537, 1080285308, 1080285794,
+                           #130200, 1080285656, 1080285656, 1080285656, 1080285269, 1080287537, 1080285308, 1080285794,
+                           #130202, 1080288409, 1080287759, 1080323139, 1080285308, 1080285512, 1080285308, 1080285874,
+                           #130220, 1080285333, 1080285373, 1080285450, 1080287537, 1080287537, 1080285625, 1080285771)
+                #floats  = (68011, 0.0, 805.28, 6,
+                           #0.0,                   0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+                           #1.681558157189705e-40, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+                           #1.681572170174437e-40, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+                           #1.681698287036213e-40, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+                           #1.682959455654153e-40, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+                           #1.682973468638786e-40, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+                           #1.683099585500578e-40, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+
+                           #9.544383970362762e-41, 0.0, 805.28, 2.1019476964872256e-44,
+                           #0.0,                    3.559982299804687, 3.562752008438110, 3.5600123405456, 3.558685779571533, 3.560031890869140, 3.560150623321533, 3.56019353866577,
+                           #1.8216880036222622e-40, 3.560171127319336, 3.560171127319336, 3.5601711273193, 3.560053348541259, 3.560619592666626, 3.560088157653808, 3.56020402908325,
+                           #1.8217160295915487e-40, 3.560171127319336, 3.560171127319336, 3.5601711273193, 3.559907674789428, 3.560619592666626, 3.560088157653808, 3.56020402908325,
+                           #1.8219682633151272e-40, 3.560171127319336, 3.560171127319336, 3.5601711273193, 3.561064004898071, 3.560619592666626, 3.560088157653808, 3.56020402908325,
+                           #1.8244906005509118e-40, 3.560171127319336, 3.560171127319336, 3.5601711273193, 3.560078859329223, 3.560619592666626, 3.560088157653808, 3.56020402908325,
+                           #1.8245186265201983e-40, 3.560827493667602, 3.560672521591186, 3.5691077709198, 3.560088157653808, 3.560136795043945, 3.560088157653808, 3.56022310256958,
+                           #1.8247708602437768e-40, 3.560094118118286, 3.56010365486145,  3.5601220130920, 3.560619592666626, 3.560619592666626, 3.560163736343384, 3.56019854545593)
+                #self.show_data(data, types='ifs')
+
             #C:\MSC.Software\simcenter_nastran_2019.2\tpl_post2\tr1081x.op2
             msg = 'skipping random CPENTA; numwide=60'
             n = self._not_implemented_or_skip(data, ndata, msg)
@@ -3427,69 +3470,11 @@ class OES(OP2Common):
             else:
                 #if is_vectorized and self.use_vector:  # pragma: no cover
                     #self.log.debug('vectorize CSolid real SORT%s' % self.sort_method)
-
-                # 1 PLY I Lamina number
-                # 2 FLOC CHAR4 Fiber location (BOT, MID, TOP)
-                # 3 GRID I Edge grid ID (center=0)
-                #
-                # 4 EX1 RS Normal strain in the 1-direction
-                # 5 EY1 RS Normal strain in the 2-direction
-                # 6 EZ1 RS Normal strain in the 3-direction
-                # 7 ET1 RS Shear strain in the 12-plane
-                # 8 EL2 RS Shear strain in the 23-plane
-                # 9 EL1 RS Shear strain in the 13-plane
-                # 10 ETMAX1 RS von Mises strain
-                # For each fiber location requested (PLSLOC), words 3 through 10 repeat 4 times.
-                struct1 = Struct(self._endian + self._analysis_code_fmt + b'i4s')
-                struct2 = Struct(self._endian + b'i7f')
-                if self.is_debug_file:
-                    msg = '%s-%s nelements=%s nnodes=%s; C=[sxx, syy, szz, txy, tyz, txz, ovm,\n' % (
-                        self.element_name, self.element_type, nelements, nedges)
-                    self.binary_debug.write(msg)
-
-                for unused_i in range(nelements):
-                    edata = data[n:n+12]
-                    out = struct1.unpack(edata)
-                    (eid_device, ply, fiber_location) = out
-                    #print(out)
-                    eid, dt = get_eid_dt_from_eid_device(
-                        eid_device, self.nonlinear_factor, self.sort_method)
-
-                    if self.is_debug_file:
-                        self.binary_debug.write('%s - eid=%i; %s\n' % (preline1, eid, str(out)))
-
-                    n += 12
-                    for inode in range(nedges):  # nodes pts, no centroid
-                        out = struct2.unpack(data[n:n + 32]) # 4*8 = 32
-                        if self.is_debug_file:
-                            self.binary_debug.write('%s - %s\n' % (preline2, str(out)))
-                        (grid_device, sxx, syy, szz, txy, tyz, txz, ovm) = out
-
-                        if self.is_debug_file:
-                            self.binary_debug.write('  eid=%s inode=%i; C=[%s]\n' % (
-                                eid, grid_device, ', '.join(['%r' % di for di in out])))
-
-                        #if grid_device == 0:
-                            #grid = 'CENTER'
-                        #else:
-                            ##grid = (grid_device - device_code) // 10
-                            #grid = grid_device
-
-                        grid = grid_device
-                        #a_cos = [a1, a2, a3]
-                        #b_cos = [b1, b2, b3]
-                        #c_cos = [c1, c2, c3]
-                        if 0:
-                            if inode == 0:
-                                #  this is correct, but fails
-                                #element_name = self.element_name + str(nnodes)
-                                obj.add_eid_sort1(element_name, cid, dt, eid, grid,
-                                                  sxx, syy, szz, txy, tyz, txz, ovm)
-                            else:
-                                obj.add_node_sort1(dt, eid, inode, grid,
-                                                   sxx, syy, szz, txy, tyz, txz, ovm)
-                        n += 32
+                n = oes_csolid_composite_real(self, data, obj,
+                                              nelements, nedges,
+                                              element_name, preline1, preline2, dt)
             self.log.warning(f'skipping {self.table_name_str}: {self.element_name}-{self.element_type} {word} csolid composite')
+
         elif result_type == 1 and self.num_wide == numwide_imag:  # complex
             # 1 PLY I Lamina number
             # 2 FLOC I Fiber location (BOT, MID, TOP)
@@ -3535,7 +3520,7 @@ class OES(OP2Common):
             if self.element_type == 140:  # CHEXA
                 nnodes_expected = 8
                 result_name = prefix + 'chexa_stress' + postfix
-                element_name = 'CHEXA8'
+                #element_name = 'CHEXA8'
                 # real=122
             #elif self.element_type == 160:  # CPENTA
                 #nnodes_expected = 6
@@ -3850,9 +3835,9 @@ class OES(OP2Common):
         #numwide_real = 122  # CHEXA
         #print(self.num_wide, numwide_real)
         assert numwide_real == self.num_wide, numwide_real
-        #numwide_imag = 4 + (17 - 4) * nnodes_expected
+        numwide_imag = 4 + (17 - 4) * nnodes_expected
         #numwide_random = 4 + (11 - 4) * nnodes_expected
-        #numwide_random2 = 18 + 14 * (nnodes_expected - 1)
+        numwide_random2 = 18 + 14 * (nnodes_expected - 1)
         preline1 = '%s-%s' % (self.element_name, self.element_type)
         preline2 = ' ' * len(preline1)
 
@@ -4111,9 +4096,9 @@ class OES(OP2Common):
         numwide_real = 2 + 15 * nnodes_expected
         #numwide_real = 122  # CHEXA
         assert numwide_real == self.num_wide, numwide_real
-        #numwide_imag = 4 + (17 - 4) * nnodes_expected
+        numwide_imag = 4 + (17 - 4) * nnodes_expected
         #numwide_random = 4 + (11 - 4) * nnodes_expected
-        #numwide_random2 = 18 + 14 * (nnodes_expected - 1)
+        numwide_random2 = 18 + 14 * (nnodes_expected - 1)
         preline1 = '%s-%s' % (self.element_name, self.element_type)
         preline2 = ' ' * len(preline1)
 
@@ -4426,6 +4411,8 @@ class OES(OP2Common):
 
         """
         n = 0
+        factor = self.factor
+        size = self.size
         #print('_oes_cquad4_33')
         if self.is_stress:
             obj_vector_real = RealPlateStressArray
@@ -4456,7 +4443,7 @@ class OES(OP2Common):
         numwide_real = 17
         sort_method = self.sort_method
         if result_type == 0 and self.num_wide == 17:  # real
-            ntotal = 68 * self.factor  # 4*17
+            ntotal = 68 * factor  # 4*17
             nelements = ndata // ntotal
             nlayers = nelements * 2  # 2 layers per node
             #self.log.info(f'CQUAD4-33: len(data)={ndata} numwide={self.num_wide} nelements={nelements} nlayers={nlayers}')
@@ -4502,8 +4489,8 @@ class OES(OP2Common):
 
         elif result_type == 1 and self.num_wide == 15:  # imag
             self.to_nx()
-            nnodes = 0  # centroid + 4 corner points
-            ntotal = 4 * (15 * (nnodes + 1)) * self.factor
+            #nnodes = 0  # centroid + 4 corner points
+            ntotal = self.num_wide * size
             #self.log.info(f'CQUAD4-33: len(data)={ndata} numwide={self.num_wide} nelements={nelements} nlayers={nlayers}')
 
             nelements = ndata // ntotal
@@ -4517,7 +4504,7 @@ class OES(OP2Common):
             obj = self.obj
             if self.use_vector and is_vectorized and sort_method == 1:
                 n = nelements * ntotal
-                nnodes_all = (nnodes + 1)
+                nnodes_all = 1
                 itotal = obj.itotal
                 itotal2 = itotal + 2 * nelements * nnodes_all
                 ielement = obj.ielement
@@ -4553,7 +4540,7 @@ class OES(OP2Common):
 
                 n = oes_cquad4_33_complex_15(
                     self, data, obj,
-                    nelements, ntotal, nnodes,
+                    nelements, ntotal,
                     is_magnitude_phase)
 
         elif result_type in [1, 2] and self.num_wide == 9: # random msc
@@ -4703,7 +4690,7 @@ class OES(OP2Common):
             self._results._found_result(result_name)
             slot = self.get_result(result_name)
 
-            ntotal = 44  # 4*11
+            ntotal = 44 * factor # 4*11
             nelements = ndata // ntotal
             nlayers = nelements * 2
             nnodes_expected = 1
@@ -5169,6 +5156,7 @@ class OES(OP2Common):
 
         """
         n = 0
+        size = self.size
         if self.is_stress:
             obj_vector_real = RealPlateStressArray
             obj_vector_complex = ComplexPlateStressArray
@@ -5236,7 +5224,7 @@ class OES(OP2Common):
         numwide_imag = 2 + 15 * nnodes_all
         numwide_random = 2 + 9 * nnodes_all
 
-        numwide_imag2 = 2 + 16 * nnodes_all
+        #numwide_imag2 = 2 + 16 * nnodes_all
         #print('%s real=%s imag=%s imag2=%s random=%s' % (
             #self.element_name, numwide_real, numwide_imag, numwide_imag2, numwide_random
         #))
@@ -5274,7 +5262,6 @@ class OES(OP2Common):
                 # self.itotal = 0
                 #self.ntimes = 0
                 #self.nelements = 0
-                ntotal = self.num_wide * 4 * self.factor
                 n = nelements * ntotal
 
                 istart = obj.itotal
@@ -5392,7 +5379,7 @@ class OES(OP2Common):
             nelements = ndata // ntotal
             assert ndata % ntotal == 0
             nlayers = 2 * nelements * nnodes_all  # 2 layers per node
-            #print(f'random quad-33 ntotal={ntotal} numwide={self.num_wide} -> nelements={nelements}')
+            #self.log.info(f'random quad-144 ntotal={ntotal} ndata={ndata} ntotal={ntotal} numwide={self.num_wide} -> nelements={nelements}')
 
             #if self.read_mode == 1:
                 #msg = ''
@@ -5548,11 +5535,11 @@ class OES(OP2Common):
             else:
                 obj_vector_random = RandomPlateVMStrainArray
 
-            ntotal = self.num_wide * 4 * self.factor
+            ntotal = self.num_wide * size
             nelements = ndata // ntotal
-            nlayers = nnodes_all * 2
+            nlayers = nelements * nnodes_all * 2
             assert ndata % ntotal == 0
-            #print(f'selement_name={self.element_name} sort_method={self.sort_method} ntotal={ntotal} num_wide={self.num_wide} nelements={nelements} ndata={ndata}')
+            #print(f'selement_name={self.element_name} sort_method={self.sort_method} ntotal={ntotal} num_wide={self.num_wide} nelements={nelements} ndata={ndata} nlayers={nlayers}')
             #print('nnodes_all =', nnodes_all)
             # 57 = 2 + 11 * 5
             #ints    = (64011, 'CEN/',
@@ -5635,7 +5622,8 @@ class OES(OP2Common):
                 return nelements * ntotal, None, None
 
             obj = self.obj
-            n = oes_cquad4_random_vm_57(self, data, self.obj, nelements, ntotal, dt, is_magnitude_phase)
+            n = oes_cquad4_random_vm_57(self, data, self.obj, nelements, ntotal, nnodes,
+                                        dt)
         else:  # pragma: no cover
             raise RuntimeError(self.code_information())
         return n, nelements, ntotal
@@ -7179,7 +7167,7 @@ class OES(OP2Common):
                 # self.itotal = 0
                 #self.ntimes = 0
                 #self.nelements = 0
-                n = nelements * self.num_wide * 4 * self.factor
+                n = nelements * ntotal
 
                 istart = obj.itotal
                 iend = istart + nelements
@@ -7827,8 +7815,8 @@ def oes_cbeam_random_67(self, data: bytes,
                         obj: Union[RandomBeamStressArray, RandomBeamStrainArray],
                         nelements: int, nnodes: int, dt: Any) -> int:
     n = 0
-    n1 = 28
-    n2 = 24 # 6*4
+    n1 = 28 * self.factor
+    n2 = 24 * self.factor # 6*4
     s1 = Struct(self._endian + self._analysis_code_fmt + b'i5f')
     s2 = Struct(self._endian + b'i5f')
     add_sort_x = getattr(obj, 'add_sort' + str(self.sort_method))
@@ -7859,13 +7847,11 @@ def oes_cbeam_random_67(self, data: bytes,
 def oes_cquad4_33_complex_15(self,
                              data: bytes,
                              obj: Union[ComplexPlateStressArray, ComplexPlateStrainArray],
-                             nelements: int, ntotal: int, nnodes: int,
+                             nelements: int, ntotal: int,
                              is_magnitude_phase: bool) -> int:
     n = 0
     s1 = Struct(self._endian + self._analysis_code_fmt + b'14f')
-    s2 = Struct(self._endian + b'i14f')
     cen = 0 # 'CEN/4'
-    #60
     add_sort_x = getattr(obj, 'add_sort' + str(self.sort_method))
 
     for unused_i in range(nelements):
@@ -7899,42 +7885,19 @@ def oes_cquad4_33_complex_15(self,
         add_sort_x(dt, eid, cen,
                    fd1, sx1, sy1, txy1,
                    fd2, sx2, sy2, txy2)
-
-        for unused_inode in range(nnodes):  # nodes pts
-            edata = data[n:n+ntotal]  # 4*15=60
-            n += ntotal
-            out = s2.unpack(edata)
-            if self.is_debug_file:
-                self.binary_debug.write('  %s\n' % str(out))
-            (grid,
-             fd1, sx1r, sx1i, sy1r, sy1i, txy1r, txy1i,
-             fd2, sx2r, sx2i, sy2r, sy2i, txy2r, txy2i) = out
-
-            if is_magnitude_phase:
-                sx1 = polar_to_real_imag(sx1r, sx1i)
-                sx2 = polar_to_real_imag(sx2r, sx2i)
-                sy1 = polar_to_real_imag(sy1r, sy1i)
-                sy2 = polar_to_real_imag(sy2r, sy2i)
-                txy1 = polar_to_real_imag(txy1r, txy1i)
-                txy2 = polar_to_real_imag(txy2r, txy2i)
-            else:
-                sx1 = complex(sx1r, sx1i)
-                sx2 = complex(sx2r, sx2i)
-                sy1 = complex(sy1r, sy1i)
-                sy2 = complex(sy2r, sy2i)
-                txy1 = complex(txy1r, txy1i)
-                txy2 = complex(txy2r, txy2i)
-            add_sort_x(dt, eid, grid,
-                       fd1, sx1, sy1, txy1,
-                       fd2, sx2, sy2, txy2)
     return n
 
 def oes_cquad4_random_vm_57(self,
                             data: bytes,
                             obj: Union[ComplexPlateVMStressArray, ComplexPlateVMStrainArray],
                             nelements: int, ntotal: int, nnodes: int,
-                            dt,
-                            is_magnitude_phase: bool) -> int:
+                            dt: Any) -> int:
+    """
+    name    ntotal numwide
+    CQUAD8  228    57
+    CTRIA6  184
+    """
+
     #ntotal = 228 # 57*4
     n = 0
     cen = 0
@@ -7948,6 +7911,11 @@ def oes_cquad4_random_vm_57(self,
         raise NotImplementedError('64-bit')
 
     nnodes_corners = nnodes - 1
+    #print('random-57: nelements =', nelements)
+    factor = self.factor
+
+    ntotal1 = 52 * factor
+    ntotal2 = 44 * factor
     for unused_i in range(nelements):
         ni = 0
         edata = data[n:n+ntotal]
@@ -7955,14 +7923,14 @@ def oes_cquad4_random_vm_57(self,
         #out = struct1.unpack(edata)  # len=17*4
         (eid_device, grid1, four,
          fd1, ox1, oy1, txy1, vm1,
-         fd2, ox2, oy2, txy2, vm2) = struct1.unpack(edata[ni:ni+52])  # 13*4=52
+         fd2, ox2, oy2, txy2, vm2) = struct1.unpack(edata[ni:ni+ntotal1])  # 13*4=52
         eid, dt = get_eid_dt_from_eid_device(
             eid_device, self.nonlinear_factor, self.sort_method)
         #print(eid, cen)
         obj.add_sort1(dt, eid, cen,
                       fd1, ox2, oy2, txy2, vm1,
                       fd2, ox2, oy2, txy2, vm2)
-        ni += 52
+        ni += ntotal1
         #print(eid, grid1,
               #fd1, ox1, oy1, txy1, vm1,
               #fd2, ox2, oy2, txy2, vm2)
@@ -7970,17 +7938,17 @@ def oes_cquad4_random_vm_57(self,
         for unused_jnode in range(nnodes_corners): # 4*44=176
             (grid,
              fd1, ox1, oy1, txy1, vm1,
-             fd2, ox2, oy2, txy2, vm2) = struct2.unpack(edata[ni:ni+44])  # 11*4=44
+             fd2, ox2, oy2, txy2, vm2) = struct2.unpack(edata[ni:ni+ntotal2])  # 11*4=44
             #print(eid, grid)
-            ni += 44
+            ni += ntotal2
             #print(grid,
                   #fd1, ox1, oy1, txy1, vm1,
                   #fd2, ox2, oy2, txy2, vm2)
             obj.add_sort1(dt, eid, grid,
                           fd1, ox2, oy2, txy2, vm1,
                           fd2, ox2, oy2, txy2, vm2)
-        assert ni == 228
-        n += 228
+        assert ni == ntotal, f'ni={ni}'
+        n += ntotal
         #print()
     #assert n == ndata
     #n = self._not_implemented_or_skip(data, ndata, msg)
@@ -8081,10 +8049,10 @@ def oes_cquad4_complex_vm_87(self, data: bytes,
     33  CQUAD4-33 -> 17      (not in this function)
     82  CQUADR    -> 87      (1+4 nodes)
     144 CQUAD144  -> 87      (1+4 nodes)
-    ??? CTRIA6->  -> 70?     (1+3 nodes)
+    ??? CTRIA6    -> 70?     (1+3 nodes)
 
-    2 TERM CHAR4
-    3 GRID I
+    2 TERM    CHAR4
+    3 GRID    I
     4 FD1     RS Fiber distance at z1
     5 EX1R    RS Normal in x at z1
     6 EX1I    RS Normal in x at z1
@@ -8193,7 +8161,8 @@ def oes_cquad4_complex_vm_87(self, data: bytes,
     ntotal1 = 8 * self.factor  # 2*4
     ntotal2 = 68 * self.factor # 17*4
     add_sort_x = getattr(obj, 'add_sort' + str(self.sort_method))
-    #print('len(data)', len(data))
+    #print('ndata', len(data))
+    #print('ntotal', ntotal1+nnodes*ntotal2)
     #print('nelements =', nelements)
     for i in range(nelements):
         #print(f'{i}/{nelements}')
@@ -8583,8 +8552,10 @@ def oes_cquad4_144_random(self, data: bytes,
     grid_center = 0
     add_sort_x = getattr(obj, 'add_sort' + str(self.sort_method))
 
+    ntotal1 = 44 * self.factor
+    ntotal2 = 36 * self.factor
     for unused_i in range(nelements):
-        edata = data[n:n+44]
+        edata = data[n:n+ntotal1]
         #self.show_data(edata)
         out = cs.unpack(edata)  # len=17*4
         #print(out)
@@ -8604,9 +8575,9 @@ def oes_cquad4_144_random(self, data: bytes,
 
         add_sort_x(dt, eid, grid_center,
                    fd1, sx1, sy1, txy1, fd2, sx2, sy2, txy2)
-        n += 44
+        n += ntotal1
         for inode in range(nnodes):
-            out = ns.unpack(data[n:n + 36])
+            out = ns.unpack(data[n:n + ntotal2])
             #print(out)
             (grid,
              fd1, sx1, sy1, txy1,
@@ -8624,12 +8595,12 @@ def oes_cquad4_144_random(self, data: bytes,
             add_sort_x(dt, eid, grid,
                        fd1, sx1, sy1, txy1,
                        fd2, sx2, sy2, txy2)
-            n += 36
+            n += ntotal2
     return n
 
 def oes_cbar_real_16(self, data: bytes,
                      obj: Union[RealBarStressArray, RealBarStrainArray],
-                     nelements: int, ntotal: int, dt) -> int:
+                     nelements: int, ntotal: int, dt: Any) -> int:
     n = 0
     fmt = mapfmt(self._endian + self._analysis_code_fmt + b'15f', self.size)
     struct1 = Struct(fmt)
@@ -9018,8 +8989,10 @@ def oes_csolid_random(self, data: bytes,
         msg += '                                 szz, sxz, s3, c1, c2, c3]\n'
         self.binary_debug.write(msg)
 
+    ntotal1 = 16 * self.factor
+    ntotal2 = 28 * self.factor
     for unused_i in range(nelements):
-        edata = data[n:n+16]
+        edata = data[n:n+ntotal1]
         out = struct1.unpack(edata)
         (eid_device, cid, unused_abcd, grid) = out
 
@@ -9032,10 +9005,10 @@ def oes_csolid_random(self, data: bytes,
 
         #assert nnodes < 21, 'print_block(data[n:n+16])'  #self.print_block(data[n:n+16])
 
-        n += 16
+        n += ntotal1
         for inode in range(nnodes_expected):  # nodes pts, +1 for centroid (???)
             #self.show_data(data[n:n+48])
-            out = struct2.unpack(data[n:n + 28]) # 4*7 = 28
+            out = struct2.unpack(data[n:n + ntotal2]) # 4*7 = 28
             if self.is_debug_file:
                 self.binary_debug.write('%s - %s\n' % (preline2, str(out)))
             (grid_device, sxx, syy, szz, txy, tyz, txz) = out
@@ -9059,7 +9032,7 @@ def oes_csolid_random(self, data: bytes,
             else:
                 obj.add_node_sort1(dt, eid, inode, grid,
                                    sxx, syy, szz, txy, tyz, txz)
-            n += 28
+            n += ntotal2
     return n
 
 def oes_comp_shell_real_11(self, data: bytes, ndata: int,
@@ -9117,7 +9090,7 @@ def oes_cbend_real_21(self, data: bytes,
                       obj: Union[RealBendStressArray, RealBendStrainArray],
                       nelements: int, ntotal: int, dt) -> int:
     n = 0
-    ntotali = 40
+    ntotali = 40 * self.factor
     struct1 = Struct(self._endian + self._analysis_code_fmt)
     struct2 = Struct(self._endian + b'i9f')
     add_sort_x = getattr(obj, 'add_sort' + str(self.sort_method))
@@ -9146,8 +9119,8 @@ def oes_cbend_real_21(self, data: bytes,
 
 def oesrt_cquad4_95(self, data: bytes, ndata: int) -> int:
     """unsupported element"""
-    assert self.num_wide == 9, "num_wide=%s not 9" % self.num_wide
-    ntotal = 36  # 4*9
+    assert self.num_wide == 9, f'num_wide={self.num_wide} not 9'
+    ntotal = 36 * self.factor # 4*9
     #oesrt_cquad4_95
 
     n = 0
@@ -9170,4 +9143,77 @@ def oesrt_cquad4_95(self, data: bytes, ndata: int) -> int:
             #eid, strength_ratio_ply, failure_index_bonding, strength_ratio_bonding))
         #obj.add_new_eid(element_name, dt, eid, force, stress)
         n += ntotal
+    return n
+
+def oes_csolid_composite_real(self, data: bytes,
+                              obj,
+                              nelements: int, nedges: int,
+                              element_name: str, preline1: str, preline2: str,
+                              dt: Any) -> int:
+    """
+    1 PLY I Lamina number
+    2 FLOC CHAR4 Fiber location (BOT, MID, TOP)
+    3 GRID I Edge grid ID (center=0)
+
+    4 EX1 RS Normal strain in the 1-direction
+    5 EY1 RS Normal strain in the 2-direction
+    6 EZ1 RS Normal strain in the 3-direction
+    7 ET1 RS Shear strain in the 12-plane
+    8 EL2 RS Shear strain in the 23-plane
+    9 EL1 RS Shear strain in the 13-plane
+    10 ETMAX1 RS von Mises strain
+    For each fiber location requested (PLSLOC), words 3 through 10 repeat 4 times.
+    """
+    n = 0
+    struct1 = Struct(self._endian + self._analysis_code_fmt + b'i4s')
+    struct2 = Struct(self._endian + b'i7f')
+    if self.is_debug_file:
+        msg = '%s-%s nelements=%s nnodes=%s; C=[sxx, syy, szz, txy, tyz, txz, ovm,\n' % (
+            self.element_name, self.element_type, nelements, nedges)
+        self.binary_debug.write(msg)
+
+    ntotal1 = 12 * self.factor
+    ntotal2 = 32 * self.factor
+    for unused_i in range(nelements):
+        edata = data[n:n+ntotal1]
+        out = struct1.unpack(edata)
+        (eid_device, ply, fiber_location) = out
+        #print(out)
+        eid, dt = get_eid_dt_from_eid_device(
+            eid_device, self.nonlinear_factor, self.sort_method)
+
+        if self.is_debug_file:
+            self.binary_debug.write('%s - eid=%i; %s\n' % (preline1, eid, str(out)))
+
+        n += ntotal1
+        for inode in range(nedges):  # nodes pts, no centroid
+            out = struct2.unpack(data[n:n + ntotal2]) # 4*8 = 32
+            if self.is_debug_file:
+                self.binary_debug.write('%s - %s\n' % (preline2, str(out)))
+            (grid_device, sxx, syy, szz, txy, tyz, txz, ovm) = out
+
+            if self.is_debug_file:
+                self.binary_debug.write('  eid=%s inode=%i; C=[%s]\n' % (
+                    eid, grid_device, ', '.join(['%r' % di for di in out])))
+
+            #if grid_device == 0:
+                #grid = 'CENTER'
+            #else:
+                ##grid = (grid_device - device_code) // 10
+                #grid = grid_device
+
+            grid = grid_device
+            #a_cos = [a1, a2, a3]
+            #b_cos = [b1, b2, b3]
+            #c_cos = [c1, c2, c3]
+            if 0:
+                if inode == 0:
+                    #  this is correct, but fails
+                    #element_name = self.element_name + str(nnodes)
+                    obj.add_eid_sort1(element_name, cid, dt, eid, grid,
+                                      sxx, syy, szz, txy, tyz, txz, ovm)
+                else:
+                    obj.add_node_sort1(dt, eid, inode, grid,
+                                       sxx, syy, szz, txy, tyz, txz, ovm)
+            n += ntotal2
     return n

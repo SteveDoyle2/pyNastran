@@ -69,9 +69,10 @@ class ComplexPlateVMArray(OES_Object):
         """sizes the vectorized attributes of the ComplexPlateArray
 
         SORT1:
-         - etype   ndata numwide size  -> nelements     nnodes nlayers
-         - CQUAD8  1044  87      4        1044/(4*87)=3 5      3*5=15  C:\MSC.Software\simcenter_nastran_2019.2\tpl_post2\tr1081x.op2
-         -
+         - etype   SORT ndata numwide size  -> nelements     ntimes                 nnodes ntotal_layers
+         - CQUAD8  1    1044  87      4        1044/(4*87)=3 xxx                    5      3*5=15        C:\MSC.Software\simcenter_nastran_2019.2\tpl_post2\tr1081x.op2
+         - QUADR   2    3828  87               1             3828/(4*87)=11         10     2*1*10=20     C:\MSC.Software\simcenter_nastran_2019.2\tpl_post2\cqromids111.op2
+
         """
         if not hasattr(self, 'subtitle'):
             self.subtitle = self.data_code['subtitle']
@@ -101,18 +102,14 @@ class ComplexPlateVMArray(OES_Object):
             ntimes = self.ntimes
             nelements = self.ntotal // 2
             nlayers = self.ntotal
-            #nx = ntimes
-            #ny = self.ntotal
             #print(f'  SORT1: ntimes={ntimes} nelements={nelements} nlayers={nlayers} {self.element_name}-{self.element_type}')
-            #if self.element_type == 74:
-                #aasdf
         elif self.is_sort2:
             #print(self._ntotals)
             nelements = self.ntimes
             nlayers = nelements * 2 * nnodes
             ntimes = self.ntotal // (2 * nnodes)
             #print(f'  SORT2: ntimes={ntimes} nelements={nelements} nnodes={nnodes} nlayers={nlayers} {self.element_name}-{self.element_type}')
-        #print("nelements=%s nlayers=%s ntimes=%s" % (nelements, nlayers, ntimes))
+        #print(f'{self.element_name}-{self.element_type} nelements={nelements} nlayers={nlayers} ntimes={ntimes}')
 
         self._times = zeros(ntimes, dtype=dtype)
         #self.ntotal = self.nelements * nnodes
@@ -127,12 +124,13 @@ class ComplexPlateVMArray(OES_Object):
 
         self.fiber_curvature = zeros(nlayers, 'float32')
 
-        nelement_nodes = nelements * 2
         # [oxx, oyy, txy, ovm]
         self.data = zeros((ntimes, nlayers, 4), dtype=cfdtype)
 
+        # we could use nelements*2 to make it smaller, but it'd be harder
+        self.element_node = zeros((nlayers, 2), dtype=idtype)
+
         # TODO: could be more efficient by using nelements for cid
-        self.element_node = zeros((nelement_nodes, 2), dtype=idtype)
         #self.element_cid = zeros((self.nelements, 2), 'int32')
         #print(self.data.shape, self.element_node.shape)
 

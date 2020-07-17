@@ -88,6 +88,7 @@ class FortranFormat:
 
             #n = op2_reader._skip_record()
             #n = table4_parser(datai, 300000)
+            #self.show(100, types='ifs', endian=None, force=False)
             if self.table_name in {b'R1TABRG', b'ONRGY1', b'PVT', b'PVT0', b'PVTS'}:
                 # these tables are always fully parsed
                 # PVT/PVTS - we want to know what the PARAM cards are,

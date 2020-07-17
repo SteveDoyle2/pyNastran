@@ -51,7 +51,13 @@ class RandomPlateArray(OES_Object):
         self.ielement = 0
 
     def build(self):
-        """sizes the vectorized attributes of the ComplexPlateArray"""
+        """sizes the vectorized attributes of the RandomPlateArray
+
+        SORT1:
+         - etype     ndata numwide size  -> nelements     nnodes nlayers
+         - CQUAD-144 376   47      4        376/(47*4)=2  5      2*2*5=20  C:\MSC.Software\simcenter_nastran_2019.2\tpl_post1\plate_111.op2
+
+        """
         if not hasattr(self, 'subtitle'):
             self.subtitle = self.data_code['subtitle']
 
@@ -73,13 +79,17 @@ class RandomPlateArray(OES_Object):
             #nelements = self.nelements
             ntimes = len(self._ntotals)
             ntotal = self._ntotals[0]
-            nelements = ntotal // 2
+            nelements = ntotal // (2 * nnodes)
 
             #ntotal = self.ntotal
             #ny = nelements * 2
             nelements_nnodes = nelements * 2
             nlayers = nelements * 2 * nnodes
-            assert nlayers == ntotal, f'nlayers={nlayers} ntotal={ntotal}'
+            if nlayers != ntotal:
+                msg = f'nlayers={nlayers} ntotal={ntotal}\n'
+                msg += f'SORT1 {self.element_name}-{self.element_type} ntimes={ntimes} nelements={nelements} ntotal={ntotal}\n'
+                msg = f'_ntotals={self._ntotals}\n'
+                raise RuntimeError(msg)
             #nx = ntimes
             #ny = nelements_nnodes
             #ntotal = nelements * 2
