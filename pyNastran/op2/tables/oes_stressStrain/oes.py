@@ -4823,7 +4823,7 @@ class OES(OP2Common):
             b'OES1', b'OES1X', b'OES1X1', b'OSTR1X',
             b'OES2', b'OSTR2',
             b'OESVM1', b'OESVM2', b'OSTRVM1', b'OSTRVM2',
-            b'OESPSD2', b'OESATO2', b'OESCRM2', b'OESXNO1', b'OESXRMS1',
+            b'OESPSD2',  b'OESATO2',  b'OESCRM2',  b'OESNO1',  b'OESXRMS1', b'OESXNO1',
             b'OSTRPSD2', b'OSTRATO2', b'OSTRCRM2', b'OSTRNO1', b'OSTRRMS1',
 
         ]

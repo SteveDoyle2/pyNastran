@@ -181,6 +181,7 @@ class OP2Reader:
 
             b'OBC1': self.read_obc1,
             b'OBG1': self.read_obc1,
+            b'PTMIC' : self._read_ptmic,
         }
 
     def read_nastran_version(self, mode: str):
@@ -277,6 +278,121 @@ class OP2Reader:
         self.op2.set_mode(mode)
         self.op2.set_table_type()
 
+
+    def _read_ptmic(self):
+        """
+        5.73 PTMIC
+        Table of the properties of microphone grids for ATV analysis.
+        Record 0 – HEADER
+        Word Name Type Description
+        1 NAME(2) CHAR4 Data block name
+
+        Record 1 – MICROPHONE POINT
+        Word Name Type Description
+        1 EXTID I Microphone point external ID
+        2 PID   I Property ID of microphone point
+        Words 1 and 2 repeat until End of Record
+
+        Record 2 – PROPERTY LIST BY FREQUENCY
+        Word Name Type Description
+        1 EXTID I  Property ID of microphone point
+        2 RHOR  RS Real part of density
+        3 RHOI  RS Imaginary part of density
+        4 CR    RS Real part of velocity
+        5 CI    RS Imaginary part of velocity
+        Words 1 through 5 repeat until End of Record
+        """
+        op2 = self.op2
+        if self.read_mode == 1:
+            self.read_geom_table()
+            return
+
+        size = self.size
+        table_name = self._read_table_name(rewind=False)
+
+        self.read_markers([-1])
+        data = self._read_record()
+        itable = -1
+        struct1 = Struct(mapfmt(b'7i', size))
+
+        # (104, 90, 1, 6, 0, 0, 0)
+        a, nrows, b, nrecord2, c, d, e = struct1.unpack(data)
+        assert a == 104, a
+        assert b == 1, b
+        assert c == 0, c
+        assert d == 0, d
+        assert e == 0, e
+        self.log.warning(f'ptmic itable={itable} - (104, nrows={nrows}, 1, nrecord2={nrecord2}, 0, 0, 0)')
+
+        # (104, 90, 1, 6, 0, 0, 0)  # q
+        #op2.show_data(data, 'iq')
+
+        itable = -2
+        self.log.warning(f'ptmic itable={itable} - PTMIC')
+        self.read_3_markers([itable, 1, 0])
+        data = self._read_record()
+        # PTMIC
+        #op2.show_data(data, 's')
+
+        itable = -3
+        self.log.warning(f'ptmic itable={itable} (406, 1, 420, 1, ...)')
+        self.read_3_markers([itable, 1, 0])
+        data = self._read_record()
+        extid_pid = np.frombuffer(data, dtype=op2.idtype8)
+        #print(extid_pid, len(extid_pid))
+        assert len(extid_pid) % 2 == 0, len(extid_pid)
+        nrows_test = len(extid_pid) // 2
+        assert nrows == nrows_test
+
+        extid_pid = extid_pid.reshape(nrows, 2)
+        print(extid_pid, extid_pid.shape)
+
+        # Record 2 repeats for each material type region in which a microphone point is defined.
+
+        itable = -4
+
+        ntotal = 5 * size
+        marker = self.get_nmarkers(1, rewind=True)[0]
+        while marker != 0:
+            #self.log.warning(f'ptmic itable={itable}')
+            self.read_3_markers([itable, 1, 0])
+            ni = op2.n
+            #self.show(20, types='ifsdq')
+            try:
+                marker_test = self.get_nmarkers(1, rewind=True)
+                #print('marker_testA =', marker_test)
+            except:
+                print('ni =', ni, op2.n)
+                raise
+            if marker_test == [0]:
+                break
+
+            data = self._read_record()
+            #self.show_data(data, types='ifsdq')
+            nvalues = len(data) // size
+            ncomplex = nvalues // 5
+            assert nvalues % 5 == 0
+            n = 0
+            struct_i4f = Struct(mapfmt(b'i 4f', size))
+            for i in range(ncomplex):
+                edata = data[n:n+ntotal]
+                out = struct_i4f.unpack(edata)
+                print(out)
+                n += ntotal
+            assert ncomplex == 1
+            itable -= 1
+
+            markers = self.get_marker1(1, True)
+            if markers == -10:
+                markers = self.get_marker1(1, False)
+
+        markers_check = self.get_nmarkers(1, rewind=False)[0]
+
+        #self.log.warning(f'ptmic itable={itable}')
+        #op2.show_data(data, 'idsq')
+        #op2.show(100, 'ifsqd')
+        #aa
+
     def read_xsop2dir(self):
         """
         Matrix datablocks are named with the matrix name, and they contain
@@ -297,7 +413,7 @@ class OP2Reader:
         # C:\MSC.Software\simcenter_nastran_2019.2\tpl_post1\atv005mat.op2
         op2 = self.op2
         self.xsop2dir_names = []
-        if self.read_mode == 1:
+        if self.read_mode == 1 or op2.make_geom is False:
             table_name = self._read_table_name(rewind=True)
             self._skip_table(table_name, warn=False)
             return
@@ -307,6 +423,7 @@ class OP2Reader:
 
         self.read_markers([-1])
         # (101, 14, 0, 0, 0, 0, 0)
+        # (101, 17, 0, 0, 0, 0, 0) # modes_elements_dmig.op2
         data = self._read_record()
         values = np.frombuffer(data, dtype=op2.idtype8)
         ntables = values[1]
@@ -318,16 +435,27 @@ class OP2Reader:
         itable = -2
         self.read_3_markers([itable, 1, 0])
         #marker = self.get_marker1(rewind=True, macro_rewind=False)
+
+        skip_tables = {'PVT', 'PVT0'}
         if self.size == 4:
+            #self.show(1000, types='ifs', endian=None, force=False)
             struct_8s = Struct(self._endian + b'8s')
+            struct_16s = Struct(self._endian + b'16s')
             for unused_i in range(ntables + 1):
             #while marker != 0:
                 itable -= 1
-                data = self._read_record()
-                name = struct_8s.unpack(data)[0].decode('latin1').rstrip()
-                self.log.warning(f'{len(self.xsop2dir_names)} {name}')
+                data, ndata = self._read_record_ndata()
+                if ndata == 8:
+                    name = struct_8s.unpack(data)[0].decode('latin1').rstrip()
+                else:
+                    assert ndata == 16, self.show_data(data, types='ifs', endian=None, force=False)
+                    name = struct_16s.unpack(data)[0].decode('latin1').rstrip()
                 self.read_3_markers4([itable, 1, 0])
                 #marker = self.get_marker1_4(rewind=True, macro_rewind=False)
+                if name in skip_tables:
+                    self.log.warning(f'skipping {name}')
+                    continue
+                self.log.warning(f'{len(self.xsop2dir_names)} {name}')
                 self.xsop2dir_names.append(name)
         else:
             struct_16s = Struct(self._endian + b'16s')
@@ -337,9 +465,12 @@ class OP2Reader:
                 data = self._read_record()
                 name = struct_16s.unpack(data)[0]
                 name = reshape_bytes_block(name).decode('latin1').rstrip()
-                self.log.warning(f'{len(self.xsop2dir_names)} {name}')
                 self.read_3_markers([itable, 1, 0])
                 #marker = self.get_marker1_8(rewind=True, macro_rewind=False)
+                if name in skip_tables:
+                    self.log.warning(f'skipping {name}')
+                    continue
+                self.log.warning(f'{len(self.xsop2dir_names)} {name}')
                 self.xsop2dir_names.append(name)
         self.read_markers([0])
         #self.log.warning(f'XSOP2DIR itable={itable}')
@@ -728,13 +859,19 @@ class OP2Reader:
         """
         op2 = self.op2
         op2.table_name = self._read_table_name(rewind=False)
-        self.log.debug('table_name = %r' % op2.table_name)
+        #self.log.debug('table_name = %r' % op2.table_name)
         if self.is_debug_file:
             self.binary_debug.write('_read_geom_table - %s\n' % op2.table_name)
+
+        size = self.size
         self.read_markers([-1])
         if self.is_debug_file:
             self.binary_debug.write('---markers = [-1]---\n')
         data = self._read_record()
+        out = unpack(mapfmt(b'7i', size), data)
+        self.log.debug(str(out))
+        # (101, 500, 37232, 2, 1, 18355, 158)
+        #self.show_data(data, types='sqd')
 
         markers = self.get_nmarkers(1, rewind=True)
         if self.is_debug_file:
@@ -754,25 +891,45 @@ class OP2Reader:
         #print('170*4 =', 170*4)
         #self.show_data(data)
         marker -= 1
-        marker = self._read_cmodext_helper(marker) # -3
-        marker = self._read_cmodext_helper(marker)
-        marker = self._read_cmodext_helper(marker)
-        marker = self._read_cmodext_helper(marker)
-        marker = self._read_cmodext_helper(marker)
-        print('table8')
-        marker = self._read_cmodext_helper(marker, debug=True)
-        op2.show_ndata(100)
+        n = op2.n
+        while marker < 0:
+            #marker = self._read_cmodext_helper(marker) # -3
+            marker, is_done= self._read_cmodext_helper(marker)
+            #print(f'--end marker={marker}')
+            #print(f'--end marker2={marker2}')
+            if is_done:
+                break
+            marker2 = self.get_nmarkers(1, rewind=True)[0]
+            n = op2.n
+        #marker = self._read_cmodext_helper(marker); print(marker)
+        #marker = self._read_cmodext_helper(marker); print(marker)
+        #marker = self._read_cmodext_helper(marker); print(marker)
+        #marker = self._read_cmodext_helper(marker); print(marker)
+        #marker = self._read_cmodext_helper(marker); print(marker)
+        #marker = self._read_cmodext_helper(marker); print(marker)
+        #marker = self._read_cmodext_helper(marker); print(marker)
+        #marker = self._read_cmodext_helper(marker); print(marker)
+        print(f'table end; {marker2-1}')
+        #marker = self._read_cmodext_helper(marker, debug=True)
+        op2.show_ndata(200)
+        sss
 
-    def _read_cmodext_helper(self, marker_orig, debug=False):
+    def _read_cmodext_helper(self, marker_orig, debug=False) -> Tuple[int, bool]:
+        """
+
+        64-bit:
+          C:\MSC.Software\simcenter_nastran_2019.2\tpl_post2\mbdrecvr_c_0.op2
+          C:\MSC.Software\simcenter_nastran_2019.2\tpl_post1\cntlmtl05_0.op2
+        """
         op2 = self.op2
         marker = marker_orig
         #markers = self.read_nmarkers([marker, 1, 1]) # -3
-
+        debug = False
         if debug:
             op2.show_ndata(100)
         markers = self.get_nmarkers(3, rewind=False)
         assert markers == [marker_orig, 1, 1], markers
-        print('markers =', markers)
+        #print('markers =', markers)
 
         #marker = self.get_nmarkers(1, rewind=False, macro_rewind=False)[0]
         val_old = 0
@@ -780,43 +937,175 @@ class OP2Reader:
             print('-----------------------------')
         #i = 0
         #icheck = 7
+        factor = self.factor
+        size = self.size
+        if size == 4:
+            expected_marker = 3
+            sint = 'i'
+            ifs = 'ifs'
+            dq = 'if'
+            structi = Struct(b'i')
+            struct_qd = Struct(b'i f')
+            struct_q2d = Struct(b'i 2f')
+            struct_q3d = Struct(b'i 3f')
+            struct_d4q = Struct(b'i 4f')
+        else:
+            expected_marker = 3
+            sint = 'q'
+            ifs = 'qds'
+            dq = 'dq'
+            structi = Struct(b'q')
+            struct_qd = Struct(b'q d')
+            #struct_dq = Struct(b'd q')
+            struct_q2d = Struct(b'q 2d')
+            struct_q3d = Struct(b'q 3d')
+            struct_d4q = Struct(b'd 4q')
+
+        marker = self.get_nmarkers(1, rewind=True, macro_rewind=True)[0]
+        #print('AAAAA', marker)
+        if marker is None:
+            asdf
+        elif marker == 3:
+            pass
+        elif marker < 0:
+            self.log.warning('finished CMODEXT :)!')
+            done = True
+            return None, done
+        else:
+            raise RuntimeError(marker)
+
+        i = 0
         while 1:
+            #print('------------------------------')
             #print('i = %i' % i)
             marker = self.get_nmarkers(1, rewind=False, macro_rewind=False)[0]
-            if marker != 6:
-                print('marker = %s' % marker)
+            if marker != expected_marker:
+                self.log.info(f'i={i} marker={marker}')
 
-            assert marker == 6, marker
+            if self.size == 4:
+                assert marker in [expected_marker], marker
+            else:
+                #if marker == -4:
+                    #self.show(200, types='isq', endian=None, force=False)
+                assert marker in [1, 2, 3, 10, 13, 16], marker
             data = self.read_block()
-            val = unpack('i', data[:4])[0]
+            ndata = len(data)
+            nvalues = ndata // size
+            if nvalues == 2:
+                #self.show_data(data, types=dq)
+                #print(ndata)
+                #self.show_data(data, types=ifs)
+                a, b = struct_qd.unpack(data)
+                print(f' 2 {i}: {a:-4d} {b:.6g}')
+            elif nvalues == 3:
+                #self.show_data(data, types=dq)
+                #print(ndata)
+                #self.show_data(data, types=ifs)
+                a, b, c = struct_q2d.unpack(data)
+                print(f' 3 {i}: {a:-4d} {b:.6g}')
+            elif nvalues == 4:
+                #self.show_data(data, types=dq)
+                #print(ndata)
+                #self.show_data(data, types=ifs)
+                a, b, c, d = struct_q3d.unpack(data)
+                #print(f'4 {i}: {a:-4d} {b:10g} {c:10g} {d:10g}')
+            elif nvalues == 5:
+                #self.show_data(data, types=dq)
+                #print(ndata)
+                out = struct_d4q.unpack(data)
+                print('5 {i}:', out)
+            #elif ndata == 24 * factor:
+                #self.show_data(data, types=dq)
+                #print(ndata)
+                #self.show_data(data, types=ifs)
+                #a, b, c, d = struct_q2d.unpack(data)
+            elif ndata == 11:
+                # ints    = (697, 0, 0, 1072693248, -427255041, -1128310260, -1065349346, 1019092170, -458662240, 1015082339, -1959380180, 1018327314, 863132413, -1129941844, 477962639, 992946870, -935437031, 992276971, -1286826876, -1158808745, 1765409376, 986144275)
+                # floats  = (9.767050296343975e-43, 0.0, 0.0, 1.875, -3.2255050747205135e+23, -0.023358367383480072, -4.001845359802246, 0.023207087069749832, -2.4994545586342025e+22, 0.015738194808363914, -3.509644095891333e-32, 0.02178243175148964, 5.642776912395675e-08, -0.02031930536031723, 8.375405145620162e-22, 0.0026728338561952114, -194932.390625, 0.002516860840842128, -4.76325254794574e-08, -0.0018156570149585605, 1.4054463629294865e+25, 0.001521053141914308)
+                # doubles (float64) = (3.444e-321, 1.0, -4.350930636102116e-16, 4.1789445167220847e-16, 2.936419423485894e-17, 2.559298496168014e-16, -1.5581808467238972e-16, 1.2890303437976399e-23, 8.662650619686277e-24, -7.750115449925671e-25, 1.5100882399748836e-25)
+                # long long (int64) = (697, 4607182418800017408, -4846055662573544705, 4376967544989290270, 4359745452588490400, 4373682512589110060, -4853063265498801411, 4264674333793526159, 4261797142378470681, -4977045659085663100, 4235457412028039776)
+
+                #ints    = (697, 0, 0, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z, z)
+                #floats  = (697, 0.0,
+                           #0.0, 1.875,
+                           #-3.2255050747205135e+23, -0.023358367383480072, -4.001845359802246, 0.023207087069749832, -2.4994545586342025e+22, 0.015738194808363914, -3.509644095891333e-32, 0.02178243175148964, 5.642776912395675e-08, -0.02031930536031723, 8.375405145620162e-22, 0.0026728338561952114, -194932.390625, 0.002516860840842128, -4.76325254794574e-08, -0.0018156570149585605, 1.4054463629294865e+25, 0.001521053141914308)
+                #doubles (float64) = (697, 1.0, y, y, y, y, y, y, y, y, y)
+                #long long (int64) = (697, 1.0, x, x, x, x, x, x, x, x, x)
+                self.show_data(data, types='ifsqd')
+                #self.show_data(data[4:], types='qd')
+                raise RuntimeError(f'marker={marker} ndata={ndata}; nvalues={nvalues}')
+            elif nvalues == 17:
+                inti = structi.unpack(data[:size])
+                floats = np.frombuffer(data, dtype=op2.fdtype8)[1:]
+                print(inti, floats)
+            else:
+                self.show_data(data, types=ifs)
+                raise RuntimeError(f'marker={marker} ndata={ndata}; nvalues={nvalues}')
+                sdf
+                #ints = [
+                    #1387, 0, -1574726656, -1076024976, 12958534, -1079706775, -1204798216, -1076795484, -674762419, -1125074255, -1234714250, 1025640630, 367990681, 1024314941, -1752243687, 1021642278,
+                    #-3, 1017741311,
+                    #-3, 1019878559,
+                    #-2, 1019293439,
+                    #-5, -1134034945,
+                    #-3, 1017733119,
+                    #-3, 1017241599]
+                #floats = [
+                    #1387, 0.0, -2.2168969812013176e-18, -1.7278270721435547, 1.815877379410093e-38, -1.2889224290847778, -4.201845149509609e-05, -1.6359753608703613, -439678385782784.0, -0.029385896399617195, -3.45342914442881e-06, 0.03955908864736557, 9.656856178702571e-26, 0.034620512276887894, -9.233609993079022e-25, 0.02795703336596489,
+                    #nan, 0.02069091610610485,
+                    #nan, 0.024671850726008415,
+                    #nan, 0.023581979796290398,
+                    #nan, -0.014160155318677425,
+                    #nan, 0.02067565731704235,
+                    #nan, 0.01976012997329235]
+                #self.show_data(data, types='ifsqd')
+                #ints = np.frombuffer(data, dtype='int32').tolist()
+                #floats = np.frombuffer(data, dtype='float32').tolist()
+                #print(ints)
+                #print(floats)
+                #np.frombuffer(data, dtype='ifsdq')
+                print('------------------------------')
+                self.show_data(data, types=ifs)
+            #else:
+                #self.show_data(data, types=ifs)
+
+            val = unpack(sint, data[:size])[0]
             if debug:
                 print('val=%s delta=%s' % (val, val - val_old))
-                self.show_data(data, types='ifs')
-            assert len(data) > 4
+                #self.show_data(data, types=ifs)
+                #self.show_data(data[4:], types=ifs)
+            assert len(data) > size
             #print('i=%s val=%s delta=%s' % (i, val, val - val_old))
             val_old = val
 
             marker2 = self.get_nmarkers(1, rewind=True, macro_rewind=False)[0]
             #print(marker2)
-            if marker2 == 696:
+            if marker2 < 0:
+                self.log.warning(f'breaking marker2={marker2}')
+                self.show(300, types=ifs)
                 break
-            #i += 1
+            #if marker2 == 696:
+                #self.log.warning('breaking 696')
+                #break
+            i += 1
         if debug:
             print('----------------------------------------')
 
-        marker = self.get_nmarkers(1, rewind=False, macro_rewind=False)[0]
-        if debug:
-            print('****marker = %s' % marker)
-        assert marker == 696, marker
-        data = self.read_block()
+        marker = self.get_nmarkers(1, rewind=True, macro_rewind=False)[0]
+        #if debug:
+        print('****marker  = %s' % marker)
+        #print('****marker2 = %s' % marker2)
+        #assert marker == 696, marker
+        #data = self.read_block()
         #self.show_data(data)
 
-        marker = self.get_nmarkers(1, rewind=True, macro_rewind=False)[0]
-        assert marker == (marker_orig - 1), marker
+        #marker = self.get_nmarkers(1, rewind=True, macro_rewind=False)[0]
+        assert marker == (marker_orig - 1), f'marker={marker} marker_orig={marker_orig}'
 
         if debug:
             op2.show_ndata(200)
-        return marker
+        done = False
+        return marker, done
 
         #data = self._read_record()
         #marker -= 1
@@ -1243,7 +1532,6 @@ class OP2Reader:
         """
         # C:\MSC.Software\simcenter_nastran_2019.2\tpl_post1\extse04c_cnv1_0.op2
         op2 = self.op2
-        #ddd
         op2.table_name = self._read_table_name(rewind=False)
         #self.log.debug('table_name = %r' % op2.table_name)
         if self.is_debug_file:
@@ -1259,7 +1547,9 @@ class OP2Reader:
 
         self.read_3_markers([-2, 1, 0])
         marker = -3
-        if self.read_mode == 1:
+        if self.read_mode == 1 or op2.make_geom is False:
+            if self.read_mode == 1 and op2.make_geom is False:
+                self.log.warning('reading the EXTRN tables requires the read_op2_geom')
             data = self._skip_record()
             while 1:
                 #print('====================')
@@ -1276,7 +1566,7 @@ class OP2Reader:
             return
 
         # drop XSOP2DIR and PVT0
-        iextdb = op2.table_count[b'EXTDB'] + 1
+        iextdb = op2.table_count[b'EXTDB'] + 0
         xsop2dir_name = self.xsop2dir_names[iextdb]
         if self.read_mode == 2:
             data, ndata = self._read_record_ndata()
@@ -1301,7 +1591,8 @@ class OP2Reader:
                     name1, int1, name2, int2 = Struct(self._endian + b'8s i 12s i').unpack(data)
                     name1 = name1.decode('latin1').rstrip()
                     name2 = name2.decode('latin1').rstrip()
-                    self.log.info(f'C: name1={name1!r} -> {xsop2dir_name!r} int1={int1} name2={name2!r} int2={int2}')
+                    self.log.info(f'C DMI: name1={name1!r} -> {xsop2dir_name!r} int1={int1} name2={name2!r} int2={int2}')
+                    # m.add_dmi(name, form, tin, tout, nrows, ncols, GCj, GCi, Real, Complex=None, comment='')
                     #print(name1, int1, name2, int2, 28)
                 else:
                     self.show_data(data, types='ifs')
@@ -1374,105 +1665,56 @@ class OP2Reader:
 
             data, ndata = self._read_record_ndata()
             if self.read_mode == 2:
-                self.log.warning('--B--')
+                if name not in ['GEOM1', 'GEOM2', 'GEOM2X', 'IGEOM2X', 'GEOM4', 'EXTDB']:
+                    if ndata != 12:
+                        self.log.warning(f'--B; ndata={ndata}--')
+
                 if self.size == 4:
                     if ndata == 12:
                         name, int1, int2 = Struct(self._endian + b'4s 2i').unpack(data)
                         # b'\xff\xff\x00\x00' 65535 25535 12 ???
                         #print(name, int1, int2, 12)
                         #self.show_data(data)
-                        #self.show_data(data)
-                    elif ndata < 99:
-                        # ndata=84
-                        # (1627, 16, 463,
-                        #  1, 123456, 2, 123456, 3, 123456, 4, 123456, 100001, 1, 100002, 1, 100003, 1, 100004, 1, -1, -1)
-                        self.show_data(data[12:], types='i')
 
                     elif name == 'GEOM1':
-                        _read_extdb_geom1(self, data, self._endian)
-                    elif name == 'IGEOM2X':
-                        #print('marker =', marker)
-                        if marker == -3:
-                            # (2958, 51, 177) ???
-                            # igeom2x = 144???
-                            #
-                            # ints = (2958, 51, 177,
-                            #         1, 1, 49, 60, 61, 50, 0,   0,   0,   0,   -1.0, -1.0, -1.0, -1.0,
-                            #         2, 1, 50, 61, 62, 51, 0, 0, 0, 0, -1.0, -1.0, -1.0, -1.0,
-                            #         3, 1, 51, 62, 63, 52, 0, 0, 0, 0, -1.0, -1.0, -1.0, -1.0, ...)
-                            #self.show_data(data, types='ifs')
-                            structi = Struct(self._endian + b'6i  4i 4f')
-                            out = op2.struct_3i.unpack(data[:12])
-                            assert out == (2958, 51, 177), out
-                            #print(out)
-                            n = 12
-                            #igeom2x = 0
-                            while n < len(data):
-                                edata = data[n:n+56]
-                                #self.show_data(edata, types='if')
-                                out = structi.unpack(edata)
-                                print(out)
-                                n += 56
-                                if n > 200:
-                                    self.log.info(f'  breaking n={n}')
-                                    break
-                                #igeom2x += 1
-                            #print('igeom2x =', igeom2x)
-                        elif marker == -4:
-                            #5551, 49, 105
-                            # self.show_data(data, types='i')
-                            ints = np.frombuffer(data, dtype=op2.idtype8)
-                            assert np.array_equal(ints[:3], [5551, 49, 105]), ints[:3]
-                            #print(len(ints) - 3)  # 500...????
-                            print(ints.tolist())
-                            #bbb
-                        else:
-                            print('marker =', marker)
-                            asdf
-
-                    elif name1 in ['TES', 'PHIP']:
-                        _read_extdb_phip(self, marker, data, self._endian, 'i', op2.idtype8)
+                        _read_extdb_geomx(self, data, self._endian, op2._geom1_map)
+                    elif name in ['GEOM2', 'GEOM2X', 'IGEOM2X']:
+                        _read_extdb_geomx(self, data, self._endian, op2._geom2_map)
 
                     elif name == 'GEOM4':
-                        self.show_data(data, types='i')
+                        _read_extdb_geomx(self, data, self._endian, op2._geom4_map)
 
                     elif name == 'EXTDB':
-                        _read_extdb_extdb(self, data, self._endian, 'int32')
-                    #else:
-                        #print('marker =', marker)
-                        #self.show_data(data, types='ifs')
+                        _read_extdb_extdb(self, xsop2dir_name, data, self._endian, 'int32')
+                    elif name1 in ['TES', 'PHIP']:
+                        _read_extdb_phip(self, marker, data, self._endian, 'i', op2.idtype8)
+                    elif name1 in ['TQP', 'TEF']:
+                        _read_extdb_phip(self, marker, data, self._endian, 'i', op2.idtype8)
                     else:
-                        raise NotImplementedError(f'name={name} name1={name1} name2={name2}')
+                        raise NotImplementedError(f'EXTDB; name={name!r} name1={name1!r} name2={name2!r}')
                 else:
                     if ndata == 24:
                         ints = Struct(self._endian + b'3q').unpack(data)
                         assert ints == (65535, 65535, 65535), ints
-                    elif ndata == 56:
-                        name, = Struct(self._endian + b'16s').unpack(data[:16])
-                        self.log.warning(name)
-                        self.show_data(data[16:], types='ifsqd', force=True)
                     elif name == 'GEOM1':
                         # _read_extdb_geom1(self, data, self._endian)
-                        self.show_data(data, types='q')
-                    elif name == 'GEOM2':
-                        self.show_data(data, types='q')
+                        _read_extdb_geomx(self, data, self._endian, op2._geom1_map)
+                    elif name in ['GEOM2', 'IGEOM2X']:
+                        _read_extdb_geomx(self, data, self._endian, op2._geom2_map)
                     elif name == 'GEOM4':
-                        self.show_data(data, types='q')
-                    elif name == 'EXTDB':
-                        _read_extdb_extdb(self, data, self._endian, 'int64')
+                        _read_extdb_geomx(self, data, self._endian, op2._geom4_map)
 
+                    elif name == 'EXTDB':
+                        _read_extdb_extdb(self, xsop2dir_name, data, self._endian, 'int64')
                     elif name1 == 'PHIP':
+                        _read_extdb_phip(self, marker, data, self._endian, 'q', op2.idtype8)
+                    elif name1 == 'TES':
                         _read_extdb_phip(self, marker, data, self._endian, 'q', op2.idtype8)
 
                     else:
                         self.log.warning(f'EXTDB; name={name!r} name1={name1!r} ndata={ndata}')
-                        #aaa
+                        raise RuntimeError(f'EXTDB; name={name!r} name1={name1!r} ndata={ndata}')
                         #self.show_data(data, types='sqd')
-                    #elif ndata > 99:
-                        #pass
-                    #else:
-                        #self.log.warning(f'EXTDB; ndata={ndata}')
-                        #self.show_data(data, types=mapfmt_str('i', self.size))
             marker -= 1
             #print('--------------------')
         unused_marker_end = self.get_marker1(rewind=False)
@@ -1719,7 +1961,7 @@ class OP2Reader:
 
         """
         op2 = self.op2
-        op2.log.debug("table_name = %r" % op2.table_name)
+        #op2.log.debug("table_name = %r" % op2.table_name)
         op2.table_name = self._read_table_name(rewind=False)
         self.read_markers([-1])
         data = self._read_record()
@@ -5508,17 +5750,17 @@ class OP2Reader:
         f.write('\n')
         return strings, ints, floats
 
-    def show_ndata(self, n: int, types: str='ifs'):  # pragma: no cover
-        return self._write_ndata(sys.stdout, n, types=types)
+    def show_ndata(self, n: int, types: str='ifs', force: bool=False):  # pragma: no cover
+        return self._write_ndata(sys.stdout, n, types=types, force=force)
 
-    def _write_ndata(self, f, n: int, types: str='ifs'):  # pragma: no cover
+    def _write_ndata(self, f, n: int, types: str='ifs', force: bool=False):  # pragma: no cover
         """Useful function for seeing what's going on locally when debugging."""
         op2 = self.op2
         nold = op2.n
         data = op2.f.read(n)
         op2.n = nold
         op2.f.seek(op2.n)
-        return self._write_data(f, data, types=types)
+        return self._write_data(f, data, types=types, force=force)
 
 def grids_comp_array_to_index(grids1, comps1, grids2, comps2,
                               make_matrix_symmetric: bool) -> Tuple[Any, Any, int, int, int]:
@@ -6173,18 +6415,30 @@ def update_op2_datacode(op2, data_code_old):
             continue
         setattr(op2, key, value)
 
-def _read_extdb_extdb(self, data: bytes, endian: bytes, idtype: str) -> None:
+def _read_extdb_extdb(self, name_str: str, data: bytes, endian: bytes, idtype: str) -> None:
     #TODO: needs work...
     # ints    = (0, 6, 2, 2, 0, 0, 1018, 1, 1, 1, 1, 725010254, 1099302303, -1, -1)
     # strings = (b'r\x00\x00\x00\x01\x00\x00\x00x\x00\x00\x00EXTDB   \x00\x00\x00\x00\x06\x00\x00\x00\x02\x00\x00\x00\x02\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\xfa\x03\x00\x00\x01\x00\x00\x00\x01\x00\x00\x00\x01\x00\x00\x00\x01\x00\x00\x00N\xc76+\x9f\x05\x86A\xff\xff\xff\xff\xff\xff\xff\xff\x01\x00\x00\x00\x02\x00\x00\x00\x01\x00\x00\x00\x01\x00\x00\x00\xee\x92\x91Z',)
     # ints    = (114, 1, 120, EXTDB, 0, 6, 2, 2, 0, 0, 1018, 1, 1, 1, 1, 725010254, 1099302303, -1, -1, 1, 2, 1, 1, 1519489774)
-    # floats  = (114, 1, 120, EXTDB, 0.0, 8.407790785948902e-45, 2.802596928649634e-45, 2.802596928649634e-45, 0.0, 0.0, 1.4265218366826638e-42, 1.401298464324817e-45, 1.401298464324817e-45, 1.401298464324817e-45, 1.401298464324817e-45, 6.493597977039189e-13, 16.752744674682617, nan, nan, 1.401298464324817e-45, 2.802596928649634e-45, 1.401298464324817e-45, 1.401298464324817e-45, 2.048771126145843e+16)
+    # floats  = (114, 1, 120, EXTDB, 0.0, 6, 2, 2, 0.0, 0.0, 1.4265218366826638e-42, 1, 1, 1, 1, 6.493597977039189e-13, 16.752744674682617, nan, nan, 1, 2, 1, 1, 2.048771126145843e+16)
+    #self.log.debug('start _read_extdb_extdb')
     size = self.size
     factor = self.factor
-    nameb = data[12*factor:20*factor]
-    print(nameb)
+    if size == 4:
+        struct2i = Struct(b'2i')
+        struct2id = Struct(b'2i d')
+        struct7i = Struct(b'7i')
+        ntotal2 = 16
+    else:
+        struct2i = Struct(b'2q')
+        struct2id = Struct(b'2q d')
+        struct7i = Struct(b'7q')
+        ntotal2 = 24
+
+    name_bytes = data[12*factor:20*factor]
+    name = name_bytes.decode('latin1').rstrip()
+    #print(name)
     #self.show_data(data[20:4000], types='if', force=True)
-    structi = Struct(mapfmt(endian + b'11i 2i 2i', self.size))
     ints = np.frombuffer(data[20*factor:], dtype=idtype)
     iminus1 = np.where(ints == -1)[0]
     i2 = np.where(iminus1[:-1] + 1 == iminus1[1:])[0]
@@ -6196,8 +6450,14 @@ def _read_extdb_extdb(self, data: bytes, endian: bytes, idtype: str) -> None:
     #print(iend, len(iend))
 
     n = 20 * factor
-    structi2 = Struct(mapfmt(endian + b'ii d', self.size))
     for i0, i1 in zip(istart, iend):
+        edata = data[n+i0*size:n+i1*size]
+        if len(edata) == 0:
+            break
+
+        n2 = 0
+        flag, niii = Struct(mapfmt(self._endian + b'ii', size)).unpack(edata[:8*factor])
+
         #print(n, i0, i1)
         # inputs = (0, 6, 2, 2, 0, 0,
         #           1018, 1, 1, 1, 1, 725010254, 1099302303, -1, -1
@@ -6234,78 +6494,139 @@ def _read_extdb_extdb(self, data: bytes, endian: bytes, idtype: str) -> None:
         #          100003, 0, 0, 1.875,
         #          100004, 0, 0, 1.875)
         #self.show_data(data, types='ifqsd', force=True)
-        edata = data[n+i0*size:n+i1*size]
-        if len(edata) == 0:
-            break
         #print(len(edata))
 
-        niii, = Struct(mapfmt(self._endian + b'i', self.size)).unpack(edata[4*factor:8*factor])
-        n2 = niii * 4
-        #self.show_data(edata, types='ifqd')
         # 0, 6, 2, 2, 0, 0,
         # 1018...
-        len_edata = len(edata) - n2
-        if len_edata % 16 == 0:
-            #print(niii)
-            #print('n2 =', n2)
-            #print('len(edata) ', len(edata))
-            while n2 < len(edata):
-                edata2 = edata[n2:n2+16]
-                assert len(edata2) == 16, len(edata2)
-                #self.show_data(edata2, types='ifqd')
 
-                out = structi2.unpack(edata2)
-                print(out)
-                n2 += 16
-                if n2 > 80:
-                    self.log.info(f'  breaking n2={n2}')
-                    break
-            #n += (i1 - i0 + 1) * 4
-        #else:
-            #self.show_data(edata, types='if')
+        # DMIG    KAAX           0       6       2       0                     243
+
+        #(1, 2,
+         #1, 1, 37772923, 1094840434,
+         #1, 2, 2351332.017589388, 9779310.02896148)
+
+        if flag == 0:  #  was counter
+            out = struct7i.unpack(edata[:7*size])
+            zero_a, ifo, tin, tout, polar, zero_b, ncols = out
+            #self.log.info(f'flag0: ifo={ifo} tin={tin} tout={tout} polar={polar} ncols={ncols}')
+            #, zero_a, ifo, tin, tout, polar, zero_b, ncols
+            assert zero_a == 0, out
+            assert zero_b == 0, out
+            assert polar == 0, polar
+            assert ifo in [6, 9], ifo
+            #ifo : int
+            #    matrix shape
+            #    4=Lower Triangular
+            #    5=Upper Triangular
+            #    6=Symmetric
+            #    8=Identity (m=nRows, n=m)
+
+            #tin : int
+            #    matrix input precision
+            #    1=Real, Single Precision
+            #    2=Real, Double Precision
+            #    3=Complex, Single Precision
+            #    4=Complex, Double Precision
+            #tout : int
+            #    matrix output precision
+            #    0=same as tin
+            #    1=Real, Single Precision
+            #    2=Real, Double Precision
+            #    3=Complex, Single Precision
+            #    4=Complex, Double Precision
+            tin_tout = tin, tout
+            # TODO: this should only be tin or tout (probably tout), but until we have validation...
+            if tin_tout == (2, 2):
+                n2 = 7 * size
+            elif tin_tout == (1, 1):
+                n2 = 7 * size
+            else:
+                raise NotImplementedError(tin_tout)
+        else:
+            #self.log.debug(f'flag = {flag}')
+            assert flag == -1, flag
+            n2 = size
+            #edata = edata[7*size:]
+
+        len_edata = len(edata) - n2
+
+        nvalues = len_edata // size  # assume doubles are 2
+
+        if tin_tout == (2, 2):
+            # 2 = (gi, ci)
+            # 4 = (gj, cj, real_a, real_b) = (gj, cj, real)
+            ngrid_components = (nvalues - 2) // 4  # 4 values
+            assert (nvalues - 2) % 4 == 0
+            #int_type = 'int32'
+            #float_type = 'float64'
+            #dint = 1
+            #dfloat = 2
+            #float_factor = 2
+        elif tin_tout == (1, 1):
+            # 2 = (gi, ci)
+            # 3 = (gj, cj, real)
+            ngrid_components = (nvalues - 2) // 3  # 3 values
+            #int_type = 'int32'
+            #float_type = 'float32'
+            #dint = 1
+            #dfloat = 1
+            #float_factor = 1
+        else:
+            raise RuntimeError(tin_tout)
+        #float_factor = dfloat // dint
+        #print(float_type)
+
+        GCj = []
+        GCi = []
+        reals = []
+        edatai = edata[n2:n2+2*size]
+        n2 += 2*size
+
+        #1, 1,
+        gj, cj = struct2i.unpack(edatai)
+        gcj = gj, cj
+        for ii in range(ngrid_components):
+            # (1, 1, 11933743.780688906)
+            edata2 = edata[n2:n2+ntotal2]
+            # (1, 1, 0, 1.875)
+            out = struct2id.unpack(edata2)
+            #self.log.debug(' 16: ' + str(out))
+            gi, ci, real = out
+            gci = gi, ci
+            GCj.append(gcj)
+            GCi.append(gci)
+            reals.append(real)
+            n2 += ntotal2
+            if ii > 0:
+                #self.log.info(f'  breaking n2={n2}')
+                break
+
+        dmig = self.op2.add_dmig(name_str, ifo, tin, tout, polar, ncols, GCj, GCi,
+                                 reals, Complex=None, comment='')
+        if flag == 0:
+            print(dmig)
+        #print(dmig)
+        str(dmig)
+        #n += (i1 - i0 + 1) * 4
+    #self.log.debug('end _read_extdb_extdb')
     return
 
-def _read_extdb_geom1(self, data: bytes, endian: bytes):
-    #  ndata=188
-    #ints    = (4501, 45, 1120001,
-    #           1, 0, 2147448983, 1068813674, -2147405407, 1070820344, 0, 0, 0, 0, 0,
-    #           2, 0, 187797,     1073199421, -536792572,  1081262756, 0, 0, 0, 0, 0,
-    #           3, 0, 1073728080, 1081259753, -2147405407, 1070820344, 0, 0, 0, 0, 0,
-    #           4, 0, 1073728080, 1081259753, -536792572,  1081262756, 0, 0, 0, 0, 0)
-    #floats  = (4501, 45, 1120001,
-    #           1, 0.0, nan, 1.4125187397003174, -1.0963899314723801e-40, 1.6517324447631836, 0.0, 0.0, 0.0, 0.0, 0.0,
-    #           2, 0.0, 2.6315964770480767e-40, 1.9353405237197876, -3.723803111109899e+19, 3.7931299209594727, 0.0, 0.0, 0.0, 0.0, 0.0,
-    #           4, 0.0, 1.998361587524414, 3.7924139499664307, -1.0963899314723801e-40, 1.6517324447631836, 0.0, 0.0, 0.0, 0.0, 0.0,
-    #           4, 0.0, 1.998361587524414, 3.7924139499664307, -3.723803111109899e+19, 3.7931299209594727, 0.0, 0.0, 0.0, 0.0, 0.0)
-    #self.show_data(data, types='if')
+def _read_extdb_geomx(self, data: bytes, endian: bytes, function_map):
+    """this is literally a GEOMx table, but embedded in a EXTRN table"""
+    size = self.size
 
-    # ints    = (5, 0, 466334723,              1070160292, -12985232, 1077496508, 0, 0, 0, 0, 0)
-    # floats  = (4, 0, 3.3699862716357883e-22, 1.5730481147766113, -2.470517561589627e+38, 2.895186424255371,  0, 0, 0, 0, 0)
-    structi = Struct(mapfmt(endian + b'2i if i f   5i', self.size))
-    self.show_data(data, types='qdf')
-    # ints = (1627, 16, 463,
-    #         80000020007, 123456,
-    #         80000020008, 123456,
-    #         80000020065, 123456,
-    #         80000020066, 123456,
-    #         80000020067, 123456,
-    #         80000120001, 1,
-    #         80000120002, 1,
-    #         80000120003, 1,
-    #         80000120004, 1,
-    #         80000120005, 1, 80000120006, 1, 80000120007, 1, 80000120008, 1, 80000120009, 1, 80000120010, 1, 80000120011, 1, 80000120012, 1,
-    #         -1, -1)
+    struct3i = Struct(mapfmt(endian + b'3i', size))
+
     factor = self.factor
     n = 12 * factor
-    while n < len(data):
-        edata = data[n:n+44*factor]
-        #self.show_data(edata, types='if')
-        out = structi.unpack(edata)
-        print(out)
-        n += 44*factor
-        if n > 200*factor:
-            self.log.info(f'  breaking n={n}')
-            break
+    code = struct3i.unpack(data[:n])
+    if code in function_map:
+        name, func = function_map[code]
+        self.log.debug(f'code = {code} -> {name}')
+        func(data, n)
+    else:
+        self.log.error(f'code = {code}')
+        raise RuntimeError(code)
     return
 
 
@@ -6317,7 +6638,7 @@ def _read_extdb_phip(self, marker: int,
     #              20, 0, 21, 0, 22, 0, 23, 0, 24, 0, 25, 0, 26, 0, 27, 0, 28, 0)
     factor = self.factor
     if marker == -3:
-
+        self.log.warning('showing for marker=-3')
         self.show_data(data, types=int_type)
     elif marker == -4:
         #data = (
@@ -6495,6 +6816,7 @@ def _read_extdb_phip(self, marker: int,
                 break
             print(out)
     elif marker == -5:
+        self.log.warning('showing for marker=-5')
         self.show_data(data, types='ifs', force=True)
         aaa
     return
