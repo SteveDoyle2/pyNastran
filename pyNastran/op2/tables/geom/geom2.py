@@ -2361,6 +2361,8 @@ class GEOM2(GeomCommon):
         n = self._read_split_card(data, n,
                                   self._read_cquad8_current, self._read_cquad8_v2001,
                                   'CQUAD8', self.add_op2_element)
+        #nelements = self.card_count['CQUAD8']
+        #self.log.debug(f'nCQUAD8 = {nelements}')
         return n
 
     def _read_cquad8_current(self, data: bytes, n: int) -> int:

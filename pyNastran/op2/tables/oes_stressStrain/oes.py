@@ -5931,31 +5931,20 @@ class OES(OP2Common):
                 #obj.add_new_eid_sort1(dt, eid, theory, lamid, fp, fm, fb, fmax, fflag)
                 #n += ntotal
             #raise NotImplementedError('this is a really weird case...')
-        elif result_type == 1 and self.num_wide == 11 and table_name in [b'OESCP', b'OESTRCP']:
-            self.log.warning(f'skipping {self.table_name_str}-PCOMP')
+        elif result_type == 1 and self.num_wide == 11 and table_name in [b'OESCP', b'OESTRCP']:  # complex
+            self.log.warning(f'skipping complex {self.table_name_str}-PCOMP')
             # OESCP - STRAINS IN LAYERED COMPOSITE ELEMENTS (QUAD4)
             ntotal = 44 * self.factor
             nelements = ndata // ntotal
             if self.read_mode == 1:
                 return nelements * ntotal, None, None
 
-            struct1 = Struct(self._endian + self._analysis_code_fmt + b'i9f')
-            for unused_i in range(nelements):
-                edata = data[n:n+ntotal]
-                out = struct1.unpack(edata)
-
-                (eid_device, ply_id, oxx, oyy, txy, txz, tyz, angle, omax, omin, max_shear) = out
-                eid, dt = get_eid_dt_from_eid_device(
-                    eid_device, self.nonlinear_factor, sort_method)
-                #print(eid, out)
-
-                #if self.is_debug_file:
-                    #self.binary_debug.write('%s-%s - (%s) + %s\n' % (self.element_name, self.element_type, eid_device, str(out)))
-                #obj.add_new_eid_sort1(dt, eid, theory, lamid, fp, fm, fb, fmax, fflag)
-                n += ntotal
+            n = oes_shell_composite_complex_11(self, data, obj,
+                                               ntotal, nelements, sort_method,
+                                               dt, is_magnitude_phase)
             return nelements * ntotal, None, None
 
-        elif result_type == 0 and self.num_wide == 9 and table_name == b'OESRT':
+        elif result_type == 0 and self.num_wide == 9 and table_name == b'OESRT': # real
             # strength_ratio.cquad4_composite_stress
             ntotal = 36 * self.factor
             nelements = ndata // ntotal
@@ -5983,33 +5972,23 @@ class OES(OP2Common):
                 #obj.add_new_eid_sort1(dt, eid, theory, lamid, fp, fm, fb, fmax, fflag)
                 n += ntotal
             return nelements * ntotal, None, None
-        elif result_type == 1 and self.num_wide == 13 and table_name in [b'OESVM1C', b'OSTRVM1C']:
+        elif result_type == 1 and self.num_wide == 13 and table_name in [b'OESVM1C', b'OSTRVM1C']: # complex
+            self.log.warning(f'skipping complex {self.table_name_str}-PCOMP')
             is_vectorized = False
             if is_vectorized and self.use_vector:  # pragma: no cover
                 self.log.debug(f'vectorize COMP_SHELL random SORT{sort_method}')
-            # OESCP - STRAINS IN LAYERED COMPOSITE ELEMENTS (QUAD4)
+
             ntotal = 52 * self.factor
             nelements = ndata // ntotal
             if self.read_mode == 1:
-                return nelements * self.num_wide * 4, None, None
+                return nelements * ntotal, None, None
 
-            struct1 = Struct(self._endian + self._analysis_code_fmt + b'i9f ff')
-            for unused_i in range(nelements):
-                edata = data[n:n+ntotal]
-                out = struct1.unpack(edata)
+            obj = None
+            n = oes_shell_composite_complex_13(self, data, obj,
+                                               ntotal, nelements, sort_method,
+                                               dt, is_magnitude_phase)
+            return nelements * ntotal, None, None
 
-                (eid_device, ply_id,
-                 o1a, o2a, t12a, o1za, o2za,
-                 o1b, o2b, t12b, o1zb, e2zb, ovm,) = out
-                eid, dt = get_eid_dt_from_eid_device(
-                    eid_device, self.nonlinear_factor, sort_method)
-                #print(eid, out)
-
-                #print('%s-%s - (%s) + %s\n' % (self.element_name, self.element_type, eid_device, str(out)))
-                #if self.is_debug_file:
-                    #self.binary_debug.write('%s-%s - (%s) + %s\n' % (self.element_name, self.element_type, eid_device, str(out)))
-                #obj.add_new_eid_sort1(dt, eid, theory, lamid, fp, fm, fb, fmax, fflag)
-                n += ntotal
         elif result_type == 2 and self.num_wide == 7: # self.num_wide == 7
             # TCODE,7 =0 Real
             # 2 PLY I Lamina Number
@@ -6176,25 +6155,9 @@ class OES(OP2Common):
                 obj.ielement = ielement2
                 obj.itotal = itotal2
             else:
-                s1 = Struct(self._endian + b'2i7f')  # 36
-                s2 = Struct(self._endian + b'i7f')
-                for unused_i in range(nelements):
-                    out = s1.unpack(data[n:n + 36])
-                    (eid_device, loc, rs, azs, As, ss, maxp, tmax, octs) = out
-                    if self.is_debug_file:
-                        self.binary_debug.write('CTRIAX6-53A - %s\n' % (str(out)))
-                    eid, dt = get_eid_dt_from_eid_device(
-                        eid_device, self.nonlinear_factor, self.sort_method)
+                n = oes_ctriax6_real_33(self, data, obj,
+                                        nelements, ntotal, dt)
 
-                    obj.add_sort1(dt, eid, loc, rs, azs, As, ss, maxp, tmax, octs)
-                    n += 36
-                    for unused_j in range(3):
-                        out = s2.unpack(data[n:n + 32])
-                        (loc, rs, azs, As, ss, maxp, tmax, octs) = out
-                        if self.is_debug_file:
-                            self.binary_debug.write('CTRIAX6-53B - %s\n' % (str(out)))
-                        obj.add_sort1(dt, eid, loc, rs, azs, As, ss, maxp, tmax, octs)
-                        n += 32
         elif result_type == 1 and self.num_wide == 37: # imag
             # TODO: vectorize object
             if self.is_stress:
@@ -7960,7 +7923,7 @@ def oes_cquad4_144_complex_77(self,
                               data: bytes,
                               obj: Union[ComplexPlateStressArray, ComplexPlateStrainArray],
                               nelements: int, nnodes: int,
-                              dt,
+                              dt: Any,
                               is_magnitude_phase: bool) -> int:
     #print('nelements =', nelements)
     n = 0
@@ -8773,6 +8736,33 @@ def oes_cbush_complex_13(self,
         n += ntotal
     return ntotal
 
+def oes_ctriax6_real_33(self, data: bytes,
+                        obj: Union[RealTriaxStressArray, RealTriaxStrainArray],
+                        nelements: int, ntotal: int, dt: Any) -> int:
+    n = 0
+    ntotal1 = 36 * self.factor
+    ntotal2 = 32 * self.factor
+    s1 = Struct(self._endian + b'2i7f')  # 36
+    s2 = Struct(self._endian + b'i7f')
+    for unused_i in range(nelements):
+        out = s1.unpack(data[n:n + ntotal1])
+        (eid_device, loc, rs, azs, As, ss, maxp, tmax, octs) = out
+        if self.is_debug_file:
+            self.binary_debug.write('CTRIAX6-53A - %s\n' % (str(out)))
+        eid, dt = get_eid_dt_from_eid_device(
+            eid_device, self.nonlinear_factor, self.sort_method)
+
+        obj.add_sort1(dt, eid, loc, rs, azs, As, ss, maxp, tmax, octs)
+        n += ntotal1
+        for unused_j in range(3):
+            out = s2.unpack(data[n:n + ntotal2])
+            (loc, rs, azs, As, ss, maxp, tmax, octs) = out
+            if self.is_debug_file:
+                self.binary_debug.write('CTRIAX6-53B - %s\n' % (str(out)))
+            obj.add_sort1(dt, eid, loc, rs, azs, As, ss, maxp, tmax, octs)
+            n += ntotal2
+    return n
+
 def oes_ctriax_complex_37(self,
                           data: bytes,
                           obj: ComplexTriaxStressArray,
@@ -9216,4 +9206,54 @@ def oes_csolid_composite_real(self, data: bytes,
                     obj.add_node_sort1(dt, eid, inode, grid,
                                        sxx, syy, szz, txy, tyz, txz, ovm)
             n += ntotal2
+    return n
+
+def oes_shell_composite_complex_11(self,
+                                   data: bytes,
+                                   obj,
+                                   ntotal: int, nelements: int, sort_method: int,
+                                   dt: Any, is_magnitude_phase: bool) -> int:
+    """OESCP, OESTRCP"""
+    n = 0
+    struct1 = Struct(self._endian + self._analysis_code_fmt + b'i9f')
+    for unused_i in range(nelements):
+        edata = data[n:n+ntotal]
+        out = struct1.unpack(edata)
+
+        (eid_device, ply_id, oxx, oyy, txy, txz, tyz, angle, omax, omin, max_shear) = out
+        eid, dt = get_eid_dt_from_eid_device(
+            eid_device, self.nonlinear_factor, sort_method)
+        #print(eid, out)
+
+        #if self.is_debug_file:
+            #self.binary_debug.write('%s-%s - (%s) + %s\n' % (self.element_name, self.element_type, eid_device, str(out)))
+        #obj.add_new_eid_sort1(dt, eid, theory, lamid, fp, fm, fb, fmax, fflag)
+        n += ntotal
+    return n
+
+def oes_shell_composite_complex_13(self,
+                                   data: bytes,
+                                   obj,
+                                   ntotal: int, nelements: int, sort_method: int,
+                                   dt: Any, is_magnitude_phase: bool) -> int:
+    """OESVM1C, OSTRVM1C"""
+    # OESCP - STRAINS IN LAYERED COMPOSITE ELEMENTS (QUAD4)
+    n = 0
+    struct1 = Struct(self._endian + self._analysis_code_fmt + b'i9f ff')
+    for unused_i in range(nelements):
+        edata = data[n:n+ntotal]
+        out = struct1.unpack(edata)
+
+        (eid_device, ply_id,
+         o1a, o2a, t12a, o1za, o2za,
+         o1b, o2b, t12b, o1zb, e2zb, ovm,) = out
+        eid, dt = get_eid_dt_from_eid_device(
+            eid_device, self.nonlinear_factor, sort_method)
+        #print(eid, out)
+
+        #print('%s-%s - (%s) + %s\n' % (self.element_name, self.element_type, eid_device, str(out)))
+        #if self.is_debug_file:
+            #self.binary_debug.write('%s-%s - (%s) + %s\n' % (self.element_name, self.element_type, eid_device, str(out)))
+        #obj.add_new_eid_sort1(dt, eid, theory, lamid, fp, fm, fb, fmax, fflag)
+        n += ntotal
     return n

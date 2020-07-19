@@ -530,22 +530,19 @@ class ComplexPlateArray(OES_Object):
             ilayer0 = True
             nwide = 0
 
-            ovm = self.data[itime, :, 3]
-            for eid_device, eid, fd, doxx, doyy, dtxy, dovm in zip(eids_device, eids, fds, oxx, oyy, txy, ovm):
+            for eid_device, eid, fd, doxx, doyy, dtxy in zip(eids_device, eids, fds, oxx, oyy, txy):
                 #ilyaer0 = True
                 if ilayer0:
                     ndatai = 0
                     data = [eid_device, fd,
-                            doxx.real, doxx.imag, doyy.real, doyy.imag, dtxy.real, dtxy.imag,
-                            dovm.real]
+                            doxx.real, doxx.imag, doyy.real, doyy.imag, dtxy.real, dtxy.imag]
                     op2.write(struct1.pack(*data))
                     #op2_ascii.write('eid=%s node=%s data=%s' % (eid, node, str(data[2:])))
                     op2_ascii.write('0  %6i   %-13s     %-13s / %-13s     %-13s / %-13s     %-13s / %s\n' % (
                         eid, fd, doxx.real, doxx.imag, doyy.real, doyy.imag, dtxy.real, dtxy.imag, ))
                 else:
                     data = [fd,
-                            doxx.real, doxx.imag, doyy.real, doyy.imag, dtxy.real, dtxy.imag,
-                            dovm.real]
+                            doxx.real, doxx.imag, doyy.real, doyy.imag, dtxy.real, dtxy.imag]
                     op2.write(struct2.pack(*data))
                     #op2_ascii.write('    data=%s' % (str(data[2:])))
                     op2_ascii.write('   %6s   %-13s     %-13s / %-13s     %-13s / %-13s     %-13s / %s\n' % (

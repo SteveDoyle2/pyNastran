@@ -2282,13 +2282,13 @@ class TestOP2(Tester):
         #assert cbeam_stress.data.shape == (7, 2, 8), cbeam_stress.data.shape
 
         cquad4_stress = op2.cquad4_stress[isubcase]
-        assert cquad4_stress.nelements == 4, cquad4_stress.nelements # TODO: wrong
         assert cquad4_stress.data.shape == (7, 40, 3), cquad4_stress.data.shape
+        assert cquad4_stress.nelements == 40, cquad4_stress.nelements # TODO: wrong?
 
         #print(op2.ctria3_stress.keys())
         ctria3_stress = op2.ctria3_stress[isubcase]
-        assert ctria3_stress.nelements == 8, ctria3_stress.nelements # TODO: wrong
         assert ctria3_stress.data.shape == (7, 16, 3), ctria3_stress.data.shape
+        assert ctria3_stress.nelements == 8, ctria3_stress.nelements # TODO: wrong
 
         ctetra_stress = op2.ctetra_stress[isubcase]
         assert ctetra_stress.nelements == 2, ctetra_stress.nelements

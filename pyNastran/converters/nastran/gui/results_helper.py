@@ -768,7 +768,7 @@ class NastranGuiResults(NastranGuiAttributes):
 
         return icase
 
-    def _fill_op2_centroidal_strain(self, cases, model, times, key, icase,
+    def _fill_op2_centroidal_strain(self, cases, model: OP2, times, key, icase: int,
                                     form_dict, header_dict, keys_map) -> int:
         """Creates the time accurate strain objects"""
         settings = self.settings  # type: Settings

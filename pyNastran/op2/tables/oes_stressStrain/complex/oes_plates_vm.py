@@ -331,11 +331,12 @@ class ComplexPlateVMArray(OES_Object):
         oxx = self.data[itime, :, 0]
         oyy = self.data[itime, :, 1]
         txy = self.data[itime, :, 2]
+        ovm = self.data[itime, :, 3]
 
         eids = self.element_node[:, 0]
 
         ilayer0 = True
-        for eid, fd, doxx, doyy, dtxy in zip(eids, fds, oxx, oyy, txy):
+        for eid, fd, doxx, doyy, dtxy, dovm in zip(eids, fds, oxx, oyy, txy, ovm):
             fdr = write_float_13e(fd)
             [oxxr, oyyr, txyr,
              oxxi, oyyi, txyi,] = write_imag_floats_13e([doxx, doyy, dtxy], is_magnitude_phase)
@@ -360,12 +361,13 @@ class ComplexPlateVMArray(OES_Object):
         oxx = self.data[itime, :, 0]
         oyy = self.data[itime, :, 1]
         txy = self.data[itime, :, 2]
+        ovm = self.data[itime, :, 3]
 
         eids = self.element_node[:, 0]
         nodes = self.element_node[:, 1]
 
         ilayer0 = True
-        for eid, node, fd, doxx, doyy, dtxy in zip(eids, nodes, fds, oxx, oyy, txy):
+        for eid, node, fd, doxx, doyy, dtxy, dovm in zip(eids, nodes, fds, oxx, oyy, txy, ovm):
             fdr = write_float_13e(fd)
             [oxxr, oyyr, txyr,
              oxxi, oyyi, txyi,] = write_imag_floats_13e([doxx, doyy, dtxy], is_magnitude_phase)

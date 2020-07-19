@@ -459,13 +459,20 @@ def get_beam_stress_strains(eids, cases, model: OP2, times, key, icase,
             icase += 1
     return icase
 
-def get_plate_stress_strains(eids, cases, model: OP2, times, key, icase,
-                             form_dict, header_dict, keys_map, is_stress,
-                             prefix=''):
+def get_plate_stress_strains(eids, cases, model: OP2, times, key, icase: int,
+                             form_dict, header_dict, keys_map, is_stress: bool,
+                             prefix: str=''):
     """
     helper method for _fill_op2_time_centroidal_stress.
     Gets the max/min stress for each layer.
+
+    key : varies
+        (1, 5, 1, 0, 0, '', '')
+        (isubcase, analysis_code, sort_method, count, ogs,
+         superelement_adaptivity_index, pval_step)
     """
+    log = model.log
+    analysis_code = key[1]
     #print("***stress eids=", eids)
     subcase_id = key[0]
     if prefix == 'modal_contribution':
@@ -502,7 +509,23 @@ def get_plate_stress_strains(eids, cases, model: OP2, times, key, icase,
         if key not in result:
             continue
         case = result[key]
-        #print(case)
+
+        if analysis_code in [5, 9]:  # complex
+            # 5-freq
+            # 9-complex eigenvalues
+            if not case.is_complex:
+                log.info(f'skipping:\n{case}{case.code_information()}')
+                continue
+        else:
+            assert analysis_code in [1, 2, 6, 8, 10], case.code_information()
+            # 1-statics
+            # 2-modes
+            # 6-transient
+            # 8-post buckling
+            # 10-nonlinear statics
+            if not case.is_real:
+                log.info(f'skipping:\n{case}{case.code_information()}')
+                continue
 
         nnodes_per_element = case.nnodes_per_element
         nlayers_per_element = nnodes_per_element * 2
@@ -563,6 +586,7 @@ def get_plate_stress_strains(eids, cases, model: OP2, times, key, icase,
             'angle' : 'θ',
             'emax' : 'ϵmax',
             'emin' : 'ϵmin',
+            'evm' : 'ϵ von Mises',
             'von_mises' : 'ϵ von Mises',
             'max_shear' : '𝛾max',
         }
@@ -591,7 +615,6 @@ def get_plate_stress_strains(eids, cases, model: OP2, times, key, icase,
         #self.data[self.itime, self.itotal, :] = [fd, oxx, oyy,
         #                                         txy, angle,
         #                                         majorP, minorP, ovm]
-
         keys_map[key] = (case.subtitle, case.label,
                          case.superelement_adaptivity_index, case.pval_step)
 
@@ -1080,5 +1103,8 @@ def concatenate_scalars(scalars_array):
     if len(scalars_array) == 1:
         scalars_array = scalars_array[0]
     else:
+        #print(len(scalars_array))
+        #for arrayi in scalars_array:
+            #print('   ', arrayi.shape)
         scalars_array = np.concatenate(scalars_array, axis=1)
     return scalars_array

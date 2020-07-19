@@ -489,7 +489,7 @@ TABLE_OBJ_MAP = {
     'psd.cquad4_stress' : (RandomPlateStressArray, ),
     'rms.cquad4_stress' : (RandomPlateStressArray, ),
     'no.cquad4_stress' : (RandomPlateStressArray, ),
-    'modal_contribution.cquad4_stress' : (RealPlateStressArray, ComplexPlateStressArray,),
+    'modal_contribution.cquad4_stress' : (RealPlateStressArray, ComplexPlateStressArray, ComplexPlateVMStressArray),
     'RASCONS.cquad4_stress' : (RealPlateStressArray, ),
     'RASEATC.cquad4_stress' : (RealPlateStressArray, ),
 
@@ -509,7 +509,7 @@ TABLE_OBJ_MAP = {
     'psd.cquad8_stress' : (RandomPlateStressArray, ),
     'rms.cquad8_stress' : (RandomPlateStressArray, ),
     'no.cquad8_stress' : (RandomPlateStressArray, ),
-    'modal_contribution.cquad8_stress' : (RealPlateStressArray, ComplexPlateStressArray, ),
+    'modal_contribution.cquad8_stress' : (RealPlateStressArray, ComplexPlateStressArray, ComplexPlateVMStressArray),
 
     'ctria6_stress' : (RealPlateStressArray, ComplexPlateStressArray),
     'ato.ctria6_stress' : (RandomPlateStressArray, ),
@@ -517,7 +517,7 @@ TABLE_OBJ_MAP = {
     'psd.ctria6_stress' : (RandomPlateStressArray, ),
     'rms.ctria6_stress' : (RandomPlateStressArray, ),
     'no.ctria6_stress' : (RandomPlateStressArray, ),
-    'modal_contribution.ctria6_stress' : (RealPlateStressArray, ComplexPlateStressArray,),
+    'modal_contribution.ctria6_stress' : (RealPlateStressArray, ComplexPlateStressArray, ComplexPlateVMStressArray),
 
     'ctriar_stress' : (RealPlateStressArray, ComplexPlateStressArray),
     'ato.ctriar_stress' : (RandomPlateStressArray, ),
@@ -540,7 +540,7 @@ TABLE_OBJ_MAP = {
     'psd.cquad4_strain' : (RandomPlateStrainArray, ),
     'rms.cquad4_strain' : (RandomPlateStrainArray, ),
     'no.cquad4_strain' : (RandomPlateStrainArray, ),
-    'modal_contribution.cquad4_strain' : (RealPlateStrainArray, ComplexPlateStrainArray, ),
+    'modal_contribution.cquad4_strain' : (RealPlateStrainArray, ComplexPlateStrainArray, ComplexPlateVMStrainArray),
     'RAECONS.cquad4_strain' : (RealPlateStrainArray, ),
     'RAEEATC.cquad4_strain' : (RealPlateStrainArray, ),
 
@@ -559,7 +559,7 @@ TABLE_OBJ_MAP = {
     'psd.cquad8_strain' : (RandomPlateStrainArray, ),
     'rms.cquad8_strain' : (RandomPlateStrainArray, ),
     'no.cquad8_strain' : (RandomPlateStrainArray, ),
-    'modal_contribution.cquad8_strain' : (RealPlateStrainArray, ComplexPlateStrainArray,),
+    'modal_contribution.cquad8_strain' : (RealPlateStrainArray, ComplexPlateStrainArray, ComplexPlateVMStrainArray),
 
     'ctria6_strain' : (RealPlateStrainArray, ComplexPlateStrainArray),
     'ato.ctria6_strain' : (RandomPlateStrainArray, ),
@@ -567,7 +567,7 @@ TABLE_OBJ_MAP = {
     'psd.ctria6_strain' : (RandomPlateStrainArray, ),
     'rms.ctria6_strain' : (RandomPlateStrainArray, ),
     'no.ctria6_strain' : (RandomPlateStrainArray, ),
-    'modal_contribution.ctria6_strain' : (RealPlateStrainArray, ComplexPlateStrainArray,),
+    'modal_contribution.ctria6_strain' : (RealPlateStrainArray, ComplexPlateStrainArray, ComplexPlateVMStrainArray),
 
     'ctriar_strain' : (RealPlateStrainArray, ComplexPlateStrainArray),
     'ato.ctriar_strain' : (RandomPlateStrainArray, ),

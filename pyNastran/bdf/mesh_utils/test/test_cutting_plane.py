@@ -1,7 +1,7 @@
 """defines cutting plane tests"""
 import os
 from itertools import count
-from typing import Tuple, Any
+from typing import Tuple, List, Any
 import unittest
 import numpy as np
 #import PySide
@@ -76,23 +76,47 @@ class TestCuttingPlane(unittest.TestCase):
         os.remove('real_result.csv')
         os.remove('complex_result.csv')
 
+    def _test_cut_box(self):  # pragma: no cover
+        """recover element ids"""
+        log = SimpleLogger(level='warning', encoding='utf-8', log_func=None)
+        #bdf_filename = r'SEction_1_box.bdf'  # x-axis
+        #normal_plane = np.array([1., 0., 0.])
+        bdf_filename = 'SEction_1_box_4.bdf'  # y-axis
+        normal_plane = np.array([0., 1., 0.])
+        dys, coords = get_coords_box()
+        y, A, I, J, EI, GJ, avg_centroid, plane_bdf_filenames = cut_and_plot_moi(
+            bdf_filename, normal_plane, log,
+            dys, coords,
+            ytol=0.0,
+            plot=True, show=True)
+
+        show = True
+        if IS_MATPLOTLIB:
+            plot_inertia(y, A, I, J, EI, GJ, avg_centroid, show=show)
+
     def test_cut_bwb(self):
         """recover element ids"""
         log = SimpleLogger(level='warning', encoding='utf-8', log_func=None)
         is_bwb = True
         if is_bwb:
             bdf_filename = os.path.join(MODEL_PATH, 'bwb', 'bwb_saero.bdf')  # ymax~=1262.0
+            dys, coords = get_coords_bwb()
         else:  #  pragma: no cover
             bdf_filename = r'C:\NASA\asm\all_modes_mach_0.85\flutter.bdf'  # ymax=1160.601
+            dys, coords = get_coords_crm()
         normal_plane = np.array([0., 1., 0.])
-        y, A, I, EI, avg_centroid, plane_bdf_filenames = cut_and_plot_moi(
+
+        y, A, I, J, EI, J, avg_centroid, plane_bdf_filenames = cut_and_plot_moi(
             bdf_filename, normal_plane, log,
+            dys, coords,
+            ytol=2.0,
             plot=True, show=True)
 
         show = True
         #show = False
         if IS_MATPLOTLIB:
-            plot_inertia(y, A, I, EI, avg_centroid, show=show)
+            GJ = J
+            plot_inertia(y, A, I, J, EI, GJ, avg_centroid, show=show)
             os.remove('normalized_inertia_vs_span.png')
             os.remove('area_vs_span.png')
             os.remove('amoi_vs_span.png')
@@ -352,8 +376,53 @@ class TestCuttingPlane(unittest.TestCase):
         assert np.array_equal(iedges, [[0, 1, 2, 3, 0], [4, 5, 6, 7, 4]]), 'iedges=%s' % iedges
 
 
+def get_coords_bwb(ncuts=2000):
+    dys = []
+    coords = []
+    for i in range(ncuts):
+        dy = 100. * i + 1.  #  bwb
+        coord = CORD2R(1, rid=0, origin=[0., dy, 0.], zaxis=[0., dy, 1], xzplane=[1., dy, 0.])
+        dys.append(dy)
+        coords.append(coord)
+    return dys, coords
+
+def get_coords_crm(ncuts=2000):  # pragma: no cover
+    dys = []
+    coords = []
+    for i in range(ncuts):
+        dy = 4. * i + 1.  #  CRM
+        coord = CORD2R(1, rid=0, origin=[0., dy, 0.], zaxis=[0., dy, 1], xzplane=[1., dy, 0.])
+        dys.append(dy)
+        coords.append(coord)
+    return dys, coords
+
+def get_coords_box(ncuts):  # pragma: no cover
+    dys = []
+    coords = []
+    for i in range(ncuts):
+        dy = -0.1 * i - 0.1  #  box
+        #coord = CORD2R(1, rid=0, origin=[0., dy, 0.], zaxis=[0., dy, 1], xzplane=[1., dy, 0.])
+        coord = CORD2R(1, rid=0, origin=[0., dy, 0.], zaxis=[0., dy, 1], xzplane=[1., dy, 0.])
+
+        #if dy < -5:
+            #print('break', dy)
+            #break
+
+        #origin = np.array([0., dy, 0.])
+        #xzplane = origin + dx
+        #xzplane = np.array([1., dy, 0.])
+        #coord = CORD2R.add_axes(cid, rid=0, origin=p1, xaxis=p2-p1, yaxis=None, zaxis=None,
+                                 #xyplane=None, yzplane=None, xzplane=None, comment='')
+        #print(coord)
+        dys.append(dy)
+        coords.append(coord)
+    return dys, coords
+
 def cut_and_plot_moi(bdf_filename: str, normal_plane: np.ndarray, log: SimpleLogger,
-                     ytol: float=2.0, ncuts: int=2000, dirname: str='',
+                     dys: List[float],
+                     coords: List[CORD2R],
+                     ytol: float=2.0,
+                     dirname: str='',
                      plot: bool=True, show: bool=False) -> Tuple[Any, Any, Any, Any, Any]: # y, A, I, EI, avg_centroid
     model = read_bdf(bdf_filename, log=log)
     model2 = read_bdf(bdf_filename, log=log)
@@ -367,29 +436,17 @@ def cut_and_plot_moi(bdf_filename: str, normal_plane: np.ndarray, log: SimpleLog
     #p1 = np.array([466.78845, 735.9053, 0.0])
     #p2 = np.array([624.91345, 639.68896, -0.99763656])
     #dx = p2 - p1
-    ytol = 2.
     nodal_result = None
     plane_bdf_filenames = []
     y = []
     A = []
     I = []
+    J = []
     EI = []
+    GJ = []
     avg_centroid = []
 
-    is_bwb = True
-    for i in range(ncuts):
-        if is_bwb:
-            dy = 100. * i + 1.  #  bwb
-            coord = CORD2R(1, rid=0, origin=[0., dy, 0.], zaxis=[0., dy, 1], xzplane=[1., dy, 0.])
-        else:  #  pragma: no cover
-            dy = 4. * i + 1.  #  CRM
-            coord = CORD2R(1, rid=0, origin=[0., dy, 0.], zaxis=[0., dy, 1], xzplane=[1., dy, 0.])
-            #origin = np.array([0., dy, 0.])
-            #xzplane = origin + dx
-            #xzplane = np.array([1., dy, 0.])
-            #coord = CORD2R.add_axes(cid, rid=0, origin=p1, xaxis=p2-p1, yaxis=None, zaxis=None,
-                                     #xyplane=None, yzplane=None, xzplane=None, comment='')
-            print(coord)
+    for i, dy, coord in zip(count(), dys, coords):
         model.coords[1] = coord
         plane_bdf_filename = os.path.join(dirname, f'plane_face_{i:d}.bdf')
         cut_face_filename = os.path.join(dirname, f'cut_face_{i:d}.csv')
@@ -416,12 +473,17 @@ def cut_and_plot_moi(bdf_filename: str, normal_plane: np.ndarray, log: SimpleLog
         #moi_filename = 'amoi_%i.bdf' % i
         moi_filename = None
         out = calculate_area_moi(model, rods, normal_plane, thetas, moi_filename=moi_filename)
+
         #print(out)
         Ai, Ii, EIi, avg_centroidi = out
+        #Ai, Ii, Ji, EIi, GJi, avg_centroidi = out
+        Ji = GJi = 1.0
         y.append(dy)
         A.append(Ai)
         I.append(Ii)
+        J.append(Ji)
         EI.append(EIi)
+        GJ.append(GJi)
         avg_centroid.append(avg_centroidi)
         #break
 
@@ -435,7 +497,9 @@ def cut_and_plot_moi(bdf_filename: str, normal_plane: np.ndarray, log: SimpleLog
     y = np.array(y, dtype='float64')
     A = np.array(A, dtype='float64')
     I = np.array(I, dtype='float64')
+    J = np.array(J, dtype='float64')
     EI = np.array(EI, dtype='float64')
+    GJ = np.array(GJ, dtype='float64')
     avg_centroid = np.array(avg_centroid, dtype='float64')
 
     inid = 1
@@ -449,10 +513,13 @@ def cut_and_plot_moi(bdf_filename: str, normal_plane: np.ndarray, log: SimpleLog
     nu = 0.3
     model.add_mat1(mid, E, G, nu, rho=0.1)
 
+    #   0    1    2    3    4    5
+    # [Ixx, Iyy, Izz, Ixy, Iyz, Ixz]
     Ix = I[:, 0]
     Iy = I[:, 1]
-    Ixy = I[:, 2]
-    J = Ix + Iy
+    Iz = I[:, 2]
+    Ixz = I[:, 5]
+    J = Ix + Iz
     #i1, i2, i12 = Ix, Iy, Ixy
     for inid, xyz in enumerate(avg_centroid):
         beam_model.add_grid(inid+1, xyz)
@@ -469,8 +536,8 @@ def cut_and_plot_moi(bdf_filename: str, normal_plane: np.ndarray, log: SimpleLog
         xxb = [0., 1.]
         area = [A[eid-1], A[eid]]
         i1 = [Ix[eid-1], Ix[eid]]
-        i2 = [Iy[eid-1], Iy[eid]]
-        i12 = [Ixy[eid-1], Ixy[eid]]
+        i2 = [Iz[eid-1], Iz[eid]]
+        i12 = [Ixz[eid-1], Ixz[eid]]
         j = [J[eid-1], J[eid]]
         beam_model.add_pbeam(pid, mid, xxb, so, area, i1, i2, i12, j, nsm=None,
                              c1=None, c2=None, d1=None, d2=None, e1=None, e2=None, f1=None, f2=None,
@@ -489,18 +556,19 @@ def cut_and_plot_moi(bdf_filename: str, normal_plane: np.ndarray, log: SimpleLog
     np.savetxt(cut_data_span_filename, Y, header=header, delimiter=',')
 
     if IS_MATPLOTLIB and (plot or show):
-        plot_inertia(y, A, I, EI, avg_centroid, show=show, dirname=dirname)
+        plot_inertia(y, A, I, J, EI, GJ, avg_centroid, show=show, dirname=dirname)
     else:
         plane_bdf_filenames = []
-    return y, A, I, EI, avg_centroid, plane_bdf_filenames
+    return y, A, I, J, EI, GJ, avg_centroid, plane_bdf_filenames
 
-def plot_inertia(y, A, I, EI, avg_centroid, ifig: int=1, show: bool=True, dirname: str=''):
+def plot_inertia(y, A, I, J, EI, GJ, avg_centroid, ifig: int=1, show: bool=True, dirname: str=''):
     """hepler method for test"""
     #plt.plot(y, I[:, 0] / I[:, 0].max(), 'ro-', label='Qxx')
     #plt.plot(y, I[:, 1] / I[:, 1].max(), 'bo-', label='Qyy')
     #plt.plot(y, I[:, 2] / I[:, 2].max(), 'go-', label='Qxy')
     aI = np.abs(I)
     aEI = np.abs(EI)
+    aGJ = np.abs(GJ)
 
     fig = plt.figure(ifig)
     ax = fig.gca()
@@ -511,6 +579,7 @@ def plot_inertia(y, A, I, EI, avg_centroid, ifig: int=1, show: bool=True, dirnam
     ax.plot(y, EI[:, 0] / aEI[:, 0].max(), 'ro-', label='EIxx', linestyle='--')
     ax.plot(y, EI[:, 1] / aEI[:, 1].max(), 'bo-', label='EIzz', linestyle='--')
     ax.plot(y, EI[:, 2] / aEI[:, 2].max(), 'go-', label='EIxz', linestyle='--')
+    #ax.plot(y, GJ / aGJ.max(), 'go-', label='GJ', linestyle='--')
 
     ax.grid(True)
     ax.set_xlabel('Span, y')
