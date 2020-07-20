@@ -1251,7 +1251,7 @@ class RealCBeamForceArray(RealForceObject):
         sd = self.data[0, :, 0]
         i_sd_zero = np.where(sd != 0.0)[0]
         i_node_zero = np.where(self.element_node[:, 1] != 0)[0]
-        assert i_node_zero.max() > 0, 'CBEAM element_node hasnt been filled'
+        assert i_node_zero.max() > 0, "CBEAM element_node hasn't been filled"
         i = np.union1d(i_sd_zero, i_node_zero)
 
         #self.nelements = len(self.element) // 11
@@ -1334,9 +1334,6 @@ class RealCBeamForceArray(RealForceObject):
                 print(msg)
                 raise ValueError(msg)
         return True
-
-    def add_new_element_sort1(self, dt, eid, nid, sd, bm1, bm2, ts1, ts2, af, ttrq, wtrq):
-        return self.add_sort1(dt, eid, nid, sd, bm1, bm2, ts1, ts2, af, ttrq, wtrq)
 
     def add_sort1(self, dt, eid, nid, sd, bm1, bm2, ts1, ts2, af, ttrq, wtrq):
         """unvectorized method for adding SORT1 transient data"""

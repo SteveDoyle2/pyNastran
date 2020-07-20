@@ -1753,27 +1753,7 @@ class OES(OP2Common):
         if nelements is None:
             return n
 
-        if self.read_mode == 2:
-            if self.is_sort1:
-                obj = self.obj
-                if obj is None:
-                    raise RuntimeError('obj is None...\n' + self.code_information())
-                if hasattr(obj, 'element_node'):
-                    eids = obj.element_node[:, 0]
-                elif hasattr(obj, 'element_layer'):
-                    eids = obj.element_layer[:, 0]
-                elif hasattr(obj, 'element'):
-                    eids = obj.element
-                else:
-                    print(self.code_information())
-                    raise RuntimeError(''.join(obj.get_stats()))
-                if eids.min() <= 0:
-                    #print(obj.code_information())
-                    print(''.join(obj.get_stats()))
-                    raise RuntimeError(eids)
-
-            #else:
-                #assert._times
+        self.check_element_ids()
         assert ndata > 0, ndata
         assert nelements > 0, f'nelements={nelements} element_type={self.element_type} element_name={self.element_name!r}'
         #assert ndata % ntotal == 0, '%s n=%s nwide=%s len=%s ntotal=%s' % (self.element_name, ndata % ntotal, ndata % self.num_wide, ndata, ntotal)
@@ -1784,6 +1764,29 @@ class OES(OP2Common):
         #if self.is_sort2:
             #assert len(np.unique(self.obj._times)) == len(self.obj._times), f'{self.obj._times.tolist()}\n{self.code_information()}'
         return n
+
+    def check_element_ids(self):
+        if self.read_mode == 1:
+            return
+        if self.is_sort1:
+            obj = self.obj
+            if obj is None:
+                raise RuntimeError('obj is None...\n' + self.code_information())
+            if hasattr(obj, 'element_node'):
+                eids = obj.element_node[:, 0]
+            elif hasattr(obj, 'element_layer'):
+                eids = obj.element_layer[:, 0]
+            elif hasattr(obj, 'element'):
+                eids = obj.element
+            else:
+                print(self.code_information())
+                raise RuntimeError(''.join(obj.get_stats()))
+            if eids.min() <= 0:
+                #print(obj.code_information())
+                print(''.join(obj.get_stats()))
+                raise RuntimeError(f'{self.element_name}-{self.element_type}: {eids}')
+        #else:
+            #assert._times
 
     def _create_nodes_object(self, nnodes, result_name, slot, obj_vector):
         """same as _create_oes_object4 except it adds to the nnodes parameter"""
@@ -4819,15 +4822,15 @@ class OES(OP2Common):
 
         slot = self.get_result(result_name)
         #print(self.element_name, result_name, self.format_code, self.num_wide)
-        table_names = [
-            b'OES1', b'OES1X', b'OES1X1', b'OSTR1X',
-            b'OES2', b'OSTR2',
-            b'OESVM1', b'OESVM2', b'OSTRVM1', b'OSTRVM2',
-            b'OESPSD2',  b'OESATO2',  b'OESCRM2',  b'OESNO1',  b'OESXRMS1', b'OESXNO1',
-            b'OSTRPSD2', b'OSTRATO2', b'OSTRCRM2', b'OSTRNO1', b'OSTRRMS1',
-
-        ]
-        assert self.table_name in table_names, self.table_name
+        #table_names = [
+        #    b'OES1', b'OES1X', b'OES1X1', b'OSTR1X',
+        #    b'OES2', b'OSTR2',
+        #    b'OESVM1', b'OESVM2', b'OSTRVM1', b'OSTRVM2',
+        #    b'OESPSD1', b'OESRMS1',
+        #    b'OESPSD2',  b'OESATO2',  b'OESCRM2',  b'OESNO1',  b'OESXRMS1', b'OESXNO1',
+        #    b'OSTRPSD2', b'OSTRATO2', b'OSTRCRM2', b'OSTRNO1', b'OSTRRMS1',
+        #]
+        #assert self.table_name in table_names, self.table_name
         sort_method = self.sort_method
         element_name_type = f'{self.element_name}-{self.element_type}'
 

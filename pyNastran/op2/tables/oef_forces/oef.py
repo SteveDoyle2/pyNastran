@@ -1274,8 +1274,8 @@ class OEF(OP2Common):
         unused_flag = 'element_id'
         (num_wide_real, num_wide_imag) = self._oef_force_code()
         if self.is_debug_file:
-            self.binary_debug.write('  num_wide_real = %r\n' % num_wide_real)
-            self.binary_debug.write('  num_wide_imag = %r\n' % num_wide_imag)
+            self.binary_debug.write(f'  num_wide_real = {num_wide_real!r}\n')
+            self.binary_debug.write(f'  num_wide_imag = {num_wide_imag!r}\n')
 
         n = 0
         is_magnitude_phase = self.is_magnitude_phase()
@@ -1471,13 +1471,16 @@ class OEF(OP2Common):
 
         if nelements is None:
             return n
+        if self.element_type != 2:
+            # CBEAM-2: has a finalize step
+            self.check_element_ids()
 
         #assert self.thermal == 0, self.thermal
         assert ndata > 0, ndata
         assert nelements > 0, 'nelements=%r element_type=%s element_name=%r num_wide=%s' % (
             nelements, self.element_type, self.element_name, self.num_wide)
         #assert ndata % ntotal == 0, '%s n=%s nwide=%s len=%s ntotal=%s' % (self.element_name, ndata % ntotal, ndata % self.num_wide, ndata, ntotal)
-        assert self.num_wide * 4 * self.factor == ntotal, 'numwide*4=%s ntotal=%s' % (self.num_wide*4, ntotal)
+        assert self.num_wide * 4 * self.factor == ntotal, f'numwide*4={self.num_wide*4} ntotal={ntotal}'
         assert n is not None and n > 0, self.code_information()
         return n
 
@@ -1487,6 +1490,7 @@ class OEF(OP2Common):
         1-CROD
         3-CTUBE
         10-CONROD
+
         """
         n = 0
         obj_real = RealRodForceArray
@@ -1541,18 +1545,8 @@ class OEF(OP2Common):
                 obj.itotal = itotal2
                 obj.ielement = ielement2
             else:
-                fmt = mapfmt(self._endian + self._analysis_code_fmt + b'ff', self.size)  # 3
-                s = Struct(fmt)
-                for unused_i in range(nelements):
-                    edata = data[n:n+ntotal]
-                    out = s.unpack(edata)
-                    (eid_device, axial, torque) = out
-                    eid, dt = get_eid_dt_from_eid_device(
-                        eid_device, self.nonlinear_factor, self.sort_method)
-                    if self.is_debug_file:
-                        self.binary_debug.write('OEF_Rod - %s\n' % (str(out)))
-                    obj.add_sort1(dt, eid, axial, torque)
-                    n += ntotal
+                n = oef_crod_real_3(self, data, obj,
+                                    nelements, ntotal)
 
         elif self.format_code in [2, 3] and self.num_wide == 5: # imag
             ntotal = 20 * self.factor  # 5*4
@@ -1591,26 +1585,10 @@ class OEF(OP2Common):
                 obj.itotal = itotal2
                 obj.ielement = ielement2
             else:
-                fmt = mapfmt(self._endian + self._analysis_code_fmt + b'4f', self.size)
-                s = Struct(fmt)
-                for unused_i in range(nelements):
-                    edata = data[n:n+ntotal]
+                n = oef_crod_imag_5(self, data, obj,
+                                    nelements, ntotal,
+                                    is_magnitude_phase)
 
-                    out = s.unpack(edata)
-                    if self.is_debug_file:
-                        self.binary_debug.write('OEF_CRod - %s\n' % (str(out)))
-                    (eid_device, axial_real, torque_real, axial_imag, torque_imag) = out
-                    eid, dt = get_eid_dt_from_eid_device(
-                        eid_device, self.nonlinear_factor, self.sort_method)
-                    if is_magnitude_phase:
-                        axial = polar_to_real_imag(axial_real, axial_imag)
-                        torque = polar_to_real_imag(torque_real, torque_imag)
-                    else:
-                        axial = complex(axial_real, axial_imag)
-                        torque = complex(torque_real, torque_imag)
-
-                    obj.add_sort1(dt, eid, axial, torque)
-                    n += ntotal
         else:  # pragma: no cover
             raise RuntimeError(self.code_information())
             #msg = self.code_information()
@@ -1915,22 +1893,9 @@ class OEF(OP2Common):
                 obj.itotal = itotal2
                 obj.ielement = ielement2
             else:
-                fmt = mapfmt(self._endian + self._analysis_code_fmt + b'2f', self.size)
-                s = Struct(fmt)
-                for unused_i in range(nelements):
-                    edata = data[n:n + ntotal]
-                    out = s.unpack(edata)
-                    if self.is_debug_file:
-                        self.binary_debug.write('OEF_SpringDamper - %s\n' % str(out))
-                    (eid_device, force_real, force_imag) = out
-                    eid, dt = get_eid_dt_from_eid_device(
-                        eid_device, self.nonlinear_factor, self.sort_method)
-                    if is_magnitude_phase:
-                        force = polar_to_real_imag(force_real, force_imag)
-                    else:
-                        force = complex(force_real, force_imag)
-                    obj.add_sort1(dt, eid, force)
-                    n += ntotal
+                n = oef_celas_cdamp_imag_3(self, data, obj,
+                                           nelements, ntotal,
+                                           is_magnitude_phase)
         else:
             raise RuntimeError(self.code_information())
             #msg = 'OEF: element_name=%s element_type=%s' % (self.element_name, self.element_type)
@@ -2019,25 +1984,9 @@ class OEF(OP2Common):
                 obj.itotal = itotal2
                 obj.ielement = ielement2
             else:
-                s = Struct(self._endian + self._analysis_code_fmt + b'4f')  # 5
-                for unused_i in range(nelements):
-                    edata = data[n:n+20]
-
-                    out = s.unpack(edata)
-                    if self.is_debug_file:
-                        self.binary_debug.write('OEF_CVisc - %s\n' % (str(out)))
-                    (eid_device, axial_real, torque_real, axial_imag, torque_imag) = out
-                    eid, dt = get_eid_dt_from_eid_device(
-                        eid_device, self.nonlinear_factor, self.sort_method)
-                    if is_magnitude_phase:
-                        axial = polar_to_real_imag(axial_real, axial_imag)
-                        torque = polar_to_real_imag(torque_real, torque_imag)
-                    else:
-                        axial = complex(axial_real, axial_imag)
-                        torque = complex(torque_real, torque_imag)
-
-                    obj.add_sort1(dt, eid, axial, torque)
-                    n += ntotal
+                n = oef_cvisc_imag_5(self, data, obj,
+                                     nelements, ntotal,
+                                     is_magnitude_phase)
         else:
             raise RuntimeError(self.code_information())
             #msg = self.code_information()
@@ -2148,16 +2097,16 @@ class OEF(OP2Common):
         slot = self.get_result(result_name)
 
         if self.format_code == 1 and self.num_wide == 8:  # real
-            ntotal = 32  # 8*4
+            ntotal = 32 * self.factor # 8*4
             nelements = ndata // ntotal
             auto_return, is_vectorized = self._create_oes_object4(
                 nelements, result_name, slot, RealCBar100ForceArray)
             if auto_return:
-                return nelements * self.num_wide * 4, None, None
+                return nelements * ntotal, None, None
 
             obj = self.obj
             if self.use_vector and is_vectorized and self.sort_method == 1:
-                n = nelements * 4 * self.num_wide
+                n = nelements * ntotal
                 itotal = obj.ielement
                 ielement2 = obj.itotal + nelements
                 itotal2 = ielement2
@@ -2175,18 +2124,9 @@ class OEF(OP2Common):
                 obj.itotal = itotal2
                 obj.ielement = ielement2
             else:
-                s = Struct(self._endian + self._analysis_code_fmt + b'7f')
-                for unused_i in range(nelements):
-                    edata = data[n:n+32]
+                n = oef_cbar_100_real_8(self, data, obj,
+                                        nelements, ntotal)
 
-                    out = s.unpack(edata)
-                    if self.is_debug_file:
-                        self.binary_debug.write('OEF_CBar100 - %s\n' % (str(out)))
-                    (eid_device, sd, bm1, bm2, ts1, ts2, af, trq) = out
-                    eid, dt = get_eid_dt_from_eid_device(
-                        eid_device, self.nonlinear_factor, self.sort_method)
-                    obj.add_sort1(dt, eid, sd, bm1, bm2, ts1, ts2, af, trq)
-                    n += 32
         #elif self.format_code in [2, 3] and self.num_wide == 14:  # imag
         else:  # pragma: no cover
             raise RuntimeError(self.code_information())
@@ -2255,17 +2195,9 @@ class OEF(OP2Common):
                 obj.itotal = ielement2
                 obj.ielement = ielement2
             else:
-                s = Struct(mapfmt(self._endian + self._analysis_code_fmt + b'8f', self.size))
-                for unused_i in range(nelements):
-                    edata = data[n:n+ntotal]
-                    out = s.unpack(edata)
-                    if self.is_debug_file:
-                        self.binary_debug.write('real_OEF_Plate-%s - %s\n' % (self.element_type, str(out)))
-                    (eid_device, mx, my, mxy, bmx, bmy, bmxy, tx, ty) = out
-                    eid, dt = get_eid_dt_from_eid_device(
-                        eid_device, self.nonlinear_factor, self.sort_method)
-                    obj.add_sort1(dt, eid, mx, my, mxy, bmx, bmy, bmxy, tx, ty)
-                    n += ntotal
+                n = oef_cquad4_33_real_9(self, data, obj,
+                                         nelements, ntotal)
+
         elif self.format_code in [2, 3] and self.num_wide == 17:  # imag
             ntotal = 68 * self.factor
             nelements = ndata // ntotal
@@ -2299,38 +2231,10 @@ class OEF(OP2Common):
                 obj.itotal = itotal2
                 obj.ielement = ielement2
             else:
-                s = Struct(mapfmt(self._endian + self._analysis_code_fmt + b'16f', self.size))
-                for unused_i in range(nelements):
-                    edata = data[n:n+ntotal]
-                    out = s.unpack(edata)
-                    (eid_device,
-                     mxr, myr, mxyr, bmxr, bmyr, bmxyr, txr, tyr,
-                     mxi, myi, mxyi, bmxi, bmyi, bmxyi, txi, tyi) = out
-                    eid, dt = get_eid_dt_from_eid_device(
-                        eid_device, self.nonlinear_factor, self.sort_method)
-                    if self.is_debug_file:
-                        self.binary_debug.write('complex_OEF_Plate-%s - %s\n' % (self.element_type, str(out)))
+                n = oef_cquad4_33_imag_17(self, data, ndata, obj,
+                                          nelements, ntotal,
+                                          is_magnitude_phase)
 
-                    if is_magnitude_phase:
-                        mx = polar_to_real_imag(mxr, mxi)
-                        my = polar_to_real_imag(myr, myi)
-                        mxy = polar_to_real_imag(mxyr, mxyi)
-                        bmx = polar_to_real_imag(bmxr, bmxi)
-                        bmy = polar_to_real_imag(bmyr, bmyi)
-                        bmxy = polar_to_real_imag(bmxyr, bmxyi)
-                        tx = polar_to_real_imag(txr, txi)
-                        ty = polar_to_real_imag(tyr, tyi)
-                    else:
-                        mx = complex(mxr, mxi)
-                        my = complex(myr, myi)
-                        mxy = complex(mxyr, mxyi)
-                        bmx = complex(bmxr, bmxi)
-                        bmy = complex(bmyr, bmyi)
-                        bmxy = complex(bmxyr, bmxyi)
-                        tx = complex(txr, txi)
-                        ty = complex(tyr, tyi)
-                    obj.add_sort1(dt, eid, mx, my, mxy, bmx, bmy, bmxy, tx, ty)
-                    n += ntotal
         else:  # pragma: no cover
             raise RuntimeError(self.code_information())
             #msg = self.code_information()
@@ -2629,60 +2533,9 @@ class OEF(OP2Common):
                 obj.itotal = itotal2
                 obj.ielement = ielement2
             else:
-                #self.create_transient_object(self.cshear_force, ComplexCShearForce)
-                s = Struct(mapfmt(self._endian + self._analysis_code_fmt + b'32f', self.size))
-                #ntotal1 = 132 * self.factor
-                for unused_i in range(nelements):
-                    edata = data[n:n+ntotal]
-                    n += ntotal
-                    out = s.unpack(edata)
-                    if self.is_debug_file:
-                        self.binary_debug.write('OEF_Shear - %s\n' % (str(out)))
-                    (eid_device,
-                     f41r, f21r, f12r, f32r, f23r, f43r, f34r, f14r, # 8
-                     kf1r, s12r, kf2r, s23r, kf3r, s34r, kf4r, s41r, # 16
-                     f41i, f21i, f12i, f32i, f23i, f43i, f34i, f14i,
-                     kf1i, s12i, kf2i, s23i, kf3i, s34i, kf4i, s41i) = out
-                    if is_magnitude_phase:
-                        f41 = polar_to_real_imag(f41r, f41i)
-                        kf1 = polar_to_real_imag(kf1r, kf1i)
-                        f21 = polar_to_real_imag(f21r, f21i)
-                        kf2 = polar_to_real_imag(kf2r, kf2i)
-                        f12 = polar_to_real_imag(f12r, f12i)
-                        kf3 = polar_to_real_imag(kf3r, kf3i)
-                        f23 = polar_to_real_imag(f23r, f23i)
-                        kf4 = polar_to_real_imag(kf4r, kf4i)
-                        f32 = polar_to_real_imag(f32r, f32i)
-                        s12 = polar_to_real_imag(s12r, s12i)
-                        f43 = polar_to_real_imag(f43r, f43i)
-                        s23 = polar_to_real_imag(s23r, s23i)
-                        f34 = polar_to_real_imag(f34r, f34i)
-                        s34 = polar_to_real_imag(s34r, s34i)
-                        f14 = polar_to_real_imag(f14r, f14i)
-                        s41 = polar_to_real_imag(s41r, s41i)
-                    else:
-                        f41 = complex(f41r, f41i)
-                        kf1 = complex(kf1r, kf1i)
-                        f21 = complex(f21r, f21i)
-                        kf2 = complex(kf2r, kf2i)
-                        f12 = complex(f12r, f12i)
-                        kf3 = complex(kf3r, kf3i)
-                        f23 = complex(f23r, f23i)
-                        kf4 = complex(kf4r, kf4i)
-                        f32 = complex(f32r, f32i)
-                        s12 = complex(s12r, s12i)
-                        f43 = complex(f43r, f43i)
-                        s23 = complex(s23r, s23i)
-                        f34 = complex(f34r, f34i)
-                        s34 = complex(s34r, s34i)
-                        f14 = complex(f14r, f14i)
-                        s41 = complex(s41r, s41i)
-
-                    eid, dt = get_eid_dt_from_eid_device(
-                        eid_device, self.nonlinear_factor, self.sort_method)
-                    obj.add_sort1(dt, eid,
-                                  f41, f21, f12, f32, f23, f43, f34, f14,
-                                  kf1, s12, kf2, s23, kf3, s34, kf4, s41)
+                n = oef_cshear_imag_33(self, data, obj,
+                                       nelements, ntotal,
+                                       is_magnitude_phase)
         else:  # pragma: no cover
             raise RuntimeError(self.code_information())
             #msg = self.code_information()
@@ -2728,17 +2581,9 @@ class OEF(OP2Common):
                 obj.itotal = itotal2
                 obj.ielement = ielement2
             else:
-                s = Struct(self._endian + self._analysis_code_fmt + b'6f')
-                for unused_i in range(nelements):
-                    edata = data[n:n+ntotal]
-                    out = s.unpack(edata)
-                    if self.is_debug_file:
-                        self.binary_debug.write('OEF_CONEAX-35 - %s\n' % (str(out)))
-                    (eid_device, hopa, bmu, bmv, tm, su, sv) = out
-                    eid, dt = get_eid_dt_from_eid_device(
-                        eid_device, self.nonlinear_factor, self.sort_method)
-                    obj.add_sort1(dt, eid, hopa, bmu, bmv, tm, su, sv)
-                    n += ntotal
+                n = oef_cconeax_real_7(self, data, obj,
+                                       nelements, ntotal, dt)
+
         else:  # pragma: no cover
             raise RuntimeError(self.code_information())
             #msg = self.code_information()
@@ -2756,18 +2601,18 @@ class OEF(OP2Common):
 
         n = 0
         if self.format_code == 1 and self.num_wide == 9:  # real
-            ntotal = 36 # 9*4
+            ntotal = 36 *  self.factor # 9*4
             nelements = ndata // ntotal
             obj = self.obj
 
             auto_return, is_vectorized = self._create_oes_object4(
                 nelements, result_name, slot, RealCGapForceArray)
             if auto_return:
-                return nelements * self.num_wide * 4, None, None
+                return nelements * ntotal, None, None
 
             obj = self.obj
             if self.use_vector and is_vectorized and self.sort_method == 1:
-                n = nelements * 4 * self.num_wide
+                n = nelements * ntotal
                 itotal = obj.ielement
                 ielement2 = obj.itotal + nelements
                 itotal2 = ielement2
@@ -2785,21 +2630,9 @@ class OEF(OP2Common):
                 obj.itotal = itotal2
                 obj.ielement = ielement2
             else:
-                s = Struct(self._endian + self._analysis_code_fmt + b'8f')
-                for unused_i in range(nelements):
-                    edata = data[n:n+36]
+                n = oef_cgap_real_9(self, data, obj,
+                                    nelements, ntotal)
 
-                    out = s.unpack(edata)
-                    if self.is_debug_file:
-                        self.binary_debug.write('OEF_CGAP-38 - %s\n' % (str(out)))
-                    (eid_device, fx, sfy, sfz, u, v, w, sv, sw) = out
-                    eid, dt = get_eid_dt_from_eid_device(
-                        eid_device, self.nonlinear_factor, self.sort_method)
-                    #data_in = [eid, fx, sfy, sfz, u, v, w, sv, sw]
-                    #print "%s" %(self.get_element_type(self.element_type)), data_in
-                    #eid = obj.add_new_eid_sort1(out)
-                    obj.add_sort1(dt, eid, fx, sfy, sfz, u, v, w, sv, sw)
-                    n += ntotal
         else:  # pragma: no cover
             raise RuntimeError(self.code_information())
             #msg = self.code_information()
@@ -3041,21 +2874,8 @@ class OEF(OP2Common):
                 obj.itotal = itotal2
                 obj.ielement = ielement2
             else:
-                if self.size == 4:
-                    fmt = self._endian + self._analysis_code_fmt + b'8s7f'
-                else:
-                    fmt = self._endian + mapfmt(self._analysis_code_fmt, self.size) + b'16s7d'
-                s = Struct(fmt)
-                for unused_i in range(nelements):
-                    edata = data[n : n + ntotal]
-                    n += ntotal
-                    out = s.unpack(edata)
-                    if self.is_debug_file:
-                        self.binary_debug.write('OEF_PentaPressure-%s %s\n' % (self.element_type, str(out)))
-                    (eid_device, ename, ax, ay, az, vx, vy, vz, pressure) = out
-                    eid, dt = get_eid_dt_from_eid_device(
-                        eid_device, self.nonlinear_factor, self.sort_method)
-                    obj.add_sort1(dt, eid, ename, ax, ay, az, vx, vy, vz, pressure)
+                n = oef_csolid_pressure_10(self, data, obj,
+                                           nelements, ntotal, dt)
 
         elif self.format_code in [2, 3] and self.num_wide == 16:  # imag
             ntotal = 64 * self.factor
@@ -3107,41 +2927,9 @@ class OEF(OP2Common):
                 obj.itotal = itotal2
                 obj.ielement = ielement2
             else:
-                if self.size == 4:
-                    s = Struct(self._endian + self._analysis_code_fmt + b'8s 13f')
-                else:
-                    s = Struct(mapfmt(self._endian + self._analysis_code_fmt, self.size) + b'16s 13d')
-                for unused_i in range(nelements):
-                    edata = data[n:n+ntotal]
-                    n += ntotal
-
-                    #print(len(edata))
-                    out = s.unpack(edata)
-                    if self.is_debug_file:
-                        self.binary_debug.write('_oef_csolid_pressure-%s %s\n' % (self.element_type, str(out)))
-                    (eid_device, ename,
-                     axr, ayr, azr, vxr, vyr, vzr, pressure,
-                     axi, ayi, azi, vxi, vyi, vzi) = out
-                    eid, dt = get_eid_dt_from_eid_device(
-                        eid_device, self.nonlinear_factor, self.sort_method)
-                    ename = ename.decode('utf-8').strip()
-
-                    if is_magnitude_phase:
-                        ax = polar_to_real_imag(axr, axi)
-                        vx = polar_to_real_imag(vxr, vxi)
-                        ay = polar_to_real_imag(ayr, ayi)
-                        vy = polar_to_real_imag(vyr, vyi)
-                        az = polar_to_real_imag(azr, azi)
-                        vz = polar_to_real_imag(vzr, vzi)
-                    else:
-                        ax = complex(axr, axi)
-                        vx = complex(vxr, vxi)
-                        ay = complex(ayr, ayi)
-                        vy = complex(vyr, vyi)
-                        az = complex(azr, azi)
-                        vz = complex(vzr, vzi)
-                    cpressure = complex(pressure, 0.)
-                    obj.add_sort1(dt, eid, ename, ax, ay, az, vx, vy, vz, cpressure)
+                n = oef_csolid_imag_16(self, data, obj,
+                                       nelements, ntotal,
+                                       is_magnitude_phase)
         else:  # pragma: no cover
             raise RuntimeError(self.code_information())
             #msg = self.code_information()
@@ -3217,46 +3005,18 @@ class OEF(OP2Common):
                                      nelements, ntotal, dt)
         elif result_type == 1 and self.num_wide == 13:  # imag
             # TODO: vectorize
-            ntotal = 52  # 13*4
+            ntotal = 52 * self.factor  # 13*4
             nelements = ndata // ntotal
             #result_name = prefix + 'cbush_force' + postfix
             auto_return, is_vectorized = self._create_oes_object4(
                 nelements, result_name, slot, complex_obj)
             if auto_return:
-                return nelements * self.num_wide * 4, None, None
-
-            s = Struct(self._endian + self._analysis_code_fmt + b'12f')
+                return nelements * ntotal, None, None
 
             obj = self.obj
-            for unused_i in range(nelements):
-                edata = data[n:n + 52]
-
-                out = s.unpack(edata)
-                if self.is_debug_file:
-                    self.binary_debug.write('OEF_CBUSH-102 - %s\n' % (str(out)))
-                (eid_device,
-                 fxr, fyr, fzr, mxr, myr, mzr,
-                 fxi, fyi, fzi, mxi, myi, mzi) = out
-                eid, dt = get_eid_dt_from_eid_device(
-                    eid_device, self.nonlinear_factor, self.sort_method)
-
-                if is_magnitude_phase:
-                    fx = polar_to_real_imag(fxr, fxi)
-                    mx = polar_to_real_imag(mxr, mxi)
-                    fy = polar_to_real_imag(fyr, fyi)
-                    my = polar_to_real_imag(myr, myi)
-                    fz = polar_to_real_imag(fzr, fzi)
-                    mz = polar_to_real_imag(mzr, mzi)
-                else:
-                    fx = complex(fxr, fxi)
-                    mx = complex(mxr, mxi)
-                    fy = complex(fyr, fyi)
-                    my = complex(myr, myi)
-                    fz = complex(fzr, fzi)
-                    mz = complex(mzr, mzi)
-
-                obj.add_sort1(dt, eid, fx, fy, fz, mx, my, mz)
-                n += ntotal
+            n = oef_cbush_imag_13(self, data, obj,
+                                  nelements, ntotal,
+                                  is_magnitude_phase)
         #elif self.format_code == 2 and self.num_wide == 7:
             #self.log.warning(self.code_information())
         else:
@@ -3333,44 +3093,8 @@ class OEF(OP2Common):
                 #[fx, fy, fz, mx, my, mz]
                 obj.data[obj.itime, istart:iend, :] = results[:, 1:].copy()
             else:
-                # 6+n*13
-                if self.size == 4:
-                    s1 = Struct(self._endian + b'3i4s2i') # 6
-                else:
-                    s1 = Struct(self._endian + b'3q8s2q') # 6
-                s2 = Struct(mapfmt(self._endian + b'i3f3i5fi', self.size)) # 13
-                ntotal1 = 24 * self.factor # 6*4
-                ntotal2 = 52 * self.factor # 13*4
-                for unused_i in range(nelements):
-                    edata = data[n:n+ntotal1]
-                    n += ntotal1
-
-                    out = s1.unpack(edata)
-                    if self.is_debug_file:
-                        self.binary_debug.write('OEF_Force_%s-%s - %s\n' % (
-                            etype, self.element_type, str(out)))
-                    (eid_device, parent, coord, icord, theta, _) = out
-
-                    eid, dt = get_eid_dt_from_eid_device(
-                        eid_device, self.nonlinear_factor, self.sort_method)
-
-                    #vugrids = []
-                    #forces = []
-                    for unused_j in range(nnodes):
-                        edata = data[n:n+ntotal2]
-                        n += ntotal2
-                        out = s2.unpack(edata)
-                        if self.is_debug_file:
-                            self.binary_debug.write('%s\n' % (str(out)))
-                        (vugrid, mfx, mfy, mfxy, unused_ai, unused_bi, unused_ci, bmx, bmy,
-                         bmxy, syz, szx, unused_di) = out
-                        #out2 = (vugrid, mfx, mfy, mfxy, bmx, bmy, bmxy, syz, szx)
-                        obj.add_sort1(dt, eid, parent, coord, icord, theta,
-                                      vugrid, mfx, mfy, mfxy, bmx, bmy, bmxy, syz, szx)
-                        #vugrids.append(vugrid)
-                        #forces.append(out2)
-                    #data_in = [vugrid,mfx,mfy,mfxy,a,b,c,bmx,bmy,bmxy,syz,szx,d]
-                    #obj.add_sort1(dt, eid, parent, coord, icord, theta, vugrids, forces)
+                n = oef_vu_shell_real(self, data, obj,
+                                      nelements, nnodes, ntotal, etype)
 
         elif self.format_code in [2, 3] and self.num_wide == numwide_imag:  # imag
             if self._results.is_not_saved(result_name):
@@ -3600,6 +3324,95 @@ class OEF(OP2Common):
             #return self._not_implemented_or_skip(data, ndata, msg), None, None
         return n, nelements, ntotal
 
+def oef_crod_real_3(self, data: bytes,
+                    obj: RealRodForceArray,
+                    nelements: int, ntotal: int) -> int:
+        n = 0
+        fmt = mapfmt(self._endian + self._analysis_code_fmt + b'ff', self.size)  # 3
+        s = Struct(fmt)
+        for unused_i in range(nelements):
+            edata = data[n:n+ntotal]
+            out = s.unpack(edata)
+            (eid_device, axial, torque) = out
+            eid, dt = get_eid_dt_from_eid_device(
+                eid_device, self.nonlinear_factor, self.sort_method)
+            if self.is_debug_file:
+                self.binary_debug.write('OEF_Rod - %s\n' % (str(out)))
+            obj.add_sort1(dt, eid, axial, torque)
+            n += ntotal
+        return n
+
+def oef_crod_imag_5(self, data: bytes,
+                    obj: ComplexRodForceArray,
+                    nelements: int, ntotal: int,
+                    is_magnitude_phase: bool) -> int:
+    n = 0
+    fmt = mapfmt(self._endian + self._analysis_code_fmt + b'4f', self.size)
+    s = Struct(fmt)
+    for unused_i in range(nelements):
+        edata = data[n:n+ntotal]
+
+        out = s.unpack(edata)
+        if self.is_debug_file:
+            self.binary_debug.write('OEF_CRod - %s\n' % (str(out)))
+        (eid_device, axial_real, torque_real, axial_imag, torque_imag) = out
+        eid, dt = get_eid_dt_from_eid_device(
+            eid_device, self.nonlinear_factor, self.sort_method)
+        if is_magnitude_phase:
+            axial = polar_to_real_imag(axial_real, axial_imag)
+            torque = polar_to_real_imag(torque_real, torque_imag)
+        else:
+            axial = complex(axial_real, axial_imag)
+            torque = complex(torque_real, torque_imag)
+
+        obj.add_sort1(dt, eid, axial, torque)
+        n += ntotal
+    return n
+
+def oef_celas_cdamp_imag_3(self, data: bytes,
+                           obj: Union[ComplexSpringForceArray, ComplexDamperForceArray],
+                           nelements: int, ntotal: int,
+                           is_magnitude_phase: bool) -> int:
+    n = 0
+    fmt = mapfmt(self._endian + self._analysis_code_fmt + b'2f', self.size)
+    s = Struct(fmt)
+    for unused_i in range(nelements):
+        edata = data[n:n + ntotal]
+        out = s.unpack(edata)
+        if self.is_debug_file:
+            self.binary_debug.write('OEF_SpringDamper - %s\n' % str(out))
+        (eid_device, force_real, force_imag) = out
+        eid, dt = get_eid_dt_from_eid_device(
+            eid_device, self.nonlinear_factor, self.sort_method)
+        if is_magnitude_phase:
+            force = polar_to_real_imag(force_real, force_imag)
+        else:
+            force = complex(force_real, force_imag)
+        obj.add_sort1(dt, eid, force)
+        n += ntotal
+    return n
+
+def oef_cgap_real_9(self, data: bytes,
+                    obj: RealCGapForceArray,
+                    nelements: int, ntotal: int) -> int:
+    n = 0
+    s = Struct(self._endian + self._analysis_code_fmt + b'8f')
+    for unused_i in range(nelements):
+        edata = data[n:n+36]
+
+        out = s.unpack(edata)
+        if self.is_debug_file:
+            self.binary_debug.write('OEF_CGAP-38 - %s\n' % (str(out)))
+        (eid_device, fx, sfy, sfz, u, v, w, sv, sw) = out
+        eid, dt = get_eid_dt_from_eid_device(
+            eid_device, self.nonlinear_factor, self.sort_method)
+        #data_in = [eid, fx, sfy, sfz, u, v, w, sv, sw]
+        #print "%s" %(self.get_element_type(self.element_type)), data_in
+        #eid = obj.add_new_eid_sort1(out)
+        obj.add_sort1(dt, eid, fx, sfy, sfz, u, v, w, sv, sw)
+        n += ntotal
+    return n
+
 def oef_cbar_real_9(self, data: bytes,
                     obj: RealCBarForceArray,
                     nelements: int, ntotal: int) -> int:
@@ -3639,7 +3452,6 @@ def oef_cbar_imag_17(self, data: bytes,
                      nelements: int, ntotal: int,
                      is_magnitude_phase: bool) -> int:
     n = 0
-
     fmt = mapfmt(self._endian + self._analysis_code_fmt + b'16f', self.size)
     #add_sort_x = getattr(obj, 'add_sort' + str(self.sort_method))
     s = Struct(fmt)
@@ -3681,6 +3493,24 @@ def oef_cbar_imag_17(self, data: bytes,
         n += ntotal
     return n
 
+def oef_cbar_100_real_8(self, data: bytes,
+                        obj: RealCBar100ForceArray,
+                        nelements: int, ntotal: int) -> int:
+    n = 0
+    s = Struct(self._endian + self._analysis_code_fmt + b'7f')
+    for unused_i in range(nelements):
+        edata = data[n:n+ntotal]
+
+        out = s.unpack(edata)
+        if self.is_debug_file:
+            self.binary_debug.write('OEF_CBar100 - %s\n' % (str(out)))
+        (eid_device, sd, bm1, bm2, ts1, ts2, af, trq) = out
+        eid, dt = get_eid_dt_from_eid_device(
+            eid_device, self.nonlinear_factor, self.sort_method)
+        obj.add_sort1(dt, eid, sd, bm1, bm2, ts1, ts2, af, trq)
+        n += ntotal
+    return n
+
 def oef_cbeam_real_100(self, data: bytes, obj: RealCBeamForceArray,
                        nelements: int, ntotal: int, dt: Any) -> int:
     n = 0
@@ -3694,52 +3524,25 @@ def oef_cbeam_real_100(self, data: bytes, obj: RealCBeamForceArray,
         s2 = Struct(self._endian + b'q8d')  # 36
 
     sort_method = self.sort_method
-    if sort_method == 1:
-        for unused_i in range(nelements):
-            edata = data[n:n+ntotal1]
-            eid_device, = s1.unpack(edata)
-            eid, dt = get_eid_dt_from_eid_device(
-                eid_device, self.nonlinear_factor, sort_method)
-            n += ntotal1
+    add_sort_x = getattr(obj, 'add_sort' + str(sort_method))
+    for unused_i in range(nelements):
+        edata = data[n:n+ntotal1]
+        eid_device, = s1.unpack(edata)
+        eid, dt = get_eid_dt_from_eid_device(
+            eid_device, self.nonlinear_factor, sort_method)
+        n += ntotal1
 
-            for istation in range(11):
-                edata = data[n:n+ntotal2]
-                out = s2.unpack(edata)
-                if self.is_debug_file:
-                    self.binary_debug.write('OEF_Beam - %s\n' % (str(out)))
-                (nid, sd, bm1, bm2, ts1, ts2, af, ttrq, wtrq) = out
+        for istation in range(11):
+            edata = data[n:n+ntotal2]
+            out = s2.unpack(edata)
+            if self.is_debug_file:
+                self.binary_debug.write('OEF_Beam - %s\n' % (str(out)))
+            (nid, sd, bm1, bm2, ts1, ts2, af, ttrq, wtrq) = out
 
-                if istation == 0:  # new element
-                    obj.add_new_element_sort1(
-                        dt, eid, nid, sd, bm1, bm2, ts1, ts2, af, ttrq, wtrq)
-                elif sd > 0.:
-                    obj.add_sort1(
-                        dt, eid, nid, sd, bm1, bm2, ts1, ts2, af, ttrq, wtrq)
-                n += ntotal2
-    else:  # pramga: no cover
-        self.log.warning(self.code_information())
-        n = nelements * ntotal
-        #for unused_i in range(nelements):
-            #edata = data[n:n+ntotal1]
-            #eid_device, = s1.unpack(edata)
-            #eid, dt = get_eid_dt_from_eid_device(
-                #eid_device, self.nonlinear_factor, sort_method)
-            #n += ntotal1
-
-            #for istation in range(11):
-                #edata = data[n:n+ntotal2]
-                #out = s2.unpack(edata)
-                #if self.is_debug_file:
-                    #self.binary_debug.write('OEF_Beam - %s\n' % (str(out)))
-                #(nid, sd, bm1, bm2, ts1, ts2, af, ttrq, wtrq) = out
-
-                #if istation == 0:  # isNewElement
-                    #obj.add_new_element_sort2(
-                        #dt, eid, nid, sd, bm1, bm2, ts1, ts2, af, ttrq, wtrq)
-                #elif sd > 0.:
-                    #obj.add_sort2(
-                        #dt, eid, nid, sd, bm1, bm2, ts1, ts2, af, ttrq, wtrq)
-                #n += ntotal2
+            if istation == 0 or sd > 0:
+                add_sort_x(dt, eid, nid, sd, bm1, bm2, ts1, ts2,
+                           af, ttrq, wtrq)
+            n += ntotal2
     return n
 
 def oef_cbeam_imag_177(self, data: bytes,
@@ -3906,6 +3709,43 @@ def oef_cbush_real_7(self, data: bytes,
         n += ntotal
     return n
 
+def oef_cbush_imag_13(self, data: bytes,
+                      obj: ComplexCBushForceArray,
+                      nelements: int, ntotal: int,
+                      is_magnitude_phase: bool) -> int:
+    n = 0
+    s = Struct(self._endian + self._analysis_code_fmt + b'12f')
+    for unused_i in range(nelements):
+        edata = data[n:n + ntotal]
+
+        out = s.unpack(edata)
+        if self.is_debug_file:
+            self.binary_debug.write('OEF_CBUSH-102 - %s\n' % (str(out)))
+        (eid_device,
+         fxr, fyr, fzr, mxr, myr, mzr,
+         fxi, fyi, fzi, mxi, myi, mzi) = out
+        eid, dt = get_eid_dt_from_eid_device(
+            eid_device, self.nonlinear_factor, self.sort_method)
+
+        if is_magnitude_phase:
+            fx = polar_to_real_imag(fxr, fxi)
+            mx = polar_to_real_imag(mxr, mxi)
+            fy = polar_to_real_imag(fyr, fyi)
+            my = polar_to_real_imag(myr, myi)
+            fz = polar_to_real_imag(fzr, fzi)
+            mz = polar_to_real_imag(mzr, mzi)
+        else:
+            fx = complex(fxr, fxi)
+            mx = complex(mxr, mxi)
+            fy = complex(fyr, fyi)
+            my = complex(myr, myi)
+            fz = complex(fzr, fzi)
+            mz = complex(mzr, mzi)
+
+        obj.add_sort1(dt, eid, fx, fy, fz, mx, my, mz)
+        n += ntotal
+    return n
+
 def oef_cvisc_real_3(self, data: bytes, obj: RealViscForceArray,
                      nelements: int, ntotal: int, dt: Any) -> int:
     n = 0
@@ -3920,6 +3760,32 @@ def oef_cvisc_real_3(self, data: bytes, obj: RealViscForceArray,
         (eid_device, axial, torque) = out
         eid, dt = get_eid_dt_from_eid_device(
             eid_device, self.nonlinear_factor, self.sort_method)
+        obj.add_sort1(dt, eid, axial, torque)
+        n += ntotal
+    return n
+
+def oef_cvisc_imag_5(self, data: bytes,
+                     obj: ComplexViscForceArray,
+                     nelements: int, ntotal: int,
+                     is_magnitude_phase: bool) -> int:
+    n = 0
+    s = Struct(self._endian + self._analysis_code_fmt + b'4f')  # 5
+    for unused_i in range(nelements):
+        edata = data[n:n+20]
+
+        out = s.unpack(edata)
+        if self.is_debug_file:
+            self.binary_debug.write('OEF_CVisc - %s\n' % (str(out)))
+        (eid_device, axial_real, torque_real, axial_imag, torque_imag) = out
+        eid, dt = get_eid_dt_from_eid_device(
+            eid_device, self.nonlinear_factor, self.sort_method)
+        if is_magnitude_phase:
+            axial = polar_to_real_imag(axial_real, axial_imag)
+            torque = polar_to_real_imag(torque_real, torque_imag)
+        else:
+            axial = complex(axial_real, axial_imag)
+            torque = complex(torque_real, torque_imag)
+
         obj.add_sort1(dt, eid, axial, torque)
         n += ntotal
     return n
@@ -3966,6 +3832,122 @@ def oef_cshear_real_17(self, data: bytes,
         obj.add_sort1(dt, eid,
                       f41, f21, f12, f32, f23, f43, f34,
                       f14, kf1, s12, kf2, s23, kf3, s34, kf4, s41)
+        n += ntotal
+    return n
+
+def oef_cshear_imag_33(self, data: bytes,
+                       obj: ComplexCShearForceArray,
+                       nelements: int, ntotal: int,
+                       is_magnitude_phase: bool) -> int:
+    n = 0
+    s = Struct(mapfmt(self._endian + self._analysis_code_fmt + b'32f', self.size))
+    #ntotal1 = 132 * self.factor
+    for unused_i in range(nelements):
+        edata = data[n:n+ntotal]
+        n += ntotal
+        out = s.unpack(edata)
+        if self.is_debug_file:
+            self.binary_debug.write('OEF_Shear - %s\n' % (str(out)))
+        (eid_device,
+         f41r, f21r, f12r, f32r, f23r, f43r, f34r, f14r, # 8
+         kf1r, s12r, kf2r, s23r, kf3r, s34r, kf4r, s41r, # 16
+         f41i, f21i, f12i, f32i, f23i, f43i, f34i, f14i,
+         kf1i, s12i, kf2i, s23i, kf3i, s34i, kf4i, s41i) = out
+        if is_magnitude_phase:
+            f41 = polar_to_real_imag(f41r, f41i)
+            kf1 = polar_to_real_imag(kf1r, kf1i)
+            f21 = polar_to_real_imag(f21r, f21i)
+            kf2 = polar_to_real_imag(kf2r, kf2i)
+            f12 = polar_to_real_imag(f12r, f12i)
+            kf3 = polar_to_real_imag(kf3r, kf3i)
+            f23 = polar_to_real_imag(f23r, f23i)
+            kf4 = polar_to_real_imag(kf4r, kf4i)
+            f32 = polar_to_real_imag(f32r, f32i)
+            s12 = polar_to_real_imag(s12r, s12i)
+            f43 = polar_to_real_imag(f43r, f43i)
+            s23 = polar_to_real_imag(s23r, s23i)
+            f34 = polar_to_real_imag(f34r, f34i)
+            s34 = polar_to_real_imag(s34r, s34i)
+            f14 = polar_to_real_imag(f14r, f14i)
+            s41 = polar_to_real_imag(s41r, s41i)
+        else:
+            f41 = complex(f41r, f41i)
+            kf1 = complex(kf1r, kf1i)
+            f21 = complex(f21r, f21i)
+            kf2 = complex(kf2r, kf2i)
+            f12 = complex(f12r, f12i)
+            kf3 = complex(kf3r, kf3i)
+            f23 = complex(f23r, f23i)
+            kf4 = complex(kf4r, kf4i)
+            f32 = complex(f32r, f32i)
+            s12 = complex(s12r, s12i)
+            f43 = complex(f43r, f43i)
+            s23 = complex(s23r, s23i)
+            f34 = complex(f34r, f34i)
+            s34 = complex(s34r, s34i)
+            f14 = complex(f14r, f14i)
+            s41 = complex(s41r, s41i)
+
+        eid, dt = get_eid_dt_from_eid_device(
+            eid_device, self.nonlinear_factor, self.sort_method)
+        obj.add_sort1(dt, eid,
+                      f41, f21, f12, f32, f23, f43, f34, f14,
+                      kf1, s12, kf2, s23, kf3, s34, kf4, s41)
+    return n
+
+def oef_cquad4_33_real_9(self, data: bytes,
+                         obj: RealPlateForceArray,
+                         nelements: int, ntotal: int) -> int:
+    n = 0
+    s = Struct(mapfmt(self._endian + self._analysis_code_fmt + b'8f', self.size))
+    for unused_i in range(nelements):
+        edata = data[n:n+ntotal]
+        out = s.unpack(edata)
+        if self.is_debug_file:
+            self.binary_debug.write('real_OEF_Plate-%s - %s\n' % (self.element_type, str(out)))
+        (eid_device, mx, my, mxy, bmx, bmy, bmxy, tx, ty) = out
+        eid, dt = get_eid_dt_from_eid_device(
+            eid_device, self.nonlinear_factor, self.sort_method)
+        obj.add_sort1(dt, eid, mx, my, mxy, bmx, bmy, bmxy, tx, ty)
+        n += ntotal
+    return n
+
+def oef_cquad4_33_imag_17(self, data: bytes, ndata: int,
+                          obj: ComplexPlateForceArray,
+                          nelements: int, ntotal: int,
+                          is_magnitude_phase: bool) -> int:
+    n = 0
+    s = Struct(mapfmt(self._endian + self._analysis_code_fmt + b'16f', self.size))
+    for unused_i in range(nelements):
+        edata = data[n:n+ntotal]
+        out = s.unpack(edata)
+        (eid_device,
+         mxr, myr, mxyr, bmxr, bmyr, bmxyr, txr, tyr,
+         mxi, myi, mxyi, bmxi, bmyi, bmxyi, txi, tyi) = out
+        eid, dt = get_eid_dt_from_eid_device(
+            eid_device, self.nonlinear_factor, self.sort_method)
+        if self.is_debug_file:
+            self.binary_debug.write('complex_OEF_Plate-%s - %s\n' % (self.element_type, str(out)))
+
+        if is_magnitude_phase:
+            mx = polar_to_real_imag(mxr, mxi)
+            my = polar_to_real_imag(myr, myi)
+            mxy = polar_to_real_imag(mxyr, mxyi)
+            bmx = polar_to_real_imag(bmxr, bmxi)
+            bmy = polar_to_real_imag(bmyr, bmyi)
+            bmxy = polar_to_real_imag(bmxyr, bmxyi)
+            tx = polar_to_real_imag(txr, txi)
+            ty = polar_to_real_imag(tyr, tyi)
+        else:
+            mx = complex(mxr, mxi)
+            my = complex(myr, myi)
+            mxy = complex(mxyr, mxyi)
+            bmx = complex(bmxr, bmxi)
+            bmy = complex(bmyr, bmyi)
+            bmxy = complex(bmxyr, bmxyi)
+            tx = complex(txr, txi)
+            ty = complex(tyr, tyi)
+        obj.add_sort1(dt, eid, mx, my, mxy, bmx, bmy, bmxy, tx, ty)
         n += ntotal
     return n
 
@@ -4091,6 +4073,50 @@ def oef_cquad4_imag_17(self, data: bytes, ndata: int,
                 self.binary_debug.write('OEF_Plate2 - eid=%i nid=%s out=%s\n' % (
                     eid, nid, str(out)))
             obj.add_sort1(dt, eid, nid, mx, my, mxy, bmx, bmy, bmxy, tx, ty)
+    return n
+
+def oef_vu_shell_real(self, data: bytes,
+                      obj: RealForceVU2DArray,
+                      nelements: int, nnodes: int, ntotal: int, etype: str) -> int:
+    n = 0
+    # 6+n*13
+    if self.size == 4:
+        s1 = Struct(self._endian + b'3i4s2i') # 6
+    else:
+        s1 = Struct(self._endian + b'3q8s2q') # 6
+    s2 = Struct(mapfmt(self._endian + b'i3f3i5fi', self.size)) # 13
+    ntotal1 = 24 * self.factor # 6*4
+    ntotal2 = 52 * self.factor # 13*4
+    for unused_i in range(nelements):
+        edata = data[n:n+ntotal1]
+        n += ntotal1
+
+        out = s1.unpack(edata)
+        if self.is_debug_file:
+            self.binary_debug.write('OEF_Force_%s-%s - %s\n' % (
+                etype, self.element_type, str(out)))
+        (eid_device, parent, coord, icord, theta, _) = out
+
+        eid, dt = get_eid_dt_from_eid_device(
+            eid_device, self.nonlinear_factor, self.sort_method)
+
+        #vugrids = []
+        #forces = []
+        for unused_j in range(nnodes):
+            edata = data[n:n+ntotal2]
+            n += ntotal2
+            out = s2.unpack(edata)
+            if self.is_debug_file:
+                self.binary_debug.write('%s\n' % (str(out)))
+            (vugrid, mfx, mfy, mfxy, unused_ai, unused_bi, unused_ci, bmx, bmy,
+             bmxy, syz, szx, unused_di) = out
+            #out2 = (vugrid, mfx, mfy, mfxy, bmx, bmy, bmxy, syz, szx)
+            obj.add_sort1(dt, eid, parent, coord, icord, theta,
+                          vugrid, mfx, mfy, mfxy, bmx, bmy, bmxy, syz, szx)
+            #vugrids.append(vugrid)
+            #forces.append(out2)
+        #data_in = [vugrid,mfx,mfy,mfxy,a,b,c,bmx,bmy,bmxy,syz,szx,d]
+        #obj.add_sort1(dt, eid, parent, coord, icord, theta, vugrids, forces)
     return n
 
 def oef_vu_shell_imag(self, data: bytes,
@@ -4224,4 +4250,84 @@ def oef_vu_beam_imag(self, data: bytes,
 
             obj._add_sort1(dt, eid, parent, coord, icord,
                            vugrid, posit, force_x, shear_y, shear_z, torsion, bending_y, bending_z)
+    return n
+
+def oef_cconeax_real_7(self, data: bytes,
+                       obj: Union[RealConeAxForceArray],
+                       nelements: int, ntotal: int, dt: Any) -> int:
+    n = 0
+    s = Struct(self._endian + self._analysis_code_fmt + b'6f')
+    for unused_i in range(nelements):
+        edata = data[n:n+ntotal]
+        out = s.unpack(edata)
+        if self.is_debug_file:
+            self.binary_debug.write('OEF_CONEAX-35 - %s\n' % (str(out)))
+        (eid_device, hopa, bmu, bmv, tm, su, sv) = out
+        eid, dt = get_eid_dt_from_eid_device(
+            eid_device, self.nonlinear_factor, self.sort_method)
+        obj.add_sort1(dt, eid, hopa, bmu, bmv, tm, su, sv)
+        n += ntotal
+    return n
+
+def oef_csolid_pressure_10(self, data: bytes,
+                           obj: Union[RealSolidPressureForceArray],
+                           nelements: int, ntotal: int, dt: Any) -> int:
+    n = 0
+    if self.size == 4:
+        fmt = self._endian + self._analysis_code_fmt + b'8s7f'
+    else:
+        fmt = self._endian + mapfmt(self._analysis_code_fmt, self.size) + b'16s7d'
+    s = Struct(fmt)
+    for unused_i in range(nelements):
+        edata = data[n : n + ntotal]
+        n += ntotal
+        out = s.unpack(edata)
+        if self.is_debug_file:
+            self.binary_debug.write('OEF_PentaPressure-%s %s\n' % (self.element_type, str(out)))
+        (eid_device, ename, ax, ay, az, vx, vy, vz, pressure) = out
+        eid, dt = get_eid_dt_from_eid_device(
+            eid_device, self.nonlinear_factor, self.sort_method)
+        obj.add_sort1(dt, eid, ename, ax, ay, az, vx, vy, vz, pressure)
+    return n
+
+def oef_csolid_imag_16(self, data: bytes,
+                       obj: ComplexSolidPressureForceArray,
+                       nelements: int, ntotal: int,
+                       is_magnitude_phase: bool) -> int:
+    n = 0
+    if self.size == 4:
+        s = Struct(self._endian + self._analysis_code_fmt + b'8s 13f')
+    else:
+        s = Struct(mapfmt(self._endian + self._analysis_code_fmt, self.size) + b'16s 13d')
+    for unused_i in range(nelements):
+        edata = data[n:n+ntotal]
+        n += ntotal
+
+        #print(len(edata))
+        out = s.unpack(edata)
+        if self.is_debug_file:
+            self.binary_debug.write('_oef_csolid_pressure-%s %s\n' % (self.element_type, str(out)))
+        (eid_device, ename,
+         axr, ayr, azr, vxr, vyr, vzr, pressure,
+         axi, ayi, azi, vxi, vyi, vzi) = out
+        eid, dt = get_eid_dt_from_eid_device(
+            eid_device, self.nonlinear_factor, self.sort_method)
+        ename = ename.decode('utf-8').strip()
+
+        if is_magnitude_phase:
+            ax = polar_to_real_imag(axr, axi)
+            vx = polar_to_real_imag(vxr, vxi)
+            ay = polar_to_real_imag(ayr, ayi)
+            vy = polar_to_real_imag(vyr, vyi)
+            az = polar_to_real_imag(azr, azi)
+            vz = polar_to_real_imag(vzr, vzi)
+        else:
+            ax = complex(axr, axi)
+            vx = complex(vxr, vxi)
+            ay = complex(ayr, ayi)
+            vy = complex(vyr, vyi)
+            az = complex(azr, azi)
+            vz = complex(vzr, vzi)
+        cpressure = complex(pressure, 0.)
+        obj.add_sort1(dt, eid, ename, ax, ay, az, vx, vy, vz, cpressure)
     return n
