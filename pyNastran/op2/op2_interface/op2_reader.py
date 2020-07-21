@@ -1987,7 +1987,7 @@ class OP2Reader:
             op2._frequencies = freqs
             if self.is_debug_file:
                 self.binary_debug.write('  recordi = [%r, freqs]\n'  % (subtable_name_raw))
-                self.binary_debug.write('  subtable_name=%r\n' % subtable_name)
+                self.binary_debug.write(f'  subtable_name={subtable_name!r}\n')
                 self.binary_debug.write('  freqs = %s' % freqs)
         self._read_subtables()
 
@@ -2973,7 +2973,7 @@ class OP2Reader:
             if self.is_debug_file:
                 self.binary_debug.write('  recordi = [%r, %i, %i, %i, %i, %i]\n'  % (
                     subtable_name, month, day, year, zero, one))
-                self.binary_debug.write('  subtable_name=%r\n' % subtable_name)
+                self.binary_debug.write(f'  subtable_name={subtable_name!r}\n')
             self._print_month(month, day, year, zero, one)
         else:
             raise NotImplementedError(self.show_data(data))
@@ -3465,7 +3465,7 @@ class OP2Reader:
             if self.is_debug_file:
                 self.binary_debug.write('  recordi = [%r, %i, %i]\n'  % (
                     subtable_name, dummy_a, dummy_b))
-                self.binary_debug.write('  subtable_name=%r\n' % subtable_name)
+                self.binary_debug.write(f'  subtable_name={subtable_name!r}\n')
                 assert dummy_a == 170, dummy_a
                 assert dummy_b == 170, dummy_b
         else:
@@ -5260,7 +5260,7 @@ class OP2Reader:
         """Reads a results table"""
         op2 = self.op2
         if self.is_debug_file:
-            self.binary_debug.write('read_results_table - %s\n' % op2.table_name)
+            self.binary_debug.write(f'read_results_table - {op2.table_name}\n')
         op2.table_name = self._read_table_name(rewind=False)
         self.read_markers([-1])
         if self.is_debug_file:
@@ -5281,7 +5281,7 @@ class OP2Reader:
         """Reads a results table"""
         op2 = self.op2
         if self.is_debug_file:
-            self.binary_debug.write('read_results_table - %s\n' % op2.table_name)
+            self.binary_debug.write(f'read_results_table - {op2.table_name}\n')
         op2.table_name = self._read_table_name(rewind=False)
         self.read_markers8([-1])
         if self.is_debug_file:
@@ -5304,23 +5304,23 @@ class OP2Reader:
             subtable_name = op2.struct_16s.unpack(data)
             subtable_name = reshape_bytes_block(subtable_name)
             if self.is_debug_file:
-                self.binary_debug.write('  recordi = [%r]\n'  % subtable_name)
-                self.binary_debug.write('  subtable_name=%r\n' % subtable_name)
+                self.binary_debug.write(f'  recordi = [{subtable_name!r}]\n')
+                self.binary_debug.write(f'  subtable_name={subtable_name!r}\n')
         elif ndata == 32: # 16*2
             #(name1, name2, 170, 170)
             subtable_name, = op2.struct_16s.unpack(data[:16])
             assert len(subtable_name) == 16, len(subtable_name)
             subtable_name = reshape_bytes_block(subtable_name)
             if self.is_debug_file:
-                self.binary_debug.write('  recordi = [%r]\n'  % subtable_name)
-                self.binary_debug.write('  subtable_name=%r\n' % subtable_name)
+                self.binary_debug.write(f'  recordi = [{subtable_name!r}]\n')
+                self.binary_debug.write(f'  subtable_name={subtable_name!r}\n')
         elif ndata == 56: # 28*2
             subtable_name, month, day, year, zero, one = unpack(self._endian + b'16s5q', data)
             subtable_name = reshape_bytes_block(subtable_name)
             if self.is_debug_file:
                 self.binary_debug.write('  recordi = [%r, %i, %i, %i, %i, %i]\n'  % (
                     subtable_name, month, day, year, zero, one))
-                self.binary_debug.write('  subtable_name=%r\n' % subtable_name)
+                self.binary_debug.write(f'  subtable_name={subtable_name!r}\n')
             self._print_month(month, day, year, zero, one)
         else:
             self.show_data(data, types='ifsqd', endian=None)
@@ -5331,26 +5331,26 @@ class OP2Reader:
         if ndata == 8:
             subtable_name = op2.struct_8s.unpack(data)
             if self.is_debug_file:
-                self.binary_debug.write('  recordi = [%r]\n'  % subtable_name)
-                self.binary_debug.write('  subtable_name=%r\n' % subtable_name)
+                self.binary_debug.write(f'  recordi = [{subtable_name!r}]\n')
+                self.binary_debug.write(f'  subtable_name={subtable_name!r}\n')
         elif ndata == 12:
             subtable_name, unused_ten = unpack(self._endian + b'8si', data)  # type: Tuple[bytes, int]
             subtable_name = subtable_name.strip().decode(self._encoding)
             #assert ten == 10, self.show_data(data, types='ifs', endian=None)
             assert subtable_name in ['GPL', 'GPLS'], subtable_name
             if self.is_debug_file:
-                self.binary_debug.write('  recordi = [%r]\n'  % subtable_name)
-                self.binary_debug.write('  subtable_name=%r\n' % subtable_name)
+                self.binary_debug.write(f'  recordi = [{subtable_name!r}]\n')
+                self.binary_debug.write(f'  subtable_name={subtable_name!r}\n')
         elif ndata == 28:
             subtable_name, month, day, year, zero, one = unpack(self._endian + b'8s5i', data)
             if self.is_debug_file:
                 self.binary_debug.write('  recordi = [%r, %i, %i, %i, %i, %i]\n'  % (
                     subtable_name, month, day, year, zero, one))
-                self.binary_debug.write('  subtable_name=%r\n' % subtable_name)
+                self.binary_debug.write(f'  subtable_name={subtable_name!r}\n')
             self._print_month(month, day, year, zero, one)
         elif ndata == 612: # ???
             strings, ints, floats = self.show_data(data)
-            msg = 'len(data) = %i\n' % ndata
+            msg = f'len(data) = {ndata:d}\n'
             #msg += 'strings  = %r\n' % strings
             #msg += 'ints     = %r\n' % str(ints)
             #msg += 'floats   = %r' % str(floats)
@@ -5376,8 +5376,8 @@ class OP2Reader:
         """print table data when things get weird"""
         strings, ints, floats = self.show_data(data)
         msg = 'Unhandled table length error\n'
-        msg += 'table_name = %s\n' % self.op2.table_name
-        msg += 'len(data) = %i\n' % ndata
+        msg += f'table_name = {self.op2.table_name}\n'
+        msg += f'len(data) = {ndata:d}\n'
         msg += 'strings  = %r\n' % strings
         msg += 'ints     = %r\n' % str(ints)
         msg += 'floats   = %r' % str(floats)
@@ -5389,7 +5389,7 @@ class OP2Reader:
         op2.table_name = self._read_table_name(rewind=False)
 
         if self.is_debug_file:
-            self.binary_debug.write('read_geom_table - %s\n' % op2.table_name)
+            self.binary_debug.write(f'read_geom_table - {op2.table_name}\n')
         self.read_markers([-1])
         data = self._read_record() # length=28
 
@@ -5430,7 +5430,7 @@ class OP2Reader:
         op2.isubtable = -3
         self.read_3_markers([-3, 1, 0])
         if self.is_debug_file:
-            self.binary_debug.write('***isubtable = %i\n' % op2.isubtable)
+            self.binary_debug.write(f'***isubtable = {op2.isubtable:d}\n')
             self.binary_debug.write('---markers = [-3, 1, 0]---\n')
 
         # get the parsing functions (table3_parser, table4_parser)
@@ -5452,7 +5452,7 @@ class OP2Reader:
             passer = False
         else:
             if self.read_mode == 2:
-                self.log.info("skipping table_name = %r" % op2.table_name)
+                self.log.info(f'skipping table_name = {op2.table_name!r}')
                     #raise NotImplementedError(op2.table_name)
             table3_parser = None
             table4_parser = None
@@ -6331,12 +6331,19 @@ def _parse_nastran_version(data, version, encoding, log):
 
 def _parse_nastran_version_16(data: bytes, version: bytes, encoding: str, log) -> str:
     """parses an 8 character version string"""
+    version2 = reshape_bytes_block(version)
     if version in [b'NX20    19.0',
                    b'NX20    19.1',
                    b'NX20    19.2']:
         mode = 'nx'
+    elif version2[:2] == b'NX':
+        version_str = version2[2:].decode('latin1')
+        if version_str in NX_VERSIONS:
+            mode = 'nx'
+        else:
+            raise RuntimeError(f'unknown version={version_str}')
     else:
-        raise RuntimeError('unknown version=%r' % version)
+        raise RuntimeError(f'unknown version={version}')
     return mode
 
 def _parse_nastran_version_8(data: bytes, version: bytes, encoding: str, log) -> str:
@@ -6345,7 +6352,7 @@ def _parse_nastran_version_8(data: bytes, version: bytes, encoding: str, log) ->
         mode = 'nx'
         version_str = version[2:].strip().decode(encoding)
         if version_str not in NX_VERSIONS:
-            log.warning('nx version=%r is not supported' % version_str)
+            log.warning(f'nx version={version_str!r} is not supported')
     elif version.startswith(b'MODEP'):
         # TODO: why is this separate?
         # F:\work\pyNastran\pyNastran\master2\pyNastran\bdf\test\nx_spike\out_ac11103.op2
@@ -6376,7 +6383,7 @@ def _parse_nastran_version_8(data: bytes, version: bytes, encoding: str, log) ->
         #self.set_as_msc()
         #self.set_table_type()
     else:
-        raise RuntimeError('unknown version=%r' % version)
+        raise RuntimeError(f'unknown version={version!r}')
     return mode
 
 def reshape_bytes_block(block: bytes) -> bytes:

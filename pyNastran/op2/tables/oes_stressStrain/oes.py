@@ -5942,6 +5942,7 @@ class OES(OP2Common):
             if self.read_mode == 1:
                 return nelements * ntotal, None, None
 
+            obj = None
             n = oes_shell_composite_complex_11(self, data, obj,
                                                ntotal, nelements, sort_method,
                                                dt, is_magnitude_phase)
