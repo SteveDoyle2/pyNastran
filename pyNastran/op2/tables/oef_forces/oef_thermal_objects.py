@@ -68,7 +68,6 @@ class Real1DHeatFluxArray(BaseElement):
         self.itotal = 0
         #self.ntimes = 0
         #self.nelements = 0
-        self.is_built = True
 
         #print("ntimes=%s nelements=%s ntotal=%s" % (self.ntimes, self.nelements, self.ntotal))
         dtype, idtype, fdtype = get_times_dtype(self.nonlinear_factor, self.size, self.analysis_fmt)
@@ -263,16 +262,23 @@ class RealHeatFluxVU3DArray(BaseElement):
         self.itotal = 0
         #self.ntimes = 0
         #self.nelements = 0
-        self.is_built = True
 
-        #print("ntimes=%s nelements=%s ntotal=%s" % (self.ntimes, self.nelements, self.ntotal))
+        if self.is_sort1:
+            print(f'build {self.element_name}: ntimes={self.ntimes} nelements={self.nelements} ntotal={self.ntotal}')
+            ntimes = self.ntimes
+            nelements = self.nelements
+            ntotal = self.ntotal
+        else:
+            raise NotImplementedError(self.code_information())
+
         dtype, idtype, fdtype = get_times_dtype(self.nonlinear_factor, self.size, self.analysis_fmt)
-        self._times = np.zeros(self.ntimes, dtype=dtype)
-        self.element_parent = np.zeros((self.nelements, 2), dtype='int32')
 
-        self.vugrid = np.zeros((self.ntimes, self.ntotal), dtype='int32')
+        self._times = np.zeros(ntimes, dtype=dtype)
+        self.element_parent = np.zeros((nelements, 2), dtype='int32')
+
+        self.vugrid = np.zeros((ntimes, ntotal), dtype='int32')
         #[xgrad, ygrad, zgrad, xflux, yflux, zflux]
-        self.data = np.zeros((self.ntimes, self.ntotal, 6), dtype='float32')
+        self.data = np.zeros((ntimes, ntotal, 6), dtype='float32')
 
     def _build_dataframe(self):
         """creates a pandas dataframe"""
@@ -351,9 +357,9 @@ class RealHeatFluxVU3DArray(BaseElement):
         self.element_parent[self.ielement, :] = [eid, parent]
         #try:
             #self.element_parent[self.ielement, :] = [eid, parent]
-            #print([self.ielement, eid, parent])
+            #print(self.element_name, self.ielement, eid, parent)
         #except:
-            #print(['*', self.ielement, eid, parent])
+            #print(f'*{self.element_name}', self.ielement, eid, parent)
 
         for grad_flux in grad_fluxes:
             #print(self.itime, self.itotal, grad_flux)
@@ -478,7 +484,6 @@ class RealHeatFluxVUBeamArray(BaseElement):  # 191-VUBEAM
         self.itotal = 0
         #self.ntimes = 0
         #self.nelements = 0
-        self.is_built = True
 
         #print("ntimes=%s nelements=%s ntotal=%s" % (self.ntimes, self.nelements, self.ntotal))
         dtype, idtype, fdtype = get_times_dtype(self.nonlinear_factor, self.size, self.analysis_fmt)
@@ -754,7 +759,6 @@ class RealConvHeatFluxArray(BaseElement):  # 107-CHBDYE 108-CHBDYG 109-CHBDYP
         self.itotal = 0
         #self.ntimes = 0
         #self.nelements = 0
-        self.is_built = True
 
         #print("ntimes=%s nelements=%s ntotal=%s" % (self.ntimes, self.nelements, self.ntotal))
         dtype, idtype, fdtype = get_times_dtype(self.nonlinear_factor, self.size, self.analysis_fmt)
@@ -975,7 +979,6 @@ class RealChbdyHeatFluxArray(BaseElement):  # 107-CHBDYE 108-CHBDYG 109-CHBDYP
         self.itotal = 0
         #self.ntimes = 0
         #self.nelements = 0
-        self.is_built = True
 
         #print("ntimes=%s nelements=%s ntotal=%s" % (self.ntimes, self.nelements, self.ntotal))
         dtype, idtype, fdtype = get_times_dtype(self.nonlinear_factor, self.size, self.analysis_fmt)
@@ -1232,7 +1235,6 @@ class RealHeatFluxVUShellArray(BaseElement):
         self.nelements //= self.ntimes
         self.itime = 0
         self.itotal = 0
-        self.is_built = True
 
         if self.is_sort1:
             ntimes = self.ntimes

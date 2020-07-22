@@ -374,7 +374,6 @@ class TableArray(ScalarObject):  # displacement style table
 
         self.itime = 0
         self.itotal = 0
-        self.is_built = True
 
         if self.is_sort1:
             ntimes = self.ntimes
@@ -934,7 +933,6 @@ class RealTableArray(TableArray):
         obj.ntimes = ntimes
         obj.ntotal = nnodes
         obj._times = [None]
-        obj.is_built = True
         return obj
 
     @classmethod
@@ -961,7 +959,6 @@ class RealTableArray(TableArray):
         obj.ntotal = nnodes
         obj.dts = times
         obj._times = times
-        obj.is_built = True
         return obj
 
     @classmethod
@@ -1004,7 +1001,6 @@ class RealTableArray(TableArray):
         obj.ntimes = ntimes
         obj.ntotal = nnodes
         obj._times = modes
-        obj.is_built = True
         return obj
 
     @property
@@ -1328,7 +1324,6 @@ class ComplexTableArray(TableArray):
         obj.ntimes = ntimes
         obj.ntotal = nnodes
         obj._times = freqs
-        obj.is_built = True
         return obj
 
     def extract_xyplot(self, node_ids, index, index_str):

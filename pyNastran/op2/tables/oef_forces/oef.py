@@ -335,7 +335,7 @@ class OEF(OP2Common):
             raise
 
         if self.element_type == 227 and self.element_name == 'RBAR' and self.is_msc:
-            self.to_nx()
+            self.to_nx(' because element_type=227 was found')
             self.element_name = self.element_mapper[self.element_type]
         assert self.element_name != '', self.code_information()
 
@@ -898,7 +898,7 @@ class OEF(OP2Common):
         """
         n = 0
         if self.format_code == 1 and self.num_wide == 27:  # real
-            result_name = prefix + 'thermalLoad_VU' + postfix
+            result_name = prefix + 'vu_2d_thermal_load' + postfix
             if self._results.is_not_saved(result_name):
                 return ndata, None, None
             self._results._found_result(result_name)
@@ -1005,7 +1005,7 @@ class OEF(OP2Common):
             #msg = self.code_information()
             #return self._not_implemented_or_skip(data, ndata, msg), None, None
 
-        result_name = prefix + 'thermalLoad_VU_3D' + postfix
+        result_name = prefix + 'vu_3d_thermal_load' + postfix
         if self._results.is_not_saved(result_name):
             return ndata, None, None
         self._results._found_result(result_name)
@@ -1013,20 +1013,21 @@ class OEF(OP2Common):
 
         numwide_real = 2 + 7 * nnodes
         if self.format_code == 1 and self.num_wide == numwide_real:  # real
-            ntotal = 8 + 28 * nnodes
+            ntotal = (8 + 28 * nnodes) * self.factor
             nelements = ndata // ntotal
-            #self.create_transient_object(result_name, self.thermalLoad_VU_3D, HeatFluxVU_3DArray)
+            #print(f'{self.element_name}: nelements = {nelements}')
+            #self.create_transient_object(result_name, self.vu_3d_thermal_load, HeatFluxVU_3DArray)
             #is_vectorized = False
 
             auto_return, is_vectorized = self._create_oes_object4(
                 nelements, result_name, slot, RealHeatFluxVU3DArray)
             if auto_return:
                 self._data_factor = nnodes
-                return nelements * self.num_wide * 4, None, None
+                return nelements * ntotal, None, None
 
             obj = self.obj
             if self.use_vector and is_vectorized and self.sort_method == 1:
-                n = nelements * 4 * self.num_wide
+                n = nelements * ntotal
                 ielement = obj.ielement
                 ielement2 = ielement + nelements
                 itotal = obj.itotal
@@ -1050,21 +1051,8 @@ class OEF(OP2Common):
                 obj.itotal = itotal2
                 obj.ielement = ielement2
             else:
-                s1 = self.struct_2i
-                s2 = Struct(self._endian + self._analysis_code_fmt + b'6f')
-                for unused_i in range(nelements):
-                    out = s1.unpack(data[n:n+8])
-                    n += 8
-                    (eid_device, parent) = out
-                    eid, dt = get_eid_dt_from_eid_device(
-                        eid_device, self.nonlinear_factor, self.sort_method)
-
-                    grad_fluxes = []
-                    for unused_j in range(nnodes):
-                        out = s2.unpack(data[n:n+28])
-                        grad_fluxes.append(out)
-                        n += 28
-                    obj.add_sort1(dt, eid, parent, grad_fluxes)
+                n = oef_thermal_vu_solid_real_7(self, data, obj,
+                                                nelements, nnodes, ntotal)
         else:  # pragma: no cover
             msg = self.code_information()
             return self._not_implemented_or_skip(data, ndata, msg), None, None
@@ -3713,11 +3701,18 @@ def oef_cbush_imag_13(self, data: bytes,
                       obj: ComplexCBushForceArray,
                       nelements: int, ntotal: int,
                       is_magnitude_phase: bool) -> int:
+    """
+    102-CBUSH
+    126-CFAST-MSC
+    280-CBEAR
+
+    """
     n = 0
     s = Struct(self._endian + self._analysis_code_fmt + b'12f')
+    add_sort_x = getattr(obj, 'add_sort' + str(self.sort_method))
+
     for unused_i in range(nelements):
         edata = data[n:n + ntotal]
-
         out = s.unpack(edata)
         if self.is_debug_file:
             self.binary_debug.write('OEF_CBUSH-102 - %s\n' % (str(out)))
@@ -3742,7 +3737,7 @@ def oef_cbush_imag_13(self, data: bytes,
             fz = complex(fzr, fzi)
             mz = complex(mzr, mzi)
 
-        obj.add_sort1(dt, eid, fx, fy, fz, mx, my, mz)
+        add_sort_x(dt, eid, fx, fy, fz, mx, my, mz)
         n += ntotal
     return n
 
@@ -4330,4 +4325,27 @@ def oef_csolid_imag_16(self, data: bytes,
             vz = complex(vzr, vzi)
         cpressure = complex(pressure, 0.)
         obj.add_sort1(dt, eid, ename, ax, ay, az, vx, vy, vz, cpressure)
+    return n
+
+def oef_thermal_vu_solid_real_7(self, data: bytes,
+                                obj: RealHeatFluxVU3DArray,
+                                nelements: int, nnodes: int, ntotal: int) -> int:
+    n = 0
+    s1 = self.struct_2i
+    s2 = Struct(self._endian + self._analysis_code_fmt + b'6f')
+    ntotal1 = 8 * self.factor
+    ntotal2 = 28 * self.factor
+    for unused_i in range(nelements):
+        out = s1.unpack(data[n:n+ntotal1])
+        n += ntotal1
+        (eid_device, parent) = out
+        eid, dt = get_eid_dt_from_eid_device(
+            eid_device, self.nonlinear_factor, self.sort_method)
+
+        grad_fluxes = []
+        for unused_j in range(nnodes):
+            out = s2.unpack(data[n:n+ntotal2])
+            grad_fluxes.append(out)
+            n += ntotal2
+        obj.add_sort1(dt, eid, parent, grad_fluxes)
     return n

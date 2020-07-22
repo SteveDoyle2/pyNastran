@@ -430,30 +430,38 @@ class GEOM1(GeomCommon):
         """
         (2001,20,9) - the marker for Record 4
         """
-        if self.table_name == b'GEOM1N' and self.factor == 1:
-            n2 = self._read_cord2x_22(data, n, 'CORD2C', CORD2C, (2, 2))
-        else:
-            n2 = self._read_cord2x_13(data, n, 'CORD2C', CORD2C, (2, 2))
-        return n2
+        n = self._read_cord2x(data, n, 'CORD2C', CORD2C, (2, 2))
+        return n
 
     def _read_cord2r(self, data: bytes, n: int) -> int:
         """
         (2101,21,8) - the marker for Record 5
         """
-        if self.table_name == b'GEOM1N' and self.factor == 1:
-            n2 = self._read_cord2x_22(data, n, 'CORD2R', CORD2R, (1, 2))
-        else:
-            n2 = self._read_cord2x_13(data, n, 'CORD2R', CORD2R, (1, 2))
-        return n2
+        n = self._read_cord2x(data, n, 'CORD2R', CORD2R, (1, 2))
+        return n
 
     def _read_cord2s(self, data: bytes, n: int) -> int:
         """
         (2201,22,10) - the marker for Record 6
         """
+        n = self._read_cord2x(data, n, 'CORD2S', CORD2S, (3, 2))
+        return n
+
+    def _read_cord2x(self, data: bytes, n: int, card_name: str, card_obj,
+                     coord_flag: Tuple[int, int]) -> int:
         if self.table_name == b'GEOM1N' and self.factor == 1:
-            n2 = self._read_cord2x_22(data, n, 'CORD2S', CORD2S, (3, 2))
+            try:
+                n2, coords = self._read_cord2x_22(data, n, card_name, card_obj, coord_flag)
+            except:
+                n2, coords = self._read_cord2x_13(data, n, card_name, card_obj, coord_flag)
         else:
-            n2 = self._read_cord2x_13(data, n, 'CORD2S', CORD2S, (3, 2))
+            n2, coords = self._read_cord2x_13(data, n, card_name, card_obj, coord_flag)
+
+        ncoords = len(coords)
+        assert n is not None
+        for coord in coords:
+            self._add_coord_object(coord, allow_overwrites=False)
+        self.card_count[card_name] = ncoords
         return n2
 
     def _read_cord2x_22(self, data: bytes, n: int,
@@ -461,11 +469,16 @@ class GEOM1(GeomCommon):
                         coord_cls: Union[CORD2R, CORD2C, CORD2S],
                         flags: Tuple[int, int]) -> int:
         """
-        (2201,22,10) - the marker for Record 6
+        (2101,21,8) - CORD2R
+        (2201,22,10) - CORD2S
+
         """
         ntotal = 88 # 22*4
         s = Struct(self._endian + b'4i9d')
-        nentries = (len(data) - n) // ntotal
+        ndatai = len(data) - n
+        nentries = ndatai // ntotal
+        assert ndatai % ntotal == 0
+        coords = []
         for unused_i in range(nentries):
             edata = data[n:n + ntotal]
             out = s.unpack(edata)
@@ -475,10 +488,9 @@ class GEOM1(GeomCommon):
             if self.is_debug_file:
                 self.binary_debug.write(f'  {coord_name}={out}\n')
             coord = coord_cls.add_op2_data(data_in)
-            self._add_coord_object(coord, allow_overwrites=False)
+            coords.append(coord)
             n += ntotal
-        self.increase_card_count(coord_name, nentries)
-        return n
+        return n, coords
 
     def _read_cord2x_13(self, data: bytes, n: int,
                         coord_name: str,
@@ -486,7 +498,10 @@ class GEOM1(GeomCommon):
                         flags: Tuple[int, int]) -> int:
         ntotal = 52 * self.factor # 13*4
         s = Struct(mapfmt(self._endian + b'4i9f', self.size))
-        nentries = (len(data) - n) // ntotal
+        ndatai = len(data) - n
+        nentries = ndatai // ntotal
+        assert ndatai % ntotal == 0
+        coords = []
         for unused_i in range(nentries):
             edata = data[n:n + ntotal]
             out = s.unpack(edata)
@@ -495,10 +510,9 @@ class GEOM1(GeomCommon):
             if self.is_debug_file:
                 self.binary_debug.write(f'  {coord_name}={out}\n')
             coord = coord_cls.add_op2_data(data_in)
-            self._add_coord_object(coord, allow_overwrites=False)
+            coords.append(coord)
             n += ntotal
-        self.increase_card_count(coord_name, nentries)
-        return n
+        return n, coords
 
     def _read_cord3g(self, data: bytes, n: int) -> int:
         """
@@ -555,10 +569,19 @@ class GEOM1(GeomCommon):
     def _read_grid(self, data: bytes, n: int) -> int:
         """(4501,45,1) - the marker for Record 17"""
         if self.table_name == b'GEOM1N' and self.factor == 1:
-            n2 = self._read_grid_11(data, n)
+            try:
+                n, grids = self._read_grid_11(data, n)
+            except:
+                n, grids = self._read_grid_8(data, n)
         else:
-            n2 = self._read_grid_8(data, n)
-        return n2
+            n, grids = self._read_grid_8(data, n)
+
+        ngrids = len(grids)
+        assert n is not None
+        for grid in grids:
+            self.nodes[grid.nid] = grid
+        self.card_count['GRID'] = ngrids
+        return n
 
     def _read_grid_8(self, data: bytes, n: int) -> int:  # 21.8 sec, 18.9
         """(4501,45,1) - the marker for Record 17"""
@@ -567,7 +590,8 @@ class GEOM1(GeomCommon):
         ndatai = len(data) - n
         nentries = ndatai // ntotal
         assert nentries > 0, nentries
-        nfailed = 0
+        assert ndatai % ntotal == 0, f'ndatai={ndatai} ntotal={ntotal} leftover={ndatai % ntotal}'
+        grids = []
         for unused_i in range(nentries):
             edata = data[n:n + ntotal]
             out = structi.unpack(edata)
@@ -579,8 +603,9 @@ class GEOM1(GeomCommon):
             if ps == 0:
                 ps = ''
             node = GRID(nid, np.array([x1, x2, x3]), cp, cd, ps, seid)
-            self._type_to_id_map['GRID'].append(nid)
-            self.nodes[nid] = node
+            #self._type_to_id_map['GRID'].append(nid)
+            #self.nodes[nid] = node
+            grids.append(node)
             #if nid in self.nodes:
                 #self.reject_lines.append(str(node))
             #else:
@@ -593,9 +618,8 @@ class GEOM1(GeomCommon):
                 #self.rejects.append(str(node))
                 #nfailed += 1
             n += ntotal
-        assert ndatai % ntotal == 0, f'ndatai={ndatai} ntotal={ntotal} leftover={ndatai % ntotal}'
-        self.increase_card_count('GRID', nentries - nfailed)
-        return n
+        #self.increase_card_count('GRID', nentries - nfailed)
+        return n, grids
 
     def _read_grid_11(self, data: bytes, n: int) -> int:  # 21.8 sec, 18.9
         """(4501,45,1) - the marker for Record 17"""
@@ -608,6 +632,7 @@ class GEOM1(GeomCommon):
         assert ndatai % ntotal == 0, f'len(data)={len(data)} ndatai={ndatai} ntotal={ntotal} nentries={nentries}'
         assert nentries > 0, f'len(data)={len(data)} ndatai={ndatai} ntotal={ntotal} nentries={nentries}'
         nfailed = 0
+        grids = []
         for unused_i in range(nentries):
             edata = data[n:n + ntotal]
             out = structi.unpack(edata)
@@ -624,8 +649,9 @@ class GEOM1(GeomCommon):
                     ps = ''
                 node = GRID(nid, np.array([x1, x2, x3]), cp, cd, ps, seid)
                 #print(node)
-                self._type_to_id_map['GRID'].append(nid)
-                self.nodes[nid] = node
+                #self._type_to_id_map['GRID'].append(nid)
+                #self.nodes[nid] = node
+                grids.append(node)
                 #if nid in self.nodes:
                     #self.reject_lines.append(str(node))
                 #else:
@@ -638,9 +664,7 @@ class GEOM1(GeomCommon):
                 #self.rejects.append(str(node))
                 nfailed += 1
             n += ntotal
-        assert ndatai % ntotal == 0, f'ndatai={ndatai} ntotal={ntotal} leftover={ndatai % ntotal}'
-        self.increase_card_count('GRID', nentries - nfailed)
-        return n
+        return n, grids
 
     def _read_seqgp(self, data: bytes, n: int) -> int:
         """(5301,53,4) - the marker for Record 27"""

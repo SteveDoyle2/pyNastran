@@ -1591,7 +1591,7 @@ class EPT(GeomCommon):
                                -1, -1, -1, -1)
 
         """
-        self.to_nx()
+        self.to_nx(' because PCOMP-64 was found')
         nproperties = 0
         s1 = Struct(mapfmt(self._endian + b'2i3fi2f', self.size))
         ntotal1 = 32 * self.factor
@@ -2029,7 +2029,7 @@ class EPT(GeomCommon):
         PFAST(3601,36,55)
         NX only
         """
-        self.to_nx()
+        self.to_nx(' because PFAST-NX was found')
         ntotal = 48
         struct1 = Struct(self._endian + b'ifii 8f')
         nproperties = (len(data) - n) // ntotal

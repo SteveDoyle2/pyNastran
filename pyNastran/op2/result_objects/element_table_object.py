@@ -154,7 +154,6 @@ class ElementTableArray(BaseElement):  # displacement style table
         self.nelements //= self.ntimes
         self.itime = 0
         self.itotal = 0
-        self.is_built = True
 
         if self.is_sort1:
             ntimes = self.ntimes

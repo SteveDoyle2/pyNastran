@@ -3,6 +3,7 @@ Defines:
  - FortranFormat
 
 """
+from typing import Optional
 from pyNastran.utils import object_attributes
 from pyNastran.utils.numpy_utils import integer_types
 #from pyNastran.op2.errors import FortranMarkerError, SortCodeError
@@ -51,7 +52,7 @@ class FortranFormat:
     def _finish(self):
         raise NotImplementedError('overwrite this')
 
-    def _read_subtable_results(self, table4_parser, record_len):
+    def _read_subtable_results(self, table4_parser, record_len: int) -> Optional[int]:
         """
         # if reading the data
         # 1 - 1st pass to size the array (vectorized)
@@ -67,7 +68,7 @@ class FortranFormat:
         Returns
         -------
         n : None / int
-            None : an error occurred or we're in read_mode=1/array sizeing (???)
+            None : an error occurred or we're in read_mode=1/array sizing (???)
             int : the number of bytes that have been read
 
         """

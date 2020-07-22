@@ -10,6 +10,7 @@ def build_obj(obj):
     """
     if not obj.is_built:
         obj.build()
+        obj.is_built = True
 
 def apply_mag_phase(floats: Any, is_magnitude_phase: bool,
                     isave1: List[int], isave2: List[int]) -> Any:

@@ -3,6 +3,9 @@ from pyNastran.f06.errors import FatalError
 class FortranMarkerError(Exception):
     pass
 
+class EmptyRecordError(SyntaxError):
+    pass
+
 class SortCodeError(RuntimeError):
     pass
 

@@ -25,7 +25,7 @@ NX_TABLES = [
     601, 610, 611,
     701, 710, 711,
     801, 810, 811,
-    901, 910, 911
+    901, 910, 911,
 ]
 
 class OP2Common(Op2Codes, F06Writer):
@@ -201,7 +201,10 @@ class OP2Common(Op2Codes, F06Writer):
         result_type = func7(self.tCode)
         #print(f'format_code={self.format_code}; result_type (func7)={result_type}')
 
-        if self.table_name in [b'OESNLXR', b'OESNLBR', b'OESNLXD', b'OESNL1X', b'OESNLBR2']:
+        if self.table_name in [b'OESRT']:
+            self.format_code = 1 # real
+            result_type = 0 # real
+        elif self.table_name in [b'OESNLXR', b'OESNLBR', b'OESNLXD', b'OESNL1X', b'OESNLBR2']:
             assert self.format_code in [-1, 1], self.format_code
             self.format_code = 1
         elif result_type == 0: # real
@@ -1668,7 +1671,7 @@ class OP2Common(Op2Codes, F06Writer):
                 self.obj = storage_obj[code]
             else:
                 storage_obj[code] = self.obj
-        assert self.obj.table_name is not None, self.data_code
+        assert self.obj.table_name is not None, f'apply the data_code...{self.data_code}'
 
     def _get_code(self):
         """
@@ -1800,7 +1803,7 @@ class OP2Common(Op2Codes, F06Writer):
 
         table_code = tCode % 1000
         if table_code in NX_TABLES:
-            self.to_nx()
+            self.to_nx(f' because table_code={table_code}')
 
         #: the type of result being processed
         self.table_code = table_code
@@ -2194,7 +2197,7 @@ class OP2Common(Op2Codes, F06Writer):
                 self.result_names.add(result_name)
                 #print('self.obj =', self.obj)
                 self.obj.nelements += nelements
-                assert self.obj.table_name is not None
+                assert self.obj.table_name is not None, 'you probably need to apply the data_code...'
                 auto_return = True
             elif self.read_mode == 2:
                 self.code = self._get_code()

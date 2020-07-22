@@ -1490,13 +1490,13 @@ class GEOM2(GeomCommon):
         n0 = n
         if self.is_nx:
             try:
-                n, elements = nx_read(data, n)
+                n, elements = nx_read(data, n0)
             except (AssertionError, MixedVersionCard):
                 #raise
                 n, elements = msc_read(data, n0)
         else:
             try:
-                n, elements = msc_read(data, n)
+                n, elements = msc_read(data, n0)
             except (AssertionError, MixedVersionCard):
                 #raise
                 n, elements = nx_read(data, n0)
@@ -1731,7 +1731,7 @@ class GEOM2(GeomCommon):
         16 UNDEF None
         """
         #self.show_data(data[n:], types='if')
-        self.to_nx()
+        self.to_nx(' because CPLSTS3 was found')
         ntotal = 64 * self.factor  # 16*4
         struct_16i = Struct(mapfmt(self._endian + b'6i f 4i i3f i', self.size))
         ndatai = len(data)
@@ -1770,7 +1770,7 @@ class GEOM2(GeomCommon):
         12 TFLAG I Flag signifying meaning of T(4) values
         13 T(4) RS Membrane thickness of element at grid points
         """
-        self.to_nx()
+        self.to_nx(' because CPLSTS4-NX was found')
         ntotal = 64 * self.factor  # 16*4
         struct_16i = Struct(mapfmt(self._endian + b'6i f 4i i4f', self.size))
         ndatai = len(data)
@@ -1812,7 +1812,7 @@ class GEOM2(GeomCommon):
         """
         #1728 / 4 = 432
         #432 = 16 * 27
-        self.to_nx()
+        self.to_nx(' because CPLSTS6-NX was found')
         struct_16i = Struct(mapfmt(self._endian + b'2i 8i fi 4f 4i 4f', self.size))
         ntotal = 96 * self.factor  # 24*4
         #ntotal = 128 * self.factor  # 16*4
@@ -1864,7 +1864,7 @@ class GEOM2(GeomCommon):
           ints    = (39, 4, 43, 41, 114, 115, 54, 55, 116, 56, 0, 0,     -1.0, -1.0, -1.0, -1.0)
           floats  = (39, 4, 43, 41, 114, 115, 54, 55, 116, 56, 0.0, 0.0, -1.0, -1.0, -1.0, -1.0)
         """
-        self.to_nx()
+        self.to_nx(' because CPLSTS8 was found')
         struct_16i = Struct(mapfmt(self._endian + b'2i 8i fi 4f 4i 4f', self.size))
         ntotal = 96 * self.factor  # 24*4
         ndatai = len(data) - n
@@ -1906,7 +1906,7 @@ class GEOM2(GeomCommon):
         7 UNDEF(10) None
 
         """
-        self.to_nx()
+        self.to_nx(' because CPLSTN3 was found')
         struct_16i = Struct(mapfmt(self._endian + b'2i 3i f 10i', self.size))
         ntotal = 64 * self.factor  # 16*4
         ndatai = len(data) - n
@@ -1941,7 +1941,7 @@ class GEOM2(GeomCommon):
         8 UNDEF(9) None
 
         """
-        self.to_nx()
+        self.to_nx(' because CPLSTN4 was found')
         struct_16i = Struct(mapfmt(self._endian + b'2i 4i f 9i', self.size))
         ntotal = 64 * self.factor  # 16*4
         ndatai = len(data) - n
@@ -1977,7 +1977,7 @@ class GEOM2(GeomCommon):
         10 UNDEF(7) None
 
         """
-        self.to_nx()
+        self.to_nx(' because CPLSTN6 was found')
         struct_16i = Struct(mapfmt(self._endian + b'2i 6i f 7i', self.size))
         ntotal = 64 * self.factor  # 16*4
         ndatai = len(data) - n
@@ -2013,7 +2013,7 @@ class GEOM2(GeomCommon):
         12 UNDEF(5) None
 
         """
-        self.to_nx()
+        self.to_nx(' because CPLSTN8 was found')
         struct_16i = Struct(mapfmt(self._endian + b'2i 8i f 5i', self.size))
         ntotal = 64 * self.factor  # 16*4
         ndatai = len(data) - n
@@ -2042,7 +2042,6 @@ class GEOM2(GeomCommon):
 
         Specific to NX Nastran
         """
-        self.to_nx()
         ntotal = 64 * self.factor  # 16*4
         struct_16i = Struct(mapfmt(self._endian + b'16i', self.size))
         nelements = (len(data) - n) // ntotal
@@ -2063,7 +2062,7 @@ class GEOM2(GeomCommon):
             self.add_op2_element(elem)
             n += ntotal
         self.card_count['CPYRAM'] = nelements
-        self.to_nx()
+        self.to_nx(' because CPYRAM was found')
         return n
 
 # CPENP

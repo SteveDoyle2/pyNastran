@@ -172,7 +172,6 @@ class ScalarTableArray(ScalarObject):  # displacement style table
         self._nnodes //= self.ntimes
         self.itime = 0
         self.itotal = 0
-        self.is_built = True
 
         if self.is_sort1:
             ntimes = self.ntimes

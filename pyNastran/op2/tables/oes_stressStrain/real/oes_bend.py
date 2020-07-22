@@ -61,7 +61,6 @@ class RealBendArray(OES_Object):
         self.itime = 0
         self.ielement = 0
         self.itotal = 0
-        self.is_built = True
         #print('ntotal=%s ntimes=%s nelements=%s' % (self.ntotal, self.ntimes, self.nelements))
 
         self.ntotal = self.nelements * nnodes * 2

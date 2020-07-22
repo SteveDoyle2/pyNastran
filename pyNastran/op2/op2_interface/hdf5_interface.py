@@ -937,8 +937,8 @@ TABLE_OBJ_MAP = {
     'thermal_load.chbdye_thermal_load' :  (RealChbdyHeatFluxArray, ),
     'thermal_load.chbdyp_thermal_load' : (RealChbdyHeatFluxArray, ),
     'thermal_load.chbdyg_thermal_load' : (RealChbdyHeatFluxArray, ),
-    'thermal_load.thermalLoad_VU' : (RealHeatFluxVUShellArray, ),
-    'thermal_load.thermalLoad_VU_3D' : (RealHeatFluxVU3DArray, ),
+    'thermal_load.vu_2d_thermal_load' : (RealHeatFluxVUShellArray, ),
+    'thermal_load.vu_3d_thermal_load' : (RealHeatFluxVU3DArray, ),
     'thermal_load.vu_beam_thermal_load' : (RealHeatFluxVUBeamArray, ),
 
     # ----------------------------------------------------------

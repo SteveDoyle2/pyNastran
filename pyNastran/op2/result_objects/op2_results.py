@@ -447,8 +447,8 @@ class ThermalLoad:
         self.chexa_thermal_load_flux = {}
         self.cpenta_thermal_load_flux = {}
 
-        #self.thermalLoad_VU = {}
-        #self.thermalLoad_VU_3D = {}
+        self.vu_2d_thermal_load = {}
+        self.vu_3d_thermal_load = {}
         self.vu_beam_thermal_load = {}
         #self.temperatureForces = {}
 
@@ -498,8 +498,8 @@ class ThermalLoad:
             'cpenta_thermal_load_flux',
 
             # vu-elements
-            #'thermalLoad_VU'
-            #'thermalLoad_VU_3D'
+            'vu_2d_thermal_load',
+            'vu_3d_thermal_load',
             'vu_beam_thermal_load',
         ]
         return ['thermal_load.' + table for table in tables]

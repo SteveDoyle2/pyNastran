@@ -281,27 +281,27 @@ class OQG(OP2Common):
 
         if self.table_name in [b'OQGCRM1', b'OQGCRM2']:
             if self.table_code not in [3, 503]:
-                msg = 'table_name=%s table_code=%s' % (self.table_name, self.table_code)
+                msg = f'table_name={self.table_name} table_code={self.table_code}'
                 raise AssertionError(msg)
             n = self._read_oqg_spc_crm(data, ndata)
         elif self.table_name in [b'OQGPSD1', b'OQGPSD2']:
             if self.table_code not in [3, 603]:  # was 3
-                msg = 'table_name=%s table_code=%s' % (self.table_name, self.table_code)
+                msg = f'table_name={self.table_name} table_code={self.table_code}'
                 raise AssertionError(msg + '\n%s' % self.code_information())
             n = self._read_oqg_spc_psd(data, ndata)
         elif self.table_name in [b'OQGATO1', b'OQGATO2']:
             if self.table_code not in [3, 703]:
-                msg = 'table_name=%s table_code=%s' % (self.table_name, self.table_code)
+                msg = f'table_name={self.table_name} table_code={self.table_code}'
                 raise AssertionError(msg)
             n = self._read_oqg_spc_ato(data, ndata)
         elif self.table_name in [b'OQGRMS1', b'OQGRMS2']:
             if self.table_code not in [3, 803]:
-                msg = 'table_name=%s table_code=%s' % (self.table_name, self.table_code)
+                msg = f'table_name={self.table_name} table_code={self.table_code}'
                 raise AssertionError(msg)
             n = self._read_oqg_spc_rms(data, ndata)
         elif self.table_name in [b'OQGNO1', b'OQGNO2']:
             if self.table_code not in [3, 903]:
-                msg = 'table_name=%s table_code=%s' % (self.table_name, self.table_code)
+                msg = f'table_name={self.table_name} table_code={self.table_code}'
                 raise AssertionError(msg)
             n = self._read_oqg_spc_no(data, ndata)
 
@@ -315,7 +315,7 @@ class OQG(OP2Common):
             # self.table_code == 5 and
             n = self._read_oqg_mpc_forces(data, ndata)
         elif self.table_code == 63:   # Contact Forces
-            self.to_nx()
+            self.to_nx(f' because table_name={self.table_name} was found')
             assert self.table_name in [b'OQGCF1', b'OQGCF2'], self.code_information()
             n = self._oqg_read_contact_forces(data, ndata)
         elif self.table_code == 67:   # Glue Forces
@@ -416,7 +416,7 @@ class OQG(OP2Common):
         """
         table_code = 63
         """
-        self.to_nx()
+        self.to_nx(f' because table_name={self.table_name} was found')
         #self._setup_op2_subcase('MPCFORCES')
         if self.table_name in [b'OQGCF1', b'OQGCF2']:
             result_name = 'contact_forces'
@@ -443,7 +443,7 @@ class OQG(OP2Common):
         """
         table_code = 67
         """
-        self.to_nx()
+        self.to_nx(f' because table_name={self.table_name} was found')
         #self._setup_op2_subcase('MPCFORCES')
         if self.table_name in [b'OQGGF1', b'OQGGF2']:
             result_name = 'glue_forces'
@@ -727,7 +727,7 @@ class OQG(OP2Common):
         return n
 
     def _read_obc1_3(self, data: bytes, ndata: int):
-        self.to_nx()
+        self.to_nx(f' because table_name={self.table_name} was found')
         self.nonlinear_factor = np.nan #None
         self.is_table_1 = True
         self.is_table_2 = False

@@ -50,8 +50,6 @@ class RealTriaxArray(OES_Object):
 
     def build(self):
         """sizes the vectorized attributes of the RealTriaxArray"""
-        if self.is_built:
-            return
         #print("self.ielement =", self.ielement)
         #print('ntimes=%s nelements=%s ntotal=%s' % (self.ntimes, self.nelements, self.ntotal))
         assert self.ntimes > 0, 'ntimes=%s' % self.ntimes
@@ -64,7 +62,6 @@ class RealTriaxArray(OES_Object):
         self.itotal = 0
         #self.ntimes = 0
         #self.nelements = 0
-        self.is_built = True
 
         #print("***name=%s type=%s nnodes_per_element=%s ntimes=%s nelements=%s ntotal=%s" % (
             #self.element_name, self.element_type, nnodes_per_element, self.ntimes, self.nelements, self.ntotal))

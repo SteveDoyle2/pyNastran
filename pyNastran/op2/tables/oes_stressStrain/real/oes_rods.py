@@ -64,7 +64,6 @@ class RealRodArray(OES_Object):
         obj.ntimes = ntimes
         obj.ntotal = nnodes
         obj._times = [None]
-        obj.is_built = True
         return obj
 
     @property
@@ -102,7 +101,6 @@ class RealRodArray(OES_Object):
         self.itotal = 0
         #self.ntimes = 0
         #self.nelements = 0
-        self.is_built = True
 
         #print("ntimes=%s nelements=%s ntotal=%s" % (self.ntimes, self.nelements, self.ntotal))
         dtype, idtype, fdtype = get_times_dtype(self.nonlinear_factor, self.size, self.analysis_fmt)

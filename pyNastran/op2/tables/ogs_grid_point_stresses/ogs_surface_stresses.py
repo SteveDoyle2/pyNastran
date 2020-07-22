@@ -1,7 +1,6 @@
 from typing import List
 import numpy as np
 
-from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.op2.result_objects.op2_objects import ScalarObject, get_times_dtype
 from pyNastran.f06.f06_formatting import (
     write_floats_10e, _eigenvalue_header)
@@ -64,7 +63,6 @@ class GridPointSurfaceStressesArray(ScalarObject):
         self.location = np.empty(self.ntotal, dtype='U8')
 
         self._times = np.zeros(self.ntimes, dtype=dtype)
-        self.is_built = True
 
     #def build_dataframe(self):
         #"""creates a pandas dataframe"""
@@ -133,8 +131,8 @@ class GridPointSurfaceStressesArray(ScalarObject):
         axis_map = {0 : 'X', 1 : 'Y', 2 : 'Z'}
         axis = axis_map[axis_int]
         msg = [
-            '                                  S T R E S S E S   A T   G R I D   P O I N T S   - -     S U R F A C E    %s\n' % self.ogs_id,
-            '0                       SURFACE X-AXIS X  NORMAL(Z-AXIS)  %s         REFERENCE COORDINATE SYSTEM FOR SURFACE DEFINITION CID        %s\n' % (axis, cid),
+            f'                                  S T R E S S E S   A T   G R I D   P O I N T S   - -     S U R F A C E    {self.ogs_id:d}\n',
+            f'0                       SURFACE X-AXIS X  NORMAL(Z-AXIS)  {axis}         REFERENCE COORDINATE SYSTEM FOR SURFACE DEFINITION CID        {cid}\n',
             '     GRID      ELEMENT            STRESSES IN SURFACE SYSTEM           PRINCIPAL STRESSES            MAX             \n',
             '     ID          ID    FIBRE   NORMAL-X   NORMAL-Y   SHEAR-XY     ANGLE      MAJOR      MINOR      SHEAR     VON MISES\n']
            #'0     13683          3736    TRIAX6         4.996584E+00   0.0            1.203093E+02   0.0            0.0            0.0'
@@ -296,7 +294,6 @@ class GridPointStressesVolumePrincipalArray(ScalarObject):
         self.location = np.empty(self.ntotal, dtype='U8')
 
         self._times = np.zeros(self.ntimes, dtype=dtype)
-        self.is_built = True
 
     def get_stats(self, short=False) -> List[str]:
         if not self.is_built:
@@ -386,7 +383,6 @@ class GridPointStressesVolumeDirectArray(ScalarObject):
         self.data = np.zeros((self.ntimes, self.ntotal, 8), dtype=fdtype)
         self.location = np.empty(self.ntotal, dtype='U8')
         self._times = np.zeros(self.ntimes, dtype=dtype)
-        self.is_built = True
 
     def get_stats(self, short=False) -> List[str]:
         if not self.is_built:
@@ -577,7 +573,6 @@ class GridPointStressesSurfaceDiscontinutiesArray(ScalarObject): # tCode=35
         dtype, idtype, fdtype = get_times_dtype(self.nonlinear_factor, self.size, self.analysis_fmt)
 
         self._times = np.zeros(self.ntimes, dtype=dtype)
-        self.is_built = True
 
     def get_stats(self, short=False) -> List[str]:
         if not self.is_built:

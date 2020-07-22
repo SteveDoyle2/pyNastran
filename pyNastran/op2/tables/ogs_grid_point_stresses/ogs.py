@@ -102,22 +102,22 @@ class OGS(OP2Common):
     def _read_ogs1_4(self, data, ndata):
         if self.table_code == 26:
             # OGS1 - grid point stresses - surface
-            assert self.table_name in [b'OGS1'], 'table_name=%s table_code=%s' % (self.table_name, self.table_code)
+            assert self.table_name in [b'OGS1'], f'table_name={self.table_name} table_code={self.table_code}'
             n = self._read_ogs1_table26(data, ndata)
         elif self.table_code == 27:
             #OGS1 - grid point stresses - volume direct
-            assert self.table_name in [b'OGS1'], 'table_name=%s table_code=%s' % (self.table_name, self.table_code)
+            assert self.table_name in [b'OGS1'], f'table_name={self.table_name} table_code={self.table_code}'
             n = self._read_ogs1_table27(data, ndata)
         elif self.table_code == 28:
             #OGS1- grid point stresses - principal
-            assert self.table_name in [b'OGS1'], 'table_name=%s table_code=%s' % (self.table_name, self.table_code)
+            assert self.table_name in [b'OGS1'], f'table_name={self.table_name} table_code={self.table_code}'
             n = self._read_ogs1_table28(data, ndata)
         elif self.table_code == 35:
             # OGS - Grid point stress discontinuities (plane strain)
-            assert self.table_name in [b'OGS1'], 'table_name=%s table_code=%s' % (self.table_name, self.table_code)
+            assert self.table_name in [b'OGS1'], f'table_name={self.table_name} table_code={self.table_code}'
             n = self._read_ogs1_table35(data, ndata)
         else:
-            msg = self.code_information()
+            #msg = self.code_information()
             raise RuntimeError(self.code_information())
             #n = self._not_implemented_or_skip(data, ndata, msg)
         del self.ogs
@@ -211,15 +211,16 @@ class OGS(OP2Common):
         assert nelements > 0, 'nelements=%r element_type=%s element_name=%r' % (nelements, self.element_type, self.element_name)
         #assert ndata % ntotal == 0, '%s n=%s nwide=%s len=%s ntotal=%s' % (self.element_name, ndata % ntotal, ndata % self.num_wide, ndata, ntotal)
         assert self.num_wide * 4 * self.factor == ntotal, 'numwide*4=%s ntotal=%s' % (self.num_wide * 4, ntotal)
-        assert n > 0, "n = %s result_name=%s" % (n, result_name)
+        assert n > 0, f'n = {n} result_name={result_name}'
         return n
+
     #-----------------------------------------------------------------------------------
     def _read_ogs1_table26(self, data, ndata):
         """reads grid point stresses"""
         if self.num_wide == 11:  # real/random
             n = self._read_ogs1_table26_numwide11(data, ndata)
         else:
-            msg = 'only num_wide=11 is allowed  num_wide=%s' % self.num_wide
+            msg = f'only num_wide=11 is allowed  num_wide={self.num_wide}'
             raise NotImplementedError(msg)
         return n
 
@@ -287,7 +288,7 @@ class OGS(OP2Common):
         assert nelements > 0, 'nelements=%r element_type=%s element_name=%r' % (nelements, self.element_type, self.element_name)
         #assert ndata % ntotal == 0, '%s n=%s nwide=%s len=%s ntotal=%s' % (self.element_name, ndata % ntotal, ndata % self.num_wide, ndata, ntotal)
         #assert self.num_wide * 4 * self.factor == ntotal, 'numwide*4=%s ntotal=%s' % (self.num_wide * 4, ntotal)
-        assert n > 0, "n = %s result_name=%s" % (n, result_name)
+        assert n > 0, f'n = {n} result_name={result_name}'
         return n
 
     def _read_ogs1_table27(self, data, ndata):

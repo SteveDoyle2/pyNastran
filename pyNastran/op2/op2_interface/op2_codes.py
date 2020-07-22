@@ -12,7 +12,8 @@ SORT1_TABLES_BYTES = [
     b'OESNLXR', b'OESTRCP',
     # ----------
     b'OEF1X', b'OEF1', b'OEFIT',
-    b'HOEF1',
+    b'HOEF1', b'DOEF1',
+    b'OEFITSTN',
     # --------
     # random
 
@@ -24,6 +25,8 @@ SORT1_TABLES_BYTES = [
 
     # mislabeled tables
     b'OESRMS2', b'OESNO2',
+
+    b'RAFCONS', b'RAFEATC',
 ]
 SORT2_TABLES_BYTES = [
     b'OUGPSD2', b'OUGATO2', b'OESCP',
@@ -308,11 +311,18 @@ class Op2Codes:
         """
         #if self.analysis_code in [1]:
             #fmts = ('int32', 'int64')
-        if self.analysis_code in [1, 2, 5, 6, 8, 10]:
-            # [modes, freq, transient, post-buckling, nonlinear statics]
+        if self.analysis_code in [1, 2, 5, 6, 8, 9, 10]:
+            # 3 - modes
+            # 5 - freq
+            # 6 - transient
+            # 8 - post-buckling
+            # 9 - complex eigenvalues
+            # 10 - nonlinear statics
             fmts = ('float32', 'float64')
-        elif self.analysis_code in [1, 7]:
-            # [static, ???]
+        elif self.analysis_code in [1, 7, 11]:
+            # 1 - static
+            # 7 - pre-buckling
+            # 11 - geometric nonlinear statics
             fmts = ('int32', 'int64')
         else:
             raise NotImplementedError(self.code_information())

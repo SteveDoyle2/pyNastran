@@ -361,13 +361,14 @@ class OP2(OP2_Scalar, OP2Writer):
             raise RuntimeError(f'mode={mode!r} and must be in [msc, nx, '
                                f'autodesk, nasa95, optistruct]')
 
-    def to_nx(self) -> None:
+    def to_nx(self, msg='') -> None:
         if self.is_msc:
-            self.log.warning('switching to NX')
+            #assert msg != ''
+            self.log.warning(f'switching to NX{msg}')
             self.set_as_nx()
             self.set_table_type()
 
-    def to_msc(self) -> None:
+    def to_msc(self, msg='') -> None:
         if self.is_nx:
             self.log.warning('switching to MSC')
             self.set_as_msc()

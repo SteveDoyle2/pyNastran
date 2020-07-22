@@ -45,7 +45,7 @@ class GeomCommon:
 
     def _read_fake_nx(self, data, n):
         """same as _read_fake, but casts to NX"""
-        self.to_nx()
+        self.to_nx(f' because {self.card_name} was found')
         self.log.info(f'skipping {self.card_name} in {self.table_name}; ndata={len(data)-12}')
         return len(data)
 

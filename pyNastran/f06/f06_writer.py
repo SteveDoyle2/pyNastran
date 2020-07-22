@@ -13,6 +13,8 @@ from traceback import print_exc
 from typing import Optional, List, Dict, Union
 
 import pyNastran
+from pyNastran.op2.tables.oee_energy.oee_objects import RealStrainEnergyArray
+from pyNastran.op2.tables.ogf_gridPointForces.ogf_objects import RealGridPointForcesArray
 from pyNastran.op2.op2_interface.op2_f06_common import OP2_F06_Common
 from pyNastran.op2.op2_interface.result_set import ResultSet
 
@@ -495,6 +497,7 @@ class F06Writer(OP2_F06_Common):
             suppress print messages
         repr_check: bool; defualt=False
             calls the object repr as a validation test (prints nothing)
+
         """
         is_failed = False
         header = ['     DEFAULT                                                                                                                        \n',
@@ -556,7 +559,8 @@ class F06Writer(OP2_F06_Common):
 
                 self.page_num = result.write_f06(f06, header, page_stamp,
                                                  self.page_num, is_mag_phase=is_mag_phase, is_sort1=True)
-                assert isinstance(self.page_num, int), 'pageNum=%r' % str(self.page_num)
+                check_element_node(result)
+                assert isinstance(self.page_num, int), f'page_num={self.page_num!r}'
                 if delete_objects:
                     del result
                 self.page_num += 1
@@ -626,6 +630,7 @@ class F06Writer(OP2_F06_Common):
                         result.is_complex
                         result.is_real
 
+                        check_element_node(result)
                         try:
                             self.page_num = result.write_f06(
                                 f06, header, page_stamp, page_num=self.page_num,
@@ -643,3 +648,40 @@ class F06Writer(OP2_F06_Common):
                     if delete_objects:
                         del result
                     self.page_num += 1
+
+def check_element_node(obj):
+    if obj is None:
+        raise RuntimeError('obj is None...')
+
+    if hasattr(obj, 'node_gridtype'):
+        nids = obj.node_gridtype[:, 0]
+        if nids.min() <= 0:
+            print(''.join(obj.get_stats()))
+            raise RuntimeError(f'nids = {nids}')
+        return
+    elif isinstance(obj, (RealStrainEnergyArray, RealGridPointForcesArray)):
+        return
+    elif hasattr(obj, 'node_element'):
+        nids = obj.node_element[:, 0]
+        if nids.min() <= 0:
+            print(''.join(obj.get_stats()))
+            raise RuntimeError(f'nids = {nids}')
+        return
+        #eids = obj.node_element[:, 1]
+        #if eids.min() <= 0:
+            #print(''.join(obj.get_stats()))
+            #raise RuntimeError(f'eids = {eids}')
+        #return
+
+    elif hasattr(obj, 'element_node'):
+        eids = obj.element_node[:, 0]
+    elif hasattr(obj, 'element_layer'):
+        eids = obj.element_layer[:, 0]
+    elif hasattr(obj, 'element'):
+        eids = obj.element
+    else:
+        raise RuntimeError(''.join(obj.get_stats()))
+    if eids.min() <= 0:
+        print(''.join(obj.get_stats()))
+        raise RuntimeError(f'{obj.element_name}-{obj.element_type}: {eids}')
+

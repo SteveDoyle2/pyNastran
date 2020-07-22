@@ -66,7 +66,6 @@ class ComplexRodForceArray(ComplexForceObject):
         self.itotal = 0
         #self.ntimes = 0
         #self.nelements = 0
-        self.is_built = True
 
         #print("ntimes=%s nelements=%s ntotal=%s" % (self.ntimes, self.nelements, self.ntotal))
         dtype, idtype, cfdtype = get_complex_times_dtype(self.nonlinear_factor, self.size)
@@ -363,7 +362,6 @@ class ComplexCShearForceArray(BaseElement):
         self.itotal = 0
         #self.ntimes = 0
         #self.nelements = 0
-        self.is_built = True
 
         #print("ntimes=%s nelements=%s ntotal=%s" % (self.ntimes, self.nelements, self.ntotal))
         dtype, idtype, cfdtype = get_complex_times_dtype(self.nonlinear_factor, self.size)
@@ -631,7 +629,6 @@ class ComplexSpringDamperForceArray(ComplexForceObject):
         self.itotal = 0
         #self.ntimes = 0
         #self.nelements = 0
-        self.is_built = True
 
         #print("ntimes=%s nelements=%s ntotal=%s" % (self.ntimes, self.nelements, self.ntotal))
         dtype, idtype, cfdtype = get_complex_times_dtype(self.nonlinear_factor, self.size)
@@ -945,7 +942,6 @@ class ComplexViscForceArray(BaseElement):
         self.itotal = 0
         #self.ntimes = 0
         #self.nelements = 0
-        self.is_built = True
 
         #print("ntimes=%s nelements=%s ntotal=%s" % (self.ntimes, self.nelements, self.ntotal))
         dtype = 'float32'
@@ -1156,7 +1152,6 @@ class ComplexPlateForceArray(ComplexForceObject):
         self.itotal = 0
         #self.ntimes = 0
         #self.nelements = 0
-        self.is_built = True
 
         #print("ntimes=%s nelements=%s ntotal=%s" % (self.ntimes, self.nelements, self.ntotal))
         dtype, idtype, cfdtype = get_complex_times_dtype(self.nonlinear_factor, self.size)
@@ -1493,7 +1488,6 @@ class ComplexPlate2ForceArray(ComplexForceObject):
         self.itotal = 0
         #self.ntimes = 0
         #self.nelements = 0
-        self.is_built = True
 
         #print("ntimes=%s nelements=%s ntotal=%s" % (self.ntimes, self.nelements, self.ntotal))
         dtype, idtype, cfdtype = get_complex_times_dtype(self.nonlinear_factor, self.size)
@@ -1883,7 +1877,7 @@ class ComplexCBarWeldForceArray(ComplexForceObject):
             #self.ntimes, self.nelements, self.ntotal, self.subtitle))
         if self.is_built:
             return
-        nnodes = 1
+        #nnodes = 1
 
         #self.names = []
         #self.nelements //= nnodes
@@ -1892,7 +1886,6 @@ class ComplexCBarWeldForceArray(ComplexForceObject):
         self.itime = 0
         self.ielement = 0
         self.itotal = 0
-        self.is_built = True
         #print('ntotal=%s ntimes=%s nelements=%s' % (self.ntotal, self.ntimes, self.nelements))
 
         #print("ntimes=%s nelements=%s ntotal=%s" % (self.ntimes, self.nelements, self.ntotal))
@@ -2237,7 +2230,7 @@ class ComplexCBeamForceArray(ComplexForceObject):
         """sizes the vectorized attributes of the ComplexCBeamForceArray"""
         #print('ntimes=%s nelements=%s ntotal=%s subtitle=%s' % (
             #self.ntimes, self.nelements, self.ntotal, self.subtitle))
-        nnodes = 11
+        #nnodes = 11
 
         #self.names = []
         #self.nelements //= nnodes
@@ -2246,7 +2239,6 @@ class ComplexCBeamForceArray(ComplexForceObject):
         self.itime = 0
         self.ielement = 0
         self.itotal = 0
-        self.is_built = True
         #print('ntotal=%s ntimes=%s nelements=%s' % (self.ntotal, self.ntimes, self.nelements))
 
         #print("ntimes=%s nelements=%s ntotal=%s" % (self.ntimes, self.nelements, self.ntotal))
@@ -2685,7 +2677,6 @@ class ComplexCBendForceArray(BaseElement):  # 69-CBEND
         self.itotal = 0
         #self.ntimes = 0
         #self.nelements = 0
-        self.is_built = True
 
         #print("ntimes=%s nelements=%s ntotal=%s" % (self.ntimes, self.nelements, self.ntotal))
         dtype = 'float32'
@@ -2960,7 +2951,6 @@ class ComplexSolidPressureForceArray(ComplexForceObject):
         self.itotal = 0
         #self.ntimes = 0
         #self.nelements = 0
-        self.is_built = True
 
         #print("ntimes=%s nelements=%s ntotal=%s" % (self.ntimes, self.nelements, self.ntotal))
         dtype, idtype, cfdtype = get_complex_times_dtype(self.nonlinear_factor, self.size)
@@ -3308,21 +3298,28 @@ class ComplexForceMomentArray(ComplexForceObject):
         self.itime = 0
         self.ielement = 0
         self.itotal = 0
-        self.is_built = True
         #print('ntotal=%s ntimes=%s nelements=%s' % (self.ntotal, self.ntimes, self.nelements))
 
         #print("ntimes=%s nelements=%s ntotal=%s" % (self.ntimes, self.nelements, self.ntotal))
-        self._times = zeros(self.ntimes, 'float32')
-        self.element = zeros(self.ntotal, 'int32')
+        if self.is_sort1:
+            ntimes = self.ntimes
+            ntotal = self.ntotal
+            #print(f'CBUSH SORT1: ntimes={ntimes} ntotal={ntotal}')
+        else:
+            ntimes = self.ntotal
+            ntotal = self.ntimes
+            #print(f'CBUSH SORT2: ntimes={ntimes} ntotal={ntotal}')
+        dtype, idtype, cfdtype = get_complex_times_dtype(self.nonlinear_factor, self.size)
+        self._times = zeros(ntimes, dtype=dtype)
+        self.element = zeros(ntotal, dtype=idtype)
 
         # the number is messed up because of the offset for the element's properties
-
         if self.nelements * nnodes != self.ntotal:
             msg = 'ntimes=%s nelements=%s nnodes=%s ne*nn=%s ntotal=%s' % (
                 self.ntimes, self.nelements, nnodes, self.nelements * nnodes, self.ntotal)
             raise RuntimeError(msg)
         #[fx, fy, fz, mx, my, mz]
-        self.data = zeros((self.ntimes, self.ntotal, 6), 'complex64')
+        self.data = zeros((ntimes, ntotal, 6), dtype=cfdtype)
 
     def build_dataframe(self):
         """creates a pandas dataframe"""
@@ -3383,6 +3380,17 @@ class ComplexForceMomentArray(ComplexForceObject):
         self._times[self.itime] = dt
         self.data[self.itime, self.itotal, :] = [fx, fy, fz, mx, my, mz]
         self.element[self.itotal] = eid
+        self.itotal += 1
+
+    def add_sort2(self, dt, eid, fx, fy, fz, mx, my, mz):
+        """unvectorized method for adding SORT2 transient data"""
+        assert isinstance(eid, integer_types) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
+        #[fx, fy, fz, mx, my, mz]
+        itime = self.itotal
+        itotal = self.itime
+        self._times[itime] = dt
+        self.data[itime, itotal, :] = [fx, fy, fz, mx, my, mz]
+        self.element[itotal] = eid
         self.itotal += 1
 
     def get_stats(self, short=False) -> List[str]:
@@ -3728,7 +3736,6 @@ class ComplexCBeamForceVUArray(BaseElement):  # 191-VUBEAM
         self.itotal = 0
         #self.ntimes = 0
         #self.nelements = 0
-        self.is_built = True
 
         #print("***name=%s type=%s nnodes_per_element=%s ntimes=%s nelements=%s ntotal=%s" % (
             #self.element_name, self.element_type, nnodes_per_element, self.ntimes, self.nelements, self.ntotal))
@@ -4052,7 +4059,6 @@ class ComplexForceVU_2DArray(BaseElement):  # 189-VUQUAD,190-VUTRIA
         self.itotal = 0
         #self.ntimes = 0
         #self.nelements = 0
-        self.is_built = True
 
         #print("ntimes=%s nelements=%s ntotal=%s" % (self.ntimes, self.nelements, self.ntotal))
         dtype, idtype, cfdtype = get_complex_times_dtype(self.nonlinear_factor, self.size)

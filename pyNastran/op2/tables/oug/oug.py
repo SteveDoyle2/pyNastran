@@ -365,7 +365,7 @@ class OUG(OP2Common):
 
     def _read_ougpc1_3(self, data, ndata):
         """reads table 3 (the header table)"""
-        self.to_nx()
+        self.to_nx(f' because table_name={self.table_name} was found')
         #self._set_times_dtype()
         self.nonlinear_factor = np.nan
         self.is_table_1 = True
@@ -727,13 +727,13 @@ class OUG(OP2Common):
                                     b'BOUGV1',
                                     b'OUPV1']:
                 # OUG1F - acoustic displacements?
-                #msg = 'table_name=%s table_code=%s' % (self.table_name, self.table_code)
+                #msg = f'table_name={self.table_name} table_code={self.table_code}'
                 #raise AssertionError(msg)
                 n = self._read_oug_displacement(data, ndata, is_cid=False)
             elif table_name_bytes in [b'ROUGV1', b'ROUGV2', b'TOUGV1',
                                       b'OUGF1', b'OUGF2',
                                       b'BOUGF1', ]:
-                self.to_nx()
+                self.to_nx(f' because table_name={self.table_name} was found')
                 n = self._read_oug_displacement(data, ndata, is_cid=False)
             elif table_name_bytes == b'OUGV1PAT':
                 n = self._read_oug_displacement(data, ndata, is_cid=True)
@@ -752,23 +752,23 @@ class OUG(OP2Common):
 
         elif self.table_code == 14:  # eigenvector (solution set)
             assert table_name_bytes in [b'OPHSA'], self.table_name
-            self.to_nx()
+            self.to_nx(f' because table_name={self.table_name} was found')
             n = self._read_oug_eigenvector(data, ndata)
         elif self.table_code == 15:  # displacement (solution set)
             assert table_name_bytes in [b'OUXY1', b'OUXY2'], self.table_name
-            self.to_nx()
+            self.to_nx(f' because table_name={self.table_name} was found')
             n = self._read_oug_displacement(data, ndata, is_cid=False)
         elif self.table_code == 16:  # velocity (solution set)
             assert table_name_bytes in [b'OUXY1', b'OUXY2'], self.table_name
-            self.to_nx()
+            self.to_nx(f' because table_name={self.table_name} was found')
             n = self._read_oug_velocity(data, ndata)
         elif self.table_code == 17:  # acceleration (solution set)
             assert table_name_bytes in [b'OUXY1', b'OUXY2'], self.table_name
-            self.to_nx()
+            self.to_nx(f' because table_name={self.table_name} was found')
             n = self._read_oug_acceleration(data, ndata)
         elif self.table_code == 44:   # Displacements
             assert table_name_bytes in [b'OUGMC1', b'OUGMC2'], self.table_name
-            self.to_nx()
+            self.to_nx(f' because table_name={self.table_name} was found')
             n = self._read_oug_displacement(data, ndata, is_cid=False)
         else:
             raise NotImplementedError(self.code_information())
@@ -943,11 +943,11 @@ class OUG(OP2Common):
             assert self.thermal in [0, 1], self.code_information()
             result_name = 'velocities'
         elif self.table_name in [b'OUXY1', b'OUXY2']:
-            self.to_nx()
+            self.to_nx(f' because table_name={self.table_name} was found')
             assert self.thermal == 0, self.code_information()
             result_name = 'solution_set.velocities'
         elif self.table_name in [b'ROUGV1', b'ROUGV2']:
-            self.to_nx()
+            self.to_nx(f' because table_name={self.table_name} was found')
             result_name = 'velocities_ROUGV1'
             assert self.thermal == 0, self.code_information()
         elif self.table_name == b'OUPV1':
@@ -1002,11 +1002,11 @@ class OUG(OP2Common):
             result_name = 'accelerations'
             assert self.thermal == 0, self.code_information()
         elif self.table_name in [b'OUXY1', b'OUXY2']:
-            self.to_nx()
+            self.to_nx(f' because table_name={self.table_name} was found')
             assert self.thermal == 0, self.code_information()
             result_name = 'solution_set.accelerations'
         elif self.table_name in [b'ROUGV1', b'ROUGV2']:
-            self.to_nx()
+            self.to_nx(f' because table_name={self.table_name} was found')
             result_name = 'accelerations_ROUGV1'
             assert self.thermal == 0, self.code_information()
         elif self.table_name in [b'OAGPSD1', b'OAGPSD2',
@@ -1101,25 +1101,25 @@ class OUG(OP2Common):
             result_name = 'eigenvectors_fluid'
 
         elif self.table_name == b'OPHSA':
-            self.to_nx()
+            self.to_nx(f' because table_name={self.table_name} was found')
             self._setup_op2_subcase('SVECTOR')
             assert self.thermal == 0, self.code_information()
             result_name = 'solution_set.eigenvectors'
 
         elif self.table_name == b'RADCONS':
-            self.to_nx()
+            self.to_nx(f' because table_name={self.table_name} was found')
             self._setup_op2_subcase('VECTOR')
             result_name = 'RADCONS.eigenvectors'
         elif self.table_name == b'RADEFFM':
-            self.to_nx()
+            self.to_nx(f' because table_name={self.table_name} was found')
             self._setup_op2_subcase('VECTOR')
             result_name = 'RADEFFM.eigenvectors'
         elif self.table_name == b'RADEATC':
-            self.to_nx()
+            self.to_nx(f' because table_name={self.table_name} was found')
             self._setup_op2_subcase('VECTOR')
             result_name = 'RADEATC.eigenvectors'
         elif self.table_name in [b'ROUGV1', 'ROUGV2']:
-            self.to_nx()
+            self.to_nx(f' because table_name={self.table_name} was found')
             self._setup_op2_subcase('VECTOR')
             result_name = 'ROUGV1.eigenvectors'
         else:  # pragma: no cover

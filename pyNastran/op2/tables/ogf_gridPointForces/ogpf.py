@@ -29,7 +29,7 @@ class OGPF(OP2Common):
             elif self.table_name == b'RAGCONS':
                 prefix = 'RAGCONS.'
             else:
-                msg = 'table_name=%s table_code=%s' % (self.table_name, self.table_code)
+                msg = f'table_name={self.table_name} table_code={self.table_code}'
                 raise RuntimeError(msg)
             n = self._read_grid_point_forces(data, ndata, prefix=prefix)
         else:

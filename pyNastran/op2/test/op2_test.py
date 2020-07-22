@@ -1,5 +1,6 @@
 import os
 import sys
+from typing import List
 
 import pyNastran
 from pyNastran.utils.dev import get_files_of_type
@@ -50,7 +51,34 @@ def parse_skipped_cards(fname):
     return files_to_analyze
 
 
-def get_all_files(folders_file, file_type, max_size=4.2):
+def get_directories(folders_file: str) -> List[str]:
+    with open(folders_file, 'r') as file_obj:
+        lines = file_obj.readlines()
+
+    dirnames = []
+    for line in lines:
+        line = line.strip()
+        if line == '' or line.startswith('#'):
+            continue
+        if '"' in line:
+            # "C:\Program Files\Siemens\NX 12.0\NXNASTRAN\nxn12\nast"
+            line = line.strip('"')
+            pthi = line.split('\\')
+            unused_pth = os.path.join(*pthi)
+            move_dir = os.path.join(line)
+        else:
+            # C:\MSC.Software\MSC.Nastran\msc20051\nast\doc
+            move_dir = os.path.join(line)
+        #move_dir = line.strip()
+
+        if move_dir:
+            if not os.path.exists(move_dir):
+                #print("***move_dir doesn't exist = %r" % move_dir)
+                continue
+            dirnames.append(move_dir)
+    return dirnames
+
+def get_all_files(folders_file: str, file_type: str, max_size: float=4.2) -> List[str]:
     """
     Gets all the files in the folder and subfolders.  Ignores missing folders.
 
@@ -68,33 +96,38 @@ def get_all_files(folders_file, file_type, max_size=4.2):
     filenames : List[str]
         a series of filenames that were found
     """
-    with open(folders_file, 'r') as file_obj:
-        lines = file_obj.readlines()
-
     files2 = []
-    for line in lines:
-        line = line.strip()
-        if line == '' or line.startswith('#'):
-            continue
-        if '"' in line:
-            # "C:\Program Files\Siemens\NX 12.0\NXNASTRAN\nxn12\nast"
-            line = line.strip('"')
-            pthi = line.split('\\')
-            unused_pth = os.path.join(*pthi)
-            move_dir = os.path.join(line)
-        else:
-            # C:\MSC.Software\MSC.Nastran\msc20051\nast\doc
-            move_dir = os.path.join(line)
-        #move_dir = line.strip()
-        if move_dir:
-            if not os.path.exists(move_dir):
-                #print("***move_dir doesn't exist = %r" % move_dir)
-                continue
-            print("move_dir = %s" % move_dir)
-            #assert os.path.exists(move_dir), '%s doesnt exist' % move_dir
-            files_in_dir = get_files_of_type(move_dir, file_type, max_size=max_size)
-            files2 += files_in_dir
-            #print('nfiles = %s/%s' % (len(files_in_dir), len(files2)))
+    dirnames = get_directories(folders_file)
+    files2 = get_files_from_directories(dirnames, file_type, max_size=max_size)
+    return files2
+
+def get_files_from_directories(dirnames: List[str], file_type: str,
+                               max_size: float=4.2) -> List[str]:
+    """
+    Gets all the files in the folder and subfolders.  Ignores missing folders.
+
+    Parameters
+    ----------
+    dirnames : List[str]
+        paths to the file with a list of folders
+    file_type : str
+        a file extension
+    max_size : float; default=4.2
+        size in MB for max file size
+
+    Returns
+    -------
+    filenames : List[str]
+        a series of filenames that were found
+
+    """
+    files2 = []
+    for move_dir in dirnames:
+        print("move_dir = %s" % move_dir)
+        #assert os.path.exists(move_dir), '%s doesnt exist' % move_dir
+        files_in_dir = get_files_of_type(move_dir, file_type, max_size=max_size)
+        files2 += files_in_dir
+        #print('nfiles = %s/%s' % (len(files_in_dir), len(files2)))
     #print('nfiles = %s' % len(files2))
     return files2
 
@@ -117,21 +150,37 @@ def run(regenerate=True, make_geom=False, combine=True,
     get_skip_cards = False
 
     max_size = 4000. # MB
+    filter_simcenter = False
     failed_cases_filename = 'failed_cases%s%s.in' % (sys.version_info[:2])
     if get_skip_cards:
         files2 = parse_skipped_cards('skipped_cards.out')
     elif regenerate or not os.path.exists(failed_cases_filename):
-        files2 = get_all_files(folders_file1, '.op2', max_size=max_size)
-        files2 = get_all_files(folders_file2, '.op2', max_size=max_size)
+        dirnames = get_directories(folders_file1) + get_directories(folders_file2)
+        if filter_simcenter:
+            dirnames2 = []
+            for dirname in list(set(dirnames)):
+                if 'Siemens' not in dirname and 'simcenter' not in dirname:
+                    #print(filename)
+                    dirnames2.append(dirname)
+                #else:
+                    #print('*', filename)
+            dirnames = dirnames2
+
+        #for dirname in dirnames2:
+            #print(dirname)
+        files2 = get_files_from_directories(dirnames, '.op2', max_size=max_size)
         files2 += files
         assert len(files2) > 0, files2
     else:
-        print('failed_cases_filename = %r' % failed_cases_filename)
+        print(f'failed_cases_filename = {failed_cases_filename!r}')
         files2 = get_failed_files(failed_cases_filename)
     assert len(files2) > 0, files2
     files = list(set(files2))
     files.sort()
     files = [filename for filename in files if '.test_op2.' not in filename]
+        #files = [filename for filename in files
+                 #if 'Siemens' not in filename and 'simcenter' not in filename]
+    assert len(files)
 
     skip_files = []
     #skip_files = ['nltrot99.op2', 'rot12901.op2', 'plan20s.op2'] # giant

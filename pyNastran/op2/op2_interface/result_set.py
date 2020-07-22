@@ -64,7 +64,7 @@ class ResultSet:
                 if base in self.results_map:
                     results_obj = self.results_map[base]
                     msg += 'Potential results include:\n - ' + '\n - '.join(results_obj.get_table_types())
-                    assert result in results_obj.get_table_types()
+                    assert result in results_obj.get_table_types(), result
                     #print(results_obj.get_table_types())
                 raise RuntimeError(msg.rstrip())
         if result in self.saved:

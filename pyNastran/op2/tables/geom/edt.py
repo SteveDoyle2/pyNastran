@@ -946,7 +946,7 @@ class EDT(GeomCommon):
             set2 = self.add_set2(sid, macro, sp1, sp2, ch1, ch2, zmax, zmin)
             str(set2)
             n += ntotal
-        self.to_nx()
+        self.to_nx(' because SET2 was found')
         return n
 
     def _read_set3(self, data: bytes, n: int) -> int:
@@ -1231,7 +1231,7 @@ class EDT(GeomCommon):
                              dz, method, usage,
                              nelements, melements)
             n += ntotal
-        self.to_nx()
+        self.to_nx(' because SPLINE4-NX was found')
         return n
 
     def _read_spline5(self, data: bytes, n: int) -> int:
@@ -1293,7 +1293,7 @@ class EDT(GeomCommon):
             )
             str(spline5)
             n += ntotal
-        self.to_nx()
+        self.to_nx(' because SPLINE5-NX was found')
         return n
 
     def _read_monpnt1(self, data: bytes, n: int) -> int:
@@ -1339,7 +1339,7 @@ class EDT(GeomCommon):
             str(monpnt1)
             n += ntotal
             #monpnt1s.append(monpnt1)
-        self.to_nx()
+        self.to_nx(' because MONPNT1-NX was found')
         return n
 
     def _read_aestat(self, data: bytes, n: int) -> int:
@@ -1419,7 +1419,7 @@ class EDT(GeomCommon):
                              imethod=imethod, # 'L'
                              nvalue=nvalue,
                              epsilon=epsilon)
-        self.to_nx()
+        self.to_nx(' because FLUTTER was found')
         return len(data)
         #ntotal = 12 # 4 * 8
         #ndatai = len(data) - n

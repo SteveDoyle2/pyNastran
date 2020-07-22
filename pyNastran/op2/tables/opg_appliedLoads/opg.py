@@ -308,16 +308,16 @@ class OPG(OP2Common):
         elif self.table_code == 12:  # ???
             n = self._read_force_vector(data, ndata)
         elif self.table_code == 502:  # load vector
-            assert self.table_name in [b'OPGCRM2'], 'table_name=%s table_code=%s' % (self.table_name, self.table_code)
+            assert self.table_name in [b'OPGCRM2'], f'table_name={self.table_name} table_code={self.table_code}'
             n = self._read_load_vector(data, ndata, prefix='crm.')
         elif self.table_code == 602:  # load vector
-            assert self.table_name in [b'OPGPSD2'], 'table_name=%s table_code=%s' % (self.table_name, self.table_code)
+            assert self.table_name in [b'OPGPSD2'], f'table_name={self.table_name} table_code={self.table_code}'
             n = self._read_load_vector(data, ndata, prefix='psd.')
         elif self.table_code == 802:  # load vector
-            assert self.table_name in [b'OPGRMS1'], 'table_name=%s table_code=%s' % (self.table_name, self.table_code)
+            assert self.table_name in [b'OPGRMS1'], f'table_name={self.table_name} table_code={self.table_code}'
             n = self._read_load_vector(data, ndata, prefix='rms.')
         elif self.table_code == 902:  # load vector
-            assert self.table_name in [b'OPGNO1'], 'table_name=%s table_code=%s' % (self.table_name, self.table_code)
+            assert self.table_name in [b'OPGNO1'], f'table_name={self.table_name} table_code={self.table_code}'
             n = self._read_load_vector(data, ndata, prefix='no.')
         #else:
             #n = self._not_implemented_or_skip('bad OPG table')

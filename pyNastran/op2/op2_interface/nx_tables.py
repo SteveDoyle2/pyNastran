@@ -2,12 +2,15 @@ from collections import Counter
 from typing import List, Dict
 import numpy as np
 
-NX_VERSIONS = ['8.0', '8.1', '8.2', '8.3', '8.4', '8.5',
-               '9.0', '9.1',
-               '10.0', '10.1',
-               '11.0', '11.0.1', '11.0.2',
-               '12.0', '12.0.2',
-               '2019.0', '2019.1', '2019.2']
+NX_VERSIONS = [
+    '8.0', '8.1', '8.2', '8.3', '8.4', '8.5',
+    '9.0', '9.1',
+    '10.0', '10.1',
+    '11.0', '11.0.1', '11.0.2',
+    '12.0', '12.0.2',
+    '2019.0', '2019.1', '2019.2',
+    '2020.0', '2020.1',
+]
 
 NX_ELEMENTS = {
     0 : 'GRID',
@@ -416,6 +419,10 @@ NX_MATRIX_TABLES = [
     b'ATV',
     b'XSOP2DIR',
     b'RADEFMP', # Modal Effective Inertia Matrix - Modal Matrix (per Vibrata)
+    b'K4HH', # K4HH - Modal Structural Damping Matrix
+    b'RAFGEN',  # RAFGEN - Generalized Forces
+    b'RADAMPZ', # Matrix N x N equivalent viscous damping ratios
+    b'RADAMPG', # Matrix N X N equivalent structural damping ratio
 
     # hasn't been validated
     #b'RAFGEN', # Load Set Modal Forces  - Modal generalized force vectors  (per Vibrata)

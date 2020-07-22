@@ -28,6 +28,8 @@ RESULT_NAME_MAP = {
     'QUADFD' : 'cquad4_strain_energy',
     'QUAD4FD' : 'cquad4_strain_energy',
     'QUAD8' : 'cquad8_strain_energy',
+    # TODO: this will probably be a problem someday...cquad8_nonlinear_strain_energy
+    'QUAD8N' : 'cquad8_strain_energy',
 
     'QUADR' : 'cquadr_strain_energy',
     'QUADXFD' : 'cquadx_strain_energy',
@@ -424,7 +426,7 @@ class ONR(OP2Common):
         """
         if self.table_code == 18:  # element strain energy
             if self.table_name not in self.table_name in [b'ONRGY', b'ONRGY1']:
-                msg = 'table_name=%s table_code=%s' % (self.table_name, self.table_code)
+                msg = f'table_name={self.table_name} table_code={self.table_code}'
                 raise NotImplementedError(msg)
             n = self._read_element_strain_energy(data, ndata)
         else:

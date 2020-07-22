@@ -92,42 +92,8 @@ class OES_Object(BaseElement):
             raise NotImplementedError(self.data_code)
         return dtype
 
-    def _update_time_word(self):
-        if self.analysis_code == 1:
-            name = 'lsdvmn'
-            self._times = np.full(1, np.nan, dtype=self.data.dtype)
-            self.nonlinear_factor = self._times[0]
-        else:
-            name = self.analysis_method
-            #print(f'\n{self.class_name}: name = {name}')
-            #_analysis_code_fmt
-        #if self.analysis_code == 5:
-            #name = 'freq'
-        #elif self.analysis_code == 6:
-            #name = 'dt'
-        #elif self.analysis_code == 10:
-            #name = 'dt'
-        #else:
-            #raise NotImplementedError(self.data_code)
-
-        names = name + 's'
-        self.data_code['name'] = name
-        self.data_code['data_names'][0] = name
-        #print(self.element_ids)
-        del self.element_id, self.element_ids
-        #print('timesA =', self._times)
-        old_times = None
-        if 1:
-            old_times = self._times
-            setattr(self, names, self._times)
-            #print('timesB =', self._times)
-
-        if self.analysis_code == 1:
-            assert len(self._times) == 1, self.data.shape
-        elif len(self._times) > 1:
-            class_name = self.__class__.__name__
-            #assert self._times.min() != self._times.max(), f'{class_name}: old_times={old_times} -> times={self._times}; data.shape={self.data.shape}\n{self.code_information()}'
-        #print(self.object_attributes())
+    def _update_time_word(self) -> None:
+        update_stress_force_time_word(self)
 
     @property
     def is_curvature(self) -> bool:
@@ -420,3 +386,40 @@ def oes_data_code(table_name, analysis_code,
         'num_wide' : 8, # displacement-style table
     }
     return data_code
+
+def update_stress_force_time_word(obj) -> None:
+    if obj.analysis_code == 1:
+        name = 'lsdvmn'
+        obj._times = np.full(1, np.nan, dtype=obj.data.dtype)
+        obj.nonlinear_factor = obj._times[0]
+    else:
+        name = obj.analysis_method
+        #print(f'\n{self.class_name}: name = {name}')
+        #_analysis_code_fmt
+    #if self.analysis_code == 5:
+        #name = 'freq'
+    #elif self.analysis_code == 6:
+        #name = 'dt'
+    #elif self.analysis_code == 10:
+        #name = 'dt'
+    #else:
+        #raise NotImplementedError(self.data_code)
+
+    names = name + 's'
+    obj.data_code['name'] = name
+    obj.data_code['data_names'][0] = name
+    #print(self.element_ids)
+    del obj.element_id, obj.element_ids
+    #print('timesA =', self._times)
+    old_times = None
+    if 1:
+        old_times = obj._times
+        setattr(obj, names, obj._times)
+        #print('timesB =', self._times)
+
+    if obj.analysis_code == 1:
+        assert len(obj._times) == 1, obj.data.shape
+    elif len(obj._times) > 1:
+        class_name = obj.__class__.__name__
+        #assert obj._times.min() != obj._times.max(), f'{class_name}: old_times={old_times} -> times={obj._times}; data.shape={obj.data.shape}\n{obj.code_information()}'
+    #print(obj.object_attributes())
