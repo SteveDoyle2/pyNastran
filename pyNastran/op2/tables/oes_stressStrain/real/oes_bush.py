@@ -54,17 +54,11 @@ class RealBushArray(OES_Object):
         assert self.element_type == 102, self.element_type
         #nnodes_per_element = 1
 
-        # buggy MSC 2005 (was this ever fixed?)
-        # NX doesn't have this bug
-        if self.table_name in ['OESRMS2', 'OESNO2', 'OSTRRMS2', 'OSTRNO2']:
-            self.ntotal = self.nelements
-
         self.itime = 0
         self.ielement = 0
         self.itotal = 0
         #self.ntimes = 0
         #self.nelements = 0
-        self.is_built = True
 
         #print("***name=%s type=%s nnodes_per_element=%s ntimes=%s nelements=%s ntotal=%s" % (
             #self.element_name, self.element_type, nnodes_per_element, self.ntimes, self.nelements, self.ntotal))
@@ -78,6 +72,12 @@ class RealBushArray(OES_Object):
             ntimes = self.ntotal
             ntotal = self.ntimes
             #print('BUSH SORT2:', ntimes, ntotal)
+
+        # buggy MSC 2005 (was this ever fixed?)
+        # NX doesn't have this bug
+        if self.table_name in ['OESRMS2', 'OESNO2', 'OSTRRMS2', 'OSTRNO2']:
+            print('flipping the order...')
+            ntimes, ntotal = ntotal, ntimes
 
         _times = zeros(ntimes, dtype=dtype)
         element = zeros(ntotal, dtype=idtype)

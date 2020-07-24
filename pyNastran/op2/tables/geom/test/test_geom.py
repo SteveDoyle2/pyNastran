@@ -193,6 +193,7 @@ class TestOP2GeomUnit(unittest.TestCase):
         op2 = OP2Geom(make_geom=True, debug=False, log=None, debug_file=None, mode='msc')
         #op2.idtype8 = 'int32'
         op2._endian = b'<'
+        op2.op2_reader.factor = 1
         data = (5678, 71, 475,
                 1059, 10, 0.0, 0.2, 0.0,
                 -1059, 101000001, 0.0, 0.2, 0.0,
@@ -221,7 +222,7 @@ class TestOP2GeomUnit(unittest.TestCase):
 
         op2.table_name = b'GEOM1N'
         with self.assertRaises(AssertionError):
-            op2._read_grid(data_bytes3, 12)
+            op2._read_grid_11(data_bytes3, 12)
 
         #-----------------------------------
     def test_read_grid_11(self):

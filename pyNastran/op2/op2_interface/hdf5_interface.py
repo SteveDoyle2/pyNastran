@@ -63,7 +63,7 @@ from pyNastran.op2.tables.oes_stressStrain.complex.oes_bars import ComplexBarStr
 from pyNastran.op2.tables.oes_stressStrain.complex.oes_beams import ComplexBeamStressArray, ComplexBeamStrainArray
 from pyNastran.op2.tables.oes_stressStrain.complex.oes_bush import ComplexCBushStressArray, ComplexCBushStrainArray
 from pyNastran.op2.tables.oes_stressStrain.complex.oes_bush1d import ComplexCBush1DStressArray
-from pyNastran.op2.tables.oes_stressStrain.complex.oes_plates import ComplexPlateStressArray, ComplexPlateStrainArray
+from pyNastran.op2.tables.oes_stressStrain.complex.oes_plates import ComplexPlateStressArray, ComplexPlateStrainArray, ComplexLayeredCompositesArray
 from pyNastran.op2.tables.oes_stressStrain.complex.oes_plates_vm import ComplexPlateVMStressArray, ComplexPlateVMStrainArray
 from pyNastran.op2.tables.oes_stressStrain.complex.oes_triax import ComplexTriaxStressArray
 from pyNastran.op2.tables.oes_stressStrain.complex.oes_rods import ComplexRodStressArray, ComplexRodStrainArray
@@ -600,6 +600,19 @@ TABLE_OBJ_MAP = {
     'ctriar_composite_strain' : (RealCompositePlateStrainArray, ),
     'cquad8_composite_strain' : (RealCompositePlateStrainArray, ),
     'cquadr_composite_strain' : (RealCompositePlateStrainArray, ),
+
+    #'modal_contribution.cquad4_composite_strain' : (RealCompositePlateStrainArray, ),
+    'modal_contribution.cquad4_composite_strain' : (ComplexLayeredCompositesArray, ),
+    'modal_contribution.cquad4_composite_stress' : (ComplexLayeredCompositesArray, ),
+
+    'modal_contribution.cquadr_composite_strain' : (ComplexLayeredCompositesArray, ),
+    'modal_contribution.cquadr_composite_stress' : (ComplexLayeredCompositesArray, ),
+
+    'modal_contribution.ctria3_composite_strain' : (ComplexLayeredCompositesArray, ),
+    'modal_contribution.ctria3_composite_stress' : (ComplexLayeredCompositesArray, ),
+
+    'modal_contribution.ctriar_composite_strain' : (ComplexLayeredCompositesArray, ),
+    'modal_contribution.ctriar_composite_stress' : (ComplexLayeredCompositesArray, ),
 
     'RAPCONS.cquad4_composite_stress' : (RealCompositePlateStressArray, ),
     'RAPCONS.ctria3_composite_stress' : (RealCompositePlateStressArray, ),

@@ -62,8 +62,8 @@ class RandomBarArray(OES_Object):
 
         # buggy MSC 2005 (was this ever fixed?)
         # NX doesn't have this bug
-        if self.table_name in ['OESRMS2', 'OESNO2', 'OSTRRMS2', 'OSTRNO2']:
-            self.ntotal = self.nelements
+        #if self.table_name in ['OESRMS2', 'OESNO2', 'OSTRRMS2', 'OSTRNO2']:
+            #self.ntotal = self.nelements
 
         #if self.element_type == 34:
             #nnodes_per_element = 1
@@ -75,7 +75,6 @@ class RandomBarArray(OES_Object):
         self.itotal = 0
         #self.ntimes = 0
         #self.nelements = 0
-        self.is_built = True
 
         #print("***name=%s type=%s nnodes_per_element=%s ntimes=%s nelements=%s ntotal=%s" % (
             #self.element_name, self.element_type, nnodes_per_element, self.ntimes, self.nelements, self.ntotal))

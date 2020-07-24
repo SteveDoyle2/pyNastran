@@ -559,7 +559,7 @@ class F06Writer(OP2_F06_Common):
 
                 self.page_num = result.write_f06(f06, header, page_stamp,
                                                  self.page_num, is_mag_phase=is_mag_phase, is_sort1=True)
-                check_element_node(result)
+                #check_element_node(result)
                 assert isinstance(self.page_num, int), f'page_num={self.page_num!r}'
                 if delete_objects:
                     del result
@@ -630,7 +630,7 @@ class F06Writer(OP2_F06_Common):
                         result.is_complex
                         result.is_real
 
-                        check_element_node(result)
+                        #check_element_node(result)
                         try:
                             self.page_num = result.write_f06(
                                 f06, header, page_stamp, page_num=self.page_num,

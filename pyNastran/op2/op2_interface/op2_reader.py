@@ -247,7 +247,8 @@ class OP2Reader:
             if macro_version == 'nastran':
                 mode = _parse_nastran_version(
                     data, version, self._encoding, self.op2.log)
-                op2._nastran_format = mode
+                # don't uncomment this...it breaks tests
+                #op2._nastran_format = mode
             elif macro_version.startswith('IMAT'):
                 assert version.startswith(b'ATA'), version
                 op2._nastran_format = macro_version
@@ -5386,8 +5387,8 @@ class OP2Reader:
             op2.f.seek(na)
             op2.n = na
             self.log.error(f'marker0={marker0} nrecord={nrecord}')
-            if nrecord == 4:
-                raise EmptyRecordError('nrecord=4')
+            #if nrecord == 4:
+                #raise EmptyRecordError('nrecord=4')
             self.show(500, types='ifs', endian=None, force=False)
             self.show(record, types='ifs', endian=None, force=False)
             self.log.error('returning to before data block is skipped...')

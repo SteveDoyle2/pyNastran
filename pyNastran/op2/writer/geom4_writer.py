@@ -475,7 +475,7 @@ def _write_rbar(card_type: str, cards, ncards: int, op2, op2_ascii,
         for rbar in cards:
             cna = int(rbar.cna)
             cma = int(rbar.cma)
-            cnb = int(rbar.cnb)# if rbar.cnb != '' else 0
+            cnb = int(rbar.cnb) if rbar.cnb != '' else 0
             cmb = int(rbar.cmb)
             fields += [
                 rbar.eid, rbar.ga, rbar.gb,

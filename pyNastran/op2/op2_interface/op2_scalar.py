@@ -52,6 +52,7 @@ from cpylog import get_logger
 
 from pyNastran import is_release, __version__
 from pyNastran.f06.errors import FatalError
+from pyNastran.op2.errors import EmptyRecordError
 from pyNastran.op2.op2_interface.op2_reader import OP2Reader, reshape_bytes_block
 from pyNastran.bdf.cards.params import PARAM
 
@@ -179,7 +180,7 @@ RADEFMP - Displacement PHA^T * Effective Inertia Mode
 RADAMPZ - Viscous Damping Ratio Matrix
 RADAMPG - Structural Damping Ratio Matrix
 
-RAFGEN  - Generalized Forces
+RAFGEN  - Generalized Forces Matrix
 BHH     - Modal Viscous Damping Matrix
 K4HH    - Modal Structural Damping Matrix
 """
@@ -302,7 +303,8 @@ FLOAT_PARAMS_1 = {
     b'GE', b'MASSDENS',
 
     # should this be FLOAT_PARAMS_1???
-    b'EPPRT', b'HFREQFL',
+    b'HFREQFL',
+    b'EPPRT',
 
     # not defined
     b'PRPA', b'PRPHIVZ', b'PRPJ', b'PRRULV', b'RMAX', b'ADJFRQ', b'ARF',
@@ -920,9 +922,9 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             b'OSTRATO2' : [self._read_oes2_3, self._read_ostr2_4],
             b'OSTRCRM2' : [self._read_oes2_3, self._read_ostr2_4],
             b'OSTRPSD2' : [self._read_oes2_3, self._read_ostr2_4],
-            b'OSTRRMS2' : [self._table_passer, self._table_passer],  # buggy on isat random
+            b'OSTRRMS2' : [self._table_passer, self._table_passer], # buggy on isat random
             b'OSTRNO2' : [self._table_passer, self._table_passer],  # buggy on isat random
-            #b'OSTRRMS2' : [self._read_oes2_3, self._read_ostr2_4],  # buggy on isat random
+            #b'OSTRRMS2' : [self._read_oes2_3, self._read_ostr2_4], # buggy on isat random
             #b'OSTRNO2' : [self._read_oes2_3, self._read_ostr2_4],  # buggy on isat random
 
             b'OSTRMS1C' : [self._read_oes1_3, self._read_ostr1_4], # isat_random
@@ -1477,7 +1479,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
 
     def _nx_table_passer(self, data, ndata: int):
         """auto-table skipper"""
-        self.to_nx()
+        self.to_nx(f' because table_name={self.table_name} was found')
         self._table_passer(data, ndata)
 
     def _table_passer(self, data, ndata: int):
@@ -1617,7 +1619,16 @@ class OP2_Scalar(LAMA, ONR, OGPF,
                              'No tables exist...check for a license issue')
 
         self._make_tables()
-        table_names = self._read_tables(table_name)
+        table_names = []
+        try:
+            self._read_tables(table_name, table_names)
+        except EmptyRecordError:
+            self.show(500, types='ifs', endian=None, force=False)
+            raise
+            op2_reader = self.op2_reader
+            op2_reader.read_markers([1, 0, 0, 0])
+            self.show(500, types='ifs', endian=None, force=False)
+            self._finish()
 
         self.close_op2(force=False)
         #self.remove_unpickable_data()
@@ -1689,9 +1700,11 @@ class OP2_Scalar(LAMA, ONR, OGPF,
         self.n = 0
         self.table_name = None
 
+
         if not hasattr(self, 'f') or self.f is None:
             #: the OP2 file object
-            self.f = open(self.op2_filename, 'rb')
+            op2_filename = self.op2_filename
+            self.f = open(op2_filename, 'rb')
             #: the endian in bytes
             self._endian = None
             #: the endian in unicode
@@ -1737,7 +1750,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
         #table_mapper = self._get_table_mapper()
         #RESULT_TABLES = table_mapper.keys()
 
-    def _read_tables(self, table_name: bytes) -> List[bytes]:
+    def _read_tables(self, table_name: bytes, table_names: List[bytes]) -> None:
         """
         Reads all the geometry/result tables.
         The OP2 header is not read by this function.
@@ -1746,15 +1759,11 @@ class OP2_Scalar(LAMA, ONR, OGPF,
         ----------
         table_name : bytes str
             the first table's name
-
-        Returns
-        -------
         table_names : List[bytes str]
             the table names that were read
 
         """
         op2_reader = self.op2_reader
-        table_names = []
         self.table_count = defaultdict(int)
         while table_name is not None:
             self.table_count[table_name] += 1
@@ -1822,7 +1831,6 @@ class OP2_Scalar(LAMA, ONR, OGPF,
 
             table_name = op2_reader._read_table_name(last_table_name=table_name,
                                                      rewind=True, stop_on_failure=False)
-        return table_names
 
     def set_additional_generalized_tables_to_read(self, tables):
         """

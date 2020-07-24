@@ -192,7 +192,6 @@ class ComplexLayeredCompositesArray(OES_Object):
                   page_num=1, is_mag_phase=False, is_sort1=True) -> int:
         if header is None:
             header = []
-        adsf
         msg_temp, nnodes, is_bilinear = _get_plate_msg(self, is_mag_phase, is_sort1)
         if self.is_von_mises:
             warnings.warn(f'{self.class_name} doesnt support writing von Mises')
