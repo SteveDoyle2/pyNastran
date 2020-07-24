@@ -335,7 +335,7 @@ def run_op2(op2_filename: str, make_geom: bool=False, combine: bool=True,
                 op2a = OP2(debug_file='debug.out', log=log)
                 op2a.use_vector = False
                 op2a.read_op2(op2_filename2)
-                os.remove(op2_filename2)
+                #os.remove(op2_filename2)
             #read_op2(op2_filename2)
             if delete_op2:
                 remove_file(op2_filename2)

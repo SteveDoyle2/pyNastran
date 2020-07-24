@@ -54,7 +54,7 @@ import scipy  # type: ignore
 
 from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.f06.errors import FatalError
-from pyNastran.op2.errors import FortranMarkerError, SortCodeError
+from pyNastran.op2.errors import FortranMarkerError, SortCodeError, EmptyRecordError
 from pyNastran.op2.result_objects.gpdt import GPDT, BGPDT
 from pyNastran.op2.result_objects.eqexin import EQEXIN
 from pyNastran.op2.result_objects.matrix import Matrix, MatrixDict
@@ -84,6 +84,10 @@ DENSE_MATRICES = [
     b'KELMP',
     b'MELMP',
 ]
+OPTISTRUCT_VERSIONS = [
+    b'OS11XXXX', b'OS12.210', b'OS14.210',
+    b'OS2017.1', b'OS2017.2',
+    b'OS2018.1']
 
 class OP2Reader:
     """Stores methods that aren't useful to an end user"""
@@ -182,6 +186,7 @@ class OP2Reader:
             b'OBC1': self.read_obc1,
             b'OBG1': self.read_obc1,
             b'PTMIC' : self._read_ptmic,
+            b'MATPOOL' : self._read_matrix_matpool,
         }
 
     def read_nastran_version(self, mode: str):
@@ -242,6 +247,7 @@ class OP2Reader:
             if macro_version == 'nastran':
                 mode = _parse_nastran_version(
                     data, version, self._encoding, self.op2.log)
+                op2._nastran_format = mode
             elif macro_version.startswith('IMAT'):
                 assert version.startswith(b'ATA'), version
                 op2._nastran_format = macro_version
@@ -345,7 +351,7 @@ class OP2Reader:
         assert nrows == nrows_test
 
         extid_pid = extid_pid.reshape(nrows, 2)
-        print(extid_pid, extid_pid.shape)
+        #print(extid_pid, extid_pid.shape)
 
         # Record 2 repeats for each material type region in which a microphone point is defined.
 
@@ -377,7 +383,7 @@ class OP2Reader:
             for i in range(ncomplex):
                 edata = data[n:n+ntotal]
                 out = struct_i4f.unpack(edata)
-                print(out)
+                #print(out)
                 n += ntotal
             assert ncomplex == 1
             itable -= 1
@@ -3937,6 +3943,19 @@ class OP2Reader:
         |  9   | Pseudo identity |
         +------+-----------------+
 
+
+        Record 2  - BNDFL(9614,96,0)
+        Record 3  - DMIAX(214,2,221)
+        Record 4  - DMIG(114,1,120)
+        Record 5  - DMIJ(514,5,578)
+        Record 6  - DMIJI(614,6,579)
+        Record 7  - DMIK(714,7,580)
+        Record 8  - ELIST(314,3,279)
+        Record 9  - MFLUID(414,4,284)
+        Record 10 - RADCAV(2509,25,418)
+        Record 11 - RADSET(8602,86,421)
+        Record 12 - RADLST(2014,20,243)
+        Record 13 - RADMTX(3014,30,244)
         """
         #print('-------------------------------------')
 
@@ -3945,228 +3964,488 @@ class OP2Reader:
         utable_name = table_name.decode('utf-8')
         #print(utable_name)
         self.read_markers([-1])
+
+        # (104, 32768, 0, 0, 0, 0, 0)
         data = self._read_record()
+        #self.show_data(data, types='ifs', endian=None, force=False)
 
         self.read_3_markers([-2, 1, 0])
+
+        # MATPOOL
         data = self._read_record()
+        #self.show_data(data, types='ifs', endian=None, force=False)
         if self.size == 8:
             data = reshape_bytes_block(data)
         #self.show_data(data)
         ndata = len(data)
         if ndata == 8:
             table_name2, = op2.struct_8s.unpack(data)
-            utable_name2 = table_name2.decode('utf-8').strip()
-            assert utable_name == utable_name2, utable_name2
+            utable_name = table_name2.decode('utf-8').strip()
+            #assert utable_name == utable_name2, f'utable_name={utable_name} utable_name2={utable_name2}'
 
-        self.read_markers([-3, 1])
-        #self.show(100, types='iq')
-        #if utable_name == 'DELTAK':
-            #pass
-            ##self.read_markers([1])
-            #self.show(200)
-        #else:
+        self.read_markers([-3, 1, 0])
+        data = self._read_record()
+
         if self.size == 4:
-            self.read_markers([0])
-            data = self._read_record()
+            struct_3i = op2.struct_3i
         else:
-            self.read_markers([1])
-            #self.show(340, types='ifqd')
-            data = self._read_record()
+            struct_3i = op2.struct_3q
+        itable = -4
+        while 1:
+            #self.show_data(data[:12*self.factor], types='ifsqd')
+            code = struct_3i.unpack(data[:12*self.factor])
+            #self.show(36)
 
-        #self.show(36)
+            #if utable_name == 'DELTAK':
+                #self.show_data(data)
 
-        #if utable_name == 'DELTAK':
-            #self.show_data(data)
+            #nvalues = len(data) // 4
+            assert len(data) % 4 == 0, len(data) / 4
 
-        #nvalues = len(data) // 4
-        assert len(data) % 4 == 0, len(data) / 4.
+            if self.read_mode == 1:
+                if code == (114, 1, 120):
+                    self.log.debug(f'code = {code}')
+                    try:
+                        self._read_matpool_dmig(op2, data, utable_name, debug=False)
+                    except Exception as excep:
+                        self.log.error(str(excep))
+                        self.log.warning('skipping DMIG')
+                        #raise
+                else:
+                    print(f'code = {code}')
+                    self.show_data(data, types='ifs', endian=None, force=False)
+                    raise NotImplementedError(code)
 
-        header = unpack(self._endian + b'3i 8s 7i', data[:48]) # 48=4*12
-        assert header[:3] == (114, 1, 120), 'header[:3]=%s header=%s' % (header[:3], header)
+            self.read_3_markers([itable, 1, 0])
+            self.log.debug(f'read [{itable},1,0]')
+            expected_marker = itable - 1
+            data, ndatas = self.read_long_block(expected_marker)
+            if ndatas == 0:
+                itable -= 1
+                self.log.debug(f'read [{itable},1,0]')
+                self.read_3_markers([itable, 1, 0])
+                break
+                #data, ndatas = self.read_long_block(expected_marker)
 
-        # ncols_gset is needed for form=9
-        #  list of header values:
-        #    4:5   matrix name
-        #    6     placeholder
-        #    7     matrix shape (1=square, 2 or 9 = rectangular, 6=symmetric)
-        #    8     input type flag (1=single, 2=double, 3=complex single,
-        #                           4=complex double)
-        #    9     output type flag (0=precision set by system cell,
-        #                            1=single, 2=double, 3=complex single,
-        #                            4=complex double)
-        #   10     complex flag (0=real/imaginary, >0=magnitude/phase)
-        #   11     placeholder
-        #   12     number of columns in the G set
-        #          (only necessary for matrix shape 9)
-        matrix_name, junk1, matrix_shape, tin, tout, is_phase, junk2, ncols_gset = header[3:]
-        matrix_name = matrix_name.strip()
+        #self.show(100, types='ifsqd')
+        self.read_markers([0])
+        #raise RuntimeError('failed on _read_matpool_matrix')
 
+    def read_long_block(self, expected_marker: int):
+        op2 = self.op2
+        if self.size == 4:
+            struct_3i = op2.struct_3i
+        else:
+            struct_3i = op2.struct_3q
+
+        marker1 = None
+        datas = []
+        ndatas = 0
+        while marker1 != expected_marker:
+            data, ndata = self._read_record_ndata()
+            if ndata == 12 * self.factor:
+                out = struct_3i.unpack(data)
+                #print('****', out)
+                #self.show(100, types='ifsq')
+                marker1 = self.get_marker1(rewind=True, macro_rewind=False)
+                self.log.info(f'marker1 = {marker1}')
+                continue
+            self.log.info('adding data')
+            datas.append(data)
+            ndatas += ndata
+            #self.show(500, types='ifsq')
+            marker1 = self.get_marker1(rewind=True, macro_rewind=False)
+            self.log.info(f'marker1 = {marker1}')
+
+        if len(datas) != 1:
+            #print('ndatas =', len(datas))
+            data = b''.join(datas)
+        #self.show(200, types='ifsq')
+        return data, ndatas
+
+    def _read_matpool_dmig(self, op2: OP2, data, utable_name: str, debug: bool=False):
+        """
+        ncols_gset is needed for form=9
+        list of header values:
+          4:5   matrix name
+          6     placeholder
+          7     matrix shape (1=square, 2 or 9 = rectangular, 6=symmetric)
+          8     input type flag (1=single, 2=double, 3=complex single,
+                                 4=complex double)
+          9     output type flag (0=precision set by system cell,
+                                  1=single, 2=double, 3=complex single,
+                                  4=complex double)
+         10     complex flag (0=real/imaginary, >0=magnitude/phase)
+         11     placeholder
+         12     number of columns in the G set
+                (only necessary for matrix shape 9)
+        """
+        #matrix_name=b'B0', junk1=0, matrix_shape=6, tin=2, tout=2, is_phase=0, junk2=0, ncols_gset=0
+
+        #ints    = (3, 1, 4, 1, 1717986918, 1072064102, -1, -1, -1, -1,
+        #           540029250, 538976288, 0, 6, 1, 1, 0, 0, 0, 10402, 1, 10402, 3, -1717986918, 1071225241, -1, -1, -1, -1,
+        #           540029762, 538976288, 0, 6, 1, 1, 0, 0, 0, 30301, 1, 30301, 3, 0, 1071644672, -1, -1, -1, -1)
+        #floats  = (3, 1, 4, 1, 2.7200830220753216e+23, 1.7999999523162842, nan, nan, nan, nan,
+        #           1.4924077914682395e-19, 1.3563156426940112e-19, 0.0, 6, 1, 1, 0.0, 0.0, 0.0, 10402, 1, 10402, 3, -1.5881868392106856e-23, 1.6999999284744263, nan, nan, nan, nan,
+        #           1.4924739659172437e-19, 1.3563156426940112e-19, 0.0, 6, 1, 1, 0.0, 0.0, 0.0, 30301, 1, 30301, 3, 0.0, 1.75, nan, nan, nan, nan)
+        #doubles (float64) = (2.1219957924e-314, 2.121995793e-314, 0.7, nan, nan, 6.013470018394104e-154, 1.2731974746e-313, 2.1219957915e-314, 0.0, 2.2073000217621e-310, 2.20730002176213e-310, -2.3534379293677296e-185, nan, nan, 1.208269179683613e-153, 2.66289668e-315, 2.121995794e-314, 5e-324, 0.0, 2.1220107616e-314, 6.3660023436e-314, 0.5, nan, nan)
+
+        factor = self.factor
+        if self.size == 4:
+            header_fmt = self._endian + b'8s 7i'
+        else:
+            header_fmt = self._endian + b'16s 7q'
+
+        #nheader = 48 * factor
+        #header = unpack(header_fmt, data[:nheader]) # 48=4*12
+        #assert header[:3] == (114, 1, 120), 'header[:3]=%s header=%s' % (header[:3], header)
+
+        # 1 NAME(2) CHAR4
+        # 3 UNDEF none
+        # 4 MATFORM  I Matrix Form
+        # 5 MATRIX T I
+        # MATRIX T=1
+        # 6 MATTYPE I Matrix Type, repeat of previous word
+        # 7 UNDEF(2 ) none
+        # 9 MATCOLS I Matrix Columns
+        # 10 GJ I
+        # 11 CJ I
+        # 12 GI I
+        # 13 CI I
+        # 14 VRS RS
+        #matrix_name, junk1, matrix_shape, tin, tout, is_phase, junk2, ncols_gset = header[3:]
+        #if factor == 2:
+            #matrix_name = reshape_bytes_block(matrix_name)
+        #matrix_name = matrix_name.strip()
         #self.log.debug('matrix_name=%s, junk1=%s, matrix_shape=%s, tin=%s, tout=%s, '
                        #'is_phase=%s, junk2=%s, ncols_gset=%s' % (
                            #matrix_name, junk1, matrix_shape, tin, tout,
                            #is_phase, junk2, ncols_gset))
+        #self.show_data(data[48*factor:], types='ifsd')
 
-        is_complex = False
-        if tin > 2 or tout > 2:
-            is_complex = True
-            assert is_phase == 0, 'is_phase=%s' % is_phase
-            imags = []
+        #is_complex = False
+        #if tin > 2 or tout > 2:
+            #is_complex = True
+            #assert is_phase == 0, 'is_phase=%s' % is_phase
+            #imags = []
 
-        if tout == 1:
-            dtype = 'float32'
-            fdtype = op2.fdtype
-        elif tout == 2:
-            dtype = 'float64'
-            fdtype = op2.double_dtype
-        elif tout == 3:
-            dtype = 'complex64'
-            fdtype = op2.fdtype
-        elif tout == 4:
-            dtype = 'complex128'
-            fdtype = op2.double_dtype
-        else:
-            dtype = '???'
-            msg = ('matrix_name=%s, junk1=%s, matrix_shape=%s, tin=%s, tout=%s, '
-                   'is_phase=%s, junk2=%s, ncols_gset=%s' % (
-                       matrix_name, junk1, matrix_shape, tin, tout,
-                       is_phase, junk2, ncols_gset))
-            self.log.warning(msg)
-            raise RuntimeError(msg)
+        #if tout == 1:
+            #dtype = 'float32'
+            #fdtype = op2.fdtype
+        #elif tout == 2:
+            #dtype = 'float64'
+            #fdtype = op2.double_dtype
+        #elif tout == 3:
+            #dtype = 'complex64'
+            #fdtype = op2.fdtype
+        #elif tout == 4:
+            #dtype = 'complex128'
+            #fdtype = op2.double_dtype
+        #else:
+            #dtype = '???'
+            #msg = ('matrix_name=%s, junk1=%s, matrix_shape=%s, tin=%s, tout=%s, '
+                   #'is_phase=%s, junk2=%s, ncols_gset=%s' % (
+                       #matrix_name, junk1, matrix_shape, tin, tout,
+                       #is_phase, junk2, ncols_gset))
+            #self.log.warning(msg)
+            #raise RuntimeError(msg)
 
-        is_symmetric = matrix_shape == 6
+        #is_symmetric = matrix_shape == 6
         #is_phase_flag = is_phase > 0
 
-        if tout in [1, 3]:
-            # works for float32, complex64
-            ints = np.frombuffer(data[48:], dtype=op2.idtype).copy()
-            floats = np.frombuffer(data[48:], dtype=op2.fdtype).copy()
-            temp_ints = ints
-        else:
-            # works for float64, complex128
-            temp_ints = np.frombuffer(data[48:], dtype=op2.idtype).copy()
+        ncode = 12 * self.factor
+        datai = data[ncode:]
+        ints = np.frombuffer(datai, dtype=op2.idtype8).copy()
+        temp_ints = ints
+        if 0:
+            if self.size == 4:
+                if tout in [1, 3]:
+                    # works for float32, complex64
+                    ints = np.frombuffer(datai, dtype=op2.idtype).copy()
+                    floats = np.frombuffer(datai, dtype=op2.fdtype).copy()
+                    temp_ints = ints
+                else:
+                    # works for float64, complex128
+                    temp_ints = np.frombuffer(datai, dtype=op2.idtype8).copy()
+            else:
+                if tout == 1:
+                    # C:\MSC.Software\simcenter_nastran_2019.2\tpl_post2\mnfexam32_0.op2
+                    ints = np.frombuffer(datai, dtype=op2.idtype8).copy()
+                    floats = np.frombuffer(datai, dtype=op2.fdtype8).copy()
+                else:
+                    assert tout == 1, tout
+                    asdf
+                temp_ints = ints
 
         # find the first index with ()-1,-1)
-        iminus1 = np.where(temp_ints[:-1] == -1)[0]
-        double_minus1 = (iminus1[:-1] + 1 == iminus1[1:])[:-1]
+        iminus1 = np.where(temp_ints == -1)[0]
+        #istart, istop, kstops = _find_dmig_start_stop(datai, iminus1, header_fmt, self.size, self.log)
+        istart, istop, outs, kstarts, kstops = _find_all_dmigs_start_stop(datai, header_fmt, self.size, iminus1,
+                                                                          debug=debug)
 
-        # the field after our stop
-        # we'll handle the off by 1 later with arange
-        istop = iminus1[:-2][double_minus1]
+        ioffset = 9
+        # istop : the end of the matrix(s)
+        # istart : the start of the matrix(s)
 
-        # 2 fields after is the start position
-        # add on a 0 to the beginning to account for the starting position
-        # istart defines icol
-        istart = np.hstack([0, istop[:-1] + 2])
+        # kstart : the start of the columns
+        # kstop  : the end of the columns
+        self.log.info(f'outs = {outs}')
+        self.log.info(f'kstarts = {kstarts}')
+        self.log.info(f'kstops  = {kstops}')
+        for i, istarti, istopi, out, kstart, kstop in zip(count(), istart, istop, outs, kstarts, kstops):
+            self.log.info(f'-------------------------------')
+            matrix_name, junk1, matrix_shape, tin, tout, is_phase, junk2, ncols_gset = out # [3:]
+            if self.size == 8:
+                matrix_name = reshape_bytes_block(matrix_name)
+            matrix_name = matrix_name.strip()
+            matrix_name_str = matrix_name.decode('latin1')
+            #self.show_data(data[48*factor:], types='ifsd')
 
-        col_nids_short = temp_ints[istart]
-        col_dofs_short = temp_ints[istart+1]
-        #nj2 = len(istart)  ## TODO: why is this wrong???
+            is_complex = False
+            if tin > 2 or tout > 2:
+                #is_complex = True
+                assert is_phase == 0, 'is_phase=%s' % is_phase
+                #imags = []
 
-        row_nids = []
-        row_dofs = []
-        col_nids = []
-        col_dofs = []
-        reals = []
-        imags = []
-        for col_nidi, col_dofi, istarti, istopi in zip(
-                col_nids_short, col_dofs_short, istart + 2, istop):
+            dtype, fdtype = get_dtype_fdtype_from_tout(op2, tout)
+            self.log.info('matrix_name=%s junk1=%s matrix_shape=%s tin=%s tout=%s '
+                          'is_phase=%s junk2=%s ncols_gset=%s' % (
+                              matrix_name, junk1, matrix_shape, tin, tout,
+                              is_phase, junk2, ncols_gset))
 
-            ## TODO: preallocate arrays
-            imag = None
-            # The float32/complex64 blocks are really simple
-            # because we can just use the data is from the temp_ints block.
-            # We calculate istart/istop and directly access the float data.
-            #
-            # The float64/complex128 blocks are more complicated.
-            # It's easier to just use istart/istop to calculate datai
-            # case that, and then slice it.
-            #
-            # In all cases, we use istart/istop to calculate row/col nid/dof
-            # because they are always int32.  Only the real/imag types change.
-            if dtype == 'float32':
-                irow = np.arange(istarti, istopi-1, step=3, dtype='int32')
-                real = floats[irow + 2]
-            elif dtype == 'complex64':
-                irow = np.arange(istarti, istopi-1, step=4, dtype='int32')
-                real = floats[irow + 2]
-                imag = floats[irow + 3]
+            is_symmetric = matrix_shape == 6
+            is_phase_flag = is_phase > 0
+            if self.size == 4:
+                if tout == 1:  # float32
+                    nvalues = 3
+                elif tout == 2:  # float64
+                    nvalues = 4
+                elif tout == 3:  # complex64
+                    nvalues = 4
+                elif tout == 4:  # complex128
+                    nvalues = 5
+                else:
+                    raise NotImplementedError(tout)
 
-            elif dtype == 'float64':
-                datai = data[48+(istarti*4) : 48+(istopi*4)]
-                irow = np.arange(istarti, istopi-1, step=4, dtype='int32')
-                assert len(datai) % 8 == 0, len(datai) / 8
-                real = np.frombuffer(datai, dtype=fdtype)[1::2].copy()
+            #----------------------------------------
+            #print(kstart, kstop)
+            #kstart = np.array(kstart
+            kstop = np.array(kstop)
+            kstart = np.hstack([ioffset, kstop[:-1] + 2])
+            #self.show_data(data[kstart*4:kstop*4])
+            kfirst = ioffset
+            klast = kstop[-1]
+            self.log.info(f'kstart = {kstart}')
+            self.log.info(f'kstop  = {kstop}')
+            #----------------------------------------
+            self.log.info('casting floats')
+            nheader = ioffset * self.size
+            nend = istopi * self.size
+            #floats = get_floats(datai[nheader:nend], fdtype, op2, tout, self.size)
 
-            elif dtype == 'complex128':
-                datai = data[48+(istarti*4) : 48+(istopi*4)]
+            assert tout in [1, 2, 3, 4]
+            #print(floats.tolist())
+            print(ints[kfirst:klast].tolist())
+            #print(floats)
+            #----------------------------------------
+            self.log.info('getting col (nid,dof)')
 
-                # iword
-                # -----
-                #   0    1    3     5   <---- iword
-                #   1    1    2     2   <---- nwords
-                # (nid, dof, real, imag)
-                irow = np.arange(istarti, istopi-1, step=6, dtype='int32')
-                assert len(datai) % 8 == 0, len(datai) / 8
-                floats = np.frombuffer(datai, dtype=fdtype).copy()
-
-                # ndoubles
-                # --------
-                #  <---0--->   1     2    <----- iword
-                #      1       1     1    <----- nwords
-                # (nid, dof, real, imag)
-                real = floats[1::3]
-                imag = floats[2::3]
-            else:
-                msg = '%s is not supported' % dtype
-                self.log.error(msg)
-                raise RuntimeError(msg)
-
-            if len(irow) != len(real):
-                msg = 'nrow=%s nreal=%s nimag=%s' % (len(irow), len(real), len(imag))
-                raise RuntimeError(msg)
-
-            # the row index; [1, 2, ..., 43]
-            row_nid = temp_ints[irow]
-
-            # the dof; [0, 0, ..., 0.]
-            row_dof = temp_ints[irow + 1]
-            urow_dof = np.unique(row_dof)
-            for udofi in urow_dof:
+            col_nids_short = temp_ints[kstart]
+            col_dofs_short = temp_ints[kstart+1]
+            ucol_dofs = np.unique(col_dofs_short)
+            self.log.debug(f'  col_dofs = {ucol_dofs}')
+            for udofi in ucol_dofs:
                 if udofi not in [0, 1, 2, 3, 4, 5, 6]:
+                    self.show_data(data[ncode:], types='ifsqd')
+                    print(temp_ints.tolist())
                     msg = 'udofi=%s is invalid; must be in [0, 1, 2, 3, 4, 5, 6]; dofs=%s' % (
-                        udofi, np.asarray(urow_dof, dtype='int32').tolist())
+                        udofi, np.asarray(ucol_dofs, dtype='int32').tolist())
                     raise ValueError(msg)
 
-            ni = len(irow)
-            col_nid = np.ones(ni, dtype='int32') * col_nidi
-            col_dof = np.ones(ni, dtype='int32') * col_dofi
+            #nj2 = len(istart)  ## TODO: why is this wrong???
+            # -------------------------------------------------
+            self.log.info(f'extracting rows')
+            row_nids = []
+            row_dofs = []
+            col_nids = []
+            col_dofs = []
+            reals = []
+            imags = []
+            self.log.debug(f'  dtype={dtype} fdtype={fdtype}')
+            self.log.debug(f'  istart = {istart}')
+            self.log.debug(f'  istop = {istop}')
+            self.log.debug(f'  kstart = {kstart}')
+            self.log.debug(f'  kstop = {kstop}')
+            #self.show_data(data[nheader:], types='ifsdq')
 
-            row_nids.append(row_nid)
-            row_dofs.append(row_dof)
-            col_nids.append(col_nid)
-            col_dofs.append(col_dof)
-            reals.append(real)
-            imags.append(imag)
+            for col_nidi, col_dofi, istarti, istopi in zip(
+                    col_nids_short, col_dofs_short, kstart, kstop):
 
-        row_nids_array = np.hstack(row_nids)
-        row_dofs_array = np.hstack(row_dofs)
+                #  the +2 on nstart2 is for the grid,comp offset
+                if self.size == 4:
+                    nstart2 = (istarti + 2) * self.size
+                    nend_float2 = (istopi - 3) * self.size
+                    nend_int2 = (istopi - 3) * self.size
+                else:
+                    nstart2 = (istarti + 2) * self.size
+                    nend_float2 = (istopi) * self.size
+                    nend_int2 = (istopi) * self.size
 
-        col_nids_array = np.hstack(col_nids)
-        col_dofs_array = np.hstack(col_dofs)
-        real_array = np.hstack(reals)
-        if is_complex:
-            complex_array = np.hstack(imags)
-            assert len(real_array) == len(complex_array)
-            real_imag_array = real_array + 1.j * complex_array
-        else:
-            real_imag_array = real_array
+                #ints2 = np.frombuffer(datai[istarti*4:(istopi-2)*4], dtype=op2.idtype8).copy()
+                #print(f'ints test = {ints2}')
+                self.log.debug(f'  nid={col_nidi} dof={col_dofi} istarti={istarti} istopi={istopi}')
+                ## TODO: preallocate arrays
+                imag = None
+                # The float32/complex64 blocks are really simple
+                # because we can just use the data is from the temp_ints block.
+                # We calculate istart/istop and directly access the float data.
+                #
+                # The float64/complex128 blocks are more complicated.
+                # It's easier to just use istart/istop to calculate datai
+                # case that, and then slice it.
+                #
+                # In all cases, we use istart/istop to calculate row/col nid/dof
+                # because they are always int32.  Only the real/imag types change.
+                #print(datai[nstart2:nend2])
+                #self.show_data(datai[nstart2:nend2], types='ifd')
+                print('fdtype =', fdtype)
+                #nints = len(ints2)
+                #ints2 = ints2.reshape(nints//nvalues, nvalues)
 
-        self._cast_matrix_matpool(utable_name, real_imag_array,
-                                  col_nids_array, col_dofs_array,
-                                  row_nids_array, row_dofs_array,
-                                  matrix_shape, dtype, is_symmetric)
+                # irow brings us to the (grid, dof)
+                if self.size == 4:
+                    ints2 = np.frombuffer(datai[nstart2:nend_int2], dtype=op2.idtype8).copy()
+                    floats = get_floats(datai[nstart2:nend_float2], fdtype, op2, tout, self.size)
+                    if dtype == 'float32':
+                        # [int, int, float]  -> get float
+                        real = floats[3::3]
 
-    def _cast_matrix_matpool(self, table_name, real_imag_array,
+                        # [int, x, x
+                        #  int, x, x] -> get int
+                        irow = np.arange(0, len(ints2), step=3, dtype='int32')
+                    elif dtype == 'float64':
+                        # [long, double]  -> get double
+                        real = floats[1::2]
+
+                        # [int, x, x, x
+                        #  int, x, x, x] -> get int
+                        irow = np.arange(0, len(ints2), step=4, dtype='int32')
+                    else:
+                        raise RuntimeError((self.size, dtype))
+                else:
+                    assert nend_float2 - nstart2 > 1, nend_float2 - nstart2
+                    dataii = datai[nstart2:nend_float2]
+                    ints2 = np.frombuffer(dataii, dtype='int64').copy()
+                    floats = np.frombuffer(dataii, dtype='float64').copy()
+                    print(ints2)
+                    print(floats)
+                    if dtype == 'float32':
+                        irow = np.arange(0, len(ints2), step=3, dtype='int64')
+                        real = floats[2::3]
+                    else:
+                        raise RuntimeError((self.size, dtype))
+                self.log.debug(f'real = {real}; {type(real[0])}')
+                self.log.debug(f'irow = {irow}')
+
+                if 0:
+                    if dtype == 'float32':
+                        irow = np.arange(istarti, istopi-1, step=3, dtype='int32')
+                        real = floats[irow + 2]
+                    elif dtype == 'complex64':
+                        irow = np.arange(istarti, istopi-1, step=4, dtype='int32')
+                        real = floats[irow + 2]
+                        imag = floats[irow + 3]
+
+                    elif dtype == 'float64':
+                        datai = data[nheader+(istarti*4) : nheader+(istopi*4)]
+                        #self.show_data(datai)
+                        irow = np.arange(istarti, istopi-1, step=4, dtype='int32')
+                        self.log.debug(f'irow float64: irow={irow}')
+                        assert len(datai) % 8 == 0, len(datai) / 8
+                        real = np.frombuffer(datai, dtype=fdtype)[1::2].copy()
+
+                    elif dtype == 'complex128':
+                        datai = data[nheader+(istarti*4) : nheader+(istopi*4)]
+
+                        # iword
+                        # -----
+                        #   0    1    3     5   <---- iword
+                        #   1    1    2     2   <---- nwords
+                        # (nid, dof, real, imag)
+                        irow = np.arange(istarti, istopi-1, step=6, dtype='int32')
+                        assert len(datai) % 8 == 0, len(datai) / 8
+                        floats = np.frombuffer(datai, dtype=fdtype).copy()
+
+                        # ndoubles
+                        # --------
+                        #  <---0--->   1     2    <----- iword
+                        #      1       1     1    <----- nwords
+                        # (nid, dof, real, imag)
+                        real = floats[1::3]
+                        imag = floats[2::3]
+                    else:
+                        msg = f'{dtype} is not supported'
+                        self.log.error(msg)
+                        raise RuntimeError(msg)
+
+                    if len(irow) != len(real):
+                        msg = 'nrow=%s nreal=%s' % (len(irow), len(real))
+                        raise RuntimeError(msg)
+                    #elif len(irow) == 0:
+                        #msg = 'nrow=%s nreal=%s' % (len(irow), len(real))
+                        #raise RuntimeError(msg)
+
+                # the row index; [1, 2, ..., 43]
+                row_nid = ints2[irow]
+
+                # the dof; [0, 0, ..., 0.]
+                row_dof = ints2[irow + 1]
+                self.log.debug(f'row nid,dof = =({row_nid}, {row_dof})')
+                self.log.debug(f'row_nid = {row_nid}')
+                self.log.debug(f'row_dof = {row_dof}')
+                urow_dof = np.unique(row_dof)
+                self.log.debug(f'urow_dof = {urow_dof}')
+                for udofi in urow_dof:
+                    if udofi not in [0, 1, 2, 3, 4, 5, 6]:
+                        msg = 'udofi=%s is invalid; must be in [0, 1, 2, 3, 4, 5, 6]; dofs=%s' % (
+                            udofi, np.asarray(urow_dof, dtype='int32').tolist())
+                        raise ValueError(msg)
+                ni = len(irow)
+                self.log.debug(f'real = {real}')
+                col_nid = np.ones(ni, dtype='int32') * col_nidi
+                col_dof = np.ones(ni, dtype='int32') * col_dofi
+
+                row_nids.append(row_nid)
+                row_dofs.append(row_dof)
+                col_nids.append(col_nid)
+                col_dofs.append(col_dof)
+                reals.append(real)
+                imags.append(imag)
+
+                row_nids_array = np.hstack(row_nids)
+                row_dofs_array = np.hstack(row_dofs)
+
+                col_nids_array = np.hstack(col_nids)
+                col_dofs_array = np.hstack(col_dofs)
+                real_array = np.hstack(reals)
+            ioffset = kstop[-1] + 4
+
+            if is_complex:
+                complex_array = np.hstack(imags)
+                assert len(real_array) == len(complex_array)
+                real_imag_array = real_array + 1.j * complex_array
+            else:
+                real_imag_array = real_array
+
+            self._cast_matrix_matpool(matrix_name_str, real_imag_array,
+                                      col_nids_array, col_dofs_array,
+                                      row_nids_array, row_dofs_array,
+                                      matrix_shape, dtype, is_symmetric)
+            self.log.warning('breaking...')
+            break
+        return
+
+    def _cast_matrix_matpool(self, table_name: str, real_imag_array,
                              col_nids_array, col_dofs_array,
                              row_nids_array, row_dofs_array,
                              matrix_shape, dtype, is_symmetric):
@@ -4241,8 +4520,8 @@ class OP2Reader:
                     matrix = upper_tri + upper_tri_t - diagi
                 else:
                     self.log.warning(
-                        'Matrix %r marked as symmetric does not contain '
-                        'symmetric data.  Data will be symmetrized by averaging.' % table_name)
+                        f'Matrix {table_name!r} marked as symmetric does not contain '
+                        'symmetric data.  Data will be symmetrized by averaging.')
                     matrix = (matrix + matrix.T) / 2.
             elif lnnz > 0:
                 #  lower triangle is populated
@@ -4267,14 +4546,6 @@ class OP2Reader:
         m.form = matrix_shape
         op2.matrices[table_name] = m
         self.log.debug(m)
-
-        self.read_3_markers([-4, 1, 0])
-        data = self._read_record()
-
-        if len(data) == 12:
-            self.read_markers([-5, 1, 0, 0])
-            return
-        raise RuntimeError('failed on _read_matpool_matrix')
 
     #---------------------------------------------------------------------------
 
@@ -4453,7 +4724,7 @@ class OP2Reader:
             data = self.read_block8()
             imarker, = op2.struct_q.unpack(data)
             if marker != imarker:
-                #self.show_data(data)
+                #self.show_data(data, types='iq')
                 msg = 'marker=%r imarker=%r; markers=%s; i=%s; table_name=%r; iloc=%s/%s' % (
                     marker, imarker, markers, i, op2.table_name,
                     op2.f.tell(), os.path.getsize(op2.op2_filename))
@@ -4539,13 +4810,20 @@ class OP2Reader:
         if self.is_debug_file and debug:
             self.binary_debug.write('read_record - marker = [4, %i, 4]; macro_rewind=%s\n' % (
                 markers0[0], macro_rewind))
+        na = op2.n
         record, nrecord = self._read_block_ndata4()
 
         if self.is_debug_file and debug:
             msg = 'read_record - record = [%i, recordi, %i]; macro_rewind=%s\n' % (
                 nrecord, nrecord, macro_rewind)
             self.binary_debug.write(msg)
+
         if markers0[0]*4 != len(record):
+            op2.f.seek(na)
+            op2.n = na
+            self.log.error(f'markers0={markers0} nrecord={nrecord}')
+            if nrecord == 4:
+                raise EmptyRecordError('nrecord=4')
             raise FortranMarkerError('markers0=%s*4 len(record)=%s; table_name=%r' % (
                 markers0[0]*4, len(record), op2.table_name))
 
@@ -4615,6 +4893,13 @@ class OP2Reader:
                 # record = records[0] + records[1]
             # else:
             record = b''.join(records)
+        #self.show(200, types='ifq')
+            #if out == (65535, 65535, 65535):
+                #continue
+                #self.show_data(data, types='ifsqd')
+                #self.log.info('break....')
+                #break
+
         return record, nrecord
 
     def _read_block_ndata4(self):
@@ -5089,17 +5374,28 @@ class OP2Reader:
         if self.is_debug_file and debug:
             self.binary_debug.write('read_record - marker = [4, %i, 4]; macro_rewind=%s\n' % (
                 marker0, macro_rewind))
-        #self.show(1000, types='ifs', endian=None, force=False)
+
+        na = op2.n
         record, nrecord = self._skip_block_ndata()
 
         if self.is_debug_file and debug:
             self.binary_debug.write('read_record - record = [%i, recordi, %i]; '
                                     'macro_rewind=%s\n' % (nrecord, nrecord, macro_rewind))
+
         if marker0*4 != nrecord:
-            msg = 'marker0=%s*4 len(record)=%s; table_name=%r' % (
-                marker0*4, nrecord, op2.table_name)
+            op2.f.seek(na)
+            op2.n = na
+            self.log.error(f'marker0={marker0} nrecord={nrecord}')
+            if nrecord == 4:
+                raise EmptyRecordError('nrecord=4')
+            self.show(500, types='ifs', endian=None, force=False)
+            self.show(record, types='ifs', endian=None, force=False)
+            self.log.error('returning to before data block is skipped...')
+            self.show(500, types='ifs', endian=None, force=False)
+            msg = f'marker0={marker0*4}*4 len(record)={nrecord}; table_name={op2.table_name!r}'
             raise FortranMarkerError(msg)
 
+        #self.log.debug(f'marker0={marker0} nrecord={nrecord}')
         marker1 = self.get_marker1_4(rewind=True)
 
         if marker1 > 0:
@@ -5473,11 +5769,12 @@ class OP2Reader:
             #print(markers)
             op2.is_start_of_subtable = True
             if self.is_debug_file:
-                self.binary_debug.write('***isubtable = %i\n' % op2.isubtable)
+                self.binary_debug.write(f'***isubtable = {op2.isubtable:d}\n')
+
             try:
                 self._read_subtable_3_4(table3_parser, table4_parser, passer)
             except:  # pragma: no cover
-                print('failed reading %s isubtable=%s' % (op2.table_name, op2.isubtable))
+                print(f'failed reading {op2.table_name} isubtable={op2.isubtable:d}')
                 raise
             #force_table4 = self._read_subtable_3_4(table3_parser, table4_parser, passer)
             op2.isubtable -= 1
@@ -5487,7 +5784,7 @@ class OP2Reader:
                 self.read_3_markers([op2.isubtable, 1, 0])
                 #self.log.debug('markers=%s' % [op2.isubtable, 1, 0])
             except FortranMarkerError:
-                self.log.error('isubtable=%s' % op2.isubtable)
+                self.log.error(f'isubtable={op2.isubtable:d}')
                 op2.f.seek(iloc)
                 op2.n = iloc
 
@@ -5495,7 +5792,7 @@ class OP2Reader:
                 self.show(500)
 
                 marker0 = self.get_nmarkers(1, rewind=True)[0]
-                #print('marker0 =', marker0)
+                self.log.debug(f'marker0 = {marker0}')
                 if marker0 < op2.isubtable:
                     raise RuntimeError('marker0 < isubtable; marker0=%s isubtable=%s' % (
                         marker0, op2.isubtable))
@@ -6154,8 +6451,8 @@ def dscmcol_dresp1(responses: Dict[int, Dict[str, Any]],
             mode_num = ints[idata+3]
             subcase = ints[idata+5]
             seid = ints[idata+8]
-            print(ints[idata+4:idata+9])
-            print(floats[idata+4:idata+9])
+            #print(ints[idata+4:idata+9])
+            #print(floats[idata+4:idata+9])
             #print(f'internal_response_id={internal_response_id} '
                   #f'external_response_id={external_response_id} response_type={response_type}')
             #print(f'  mode_num={mode_num} subcase={subcase} seid={seid} (CEIG)')
@@ -6303,7 +6600,7 @@ def dscmcol_dresp2(responses: Dict[int, Dict[str, Any]],
         idata += 6
     return
 
-def _parse_nastran_version(data, version, encoding, log):
+def _parse_nastran_version(data: bytes, version: bytes, encoding: bytes, log: SimpleLogger) -> str:
     """parses a Nastran version string"""
     if len(data) == 32:
         MSC_LONG_VERSION = [
@@ -6375,8 +6672,7 @@ def _parse_nastran_version_8(data: bytes, version: bytes, encoding: str, log) ->
     elif version in [b'XXXXXXXX']:
         #log.warning('Assuming MSC Nastran')
         mode = 'msc'
-    elif version in [b'OS11XXXX', b'OS12.210', b'OS14.210',
-                     b'OS2017.1', b'OS2017.2', b'OS2018.1']:
+    elif version in OPTISTRUCT_VERSIONS:
         # should this be called optistruct or radioss?
         mode = 'optistruct'
     #elif data[:20] == b'XXXXXXXX20141   0   ':
@@ -6827,3 +7123,238 @@ def _read_extdb_phip(self, marker: int,
         self.show_data(data, types='ifs', force=True)
         aaa
     return
+
+def _find_dmig_start_stop(data, iminus1, header_fmt, size: int, log):
+    """
+    iminus1 = [6, 7,
+               14, 15, 16]
+    istart  = [0, 6+2]
+    iend    = [6, 14]
+
+    iminus1 =  [
+        10, 11, 12, 13,
+        24, 25, 26, 27,
+        38, 39, 40, 41,
+        52, 53, 54, 55,
+        66, 67, 68, 69,
+        80, 81, 82, 83,
+        94, 95, 96, 97,
+        108, 109, 110, 111,
+        122, 123, 124, 125,
+        136, 137, 138, 139,
+        150, 151, 152, 153,
+        164, 165, 166, 167,
+        178, 179, 180, 181,
+        192, 193, 194, 195, 206, 207, 208, 209, 220, 221, 222, 223, 234, 235, 236, 237, 248, 249, 250, 251, 262, 263, 264, 265, 276, 277, 278, 279,
+        290, 291, 292, 293,
+        304, 305, 306, 307, 308, 309, 310]
+    istart  =  [0,  12, 14, 26, 40, 54, 68, 82, ...]
+    iend    =  [10, 12, 24, 38, 52, 66, 80, 94, ...]
+
+    iminus1 = [
+        5, 6,
+        12, 13,
+        19, 20,
+        26, 27,
+        33, 34,
+        40, 41,
+        47, 48, 54, 55, 61, 62, 68, 69, 75, 76, 82, 83, 89, 90, 96, 97, 103, 104, 110, 111, 117, 118, 124, 125, 131, 132,
+        138, 139,
+        145, 146,
+        152, 153, 154]
+    jstop = [5, 12, 19, 26, 33, 40, 47, 54, 61, 68, 75, 82, 89, 96, 103, 110, 117, 124, 131, 138, 145, 152]
+
+    iminus1 = [
+        4, 5, 6,
+        11,
+        15, 16,
+        21,
+        28, 29,
+        34,
+        44, 45,
+        50,
+        63, 64,
+        70, 71,
+        77, 78,
+        84, 85,
+        91, 92,
+        98, 99,
+        105, 106,
+        112, 113,
+        119, 120,
+        126, 127,
+        133, 134,
+        140, 141,
+        147, 148,
+        154, 155,
+        161, 162,
+        168, 169,
+        175, 176, 177]
+    jstop = [5, 12, 19, 26, 33, 40, 47, 54, 61, 68, 75, 82, 89, 96, 103, 110, 117, 124, 131, 138, 145, 152]
+    """
+    #print(iminus1)
+    #strings = (b'114 1 120'
+               #b'B0      \x00\x00\x00\x00\x06\x00\x00\x00\x02\x00\x00\x00\x02\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x03\x00\x00\x00\x01\x00\x00\x00\x04\x00\x00\x00\x01\x00\x00\x00ffffff\xe6?\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff'
+               #b'B10     \x00\x00\x00\x00\x06\x00\x00\x00\x01\x00\x00\x00\x01\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\xa2(\x00\x00\x01\x00\x00\x00\xa2(\x00\x00\x03\x00\x00\x00\x9a\x99\x99\x99\x99\x99\xd9?\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff'
+               #b'B30     \x00\x00\x00\x00\x06\x00\x00\x00\x01\x00\x00\x00\x01\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00]v\x00\x00\x01\x00\x00\x00]v\x00\x00\x03\x00\x00\x00\x00\x00\x00\x00\x00\x00\xe0?\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff',)
+    #ints    = (114, 1, 120,
+             #'B0', 0, 6, 2, 2, 0, 0, 0, 3, 1, 4, 1, 1717986918, 1072064102, -1, -1, -1, -1,
+             #'B10', 0, 6, 1, 1, 0, 0, 0, 10402, 1, 10402, 3, -1717986918, 1071225241, -1, -1, -1, -1,
+             #'B30', 0, 6, 1, 1, 0, 0, 0, 30301, 1, 30301, 3, 0, 1071644672, -1, -1, -1, -1)
+    istart, istop, outs, kstops = _find_all_dmigs_start_stop(data, header_fmt, size, iminus1)
+    log.info(f'istart = {istart}')
+    log.info(f'istop = {istop}')
+
+    for istarti, istopi, out, kstop in zip(istart, istop, outs, kstops):
+        ig = istarti + 2
+
+        print(out)
+        log.info(f'kstop = {kstop}')
+
+        # tin=1
+        # 10 GJ I
+        # 11 CJ I
+        # 12 GI I
+        # 13 CI I
+        # 14 VRS RS
+        # Words 12 through 14 repeat until (-1,-1) occurs
+        # Words 10 through 14 repeat until (-1,-1) occurs
+
+        #nints = len(ints)
+        #log.info(f'iminus1 = {iminus1.tolist()}')
+        #log.info(f'double_minus1 = {double_minus1}')
+
+
+        kstop = np.array(kstop)
+
+        # the field after our stop
+        # we'll handle the off by 1 later with arange
+        #istop = iminus1[:-2][double_minus1]
+
+        # 2 fields after is the start position
+        # add on a 0 to the beginning to account for the starting position
+        # istart defines icol
+        kstart = np.hstack([0, kstop[:-1] + 2])
+
+    return kstart, kstop
+
+def _find_all_dmigs_start_stop(data: bytes, header_fmt: bytes, size: int, iminus1,
+                               debug: bool=True):
+    """
+    istop : the end of the matrix(s)
+    istart : the start of the matrix(s)
+
+    kstart : the start of the columns
+    kstop  : the end of the columns
+    """
+    iends = []
+    for i, ivalue in enumerate(iminus1[:-3]):
+        if iminus1[i+1] == ivalue + 1 and iminus1[i+2] == ivalue + 2 and iminus1[i+3] == ivalue + 3:
+            iends.append(ivalue)
+            #iend = i
+            #break
+    #iends.append(iminus1[-1])
+    iminus1 = iminus1[:i+4]
+    #if ivalue
+
+    istop = np.array(iends)
+    istart = np.hstack([0, istop[:-1] + 4])
+
+    structi = Struct(header_fmt)
+    nheader = 9 * size
+    outs = []
+    kstarts = []
+    kstops = []
+    ig = 9
+    for istarti, istopi in zip(istart, istop):
+        ig = istarti + 2
+        if debug:
+            print(ig)
+        datai = data[istarti*size : istarti*size + nheader]
+        out = structi.unpack(datai)
+        outs.append(out)
+
+        matrix_name, junk1, matrix_shape, tin, tout, is_phase, junk2, ncols_gset = out
+
+        if tout == 1:
+            nvalues = 3
+        elif tout == 2:
+            nvalues = 4
+        else:
+            raise RuntimeError(tout)
+        kstart, kstop = _get_dmig_kstop(ig, nvalues, istopi, iminus1, debug=debug)
+        kstarts.append(kstart)
+        kstops.append(kstop)
+
+    return istart, istop, outs, kstarts, kstops
+
+def _get_dmig_kstop(ig: int, nvalues: int, istop: int, iminus1, debug: bool=True):
+    kstart = []
+    kstop = []
+    #ig = 2
+    #print('ig = ', ig)
+    kstart = [9]
+    for i, ivalue in enumerate(iminus1[:-1]):
+        if ivalue < ig:
+            continue
+        elif ivalue > istop + 3:
+            break
+
+        leftover = (ivalue - ig) % nvalues
+        if debug:
+            if leftover:
+                print('  ', i, ivalue, ig, nvalues, 'leftover')
+            else:
+                print('  ', i, ivalue, ig, nvalues)
+            kstop.append(ivalue)
+            ig = ivalue + 4
+            if debug:
+                print('ig = ', ig)
+            kstart.append(ig)
+    kstart.pop()
+    return kstart, kstop
+
+def get_dtype_fdtype_from_tout(op2: OP2, tout: int) -> Tuple[str, str]:
+    if tout == 1:
+        dtype = 'float32'
+        fdtype = op2.fdtype
+    elif tout == 2:
+        dtype = 'float64'
+        fdtype = op2.double_dtype
+    elif tout == 3:
+        dtype = 'complex64'
+        fdtype = op2.fdtype
+    elif tout == 4:
+        dtype = 'complex128'
+        fdtype = op2.double_dtype
+    else:
+        dtype = '???'
+        fdtype = '???'
+        msg = ('matrix_name=%s, junk1=%s, matrix_shape=%s, tin=%s, tout=%s, '
+               'is_phase=%s, junk2=%s, ncols_gset=%s dtype=%s' % (
+                   matrix_name, junk1, matrix_shape, tin, tout,
+                   is_phase, junk2, ncols_gset, dtype))
+        op2.log.warning(msg)
+        raise RuntimeError(msg)
+    return dtype, fdtype
+
+def get_ints(data: bytes, idtype: str, op2: OP2, size: int):
+    if size == 4:
+        ints = np.frombuffer(data, dtype=idtype).copy()
+    else:
+        ints = np.frombuffer(data, dtype=op2.idtype8).copy()
+    return ints
+
+def get_floats(data: bytes, fdtype: str, op2: OP2, tout: int, size: int):
+    if size == 4:
+        if tout in [1, 3]:
+            # works for float32, complex64
+            floats = np.frombuffer(data, dtype=fdtype).copy()
+        else:
+            # works for float64, complex128
+            floats = np.frombuffer(data, dtype=fdtype).copy()
+    else:
+        if tout == 1:
+            # C:\MSC.Software\simcenter_nastran_2019.2\tpl_post2\mnfexam32_0.op2
+            floats = np.frombuffer(data, dtype=op2.fdtype8).copy()
+    return floats

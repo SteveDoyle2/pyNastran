@@ -41,7 +41,7 @@ class OP2Writer(OP2_F06_Common):
     def write_op2(self, op2_outname: str,
                   post: int=-1, endian: bytes=b'<',
                   skips: List[str]=None,
-                  nastran_format: str='nx') -> int:
+                  nastran_format: str='msc') -> int:
         """
         Writes an OP2 file based on the data we have stored in the object
 
@@ -49,8 +49,6 @@ class OP2Writer(OP2_F06_Common):
         ----------
         op2_outname : str
             the name of the F06 file to write
-        obj : OP2(); default=None -> self
-            the OP2 object if you didn't inherit the class
         #is_mag_phase : bool; default=False
             #should complex data be written using Magnitude/Phase
             #instead of Real/Imaginary (default=False; Real/Imag)
@@ -266,6 +264,7 @@ def _write_result_tables(obj: OP2, fop2, fop2_ascii, struct_3i, endian, skips: S
                 isubcase = ''
                 if hasattr(result, 'isubcase'): # no for eigenvalues
                     isubcase = result.isubcase
+                    print(f' {result.__class__.__name__} - isubcase={isubcase}')
                 try:
                     #print(' %-6s - %s - isubcase=%s%s; itable=%s %s' % (
                         #table_name, result.__class__.__name__,
@@ -292,7 +291,7 @@ def _write_result_tables(obj: OP2, fop2, fop2_ascii, struct_3i, endian, skips: S
             ]
             #print('writing itable=%s' % itable)
             assert itable is not None, '%s itable is None' % result.__class__.__name__
-            fop2.write(pack(b'9i', *header))
+            fop2.write(pack(endian + b'9i', *header))
             fop2_ascii.write('footer2 = %s\n' % header)
             new_result = False
 
@@ -320,15 +319,23 @@ def _write_result_tables(obj: OP2, fop2, fop2_ascii, struct_3i, endian, skips: S
 
 def write_op2_header(obj, fop2, fop2_ascii, struct_3i, post: int=-1, endian: bytes=b'<'):
     """writes the op2 header"""
+    is_nx = obj.is_nx
     if post == -1:
     #_write_markers(op2, op2_ascii, [3, 0, 7])
         fop2.write(struct_3i.pack(*[4, 3, 4,]))
         tape_code = b'NASTRAN FORT TAPE ID CODE - '
-        fop2.write(pack(endian + b'7i 28s i', *[4, 1, 4,
-                                                4, 7, 4,
-                                                28, tape_code, 28]))
+        if is_nx:
+            fop2.write(pack(endian + b'7i 28s i', *[4, 1, 4,
+                                                    4, 7, 4,
+                                                    28, tape_code, 28]))
+            nastran_version = b'NX8.5   '
+        else:
+            fop2.write(pack(endian + b'9i 28s i', *[12,
+                                                    7, 24, 20,
+                                                    12, 4, 7, 4,
+                                                    28, tape_code, 28]))
+            nastran_version = b'XXXXXXXX'
 
-        nastran_version = b'NX8.5   ' if obj.is_nx else b'XXXXXXXX'
         fop2.write(pack(endian + b'4i 8s i', *[4, 2, 4,
                                                #4, 2, 4,
                                                #4, 1, 4,
