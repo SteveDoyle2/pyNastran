@@ -41,7 +41,7 @@ class OP2Writer(OP2_F06_Common):
     def write_op2(self, op2_outname: str,
                   post: int=-1, endian: bytes=b'<',
                   skips: List[str]=None,
-                  nastran_format: str='msc') -> int:
+                  nastran_format: str='nx') -> int:
         """
         Writes an OP2 file based on the data we have stored in the object
 
@@ -135,6 +135,7 @@ def _write_op2(fop2, fop2_ascii, obj: OP2,
 def _write_result_tables(obj: OP2, fop2, fop2_ascii, struct_3i, endian, skips: Set[str]):
     """writes the op2 result tables"""
     date = obj.date
+    log = obj.log
     res_categories2 = defaultdict(list)
     table_order = [
         'OUGV1', 'OPHIG',
@@ -187,7 +188,7 @@ def _write_result_tables(obj: OP2, fop2, fop2_ascii, struct_3i, endian, skips: S
         # ---------------
         # stress
         'OESNLXD', 'OESNLXR', 'OESNL1X',
-        'OES1', 'OES1X', 'OES1X1', 'OES1C', 'OESVM1',
+        'OES1', 'OES1X', 'OES1X1', 'OES1C', 'OESVM1', 'OESVM1C',
         'OES2', 'OESVM2',
         'OESCP',
         'OESNL1',
@@ -200,7 +201,7 @@ def _write_result_tables(obj: OP2, fop2, fop2_ascii, struct_3i, endian, skips: S
         # ---------------
         #strain
 
-        'OSTR1', 'OSTR1X', 'OSTR1C', 'OSTRVM1',
+        'OSTR1', 'OSTR1X', 'OSTR1C', 'OSTRVM1', 'OSTRVM1C',
         'OSTR2',
         'OESTRCP',
 
@@ -234,7 +235,6 @@ def _write_result_tables(obj: OP2, fop2, fop2_ascii, struct_3i, endian, skips: S
 
     total_case_count = 0
     pretables = ['LAMA', 'BLAMA', ] # 'CLAMA'
-
     if 'eigenvalues' not in skips:
         for unused_title, eigenvalue in obj.eigenvalues.items():
             res_categories2[eigenvalue.table_name].append(eigenvalue)
@@ -242,8 +242,21 @@ def _write_result_tables(obj: OP2, fop2, fop2_ascii, struct_3i, endian, skips: S
         for unused_title, eigenvalue in obj.eigenvalues_fluid.items():
             res_categories2[eigenvalue.table_name].append(eigenvalue)
 
+    skip_tables = [
+        'LAMA', 'BLAMA',
+        'OGPFB1',
+        #'OESVM1', 'OESVM1C',
+        #'OSTRVM1',
+        #'OEF1X',
+        #'OPG1',
+        #'OQG1',
+        #'OUGV1',
+    ]
     for table_name in pretables + table_order:
         if table_name not in res_categories2:
+            continue
+        if table_name in skip_tables:
+            log.warning(f'skipping table={table_name}')
             continue
         results = res_categories2[table_name]
         itable = -1
@@ -276,11 +289,11 @@ def _write_result_tables(obj: OP2, fop2, fop2_ascii, struct_3i, endian, skips: S
                     raise
             elif hasattr(result, 'element_name'):
                 if result.element_name in ['CBAR', 'CBEND']:
-                    obj.log.warning('skipping:\n%s' % result)
+                    log.warning('skipping:\n%s' % result)
                     continue
             else:
                 raise NotImplementedError(f'  *op2 - {result.__class__.__name__} not written')
-                obj.log.warning(f'  *op2 - {result.__class__.__name__} not written')
+                log.warning(f'  *op2 - {result.__class__.__name__} not written')
                 #continue
 
             case_count += 1

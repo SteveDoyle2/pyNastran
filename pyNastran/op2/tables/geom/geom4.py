@@ -23,7 +23,7 @@ from pyNastran.bdf.cards.constraints import (
 class GEOM4(GeomCommon):
     """defines methods for reading op2 constraints"""
 
-    def _read_geom4_4(self, data, ndata):
+    def _read_geom4_4(self, data: bytes, ndata: int) -> int:
         """reads the GEOM4/GEOM4OLD table"""
         return self._read_geom_4(self._geom4_map, data, ndata)
 

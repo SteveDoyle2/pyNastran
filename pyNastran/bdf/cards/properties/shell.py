@@ -935,8 +935,8 @@ class PCOMP(CompositeShellProperty):
             #elif sout == 3:  #: .. todo:: what?!!
                 #sout = 'YES'
             else:
-                raise RuntimeError('unsupported sout.  sout=%r and must be 0 or 1.'
-                                   '\nPCOMP = %s' % (sout, data))
+                raise RuntimeError(f'unsupported sout.  sout={sout!r} and must be 0 or 1.'
+                                   f'\nPCOMP = {data}')
             mids.append(mid)
             thicknesses.append(t)
             thetas.append(theta)
@@ -952,8 +952,8 @@ class PCOMP(CompositeShellProperty):
         elif ft == 4:
             ft = 'STRN'
         else:
-            raise RuntimeError('unsupported ft.  pid=%s ft=%r.'
-                               '\nPCOMP = %s' % (pid, ft, data))
+            raise RuntimeError(f'unsupported ft.  pid={pid} ft={ft!r}.'
+                               f'\nPCOMP = data')
         return PCOMP(pid, mids, thicknesses, thetas, souts,
                      nsm, sb, ft, tref, ge, lam, z0, comment=comment)
 
@@ -1079,7 +1079,7 @@ class PCOMP(CompositeShellProperty):
         if self.is_symmetrical:
             mids_ref += mids_ref[::-1]
 
-        assert len(mids) == len(mids_ref), 'mids=%s (%s) mids_ref:\n%s; %s' % (mids, len(mids), mids_ref, len(mids_ref))
+        assert len(mids) == len(mids_ref), f'mids={mids} ({len(mids)}) mids_ref:\n{mids_ref}; {len(mids_ref)}'
         for mid, mid_ref, thetai, thickness, zmean, z0i, z1i in zip(mids, mids_ref, theta,
                                                                     thicknesses, zmeans, z0, z1):
             Qbar = self.get_Qbar_matrix(mid_ref, thetai)
@@ -1149,32 +1149,32 @@ class PCOMP(CompositeShellProperty):
         nsm = self.Nsm()
         mids = self.Mids()
 
-        assert isinstance(pid, integer_types), 'pid=%r' % pid
-        assert isinstance(is_sym, bool), 'is_sym=%r' % is_sym
-        assert isinstance(nplies, integer_types), 'nplies=%r' % nplies
-        assert isinstance(nsm, float), 'nsm=%r' % nsm
-        assert isinstance(mids, list), 'mids=%r' % mids
+        assert isinstance(pid, integer_types), f'pid={pid!r}'
+        assert isinstance(is_sym, bool), f'is_sym={is_sym!r}'
+        assert isinstance(nplies, integer_types), f'nplies={nplies!r}'
+        assert isinstance(nsm, float), f'nsm={nsm!r}'
+        assert isinstance(mids, list), f'mids={mids}'
 
         t = self.Thickness()
-        assert isinstance(t, float), 'thickness=%r' % t
+        assert isinstance(t, float), f'thickness={t!r}'
         if xref:
             mpa = self.MassPerArea()
-            assert isinstance(mpa, float), 'mass_per_area=%r' % mpa
+            assert isinstance(mpa, float), f'mass_per_area={mpa!r}'
 
         for iply in range(nplies):
             mid2 = self.Mid(iply)
             assert mids[iply] == mid2
             t = self.Thickness(iply)
-            assert isinstance(t, float), 'thickness=%r' % t
+            assert isinstance(t, float), f'thickness={t!r}'
 
             if xref:
                 rho = self.Rho(iply)
                 mpa = self.MassPerArea(iply)
-                assert isinstance(rho, float), 'rho=%r' % rho
-                assert isinstance(mpa, float), 'mass_per_area=%r' % mpa
+                assert isinstance(rho, float), f'rho={rho!r}'
+                assert isinstance(mpa, float), f'mass_per_area={mpa!r}'
                 iplyi = self._adjust_ply_id(iply)
                 mid = self.mids_ref[iplyi]
-                assert mid.type in ['MAT1', 'MAT2', 'MAT8'], 'PCOMP: mid.type=%r' % mid.type
+                assert mid.type in ['MAT1', 'MAT2', 'MAT8'], f'PCOMP: mid.type={mid.type!r}'
 
         for ply in self.plies:
             assert len(ply) == 4, ply

@@ -1455,11 +1455,16 @@ def _write_params(params):
     if not params:
         return []
     msg = ['params:\n']
+    iparam = 0
     for key, param in sorted(params.items()):
         if len(param.values) == 1:
             msg.append(f'  {key} = {param.values[0]!r}\n')
         else:
             msg.append(f'  {key} = {param.values}\n')
+        iparam += 1
+        if iparam > 10:
+            msg.append(f'  ...\n')
+            break
     return msg
 
 COMPARE_KEYS = (int, int32, int64, str, bytes)

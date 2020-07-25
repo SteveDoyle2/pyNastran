@@ -3,7 +3,7 @@ import os
 import sys
 import time
 from traceback import print_exc
-from typing import List, Tuple, Optional, Any
+from typing import Tuple, List, Dict, Optional, Any
 
 import numpy as np
 np.set_printoptions(precision=3, threshold=20)
@@ -33,7 +33,7 @@ from pyNastran.op2.op2_geom import OP2Geom, DuplicateIDsError
 from pyNastran.utils import is_binary_file
 
 
-def parse_table_names_from_f06(f06_filename):
+def parse_table_names_from_f06(f06_filename: str) -> List[str]:
     """gets the op2 names from the f06"""
 
     marker = 'NAME OF DATA BLOCK WRITTEN ON FORTRAN UNIT IS'
@@ -273,9 +273,10 @@ def run_op2(op2_filename: str, make_geom: bool=False, combine: bool=True,
     op2_nv.use_vector = False
 
     if not quiet:
-        op2.log.debug('subcases = %s' % subcases)
-    op2.set_subcases(subcases)
-    op2_nv.set_subcases(subcases)
+        op2.log.debug(f'subcases = {subcases}')
+    if subcases:
+        op2.set_subcases(subcases)
+        op2_nv.set_subcases(subcases)
     op2.remove_results(exclude)
     op2_nv.remove_results(exclude)
 
@@ -293,7 +294,7 @@ def run_op2(op2_filename: str, make_geom: bool=False, combine: bool=True,
         op2.object_attributes()
         op2.object_methods()
         if not quiet:
-            print("---stats for %s---" % op2_filename)
+            print(f'---stats for {op2_filename}---')
             print(op2.get_op2_stats(short=short_stats))
             op2.print_subcase_key()
 
@@ -359,7 +360,7 @@ def run_op2(op2_filename: str, make_geom: bool=False, combine: bool=True,
     except KeyboardInterrupt:
         sys.stdout.flush()
         print_exc(file=sys.stdout)
-        sys.stderr.write('**file=%s\n' % op2_filename)
+        sys.stderr.write(f'**file={op2_filename}\n')
         sys.exit('keyboard stop...')
     #except SortCodeError: # inherits from Runtime; comment this
         #is_passed = True
@@ -392,10 +393,10 @@ def run_op2(op2_filename: str, make_geom: bool=False, combine: bool=True,
         #is_passed = True
     except SixtyFourBitError:
         #log.error('SixtyFourBitError')
-        raise
+        #raise
         if not dev:
             raise
-        is_passed = True
+        is_passed = False
     except FatalError:  # this block should be commented
         #if stop_on_failure:
             #raise
@@ -474,7 +475,7 @@ def write_op2_as_bdf(op2, op2_bdf, bdf_filename, write_bdf, make_geom, read_bdf,
                     raise
         #os.remove(bdf_filename)
 
-def get_test_op2_data(argv):
+def get_test_op2_data(argv) -> Dict[str, str]:
     """defines the docopt interface"""
     from docopt import docopt
     ver = str(pyNastran.__version__)
@@ -564,7 +565,9 @@ def remove_file(filename):
         pass
 
 
-def set_versions(op2s, is_nx, is_autodesk, is_nasa95, post):
+def set_versions(op2s: List[OP2],
+                 is_nx: bool, is_autodesk: bool, is_nasa95: bool,
+                 post: int) -> None:
     for op2 in op2s:
         op2.IS_TESTING = False
 
@@ -587,7 +590,7 @@ def set_versions(op2s, is_nx, is_autodesk, is_nasa95, post):
         for op2 in op2s:
             op2.post = -4
 
-def main(argv=None, show_args=True):
+def main(argv=None, show_args: bool=True) -> None:
     """the interface for test_op2"""
     if argv is None:
         argv = sys.argv

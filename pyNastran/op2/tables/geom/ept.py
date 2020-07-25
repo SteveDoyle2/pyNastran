@@ -23,7 +23,7 @@ from pyNastran.bdf.cards.thermal.thermal import PCONV, PHBDY, PCONVM
 # PCOMPG, PBUSH1D, PBEAML, PBEAM3
 from pyNastran.op2.tables.geom.geom_common import GeomCommon
 from pyNastran.op2.op2_interface.op2_reader import (
-    mapfmt, reshape_bytes_block, reshape_bytes_block_size)
+    mapfmt, reshape_bytes_block_size) # reshape_bytes_block,
 from .utils import get_minus1_start_end
 
 
@@ -1712,6 +1712,7 @@ class EPT(GeomCommon):
                 pid, z0, nsm, sb, ft, tref, ge,
                 is_symmetrical, mids, T, thetas, souts]
             prop = PCOMP.add_op2_data(data_in)
+            #print(prop)
             props.append(prop)
             nproperties += 1
         return n, props
