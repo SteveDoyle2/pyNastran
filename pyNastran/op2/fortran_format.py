@@ -7,7 +7,7 @@ from typing import Optional
 from pyNastran.utils import object_attributes
 from pyNastran.utils.numpy_utils import integer_types
 #from pyNastran.op2.errors import FortranMarkerError, SortCodeError
-
+from pyNastran.op2.errors import EmptyRecordError
 
 class FortranFormat:
     """defines basic methods for reading Fortran formatted data files"""
@@ -72,7 +72,7 @@ class FortranFormat:
             int : the number of bytes that have been read
 
         """
-        op2_reader = self.op2_reader
+        op2_reader = self.op2_reader  # type: OP2Reader
         #datai = b''
         n = 0
         if self.read_mode == 2:
@@ -96,7 +96,21 @@ class FortranFormat:
                 #            so we can determine the NXVER
                 data, ndata = op2_reader._read_record_ndata()
             else:
-                data, ndata = op2_reader._skip_record_ndata()
+                try:
+                    data, ndata = op2_reader._skip_record_ndata()
+                except EmptyRecordError:
+                    self.log.error('error round 2...')
+                    raise
+                    op2_reader.read_markers([1, 0], macro_rewind=False)
+                    marker146 = op2_reader.get_nmarkers4(1, rewind=True)
+                    if marker146 == 146:
+                        #print('marker146', marker146)
+                        return n
+                    self._cleanup_data_members()
+                    #n = self.n
+                    #return n
+                    raise
+
             n = table4_parser(data, ndata)
             if not isinstance(n, integer_types):
                 msg = 'n is not an integer; table_name=%s n=%s table4_parser=%s' % (
@@ -151,6 +165,9 @@ class FortranFormat:
         # For a PCOMP, it's ntotal=sum(nelements*nlayers),
         # where each element can have a different number
         # of layers
+        #
+        # TODO: the or 1 flag breaks tests...that could be why shapes are bad...
+        #
         if self.obj.ntotal == self.obj.data.shape[1] or 1:
             #if self.table_name_str in ['OESRMS2', 'OESNO2', 'OSTRRMS2', 'OSTRNO2', 'OESATO2']:
                 #print('resetting %r indicies; itime=%s; shape=%s' % (
@@ -256,7 +273,7 @@ class FortranFormat:
                 val = getattr(self, word)
                 if isinstance(val, list) and len(val) == 0:
                     continue
-                msg += '  %s=%s\n' % (word, val)
+                msg += f'  {word}={val}\n'
         if msg:
             print(object_attributes(self))
             print(msg)

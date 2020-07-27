@@ -5,7 +5,8 @@ from typing import Tuple, List
 
 from pyNastran.bdf.cards.materials import (CREEP, MAT1, MAT2, MAT3, MAT4, MAT5,
                                            MAT8, MAT9, MAT10, MAT11, MATHP)
-from pyNastran.bdf.cards.material_deps import MATS1, MATT1, MATT2, MATT3, MATT4, MATT5, MATT9
+from pyNastran.bdf.cards.material_deps import (
+    MATS1, MATT1, MATT2, MATT3, MATT4, MATT5, MATT8, MATT9)
 from pyNastran.bdf.cards.dynamic import NLPARM, TSTEPNL # TSTEP
 from pyNastran.op2.tables.geom.geom_common import GeomCommon
 #from pyNastran.bdf.cards.thermal.thermal import (CHBDYE, CHBDYG, CHBDYP, PCONV, PCONVM,
@@ -593,10 +594,111 @@ class MPT(GeomCommon):
         self.increase_card_count('MATT5', ncards)
         return n
 
-# MATT8 - unused
     def _read_matt8(self, data: bytes, n: int) -> int:
-        self.log.warning('skipping MATT8 in MPT')
-        return len(data)
+        """common method to read MSC/NX MATT8s"""
+        n = self._read_dual_card(data, n, self._read_matt8_18, self._read_matt8_19,
+                                 'MATT8', self._add_material_dependence_object)
+        return n
+
+    def _read_matt8_19(self, data: bytes, n: int) -> int:
+        """
+        MATT8 (903, 9, 336)
+        (903, 9, 336,
+        2, 1, 2, 0, 3, 4, 5, 0, 6, 7, 0, 0, 0, 0, 0, 0, 0, 0, xxx)
+
+        Word Name Type Description
+        1 MID I
+        2 TID(9)  I TABLEMi entry identification numbers
+        11 UNDEF None
+        12 TID(7) I TABLEMi entry identification numbers
+        19 UNDEF None
+        """
+        ntotal = 76 * self.factor  # 35*4
+        s = Struct(mapfmt(self._endian + b'i18i', self.size))
+        ndatai = len(data) - n
+        nmaterials = ndatai // ntotal
+        assert ndatai % ntotal == 0
+
+        matt8s = []
+        for unused_i in range(nmaterials):
+            edata = data[n:n+ntotal]
+            out = s.unpack(edata)
+            (mid, e1_table, e2_table, nu12_table, g12_table, g1z_table, g2z_table, trho,
+             ta1, ta2, blank,
+             xt_table, xc_table, yt_table, yc_table,
+             s_table, ge_table, f12_table, final) = out
+            if self.is_debug_file:
+                self.binary_debug.write('  MATT8=%s\n' % str(out))
+            mat = MATT8(mid,
+                        e1_table=e1_table, e2_table=e2_table,
+                        nu12_table=nu12_table, g12_table=g12_table,
+                        g1z_table=g1z_table, g2z_table=g2z_table, rho_table=trho,
+                        a1_table=ta1, a2_table=ta2,
+                        xt_table=xt_table, xc_table=xc_table,
+                        yt_table=yt_table, yc_table=yc_table,
+                        s_table=s_table, ge_table=ge_table, f12_table=f12_table)
+            assert blank == 0, f'blank={blank} out={out}'
+            assert final == 0, f'final={final} out={out}'
+            #assert xc_table == 0, f'xc_table={xc_table} out={out}'
+            #assert yt_table == 0, f'yt_table={yt_table} out={out}'
+            #assert yc_table == 0, f'yc_table={yc_table} out={out}'
+            #assert s_table == 0, f's_table={s_table} out={out}'
+            #assert ge_table == 0, f'ge_table={ge_table} out={out}'
+            #assert f12_table == 0, f'f12_table={f12_table} out={out}'
+            str(mat)
+            matt8s.append(mat)
+            n += ntotal
+
+        return n, matt8s
+
+    def _read_matt8_18(self, data: bytes, n: int) -> int:
+        """
+        MATT8 (903, 9, 336)
+        (903, 9, 336,
+        2, 1, 2, 0, 3, 4, 5, 0, 6, 7, 0, 0, 0, 0, 0, 0, 0, 0)
+
+        Word Name Type Description
+        1 MID I
+        2 TID(9)  I TABLEMi entry identification numbers
+        11 UNDEF None
+        12 TID(7) I TABLEMi entry identification numbers
+        19 UNDEF None
+        """
+        ntotal = 72 * self.factor  # 35*4
+        s = Struct(mapfmt(self._endian + b'18i', self.size))
+        ndatai = len(data) - n
+        nmaterials = ndatai // ntotal
+        assert ndatai % ntotal == 0
+        matt8s = []
+        for unused_i in range(nmaterials):
+            edata = data[n:n+ntotal]
+            out = s.unpack(edata)
+            (mid, e1_table, e2_table, nu12_table, g12_table, g1z_table, g2z_table, trho,
+             ta1, ta2, blank,
+             xt_table, xc_table, yt_table, yc_table,
+             s_table, ge_table, f12_table) = out
+            if self.is_debug_file:
+                self.binary_debug.write('  MATT8=%s\n' % str(out))
+            mat = MATT8(mid,
+                        e1_table=e1_table, e2_table=e2_table,
+                        nu12_table=nu12_table, g12_table=g12_table,
+                        g1z_table=g1z_table, g2z_table=g2z_table, rho_table=trho,
+                        a1_table=ta1, a2_table=ta2,
+                        xt_table=xt_table, xc_table=xc_table,
+                        yt_table=yt_table, yc_table=yc_table,
+                        s_table=s_table, ge_table=ge_table, f12_table=f12_table)
+            assert blank == 0, f'blank={blank} out={out}'
+            #assert xc_table == 0, f'xc_table={xc_table} out={out}'
+            #assert yt_table == 0, f'yt_table={yt_table} out={out}'
+            #assert yc_table == 0, f'yc_table={yc_table} out={out}'
+            #assert s_table == 0, f's_table={s_table} out={out}'
+            #assert ge_table == 0, f'ge_table={ge_table} out={out}'
+            #assert f12_table == 0, f'f12_table={f12_table} out={out}'
+            str(mat)
+            matt8s.append(mat)
+            n += ntotal
+
+        return n, matt8s
 
     def _read_matt9(self, data: bytes, n: int) -> int:
         """

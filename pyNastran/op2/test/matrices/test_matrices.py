@@ -29,13 +29,15 @@ class TestOP2Matrix(unittest.TestCase):
         deltam0 = model.matrices['DELTAM0']
         assert deltam0.data.shape == (6, 78), deltam0.data.shape
 
-        mrggt = model.matrices['MRGGT']
+        #mrggt = model.matrices['MRGGT']
+        mrggt = model.matrices['MRGG']
         assert mrggt.data.shape == (24, 24), mrggt.data.shape
 
         rbm0 = model.matrices['RBM0']
         assert rbm0.data.shape == (6, 6), rbm0.data.shape
 
-        uexpt = model.matrices['UEXPT']
+        #uexpt = model.matrices['UEXPT']
+        uexpt = model.matrices['UEXP']
         assert uexpt.data.shape == (276, 24), uexpt.data.shape
 
     def test_kelm_kdict(self):

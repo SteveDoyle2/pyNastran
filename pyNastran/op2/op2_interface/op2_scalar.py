@@ -595,7 +595,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
 
             #: the set of valid subcases -> set([1,2,3])
             self.valid_subcases = set(subcases)
-        self.log.debug("set_subcases - subcases = %s" % self.valid_subcases)
+        self.log.debug(f'set_subcases - subcases = {self.valid_subcases}')
 
     def set_transient_times(self, times):  # TODO this name sucks...
         """

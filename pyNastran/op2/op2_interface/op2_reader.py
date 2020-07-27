@@ -281,7 +281,8 @@ class OP2Reader:
         elif mode is None:
             self.log.warning("No mode was set, assuming 'msc'")
             mode = 'msc'
-        self.log.debug('mode = %r' % mode)
+        if self.read_mode == 1:
+            self.log.debug(f'mode = {mode!r}')
         self.op2.set_mode(mode)
         self.op2.set_table_type()
 
@@ -315,7 +316,7 @@ class OP2Reader:
             return
 
         size = self.size
-        table_name = self._read_table_name(rewind=False)
+        unused_table_name = self._read_table_name(rewind=False)
 
         self.read_markers([-1])
         data = self._read_record()
@@ -381,9 +382,10 @@ class OP2Reader:
             assert nvalues % 5 == 0
             n = 0
             struct_i4f = Struct(mapfmt(b'i 4f', size))
-            for i in range(ncomplex):
+            for unused_i in range(ncomplex):
                 edata = data[n:n+ntotal]
                 out = struct_i4f.unpack(edata)
+                str(out)
                 #print(out)
                 n += ntotal
             assert ncomplex == 1
@@ -944,13 +946,13 @@ class OP2Reader:
             print('-----------------------------')
         #i = 0
         #icheck = 7
-        factor = self.factor
+        #factor = self.factor
         size = self.size
         if size == 4:
             expected_marker = 3
             sint = 'i'
             ifs = 'ifs'
-            dq = 'if'
+            #dq = 'if'
             structi = Struct(b'i')
             struct_qd = Struct(b'i f')
             struct_q2d = Struct(b'i 2f')
@@ -960,7 +962,7 @@ class OP2Reader:
             expected_marker = 3
             sint = 'q'
             ifs = 'qds'
-            dq = 'dq'
+            #dq = 'dq'
             structi = Struct(b'q')
             struct_qd = Struct(b'q d')
             #struct_dq = Struct(b'd q')
@@ -987,7 +989,7 @@ class OP2Reader:
             #print('i = %i' % i)
             marker = self.get_nmarkers(1, rewind=False, macro_rewind=False)[0]
             if marker != expected_marker:
-                self.log.info(f'i={i} marker={marker}')
+                self.log.info(f'CMODEXT i={i} marker={marker}')
 
             if self.size == 4:
                 assert marker in [expected_marker], marker
@@ -3925,7 +3927,7 @@ class OP2Reader:
             try:
                 self._read_matrix_matpool()
             except(RuntimeError, AssertionError, ValueError):
-                #raise
+                raise
                 self._goto(i)
                 self._skip_table(op2.table_name)
 
@@ -4005,25 +4007,25 @@ class OP2Reader:
 
             if self.read_mode == 1:
                 if code == (114, 1, 120):
-                    self.log.debug(f'code = {code}')
+                    self.log.debug(f'  code = {code}')
                     try:
                         self._read_matpool_dmig(op2, data, utable_name, debug=False)
                     except Exception as excep:
                         self.log.error(str(excep))
-                        self.log.warning('skipping DMIG')
-                        #raise
+                        self.log.warning('  skipping DMIG')
+                        raise
                 else:
-                    print(f'code = {code}')
+                    print(f'  code = {code}')
                     self.show_data(data, types='ifs', endian=None, force=False)
                     raise NotImplementedError(code)
 
             self.read_3_markers([itable, 1, 0])
-            self.log.debug(f'read [{itable},1,0]')
+            self.log.debug(f'  read [{itable},1,0]')
             expected_marker = itable - 1
             data, ndatas = self.read_long_block(expected_marker)
             if ndatas == 0:
                 itable -= 1
-                self.log.debug(f'read [{itable},1,0]')
+                self.log.debug(f'  read [{itable},1,0]')
                 self.read_3_markers([itable, 1, 0])
                 break
                 #data, ndatas = self.read_long_block(expected_marker)
@@ -4049,7 +4051,7 @@ class OP2Reader:
                 #print('****', out)
                 #self.show(100, types='ifsq')
                 marker1 = self.get_marker1(rewind=True, macro_rewind=False)
-                self.log.info(f'marker1 = {marker1}')
+                #self.log.info(f'marker1 = {marker1}')
                 continue
             self.log.info('adding data')
             datas.append(data)
@@ -4091,8 +4093,10 @@ class OP2Reader:
         #           1.4924739659172437e-19, 1.3563156426940112e-19, 0.0, 6, 1, 1, 0.0, 0.0, 0.0, 30301, 1, 30301, 3, 0.0, 1.75, nan, nan, nan, nan)
         #doubles (float64) = (2.1219957924e-314, 2.121995793e-314, 0.7, nan, nan, 6.013470018394104e-154, 1.2731974746e-313, 2.1219957915e-314, 0.0, 2.2073000217621e-310, 2.20730002176213e-310, -2.3534379293677296e-185, nan, nan, 1.208269179683613e-153, 2.66289668e-315, 2.121995794e-314, 5e-324, 0.0, 2.1220107616e-314, 6.3660023436e-314, 0.5, nan, nan)
 
+        size = self.size
         factor = self.factor
-        if self.size == 4:
+        log = self.log
+        if size == 4:
             header_fmt = self._endian + b'8s 7i'
         else:
             header_fmt = self._endian + b'16s 7q'
@@ -4154,12 +4158,12 @@ class OP2Reader:
         #is_symmetric = matrix_shape == 6
         #is_phase_flag = is_phase > 0
 
-        ncode = 12 * self.factor
+        ncode = 12 * factor
         datai = data[ncode:]
         ints = np.frombuffer(datai, dtype=op2.idtype8).copy()
         temp_ints = ints
         if 0:
-            if self.size == 4:
+            if size == 4:
                 if tout in [1, 3]:
                     # works for float32, complex64
                     ints = np.frombuffer(datai, dtype=op2.idtype).copy()
@@ -4181,8 +4185,9 @@ class OP2Reader:
         # find the first index with ()-1,-1)
         iminus1 = np.where(temp_ints == -1)[0]
         #istart, istop, kstops = _find_dmig_start_stop(datai, iminus1, header_fmt, self.size, self.log)
-        istart, istop, outs, kstarts, kstops = _find_all_dmigs_start_stop(datai, header_fmt, self.size, iminus1,
-                                                                          debug=debug)
+        istart, istop, outs, kstarts, kstops = _find_all_dmigs_start_stop(
+            datai, header_fmt, self.size, iminus1,
+            debug=debug)
 
         ioffset = 9
         # istop : the end of the matrix(s)
@@ -4190,11 +4195,12 @@ class OP2Reader:
 
         # kstart : the start of the columns
         # kstop  : the end of the columns
-        self.log.info(f'outs = {outs}')
-        self.log.info(f'kstarts = {kstarts}')
-        self.log.info(f'kstops  = {kstops}')
+        assert len(kstarts) > 0, kstarts
+        log.info(f'  outs = {outs}')
+        log.info(f'  kstarts = {kstarts}')
+        log.info(f'  kstops  = {kstops}')
         for i, istarti, istopi, out, kstart, kstop in zip(count(), istart, istop, outs, kstarts, kstops):
-            self.log.info(f'-------------------------------')
+            log.info(f'-------------------------------')
             matrix_name, junk1, matrix_shape, tin, tout, is_phase, junk2, ncols_gset = out # [3:]
             if self.size == 8:
                 matrix_name = reshape_bytes_block(matrix_name)
@@ -4209,24 +4215,24 @@ class OP2Reader:
                 #imags = []
 
             dtype, fdtype = get_dtype_fdtype_from_tout(op2, tout)
-            self.log.info('matrix_name=%s junk1=%s matrix_shape=%s tin=%s tout=%s '
-                          'is_phase=%s junk2=%s ncols_gset=%s' % (
-                              matrix_name, junk1, matrix_shape, tin, tout,
-                              is_phase, junk2, ncols_gset))
+            log.info('matrix_name=%s junk1=%s matrix_shape=%s tin=%s tout=%s '
+                     'is_phase=%s junk2=%s ncols_gset=%s' % (
+                         matrix_name, junk1, matrix_shape, tin, tout,
+                         is_phase, junk2, ncols_gset))
 
             is_symmetric = matrix_shape == 6
             is_phase_flag = is_phase > 0
-            if self.size == 4:
-                if tout == 1:  # float32
-                    nvalues = 3
-                elif tout == 2:  # float64
-                    nvalues = 4
-                elif tout == 3:  # complex64
-                    nvalues = 4
-                elif tout == 4:  # complex128
-                    nvalues = 5
-                else:
-                    raise NotImplementedError(tout)
+            #if self.size == 4:
+                #if tout == 1:  # float32
+                    #nvalues = 3
+                #elif tout == 2:  # float64
+                    #nvalues = 4
+                #elif tout == 3:  # complex64
+                    #nvalues = 4
+                #elif tout == 4:  # complex128
+                    #nvalues = 5
+                #else:
+                    #raise NotImplementedError(tout)
 
             #----------------------------------------
             #print(kstart, kstop)
@@ -4236,25 +4242,25 @@ class OP2Reader:
             #self.show_data(data[kstart*4:kstop*4])
             kfirst = ioffset
             klast = kstop[-1]
-            self.log.info(f'kstart = {kstart}')
-            self.log.info(f'kstop  = {kstop}')
+            log.info(f'kstart = {kstart}')
+            log.info(f'kstop  = {kstop}')
             #----------------------------------------
-            self.log.info('casting floats')
+            log.info('casting floats')
             nheader = ioffset * self.size
             nend = istopi * self.size
             #floats = get_floats(datai[nheader:nend], fdtype, op2, tout, self.size)
 
             assert tout in [1, 2, 3, 4]
             #print(floats.tolist())
-            print(ints[kfirst:klast].tolist())
+            #print(ints[kfirst:klast].tolist())
             #print(floats)
             #----------------------------------------
-            self.log.info('getting col (nid,dof)')
+            log.info('getting col (nid,dof)')
 
             col_nids_short = temp_ints[kstart]
             col_dofs_short = temp_ints[kstart+1]
             ucol_dofs = np.unique(col_dofs_short)
-            self.log.debug(f'  col_dofs = {ucol_dofs}')
+            log.debug(f'  col_dofs = {ucol_dofs}')
             for udofi in ucol_dofs:
                 if udofi not in [0, 1, 2, 3, 4, 5, 6]:
                     self.show_data(data[ncode:], types='ifsqd')
@@ -4265,36 +4271,37 @@ class OP2Reader:
 
             #nj2 = len(istart)  ## TODO: why is this wrong???
             # -------------------------------------------------
-            self.log.info(f'extracting rows')
+            log.info(f'extracting rows')
             row_nids = []
             row_dofs = []
             col_nids = []
             col_dofs = []
             reals = []
             imags = []
-            self.log.debug(f'  dtype={dtype} fdtype={fdtype}')
-            self.log.debug(f'  istart = {istart}')
-            self.log.debug(f'  istop = {istop}')
-            self.log.debug(f'  kstart = {kstart}')
-            self.log.debug(f'  kstop = {kstop}')
+            log.debug(f'  dtype={dtype} fdtype={fdtype}')
+            log.debug(f'  istart = {istart}')
+            log.debug(f'  istop = {istop}')
+            log.debug(f'  kstart = {kstart}')
+            log.debug(f'  kstop = {kstop}')
             #self.show_data(data[nheader:], types='ifsdq')
 
             for col_nidi, col_dofi, istarti, istopi in zip(
                     col_nids_short, col_dofs_short, kstart, kstop):
 
-                #  the +2 on nstart2 is for the grid,comp offset
-                if self.size == 4:
-                    nstart2 = (istarti + 2) * self.size
-                    nend_float2 = (istopi - 3) * self.size
-                    nend_int2 = (istopi - 3) * self.size
+                if size == 4:
+                    nstart2 = istarti * size
+                    nend_float2 = istopi * size
+                    #nend_int2 = istopi * size
                 else:
-                    nstart2 = (istarti + 2) * self.size
-                    nend_float2 = (istopi) * self.size
-                    nend_int2 = (istopi) * self.size
+                    nstart2 = istarti * size
+                    nend_float2 = istopi * size
+                    #nend_int2 = istopi * size
+                assert nend_float2 > nstart2
+                log.debug(f'  nstart2={nstart2} nend_float2={nend_float2}')
 
                 #ints2 = np.frombuffer(datai[istarti*4:(istopi-2)*4], dtype=op2.idtype8).copy()
                 #print(f'ints test = {ints2}')
-                self.log.debug(f'  nid={col_nidi} dof={col_dofi} istarti={istarti} istopi={istopi}')
+                log.debug(f'  nid={col_nidi} dof={col_dofi} istarti={istarti} istopi={istopi}')
                 ## TODO: preallocate arrays
                 imag = None
                 # The float32/complex64 blocks are really simple
@@ -4309,28 +4316,46 @@ class OP2Reader:
                 # because they are always int32.  Only the real/imag types change.
                 #print(datai[nstart2:nend2])
                 #self.show_data(datai[nstart2:nend2], types='ifd')
-                print('fdtype =', fdtype)
+                #print('fdtype =', fdtype)
                 #nints = len(ints2)
                 #ints2 = ints2.reshape(nints//nvalues, nvalues)
 
                 # irow brings us to the (grid, dof)
-                if self.size == 4:
-                    ints2 = np.frombuffer(datai[nstart2:nend_int2], dtype=op2.idtype8).copy()
-                    floats = get_floats(datai[nstart2:nend_float2], fdtype, op2, tout, self.size)
+                #print(size, dtype)
+                #  the +2 on nstart2 is for the grid,comp offset
+
+                # nstart2: The start of the (g,c) data
+                #          (including the matrix and the code)
+                #          thus we add 2 to get to the (g,c)
+                #nstart2 += 9 * 4
+                assert nend_float2 > nstart2
+                if size == 4:
+                    #print(nstart2, nend_int2, nend_float2)
+                    dataii = datai[nstart2:nend_float2]
+                    ints2 = np.frombuffer(dataii, dtype='int32').copy()
+                    floats = get_floats(dataii, fdtype, op2, tout, size)
+                    #self.show_data(datai, types='ifs', endian=None, force=False)
+
+                    nints = len(ints2)
+
+                    #ints2 = ints2[:nints//3*3]
+                    #print('ints2 =', ints2, nints)
+                    #print('floats =', floats, nints)
                     if dtype == 'float32':
                         # [int, int, float]  -> get float
-                        real = floats[3::3]
+                        real = floats[4::3]
+                        #print('real =', real)
 
                         # [int, x, x
                         #  int, x, x] -> get int
-                        irow = np.arange(0, len(ints2), step=3, dtype='int32')
+                        irow = np.arange(2, nints, step=3, dtype='int32')
                     elif dtype == 'float64':
                         # [long, double]  -> get double
                         real = floats[1::2]
 
                         # [int, x, x, x
                         #  int, x, x, x] -> get int
-                        irow = np.arange(0, len(ints2), step=4, dtype='int32')
+                        irow = np.arange(2, nints, step=4, dtype='int32')
                     else:
                         raise RuntimeError((self.size, dtype))
                 else:
@@ -4338,17 +4363,24 @@ class OP2Reader:
                     dataii = datai[nstart2:nend_float2]
                     ints2 = np.frombuffer(dataii, dtype='int64').copy()
                     floats = np.frombuffer(dataii, dtype='float64').copy()
-                    print(ints2)
-                    print(floats)
+                    #print(floats)
+                    nints = len(ints2)
                     if dtype == 'float32':
-                        irow = np.arange(0, len(ints2), step=3, dtype='int64')
+                        irow = np.arange(0, nints, step=3, dtype='int64')
                         real = floats[2::3]
                     else:
                         raise RuntimeError((self.size, dtype))
-                self.log.debug(f'real = {real}; {type(real[0])}')
-                self.log.debug(f'irow = {irow}')
+                log.debug(f'ints2 = {ints2}')
+                log.debug(f'real = {real}')
+                log.debug(f'irow = {irow}')
+                if len(irow) == 0:
+                    print(ints2)
+                    msg = f'irow={irow} nints={nints}'
+                    raise RuntimeError(msg)
+                assert len(irow) > 0, irow
+                assert len(real) > 0, real
 
-                if 0:
+                if 0:  # pragma: no cover
                     if dtype == 'float32':
                         irow = np.arange(istarti, istopi-1, step=3, dtype='int32')
                         real = floats[irow + 2]
@@ -4361,7 +4393,7 @@ class OP2Reader:
                         datai = data[nheader+(istarti*4) : nheader+(istopi*4)]
                         #self.show_data(datai)
                         irow = np.arange(istarti, istopi-1, step=4, dtype='int32')
-                        self.log.debug(f'irow float64: irow={irow}')
+                        log.debug(f'irow float64: irow={irow}')
                         assert len(datai) % 8 == 0, len(datai) / 8
                         real = np.frombuffer(datai, dtype=fdtype)[1::2].copy()
 
@@ -4386,7 +4418,7 @@ class OP2Reader:
                         imag = floats[2::3]
                     else:
                         msg = f'{dtype} is not supported'
-                        self.log.error(msg)
+                        log.error(msg)
                         raise RuntimeError(msg)
 
                     if len(irow) != len(real):
@@ -4401,9 +4433,9 @@ class OP2Reader:
 
                 # the dof; [0, 0, ..., 0.]
                 row_dof = ints2[irow + 1]
-                self.log.debug(f'row nid,dof = =({row_nid}, {row_dof})')
-                self.log.debug(f'row_nid = {row_nid}')
-                self.log.debug(f'row_dof = {row_dof}')
+                log.debug(f'row nid,dof = =({row_nid}, {row_dof})')
+                log.debug(f'row_nid = {row_nid}')
+                log.debug(f'row_dof = {row_dof}')
                 urow_dof = np.unique(row_dof)
                 self.log.debug(f'urow_dof = {urow_dof}')
                 for udofi in urow_dof:
@@ -4412,7 +4444,7 @@ class OP2Reader:
                             udofi, np.asarray(urow_dof, dtype='int32').tolist())
                         raise ValueError(msg)
                 ni = len(irow)
-                self.log.debug(f'real = {real}')
+                log.debug(f'real = {real}')
                 col_nid = np.ones(ni, dtype='int32') * col_nidi
                 col_dof = np.ones(ni, dtype='int32') * col_dofi
 
@@ -4438,12 +4470,18 @@ class OP2Reader:
             else:
                 real_imag_array = real_array
 
+            #print('matrix_name_str =', matrix_name_str)
+            #print('col_nids_array =', col_nids_array)
+            #print('col_dofs_array =', col_dofs_array)
+            #print('row_nids_array =', row_nids_array)
+            #print('row_dofs_array =', row_dofs_array)
+            #print('real_imag_array =', real_imag_array)
             self._cast_matrix_matpool(matrix_name_str, real_imag_array,
                                       col_nids_array, col_dofs_array,
                                       row_nids_array, row_dofs_array,
                                       matrix_shape, dtype, is_symmetric)
-            self.log.warning('breaking...')
-            break
+            log.warning('breaking...')
+            #break
         return
 
     def _cast_matrix_matpool(self, table_name: str, real_imag_array,
@@ -4546,11 +4584,12 @@ class OP2Reader:
         m.row_dof = row_dofs_array
         m.form = matrix_shape
         op2.matrices[table_name] = m
+        #print(m)
         self.log.debug(m)
 
     #---------------------------------------------------------------------------
 
-    def _get_marker_n(self, nmarkers):
+    def _get_marker_n(self, nmarkers: int) -> List[int]:
         """
         Gets N markers
 
@@ -4577,12 +4616,12 @@ class OP2Reader:
             markers.append(marker)
         return markers
 
-    def get_nmarkers(self, n, rewind=True, macro_rewind=False):
+    def get_nmarkers(self, n: int, rewind=True, macro_rewind=False):
         if self.size == 4:
             return self.get_nmarkers4(n, rewind=rewind, macro_rewind=macro_rewind)
         return self.get_nmarkers8(n, rewind=rewind, macro_rewind=macro_rewind)
 
-    def get_nmarkers4(self, n, rewind=True, macro_rewind=False):
+    def get_nmarkers4(self, n: int, rewind=True, macro_rewind=False):
         """
         Gets n markers, so if n=2, it will get 2 markers.
 
@@ -4620,7 +4659,7 @@ class OP2Reader:
                         i, macro_rewind or rewind))
         return markers
 
-    def get_nmarkers8(self, n, rewind=True, macro_rewind=False):
+    def get_nmarkers8(self, n: int, rewind=True, macro_rewind=False):
         """
         Gets n markers, so if n=2, it will get 2 markers.
 
@@ -4658,12 +4697,12 @@ class OP2Reader:
                         i, macro_rewind or rewind))
         return markers
 
-    def read_markers(self, markers, macro_rewind=True):
+    def read_markers(self, markers: List[int], macro_rewind: bool=True) -> None:
         if self.size == 4:
             return self.read_markers4(markers, macro_rewind=macro_rewind)
         return self.read_markers8(markers, macro_rewind=macro_rewind)
 
-    def read_markers4(self, markers, macro_rewind=True):
+    def read_markers4(self, markers: List[int], macro_rewind: bool=True) -> None:
         """
         Gets specified markers, where a marker has the form of [4, value, 4].
         The "marker" corresponds to the value, so 3 markers takes up 9 integers.
@@ -4696,9 +4735,9 @@ class OP2Reader:
                     op2.f.tell(), os.path.getsize(op2.op2_filename))
                 raise FortranMarkerError(msg)
             if self.is_debug_file:
-                self.binary_debug.write('  read_markers -> [4, %i, 4]\n' % marker)
+                self.binary_debug.write(f'  read_markers -> [4, {marker:d}, 4]\n')
 
-    def read_markers8(self, markers, macro_rewind=True):
+    def read_markers8(self, markers: List[int], macro_rewind: int=True) -> None:
         """
         Gets specified markers, where a marker has the form of [4, value, 4].
         The "marker" corresponds to the value, so 3 markers takes up 9 integers.
@@ -4731,9 +4770,9 @@ class OP2Reader:
                     op2.f.tell(), os.path.getsize(op2.op2_filename))
                 raise FortranMarkerError(msg)
             if self.is_debug_file:
-                self.binary_debug.write('  read_markers -> [8, %i, 8]\n' % marker)
+                self.binary_debug.write(f'  read_markers -> [8, {marker:d}, 8]\n')
 
-    def _skip_table(self, table_name, warn=True):
+    def _skip_table(self, table_name: str, warn: bool=True) -> None:
         """bypasses the next table as quickly as possible"""
         #if table_name in ['DIT', 'DITS']:  # tables
             #self._read_dit()
@@ -4742,7 +4781,7 @@ class OP2Reader:
         else:
             self._skip_table_helper(warn=warn)
 
-    def _print_month(self, month, day, year, zero, one):
+    def _print_month(self, month: int, day: int, year: int, zero: int, one: int) -> None:
         """
         Creates the self.date attribute from the 2-digit year.
 
@@ -4775,14 +4814,14 @@ class OP2Reader:
         #assert zero == 0, zero  # is this the RTABLE indicator???
         assert one in [0, 1], one  # 0, 50
 
-    def _set_op2_date(self, month, day, year):
+    def _set_op2_date(self, month: int, day: int, year: int) -> Tuple[int, int, int]:
         """sets the date the job was run"""
         date = (month, day, year)
         self.op2.date = date
         return date
 
     #----------------------------------------------------------------------------------------
-    def _read_record(self, debug=True, macro_rewind=False) -> bytes:
+    def _read_record(self, debug=True, macro_rewind=False) -> Tuple[bytes, int]:
         """
         Reads a record.
 
@@ -4800,17 +4839,18 @@ class OP2Reader:
         return self._read_record_ndata8(debug=debug, macro_rewind=macro_rewind)[0]
 
     def _read_record_ndata(self, debug=True, macro_rewind=False) -> Tuple[bytes, int]:
+        """reads a record and the length of the record"""
         if self.size == 4:
             return self._read_record_ndata4(debug=debug, macro_rewind=macro_rewind)
         return self._read_record_ndata8(debug=debug, macro_rewind=macro_rewind)
 
     def _read_record_ndata4(self, debug=True, macro_rewind=False) -> Tuple[bytes, int]:
-        """reads a record and the length of the record"""
+        """reads a record and the length of the record for size=4"""
         op2 = self.op2
-        markers0 = self.get_nmarkers4(1, rewind=False, macro_rewind=macro_rewind)
+        marker0 = self.get_marker1_4(rewind=False, macro_rewind=macro_rewind)
         if self.is_debug_file and debug:
             self.binary_debug.write('read_record - marker = [4, %i, 4]; macro_rewind=%s\n' % (
-                markers0[0], macro_rewind))
+                marker0, macro_rewind))
         na = op2.n
         record, nrecord = self._read_block_ndata4()
 
@@ -4819,17 +4859,19 @@ class OP2Reader:
                 nrecord, nrecord, macro_rewind)
             self.binary_debug.write(msg)
 
-        if markers0[0]*4 != len(record):
+        if marker0*4 != len(record):
             op2.f.seek(na)
             op2.n = na
-            self.log.error(f'markers0={markers0} nrecord={nrecord}')
             if nrecord == 4:
-                raise EmptyRecordError('nrecord=4')
-            raise FortranMarkerError('markers0=%s*4 len(record)=%s; table_name=%r' % (
-                markers0[0]*4, len(record), op2.table_name))
+               self.log.error(f'EmptyRecordError: marker0={marker0} nrecord={nrecord}')
+               raise EmptyRecordError('nrecord=4')
+            self.log.error(f'marker0={marker0} nrecord={nrecord}')
+            raise FortranMarkerError('marker0=%s*4 len(record)=%s; table_name=%r' % (
+                marker0*4, len(record), op2.table_name))
 
         markers1 = self.get_nmarkers4(1, rewind=True)
         if markers1[0] > 0:
+            #self.log.debug(markers1)
             #nloop = 0
             records = [record]
             while markers1[0] > 0:
@@ -4854,7 +4896,7 @@ class OP2Reader:
         return record, nrecord
 
     def _read_record_ndata8(self, debug=True, macro_rewind=False) -> Tuple[bytes, int]:
-        """reads a record and the length of the record"""
+        """reads a record and the length of the record for size=8"""
         op2 = self.op2
         markers0 = self.get_nmarkers8(1, rewind=False, macro_rewind=macro_rewind)
         if self.is_debug_file and debug:
@@ -4926,11 +4968,35 @@ class OP2Reader:
         return data_out, ndata
 
     def _read_block_ndata(self):
+        """
+        Reads a block following a pattern of:
+            [nbytes, data, nbytes]
+
+        Returns
+        -------
+        data : bytes
+            the data in binary
+        ndata : int
+            len(data)
+
+        """
         if self.size == 4:
             return self._read_block_ndata4()
         return self._read_block_ndata8()
 
     def _read_block_ndata8(self):
+        """
+        Reads a block following a pattern of:
+            [nbytes, data, nbytes]
+
+        Returns
+        -------
+        data : bytes
+            the data in binary
+        ndata : int
+            len(data)
+
+        """
         op2 = self.op2
         data = op2.f.read(4)
         ndata, = op2.struct_i.unpack(data)
@@ -5173,12 +5239,12 @@ class OP2Reader:
             if self.is_debug_file:
                 self.binary_debug.write('  read_markers -> [4, %i, 4]\n' % marker)
 
-    def get_marker1(self, rewind=True, macro_rewind=False) -> int:
+    def get_marker1(self, rewind: bool=True, macro_rewind: bool=False) -> int:
         if self.size == 4:
             return self.get_marker1_4(rewind=rewind, macro_rewind=macro_rewind)
         return self.get_marker1_8(rewind=rewind, macro_rewind=macro_rewind)
 
-    def get_marker1_4(self, rewind=True, macro_rewind=False) -> int:
+    def get_marker1_4(self, rewind: bool=True, macro_rewind: bool=False) -> int:
         """
         Gets 1 marker
         See get_n_markers(...)
@@ -5311,9 +5377,9 @@ class OP2Reader:
         op2 = self.op2
         op2.table_name = self._read_table_name(rewind=False)
         if self.is_debug_file:
-            self.binary_debug.write('skipping table...%r\n' % op2.table_name)
+            self.binary_debug.write(f'skipping table...{op2.table_name!r}\n')
         if warn:
-            self.log.warning('    skipping table_helper = %s' % op2.table_name)
+            self.log.warning(f'    skipping table_helper = {op2.table_name}')
 
         self.read_markers([-1])
         unused_data = self._skip_record()
@@ -5384,13 +5450,17 @@ class OP2Reader:
                                     'macro_rewind=%s\n' % (nrecord, nrecord, macro_rewind))
 
         if marker0*4 != nrecord:
+            self.log.debug(marker0)
             op2.f.seek(na)
             op2.n = na
+            if nrecord == 4:
+                #self.read_3_markers([1, 0], macro_rewind=False)
+                #self.show(500, types='ifs', endian=None, force=False)
+                self.log.error(f'EmptyRecordError: marker0={marker0} nrecord={nrecord}')
+                raise EmptyRecordError('nrecord=4')
             self.log.error(f'marker0={marker0} nrecord={nrecord}')
-            #if nrecord == 4:
-                #raise EmptyRecordError('nrecord=4')
-            self.show(500, types='ifs', endian=None, force=False)
-            self.show(record, types='ifs', endian=None, force=False)
+            #self.show(500, types='ifs', endian=None, force=False)
+            #self.show(record, types='ifs', endian=None, force=False)
             self.log.error('returning to before data block is skipped...')
             self.show(500, types='ifs', endian=None, force=False)
             msg = f'marker0={marker0*4}*4 len(record)={nrecord}; table_name={op2.table_name!r}'
@@ -5497,15 +5567,18 @@ class OP2Reader:
         """
         return self._skip_block_ndata()[0]
 
-    def _skip_block_ndata(self):
+    def _skip_block_ndata(self) -> Tuple[None, int]:
         """
         Skips a block following a pattern of:
             [nbytes, data, nbytes]
 
         Returns
         -------
-        data :  since data can never be None, a None value
-                indicates something bad happened.
+        data : None
+            since data can never be None, a None value
+            indicates something bad happened.
+        ndata : int
+            the length of the data block that was skipped
 
         """
         op2 = self.op2
@@ -5516,7 +5589,7 @@ class OP2Reader:
         return None, ndata
 
     #---------------------------------------------------------------------------
-    def _goto(self, n):
+    def _goto(self, n: int) -> None:
         """
         Jumps to position n in the file
 
@@ -5529,7 +5602,7 @@ class OP2Reader:
         self.op2.n = n
         self.op2.f.seek(n)
 
-    def is_valid_subcase(self):
+    def is_valid_subcase(self) -> bool:
         """
         Lets the code check whether or not to read a subcase
 
@@ -5553,7 +5626,7 @@ class OP2Reader:
         else:
             self.read_results_table8()
 
-    def read_results_table4(self):
+    def read_results_table4(self) -> None:
         """Reads a results table"""
         op2 = self.op2
         if self.is_debug_file:
@@ -5574,7 +5647,7 @@ class OP2Reader:
         op2.subtable_name = subtable_name
         self._read_subtables()
 
-    def read_results_table8(self):
+    def read_results_table8(self) -> None:
         """Reads a results table"""
         op2 = self.op2
         if self.is_debug_file:
@@ -5715,7 +5788,7 @@ class OP2Reader:
         op2.subtable_name = subtable_name.rstrip()
         self._read_subtables()
 
-    def _read_subtables(self):
+    def _read_subtables(self) -> None:
         """reads a series of subtables"""
         # this parameters is used for numpy streaming
         op2 = self.op2
@@ -5763,7 +5836,7 @@ class OP2Reader:
             #return
 
         if self.is_debug_file:
-            self.binary_debug.write('---marker0 = %s---\n' % markers)
+            self.binary_debug.write(f'---marker0 = {markers}---\n')
 
         # while the subtables aren't done
         while markers[0] != 0:
@@ -5774,6 +5847,21 @@ class OP2Reader:
 
             try:
                 self._read_subtable_3_4(table3_parser, table4_parser, passer)
+            except EmptyRecordError:
+                self.log.error('catching EmptyRecordError')
+                self.read_markers([1, 0], macro_rewind=False)
+                #n = op2.n
+                #try:
+                marker146 = self.get_marker1(rewind=True)
+                #except AssertionError:
+                    #self.log.debug('resetting n!')
+                    #op2.f.seek(n)
+                    #op2.n = n
+                    #raise
+                op2.isubtable -= 1
+                if marker146 == 146:
+                    continue
+                break
             except:  # pragma: no cover
                 print(f'failed reading {op2.table_name} isubtable={op2.isubtable:d}')
                 raise
@@ -5805,10 +5893,11 @@ class OP2Reader:
             markers = self.get_nmarkers(1, rewind=True)
 
         if self.is_debug_file:
-            self.binary_debug.write('breaking on marker=%r\n' % str(markers))
+            self.binary_debug.write(f'breaking on marker={markers}\n')
 
         # we've finished reading all subtables, but have one last marker to read
-        self.read_markers([0])
+        marker = self.get_marker1(rewind=False, macro_rewind=False)
+        assert marker == 0, marker
         op2._finish()
 
     def _read_subtable_3_4(self, table3_parser, table4_parser, passer) -> Optional[bool]:
@@ -5840,9 +5929,9 @@ class OP2Reader:
         # this is the length of the current record inside table3/table4
         record_len = self._get_record_length()
         if self.is_debug_file:
-            self.binary_debug.write('record_length = %s\n' % record_len)
+            self.binary_debug.write(f'record_length = {record_len:d}\n')
 
-        oes_nl = [b'OESNLXD', b'OESNL1X', b'OESNLXR']
+        oes_nl = [b'OESNLXD', b'OESNL1X', b'OESNLXR'] # 'OESCP'?
         factor = self.factor
         #print('record_len =', record_len)
         if record_len == 584 * factor:  # table3 has a length of 584
@@ -6740,7 +6829,7 @@ def _read_extdb_extdb(self, name_str: str, data: bytes, endian: bytes, idtype: s
         ntotal2 = 24
 
     name_bytes = data[12*factor:20*factor]
-    name = name_bytes.decode('latin1').rstrip()
+    unused_name = name_bytes.decode('latin1').rstrip()
     #print(name)
     #self.show_data(data[20:4000], types='if', force=True)
     ints = np.frombuffer(data[20*factor:], dtype=idtype)
@@ -7247,7 +7336,24 @@ def _find_all_dmigs_start_stop(data: bytes, header_fmt: bytes, size: int, iminus
 
     kstart : the start of the columns
     kstop  : the end of the columns
+
+    [14, 15,
+    24, 25,
+    37, 38,
+    53, 54,
+    72, 73,
+    94, 95,
+    119, 120,
+    147, 148,
+    178, 179, 212, 213, 249, 250, 289, 290,
+    332, 333, 378, 379, 427, 428, 479, 480,
+    534, 535, 592, 593, 653, 654, 717, 718,
+    784, 785, 854, 855, 927, 928,
+    1003, 1004,
+    1005, 1006]
     """
+    #debug = True
+    #print(iminus1.tolist())
     iends = []
     for i, ivalue in enumerate(iminus1[:-3]):
         if iminus1[i+1] == ivalue + 1 and iminus1[i+2] == ivalue + 2 and iminus1[i+3] == ivalue + 3:
@@ -7260,6 +7366,10 @@ def _find_all_dmigs_start_stop(data: bytes, header_fmt: bytes, size: int, iminus
 
     istop = np.array(iends)
     istart = np.hstack([0, istop[:-1] + 4])
+    if debug:
+        print(f'iends = {iends}')
+        print(f'istop = {istop}')
+        print(f'istart = {istart}')
 
     structi = Struct(header_fmt)
     nheader = 9 * size
@@ -7289,7 +7399,9 @@ def _find_all_dmigs_start_stop(data: bytes, header_fmt: bytes, size: int, iminus
 
     return istart, istop, outs, kstarts, kstops
 
-def _get_dmig_kstop(ig: int, nvalues: int, istop: int, iminus1, debug: bool=True):
+def _get_dmig_kstop(ig: int, nvalues: int, istop: int, iminus1,
+                    debug: bool=True):
+    assert isinstance(debug, bool), debug
     kstart = []
     kstop = []
     #ig = 2
@@ -7307,12 +7419,14 @@ def _get_dmig_kstop(ig: int, nvalues: int, istop: int, iminus1, debug: bool=True
                 print('  ', i, ivalue, ig, nvalues, 'leftover')
             else:
                 print('  ', i, ivalue, ig, nvalues)
-            kstop.append(ivalue)
-            ig = ivalue + 4
-            if debug:
-                print('ig = ', ig)
-            kstart.append(ig)
+        kstop.append(ivalue)
+        ig = ivalue + 4
+        #if debug:
+            #print('  ig = ', ig)
+        kstart.append(ig)
     kstart.pop()
+    assert len(kstart) > 0, kstart
+    assert len(kstop) > 0, kstop
     return kstart, kstop
 
 def get_dtype_fdtype_from_tout(op2: OP2, tout: int) -> Tuple[str, str]:
@@ -7331,12 +7445,12 @@ def get_dtype_fdtype_from_tout(op2: OP2, tout: int) -> Tuple[str, str]:
     else:
         dtype = '???'
         fdtype = '???'
-        msg = ('matrix_name=%s, junk1=%s, matrix_shape=%s, tin=%s, tout=%s, '
-               'is_phase=%s, junk2=%s, ncols_gset=%s dtype=%s' % (
-                   matrix_name, junk1, matrix_shape, tin, tout,
-                   is_phase, junk2, ncols_gset, dtype))
-        op2.log.warning(msg)
-        raise RuntimeError(msg)
+        #msg = ('matrix_name=%s, junk1=%s, matrix_shape=%s, tin=%s, tout=%s, '
+               #'is_phase=%s, junk2=%s, ncols_gset=%s dtype=%s' % (
+                   #matrix_name, junk1, matrix_shape, tin, tout,
+                   #is_phase, junk2, ncols_gset, dtype))
+        #op2.log.warning(msg)
+        raise RuntimeError(f'matrix tout={tout}; expected 1=float32, 2=float64, 3=complex64, 4=complex128')
     return dtype, fdtype
 
 def get_ints(data: bytes, idtype: str, op2: OP2, size: int):

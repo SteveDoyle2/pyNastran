@@ -436,11 +436,12 @@ NX_MATRIX_TABLES = [
 
     # not-MATPOOL
     # hasn't been validated
-    #b'DELTAK', b'DELTAM', b'RBM0', b'DELTAM0',
+    b'DELTAK', b'DELTAM', b'RBM0', b'DELTAM0',
 
     # MATPOOL
     # hasn't been validated
-    #b'MRGGT', b'UEXPT',
+    b'MRGGT', b'UEXPT', # b'DELTAK',
+    #b'MRGGT',
 
     # MATRIX/MATPOOL - testing-remove this
     # hasn't been validated
