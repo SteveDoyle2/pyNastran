@@ -3515,12 +3515,15 @@ class GEOM2(GeomCommon):
 
 
         #self.show_data(data[12:])
-        ntotal = 28  # 7*4
+        ntotal = 28 * self.factor  # 7*4
         # s = Struct(self._endian + b'4i 4s 2i') #expected
         s = Struct(self._endian + b'7i')
-        nelements = (len(data) - n)// 28  # 7*4
+        ndatai = len(data) - n
+        nelements = ndatai // ntotal  # 7*4
+        assert ndatai % ntotal == 0
         for unused_i in range(nelements):
-            edata = data[n:n+28]
+            edata = data[n:n+ntotal]
+            n += ntotal
             out = s.unpack(edata)
             #print(out)
             #edge_id, n1, n2, cid, geomin, geom1, geom2 = out # expected
@@ -3536,7 +3539,15 @@ class GEOM2(GeomCommon):
             geom1 = 0
             geom2 = 0
             if nfields == 2:
-                self.add_feedge(edge_id, [n1, n2], cid, [geom1, geom2], geomin=geomin_str)
+                edge = FEEDGE(edge_id, [n1, n2], cid, [geom1, geom2], geomin=geomin_str)
+                if edge_id in self.feedge:
+                    edge_old = self.feedge[edge_id]
+                    if edge != edge_old:
+                        msg = f'Duplicate FEEDGE\nold:\n{edge_old}\nnew:\n{edge}'
+                        raise RuntimeError(msg)
+                    continue
+            feedge = self.add_feedge(edge_id, [n1, n2], cid, [geom1, geom2], geomin=geomin_str)
+            str(feedge)
             #elif nfields in [3, 4, 5]:
                 #if nfields == 3:
                     #nids = [n1, n2]
@@ -3549,7 +3560,6 @@ class GEOM2(GeomCommon):
             #data_in = [eid, pid, n1, n2, n3, n4, n5, n6, n7, n8, theta]
             # elem = CQUADX8(eid, pid, [n1, n2, n3, n4, n5, n6, n7, n8], theta)
             # self.add_op2_element(elem)
-            n += ntotal
         self.card_count['FEEDGE'] = nelements
         return n
 

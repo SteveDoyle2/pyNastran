@@ -281,7 +281,7 @@ class OES(OP2Common):
         Reads the Stress Table 4
         """
         if self.table_name in NX_TABLES_BYTES:
-            self.to_nx(f'because table_name={self.table_name}')
+            self.to_nx(f' because table_name={self.table_name}')
 
         #assert self.isubtable == -4, self.isubtable
         #if self.is_debug_file:
@@ -333,7 +333,7 @@ class OES(OP2Common):
         Reads the Stress Table 4
         """
         if self.table_name in NX_TABLES_BYTES:
-            self.to_nx(f'because table_name={self.table_name}')
+            self.to_nx(f' because table_name={self.table_name}')
         #assert self.isubtable == -4, self.isubtable
         #if self.is_debug_file:
             #self.binary_debug.write('  element_name = %r\n' % self.element_name)

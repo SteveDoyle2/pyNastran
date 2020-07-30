@@ -112,6 +112,8 @@ class FEEDGE(BaseCard):
     def __init__(self, edge_id, nids, cid, geom_ids, geomin='POINT', comment=''):
         if comment:
             self.comment = comment
+        if cid is None:
+            cid = 0
         self.edge_id = edge_id
         self.nids = nids
         self.cid = cid
@@ -142,7 +144,7 @@ class FEEDGE(BaseCard):
     def _init_from_empty(cls):
         edge_id = 1
         nids = [1, 2]
-        cid = None
+        cid = 100
         geom_ids = [0, 0]
         return FEEDGE(edge_id, nids, cid, geom_ids, geomin='POINT', comment='')
 

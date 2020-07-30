@@ -1209,7 +1209,8 @@ def _clean_lines(lines: List[str]) -> List[str]:
     """
     lines2 = []  # type: List[str]
     for line in lines:
-        line = line.strip(' \n\r').split('$')[0].rstrip()
+        # ' \n\r\t'
+        line = line.strip().split('$')[0].rstrip()
         if line:
             lines2.append(line)
 

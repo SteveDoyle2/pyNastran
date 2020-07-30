@@ -1,3 +1,4 @@
+
 """
 Defines various tables that don't fit in other sections:
   - OP2Reader
@@ -4006,29 +4007,24 @@ class OP2Reader:
             assert len(data) % 4 == 0, len(data) / 4
 
             if self.read_mode == 1:
-                if code == (114, 1, 120):
-                    self.log.debug(f'  code = {code}')
-                    try:
-                        self._read_matpool_dmig(op2, data, utable_name, debug=False)
-                    except Exception as excep:
-                        self.log.error(str(excep))
-                        self.log.warning('  skipping DMIG')
-                        raise
-                else:
-                    print(f'  code = {code}')
-                    self.show_data(data, types='ifs', endian=None, force=False)
-                    raise NotImplementedError(code)
+                self.read_matpool_result(code, op2, data, utable_name)
 
             self.read_3_markers([itable, 1, 0])
-            self.log.debug(f'  read [{itable},1,0]')
+            #self.log.debug(f'  read [{itable},1,0]')
             expected_marker = itable - 1
             data, ndatas = self.read_long_block(expected_marker)
             if ndatas == 0:
                 itable -= 1
-                self.log.debug(f'  read [{itable},1,0]')
+                #self.log.debug(f'  read [{itable},1,0]')
                 self.read_3_markers([itable, 1, 0])
                 break
+            elif self.read_mode == 1:
+                #self.show_data(data, types='ifs', endian=None, force=False)
+                code = struct_3i.unpack(data[:12*self.factor])
+                self.read_matpool_result(code, op2, data, utable_name)
+                #self.log.info('showing data...')
                 #data, ndatas = self.read_long_block(expected_marker)
+            itable -= 1
 
         #self.show(100, types='ifsqd')
         self.read_markers([0])
@@ -4053,18 +4049,219 @@ class OP2Reader:
                 marker1 = self.get_marker1(rewind=True, macro_rewind=False)
                 #self.log.info(f'marker1 = {marker1}')
                 continue
-            self.log.info('adding data')
+            #self.log.info('adding data')
             datas.append(data)
             ndatas += ndata
             #self.show(500, types='ifsq')
             marker1 = self.get_marker1(rewind=True, macro_rewind=False)
-            self.log.info(f'marker1 = {marker1}')
+            #self.log.info(f'marker1 = {marker1}')
 
         if len(datas) != 1:
             #print('ndatas =', len(datas))
             data = b''.join(datas)
         #self.show(200, types='ifsq')
         return data, ndatas
+
+    def read_matpool_result(self, code, op2, data, utable_name):
+        if code == (114, 1, 120):
+            self.log.debug(f'  code = {code}')
+            try:
+                self._read_matpool_dmig(op2, data, utable_name, debug=False)
+            except Exception as excep:
+                self.log.error(str(excep))
+                self.log.warning('  skipping MATPOOL-DMIG')
+                raise
+        elif code == (314, 3, 279):
+            # geom
+            self._read_matpool_elist(op2, data, utable_name, debug=False)
+        elif code == (414, 4, 284):
+            # geom
+            self._read_matpool_mfluid(op2, data, utable_name, debug=False)
+        elif code == (2509, 25, 418):
+            # C:\NASA\m4\formats\git\examples\pyNastran_examples\demo_sort2_post_m2\hd15305.op2
+            self.log.warning('  skipping MATPOOL-RADCAV')
+        elif code == (3014, 30, 244):
+            # C:\NASA\m4\formats\git\examples\pyNastran_examples\demo_sort2_post_m2\hd15305.op2
+            self.log.warning('  skipping MATPOOL-RADMTX')
+        elif code == (8602, 86, 421):
+            # C:\NASA\m4\formats\git\examples\pyNastran_examples\demo_sort2_post_m2\hd15305.op2
+            self.log.warning('  skipping MATPOOL-RADSET')
+        elif code == (2014, 20, 243):
+            # C:\NASA\m4\formats\git\examples\pyNastran_examples\demo_sort2_post_m2\hd15306.op2
+            self.log.warning('  skipping MATPOOL-RADLST')
+
+        elif code == (9614, 96, 0):
+            # some axisymmetric matrix
+            self._read_matpool_bndfl(op2, data, utable_name, debug=False)
+        else:
+            print(f'  code = {code}')
+            self.show_data(data, types='ifs', endian=None, force=False)
+            raise NotImplementedError(code)
+
+    def _read_matpool_mfluid(self, op2: OP2, data, utable_name: str, debug: bool=False):
+        """
+        Word Name Type Description
+        1 SID       I
+        2 CID       I
+        3 ZFR      RS
+        4 RHO      RS
+        5 ELIST1    I
+        6 ELIST2    I
+        7 PLANE1    I
+        8 PLANE2    I
+        9 RMAX     RS
+        10 FMEXACT RS
+
+        C:\MSC.Software\simcenter_nastran_2019.2\tpl_post2\cms01.op2
+        """
+        assert len(data) == 12 + 40, len(data)
+        structi = Struct(self._endian + b'2i 2f 4i 2f')
+        sid, cid, zfr, rho, elist1, elist2, plane1, plane2, rmax, fmexact = structi.unpack(data[12:])
+        self.log.warning('skipping MATPOOL-MFLUID table')
+
+    def _read_matpool_elist(self, op2: OP2, data: bytes, utable_name: str, debug: bool=False):
+        """
+        Word Name Type Description
+        1 LID I
+        2 E1 I
+        Word 2 repeats until End of Record
+        """
+        n = 12 * self.factor
+        datai = data[n:]
+        ints = np.frombuffer(datai, dtype=op2.idtype8).copy()
+        assert ints[-1] == 0, ints
+        elist_id = ints[0]
+        element_ids = ints[1:-1].tolist()
+        if not hasattr(self, 'elist'):
+            self.elist = {}
+        self.elist[elist_id] = element_ids
+
+    def _read_matpool_bndfl(self, op2: OP2, data: bytes, utable_name: str, debug: bool=False):
+        """
+        Word Name Type Description
+        1 CSF      I
+        2 G        RS
+        3 RHO      RS
+        4 B        RS
+        5 NOSYM    I
+        6 M        I
+        7 S1       I
+        8 S2       I
+        9 NHARM(C) I
+        10 NI      I
+        Word 10 repeats NHARM times
+        11 IDFL I
+        12 R    RS
+        13 Z    RS
+        14 L    RS
+        15 C    RS
+        16 S    RS
+        17 RHOI RS
+        18 G    I
+        19 PHI  RS
+        Words 18 through 19 repeat until (-1,-1) occurs
+        Words 11 through 19 repeat until End of Record
+
+        ints = [7, 26, 27, 43, 44, 60, 61]
+        C:\MSC.Software\simcenter_nastran_2019.2\tpl_post2\tr1072x.op2
+        """
+        endian = self._endian
+        struct1 = Struct(endian + b'i 3f 5i')
+        #          c   g    rho   b   nosym m s1  s2 nharm n1, n2
+        #ints    = (2, 32.2, 0.03, 0.0, 0,   4, 1, -1, 2,    4, 8,
+        #           # idfl r    z     l    c    s    rho
+        #           2,     8.0, 10.0, 2.5, 1.0, 0,   0.03,
+        #           # g  phi
+        #           3, 0,
+        #           4, 30.0,
+        #           5, 60.0,
+        #           6, 90.0,
+        #           -1, -1,
+        #
+        #           # idfl  r    z    l      c     s    rho
+        #           8,      8.0, 5.0, 5.0, 0.93, -0.35, 0.03,
+        #           # g phi
+        #           9, 0,
+        #           10, 30.0,
+        #           11, 60.0,
+        #           12, 90.0,
+        #           -1, -1,
+        #           ...)
+
+        size = self.size
+        factor = self.factor
+        log = self.log
+        ndata = len(data)
+        log.warning('skipping MATPOOL-BNDFL table')
+        n = 12 * factor
+        datai = data[n:]
+        ints = np.frombuffer(datai, dtype=op2.idtype8).copy()
+        floats = np.frombuffer(datai, dtype=op2.fdtype8).copy()
+        iminus1 = np.where(ints == -1)[0]
+        #print(iminus1)
+
+        iharm = 9
+        nharm = ints[iharm]
+        #idfl = ints[iharm + nharm]
+        #print(f'nharm = {nharm}')
+
+        #b_idfl = (iharm + nharm) * size + 12
+        #self.show_data(datai, types='if')
+        #self.show_data(datai[:b_idfl], types='ifs')
+
+        ntotal1 = 9 * size
+        #print('i =', i)
+
+        edata = data[n:n+ntotal1]
+        #print('len(edata)', len(edata))
+        c, g, rho, b, nosym, m, s1, s2, nharm = struct1.unpack(edata)
+        log.debug(f'  c={c} g={g:g} rho={rho:g} nosym={nosym} m={m} s1={s1} s2={s2} nharm={nharm}')
+        n += ntotal1
+        i = 9
+
+        ntotal2 = nharm * size
+        #ni = Struct(b'%di' % nharm).unpack(data[n:n+ntotal2])
+        ni = ints[i:i+nharm]
+        #print(f'n={n} i={i} ni={ni}')
+        n += ntotal2
+        i += nharm
+
+        while n < ndata:
+            #print('------------------------------------')
+            #print(ints[i-2:i+10])
+            #print(floats[i-2:i+10])
+            # 11 IDFL I
+            # 12 R    RS
+            # 13 Z    RS
+            # 14 L    RS
+            # 15 C    RS
+            # 16 S    RS
+            # 17 RHOI RS
+            idfl = ints[i]
+            r, z, l, c, s, rhoi = floats[i+1:i+7]
+            log.debug(f'    idfl={idfl} r={r} z={z} L={l:g} c={c:g} s={s:g} rhoi={rhoi:g}')
+            i += 7
+            n += 7 * size
+            assert idfl < 1000
+
+            ints2 = ints[i+1::2]
+            ints1 = ints[i::2][:len(ints2)]
+            iminus1i = np.where((ints1 == -1) & (ints2 == -1))[0][0] - 1
+
+            #intsi = ints[i:i+iminus1i+4:2]  # good
+            intsi = ints1[:iminus1i+1]
+            #floatsi = floats[i+1::2][:iminus1i+1]  #good
+            floatsi = floats[i+1:i+2*(iminus1i+1):2]
+            log.debug(f'    {intsi} {floatsi}')
+            assert intsi.min() >= 1, intsi
+            assert intsi.max() <= 1000, intsi
+            #n += (iminus1i + 4) * size# ???
+            #i += iminus1i + 1
+            i += len(intsi) * 2 + 2 # ???
+            n2 = (i + 3) * size
+            n = n2
+            #print(f'n={n} i={i} -> n2={n2}')
+        return
 
     def _read_matpool_dmig(self, op2: OP2, data, utable_name: str, debug: bool=False):
         """
@@ -4211,7 +4408,7 @@ class OP2Reader:
             is_complex = False
             if tin > 2 or tout > 2:
                 #is_complex = True
-                assert is_phase == 0, 'is_phase=%s' % is_phase
+                assert is_phase == 0, f'is_phase={is_phase}'
                 #imags = []
 
             dtype, fdtype = get_dtype_fdtype_from_tout(op2, tout)
@@ -4366,8 +4563,18 @@ class OP2Reader:
                     #print(floats)
                     nints = len(ints2)
                     if dtype == 'float32':
-                        irow = np.arange(0, nints, step=3, dtype='int64')
+                        #0   1   2     3   4    5
+                        # g1, c1,  (gi, ci, ri), ...
+                        # (g, c,  # 0, 1
+                        #  g, c, r, # 2, 3, 4
+                        #  )
+                        irow = np.arange(2, nints, step=3, dtype='int64')
+                        #real = floats[irow + 4]  # nope...
+                        #real = floats[irow + 2]  # ???
                         real = floats[2::3]
+                        #print(real_old, real)
+                        #print(real)
+                        #sss
                     else:
                         raise RuntimeError((self.size, dtype))
                 log.debug(f'ints2 = {ints2}')
@@ -4379,6 +4586,7 @@ class OP2Reader:
                     raise RuntimeError(msg)
                 assert len(irow) > 0, irow
                 assert len(real) > 0, real
+                assert len(irow) == len(real), len(irow)
 
                 if 0:  # pragma: no cover
                     if dtype == 'float32':
@@ -4521,11 +4729,18 @@ class OP2Reader:
             ncols = nj1
             mrows = nj2
 
+        # C:\MSC.Software\simcenter_nastran_2019.2\tpl_post2\tr1071x.op2
+        #print(real_imag_array)
+        #print(j1)
+        #print(j2)
+        #print(mrows, ncols)
         try:
             matrix = scipy.sparse.coo_matrix(
                 (real_imag_array, (j2, j1)),
                 shape=(mrows, ncols), dtype=dtype)
         except ValueError:
+            print('gc1', grids1, comps1)
+            print('gc2', grids2, comps2)
             msg = 'Passed all the checks; cannot build MATPOOL sparse matrix...\n'
             spaces = '                                          '
             msg += '%sname=%s dtype=%s nrows=%s ncols=%s nj1=%s nj2=%s nj=%s' % (

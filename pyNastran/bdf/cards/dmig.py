@@ -607,6 +607,13 @@ class NastranMatrix(BaseCard):
         else:
             msg += print_card_16(list_fields)
 
+        if size == 8:
+            Gi = np.array(self.GCi)[:, 0]
+            Gj = np.array(self.GCi)[:, 0]
+            if max(Gi.max(), Gj.max()) >= 100000000:
+                size = 16
+            del Gi, Gj
+
         if self.is_complex:
             if self.is_polar:
                 for (GCi, GCj, reali, complexi) in zip(self.GCi, self.GCj, self.Real, self.Complex):
@@ -650,7 +657,6 @@ class NastranMatrix(BaseCard):
         #assert isinstance(self.GCi[0], (list, np.ndarray)), msg
         #assert isinstance(self.GCj[0], (list, np.ndarray)), msg
         #assert isinstance(self.Real[0], (list, np.ndarray)), msg
-
         return msg
 
 

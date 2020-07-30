@@ -845,7 +845,7 @@ class EPT(GeomCommon):
             self.show_data(data[12*self.factor:], types='qd')
         #print(len(data[12*self.factor:]))
         while n < ndata:
-            self.log.debug(f"n={n} ndata={ndata}")
+            #self.log.debug(f"n={n} ndata={ndata}")
             edata = data[n:n+ntotal1]
             #if len(edata) == ntotal1:
             data1 = struct1.unpack(edata)
@@ -896,8 +896,8 @@ class EPT(GeomCommon):
                         None, None, None, None, None, None, None, None,)
                 )
                 self.log.debug(msg)
-            self.log.debug(data1)
-            self.log.debug(data2)
+            #self.log.debug(data1)
+            #self.log.debug(data2)
 
             data_in = [data1, data2]
             prop = PBCOMP.add_op2_data(data_in)
@@ -961,28 +961,29 @@ class EPT(GeomCommon):
             #print('cross_section_type = %s' % cross_section_type)
 
             is_pbcomp = False
+            is_bad_so = False
+
+            so = []
+            xxb = []
             for i in range(11):
                 edata = data[n:n+ntotal2]
                 if len(edata) != ntotal2:
                     endpack = []
-                    raise RuntimeError('PBEAM unexpected length i=%s...' % i)
+                    raise RuntimeError(f'PBEAM unexpected length i={i:d}...')
                 n += ntotal2
                 pack = struct2.unpack(edata)
-                (soi, xxb, a, i1, i2, i12, j, nsm, c1, c2,
+                (soi, xxbi, a, i1, i2, i12, j, nsm, c1, c2,
                  d1, d2, e1, e2, f1, f2) = pack
+                xxb.append(xxbi)
+                so.append(soi)
 
                 if soi == 0.0:
                     so_str = 'NO'
                 elif soi == 1.0:
                     so_str = 'YES'
                 else:
-                    if soi < 0.:
-                        msg = 'PBEAM pid=%s i=%s x/xb=%s soi=%s; soi not in 0.0 or 1.0; assuming PBCOMP & dropping' % (
-                            pid, i, xxb, soi)
-                        self.log.error(msg)
-                        is_pbcomp = True
-
                     so_str = str(soi)
+                    is_bad_so = True
                     #msg = 'PBEAM pid=%s i=%s x/xb=%s soi=%s; soi not in 0.0 or 1.0' % (
                         #pid, i, xxb, soi)
                     #raise NotImplementedError(msg)
@@ -992,11 +993,11 @@ class EPT(GeomCommon):
                         #pid, i, xxb, soi)
                     #raise NotImplementedError(msg)
 
-                pack2 = (so_str, xxb, a, i1, i2, i12, j, nsm, c1, c2,
+                pack2 = (so_str, xxbi, a, i1, i2, i12, j, nsm, c1, c2,
                          d1, d2, e1, e2, f1, f2)
                 data_in.append(pack2)
                 if self.is_debug_file:
-                    self.binary_debug.write('     %s\n' % str(pack))
+                    self.binary_debug.write(f'     {pack}\n')
                     msg = (
                         '    i=%-2s' % i + ' so=%s xxb=%.1f a=%g i1=%g i2=%g i12=%g j=%g nsm=%g '
                         'c=[%s,%s] d=[%s,%s] e=[%s,%s] f=[%s,%s]' % (tuple(pack2))
@@ -1024,11 +1025,28 @@ class EPT(GeomCommon):
                                             tuple(endpack)))
             data_in.append(endpack)
 
+            if is_bad_so:
+            #if soi < 0.:
+                xxb_str = ', '.join(['%g' % xxbi for xxbi in xxb])
+                so_str = ', '.join(['%g' % soi for soi in so])
+                msg = (f'PBEAM pid={pid} i={i} soi=[{so_str}]; '
+                       'soi not 0.0 or 1.0; assuming PBCOMP & dropping')
+                self.log.error(msg)
+                is_pbcomp = True
+
+            if min(xxb) < 0.0 or max(xxb) > 1.0:
+                xxb_str = ', '.join(['%g' % xxbi for xxbi in xxb])
+                msg = (f'PBEAM pid={pid} i={i} x/xb=[{xxb_str}]; '
+                       'x/xb must be between 0.0 and 1.0; assuming PBCOMP & dropping')
+                self.log.error(msg)
+                is_pbcomp = True
+
             if is_pbcomp:
                 continue
             if pid in self.properties:
                 if self.properties[pid].type == 'PBCOMP':
                     continue
+
             prop = PBEAM.add_op2_data(data_in)
             nproperties += 1
             self._add_op2_property(prop)

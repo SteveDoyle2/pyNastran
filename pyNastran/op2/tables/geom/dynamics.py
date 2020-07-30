@@ -1523,20 +1523,40 @@ class DYNAMICS(GeomCommon):
         4 GR         RS Rotor damping coefficient
         5 UNIT(2) CHAR4 RPM/FREQ flag for speed input
         7 TABLEID     I Table identification number for speed history
+        8 ZERO ???
 
         """
-        ntotal = 28 # 4*7
-        nentries = (len(data) - n) // ntotal
-        struc = Struct(self._endian + b'3if 8s i')
+        #strings = (b'\xf9*\x00\x00n\x00\x00\x006\x01\x00\x00\x05\x00\x00\x00y\xe6\x00\x00~\xe6\x00\x00\x00\x00\x00\x00RPM     \xa0\x0f\x00\x00\x00\x00\x00\x00\x06\x00\x00\x00\x89\r\x01\x00\x97\r\x01\x00\x00\x00\x00\x00RPM     \xf8*\x00\x00\x00\x00\x00\x00',)
+        #data = (11001, 110, 310,
+                #5, 59001, 59006, 0, 541937746, 538976288, 4000, 0,
+                #6, 69001, 69015, 0, 541937746, 538976288, 11000, 0)
+        #self.show_data(data)
+
+        # per DMAP ???
+        #ntotal = 28 * self.factor # 4*7
+        #struc = Struct(self._endian + b'3i f 8s i')  # per QRG
+
+        # MSC
+        # C:\NASA\m4\formats\git\examples\move_tpl\nltrot99.op2
+        ntotal = 32 * self.factor # 4*7
+        struc = Struct(self._endian + b'3i f 8s 2i')  # per QRG
+
+        ndatai = len(data) - n
+        nentries = ndatai // ntotal
+        assert ndatai % ntotal == 0
+
         for unused_i in range(nentries):
             edata = data[n:n+ntotal]
+            n += ntotal
             out = struc.unpack(edata)
-            rid, grida, gridb, gr, unit, table_id = out
-            unit = unit.decode('latin1')
+            # rid, grida, gridb, gr, unit, table_id = out
+            rid, grida, gridb, gr, unit, table_id, zero = out
+            unit = unit.decode('latin1').rstrip()
+            self.log.debug(f'RSPINT: rid={rid} nids=[{grida}, {gridb}] gr={gr} unit={unit!r} table_id={table_id} zero={zero}')
+            assert zero == 0
             if self.is_debug_file:
                 self.binary_debug.write('  RSPINT=%s\n' % str(out))
             self.add_rspint(rid, grida, gridb, gr, unit, table_id)
-            n += ntotal
         self.increase_card_count('RSPINT', nentries)
         return n
 

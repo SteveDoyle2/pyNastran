@@ -746,6 +746,8 @@ class Subcase:
         key = update_param_name(key)
         if key == 'ANALYSIS' and value == 'FLUT':
             value = 'FLUTTER'
+        elif param_type == 'STRESS-type' and key.startswith('SET'):
+            raise RuntimeError('%r' % key, options, param_type)
 
         #print("adding isubcase=%s key=%r value=%r options=%r "
               #"param_type=%r" %(self.id, key, value, options, param_type))

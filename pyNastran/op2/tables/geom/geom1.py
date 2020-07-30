@@ -910,7 +910,7 @@ class GEOM1(GeomCommon):
         7 SURFID(2) I Alternate method used to specify the geometry
         """
         ntotal = 32 * self.factor
-        structi = Struct(self._endian + b'8i')
+        structi = Struct(mapfmt(self._endian + b'8i', self.size))
         nentries = (len(data) - n) // ntotal
         for unused_i in range(nentries):
             edata = data[n:n + ntotal]
