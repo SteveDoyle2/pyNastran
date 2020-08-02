@@ -532,7 +532,7 @@ class FREQ1(BaseCard):
         f1 = double_or_blank(card, 2, 'f1', 0.0)
         df = double(card, 3, 'df')
         ndf = integer_or_blank(card, 4, 'ndf', 1)
-        assert len(card) <= 5, 'len(FREQ card) = %i\ncard=%s' % (len(card), card)
+        assert len(card) <= 5, f'len(FREQ card) = {len(card):d}\ncard={card}'
         return FREQ1(sid, f1, df, ndf, comment=comment)
 
     def raw_fields(self):
@@ -621,7 +621,7 @@ class FREQ2(BaseCard):
         f1 = double(card, 2, 'f1')  # default=0.0 ?
         f2 = double(card, 3, 'f2')
         nf = integer_or_blank(card, 4, 'nf', 1)
-        assert len(card) <= 5, 'len(FREQ2 card) = %i\ncard=%s' % (len(card), card)
+        assert len(card) <= 5, f'len(FREQ2 card) = {len(card):d}\ncard={card}'
         return FREQ2(sid, f1, f2, nf, comment=comment)
         #return FREQ(sid, freqs, comment=comment)
 
@@ -792,7 +792,7 @@ class FREQ4(FREQ):
         f2 = double_or_blank(card, 3, 'f2', 1.e20)
         fspread = double_or_blank(card, 4, 'fspd', 0.1)
         nfm = integer_or_blank(card, 5, 'nfm', 3)
-        assert len(card) <= 6, 'len(FREQ card) = %i\ncard=%s' % (len(card), card)
+        assert len(card) <= 6, f'len(FREQ card) = {len(card):d}\ncard={card}'
         return FREQ4(sid, f1=f1, f2=f2, fspread=fspread, nfm=nfm, comment=comment)
 
     def raw_fields(self):
@@ -1058,7 +1058,7 @@ class NLPARM(BaseCard):
         max_bisect = integer_or_blank(card, 17, 'max_bisect', 5)
         max_r = double_or_blank(card, 21, 'max_r', 20.)
         rtol_b = double_or_blank(card, 23, 'rtol_b', 20.)
-        assert len(card) <= 24, 'len(NLPARM card) = %i\ncard=%s' % (len(card), card)
+        assert len(card) <= 24, f'len(NLPARM card) = {len(card):d}\ncard={card}'
         return NLPARM(nlparm_id, ninc, dt, kmethod, kstep, max_iter, conv,
                       int_out, eps_u, eps_p, eps_w, max_div,
                       max_qn, max_ls, fstress,
@@ -2245,7 +2245,7 @@ class TSTEPNL(BaseCard):
 
         # not listed in all QRGs
         min_iter = integer_or_blank(card, 24, 'minIter')
-        assert len(card) <= 25, 'len(TSTEPNL card) = %i\ncard=%s' % (len(card), card)
+        assert len(card) <= 25, f'len(TSTEPNL card) = {len(card):d}\ncard={card}'
         return TSTEPNL(
             sid, ndt, dt, no, method, kstep, max_iter, conv,
             eps_u, eps_p, eps_w, max_div, max_qn, max_ls, fstress,

@@ -511,7 +511,7 @@ class RLOAD1(DynamicLoad):
         td = integer_double_or_blank(card, 6, 'td', 0)
         Type = integer_string_or_blank(card, 7, 'Type', 'LOAD')
 
-        assert len(card) <= 8, 'len(RLOAD1 card) = %i\ncard=%s' % (len(card), card)
+        assert len(card) <= 8, f'len(RLOAD1 card) = {len(card):d}\ncard={card}'
         return RLOAD1(sid, excite_id, delay, dphase, tc, td, Type, comment=comment)
 
     def cross_reference(self, model: BDF) -> None:
@@ -942,7 +942,7 @@ class RLOAD2(DynamicLoad):
         tp = integer_double_or_blank(card, 6, 'tp', 0)
         Type = integer_string_or_blank(card, 7, 'Type', 'LOAD')
 
-        assert len(card) <= 8, 'len(RLOAD2 card) = %i\ncard=%s' % (len(card), card)
+        assert len(card) <= 8, f'len(RLOAD2 card) = {len(card):d}\ncard={card}'
         return RLOAD2(sid, excite_id, delay, dphase, tb, tp, Type, comment=comment)
 
     def get_load_at_freq(self, freq, scale=1.):
@@ -1234,7 +1234,7 @@ class TLOAD1(DynamicLoad):
         us0 = double_or_blank(card, 6, 'us0', 0.0)
         vs0 = double_or_blank(card, 7, 'vs0', 0.0)
 
-        assert len(card) <= 8, 'len(TLOAD1 card) = %i\ncard=%s' % (len(card), card)
+        assert len(card) <= 8, f'len(TLOAD1 card) = {len(card):d}\ncard={card}'
         return TLOAD1(sid, excite_id, tid, delay=delay, Type=Type, us0=us0, vs0=vs0, comment=comment)
 
     def get_loads(self):
@@ -1509,7 +1509,7 @@ class TLOAD2(DynamicLoad):
         us0 = double_or_blank(card, 11, 'us0', 0.)
         vs0 = double_or_blank(card, 12, 'vs0', 0.)
 
-        assert len(card) <= 13, 'len(TLOAD2 card) = %i\ncard=%s' % (len(card), card)
+        assert len(card) <= 13, f'len(TLOAD2 card) = {len(card):d}\ncard={card}'
         return TLOAD2(sid, excite_id, delay, Type, T1, T2, frequency, phase,
                       c, b, us0, vs0, comment=comment)
 

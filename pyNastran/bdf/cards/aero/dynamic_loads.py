@@ -1027,7 +1027,7 @@ class GUST(BaseCard):
         wg = double(card, 3, 'wg')
         x0 = double(card, 4, 'x0')
         V = double_or_blank(card, 5, 'V')
-        assert len(card) <= 6, f'len(GUST card = {len(card):d}\ncard={card}')
+        assert len(card) <= 6, f'len(GUST card) = {len(card):d}\ncard={card}'
         return GUST(sid, dload, wg, x0, V=V, comment=comment)
 
     @classmethod

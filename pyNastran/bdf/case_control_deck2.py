@@ -1001,7 +1001,8 @@ class CaseControlDeck:
         subcase0.add_parameter_to_global_subcase('ANALYSIS', analysis)
         #subcase.add_parameter_to_global_subcase('DESSUB', dessub)
 
-    def _add_parameter_to_subcase(self, key, value, options, param_type, isubcase):
+    def _add_parameter_to_subcase(self, key: str, value: Any, options: List[str],
+                                  param_type: str, isubcase: int) -> int:
         """Internal method"""
         if self.debug:
             a = 'key=%r' % key

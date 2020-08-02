@@ -1102,6 +1102,9 @@ DOPTPRM_FLOATS = {
     'DABOBJ', 'DOBJ2', 'DX2',
 }
 DOPTPRM_INT_FLOATS = set([])
+DOPTPRM_STRS = set(
+    ['OPTCOD'] # DOT
+)
 DOPTPRM_DEFAULTS = {
     'APRCOD' : 2,
     'AUTOSE' : 0,
@@ -1161,7 +1164,7 @@ DOPTPRM_DEFAULTS = {
 
     'NASPRO' : 0,
     'OBJMOD' : 0,
-    'OPTCOD' : 0,
+    #'OPTCOD' : 0,
     'P1' : 0,
     'P2' : 1,
 
@@ -1255,6 +1258,8 @@ class DOPTPRM(OptConstraint):
                 val = integer_or_blank(card, i + 2, '%s_value' % param, default_value)
             elif param in DOPTPRM_FLOATS:
                 val = double_or_blank(card, i + 2, '%s_value' % param, default_value)
+            elif param in DOPTPRM_STRS:
+                val = string_or_blank(card, i + 2, '%s_value' % param)
             elif param in DOPTPRM_INT_FLOATS:
                 val = integer_double_string_or_blank(card, i + 2, '%s_value' % param, default_value)
             else:

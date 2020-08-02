@@ -968,25 +968,28 @@ class CaseControlDeck:
         subcase0.add_parameter_to_global_subcase('ANALYSIS', analysis)
         #subcase.add_parameter_to_global_subcase('DESSUB', dessub)
 
-    def _add_parameter_to_subcase(self, key, value, options, param_type, isubcase):
+    def _add_parameter_to_subcase(self, key: str, value: Any, options: List[str],
+                                  param_type: str, isubcase: int) -> int:
         """Internal method"""
         if self.debug:
-            a = 'key=%r' % key
-            b = 'value=%r' % value
-            c = 'options=%r' % options
-            d = 'param_type=%r' % param_type
+            a = f'key={key!r}'
+            b = f'value={value!r}'
+            c = f'options={options!r}'
+            d = f'param_type={param_type!r}'
             msg = "_adding isubcase=%s %-12s %-12s %-12s %-12s" % (isubcase, a,
                                                                    b, c, d)
             self.log.debug(msg)
 
         if key == 'SUBCASE':
-            assert value not in self.subcases, 'key=%s value=%s already exists' % (key, value)
             assert isinstance(value, int)
             isubcase = value
+            if isubcase == 0:
+                return isubcase
+            assert value not in self.subcases, f'key={key} value={value} already exists'
             self.copy_subcase(i_from_subcase=0, i_to_subcase=isubcase,
                               overwrite_subcase=True)
             if self.debug:
-                msg = "copied subcase i_from_subcase=%r to i_to_subcase=%r" % (0, isubcase)
+                msg = f'copied subcase i_from_subcase=0 to i_to_subcase={isubcase!r}'
                 self.log.debug(msg)
         elif isubcase not in self.subcases:  # initialize new subcase
             #self.isubcase += 1 # is handled in the read code

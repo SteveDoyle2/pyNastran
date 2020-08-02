@@ -1264,7 +1264,7 @@ class PBAR(LineProperty):
             #: default=infinite; assume 1e8
             k2 = double_or_blank(card, 18, 'K2', 1e8)
 
-        assert len(card) <= 20, 'len(PBAR card) = %i\ncard=%s' % (len(card), card)
+        assert len(card) <= 20, f'len(PBAR card) = {len(card):d}\ncard={card}'
         return PBAR(pid, mid, A, i1, i2, i12, j, nsm,
                     c1, c2, d1, d2, e1, e2,
                     f1, f2, k1, k2, comment=comment)
@@ -3101,7 +3101,7 @@ class PBEND(LineProperty):
 
         #: Arc angle :math:`\theta_B` of element  (optional)
         theta_b = double_or_blank(card, 8, 'thetab')
-        assert len(card) <= 23, 'len(PBEND card) = %i\ncard=%s' % (len(card), card)
+        assert len(card) <= 23, f'len(PBEND card) = {len(card):d}\ncard={card}'
         return PBEND(pid, mid, beam_type, A, i1, i2, j, c1, c2, d1, d2,
                      e1, e2, f1, f2, k1, k2, nsm,
                      rc, zc, delta_n, fsi, rm, t,

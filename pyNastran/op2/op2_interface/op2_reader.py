@@ -47,12 +47,13 @@ import os
 import sys
 from copy import deepcopy
 from itertools import count
-from struct import unpack, Struct, error as struct_error
+from struct import unpack, Struct # , error as struct_error
 from typing import Tuple, Optional, TYPE_CHECKING
 
 import numpy as np
 import scipy  # type: ignore
 
+from cpylog import SimpleLogger
 from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.f06.errors import FatalError
 from pyNastran.op2.errors import FortranMarkerError, SortCodeError, EmptyRecordError
@@ -6909,9 +6910,13 @@ def _parse_nastran_version(data: bytes, version: bytes, encoding: bytes, log: Si
     """parses a Nastran version string"""
     if len(data) == 32:
         MSC_LONG_VERSION = [
-            b'XXXXXXXX20140',
-            b'XXXXXXXX20141',
-            b'XXXXXXXX20182',
+            b'XXXXXXXX20140', b'XXXXXXXX20141',
+            b'XXXXXXXX20150',
+            b'XXXXXXXX20160',
+            b'XXXXXXXX20170',
+            b'XXXXXXXX20180', b'XXXXXXXX20181', b'XXXXXXXX20182',
+            b'XXXXXXXX20190',
+            b'XXXXXXXX20200',
         ]
         #self.show_data(data[:16], types='ifsdqlILQ', endian=None)
         #self.show_data(data[16:], types='ifsdqlILQ', endian=None)
@@ -6920,13 +6925,12 @@ def _parse_nastran_version(data: bytes, version: bytes, encoding: bytes, log: Si
             # 'XXXXXXXX20141   0   \x00\x00\x00\x00        '
             mode = 'msc'
         else:
-            raise NotImplementedError(f'check={data[:16].strip()} data={data!r}')
+            raise NotImplementedError(f'check={data[:16].strip()} data={data!r}; '
+                                      f'len(data)={len(data)}')
     elif len(data) == 8:
-        mode = _parse_nastran_version_8(
-            data, version, encoding, log)
+        mode = _parse_nastran_version_8(data, version, encoding, log)
     elif len(data) == 16:
-        mode = _parse_nastran_version_16(
-            data, version, encoding, log)
+        mode = _parse_nastran_version_16(data, version, encoding, log)
     else:
         raise NotImplementedError(f'version={version!r}; n={len(data)}')
     return mode

@@ -2915,6 +2915,9 @@ class MAT11(Material):
         return MAT11(mid, e1, e2, e3, nu12, nu13, nu23, g12, g13, g23, rho,
                      a1, a2, a3, tref, ge, comment=comment)
 
+    def get_density(self):
+        return self.rho
+
     def _verify(self, xref):
         """
         Verifies all methods for this object work

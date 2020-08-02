@@ -326,7 +326,7 @@ class CBEAM(LineElement):
 
         sa = integer_or_blank(card, 17, 'sa', 0)
         sb = integer_or_blank(card, 18, 'sb', 0)
-        assert len(card) <= 19, 'len(CBEAM card) = %i\ncard=%s' % (len(card), card)
+        assert len(card) <= 19, f'len(CBEAM card) = {len(card):d}\ncard={card}'
         return CBEAM(eid, pid, [ga, gb], x, g0, offt, bit,
                      pa=pa, pb=pb, wa=wa, wb=wb, sa=sa, sb=sb, comment=comment)
 
@@ -925,7 +925,7 @@ class BEAMOR(BaseCard):
         else:
             raise NotImplementedError('BEAMOR field5 = %r' % field5)
         offt = integer_string_or_blank(card, 8, 'offt', 'GGG')
-        assert len(card) <= 9, 'len(BEAMOR card) = %i\ncard=%s' % (len(card), card)
+        assert len(card) <= 9, f'len(BEAMOR card) = {len(card):d}\ncard={card}'
         return BEAMOR(pid, is_g0, g0, x, offt=offt, comment=comment)
 
     def raw_fields(self):

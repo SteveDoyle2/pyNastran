@@ -115,8 +115,8 @@ from .cards.loads.random_loads import RANDPS, RANDT1
 
 from .cards.materials import (MAT1, MAT2, MAT3, MAT4, MAT5,
                               MAT8, MAT9, MAT10, MAT11, MAT3D,
-                              MATG, MATHE, MATHP, CREEP, EQUIV,
-                              NXSTRAT)
+                              MATG, MATHE, MATHP, MATEV,
+                              CREEP, EQUIV, NXSTRAT)
 from .cards.material_deps import (
     MATT1, MATT2, MATT3, MATT4, MATT5, MATT8, MATT9, MATS1)
 
@@ -377,7 +377,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
 
             ## materials
             'MAT1', 'MAT2', 'MAT3', 'MAT8', 'MAT9', 'MAT10', 'MAT11', 'MAT3D',
-            'MATG', 'MATHE', 'MATHP',
+            'MATG', 'MATHE', 'MATHP', 'MATEV',
 
             ## Material dependence - MATT1/MATT2/etc.
             'MATT1', 'MATT2', 'MATT3', 'MATT4', 'MATT5', 'MATT8', 'MATT9',
@@ -1963,11 +1963,13 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             'MAT10' : (MAT10, self._add_structural_material_object),
             'MAT11' : (MAT11, self._add_structural_material_object),
             'MAT3D' : (MAT3D, self._add_structural_material_object),
+            'MATEV' : (MATEV, self._add_structural_material_object),
             'EQUIV' : (EQUIV, self._add_structural_material_object),
             'MATG' : (MATG, self._add_structural_material_object),
 
             'MATHE' : (MATHE, self._add_hyperelastic_material_object),
             'MATHP' : (MATHP, self._add_hyperelastic_material_object),
+            'MATEV' : (MATEV, self._add_structural_material_object),
             'MAT4' : (MAT4, self._add_thermal_material_object),
             'MAT5' : (MAT5, self._add_thermal_material_object),
 

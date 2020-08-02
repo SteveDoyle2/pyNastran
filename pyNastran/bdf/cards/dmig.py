@@ -607,9 +607,9 @@ class NastranMatrix(BaseCard):
         else:
             msg += print_card_16(list_fields)
 
-        if size == 8:
+        if size == 8 and len(self.GCi):
             Gi = np.array(self.GCi)[:, 0]
-            Gj = np.array(self.GCi)[:, 0]
+            Gj = np.array(self.GCj)[:, 0]
             if max(Gi.max(), Gj.max()) >= 100000000:
                 size = 16
             del Gi, Gj
@@ -1655,7 +1655,7 @@ class DMI(NastranMatrix):
         nrows = integer(card, 7, 'nrows')
         ncols = integer(card, 8, 'ncols')
 
-        assert len(card) == 9, 'len(DMI card) = %i\ncard=%s' % (len(card), card)
+        assert len(card) == 9, f'len(DMI card) = {len(card):d}\ncard={card}'
 
         GCj = []
         GCi = []

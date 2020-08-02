@@ -179,7 +179,7 @@ class PDAMP5(DamperProperty):
         pid = integer(card, 1, 'pid')
         mid = integer(card, 2, 'mid')
         b = double(card, 3, 'b')
-        assert len(card) == 4, 'len(PDAMP5 card) = %i\ncard=%s' % (len(card), card)
+        assert len(card) == 4, f'len(PDAMP5 card) = {len(card):d}\ncard={card}'
         return PDAMP5(pid, mid, b, comment=comment)
 
     @classmethod
@@ -285,7 +285,7 @@ class PDAMPT(DamperProperty):
         """
         pid = integer(card, 1, 'pid')
         tbid = integer_or_blank(card, 2, 'tbid', 0)
-        assert len(card) <= 3, 'len(PDAMPT card) = %i\ncard=%s' % (len(card), card)
+        assert len(card) <= 3, f'len(PDAMPT card) = {len(card):d}\ncard={card}'
         return PDAMPT(pid, tbid, comment=comment)
 
     @classmethod

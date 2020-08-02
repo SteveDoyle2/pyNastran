@@ -2107,7 +2107,9 @@ def hdf5_load_plotels(model, elements_group, unused_encoding):
 def write_card(elem):  # pragma: no cover
     """verifies that the card was built correctly near where the card was made"""
     try:
-        elem.write_card()
+        elem.write_card(size=8, is_double=False)
+    except RuntimeError:
+        elem.write_card(size=16, is_double=False)
     except:  # pragma: no cover
         print(elem.get_stats())
         raise
