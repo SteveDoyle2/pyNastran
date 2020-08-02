@@ -229,7 +229,7 @@ class AERO(Aero):
         rho_ref = double(card, 4, 'rho_ref')
         sym_xz = integer_or_blank(card, 5, 'symXZ', 0)
         sym_xy = integer_or_blank(card, 6, 'symXY', 0)
-        assert len(card) <= 7, 'len(AERO card) = %i\ncard=%s' % (len(card), card)
+        assert len(card) <= 7, f'len(AERO card) = {len(card):d}\ncard={card}'
         return AERO(velocity, cref, rho_ref, acsid=acsid, sym_xz=sym_xz, sym_xy=sym_xy,
                     comment=comment)
 
@@ -676,7 +676,7 @@ class FLUTTER(BaseCard):
 
         assert method in ['K', 'KE', 'PK', 'PKS', 'PKNL', 'PKNLS', None], method
         epsilon = double_or_blank(card, 8, 'epsilon', 1e-3)  # not defined in QRG
-        assert len(card) <= 9, 'len(FLUTTER card) = %i\ncard=%s' % (len(card), card)
+        assert len(card) <= 9, f'len(FLUTTER card) = {len(card):d}\ncard={card}'
         return FLUTTER(sid, method, density_id, mach_id, reduced_freq_velocity_id,
                        imethod=imethod, nvalue=nvalue, omax=omax,
                        epsilon=epsilon, comment=comment)
@@ -1027,7 +1027,7 @@ class GUST(BaseCard):
         wg = double(card, 3, 'wg')
         x0 = double(card, 4, 'x0')
         V = double_or_blank(card, 5, 'V')
-        assert len(card) <= 6, 'len(GUST card) = %i\ncard=%s' % (len(card), card)
+        assert len(card) <= 6, f'len(GUST card = {len(card):d}\ncard={card}')
         return GUST(sid, dload, wg, x0, V=V, comment=comment)
 
     @classmethod

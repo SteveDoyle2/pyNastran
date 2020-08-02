@@ -64,6 +64,11 @@ class AnisotropicMaterial(Material):
     def __init__(self):
         Material.__init__(self)
 
+class ViscoelasticMaterial(Material):
+    """Viscoelastic Material Class"""
+    def __init__(self):
+        Material.__init__(self)
+
 
 class ThermalMaterial(Material):
     """Thermal Material Class"""
@@ -3766,6 +3771,266 @@ class MATHP(HyperelasticMaterial):
             return self.comment + print_card_8(card)
         return self.comment + print_card_16(card)
 
+class MATEV(ViscoelasticMaterial):
+    """
+    Defines the material properties for linear isotropic materials.
+
+    +-------+-------+-------+-------+------+-------+------+------+-----+
+    |   1   |   2   |   3   |   4   |   5  |   6   |  7   |  8   |  9  |
+    +=======+=======+=======+=======+======+=======+======+======+=====+
+    | MATVE |  MID  | GFUNC | KFUNC |  RHO | ALPHA |      |      |     |
+    +-------+-------+-------+-------+------+-------+------+------+-----+
+    |       | SHIFT |   C1  |   C2  |  T0  |       |      |      |     |
+    +-------+-------+-------+-------+------+-------+------+------+-----+
+
+    """
+    type = 'MATEV'
+    _field_map = {
+        #1: 'mid', 2:'e', 3:'g', 4:'nu', 5: 'rho', 6:'a', 7:'tref', 8:'ge',
+        #9: 'St', 10:'Sc', 11:'Ss', 12:'mcsid',
+    }
+    mp_name_map = {
+        #'E' : 'e', #3 : 'e',
+    }
+    _properties = ['_field_map', 'mp_name_map']
+
+    def __init__(self, mid: int, gfunc: int, kfunc: int,
+                 rho: float=0.0, alpha: float=0.0,
+                 shift: int=1, c1: float=0.0, c2: float=0.0, tref=0.0, comment=''):
+        """
+        Creates a MAT1 card
+
+        Parameters
+        ----------
+        mid : int
+            material id
+        gfunc : int
+            Table identification number of a TABVE entry that contains a
+            series of shear modulii and decay coefficients to represent
+            the shear modulus relaxation function of the material.
+        kfunc : int
+            Table identification number of a TABVE entry that contains a
+            series of bulk modulii and decay coefficients to represent
+            the bulk modulus relaxation function of the material.
+        rho : float; default=0.0
+            Mass density.
+        alpha : float; default=0.0
+            Coefficient of thermal expansion.
+        shift : int; default=1
+            Time-temperature superposition shift law.
+            1: Use WLF (Williams-Landel-Ferry) shift function
+            2: Use Arrhenius shift function
+        c1, c2 : float; default=0.0
+            Material constants used by the WLF or Arrhenius shift function.
+        tref : float; default=0.
+            Reference temperature used by the WLF or Arrhenius shift function.
+        comment : str; default=''
+            a comment for the card
+
+        """
+        IsotropicMaterial.__init__(self)
+        if comment:
+            self.comment = comment
+        self.mid = mid
+        self.gfunc = gfunc
+        self.kfunc = kfunc
+        self.rho = rho
+        self.alpha = alpha
+        self.shift = shift
+        self.c1 = c1
+        self.c2 = c2
+        self.tref = tref
+
+    #@classmethod
+    #def export_to_hdf5(cls, h5_file, model, mids):
+        #"""exports the materials in a vectorized way"""
+        ##comments = []
+        #e = []
+        #g = []
+        #nu = []
+        #rho = []
+        #a = []
+        #tref = []
+        #ge = []
+        #St = []
+        #Sc = []
+        #Ss = []
+        #mcsid = []
+        #for mid in mids:
+            #material = model.materials[mid]
+            ##comments.append(element.comment)
+
+            #if material.e is None:
+                #e.append(np.nan)
+            #else:
+                #e.append(material.e)
+
+            #if material.g is None:
+                #e.append(np.nan)
+            #else:
+                #g.append(material.g)
+
+            #if material.nu is None:
+                #nu.append(np.nan)
+            #else:
+                #nu.append(material.nu)
+
+            #rho.append(material.rho)
+            #a.append(material.a)
+            #tref.append(material.tref)
+            #ge.append(material.ge)
+            #St.append(material.St)
+            #Sc.append(material.Sc)
+            #Ss.append(material.Ss)
+            #mcsid.append(material.mcsid)
+        ##h5_file.create_dataset('_comment', data=comments)
+        #h5_file.create_dataset('mid', data=mids)
+        #h5_file.create_dataset('E', data=e)
+        #h5_file.create_dataset('G', data=g)
+        #h5_file.create_dataset('nu', data=nu)
+        #h5_file.create_dataset('A', data=a)
+        #h5_file.create_dataset('rho', data=rho)
+        #h5_file.create_dataset('tref', data=tref)
+        #h5_file.create_dataset('ge', data=ge)
+        #h5_file.create_dataset('St', data=St)
+        #h5_file.create_dataset('Sc', data=Sc)
+        #h5_file.create_dataset('Ss', data=Ss)
+        #h5_file.create_dataset('mcsid', data=mcsid)
+
+    @classmethod
+    def add_card(cls, card, comment=''):
+        """
+        Adds a MATEV card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+
+        """
+        # |   1   |   2   |   3   |   4   |   5  |   6   |  7   |  8   |  9  |
+        # +=======+=======+=======+=======+======+=======+======+======+=====+
+        # | MATVE |  MID  | GFUNC | KFUNC |  RHO | ALPHA |      |      |     |
+        # +-------+-------+-------+-------+------+-------+------+------+-----+
+        # |       | SHIFT |   C1  |   C2  |  T0  |       |      |      |     |
+
+        mid = integer(card, 1, 'mid')
+        gfunc = integer_or_blank(card, 2, 'gfunc')
+        kfunc = integer_or_blank(card, 3, 'G')
+        rho = double_or_blank(card, 4, 'rho', 0.)
+        alpha = double_or_blank(card, 5, 'alpha', 0.0)
+
+        shift = integer_or_blank(card, 9, 'shift', 1)
+        c1 = double_or_blank(card, 10, 'c1', 0.0)
+        c2 = double_or_blank(card, 11, 'c2', 0.0)
+        tref = double_or_blank(card, 12, 'tref', 0.0)
+        assert len(card) <= 12, 'len(MATEV card) = %i\ncard=%s' % (len(card), card)
+        return MATEV(mid, gfunc, kfunc, rho=rho, alpha=alpha,
+                     shift=shift, c1=c1, c2=c2, tref=tref, comment=comment)
+
+    #@classmethod
+    #def add_op2_data(cls, data, comment=''):
+        #"""
+        #Adds a MAT1 card from the OP2
+
+        #Parameters
+        #----------
+        #data : List[varies]
+            #a list of fields defined in OP2 format
+        #comment : str; default=''
+            #a comment for the card
+
+        #"""
+        #mid = data[0]
+        #return MAT1(mid, e, g, nu, rho, a, tref, ge,
+                    #St, Sc, Ss, mcsid, comment=comment)
+
+    def _verify(self, xref):
+        """
+        Verifies all methods for this object work
+
+        Parameters
+        ----------
+        xref : bool
+            has this model been cross referenced
+
+        """
+        mid = self.Mid()
+        assert isinstance(mid, integer_types), 'mid=%r' % mid
+        #if xref:
+            #if [self.matt1_ref, self.mats1_ref] == [None, None]:
+                #assert isinstance(nu, float), 'nu=%r' % nu
+
+    def Rho(self):
+        return self.rho
+
+    def get_density(self):
+        return self.rho
+
+    def cross_reference(self, model: BDF) -> None:
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+
+        """
+        pass
+        #msg = ', which is required by MAT1 mid=%s' % self.mid
+        #self.mcsid = model.Coord(self.mcsid, msg=msg)  # used only for PARAM,CURVPLOT
+        #if self.mid in model.MATS1:
+            #self.mats1_ref = model.MATS1[self.mid]  # not using a method...
+        #if self.mid in model.MATT1:
+            #self.matt1_ref = model.MATT1[self.mid]  # not using a method...
+
+    def uncross_reference(self) -> None:
+        """Removes cross-reference links"""
+        #self.mats1_ref = None
+        pass
+
+    def raw_fields(self):
+        list_fields = ['MATEV', self.mid, self.gfunc, self.kfunc, self.rho, self.alpha, None, None, None,
+                       self.shift, self.c1, self.c2, self.tref]
+        return list_fields
+
+    def repr_fields(self):
+        """
+        Gets the fields in their simplified form
+
+        Returns
+        -------
+        fields : [varies, ...]
+            the fields that define the card
+
+        """
+        #Gdefault = self.getG_default()
+        #G = set_blank_if_default(self.g, Gdefault)
+
+        #rho = set_blank_if_default(self.rho, 0.)
+        #a = set_blank_if_default(self.a, 0.)
+        #tref = set_blank_if_default(self.tref, 0.)
+        #ge = set_blank_if_default(self.ge, 0.)
+
+        #if [self.St, self.Sc, self.Ss, self.mcsid] == [0., 0., 0., 0]:
+            #list_fields = ['MAT1', self.mid, self.e, G, self.nu, rho, a, tref, ge]
+        #else:
+            #St = set_blank_if_default(self.St, 0.)
+            #Sc = set_blank_if_default(self.Sc, 0.)
+            #Ss = set_blank_if_default(self.Ss, 0.)
+            #mcsid = set_blank_if_default(self.mcsid, 0)
+            #list_fields = ['MAT1', self.mid, self.e, G, self.nu, rho, a, tref, ge,
+                           #St, Sc, Ss, mcsid]
+        return list_fields
+
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
+        card = self.repr_fields()
+        if size == 8:
+            return self.comment + print_card_8(card)
+        return self.comment + print_card_16(card)
 
 class EQUIV(Material):
     type = 'EQUIV'

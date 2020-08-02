@@ -81,8 +81,8 @@ from pyNastran.bdf.cards.loads.random_loads import RANDPS, RANDT1
 
 from pyNastran.bdf.cards.materials import (MAT1, MAT2, MAT3, MAT4, MAT5,
                                            MAT8, MAT9, MAT10, MAT11, MAT3D,
-                                           MATG, MATHE, MATHP, CREEP, EQUIV,
-                                           NXSTRAT)
+                                           MATG, MATHE, MATHP, CREEP, MATEV,
+                                           EQUIV, NXSTRAT)
 from pyNastran.bdf.cards.material_deps import (
     MATT1, MATT2, MATT3, MATT4, MATT5, MATT8, MATT9, MATS1)
 
@@ -395,6 +395,7 @@ CARD_MAP = {
     'MAT3D' : MAT3D,
     'EQUIV' : EQUIV,
     'MATG' : MATG,
+    'MATEV' : MATEV,
 
     'MATHE' : MATHE,
     'MATHP' : MATHP,
