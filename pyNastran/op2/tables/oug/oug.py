@@ -1088,7 +1088,7 @@ class OUG(OP2Common):
         # 2: axisymmetric Fourier
         # 3: for cyclic symmetric;
         # 0: otherwise
-        assert self.thermal in [0, 3], self.code_information()
+        assert self.thermal in [0, 2, 3], self.code_information()
         if self.table_name in [b'OUGV1', b'OUGV2', b'OUG1',
                                b'BOUGV1',
                                b'OPHIG', b'BOPHIG', ]:
@@ -1125,7 +1125,7 @@ class OUG(OP2Common):
         else:  # pragma: no cover
             msg = 'eigenvectors; table_name=%s' % self.table_name
             raise NotImplementedError(msg)
-        assert self.thermal in [0, 3], self.code_information()
+        assert self.thermal in [0, 2, 3], self.code_information()
 
         if self._results.is_not_saved(result_name):
             return ndata
@@ -1137,7 +1137,7 @@ class OUG(OP2Common):
         # 2: axisymmetric Fourier
         # 3: for cyclic symmetric;
         # 0: otherwise
-        if self.thermal in [0, 3]:
+        if self.thermal in [0, 2, 3]:
             n = self._read_table_vectorized(data, ndata, result_name, storage_obj,
                                             RealEigenvectorArray, ComplexEigenvectorArray,
                                             'node', random_code=self.random_code)

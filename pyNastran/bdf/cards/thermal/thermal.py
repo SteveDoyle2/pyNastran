@@ -1734,7 +1734,7 @@ class CONVM(ThermalBC):
         ta1 = integer(card, 5, 'ta1')
         ta2 = integer_or_blank(card, 6, 'ta2', ta1)
         mdot = double_or_blank(card, 7, 'mdot', 1.0)
-        assert len(card) <= 8, f'len(CONVMcard) = {len(card):d}\ncard={card}')
+        assert len(card) <= 8, f'len(CONVM card) = {len(card):d}\ncard={card}'
         return CONVM(eid, pconvm, ta1, film_node=film_node, cntmdot=cntmdot,
                      ta2=ta2, mdot=mdot, comment=comment)
 

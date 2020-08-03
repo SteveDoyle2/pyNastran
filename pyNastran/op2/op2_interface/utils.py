@@ -2,6 +2,34 @@ from itertools import count
 from typing import List, Any
 import numpy as np
 
+def reshape_bytes_block(block: bytes) -> bytes:
+    nwords = len(block) // 2
+    block2 = b''.join([block[8*i:8*i+4] for i in range(nwords)])
+    return block2
+
+def reshape_bytes_block_size(name_bytes: bytes, size: int=4) -> bytes:
+    if size == 4:
+        name_str = name_bytes.decode('latin1').rstrip()
+    else:
+        name_str = reshape_bytes_block(name_bytes).decode('latin1').rstrip()
+    return name_str
+
+def reshape_bytes_block_strip(name_bytes: bytes, size: int=4) -> str:
+    if size == 4:
+        name_str = name_bytes.decode('latin1').strip()
+    else:
+        name_str = reshape_bytes_block(name_bytes).decode('latin1').strip()
+    return name_str
+
+def mapfmt(fmt: bytes, size: int) -> bytes:
+    if size == 4:
+        return fmt
+    return fmt.replace(b'i', b'q').replace(b'f', b'd')
+
+def mapfmt_str(fmt: str, size: int) -> str:
+    if size == 4:
+        return fmt
+    return fmt.replace('i', 'q').replace('f', 'd')
 
 def build_obj(obj):
     """
@@ -56,7 +84,7 @@ def get_superelement_adaptivity_index(subtitle: str, superelement: str) -> str:
             else:
                 superelement_adaptivity_index = 'SUPERELEMENT %s' % value1
         elif len(split_superelement) == 4:
-            word, value1, comma, value2 = split_superelement
+            word, value1, unused_comma, value2 = split_superelement
             assert word == 'SUPERELEMENT', 'split_superelement=%s' % split_superelement
             value1 = int(value1)
             value2 = int(value2)
