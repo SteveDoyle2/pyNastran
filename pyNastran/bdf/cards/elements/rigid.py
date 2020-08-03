@@ -128,7 +128,7 @@ class RROD(RigidElement):
         cma = components_or_blank(card, 4, 'cma')
         cmb = components_or_blank(card, 5, 'cmb')
         alpha = double_or_blank(card, 6, 'alpha', 0.0)
-        assert len(card) <= 7, 'len(RROD card) = %i\ncard=%s' % (len(card), card)
+        assert len(card) <= 7, f'len(RROD card) = {len(card):d}\ncard={card}'
         return RROD(eid, [ga, gb], cma, cmb, alpha, comment=comment)
 
     @classmethod
@@ -380,7 +380,7 @@ class RBAR(RigidElement):
         cma = components_or_blank(card, 6, 'cma', '')
         cmb = components_or_blank(card, 7, 'cmb', '')
         alpha = double_or_blank(card, 8, 'alpha', 0.0)
-        assert len(card) <= 9, 'len(RBAR card) = %i\ncard=%s' % (len(card), card)
+        assert len(card) <= 9, f'len(RBAR card) = {len(card):d}\ncard={card}'
         return RBAR(eid, [ga, gb], cna, cnb, cma, cmb, alpha, comment=comment)
 
     @classmethod
@@ -549,7 +549,7 @@ class RBAR1(RigidElement):
         gb = integer(card, 3, 'gb')
         cb = components_or_blank(card, 4, 'cb')
         alpha = double_or_blank(card, 5, 'alpha', 0.0)
-        assert len(card) <= 6, 'len(RBAR1 card) = %i\ncard=%s' % (len(card), card)
+        assert len(card) <= 6, f'len(RBAR1 card) = {len(card):d}\ncard={card}'
         return RBAR1(eid, [ga, gb], cb, alpha=alpha, comment=comment)
 
     @classmethod

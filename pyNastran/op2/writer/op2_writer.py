@@ -1,5 +1,6 @@
 #pylint: disable=W0201,C0301,C0111
 from __future__ import annotations
+import datetime
 from collections import defaultdict
 from struct import pack, Struct
 from typing import Set, List, TYPE_CHECKING
@@ -244,7 +245,7 @@ def _write_result_tables(obj: OP2, fop2, fop2_ascii, struct_3i, endian, skips: S
 
     skip_tables = [
         'LAMA', 'BLAMA',
-        'OGPFB1',
+        #'OGPFB1',
         #'OESVM1', 'OESVM1C',
         #'OSTRVM1',
         #'OEF1X',
@@ -330,9 +331,14 @@ def _write_result_tables(obj: OP2, fop2, fop2_ascii, struct_3i, endian, skips: S
     fop2_ascii.close()
     return total_case_count
 
-def write_op2_header(obj, fop2, fop2_ascii, struct_3i, post: int=-1, endian: bytes=b'<'):
+def write_op2_header(obj: OP2, fop2, fop2_ascii, struct_3i,
+                     post: int=-1, endian: bytes=b'<'):
     """writes the op2 header"""
     is_nx = obj.is_nx
+    if obj.date == (1, 1, 2000):  # (7, 24, 2020)
+        today = datetime.datetime.today()
+        obj.date = (today.month, today.day, today.year)
+
     if post == -1:
     #_write_markers(op2, op2_ascii, [3, 0, 7])
         fop2.write(struct_3i.pack(*[4, 3, 4,]))
@@ -343,8 +349,9 @@ def write_op2_header(obj, fop2, fop2_ascii, struct_3i, post: int=-1, endian: byt
                                                     28, tape_code, 28]))
             nastran_version = b'NX8.5   '
         else:
+            day, month, year = obj.date
             fop2.write(pack(endian + b'9i 28s i', *[12,
-                                                    7, 24, 20,
+                                                    day, month, year - 2000,
                                                     12, 4, 7, 4,
                                                     28, tape_code, 28]))
             nastran_version = b'XXXXXXXX'

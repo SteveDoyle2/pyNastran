@@ -130,7 +130,7 @@ class CMASS1(PointMassElement):
         c1 = integer_or_blank(card, 4, 'c1')
         g2 = integer_or_blank(card, 5, 'g2')
         c2 = integer_or_blank(card, 6, 'c2')
-        assert len(card) <= 7, 'len(CMASS1 card) = %i\ncard=%s' % (len(card), card)
+        assert len(card) <= 7, f'len(CMASS1 card) = {len(card):d}\ncard={card}'
         return CMASS1(eid, pid, [g1, g2], c1, c2, comment=comment)
 
     @classmethod
@@ -367,7 +367,7 @@ class CMASS2(PointMassElement):
         c1 = integer_or_blank(card, 4, 'c1')
         g2 = integer_or_blank(card, 5, 'g2')
         c2 = integer_or_blank(card, 6, 'c2')
-        assert len(card) <= 7, 'len(CMASS2 card) = %i\ncard=%s' % (len(card), card)
+        assert len(card) <= 7, f'len(CMASS2 card) = {len(card):d}\ncard={card}'
         return CMASS2(eid, mass, [g1, g2], c1, c2, comment=comment)
 
     @classmethod
@@ -589,7 +589,7 @@ class CMASS3(PointMassElement):
         pid = integer_or_blank(card, 2, 'pid', eid)
         s1 = integer_or_blank(card, 3, 's1')
         s2 = integer_or_blank(card, 4, 's2')
-        assert len(card) <= 5, 'len(CMASS3 card) = %i\ncard=%s' % (len(card), card)
+        assert len(card) <= 5, f'len(CMASS3 card) = {len(card):d}\ncard={card}'
         return CMASS3(eid, pid, [s1, s2], comment=comment)
 
     @classmethod
@@ -731,7 +731,7 @@ class CMASS4(PointMassElement):
         mass = double_or_blank(card, 2 + ioffset, 'mass', 0.)
         s1 = integer(card, 3 + ioffset, 's1')
         s2 = integer_or_blank(card, 4 + ioffset, 's2', 0)
-        assert len(card) <= 9, 'len(CMASS4 card) = %i\ncard=%s' % (len(card), card)
+        assert len(card) <= 9, f'len(CMASS4 card) = {len(card):d}\ncard={card}'
         return CMASS4(eid, mass, [s1, s2], comment=comment)
 
     @classmethod
@@ -982,7 +982,7 @@ class CONM1(PointMassElement):
         m[5, 3] = double_or_blank(card, 22, 'M64', 0.)
         m[5, 4] = double_or_blank(card, 23, 'M65', 0.)
         m[5, 5] = double_or_blank(card, 24, 'M66', 0.)
-        assert len(card) <= 25, 'len(CONM1 card) = %i\ncard=%s' % (len(card), card)
+        assert len(card) <= 25, f'len(CONM1 card) = {len(card):d}\ncard={card}'
         return CONM1(eid, nid, m, cid=cid, comment=comment)
 
     @classmethod
@@ -1331,7 +1331,7 @@ class CONM2(PointMassElement):
             double_or_blank(card, 13, 'I32', 0.0),
             double_or_blank(card, 14, 'I33', 0.0),
         ]
-        assert len(card) <= 15, 'len(CONM2 card) = %i\ncard=%s' % (len(card), card)
+        assert len(card) <= 15, 'len(CONM2 card) = {len(card):d}\ncard={card}'
         return CONM2(eid, nid, mass, cid=cid, X=X, I=I, comment=comment)
 
     @classmethod

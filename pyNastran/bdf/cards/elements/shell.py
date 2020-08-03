@@ -998,7 +998,7 @@ class CPLSTx3(TriShell):
         ]
         if len(card) > 5:
             theta = double_or_blank(card, 6, 'theta', 0.0)
-            assert len(card) <= 14, 'len(CPLSTN3 card) = %i\ncard=%s' % (len(card), card)
+            assert len(card) <= 14, f'len(CPLSTN3 card) = {len(card):d}\ncard={card}'
         else:
             theta = 0.0
         return cls(eid, pid, nids, theta, comment=comment)
@@ -1248,7 +1248,7 @@ class CTRIA6(TriShell):
             T2 = double_or_blank(card, 12, 'T2')
             T3 = double_or_blank(card, 13, 'T3')
             tflag = integer_or_blank(card, 14, 'tflag', 0)
-            assert len(card) <= 15, 'len(CTRIA6 card) = %i\ncard=%s' % (len(card), card)
+            assert len(card) <= 15, f'len(CTRIA6 card) = {len(card):d}\ncard={card}'
         else:
             theta_mcid = 0.0
             zoffset = 0.0
@@ -1606,7 +1606,7 @@ class CTRIAR(TriShell):
         T1 = double_or_blank(card, 11, 'T1')
         T2 = double_or_blank(card, 12, 'T2')
         T3 = double_or_blank(card, 13, 'T3')
-        assert len(card) <= 14, 'len(CTRIAR card) = %i\ncard=%s' % (len(card), card)
+        assert len(card) <= 14, f'len(CTRIAR card) = {len(card):d}\ncard={card}'
         return CTRIAR(eid, pid, nids, theta_mcid=theta_mcid, zoffset=zoffset,
                       tflag=tflag, T1=T1, T2=T2, T3=T3, comment=comment)
 
@@ -2060,7 +2060,7 @@ class CSHEAR(QuadShell):
                 integer_or_blank(card, 4, 'n2'),
                 integer_or_blank(card, 5, 'n3'),
                 integer_or_blank(card, 6, 'n4')]
-        assert len(card) <= 7, 'len(CSHEAR card) = %i\ncard=%s' % (len(card), card)
+        assert len(card) <= 7, f'len(CSHEAR card) = {len(card):d}\ncard={card}'
         return CSHEAR(eid, pid, nids, comment=comment)
 
     @classmethod
@@ -2407,7 +2407,7 @@ class CQUAD4(QuadShell):
             T2 = double_or_blank(card, 12, 'T2')
             T3 = double_or_blank(card, 13, 'T3')
             T4 = double_or_blank(card, 14, 'T4')
-            assert len(card) <= 15, 'len(CQUAD4 card) = %i\ncard=%s' % (len(card), card)
+            assert len(card) <= 15, f'len(CQUAD4 card) = {len(card):d}\ncard={card}'
         else:
             theta_mcid = 0.0
             zoffset = 0.0
@@ -3153,7 +3153,7 @@ class CPLSTS4(CPLSTx4):
             T2 = double_or_blank(card, 12, 'T2')
             T3 = double_or_blank(card, 13, 'T3')
             T4 = double_or_blank(card, 14, 'T3')
-            assert len(card) <= 14, 'len(CPLSTS4 card) = %i\ncard=%s' % (len(card), card)
+            assert len(card) <= 14, f'len(CPLSTS4 card) = {len(card):d}\ncard={card}'
         else:
             theta = 0.0
             tflag = 0
@@ -3936,7 +3936,7 @@ class CQUADR(QuadShell):
         T2 = double_or_blank(card, 12, 'T2')
         T3 = double_or_blank(card, 13, 'T3')
         T4 = double_or_blank(card, 14, 'T4')
-        assert len(card) <= 15, 'len(CQUADR card) = %i\ncard=%s' % (len(card), card)
+        assert len(card) <= 15, f'len(CQUADR card) = {len(card):d}\ncard={card}'
         return CQUADR(eid, pid, nids, theta_mcid=theta_mcid, zoffset=zoffset,
                       tflag=tflag, T1=T1, T2=T2, T3=T3, T4=T4, comment=comment)
 
@@ -4196,7 +4196,7 @@ class CPLSTS3(TriShell):
             T1 = double_or_blank(card, 11, 'T1')
             T2 = double_or_blank(card, 12, 'T2')
             T3 = double_or_blank(card, 13, 'T3')
-            assert len(card) <= 14, 'len(CPLSTS3 card) = %i\ncard=%s' % (len(card), card)
+            assert len(card) <= 14, f'len(CPLSTS3 card) = {len(card):d}\ncard={card}'
         else:
             theta = 0.0
             tflag = 0
@@ -4430,7 +4430,7 @@ class CQUAD(QuadShell):
                 integer_or_blank(card, 10, 'n8'),
                 integer_or_blank(card, 11, 'n9'),]
         theta_mcid = integer_double_or_blank(card, 12, 'theta_mcid', 0.)
-        assert len(card) <= 13, 'len(CQUAD card) = %i\ncard=%s' % (len(card), card)
+        assert len(card) <= 13, f'len(CQUAD card) = {len(card):d}\ncard={card}'
         return CQUAD(eid, pid, nids, theta_mcid=theta_mcid, comment=comment)
 
     @classmethod
@@ -4698,7 +4698,7 @@ class CQUAD8(QuadShell):
             theta_mcid = integer_double_or_blank(card, 15, 'theta_mcid', 0.0)
             zoffset = double_or_blank(card, 16, 'zoffset', 0.0)
             tflag = integer_or_blank(card, 17, 'tflag', 0)
-            assert len(card) <= 18, 'len(CQUAD8 card) = %i\ncard=%s' % (len(card), card)
+            assert len(card) <= 18, f'len(CQUAD8 card) = {len(card):d}\ncard={card}'
         else:
             theta_mcid = 0.0
             zoffset = 0.0
@@ -4975,7 +4975,7 @@ class SNORM(BaseCard):
             double_or_blank(card, 5, 'n3', default=0.0),
         ]
 
-        assert len(card) <= 6, 'len(SNORM card) = %i\ncard=%s' % (len(card), card)
+        assert len(card) <= 6, f'len(SNORM card) = {len(card):d}\ncard={card}'
         return SNORM(nid, normal, cid=cid, comment=comment)
 
     def cross_reference(self, model: BDF) -> None:

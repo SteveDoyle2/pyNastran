@@ -590,19 +590,28 @@ class ScalarObject(BaseScalarObject):
         assert len(self.get_headers()) == self.data.shape[-1], 'headers=%s; n=%s\ndata.headers=%s' % (self.get_headers(), len(self.get_headers()), self.data.shape[-1])
         return column_names, column_values
 
-    def _write_table_header(self, op2_file, fascii, date):
+    def _write_table_header(self, op2_file, fascii,
+                            date: Tuple[int, int, int],
+                            include_date: bool=True,
+                            subtable_name_default: bytes=b'OUG1    ') -> None:
         try:
             subtable_name = self.subtable_name
         except AttributeError:
-            subtable_name = b'OUG1    '
+            subtable_name = subtable_name_default
             #print('attrs =', self.object_attributes())
             #raise
             pass
-        _write_table_header(op2_file, fascii, date, self.table_name, subtable_name)
+        _write_table_header(op2_file, fascii, date, self.table_name, subtable_name,
+                            include_date=include_date)
 
-def _write_table_header(op2_file, fascii, date, table_name, subtable_name):
+def _write_table_header(op2_file, fascii,
+                        date: Tuple[int, int, int],
+                        table_name: bytes,
+                        subtable_name: bytes,
+                        include_date: bool=True) -> None:
+    endian = b'<'
     table_name = '%-8s' % table_name # 'BOUGV1  '
-    fascii.write('%s._write_table_header\n' % table_name)
+    fascii.write(f'{table_name}._write_table_header\n')
     #get_nmarkers- [4, 0, 4]
     #marker = [4, 2, 4]
     #table_header = [8, 'BOUGV1  ', 8]
@@ -619,20 +628,24 @@ def _write_table_header(op2_file, fascii, date, table_name, subtable_name):
     #data_a = []
     #data_b = [4, -1, 4,]
     data_c = [4, 7, 4,]
+    fmt_header = endian + b'6i'
     data = data_a + data_c
-    blank = ' ' * len(table_name)
-    fascii.write('%s header1a_i = %s\n' % (table_name, data_a))
-    #fascii.write('%s            = %s\n' % (blank, data_b))
-    fascii.write('%s            = %s\n' % (blank, data_c))
-    op2_file.write(pack('<6i', *data))
+    op2_file.write(pack(fmt_header, *data))
 
-    table1_fmt = b'<9i'
+    #-----------------
+    table1_fmt = endian + b'9i'
     table1 = [
         28,
         102, 0, 0, 0, 512, 0, 0,
         28,
     ]
-    fascii.write('%s header1b = %s\n' % (table_name, table1))
+
+    blank = ' ' * len(table_name)
+    fascii.write(f'{table_name} header1a_i = {data_a}\n')
+    #fascii.write(f'{blank}            = {data_b}\n')
+    fascii.write(f'{blank}            = {data_c}\n')
+
+    fascii.write(f'{table_name} header1b = {table1}\n')
     op2_file.write(pack(table1_fmt, *table1))
 
     #recordi = [subtable_name, month, day, year, 0, 1]
@@ -641,28 +654,39 @@ def _write_table_header(op2_file, fascii, date, table_name, subtable_name):
         4, -2, 4,
         4, 1, 4,
         4, 0, 4,
-        4, 7, 4,
     ]
     fascii.write('%s header2a = %s\n' % (table_name, data))
-    op2_file.write(pack(b'<12i', *data))
+    op2_file.write(pack(endian + b'9i', *data))
 
     month, day, year = date
-    if subtable_name:
+    dyear = year - 2000
+    if subtable_name and include_date:
         table2 = [
+            4, 7, 4,
             28,  # 4i -> 13i
             # subtable,todays date 3/6/2014, 0, 1  ( year=year-2000)
-            b'%-8s' % subtable_name, month, day, year - 2000, 0, 1,
+            b'%-8s' % subtable_name, month, day, dyear, 0, 1,
             28,
         ]
-        table2_format = 'i8s6i'
-    else:
+        table2_format = '4i 8s 6i'
+    elif subtable_name:
         table2 = [
+            4, 2, 4,
+            8,
+            b'%-8s' % subtable_name,
+            8,
+        ]
+        table2_format = '4i 8s i'
+    else:
+        assert include_date is True, include_date
+        table2 = [
+            4, 7, 4,
             28,  # 4i -> 13i
             # todays date 3/6/2014, 0, 1  ( year=year-2000)
-            month, day, year - 2000, 0, 1,
+            month, day, dyear, 0, 1,
             28,
         ]
-        table2_format = 'i6i'
+        table2_format = '4i 6i'
 
     fascii.write('%s header2b = %s\n' % (table_name, table2))
     op2_file.write(pack(table2_format, *table2))

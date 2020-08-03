@@ -120,7 +120,7 @@ class EIGB(Method):
         else:
             G = integer_or_blank(card, 10, 'G')
             C = components_or_blank(card, 11, 'C')
-        assert len(card) <= 12, 'len(EIGB card) = %i\ncard=%s' % (len(card), card)
+        assert len(card) <= 12, f'len(EIGB card) = {len(card):d}\ncard={card}'
         return EIGB(sid, method, L1, L2, nep, ndp, ndn, norm, G, C,
                     comment=comment)
 
@@ -623,7 +623,7 @@ class EIGP(Method):
         alpha2 = double(card, 5, 'alpha2')
         omega2 = double(card, 6, 'omega2')
         m2 = integer(card, 7, 'm2')
-        assert len(card) == 8, 'len(EIGP card) = %i\ncard=%s' % (len(card), card)
+        assert len(card) == 8, f'len(EIGP card) = {len(card):d}\ncard={card}'
         return EIGP(sid, alpha1, omega1, m1, alpha2, omega2, m2, comment=comment)
 
     def cross_reference(self, model: BDF) -> None:
@@ -784,7 +784,7 @@ class EIGR(Method):
         else:
             G = blank(card, 10, 'G')
             C = blank(card, 11, 'C')
-        assert len(card) <= 12, 'len(EIGR card) = %i\ncard=%s' % (len(card), card)
+        assert len(card) <= 12, f'len(EIGR card) = {len(card):d}\ncard={card}'
         return EIGR(sid, method, f1, f2, ne, nd, norm, G, C, comment=comment)
 
     def cross_reference(self, model: BDF) -> None:
@@ -962,8 +962,8 @@ class EIGRL(Method):
         #else:
         norm = string_or_blank(card, 8, 'norm')
 
-        #assert len(card) <= 9, 'len(EIGRL card) = %i\ncard=%s' % (len(card), card)
-        assert len(card) <= 10, 'len(EIGRL card) = %i\ncard=%s' % (len(card), card)
+        #assert len(card) <= 9, f'len(EIGRL card) = {len(card):d}\ncard={card}'
+        assert len(card) <= 10, f'len(EIGRL card) = {len(card):d}\ncard={card}'
 
         #msg = 'norm=%s sol=%s' % (self.norm, sol)
         #assert self.norm in ['MASS', 'MAX'],msg

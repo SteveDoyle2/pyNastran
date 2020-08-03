@@ -469,7 +469,7 @@ class ACOORD(Coord):  # not done
         origin = [origin_x, origin_y, origin_z]
         delta = double(card, 5, 'delta')
         theta = double(card, 6, 'theta')
-        assert len(card) <= 7, 'len(ACOORD card) = %i\ncard=%s' % (len(card), card)
+        assert len(card) <= 7, f'len(ACOORD card) = {len(card):d}\ncard={card}'
         return ACOORD(cid, origin, delta, theta, comment=comment)
 
     def setup(self):
@@ -637,7 +637,7 @@ class AESURFZ(BaseCard):
         panlst = integer(card, 4, 'PANLST/SETK') # PANLST1, PANLST2, PANLST3
         setg = integer(card, 5, 'SETG') # SET1, SETADD
         actuator_tf = integer_or_blank(card, 6, 'ACTID') # ACTU card
-        assert len(card) <= 7, 'len(AESURFZ card) = %i\ncard=%s' % (len(card), card)
+        assert len(card) <= 7, f'len(AESURFZ card) = {len(card):d}\ncard={card}'
         assert surface_type in ['SYM', 'ANTISYM', 'ASYM']
         return AESURFZ(label, surface_type, cid, panlst, setg, actuator_tf, comment=comment)
 
@@ -932,7 +932,7 @@ class AEROZ(Aero):
         zref = double_or_blank(card, 11, 'zref', 0.)
         xyz_ref = [xref, yref, zref]
 
-        assert len(card) <= 12, 'len(AEROZ card) = %i\ncard=%s' % (len(card), card)
+        assert len(card) <= 12, f'len(AEROZ card) = {len(card):d}\ncard={card}'
 
         # faking data to not change gui
         rcsid = 0
@@ -1227,7 +1227,7 @@ class PANLST1(Spline):
         macro_id = integer(card, 2, 'macro_id')
         box1 = integer(card, 3, 'box1')
         box2 = integer(card, 4, 'box2')
-        assert len(card) == 5, 'len(PANLST1 card) = %i\ncard=%s' % (len(card), card)
+        assert len(card) == 5, f'len(PANLST1 card) = {len(card):d}\ncard={card}'
         return PANLST1(eid, macro_id, box1, box2, comment=comment)
 
     def cross_reference(self, model: BDF) -> None:
@@ -1455,7 +1455,7 @@ class PAFOIL7(BaseCard):
         i_camber_tip = integer(card, 7, 'i_camber_tip')
         le_radius_tip = double_or_blank(card, 8, 'le_radius_tip')
 
-        assert len(card) <= 9, 'len(PAFOIL7 card) = %i\ncard=%s' % (len(card), card)
+        assert len(card) <= 9, f'len(PAFOIL7 card) = {len(card):d}\ncard={card}'
         return PAFOIL7(pid, i_axial,
                        i_thickness_root, i_camber_root, le_radius_root,
                        i_thickness_tip, i_camber_tip, le_radius_tip,
@@ -1665,7 +1665,7 @@ class BODY7(BaseCard):
         """
         eid = integer(card, 1, 'eid')
         label = string(card, 2, 'label')
-        assert len(card) >= 3, 'len(BODY7 card) = %i\ncard=%s' % (len(card), card)
+        assert len(card) >= 3, f'len(BODY7 card) = {len(card):d}\ncard={card}'
         pid = integer_or_blank(card, 3, 'pid')
         acoord = integer_or_blank(card, 4, 'acoord', 0)
         nseg = integer_or_blank(card, 5, 'nseg')
@@ -1674,7 +1674,7 @@ class BODY7(BaseCard):
         for i, ifield in enumerate(range(6, len(card))):
             segmesh = integer(card, ifield, 'idmesh_%i' % (i+1))
             idmeshes.append(segmesh)
-        assert len(card) <= 13, 'len(BODY7 card) = %i\ncard=%s' % (len(card), card)
+        assert len(card) <= 13, f'len(BODY7 card) = {len(card):d}\ncard={card}'
         return BODY7(eid, label, pid, nseg, idmeshes, acoord=acoord, comment=comment)
 
     def ACoord(self):
@@ -2235,7 +2235,7 @@ class SEGMESH(BaseCard):
         cambers = []
         idys = []
         idzs = []
-        assert len(card) >= 9, 'len(SEGMESH card) = %i\ncard=%s' % (len(card), card)
+        assert len(card) >= 9, f'len(SEGMESH card) = {len(card):d}\ncard={card}'
 
         for counter, ifield in enumerate(range(9, len(card), 8)):
             itype = integer(card, ifield, 'itype%i' % (counter+1))
@@ -2577,7 +2577,7 @@ class CAERO7(BaseCard):
         unused_attach_tip = integer_or_blank(card, 22, 'attach_tip')
         unused_achord_tip = integer_or_blank(card, 23, 'achord_tip')
 
-        assert len(card) <= 23, 'len(CAERO7 card) = %i\ncard=%s' % (len(card), card)
+        assert len(card) <= 23, f'len(CAERO7 card) = {len(card):d}\ncard={card}'
         return CAERO7(eid, name, p1, x12, p4, x43,
                       cp=cp, nspan=nspan, nchord=nchord, lspan=lspan,
                       p_airfoil=p_airfoil, ztaic=ztaic,
@@ -3113,7 +3113,7 @@ class TRIM_ZONA(BaseCard):
             uxs.append(ux)
             i += 2
             n += 1
-        assert len(card) >= 25, 'len(TRIM card) = %i\ncard=%s' % (len(card), card)
+        assert len(card) >= 25, f'len(TRIM card) = {len(card):d}\ncard={card}'
         return TRIM_ZONA(sid, mkaeroz, qinf, cg, true_g, nxyz, pqr, loadset,
                          labels, uxs, comment=comment)
 
@@ -3285,7 +3285,7 @@ class TRIMLNK(BaseCard):
             coeffs.append(coeff)
             var_ids.append(var_id)
             icoeff += 1
-        assert len(card) >= 5, 'len(TRIMLNK card) = %i\ncard=%s' % (len(card), card)
+        assert len(card) >= 5, f'len(TRIMLNK card) = {len(card):d}\ncard={card}'
         return TRIMLNK(link_id, sym, coeffs, var_ids, comment=comment)
 
     def cross_reference(self, model: BDF) -> None:
@@ -3575,7 +3575,7 @@ class FLUTTER_ZONA(Spline):
         mlist = integer(card, 6, 'mlist')
         conmlst = integer(card, 7, 'conmlst')
         nkstep = integer_or_blank(card, 8, 'nkstep', 25)
-        assert len(card) <= 9, 'len(FLUTTER card) = %i\ncard=%s' % (len(card), card)
+        assert len(card) <= 9, f'len(FLUTTER card) = {len(card):d}\ncard={card}'
         return FLUTTER_ZONA(sid, sym, fix, nmode, tabdmp, mlist, conmlst, nkstep,
                             comment=comment)
 

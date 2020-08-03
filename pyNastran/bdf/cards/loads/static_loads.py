@@ -422,7 +422,7 @@ class GRAV(BaseCard):
                    double_or_blank(card, 5, 'N2', 0.0),
                    double_or_blank(card, 6, 'N3', 0.0)])
         mb = integer_or_blank(card, 7, 'mb', 0)
-        assert len(card) <= 8, 'len(GRAV card) = %i\ncard=%s' % (len(card), card)
+        assert len(card) <= 8, f'len(GRAV card) = {len(card):d}\ncard={card}'
         return GRAV(sid, scale, N, cid=cid, mb=mb, comment=comment)
 
     @classmethod
@@ -2033,7 +2033,7 @@ class PLOAD(Load):
         n4 = integer_or_blank(card, 6, 'n4', 0)
         if n4:
             nodes.append(n4)
-        assert len(card) <= 7, 'len(PLOAD card) = %i\ncard=%s' % (len(card), card)
+        assert len(card) <= 7, f'len(PLOAD card) = {len(card):d}\ncard={card}'
         return PLOAD(sid, pressure, nodes, comment=comment)
 
     @classmethod
@@ -2215,7 +2215,7 @@ class PLOAD1(Load):
         p1 = double(card, 6, 'p1')
         x2 = double_or_blank(card, 7, 'x2', x1)
         p2 = double_or_blank(card, 8, 'p2', p1)
-        assert len(card) <= 9, 'len(PLOAD1 card) = %i\ncard=%s' % (len(card), card)
+        assert len(card) <= 9, f'len(PLOAD1 card) = {len(card):d}\ncard={card}'
         return PLOAD1(sid, eid, load_type, scale, x1, p1, x2, p2, comment=comment)
 
     @classmethod
@@ -2386,7 +2386,7 @@ class PLOAD2(Load):
             e1 = integer(card, 3, 'Element1')
             e2 = integer(card, 5, 'Element1')
             eids = [i for i in range(e1, e2 + 1)]
-            assert len(card) == 6, 'len(PLOAD2 card) = %i\ncard=%s' % (len(card), card)
+            assert len(card) == 6, f'len(PLOAD2 card) = {len(card):d}\ncard={card}'
         else:
             eids = fields(integer, card, 'eid', i=3, j=len(card))
         return PLOAD2(sid, pressure, eids, comment=comment)
@@ -2731,7 +2731,7 @@ class PLOAD4(Load):
 
         surf_or_line = string_or_blank(card, 13, 'sorl', 'SURF')
         line_load_dir = string_or_blank(card, 14, 'ldir', 'NORM')
-        assert len(card) <= 15, 'len(PLOAD4 card) = %i\ncard=%s' % (len(card), card)
+        assert len(card) <= 15, f'len(PLOAD4 card) = {len(card):d}\ncard={card}'
         return PLOAD4(sid, eids, pressures, g1, g34, cid, nvector,
                       surf_or_line, line_load_dir, comment=comment)
 

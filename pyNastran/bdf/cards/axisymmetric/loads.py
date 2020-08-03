@@ -105,7 +105,7 @@ class FORCEAX(BaseCard):
             double_or_blank(card, 6, 'Ft', 0.),
             double_or_blank(card, 7, 'Fz', 0.),
         ]
-        assert len(card) <= 8, 'len(FORCEAX card) = %i\ncard=%s' % (len(card), card)
+        assert len(card) <= 8, f'len(FORCEAX card) = {len(card):d}\ncard={card}'
         return FORCEAX(sid, ring_id, hid, scale, f_rtz, comment=comment)
 
     def cross_reference(self, model: BDF) -> None:
@@ -262,7 +262,7 @@ class PLOADX1(BaseCard):
         ga = integer(card, 5, 'ga')
         gb = integer(card, 6, 'gb')
         theta = double_or_blank(card, 7, 'theta', 0.)
-        assert len(card) <= 8, 'len(PLOADX1 card) = %i\ncard=%s' % (len(card), card)
+        assert len(card) <= 8, f'len(PLOADX1 card) = {len(card):d}\ncard={card}'
         nids = [ga, gb]
         return PLOADX1(sid, eid, pa, nids, pb=pb, theta=theta, comment=comment)
 
@@ -417,7 +417,7 @@ class PRESAX(BaseCard):
         rid2 = integer(card, 4, 'rid2')
         phi1 = double_or_blank(card, 5, 'phi1', 0.)
         phi2 = double_or_blank(card, 6, 'phi2', 360.)
-        assert len(card) == 7, 'len(PRESAX card) = %i\ncard=%s' % (len(card), card)
+        assert len(card) == 7, f'len(PRESAX card) = {len(card):d}\ncard={card}'
         return PRESAX(sid, pressure, rid1, rid2, phi1, phi2, comment=comment)
 
     def get_loads(self):

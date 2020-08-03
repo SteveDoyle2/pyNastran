@@ -203,7 +203,7 @@ class AEROS(Aero):
         sref = double(card, 5, 'Sref')
         sym_xz = integer_or_blank(card, 6, 'sym_xz', 0)
         sym_xy = integer_or_blank(card, 7, 'sym_xy', 0)
-        assert len(card) <= 8, 'len(AEROS card) = %i\ncard=%s' % (len(card), card)
+        assert len(card) <= 8, f'len(AEROS card) = {len(card):d}\ncard={card}'
         return AEROS(cref, bref, sref, acsid, rcsid, sym_xz, sym_xy,
                      comment=comment)
 
@@ -328,7 +328,7 @@ class AESTAT(BaseCard):
         """
         aestat_id = integer(card, 1, 'ID')
         label = string(card, 2, 'label')
-        assert len(card) <= 3, 'len(AESTAT card) = %i\ncard=%s' % (len(card), card)
+        assert len(card) <= 3, f'len(AESTAT card) = {len(card):d}\ncard={card}'
         return AESTAT(aestat_id, label, comment=comment)
 
     @classmethod
@@ -452,7 +452,7 @@ class CSSCHD(Aero):
         lalpha = integer_or_blank(card, 3, 'lAlpha')  # AEFACT
         lmach = integer_or_blank(card, 4, 'lMach')    # AEFACT
         lschd = integer(card, 5, 'lSchd')             # AEFACT
-        assert len(card) <= 6, 'len(CSSCHD card) = %i\ncard=%s' % (len(card), card)
+        assert len(card) <= 6, f'len(CSSCHD card) = {len(card):d}\ncard={card}'
         return CSSCHD(sid, aesid, lalpha, lmach, lschd, comment=comment)
 
     @classmethod

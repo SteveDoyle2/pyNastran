@@ -1,4 +1,6 @@
 import sys
+import inspect
+from struct import Struct, pack
 from typing import List
 
 import numpy as np
@@ -23,8 +25,6 @@ class GridPointForces(BaseElement):
         self.itotal = 0
 
     def _write_table_3(self, op2, op2_ascii, new_result, itable, itime): #, itable=-3, itime=0):
-        import inspect
-        from struct import pack
         frame = inspect.currentframe()
         call_frame = inspect.getouterframes(frame, 2)
         op2_ascii.write('%s.write_table_3: %s\n' % (self.__class__.__name__, call_frame[1][3]))
@@ -1052,14 +1052,13 @@ class RealGridPointForcesArray(GridPointForces):
     def write_op2(self, op2, op2_ascii, itable, new_result,
                   date, is_mag_phase=False, endian='>'):
         """writes an OP2"""
-        import inspect
-        from struct import Struct, pack
         frame = inspect.currentframe()
         call_frame = inspect.getouterframes(frame, 2)
         op2_ascii.write(f'{self.__class__.__name__}.write_op2: {call_frame[1][3]}\n')
 
         if itable == -1:
-            self._write_table_header(op2, op2_ascii, date)
+            self._write_table_header(op2, op2_ascii, date, subtable_name_default=b'OGPFB1  ',
+                                     include_date=False)
             itable = -3
 
         #if isinstance(self.nonlinear_factor, float):
@@ -1127,7 +1126,7 @@ class RealGridPointForcesArray(GridPointForces):
             op2_ascii.write(f'r4 [4, {4 * ntotal:d}, 4]\n')
 
             #zero = ' '
-            ntotal = self._ntotals[itime]
+            ntotali = self._ntotals[itime]
             #print(self._ntotals)
             assert len(eids) == len(nids)
             assert len(enames) == len(nids), 'enames=%s nnids=%s' % (len(enames), len(nids))
@@ -1136,10 +1135,10 @@ class RealGridPointForcesArray(GridPointForces):
             assert len(t3) == len(nids)
             assert len(r1) == len(nids)
             assert len(r2) == len(nids)
-            assert len(nids) <= ntotal, 'len(nids)=%s ntotal=%s' % (len(nids), ntotal)
+            assert len(nids) <= ntotali, 'len(nids)=%s ntotali=%s' % (len(nids), ntotali)
 
             for (i, nid, eid, ename, t1i, t2i, t3i, r1i, r2i, r3i) in zip(
-                 range(ntotal), nids_device, eids, enames, t1, t2, t3, r1, r2, r3):
+                 range(ntotali), nids_device, eids, enames, t1, t2, t3, r1, r2, r3):
 
                 #print(nid, eid, ename, t1i)
                 data = [nid, eid, ename.encode('ascii'), t1i, t2i, t3i, r1i, r2i, r3i]

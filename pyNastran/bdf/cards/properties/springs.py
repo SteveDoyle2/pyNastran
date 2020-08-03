@@ -236,7 +236,7 @@ class PELAST(SpringProperty):
         tkid = integer_or_blank(card, 2, 'tkid', 0)
         tgeid = integer_or_blank(card, 3, 'tgeid', 0)
         tknid = integer_or_blank(card, 4, 'tknid', 0)
-        assert len(card) <= 5, 'len(PELAST card) = %i\ncard=%s' % (len(card), card)
+        assert len(card) <= 5, f'len(PELAST card) = {len(card):d}\ncard={card}'
         return PELAST(pid, tkid, tgeid, tknid, comment=comment)
 
     @classmethod

@@ -643,7 +643,7 @@ class GRDSET(BaseCard):
 
         ps = str(integer_or_blank(card, 7, 'ps', ''))
         seid = integer_or_blank(card, 8, 'seid', 0)
-        assert len(card) <= 9, 'len(GRDSET card) = %i\ncard=%s' % (len(card), card)
+        assert len(card) <= 9, f'len(GRDSET card) = {len(card):d}\ncard={card}'
         return GRDSET(cp, cd, ps, seid, comment=comment)
 
     def cross_reference(self, model: BDF) -> None:
@@ -1192,7 +1192,7 @@ class GRID(BaseCard):
 
             #: Superelement ID
             seid = integer_or_blank(card, 8, 'seid', 0)
-            assert len(card) <= 9, 'len(GRID card) = %i\ncard=%s' % (len(card), card)
+            assert len(card) <= 9, f'len(GRID card) = {len(card):d}\ncard={card}'
         else:
             cd = 0
             ps = ''
@@ -1706,7 +1706,7 @@ class POINT(BaseCard):
             double_or_blank(card, 4, 'x2', 0.),
             double_or_blank(card, 5, 'x3', 0.)], dtype='float64')
 
-        assert len(card) <= 9, 'len(POINT card) = %i\ncard=%s' % (len(card), card)
+        assert len(card) <= 9, f'len(POINT card) = {len(card):d}\ncard={card}'
         return POINT(nid, xyz, cp=cp, comment=comment)
 
     @classmethod

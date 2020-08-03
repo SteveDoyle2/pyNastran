@@ -105,7 +105,7 @@ class PLSOLID(Property):
         pid = integer(card, 1, 'pid')
         mid = integer(card, 2, 'mid')
         stress_strain = string_or_blank(card, 3, 'stress_strain', 'GRID')
-        assert len(card) <= 4, 'len(PLSOLID card) = %i\ncard=%s' % (len(card), card)
+        assert len(card) <= 4, f'len(PLSOLID card) = {len(card):d}\ncard={card}'
         return PLSOLID(pid, mid, stress_strain, comment=comment)
 
     @classmethod
@@ -259,7 +259,7 @@ class PCOMPS(Property):
             souts.append(sout)
             iply += 1
             ifield += 8
-        assert len(card) <= ifield, 'len(PCOMPS card) = %i\ncard=%s' % (len(card), card)
+        assert len(card) <= ifield, f'len(PCOMPS card) = {len(card):d}\ncard={card}'
         return PCOMPS(pid, global_ply_ids, mids, thicknesses, thetas,
                       cordm, psdir, sb, nb, tref, ge,
                       failure_theories, interlaminar_failure_theories, souts,
@@ -543,7 +543,7 @@ class PSOLID(Property):
         stress = integer_string_or_blank(card, 5, 'stress')
         isop = integer_string_or_blank(card, 6, 'isop')
         fctn = string_or_blank(card, 7, 'fctn', 'SMECH')
-        assert len(card) <= 8, 'len(PSOLID card) = %i\ncard=%s' % (len(card), card)
+        assert len(card) <= 8, f'len(PSOLID card) = {len(card):d}\ncard={card}'
         return cls(pid, mid, cordm, integ, stress, isop,
                    fctn, comment=comment)
 

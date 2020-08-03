@@ -179,7 +179,7 @@ class CHBDYE(ThermalElement):
         iview_back = integer_or_blank(card, 5, 'iview_back', 0)
         rad_mid_front = integer_or_blank(card, 6, 'rad_mid_front', 0)
         rad_mid_back = integer_or_blank(card, 7, 'rad_mid_back', 0)
-        assert len(card) <= 8, 'len(CHBDYE card) = %i\ncard=%s' % (len(card), card)
+        assert len(card) <= 8, f'len(CHBDYE card) = {len(card):d}\ncard={card}'
         return CHBDYE(eid, eid2, side, iview_front, iview_back,
                       rad_mid_front, rad_mid_back, comment=comment)
 
@@ -690,7 +690,7 @@ class CHBDYP(ThermalElement):
         e1 = double_or_blank(card, 13, 'e1')
         e2 = double_or_blank(card, 14, 'e2')
         e3 = double_or_blank(card, 15, 'e3')
-        assert len(card) <= 16, 'len(CHBDYP card) = %i\ncard=%s' % (len(card), card)
+        assert len(card) <= 16, f'len(CHBDYP card) = {len(card):d}\ncard={card}'
         return CHBDYP(eid, pid, surface_type, g1, g2, g0=g0, gmid=gmid, ce=ce,
                       iview_front=iview_front, iview_back=iview_back,
                       rad_mid_front=rad_mid_front, rad_mid_back=rad_mid_back,
@@ -1008,7 +1008,7 @@ class PCONV(ThermalProperty):
         e1 = double_or_blank(card, 12, 'e1')
         e2 = double_or_blank(card, 13, 'e2')
         e3 = double_or_blank(card, 14, 'e3')
-        assert len(card) <= 15, 'len(PCONV card) = %i\ncard=%s' % (len(card), card)
+        assert len(card) <= 15, f'len(PCONV card) = {len(card):d}\ncard={card}'
         return PCONV(pconid, mid=mid,
                      form=form, expf=expf, ftype=ftype,
                      tid=tid, chlen=chlen, gidin=gidin,
@@ -1196,7 +1196,7 @@ class PCONVM(ThermalProperty):
         expr = double_or_blank(card, 6, 'expr', 0.0)
         exppi = double_or_blank(card, 7, 'exppi', 0.0)
         exppo = double_or_blank(card, 8, 'exppo', 0.0)
-        assert len(card) <= 9, 'len(PCONVM card) = %i\ncard=%s' % (len(card), card)
+        assert len(card) <= 9, f'len(PCONVM card) = {len(card):d}\ncard={card}'
         return PCONVM(pconid, mid, coef, form=form, flag=flag,
                       expr=expr, exppi=exppi, exppo=exppo, comment=comment)
 
@@ -1319,7 +1319,7 @@ class PHBDY(ThermalProperty):
         af = double_or_blank(card, 2, 'af')
         d1 = double_or_blank(card, 3, 'd1')
         d2 = double_or_blank(card, 4, 'd2', d1)
-        assert len(card) <= 5, 'len(PHBDY card) = %i\ncard=%s' % (len(card), card)
+        assert len(card) <= 5, f'len(PHBDY card) = {len(card):d}\ncard={card}'
         return PHBDY(pid, af, d1, d2, comment=comment)
 
     @classmethod
@@ -1473,7 +1473,7 @@ class CONV(ThermalBC):
         ta7 = integer_or_blank(card, 11, 'ta7', ta1)
         ta8 = integer_or_blank(card, 12, 'ta8', ta1)
         ta = [ta1, ta2, ta3, ta4, ta5, ta6, ta7, ta8]
-        assert len(card) <= 13, 'len(CONV card) = %i\ncard=%s' % (len(card), card)
+        assert len(card) <= 13, f'len(CONV card) = {len(card):d}\ncard={card}'
         return CONV(eid, pconid, ta, film_node, cntrlnd, comment=comment)
 
     @classmethod
@@ -1734,7 +1734,7 @@ class CONVM(ThermalBC):
         ta1 = integer(card, 5, 'ta1')
         ta2 = integer_or_blank(card, 6, 'ta2', ta1)
         mdot = double_or_blank(card, 7, 'mdot', 1.0)
-        assert len(card) <= 8, 'len(CONVM card) = %i\ncard=%s' % (len(card), card)
+        assert len(card) <= 8, f'len(CONVMcard) = {len(card):d}\ncard={card}')
         return CONVM(eid, pconvm, ta1, film_node=film_node, cntmdot=cntmdot,
                      ta2=ta2, mdot=mdot, comment=comment)
 

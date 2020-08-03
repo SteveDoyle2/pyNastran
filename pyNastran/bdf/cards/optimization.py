@@ -614,7 +614,7 @@ class DCONSTR(OptConstraint):
         uid = integer_double_or_blank(card, 4, 'uid', 1e20)
         lowfq = double_or_blank(card, 5, 'lowfq', 0.0)
         highfq = double_or_blank(card, 6, 'highfq', 1e20)
-        assert len(card) <= 7, 'len(DCONSTR card) = %i\ncard=%s' % (len(card), card)
+        assert len(card) <= 7, f'len(DCONSTR card) = {len(card):d}\ncard={card}'
         return DCONSTR(oid, dresp_id, lid, uid, lowfq, highfq, comment=comment)
 
     @classmethod
@@ -827,7 +827,7 @@ class DESVAR(OptConstraint):
         xub = double_or_blank(card, 5, 'xub', 1e20)
         delx = double_or_blank(card, 6, 'delx')
         ddval = integer_or_blank(card, 7, 'ddval')
-        assert len(card) <= 8, 'len(DESVAR card) = %i\ncard=%s' % (len(card), card)
+        assert len(card) <= 8, f'len(DESVAR card) = {len(card):d}\ncard={card}'
         return DESVAR(desvar_id, label, xinit, xlb=xlb, xub=xub,
                       delx=delx, ddval=ddval, comment=comment)
 
@@ -957,13 +957,13 @@ class TOPVAR(BaseCard):
                     'cyclic_symmetry' : cyclic_symmetry,
                     'num_cyclic_symmetries' : num_cyclic_symmetries,
                 }
-                assert len(card) <= 16, 'len(TOPVAR card) = %i\ncard=%s' % (len(card), card)
+                assert len(card) <= 16, f'len(TOPVAR card) = {len(card):d}\ncard={card}'
             elif name == 'STRESS':
                 allowable = double(card, 10, 'allowable?')
                 options[name] = {'allowable' : allowable,}
-                assert len(card) <= 11, 'len(TOPVAR card) = %i\ncard=%s' % (len(card), card)
+                assert len(card) <= 11, f'len(TOPVAR card) = {len(card):d}\ncard={card}'
             else:
-                assert len(card) <= 9, 'len(TOPVAR card) = %i\ncard=%s' % (len(card), card)
+                assert len(card) <= 9, f'len(TOPVAR card) = {len(card):d}\ncard={card}'
         return TOPVAR(opt_id, label, prop_type, xinit, pid, xlb=xlb,
                       delxv=delxv, power=power, options=options, comment=comment)
 
@@ -3344,7 +3344,7 @@ class DSCREEN(OptConstraint):
         rtype = string(card, 1, 'rtype')
         trs = double_or_blank(card, 2, 'trs', -0.5)
         nstr = integer_or_blank(card, 3, 'nstr', 20)
-        assert len(card) <= 4, 'len(DSCREEN card) = %i\ncard=%s' % (len(card), card)
+        assert len(card) <= 4, f'len(DSCREEN card) = {len(card):d}\ncard={card}'
         return DSCREEN(rtype, trs=trs, nstr=nstr, comment=comment)
 
     def raw_fields(self):
