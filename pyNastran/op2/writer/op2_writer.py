@@ -277,7 +277,7 @@ def _write_result_tables(obj: OP2, fop2, fop2_ascii, struct_3i, endian, skips: S
                 isubcase = ''
                 if hasattr(result, 'isubcase'): # no for eigenvalues
                     isubcase = result.isubcase
-                    print(f' {result.__class__.__name__} - isubcase={isubcase}')
+                    #print(f' {result.__class__.__name__} - isubcase={isubcase}')
                 try:
                     #print(' %-6s - %s - isubcase=%s%s; itable=%s %s' % (
                         #table_name, result.__class__.__name__,
