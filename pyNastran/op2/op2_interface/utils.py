@@ -74,18 +74,18 @@ def get_superelement_adaptivity_index(subtitle: str, superelement: str) -> str:
         split_superelement = superelement.split()
         if len(split_superelement) == 2:
             word, value1 = split_superelement
-            assert word == 'SUPERELEMENT', 'split_superelement=%s' % split_superelement
-            subtitle = '%s; SUPERELEMENT %s' % (subtitle, value1)
+            assert word == 'SUPERELEMENT', f'split_superelement={split_superelement}'
+            subtitle = f'{subtitle}; SUPERELEMENT {value1}'
             value1 = int(value1)
 
             if superelement_adaptivity_index:
                 superelement_adaptivity_index = '%s; SUPERELEMENT %s' % (
                     superelement_adaptivity_index, value1)
             else:
-                superelement_adaptivity_index = 'SUPERELEMENT %s' % value1
+                superelement_adaptivity_index = f'SUPERELEMENT {value1}'
         elif len(split_superelement) == 4:
             word, value1, unused_comma, value2 = split_superelement
-            assert word == 'SUPERELEMENT', 'split_superelement=%s' % split_superelement
+            assert word == 'SUPERELEMENT', f'split_superelement={split_superelement}'
             value1 = int(value1)
             value2 = int(value2)
 
@@ -93,7 +93,7 @@ def get_superelement_adaptivity_index(subtitle: str, superelement: str) -> str:
                 superelement_adaptivity_index = '%s; SUPERELEMENT %s,%s' % (
                     superelement_adaptivity_index, value1, value2)
             else:
-                superelement_adaptivity_index = 'SUPERELEMENT %s,%s' % (value1, value2)
+                superelement_adaptivity_index = f'SUPERELEMENT {value1},{value2}'
         else:
             raise RuntimeError(split_superelement)
     return superelement_adaptivity_index
@@ -241,61 +241,3 @@ def update_label2(label2, isubcase):
             #print('label2   = %r' % label2)
             #print('subcasee = %r' % subcase_expected)
     return label2
-
-def grids_comp_array_to_index(grids1, comps1, grids2, comps2,
-                              make_matrix_symmetric):
-    """maps the dofs"""
-    #from pyNastran.femutils.utils import unique2d
-    ai = np.vstack([grids1, comps1]).T
-    bi = np.vstack([grids2, comps2]).T
-    #print('grids2 =', grids2)
-    #print('comps2 =', comps2)
-    #c = np.vstack([a, b])
-    #assert c.shape[1] == 2, c.shape
-    #urows = unique2d(c)
-    #urows = c
-
-    nid_comp_to_dof_index = {}
-    j = 0
-    a_keys = set()
-    for nid_dof in ai:
-        #nid_dof = (int(nid), int(dof))
-        nid_dof = tuple(nid_dof)
-        if nid_dof not in a_keys:
-            a_keys.add(nid_dof)
-            if nid_dof not in nid_comp_to_dof_index:
-                nid_comp_to_dof_index[nid_dof] = j
-                j += 1
-    nja = len(a_keys)
-    del a_keys
-
-    b_keys = set()
-    for nid_dof in bi:
-        nid_dof = tuple(nid_dof)
-        if nid_dof not in b_keys:
-            b_keys.add(nid_dof)
-        if nid_dof not in nid_comp_to_dof_index:
-            nid_comp_to_dof_index[nid_dof] = j
-            j += 1
-    njb = len(b_keys)
-    del b_keys
-
-
-    nj = len(nid_comp_to_dof_index)
-    if make_matrix_symmetric:
-        ja = np.zeros(nj, dtype='int32')
-        for i, nid_dof in zip(count(), ai):
-            j[i] = nid_comp_to_dof_index[tuple(nid_dof)]
-        for i, nid_dof in zip(count(), bi):
-            j[i] = nid_comp_to_dof_index[tuple(nid_dof)]
-        return j, j, nj, nj, nj
-    else:
-        ja = np.zeros(grids1.shape, dtype='int32')
-        for i, nid_dof in zip(count(), ai.tolist()):
-            ja[i] = nid_comp_to_dof_index[tuple(nid_dof)]
-
-        jb = np.zeros(grids2.shape, dtype='int32')
-        for i, nid_dof in zip(count(), bi.tolist()):
-            jb[i] = nid_comp_to_dof_index[tuple(nid_dof)]
-
-        return ja, jb, nja, njb, nj

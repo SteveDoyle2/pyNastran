@@ -678,7 +678,7 @@ class BDFAttributes:
                 'CQUADX', 'CQUADX4', 'CQUADX8',
                 'CCONEAX',
 
-                'CTETRA', 'CPYRAM', 'CPENTA', 'CHEXA', 'CIHEX1', 'CIHEX2',
+                'CTETRA', 'CPYRAM', 'CPENTA', 'CHEXA', 'CIHEX1', 'CIHEX2', 'CHEXA1', 'CHEXA2',
                 'CSHEAR', 'CVISC', 'CRAC2D', 'CRAC3D',
                 'CGAP',
 

@@ -56,7 +56,7 @@ from .cards.properties.springs import PELAS, PELAST
 
 from .cards.elements.solid import (
     #CTETRA, CPYRAM, CPENTA, CHEXA,
-    CIHEX1, CIHEX2,
+    CIHEX1, CIHEX2, CHEXA1, CHEXA2,
     CTETRA4, CPYRAM5, CPENTA6, CHEXA8,
     CTETRA10, CPYRAM13, CPENTA15, CHEXA20,
 )
@@ -331,7 +331,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             'PACABS', 'PAABSF', 'PACBAR', 'ACMODL',
 
             'CTETRA', 'CPYRAM', 'CPENTA', 'CHEXA',
-            'CIHEX1', 'CIHEX2',
+            'CIHEX1', 'CIHEX2', 'CHEXA1', 'CHEXA2',
             'CSHEAR', 'CVISC', 'CRAC2D', 'CRAC3D',
             'CGAP',
             'GENEL',
@@ -1893,9 +1893,14 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             'CSHEAR' : (CSHEAR, self._add_element_object),
             'PSHEAR' : (PSHEAR, self._add_property_object),
 
+            # nastran95
             'CIHEX1' : (CIHEX1, self._add_element_object),
             'CIHEX2' : (CIHEX2, self._add_element_object),
+            'CHEXA1' : (CHEXA1, self._add_element_object),
+            'CHEXA2' : (CHEXA2, self._add_element_object),
             'PIHEX' : (PIHEX, self._add_property_object),
+
+            # msc/nx
             'PSOLID' : (PSOLID, self._add_property_object),
             'PLSOLID' : (PLSOLID, self._add_property_object),
             'PCOMPS' : (PCOMPS, self._add_property_object),

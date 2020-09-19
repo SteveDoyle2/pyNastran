@@ -68,7 +68,7 @@ from pyNastran.bdf.bdf import (BDF,
 from pyNastran.bdf.cards.aero.zona import CAERO7, BODY7
 from pyNastran.bdf.cards.elements.solid import (
     CTETRA4, CTETRA10, CPENTA6, CPENTA15,
-    CHEXA8, CHEXA20, CIHEX1, CIHEX2,
+    CHEXA8, CHEXA20, CIHEX1, CIHEX2, CHEXA1, CHEXA2,
     CPYRAM5, CPYRAM13,
 )
 from pyNastran.bdf.mesh_utils.delete_bad_elements import (
@@ -4624,6 +4624,59 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                 elem = vtk.vtkLine()
                 elem.GetPointIds().SetId(0, nid_map[node_ids[0]])
                 elem.GetPointIds().SetId(1, nid_map[node_ids[1]])
+            elif isinstance(element, CHEXA1):
+                node_ids = element.node_ids
+                pid = 0
+                #mid = element.Mid()
+                for nid in node_ids:
+                    nid_to_pid_map[nid].append(pid)
+                eid_to_nid_map[eid] = node_ids[:8]
+                elem = vtkHexahedron()
+                elem.GetPointIds().SetId(0, nid_map[node_ids[0]])
+                elem.GetPointIds().SetId(1, nid_map[node_ids[1]])
+                elem.GetPointIds().SetId(2, nid_map[node_ids[2]])
+                elem.GetPointIds().SetId(3, nid_map[node_ids[3]])
+                elem.GetPointIds().SetId(4, nid_map[node_ids[4]])
+                elem.GetPointIds().SetId(5, nid_map[node_ids[5]])
+                elem.GetPointIds().SetId(6, nid_map[node_ids[6]])
+                elem.GetPointIds().SetId(7, nid_map[node_ids[7]])
+                grid.InsertNextCell(12, elem.GetPointIds())
+            elif isinstance(element, CHEXA2):
+                node_ids = element.node_ids
+                pid = 0
+                for nid in node_ids:
+                    if nid is not None:
+                        nid_to_pid_map[nid].append(pid)
+                if None not in node_ids:
+                    elem = vtkQuadraticHexahedron()
+                    elem.GetPointIds().SetId(8, nid_map[node_ids[8]])
+                    elem.GetPointIds().SetId(9, nid_map[node_ids[9]])
+                    elem.GetPointIds().SetId(10, nid_map[node_ids[10]])
+                    elem.GetPointIds().SetId(11, nid_map[node_ids[11]])
+
+                    # these two blocks are flipped
+                    elem.GetPointIds().SetId(12, nid_map[node_ids[16]])
+                    elem.GetPointIds().SetId(13, nid_map[node_ids[17]])
+                    elem.GetPointIds().SetId(14, nid_map[node_ids[18]])
+                    elem.GetPointIds().SetId(15, nid_map[node_ids[19]])
+
+                    elem.GetPointIds().SetId(16, nid_map[node_ids[12]])
+                    elem.GetPointIds().SetId(17, nid_map[node_ids[13]])
+                    elem.GetPointIds().SetId(18, nid_map[node_ids[14]])
+                    elem.GetPointIds().SetId(19, nid_map[node_ids[15]])
+                else:
+                    elem = vtkHexahedron()
+
+                eid_to_nid_map[eid] = node_ids[:8]
+                elem.GetPointIds().SetId(0, nid_map[node_ids[0]])
+                elem.GetPointIds().SetId(1, nid_map[node_ids[1]])
+                elem.GetPointIds().SetId(2, nid_map[node_ids[2]])
+                elem.GetPointIds().SetId(3, nid_map[node_ids[3]])
+                elem.GetPointIds().SetId(4, nid_map[node_ids[4]])
+                elem.GetPointIds().SetId(5, nid_map[node_ids[5]])
+                elem.GetPointIds().SetId(6, nid_map[node_ids[6]])
+                elem.GetPointIds().SetId(7, nid_map[node_ids[7]])
+                grid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
             else:
                 log.warning('removing\n%s' % (element))
                 log.warning('removing eid=%s; %s' % (eid, element.type))
@@ -5235,7 +5288,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                 min_thetai, max_thetai, dideal_thetai, min_edge_lengthi = get_min_max_theta(
                     _cpenta_faces, node_ids[:6], nid_map, xyz_cid0)
 
-            elif isinstance(element, (CHEXA8, CIHEX1)):
+            elif isinstance(element, (CHEXA8, CIHEX1, CHEXA1)):
                 node_ids = element.node_ids
                 pid = element.Pid()
                 for nid in node_ids:

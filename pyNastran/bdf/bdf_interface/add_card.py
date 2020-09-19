@@ -23,7 +23,7 @@ from pyNastran.bdf.cards.properties.springs import PELAS, PELAST
 
 from pyNastran.bdf.cards.elements.solid import (
     #CTETRA, CPYRAM, CPENTA, CHEXA,
-    CIHEX1, CIHEX2,
+    CIHEX1, CIHEX2, CHEXA1, CHEXA2,
     CTETRA4, CPYRAM5, CPENTA6, CHEXA8,
     CTETRA10, CPYRAM13, CPENTA15, CHEXA20,
 )
@@ -312,9 +312,14 @@ CARD_MAP = {
     'CSHEAR' : CSHEAR,
     'PSHEAR' : PSHEAR,
 
+    # nastran95
     'CIHEX1' : CIHEX1,
     'CIHEX2' : CIHEX2,
+    'CHEXA1' : CHEXA1,
+    'CHEXA2' : CHEXA2,
     'PIHEX' : PIHEX,
+
+    # msc/nx
     'PSOLID' : PSOLID,
     'PLSOLID' : PLSOLID,
     'PCOMPS' : PCOMPS,
@@ -3264,6 +3269,18 @@ class AddCards(AddMethods):
     def add_cihex2(self, eid, pid, nids, comment='') -> CIHEX2:
         """see CHEXA"""
         elem = CIHEX2(eid, pid, nids, comment=comment)
+        self._add_element_object(elem)
+        return elem
+
+    def add_chexa1(self, eid, mid, nids, comment='') -> CHEXA1:
+        """see CHEXA"""
+        elem = CHEXA1(eid, mid, nids, comment=comment)
+        self._add_element_object(elem)
+        return elem
+
+    def add_chexa2(self, eid, mid, nids, comment='') -> CHEXA2:
+        """see CHEXA"""
+        elem = CHEXA2(eid, mid, nids, comment=comment)
         self._add_element_object(elem)
         return elem
 

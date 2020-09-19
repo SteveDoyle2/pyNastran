@@ -30,12 +30,12 @@ def get_nastran_gui_layer_word(i: int, ilayer: int, is_pshell_pcomp: bool) -> st
             else:
                 word += 'Other Properties'
         else:
-            word += 'PSHELL: ilayer=%i' % (ilayer + 1)
+            word += f'PSHELL: ilayer={ilayer + 1:d}'
     else:
         if ilayer == 0:
             word += 'PCOMP: Total'
         else:
-            word += 'PCOMP: ilayer=%i' % (ilayer)
+            word += f'PCOMP: ilayer={ilayer:d}'
     return word
 
 def check_for_missing_control_surface_boxes(name: str, cs_box_ids: List[int],
@@ -58,7 +58,7 @@ def check_for_missing_control_surface_boxes(name: str, cs_box_ids: List[int],
         msg = 'Missing CAERO AELIST/SPLINE control surface %r boxes: %s\n' % (
             name, str(missing_boxes))
         if not boxes_to_show:
-            msg += 'boxes_to_show=%s\n' % boxes_to_show
+            msg += f'boxes_to_show={boxes_to_show}\n'
 
         out_msg = store_error(log, store_msg, msg.rstrip())
     return boxes_to_show, out_msg
@@ -67,7 +67,7 @@ def store_error(log, store_msg: bool, msg: str) -> str:
     out_msg = ''
     if store_msg:
         n, filename = log_properties(nframe=2)
-        out_msg = 'ERROR: %s:%s %s\n' % (filename, n, msg)
+        out_msg = f'ERROR: {filename}:{n:d} {msg}\n'
     else:
         log.warning(msg)
     return out_msg
@@ -76,7 +76,7 @@ def store_warning(log, store_msg: bool, msg: str) -> str:
     out_msg = ''
     if store_msg:
         n, filename = log_properties(nframe=2)
-        out_msg = 'WARNING: %s:%s %s\n' % (filename, n, msg)
+        out_msg = f'WARNING: {filename}:{n:d} {msg}\n'
     else:
         log.warning(msg)
     return out_msg
@@ -105,7 +105,7 @@ def get_elements_nelements_unvectorized(model: BDF) -> Tuple[Any, int, List[Dict
             elements.update(superelement.elements)
             #eid_map.update(superelement.eid_map)
         superelements = np.hstack(superelements)
-        assert len(superelements) == nelements, 'len(superelements)=%s nelements=%s' % (len(superelements), nelements)
+        assert len(superelements) == nelements, f'len(superelements)={len(superelements):d} nelements={nelements:d}'
     return elements, nelements, superelements
 
 
@@ -141,16 +141,18 @@ def build_offset_normals_dims(model: BDF, eid_map: Dict[int, int], nelements: in
             try:
                 normali = element.Normal()
             except AttributeError:
-                msg = str(element)
-                msg += 'nodes_ref = %s\n' % element
-                msg += 'nodes = %s' % element.node_ids
+                msg += (
+                    f'{element}'
+                    f'nodes_ref = {element}\n'
+                    f'nodes = {element.node_ids}'
+                )
                 raise AttributeError(msg)
             except RuntimeError:
                 # this happens when you have a degenerate tri
                 msg = (
-                    'eid=%i normal=NaN...\n'
-                    '%s'
-                    'nodes = %s' % (eid, element, str(element.nodes)))
+                    f'eid={eid:d} normal=NaN...\n'
+                    f'{element}'
+                    f'nodes = {element.nodes}')
                 log.error(msg)
                 normali = np.ones(3) * np.nan
                 #raise
@@ -164,11 +166,11 @@ def build_offset_normals_dims(model: BDF, eid_map: Dict[int, int], nelements: in
                 ptype = prop.type
                 if ptype == 'PSHELL':
                     z0 = prop.z1
-                elif ptype in ['PCOMP', 'PCOMPG']:
+                elif ptype in {'PCOMP', 'PCOMPG'}:
                     z0 = prop.z0
-                elif ptype in ['PLPLANE', 'PTRSHL']: # ? PTRSHL
+                elif ptype in {'PLPLANE', 'PTRSHL'}: # ? PTRSHL
                     z0 = 0.
-                elif ptype in ['PSHEAR', 'PSOLID', 'PLSOLID', 'PPLANE']:
+                elif ptype in {'PSHEAR', 'PSOLID', 'PLSOLID', 'PPLANE'}:
                     z0 = np.nan
                 else:
                     raise NotImplementedError(ptype) # PSHEAR, PCOMPG
@@ -204,7 +206,7 @@ def build_offset_normals_dims(model: BDF, eid_map: Dict[int, int], nelements: in
                     #node_ids = self.nodes[3:]
                     nnodesi = 6
                     z0 = np.nan
-                elif etype in ['CTRIAX', 'CTRIAX6']:
+                elif etype in {'CTRIAX', 'CTRIAX6'}:
                     # the CTRIAX6 uses a non-standard node orientation
                     #node_ids = self.nodes[3:]
                     z0 = np.nan
@@ -228,7 +230,7 @@ def build_offset_normals_dims(model: BDF, eid_map: Dict[int, int], nelements: in
 
             ieid = eid_map[eid]
             normals[ieid, :] = normali
-            if element.type in ['CPLSTN3', 'CPLSTN4', 'CPLSTN6', 'CPLSTN8']:
+            if element.type in {'CPLSTN3', 'CPLSTN4', 'CPLSTN6', 'CPLSTN8'}:
                 element_dim[ieid] = element_dimi
                 nnodes_array[ieid] = nnodesi
                 log.debug('continue...element.type=%r' % element.type)
@@ -251,19 +253,19 @@ def build_offset_normals_dims(model: BDF, eid_map: Dict[int, int], nelements: in
             ieid = eid_map[eid]
             element_dimi = 3
             nnodesi = 5
-        elif etype in ['CHEXA', 'CIHEX1', 'CIHEX2']:
+        elif etype in {'CHEXA', 'CIHEX1', 'CIHEX2', 'CHEXA1', 'CHEXA2'}:
             ieid = eid_map[eid]
             element_dimi = 3
             nnodesi = 8
 
-        elif etype in ['CROD', 'CONROD', 'CBEND', 'CBAR', 'CBEAM', 'CGAP', 'CTUBE']:
+        elif etype in {'CROD', 'CONROD', 'CBEND', 'CBAR', 'CBEAM', 'CGAP', 'CTUBE'}:
             ieid = eid_map[eid]
             element_dimi = 1
             nnodesi = 2
-        elif etype in ['CBUSH', 'CBUSH1D', 'CBUSH2D',
+        elif etype in {'CBUSH', 'CBUSH1D', 'CBUSH2D',
                        'CFAST', 'CVISC',
                        'CELAS1', 'CELAS2', 'CELAS3', 'CELAS4',
-                       'CDAMP1', 'CDAMP2', 'CDAMP3', 'CDAMP4', 'CDAMP5']:
+                       'CDAMP1', 'CDAMP2', 'CDAMP3', 'CDAMP4', 'CDAMP5'}:
             ieid = eid_map[eid]
             element_dimi = 0
             nnodesi = 2
@@ -288,7 +290,7 @@ def build_offset_normals_dims(model: BDF, eid_map: Dict[int, int], nelements: in
             else:
                 element_dimi = -1
                 nnodesi = -1
-                print('element.type=%s doesnt have a dimension' % element.type)
+                print(f'element.type={element.type} doesnt have a dimension')
         elif etype == 'CHBDYP':
             continue
         else:
@@ -300,18 +302,20 @@ def build_offset_normals_dims(model: BDF, eid_map: Dict[int, int], nelements: in
                 raise
             element_dimi = -1
             nnodesi = -1
-            print('element.type=%s doesnt have a dimension' % element.type)
+            print(f'element.type={element.type} doesnt have a dimension')
         assert ieid is not None
         element_dim[ieid] = element_dimi
         nnodes_array[ieid] = nnodesi
         #ielement += 1
     return normals, offset, xoffset, yoffset, zoffset, element_dim, nnodes_array
 
-def build_map_centroidal_result(model: BDF, nid_map: Dict[int, int], stop_on_failure: bool=True) -> None:
+def build_map_centroidal_result(model: BDF, nid_map: Dict[int, int],
+                                stop_on_failure: bool=True) -> None:
     """
     Sets up map_centroidal_result.  Used for:
      - cutting plane
      - nodal stress/strain
+
     """
     try:
         # test_gui_superelement_1
@@ -332,6 +336,7 @@ def _build_map_centroidal_result(model: BDF, nid_map: Dict[int, int]) -> None:
     Sets up map_centroidal_result.  Used for:
      - cutting plane
      - nodal stress/strain
+
     """
     if hasattr(model, 'map_centroidal_result'):
         return
@@ -363,7 +368,10 @@ def _build_map_centroidal_result(model: BDF, nid_map: Dict[int, int]) -> None:
         'CTRIAX' : (3, 6),
         'CQUADX8' : (4, 8),
         'CTRIAX6' : (3, 6),
+        # nastran 95
         'CTRSHL' : (6, 6),
+        'CHEXA1' : (8, 8),
+        'CHEXA20' : (20, 20),
     }
     #['CTRIA6', 'CQUAD8', 'CHEXA', 'CTETRA', 'CPENTA', 'CPYRAM', 'CQUADX', 'CTRIAX']
     etypes_mixed_nodes = set(list(nnodes_map.keys()))
@@ -384,9 +392,9 @@ def _build_map_centroidal_result(model: BDF, nid_map: Dict[int, int]) -> None:
                 pass
             elif 0 in node_ids:
                 node_ids = node_ids[:nnodes_min]
-                assert len(node_ids) == nnodes_min, 'nnodes=%s min=%s\n%s' % (len(node_ids), nnodes_min, elem)
+                assert len(node_ids) == nnodes_min, f'nnodes={len(node_ids):d} min={nnodes_min:d}\n{elem}'
             else:
-                assert nnodesi == nnodes_max, 'nnodes=%s max=%s\n%s' % (nnodesi, nnodes_max, elem)
+                assert nnodesi == nnodes_max, f'nnodes={nnodesi:d} max={nnodes_max:d}\n{elem}'
         elif elem.type in springs_dampers:
             node_ids = [nid_map[nid] for nid in elem.nodes
                         if nid is not None]

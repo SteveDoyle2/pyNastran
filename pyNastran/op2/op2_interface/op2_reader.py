@@ -6301,7 +6301,8 @@ def dscmcol_dresp2(responses: Dict[int, Dict[str, Any]],
         idata += 6
     return
 
-def _parse_nastran_version(data: bytes, version: bytes, encoding: bytes, log: SimpleLogger) -> str:
+def _parse_nastran_version(data: bytes, version: bytes, encoding: bytes,
+                           log: SimpleLogger) -> str:
     """parses a Nastran version string"""
     if len(data) == 32:
         MSC_LONG_VERSION = [

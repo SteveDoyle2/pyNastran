@@ -19,7 +19,7 @@ if TYPE_CHECKING:  # pragma: no cover
 
     from pyNastran.bdf.cards.elements.solid import (
         #CTETRA, CPYRAM, CPENTA, CHEXA,
-        CIHEX1, CIHEX2,
+        CIHEX1, CIHEX2, CHEXA1, CHEXA2,
         CTETRA4, CPYRAM5, CPENTA6, CHEXA8,
         CTETRA10, CPYRAM13, CPENTA15, CHEXA20,
     )
@@ -394,7 +394,9 @@ class AddMethods(BDFAttributes):
                                               # thermal
                                               CHBDYE, CHBDYG, CHBDYP,
                                               # Nastran 95
-                                              CIHEX1, CIHEX2,],
+                                              CIHEX1, CIHEX2,
+                                              CHEXA1, CHEXA2,
+                                              ],
                             allow_overwrites: bool=False) -> None:
         key = elem.eid
         assert key > 0, 'eid=%s must be positive; elem=\n%s' % (key, elem)

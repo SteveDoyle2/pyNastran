@@ -61,7 +61,7 @@ BULK_DATA_CARDS = {
     'SNORM',
 
     'CTETRA', 'CPYRAM', 'CPENTA', 'CHEXA',
-    'CIHEX1', 'CIHEX2',
+    'CIHEX1', 'CIHEX2', 'CHEXA1', 'CHEXA2',
     'CSHEAR', 'CVISC', 'CRAC2D', 'CRAC3D',
     'CGAP',
     'GENEL',

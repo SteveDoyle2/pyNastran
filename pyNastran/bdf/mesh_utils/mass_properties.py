@@ -801,7 +801,7 @@ def _get_mass_nsm(model, element_ids, mass_ids,
             if eid in element_ids:
                 mass = _increment_inertia(centroid, reference_point, m, mass, cg, I)
 
-    elif etype == 'CHEXA':
+    elif etype in ['CHEXA', 'CHEXA1', 'CHEXA2']:
         eids2 = get_sub_eids(all_eids, eids, etype)
         for eid in eids2:
             elem = model.elements[eid]
