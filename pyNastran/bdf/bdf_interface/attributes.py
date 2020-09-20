@@ -625,9 +625,12 @@ class BDFAttributes:
         self.radmtx = {}  # type: Dict[int, RADMTX]
 
         # -------------------------contact cards-------------------------------
+        self.bcbodys = {}  # type: Dict[int, BCBODY]
+        self.bcparas = {}  # type: Dict[int, BCPARA]
         self.bcrparas = {}  # type: Dict[int, BCRPARA]
-        self.bctadds = {}  # type: Dict[int, BCTADD]
         self.bctparas = {}  # type: Dict[int, BCTPARA]
+
+        self.bctadds = {}  # type: Dict[int, BCTADD]
         self.bctsets = {}  # type: Dict[int, BCTSET]
         self.bsurf = {}  # type: Dict[int, BSURF]
         self.bsurfs = {}  # type: Dict[int, BSURFS]
@@ -935,9 +938,12 @@ class BDFAttributes:
             'cMethods' : ['EIGC', 'EIGP'],
 
             # contact
+            'bcbodys' : ['BCBODY'],
+            'bcparas' : ['BCPARA'],
             'bctparas' : ['BCTPARA'],
             'bcrparas' : ['BCRPARA'],
             'bctparms' : ['BCTPARM'],
+
             'bctadds' : ['BCTADD'],
             'bctsets' : ['BCTSET'],
             'bgadds' : ['BGADD'],

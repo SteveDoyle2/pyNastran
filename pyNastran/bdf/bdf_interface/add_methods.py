@@ -128,7 +128,7 @@ if TYPE_CHECKING:  # pragma: no cover
                                                 TABRND1, TABRNDG,
                                                 DTABLE)
     from pyNastran.bdf.cards.contact import (
-        BCRPARA, BCTADD, BCTSET, BSURF, BSURFS, BCTPARA, BCONP, BLSEG,
+        BCRPARA, BCTADD, BCTSET, BSURF, BSURFS, BCPARA, BCTPARA, BCONP, BLSEG,
         BFRIC, BCTPARM, BGADD, BGSET)
     from pyNastran.bdf.cards.parametric.geometry import PSET, PVAL, FEEDGE, FEFACE, GMCURV, GMSURF
 
@@ -559,6 +559,12 @@ class AddMethods(BDFAttributes):
         self.bctadds[key] = card
         self._type_to_id_map[card.type].append(key)
 
+    def _add_bcpara_object(self, card: BCPARA, allow_overwrites: bool=False) -> None:
+        """adds an BCPARA object"""
+        key = card.csid
+        self.bcparas[key] = card
+        self._type_to_id_map[card.type].append(key)
+
     def _add_bctpara_object(self, card: BCTPARA, allow_overwrites: bool=False) -> None:
         """adds an BCTPARA object"""
         key = card.csid
@@ -588,6 +594,12 @@ class AddMethods(BDFAttributes):
         key = bconp.contact_id
         self.bconp[key] = bconp
         self._type_to_id_map[bconp.type].append(key)
+
+    def _add_bcbody_object(self, bcbody: BCBODY) -> None:
+        """adds an BCBODY object"""
+        key = bcbody.contact_id
+        self.bcbodys[key] = bcbody
+        self._type_to_id_map[bcbody.type].append(key)
 
     def _add_blseg_object(self, blseg: BLSEG) -> None:
         """adds an BLSEG object"""

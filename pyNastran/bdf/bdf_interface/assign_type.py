@@ -1,6 +1,6 @@
 """Parses Nastran fields"""
 import re
-from typing import Union, Optional
+from typing import Tuple, Union, Optional
 from pyNastran.bdf.bdf_interface.bdf_card import BDFCard
 from pyNastran.utils.numpy_utils import (
     integer_types, integer_float_types, float_types)
@@ -963,6 +963,43 @@ def string_or_blank(card: BDFCard, ifield: int, fieldname: str, default=None):
 
     if svalue:  # string
         return str(svalue.upper())
+    return default
+
+def string_choice_or_blank(card: BDFCard, ifield: int, fieldname: str, choices: Tuple[str], default=None):
+    """
+    Parameters
+    ----------
+    card : BDFCard()
+        BDF card as a list
+    ifield : int
+        field number
+    fieldname : str
+        name of field
+    default : str, None
+        the default value for the field (default=None)
+
+    Returns
+    -------
+    value : varies
+        the value of the field
+
+    """
+    svalue = card.field(ifield)
+    if svalue is None:
+        return default
+    elif isinstance(svalue, str):
+        svalue = svalue.strip().upper()
+    else:
+        dtype = _get_dtype(svalue)
+        raise SyntaxError('%s = %r (field #%s) on card must be a string (not %s).\n'
+                          'card=%s' % (fieldname, svalue, ifield, dtype, card))
+
+    if svalue:  # string
+        svalue = svalue.upper()
+        if svalue not in choices:
+            raise RuntimeError(f'{fieldname} = {svalue} (field #{ifield}) on card is a string, but must be {choices}.\n'
+                               f'card={card}')
+        return svalue
     return default
 
 def loose_string_or_blank(card: BDFCard, ifield: int, fieldname: str, default=None):

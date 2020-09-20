@@ -165,8 +165,8 @@ from .cards.bdf_tables import (TABLED1, TABLED2, TABLED3, TABLED4,
                                TABRND1, TABRNDG,
                                DTABLE)
 from .cards.contact import (
-    BCRPARA, BCTADD, BCTSET, BSURF, BSURFS, BCTPARA, BCONP, BLSEG, BFRIC,
-    BCTPARM, BGADD, BGSET)
+    BCRPARA, BCTADD, BCTSET, BSURF, BSURFS, BCPARA, BCTPARA, BCONP, BLSEG, BFRIC,
+    BCTPARM, BGADD, BGSET, BCBODY)
 from .cards.parametric.geometry import PSET, PVAL, FEEDGE, FEFACE, GMCURV, GMSURF
 
 from .case_control_deck import CaseControlDeck, Subcase
@@ -557,6 +557,8 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             'MODTRAK',
 
             #: contact
+            'BCBODY',  ## bcbody
+            'BCPARA',  ## bcpara
             'BCTPARA',  ## bctpara
             'BCRPARA',  ## bcrpara
             'BCTPARM', ## bctparm
@@ -1768,9 +1770,11 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             'MODTRAK' : (MODTRAK, self._add_modtrak_object),
 
             #  nx contact
+            'BCPARA' : (BCPARA, self._add_bcpara_object),
             'BCTPARM' : (BCTPARM, self._add_bctparam_object),
             'BGADD' : (BGADD, self._add_bgadd_object),
             'BGSET' : (BGSET, self._add_bgset_object),
+            'BCBODY' : (BCBODY, self._add_bcbody_object),
 
             # 'BOLT', 'BOLTFOR'
             'BOLT' : (Crash, None),
@@ -2348,17 +2352,26 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
                 card_name, card_lines)
             raise RuntimeError(msg)
 
+        #if card_name in ['CGEN', 'GMSPC', 'GMCURV', 'GMLOAD', 'FEFACE', 'GMSURF', 'GMINTS', 'PVAL', 'PINTS',
+                         #'EGRID', 'ADAPT', 'GRIDG', 'MESHOPT', 'OUTPUT']:
+            #return
+
+        # add me
+        #elif card_name in ['BCTABLE', 'RJOINT', 'RTRPLT', 'RTRPLT1', 'MDLPRM', 'DYNRED']:
+            #return
+
         if card_name not in self.card_count:
             _check_for_spaces(card_name, card_lines, comment, self.log)
+            #raise RuntimeError(card_name)
             if card_name == '\ufeff':
-                self.log.warning('    rejecting card_name = %r' % card_name)
+                self.log.warning(f'    rejecting card_name = {card_name!r}')
                 self.log.warning('    comment:\n')
                 print(comment)
                 self.log.warning('    lines:\n')
                 for line in card_lines:
                     print(line)
             elif show_log:
-                self.log.info('    rejecting card_name = %r' % card_name)
+                self.log.info(f'    rejecting card_name = {card_name!r}')
             assert isinstance(show_log, bool), show_log
         self.increase_card_count(card_name)
         self.reject_lines.append([_format_comment(comment)] + card_lines)
@@ -3828,7 +3841,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
 
         for card_name, cards in sorted(cards_dict.items()):
             if self.is_reject(card_name):
-                self.log.info('    rejecting card_name = %s' % card_name)
+                self.log.info(f'    rejecting card_name = {card_name}')
                 for comment, card_lines, unused_ifile_iline in cards:
                     self.increase_card_count(card_name)
                     self.reject_lines.append([_format_comment(comment)] + card_lines)
@@ -3844,8 +3857,8 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             for icard, card in enumerate(cards_list):
                 card_name, comment, card_lines, (ifile, unused_iline) = card
                 if card_name is None:
-                    msg = 'card_name = %r\n' % card_name
-                    msg += 'card_lines = %s' % card_lines
+                    msg = f'card_name = {card_name!r}\n'
+                    msg += f'card_lines = {card_lines}'
                     raise RuntimeError(msg)
 
                 if '=' in card_name:
@@ -3864,7 +3877,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
                     continue
 
                 if self.is_reject(card_name):  # pragma: no cover
-                    msg = "save_file_structure=True doesn't support %s" % card_name
+                    msg = f"save_file_structure=True doesn't support {card_name}"
                     raise NotImplementedError(msg)
                     #self.reject_card_lines(card_name, card_lines, comment)
                 else:
@@ -3876,8 +3889,8 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
                 card_name, comment, card_lines, (ifile, unused_iline) = card
                 #print(unused_iline, card_lines[0])
                 if card_name is None:
-                    msg = 'card_name = %r\n' % card_name
-                    msg += 'card_lines = %s' % card_lines
+                    msg = f'card_name = {card_name!r}\n'
+                    msg += f'card_lines = {card_lines}'
                     raise RuntimeError(msg)
 
                 if '=' in card_name:
@@ -4001,7 +4014,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
                 #values = [int(value) for value in value.upper().split(',')]
                 values = parse_patran_syntax(value)
                 if type_to_skip not in self.object_attributes():
-                    raise RuntimeError('%r is an invalid key' % type_to_skip)
+                    raise RuntimeError(f'{type_to_skip!r} is an invalid key')
                 if type_to_skip not in self.values_to_skip:
                     self.values_to_skip[type_to_skip] = values
                 else:
@@ -4065,7 +4078,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
         self._is_cards_dict = True
 
         self._read_bdf_helper(bdf_filename, encoding, punch, read_includes)
-        self.log.debug('---starting BDF.read_bdf of %s---' % self.bdf_filename)
+        self.log.debug(f'---starting BDF.read_bdf of {self.bdf_filename}---')
         self._parse_primary_file_header(bdf_filename)
 
         obj = BDFInputPy(self.read_includes, self.dumplines, self._encoding,
@@ -4120,7 +4133,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             cards_list = []
             cards_out[card_name] = cards_list
             if self.is_reject(card_name):
-                self.log.info('    rejecting card_name = %s' % card_name)
+                self.log.info(f'    rejecting card_name = {card_name}')
                 for comment, card_lines, unused_ifile_iline in card:
                     self.increase_card_count(card_name)
                     self.reject_lines.append([_format_comment(comment)] + card_lines)

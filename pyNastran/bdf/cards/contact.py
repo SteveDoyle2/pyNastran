@@ -18,7 +18,7 @@ from typing import TYPE_CHECKING
 from pyNastran.bdf.cards.base_card import BaseCard, expand_thru_by, _node_ids
 from pyNastran.bdf.bdf_interface.assign_type import (
     integer, integer_or_blank, integer_string_or_blank, double_or_blank,
-    integer_double_or_blank, string, string_or_blank, double)
+    integer_double_or_blank, string, string_or_blank, string_choice_or_blank, double)
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
 if TYPE_CHECKING:  # pragma: no cover
@@ -161,6 +161,120 @@ class BLSEG(BaseCard):
     def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.repr_fields()
         return self.comment + print_card_8(card)
+
+class BCBODY(BaseCard):
+    """TODO
+
+        | BCBODY | BID     | DIM    | BEHAV  | BSID |  ISTYP | FRIC    | IDSPL  | CONTROL |
+        |        | NLOAD   | ANGVEL | DCOS1  | DCOS2|  DCOS3 | VELRB1  | VELRB2 | VELRB3  |
+        |        | ADVANCE | SANGLE | COPTB  | USER |        |         |        |         |
+        |        | CTYPE   | ISMALL | ITYPE  | IAUG | PENALT | AUGDIST |
+        |        | RIGID   | CGID   | NENT   | --- Rigid Body Name --- |
+        |        | APPROV  | A      |  N1    | N2       |    N3   |    V1   |    V2   |   V3   |
+        |        | RTEMP   | G(temp)|  Tempr | T(Tempr) |         |         |         |        |
+        |        | SINK    | G(sink)|  Tsink | T(Tsink) |         |         |         |        |
+        |        | GROW    | GF1    |  GF2   |   GF3    | TAB-GF1 | TAB-GF2 | TAB-GF3 |        |
+        |        | HEAT    | CFILM  |  TSINK |   CHEAT  | TBODY   | HCV     | HNC     | ITYPE  |
+        |        | BNC     | EMISS  |  HBL   |          |         |         |         |        |
+    """
+    type = 'BCBODY'
+    #@classmethod
+    #def _init_from_empty(cls):
+        #contact_id = 1
+        #slave = 2
+        #master = 3
+        #sfac = 4
+        #friction_id = 5
+        #ptype = 'cat'
+        #cid = 0
+        #return BCBODY(contact_id, dim, behav, bsid, istype, fric, idispl, comment='')
+
+    def __init__(self, contact_id, dim, behav, bsid, istype, fric, idispl, comment=''):
+        if comment:
+            self.comment = comment
+        self.contact_id = contact_id
+        self.dim = dim
+        self.behav = behav
+        self.bsid = bsid
+        self.istype = istype
+        self.fric = fric
+        self.idispl = idispl
+
+    @classmethod
+    def add_card(cls, card, comment=''):
+        """
+        Adds a BCBODY card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+
+        BID (4,1)
+           Contact body identification number referenced by BCTABLE, BCHANGE, or
+        BCMOVE. (Integer > 0; Required)
+        DIM Dimension of body. (Character; Default=3D)
+           DIM=2D planar body in x-y plane of the basic coordinate system, composed of 2D
+           elements or curves.
+           DIM=3D any 3D body composed of rigid surfaces, shell elements or solid
+            elements.
+        BEHAV (4,8)
+           Behavior of curve or surface (Character; Default = DEFORM) DEFORM body is
+           deformable, RIGID body is rigid, SYMM body is a symmetry body, ACOUS
+           indicates an acoustic body, WORK indicates body is a workpiece, HEAT indicates
+           body is a heat-rigid body. See Remark 3. for Rigid Bodies..
+        BSID : int
+            Identification number of a BSURF, BCBOX, BCPROP or BCMATL entry if
+        BEHAV=DEFORM. (Integer > 0)
+        ISTYP : int (4,3)
+           Check of contact conditions. (Integer > 0; Default = 0)
+        ISTYP : int
+           is not supported in segment-to-segment contact.
+           For a deformable body:
+           =0 symmetric penetration, double sided contact.
+           =1 unsymmetric penetration, single sided contact. (Integer > 0)
+           =2 double-sided contact with automatic optimization of contact constraint
+              equations (this option is known as “optimized contact”).
+              Notes: single-sided contact (ISTYP=1) with the contact bodies arranged properly
+              using the contact table frequently runs much faster than ISTYP=2.
+              For a rigid body:
+           =0 no symmetry condition on rigid body.
+           =1 rigid body is a symmetry plane.
+        FRIC : float (6,7)
+            Friction coefficient. (Real > 0 or integer; Default = 0)
+            If the value is an integer it represents the ID of a TABL3Di.
+        IDSPL : int (4,5)
+            Set IDSPL=1 to activate the SPLINE (analytical contact) option for a deformable
+           body and for a rigid contact surface. Set it to zero or leave blank to not have
+           analytical contact. (Integer; Default = 0)
+
+        """
+        contact_id = integer(card, 1, 'contact_id')
+        dim = string_choice_or_blank(card, 2, 'dim',
+                                     ('2D', '3D'),
+                                     '3D')
+
+        behav = string_choice_or_blank(card, 3, 'behav',
+                                       ('RIGID', 'DEFORM', 'SYMM', 'ACOUS', 'WORK', 'HEAT'),
+                                       'DEFORM')
+        bsid = integer(card, 4, 'bsid')
+        istype = integer_or_blank(card, 5, 'istype', 0)
+        fric = double(card, 6, 'fric')
+        idispl = integer_or_blank(card, 7, 'idispl', 0)
+        return BCBODY(contact_id, dim, behav, bsid, istype, fric, idispl,
+                      comment=comment)
+
+    def raw_fields(self):
+        list_fields = [
+            'BCBODY', self.contact_id, self.dim, self.behav, self.bsid, self.istype, self.fric, self.idispl]
+        return list_fields
+
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
+        card = self.repr_fields()
+        return self.comment + print_card_8(card)
+
 
 class BCONP(BaseCard):
     """
@@ -635,6 +749,112 @@ class BCRPARA(BaseCard):
         return self.comment + print_card_16(card)
 
 
+class BCPARA(BaseCard):
+    """
+    Defines contact parameters used in SOL 600.
+
+    +--------+---------+--------+--------+--------+--------+---------+--------+
+    |   1    |    2    |    3   |   4    |   5    |   6    |    7    |    8   |
+    +========+=========+========+========+========+========+=========+========+
+    | BCPARA |  CSID   | Param1 | Value1 | Param2 | Value2 | Param3  | Value3 |
+    +--------+---------+--------+--------+--------+--------+---------+--------+
+    |        | Param4  | Value4 | Param5 | Value5 |  etc.  |         |        |
+    +--------+---------+--------+--------+--------+--------+---------+--------+
+    | BCPARA | NBODIES |   4    |  BIAS  |   0.5  |        |         |        |
+    +--------+---------+--------+--------+--------+--------+---------+--------+
+
+    """
+    type = 'BCPARA'
+
+    @classmethod
+    def _init_from_empty(cls):
+        csid = 1
+        params = {'NBODIES' : 4}
+        return BCTPARM(csid, params, comment='')
+
+    def _finalize_hdf5(self, encoding):
+        """hdf5 helper function"""
+        keys, values = self.params
+        self.params = {key : value for key, value in zip(keys, values)}
+
+    def __init__(self, csid, params, comment=''):
+        """
+        Creates a BCPARA card
+
+        Parameters
+        ----------
+        csid : int
+            ID is not used and should be set to zero. Only one BCPARA should be
+            entered and it applies to all subcases.
+        csid : int
+            Contact set ID. Parameters defined in this command apply to
+            contact set CSID defined by a BCTSET entry. (Integer > 0)
+        params : dict[key] : int/float
+            the optional parameters
+        comment : str; default=''
+            a comment for the card
+
+        """
+        if comment:
+            self.comment = comment
+
+        #: Contact set ID. Parameters defined in this command apply to
+        #: contact set CSID defined by a BCTSET entry. (Integer > 0)
+        self.csid = csid
+        self.params = params
+
+    @classmethod
+    def add_card(cls, card, comment=''):
+        """
+        Adds a BCPARA card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+
+        """
+        csid = integer(card, 1, 'csid')
+        i = 2
+        j = 1
+        params = {}
+        while i < card.nfields:
+            param = string(card, i, f'param{j}')
+            i += 1
+            if param == 'FTYPE':
+                value = integer_or_blank(card, i, f'value{j}', 1)
+                assert value in [6], f'FTYPE must be [6]; FTYPE={value}'
+            else:
+                raise NotImplementedError(param)
+
+            params[param] = value
+            i += 1
+            j += 1
+            if j == 4:
+                i += 1
+        return BCPARA(csid, params, comment=comment)
+
+    def raw_fields(self):
+        fields = ['BCPARA', self.csid]
+        i = 0
+        for key, value in sorted(self.params.items()):
+            if i == 3:
+                fields.append(None)
+                i = 0
+            fields.append(key)
+            fields.append(value)
+            i += 1
+        return fields
+
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
+        card = self.repr_fields()
+        if size == 8:
+            return self.comment + print_card_8(card)
+        return self.comment + print_card_16(card)
+
+
 class BCTPARM(BaseCard):
     """
     Contact Parameters (SOLs 101, 103, 111, 112, and 401).
@@ -865,7 +1085,7 @@ class BCTPARA(BaseCard):
         j = 1
         params = {}
         while i < card.nfields:
-            param = string(card, i, 'param%s' % j)
+            param = string(card, i, f'param{j}')
             i += 1
             if param == 'TYPE':
                 value = integer_or_blank(card, i, 'value%s' % j, 0)

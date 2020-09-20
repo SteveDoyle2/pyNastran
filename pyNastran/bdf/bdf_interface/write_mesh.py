@@ -519,9 +519,14 @@ class WriteMesh(BDFAttributes):
         is_contact = (self.bcrparas or self.bctadds or self.bctparas
                       or self.bctsets or self.bsurf or self.bsurfs
                       or self.bconp or self.blseg or self.bfric
-                      or self.bgadds or self.bgsets or self.bctparms)
+                      or self.bgadds or self.bgsets or self.bctparms or self.bcbodys or self.bcparas)
         if is_contact:
             bdf_file.write('$CONTACT\n')
+            for (unused_id, bcbody) in sorted(self.bcbodys.items()):
+                bdf_file.write(bcbody.write_card(size, is_double))
+            for (unused_id, bcpara) in sorted(self.bcparas.items()):
+                bdf_file.write(bcpara.write_card(size, is_double))
+
             for (unused_id, bcrpara) in sorted(self.bcrparas.items()):
                 bdf_file.write(bcrpara.write_card(size, is_double))
             for (unused_id, bctparam) in sorted(self.bctparms.items()):

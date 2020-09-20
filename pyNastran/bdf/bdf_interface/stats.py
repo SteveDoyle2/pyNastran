@@ -84,6 +84,7 @@ def get_bdf_stats(model: BDF, return_type: str='string',
         'bsurf', 'bsurfs', 'blseg', 'bfric',
         'bconp', 'bcrparas', 'bctadds', 'bctparas', 'bctsets',
         'bgadds', 'bgsets', 'bctparms',
+        'bcbodys', 'bcparas',
 
         # sets
         'sets', 'usets',
