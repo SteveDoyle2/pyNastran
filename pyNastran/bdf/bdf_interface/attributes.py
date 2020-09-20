@@ -23,6 +23,7 @@ class BDFAttributes:
 
         self.is_nx = False
         self.is_msc = False
+        self.is_mystran = False
         self.is_nasa95 = False
         self.is_zona = False
         self.save_file_structure = False
@@ -34,6 +35,7 @@ class BDFAttributes:
         self._nastran_format = 'msc'
         self.is_nx = False
         self.is_msc = True
+        self.is_mystran = False
         self.is_nasa95 = False
         self.is_zona = False
 
@@ -41,6 +43,7 @@ class BDFAttributes:
         self._nastran_format = 'nx'
         self.is_nx = True
         self.is_msc = False
+        self.is_mystran = False
         self.is_nasa95 = False
         self.is_zona = False
 
@@ -48,8 +51,18 @@ class BDFAttributes:
         self._nastran_format = 'zona'
         self.is_nx = False
         self.is_msc = False
+        self.is_mystran = False
         self.is_nasa95 = False
         self.is_zona = True
+
+    def set_as_mystran(self):
+        self._nastran_format = 'mystran'
+        self.is_nx = False
+        self.is_msc = False
+        self.is_mystran = True
+        self.is_nasa95 = False
+        self.is_zona = False
+        self._update_for_mystran()
 
     def __properties__(self):
         """the list of @property attributes"""
@@ -1012,7 +1025,7 @@ class BDFAttributes:
     @nastran_format.setter
     def nastran_format(self, nastran_format: str) -> None:
         fmt_lower = nastran_format.lower().strip()
-        if fmt_lower not in ['nx', 'msc', 'zona', 'nasa95']:
+        if fmt_lower not in {'nx', 'msc', 'zona', 'nasa95', 'mystran'}:
             raise RuntimeError(nastran_format)
         self._nastran_format = fmt_lower
 

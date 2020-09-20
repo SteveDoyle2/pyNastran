@@ -647,6 +647,14 @@ class EIGP(Method):
 class EIGR(Method):
     """
     Defines data needed to perform real eigenvalue analysis
+
+    # msc/nx
+    | EIGR | SID  | METH| F1 | F2 | NE | ND |   |      |
+    |      | NORM |  G  |  C |    |    |    |   |      |
+
+    # mystran
+    | EIGR | SID  | METH| F1 | F2 | NE | ND |   | CRIT |
+    |      | NORM |  G  |  C |    |    |    |   |      |
     """
     type = 'EIGR'
     allowed_methods = [
@@ -657,10 +665,10 @@ class EIGR(Method):
     @classmethod
     def _init_from_empty(cls):
         sid = 1
-        return EIGR(sid, method='LAN', f1=None, f2=None, ne=None, nd=None,
+        return EIGR(sid, method='LAN', f1=None, f2=None, ne=None, nd=None, crit=None,
                     norm='MASS', G=None, C=None, comment='')
 
-    def __init__(self, sid, method='LAN', f1=None, f2=None, ne=None, nd=None,
+    def __init__(self, sid, method='LAN', f1=None, f2=None, ne=None, nd=None, crit=None,
                  norm='MASS', G=None, C=None, comment=''):
         """
         Adds a EIGR card
@@ -681,6 +689,8 @@ class EIGR(Method):
             estimate of number of roots (used for INV)
         nd : int; default=None
             desired number of roots
+        crit : float; default=0.0
+            orthogonality criteria
         msglvl : int; default=0
             debug level; 0-4
         maxset : int; default=None
@@ -723,6 +733,9 @@ class EIGR(Method):
 
         #: Desired number of roots (default=600 for SINV 3*ne for INV)
         self.nd = nd
+
+        #: orthogonality criterion
+        self.crit = crit
 
         #: Method for normalizing eigenvectors. ('MAX' or 'POINT';
         #: Default='MAX')
@@ -776,6 +789,7 @@ class EIGR(Method):
             nd = integer_or_blank(card, 6, 'nd', 0)
         else:
             nd = integer(card, 6, 'nd')
+        crit = double_or_blank(card, 8, 'crit')
         norm = string_or_blank(card, 9, 'norm', 'MASS')
 
         if norm == 'POINT':
@@ -785,7 +799,8 @@ class EIGR(Method):
             G = blank(card, 10, 'G')
             C = blank(card, 11, 'C')
         assert len(card) <= 12, f'len(EIGR card) = {len(card):d}\ncard={card}'
-        return EIGR(sid, method, f1, f2, ne, nd, norm, G, C, comment=comment)
+        return EIGR(sid, method, f1, f2, ne, nd,
+                    crit=crit, norm=norm, G=G, C=C, comment=comment)
 
     def cross_reference(self, model: BDF) -> None:
         pass

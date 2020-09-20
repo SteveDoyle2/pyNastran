@@ -1,0 +1,62 @@
+$ pynastran: version=mystran
+SOL 1
+CEND
+TITLE = SIMPLE composite plate in bending
+ECHO = NONE
+$
+SUBCASE 3
+SPC = 1
+OLOAD = ALL
+DISP = ALL
+LOAD = 1003
+$ 
+BEGIN BULK
+$ set AUTOSPC_RAT = 1.0E-9 to avoid all rotational DOFs being constrained
+PARAM   AUTOSPC Y       1.0E-9          Y       Y
+$-------$-------$-------$-------$-------$-------$-------$-------$-------$------- 
+$ Out-of-plane shear force applied to at the tip of the plate
+FORCE   1003    21              1.0     0.      0.      1.
+FORCE   1003    22              1.0     0.      0.      1.
+$-------$-------$-------$-------$-------$-------$-------$-------$-------$-------   
+$ Orthotropic material
+MAT8, 102,  4.5E9, 9.0E9, 0.28, 6.9E9, 6.9E9, 6.9E9
+$-------$-------$-------$-------$-------$-------$-------$-------$-------$-------
+PSHELL, 100, 102, 0.005, 102, 1.0, 102           
+$-------$-------$-------$-------$-------$-------$-------$-------$-------$-------
+$ BOUNDARY conditions based on SPC
+SPC     1       1       123456  0.0     2       123456  0.0 
+$-------$-------$-------$-------$-------$-------$-------$-------$-------$-------
+$ GRIDs and CQUADs
+GRID    1       0       0.0     0.0     0.0     0
+GRID    2       0       0.01    0.0     0.0     0
+GRID    3       0       0.01    0.01    0.0     0
+GRID    4       0       0.0     0.01    0.0     0
+GRID    5       0       0.01    0.02    0.0     0
+GRID    6       0       0.0     0.02    0.0     0 
+GRID    7       0       0.01    0.03    0.0     0
+GRID    8       0       0.0     0.03    0.0     0 
+GRID    9       0       0.01    0.04    0.0     0
+GRID    10      0       0.0     0.04    0.0     0 
+GRID    11      0       0.01    0.05    0.0     0
+GRID    12      0       0.0     0.05    0.0     0 
+GRID    13      0       0.01    0.06    0.0     0
+GRID    14      0       0.0     0.06    0.0     0
+GRID    15      0       0.01    0.07    0.0     0
+GRID    16      0       0.0     0.07    0.0     0 
+GRID    17      0       0.01    0.08    0.0     0
+GRID    18      0       0.0     0.08    0.0     0 
+GRID    19      0       0.01    0.09    0.0     0
+GRID    20      0       0.0     0.09    0.0     0 
+GRID    21      0       0.01    0.10    0.0     0
+GRID    22      0       0.0     0.10    0.0     0 
+CQUAD4  1       100     1       2       3       4       
+CQUAD4  2       100     4       3       5       6         
+CQUAD4  3       100     6       5       7       8    
+CQUAD4  4       100     8       7       9       10    
+CQUAD4  5       100     10      9       11      12   
+CQUAD4  6       100     12      11      13      14       
+CQUAD4  7       100     14      13      15      16         
+CQUAD4  8       100     16      15      17      18    
+CQUAD4  9       100     18      17      19      20    
+CQUAD4  10      100     20      19      21      22     
+ENDDATA

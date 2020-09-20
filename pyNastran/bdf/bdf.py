@@ -152,7 +152,7 @@ from .cards.bdf_sets import (
     SESET, #SEQSEP
     RADSET,
 )
-from .cards.params import PARAM
+from .cards.params import PARAM, PARAM_MYSTRAN
 from .cards.dmig import DMIG, DMI, DMIJ, DMIK, DMIJI, DMIG_UACCEL, DTI, DMIAX
 from .cards.thermal.loads import (QBDY1, QBDY2, QBDY3, QHBDY, TEMP, TEMPD, TEMPB3,
                                   TEMPRB, QVOL, QVECT)
@@ -235,10 +235,10 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             settings the logging object has
         mode : str; default='msc'
             the type of Nastran
-            valid_modes = {'msc', 'nx'}
+            valid_modes = {'msc', 'nx', 'mystran', 'zona}
 
         """
-        assert debug in [True, False, None], 'debug=%r' % debug
+        assert debug in [True, False, None], f'debug={debug!r}'
         self.echo = False
         self.read_includes = True
 
@@ -615,12 +615,14 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             self.set_as_msc()
         elif mode == 'nx':
             self.set_as_nx()
-        elif mode == 'zona':
-            self.set_as_zona()
         elif mode == 'nasa95':
             self.set_as_nasa95()
+        elif mode == 'mystran':
+            self.set_as_mystran()
+        elif mode == 'zona':
+            self.set_as_zona()
         else:  # pragma: no cover
-            msg = 'mode=%r is not supported; modes=[msc, nx, zona, nasa95]' % self._nastran_format
+            msg = f'mode={self._nastran_format!r} is not supported; modes=[msc, nx, zona, nasa95, mystran]'
             raise NotImplementedError(msg)
 
     def __getstate__(self):
@@ -3955,6 +3957,15 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
         self._check_pynastran_header(lines, check_header=True)
         if self.nastran_format == 'zona':
             self.zona.update_for_zona()
+        elif self.nastran_format == 'mystran':
+            self._update_for_mystran()
+        # TODO: undo the changes for zona/mystran...
+
+    def _update_for_mystran(self):
+        """updates for mystran"""
+        card_parser = self._card_parser
+        card_parser['PARAM'] = (PARAM_MYSTRAN, self._add_param_object)
+        self.add_param = self._add_param_mystran
 
     def _check_pynastran_header(self, lines: List[str], check_header: bool=True) -> None:
         """updates the $pyNastran: key=value variables"""
@@ -3970,7 +3981,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
 
             # key/value are lowercase
             if key == 'version':
-                assert value.lower() in ['msc', 'nx', 'zona', 'nasa95'], f'version={value!r} is not supported'
+                assert value.lower() in ['msc', 'nx', 'zona', 'nasa95', 'mystran'], f'version={value!r} is not supported'
                 self.nastran_format = value
             elif key == 'encoding':
                 self._encoding = value
@@ -4283,7 +4294,7 @@ class BDF(BDF_):
             settings the logging object has
         mode : str; default='msc'
             the type of Nastran
-            valid_modes = {'msc', 'nx'}
+            valid_modes = {'msc', 'nx', 'nasa95', 'mystran', 'zona'}
 
         """
         BDF_.__init__(self, debug=debug, log=log, mode=mode)

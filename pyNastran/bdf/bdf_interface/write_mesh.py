@@ -142,7 +142,7 @@ class WriteMesh(BDFAttributes):
         if has_read_write:
             bdf_file = out_filename
         else:
-            self.log.debug('---starting BDF.write_bdf of %s---' % out_filename)
+            self.log.debug(f'---starting BDF.write_bdf of {out_filename}---')
             bdf_file = open(out_filename, 'w', encoding=encoding)
         self._write_header(bdf_file, encoding, write_header=write_header)
 
@@ -150,7 +150,7 @@ class WriteMesh(BDFAttributes):
         if self.superelement_models:
             bdf_file.write('$' + '*'*80+'\n')
             for superelement_id, superelement in sorted(self.superelement_models.items()):
-                bdf_file.write('BEGIN SUPER=%s\n' % superelement_id)
+                bdf_file.write(f'BEGIN SUPER={superelement_id}\n')
                 superelement.write_bdf(out_filename=bdf_file, encoding=encoding,
                                        size=size, is_double=is_double,
                                        interspersed=interspersed, enddata=False,
@@ -191,11 +191,11 @@ class WriteMesh(BDFAttributes):
                 self.punch = True
 
         if self.nastran_format and write_header:
-            bdf_file.write('$pyNastran: version=%s\n' % self.nastran_format)
-            bdf_file.write('$pyNastran: punch=%s\n' % self.punch)
-            bdf_file.write('$pyNastran: encoding=%s\n' % encoding)
-            bdf_file.write('$pyNastran: nnodes=%s\n' % len(self.nodes))
-            bdf_file.write('$pyNastran: nelements=%s\n' % len(self.elements))
+            bdf_file.write(f'$pyNastran: version={self.nastran_format}\n')
+            bdf_file.write(f'$pyNastran: punch={self.punch}\n')
+            bdf_file.write(f'$pyNastran: encoding={encoding}\n')
+            bdf_file.write(f'$pyNastran: nnodes={len(self.nodes):d}\n')
+            bdf_file.write(f'$pyNastran: nelements={len(self.elements):d}\n')
 
         if not self.punch:
             self._write_executive_control_deck(bdf_file)

@@ -116,13 +116,13 @@ class BDFInputPy:
             system_lines, executive_control_lines, case_control_lines,
             bulk_data_lines, bulk_data_ilines,
             superelement_lines, superelement_ilines) = out
-        if self.nastran_format in ['msc', 'nx', 'nasa95']:
+        if self.nastran_format in {'msc', 'nx', 'nasa95', 'mystran'}:
             pass
         elif self.nastran_format == 'zona':
             bulk_data_lines, bulk_data_ilines, system_lines = self._get_lines_zona(
                 system_lines, bulk_data_lines, bulk_data_ilines, punch)
         else:
-            msg = 'nastran_format=%r and must be msc, nx, nasa95, or zona' % self.nastran_format
+            msg = f'nastran_format={self.nastran_format!r} and must be msc, nx, nasa95, mystran, or zona'
             raise NotImplementedError(msg)
         return (system_lines, executive_control_lines, case_control_lines,
                 bulk_data_lines, bulk_data_ilines,

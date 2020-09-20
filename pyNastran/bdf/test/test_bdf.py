@@ -250,6 +250,7 @@ def run_bdf(folder, bdf_filename, debug=False, xref=True, check=True, punch=Fals
             run_extract_bodies=False, run_skin_solids=True,
             save_file_structure=False,
             nerrors=0, dev=False, crash_cards=None, safe_xref=False, pickle_obj=False,
+            version: Optional[str]=None,
             stop_on_failure=True, log=None):
     """
     Runs a single BDF
@@ -336,6 +337,7 @@ def run_bdf(folder, bdf_filename, debug=False, xref=True, check=True, punch=Fals
         quiet=quiet, dumplines=dumplines, dictsort=dictsort,
         nerrors=nerrors, dev=dev, crash_cards=crash_cards,
         safe_xref=safe_xref,
+        version=version,
         run_extract_bodies=run_extract_bodies,
         run_skin_solids=run_skin_solids,
         save_file_structure=save_file_structure,
@@ -344,6 +346,18 @@ def run_bdf(folder, bdf_filename, debug=False, xref=True, check=True, punch=Fals
         log=log,
     )
     return fem1, fem2, diff_cards
+
+def _map_version(fem: BDF, version: Optional[str]):
+    if version:
+        version_map = {
+            'msc': fem.set_as_msc,
+            'nx': fem.set_as_nx,
+            'mystran': fem.set_as_mystran,
+            #'nasa95': fem.set_as_nasa95,
+            'zona': fem.set_as_zona,
+        }
+        func = version_map[version]
+        func()
 
 def run_and_compare_fems(
         bdf_model, out_model, debug=False, xref=True, check=True,
@@ -355,14 +369,16 @@ def run_and_compare_fems(
         dynamic_vars=None,
         quiet=False, dumplines=False, dictsort=False,
         nerrors=0, dev=False, crash_cards=None,
+        version: Optional[str]=None,
         safe_xref=True,
         run_extract_bodies=False,
         run_skin_solids=True, pickle_obj=False,
         stop_on_failure=True, log=None,
     ):
     """runs two fem models and compares them"""
-    assert os.path.exists(bdf_model), '%r doesnt exist' % bdf_model
+    assert os.path.exists(bdf_model), f'{bdf_model!r} doesnt exist'
     fem1 = BDF(debug=debug, log=log)
+    _map_version(fem1, version)
     fem1.dumplines = dumplines
 
     fem1.set_error_storage(nparse_errors=nerrors, stop_on_parsing_error=True,
@@ -385,7 +401,6 @@ def run_and_compare_fems(
     is_mesh_opt = False
     try:
         #try:
-
         fem1 = run_fem1(fem1, bdf_model, out_model, mesh_form, xref, punch, sum_load,
                         size, is_double,
                         run_extract_bodies=run_extract_bodies,
@@ -667,8 +682,9 @@ def run_fem1(fem1: BDF, bdf_model: str, out_model: str, mesh_form: str,
                 export_mcids_all(fem1)
 
                 fem1._xref = True
-                read_bdf(fem1.bdf_filename, encoding=encoding, xref=False,
-                         debug=fem1.debug, log=fem1.log)
+                if fem1._nastran_format != 'mystran':
+                    read_bdf(fem1.bdf_filename, encoding=encoding, xref=False,
+                             debug=fem1.debug, log=fem1.log)
                 if safe_xref:
                     fem1.safe_cross_reference()
                 elif xref:
@@ -2002,6 +2018,20 @@ def test_bdf_argparse(argv=None):
         '-d', '--double', action='store_true',
         help='writes the BDF in large field, double precision format (default=False)')
 
+    version_group = parent_parser.add_mutually_exclusive_group()
+    version_group.add_argument(
+        '--msc', action='store_true',
+        help='Assume MSC Nastran (default=True)')
+    version_group.add_argument(
+        '--nx', action='store_true',
+        help='Assume NX Nastran (default=False)')
+    version_group.add_argument(
+        '--nasa95', action='store_true',
+        help='Assume Nastran 95 (default=False)')
+    version_group.add_argument(
+        '--mystran', action='store_true',
+        help='Assume Mystran (default=False)')
+
     parent_parser.add_argument(
         '-L', '--loads', action='store_false',
         help='Disables forces/moments summation for the different subcases (default=True)')
@@ -2050,6 +2080,7 @@ def test_bdf_argparse(argv=None):
     args = parent_parser.parse_args(args=argv)
 
     args2 = argparse_to_dict(args)
+    _set_version(args2)
     #optional_args = [
         #'double', 'large', 'crash', 'quiet', 'profile',
         #'xref', 'safe', 'check', 'punch', 'loads', 'stop', 'encoding',
@@ -2058,6 +2089,22 @@ def test_bdf_argparse(argv=None):
     #for arg in optional_args:
         #swap_key(args2, arg, '--' + arg)
     return args2
+
+def _set_version(args: Any):
+    """sets the version flag"""
+    if args['msc']:
+        version = 'msc'
+    elif args['nx']:
+        version = 'nx'
+    elif args['nasa95']:
+        version = 'nasa95'
+    elif args['mystran']:
+        version = 'mystran'
+    else:
+        version = None
+    args['version'] = version
+    del args['msc'], args['nx'], args['nasa95'], args['mystran']
+
 # defaults
 #check        = False
 #crash        = None
@@ -2083,7 +2130,7 @@ def get_test_bdf_usage_args_examples(encoding):
     """helper method"""
     options = (
         '\n  [options] = [-e E] [--encoding ENCODE] [-q] [--dumplines] [--dictsort]\n'
-        '              [--crash C] [--pickle] [--profile] [--hdf5]\n')
+        '              [--crash C] [--pickle] [--profile] [--hdf5] [--msc|--nx|--nasa95|--mystran]\n')
     usage = (
         "Usage:\n"
         '  test_bdf [-x | --safe] [-p] [-c] [-L]      BDF_FILENAME [options]\n'
@@ -2130,6 +2177,10 @@ def get_test_bdf_usage_args_examples(encoding):
         '  --profile    Profiles the code (default=False)\n'
         '  --pickle     Pickles the data objects (default=False)\n'
         '  --hdf5       Save/load the BDF in HDF5 format\n'
+        '  --msc        Assume MSC Nastran\n'
+        '  --nx         Assume NX Nastran\n'
+        '  --nasa95     Assume Nastran 95\n'
+        '  --mystran    Assume Mystran\n'
         '\n'
         'Info:\n'
         '  -h, --help     show this help message and exit\n'
@@ -2201,6 +2252,7 @@ def main(argv=None):
             pickle_obj=data['pickle'],
             safe_xref=data['safe'],
             hdf5=data['hdf5'],
+            version=data['version'],
             print_stats=True,
             stop_on_failure=False,
         )
@@ -2246,6 +2298,7 @@ def main(argv=None):
             pickle_obj=data['pickle'],
             safe_xref=data['safe'],
             hdf5=data['hdf5'],
+            version=data['version'],
             print_stats=True,
             stop_on_failure=False,
         )
