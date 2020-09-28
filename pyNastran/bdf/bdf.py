@@ -187,6 +187,274 @@ from .bdf_interface.pybdf import (
 
 #from .bdf_interface.add_card import CARD_MAP
 
+SOL_700 = {
+    ## Explicit Nonlinear (SOL 700)
+    'ABINFL', 'AIRBAG', 'ATBACC', 'ATBJNT', 'ATBSEG',
+    'BARRIER',
+    'BCBODY', 'BCBODY1', 'BCBOX', 'BCELIPS', 'BCGRID', 'BCMATL', 'BCONECT',
+    'BCONPRG', 'BCONPRP', 'BCPROP', 'BCSEG', 'BCTABL1', 'BCTABLE',
+    'BIAS', 'BJOIN', 'BSURF',
+    'CDAMP1D', 'CDAMP2D', 'CELAS1D', 'CELAS2D', 'CMARKB2', 'CMARKN1', 'COHFRIC',
+    'COMPUDS', 'CORD3R',
+    'COUCOHF', 'COUOPT', 'COUP1FL', 'COUPINT', 'COUPLE',
+    'CSPR', 'CYLINDR', 'DETSPH', 'DYFSISW', 'DYPARAM',
+    'EOSDEF', 'EOSGAM', 'EOSGRUN', 'EOSIG', 'EOSJWL',
+    'EOSMG', 'EOSNA', 'EOSPOL', 'EOSUDS',
+    'EOSTAIT', 'EULFOR', 'EULFOR1', 'EULFREG',
+    'FAILJC', 'FAILMPS', 'FAILUDS', 'FFCONTR',
+    'FLOW', 'FLOWC', 'FLOWDEF', 'FLOWT', 'FLOWUDS', 'FORCE2', 'FORCUDS',
+    'GBAG', 'GBAGCOU',
+    'HEATLOS', 'HGSUPPR', 'HTRCONV', 'HTRRAD', 'HYDSTAT',
+    'INFLCG', 'INFLFRC', 'INFLGAS', 'INFLHB', 'INFLTNK', 'INFLTR', 'INITGAS', 'LEAKAGE',
+    'MATBV', 'MATDEUL', 'MATEP', 'MATF', 'MATFAB', 'MATHE', 'MATORT', 'MATRIG', 'MATVE',
+    'MESH', 'MOMENT2', 'NLOUTUD',
+    'PBEAML', 'PBELT', 'PCOMPA', 'PELAS1', 'PERMEAB', 'PERMGBG', 'PEULER', 'PEULER1', 'PMARKER', 'PMINC',
+    'PORFCPL', 'PORFGBG', 'PORFLOW', 'PORFLWT', 'PORHOLE', 'PORHYDS', 'PORUDS',
+    'PSHELL1', 'PSPRMAT', 'PVISC1', 'RBJOINT', 'RELEX',
+    'SHREL', 'SHRPOL', 'SHRUDS',
+    'SPHERE', 'SURFINI',
+    'TABLUDS', 'TIC3', 'TICEL', 'TICEUDS', 'TICEUL1', 'TICREG', 'TICVAL',
+    'TODYNA',
+    'WALL',
+    'YLDHY', 'YLDJC', 'YLDMC', 'YLDMSS', 'YLDPOL', 'YLDRPL',
+    'YLDSG', 'YLDTM', 'YLDUDS', 'YLDVM', 'YLDZA',
+}
+MISSING_CARDS = {
+    'CGEN', 'GMSPC', 'GMCURV', 'GMLOAD', 'FEFACE', 'GMSURF', 'GMINTS', 'PVAL', 'PINTS',
+    'EGRID', 'ADAPT', 'GRIDG', 'MESHOPT', 'OUTPUT', 'OUTRCV', 'SPCG', 'GRIDU',
+    'GMINTC', 'PINTC', 'GMBNDS', 'GMBC', 'GMCONV', 'PGEN', 'GMQVOL',
+    'CNGRNT',
+
+    # slot
+    'GRIDF',
+    'CSLOT3', 'CSLOT4', 'CAXIF2', 'CAXIF3', 'AXSLOT', 'SLBDY',
+
+    'EQUIV', 'EXTRN', 'DSCONS', 'DVGEOM', 'DVAR', 'DVSET',
+    'ADUM1', 'ADUM8', 'ADUM9', 'GRIDS',
+
+    'CFLUID2', 'CFLUID3', 'CFLUID4', 'FSLIST', 'BNDGRID', 'BDYLIST', 'PRESPT',
+    'FREEPT', 'FLSYM',
+    # ----------------------------
+    'RJOINT', 'RTRPLT', 'RTRPLT1', 'MDLPRM', 'DYNRED',
+
+    ## fatigue
+    'FTGDEF', 'FTGPARM', 'FTGEVNT', 'FTGLOAD', 'FTGSEQ',
+    'MATFTG', 'PFTG', 'TABLFTG', 'UDNAME', 'SET4',
+    'TOPSTR', 'TOPDMG',
+
+    ## acoustic
+    'CACINF3', 'CACINF4',
+
+    ## Non Linear (SOL 400)
+    'BCBODY', 'BSURF', 'BCTABLE', 'BCPARA', 'PSLDN1',
+
+
+    ## Implicit Nonlinear (SOL 600) - marc
+    'PARAMARC', 'MARCIN', 'MARCOUT',
+    'RESTART',
+    'MATD001', 'MATD003', 'MATD005','MATD006', 'MATD007', 'MATD009',
+    'MATD012', 'MATD013', 'MATD014', 'MATD015', 'MATD018', 'MATD019',
+    'MATD020', 'MATD022', 'MATD024', 'MATD026', 'MATD027', 'MATD028',
+    'MATD030', 'MATD031', 'MATD034', 'MATD036',
+    'MATD054', 'MATD055', 'MATD057', 'MATD059',
+    'MATD062', 'MATD063', 'MATD064', 'MATD077',
+    'MATD080', 'MATD081', 'MATD127', 'MATD181',
+    'MATD20M',
+    'MATD2AN', 'MATD2OR',
+    'MATORT', 'MATTORT',
+    'MATEP', 'MATTEP',
+    'MATHE', 'MATTHE',
+    'MATVP',
+    'MATSMA',
+    'MATVE', 'MATTVE',
+    'MATG', 'MATTG'
+    'MATF',
+    'MATVB',
+    'MATHED',
+    'COHSEIV',
+    'DEACTEL', 'ACTIVAT',
+    # properties
+    'PCOMPF', 'MSTACK', 'GASKET',
+    # control
+    'NLAUTO', 'NLDAMP', 'NLSTRAT',
+    # solid -> shell
+    'CSSHLH', 'CSSHLP',
+    # solid element connector
+    'CSSHL', 'PSSHL',
+    # contact bodies
+    'BCBODY', 'BCHANGE',
+    'GMNURB', 'BSURF', 'BCBOX', 'BCPROP', 'BCMATL',
+    # contact parameters
+    'BCONTACT', 'BCPARA',
+    # contact table
+    'BCTABLE',
+    # contact movement
+    'BCMOVE',
+    # thermal contact
+    'MPHEAT', 'NLHEAT', 'MCHSTAT', 'MINSTAT',
+    'MHEATSHL', 'MTHERM',
+
+    ## bolts
+    'MBOLT', 'MBOLTUS', 'BOLT', 'BOLTFRC', 'BOLTFOR',
+
+    ## uds
+    'PORUDS', 'YLDUDS', 'SHRUDS', 'FAILUDS', 'COMPUDS',
+    'FLOWUDS','BCONUDS', 'ELEMUDS', 'UDSESV', 'MATUDS',
+    'TICEUDS', 'EOSUDS', 'TABLUDS', 'GENUDS', 'ENTUDS',
+
+    # explosives
+    'EXPLSV', 'PLBLAST',
+
+    # rotor
+    'ROTOR', 'ROTORB', 'ROTPARM', 'ROTORAX', 'ROTORSE',
+
+    # elements/properties
+    'CELAS1D',
+    'PRODN1',
+    'CBARG',
+    'PBEMN1',
+    'PSHELL1', 'PSHL3D',
+    'PSLDN1', 'PSHELLD', 'PSOLIDD',
+    'PSHLN1', 'PSHLN2',
+    'PCOMPG1', 'PCOMPLS', 'PLCOMP',
+    'PBUSH2D', 'PBSH2DT',
+    'CYSYM', 'CSEAM', 'PSEAM', 'CWSEAM', 'PWSEAM',
+    'PACINF', 'PAXSYMH',
+    'CBEAR', 'PBEAR',
+    'CSPOT', 'CFILLET',
+    'CBUTT',
+    'PCOHE',
+    'CWELD', 'PWELD',
+
+
+    ## rigid_elements
+    'RSPINT', 'RSPINR', 'RBE2GS',
+
+    ## materials
+    'MATF', 'MATEP', 'MATVE', 'MCOHE', 'MATM',
+    'MATDT01', 'MATDIGI', 'MATUSR', 'MATTC',
+    'MATORT', 'MATTORT', 'MATTHE', 'MATPLCY',
+    'MATSMA', 'MAT8A', 'MATTEP',
+    'MATPOR', 'MATDMG',
+    'MAT2F', 'MAT8F',
+
+    ## loads
+    'FORCDST', 'PLOADX', 'PLOADB3', 'PLOADG', 'QBDY4', 'SLOADN1',
+    'TEMPP1', 'TTEMP', 'RGYRO', 'PLOADE1', 'RCROSSC', 'LOADCYT',
+    'TEMPN1',
+
+    ## boundaries
+    'BNDFREE', 'BNDFRE1',
+    'BNDFIX', 'BNDFIX1',
+    'SPCR',
+
+    ## aero
+    'UXVEC', 'GUST2', 'RVDOF', 'RVDOF1', 'AEFORCE', 'AEPRESS',
+
+    ## acoustics
+    'MICPNT',
+
+    ## coords
+    'CORD1RX', 'CORD3G',
+
+    ## brakes
+    'BRKSQL',
+
+    ## d2r
+    'D2R0000', 'D2RAUTO', 'D2RINER',
+
+    'MATD016', 'MATD029', 'MATD053', 'MATD066', 'MATD067', 'MATD069',
+    'MATD070', 'MATD078', 'MATD093', 'MATD094', 'MATD095', 'MATD097',
+    'MATD098', 'MATD099',
+    'MATDS01', 'MATDS02','MATDS03','MATDS04', 'MATDS05','MATDS06','MATDS07','MATDS08',
+    'MATDS13','MATDS14','MATDS15',
+    'MATDSW1', 'MATDSW2', 'MATDSW3', 'MATDSW4', 'MATDSW5',
+
+    # ???
+    'MONGRP', 'THPAD', 'TABLEDR',
+    'DMIGOUT', 'MPCOUT', 'BCBZIER', 'BCPATCH', 'MDBULK', 'BCSCAP',
+    'PRJCON',
+    'TABLRPC', 'CIFQDX', 'NLADAPT', 'EOSTAB', 'EOSTABC',
+    'TABLED5',
+    'TIMNAT', 'ROTHYBD',
+    'GRIA',
+    'PANEL', 'TRMCPL',
+    'DAMPING', 'DAMPGBL',
+    'MONCARL',
+    'PLCYISO', 'PLCYKIN', 'PLCYRUP',
+    'BCTABLE', 'BCTABL1', 'BCAUTOP', 'BCBODY1', 'BCPROP', 'BCPROPS', 'BCBMRAD',
+    'BGPARM', 'BCHANGE', 'BOUTPUT', 'TCNTPRM', 'BSQUEAL',
+    'DELETE', 'RENAME',
+    'ITER', 'GROUP', 'LIST',
+    'MATRIG',
+    'DVSHAP', 'DVBSHAP',
+    'DISTORT', 'UNGLUE',
+    'NLSTEP', 'NLAUTO', 'NLMOPTS', 'NLOUT', 'ERPPNL',
+    'RBAX3D', 'ACPEMCP',
+    'FTGDEF', 'CAMPBLL', 'UNBALNC', 'ECHO',
+    'CINTC', 'GMBNDC',
+    'SET4', 'PFTG', 'FTGPARM', 'UDNAME', 'FTGSEQ',
+    'ELIST', 'MFLUID',
+    'TEMPF', 'TEMPG', 'HADAPTL', 'HADACRI',
+    'CIFPENT',
+    'ELAR2', 'EBDSET', 'TMCPARA',
+    'PEULER1', 'MATDEUL', 'EOSPOL', 'SHREL', 'YLDMC', 'PMINC', 'COUPLE', 'COUCOHF',
+    'COHFRIC', 'MESH', 'TICVAL', 'TICEUL1', 'TICREG', 'CYLINDR',
+    'SWLDPRM', 'PLOTOPT', 'PLOTE', 'PLOTG',
+    'FTGEVNT', 'RADBND', 'RADMT', 'NOLIN1', 'NOLIN2', 'NOLIN3', 'NOLIN4',
+    'NLFREQ1', 'NLRGAP',
+    'ACADAPT', 'ACORDER', 'AMLREG'
+    'NLCNTL', 'NLCNTLG', 'NLCNTL2', 'NLSTRAT', 'NLRSFD', 'NLHARM',
+    'DMRLAW',
+    'TABLE3D', 'TABL3D0',
+    'CONTRLT',
+    'MPOINT',
+    'CFTUBE', 'CHBDY', 'MONSUM', 'TMPSET', 'HYBDAMP',
+    'TOMVAR', 'STOCHAS', 'NHRMPRM', 'MONSUM', 'CYLINDER', 'EOSGAM',
+    'SPHERE', 'BJOIN', 'PMARKER', 'TICEUL', 'PEULER', 'BCBOX',
+    'NLOUTUD', 'YLDVM', 'MATBV', 'SEDRSP2', 'SEDRSP3', 'SEDLINK', 'MFUN',
+    'MTAB', 'TIC3', 'TABSCTL', 'SPLINEX', 'BCONECT', 'BCONPRG',
+    'BCSURF', 'BCGRID', 'PAXISYM', 'BEADVAR', 'BLDOUT', 'GRIDMOD',
+    'IPSTRAIN', 'RESTART', 'TICD',
+    'RCROSS', 'CYSUP', 'FBODYLD', 'BDYOR', 'RANDVAR',
+    'L16MOD', 'SECTAX',
+    'ACIFPRM', 'BCBDPRP', 'MDMIOUT', 'MPROCS', 'FBODYSB',
+    'CCRSFIL', 'COMBWLD',
+    'CIFHEX',
+    'FSICTRL', 'FLOW', 'FLOWDEF', 'BCSEG', 'CMARKN1', 'LEAKAGE', 'TICEL',
+    'EOSMG', 'YLDJC', 'MAT1A', 'HGSUPPR',
+    'EOSTAIT', 'EOSJWL', 'SURFINI', 'WALL', 'MPCY',
+    'TIMNVH', 'CIFQUAD', 'VCCT',
+    'DYTIMHS', 'PRESTRS', 'SEQROUT', 'BCRIGID', 'BCMOVE', 'ISTRESS',
+    'WETLOAD', 'WETELMG', 'COUP1FL', 'PORFLOW', 'PERMEAB', 'ENDDYNA',
+    'COUOPT', 'COUPLE1', 'COUP1INT', 'FAILJC',
+    'DETSPH', 'BIAS', 'PORFCPL', 'RELAX', 'FLOW', 'ISTRSSH',
+    'NTHICK', 'TIM2PSD', 'WETSURF', 'WETELME', 'BCNURBS',
+    'BCTRIM', 'IMPGEOM', 'IMPCASE', 'SPCD2', 'SPRBCK', 'BCRGSRF', 'BCNURB2',
+    'CAXISYM', 'RADC', 'VIEWEX',
+    'ACLOAD', 'PBARN1'
+    , 'TABL3D1', 'AEGRID', 'AEQUAD4', 'SPBLND1', 'CONCTL',
+    'MAT1F', 'HYDROS', 'HYDROC', 'DVLREL1', 'DTABLE2', 'DVPSURF', 'PFASTT',
+    'FRFRELS', 'FRFCONN', 'FRFXIT1', 'FBALOAD', 'MATS8', 'METADATA',
+    'PRIM1', 'PRIM7', 'CONV3', 'GRIDA', 'MAT10F', 'RADCOL', 'SPLINRB',
+    'TABL3D2', 'DYMAT24', 'FBAPHAS', 'FRFFLEX', 'FBADLAY', 'FRFXIT',
+    'FRFCOMP', 'FRFSPC1', 'PCOMPFQ', 'PDISTB', 'MASSSET', 'PSLDN2', 'MATSORT',
+    'NLHEATC', 'MDRBE2', 'MDRBE3', 'MDEXCLD', 'MDWELD', 'MDBCNCT', 'MDCONCT',
+    'MDBCTB1', 'MDMPC', 'MDRROD', 'ACCSSPT', 'MDLOC', 'MDMPLN', 'MDMOVE', 'MDWELD',
+    'DEFUSET', 'MDFAST', 'MDBOLT', 'MDSEAM', 'ALIASM', 'POSTBUK', 'MATDB01',
+    'PBEAM71', 'PSHEARN', 'MATD010', 'PBDISCR', 'PBELTD', 'CORD3RX', 'RBE2A',
+    'ACCMETR', 'CBELT', 'RBJSTIF', 'MDRJNT', 'BCPFLG', 'MDLABEL', 'MDBNDRY',
+    'CHEXCZ', 'CPENTCZ', 'BEDGE', 'DVEREL1', 'DMNCON', 'DVTREL1', 'NLCNTL',
+    'MATCRP', 'TLOAD3', 'MATSR', 'DTEMP',
+    'MDDMIG', 'MDTRAN', 'MDROT1', 'MDROT2', 'MDMIR1', 'MDMIR2', 'MDMIAUX',
+    'MPCREEP',
+    'COHESIV', 'CSSHLM', 'PBMARB6', 'PBMNUM6', 'DMIGROT', 'GRNDSPR', 'SUPORT6',
+    'MARPRN', 'MATNLE2', 'MATNLE3', 'MATNLE4', 'MATNLE5', 'MATNLE6', 'MATPDR',
+    'MGRSPR', 'MIXTURE', 'MNF600', 'MT16SEL', 'MTABRV', 'NLBSH3D', 'MONCNCM',
+    'FREQV', 'VATVFS', 'PMIC', 'MAT10C', 'ALOAD', 'ELAR', 'ATVBULK', 'AMLREG',
+    'ATVFS', 'BOLTLD', 'BCTPAR2', 'MATFT', 'PLOTEL4', 'CYCADD', 'MATT11'
+}
+
 
 def load_bdf_object(obj_filename:str, xref: bool=True, log=None, debug: bool=True):
     model = BDF(log=log, debug=debug)
@@ -2352,12 +2620,8 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
                 card_name, card_lines)
             raise RuntimeError(msg)
 
-        #if card_name in ['CGEN', 'GMSPC', 'GMCURV', 'GMLOAD', 'FEFACE', 'GMSURF', 'GMINTS', 'PVAL', 'PINTS',
-                         #'EGRID', 'ADAPT', 'GRIDG', 'MESHOPT', 'OUTPUT']:
-            #return
-
-        # add me
-        #elif card_name in ['BCTABLE', 'RJOINT', 'RTRPLT', 'RTRPLT1', 'MDLPRM', 'DYNRED']:
+        #elif card_name in SOL_700 or card_name in MISSING_CARDS:
+            #self.log.warning(f'    rejecting card_name = {card_name!r}')
             #return
 
         if card_name not in self.card_count:
@@ -3953,14 +4217,26 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             with open(bdf_filename, 'r') as bdf_file:
                 lines = bdf_file.readlines()
         except UnicodeDecodeError:
-            with open(bdf_filename, 'r', errors='ignore') as bdf_file:
-                line = bdf_file.readline()
-                iline = 1
+            with open(bdf_filename, 'r', errors='replace') as bdf_file:
+                line = 'temp'
+                lines = []
                 while line:
-                    self.log.debug(f'Line {iline}: {line.strip()}')
                     line = bdf_file.readline()
-                    iline += 1
+                    lines.append(line)
+                    try:
+                        # try to force a crash
+                        bytes_line = line.encode('ascii')  # TODO: use the encoding
+                    except UnicodeEncodeError:
+                        break
+                n = 20
+                i0 = len(lines) - n
+                for i, line in enumerate(lines[-n:-1]):
+                    self.log.debug(f'Line {i0+i}: {line.strip()!r}')
+                self.log.error(f'Line {i0+i+1}: {lines[-1].strip()!r}')
+                raise
+
         except (AttributeError, TypeError) as error:
+            self.log.warning(str(error))
             if hasattr(bdf_filename, 'read') and hasattr(bdf_filename, 'write'):
                 lines = bdf_filename.readlines()
                 bdf_filename.seek(0)  # need to rewind the buffer!

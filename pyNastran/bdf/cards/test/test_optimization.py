@@ -948,6 +948,7 @@ class TestOpt(unittest.TestCase):
         tests:
          - DTABLE
          - DRESP2
+
         """
         log = get_logger(level='warning')
         model = BDF(log=log)
@@ -971,9 +972,24 @@ class TestOpt(unittest.TestCase):
             (0, 'DTABLE'): ['B1', 'C', 'A'],
         }
         dresp2 = model.add_dresp2(dresp_id, label, dequation, region, params,
-                                  method='MIN', c1=1., c2=0.005, c3=10., validate=True, comment='')
+                                  method='MIN', c1=1., c2=0.005, c3=10., validate=True,
+                                  comment='')
+        eqs = [
+            'f(a,b,c)=a+b+c'
+        ]
+        model.add_deqatn(dequation, eqs)
+        fields = dresp2.raw_fields()
+        #print(fields)
+        expected_fields = ['DRESP2', 42, 'cat', 1000, None, 'MIN', 1.0, 0.005, 10.0,
+                           'DTABLE', 'B1', 'C', 'A', None, None, None, None]
+        assert fields == expected_fields
+        #DRESP2        42     cat    1000
+        #          DTABLE      B1       C       A
+        #---------------------------------
+        dresp2.cross_reference(model)
         str(dresp2)
-        #print(dresp2)
+        fields = dresp2.raw_fields()
+        assert fields == expected_fields, fields
 
 if __name__ == '__main__':  # pragma: no cover
     unittest.main()

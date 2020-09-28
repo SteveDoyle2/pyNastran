@@ -6556,7 +6556,7 @@ class AddCards(AddMethods):
         self._add_tf_object(tf)
         return tf
 
-    def add_deqatn(self, equation_id, eqs, comment='') -> DEQATN:
+    def add_deqatn(self, equation_id: int, eqs: List[str], comment: str='') -> DEQATN:
         """
         Creates a DEQATN card
 

@@ -1941,7 +1941,8 @@ class DRESP1(OptConstraint):
             'FRMASS', 'WEIGHT', 'EIGN', 'LAMA', 'VOLUME', 'FREQ', 'ERP',
             'FLUTTER', 'CFAILURE', 'CSTRAT', 'CEIG', 'DIVERG', 'STABDER', 'TRIM',
             'ESE', 'TOTSE',
-            'GPFORCE', 'GPFORCP',}
+            'GPFORCE', 'GPFORCP',
+            'FATIGUE'}
         not_implemented = no_validate
         no_validate.update(not_implemented)
         no_validate.update(node_types)
@@ -2378,6 +2379,21 @@ def _dresp_verify_eids(dresp: DRESP1, model: BDF, property_type):
                 element = model.elements[eid]
                 assert element.type in valid_etypes, f'valid={valid_etypes}\n{element.get_stats()}'
 
+DRESP2_PACK_LENGTH = {
+    'DESVAR' : (1, 0),
+    'DTABLE' : (1, 0),
+    'DFRFNC' : (1, 0),
+    'DRESP1' : (1, 0),
+    'DNODE' : (1, 1),  # unique entry
+    'DVPREL1' : (1, 0),
+    'DVCREL1' : (1, 0),
+    'DVMREL1' : (1, 0),
+    'DVPREL2' : (1, 0),
+    'DVCREL2' : (1, 0),
+    'DVMREL2' : (1, 0),
+    'DRESP2' : (1, 0),
+}
+
 class DRESP2(OptConstraint):
     """
     Design Sensitivity Equation Response Quantities
@@ -2670,9 +2686,9 @@ class DRESP2(OptConstraint):
         """
         #if model.dtable is not None:
             #model.log.debug(model.dtable.rstrip())
-        msg = ', which is required by DRESP2 ID=%s' % (self.dresp_id)
+        msg = f', which is required by DRESP2 ID={self.dresp_id}'
         default_values = {}
-        params = {}
+        params_ref = {}
         for key, vals in sorted(self.params.items()):
             try:
                 unused_j, name = key
@@ -2680,47 +2696,52 @@ class DRESP2(OptConstraint):
                 raise RuntimeError(str(self))
             #print(j, name)
             if name in ['DRESP1', 'DRESP2']:
-                params[key] = []
+                params_ref[key] = []
                 for unused_i, val in enumerate(vals):
-                    params[key].append(model.DResp(val, msg))
+                    params_ref[key].append(model.DResp(val, msg))
             elif name in ['DVCREL1', 'DVCREL2']:
-                params[key] = []
+                params_ref[key] = []
                 for val in vals:
-                    params[key].append(model.DVcrel(val, msg))
+                    params_ref[key].append(model.DVcrel(val, msg))
             elif name in ['DVMREL1', 'DVMREL2']:
-                params[key] = []
+                params_ref[key] = []
                 for unused_i, val in enumerate(vals):
-                    params[key].append(model.DVmrel(val, msg))
+                    params_ref[key].append(model.DVmrel(val, msg))
             elif name in ['DVPREL1', 'DVPREL2']:
-                params[key] = []
+                params_ref[key] = []
                 for unused_i, val in enumerate(vals):
-                    params[key].append(model.DVprel(val, msg))
+                    params_ref[key].append(model.DVprel(val, msg))
             elif name == 'DESVAR':
-                params[key] = []
+                params_ref[key] = []
                 for unused_i, val in enumerate(vals):
-                    params[key].append(model.Desvar(val, msg))
+                    params_ref[key].append(model.Desvar(val, msg))
             elif name == 'DTABLE':
                 #model.log.info('bdf_filename = %s' % model.bdf_filename)
                 #model.log.info('\n' + model.dtable.rstrip())
                 self.dtable_ref = model.dtable
                 #print('dtable =', self.dtable)
+                names = []
                 for unused_i, val in enumerate(vals):
                     default_values[val] = self.dtable_ref[val]
+                    names.append(val)
+                params_ref[key] = names
+                del names, vals
             elif name == 'DNODE':
-                params[key] = [[], []]
+                params_ref[key] = [[], []]
                 node_vals, component_vals = vals
                 for nid in node_vals:
-                    params[key][0].append(model.Node(nid, msg))
-                params[key][1] = component_vals
+                    params_ref[key][0].append(model.Node(nid, msg))
+                params_ref[key][1] = component_vals
+                del node_vals, component_vals, vals
             else:
-                raise NotImplementedError('  TODO: xref %s\n%s' % (str(key), str(self)))
+                raise NotImplementedError(f'  TODO: xref {key}\n{self}')
 
         # what does this do???
         #for key, value_list in sorted(self.params.items()):
             #j, name = key
             #values_list2 = self._get_values(name, value_list)
             #self.params[key] = values_list2
-        self.params_ref = params
+        self.params_ref = params_ref
 
         if isinstance(self.DEquation(), integer_types):
             self.dequation_ref = model.DEQATN(self.dequation, msg=msg)
@@ -2755,34 +2776,22 @@ class DRESP2(OptConstraint):
         return self.dequation_ref.equation_id
 
     def _pack_params(self):
+        """"""
         if self.params_ref is None:
+            # not cross-referenced
             return self._pack(self.params)
+        # cross-referenced
         return self._pack(self.params_ref)
 
-    def _pack(self, params):
+    def _pack(self, params: List[Any]):
         """packs the params/params_ref into a form for output"""
         # # the amount of padding at the [beginning,end] of the 2nd line
-        pack_length = {
-            'DESVAR' : [1, 0],
-            'DTABLE' : [1, 0],
-            'DFRFNC' : [1, 0],
-            'DRESP1' : [1, 0],
-            'DNODE' : [1, 1],  # unique entry
-            'DVPREL1' : [1, 0],
-            'DVCREL1' : [1, 0],
-            'DVMREL1' : [1, 0],
-            'DVPREL2' : [1, 0],
-            'DVCREL2' : [1, 0],
-            'DVMREL2' : [1, 0],
-            'DRESP2' : [1, 0],
-        }
-
         list_fields = []
         for (j, name), value_list in sorted(params.items()):
             values_list2 = _get_dresp23_table_values(name, value_list, inline=True)
             fields2 = [name] + values_list2
             #try:
-            (i, j) = pack_length[name]
+            (i, j) = DRESP2_PACK_LENGTH[name]
             #except KeyError:
                 #msg = 'INVALID DRESP2 name=%r fields=%s ID=%s' % (name, value_list, self.oid)
                 #raise KeyError(msg)
@@ -5463,7 +5472,7 @@ def _get_dresp23_table_values(name, values_list, inline=False):
     elif name == 'DTABLE':
         out = values_list
     else:
-        raise NotImplementedError('  TODO: _get_values %s' % str(name))
+        raise NotImplementedError(f'  TODO: _get_values {str(name)}')
         #out = values_list
     return out
 

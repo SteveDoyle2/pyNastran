@@ -130,6 +130,14 @@ class WriteMesh(BDFAttributes):
                 self.thermal_materials and max(self.thermal_materials) > 100000000 or
                 self.nsms and max(self.nsms) > 100000000 or
                 self.nsmadds and max(self.nsmadds) > 100000000)
+            if not is_long_ids:
+                for loads in self.loads.values():
+                    for load in loads:
+                        if load.type == 'TEMP':
+                            if max(load.temperatures) > 100000000:
+                                is_long_ids = True
+                                break
+                            #print(load.get_stats())
             if is_long_ids:
                 size = 16
 
