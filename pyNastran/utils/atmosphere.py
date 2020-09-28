@@ -303,6 +303,8 @@ def _velocity_factor(velocity_units_in: str, velocity_units_out: str) -> float:
     factor = 1.0
     if velocity_units_in == 'm/s':
         factor /= 0.3048
+    elif velocity_units_in == 'cm/s':
+        factor /= 30.48
     elif velocity_units_in == 'ft/s':
         pass
     elif velocity_units_in == 'in/s':
@@ -310,11 +312,13 @@ def _velocity_factor(velocity_units_in: str, velocity_units_out: str) -> float:
     elif velocity_units_in == 'knots':
         factor *= 1.68781
     else:
-        msg = 'velocity_units_in=%r is not valid; use [ft/s, m/s, knots]' % velocity_units_in
+        msg = 'velocity_units_in=%r is not valid; use [ft/s, m/s, cm/s, in/s, knots]' % velocity_units_in
         raise RuntimeError(msg)
 
     if velocity_units_out == 'm/s':
         factor *= 0.3048
+    elif velocity_units_out == 'cm/s':
+        factor *= 30.48
     elif velocity_units_out == 'ft/s':
         pass
     elif velocity_units_out == 'in/s':
@@ -322,7 +326,7 @@ def _velocity_factor(velocity_units_in: str, velocity_units_out: str) -> float:
     elif velocity_units_out == 'knots':
         factor /= 1.68781
     else:
-        msg = 'velocity_units_out=%r is not valid; use [ft/s, m/s, in/s, knots]' % (
+        msg = 'velocity_units_out=%r is not valid; use [ft/s, m/s, cm/s, in/s, knots]' % (
             velocity_units_out)
         raise RuntimeError(msg)
     return factor
