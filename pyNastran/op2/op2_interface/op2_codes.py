@@ -21,12 +21,14 @@ SORT1_TABLES_BYTES = [
     b'OESXRMS1', b'OESPSD1C', b'OESXNO1', b'OESXNO1C', b'OESXRM1C',
     b'OSTRMS1C', b'OSTPSD1C', b'OSTNO1C', b'OSTRRMS1',
     b'OEFRMS1',  b'OEFPSD1',  b'OEFNO1', b'OEFCRM1',
+    b'OESPSD1',
     b'OSTRNO1',
 
     # mislabeled tables
     b'OESRMS2', b'OESNO2',
 
     b'RAFCONS', b'RAFEATC',
+    b'OUG1F',
 ]
 SORT2_TABLES_BYTES = [
     b'OUGPSD2', b'OUGATO2', b'OESCP',
@@ -133,27 +135,27 @@ NASA95_ELEMENTS = {
     83 : 'CTRIA3',  # done   done
 }
 ANALYSIS_CODE_MAP = {
-    1 : "Statics",
-    2 : "Normal modes or buckling (real eigenvalues)",
-    3 : "Differential Stiffness 0 - obsolete",
-    4 : "Differential Stiffness 1 - obsolete",
-    5 : "Frequency",
-    6 : "Transient",
-    7 : "Pre-buckling",
-    8 : "Post-buckling",
-    9 : "Complex eigenvalues",
-    10 : "Nonlinear statics",
-    11 : "Geometric nonlinear statics",
+    1 : 'Statics',
+    2 : 'Normal modes or buckling (real eigenvalues)',
+    3 : 'Differential Stiffness 0 - obsolete',
+    4 : 'Differential Stiffness 1 - obsolete',
+    5 : 'Frequency',
+    6 : 'Transient',
+    7 : 'Pre-buckling',
+    8 : 'Post-buckling',
+    9 : 'Complex eigenvalues',
+    10 : 'Nonlinear statics',
+    11 : 'Geometric nonlinear statics',
 }
 
 DEVICE_CODE_MAP = {
-    1 : "Print",
-    2 : "Plot",
-    3 : "Print and Plot",
-    4 : "Punch",
-    5 : "Print and Punch",
-    6 : "Plot and Punch",
-    7 : "Print, Plot, and Punch",
+    1 : 'Print',
+    2 : 'Plot',
+    3 : 'Print and Plot',
+    4 : 'Punch',
+    5 : 'Print and Punch',
+    6 : 'Plot and Punch',
+    7 : 'Print, Plot, and Punch',
 }
 
 THERMAL_MAP = {

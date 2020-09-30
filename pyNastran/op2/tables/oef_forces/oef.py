@@ -63,7 +63,7 @@ from pyNastran.op2.tables.oef_forces.oef_complex_force_objects import (
     ComplexRodForceArray,
     ComplexCBarForceArray, ComplexCWeldForceArray,
     ComplexCBeamForceArray,
-    ComplexCBushForceArray,
+    ComplexCBushForceArray, ComplexCFastForceArrayMSC,
     ComplexCBearForceArray,
     ComplexCShearForceArray,
     ComplexSpringForceArray,
@@ -2939,7 +2939,7 @@ class OEF(OP2Common):
         elif self.element_type == 126:
             result_name = prefix + 'cfast_force' + postfix
             real_obj = RealCFastForceArrayMSC
-            complex_obj = None
+            complex_obj = ComplexCFastForceArrayMSC
         elif self.element_type == 280:
             result_name = prefix + 'cbear_force' + postfix
             assert self.num_wide in [7, 13], self.code_information()
@@ -2955,8 +2955,8 @@ class OEF(OP2Common):
         slot = self.get_result(result_name)
 
         n = 0
-        numwide_real = 7
         if result_type in [0, 2] and self.num_wide == 7:  # real/random
+            numwide_real = 7
             # real - format_code == 1
             # random - format_code == 3
             ntotal = 28 *  self.factor # 7*4
@@ -2992,6 +2992,20 @@ class OEF(OP2Common):
                 n = oef_cbush_real_7(self, data, obj,
                                      nelements, ntotal, dt)
         elif result_type == 1 and self.num_wide == 13:  # imag
+            # TCODE,7 =1 Real/imaginary or magnitude/phase
+            # 2 FXR RS Force x - real/mag. part
+            # 3 FYR RS Force y - real/mag. part
+            # 4 FZR RS Force z - real/mag. part
+            # 5 MXR RS Moment x - real/mag. part
+            # 6 MYR RS Moment y - real/mag. part
+            # 7 MZR RS Moment z - real/mag. part
+            # 8 FXI RS Force x - imag./phase part
+            # 9 FYI RS Force y - imag./phase part
+            # 10 FZI RS Force z - imag./phase part
+            # 11 MXI RS Moment x - imag./phase part
+            # 12 MYI RS Moment y - imag./phase part
+            # 13 MZI RS Moment z - imag./phase part
+
             # TODO: vectorize
             ntotal = 52 * self.factor  # 13*4
             nelements = ndata // ntotal
@@ -3595,64 +3609,99 @@ def oef_shells_composite_real_9(self, data: bytes,
                                 obj: FailureIndicesArray,
                                 nelements: int, ntotal: int,
                                 dt: Any) -> int:
+    """
+    2 THEORY(2) CHA/R4
+    4 PLY       I
+    5 DIRECT    RS
+    6 INDEX     CHA/R4
+    7 LAMIN     RS (I)
+    8 MAX       RS (I)
+    9 FLAG      CHA
+    """
     n = 0
     size = self.size
     if size == 4:
         #                                5 6  7 8-i/f 9
-        s1 = Struct(self._endian + b'i8sif 4s f i     4s')
+        s1 = Struct(self._endian + b'i8sif  i f i     4s')
         s2 = Struct(self._endian + b'i8sif 4s f f     4s')
     elif size == 8:
-        s1 = Struct(self._endian + b'q16sqd 8s d q     8s')
+        s1 = Struct(self._endian + b'q16sqd  q d q     8s')
         s2 = Struct(self._endian + b'q16sqd 8s d d     8s')
     else:  # pragma: no cover
         raise RuntimeError(size)
 
     eid_old = None
+    #print(self.element_type)
     for unused_i in range(nelements):
         #2 THEORY(2) CHAR4 Theory
         #4 LAMID     I Lamina number
+
         #5 FP       RS Failure index for direct stresses
         #6 FM       RS Failure mode for maximum strain theory
         #7 FB       RS Failure index for interlaminar shear stress or -1
         #8 FMAX     RS Maximum of FP and FB or -1.
         #9 FFLAG CHAR4 Failure flag
         edata = data[n:n+ntotal]  # 4*9
-        out = s1.unpack(edata)
+        #print(self.show_data(edata[4+8+4:-4-4], types='ifs'))
+        out1 = s1.unpack(edata)
+        out2 = s2.unpack(edata)
 
         # failure_stress_for_ply = failure_strain_for_ply = failure_index_for_ply???
         # i    8s               i      f
         (eid, failure_theoryb, ply_id, failure_stress_for_ply,
          # 4s   7-f/i                8-f/i      9-4s
-         flagb, interlaminar_stress, max_value, failure_flagb,
+         flagi, interlaminar_stress, max_value, failure_flagb,
          #failure_index_for_bonding,
          #failure_index_for_element,
          #flag,
          #direct_stress_or_strain,
          #interlaminar_stress,
          #max_of_fb_fp_for_all_plies
-        ) = out
+        ) = out1
+
+        (_eid, _failure_theoryb, _ply_id, _failure_stress_for_ply,
+         # 4s   7-f/i                8-f/i      9-4s
+         flagb, _interlaminar_stress, max_value_float, _failure_flagb,
+         #failure_index_for_bonding,
+         #failure_index_for_element,
+         #flag,
+         #direct_stress_or_strain,
+         #interlaminar_stress,
+         #max_of_fb_fp_for_all_plies
+        ) = out2
+        #print(interlaminar_stress, _interlaminar_stress)
+
+        #print('failure_flagb = %r' % failure_flagb)
+        if flagi == 0:
+            flag = ''
+        else:
+            #print('flagb = %r' % flagb)
+            flag = reshape_bytes_block_strip(flagb, size=size)
 
         failure_theory = reshape_bytes_block_strip(failure_theoryb, size=size)
-        flag = reshape_bytes_block_strip(flagb, size=size)
         failure_flag = reshape_bytes_block_strip(failure_flagb, size=size)
+        #print('flag = %r' % flag)
+        #print('failure_flag = %r' % failure_flag)
 
         if max_value == -1:
             max_value = np.nan
         else:
-            max_value = s2.unpack(edata)[6]
+            max_value = max_value_float # out2[6]
 
         if eid == -1:
-            #print(f'  ply_id={ply_id} failure_stress_for_ply={failure_stress_for_ply} '
-                  #f'flag={flag} interlaminar_stress={interlaminar_stress} max_value={max_value} failure_flag={failure_flag}')
+            #print(f'  ply_id={ply_id} failure_stress_for_ply={failure_stress_for_ply:g} '
+                  #f'flag={flag!r} interlaminar_stress={interlaminar_stress} '
+                  #f'max_value={max_value:g} failure_flag={failure_flag!r}')
             eid = eid_old
         else:
-            #print(f"eid={eid} ft='{failure_theory}'\n"
-                  #f'  ply_id={ply_id} failure_stress_for_ply={failure_stress_for_ply} '
-                  #f'flag={flag} interlaminar_stress={interlaminar_stress} max_value={max_value} failure_flag={failure_flag}')
+            #print(f"eid={eid} ft={failure_theory!r}\n"
+                  #f'  ply_id={ply_id} failure_stress_for_ply={failure_stress_for_ply:g} '
+                  #f'flag={flag!r} interlaminar_stress={interlaminar_stress} '
+                  #f'max_value={max_value} failure_flag={failure_flag!r}')
             eid_old = eid
         assert flag in ['', '-1', '-2', '-12', 'IN'], f'flag={flag!r} flagb={flagb!r}'
-        assert failure_theory in ['TSAI-WU', 'STRAIN', 'HILL', 'HOFFMAN', ''], 'failure_theory={failure_theory!r}'
-        assert  failure_flag in ['', '***'], 'failure_flag=%r' % failure_flag
+        assert failure_theory in ['TSAI-WU', 'STRAIN', 'HILL', 'HOFFMAN', ''], f'failure_theory={failure_theory!r}'
+        assert failure_flag in ['', '***'], 'failure_flag=%r' % failure_flag
         obj.add_sort1(dt, eid, failure_theory, ply_id, failure_stress_for_ply, flag,
                       interlaminar_stress, max_value, failure_flag)
         n += ntotal
@@ -3698,7 +3747,7 @@ def oef_cbush_real_7(self, data: bytes,
     return n
 
 def oef_cbush_imag_13(self, data: bytes,
-                      obj: ComplexCBushForceArray,
+                      obj: Union[ComplexCBushForceArray, ComplexCFastForceArrayMSC],
                       nelements: int, ntotal: int,
                       is_magnitude_phase: bool) -> int:
     """

@@ -2,18 +2,18 @@
 import copy
 from struct import unpack, Struct, pack
 from collections import defaultdict
+from typing import Optional
 
 import numpy as np
 import scipy
 
-from cpylog import get_logger2
+from cpylog import get_logger2, SimpleLogger
 from pyNastran.utils import is_binary_file
 
 
-def read_stl(stl_filename, remove_elements_with_bad_normals=False,
-             log=None, debug=False):
+def read_stl(stl_filename: str, remove_elements_with_bad_normals: bool=False,
+             log: Optional[SimpleLogger]=None, debug: bool=False):
     """
-
     Reads an STL file
 
     Parameters
@@ -41,7 +41,7 @@ class STL:
     #is_structured = False
     #is_outward_normals = True
 
-    def __init__(self, log=None, debug=False):
+    def __init__(self, log: Optional[SimpleLogger]=None, debug: bool=False):
         """
         Initializes the STL object
 
@@ -63,8 +63,9 @@ class STL:
         self.header = ''
         self.infilename = None
 
-    def write_stl(self, stl_out_filename, is_binary=False, float_fmt='%6.12f',
-                  normalize_normal_vectors=False, stop_on_failure=True):
+    def write_stl(self, stl_out_filename: str, is_binary: bool=False,
+                  float_fmt: str='%6.12f', normalize_normal_vectors: bool=False,
+                  stop_on_failure: bool=True) -> None:
         """
         Writes an STL file
 
@@ -79,7 +80,7 @@ class STL:
         normalize_normal_vectors : bool; default=False
             should the vectors be normalized
         """
-        self.log.info("---writing STL...%r---" % stl_out_filename)
+        self.log.info(f'---writing STL...{stl_out_filename!r}---')
         self._validate()
         solid_name = 'dummy_name'
         if is_binary:
@@ -91,7 +92,7 @@ class STL:
                                  normalize_normal_vectors=normalize_normal_vectors,
                                  stop_on_failure=stop_on_failure)
 
-    def read_stl(self, stl_filename):
+    def read_stl(self, stl_filename: str) -> None:
         """
         Reads an STL file
 
@@ -99,9 +100,10 @@ class STL:
         ----------
         stl_filename : str
             the filename to read
+
         """
         self.infilename = stl_filename
-        self.log.info("---reading STL...%r---" % self.infilename)
+        self.log.info(f'---reading STL...{self.infilename}---')
 
         if is_binary_file(stl_filename):
             self.read_binary_stl(stl_filename)
@@ -113,8 +115,9 @@ class STL:
         #assert self.nelements > 0, 'nelements=%s' % self.nelements
 
 
-    def write_binary_stl(self, stl_filename, normalize_normal_vectors=False,
-                         stop_on_failure=True):
+    def write_binary_stl(self, stl_filename: str,
+                         normalize_normal_vectors: bool=False,
+                         stop_on_failure=True) -> None:
         """
         Write an STL binary file
 
@@ -163,7 +166,7 @@ class STL:
                               p3[eid, 0], p3[eid, 1], p3[eid, 2], 0)
                 infile.write(data)
 
-    def read_binary_stl(self, stl_filename):
+    def read_binary_stl(self, stl_filename: str) -> None:
         """
         Read an STL binary file
 
@@ -171,6 +174,7 @@ class STL:
         ----------
         stl_filename : str
             the filename to read
+
         """
         with open(stl_filename, 'rb') as infile:
             data = infile.read()
@@ -178,14 +182,14 @@ class STL:
         ndata = len(data)
         j = 0
         while j < ndata:
-            self.log.info('  read_binary_stl: j=%s ndata=%s' % (j, ndata))
+            self.log.info(f'  read_binary_stl: j={j} ndata={ndata}')
             self.header = data[j:j+80]
             nelements, = unpack('i', data[j+80:j+84])
             j += 84
 
             inode = 0
             nodes_dict = {}
-            assert nelements > 0, 'nelements=%s' % nelements
+            assert nelements > 0, f'nelements={nelements}'
             elements = np.zeros((nelements, 3), 'int32')
 
             s = Struct('12fH')
@@ -230,7 +234,9 @@ class STL:
 
     def _get_normals_data(self, elements):
         """
-        This is intended as a submethod to help handle the problem of bad normals
+        This is intended as a submethod to help handle the problem of
+        bad normals
+
         """
         nodes = self.nodes
         #self.log.debug("get_normals...elements.shape %s" % str(elements.shape))
@@ -261,7 +267,7 @@ class STL:
         normals[:, 2] /= normals_norm
         return normals
 
-    def get_area(self, elements, stop_on_failure=True):
+    def get_area(self, elements, stop_on_failure: bool=True):
         unused_v123, normals_norm, inan = self._get_normals_data(elements)
 
         if stop_on_failure:
@@ -274,7 +280,7 @@ class STL:
                 raise RuntimeError(msg)
         return 0.5 * normals_norm
 
-    def get_normals(self, elements, stop_on_failure=True):
+    def get_normals(self, elements, stop_on_failure: bool=True):
         """
         Parameters
         ----------
@@ -332,7 +338,7 @@ class STL:
         return normals
 
 
-    def flip_normals(self, i=None):
+    def flip_normals(self, i=None) -> None:
         """
         Flips the normals of the specified elements.
 
@@ -399,7 +405,7 @@ class STL:
             eid += 1
         return normals_at_nodes
 
-    def equivalence_nodes(self, tol=1e-5):
+    def equivalence_nodes(self, tol: float=1e-5) -> None:
         """equivalences the nodes of the model and updates the elements"""
         nnodes = self.nodes.shape[0]
 
@@ -434,12 +440,14 @@ class STL:
                 ireplace = np.where(self.elements == r)
                 self.elements[ireplace] = r_new_nid
 
-    def _validate(self):
+    def _validate(self) -> None:
         assert len(self.nodes) > 0, 'No nodes were found in the model'
         assert len(self.elements) > 0, 'No nodes were found in the model'
 
-    def write_stl_ascii(self, out_filename, solid_name, float_fmt='%.6f',
-                        normalize_normal_vectors=False, stop_on_failure=True):
+    def write_stl_ascii(self, out_filename: str, solid_name: str,
+                        float_fmt: str='%.6f',
+                        normalize_normal_vectors: bool=False,
+                        stop_on_failure: bool=True) -> None:
         """
         Writes an STL in ASCII format
 
@@ -486,7 +494,7 @@ class STL:
             out.write(msg)
 
 
-    def read_ascii_stl(self, stl_filename):
+    def read_ascii_stl(self, stl_filename: str) -> None:
         """
         Reads an STL that's in ASCII format
         """
@@ -558,7 +566,7 @@ class STL:
                 else:
                     self.log.error(line)
                     #line = f.readline()
-                    raise NotImplementedError('multiple solids are not supported; line=%r' % line)
+                    raise NotImplementedError(f'multiple solids are not supported; line={line!r}')
                     #break
 
         assert inode > 0, inode
@@ -622,7 +630,7 @@ class STL:
             self.nodes[:, 0] = z * scale
             self.nodes[:, 2] = x * scale
 
-    def create_mirror_model(self, xyz, tol):
+    def create_mirror_model(self, xyz, tol: float) -> None:
         """
         Creates a mirror model.
 
@@ -682,7 +690,7 @@ class STL:
         self.elements = np.array(elements2 + elements3, dtype='int32')
 
 
-def _rotate_model(stl):  # pragma: no cover
+def _rotate_model(stl: STL) -> None:  # pragma: no cover
     nodes = stl.nodes
     elements = stl.elements
     if 0:

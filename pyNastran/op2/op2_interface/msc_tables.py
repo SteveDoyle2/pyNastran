@@ -264,6 +264,7 @@ MSC_GEOM_TABLES = [
     b'GEOM1S', b'GEOM2S', b'GEOM3S', b'GEOM4S', # superelements
     b'GEOM1N', b'GEOM1VU', b'GEOM2VU',
     b'GEOM1OLD', b'GEOM2OLD', b'GEOM4OLD',
+    b'GEOM1X', b'GEOM2X',b'GEOM4X',
 
     b'EPT', b'EPTS', b'EPTOLD',
     b'EDTS',
@@ -296,6 +297,14 @@ MSC_GEOM_TABLES = [
 ]
 
 MSC_MATRIX_TABLES = [
+    # 2020
+    b'MATAKA',
+    b'MATPH2',
+    b'MATAMA',
+    b'MATK',
+    b'MATV',
+    # -----------
+
     #b'TOLD',
     b'SDT', #b'STDISP',
     b'TOLB2', b'ADSPT', #b'MONITOR',
@@ -571,6 +580,24 @@ MSC_RESULT_TABLES = [b'ASSIG', b'ASEPS'] + [
     b'OUG2T',
     b'AEMONPT',
     #b'KDICT',
+    #---------------------
+    #2020 - could these be matrices?
+    b'OFCON3DD', b'OFCON3D0',
+    b'OFGCOND',
+    b'OCOMPQT',
+    b'OGS1X',
+    b'OVINT',
+    #b'TUG1',
+    #b'MUG1',
+
+    # for sure results
+    b'OUTSFLOW',
+    b'OERPDSN',
+    b'OUG1S',
+    b'OVG1',
+    b'OUGSTRS0',
+    b'OBCNURB0', b'OBCNURBD'
+
 ]
 if len(MSC_RESULT_TABLES) != len(np.unique(MSC_RESULT_TABLES)):  # pragma: no cover
     counter = Counter(MSC_RESULT_TABLES)

@@ -515,7 +515,7 @@ class OQG(OP2Common):
         """
         if self.thermal == 0:
             if self.table_code in [3]:
-                assert self.table_name in [b'OQGATO2'], 'self.table_name=%r' % self.table_name
+                assert self.table_name in [b'OQGATO1', b'OQGATO2'], 'self.table_name=%r' % self.table_name
                 result_name = 'ato.spc_forces'
             #elif self.table_code in [603]:
                 #assert self.table_name in [b'OQGATO2'], 'self.table_name=%r' % self.table_name

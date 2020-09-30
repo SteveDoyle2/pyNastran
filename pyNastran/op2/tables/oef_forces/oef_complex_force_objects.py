@@ -3634,6 +3634,15 @@ class ComplexCBushForceArray(ComplexForceMomentArray):
         words = '                         C O M P L E X   F O R C E S   I N   B U S H   E L E M E N T S   ( C B U S H ) \n'
         return words
 
+class ComplexCFastForceArrayMSC(ComplexForceMomentArray):
+    def __init__(self, data_code, is_sort1, isubcase, dt):
+        ComplexForceMomentArray.__init__(self, data_code, is_sort1, isubcase, dt)
+        self.element_type = 'CFAST'
+
+    #def _words(self) -> str:
+        #words = '                         C O M P L E X   F O R C E S   I N   B U S H   E L E M E N T S   ( C B U S H ) \n'
+        #return words
+
 class ComplexCBearForceArray(ComplexForceMomentArray):
     def __init__(self, data_code, is_sort1, isubcase, dt):
         ComplexForceMomentArray.__init__(self, data_code, is_sort1, isubcase, dt)

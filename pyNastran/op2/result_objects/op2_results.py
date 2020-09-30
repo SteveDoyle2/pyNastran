@@ -586,12 +586,13 @@ class StrainEnergy:
 
         self.cbar_strain_energy = {}
         self.cbeam_strain_energy = {}
+        self.cbend_strain_energy = {}
+        self.cbeam3_strain_energy = {}
 
         self.cgap_strain_energy = {}
         self.cdum8_strain_energy = {}
         self.cbush_strain_energy = {}
         #self.chexa8fd_strain_energy = {}
-        self.cbend_strain_energy = {}
         self.dmig_strain_energy = {}
         self.genel_strain_energy = {}
         self.cshear_strain_energy = {}
@@ -616,7 +617,7 @@ class StrainEnergy:
 
             'crod_strain_energy', 'ctube_strain_energy', 'conrod_strain_energy',
 
-            'cbar_strain_energy', 'cbeam_strain_energy',
+            'cbar_strain_energy', 'cbeam_strain_energy', 'cbeam3_strain_energy',
 
             'cgap_strain_energy',
             'cbush_strain_energy',

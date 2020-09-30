@@ -10,6 +10,7 @@ RESULT_NAME_MAP = {
     'BAR' : 'cbar_strain_energy',
     'BEAM' : 'cbeam_strain_energy',
     'BEND' : 'cbend_strain_energy',
+    'BEAM3' : 'cbeam3_strain_energy',
 
     'ROD' : 'crod_strain_energy',
     'TUBE' : 'ctube_strain_energy',

@@ -16,6 +16,9 @@ F:\work\pyNastran\femap_examples\Support\nast\misc\sssalter\IA
 F:\work\pyNastran\femap_examples\Support\nast\tpl
 F:\Program Files\Siemens\NXNastran\nxn10p1\nxn10p1\nast\tpl
 
+# msc 2020
+C:\MSC.Software\msc_nastran_runs
+
 #-------------------------------------------------
 # desktop2
 

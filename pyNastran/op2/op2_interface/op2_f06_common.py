@@ -213,6 +213,9 @@ class OP2_F06_Common:
     def cbeam_strain_energy(self):
         return self.op2_results.strain_energy.cbeam_strain_energy
     @property
+    def cbeam3_strain_energy(self):
+        return self.op2_results.strain_energy.cbeam3_strain_energy
+    @property
     def cbend_strain_energy(self):
         return self.op2_results.strain_energy.cbend_strain_energy
 
