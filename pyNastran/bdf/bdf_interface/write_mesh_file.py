@@ -6,9 +6,8 @@ This file defines:
 """
 from __future__ import annotations
 import os
-from typing import Any, Union, Optional, Any
 from collections import defaultdict
-from typing import Optional, TYPE_CHECKING
+from typing import Any, Union, Optional, TYPE_CHECKING
 if TYPE_CHECKING:  # pragma: no cover
     from io import StringIO
 
@@ -72,23 +71,12 @@ class WriteMeshs(WriteMesh):
                 Windows is different.
             None : Check the platform
         """
-        is_long_ids = False
+        #is_long_ids = False
 
         if self.is_bdf_vectorized:  # pragma: no cover
             raise NotImplementedError()
         else:
-            # required for MasterModelTaxi
-            is_long_ids = (
-                self.nodes and max(self.nodes) > 100000000 or
-                self.coords and max(self.coords) > 100000000 or
-                self.elements and max(self.elements) > 100000000 or
-                self.properties and max(self.properties) > 100000000 or
-                self.materials and max(self.materials) > 100000000 or
-                self.thermal_materials and max(self.thermal_materials) > 100000000 or
-                self.nsms and max(self.nsms) > 100000000 or
-                self.nsmadds and max(self.nsmadds) > 100000000)
-            if is_long_ids:
-                size = 16
+            is_long_ids, size = self._get_long_ids(size)
 
         ifile_out_filenames = _map_filenames_to_ifile_filname_dict(
             out_filenames, self.active_filenames)
@@ -101,7 +89,7 @@ class WriteMeshs(WriteMesh):
         interspersed = False
         out_filename = self._output_helper(out_filename0,
                                            interspersed, size, is_double)
-        self.log.debug('---starting BDF.write_bdf of %s---' % out_filename)
+        self.log.debug(f'---starting BDF.write_bdf of {out_filename}---')
         encoding = self.get_encoding(encoding)
 
         #class DevNull:
@@ -164,11 +152,11 @@ class WriteMeshs(WriteMesh):
         elif relative_dirname == '':
             out_filename0 = list(out_filenames.keys())[0]
             relative_dirname = os.path.dirname(os.path.abspath(out_filename0))
-            self.log.debug('relative_dirname = %s' % relative_dirname)
+            self.log.debug(f'relative_dirname = {relative_dirname}')
 
         self.log.debug('include_filenames:')
         for ifile, include_filenames in self.include_filenames.items():
-            self.log.debug('ifile=%i %s' % (ifile, include_filenames))
+            self.log.debug(f'ifile={ifile:d} {include_filenames}')
             assert len(include_filenames) > 0, include_filenames
             bdf_file = bdf_files[ifile]
             if bdf_file is None:
@@ -602,7 +590,7 @@ class WriteMeshs(WriteMesh):
                     raise TypeError(reject_lines)
 
     def _write_rigid_elements_file(self, bdf_files: Any, size: int=8, is_double: bool=False,
-                           is_long_ids: Optional[bool]=None) -> None:
+                                   is_long_ids: Optional[bool]=None) -> None:
         """Writes the rigid elements in a sorted order"""
         size, is_long_ids = self._write_mesh_long_ids_size(size, is_long_ids)
         if self.rigid_elements:
@@ -612,7 +600,7 @@ class WriteMeshs(WriteMesh):
             write_bdfs_dict(bdf_files, self.plotels, size, is_double, is_long_ids)
 
     def _write_sets_file(self, bdf_files: Any, size: int=8, is_double: bool=False,
-                           is_long_ids: Optional[bool]=None) -> None:
+                         is_long_ids: Optional[bool]=None) -> None:
         """Writes the SETx cards sorted by ID"""
         is_sets = (self.sets or self.asets or self.omits or self.bsets or self.csets or self.qsets
                    or self.usets)

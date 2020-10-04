@@ -193,8 +193,7 @@ def print_float_16(value: float) -> str:
     return field
 
 
-def print_field_16(value):
-    # type: (Optional[Union[int, float, str]]) -> str
+def print_field_16(value: Optional[Union[int, float, str]]) -> str:
     """
     Prints a 16-character width field
 
@@ -222,8 +221,8 @@ def print_field_16(value):
     return field
 
 
-def print_card_16(fields, wipe_fields=True):
-    # type: (List[Optional[Union[int, float, str]]], bool) -> str
+def print_card_16(fields: List[Optional[Union[int, float, str]]],
+                  wipe_fields: bool=True) -> str:
     """
     Prints a nastran-style card with 16-character width fields.
 

@@ -1042,6 +1042,15 @@ class BDFAttributes:
             #return True
         #return False
 
+    def _set_punch(self) -> None:
+        """updates the punch flag"""
+        if self.punch is None:
+            # writing a mesh without using read_bdf
+            if self.system_command_lines or self.executive_control_lines or self.case_control_deck:
+                self.punch = False
+            else:
+                self.punch = True
+
     @property
     def sol(self) -> int:
         """gets the solution (e.g. 101, 103)"""

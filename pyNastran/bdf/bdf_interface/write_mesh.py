@@ -4,15 +4,18 @@ This file defines:
   - WriteMesh
 
 """
+from __future__ import annotations
 import sys
-from io import StringIO, IOBase
+from io import IOBase
 from collections import defaultdict, OrderedDict
-from typing import List, Dict, Union, Optional, Tuple, Any, cast
+from typing import List, Dict, Union, Optional, Tuple, Any, cast, TYPE_CHECKING
 
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
 from pyNastran.bdf.bdf_interface.attributes import BDFAttributes
 from pyNastran.bdf.cards.nodes import write_xpoints
+if TYPE_CHECKING:
+    from io import StringIO
 
 
 class WriteMesh(BDFAttributes):
@@ -44,9 +47,7 @@ class WriteMesh(BDFAttributes):
 
     def _output_helper(self, out_filename: Optional[str], interspersed: bool,
                        size: int, is_double: bool) -> str:
-        """
-        Performs type checking on the write_bdf inputs
-        """
+        """Performs type checking on the write_bdf inputs"""
         if out_filename is None:
             from pyNastran.utils.gui_io import save_file_dialog
             wildcard_wx = "Nastran BDF (*.bdf; *.dat; *.nas; *.pch)|" \
@@ -66,9 +67,9 @@ class WriteMesh(BDFAttributes):
             raise TypeError(msg)
 
         if size == 8:
-            assert is_double is False, 'is_double=%r' % is_double
+            assert is_double is False, f'is_double={is_double!r}'
         elif size == 16:
-            assert is_double in [True, False], 'is_double=%r' % is_double
+            assert is_double in [True, False], f'is_double={is_double!r}'
         else:
             assert size in [8, 16], size
 
@@ -76,6 +77,30 @@ class WriteMesh(BDFAttributes):
         #fname = print_filename(out_filename)
         #self.log.debug("***writing %s" % fname)
         return out_filename
+
+    def _get_long_ids(self, size) -> Tuple[bool, int]:
+        """calculate is_long_ids"""
+        # required for MasterModelTaxi
+        is_long_ids = (
+            self.nodes and max(self.nodes) > 100000000 or
+            self.coords and max(self.coords) > 100000000 or
+            self.elements and max(self.elements) > 100000000 or
+            self.properties and max(self.properties) > 100000000 or
+            self.materials and max(self.materials) > 100000000 or
+            self.thermal_materials and max(self.thermal_materials) > 100000000 or
+            self.nsms and max(self.nsms) > 100000000 or
+            self.nsmadds and max(self.nsmadds) > 100000000)
+        if not is_long_ids:
+            for loads in self.loads.values():
+                for load in loads:
+                    if load.type == 'TEMP':
+                        if max(load.temperatures) > 100000000:
+                            is_long_ids = True
+                            break
+                        #print(load.get_stats())
+        if is_long_ids:
+            size = 16
+        return is_long_ids, size
 
     def write_bdf(self, out_filename: Optional[Union[str, StringIO]]=None,
                   encoding: Optional[str]=None,
@@ -115,31 +140,10 @@ class WriteMesh(BDFAttributes):
             should the output file be closed
 
         """
-        is_long_ids = False
-
         if self.is_bdf_vectorized:
-            pass
+            is_long_ids = False
         else:
-            # required for MasterModelTaxi
-            is_long_ids = (
-                self.nodes and max(self.nodes) > 100000000 or
-                self.coords and max(self.coords) > 100000000 or
-                self.elements and max(self.elements) > 100000000 or
-                self.properties and max(self.properties) > 100000000 or
-                self.materials and max(self.materials) > 100000000 or
-                self.thermal_materials and max(self.thermal_materials) > 100000000 or
-                self.nsms and max(self.nsms) > 100000000 or
-                self.nsmadds and max(self.nsmadds) > 100000000)
-            if not is_long_ids:
-                for loads in self.loads.values():
-                    for load in loads:
-                        if load.type == 'TEMP':
-                            if max(load.temperatures) > 100000000:
-                                is_long_ids = True
-                                break
-                            #print(load.get_stats())
-            if is_long_ids:
-                size = 16
+            is_long_ids, size = self._get_long_ids(size)
 
         out_filename = self._output_helper(out_filename,
                                            interspersed, size, is_double)
@@ -191,12 +195,7 @@ class WriteMesh(BDFAttributes):
 
     def _write_header(self, bdf_file: Any, encoding: str, write_header: bool=True) -> None:
         """Writes the executive and case control decks."""
-        if self.punch is None:
-            # writing a mesh without using read_bdf
-            if self.system_command_lines or self.executive_control_lines or self.case_control_deck:
-                self.punch = False
-            else:
-                self.punch = True
+        self._set_punch()
 
         if self.nastran_format and write_header:
             bdf_file.write(f'$pyNastran: version={self.nastran_format}\n')
@@ -219,12 +218,12 @@ class WriteMesh(BDFAttributes):
 
         if self.executive_control_lines:
             msg += '$EXECUTIVE CONTROL DECK\n'
-            if self.sol == 600:
-                new_sol = 'SOL 600,%s' % self.sol_method
-            else:
-                new_sol = 'SOL %s' % self.sol
 
             if self.sol_iline is not None:
+                if self.sol == 600:
+                    new_sol = f'SOL 600,{self.sol_method:d}'
+                else:
+                    new_sol = f'SOL {self.sol:d}'
                 self.executive_control_lines[self.sol_iline] = new_sol
 
             for line in self.executive_control_lines:
@@ -257,7 +256,7 @@ class WriteMesh(BDFAttributes):
                         bdf_file.write(element.write_card(size, is_double))
                     except:
                         print('failed printing element...'
-                              'type=%s eid=%s' % (element.type, eid))
+                              f'type={element.type} eid={eid}')
                         raise
         if self.ao_element_flags:
             for (eid, element) in sorted(self.ao_element_flags.items()):
@@ -280,8 +279,7 @@ class WriteMesh(BDFAttributes):
                     try:
                         bdf_file.write(nsm.write_card(size, is_double))
                     except:
-                        print('failed printing nsm...type=%s key=%r'
-                              % (nsm.type, key))
+                        print('failed printing nsm...type={nsm.type} key={key!r}')
                         raise
 
     def _write_elements_interspersed(self, bdf_file: Any, size: int=8, is_double: bool=False,
@@ -306,8 +304,7 @@ class WriteMesh(BDFAttributes):
                     try:
                         bdf_file.write(element.write_card(size, is_double))
                     except:
-                        print('failed printing element...' 'type=%r eid=%s'
-                              % (element.type, eid))
+                        print(f'failed printing element...type={element.type!r} eid={eid}')
                         raise
                 eids_written += eids
             else:
@@ -323,7 +320,7 @@ class WriteMesh(BDFAttributes):
                     bdf_file.write(element.write_card(size, is_double))
                 except:
                     print('failed printing element...'
-                          'type=%s eid=%s' % (element.type, eid))
+                          f'type={element.type} eid={eid}')
                     raise
 
         if missing_properties or self.pdampt or self.pbusht or self.pelast:
@@ -363,7 +360,7 @@ class WriteMesh(BDFAttributes):
         self.zona.write_bdf(bdf_file, size=8, is_double=False)
 
     def _write_aero_control(self, bdf_file: Any, size: int=8, is_double: bool=False,
-                           is_long_ids: Optional[bool]=None) -> None:
+                            is_long_ids: Optional[bool]=None) -> None:
         """Writes the aero control surface cards"""
         if(self.aecomps or self.aefacts or self.aeparams or self.aelinks or
            self.aelists or self.aestats or self.aesurf or self.aesurfs):
@@ -661,8 +658,7 @@ class WriteMesh(BDFAttributes):
                     try:
                         bdf_file.write(load_combination.write_card(size, is_double))
                     except:
-                        print('failed printing load...type=%s key=%r'
-                              % (load_combination.type, key))
+                        print(f'failed printing load...type={load_combination.type} key={key!r}')
                         raise
 
             if is_long_ids:

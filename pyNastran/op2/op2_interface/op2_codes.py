@@ -20,7 +20,7 @@ SORT1_TABLES_BYTES = [
     # properly labeled
     b'OESXRMS1', b'OESPSD1C', b'OESXNO1', b'OESXNO1C', b'OESXRM1C',
     b'OSTRMS1C', b'OSTPSD1C', b'OSTNO1C', b'OSTRRMS1',
-    b'OEFRMS1',  b'OEFPSD1',  b'OEFNO1', b'OEFCRM1',
+    b'OEFATO1', b'OEFRMS1',  b'OEFPSD1',  b'OEFNO1', b'OEFCRM1',
     b'OESPSD1',
     b'OSTRNO1',
 

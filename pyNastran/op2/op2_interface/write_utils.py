@@ -28,7 +28,7 @@ def _write_markers(op2_file, fascii, markers):
     for marker in markers:
         out += [4, marker, 4]
         n += 3
-        fascii.write('marker = [4, %i, 4]\n' % marker)
+        fascii.write(f'marker = [4, {marker:d}, 4]\n')
     op2_file.write(pack(b'<%ii' % n, *out))
 
 

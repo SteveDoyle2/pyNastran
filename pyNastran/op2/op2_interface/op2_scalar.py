@@ -1351,8 +1351,24 @@ class OP2_Scalar(LAMA, ONR, OGPF,
         """unused"""
         raise RuntimeError(self.read_mode)
 
-    def _read_pvto_4(self, data, ndata: int) -> int:
-        """reads PARAM cards"""
+    def _read_pvto_4(self, data: bytes, ndata: int) -> int:
+        """
+        Reads PARAM cards
+
+        data    = (
+            AUTOSPC, 3, YES,
+            GRDPNT, 1, 0,
+            K6ROT, 2, 100.0,
+            OUGCORD, 3, GLOBAL,
+            POST, 1, -1,
+            POST, 1, -2,
+            POSTEXT, 3, YES,
+            K6ROT, 2, 100.0,
+            OIBULK, 3, YES,
+            OMACHPR, 3, YES,
+            POSTEXT, 3, YES,
+            UNITSYS, 3, MN-MM)
+        """
         if self.read_mode == 2:
             return ndata
 
@@ -1378,18 +1394,21 @@ class OP2_Scalar(LAMA, ONR, OGPF,
         assert ndata % xword == 0, ndata
 
         if self.size == 4:
+            structi = self.struct_i
+            structf = Struct(b'f')
             structs8 = self.struct_8s
             #struct2s8 = Struct(b'4s8s')
             struct2i = self.struct_2i
             struct2f = Struct(b'ff')
             struct2d = Struct(b'dd')
         else:
+            structi = self.struct_q
+            structf = Struct(b'd')
             struct2i = self.struct_2q
             structs8 = self.struct_16s
             struct2f = Struct(b'dd')
 
         i = 0
-
         #print('---------------------------')
         #self.show_data(data, types='ifsqL')
         while i < nvalues:
@@ -1405,62 +1424,116 @@ class OP2_Scalar(LAMA, ONR, OGPF,
                 word = reshape_bytes_block(bword).rstrip()
             else:
                 raise RuntimeError(self.size)
+            key = word.decode('latin1')
+            flag_data = data[(i+2)*xword:(i+3)*xword]
+            flag = structi.unpack(flag_data)[0]
+
+            # 1 PARAM(2) CHAR4
+            # 3 I
+            # =1 4 INT     I*
+            # =2 4 REAL    RS*
+            # =3 4 BCD(2)  CHAR4*
+            # =4 4 REALDBL RD
+            # =5 4 CMPLXS  CS*
+            # =6 4 CMPLXD  CD
+            # =7 4 LOGICAL LOGIC*
 
             #print('word=%r' % word)
             #word = s8.unpack(word)[0]#.decode(self._encoding)
 
             # the first two entries are typically trash, then we can get values
-            if word in INT_PARAMS_1:
-                slot = data[(i+2)*xword:(i+4)*xword]
-                value = struct2i.unpack(slot)[1]
+            if flag == 1: # int
+                #self.show_data(data[i*xword:(i+4)*xword], types='isq', endian=None, force=False)
+                assert self.size in [4, 8], (key, self.size, flag)
+                assert word in INT_PARAMS_1, f'word={word}'
+                slot = data[(i+3)*xword:(i+4)*xword]
+                value, = structi.unpack(slot)
                 i += 4
-            elif word in FLOAT_PARAMS_1:
-                slot = data[(i+2)*xword:(i+4)*xword]
-                value = struct2f.unpack(slot)[1]
+            elif flag == 2: # float
+                assert self.size in [4, 8], (key, self.size, flag)
+                slot = data[(i+3)*xword:(i+4)*xword]
+                value, = structf.unpack(slot)
+                assert word in FLOAT_PARAMS_1, f'word={word}'
                 i += 4
-            elif word in FLOAT_PARAMS_2:
+            elif flag == 3: # string
+                assert self.size in [4, 8], (key, self.size, flag)
                 slot = data[(i+3)*xword:(i+5)*xword]
-                value = struct2f.unpack(slot)
-                i += 5
-            elif word in INT_PARAMS_2:
-                slot = data[(i+3)*xword:(i+5)*xword]
-                value = struct2i.unpack(slot)
-                i += 5
-            elif word in DOUBLE_PARAMS_1:
-                slot = data[(i+1)*xword:(i+8)*xword]
-                try:
-                    value = struct2d.unpack(slot)[1]
-                except:
-                    print(word)
-                    raise
-                i += 8
-            #elif word in [b'VUHEXA']:
-                #self.show_data(data[i*4:(i+5)*4], types='ifs', endian=None)
-                #aaa
-            elif word in STR_PARAMS_1:
-                i += 3
-                slot = data[i*xword:(i+2)*xword]
-                bvalue = structs8.unpack(slot)[0]
+                bvalue, = structs8.unpack(slot)
                 if self.size == 8:
                     bvalue = reshape_bytes_block(bvalue)
                 value = bvalue.decode('latin1').rstrip()
-                i += 2
-            else:
-                if self.size == 4:
-                    self.show_data(data[i*xword+12:i*4+i*4+12], types='ifs')
-                    self.show_data(data[i*xword+8:(i+4)*4], types='ifs')
-                else:
-                    self.show_data(data[i*xword+24:i*8+i*8+24], types='sdq')
-                    self.show_data(data[i*xword+16:(i+4)*8], types='sdq')
-                    #print(i*xword+24, i*8+i*8+24)
-                    #print(i*xword+16, (i+4)*8)
-                self.log.error('%r' % word)
-                raise NotImplementedError(f'{word!r} is not a supported PARAM')
+                assert word in STR_PARAMS_1, f'word={word}'
+                i += 5
 
-            key = word.decode('latin1')
+            elif flag == 5:  # CMPLXS  CS - FLOAT_PARAMS_2
+                assert self.size in [4, 8], (key, self.size, flag)
+                slot = data[(i+3)*xword:(i+5)*xword]
+                #self.show_data(data[(i+3)*xword:(i+5)*xword], types='ifsqd', endian=None, force=False)
+                value = struct2f.unpack(slot)
+                assert word in FLOAT_PARAMS_2, f'word={word}'
+                i += 5
+
+            elif flag == 7: # logical/int
+                assert self.size in [4, 8], (key, self.size, flag)
+                slot = data[(i+3)*xword:(i+4)*xword]
+                value, = structi.unpack(slot)
+                i += 4
+            else:
+                self.show_data(data[i*xword:], types='ifsqd', endian=None, force=False)
+                self.log.error('%r' % word)
+                raise NotImplementedError(f'{word!r} is not a supported PARAM; flag={flag}')
+
+            if 0:  # pragma: no cover
+                if word in INT_PARAMS_1:
+                    slot = data[(i+2)*xword:(i+4)*xword]
+                    value = struct2i.unpack(slot)[1]
+                    i += 4
+                elif word in FLOAT_PARAMS_1:
+                    slot = data[(i+2)*xword:(i+4)*xword]
+                    value = struct2f.unpack(slot)[1]
+                    i += 4
+                elif word in FLOAT_PARAMS_2:
+                    slot = data[(i+3)*xword:(i+5)*xword]
+                    value = struct2f.unpack(slot)
+                    i += 5
+                elif word in INT_PARAMS_2:
+                    slot = data[(i+3)*xword:(i+5)*xword]
+                    value = struct2i.unpack(slot)
+                    i += 5
+                elif word in DOUBLE_PARAMS_1:
+                    slot = data[(i+1)*xword:(i+8)*xword]
+                    try:
+                        value = struct2d.unpack(slot)[1]
+                    except:
+                        print(word)
+                        raise
+                    i += 8
+                #elif word in [b'VUHEXA']:
+                    #self.show_data(data[i*4:(i+5)*4], types='ifs', endian=None)
+                    #aaa
+                elif word in STR_PARAMS_1:
+                    i += 3
+                    slot = data[i*xword:(i+2)*xword]
+                    bvalue = structs8.unpack(slot)[0]
+                    if self.size == 8:
+                        bvalue = reshape_bytes_block(bvalue)
+                    value = bvalue.decode('latin1').rstrip()
+                    i += 2
+                else:
+                    if self.size == 4:
+                        self.show_data(data[i*xword+12:i*4+i*4+12], types='ifs')
+                        self.show_data(data[i*xword+8:(i+4)*4], types='ifs')
+                    else:
+                        self.show_data(data[i*xword+24:i*8+i*8+24], types='sdq')
+                        self.show_data(data[i*xword+16:(i+4)*8], types='sdq')
+                        #print(i*xword+24, i*8+i*8+24)
+                        #print(i*xword+16, (i+4)*8)
+                    self.log.error('%r' % word)
+                    raise NotImplementedError(f'{word!r} is not a supported PARAM')
+
             param = PARAM(key, [value], comment='')
             self.params[key] = param
-            #print(f'{key} = {value}')
+            #print(f'{key} = {value!r}')
             #print(param.rstrip())
         return nvalues
 
@@ -1771,10 +1844,10 @@ class OP2_Scalar(LAMA, ONR, OGPF,
 
             if self.is_debug_file:
                 self.binary_debug.write('-' * 80 + '\n')
-                self.binary_debug.write('table_name = %r\n' % (table_name))
+                self.binary_debug.write(f'table_name = {table_name!r}\n')
 
             if is_release:
-                self.log.debug('  table_name=%r' % table_name)
+                self.log.debug(f'  table_name={table_name!r}')
 
             self.table_name = table_name
             #if 0:
@@ -1802,7 +1875,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             else:
                 #self.show(1000, types='ifsq')
                 msg = (
-                    'Invalid Table = %r\n\n'
+                    f'Invalid Table = {table_name!r}\n\n'
                     'If you have matrices that you want to read, see:\n'
                     '  model.set_additional_matrices_to_read(matrices)'
                     '  matrices = {\n'
@@ -1824,8 +1897,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
                     "  methods_dict = {\n"
                     "      b'OUGV1' : [method],\n"
                     '  }\n'
-                    '  model.set_additional_generalized_tables_to_read(methods_dict)\n' % (
-                        table_name)
+                    '  model.set_additional_generalized_tables_to_read(methods_dict)\n'
                 )
                 raise NotImplementedError(msg)
 
