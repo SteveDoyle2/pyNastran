@@ -66,6 +66,15 @@ matrix:
       - NUMPY='numpy scipy h5py vtk PySide2 pandas>=0.25'
       #- LIB='libegl1-mesa'
       #- XVFB='xvfb-run --auto-servernum -e /dev/stdout'
+
+    #--------------------------------------------------------------------------------------------------
+    # the most basic of pyNastran - no matplotlib, h5py, pandas, or even six
+    - name: "Python 3.9 (basic)"
+      python: '3.9'
+      env:
+      - NUMPY='numpy scipy'
+      - NOGUI='_no_gui'
+      - LIB='libblas-dev liblapack-dev'
     #--------------------------------------------------------------------------------------------------
 
   include:
@@ -122,6 +131,13 @@ matrix:
 
     #--------------------------------------------------------------------------------------------------
     # the most basic of pyNastran - no matplotlib, h5py, pandas, or even six
+    - name: "Python 3.9 (basic)"
+      python: '3.9'
+      env:
+      - NUMPY='numpy scipy'
+      - NOGUI='_no_gui'
+      - LIB='libblas-dev liblapack-dev'
+
     - name: "Python 3.8 (basic)"
       python: '3.8'
       env:
