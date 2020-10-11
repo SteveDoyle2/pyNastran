@@ -46,6 +46,17 @@ class DIT(GeomCommon):
 
             # F:\work\pyNastran\examples\Dropbox\move_tpl\n10640b.op2
             (1905, 19, 178) : ['TABLEST', self._read_fake],
+
+            (505, 5, 644) : ['TABLEM5', self._read_fake],
+            (1605, 16, 117) : ['TABLED6', self._read_fake],
+            #(1605, 16, 117) : ['???', self._read_fake],
+            #(1605, 16, 117) : ['???', self._read_fake],
+            #(1605, 16, 117) : ['???', self._read_fake],
+            #(1605, 16, 117) : ['???', self._read_fake],
+            #(1605, 16, 117) : ['???', self._read_fake],
+            #(1605, 16, 117) : ['???', self._read_fake],
+            #(1605, 16, 117) : ['???', self._read_fake],
+            #(1605, 16, 117) : ['???', self._read_fake],
         }
 
     def _read_tabdmp1(self, data: bytes, n: int) -> int:

@@ -57,6 +57,26 @@ class MPT(GeomCommon):
             (903, 9, 336) : ['MATT8', self._read_matt8],
             (8902, 89, 423) : ['RADMT', self._read_radmt],
             (9002, 90, 410) : ['RADBND', self._read_radbnd],
+            (4801, 48, 961): ['MATPOR', self._read_fake],
+            (5101, 51, 642): ['MATDMG', self._read_fake],
+            (14403, 144, 840): ['NLSTEP', self._read_fake],
+            (4603, 46, 623): ['MATCRP', self._read_fake],
+            (4701, 50, 965): ['MAT10C', self._read_fake],
+            (3403, 34, 902): ['MATFT', self._read_fake],
+            (2008, 20, 249): ['MATTC', self._read_fake],
+            (4201, 42, 966): ['MATSR', self._read_fake],
+            (8310, 83, 403): ['MATG', self._read_fake],
+
+            (5303, 53, 906): ['MATCZ', self._read_fake],
+            #(8310, 83, 403): ['???', self._read_fake],
+            #(8310, 83, 403): ['???', self._read_fake],
+            #(8310, 83, 403): ['???', self._read_fake],
+            #(8310, 83, 403): ['???', self._read_fake],
+            #(8310, 83, 403): ['???', self._read_fake],
+            #(8310, 83, 403): ['???', self._read_fake],
+            #(8310, 83, 403): ['???', self._read_fake],
+            #(8310, 83, 403): ['???', self._read_fake],
+
         }
 
     def add_op2_material(self, mat):
@@ -936,6 +956,45 @@ class MPT(GeomCommon):
         ints    = (1, 10, 0,   1, 5, 25, -1, 0,   0.01, 0.01, 0.01, 3, 25, 4, 0.20, 0.5, 5, 20.0, 20.0, 0)
         floats  = (1, 10, 0.0, 1, 5, 25, -1, 0.0, 0.01, 0.01, 0.01, 3, 25, 4, 0.20, 0.5, 5, 20.0, 20.0, 0.0)
 
+        # C:\MSC.Software\msc_nastran_runs\lcdf07a.op2
+        ints    = (10000001, 1, 0,   1, 500, 25, 14, 0,   0.01, 0.01, 0.01, 5, 25, 0,   0.2, 0.5, 5, 20.0, 20.0, 0)
+        floats  = (10000001, 1, 0.0, 1, 500, 25, 14, 0.0, 0.01, 0.01, 0.01, 5, 25, 0.0, 0.2, 0.5, 5, 20.0, 20.0, 0.0)
+
+        """
+        ndatai = (len(data) - n) // self.factor
+        ndata_80 = ndatai % 80
+        ndata_76 = ndatai % 76
+        if ndata_80 == 0 and ndata_76:
+            n = self._read_nlparm_80(data, n)
+        elif ndata_76 == 0 and ndata_80:
+            n = self._read_nlparm_76(data, n)
+        else:
+            raise NotImplementedError(ndatai)
+        return n
+
+    def _read_nlparm_76(self, data: bytes, n: int) -> int:
+        """
+        Word Name Type Description
+        1 SID       I Set identification number
+        2 NINC      I Number of increments
+        3 DT       RS Incremental time interval for creep analysis
+        4 KMETHOD   I Method for controlling stiffness updates
+        5 KSTEP     I Number of iterations before the stiffness update
+        6 MAXITER   I Limit on number of iterations for each load increment
+        7 CONV      I Flags to select convergence criteria
+        8 INTOUT    I Intermediate output flag
+        9 EPSU     RS Error tolerance for displacement U criterion
+        10 EPSP    RS Error tolerance for displacement P criterion
+        11 EPSW    RS Error tolerance for displacement W criterion
+        12 MAXDIV   I Limit on probable divergence conditions
+        13 MAXQN    I Maximum number of quasi-Newton correction vectors
+        14 MAXLS    I Maximum number of line searches
+        15 FSTRESS RS Fraction of effective stress
+        16 LSTOL   RS Line search tolerance
+        17 MAXBIS   I Maximum number of bisections
+        18 MAXR    RS Maximum ratio for the adjusted arc-length increment
+        19 RTOLB   RS Maximum value of incremental rotation
+
         """
         ntotal = 76 * self.factor  # 19*4
         s = Struct(mapfmt(self._endian + b'iif5i3f3iffiff', self.size))
@@ -945,14 +1004,72 @@ class MPT(GeomCommon):
         #assert ndatai % ntotal == 0
         for unused_i in range(nentries):
             edata = data[n:n+ntotal]
+            n += ntotal
+
             out = s.unpack(edata)
             #(sid,ninc,dt,kMethod,kStep,maxIter,conv,intOut,epsU,epsP,epsW,
             # maxDiv,maxQn,maxLs,fStress,lsTol,maxBisect,maxR,rTolB) = out
+            conv = out[6]
             if self.is_debug_file:
                 self.binary_debug.write('  NLPARM=%s\n' % str(out))
+            if conv in [10, 14]:
+                nentries -= 1
+                self.log.warning('  skipping NLPARM=%s\n' % str(out))
+                continue
+
             self._add_nlparm_object(NLPARM.add_op2_data(out))
+        if nentries > 0:
+            self.card_count['NLPARM'] = nentries
+        return n
+
+    def _read_nlparm_80(self, data: bytes, n: int) -> int:
+        """
+        Word Name Type Description
+        1 SID       I Set identification number
+        2 NINC      I Number of increments
+        3 DT       RS Incremental time interval for creep analysis
+        4 KMETHOD   I Method for controlling stiffness updates
+        5 KSTEP     I Number of iterations before the stiffness update
+        6 MAXITER   I Limit on number of iterations for each load increment
+        7 CONV      I Flags to select convergence criteria
+        8 INTOUT    I Intermediate output flag
+        9 EPSU     RS Error tolerance for displacement U criterion
+        10 EPSP    RS Error tolerance for displacement P criterion
+        11 EPSW    RS Error tolerance for displacement W criterion
+        12 MAXDIV   I Limit on probable divergence conditions
+        13 MAXQN    I Maximum number of quasi-Newton correction vectors
+        14 MAXLS    I Maximum number of line searches
+        15 FSTRESS RS Fraction of effective stress
+        16 LSTOL   RS Line search tolerance
+        17 MAXBIS   I Maximum number of bisections
+        18 MAXR    RS Maximum ratio for the adjusted arc-length increment
+        19 RTOLB   RS Maximum value of incremental rotation
+        20 ZERO  RS/I Dummy field
+        """
+        ntotal = 80 * self.factor  # 20*4
+        s = Struct(mapfmt(self._endian + b'iif5i3f3iffiff i', self.size))
+        ndatai = len(data) - n
+        nentries = ndatai // ntotal
+        assert nentries > 0
+        #assert ndatai % ntotal == 0
+        for unused_i in range(nentries):
+            edata = data[n:n+ntotal]
             n += ntotal
-        self.card_count['NLPARM'] = nentries
+
+            out = s.unpack(edata)
+            #(sid,ninc,dt,kMethod,kStep,maxIter,conv,intOut,epsU,epsP,epsW,
+            # maxDiv,maxQn,maxLs,fStress,lsTol,maxBisect,maxR,rTolB) = out
+            conv = out[6]
+            if self.is_debug_file:
+                self.binary_debug.write('  NLPARM=%s\n' % str(out))
+            #if conv in [10, 14]:
+                #nentries -= 1
+                #self.log.warning('  skipping NLPARM=%s\n' % str(out))
+                #continue
+
+            self._add_nlparm_object(NLPARM.add_op2_data(out))
+        if nentries > 0:
+            self.card_count['NLPARM'] = nentries
         return n
 
     def _read_nlpci(self, data: bytes, n: int) -> int:

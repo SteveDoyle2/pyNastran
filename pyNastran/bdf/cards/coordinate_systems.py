@@ -2329,8 +2329,8 @@ class CORD3G(Coord):
         assert len(self.thetas) == 3, 'thetas=%s' % (self.thetas)
 
         # EQN for DEQATN, TABLE for TABLE3D
-        assert self.form in ['EQN', 'TABLE']
-        assert self.method_es in ['E', 'S'] # Euler / Space-Fixed
+        assert self.form in ['EQN', 'TABLE'], self.form
+        assert self.method_es in ['E', 'S'], self.method_es # Euler / Space-Fixed
         smethod = str(method_int)
         assert len(smethod) == 3, f"method='{self.method_es}{method_int}' must be of the form E123 or S123"
 
@@ -2360,7 +2360,7 @@ class CORD3G(Coord):
         thetas = [integer(card, 4, 'theta1'),
                   integer(card, 5, 'theta2'),
                   integer(card, 6, 'theta3')]
-        rid = integer_or_blank(card, 7, 'cidRef')
+        rid = integer_or_blank(card, 7, 'cid_ref')
         assert len(card) <= 8, f'len(CORD3G card) = {len(card):d}\ncard={card}'
 
         return CORD3G(cid, method_es, method_int, form, thetas, rid,

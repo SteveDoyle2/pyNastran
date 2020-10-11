@@ -18,7 +18,7 @@ class CONTACT(GeomCommon):
         Table of Bulk Data entry related to surface contact
 
         """
-        return self._read_geom_4(self._edt_map, data, ndata)
+        return self._read_geom_4(self._contact_map, data, ndata)
 
     def __init__(self):
         GeomCommon.__init__(self)
@@ -51,6 +51,8 @@ class CONTACT(GeomCommon):
             (8110, 81, 598) : ['BCTPARM', self._read_fake],
             (8301, 83, 605) : ['BCPROPS', self._read_fake],
 
+            #(124, 1, 435) : ['???', self._read_fake],
+
             # Record – ACTRAD(5907,60,654)
             # Record – AMLREG(811,8,628)  .
             # Record – ATVFS(6571,65,657)  .
@@ -71,7 +73,37 @@ class CONTACT(GeomCommon):
             # Record – VATVFS(6801,68,680)
             (8710, 87, 449) : ['???', self._read_fake],
             (424, 4, 438) : ['???', self._read_fake],
+
+            (624, 6, 440) : ['???', self._read_fake],
+            (1124, 11, 445) : ['BCPARA', self._read_fake],
+            (20029, 29, 493) : ['BCPROP', self._read_fake],
+            (1024, 10, 444) : ['BCBODY', self._read_fake],
+            (811, 8, 628) : ['AMLREG', self._read_fake],
+
+            (6621, 66, 662) : ['BCTPAR2', self._read_fake],
+            (7610, 76, 593) : ['BGPARA', self._read_fake],
+            (9101, 91, 693) : ['FLXSLI', self._read_fake],
+            (5524, 55, 897) : ['BCONPRG', self._read_fake],
+            (924, 9, 443) : ['???', self._read_fake],
+
+            (6571, 65, 657) : ['???', self._read_fake],
+            (4624, 46, 888) : ['BCONPRP', self._read_fake],
+            (4524, 45, 887) : ['BCONECT', self._read_fake],
+            (4424, 44, 886) : ['BCTABL1', self._read_fake],
+            (7124, 71, 992) : ['BCAUTOP', self._read_fake],
+            (4724, 47, 889) : ['BCBODY1', self._read_fake],
+            (4824, 48, 890) : ['BCBDPRP', self._read_fake],
+            (6724, 67, 948) : ['BCSCAP', self._read_fake],
+            #(4824, 48, 890) : ['???', self._read_fake],
+            #(4824, 48, 890) : ['???', self._read_fake],
+            #(4824, 48, 890) : ['???', self._read_fake],
+            #(4824, 48, 890) : ['???', self._read_fake],
+            #(4824, 48, 890) : ['???', self._read_fake],
         }
+
+    #def _read_924(self, data: bytes, n: int) -> int:
+        #self.show_data(data[n:])
+        #sds
 
     def _read_bsurfs(self, data: bytes, n: int) -> int:
         """

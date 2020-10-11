@@ -1078,9 +1078,15 @@ class NLPARM(BaseCard):
             a comment for the card
 
         """
-        (nlparm_id, ninc, dt, kmethod, kstep, max_iter, conv, int_out, eps_u, eps_p,
-         eps_w, max_div, max_qn, max_ls, fstress, ls_tol, max_bisect, max_r,
-         rtol_b) = data
+        if len(data) == 19:
+            (nlparm_id, ninc, dt, kmethod, kstep, max_iter, conv, int_out, eps_u, eps_p,
+             eps_w, max_div, max_qn, max_ls, fstress, ls_tol, max_bisect, max_r,
+             rtol_b) = data
+        else:
+            (nlparm_id, ninc, dt, kmethod, kstep, max_iter, conv, int_out, eps_u, eps_p,
+             eps_w, max_div, max_qn, max_ls, fstress, ls_tol, max_bisect, max_r,
+             rtol_b, end_zero) = data
+            assert end_zero == 0, data
 
         kmethod_map = {
             1 : 'AUTO',
@@ -1102,6 +1108,8 @@ class NLPARM(BaseCard):
             5 : 'UW',
             6 : 'UP',
             7 : 'UPW',
+            10: '', # NLSTEP
+            14: '', # NLSTEP
             -1 : 'PW',  # Nastran-CoFE : blank -> assuming default
         }
         try:

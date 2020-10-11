@@ -101,6 +101,13 @@ class GEOM1(GeomCommon):
 
             # F:\work\pyNastran\pyNastran\master2\pyNastran\bdf\test\nx_spike\out_boltsold01d.op2
             (2101, 21, 2220008) : ['CORDx?', self._read_fake],
+            (2001, 20, 1310009) : ['???', self._read_fake],
+
+            (2101, 21, 1310008) : ['CORD2R?', self._read_fake],
+            (501, 5, 43) : ['CORDx?', self._read_cord3g],
+            (6591, 65, 677) : ['ATVBULK', self._read_fake],
+            (2201, 22, 2220010) : ['CORDx?', self._read_fake],
+            (1209, 96, 665) : ['IMPERF', self._read_fake],
 
             # nx
             #(707, 7, 124) :  ['EPOINT', self._read_epoint],  # record 12
@@ -130,6 +137,17 @@ class GEOM1(GeomCommon):
         #"""
         #self.show_data(data[n:])
         #return aaa
+
+    #def _read_new(self, data: bytes, n: int) -> int:
+        #"""
+        #C:\MSC.Software\simcenter_nastran_2019.2\tpl_post2\e402conm1_02.op2
+        #ndata = 104:
+            #ints    = (64, 0,   1, 0,   2, 0,   0,   0,   0,   0,   0,   0,   0,   0,   0, 1072693248, -2409647, -1126432769, 0, 0, -2409647, -1126432769, 0, -1074790400, 46723, 1022656512)
+            #floats  = (64, 0.0, 1, 0.0, 2, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.875, nan, -0.02685546688735485, 0.0, 0.0, nan, -0.02685546688735485, 0.0, -1.875, 6.547286814864843e-41, 0.02984619140625)
+            #doubles (float64) = (64, 1, 2, 0.0, 0.0, 0.0, 0.0, 1.0, -1.554312234e-15, 0.0, -1.554312234e-15, -1.0, 4.551914401e-15)
+            #long long (int64) = (64, 1, 2, 0,   0,   0,   0,   1.0, -4837991899705164975, 0, -4837991899705164975, -4616189618054758400, 4392276274081478275)
+        #"""
+        #self.show_data(data[n:], 'qsdfi')
 
     def _read_gridx(self, data: bytes, n: int) -> int:
         """
@@ -561,6 +579,44 @@ class GEOM1(GeomCommon):
 
             n += ntotal
         self.increase_card_count('GRID', nentries)
+        return n
+
+    def _read_cord3g(self, data: bytes, n: int) -> int:
+        """
+        Record – CORD3G(501,5,43)
+        Word Name Type Description
+        1 CID           I Coordinate system identification number
+        2 METHOD(2) CHAR4 Methods
+        4 FORM(2)   CHAR4 Forms
+        6 THETAID(3)    I Identification number for DEQATN or TABLE
+        9 CIDREF        I Coordinate system identification number
+        """
+        assert self.size == 4, self.size
+        structi = Struct(self._endian + b'i 8s 8s 4i')
+        ntotal = 36 * self.factor
+        ndatai = len(data) - n
+        nentries = ndatai // ntotal
+        assert nentries > 0, nentries
+        assert ndatai % ntotal == 0, f'ndatai={ndatai} ntotal={ntotal} leftover={ndatai % ntotal}'
+        #grids = {}
+        for unused_i in range(nentries):
+            edata = data[n:n + ntotal]
+            out = structi.unpack(edata)
+            (cid, method_bytes, form_bytes, theta1, theta2, theta3, cid_ref) = out
+            if self.is_debug_file:
+                self.binary_debug.write('  CORD3G=%s\n' % str(out))
+            method = method_bytes.decode('ascii').strip()
+            method_es = method[0]
+            method_int = int(method[1:])
+
+            form = form_bytes.decode('ascii').strip()
+
+            thetas = [theta1, theta2, theta3]
+            coord = self.add_cord3g(cid,
+                                    method_es, method_int, form,
+                                    thetas, cid_ref, comment='')
+            str(coord)
+            n += ntotal
         return n
 
     def _read_grid(self, data: bytes, n: int) -> int:

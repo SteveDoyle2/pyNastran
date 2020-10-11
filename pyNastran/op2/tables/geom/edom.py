@@ -78,7 +78,7 @@ class EDOM(GeomCommon):
             (4406, 44, 372) : ['DVGRID', self._read_dvgrid],
             #DVSHAP(5006,50,470)
             (5106, 51, 471) : ['DCONADD', self._read_fake],
-            #DVBSHAP(5806,58,474)
+            (5806, 58, 474) : ['DVBSHAP', self._read_fake],
             #DVGEOM(5906,59,356)
             (6006, 60, 477) : ['MODTRAK', self._read_fake],
             #DRESP3(6700,67,433)
@@ -88,6 +88,19 @@ class EDOM(GeomCommon):
             (6400, 64, 432) : ['DVMREL2', self._read_dvmrel2],
             (6006, 60, 477) : ['???', self._read_fake],
             (7000, 70, 563) : ['DCONSTR/DDVAL?', self._read_fake],
+
+            # C:\MSC.Software\simcenter_nastran_2019.2\tpl_post2\s200tpgchbc1.op2
+            (6903, 69, 637) : ['DMNCON', self._read_fake],
+            (7102, 71, 645) : ['DMRLAW', self._read_fake],
+            (6803, 68, 636) : ['DVTREL1', self._read_fake],
+
+
+            (2801, 28, 9945) : ['MAT10DOM', self._read_fake],
+            (5706, 57, 634) : ['DVEREL1', self._read_fake],
+            #(6903, 69, 637) : ['???', self._read_fake],
+            #(6903, 69, 637) : ['???', self._read_fake],
+            #(6903, 69, 637) : ['???', self._read_fake],
+            #(6903, 69, 637) : ['???', self._read_fake],
         }
 
     def _read_dconstr(self, data: bytes, n: int) -> int:

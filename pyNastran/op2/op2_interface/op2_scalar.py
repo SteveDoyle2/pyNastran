@@ -44,7 +44,7 @@ Defines the sub-OP2 class.  This should never be called outisde of the OP2 class
 import os
 from struct import Struct, unpack
 from collections import defaultdict
-from typing import List, Tuple, Dict, Union, Optional, Any
+from typing import List, Tuple, Dict, Set, Union, Optional, Any
 
 from numpy import array
 import numpy as np
@@ -204,7 +204,8 @@ MATRIX_TABLES = NX_MATRIX_TABLES + MSC_MATRIX_TABLES + AUTODESK_MATRIX_TABLES + 
 # TODO: these are weird...
 #   RPOSTS1, MAXRATI, RESCOMP, PDRMSG
 INT_PARAMS_1 = {
-    b'OMODES',
+    b'OMODES', b'LGSTRN', b'ADJFRQ', b'BSHDMP', b'BSHDMP4',
+
     b'POST', b'OPPHIPA', b'OPPHIPB', b'GRDPNT', b'RPOSTS1', b'BAILOUT',
     b'COUPMASS', b'CURV', b'INREL', b'MAXRATI', b'OG',
     b'S1AM', b'S1M', b'DDRMM', b'MAXIT', b'PLTMSG', b'LGDISP', b'NLDISP',
@@ -236,27 +237,27 @@ INT_PARAMS_1 = {
     b'SEFINAL', b'SEMAP1', b'SKPLOAD', b'SKPMTRX', b'SOLID1', b'SSG3',
     b'PEDGEP', b'ACMSPROC', b'ACMSSEID', b'ACOUS', b'ACOUSTIC', b'ADJFLG',
     b'ADJLDF', b'AEDBCP', b'AESRNDM', b'ARCSIGNS', b'ATVUSE', b'BADMESH', b'BCHNG',
-    b'BCTABLE', b'ROTCSV', b'ROTGPF', b'BEARDMP', b'BEARFORC', b'BOV', b'OP2FMT',
+    b'BCTABLE', b'ROTCSV', b'ROTGPF', b'BEARDMP', b'BEARFORC', b'OP2FMT',
     b'LRDISP',
 
     # ???
-    b'CHKSEC', b'CMSMETH', b'CNTNSUB', b'CNTSCL', b'CNTSTPS', b'CONCHG',
+    b'CHKSEC', b'CMSMETH', b'CNTNSUB', b'CNTSTPS', b'CONCHG', b'CP',
     b'DBDRPRJ', b'DBDRVER', b'DDAMRUN', b'DESCONX', b'DESEIG', b'DESFINAL',
     b'DESMAX', b'DESSOLAP', b'DIAGOPT',
 
     b'DOBUCKL', b'DOF123', b'DOMODES', b'DOSTATIC', b'DOTRIP', b'DRESP', b'DSGNOPTX',
-    b'DSNOKD', b'DYNAMICX', b'EBULK', b'EIGNFREQ', b'ELOOPID',
+    b'DYNAMICX', b'EBULK', b'EIGNFREQ', b'ELOOPID',
     b'FDEPCB', b'FLUIDMP', b'FLUIDSE', b'FMODE', b'FREQDEP', b'FREQDEPS',
     b'GENEL', b'GEOMFLAG', b'GEOMU', b'GKCHNG', b'GLUSET', b'GMCONV', b'GNSTART',
     b'GOODVER', b'GOPH2', b'GRIDFMP', b'GRIDMP', b'HNNLK', b'ICTASET', b'IFPCHNG',
-    b'INEP', b'INP2FMT', b'INP4FMT', b'INREL0', b'ITAPE', b'ITODENS', b'ITOITCNT',
+    b'INEP', b'INP2FMT', b'INP4FMT', b'INREL0', b'ITAPE', b'ITOITCNT',
     b'ITOMXITR', b'ITONDVAR', b'ITONGHBR', b'ITONOBJF', b'ITOOPITR', b'ITOPALG',
-    b'ITOPALLR', b'ITOPCONV', b'ITOPDIAG', b'ITOPOPT', b'ITORMAS', b'ITOSIMP',
-    b'ITOSIMP1', b'ITOSIMP2', b'IUNIT', b'K4CHNG', b'KCHNG', b'KREDX', b'LANGLES',
+    b'ITOPALLR', b'ITOPDIAG', b'ITOPOPT', b'ITOSIMP',
+    b'IUNIT', b'K4CHNG', b'KCHNG', b'KREDX', b'LANGLES',
     b'LBEARING', b'LDSTI1', b'LMDYN', b'LMODESFL', b'LMSTAT', b'LNUMROT',
     b'LOADGENX', b'LOADREDX', b'LOADU', b'LODCHG', b'LROTOR', b'LTOPOPT',
     b'LUSET', b'LUSETD', b'LUSETS', b'LUSETX', b'MATGENX',
-    b'MAXITER', b'MAXRPM', b'MAXSEIDX', b'MBDIFB', b'MBDIFO', b'MBDLMN',
+    b'MAXITER', b'MAXSEIDX', b'MBDIFB', b'MBDIFO', b'MBDLMN',
     b'MCHNG', b'MDOF', b'MDTRKFLG', b'MELPG', b'MGRID', b'MLTIMSTR', b'MODESX',
     b'MODETRAK', b'MPIFRHD', b'MPNFLG', b'MREDX', b'MSCOP2', b'NACEXTRA',
     b'NCNOFFST', b'NDISOFP', b'NDVAR', b'NEWSET', b'NGELS', b'NJ', b'NK',
@@ -266,27 +267,28 @@ INT_PARAMS_1 = {
     b'NORADMAT', b'NORBM', b'NOSE', b'NOSIMP', b'NOSSET', b'NOUE', b'NOUP',
     b'NOYSET', b'NOZSET', b'NQSET', b'NR1OFFST', b'NR2OFFST', b'NR3OFFST',
     b'NROTORS', b'NSE', b'NSKIP0', b'NSOL', b'NSOLF', b'NUMPAN', b'NX',
-    b'O2E', b'OADPMAX', b'OALTSHP', b'OBJIN', b'ODESMAX', b'ODSFLG', b'OMAXR',
+    b'O2E', b'OADPMAX', b'OALTSHP', b'ODESMAX', b'ODSFLG', b'OMAXR',
     b'OP2SE', b'OP4FMT', b'OP4SE', b'OPGEOM', b'OPTIFCS',
     b'OPTII231', b'OPTII408', b'OPTII411', b'OPTII420', b'OPTIIDMP', b'OPTISNS',
     b'OTAPE', b'OUNIT1', b'OUNIT2', b'OUNIT2R', b'OUTFMP', b'OUTSMP', b'PANELMP',
-    b'PBCONT', b'PCHNG', b'PITIME', b'PKLLR', b'POSTU', b'PRTMAT', b'PSLGDVX',
+    b'PBCONT', b'PCHNG', b'PKLLR', b'POSTU', b'PRTMAT', b'PSLGDVX',
     b'PSLOAD', b'PSORT', b'PVALINIT', b'PVALLAST', b'PVALLIST', b'PYCHNG',
-    b'REFOPT', b'RESLTOPT', b'RESPSENX', b'RGBEAMA', b'RGBEAME', b'RGLCRIT',
-    b'RGSPRGK', b'RMXPANEL', b'ROTPRES', b'ROTPRT', b'RPDFRD', b'RVCHG', b'RVCHG1',
+    b'REFOPT', b'RESLTOPT', b'RESPSENX',
+    b'RMXPANEL', b'ROTPRES', b'ROTPRT', b'RPDFRD', b'RVCHG', b'RVCHG1',
     b'RVCHG2', b'S1AG', b'SAVERSTL', b'SDSRFLAG', b'SEBULK',
     b'SEDMP231', b'SEDMP265', b'SEDMP408', b'SEDMP411', b'SEDMP445', b'SEDMPFLG',
     b'SELDPRS', b'SKIPSE', b'SNDSEIDX', b'SOLFINAL',
     b'SOLNLX', b'SOLNX', b'SOLVSUB', b'SPLINE', b'STOP0', b'STRUCTMP', b'SWEXIST',
-    b'TORSIN', b'UACCEL', b'UNIQIDS', b'VOL', b'VOLS', b'VUELJUMP', b'VUENEXT',
-    b'VUGJUMP', b'VUGNEXT', b'WGT', b'WGTS', b'WRTMAT',
-    b'XSMALLQ',
+    b'TORSIN', b'UACCEL', b'UNIQIDS', b'VUELJUMP', b'VUENEXT',
+    b'VUGJUMP', b'VUGNEXT', b'WRTMAT',
     b'XNTIPS', b'XRESLTOP', b'XSEMEDIA', b'XSEUNIT', b'XTIPSCOL',
-    b'XUPFAC', b'XYUNIT', b'XZCOLLCT', b'Z2XSING',
+    b'XYUNIT', b'XZCOLLCT', b'Z2XSING',
     b'ZUZRI1', b'ZUZRI2', b'ZUZRI3', b'ZUZRI4', b'ZUZRI5', b'ZUZRI6', b'ZUZRI7', b'ZUZRI8', b'ZUZRI9', b'ZUZRI10',
     b'ZUZRL1', b'ZUZRL2', b'ZUZRL3', b'ZUZRL4', b'ZUZRL5', b'ZUZRL6', b'ZUZRL7', b'ZUZRL8', b'ZUZRL9', b'ZUZRL10',
-    b'ZUZRR1', b'ZUZRR2', b'ZUZRR3', b'ZUZRR4', b'ZUZRR5', b'ZUZRR6', b'ZUZRR7', b'ZUZRR8', b'ZUZRR9', b'ZUZRR10',
-
+    b'DBCPAE', b'DBCPATH',
+    b'EXTBEMI', b'EXTBEMO', b'EXTDRUNT', b'EXTUNIT',
+    b'UZROLD',
+    b'HIRES'
     # no
     #b'SEPS', b'SMALLQ', b'FEPS',
 }
@@ -298,7 +300,7 @@ FLOAT_PARAMS_1 = {
     b'EPZERO', b'DSZERO', b'TINY', b'TOLRSC',
     b'FRSPD', b'HRSPD', b'LRSPD', b'MTRFMAX', b'ROTCMRF', b'MTRRMAX',
     b'LAMLIM', b'BIGER', b'BIGER1', b'BIGER2', b'CLOSE',
-    b'EPSBIG', b'EPSMALC', b'EPSMALU', b'HIRES', b'KDIAG', b'MACH', b'VREF',
+    b'EPSBIG', b'EPSMALC', b'EPSMALU', b'KDIAG', b'MACH', b'VREF',
     b'STIME', b'TESTSE', b'LFREQFL', b'Q', b'ADPCONS', b'AFNORM', b'AFZERO',
     b'GE', b'MASSDENS',
 
@@ -307,25 +309,36 @@ FLOAT_PARAMS_1 = {
     b'EPPRT',
 
     # not defined
-    b'PRPA', b'PRPHIVZ', b'PRPJ', b'PRRULV', b'RMAX', b'ADJFRQ', b'ARF',
+    b'CNTSCL',
+    b'PRPA', b'PRPHIVZ', b'PRPJ', b'PRRULV', b'RMAX', b'ARF', b'BOV',
     b'ARS', # b'BSHDAMP',
     b'EPSRC',
 
     # floats - not verified
     b'THRSHOLD', b'SEPS', b'SMALLQ', b'FEPS',
+    b'DSNOKD',
 
     # or integer (not string)
-    b'BSHDMP',
-    b'BSHDMP4',
     b'CONFAC',
-    b'CP',
-    b'DBCPAE',
-    b'DBCPATH',
     b'DFREQ', b'DFRSPCF', b'DSTSPCF', b'DTRSPCF',
     b'DUCTFMAX',
-    b'EXTBEMI', b'EXTBEMO', b'EXTDONE', b'EXTDRUNT', b'EXTUNIT',
+    b'EXTDONE',
     b'FZERO', b'LMFACT', b'MPCZERO',
-    b'RESVPGF', b'RESVRAT', b'SWPANGLE',  b'UPFAC', b'UZROLD',
+    b'RESVPGF', b'RESVRAT', b'SWPANGLE',  b'UPFAC',
+    b'ITODENS',
+    b'ITOPCONV',
+    b'ITORMAS',
+    b'ITOSIMP1',
+    b'ITOSIMP2',
+    b'MAXRPM',
+    b'OBJIN',
+    b'PITIME',
+    b'RGBEAMA', b'RGBEAME', b'RGLCRIT', b'RGSPRGK',
+    b'VOL', b'VOLS',
+    b'WGT', b'WGTS',
+    b'XSMALLQ',
+    b'XUPFAC',
+    b'ZUZRR1', b'ZUZRR2', b'ZUZRR3', b'ZUZRR4', b'ZUZRR5', b'ZUZRR6', b'ZUZRR7', b'ZUZRR8', b'ZUZRR9', b'ZUZRR10',
 }
 FLOAT_PARAMS_2 = {
     b'BETA', b'CB1', b'CB2', b'CK1', b'CK2', b'CK3', b'CK41', b'CK42',
@@ -335,6 +348,8 @@ FLOAT_PARAMS_2 = {
     b'ALPHA1', b'ALPHA2',
     b'CA1', b'CA2',
     b'CP1', b'CP2',
+    b'LOADFACS',
+    b'ZUZRC1', b'ZUZRC2', b'ZUZRC3', b'ZUZRC4', b'ZUZRC5', b'ZUZRC6', b'ZUZRC7', b'ZUZRC8', b'ZUZRC9', b'ZUZRC10',
 
 
     # should this be FLOAT_PARAMS_1???
@@ -344,7 +359,7 @@ INT_PARAMS_2 = {
     b'LOADFACS',
     b'ZUZRC1', b'ZUZRC2', b'ZUZRC3', b'ZUZRC4', b'ZUZRC5', b'ZUZRC6', b'ZUZRC7', b'ZUZRC8', b'ZUZRC9', b'ZUZRC10',
 }
-DOUBLE_PARAMS_1 = [] # b'Q'
+#DOUBLE_PARAMS_1 = [] # b'Q'
 STR_PARAMS_1 = {
     b'POSTEXT', b'PRTMAXIM', b'AUTOSPC', b'OGEOM', b'PRGPST',
     b'RESVEC', b'RESVINER', b'ALTRED', b'OGPS', b'OIBULK', b'OMACHPR',
@@ -401,6 +416,15 @@ STR_PARAMS_1 = {
     b'ADB', b'AEDB', b'MREDUC', b'OUTDRM', b'OUTFORM', b'REDMETH', b'DEBUG',
     b'AEDBX', b'AERO', b'AUTOSUP0', b'AXIOPT',
 }
+def _check_unique_sets(*sets: List[Set[str]]):
+    """verifies that the sets are unique"""
+    for i, seti in enumerate(sets):
+        for j, setj in enumerate(sets[i+1:]):
+            intersectioni = seti.intersection(setj)
+            assert len(intersectioni) == 0, intersectioni
+
+_check_unique_sets(INT_PARAMS_1, FLOAT_PARAMS_1, FLOAT_PARAMS_2, STR_PARAMS_1)
+
 
 class OP2_Scalar(LAMA, ONR, OGPF,
                  OEF, OES, OGS, OPG, OQG, OUG, OGPWG, FortranFormat):
@@ -1167,6 +1191,13 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             b'OEFCRM2' : [self._read_oef2_3, self._read_oef2_4],
             b'OEFPSD2' : [self._read_oef2_3, self._read_oef2_4],
             #b'OEFRMS2' : [self._read_oef2_3, self._read_oef2_4], # buggy on isat random
+
+
+            # nx cohesive zone
+            b'ODAMGCZT' : [self._nx_table_passer, self._table_passer],
+            b'ODAMGCZR' : [self._nx_table_passer, self._table_passer],
+            b'ODAMGCZD' : [self._nx_table_passer, self._table_passer],
+
         }
         if self.is_nx and 0:
             table_mapper2 = {
@@ -1500,14 +1531,14 @@ class OP2_Scalar(LAMA, ONR, OGPF,
                     slot = data[(i+3)*xword:(i+5)*xword]
                     value = struct2i.unpack(slot)
                     i += 5
-                elif word in DOUBLE_PARAMS_1:
-                    slot = data[(i+1)*xword:(i+8)*xword]
-                    try:
-                        value = struct2d.unpack(slot)[1]
-                    except:
-                        print(word)
-                        raise
-                    i += 8
+                #elif word in DOUBLE_PARAMS_1:
+                    #slot = data[(i+1)*xword:(i+8)*xword]
+                    #try:
+                        #value = struct2d.unpack(slot)[1]
+                    #except:
+                        #print(word)
+                        #raise
+                    #i += 8
                 #elif word in [b'VUHEXA']:
                     #self.show_data(data[i*4:(i+5)*4], types='ifs', endian=None)
                     #aaa

@@ -99,6 +99,32 @@ class EPT(GeomCommon):
             (3801, 38, 979) : ['PPLANE', self._read_pplane],
             (11801, 118, 560) : ['PWELD', self._read_fake],
             (3401, 34, 993) : ['NSMADD', self._read_nsmadd],
+            (9300, 93, 684) : ['ELAR', self._read_fake],
+            (9400, 94, 685) : ['ELAR2', self._read_fake],
+            (16006, 160, 903) : ['PCOMPS', self._read_fake],
+
+            # MSC-specific
+            (14602, 146, 692): ['PSLDN1', self._read_fake],
+            (16502, 165, 916): ['PAXSYMH', self._read_fake],
+            (13201, 132, 513): ['PBRSECT', self._read_fake],
+
+            (13701, 137, 638): ['PWSEAM', self._read_fake],
+            (7001, 70, 632): ['???', self._read_fake],
+            (15106, 151, 953): ['PCOMPG1', self._read_fake],
+            (3901, 39, 969): ['PSHL3D', self._read_fake],
+            (17006, 170, 901): ['MATCID', self._read_fake],
+
+            (9601, 96, 691): ['PJOINT', self._read_fake],
+            (16502, 165, 916): ['???', self._read_fake],
+
+            (9701, 97, 692): ['PJOINT2', self._read_fake],
+            (13401, 134, 611): ['PBEAM3', self._read_fake],
+            (8901, 89, 905): ['PSOLCZ', self._read_fake],
+            #(9701, 97, 692): ['???', self._read_fake],
+            #(9701, 97, 692): ['???', self._read_fake],
+            #(9701, 97, 692): ['???', self._read_fake],
+            #(9701, 97, 692): ['???', self._read_fake],
+
         }
 
     def _add_op2_property(self, prop):
@@ -729,26 +755,27 @@ class EPT(GeomCommon):
         NSM is at the end of the element.
         """
         valid_types = {
-            "ROD": 1,
-            "TUBE": 2,
-            "I": 6,
-            "CHAN": 4,
-            "T": 4,
-            "BOX": 4,
-            "BAR": 2,
-            "CROSS": 4,
-            "H": 4,
-            "T1": 4,
-            "I1": 4,
-            "CHAN1": 4,
-            "Z": 4,
-            "CHAN2": 4,
+            'ROD': 1,
+            'TUBE': 2,
+            'TUBE2': 2,
+            'I': 6,
+            'CHAN': 4,
+            'T': 4,
+            'BOX': 4,
+            'BAR': 2,
+            'CROSS': 4,
+            'H': 4,
+            'T1': 4,
+            'I1': 4,
+            'CHAN1': 4,
+            'Z': 4,
+            'CHAN2': 4,
             "T2": 4,
-            "BOX1": 6,
-            "HEXA": 3,
-            "HAT": 4,
-            "HAT1": 5,
-            "DBOX": 10,  # was 12
+            'BOX1': 6,
+            'HEXA': 3,
+            'HAT': 4,
+            'HAT1': 5,
+            'DBOX': 10,  # was 12
             #'MLO TUBE' : 2,
         }  # for GROUP="MSCBML0"
 
@@ -1480,9 +1507,37 @@ class EPT(GeomCommon):
             n, props = self._read_pbusht_100(data, n)
         elif ndata % 80 == 0:
             n, props = self._read_pbusht_80(data, n)
+        else:
+            # C:\MSC.Software\msc_nastran_runs\mbsh14.op2
+            # ints = (1,
+            #         51, 51, 0, 0, 0, 0,
+            #         61, 61, 0, 0, 0, 0,
+            #         0,  0,  0, 0, 0, 0,
+            #         0, '', '', 0, 0, '', '', 0, 0, 925353388, 0, 0, 0, 0, 0,
+            #         7,
+            #         51, 51, 0, 0, 0, 0,
+            #         61, 61, 0, 0, 0, 0,
+            #         0,  0,  0, 0, 0, 0,
+            #         0, '', '', 0, 0, '', '', 0, 0, 925353388, 0, 0, 0, 0, 0)
+            # strings = (b"1 51 51 \x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00=\x00\x00\x00=\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00        \x00\x00\x00\x00\x00\x00\x00\x00        \x00\x00\x00\x00\x00\x00\x00\x00\xac\xc5'7\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x07\x00\x00\x003\x00\x00\x003\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00=\x00\x00\x00=\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00        \x00\x00\x00\x00\x00\x00\x00\x00        \x00\x00\x00\x00\x00\x00\x00\x00\xac\xc5'7\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00",)
+            # ints    = (1, 51, 51, 0,   0,   0,   0,   61, 61, 0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   '    ', '    ', 0,   0,   '    ', '    ', 0,   0,   1e-5, 0,   0,   0,   0  , 0,
+            #
+            # 7, 51, 51, 0,   0,   0,   0,   61, 61, 0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0, '    ', '    ', 0, 0, '    ', '    ', 0, 0, 1e-5, 0, 0, 0, 0, 0)
+            #self.show_data(data[n:], types='is')
+            raise NotImplementedError('You have blank lines in your PBUSHT')
         return n, props
 
     def _read_pbusht_80(self, data: bytes, n: int) -> int:
+        """
+        Word Name Type Description
+        1 PID     I Property identification number
+        2 TKID(6) I TABLEDi entry identification numbers for stiffness
+        8 TBID(6) I TABLEDi entry identification numbers for viscous damping
+        14 TGEID  I TABLEDi entry identification number for structural damping
+        15 TKNID(6) I TABLEDi entry identification numbers for force versus deflection
+        16,17,18,19,20
+        ???
+        """
         ntotal = 80 * self.factor
         struct1 = Struct(self._endian + b'20i')
         nentries = (len(data) - n) // ntotal
@@ -2021,8 +2076,41 @@ class EPT(GeomCommon):
         return n
 
     def _read_pfast_msc(self, data: bytes, n: int) -> int:
-        ntotal = 92 # 23*4
-        struct1 = Struct(self._endian + b'ifii 4f')
+        """
+        Word Name Type Description
+        1 PID       I Property identification number
+        2 MID       I Material property identification number
+        3 D        RS Diameter of the fastener
+        4 CONNBEH   I Connection behavior (0=FF/F, 1=FR, 10=RF/R, 11=RR)
+        5 CONNTYPE  I Connection type (0=clamp, 1=hinge, 2=bolt)
+        6 EXTCON    I External constraint flag (0=off, 1=on)
+        7 CONDTYPE  I Condition type (0=rigid, 1=equivalent)
+        8 WELDTYPE  I Weld type (0=spot weld, 1=but seam, 2=T-seam)
+
+        9 MINLEN   RS Minimum length of spot weld
+        10 MAXLEN  RS Maximum length of spot weld
+        11 GMCHK    I Perform geometry check
+        12 SPCGS    I SPC the master grid GS
+        13 CMASS   RS Concentrated mass
+        14 GE      RS Structureal Damping
+
+        15 UNDEF(3) none Not used
+        18 MCID    I Element stiffness coordinate system
+        19 MFLAG   I Defined the coordinate system type
+        20 KT(3)  RS Stiffness values in direction 1
+        23 KR(3)  RS Rotation stiffness values in direction 1
+
+        C:\MSC.Software\msc_nastran_runs\cfmass.op2
+                   pid mid  D    con  con  ext  cond weld min max  chk  spc  cmass ge  und  und  und  mcid mfag kt1      kt2       kt3       kr1    kr2      kr3
+        ints    = (99, 0,   0.1, 0,   0,   0,   0,   -1, 0.2, 5.0, 0,   0,   7.9, 0,   0,   0,   0,   -1, 0,   471200.0, 181200.0, 181200.0, 226.6, 45610.0, 45610.0)
+        floats  = (99, 0.0, 0.1, 0.0, 0.0, 0.0, 0.0, -1, 0.2, 5.0, 0.0, 0.0, 7.9, 0.0, 0.0, 0.0, 0.0, -1, 0.0, 471200.0, 181200.0, 181200.0, 226.6, 45610.0, 45610.0)
+        """
+        #self.show_data(data[n:], types='ifs')
+        #ntotal = 92 * self.factor # 26*4
+        #struct1 = Struct(self._endian + b'ifii 3f')
+
+        ntotal = 100 * self.factor # 25*4
+        struct1 = Struct(self._endian + b'2if 5i 2f2i2f 3i 2i 6f')
         nproperties = (len(data) - n) // ntotal
         for unused_i in range(nproperties):
             edata = data[n:n+ntotal]
@@ -2038,6 +2126,8 @@ class EPT(GeomCommon):
             data_in = (pid, d, mcid, mflag, kt1, kt2, kt3,
                        kr1, kr2, kr3, mass, ge)
             prop = PFAST.add_op2_data(data_in)
+            str(prop)
+            print(prop)
             self._add_op2_property(prop)
             n += ntotal
         self.card_count['PFAST'] = nproperties

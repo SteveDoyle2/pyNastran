@@ -64,7 +64,7 @@ from pyNastran.bdf.cards.constraints import (SPC, SPCADD, SPCAX, SPC1, SPCOFF, S
                                              MPC, MPCADD, SUPORT1, SUPORT, SESUP,
                                              GMSPC)
 from pyNastran.bdf.cards.coordinate_systems import (CORD1R, CORD1C, CORD1S,
-                                                    CORD2R, CORD2C, CORD2S, #CORD3G,
+                                                    CORD2R, CORD2C, CORD2S, CORD3G,
                                                     GMCORD)
 from pyNastran.bdf.cards.deqatn import DEQATN
 from pyNastran.bdf.cards.dynamic import (
@@ -1019,6 +1019,16 @@ class AddCards(AddMethods):
 
         """
         coord = CORD1S(cid, g1, g2, g3, comment=comment)
+        self._add_coord_object(coord)
+        return coord
+
+    def add_cord3g(self, cid: int,
+                   method_es, method_int, form,
+                   thetas: List[int],
+                   rid: int,
+                   comment: str=''):
+        """Creates a GMCORD card"""
+        coord = CORD3G(cid, method_es, method_int, form, thetas, rid, comment=comment)
         self._add_coord_object(coord)
         return coord
 

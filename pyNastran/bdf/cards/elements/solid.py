@@ -13,6 +13,9 @@ All solid elements are defined in this file.  This includes:
  * CHEXA1
  * CHEXA2
 
+ * CHEXCZ
+ * CPENTCZ
+
 All solid elements are SolidElement and Element objects.
 
 """
@@ -780,6 +783,40 @@ class CHEXA20(SolidElement):
         nids = self._node_ids(nodes=self.nodes_ref, allow_empty_nodes=True)
         return nids
 
+
+
+class CHEXCZ(CHEXA20):
+    """
+    +-------+-----+-----+-----+-----+-----+-----+-----+-----+
+    |   1   |  2  |  3  |  4  |  5  |  6  |  7  |  8  |  9  |
+    +=======+=====+=====+=====+=====+=====+=====+=====+=====+
+    | CHEXA | EID | PID | G1  | G2  | G3  | G4  | G5  | G6  |
+    +-------+-----+-----+-----+-----+-----+-----+-----+-----+
+    |       | G7  | G8  | G9  | G10 | G11 | G12 | G13 | G14 |
+    +-------+-----+-----+-----+-----+-----+-----+-----+-----+
+    |       | G15 | G16 | G17 | G18 | G19 | G20 |     |     |
+    +-------+-----+-----+-----+-----+-----+-----+-----+-----+
+    """
+    type = 'CHEXCZ'
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
+        nodes = self.node_ids
+        nodes2 = ['' if node is None else '%8i' % node for node in nodes[8:]]
+        data = [self.eid, self.Pid()] + nodes[:8] + nodes2
+        msg = ('CHEXCZ  %8i%8i%8i%8i%8i%8i%8i%8i\n'
+               '        %8i%8i%8s%8s%8s%8s%8s%8s\n'
+               '        %8s%8s%8s%8s%8s%8s' % tuple(data))
+        return self.comment + msg.rstrip() + '\n'
+
+    def write_card_16(self, is_double=False):
+        nodes = self.node_ids
+        nodes2 = ['' if node is None else '%8i' % node for node in nodes[8:]]
+        data = [self.eid, self.Pid()] + nodes[:8] + nodes2
+        msg = ('CHEXCZ* %16i%16i%16i%16i\n'
+               '*       %16i%16i%16i%16i\n'
+               '*       %16i%16i%16s%16s\n'
+               '*       %16s%16s%16s%16s\n'
+               '*       %16s%16s%16s%16s%16s%16s' % tuple(data))
+        return self.comment + msg.rstrip() + '\n'
 
 class CIHEX1(CHEXA8):
     type = 'CIHEX1'
@@ -2082,6 +2119,40 @@ class CPENTA15(SolidElement):
         nodes2 = ['' if node is None else '%16i' % node for node in nodes[6:]]
         data = [self.eid, self.Pid()] + nodes[:6] + nodes2
         msg = ('CPENTA* %16i%16i%16i%16i\n'
+               '*       %16s%16s%16s%16s\n'
+               '*       %16s%16s%16s%16s\n'
+               '*       %16s%16s%16s%16s\n'
+               '*       %16s' % tuple(data))
+        return self.comment + msg.rstrip() + '\n'
+
+
+class CPENTCZ(CPENTA15):
+    """
+    +---------+-----+-----+-----+-----+-----+-----+-----+-----+
+    |    1    |  2  |  3  |  4  |  5  |  6  |  7  |  8  |  9  |
+    +=========+=====+=====+=====+=====+=====+=====+=====+=====+
+    | CPENTCZ | EID | PID | G1  | G2  | G3  | G4  | G5  | G6  |
+    +---------+-----+-----+-----+-----+-----+-----+-----+-----+
+    |         | G7  | G8  | G9  | G10 | G11 | G12 | G13 | G14 |
+    +---------+-----+-----+-----+-----+-----+-----+-----+-----+
+    |         | G15 |     |     |     |     |     |     |     |
+    +---------+-----+-----+-----+-----+-----+-----+-----+-----+
+    """
+    type = 'CPENTCZ'
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
+        nodes = self.node_ids
+        nodes2 = ['' if node is None else '%8i' % node for node in nodes[6:]]
+        data = [self.eid, self.Pid()] + nodes[:6] + nodes2
+        msg = ('CPENTCZ %8i%8i%8i%8i%8i%8i%8i%8i\n'
+               '        %8s%8s%8s%8s%8s%8s%8s%8s\n'
+               '        %8s' % tuple(data))
+        return self.comment + msg.rstrip() + '\n'
+
+    def write_card_16(self, is_double=False):
+        nodes = self.node_ids
+        nodes2 = ['' if node is None else '%16i' % node for node in nodes[6:]]
+        data = [self.eid, self.Pid()] + nodes[:6] + nodes2
+        msg = ('CPENTCZ*%16i%16i%16i%16i\n'
                '*       %16s%16s%16s%16s\n'
                '*       %16s%16s%16s%16s\n'
                '*       %16s%16s%16s%16s\n'

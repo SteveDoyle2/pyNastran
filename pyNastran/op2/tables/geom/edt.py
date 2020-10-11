@@ -2,11 +2,13 @@
 defines readers for BDF objects in the OP2 EDT/EDTS table
 """
 from struct import Struct
-from typing import Tuple, Any
+from typing import Tuple, List, Any
 
 import numpy as np
 from pyNastran.op2.tables.geom.geom_common import GeomCommon
 from pyNastran.op2.op2_interface.op2_reader import mapfmt, reshape_bytes_block, reshape_bytes_block_size
+from pyNastran.bdf.cards.elements.acoustic import ACMODL
+
 from .utils import get_minus1_start_end
 
 class EDT(GeomCommon):
@@ -91,6 +93,26 @@ class EDT(GeomCommon):
             #(10500, 105, 14) : ['???', self._read_fake],
             #(10500, 105, 14) : ['???', self._read_fake],
             #(10500, 105, 14) : ['???', self._read_fake],
+
+            (7108, 82, 251): ['BOLT', self._read_fake],
+
+            # MSC
+            (1247, 12, 667): ['MONPNT2', self._read_fake],
+            (11204, 112, 821): ['ERPPNL', self._read_fake],
+            (8001, 80, 511): ['SET3', self._read_fake],
+            (9400, 94, 641): ['MDLPRM', self._read_fake],
+            (11004, 110, 1820_720): ['HADACRI', self._read_fake],
+            (8804, 88, 628): ['MONDSP1', self._read_fake],
+
+            (10904, 109, 719): ['HADAPTL', self._read_fake],
+            (8204, 82, 621): ['MONPNT2', self._read_fake],
+            (8304, 83, 622): ['MONPNT3', self._read_fake],
+            #(8001, 80, 511): ['???', self._read_fake],
+            #(8001, 80, 511): ['???', self._read_fake],
+            #(8001, 80, 511): ['???', self._read_fake],
+            #(8001, 80, 511): ['???', self._read_fake],
+            #(8001, 80, 511): ['???', self._read_fake],
+
         }
     def _read_aeforce(self, data: bytes, n: int) -> int:
         aeforcex
@@ -760,24 +782,16 @@ class EDT(GeomCommon):
         return len(data)
 
     def _read_acmodl(self, data: bytes, n: int) -> int:
-        """
-        MSC 2018.2
-        Word Name Type Description
-        1 INTER(2)     CHAR4 Type of structure-fluid interface:
-                             "IDENT","DIFF"-def"DIFF"
-        3 INFOR(2)     CHAR4 If INTER="DIFF", defines the type of list:
-                             "GRIDS","ELEMENTS","NONE"-def"NONE"
-        5 FSET             I SET1 ID for fluid elements or grids ID list, FSET>0 or blank
-        6 SSET             I SET1 ID for struc elements or grids ID list, SSET>0 or blank
-        7 NORMAL          RS Fluid normal tolerance - def 1.0
-        8 METHOD(2)    CHAR4 Method -def" "
-        10 SKNEPS         RS Fluid skin growth tolereance - def 0.75
-        11 DSKNEPS        RS Fluid secondary skin growth tolerance - def 0.75
-        12 INTOL          RS Tolerance of inward normal - def 0.5
-        13 ALLSSET(2)  CHAR4 coupled all structure given by SSET if "YES" - def"NO"
-        15 SRCHUNIT(2) CHAR4 Search Units:"ABS","REL"-def"REL"
+        """common method for reading SPCs"""
+        n = self._read_dual_card(data, n, self._read_acmodl_nx, self._read_acmodl_msc,
+                                 'ACMODL', self._add_acmodl_object)
+        #return self._read_acmodl_msc(data, n)
+        return n
 
-        NX 2019.2
+
+    def _read_acmodl_nx(self, data: bytes, n: int) -> Tuple[int, List[ACMODL]]:
+        """
+        NX 2019.2 - 72 bytes
         Word Name Type Description
         1 INTER(2)      CHAR4 IDENT or DIFF method specification
         3 INFO(2)       CHAR4 Allowable values are ALL, ELEMENTS, PID, SET3, and NONE
@@ -818,6 +832,8 @@ class EDT(GeomCommon):
             structi = Struct(self._endian + b'8s 8s 2i f 8s f 8s f ifi 8s')
         else:
             structi = Struct(self._endian + b'16s 16s 2q d 16s d 16s d qdq 16s')
+
+        acmodls = []
         for unused_i in range(ncards):
             edata = data[n:n + ntotal]
             out = structi.unpack(edata)
@@ -849,21 +865,115 @@ class EDT(GeomCommon):
             assert search_unit in ['ABS', 'REL'], search_unit
             #INTOL Inward normal sea
             # set2 = self.add_set2(sid, macro, sp1, sp2, ch1, ch2, zmax, zmin)
-            acmodl = self.add_acmodl(infor, fset, sset,
-                                     normal=normal, olvpang=olvpang,
-                                     search_unit=search_unit, intol=intol,
-                                     area_op=area_op,
-                                     ctype=ctype,
-                                     method='BW',
-                                     sk_neps=sk_neps,
-                                     #dsk_neps=0.75,
-                                     #all_set='NO',
-                                     inter=inter,
-                                     nastran_version='nx')
+            acmodl = ACMODL(infor, fset, sset,
+                            normal=normal, olvpang=olvpang,
+                            search_unit=search_unit, intol=intol,
+                            area_op=area_op,
+                            ctype=ctype,
+                            method='BW',
+                            sk_neps=sk_neps,
+                            #dsk_neps=0.75,
+                            #all_set='NO',
+                            inter=inter,
+                            nastran_version='nx')
             #print(acmodl)
             str(acmodl)
+            acmodls.append(acmodl)
             n += ntotal
-        return n
+        return n, acmodls
+
+    def _read_acmodl_msc(self, data: bytes, n: int) ->  Tuple[int, List[ACMODL]]:
+        """
+        MSC 2018.2 - 64 bytes
+        Word Name Type Description
+
+
+        1 INTER(2)     CHAR4 Type of structure-fluid interface:
+                             "IDENT","DIFF"-def"DIFF"
+        3 INFOR(2)     CHAR4 If INTER="DIFF", defines the type of list:
+                             "GRIDS","ELEMENTS","NONE"-def"NONE"
+        5 FSET             I SET1 ID for fluid elements or grids ID list, FSET>0 or blank
+        6 SSET             I SET1 ID for struc elements or grids ID list, SSET>0 or blank
+        7 NORMAL          RS Fluid normal tolerance - def 1.0
+        8 METHOD(2)    CHAR4 Method -def" "
+        10 SKNEPS         RS Fluid skin growth tolereance - def 0.75
+        11 DSKNEPS        RS Fluid secondary skin growth tolerance - def 0.75
+        12 INTOL          RS Tolerance of inward normal - def 0.5
+        13 ALLSSET(2)  CHAR4 coupled all structure given by SSET if "YES" - def"NO"
+        15 SRCHUNIT(2) CHAR4 Search Units:"ABS","REL"-def"REL"
+
+        ndata = 64: # MSC
+          strings = (b'IDENT   NONE    \x00\x00\x00\x00\x00\x00\x00\x00\x17\xb7\xd18        \x00\x00\x00?\x00\x00@?\x00\x00\x00?NO      REL     ',)
+          ints    = (IDENT, NONE, 0,   0,   953267991, 538976288, 538976288,                                       0.5, 0.75, 0.5, NO, REL)
+          floats  = (IDENT, NONE, 0.0, 0.0, 9.999999747378752e-05, 1.3563156426940112e-19, 1.3563156426940112e-19, 0.5, 0.75, 0.5, NO, REL)
+
+        MSC 2018.2
+        | ACMODL | INTER | INFOR   |   FSET   | SSET | NORMAL | METHOD |  SKNEPS | DSKNEPS  |
+        |        | INTOL | ALLSSET | SRCHUNIT |      |        |        |         |          |
+
+        """
+        ntotal = 64 *  self.factor # 4 * 8
+        ndatai = len(data) - n
+        ncards = ndatai // ntotal
+        assert ndatai % ntotal == 0, ndatai % ntotal
+        #structi = Struct(self._endian + b'4i f 8s 8s 3i f') # msc
+        if self.size == 4:
+            structi = Struct(self._endian + b'8s 8s 2if 8s 3f 8s 8s')
+        else:
+            raise NotImplementedError(('ACMODL-MSC', self.size))
+            structi = Struct(self._endian + b'16s 16s 2q d 16s d 16s d qdq 16s')
+
+        acmodls = []
+        for unused_i in range(ncards):
+            edata = data[n:n + ntotal]
+            out = structi.unpack(edata)
+            #Type of structure-fluid interface. (Character = IDENT or DIFF;
+            #inter: good
+            #olvpang: good
+            #search_unit_bytes: good
+            #ctype: good
+            #area_op: good
+            #sk_neps/olvpang;  Default=60.0
+            inter_bytes, infor_bytes, fset, sset, normal, method_bytes, sk_neps, dsk_neps, intol, all_sset, search_unit_bytes = out
+            area_op= None
+            olvpang = None
+            #inter_bytes, infor_bytes, fset, sset, normal, method_bytes, olvpang, search_unit_bytes, intol, area_op, sk_neps, intord, ctype_bytes = out
+            inter = reshape_bytes_block_size(inter_bytes, self.size)
+            infor = reshape_bytes_block_size(infor_bytes, self.size)
+            method = reshape_bytes_block_size(method_bytes, self.size)
+            search_unit = reshape_bytes_block_size(search_unit_bytes, self.size)
+            #ctype = reshape_bytes_block_size(ctype_bytes, self.size)
+
+            assert inter in ['IDENT'], inter
+            #assert ctype in ['STRONG', 'WEAK', 'WEAKINT', 'WEAKEXT'], ctype
+            assert method in [''], method
+            #assert area_op in [0, 1], area_op
+            #If CTYPE = STRONG
+            #If CTYPE = WEAK
+            #print(f'inter={inter!r} infor={infor!r} fset={fset} sset={sset} normal={normal:g} method={method} olvpang={olvpang} search_unit={search_unit!r}\n'
+                  #f'intol={intol:g} area_op={area_op} sk_neps={sk_neps} intord={intord} ctype={ctype!r}')
+
+            #If SRCHUNIT = ABS, then the model units are absolute.
+            #If SRCHUNIT = REL, then the relative model units are based on element size.
+            assert search_unit in ['ABS', 'REL'], search_unit
+            #INTOL Inward normal sea
+            # set2 = self.add_set2(sid, macro, sp1, sp2, ch1, ch2, zmax, zmin)
+            acmodl = ACMODL(infor, fset, sset,
+                            normal=normal, olvpang=olvpang,
+                            search_unit=search_unit, intol=intol,
+                            area_op=area_op,
+                            #ctype=ctype,
+                            method='BW',
+                            sk_neps=sk_neps,
+                            #dsk_neps=0.75,
+                            #all_set='NO',
+                            inter=inter,
+                            nastran_version='msc')
+            #print(acmodl)
+            str(acmodl)
+            acmodls.append(acmodl)
+            n += ntotal
+        return n, acmodls
 
     def _read_aelist(self, data: bytes, n: int) -> int:
         """

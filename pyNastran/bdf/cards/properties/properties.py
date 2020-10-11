@@ -111,7 +111,7 @@ class PFAST(Property):
         self.mass = mass
         #: Structural damping
         self.ge = ge
-        assert self.d > 0
+        #assert self.d > 0, d
         assert mflag in [0, 1]
         assert self.mcid >= -1
         self.mcid_ref = None

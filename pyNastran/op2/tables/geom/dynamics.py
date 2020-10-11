@@ -75,6 +75,30 @@ class DYNAMICS(GeomCommon):
 
             #F:\work\pyNastran\examples\Dropbox\move_tpl\rcross01.op2
             (3201, 24, 54) : ['RCROSS', self._read_rcross],
+
+            (9010, 90, 569): ['CBEAR', self._read_fake],
+
+            (9010, 90, 569): ['CBEAR', self._read_fake],
+            (9110, 91, 570): ['PBEAR', self._read_fake],
+            (9310, 93, 633): ['ROTPARM', self._read_fake],
+            (9010, 90, 569): ['CBEAR', self._read_fake],
+
+            (9407, 94, 659): ['ACADAPT', self._read_fake],
+            (11701, 117, 656): ['???', self._read_fake],
+
+            (9607, 96, 660): ['ACORDER', self._read_fake],
+            (2601, 26, 58): ['FRFFLEX', self._read_fake],
+            (3501, 35, 56): ['RCROSSC', self._read_fake],
+            (5807, 59, 653): ['ACPLNW', self._read_fake],
+            (2807, 28, 79): ['FRFOMAP', self._read_fake],
+            (7307, 73, 647): ['TLOAD3', self._read_fake],
+            (5407, 54, 649): ['ALOAD', self._read_fake],
+            (2701, 27, 62): ['FRFOTM', self._read_fake],
+            #(9407, 94, 659): ['???', self._read_fake],
+            #(9407, 94, 659): ['???', self._read_fake],
+            #(9407, 94, 659): ['???', self._read_fake],
+            #(9407, 94, 659): ['???', self._read_fake],
+            #(9407, 94, 659): ['???', self._read_fake],
         }
 
     def _read_acsrce(self, data: bytes, n: int) -> int:
@@ -1637,8 +1661,27 @@ class DYNAMICS(GeomCommon):
 #TIC3
     def _read_tload1(self, data: bytes, n: int) -> int:
         """common method for reading NX/MSC TLOAD1"""
-        n = self._read_dual_card(data, n, self._read_tload1_nx, self._read_tload1_msc,
-                                 'TLOAD1', self._add_dload_entry)
+        # NX - 24
+        # MSC - 32
+        #$       sid excite  delay    type    tid/f us vs
+        #TLOAD1  5   2                         2    0. 0.
+                   #sid excite ?    ?    tid ?    ?    ?    ?
+        #ints    = (5,  2,     0,   0,   2,  0,   0,   0,   0)
+        #floats  = (5,  2,     0.0, 0.0, 2,  0.0, 0.0, 0.0, 0.0)
+        ndatai = (len(data) - n) // self.factor
+        if ndatai % 24 == 0 and ndatai % 32 and ndatai % 36:
+            n, dloads = self._read_tload1_nx(data, n)
+        elif ndatai % 32 == 0 and ndatai % 24 and ndatai % 36:
+            n, dloads = self._read_tload1_msc(data, n)
+        elif ndatai % 36 == 0 and ndatai % 24 and ndatai % 32:
+            n, dloads = self._read_tload1_36(data, n)
+        else:
+            n = self._read_dual_card(data, n, self._read_tload1_nx, self._read_tload1_msc,
+                                     'TLOAD1', self._add_dload_entry)
+            return n
+        for dload in dloads:
+            self._add_dload_entry(dload)
+        self.card_count['TLOAD1'] = len(dloads)
         return n
 
     def _read_tload1_nx(self, data: bytes, n: int) -> Tuple[int, List[TLOAD1]]:
@@ -1652,6 +1695,7 @@ class DYNAMICS(GeomCommon):
         4 TYPE    I Nature of the dynamic excitation
         5 TID     I Identification number of TABLEDi entry that gives F(t)
         6 DELAYR RS If DELAYI = 0, constant value for delay
+
         """
         ntotal = 24 * self.factor # 6*4
         nentries = (len(data) - n) // ntotal
@@ -1690,9 +1734,15 @@ class DYNAMICS(GeomCommon):
         7 V0     RS Initial velocity factor for enforced motion (MSC; NX undocumented)
         8 T      RS Time delay (MSC)
 
+        # C:\MSC.Software\msc_nastran_runs\pbxsfsd.op2
+        # why are there 9 fields?
+        $       sid excite  delay    type    tid/f us vs
+        TLOAD1  5   2                         2    0. 0.
+                   sid excite ?    ?    tid ?    ?    ?    ?
+        ints    = (5,  2,     0,   0,   2,  0,   0,   0,   0)
+        floats  = (5,  2,     0.0, 0.0, 2,  0.0, 0.0, 0.0, 0.0)
         """
         ntotal = 32 * self.factor # 8*4
-        #self.show_data(data[n:], 'if')
         nentries = (len(data) - n) // ntotal
         assert (len(data) - n) % ntotal == 0
         assert nentries > 0, nentries
@@ -1710,10 +1760,53 @@ class DYNAMICS(GeomCommon):
                 delay = delayr
             dload = TLOAD1(sid, darea, tid, delay=delay, Type=load_type,
                            us0=us0, vs0=vs0)
-            #self._add_dload_entry(dload)
             dloads.append(dload)
             n += ntotal
-        #self.increase_card_count('TLOAD1', nentries)
+        return n, dloads
+
+    def _read_tload1_36(self, data: bytes, n: int) -> Tuple[int, List[TLOAD1]]:
+        """
+        TLOAD1(7107,71,138) - Record 37
+
+        1 SID    I  Load set identification number
+        2 DAREA  I  DAREA Bulk Data entry identification number
+        3 DELAYI I  DELAY Bulk Data entry identification number
+        4 TYPE   I  Nature of the dynamic excitation
+        5 TID    I  Identification number of TABLEDi entry that gives F(t)
+        6 DELAYR RS If DELAYI = 0, constant value for delay
+        6 U0     RS Initial displacement factor for enforced motion (MSC; NX undocumented)
+        7 V0     RS Initial velocity factor for enforced motion (MSC; NX undocumented)
+        8 T      RS Time delay (MSC; undocumented)
+
+        # C:\MSC.Software\msc_nastran_runs\pbxsfsd.op2
+        # why are there 9 fields?
+        $       sid excite  delay    type    tid/f us vs
+        TLOAD1  5   2                         2    0. 0.
+                   sid excite ?    ?    tid ?    ?    ?    ?
+        ints    = (5,  2,     0,   0,   2,  0,   0,   0,   0)
+        floats  = (5,  2,     0.0, 0.0, 2,  0.0, 0.0, 0.0, 0.0)
+        """
+        ntotal = 36 * self.factor # 8*4
+        nentries = (len(data) - n) // ntotal
+        assert (len(data) - n) % ntotal == 0
+        assert nentries > 0, nentries
+
+        dloads = []
+        struc = Struct(mapfmt(self._endian + b'5i 3fi', self.size))
+        for unused_i in range(nentries):
+            edata = data[n:n+ntotal]
+            out = struc.unpack(edata)
+            sid, darea, delayi, load_type, tid, delayr, us0, vs0, last_zero = out
+            assert last_zero == 0, out
+            if self.is_debug_file:
+                self.binary_debug.write('TLOAD1=%s\n' % str(out))
+            delay = delayi
+            if delayi == 0:
+                delay = delayr
+            dload = TLOAD1(sid, darea, tid, delay=delay, Type=load_type,
+                           us0=us0, vs0=vs0)
+            dloads.append(dload)
+            n += ntotal
         return n, dloads
 
     def _read_tload2(self, data: bytes, n: int) -> int:

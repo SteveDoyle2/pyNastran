@@ -23,7 +23,8 @@ from pyNastran.bdf.cards.elements.beam import CBEAM
 from pyNastran.bdf.cards.elements.mass import (CONM1, CONM2, CMASS1, CMASS2,
                                                CMASS3, CMASS4)
 from pyNastran.bdf.cards.elements.solid import (CTETRA4, CPYRAM5, CPENTA6, CHEXA8,
-                                                CTETRA10, CPYRAM13, CPENTA15, CHEXA20,)
+                                                CTETRA10, CPYRAM13, CPENTA15, CHEXA20,
+                                                CPENTCZ, CHEXCZ)
 from pyNastran.bdf.cards.thermal.thermal import CHBDYG, CONV, CHBDYP, CHBDYE, CONVM
 from pyNastran.bdf.cards.thermal.radiation import RADBC # , RADM, RADCAV, RADLST, RADMTX, VIEW, VIEW3D
 from pyNastran.bdf.cards.nodes import SPOINTs
@@ -112,7 +113,7 @@ class GEOM2(GeomCommon):
             #(14100, 141, 9990): ['CHEXAF', self._read_fake],
             #(14000, 140, 9990): ['CHEXAFD', self._read_fake],
             #(7708, 77, 9944): ['CHEXAL', self._read_fake],
-            #(11801, 118, 907): ['CHEXCZ', self._read_fake],
+            (11801, 118, 907): ['CHEXCZ', self._read_chexa_cz],
             #(12001, 120, 9011): ['CHEXP', self._read_fake],
             #(7409, 74, 9991): ['CHEXPR', self._read_fake],
             (1001, 10, 65): ['CMASS1', self._read_cmass1],    # record 52
@@ -127,12 +128,12 @@ class GEOM2(GeomCommon):
             (8908, 89, 422): ['CONVM', self._read_convm],
             (12101, 121, 9012): ['CPENP', self._read_fake],
             (4108, 41, 280): ['CPENTA', self._read_cpenta],
-            #(14200, 142, 9906): ['CPENTAF', self._read_fake],
+            (14200, 142, 9906): ['CPENTAF', self._read_cpenta],
             #(7108, 71, 9943): ['CPENTAL', self._read_fake],
             (7509, 75, 9992): ['CPENPR', self._read_fake],
             #(16500, 165, 9987): ['CPENT15F', self._read_fake],
             #(16000, 160, 9988): ['CPENT6FD', self._read_fake],
-            #(11901, 119, 908): ['CPENTCZ', self._read_fake],
+            (11901, 119, 908): ['CPENTCZ', self._read_cpenta_cz],
             (1701, 17, 980): ['CPLSTN3', self._read_cplstn3],
             (5701, 57, 981): ['CPLSTN4', self._read_cplstn4],
             (5801, 58, 982): ['CPLSTN6', self._read_cplstn6],
@@ -142,7 +143,7 @@ class GEOM2(GeomCommon):
             (1801, 18, 986): ['CPLSTS6', self._read_cplsts6],
             (3601, 36, 987): ['CPLSTS8', self._read_cplsts8],
             (17200, 172, 1000) : ['CPYRAM', self._read_cpyram], # nx-specific
-            #(14400, 144, 9908): ['CPYRAMF', self._read_fake], # nx-specific
+            (14400, 144, 9908): ['CPYRAMF', self._read_cpyram], # nx-specific
             (25700, 257, 9948) : ['CPYRA5FD', self._read_cpyram], # nx-specific
             (25800, 258, 9947) : ['CPYRA13F', self._read_cpyram], # nx-specific
             (7909, 79, 9946) : ['CPYRAMPR', self._read_cpyram], # nx-specific
@@ -166,14 +167,14 @@ class GEOM2(GeomCommon):
             (6112, 61, 997): ['CQUADX4', self._read_fake],
             (6114, 61, 999): ['CQUADX8', self._read_cquadx8],
             (3001, 30, 48): ['CROD', self._read_crod],         # record 81
-            #(14500, 145, 9909): ['CRODF', self._read_fake],
+            (14500, 145, 9909): ['CRODF', self._read_fake],
             (3501, 35, 1): ['CSBOLT', self._read_fake],
             (3101, 31, 61): ['CSHEAR', self._read_cshear],     # record 84
             (4408, 44, 227): ['CSLOT3', self._read_fake],
             (4508, 45, 228): ['CSLOT4', self._read_fake],
             #(12201, 122, 9013): ['CTETP', self._read_fake],
             #(5508, 55, 217): ['CTETRA', self._read_fake],
-            #(14300, 143, 9907): ['CTETRAF', self._read_fake],
+            (14300, 143, 9907): ['CTETRAF', self._read_ctetra],
             #(7609, 76, 9993): ['CTETPR', self._read_fake],
             #(16600, 166, 9985): ['CTETR10F', self._read_fake],
             #(16100, 161, 9986): ['CTETR4FD', self._read_fake],
@@ -185,7 +186,7 @@ class GEOM2(GeomCommon):
             #(4801, 48, 327): ['CTRIA6', self._read_fake],
             #(16700, 167, 9981): ['CTRIA6FD', self._read_fake],
             #(3202, 32, 1693): ['CTRIA6L', self._read_fake],
-            #(15801, 158, 9955): ['CTRIA6N', self._read_fake],
+            (15801, 158, 9955): ['CTRIA6N', self._read_ctria6],
             #(11301, 113, 9015): ['CTRIAP', self._read_fake],
             #(9200, 92, 385): ['CTRIAR', self._read_fake],
             #(12902, 129, 1691): ['CTRIARL', self._read_fake],
@@ -210,7 +211,7 @@ class GEOM2(GeomCommon):
             #(2801, 28, 630): ['MICPNT', self._read_fake],
             (5201, 52, 11): ['PLOTEL', self._read_plotel],
             #(5202, 52, 669): ['PLOTEL3', self._read_fake],
-            #(5203, 52, 670): ['PLOTEL4', self._read_fake],
+            (5203, 52, 670): ['PLOTEL4', self._read_fake],
             #(5204, 52, 671): ['PLOTEL6', self._read_fake],
             #(5205, 52, 672): ['PLOTEL8', self._read_fake],
             #(5206, 52, 673): ['PLOTHEX', self._read_fake],
@@ -404,7 +405,65 @@ class GEOM2(GeomCommon):
 
             (1001, 100, 10000) : ['', self._read_fake],  # record
             (1118, 1, 1874) : ['', self._read_fake],  # record
+
+            (2801, 28, 630) : ['MICPNT', self._read_fake],  # record
+            (7708, 77, 9944): ['CHEXAL', self._read_fake],  # record
+            (7108, 71, 9943): ['CPENTAL', self._read_fake],  # record
+            (11001, 110, 8881): ['???', self._read_fake],
+            (15301, 153, 9953): ['CTRIARN', self._read_ctria3],
+            (15401, 154, 9954): ['CQUADRN', self._read_cquad4],
+
+            (9508, 95, 9801): ['CQUADX', self._read_cquadx_9508],
+
+            (15418, 154, 610): ['???', self._read_fake],
+            (15901, 159, 9956): ['CQUAD8N', self._read_cquad8],
+            (14600, 146, 9910): ['CQUAD4F', self._read_cquad4],
+            (7908, 79, 9702): ['???', self._read_fake],
+
+            (14100, 141, 9905): ['???', self._read_fake],
+            (14700, 147, 9911): ['CTRIAF', self._read_ctria3],
+            (9301, 93, 690): ['CJOINT', self._read_fake],
+            #(14200, 142, 9906): ['???', self._read_fake],
+            #(15801, 158, 9955): ['???', self._read_fake],
+            #(15801, 158, 9955): ['???', self._read_fake],
+
         }
+
+    def _read_cquadx_9508(self, data: bytes, n: int) -> int:
+        """
+        ints    = (1, 1, [1, 2,  8,  7], [0, 0, 0, 0, 0, 0, -1],
+                   2, 1, [2, 3,  9,  8], [0, 0, 0, 0, 0, 0, -1],
+                   3, 1, [3, 4, 10,  9], [0, 0, 0, 0, 0, 0, -1],
+                   4, 1, [4, 5, 11, 10], [0, 0, 0, 0, 0, 0, -1],
+                   5, 1, [5, 6, 12, 11], [0, 0, 0, 0, 0, 0, -1])
+        C:\MSC.Software\msc_nastran_runs\axh101a2.op2
+        """
+        ntotal = 52 * self.factor # 16*4
+        nelements = (len(data) - n) // ntotal
+        s = Struct(mapfmt(self._endian + b'2i 4i 7i', self.size))
+
+        for unused_i in range(nelements):
+            edata = data[n:n + ntotal]
+            out = s.unpack(edata)
+            #print(out)
+            (eid, pid,
+             n1, n2, n3, n4,
+             n5, n6, n7, n8, n9, f0, gm1) = out
+            assert (n5, n6, n7, n8, n9, f0, gm1) == (0, 0, 0, 0, 0, 0, -1)
+            nids = [n1, n2, n3, n4,
+                    n5, n6, n7, n8, n9]
+            elem = CQUADX(eid, pid, nids)
+            self._add_element_object(elem)
+            n += ntotal
+        self.card_count['CQUADX'] = nelements
+        return n
+
+    #def _show_geom2_fake(self, data: bytes, n: int):
+        #"""
+        #ints    = (1, 2, 1, 2, 2, 2, 1, 2, 11, 12, 16, 21, 25, 2, 3, 28, 29, 34, 41, 45, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
+        #floats  = (1.401298464324817e-45, 2.802596928649634e-45, 1.401298464324817e-45, 2.802596928649634e-45, 2.802596928649634e-45, 2.802596928649634e-45, 1.401298464324817e-45, 2.802596928649634e-45, 1.5414283107572988e-44, 1.6815581571897805e-44, 2.2420775429197073e-44, 2.942726775082116e-44, 3.5032461608120427e-44, 2.802596928649634e-45, 4.203895392974451e-45, 3.923635700109488e-44, 4.0637655465419695e-44, 4.764414778704378e-44, 5.74532370373175e-44, 6.305843089461677e-44, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0)
+        #"""
+        #self.show_data(data[n:])
 
     def add_op2_element(self, elem):
         """checks that eids are positive and that -1 node ids become None"""
@@ -1270,6 +1329,34 @@ class GEOM2(GeomCommon):
         self.card_count['CHEXA'] = nelements
         return n
 
+    def _read_chexa_cz(self, data: bytes, n: int) -> int:
+        """
+        CHEXCZ(11801,118,907)
+        """
+        s = Struct(mapfmt(self._endian + b'22i 2i', self.size))
+        ntotal = 96 * self.factor  # 24*4
+        nelements = (len(data) - n) // ntotal
+        for unused_i in range(nelements):
+            edata = data[n:n+ntotal]
+            out = s.unpack(edata)
+            if self.is_debug_file:
+                self.binary_debug.write('  CHEXCZ=%s\n' % str(out))
+            (eid, pid, g1, g2, g3, g4, g5, g6, g7, g8, g9, g10,
+             g11, g12, g13, g14, g15, g16, g17, g18, g19, g20,
+             dummy1, dummy2) = out
+            dummy = (dummy1, dummy2)
+            assert dummy == (0, 0), dummy
+            big_nodes = [g9, g10, g11, g12, g13, g14, g15, g16,
+                         g17, g18, g19, g20]
+            #print(eid, pid, big_nodes)
+
+            data_in = [eid, pid, g1, g2, g3, g4, g5, g6, g7, g8, ] + big_nodes
+            elem = CHEXCZ.add_op2_data(data_in)
+            self.add_op2_element(elem)
+            n += ntotal
+        self.card_count['CHEXCZ'] = nelements
+        return n
+
 # CHEXA20F
 # CHEXAFD
 # CHEXAL
@@ -2094,6 +2181,37 @@ class GEOM2(GeomCommon):
             self.add_op2_element(elem)
             n += ntotal
         self.card_count['CPENTA'] = nelements
+        return n
+
+    def _read_cpenta_cz(self, data: bytes, n: int) -> int:
+        """
+        CPENTCZ
+        """
+        ntotal = 96 * self.factor  # 19*4
+        s = Struct(mapfmt(self._endian + b'17i 7i', self.size))
+        nelements = (len(data) - n) // ntotal
+        for unused_i in range(nelements):
+            edata = data[n:n + ntotal]
+
+            out = s.unpack(edata)
+            if self.is_debug_file:
+                self.binary_debug.write('  CPENTCZ=%s\n' % str(out))
+            (eid, pid, g1, g2, g3, g4, g5, g6, g7, g8, g9, g10,
+             g11, g12, g13, g14, g15,
+             dummy1, dummy2, dummy3, dummy4, dummy5, dummy6, dummy7) = out
+            dummy = (dummy1, dummy2, dummy3, dummy4, dummy5, dummy6, dummy7)
+            assert dummy == (0, 0, 0, 0, 0, 0, 0), dummy
+            #print(eid, pid, dummy)
+
+            data_in = [eid, pid, g1, g2, g3, g4, g5, g6]
+            big_nodes = [g7, g8, g9, g10, g11, g12, g13, g14, g15]
+            #if sum(big_nodes) > 0:
+            elem = CPENTCZ.add_op2_data(data_in + big_nodes)
+            #else:
+                #elem = CPENTA6.add_op2_data(data_in)
+            self.add_op2_element(elem)
+            n += ntotal
+        self.card_count['CPENTCZ'] = nelements
         return n
 
 # CQDX4FD
