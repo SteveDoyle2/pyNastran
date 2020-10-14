@@ -84,7 +84,7 @@ class DYNAMICS(GeomCommon):
             (9010, 90, 569): ['CBEAR', self._read_fake],
 
             (9407, 94, 659): ['ACADAPT', self._read_fake],
-            (11701, 117, 656): ['???', self._read_fake],
+            (11701, 117, 656): ['CAMPBLL', self._read_campbll],
 
             (9607, 96, 660): ['ACORDER', self._read_fake],
             (2601, 26, 58): ['FRFFLEX', self._read_fake],
@@ -100,6 +100,36 @@ class DYNAMICS(GeomCommon):
             #(9407, 94, 659): ['???', self._read_fake],
             #(9407, 94, 659): ['???', self._read_fake],
         }
+
+    def _read_campbll(self, data: bytes, n: int) -> int:
+        """
+        CAMPBLL
+        CAMPBLL CID    VPARM DDVALID TYPE
+                MODTRK CORU  SWITR   NUMMOD PRTCOR
+        CAMPBLL,15,SPEED,22,RPM
+        ints    = (15, 1, 22, RPM, 0, 0, 0, 0, 0)
+        floats  = (15, 1, 22, RPM, 0.0, 0.0, 0.0, 0.0, 0.0)
+        """
+        assert self.size == 4, f'CAMPBLL size={self.size}'
+        ntotal = 40 * self.factor
+        nentries = (len(data) - n) // ntotal
+        self.increase_card_count('CAMPBLL', nentries)
+        struc = Struct(self._endian + b'3i 8s 5i')
+        for unused_i in range(nentries):
+            edata = data[n:n+ntotal]
+            out = struc.unpack(edata)
+            #(sid,p,c,a) = out
+            campbell_id, variable_param, ddval, cambell_type, modtrak, corr_threshold, switch, num_modes, print_flag = out
+            #print(campbell_id, variable_param, ddval, cambell_type, modtrak, corr_threshold, switch, num_modes)
+            check = (modtrak, corr_threshold, switch, num_modes, print_flag)
+            assert check == (0, 0, 0, 0, 0), check
+            assert variable_param == 1, 'variable_param=1 (speed?)'
+
+            # darea = DAREA.add_op2_data(data=out)
+            # self._add_darea_object(darea)
+            n += ntotal
+        self.log.warning('skipping CAMPBLL')
+        return n
 
     def _read_acsrce(self, data: bytes, n: int) -> int:
         """common method for reading NX/MSC ACSRCE"""
@@ -1538,6 +1568,15 @@ class DYNAMICS(GeomCommon):
 #RSPINR
 
     def _read_rspint(self, data: bytes, n: int) -> int:
+        n = self._read_dual_card(data, n, self._read_rspint_32, self._read_rspint_56,
+                                 'RSPINT', self._add_rspint_obj)
+        return n
+
+    def _add_rspint_obj(self, rspints: List[int]):
+        """TODO: remove this..."""
+        pass
+
+    def _read_rspint_32(self, data: bytes, n: int) -> int:
         """
         RSPINT(11001,110,310) - Record 31
 
@@ -1549,6 +1588,13 @@ class DYNAMICS(GeomCommon):
         7 TABLEID     I Table identification number for speed history
         8 ZERO ???
 
+        C:\MSC.Software\msc_nastran_runs\r1d101m1.op2
+
+        RSPINT   4       9       10     FREQ     20
+         0.
+        ints    = (4, 9, 10, 'FREQ    ', 20,
+                   may be floats
+                   0, 0, 0, 0, 0, 0, 0, 0)
         """
         #strings = (b'\xf9*\x00\x00n\x00\x00\x006\x01\x00\x00\x05\x00\x00\x00y\xe6\x00\x00~\xe6\x00\x00\x00\x00\x00\x00RPM     \xa0\x0f\x00\x00\x00\x00\x00\x00\x06\x00\x00\x00\x89\r\x01\x00\x97\r\x01\x00\x00\x00\x00\x00RPM     \xf8*\x00\x00\x00\x00\x00\x00',)
         #data = (11001, 110, 310,
@@ -1564,11 +1610,13 @@ class DYNAMICS(GeomCommon):
         # C:\NASA\m4\formats\git\examples\move_tpl\nltrot99.op2
         ntotal = 32 * self.factor # 4*7
         struc = Struct(self._endian + b'3i f 8s 2i')  # per QRG
-
+        assert self.size == 4, f'RSPINT size={self.size}'
+        #self.show_data(data[n:], types='ifs')
         ndatai = len(data) - n
         nentries = ndatai // ntotal
         assert ndatai % ntotal == 0
 
+        rspints = []
         for unused_i in range(nentries):
             edata = data[n:n+ntotal]
             n += ntotal
@@ -1581,8 +1629,70 @@ class DYNAMICS(GeomCommon):
             if self.is_debug_file:
                 self.binary_debug.write('  RSPINT=%s\n' % str(out))
             self.add_rspint(rid, grida, gridb, gr, unit, table_id)
-        self.increase_card_count('RSPINT', nentries)
-        return n
+            rspint = None
+            rspints.append(rspint)
+        return n, rspints
+
+    def _read_rspint_56(self, data: bytes, n: int) -> int:
+        """
+        RSPINT(11001,110,310) - Record 31
+
+        1 RID         I Rotor identification number
+        2 GRIDA       I Grid A for rotation direction vector
+        3 GRIDB       I Grid B for rotation direction vector
+        4 GR         RS Rotor damping coefficient
+        5 UNIT(2) CHAR4 RPM/FREQ flag for speed input
+        7 TABLEID     I Table identification number for speed history
+        8 ZERO ???
+
+        C:\MSC.Software\msc_nastran_runs\r1d101m1.op2
+
+        RSPINT ROTORID GRIDA   GRIDB   SPDUNT SPTID SPDOUT ROTSEID
+              GR       ALPHAR1 ALPHAR2 WR3R   WR4R  WRHR
+        RSPINT   4       9       10     FREQ     20
+         0.
+        ints    = (4, 9, 10, 'FREQ    ', 20,
+                   may be floats
+                   0, 0, 0, 0, 0, 0, 0, 0)
+        """
+        #strings = (b'\xf9*\x00\x00n\x00\x00\x006\x01\x00\x00\x05\x00\x00\x00y\xe6\x00\x00~\xe6\x00\x00\x00\x00\x00\x00RPM     \xa0\x0f\x00\x00\x00\x00\x00\x00\x06\x00\x00\x00\x89\r\x01\x00\x97\r\x01\x00\x00\x00\x00\x00RPM     \xf8*\x00\x00\x00\x00\x00\x00',)
+        #data = (11001, 110, 310,
+                #5, 59001, 59006, 0, 541937746, 538976288, 4000, 0,
+                #6, 69001, 69015, 0, 541937746, 538976288, 11000, 0)
+        #self.show_data(data)
+
+        # per DMAP ???
+        #ntotal = 28 * self.factor # 4*7
+        #struc = Struct(self._endian + b'3i f 8s i')  # per QRG
+
+        # MSC
+        # C:\NASA\m4\formats\git\examples\move_tpl\nltrot99.op2
+        ntotal = 56 * self.factor # 4*14
+        struc = Struct(self._endian + b'3i 8s i 8i')  # per QRG
+        assert self.size == 4, f'RSPINT size={self.size}'
+        #self.show_data(data[n:], types='ifs')
+        ndatai = len(data) - n
+        nentries = ndatai // ntotal
+        assert ndatai % ntotal == 0
+
+        rspints = []
+        for unused_i in range(nentries):
+            edata = data[n:n+ntotal]
+            n += ntotal
+            out = struc.unpack(edata)
+            # rid, grida, gridb, gr, unit, table_id = out
+            rid, grida, gridb, speed_unit_bytes, table_id, *zero = out
+            speed_unit = speed_unit_bytes.decode('latin1').rstrip()
+            #print('RSPINT', rid, grida, gridb, speed_unit, table_id)
+            #self.log.debug(f'RSPINT: rid={rid} nids=[{grida}, {gridb}] gr={gr} unit={unit!r} table_id={table_id} zero={zero}')
+            assert zero == [0, 0, 0, 0, 0, 0, 0, 0], zero
+            if self.is_debug_file:
+                self.binary_debug.write('  RSPINT=%s\n' % str(out))
+            gr = 0.0
+            self.add_rspint(rid, grida, gridb, gr, speed_unit, table_id)
+            rspint = None
+            rspints.append(rspint)
+        return n, rspints
 
 #SEQEP(5707,57,135)
 

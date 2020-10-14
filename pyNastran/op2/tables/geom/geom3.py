@@ -106,7 +106,7 @@ class GEOM3(GeomCommon):
             (5001, 50, 646): ['FORCDST', self._read_fake],
             (1101, 11, 626): ['INITADD', self._read_fake],
             (8701, 87, 625): ['INITS', self._read_fake],
-            (11601, 116, 625): ['???', self._read_fake],
+            (11601, 116, 625): ['PLOADB3', self._read_ploadb3],
             (7901, 79, 967): ['VCEV', self._read_fake],
             (2901, 29, 638): ['INITSO', self._read_fake],
             (9801, 98, 695): ['DRIVER', self._read_fake],
@@ -124,6 +124,74 @@ class GEOM3(GeomCommon):
 
 
         }
+
+    def _read_ploadb3(self, data: bytes, n: int) -> int:
+        """
+        PLOADB3 SID     EID     CID     N1      N2      N3      TYPE    SCALE
+                P(A)    P(B)    P(C)
+        PLOADB3 10      1       LOCAL   0.0     1.0     0.0     FORCE   1.0     +
+        +       100.    100.    100.0
+        PLOADB3 10      2       LOCAL   0.0     1.0     0.0     FORCE   1.0     +
+        +       100.    100.    100.0
+
+        3i         3i          3f         i  4f
+        ints    = (10, 1,  -1, 0, 1.0, 0, 1, 1.0, 100.0, 100.0, 100.0,
+                   10, 2,  -1, 0, 1.0, 0, 1, 1.0, 100.0, 100.0, 100.0,
+                   10, 3,  -1, 0, 1.0, 0, 1, 1.0, 100.0, 100.0, 100.0,
+                   10, 4,  -1, 0, 1.0, 0, 1, 1.0, 100.0, 100.0, 100.0,
+                   10, 5,  -1, 0, 1.0, 0, 1, 1.0, 100.0, 100.0, 100.0,
+                   10, 6,  -1, 0, 1.0, 0, 1, 1.0, 100.0, 100.0, 100.0,
+                   10, 7,  -1, 0, 1.0, 0, 1, 1.0, 100.0, 100.0, 100.0,
+                   10, 8,  -1, 0, 1.0, 0, 1, 1.0, 100.0, 100.0, 100.0,
+                   10, 9,  -1, 0, 1.0, 0, 1, 1.0, 100.0, 100.0, 100.0,
+                   10, 10, -1, 0, 1.0, 0, 1, 1.0, 100.0, 100.0, 100.0,
+                   10, 11, -1, 0, 1.0, 0, 1, 1.0, 100.0, 100.0, 100.0,
+                   10, 12, -1, 0, 1.0, 0, 1, 1.0, 100.0, 100.0, 100.0)
+        floats  = (10, 1, nan, 0.0, 1.0, 0.0, 1, 1.0, 100.0, 100.0, 100.0,
+                   10, 2, -1, 0.0, 1.0, 0.0, 1, 1.0, 100.0, 100.0, 100.0,
+                   10, 3, nan, 0.0, 1.0, 0.0, 1, 1.0, 100.0, 100.0, 100.0,
+                   10, 4, nan, 0.0, 1.0, 0.0, 1, 1.0, 100.0, 100.0, 100.0,
+                   10, 5, nan, 0.0, 1.0, 0.0, 1, 1.0, 100.0, 100.0, 100.0,
+                   10, 6, nan, 0.0, 1.0, 0.0, 1, 1.0, 100.0, 100.0, 100.0,
+                   10, 7, nan, 0.0, 1.0, 0.0, 1, 1.0, 100.0, 100.0, 100.0,
+                   10, 8, nan, 0.0, 1.0, 0.0, 1, 1.0, 100.0, 100.0, 100.0,
+                   10, 9, nan, 0.0, 1.0, 0.0, 1, 1.0, 100.0, 100.0, 100.0,
+                   10, 10, nan, 0.0, 1.0, 0.0, 1, 1.0, 100.0, 100.0, 100.0,
+                   10, 11, nan, 0.0, 1.0, 0.0, 1, 1.0, 100.0, 100.0, 100.0,
+                   10, 12, nan, 0.0, 1.0, 0.0, 1, 1.0, 100.0, 100.0, 100.0)
+        """
+        ntotal = 44 * self.factor  # 11*4
+        nelements = (len(data) - n) // ntotal
+        structi = Struct(mapfmt(self._endian + b'3i 3f i 4f', self.size))
+
+        for i in range(nelements):
+            datai = data[n:n+ntotal]
+            out = structi.unpack(datai)
+            (sid, eid, cid, n1, n2, n3, load_type, scale, pa, pb, pc) = out
+            #print(out)
+            if cid == -1:
+                cid = 'LOCAL'
+            elif cid == 0:
+                cid = 'BASIC'
+            elif cid == -2:
+                cid = 'ELEMENT'
+            elif cid > 1:
+                pass
+            else:
+                raise NotImplementedError(f'PLOADB3 cid={cid}')
+
+            if load_type == 1:
+                load_type = 'FORCE'
+            elif load_type == 2:
+                load_type = 'MOMENT'
+            else:
+                raise NotImplementedError(f'PLOADB3 load_type={load_type}')
+            #self.add_cbeam3(eid, pid, nids, x, g0, wa, wb, wc, tw, s)
+            n += ntotal
+        #self.show_data(data[n:])
+        self.log.warning('skipping PLOADB3')
+        self.card_count['PLOADB3'] = nelements
+        return n
 
     def _read_accel(self, data: bytes, n: int) -> int:
         """

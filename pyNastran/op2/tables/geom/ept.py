@@ -120,7 +120,7 @@ class EPT(GeomCommon):
             (9701, 97, 692): ['PJOINT2', self._read_fake],
             (13401, 134, 611): ['PBEAM3', self._read_fake],
             (8901, 89, 905): ['PSOLCZ', self._read_fake],
-            #(9701, 97, 692): ['???', self._read_fake],
+            (9801, 98, 698): ['DESC', self._read_desc],
             #(9701, 97, 692): ['???', self._read_fake],
             #(9701, 97, 692): ['???', self._read_fake],
             #(9701, 97, 692): ['???', self._read_fake],
@@ -159,6 +159,37 @@ class EPT(GeomCommon):
         self._add_convection_property_object(prop)
 
 # HGSUPPR
+
+
+    def _read_desc(self, data: bytes, n: int) -> int:
+        """
+        RECORD – DESC(9801,98,698)
+
+        Word Name Type Description
+        1 DID        I Description identification number
+        2 NWORDS     I Number of words for the description string
+        3 DESC   CHAR4 Description
+        Words 3 repeats NWORDS times
+
+        data = (1, 14, 'FACE CONTACT(1)                                         ')
+        """
+        assert self.size == 4, 'DESC size={self.size} is not supported'
+        #self.show_data(data[n:], types='ifs')
+        struct_2i = Struct(self._endian + b'2i')
+        while n < len(data):
+
+            datai = data[n:n+8]
+            desc_id, nwords = struct_2i.unpack(datai)
+            #print(desc_id, nwords)
+            ndatai = 8 + nwords * 4
+            word_bytes = data[n+8:n+ndatai]
+            word = word_bytes.decode('ascii').rstrip()
+            assert len(word_bytes) == nwords * 4
+            #print('word_bytes =', word_bytes)
+            self.log.warning(f'skipping DESC={desc_id}: {word!r}')
+            n += ndatai
+        assert n == len(data), n
+        return n
 
     def _read_nsml(self, data: bytes, n: int) -> int:
         """

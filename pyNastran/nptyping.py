@@ -11,6 +11,7 @@ try:
     # vector:
     # [0., 0., 0., 0., 0., 0.]
     NDArray6float = NDArray[(6, ), float]
+    NDArray6float = NDArray[(6, 6), float]
 
     # vector:
     # [0., 0., 0., ...]
@@ -56,6 +57,7 @@ except ImportError:
     NDArrayNbool = \
     NDArray3float = NDArray6float = \
     NDArrayNint = NDArrayNfloat = \
+    NDArray66float = \
     NDArrayN3float = NDArrayN4float = \
     NDArray33float = \
     NDArrayN2int = NDArrayN3int = NDArrayN4int = NDArrayN6int = NDArrayN8int = NDArrayN9int = \

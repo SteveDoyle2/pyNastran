@@ -7,7 +7,7 @@ Defines a method to add a card that is faster than add_card.
 from typing import Optional, List, Dict, Union, Any
 import numpy as np
 
-from pyNastran.nptyping import NDArray3float
+from pyNastran.nptyping import NDArray3float, NDArray66float
 from pyNastran.bdf.field_writer import print_card_
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.bdf_interface.add_methods import AddMethods
@@ -1040,6 +1040,10 @@ class AddCards(AddMethods):
 
     def add_param(self, key: str, values: List[Union[int, float, str]],
                   comment: str='') -> PARAM:
+        return self._add_param_nastran(key, values, comment=comment)
+
+    def _add_param_nastran(self, key: str, values: List[Union[int, float, str]],
+                           comment: str='') -> PARAM:
         """
         Creates a PARAM card
 
@@ -1094,7 +1098,7 @@ class AddCards(AddMethods):
         self._add_plotel_object(elem)
         return elem
 
-    def add_conm1(self, eid, nid, mass_matrix, cid=0, comment='') -> CONM1:
+    def add_conm1(self, eid: int, nid: int, mass_matrix: NDArray66float, cid=0, comment='') -> CONM1:
         """
         Creates a CONM1 card
 

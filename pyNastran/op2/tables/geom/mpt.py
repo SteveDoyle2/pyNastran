@@ -7,7 +7,8 @@ from pyNastran.bdf.cards.materials import (CREEP, MAT1, MAT2, MAT3, MAT4, MAT5,
                                            MAT8, MAT9, MAT10, MAT11, MATHP)
 from pyNastran.bdf.cards.material_deps import (
     MATS1, MATT1, MATT2, MATT3, MATT4, MATT5, MATT8, MATT9)
-from pyNastran.bdf.cards.dynamic import NLPARM, TSTEPNL # TSTEP
+from pyNastran.bdf.cards.dynamic import (TSTEPNL,
+                                         NLPARM, NLPARM_CONV_MAP, NLPARM_KMETHOD_MAP) # TSTEP
 from pyNastran.op2.tables.geom.geom_common import GeomCommon
 #from pyNastran.bdf.cards.thermal.thermal import (CHBDYE, CHBDYG, CHBDYP, PCONV, PCONVM,
                                                  #PHBDY, CONV, CONVM, RADBC)
@@ -926,7 +927,7 @@ class MPT(GeomCommon):
         return len(data)
 
     def _read_nlparm(self, data: bytes, n: int) -> int:
-        """
+        r"""
         NLPARM(3003,30,286) - record 27
 
         NX 2019.2
@@ -965,14 +966,24 @@ class MPT(GeomCommon):
         ndata_80 = ndatai % 80
         ndata_76 = ndatai % 76
         if ndata_80 == 0 and ndata_76:
-            n = self._read_nlparm_80(data, n)
+            n, nlparms = self._read_nlparm_80(data, n)
         elif ndata_76 == 0 and ndata_80:
-            n = self._read_nlparm_76(data, n)
+            n, nlparms = self._read_nlparm_76(data, n)
+        elif ndata_76 == 0 and ndata_80 == 0:
+            n = self._read_dual_card(data, n, self._read_nlparm_76, self._read_nlparm_80,
+                                     'NLPARM', self._add_nlparm_object)
+            #n = self._read_nlparm_76(data, n)
+            return n
         else:
-            raise NotImplementedError(ndatai)
+            raise NotImplementedError(f'ndatai={ndatai} ndata_76={ndata_76} ndata_80={ndata_80}')
+
+        assert isinstance(n, int), n
+        nentries = len(nlparms)
+        if nentries > 0:
+            self.card_count['NLPARM'] = nentries
         return n
 
-    def _read_nlparm_76(self, data: bytes, n: int) -> int:
+    def _read_nlparm_76(self, data: bytes, n: int) -> Tuple[int, List[NLPARM]]:
         """
         Word Name Type Description
         1 SID       I Set identification number
@@ -1002,6 +1013,7 @@ class MPT(GeomCommon):
         nentries = ndatai // ntotal
         assert nentries > 0
         #assert ndatai % ntotal == 0
+        nlparms = []
         for unused_i in range(nentries):
             edata = data[n:n+ntotal]
             n += ntotal
@@ -1017,12 +1029,11 @@ class MPT(GeomCommon):
                 self.log.warning('  skipping NLPARM=%s\n' % str(out))
                 continue
 
-            self._add_nlparm_object(NLPARM.add_op2_data(out))
-        if nentries > 0:
-            self.card_count['NLPARM'] = nentries
-        return n
+            nlparm = NLPARM.add_op2_data(out)
+            nlparms.append(nlparm)
+        return n, nlparms
 
-    def _read_nlparm_80(self, data: bytes, n: int) -> int:
+    def _read_nlparm_80(self, data: bytes, n: int) -> Tuple[int, List[NLPARM]]:
         """
         Word Name Type Description
         1 SID       I Set identification number
@@ -1044,7 +1055,7 @@ class MPT(GeomCommon):
         17 MAXBIS   I Maximum number of bisections
         18 MAXR    RS Maximum ratio for the adjusted arc-length increment
         19 RTOLB   RS Maximum value of incremental rotation
-        20 ZERO  RS/I Dummy field
+        20 ZERO  RS/I Dummy field?
         """
         ntotal = 80 * self.factor  # 20*4
         s = Struct(mapfmt(self._endian + b'iif5i3f3iffiff i', self.size))
@@ -1052,6 +1063,7 @@ class MPT(GeomCommon):
         nentries = ndatai // ntotal
         assert nentries > 0
         #assert ndatai % ntotal == 0
+        nlparms = []
         for unused_i in range(nentries):
             edata = data[n:n+ntotal]
             n += ntotal
@@ -1067,19 +1079,33 @@ class MPT(GeomCommon):
                 #self.log.warning('  skipping NLPARM=%s\n' % str(out))
                 #continue
 
-            self._add_nlparm_object(NLPARM.add_op2_data(out))
-        if nentries > 0:
-            self.card_count['NLPARM'] = nentries
-        return n
+            nlparm = NLPARM.add_op2_data(out)
+            nlparms.append(nlparm)
+        return n, nlparms
 
     def _read_nlpci(self, data: bytes, n: int) -> int:
         self.log.info('skipping NLPCI in MPT')
         return len(data)
 
     def _read_tstepnl(self, data: bytes, n: int) -> int:
-        """common method to read MSC/NX TSTEPNLs"""
-        n = self._read_dual_card(data, n, self._read_tstepnl_nx, self._read_tstepnl_msc,
-                                 'TSTEPNL', self._add_tstepnl_object)
+        """Common method to read MSC/NX TSTEPNLs"""
+        ndatai = (len(data) - n) * self.factor
+        n108 = ndatai % 108 # nx
+        n88 = ndatai % 88 # msc
+        n92 = ndatai % 92 # msc-2
+        if n108 == 0 and n88 != 0:
+            n, tstepnls = self._read_tstepnl_nx(data, n)
+        elif n108 != 0 and n88 == 0:
+            n, tstepnls = self._read_tstepnl_msc(data, n)
+        elif n108 != 0 and n88 != 0 and n92 == 0:
+            n, tstepnls = self._read_tstepnl_msc_92(data, n)
+            #self.show_data(data[n:])
+            #n, tstepnls = self._read_tstepnl_msc(data, n)
+        else:
+            raise RuntimeError(f'ndatai={ndatai} n108={n108} n88={n88}')
+
+        #n = self._read_dual_card(data, n, self._read_tstepnl_nx, self._read_tstepnl_msc,
+                                 #'TSTEPNL', self._add_tstepnl_object)
         return n
 
     def _read_tstepnl_nx(self, data: bytes, n: int) -> Tuple[int, List[TSTEPNL]]:
@@ -1160,5 +1186,107 @@ class MPT(GeomCommon):
             else:
                 tstepnl = TSTEPNL.add_op2_data(out)
                 tstepnls.append(tstepnl)
+            n += ntotal
+        return n, tstepnls
+
+    def _read_tstepnl_msc_92(self, data: bytes, n: int) -> Tuple[int, List[TSTEPNL]]:
+        r"""
+        TSTEPNL(3103,31,337) - record 29
+
+        MSC 2005.2
+        1 SID       I Set identification number
+        2 NDT       I Number of time steps of value DT
+        3 DT       RS Time increment
+        4 NO        I Time step interval for output
+        5 METHOD    I Method for dynamic matrix update
+        6 KSTEP     I Time step interval or number of converged bisections
+        7 MAXITER   I Limit on number of iterations
+        8 CONV      I Flags to select convergence criteria
+        9 EPSU     RS Error tolerance for displacement U criterion
+        10 EPSP    RS Error tolerance for displacement P criterion
+        11 EPSW    RS Error tolerance for displacement W criterion
+        12 MAXDIV   I Limit on probable divergence conditions
+        13 MAXQN    I Maximum number of quasi-Newton correction vectors
+        14 MAXLS    I Maximum number of line searches
+        15 FSTRESS RS Fraction of effective stress
+        16 MAXBIS   I Maximum number of bisections
+        17 ADJUST   I Time step skip factor for automatic time step adjustment
+        18 MSTEP    I Number of steps to obtain the dominant period response
+        19 RB      RS Define bounds for maintaining the same time step
+        20 MAXR    RS Maximum ratio for the adjusted arc-length increment
+        21 UTOL    RS Tolerance on displacement or temperature increment
+        22 RTOLB   RS Maximum value of incremental rotation
+
+
+        TSTEPNL  1       10      .01     1       ADAPT   2       10     U
+        tstepnl,2,300,1.0e-6,1,adapt,,,u
+        TSTEPNL  3  10  .001        ADAPT  2  10  Upw
+        TSTEPNL  4  10  .0001       ADAPT  2  10  Upw
+        +									+
+        +		9990
+        TSTEPNL  5       10      .2      1       ADAPT   2       10     U
+        TSTEPNL ID     NDT    DT    NO     METHOD KSTEP MAXITER  CONV
+                EPSU   EPSP   EPSW  MAXDIV MAXQN  MAXLS FSTRESS
+                MAXBIS ADJUST MSTEP RB     MAXR   UTOL  RTOLB    MINITER
+
+                   2i     f        5i              3f                   3i        f    3i            4f                   i
+        ints    = (1, 10, 0.01,    1, 3, 2, 10, 4, 0.01, 0.001, 1.0e-8, 2, 10, 2, 0.2, 5, 5,    0,   0.6, 32.0, 0.1, 20.0, 0,
+                   2, 300, 1.0e-8, 1, 3, 2, 10, 4, 0.01, 0.001, 1.0e-8, 2, 10, 2, 0.2, 5, 5,    0,   0.6, 32.0, 0.1, 20.0, 0,
+                   3, 10, 0.001,   1, 3, 2, 10, 7, 0.01, 0.001, 1.0e-8, 2, 10, 2, 0.2, 5, 5,    0,   0.6, 32.0, 0.1, 20.0, 0,
+                   4, 10, 1.e-06,  1, 3, 2, 10, 7, 0.01, 0.001, 1.0e-8, 2, 10, 2, 0.2, 5, 9990, 0,   0.6, 32.0, 0.1, 20.0, 0,
+                   5, 10, 0.2,     1, 3, 2, 10, 4, 0.01, 0.001, 1.0e-8, 2, 10, 2, 0.2, 5, 5,    0,   0.6, 32.0, 0.1, 20.0, 0)
+        floats  = (1, 10,  0.01,   1, 3, 2, 10, 4, 0.01, 0.001, 1.0e-8, 2, 10, 2, 0.2, 5, 5,    0.0, 0.6, 32.0, 0.1, 20.0, 0.0,
+                   2, 300, 1.0e-8, 1, 3, 2, 10, 4, 0.01, 0.001, 1.0e-8, 2, 10, 2, 0.2, 5, 5,    0.0, 0.6, 32.0, 0.1, 20.0, 0.0,
+                   3, 10, 0.001,   1, 3, 2, 10, 7, 0.01, 0.001, 1.0e-8, 2, 10, 2, 0.2, 5, 5,    0.0, 0.6, 32.0, 0.1, 20.0, 0.0,
+                   4, 10, 1.e-06,  1, 3, 2, 10, 7, 0.01, 0.001, 1.0e-8, 2, 10, 2, 0.2, 5, 9990, 0.0, 0.6, 32.0, 0.1, 20.0, 0.0,
+                   5, 10, 0.2,     1, 3, 2, 10, 4, 0.01, 0.001, 1.0e-8, 2, 10, 2, 0.2, 5, 5,    0.0, 0.6, 32.0, 0.1, 20.0, 0.0)
+
+        C:\MSC.Software\msc_nastran_runs\lcdf03p.4.op2
+        ints    = (100000000, 1, 1.0, 1, 1, 500, 25, 10, 0.001, 0.001, 1.0e-7, 3, 25, 0,   0.2, 5, 5, 20, 0.75, 20.0, 0.1, 20.0, 0)
+        floats  = (100000000, 1, 1.0, 1, 1, 500, 25, 10, 0.001, 0.001, 1.0e-7, 3, 25, 0.0, 0.2, 5, 5, 20, 0.75, 20.0, 0.1, 20.0, 0.0)
+
+        """
+        ntotal = 92 * self.factor  # 23*4
+        #s = Struct(mapfmt(self._endian + b'iif5i3f3if3i4f', self.size))
+        s = Struct(mapfmt(self._endian + b'2i f 5i 3f 3i f 3i 4f i', self.size))
+
+        #self.show_data(data, types='ifs')
+        nentries = (len(data) - n) // ntotal
+        assert (len(data) - n) % ntotal == 0
+        assert nentries > 0, nentries
+        tstepnls = []
+        for unused_i in range(nentries):
+            edata = data[n:n+ntotal]
+            out = s.unpack(edata)
+            #print(out)
+            (tstep_id, ndt, dt, no, method_int, kstep, max_iter, conv_int,
+             eps_u, eps_p, eps_w, max_div, max_qn, max_ls,
+             fstress, max_bisect, adjust, mstep, rb, max_r,
+             utol, rtol_b, min_iter) = out
+            #(sid,ndt,dt,no,kMethod,kStep,maxIter,conv,epsU,epsP,epsW,
+            # maxDiv,maxQn,maxLs,fStress,lsTol,maxBisect,adjust,mStep,rb,maxR,uTol,rTolB) = out
+
+            try:
+                method = NLPARM_KMETHOD_MAP[method_int]
+            except KeyError:
+                raise NotImplementedError('tstepnl=%s method_int=%r' % (tstep_id, method_int))
+
+            try:
+                conv = NLPARM_CONV_MAP[conv_int]
+            except KeyError:
+                raise NotImplementedError('tstepnl=%s conv_int=%r' % (tstep_id, conv_int))
+
+            tstepnl = TSTEPNL(
+                tstep_id, ndt, dt, no, method=method, kstep=kstep, max_iter=max_iter, conv=conv,
+                eps_u=eps_u, eps_p=eps_p, eps_w=eps_w, max_div=max_div, max_qn=max_qn, max_ls=max_ls,
+                fstress=fstress, max_bisect=max_bisect, adjust=adjust, mstep=mstep, rb=rb, max_r=max_r,
+                utol=utol, rtol_b=rtol_b, min_iter=min_iter, comment='')
+            tstepnl.validate()
+            #method = out[4]
+            #if method in [4]:
+                #self.log.warning('method=4; skipping TSTEPNL=%r' % str(out))
+            #else:
+                #tstepnl = TSTEPNL.add_op2_data(out)
+            tstepnls.append(tstepnl)
             n += ntotal
         return n, tstepnls

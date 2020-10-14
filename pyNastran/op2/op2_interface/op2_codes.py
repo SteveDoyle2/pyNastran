@@ -23,6 +23,7 @@ SORT1_TABLES_BYTES = [
     b'OEFATO1', b'OEFRMS1',  b'OEFPSD1',  b'OEFNO1', b'OEFCRM1',
     b'OESPSD1',
     b'OSTRNO1',
+    b'OSTRPSD1',
 
     # mislabeled tables
     b'OESRMS2', b'OESNO2',

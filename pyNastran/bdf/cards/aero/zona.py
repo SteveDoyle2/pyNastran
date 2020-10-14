@@ -158,10 +158,11 @@ class ZONA:
         try:
             return self.pafoil[pid]
         except KeyError:
-            raise KeyError('pid=%s not found%s.  Allowed pafoils=%s'
-                           % (pid, msg, np.unique(list(self.pafoil.keys()))))
+            pafoils = np.unique(list(self.pafoil.keys()))
+            raise KeyError(f'pid={pid} not found{msg}.  Allowed pafoils={pafoils}')
 
     def update_for_zona(self):
+        """updates for zona"""
         card_parser = self.model._card_parser
         card_parser['TRIM'] = (TRIM_ZONA, self.model._add_trim_object)
         card_parser['CAERO7'] = (CAERO7, self.model._add_caero_object)

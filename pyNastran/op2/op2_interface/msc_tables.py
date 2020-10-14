@@ -596,7 +596,8 @@ MSC_RESULT_TABLES = [b'ASSIG', b'ASEPS'] + [
     b'OUG1S',
     b'OVG1',
     b'OUGSTRS0',
-    b'OBCNURB0', b'OBCNURBD'
+    b'OBCNURB0', b'OBCNURBD',
+    b'OQMPSD1', b'OQMATO1', b'OQMRMS1', b'OQMNO1', b'OQMCRM1',
 
 ]
 if len(MSC_RESULT_TABLES) != len(np.unique(MSC_RESULT_TABLES)):  # pragma: no cover

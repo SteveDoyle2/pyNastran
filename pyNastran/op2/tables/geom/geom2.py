@@ -35,6 +35,11 @@ from pyNastran.op2.errors import MixedVersionCard
 from pyNastran.op2.tables.geom.geom_common import GeomCommon
 from pyNastran.op2.op2_interface.op2_reader import mapfmt # , reshape_bytes_block
 
+class DoubleCardError(RuntimeError):
+    pass
+class EmptyCardError(RuntimeError):
+    pass
+
 
 class GEOM2(GeomCommon):
     """defines methods for reading op2 elements"""
@@ -415,7 +420,7 @@ class GEOM2(GeomCommon):
 
             (9508, 95, 9801): ['CQUADX', self._read_cquadx_9508],
 
-            (15418, 154, 610): ['???', self._read_fake],
+            (15418, 154, 610): ['CBEAM3', self._read_cbeam3],
             (15901, 159, 9956): ['CQUAD8N', self._read_cquad8],
             (14600, 146, 9910): ['CQUAD4F', self._read_cquad4],
             (7908, 79, 9702): ['???', self._read_fake],
@@ -628,6 +633,94 @@ class GEOM2(GeomCommon):
         self.card_count['CBARAO'] = nelements
         return n
 
+    def _read_cbeam3(self, data: bytes, n: int) -> int:
+        """
+        $       eid     pid     ga      gb      gc      g0
+        CBEAM3  1       1       1       2       21      100
+
+                  eid pid ga gb   gc  5  6  7  g0   x2 x3 ?
+        ints    = (1,  1, 1, 2,   21, 0, 0, 0, 100, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                   2,  1, 2, 3,   22, 0, 0, 0, 100, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                   3,  1, 3, 4,   23, 0, 0, 0, 100, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                   4,  1, 4, 5,   24, 0, 0, 0, 100, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                   5,  1, 5, 6,   25, 0, 0, 0, 100, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                   6,  1, 6, 7,   26, 0, 0, 0, 100, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                   7,  1, 1, 8,   31, 0, 0, 0, 100, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                   8,  1, 8, 9,   32, 0, 0, 0, 100, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                   9,  1, 9, 10,  33, 0, 0, 0, 100, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                   10, 1, 10, 11, 34, 0, 0, 0, 100, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                   11, 1, 11, 12, 35, 0, 0, 0, 100, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                   12, 1, 12, 13, 36, 0, 0, 0, 100, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
+
+               eid, pid, ga, gb  gc,  x1  x2  x3
+        CBEAM3, 11,   2,  2,  4, ,   1.0,0.0,0.0
+                    eid pid ga gb, gc  5    6    7    8/x1 9/x2 10/x3
+          ints    = (11, 2, 2, 4, 0,   0,   0,   0,   1.0, 0,   0,   1, 0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0)
+          floats  = (11, 2, 2, 4, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0)
+
+          CBEAM3  11      2201    1       3       2       1001                    +
+          +                                                                       +
+          +                                       101     103     102
+          sa, sb, sc = (101, 103, 102)
+
+                    eid  pid  ga gb, gc  sa   sb   sc    8/x1 9/x2 10/x3
+          ints    = (11, 2201, 1, 3, 2, 101, 103, 102, 1001, 0,   0,   2, 0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0)
+          floats  = (11, 2201, 1, 3, 2, 101, 103, 102, 1001, 0.0, 0.0, 2, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0)
+
+          CBEAM3  13      11      3       4       7        10
+          $       W1A     W2A     W3A     W1B     W2B     W3B     W1C     W2C
+          +       0.0     0.0     1.0     0.0     0.0     1.0     0.0     0.0     +
+          $       W3C
+          +       1.0
+                                                                         wa             wb             wc
+                    eid  pid ga gb,gc sa   sb   sc   x1  x2  x3    flag [?    ?    ?]  [?    ?    ?]  [?    ?    ?]
+          ints    = (13, 11, 3, 4, 7, 0,   0,   0,   10, 0,   0,   2,   0,   0,   1.0, 0,   0,   1.0, 0,   0,   1.0, 0, 0, 0, 0, 0)
+          floats  = (13, 11, 3, 4, 7, 0.0, 0.0, 0.0, 10, 0.0, 0.0, 2,   0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0)
+        """
+        ntotal = 104 * self.factor  # 26*4
+        nelements = (len(data) - n) // ntotal
+        structi = Struct(mapfmt(self._endian + b'8i 3i i 9f 5i', self.size))
+        structf = Struct(mapfmt(self._endian + b'8i 3f i 9f 5i', self.size))
+
+        for i in range(nelements):
+            datai = data[n:n+ntotal]
+            out = structi.unpack(datai)
+            #self.show_data(datai, types='if')
+            (eid, pid, ga, gb, gc, sa, sb, sc,
+             g0_x1, x2, x3, flag,
+             w1a, w2a, w3a, w1b, w2b, w3b, w1c, w2c, w3c,
+             *other) = out
+            #print([eid, pid], [ga, gb, gc], [sa, sb, sc], [g0_x1, x2, x3, flag],
+                  #[w1a, w2a, w3a], [w1b, w2b, w3b], [w1c, w2c, w3c],
+                  #*other)
+            if flag == 1:
+                (eid, pid, ga, gb, gc, sa, sb, sc,
+                 x1, x2, x3, flag,
+                 w1a, w2a, w3a, w1b, w2b, w3b, w1c, w2c, w3c,
+                 *other) = structf.unpack(datai)
+                x = [x1, x2, x3]
+                g0 = None
+            elif flag == 2:
+                g0 = g0_x1
+                x = None
+            else:
+                raise NotImplementedError(flag)
+            #print(eid, pid, ga, gb, gc, sa, sb, sc, g0, sum(other))
+            #print(other)
+            assert sum(other) == 0, other # self.show_data(datai, types='if')
+
+            nids = [ga, gb, gc]
+            wa = [w1a, w2a, w3a]
+            wb = [w1b, w2b, w3b]
+            wc = [w1c, w2c, w3c]
+            tw = None # TWA TWB TWC
+            s = [sa, sb, sc]
+            self.add_cbeam3(eid, pid, nids, x, g0, wa, wb, wc, tw, s)
+            n += ntotal
+        #self.show_data(data[n:])
+        self.card_count['CBEAM3'] = nelements
+        return n
+
     def _read_cbeam(self, data: bytes, n: int) -> int:
         """
         CBEAM(5408,54,261) - the marker for Record 10
@@ -684,7 +777,7 @@ class GEOM2(GeomCommon):
                     data_in = [[eid, pid, ga, gb, sa, sb, pa, pb, w1a, w2a, w3a, w1b, w2b, w3b],
                                [f, g0]]
             else:
-                raise RuntimeError('invalid f value...f=%r' % f)
+                raise RuntimeError(f'invalid f value...f={f!r}')
             if self.is_debug_file:
                 self.binary_debug.write('  CBEAM eid=%s f=%s fe=%s %s\n' % (
                     eid, f, fe, str(data_in)))
@@ -1552,17 +1645,17 @@ class GEOM2(GeomCommon):
         self.card_count['CONV'] = nelements
         return n
 
-    def _read_split_card(self, data, n, read1, read2, card_name, add_method):
+    def _read_split_card(self, data, n, read1, read2, card_name, card_obj, add_method):
         """
         generalization of multi read methods for different
         versions of MSC Nastran
         """
         n0 = n
         try:
-            n, elements = read1(data, n)
+            n, elements = read1(card_obj, data, n)
         except AssertionError:
-            self.log.info('AssertionError...try again reading %r' % card_name)
-            n, elements = read2(data, n0)
+            self.log.info(f'AssertionError...try again reading {card_name!r}')
+            n, elements = read2(card_obj, data, n0)
 
         nelements = len(elements)
         for elem in elements:
@@ -2226,12 +2319,66 @@ class GEOM2(GeomCommon):
         CQUAD4(2958,51,177)    - the marker for Record 70
         CQUAD4(13900,139,9989) - the marker for Record 71
         """
-        nx_method = partial(self._run_cquad4_nx, CQUAD4)
-        msc_method = partial(self._run_cquad4_msc, CQUAD4)
-        n = self._read_dual_card(
-            data, n,
-            nx_method, msc_method,
-            'CQUAD4', self.add_op2_element)
+        card_name = 'CQUAD4'
+        card_obj = CQUAD4
+        methods = {
+            56 : self._run_cquad4_nx,
+            60 : self._run_cquad4_msc,
+        }
+        try:
+            n = self._read_double_card(card_name, card_obj, methods, data, n)
+        except DoubleCardError:
+            nx_method = partial(self._run_cquad4_nx, card_obj)
+            msc_method = partial(self._run_cquad4_msc, card_obj)
+            n = self._read_dual_card(
+                data, n,
+                nx_method, msc_method,
+                card_name, self.add_op2_element)
+        #nentries = len(elements)
+        #for elem in elements:
+            #self.add_op2_element(elem)
+        #self.card_count[card_name] = nentries
+
+        return n
+
+    def _read_double_card(self, card_name: str, card_obj,
+                          methods, data: bytes, n: int) -> int:
+        assert isinstance(data, bytes), type(data)
+        ndatai = (len(data) - n) // self.factor
+        keys = np.array(list(methods.keys()))
+
+        #print(ndatai, keys)
+        errors = ndatai % keys
+        izero = np.where(errors == 0)[0]
+        if len(izero) == 1:
+            key0 = keys[izero[0]]
+            method = methods[key0]
+            #print(method)
+            n, elements = method(card_obj, data, n)
+        else:
+            #print(keys, errors)
+            methods2 = {key : methods[key] for i, key in enumerate(keys)
+                        if i in izero}
+            elements = None
+            for key, method in methods2.items():
+                try:
+                    n, elements = method(card_obj, data, n)
+                    #print('breaking')
+                    #print(methods2)
+                    break
+                except:
+                    #print('error')
+                    pass
+                else:
+                    raise DoubleCardError()
+        #else:
+        if elements is None:
+            raise EmptyCardError()
+
+        nentries = len(elements)
+        for elem in elements:
+            self.add_op2_element(elem)
+        self.card_count[card_name] = nentries
         return n
 
     def _read_vutria3(self, data: bytes, n: int) -> int:
@@ -2355,6 +2502,19 @@ class GEOM2(GeomCommon):
             2, 1, 2, 3, 74, 73, 0, 0, 0, 0, -1.0, -1.0, -1.0, -1.0, -1,
             3, 1, 3, 4, 75, 74, 0, 0, 0, 0, -1.0, -1.0, -1.0, -1.0, -1,
         )
+
+        C:\MSC.Software\msc_nastran_runs\cc179h.op2
+
+        data = (
+            eid   pid n1     n2     n3     n4     theta ?  ?  ?   t1    t2    t3    t4   flag
+            101,  30, 30000, 30001, 30101, 30100, 19.2, 0, 0, 0,  0.2,  0.2,  0.2,  0.2, -1,
+            102,  30, 30001, 30002, 30102, 30101, 19.2, 0, 0, 0,  0.2,  0.2,  0.2,  0.2, -1,
+            103,  30, 30002, 30003, 30103, 30102, 19.2, 0, 0, 0,  0.2,  0.2,  0.2,  0.2, -1,
+            104,  30, 30100, 30101, 30201, 30200, 19.2, 0, 0, 0,  0.2,  0.2,  0.2,  0.2, -1,
+            1001, 20, 20000, 20001, 20101, 20100, 0,    0, 0, 0, -1.0, -1.0, -1.0, -1.0, -1,
+            1002, 20, 20001, 20002, 20102, 20101, 0,    0, 0, 0, -1.0, -1.0, -1.0, -1.0, -1,
+            1003, 20, 20002, 20003, 20103, 20102, 0,    0, 0, 0, -1.0, -1.0, -1.0, -1.0, -1,
+            1004, 20, 20100, 20101, 20201, 20200, 0,    0, 0, 0, -1.0, -1.0, -1.0, -1.0, -1)
         """
         elements = []
         ntotal = 60 * self.factor  # 15*4
@@ -2384,6 +2544,8 @@ class GEOM2(GeomCommon):
              t1, t2, t3, t4,
              minus1) = out
             minus1 = out[-1]
+            #eid, pid, n1, n2, n3, n4, theta, a, b, c, t1, t2, t3, t4, minus1 = out
+            #print(eid, pid)
 
             msg = ('eid=%s pid=%s nodes=%s '
                    'theta=%s zoffs=%s '
@@ -2394,7 +2556,7 @@ class GEOM2(GeomCommon):
                        blank, tflag,
                        (t1, t2, t3, t4), minus1))
 
-            assert theta == 0, msg
+            #assert theta == 0, msg
             assert zoffs == 0, msg
             assert blank == 0, msg
             assert tflag == 0, msg
@@ -2475,14 +2637,26 @@ class GEOM2(GeomCommon):
 
     def _read_cquad8(self, data: bytes, n: int) -> int:
         """common method for reading CQUAD8s"""
-        n = self._read_split_card(data, n,
-                                  self._read_cquad8_current, self._read_cquad8_v2001,
-                                  'CQUAD8', self.add_op2_element)
+        card_name = 'CQUAD8'
+        card_obj = CQUAD8
+        methods = {
+            68 : self._read_cquad8_current,
+            64 : self._read_cquad8_v2001,
+            72 : self._read_cquad8_72,
+        }
+        try:
+            n = self._read_double_card(card_name, card_obj, methods, data, n)
+        except DoubleCardError:
+            raise
+            self.log.warning(f'try-except {card_name}')
+            #n = self._read_split_card(data, n,
+                                      #self._read_cquad8_current, self._read_cquad8_v2001,
+                                      #card_name, self.add_op2_element)
         #nelements = self.card_count['CQUAD8']
         #self.log.debug(f'nCQUAD8 = {nelements}')
         return n
 
-    def _read_cquad8_current(self, data: bytes, n: int) -> int:
+    def _read_cquad8_current(self, card_obj, data: bytes, n: int) -> int:
         """
         CQUAD8(4701,47,326)  - the marker for Record 72
         .. warning:: inconsistent with dmap manual
@@ -2526,7 +2700,7 @@ class GEOM2(GeomCommon):
             n += ntotal
         return n, elements
 
-    def _read_cquad8_v2001(self, data: bytes, n: int) -> int:
+    def _read_cquad8_v2001(self, card_obj, data: bytes, n: int) -> int:
         """
         CQUAD8(4701,47,326)  - the marker for Record 72
 
@@ -2541,30 +2715,107 @@ class GEOM2(GeomCommon):
         16 ZOFFS RS Offset from the surface of grid points
                     reference plane
         """
+        elements = []
+        #self.show_data(data, types='if')
+        #ss
         ntotal = 64 * self.factor  # 16*4
         ndatai = (len(data) - n)
         nelements = ndatai // ntotal
         assert ndatai % ntotal == 0
-        s = Struct(mapfmt(self._endian + b'10i 6f', self.size))
-        elements = []
+        sf = Struct(mapfmt(self._endian + b'10i 6f', self.size))
         for unused_i in range(nelements):
             edata = data[n:n + ntotal]
-            out = s.unpack(edata)
+            out = sf.unpack(edata)
             if self.is_debug_file:
                 self.binary_debug.write('  CQUAD8=%s\n' % str(out))
             (eid, pid, n1, n2, n3, n4, n5, n6, n7, n8, t1, t2,
              t3, t4, theta, zoffs) = out
+            assert eid > 0
+            assert pid > 0
             tflag = None
             out = (eid, pid, n1, n2, n3, n4, n5, n6, n7, n8, t1, t2,
                    t3, t4, theta, zoffs, tflag)
-            #print('eid=%s pid=%s n1=%s n2=%s n3=%s n4=%s theta=%s zoffs=%s '
-                  #'tflag=%s t1=%s t2=%s t3=%s t4=%s' % (
+            #print('eid=%s pid=%s n1=%s n2=%s n3=%s n4=%s theta=%g zoffs=%s '
+                  #'tflag=%s t1=%g t2=%g t3=%g t4=%g' % (
                       #eid, pid, n1, n2, n3, n4, theta, zoffs, tflag, t1, t2, t3, t4))
             #data_init = [eid,pid,n1,n2,n3,n4,theta,zoffs,tflag,t1,t2,t3,t4]
             elem = CQUAD8.add_op2_data(out)
             elements.append(elem)
             self.add_op2_element(elem)
             n += ntotal
+        return n, elements
+
+
+    def _read_cquad8_72(self, card_obj, data: bytes, n: int) -> int:
+        """
+        data = (
+            eid   pid n1     n2     n3     n4     n5     n6     n7     n8     t1   t2   t3   t4   theta ? ?
+            301,  30, 40000, 40002, 40202, 40200, 40001, 40102, 40201, 40100, 0.2, 0.2, 0.2, 0.2, 19.2, 0, 0, -1,
+            302,  30, 40002, 40004, 40204, 40202, 40003, 40104, 40203, 40102, 0.2, 0.2, 0.2, 0.2, 19.2, 0, 0, -1,
+            303,  30, 40200, 40202, 40402, 40400, 40201, 40302, 40401, 40300, 0.2, 0.2, 0.2, 0.2, 19.2, 0, 0, -1,
+            304,  30, 40202, 40204, 40404, 40402, 40203, 40304, 40403, 40302, 0.2, 0.2, 0.2, 0.2, 19.2, 0, 0, -1,
+            1301, 20, 10000, 10002, 10202, 10200, 10001, 10102, 10201, 10100, -1.0, -1.0, -1.0, -1.0, 0, 0, 0, -1,
+            1302, 20, 10002, 10004, 10204, 10202, 10003, 10104, 10203, 10102, -1.0, -1.0, -1.0, -1.0, 0, 0, 0, -1,
+            1303, 20, 10200, 10202, 10402, 10400, 10201, 10302, 10401, 10300, -1.0, -1.0, -1.0, -1.0, 0, 0, 0, -1,
+            1304, 20, 10202, 10204, 10404, 10402, 10203, 10304, 10403, 10302, -1.0, -1.0, -1.0, -1.0, 0, 0, 0, -1)
+        """
+        elements = []
+        #self.show_data(data, types='if')
+        #ss
+        ntotal = 72 * self.factor  # 16*4
+        ndatai = (len(data) - n)
+        nelements = ndatai // ntotal
+        assert ndatai % ntotal == 0
+        s = Struct(mapfmt(self._endian + b'10i 5f 3i', self.size))
+
+        #sf = Struct(mapfmt(self._endian + b'10i 6f', self.size))
+        edata0 = data[n:n + ntotal]
+        flag = s.unpack(edata0)[-1]
+        if flag == -1:
+            for unused_i in range(nelements):
+                edata = data[n:n + ntotal]
+                out = s.unpack(edata)
+                if self.is_debug_file:
+                    self.binary_debug.write('  CQUAD8=%s\n' % str(out))
+                (eid, pid, n1, n2, n3, n4, n5, n6, n7, n8, t1, t2,
+                 t3, t4, theta, tflag, zoffs, flag) = out
+                assert eid > 0
+                assert pid > 0
+                assert tflag == 0
+                assert zoffs == 0
+                assert flag == -1, flag
+                tflag = None
+                out = (eid, pid, n1, n2, n3, n4, n5, n6, n7, n8, t1, t2,
+                       t3, t4, theta, zoffs, tflag)
+                #print('eid=%s pid=%s n1=%s n2=%s n3=%s n4=%s theta=%g zoffs=%s '
+                      #'tflag=%s t1=%g t2=%g t3=%g t4=%g' % (
+                          #eid, pid, n1, n2, n3, n4, theta, zoffs, tflag, t1, t2, t3, t4))
+                #data_init = [eid,pid,n1,n2,n3,n4,theta,zoffs,tflag,t1,t2,t3,t4]
+                elem = CQUAD8.add_op2_data(out)
+                elements.append(elem)
+                self.add_op2_element(elem)
+                n += ntotal
+        else:
+            for unused_i in range(nelements):
+                edata = data[n:n + ntotal]
+                out = sf.unpack(edata)
+                if self.is_debug_file:
+                    self.binary_debug.write('  CQUAD8=%s\n' % str(out))
+                (eid, pid, n1, n2, n3, n4, n5, n6, n7, n8, t1, t2,
+                 t3, t4, theta, zoffs) = out
+                assert eid > 0
+                assert pid > 0
+                tflag = None
+                out = (eid, pid, n1, n2, n3, n4, n5, n6, n7, n8, t1, t2,
+                       t3, t4, theta, zoffs, tflag)
+                #print('eid=%s pid=%s n1=%s n2=%s n3=%s n4=%s theta=%g zoffs=%s '
+                      #'tflag=%s t1=%g t2=%g t3=%g t4=%g' % (
+                          #eid, pid, n1, n2, n3, n4, theta, zoffs, tflag, t1, t2, t3, t4))
+                #data_init = [eid,pid,n1,n2,n3,n4,theta,zoffs,tflag,t1,t2,t3,t4]
+                elem = CQUAD8.add_op2_data(out)
+                elements.append(elem)
+                self.add_op2_element(elem)
+                n += ntotal
         return n, elements
 
 # CQUAD9FD
@@ -2764,11 +3015,30 @@ class GEOM2(GeomCommon):
 
     def _read_ctria3(self, data: bytes, n: int) -> int:
         """
-        CTRIA3(5959,59,282)    - the marker for Record 94
+        Common method for reading CTRIA3s
+
+        """
+        card_name = 'CTRIA3'
+        card_obj = CTRIA3
+        methods = {
+            52 : self._read_ctria3_52,
+            56 : self._read_ctria3_56,
+        }
+        try:
+            n = self._read_double_card(card_name, card_obj, methods, data, n)
+        except DoubleCardError:
+            raise
+        return n
+
+    def _read_ctria3_52(self, card_obj, data: bytes, n: int) -> int:
+        """
+        CTRIA3(5959,59,282) - the marker for Record 94
+
         """
         ntotal = 52 * self.factor  # 13*4
         s = Struct(mapfmt(self._endian + b'5iff3i3f', self.size))
         nelements = (len(data) - n)// ntotal
+        elements = []
         for unused_i in range(nelements):
             edata = data[n:n+ntotal]
             out = s.unpack(edata)
@@ -2784,10 +3054,59 @@ class GEOM2(GeomCommon):
             theta_mcid = convert_theta_to_mcid(theta)
             data_in = [eid, pid, n1, n2, n3, theta_mcid, zoffs, tflag, t1, t2, t3]
             elem = CTRIA3.add_op2_data(data_in)
-            self.add_op2_element(elem)
+            #self.add_op2_element(elem)
+            elements.append(elem)
             n += ntotal
-        self.card_count['CTRIA3'] = nelements
-        return n
+        #self.card_count['CTRIA3'] = nelements
+        return n, elements
+
+    def _read_ctria3_56(self, card_obj, data: bytes, n: int) -> int:
+        """
+        CTRIA3(5959,59,282) - the marker for Record 94
+            eid  pid n1     n2     n3     theta?      ?  ?  ?  ?
+            201, 35, 50000, 50001, 50101, 19.2, 0, 0, 0, 0, 0.2, 0.2, 0.2, -1,
+
+
+        C:\MSC.Software\msc_nastran_runs\cc179h.op2
+        ints = (
+            5959, 59, 282,
+            5i                            f     4i          3f             i
+            eid  pid n1     n2     n3     theta ?  ?  ?  ?  t1   t2   t3
+            201, 35, 50000, 50001, 50101, 19.2, 0, 0, 0, 0, 0.2, 0.2, 0.2, -1,
+            202, 35, 50101, 50100, 50000, 19.2, 0, 0, 0, 0, 0.2, 0.2, 0.2, -1,
+            203, 35, 50001, 50002, 50102, 19.2, 0, 0, 0, 0, 0.2, 0.2, 0.2, -1,
+            204, 35, 50102, 50101, 50001, 19.2, 0, 0, 0, 0, 0.2, 0.2, 0.2, -1,
+            205, 35, 50002, 50003, 50103, 19.2, 0, 0, 0, 0, 0.2, 0.2, 0.2, -1, ...)
+
+        """
+        ntotal = 56 * self.factor  # 13*4
+        s = Struct(mapfmt(self._endian + b'5i f 4i 3f i', self.size))
+        nelements = (len(data) - n)// ntotal
+        elements = []
+        for unused_i in range(nelements):
+            edata = data[n:n+ntotal]
+            out = s.unpack(edata)
+            #print('eid=%s pid=%s n1=%s n2=%s n3=%s theta=%s zoffs=%s '
+                  #'blank1=%s blank2=%s tflag=%s t1=%s t2=%s t3=%s' % (
+                      #eid, pid, n1, n2, n3, theta, zoffs,
+                      #blank1, blank2, tflag, t1, t2, t3))
+            (eid, pid, n1, n2, n3, theta, a, b, c, d,
+             t1, t2, t3, minus1) = out
+            abcd = (a, b, c, d)
+            assert abcd == (0, 0, 0, 0), abcd
+            if self.is_debug_file:
+                self.binary_debug.write('  CTRIA3=%s\n' % str(out))
+
+            zoffs = 0.0
+            tflag = 0
+            theta_mcid = convert_theta_to_mcid(theta)
+            data_in = [eid, pid, n1, n2, n3, theta_mcid, zoffs, tflag, t1, t2, t3]
+            elem = CTRIA3.add_op2_data(data_in)
+            #self.add_op2_element(elem)
+            elements.append(elem)
+            n += ntotal
+        #self.card_count['CTRIA3'] = nelements
+        return n, elements
 
 
 # CTRIAFD - 95
@@ -2816,12 +3135,71 @@ class GEOM2(GeomCommon):
         11 T(3)  RS Membrane thickness of element at grid points
         14 TFLAG  I Relative thickness flag
         """
-        n = self._read_split_card(data, n,
-                                  self._read_ctria6_current, self._read_ctria6_v2001,
-                                  'CTRIA6', self.add_op2_element)
+        card_name = 'CTRIA6'
+        card_obj = CTRIA6
+        methods = {
+            52 : self._read_ctria6_v2001,
+            56 : self._read_ctria6_current,
+        }
+        try:
+            n = self._read_double_card(card_name, card_obj, methods, data, n)
+        except DoubleCardError:
+            raise
+
+        #n = self._read_split_card(data, n,
+                                  #self._read_ctria6_current, self._read_ctria6_v2001,
+                                  #'CTRIA6', CTRIA6, self.add_op2_element)
         return n
 
     def _read_ctria3fd(self, data: bytes, n: int) -> int:
+        """
+        data= (
+            16200, 16201, 16201, 16202, 16203, 0, 0, 0, 0, -1,
+            16201, 16201, 16201, 16203, 16204, 0, 0, 0, 0, -1) - 10
+
+        """
+        """
+        Common method for reading CTRIA3s
+
+        """
+        card_name = 'CTRIA3'
+        card_obj = CTRIA3
+        methods = {
+            32 : self._read_ctria3fd_32,
+            40 : self._read_ctria3fd_40,
+        }
+        try:
+            n = self._read_double_card(card_name, card_obj, methods, data, n)
+        except DoubleCardError:
+            raise
+        return n
+
+    def _read_ctria3fd_40(self, card_obj, data: bytes, n: int) -> int:
+        s = Struct(self._endian + b'10i')
+        ntotal = 40
+        nelements = (len(data) - n) // ntotal  # 8*4
+        assert (len(data) - n) % ntotal == 0
+        elements = []
+        for unused_i in range(nelements):
+            edata = data[n:n + ntotal]
+            out = s.unpack(edata)
+            if self.is_debug_file:
+                self.binary_debug.write('  CTRIA3=%s\n' % str(out))
+            (eid, pid, n1, n2, n3, n4, n5, n6, a, minus1) = out
+            assert (a, minus1) == (0, -1), (a, minus1)
+            assert minus1 == -1
+            assert n4 == 0, out
+            assert n5 == 0, out
+            assert n6 == 0, out
+            nids = [n1, n2, n3]
+            elem = CTRIA3(eid, pid, nids,
+                          theta_mcid=0., zoffset=0., tflag=0,
+                          T1=None, T2=None, T3=None, comment='')
+            elements.append(elem)
+            n += ntotal
+        return n, elements
+
+    def _read_ctria3fd_32(self, card_obj, data: bytes, n: int) -> int:
         """
         Word Name Type Description
         1 EID  I Element identification number
@@ -2829,11 +3207,12 @@ class GEOM2(GeomCommon):
         3 G(6) I Grid point identification numbers of connection points
         """
         s = Struct(self._endian + b'8i')
-        nelements = (len(data) - n) // 32  # 8*4
-        assert (len(data) - n) % 32 == 0
+        ntotal = 32
+        nelements = (len(data) - n) // ntotal  # 8*4
+        assert (len(data) - n) % ntotal == 0
         elements = []
         for unused_i in range(nelements):
-            edata = data[n:n + 32]
+            edata = data[n:n + ntotal]
             out = s.unpack(edata)
             if self.is_debug_file:
                 self.binary_debug.write('  CTRIA3=%s\n' % str(out))
@@ -2846,13 +3225,8 @@ class GEOM2(GeomCommon):
                           theta_mcid=0., zoffset=0., tflag=0,
                           T1=None, T2=None, T3=None, comment='')
             elements.append(elem)
-            n += 32
-
-        nelements = len(elements)
-        for elem in elements:
-            self.add_op2_element(elem)
-        self.card_count['CTRIA6'] = nelements
-        return n
+            n += ntotal
+        return n, elements
 
     def _read_ctrix3fd(self, data: bytes, n: int) -> int:
         """
@@ -2890,6 +3264,23 @@ class GEOM2(GeomCommon):
 
     def _read_ctria6fd(self, data: bytes, n: int) -> int:
         """
+        Common method for reading CTRIA6s
+
+        """
+        card_name = 'CTRIA6'
+        card_obj = CTRIA6
+        methods = {
+            32 : self._read_ctria6fd_32,
+            #40 : self._read_ctria3fd_40,
+        }
+        try:
+            n = self._read_double_card(card_name, card_obj, methods, data, n)
+        except DoubleCardError:
+            raise
+        return n
+
+    def _read_ctria6fd_32(self, data: bytes, n: int) -> int:
+        """
         Word Name Type Description
         1 EID  I Element identification number
         2 PID  I Property identification number
@@ -2919,7 +3310,7 @@ class GEOM2(GeomCommon):
         self.card_count['CTRIA6'] = nelements
         return n
 
-    def _read_ctria6_current(self, data: bytes, n: int) -> int:
+    def _read_ctria6_current(self, card_obj, data: bytes, n: int) -> int:
         """
         CTRIA6(4801,48,327) - the marker for Record 96
 
@@ -2957,7 +3348,7 @@ class GEOM2(GeomCommon):
             n += ntotal
         return n, elements
 
-    def _read_ctria6_v2001(self, data: bytes, n: int) -> int:
+    def _read_ctria6_v2001(self, card_obj, data: bytes, n: int) -> int:
         """
         CTRIA6(4801,48,327) - the marker for Record 96
 
@@ -2994,7 +3385,7 @@ class GEOM2(GeomCommon):
 
     def _read_ctriar(self, data: bytes, n: int) -> int:
         """
-        CTRIAR(9200,92,385)    - the marker for Record 99
+        CTRIAR(9200,92,385) - the marker for Record 99
         """
         ntotal = 52 * self.factor  # 13*4
         s = Struct(mapfmt(self._endian + b'5iff3i3f', self.size))

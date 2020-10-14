@@ -15,6 +15,7 @@ import os
 import sys
 from copy import deepcopy
 from io import StringIO, IOBase
+from pathlib import PurePath
 import traceback
 from collections import defaultdict
 
@@ -3220,7 +3221,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
                 add_card_function(class_instance)
             except TypeError:
                 # this should never be turned on, but is useful for testing
-                msg = 'problem adding %s' % card_obj
+                msg = f'problem adding {card_obj}'
                 print(msg)
                 raise
             except (SyntaxError, AssertionError, KeyError, ValueError) as exception:
@@ -3248,7 +3249,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
                 print(add_card_function)
                 print(card)
                 print(card_obj)
-                raise RuntimeError('_prepare_%s needs to implement obj' % card_name.lower())
+                raise RuntimeError(f'_prepare_{card_name.lower()} needs to implement obj')
             elif isinstance(obj, list):
                 for obji in obj:
                     obji.ifile = ifile
@@ -3479,7 +3480,8 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
         return icd_transform, icp_transform, xyz_cp, nid_cp_cd
 
     def get_xyz_in_coord_array(self, cid: int=0,
-                               fdtype: str='float64', idtype: str='int32') -> Tuple[Any, Any, Any, Dict[int, Any], Dict[int, Any]]:
+                               fdtype: str='float64', idtype: str='int32') -> Tuple[Any, Any, Any,
+                                                                                    Dict[int, Any], Dict[int, Any]]:
         """
         Gets the xyzs as an array in an arbitrary coordinate system
 
@@ -3663,7 +3665,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
                 if coord.type in ['CORD2R', 'CORD2C', 'CORD2S']:
                     rid_ref = self.coords[coord.rid]
                     msg += rid_ref.rstrip() + '\n'
-                    msg += '  rid=%r origin=%s\n\n' % (coord.rid, rid_ref.origin)
+                    msg += f'  rid={coord.rid!r} origin={rid_ref.origin}\n\n'
                 else:
                     nid1, nid2, nid3 = coord.node_ids
                     #coord.e1 = xyz_cid0[i1, :] #: the origin in the local frame
@@ -3678,9 +3680,9 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
                         cp1 = nodes[nid1].cp
                         cp2 = nodes[nid2].cp
                         cp3 = nodes[nid3].cp
-                    msg += '  g1=%s xyz=%s cp=%s\n' % (nid1, coord.e1, cp1)
-                    msg += '  g2=%s xyz=%s cp=%s\n' % (nid2, coord.e2, cp2)
-                    msg += '  g3=%s xyz=%s cp=%s\n' % (nid3, coord.e3, cp3)
+                    msg += f'  g1={nid1} xyz={coord.e1} cp={cp1}\n'
+                    msg += f'  g2={nid2} xyz={coord.e2} cp={cp2}\n'
+                    msg += f'  g3={nid3} xyz={coord.e3} cp={cp3}\n'
                     #break
             raise RuntimeError(msg)
 
@@ -3962,7 +3964,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
 
             cards2 = self._expand_replication(
                 card_name, icard-1, cards_list, card_lines_old, dig=False)
-            assert len(cards2) == 1, 'cards2=%s; ncards=%s' % (cards2, len(cards2))
+            assert len(cards2) == 1, f'cards2={cards2}; ncards={len(cards2)}'
             #print(dig_str, 'cards_equal =', cards2)
             old_card_fields = cards2[0]
             old_card_real = old_card
@@ -4017,7 +4019,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
                 break
             elif '=' in field:
                 # =4
-                assert ifield == 0, 'ifield=%s field=%r new_card=%s' % (ifield, field, new_card)
+                assert ifield == 0, f'ifield={ifield} field={field!r} new_card={new_card}'
                 nrepeats = get_nrepeats(field, old_card, new_card)
                 if old_card_real is None:
                     #old_card_real = old_card
@@ -4066,9 +4068,9 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
                     self.log.error(f'old_card:{old_card}\nnew_card:\n{new_card}')
                     raise
             else:
-                assert '(' not in field, 'field=%r' % field
-                assert '*' not in field, 'field=%r' % field
-                assert '=' not in field, 'field=%r' % field
+                assert '(' not in field, f'field={field!r}'
+                assert '*' not in field, f'field={field!r}'
+                assert '=' not in field, f'field={field!r}'
                 field2 = field
             #print(dig_str, ' %i: %r -> %r' % (ifield, field, field2))
             card.append(field2)
@@ -4213,42 +4215,49 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
         ..warning :: pyNastran lines must be at the top of the file
 
         """
-        try:
-            with open(bdf_filename, 'r') as bdf_file:
-                lines = bdf_file.readlines()
-        except UnicodeDecodeError:
-            with open(bdf_filename, 'r', errors='replace') as bdf_file:
-                line = 'temp'
-                lines = []
-                while line:
-                    line = bdf_file.readline()
-                    lines.append(line)
-                    try:
-                        # try to force a crash
-                        bytes_line = line.encode('ascii')  # TODO: use the encoding
-                    except UnicodeEncodeError:
-                        break
-                n = 20
-                i0 = len(lines) - n
-                for i, line in enumerate(lines[-n:-1]):
-                    self.log.debug(f'Line {i0+i}: {line.strip()!r}')
-                self.log.error(f'Line {i0+i+1}: {lines[-1].strip()!r}')
-                raise
-
-        except (AttributeError, TypeError) as error:
-            self.log.warning(str(error))
+        if isinstance(bdf_filename, (str, PurePath)):
+            try:
+                with open(bdf_filename, 'r') as bdf_file:
+                    lines = bdf_file.readlines()
+            except UnicodeDecodeError:
+                with open(bdf_filename, 'r', errors='replace') as bdf_file:
+                    line = 'temp'
+                    lines = []
+                    while line:
+                        line = bdf_file.readline()
+                        lines.append(line)
+                        try:
+                            # try to force a crash
+                            unused_bytes_line = line.encode('ascii')  # TODO: use the encoding
+                        except UnicodeEncodeError:
+                            break
+                    n = 20
+                    i0 = len(lines) - n
+                    for i, line in enumerate(lines[-n:-1]):
+                        self.log.debug(f'Line {i0+i}: {line.strip()!r}')
+                    self.log.error(f'Line {i0+i+1}: {lines[-1].strip()!r}')
+                    raise
+        else:
+            # StringIO
             if hasattr(bdf_filename, 'read') and hasattr(bdf_filename, 'write'):
                 lines = bdf_filename.readlines()
                 bdf_filename.seek(0)  # need to rewind the buffer!
-            else:
-                raise error
 
         self._check_pynastran_header(lines, check_header=True)
         if self.nastran_format == 'zona':
             self.zona.update_for_zona()
         elif self.nastran_format == 'mystran':
             self._update_for_mystran()
-        # TODO: undo the changes for zona/mystran...
+        else:
+            # msc / nx / optistruct
+            self._update_for_nastran()
+
+    def _update_for_nastran(self):
+        """updates for msc/nx/optistruct"""
+        # TODO: undo the changes for zona
+        card_parser = self._card_parser
+        card_parser['PARAM'] = (PARAM, self._add_param_object)
+        self.add_param = self._add_param_nastran
 
     def _update_for_mystran(self):
         """updates for mystran"""

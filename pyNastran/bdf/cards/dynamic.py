@@ -44,6 +44,49 @@ if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.bdf.bdf import BDF
 
 
+#if method_int == 1:
+    #method = 'AUTO'
+#elif method_int == 2:
+    #method = 'TSTEP'
+#elif method_int == 3:
+    #method = 'ADAPT'
+
+NLPARM_KMETHOD_MAP = {
+    1 : 'AUTO',
+    2 : 'ITER',
+    3 : 'ADAPT',
+    4 : 'SEMI',
+}
+NLPARM_CONV_MAP = {
+    1 : 'W',
+    2 : 'P',
+    3 : 'PW',
+    4 : 'U',
+    5 : 'UW',
+    6 : 'UP',
+    7 : 'UPW',
+    10: '', # NLSTEP
+    14: '', # NLSTEP
+    -1 : 'PW',  # Nastran-CoFE : blank -> assuming default
+}
+#nlparm_conv_map = {
+    #1 : 'W',
+    #2 : 'P',  # guess based on format
+    #3 : 'PW',
+    #4 : 'U',
+    #7 : 'UPW',
+    #10 : '',
+    ##3: 'ADAPT'
+#}
+
+
+
+NLPARM_INT_OUT_MAP = {
+    0 : 'NO',
+    1 : 'YES',
+    2 : 'ALL',
+}
+
 class DELAY(BaseCard):
     """
     +-------+-----+-----------+-----+--------+------+-----+--------+
@@ -1011,6 +1054,30 @@ class NLPARM(BaseCard):
         self.max_r = max_r
         self.rtol_b = rtol_b
 
+    def validate(self):
+        # line 1
+        assert self.nlparm_id > 0, self.get_stats()
+        assert self.ninc > 0, self.get_stats()
+        assert self.dt >= 0., self.get_stats()
+        assert self.kstep >= -1, self.get_stats()
+        assert self.conv in ['UPW', 'PW', 'UP', 'UW', 'U', 'P', 'W', ''], self.get_stats()
+        assert self.int_out in ['YES', 'NO', 'ALL'], self.get_stats()
+
+        # line 2
+        assert self.eps_p > 0.0, self.get_stats()
+        assert self.eps_u > 0.0, self.get_stats()
+        assert self.eps_w > 0.0, self.get_stats()
+        assert isinstance(self.max_div, int), self.get_stats()
+        assert self.max_qn >= 0, self.get_stats()
+        assert self.max_ls >= 0, self.get_stats()
+        assert 0.0 < self.fstress < 1.0, self.get_stats()
+        assert 0.01 < self.ls_tol < 0.9, self.get_stats()
+
+        # line 3
+        assert -10 <= self.max_bisect <= 10, self.get_stats()
+        assert 1.0 <= self.max_r <= 40.0, self.get_stats()
+        assert self.rtol_b > 0.0, self.get_stats()
+
     @classmethod
     def add_card(cls, card, comment=''):
         """
@@ -1088,51 +1155,31 @@ class NLPARM(BaseCard):
              rtol_b, end_zero) = data
             assert end_zero == 0, data
 
-        kmethod_map = {
-            1 : 'AUTO',
-            2 : 'ITER',
-            3 : 'ADAPT',
-            4 : 'SEMI',
-        }
         try:
-            kmethod = kmethod_map[kmethod]
+            kmethod = NLPARM_KMETHOD_MAP[kmethod]
         except KeyError:
             msg = 'nlparm_id=%s kmethod=%r data=%s' % (nlparm_id, kmethod, data)
             raise NotImplementedError(msg)
 
-        conv_map = {
-            1 : 'W',
-            2 : 'P',
-            3 : 'PW',
-            4 : 'U',
-            5 : 'UW',
-            6 : 'UP',
-            7 : 'UPW',
-            10: '', # NLSTEP
-            14: '', # NLSTEP
-            -1 : 'PW',  # Nastran-CoFE : blank -> assuming default
-        }
         try:
-            conv = conv_map[conv]
+            conv = NLPARM_CONV_MAP[conv]
         except KeyError:
             msg = 'nlparm_id=%s conv=%r data=%s' % (nlparm_id, conv, data)
             raise NotImplementedError(msg)
 
-        int_out_map = {
-            0 : 'NO',
-            1 : 'YES',
-            2 : 'ALL',
-        }
         try:
-            int_out = int_out_map[int_out]
+            int_out = NLPARM_INT_OUT_MAP[int_out]
         except KeyError:
             msg = 'nlparm_id=%s int_out=%r data=%s' % (nlparm_id, int_out, data)
             raise NotImplementedError(msg)
-        return NLPARM(nlparm_id, ninc, dt, kmethod, kstep, max_iter, conv,
-                      int_out, eps_u, eps_p, eps_w, max_div,
-                      max_qn, max_ls, fstress,
-                      ls_tol, max_bisect, max_r,
-                      rtol_b, comment=comment)
+
+        nlparm = NLPARM(nlparm_id, ninc, dt, kmethod, kstep, max_iter, conv,
+                        int_out, eps_u, eps_p, eps_w, max_div,
+                        max_qn, max_ls, fstress,
+                        ls_tol, max_bisect, max_r,
+                        rtol_b, comment=comment)
+        nlparm.validate()
+        return nlparm
 
     def raw_fields(self):
         list_fields = ['NLPARM', self.nlparm_id, self.ninc, self.dt, self.kmethod,
@@ -2198,6 +2245,38 @@ class TSTEPNL(BaseCard):
             msg = 'method=%r allowed_methods=[%s]' % (
                 self.method, ', '.join(self.allowed_methods))
             raise ValueError(msg)
+        assert self.sid > 0, self.get_stats()
+        assert self.ndt > 0, self.get_stats()
+        assert self.dt > 0.0, self.get_stats()
+        assert self.no >= 1, self.get_stats()
+        assert self.method in self.allowed_methods, self.get_stats()
+        assert self.kstep is None or self.kstep >= 2, self.get_stats()
+
+        assert self.min_iter >= 0, self.get_stats()
+        assert self.max_iter > 0, self.get_stats()
+        assert self.max_div > 0, self.get_stats()
+        assert self.max_qn > 0, self.get_stats()
+        assert self.max_ls >= 0, self.get_stats()
+        assert self.max_bisect > 0, self.get_stats()
+        assert self.adjust > 0, self.get_stats()
+    #def __init__(self, sid, ndt, dt, no, method='ADAPT', kstep=None,
+                 #max_iter=10, conv='PW', eps_u=1.e-2, eps_p=1.e-3,
+                 #eps_w=1.e-6, max_div=2, max_qn=10, max_ls=2,
+                 #fstress=0.2, max_bisect=5, adjust=5, mstep=None,
+                 #rb=0.6, max_r=32., utol=0.1, rtol_b=20.,
+                 #min_iter=None, comment=''):
+
+        assert self.eps_u > 0.0, self.get_stats()
+        assert self.eps_p > 0.0, self.get_stats()
+        assert self.eps_w > 0.0, self.get_stats()
+        assert self.fstress > 0.0, self.get_stats()
+        assert self.rb > 0.0, self.get_stats()
+        assert self.max_r > 0.0, self.get_stats()
+        assert self.utol > 0.0, self.get_stats()
+        assert self.rtol_b > 0.0, self.get_stats()
+
+
+
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -2274,39 +2353,39 @@ class TSTEPNL(BaseCard):
 
         """
         if len(data) == 22:
-            (sid, ndt, dt, no, method, kstep, max_iter, conv, eps_u, eps_p, eps_w,
+            (sid, ndt, dt, no, method_int, kstep, max_iter, conv_int, eps_u, eps_p, eps_w,
              max_div, max_qn, max_ls, fstress, max_bisect,
              adjust, mstep, rb, max_r, utol, rtol_b) = data
         else:
             assert len(data) == 27, len(data)
-            (sid, ndt, dt, no, method, kstep, max_iter, conv, eps_u, eps_p, eps_w,
+            (sid, ndt, dt, no, method_int, kstep, max_iter, conv_int, eps_u, eps_p, eps_w,
              max_div, max_qn, max_ls, fstress, max_bisect,
              adjust, mstep, rb, max_r, utol, rtol_b,
              kdamp, kupdate, kustep, tintopt, gamma) = data
 
-        if method == 1:
+        if method_int == 1:
             method = 'AUTO'
-        elif method == 2:
+        elif method_int == 2:
             method = 'TSTEP'
-        elif method == 3:
+        elif method_int == 3:
             method = 'ADAPT'
         else:
-            raise NotImplementedError('tstepnl=%s method=%r data=%s' % (sid, method, data))
+            raise NotImplementedError('tstepnl=%s method_int=%r data=%s' % (sid, method_int, data))
 
-        if conv == 1:
+        if conv_int == 1:
             conv = 'W'
-        #elif conv == 2:  # guess based on format
-            #conv = 'P'
-        elif conv == 3:
+        elif conv_int == 2:  # guess based on format
+            conv = 'P'
+        elif conv_int == 3:
             conv = 'PW'
-        elif conv == 4:
+        elif conv_int == 4:
             conv = 'U'
-        elif conv == 7:
+        elif conv_int == 7:
             conv = 'UPW'
-        #elif conv == 3:
+        #elif conv_int == 3:
             #conv = 'ADAPT'
         else:
-            raise NotImplementedError('tstepnl=%s conv=%r data=%s' % (sid, conv, data))
+            raise NotImplementedError('tstepnl=%s conv_int=%r data=%s' % (sid, conv_int, data))
 
         min_iter = None  # not listed in DMAP 2005
         return TSTEPNL(

@@ -223,7 +223,7 @@ class WriteMesh(BDFAttributes):
                 if self.sol == 600:
                     new_sol = f'SOL 600,{self.sol_method:d}'
                 else:
-                    new_sol = f'SOL {self.sol:d}'
+                    new_sol = f'SOL {self.sol}'
                 self.executive_control_lines[self.sol_iline] = new_sol
 
             for line in self.executive_control_lines:
@@ -667,8 +667,7 @@ class WriteMesh(BDFAttributes):
                         try:
                             bdf_file.write(load.write_card_16(is_double))
                         except:
-                            print('failed printing load...type=%s key=%r'
-                                  % (load.type, key))
+                            print(f'failed printing load...type={load.type} key={key!r}')
                             raise
             else:
                 for (key, loadcase) in sorted(self.loads.items()):
@@ -697,8 +696,7 @@ class WriteMesh(BDFAttributes):
                     try:
                         bdf_file.write(load.write_card(size, is_double))
                     except:
-                        print('failed printing load...type=%s key=%r'
-                              % (load.type, key))
+                        print(f'failed printing load...type={load.type} key={key!r}')
                         raise
 
             for (key, loadcase) in sorted(self.dload_entries.items()):
@@ -988,7 +986,7 @@ class WriteMesh(BDFAttributes):
 
         bdf_file.write('$PROPERTIES\n')
         for prop_class, prop_types in propertys_class_to_property_types.items():
-            print(prop_class, prop_types)
+            #print(prop_class, prop_types)
             #for prop_type in prop_types:
                 #if prop_type not in properties_by_class:
                     #continue

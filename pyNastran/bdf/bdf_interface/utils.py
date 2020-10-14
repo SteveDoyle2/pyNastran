@@ -185,10 +185,17 @@ def parse_executive_control_deck(
                 method = None
 
             if sol is None:
-                sol = sol_value[3:].strip()
+                sol = sol_value[3:].strip(' \t=')
+                if ',' not in sol:
+                    try:
+                        # SOL 101
+                        sol = int(sol)
+                    except ValueError:
+                        # SOL SESTATIC
+                        pass
             else:
                 raise ValueError('cannot overwrite solution existing='
-                                 '|SOL %s| new =|%s|' % (sol, uline))
+                                 f'|SOL {sol}| new={uline!r}')
             sol_iline = i
     return sol, method, sol_iline
 
