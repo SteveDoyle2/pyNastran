@@ -14,6 +14,7 @@ from pyNastran.op2.tables.geom.geom_common import GeomCommon
                                                  #PHBDY, CONV, CONVM, RADBC)
 from pyNastran.bdf.cards.thermal.radiation import RADM
 from pyNastran.op2.op2_interface.op2_reader import mapfmt # , reshape_bytes_block
+from .geom2 import DoubleCardError
 
 
 class MPT(GeomCommon):
@@ -722,6 +723,116 @@ class MPT(GeomCommon):
         return n, matt8s
 
     def _read_matt9(self, data: bytes, n: int) -> int:
+        """common method for reading MATT9s"""
+        card_name = 'MATT9'
+        card_obj = MATT9
+        methods = {
+            140 : self._read_matt9_140,
+            224 : self._read_matt9_224,
+        }
+        add_method = self._add_material_dependence_object
+        #self._add_material_dependence_object(mat, allow_overwrites=False)
+        try:
+            n = self._read_double_card(card_name, card_obj, add_method,
+                                       methods, data, n)
+        except DoubleCardError:
+            raise
+            self.log.warning(f'try-except {card_name}')
+            #n = self._read_split_card(data, n,
+                                      #self._read_cquad8_current, self._read_cquad8_v2001,
+                                      #card_name, self.add_op2_element)
+        #nelements = self.card_count['CQUAD8']
+        #self.log.debug(f'nCQUAD8 = {nelements}')
+
+        #n = self._read_dual_card(data, n, self._read_ctriax_8, self._read_ctriax_9,
+                                 #'CTRIAX', self.add_op2_element)
+        return n
+
+    def _read_matt9_224(self, card_obj, data: bytes, n: int) -> int:
+        r"""
+        Word Name Type Description
+        1 MID    I Material identification number
+        2 TC(21) I TABLEMi identification numbers for material property matrix
+        23 TRHO  I TABLEMi identification number for mass density
+        24 TA(6) I TABLEMi identification numbers for thermal expansion coefficients
+        30 UNDEF None
+        31 TGE   I TABLEMi identification number for structural damping coefficient
+        32 UNDEF(4) None
+        ????
+
+        # C:\MSC.Software\msc_nastran_runs\freefld.op2
+        MATT9,1101,2 ,3 ,4 ,,,,8 ,+P101
+        +P101,9 ,,,,13
+        $ mid, g11, g12, g13, g14, g15, g16, g22
+        MATT9,1251,2 ,3 ,4 ,5 ,6 ,7 ,8 ,+P251
+        $ g23, g24, g25, g26, g33, g34, g35, g36
+        +P251,9 ,10 ,11 ,12 ,13 ,14 ,15 ,16 ,+P252
+        $     44  45 46, 55  56 66
+        +P252,17 ,18 ,,  20 , , 22
+           g36,
+
+        ints    = (
+            2703, 27, 301,
+            mid   11 12  13 14 15 16 22 23 24 25 26 33  ?
+            1101, 2,  3, 4, 0, 0, 0, 8, 9, 0, 0, 0, 13, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            1102, 2,  3, 0, 0, 0, 0, 8, 0, 0, 0, 0, 0,  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            1103, 2,  3, 0, 0, 0, 0, 8, 0, 0, 0, 0, 0,  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            1151, 2,  3, 4, 0, 0, 0, 8, 9, 0, 0, 0, 13, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            1152, 2,  3, 0, 0, 0, 0, 8, 0, 0, 0, 0, 0,  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            1153, 2,  3, 0, 0, 0, 0, 8, 0, 0, 0, 0, 0,  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            1201, 2,  3, 4, 0, 0, 0, 8, 9, 0, 0, 0, 13, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            1203, 2,  3, 0, 0, 0, 0, 8, 0, 0, 0, 0, 0,  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            1204, 2,  3, 0, 0, 0, 0, 8, 0, 0, 0, 0, 0,  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, ...)
+            ...
+           (1251, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 0, 20, 0, 22, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0),
+
+        """
+        #self.show_data(data, types='if')
+        ntotal = 224 * self.factor  # 56*4
+        s = Struct(mapfmt(self._endian + b'56i', self.size))
+        nmaterials = (len(data) - n) // ntotal
+        materials = []
+        for unused_i in range(nmaterials):
+            edata = data[n:n+ntotal]
+            out = s.unpack(edata)
+            #print(out)
+            (mid, g11, g12, g13, g14, g15, g16, g22,
+             g23, g24, g25, g26, g33, g34, g35, g36,
+             g44, g45, g46, g55, g56, g66, *other) = out
+
+            tc_tables = (g11, g12, g13, g14, g15, g16, g22,
+                         g23, g24, g25, g26, g33, g34, g35, g36,
+                         g44, g45, g46, g55, g56, g66)
+            #(mid, tc_tables, *other) = out
+            #print(mid, tc_tables, *other)
+            assert sum(other) == 0, f'mid={mid} other={other}'
+            if self.is_debug_file:
+                self.binary_debug.write('  MATT9=%s\n' % str(out))
+
+            #MATT9(mid, g11_table=None, g12_table=None, g13_table=None, g14_table=None,
+                                 #g15_table=None, g16_table=None, g22_table=None, g23_table=None,
+                                 #g24_table=None, g25_table=None, g26_table=None, g33_table=None,
+                                 #g34_table=None, g35_table=None, g36_table=None, g44_table=None,
+                                 #g45_table=None, g46_table=None, g55_table=None, g56_table=None,
+                                 #g66_table=None, rho_table=None,
+                                 #a1_table=None, a2_table=None, a3_table=None,
+                                 #a4_table=None, a5_table=None, a6_table=None, ge_table=None, comment='')
+            tc_tables = [g11, g12, g13, g14, g15, g16, g22, g23, g24, g25, g26, g33]
+            assert mid > 0, (mid, tc_tables, *other)
+            trho = 0
+            ta1 = 0
+            ta2 = 0
+            ta3 = 0
+            ta4 = 0
+            ta5 = 0
+            ta6 = 0
+            tge = 0
+            mat = MATT9(mid, *tc_tables, trho, ta1, ta2, ta3, ta4, ta5, ta6, tge, comment='')
+            materials.append(mat)
+            n += ntotal
+        return n, materials
+
+    def _read_matt9_140(self, card_obj, data: bytes, n: int) -> int:
         """
         Word Name Type Description
         1 MID    I Material identification number
@@ -731,10 +842,12 @@ class MPT(GeomCommon):
         30 UNDEF None
         31 TGE   I TABLEMi identification number for structural damping coefficient
         32 UNDEF(4) None
+
         """
         ntotal = 140 * self.factor  # 35*4
         s = Struct(mapfmt(self._endian + b'35i', self.size))
         nmaterials = (len(data) - n) // ntotal
+        materials = []
         for unused_i in range(nmaterials):
             edata = data[n:n+ntotal]
             out = s.unpack(edata)
@@ -755,10 +868,9 @@ class MPT(GeomCommon):
                                  #a1_table=None, a2_table=None, a3_table=None,
                                  #a4_table=None, a5_table=None, a6_table=None, ge_table=None, comment='')
             mat = MATT9(mid, *tc_tables, trho, ta1, ta2, ta3, ta4, ta5, ta6, tge, comment='')
-            self._add_material_dependence_object(mat, allow_overwrites=False)
+            materials.append(mat)
             n += ntotal
-        self.card_count['MATT9'] = nmaterials
-        return n
+        return n, materials
 
     def junk_read_mat11(self, data: bytes, n: int) -> int:
         """
@@ -845,7 +957,7 @@ class MPT(GeomCommon):
         17 UNDEF(16) None
         ints = (1, 10, 20, 20, 30, 30, 30, 40, 40, 50, 60, 70, 70, 70, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
         """
-        ntotal = 128 # 32*4
+        ntotal = 128 * self.factor # 32*4
         #self.show_data(data[n:], types='if')
         struct1 = Struct(mapfmt(self._endian + b'32i', self.size))
         nmaterials = (len(data) - n) // ntotal

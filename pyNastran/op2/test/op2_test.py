@@ -1,6 +1,6 @@
 import os
 import sys
-from typing import List
+from typing import List, Optional
 
 import pyNastran
 from pyNastran.utils.dev import get_files_of_type
@@ -134,6 +134,7 @@ def get_files_from_directories(dirnames: List[str], file_type: str,
 def run(regenerate=True, make_geom=False, combine=True,
         write_bdf=False, build_pandas=True,
         xref_safe=False,
+        exclude: Optional[str]=None,
         save_cases=True, debug=False, write_f06=True, write_op2=False,
         compare=True, short_stats=False, write_hdf5=True):
     # works
@@ -203,6 +204,7 @@ def run(regenerate=True, make_geom=False, combine=True,
     failed_files = run_lots_of_files(files, make_geom=make_geom, combine=combine,
                                      write_bdf=write_bdf,
                                      xref_safe=xref_safe,
+                                     exclude=exclude,
                                      write_f06=write_f06, delete_f06=True,
                                      write_op2=write_op2, delete_op2=True,
                                      write_hdf5=write_hdf5, delete_hdf5=True,
@@ -240,12 +242,12 @@ def main():
     msg = "Usage:  "
     #is_release = False
     is_dev = 'dev' in ver
-    msg += "op2_test [-r] [-s] [-c] [-u] [-t] [-g] [-n] [-f] [-o] [-h] [-d] [-b] [--safe] [--skip_dataframe] [--nocombine]\n"
-    msg += "        op2_test -h | --help\n"
-    msg += "        op2_test -v | --version\n"
-    msg += "\n"
-    msg += "Tests to see if an OP2 will work with pyNastran %s.\n" % ver
-    msg += "\n"
+    msg += "op2_test [-r] [-s] [-c] [-u] [-t] [-g] [-n] [-f] [-o] [-h] [-d] [-b] [-x <arg>]... [--safe] [--skip_dataframe] [--nocombine]\n"
+    msg += '        op2_test -h | --help\n'
+    msg += '        op2_test -v | --version\n'
+    msg += '\n'
+    msg += f'Tests to see if an OP2 will work with pyNastran {ver}.\n'
+    msg += '\n'
     #msg += "Positional Arguments:\n"
     #msg += "  OP2_FILENAME         Path to OP2 file\n"
     #msg += "\n"
@@ -263,6 +265,7 @@ def main():
     msg += "  --skip_dataframe       Disables pandas dataframe building; [default: False]\n"
     msg += "  --nocombine            Disables case combination\n"
     msg += "  -s, --save_cases       Disables saving of the cases (default=False)\n"
+    msg += "  -x <arg>, --exclude    Exclude specific results\n"
     msg += "  --safe                 Safe cross-references BDF (default=False)\n"
     #msg += "  -z, --is_mag_phase    F06 Writer writes Magnitude/Phase instead of\n"
     #msg += "                        Real/Imaginary (still stores Real/Imag); [default: False]\n"
@@ -284,12 +287,14 @@ def main():
     short_stats = data['--short_stats']
     compare = not data['--disablecompare']
     build_pandas = not data['--skip_dataframe']
+    exclude = data['--exclude']
     xref_safe = data['--safe']
     combine = not data['--nocombine']
     run(regenerate=regenerate, make_geom=make_geom,
         combine=combine,
         write_bdf=write_bdf,
         xref_safe=xref_safe,
+        exclude=exclude,
         save_cases=save_cases, write_f06=write_f06, write_op2=write_op2,
         write_hdf5=write_hdf5, short_stats=short_stats,
         build_pandas=build_pandas, compare=compare, debug=debug)

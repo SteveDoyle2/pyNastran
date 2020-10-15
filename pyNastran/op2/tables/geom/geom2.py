@@ -387,7 +387,7 @@ class GEOM2(GeomCommon):
             (16100, 161, 9986): ['CTETRAFD', self._read_ctetra],
             (16300, 163, 9989): ['CHEXA20F', self._read_chexa],
             (16700, 167, 9981): ['CTRI6FD', self._read_ctria6fd],
-            (16800, 168, 9978): ['CTRIAX3FD', self._read_ctrix3fd],  # same as ctria6fd
+            (16800, 168, 9978): ['CTRIAX3FD', self._read_ctriax3fd],  # same as ctria6fd
             (16500, 165, 9987): ['CPENT15F', self._read_cpenta],
             (5008, 50, 258): ['CNGRET', self._read_cngret],
             (12301, 123, 9921): ['ADAPT card', self._read_adapt],
@@ -2326,7 +2326,8 @@ class GEOM2(GeomCommon):
             60 : self._run_cquad4_msc,
         }
         try:
-            n = self._read_double_card(card_name, card_obj, methods, data, n)
+            n = self._read_double_card(card_name, card_obj, self.add_op2_element,
+                                       methods, data, n)
         except DoubleCardError:
             nx_method = partial(self._run_cquad4_nx, card_obj)
             msc_method = partial(self._run_cquad4_msc, card_obj)
@@ -2341,7 +2342,7 @@ class GEOM2(GeomCommon):
 
         return n
 
-    def _read_double_card(self, card_name: str, card_obj,
+    def _read_double_card(self, card_name: str, card_obj, add_method,
                           methods, data: bytes, n: int) -> int:
         assert isinstance(data, bytes), type(data)
         ndatai = (len(data) - n) // self.factor
@@ -2373,11 +2374,12 @@ class GEOM2(GeomCommon):
                     raise DoubleCardError()
         #else:
         if elements is None:
+            self.show_data(data, types='ifs')
             raise EmptyCardError()
 
         nentries = len(elements)
         for elem in elements:
-            self.add_op2_element(elem)
+            add_method(elem)
         self.card_count[card_name] = nentries
         return n
 
@@ -2645,7 +2647,8 @@ class GEOM2(GeomCommon):
             72 : self._read_cquad8_72,
         }
         try:
-            n = self._read_double_card(card_name, card_obj, methods, data, n)
+            n = self._read_double_card(card_name, card_obj, self.add_op2_element,
+                                       methods, data, n)
         except DoubleCardError:
             raise
             self.log.warning(f'try-except {card_name}')
@@ -3025,7 +3028,8 @@ class GEOM2(GeomCommon):
             56 : self._read_ctria3_56,
         }
         try:
-            n = self._read_double_card(card_name, card_obj, methods, data, n)
+            n = self._read_double_card(card_name, card_obj, self.add_op2_element,
+                                       methods, data, n)
         except DoubleCardError:
             raise
         return n
@@ -3142,7 +3146,8 @@ class GEOM2(GeomCommon):
             56 : self._read_ctria6_current,
         }
         try:
-            n = self._read_double_card(card_name, card_obj, methods, data, n)
+            n = self._read_double_card(card_name, card_obj, self.add_op2_element,
+                                       methods, data, n)
         except DoubleCardError:
             raise
 
@@ -3169,7 +3174,8 @@ class GEOM2(GeomCommon):
             40 : self._read_ctria3fd_40,
         }
         try:
-            n = self._read_double_card(card_name, card_obj, methods, data, n)
+            n = self._read_double_card(card_name, card_obj, self.add_op2_element,
+                                       methods, data, n)
         except DoubleCardError:
             raise
         return n
@@ -3228,7 +3234,24 @@ class GEOM2(GeomCommon):
             n += ntotal
         return n, elements
 
-    def _read_ctrix3fd(self, data: bytes, n: int) -> int:
+    def _read_ctriax3fd(self, data: bytes, n: int) -> int:
+        """
+        Common method for reading CTRIAX3
+        """
+        card_name = 'CTRIAX'
+        card_obj = CTRIAX
+        methods = {
+            32 : self._read_ctriax3fd_32,
+            40 : self._read_ctriax3fd_40,
+        }
+        try:
+            n = self._read_double_card(card_name, card_obj, self.add_op2_element,
+                                       methods, data, n)
+        except DoubleCardError:
+            raise
+        return n
+
+    def _read_ctriax3fd_32(self, card_obj, data: bytes, n: int) -> int:
         """
         Word Name Type Description
         1 EID  I Element identification number
@@ -3239,14 +3262,15 @@ class GEOM2(GeomCommon):
          332, 11, 331, 333, 334, 0, 0, 0)
         """
         s = Struct(self._endian + b'8i')
-        nelements = (len(data) - n) // 32  # 8*4
-        assert (len(data) - n) % 32 == 0
+        ntotal = 32 * self.factor
+        nelements = (len(data) - n) // ntotal  # 8*4
+        assert (len(data) - n) % ntotal == 0
         elements = []
         for unused_i in range(nelements):
-            edata = data[n:n + 32]
+            edata = data[n:n + ntotal]
             out = s.unpack(edata)
             if self.is_debug_file:
-                self.binary_debug.write('  CTRIA6=%s\n' % str(out))
+                self.binary_debug.write('  CTRIAX=%s\n' % str(out))
             (eid, pid, n1, n2, n3, n4, n5, n6) = out
             nids = [n1, n2, n3, n4, n5, n6]
             assert n4 == 0, out
@@ -3254,44 +3278,112 @@ class GEOM2(GeomCommon):
             assert n6 == 0, out
             elem = CTRIAX(eid, pid, nids, theta_mcid=0., comment='')
             elements.append(elem)
-            n += 32
+            n += ntotal
+        return n, elements
 
-        nelements = len(elements)
-        for elem in elements:
-            self.add_op2_element(elem)
-        self.card_count['CTRIAX'] = nelements
-        return n
+    def _read_ctriax3fd_40(self, card_obj, data: bytes, n: int) -> int:
+        """
+        Word Name Type Description
+        1 EID  I Element identification number
+        2 PID  I Property identification number
+        3 G(6) I Grid point identification numbers of connection points
+        ?
+        ?
+
+        ints    = (16800, 168, 9978,
+                   eid    pid    n1     n2     n3     4  5  6  ?   ?
+                   16800, 16801, 16801, 16802, 16803, 0, 0, 0, 0, -1,
+                   16801, 16801, 16801, 16803, 16804, 0, 0, 0, 0, -1)
+        """
+        s = Struct(self._endian + b'10i')
+        ntotal = 40 * self.factor
+        nelements = (len(data) - n) // ntotal  # 8*4
+        assert (len(data) - n) % ntotal == 0
+        elements = []
+        for unused_i in range(nelements):
+            edata = data[n:n + ntotal]
+            out = s.unpack(edata)
+            if self.is_debug_file:
+                self.binary_debug.write('  CTRIAX=%s\n' % str(out))
+            (eid, pid, n1, n2, n3, n4, n5, n6, dunno, minus1) = out
+            nids = [n1, n2, n3, n4, n5, n6]
+            assert n4 == 0, out
+            assert n5 == 0, out
+            assert n6 == 0, out
+            assert dunno == 0, dunno
+            assert minus1 == -1, minus1
+            elem = CTRIAX(eid, pid, nids, theta_mcid=0., comment='')
+            elements.append(elem)
+            n += ntotal
+        return n, elements
 
     def _read_ctria6fd(self, data: bytes, n: int) -> int:
         """
         Common method for reading CTRIA6s
-
         """
         card_name = 'CTRIA6'
         card_obj = CTRIA6
         methods = {
             32 : self._read_ctria6fd_32,
-            #40 : self._read_ctria3fd_40,
+            40 : self._read_ctria6fd_40,
         }
         try:
-            n = self._read_double_card(card_name, card_obj, methods, data, n)
+            n = self._read_double_card(card_name, card_obj, self.add_op2_element,
+                                       methods, data, n)
         except DoubleCardError:
             raise
         return n
 
-    def _read_ctria6fd_32(self, data: bytes, n: int) -> int:
+    def _read_ctria6fd_40(self, card_obj, data: bytes, n: int) -> int:
+        """
+        Word Name Type Description
+        1 EID  I Element identification number
+        2 PID  I Property identification number
+        3 G(6) I Grid point identification numbers of connection points
+        ?
+        ?
+
+        ints    = (16700, 167, 9981,
+                   eid    pid    n1     n2     n3     n4     n5     n6
+                   16700, 16701, 16701, 16702, 16703, 16705, 16706, 16709, 0, -1,
+                   16701, 16701, 16701, 16703, 16704, 16709, 16707, 16708, 0, -1)
+        """
+        ntotal = 40 * self.factor
+        s = Struct(self._endian + b'10i')
+        nelements = (len(data) - n) // ntotal  # 8*4
+        assert (len(data) - n) % ntotal == 0
+        elements = []
+        for unused_i in range(nelements):
+            edata = data[n:n + ntotal]
+            out = s.unpack(edata)
+            if self.is_debug_file:
+                self.binary_debug.write('  CTRIA6=%s\n' % str(out))
+            (eid, pid, n1, n2, n3, n4, n5, n6, dunno, minus1) = out
+            assert dunno == 0, dunno
+            assert minus1 == -1, minus1
+            nids = [n1, n2, n3, n4, n5, n6]
+            #out = (eid, pid, n1, n2, n3, n4, n5, n6, theta, zoffs, t1, t2, t3, 0)
+            elem = CTRIA6(eid, pid, nids,
+                          theta_mcid=0., zoffset=0., tflag=0,
+                          T1=None, T2=None, T3=None, comment='')
+            elements.append(elem)
+            n += ntotal
+        return n, elements
+
+    def _read_ctria6fd_32(self, card_obj, data: bytes, n: int) -> int:
         """
         Word Name Type Description
         1 EID  I Element identification number
         2 PID  I Property identification number
         3 G(6) I Grid point identification numbers of connection points
         """
+        ntotal = 32 * self.factor
         s = Struct(self._endian + b'8i')
-        nelements = (len(data) - n) // 32  # 8*4
-        assert (len(data) - n) % 32 == 0
+        nelements = (len(data) - n) // ntotal  # 8*4
+        assert (len(data) - n) % ntotal == 0
         elements = []
         for unused_i in range(nelements):
-            edata = data[n:n + 32]
+            edata = data[n:n + ntotal]
             out = s.unpack(edata)
             if self.is_debug_file:
                 self.binary_debug.write('  CTRIA6=%s\n' % str(out))
@@ -3302,13 +3394,8 @@ class GEOM2(GeomCommon):
                           theta_mcid=0., zoffset=0., tflag=0,
                           T1=None, T2=None, T3=None, comment='')
             elements.append(elem)
-            n += 32
-
-        nelements = len(elements)
-        for elem in elements:
-            self.add_op2_element(elem)
-        self.card_count['CTRIA6'] = nelements
-        return n
+            n += ntotal
+        return n, elements
 
     def _read_ctria6_current(self, card_obj, data: bytes, n: int) -> int:
         """
@@ -3434,11 +3521,30 @@ class GEOM2(GeomCommon):
 
     def _read_ctriax(self, data: bytes, n: int) -> int:
         """common method for reading CTRIAXs"""
-        n = self._read_dual_card(data, n, self._read_ctriax_8, self._read_ctriax_9,
-                                 'CTRIAX', self.add_op2_element)
+        card_name = 'CTRIAX'
+        card_obj = CTRIAX
+        methods = {
+            32 : self._read_ctriax_8,
+            36 : self._read_ctriax_9,
+            40 : self._read_ctriax_10,
+        }
+        try:
+            n = self._read_double_card(card_name, card_obj, self.add_op2_element,
+                                       methods, data, n)
+        except DoubleCardError:
+            raise
+            self.log.warning(f'try-except {card_name}')
+            #n = self._read_split_card(data, n,
+                                      #self._read_cquad8_current, self._read_cquad8_v2001,
+                                      #card_name, self.add_op2_element)
+        #nelements = self.card_count['CQUAD8']
+        #self.log.debug(f'nCQUAD8 = {nelements}')
+
+        #n = self._read_dual_card(data, n, self._read_ctriax_8, self._read_ctriax_9,
+                                 #'CTRIAX', self.add_op2_element)
         return n
 
-    def _read_ctriax_8(self, data: bytes, n: int) -> Tuple[int, List[CTRIAX]]:
+    def _read_ctriax_8(self, card_obj, data: bytes, n: int) -> Tuple[int, List[CTRIAX]]:
         """(10108, 101, 512)"""
         ntotal = 32  # 9*4
         struc = Struct(self._endian + b'8i')
@@ -3460,7 +3566,7 @@ class GEOM2(GeomCommon):
             n += ntotal
         return n, elems
 
-    def _read_ctriax_9(self, data: bytes, n: int) -> Tuple[int, List[CTRIAX]]:
+    def _read_ctriax_9(self, card_obj, data: bytes, n: int) -> Tuple[int, List[CTRIAX]]:
         """(10108, 101, 512)"""
         ntotal = 36  # 9*4
         struc = Struct(self._endian + b'9i')
@@ -3476,6 +3582,37 @@ class GEOM2(GeomCommon):
             if self.is_debug_file:
                 self.binary_debug.write('  CTRIAX=%s\n' % str(out))
             eid, pid, n1, n2, n3, n4, n5, n6, unused_undef1 = out
+            nids = [n1, n2, n3, n4, n5, n6]
+            elem = CTRIAX(eid, pid, nids, theta_mcid=0., comment='no theta set')
+            elems.append(elem)
+            n += ntotal
+        return n, elems
+
+    def _read_ctriax_10(self, card_obj, data: bytes, n: int) -> Tuple[int, List[CTRIAX]]:
+        r"""(10108, 101, 512)
+
+        C:\MSC.Software\msc_nastran_runs\el705ce.op2
+        data = (16900, 169, 9977,
+        eid    pid    n1     n2     n3     n4     n5     n6     ?   ?
+        16900, 16901, 16901, 16902, 16903, 16905, 16906, 16909, 0, -1,
+        16901, 16901, 16901, 16903, 16904, 16909, 16907, 16908, 0, -1
+        """
+        ntotal = 40  # 10*4
+        struc = Struct(self._endian + b'10i')
+
+        nentries = (len(data) - n) // ntotal
+        assert (len(data) - n) % ntotal == 0
+        assert nentries > 0
+
+        elems = []
+        for unused_i in range(nentries):
+            edata = data[n:n + ntotal]
+            out = struc.unpack(edata)
+            if self.is_debug_file:
+                self.binary_debug.write('  CTRIAX=%s\n' % str(out))
+            eid, pid, n1, n2, n3, n4, n5, n6, dunno, minus1 = out
+            assert dunno == 0, dunno
+            assert minus1 == -1, minus1
             nids = [n1, n2, n3, n4, n5, n6]
             elem = CTRIAX(eid, pid, nids, theta_mcid=0., comment='no theta set')
             elems.append(elem)
@@ -3538,7 +3675,6 @@ class GEOM2(GeomCommon):
             assert entity in ['FEEDGE', 'GRID', 'GMCURV'], f'entity={entity!r}'
             #print(eids)
             i0 = ispliti + 1
-
         self.card_count['GMBNDC'] = nelements
         return len(data)
 

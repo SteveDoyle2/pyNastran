@@ -25,6 +25,7 @@ from pyNastran.op2.tables.geom.geom_common import GeomCommon
 from pyNastran.op2.op2_interface.op2_reader import (
     mapfmt, reshape_bytes_block_size) # reshape_bytes_block,
 from .utils import get_minus1_start_end
+from .geom2 import DoubleCardError
 
 
 class EPT(GeomCommon):
@@ -1501,15 +1502,15 @@ class EPT(GeomCommon):
         self.card_count['PBUSH1D'] = nentries
         return n
 
-    def _read_pbusht(self, data: bytes, n: int) -> int:
-        """reads the PBUSHT"""
-        n, props = self._read_pbusht_nx(data, n)
-        for prop in props:
-            #print(prop)
-            self._add_pbusht_object(prop)
-        return n
+    #def _read_pbusht(self, data: bytes, n: int) -> int:
+        #"""reads the PBUSHT(702, 7, 38)"""
+        #n, props = self._read_pbusht_nx(data, n)
+        #for prop in props:
+            ##print(prop)
+            #self._add_pbusht_object(prop)
+        #return n
 
-    def _read_pbusht_nx(self, data: bytes, n: int) -> int:
+    def _read_pbusht(self, data: bytes, n: int) -> int:
         """
         NX 12 / MSC 2005
         Word Name Type Description
@@ -1527,6 +1528,30 @@ class EPT(GeomCommon):
         14 TGEID    I TABLEDi entry identification number for structural damping
         15 TKNID(6) I TABLEDi entry IDs for force versus deflection
         """
+        card_name = 'PBUSHT'
+        card_obj = PBUSHT
+        methods = {
+            80 : self._read_pbusht_80,
+            100 : self._read_pbusht_100,
+            136 : self._read_pbusht_136,
+        }
+        try:
+            n = self._read_double_card(card_name, card_obj, self._add_pbusht_object,
+                                       methods, data, n)
+        except DoubleCardError:
+            raise
+            self.log.warning(f'try-except {card_name}')
+            #n = self._read_split_card(data, n,
+                                      #self._read_cquad8_current, self._read_cquad8_v2001,
+                                      #card_name, self.add_op2_element)
+        #nelements = self.card_count['CQUAD8']
+        #self.log.debug(f'nCQUAD8 = {nelements}')
+
+        #n = self._read_dual_card(data, n, self._read_ctriax_8, self._read_ctriax_9,
+                                 #'CTRIAX', self.add_op2_element)
+        return n
+
+    def _read_pbusht_nx_old(self, data: bytes, n: int) -> int:
         #self.show_data(data[12:])
         ndata = (len(data) - n) // self.factor
 
@@ -1558,7 +1583,7 @@ class EPT(GeomCommon):
             raise NotImplementedError('You have blank lines in your PBUSHT')
         return n, props
 
-    def _read_pbusht_80(self, data: bytes, n: int) -> int:
+    def _read_pbusht_80(self, card_obj, data: bytes, n: int) -> int:
         """
         Word Name Type Description
         1 PID     I Property identification number
@@ -1597,7 +1622,7 @@ class EPT(GeomCommon):
             n += ntotal
         return n, props
 
-    def _read_pbusht_100(self, data: bytes, n: int) -> int:
+    def _read_pbusht_100(self, card_obj, data: bytes, n: int) -> int:
         props = []
         ntotal = 100 * self.factor
         struct1 = Struct(mapfmt(self._endian + b'25i', self.size))
@@ -1615,6 +1640,79 @@ class EPT(GeomCommon):
             b_tables = [b1, b2, b3, b4, b5, b6]
             ge_tables = [g1, g2, g3, g4, g5, g6]
             kn_tables = [n1, n2, n3, n4, n5, n6]
+            prop = PBUSHT(pid, k_tables, b_tables, ge_tables, kn_tables)
+            props.append(prop)
+            n += ntotal
+        return n, props
+
+    def _read_pbusht_136(self, card_obj, data: bytes, n: int) -> int:
+        r"""not 100%
+
+        1  PID           I Property identification number
+        2  TKID(6)       I TABLEDi entry identification numbers for stiffness
+        8  TBID(6)       I TABLEDi entry identification numbers for viscous damping
+        14 TGEID(6)      I TABLEDi entry identification number for structural damping
+        20 TKNID(6)      I TABLEDi entry IDs for force vs. deflection
+        26 FDC(2)    CHAR4 Force deflection curve rule
+        28 FUSE          I Failure level
+        29 DIR           I Fuse direction
+        30 OPTION(2) CHAR4 Failure mode
+        32 LOWER        RS Lower failure bound
+        33 UPPER        RS Uppler failure bound
+        34 FRATE        RS FACTOR of scales the stiffness
+        35 LRGR          I Controls larg rotation
+        36 UNDEF(4)        none
+
+        # C:\MSC.Software\msc_nastran_runs\mbsh14.op2
+        PBUSHT	1	 K	51	51
+                 B	61	61
+        PBUSHT	7	 K	51	51
+                 B	61	61
+
+        538976288 = '    '
+        ints    = (
+            702, 7, 38,
+            1, (51, 51, 0, 0, 0, 0), (61, 61, 0, 0, 0, 0), (0, 0, 0, 0, 0, 0), 0, 538976288, 538976288, 0, 0, 538976288, 538976288, 0, 0, 925353388, 0, 0, 0, 0, 0,
+            7, (51, 51, 0, 0, 0, 0), (61, 61, 0, 0, 0, 0), (0, 0, 0, 0, 0, 0), 0, 538976288, 538976288, 0, 0, 538976288, 538976288, 0, 0, 925353388, 0, 0, 0, 0, 0)
+        floats  = (
+            702, 7, 38,
+            1, 51, 51, 0.0, 0.0, 0.0, 0.0, 61, 61, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 538976288, 538976288, 0.0, 0.0, 538976288, 538976288, 0.0, 0.0, 1.e-7, 0.0, 0.0, 0.0, 0.0, 0.0,
+            7, 51, 51, 0.0, 0.0, 0.0, 0.0, 61, 61, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 538976288, 538976288, 0.0, 0.0, 538976288, 538976288, 0.0, 0.0, 1.e-7, 0.0, 0.0, 0.0, 0.0, 0.0)
+        """
+        props = []
+        ntotal = 136 * self.factor              #  k  b  g  n  fdc
+        struct1 = Struct(mapfmt(self._endian + b'i 6i 6i 6i 6i 4s  2i i 5i', self.size))
+        nentries = (len(data) - n) // ntotal
+        assert nentries > 0, 'table=%r len=%s' % (self.table_name, len(data) - n)
+        for unused_i in range(nentries):
+            edata = data[n:n+ntotal]
+            out = struct1.unpack(edata)
+            (pid,
+             k1, k2, k3, k4, k5, k6,
+             b1, b2, b3, b4, b5, b6,
+             g1, g2, g3, g4, g5, g6,
+             n1, n2, n3, n4, n5, n6,
+             word1, a, word2, c, *other) = out
+
+
+            k_tables = [ki if ki != 538976288 else 0
+                        for ki in [k1, k2, k3, k4, k5, k6]]
+
+            b_tables = [bi if bi != 538976288 else 0
+                        for bi in [b1, b2, b3, b4, b5, b6]]
+            ge_tables = [gei if gei != 538976288 else 0
+                        for gei in [g1, g2, g3, g4, g5, g6]]
+            kn_tables = [kni if kni != 538976288 else 0
+                        for kni in [n1, n2, n3, n4, n5, n6]]
+            self.log.warning(
+                f'PBUSHT: pid={pid} '
+                f'k={k_tables} '
+                f'b={b_tables} '
+                f'ge={ge_tables} '
+                f'n={kn_tables} ' +
+                'words=' + str([word1, a, word2, c]) +
+                f' other={other}')
+            assert sum(other) == 0, other
             prop = PBUSHT(pid, k_tables, b_tables, ge_tables, kn_tables)
             props.append(prop)
             n += ntotal
