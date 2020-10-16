@@ -8,7 +8,16 @@ from pyNastran.utils.nastran_utils import run_nastran
 
 
 # no files are written if RUN_NASTRAN is False
-RUN_NASTRAN = False
+RUN_NASTRAN = True
+
+# nx 2019
+#NASTRAN_EXE = r'C:\Program Files\Siemens\SimcenterNastran_2019.2\bin\nastran.exe'
+
+# msc 2020
+#NASTRAN_EXE = r'C:\MSC.Software\MSC_Nastran_2020\bin\nastran.exe' #bad
+NASTRAN_EXE = r'C:\MSC.Software\MSC_Nastran_2020\bin\nast20200.exe'
+
+
 
 solutions = (
     'SOL 1',
@@ -72,9 +81,9 @@ solutions = (
     'SOL 200',  # optimization
 )
 def main():
-    nastran_path = r'C:\Program Files\Siemens\SimcenterNastran_2019.2\bin\nastran.exe'
     print(sys.argv)
-    export_dir = sys.argv[1]
+    #export_dir = sys.argv[1]
+    export_dir = r'C:\MSC.Software\msc_nastran_runs'
     print('export_dir = %r' % export_dir)
 
     #folders_file = os.path.abspath('.')
@@ -85,7 +94,7 @@ def main():
     #files2.sort()
 
     max_size = 4.2 # MB
-    dirname = '.'
+    dirname = r'C:\MSC.Software\msc_nastran_docs_2020\tpl'
     files2 = get_files_of_type(dirname, '.bdf', max_size=max_size)
     files2 += get_files_of_type(dirname, '.nas', max_size=max_size)
     files2 += get_files_of_type(dirname, '.dat', max_size=max_size)
@@ -108,10 +117,23 @@ def main():
             continue
         if not RUN_NASTRAN:
             continue
-        keywords = 'scr=yes old=no news=no'
-        run_nastran(fname2, nastran_cmd=nastran_path, keywords=keywords, run=True, run_in_bdf_dir=True)
+        keywords = 'scr=yes old=no news=no notify=no'
+        run_nastran(fname2, nastran_cmd=NASTRAN_EXE, keywords=keywords, run=True, run_in_bdf_dir=True)
+
+def load_lines(fname):
+    encodings = ['latin1', 'cp1252']
+    for encoding in encodings:
+        try:
+            with open(fname, 'r', encoding=encoding) as bdf_file:
+                lines = bdf_file.readlines()
+            break
+        except UnicodeDecodeError:
+            continue
+    return lines
 
 def update_with_post(fname, dirname):
+    #print('-'*40)
+    print('fname =', fname)
     basename = os.path.basename(fname)
     base = os.path.splitext(basename)[0]
     bdf_name2 = os.path.join(dirname, basename)
@@ -120,13 +142,16 @@ def update_with_post(fname, dirname):
     op2_name2 = os.path.join(dirname, base + '.op2')
     log_name2 = os.path.join(dirname, base + '.log')
 
-    with open(fname, 'r') as bdf_file:
-        lines = bdf_file.readlines()
+    lines = load_lines(fname)
+    if len(lines) == 0:
+        return None
 
     post = -1
     found_post = False
     lines2 = None
     for i, line in enumerate(lines):
+        #if i < 50:
+            #print(line.rstrip())
         line_upper = line.upper().split('$')[0].rstrip()
 
         line_upper = line_upper.replace('\t', ' ').strip()
@@ -153,9 +178,9 @@ def update_with_post(fname, dirname):
                 if os.path.exists(log_name2):
                     os.remove(log_name2)
                 return None
-        if line_upper.startswith(('LABEL', 'TITLE', 'SUBTITLE')):
+        if line_upper.startswith(('LABEL', 'TITLE', 'SUBTITLE', 'SUBTI')):
             pass
-        elif 'PRGPOST' in line_upper or 'POSTEXT' in line_upper:
+        elif 'PRGPOST' in line_upper or 'POSTEXT' in line_upper or 'AKMPOST' in line_upper or 'POSTADF' in line_upper:
             pass
         elif 'PARAM' in line_upper and 'POST' in line_upper:
             nlines_extra = 0
@@ -204,22 +229,26 @@ def update_with_post(fname, dirname):
             #print(fname)
             if not found_post:
                 #print('enddata not found post')
-                lines2 = lines[i:] + [f'PARAM,POST,{post}\n', 'ENDDATA\n'] + lines[i:]
+                lines2 = lines[:i] + [f'PARAM,POST,{post}\n', 'ENDDATA\n'] + lines[i:]
             break
         elif 'ENDATA' in line_upper:
             print(fname)
             print('*en_data')
             raise RuntimeError('ENDATA...')
-
+    #print('------------------')
+    #print('i = ', i)
     if lines2 is None:
-        lines2 = lines[i:] + [f'PARAM,POST,{post}\n'] + lines[i:]
+        lines2 = lines[:i] + [f'PARAM,POST,{post}\n'] + lines[i:]
 
     assert lines2 is not None, fname
-
-    if not RUN_NASTRAN:
-        return None
+    #print("bdf_name2 =", bdf_name2)
+    #for line in lines2:
+        #print(line)
     with open(bdf_name2, 'w') as bdf_file:
         bdf_file.writelines(lines2)
+    #sss
+    if not RUN_NASTRAN:
+        return None
     return bdf_name2
 
 if __name__ == '__main__':   # pragma: no cover

@@ -1568,7 +1568,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
 
             param = PARAM(key, [value], comment='')
             self.params[key] = param
-            print(f'{key} ({flag}) = {value!r}')
+            #print(f'{key} ({flag}) = {value!r}')
             #print(param.rstrip())
         return nvalues
 
