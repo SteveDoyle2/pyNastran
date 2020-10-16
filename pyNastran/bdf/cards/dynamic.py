@@ -1057,7 +1057,7 @@ class NLPARM(BaseCard):
     def validate(self):
         # line 1
         assert self.nlparm_id > 0, self.get_stats()
-        assert self.ninc > 0, self.get_stats()
+        assert self.ninc is None or self.ninc >= 0, self.get_stats()  #  is this >0 or >= 0?
         assert self.dt >= 0., self.get_stats()
         assert self.kstep >= -1, self.get_stats()
         assert self.conv in ['UPW', 'PW', 'UP', 'UW', 'U', 'P', 'W', ''], self.get_stats()
@@ -2246,19 +2246,19 @@ class TSTEPNL(BaseCard):
                 self.method, ', '.join(self.allowed_methods))
             raise ValueError(msg)
         assert self.sid > 0, self.get_stats()
-        assert self.ndt > 0, self.get_stats()
+        assert self.ndt > 0, self.get_stats()  # not correct...should be ndt > 0, but has test issues...
         assert self.dt > 0.0, self.get_stats()
         assert self.no >= 1, self.get_stats()
         assert self.method in self.allowed_methods, self.get_stats()
         assert self.kstep is None or self.kstep >= 2, self.get_stats()
 
-        assert self.min_iter >= 0, self.get_stats()
+        assert self.min_iter is None or self.min_iter >= 0, self.get_stats()
         assert self.max_iter > 0, self.get_stats()
         assert self.max_div > 0, self.get_stats()
         assert self.max_qn > 0, self.get_stats()
         assert self.max_ls >= 0, self.get_stats()
         assert self.max_bisect > 0, self.get_stats()
-        assert self.adjust > 0, self.get_stats()
+        assert self.adjust >= 0, self.get_stats()  #  is this >0 or >= 0?
     #def __init__(self, sid, ndt, dt, no, method='ADAPT', kstep=None,
                  #max_iter=10, conv='PW', eps_u=1.e-2, eps_p=1.e-3,
                  #eps_w=1.e-6, max_div=2, max_qn=10, max_ls=2,

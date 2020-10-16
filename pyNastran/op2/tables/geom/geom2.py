@@ -18,7 +18,7 @@ from pyNastran.bdf.cards.elements.shell import (CTRIA3, CQUAD4, CTRIA6,
                                                 CQUAD8, CQUAD,
                                                 CSHEAR)
 from pyNastran.bdf.cards.elements.rods import CROD, CTUBE, CONROD
-from pyNastran.bdf.cards.elements.bars import CBAR, CBEND
+from pyNastran.bdf.cards.elements.bars import CBAR, CBEND, CBEAM3
 from pyNastran.bdf.cards.elements.beam import CBEAM
 from pyNastran.bdf.cards.elements.mass import (CONM1, CONM2, CMASS1, CMASS2,
                                                CMASS3, CMASS4)
@@ -466,7 +466,7 @@ class GEOM2(GeomCommon):
     #def _show_geom2_fake(self, data: bytes, n: int):
         #"""
         #ints    = (1, 2, 1, 2, 2, 2, 1, 2, 11, 12, 16, 21, 25, 2, 3, 28, 29, 34, 41, 45, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
-        #floats  = (1.401298464324817e-45, 2.802596928649634e-45, 1.401298464324817e-45, 2.802596928649634e-45, 2.802596928649634e-45, 2.802596928649634e-45, 1.401298464324817e-45, 2.802596928649634e-45, 1.5414283107572988e-44, 1.6815581571897805e-44, 2.2420775429197073e-44, 2.942726775082116e-44, 3.5032461608120427e-44, 2.802596928649634e-45, 4.203895392974451e-45, 3.923635700109488e-44, 4.0637655465419695e-44, 4.764414778704378e-44, 5.74532370373175e-44, 6.305843089461677e-44, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0)
+        #floats  = (1, 2.802596928649634e-45, 1, 2.802596928649634e-45, 2.802596928649634e-45, 2.802596928649634e-45, 1, 2.802596928649634e-45, 1.5414283107572988e-44, 1.6815581571897805e-44, 2.2420775429197073e-44, 2.942726775082116e-44, 3.5032461608120427e-44, 2.802596928649634e-45, 4.203895392974451e-45, 3.923635700109488e-44, 4.0637655465419695e-44, 4.764414778704378e-44, 5.74532370373175e-44, 6.305843089461677e-44, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0)
         #"""
         #self.show_data(data[n:])
 
@@ -634,7 +634,114 @@ class GEOM2(GeomCommon):
         return n
 
     def _read_cbeam3(self, data: bytes, n: int) -> int:
+        """Common method for reading CBEAM3s"""
+        card_name = 'CBEAM3'
+        card_obj = CBEAM3
+        methods = {
+            104 : self._read_cbeam3_104,
+            108 : self._read_cbeam3_108,
+        }
+        try:
+            n = self._read_double_card(card_name, card_obj, self.add_op2_element,
+                                       methods, data, n)
+        except DoubleCardError:
+            raise
+        return n
+
+    def _read_cbeam3_104(self, card_obj, data: bytes, n: int) -> int:
         """
+        CBEAM3(15418, 154, 610)
+
+        $       eid     pid     ga      gb      gc      g0
+        CBEAM3  1       1       1       2       21      100
+
+                  eid pid ga gb   gc  5  6  7  g0   x2 x3 ?
+        ints    = (1,  1, 1, 2,   21, 0, 0, 0, 100, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                   2,  1, 2, 3,   22, 0, 0, 0, 100, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                   3,  1, 3, 4,   23, 0, 0, 0, 100, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                   4,  1, 4, 5,   24, 0, 0, 0, 100, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                   5,  1, 5, 6,   25, 0, 0, 0, 100, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                   6,  1, 6, 7,   26, 0, 0, 0, 100, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                   7,  1, 1, 8,   31, 0, 0, 0, 100, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                   8,  1, 8, 9,   32, 0, 0, 0, 100, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                   9,  1, 9, 10,  33, 0, 0, 0, 100, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                   10, 1, 10, 11, 34, 0, 0, 0, 100, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                   11, 1, 11, 12, 35, 0, 0, 0, 100, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                   12, 1, 12, 13, 36, 0, 0, 0, 100, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
+
+               eid, pid, ga, gb  gc,  x1  x2  x3
+        CBEAM3, 11,   2,  2,  4, ,   1.0,0.0,0.0
+                    eid pid ga gb, gc  5    6    7    8/x1 9/x2 10/x3
+          ints    = (11, 2, 2, 4, 0,   0,   0,   0,   1.0, 0,   0,   1, 0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0)
+          floats  = (11, 2, 2, 4, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0)
+
+          CBEAM3  11      2201    1       3       2       1001                    +
+          +                                                                       +
+          +                                       101     103     102
+          sa, sb, sc = (101, 103, 102)
+
+                    eid  pid  ga gb, gc  sa   sb   sc    8/x1 9/x2 10/x3
+          ints    = (11, 2201, 1, 3, 2, 101, 103, 102, 1001, 0,   0,   2, 0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0)
+          floats  = (11, 2201, 1, 3, 2, 101, 103, 102, 1001, 0.0, 0.0, 2, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0)
+
+          CBEAM3  13      11      3       4       7        10
+          $       W1A     W2A     W3A     W1B     W2B     W3B     W1C     W2C
+          +       0.0     0.0     1.0     0.0     0.0     1.0     0.0     0.0     +
+          $       W3C
+          +       1.0
+        """
+        #self.show_data(data, types='if')
+        ntotal = 104 * self.factor  # 26*4
+        nelements = (len(data) - n) // ntotal
+        structi = Struct(mapfmt(self._endian + b'8i 3i i 9f 5i', self.size))
+        structf = Struct(mapfmt(self._endian + b'8i 3f i 9f 5i', self.size))
+
+        elements = []
+        for unused_i in range(nelements):
+            datai = data[n:n+ntotal]
+            out = structi.unpack(datai)
+            #self.show_data(datai, types='if')
+            (eid, pid, ga, gb, gc, sa, sb, sc,
+             g0_x1, x2, x3, flag,
+             w1a, w2a, w3a, w1b, w2b, w3b, w1c, w2c, w3c,
+             *other) = out
+            #print([eid, pid], [ga, gb, gc], [sa, sb, sc], [g0_x1, x2, x3, flag],
+                  #[w1a, w2a, w3a], [w1b, w2b, w3b], [w1c, w2c, w3c],
+                  #*other)
+            if flag == 1:
+                (eid, pid, ga, gb, gc, sa, sb, sc,
+                 x1, x2, x3, flag,
+                 w1a, w2a, w3a, w1b, w2b, w3b, w1c, w2c, w3c,
+                 *other) = structf.unpack(datai)
+                x = [x1, x2, x3]
+                g0 = None
+            elif flag == 2:
+                g0 = g0_x1
+                x = None
+            else:
+                raise NotImplementedError(flag)
+            #print(eid, pid, ga, gb, gc, sa, sb, sc, g0, sum(other))
+            #print(other)
+            assert sum(other) == 0, other # self.show_data(datai, types='if')
+
+            nids = [ga, gb, gc]
+            wa = [w1a, w2a, w3a]
+            wb = [w1b, w2b, w3b]
+            wc = [w1c, w2c, w3c]
+            tw = None # TWA TWB TWC
+            s = [sa, sb, sc]
+            elem = CBEAM3(eid, pid, nids, x, g0, wa, wb, wc, tw, s)
+            assert eid > 0, elem.get_stats()
+            assert pid > 0, elem.get_stats()
+            elements.append(elem)
+            n += ntotal
+        #self.show_data(data[n:])
+        return n, elements
+
+    def _read_cbeam3_108(self, card_obj, data: bytes, n: int) -> int:
+        """
+        CBEAM3(15418, 154, 610)
+
         $       eid     pid     ga      gb      gc      g0
         CBEAM3  1       1       1       2       21      100
 
@@ -676,13 +783,26 @@ class GEOM2(GeomCommon):
                     eid  pid ga gb,gc sa   sb   sc   x1  x2  x3    flag [?    ?    ?]  [?    ?    ?]  [?    ?    ?]
           ints    = (13, 11, 3, 4, 7, 0,   0,   0,   10, 0,   0,   2,   0,   0,   1.0, 0,   0,   1.0, 0,   0,   1.0, 0, 0, 0, 0, 0)
           floats  = (13, 11, 3, 4, 7, 0.0, 0.0, 0.0, 10, 0.0, 0.0, 2,   0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0)
-        """
-        ntotal = 104 * self.factor  # 26*4
-        nelements = (len(data) - n) // ntotal
-        structi = Struct(mapfmt(self._endian + b'8i 3i i 9f 5i', self.size))
-        structf = Struct(mapfmt(self._endian + b'8i 3f i 9f 5i', self.size))
 
-        for i in range(nelements):
+                    eid   pid    ga    gb,     gc   sa   sb   sc    x1     x2 x3 flag [?    ?    ?]  [?    ?    ?]  [?    ?    ?]
+        ints    = (2901,  2901,  2901,  2902,  2903, 0,   0,   0,   10.0,    0, 0, 1, 0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,
+                   3901,  2901,  3901,  3903,  3904, 0,   0,   0,   10.0,    0, 0, 1, 0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,
+                   3902,  2901,  3903,  3902,  3905, 0,   0,   0,   10.0,    0, 0, 1, 0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,
+                   4901,  2901,  4901,  4904,  4903, 0,   0,   0,   10.0,    0, 0, 1, 0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,
+                   4902,  2901,  4904,  4906,  4905, 0,   0,   0,   10.0,    0, 0, 1, 0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,
+                   4903,  2901,  4906,  4902,  4907, 0,   0,   0,   10.0,    0, 0, 1, 0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,
+                   12901, 2901, 12901, 12902, 12903, 0,   0,   0,      0, 10.0, 0, 1, 0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0)
+        floats  = (2901, 2901, 2901, 2902, 2903, 0.0, 0.0, 0.0, 10.0, 0.0, 0.0,    1, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+                   3901, 2901, 3901, 3903, 3904, 0.0, 0.0, 0.0, 10.0, 0.0, 0.0,    1, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 5.467866607795436e-42, 2901, 3903, 5.467866607795436e-42, 5.4720705031884107e-42, 0.0, 0.0, 0.0, 10.0, 0.0, 0.0, 1, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 6.867763773655928e-42, 2901, 6.867763773655928e-42, 6.871967669048903e-42, 6.870566370584578e-42, 0.0, 0.0, 0.0, 10.0, 0.0, 0.0, 1, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 6.869165072120253e-42, 2901, 6.871967669048903e-42, 6.874770265977553e-42, 6.873368967513228e-42, 0.0, 0.0, 0.0, 10.0, 0.0, 0.0, 1, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 6.870566370584578e-42, 2901, 6.874770265977553e-42, 6.869165072120253e-42, 6.876171564441877e-42, 0.0, 0.0, 0.0, 10.0, 0.0, 0.0, 1, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.8078151488254465e-41, 2901, 1.8078151488254465e-41, 1.807955278671879e-41, 1.8080954085183115e-41, 0.0, 0.0, 0.0, 0.0, 10.0, 0.0, 1, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0)
+        """
+        #self.show_data(data, types='if')
+        ntotal = 108 * self.factor  # 26*4
+        nelements = (len(data) - n) // ntotal
+        structi = Struct(mapfmt(self._endian + b'8i 3i i 9f 5i i', self.size))
+        structf = Struct(mapfmt(self._endian + b'8i 3f i 9f 5i i', self.size))
+
+        elements = []
+        for unused_i in range(nelements):
             datai = data[n:n+ntotal]
             out = structi.unpack(datai)
             #self.show_data(datai, types='if')
@@ -715,11 +835,13 @@ class GEOM2(GeomCommon):
             wc = [w1c, w2c, w3c]
             tw = None # TWA TWB TWC
             s = [sa, sb, sc]
-            self.add_cbeam3(eid, pid, nids, x, g0, wa, wb, wc, tw, s)
+            elem = CBEAM3(eid, pid, nids, x, g0, wa, wb, wc, tw, s)
+            assert eid > 0, elem.get_stats()
+            assert pid > 0, elem.get_stats()
+            elements.append(elem)
             n += ntotal
         #self.show_data(data[n:])
-        self.card_count['CBEAM3'] = nelements
-        return n
+        return n, elements
 
     def _read_cbeam(self, data: bytes, n: int) -> int:
         """
@@ -3017,10 +3139,7 @@ class GEOM2(GeomCommon):
 # CTTRIA - 93
 
     def _read_ctria3(self, data: bytes, n: int) -> int:
-        """
-        Common method for reading CTRIA3s
-
-        """
+        """Common method for reading CTRIA3s"""
         card_name = 'CTRIA3'
         card_obj = CTRIA3
         methods = {
@@ -3779,7 +3898,7 @@ class GEOM2(GeomCommon):
         4, 1, # N(c), f, KZij...floats...)
 
         (6.05360936588321e-43,
-        1.401298464324817e-45, 4.203895392974451e-45,
+        1, 4.203895392974451e-45,
         2.802596928649634e-45, 4.203895392974451e-45,
         4.203895392974451e-45, 4.203895392974451e-45,
         5.605193857299268e-45, 4.203895392974451e-45,
@@ -3792,7 +3911,7 @@ class GEOM2(GeomCommon):
         nan,
         1.401298464324817e-44, 1.5414283107572988e-44, 4.203895392974451e-45, 1.5414283107572988e-44, 5.605193857299268e-45, 1.5414283107572988e-44, 7.006492321624085e-45, 1.5414283107572988e-44, 8.407790785948902e-45,
         nan,
-        5.605193857299268e-45, 1.401298464324817e-45,
+        5.605193857299268e-45, 1,
         8.71720021677902e-06, 1.3361000128497835e-06, 1.2778000382240862e-05, 6.272000064200256e-06, 1.6251000488409773e-05, 1.0492000001249835e-05, 2.0478000806178898e-05, 1.562999932502862e-05, 2.428500010864809e-05, 2.0403000235091895e-05,
         3.086099968641065e-05, 6.272000064200256e-06, 3.229700087103993e-05, 1.0492000001249835e-05, 3.352899875608273e-05, 1.562999932502862e-05, 3.502099934848957e-05,
         2.025700086960569e-05, 3.578500036383048e-05, 2.7731999580282718e-05, 1.572600012877956e-05, 4.825499854632653e-05, 3.762800042750314e-05, 7.328399806283414e-05,

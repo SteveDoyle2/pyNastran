@@ -1,7 +1,7 @@
 from __future__ import annotations
 from struct import Struct
 from itertools import count
-from typing import Tuple, TYPE_CHECKING
+from typing import Tuple, Any, TYPE_CHECKING
 
 import numpy as np
 import scipy  # type: ignore
@@ -14,8 +14,400 @@ from pyNastran.op2.op2_interface.utils import reshape_bytes_block
 if TYPE_CHECKING:
     from pyNastran.op2.op2 import OP2
 
+def read_matpool_dmig_4(op2: OP2, data: bytes,
+                        unused_utable_name: str, debug: bool=False):
+    #return read_matpool_dmig(op2, data, utable_name, debug=debug)
+    """
+    ncols_gset is needed for form=9
+    list of header values:
+      4:5   matrix name
+      6     placeholder
+      7     matrix shape (1=square, 2 or 9=rectangular, 6=symmetric)
+      8     input type flag (1=single, 2=double, 3=complex single,
+                             4=complex double)
+      9     output type flag (0=precision set by system cell,
+                              1=single, 2=double, 3=complex single,
+                              4=complex double)
+     10     complex flag (0=real/imaginary, >0=magnitude/phase)
+     11     placeholder
+     12     number of columns in the G set
+            (only necessary for matrix shape 9)
+    """
+    #aaa
+    log = op2.log
+    log.debug('================================================')
+    #matrix_name=b'B0', junk1=0, matrix_shape=6, tin=2, tout=2, is_phase=0, junk2=0, ncols_gset=0
+
+    #ints    = (3, 1, 4, 1, 1717986918, 1072064102, -1, -1, -1, -1,
+    #           540029250, 538976288, 0, 6, 1, 1, 0, 0, 0, 10402, 1, 10402, 3, -1717986918, 1071225241, -1, -1, -1, -1,
+    #           540029762, 538976288, 0, 6, 1, 1, 0, 0, 0, 30301, 1, 30301, 3, 0, 1071644672, -1, -1, -1, -1)
+    #floats  = (3, 1, 4, 1, 2.7200830220753216e+23, 1.7999999523162842, nan, nan, nan, nan,
+    #           1.4924077914682395e-19, 1.3563156426940112e-19, 0.0, 6, 1, 1, 0.0, 0.0, 0.0, 10402, 1, 10402, 3, -1.5881868392106856e-23, 1.6999999284744263, nan, nan, nan, nan,
+    #           1.4924739659172437e-19, 1.3563156426940112e-19, 0.0, 6, 1, 1, 0.0, 0.0, 0.0, 30301, 1, 30301, 3, 0.0, 1.75, nan, nan, nan, nan)
+    #doubles (float64) = (2.1219957924e-314, 2.121995793e-314, 0.7, nan, nan, 6.013470018394104e-154, 1.2731974746e-313, 2.1219957915e-314, 0.0, 2.2073000217621e-310, 2.20730002176213e-310, -2.3534379293677296e-185, nan, nan, 1.208269179683613e-153, 2.66289668e-315, 2.121995794e-314, 5e-324, 0.0, 2.1220107616e-314, 6.3660023436e-314, 0.5, nan, nan)
+
+    #size = op2.size
+    factor = op2.factor
+    endian = op2._endian
+    header_fmt = endian + b'8s 7i'
+    #idtype = 'int32'
+
+    #nheader = 48 * factor
+    #header = unpack(header_fmt, data[:nheader]) # 48=4*12
+    #assert header[:3] == (114, 1, 120), 'header[:3]=%s header=%s' % (header[:3], header)
+
+    # 1 NAME(2) CHAR4
+    # 3 UNDEF none
+    # 4 MATFORM  I Matrix Form
+    # 5 MATRIX T I
+    # MATRIX T=1
+    # 6 MATTYPE I Matrix Type, repeat of previous word
+    # 7 UNDEF(2 ) none
+    # 9 MATCOLS I Matrix Columns
+    # 10 GJ I
+    # 11 CJ I
+    # 12 GI I
+    # 13 CI I
+    # 14 VRS RS
+    #matrix_name, junk1, matrix_shape, tin, tout, is_phase, junk2, ncols_gset = header[3:]
+    #if factor == 2:
+        #matrix_name = reshape_bytes_block(matrix_name)
+    #matrix_name = matrix_name.strip()
+    #self.log.debug('matrix_name=%s, junk1=%s, matrix_shape=%s, tin=%s, tout=%s, '
+                   #'is_phase=%s, junk2=%s, ncols_gset=%s' % (
+                       #matrix_name, junk1, matrix_shape, tin, tout,
+                       #is_phase, junk2, ncols_gset))
+    #self.show_data(data[48*factor:], types='ifsd')
+
+    #is_complex = False
+    #if tin > 2 or tout > 2:
+        #is_complex = True
+        #assert is_phase == 0, 'is_phase=%s' % is_phase
+        #imags = []
+
+    #if tout == 1:
+        #dtype = 'float32'
+        #fdtype = op2.fdtype
+    #elif tout == 2:
+        #dtype = 'float64'
+        #fdtype = op2.double_dtype
+    #elif tout == 3:
+        #dtype = 'complex64'
+        #fdtype = op2.fdtype
+    #elif tout == 4:
+        #dtype = 'complex128'
+        #fdtype = op2.double_dtype
+    #else:
+        #dtype = '???'
+        #msg = ('matrix_name=%s, junk1=%s, matrix_shape=%s, tin=%s, tout=%s, '
+               #'is_phase=%s, junk2=%s, ncols_gset=%s' % (
+                   #matrix_name, junk1, matrix_shape, tin, tout,
+                   #is_phase, junk2, ncols_gset))
+        #self.log.warning(msg)
+        #raise RuntimeError(msg)
+
+    #is_symmetric = matrix_shape == 6
+    #is_phase_flag = is_phase > 0
+
+    n = 12 * factor
+    datai = data[n:]
+    ints = np.frombuffer(datai, dtype=op2.idtype8).copy()
+    #print(ints.tolist())
+
+    # find the first index with ()-1,-1)
+    iminus1 = np.where(ints == -1)[0]
+    #istart, istop, kstops = _find_dmig_start_stop(datai, iminus1, header_fmt, self.size, self.log)
+    size = 4
+    istarts, istops, outs, kstarts, kstops = find_all_dmigs_start_stop(
+        datai, header_fmt, size, iminus1,
+        debug=debug)
+    del size
+
+    ioffset = 9
+    # istop : the end of the matrix(s)
+    # istart : the start of the matrix(s)
+
+    # kstart : the start of the columns
+    # kstop  : the end of the columns
+    assert len(kstarts) > 0, kstarts
+    log.info(f'  outs = {outs}')
+    log.info(f'  istarts = {istarts}')
+    log.info(f'  istops  = {istops}')
+    log.info(f'  kstarts = {kstarts}')
+    log.info(f'  kstops  = {kstops}')
+    nmatrices = len(outs)
+    for i, istart, istop, out, kstart, kstop in zip(count(), istarts, istops, outs, kstarts, kstops):
+        # istop : the end of the matrix(s)
+        # istart : the start of the matrix(s)
+        #
+        # kstart : the start of the columns
+        # kstop  : the end of the columns
+        log.info(f'-------------------------------')
+        log.debug(f'n={n} istart={istart} istopi={istop} kstart={kstart} kstop={kstop}')
+        kstart0 = kstart[0]
+        kstop0 = kstop[0]
+
+        #datai = data[n+istart*size:n+istop*size]
+        #op2.show_data(datai, types='ifsd')
+
+        datak = data[n+kstart0*4:n+kstop0*4]
+        #op2.show_data(datak, types='ifqd')
+
+        #datak = data[n+kstart0*size+4:n+kstop0*size+4]
+        #op2.show_data(datak, types='ifqd')
+
+        matrix_name, junk1, matrix_shape, tin, tout, is_phase, junk2, ncols_gset = out # [3:]
+        matrix_name = matrix_name.strip()
+        matrix_name_str = matrix_name.decode('latin1')
+        #self.show_data(data[48*factor:], types='ifsd')
+
+        is_complex = False
+        if tin > 2 or tout > 2:
+            #is_complex = True
+            assert is_phase == 0, f'is_phase={is_phase}'
+            #imags = []
+
+        #if size == 8 and tin == 1:
+            #tin = 2
+        #if size == 8 and tout == 1:
+            #tout = 2
+        out_dtype, out_fdtype = get_dtype_fdtype_from_tout(op2, tout)
+        in_dtype, in_fdtype = get_dtype_fdtype_from_tout(op2, tin)
+        dtype, fdtype = in_dtype, in_fdtype
+
+        is_symmetric = matrix_shape == 6
+        is_phase_flag = is_phase > 0
+        log.info(f'matrix_name={matrix_name} junk1={junk1} matrix_shape={matrix_shape} '
+                 f'tin={tin} ({in_dtype} {in_fdtype}) tout={tout} ({out_dtype} {out_fdtype}) \n    '
+                 f'is_phase={is_phase_flag} junk2={junk2} ncols_gset={ncols_gset}')
+
+        #if self.size == 4:
+            #if tout == 1:  # float32
+                #nvalues = 3
+            #elif tout == 2:  # float64
+                #nvalues = 4
+            #elif tout == 3:  # complex64
+                #nvalues = 4
+            #elif tout == 4:  # complex128
+                #nvalues = 5
+            #else:
+                #raise NotImplementedError(tout)
+
+        #----------------------------------------
+        #print(kstart, kstop)
+        #kstart = np.array(kstart
+        kstop = np.array(kstop)
+        kstart = np.hstack([ioffset, kstop[:-1] + 2])
+        #self.show_data(data[kstart*4:kstop*4])
+        #kfirst = ioffset
+        #klast = kstop[-1]
+        log.info(f'kstart = {kstart}')
+        log.info(f'kstop  = {kstop}')
+        #----------------------------------------
+        log.info('casting floats')
+        #nheader = ioffset * 4
+        #nend = istop * self.size
+        #floats = get_floats(datai[nheader:nend], fdtype, op2, tout, self.size)
+
+        assert tout in [1, 2, 3, 4]
+        #print(floats.tolist())
+        #print(ints[kfirst:klast].tolist())
+        #print(floats)
+        #----------------------------------------
+        log.info(f'getting col (nid,dof); kstart+1={kstart+1}')
+
+        #C:\MSC.Software\simcenter_nastran_2019.2\tpl_post2\elsum15.op2
+        # ints    = ('MATK    ', 0,   6, 2, 2, 0,   0,   0,
+        #               10000, 3, 10000, 3, 0,   10.9, 10001, 3, 0  , -10.9, -1, -1,
+        #               10001, 3, 10001, 3, 0, 10.9, -1, -1, -1, -1,
+        #            'MATLOAD ', 0, 9, 1, 1, 0, 0, 0)
+        # floats  = ('MATK    ', 0.0, 6, 2, 2, 0.0, 0.0, 0.0,
+        #               10000, 3, 10000, 3, 0.0, 10.9, 10001, 3, 0.0, -10.9, nan, nan,
+        #               10001, 3, 10001, 3, 0.0, 10.9, nan, nan, nan, nan,
+        #             'MATLOAD ', 0.0, 9, 1, 1, 0.0, 0.0, 0.0)
+
+        col_nids_short = ints[kstart]
+        assert col_nids_short.min() > 0, col_nids_short.tolist()
+
+        col_dofs_short = ints[kstart+1]
+        ucol_dofs = np.unique(col_dofs_short)
+        log.debug(f'  col_nids_short = {col_nids_short}; {ints.dtype}')
+        log.debug(f'  col_dofs = {ucol_dofs}')
+        for udofi in ucol_dofs:
+            if udofi not in [0, 1, 2, 3, 4, 5, 6]:
+                datak = data[n+kstart0*4:n+kstop0*4]
+                op2.show_data(data[n:n+kstart0*4], types='ifs')
+                op2.show_data(datak, types='if')
+                #else:
+                    #op2.show_data(data[n:n+kstart0*4], types='ifsqd')
+                    #op2.show_data(datak, types='ifqd')
+                print(ints.tolist())
+                msg = 'udofi=%s is invalid; must be in [0, 1, 2, 3, 4, 5, 6]; dofs=%s' % (
+                    udofi, np.asarray(ucol_dofs, dtype='int32').tolist())
+                raise ValueError(msg)
+
+        #nj2 = len(istart)  ## TODO: why is this wrong???
+        # -------------------------------------------------
+        log.info(f'extracting rows')
+        row_nids = []
+        row_dofs = []
+        col_nids = []
+        col_dofs = []
+        reals = []
+        imags = []
+        log.debug(f'  dtype={dtype} fdtype={fdtype}')
+        log.debug(f'  istart = {istart}')
+        log.debug(f'  istop = {istop}')
+        log.debug(f'  kstart = {kstart}')
+        log.debug(f'  kstop = {kstop}')
+
+        for col_nidi, col_dofi, istarti, istopi in zip(
+                col_nids_short, col_dofs_short, kstart, kstop):
+
+            nstart2 = istarti * 4
+            nend_float2 = istopi * 4
+            #nend_int2 = istopi * 4
+
+            assert nend_float2 > nstart2
+            log.debug(f'  nstart2={nstart2} nend_float2={nend_float2}')
+
+            #ints2 = np.frombuffer(datai[istarti*4:(istopi-2)*4], dtype=op2.idtype8).copy()
+            #print(f'ints test = {ints2}')
+            log.debug(f'  nid={col_nidi} dof={col_dofi} istarti={istarti} istopi={istopi}')
+            ## TODO: preallocate arrays
+            imag = None
+            # The float32/complex64 blocks are really simple
+            # because we can just use the data is from the ints block.
+            # We calculate istart/istop and directly access the float data.
+            #
+            # The float64/complex128 blocks are more complicated.
+            # It's easier to just use istart/istop to calculate datai
+            # case that, and then slice it.
+            #
+            # In all cases, we use istart/istop to calculate row/col nid/dof
+            # because they are always int32.  Only the real/imag types change.
+            #print(datai[nstart2:nend2])
+            #self.show_data(datai[nstart2:nend2], types='ifd')
+            #print('fdtype =', fdtype)
+            #nints = len(ints2)
+            #ints2 = ints2.reshape(nints//nvalues, nvalues)
+
+            # irow brings us to the (grid, dof)
+            #print(size, dtype)
+            #  the +2 on nstart2 is for the grid,comp offset
+
+            # nstart2: The start of the (g,c) data
+            #          (including the matrix and the code)
+            #          thus we add 2 to get to the (g,c)
+            #nstart2 += 9 * 4
+            assert nend_float2 > nstart2
+
+            #print(nstart2, nend_int2, nend_float2)
+            dataii = datai[nstart2:nend_float2]
+            ints2 = np.frombuffer(dataii, dtype='int32').copy()
+            size = 4
+            floats = get_floats(dataii, fdtype, op2, tout, size)
+            del size
+            #op2.show_data(datai, types='ifs', endian=None, force=False)
+
+            nints = len(ints2)
+
+            #ints2 = ints2[:nints//3*3]
+            #print('ints2 =', ints2, nints)
+            #print('floats =', floats, nints)
+            if dtype == 'float32':
+                # [int, int, float]  -> get float
+                real = floats[4::3]
+                #print('real =', real)
+
+                # [int, x, x
+                #  int, x, x] -> get int
+                irow = np.arange(2, nints, step=3, dtype='int32')
+            elif dtype == 'float64':
+                # [long, double]  -> get double
+                real = floats[1::2]
+
+                # [int, x, x, x
+                #  int, x, x, x] -> get int
+                irow = np.arange(2, nints, step=4, dtype='int32')
+            else:
+                raise RuntimeError((size, dtype))
+
+            log.debug(f'ints2 = {ints2}')
+            log.debug(f'real = {real}')
+            log.debug(f'irow = {irow}')
+            if len(irow) == 0:
+                print(ints2)
+                msg = f'irow={irow} nints={nints}'
+                raise RuntimeError(msg)
+            assert len(irow) > 0, irow
+            assert len(real) > 0, real
+            assert len(irow) == len(real), len(irow)
+
+            # the row index; [1, 2, ..., 43]
+            row_nid = ints2[irow]
+
+            # the dof; [0, 0, ..., 0.]
+            row_dof = ints2[irow + 1]
+            log.debug(f'row nid,dof = =({row_nid}, {row_dof})')
+            log.debug(f'row_nid = {row_nid}')
+            log.debug(f'row_dof = {row_dof}')
+            urow_dof = np.unique(row_dof)
+            log.debug(f'urow_dof = {urow_dof}')
+            for udofi in urow_dof:
+                if udofi not in [0, 1, 2, 3, 4, 5, 6]:
+                    msg = 'udofi=%s is invalid; must be in [0, 1, 2, 3, 4, 5, 6]; dofs=%s' % (
+                        udofi, np.asarray(urow_dof, dtype='int32').tolist())
+                    raise ValueError(msg)
+            ni = len(irow)
+            log.debug(f'real = {real}')
+            col_nid = np.ones(ni, dtype='int32') * col_nidi
+            col_dof = np.ones(ni, dtype='int32') * col_dofi
+
+            row_nids.append(row_nid)
+            row_dofs.append(row_dof)
+            col_nids.append(col_nid)
+            col_dofs.append(col_dof)
+            reals.append(real)
+            imags.append(imag)
+
+            row_nids_array = np.hstack(row_nids)
+            row_dofs_array = np.hstack(row_dofs)
+
+            col_nids_array = np.hstack(col_nids)
+            col_dofs_array = np.hstack(col_dofs)
+            real_array = np.hstack(reals)
+            print(real_array)
+        ioffset = kstop[-1] + 4
+
+        if is_complex:
+            complex_array = np.hstack(imags)
+            assert len(real_array) == len(complex_array)
+            real_imag_array = real_array + 1.j * complex_array
+        else:
+            real_imag_array = real_array
+
+        #print('matrix_name_str =', matrix_name_str)
+        #print('col_nids_array =', col_nids_array)
+        #print('col_dofs_array =', col_dofs_array)
+        #print('row_nids_array =', row_nids_array)
+        #print('row_dofs_array =', row_dofs_array)
+        #print('real_imag_array =', real_imag_array)
+        m = _cast_matrix_matpool(
+            matrix_name_str, real_imag_array,
+            col_nids_array, col_dofs_array,
+            row_nids_array, row_dofs_array,
+            matrix_shape, dtype, is_symmetric, log,
+            apply_symmetry=op2.apply_symmetry)
+        str(m)
+        op2.matrices[matrix_name_str] = m
+
+        if nmatrices > 1:
+            log.warning('breaking...')
+        #break
+
 def read_matpool_dmig(op2: OP2, data: bytes,
-                      utable_name: str, debug: bool=False):
+                      unused_utable_name: str, debug: bool=False):  # pragma: no cover
     """
     ncols_gset is needed for form=9
     list of header values:
@@ -49,9 +441,9 @@ def read_matpool_dmig(op2: OP2, data: bytes,
     endian = op2._endian
     if size == 4:
         header_fmt = endian + b'8s 7i'
-        idtype = 'int32'
+        #idtype = 'int32'
     else:
-        idtype = 'int64'
+        #idtype = 'int64'
         header_fmt = endian + b'16s 7q'
 
     #nheader = 48 * factor
@@ -155,7 +547,6 @@ def read_matpool_dmig(op2: OP2, data: bytes,
 
         #datak = data[n+kstart0*size+4:n+kstop0*size+4]
         #op2.show_data(datak, types='ifqd')
-        #aaa
 
         matrix_name, junk1, matrix_shape, tin, tout, is_phase, junk2, ncols_gset = out # [3:]
         if size == 8:
@@ -307,7 +698,7 @@ def read_matpool_dmig(op2: OP2, data: bytes,
                 dataii = datai[nstart2:nend_float2]
                 ints2 = np.frombuffer(dataii, dtype='int32').copy()
                 floats = get_floats(dataii, fdtype, op2, tout, size)
-                #self.show_data(datai, types='ifs', endian=None, force=False)
+                #op2.show_data(datai, types='ifs', endian=None, force=False)
 
                 nints = len(ints2)
 
@@ -334,9 +725,12 @@ def read_matpool_dmig(op2: OP2, data: bytes,
             else:
                 assert nend_float2 - nstart2 > 1, nend_float2 - nstart2
                 dataii = datai[nstart2:nend_float2]
+                op2.show_data(datai, types='ifsqd', endian=None, force=False)
                 ints2 = np.frombuffer(dataii, dtype='int64').copy()
-                floats = np.frombuffer(dataii, dtype='float64').copy()
-                #print(floats)
+                floats = np.frombuffer(dataii, dtype='float32').copy()
+                #doubles = np.frombuffer(dataii, dtype='float64').copy()
+                #print('floats', floats)
+                #print('doubles', doubles)
                 nints = len(ints2)
                 if dtype == 'float32':
                     #0   1   2     3   4    5
@@ -347,9 +741,9 @@ def read_matpool_dmig(op2: OP2, data: bytes,
                     irow = np.arange(2, nints, step=3, dtype='int64')
                     #real = floats[irow + 4]  # nope...
                     #real = floats[irow + 2]  # ???
-                    real = floats[2::3]
+                    real = floats[3::3]
                     #print(real_old, real)
-                    #print(real)
+                    print(real, real.dtype)
                     #sss
                 #elif dtype == 'float64':
                     #print(ints)
@@ -451,6 +845,393 @@ def read_matpool_dmig(op2: OP2, data: bytes,
             col_nids_array = np.hstack(col_nids)
             col_dofs_array = np.hstack(col_dofs)
             real_array = np.hstack(reals)
+            print(real_array)
+        ioffset = kstop[-1] + 4
+
+        if is_complex:
+            complex_array = np.hstack(imags)
+            assert len(real_array) == len(complex_array)
+            real_imag_array = real_array + 1.j * complex_array
+        else:
+            real_imag_array = real_array
+
+        #print('matrix_name_str =', matrix_name_str)
+        #print('col_nids_array =', col_nids_array)
+        #print('col_dofs_array =', col_dofs_array)
+        #print('row_nids_array =', row_nids_array)
+        #print('row_dofs_array =', row_dofs_array)
+        #print('real_imag_array =', real_imag_array)
+        m = _cast_matrix_matpool(
+            matrix_name_str, real_imag_array,
+            col_nids_array, col_dofs_array,
+            row_nids_array, row_dofs_array,
+            matrix_shape, dtype, is_symmetric, log,
+            apply_symmetry=op2.apply_symmetry)
+        str(m)
+        op2.matrices[matrix_name_str] = m
+
+        if nmatrices > 1:
+            log.warning('breaking...')
+        #break
+    return
+
+def read_matpool_dmig_8(op2: OP2, data: bytes,
+                        unused_utable_name: str, debug: bool=False):
+    """
+    ncols_gset is needed for form=9
+    list of header values:
+      4:5   matrix name
+      6     placeholder
+      7     matrix shape (1=square, 2 or 9=rectangular, 6=symmetric)
+      8     input type flag (1=single, 2=double, 3=complex single,
+                             4=complex double)
+      9     output type flag (0=precision set by system cell,
+                              1=single, 2=double, 3=complex single,
+                              4=complex double)
+     10     complex flag (0=real/imaginary, >0=magnitude/phase)
+     11     placeholder
+     12     number of columns in the G set
+            (only necessary for matrix shape 9)
+    """
+    #aaa
+    log = op2.log
+    log.debug('================================================')
+    #matrix_name=b'B0', junk1=0, matrix_shape=6, tin=2, tout=2, is_phase=0, junk2=0, ncols_gset=0
+
+    #ints    = (3, 1, 4, 1, 1717986918, 1072064102, -1, -1, -1, -1,
+    #           540029250, 538976288, 0, 6, 1, 1, 0, 0, 0, 10402, 1, 10402, 3, -1717986918, 1071225241, -1, -1, -1, -1,
+    #           540029762, 538976288, 0, 6, 1, 1, 0, 0, 0, 30301, 1, 30301, 3, 0, 1071644672, -1, -1, -1, -1)
+    #floats  = (3, 1, 4, 1, 2.7200830220753216e+23, 1.7999999523162842, nan, nan, nan, nan,
+    #           1.4924077914682395e-19, 1.3563156426940112e-19, 0.0, 6, 1, 1, 0.0, 0.0, 0.0, 10402, 1, 10402, 3, -1.5881868392106856e-23, 1.6999999284744263, nan, nan, nan, nan,
+    #           1.4924739659172437e-19, 1.3563156426940112e-19, 0.0, 6, 1, 1, 0.0, 0.0, 0.0, 30301, 1, 30301, 3, 0.0, 1.75, nan, nan, nan, nan)
+    #doubles (float64) = (2.1219957924e-314, 2.121995793e-314, 0.7, nan, nan, 6.013470018394104e-154, 1.2731974746e-313, 2.1219957915e-314, 0.0, 2.2073000217621e-310, 2.20730002176213e-310, -2.3534379293677296e-185, nan, nan, 1.208269179683613e-153, 2.66289668e-315, 2.121995794e-314, 5e-324, 0.0, 2.1220107616e-314, 6.3660023436e-314, 0.5, nan, nan)
+
+    factor = op2.factor
+    endian = op2._endian
+    #idtype = 'int64'
+    header_fmt = endian + b'16s 7q'
+
+    #nheader = 48 * factor
+    #header = unpack(header_fmt, data[:nheader]) # 48=4*12
+    #assert header[:3] == (114, 1, 120), 'header[:3]=%s header=%s' % (header[:3], header)
+
+    # 1 NAME(2) CHAR4
+    # 3 UNDEF none
+    # 4 MATFORM  I Matrix Form
+    # 5 MATRIX T I
+    # MATRIX T=1
+    # 6 MATTYPE I Matrix Type, repeat of previous word
+    # 7 UNDEF(2 ) none
+    # 9 MATCOLS I Matrix Columns
+    # 10 GJ I
+    # 11 CJ I
+    # 12 GI I
+    # 13 CI I
+    # 14 VRS RS
+    #matrix_name, junk1, matrix_shape, tin, tout, is_phase, junk2, ncols_gset = header[3:]
+    #if factor == 2:
+        #matrix_name = reshape_bytes_block(matrix_name)
+    #matrix_name = matrix_name.strip()
+    #self.log.debug('matrix_name=%s, junk1=%s, matrix_shape=%s, tin=%s, tout=%s, '
+                   #'is_phase=%s, junk2=%s, ncols_gset=%s' % (
+                       #matrix_name, junk1, matrix_shape, tin, tout,
+                       #is_phase, junk2, ncols_gset))
+    #self.show_data(data[48*factor:], types='ifsd')
+
+    #is_complex = False
+    #if tin > 2 or tout > 2:
+        #is_complex = True
+        #assert is_phase == 0, 'is_phase=%s' % is_phase
+        #imags = []
+
+    #if tout == 1:
+        #dtype = 'float32'
+        #fdtype = op2.fdtype
+    #elif tout == 2:
+        #dtype = 'float64'
+        #fdtype = op2.double_dtype
+    #elif tout == 3:
+        #dtype = 'complex64'
+        #fdtype = op2.fdtype
+    #elif tout == 4:
+        #dtype = 'complex128'
+        #fdtype = op2.double_dtype
+    #else:
+        #dtype = '???'
+        #msg = ('matrix_name=%s, junk1=%s, matrix_shape=%s, tin=%s, tout=%s, '
+               #'is_phase=%s, junk2=%s, ncols_gset=%s' % (
+                   #matrix_name, junk1, matrix_shape, tin, tout,
+                   #is_phase, junk2, ncols_gset))
+        #self.log.warning(msg)
+        #raise RuntimeError(msg)
+
+    #is_symmetric = matrix_shape == 6
+    #is_phase_flag = is_phase > 0
+
+    n = 12 * factor
+    datai = data[n:]
+    ints = np.frombuffer(datai, dtype=op2.idtype8).copy()
+    #print(ints.tolist())
+
+    # find the first index with ()-1,-1)
+    iminus1 = np.where(ints == -1)[0]
+    #istart, istop, kstops = _find_dmig_start_stop(datai, iminus1, header_fmt, self.size, self.log)
+    size = 8
+    istarts, istops, outs, kstarts, kstops = find_all_dmigs_start_stop(
+        datai, header_fmt, size, iminus1,
+        debug=debug)
+
+    ioffset = 9
+    # istop : the end of the matrix(s)
+    # istart : the start of the matrix(s)
+
+    # kstart : the start of the columns
+    # kstop  : the end of the columns
+    assert len(kstarts) > 0, kstarts
+    log.info(f'  outs = {outs}')
+    log.info(f'  istarts = {istarts}')
+    log.info(f'  istops  = {istops}')
+    log.info(f'  kstarts = {kstarts}')
+    log.info(f'  kstops  = {kstops}')
+    nmatrices = len(outs)
+    for i, istart, istop, out, kstart, kstop in zip(count(), istarts, istops, outs, kstarts, kstops):
+        # istop : the end of the matrix(s)
+        # istart : the start of the matrix(s)
+        #
+        # kstart : the start of the columns
+        # kstop  : the end of the columns
+        log.info(f'-------------------------------')
+        log.debug(f'n={n} istart={istart} istopi={istop} kstart={kstart} kstop={kstop}')
+        kstart0 = kstart[0]
+        kstop0 = kstop[0]
+
+        #datai = data[n+istart*size:n+istop*size]
+        #op2.show_data(datai, types='ifsd')
+
+        datak = data[n+kstart0*size:n+kstop0*size]
+        #op2.show_data(datak, types='ifqd')
+
+        #datak = data[n+kstart0*size+4:n+kstop0*size+4]
+        #op2.show_data(datak, types='ifqd')
+
+        matrix_name, junk1, matrix_shape, tin, tout, is_phase, junk2, ncols_gset = out # [3:]
+        matrix_name = reshape_bytes_block(matrix_name).strip()
+        matrix_name_str = matrix_name.decode('latin1')
+        #self.show_data(data[48*factor:], types='ifsd')
+
+        is_complex = False
+        if tin > 2 or tout > 2:
+            #is_complex = True
+            assert is_phase == 0, f'is_phase={is_phase}'
+            #imags = []
+
+        #if size == 8 and tin == 1:
+            #tin = 2
+        #if size == 8 and tout == 1:
+            #tout = 2
+        out_dtype, out_fdtype = get_dtype_fdtype_from_tout(op2, tout)
+        in_dtype, in_fdtype = get_dtype_fdtype_from_tout(op2, tin)
+        dtype, fdtype = in_dtype, in_fdtype
+
+        is_symmetric = matrix_shape == 6
+        is_phase_flag = is_phase > 0
+        log.info(f'matrix_name={matrix_name} junk1={junk1} matrix_shape={matrix_shape} '
+                 f'tin={tin} ({in_dtype} {in_fdtype}) tout={tout} ({out_dtype} {out_fdtype}) \n    '
+                 f'is_phase={is_phase_flag} junk2={junk2} ncols_gset={ncols_gset}')
+
+        #if self.size == 4:
+            #if tout == 1:  # float32
+                #nvalues = 3
+            #elif tout == 2:  # float64
+                #nvalues = 4
+            #elif tout == 3:  # complex64
+                #nvalues = 4
+            #elif tout == 4:  # complex128
+                #nvalues = 5
+            #else:
+                #raise NotImplementedError(tout)
+
+        #----------------------------------------
+        #print(kstart, kstop)
+        #kstart = np.array(kstart
+        kstop = np.array(kstop)
+        kstart = np.hstack([ioffset, kstop[:-1] + 2])
+        #self.show_data(data[kstart*4:kstop*4])
+        #kfirst = ioffset
+        #klast = kstop[-1]
+        log.info(f'kstart = {kstart}')
+        log.info(f'kstop  = {kstop}')
+        #----------------------------------------
+        log.info('casting floats')
+        #nheader = ioffset * size
+        #nend = istop * self.size
+        #floats = get_floats(datai[nheader:nend], fdtype, op2, tout, self.size)
+
+        assert tout in [1, 2, 3, 4]
+        #print(floats.tolist())
+        #print(ints[kfirst:klast].tolist())
+        #print(floats)
+        #----------------------------------------
+        log.info('getting col (nid,dof)')
+
+        col_nids_short = ints[kstart]
+        assert col_nids_short.min() > 0, col_nids_short.tolist()
+
+        col_dofs_short = ints[kstart+1]
+        ucol_dofs = np.unique(col_dofs_short)
+        log.debug(f'  col_nids_short = {col_nids_short}; {ints.dtype}')
+        log.debug(f'  col_dofs = {ucol_dofs}')
+        for udofi in ucol_dofs:
+            if udofi not in [0, 1, 2, 3, 4, 5, 6]:
+                datak = data[n+kstart0*size:n+kstop0*size]
+                if size == 4:
+                    op2.show_data(data[n:n+kstart0*size], types='ifs')
+                    op2.show_data(datak, types='if')
+                else:
+                    op2.show_data(data[n:n+kstart0*size], types='ifsqd')
+                    op2.show_data(datak, types='ifqd')
+                print(ints.tolist())
+                msg = 'udofi=%s is invalid; must be in [0, 1, 2, 3, 4, 5, 6]; dofs=%s' % (
+                    udofi, np.asarray(ucol_dofs, dtype='int32').tolist())
+                raise ValueError(msg)
+
+        #nj2 = len(istart)  ## TODO: why is this wrong???
+        # -------------------------------------------------
+        log.info(f'extracting rows')
+        row_nids = []
+        row_dofs = []
+        col_nids = []
+        col_dofs = []
+        reals = []
+        imags = []
+        log.debug(f'  dtype={dtype} fdtype={fdtype}')
+        log.debug(f'  istart = {istart}')
+        log.debug(f'  istop = {istop}')
+        log.debug(f'  kstart = {kstart}')
+        log.debug(f'  kstop = {kstop}')
+
+        for col_nidi, col_dofi, istarti, istopi in zip(
+                col_nids_short, col_dofs_short, kstart, kstop):
+
+            nstart2 = istarti * size
+            nend_float2 = istopi * size
+            #nend_int2 = istopi * size
+            data
+            #self.show_data(data[n:], types='ifsdq')
+
+            assert nend_float2 > nstart2
+            log.debug(f'  nstart2={nstart2} nend_float2={nend_float2}')
+
+            #ints2 = np.frombuffer(datai[istarti*4:(istopi-2)*4], dtype=op2.idtype8).copy()
+            #print(f'ints test = {ints2}')
+            log.debug(f'  nid={col_nidi} dof={col_dofi} istarti={istarti} istopi={istopi}')
+            ## TODO: preallocate arrays
+            imag = None
+            # The float32/complex64 blocks are really simple
+            # because we can just use the data is from the ints block.
+            # We calculate istart/istop and directly access the float data.
+            #
+            # The float64/complex128 blocks are more complicated.
+            # It's easier to just use istart/istop to calculate datai
+            # case that, and then slice it.
+            #
+            # In all cases, we use istart/istop to calculate row/col nid/dof
+            # because they are always int32.  Only the real/imag types change.
+            #print(datai[nstart2:nend2])
+            #self.show_data(datai[nstart2:nend2], types='ifd')
+            #print('fdtype =', fdtype)
+            #nints = len(ints2)
+            #ints2 = ints2.reshape(nints//nvalues, nvalues)
+
+            # irow brings us to the (grid, dof)
+            #print(size, dtype)
+            #  the +2 on nstart2 is for the grid,comp offset
+
+            # nstart2: The start of the (g,c) data
+            #          (including the matrix and the code)
+            #          thus we add 2 to get to the (g,c)
+            #nstart2 += 9 * 4
+            assert nend_float2 > nstart2
+            assert nend_float2 - nstart2 > 1, nend_float2 - nstart2
+            dataii = datai[nstart2:nend_float2]
+
+            log.debug('showing data')
+            op2.show_data(datai[:16], types='s', endian=None, force=False)
+            op2.show_data(datai[16:], types='ifqd', endian=None, force=False)
+
+            ints2 = np.frombuffer(dataii, dtype='int64').copy()
+            floats = np.frombuffer(dataii, dtype='float64').copy()
+            #doubles = np.frombuffer(dataii, dtype='float64').copy()
+            #print('floats', floats)
+            #print('doubles', doubles)
+            nints = len(ints2)
+            log.debug(f'  dtype={dtype}')
+            if dtype == 'float32':  # it's a float64 for 64 bit :(
+                #0   1   2     3   4    5
+                # g1, c1,  (gi, ci, ri), ...
+                # (g, c,  # 0, 1
+                #  g, c, r, # 2, 3, 4
+                #  )
+                irow = np.arange(2, nints, step=3, dtype='int64')
+                #real = floats[irow + 4]  # nope...
+                #real = floats[irow + 2]  # ???
+                real = floats[3::3]
+                #print(real_old, real)
+                print(real, real.dtype)
+                #sss
+            #elif dtype == 'float64':
+                #print(ints)
+                #irow = np.arange(2, nints, step=4, dtype='int64')
+                #print(floats, floats.dtype)
+                #real = floats[2::3]
+                #print(real)
+            else:
+                raise RuntimeError((size, dtype))
+            log.debug(f'ints2 = {ints2}')
+            log.debug(f'real = {real}')
+            log.debug(f'irow = {irow}')
+            if len(irow) == 0:
+                print(ints2)
+                msg = f'irow={irow} nints={nints}'
+                raise RuntimeError(msg)
+            assert len(irow) > 0, irow
+            assert len(real) > 0, real
+            assert len(irow) == len(real), len(irow)
+
+            # the row index; [1, 2, ..., 43]
+            row_nid = ints2[irow]
+
+            # the dof; [0, 0, ..., 0.]
+            row_dof = ints2[irow + 1]
+            log.debug(f'row nid,dof = =({row_nid}, {row_dof})')
+            log.debug(f'row_nid = {row_nid}')
+            log.debug(f'row_dof = {row_dof}')
+            urow_dof = np.unique(row_dof)
+            log.debug(f'urow_dof = {urow_dof}')
+            for udofi in urow_dof:
+                if udofi not in [0, 1, 2, 3, 4, 5, 6]:
+                    msg = 'udofi=%s is invalid; must be in [0, 1, 2, 3, 4, 5, 6]; dofs=%s' % (
+                        udofi, np.asarray(urow_dof, dtype='int32').tolist())
+                    raise ValueError(msg)
+            ni = len(irow)
+            log.debug(f'real = {real}')
+            col_nid = np.ones(ni, dtype='int32') * col_nidi
+            col_dof = np.ones(ni, dtype='int32') * col_dofi
+
+            row_nids.append(row_nid)
+            row_dofs.append(row_dof)
+            col_nids.append(col_nid)
+            col_dofs.append(col_dof)
+            reals.append(real)
+            imags.append(imag)
+
+            row_nids_array = np.hstack(row_nids)
+            row_dofs_array = np.hstack(row_dofs)
+
+            col_nids_array = np.hstack(col_nids)
+            col_dofs_array = np.hstack(col_dofs)
+            real_array = np.hstack(reals)
+            print(real_array)
         ioffset = kstop[-1] + 4
 
         if is_complex:
@@ -581,7 +1362,7 @@ def _cast_matrix_matpool(table_name: str,
         else:
             # matrix is diagonal (or null)
             matrix = diagi
-        data = matrix
+        #data = matrix
 
         # matrix is symmetric, but is not stored as symmetric
         matrix_shape = 'rectangular'

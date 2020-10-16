@@ -9,7 +9,7 @@ import numpy as np
 
 #from pyNastran import is_release
 from pyNastran.bdf.cards.properties.mass import PMASS, NSM, NSML
-from pyNastran.bdf.cards.properties.bars import PBAR, PBARL, PBEND
+from pyNastran.bdf.cards.properties.bars import PBAR, PBARL, PBEND, PBEAM3
 from pyNastran.bdf.cards.properties.beam import PBEAM, PBEAML, PBCOMP
 from pyNastran.bdf.cards.properties.bush import PBUSH, PBUSHT
 from pyNastran.bdf.cards.properties.damper import PDAMP, PVISC
@@ -119,7 +119,7 @@ class EPT(GeomCommon):
             (16502, 165, 916): ['???', self._read_fake],
 
             (9701, 97, 692): ['PJOINT2', self._read_fake],
-            (13401, 134, 611): ['PBEAM3', self._read_fake],
+            (13401, 134, 611): ['PBEAM3', self._read_pbeam3],
             (8901, 89, 905): ['PSOLCZ', self._read_fake],
             (9801, 98, 698): ['DESC', self._read_desc],
             #(9701, 97, 692): ['???', self._read_fake],
@@ -398,7 +398,7 @@ class EPT(GeomCommon):
         return n
 
     def _read_nsml1_msc(self, data: bytes, n: int) -> int:
-        """
+        r"""
         NSML1(3601, 36, 62)
 
         Word Name Type Description
@@ -1719,7 +1719,7 @@ class EPT(GeomCommon):
         return n, props
 
     def _read_pcomp(self, data: bytes, n: int) -> int:
-        """PCOMP(2706,27,287) - the marker for Record 22
+        r"""PCOMP(2706,27,287) - the marker for Record 22
 
         standard:
           EPTS; 64-bit: C:\MSC.Software\simcenter_nastran_2019.2\tpl_post1\cqrdbxdra3lg.op2
@@ -2205,7 +2205,7 @@ class EPT(GeomCommon):
         return n
 
     def _read_pfast_msc(self, data: bytes, n: int) -> int:
-        """
+        r"""
         Word Name Type Description
         1 PID       I Property identification number
         2 MID       I Material property identification number
@@ -2357,6 +2357,171 @@ class EPT(GeomCommon):
     def _read_pints(self, data: bytes, n: int) -> int:
         self.log.info('skipping PINTS in EPT')
         return len(data)
+
+    def _read_pbeam3(self, data: bytes, n: int) -> int:
+        card_name = 'PBUSHT'
+        card_obj = PBUSHT
+        methods = {
+            264 : self._read_pbeam3_264,
+            456 : self._read_pbeam3_456,
+        }
+        try:
+            n = self._read_double_card(card_name, card_obj, self._add_op2_property,
+                                       methods, data, n)
+        except DoubleCardError:
+            raise
+            self.log.warning(f'try-except {card_name}')
+        return n
+
+    def _read_pbeam3_456(self, card_obj, data: bytes, n: int) -> int:
+        """
+
+        # per C:\MSC.Software\msc_nastran_runs\b3plod3.op2
+        ints    = (2201, 1, 1.0, 0.1833, 0.0833, 0, -1.0, 0, -0.5, -0.5, -0.5, 0.5, 0.5, 0.5, 0.5, -0.5,
+                         2, 1.0, 0.1833, 0.0833, 0, -1.0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                         2, 1.0, 0.1833, 0.0833, 0, -1.0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                         1.0, 1.0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                   2901, 2, 0.1, 0.1, 0.1, 0, 0.2, 0, 0.5, 0, 0, 0.5, -0.5, 0, 0, -0.5,
+                         2, 0.1, 0.1, 0.1, 0, 0.2, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                         2, 0.1, 0.1, 0.1, 0, 0.2, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                         1.0, 1.0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
+        floats  = (2201, 1, 1.0, 0.1833, 0.0833, 0.0, -1.0, 0.0, -0.5, -0.5, -0.5, 0.5, 0.5, 0.5, 0.5, -0.5,
+                         2, 1.0, 0.1833, 0.0833, 0.0, -1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+                         2, 1.0, 0.1833, 0.0833, 0.0, -1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+                         1.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+                   2901, 2, 0.1, 0.1, 0.1, 0.0, 0.2, 0.0, 0.5, 0.0, 0.0, 0.5, -0.5, 0.0, 0.0, -0.5,
+                         2, 0.1, 0.1, 0.1, 0.0, 0.2, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+                         2, 0.1, 0.1, 0.1, 0.0, 0.2, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+                         1.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0)
+        """
+        #self.show_data(data[n:])
+        ntotal = 456 * self.factor # 114*4
+        #
+        struct1 = Struct(mapfmt(self._endian +
+                                b'2i' # pid, mid
+                                b'3f' # A, Iy, Iz
+                                b'5f'  # # a, b, c, d, e
+                                b'5f fi  14f i' #fj ki  14f i
+                                b'2i3f' #aa-ee - good
+                                b'5f'   #ff-jj
+                                b'5f'   #kk-oo
+                                b'5f'   #pp-tt
+                                b'6f'   #uu-zz
+                                b'5f'   #aaa-eee
+                                b'4i'   #fff-iii
+                                # jjj-ooo
+                                b'2f iii f'
+                                # ppp-ttt
+                                b'5f'
+                                # uuu-zzz
+                                b'6f'
+                                b'30f', self.size))
+
+        ndatai = len(data) - n
+        nentries = ndatai // ntotal
+        assert ndatai % ntotal == 0
+
+        props = []
+        for unused_i in range(nentries):
+            print(n, ntotal)
+            datai = data[n:n+ntotal]
+            #self.show_data(datai, types='ifqd')
+            n += ntotal
+
+            (pid, mid, A, iz, iy,
+             a, b, c, d, e,
+             f, g, h, i, j,
+             k, inta, l, m, ni, o, p, q, r, s, t, u, v, w, x, y, z,
+             aa, bb, cc, dd, ee,
+             ff, gg, hh, ii, jj,
+             kk, ll, mm, nn, oo,
+             pp, qq, rr, ss, tt,
+             uu, vv, ww, xx, yy, zz,
+             aaa, bbb, ccc, ddd, eee,
+             fff, ggg, hhh, iii,
+             jjj, kkk, lll, mmm, nnn, ooo,
+             ppp, qqq, rrr, sss, ttt,
+             uuu, vvv, www, xxx, yyy, zzz,
+             *other) = struct1.unpack(datai)
+            #print(pid, mid, A, iz, iy)
+            #print('a-e', (a, b, c, d, e))
+            #print('f-j', (f, g, h, i, j))
+            #print(k, inta, l, m, n, o, p, q, r, s, t, u, v, w, x, y, z)
+            #print('aa-ee', (aa, bb, cc, dd, ee))
+            #print('ff-jj', (ff, gg, hh, ii, jj))
+            #print('kk-oo', (kk, ll, mm, nn, oo))
+            #print('pp-tt', (pp, qq, rr, ss, tt))
+            #print('uu-zz', (uu, vv, ww, xx, yy, zz))
+            #print('aaa-eee', (aaa, bbb, ccc, ddd, eee))
+            #print('fff-jjj', (fff, ggg, hhh, iii))
+            #print('jjj-ooo', (jjj, kkk, lll, mmm, nnn, ooo))
+            #print('ppp-ttt', (ppp, qqq, rrr, sss, ttt))
+            #print('uuu-zzz', (uuu, vvv, www, xxx, yyy, zzz))
+
+            if mid == 0:
+                continue
+            #assert sum(other) < 100, other
+            prop = PBEAM3(
+                pid, mid, A, iz, iy, iyz=None, j=None, nsm=0.,
+                so=None,
+                cy=None, cz=None,
+                dy=None, dz=None,
+                ey=None, ez=None,
+                fy=None, fz=None,
+                ky=1., kz=1.,
+                ny=None, nz=None, my=None, mz=None,
+                nsiy=None, nsiz=None, nsiyz=None,
+                cw=None, stress='GRID',
+                w=None, wy=None, wz=None, comment='')
+            assert pid > 0, prop.get_stats()
+            assert mid > 0, prop.get_stats()
+            str(prop)
+            props.append(prop)
+            #self._add_op2_property(prop)
+        #self.card_count['PBEAM3'] = nentries
+        return n, props
+
+    def _read_pbeam3_264(self, card_obj, data: bytes, n: int) -> int:
+        """
+        TODO: partial
+        # per test_cbeam_cbeam3???
+        ints    = (2901, 2, 0.1, 0.1, 0.1, 0,   0.02, 0,   0.5, 0,   0,   0.5, -0.5, 0,   0,   -0.5, 2, 0.1, 0.1, 0.1, 0,   0.02, 0,   0,   0,   0,   0,   0,   0,   0,   0,   2, 0.1, 0.1, 0.1, 0,   0.02, 0,   0,   0,   0,   0,   0,   0,   0,   0,   1.0, 1.0,   0,   0,   0,   0, 0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   -2,   0,   0)
+        floats  = (2901, 2, 0.1, 0.1, 0.1, 0.0, 0.02, 0.0, 0.5, 0.0, 0.0, 0.5, -0.5, 0.0, 0.0, -0.5, 2, 0.1, 0.1, 0.1, 0.0, 0.02, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 2, 0.1, 0.1, 0.1, 0.0, 0.02, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, nan, 0.0, 0.0)
+        """
+        ntotal = 264 * self.factor # 66*4
+        #                                       p/m ayz ae fj ki  14f i
+        struct1 = Struct(mapfmt(self._endian + b'2i 3f  5f 5f fi  14f i 30f 4i', self.size))
+
+        ndatai = len(data) - n
+        nentries = ndatai // ntotal
+        assert ndatai % ntotal == 0
+
+        props = []
+        for unused_i in range(nentries):
+            pid, mid, A, iz, iy, a, b, c, d, e, f, g, h, i, j, k, inta, *other = struct1.unpack(data[n:n+ntotal])
+            #print(pid, mid, A, iz, iy)
+            #print((a, b, c, d, e))
+            #print((f, g, h, i, j))
+            #print(k, inta)
+            assert sum(other) < 100, other
+            prop = PBEAM3(
+                pid, mid, A, iz, iy, iyz=None, j=None, nsm=0.,
+                so=None,
+                cy=None, cz=None,
+                dy=None, dz=None,
+                ey=None, ez=None,
+                fy=None, fz=None,
+                ky=1., kz=1.,
+                ny=None, nz=None, my=None, mz=None,
+                nsiy=None, nsiz=None, nsiyz=None,
+                cw=None, stress='GRID',
+                w=None, wy=None, wz=None, comment='')
+            assert pid > 0, prop.get_stats()
+            assert mid > 0, prop.get_stats()
+            str(prop)
+            props.append(prop)
+            n += ntotal
+        return n, props
 
     def _read_pplane(self, data: bytes, n: int) -> int:
         """

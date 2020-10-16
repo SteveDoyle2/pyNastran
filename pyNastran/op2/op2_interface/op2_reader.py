@@ -64,7 +64,8 @@ from pyNastran.op2.op2_interface.nx_tables import NX_VERSIONS
 from pyNastran.op2.op2_interface.utils import (
     mapfmt, reshape_bytes_block,
     reshape_bytes_block_size, reshape_bytes_block_strip)
-from pyNastran.op2.op2_interface.utils_matpool import read_matpool_dmig
+from pyNastran.op2.op2_interface.utils_matpool import (
+    read_matpool_dmig, read_matpool_dmig_4, read_matpool_dmig_8)
 
 
 from pyNastran.op2.result_objects.design_response import (
@@ -927,7 +928,7 @@ class OP2Reader:
         print(f'table end; {marker2-1}')
         #marker = self._read_cmodext_helper(marker, debug=True)
         op2.show_ndata(200)
-        sss
+        #sss
 
     def _read_cmodext_helper(self, marker_orig, debug=False) -> Tuple[int, bool]:
         """
@@ -4072,7 +4073,12 @@ class OP2Reader:
         if code == (114, 1, 120):
             self.log.debug(f'  code = {code}')
             try:
-                read_matpool_dmig(op2, data, utable_name, debug=False)
+                if self.size == 4:
+                    read_matpool_dmig_4(op2, data, utable_name, debug=False)
+                else:
+                    read_matpool_dmig_8(op2, data, utable_name, debug=False)
+            #try:
+                #read_matpool_dmig(op2, data, utable_name, debug=False)
             except Exception as excep:
                 self.log.error(str(excep))
                 self.log.warning('  skipping MATPOOL-DMIG')
