@@ -104,6 +104,7 @@ class TestOP2Writer(unittest.TestCase):
 
         exclude_results = [
             #'*_strain_energy',
+            'grid_point_forces',
         ]
         op2 = read_op2_geom(op2_filename, debug_file=op2_filename_debug,
                             exclude_results=exclude_results,
@@ -127,7 +128,9 @@ class TestOP2Writer(unittest.TestCase):
         #model = os.path.splitext(op2_filename)[0]
         #debug_file = model + '.debug.out'
 
-        op2 = read_op2_geom(op2_filename, debug_file=op2_filename_debug, log=log)
+        exclude_results = ['grid_point_forces']
+        op2 = read_op2_geom(op2_filename, debug_file=op2_filename_debug, log=log,
+                            exclude_results=exclude_results)
 
         op2.write_op2(op2_filename_out) #, is_mag_phase=False)
         op2b = read_op2_geom(op2_filename_out, debug_file=op2_filename_debug_out, log=log)
