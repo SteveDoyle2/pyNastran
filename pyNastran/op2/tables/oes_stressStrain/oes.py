@@ -225,6 +225,7 @@ class OES(OP2Common):
         #print('self.nonlinear_factor =', self.nonlinear_factor)
         #assert self.num_wide != 146, self.code_information()
         #self._check_result_type()
+        #print(self.code_information())
 
     def _check_result_type(self):
         sort_method = func1(self.tCode)
@@ -2694,57 +2695,31 @@ class OES(OP2Common):
 
         """
         n = 0
+        etype_map = {
+            #element_type : (element_base, nnodes_expected, element_name)
+            39 : ('ctetra', 5, 'CTETRA4'),
+            67 : ('chexa', 9, 'CHEXA8'),
+            68 : ('cpenta', 7, 'CPENTA6'),
+            255 : ('cpyram', 6, 'CPYRAM5'),
+        }
+        element_base, nnodes_expected, element_name = etype_map[self.element_type]
+
         if self.is_stress:
-            if prefix == '' and postfix == '':
-                prefix = 'stress.'
+            stress_strain = 'stress'
             obj_vector_real = RealSolidStressArray
             obj_vector_complex = ComplexSolidStressArray
             obj_vector_random = RandomSolidStressArray
-            if self.element_type == 39: # CTETRA
-                nnodes_expected = 5  # 1 centroid + 4 corner points
-                result_name = prefix + 'ctetra_stress' + postfix
-                element_name = 'CTETRA4'
-            elif self.element_type == 67:  # CHEXA
-                nnodes_expected = 9
-                result_name = prefix + 'chexa_stress' + postfix
-                element_name = 'CHEXA8'
-            elif self.element_type == 68:  # CPENTA
-                nnodes_expected = 7
-                result_name = prefix + 'cpenta_stress' + postfix
-                element_name = 'CPENTA6'
-            elif self.element_type == 255:  # CPYRAM
-                nnodes_expected = 6
-                result_name = prefix + 'cpyram_stress' + postfix
-                element_name = 'CPYRAM5'
-            else:  # pragma: no cover
-                raise RuntimeError(self.code_information())
         else:
-            if prefix == '' and postfix == '':
-                prefix = 'strain.'
+            stress_strain = 'strain'
             obj_vector_real = RealSolidStrainArray
             obj_vector_complex = ComplexSolidStrainArray
             obj_vector_random = RandomSolidStrainArray
 
-            if self.element_type == 39: # CTETRA
-                nnodes_expected = 5  # 1 centroid + 4 corner points
-                result_name = prefix + 'ctetra_strain' + postfix
-                element_name = 'CTETRA4'
-            elif self.element_type == 67:  # CHEXA
-                nnodes_expected = 9
-                result_name = prefix + 'chexa_strain' + postfix
-                element_name = 'CHEXA8'
-            elif self.element_type == 68:  # CPENTA
-                nnodes_expected = 7
-                result_name = prefix + 'cpenta_strain' + postfix
-                element_name = 'CPENTA6'
-            elif self.element_type == 255:  # CPYRAM
-                nnodes_expected = 6
-                result_name = prefix + 'cpyram_strain' + postfix
-                element_name = 'CPYRAM5'
-            else:  # pragma: no cover
-                raise RuntimeError(self.code_information())
-                #msg = 'sort1 Type=%s num=%s' % (self.element_name, self.element_type)
-                #return self._not_implemented_or_skip(data, ndata, msg)
+        if prefix == '' and postfix == '':
+            prefix = stress_strain + '.'
+
+        # stress.chexa_stress
+        result_name = prefix + f'{element_base}_{stress_strain}' + postfix
 
         if self._results.is_not_saved(result_name):
             return ndata, None, None
@@ -3116,54 +3091,27 @@ class OES(OP2Common):
         """
         n = 0
         if self.is_stress:
+            stress_strain = 'stress'
             #obj_vector_real = RealSolidStressArray
             #obj_vector_complex = ComplexSolidStressArray
             #obj_vector_random = RandomSolidStressArray
-            word = 'stress'
-            if self.element_type == 300:  # CHEXA
-                nnodes_expected = 8
-                result_name = prefix + 'chexa_stress' + postfix
-                element_name = 'CHEXA8'
-                # real=67
-            elif self.element_type == 301:  # CPENTA
-                nnodes_expected = 6
-                result_name = prefix + 'cpenta_stress' + postfix
-                element_name = 'CPENTA6'
-            elif self.element_type == 302:  # CTETRA
-                nnodes_expected = 4
-                result_name = prefix + 'ctetra_stress' + postfix
-                element_name = 'CTETRA4'
-            elif self.element_type == 303:  # CPYRAM
-                nnodes_expected = 5
-                result_name = prefix + 'cpyram_stress' + postfix
-                element_name = 'CPYRAM5'
-            else:  # pragma: no cover
-                raise RuntimeError(self.code_information())
         else:
             #obj_vector_real = RealSolidStrainArray
             #obj_vector_complex = ComplexSolidStrainArray
             #obj_vector_random = RandomSolidStrainArray
-            word = 'strain'
-            if self.element_type == 300:  # CHEXA
-                nnodes_expected = 8
-                result_name = prefix + 'chexa_strain' + postfix
-                element_name = 'CHEXA8'
-            elif self.element_type == 301:  # CPENTA
-                nnodes_expected = 6
-                result_name = prefix + 'cpenta_strain' + postfix
-                element_name = 'CPENTA6'
-            elif self.element_type == 302:  # CTETRA
-                nnodes_expected = 4
-                result_name = prefix + 'ctetra_strain' + postfix
-                element_name = 'CTETRA4'
-            elif self.element_type == 303:  # CPYRAM
-                nnodes_expected = 5
-                result_name = prefix + 'cpyram_strain' + postfix
-                element_name = 'CPYRAM5'
-            else:  # pragma: no cover
-                raise RuntimeError(self.code_information())
-                #msg = 'sort1 Type=%s num=%s' % (self.element_name, self.element_type)
-                #return self._not_implemented_or_skip(data, ndata, msg)
+            stress_strain = 'strain'
+
+        if prefix == '' and postfix == '':
+             prefix = stress_strain + '.'
+        etype_map = {
+            300 : ('chexa', 8, 'CHEXA8'),
+            301 : ('cpenta', 6, 'CPENTA6'),
+            302 : ('ctetra', 4, 'CTETRA4'),
+            303 : ('cpyram', 5, 'CPYRAM5'),
+        }
+        element_base, nnodes_expected, element_name = etype_map[self.element_type]
+        # chexa_stress
+        result_name = prefix + f'{element_base}_{stress_strain}' + postfix
 
         if self._results.is_not_saved(result_name):
             return ndata, None, None
@@ -3319,7 +3267,7 @@ class OES(OP2Common):
                                 obj.add_node_sort1(dt, eid, inode, grid,
                                                    sxx, syy, szz, txy, tyz, txz, ovm)
                         n += 32
-            self.log.warning(f'skipping {self.table_name_str}: {self.element_name}-{self.element_type} {word} csolid2')
+            self.log.warning(f'skipping {self.table_name_str}: {self.element_name}-{self.element_type} {stress_strain} csolid2')
         else:  # pragma: no cover
             raise NotImplementedError(self.code_information())
         assert n == ntotal * nelements, f'n={n} ntotal={ntotal*nelements}'
@@ -4807,24 +4755,28 @@ class OES(OP2Common):
         """
         #print('_oes_ctria3')
         n = 0
+
+        etype_map = {
+            #element_type : (element_base, nnodes_expected, element_name)
+            74 : ('ctria3', -1, 'CTRIA3'),
+            83 : ('ctria3', -1, 'CTRIA3'),  # NASA-95
+            227 : ('ctriar', -1, 'CTRIAR'),
+        }
         if self.is_stress:
+            stress_strain = 'stress'
             obj_vector_real = RealPlateStressArray
             obj_vector_complex = ComplexPlateStressArray
-            if self.element_type in [74, 83]:
-                result_name = prefix + 'ctria3_stress' + postfix
-            elif self.element_type in [227]:
-                result_name = prefix + 'ctriar_stress' + postfix
-            else:
-                raise NotImplementedError(self.code_information())
         else:
+            stress_strain = 'stress'
             obj_vector_real = RealPlateStrainArray
             obj_vector_complex = ComplexPlateStrainArray
-            if self.element_type in [74, 83]:
-                result_name = prefix + 'ctria3_strain' + postfix
-            elif self.element_type in [227]:
-                result_name = prefix + 'ctriar_strain' + postfix
-            else:
-                raise NotImplementedError(self.code_information())
+
+        if prefix == '' and postfix == '':
+            prefix = stress_strain + '.'
+
+        element_base, nnodes_expected, element_name = etype_map[self.element_type]
+        # stress.ctria3_stress
+        result_name = prefix + f'{element_base}_{stress_strain}' + postfix
 
         if self._results.is_not_saved(result_name):
             return ndata, None, None
@@ -5168,55 +5120,32 @@ class OES(OP2Common):
         """
         n = 0
         size = self.size
+
+        etype_map = {
+            #element_type : (element_base, nnodes_expected, element_name)
+            64 : ('cquad8', -1, 'CQUAD8'),
+            70 : ('ctriar', -1, 'CTRIAR'),
+            75 : ('ctria6', -1, 'CTRIA6'),
+            82 : ('cquadr', -1, 'CQUADR'),
+            144 : ('cquad4', -1, 'CQUAD4-bilinear'),
+        }
+        element_base, nnodes_expected, element_name = etype_map[self.element_type]
+        if prefix == '' and postfix == '':
+            prefix = stress_strain + '.'
+
+        # stress.cquad4_stress
+        result_name = prefix + f'{element_base}_{stress_strain}' + postfix
+
         if self.is_stress:
+            stress_strain = 'stress'
             obj_vector_real = RealPlateStressArray
             obj_vector_complex = ComplexPlateStressArray
             obj_vector_random = RandomPlateStressArray
-            if self.element_type == 64: # CQUAD8
-                result_name = prefix + 'cquad8_stress' + postfix
-                #gridC = 'CEN/8'
-            elif self.element_type == 70:  # CTRIAR
-                result_name = prefix + 'ctriar_stress' + postfix
-                #gridC = 'CEN/3'
-            elif self.element_type == 75:  # CTRIA6
-                result_name = prefix + 'ctria6_stress' + postfix
-                #gridC = 'CEN/6'
-            elif self.element_type == 82:  # CQUADR
-                result_name = prefix + 'cquadr_stress' + postfix
-                #gridC = 'CEN/4'
-            elif self.element_type == 144:  # CQUAD4-bilinear
-                # there's no nead to separate this with centroidal strain
-                # because you can only have one in a given OP2
-                result_name = prefix + 'cquad4_stress' + postfix
-                #gridC = 'CEN/4'
-            else:  # pragma: no cover
-                raise RuntimeError(self.code_information())
-                #msg = 'sort1 Type=%s num=%s' % (self.element_name, self.element_type)
-                #return self._not_implemented_or_skip(data, ndata, msg)
         else:
+            stress_strain = 'strain'
             obj_vector_real = RealPlateStrainArray
             obj_vector_complex = ComplexPlateStrainArray
             obj_vector_random = RandomPlateStrainArray
-
-            if self.element_type == 64: # CQUAD8
-                result_name = prefix + 'cquad8_strain' + postfix
-                #gridC = 'CEN/8'
-            elif self.element_type == 70:  # CTRIAR
-                result_name = prefix + 'ctriar_strain' + postfix
-                #gridC = 'CEN/3'
-            elif self.element_type == 75:  # CTRIA6
-                result_name = prefix + 'ctria6_strain' + postfix
-                #gridC = 'CEN/6'
-            elif self.element_type == 82: # CQUADR
-                result_name = prefix + 'cquadr_strain' + postfix
-                #gridC = 'CEN/4'
-            elif self.element_type == 144: # CQUAD4-bilinear
-                # there's no nead to separate this with centroidal strain
-                # because you can only have one in a given OP2
-                result_name = prefix + 'cquad4_strain' + postfix
-                #gridC = 'CEN/4'
-            else:  # pragma: no cover
-                raise RuntimeError(self.code_information())
 
         if self._results.is_not_saved(result_name):
             return ndata, None, None

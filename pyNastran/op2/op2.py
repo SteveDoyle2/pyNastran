@@ -55,7 +55,7 @@ class OP2(OP2_Scalar, OP2Writer):
                    'matrix_tables', 'table_name_str']
 
     def __init__(self,
-                 debug: bool=True,
+                 debug: Optional[bool]=True,
                  log: Any=None,
                  debug_file: Optional[str]=None,
                  mode: Optional[str]=None) -> None:
@@ -64,8 +64,11 @@ class OP2(OP2_Scalar, OP2Writer):
 
         Parameters
         ----------
-        debug : bool; default=False
-            enables the debug log and sets the debug in the logger
+        debug : bool/None; default=True
+            used to set the logger if no logger is passed in
+                True:  logs debug/info/warning/error messages
+                False: logs info/warning/error messages
+                None:  logs warning/error messages
         log : Log()
             a logging object to write debug messages to
          (.. seealso:: import logging)
@@ -1241,7 +1244,7 @@ def read_op2(op2_filename: Optional[str]=None,
              exclude_results: Optional[List[str]]=None,
              include_results: Optional[List[str]]=None,
              log: Any=None,
-             debug: bool=True,
+             debug: Optional[bool]=True,
              debug_file: Optional[str]=None,
              build_dataframe: Optional[bool]=None,
              skip_undefined_matrices: bool=True,
@@ -1267,8 +1270,11 @@ def read_op2(op2_filename: Optional[str]=None,
         builds a pandas DataFrame for op2 objects
     skip_undefined_matrices : bool; default=False
          True : prevents matrix reading crashes
-    debug : bool; default=False
-        enables the debug log and sets the debug in the logger
+        debug : bool/None; default=True
+            used to set the logger if no logger is passed in
+                True:  logs debug/info/warning/error messages
+                False: logs info/warning/error messages
+                None:  logs warning/error messages
     log : Log()
         a logging object to write debug messages to
         (.. seealso:: import logging)

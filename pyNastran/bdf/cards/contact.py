@@ -830,12 +830,16 @@ class BCTSET(BaseCard):
             sids.append(integer(card, i, 'sid%s' % j))
             tids.append(integer(card, i + 1, 'tid%s' % j))
             frictions.append(double_or_blank(card, i + 2, 'fric%s' % j, 0.0))
-            if sol == 101:
-                min_distances.append(double_or_blank(card, i + 3, 'mind%s' % j, 0.0))
-                max_distances.append(double_or_blank(card, i + 4, 'maxd%s' % j, 0.0))
-            else:
-                min_distances.append(None)
-                max_distances.append(None)
+
+            # we ignore what the NX QRG says about the min/max distance for SOL 401
+            # if you don't, Nastran will crash
+            #if sol == 101:
+            min_distances.append(double_or_blank(card, i + 3, 'mind%s' % j, 0.0))
+            max_distances.append(double_or_blank(card, i + 4, 'maxd%s' % j, 0.0))
+            #else:
+                #min_distances.append(None)
+                #max_distances.append(None)
+
             i += 8
             j += 1
         return BCTSET(csid, sids, tids, frictions, min_distances,

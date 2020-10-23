@@ -48,7 +48,7 @@ from typing import List, Tuple, Dict, Set, Union, Optional, Any
 
 from numpy import array
 import numpy as np
-from cpylog import get_logger
+from cpylog import get_logger2
 
 from pyNastran import is_release, __version__
 from pyNastran.f06.errors import FatalError
@@ -536,8 +536,11 @@ class OP2_Scalar(LAMA, ONR, OGPF,
 
         Parameters
         ----------
-        debug : bool; default=False
-            enables the debug log and sets the debug in the logger
+        debug : bool/None; default=True
+            used to set the logger if no logger is passed in
+                True:  logs debug/info/warning/error messages
+                False: logs info/warning/error messages
+                None:  logs warning/error messages
         log : Log()
             a logging object to write debug messages to
             (.. seealso:: import logging)
@@ -545,9 +548,9 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             sets the filename that will be written to
 
         """
-        assert isinstance(debug, bool), 'debug=%r' % debug
+        assert debug is None or isinstance(debug, bool), 'debug=%r' % debug
 
-        self.log = get_logger(log, 'debug' if debug else 'info')
+        self.log = get_logger2(log, debug=debug, encoding='utf-8')
         self._count = 0
         self.op2_filename = None
         self.bdf_filename = None
