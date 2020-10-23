@@ -6,9 +6,9 @@ All dynamic control cards are defined in this file.  This includes:
  * FREQ
  * FREQ1
  * FREQ2
- * FREQ3 (not implemented)
+ * FREQ3
  * FREQ4
- * FREQ5 (not implemented)
+ * FREQ5
  * NLPCI
  * NLPARM
  * TSTEP

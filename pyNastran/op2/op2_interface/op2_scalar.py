@@ -324,7 +324,7 @@ FLOAT_PARAMS_1 = {
     b'DUCTFMAX',
     b'EXTDONE',
     b'FZERO', b'LMFACT', b'MPCZERO',
-    b'RESVPGF', b'RESVRAT', b'SWPANGLE',  b'UPFAC',
+    b'RESVPGF', b'RESVRAT', b'SWPANGLE', b'UPFAC',
     b'ITODENS',
     b'ITOPCONV',
     b'ITORMAS',
@@ -392,7 +392,7 @@ STR_PARAMS_1 = {
     b'FLEXINCR', b'FTL', b'GDAMPF', b'GEOCENT', b'IFPSCR', b'IFPSOPT',
     b'IFPX', b'IFPXOPT', b'MASTER', b'MODEOUT',
     b'NXVER', b'OAPP', b'OCMP', b'OEE', b'OEEX', b'OEF', b'OEFX', b'OEPT',
-    b'OES', b'OESE', b'OESX', b'OGPF', b'OMPT', b'OPG', b'OPTIM',  b'OQG',
+    b'OES', b'OESE', b'OESX', b'OGPF', b'OMPT', b'OPG', b'OPTIM', b'OQG',
     b'OUG', b'OUMU', b'OUTSCR', b'PANAME', b'QSETREM', b'RESVSE', b'RESVSLI',
     b'RESVSO', b'RSATT', b'SAVEOFP', b'SAVERST', b'SCRATCH', b'SDRPOPT',
     b'SECOMB0', b'SELRNG', b'SERST', b'SOFTEXIT', b'SOLAPPI', b'SOLTYPI',
@@ -420,7 +420,7 @@ STR_PARAMS_1 = {
 def _check_unique_sets(*sets: List[Set[str]]):
     """verifies that the sets are unique"""
     for i, seti in enumerate(sets):
-        for j, setj in enumerate(sets[i+1:]):
+        for unused_j, setj in enumerate(sets[i+1:]):
             intersectioni = seti.intersection(setj)
             assert len(intersectioni) == 0, intersectioni
 
@@ -1387,7 +1387,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
         """
         Reads PARAM cards
 
-        data    = (
+        data = (
             AUTOSPC, 3, YES,
             GRDPNT, 1, 0,
             K6ROT, 2, 100.0,
@@ -1407,8 +1407,8 @@ class OP2_Scalar(LAMA, ONR, OGPF,
         iloc = self.f.tell()
         try:
             ndata2 = self._read_pvto_4_helper(data, ndata)
-        except NotImplementedError as e:
-            self.log.error(str(e))
+        except NotImplementedError as error:
+            self.log.error(str(error))
             #raise  # only for testing
             if 'dev' in __version__ and self.IS_TESTING:
                 raise  # only for testing
@@ -1573,7 +1573,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
         return nvalues
 
 
-    def _old_pvto(word: bytes, data: bytes, i: int, xword: int,
+    def _old_pvto(self, word: bytes, data: bytes, i: int, xword: int,
                   struct2i, struct2f, structs8) -> Tuple[int, Any]:  # pragma: no cover
         if word in INT_PARAMS_1:
             slot = data[(i+2)*xword:(i+4)*xword]

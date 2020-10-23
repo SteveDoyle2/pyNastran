@@ -24,6 +24,9 @@ language: python
 # matplotlib:
 #  - 2.1 min for 3.6
 #  - 2.2 min for 3.7
+env:
+ - COVERAGE_RUN='coverage run'
+ - CODECOV='codecov'
 matrix:
   allow_failures:
     #--------------------------------------------------------------------------------------------------
@@ -46,6 +49,8 @@ matrix:
     - name: "Python 3.7 (PyQt5)"
       python: '3.7'
       env:
+      - COVERAGE_RUN='python'
+      - CODECOV='ls'
       - NUMPY='numpy scipy matplotlib h5py vtk pyqt5 pandas>=0.25 imageio pillow>5.2,!=7.1.0'
     #--------------------------------------------------------------------------------------------------
 
@@ -53,6 +58,7 @@ matrix:
     #- name: "Python 3.7 old packages"
     #  python: '3.7'
     #  env:
+    #  #- COVERAGE_RUN='python'
     #  #- NUMPY='numpy==1.15 scipy==0.19 matplotlib==2.2'  # doesn't work
     #  # - bumped scipy from 1.0 to 1.1 for compatibility with numpy
     #  # - no pyside2 on conda
@@ -63,6 +69,8 @@ matrix:
       python: '3.7'
       #services: xvfb
       env:
+      - COVERAGE_RUN='python'
+      - CODECOV='ls'
       - NUMPY='numpy scipy h5py vtk PySide2 pandas>=0.25'
       #- LIB='libegl1-mesa'
       #- XVFB='xvfb-run --auto-servernum -e /dev/stdout'
@@ -104,6 +112,8 @@ matrix:
       python: '3.7'
       #services: xvfb
       env:
+      - COVERAGE_RUN='python'
+      - CODECOV='ls'
       - NUMPY='numpy scipy matplotlib h5py vtk pyqt5 pandas>=0.25 imageio pillow>5.2,!=7.1.0'
       #- LIB='libegl1-mesa'
       #- XVFB='xvfb-run --auto-servernum -e /dev/stdout'
@@ -112,6 +122,8 @@ matrix:
       python: '3.7'
       #services: xvfb
       env:
+      - COVERAGE_RUN='python'
+      - CODECOV='ls'
       - NUMPY='numpy scipy h5py vtk PySide2 pandas>=0.25'
       #- LIB='libegl1-mesa'
       #- XVFB='xvfb-run --auto-servernum -e /dev/stdout'
@@ -122,6 +134,8 @@ matrix:
       python: '3.7'
       #services: xvfb
       env:
+      - COVERAGE_RUN='python'
+      - CODECOV='ls'
       #- NUMPY='numpy==1.15 scipy==0.19 matplotlib==2.2'  # doesn't work
       # - bumped scipy from 1.0 to 1.1 for compatibility with numpy
       # - bumped from numpy 1.14 to 1.14.5 for py3.7 pypi compatibility
@@ -148,6 +162,8 @@ matrix:
     - name: "Python 3.7 (basic)"
       python: '3.7'
       env:
+      - COVERAGE_RUN='python'
+      - CODECOV='ls'
       - NUMPY='numpy scipy'
       - NOGUI='_no_gui'
 
@@ -205,8 +221,9 @@ install:
 # Run test
 script:
   #- nosetests --with-cov --cov YOUR_PACKAGE_NAME_HERE --cov-config .coveragerc --logging-level=INFO
-  - ${XVFB} coverage run pyNastran/all_tests${NOGUI}.py
-  
+  #- ${XVFB} ${COVERAGE_RUN} pyNastran/all_tests${NOGUI}.py
+  - ${COVERAGE_RUN} pyNastran/all_tests${NOGUI}.py
+
   # good
   #- coverage run pyNastran/all_tests${NOGUI}.py
 
@@ -230,6 +247,6 @@ after_success:
 
     # coverage
   #- coveralls debug
-  - codecov
+  - {CODECOV}
 #after_success:
 #  - coveralls --config_file .coveragerc

@@ -517,10 +517,11 @@ def get_plate_stress_strains(eids, cases, model: OP2, times, key, icase: int,
                 log.info(f'skipping:\n{case}{case.code_information()}')
                 continue
         else:
-            assert analysis_code in [1, 2, 6, 8, 10], case.code_information()
+            assert analysis_code in [1, 2, 6, 7, 8, 10], case.code_information()
             # 1-statics
             # 2-modes
             # 6-transient
+            # 7-pre buckling
             # 8-post buckling
             # 10-nonlinear statics
             if not case.is_real:

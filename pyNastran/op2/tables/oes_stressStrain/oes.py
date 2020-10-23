@@ -1415,6 +1415,11 @@ class OES(OP2Common):
             n, nelements, ntotal = self._oes_cbar_34(data, ndata, dt, is_magnitude_phase,
                                                      result_type, prefix, postfix)
 
+        elif self.element_type == 64: # CQUAD4
+            self.element_type = 33  # faking...
+            n, nelements, ntotal = self._oes_cquad4_33(data, ndata, dt, is_magnitude_phase,
+                                                       result_type, prefix, postfix)
+
         elif self.element_type == 83:
             # 83: TRIA3
             n, nelements, ntotal = self._oes_ctria3(data, ndata, dt, is_magnitude_phase,
@@ -4417,6 +4422,7 @@ class OES(OP2Common):
         """
         reads stress/strain for element type:
          - 33 : CQUAD4-centroidal
+         - 64 : CQUAD4-centroidal (nastran95)
          - 228 : CQUADR-centroidal
 
         """
@@ -4427,7 +4433,7 @@ class OES(OP2Common):
         if self.is_stress:
             obj_vector_real = RealPlateStressArray
             obj_vector_complex = ComplexPlateStressArray
-            if self.element_type == 33:
+            if self.element_type == 33 or self.element_type == 64 and self._nastran_format == 'nasa95':
                 result_name = prefix + 'cquad4_stress' + postfix
             elif self.element_type == 228:
                 result_name = prefix + 'cquadr_stress' + postfix
@@ -4437,7 +4443,7 @@ class OES(OP2Common):
         else:
             obj_vector_real = RealPlateStrainArray
             obj_vector_complex = ComplexPlateStrainArray
-            if self.element_type == 33:
+            if self.element_type == 33 or self.element_type == 64 and self._nastran_format == 'nasa95':
                 result_name = prefix + 'cquad4_strain' + postfix
             elif self.element_type == 228:
                 result_name = prefix + 'cquadr_strain' + postfix
