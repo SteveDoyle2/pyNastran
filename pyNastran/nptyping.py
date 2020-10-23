@@ -11,7 +11,7 @@ try:
     # vector:
     # [0., 0., 0., 0., 0., 0.]
     NDArray6float = NDArray[(6, ), float]
-    NDArray6float = NDArray[(6, 6), float]
+    NDArray66float = NDArray[(6, 6), float]
 
     # vector:
     # [0., 0., 0., ...]
