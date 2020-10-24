@@ -522,6 +522,9 @@ class OP2_Scalar(LAMA, ONR, OGPF,
         self._read_oes1_loads = self._read_oes1_loads_nasa95
         self._read_oef1_loads = self._read_oef1_loads_nasa95
 
+        if hasattr(self, '_read_cquad4_nasa95'):
+            self._geom2_map[(5408, 54, 261)] = ['CQUAD4', self._read_cquad4_nasa95]
+
     def set_as_optistruct(self):
         self.is_nx = False
         self.is_msc = False

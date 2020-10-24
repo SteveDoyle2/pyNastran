@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import TYPE_CHECKING
+from typing import Tuple, List, Dict, Any, TYPE_CHECKING
 import numpy as np
 
 from cpylog import properties as log_properties
@@ -122,14 +122,17 @@ def build_offset_normals_dims(model: BDF, eid_map: Dict[int, int], nelements: in
     #eid_map = self.gui.eid_map
     assert eid_map is not None
     etype_to_nnodes_map = {
-        'CTRIA3' : 3, 'CTRIAR' : 3, 'CTRAX3' : 3, 'CPLSTN3' : 3,
+        'CTRIA3' : 3, 'CTRIAR' : 3, 'CTRAX3' : 3,
         # no a CTRIAX really has 6 nodes because reasons...
-        'CTRIA6' : 6, 'CTRIAX' : 6, 'CTRIAX6' : 6, 'CPLSTN6' : 6, 'CTRAX6' : 6,
-        'CQUAD4' : 4, 'CQUADR' : 4, 'CPLSTN4' : 4, 'CSHEAR' : 4, 'CQUADX4' : 4,
-        'CQUAD8' : 8, 'CPLSTN8' : 8, 'CQUADX8' : 8,
+        'CTRIA6' : 6, 'CTRIAX' : 6, 'CTRIAX6' : 6, 'CTRAX6' : 6,
+        'CQUAD4' : 4, 'CQUADR' : 4, 'CSHEAR' : 4, 'CQUADX4' : 4,
+        'CQUAD8' : 8, 'CQUADX8' : 8,
         'CQUAD' : 9, 'CQUADX' : 9,
         'CPLSTN3': 3, 'CPLSTN4': 4, 'CPLSTN6': 6, 'CPLSTN8': 8,
         'CPLSTS3': 3, 'CPLSTS4': 4, 'CPLSTS6': 6, 'CPLSTS8': 8,
+
+        # nastran95
+        'CQUAD1': 4,
         'CTRSHL': 6,
     }
     for eid, element in sorted(model.elements.items()):
@@ -168,7 +171,7 @@ def build_offset_normals_dims(model: BDF, eid_map: Dict[int, int], nelements: in
                     z0 = prop.z1
                 elif ptype in {'PCOMP', 'PCOMPG'}:
                     z0 = prop.z0
-                elif ptype in {'PLPLANE', 'PTRSHL'}: # ? PTRSHL
+                elif ptype in {'PLPLANE', 'PTRSHL', 'PQUAD1'}: # ? PTRSHL, PQUAD1
                     z0 = 0.
                 elif ptype in {'PSHEAR', 'PSOLID', 'PLSOLID', 'PPLANE'}:
                     z0 = np.nan
@@ -215,8 +218,11 @@ def build_offset_normals_dims(model: BDF, eid_map: Dict[int, int], nelements: in
                     #node_ids = self.nodes[4:]
                     nnodesi = 9
                     z0 = np.nan
-                elif etype == 'CQUADX4':
+                elif etype in 'CQUADX4':
                     #node_ids = self.nodes[4:]
+                    nnodesi = 4
+                    z0 = np.nan
+                elif etype in 'CQUAD1':
                     nnodesi = 4
                     z0 = np.nan
                 elif etype == 'CQUADX8':
@@ -369,6 +375,7 @@ def _build_map_centroidal_result(model: BDF, nid_map: Dict[int, int]) -> None:
         'CQUADX8' : (4, 8),
         'CTRIAX6' : (3, 6),
         # nastran 95
+        'CQUAD1' : (4, 4),
         'CTRSHL' : (6, 6),
         'CHEXA1' : (8, 8),
         'CHEXA20' : (20, 20),

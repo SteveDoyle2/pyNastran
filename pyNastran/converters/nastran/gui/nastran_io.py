@@ -64,7 +64,9 @@ from pyNastran.bdf.bdf import (BDF,
                                CTRSHL,
                                CTRAX3, CTRIAX6, CTRIAX, #CTRAX6,
                                CQUADX4, CQUADX8, CQUADX,
-                               CONM2)
+                               CONM2,
+                               # nastran95
+                               CQUAD1)
 from pyNastran.bdf.cards.aero.zona import CAERO7, BODY7
 from pyNastran.bdf.cards.elements.solid import (
     CTETRA4, CTETRA10, CPENTA6, CPENTA15,
@@ -1154,6 +1156,8 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                 'CTRIA3', 'CQUAD4', 'CTRIA6', 'CQUAD8', 'CTRIAR', 'CQUADR',
                 'CTETRA', 'CPENTA', 'CHEXA', 'CPYRAM',
                 'CHBDYG', 'CHBDYE', 'CHBDYP',
+                # nastran 95
+                'CQUAD1',
             ]
             for key in potential_elements_found:
                 if key not in etypes:
@@ -2889,7 +2893,8 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                 nnodes = 3
                 dim = 2
 
-            elif etype in ['CQUAD4', 'CQUADR', 'CPLSTN4', 'CPLSTS4', 'CQUADX4']:
+            elif etype in {'CQUAD4', 'CQUADR', 'CPLSTN4', 'CPLSTS4', 'CQUADX4',
+                           'CQUAD1'}:  # nastran95
                 nids = elem.nodes
                 pid = elem.pid
                 cell_type = cell_type_quad4 #9
@@ -4073,7 +4078,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
 
                 grid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
 
-            elif isinstance(element, CTRSHL):
+            elif isinstance(element, CTRSHL):  # nastran95
                 # the CTRIAX6 is not a standard second-order triangle
                 #
                 # 5
@@ -4113,8 +4118,8 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
 
                 grid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
 
-            elif isinstance(element, (CQUAD4, CSHEAR, CQUADR, CPLSTN4, CPLSTS4, CQUADX4)):
-                if isinstance(element, (CQUAD4, CQUADR)):
+            elif isinstance(element, (CQUAD4, CSHEAR, CQUADR, CPLSTN4, CPLSTS4, CQUADX4, CQUAD1)):
+                if isinstance(element, (CQUAD4, CQUADR, CQUAD1)):
                     mcid, theta = get_shell_material_coord(element)
                     material_coord[i] = mcid
                     material_theta[i] = theta
@@ -5094,8 +5099,8 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                 eid_to_nid_map[eid] = [node_ids[0], node_ids[2], node_ids[4]]
                 grid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
 
-            elif isinstance(element, (CQUAD4, CSHEAR, CQUADR, CPLSTN4, CQUADX4)):
-                if isinstance(element, (CQUAD4, CQUADR)):
+            elif isinstance(element, (CQUAD4, CSHEAR, CQUADR, CPLSTN4, CQUADX4, CQUAD1)):
+                if isinstance(element, (CQUAD4, CQUADR, CQUAD1)):
                     mcid, theta = get_shell_material_coord(element)
                     material_coord[i] = mcid
                     material_theta[i] = theta

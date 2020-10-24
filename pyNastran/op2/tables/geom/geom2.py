@@ -844,9 +844,7 @@ class GEOM2(GeomCommon):
         return n, elements
 
     def _read_cbeam(self, data: bytes, n: int) -> int:
-        """
-        CBEAM(5408,54,261) - the marker for Record 10
-        """
+        """CBEAM(5408,54,261) - the marker for Record 10"""
         ntotal = 72 * self.factor  # 18*4
         fe1 = 40 * self.factor
         fe2 = 44 * self.factor
@@ -2435,6 +2433,80 @@ class GEOM2(GeomCommon):
     def _read_cquad(self, data: bytes, n: int) -> int:
         """CQUAD(9108,91,507)  - the marker for Record 69"""
         return self._run_cquad(CQUAD, data, n)
+
+    def _read_cquad4_nasa95(self, data: bytes, n: int) -> int:
+        """
+        CQUAD4(5408,54,261) - the marker for Record 10
+
+        CQUAD4       350       5       5     241     329      13
+        CQUAD4       351       5      13     329     330      14
+        CQUAD4       352       5      14     330     331      15
+        ints    = (5408, 54, 261,
+                   eid pid n1  n2    n3  n4
+                   350, 5, 5, 241, 329,  13, 0, 0, 0, 0, 0, 0, 0,
+                   351, 5, 13, 329, 330, 14, 0, 0, 0, 0, 0, 0, 0,
+                   352, 5, 14, 330, 331, 15, 0, 0, 0, 0, 0, 0, 0)
+        """
+        elements = []
+        ntotal = 52 * self.factor  # 13*4
+        nelements = (len(data) - n) // ntotal
+        leftover = (len(data) - n) % ntotal
+        assert leftover == 0, leftover
+
+        #  TODO: not sure...
+        #   6i is correct
+        #   3f-i zeros as float/int???
+        #   4f correct
+        #   i correct
+        s = Struct(mapfmt(self._endian + b'6i 7i', self.size))
+        #if self.is_debug_file:
+            #self.binary_debug.write('ndata=%s\n' % (nelements * 44))
+
+        if self.is_debug_file:
+            self.binary_debug.write(f'  {element.type}=(eid, pid, [n1, n2, n3, n4], theta, zoffs, '
+                                    'unused_blank, [tflag, t1, t2, t3, t4]); theta_mcid\n')
+
+        for unused_i in range(nelements):
+            edata = data[n:n + ntotal]
+            out = s.unpack(edata)
+            # theta, zoffs, blank, tflag, t1, t2, t3, t4
+            (eid, pid, n1, n2, n3, n4,
+             theta, zoffs, tflag,
+             t1, t2, t3, t4) = out
+
+            msg = ('eid=%s pid=%s nodes=%s '
+                   'theta=%s zoffs=%s '
+                   'tflag=%s '
+                   't1-t3=%s' % (
+                       eid, pid, (n1, n2, n3, n4),
+                       theta, zoffs,
+                       tflag,
+                       (t1, t2, t3, t4)))
+
+            #assert theta == 0, msg
+            assert zoffs == 0, msg
+            assert tflag == 0, msg
+            assert t1 == 0, msg
+            assert t2 == 0, msg
+            assert t3 == 0, msg
+            assert t4 == 0, msg
+
+            #theta_mcid = convert_theta_to_mcid(theta)
+            #if self.is_debug_file:
+                #self.binary_debug.write(
+                    #f'  {element.type}=({eid}, {pid}, [{n1}, {n2}, {n3}, {n4}], '
+                    #f'{theta}, {zoffs}, [{tflag}, {t1}, {t2}, {t3})]; {theta_mcid}\n')
+
+            data_init = [
+                eid, pid, n1, n2, n3, n4, theta, zoffs,
+                tflag, t1, t2, t3, t4]
+            elem = CQUAD4.add_op2_data(data_init)
+            #elements.append(elem)
+            self.add_op2_element(elem)
+            n += ntotal
+        self.card_count['CQUAD4'] = nelements
+        assert n == len(data), f'n={n} ndata={len(data)}'
+        return n
 
     def _read_cquad4(self, data: bytes, n: int) -> int:
         """

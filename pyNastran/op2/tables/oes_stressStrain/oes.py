@@ -4767,12 +4767,12 @@ class OES(OP2Common):
             obj_vector_real = RealPlateStressArray
             obj_vector_complex = ComplexPlateStressArray
         else:
-            stress_strain = 'stress'
+            stress_strain = 'strain'
             obj_vector_real = RealPlateStrainArray
             obj_vector_complex = ComplexPlateStrainArray
 
-        if prefix == '' and postfix == '':
-            prefix = stress_strain + '.'
+        #if prefix == '' and postfix == '':
+            #prefix = stress_strain + '.'
 
         element_base, nnodes_expected, element_name = etype_map[self.element_type]
         # stress.ctria3_stress
@@ -5129,13 +5129,6 @@ class OES(OP2Common):
             82 : ('cquadr', -1, 'CQUADR'),
             144 : ('cquad4', -1, 'CQUAD4-bilinear'),
         }
-        element_base, nnodes_expected, element_name = etype_map[self.element_type]
-        if prefix == '' and postfix == '':
-            prefix = stress_strain + '.'
-
-        # stress.cquad4_stress
-        result_name = prefix + f'{element_base}_{stress_strain}' + postfix
-
         if self.is_stress:
             stress_strain = 'stress'
             obj_vector_real = RealPlateStressArray
@@ -5146,6 +5139,13 @@ class OES(OP2Common):
             obj_vector_real = RealPlateStrainArray
             obj_vector_complex = ComplexPlateStrainArray
             obj_vector_random = RandomPlateStrainArray
+
+        element_base, nnodes_expected, element_name = etype_map[self.element_type]
+        #if prefix == '' and postfix == '':
+            #prefix = stress_strain + '.'
+
+        # stress.cquad4_stress
+        result_name = prefix + f'{element_base}_{stress_strain}' + postfix
 
         if self._results.is_not_saved(result_name):
             return ndata, None, None

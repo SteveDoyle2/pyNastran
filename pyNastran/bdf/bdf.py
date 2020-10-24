@@ -74,9 +74,10 @@ from pyNastran.bdf.cards.elements.shell import (
     CTRIA3, CTRIA6, CTRIAR,
     CPLSTN3, CPLSTN4, CPLSTN6, CPLSTN8,
     CPLSTS3, CPLSTS4, CPLSTS6, CPLSTS8,
-    SNORM,
-    # nastran 95
-    CTRSHL)
+    SNORM,)
+from pyNastran.bdf.cards.elements.shell_nasa95 import (
+    CTRSHL, CQUAD1, PQUAD1)
+
 from .cards.properties.shell import PSHELL, PCOMP, PCOMPG, PSHEAR, PLPLANE, PPLANE, PTRSHL
 from .cards.elements.acoustic import (
     CHACAB, CAABSF, CHACBR, PACABS, PAABSF, PACBAR, ACMODL)
@@ -589,7 +590,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             'CTRIA3', 'CTRIA6', 'CTRIAR',
             'CQUAD4', 'CQUAD8', 'CQUADR', 'CQUAD',
             'CTRAX3', 'CTRAX6', 'CTRIAX', 'CTRIAX6', 'CQUADX', 'CQUADX4', 'CQUADX8',
-            'CTRSHL',
+            'CTRSHL', 'CQUAD1',
             'SNORM',
 
             'CPLSTN3', 'CPLSTN4', 'CPLSTN6', 'CPLSTN8', # plate strain
@@ -620,7 +621,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             'PBEAML', 'PBMSECT', # not fully supported
             'PBEAM3',  # v1.3
 
-            'PSHELL', 'PCOMP', 'PCOMPG', 'PSHEAR', 'PTRSHL',
+            'PSHELL', 'PCOMP', 'PCOMPG', 'PSHEAR', 'PTRSHL', 'PQUAD1',
             'PSOLID', 'PLSOLID', 'PVISC', 'PRAC2D', 'PRAC3D',
             'PIHEX', 'PCOMPS',
             # PQUAD4
@@ -2134,8 +2135,9 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             'CBEND' : (CBEND, self._add_element_object),
             'PBEND' : (PBEND, self._add_property_object),
 
-            'CTRSHL' : (CTRSHL, self._add_element_object),
+            'CTRSHL' : (CTRSHL, self._add_element_object),  # nasa95
             'CTRIA3' : (CTRIA3, self._add_element_object),
+            'CQUAD1' : (CQUAD1, self._add_element_object),  # nasa95
             'CQUAD4' : (CQUAD4, self._add_element_object),
             'CQUAD' : (CQUAD, self._add_element_object),
             'CQUAD8' : (CQUAD8, self._add_element_object),
@@ -2154,6 +2156,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             'PCOMPG' : (PCOMPG, self._add_property_object),
             'PSHELL' : (PSHELL, self._add_property_object),
             'PTRSHL' : (PTRSHL, self._add_property_object),
+            'PQUAD1' : (PQUAD1, self._add_property_object),
             'PLPLANE' : (PLPLANE, self._add_property_object),
             'CPLSTN3' : (CPLSTN3, self._add_element_object),
             'CPLSTN4' : (CPLSTN4, self._add_element_object),
