@@ -54,15 +54,18 @@ matrix:
     #--------------------------------------------------------------------------------------------------
 
     # old versions of packages
-    #- name: "Python 3.7 old packages"
-    #  python: '3.7'
-    #  env:
-    #  #- COVERAGE_RUN='python'
-    #  #- NUMPY='numpy==1.15 scipy==0.19 matplotlib==2.2'  # doesn't work
-    #  # - bumped scipy from 1.0 to 1.1 for compatibility with numpy
-    #  # - no pyside2 on conda
-    #  # - bumped from numpy 1.14 to 1.14.5 for py3.7 pypi compatibility
-    #  - NUMPY='numpy==1.14.5 scipy==1.1 matplotlib==2.2 h5py vtk pyqt5 pandas<0.25'
+    # old versions of packages
+    - name: "Python 3.7 old packages"
+      python: '3.7'
+      #services: xvfb
+      env:
+      - COVERAGE_RUN='python'
+      - CODECOV='ls'
+      #- NUMPY='numpy==1.15 scipy==0.19 matplotlib==2.2'  # doesn't work
+      # - bumped scipy from 1.0 to 1.1 for compatibility with numpy
+      # - bumped from numpy 1.14 to 1.14.5 for py3.7 pypi compatibility
+      - NUMPY='numpy==1.14.5 scipy==1.1 matplotlib==2.2 h5py vtk pyqt5 pandas<0.25'
+
     #--------------------------------------------------------------------------------------------------
     - name: "Python 3.7 (PySide2, no matplotlib)"
       python: '3.7'
