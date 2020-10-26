@@ -45,6 +45,7 @@ from pyNastran.op2.tables.oes_stressStrain.real.oes_plate_strain import RealCPLS
 from pyNastran.op2.tables.oes_stressStrain.real.oes_rods import RealRodStressArray, RealRodStrainArray
 from pyNastran.op2.tables.oes_stressStrain.real.oes_shear import RealShearStrainArray, RealShearStressArray
 from pyNastran.op2.tables.oes_stressStrain.real.oes_solids import RealSolidStrainArray, RealSolidStressArray
+from pyNastran.op2.tables.oes_stressStrain.real.oes_solids_nx import RealSolidStressArrayNx, RealSolidStrainArrayNx
 from pyNastran.op2.tables.oes_stressStrain.real.oes_springs import (RealSpringStressArray, RealSpringStrainArray,
                                                                     RealNonlinearSpringStressArray)
 from pyNastran.op2.tables.oes_stressStrain.real.oes_triax import RealTriaxStressArray, RealTriaxStrainArray
@@ -3092,11 +3093,11 @@ class OES(OP2Common):
         n = 0
         if self.is_stress:
             stress_strain = 'stress'
-            #obj_vector_real = RealSolidStressArray
+            obj_real = RealSolidStressArrayNx
             #obj_vector_complex = ComplexSolidStressArray
             #obj_vector_random = RandomSolidStressArray
         else:
-            #obj_vector_real = RealSolidStrainArray
+            obj_real = RealSolidStrainArrayNx
             #obj_vector_complex = ComplexSolidStrainArray
             #obj_vector_random = RandomSolidStrainArray
             stress_strain = 'strain'
@@ -3122,8 +3123,6 @@ class OES(OP2Common):
         #numwide_imag = 4 + (17 - 4) * nnodes_expected
         #numwide_random = 4 + (11 - 4) * nnodes_expected
         #numwide_random2 = 18 + 14 * (nnodes_expected - 1)
-        preline1 = '%s-%s' % (self.element_name, self.element_type)
-        preline2 = ' ' * len(preline1)
 
         #print('nnodes_expected =', nnodes_expected)
         #print('numwide real=%s imag=%s random=%s' % (numwide_real, numwide_imag, numwide_random2))
@@ -3133,13 +3132,16 @@ class OES(OP2Common):
             nelements = ndata // ntotal
             #auto_return, is_vectorized = self._create_oes_object4(
                 #nelements, result_name, slot, obj_vector_real)
-            auto_return = self.read_mode == 1
-            is_vectorized = False
+            #auto_return = self.read_mode == 1
+            #is_vectorized = False
+            auto_return, is_vectorized = self._create_oes_object4(
+                nelements, result_name, slot, obj_real)
+
             if auto_return:
                 return nelements * self.num_wide * 4, None, None
 
             obj = self.obj
-            if self.use_vector and is_vectorized and self.sort_method == 1 and 0:  # pragma: no cover
+            if self.use_vector and is_vectorized and self.sort_method == 1:  # pragma: no cover
                 n = nelements * 4 * self.num_wide
                 itotal = obj.ielement
                 itotali = obj.itotal + nelements
@@ -3155,12 +3157,13 @@ class OES(OP2Common):
                         msg += 'nelements=%s numwide_real=%s nelements*numwide=%s' % (
                             nelements, numwide_real, nelements * numwide_real)
                         raise ValueError(msg)
+
                     eids = ints1[:, 0] // 10
                     cids = ints1[:, 1]
                     #nids = ints1[:, 4]
                     assert eids.min() > 0, eids.min()
                     obj.element_node[itotal:itotal2, 0] = repeat(eids, nnodes_expected)
-                    ints2 = ints1[:, 4:].reshape(nelements * nnodes_expected, 21)
+                    ints2 = ints1[:, 3:].reshape(nelements * nnodes_expected, 8)
                     grid_device = ints2[:, 0]#.reshape(nelements, nnodes_expected)
 
                     #print('%s-grid_device=%s' % (self.element_name, grid_device))
@@ -3176,100 +3179,35 @@ class OES(OP2Common):
                     obj.element_cid[itotal:itotali, 0] = eids
                     obj.element_cid[itotal:itotali, 1] = cids
 
-                floats = frombuffer(data, dtype=self.fdtype).reshape(nelements, numwide_real)[:, 4:]
-                # 1     9    15   2    10   16  3   11  17   8
-                #[oxx, oyy, ozz, txy, tyz, txz, o1, o2, o3, ovm]
+                floats = frombuffer(data, dtype=self.fdtype).reshape(nelements, numwide_real)[:, 3:]
+                # 1    2    3    4    5    6    7 - verify...
+                #[oxx, oyy, ozz, txy, tyz, txz, ovm]
                 #isave = [1, 9, 15, 2, 10, 16, 3, 11, 17, 8]
                 #(grid_device,
                     #sxx, sxy, s1, a1, a2, a3, pressure, svm,
                     #syy, syz, s2, b1, b2, b3,
                     #szz, sxz, s3, c1, c2, c3)
-                floats1 = floats.reshape(nelements * nnodes_expected, 21)#[:, 1:] # drop grid_device
+
+                floats1 = floats.reshape(nelements * nnodes_expected, 8)[:, 1:] # drop grid_device
 
                 # o1/o2/o3 is not max/mid/min.  They are not consistently ordered, so we force it.
-                max_mid_min = np.vstack([
-                    floats1[:, 3],
-                    floats1[:, 11],
-                    floats1[:, 17],
-                ]).T
-                max_mid_min.sort(axis=1)
-                assert max_mid_min.shape == (nelements * nnodes_expected, 3), max_mid_min.shape
-                obj.data[obj.itime, itotal:itotal2, 6:9] = max_mid_min[:, [2, 1, 0]]
 
-                #obj.data[obj.itime, itotal:itotal2, :] = floats1[:, isave]
-                obj.data[obj.itime, itotal:itotal2, :6] = floats1[:, [1, 9, 15, 2, 10, 16]]
-                obj.data[obj.itime, itotal:itotal2, 9] = floats1[:, 8]
+                obj.data[obj.itime, itotal:itotal2, :] = floats1
                 obj.itotal = itotal2
                 obj.ielement = itotali
             else:
-                #if is_vectorized and self.use_vector:  # pragma: no cover
-                    #self.log.debug('vectorize CSolid real SORT%s' % self.sort_method)
-
-            # 2 CID I Coordinate System
-            # 3 CTYPE CHAR4 Grid or Gauss
-            #
-            # 4 GRID I Corner grid ID
-            # 5 EX RS Strain in X
-            # 6 EY RS Strain in Y
-            # 7 EZ RS Strain in Z
-            # 8 EXY RS Strain in XY
-            # 9 EYZ RS Strain in YZ
-            # 10 EZX RS Strain in ZX
-            # 11 EVM RS Von Mises strain
-            # Words 4 through 11 repeat nnodes times.
-                struct1 = Struct(self._endian + self._analysis_code_fmt + b'i4s')
-                struct2 = Struct(self._endian + b'i7f')
-                if self.is_debug_file:
-                    msg = '%s-%s nelements=%s nnodes=%s; C=[sxx, syy, szz, txy, tyz, txz, ovm,\n' % (
-                        self.element_name, self.element_type, nelements, nnodes_expected)
-                    self.binary_debug.write(msg)
-
-                for unused_i in range(nelements):
-                    edata = data[n:n+12]
-                    out = struct1.unpack(edata)
-                    (eid_device, cid, unused_abcd) = out
-                    eid, dt = get_eid_dt_from_eid_device(
-                        eid_device, self.nonlinear_factor, self.sort_method)
-
-                    if self.is_debug_file:
-                        self.binary_debug.write('%s - eid=%i; %s\n' % (preline1, eid, str(out)))
-
-                    #assert nnodes < 21, 'print_block(data[n:n+16])'  #self.print_block(data[n:n+16])
-
-                    n += 12
-                    for inode in range(nnodes_expected):  # nodes pts, no centroid
-                        out = struct2.unpack(data[n:n + 32]) # 4*8 = 32
-                        if self.is_debug_file:
-                            self.binary_debug.write('%s - %s\n' % (preline2, str(out)))
-                        (grid_device, sxx, syy, szz, txy, tyz, txz, ovm) = out
-
-                        if self.is_debug_file:
-                            self.binary_debug.write('  eid=%s inode=%i; C=[%s]\n' % (
-                                eid, grid_device, ', '.join(['%r' % di for di in out])))
-
-                        #if grid_device == 0:
-                            #grid = 'CENTER'
-                        #else:
-                            ##grid = (grid_device - device_code) // 10
-                            #grid = grid_device
-
-                        grid = grid_device
-                        #a_cos = [a1, a2, a3]
-                        #b_cos = [b1, b2, b3]
-                        #c_cos = [c1, c2, c3]
-                        if 0:
-                            if inode == 0:
-                                #  this is correct, but fails
-                                #element_name = self.element_name + str(nnodes)
-                                obj.add_eid_sort1(element_name, cid, dt, eid, grid,
-                                                  sxx, syy, szz, txy, tyz, txz, ovm)
-                            else:
-                                obj.add_node_sort1(dt, eid, inode, grid,
-                                                   sxx, syy, szz, txy, tyz, txz, ovm)
-                        n += 32
-            self.log.warning(f'skipping {self.table_name_str}: {self.element_name}-{self.element_type} {stress_strain} csolid2')
+                n = _oes_csolid2_real(self, data, n,
+                                      obj,
+                                      nnodes_expected,
+                                      nelements,
+                                      element_name,
+                                      stress_strain=stress_strain)
         else:  # pragma: no cover
             raise NotImplementedError(self.code_information())
+        assert isinstance(n, int), n
+        assert isinstance(ntotal, int), ntotal
+        assert isinstance(nelements, int), nelements
+
         assert n == ntotal * nelements, f'n={n} ntotal={ntotal*nelements}'
         return n, nelements, ntotal
 
@@ -9246,4 +9184,70 @@ def oes_shell_composite_complex_13(self,
                       o1a, o2a, t12a, o1za, o2za,
                       o1b, o2b, t12b, o1zb, e2zb, ovm)
         n += ntotal
+    return n
+
+def _oes_csolid2_real(self, data: bytes,
+                      n: int,
+                      obj: Union[RealSolidStressArrayNx, RealSolidStrainArrayNx],
+                      nnodes_expected: int,
+                      nelements: int,
+                      element_name: str,
+                      stress_strain='stress') -> Tuple[int, int, int]:
+
+    obj = self.obj
+    preline1 = '%s-%s' % (self.element_name, self.element_type)
+    preline2 = ' ' * len(preline1)
+    #if is_vectorized and self.use_vector:  # pragma: no cover
+        #self.log.debug('vectorize CSolid real SORT%s' % self.sort_method)
+
+    # 2 CID I Coordinate System
+    # 3 CTYPE CHAR4 Grid or Gauss
+    #
+    # 4 GRID I Corner grid ID
+    # 5 EX RS Strain in X
+    # 6 EY RS Strain in Y
+    # 7 EZ RS Strain in Z
+    # 8 EXY RS Strain in XY
+    # 9 EYZ RS Strain in YZ
+    # 10 EZX RS Strain in ZX
+    # 11 EVM RS Von Mises strain
+    # Words 4 through 11 repeat nnodes times.
+    struct1 = Struct(self._endian + self._analysis_code_fmt + b'i4s')
+    struct2 = Struct(self._endian + b'i7f')
+    if self.is_debug_file:
+        msg = '%s-%s nelements=%s nnodes=%s; C=[sxx, syy, szz, txy, tyz, txz, ovm,\n' % (
+            self.element_name, self.element_type, nelements, nnodes_expected)
+        self.binary_debug.write(msg)
+
+    assert self.is_sort1
+    obj._times[obj.itime] = self.nonlinear_factor
+    for unused_i in range(nelements):
+        edata = data[n:n+12]
+        out = struct1.unpack(edata)
+        (eid_device, cid, unused_abcd) = out
+        eid, dt = get_eid_dt_from_eid_device(
+            eid_device, self.nonlinear_factor, self.sort_method)
+        #print(eid, dt, cid, unused_abcd)
+        if self.is_debug_file:
+            self.binary_debug.write('%s - eid=%i; %s\n' % (preline1, eid, str(out)))
+
+        #assert nnodes < 21, 'print_block(data[n:n+16])'  #self.print_block(data[n:n+16])
+        n += 12
+        for inode in range(nnodes_expected):  # nodes pts, no centroid
+            out = struct2.unpack(data[n:n + 32]) # 4*8 = 32
+            if self.is_debug_file:
+                self.binary_debug.write('%s - %s\n' % (preline2, str(out)))
+            (grid_device, sxx, syy, szz, txy, tyz, txz, ovm) = out
+
+            if self.is_debug_file:
+                self.binary_debug.write('  eid=%s inode=%i; C=[%s]\n' % (
+                    eid, grid_device, ', '.join(['%r' % di for di in out])))
+
+            #grid = (grid_device - device_code) // 10
+            #grid = grid_device
+
+            grid = grid_device
+            obj.add_node_sort1(dt, eid, inode, grid,
+                               sxx, syy, szz, txy, tyz, txz, ovm)
+            n += 32
     return n

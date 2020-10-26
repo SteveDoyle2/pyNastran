@@ -667,6 +667,7 @@ class NastranGuiResults(NastranGuiAttributes):
                         is_stress=True)
                 except IndexError:
                     self.log.error('problem getting stress...')
+                    #raise
                     break
             if icase == icase_old:
                 return icase
@@ -837,6 +838,7 @@ class NastranGuiResults(NastranGuiAttributes):
         eids = self.element_ids
         assert len(eids) > 0, eids
         nelements = self.nelements
+        print('***nelements', nelements)
 
         is_element_on = np.zeros(nelements, dtype='int8')  # is the element supported
         oxx = np.full(nelements, np.nan, dtype='float32')

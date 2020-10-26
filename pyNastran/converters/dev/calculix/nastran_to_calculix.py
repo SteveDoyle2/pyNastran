@@ -375,7 +375,7 @@ class CalculixConverter(BDF):
                 loads2.append(load)
 
         nnodes = self.nnodes
-        print('nnodes = %s' % nnodes)
+        #print('nnodes = %s' % nnodes)
         force_moment = zeros((nnodes, 6), 'float64')
         #print(force_moment.shape)
         force = force_moment[:, :3]

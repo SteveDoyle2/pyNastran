@@ -894,6 +894,9 @@ def _check_element_node(table1: BaseElement, table2: BaseElement, log: SimpleLog
         msg += '%s\n' % str(table1.code_information())
         for i, (eid1, nid1), (eid2, nid2) in zip(count(), table1.element_node, table2.element_node):
             msg += '%s : (%s, %s), (%s, %s)\n' % (i, eid1, nid1, eid2, nid2)
+            if i > 20:
+                msg += '...'
+                break
         print(msg)
         raise ValueError(msg)
 

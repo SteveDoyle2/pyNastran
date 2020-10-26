@@ -4,6 +4,8 @@ from typing import TYPE_CHECKING
 import numpy as np
 from pyNastran.converters.nastran.gui.results import SimpleTableResults, LayeredTableResults
 from pyNastran.op2.result_objects.stress_object import _get_nastran_header
+from pyNastran.op2.tables.oes_stressStrain.real.oes_solids import RealSolidArray
+from pyNastran.op2.tables.oes_stressStrain.real.oes_solids_nx import RealSolidArrayNx
 
 if TYPE_CHECKING: # pragma: no cover
     from pyNastran.op2.op2 import OP2
@@ -112,7 +114,6 @@ def get_rod_stress_strains(eids, cases, model: OP2, times, key, icase,
         return icase
 
     scalars_array = concatenate_scalars(scalars_array)
-
     headers = [] # sidebar word
     res = SimpleTableResults(
         subcase_id, headers, rod_ieids, ieid_max, scalars_array, methods,
@@ -902,6 +903,7 @@ def get_solid_stress_strains(eids, cases, model: OP2, times, key, icase,
             'omin' : 'σmin',
             'omid' : 'σmid',
             'von_mises' : 'σ von Mises',
+            'max_shear' : 'σ max Shear',
         }
         data_format = '%.3f'
     else:
@@ -918,6 +920,7 @@ def get_solid_stress_strains(eids, cases, model: OP2, times, key, icase,
             'emin' : 'ϵmin',
             'emid' : 'ϵmid',
             'von_mises' : 'ϵ von Mises',
+            'max_shear' : 'ϵ max Shear',
         }
         data_format = '%.3e'
     methods = [method_map[headeri] for headeri in case_headers]
@@ -957,8 +960,50 @@ def get_solid_stress_strains(eids, cases, model: OP2, times, key, icase,
         #print('scalars.shape', scalars.shape)
         ntimes, nall, nresults = scalars.shape
         nelements = nall // nnodes
-        scalars_save = scalars.reshape(ntimes, nelements, nnodes, nresults)
-        scalars_array.append(scalars_save[:, :, 0, :])
+        if isinstance(case, RealSolidArray):
+            scalars_save = scalars.reshape(ntimes, nelements, nnodes, nresults)
+            scalars_array.append(scalars_save[:, :, 0, :])
+        elif isinstance(case, RealSolidArrayNx):
+            # calculate centroidal stresses because they don't exist
+            scalars_save = scalars.reshape(ntimes, nelements, nnodes, nresults)
+            oxxi = scalars_save[:, :, :, 0].mean(axis=2)
+            oyyi = scalars_save[:, :, :, 1].mean(axis=2)
+            ozzi = scalars_save[:, :, :, 2].mean(axis=2)
+            txyi = scalars_save[:, :, :, 3].mean(axis=2)
+            tyzi = scalars_save[:, :, :, 4].mean(axis=2)
+            txzi = scalars_save[:, :, :, 5].mean(axis=2)
+            ovmi = scalars_save[:, :, :, 6].mean(axis=2)
+
+            assert len(oxxi.shape) == 2, oxxi.shape
+            ntimes, nrows = oxxi.shape
+
+            # calculate principal stresses
+            a_matrix = np.full((ntimes, nrows, 3, 3), np.nan)
+            a_matrix[:, :, 0, 0] = oxxi
+            a_matrix[:, :, 1, 1] = oyyi
+            a_matrix[:, :, 2, 2] = ozzi
+
+            a_matrix[:, :, 0, 1] = a_matrix[:, :, 1, 0] = txyi
+            a_matrix[:, :, 0, 2] = a_matrix[:, :, 2, 0] = txzi
+            a_matrix[:, :, 1, 2] = a_matrix[:, :, 2, 1] = tyzi
+
+            eigs = np.linalg.eigvalsh(a_matrix)  # array = (..., M, M) array
+            o1i = eigs[:, :, 2]
+            o2i = eigs[:, :, 1]
+            o3i = eigs[:, :, 0]
+
+            scalars_save2 = np.full((ntimes, nrows, 10), np.nan)
+            scalars_save2[:, :, 0] = oxxi
+            scalars_save2[:, :, 1] = oyyi
+            scalars_save2[:, :, 2] = ozzi
+            scalars_save2[:, :, 3] = txyi
+            scalars_save2[:, :, 4] = tyzi
+            scalars_save2[:, :, 5] = txzi
+            scalars_save2[:, :, 6] = o1i
+            scalars_save2[:, :, 7] = o2i
+            scalars_save2[:, :, 8] = o3i
+            scalars_save2[:, :, 9] = ovmi
+            scalars_array.append(scalars_save2)
 
     if len(scalars_array) == 0:
         return icase
@@ -967,11 +1012,11 @@ def get_solid_stress_strains(eids, cases, model: OP2, times, key, icase,
 
     #titles = []  # legend title
     headers = [] # sidebar word
+    assert scalars_array.shape[2] == len(methods), f'shape={scalars_array.shape}; methods={methods} n={len(methods)}'
     res = SimpleTableResults(
         subcase_id, headers, solid_ieids, ieid_max, scalars_array, methods,
         data_format=data_format,
         colormap='jet', uname='Solid ' + word)
-
     icase = add_simple_methods_to_form(icase, cases, key, subcase_id, word, res, case,
                                        form_dict, header_dict, methods,
                                        name='Solid')

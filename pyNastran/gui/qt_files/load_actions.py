@@ -298,8 +298,8 @@ class LoadActions:
                 msg = traceback.format_exc()
                 self.gui.log_error(msg)
                 print(msg)
-                #return
-                raise
+                return
+                #raise
 
             self.gui.out_filename = out_filenamei
             msg = '%s - %s - %s' % (self.gui.format, self.gui.infile_name, out_filenamei)

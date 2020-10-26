@@ -4,6 +4,9 @@ from typing import Dict, Union, Any
 
 import numpy as np
 from pyNastran.femutils.utils import pivot_table
+from pyNastran.op2.tables.oes_stressStrain.real.oes_solids import RealSolidArray
+from pyNastran.op2.tables.oes_stressStrain.real.oes_solids_nx import RealSolidArrayNx
+
 
 #vm_word = get_plate_stress_strain(
     #model, key, is_stress, vm_word, itime,
@@ -28,8 +31,8 @@ class StressObject:
             #(min_data, max_data) = data2
 
         for element_type, composite_data in self.composite_data_dict.items():
-            for key in composite_data:
-                element_layer, ueids, data2, vm_word, unused_ntimes, headers = composite_data[key]
+            for keyi in composite_data:
+                element_layer, ueids, data2, vm_word, unused_ntimes, headers = composite_data[keyi]
                 #all_eids = ueids
 
                 ntimes, unused_neids, unused_nlayers, unused_nresults = data2.shape
@@ -797,6 +800,7 @@ def get_solid_stress_strain(model, key, is_stress, vm_word, itime,
                             max_principal, mid_principal, min_principal, ovm, is_element_on,
                             eids, header_dict, keys_map):
     """helper method for _fill_op2_time_centroidal_stress"""
+    log = model.log
     if is_stress:
         solids = [(model.ctetra_stress),
                   (model.cpenta_stress),
@@ -820,7 +824,6 @@ def get_solid_stress_strain(model, key, is_stress, vm_word, itime,
 
         nnodes_per_element = case.nnodes
         eidsi = case.element_cid[:, 0]
-        ntotal = len(eidsi)  * nnodes_per_element
 
         i = np.searchsorted(eids, eidsi)
         if len(i) != len(np.unique(i)):
@@ -830,51 +833,29 @@ def get_solid_stress_strain(model, key, is_stress, vm_word, itime,
             if len(i) != len(np.unique(i)):
                 msg = 'i%s (solid)=%s is not unique' % (case.element_name, str(i))
                 #msg = 'isolid=%s is not unique' % str(i)
-                model.log.warning(msg)
+                log.warning(msg)
                 continue
 
         is_element_on[i] = 1
-        #self.data[self.itime, self.itotal, :] = [oxx, oyy, ozz,
-        #                                         txy, tyz, txz,
-        #                                         o1, o2, o3, ovm]
-
-        if nnodes_per_element == 1:
-            j = None
+        if isinstance(case, RealSolidArray):
+            out = _get_solid_stress_strain_real(
+                case, eidsi,
+                nnodes_per_element,
+                key, itime,
+                header_dict,
+                keys_map
+            )
+        elif isinstance(case, RealSolidArrayNx):
+            out = _get_solid_stress_strain_real_nx(
+                case, eidsi,
+                nnodes_per_element,
+                key, itime,
+                header_dict,
+                keys_map
+            )
         else:
-            j = np.arange(ntotal)[::nnodes_per_element]
-            ueidsi = np.unique(eidsi)
-            assert len(j) == len(ueidsi), 'j=%s ueidsi=%s' % (j, ueidsi)
-
-        dt = case._times[itime]
-        header = _get_nastran_header(case, dt, itime)
-        header_dict[(key, itime)] = header
-        keys_map[key] = (case.subtitle, case.label,
-                         case.superelement_adaptivity_index, case.pval_step)
-        oxxi = case.data[itime, j, 0]
-        oyyi = case.data[itime, j, 1]
-        ozzi = case.data[itime, j, 2]
-        txyi = case.data[itime, j, 3]
-        tyzi = case.data[itime, j, 4]
-        txzi = case.data[itime, j, 5]
-        o1i = case.data[itime, j, 6]
-        o2i = case.data[itime, j, 7]
-        o3i = case.data[itime, j, 8]
-        ovmi = case.data[itime, j, 9]
-
-        for inode in range(1, nnodes_per_element):
-            oxxi = np.amax(np.vstack([oxxi, case.data[itime, j + inode, 0]]), axis=0)
-            oyyi = np.amax(np.vstack([oyyi, case.data[itime, j + inode, 1]]), axis=0)
-            ozzi = np.amax(np.vstack([ozzi, case.data[itime, j + inode, 2]]), axis=0)
-            txyi = np.amax(np.vstack([txyi, case.data[itime, j + inode, 3]]), axis=0)
-            tyzi = np.amax(np.vstack([tyzi, case.data[itime, j + inode, 4]]), axis=0)
-            txzi = np.amax(np.vstack([txzi, case.data[itime, j + inode, 2]]), axis=0)
-
-            o1i = np.amax(np.vstack([o1i, case.data[itime, j + inode, 6]]), axis=0)
-            o2i = np.amax(np.vstack([o2i, case.data[itime, j + inode, 7]]), axis=0)
-            o3i = np.amin(np.vstack([o3i, case.data[itime, j + inode, 8]]), axis=0)
-            ovmi = np.amax(np.vstack([ovmi, case.data[itime, j + inode, 9]]), axis=0)
-            assert len(oxxi) == len(j)
-
+            raise NotImplementedError(type(case))
+        oxxi, oyyi, ozzi, txyi, tyzi, txzi, o1i, o2i, o3i, ovmi = out
         oxx[i] = oxxi
         oyy[i] = oyyi
         ozz[i] = ozzi
@@ -887,3 +868,123 @@ def get_solid_stress_strain(model, key, is_stress, vm_word, itime,
         ovm[i] = ovmi
     del solids
     return vm_word
+
+def _get_solid_stress_strain_real(case: RealSolidArray,
+                                  eidsi,
+                                  nnodes_per_element: int,
+                                  key: str, itime: int,
+                                  header_dict,
+                                  keys_map):
+
+    ntotal = len(eidsi)  * nnodes_per_element
+
+    #self.data[self.itime, self.itotal, :] = [oxx, oyy, ozz,
+    #                                         txy, tyz, txz,
+    #                                         o1, o2, o3, ovm]
+
+    if nnodes_per_element == 1:
+        j = None
+    else:
+        j = np.arange(ntotal)[::nnodes_per_element]
+        ueidsi = np.unique(eidsi)
+        assert len(j) == len(ueidsi), 'j=%s ueidsi=%s' % (j, ueidsi)
+
+    dt = case._times[itime]
+    header = _get_nastran_header(case, dt, itime)
+    header_dict[(key, itime)] = header
+    keys_map[key] = (case.subtitle, case.label,
+                     case.superelement_adaptivity_index, case.pval_step)
+    oxxi = case.data[itime, j, 0]
+    oyyi = case.data[itime, j, 1]
+    ozzi = case.data[itime, j, 2]
+    txyi = case.data[itime, j, 3]
+    tyzi = case.data[itime, j, 4]
+    txzi = case.data[itime, j, 5]
+    o1i = case.data[itime, j, 6] # max
+    o2i = case.data[itime, j, 7] # min
+    o3i = case.data[itime, j, 8] # mid
+    ovmi = case.data[itime, j, 9]
+
+    for inode in range(1, nnodes_per_element):
+        oxxi = np.amax(np.vstack([oxxi, case.data[itime, j + inode, 0]]), axis=0)
+        oyyi = np.amax(np.vstack([oyyi, case.data[itime, j + inode, 1]]), axis=0)
+        ozzi = np.amax(np.vstack([ozzi, case.data[itime, j + inode, 2]]), axis=0)
+        txyi = np.amax(np.vstack([txyi, case.data[itime, j + inode, 3]]), axis=0)
+        tyzi = np.amax(np.vstack([tyzi, case.data[itime, j + inode, 4]]), axis=0)
+        txzi = np.amax(np.vstack([txzi, case.data[itime, j + inode, 2]]), axis=0)
+
+        o1i = np.amax(np.vstack([o1i, case.data[itime, j + inode, 6]]), axis=0)
+        o2i = np.amax(np.vstack([o2i, case.data[itime, j + inode, 7]]), axis=0)
+        o3i = np.amin(np.vstack([o3i, case.data[itime, j + inode, 8]]), axis=0)
+        ovmi = np.amax(np.vstack([ovmi, case.data[itime, j + inode, 9]]), axis=0)
+        assert len(oxxi) == len(j)
+    return oxxi, oyyi, ozzi, txyi, tyzi, txzi, o1i, o2i, o3i, ovmi
+
+def _get_solid_stress_strain_real_nx(case: RealSolidArrayNx,
+                                     eidsi,
+                                     nnodes_per_element: int,
+                                     key: str, itime: int,
+                                     header_dict,
+                                     keys_map):
+
+    ntotal = len(eidsi)  * nnodes_per_element
+
+    #self.data[self.itime, self.itotal, :] = [oxx, oyy, ozz,
+    #                                         txy, tyz, txz,
+    #                                         o1, o2, o3, ovm]
+
+    if nnodes_per_element == 1:
+        j = None
+    else:
+        j = np.arange(ntotal)[::nnodes_per_element]
+        ueidsi = np.unique(eidsi)
+        assert len(j) == len(ueidsi), 'j=%s ueidsi=%s' % (j, ueidsi)
+
+    dt = case._times[itime]
+    header = _get_nastran_header(case, dt, itime)
+    header_dict[(key, itime)] = header
+    keys_map[key] = (case.subtitle, case.label,
+                     case.superelement_adaptivity_index, case.pval_step)
+    oxxi = case.data[itime, j, 0]
+    oyyi = case.data[itime, j, 1]
+    ozzi = case.data[itime, j, 2]
+    txyi = case.data[itime, j, 3]
+    tyzi = case.data[itime, j, 4]
+    txzi = case.data[itime, j, 5]
+    ovmi = case.data[itime, j, 6]
+
+    nrows = len(oxxi)
+    a_matrix = np.full((nrows, 3, 3), np.nan)
+    a_matrix[:, 0, 0] = oxxi
+    a_matrix[:, 1, 1] = oyyi
+    a_matrix[:, 2, 2] = ozzi
+
+    a_matrix[:, 0, 1] = a_matrix[:, 1, 0] = txyi
+    a_matrix[:, 0, 2] = a_matrix[:, 2, 0] = txzi
+    a_matrix[:, 1, 2] = a_matrix[:, 2, 1] = tyzi
+
+    eigs = np.linalg.eigvalsh(a_matrix)  # array = (..., M, M) array
+
+    o1i = eigs[:, 2]
+    o2i = eigs[:, 1]
+    o3i = eigs[:, 0]
+    #print(o1i)
+    #print(eigs.shape)
+    #print(eigs)
+    #aaa
+
+    for inode in range(nnodes_per_element-1):
+        oxxi = np.amax(np.vstack([oxxi, case.data[itime, j + inode, 0]]), axis=0)
+        oyyi = np.amax(np.vstack([oyyi, case.data[itime, j + inode, 1]]), axis=0)
+        ozzi = np.amax(np.vstack([ozzi, case.data[itime, j + inode, 2]]), axis=0)
+        txyi = np.amax(np.vstack([txyi, case.data[itime, j + inode, 3]]), axis=0)
+        tyzi = np.amax(np.vstack([tyzi, case.data[itime, j + inode, 4]]), axis=0)
+        txzi = np.amax(np.vstack([txzi, case.data[itime, j + inode, 2]]), axis=0)
+
+        #o1i = np.amax(np.vstack([o1i, case.data[itime, j + inode, 6]]), axis=0)
+        #o2i = np.amax(np.vstack([o2i, case.data[itime, j + inode, 7]]), axis=0)
+        #o3i = np.amin(np.vstack([o3i, case.data[itime, j + inode, 8]]), axis=0)
+        #o1i = np.zeros(ovmi.shape)
+        ovmi = np.amax(np.vstack([ovmi, case.data[itime, j + inode, 6]]), axis=0)
+        assert len(oxxi) == len(j)
+    return oxxi, oyyi, ozzi, txyi, tyzi, txzi, o1i, o2i, o3i, ovmi
