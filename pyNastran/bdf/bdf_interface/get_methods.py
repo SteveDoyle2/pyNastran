@@ -178,8 +178,13 @@ class GetMethods(BDFAttributes):
                     raise KeyError('nid=%s is not a GRIDB%s\n%s' % (nid, msg, nid_list))
                 nodes.append(gridb)
         else:
-            for nid in nids:
-                nodes.append(self.Node(nid, msg=msg))
+            try:
+                for nid in nids:
+                    nodes.append(self.Node(nid, msg=msg))
+            except AssertionError:
+                print(msg)
+                print(nids)
+                raise
         return nodes
 
     def Point(self, nid: int, msg: str='') -> POINT:

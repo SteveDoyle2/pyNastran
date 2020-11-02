@@ -2985,7 +2985,7 @@ class CTETRA10(SolidElement):
             the BDF object
         """
         msg = ', which is required by CTETRA eid=%s' % self.eid
-        self.nodes_ref = model.Nodes(self.nodes, msg=msg)
+        self.nodes_ref = model.Nodes(self.nodes[:4], msg=msg) + model.EmptyNodes(self.nodes[4:], msg=msg)
         self.pid_ref = model.safe_property(self.pid, self.eid, xref_errors, msg=msg)
 
     def material_coordinate_system(self, xyz=None):
