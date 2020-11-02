@@ -1,7 +1,7 @@
 # pylint: disable=C0301,C0103,R0913,R0914,R0904,C0111,R0201,R0902
 from itertools import count
 from struct import Struct, pack
-from typing import List
+from typing import Tuple, List, Any
 
 import numpy as np
 from numpy import zeros, where, searchsorted
@@ -45,13 +45,14 @@ class RealSolidArray(OES_Object):
         self.ielement = 0
 
     def update_data_components(self):
+        ntimes, nelements_nnodes = self.data.shape[:2]
         # vm
-        oxx = self.data[:, :, 0]
-        oyy = self.data[:, :, 1]
-        ozz = self.data[:, :, 2]
-        txy = self.data[:, :, 3]
-        tyz = self.data[:, :, 4]
-        txz = self.data[:, :, 5]
+        oxx = self.data[:, :, 0].reshape(ntimes * nelements_nnodes)
+        oyy = self.data[:, :, 1].reshape(ntimes * nelements_nnodes)
+        ozz = self.data[:, :, 2].reshape(ntimes * nelements_nnodes)
+        txy = self.data[:, :, 3].reshape(ntimes * nelements_nnodes)
+        tyz = self.data[:, :, 4].reshape(ntimes * nelements_nnodes)
+        txz = self.data[:, :, 5].reshape(ntimes * nelements_nnodes)
 
         #I1 = oxx + oyy + ozz
         #txyz = txy**2 + tyz**2 + txz ** 2
@@ -59,10 +60,19 @@ class RealSolidArray(OES_Object):
         #I3 = oxx * oyy * ozz + 2 * txy * tyz * txz + oxx * tyz**2 - oyy * txz**2 - ozz * txy
 
         # (n_subarrays, nrows, ncols)
+        o1, o2, o3 = calculate_principal_components(
+            ntimes, nelements_nnodes,
+            oxx, oyy, ozz, txy, tyz, txz,
+            self.is_stress)
+        ovm_sheari = calculate_ovm_shear(oxx, oyy, ozz, txy, tyz, txz, o1, o3,
+                                         self.is_von_mises, self.is_stress)
+        ovm_sheari2 = ovm_sheari.reshape(ntimes, nelements_nnodes)
 
-        ovm = np.sqrt((oxx - oyy)**2 + (oyy - ozz)**2 + (oxx - ozz)**2 +
-                      3. * (txy**2 + tyz**2 + txz ** 2))
-        self.data[:, :, 9] = ovm
+        self.data[:, :, 6] = o1.reshape(ntimes, nelements_nnodes)
+        self.data[:, :, 7] = o2.reshape(ntimes, nelements_nnodes)
+        self.data[:, :, 8] = o3.reshape(ntimes, nelements_nnodes)
+        self.data[:, :, 9] = ovm_sheari2
+
         #A = [[doxx, dtxy, dtxz],
              #[dtxy, doyy, dtyz],
              #[dtxz, dtyz, dozz]]
@@ -705,3 +715,44 @@ def _get_f06_header_nnodes(self, is_mag_phase=True):
         msg = f'element_name={self.element_name} self.element_type={self.element_type}'
         raise NotImplementedError(msg)
     return nnodes, msg
+
+def calculate_principal_components(ntimes: int, nelements_nnodes: int,
+                                   oxx, oyy, ozz,
+                                   txy, tyz, txz,
+                                   is_stress: bool) -> Tuple[Any, Any, Any]:
+    """
+    # TODO: scale by 2 for strain
+    """
+    a_matrix = np.full((ntimes * nelements_nnodes, 3, 3), np.nan)
+    print(a_matrix.shape, oxx.shape)
+    a_matrix[:, 0, 0] = oxx
+    a_matrix[:, 1, 1] = oyy
+    a_matrix[:, 2, 2] = ozz
+    if is_stress:
+        a_matrix[:, 0, 1] = a_matrix[:, 1, 0] = txy
+        a_matrix[:, 0, 2] = a_matrix[:, 2, 0] = txz
+        a_matrix[:, 1, 2] = a_matrix[:, 2, 1] = tyz
+    else:
+        a_matrix[:, 0, 1] = a_matrix[:, 1, 0] = txy / 2.
+        a_matrix[:, 0, 2] = a_matrix[:, 2, 0] = txz / 2.
+        a_matrix[:, 1, 2] = a_matrix[:, 2, 1] = tyz / 2.
+
+    eigs = np.linalg.eigvalsh(a_matrix)  # array = (..., M, M) array
+
+    o1 = eigs[:, 2]
+    o2 = eigs[:, 1]
+    o3 = eigs[:, 0]
+    return o1, o2, o3
+
+def calculate_ovm_shear(oxx, oyy, ozz,
+                        txy, tyz, txz, o1, o3,
+                        is_von_mises: bool,
+                        is_stress: bool):
+    if is_von_mises:
+        # von mises
+        ovm_shear = np.sqrt((oxx - oyy)**2 + (oyy - ozz)**2 + (oxx - ozz)**2 +
+                      3. * (txy**2 + tyz**2 + txz ** 2))
+    else:
+        # max shear
+        ovm_shear = (o1 - o3) / 2.
+    return ovm_shear

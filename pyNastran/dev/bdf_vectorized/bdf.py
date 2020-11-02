@@ -406,7 +406,6 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
         #: / is the delete from restart card
         self.special_cards = ['DEQATN', '/']
         self._make_card_parser()
-
         if self.is_msc:
             self.set_as_msc()
         elif self.is_nx:

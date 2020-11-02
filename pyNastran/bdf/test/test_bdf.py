@@ -37,7 +37,7 @@ from pyNastran.bdf.errors import (
     ReplicationError,
     EnvironmentVariableError,
 )
-from pyNastran.bdf.bdf import BDF, read_bdf
+from pyNastran.bdf.bdf import BDF, read_bdf, map_version
 from pyNastran.bdf.subcase import Subcase
 from pyNastran.bdf.mesh_utils.export_mcids import export_mcids, export_mcids_all
 from pyNastran.bdf.mesh_utils.extract_bodies import extract_bodies
@@ -347,18 +347,6 @@ def run_bdf(folder, bdf_filename, debug=False, xref=True, check=True, punch=Fals
     )
     return fem1, fem2, diff_cards
 
-def _map_version(fem: BDF, version: Optional[str]):
-    if version:
-        version_map = {
-            'msc': fem.set_as_msc,
-            'nx': fem.set_as_nx,
-            'mystran': fem.set_as_mystran,
-            #'nasa95': fem.set_as_nasa95,
-            'zona': fem.set_as_zona,
-        }
-        func = version_map[version]
-        func()
-
 def run_and_compare_fems(
         bdf_model, out_model, debug=False, xref=True, check=True,
         punch=False, mesh_form='combined',
@@ -378,7 +366,8 @@ def run_and_compare_fems(
     """runs two fem models and compares them"""
     assert os.path.exists(bdf_model), f'{bdf_model!r} doesnt exist'
     fem1 = BDF(debug=debug, log=log)
-    _map_version(fem1, version)
+    if version:
+        map_version(fem1, version)
     fem1.dumplines = dumplines
 
     fem1.set_error_storage(nparse_errors=nerrors, stop_on_parsing_error=True,

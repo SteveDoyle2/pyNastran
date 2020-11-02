@@ -11,6 +11,7 @@ Main BDF class.  Defines:
 # -etc.- ENDT
 
 # see https://docs.plm.automation.siemens.com/tdoc/nxnastran/10/help/#uid:index
+from __future__ import annotations
 import os
 import sys
 from copy import deepcopy
@@ -19,7 +20,8 @@ from pathlib import PurePath
 import traceback
 from collections import defaultdict
 
-from typing import List, Dict, Set, Tuple, Sequence, Optional, Union, Any # , cast
+from typing import (
+    List, Dict, Set, Tuple, Sequence, Optional, Union, Any, TYPE_CHECKING)
 from pickle import load, dump, dumps  # type: ignore
 
 import numpy as np  # type: ignore
@@ -31,7 +33,7 @@ from .bdf_interface.utils import (
     _parse_pynastran_header, to_fields, parse_executive_control_deck,
     fill_dmigs, _get_card_name, _parse_dynamic_syntax,
 )
-
+from pyNastran.bdf.bdf_interface.add_card import CARD_MAP
 from .bdf_interface.replication import (
     to_fields_replication, get_nrepeats, int_replication, float_replication,
     _field, repeat_cards)
@@ -154,7 +156,7 @@ from .cards.bdf_sets import (
     SESET, #SEQSEP
     RADSET,
 )
-from .cards.params import PARAM, PARAM_MYSTRAN
+from .cards.params import PARAM, PARAM_MYSTRAN, PARAM_NASA95
 from .cards.dmig import DMIG, DMI, DMIJ, DMIK, DMIJI, DMIG_UACCEL, DTI, DMIAX
 from .cards.thermal.loads import (QBDY1, QBDY2, QBDY3, QHBDY, TEMP, TEMPD, TEMPB3,
                                   TEMPRB, QVOL, QVECT)
@@ -188,6 +190,8 @@ from .bdf_interface.pybdf import (
     BDFInputPy, _clean_comment, _clean_comment_bulk, EXECUTIVE_CASE_SPACES)
 
 #from .bdf_interface.add_card import CARD_MAP
+if TYPE_CHECKING:
+    from cpylog import SimpleLogger
 
 SOL_700 = {
     ## Explicit Nonlinear (SOL 700)
@@ -488,8 +492,9 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
     #: required for sphinx bug
     #: http://stackoverflow.com/questions/11208997/autoclass-and-instance-attributes
     #__slots__ = ['_is_dynamic_syntax']
-    def __init__(self, debug: bool=True, log=None, mode: str='msc') -> None:
-        # SimpleLogger
+    def __init__(self, debug: bool=True,
+                 log: Optional[SimpleLogger]=None,
+                 mode: str='msc') -> None:
         """
         Initializes the BDF_ object
 
@@ -505,7 +510,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             settings the logging object has
         mode : str; default='msc'
             the type of Nastran
-            valid_modes = {'msc', 'nx', 'mystran', 'zona}
+            valid_modes = {'msc', 'nx', 'mystran', 'nasa95', 'zona'}
 
         """
         assert debug in [True, False, None], f'debug={debug!r}'
@@ -883,19 +888,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
         self._make_card_parser()
 
         self._nastran_format = mode
-        if mode == 'msc':
-            self.set_as_msc()
-        elif mode == 'nx':
-            self.set_as_nx()
-        elif mode == 'nasa95':
-            self.set_as_nasa95()
-        elif mode == 'mystran':
-            self.set_as_mystran()
-        elif mode == 'zona':
-            self.set_as_zona()
-        else:  # pragma: no cover
-            msg = f'mode={self._nastran_format!r} is not supported; modes=[msc, nx, zona, nasa95, mystran]'
-            raise NotImplementedError(msg)
+        map_version(self, mode)
 
     def __getstate__(self):
         """clears out a few variables in order to pickle the object"""
@@ -3301,8 +3294,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
                 add_card_function(class_instance)
             except TypeError:
                 # this should never be turned on, but is useful for testing
-                msg = 'problem adding %s' % card_obj
-                print(msg)
+                print('problem adding %s' % card_obj)
                 raise
                 #raise TypeError(msg)
             except (SyntaxError, AssertionError, KeyError, ValueError) as exception:
@@ -4247,26 +4239,29 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
                 bdf_filename.seek(0)  # need to rewind the buffer!
 
         self._check_pynastran_header(lines, check_header=True)
-        if self.nastran_format == 'zona':
-            self.zona.update_for_zona()
-        elif self.nastran_format == 'mystran':
-            self._update_for_mystran()
-        else:
-            # msc / nx / optistruct
-            self._update_for_nastran()
+        map_update(self, self.nastran_format)
 
     def _update_for_nastran(self):
         """updates for msc/nx/optistruct"""
         # TODO: undo the changes for zona
         card_parser = self._card_parser
+        CARD_MAP['PARAM'] = PARAM
         card_parser['PARAM'] = (PARAM, self._add_param_object)
         self.add_param = self._add_param_nastran
 
     def _update_for_mystran(self):
         """updates for mystran"""
         card_parser = self._card_parser
+        CARD_MAP['PARAM'] = PARAM_MYSTRAN
         card_parser['PARAM'] = (PARAM_MYSTRAN, self._add_param_object)
         self.add_param = self._add_param_mystran
+
+    def _update_for_nasa95(self):
+        """updates for nasa95"""
+        CARD_MAP['PARAM'] = PARAM_NASA95
+        card_parser = self._card_parser
+        card_parser['PARAM'] = (PARAM_NASA95, self._add_param_object)
+        self.add_param = self._add_param_nasa95
 
     def _check_pynastran_header(self, lines: List[str], check_header: bool=True) -> None:
         """updates the $pyNastran: key=value variables"""
@@ -4908,6 +4903,62 @@ def _set_nodes(model: BDF,
 def _bool(value):
     """casts a lower string to a booean"""
     return True if value == 'true' else False
+
+def map_version(fem: BDF, version: str):
+    version_map = {
+        'msc': fem.set_as_msc,
+        'nx': fem.set_as_nx,
+        'mystran': fem.set_as_mystran,
+        'nasa95': fem.set_as_nasa95,
+        'zona': fem.set_as_zona,
+    }
+    try:
+        func = version_map[version]
+    except KeyError:
+        msg = f'mode={version!r} is not supported; modes=[msc, nx, zona, nasa95, mystran]'
+        raise RuntimeError(msg)
+    func()
+
+def map_update(fem: BDF, version: str):
+    #if self.nastran_format == 'zona':
+        #self.zona.update_for_zona()
+    #elif self.nastran_format == 'mystran':
+        #self._update_for_mystran()
+    #elif self.nastran_format == 'nasa95':
+        #self._update_for_nasa95()
+    #else:
+        # msc / nx / optistruct
+        #self._update_for_nastran()
+
+    version_map = {
+        'msc': fem._update_for_nastran,
+        'nx': fem._update_for_nastran,
+        'optistruct': fem._update_for_nastran,
+        'mystran': fem._update_for_mystran,
+        'nasa95': fem._update_for_nasa95,
+        'zona': fem.zona.update_for_zona,
+    }
+    try:
+        func = version_map[version]
+    except KeyError:
+        msg = f'mode={version!r} is not supported; modes=[msc, nx, optistruct, zona, nasa95, mystran]'
+        raise RuntimeError(msg)
+    func()
+
+
+#if mode == 'msc':
+    #self.set_as_msc()
+#elif mode == 'nx':
+    #self.set_as_nx()
+#elif mode == 'nasa95':
+    #self.set_as_nasa95()
+#elif mode == 'mystran':
+    #self.set_as_mystran()
+#elif mode == 'zona':
+    #self.set_as_zona()
+#else:  # pragma: no cover
+    #msg = f'mode={self._nastran_format!r} is not supported; modes=[msc, nx, zona, nasa95, mystran]'
+    #raise NotImplementedError(msg)
 
 def main():  # pragma: no cover
     """shows off how unicode works becausee it's overly complicated"""

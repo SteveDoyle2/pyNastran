@@ -838,7 +838,7 @@ class NastranGuiResults(NastranGuiAttributes):
         eids = self.element_ids
         assert len(eids) > 0, eids
         nelements = self.nelements
-        print('***nelements', nelements)
+        #print('***nelements', nelements)
 
         is_element_on = np.zeros(nelements, dtype='int8')  # is the element supported
         oxx = np.full(nelements, np.nan, dtype='float32')

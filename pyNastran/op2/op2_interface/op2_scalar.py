@@ -1205,6 +1205,10 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             b'ODAMGCZR' : [self._nx_table_passer, self._table_passer],
             b'ODAMGCZD' : [self._nx_table_passer, self._table_passer],
 
+            #====================================================================
+            # NASA95
+            b'OESC1'  : [self._read_oes1_3, self._read_oes1_4],
+
         }
         if self.is_nx and 0:
             table_mapper2 = {

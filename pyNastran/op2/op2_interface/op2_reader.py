@@ -275,10 +275,10 @@ class OP2Reader:
         else:
             raise NotImplementedError(markers)
 
-        if op2._nastran_format == 'autodesk':
+        if mode == 'autodesk' or op2._nastran_format == 'autodesk':
             op2.post = -4
             mode = 'autodesk'
-        elif op2._nastran_format == 'nasa95':
+        elif mode == 'nasa95' or op2._nastran_format == 'nasa95':
             op2.post = -4
             mode = 'nasa95'
         elif isinstance(op2._nastran_format, str):
@@ -6390,6 +6390,8 @@ def _parse_nastran_version_8(data: bytes, version: bytes, encoding: str, log) ->
     #elif data[:20] == b'XXXXXXXX20141   0   ':
         #self.set_as_msc()
         #self.set_table_type()
+    elif version == b'NASA95':
+        mode = 'nasa95'
     else:
         raise RuntimeError(f'unknown version={version!r}')
     return mode

@@ -84,6 +84,7 @@ from pyNastran.op2.tables.oes_stressStrain.oes_hyperelastic import (
 from pyNastran.op2.tables.oes_stressStrain.oes_nonlinear import RealNonlinearPlateArray, RealNonlinearSolidArray
 
 NX_TABLES_BYTES = [b'OESVM1', b'OESVM2']
+NASA_TABLES_BYTES = [b'OESC1']
 
 class OES(OP2Common):
     """
@@ -284,6 +285,8 @@ class OES(OP2Common):
         """
         if self.table_name in NX_TABLES_BYTES:
             self.to_nx(f' because table_name={self.table_name}')
+        elif self.table_name in NASA_TABLES_BYTES:
+            self.to_nasa(f' because table_name={self.table_name}')
 
         #assert self.isubtable == -4, self.isubtable
         #if self.is_debug_file:
@@ -1320,6 +1323,9 @@ class OES(OP2Common):
             prefix = 'RAPEATC.'
         elif table_name_bytes in [b'OESMC1', b'OSTRMC1']:
             prefix = 'modal_contribution.'
+        elif table_name_bytes in [b'OESC1']:
+            # NASA95
+            prefix = ''
         else:
             raise NotImplementedError(self.table_name)
 
@@ -1413,6 +1419,10 @@ class OES(OP2Common):
             n, nelements, ntotal = self._oes_celas(data, ndata, dt, is_magnitude_phase,
                                                    result_type, prefix, postfix)
 
+        elif self.element_type == 19:
+            # 19-CQUAD1
+            n, nelements, ntotal = self._oes_cquad4_33(data, ndata, dt, is_magnitude_phase,
+                                                       result_type, prefix, postfix)
         elif self.element_type == 34: # CBAR
             n, nelements, ntotal = self._oes_cbar_34(data, ndata, dt, is_magnitude_phase,
                                                      result_type, prefix, postfix)
@@ -3128,7 +3138,7 @@ class OES(OP2Common):
         #print('numwide real=%s imag=%s random=%s' % (numwide_real, numwide_imag, numwide_random2))
         self._data_factor = nnodes_expected
         if self.format_code == 1 and self.num_wide == numwide_real:  # real
-            ntotal = 12 + 32 * nnodes_expected
+            ntotal = (12 + 32 * nnodes_expected) * self.factor
             nelements = ndata // ntotal
             #auto_return, is_vectorized = self._create_oes_object4(
                 #nelements, result_name, slot, obj_vector_real)
@@ -3149,7 +3159,7 @@ class OES(OP2Common):
                 obj._times[obj.itime] = dt
                 if obj.itime == 0:
                     # (eid_device, cid, abcd, nnodes)
-                    ints = frombuffer(data, dtype=self.idtype).copy()
+                    ints = frombuffer(data, dtype=self.idtype8).copy()
                     try:
                         ints1 = ints.reshape(nelements, numwide_real)
                     except ValueError:
@@ -3179,7 +3189,7 @@ class OES(OP2Common):
                     obj.element_cid[itotal:itotali, 0] = eids
                     obj.element_cid[itotal:itotali, 1] = cids
 
-                floats = frombuffer(data, dtype=self.fdtype).reshape(nelements, numwide_real)[:, 3:]
+                floats = frombuffer(data, dtype=self.fdtype8).reshape(nelements, numwide_real)[:, 3:]
                 # 1    2    3    4    5    6    7 - verify...
                 #[oxx, oyy, ozz, txy, tyz, txz, ovm]
                 #isave = [1, 9, 15, 2, 10, 16, 3, 11, 17, 8]
@@ -3208,7 +3218,7 @@ class OES(OP2Common):
         assert isinstance(ntotal, int), ntotal
         assert isinstance(nelements, int), nelements
 
-        assert n == ntotal * nelements, f'n={n} ntotal={ntotal*nelements}'
+        #assert n == ntotal * nelements, f'n={n} ntotal={ntotal*nelements}'
         return n, nelements, ntotal
 
     def _oes_csolid_composite(self, data, ndata, dt, is_magnitude_phase: bool,
@@ -4319,21 +4329,36 @@ class OES(OP2Common):
         if self.is_stress:
             obj_vector_real = RealPlateStressArray
             obj_vector_complex = ComplexPlateStressArray
-            if self.element_type == 33 or self.element_type == 64 and self._nastran_format == 'nasa95':
+            if self.element_type == 33:
                 result_name = prefix + 'cquad4_stress' + postfix
             elif self.element_type == 228:
                 result_name = prefix + 'cquadr_stress' + postfix
                 assert self.num_wide in [17, 15], self.code_information()
+
+            elif self._nastran_format == 'nasa95':
+                if self.element_type == 19:
+                    result_name = prefix + 'cquad1_stress' + postfix
+                elif self.element_type == 64:
+                    result_name = prefix + 'cquad4_stress' + postfix
+                else:
+                    raise NotImplementedError(self.code_information())
             else:
                 raise NotImplementedError(self.code_information())
         else:
             obj_vector_real = RealPlateStrainArray
             obj_vector_complex = ComplexPlateStrainArray
-            if self.element_type == 33 or self.element_type == 64 and self._nastran_format == 'nasa95':
+            if self.element_type == 33:
                 result_name = prefix + 'cquad4_strain' + postfix
             elif self.element_type == 228:
                 result_name = prefix + 'cquadr_strain' + postfix
                 assert self.num_wide in [17, 15], self.code_information()
+            elif self._nastran_format == 'nasa95':
+                if self.element_type == 19:
+                    result_name = prefix + 'cquad1_strain' + postfix
+                elif self.element_type == 64:
+                    result_name = prefix + 'cquad4_strain' + postfix
+                else:
+                    raise NotImplementedError(self.code_information())
             else:
                 raise NotImplementedError(self.code_information())
 
@@ -4528,7 +4553,7 @@ class OES(OP2Common):
                         ints = frombuffer(data, dtype=self.idtype).reshape(nelements, 9)
                         eids = ints[:, 0] // 10
                         #nids = np.zeros(len(eids), dtype='int32')
-                        print(eids)
+                        #print(eids)
                         #eids = np.vstack([eids, nids]).T.ravel()
                         #print(eids.shape)
                         #print(eids)
@@ -9212,8 +9237,15 @@ def _oes_csolid2_real(self, data: bytes,
     # 10 EZX RS Strain in ZX
     # 11 EVM RS Von Mises strain
     # Words 4 through 11 repeat nnodes times.
-    struct1 = Struct(self._endian + self._analysis_code_fmt + b'i4s')
-    struct2 = Struct(self._endian + b'i7f')
+    if self.size == 4:
+        struct1 = Struct(self._endian + self._analysis_code_fmt + b'i4s')
+        struct2 = Struct(self._endian + b'i7f')
+    else:
+        struct1 = Struct(self._endian + mapfmt(self._analysis_code_fmt, self.size) + b'q8s')
+        struct2 = Struct(self._endian + b'q7d')
+    ntotal1 = 12 * self.factor
+    ntotal2 = 32 * self.factor
+
     if self.is_debug_file:
         msg = '%s-%s nelements=%s nnodes=%s; C=[sxx, syy, szz, txy, tyz, txz, ovm,\n' % (
             self.element_name, self.element_type, nelements, nnodes_expected)
@@ -9222,7 +9254,7 @@ def _oes_csolid2_real(self, data: bytes,
     assert self.is_sort1
     obj._times[obj.itime] = self.nonlinear_factor
     for unused_i in range(nelements):
-        edata = data[n:n+12]
+        edata = data[n:n+ntotal1]
         out = struct1.unpack(edata)
         (eid_device, cid, unused_abcd) = out
         eid, dt = get_eid_dt_from_eid_device(
@@ -9232,9 +9264,9 @@ def _oes_csolid2_real(self, data: bytes,
             self.binary_debug.write('%s - eid=%i; %s\n' % (preline1, eid, str(out)))
 
         #assert nnodes < 21, 'print_block(data[n:n+16])'  #self.print_block(data[n:n+16])
-        n += 12
+        n += ntotal1
         for inode in range(nnodes_expected):  # nodes pts, no centroid
-            out = struct2.unpack(data[n:n + 32]) # 4*8 = 32
+            out = struct2.unpack(data[n:n + ntotal2]) # 4*8 = 32
             if self.is_debug_file:
                 self.binary_debug.write('%s - %s\n' % (preline2, str(out)))
             (grid_device, sxx, syy, szz, txy, tyz, txz, ovm) = out
@@ -9244,10 +9276,10 @@ def _oes_csolid2_real(self, data: bytes,
                     eid, grid_device, ', '.join(['%r' % di for di in out])))
 
             #grid = (grid_device - device_code) // 10
-            #grid = grid_device
-
             grid = grid_device
+            #print(eid, inode, grid)
+
             obj.add_node_sort1(dt, eid, inode, grid,
                                sxx, syy, szz, txy, tyz, txz, ovm)
-            n += 32
+            n += ntotal2
     return n

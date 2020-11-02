@@ -64,6 +64,15 @@ class BDFAttributes:
         self.is_zona = False
         self._update_for_mystran()
 
+    def set_as_nasa95(self):
+        self._nastran_format = 'nasa95'
+        self.is_nx = False
+        self.is_msc = False
+        self.is_mystran = False
+        self.is_nasa95 = True
+        self.is_zona = False
+        self._update_for_nasa95()
+
     def __properties__(self):
         """the list of @property attributes"""
         return ['nastran_format', 'is_long_ids', 'sol', 'subcases',

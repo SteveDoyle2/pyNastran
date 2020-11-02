@@ -123,7 +123,7 @@ from pyNastran.bdf.cards.bdf_sets import (
     SESET, #SEQSEP,
     RADSET,
 )
-from pyNastran.bdf.cards.params import PARAM, PARAM_MYSTRAN
+from pyNastran.bdf.cards.params import PARAM, PARAM_MYSTRAN, PARAM_NASA95
 from pyNastran.bdf.cards.dmig import DMIG, DMIAX, DMI, DMIJ, DMIK, DMIJI, DMIG_UACCEL, DTI
 from pyNastran.bdf.cards.thermal.loads import (QBDY1, QBDY2, QBDY3, QHBDY, TEMP, TEMPD, TEMPB3,
                                                TEMPRB, QVOL, QVECT)
@@ -1077,6 +1077,25 @@ class AddCards(AddMethods):
 
         """
         param = PARAM_MYSTRAN(key, values, comment=comment)
+        self._add_param_object(param)
+        return param
+
+    def _add_param_nasa95(self, key: str, values: List[Union[int, float, str]],
+                          comment: str='') -> PARAM_NASA95:
+        """
+        Creates a PARAM card
+
+        Parameters
+        ----------
+        key : str
+            the name of the PARAM
+        values : int/float/str/List
+            varies depending on the type of PARAM
+        comment : str; default=''
+            a comment for the card
+
+        """
+        param = PARAM_NASA95(key, values, comment=comment)
         self._add_param_object(param)
         return param
 

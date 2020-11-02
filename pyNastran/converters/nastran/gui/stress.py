@@ -851,6 +851,10 @@ def get_solid_stress_strains(eids, cases, model: OP2, times, key, icase,
         if key not in result:
             continue
         case = result[key]
+        if isinstance(case, RealSolidArrayNx):
+            model.log.info(f'converting {case.class_name}')
+            case = case.to_real_solid_array()
+            result[key] = case
 
         #print(case)
         nnodes = case.nnodes_per_element
@@ -960,50 +964,12 @@ def get_solid_stress_strains(eids, cases, model: OP2, times, key, icase,
         #print('scalars.shape', scalars.shape)
         ntimes, nall, nresults = scalars.shape
         nelements = nall // nnodes
+
         if isinstance(case, RealSolidArray):
             scalars_save = scalars.reshape(ntimes, nelements, nnodes, nresults)
             scalars_array.append(scalars_save[:, :, 0, :])
-        elif isinstance(case, RealSolidArrayNx):
-            # calculate centroidal stresses because they don't exist
-            scalars_save = scalars.reshape(ntimes, nelements, nnodes, nresults)
-            oxxi = scalars_save[:, :, :, 0].mean(axis=2)
-            oyyi = scalars_save[:, :, :, 1].mean(axis=2)
-            ozzi = scalars_save[:, :, :, 2].mean(axis=2)
-            txyi = scalars_save[:, :, :, 3].mean(axis=2)
-            tyzi = scalars_save[:, :, :, 4].mean(axis=2)
-            txzi = scalars_save[:, :, :, 5].mean(axis=2)
-            ovmi = scalars_save[:, :, :, 6].mean(axis=2)
-
-            assert len(oxxi.shape) == 2, oxxi.shape
-            ntimes, nrows = oxxi.shape
-
-            # calculate principal stresses
-            a_matrix = np.full((ntimes, nrows, 3, 3), np.nan)
-            a_matrix[:, :, 0, 0] = oxxi
-            a_matrix[:, :, 1, 1] = oyyi
-            a_matrix[:, :, 2, 2] = ozzi
-
-            a_matrix[:, :, 0, 1] = a_matrix[:, :, 1, 0] = txyi
-            a_matrix[:, :, 0, 2] = a_matrix[:, :, 2, 0] = txzi
-            a_matrix[:, :, 1, 2] = a_matrix[:, :, 2, 1] = tyzi
-
-            eigs = np.linalg.eigvalsh(a_matrix)  # array = (..., M, M) array
-            o1i = eigs[:, :, 2]
-            o2i = eigs[:, :, 1]
-            o3i = eigs[:, :, 0]
-
-            scalars_save2 = np.full((ntimes, nrows, 10), np.nan)
-            scalars_save2[:, :, 0] = oxxi
-            scalars_save2[:, :, 1] = oyyi
-            scalars_save2[:, :, 2] = ozzi
-            scalars_save2[:, :, 3] = txyi
-            scalars_save2[:, :, 4] = tyzi
-            scalars_save2[:, :, 5] = txzi
-            scalars_save2[:, :, 6] = o1i
-            scalars_save2[:, :, 7] = o2i
-            scalars_save2[:, :, 8] = o3i
-            scalars_save2[:, :, 9] = ovmi
-            scalars_array.append(scalars_save2)
+        else:
+            raise NotImplementedError(case.class_name)
 
     if len(scalars_array) == 0:
         return icase

@@ -7,7 +7,7 @@ from pyNastran.bdf.cards.base_card import BaseCard
 from pyNastran.bdf.bdf_interface.bdf_card import BDFCard
 from pyNastran.bdf.bdf_interface.assign_type import (
     integer, double, integer_or_blank, double_or_blank, string, string_or_blank,
-    integer_double_string_or_blank, blank)
+    integer_double_string_or_blank)
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
 
@@ -565,7 +565,7 @@ class PARAM_NASA95(BaseCard):
     def _init_from_empty(cls):
         key = 'POST'
         values = -1
-        return PARAM(key, values, comment='')
+        return PARAM_NASA95(key, values, comment='')
 
     def __init__(self, key, values, comment=''):
         """
@@ -645,11 +645,10 @@ class PARAM_NASA95(BaseCard):
             #                 x
             #[PARAM, AUTOSPC, 2]
             values = []
-            while ifield <= len(card):
+            while ifield < len(card):
                 value = integer_double_string_or_blank(card, ifield, 'field_{i}')
                 values.append(value)
                 ifield += 1
-            raise NotImplementedError(card)
         return PARAM_NASA95(key, values, comment=comment)
 
     def raw_fields(self):

@@ -519,6 +519,8 @@ class Subcase:
                             'OSTRMS1C', 'OSTRRMS1', 'OSTRRMS1C',
                             'OQMPSD2']:
             pass
+        elif table_name in ['OESC1']:
+            pass
         else:  # pragma: no cover
             self._write_op2_error_msg(log, self.log, msg, data_code)
         #print(self)

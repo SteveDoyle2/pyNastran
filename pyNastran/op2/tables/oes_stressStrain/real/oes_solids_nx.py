@@ -1,3 +1,12 @@
+"""
+Defines the Solid Stress/Strain Result
+ - NX Nastran SOL 401 (contact) analysis for:
+    - 300-CHEXA
+    - 301-CPENTA
+    - 302-CTETRA
+    - 303-CPYRAM
+
+"""
 # pylint: disable=C0301,C0103,R0913,R0914,R0904,C0111,R0201,R0902
 from itertools import count
 from struct import Struct, pack
@@ -5,13 +14,12 @@ from typing import List
 
 import numpy as np
 from numpy import zeros, where, searchsorted
-from numpy.linalg import eigh  # type: ignore
 
 from pyNastran.utils.numpy_utils import float_types
 from pyNastran.f06.f06_formatting import write_floats_13e, _eigenvalue_header
 from pyNastran.op2.result_objects.op2_objects import get_times_dtype
 from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import StressObject, StrainObject, OES_Object
-
+from .oes_solids import RealSolidStressArray, RealSolidStrainArray, calculate_principal_components, calculate_ovm_shear
 
 class RealSolidArrayNx(OES_Object):
     def __init__(self, data_code, is_sort1, isubcase, dt):
@@ -44,8 +52,93 @@ class RealSolidArrayNx(OES_Object):
         self.itotal = 0
         self.ielement = 0
 
+    def to_real_solid_array(self):
+        """convert to RealStressArray/RealStrainArray for post-processing simplicity"""
+        ntimes, nelements_nnodes_nx = self.data.shape[:2]
+        nelements = self.element_cid.shape[0]
+
+        nnodes_nx = self.nnodes_per_element
+        nnodes = nnodes_nx + 1
+        nnodes_nelements = nelements * nnodes
+
+        # caulate obj.element_node (with the centroid)
+        #nelements0 = self.element_node.shape[0]
+        element = self.element_node[:, 0].reshape(nelements, nnodes_nx)
+        node = self.element_node[:, 1].reshape(nelements, nnodes_nx)
+
+        element_centroid = element[:, 0].reshape((nelements, 1))
+        node_centroid = np.zeros((nelements, 1), dtype='int32')
+        element2 = np.block([element_centroid, element]).ravel()
+        node2 = np.block([node_centroid, node]).ravel()
+        element_node = np.vstack([element2, node2]).T
+        assert element_node.shape == (nnodes_nelements, 2), element_node.shape
+        # ----------------------------------------------------------------------
+        # calculate obj.data (with the centroid)
+        # reshape for easy centroid calculation (simple mean)
+        oxxi = self.data[:, :, 0].reshape(ntimes, nelements, nnodes_nx)
+        oyyi = self.data[:, :, 1].reshape(ntimes, nelements, nnodes_nx)
+        ozzi = self.data[:, :, 2].reshape(ntimes, nelements, nnodes_nx)
+        txyi = self.data[:, :, 3].reshape(ntimes, nelements, nnodes_nx)
+        tyzi = self.data[:, :, 4].reshape(ntimes, nelements, nnodes_nx)
+        txzi = self.data[:, :, 5].reshape(ntimes, nelements, nnodes_nx)
+
+        # caculate centroid and reshape to be the same as oxxi
+        oxx_avg = oxxi.mean(axis=2).reshape(ntimes, nelements, 1)
+        oyy_avg = oyyi.mean(axis=2).reshape(ntimes, nelements, 1)
+        ozz_avg = ozzi.mean(axis=2).reshape(ntimes, nelements, 1)
+        txy_avg = txyi.mean(axis=2).reshape(ntimes, nelements, 1)
+        tyz_avg = tyzi.mean(axis=2).reshape(ntimes, nelements, 1)
+        txz_avg = txzi.mean(axis=2).reshape(ntimes, nelements, 1)
+
+        # stack the centroid at the beginning of the element
+        oxxi = np.block([oxx_avg, oxxi])  # type: np.ndarray
+        oyyi = np.block([oyy_avg, oyyi])
+        ozzi = np.block([ozz_avg, ozzi])
+        txyi = np.block([txy_avg, txyi])
+        tyzi = np.block([tyz_avg, tyzi])
+        txzi = np.block([txz_avg, txzi])
+
+        expected = (ntimes, nelements, nnodes_nx + 1)
+        assert oxxi.shape == expected, f'actual={oxxi.shape} expected={expected}'
+
+        # build the data array
+        expected2 = (ntimes, nnodes_nelements)
+        data = np.full((ntimes, nnodes_nelements, 10), np.nan)
+        data[:, :, 0] = oxxi.reshape(expected2)
+        data[:, :, 1] = oyyi.reshape(expected2)
+        data[:, :, 2] = ozzi.reshape(expected2)
+        data[:, :, 3] = txyi.reshape(expected2)
+        data[:, :, 4] = tyzi.reshape(expected2)
+        data[:, :, 5] = txzi.reshape(expected2)
+
+        #-----------------------------------------------------------------------
+        data_code = self.data_code
+        element_type = self.data_code['element_type']
+        data_code['element_type'] = to_solid_element_type(element_type)
+
+        if isinstance(self, RealSolidStressArrayNx):
+            obj = RealSolidStressArray(data_code, self.is_sort1, self.isubcase, self.nonlinear_factor)
+        elif isinstance(self, RealSolidStrainArrayNx):
+            obj = RealSolidStrainArray(data_code, self.is_sort1, self.isubcase, self.nonlinear_factor)
+        else:  # pragma: no cover
+            raise NotImplementedError(type(self))
+
+        obj.element_cid = self.element_cid
+        obj.element_node = element_node
+
+        obj.data = data
+        obj._times = self._times
+        obj.nnodes = nnodes
+
+        # calculate principal stresses & max shear/von mises
+        obj.update_data_components()
+        #obj.nnodes_per_element
+        obj.is_built = True
+        return obj
+
     def update_data_components(self):
-        # vm
+        """calculate von_mises/max_shear stress/strain"""
+        ntimes, nelements_nnodes = oxx.shape[:2]
         oxx = self.data[:, :, 0]
         oyy = self.data[:, :, 1]
         ozz = self.data[:, :, 2]
@@ -59,14 +152,22 @@ class RealSolidArrayNx(OES_Object):
         #I3 = oxx * oyy * ozz + 2 * txy * tyz * txz + oxx * tyz**2 - oyy * txz**2 - ozz * txy
 
         # (n_subarrays, nrows, ncols)
-
-        ovm = np.sqrt((oxx - oyy)**2 + (oyy - ozz)**2 + (oxx - ozz)**2 +
-                      3. * (txy**2 + tyz**2 + txz ** 2))
-        self.data[:, :, 9] = ovm
+        if self.is_von_mises:
+            o1 = o3 = np.array([])
+        else:
+            o1, o2, o3 = calculate_principal_components(
+                ntimes, nelements_nnodes,
+                oxx, oyy, ozz, txy, tyz, txz,
+                self.is_stress)
+            del o2
+        ovm_sheari = calculate_ovm_shear(oxx, oyy, ozz, txy, tyz, txz, o1, o3,
+                                         self.is_von_mises, self.is_stress)
+        #ovm = np.sqrt((oxx - oyy)**2 + (oyy - ozz)**2 + (oxx - ozz)**2 +
+                      #3. * (txy**2 + tyz**2 + txz ** 2))
+        self.data[:, :, 6] = ovm_sheari
         #A = [[doxx, dtxy, dtxz],
              #[dtxy, doyy, dtyz],
              #[dtxz, dtyz, dozz]]
-        #(_lambda, v) = eigh(A)  # a hermitian matrix is a symmetric-real matrix
 
     def __iadd__(self, factor):
         """[A] += b"""
@@ -423,10 +524,6 @@ class RealSolidArrayNx(OES_Object):
 
                 j = where(eids3 == deid)[0][0]
                 cid = cids3[j]
-                A = [[doxx, dtxy, dtxz],
-                     [dtxy, doyy, dtyz],
-                     [dtxz, dtyz, dozz]]
-                #(_lambda, v) = eigh(A)  # a hermitian matrix is a symmetric-real matrix
 
                 # o1-max
                 # o2-mid
@@ -662,16 +759,25 @@ def _get_f06_header_nnodes(self, is_mag_phase=True):
     if self.element_type == 302: # CTETRA
         msg = tetra_msg
         nnodes = 4
-    #elif self.element_type == 67: # CHEXA
-        #msg = hexa_msg
-        #nnodes = 8
-    #elif self.element_type == 68: # CPENTA
-        #msg = penta_msg
-        #nnodes = 6
-    #elif self.element_type == 255: # CPYRAM
-        #msg = pyram_msg
-        #nnodes = 5
+    elif self.element_type == 300: # CHEXA
+        msg = hexa_msg
+        nnodes = 8
+    elif self.element_type == 301: # CPENTA
+        msg = penta_msg
+        nnodes = 6
+    elif self.element_type == 303: # CPYRAM
+        msg = pyram_msg
+        nnodes = 5
     else:  # pragma: no cover
         msg = f'element_name={self.element_name} self.element_type={self.element_type}'
         raise NotImplementedError(msg)
     return nnodes, msg
+
+def to_solid_element_type(element_type: int) -> int:
+    mapper = {
+        302 : 39, # CTETRA
+        300 : 67, # CHEXA
+        301 : 68, # CPENTA
+        303 : 255, # CPYRAM
+    }
+    return mapper[element_type]
