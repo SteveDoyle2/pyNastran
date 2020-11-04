@@ -181,7 +181,7 @@ class ComplexBendArray(OES_Object):
         return self.headers
 
     def write_f06(self, f06_file, header=None, page_stamp='PAGE %s',
-                  page_num=1, is_mag_phase=False, is_sort1=True):
+                  page_num: int=1, is_mag_phase: bool=False, is_sort1: bool=True):
         """
               ELEMENT-ID =    6901'
                                  C O M P L E X   S T R E S S E S   I N   B E N D   E L E M E N T S   ( C B E N D )

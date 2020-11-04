@@ -192,7 +192,7 @@ class CQUAD1(QuadShell):
         self.nodes_ref = model.Nodes(self.nodes, msg=msg)
         self.pid_ref = model.Property(self.pid, msg=msg)
 
-    def safe_cross_reference(self, model, xref_errors):
+    def safe_cross_reference(self, model: BDF, xref_errors):
         """
         Cross links the card so referenced cards can be extracted directly
 
@@ -405,7 +405,7 @@ class CTRSHL(TriShell):
         #if isinstance(self.theta_mcid, integer_types):
             #self.theta_mcid_ref = model.Coord(self.theta_mcid, msg=msg)
 
-    def safe_cross_reference(self, model, xref_errors):
+    def safe_cross_reference(self, model: BDF, xref_errors):
         """
         Cross links the card so referenced cards can be extracted directly
 

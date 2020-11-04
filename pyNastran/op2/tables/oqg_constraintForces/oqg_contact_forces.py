@@ -6,13 +6,14 @@ class RealContactForcesArray(RealTableArray):
         RealTableArray.__init__(self, data_code, is_sort1, isubcase, dt)
 
     def write_f06(self, f06_file, header=None, page_stamp='PAGE %s',
-                  page_num=1, is_mag_phase=False, is_sort1=True):
+                  page_num: int=1, is_mag_phase: bool=False, is_sort1: bool=True):
         if header is None:
             header = []
         words = ['                               C O N T A C T  F O R C E S\n', ]
         #' \n',
         #'      POINT ID.   TYPE          T1             T2             T3             R1             R2             R3\n']
         if self.table_name in ['OQGCF1']:
+            # contact
             pass
         elif self.table_name in ['OQGGF1']:
             # glue
@@ -46,7 +47,7 @@ class ComplexSPCForcesArray(ComplexTableArray):
         ComplexTableArray.__init__(self, data_code, is_sort1, isubcase, dt)
 
     def write_f06(self, f06_file, header=None, page_stamp='PAGE %s',
-                  page_num=1, is_mag_phase=False, is_sort1=True):
+                  page_num: int=1, is_mag_phase: bool=False, is_sort1: bool=True):
         if header is None:
             header = []
         words = ['                         C O M P L E X   F O R C E S   O F   S I N G L E   P O I N T   C O N S T R A I N T\n']

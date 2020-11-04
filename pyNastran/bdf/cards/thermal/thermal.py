@@ -203,7 +203,7 @@ class CHBDYE(ThermalElement):
     def cross_reference(self, model: BDF) -> None:
         pass
 
-    def safe_cross_reference(self, model, xref_errors):
+    def safe_cross_reference(self, model: BDF, xref_errors):
         pass
 
     def uncross_reference(self) -> None:
@@ -472,7 +472,7 @@ class CHBDYG(ThermalElement):
         msg = ', which is required by CHBDYG eid=%s' % self.eid
         self.nodes_ref = model.EmptyNodes(self.nodes, msg=msg)
 
-    def safe_cross_reference(self, model, xref_errors):
+    def safe_cross_reference(self, model: BDF, xref_errors):
         msg = ', which is required by CHBDYG eid=%s' % self.eid
         self.nodes_ref = model.EmptyNodes(self.nodes, msg=msg)
 
@@ -775,7 +775,7 @@ class CHBDYP(ThermalElement):
             print(self.get_stats())
             raise
 
-    def safe_cross_reference(self, model, xref_errors):
+    def safe_cross_reference(self, model: BDF, xref_errors):
         msg = ', which is required by CHBDYP pid=%s' % self.pid
         self.pid_ref = model.Phbdy(self.pid, msg=msg)
         self.nodes_ref = model.EmptyNodes(self.nodes, msg=msg)

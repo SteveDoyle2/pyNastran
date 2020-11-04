@@ -6,14 +6,24 @@ from pyNastran.op2.tables.ogs_grid_point_stresses.ogs_surface_stresses import (
     GridPointSurfaceStressesArray,
     GridPointStressesVolumeDirectArray, GridPointStressesVolumePrincipalArray,
     GridPointStressesSurfaceDiscontinutiesArray,
-    GridPointStressesVolumeDiscontinutiesArray)
+    GridPointStressesVolumeDiscontinutiesArray,
+    # strains
+    GridPointSurfaceStrainsArray, GridPointStrainsVolumeDirectArray,
+    GridPointStrainsVolumePrincipalArray,
+    GridPointStrainsSurfaceDiscontinutiesArray
+)
 
 
 class OGS(OP2Common):
     def __init__(self):
         OP2Common.__init__(self)
 
-    def _read_ogs1_3(self, data, ndata):
+    def _read_ogstr1_3(self, data: bytes, ndata: int):
+        """OGSTR1 - grid point strains"""
+        self._read_ogs1_3(data, ndata)
+
+    def _read_ogs1_3(self, data: bytes, ndata: int):
+        """OGS1 - grid point stresses"""
         unused_three = self.parse_approach_code(data)
         self.words = [
             'aCode', 'tCode', '???', 'isubcase',
@@ -99,23 +109,28 @@ class OGS(OP2Common):
         self._read_title(data)
         self._write_debug_bits()
 
-    def _read_ogs1_4(self, data, ndata):
+    def _read_ogstr1_4(self, data: bytes, ndata: int) -> int:
+        """OGSTR1 - grid point strains"""
+        return self._read_ogs1_4(data, ndata, restype='strains')
+
+    def _read_ogs1_4(self, data: bytes, ndata: int, restype: str='stresses') -> int:
+        """OGS1 - grid point stresses"""
         if self.table_code == 26:
             # OGS1 - grid point stresses - surface
-            assert self.table_name in [b'OGS1'], f'table_name={self.table_name} table_code={self.table_code}'
-            n = self._read_ogs1_table26(data, ndata)
+            assert self.table_name in [b'OGS1', b'OGSTR1'], f'table_name={self.table_name} table_code={self.table_code}'
+            n = self._read_ogs1_table26(data, ndata, restype)
         elif self.table_code == 27:
             #OGS1 - grid point stresses - volume direct
-            assert self.table_name in [b'OGS1'], f'table_name={self.table_name} table_code={self.table_code}'
-            n = self._read_ogs1_table27(data, ndata)
+            assert self.table_name in [b'OGS1', b'OGSTR1'], f'table_name={self.table_name} table_code={self.table_code}'
+            n = self._read_ogs1_table27(data, ndata, restype)
         elif self.table_code == 28:
             #OGS1- grid point stresses - principal
-            assert self.table_name in [b'OGS1'], f'table_name={self.table_name} table_code={self.table_code}'
-            n = self._read_ogs1_table28(data, ndata)
+            assert self.table_name in [b'OGS1', b'OGSTR1'], f'table_name={self.table_name} table_code={self.table_code}'
+            n = self._read_ogs1_table28(data, ndata, restype)
         elif self.table_code == 35:
             # OGS - Grid point stress discontinuities (plane strain)
             assert self.table_name in [b'OGS1'], f'table_name={self.table_name} table_code={self.table_code}'
-            n = self._read_ogs1_table35(data, ndata)
+            n = self._read_ogs1_table35(data, ndata, restype)
         else:
             #msg = self.code_information()
             raise RuntimeError(self.code_information())
@@ -123,14 +138,14 @@ class OGS(OP2Common):
         del self.ogs
         return n
 
-    def _read_ogs1_table28(self, data, ndata):
+    def _read_ogs1_table28(self, data, ndata, restype: str):
         if self.num_wide == 15:
-            n = self._read_ogs1_table28_numwide15(data, ndata)
+            n = self._read_ogs1_table28_numwide15(data, ndata, restype)
         else:
             raise RuntimeError(self.code_information())
         return n
 
-    def _read_ogs1_table28_numwide15(self, data, ndata):
+    def _read_ogs1_table28_numwide15(self, data, ndata, restype: str):
         """
         TCODE =28 Volume with principal
         1 EKEY I 10*grid point identification number + device code
@@ -152,9 +167,14 @@ class OGS(OP2Common):
         14 EPR RS Mean pressure
         15 EHVM RS Hencky-von Mises or octahedral
         """
-        result_name = 'grid_point_stresses_volume_principal'
-        obj_vector_real = GridPointStressesVolumePrincipalArray
+        result_name = f'grid_point_{restype}_volume_principal'
+        if 'strain' in restype:
+            obj_vector_real = GridPointStrainsVolumePrincipalArray
+        else:
+            obj_vector_real = GridPointStressesVolumePrincipalArray
+
         if self._results.is_not_saved(result_name):
+            self.log.warning(f'skipping {result_name}')
             return ndata
         self._results._found_result(result_name)
         slot = getattr(self, result_name)
@@ -208,27 +228,31 @@ class OGS(OP2Common):
                 n += ntotal
 
         assert ndata > 0, ndata
-        assert nelements > 0, 'nelements=%r element_type=%s element_name=%r' % (nelements, self.element_type, self.element_name)
+        assert nelements > 0, f'nelements={nelements} element_type={self.element_type} element_name={self.element_name!r}'
         #assert ndata % ntotal == 0, '%s n=%s nwide=%s len=%s ntotal=%s' % (self.element_name, ndata % ntotal, ndata % self.num_wide, ndata, ntotal)
         assert self.num_wide * 4 * self.factor == ntotal, 'numwide*4=%s ntotal=%s' % (self.num_wide * 4, ntotal)
         assert n > 0, f'n = {n} result_name={result_name}'
         return n
 
     #-----------------------------------------------------------------------------------
-    def _read_ogs1_table26(self, data, ndata):
+    def _read_ogs1_table26(self, data: bytes, ndata: int, restype: str) -> int:
         """reads grid point stresses"""
         if self.num_wide == 11:  # real/random
-            n = self._read_ogs1_table26_numwide11(data, ndata)
+            n = self._read_ogs1_table26_numwide11(data, ndata, restype)
         else:
             msg = f'only num_wide=11 is allowed  num_wide={self.num_wide}'
             raise NotImplementedError(msg)
         return n
 
-    def _read_ogs1_table26_numwide11(self, data, ndata):
+    def _read_ogs1_table26_numwide11(self, data: bytes, ndata: int, restype: str) -> int:
         """surface stresses"""
-        result_name = 'grid_point_surface_stresses'
-        obj_vector_real = GridPointSurfaceStressesArray
+        result_name = f'grid_point_surface_{restype}'
+        if 'strain' in restype:
+            obj_vector_real = GridPointSurfaceStrainsArray
+        else:
+            obj_vector_real = GridPointSurfaceStressesArray
         if self._results.is_not_saved(result_name):
+            self.log.warning(f'skipping {result_name}')
             return ndata
         self._results._found_result(result_name)
         slot = getattr(self, result_name)
@@ -291,19 +315,19 @@ class OGS(OP2Common):
         assert n > 0, f'n = {n} result_name={result_name}'
         return n
 
-    def _read_ogs1_table27(self, data, ndata):
+    def _read_ogs1_table27(self, data: bytes, ndata: int, restype: str) -> int:
         """OGS1 - grid point stresses - volume direct"""
         #is_sort1 = self.is_sort1
         if self.num_wide == 9:  # real/random
             #result_name = 'grid_point_stresses_volume_direct'
-            n = self._read_ogs1_table27_numwide9(data, ndata)
+            n = self._read_ogs1_table27_numwide9(data, ndata, restype)
         else:
             msg = self.code_information()
             #msg = 'only num_wide=9 is allowed  num_wide=%s' % self.num_wide
             raise RuntimeError(msg)
         return n
 
-    def _read_ogs1_table27_numwide9(self, data, ndata):
+    def _read_ogs1_table27_numwide9(self, data: bytes, ndata: int, restype: str) -> int:
         """
         TCODE =27 Volume with direct
         1 EKEY I 10*grid point identification number + Device Code
@@ -316,11 +340,15 @@ class OGS(OP2Common):
         8 PR RS Mean pressure
         9 HVM RS Hencky-von Mises or Octahedral
         """
-        result_name = 'grid_point_stresses_volume_direct'
+        result_name = f'grid_point_{restype}_volume_direct'
         if self._results.is_not_saved(result_name):
+            self.log.warning(f'skipping {result_name}')
             return ndata
 
-        obj_vector_real = GridPointStressesVolumeDirectArray
+        if 'strain' in restype:
+            obj_vector_real = GridPointStrainsVolumeDirectArray
+        else:
+            obj_vector_real = GridPointStressesVolumeDirectArray
         self._results._found_result(result_name)
         slot = getattr(self, result_name)
         n = 0
@@ -372,7 +400,7 @@ class OGS(OP2Common):
         return n
 
 
-    def _read_ogs1_table35(self, data, ndata):
+    def _read_ogs1_table35(self, data: bytes, ndata: int, restype: str) -> int:
         """
         grid point stress discontinuities (plane stress/strain)
 
@@ -384,15 +412,22 @@ class OGS(OP2Common):
         5 TXY RS Shear in xy
         6 PR RS Mean pressure (always -1)
         """
-        result_name = 'grid_point_stress_discontinuities'
+        if restype in 'strains':
+            result_name = 'grid_point_strain_discontinuities'
+        else:
+            result_name = 'grid_point_stress_discontinuities'
         if self._results.is_not_saved(result_name):
+            self.log.warning(f'skipping {result_name}')
             return ndata
         self._results._found_result(result_name)
         slot = getattr(self, result_name)
         n = 0
 
         if self.num_wide == 6:
-            obj_vector_real = GridPointStressesSurfaceDiscontinutiesArray
+            if 'strain' in restype:
+                obj_vector_real = GridPointStrainsSurfaceDiscontinutiesArray
+            else:
+                obj_vector_real = GridPointStressesSurfaceDiscontinutiesArray
 
             #result_name, is_random = self._apply_oes_ato_crm_psd_rms_no(result_name)
             ntotal = 6 * 4 * self.factor

@@ -183,7 +183,7 @@ class SUPORT1(Constraint):
         msg = ', which is required by SUPORT1'
         self.nodes_ref = model.EmptyNodes(self.nodes, msg=msg)
 
-    def safe_cross_reference(self, model, debug=True):
+    def safe_cross_reference(self, model: BDF, debug=True):
         nids2 = []
         msg = ', which is required by SUPORT1=%s' % self.conid
         for nid in self.nodes:
@@ -332,7 +332,7 @@ class SUPORT(Constraint):
         msg = ', which is required by SUPORT'
         self.nodes_ref = model.EmptyNodes(self.nodes, msg=msg)
 
-    def safe_cross_reference(self, model, debug=True):
+    def safe_cross_reference(self, model: BDF, debug=True):
         nids2 = []
         msg = ', which is required by SUPORT'
         for nid in self.nodes:
@@ -539,7 +539,7 @@ class MPC(Constraint):
         msg = ', which is required by MPC=%s' % self.conid
         self.nodes_ref = model.EmptyNodes(self.nodes, msg=msg)
 
-    def safe_cross_reference(self, model, debug=True):
+    def safe_cross_reference(self, model: BDF, debug=True):
         nids2 = []
         msg = ', which is required by SPC=%s' % self.conid
         for nid in self.nodes:
@@ -785,7 +785,7 @@ class SPC(Constraint):
         msg = ', which is required by SPC=%s' % (self.conid)
         self.nodes_ref = model.EmptyNodes(self.nodes, msg=msg)
 
-    def safe_cross_reference(self, model, debug=True):
+    def safe_cross_reference(self, model: BDF, debug=True):
         nids2 = []
         msg = ', which is required by SPC=%s' % self.conid
         for nid in self.node_ids:
@@ -1118,7 +1118,7 @@ class SPC1(Constraint):
         msg = ', which is required by SPC1; conid=%s' % self.conid
         self.nodes_ref = model.EmptyNodes(self.node_ids, msg=msg)
 
-    def safe_cross_reference(self, model, debug=True):
+    def safe_cross_reference(self, model: BDF, debug=True):
         nids2 = []
         missing_nids = []
         for nid in self.node_ids:
@@ -1268,7 +1268,7 @@ class SPCOFF(Constraint):
         msg = ', which is required by SPCOFF'
         self.nodes_ref = model.EmptyNodes(self.nodes, msg=msg)
 
-    def safe_cross_reference(self, model, debug=True):
+    def safe_cross_reference(self, model: BDF, debug=True):
         nids2 = []
         missing_nids = []
         for nid in self.node_ids:
@@ -1389,7 +1389,7 @@ class SPCOFF1(Constraint):
         msg = ', which is required by SPCOFF1'
         self.nodes_ref = model.EmptyNodes(self.node_ids, msg=msg)
 
-    def safe_cross_reference(self, model, debug=True):
+    def safe_cross_reference(self, model: BDF, debug=True):
         nids2 = []
         missing_nids = []
         for nid in self.node_ids:
@@ -1524,7 +1524,7 @@ class SPCADD(ConstraintAdd):
         for spc_id in self.sets:
             self.sets_ref.append(model.SPC(spc_id, consider_spcadd=False, msg=msg))
 
-    def safe_cross_reference(self, model, debug=True):
+    def safe_cross_reference(self, model: BDF, debug=True):
         self.sets_ref = []
         msg = ', which is required by SPCADD=%s' % self.conid
         for spc_id in self.sets:
@@ -1646,7 +1646,7 @@ class MPCADD(ConstraintAdd):
         for mpc_id in self.sets:
             self.sets_ref.append(model.MPC(mpc_id, consider_mpcadd=False, msg=msg))
 
-    def safe_cross_reference(self, model, debug=True):
+    def safe_cross_reference(self, model: BDF, debug=True):
         self.sets_ref = []
         msg = ', which is required by MPCADD=%s' % self.conid
         for mpc_id in self.sets:

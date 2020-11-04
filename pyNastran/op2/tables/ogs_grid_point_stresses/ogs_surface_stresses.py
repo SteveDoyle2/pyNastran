@@ -6,7 +6,7 @@ from pyNastran.f06.f06_formatting import (
     write_floats_10e, _eigenvalue_header)
 
 
-class GridPointSurfaceStressesArray(ScalarObject):
+class GridPointSurfaceArray(ScalarObject):
     """
     '                                  S T R E S S E S   A T   G R I D   P O I N T S   - -     S U R F A C E       5\n',
     '0                       SURFACE X-AXIS X  NORMAL(Z-AXIS)  Z         REFERENCE COORDINATE SYSTEM FOR SURFACE DEFINITION CID        0\n',
@@ -117,12 +117,9 @@ class GridPointSurfaceStressesArray(ScalarObject):
         msg += self.get_data_code()
         return msg
 
-    def get_headers(self) -> List[str]:
-        headers = ['nx', 'ny', 'txy', 'angle', 'majorP', 'minorP', 'tmax', 'ovm']
-        return headers
 
     def write_f06(self, f06_file, header=None, page_stamp='PAGE %s',
-                  page_num=1, is_mag_phase=False, is_sort1=True):
+                  page_num: int=1, is_mag_phase: bool=False, is_sort1: bool=True):
         if header is None:
             header = []
 
@@ -130,14 +127,8 @@ class GridPointSurfaceStressesArray(ScalarObject):
         axis_int = self.oCoord
         axis_map = {0 : 'X', 1 : 'Y', 2 : 'Z'}
         axis = axis_map[axis_int]
-        msg = [
-            f'                                  S T R E S S E S   A T   G R I D   P O I N T S   - -     S U R F A C E    {self.ogs_id:d}\n',
-            f'0                       SURFACE X-AXIS X  NORMAL(Z-AXIS)  {axis}         REFERENCE COORDINATE SYSTEM FOR SURFACE DEFINITION CID        {cid}\n',
-            '     GRID      ELEMENT            STRESSES IN SURFACE SYSTEM           PRINCIPAL STRESSES            MAX             \n',
-            '     ID          ID    FIBRE   NORMAL-X   NORMAL-Y   SHEAR-XY     ANGLE      MAJOR      MINOR      SHEAR     VON MISES\n']
-           #'0     13683          3736    TRIAX6         4.996584E+00   0.0            1.203093E+02   0.0            0.0            0.0'
-           #'      13683          3737    TRIAX6        -4.996584E+00   0.0           -1.203093E+02   0.0            0.0            0.0'
-           #'      13683                  *TOTALS*       6.366463E-12   0.0           -1.364242E-12   0.0            0.0            0.0'
+        msg = self._get_f06_message(self.ogs_id, cid, axis)
+
         ntimes = self.data.shape[0]
 
         nids = self.node_element[:, 0]
@@ -208,6 +199,49 @@ class GridPointSurfaceStressesArray(ScalarObject):
                 print(msg)
                 raise ValueError(msg)
         return True
+
+    def _get_f06_message(self, ogs_id: int, cid: int, axis: str) -> List[str]:
+        raise NotImplementedError()
+
+class GridPointSurfaceStressesArray(GridPointSurfaceArray):
+
+    def get_headers(self) -> List[str]:
+        headers = ['nx', 'ny', 'txy', 'angle', 'majorP', 'minorP', 'tmax', 'ovm']
+        return headers
+
+    def _get_f06_message(self, ogs_id: int, cid: int, axis: str) -> List[str]:
+        msg = [
+            f'                                  S T R E S S E S   A T   G R I D   P O I N T S   - -     S U R F A C E    {ogs_id:d}\n',
+            f'0                       SURFACE X-AXIS X  NORMAL(Z-AXIS)  {axis}         REFERENCE COORDINATE SYSTEM FOR SURFACE DEFINITION CID        {cid}\n',
+            '     GRID      ELEMENT            STRESSES IN SURFACE SYSTEM           PRINCIPAL STRESSES            MAX             \n',
+            '     ID          ID    FIBRE   NORMAL-X   NORMAL-Y   SHEAR-XY     ANGLE      MAJOR      MINOR      SHEAR     VON MISES\n']
+           #'0     13683          3736    TRIAX6         4.996584E+00   0.0            1.203093E+02   0.0            0.0            0.0'
+           #'      13683          3737    TRIAX6        -4.996584E+00   0.0           -1.203093E+02   0.0            0.0            0.0'
+           #'      13683                  *TOTALS*       6.366463E-12   0.0           -1.364242E-12   0.0            0.0            0.0'
+        return msg
+
+
+
+class GridPointSurfaceStrainsArray(GridPointSurfaceArray):
+
+    def get_headers(self) -> List[str]:
+        headers = ['nx', 'ny', 'exy', 'angle', 'majorP', 'minorP', 'emax', 'evm']
+        return headers
+
+    def _get_f06_message(self, ogs_id: int, cid: int, axis: str) -> List[str]:
+        msg = [
+            f'                                    S T R A I N S   A T   G R I D   P O I N T S   - -     S U R F A C E    {ogs_id:d}\n',
+           #f'                                  S T R E S S E S   A T   G R I D   P O I N T S   - -     S U R F A C E    {ogs_id:d}\n',
+            f'0                       SURFACE X-AXIS X  NORMAL(Z-AXIS)  {axis}         REFERENCE COORDINATE SYSTEM FOR SURFACE DEFINITION CID        {cid}\n',
+           #'     GRID      ELEMENT            STRESSES IN SURFACE SYSTEM           PRINCIPAL STRESSES            MAX             \n',
+            '     GRID      ELEMENT            STRAINS  IN SURFACE SYSTEM           PRINCIPAL STRAINS             MAX             \n',
+            '     ID          ID    FIBRE   NORMAL-X   NORMAL-Y   SHEAR-XY     ANGLE      MAJOR      MINOR      SHEAR     VON MISES\n']
+           #'0     13683          3736    TRIAX6         4.996584E+00   0.0            1.203093E+02   0.0            0.0            0.0'
+           #'      13683          3737    TRIAX6        -4.996584E+00   0.0           -1.203093E+02   0.0            0.0            0.0'
+           #'      13683                  *TOTALS*       6.366463E-12   0.0           -1.364242E-12   0.0            0.0            0.0'
+        return msg
+
+
 
 
 class GridPointStressesVolumePrincipalArray(ScalarObject):
@@ -333,7 +367,7 @@ class GridPointStressesVolumePrincipalArray(ScalarObject):
         self.itotal += 1
 
     #def write_f06(self, f06_file, header=None, page_stamp='PAGE %s',
-                  #page_num=1, is_mag_phase=False, is_sort1=True):
+                  #page_num: int=1, is_mag_phase: bool=False, is_sort1: bool=True):
         #pass
 
 
@@ -422,7 +456,7 @@ class GridPointStressesVolumeDirectArray(ScalarObject):
         self.itotal += 1
 
     def write_f06(self, f06_file, header=None, page_stamp='PAGE %s',
-                  page_num=1, is_mag_phase=False, is_sort1=True):
+                  page_num: int=1, is_mag_phase: bool=False, is_sort1: bool=True):
         """
         '    D I R E C T   S T R E S S E S   A T   G R I D   P O I N T S   - -       V O L U M E      101'
         '        OUTPUT COORDINATE SYSTEM =       0  BASIC   '
@@ -610,3 +644,14 @@ class GridPointStressesSurfaceDiscontinutiesArray(ScalarObject): # tCode=35
         self.node[self.itotal] = nid
         self.data[self.itime, self.itotal, :] = [oxx, oyy, ozz, txy, pressure]
         self.itotal += 1
+
+class GridPointStrainsVolumePrincipalArray(GridPointStressesVolumePrincipalArray):
+    pass
+
+class GridPointStrainsVolumeDirectArray(GridPointStressesVolumeDirectArray):
+    pass
+
+GridPointStrainsVolumeDiscontinutiesArray = None
+
+class GridPointStrainsSurfaceDiscontinutiesArray(GridPointStressesSurfaceDiscontinutiesArray):
+    pass

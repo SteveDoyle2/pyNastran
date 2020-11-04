@@ -1125,7 +1125,7 @@ class SET1(Set):
             raise NotImplementedError("xref_type=%r and must be ['Node', 'Point']" % xref_type)
         self.xref_type = xref_type
 
-    def safe_cross_reference(self, model, xref_type, msg='', allow_empty_nodes=False):
+    def safe_cross_reference(self, model: BDF, xref_type, msg='', allow_empty_nodes=False):
         """
         Cross links the card so referenced cards can be extracted directly
 
@@ -1344,7 +1344,7 @@ class SET2(Set):
     def get_ids(self):
         return []
 
-    def safe_cross_reference(self, model, xref_type: str, msg=''):
+    def safe_cross_reference(self, model: BDF, xref_type: str, msg=''):
         msg = f', which is required by SET2 sid={self.sid}{msg}'
         if xref_type == 'MACRO':
             self.macro_ref = model.CAero(self.macro, msg=msg)

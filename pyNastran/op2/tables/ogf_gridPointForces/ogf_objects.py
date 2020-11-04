@@ -885,7 +885,7 @@ class RealGridPointForcesArray(GridPointForces):
         return
 
     def write_f06(self, f06_file, header=None, page_stamp='PAGE %s',
-                  page_num=1, is_mag_phase=False, is_sort1=True):
+                  page_num: int=1, is_mag_phase: bool=False, is_sort1: bool=True):
         if header is None:
             header = []
         msg = self._get_f06_msg()
@@ -1457,7 +1457,7 @@ class ComplexGridPointForcesArray(GridPointForces):
         #return ind
 
     def write_f06(self, f06_file, header=None, page_stamp='PAGE %s',
-                  page_num=1, is_mag_phase=False, is_sort1=True):
+                  page_num: int=1, is_mag_phase: bool=False, is_sort1: bool=True):
         if header is None:
             header = []
         msg = self._get_f06_msg(is_mag_phase=is_mag_phase, is_sort1=is_sort1)

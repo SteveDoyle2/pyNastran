@@ -44,7 +44,7 @@ class EmptyCardError(RuntimeError):
 class GEOM2(GeomCommon):
     """defines methods for reading op2 elements"""
 
-    def _read_geom2_4(self, data, ndata):
+    def _read_geom2_4(self, data: bytes, ndata: int):
         return self._read_geom_4(self._geom2_map, data, ndata)
 
     def __init__(self):

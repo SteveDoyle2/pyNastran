@@ -38,7 +38,7 @@ class OP2_F06_Common:
         self.__objects_init__()
         self.__objects_common_init__()
 
-    def has_result(self, result_name):
+    def has_result(self, result_name: str) -> bool:
         """checks to see if a result exists"""
         if '.' in result_name:
             sline = result_name.split('.')
@@ -996,6 +996,12 @@ class OP2_F06_Common:
         self.grid_point_stresses_volume_principal = {} # tCode=28
         self.grid_point_stress_discontinuities = {}  # tCode=35
 
+        # : OGSTR1 - grid point strains
+        self.grid_point_surface_strains = {}       # tCode=26
+        self.grid_point_strains_volume_direct = {}  # tCode=27
+        self.grid_point_strains_volume_principal = {} # tCode=28
+        self.grid_point_strain_discontinuities = {}  # tCode=35
+
         #: OPG - summation of loads for each element
         self.load_vectors = {}       # OPG1; tCode=2  thermal=0
         self.load_vectors_v = {}     # OPGV1
@@ -1201,6 +1207,11 @@ class OP2_F06_Common:
             'grid_point_stresses_volume_direct',  # tCode=27 # volume direct
             'grid_point_stresses_volume_principal', # tCode =28
             'grid_point_stress_discontinuities',  # tCode=35,
+
+            'grid_point_surface_strains',
+            'grid_point_strains_volume_direct',
+            'grid_point_strains_volume_principal',
+            'grid_point_strain_discontinuities',
 
 
             # unused?

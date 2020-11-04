@@ -169,7 +169,7 @@ class AEROS(Aero):
         self.acsid_ref = model.Coord(self.acsid, msg=msg)
         self.rcsid_ref = model.Coord(self.rcsid, msg=msg)
 
-    def safe_cross_reference(self, model, xref_errors):
+    def safe_cross_reference(self, model: BDF, xref_errors):
         """
         Safe cross refernece aerodynamic coordinate system.
 
@@ -480,7 +480,7 @@ class CSSCHD(Aero):
         self.lmach_ref = model.AEFact(self.lmach, msg=msg)
         self.lschd_ref = model.AEFact(self.lschd, msg=msg)
 
-    def safe_cross_reference(self, model, xref_errors):
+    def safe_cross_reference(self, model: BDF, xref_errors):
         msg = ', which is required by CSSCHD sid=%s' % self.sid
         try:
             self.aesid_ref = model.AESurf(self.aesid, msg=msg)

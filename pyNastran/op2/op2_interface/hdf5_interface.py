@@ -86,7 +86,11 @@ from pyNastran.op2.tables.oes_stressStrain.oes_nonlinear_bush import RealNonline
 
 from pyNastran.op2.tables.ogs_grid_point_stresses.ogs_surface_stresses import (
     GridPointSurfaceStressesArray, GridPointStressesVolumeDirectArray, GridPointStressesVolumePrincipalArray,
-    GridPointStressesSurfaceDiscontinutiesArray)
+    GridPointStressesSurfaceDiscontinutiesArray,
+    # strains
+    GridPointSurfaceStrainsArray, GridPointStrainsVolumeDirectArray, GridPointStrainsVolumePrincipalArray,
+    GridPointStrainsSurfaceDiscontinutiesArray,
+)
 
 
 from pyNastran.op2.tables.oee_energy.oee_objects import RealStrainEnergyArray, ComplexStrainEnergyArray
@@ -922,6 +926,11 @@ TABLE_OBJ_MAP = {
     'grid_point_stresses_volume_direct' : (GridPointStressesVolumeDirectArray, ),
     'grid_point_stresses_volume_principal' : (GridPointStressesVolumePrincipalArray, ),
     'grid_point_stress_discontinuities' : (GridPointStressesSurfaceDiscontinutiesArray, ),
+
+    'grid_point_surface_strains' : (GridPointSurfaceStrainsArray, ),
+    'grid_point_strains_volume_direct' : (GridPointStrainsVolumeDirectArray, ),
+    'grid_point_strains_volume_principal' : (GridPointStrainsVolumePrincipalArray, ),
+    'grid_point_strain_discontinuities' : (GridPointStrainsSurfaceDiscontinutiesArray, ),
 
     'contact_forces' : (RealContactForcesArray, ),
     'glue_forces' : (RealContactForcesArray, ),

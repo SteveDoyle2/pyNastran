@@ -14,7 +14,7 @@ from pyNastran.op2.tables.geom.dit import get_iend_from_ints
 
 class DYNAMICS(GeomCommon):
     """defines methods for reading op2 dynamics loads/methods"""
-    def _read_dynamics_4(self, data, ndata):
+    def _read_dynamics_4(self, data: bytes, ndata: int):
         return self._read_geom_4(self._dynamics_map, data, ndata)
 
     def __init__(self):

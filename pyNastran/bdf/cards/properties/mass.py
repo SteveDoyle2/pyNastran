@@ -540,7 +540,7 @@ class NSMADD(BaseCard):
             nsms.append(model.NSM(nsm, msg=msg))
         self.sets_ref = nsms
 
-    def safe_cross_reference(self, model, debug=True):
+    def safe_cross_reference(self, model: BDF, debug=True):
         nsms = []
         msg = ', which is required by NSMADD=%s' % self.sid
         for nsm_id in self.sets:

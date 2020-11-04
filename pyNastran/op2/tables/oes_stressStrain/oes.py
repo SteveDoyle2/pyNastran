@@ -279,7 +279,7 @@ class OES(OP2Common):
         self.stress_bits = bits
         self.data_code['stress_bits'] = self.stress_bits
 
-    def _read_oes2_4(self, data, ndata):
+    def _read_oes2_4(self, data: bytes, ndata: int):
         """
         Reads the Stress Table 4
         """
@@ -333,7 +333,7 @@ class OES(OP2Common):
             n = self._not_implemented_or_skip(data, ndata, msg)
         return n
 
-    def _read_oes1_4(self, data, ndata):
+    def _read_oes1_4(self, data: bytes, ndata: int):
         """
         Reads the Stress Table 4
         """
@@ -499,7 +499,7 @@ class OES(OP2Common):
         self._write_debug_bits()
         #assert isinstance(self.nonlinear_factor, int), self.nonlinear_factor
 
-    def _read_ostr1_4(self, data, ndata):
+    def _read_ostr1_4(self, data: bytes, ndata: int):
         """
         Reads the Strain Table 4
         """
@@ -517,7 +517,7 @@ class OES(OP2Common):
         n = self._read_ostr_4_sort(data, ndata)
         return n
 
-    def _read_ostr2_4(self, data, ndata):
+    def _read_ostr2_4(self, data: bytes, ndata: int):
         """
         Reads the Strain Table 4
         """
@@ -588,7 +588,7 @@ class OES(OP2Common):
         return new_func
 
     #@_print_obj_name_on_crash
-    def _read_oes_4_sort(self, data, ndata):
+    def _read_oes_4_sort(self, data: bytes, ndata: int):
         """Reads OES1 subtable 4 for NX/MSC/Autodesk/Optistruct"""
         #if self.num_wide == 146:
             #assert self.num_wide != 146
@@ -604,7 +604,7 @@ class OES(OP2Common):
         return n
 
     #@_print_obj_name_on_crash
-    def _read_ostr_4_sort(self, data, ndata):
+    def _read_ostr_4_sort(self, data: bytes, ndata: int):
         """
         Reads OSTR1 subtable 4
         """
@@ -1358,7 +1358,7 @@ class OES(OP2Common):
         self.sort_bits[1] = 1 # sort2
         self.sort_method = 2
 
-    def _read_oesmc_4(self, data, ndata):
+    def _read_oesmc_4(self, data: bytes, ndata: int):
         n = 0
         if self.element_type == 1:
             assert self.num_wide == 4, self.code_information()

@@ -1069,6 +1069,8 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             # grid point stresses
             b'OGS1' : [self._read_ogs1_3, self._read_ogs1_4],  # grid point stresses
             #b'OGS2' : [self._read_ogs1_3, self._read_ogs1_4],  # grid point stresses
+
+            b'OGSTR1' : [self._read_ogstr1_3, self._read_ogstr1_4],  # grid point strains
             #=======================
             # eigenvalues
             b'BLAMA' : [self._read_buckling_eigenvalue_3, self._read_buckling_eigenvalue_4], # buckling eigenvalues
@@ -1367,7 +1369,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
         self._read_title(data)
         self._write_debug_bits()
 
-    def _read_mpf_4(self, data, ndata):
+    def _read_mpf_4(self, data: bytes, ndata: int):
         """unused"""
         if self.read_mode == 1: # or self.table_name_str not in ['OFMPF2M']:
             return ndata
@@ -1389,7 +1391,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             self.log.warning('%s results were read, but not saved' % self.table_name_str)
         return ndata
 
-    def _read_pvto_3(self, data, ndata):
+    def _read_pvto_3(self, data: bytes, ndata: int):
         """unused"""
         raise RuntimeError(self.read_mode)
 
@@ -1639,7 +1641,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             raise RuntimeError('this should never be called...'
                                'table_name={self.table_name!r} len(data)={ndata}')
 
-    def _table_crasher(self, data, ndata):
+    def _table_crasher(self, data: bytes, ndata: int):
         """auto-table crasher"""
         if self.is_debug_file:
             self.binary_debug.write(f'  crashing table = {self.table_name}\n')
@@ -2137,7 +2139,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
         if hasattr(self, 'subtable_name'):
             del self.subtable_name
 
-    def _read_psdf_3(self, data, ndata):
+    def _read_psdf_3(self, data: bytes, ndata: int):
         """reads the PSDF table"""
         #(50, 2011, 4001, 0, 302130, 3
         # strip off the title
@@ -2245,7 +2247,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
         #self.show_data(data, types='ifs', endian=None)
         #aaaa
 
-    def _read_psdf_4(self, data, ndata):
+    def _read_psdf_4(self, data: bytes, ndata: int):
         """reads the PSDF table"""
         if self.read_mode == 1:
             return ndata

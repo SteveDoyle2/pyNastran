@@ -41,7 +41,7 @@ class GEOM1(GeomCommon):
             #self._type_to_id_map[node.type].append(key)
         #self.nodes[key] = node
 
-    def _read_geom1_4(self, data, ndata):
+    def _read_geom1_4(self, data: bytes, ndata: int):
         return self._read_geom_4(self._geom1_map, data, ndata)
 
     def __init__(self):

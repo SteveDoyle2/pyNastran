@@ -18,7 +18,7 @@ class LAMA(OP2Common):
     def __init__(self):
         OP2Common.__init__(self)
 
-    def _read_complex_eigenvalue_3(self, data, ndata):
+    def _read_complex_eigenvalue_3(self, data: bytes, ndata: int):
         """parses the Complex Eigenvalues Table 3 Data"""
         #raise NotImplementedError(self.table_name)
         self.words = [
@@ -35,7 +35,7 @@ class LAMA(OP2Common):
         self.six = self.add_data_parameter(data, 'six', b'i', 10, False)  # seven
         self._read_title(data)
 
-    def _read_buckling_eigenvalue_3(self, data, ndata):
+    def _read_buckling_eigenvalue_3(self, data: bytes, ndata: int):
         """parses the Buckling Eigenvalues Table 3 Data"""
         #print(self.show_data(data))
         #self._read_title_helper(data)
@@ -60,7 +60,7 @@ class LAMA(OP2Common):
 
         self._read_title(data)
 
-    def _read_complex_eigenvalue_4(self, data, ndata):
+    def _read_complex_eigenvalue_4(self, data: bytes, ndata: int):
         """parses the Complex Eigenvalues Table 4 Data"""
         if self.read_mode == 1:
             return ndata
@@ -87,7 +87,7 @@ class LAMA(OP2Common):
         assert n == ndata, 'clama length error'
         return n
 
-    def _read_buckling_eigenvalue_4(self, data, ndata):
+    def _read_buckling_eigenvalue_4(self, data: bytes, ndata: int):
         """parses the Buckling Eigenvalues Table 4 Data"""
         # BLAMA - Buckling eigenvalue summary table
         # CLAMA - Complex eigenvalue summary table
@@ -116,7 +116,7 @@ class LAMA(OP2Common):
             n += ntotal
         return n
 
-    def _read_real_eigenvalue_3(self, data, ndata):
+    def _read_real_eigenvalue_3(self, data: bytes, ndata: int):
         """parses the Real Eigenvalues Table 3 Data"""
         self.words = [
             'aCode', 'tCode', '???', 'isubcase',
@@ -154,7 +154,7 @@ class LAMA(OP2Common):
         #self.print_block(data)
         self._read_title(data)
 
-    def _read_real_eigenvalue_4(self, data, ndata):
+    def _read_real_eigenvalue_4(self, data: bytes, ndata: int):
         """parses the Real Eigenvalues Table 4 Data"""
         if self.read_mode == 1:
             return ndata

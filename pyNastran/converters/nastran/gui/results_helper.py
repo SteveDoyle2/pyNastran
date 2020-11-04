@@ -97,8 +97,8 @@ class NastranGuiResults(NastranGuiAttributes):
         return icase
 
     def _fill_op2_gpstress(self, cases, model: OP2,
-                                times, key, icase: int,
-                                form_dict, header_dict, keys_map) -> int:
+                           times, key, icase: int,
+                           form_dict, header_dict, keys_map) -> int:
         """Creates the time accurate grid point stress objects"""
         if key in model.grid_point_stress_discontinuities:
             case = model.grid_point_stress_discontinuities[key]

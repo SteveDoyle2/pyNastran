@@ -12,7 +12,7 @@ class MONPNT1:
         self.ry_matrix = matrices[comp_matrices[4]]
         self.rz_matrix = matrices[comp_matrices[5]]
 
-    def write(self, f06_file, page_stamp='', page_num=1):
+    def write(self, f06_file, page_stamp: str='', page_num: int=1):
         comps = ['CX', 'CY', 'CZ', 'CMX', 'CMY', 'CMZ']
         dok1 = self.cx_matrix.data.todok()
         dok2 = self.cy_matrix.data.todok()
@@ -73,7 +73,7 @@ class MONPNT3:
         self.frequencies = frequencies
         self.data = matrix.data
 
-    def write(self, f06_file, page_stamp='', page_num=1):
+    def write(self, f06_file, page_stamp: str='', page_num: int=1):
         comps = ['CX', 'CY', 'CZ', 'CMX', 'CMY', 'CMZ']
         matrix = self.data
         dok = matrix.todok()

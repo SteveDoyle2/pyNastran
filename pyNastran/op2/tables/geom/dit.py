@@ -16,7 +16,7 @@ from pyNastran.op2.op2_interface.op2_reader import mapfmt, reshape_bytes_block
 class DIT(GeomCommon):
     """defines methods for reading op2 tables"""
 
-    def _read_dit_4(self, data, ndata):
+    def _read_dit_4(self, data: bytes, ndata: int):
         return self._read_geom_4(self._dit_map, data, ndata)
 
     def __init__(self):

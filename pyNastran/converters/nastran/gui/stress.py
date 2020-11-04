@@ -6,6 +6,8 @@ from pyNastran.converters.nastran.gui.results import SimpleTableResults, Layered
 from pyNastran.op2.result_objects.stress_object import _get_nastran_header
 from pyNastran.op2.tables.oes_stressStrain.real.oes_solids import RealSolidArray
 from pyNastran.op2.tables.oes_stressStrain.real.oes_solids_nx import RealSolidArrayNx
+from pyNastran.op2.tables.oes_stressStrain.complex.oes_solids import ComplexSolidArray
+
 
 if TYPE_CHECKING: # pragma: no cover
     from pyNastran.op2.op2 import OP2
@@ -965,7 +967,7 @@ def get_solid_stress_strains(eids, cases, model: OP2, times, key, icase,
         ntimes, nall, nresults = scalars.shape
         nelements = nall // nnodes
 
-        if isinstance(case, RealSolidArray):
+        if isinstance(case, (RealSolidArray, ComplexSolidArray)):
             scalars_save = scalars.reshape(ntimes, nelements, nnodes, nresults)
             scalars_array.append(scalars_save[:, :, 0, :])
         else:

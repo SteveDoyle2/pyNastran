@@ -115,7 +115,7 @@ class ONR(OP2Common):
         self.data_code['nonlinear_factor'] = self.nonlinear_factor
         return prefix, postfix
 
-    def _read_onr1_3(self, data, ndata):
+    def _read_onr1_3(self, data: bytes, ndata: int):
         """
         reads ONRGY1 subtable 3
         """
@@ -265,7 +265,7 @@ class ONR(OP2Common):
             self.data_code['element_name'] = 'UnicodeDecodeError???'
             self.log.warning('data[20:28]=%r instead of data[24:32]' % data[20:28])
 
-    def _read_onr2_3(self, data, ndata):
+    def _read_onr2_3(self, data: bytes, ndata: int):
         """reads the SORT2 version of table 4 (the data table)"""
         self.nonlinear_factor = np.nan
         self.is_table_1 = False
@@ -421,7 +421,7 @@ class ONR(OP2Common):
         self._read_title(data)
         self._write_debug_bits()
 
-    def _read_onr1_4(self, data, ndata):
+    def _read_onr1_4(self, data: bytes, ndata: int):
         """
         reads ONRGY1 subtable 4
         """
@@ -434,7 +434,7 @@ class ONR(OP2Common):
             raise NotImplementedError(self.table_code)
         return n
 
-    def _read_element_strain_energy(self, data, ndata):
+    def _read_element_strain_energy(self, data: bytes, ndata: int):
         """
         table_code = 19
         """

@@ -214,7 +214,7 @@ def _write_result_tables(obj: OP2, fop2, fop2_ascii, struct_3i, endian, skips: S
 
         'OGPFB1',
         'ONRGY', 'ONRGY1',
-        'OGS1',
+        'OGS1', 'OGSTR1',
         'OEFIT',
     ]
     skip_results = ['gpdt', 'bgpdt', 'eqexin', 'psds', 'monitor1', 'monitor3']

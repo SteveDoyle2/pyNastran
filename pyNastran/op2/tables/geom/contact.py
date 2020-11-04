@@ -12,7 +12,7 @@ from pyNastran.op2.op2_interface.op2_reader import mapfmt, reshape_bytes_block
 class CONTACT(GeomCommon):
     """defines methods for reading contact geometry"""
 
-    def _read_contact_4(self, data, ndata):
+    def _read_contact_4(self, data: bytes, ndata: int):
         """
         reads the CONTACT/CONTACTS table
         Table of Bulk Data entry related to surface contact

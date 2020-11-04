@@ -197,7 +197,7 @@ class AERO(Aero):
         msg = ', which is required by AERO'
         self.acsid_ref = model.Coord(self.acsid, msg=msg)
 
-    def safe_cross_reference(self, model, xref_errors):
+    def safe_cross_reference(self, model: BDF, xref_errors):
         """
         Safe cross refernece aerodynamic coordinate system.
 

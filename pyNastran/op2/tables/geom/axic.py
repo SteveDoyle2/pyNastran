@@ -29,7 +29,7 @@ from pyNastran.op2.tables.geom.geom_common import GeomCommon
 class AXIC(GeomCommon):
     """defines methods for reading op2 properties"""
 
-    def _read_axic_4(self, data, ndata):
+    def _read_axic_4(self, data: bytes, ndata: int):
         """reads the AXIC table"""
         return self._read_geom_4(self._axic_map, data, ndata)
 

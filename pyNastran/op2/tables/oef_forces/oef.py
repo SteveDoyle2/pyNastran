@@ -206,7 +206,7 @@ class OEF(OP2Common):
             imag = None
         return (real, imag)
 
-    def _read_oef1_3(self, data, ndata):
+    def _read_oef1_3(self, data: bytes, ndata: int):
         """Table 3 parser for OEF1 table"""
         self._analysis_code_fmt = b'i'
         self._data_factor = 1
@@ -430,7 +430,7 @@ class OEF(OP2Common):
         #assert isinstance(self.nonlinear_factor, int), self.nonlinear_factor
         #self._check_result_type()
 
-    def _read_oef1_4(self, data, ndata):
+    def _read_oef1_4(self, data: bytes, ndata: int):
         """Table 4 parser for OEF1 table"""
         if self.thermal == 0:
             self._setup_op2_subcase('FORCE')
@@ -444,7 +444,7 @@ class OEF(OP2Common):
             n = self._not_implemented_or_skip(data, ndata, 'thermal=%s' % self.thermal)
         return n
 
-    def _read_oef2_4(self, data, ndata):
+    def _read_oef2_4(self, data: bytes, ndata: int):
         if self.thermal == 0: # and self.element_type not in [77]:
             self._setup_op2_subcase('FORCE')
             n = self._read_oef1_loads(data, ndata)
@@ -452,7 +452,7 @@ class OEF(OP2Common):
             n = self._not_implemented_or_skip(data, ndata, 'thermal=%s' % self.thermal)
         return n
 
-    def _read_oef1_thermal(self, data, ndata):
+    def _read_oef1_thermal(self, data: bytes, ndata: int):
         """Table 4 parser for OEF1 thermal table"""
         if self._results.is_not_saved('element_forces'):
             return ndata
@@ -1169,7 +1169,7 @@ class OEF(OP2Common):
             return n
         return new_func
 
-    def _read_oef1_loads_nasa95(self, data, ndata):
+    def _read_oef1_loads_nasa95(self, data: bytes, ndata: int):
         """Reads the OEF1 table for NASA 95 Nastran"""
         if self._results.is_not_saved('element_forces'):
             return ndata
@@ -1248,7 +1248,7 @@ class OEF(OP2Common):
         return n
 
     # @_print_obj_name_on_crash
-    def _read_oef1_loads(self, data, ndata):
+    def _read_oef1_loads(self, data: bytes, ndata: int):
         """Reads the OEF1 table; stores the element forces/heat flux."""
         #self._apply_oef_ato_crm_psd_rms_no('') # TODO: just testing
         if self._results.is_not_saved('element_forces'):

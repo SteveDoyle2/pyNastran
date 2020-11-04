@@ -22,7 +22,7 @@ DSCREEN_RTYPE_TO_INT = {value: key for key, value in DSCREEN_INT_TO_RTYPE.items(
 class EDOM(GeomCommon):
     """defines methods for reading op2 properties"""
 
-    def _read_edom4_4(self, data, ndata):
+    def _read_edom4_4(self, data: bytes, ndata: int):
         """
         reads the EDOM table
         SOL 200 design optimization and sensitivity analysis bulk entries.

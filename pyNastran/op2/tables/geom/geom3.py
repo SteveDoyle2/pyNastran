@@ -32,7 +32,7 @@ class GEOM3(GeomCommon):
             self.rigid_elements[eid].type == elem.type)
         self._add_rigid_element_object(elem, allow_overwrites=allow_overwrites)
 
-    def _read_geom3_4(self, data, ndata):
+    def _read_geom3_4(self, data: bytes, ndata: int):
         return self._read_geom_4(self._geom3_map, data, ndata)
 
     def __init__(self):

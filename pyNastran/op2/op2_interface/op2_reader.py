@@ -3253,7 +3253,7 @@ class OP2Reader:
             read_record_ndata = self._skip_record_ndata
         return read_record_ndata
 
-    def _read_r1tabrg(self, data, ndata):
+    def _read_r1tabrg(self, data: bytes, ndata: int):
         """
         Design Responses:
           - Weight
@@ -5433,7 +5433,7 @@ class OP2Reader:
                 op2.subtable_name, subtable_name))
         return subtable_name
 
-    def generic_stop_table(self, data, ndata):  # pragma: no cover
+    def generic_stop_table(self, data: bytes, ndata: int):  # pragma: no cover
         """print table data when things get weird"""
         strings, ints, floats = self.show_data(data)
         msg = 'Unhandled table length error\n'

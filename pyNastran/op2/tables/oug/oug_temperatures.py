@@ -7,7 +7,7 @@ class RealTemperatureArray(RealScalarTableArray):
         RealScalarTableArray.__init__(self, data_code, is_sort1, isubcase, dt)
 
     def write_f06(self, f06_file, header=None, page_stamp='PAGE %s',
-                  page_num=1, is_mag_phase=False, is_sort1=True):
+                  page_num: int=1, is_mag_phase: bool=False, is_sort1: bool=True):
         if header is None:
             header = []
         if self.nonlinear_factor not in (None, np.nan):

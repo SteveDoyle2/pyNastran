@@ -685,7 +685,7 @@ class AESURFZ(BaseCard):
         self.panlst_ref.cross_reference(model)
         self.aero_element_ids = self.panlst_ref.aero_element_ids
 
-    def safe_cross_reference(self, model, xref_errors):
+    def safe_cross_reference(self, model: BDF, xref_errors):
         msg = ', which is required by AESURF aesid=%s' % self.aesid
         self.cid_ref = model.safe_coord(self.cid, self.aesid, xref_errors, msg=msg)
         #if self.cid2 is not None:
@@ -988,7 +988,7 @@ class AEROZ(Aero):
         self.acsid_ref = model.Coord(self.acsid, msg=msg)
         self.rcsid_ref = model.Coord(self.rcsid, msg=msg)
 
-    def safe_cross_reference(self, model, xref_errors):
+    def safe_cross_reference(self, model: BDF, xref_errors):
         """
         Safe cross refernece aerodynamic coordinate system.
 
@@ -1236,7 +1236,7 @@ class PANLST1(Spline):
         self.caero_ref = model.CAero(self.macro_id, msg=msg)
         self.aero_element_ids = np.arange(self.box1, self.box2)
 
-    def safe_cross_reference(self, model, xref_errors):
+    def safe_cross_reference(self, model: BDF, xref_errors):
         self.cross_reference(model)
 
     def raw_fields(self):
@@ -1339,7 +1339,7 @@ class PANLST3(Spline):
         self.caero_refs = caero_refs
         self.aero_element_ids = aero_element_ids
 
-    def safe_cross_reference(self, model, xref_errors):
+    def safe_cross_reference(self, model: BDF, xref_errors):
         self.cross_reference(model)
 
     def raw_fields(self):
@@ -1501,7 +1501,7 @@ class PAFOIL7(BaseCard):
         self.i_thickness_tip_ref = model.AEFact(self.i_thickness_tip, msg=msg)
         self.i_camber_tip_ref = model.AEFact(self.i_camber_tip, msg=msg)
 
-    def safe_cross_reference(self, model, xref_errors):
+    def safe_cross_reference(self, model: BDF, xref_errors):
         self.cross_reference(model)
 
     def uncross_reference(self) -> None:
@@ -1722,7 +1722,7 @@ class BODY7(BaseCard):
         #self.ascid_ref = model.Acsid(msg=msg)
         self.ascid_ref = model.Coord(0, msg=msg)
 
-    def safe_cross_reference(self, model, xref_errors):
+    def safe_cross_reference(self, model: BDF, xref_errors):
         self.cross_reference(model)
 
     def uncross_reference(self) -> None:
@@ -2288,7 +2288,7 @@ class SEGMESH(BaseCard):
         self.idzs_ref = idzs_ref
         #print(self.idys_ref)
 
-    def safe_cross_reference(self, model, xref_errors):
+    def safe_cross_reference(self, model: BDF, xref_errors):
         return self.cross_reference(model)
 
     def uncross_reference(self) -> None:
@@ -2646,7 +2646,7 @@ class CAERO7(BaseCard):
             self.pafoil_ref = model.zona.PAFOIL(self.p_airfoil, msg)
         self._init_ids()
 
-    def safe_cross_reference(self, model, xref_errors):
+    def safe_cross_reference(self, model: BDF, xref_errors):
         """
         Cross links the card so referenced cards can be extracted directly
 
@@ -3590,7 +3590,7 @@ class FLUTTER_ZONA(Spline):
         #self.panlst_ref.cross_reference(model)
         #self.aero_element_ids = self.panlst_ref.aero_element_ids
 
-    def safe_cross_reference(self, model, xref_errors=None):
+    def safe_cross_reference(self, model: BDF, xref_errors=None):
         return
         #msg = ', which is required by SPLINE1 eid=%s' % self.eid
         #try:
@@ -3716,7 +3716,7 @@ class SPLINE1_ZONA(Spline):
         self.panlst_ref.cross_reference(model)
         self.aero_element_ids = self.panlst_ref.aero_element_ids
 
-    def safe_cross_reference(self, model, xref_errors):
+    def safe_cross_reference(self, model: BDF, xref_errors):
         msg = ', which is required by SPLINE1 eid=%s' % self.eid
         try:
             self.setg_ref = model.Set(self.setg, msg=msg)
@@ -3873,7 +3873,7 @@ class SPLINE2_ZONA(Spline):
         self.panlst_ref.cross_reference(model)
         self.aero_element_ids = self.panlst_ref.aero_element_ids
 
-    def safe_cross_reference(self, model, xref_errors):
+    def safe_cross_reference(self, model: BDF, xref_errors):
         try:
             msg = ', which is required by SPLINE1 eid=%s' % self.eid
             self.setg_ref = model.Set(self.setg, msg=msg)
@@ -3979,7 +3979,7 @@ class SPLINE3_ZONA(Spline):
         self.panlst_ref.cross_reference(model)
         self.aero_element_ids = self.panlst_ref.aero_element_ids
 
-    def safe_cross_reference(self, model, xref_errors):
+    def safe_cross_reference(self, model: BDF, xref_errors):
         msg = ', which is required by SPLINE3 eid=%s' % self.eid
         try:
             self.setg_ref = model.Set(self.setg, msg=msg)

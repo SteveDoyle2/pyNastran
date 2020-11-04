@@ -767,7 +767,7 @@ class CBAR(LineElement):
         else:
             self.g0_vector = self.x
 
-    def safe_cross_reference(self, model, xref_errors):
+    def safe_cross_reference(self, model: BDF, xref_errors):
         msg = ', which is required by CBAR eid=%s' % (self.eid)
         self.ga_ref = model.Node(self.ga, msg=msg)
         self.gb_ref = model.Node(self.gb, msg=msg)
@@ -1134,7 +1134,7 @@ class CBEAM3(LineElement):  # was CBAR
         if self.g0:
             self.g0_ref = model.Node(self.g0, msg=msg)
 
-    def safe_cross_reference(self, model, xref_errors):
+    def safe_cross_reference(self, model: BDF, xref_errors):
         msg = ', which is required by CBEAM3 eid=%s' % (self.eid)
         self.ga_ref = model.Node(self.ga, msg=msg)
         self.gb_ref = model.Node(self.gb, msg=msg)
@@ -1731,7 +1731,7 @@ class CBEND(LineElement):
         self.gb_ref = model.Node(self.gb, msg=msg)
         self.pid_ref = model.Property(self.pid, msg=msg)
 
-    def safe_cross_reference(self, model, xref_errors):
+    def safe_cross_reference(self, model: BDF, xref_errors):
         msg = ', which is required by CBEND eid=%s' % (self.eid)
         self.ga_ref = model.Node(self.ga, msg=msg)
         self.gb_ref = model.Node(self.gb, msg=msg)

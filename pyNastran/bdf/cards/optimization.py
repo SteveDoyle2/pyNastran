@@ -2079,7 +2079,7 @@ class DRESP1(OptConstraint):
             msg += str(self)
             raise NotImplementedError(msg)
 
-    def safe_cross_reference(self, model, xref_errors):
+    def safe_cross_reference(self, model: BDF, xref_errors):
         """
         Cross links the card so referenced cards can be extracted directly
 
@@ -2751,7 +2751,7 @@ class DRESP2(OptConstraint):
         else:
             raise NotImplementedError(self.dequation)
 
-    def safe_cross_reference(self, model, xref_errors):
+    def safe_cross_reference(self, model: BDF, xref_errors):
         self.cross_reference(model)
 
     def uncross_reference(self) -> None:
@@ -3059,7 +3059,7 @@ class DRESP3(OptConstraint):
             list_fields += build_table_lines(fields2, nstart=i, nend=j)
         return list_fields
 
-    def safe_cross_reference(self, model, xref_errors):
+    def safe_cross_reference(self, model: BDF, xref_errors):
         self.cross_reference(model)
 
     def cross_reference(self, model: BDF) -> None:

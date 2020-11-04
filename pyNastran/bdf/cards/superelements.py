@@ -90,7 +90,7 @@ class SEBNDRY(BaseCard):
     def cross_reference(self, model: BDF) -> None:
         pass
 
-    def safe_cross_reference(self, model, xref_errors):
+    def safe_cross_reference(self, model: BDF, xref_errors):
         self.cross_reference(model)
 
     def uncross_reference(self) -> None:
@@ -163,7 +163,7 @@ class RELEASE(BaseCard):
     def cross_reference(self, model: BDF) -> None:
         pass
 
-    def safe_cross_reference(self, model, xref_errors):
+    def safe_cross_reference(self, model: BDF, xref_errors):
         self.cross_reference(model)
 
     def uncross_reference(self) -> None:
@@ -249,7 +249,7 @@ class SEELT(BaseCard):
             raise KeyError('eids=%s not found%s' % (missing_eids, msg))
         return eids_ref
 
-    def safe_cross_reference(self, model, xref_errors):
+    def safe_cross_reference(self, model: BDF, xref_errors):
         """
         Cross links the card so referenced cards can be extracted directly
 
@@ -321,7 +321,7 @@ class SELOAD(BaseCard):
     def uncross_reference(self) -> None:
         pass
 
-    def safe_cross_reference(self, model, xref_errors):
+    def safe_cross_reference(self, model: BDF, xref_errors):
         pass
 
     def raw_fields(self):
@@ -386,7 +386,7 @@ class SEEXCLD(BaseCard):
     def cross_reference(self, model: BDF) -> None:
         pass
 
-    def safe_cross_reference(self, model, xref_errors):
+    def safe_cross_reference(self, model: BDF, xref_errors):
         self.cross_reference(model)
 
     def uncross_reference(self) -> None:
@@ -462,7 +462,7 @@ class SEMPLN(BaseCard):
         msg = ', which is required by SEMPLN seid=%s' % self.seid
         self.nodes_ref = model.Nodes(self.nodes, msg=msg)
 
-    def safe_cross_reference(self, model, xref_errors):
+    def safe_cross_reference(self, model: BDF, xref_errors):
         """
         Cross links the card so referenced cards can be extracted directly
 
@@ -544,7 +544,7 @@ class SELABEL(BaseCard):
         """
         pass
 
-    def safe_cross_reference(self, model, xref_errors):
+    def safe_cross_reference(self, model: BDF, xref_errors):
         """
         Cross links the card so referenced cards can be extracted directly
 
@@ -668,7 +668,7 @@ class SELOC(BaseCard):
         # either GRID or POINT entries
         self.nodes_0_ref = model.get_point_grids(self.nodes_0, msg=msg)
 
-    def safe_cross_reference(self, model, xref_errors):
+    def safe_cross_reference(self, model: BDF, xref_errors):
         """
         Cross links the card so referenced cards can be extracted directly
 
@@ -811,7 +811,7 @@ class SETREE(BaseCard):
             raise KeyError('cannot find superelements=%s%s' % (missing_superelements, msg))
         self.superelements_ref = superelements_ref
 
-    def safe_cross_reference(self, model, xref_errors):
+    def safe_cross_reference(self, model: BDF, xref_errors):
         """
         Cross links the card so referenced cards can be extracted directly
 
@@ -900,7 +900,7 @@ class CSUPER(BaseCard):
         msg = ', which is required by CSUPER seid=%s' % self.seid
         self.nodes_ref = model.Nodes(self.nodes, msg=msg)
 
-    def safe_cross_reference(self, model, xref_errors):
+    def safe_cross_reference(self, model: BDF, xref_errors):
         """
         Cross links the card so referenced cards can be extracted directly
 
@@ -989,7 +989,7 @@ class CSUPEXT(BaseCard):
         msg = ', which is required by CSUPEXT eid=%s' % self.seid
         self.nodes_ref = model.Nodes(self.nodes, msg=msg)
 
-    def safe_cross_reference(self, model, xref_errors):
+    def safe_cross_reference(self, model: BDF, xref_errors):
         """
         Cross links the card so referenced cards can be extracted directly
 
@@ -1114,7 +1114,7 @@ class SEBULK(BaseCard):
         """
         pass
 
-    def safe_cross_reference(self, model, xref_errors):
+    def safe_cross_reference(self, model: BDF, xref_errors):
         """
         Cross links the card so referenced cards can be extracted directly
 
@@ -1270,7 +1270,7 @@ class SECONCT(BaseCard):
         self.nodes_a_ref = model.superelement_nodes(self.seid_a, self.nodes_a, msg=msg)
         self.nodes_b_ref = model.superelement_nodes(self.seid_b, self.nodes_b, msg=msg)
 
-    def safe_cross_reference(self, model, xref_errors):
+    def safe_cross_reference(self, model: BDF, xref_errors):
         """
         Cross links the card so referenced cards can be extracted directly
 

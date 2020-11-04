@@ -20,7 +20,7 @@ from .geom2 import DoubleCardError
 class MPT(GeomCommon):
     """defines methods for reading op2 materials & time-stepping methods"""
 
-    def _read_mpt_4(self, data, ndata):
+    def _read_mpt_4(self, data: bytes, ndata: int):
         return self._read_geom_4(self._mpt_map, data, ndata)
 
     def __init__(self):

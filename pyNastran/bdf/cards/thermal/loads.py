@@ -122,7 +122,7 @@ class QVOL(ThermalLoad):
         msg = ', which is required by QVOL sid=%s' % self.sid
         self.elements_ref = model.Elements(self.elements, msg=msg)
 
-    def safe_cross_reference(self, model, xref_errors):
+    def safe_cross_reference(self, model: BDF, xref_errors):
         try:
             return self.cross_reference(model)
         except KeyError:
@@ -295,7 +295,7 @@ class QVECT(ThermalLoad):
         msg = ', which is required by QVECT sid=%s' % self.sid
         self.eids_ref = model.Elements(self.eids, msg=msg)
 
-    def safe_cross_reference(self, model, xref_errors):
+    def safe_cross_reference(self, model: BDF, xref_errors):
         try:
             return self.cross_reference(model)
         except KeyError:
@@ -426,7 +426,7 @@ class QBDY1(ThermalLoad):
         msg = ', which is required by QBDY1 sid=%s' % self.sid
         self.eids_ref = model.Elements(self.eids, msg=msg)
 
-    def safe_cross_reference(self, model, xref_errors):
+    def safe_cross_reference(self, model: BDF, xref_errors):
         try:
             return self.cross_reference(model)
         except KeyError:
@@ -561,7 +561,7 @@ class QBDY2(ThermalLoad):  # not tested
         msg = ', which is required by QBDY2 sid=%s' % self.sid
         self.eid_ref = model.Element(self.eid, msg=msg)
 
-    def safe_cross_reference(self, model, xref_errors):
+    def safe_cross_reference(self, model: BDF, xref_errors):
         try:
             return self.cross_reference(model)
         except KeyError:
@@ -704,7 +704,7 @@ class QBDY3(ThermalLoad):
             eids.append(model.Element(eid, msg=msg))
         self.eids_ref = eids
 
-    def safe_cross_reference(self, model, xref_errors):
+    def safe_cross_reference(self, model: BDF, xref_errors):
         try:
             return self.cross_reference(model)
         except KeyError:
@@ -903,7 +903,7 @@ class QHBDY(ThermalLoad):
     def cross_reference(self, model: BDF) -> None:
         pass
 
-    def safe_cross_reference(self, model, xref_errors):
+    def safe_cross_reference(self, model: BDF, xref_errors):
         try:
             return self.cross_reference(model)
         except KeyError:
@@ -1088,7 +1088,7 @@ class TEMPRB(ThermalLoad):
     def cross_reference(self, model: BDF) -> None:
         pass
 
-    def safe_cross_reference(self, model, debug=True):
+    def safe_cross_reference(self, model: BDF, debug=True):
         pass
 
     def uncross_reference(self) -> None:
@@ -1244,7 +1244,7 @@ class TEMP(ThermalLoad):
     def cross_reference(self, model: BDF) -> None:
         pass
 
-    def safe_cross_reference(self, model, debug=True):
+    def safe_cross_reference(self, model: BDF, debug=True):
         pass
 
     def uncross_reference(self) -> None:
@@ -1569,7 +1569,7 @@ class TEMPD(BaseCard):
     def cross_reference(self, model: BDF) -> None:
         pass
 
-    def safe_cross_reference(self, model, xref_errors):
+    def safe_cross_reference(self, model: BDF, xref_errors):
         pass
 
     def uncross_reference(self) -> None:

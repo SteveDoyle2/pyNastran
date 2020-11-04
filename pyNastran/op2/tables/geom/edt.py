@@ -14,7 +14,7 @@ from .utils import get_minus1_start_end
 class EDT(GeomCommon):
     """defines methods for reading aero and element deformations"""
 
-    def _read_edt_4(self, data, ndata):
+    def _read_edt_4(self, data: bytes, ndata: int):
         """
         3.21 EDT
         Aero and element deformations.

@@ -31,7 +31,7 @@ from .geom2 import DoubleCardError
 class EPT(GeomCommon):
     """defines methods for reading op2 properties"""
 
-    def _read_ept_4(self, data, ndata):
+    def _read_ept_4(self, data: bytes, ndata: int):
         return self._read_geom_4(self._ept_map, data, ndata)
 
     def __init__(self):

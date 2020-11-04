@@ -60,7 +60,7 @@ class OUG(OP2Common):
             setattr(self, name, value)
             self.data_code[name] = value
 
-    def _read_otemp1_3(self, data, ndata):
+    def _read_otemp1_3(self, data: bytes, ndata: int):
         """SOL 401 table"""
         self.nonlinear_factor = np.nan
         self.is_table_1 = True
@@ -104,7 +104,7 @@ class OUG(OP2Common):
         self._write_debug_bits()
         #print(self.code_information())
 
-    def _read_otemp1_4(self, data, ndata):
+    def _read_otemp1_4(self, data: bytes, ndata: int):
         """SOL 401 table"""
         nfields = ndata // 4
         nnodes = nfields // 2
@@ -130,7 +130,7 @@ class OUG(OP2Common):
         self.obj.data[self.obj.itime, :, 0] = temps
         return ndata
 
-    def _read_oug1_3(self, data, ndata):
+    def _read_oug1_3(self, data: bytes, ndata: int):
         """reads table 3 (the header table)"""
         #self._set_times_dtype()
         self.nonlinear_factor = np.nan
@@ -235,7 +235,7 @@ class OUG(OP2Common):
         self._write_debug_bits()
 
 
-    def _read_oug2_3(self, data, ndata):
+    def _read_oug2_3(self, data: bytes, ndata: int):
         """reads the SORT2 version of table 4 (the data table)"""
         #self._set_times_dtype()
         #return self._read_oug1_3(data)
@@ -363,7 +363,7 @@ class OUG(OP2Common):
         self._write_debug_bits()
         assert isinstance(self.nonlinear_factor, integer_types), self.nonlinear_factor
 
-    def _read_ougpc1_3(self, data, ndata):
+    def _read_ougpc1_3(self, data: bytes, ndata: int):
         """reads table 3 (the header table)"""
         self.to_nx(f' because table_name={self.table_name} was found')
         #self._set_times_dtype()
@@ -513,7 +513,7 @@ class OUG(OP2Common):
             self.log.warning(f'skipping {self.table_name}')
             self._table4_count += 1
 
-    def _read_ougpc2_3(self, data, ndata):
+    def _read_ougpc2_3(self, data: bytes, ndata: int):
         """reads the SORT2 version of table 4 (the data table)"""
         #self._set_times_dtype()
         self.nonlinear_factor = np.nan
@@ -646,7 +646,7 @@ class OUG(OP2Common):
         assert isinstance(self.nonlinear_factor, integer_types), self.nonlinear_factor
         self.warn_skip_table()
 
-    def _read_ougpc_4(self, data, ndata):
+    def _read_ougpc_4(self, data: bytes, ndata: int):
         """reads table 4 (the results table)"""
         assert self.table_code == 49, self.code_information()
         if self.read_mode == 1:
@@ -682,7 +682,7 @@ class OUG(OP2Common):
         #floats  = (1.3563177106455426e-19, 1.3563156426940112e-19, 15.746319770812988, 13.788395881652832, 3300.08203125, 1.3569499868262628e-19, 16.328763961791992, 14.360718727111816, 3300.08203125, 1.357016161275267e-19, -0.15910102427005768, -0.3206767737865448, 3300.08203125, 1.3570492484997691e-19, -0.316183865070343, -0.009832870215177536, 3300.08203125, 1.3569168996017607e-19, -0.13817934691905975, -0.0836285650730133, 3300.08203125, 1.3568838123772585e-19, -0.037704844027757645, -0.08996585756540298)
         return ndata
 
-    def _read_ougmc_4(self, data, ndata):
+    def _read_ougmc_4(self, data: bytes, ndata: int):
         if self.table_code == 44:   # Displacements
             if self.table_name in [b'OUGMC1', b'OUGMC2']:
                 assert self.thermal == 0, self.code_information()
@@ -718,7 +718,7 @@ class OUG(OP2Common):
         self.warn_skip_table()
         return n
 
-    def _read_oug_4(self, data, ndata):
+    def _read_oug_4(self, data: bytes, ndata: int):
         """reads the SORT1 version of table 4 (the data table)"""
         table_name_bytes = self.table_name
         if self.table_code == 1:   # Displacements
@@ -774,25 +774,25 @@ class OUG(OP2Common):
             raise NotImplementedError(self.code_information())
         return n
 
-    #def _read_eigenvector_displacement_solution_set(self, data, ndata):
+    #def _read_eigenvector_displacement_solution_set(self, data: bytes, ndata: int):
         #"""
         #table_code = 14
         #"""
         #raise NotImplementedError()
 
-    #def _read_displacement_solution_set(self, data, ndata):
+    #def _read_displacement_solution_set(self, data: bytes, ndata: int):
         #"""
         #table_code = 15
         #"""
         #raise NotImplementedError()
 
-    #def _read_velocity_solution_set(self, data, ndata):
+    #def _read_velocity_solution_set(self, data: bytes, ndata: int):
         #"""
         #table_code = 16
         #"""
         #raise NotImplementedError()
 
-    #def _read_acceleration_solution_set(self, data, ndata):
+    #def _read_acceleration_solution_set(self, data: bytes, ndata: int):
         #"""
         #table_code = 17
         #"""
@@ -934,7 +934,7 @@ class OUG(OP2Common):
             #raise NotImplementedError(self.thermal)
         return n
 
-    def _read_oug_velocity(self, data, ndata):
+    def _read_oug_velocity(self, data: bytes, ndata: int):
         """
         table_code = 10
         """
@@ -991,7 +991,7 @@ class OUG(OP2Common):
             raise NotImplementedError(self.thermal)
         return n
 
-    def _read_oug_acceleration(self, data, ndata):
+    def _read_oug_acceleration(self, data: bytes, ndata: int):
         """
         table_code = 11
         """
@@ -1079,7 +1079,7 @@ class OUG(OP2Common):
             raise NotImplementedError(self.thermal)
         return n
 
-    def _read_oug_eigenvector(self, data, ndata):
+    def _read_oug_eigenvector(self, data: bytes, ndata: int):
         """
         table_code = 7
         """
@@ -1147,7 +1147,7 @@ class OUG(OP2Common):
             raise NotImplementedError(self.thermal)
         return n
 
-    def _read_oug_psd(self, data, ndata):
+    def _read_oug_psd(self, data: bytes, ndata: int):
         """
         table_code = 601/610/611
 
@@ -1257,7 +1257,7 @@ class OUG(OP2Common):
             raise NotImplementedError(self.thermal)
         return n
 
-    def _read_oug_rms(self, data, ndata):
+    def _read_oug_rms(self, data: bytes, ndata: int):
         """
         table_code = 801  # /610/611
         """
@@ -1349,7 +1349,7 @@ class OUG(OP2Common):
             raise NotImplementedError(self.thermal)
         return n
 
-    def _read_oug_no(self, data, ndata):
+    def _read_oug_no(self, data: bytes, ndata: int):
         """
         table_code = 901  # /610/611
         """
@@ -1429,7 +1429,7 @@ class OUG(OP2Common):
             raise NotImplementedError(self.thermal)
         return n
 
-    def _read_oug_ato(self, data, ndata):
+    def _read_oug_ato(self, data: bytes, ndata: int):
         """
         table_code = 901  # /610/611
         """
@@ -1461,7 +1461,7 @@ class OUG(OP2Common):
                                     random_code=self.random_code)
         return n
 
-    def _read_oug_crm(self, data, ndata):
+    def _read_oug_crm(self, data: bytes, ndata: int):
         """
         table_code = 501  # /510/511
         """
