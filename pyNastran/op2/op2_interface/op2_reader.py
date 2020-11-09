@@ -94,7 +94,9 @@ OPTISTRUCT_VERSIONS = [
     b'OS11XXXX', b'OS12.210', b'OS14.210',
     b'OS2017.1', b'OS2017.2',
     b'OS2018.1',
-    b'OS2019.1']
+    b'OS2019.1',
+    b'OS2020',
+]
 
 class OP2Reader:
     """Stores methods that aren't useful to an end user"""
