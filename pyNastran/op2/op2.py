@@ -305,7 +305,7 @@ class OP2(OP2_Scalar, OP2Writer):
         aname = a_obj.__class__.__name__
         bname = b_obj.__class__.__name__
         if not aname == bname:
-            self.log.warning('type(a)=%s type(b)=%s' % (aname, bname))
+            self.log.warning(f'type(a)={aname} type(b)={bname}')
             return False
 
         if aname == 'PARAM': # TODO: update this
@@ -313,9 +313,9 @@ class OP2(OP2_Scalar, OP2Writer):
 
         # does this ever hit?
         if not any(word in aname for word in ['Array', 'Eigenvalues', 'GridPointWeight']):
-            msg = '%s is not an Array ... assume equal' % aname
+            msg = f'{aname} is not an Array ... assume equal'
             self.log.warning(msg)
-            raise NotImplementedError('%s __eq__' % aname)
+            raise NotImplementedError(f'{aname} __eq__')
             #continue
 
         # use the array methods to check for equality
@@ -373,7 +373,7 @@ class OP2(OP2_Scalar, OP2Writer):
 
     def to_msc(self, msg='') -> None:
         if self.is_nx:
-            self.log.warning('switching to MSC')
+            self.log.warning(f'switching to MSC{msg}')
             self.set_as_msc()
 
     def include_exclude_results(self,
@@ -392,8 +392,8 @@ class OP2(OP2_Scalar, OP2Writer):
         if exclude_results and include_results:
             msg = (
                 'exclude_results or include_results must be None\n'
-                'exclude_results=%r\n'
-                'include_results=%r\n' % (exclude_results, include_results)
+                f'exclude_results={exclude_results!r}\n'
+                f'include_results={include_results!r}\n'
             )
             raise RuntimeError(msg)
 
@@ -499,7 +499,7 @@ class OP2(OP2_Scalar, OP2Writer):
             try:
                 val = getattr(obj, key)
             except NameError:
-                self.log.warning('key=%r val=%s' % (key, val))
+                self.log.warning(f'key={key!r} val={val}')
                 continue
             #print(key)
             #if isinstance(val, types.FunctionType):
@@ -507,7 +507,7 @@ class OP2(OP2_Scalar, OP2Writer):
             try:
                 setattr(self, key, val)
             except AttributeError:
-                print('key=%r val=%s' % (key, val))
+                print(f'key={key!r} val={val}')
                 raise
 
         #self.case_control_deck = CaseControlDeck(self.case_control_lines, log=self.log)
@@ -559,7 +559,7 @@ class OP2(OP2_Scalar, OP2Writer):
         self.skip_undefined_matrices = skip_undefined_matrices
         assert self.ask in [True, False], self.ask
         self.is_vectorized = True
-        self.log.debug('combine=%s' % combine)
+        self.log.debug(f'combine={combine}')
         self.log.debug('-------- reading op2 with read_mode=1 (array sizing) --------')
         self.read_mode = 1
         self._close_op2 = False
@@ -631,7 +631,7 @@ class OP2(OP2_Scalar, OP2Writer):
             try:
                 values = result.values()
             except AttributeError:
-                self.log.error('result_type = %s' % result_type)
+                self.log.error(f'result_type = {result_type}')
                 raise
 
             for obj in values:
@@ -695,12 +695,12 @@ class OP2(OP2_Scalar, OP2Writer):
                         raise
                     except:
                         self.log.error(obj)
-                        self.log.error('build_dataframe is broken for %s' % class_name)
+                        self.log.error(f'build_dataframe is broken for {class_name}')
                         raise
                     continue
                 if obj.is_sort2:
                     #self.log.warning(obj)
-                    self.log.warning('build_dataframe is not supported for %s - SORT2' % class_name)
+                    self.log.warning(f'build_dataframe is not supported for {class_name} - SORT2')
                     continue
 
                 # SORT1
@@ -713,11 +713,11 @@ class OP2(OP2_Scalar, OP2Writer):
                     raise
                 except NotImplementedError:
                     self.log.warning(obj)
-                    self.log.warning('build_dataframe is broken for %s' % class_name)
+                    self.log.warning(f'build_dataframe is broken for {class_name}')
                     raise
                 except:
                     self.log.error(obj)
-                    self.log.error('build_dataframe is broken for %s' % class_name)
+                    self.log.error(f'build_dataframe is broken for {class_name}')
                     raise
 
     def load_hdf5_filename(self, hdf5_filename: str, combine: bool=True) -> None:
@@ -737,7 +737,7 @@ class OP2(OP2_Scalar, OP2Writer):
         import h5py
         self.op2_filename = hdf5_filename
 
-        self.log.info('hdf5_op2_filename = %r' % hdf5_filename)
+        self.log.info(f'hdf5_op2_filename = {hdf5_filename!r}')
         debug = False
         with h5py.File(hdf5_filename, 'r') as h5_file:
             load_op2_from_hdf5_file(self, h5_file, self.log, debug=debug)
@@ -930,11 +930,12 @@ class OP2(OP2_Scalar, OP2Writer):
                         continue
 
                     res1 = result[key1]
+                    class_name = res1.__class__.__name__
                     if not hasattr(res1, 'combine'):
-                        self.log.info("res=%s has no method combine" % res1.__class__.__name__)
+                        self.log.info(f'res={class_name} has no method combine')
                         continue
 
-                    self.log.info("res=%s has combine" % res1.__class__.__name__)
+                    self.log.info(f'res={class_name} has combine')
                     res2 = result[key2]
                     del result[key1]
                     del result[key2]
@@ -957,13 +958,13 @@ class OP2(OP2_Scalar, OP2Writer):
             try:
                 case_keys = list(result.keys())
             except AttributeError:
-                self.log.error('result_type = %s' % result_type)
+                self.log.error(f'result_type = {result_type}')
                 raise
 
             try:
                 case_keys = sorted(case_keys)  # TODO: causes DeprecationWarning
             except TypeError:
-                self.log.error('result.keys() = %s' % case_keys)
+                self.log.error(f'result.keys() = {case_keys}')
 
             if len(result) == 0:
                 continue
@@ -1014,7 +1015,7 @@ class OP2(OP2_Scalar, OP2Writer):
             for key in result_type_dict:
                 if isinstance(key, str):
                     if table_type not in ['eigenvalues', 'eigenvalues_fluid', 'params']:
-                        self.log.warning('table_type = %s' % table_type)
+                        self.log.warning(f'table_type = {table_type}')
                     continue
                 if key not in keys:
                     keys.append(key)
@@ -1098,14 +1099,16 @@ class OP2(OP2_Scalar, OP2Writer):
         self.log.info('---self.subcase_key---')
         for isubcase, keys in sorted(self.subcase_key.items()):
             if len(keys) == 1:
-                self.log.info('subcase_id=%s : keys=%s' % (isubcase, keys))
+                self.log.info(f'subcase_id={isubcase} : keys={keys}')
             else:
-                self.log.info('subcase_id=%s' % isubcase)
+                self.log.info(f'subcase_id={isubcase}')
                 for key in keys:
                     self.log.info('  %s' % str(key))
         #self.log.info('subcase_key = %s' % self.subcase_key)
 
-    def transform_displacements_to_global(self, icd_transform: Any, coords: Dict[int, Any], xyz_cid0: Any=None,
+    def transform_displacements_to_global(self, icd_transform: Any,
+                                          coords: Dict[int, Any],
+                                          xyz_cid0: Any=None,
                                           debug: bool=False) -> None:
         """
         Transforms the ``data`` of displacement-like results into the
@@ -1190,11 +1193,12 @@ class OP2(OP2_Scalar, OP2Writer):
             for subcase, result in disp_like_dict.items():
                 if result.table_name in ['BOUGV1', 'BOPHIG', 'TOUGV1']:
                     continue
-                self.log.debug("transforming %s" % result.table_name)
+                self.log.debug(f'transforming {result.table_name}')
                 transform_displacement_to_global(subcase, result, icd_transform, coords, xyz_cid0,
                                                  self.log, debug=debug)
 
-    def transform_gpforce_to_global(self, nids_all, nids_transform, icd_transform, coords, xyz_cid0=None):
+    def transform_gpforce_to_global(self, nids_all, nids_transform, icd_transform, coords,
+                                    xyz_cid0=None):
         """
         Transforms the ``data`` of GPFORCE results into the
         global coordinate system for those nodes with different output

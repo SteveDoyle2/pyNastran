@@ -2,8 +2,11 @@
 Defines methods for the op2 & hdf5 writer
 """
 from struct import Struct, pack
+from typing import List
+
 import numpy as np
 import scipy.sparse as sp
+
 
 def set_table3_field(str_fields, ifield, value):
     """
@@ -53,6 +56,32 @@ def write_table_header(op2_file, fascii, table_name):
     st = Struct(table0_format)
     op2_file.write(st.pack(*table0))
     fascii.write('%s header0 = %s\n' % (table_name, table0))
+
+
+def to_column_bytes(data_list: List[np.ndarray], dtype_out: str,
+                    debug: bool=False) -> np.ndarray:
+    """
+    Takes an stackable numpy array of mixed types (e.g., ints/strings)
+    and casts them to the appropriate output datatype
+    (typically float32/float64).
+
+    An array is stackable if it's the same shape (e.g., ints/floats).  This
+    requirement is a bit looser for strings (4 characters per 32-bit float)
+    """
+    for i, datai in enumerate(data_list):
+        #if isinstance(datai, bytes):
+            ##print('bytes')
+            #data_list[i] = np.frombuffer(datai, dtype=dtype_out)
+        if datai.dtype != dtype_out:
+            #print(datai.dtype, dtype_out)
+            data_list[i] = np.frombuffer(datai.tobytes(), dtype=dtype_out)
+        elif debug:
+            #print('floats...')
+            print(datai.shape)
+        if debug:
+            print(data_list[i].shape)
+    out = np.column_stack(data_list)
+    return out
 
 def export_to_hdf5(self, group, log):
     """exports the object to HDF5 format"""

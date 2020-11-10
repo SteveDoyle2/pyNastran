@@ -11,6 +11,7 @@ from pyNastran.utils.numpy_utils import float_types
 from pyNastran.f06.f06_formatting import write_floats_13e, _eigenvalue_header
 from pyNastran.op2.result_objects.op2_objects import get_times_dtype
 from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import StressObject, StrainObject, OES_Object
+from pyNastran.op2.op2_interface.write_utils import to_column_bytes
 
 
 class RealSolidArray(OES_Object):
@@ -504,7 +505,7 @@ class RealSolidArray(OES_Object):
             page_num += 1
         return page_num - 1
 
-    def write_op2(self, op2, op2_ascii, itable, new_result,
+    def write_op2(self, op2_file, op2_ascii, itable, new_result,
                   date, is_mag_phase=False, endian='>'):
         """writes an OP2"""
         import inspect
@@ -514,7 +515,7 @@ class RealSolidArray(OES_Object):
 
         if itable == -1:
             #print('***************', itable)
-            self._write_table_header(op2, op2_ascii, date)
+            self._write_table_header(op2_file, op2_ascii, date)
             itable = -3
 
         #if isinstance(self.nonlinear_factor, float):
@@ -530,6 +531,7 @@ class RealSolidArray(OES_Object):
 
         eids3 = self.element_cid[:, 0]
         cids3 = self.element_cid[:, 1]
+        element_device = eids3 * 10 + self.device_code
 
         # table 4 info
         #ntimes = self.data.shape[0]
@@ -538,11 +540,12 @@ class RealSolidArray(OES_Object):
 
         # 21 = 1 node, 3 principal, 6 components, 9 vectors, 2 p/ovm
         #ntotal = ((nnodes * 21) + 1) + (nelements * 4)
-
-        nnodes_expected = self.nnodes_per_element_no_centroid
-        ntotali = 4 + 21 * nnodes_expected
+        nnodes_centroid = self.nnodes_per_element
+        nnodes_no_centroid = self.nnodes_per_element_no_centroid
+        ntotali = 4 + 21 * nnodes_no_centroid
         ntotali = self.num_wide
         ntotal = ntotali * nelements
+
 
         #print('shape = %s' % str(self.data.shape))
         assert nnodes > 1, nnodes
@@ -550,6 +553,7 @@ class RealSolidArray(OES_Object):
 
         #device_code = self.device_code
         op2_ascii.write(f'  ntimes = {self.ntimes}\n')
+        ntimes = self.ntimes
 
         #fmt = '%2i %6f'
         #print('ntotal=%s' % (ntotal))
@@ -562,10 +566,62 @@ class RealSolidArray(OES_Object):
         else:
             raise NotImplementedError('SORT2')
 
+        use_numpy = True
+        if use_numpy or 1:
+            fdtype = self.data.dtype
+
+            if use_numpy:
+                idtype = self.element_cid.dtype
+                cen_array = np.full(nelements, b'GRID', dtype='|S4')
+                nnodes_no_centroid_array = np.full(nelements, nnodes_no_centroid, dtype=idtype)
+                #print('element_wise')
+                element_wise_data = to_column_bytes([
+                    element_device, # ints
+                    cids3, # ints
+                    cen_array, # bytes
+                    nnodes_no_centroid_array, # ints
+                ], fdtype, debug=False)
+
+            oxx = self.data[:, :, 0]
+            oyy = self.data[:, :, 1]
+            ozz = self.data[:, :, 2]
+            txy = self.data[:, :, 3]
+            tyz = self.data[:, :, 4]
+            txz = self.data[:, :, 5]
+            o1 = self.data[:, :, 6]
+            o2 = self.data[:, :, 7]
+            o3 = self.data[:, :, 8]
+            #print(o1)
+            ovm = self.data[:, :, 9]
+            p = (o1 + o2 + o3) / -3.
+            A = np.full((ntimes, nnodes, 3, 3), np.nan, dtype=self.data.dtype)
+
+            #A = [[doxx, dtxy, dtxz],
+                 #[dtxy, doyy, dtyz],
+                 #[dtxz, dtyz, dozz]]
+            #(_lambda, v) = eigh(A)
+
+            # we're only filling the lower part of the A matrix
+            A[:, :, 0, 0] = oxx
+            A[:, :, 1, 1] = oyy
+            A[:, :, 2, 2] = ozz
+            A[:, :, 1, 0] = txy
+            A[:, :, 2, 0] = txz
+            A[:, :, 2, 1] = tyz
+            #A[:, :, 0, 1] =
+            #A[:, :, 0, 2] =
+            #A[:, :, 1, 2] =
+            #print(A[0, 0, :, :])
+
+            # v: ntimes, nnodes, (3, 3)
+            (_lambda, v) = eigh(A)  # a hermitian matrix is a symmetric-real matrix
+            del _lambda
+
         cen = b'GRID'
         op2_ascii.write(f'nelements={nelements:d}\n')
         for itime in range(self.ntimes):
-            self._write_table_3(op2, op2_ascii, new_result, itable, itime)
+            vi = v[itime, :, :, :]
+            self._write_table_3(op2_file, op2_ascii, new_result, itable, itime)
 
             # record 4
             #print('stress itable = %s' % itable)
@@ -575,67 +631,74 @@ class RealSolidArray(OES_Object):
                       4, 0, 4,
                       4, ntotal, 4,
                       4 * ntotal]
-            op2.write(pack('%ii' % len(header), *header))
+            op2_file.write(pack('%ii' % len(header), *header))
             op2_ascii.write('r4 [4, 0, 4]\n')
             op2_ascii.write(f'r4 [4, {itable:d}, 4]\n')
             op2_ascii.write(f'r4 [4, {4 * ntotal:d}, 4]\n')
 
-            oxx = self.data[itime, :, 0]
-            oyy = self.data[itime, :, 1]
-            ozz = self.data[itime, :, 2]
-            txy = self.data[itime, :, 3]
-            tyz = self.data[itime, :, 4]
-            txz = self.data[itime, :, 5]
-            o1 = self.data[itime, :, 6]
-            o2 = self.data[itime, :, 7]
-            o3 = self.data[itime, :, 8]
-            ovm = self.data[itime, :, 9]
-            p = (o1 + o2 + o3) / -3.
-
             #print('eids3', eids3)
-            cnnodes = nnodes_expected + 1
-            for i, deid, node_id, doxx, doyy, dozz, dtxy, dtyz, dtxz, do1, do2, do3, dp, dovm in zip(
-                    count(), eids2, nodes, oxx, oyy, ozz, txy, tyz, txz, o1, o2, o3, p, ovm):
-                #print('  eid =', deid, node_id)
+            cnnodes = nnodes_no_centroid + 1
 
-                j = where(eids3 == deid)[0]
-                assert len(j) > 0, j
-                cid = cids3[j][0]
-                A = [[doxx, dtxy, dtxz],
-                     [dtxy, doyy, dtyz],
-                     [dtxz, dtyz, dozz]]
-                (_lambda, v) = eigh(A)  # a hermitian matrix is a symmetric-real matrix
+            if use_numpy:
+                col_inputs = [
+                    nodes,
+                    oxx[itime, :], txy[itime, :], o1[itime, :], vi[:, 0, 1], vi[:, 0, 2], vi[:, 0, 0], p[itime, :], ovm[itime, :],
+                    oyy[itime, :], tyz[itime, :], o2[itime, :], vi[:, 1, 1], vi[:, 1, 2], vi[:, 1, 0],
+                    ozz[itime, :], txz[itime, :], o3[itime, :], vi[:, 2, 1], vi[:, 2, 2], vi[:, 2, 0], ]
 
-                #node_id, oxxi, txyi, o1i, v[0, 1], v[0, 2], v[0, 0], pi, ovmi,
-                    #'', oyyi, tyzi, o2i, v[1, 1], v[1, 2], v[1, 0],
-                    #'', ozzi, txzi, o3i, v[2, 1], v[2, 2], v[2, 0]
-                    #(grid_device, sxx, sxy, s1, a1, a2, a3, pressure, svm,
-                     #syy, syz, s2, b1, b2, b3,
-                     #szz, sxz, s3, c1, c2, c3)
+                datai = to_column_bytes(col_inputs, fdtype)
+                datai2 = datai.reshape(nelements, 21*nnodes_centroid)
+                data_out = np.hstack([element_wise_data, datai2])
 
-                if i % cnnodes == 0:
-                    data = [deid * 10 + self.device_code, cid, cen, nnodes_expected]
-                    op2_ascii.write('  eid=%s cid=%s cen=%s nnodes = %s\n' % tuple(data))
-                    op2.write(
-                        struct1.pack(*data)
-                        #pack(b'2i 4s i', *data)
-                    )
-                #else:
-                op2_ascii.write('    nid=%i\n' % node_id)
+                op2_file.write(data_out)
+            else:
+                oxx = self.data[itime, :, 0]
+                oyy = self.data[itime, :, 1]
+                ozz = self.data[itime, :, 2]
+                txy = self.data[itime, :, 3]
+                tyz = self.data[itime, :, 4]
+                txz = self.data[itime, :, 5]
+                o1 = self.data[itime, :, 6]
+                o2 = self.data[itime, :, 7]
+                o3 = self.data[itime, :, 8]
+                ovm = self.data[itime, :, 9]
+                pi = p[itime, :]
+                for i, deid, node_id, doxx, doyy, dozz, dtxy, dtyz, dtxz, do1, do2, do3, dp, dovm, dv in zip(
+                        count(), eids2, nodes, oxx, oyy, ozz, txy, tyz, txz, o1, o2, o3, pi, ovm, vi):
+                    #print('  eid =', deid, node_id)
 
-                data = [node_id,
-                        doxx, dtxy, do1, v[0, 1], v[0, 2], v[0, 0], dp, dovm,
-                        doyy, dtyz, do2, v[1, 1], v[1, 2], v[1, 0],
-                        dozz, dtxz, do3, v[2, 1], v[2, 2], v[2, 0], ]
-                op2_ascii.write('      oxx, txy, o1, v01, v02, v00, p, ovm = %s\n' % data[1:8])
-                op2_ascii.write('      oyy, tyz, o2, v11, v12, v10         = %s\n' % data[8:14])
-                op2_ascii.write('      ozz, txz, o3, v21, v22, v20         = %s\n' % data[14:])
-                op2.write(struct2.pack(*data))
-                i += 1
+                    #node_id, oxxi, txyi, o1i, dv[0, 1], dv[0, 2], v[0, 0], pi, ovmi,
+                        #'', oyyi, tyzi, o2i, dv[1, 1], dv[1, 2], v[1, 0],
+                        #'', ozzi, txzi, o3i, dv[2, 1], dv[2, 2], v[2, 0]
+                        #(grid_device, sxx, sxy, s1, a1, a2, a3, pressure, svm,
+                         #syy, syz, s2, b1, b2, b3,
+                         #szz, sxz, s3, c1, c2, c3)
+
+                    if i % cnnodes == 0:
+                        j = where(eids3 == deid)[0]
+                        assert len(j) > 0, j
+                        cid = cids3[j][0]
+                        data = [deid * 10 + self.device_code, cid, cen, nnodes_no_centroid]
+                        op2_ascii.write('  eid=%s cid=%s cen=%s nnodes = %s\n' % tuple(data))
+                        op2_file.write(
+                            struct1.pack(*data)
+                            #pack(b'2i 4s i', *data)
+                        )
+                    op2_ascii.write('    nid=%i\n' % node_id)
+
+                    data = [node_id,
+                            doxx, dtxy, do1, dv[0, 1], dv[0, 2], dv[0, 0], dp, dovm,
+                            doyy, dtyz, do2, dv[1, 1], dv[1, 2], dv[1, 0],
+                            dozz, dtxz, do3, dv[2, 1], dv[2, 2], dv[2, 0], ]
+                    op2_ascii.write('      oxx, txy, o1, v01, v02, v00, p, ovm = %s\n' % data[1:8])
+                    op2_ascii.write('      oyy, tyz, o2, v11, v12, v10         = %s\n' % data[8:14])
+                    op2_ascii.write('      ozz, txz, o3, v21, v22, v20         = %s\n' % data[14:])
+                    op2_file.write(struct2.pack(*data))
+                    i += 1
 
             itable -= 1
             header = [4 * ntotal,]
-            op2.write(pack('i', *header))
+            op2_file.write(pack('i', *header))
             op2_ascii.write('footer = %s\n' % header)
             new_result = False
         return itable
@@ -724,7 +787,7 @@ def calculate_principal_components(ntimes: int, nelements_nnodes: int,
     # TODO: scale by 2 for strain
     """
     a_matrix = np.full((ntimes * nelements_nnodes, 3, 3), np.nan)
-    print(a_matrix.shape, oxx.shape)
+    #print(a_matrix.shape, oxx.shape)
     a_matrix[:, 0, 0] = oxx
     a_matrix[:, 1, 1] = oyy
     a_matrix[:, 2, 2] = ozz

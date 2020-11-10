@@ -1052,17 +1052,37 @@ class RealTableArray(TableArray):
 
         node = self.node_gridtype[:, 0]
         gridtype = self.node_gridtype[:, 1]
+
+        # table 4 info
+        #ntimes = self.data.shape[0]
+        nnodes = self.data.shape[1]
+        nnodes_device = self.node_gridtype[:, 0] * 10 + self.device_code
+
+
+        use_numpy = True
+        if use_numpy:
+            fdtype = self.data.dtype
+            nnodes = len(node)
+            #node_bytes = node.tobytes()
+            #gridtype_bytes = gridtype.tobytes()
+            #node_floats = np.frombuffer(node.tobytes(), dtype='float32')
+            #gridtype_floats = np.frombuffer(gridtype.tobytes(), dtype='float32')
+            nodedevice_gridtype = np.column_stack([nnodes_device, gridtype])
+            #print(node)
+            #print(nnodes_device)
+            #print(nodedevice_gridtype)
+            node_gridtype_floats = np.frombuffer(nodedevice_gridtype.tobytes(), dtype=fdtype).reshape(nnodes, 2)
+            #print(node_floats)
+            #print(gridtype_floats)
+            #print(node_gridtype_floats)
+            #data = self.data
+
         max_id = node.max()
         if max_id > 99999999:
             raise SixtyFourBitError(f'64-bit OP2 writing is not supported; max id={max_id}')
 
         #format_table4_1 = Struct(self._endian + b'15i')
         #format_table4_2 = Struct(self._endian + b'3i')
-
-        # table 4 info
-        #ntimes = self.data.shape[0]
-        nnodes = self.data.shape[1]
-        nnodes_device = self.node_gridtype[:, 0] * 10 + self.device_code
 
         #(2+6) => (node_id, gridtypei, t1i, t2i, t3i, r1i, r2i, r3i)
         ntotal = nnodes * (2 + 6)
@@ -1091,17 +1111,23 @@ class RealTableArray(TableArray):
             fascii.write('r4 [4, %s, 4]\n' % (itable))
             fascii.write('r4 [4, %i, 4]\n' % (4*ntotal))
 
-            t1 = self.data[itime, :, 0]
-            t2 = self.data[itime, :, 1]
-            t3 = self.data[itime, :, 2]
-            r1 = self.data[itime, :, 3]
-            r2 = self.data[itime, :, 4]
-            r3 = self.data[itime, :, 5]
+            if use_numpy:
+                datai = self.data[itime, :, :]
+                node_gridtype_data = np.hstack([node_gridtype_floats, datai])
+                node_gridtype_data_bytes = node_gridtype_data.tobytes()
+                op2_file.write(node_gridtype_data_bytes)
+            else:
+                t1 = self.data[itime, :, 0]
+                t2 = self.data[itime, :, 1]
+                t3 = self.data[itime, :, 2]
+                r1 = self.data[itime, :, 3]
+                r2 = self.data[itime, :, 4]
+                r3 = self.data[itime, :, 5]
 
-            for node_id, gridtypei, t1i, t2i, t3i, r1i, r2i, r3i in zip(nnodes_device, gridtype, t1, t2, t3, r1, r2, r3):
-                data = [node_id, gridtypei, t1i, t2i, t3i, r1i, r2i, r3i]
-                fascii.write('  nid, grid_type, dx, dy, dz, rx, ry, rz = %s\n' % data)
-                op2_file.write(s.pack(*data))
+                for node_id, gridtypei, t1i, t2i, t3i, r1i, r2i, r3i in zip(nnodes_device, gridtype, t1, t2, t3, r1, r2, r3):
+                    data = [node_id, gridtypei, t1i, t2i, t3i, r1i, r2i, r3i]
+                    fascii.write('  nid, grid_type, dx, dy, dz, rx, ry, rz = %s\n' % data)
+                    op2_file.write(s.pack(*data))
 
             itable -= 1
             header = [4 * ntotal,]

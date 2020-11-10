@@ -283,6 +283,9 @@ class OP2Reader:
         elif mode == 'nasa95' or op2._nastran_format == 'nasa95':
             op2.post = -4
             mode = 'nasa95'
+        elif mode == 'optistruct' or op2._nastran_format == 'optistruct':
+            op2.post = -4
+            #pass # mode = 'optistruct'
         elif isinstance(op2._nastran_format, str):
             if op2._nastran_format not in ['msc', 'nx', 'optistruct']:
                 raise RuntimeError(f'nastran_format={op2._nastran_format} mode={mode} and must be "msc", "nx", "optistruct", or "autodesk"')

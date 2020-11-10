@@ -127,7 +127,7 @@ class OES_Object(BaseElement):
     def is_stress(self):
         raise NotImplementedError(f'overwrite this in {self.class_name}')
 
-    def _write_table_3(self, op2, op2_ascii, new_result, itable, itime): #, itable=-3, itime=0):
+    def _write_table_3(self, op2_file, op2_ascii, new_result, itable, itime): #, itable=-3, itime=0):
         import inspect
         from struct import pack
         frame = inspect.currentframe()
@@ -147,12 +147,12 @@ class OES_Object(BaseElement):
                 4, 0, 4,
                 4, 146, 4,
             ]
-        op2.write(pack(b'%ii' % len(header), *header))
+        op2_file.write(pack(b'%ii' % len(header), *header))
         op2_ascii.write('table_3_header = %s\n' % header)
-        #op2.write(pack('12i', *header))
+        #op2_file.write(pack('12i', *header))
         #else:
             #print('***writing itable=%s' % itable)
-            #op2.write(pack('3i', *[
+            #op2_file.write(pack('3i', *[
                 ##4, itable, 4,
                 ##4, 1, 4,
                 ##4, 0, 4,
@@ -266,7 +266,7 @@ class OES_Object(BaseElement):
         #print(data)
         #f.write(pack(fascii, '%s header 3c' % self.table_name, fmt, data))
         op2_ascii.write('%s header 3c = %s\n' % (self.table_name, data))
-        op2.write(pack(fmt, *data))
+        op2_file.write(pack(fmt, *data))
 
 
 class StressObject(OES_Object):
