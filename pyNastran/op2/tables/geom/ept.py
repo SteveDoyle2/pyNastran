@@ -1344,9 +1344,12 @@ class EPT(GeomCommon):
         for unused_i in range(nentries):
             edata = data[n:n+ntotal]
             out = struct1.unpack(edata)
-            (pid, k1, k2, k3, k4, k5, k6, b1, b2, b3, b4, b5, b6,
+            (pid,
+             k1, k2, k3, k4, k5, k6,
+             b1, b2, b3, b4, b5, b6,
              g1, sa, st, ea, et) = out
             #self.log.debug(out)
+            assert pid > 0, pid
             g2 = g3 = g4 = g5 = g6 = g1
             data_in = (pid, k1, k2, k3, k4, k5, k6, b1, b2, b3, b4, b5, b6,
                        g1, g2, g3, g4, g5, g6, sa, st, ea, et)
@@ -1371,6 +1374,8 @@ class EPT(GeomCommon):
             out = struct1.unpack(edata)
             #(pid, k1, k2, k3, k4, k5, k6, b1, b2, b3, b4, b5, b6,
              #g1, g2, g3, g4, g5, g6, sa, st, ea, et) = out
+            pid = out[0]
+            assert pid > 0, pid
             prop = PBUSH.add_op2_data(out)
             props.append(prop)
             n += ntotal
@@ -1723,6 +1728,23 @@ class EPT(GeomCommon):
 
         standard:
           EPTS; 64-bit: C:\MSC.Software\simcenter_nastran_2019.2\tpl_post1\cqrdbxdra3lg.op2
+
+        optistruct:
+          ints    = (2706, 27, 287,
+                     5,
+                     3, -2.75, 0, 0, 1, 0,   0,
+                     2,  0.25, 0, 2, # why is sout=2?
+                     3,  5.0,  0, 3, # why is sout=3?
+                     2,  0.25, 0, 2, # why is sout=2?
+
+                     6, 5, -3.0, 0, 0, 1, 0, 0,
+                     2, 0.25, 0, 2,
+                     2, 0.25, 0, 2,
+                     3, 5.0,  0, 3,
+                     2, 0.25, 0, 2,
+                     2, 0.25, 0, 2, 7, 7, -1068498944, 0, 0, 1, 0, 0, 2, 0.25, 0, 2, 2, 0.25, 0, 2, 2, 0.25, 0, 2, 3, 5.0, 0, 3, 2, 0.25, 0, 2, 2, 0.25, 0, 2, 2, 0.25, 0, 2)
+          floats  = (2706, 27, 287,
+                     5, 3, -2.75, 0.0, 0.0, 1, 0.0, 0.0, 2, 0.25, 0.0, 2, 3, 5.0, 0.0, 3, 2, 0.25, 0.0, 2, 6, 5, -3.0, 0.0, 0.0, 1, 0.0, 0.0, 2, 0.25, 0.0, 2, 2, 0.25, 0.0, 2, 3, 5.0, 0.0, 3, 2, 0.25, 0.0, 2, 2, 0.25, 0.0, 2, 9.80908925027372e-45, 9.80908925027372e-45, -3.25, 0.0, 0.0, 1, 0.0, 0.0, 2, 0.25, 0.0, 2, 2, 0.25, 0.0, 2, 2, 0.25, 0.0, 2, 3, 5.0, 0.0, 3, 2, 0.25, 0.0, 2, 2, 0.25, 0.0, 2, 2, 0.25, 0.0, 2)
         """
         if self.size == 4:
             n2, props = self._read_pcomp_32_bit(data, n)
@@ -1891,14 +1913,22 @@ class EPT(GeomCommon):
                 nlayers = abs(nlayers)
             assert nlayers > 0, out
 
-            assert 0 < nlayers < 100, 'pid=%s nlayers=%s z0=%s nms=%s sb=%s ft=%s Tref=%s ge=%s' % (
+            assert 0 < nlayers < 100, 'pid=%s nlayers=%s z0=%s nsm=%s sb=%s ft=%s Tref=%s ge=%s' % (
                 pid, nlayers, z0, nsm, sb, ft, tref, ge)
 
             if self.is_debug_file:
-                self.binary_debug.write('    pid=%s nlayers=%s z0=%s nms=%s sb=%s ft=%s Tref=%s ge=%s\n' % (
+                self.binary_debug.write('    pid=%s nlayers=%s z0=%s nsm=%s sb=%s ft=%s Tref=%s ge=%s\n' % (
                     pid, nlayers, z0, nsm, sb, ft, tref, ge))
+            #if self._nastran_format == 'optistruct':
+                #print('    pid=%s nlayers=%s z0=%s nsm=%s sb=%s ft=%s Tref=%s ge=%s' % (
+                    #pid, nlayers, z0, nsm, sb, ft, tref, ge))
             for unused_ilayer in range(nlayers):
                 (mid, t, theta, sout) = s2.unpack(data[n:n+ntotal2])
+                if self._nastran_format == 'optistruct':
+                    #print(f'      mid={mid} t={t} theta={theta} sout={sout}')
+                    if sout in [2, 3]:
+                        sout = 1 # YES
+
                 mids.append(mid)
                 assert mid > 0
 
@@ -1908,7 +1938,6 @@ class EPT(GeomCommon):
                 if self.is_debug_file:
                     self.binary_debug.write(f'      mid={mid} t={t} theta={theta} sout={sout}\n')
                 n += ntotal2
-                #print(f'      mid={mid} t={t} theta={theta} sout={sout}\n')
 
             data_in = [
                 pid, z0, nsm, sb, ft, tref, ge,

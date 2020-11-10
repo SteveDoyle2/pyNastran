@@ -15,7 +15,7 @@ from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.bdf.cards.base_card import Property
 from pyNastran.bdf.bdf_interface.assign_type import (
     integer, integer_or_blank, double, double_or_blank, string,
-    string_or_blank, blank, fields)
+    double_string_or_blank, string_or_blank, blank, fields)
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
 if TYPE_CHECKING:  # pragma: no cover
@@ -925,6 +925,297 @@ class PBUSHT(BushingProperty):
         if self.kn_tables:
             list_fields += ['KN'] + self.kn_tables
         return list_fields
+
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
+        card = self.repr_fields()
+        if size == 8:
+            return self.comment + print_card_8(card)
+        return self.comment + print_card_16(card)
+
+
+class PBUSH_OPTISTRUCT(BushingProperty):
+    """
+    Generalized Spring-and-Damper Property
+    Defines the nominal property values for a generalized spring-and-damper
+    structural element.
+
+    +-------+-----+------+-----+-----+-----+-----+-----+-----+
+    |   1   |  2  |   3  |  4  |  5  |  6  |  7  |  8  |  9  |
+    +=======+=====+======+=====+=====+=====+=====+=====+=====+
+    | PBUSH | PID |   K  |  K1 |  K2 |  K3 |  K4 |  K5 |  K6 |
+    +-------+-----+------+-----+-----+-----+-----+-----+-----+
+    |       |     |   B  |  B1 |  B2 |  B3 |  B4 |  B5 |  B6 |
+    +-------+-----+------+-----+-----+-----+-----+-----+-----+
+    |       |     |  GE  | GE1 | GE2 | GE3 | GE4 | GE5 | GE6 |
+    +-------+-----+------+-----+-----+-----+-----+-----+-----+
+    |       |     |   M  |  M1 |  M2 |  M3 |  M4 |  M5 |  M6 |
+    +-------+-----+------+-----+-----+-----+-----+-----+-----+
+
+    """
+    type = 'PBUSH'
+    _field_map = {
+        1: 'pid',
+    }
+    pname_map = {
+        -2 : 'K1', -3 : 'K2', -4 : 'K3', -5 : 'K4', -6 : 'K5', -7 : 'K6',
+        -8 : 'B1', -9 : 'B2', -10 : 'B3', -11 : 'B4', -12 : 'B5', -13 : 'B6',
+        -14 : 'GE1', -15 : 'GE2', -16 : 'GE3', -17 : 'GE4', -18 : 'GE5', -19 : 'GE6',
+        -20 : 'SA', -21 : 'ST', -22 : 'EA', -23 : 'ET',
+    }
+    #def update_by_pname_fid(self, name, value):
+        #if name == 'B1':
+            #self.Bi[0] = value
+        #elif name == 'B2':
+            #self.Bi[1] = value
+        #elif name == 'B3':
+            #self.Bi[2] = value
+        #elif name == 'B4':
+            #self.Bi[3] = value
+        #elif name == 'B5':
+            #self.Bi[4] = value
+        #elif name == 'B6':
+            #self.Bi[5] = value
+
+        #elif name == 'K1':
+            #self.Ki[0] = value
+        #elif name == 'K2':
+            #self.Ki[1] = value
+        #elif name == 'K3':
+            #self.Ki[2] = value
+        #elif name == 'K4':
+            #self.Ki[3] = value
+        #elif name == 'K5':
+            #self.Ki[4] = value
+        #elif name == 'K6':
+            #self.Ki[5] = value
+
+        #elif name == 'GE1':
+            #self.GEi[0] = value
+        #elif name == 'GE2':
+            #self.GEi[1] = value
+        #elif name == 'GE3':
+            #self.GEi[2] = value
+        #elif name == 'GE4':
+            #self.GEi[3] = value
+        #elif name == 'GE5':
+            #self.GEi[4] = value
+        #elif name == 'GE6':
+            #self.GEi[5] = value
+        ##elif name == 'M':
+            ##self.mass
+        #elif isinstance(name, int) and name in self.pname_map:
+            #name2 = self.pname_map[name]
+            #self.update_by_pname_fid(name2, value)
+        #else:
+            #raise NotImplementedError('property_type=%r has not implemented %r in pname_map' % (
+                #self.type, name))
+    #pname_fid_map = {
+        #4 : 'A', 'A' : 'A',
+        #5 : 'i1', 'I1' : 'i1',
+        #6 : 'i2', 'I2' : 'i2',
+        #7 : 'i12', 'I12' : 'i12',
+        #5 : 'j', 'J' : 'j',
+    #}
+
+    def __init__(self, pid, k, b, ge, mass, comment=''):
+        """
+        Creates a PBUSH card, which defines a property for a CBUSH
+
+        Parameters
+        ----------
+        pid : int
+            property id
+        k : List[float]
+            Nominal stiffness values in directions 1 through 6.
+            len(k) = 6
+        b : List[float]
+            Nominal damping coefficients in direction 1 through 6 in units of
+            force per unit velocity
+            len(b) = 6
+        ge : List[float]
+            Nominal structural damping constant in directions 1 through 6.
+            len(ge) = 6
+        mass : List[float]
+            Nominal mass in directions 1 through 6.
+        comment : str; default=''
+            a comment for the card
+
+        """
+        BushingProperty.__init__(self)
+        if comment:
+            self.comment = comment
+
+        #: Property ID
+        self.pid = pid
+        self.vars = []
+
+        # K parameter
+        self.k = k
+        if k:
+            nk = len(k)
+            if nk < 6:
+                k.extend([0.] * (6 - nk))
+            self.vars.append('K')
+
+        # B parameter
+        self.b = b
+        if b:
+            nb = len(b)
+            if nb < 6:
+                b.extend([0.] * (6 - nb))
+            self.vars.append('B')
+
+        # GE parameter
+        self.ge = ge
+        if ge:
+            nge = len(ge)
+            if nge < 6:
+                ge.extend([0.] * (6 - nge))
+            self.vars.append('GE')
+
+        self.mass = mass
+        if mass:
+            nmass = len(mass)
+            if nmass < 6:
+                mass.extend([0.] * (6 - nmass))
+            self.vars.append('M')
+
+    @classmethod
+    def _init_from_empty(cls):
+        pid = 1
+        k = [1.]
+        b = [1.]
+        ge = [1.]
+        mass = [1.]
+        return PBUSH(pid, k, b, ge, mass, comment='')
+
+    def validate(self):
+        assert isinstance(self.k, list), 'PBUSH: pid=%i type(k)=%s k=%s' % (self.pid, type(self.k), self.k)
+        assert isinstance(self.b, list), 'PBUSH: pid=%i type(b)=%s b=%s' % (self.pid, type(self.b), self.b)
+        assert isinstance(self.ge, list), 'PBUSH: pid=%i type(ge)=%s ge=%s' % (self.pid, type(self.ge), self.ge)
+        assert isinstance(self.mass, list), 'PBUSH: pid=%i type(mass)=%s mass=%s' % (self.pid, type(self.mass), self.mass)
+
+    @classmethod
+    def add_card(cls, card, comment=''):
+        """
+        Adds a PBUSH card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+
+        """
+        k_fields = []
+        b_fields = []
+        ge_fields = []
+        mass_fields = []
+
+        pid = integer(card, 1, 'pid')
+
+        nfields = card.nfields
+        istart = 2
+        while istart < nfields:
+            pname = string(card, istart, 'pname')
+            print('panme =', pname)
+
+            if pname == 'K':
+                # Flag indicating that the next 1 to 6 fields are stiffness values in
+                # the element coordinate system.
+                #self.k = string(card, istart, 'k')
+
+                #: Nominal stiffness values in directions 1 through 6.
+                #: See Remarks 2 and 3. (Real; Default = 0.0)
+                k_fields = cls._read_var(card, 'Ki', istart + 1, istart + 7)
+
+            elif pname == 'B':
+                # Flag indicating that the next 1 to 6 fields are force-per-velocity
+                # damping.
+                #self.b = string(card, istart, 'b')
+
+                #: Force per unit velocity (Real)
+                #: Nominal damping coefficients in direction 1 through 6 in units of
+                #: force per unit velocity. See Remarks 2, 3, and 9. (Real; Default=0.)
+                b_fields = cls._read_var(card, 'Bi', istart + 1, istart + 7)
+
+            elif pname == 'GE':
+                # Flag indicating that the next fields, 1 through 6 are structural
+                # damping constants. See Remark 7. (Character)
+                #self.ge = string(card, istart, 'ge')
+
+                #: Nominal structural damping constant in directions 1 through 6. See
+                #: Remarks 2. and 3. (Real; Default = 0.0)
+                ge_fields = cls._read_var(card, 'GEi', istart + 1, istart + 7)
+            elif pname == 'M':
+                # Lumped mass of the cbush; default=0.0
+                mass_fields = cls._read_var(card, 'MASSi', istart + 1, istart + 7)
+            else:
+                raise RuntimeError('unsupported PBUSH type; pname=%r' % pname)
+                #break #  old version...
+            istart += 8
+        return PBUSH_OPTISTRUCT(pid, k_fields, b_fields, ge_fields, mass_fields,
+                                comment=comment)
+
+    @classmethod
+    def _read_var(cls, card, var_prefix, istart, iend):
+        print(card[istart:iend+1])
+        Ki = fields(double_string_or_blank, card, var_prefix, istart, iend)
+        return Ki
+
+    @classmethod
+    def add_op2_data(cls, data, comment=''):
+        """
+        Adds a PBUSH card from the OP2
+
+        Parameters
+        ----------
+        data : List[varies]
+            a list of fields defined in OP2 format
+        comment : str; default=''
+            a comment for the card
+
+        """
+        (pid,
+         k1, k2, k3, k4, k5, k6,
+         b1, b2, b3, b4, b5, b6,
+         g1, g2, g3, g4, g5, g6,
+         m1, m2, m3, m4, m5, m6) = data
+        k_fields = [k1, k2, k3, k4, k5, k6]
+        b_fields = [b1, b2, b3, b4, b5, b6]
+        ge_fields = [g1, g2, g3, g4, g5, g6]
+        mass_fields = [m1, m2, m3, m4, m5, m6]
+        return PBUSH_OPTISTRUCT(pid, k_fields, b_fields, ge_fields, mass_fields,
+                                comment=comment)
+
+    def _verify(self, xref):
+        pid = self.Pid()
+        assert isinstance(pid, integer_types), 'pid=%r' % pid
+
+    def raw_fields(self):
+        list_fields = ['PBUSH', self.pid]
+        for var in self.vars:
+            if var == 'K':
+                list_fields += ['K'] + self.k
+            elif var == 'B':
+                list_fields += ['B'] + self.b
+            elif var == 'GE':
+                list_fields += ['GE'] + self.ge
+            elif var == 'M':
+                list_fields += ['M', self.mass]
+            else:
+                raise RuntimeError('not supported PBUSH field...')
+            nspaces = 8 - (len(list_fields) - 1) % 8
+
+            if nspaces == 8:
+                list_fields += [None]
+            elif nspaces < 8:
+                list_fields += [None] * (nspaces + 1)
+        return list_fields
+
+    def repr_fields(self):
+        return self.raw_fields()
 
     def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.repr_fields()

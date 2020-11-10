@@ -376,7 +376,7 @@ def run_and_compare_fems(
         fem1.set_dynamic_syntax(dynamic_vars)
 
     if not quiet:
-        fem1.log.info('starting fem1')
+        fem1.log.info('starting fem1 (read/write)')
     sys.stdout.flush()
     fem2 = None
     diff_cards = []
@@ -390,6 +390,7 @@ def run_and_compare_fems(
     is_mesh_opt = False
     try:
         #try:
+        fem1.log.info('running fem1 (read/write)')
         fem1 = run_fem1(fem1, bdf_model, out_model, mesh_form, xref, punch, sum_load,
                         size, is_double,
                         run_extract_bodies=run_extract_bodies,
@@ -411,6 +412,7 @@ def run_and_compare_fems(
             return fem1, None, None
 
         ierror = 0
+        fem1.log.info('running fem2')
         fem2 = run_fem2(bdf_model, out_model, xref, punch, sum_load, size, is_double, mesh_form,
                         safe_xref=safe_xref,
                         encoding=encoding, debug=debug, quiet=quiet,
@@ -504,7 +506,7 @@ def run_and_compare_fems(
     return (fem1, fem2, diff_cards)
 
 
-def run_nastran(bdf_model: BDF, nastran: str, post: int=-1,
+def run_nastran(bdf_model: str, nastran: str, post: int=-1,
                 size: int=8, is_double: bool=False) -> None:
     """
     Verifies that a valid bdf was written by running nastran and parsing
@@ -517,20 +519,20 @@ def run_nastran(bdf_model: BDF, nastran: str, post: int=-1,
         dirname = os.path.dirname(bdf_model)
         basename = os.path.basename(bdf_model).split('.')[0]
 
-        f04_model = os.path.join(dirname, 'out_%s.f04' % basename)
-        f06_model = os.path.join(dirname, 'out_%s.f06' % basename)
-        op2_model = os.path.join(dirname, 'out_%s.f06' % basename)
-        log_model = os.path.join(dirname, 'out_%s.log' % basename)
-        xdb_model = os.path.join(dirname, 'out_%s.xdb' % basename)
-        pch_model = os.path.join(dirname, 'out_%s.pch' % basename)
-        asm_model = os.path.join(dirname, 'out_%s.asm' % basename)
-        master_model = os.path.join(dirname, 'out_%s.master' % basename)
+        f04_model = os.path.join(dirname, f'out_{basename}.f04')
+        f06_model = os.path.join(dirname, f'out_{basename}.f06')
+        op2_model = os.path.join(dirname, f'out_{basename}.f06')
+        log_model = os.path.join(dirname, f'out_{basename}.log')
+        xdb_model = os.path.join(dirname, f'out_{basename}.xdb')
+        pch_model = os.path.join(dirname, f'out_{basename}.pch')
+        asm_model = os.path.join(dirname, f'out_{basename}.asm')
+        master_model = os.path.join(dirname, f'out_{basename}.master')
         #op2_model = os.path.join(dirname, 'out_%s.op2' % basename)
 
         #cwd = os.getcwd()
         cwd = dirname
-        bdf_model2 = os.path.join(cwd, 'out_%s.bdf' % basename)
-        op2_model2 = os.path.join(cwd, 'out_%s.op2' % basename)
+        bdf_model2 = os.path.join(cwd, f'out_{basename}.bdf')
+        op2_model2 = os.path.join(cwd, f'out_{basename}.op2')
         #f06_model2 = os.path.join(cwd, 'out_%s.f06' % basename)
         print(bdf_model2)
         #if os.path.exists(bdf_model2):
@@ -602,6 +604,7 @@ def run_fem1(fem1: BDF, bdf_model: str, out_model: str, mesh_form: str,
         ???
 
     """
+    log = fem1.log
     if crash_cards is None:
         crash_cards = []
     check_path(bdf_model, 'bdf_model')
@@ -614,9 +617,10 @@ def run_fem1(fem1: BDF, bdf_model: str, out_model: str, mesh_form: str,
                           save_file_structure=save_file_structure)
             for card in crash_cards:
                 if card in fem1.card_count:
-                    raise DisabledCardError('card=%r has been disabled' % card)
+                    raise DisabledCardError(f'card={card!r} has been disabled')
             #fem1.geom_check(geom_check=True, xref=False)
             if not stop and not xref and run_skin_solids:
+                log.info('fem1-write_skin_solid_faces')
                 skin_filename = 'skin_file.bdf'
                 write_skin_solid_faces(fem1, skin_filename, size=16, is_double=False)
                 if os.path.exists(skin_filename):
@@ -624,6 +628,7 @@ def run_fem1(fem1: BDF, bdf_model: str, out_model: str, mesh_form: str,
                     os.remove(skin_filename)
             if xref:
                 if run_extract_bodies:
+                    log.info('fem1-run_extract_bodies')
                     extract_bodies(fem1)
 
                 # 1. testing that these methods word without xref
@@ -636,42 +641,18 @@ def run_fem1(fem1: BDF, bdf_model: str, out_model: str, mesh_form: str,
 
                 #fem1.uncross_reference()
                 if safe_xref:
+                    log.debug('fem1.safe_cross_reference()')
                     fem1.safe_cross_reference()
                 else:
+                    log.debug('fem1.cross_reference()')
                     fem1.cross_reference()
 
-                # 1. testing that these methods work with xref
-                fem1._get_rigid()
-                common_node_ids = list(fem1.nodes.keys())
-                fem1.get_rigid_elements_with_node_ids(common_node_ids)
-
-                for spc_id in set(list(fem1.spcadds.keys()) + list(fem1.spcs.keys())):
-                    fem1.get_reduced_spcs(spc_id, consider_spcadd=True)
-                for mpc_id in set(list(fem1.mpcadds.keys()) + list(fem1.mpcs.keys())):
-                    fem1.get_reduced_mpcs(mpc_id, consider_mpcadd=True)
-
-                get_dependent_nid_to_components(fem1)
-                fem1._get_maps(eids=None, map_names=None,
-                               consider_0d=True, consider_0d_rigid=True,
-                               consider_1d=True, consider_2d=True, consider_3d=True)
-                get_dependent_nid_to_components(fem1)
-                fem1.get_pid_to_node_ids_and_elements_array(pids=None, etypes=None, idtype='int32',
-                                                            msg=' which is required by test_bdf')
-                fem1.get_property_id_to_element_ids_map(msg=' which is required by test_bdf')
-                fem1.get_material_id_to_property_ids_map(msg=' which is required by test_bdf')
-                fem1.get_element_ids_list_with_pids(pids=None)
-                fem1.get_element_ids_dict_with_pids(pids=None, stop_if_no_eids=False,
-                                                    msg=' which is required by test_bdf')
-                fem1.get_node_id_to_element_ids_map()
-                fem1.get_node_id_to_elements_map()
-
-                export_mcids(fem1, csv_filename=None, eids=None,
-                             export_xaxis=True, export_yaxis=False, iply=0, log=None, debug=False)
-
-                export_mcids_all(fem1)
+                _fem_xref_methods_check(fem1)
 
                 fem1._xref = True
-                if fem1._nastran_format != 'mystran':
+                if fem1._nastran_format not in ['optistruct', 'mystran']:
+                    log.info(f'fem1.bdf_filename = {fem1.bdf_filename}')
+                    log.info('trying read_bdf from the raw filename')
                     read_bdf(fem1.bdf_filename, encoding=encoding, xref=False,
                              debug=fem1.debug, log=fem1.log)
                 if safe_xref:
@@ -749,6 +730,42 @@ def run_fem1(fem1: BDF, bdf_model: str, out_model: str, mesh_form: str,
             fem1.get_mass_breakdown(stop_if_no_mass=False)
     return fem1
 
+def _fem_xref_methods_check(fem1: BDF):
+    """
+    testing that these methods work with xref
+    """
+    log = fem1.log
+    log.debug('_fem_xref_methods_check(fem1)')
+
+    fem1._get_rigid()
+    common_node_ids = list(fem1.nodes.keys())
+    fem1.get_rigid_elements_with_node_ids(common_node_ids)
+
+    for spc_id in set(list(fem1.spcadds.keys()) + list(fem1.spcs.keys())):
+        fem1.get_reduced_spcs(spc_id, consider_spcadd=True)
+    for mpc_id in set(list(fem1.mpcadds.keys()) + list(fem1.mpcs.keys())):
+        fem1.get_reduced_mpcs(mpc_id, consider_mpcadd=True)
+
+    get_dependent_nid_to_components(fem1)
+    fem1._get_maps(eids=None, map_names=None,
+                   consider_0d=True, consider_0d_rigid=True,
+                   consider_1d=True, consider_2d=True, consider_3d=True)
+    get_dependent_nid_to_components(fem1)
+
+    fem1.get_pid_to_node_ids_and_elements_array(pids=None, etypes=None, idtype='int32',
+                                                msg=' which is required by test_bdf')
+    fem1.get_property_id_to_element_ids_map(msg=' which is required by test_bdf')
+    fem1.get_material_id_to_property_ids_map(msg=' which is required by test_bdf')
+    fem1.get_element_ids_list_with_pids(pids=None)
+    fem1.get_element_ids_dict_with_pids(pids=None, stop_if_no_eids=False,
+                                        msg=' which is required by test_bdf')
+    fem1.get_node_id_to_element_ids_map()
+    fem1.get_node_id_to_elements_map()
+
+    export_mcids(fem1, csv_filename=None, eids=None,
+                 export_xaxis=True, export_yaxis=False, iply=0, log=None, debug=False)
+
+    export_mcids_all(fem1)
 
 def remake_model(bdf_model: BDF, fem1: BDF, pickle_obj: bool) -> None:
     """reloads the model if we're testing pickling"""
@@ -861,7 +878,7 @@ def run_fem2(bdf_model: str, out_model: str, xref: bool, punch: bool,
         if 'POST' in fem2.params:
             value = fem2.params['POST'].values[0]
             if value >= 0:
-                msg = 'PARAM,POST,%i is not supported by the OP2 reader' % value
+                msg = f'PARAM,POST,{value:d} is not supported by the OP2 reader'
                 fem2.log.warning(msg)
         else:
             msg = 'PARAM,POST,0 is not supported by the OP2 reader'
@@ -889,7 +906,7 @@ def run_fem2(bdf_model: str, out_model: str, xref: bool, punch: bool,
         try:
             os.remove(out_model_2)
         except PermissionError:  # pragma: no cover
-            fem2.log.warning('cannot remove %s due to a permissions error' % out_model_2)
+            fem2.log.warning(f'cannot remove {out_model_2} due to a permissions error')
     #fem2.write_as_ctria3(out_model_2)
     return fem2
 
@@ -2008,18 +2025,18 @@ def test_bdf_argparse(argv=None):
         help='writes the BDF in large field, double precision format (default=False)')
 
     version_group = parent_parser.add_mutually_exclusive_group()
-    version_group.add_argument(
-        '--msc', action='store_true',
-        help='Assume MSC Nastran (default=True)')
-    version_group.add_argument(
-        '--nx', action='store_true',
-        help='Assume NX Nastran (default=False)')
-    version_group.add_argument(
-        '--nasa95', action='store_true',
-        help='Assume Nastran 95 (default=False)')
-    version_group.add_argument(
-        '--mystran', action='store_true',
-        help='Assume Mystran (default=False)')
+
+    version_group_map = {
+        '--msc' : 'Assume MSC Nastran (default=True)',
+        '--nx' : 'Assume NX Nastran/Simcenter (default=False)',
+        '--optistruct' : 'Assume Altair OptiStruct (default=False)',
+        '--nasa95' : 'Assume Nastran 95 (default=False)',
+        '--mystran' : 'Assume Mystran (default=False)',
+    }
+    for version, help_msg in version_group_map.items():
+        version_group.add_argument(
+            version, action='store_true',
+            help=help_msg)
 
     parent_parser.add_argument(
         '-L', '--loads', action='store_false',
@@ -2085,6 +2102,8 @@ def _set_version(args: Any):
         version = 'msc'
     elif args['nx']:
         version = 'nx'
+    elif args['optistruct']:
+        version = 'optistruct'
     elif args['nasa95']:
         version = 'nasa95'
     elif args['mystran']:
@@ -2092,7 +2111,7 @@ def _set_version(args: Any):
     else:
         version = None
     args['version'] = version
-    del args['msc'], args['nx'], args['nasa95'], args['mystran']
+    del args['msc'], args['nx'], args['nasa95'], args['mystran'], args['optistruct']
 
 # defaults
 #check        = False
@@ -2117,9 +2136,10 @@ def _set_version(args: Any):
 
 def get_test_bdf_usage_args_examples(encoding):
     """helper method"""
+    formats = '--msc|--nx|--optistruct|--nasa95|--mystran'
     options = (
         '\n  [options] = [-e E] [--encoding ENCODE] [-q] [--dumplines] [--dictsort]\n'
-        '              [--crash C] [--pickle] [--profile] [--hdf5] [--msc|--nx|--nasa95|--mystran]\n')
+        f'              [--crash C] [--pickle] [--profile] [--hdf5] [{formats}]\n')
     usage = (
         "Usage:\n"
         '  test_bdf [-x | --safe] [-p] [-c] [-L]      BDF_FILENAME [options]\n'
@@ -2157,19 +2177,20 @@ def get_test_bdf_usage_args_examples(encoding):
 
         '\n'
         'Developer:\n'
-        '  --crash C,   Crash on specific cards (e.g. CGEN,EGRID)\n'
-        '  --stop       Stop after first read/write (default=False)\n'
-        '  --dumplines  Writes the BDF exactly as read with the INCLUDEs processed\n'
-        '               (pyNastran_dump.bdf)\n'
-        '  --dictsort   Writes the BDF exactly as read with the INCLUDEs processed\n'
-        '               (pyNastran_dict.bdf)\n'
-        '  --profile    Profiles the code (default=False)\n'
-        '  --pickle     Pickles the data objects (default=False)\n'
-        '  --hdf5       Save/load the BDF in HDF5 format\n'
-        '  --msc        Assume MSC Nastran\n'
-        '  --nx         Assume NX Nastran\n'
-        '  --nasa95     Assume Nastran 95\n'
-        '  --mystran    Assume Mystran\n'
+        '  --crash C,    Crash on specific cards (e.g. CGEN,EGRID)\n'
+        '  --stop        Stop after first read/write (default=False)\n'
+        '  --dumplines   Writes the BDF exactly as read with the INCLUDEs processed\n'
+        '                (pyNastran_dump.bdf)\n'
+        '  --dictsort    Writes the BDF exactly as read with the INCLUDEs processed\n'
+        '                (pyNastran_dict.bdf)\n'
+        '  --profile     Profiles the code (default=False)\n'
+        '  --pickle      Pickles the data objects (default=False)\n'
+        '  --hdf5        Save/load the BDF in HDF5 format\n'
+        '  --msc         Assume MSC Nastran\n'
+        '  --nx          Assume NX Nastran\n'
+        '  --optistruct  Assume OptiStruct\n'
+        '  --nasa95      Assume Nastran 95\n'
+        '  --mystran     Assume Mystran\n'
         '\n'
         'Info:\n'
         '  -h, --help     show this help message and exit\n'

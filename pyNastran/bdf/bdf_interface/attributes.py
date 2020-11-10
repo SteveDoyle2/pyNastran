@@ -12,6 +12,7 @@ from pyNastran.bdf.cards.aero.zona import ZONA
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.bdf.cards.dmig import DMIG, DMI, DMIJ, DMIK, DMIJI
 
+BDF_FORMATS = {'nx', 'msc', 'optistruct', 'zona', 'nasa95', 'mystran'}
 
 class BDFAttributes:
     """defines attributes of the BDF"""
@@ -35,6 +36,7 @@ class BDFAttributes:
         self._nastran_format = 'msc'
         self.is_nx = False
         self.is_msc = True
+        self.is_optistruct = False
         self.is_mystran = False
         self.is_nasa95 = False
         self.is_zona = False
@@ -43,6 +45,16 @@ class BDFAttributes:
         self._nastran_format = 'nx'
         self.is_nx = True
         self.is_msc = False
+        self.is_optistruct = False
+        self.is_mystran = False
+        self.is_nasa95 = False
+        self.is_zona = False
+
+    def set_as_optistruct(self):
+        self._nastran_format = 'optistruct'
+        self.is_nx = False
+        self.is_msc = False
+        self.is_optistruct = True
         self.is_mystran = False
         self.is_nasa95 = False
         self.is_zona = False
@@ -51,6 +63,7 @@ class BDFAttributes:
         self._nastran_format = 'zona'
         self.is_nx = False
         self.is_msc = False
+        self.is_optistruct = False
         self.is_mystran = False
         self.is_nasa95 = False
         self.is_zona = True
@@ -59,6 +72,7 @@ class BDFAttributes:
         self._nastran_format = 'mystran'
         self.is_nx = False
         self.is_msc = False
+        self.is_optistruct = False
         self.is_mystran = True
         self.is_nasa95 = False
         self.is_zona = False
@@ -68,6 +82,7 @@ class BDFAttributes:
         self._nastran_format = 'nasa95'
         self.is_nx = False
         self.is_msc = False
+        self.is_optistruct = False
         self.is_mystran = False
         self.is_nasa95 = True
         self.is_zona = False
@@ -1040,7 +1055,7 @@ class BDFAttributes:
     @nastran_format.setter
     def nastran_format(self, nastran_format: str) -> None:
         fmt_lower = nastran_format.lower().strip()
-        if fmt_lower not in {'nx', 'msc', 'zona', 'nasa95', 'mystran'}:
+        if fmt_lower not in BDF_FORMATS:
             raise RuntimeError(nastran_format)
         self._nastran_format = fmt_lower
 

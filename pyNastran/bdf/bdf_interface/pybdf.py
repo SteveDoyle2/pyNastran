@@ -111,18 +111,19 @@ class BDFInputPy:
 
         out = _lines_to_decks(all_lines, ilines, punch, self.log,
                               keep_enddata=True,
-                              consider_superelements=self.consider_superelements)
+                              consider_superelements=self.consider_superelements,
+                              nastran_format=self.nastran_format)
         (
             system_lines, executive_control_lines, case_control_lines,
             bulk_data_lines, bulk_data_ilines,
             superelement_lines, superelement_ilines) = out
-        if self.nastran_format in {'msc', 'nx', 'nasa95', 'mystran'}:
+        if self.nastran_format in {'msc', 'nx', 'optistruct', 'nasa95', 'mystran'}:
             pass
         elif self.nastran_format == 'zona':
             bulk_data_lines, bulk_data_ilines, system_lines = self._get_lines_zona(
                 system_lines, bulk_data_lines, bulk_data_ilines, punch)
         else:
-            msg = f'nastran_format={self.nastran_format!r} and must be msc, nx, nasa95, mystran, or zona'
+            msg = f'nastran_format={self.nastran_format!r} and must be msc, nx, optistruct, nasa95, mystran, or zona'
             raise NotImplementedError(msg)
         return (system_lines, executive_control_lines, case_control_lines,
                 bulk_data_lines, bulk_data_ilines,
@@ -737,7 +738,8 @@ def _lines_to_decks(lines: List[str],
                     punch: Optional[bool],
                     log: Any,
                     keep_enddata: bool=True,
-                    consider_superelements: bool=False) -> Tuple[
+                    consider_superelements: bool=False,
+                    nastran_format: str='msc') -> Tuple[
                         List[str], List[str], List[str], List[str], NDArrayN2int,
                         List[str], List[str], List[str]]:
     """
@@ -800,7 +802,8 @@ def _lines_to_decks(lines: List[str],
     # typical deck
     out = _lines_to_decks_main(lines, ilines, log, punch=punch,
                                keep_enddata=keep_enddata,
-                               consider_superelements=consider_superelements)
+                               consider_superelements=consider_superelements,
+                               nastran_format=nastran_format)
     (executive_control_lines, case_control_lines,
      bulk_data_lines, bulk_data_ilines,
      superelement_lines, superelement_ilines,
@@ -844,7 +847,8 @@ def _lines_to_decks_main(lines: List[str],
                          ilines: Any, log: Any,
                          punch: Optional[bool]=False,
                          keep_enddata: bool=True,
-                         consider_superelements: bool=False) -> Tuple[
+                         consider_superelements: bool=False,
+                         nastran_format: str='msc') -> Tuple[
                         List[str], List[str], List[str], List[str], NDArrayN2int,
                         List[str], List[str], List[str]]:
     """
@@ -915,8 +919,15 @@ def _lines_to_decks_main(lines: List[str],
     #---------------------------------------------
     current_lines = executive_control_lines
 
-    #flag_word = 'executive'
-    flag = 1
+    if nastran_format in ['msc', 'nx', 'nasa95', 'mystran']:
+        #flag_word = 'executive'
+        flag = 1  # start from executive control deck
+    elif nastran_format == 'optistruct':
+        #flag_word = 'case control'
+        flag = 2  # case from control deck
+    else:
+        raise RuntimeError(nastran_format)
+    #flag = 1
     old_flags = []
     bulk_data_ilines = []
     if ilines is None:
@@ -937,8 +948,8 @@ def _lines_to_decks_main(lines: List[str],
 
             if _is_begin_bulk(uline):
                 #old_flags.append(flag)
-                log.warning('currently in %s deck and skipping directly '
-                            'to bulk data section' % section_name)
+                log.warning(f'currently in {section_name} deck and skipping '
+                            'directly to bulk data section')
                 flag = 3
                 current_ilines = bulk_data_ilines
                 current_lines = bulk_data_lines
@@ -946,8 +957,8 @@ def _lines_to_decks_main(lines: List[str],
                     lines, ilines, bulk_data_lines, i,
                     make_ilines=make_ilines, keep_enddata=keep_enddata)
             else:
-                raise RuntimeError('currently in %s deck and unexpectedly found the following '
-                                   'line:\n%s' % (section_name, line))
+                raise RuntimeError(f'currently in {section_name} deck and unexpectedly '
+                                   f'found the following line:\n{line}')
             break
 
         if guess_deck_sections and flag in [1, 2] and _is_bulk_data_line(line):
@@ -956,8 +967,8 @@ def _lines_to_decks_main(lines: List[str],
                 2 : 'case control',
             }
             section_name = section_name_map[flag]
-            log.warning('currently in %s deck and skipping directly '
-                        'to bulk data section\n%s' % (section_name, line))
+            log.warning(f'currently in {section_name} deck and skipping directly '
+                        f'to bulk data section\n{line}')
             log.warning(line)
             flag = 3
             current_ilines = bulk_data_ilines
@@ -1062,7 +1073,7 @@ def _lines_to_decks_main(lines: List[str],
                     if is_broken:
                         break
                 else:
-                    msg = 'expected "BEGIN BULK" or "BEGIN SUPER=1"\nline = %s' % line
+                    msg = f'expected "BEGIN BULK" or "BEGIN SUPER=1"\nline = {line}'
                     raise RuntimeError(msg)
 
                 #print('%s: %s' % (flag_word, line.rstrip()))
@@ -1137,7 +1148,7 @@ def _lines_to_decks_main(lines: List[str],
         else:
             raise RuntimeError(line)
 
-    _check_valid_deck(flag, old_flags)
+    _check_valid_deck(flag, old_flags, nastran_format)
 
     if len(bulk_data_lines) == 0:
         raise RuntimeError('no bulk data lines were found')
@@ -1363,7 +1374,8 @@ def _break_system_lines(executive_control_lines: List[str]) -> Tuple[List[str], 
     return system_lines2, executive_control_lines2
 
 
-def _check_valid_deck(flag: int, old_flags: List[int]) -> None:
+def _check_valid_deck(flag: int, old_flags: List[int],
+                      nastran_format: str) -> None:
     """Crashes if the flag is set wrong"""
     if flag != 3:
         if flag == 1:
@@ -1382,9 +1394,9 @@ def _check_valid_deck(flag: int, old_flags: List[int]) -> None:
         else:
             raise RuntimeError('flag=%r is not [1, 2, 3]' % flag)
 
-        msg = 'This is not a valid BDF (a BDF capable of running Nastran).\n\n'
-        msg += 'The following sections were found:\n%s\n' % found
-        msg += 'The following sections are missing:\n%s\n' % missing
+        msg = f'This is not a valid {nastran_format} BDF (a BDF capable of running Nastran).\n\n'
+        msg += f'The following sections were found:\n{found}\n'
+        msg += f'The following sections are missing:\n{missing}\n'
         msg += 'If you do not have an Executive Control Deck or a Case Control Deck:\n'
         msg += '  1.  call read_bdf(...) with `punch=True`\n'
         msg += "  2.  Add '$ pyNastran : punch=True' to the top of the main file\n"

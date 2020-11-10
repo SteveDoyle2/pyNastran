@@ -84,7 +84,7 @@ from .cards.properties.shell import PSHELL, PCOMP, PCOMPG, PSHEAR, PLPLANE, PPLA
 from .cards.elements.acoustic import (
     CHACAB, CAABSF, CHACBR, PACABS, PAABSF, PACBAR, ACMODL)
 from .cards.elements.bush import CBUSH, CBUSH1D, CBUSH2D
-from .cards.properties.bush import PBUSH, PBUSH1D, PBUSHT
+from .cards.properties.bush import PBUSH, PBUSH1D, PBUSHT, PBUSH_OPTISTRUCT
 from .cards.elements.damper import (CVISC, CDAMP1, CDAMP2, CDAMP3, CDAMP4,
                                     CDAMP5)
 from .cards.properties.damper import PVISC, PDAMP, PDAMP5, PDAMPT
@@ -1270,7 +1270,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
         if bdf_filename and not isinstance(bdf_filename, (StringIO, list)):
             check_path(bdf_filename, 'bdf_filename')
         self._read_bdf_helper(bdf_filename, encoding, punch, read_includes)
-        self.log.debug('---starting BDF.read_bdf of %s---' % self.bdf_filename)
+        self.log.debug(f'---starting BDF.read_bdf of {self.bdf_filename}---')
         self._parse_primary_file_header(bdf_filename)
 
         obj = BDFInputPy(self.read_includes, self.dumplines, self._encoding,
@@ -1278,7 +1278,11 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
                          consider_superelements=self.is_superelements,
                          log=self.log, debug=self.debug)
         out = obj.get_lines(bdf_filename, punch=self.punch, make_ilines=True)
-        system_lines, executive_control_lines, case_control_lines, bulk_data_lines, bulk_data_ilines, superelement_lines, superelement_ilines = out
+        (system_lines,
+         executive_control_lines,
+         case_control_lines,
+         bulk_data_lines, bulk_data_ilines,
+         superelement_lines, superelement_ilines) = out
         self._set_pybdf_attributes(obj, save_file_structure)
 
         self.system_command_lines = system_lines
@@ -1353,7 +1357,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             for key, values in self.values_to_skip.items():
                 dict_values = getattr(self, key)
                 if not isinstance(dict_values, dict):
-                    msg = '%r is an invalid type; only dictionaries are supported' % key
+                    msg = f'{key!r} is an invalid type; only dictionaries are supported'
                     raise TypeError(msg)
                 for value in values:
                     del dict_values[value]
@@ -1672,7 +1676,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
                     self.card_count['ENDDATA'] = 1
                     if nlines - iline_bulk > 1:
                         nleftover = nlines - iline_bulk - 1
-                        msg = 'exiting due to ENDDATA found with %i lines left' % nleftover
+                        msg = f'exiting due to ENDDATA found with {nleftover:d} lines left'
                         self.log.debug(msg)
                     return cards_dict, card_count
                 #print("card_name = %s" % card_name)
@@ -1746,7 +1750,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             if method is None:
                 method = ''
             self.sol_method = method.strip()
-            self.log.debug("sol=%s method=%s" % (self.sol, self.sol_method))
+            self.log.debug(f'sol={self.sol} method={self.sol_method}')
         else:  # very common
             self.sol_method = None
 
@@ -1785,7 +1789,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
         #rslot_map = self.get_rslot_map(reset_type_to_slot_map=False)
 
         for key in self.card_count:
-            assert isinstance(key, str), 'key=%r' % key
+            assert isinstance(key, str), f'key={key!r}'
             if key not in self._type_to_slot_map:
                 msg = 'add %r to self._type_to_slot_map\n%s' % (key, str(self._type_to_slot_map))
                 raise RuntimeError(msg)
@@ -1841,7 +1845,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
 
         """
         self.dict_of_vars = {}
-        assert len(dict_of_vars) > 0, 'nvars = %s' % len(dict_of_vars)
+        assert len(dict_of_vars) > 0, f'nvars = {len(dict_of_vars):d}'
         for (key, value) in sorted(dict_of_vars.items()):
             assert len(key) <= 7, ('max length for key is 7; '
                                    'len(%s)=%s' % (key, len(key)))
@@ -4249,6 +4253,13 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
         card_parser['PARAM'] = (PARAM, self._add_param_object)
         self.add_param = self._add_param_nastran
 
+    def _update_for_optistruct(self):
+        """updates for mystran"""
+        self._update_for_nastran() # copies this...
+        card_parser = self._card_parser
+        CARD_MAP['PBUSH_OPTISTRUCT'] = PBUSH_OPTISTRUCT
+        card_parser['PBUSH'] = (PBUSH_OPTISTRUCT, self._add_property_object)
+
     def _update_for_mystran(self):
         """updates for mystran"""
         card_parser = self._card_parser
@@ -4277,7 +4288,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
 
             # key/value are lowercase
             if key == 'version':
-                assert value.lower() in ['msc', 'nx', 'zona', 'nasa95', 'mystran'], f'version={value!r} is not supported'
+                assert value.lower() in ['msc', 'nx', 'optistruct', 'zona', 'nasa95', 'mystran'], f'version={value!r} is not supported'
                 self.nastran_format = value
             elif key == 'encoding':
                 self._encoding = value
@@ -4908,14 +4919,16 @@ def map_version(fem: BDF, version: str):
     version_map = {
         'msc': fem.set_as_msc,
         'nx': fem.set_as_nx,
+        'optistruct': fem.set_as_optistruct,
         'mystran': fem.set_as_mystran,
         'nasa95': fem.set_as_nasa95,
         'zona': fem.set_as_zona,
     }
     try:
         func = version_map[version]
-    except KeyError:
-        msg = f'mode={version!r} is not supported; modes=[msc, nx, zona, nasa95, mystran]'
+    except KeyError: # msc, nx, zona, nasa95, mystran
+        fmts = ', '.join(version_map)
+        msg = f'mode={version!r} is not supported; modes=[{fmts}]'
         raise RuntimeError(msg)
     func()
 
@@ -4933,7 +4946,7 @@ def map_update(fem: BDF, version: str):
     version_map = {
         'msc': fem._update_for_nastran,
         'nx': fem._update_for_nastran,
-        'optistruct': fem._update_for_nastran,
+        'optistruct': fem._update_for_optistruct,
         'mystran': fem._update_for_mystran,
         'nasa95': fem._update_for_nasa95,
         'zona': fem.zona.update_for_zona,
