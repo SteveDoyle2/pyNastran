@@ -556,7 +556,7 @@ class RealPlateArray(OES_Object):
             raise NotImplementedError(f'name={self.element_name} type={self.element_type}')
         return nnodes, is_bilinear
 
-    def write_op2(self, op2, op2_ascii, itable, new_result,
+    def write_op2(self, op2_file, op2_ascii, itable, new_result,
                   date, is_mag_phase=False, endian='>'):
         """writes an OP2"""
         import inspect
@@ -566,7 +566,7 @@ class RealPlateArray(OES_Object):
         op2_ascii.write(f'{self.__class__.__name__}.write_op2: {call_frame[1][3]}\n')
 
         if itable == -1:
-            self._write_table_header(op2, op2_ascii, date)
+            self._write_table_header(op2_file, op2_ascii, date)
             itable = -3
 
         nnodes, is_bilinear = self.get_nnodes_bilinear()
@@ -609,7 +609,7 @@ class RealPlateArray(OES_Object):
 
         op2_ascii.write(f'nelements={nelements:d}\n')
         for itime in range(self.ntimes):
-            self._write_table_3(op2, op2_ascii, new_result, itable, itime)
+            self._write_table_3(op2_file, op2_ascii, new_result, itable, itime)
 
             # record 4
             #print('stress itable = %s' % itable)
@@ -619,7 +619,7 @@ class RealPlateArray(OES_Object):
                       4, 0, 4,
                       4, ntotal, 4,
                       4 * ntotal]
-            op2.write(pack('%ii' % len(header), *header))
+            op2_file.write(pack('%ii' % len(header), *header))
             op2_ascii.write('r4 [4, 0, 4]\n')
             op2_ascii.write(f'r4 [4, {itable:d}, 4]\n')
             op2_ascii.write(f'r4 [4, {4 * ntotal:d}, 4]\n')
@@ -643,12 +643,12 @@ class RealPlateArray(OES_Object):
                     if ilayer == 0:
                         #print([eid, fdi, oxxi, oyyi, txyi, anglei, major, minor, ovmi])
                         data = [eid_device, fdi, oxxi, oyyi, txyi, anglei, major, minor, ovmi]
-                        op2.write(struct_i8f.pack(*data))
+                        op2_file.write(struct_i8f.pack(*data))
                         op2_ascii.write('eid=%s ilayer=0 data=%s' % (eid, str(data[1:])))
 
                     else:
                         data = [fdi, oxxi, oyyi, txyi, anglei, major, minor, ovmi]
-                        op2.write(struct_8f.pack(*data))
+                        op2_file.write(struct_8f.pack(*data))
                         op2_ascii.write('eid=%s ilayer=1 data=%s' % (eid, str(data[1:])))
                     #print('eid=%-2s ilayer=%s data=%s' % (eid_device, ilayer, str(data[1:])))
 
@@ -658,17 +658,17 @@ class RealPlateArray(OES_Object):
                     if nid == 0 and ilayer == 0:  # CEN
                         data = [eid_device, cen_word, nid,
                                 fdi, oxxi, oyyi, txyi, anglei, major, minor, ovmi]
-                        op2.write(pack('i 4s i 8f', *data))
+                        op2_file.write(pack('i 4s i 8f', *data))
                         op2_ascii.write('0  %8i %8s  %-13s  %-13s %-13s %-13s   %8.4f  %-13s %-13s %s\n' % (
                             eid, cen_word_ascii, fdi, oxxi, oyyi, txyi, anglei, major, minor, ovmi))
                     elif ilayer == 0:
                         data = [nid, fdi, oxxi, oyyi, txyi, anglei, major, minor, ovmi]
-                        op2.write(pack('i8f', *data))
+                        op2_file.write(pack('i8f', *data))
                         op2_ascii.write('   %8s %8i  %-13s  %-13s %-13s %-13s   %8.4f  %-13s %-13s %s\n' % (
                             '', nid, fdi, oxxi, oyyi, txyi, anglei, major, minor, ovmi))
                     elif ilayer == 1:
                         data = [fdi, oxxi, oyyi, txyi, anglei, major, minor, ovmi]
-                        op2.write(pack('8f', *data))
+                        op2_file.write(pack('8f', *data))
                         op2_ascii.write('   %8s %8s  %-13s  %-13s %-13s %-13s   %8.4f  %-13s %-13s %s\n\n' % (
                             '', '', fdi, oxxi, oyyi, txyi, anglei, major, minor, ovmi))
                     else:  # pragma: no cover
@@ -681,7 +681,7 @@ class RealPlateArray(OES_Object):
             assert nwide == ntotal, f'nwide={nwide} ntotal={ntotal}'
             itable -= 1
             header = [4 * ntotal,]
-            op2.write(pack('i', *header))
+            op2_file.write(pack('i', *header))
             op2_ascii.write('footer = %s\n' % header)
             new_result = False
         return itable

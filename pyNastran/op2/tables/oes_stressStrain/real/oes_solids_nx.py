@@ -424,11 +424,11 @@ class RealSolidArrayNx(OES_Object):
     def nnodes_per_element_no_centroid(self) -> int:
         if self.element_type == 302: # CTETRA
             nnodes = 4
-        #elif self.element_type == 67: # CHEXA
+        #elif self.element_type == 300: # CHEXA
             #nnodes = 8
-        #elif self.element_type == 68: # CPENTA
+        #elif self.element_type == 301: # CPENTA
             #nnodes = 6
-        #elif self.element_type == 255: # CPYRAM
+        #elif self.element_type == 303: # CPYRAM
             #nnodes = 5
         else:
             raise NotImplementedError(f'element_name={self.element_name} self.element_type={self.element_type}')
@@ -500,6 +500,7 @@ class RealSolidArrayNx(OES_Object):
         eids3 = self.element_cid[:, 0]
         cids3 = self.element_cid[:, 1]
 
+        nnodes_expected = self.nnodes
         for itime in range(ntimes):
             dt = self._times[itime]
             header = _eigenvalue_header(self, header, itime, ntimes, dt)
@@ -518,12 +519,9 @@ class RealSolidArrayNx(OES_Object):
             ovm = self.data[itime, :, 6]
             #p = (o1 + o2 + o3) / -3.
 
-            cnnodes = nnodes + 1
+            ennodes = nnodes_expected
             for i, deid, node_id, doxx, doyy, dozz, dtxy, dtyz, dtxz, dovm in zip(
                     count(), eids2, nodes, oxx, oyy, ozz, txy, tyz, txz, ovm):
-
-                j = where(eids3 == deid)[0][0]
-                cid = cids3[j]
 
                 # o1-max
                 # o2-mid
@@ -533,7 +531,10 @@ class RealSolidArrayNx(OES_Object):
                     [doxx, doyy, dozz, dtxy, dtyz, dtxz, dovm])
 
                 assert node_id > 0, node_id
-                if i % cnnodes == 0:
+                if i % ennodes == 0:
+                    j = where(eids3 == deid)[0][0]
+                    cid = cids3[j]
+
                     f06_file.write('0  %8s    %8iGRID CS  %i GP\n' % (deid, cid, nnodes))
                     f06_file.write(
                         '0              %8s  X  %-13s  XY  %-13s   %s\n'
@@ -555,7 +556,7 @@ class RealSolidArrayNx(OES_Object):
             page_num += 1
         return page_num - 1
 
-    def write_op2(self, op2, op2_ascii, itable, new_result,
+    def write_op2(self, op2_file, op2_ascii, itable, new_result,
                   date, is_mag_phase=False, endian='>'):
         """writes an OP2"""
         import inspect
@@ -565,7 +566,7 @@ class RealSolidArrayNx(OES_Object):
 
         if itable == -1:
             #print('***************', itable)
-            self._write_table_header(op2, op2_ascii, date)
+            self._write_table_header(op2_file, op2_ascii, date)
             itable = -3
 
         #if isinstance(self.nonlinear_factor, float):
@@ -616,7 +617,7 @@ class RealSolidArrayNx(OES_Object):
         cen = b'GRID'
         op2_ascii.write(f'nelements={nelements:d}\n')
         for itime in range(self.ntimes):
-            self._write_table_3(op2, op2_ascii, new_result, itable, itime)
+            self._write_table_3(op2_file, op2_ascii, new_result, itable, itime)
 
             # record 4
             #print('stress itable = %s' % itable)
@@ -626,7 +627,7 @@ class RealSolidArrayNx(OES_Object):
                       4, 0, 4,
                       4, ntotal, 4,
                       4 * ntotal]
-            op2.write(pack('%ii' % len(header), *header))
+            op2_file.write(pack('%ii' % len(header), *header))
             op2_ascii.write('r4 [4, 0, 4]\n')
             op2_ascii.write(f'r4 [4, {itable:d}, 4]\n')
             op2_ascii.write(f'r4 [4, {4 * ntotal:d}, 4]\n')
@@ -640,14 +641,10 @@ class RealSolidArrayNx(OES_Object):
             ovm = self.data[itime, :, 6]
 
             #print('eids3', eids3)
-            cnnodes = nnodes_expected + 1
+            ennodes = nnodes_expected
             for i, deid, node_id, doxx, doyy, dozz, dtxy, dtyz, dtxz, dovm in zip(
                     count(), eids2, nodes, oxx, oyy, ozz, txy, tyz, txz, ovm):
                 #print('  eid =', deid, node_id)
-
-                j = where(eids3 == deid)[0]
-                assert len(j) > 0, j
-                cid = cids3[j][0]
 
                 #node_id, oxxi, txyi, ovmi,
                     #'', oyyi, tyzi,
@@ -656,10 +653,14 @@ class RealSolidArrayNx(OES_Object):
                      #syy, syz,
                      #szz, sxz)
 
-                if i % cnnodes == 0:
+                if i % ennodes == 0:
+                    j = where(eids3 == deid)[0]
+                    assert len(j) > 0, j
+                    cid = cids3[j][0]
+
                     data = [deid * 10 + self.device_code, cid, cen, nnodes_expected]
                     op2_ascii.write('  eid=%s cid=%s cen=%s nnodes = %s\n' % tuple(data))
-                    op2.write(
+                    op2_file.write(
                         struct1.pack(*data)
                         #pack(b'2i 4s i', *data)
                     )
@@ -673,12 +674,12 @@ class RealSolidArrayNx(OES_Object):
                 op2_ascii.write('      oxx, txy, ovm = %s\n' % data[:3])
                 op2_ascii.write('      oyy, tyz,     = %s\n' % data[3:5])
                 op2_ascii.write('      ozz, txz,     = %s\n' % data[5:])
-                op2.write(struct2.pack(*data))
+                op2_file.write(struct2.pack(*data))
                 i += 1
 
             itable -= 1
             header = [4 * ntotal,]
-            op2.write(pack('i', *header))
+            op2_file.write(pack('i', *header))
             op2_ascii.write('footer = %s\n' % header)
             new_result = False
         return itable

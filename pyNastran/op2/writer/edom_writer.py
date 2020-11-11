@@ -15,7 +15,7 @@ if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.op2.op2_geom import OP2Geom, BDF
 integer_types = int
 
-def write_edom(op2, op2_ascii, model: Union[BDF, OP2Geom], endian: bytes=b'<') -> None:
+def write_edom(op2_file, op2_ascii, model: Union[BDF, OP2Geom], endian: bytes=b'<') -> None:
     """writes the EDOM table"""
     if not hasattr(model, 'loads'):  # OP2
         return
@@ -71,7 +71,7 @@ def write_edom(op2, op2_ascii, model: Union[BDF, OP2Geom], endian: bytes=b'<') -
     if len(out) == 0:
         return
 
-    write_geom_header(b'EDOM', op2, op2_ascii, endian=endian)
+    write_geom_header(b'EDOM', op2_file, op2_ascii, endian=endian)
     itable = -3
 
     for name, ids in sorted(out.items()):
@@ -90,24 +90,24 @@ def write_edom(op2, op2_ascii, model: Union[BDF, OP2Geom], endian: bytes=b'<') -
         except KeyError:  # pragma: no cover
             raise NotImplementedError(name)
 
-        nbytes = func(model, name, ids, ncards, op2, op2_ascii, endian)
-        op2.write(pack('i', nbytes))
+        nbytes = func(model, name, ids, ncards, op2_file, op2_ascii, endian)
+        op2_file.write(pack('i', nbytes))
         itable -= 1
         data = [
             4, itable, 4,
             4, 1, 4,
             4, 0, 4]
-        op2.write(pack('9i', *data))
+        op2_file.write(pack('9i', *data))
         op2_ascii.write(str(data) + '\n')
 
     #-------------------------------------
     #print('itable', itable)
-    close_geom_table(op2, op2_ascii, itable)
+    close_geom_table(op2_file, op2_ascii, itable)
     #-------------------------------------
 
 def _write_dscreen(model: Union[BDF, OP2Geom], name: str,
                    dscreens: List[Any], ncards: int,
-                   op2, op2_ascii, endian: bytes) -> int:
+                   op2_file, op2_ascii, endian: bytes) -> int:
     """
     DSCREEN(4206, 42, 363)
     Design constraint screening data.
@@ -123,19 +123,19 @@ def _write_dscreen(model: Union[BDF, OP2Geom], name: str,
     structi = Struct(endian + b'ifi')
 
     nvalues = 3 * ncards
-    nbytes = write_header_nvalues(name, nvalues, key, op2, op2_ascii)
+    nbytes = write_header_nvalues(name, nvalues, key, op2_file, op2_ascii)
 
     for dscreen in dscreens:
         rtype_int = DSCREEN_RTYPE_TO_INT[dscreen.rtype]
         data = [rtype_int, dscreen.trs, dscreen.nstr]
         assert None not in data, data
         op2_ascii.write(f'  DSCREEN data={data}\n')
-        op2.write(structi.pack(*data))
+        op2_file.write(structi.pack(*data))
     return nbytes
 
 def _write_desvar(model: Union[BDF, OP2Geom], name: str,
                   desvar_ids: List[int], ncards: int,
-                  op2, op2_ascii, endian: bytes) -> int:
+                  op2_file, op2_ascii, endian: bytes) -> int:
     """
     (3106, 31, 352)
     NX 2019.2
@@ -156,7 +156,7 @@ def _write_desvar(model: Union[BDF, OP2Geom], name: str,
     structi = Struct(endian + b'i8s ffff i')
 
     nvalues = 8 * ncards
-    nbytes = write_header_nvalues(name, nvalues, key, op2, op2_ascii)
+    nbytes = write_header_nvalues(name, nvalues, key, op2_file, op2_ascii)
 
     for desvar_id in desvar_ids:
         desvar = model.desvars[desvar_id]
@@ -178,12 +178,12 @@ def _write_desvar(model: Union[BDF, OP2Geom], name: str,
         assert None not in data, data
         #print(data)
         op2_ascii.write(f'  DESVAR data={data}\n')
-        op2.write(structi.pack(*data))
+        op2_file.write(structi.pack(*data))
     return nbytes
 
 def _write_dconstr(model: Union[BDF, OP2Geom], name: str,
                    dconstrs: List[int], ncards: int,
-                   op2, op2_ascii, endian: bytes) -> int:
+                   op2_file, op2_ascii, endian: bytes) -> int:
     """
     Record – DCONSTR(4106,41,362)
     Design constraints.
@@ -210,7 +210,7 @@ def _write_dconstr(model: Union[BDF, OP2Geom], name: str,
     structi = Struct(endian + b'ii 4f ii')
 
     nvalues = 8 * ncards
-    nbytes = write_header_nvalues(name, nvalues, key, op2, op2_ascii)
+    nbytes = write_header_nvalues(name, nvalues, key, op2_file, op2_ascii)
 
     for dconstr in dconstrs:
         if isinstance(dconstr.uid, integer_types):
@@ -231,12 +231,12 @@ def _write_dconstr(model: Union[BDF, OP2Geom], name: str,
         assert None not in data, data
         #print(data)
         op2_ascii.write(f'  DCONSTR data={data}\n')
-        op2.write(structi.pack(*data))
+        op2_file.write(structi.pack(*data))
     return nbytes
 
 def _write_dvprel2(model: Union[BDF, OP2Geom], name: str,
                    dvprel_ids: List[int], ncards: int,
-                   op2, op2_ascii, endian: bytes):
+                   op2_file, op2_ascii, endian: bytes):
     """
     Record – DVPREL2(3406,34,355)
     Design variable to property relation based on a user-supplied equation.
@@ -283,7 +283,7 @@ def _write_dvprel2(model: Union[BDF, OP2Geom], name: str,
             nvalues += 2 * len(dvprel.labels) + 2
             ndata += len(dvprel.labels) + 2
 
-    nbytes = write_header_nvalues(name, nvalues, key, op2, op2_ascii)
+    nbytes = write_header_nvalues(name, nvalues, key, op2_file, op2_ascii)
 
     data_all = []
     for dvprel_id in dvprel_ids:
@@ -321,7 +321,7 @@ def _write_dvprel2(model: Union[BDF, OP2Geom], name: str,
         assert None not in data, data
         structi = Struct(endian + fmt)
         op2_ascii.write(f'  DVPREL2 data={data}\n')
-        op2.write(structi.pack(*data))
+        op2_file.write(structi.pack(*data))
         data_all += data
     #assert len(data_all) == nvalues, f'ndata={len(data_all)} nvalues={nvalues}'
     assert len(data_all) == ndata, f'ndata={len(data_all)} nvalues={ndata}'
@@ -329,7 +329,7 @@ def _write_dvprel2(model: Union[BDF, OP2Geom], name: str,
 
 def _write_dvmrel2(model: Union[BDF, OP2Geom], name: str,
                    dvmrel_ids: List[int], ncards: int,
-                   op2, op2_ascii, endian: bytes):
+                   op2_file, op2_ascii, endian: bytes):
     """
     Record – DVMREL2(6400,64,432)
     Design variable to material relation based on a user-supplied equation.
@@ -366,7 +366,7 @@ def _write_dvmrel2(model: Union[BDF, OP2Geom], name: str,
             nvalues += 2 * len(dvmrel.labels) + 2
             ndata += len(dvmrel.labels) + 2
 
-    nbytes = write_header_nvalues(name, nvalues, key, op2, op2_ascii)
+    nbytes = write_header_nvalues(name, nvalues, key, op2_file, op2_ascii)
 
     data_all = []
     for dvmrel_id in dvmrel_ids:
@@ -400,7 +400,7 @@ def _write_dvmrel2(model: Union[BDF, OP2Geom], name: str,
         assert None not in data, data
         structi = Struct(endian + fmt)
         op2_ascii.write(f'  DVMREL2 data={data}\n')
-        op2.write(structi.pack(*data))
+        op2_file.write(structi.pack(*data))
         data_all += data
     #assert len(data_all) == nvalues, f'ndata={len(data_all)} nvalues={nvalues}'
     assert len(data_all) == ndata, f'ndata={len(data_all)} nvalues={ndata}'
@@ -425,7 +425,7 @@ def _write_dvxrel2_flag(dvxrel2: Union[DVPREL2, DVMREL2], data: List[Any]) -> by
 
 def _write_dtable(model: Union[BDF, OP2Geom], name: str,
                   dtables: List[DTABLE], ncards: int,
-                  op2, op2_ascii, endian: bytes) -> int:
+                  op2_file, op2_ascii, endian: bytes) -> int:
     """
     Record – DTABLE(3706,37,358)
     Table constants.
@@ -447,7 +447,7 @@ def _write_dtable(model: Union[BDF, OP2Geom], name: str,
 
     key = (3706, 37, 358)
     nvalues = 3 * nkeys + 1
-    nbytes = write_header_nvalues(name, nvalues, key, op2, op2_ascii)
+    nbytes = write_header_nvalues(name, nvalues, key, op2_file, op2_ascii)
 
     data = []
     for key, value in dtable.default_values.items():
@@ -458,7 +458,7 @@ def _write_dtable(model: Union[BDF, OP2Geom], name: str,
     assert None not in data, data
     op2_ascii.write(f'  DTABLE data={data}\n')
     out = structi.pack(*data)
-    op2.write(out)
+    op2_file.write(out)
 
     return nbytes
 

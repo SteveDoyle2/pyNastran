@@ -11,7 +11,7 @@ if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.bdf.cards.aero.dynamic_loads import AERO, MKAERO1, FLUTTER # , FLFACT, MKAERO2
     from pyNastran.op2.op2_geom import OP2Geom, BDF
 
-def write_edt(op2, op2_ascii, model: Union[BDF, OP2Geom], endian: bytes=b'<') -> None:
+def write_edt(op2_file, op2_ascii, model: Union[BDF, OP2Geom], endian: bytes=b'<') -> None:
     """writes the EDT/EDTS table"""
     if not hasattr(model, 'loads'):  # OP2
         return
@@ -81,7 +81,7 @@ def write_edt(op2, op2_ascii, model: Union[BDF, OP2Geom], endian: bytes=b'<') ->
     if len(out) == 0:
         return
 
-    write_geom_header(b'EDT', op2, op2_ascii, endian=endian)
+    write_geom_header(b'EDT', op2_file, op2_ascii, endian=endian)
     itable = -3
 
     for name, ids in sorted(out.items()):
@@ -99,24 +99,24 @@ def write_edt(op2, op2_ascii, model: Union[BDF, OP2Geom], endian: bytes=b'<') ->
         except KeyError:  # pragma: no cover
             raise NotImplementedError(name)
 
-        nbytes = func(model, name, ids, ncards, op2, op2_ascii, endian)
-        op2.write(pack('i', nbytes))
+        nbytes = func(model, name, ids, ncards, op2_file, op2_ascii, endian)
+        op2_file.write(pack('i', nbytes))
         itable -= 1
         data = [
             4, itable, 4,
             4, 1, 4,
             4, 0, 4]
-        op2.write(pack('9i', *data))
+        op2_file.write(pack('9i', *data))
         op2_ascii.write(str(data) + '\n')
 
     #-------------------------------------
     #print('itable', itable)
-    close_geom_table(op2, op2_ascii, itable)
+    close_geom_table(op2_file, op2_ascii, itable)
     #-------------------------------------
 
 def _write_trim(model: Union[BDF, OP2Geom], name: str,
                 trim_ids: List[int], ncards: int,
-                op2, op2_ascii, endian: bytes) -> int:
+                op2_file, op2_ascii, endian: bytes) -> int:
     """
     (2402, 24, 342)
     MSC 2018.2
@@ -150,7 +150,7 @@ def _write_trim(model: Union[BDF, OP2Geom], name: str,
     #  - label (2 fields of 4s)
     #  - ux
     nvalues = 7 * ncards + nlabels_total * 3
-    nbytes = write_header_nvalues(name, nvalues, key, op2, op2_ascii)
+    nbytes = write_header_nvalues(name, nvalues, key, op2_file, op2_ascii)
 
     all_data = []
     for trim_id in trim_ids:
@@ -165,13 +165,13 @@ def _write_trim(model: Union[BDF, OP2Geom], name: str,
         fmt = endian + b'ifff ' + b' 8sf' * nlabels + b' 3i'
         structi = Struct(fmt)
         op2_ascii.write(f'  TRIM data={data}\n')
-        op2.write(structi.pack(*data))
+        op2_file.write(structi.pack(*data))
         all_data += data
     return nbytes
 
 def _write_caero1(model: Union[BDF, OP2Geom], name: str,
                   caero_ids: List[int], ncards: int,
-                  op2, op2_ascii, endian: bytes) -> int:
+                  op2_file, op2_ascii, endian: bytes) -> int:
     """
     MSC 2018.2
 
@@ -197,7 +197,7 @@ def _write_caero1(model: Union[BDF, OP2Geom], name: str,
     key = (3002, 30, 263)
     nfields = 16
     structi = Struct(endian + b'8i 8f')
-    nbytes = write_header(name, nfields, ncards, key, op2, op2_ascii)
+    nbytes = write_header(name, nfields, ncards, key, op2_file, op2_ascii)
 
     for caero_id in caero_ids:
         caero = model.caeros[caero_id]
@@ -212,12 +212,12 @@ def _write_caero1(model: Union[BDF, OP2Geom], name: str,
 
         assert None not in data, data
         op2_ascii.write(f'  CAERO1 data={data}\n')
-        op2.write(structi.pack(*data))
+        op2_file.write(structi.pack(*data))
     return nbytes
 
 def _write_paero1(model: Union[BDF, OP2Geom], name: str,
                   paero_ids: List[int], ncards: int,
-                  op2, op2_ascii, endian: bytes) -> int:
+                  op2_file, op2_ascii, endian: bytes) -> int:
     """
     (3102, 31, 264)
     MSC 2018.2
@@ -238,7 +238,7 @@ def _write_paero1(model: Union[BDF, OP2Geom], name: str,
     key = (3102, 31, 264)
     nfields = 8
     structi = Struct(endian + b'8i')
-    nbytes = write_header(name, nfields, ncards, key, op2, op2_ascii)
+    nbytes = write_header(name, nfields, ncards, key, op2_file, op2_ascii)
 
     for paero_id in paero_ids:
         paero = model.paeros[paero_id]
@@ -248,12 +248,12 @@ def _write_paero1(model: Union[BDF, OP2Geom], name: str,
             data += [0] * n0s
         assert None not in data, data
         op2_ascii.write(f'  PAERO1 data={data}\n')
-        op2.write(structi.pack(*data))
+        op2_file.write(structi.pack(*data))
     return nbytes
 
 def _write_flutter(model: Union[BDF, OP2Geom], name: str,
                    flutter_ids: List[int], ncards: int,
-                   op2, op2_ascii, endian: bytes) -> int:
+                   op2_file, op2_ascii, endian: bytes) -> int:
     """
     (3902, 39, 272)
     MSC 2018.2
@@ -282,7 +282,7 @@ def _write_flutter(model: Union[BDF, OP2Geom], name: str,
     key = (3902, 39, 272)
     nfields = 10
     structi = Struct(endian + b'i 8s 3i 8s ifi')
-    nbytes = write_header(name, nfields, ncards, key, op2, op2_ascii)
+    nbytes = write_header(name, nfields, ncards, key, op2_file, op2_ascii)
 
     for flutter_id in flutter_ids:
         flutter = model.flutters[flutter_id]  # type: FLUTTER
@@ -294,12 +294,12 @@ def _write_flutter(model: Union[BDF, OP2Geom], name: str,
                 imethod, flutter.nvalue, flutter.epsilon, -1]
         assert None not in data, data
         op2_ascii.write(f'  FLUTTER data={data}\n')
-        op2.write(structi.pack(*data))
+        op2_file.write(structi.pack(*data))
     return nbytes
 
 def _write_mkaero1(model: Union[BDF, OP2Geom], name: str,
                    mkaero1s: List[MKAERO1], ncards: int,
-                   op2, op2_ascii, endian: bytes) -> int:
+                   op2_file, op2_ascii, endian: bytes) -> int:
     """writes the MKAERO1
 
     data = (1.3, -1, -1, -1, -1, -1, -1, -1,
@@ -308,7 +308,7 @@ def _write_mkaero1(model: Union[BDF, OP2Geom], name: str,
     key = (3802, 38, 271)
     nfields = 16 * ncards
     #spack = Struct(endian + b'i10fi')
-    nbytes = write_header(name, nfields, ncards, key, op2, op2_ascii)
+    nbytes = write_header(name, nfields, ncards, key, op2_file, op2_ascii)
 
     for mkaero in mkaero1s:
         data = []
@@ -327,12 +327,12 @@ def _write_mkaero1(model: Union[BDF, OP2Geom], name: str,
             data.extend([-1]*nint_mach)
 
         op2_ascii.write(f'  mkaero1 data={data}\n')
-        op2.write(spack.pack(*data))
+        op2_file.write(spack.pack(*data))
     return nbytes
 
 def _write_aero(model: Union[BDF, OP2Geom], name: str,
                 aero: List[AERO], ncards: int,
-                op2, op2_ascii, endian: bytes) -> int:
+                op2_file, op2_ascii, endian: bytes) -> int:
     """
     Word Name Type Description
     1 ACSID     I
@@ -349,7 +349,7 @@ def _write_aero(model: Union[BDF, OP2Geom], name: str,
 
     key = (3202, 32, 265)
     nfields = 6
-    nbytes = write_header(name, nfields, ncards, key, op2, op2_ascii)
+    nbytes = write_header(name, nfields, ncards, key, op2_file, op2_ascii)
 
     # cref   : 0.3048
     # is_anti_symmetric_xy : False
@@ -366,12 +366,12 @@ def _write_aero(model: Union[BDF, OP2Geom], name: str,
         velocity = aeroi.velocity
     data = [aeroi.acsid, velocity, aeroi.cref, aeroi.rho_ref, aeroi.sym_xz, aeroi.sym_xy]
     op2_ascii.write(f'  AERO data={data}\n')
-    op2.write(spack.pack(*data))
+    op2_file.write(spack.pack(*data))
     return nbytes
 
 def _write_aeros(model: Union[BDF, OP2Geom], name: str,
                  aeros: List[AEROS], ncards: int,
-                 op2, op2_ascii, endian: bytes) -> int:
+                 op2_file, op2_ascii, endian: bytes) -> int:
     """
     AEROS(2202, 22, 340)
 
@@ -385,7 +385,7 @@ def _write_aeros(model: Union[BDF, OP2Geom], name: str,
 
     key = (2202, 22, 340)
     nfields = 7
-    nbytes = write_header(name, nfields, ncards, key, op2, op2_ascii)
+    nbytes = write_header(name, nfields, ncards, key, op2_file, op2_ascii)
 
     data = [aeroi.acsid, aeroi.rcsid,
             aeroi.cref, aeroi.bref, aeroi.sref,
@@ -393,12 +393,12 @@ def _write_aeros(model: Union[BDF, OP2Geom], name: str,
     #print(data)
     assert None not in data, data
     op2_ascii.write(f'  AEROS data={data}\n')
-    op2.write(spack.pack(*data))
+    op2_file.write(spack.pack(*data))
     return nbytes
 
 def _write_deform(model: Union[BDF, OP2Geom], name: str,
                   loads: List[AEROS], ncards: int,
-                  op2, op2_ascii, endian: bytes) -> int:
+                  op2_file, op2_ascii, endian: bytes) -> int:
     """
     (104, 1, 81)
     NX 2019.2
@@ -412,7 +412,7 @@ def _write_deform(model: Union[BDF, OP2Geom], name: str,
     key = (104, 1, 81)
     nfields = 3
     structi = Struct(endian + b'iif')
-    nbytes = write_header(name, nfields, ncards, key, op2, op2_ascii)
+    nbytes = write_header(name, nfields, ncards, key, op2_file, op2_ascii)
 
     for load in loads:
         data = [load.sid, load.eid, load.deformation]
@@ -420,7 +420,7 @@ def _write_deform(model: Union[BDF, OP2Geom], name: str,
         #print(flutter.get_stats())
         assert None not in data, data
         op2_ascii.write(f'  DEFORM data={data}\n')
-        op2.write(structi.pack(*data))
+        op2_file.write(structi.pack(*data))
     return nbytes
 
 

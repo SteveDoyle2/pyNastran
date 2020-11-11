@@ -919,13 +919,13 @@ def _lines_to_decks_main(lines: List[str],
     #---------------------------------------------
     current_lines = executive_control_lines
 
-    if nastran_format in ['msc', 'nx', 'nasa95', 'mystran']:
+    if nastran_format in ['msc', 'nx', 'nasa95', 'mystran', 'zona']:
         #flag_word = 'executive'
         flag = 1  # start from executive control deck
     elif nastran_format == 'optistruct':
         #flag_word = 'case control'
         flag = 2  # case from control deck
-    else:
+    else:  # pragma: no cover
         raise RuntimeError(nastran_format)
     #flag = 1
     old_flags = []

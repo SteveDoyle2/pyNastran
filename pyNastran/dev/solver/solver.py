@@ -780,6 +780,11 @@ class Solver:
             fdtype=fdtype, page_num=page_num, page_stamp=page_stamp)
         return page_num
 
+    def _recast_data(self, idtype: str, fdtype: str):
+        idtype = 'int32'
+        fdtype = 'float32'
+        return idtype, fdtype
+
     def _save_static_table(self, f06_file,
                            subcase: Subcase, itime: int, ntimes: int,
                            node_gridtype: NDArrayN2int, Fg: NDArrayNfloat,
@@ -788,8 +793,9 @@ class Solver:
                            table_name: str, slot: Dict[Any, RealSPCForcesArray],
                            ngrid: int, ndof_per_grid: int,
                            title: str='', subtitle: str='', label: str='',
-                           fdtype: str='float32', page_num: int=1,
-                           page_stamp: str='PAGE %s') -> int:
+                           idtype: str='int32', fdtype: str='float32',
+                           page_num: int=1, page_stamp: str='PAGE %s') -> int:
+        idtype, fdtype = self._recast_data(idtype, fdtype)
         isubcase = subcase.id
         #self.log.debug(f'saving {f06_request_name} -> {table_name}')
         unused_nids_write, write_f06, write_op2, quick_return = get_plot_request(

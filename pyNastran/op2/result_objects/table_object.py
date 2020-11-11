@@ -394,7 +394,7 @@ class TableArray(ScalarObject):  # displacement style table
             raise RuntimeError('expected sort1/sort2\n%s' % self.code_information())
         self.build_data(ntimes, nnodes, ntotal, nx, ny, self._times_dtype)
 
-    def build_data(self, ntimes, nnodes, ntotal, nx, ny, float_fmt):
+    def build_data(self, ntimes, nnodes, ntotal, nx, ny, float_fmt: str):
         """actually performs the build step"""
         self.ntimes = ntimes
         self._nnodes = nnodes
@@ -1044,11 +1044,9 @@ class RealTableArray(TableArray):
             itable = -3
 
         #print('nonlinear_factor =', self.nonlinear_factor)
-        if self.is_sort1:
-            op2_format = endian + b'2i6f'
-        else:
+        if not self.is_sort1:
             raise NotImplementedError('SORT2')
-        s = Struct(op2_format)
+        #op2_format = endian + b'2i6f'
 
         node = self.node_gridtype[:, 0]
         gridtype = self.node_gridtype[:, 1]
@@ -1058,24 +1056,19 @@ class RealTableArray(TableArray):
         nnodes = self.data.shape[1]
         nnodes_device = self.node_gridtype[:, 0] * 10 + self.device_code
 
-
-        use_numpy = True
-        if use_numpy:
-            fdtype = self.data.dtype
-            nnodes = len(node)
-            #node_bytes = node.tobytes()
-            #gridtype_bytes = gridtype.tobytes()
-            #node_floats = np.frombuffer(node.tobytes(), dtype='float32')
-            #gridtype_floats = np.frombuffer(gridtype.tobytes(), dtype='float32')
-            nodedevice_gridtype = np.column_stack([nnodes_device, gridtype])
-            #print(node)
-            #print(nnodes_device)
-            #print(nodedevice_gridtype)
-            node_gridtype_floats = np.frombuffer(nodedevice_gridtype.tobytes(), dtype=fdtype).reshape(nnodes, 2)
-            #print(node_floats)
-            #print(gridtype_floats)
-            #print(node_gridtype_floats)
-            #data = self.data
+        fdtype = self.data.dtype
+        nnodes = len(node)
+        #node_bytes = node.tobytes()
+        #gridtype_bytes = gridtype.tobytes()
+        #node_floats = np.frombuffer(node.tobytes(), dtype='float32')
+        #gridtype_floats = np.frombuffer(gridtype.tobytes(), dtype='float32')
+        nodedevice_gridtype = np.column_stack([nnodes_device, gridtype])
+        node_gridtype_bytes = nodedevice_gridtype.tobytes()
+        node_gridtype_floats = np.frombuffer(node_gridtype_bytes,
+                                             dtype=fdtype).reshape(nnodes, 2)
+        #print(node_floats)
+        #print(gridtype_floats)
+        #print(node_gridtype_floats)
 
         max_id = node.max()
         if max_id > 99999999:
@@ -1111,23 +1104,10 @@ class RealTableArray(TableArray):
             fascii.write('r4 [4, %s, 4]\n' % (itable))
             fascii.write('r4 [4, %i, 4]\n' % (4*ntotal))
 
-            if use_numpy:
-                datai = self.data[itime, :, :]
-                node_gridtype_data = np.hstack([node_gridtype_floats, datai])
-                node_gridtype_data_bytes = node_gridtype_data.tobytes()
-                op2_file.write(node_gridtype_data_bytes)
-            else:
-                t1 = self.data[itime, :, 0]
-                t2 = self.data[itime, :, 1]
-                t3 = self.data[itime, :, 2]
-                r1 = self.data[itime, :, 3]
-                r2 = self.data[itime, :, 4]
-                r3 = self.data[itime, :, 5]
-
-                for node_id, gridtypei, t1i, t2i, t3i, r1i, r2i, r3i in zip(nnodes_device, gridtype, t1, t2, t3, r1, r2, r3):
-                    data = [node_id, gridtypei, t1i, t2i, t3i, r1i, r2i, r3i]
-                    fascii.write('  nid, grid_type, dx, dy, dz, rx, ry, rz = %s\n' % data)
-                    op2_file.write(s.pack(*data))
+            datai = self.data[itime, :, :]
+            node_gridtype_data = np.hstack([node_gridtype_floats, datai])
+            node_gridtype_data_bytes = node_gridtype_data.tobytes()
+            op2_file.write(node_gridtype_data_bytes)
 
             itable -= 1
             header = [4 * ntotal,]
@@ -1614,6 +1594,13 @@ class ComplexTableArray(TableArray):
         nnodes = self.data.shape[1]
         nnodes_device = self.node_gridtype[:, 0] * 10 + self.device_code
 
+        #fdtype = self.data.real.dtype
+        #fdtype = 'float32'  # we don't support complex data yet
+        #nodedevice_gridtype = np.column_stack([nnodes_device, gridtype])
+        #node_gridtype_bytes = nodedevice_gridtype.tobytes()
+        #node_gridtype_floats = np.frombuffer(node_gridtype_bytes,
+                                             #dtype=fdtype).reshape(nnodes, 2)
+
         #(2+6) => (node_id, gridtypei, t1i, t2i, t3i, r1i, r2i, r3i)
         ntotal = nnodes * (2 + 12)
 
@@ -1640,6 +1627,15 @@ class ComplexTableArray(TableArray):
             fascii.write('r4 [4, 0, 4]\n')
             fascii.write('r4 [4, %s, 4]\n' % (itable))
             fascii.write('r4 [4, %i, 4]\n' % (4*ntotal))
+
+            #datai = self.data[itime, :, :]
+            #node_gridtype_data = np.hstack([
+                #node_gridtype_floats,
+                #datai.real.astype('float32'),
+                #datai.imag.astype('float32'),
+            #])
+            #node_gridtype_data_bytes = node_gridtype_data.tobytes()
+            #op2_file.write(node_gridtype_data_bytes)
 
             t1 = self.data[itime, :, 0]
             t2 = self.data[itime, :, 1]

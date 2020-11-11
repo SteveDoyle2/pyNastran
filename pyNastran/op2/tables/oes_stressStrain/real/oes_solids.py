@@ -435,7 +435,9 @@ class RealSolidArray(OES_Object):
         #ind.sort()
         return ind
 
-    def write_f06(self, f06_file, header=None, page_stamp: str='PAGE %s', page_num: int=1, is_mag_phase: bool=False, is_sort1: bool=True):
+    def write_f06(self, f06_file, header=None, page_stamp: str='PAGE %s',
+                  page_num: int=1, is_mag_phase: bool=False, is_sort1: bool=True):
+        calculate_directional_vectors = True
         if header is None:
             header = []
         nnodes, msg_temp = _get_f06_header_nnodes(self, is_mag_phase)
@@ -448,6 +450,28 @@ class RealSolidArray(OES_Object):
 
         eids3 = self.element_cid[:, 0]
         cids3 = self.element_cid[:, 1]
+
+        fdtype = self.data.dtype
+        oxx = self.data[:, :, 0]
+        oyy = self.data[:, :, 1]
+        ozz = self.data[:, :, 2]
+        txy = self.data[:, :, 3]
+        tyz = self.data[:, :, 4]
+        txz = self.data[:, :, 5]
+        o1 = self.data[:, :, 6]
+        o2 = self.data[:, :, 7]
+        o3 = self.data[:, :, 8]
+        ovm = self.data[:, :, 9]
+        p = (o1 + o2 + o3) / -3.
+
+        nnodes_total = self.data.shape[1]
+        if calculate_directional_vectors:
+            v = calculate_principal_eigenvectors4(
+                ntimes, nnodes_total,
+                oxx, oyy, ozz, txy, txz, tyz,
+                fdtype)[1]
+        else:
+            v = np.zeros((ntimes, nnodes, 3, 3), dtype=fdtype)
 
         for itime in range(ntimes):
             dt = self._times[itime]
@@ -465,43 +489,39 @@ class RealSolidArray(OES_Object):
             o2 = self.data[itime, :, 7]
             o3 = self.data[itime, :, 8]
             ovm = self.data[itime, :, 9]
-            p = (o1 + o2 + o3) / -3.
+            vi = v[itime, :, :, :]
+            pi = p[itime, :]
 
             cnnodes = nnodes + 1
-            for i, deid, node_id, doxx, doyy, dozz, dtxy, dtyz, dtxz, do1, do2, do3, dp, dovm in zip(
-                    count(), eids2, nodes, oxx, oyy, ozz, txy, tyz, txz, o1, o2, o3, p, ovm):
-
-                j = where(eids3 == deid)[0][0]
-                cid = cids3[j]
-                A = [[doxx, dtxy, dtxz],
-                     [dtxy, doyy, dtyz],
-                     [dtxz, dtyz, dozz]]
-                (_lambda, v) = eigh(A)  # a hermitian matrix is a symmetric-real matrix
+            for i, deid, node_id, doxx, doyy, dozz, dtxy, dtyz, dtxz, do1, do2, do3, dp, dv, dovm in zip(
+                    count(), eids2, nodes, oxx, oyy, ozz, txy, tyz, txz, o1, o2, o3, pi, vi, ovm):
 
                 # o1-max
                 # o2-mid
                 # o3-min
                 assert do1 >= do2 >= do3, 'o1 >= o2 >= o3; eid=%s o1=%e o2=%e o3=%e' % (deid, do1, do2, do3)
-                [oxxi, oyyi, ozzi, txyi, tyzi, txzi, o1i, o2i, o3i, pi, ovmi] = write_floats_13e(
+                [oxxi, oyyi, ozzi, txyi, tyzi, txzi, o1i, o2i, o3i, pii, ovmi] = write_floats_13e(
                     [doxx, doyy, dozz, dtxy, dtyz, dtxz, do1, do2, do3, dp, dovm])
 
                 if i % cnnodes == 0:
+                    j = where(eids3 == deid)[0][0]
+                    cid = cids3[j]
                     f06_file.write('0  %8s    %8iGRID CS  %i GP\n' % (deid, cid, nnodes))
                     f06_file.write(
                         '0              %8s  X  %-13s  XY  %-13s   A  %-13s  LX%5.2f%5.2f%5.2f  %-13s   %s\n'
                         '               %8s  Y  %-13s  YZ  %-13s   B  %-13s  LY%5.2f%5.2f%5.2f\n'
                         '               %8s  Z  %-13s  ZX  %-13s   C  %-13s  LZ%5.2f%5.2f%5.2f\n'
-                        % ('CENTER', oxxi, txyi, o1i, v[0, 1], v[0, 2], v[0, 0], pi, ovmi,
-                           '', oyyi, tyzi, o2i, v[1, 1], v[1, 2], v[1, 0],
-                           '', ozzi, txzi, o3i, v[2, 1], v[2, 2], v[2, 0]))
+                        % ('CENTER', oxxi, txyi, o1i, dv[0, 1], dv[0, 2], dv[0, 0], pii, ovmi,
+                           '', oyyi, tyzi, o2i, dv[1, 1], dv[1, 2], dv[1, 0],
+                           '', ozzi, txzi, o3i, dv[2, 1], dv[2, 2], dv[2, 0]))
                 else:
                     f06_file.write(
                         '0              %8s  X  %-13s  XY  %-13s   A  %-13s  LX%5.2f%5.2f%5.2f  %-13s   %s\n'
                         '               %8s  Y  %-13s  YZ  %-13s   B  %-13s  LY%5.2f%5.2f%5.2f\n'
                         '               %8s  Z  %-13s  ZX  %-13s   C  %-13s  LZ%5.2f%5.2f%5.2f\n'
-                        % (node_id, oxxi, txyi, o1i, v[0, 1], v[0, 2], v[0, 0], pi, ovmi,
-                           '', oyyi, tyzi, o2i, v[1, 1], v[1, 2], v[1, 0],
-                           '', ozzi, txzi, o3i, v[2, 1], v[2, 2], v[2, 0]))
+                        % (node_id, oxxi, txyi, o1i, dv[0, 1], dv[0, 2], dv[0, 0], pii, ovmi,
+                           '', oyyi, tyzi, o2i, dv[1, 1], dv[1, 2], dv[1, 0],
+                           '', ozzi, txzi, o3i, dv[2, 1], dv[2, 2], dv[2, 0]))
                 i += 1
             f06_file.write(page_stamp % page_num)
             page_num += 1
@@ -785,6 +805,9 @@ def calculate_principal_eigenvectors4(ntimes: int, nnodes: int,
 
     TODO: scale by 2 for strain
 
+    Parameters
+    ----------
+    oxx : (ntimes, nnodes) np.ndarray
     Returns
     -------
     eigenvalues : (ntimes, nnodes, 3)
@@ -795,12 +818,15 @@ def calculate_principal_eigenvectors4(ntimes: int, nnodes: int,
     a_matrix = np.full((ntimes, nnodes, 3, 3), np.nan, dtype=dtype)
 
     # we're only filling the lower part of the A matrix
-    a_matrix[:, :, 0, 0] = oxx
-    a_matrix[:, :, 1, 1] = oyy
-    a_matrix[:, :, 2, 2] = ozz
-    a_matrix[:, :, 1, 0] = txy
-    a_matrix[:, :, 2, 0] = txz
-    a_matrix[:, :, 2, 1] = tyz
+    try:
+        a_matrix[:, :, 0, 0] = oxx
+        a_matrix[:, :, 1, 1] = oyy
+        a_matrix[:, :, 2, 2] = ozz
+        a_matrix[:, :, 1, 0] = txy
+        a_matrix[:, :, 2, 0] = txz
+        a_matrix[:, :, 2, 1] = tyz
+    except:
+        raise RuntimeError(f'a_matrix.shape={a_matrix.shape} oxx.shape={oxx.shape}')
 
     # _lambda: ntimes, nnodes, (3)
     # v:       ntimes, nnodes, (3, 3)

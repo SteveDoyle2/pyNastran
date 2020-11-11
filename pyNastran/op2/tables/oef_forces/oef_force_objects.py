@@ -76,7 +76,7 @@ class ForceObject(BaseElement):
         #ind.sort()
         return ind
 
-    def _write_table_3(self, op2, op2_ascii, new_result, itable, itime): #itable=-3, itime=0):
+    def _write_table_3(self, op2_file, op2_ascii, new_result, itable, itime): #itable=-3, itime=0):
         import inspect
         from struct import pack
         frame = inspect.currentframe()
@@ -95,7 +95,7 @@ class ForceObject(BaseElement):
                 4, 0, 4,
                 4, 146, 4,
             ]
-        op2.write(pack(b'%ii' % len(header), *header))
+        op2_file.write(pack(b'%ii' % len(header), *header))
         op2_ascii.write('table_3_header = %s\n' % header)
 
         approach_code = self.approach_code
@@ -223,7 +223,7 @@ class ForceObject(BaseElement):
         #print(data)
         #f.write(pack(fascii, '%s header 3c' % self.table_name, fmt, data))
         op2_ascii.write('%s header 3c = %s\n' % (self.table_name, data))
-        op2.write(pack(fmt, *data))
+        op2_file.write(pack(fmt, *data))
 
 
 class RealForceObject(ForceObject):
@@ -706,7 +706,7 @@ class RealSpringDamperForceArray(RealForceObject):
             page_num += 1
         return page_num - 1
 
-    def write_op2(self, op2, op2_ascii, itable, new_result,
+    def write_op2(self, op2_file, op2_ascii, itable, new_result,
                   date, is_mag_phase=False, endian='>'):
         """writes an OP2"""
         import inspect
@@ -716,7 +716,7 @@ class RealSpringDamperForceArray(RealForceObject):
         op2_ascii.write(f'{self.__class__.__name__}.write_op2: {call_frame[1][3]}\n')
 
         if itable == -1:
-            self._write_table_header(op2, op2_ascii, date)
+            self._write_table_header(op2_file, op2_ascii, date)
             itable = -3
 
         #eids = self.element
@@ -750,7 +750,7 @@ class RealSpringDamperForceArray(RealForceObject):
 
         op2_ascii.write('%s-nelements=%i\n' % (self.element_name, nelements))
         for itime in range(self.ntimes):
-            self._write_table_3(op2, op2_ascii, new_result, itable, itime)
+            self._write_table_3(op2_file, op2_ascii, new_result, itable, itime)
 
             # record 4
             itable -= 1
@@ -759,7 +759,7 @@ class RealSpringDamperForceArray(RealForceObject):
                       4, 0, 4,
                       4, ntotal, 4,
                       4 * ntotal]
-            op2.write(pack('%ii' % len(header), *header))
+            op2_file.write(pack('%ii' % len(header), *header))
             op2_ascii.write('r4 [4, 0, 4]\n')
             op2_ascii.write(f'r4 [4, {itable:d}, 4]\n')
             op2_ascii.write(f'r4 [4, {4 * ntotal:d}, 4]\n')
@@ -769,11 +769,11 @@ class RealSpringDamperForceArray(RealForceObject):
             for eid, forcei in zip(eids_device, force):
                 data = [eid, forcei]
                 op2_ascii.write('  eid=%s force=%s\n' % tuple(data))
-                op2.write(struct1.pack(*data))
+                op2_file.write(struct1.pack(*data))
 
             itable -= 1
             header = [4 * ntotal,]
-            op2.write(pack('i', *header))
+            op2_file.write(pack('i', *header))
             op2_ascii.write('footer = %s\n' % header)
             new_result = False
         return itable
@@ -1115,7 +1115,7 @@ class RealRodForceArray(RealForceObject):
                     raise ValueError(msg)
         return True
 
-    def write_op2(self, op2, op2_ascii, itable, new_result,
+    def write_op2(self, op2_file, op2_ascii, itable, new_result,
                   date, is_mag_phase=False, endian='>'):
         """writes an OP2"""
         frame = inspect.currentframe()
@@ -1123,7 +1123,7 @@ class RealRodForceArray(RealForceObject):
         op2_ascii.write(f'{self.__class__.__name__}.write_op2: {call_frame[1][3]}\n')
 
         if itable == -1:
-            self._write_table_header(op2, op2_ascii, date)
+            self._write_table_header(op2_file, op2_ascii, date)
             itable = -3
 
         #if isinstance(self.nonlinear_factor, float):
@@ -1165,7 +1165,7 @@ class RealRodForceArray(RealForceObject):
 
         op2_ascii.write('%s-nelements=%i\n' % (self.element_name, nelements))
         for itime in range(self.ntimes):
-            self._write_table_3(op2, op2_ascii, new_result, itable, itime)
+            self._write_table_3(op2_file, op2_ascii, new_result, itable, itime)
 
             # record 4
             #print('stress itable = %s' % itable)
@@ -1175,7 +1175,7 @@ class RealRodForceArray(RealForceObject):
                       4, 0, 4,
                       4, ntotal, 4,
                       4 * ntotal]
-            op2.write(pack('%ii' % len(header), *header))
+            op2_file.write(pack('%ii' % len(header), *header))
             op2_ascii.write('r4 [4, 0, 4]\n')
             op2_ascii.write(f'r4 [4, {itable:d}, 4]\n')
             op2_ascii.write(f'r4 [4, {4 * ntotal:d}, 4]\n')
@@ -1187,11 +1187,11 @@ class RealRodForceArray(RealForceObject):
             for eid, axiali, torsioni in zip(eids_device, axial, torsion):
                 data = [eid, axiali, torsioni]
                 op2_ascii.write('  eid=%s axial=%s torsion=%s\n' % tuple(data))
-                op2.write(struct1.pack(*data))
+                op2_file.write(struct1.pack(*data))
 
             itable -= 1
             header = [4 * ntotal,]
-            op2.write(pack('i', *header))
+            op2_file.write(pack('i', *header))
             op2_ascii.write('footer = %s\n' % header)
             new_result = False
         return itable
@@ -1456,7 +1456,7 @@ class RealCBeamForceArray(RealForceObject):
             page_num += 1
         return page_num
 
-    def write_op2(self, op2, op2_ascii, itable, new_result,
+    def write_op2(self, op2_file, op2_ascii, itable, new_result,
                   date, is_mag_phase=False, endian='>'):
         """writes an OP2"""
         frame = inspect.currentframe()
@@ -1464,7 +1464,7 @@ class RealCBeamForceArray(RealForceObject):
         op2_ascii.write(f'{self.__class__.__name__}.write_op2: {call_frame[1][3]}\n')
 
         if itable == -1:
-            self._write_table_header(op2, op2_ascii, date)
+            self._write_table_header(op2_file, op2_ascii, date)
             itable = -3
 
         eids = self.element_node[:, 0]
@@ -1506,7 +1506,7 @@ class RealCBeamForceArray(RealForceObject):
 
         op2_ascii.write(f'nelements={nelements:d}\n')
         for itime in range(self.ntimes):
-            self._write_table_3(op2, op2_ascii, new_result, itable, itime)
+            self._write_table_3(op2_file, op2_ascii, new_result, itable, itime)
 
             # record 4
             itable -= 1
@@ -1515,7 +1515,7 @@ class RealCBeamForceArray(RealForceObject):
                       4, 0, 4,
                       4, ntotal, 4,
                       4 * ntotal]
-            op2.write(pack('%ii' % len(header), *header))
+            op2_file.write(pack('%ii' % len(header), *header))
             op2_ascii.write('r4 [4, 0, 4]\n')
             op2_ascii.write(f'r4 [4, {itable:d}, 4]\n')
             op2_ascii.write(f'r4 [4, {4 * ntotal:d}, 4]\n')
@@ -1538,7 +1538,7 @@ class RealCBeamForceArray(RealForceObject):
                     eid_device = eids_device[ielement]
                     nid = nids[ielement]
                     data = [eid_device, nid, sdi, bm1i, bm2i, ts1i, ts2i, afi, ttrqi, wtrqi] # 10
-                    op2.write(struct1.pack(*data))
+                    op2_file.write(struct1.pack(*data))
                     ielement += 1
                     icount = 1
                 elif nid > 0 and icount > 0:
@@ -1547,20 +1547,20 @@ class RealCBeamForceArray(RealForceObject):
                     data = [0, 0., 0., 0., 0., 0., 0., 0., 0.]
                     #print('***adding %s\n' % (10-icount))
                     for unused_i in range(10 - icount):
-                        op2.write(struct2.pack(*data))
+                        op2_file.write(struct2.pack(*data))
                         nwide += len(data)
 
                     eid_device2 = eids_device[ielement]
                     assert eid_device == eid_device2
                     nid = nids[ielement]
                     data = [nid, sdi, bm1i, bm2i, ts1i, ts2i, afi, ttrqi, wtrqi] # 9
-                    op2.write(struct2.pack(*data))
+                    op2_file.write(struct2.pack(*data))
                     ielement += 1
                     icount = 0
                 else:
                     raise RuntimeError('CBEAM op2 writer')
                     #data = [0, xxb, sxc, sxd, sxe, sxf, smax, smin, smt, smc]  # 10
-                    #op2.write(struct2.pack(*data))
+                    #op2_file.write(struct2.pack(*data))
                     #icount += 1
 
                 op2_ascii.write('  eid_device=%s data=%s\n' % (eid_device, str(data)))
@@ -1570,7 +1570,7 @@ class RealCBeamForceArray(RealForceObject):
 
             itable -= 1
             header = [4 * ntotal,]
-            op2.write(pack('i', *header))
+            op2_file.write(pack('i', *header))
             op2_ascii.write('footer = %s\n' % header)
             new_result = False
         return itable
@@ -1843,7 +1843,7 @@ class RealCShearForceArray(RealForceObject):
             page_num += 1
         return page_num - 1
 
-    def write_op2(self, op2, op2_ascii, itable, new_result, date,
+    def write_op2(self, op2_file, op2_ascii, itable, new_result, date,
                   is_mag_phase=False, endian='>'):
         """writes an OP2"""
         frame = inspect.currentframe()
@@ -1851,7 +1851,7 @@ class RealCShearForceArray(RealForceObject):
         op2_ascii.write(f'{self.__class__.__name__}.write_op2: {call_frame[1][3]}\n')
 
         if itable == -1:
-            self._write_table_header(op2, op2_ascii, date)
+            self._write_table_header(op2_file, op2_ascii, date)
             itable = -3
 
         #if isinstance(self.nonlinear_factor, float):
@@ -1895,7 +1895,7 @@ class RealCShearForceArray(RealForceObject):
 
         for itime in range(self.ntimes):
             #print('3, %s' % itable)
-            self._write_table_3(op2, op2_ascii, new_result, itable, itime)
+            self._write_table_3(op2_file, op2_ascii, new_result, itable, itime)
 
             # record 4
             #print('stress itable = %s' % itable)
@@ -1906,7 +1906,7 @@ class RealCShearForceArray(RealForceObject):
                       4, 0, 4,
                       4, ntotal, 4,
                       4 * ntotal]
-            op2.write(pack('%ii' % len(header), *header))
+            op2_file.write(pack('%ii' % len(header), *header))
             op2_ascii.write('r4 [4, 0, 4]\n')
             op2_ascii.write(f'r4 [4, {itable:d}, 4]\n')
             op2_ascii.write(f'r4 [4, {4 * ntotal:d}, 4]\n')
@@ -1933,7 +1933,7 @@ class RealCShearForceArray(RealForceObject):
                  kick1i, tau12i, kick2i, tau23i, kick3i, tau34i, kick4i, tau41i) in zip(
                     eids, eids_device, f14, f12, f21, f23, f32, f34, f43, f41,
                     kick1, tau12, kick2, tau23, kick3, tau34, kick4, tau41):
-                op2.write(struct1.pack(
+                op2_file.write(struct1.pack(
                             eid_device, f14i, f12i, f21i, f23i, f32i, f34i, f43i, f41i,
                             kick1i, tau12i, kick2i, tau23i, kick3i, tau34i, kick4i, tau41i))
 
@@ -1956,7 +1956,7 @@ class RealCShearForceArray(RealForceObject):
 
             itable -= 1
             header = [4 * ntotal,]
-            op2.write(pack('i', *header))
+            op2_file.write(pack('i', *header))
             op2_ascii.write('footer = %s\n' % header)
             new_result = False
         return itable
@@ -2446,7 +2446,7 @@ class RealPlateForceArray(RealForceObject):  # 33-CQUAD4, 74-CTRIA3
             page_num += 1
         return page_num - 1
 
-    def write_op2(self, op2, op2_ascii, itable, new_result,
+    def write_op2(self, op2_file, op2_ascii, itable, new_result,
                   date, is_mag_phase=False, endian='>'):
         """writes an OP2"""
         frame = inspect.currentframe()
@@ -2454,7 +2454,7 @@ class RealPlateForceArray(RealForceObject):  # 33-CQUAD4, 74-CTRIA3
         op2_ascii.write(f'{self.__class__.__name__}.write_op2: {call_frame[1][3]}\n')
 
         if itable == -1:
-            self._write_table_header(op2, op2_ascii, date)
+            self._write_table_header(op2_file, op2_ascii, date)
             itable = -3
 
         #if 'CTRIA3' in self.element_name:
@@ -2510,7 +2510,7 @@ class RealPlateForceArray(RealForceObject):  # 33-CQUAD4, 74-CTRIA3
 
         op2_ascii.write(f'nelements={nelements:d}\n')
         for itime in range(self.ntimes):
-            self._write_table_3(op2, op2_ascii, new_result, itable, itime)
+            self._write_table_3(op2_file, op2_ascii, new_result, itable, itime)
 
             # record 4
             #print('stress itable = %s' % itable)
@@ -2520,7 +2520,7 @@ class RealPlateForceArray(RealForceObject):  # 33-CQUAD4, 74-CTRIA3
                       4, 0, 4,
                       4, ntotal, 4,
                       4 * ntotal]
-            op2.write(pack('%ii' % len(header), *header))
+            op2_file.write(pack('%ii' % len(header), *header))
             op2_ascii.write('r4 [4, 0, 4]\n')
             op2_ascii.write(f'r4 [4, {itable:d}, 4]\n')
             op2_ascii.write(f'r4 [4, {4 * ntotal:d}, 4]\n')
@@ -2539,14 +2539,14 @@ class RealPlateForceArray(RealForceObject):  # 33-CQUAD4, 74-CTRIA3
                 data = [eid_device, mxi, myi, mxyi, bmxi, bmyi, bmxyi, txi, tyi]
                 #[mxi, myi, mxyi, bmxi, bmyi, bmxyi, txi, tyi] = write_floats_13e(
                 #    [mxi, myi, mxyi, bmxi, bmyi, bmxyi, txi, tyi])
-                op2.write(structi.pack(*data))
+                op2_file.write(structi.pack(*data))
                 op2_ascii.write('  eid_device=%s data=%s\n' % (eid_device, str(data[1:])))
                 nwide += len(data)
 
             assert nwide == ntotal, f'nwide={nwide} ntotal={ntotal}'
             itable -= 1
             header = [4 * ntotal,]
-            op2.write(pack('i', *header))
+            op2_file.write(pack('i', *header))
             op2_ascii.write('footer = %s\n' % header)
             new_result = False
         return itable
@@ -2854,7 +2854,7 @@ class RealPlateBilinearForceArray(RealForceObject):  # 144-CQUAD4
             page_num += 1
         return page_num - 1
 
-    def write_op2(self, op2, op2_ascii, itable, new_result,
+    def write_op2(self, op2_file, op2_ascii, itable, new_result,
                   date, is_mag_phase=False, endian='>'):
         """writes an OP2"""
         frame = inspect.currentframe()
@@ -2862,7 +2862,7 @@ class RealPlateBilinearForceArray(RealForceObject):  # 144-CQUAD4
         op2_ascii.write(f'{self.__class__.__name__}.write_op2: {call_frame[1][3]}\n')
 
         if itable == -1:
-            self._write_table_header(op2, op2_ascii, date)
+            self._write_table_header(op2_file, op2_ascii, date)
             itable = -3
 
         (unused_elem_name, nnodes, unused_msg_temp) = self.get_f06_header(is_mag_phase)
@@ -2927,7 +2927,7 @@ class RealPlateBilinearForceArray(RealForceObject):  # 144-CQUAD4
 
         op2_ascii.write(f'nelements={nelements:d}\n')
         for itime in range(self.ntimes):
-            self._write_table_3(op2, op2_ascii, new_result, itable, itime)
+            self._write_table_3(op2_file, op2_ascii, new_result, itable, itime)
 
             # record 4
             #print('stress itable = %s' % itable)
@@ -2937,7 +2937,7 @@ class RealPlateBilinearForceArray(RealForceObject):  # 144-CQUAD4
                       4, 0, 4,
                       4, ntotal, 4,
                       4 * ntotal]
-            op2.write(pack('%ii' % len(header), *header))
+            op2_file.write(pack('%ii' % len(header), *header))
             op2_ascii.write('r4 [4, 0, 4]\n')
             op2_ascii.write(f'r4 [4, {itable:d}, 4]\n')
             op2_ascii.write(f'r4 [4, {4 * ntotal:d}, 4]\n')
@@ -2958,13 +2958,13 @@ class RealPlateBilinearForceArray(RealForceObject):  # 144-CQUAD4
 
                 if i == 0:
                     data = [eid_device, cen_word, nnodes, mxi, myi, mxyi, bmxi, bmyi, bmxyi, txi, tyi]
-                    op2.write(struct1.pack(*data))
+                    op2_file.write(struct1.pack(*data))
                     op2_ascii.write(
                         '0  %8i    %s %-13s %-13s %-13s %-13s %-13s %-13s %-13s %s\n' % (
                             eid, cen_word, mxi, myi, mxyi, bmxi, bmyi, bmxyi, txi, tyi))
                 else:
                     data = [nid, mxi, myi, mxyi, bmxi, bmyi, bmxyi, txi, tyi]
-                    op2.write(struct2.pack(*data))
+                    op2_file.write(struct2.pack(*data))
                     op2_ascii.write(
                         '            %8i %-13s %-13s %-13s %-13s %-13s %-13s %-13s %s\n' % (
                             nid, mxi, myi, mxyi, bmxi, bmyi, bmxyi, txi, tyi))
@@ -2975,7 +2975,7 @@ class RealPlateBilinearForceArray(RealForceObject):  # 144-CQUAD4
             assert nwide == ntotal, f'nwide={nwide} ntotal={ntotal}'
             itable -= 1
             header = [4 * ntotal,]
-            op2.write(pack('i', *header))
+            op2_file.write(pack('i', *header))
             op2_ascii.write('footer = %s\n' % header)
             new_result = False
         return itable
@@ -3196,7 +3196,7 @@ class RealCBarFastForceArray(RealForceObject):
                     raise ValueError(msg)
         return True
 
-    def write_op2(self, op2, op2_ascii, itable, new_result,
+    def write_op2(self, op2_file, op2_ascii, itable, new_result,
                   date, is_mag_phase=False, endian='>'):
         """writes an OP2"""
         frame = inspect.currentframe()
@@ -3204,7 +3204,7 @@ class RealCBarFastForceArray(RealForceObject):
         op2_ascii.write(f'{self.__class__.__name__}.write_op2: {call_frame[1][3]}\n')
 
         if itable == -1:
-            self._write_table_header(op2, op2_ascii, date)
+            self._write_table_header(op2_file, op2_ascii, date)
             itable = -3
 
         #if isinstance(self.nonlinear_factor, float):
@@ -3244,7 +3244,7 @@ class RealCBarFastForceArray(RealForceObject):
 
         op2_ascii.write('%s-nelements=%i\n' % (self.element_name, nelements))
         for itime in range(self.ntimes):
-            self._write_table_3(op2, op2_ascii, new_result, itable, itime)
+            self._write_table_3(op2_file, op2_ascii, new_result, itable, itime)
 
             # record 4
             #print('stress itable = %s' % itable)
@@ -3254,7 +3254,7 @@ class RealCBarFastForceArray(RealForceObject):
                       4, 0, 4,
                       4, ntotal, 4,
                       4 * ntotal]
-            op2.write(pack('%ii' % len(header), *header))
+            op2_file.write(pack('%ii' % len(header), *header))
             op2_ascii.write('r4 [4, 0, 4]\n')
             op2_ascii.write(f'r4 [4, {itable:d}, 4]\n')
             op2_ascii.write(f'r4 [4, {4 * ntotal:d}, 4]\n')
@@ -3272,11 +3272,11 @@ class RealCBarFastForceArray(RealForceObject):
 
                 data = [eid_device, bm1ai, bm2ai, bm1bi, bm2bi, ts1i, ts2i, afi, trqi]
                 op2_ascii.write('  eid_device=%s data=%s\n' % (eid_device, str(data)))
-                op2.write(struct1.pack(*data))
+                op2_file.write(struct1.pack(*data))
 
             itable -= 1
             header = [4 * ntotal,]
-            op2.write(pack('i', *header))
+            op2_file.write(pack('i', *header))
             op2_ascii.write('footer = %s\n' % header)
             new_result = False
         return itable
@@ -3709,7 +3709,7 @@ class RealCBar100ForceArray(RealForceObject):  # 100-CBAR
             f06_file.write(page_stamp % page_num)
         return page_num
 
-    def write_op2(self, op2, op2_ascii, itable, new_result,
+    def write_op2(self, op2_file, op2_ascii, itable, new_result,
                   date, is_mag_phase=False, endian='>'):
         """writes an OP2"""
         frame = inspect.currentframe()
@@ -3717,7 +3717,7 @@ class RealCBar100ForceArray(RealForceObject):  # 100-CBAR
         op2_ascii.write(f'{self.__class__.__name__}.write_op2: {call_frame[1][3]}\n')
 
         if itable == -1:
-            self._write_table_header(op2, op2_ascii, date)
+            self._write_table_header(op2_file, op2_ascii, date)
             itable = -3
 
         #if isinstance(self.nonlinear_factor, float):
@@ -3764,7 +3764,7 @@ class RealCBar100ForceArray(RealForceObject):  # 100-CBAR
         #ntimes = self.data.shape[0]
         struct1 = Struct(endian + b'i7f')
         for itime in range(self.ntimes):
-            self._write_table_3(op2, op2_ascii, new_result, itable, itime)
+            self._write_table_3(op2_file, op2_ascii, new_result, itable, itime)
 
             # record 4
             #print('stress itable = %s' % itable)
@@ -3774,7 +3774,7 @@ class RealCBar100ForceArray(RealForceObject):  # 100-CBAR
                       4, 0, 4,
                       4, ntotal, 4,
                       4 * ntotal]
-            op2.write(pack('%ii' % len(header), *header))
+            op2_file.write(pack('%ii' % len(header), *header))
             op2_ascii.write('r4 [4, 0, 4]\n')
             op2_ascii.write(f'r4 [4, {itable:d}, 4]\n')
             op2_ascii.write(f'r4 [4, {4 * ntotal:d}, 4]\n')
@@ -3795,11 +3795,11 @@ class RealCBar100ForceArray(RealForceObject):  # 100-CBAR
                     '     %8i   %4.3f  %-13s  %-13s     %-13s  %-13s         %-13s      %s\n' % (
                         eid, sdi, sbm1i, sbm2i, sts1i, sts2i, safi, strqi))
                 data = [eid_device, sdi, bm1i, bm2i, ts1i, ts2i, afi, trqi]
-                op2.write(struct1.pack(*data))
+                op2_file.write(struct1.pack(*data))
 
             itable -= 1
             header = [4 * ntotal,]
-            op2.write(pack('i', *header))
+            op2_file.write(pack('i', *header))
             op2_ascii.write('footer = %s\n' % header)
             new_result = False
         return itable
@@ -4955,7 +4955,7 @@ class RealForceMomentArray(RealForceObject):
             page_num += 1
         return page_num - 1
 
-    def write_op2(self, op2, op2_ascii, itable, new_result,
+    def write_op2(self, op2_file, op2_ascii, itable, new_result,
                   date, is_mag_phase=False, endian='>'):
         """writes an OP2"""
         frame = inspect.currentframe()
@@ -4963,7 +4963,7 @@ class RealForceMomentArray(RealForceObject):
         op2_ascii.write(f'{self.__class__.__name__}.write_op2: {call_frame[1][3]}\n')
 
         if itable == -1:
-            self._write_table_header(op2, op2_ascii, date)
+            self._write_table_header(op2_file, op2_ascii, date)
             itable = -3
 
         #if isinstance(self.nonlinear_factor, float):
@@ -5005,7 +5005,7 @@ class RealForceMomentArray(RealForceObject):
 
         op2_ascii.write('%s-nelements=%i\n' % (self.element_name, nelements))
         for itime in range(self.ntimes):
-            self._write_table_3(op2, op2_ascii, new_result, itable, itime)
+            self._write_table_3(op2_file, op2_ascii, new_result, itable, itime)
 
             # record 4
             itable -= 1
@@ -5014,7 +5014,7 @@ class RealForceMomentArray(RealForceObject):
                       4, 0, 4,
                       4, ntotal, 4,
                       4 * ntotal]
-            op2.write(pack('%ii' % len(header), *header))
+            op2_file.write(pack('%ii' % len(header), *header))
             op2_ascii.write('r4 [4, 0, 4]\n')
             op2_ascii.write(f'r4 [4, {itable:d}, 4]\n')
             op2_ascii.write(f'r4 [4, {4 * ntotal:d}, 4]\n')
@@ -5029,11 +5029,11 @@ class RealForceMomentArray(RealForceObject):
             for eid, fxi, fyi, fzi, mxi, myi, mzi in zip(eids_device, fx, fy, fz, mx, my, mz):
                 data = [eid, fxi, fyi, fzi, mxi, myi, mzi]
                 op2_ascii.write('  eid=%s data=%s\n' % (eid, str(data[1:])))
-                op2.write(struct1.pack(*data))
+                op2_file.write(struct1.pack(*data))
 
             itable -= 1
             header = [4 * ntotal,]
-            op2.write(pack('i', *header))
+            op2_file.write(pack('i', *header))
             op2_ascii.write('footer = %s\n' % header)
             new_result = False
         return itable

@@ -507,7 +507,7 @@ class RealStrainEnergyArray(BaseElement):
             break
         return page_num - 1
 
-    def write_op2(self, op2, op2_ascii, itable, new_result, date,
+    def write_op2(self, op2_file, op2_ascii, itable, new_result, date,
                   is_mag_phase=False, endian='>'):
         """writes an OP2"""
         import inspect
@@ -517,7 +517,7 @@ class RealStrainEnergyArray(BaseElement):
         op2_ascii.write(f'{self.__class__.__name__}.write_op2: {call_frame[1][3]}\n')
 
         if itable == -1:
-            self._write_table_header(op2, op2_ascii, date)
+            self._write_table_header(op2_file, op2_ascii, date)
             itable = -3
 
         ntotali = self.num_wide
@@ -537,7 +537,7 @@ class RealStrainEnergyArray(BaseElement):
             op2_ascii.write(f'nelements={nelements:d}\n')
 
             eids_device = eids * 10 + self.device_code
-            self._write_table_3(op2, op2_ascii, new_result, itable, itime)
+            self._write_table_3(op2_file, op2_ascii, new_result, itable, itime)
 
             # record 4
             itable -= 1
@@ -546,7 +546,7 @@ class RealStrainEnergyArray(BaseElement):
                       4, 0, 4,
                       4, ntotal, 4,
                       4 * ntotal]
-            op2.write(pack('%ii' % len(header), *header))
+            op2_file.write(pack('%ii' % len(header), *header))
             op2_ascii.write('r4 [4, 0, 4]\n')
             op2_ascii.write(f'r4 [4, {itable:d}, 4]\n')
             op2_ascii.write(f'r4 [4, {4 * ntotal:d}, 4]\n')
@@ -567,16 +567,16 @@ class RealStrainEnergyArray(BaseElement):
                                #' %26s   %-13s  %-13s  %-13s  %-13s  %-13s  %s\n' % (
                                    #eid, fxir, fyir, fzir, mxir, myir, mzir,
                                    #'', fxii, fyii, fzii, mxii, myii, mzii))
-                op2.write(struct1.pack(*data))
+                op2_file.write(struct1.pack(*data))
 
             itable -= 1
             header = [4 * ntotal,]
-            op2.write(pack('i', *header))
+            op2_file.write(pack('i', *header))
             op2_ascii.write('footer = %s\n' % header)
             new_result = False
         return itable
 
-    def _write_table_3(self, op2, op2_ascii, new_result, itable, itime): #itable=-3, itime=0):
+    def _write_table_3(self, op2_file, op2_ascii, new_result, itable, itime): #itable=-3, itime=0):
         import inspect
         from struct import pack
         frame = inspect.currentframe()
@@ -595,7 +595,7 @@ class RealStrainEnergyArray(BaseElement):
                 4, 0, 4,
                 4, 146, 4,
             ]
-        op2.write(pack(b'%ii' % len(header), *header))
+        op2_file.write(pack(b'%ii' % len(header), *header))
         op2_ascii.write('table_3_header = %s\n' % header)
 
         approach_code = self.approach_code
@@ -731,7 +731,7 @@ class RealStrainEnergyArray(BaseElement):
         #f.write(pack(fascii, '%s header 3c' % self.table_name, fmt, data))
         op2_ascii.write('%s header 3c = %s\n' % (self.table_name, data))
 
-        op2.write(pack(fmt, *data))
+        op2_file.write(pack(fmt, *data))
 
 
 class ComplexStrainEnergyArray(BaseElement):

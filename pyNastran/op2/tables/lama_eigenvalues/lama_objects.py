@@ -108,7 +108,7 @@ class RealEigenvalues(BaseScalarObject):
         f06_file.write(''.join(msg))
         return page_num
 
-    def write_op2(self, op2, op2_ascii, itable, new_result, date,
+    def write_op2(self, op2_file, op2_ascii, itable, new_result, date,
                   is_mag_phase=False, endian='>'):
         """writes an OP2"""
         import inspect
@@ -118,7 +118,7 @@ class RealEigenvalues(BaseScalarObject):
         op2_ascii.write(f'{self.__class__.__name__}.write_op2: {call_frame[1][3]}\n')
 
         if itable == -1:
-            _write_table_header(self.table_name, op2, op2_ascii, date)
+            _write_table_header(self.table_name, op2_file, op2_ascii, date)
             itable = -3
 
         #if isinstance(self.nonlinear_factor, float):
@@ -149,7 +149,7 @@ class RealEigenvalues(BaseScalarObject):
 
         structi = Struct(endian + b'ii5f')
 
-        self._write_table_3(op2, op2_ascii, new_result, itable, 0)
+        self._write_table_3(op2_file, op2_ascii, new_result, itable, 0)
 
         # record 4
         #print('stress itable = %s' % itable)
@@ -160,7 +160,7 @@ class RealEigenvalues(BaseScalarObject):
                   4, 0, 4,
                   4, ntotal, 4,
                   4 * ntotal]
-        op2.write(pack('%ii' % len(header), *header))
+        op2_file.write(pack('%ii' % len(header), *header))
         op2_ascii.write('r4 [4, 0, 4]\n')
         op2_ascii.write(f'r4 [4, {itable:d}, 4]\n')
         op2_ascii.write(f'r4 [4, {4 * ntotal:d}, 4]\n')
@@ -182,15 +182,15 @@ class RealEigenvalues(BaseScalarObject):
             op2_ascii.write(' %8s  %8s       %-13s       %-13s       %-13s       %-13s       %s\n' % (
                 mode_num, extract_order, eigen, omega, freq, gen_mass, gen_stiffness))
 
-            op2.write(structi.pack(*data))
+            op2_file.write(structi.pack(*data))
 
         itable -= 1
         header = [4 * ntotal,]
-        op2.write(pack('i', *header))
+        op2_file.write(pack('i', *header))
         op2_ascii.write('footer = %s\n' % header)
         return itable
 
-    def _write_table_3(self, op2, op2_ascii, new_result, itable, itime): #itable=-3, itime=0):
+    def _write_table_3(self, op2_file, op2_ascii, new_result, itable, itime): #itable=-3, itime=0):
         import inspect
         from struct import pack
         frame = inspect.currentframe()
@@ -209,7 +209,7 @@ class RealEigenvalues(BaseScalarObject):
                 4, 0, 4,
                 4, 146, 4,
             ]
-        op2.write(pack(b'%ii' % len(header), *header))
+        op2_file.write(pack(b'%ii' % len(header), *header))
         op2_ascii.write('table_3_header = %s\n' % header)
 
         #approach_code = self.approach_code
@@ -290,7 +290,7 @@ class RealEigenvalues(BaseScalarObject):
         #print(data)
         #f.write(pack(fascii, '%s header 3c' % self.table_name, fmt, data))
         op2_ascii.write('%s header 3c = %s\n' % (self.table_name, data))
-        op2.write(pack(fmt, *data))
+        op2_file.write(pack(fmt, *data))
 
     def __repr__(self):
         if self.data_frame is not None:
@@ -468,7 +468,7 @@ class ComplexEigenvalues(BaseScalarObject):
         f06_file.write(''.join(msg))
         return page_num
 
-    def write_op2(self, op2, op2_ascii, itable, new_result, date,
+    def write_op2(self, op2_file, op2_ascii, itable, new_result, date,
                   is_mag_phase=False, endian='>'):
         """writes an OP2"""
         import inspect
@@ -478,7 +478,7 @@ class ComplexEigenvalues(BaseScalarObject):
         op2_ascii.write(f'{self.__class__.__name__}.write_op2: {call_frame[1][3]}\n')
 
         if itable == -1:
-            _write_table_header(self.table_name, op2, op2_ascii, date)
+            _write_table_header(self.table_name, op2_file, op2_ascii, date)
             itable = -3
 
         #if isinstance(self.nonlinear_factor, float):
@@ -509,7 +509,7 @@ class ComplexEigenvalues(BaseScalarObject):
 
         structi = Struct(endian + b'ii4f')
 
-        self._write_table_3(op2, op2_ascii, new_result, itable, 0)
+        self._write_table_3(op2_file, op2_ascii, new_result, itable, 0)
 
         # record 4
         #print('stress itable = %s' % itable)
@@ -520,7 +520,7 @@ class ComplexEigenvalues(BaseScalarObject):
                   4, 0, 4,
                   4, ntotal, 4,
                   4 * ntotal]
-        op2.write(pack('%ii' % len(header), *header))
+        op2_file.write(pack('%ii' % len(header), *header))
         op2_ascii.write('r4 [4, 0, 4]\n')
         op2_ascii.write(f'r4 [4, {itable:d}, 4]\n')
         op2_ascii.write(f'r4 [4, {4 * ntotal:d}, 4]\n')
@@ -540,15 +540,15 @@ class ComplexEigenvalues(BaseScalarObject):
             op2_ascii.write(' %22s  %10s         %-15s  %-13s         %-13s         %s\n' % (
                 mode_num, extract_order, eigr, eigi, freq, damping))
 
-            op2.write(structi.pack(*data))
+            op2_file.write(structi.pack(*data))
 
         itable -= 1
         header = [4 * ntotal,]
-        op2.write(pack('i', *header))
+        op2_file.write(pack('i', *header))
         op2_ascii.write('footer = %s\n' % header)
         return itable
 
-    def _write_table_3(self, op2, op2_ascii, new_result, itable, itime): #itable=-3, itime=0):
+    def _write_table_3(self, op2_file, op2_ascii, new_result, itable, itime): #itable=-3, itime=0):
         import inspect
         from struct import pack
         frame = inspect.currentframe()
@@ -567,7 +567,7 @@ class ComplexEigenvalues(BaseScalarObject):
                 4, 0, 4,
                 4, 146, 4,
             ]
-        op2.write(pack(b'%ii' % len(header), *header))
+        op2_file.write(pack(b'%ii' % len(header), *header))
         op2_ascii.write('table_3_header = %s\n' % header)
 
         #approach_code = self.approach_code
@@ -648,7 +648,7 @@ class ComplexEigenvalues(BaseScalarObject):
         #print(data)
         #f.write(pack(fascii, '%s header 3c' % self.table_name, fmt, data))
         op2_ascii.write('%s header 3c = %s\n' % (self.table_name, data))
-        op2.write(pack(fmt, *data))
+        op2_file.write(pack(fmt, *data))
 
     def __repr__(self):
         msg = '%-7s %15s %15s %10s %10s %10s\n' % (

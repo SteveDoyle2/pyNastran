@@ -587,7 +587,7 @@ class ComplexPlateArray(OES_Object):
                     '', '', fdr, oxxr, oxxi, oyyr, oyyi, txyr, txyi))
             ilayer0 = not ilayer0
 
-    def write_op2(self, op2, op2_ascii, itable, new_result,
+    def write_op2(self, op2_file, op2_ascii, itable, new_result,
                   date, is_mag_phase=False, endian='>') -> int:
         """writes an OP2"""
         import inspect
@@ -597,7 +597,7 @@ class ComplexPlateArray(OES_Object):
         op2_ascii.write(f'{self.__class__.__name__}.write_op2: {call_frame[1][3]}\n')
 
         if itable == -1:
-            self._write_table_header(op2, op2_ascii, date)
+            self._write_table_header(op2_file, op2_ascii, date)
             itable = -3
 
         nnodes = self.nnodes_per_element
@@ -645,11 +645,11 @@ class ComplexPlateArray(OES_Object):
         op2_ascii.write(f'nelements={nelements:d}\n')
         if nnodes == 1: # CTRIA3 centroid
             itable = self._write_op2_ctria3(
-                op2, op2_ascii, new_result, itable,
+                op2_file, op2_ascii, new_result, itable,
                 ntotal, eids_device)
             return itable
         for itime in range(self.ntimes):
-            self._write_table_3(op2, op2_ascii, new_result, itable, itime)
+            self._write_table_3(op2_file, op2_ascii, new_result, itable, itime)
 
             # record 4
             itable -= 1
@@ -658,7 +658,7 @@ class ComplexPlateArray(OES_Object):
                       4, 0, 4,
                       4, ntotal, 4,
                       4 * ntotal]
-            op2.write(pack('%ii' % len(header), *header))
+            op2_file.write(pack('%ii' % len(header), *header))
             op2_ascii.write('r4 [4, 0, 4]\n')
             op2_ascii.write(f'r4 [4, {itable:d}, 4]\n')
             op2_ascii.write(f'r4 [4, {4 * ntotal:d}, 4]\n')
@@ -678,21 +678,21 @@ class ComplexPlateArray(OES_Object):
                 if node == 0 and ilayer0:
                     data = [eid_device, b'CEN/', node, fd,
                             doxx.real, doxx.imag, doyy.real, doyy.imag, dtxy.real, dtxy.imag]
-                    op2.write(struct1.pack(*data))
+                    op2_file.write(struct1.pack(*data))
                     op2_ascii.write('eid=%s node=%s data=%s' % (eid, node, str(data[2:])))
                     #f06_file.write('0  %8i %8s  %-13s   %-13s / %-13s   %-13s / %-13s   %-13s / %s\n' % (
                         #eid, cen, fdr, oxxr, oxxi, oyyr, oyyi, txyr, txyi))
                 elif ilayer0:    # TODO: assuming 2 layers?
                     data = [node, fd,
                             doxx.real, doxx.imag, doyy.real, doyy.imag, dtxy.real, dtxy.imag]
-                    op2.write(struct2.pack(*data))
+                    op2_file.write(struct2.pack(*data))
                     op2_ascii.write('  node=%s data=%s' % (node, str(data[2:])))
                     #f06_file.write('   %8s %8i  %-13s   %-13s / %-13s   %-13s / %-13s   %-13s / %s\n' % (
                         #'', node, fdr, oxxr, oxxi, oyyr, oyyi, txyr, txyi))
                 else:
                     data = [fd,
                             doxx.real, doxx.imag, doyy.real, doyy.imag, dtxy.real, dtxy.imag]
-                    op2.write(struct3.pack(*data))
+                    op2_file.write(struct3.pack(*data))
                     op2_ascii.write('    data=%s' % (str(data[2:])))
                     #f06_file.write('   %8s %8s  %-13s   %-13s / %-13s   %-13s / %-13s   %-13s / %s\n\n' % (
                         #'', '', fdr, oxxr, oxxi, oyyr, oyyi, txyr, txyi))
@@ -702,17 +702,17 @@ class ComplexPlateArray(OES_Object):
             assert nwide == ntotal, f'nwide={nwide} ntotal={ntotal}'
             itable -= 1
             header = [4 * ntotal,]
-            op2.write(pack('i', *header))
+            op2_file.write(pack('i', *header))
             op2_ascii.write('footer = %s\n' % header)
             new_result = False
         return itable
 
-    def _write_op2_ctria3(self, op2, op2_ascii, new_result, itable,
+    def _write_op2_ctria3(self, op2_file, op2_ascii, new_result, itable,
                           ntotal, eids_device) -> int:
         struct1 = Struct(b'i 7f')
         struct2 = Struct(b'7f')
         for itime in range(self.ntimes):
-            self._write_table_3(op2, op2_ascii, new_result, itable, itime)
+            self._write_table_3(op2_file, op2_ascii, new_result, itable, itime)
             # record 4
             itable -= 1
             header = [4, itable, 4,
@@ -720,7 +720,7 @@ class ComplexPlateArray(OES_Object):
                       4, 0, 4,
                       4, ntotal, 4,
                       4 * ntotal]
-            op2.write(pack('%ii' % len(header), *header))
+            op2_file.write(pack('%ii' % len(header), *header))
             op2_ascii.write('r4 [4, 0, 4]\n')
             op2_ascii.write(f'r4 [4, {itable:d}, 4]\n')
             op2_ascii.write(f'r4 [4, {4 * ntotal:d}, 4]\n')
@@ -742,14 +742,14 @@ class ComplexPlateArray(OES_Object):
                     ndatai = 0
                     data = [eid_device, fd,
                             doxx.real, doxx.imag, doyy.real, doyy.imag, dtxy.real, dtxy.imag]
-                    op2.write(struct1.pack(*data))
+                    op2_file.write(struct1.pack(*data))
                     #op2_ascii.write('eid=%s node=%s data=%s' % (eid, node, str(data[2:])))
                     op2_ascii.write('0  %6i   %-13s     %-13s / %-13s     %-13s / %-13s     %-13s / %s\n' % (
                         eid, fd, doxx.real, doxx.imag, doyy.real, doyy.imag, dtxy.real, dtxy.imag, ))
                 else:
                     data = [fd,
                             doxx.real, doxx.imag, doyy.real, doyy.imag, dtxy.real, dtxy.imag]
-                    op2.write(struct2.pack(*data))
+                    op2_file.write(struct2.pack(*data))
                     #op2_ascii.write('    data=%s' % (str(data[2:])))
                     op2_ascii.write('   %6s   %-13s     %-13s / %-13s     %-13s / %-13s     %-13s / %s\n' % (
                         '', fd, doxx.real, doxx.imag, doyy.real, doyy.imag, dtxy.real, dtxy.imag))
@@ -759,7 +759,7 @@ class ComplexPlateArray(OES_Object):
             assert nwide == ntotal, f"numwide={self.num_wide} ndatai={ndatai} nwide={nwide} ntotal={ntotal} headers={self.get_headers()}"
             itable -= 1
             header = [4 * ntotal,]
-            op2.write(pack('i', *header))
+            op2_file.write(pack('i', *header))
             op2_ascii.write('footer = %s\n' % header)
             new_result = False
         return itable

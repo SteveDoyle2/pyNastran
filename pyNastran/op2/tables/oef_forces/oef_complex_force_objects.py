@@ -235,7 +235,7 @@ class ComplexRodForceArray(ComplexForceObject):
             page_num += 1
         return page_num - 1
 
-    def write_op2(self, op2, op2_ascii, itable, new_result, date,
+    def write_op2(self, op2_file, op2_ascii, itable, new_result, date,
                   is_mag_phase=False, endian='>'):
         """writes an OP2"""
         import inspect
@@ -245,7 +245,7 @@ class ComplexRodForceArray(ComplexForceObject):
         op2_ascii.write(f'{self.__class__.__name__}.write_op2: {call_frame[1][3]}\n')
 
         if itable == -1:
-            self._write_table_header(op2, op2_ascii, date)
+            self._write_table_header(op2_file, op2_ascii, date)
             itable = -3
 
         #eids = self.element
@@ -274,7 +274,7 @@ class ComplexRodForceArray(ComplexForceObject):
         op2_ascii.write(f'nelements={nelements:d}\n')
 
         for itime in range(self.ntimes):
-            self._write_table_3(op2, op2_ascii, new_result, itable, itime)
+            self._write_table_3(op2_file, op2_ascii, new_result, itable, itime)
 
             # record 4
             itable -= 1
@@ -283,7 +283,7 @@ class ComplexRodForceArray(ComplexForceObject):
                       4, 0, 4,
                       4, ntotal, 4,
                       4 * ntotal]
-            op2.write(pack('%ii' % len(header), *header))
+            op2_file.write(pack('%ii' % len(header), *header))
             op2_ascii.write('r4 [4, 0, 4]\n')
             op2_ascii.write(f'r4 [4, {itable:d}, 4]\n')
             op2_ascii.write(f'r4 [4, {4 * ntotal:d}, 4]\n')
@@ -294,11 +294,11 @@ class ComplexRodForceArray(ComplexForceObject):
             for eid_device, axiali, torsioni in zip(eids_device, axial, torsion):
                 data = [eid_device, axiali.real, torsioni.real, axiali.imag, torsioni.imag]
                 op2_ascii.write('  eid_device=%s data=%s\n' % (eid_device, tuple(data)))
-                op2.write(struct1.pack(*data))
+                op2_file.write(struct1.pack(*data))
 
             itable -= 1
             header = [4 * ntotal,]
-            op2.write(pack('i', *header))
+            op2_file.write(pack('i', *header))
             op2_ascii.write('footer = %s\n' % header)
             new_result = False
         return itable
@@ -807,7 +807,7 @@ class ComplexSpringDamperForceArray(ComplexForceObject):
             page_num += 1
         return page_num - 1
 
-    def write_op2(self, op2, op2_ascii, itable, new_result,
+    def write_op2(self, op2_file, op2_ascii, itable, new_result,
                   date, is_mag_phase=False, endian='>'):
         """writes an OP2"""
         import inspect
@@ -817,7 +817,7 @@ class ComplexSpringDamperForceArray(ComplexForceObject):
         op2_ascii.write(f'{self.__class__.__name__}.write_op2: {call_frame[1][3]}\n')
 
         if itable == -1:
-            self._write_table_header(op2, op2_ascii, date)
+            self._write_table_header(op2_file, op2_ascii, date)
             itable = -3
 
         #eids = self.element
@@ -851,7 +851,7 @@ class ComplexSpringDamperForceArray(ComplexForceObject):
 
         op2_ascii.write('%s-nelements=%i\n' % (self.element_name, nelements))
         for itime in range(self.ntimes):
-            self._write_table_3(op2, op2_ascii, new_result, itable, itime)
+            self._write_table_3(op2_file, op2_ascii, new_result, itable, itime)
 
             # record 4
             itable -= 1
@@ -860,7 +860,7 @@ class ComplexSpringDamperForceArray(ComplexForceObject):
                       4, 0, 4,
                       4, ntotal, 4,
                       4 * ntotal]
-            op2.write(pack('%ii' % len(header), *header))
+            op2_file.write(pack('%ii' % len(header), *header))
             op2_ascii.write('r4 [4, 0, 4]\n')
             op2_ascii.write(f'r4 [4, {itable:d}, 4]\n')
             op2_ascii.write(f'r4 [4, {4 * ntotal:d}, 4]\n')
@@ -870,11 +870,11 @@ class ComplexSpringDamperForceArray(ComplexForceObject):
             for eid, forcei in zip(eids_device, force):
                 data = [eid, forcei.real, forcei.imag]
                 op2_ascii.write('  eid=%s force=%s\n' % (eid, forcei))
-                op2.write(struct1.pack(*data))
+                op2_file.write(struct1.pack(*data))
 
             itable -= 1
             header = [4 * ntotal,]
-            op2.write(pack('i', *header))
+            op2_file.write(pack('i', *header))
             op2_ascii.write('footer = %s\n' % header)
             new_result = False
         return itable
@@ -1363,7 +1363,7 @@ class ComplexPlateForceArray(ComplexForceObject):
             page_num += 1
         return page_num - 1
 
-    def write_op2(self, op2, op2_ascii, itable, new_result,
+    def write_op2(self, op2_file, op2_ascii, itable, new_result,
                   date, is_mag_phase=False, endian='>'):
         """writes an OP2"""
         import inspect
@@ -1373,7 +1373,7 @@ class ComplexPlateForceArray(ComplexForceObject):
         op2_ascii.write(f'{self.__class__.__name__}.write_op2: {call_frame[1][3]}\n')
 
         if itable == -1:
-            self._write_table_header(op2, op2_ascii, date)
+            self._write_table_header(op2_file, op2_ascii, date)
             itable = -3
 
         #if isinstance(self.nonlinear_factor, float):
@@ -1413,7 +1413,7 @@ class ComplexPlateForceArray(ComplexForceObject):
 
         op2_ascii.write('%s-nelements=%i\n' % (self.element_name, nelements))
         for itime in range(self.ntimes):
-            self._write_table_3(op2, op2_ascii, new_result, itable, itime)
+            self._write_table_3(op2_file, op2_ascii, new_result, itable, itime)
 
             # record 4
             #print('stress itable = %s' % itable)
@@ -1423,7 +1423,7 @@ class ComplexPlateForceArray(ComplexForceObject):
                       4, 0, 4,
                       4, ntotal, 4,
                       4 * ntotal]
-            op2.write(pack('%ii' % len(header), *header))
+            op2_file.write(pack('%ii' % len(header), *header))
             op2_ascii.write('r4 [4, 0, 4]\n')
             op2_ascii.write(f'r4 [4, {itable:d}, 4]\n')
             op2_ascii.write(f'r4 [4, {4 * ntotal:d}, 4]\n')
@@ -1442,11 +1442,11 @@ class ComplexPlateForceArray(ComplexForceObject):
                         mxi.real, myi.real, mxyi.real, bmxi.real, bmyi.real, bmxyi.real, txi.real, tyi.real,
                         mxi.imag, myi.imag, mxyi.imag, bmxi.imag, bmyi.imag, bmxyi.imag, txi.imag, tyi.imag]
                 op2_ascii.write('  eid_device=%s data=%s\n' % (eid_device, str(data)))
-                op2.write(struct1.pack(*data))
+                op2_file.write(struct1.pack(*data))
 
             itable -= 1
             header = [4 * ntotal,]
-            op2.write(pack('i', *header))
+            op2_file.write(pack('i', *header))
             op2_ascii.write('footer = %s\n' % header)
             new_result = False
         return itable
@@ -1733,7 +1733,7 @@ class ComplexPlate2ForceArray(ComplexForceObject):
             page_num += 1
         return page_num - 1
 
-    def write_op2(self, op2, op2_ascii, itable, new_result,
+    def write_op2(self, op2_file, op2_ascii, itable, new_result,
                   date, is_mag_phase=False, endian='>'):
         """writes an OP2"""
         import inspect
@@ -1743,7 +1743,7 @@ class ComplexPlate2ForceArray(ComplexForceObject):
         op2_ascii.write(f'{self.__class__.__name__}.write_op2: {call_frame[1][3]}\n')
 
         if itable == -1:
-            self._write_table_header(op2, op2_ascii, date)
+            self._write_table_header(op2_file, op2_ascii, date)
             itable = -3
 
         #if isinstance(self.nonlinear_factor, float):
@@ -1791,7 +1791,7 @@ class ComplexPlate2ForceArray(ComplexForceObject):
 
         op2_ascii.write('%s-nelements=%i\n' % (self.element_name, nelements))
         for itime in range(self.ntimes):
-            self._write_table_3(op2, op2_ascii, new_result, itable, itime)
+            self._write_table_3(op2_file, op2_ascii, new_result, itable, itime)
 
             # record 4
             #print('stress itable = %s' % itable)
@@ -1801,7 +1801,7 @@ class ComplexPlate2ForceArray(ComplexForceObject):
                       4, 0, 4,
                       4, ntotal, 4,
                       4 * ntotal]
-            op2.write(pack('%ii' % len(header), *header))
+            op2_file.write(pack('%ii' % len(header), *header))
             op2_ascii.write('r4 [4, 0, 4]\n')
             op2_ascii.write(f'r4 [4, {itable:d}, 4]\n')
             op2_ascii.write(f'r4 [4, {4 * ntotal:d}, 4]\n')
@@ -1825,18 +1825,18 @@ class ComplexPlate2ForceArray(ComplexForceObject):
                             mxi.real, myi.real, mxyi.real, bmxi.real, bmyi.real, bmxyi.real, txi.real, tyi.real,
                             mxi.imag, myi.imag, mxyi.imag, bmxi.imag, bmyi.imag, bmxyi.imag, txi.imag, tyi.imag]
                     op2_ascii.write('  eid_device=%s data=%s\n' % (eid_device, str(data)))
-                    op2.write(struct1.pack(*data))
+                    op2_file.write(struct1.pack(*data))
                 else:
                     data = [nid,
                             mxi.real, myi.real, mxyi.real, bmxi.real, bmyi.real, bmxyi.real, txi.real, tyi.real,
                             mxi.imag, myi.imag, mxyi.imag, bmxi.imag, bmyi.imag, bmxyi.imag, txi.imag, tyi.imag]
                     op2_ascii.write('    data=%s\n' % (str(data)))
-                    op2.write(struct2.pack(*data))
+                    op2_file.write(struct2.pack(*data))
                 nwide += len(data)
             assert nwide == ntotal, 'nwide=%s ntotal=%s' % (nwide, ntotal)
             itable -= 1
             header = [4 * ntotal,]
-            op2.write(pack('i', *header))
+            op2_file.write(pack('i', *header))
             op2_ascii.write('footer = %s\n' % header)
             new_result = False
         return itable
@@ -2101,7 +2101,7 @@ class ComplexCBarWeldForceArray(ComplexForceObject):
             page_num += 1
         return page_num
 
-    def write_op2(self, op2, op2_ascii, itable, new_result,
+    def write_op2(self, op2_file, op2_ascii, itable, new_result,
                   date, is_mag_phase=False, endian='>'):
         """writes an OP2"""
         import inspect
@@ -2111,7 +2111,7 @@ class ComplexCBarWeldForceArray(ComplexForceObject):
         op2_ascii.write(f'{self.__class__.__name__}.write_op2: {call_frame[1][3]}\n')
 
         if itable == -1:
-            self._write_table_header(op2, op2_ascii, date)
+            self._write_table_header(op2_file, op2_ascii, date)
             itable = -3
 
         #if isinstance(self.nonlinear_factor, float):
@@ -2151,7 +2151,7 @@ class ComplexCBarWeldForceArray(ComplexForceObject):
 
         op2_ascii.write('%s-nelements=%i\n' % (self.element_name, nelements))
         for itime in range(self.ntimes):
-            self._write_table_3(op2, op2_ascii, new_result, itable, itime)
+            self._write_table_3(op2_file, op2_ascii, new_result, itable, itime)
 
             # record 4
             #print('stress itable = %s' % itable)
@@ -2161,7 +2161,7 @@ class ComplexCBarWeldForceArray(ComplexForceObject):
                       4, 0, 4,
                       4, ntotal, 4,
                       4 * ntotal]
-            op2.write(pack('%ii' % len(header), *header))
+            op2_file.write(pack('%ii' % len(header), *header))
             op2_ascii.write('r4 [4, 0, 4]\n')
             op2_ascii.write(f'r4 [4, {itable:d}, 4]\n')
             op2_ascii.write(f'r4 [4, {4 * ntotal:d}, 4]\n')
@@ -2184,11 +2184,11 @@ class ComplexCBarWeldForceArray(ComplexForceObject):
                         bm1ai.real, bm2ai.real, bm1bi.real, bm2bi.real, ts1i.real, ts2i.real, afi.real, trqi.real,
                         bm1ai.imag, bm2ai.imag, bm1bi.imag, bm2bi.imag, ts1i.imag, ts2i.imag, afi.imag, trqi.imag]
                 op2_ascii.write('  eid_device=%s data=%s\n' % (eid_device, str(data)))
-                op2.write(struct1.pack(*data))
+                op2_file.write(struct1.pack(*data))
 
             itable -= 1
             header = [4 * ntotal,]
-            op2.write(pack('i', *header))
+            op2_file.write(pack('i', *header))
             op2_ascii.write('footer = %s\n' % header)
             new_result = False
         return itable
@@ -2504,7 +2504,7 @@ class ComplexCBeamForceArray(ComplexForceObject):
             page_num += 1
         return page_num
 
-    def write_op2(self, op2, op2_ascii, itable, new_result,
+    def write_op2(self, op2_file, op2_ascii, itable, new_result,
                   date, is_mag_phase=False, endian='>'):
         """writes an OP2"""
         import inspect
@@ -2514,7 +2514,7 @@ class ComplexCBeamForceArray(ComplexForceObject):
         op2_ascii.write(f'{self.__class__.__name__}.write_op2: {call_frame[1][3]}\n')
 
         if itable == -1:
-            self._write_table_header(op2, op2_ascii, date)
+            self._write_table_header(op2_file, op2_ascii, date)
             itable = -3
 
         eids = self.element_node[:, 0]
@@ -2550,7 +2550,7 @@ class ComplexCBeamForceArray(ComplexForceObject):
 
         op2_ascii.write(f'nelements={nelements:d}\n')
         for itime in range(self.ntimes):
-            self._write_table_3(op2, op2_ascii, new_result, itable, itime)
+            self._write_table_3(op2_file, op2_ascii, new_result, itable, itime)
 
             # record 4
             itable -= 1
@@ -2559,7 +2559,7 @@ class ComplexCBeamForceArray(ComplexForceObject):
                       4, 0, 4,
                       4, ntotal, 4,
                       4 * ntotal]
-            op2.write(pack('%ii' % len(header), *header))
+            op2_file.write(pack('%ii' % len(header), *header))
             op2_ascii.write('r4 [4, 0, 4]\n')
             op2_ascii.write(f'r4 [4, {itable:d}, 4]\n')
             op2_ascii.write(f'r4 [4, {4 * ntotal:d}, 4]\n')
@@ -2584,7 +2584,7 @@ class ComplexCBeamForceArray(ComplexForceObject):
                     data = [eid_device, nid, sdi.real,
                             bm1i.real, bm2i.real, ts1i.real, ts2i.real, afi.real, ttrqi.real, wtrqi.real,
                             bm1i.imag, bm2i.imag, ts1i.imag, ts2i.imag, afi.imag, ttrqi.imag, wtrqi.imag] # 17
-                    op2.write(struct1.pack(*data))
+                    op2_file.write(struct1.pack(*data))
                     ielement += 1
                     icount = 1
                 elif nid > 0 and icount > 0:
@@ -2595,7 +2595,7 @@ class ComplexCBeamForceArray(ComplexForceObject):
                             0., 0., 0., 0., 0., 0., 0.]
                     #print('***adding %s\n' % (10-icount))
                     for unused_i in range(10 - icount):
-                        op2.write(struct2.pack(*data))
+                        op2_file.write(struct2.pack(*data))
                         nwide += len(data)
 
                     eid_device2 = eids_device[ielement]
@@ -2605,13 +2605,13 @@ class ComplexCBeamForceArray(ComplexForceObject):
                     data = [nid, sdi.real,
                             bm1i.real, bm2i.real, ts1i.real, ts2i.real, afi.real, ttrqi.real, wtrqi.real,
                             bm1i.imag, bm2i.imag, ts1i.imag, ts2i.imag, afi.imag, ttrqi.imag, wtrqi.imag] # 16
-                    op2.write(struct2.pack(*data))
+                    op2_file.write(struct2.pack(*data))
                     ielement += 1
                     icount = 0
                 else:
                     raise RuntimeError('CBEAM OEF op2 writer')
                     #data = [0, xxb, sxc, sxd, sxe, sxf, smax, smin, smt, smc]  # 10
-                    #op2.write(struct2.pack(*data))
+                    #op2_file.write(struct2.pack(*data))
                     #icount += 1
 
                 op2_ascii.write('  eid_device=%s data=%s\n' % (eid_device, str(data)))
@@ -2621,7 +2621,7 @@ class ComplexCBeamForceArray(ComplexForceObject):
 
             itable -= 1
             header = [4 * ntotal,]
-            op2.write(pack('i', *header))
+            op2_file.write(pack('i', *header))
             op2_ascii.write('footer = %s\n' % header)
             new_result = False
         return itable
@@ -3140,7 +3140,7 @@ class ComplexSolidPressureForceArray(ComplexForceObject):
             page_num += 1
         return page_num - 1
 
-    def write_op2(self, op2, op2_ascii, itable, new_result, date,
+    def write_op2(self, op2_file, op2_ascii, itable, new_result, date,
                   is_mag_phase=False, endian='>'):
         """writes an OP2"""
         import inspect
@@ -3150,7 +3150,7 @@ class ComplexSolidPressureForceArray(ComplexForceObject):
         op2_ascii.write(f'{self.__class__.__name__}.write_op2: {call_frame[1][3]}\n')
 
         if itable == -1:
-            self._write_table_header(op2, op2_ascii, date)
+            self._write_table_header(op2_file, op2_ascii, date)
             itable = -3
 
         eids = self.element
@@ -3189,7 +3189,7 @@ class ComplexSolidPressureForceArray(ComplexForceObject):
             raise NotImplementedError(self)
         #etypeb = self.element_type#.encode('ascii')
         for itime in range(self.ntimes):
-            self._write_table_3(op2, op2_ascii, new_result, itable, itime)
+            self._write_table_3(op2_file, op2_ascii, new_result, itable, itime)
 
             # record 4
             itable -= 1
@@ -3198,7 +3198,7 @@ class ComplexSolidPressureForceArray(ComplexForceObject):
                       4, 0, 4,
                       4, ntotal, 4,
                       4 * ntotal]
-            op2.write(pack('%ii' % len(header), *header))
+            op2_file.write(pack('%ii' % len(header), *header))
             op2_ascii.write('r4 [4, 0, 4]\n')
             op2_ascii.write(f'r4 [4, {itable:d}, 4]\n')
             op2_ascii.write(f'r4 [4, {4 * ntotal:d}, 4]\n')
@@ -3227,7 +3227,7 @@ class ComplexSolidPressureForceArray(ComplexForceObject):
                                 '      %8s %8s %-13s %-13s %-13s %-13s %-13s %s\n\n'
                                 % (eid, etypei, saxr, sayr, sazr, svxr, svyr, svzr, spressurer,
                                    '', '',      saxi, sayi, sazi, svxi, svyi, svzi))
-                op2.write(struct1.pack(*data))
+                op2_file.write(struct1.pack(*data))
 
             #for eid, eid_device, fxi, fyi, fzi, mxi, myi, mzi in zip(eids, eids_device, fx, fy, fz, mx, my, mz):
                 #data = [
@@ -3244,11 +3244,11 @@ class ComplexSolidPressureForceArray(ComplexForceObject):
                                #' %26s   %-13s  %-13s  %-13s  %-13s  %-13s  %s\n' % (
                                    #eid, fxir, fyir, fzir, mxir, myir, mzir,
                                    #'', fxii, fyii, fzii, mxii, myii, mzii))
-                #op2.write(struct1.pack(*data))
+                #op2_file.write(struct1.pack(*data))
 
             itable -= 1
             header = [4 * ntotal,]
-            op2.write(pack('i', *header))
+            op2_file.write(pack('i', *header))
             op2_ascii.write('footer = %s\n' % header)
             new_result = False
         return itable
@@ -3537,7 +3537,7 @@ class ComplexForceMomentArray(ComplexForceObject):
             page_num += 1
         return page_num
 
-    def write_op2(self, op2, op2_ascii, itable, new_result, date,
+    def write_op2(self, op2_file, op2_ascii, itable, new_result, date,
                   is_mag_phase=False, endian='>'):
         """writes an OP2"""
         import inspect
@@ -3547,7 +3547,7 @@ class ComplexForceMomentArray(ComplexForceObject):
         op2_ascii.write(f'{self.__class__.__name__}.write_op2: {call_frame[1][3]}\n')
 
         if itable == -1:
-            self._write_table_header(op2, op2_ascii, date)
+            self._write_table_header(op2_file, op2_ascii, date)
             itable = -3
 
         eids = self.element
@@ -3576,7 +3576,7 @@ class ComplexForceMomentArray(ComplexForceObject):
         op2_ascii.write(f'nelements={nelements:d}\n')
 
         for itime in range(self.ntimes):
-            self._write_table_3(op2, op2_ascii, new_result, itable, itime)
+            self._write_table_3(op2_file, op2_ascii, new_result, itable, itime)
 
             # record 4
             itable -= 1
@@ -3585,7 +3585,7 @@ class ComplexForceMomentArray(ComplexForceObject):
                       4, 0, 4,
                       4, ntotal, 4,
                       4 * ntotal]
-            op2.write(pack('%ii' % len(header), *header))
+            op2_file.write(pack('%ii' % len(header), *header))
             op2_ascii.write('r4 [4, 0, 4]\n')
             op2_ascii.write(f'r4 [4, {itable:d}, 4]\n')
             op2_ascii.write(f'r4 [4, {4 * ntotal:d}, 4]\n')
@@ -3612,11 +3612,11 @@ class ComplexForceMomentArray(ComplexForceObject):
                                ' %26s   %-13s  %-13s  %-13s  %-13s  %-13s  %s\n' % (
                                    eid, fxir, fyir, fzir, mxir, myir, mzir,
                                    '', fxii, fyii, fzii, mxii, myii, mzii))
-                op2.write(struct1.pack(*data))
+                op2_file.write(struct1.pack(*data))
 
             itable -= 1
             header = [4 * ntotal,]
-            op2.write(pack('i', *header))
+            op2_file.write(pack('i', *header))
             op2_ascii.write('footer = %s\n' % header)
             new_result = False
         return itable

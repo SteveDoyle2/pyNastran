@@ -2452,7 +2452,7 @@ class EPT(GeomCommon):
 
         props = []
         for unused_i in range(nentries):
-            print(n, ntotal)
+            #print(n, ntotal)
             datai = data[n:n+ntotal]
             #self.show_data(datai, types='ifqd')
             n += ntotal

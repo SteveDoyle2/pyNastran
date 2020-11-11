@@ -64,32 +64,32 @@ class OP2Writer(OP2_F06_Common):
         #print('writing %s' % op2_outname)
 
         if isinstance(op2_outname, str):
-            fop2 = open(op2_outname, 'wb')
+            op2_file = open(op2_outname, 'wb')
             #fop2_ascii = open(op2_outname + '.txt', 'w')
             fop2_ascii = TrashWriter()
             #print('op2 out = %r' % op2_outname)
             close = True
         else:
-            assert isinstance(op2_outname, file), 'type(op2_outname)= %s' % op2_outname
-            fop2 = op2_outname
+            assert isinstance(op2_outname, file), f'type(op2_outname) = {op2_outname}'
+            op2_file = op2_outname
             op2_outname = op2_outname.name
             close = False
             #print('op2_outname =', op2_outname)
 
         try:
             total_case_count = _write_op2(
-                fop2, fop2_ascii, self,
+                op2_file, fop2_ascii, self,
                 skips,
                 post=post, endian=endian,
                 nastran_format=nastran_format)
         except:  # NotImplementedError
             if close:
-                fop2.close()
+                op2_file.close()
                 fop2_ascii.close()
             raise
         return total_case_count
 
-def _write_op2(fop2, fop2_ascii, obj: OP2,
+def _write_op2(op2_file, fop2_ascii, obj: OP2,
                skips: Set[str],
                post: int=-1, endian: bytes=b'<',
                nastran_format: str='nx') -> int:
@@ -98,42 +98,42 @@ def _write_op2(fop2, fop2_ascii, obj: OP2,
     #op2_ascii.write('writing [3, 7, 0] header\n')
 
     struct_3i = Struct(endian + b'3i')
-    write_op2_header(obj, fop2, fop2_ascii, struct_3i, post=post, endian=endian)
+    write_op2_header(obj, op2_file, fop2_ascii, struct_3i, post=post, endian=endian)
 
     if 'GEOM1' not in skips:  # nodes
-        write_geom1(fop2, fop2_ascii, obj, endian=endian)
+        write_geom1(op2_file, fop2_ascii, obj, endian=endian)
     if 'GEOM2' not in skips:  # elements
-        write_geom2(fop2, fop2_ascii, obj, endian=endian)
+        write_geom2(op2_file, fop2_ascii, obj, endian=endian)
     if 'GEOM3' not in skips:  # constraints
-        write_geom3(fop2, fop2_ascii, obj, endian=endian, nastran_format=nastran_format)
+        write_geom3(op2_file, fop2_ascii, obj, endian=endian, nastran_format=nastran_format)
     if 'GEOM4' not in skips:  # loads
-        write_geom4(fop2, fop2_ascii, obj, endian=endian, nastran_format=nastran_format)
+        write_geom4(op2_file, fop2_ascii, obj, endian=endian, nastran_format=nastran_format)
     if 'EPT' not in skips:    # properties
-        write_ept(fop2, fop2_ascii, obj, endian=endian)
+        write_ept(op2_file, fop2_ascii, obj, endian=endian)
     if 'MPT' not in skips:    # materials
-        write_mpt(fop2, fop2_ascii, obj, endian=endian)
+        write_mpt(op2_file, fop2_ascii, obj, endian=endian)
 
     if 'EDT' not in skips:  # aero
-        write_edt(fop2, fop2_ascii, obj, endian=endian)
+        write_edt(op2_file, fop2_ascii, obj, endian=endian)
     if 'EDOM' not in skips:  # optimization
-        write_edom(fop2, fop2_ascii, obj, endian=endian)
+        write_edom(op2_file, fop2_ascii, obj, endian=endian)
     #if 'DIT' not in skips:  # tables
-        #write_dit(fop2, fop2_ascii, obj, endian=endian)
+        #write_dit(op2_file, fop2_ascii, obj, endian=endian)
     #if 'DYNAMIC' not in skips:
-        #write_dynamic(fop2, fop2_ascii, obj)
+        #write_dynamic(op2_file, fop2_ascii, obj)
     if 'grid_point_weight' not in skips:
         for key, weight in obj.grid_point_weight.items():
-            weight.write_op2(fop2, fop2_ascii, date, endian=endian)
+            weight.write_op2(op2_file, fop2_ascii, date, endian=endian)
 
     #is_mag_phase = False
     # we write all the other tables
     # nastran puts the tables in order of the Case Control deck,
     # but we're lazy so we just hardcode the order
 
-    case_count = _write_result_tables(obj, fop2, fop2_ascii, struct_3i, endian, skips)
+    case_count = _write_result_tables(obj, op2_file, fop2_ascii, struct_3i, endian, skips)
     return case_count
 
-def _write_result_tables(obj: OP2, fop2, fop2_ascii, struct_3i, endian, skips: Set[str]):
+def _write_result_tables(obj: OP2, op2_file, fop2_ascii, struct_3i, endian, skips: Set[str]):
     """writes the op2 result tables"""
     date = obj.date
     log = obj.log
@@ -283,7 +283,7 @@ def _write_result_tables(obj: OP2, fop2, fop2_ascii, struct_3i, endian, skips: S
                     #print(' %-6s - %s - isubcase=%s%s; itable=%s %s' % (
                         #table_name, result.__class__.__name__,
                         #isubcase, element_name, itable, new_result))
-                    itable = result.write_op2(fop2, fop2_ascii, itable, new_result,
+                    itable = result.write_op2(op2_file, fop2_ascii, itable, new_result,
                                               date, is_mag_phase=False, endian=endian)
                 except:
                     print(f' {result.__class__.__name__} - isubcase={isubcase}{element_name}')
@@ -305,7 +305,7 @@ def _write_result_tables(obj: OP2, fop2, fop2_ascii, struct_3i, endian, skips: S
             ]
             #print('writing itable=%s' % itable)
             assert itable is not None, '%s itable is None' % result.__class__.__name__
-            fop2.write(pack(endian + b'9i', *header))
+            op2_file.write(pack(endian + b'9i', *header))
             fop2_ascii.write('footer2 = %s\n' % header)
             new_result = False
 
@@ -315,7 +315,7 @@ def _write_result_tables(obj: OP2, fop2, fop2_ascii, struct_3i, endian, skips: S
             #print('res_category_name=%s case_count=%s'  % (res_category_name, case_count))
             # close off the result
             footer = [4, 0, 4]
-            fop2.write(struct_3i.pack(*footer))
+            op2_file.write(struct_3i.pack(*footer))
             fop2_ascii.write('close_a = %s\n' % footer)
             fop2_ascii.write('---------------\n')
             total_case_count += case_count
@@ -325,13 +325,13 @@ def _write_result_tables(obj: OP2, fop2, fop2_ascii, struct_3i, endian, skips: S
         #raise FatalError('total_case_count = 0')
     # close off the op2
     footer = [4, 0, 4]
-    fop2.write(struct_3i.pack(*footer))
+    op2_file.write(struct_3i.pack(*footer))
     fop2_ascii.write('close_b = %s\n' % footer)
-    fop2.close()
+    op2_file.close()
     fop2_ascii.close()
     return total_case_count
 
-def write_op2_header(obj: OP2, fop2, fop2_ascii, struct_3i,
+def write_op2_header(obj: OP2, op2_file, fop2_ascii, struct_3i,
                      post: int=-1, endian: bytes=b'<'):
     """writes the op2 header"""
     is_nx = obj.is_nx
@@ -340,30 +340,30 @@ def write_op2_header(obj: OP2, fop2, fop2_ascii, struct_3i,
         obj.date = (today.month, today.day, today.year)
 
     if post == -1:
-    #_write_markers(op2, op2_ascii, [3, 0, 7])
-        fop2.write(struct_3i.pack(*[4, 3, 4,]))
+    #_write_markers(op2_file, op2_ascii, [3, 0, 7])
+        op2_file.write(struct_3i.pack(*[4, 3, 4,]))
         tape_code = b'NASTRAN FORT TAPE ID CODE - '
         if is_nx:
-            fop2.write(pack(endian + b'7i 28s i', *[4, 1, 4,
-                                                    4, 7, 4,
-                                                    28, tape_code, 28]))
+            op2_file.write(pack(endian + b'7i 28s i', *[4, 1, 4,
+                                                        4, 7, 4,
+                                                        28, tape_code, 28]))
             nastran_version = b'NX8.5   '
         else:
             day, month, year = obj.date
-            fop2.write(pack(endian + b'9i 28s i', *[12,
-                                                    day, month, year - 2000,
-                                                    12, 4, 7, 4,
-                                                    28, tape_code, 28]))
+            op2_file.write(pack(endian + b'9i 28s i', *[12,
+                                                        day, month, year - 2000,
+                                                        12, 4, 7, 4,
+                                                        28, tape_code, 28]))
             nastran_version = b'XXXXXXXX'
 
-        fop2.write(pack(endian + b'4i 8s i', *[4, 2, 4,
-                                               #4, 2, 4,
-                                               #4, 1, 4,
-                                               #4, 8, 4,
-                                               8, nastran_version, 8]))
-        fop2.write(pack(endian + b'6i', *[4, -1, 4,
-                                          4, 0, 4,]))
+        op2_file.write(pack(endian + b'4i 8s i', *[4, 2, 4,
+                                                   #4, 2, 4,
+                                                   #4, 1, 4,
+                                                   #4, 8, 4,
+                                                   8, nastran_version, 8]))
+        op2_file.write(pack(endian + b'6i', *[4, -1, 4,
+                                              4, 0, 4,]))
     elif post == -2:
-        _write_markers(fop2, fop2_ascii, [2, 4])
+        _write_markers(op2_file, fop2_ascii, [2, 4])
     else:
         raise RuntimeError('post = %r; use -1 or -2' % post)

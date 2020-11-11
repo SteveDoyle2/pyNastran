@@ -24,7 +24,7 @@ class GridPointForces(BaseElement):
         self.ntotal = 0
         self.itotal = 0
 
-    def _write_table_3(self, op2, op2_ascii, new_result, itable, itime): #, itable=-3, itime=0):
+    def _write_table_3(self, op2_file, op2_ascii, new_result, itable, itime): #, itable=-3, itime=0):
         frame = inspect.currentframe()
         call_frame = inspect.getouterframes(frame, 2)
         op2_ascii.write('%s.write_table_3: %s\n' % (self.__class__.__name__, call_frame[1][3]))
@@ -40,7 +40,7 @@ class GridPointForces(BaseElement):
                 4, 0, 4,
                 4, 146, 4,
             ]
-        op2.write(pack(b'%ii' % len(header), *header))
+        op2_file.write(pack(b'%ii' % len(header), *header))
         op2_ascii.write('table_3_header = %s\n' % header)
 
         approach_code = self.approach_code
@@ -126,7 +126,7 @@ class GridPointForces(BaseElement):
         #print(data)
         #f.write(pack(fascii, '%s header 3c' % self.table_name, fmt, data))
         op2_ascii.write('%s header 3c = %s\n' % (self.table_name, data))
-        op2.write(pack(fmt, *data))
+        op2_file.write(pack(fmt, *data))
 
 
 class RealGridPointForcesArray(GridPointForces):
@@ -1049,7 +1049,7 @@ class RealGridPointForcesArray(GridPointForces):
         headers = ['f1', 'f2', 'f3', 'm1', 'm2', 'm3']
         return headers
 
-    def write_op2(self, op2, op2_ascii, itable, new_result,
+    def write_op2(self, op2_file, op2_ascii, itable, new_result,
                   date, is_mag_phase=False, endian='>'):
         """writes an OP2"""
         frame = inspect.currentframe()
@@ -1057,7 +1057,7 @@ class RealGridPointForcesArray(GridPointForces):
         op2_ascii.write(f'{self.__class__.__name__}.write_op2: {call_frame[1][3]}\n')
 
         if itable == -1:
-            self._write_table_header(op2, op2_ascii, date, subtable_name_default=b'OGPFB1  ',
+            self._write_table_header(op2_file, op2_ascii, date, subtable_name_default=b'OGPFB1  ',
                                      include_date=False)
             itable = -3
 
@@ -1093,7 +1093,7 @@ class RealGridPointForcesArray(GridPointForces):
             raise NotImplementedError('SORT2')
 
         for itime in range(self.ntimes):
-            self._write_table_3(op2, op2_ascii, new_result, itable, itime)
+            self._write_table_3(op2_file, op2_ascii, new_result, itable, itime)
 
             # record 4
             #print('stress itable = %s' % itable)
@@ -1120,7 +1120,7 @@ class RealGridPointForcesArray(GridPointForces):
                       4, 0, 4,
                       4, ntotal, 4,
                       4 * ntotal]
-            op2.write(pack('%ii' % len(header), *header))
+            op2_file.write(pack('%ii' % len(header), *header))
             op2_ascii.write('r4 [4, 0, 4]\n')
             op2_ascii.write(f'r4 [4, {itable:d}, 4]\n')
             op2_ascii.write(f'r4 [4, {4 * ntotal:d}, 4]\n')
@@ -1144,11 +1144,11 @@ class RealGridPointForcesArray(GridPointForces):
                 data = [nid, eid, ename.encode('ascii'), t1i, t2i, t3i, r1i, r2i, r3i]
                 #print('  nid=%s eid=%s data=%s' % (nid, eid, str(data[2:])))
                 op2_ascii.write('  nid=%-3s eid=%-3s data=%s\n' % (nid, eid, str(data[2:])))
-                op2.write(struct1.pack(*data))
+                op2_file.write(struct1.pack(*data))
 
             itable -= 1
             header = [4 * ntotal,]
-            op2.write(pack('i', *header))
+            op2_file.write(pack('i', *header))
             op2_ascii.write('footer = %s\n' % header)
             new_result = False
         return itable
@@ -1627,7 +1627,7 @@ class ComplexGridPointForcesArray(GridPointForces):
         headers = ['f1', 'f2', 'f3', 'm1', 'm2', 'm3']
         return headers
 
-    def write_op2(self, op2, op2_ascii, itable, new_result,
+    def write_op2(self, op2_file, op2_ascii, itable, new_result,
                   date, is_mag_phase=False, endian='>'):
         """writes an OP2"""
         import inspect
@@ -1637,7 +1637,7 @@ class ComplexGridPointForcesArray(GridPointForces):
         op2_ascii.write(f'{self.__class__.__name__}.write_op2: {call_frame[1][3]}\n')
 
         if itable == -1:
-            self._write_table_header(op2, op2_ascii, date)
+            self._write_table_header(op2_file, op2_ascii, date)
             itable = -3
 
         # table 4 info
@@ -1663,7 +1663,7 @@ class ComplexGridPointForcesArray(GridPointForces):
             raise NotImplementedError('SORT2')
 
         for itime in range(self.ntimes):
-            self._write_table_3(op2, op2_ascii, new_result, itable, itime)
+            self._write_table_3(op2_file, op2_ascii, new_result, itable, itime)
 
             # record 4
             itable -= 1
@@ -1691,7 +1691,7 @@ class ComplexGridPointForcesArray(GridPointForces):
                       4, 0, 4,
                       4, ntotal, 4,
                       4 * ntotal]
-            op2.write(pack('%ii' % len(header), *header))
+            op2_file.write(pack('%ii' % len(header), *header))
             op2_ascii.write('r4 [4, 0, 4]\n')
             op2_ascii.write(f'r4 [4, {itable:d}, 4]\n')
             op2_ascii.write(f'r4 [4, {4 * ntotal:d}, 4]\n')
@@ -1717,12 +1717,12 @@ class ComplexGridPointForcesArray(GridPointForces):
                         t1i.imag, t2i.imag, t3i.imag, r1i.imag, r2i.imag, r3i.imag]
                 #print('  nid=%s eid=%s data=%s' % (nid, eid, str(data[2:])))
                 op2_ascii.write('  nid=%-3s eid=%-3s data=%s\n' % (nid, eid, str(data[2:])))
-                op2.write(struct1.pack(*data))
+                op2_file.write(struct1.pack(*data))
                 assert len(data) + 1 == self.num_wide
 
             itable -= 1
             header = [4 * ntotal,]
-            op2.write(pack('i', *header))
+            op2_file.write(pack('i', *header))
             op2_ascii.write('footer = %s\n' % header)
             new_result = False
         return itable

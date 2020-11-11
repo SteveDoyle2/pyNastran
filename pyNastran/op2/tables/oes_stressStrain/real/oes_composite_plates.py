@@ -411,7 +411,7 @@ class RealCompositePlateArray(OES_Object):
             page_num += 1
         return page_num - 1
 
-    def write_op2(self, op2, op2_ascii, itable, new_result,
+    def write_op2(self, op2_file, op2_ascii, itable, new_result,
                   date, is_mag_phase=False, endian='>'):
         """writes an OP2"""
         import inspect
@@ -421,7 +421,7 @@ class RealCompositePlateArray(OES_Object):
         op2_ascii.write(f'{self.__class__.__name__}.write_op2: {call_frame[1][3]}\n')
 
         if itable == -1:
-            self._write_table_header(op2, op2_ascii, date)
+            self._write_table_header(op2_file, op2_ascii, date)
             itable = -3
 
         #print("nnodes_all =", nnodes_all)
@@ -465,7 +465,7 @@ class RealCompositePlateArray(OES_Object):
 
         for itime in range(ntimes):
             nwide = 0
-            self._write_table_3(op2, op2_ascii, new_result, itable, itime)
+            self._write_table_3(op2_file, op2_ascii, new_result, itable, itime)
 
             # record 4
             #print('stress itable = %s' % itable)
@@ -475,7 +475,7 @@ class RealCompositePlateArray(OES_Object):
                       4, 0, 4,
                       4, ntotal, 4,
                       4 * ntotal]
-            op2.write(pack('%ii' % len(header), *header))
+            op2_file.write(pack('%ii' % len(header), *header))
             op2_ascii.write('r4 [4, 0, 4]\n')
             op2_ascii.write(f'r4 [4, {itable:d}, 4]\n')
             op2_ascii.write(f'r4 [4, {4 * ntotal:d}, 4]\n')
@@ -499,7 +499,7 @@ class RealCompositePlateArray(OES_Object):
                     eids_device, eids, layers, o11, o22, t12, t1z, t2z, angle, major, minor, ovm):
 
                 data = [eid_device, layer, o11i, o22i, t12i, t1zi, t2zi, anglei, majori, minori, ovmi]
-                op2.write(struct2.pack(*data))
+                op2_file.write(struct2.pack(*data))
 
                 [o11i, o22i, t12i, t1zi, t2zi, majori, minori, ovmi] = write_floats_12e([
                     o11i, o22i, t12i, t1zi, t2zi, majori, minori, ovmi])
@@ -511,7 +511,7 @@ class RealCompositePlateArray(OES_Object):
             assert nwide == ntotal, f'nwide={nwide} ntotal={ntotal}'
             itable -= 1
             header = [4 * ntotal,]
-            op2.write(pack('i', *header))
+            op2_file.write(pack('i', *header))
             op2_ascii.write('footer = %s\n' % header)
             new_result = False
         return itable
