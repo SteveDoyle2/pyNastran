@@ -74,6 +74,7 @@ def to_column_bytes(data_list: List[np.ndarray], dtype_out: str,
             #data_list[i] = np.frombuffer(datai, dtype=dtype_out)
         if datai.dtype != dtype_out:
             #print(datai.dtype, dtype_out)
+            #data_list[i] = datai.view(dtype_out)  # TODO: is this faster/correct?
             data_list[i] = np.frombuffer(datai.tobytes(), dtype=dtype_out)
         elif debug:
             #print('floats...')

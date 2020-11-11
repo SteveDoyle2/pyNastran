@@ -6,6 +6,15 @@ from traceback import print_exc
 from typing import Tuple, List, Dict, Optional, Any
 
 import numpy as np
+
+import pyNastran
+from pyNastran.op2.op2 import (
+    OP2, FatalError, SixtyFourBitError, OverwriteTableError)
+#SortCodeError, DeviceCodeError, FortranMarkerError
+
+from pyNastran.op2.op2_geom import OP2Geom, DuplicateIDsError
+from pyNastran.utils import is_binary_file
+
 np.set_printoptions(precision=3, threshold=20)
 
 try:
@@ -24,13 +33,6 @@ except ImportError:
 #warnings.filterwarnings('error')
 #warnings.filterwarnings('error', category=UnicodeWarning)
 
-import pyNastran
-from pyNastran.op2.op2 import (
-    OP2, FatalError, SixtyFourBitError, OverwriteTableError)
-#SortCodeError, DeviceCodeError, FortranMarkerError
-
-from pyNastran.op2.op2_geom import OP2Geom, DuplicateIDsError
-from pyNastran.utils import is_binary_file
 
 
 def parse_table_names_from_f06(f06_filename: str) -> List[str]:
