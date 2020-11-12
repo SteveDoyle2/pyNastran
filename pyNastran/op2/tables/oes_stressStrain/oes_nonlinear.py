@@ -241,9 +241,9 @@ class RealNonlinearPlateArray(OES_Object):
             msg += '%s\n' % str(self.code_information())
             i = 0
             for itime in range(self.ntimes):
-                for ie, eid in enumerate(self.element):
-                    t1 = self.data[itime, ie, :]
-                    t2 = table.data[itime, ie, :]
+                for ielem, eid in enumerate(self.element):
+                    t1 = self.data[itime, ielem, :]
+                    t2 = table.data[itime, ielem, :]
 
                     # TODO: this name order is wrong
                     #[fiber_dist, oxx, oyy, ozz, txy, es, eps, ecs, exx, eyy, ezz, etxy]
@@ -570,9 +570,9 @@ class RealNonlinearSolidArray(OES_Object):
             eids = self.element_node[:, 0]
             nids = self.element_node[:, 1]
             for itime in range(self.ntimes):
-                for ie, eid, nid in zip(count(), eids, nids):
-                    t1 = self.data[itime, ie, :]
-                    t2 = table.data[itime, ie, :]
+                for ielem, eid, nid in zip(count(), eids, nids):
+                    t1 = self.data[itime, ielem, :]
+                    t2 = table.data[itime, ielem, :]
 
                     # TODO: this name order is wrong?
                     #[sx, sy, sz, sxy, syz, sxz, se, eps, ecs,

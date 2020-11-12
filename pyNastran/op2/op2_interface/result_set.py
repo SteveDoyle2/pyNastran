@@ -56,7 +56,7 @@ class ResultSet:
             #allowed2.sort()
             msg = f"result={result!r} is invalid; the name changed or it's a typo.\n"
             if '.' in result:
-                base, end = result.split('.', 1)
+                base, unused_end = result.split('.', 1)
                 #print(base, end)
                 #print(self.allowed)
                 #print(f'base={base} end={end}')
@@ -73,7 +73,7 @@ class ResultSet:
         #self.log.debug('    %s was skipped' % result)
         return False
 
-    def is_not_saved(self, result: str) -> None:
+    def is_not_saved(self, result: str) -> bool:
         """checks to see if a result is saved"""
         return not self.is_saved(result)
 
@@ -81,7 +81,7 @@ class ResultSet:
         """clears all the results"""
         self.saved.clear()
 
-    def add(self, results: List[str])  -> List[str]:
+    def add(self, results: Union[str, List[str]])  -> List[str]:
         """addds a list/str of results"""
         all_matched_results = self._get_matched_results(results)
         added = []
@@ -91,7 +91,7 @@ class ResultSet:
                 added.append(result)
         return added
 
-    def remove(self, results: List[str]) -> List[str]:
+    def remove(self, results: Union[str, List[str]]) -> List[str]:
         """removes a list/str of results"""
         all_matched_results = self._get_matched_results(results)
         removed = []

@@ -96,9 +96,9 @@ class ComplexRodForceArray(ComplexForceObject):
             msg += '%s\n' % str(self.code_information())
             i = 0
             for itime in range(self.ntimes):
-                for ie, eid in enumerate(self.element):
-                    t1 = self.data[itime, ie, :]
-                    t2 = table.data[itime, ie, :]
+                for ielem, eid in enumerate(self.element):
+                    t1 = self.data[itime, ielem, :]
+                    t2 = table.data[itime, ielem, :]
                     (axial1, torque1) = t1
                     (axial2, torque2) = t2
 
@@ -410,9 +410,9 @@ class ComplexCShearForceArray(BaseElement):
             msg += '%s\n' % str(self.code_information())
             i = 0
             for itime in range(self.ntimes):
-                for ie, eid in enumerate(self.element):
-                    t1 = self.data[itime, ie, :]
-                    t2 = table.data[itime, ie, :]
+                for ielem, eid in enumerate(self.element):
+                    t1 = self.data[itime, ielem, :]
+                    t2 = table.data[itime, ielem, :]
                     (force41a, force14a, force21a, force12a, force32a, force23a, force43a, force34a,
                      kick_force1a, kick_force2a, kick_force3a, kick_force4a,
                      shear12a, shear23a, shear34a, shear41a) = t1
@@ -664,9 +664,9 @@ class ComplexSpringDamperForceArray(ComplexForceObject):
             msg += '%s\n' % str(self.code_information())
             i = 0
             for itime in range(self.ntimes):
-                for ie, eid in enumerate(self.element):
-                    t1 = self.data[itime, ie, 0]
-                    t2 = table.data[itime, ie, 0]
+                for ielem, eid in enumerate(self.element):
+                    t1 = self.data[itime, ielem, 0]
+                    t2 = table.data[itime, ielem, 0]
 
                     if not allclose([t1.real, t1.imag], [t2.real, t2.imag], atol=0.0001):
                         msg += '%s    (%s, %s)  (%s, %s)\n' % (
@@ -978,9 +978,9 @@ class ComplexViscForceArray(BaseElement):
             msg += '%s\n' % str(self.code_information())
             i = 0
             for itime in range(self.ntimes):
-                for ie, eid in enumerate(self.element):
-                    t1 = self.data[itime, ie, :]
-                    t2 = table.data[itime, ie, :]
+                for ielem, eid in enumerate(self.element):
+                    t1 = self.data[itime, ielem, :]
+                    t2 = table.data[itime, ielem, :]
                     (axial1, torque1) = t1
                     (axial2, torque2) = t2
 
@@ -1199,9 +1199,9 @@ class ComplexPlateForceArray(ComplexForceObject):
             msg += '%s\n' % str(self.code_information())
             i = 0
             for itime in range(self.ntimes):
-                for ie, eid in enumerate(self.element):
-                    t1 = self.data[itime, ie, :]
-                    t2 = table.data[itime, ie, :]
+                for ielem, eid in enumerate(self.element):
+                    t1 = self.data[itime, ielem, :]
+                    t2 = table.data[itime, ielem, :]
                     (mx1, my1, mxy1, bmx1, bmy1, bmxy1, tx1, ty1) = t1
                     (mx2, my2, mxy2, bmx2, bmy2, bmxy2, tx2, ty2) = t2
 
@@ -2732,9 +2732,9 @@ class ComplexCBendForceArray(BaseElement):  # 69-CBEND
             i = 0
             eids = self.element_node[:, 0]
             for itime in range(self.ntimes):
-                for ie, eid in enumerate(eids):
-                    t1 = self.data[itime, ie, :]
-                    t2 = table.data[itime, ie, :]
+                for ielem, eid in enumerate(eids):
+                    t1 = self.data[itime, ielem, :]
+                    t2 = table.data[itime, ielem, :]
                     (bending_moment_1a1, bending_moment_2a1, shear_1a1, shear_2a1, axial_a1, torque_a1,
                      bending_moment_1b1, bending_moment_2b1, shear_1b1, shear_2b1, axial_b1, torque_b1) = t1
                     (bending_moment_1a2, bending_moment_2a2, shear_1a2, shear_2a2, axial_a2, torque_a2,
@@ -2988,9 +2988,9 @@ class ComplexSolidPressureForceArray(ComplexForceObject):
             msg += '%s\n' % str(self.code_information())
             i = 0
             for itime in range(self.ntimes):
-                for ie, eid in enumerate(self.element):
-                    t1 = self.data[itime, ie, :]
-                    t2 = table.data[itime, ie, :]
+                for ielem, eid in enumerate(self.element):
+                    t1 = self.data[itime, ielem, :]
+                    t2 = table.data[itime, ielem, :]
                     (ax1, ay1, az1, vx1, vy1, vz1, pressure1) = t1
                     (ax2, ay2, az2, vx2, vy2, vz2, pressure2) = t2
                     #rpressure1 = pressure1.real

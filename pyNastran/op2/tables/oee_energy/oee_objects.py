@@ -300,9 +300,9 @@ class RealStrainEnergyArray(BaseElement):
             msg += '%s\n' % str(self.code_information())
             i = 0
             for itime in range(self.ntimes):
-                for ie, eid in enumerate(self.element[itime, :]):
-                    t1 = self.data[itime, ie, :]
-                    t2 = table.data[itime, ie, :]
+                for ielem, eid in enumerate(self.element[itime, :]):
+                    t1 = self.data[itime, ielem, :]
+                    t2 = table.data[itime, ielem, :]
                     (energyi1, percenti1, densityi1) = t1
                     (energyi2, percenti2, densityi2) = t2
 
@@ -525,10 +525,19 @@ class RealStrainEnergyArray(BaseElement):
         device_code = self.device_code
         op2_ascii.write(f'  ntimes = {self.ntimes}\n')
 
-        if self.is_sort1:
-            struct1 = Struct(endian + b'i 3f')
-        else:
+        if not self.is_sort1:
             raise NotImplementedError('SORT2')
+
+        apply_device_code = True
+        eids_dtype_kind = self.element.dtype.kind
+        if eids_dtype_kind == 'i':
+            struct1 = Struct(endian + b'i 3f')
+        elif eids_dtype_kind == 'U':
+            apply_device_code = False
+            struct1 = Struct(endian + b'4s 3f')
+        else:
+            raise NotImplementedError(f'{self.class_name}: element.dtype.kind = {eids_dtype_kind!r}')
+
 
         for itime in range(self.ntimes):
             eids = self.element[itime, :]
@@ -536,7 +545,10 @@ class RealStrainEnergyArray(BaseElement):
             ntotal = ntotali * nelements
             op2_ascii.write(f'nelements={nelements:d}\n')
 
-            eids_device = eids * 10 + self.device_code
+            if apply_device_code:
+                eids_device = eids * 10 + self.device_code
+            else:
+                eids_device = eids.view('|S4')
             self._write_table_3(op2_file, op2_ascii, new_result, itable, itime)
 
             # record 4
@@ -554,10 +566,8 @@ class RealStrainEnergyArray(BaseElement):
             energy = self.data[itime, :, 0]
             percent = self.data[itime, :, 1]
             density = self.data[itime, :, 2]
-            #print(eids_device)
             for (eid, eid_device, energyi, percenti, densityi) in zip(eids, eids_device, energy, percent, density):
                 data = [eid_device, energyi, percenti, densityi]
-                #print(data)
 
                 #vals = (fxi, fyi, fzi, mxi, myi, mzi)
                 #vals2 = write_imag_floats_13e(vals, is_mag_phase)
@@ -761,9 +771,7 @@ class ComplexStrainEnergyArray(BaseElement):
         #self.element_name_count = OrderedDict()
         self.dt_temp = None
 
-        if is_sort1:
-            pass
-        else:
+        if not is_sort1:
             raise NotImplementedError('SORT2')
 
     @property
@@ -916,9 +924,9 @@ class ComplexStrainEnergyArray(BaseElement):
             msg += '%s\n' % str(self.code_information())
             i = 0
             for itime in range(self.ntimes):
-                for ie, eid in enumerate(self.element[itime, :]):
-                    t1 = self.data[itime, ie, :]
-                    t2 = table.data[itime, ie, :]
+                for ielem, eid in enumerate(self.element[itime, :]):
+                    t1 = self.data[itime, ielem, :]
+                    t2 = table.data[itime, ielem, :]
                     (energyi1r, engery1i, percenti1, densityi1) = t1
                     (energyi2r, engery2i, percenti2, densityi2) = t2
                     #print(t1, t2)

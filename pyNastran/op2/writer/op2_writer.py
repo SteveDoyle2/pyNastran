@@ -142,11 +142,12 @@ def _write_result_tables(obj: OP2, op2_file, fop2_ascii, struct_3i, endian, skip
         'OUGV1', 'OPHIG',
         'BOUGV1', 'BOPHIG', 'BOPHIGF',
         'OUPV1', 'OUXY1', 'OUXY2', 'OPHSA',
-        'OUGF1',
+        'OUGF1', 'OUG1F',
         'BOUGF1',
         'TOUGV1', 'OTEMP1',
         'OUG1',
         'OUGV1PAT',
+        'OAG1',
         'BOPG1',
         'OPHIG',
 
