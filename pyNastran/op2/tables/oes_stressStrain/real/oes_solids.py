@@ -551,6 +551,7 @@ class RealSolidArray(OES_Object):
 
         eids2 = self.element_node[:, 0]
         nodes = self.element_node[:, 1]
+        nelements_nodes = len(nodes)
 
         eids3 = self.element_cid[:, 0]
         cids3 = self.element_cid[:, 1]
@@ -616,6 +617,14 @@ class RealSolidArray(OES_Object):
         #  - CPENTA: [element_device, cid, 'CEN/', 6]
         #  - CHEXA:  [element_device, cid, 'CEN/', 8]
         data_out[:, :4] = element_wise_data
+
+        # we could tack the nodes on, so we don't have to keep stacking it
+        # but we run into issues with datai
+        #
+        # total=nelements_nodes
+        #nodes_view = nodes.view(fdtype).reshape(nelements, nnodes_centroid)
+        #inode = np.arange(nnodes_centroid)
+        #data_out[:, 4+inode*21] = nodes_view[:, inode]
 
         # v is the (3, 3) eigenvector for every time and every element
         if calculate_directional_vectors:

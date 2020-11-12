@@ -84,6 +84,18 @@ def to_column_bytes(data_list: List[np.ndarray], dtype_out: str,
     out = np.column_stack(data_list)
     return out
 
+def get_complex_fdtype(dtype):
+    """complex64 -> float32; complex128 -> float64"""
+    if dtype.itemsize == 8:
+        return np.float32(1).dtype
+    return np.float64(1).dtype # 8
+
+def view_dtype(array_obj, dtype):
+    """handles downcasting data"""
+    if array_obj.dtype.itemsize == dtype.itemsize:
+        return array_obj.view(dtype)
+    return array_obj.astype(dtype)
+
 def export_to_hdf5(self, group, log):
     """exports the object to HDF5 format"""
     #headers = self.get_headers()

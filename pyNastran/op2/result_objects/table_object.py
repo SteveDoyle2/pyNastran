@@ -33,7 +33,7 @@ import numpy as np
 from pyNastran.op2.result_objects.op2_objects import ScalarObject
 from pyNastran.f06.f06_formatting import write_floats_13e, write_imag_floats_13e, write_float_12e
 from pyNastran.op2.errors import SixtyFourBitError
-from pyNastran.op2.op2_interface.write_utils import set_table3_field
+from pyNastran.op2.op2_interface.write_utils import set_table3_field, view_dtype
 
 float_types = (float, np.float32)
 integer_types = (int, np.int32)
@@ -1019,11 +1019,15 @@ class RealTableArray(TableArray):
         """writes an OP2"""
         import inspect
         allowed_tables = [
-            'OUGV1', 'BOUGV1', 'BOPHIG', 'BOPG1',
+            'OUGV1', 'BOUGV1',
+            'OPHIG', 'BOPHIG',
             'OUPV1', 'OUXY1', # solution set
             'OQP1', 'OQMG1', 'OQG1', 'OQGV1', 'OPNL1',
-            'OPG1', 'OPGV1',
-                       'OUGCRM1', 'OUGNO1', 'OUGPSD1', 'OUGRMS1', # disp/vel/acc/eigenvector
+            'OPG1', 'BOPG1',
+            'OPHSA',
+            'OPGV1',
+            'OUGATO1', 'OUGCRM1', 'OUGNO1', 'OUGPSD1', 'OUGRMS1', # disp/vel/acc/eigenvector
+            'OVGATO1', 'OVGCRM1', 'OVGNO1',
             'OAGATO1', 'OAGCRM1', 'OAGNO1', 'OAGPSD1', 'OAGRMS1', # acceleration
                                   'OPGNO1',            'OPGRMS1', # load vector
             'OQGPSD1',
@@ -1032,7 +1036,8 @@ class RealTableArray(TableArray):
             'OUGF1',
             'OQGCF1', 'OQGGF1',
             'RADCONS', 'RADEATC', 'RADEFFM',
-        ]
+            ]
+
         assert self.table_name in allowed_tables, self.table_name
 
         frame = inspect.currentframe()
@@ -1056,23 +1061,23 @@ class RealTableArray(TableArray):
         nnodes = self.data.shape[1]
         nnodes_device = self.node_gridtype[:, 0] * 10 + self.device_code
 
-        fdtype = self.data.dtype
         nnodes = len(node)
-        #node_bytes = node.tobytes()
-        #gridtype_bytes = gridtype.tobytes()
-        #node_floats = np.frombuffer(node.tobytes(), dtype='float32')
-        #gridtype_floats = np.frombuffer(gridtype.tobytes(), dtype='float32')
-        nodedevice_gridtype = np.column_stack([nnodes_device, gridtype])
-        node_gridtype_bytes = nodedevice_gridtype.tobytes()
-        node_gridtype_floats = np.frombuffer(node_gridtype_bytes,
-                                             dtype=fdtype).reshape(nnodes, 2)
-        #print(node_floats)
-        #print(gridtype_floats)
-        #print(node_gridtype_floats)
-
         max_id = node.max()
         if max_id > 99999999:
             raise SixtyFourBitError(f'64-bit OP2 writing is not supported; max id={max_id}')
+
+        fdtype = self.data.dtype
+        if self.size == 4:
+            pass
+        else:
+            warnings.warn(f'downcasting {self.class_name}...this is buggy')
+            #idtype = np.int32(1)
+            fdtype = np.float32(1.0)
+
+        nodedevice_gridtype = np.column_stack([nnodes_device, gridtype])
+        node_gridtype_floats = view_dtype(nodedevice_gridtype, fdtype)
+        #print(node_gridtype_floats)
+        #node_gridtype_floats = nodedevice_gridtype.view(fdtype) # .reshape(nnodes, 2)
 
         #format_table4_1 = Struct(self._endian + b'15i')
         #format_table4_2 = Struct(self._endian + b'3i')
@@ -1104,10 +1109,11 @@ class RealTableArray(TableArray):
             fascii.write('r4 [4, %s, 4]\n' % (itable))
             fascii.write('r4 [4, %i, 4]\n' % (4*ntotal))
 
-            datai = self.data[itime, :, :]
+            datai = view_dtype(self.data[itime, :, :], fdtype)
             node_gridtype_data = np.hstack([node_gridtype_floats, datai])
-            node_gridtype_data_bytes = node_gridtype_data.tobytes()
-            op2_file.write(node_gridtype_data_bytes)
+            op2_file.write(node_gridtype_data)
+            assert ntotal == node_gridtype_data.size
+            #print(self.data.shape, ntotal)
 
             itable -= 1
             header = [4 * ntotal,]
@@ -1561,7 +1567,9 @@ class ComplexTableArray(TableArray):
             'OQG1', 'OQMG1',
             'OPG1',
             'OUXY1',
-            'OUGF1', 'OUG1F', 'OUG1',
+            'OUG1F',
+            'OUG1',
+            'OUGF1', 'BOUGF1',
         ]
         assert self.table_name in allowed_tables, self.table_name
 

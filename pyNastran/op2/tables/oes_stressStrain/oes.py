@@ -5086,11 +5086,11 @@ class OES(OP2Common):
 
         etype_map = {
             #element_type : (element_base, nnodes_expected, element_name)
-            64 : ('cquad8', -1, 'CQUAD8'),
-            70 : ('ctriar', -1, 'CTRIAR'),
-            75 : ('ctria6', -1, 'CTRIA6'),
-            82 : ('cquadr', -1, 'CQUADR'),
-            144 : ('cquad4', -1, 'CQUAD4-bilinear'),
+            64 : ('cquad8', 4, 'CQUAD8'),
+            70 : ('ctriar', 3, 'CTRIAR'),
+            75 : ('ctria6', 3, 'CTRIA6'),
+            82 : ('cquadr', 4, 'CQUADR'),
+            144 : ('cquad4', 4, 'CQUAD4-bilinear'),
         }
         if self.is_stress:
             stress_strain = 'stress'
@@ -5103,7 +5103,8 @@ class OES(OP2Common):
             obj_vector_complex = ComplexPlateStrainArray
             obj_vector_random = RandomPlateStrainArray
 
-        element_base, nnodes_expected, element_name = etype_map[self.element_type]
+        # centroid not incldued in nnodes
+        element_base, nnodes, element_name = etype_map[self.element_type]
         #if prefix == '' and postfix == '':
             #prefix = stress_strain + '.'
 
@@ -5114,12 +5115,6 @@ class OES(OP2Common):
             return ndata, None, None
         self._results._found_result(result_name)
 
-        if self.element_type in [64, 82, 144]:
-            nnodes = 4 # + 1 centroid
-        elif self.element_type in [70, 75]:
-            nnodes = 3 # + 1 centroid
-        else:  # pragma: no cover
-            raise RuntimeError(self.code_information())
         nnodes_all = nnodes + 1 # adding the centroid
 
         slot = self.get_result(result_name)

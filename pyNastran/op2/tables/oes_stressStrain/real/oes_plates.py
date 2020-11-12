@@ -6,11 +6,12 @@ from typing import Tuple, List
 import numpy as np
 
 from pyNastran.utils.numpy_utils import integer_types
+from pyNastran.op2.op2_interface.write_utils import to_column_bytes, view_dtype
 from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import (
     StressObject, StrainObject, OES_Object)
 from pyNastran.op2.result_objects.op2_objects import get_times_dtype
 from pyNastran.f06.f06_formatting import write_floats_13e, _eigenvalue_header
-from pyNastran.op2.op2_interface.write_utils import to_column_bytes
+from pyNastran.op2.errors import SixtyFourBitError
 
 
 class RealPlateArray(OES_Object):
@@ -561,7 +562,7 @@ class RealPlateArray(OES_Object):
                   date, is_mag_phase=False, endian='>'):
         """writes an OP2"""
         import inspect
-        from struct import Struct, pack
+        from struct import pack # Struct,
         frame = inspect.currentframe()
         call_frame = inspect.getouterframes(frame, 2)
         op2_ascii.write(f'{self.__class__.__name__}.write_op2: {call_frame[1][3]}\n')
@@ -577,14 +578,26 @@ class RealPlateArray(OES_Object):
         else:
             nnodes_all = nnodes
         #print("nnodes_all =", nnodes_all)
-        cen_word_ascii = f'CEN/{nnodes:d}'
+        #cen_word_ascii = f'CEN/{nnodes:d}'
         cen_word_bytes = b'CEN/'
+        idtype = self.element_node.dtype
+        fdtype = self.data.dtype
+        if self.size == 4:
+            pass
+        else:
+            print(f'downcasting {self.class_name}...')
+            #cen_word_bytes = b'CEN/    '
+            idtype = np.int32(1)
+            fdtype = np.float32(1.0)
 
         #msg.append(f'  element_node.shape = {self.element_node.shape}\n')
         #msg.append(f'  data.shape={self.data.shape}\n')
 
         eids = self.element_node[:, 0]
         nids = self.element_node[:, 1]
+        max_id = self.element_node.max()
+        if max_id > 99999999:
+            raise SixtyFourBitError(f'64-bit OP2 writing is not supported; max id={max_id}')
 
         eids_device = eids * 10 + self.device_code
 
@@ -593,7 +606,7 @@ class RealPlateArray(OES_Object):
 
         #print('nelements =', nelements)
         #print('nlayers =', nlayers)
-        nnodes_per_element = len(nids) // nelements // 2
+        nnodes_per_element = nlayers // nelements // 2
         # 21 = 1 node, 3 principal, 6 components, 9 vectors, 2 p/ovm
         #ntotal = ((nnodes * 21) + 1) + (nelements * 4)
 
@@ -621,25 +634,23 @@ class RealPlateArray(OES_Object):
         if not self.is_sort1:
             raise NotImplementedError('SORT2')
 
-        struct_isi8f = Struct('i 4s i 8f')
-        struct_i8f = Struct(endian + b'i8f')
-        struct_8f = Struct(endian + b'8f')
-
-        use_numpy = True
+        #struct_isi8f = Struct('i 4s i 8f')
+        #struct_i8f = Struct(endian + b'i8f')
+        #struct_8f = Struct(endian + b'8f')
 
         nelements_nnodes = len(nids) // 2
         is_centroid = self.element_type in [33, 74, 227, 228]
-        is_not_centroid = self.element_type in [64, 70, 75, 82, 144]
-        idtype = eids_device.dtype
-        fdtype = self.data.dtype
+        is_nodes = self.element_type in [64, 70, 75, 82, 144]
         if is_centroid:
             eids_device2 = to_column_bytes([eids_device[::2]], idtype).view(fdtype)
             assert len(eids_device2) == nelements
-        else:
+        elif is_nodes:
             cen_word_array_temp = np.full((nelements, 1), cen_word_bytes)
             cen_word_array = cen_word_array_temp.view(fdtype)
-            eids_device2 = eids_device[::2*nnodes_per_element].reshape(nelements, 1).view(fdtype)
-            nids2 = nids[::2].reshape(nelements_nnodes, 1).view(fdtype)
+            eids_device2 = view_dtype(eids_device[::2*nnodes_per_element].reshape(nelements, 1),
+                                      fdtype)
+            nids2 = view_dtype(nids[::2].reshape(nelements_nnodes, 1),
+                               fdtype)
 
         op2_ascii.write(f'nelements={nelements:d}\n')
         for itime in range(self.ntimes):
@@ -658,97 +669,25 @@ class RealPlateArray(OES_Object):
             op2_ascii.write(f'r4 [4, {itable:d}, 4]\n')
             op2_ascii.write(f'r4 [4, {4 * ntotal:d}, 4]\n')
 
-            fiber_dist = self.data[itime, :, 0]
-            oxx = self.data[itime, :, 1]
-            oyy = self.data[itime, :, 2]
-            txy = self.data[itime, :, 3]
-            angle = self.data[itime, :, 4]
-            major_principal = self.data[itime, :, 5]
-            minor_principal = self.data[itime, :, 6]
-            ovm = self.data[itime, :, 7]
+            if is_centroid:
+                # [eid_device, fdi, oxxi, oyyi, txyi, anglei, major, minor, ovmi]
+                # [            fdi, oxxi, oyyi, txyi, anglei, major, minor, ovmi]
+                datai = view_dtype(self.data[itime, :, :].reshape(nelements, 16), fdtype)
+                data_out = np.hstack([eids_device2, datai])
+            elif is_nodes:
+                # CQUAD8, CTRIAR, CTRIA6, CQUADR, CQUAD4
+                # bilinear
+                datai = view_dtype(
+                    self.data[itime, :, :].reshape(nelements*nnodes_per_element, 16),
+                    fdtype)
+                nids_data = np.hstack([nids2, datai]).reshape(nelements, nnodes_per_element*17)
+                data_out = np.hstack([eids_device2, cen_word_array, nids_data])
+            else:  # pragma: no cover
+                msg = f'element_name={self.element_name} element_type={self.element_type}'
+                raise NotImplementedError(msg)
+            assert data_out.size == ntotal, f'data_out.shape={data_out.shape} size={data_out.size}; ntotal={ntotal}'
+            op2_file.write(data_out)
 
-            if use_numpy:
-                if is_centroid:
-                    # [eid_device, fdi, oxxi, oyyi, txyi, anglei, major, minor, ovmi]
-                    # [            fdi, oxxi, oyyi, txyi, anglei, major, minor, ovmi]
-                    datai = self.data[itime, :, :].reshape(nelements, 16)
-                    data_out = np.hstack([eids_device2, datai])
-                elif is_not_centroid:
-                    # CQUAD8, CTRIAR, CTRIA6, CQUADR, CQUAD4
-                    # bilinear
-                    datai = self.data[itime, :, :].reshape(nelements*nnodes_per_element, 16)
-                    nids_data = np.hstack([nids2, datai]).reshape(nelements, nnodes_per_element*17)
-                    data_out = np.hstack([eids_device2, cen_word_array, nids_data])
-                else:  # pragma: no cover
-                    msg = f'element_name={self.element_name} element_type={self.element_type}'
-                    raise NotImplementedError(msg)
-                assert data_out.size == ntotal, f'data_out.shape={data_out.shape} size={data_out.size}; ntotal={ntotal}'
-                op2_file.write(data_out)
-            else:
-                #data_elem = []
-                #eid_old = 0
-                nwide = 0
-                if is_centroid:
-                    # tria3
-                    # self.element_type in [33, 74, 227, 228]
-                    # CQUAD4, CTRIA3, CTRIAR-linear, CQUADR-linear
-                    for (i, eid_device, eid, fdi, oxxi, oyyi, txyi, anglei, major, minor, ovmi) in zip(
-                         count(), eids_device, eids, fiber_dist, oxx, oyy, txy, angle, major_principal, minor_principal, ovm):
-                        #if eid != eid_old:
-                            #print(len(data_elem))
-                            #data_elem = []
-
-                        ilayer = i % 2
-                        if ilayer == 0:
-                            #print([eid, fdi, oxxi, oyyi, txyi, anglei, major, minor, ovmi])
-                            data = [eid_device, fdi, oxxi, oyyi, txyi, anglei, major, minor, ovmi]
-                            op2_file.write(struct_i8f.pack(*data))
-                            op2_ascii.write('eid=%s ilayer=0 data=%s' % (eid, str(data[1:])))
-
-                        else:
-                            data = [fdi, oxxi, oyyi, txyi, anglei, major, minor, ovmi]
-                            op2_file.write(struct_8f.pack(*data))
-                            op2_ascii.write('eid=%s ilayer=1 data=%s' % (eid, str(data[1:])))
-                        nwide += len(data)
-                        #data_elem += data
-                        #eid_old = eid
-                        #print('eid=%-2s ilayer=%s data=%s' % (eid_device, ilayer, str(data[1:])))
-                elif is_not_centroid:
-                    # self.element_type in [64, 70, 75, 82, 144]
-                    # CQUAD8, CTRIAR, CTRIA6, CQUADR, CQUAD4
-                    # bilinear
-                    for (i, eid_device, eid, nid, fdi, oxxi, oyyi, txyi, anglei, major, minor, ovmi) in zip(
-                         count(), eids_device, eids, nids, fiber_dist, oxx, oyy, txy, angle, major_principal, minor_principal, ovm):
-                        #if eid != eid_old:
-                            #print(len(data_elem))
-                            #data_elem = []
-                        ilayer = i % 2
-                        if nid == 0 and ilayer == 0:  # CEN
-                            data = [eid_device, cen_word_bytes, nid,
-                                    fdi, oxxi, oyyi, txyi, anglei, major, minor, ovmi]
-                            op2_file.write(struct_isi8f.pack(*data))
-                            op2_ascii.write('0  %8i %8s  %-13s  %-13s %-13s %-13s   %8.4f  %-13s %-13s %s\n' % (
-                                eid, cen_word_ascii, fdi, oxxi, oyyi, txyi, anglei, major, minor, ovmi))
-                        elif ilayer == 0:
-                            data = [nid, fdi, oxxi, oyyi, txyi, anglei, major, minor, ovmi]
-                            op2_file.write(struct_i8f.pack(*data))
-                            op2_ascii.write('   %8s %8i  %-13s  %-13s %-13s %-13s   %8.4f  %-13s %-13s %s\n' % (
-                                '', nid, fdi, oxxi, oyyi, txyi, anglei, major, minor, ovmi))
-                        elif ilayer == 1:
-                            data = [fdi, oxxi, oyyi, txyi, anglei, major, minor, ovmi]
-                            op2_file.write(struct_8f.pack(*data))
-                            op2_ascii.write('   %8s %8s  %-13s  %-13s %-13s %-13s   %8.4f  %-13s %-13s %s\n\n' % (
-                                '', '', fdi, oxxi, oyyi, txyi, anglei, major, minor, ovmi))
-                        else:  # pragma: no cover
-                            raise RuntimeError()
-                        #data_elem += data
-                        nwide += len(data)
-                        #eid_old = eid
-                        #data_out (25, 87)
-                else:  # pragma: no cover
-                    msg = f'element_name={self.element_name} element_type={self.element_type}'
-                    raise NotImplementedError(msg)
-                assert nwide == ntotal, f'nwide={nwide} ntotal={ntotal}'
             itable -= 1
             header = [4 * ntotal,]
             op2_file.write(pack('i', *header))
