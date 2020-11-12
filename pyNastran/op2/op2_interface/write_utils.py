@@ -53,8 +53,8 @@ def write_table_header(op2_file, fascii, table_name):
     ]
     assert len(table_name) == 8, table_name
     table0_format = '<4i 8s i'
-    st = Struct(table0_format)
-    op2_file.write(st.pack(*table0))
+    struct_table = Struct(table0_format)
+    op2_file.write(struct_table.pack(*table0))
     fascii.write('%s header0 = %s\n' % (table_name, table0))
 
 

@@ -118,7 +118,7 @@ class OES_Object(BaseElement):
 
     @property
     def is_max_shear(self):
-        return True if self.stress_bits[4] == 0 else False
+        return self.stress_bits[4] == 0
 
     def _get_headers(self):
         raise NotImplementedError(f'overwrite this {self.class_name}')
@@ -187,6 +187,10 @@ class OES_Object(BaseElement):
         field7 = 0
         if self.analysis_code == 1:
             field5 = self.lsdvmns[itime]
+            if np.isnan(field5):  # poor sort2 -> sort1
+                raise RuntimeError('field5 in a static case is nan...; do you have SORT2?')
+                #field5 = 1
+
         elif self.analysis_code == 2:
             field5 = self.modes[itime]
             field6 = self.eigns[itime]

@@ -574,14 +574,10 @@ class RealSolidArray(OES_Object):
         assert nnodes > 1, nnodes
         #assert self.ntimes == 1, self.ntimes
 
-        #device_code = self.device_code
         op2_ascii.write(f'  ntimes = {self.ntimes}\n')
         ntimes = self.ntimes
 
-        #fmt = '%2i %6f'
         #print('ntotal=%s' % (ntotal))
-        #assert ntotal == 193, ntotal
-
         if not self.is_sort1:
             raise NotImplementedError('SORT2')
         #op2_format = endian + b'2i6f'
@@ -613,8 +609,15 @@ class RealSolidArray(OES_Object):
 
         # speed up transient cases, but slightly slows down static cases
         data_out = np.full((nelements, 4+21*nnodes_centroid), np.nan, dtype=fdtype)
+
+        # setting:
+        #  - CTETRA: [element_device, cid, 'CEN/', 4]
+        #  - CPYRAM: [element_device, cid, 'CEN/', 5]
+        #  - CPENTA: [element_device, cid, 'CEN/', 6]
+        #  - CHEXA:  [element_device, cid, 'CEN/', 8]
         data_out[:, :4] = element_wise_data
 
+        # v is the (3, 3) eigenvector for every time and every element
         if calculate_directional_vectors:
             v = calculate_principal_eigenvectors4(
                 ntimes, nnodes,
@@ -648,10 +651,13 @@ class RealSolidArray(OES_Object):
                 ozz[itime, :], txz[itime, :], o3[itime, :], vi[:, 2, 1], vi[:, 2, 2], vi[:, 2, 0],
             ]
 
+            # stack each output by columns and fix any dtypes
             datai = to_column_bytes(col_inputs, fdtype)
             #datai2 = datai.reshape(nelements, 21*nnodes_centroid)
             #data_out = np.hstack([element_wise_data, datai2])
             #data_out[:, 4:] = datai2
+
+            # switch datai to element format and put it in the output buffer
             data_out[:, 4:] = datai.reshape(nelements, 21*nnodes_centroid)
             op2_file.write(data_out)
 

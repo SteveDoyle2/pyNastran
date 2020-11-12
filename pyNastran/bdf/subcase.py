@@ -371,7 +371,7 @@ class Subcase:
                 self.add('SPCFORCES', 'ALL', options, 'STRESS-type')
             else:
                 self._write_op2_error_msg(log, self.log, msg, data_code)
-        elif table_name in ['OEF1X', 'OEF1', 'RAFCONS', 'RAFEATC']:
+        elif table_name in ['OEF1X', 'OEF1', 'DOEF1', 'RAFCONS', 'RAFEATC']:
             if table_code in [4]:
                 self.add('FORCE', 'ALL', options, 'STRESS-type')
             else:
