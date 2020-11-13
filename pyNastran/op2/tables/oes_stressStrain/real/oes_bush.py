@@ -309,10 +309,22 @@ class RealBushArray(OES_Object):
         #print('ntotal=%s' % (ntotal))
         #assert ntotal == 193, ntotal
 
-        if self.is_sort1:
-            struct1 = Struct(endian + b'i6f')
-        else:
+        if not self.is_sort1:
             raise NotImplementedError('SORT2')
+        struct1 = Struct(endian + b'i6f')
+
+        fdtype = self.data.dtype
+        if self.size == 4:
+            pass
+        else:
+            print(f'downcasting {self.class_name}...')
+            #cen_word_bytes = b'CEN/    '
+            idtype = np.int32(1)
+            fdtype = np.float32(1.0)
+
+        use_numpy = True
+        data_out = np.empty((nelements, 7), dtype=fdtype)
+        data_out[:, 0] = eids_device.view(fdtype)
 
         op2_ascii.write(f'nelements={nelements:d}\n')
 
@@ -334,28 +346,33 @@ class RealBushArray(OES_Object):
             op2_ascii.write(f'r4 [4, {itable:d}, 4]\n')
             op2_ascii.write(f'r4 [4, {4 * ntotal:d}, 4]\n')
 
-            tx = self.data[itime, :, 0]
-            ty = self.data[itime, :, 1]
-            tz = self.data[itime, :, 2]
-            rx = self.data[itime, :, 3]
-            ry = self.data[itime, :, 4]
-            rz = self.data[itime, :, 5]
+            if use_numpy:
+                # [eid_device, txi, tyi, tzi, rxi, ryi, rzi]
+                data_out[:, 1:] = self.data[itime, :, :]
+                assert data_out.size == ntotal, f'data_out.shape={data_out.shape} size={data_out.size}; ntotal={ntotal}'
+                op2_file.write(data_out)
+            else:
+                tx = self.data[itime, :, 0]
+                ty = self.data[itime, :, 1]
+                tz = self.data[itime, :, 2]
+                rx = self.data[itime, :, 3]
+                ry = self.data[itime, :, 4]
+                rz = self.data[itime, :, 5]
+                for eid, eid_device, txi, tyi, tzi, rxi, ryi, rzi in zip(
+                        eids, eids_device, tx, ty, tz, rx, ry, rz):
+                    data = [eid_device, txi, tyi, tzi, rxi, ryi, rzi]
 
-            for eid, eid_device, txi, tyi, tzi, rxi, ryi, rzi in zip(
-                    eids, eids_device, tx, ty, tz, rx, ry, rz):
-                data = [eid_device, txi, tyi, tzi, rxi, ryi, rzi]
+                    vals = [txi, tyi, tzi, rxi, ryi, rzi]
+                    vals2 = write_floats_13e(vals)
+                    [txi, tyi, tzi, rxi, ryi, rzi] = vals2
+                    op2_ascii.write('0                   %8i     %-13s %-13s %-13s %-13s %-13s %s\n' % (
+                            eid, txi, tyi, tzi, rxi, ryi, rzi))
+                    op2_file.write(struct1.pack(*data))
 
-                vals = [txi, tyi, tzi, rxi, ryi, rzi]
-                vals2 = write_floats_13e(vals)
-                [txi, tyi, tzi, rxi, ryi, rzi] = vals2
-                op2_ascii.write('0                   %8i     %-13s %-13s %-13s %-13s %-13s %s\n' % (
-                        eid, txi, tyi, tzi, rxi, ryi, rzi))
-                op2_file.write(struct1.pack(*data))
-
-            #for eid, axiali, SMai, torsioni, SMti in zip(eids_device, axial, SMa, torsion, SMt):
-                #data = [eid, axiali, SMai, torsioni, SMti]
-                #op2_ascii.write('  eid=%s axial=%s SMa=%s torsion=%s SMt=%s\n' % tuple(data))
-                #op2_file.write(struct1.pack(*data))
+                #for eid, axiali, SMai, torsioni, SMti in zip(eids_device, axial, SMa, torsion, SMt):
+                    #data = [eid, axiali, SMai, torsioni, SMti]
+                    #op2_ascii.write('  eid=%s axial=%s SMa=%s torsion=%s SMt=%s\n' % tuple(data))
+                    #op2_file.write(struct1.pack(*data))
 
             itable -= 1
             header = [4 * ntotal,]

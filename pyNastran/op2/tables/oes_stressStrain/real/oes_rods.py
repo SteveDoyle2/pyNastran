@@ -5,6 +5,7 @@ from numpy import zeros, searchsorted, allclose
 from pyNastran.op2.result_objects.op2_objects import get_times_dtype
 from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import (
     StressObject, StrainObject, OES_Object, oes_data_code)
+from pyNastran.op2.op2_interface.write_utils import view_dtype
 from pyNastran.f06.f06_formatting import write_floats_13e, _eigenvalue_header #, get_key0
 
 ELEMENT_NAME_TO_ELEMENT_TYPE = {
@@ -344,10 +345,21 @@ class RealRodArray(OES_Object):
         #print('ntotal=%s' % (ntotal))
         #assert ntotal == 193, ntotal
 
-        if self.is_sort1:
-            struct1 = Struct(endian + b'i4f')
-        else:
+        if not self.is_sort1:
             raise NotImplementedError('SORT2')
+        struct1 = Struct(endian + b'i4f')
+
+        fdtype = self.data.dtype
+        if self.size == 4:
+            pass
+        else:
+            print(f'downcasting {self.class_name}...')
+            #idtype = np.int32(1)
+            fdtype = np.float32(1.0)
+
+        # [eid, axial, SMa, torsion, SMt]
+        data_out = np.empty((nelements, 5), dtype=fdtype)
+        data_out[:, 0] = view_dtype(eids_device, fdtype)
 
         op2_ascii.write(f'nelements={nelements:d}\n')
 
@@ -369,15 +381,9 @@ class RealRodArray(OES_Object):
             op2_ascii.write(f'r4 [4, {itable:d}, 4]\n')
             op2_ascii.write(f'r4 [4, {4 * ntotal:d}, 4]\n')
 
-            axial = self.data[itime, :, 0]
-            SMa = self.data[itime, :, 1]
-            torsion = self.data[itime, :, 2]
-            SMt = self.data[itime, :, 3]
-
-            for eid, axiali, SMai, torsioni, SMti in zip(eids_device, axial, SMa, torsion, SMt):
-                data = [eid, axiali, SMai, torsioni, SMti]
-                op2_ascii.write('  eid=%s axial=%s SMa=%s torsion=%s SMt=%s\n' % tuple(data))
-                op2_file.write(struct1.pack(*data))
+            # [eid, axial, SMa, torsion, SMt]
+            data_out[:, 1:] = self.data[itime, :, :]
+            op2_file.write(data_out)
 
             itable -= 1
             header = [4 * ntotal,]

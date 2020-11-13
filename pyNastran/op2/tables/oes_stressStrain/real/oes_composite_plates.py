@@ -455,16 +455,25 @@ class RealCompositePlateArray(OES_Object):
         op2_ascii.write('  #elementi = [eid_device, fd1, sx1, sy1, txy1, angle1, major1, minor1, vm1,\n')
         op2_ascii.write('  #                        fd2, sx2, sy2, txy2, angle2, major2, minor2, vm2,]\n')
 
-        #struct1 = Struct(endian + b'i16f')
-        struct2 = Struct(endian + b'2i 9f')
         if not self.is_sort1:
             raise NotImplementedError('SORT2')
+
+        fdtype = self.data.dtype
+        if self.size == 4:
+            pass
+        else:
+            print(f'downcasting {self.class_name}...')
+            #idtype = np.int32(1)
+            fdtype = np.float32(1.0)
+
+        data_out = np.empty((nlayers, 11), dtype=fdtype)
+        data_out[:, 0] = eids_device.view(fdtype)
+        data_out[:, 1] = layers.view(fdtype)
 
         op2_ascii.write(f'nelements={nelements:d}\n')
         ntimes = self.data.shape[0]
 
         for itime in range(ntimes):
-            nwide = 0
             self._write_table_3(op2_file, op2_ascii, new_result, itable, itime)
 
             # record 4
@@ -484,31 +493,12 @@ class RealCompositePlateArray(OES_Object):
             #header = _eigenvalue_header(self, header, itime, ntimes, dt)
             #f06_file.write(''.join(header + msg))
 
-            #[o11, o22, t12, t1z, t2z, angle, major, minor, ovm]
-            o11 = self.data[itime, :, 0]
-            o22 = self.data[itime, :, 1]
-            t12 = self.data[itime, :, 2]
-            t1z = self.data[itime, :, 3]
-            t2z = self.data[itime, :, 4]
-            angle = self.data[itime, :, 5]
-            major = self.data[itime, :, 6]
-            minor = self.data[itime, :, 7]
-            ovm = self.data[itime, :, 8]
+            # [eid_device, layer, o11, o22, t12, t1z, t2z, angle, major, minor, ovm]
+            # [                   o11, o22, t12, t1z, t2z, angle, major, minor, ovm]
+            data_out[:, 2:] = self.data[itime, :, :]
+            assert data_out.size == ntotal, f'data_out.shape={data_out.shape} size={data_out.size}; ntotal={ntotal}'
+            op2_file.write(data_out)
 
-            for eid_device, eid, layer, o11i, o22i, t12i, t1zi, t2zi, anglei, majori, minori, ovmi in zip(
-                    eids_device, eids, layers, o11, o22, t12, t1z, t2z, angle, major, minor, ovm):
-
-                data = [eid_device, layer, o11i, o22i, t12i, t1zi, t2zi, anglei, majori, minori, ovmi]
-                op2_file.write(struct2.pack(*data))
-
-                [o11i, o22i, t12i, t1zi, t2zi, majori, minori, ovmi] = write_floats_12e([
-                    o11i, o22i, t12i, t1zi, t2zi, majori, minori, ovmi])
-                op2_ascii.write('0 %8s %4s  %12s %12s %12s   %12s %12s  %6.2F %12s %12s %s\n'
-                                % (eid, layer, o11i, o22i, t12i, t1zi, t2zi, anglei, majori, minori, ovmi))
-
-                nwide += len(data)
-
-            assert nwide == ntotal, f'nwide={nwide} ntotal={ntotal}'
             itable -= 1
             header = [4 * ntotal,]
             op2_file.write(pack('i', *header))

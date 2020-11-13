@@ -562,7 +562,7 @@ class RealPlateArray(OES_Object):
                   date, is_mag_phase=False, endian='>'):
         """writes an OP2"""
         import inspect
-        from struct import pack # Struct,
+        from struct import Struct, pack
         frame = inspect.currentframe()
         call_frame = inspect.getouterframes(frame, 2)
         op2_ascii.write(f'{self.__class__.__name__}.write_op2: {call_frame[1][3]}\n')
@@ -652,6 +652,9 @@ class RealPlateArray(OES_Object):
             nids2 = view_dtype(nids[::2].reshape(nelements_nnodes, 1),
                                fdtype)
 
+        #nheader = 15
+        struct_i = Struct('i')
+        struct_13i = Struct('13i')
         op2_ascii.write(f'nelements={nelements:d}\n')
         for itime in range(self.ntimes):
             self._write_table_3(op2_file, op2_ascii, new_result, itable, itime)
@@ -664,7 +667,7 @@ class RealPlateArray(OES_Object):
                       4, 0, 4,
                       4, ntotal, 4,
                       4 * ntotal]
-            op2_file.write(pack('%ii' % len(header), *header))
+            op2_file.write(struct_13i.pack(*header))
             op2_ascii.write('r4 [4, 0, 4]\n')
             op2_ascii.write(f'r4 [4, {itable:d}, 4]\n')
             op2_ascii.write(f'r4 [4, {4 * ntotal:d}, 4]\n')
@@ -690,7 +693,8 @@ class RealPlateArray(OES_Object):
 
             itable -= 1
             header = [4 * ntotal,]
-            op2_file.write(pack('i', *header))
+
+            op2_file.write(struct_i.pack(*header))
             op2_ascii.write('footer = %s\n' % header)
             new_result = False
         return itable

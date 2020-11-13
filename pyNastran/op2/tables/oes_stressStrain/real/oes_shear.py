@@ -266,10 +266,21 @@ class RealShearArray(OES_Object):
         #print('ntotal=%s' % (ntotal))
         #assert ntotal == 193, ntotal
 
-        if self.is_sort1:
-            struct1 = Struct(endian + b'i 3f')
-        else:
+        if not self.is_sort1:
             raise NotImplementedError('SORT2')
+        struct1 = Struct(endian + b'i 3f')
+
+        fdtype = self.data.dtype
+        if self.size == 4:
+            pass
+        else:
+            print(f'downcasting {self.class_name}...')
+            #idtype = np.int32(1)
+            fdtype = np.float32(1.0)
+
+        # [eid, max_shear, avg_shear, margin]
+        data_out = np.empty((nelements, 4), dtype=fdtype)
+        data_out[:, 0] = eids_device.view(fdtype)
 
         op2_ascii.write(f'nelements={nelements:d}\n')
 
@@ -291,14 +302,9 @@ class RealShearArray(OES_Object):
             op2_ascii.write(f'r4 [4, {itable:d}, 4]\n')
             op2_ascii.write(f'r4 [4, {4 * ntotal:d}, 4]\n')
 
-            max_shear = self.data[itime, :, 0]
-            avg_shear = self.data[itime, :, 1]
-            margin = self.data[itime, :, 2]
-
-            for eid, eid_device, max_sheari, avg_sheari, margini in zip(eids, eids_device, max_shear, avg_shear, margin):
-                #[max_sheari, avg_sheari, margini] = write_floats_13e([max_sheari, avg_sheari, margini])
-                op2_file.write(struct1.pack(eid_device, max_sheari, avg_sheari, margini))
-                op2_ascii.write('      %8i   %13s  %10.4E %s\n' % (eid, max_sheari, avg_sheari, margini))
+            # [eid, max_shear, avg_shear, margin]
+            data_out[:, 1:] = self.data[itime, :, :]
+            op2_file.write(data_out)
 
             itable -= 1
             header = [4 * ntotal,]

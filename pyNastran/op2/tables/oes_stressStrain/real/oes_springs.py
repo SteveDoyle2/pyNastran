@@ -419,10 +419,22 @@ class RealSpringArray(OES_Object):
         #print('ntotal=%s' % (ntotal))
         #assert ntotal == 193, ntotal
 
-        if self.is_sort1:
-            struct1 = Struct(endian + b'if')
-        else:
+        if not self.is_sort1:
             raise NotImplementedError('SORT2')
+        struct1 = Struct(endian + b'if')
+
+        fdtype = self.data.dtype
+        if self.size == 4:
+            pass
+        else:
+            print(f'downcasting {self.class_name}...')
+            #idtype = np.int32(1)
+            fdtype = np.float32(1.0)
+
+        # [eid, stress]
+        data_out = np.empty((nelements, 2), dtype=fdtype)
+        data_out[:, 0] = eids_device.view(fdtype)
+
 
         op2_ascii.write('%s-nelements=%i\n' % (self.element_name, nelements))
         for itime in range(self.ntimes):
@@ -440,12 +452,9 @@ class RealSpringArray(OES_Object):
             op2_ascii.write(f'r4 [4, {itable:d}, 4]\n')
             op2_ascii.write(f'r4 [4, {4 * ntotal:d}, 4]\n')
 
-            stress = self.data[itime, :, 0]
-
-            for eid, stressi in zip(eids_device, stress):
-                data = [eid, stressi]
-                op2_ascii.write('  eid=%s force=%s\n' % tuple(data))
-                op2_file.write(struct1.pack(*data))
+            # [eid, stress]
+            data_out[:, 1] = self.data[itime, :, 0]
+            op2_file.write(data_out)
 
             itable -= 1
             header = [4 * ntotal,]

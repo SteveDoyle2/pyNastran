@@ -133,30 +133,35 @@ def _write_op2(op2_file, fop2_ascii, obj: OP2,
     case_count = _write_result_tables(obj, op2_file, fop2_ascii, struct_3i, endian, skips)
     return case_count
 
-def _write_result_tables(obj: OP2, op2_file, fop2_ascii, struct_3i, endian, skips: Set[str]):
+def _write_result_tables(obj: OP2, op2_file, fop2_ascii,
+                         struct_3i,
+                         endian, skips: Set[str]):
     """writes the op2 result tables"""
     date = obj.date
     log = obj.log
     res_categories2 = defaultdict(list)
     table_order = [
-        'OUGV1', 'OPHIG',
-        'BOUGV1', 'BOPHIG', 'BOPHIGF',
-        'OUPV1', 'OUXY1', 'OUXY2', 'OPHSA',
-        'OUGF1', 'OUG1F',
-        'BOUGF1',
+        'OUGV1', 'BOUGV1',
+        'OUPV1',
+        'OUGF1', 'OUG1F', 'BOUGF1',
         'TOUGV1', 'OTEMP1',
-        'OUG1',
-        'OUGV1PAT',
+        'OUG1', 'OUGV1PAT',
         'OAG1',
-        'BOPG1',
-        'OPHIG',
 
+        # eigenvectors, basic eigenvectors, basic fluid eigenvectors
+        'OPHIG', 'BOPHIG', 'BOPHIGF',
+        # eigenvectors in SOL 401 - NX
+        'OUXY1', 'OUXY2', 'OPHSA',
+
+        # spc/mpc forces
         'OQG1',
         'OQGV1',
         'OQP1',
         'OQMG1',
+        # contact/glue forces
         'OQGCF1', 'OQGGF1',
-        'OPGV1', 'OPG1', 'OPNL1',
+        # load vectors
+        'OPG1', 'BOPG1', 'OPGV1', 'OPNL1',
 
         # ---------------
         # random displacement-style tables
@@ -212,7 +217,6 @@ def _write_result_tables(obj: OP2, op2_file, fop2_ascii, struct_3i, endian, skip
         'OSTRVM2',
 
         # ---------------
-
         'OGPFB1',
         'ONRGY', 'ONRGY1',
         'OGS1', 'OGSTR1',
@@ -231,6 +235,11 @@ def _write_result_tables(obj: OP2, op2_file, fop2_ascii, struct_3i, endian, skip
             if hasattr(res, 'table_name_str'): # params
                 #print(table_type)
                 res_categories2[res.table_name_str].append(res)
+            else:
+                # grid_point
+                class_name = res.__class__.__name__
+                log.debug(class_name)
+                assert class_name in ['GridPointWeight', 'PARAM', 'RealEigenvalues'], class_name
 
     for table_name, results in sorted(res_categories2.items()):
         assert table_name in table_order, table_name
@@ -254,6 +263,11 @@ def _write_result_tables(obj: OP2, op2_file, fop2_ascii, struct_3i, endian, skip
         #'OQG1',
         #'OUGV1',
     ]
+
+    footer = [4, 0, 4]
+    footer_bytes = struct_3i.pack(*footer)
+
+    struct_9i = Struct(endian + b'9i')
     for table_name in pretables + table_order:
         if table_name not in res_categories2:
             continue
@@ -270,6 +284,7 @@ def _write_result_tables(obj: OP2, op2_file, fop2_ascii, struct_3i, endian, skip
                 element_name = ' - ' + result.element_name
                 #print(element_name)
 
+            #print(result.class_name)
             if hasattr(result, 'write_op2'):
                 fop2_ascii.write('-' * 60 + '\n')
                 #if hasattr(result, 'is_bilinear') and result.is_bilinear():
@@ -306,7 +321,7 @@ def _write_result_tables(obj: OP2, op2_file, fop2_ascii, struct_3i, endian, skip
             ]
             #print('writing itable=%s' % itable)
             assert itable is not None, '%s itable is None' % result.__class__.__name__
-            op2_file.write(pack(endian + b'9i', *header))
+            op2_file.write(struct_9i.pack(*header))
             fop2_ascii.write('footer2 = %s\n' % header)
             new_result = False
 
@@ -314,9 +329,8 @@ def _write_result_tables(obj: OP2, op2_file, fop2_ascii, struct_3i, endian, skip
         if case_count:
             #print(result.table_name, itable)
             #print('res_category_name=%s case_count=%s'  % (res_category_name, case_count))
-            # close off the result
-            footer = [4, 0, 4]
-            op2_file.write(struct_3i.pack(*footer))
+            # close off the result - [4, 0, 4]
+            op2_file.write(footer_bytes)
             fop2_ascii.write('close_a = %s\n' % footer)
             fop2_ascii.write('---------------\n')
             total_case_count += case_count
@@ -324,21 +338,25 @@ def _write_result_tables(obj: OP2, op2_file, fop2_ascii, struct_3i, endian, skip
 
     #if total_case_count == 0:
         #raise FatalError('total_case_count = 0')
-    # close off the op2
-    footer = [4, 0, 4]
-    op2_file.write(struct_3i.pack(*footer))
+
+    # close off the op2 - [4, 0, 4]
+    op2_file.write(footer_bytes)
     fop2_ascii.write('close_b = %s\n' % footer)
     op2_file.close()
     fop2_ascii.close()
     return total_case_count
 
-def write_op2_header(obj: OP2, op2_file, fop2_ascii, struct_3i,
+def write_op2_header(model: OP2, op2_file, fop2_ascii,
+                     struct_3i: Struct,
                      post: int=-1, endian: bytes=b'<'):
     """writes the op2 header"""
-    is_nx = obj.is_nx
-    if obj.date == (1, 1, 2000):  # (7, 24, 2020)
+    is_nx = model.is_nx
+    is_msc = model.is_msc
+    #is_nasa95 = model.is_nasa95
+    is_optistruct = model.is_optistruct
+    if model.date == (1, 1, 2000):  # (7, 24, 2020)
         today = datetime.datetime.today()
-        obj.date = (today.month, today.day, today.year)
+        model.date = (today.month, today.day, today.year)
 
     if post == -1:
     #_write_markers(op2_file, op2_ascii, [3, 0, 7])
@@ -349,13 +367,15 @@ def write_op2_header(obj: OP2, op2_file, fop2_ascii, struct_3i,
                                                         4, 7, 4,
                                                         28, tape_code, 28]))
             nastran_version = b'NX8.5   '
-        else:
-            day, month, year = obj.date
+        elif is_msc or is_optistruct:
+            day, month, year = model.date
             op2_file.write(pack(endian + b'9i 28s i', *[12,
                                                         day, month, year - 2000,
                                                         12, 4, 7, 4,
                                                         28, tape_code, 28]))
             nastran_version = b'XXXXXXXX'
+        else:
+            raise NotImplementedError(model._nastran_format)
 
         op2_file.write(pack(endian + b'4i 8s i', *[4, 2, 4,
                                                    #4, 2, 4,
@@ -367,4 +387,4 @@ def write_op2_header(obj: OP2, op2_file, fop2_ascii, struct_3i,
     elif post == -2:
         _write_markers(op2_file, fop2_ascii, [2, 4])
     else:
-        raise RuntimeError('post = %r; use -1 or -2' % post)
+        raise RuntimeError(f'post = {post:d}; use -1 or -2')

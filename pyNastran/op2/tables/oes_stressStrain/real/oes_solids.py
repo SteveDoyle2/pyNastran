@@ -585,8 +585,15 @@ class RealSolidArray(OES_Object):
 
         idtype = self.element_cid.dtype
         fdtype = self.data.dtype
+        if self.size == 4:
+            grid_bytes = b'GRID'
+        else:
+            print(f'downcasting {self.class_name}...')
+            idtype = np.int32(1)
+            fdtype = np.float32(1.0)
+            grid_bytes = b'GRID'
 
-        cen_array = np.full(nelements, b'GRID', dtype='|S4')
+        cen_array = np.full(nelements, grid_bytes, dtype='|S4')
         nnodes_no_centroid_array = np.full(nelements, nnodes_no_centroid, dtype=idtype)
 
         element_wise_data = to_column_bytes([
@@ -609,7 +616,7 @@ class RealSolidArray(OES_Object):
         p = (o1 + o2 + o3) / -3.
 
         # speed up transient cases, but slightly slows down static cases
-        data_out = np.full((nelements, 4+21*nnodes_centroid), np.nan, dtype=fdtype)
+        data_out = np.empty((nelements, 4+21*nnodes_centroid), dtype=fdtype)
 
         # setting:
         #  - CTETRA: [element_device, cid, 'CEN/', 4]
@@ -793,7 +800,7 @@ def calculate_principal_eigenvectors5(ntimes: int, nelements: int, nnodes: int,
 
     TODO: scale by 2 for strain
     """
-    a_matrix = np.full((ntimes, nelements, nnodes, 3, 3), np.nan, dtype=dtype)
+    a_matrix = np.empty((ntimes, nelements, nnodes, 3, 3), dtype=dtype)
 
     # we're only filling the lower part of the A matrix
     a_matrix[:, :, :, 0, 0] = oxx
@@ -830,7 +837,7 @@ def calculate_principal_eigenvectors4(ntimes: int, nnodes: int,
     eigenvectors : (ntimes, nnodes, 3, 3)
         the eigenvectors
     """
-    a_matrix = np.full((ntimes, nnodes, 3, 3), np.nan, dtype=dtype)
+    a_matrix = np.empty((ntimes, nnodes, 3, 3), dtype=dtype)
 
     # we're only filling the lower part of the A matrix
     try:

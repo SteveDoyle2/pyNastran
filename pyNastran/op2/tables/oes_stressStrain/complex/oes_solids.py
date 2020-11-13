@@ -344,44 +344,42 @@ class ComplexSolidArray(OES_Object):
 
         op2_ascii.write(f'nelements={nelements:d}\n')
 
-        use_numpy = True
         eids2 = self.element_node[:, 0]
         nodes = self.element_node[:, 1]
         nelements_nodes = len(nodes)
 
-        if use_numpy:
-            cfdtype = self.data.dtype
-            idtype = self.element_cid.dtype
-            fdtype = get_complex_fdtype(cfdtype)
-            cen_array = np.full(nelements, b'GRID', dtype='|S4')
-            nnodes_no_centroid_array = np.full(nelements, nnodes_no_centroid, dtype=idtype)
+        cfdtype = self.data.dtype
+        idtype = self.element_cid.dtype
+        fdtype = get_complex_fdtype(cfdtype)
+        cen_array = np.full(nelements, b'GRID', dtype='|S4')
+        nnodes_no_centroid_array = np.full(nelements, nnodes_no_centroid, dtype=idtype)
 
-            element_wise_data = to_column_bytes([
-                eids_device_nelements, # ints
-                cids, # ints
-                cen_array, # bytes
-                nnodes_no_centroid_array, # ints
-            ], fdtype, debug=False)
+        element_wise_data = to_column_bytes([
+            eids_device_nelements, # ints
+            cids, # ints
+            cen_array, # bytes
+            nnodes_no_centroid_array, # ints
+        ], fdtype, debug=False)
 
-            # speed up transient cases, but slightly slows down static cases
-            # [eid_device, cid, b'GRID', nnodes]
-            # [node, (oxx, oyy, ozz, txy, tyz, txz)] * nnodes_centroid  # 13
-            #    node is an scalar (int)
-            #    stresses (6) are complex (real+imag), so 6*2 -> 12
-            data_out = np.full((nelements, 4+13*nnodes_centroid), np.nan, dtype=fdtype)
+        # speed up transient cases, but slightly slows down static cases
+        # [eid_device, cid, b'GRID', nnodes]
+        # [node, (oxx, oyy, ozz, txy, tyz, txz)] * nnodes_centroid  # 13
+        #    node is an scalar (int)
+        #    stresses (6) are complex (real+imag), so 6*2 -> 12
+        data_out = np.full((nelements, 4+13*nnodes_centroid), np.nan, dtype=fdtype)
 
-            # setting:
-            #  - CTETRA: [element_device, cid, 'GRID', 4]
-            #  - CPYRAM: [element_device, cid, 'GRID', 5]
-            #  - CPENTA: [element_device, cid, 'GRID', 6]
-            #  - CHEXA:  [element_device, cid, 'GRID', 8]
-            data_out[:, :4] = element_wise_data
+        # setting:
+        #  - CTETRA: [element_device, cid, 'GRID', 4]
+        #  - CPYRAM: [element_device, cid, 'GRID', 5]
+        #  - CPENTA: [element_device, cid, 'GRID', 6]
+        #  - CHEXA:  [element_device, cid, 'GRID', 8]
+        data_out[:, :4] = element_wise_data
 
-            # we could tack the nodes on, so we don't have to keep stacking it
-            # but we run into issues with datai
-            #print(nodes.dtype, fdtype)
-            nodes_view = nodes.view(fdtype).reshape(nelements_nodes, 1)
-            #data_out[:, 4] = nodes_view.reshape(nelements_nodes, 1)
+        # we could tack the nodes on, so we don't have to keep stacking it
+        # but we run into issues with datai
+        #print(nodes.dtype, fdtype)
+        nodes_view = nodes.view(fdtype).reshape(nelements_nodes, 1)
+        #data_out[:, 4] = nodes_view.reshape(nelements_nodes, 1)
 
         unused_msg_temp, nnodes = get_f06_header(self, is_mag_phase, is_sort1=True)
 
@@ -400,71 +398,25 @@ class ComplexSolidArray(OES_Object):
             op2_ascii.write(f'r4 [4, {itable:d}, 4]\n')
             op2_ascii.write(f'r4 [4, {4 * ntotal:d}, 4]\n')
 
-            oxx = self.data[itime, :, 0]
-            oyy = self.data[itime, :, 1]
-            ozz = self.data[itime, :, 2]
-            txy = self.data[itime, :, 3]
-            tyz = self.data[itime, :, 4]
-            txz = self.data[itime, :, 5]
-
-            assert len(eids2) == len(oxx)
             #print(len(eids2), self.num_wide)
             #(eid_device, cid, ctype, nodef) = out
             #(grid,
              #exr, eyr, ezr, etxyr, etyzr, etzxr,
             #exi, eyi, ezi, etxyi, etyzi, etzxi) = out
 
-            if use_numpy:
-                # [node, oxx, oyy, ozz, txy, tyz, txz]  # 7
-                datai = self.data[itime, : :]
+            # [node, oxx, oyy, ozz, txy, tyz, txz]  # 7
+            datai = self.data[itime, : :]
 
-                datai2 = np.hstack([nodes_view, datai.real, datai.imag])  # 1+2*6 = 13
+            datai2 = np.hstack([nodes_view, datai.real, datai.imag])  # 1+2*6 = 13
 
-                # [eid_device, cid, b'GRID', nnodes,  #4
-                #  node,
-                #  doxx.real, doyy.real, dozz.real, dtxy.real, dtyz.real, dtxz.real, #11
-                #  doxx.imag, doyy.imag, dozz.imag, dtxy.imag, dtyz.imag, dtxz.imag]
-                # switch datai to element format and put it in the output buffer
-                data_out[:, 4:] = datai2.reshape(nelements, 13*nnodes_centroid)
-                assert data_out.size == ntotal, (data_out.shape, data_out.size, ntotal)
-                op2_file.write(data_out)
-            else:
-                nwide = 0
-                ielement = -1
-                for eid_device, deid, node, doxx, doyy, dozz, dtxy, dtyz, dtxz in zip(
-                        eids_device, eids2, nodes, oxx, oyy, ozz, txy, tyz, txz):
-
-                    if node == 0:  # CENTER
-                        ielement += 1
-                        cid = self.element_cid[ielement, 1]
-                        data = [eid_device, cid, b'GRID', nnodes, node,
-                                doxx.real, doyy.real, dozz.real, dtxy.real, dtyz.real, dtxz.real,
-                                doxx.imag, doyy.imag, dozz.imag, dtxy.imag, dtyz.imag, dtxz.imag]
-                        #op2_ascii.write('  eid_device=%s data=%s\n' % (eid_device, tuple(data)))
-                        op2_file.write(struct1.pack(*data))
-
-                        op2_ascii.write(
-                            '0 %12i %11sGRID CS %2i GP\n'
-                            '0   %22s    %-13s  %-13s  %-13s    %-13s  %-13s  %s\n'
-                            '    %22s    %-13s  %-13s  %-13s    %-13s  %-13s  %s\n' % (
-                                deid, cid, nnodes,
-                                'CENTER', doxx.real, doyy.real, dozz.real, dtxy.real, dtyz.real, dtxz.real,
-                                '', doxx.imag, doyy.imag, dozz.imag, dtxy.imag, dtyz.imag, dtxz.imag,
-                        ))
-                    else:
-                        data = [node,
-                                doxx.real, doyy.real, dozz.real, dtxy.real, dtyz.real, dtxz.real,
-                                doxx.imag, doyy.imag, dozz.imag, dtxy.imag, dtyz.imag, dtxz.imag]
-                        op2_file.write(struct2.pack(*data))
-                        op2_ascii.write(
-                            '0   %22s    %-13s  %-13s  %-13s    %-13s  %-13s  %s\n'
-                            '    %22s    %-13s  %-13s  %-13s    %-13s  %-13s  %s\n' % (
-                                node, doxx.real, doyy.real, dozz.real, dtxy.real, dtyz.real, dtxz.real,
-                                '', doxx.imag, doyy.imag, dozz.imag, dtxy.imag, dtyz.imag, dtxz.imag,
-                        ))
-                    nwide += len(data)
-                    #print(data)
-                assert nwide == ntotal, 'nwide=%s ntotal=%s' % (nwide, ntotal)
+            # [eid_device, cid, b'GRID', nnodes,  #4
+            #  node,
+            #  doxx.real, doyy.real, dozz.real, dtxy.real, dtyz.real, dtxz.real, #11
+            #  doxx.imag, doyy.imag, dozz.imag, dtxy.imag, dtyz.imag, dtxz.imag]
+            # switch datai to element format and put it in the output buffer
+            data_out[:, 4:] = datai2.reshape(nelements, 13*nnodes_centroid)
+            assert data_out.size == ntotal, (data_out.shape, data_out.size, ntotal)
+            op2_file.write(data_out)
 
             itable -= 1
             header = [4 * ntotal,]

@@ -250,3 +250,107 @@ class RealBush1DStressArray(OES_Object):
         if self.nonlinear_factor in (None, np.nan):
             page_num -= 1
         return page_num
+
+    def write_op2(self, op2_file, op2_ascii, itable, new_result, date,
+                  is_mag_phase=False, endian='>'):
+        """writes an OP2"""
+        import inspect
+        from struct import Struct, pack
+        frame = inspect.currentframe()
+        call_frame = inspect.getouterframes(frame, 2)
+        op2_ascii.write(f'{self.__class__.__name__}.write_op2: {call_frame[1][3]}\n')
+
+        if itable == -1:
+            self._write_table_header(op2_file, op2_ascii, date)
+            itable = -3
+
+        #if isinstance(self.nonlinear_factor, float):
+            #op2_format = '%sif' % (7 * self.ntimes)
+            #raise NotImplementedError()
+        #else:
+            #op2_format = 'i21f'
+        #s = Struct(op2_format)
+
+        eids = self.element
+
+        # table 4 info
+        #ntimes = self.data.shape[0]
+        #nnodes = self.data.shape[1]
+        nelements = self.data.shape[1]
+
+        # 21 = 1 node, 3 principal, 6 components, 9 vectors, 2 p/ovm
+        #ntotal = ((nnodes * 21) + 1) + (nelements * 4)
+
+        ntotali = self.num_wide
+        ntotal = ntotali * nelements
+
+        #print('shape = %s' % str(self.data.shape))
+        #assert self.ntimes == 1, self.ntimes
+
+        #device_code = self.device_code
+        op2_ascii.write(f'  ntimes = {self.ntimes}\n')
+
+        eids_device = self.element * 10 + self.device_code
+
+        #fmt = '%2i %6f'
+        #print('ntotal=%s' % (ntotal))
+        #assert ntotal == 193, ntotal
+
+        if not self.is_sort1:
+            raise NotImplementedError('SORT2')
+        struct1 = Struct(endian + b'i6f')
+
+        fdtype = self.data.dtype
+        if self.size == 4:
+            pass
+        else:
+            print(f'downcasting {self.class_name}...')
+            #cen_word_bytes = b'CEN/    '
+            idtype = np.int32(1)
+            fdtype = np.float32(1.0)
+
+        #self.element = zeros(self.ntotal, dtype='int32')
+        #self.is_failed = zeros((self.ntimes, self.ntotal, 1), dtype='int32')
+
+        # [eid,
+        #  element_force, axial_displacement, axial_velocity, axial_stress, axial_strain, plastic_strain,
+        #  is_failed]
+        data_out = np.empty((nelements, 8), dtype=fdtype)
+        data_out[:, 0] = eids_device.view(fdtype)
+
+        op2_ascii.write(f'nelements={nelements:d}\n')
+
+        for itime in range(self.ntimes):
+            #print('3, %s' % itable)
+            self._write_table_3(op2_file, op2_ascii, new_result, itable, itime)
+
+            # record 4
+            #print('stress itable = %s' % itable)
+            itable -= 1
+            #print('4, %s' % itable)
+            header = [4, itable, 4,
+                      4, 1, 4,
+                      4, 0, 4,
+                      4, ntotal, 4,
+                      4 * ntotal]
+            op2_file.write(pack('%ii' % len(header), *header))
+            op2_ascii.write('r4 [4, 0, 4]\n')
+            op2_ascii.write(f'r4 [4, {itable:d}, 4]\n')
+            op2_ascii.write(f'r4 [4, {4 * ntotal:d}, 4]\n')
+
+            # [eid,
+            #  element_force, axial_displacement, axial_velocity, axial_stress, axial_strain, plastic_strain,
+            #  is_failed]
+            data_out[:, 1:-1] = self.data[itime, :, :]
+            #print(data_out[:, -1].shape, self.is_failed[itime, :, 0].shape)
+            data_out[:, -1] = self.is_failed[itime, :, 0] # .reshape(nelements, 1).view(fdtype)
+            assert data_out.size == ntotal, f'data_out.shape={data_out.shape} size={data_out.size}; ntotal={ntotal}'
+            op2_file.write(data_out)
+
+            itable -= 1
+            header = [4 * ntotal,]
+            op2_file.write(pack('i', *header))
+            op2_ascii.write('footer = %s\n' % header)
+            new_result = False
+        return itable
+
