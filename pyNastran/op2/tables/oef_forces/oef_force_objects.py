@@ -208,7 +208,7 @@ class ForceObject(BaseElement):
 
         n = 0
         for v in table3:
-            if isinstance(v, (int, float, np.float32)):
+            if isinstance(v, (int, float, np.int32, np.float32)):
                 n += 4
             elif isinstance(v, str):
                 #print(len(v), v)

@@ -112,7 +112,7 @@ class GridPointForces(BaseElement):
 
         n = 0
         for v in table3:
-            if isinstance(v, (int, float)):
+            if isinstance(v, (int, float, np.int32, np.float32)):
                 n += 4
             elif isinstance(v, str):
                 n += len(v)

@@ -274,14 +274,14 @@ class RealEigenvalues(BaseScalarObject):
         assert table3[11-1] == residual_flag, residual_flag
 
         n = 0
-        for i, v in enumerate(table3):
-            if isinstance(v, (int, float)):
+        for v in table3:
+            if isinstance(v, (int, float, np.int32, np.float32)):
                 n += 4
             elif isinstance(v, str):
                 #print(len(v), v)
                 n += len(v)
             else:
-                print('write_table_3', i, v)
+                #print('write_table_3', v)
                 n += len(v)
         assert n == 584, n
         data = [584] + table3 + [584]
@@ -633,7 +633,7 @@ class ComplexEigenvalues(BaseScalarObject):
 
         n = 0
         for i, v in enumerate(table3):
-            if isinstance(v, (int, float)):
+            if isinstance(v, (int, float, np.int32, np.float32)):
                 n += 4
             elif isinstance(v, str):
                 #print(len(v), v)
