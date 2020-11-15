@@ -823,15 +823,17 @@ class OP2Common(Op2Codes, F06Writer):
                 result_name, nnodes, storage_obj, complex_vector)
             if auto_return:
                 return ndata
+            is_mag = self.is_magnitude_phase()
+
             if self.is_sort1:
-                if self.is_magnitude_phase():
+                if is_mag:
                     n = self._read_complex_table_sort1_mag(
                         data, is_vectorized, nnodes, result_name, node_elem)
                 else:
                     n = self._read_complex_table_sort1_imag(
                         data, is_vectorized, nnodes, result_name, node_elem)
             else:
-                if self.is_magnitude_phase():
+                if is_mag:
                     n = self._read_complex_table_sort2_mag(
                         data, is_vectorized, nnodes, result_name, node_elem)
                 else:

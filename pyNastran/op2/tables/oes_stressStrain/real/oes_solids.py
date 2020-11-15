@@ -1,4 +1,5 @@
 # pylint: disable=C0301,C0103,R0913,R0914,R0904,C0111,R0201,R0902
+import warnings
 from itertools import count
 from struct import pack
 from typing import Tuple, List, Any
@@ -588,7 +589,7 @@ class RealSolidArray(OES_Object):
         if self.size == 4:
             grid_bytes = b'GRID'
         else:
-            print(f'downcasting {self.class_name}...')
+            warnings.warn(f'downcasting {self.class_name}...')
             idtype = np.int32(1)
             fdtype = np.float32(1.0)
             grid_bytes = b'GRID'

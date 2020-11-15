@@ -239,7 +239,8 @@ def _write_result_tables(obj: OP2, op2_file, fop2_ascii,
                 # grid_point
                 class_name = res.__class__.__name__
                 log.debug(class_name)
-                assert class_name in ['GridPointWeight', 'PARAM', 'RealEigenvalues'], class_name
+                #assert class_name in ['GridPointWeight', 'PARAM',
+                                      #'RealEigenvalues', 'ComplexEigenvalues'], class_name
 
     for table_name, results in sorted(res_categories2.items()):
         assert table_name in table_order, table_name

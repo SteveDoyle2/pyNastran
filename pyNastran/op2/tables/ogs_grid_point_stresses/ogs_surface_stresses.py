@@ -1,3 +1,4 @@
+import warnings
 from typing import List
 import numpy as np
 
@@ -63,6 +64,166 @@ class GridPointSurfaceArray(ScalarObject):
         self.location = np.empty(self.ntotal, dtype='U8')
 
         self._times = np.zeros(self.ntimes, dtype=dtype)
+
+    def _write_table_3(self, op2_file, op2_ascii, new_result, itable, itime): #, itable=-3, itime=0):
+        import inspect
+        from struct import pack
+        frame = inspect.currentframe()
+        call_frame = inspect.getouterframes(frame, 2)
+        op2_ascii.write('%s.write_table_3: %s\n' % (self.__class__.__name__, call_frame[1][3]))
+
+        #if itable == -3:
+        #print('*writing itable=%s' % itable)
+        if new_result and itable != -3:
+            header = [
+                4, 146, 4,
+            ]
+        else:
+            header = [
+                4, itable, 4,
+                4, 1, 4,
+                4, 0, 4,
+                4, 146, 4,
+            ]
+        op2_file.write(pack(b'%ii' % len(header), *header))
+        op2_ascii.write('table_3_header = %s\n' % header)
+        #op2_file.write(pack('12i', *header))
+        #else:
+            #print('***writing itable=%s' % itable)
+            #op2_file.write(pack('3i', *[
+                ##4, itable, 4,
+                ##4, 1, 4,
+                ##4, 0, 4,
+                #4, 146, 4,
+            #]))
+        approach_code = self.approach_code
+        table_code = self.table_code
+        isubcase = self.isubcase
+        #[
+            #'aCode', 'tCode', 'element_type', 'isubcase',
+            #'???', '???', '???', 'load_set'
+            #'format_code', 'num_wide', 's_code', '???',
+            #'???', '???', '???', '???',
+            #'???', '???', '???', '???',
+            #'???', '???', '???', '???',
+            #'???', 'Title', 'subtitle', 'label']
+        #random_code = self.random_code
+        ogs = self.ogs
+        if ogs is None:
+            #print(''.join(self.get_stats()))
+            warnings.warn('ogs=0...')
+            ogs = 0
+
+        format_code = self.format_code
+        s_code = self.sCode
+        num_wide = self.num_wide
+        acoustic_flag = 0
+        thermal = 0
+        title = b'%-128s' % self.title.encode('ascii')
+        subtitle = b'%-128s' % self.subtitle.encode('ascii')
+        label = b'%-128s' % self.label.encode('ascii')
+        ftable3 = b'50i 128s 128s 128s'
+        unused_oCode = 0
+
+        ftable3 = b'i' * 50 + b'128s 128s 128s'
+        field6 = 0
+        field7 = 0
+        if self.analysis_code == 1:
+            field5 = self.lsdvmns[itime]
+            if np.isnan(field5):  # poor sort2 -> sort1
+                raise RuntimeError('field5 in a static case is nan...; do you have SORT2?')
+                #field5 = 1
+
+        elif self.analysis_code == 2:
+            field5 = self.modes[itime]
+            field6 = self.eigns[itime]
+            field7 = self.cycles[itime]
+            assert isinstance(field6, float), type(field6)
+            assert isinstance(field7, float), type(field7)
+            ftable3 = set_table3_field(ftable3, 6, b'f') # field 6
+            ftable3 = set_table3_field(ftable3, 7, b'f') # field 7
+
+        #elif self.analysis_code == 3:
+            #field5 = self.freqs[itime]
+        elif self.analysis_code == 5:
+            field5 = self.freqs[itime]
+            ftable3 = set_table3_field(ftable3, 5, b'f') # field 5
+        elif self.analysis_code == 6:
+            field5 = self.dts[itime]
+            ftable3 = set_table3_field(ftable3, 5, b'f') # field 5
+        elif self.analysis_code == 7:  # pre-buckling
+            field5 = self.lsdvmns[itime] # load set number
+        elif self.analysis_code == 8:  # post-buckling
+            field5 = self.lsdvmns[itime] # load set number
+            #if hasattr(self, 'eigns'):
+            if hasattr(self, 'eigens'):
+                field6 = self.eigns[itime]
+            elif hasattr(self, 'eigrs'):
+                field6 = self.eigrs[itime]
+            else:  # pragma: no cover
+                print(self.get_stats())
+                raise NotImplementedError('cant find eigns or eigrs on analysis_code=8')
+            ftable3 = set_table3_field(ftable3, 6, b'f') # field 6
+        elif self.analysis_code == 9:  # complex eigenvalues
+            field5 = self.modes[itime]
+            if hasattr(self, 'eigns'):
+                field6 = self.eigns[itime]
+            elif hasattr(self, 'eigrs'):
+                field6 = self.eigrs[itime]
+            else:  # pragma: no cover
+                print(self.get_stats())
+                raise NotImplementedError('cant find eigns or eigrs on analysis_code=9')
+
+            ftable3 = set_table3_field(ftable3, 6, b'f') # field 6
+            field7 = self.eigis[itime]
+            ftable3 = set_table3_field(ftable3, 7, b'f') # field 7
+        elif self.analysis_code == 10:  # nonlinear statics
+            field5 = self.lftsfqs[itime]
+            ftable3 = set_table3_field(ftable3, 5, b'f') # field 5; load step
+        elif self.analysis_code == 11:  # old geometric nonlinear statics
+            field5 = self.lsdvmns[itime] # load set number
+        else:
+            raise NotImplementedError(self.analysis_code)
+
+
+        #self.ogs = self.add_data_parameter(data, 'ogs_id', b'i', 3, False)
+        #self.refid = self.add_data_parameter(data, 'refid', b'i', 8, False)
+        #self.format_code = self.add_data_parameter(data, 'format_code', b'i', 9, False)
+        #self.num_wide = self.add_data_parameter(data, 'num_wide', b'i', 10, False)
+        #self.sCode = self.add_data_parameter(data, 'sCode', b'i', 11, False)
+        #self.oCoord = self.add_data_parameter(data, 'oCoord', b'i', 12, False)
+        #self.axis = self.add_data_parameter(data, 'axis', b'i', 13, False)
+        #self.normal = self.add_data_parameter(data, 'normal', b'i', 14, False)
+
+        table3 = [
+            approach_code, table_code, ogs, isubcase, field5,
+            field6, field7, self.refid, format_code, num_wide,
+            s_code, self.oCoord, self.axis, self.normal, 0,
+            0, 0, 0, 0, 0,
+            0, 0, thermal, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            0, 0, 0, 0,
+            title, subtitle, label,
+        ]
+        assert table3[22] == thermal
+
+        n = 0
+        for i, v in enumerate(table3):
+            #print('write_table_3', i, v)
+            if isinstance(v, (int, float, np.int32, np.float32)):
+                n += 4
+            elif isinstance(v, str):
+                n += len(v)
+            else:
+                n += len(v)
+        assert n == 584, n
+        data = [584] + table3 + [584]
+        fmt = b'i' + ftable3 + b'i'
+        #print(fmt)
+        #print(data)
+        #f.write(pack(fascii, '%s header 3c' % self.table_name, fmt, data))
+        op2_ascii.write('%s header 3c = %s\n' % (self.table_name, data))
+        op2_file.write(pack(fmt, *data))
 
     #def build_dataframe(self):
         #"""creates a pandas dataframe"""
@@ -166,6 +327,155 @@ class GridPointSurfaceArray(ScalarObject):
             f06_file.write(page_stamp % page_num)
             page_num += 1
         return page_num - 1
+
+    def write_op2(self, op2_file, op2_ascii, itable, new_result,
+                  date, is_mag_phase=False, endian='>'):
+        """writes an OP2"""
+        import inspect
+        from struct import Struct
+        frame = inspect.currentframe()
+        call_frame = inspect.getouterframes(frame, 2)
+        op2_ascii.write(f'{self.__class__.__name__}.write_op2: {call_frame[1][3]}\n')
+
+        if itable == -1:
+            #print('***************', itable)
+            self._write_table_header(op2_file, op2_ascii, date)
+            itable = -3
+
+        #if isinstance(self.nonlinear_factor, float):
+            #op2_format = '%sif' % (7 * self.ntimes)
+            #raise NotImplementedError()
+        #else:
+            #op2_format = 'i21f'
+        #s = Struct(op2_format)
+
+        #eids2 = self.element_node[:, 0]
+        #nodes = self.element_node[:, 1]
+        #nelements_nodes = len(nodes)
+
+        #eids3 = self.element_cid[:, 0]
+        #cids3 = self.element_cid[:, 1]
+
+        # table 4 info
+        #ntimes = self.data.shape[0]
+        #nnodes = self.data.shape[1]
+        #nelements = len(np.unique(eids2))
+
+        # 21 = 1 node, 3 principal, 6 components, 9 vectors, 2 p/ovm
+        #ntotal = ((nnodes * 21) + 1) + (nelements * 4)
+        #nnodes_centroid = self.nnodes_per_element
+        #nnodes_no_centroid = self.nnodes_per_element_no_centroid
+        nnodes = self.data.shape[1]
+        #ntotali = 11
+        ntotali = self.num_wide
+        assert ntotali == 11, ntotali
+        ntotal = ntotali * nnodes
+
+
+        #print('shape = %s' % str(self.data.shape))
+        #assert nnodes > 1, nnodes
+        #assert self.ntimes == 1, self.ntimes
+
+        op2_ascii.write(f'  ntimes = {self.ntimes}\n')
+        ntimes = self.ntimes
+
+        #print('ntotal=%s' % (ntotal))
+        if not self.is_sort1:
+            raise NotImplementedError('SORT2')
+        #op2_format = endian + b'2i6f'
+
+        #idtype = self.element_cid.dtype
+        fdtype = self.data.dtype
+        #print(self.size)
+        if self.size == 4:
+            grid_bytes = b'GRID'
+        else:
+            warnings.warn(f'downcasting {self.class_name}...')
+            idtype = np.int32(1)
+            fdtype = np.float32(1.0)
+            grid_bytes = b'GRID'
+
+        #[nids, eids, fibers, nx, ny, txy, angle, majorp, minorp, tmax, ovm]
+        nids = self.node_element[:, 0]
+        eids = self.node_element[:, 1]
+        nids_device = nids * 10 + self.device_code
+
+        nids_device
+
+        # speed up transient cases, but slightly slows down static cases
+        data_out = np.empty((nnodes, 11), dtype=fdtype)
+        # setting:
+        #  - [nid_device, eids, location_bytes]
+        data_out[:, 0] = nids_device
+        data_out[:, 1] = eids
+        location_bytes = np.array([loc.encode('ascii') for loc in self.location])
+        data_out[:, 2] = location_bytes.view(fdtype)
+
+
+        #nx = self.data[itime, :, 0]
+        #ny = self.data[itime, :, 1]
+        #txy = self.data[itime, :, 2]
+        #angle = self.data[itime, :, 3]
+        #majorp = self.data[itime, :, 4]
+        #minorp = self.data[itime, :, 5]
+        #tmax = self.data[itime, :, 6]
+        #ovm = self.data[itime, :, 7]
+        #fibers = self.location
+
+        #cen_array = np.full(nelements, grid_bytes, dtype='|S4')
+        #nnodes_no_centroid_array = np.full(nelements, nnodes_no_centroid, dtype=idtype)
+
+        #element_wise_data = to_column_bytes([
+            #element_device, # ints
+            #cids3, # ints
+            #cen_array, # bytes
+            #nnodes_no_centroid_array, # ints
+        #], fdtype, debug=False)
+
+        # we could tack the nodes on, so we don't have to keep stacking it
+        # but we run into issues with datai
+        #
+        # total=nelements_nodes
+        #nodes_view = nodes.view(fdtype).reshape(nelements, nnodes_centroid)
+        #inode = np.arange(nnodes_centroid)
+        #data_out[:, 4+inode*21] = nodes_view[:, inode]
+
+        op2_ascii.write(f'nnodes={nnodes:d}\n')
+        struct_i = Struct('i')
+        struct_13i = Struct('13i')
+        for itime in range(self.ntimes):
+            self._write_table_3(op2_file, op2_ascii, new_result, itable, itime)
+
+            # record 4
+            #print('stress itable = %s' % itable)
+            itable -= 1
+            header = [4, itable, 4,
+                      4, 1, 4,
+                      4, 0, 4,
+                      4, ntotal, 4,
+                      4 * ntotal]
+            op2_file.write(struct_13i.pack(*header))
+            op2_ascii.write('r4 [4, 0, 4]\n')
+            op2_ascii.write(f'r4 [4, {itable:d}, 4]\n')
+            op2_ascii.write(f'r4 [4, {4 * ntotal:d}, 4]\n')
+
+
+            # stack each output by columns and fix any dtypes
+            #datai2 = datai.reshape(nelements, 21*nnodes_centroid)
+            #data_out = np.hstack([element_wise_data, datai2])
+            #data_out[:, 4:] = datai2
+
+            # switch datai to element format and put it in the output buffer
+            data_out[:, 3:] = self.data[itime, :, :]
+            assert data_out.size == ntotal
+            op2_file.write(data_out)
+
+            itable -= 1
+            header = [4 * ntotal,]
+            op2_file.write(struct_i.pack(*header))
+            op2_ascii.write('footer = %s\n' % header)
+            new_result = False
+        return itable
 
     def __eq__(self, table):  # pragma: no cover
         assert self.is_sort1 == table.is_sort1
