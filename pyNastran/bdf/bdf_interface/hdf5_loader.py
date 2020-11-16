@@ -40,6 +40,9 @@ def load_bdf_from_hdf5_file(h5_file, model):
 
     """
     encoding = _cast(h5_file['minor_attributes']['encoding'])
+    if isinstance(encoding, bytes):
+        encoding = encoding.decode('latin1')
+    assert isinstance(encoding, str), f'encoding={encoding!r}; type={type(encoding)}'
     keys = h5_file.keys()
 
     mapper = {
@@ -1529,7 +1532,9 @@ def _load_cards_from_keys_values(unused_name, values, keys, encoding, unused_log
         value_objs.append(class_instance)
     return value_objs
 
-def _load_class(key, value, card_type, encoding):
+def _load_class(key, value, card_type: str, encoding: str):
+    if isinstance(card_type, bytes):
+        card_type = card_type.decode(encoding)
     keys_to_read = list(value.keys())
     class_obj = CARD_MAP[card_type]  # see add_card.py ~line 200
     if hasattr(class_obj, '_init_from_empty'):
@@ -1618,7 +1623,7 @@ def _get_casted_value(value, key_to_cast, encoding):
         #valuei = None
     return valuei
 
-def _load_from_class(value, card_type, encoding):
+def _load_from_class(value, card_type: str, encoding: str):
     """generic loader that only requires an ``_init_from_empty`` method"""
     keys_to_read = list(value.keys())
     class_obj = CARD_MAP[card_type]  # see add_card.py ~line 200

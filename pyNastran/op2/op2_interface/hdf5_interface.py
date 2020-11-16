@@ -137,7 +137,9 @@ def _cast(h5_result_attr):
     return np.array(h5_result_attr)
 
 # the data fro these keys must be strings
-STRING_KEYS = ['result_name', 'superelement_adaptivity_index']
+STRING_KEYS = [
+    'result_name', 'superelement_adaptivity_index', 'element_name',
+    'label']
 
 TABLE_OBJ_MAP = {
     'displacements' : (RealDisplacementArray, ComplexDisplacementArray),
