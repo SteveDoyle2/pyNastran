@@ -10,9 +10,11 @@ defines:
  export_op2_to_hdf5_file(hdf5_file, op2_model)
 
 """
+from typing import List, Optional, Any
 import numpy as np
 import h5py
 
+from cpylog import SimpleLogger
 import pyNastran
 from pyNastran.op2.op2 import OP2
 
@@ -135,6 +137,21 @@ def _cast(h5_result_attr):
         return np.array(h5_result_attr).tolist()
         #raise NotImplementedError(h5_result_attr.dtype)
     return np.array(h5_result_attr)
+
+def _cast_str(h5_result_attr, encoding: str) -> List[str]:
+    """converts the h5py type back into the OP2 type"""
+    if h5_result_attr is None:
+        return None
+
+    if len(h5_result_attr.shape) == 0:
+        out = np.array(h5_result_attr).tolist()
+        return out
+        #raise NotImplementedError(h5_result_attr.dtype)
+    else:
+        out = np.array(h5_result_attr)
+    out2 = [outi.decode(encoding) if isinstance(outi, bytes) else outi
+            for outi in out]
+    return out2
 
 # the data fro these keys must be strings
 STRING_KEYS = [
@@ -1026,9 +1043,9 @@ def _load_grid_point_weight(h5_result):
     obj = GridPointWeight(*datai, *data)
     return obj
 
-def _load_eigenvalue(h5_result, log):
+def _load_eigenvalue(h5_result, encoding: str, log: SimpleLogger):
     """Loads a RealEigenvalue"""
-    class_name = _cast(h5_result.get('class_name'))
+    class_name = _cast_str(h5_result.get('class_name'), encoding)
     table_name = '???'
     title = ''
     nmodes = _cast(h5_result.get('nmodes'))
@@ -1058,7 +1075,8 @@ def _load_eigenvalue(h5_result, log):
             setattr(obj, key, datai)
     return obj
 
-def _load_table(result_name, h5_result, objs, log, debug=False):# real_obj, complex_obj
+def _load_table(result_name, h5_result, objs, encoding: str,
+                log: SimpleLogger, debug: bool=False):# real_obj, complex_obj
     """loads a RealEigenvectorArray/ComplexEigenvectorArray"""
     is_real = _cast(h5_result.get('is_real'))
     #is_complex = _cast(h5_result.get('is_complex'))
@@ -1066,7 +1084,7 @@ def _load_table(result_name, h5_result, objs, log, debug=False):# real_obj, comp
     #is_stress = _cast(h5_result.get('is_stress'))
     #is_strain = _cast(h5_result.get('is_strain'))
 
-    data_names = [name.decode('utf8') for name in _cast(h5_result.get('data_names')).tolist()]
+    data_names = _cast_str(h5_result.get('data_names'), encoding)
     str_data_names = [data_name + 's' for data_name in data_names]
     data_code = {
         'load_as_h5' : _cast(h5_result.get('load_as_h5')),
@@ -1081,14 +1099,14 @@ def _load_table(result_name, h5_result, objs, log, debug=False):# real_obj, comp
         'table_code' : _cast(h5_result.get('table_code')),
         'tCode' : _cast(h5_result.get('tCode')),
         'sort_code' : _cast(h5_result.get('sort_code')),
-        'thermal' : _cast(h5_result.get('thermal')),
-        'subtitle' : _cast(h5_result.get('subtitle')),
+        'thermal' : _cast_str(h5_result.get('thermal'), encoding),
+        'subtitle' : _cast_str(h5_result.get('subtitle'), encoding),
         'acoustic_flag' : _cast(h5_result.get('acoustic_flag')),
         'stress_bits' : _cast(h5_result.get('stress_bits')),
         's_code' : _cast(h5_result.get('s_code')),
         'data_names' : data_names,
         'name' : data_names[0],
-        'table_name' : _cast(h5_result.get('table_name')),
+        'table_name' : _cast_str(h5_result.get('table_name'), encoding),
     }
     for key, value in list(data_code.items()):
         if isinstance(value, np.ndarray):
@@ -1099,16 +1117,13 @@ def _load_table(result_name, h5_result, objs, log, debug=False):# real_obj, comp
             elif key in ['acoustic_flag', 'stress_bits', 's_code', 'thermal']:
                 del data_code[key]
             else:
-                log.warning('%s %s' % (key, value))
+                log.warning(f'{key} {value}')
 
     is_sort1 = _cast(h5_result.get('is_sort1'))
     isubcase = _cast(h5_result.get('isubcase'))
     dt = nonlinear_factor
 
-    class_name = _cast(h5_result.get('class_name'))
-    if isinstance(class_name, bytes):
-        class_name = class_name.decode('latin1')
-
+    class_name = _cast_str(h5_result.get('class_name'), encoding)
 
     obj_class = _get_obj_class(objs, class_name, result_name, is_real, log)
     if obj_class is None:
@@ -1124,12 +1139,12 @@ def _load_table(result_name, h5_result, objs, log, debug=False):# real_obj, comp
         msg = 'class_name=%r selected; should be %r' % (obj.class_name, class_name)
         raise RuntimeError(msg)
     _apply_hdf5_attributes_to_object(obj, h5_result, result_name, data_code, str_data_names,
-                                     debug=debug)
+                                     encoding, debug=debug)
     return obj
 
 
 def _apply_hdf5_attributes_to_object(obj, h5_result, result_name, data_code, str_data_names,
-                                     debug=False):
+                                     encoding: str, debug: bool=False):
     """helper method for ``_load_table``"""
     keys_to_skip = [
         'class_name', 'headers', 'is_real', 'is_complex',
@@ -1148,8 +1163,8 @@ def _apply_hdf5_attributes_to_object(obj, h5_result, result_name, data_code, str
             pass
         elif key in str_data_names:
             if debug:  # pragma: no cover
-                print('  *****key=%r' % key)
-            datai = _cast(h5_result.get(key))
+                print('  *****key={key!r}')
+            datai = _cast_str(h5_result.get(key), encoding)
             setattr(obj, key, datai)
             setattr(obj, '_times', datai)
         elif key not in data_code:
@@ -1165,13 +1180,14 @@ def _apply_hdf5_attributes_to_object(obj, h5_result, result_name, data_code, str
             try:
                 setattr(obj, key, datai)
             except AttributeError:
-                print('obj = %s' % obj)
-                print('key=%s datai=%r' % (key, datai))
+                print(f'obj = {obj}')
+                print(f'key={key!r} datai={datai!r}')
                 raise
-            assert not isinstance(datai, bytes), 'key=%r data=%s' % (key, datai)
+            assert not isinstance(datai, bytes), f'key={key!r} data={data}'
     return obj
 
-def _get_obj_class(objs, class_name, result_name, unused_is_real, log):
+def _get_obj_class(objs, class_name, result_name, unused_is_real,
+                   log: SimpleLogger) -> Any:
     #if 1:
     #obj_map = {obj.__class_name : obj for obj in objs if obj is not None}
     #obj_map = {obj.__class__.__name__ : obj for obj in objs if obj is not None}
@@ -1187,7 +1203,7 @@ def _get_obj_class(objs, class_name, result_name, unused_is_real, log):
 
         print('obj_map:')
         for key, value in obj_map.items():
-            print('  %s : %s' % (key, value))
+            print(f'  {key} : {value}')
 
         # if the obj_map is wrong, you probably have an issue in:
         # - get_oes_prefix_postfix
@@ -1212,22 +1228,22 @@ def _get_obj_class(objs, class_name, result_name, unused_is_real, log):
             #obj_class = complex_obj
     return obj_class
 
-def export_op2_to_hdf5_filename(hdf5_filename, op2_model):
+def export_op2_to_hdf5_filename(hdf5_filename: str, op2_model: OP2) -> None:
     """exports an OP2 object to an HDF5 file"""
     #no_sort2_classes = ['RealEigenvalues', 'ComplexEigenvalues', 'BucklingEigenvalues']
 
     with h5py.File(hdf5_filename, 'w') as hdf5_file:
-        op2_model.log.info('starting export_op2_to_hdf5_file of %r' % hdf5_filename)
+        op2_model.log.info(f'starting export_op2_to_hdf5_file of {hdf5_filename!r}')
         export_op2_to_hdf5_file(hdf5_file, op2_model)
 
-def export_op2_to_hdf5_file(hdf5_file, op2_model):
+def export_op2_to_hdf5_file(hdf5_file, op2_model: OP2) -> None:
     """exports an OP2 object to an HDF5 file object"""
     assert not isinstance(hdf5_file, str), hdf5_file
     create_info_group(hdf5_file, op2_model)
     export_matrices(hdf5_file, op2_model)
     _export_subcases(hdf5_file, op2_model)
 
-def create_info_group(hdf5_file, op2_model):
+def create_info_group(hdf5_file, op2_model: OP2) -> None:
     """creates the info HDF5 group"""
     info_group = hdf5_file.create_group('info')
     info_group.create_dataset('pyNastran_version', data=pyNastran.__version__)
@@ -1236,7 +1252,7 @@ def create_info_group(hdf5_file, op2_model):
     #info_group.create_dataset('is_nx', data=self.is_nx)
     #info_group.create_dataset('nastran_version', data=self.is_nx)
 
-def export_matrices(hdf5_file, op2_model):
+def export_matrices(hdf5_file, op2_model: OP2) -> None:
     """exports the matrices to HDF5"""
     if len(op2_model.matrices):
         matrix_group = hdf5_file.create_group('matrices')
@@ -1293,30 +1309,35 @@ def _export_subcases(hdf5_file, op2_model):
 def load_op2_from_hdf5(hdf5_filename, combine=True, log=None):
     return load_op2_from_hdf5_filename(hdf5_filename, combine=combine, log=log)
 
-def load_op2_from_hdf5_filename(hdf5_filename, combine=True, log=None):
+def load_op2_from_hdf5_filename(hdf5_filename: str, combine: bool=True,
+                                log: Optional[SimpleLogger]=None):
     """loads an hdf5 file into an OP2 object"""
     check_path(hdf5_filename, 'hdf5_filename')
     model = OP2(log=log)
     model.op2_filename = hdf5_filename
 
-    log.info('hdf5_op2_filename = %r' % hdf5_filename)
+    log.info(f'hdf5_op2_filename = {hdf5_filename!r}')
     debug = False
     with h5py.File(hdf5_filename, 'r') as h5_file:
         load_op2_from_hdf5_file(model, h5_file, log, debug=debug)
     model.combine_results(combine=combine)
     return model
 
-def load_op2_from_hdf5_file(model, h5_file, log, debug=False):
+def load_op2_from_hdf5_file(model: OP2, h5_file,
+                            log: SimpleLogger, debug=False):
     """loads an h5 file object into an OP2 object"""
+    encoding = 'latin1'
     for key in h5_file.keys():
         if key.startswith('Subcase'):
             h5_subcase = h5_file.get(key)
             #log.debug('subcase:')
             for result_name in h5_subcase.keys():
+                assert isinstance(result_name, str), f'result_name={result_name}; type={type(result_name)}'
+
                 if result_name in ['eigenvalues', 'eigenvalues_fluid']:
                     #log.warning('    skipping %r...' % result_name)
                     h5_result = h5_subcase.get(result_name)
-                    obj = _load_eigenvalue(h5_result, log=log)
+                    obj = _load_eigenvalue(h5_result, encoding, log=log)
                     if obj is None:
                         continue
                     slot = getattr(model, result_name)  # get model.eigenvalues
@@ -1336,7 +1357,8 @@ def load_op2_from_hdf5_file(model, h5_file, log, debug=False):
                     if objs is None:
                         log.warning(f'  skipping {result_name}...')
                         continue
-                    obj = _load_table(result_name, h5_result, objs, log=log, debug=debug)
+                    obj = _load_table(result_name, h5_result, objs,
+                                      encoding, log=log, debug=debug)
                     if obj is None:
                         continue
 
@@ -1354,20 +1376,21 @@ def load_op2_from_hdf5_file(model, h5_file, log, debug=False):
                     slot[key] = obj
                     #log.debug('  loaded %r' % result_name)
                 else:
-                    log.warning('  unhandled %r...' % result_name)
+                    log.warning(f'  unhandled {result_name!r}...')
                     h5_result = h5_subcase.get(result_name)
                     print(h5_result)
-                    raise NotImplementedError('  unhandled %r...' % result_name)
+                    raise NotImplementedError(f'  unhandled {result_name}...')
             #print(h5_subcase.keys())
         elif key == 'info':
             pass
         elif key == 'matrices':
-            _read_h5_matrix(h5_file, model, key, log)
+            _read_h5_matrix(h5_file, model, key, encoding, log)
         #else:
             #log.warning('key = %r' % key)
             #raise NotImplementedError('  unhandled %r...' % key)
 
-def _read_h5_matrix(h5_file, model, key, log):
+def _read_h5_matrix(h5_file, model, key,
+                    encoding: str, log: SimpleLogger):
     """reads an hdf5 matrix"""
     h5_matrix_group = h5_file.get(key)
     matrix_names = []
@@ -1376,12 +1399,12 @@ def _read_h5_matrix(h5_file, model, key, log):
         h5_matrix = h5_matrix_group.get(matrix_name)
         nkeys = len(h5_matrix.keys())
         if not nkeys:
-            log.warning('  %s is empty...skipping' % h5_matrix)
+            log.warning(f'  {h5_matrix} is empty...skipping')
         else:
             #log.warning('  skipping %r...' % matrix_name)
 
             #[u'col', u'data', u'form', u'is_matpool', u'name', u'row', u'shape_str']
-            name = _cast(h5_matrix.get('name'))
+            name = _cast_str(h5_matrix.get('name'), encoding)
             form = _cast(h5_matrix.get('form'))
             unused_is_matpool = _cast(h5_matrix.get('is_matpool'))
             matrix_obj = Matrix(name, form, is_matpool=False)
@@ -1402,4 +1425,4 @@ def _read_h5_matrix(h5_file, model, key, log):
             matrix_names.append(matrix_name)
 
     if len(matrix_keys):
-        log.debug('matrices: %s' % matrix_names)
+        log.debug(f'matrices: {matrix_names}')
