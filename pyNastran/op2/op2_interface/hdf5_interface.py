@@ -134,9 +134,11 @@ def _cast(h5_result_attr):
         return None
 
     if len(h5_result_attr.shape) == 0:
-        return np.array(h5_result_attr).tolist()
-        #raise NotImplementedError(h5_result_attr.dtype)
-    return np.array(h5_result_attr)
+        out = np.array(h5_result_attr).tolist()
+        return out
+    out = np.array(h5_result_attr)
+    #assert not isinstance(out, str), out
+    return out
 
 def _cast_str(h5_result_attr, encoding: str) -> List[str]:
     """converts the h5py type back into the OP2 type"""

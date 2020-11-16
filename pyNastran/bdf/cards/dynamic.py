@@ -2239,6 +2239,7 @@ class TSTEPNL(BaseCard):
         self.min_iter = min_iter
         #assert self.ndt >= 3, self
         assert self.dt > 0.
+        assert isinstance(self.method, str), f'method={self.method}; type={type(self.method)}'
 
     def validate(self):
         if self.method not in self.allowed_methods:

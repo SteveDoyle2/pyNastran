@@ -22,6 +22,7 @@ Limitations:
 """
 #from types import MethodType, FunctionType
 
+from typing import Optional
 import h5py
 import numpy as np
 from cpylog import get_logger2
@@ -454,12 +455,42 @@ class HDF5Importer:
         model[key] = new_dict
 
 
-def _cast(h5_result_attr):
+def _cast(h5_result_attr) -> None:
     """converts the h5py type back into the actual type"""
     if h5_result_attr is None:
         return None
 
     if len(h5_result_attr.shape) == 0:
-        return np.array(h5_result_attr).tolist()
+        # np.int32/np.float32/np.str_
+        # calling tolist() doesn't make it a list; it makes it an int/float/str
+        out = np.array(h5_result_attr).tolist()
         #raise NotImplementedError(h5_result_attr.dtype)
-    return np.array(h5_result_attr)
+    else:
+        out = np.array(h5_result_attr)
+    #assert not isinstance(out, bytes), f'out={out!r}'
+    #if isinstance(out, bytes):
+        #out = out.decode(encoding)
+    return out
+
+def _cast_string(h5_result_attr, encoding: str) -> Optional[str]:
+    """converts the h5py type back into the actual type"""
+    if h5_result_attr is None:
+        return None
+
+    if len(h5_result_attr.shape) == 0:
+        out = np.array(h5_result_attr).tolist()
+        #out_str = out_bytes.decode(encoding)
+        #out_lst = np.array(h5_result_attr).tolist()
+        #raise NotImplementedError(f'dtype={h5_result_attr.dtype}; out_lst={out_lst!r}')
+    else:  # pragma: no cover
+        out = np.array(h5_result_attr)
+        raise NotImplementedError(f'dtype={h5_result_attr.dtype}; out_bytes={out_bytes!r}')
+
+    if isinstance(out, str):
+        return out
+    elif isinstance(out, bytes):
+        out_str = out.decode(encoding)
+    else:  # pragma: no cover
+        raise NotImplementedError(f'dtype={h5_result_attr.dtype}; out={out!r}')
+
+    return out_str

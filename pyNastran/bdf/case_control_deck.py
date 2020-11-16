@@ -27,6 +27,7 @@ from typing import List, Tuple, Dict, Any, Optional, TYPE_CHECKING
 from cpylog import get_logger
 
 #from pyNastran.bdf import subcase
+from pyNastran.bdf.bdf_interface.encoding import decode_lines
 from pyNastran.bdf.subcase import Subcase, update_param_name
 from pyNastran.bdf.bdf_interface.subcase_cards import (
     EXTSEOUT, WEIGHTCHECK, GROUNDCHECK,
@@ -1265,12 +1266,3 @@ def integer(str_value: str, line: str) -> int:
     except ValueError:
         raise ValueError('%r is not an integer; line:\n%r' % (str_value, line))
     return value
-
-def decode_lines(lines_bytes, encoding: str):
-    if isinstance(lines_bytes[0], bytes):
-        lines_str = [line.decode(encoding) for line in lines_bytes]
-    elif isinstance(lines_bytes[0], str):
-        lines_str = lines_bytes
-    else:
-        raise TypeError(type(lines_bytes[0]))
-    return lines_str
