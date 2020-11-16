@@ -19,7 +19,6 @@ CaseControlDeck:
 
 """
 from __future__ import annotations
-import re
 import sys
 import copy
 from typing import List, Tuple, Dict, Any, Optional, TYPE_CHECKING
@@ -28,6 +27,8 @@ from cpylog import get_logger
 
 #from pyNastran.bdf import subcase
 from pyNastran.bdf.subcase import Subcase, update_param_name
+from pyNastran.bdf.case_control_deck import (_clean_lines, split_equal_space,
+                                             integer, decode_lines)
 from .bdf_interface.case_control_cards import CLASS_MAP
 from pyNastran.bdf.bdf_interface.subcase_cards import (
     #SURFACE, VOLUME, CSCALE,
@@ -135,8 +136,9 @@ class CaseControlDeck:
                 value = _cast(hdf5_file[key])
                 setattr(self, key, value)
             elif key in ['reject_lines', 'begin_bulk', 'lines', 'output_lines']: # lists of strings
-                value_bytes = _cast(hdf5_file[key]).tolist()
-                unused_value_str = [line.decode(encoding) for line in value_bytes]
+                unused_lines_str = decode_lines(
+                    _cast(hdf5_file[key]).tolist(),
+                    encoding)
             elif key == 'subcases':
                 subcase_group = hdf5_file[key]
                 keys = list(subcase_group.keys())
@@ -1225,68 +1227,3 @@ def verify_card2(key, value, options, line):
         assert value in ['YES'], 'line=%r is invalid; value=%r' % (line, value)
     else:
         raise NotImplementedError('key=%r line=%r' % (key, line))
-
-
-def _clean_lines(lines: List[str]) -> List[str]:
-    """
-    Removes comment characters defined by a *$*.
-
-    Parameters
-    ----------
-    lines : List[str, ...]
-        the lines to clean.
-
-    """
-    lines2 = []  # type: List[str]
-    for line in lines:
-        line = line.strip(' \n\r').split('$')[0].rstrip()
-        if line:
-            lines2.append(line)
-
-    lines3 = []  # TODO: line, comment
-    lines_pack = []
-    for line in lines2:
-        #print(line)
-        if len(lines_pack) == 0:
-            #print('0--', line)
-            lines_pack.append(line)
-            if not line.endswith(','):
-                #print('next...')
-                lines3.append(lines_pack)
-                lines_pack = []
-        elif line.endswith(','):
-            #print('C--', line)
-            lines_pack.append(line)
-        else:
-            if lines_pack[-1][-1] == ',':  # continued
-                #print('xx--', line)
-                lines_pack.append(line)
-                lines3.append(lines_pack)
-                #print('pack =', lines_pack)
-                lines_pack = []
-            else:  # new card
-                #print('new--', line)
-                lines3.append(lines_pack)
-                lines_pack = [line]
-    return [''.join(pack) for pack in lines3]
-
-def split_equal_space(line: str, word: str, example: str) -> str:
-    """
-    Splits a case insensative line by an
-
-    reads:
-     - 'SUBCASE = 5'
-     - 'SUBCASE 5'
-    """
-    if ' ' not in line and '=' not in line:
-        raise SyntaxError("expected data of the form '%s', not %r" % (example, line))
-    out = re.split(r'\s*%s\s*=?\s*' % word, line, maxsplit=1, flags=re.IGNORECASE)
-    return out[1]
-
-def integer(str_value: str, line: str) -> int:
-    """casts the value as an integer"""
-    try:
-        value = int(str_value)
-    except ValueError:
-        raise ValueError('%r is not an integer; line:\n%r' % (str_value, line))
-    return value

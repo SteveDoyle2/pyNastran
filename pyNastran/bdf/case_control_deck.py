@@ -156,8 +156,9 @@ class CaseControlDeck:
                 value = _cast(hdf5_file[key])
                 setattr(self, key, value)
             elif key in ['reject_lines', 'begin_bulk', 'lines', 'output_lines']: # lists of strings
-                value_bytes = _cast(hdf5_file[key]).tolist()
-                unused_value_str = [line.decode(encoding) for line in value_bytes]
+                unused_lines_str = decode_lines(
+                    _cast(hdf5_file[key]).tolist(),
+                    encoding)
             elif key == 'subcases':
                 subcase_group = hdf5_file[key]
                 keys = list(subcase_group.keys())
@@ -1264,3 +1265,12 @@ def integer(str_value: str, line: str) -> int:
     except ValueError:
         raise ValueError('%r is not an integer; line:\n%r' % (str_value, line))
     return value
+
+def decode_lines(lines_bytes, encoding: str):
+    if isinstance(lines_bytes[0], bytes):
+        lines_str = [line.decode(encoding) for line in lines_bytes]
+    elif isinstance(lines_bytes[0], str):
+        lines_str = lines_bytes
+    else:
+        raise TypeError(type(lines_bytes[0]))
+    return lines_str

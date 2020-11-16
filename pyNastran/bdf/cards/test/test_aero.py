@@ -1694,12 +1694,15 @@ class TestAero(unittest.TestCase):
         assert kfreq.min() == 10., 'min=%s; factors=%s' % (kfreq.min(), factors)
         assert kfreq.max() == 20., 'max=%s; factors=%s' % (kfreq.max(), factors)
         model.flfacts[ikfreq] = kfreq
+        kfreq.validate()
 
         ikfreq4 = 82
-        kfreq = model.add_flfact(ikfreq4, [])
+        kfreq2 = model.add_flfact(ikfreq4, [])
         with self.assertRaises(ValueError):
-            kfreq.validate()
-        kfreq.write_card()
+            kfreq2.validate()
+        kfreq2.factors = [1.]
+        kfreq2.validate()
+        kfreq2.write_card()
 
         # density, mach, rfreq
         card = ['FLUTTER', 85, 'KE', idensity, imach, ikfreq]
@@ -1716,6 +1719,7 @@ class TestAero(unittest.TestCase):
 
         model.uncross_reference()
         model.safe_cross_reference()
+        save_load_deck(model)
 
     def test_flutter_2(self):
         """validates the FLUTTER card"""
@@ -1794,9 +1798,11 @@ class TestAero(unittest.TestCase):
             'MKAERO1       .9',
             '             .01     .02     .03',
         ]
+        # ----------------------------------------------------------------------
+        model = BDF(debug=False)
+
         machs = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]
         reduced_freqs = [0.01, 0.02, 0.03]
-        model = BDF(debug=False)
         mkaero = model.add_mkaero1(machs, reduced_freqs, comment='mkaero1')
         mkaero.raw_fields()
         msg = mkaero.write_card()
@@ -1806,22 +1812,35 @@ class TestAero(unittest.TestCase):
             msg += 'expected=%r\n%s' % (str(line2), msg)
             assert line1 == line2, msg
 
-        mkaerob = model.add_mkaero1([], reduced_freqs)
+        mkaerob = MKAERO1([], reduced_freqs)
         with self.assertRaises(ValueError):
             mkaerob.validate()
         with self.assertRaises(ValueError):
             mkaerob.write_card()
 
-        mkaeroc = model.add_mkaero1([0.1, 0.2], [])
+        mkaeroc = MKAERO1([0.1, 0.2], [])
         with self.assertRaises(ValueError):
             mkaeroc.validate()
         with self.assertRaises(ValueError):
             mkaeroc.write_card()
 
+        machs = [0.01, 0.02, 0.03]
+        reduced_freqs = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]
+        mkaero = model.add_mkaero1(machs, reduced_freqs, comment='mkaero1')
+
+        machs = [0.01, 0.02, 0.03, 0.04, 0.05, 0.06, 0.07, 0.08, 0.09]
+        reduced_freqs = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]
+        mkaero = model.add_mkaero1(machs, reduced_freqs, comment='mkaero1')
+
+        machs_spike = [0.01]
+        reduced_freqs_spike = [0.1, 0.2]
+        mkaero = model.add_mkaero1(machs_spike, reduced_freqs_spike, comment='mkaero1')
+
         # TODO: this fails...because it's linked to the first card somehow
         #mkaerod = model.add_mkaero1(machs, [])
         #with self.assertRaises(ValueError):
             #mkaerod.write_card()
+        save_load_deck(model)
 
     def test_mkaero2(self):
         """checks the MKAERO2 card"""
