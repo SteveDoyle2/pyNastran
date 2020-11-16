@@ -582,6 +582,7 @@ CARD_MAP = {
     'TF' : TF,
     'TIC' : TIC,
 
+    'TOPVAR' : TOPVAR,
     'DCONADD' : DCONADD,
     'DCONSTR' : DCONSTR,
     'DDVAL' : DDVAL,

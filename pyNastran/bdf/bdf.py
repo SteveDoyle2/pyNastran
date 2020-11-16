@@ -1750,7 +1750,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             if method is None:
                 method = ''
             self.sol_method = method.strip()
-            self.log.debug(f'sol={self.sol} method={self.sol_method}')
+            self.log.debug(f'sol={self.sol} method={self.sol_method!r}')
         else:  # very common
             self.sol_method = None
 

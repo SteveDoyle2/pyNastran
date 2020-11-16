@@ -654,23 +654,23 @@ def write_pcompg(name, pids, itable, op2_file, op2_ascii, obj, endian=b'<'):
     lam_map = {
         None : 0,
     }
+    ft_to_int_map = {
+        None: 0,
+        'HILL': 1,
+        'HOFF': 2,
+        'TSAI': 3,
+        'STRN': 4,
+    }
+
     for pid in sorted(pids):
         prop = obj.properties[pid]
         #print(prop.get_stats())
 
-        if prop.ft is None:
-            ft = 0
-        elif prop.ft == 'HILL':
-            ft = 1
-        elif prop.ft == 'HOFF':
-            ft = 2
-        elif prop.ft == 'TSAI':
-            ft = 3
-        elif prop.ft == 'STRN':
-            ft = 4
-        else:
-            raise RuntimeError(f'unsupported ft.  pid={pid} ft={prop.ft!r}.'
-                               f'\nPCOMP = {prop}')
+        try:
+            ft_to_int_map[prop.ft]
+        except KeyError:
+            raise KeyError(f'unsupported ft.  pid={pid} ft={prop.ft!r}.'
+                           f'\nPCOMP = {prop}')
 
         #is_symmetric = True
         #symmetric_factor = 1

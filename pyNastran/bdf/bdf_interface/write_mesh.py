@@ -7,12 +7,13 @@ This file defines:
 from __future__ import annotations
 import sys
 from io import IOBase
-from collections import defaultdict, OrderedDict
 from typing import List, Dict, Union, Optional, Tuple, Any, cast, TYPE_CHECKING
 
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
 from pyNastran.bdf.bdf_interface.attributes import BDFAttributes
+from pyNastran.bdf.bdf_interface.write_mesh_utils import (
+    find_aero_location, write_dict, get_properties_by_element_type)
 from pyNastran.bdf.cards.nodes import write_xpoints
 if TYPE_CHECKING:
     from io import StringIO
@@ -61,7 +62,7 @@ class WriteMesh(BDFAttributes):
         has_read_write = hasattr(out_filename, 'read') and hasattr(out_filename, 'write')
         if has_read_write or isinstance(out_filename, IOBase):
             return out_filename
-        elif not isinstance(out_filename, str):
+        if not isinstance(out_filename, str):
             msg = 'out_filename=%r must be a string; type=%s' % (
                 out_filename, type(out_filename))
             raise TypeError(msg)
@@ -220,8 +221,8 @@ class WriteMesh(BDFAttributes):
             msg += '$EXECUTIVE CONTROL DECK\n'
 
             if self.sol_iline is not None:
-                if self.sol == 600:
-                    new_sol = f'SOL 600,{self.sol_method:d}'
+                if self.sol == 600 and self.sol_method:
+                    new_sol = f'SOL 600,{self.sol_method}'
                 else:
                     new_sol = f'SOL {self.sol}'
                 self.executive_control_lines[self.sol_iline] = new_sol
@@ -398,19 +399,6 @@ class WriteMesh(BDFAttributes):
             for (unused_id, diverg) in sorted(self.divergs.items()):
                 bdf_file.write(diverg.write_card(size, is_double))
 
-    def _find_aero_location(self) -> Tuple[bool, bool]:
-        """Determines where the AERO card should be written"""
-        write_aero_in_flutter = False
-        write_aero_in_gust = False
-        if self.aero:
-            if self.flfacts or self.flutters or self.mkaeros:
-                write_aero_in_flutter = True
-            elif self.gusts:
-                write_aero_in_gust = True
-            else:
-                # an AERO card exists, but no FLUTTER, FLFACT, MKAEROx or GUST card
-                write_aero_in_flutter = True
-        return write_aero_in_flutter, write_aero_in_gust
 
     def _write_flutter(self, bdf_file: Any, size: int=8, is_double: bool=False,
                        write_aero_in_flutter: bool=True,
@@ -460,7 +448,7 @@ class WriteMesh(BDFAttributes):
         self._write_aero_control(bdf_file, size, is_double, is_long_ids=is_long_ids)
         self._write_static_aero(bdf_file, size, is_double, is_long_ids=is_long_ids)
 
-        write_aero_in_flutter, write_aero_in_gust = self._find_aero_location()
+        write_aero_in_flutter, write_aero_in_gust = find_aero_location(self)
         self._write_flutter(bdf_file, size, is_double, write_aero_in_flutter,
                             is_long_ids=is_long_ids)
         self._write_gust(bdf_file, size, is_double, write_aero_in_gust, is_long_ids=is_long_ids)
@@ -822,7 +810,7 @@ class WriteMesh(BDFAttributes):
             bdf_file.write('$NODES\n')
             if self.grdset:
                 bdf_file.write(self.grdset.write_card(size))
-            _write_dict(bdf_file, self.nodes, size, is_double, is_long_ids)
+            write_dict(bdf_file, self.nodes, size, is_double, is_long_ids)
 
     #def _write_nodes_associated(self, bdf_file, size=8, is_double=False):
         #"""
@@ -981,7 +969,7 @@ class WriteMesh(BDFAttributes):
         if not is_properties:
             return
 
-        out = self._get_properties_by_element_type()
+        out = get_properties_by_element_type(self)
         propertys_class_to_property_types, property_type_to_property_class, properties_by_class = out
 
         bdf_file.write('$PROPERTIES\n')
@@ -1000,40 +988,6 @@ class WriteMesh(BDFAttributes):
             for prop in props:
                 bdf_file.write(prop.write_card(size, is_double))
         bdf_file.write('$' + '-' * 80 + '\n')
-
-    def _get_properties_by_element_type(self) -> Tuple[Dict[str, List[str]],
-                                                       Dict[str, Any],
-                                                       Dict[str, Any]]:
-        """helper for ``_write_properties_by_element_type``"""
-        propertys_class_to_property_types = OrderedDict()
-        # prop_class -> property types
-        propertys_class_to_property_types['spring'] = ['PELAS', 'PELAST']
-        propertys_class_to_property_types['damper'] = ['PDAMP', 'PDAMPT']
-        propertys_class_to_property_types['rod'] = ['PROD', 'PTUBE']
-        propertys_class_to_property_types['bar'] = ['PBAR', 'PBARL', 'PBRSECT']
-        propertys_class_to_property_types['beam'] = ['PBEAM', 'PBEAML', 'PBMSECT']
-        propertys_class_to_property_types['bush'] = ['PBUSH', 'PBUSH1D', 'PBUSH2D']
-        propertys_class_to_property_types['shell'] = ['PSHEAR', 'PSHELL', 'PCOMP', 'PCOMPG']
-        propertys_class_to_property_types['solid'] = ['PSOLID', 'PLSOLID']
-
-        property_type_to_property_class = {
-            #'other' : [],
-        }
-        # the inverse of propertys_class_to_property_types
-        for prop_class, prop_types in propertys_class_to_property_types.items():
-            for prop_type in prop_types:
-                property_type_to_property_class[prop_type] = prop_class
-
-        #if is_properties:
-
-        # put each property object into a class (e.g., CQUAD4 -> PCOMP)
-        properties_by_class = defaultdict(list)
-        prop_groups = (self.properties, self.pelast, self.pdampt, self.pbusht)
-        for properties in prop_groups:
-            for unused_pid, prop in properties.items():
-                prop_class = property_type_to_property_class[prop.type]
-                properties_by_class[prop_class].append(prop)
-        return propertys_class_to_property_types, property_type_to_property_class, properties_by_class
 
     def _write_rejects(self, bdf_file: Any, size: int=8, is_double: bool=False,
                        is_long_ids: Optional[bool]=None) -> None:
@@ -1098,7 +1052,7 @@ class WriteMesh(BDFAttributes):
                         raise
         if self.plotels:
             bdf_file.write('$PLOT ELEMENTS\n')
-            _write_dict(bdf_file, self.plotels, size, is_double, is_long_ids)
+            write_dict(bdf_file, self.plotels, size, is_double, is_long_ids)
 
     def _write_sets(self, bdf_file: Any, size: int=8, is_double: bool=False,
                     is_long_ids: Optional[bool]=None) -> None:
@@ -1243,12 +1197,3 @@ class WriteMesh(BDFAttributes):
             bdf_file.write('$THERMAL MATERIALS\n')
             for (unused_mid, material) in sorted(self.thermal_materials.items()):
                 bdf_file.write(material.write_card(size, is_double))
-
-def _write_dict(bdf_file, my_dict: Dict[int, Any], size: int, is_double: bool, is_long_ids: bool) -> None:
-    """writes a dictionary that may require long format"""
-    if is_long_ids:
-        for (unused_nid, node) in sorted(my_dict.items()):
-            bdf_file.write(node.write_card_16(is_double))
-    else:
-        for (unused_nid, node) in sorted(my_dict.items()):
-            bdf_file.write(node.write_card(size, is_double))

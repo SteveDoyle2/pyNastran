@@ -300,7 +300,7 @@ class EPOINT(XPoint):
         """
         XPoint.__init__(self, nid, comment)
 
-def write_xpoints(cardtype, points, comment=''):
+def write_xpoints(cardtype: str, points, comment: str='') -> str:
     """writes SPOINTs/EPOINTs"""
     msg = comment
     if isinstance(points, dict):

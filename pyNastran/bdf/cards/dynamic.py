@@ -1060,7 +1060,10 @@ class NLPARM(BaseCard):
         assert self.ninc is None or self.ninc >= 0, self.get_stats()  #  is this >0 or >= 0?
         assert self.dt >= 0., self.get_stats()
         assert self.kstep >= -1, self.get_stats()
-        assert self.conv in ['UPW', 'PW', 'UP', 'UW', 'U', 'P', 'W', ''], self.get_stats()
+        assert len(set(self.conv)) == len(self.conv), f'There are duplicate values in conv={self.conv!r}'
+        for conv_key in set(self.conv):
+            #MSC: 'U', 'P', 'W', 'V', 'N', 'A'
+            assert conv_key in ['U', 'P', 'W', 'V', 'N', 'A', ''], self.get_stats()
         assert self.int_out in ['YES', 'NO', 'ALL'], self.get_stats()
 
         # line 2

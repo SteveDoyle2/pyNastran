@@ -1863,7 +1863,7 @@ class EPT(GeomCommon):
                 idata = four_minus1.unpack(edata2)
 
             if self.size == 4:
-                assert 0 < nlayers < 100, 'pid=%s nlayers=%s z0=%s nms=%s sb=%s ft=%s Tref=%s ge=%s' % (
+                assert 0 < nlayers < 400, 'pid=%s nlayers=%s z0=%s nms=%s sb=%s ft=%s Tref=%s ge=%s' % (
                     pid, nlayers, z0, nsm, sb, ft, tref, ge)
             else:
                 assert nlayers == 0, nlayers
@@ -1913,7 +1913,7 @@ class EPT(GeomCommon):
                 nlayers = abs(nlayers)
             assert nlayers > 0, out
 
-            assert 0 < nlayers < 100, 'pid=%s nlayers=%s z0=%s nsm=%s sb=%s ft=%s Tref=%s ge=%s' % (
+            assert 0 < nlayers < 400, 'pid=%s nlayers=%s z0=%s nsm=%s sb=%s ft=%s Tref=%s ge=%s' % (
                 pid, nlayers, z0, nsm, sb, ft, tref, ge)
 
             if self.is_debug_file:
@@ -1926,7 +1926,7 @@ class EPT(GeomCommon):
                 (mid, t, theta, sout) = s2.unpack(data[n:n+ntotal2])
                 if self._nastran_format == 'optistruct':
                     #print(f'      mid={mid} t={t} theta={theta} sout={sout}')
-                    if sout in [2, 3]:
+                    if sout in [2, 3]: # TODO: Why is this 2/3?
                         sout = 1 # YES
 
                 mids.append(mid)
@@ -2040,7 +2040,7 @@ class EPT(GeomCommon):
                 #nlayers = abs(nlayers)
             #assert nlayers > 0, out
 
-            #assert 0 < nlayers < 100, 'pid=%s nlayers=%s z0=%s nms=%s sb=%s ft=%s tref=%s ge=%s' % (
+            #assert 0 < nlayers < 400, 'pid=%s nlayers=%s z0=%s nms=%s sb=%s ft=%s tref=%s ge=%s' % (
                 #pid, nlayers, z0, nsm, sb, ft, tref, ge)
 
             #if self.is_debug_file:

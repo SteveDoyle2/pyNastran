@@ -3239,13 +3239,13 @@ class OES(OP2Common):
             word = 'stress'
             if self.element_type == 306:  # CHEXALN
                 nedges = 4 # quad
-                #nnodes_expected = 8
+                nnodes_expected = 8
                 result_name = prefix + 'chexa_stress' + postfix
                 element_name = 'CHEXA8'
                 # real=67
             elif self.element_type == 307:  # CPENTALN
                 nedges = 3 # tri
-                #nnodes_expected = 6
+                nnodes_expected = 6
                 result_name = prefix + 'cpenta_stress' + postfix
                 element_name = 'CPENTA6'
             #elif self.element_type == 302:  # CTETRA
@@ -3265,12 +3265,12 @@ class OES(OP2Common):
             word = 'strain'
             if self.element_type == 306:  # CHEXALN
                 nedges = 4 # quad
-                #nnodes_expected = 8
+                nnodes_expected = 8
                 result_name = prefix + 'chexa_strain' + postfix
                 element_name = 'CHEXA8'
             elif self.element_type == 307:  # CPENTA
                 nedges = 3 # tri
-                #nnodes_expected = 6
+                nnodes_expected = 6
                 result_name = prefix + 'cpenta_strain' + postfix
                 element_name = 'CPENTA6'
             #elif self.element_type == 302:  # CTETRA
@@ -4720,10 +4720,10 @@ class OES(OP2Common):
         n = 0
 
         etype_map = {
-            #element_type : (element_base, nnodes_expected, element_name)
-            74 : ('ctria3', -1, 'CTRIA3'),
-            83 : ('ctria3', -1, 'CTRIA3'),  # NASA-95
-            227 : ('ctriar', -1, 'CTRIAR'),
+            #element_type : (element_base, element_name)
+            74 : ('ctria3', 'CTRIA3'),
+            83 : ('ctria3', 'CTRIA3'),  # NASA-95
+            227 : ('ctriar', 'CTRIAR'),
         }
         if self.is_stress:
             stress_strain = 'stress'
@@ -4737,7 +4737,7 @@ class OES(OP2Common):
         #if prefix == '' and postfix == '':
             #prefix = stress_strain + '.'
 
-        element_base, nnodes_expected, element_name = etype_map[self.element_type]
+        element_base, element_name = etype_map[self.element_type]
         # stress.ctria3_stress
         result_name = prefix + f'{element_base}_{stress_strain}' + postfix
 
@@ -5705,43 +5705,32 @@ class OES(OP2Common):
         table_name = self.table_name
         assert isinstance(table_name, bytes), table_name
         n = 0
+
+        composite_element_name_map = {
+            95: 'cquad4',
+            96: 'cquad8',
+            97: 'ctria3',
+            98: 'ctria6',
+            232: 'cquadr',
+            233: 'ctriar',
+        }
+        try:
+            element_name = composite_element_name_map[self.element_type]
+        except KeyError:  # pragma: no cover
+            raise KeyError(self.code_information())
+
         if self.is_stress:
+            stress_strain = 'stress'
             obj_vector_real = RealCompositePlateStressArray
             #obj_vector_complex = ComplexCompositePlateStressArray
             obj_vector_random = RandomCompositePlateStressArray
-            if self.element_type == 95: # CQUAD4
-                result_name = prefix + 'cquad4_composite_stress' + postfix
-            elif self.element_type == 96:  # CQUAD8
-                result_name = prefix + 'cquad8_composite_stress' + postfix
-            elif self.element_type == 97:  # CTRIA3
-                result_name = prefix + 'ctria3_composite_stress' + postfix
-            elif self.element_type == 98:  # CTRIA6
-                result_name = prefix + 'ctria6_composite_stress' + postfix
-            elif self.element_type == 232:  # CQUADR
-                result_name = prefix + 'cquadr_composite_stress' + postfix
-            elif self.element_type == 233:  # CTRIAR
-                result_name = prefix + 'ctriar_composite_stress' + postfix
-            else:  # pragma: no cover
-                raise RuntimeError(self.code_information())
         else:
+            stress_strain = 'strain'
             obj_vector_real = RealCompositePlateStrainArray
             #obj_vector_complex = ComplexCompositePlateStrainArray
             obj_vector_random = RandomCompositePlateStrainArray
-            if self.element_type == 95: # CQUAD4
-                result_name = prefix + 'cquad4_composite_strain' + postfix
-            elif self.element_type == 96:  # CQUAD8
-                result_name = prefix + 'cquad8_composite_strain' + postfix
-            elif self.element_type == 97:  # CTRIA3
-                result_name = prefix + 'ctria3_composite_strain' + postfix
-            elif self.element_type == 98:  # CTRIA6
-                result_name = prefix + 'ctria6_composite_strain' + postfix
-            elif self.element_type == 232:  # CQUADR
-                result_name = prefix + 'cquadr_composite_strain' + postfix
-            elif self.element_type == 233:  # CTRIAR
-                result_name = prefix + 'ctriar_composite_strain' + postfix
-            else:  # pragma: no cover
-                raise RuntimeError(self.code_information())
 
+        result_name = prefix + f'{element_name}_composite_{stress_strain}' + postfix
         if self._results.is_not_saved(result_name):
             return ndata, None, None
         self._results._found_result(result_name)

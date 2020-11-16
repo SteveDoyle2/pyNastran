@@ -5,7 +5,8 @@ from typing import TYPE_CHECKING
 import numpy as np
 import h5py
 
-from pyNastran.utils.dict_to_h5py import _cast
+from pyNastran.utils.dict_to_h5py import _cast, _cast_string
+from pyNastran.bdf.bdf_interface.encoding import decode_lines
 from pyNastran.bdf.case_control_deck import CaseControlDeck
 from pyNastran.bdf.bdf_interface.add_card import CARD_MAP
 from pyNastran.bdf.bdf_interface.hdf5_exporter import (
@@ -39,9 +40,7 @@ def load_bdf_from_hdf5_file(h5_file, model):
         the BDF file to put the data into
 
     """
-    encoding = _cast(h5_file['minor_attributes']['encoding'])
-    if isinstance(encoding, bytes):
-        encoding = encoding.decode('latin1')
+    encoding = _cast_string(h5_file['minor_attributes']['encoding'], 'latin1')
     assert isinstance(encoding, str), f'encoding={encoding!r}; type={type(encoding)}'
     keys = h5_file.keys()
 
@@ -229,19 +228,23 @@ def load_bdf_from_hdf5_file(h5_file, model):
     cards_to_read = [key.decode(encoding) for key in cards_to_read]
     model.cards_to_read = set(list(cards_to_read))
 
-def _load_minor_attributes(unused_key, group, model, encoding):
+def _load_minor_attributes(unused_key: str, group, model: BDF,
+                           encoding: str) -> None:
     keys_attrs = group.keys()
+    list_attrs = {'case_control_lines', 'executive_control_lines',
+                  'system_command_lines', 'active_filenames'}
+    str_attrs = {'nastran_format'}
+    #skip_attrs = []
     for keyi in keys_attrs:
         sub_group = group[keyi]
         #model.log.debug('  %s' % keyi)
 
-        if keyi in ['case_control_lines', 'executive_control_lines',
-                    'system_command_lines', 'active_filenames']:
+        if keyi in list_attrs:
             lst = _cast(sub_group).tolist()
             if isinstance(lst[0], str):
                 pass
             else:
-                lst = [line.decode(encoding) for line in lst]
+                lst = decode_lines(lst, encoding)
                 assert isinstance(lst[0], str), type(lst[0])
             setattr(model, keyi, lst)
             continue
@@ -256,7 +259,7 @@ def _load_minor_attributes(unused_key, group, model, encoding):
                 lst[reject_key_int] = value
                 comment = value[0].decode(encoding)
                 card_lines = value[1:]
-                card_lines = [line.decode(encoding) for line in card_lines]
+                card_lines = decode_lines(card_lines, encoding)
                 try:
                     line0 = card_lines[0]
                 except IndexError:
@@ -277,12 +280,19 @@ def _load_minor_attributes(unused_key, group, model, encoding):
             reject_keys = list(sub_group.keys())
             for ireject in sub_group.keys():
                 reject_card = _cast(sub_group[ireject]).tolist()
-                fields = [val.decode(encoding) for val in reject_card]
+                fields = decode_lines(reject_card, encoding)
                 #fields = [field if field != 'nan' else None for field in fields]
                 card_name = fields[0]
                 model.add_card(fields, card_name, comment='', ifile=None,
                                is_list=True, has_none=True)
             continue
+        elif keyi in str_attrs:
+            value = _cast_string(sub_group, encoding)
+            try:
+                setattr(model, keyi, value)
+            except AttributeError:  # pragma: no cover
+                model.log.warning('cant set minor_attributes/%s as %s' % (keyi, value))
+                raise
         elif keyi == 'is_enddata':
             model.card_count['ENDDATA'] = 1
             continue
@@ -320,7 +330,7 @@ def _load_indexed_list_str(key, group, encoding):
     if isinstance(value, str):
         pass
     else:
-        lst = [line.encode(encoding) for line in lst]
+        lst = decode_lines(lst, encoding)
         assert isinstance(lst[0], str), type(lst[0])
     return lst
 
@@ -363,7 +373,7 @@ def hdf5_load_coords(model, coords_group, encoding):
             _put_keys_values_into_dict(model, 'coords', cids, values)
         model.card_count[card_type] = len(cids)
 
-def hdf5_load_tables(model, group, encoding):
+def hdf5_load_tables(model: BDF, group, encoding: str) -> None:
     """loads the tables"""
     for card_type in group.keys():
         sub_group = group[card_type]
@@ -375,7 +385,7 @@ def hdf5_load_tables(model, group, encoding):
         _put_keys_values_into_dict(model, 'tables', keys, values)
         model.card_count[card_type] = len(keys)
 
-def hdf5_load_methods(model, group, encoding):
+def hdf5_load_methods(model: BDF, group, encoding: str) -> None:
     """loads the methods"""
     for card_type in group.keys():
         sub_group = group[card_type]
@@ -387,7 +397,7 @@ def hdf5_load_methods(model, group, encoding):
         _put_keys_values_into_dict(model, 'methods', keys, values)
         model.card_count[card_type] = len(keys)
 
-def hdf5_load_masses(model, group, encoding):
+def hdf5_load_masses(model: BDF, group, encoding: str) -> None:
     """loads the masses"""
     for card_type in group.keys():
         masses = group[card_type]
@@ -420,7 +430,7 @@ def hdf5_load_masses(model, group, encoding):
         model.card_count[card_type] = len(eid)
 
 
-def hdf5_load_materials(model, group, encoding):
+def hdf5_load_materials(model: BDF, group, encoding: str) -> None:
     """loads the materials"""
     for card_type in group.keys():
         sub_group = group[card_type]
@@ -551,7 +561,7 @@ def hdf5_load_materials(model, group, encoding):
             _put_keys_values_into_dict(model, 'materials', mid, values)
         model.card_count[card_type] = len(mid)
 
-def hdf5_load_spcs(model, group, encoding):
+def hdf5_load_spcs(model: BDF, group, encoding: str) -> None:
     """loads the spcs"""
     keys = list(group.keys())
     keys.remove('keys')
@@ -570,7 +580,7 @@ def hdf5_load_spcs(model, group, encoding):
             _put_keys_values_into_dict_list(model, 'spcs', ispc_id, lkeys, values)
             model.card_count[card_type] = len(lkeys)
 
-def hdf5_load_spcadds(model, group, encoding):
+def hdf5_load_spcadds(model: BDF, group, encoding: str) -> None:
     """loads the spcadds"""
     keys = list(group.keys())
     keys.remove('keys')
@@ -588,7 +598,7 @@ def hdf5_load_spcadds(model, group, encoding):
                 sub_group, encoding, model.log)
             _put_keys_values_into_dict_list(model, 'spcadds', ispc_id, lkeys, values)
 
-def hdf5_load_mpcs(model, group, encoding):
+def hdf5_load_mpcs(model: BDF, group, encoding: str) -> None:
     """loads the mpcs"""
     keys = list(group.keys())
     keys.remove('keys')
@@ -607,7 +617,7 @@ def hdf5_load_mpcs(model, group, encoding):
             _put_keys_values_into_dict_list(model, 'mpcs', impc_id, lkeys, values)
             model.card_count[card_type] = len(lkeys)
 
-def hdf5_load_mpcadds(model, group, encoding):
+def hdf5_load_mpcadds(model: BDF, group, encoding: str) -> None:
     """loads the mpcadds"""
     keys = list(group.keys())
     keys.remove('keys')
@@ -626,7 +636,7 @@ def hdf5_load_mpcadds(model, group, encoding):
             _put_keys_values_into_dict_list(model, 'mpcadds', mpc_id, lkeys, values)
             model.card_count[card_type] = len(lkeys)
 
-def hdf5_load_pval(model, group, encoding):
+def hdf5_load_pval(model: BDF, group, encoding: str) -> None:
     """loads the pval"""
     keys = list(group.keys())
     keys.remove('keys')
@@ -652,7 +662,7 @@ def hdf5_load_pval(model, group, encoding):
             _put_keys_values_into_dict_list(model, 'pval', adapt_idi, sid, values)
             model.card_count[card_type] = len(sid)
 
-def hdf5_load_loads(model, group, encoding):
+def hdf5_load_loads(model: BDF, group, encoding: str) -> None:
     """loads the loads"""
     keys = list(group.keys())
     keys.remove('keys')
@@ -691,7 +701,7 @@ def hdf5_load_loads(model, group, encoding):
                 _put_keys_values_into_dict_list(model, 'loads', iload_id, sid, values)
             model.card_count[card_type] = len(sid)
 
-def hdf5_load_load_combinations(model, group, encoding):
+def hdf5_load_load_combinations(model: BDF, group, encoding: str) -> None:
     """loads the load_combinations"""
     keys = list(group.keys())
     keys.remove('keys')
@@ -711,7 +721,7 @@ def hdf5_load_load_combinations(model, group, encoding):
             _put_keys_values_into_dict_list(model, 'load_combinations', iload_id, lkeys, values)
             model.card_count[card_type] = len(lkeys)
 
-def hdf5_load_nsms(model, group, encoding):
+def hdf5_load_nsms(model: BDF, group, encoding: str) -> None:
     """loads the nsms"""
     keys = list(group.keys())
     keys.remove('keys')
@@ -729,7 +739,7 @@ def hdf5_load_nsms(model, group, encoding):
             _put_keys_values_into_dict_list(model, 'nsms', insm_id, keys, values)
             model.card_count[card_type] = len(keys)
 
-def hdf5_load_nsmadds(model, group, encoding):
+def hdf5_load_nsmadds(model: BDF, group, encoding: str) -> None:
     """loads the nsmadds"""
     keys = list(group.keys())
     keys.remove('keys')
@@ -747,7 +757,7 @@ def hdf5_load_nsmadds(model, group, encoding):
             _put_keys_values_into_dict_list(model, 'nsmadds', insm_id, lkeys, values)
             model.card_count[card_type] = len(keys)
 
-def hdf5_load_frequencies(model, group, encoding):
+def hdf5_load_frequencies(model: BDF, group, encoding: str) -> None:
     """loads the frequencies"""
     keys = list(group.keys())
     keys.remove('keys')
@@ -765,7 +775,7 @@ def hdf5_load_frequencies(model, group, encoding):
             _put_keys_values_into_dict_list(model, 'frequencies', ifreq_id, fkeys, values)
             model.card_count[card_type] = len(fkeys)
 
-def hdf5_load_aelinks(model, group, encoding):
+def hdf5_load_aelinks(model: BDF, group, encoding: str) -> None:
     """loads the aelinks"""
     keys = group.keys()
     naelinks = 0
@@ -785,7 +795,7 @@ def hdf5_load_aelinks(model, group, encoding):
             model._add_aelink_object(aelinki)
     model.card_count['AELINK'] = naelinks
 
-def hdf5_load_dloads(model, group, encoding):
+def hdf5_load_dloads(model: BDF, group, encoding: str) -> None:
     """loads the dloads"""
     keys = list(group.keys())
     keys.remove('keys')
@@ -803,7 +813,7 @@ def hdf5_load_dloads(model, group, encoding):
             _put_keys_values_into_dict_list(model, 'dloads', idload_id, lkeys, values)
             model.card_count[card_type] = len(lkeys)
 
-def hdf5_load_dload_entries(model, group, encoding):
+def hdf5_load_dload_entries(model: BDF, group, encoding: str) -> None:
     """loads the dload_entries"""
     keys = list(group.keys())
     keys.remove('keys')
@@ -821,7 +831,7 @@ def hdf5_load_dload_entries(model, group, encoding):
             _put_keys_values_into_dict_list(model, 'dload_entries', idload_id, lkeys, values)
             model.card_count[card_type] = len(lkeys)
 
-def hdf5_load_bcs(model, group, encoding):
+def hdf5_load_bcs(model: BDF, group, encoding: str) -> None:
     """loads the bcs"""
     keys = list(group.keys())
     keys.remove('keys')
@@ -839,7 +849,7 @@ def hdf5_load_bcs(model, group, encoding):
             _put_keys_values_into_dict_list(model, 'bcs', ibc_id, lkeys, values)
             model.card_count[card_type] = len(lkeys)
 
-def hdf5_load_transfer_functions(model, group, encoding):
+def hdf5_load_transfer_functions(model: BDF, group, encoding: str) -> None:
     """loads the transfer_functions"""
     keys = list(group.keys())
     keys.remove('keys')
@@ -857,7 +867,7 @@ def hdf5_load_transfer_functions(model, group, encoding):
             _put_keys_values_into_dict_list(model, 'transfer_functions', itf_id, lkeys, values)
             model.card_count[card_type] = len(lkeys)
 
-def hdf5_load_dvgrids(model, group, encoding):
+def hdf5_load_dvgrids(model: BDF, group, encoding: str) -> None:
     """loads the dvgrids"""
     keys = list(group.keys())
     keys.remove('keys')
@@ -875,7 +885,7 @@ def hdf5_load_dvgrids(model, group, encoding):
             _put_keys_values_into_dict_list(model, 'dvgrids', iopt_id, lkeys, values)
             model.card_count[card_type] = len(lkeys)
 
-def hdf5_load_desvars(model, group, encoding):
+def hdf5_load_desvars(model: BDF, group, encoding: str) -> None:
     """loads the desvars"""
     for card_type in group.keys():
         sub_group = group[card_type]
@@ -897,7 +907,7 @@ def hdf5_load_desvars(model, group, encoding):
             raise RuntimeError('card_type=%s in hdf5_load_desvars' % card_type)
         model.card_count[card_type] = len(desvar)
 
-def hdf5_load_dmigs(model, group, unused_encoding):
+def hdf5_load_dmigs(model: BDF, group, unused_encoding: str) -> None:
     """loads the dmigs"""
     keys = group.keys()
     if len(keys) == 0:
@@ -1532,11 +1542,12 @@ def _load_cards_from_keys_values(unused_name, values, keys, encoding, unused_log
         value_objs.append(class_instance)
     return value_objs
 
-def _load_class(key, value, card_type: str, encoding: str):
+def _load_class(key: str, value, card_type: str, encoding: str):
     if isinstance(card_type, bytes):
         card_type = card_type.decode(encoding)
     keys_to_read = list(value.keys())
     class_obj = CARD_MAP[card_type]  # see add_card.py ~line 200
+    #print(f'--{card_type}--')
     if hasattr(class_obj, '_init_from_empty'):
         class_instance = class_obj._init_from_empty()
     else:
@@ -1556,7 +1567,14 @@ def _load_class(key, value, card_type: str, encoding: str):
         if key_to_cast in _properties:
             continue
 
-        valuei = _get_casted_value(value, key_to_cast, encoding)
+        try:
+            valuei = _get_casted_value(value, key_to_cast, encoding)
+        except AssertionError:
+            print('error loading %r' % card_type)
+            print(_properties)
+            print(key, key_to_cast)
+            raise
+
         if isinstance(valuei, np.ndarray):
             valuei = valuei.tolist()
         try:
@@ -1577,7 +1595,7 @@ def _load_class(key, value, card_type: str, encoding: str):
     str(class_instance)
     return class_instance
 
-def _get_casted_value(value, key_to_cast, encoding):
+def _get_casted_value(value, key_to_cast: str, encoding: str) -> Any:
     value_h5 = value[key_to_cast]
     if isinstance(value_h5, h5py._hl.dataset.Dataset):
         valuei = _cast(value_h5)
@@ -1601,14 +1619,8 @@ def _get_casted_value(value, key_to_cast, encoding):
                     print(slot_h5, type(slot_h5))
                     raise NotImplementedError()
 
-                if isinstance(valueii, bytes):
-                    valueii = valueii.decode(encoding)
-                elif isinstance(valueii, np.ndarray):
-                    valueii = valueii.tolist()
-                    if isinstance(valueii[0], bytes):
-                        valueii = [val.decode(encoding) if isinstance(val, bytes) else val
-                                   for val in valueii]
-
+                #print(f'key={key_to_cast}; valueii={valueii}; type={type(valueii)}')
+                valueii = to_list_int_float_str(valueii, encoding)
                 lst.append(valueii)
             valuei = lst
 
@@ -1621,7 +1633,25 @@ def _get_casted_value(value, key_to_cast, encoding):
         #print(value_h5, value_h5.keys())
         #raise
         #valuei = None
+    #print(f'key={key_to_cast}; valuei={valuei}; type={type(valuei)}')
+    #assert not isinstance(valuei, bytes), f'key={key_to_cast}; valuei={valuei}; type={type(valuei)}'
     return valuei
+
+def to_list_int_float_str(valueii: Any, encoding: str) -> Any:
+    if isinstance(valueii, (int, float, str)):
+        pass
+    elif isinstance(valueii, bytes):
+        valueii = valueii.decode(encoding)
+    elif isinstance(valueii, np.ndarray):
+        valueii = valueii.tolist()
+        if isinstance(valueii[0], bytes):
+            valueii = [val.decode(encoding) if isinstance(val, bytes) else val
+                       for val in valueii]
+    elif isinstance(valueii, list):
+        if len(valueii) > 0 and isinstance(valueii[0], bytes):
+            valueii = [val.decode(encoding) if isinstance(val, bytes) else val
+                       for val in valueii]
+    return valueii
 
 def _load_from_class(value, card_type: str, encoding: str):
     """generic loader that only requires an ``_init_from_empty`` method"""
