@@ -5752,7 +5752,7 @@ class AddCards(AddMethods):
                     nvalue: Optional[int]=None,
                     omax: Optional[float]=None,
                     epsilon: float=1.0e-3,
-                    comment: str='') -> FLUTTER:
+                    comment: str='', validate: bool=False) -> FLUTTER:
         """
         Creates a FLUTTER card, which is required for a flutter (SOL 145)
         analysis.
@@ -5800,7 +5800,7 @@ class AddCards(AddMethods):
         flutter = FLUTTER(sid, method, density, mach, reduced_freq_velocity,
                           imethod=imethod, nvalue=nvalue,
                           omax=omax, epsilon=epsilon,
-                          comment=comment)
+                          comment=comment, validate=validate)
         self._add_flutter_object(flutter)
         return flutter
 

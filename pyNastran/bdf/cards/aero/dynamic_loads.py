@@ -556,7 +556,8 @@ class FLUTTER(BaseCard):
             raise KeyError('Field %r=%r is an invalid FLUTTER entry.' % (n, value))
 
     def __init__(self, sid, method, density, mach, reduced_freq_velocity,
-                 imethod='L', nvalue=None, omax=None, epsilon=1.0e-3, comment=''):
+                 imethod='L', nvalue=None, omax=None, epsilon=1.0e-3, comment='',
+                 validate: bool=False):
         """
         Creates a FLUTTER card, which is required for a flutter (SOL 145)
         analysis.
@@ -625,6 +626,8 @@ class FLUTTER(BaseCard):
         self.density_ref = None
         self.mach_ref = None
         self.reduced_freq_velocity_ref = None
+        if validate:
+            self.validate()
 
     def validate(self):
         msg = ''

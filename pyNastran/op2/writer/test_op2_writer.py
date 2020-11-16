@@ -166,7 +166,6 @@ class TestOP2Writer(unittest.TestCase):
         op2_filename_debug = os.path.join(folder, 'freq_elements.debug.out')
         op2_filename_out = os.path.join(folder, 'freq_elements_out.op2')
         op2_filename_debug_out = os.path.join(folder, 'freq_elements_out.debug.out')
-        #model = os.path.splitext(op2_filename)[0]
 
         op2 = read_op2_geom(op2_filename, debug_file=op2_filename_debug, log=log)
 
@@ -184,7 +183,6 @@ class TestOP2Writer(unittest.TestCase):
         op2_filename_debug = os.path.join(folder, 'freq_elements2.debug.out')
         op2_filename_out = os.path.join(folder, 'freq_elements_out2.op2')
         op2_filename_debug_out = os.path.join(folder, 'freq_elements_out2.debug.out')
-        #model = os.path.splitext(op2_filename)[0]
 
         exclude_results = [
             'force.ctria6_force', 'force.ctriar_force', 'force.cshear_force',
@@ -207,7 +205,6 @@ class TestOP2Writer(unittest.TestCase):
         op2_filename_debug = os.path.join(folder, 'freq_random_elements.debug.out')
         op2_filename_out = os.path.join(folder, 'freq_random_elements_out.op2')
         op2_filename_debug_out = os.path.join(folder, 'freq_random_elements_out.debug.out')
-        #model = os.path.splitext(op2_filename)[0]
 
         exclude_results = [
             'force.ctria6_force', 'force.ctriar_force', 'force.cshear_force',
@@ -230,7 +227,6 @@ class TestOP2Writer(unittest.TestCase):
         op2_filename_debug = os.path.join(folder, 'modes_complex_elements.debug.out')
         op2_filename_out = os.path.join(folder, 'modes_complex_elements_out.op2')
         op2_filename_debug_out = os.path.join(folder, 'modes_complex_elements_out.debug.out')
-        #model = os.path.splitext(op2_filename)[0]
 
         exclude_results = [
             'force.ctria6_force', 'force.ctriar_force', 'force.cshear_force',

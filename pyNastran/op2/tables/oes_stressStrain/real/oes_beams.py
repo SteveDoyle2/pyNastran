@@ -356,11 +356,11 @@ class RealBeamArray(OES_Object):
         #print('ntotal=%s' % (ntotal))
         #assert ntotal == 193, ntotal
 
-        if self.is_sort1:
-            struct1 = Struct(endian + b'2i 9f')
-            struct2 = Struct(endian + b'i 9f')
-        else:
+        if not self.is_sort1:
             raise NotImplementedError('SORT2')
+        struct1 = Struct(endian + b'2i 9f')
+        struct2 = Struct(endian + b'i 9f')
+        struct_13i = Struct('13i')
 
         op2_ascii.write(f'nelements={nelements:d}\n')
         for itime in range(self.ntimes):
@@ -374,7 +374,7 @@ class RealBeamArray(OES_Object):
                       4, 0, 4,
                       4, ntotal, 4,
                       4 * ntotal]
-            op2_file.write(pack('%ii' % len(header), *header))
+            op2_file.write(struct_13i.pack(*header))
             op2_ascii.write('r4 [4, 0, 4]\n')
             op2_ascii.write(f'r4 [4, {itable:d}, 4]\n')
             op2_ascii.write(f'r4 [4, {4 * ntotal:d}, 4]\n')
@@ -388,15 +388,13 @@ class RealBeamArray(OES_Object):
             smts = self.data[itime, :, 6]
             smcs = self.data[itime, :, 7]
 
-            #eid_old = None
-            #xxb_old = None
             icount = 0
             nwide = 0
             ielement = 0
             #print('------------')
             #print(self.element_node.shape, self.data.shape)
-            for (unused_i, xxb, sxc, sxd, sxe, sxf, smax, smin, smt, smc) in zip(
-                    count(), xxbs, sxcs, sxds, sxes, sxfs, smaxs, smins, smts, smcs):
+            for (xxb, sxc, sxd, sxe, sxf, smax, smin, smt, smc) in zip(
+                    xxbs, sxcs, sxds, sxes, sxfs, smaxs, smins, smts, smcs):
 
                 if icount == 0:
                     eid_device = eids_device[ielement]
@@ -421,10 +419,13 @@ class RealBeamArray(OES_Object):
                     op2_file.write(struct2.pack(*data))
                     ielement += 1
                     icount = 0
-                else:
+                else: # elif nid == 0 and icount > 0
                     data = [0, xxb, sxc, sxd, sxe, sxf, smax, smin, smt, smc]  # 10
                     op2_file.write(struct2.pack(*data))
+                    ielement += 1
                     icount += 1
+                #else:  # pragma: no cover
+                    #raise RuntimeError(f'OES-CBEAM op2 writer; nid={nid} xxb={xxb} icount={icount}')
 
                 op2_ascii.write('  eid_device=%s data=%s\n' % (eid_device, str(data)))
                 nwide += len(data)
@@ -451,9 +452,7 @@ class RealNonlinearBeamArray(OES_Object):
         self.nelements = 0  # result specific
         self.nnodes = None
 
-        if is_sort1:
-            pass
-        else:
+        if not is_sort1:
             raise NotImplementedError('SORT2')
 
     @property

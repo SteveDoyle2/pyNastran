@@ -148,7 +148,7 @@ class EDT(GeomCommon):
         data = (1.3, -1, -1, -1, -1, -1, -1, -1,
                 0.03, 0.04, 0.05, -1, -1, -1, -1, -1)
         """
-        assert len(data) == 76, len(data)
+        #assert len(data) == 76, len(data)
         nvalues = (len(data) - n) // 4
         nrows = nvalues // 16
         assert nrows > 0, nrows
@@ -1514,6 +1514,7 @@ class EDT(GeomCommon):
             sid = ints[i0]
             assert ints[i1] == -1, ints[i1]
             method_bytes = data[n+i0*4+4:n+i0*4+12]
+
             density = ints[i0+3]
             mach = ints[i0+4]
             reduced_freq_velocity = ints[i0+5]
@@ -1528,7 +1529,7 @@ class EDT(GeomCommon):
                              density, mach, reduced_freq_velocity,
                              imethod=imethod, # 'L'
                              nvalue=nvalue,
-                             epsilon=epsilon)
+                             epsilon=epsilon, validate=True)
         self.to_nx(' because FLUTTER was found')
         return len(data)
         #ntotal = 12 # 4 * 8

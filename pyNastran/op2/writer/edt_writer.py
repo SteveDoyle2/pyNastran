@@ -4,9 +4,12 @@ from collections import defaultdict
 from struct import pack, Struct
 from typing import List, Union, TYPE_CHECKING
 
+import numpy as np
+
 from .geom1_writer import write_geom_header, close_geom_table
 from .geom4_writer import write_header, write_header_nvalues
 if TYPE_CHECKING:  # pragma: no cover
+    from cpylog import SimpleLogger
     from pyNastran.bdf.cards.aero.static_loads import AEROS # , AESTAT, CSSCHD, DIVERG, TRIM, TRIM2
     from pyNastran.bdf.cards.aero.dynamic_loads import AERO, MKAERO1, FLUTTER # , FLFACT, MKAERO2
     from pyNastran.op2.op2_geom import OP2Geom, BDF
@@ -22,6 +25,7 @@ def write_edt(op2_file, op2_ascii, model: Union[BDF, OP2Geom], endian: bytes=b'<
         #'AELIST', 'AEFACT', 'AESURF', 'AESURFS'
         'TRIM', 'FLUTTER',
         'DEFORM',
+        'FLFACT',
     ]
 
     cards_to_skip = [
@@ -73,10 +77,7 @@ def write_edt(op2_file, op2_ascii, model: Union[BDF, OP2Geom], endian: bytes=b'<
     if model.aero:
         out[model.aero.type].append(model.aero)
 
-    for card_type in list(out):
-        if card_type not in card_types:
-            del out[card_type]
-            model.log.warning(f'removing {card_type} in OP2 writer')
+    remove_unsupported_cards(out, card_types, model.log)
     # other
     if len(out) == 0:
         return
@@ -113,6 +114,15 @@ def write_edt(op2_file, op2_ascii, model: Union[BDF, OP2Geom], endian: bytes=b'<
     #print('itable', itable)
     close_geom_table(op2_file, op2_ascii, itable)
     #-------------------------------------
+
+def remove_unsupported_cards(card_dict: Dict[str, Any],
+                             card_types: List[str],
+                             log: SimpleLogger):
+
+    for card_type in list(card_dict):
+        if card_type not in card_types:
+            del card_dict[card_type]
+            log.warning(f"removing {card_type} in OP2 writer because it's unsupported")
 
 def _write_trim(model: Union[BDF, OP2Geom], name: str,
                 trim_ids: List[int], ncards: int,
@@ -280,22 +290,47 @@ def _write_flutter(model: Union[BDF, OP2Geom], name: str,
       data = (30, PK, 1, 2, 3, L, 3, 0.001, -1)
     """
     key = (3902, 39, 272)
-    nfields = 10
+    nfields = 11
     structi = Struct(endian + b'i 8s 3i 8s ifi')
     nbytes = write_header(name, nfields, ncards, key, op2_file, op2_ascii)
 
     for flutter_id in flutter_ids:
         flutter = model.flutters[flutter_id]  # type: FLUTTER
         #print(flutter.get_stats())
-        method = b'-%8s' % flutter.method.decode('latin1')
-        imethod = b'-%8s' % flutter.imethod.decode('latin1')
+        assert isinstance(flutter.method, str), f'flutter.method={flutter.method}; type={type(flutter.method)}'
+        assert isinstance(flutter.imethod, str), f'flutter.imethod={flutter.imethod}; type={type(flutter.imethod)}'
+
+        #if isinstance(flutter.method, str):
+        method = b'%-8s' % flutter.method.encode('latin1')
+        imethod = b'%-8s' % flutter.imethod.encode('latin1')
+        #if 0:
+            #try:
+                #method = b'-%8s' % flutter.method.decode('latin1')
+                #imethod = b'-%8s' % flutter.imethod.decode('latin1')
+            #except AttributeError:
+                #print(flutter.get_stats())
+                #raise
+        nvalue = flutter.nvalue
+        if nvalue is None:
+            nvalue = 0
+        #assert isinstance(flutter.nvalue, int), f'flutter.nvalue={flutter.nvalue}; type={type(flutter.nvalue)}'
+
         data = [flutter.sid, method,
-                flutter.density, flutter.mach, flutter.reduced_freq,
-                imethod, flutter.nvalue, flutter.epsilon, -1]
+                flutter.density, flutter.mach, flutter.reduced_freq_velocity,
+                imethod, nvalue, flutter.epsilon, -1]
+        assert len(data) == 9, data
         assert None not in data, data
         op2_ascii.write(f'  FLUTTER data={data}\n')
         op2_file.write(structi.pack(*data))
     return nbytes
+
+def _makero_temp(data, i: int, nloops: int):
+    if i == (nloops - 1):
+        data_temp = data[i*8:]
+    else:
+        #machs_temp = [-1] * 8
+        data_temp = data[i*8:i*8+8]
+    return data_temp
 
 def _write_mkaero1(model: Union[BDF, OP2Geom], name: str,
                    mkaero1s: List[MKAERO1], ncards: int,
@@ -306,26 +341,78 @@ def _write_mkaero1(model: Union[BDF, OP2Geom], name: str,
            0.03, 0.04, 0.05, -1, -1, -1, -1, -1)
     """
     key = (3802, 38, 271)
-    nfields = 16 * ncards
-    #spack = Struct(endian + b'i10fi')
-    nbytes = write_header(name, nfields, ncards, key, op2_file, op2_ascii)
 
+    makero1s_temp = []
+    makero1s_final = []
     for mkaero in mkaero1s:
-        data = []
         nmachs = len(mkaero.machs)
         nkfreqs = len(mkaero.reduced_freqs)
+        assert nmachs > 0, mkaero
+        assert nkfreqs > 0, mkaero
+
+        if nmachs <= 8 and nkfreqs <= 8:
+            # no splitting required
+            makero1s_final.append((mkaero.machs, mkaero.reduced_freqs))
+        elif nmachs <= 8 or nkfreqs <= 8:
+            # one of machs or kfreqs < 8
+            makero1s_temp.append((mkaero.machs, mkaero.reduced_freqs))
+        else:
+            # both machs and kfreqs > 8
+            nloops_mach = int(np.ceil(nmachs/8))
+            for i in range(nloops_mach):
+                machs_temp = _makero_temp(mkaero.machs, i, nloops_mach)
+                assert len(machs_temp) > 0, (i, nloops_mach, machs_temp)
+                makero1s_temp.append((machs_temp, mkaero.reduced_freqs))
+
+    for (machs, reduced_freqs) in makero1s_temp:
+        nmachs = len(machs)
+        nkfreqs = len(reduced_freqs)
+        assert nmachs > 0, nmachs
+        assert nkfreqs > 0, nkfreqs
+
+        if nmachs <= 8 and nkfreqs <= 8:  # pragma: no cover
+            raise RuntimeError(f'this should never happen...nmachs={nmachs} knfreqs={nkfreqs}')
+        if nmachs <= 8:
+            # nkfreqs > 8
+            nloops = int(np.ceil(nkfreqs/8))
+            for i in range(nloops):
+                reduced_freqs_temp = _makero_temp(reduced_freqs, i, nloops)
+                makero1s_final.append((machs, reduced_freqs_temp))
+        elif nkfreqs <= 8:
+            # nmachs > 8
+            nloops = int(np.ceil(nmachs/8))
+            for i in range(nloops):
+                machs_temp = _makero_temp(machs, i, nloops)
+                assert len(machs_temp) > 0, (i, nloops_mach, machs_temp)
+                makero1s_final.append((machs_temp, reduced_freqs))
+        else:  # pragma: no cover
+            raise RuntimeError(f'this should never happen...nmachs={nmachs} knfreqs={nkfreqs}')
+            #raise RuntimeError((nmachs, nkfreqs))
+
+    ncards = len(makero1s_final)
+    nfields = 16
+    nbytes = write_header(name, nfields, ncards, key, op2_file, op2_ascii)
+
+    for machs, reduced_freqs in makero1s_final:
+        data = []
+        nmachs = len(machs)
+        nkfreqs = len(reduced_freqs)
+        assert nmachs > 0, machs
+        assert nkfreqs > 0, reduced_freqs
+
         nint_mach = 8 - nmachs
         nint_kfreq = 8 - nkfreqs
         fmt1 = b'%if' % nmachs + b'i' * nint_mach
         fmt2 = b'%if' % nkfreqs + b'i' * nint_kfreq
         spack = Struct(endian + fmt1 + fmt2)
-        data.extend(mkaero.machs.tolist())
-        if nint_mach:
-            data.extend([-1]*nint_mach)
-        data.extend(mkaero.reduced_freqs.tolist())
-        if nint_mach:
-            data.extend([-1]*nint_mach)
 
+        data.extend(machs.tolist())
+        assert nint_mach < 8, nint_mach
+        if nint_mach:
+            data.extend([-1]*nint_mach)
+        data.extend(reduced_freqs.tolist())
+        if nint_kfreq:
+            data.extend([-1]*nint_kfreq)
         op2_ascii.write(f'  mkaero1 data={data}\n')
         op2_file.write(spack.pack(*data))
     return nbytes
@@ -344,7 +431,6 @@ def _write_aero(model: Union[BDF, OP2Geom], name: str,
 
     """
     aeroi = aero[0]
-    #print(aeroi.get_stats())
     spack = Struct(endian + b'i 3f 2i')
 
     key = (3202, 32, 265)
@@ -423,6 +509,43 @@ def _write_deform(model: Union[BDF, OP2Geom], name: str,
         op2_file.write(structi.pack(*data))
     return nbytes
 
+def _write_flfact(model: Union[BDF, OP2Geom], name: str,
+                  flfact_ids, ncards: int,
+                  op2_file, op2_ascii, endian: bytes) -> int:
+    """
+    (4102, 41, 274)
+    NX 2019.2
+
+    data = (1, 0.206, -1,
+            2, 1.3, -1,
+            3, 14400.0, 15600.0, 16800.0, 18000.0, 19200.0, 20400.0, -1)
+
+    """
+    key = (4102, 41, 274)
+    #nfields = 3
+
+    fmt = ''
+    data = []
+    for flfact_id in flfact_ids:
+        flfact = model.flfacts[flfact_id]
+        #print(flfact.get_stats())
+        nfactors = len(flfact.factors)
+        fmt += 'i %if i' % nfactors
+        if isinstance(flfact.factors, np.ndarray):
+            factors = flfact.factors.tolist()
+        else:
+            factors = flfact.factors
+        datai = [flfact.sid] + factors + [-1]
+        data.extend(datai)
+        #flutter = model.loads[flutter_id]  # type: FLUTTER
+        assert None not in datai, datai
+        op2_ascii.write(f'  FLFACT data={data}\n')
+
+    nvalues = len(data)
+    nbytes = write_header_nvalues(name, nvalues, key, op2_file, op2_ascii)
+    structi = Struct(fmt)
+    op2_file.write(structi.pack(*data))
+    return nbytes
 
 EDT_MAP = {
     'CAERO1': _write_caero1,
@@ -433,4 +556,5 @@ EDT_MAP = {
     'TRIM': _write_trim,
     'FLUTTER': _write_flutter,
     'DEFORM': _write_deform,
+    'FLFACT': _write_flfact,
 }

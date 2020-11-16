@@ -1498,13 +1498,13 @@ class RealCBeamForceArray(RealForceObject):
 
         op2_ascii.write(f'  ntimes = {self.ntimes}\n')
 
-        if self.is_sort1:
-            struct1 = Struct(endian + b'2i 8f')
-            struct2 = Struct(endian + b'i 8f')
-        else:
+        if not self.is_sort1:
             raise NotImplementedError('SORT2')
+        struct1 = Struct(endian + b'2i 8f')
+        struct2 = Struct(endian + b'i 8f')
 
         op2_ascii.write(f'nelements={nelements:d}\n')
+        struct_13i = Struct('13i')
         for itime in range(self.ntimes):
             self._write_table_3(op2_file, op2_ascii, new_result, itable, itime)
 
@@ -1515,7 +1515,7 @@ class RealCBeamForceArray(RealForceObject):
                       4, 0, 4,
                       4, ntotal, 4,
                       4 * ntotal]
-            op2_file.write(pack('%ii' % len(header), *header))
+            op2_file.write(struct_13i.pack(*header))
             op2_ascii.write('r4 [4, 0, 4]\n')
             op2_ascii.write(f'r4 [4, {itable:d}, 4]\n')
             op2_ascii.write(f'r4 [4, {4 * ntotal:d}, 4]\n')
@@ -1557,12 +1557,18 @@ class RealCBeamForceArray(RealForceObject):
                     op2_file.write(struct2.pack(*data))
                     ielement += 1
                     icount = 0
-                else:
-                    raise RuntimeError('CBEAM op2 writer')
+                elif nid == 0 and icount > 0:
+                    eid_device2 = eids_device[ielement]
+                    data = [nid, sdi, bm1i, bm2i, ts1i, ts2i, afi, ttrqi, wtrqi] # 9
+                    op2_file.write(struct2.pack(*data))
+                    ielement += 1
                     #data = [0, xxb, sxc, sxd, sxe, sxf, smax, smin, smt, smc]  # 10
                     #op2_file.write(struct2.pack(*data))
-                    #icount += 1
-
+                    icount += 1
+                elif nid == 0 and icount > 0:  # pragma: no cover
+                    raise RuntimeError('OEF-CBEAM op2 writer')
+                else:
+                    raise RuntimeError('OEF-CBEAM op2 writer')
                 op2_ascii.write('  eid_device=%s data=%s\n' % (eid_device, str(data)))
                 nwide += len(data)
 
