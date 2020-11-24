@@ -503,7 +503,8 @@ class RealGridPointForcesArray(GridPointForces):
                                 coord_out, coords, nid_cd, icd_transform,
                                 xyz_cid0, summation_point=None,
                                 consider_rxf=True,
-                                itime=0, debug=True, log=None):
+                                itime=0, debug=True, log=None,
+                                idtype='int32'):
         """
         Extracts Patran-style interface loads.  Interface loads are the
         internal loads at a cut.
@@ -584,7 +585,7 @@ class RealGridPointForcesArray(GridPointForces):
         assert isinstance(nids[0], integer_types), type(nids[0])
         is_in = np.in1d(gpforce_nids, nids, assume_unique=False)
         is_in2 = np.in1d(gpforce_eids[is_in], eids, assume_unique=False)
-        irange = np.arange(len(gpforce_nids), dtype='int32')[is_in][is_in2]
+        irange = np.arange(len(gpforce_nids), dtype=idtype)[is_in][is_in2]
         if irange.size == 0:
             msg = 'no nodes/elements found\n'
             msg += 'eids=%s\n' % (eids)
@@ -803,7 +804,7 @@ class RealGridPointForcesArray(GridPointForces):
         self.data[self.itime, self.itotal, :] = [t1, t2, t3, r1, r2, r3]
         self.itotal += 1
 
-    def get_stats(self, short=False) -> List[str]:
+    def get_stats(self, short: bool=False) -> List[str]:
         if not self.is_built:
             return [
                 '<%s>\n' % self.__class__.__name__,
@@ -1411,7 +1412,7 @@ class ComplexGridPointForcesArray(GridPointForces):
         self.data[self.itime, self.itotal, :] = [t1, t2, t3, r1, r2, r3]
         self.itotal += 1
 
-    def get_stats(self, short=False) -> List[str]:
+    def get_stats(self, short: bool=False) -> List[str]:
         if not self.is_built:
             return [
                 '<%s>\n' % self.__class__.__name__,

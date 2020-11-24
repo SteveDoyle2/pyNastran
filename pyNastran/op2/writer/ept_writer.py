@@ -667,7 +667,7 @@ def write_pcompg(name, pids, itable, op2_file, op2_ascii, obj, endian=b'<'):
         #print(prop.get_stats())
 
         try:
-            ft_to_int_map[prop.ft]
+            ft = ft_to_int_map[prop.ft]
         except KeyError:
             raise KeyError(f'unsupported ft.  pid={pid} ft={prop.ft!r}.'
                            f'\nPCOMP = {prop}')

@@ -384,7 +384,7 @@ class RealSolidArray(OES_Object):
             raise NotImplementedError(f'element_name={self.element_name} self.element_type={self.element_type}')
         return nnodes
 
-    def get_stats(self, short=False) -> List[str]:
+    def get_stats(self, short: bool=False) -> List[str]:
         if not self.is_built:
             return [
                 '<%s>\n' % self.__class__.__name__,

@@ -1065,7 +1065,7 @@ def check_case(sol, subcase, fem2, p0, isubcase, subcases,
         msg = 'sol=%s\n%s' % (sol, subcase)
         ierror = check_for_optional_param(('METHOD', 'RSMETHOD', 'RIGID', 'BOLTID', 'BGSET'), subcase, msg,
                                           RuntimeError, log, ierror, nerrors)
-    elif sol == 105: # buckling
+    elif sol in [5, 105]: # buckling
         _assert_has_spc(subcase, fem2)
         msg = 'sol=%s\n%s' % (sol, subcase)
         ierror = check_for_optional_param(('LOAD', 'METHOD'), subcase, msg,

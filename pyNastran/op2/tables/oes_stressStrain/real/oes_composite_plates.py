@@ -252,7 +252,7 @@ class RealCompositePlateArray(OES_Object):
         self.data[self.itime, itotal, :] = [o11, o22, t12, t1z, t2z, angle, major, minor, ovm]
         self.itotal += 1
 
-    def get_stats(self, short=False) -> List[str]:
+    def get_stats(self, short: bool=False) -> List[str]:
         if not self.is_built:
             msg = [
                 '<%s>\n' % self.__class__.__name__,

@@ -248,7 +248,7 @@ class GridPointSurfaceArray(ScalarObject):
         self.data[self.itime, self.itotal, :] = [nx, ny, txy, angle, majorP, minorP, tmax, ovm]
         self.itotal += 1
 
-    def get_stats(self, short=False) -> List[str]:
+    def get_stats(self, short: bool=False) -> List[str]:
         if not self.is_built:
             return [
                 '<%s>\n' % self.__class__.__name__,
@@ -639,7 +639,7 @@ class GridPointStressesVolumePrincipalArray(ScalarObject):
 
         self._times = np.zeros(self.ntimes, dtype=dtype)
 
-    def get_stats(self, short=False) -> List[str]:
+    def get_stats(self, short: bool=False) -> List[str]:
         if not self.is_built:
             return [
                 '<%s>\n' % self.__class__.__name__,
@@ -728,7 +728,7 @@ class GridPointStressesVolumeDirectArray(ScalarObject):
         self.location = np.empty(self.ntotal, dtype='U8')
         self._times = np.zeros(self.ntimes, dtype=dtype)
 
-    def get_stats(self, short=False) -> List[str]:
+    def get_stats(self, short: bool=False) -> List[str]:
         if not self.is_built:
             return [
                 '<%s>\n' % self.__class__.__name__,
@@ -918,7 +918,7 @@ class GridPointStressesSurfaceDiscontinutiesArray(ScalarObject): # tCode=35
 
         self._times = np.zeros(self.ntimes, dtype=dtype)
 
-    def get_stats(self, short=False) -> List[str]:
+    def get_stats(self, short: bool=False) -> List[str]:
         if not self.is_built:
             return [
                 '<%s>\n' % self.__class__.__name__,

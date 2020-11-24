@@ -286,7 +286,7 @@ class RealContactTractionAndPressureArray(ScalarObject):  # displacement style t
     def data_type(self):
         raise NotImplementedError()
 
-    def get_stats(self, short=False) -> List[str]:
+    def get_stats(self, short: bool=False) -> List[str]:
         if not self.is_built:
             return [
                 '<%s>; table_name=%r\n' % (self.__class__.__name__, self.table_name),

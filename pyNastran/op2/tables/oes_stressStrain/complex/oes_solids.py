@@ -213,7 +213,7 @@ class ComplexSolidArray(OES_Object):
         self.element_node[self.itotal, :] = [eid, grid]
         self.itotal += 1
 
-    def get_stats(self, short=False) -> List[str]:
+    def get_stats(self, short: bool=False) -> List[str]:
         if not self.is_built:
             return [
                 '<%s>\n' % self.__class__.__name__,

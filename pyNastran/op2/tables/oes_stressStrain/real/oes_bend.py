@@ -159,7 +159,7 @@ class RealBendArray(OES_Object):
         #self.ielement += 1
         self.itotal += 1
 
-    def get_stats(self, short=False) -> List[str]:
+    def get_stats(self, short: bool=False) -> List[str]:
         if not self.is_built:
             return [
                 '<%s>\n' % self.__class__.__name__,

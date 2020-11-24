@@ -146,7 +146,7 @@ class RealNonlinearBushArray(OES_Object): # 226-CBUSHNL
         ]
         self.ielement += 1
 
-    def get_stats(self, short=False) -> List[str]:
+    def get_stats(self, short: bool=False) -> List[str]:
         if not self.is_built:
             return [
                 '<%s>\n' % self.__class__.__name__,

@@ -28,7 +28,7 @@ class AppliedLoadsVectorArray(ScalarObject):
         #[f1, f2, f3, m1, m2, m3]
         self.data = np.zeros((self.ntimes, self.itotal, 6), dtype=self.data_type())
 
-    def get_stats(self, short=False) -> List[str]:
+    def get_stats(self, short: bool=False) -> List[str]:
         if not self.is_built:
             return [
                 '<%s>\n' % self.__class__.__name__,

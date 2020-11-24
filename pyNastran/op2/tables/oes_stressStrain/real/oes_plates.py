@@ -411,7 +411,7 @@ class RealPlateArray(OES_Object):
         self.itotal += 2
         #self.ielement += 2
 
-    def get_stats(self, short=False) -> List[str]:
+    def get_stats(self, short: bool=False) -> List[str]:
         if not self.is_built:
             return [
                 '<%s>\n' % self.__class__.__name__,

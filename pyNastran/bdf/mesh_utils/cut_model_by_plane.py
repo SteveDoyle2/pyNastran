@@ -74,7 +74,7 @@ def get_stations(model: BDF, p1, p2, p3, zaxis,
            k is defined by the z-axis
        'CORD2R' : typical
     idir : int; default=0
-        the direction of the step direction
+        the direction of the step direction (0, 1, 2)
 
     Returns
     -------
@@ -84,9 +84,36 @@ def get_stations(model: BDF, p1, p2, p3, zaxis,
     i / k : (3,) float ndarray
         the i and k vectors of the coordinate system
     coord_out : Coord
-        the generated coordinate system
+        the generated coordinate system where the x-axis defines
+        the direction to be marched
     stations : (n,) float ndarray
-        ???
+        the coordinates in the x-axis that will be marched down
+
+    Example
+    -------
+    For the BWB example, we to calculate an SMT down the global x-axis
+
+    1--------> y
+    |
+    |
+    |
+    2, 3
+    |
+    v x
+
+    # axial
+    p1 = np.array([0., 0., 0.]) # origin
+    p2 = np.array([1600., 0., 0.]) # xaxis
+    p3 = np.array([1600., 0., 0.]) # end
+    zaxis = np.array([0., 0., 1.])
+    method = 'Z-Axis Projection'
+    idir = 0
+
+    xyz1, xyz2, xyz3, i, k, coord_out, stations = get_stations(
+        model, p1, p2, p3, zaxis,
+        method=method, cid_p1=0, cid_p2=0, cid_p3=0,
+        cid_zaxis=0, idir=idir, nplanes=100)
+    print(stations)
 
     """
     # define a local coordinate system
@@ -104,7 +131,8 @@ def get_stations(model: BDF, p1, p2, p3, zaxis,
     xyz3p = coord_out.transform_node_to_local(xyz3)
     dx = xyz3p[idir] - xyz1p[idir]
     if abs(dx) == 0.:
-        msg = f'Coincident starting and end points.  dx={dx} xyz1={xyz1} xyz3={xyz3}'
+        msg = f'Coincident starting and end points.  dx={dx} xyz1={xyz1} xyz3={xyz3}\n'
+        msg += coord_out.get_stats()
         raise ValueError(msg)
     stations = np.linspace(0., dx, num=nplanes, endpoint=True)
 

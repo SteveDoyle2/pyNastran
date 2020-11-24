@@ -177,7 +177,7 @@ class ComplexBeamArray(OES_Object):
         self._times[itime] = dt
         self.itotal += 1
 
-    def get_stats(self, short=False) -> List[str]:
+    def get_stats(self, short: bool=False) -> List[str]:
         if not self.is_built:
             return [
                 '<%s>\n' % self.__class__.__name__,

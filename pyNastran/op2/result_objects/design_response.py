@@ -17,7 +17,7 @@ class Responses:
         self.flutter_response = None
         self.fractional_mass_response = None
 
-    def get_stats(self, short=False) -> str:
+    def get_stats(self, short: bool=False) -> str:
         objects = [
             self.convergence_data,
             self.desvars,
@@ -173,7 +173,7 @@ class WeightResponse:
         #msg += '  velocity=%s\n' % (velocity)
         return msg
 
-    def get_stats(self, short=False):
+    def get_stats(self, short: bool=False):
         if short:
             return 'responses.weight_response (%s)\n' % (self.n)
         return self.__repr__() + '\n'
@@ -212,7 +212,7 @@ class PropertyResponse:
         msg += '  pid = %s\n' % np.array(self.pid)
         return msg
 
-    def get_stats(self, short=False):
+    def get_stats(self, short: bool=False):
         if short:
             return 'responses.%s_response (%s)\n' % (self.name, self.n)
         return self.__repr__() + '\n'
@@ -232,7 +232,7 @@ class FractionalMassResponse:
         self.type_flag = []
         self.seid = []
 
-    def get_stats(self, short=False):
+    def get_stats(self, short: bool=False):
         if short:
             return 'responses.%s_response (%s)\n' % (self.name, self.n)
         return self.__repr__() + '\n'
@@ -290,7 +290,7 @@ class DisplacementResponse:
         self.seid.append(seid)
         self._n += 1
 
-    def get_stats(self, short=False):
+    def get_stats(self, short: bool=False):
         if short:
             return 'responses.%s_response (%s)\n' % (self.name, self.n)
         return self.__repr__() + '\n'
@@ -347,7 +347,7 @@ class FlutterResponse:
         msg += '  velocity=%s\n' % np.array(self.velocity)
         return msg
 
-    def get_stats(self, short=False):
+    def get_stats(self, short: bool=False):
         if short:
             return 'responses.%s_response (%s)\n' % (self.name, self.n)
         return self.__repr__() + '\n'
@@ -707,7 +707,7 @@ class DSCMCOL:
                 msg += f'    {response_type:2d}: name={name!r}; names={names2}\n'
         return msg
 
-    def get_stats(self, short=False):
+    def get_stats(self, short: bool=False):
         if short:
             return f'responses.dscmcol ({len(self.responses)})\n'
         return self.__repr__() + '\n'
@@ -748,7 +748,7 @@ class Desvars:
         msg += '  dunno = %s\n' % self.dunno
         return msg
 
-    def get_stats(self, short=False):
+    def get_stats(self, short: bool=False):
         if short:
             return f'responses.desvars ({len(self.internal_id)})\n'
         return self.__repr__() + '\n'
@@ -829,7 +829,7 @@ class Convergence:
         msg += f'  desvar_values; shape=({self.n}, {self.ndesign_variables}):\n{self.desvar_values}'
         return msg
 
-    def get_stats(self, short=False):
+    def get_stats(self, short: bool=False):
         if short:
             return 'responses.convergence_data (%s, %s)\n' % (self.n, self.ndesign_variables)
         return self.__repr__() + '\n'
