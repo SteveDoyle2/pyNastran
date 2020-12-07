@@ -34,7 +34,8 @@ The superelement sets start with SE:
 +------------+-----------------+
 
 """
-from pyNastran.utils.numpy_utils import integer_types
+from __future__ import annotations
+from typing import TYPE_CHECKING
 from pyNastran.bdf.cards.base_card import (
     BaseCard, _node_ids, expand_thru
 )

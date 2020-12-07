@@ -1,4 +1,6 @@
 # pylint: disable=C0103,R0902,R0904,R0914
+from __future__ import annotations
+from typing import TYPE_CHECKING
 import numpy as np
 
 from pyNastran.utils.numpy_utils import integer_types

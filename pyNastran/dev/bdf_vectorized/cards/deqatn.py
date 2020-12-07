@@ -4,7 +4,9 @@ Defines the DEQATN class and sub-functions.
 
 The capitalization of the sub-functions is important.
 """
+from __future__ import annotations
 from copy import deepcopy
+from typing import TYPE_CHECKING
 
 import numpy as np
 from numpy import (

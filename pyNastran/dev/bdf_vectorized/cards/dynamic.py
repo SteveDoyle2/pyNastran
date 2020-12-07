@@ -16,6 +16,7 @@ All dynamic control cards are defined in this file.  This includes:
 All cards are BaseCard objects.
 
 """
+from typing import TYPE_CHECKING
 from math import log, exp, ceil
 import numpy as np
 from numpy import unique, hstack

@@ -24,9 +24,10 @@ All aero cards are defined in this file.  This includes:
 All cards are BaseCard objects.
 
 """
+from __future__ import annotations
 from itertools import count
 import math
-from typing import List, Any
+from typing import List, Union, Any, TYPE_CHECKING
 
 import numpy as np
 
