@@ -15,8 +15,7 @@ from typing import List
 import numpy as np
 from cpylog import get_logger2
 
-from pyNastran.utils import object_attributes, check_path, _filename
-from pyNastran.bdf.bdf_interface.include_file import get_include_filename
+from pyNastran.utils import object_attributes, check_path # _filename
 from pyNastran.bdf.bdf_interface.utils import (
     to_fields, _parse_pynastran_header, parse_executive_control_deck)
 

@@ -559,15 +559,15 @@ class WriteMesh(BDFAttributes):
             string representation of the DMIGs
         """
         msg = []
-        for unused_name, dmig in sorted(self.dmigs.items()):
+        for unused_name, dmig in sorted(self.dmig.items()):
             msg.append(dmig.write_card(size, is_double))
-        for unused_name, dmi in sorted(self.dmis.items()):
+        for unused_name, dmi in sorted(self.dmi.items()):
             msg.append(dmi.write_card(size, is_double))
-        for unused_name, dmij in sorted(self.dmijs.items()):
+        for unused_name, dmij in sorted(self.dmij.items()):
             msg.append(dmij.write_card(size, is_double))
-        for unused_name, dmiji in sorted(self.dmijis.items()):
+        for unused_name, dmiji in sorted(self.dmiji.items()):
             msg.append(dmiji.write_card(size, is_double))
-        for unused_name, dmik in sorted(self.dmiks.items()):
+        for unused_name, dmik in sorted(self.dmik.items()):
             msg.append(dmik.write_card(size, is_double))
         bdf_file.write(''.join(msg))
 
