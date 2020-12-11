@@ -909,7 +909,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
         attrs = self.object_attributes(mode='both', keys_to_skip=None)
         return attrs
 
-    def export_hdf5_filename(self, hdf5_filename:str) -> None:
+    def export_hdf5_filename(self, hdf5_filename: str) -> None:
         """
         Converts the BDF objects into hdf5 object
 
@@ -942,7 +942,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
         from pyNastran.bdf.bdf_interface.hdf5_exporter import export_bdf_to_hdf5_file
         export_bdf_to_hdf5_file(hdf5_file, self)
 
-    def load_hdf5_filename(self, hdf5_filename:str) -> None:
+    def load_hdf5_filename(self, hdf5_filename: str) -> None:
         """
         Loads a BDF object from an hdf5 filename
 
@@ -3617,7 +3617,8 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             if cps_to_check:
                 nids_checked.append(nids_checkedi)
                 #print("nids_checkedi =", nids_checkedi)
-                out = self._get_coords_to_update(cps_to_check, cps_checked, nids_checked)
+                out = _get_coords_to_update(
+                    self.coords, cps_to_check, cps_checked, nids_checked)
                 unused_ncoords_to_setup, cord1s_to_update, cord2s_to_update, nids_checked = out
                 #print('CPs not handled=%s\n  cord1s_to_update=%s\n  cord2s_to_update=%s' % (
                     #cps_to_check, cord1s_to_update, cord2s_to_update))
@@ -3910,7 +3911,6 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
 
         # apply OPENMDAO syntax
         if is_dynamic_syntax:
-            #_parse_dynamic_syntax(key, dict_of_vars, log)
             fields = [print_field_16(_parse_dynamic_syntax(field, self.dict_of_vars, log))
                       if '%' in field.strip()[0:1] else print_field_16(field)
                       for field in fields]
@@ -4914,6 +4914,63 @@ def _set_nodes(model: BDF,
 def _bool(value):
     """casts a lower string to a booean"""
     return True if value == 'true' else False
+
+def _get_coords_to_update(coords: List[CORD1R, CORD1S, CORD1C,
+                                       CORD2R, CORD2S, CORD2C],
+                          cps_to_check: List[int],
+                          cps_checked: List[int],
+                          nids_checked: List[int]) -> List[int]:
+    """helper method for ``transform_xyzcp_to_xyz_cid``"""
+    cord1s_to_update_temp = []
+    cord2s_to_update = []
+    for cp in sorted(cps_to_check):
+        coord = coords[cp]
+        if coord.type in ['CORD2R', 'CORD2C', 'CORD2S']:
+            if coord.rid in cps_checked:
+                cord2s_to_update.append(cp)
+        elif coord.type in ['CORD1R', 'CORD1C', 'CORD1S']:
+            cord1s_to_update_temp.append(cp)
+        else:
+            raise NotImplementedError(coord.rstrip())
+
+    cord1s_to_update = set()
+    if cord1s_to_update_temp:
+        if len(nids_checked) == 0:
+            raise RuntimeError('len(nids_checked)=0...this shouldnt happen.')
+        elif len(nids_checked) == 1:
+            pass
+        else:
+            nids_checked = [np.hstack(nids_checked)]
+
+        nids_checkedi = nids_checked[0]
+        if len(nids_checkedi) == 0:
+            #print("no cord1s to check...")
+            cord1s_to_update = []
+        else:
+            #print('nids_checked = ', nids_checkedi)
+            for cp in cord1s_to_update_temp:
+                coord = coords[cp]
+                nids = coord.node_ids
+                #print('cp=%s nids=%s' % (cp, nids))
+                for nid in nids:
+                    if nid not in nids_checkedi:
+                        #print('  nid=%s break...' % nid)
+                        break
+                else:
+                    #print('  passed')
+                    # all nids passed
+                    cord1s_to_update.add(cp)
+            cord1s_to_update = list(cord1s_to_update)
+            cord1s_to_update.sort()
+
+    ncoords = len(cord1s_to_update) + len(cord2s_to_update)
+    #if ncoords == 0:
+        #msg = 'CPs not handled=%s cord1s_to_update=%s cord2s_to_update=%s\n' % (
+            #cps_to_check, cord1s_to_update, cord2s_to_update)
+        #for cp in (cord1s_to_update + cord2s_to_update):
+            #msg += str(cp)
+        #raise RuntimeError(msg)
+    return ncoords, cord1s_to_update, cord2s_to_update, nids_checked
 
 def map_version(fem: BDF, version: str):
     version_map = {

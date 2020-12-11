@@ -6,25 +6,100 @@ import sys
 import os
 from struct import unpack
 import itertools
-from typing import List
+from typing import List, Optional, Any
 
 import numpy as np
 from cpylog import get_logger2
 
-from pyNastran.utils import is_binary_file
+from pyNastran.utils import is_binary_file, object_attributes, object_methods, object_stats
 from pyNastran.converters.tecplot.zone import Zone, CaseInsensitiveDict, is_3d
+class Base:
+    def object_attributes(obj: Any, mode: str='public',
+                          keys_to_skip: Optional[List[str]]=None,
+                          filter_properties: bool=False) -> List[str]:
+        """
+        List the names of attributes of a class as strings. Returns public
+        attributes as default.
 
-def read_tecplot(tecplot_filename: str, use_cols=None, dtype=None, log=None, debug=False):
+        Parameters
+        ----------
+        obj : instance
+            the object for checking
+        mode : str
+            defines what kind of attributes will be listed
+            * 'public' - names that do not begin with underscore
+            * 'private' - names that begin with single underscore
+            * 'both' - private and public
+            * 'all' - all attributes that are defined for the object
+        keys_to_skip : List[str]; default=None -> []
+            names to not consider to avoid deprecation warnings
+        filter_properties: bool: default=False
+            filters the @property objects
+
+        Returns
+        -------
+        attribute_names : List[str]
+            sorted list of the names of attributes of a given type or None
+            if the mode is wrong
+
+        """
+        return object_attributes(obj,
+                                 mode=mode,
+                                 keys_to_skip=keys_to_skip,
+                                 filter_properties=filter_properties)
+
+    def object_methods(obj: Any, mode: str='public',
+                       keys_to_skip: Optional[List[str]]=None) -> List[str]:
+        """
+        List the names of methods of a class as strings. Returns public methods
+        as default.
+
+        Parameters
+        ----------
+        obj : instance
+            the object for checking
+        mode : str
+            defines what kind of methods will be listed
+            * "public" - names that do not begin with underscore
+            * "private" - names that begin with single underscore
+            * "both" - private and public
+            * "all" - all methods that are defined for the object
+        keys_to_skip : List[str]; default=None -> []
+            names to not consider to avoid deprecation warnings
+
+        Returns
+        -------
+        method : List[str]
+            sorted list of the names of methods of a given type
+            or None if the mode is wrong
+
+        """
+        return object_methods(obj,
+                              mode=mode,
+                              keys_to_skip=keys_to_skip)
+
+    def object_stats(obj: Any, mode: str='public',
+                 keys_to_skip: Optional[List[str]]=None,
+                 filter_properties: bool=False) -> str:
+        """Prints out an easy to read summary of the object"""
+        return object_stats(obj,
+                            mode=mode,
+                            keys_to_skip=keys_to_skip,
+                            filter_properties=filter_properties)
+
+
+def read_tecplot(tecplot_filename: str, use_cols=None, dtype=None,
+                 filetype='guess',
+                 log=None, debug=False):
     """loads a tecplot file"""
     tecplot = Tecplot(log=log, debug=debug)
     if use_cols:
         tecplot.use_cols = use_cols
         tecplot.dtype = dtype
-    tecplot.read_tecplot(tecplot_filename)
+    tecplot.read_tecplot(tecplot_filename, filetype)
     return tecplot
 
-
-class Tecplot:
+class Tecplot(Base):
     """
     Parses a hexa binary/ASCII Tecplot 360 file.
     Writes an ASCII Tecplot 10 file.
@@ -59,7 +134,7 @@ class Tecplot:
             msg += str(zone)
         return msg
 
-    def __init__(self, log=None, debug=False):
+    def __init__(self, log=None, debug: bool=False):
         # defines binary file specific features
         self._endian = b'<'
         self._n = 0
@@ -79,6 +154,8 @@ class Tecplot:
 
         # mesh = False : this is a plot file
         self.use_cols = None
+
+        # TODO: what is this for?
         self.dtype = None
 
         self._uendian = ''
@@ -89,51 +166,7 @@ class Tecplot:
         """gets the number of zones"""
         return len(self.zones)
 
-    @property
-    def headers_dict(self):
-        raise RuntimeError('this data member has been removed')
-    @property
-    def xy(self):
-        raise RuntimeError('this data member has been removed')
-    @property
-    def xyz(self):
-        raise RuntimeError('this data member has been removed')
-    @property
-    def tri_elements(self):
-        raise RuntimeError('this data member has been removed')
-    @property
-    def quad_elements(self):
-        raise RuntimeError('this data member has been removed')
-    @property
-    def tet_elements(self):
-        raise RuntimeError('this data member has been removed')
-    @property
-    def hexa_elements(self):
-        raise RuntimeError('this data member has been removed')
-
-    @headers_dict.setter
-    def headers_dict(self, unused_x):
-        raise RuntimeError('this data member has been removed')
-    @xy.setter
-    def xy(self, unused_x):
-        raise RuntimeError('this data member has been removed')
-    @xyz.setter
-    def xyz(self, unused_x):
-        raise RuntimeError('this data member has been removed')
-    @tri_elements.setter
-    def tri_elements(self, unused_x):
-        raise RuntimeError('this data member has been removed')
-    @quad_elements.setter
-    def quad_elements(self, unused_x):
-        raise RuntimeError('this data member has been removed')
-    @tet_elements.setter
-    def tet_elements(self, unused_x):
-        raise RuntimeError('this data member has been removed')
-    @hexa_elements.setter
-    def hexa_elements(self, unused_x):
-        raise RuntimeError('this data member has been removed')
-
-    def read_tecplot(self, tecplot_filename):
+    def read_tecplot(self, tecplot_filename: str, filetype: str='guess'):
         """
         Reads an ASCII/binary Tecplot file.
 
@@ -143,7 +176,9 @@ class Tecplot:
         probably work on Tecplot360.  It **should** work with any set of
         variables.
         """
-        if is_binary_file(tecplot_filename):
+        filetype = filetype.lower()
+        assert filetype in ['guess', 'ascii', 'binary'], filetype
+        if filetype == 'binary' or (filetype == 'guess' and is_binary_file(tecplot_filename)):
             return self.read_tecplot_binary(tecplot_filename)
         return self.read_tecplot_ascii(tecplot_filename)
 
@@ -188,6 +223,7 @@ class Tecplot:
             headers_dict = _header_lines_to_header_dict(title_line, header_lines, self.variables)
             if headers_dict is None:
                 break
+
             zone = Zone(self.log)
             zone.headers_dict = headers_dict
             self.variables = headers_dict['VARIABLES']
@@ -218,9 +254,10 @@ class Tecplot:
             elif (('ZONE' in headers_dict) and
                   (headers_dict['ZONE'] is None) and
                   ('T' in headers_dict)):
-                A, line = self.read_table(lines, iline, iblock, headers_dict, line)
+                lines2 = itertools.chain((line, ), iter(lines[iline:]))
+                A, line = self._read_table_from_lines(lines2, headers_dict)
                 self.A = A
-                #print('read_table...')
+                self.log.debug(f'read_table; A.shape={A.shape}...')
                 return
             else:
                 msg = 'headers=%s\n' % str(headers_dict)
@@ -250,14 +287,21 @@ class Tecplot:
         """
         reads a space-separated tabular data block
         """
-        variables = [var.strip('" ') for var in headers_dict['VARIABLES']]
-        #print('variables = %s' % variables)
-        #self.dtype[]
-        use_cols = [variables.index(var) for var in self.use_cols]
-
         # add on the preceding line to the line "list"
         # that's not a hack at all...
         lines = itertools.chain((line, ), iter(tecplot_file))
+        A, blank = self._read_table_from_lines(lines, headers_dict)
+        return A, None
+
+    def _read_table_from_lines(self, lines, headers_dict):
+        variables = [var.strip('" ') for var in headers_dict['VARIABLES']]
+        #print('variables = %s' % variables)
+        #self.dtype[]
+        if self.use_cols is None:
+            use_cols = None
+        else:
+            use_cols = [variables.index(var) for var in self.use_cols]
+
         A = np.loadtxt(lines, dtype=self.dtype, comments='#', delimiter=None,
                        converters=None, skiprows=0,
                        usecols=use_cols, unpack=False, ndmin=0)
@@ -1049,6 +1093,11 @@ def split_headers(header_in):
     #headers = header.replace('""', '","').split(',')
     return cheaders
 
+def _join_headers(header_lines: List[str]) -> str:
+    """smart join by commas"""
+    header = ','.join([headeri.strip(', ') for headeri in header_lines])
+    return header
+
 def _header_lines_to_header_dict(title_line: str, header_lines: List[str], variables: List[str]):
     """parses the parsed header lines"""
     #print('header_lines', header_lines)
@@ -1064,7 +1113,8 @@ def _header_lines_to_header_dict(title_line: str, header_lines: List[str], varia
     if len(header_lines) == 0:
         #raise RuntimeError(header_lines)
         return None
-    header = ','.join(header_lines)
+
+    header = _join_headers(header_lines)
 
     # this is so overly complicataed and probably not even enough...
     # what about the following 'quote' style?
@@ -1457,7 +1507,7 @@ def _read_header_lines(lines, iline, line, log):
             continue
         if line[0].isdigit() or line[0] == '-':
             #print(line)
-            log.debug('breaking...')
+            log.debug('breaking after finding header lines...')
             break
 
         uline = line.upper()

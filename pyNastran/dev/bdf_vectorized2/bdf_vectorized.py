@@ -1,4 +1,18 @@
+# coding: utf-8
+# pylint: disable=W0201,R0915,R0912
+"""
+Main BDF class.  Defines:
+  - BDF
+
+"""
+# TABLE3D TID X0 Y0 Z0 F0
+# X1 Y1 Z1 F1 X2 Y2 Z2 F2
+# X3 Y3 Z3 F3 X4 Y4 Z4 F4
+# -etc.- ENDT
+
+# see https://docs.plm.automation.siemens.com/tdoc/nxnastran/10/help/#uid:index
 from __future__ import annotations
+
 import sys
 from io import StringIO, IOBase
 from pathlib import PurePath
@@ -13,7 +27,7 @@ from cpylog import get_logger2
 
 from pyNastran.bdf.bdf import (LOAD, _bool, _check_replicated_cards,
                                _get_coords_to_update, map_update, map_version,
-                               _prep_comment, _echo_card)
+                               _prep_comment, _echo_card, _check_for_spaces)
 #from pyNastran.bdf.bdf import BDF as BDF_, LOAD
 from pyNastran.dev.bdf_vectorized2.cards.nodes import GRIDv, Nodes
 from pyNastran.dev.bdf_vectorized2.cards.elements.elements import Elements
@@ -47,20 +61,7 @@ from pyNastran.dev.bdf_vectorized2.cards.loads.pressure_loads import (
 from pyNastran.dev.bdf_vectorized2.cards.loads.thermal_loads import (
     TEMPv, TEMPDv)
 
-# coding: utf-8
-# pylint: disable=W0201,R0915,R0912
-"""
-Main BDF class.  Defines:
-  - BDF
-
-"""
-# TABLE3D TID X0 Y0 Z0 F0
-# X1 Y1 Z1 F1 X2 Y2 Z2 F2
-# X3 Y3 Z3 F3 X4 Y4 Z4 F4
-# -etc.- ENDT
-
-# see https://docs.plm.automation.siemens.com/tdoc/nxnastran/10/help/#uid:index
-
+# ------------------------------------------------------------------------------
 from pyNastran.utils import object_attributes, check_path
 from pyNastran.bdf.utils import parse_patran_syntax
 from pyNastran.bdf.bdf_interface.utils import (
@@ -82,7 +83,7 @@ from pyNastran.bdf.cards.utils import wipe_empty_fields
 from pyNastran.bdf.bdf_interface.assign_type import (integer,
                                         integer_or_string, string)
 
-#from pyNastran.bdf.cards.elements.elements import CFAST, CGAP, CRAC2D, CRAC3D, PLOTEL, GENEL
+from pyNastran.bdf.cards.elements.elements import PLOTEL # , CFAST, CGAP, CRAC2D, CRAC3D, GENEL
 from pyNastran.bdf.cards.properties.properties import PFAST, PGAP, PRAC2D, PRAC3D
 from pyNastran.bdf.cards.properties.solid import PLSOLID, PSOLID, PIHEX, PCOMPS
 #from pyNastran.bdf.cards.cyclic import CYAX, CYJOIN
@@ -92,7 +93,7 @@ from pyNastran.bdf.cards.properties.solid import PLSOLID, PSOLID, PIHEX, PCOMPS
 from pyNastran.bdf.cards.properties.springs import PELAS, PELAST
 
 #from pyNastran.bdf.cards.elements.solid import (
-    ##CTETRA, CPYRAM, CPENTA, CHEXA,
+    #CTETRA, CPYRAM, CPENTA, CHEXA,
     #CIHEX1, CIHEX2, CHEXA1, CHEXA2,
     #CTETRA4, CPYRAM5, CPENTA6, CHEXA8,
     #CTETRA10, CPYRAM13, CPENTA15, CHEXA20,
@@ -115,8 +116,8 @@ from pyNastran.bdf.cards.elements.rigid import RBAR, RBAR1, RBE1, RBE2, RBE3, RR
     #CTRSHL, CQUAD1, PQUAD1)
 
 from pyNastran.bdf.cards.properties.shell import PSHELL, PCOMP, PCOMPG, PSHEAR, PLPLANE, PPLANE, PTRSHL
-#from pyNastran.bdf.cards.elements.acoustic import (
-    #CHACAB, CAABSF, CHACBR, PACABS, PAABSF, PACBAR, ACMODL)
+from pyNastran.bdf.cards.elements.acoustic import (
+    CHACAB, CAABSF, CHACBR, PACABS, PAABSF, PACBAR, ACMODL)
 #from pyNastran.bdf.cards.elements.bush import CBUSH, CBUSH1D, CBUSH2D
 from pyNastran.bdf.cards.properties.bush import PBUSH, PBUSH1D, PBUSHT, PBUSH_OPTISTRUCT
 #from pyNastran.bdf.cards.elements.damper import (CVISC, CDAMP1, CDAMP2, CDAMP3, CDAMP4,
@@ -125,28 +126,27 @@ from pyNastran.bdf.cards.properties.damper import PVISC, PDAMP, PDAMP5, PDAMPT
 #from pyNastran.bdf.cards.elements.rods import CROD, CONROD, CTUBE
 #from pyNastran.bdf.cards.elements.bars import CBAR, BAROR, CBARAO, CBEAM3, CBEND
 #from pyNastran.bdf.cards.elements.beam import CBEAM, BEAMOR
-#from pyNastran.bdf.cards.properties.rods import PROD, PTUBE
+from pyNastran.bdf.cards.properties.rods import PROD, PTUBE
 from pyNastran.bdf.cards.properties.bars import PBAR, PBARL, PBRSECT, PBEND, PBEAM3
-#from pyNastran.bdf.cards.properties.beam import PBEAM, PBEAML, PBCOMP, PBMSECT
+from pyNastran.bdf.cards.properties.beam import PBEAM, PBEAML, PBCOMP, PBMSECT
 ## CMASS5
 #from pyNastran.bdf.cards.elements.mass import CONM1, CONM2, CMASS1, CMASS2, CMASS3, CMASS4
 #from pyNastran.bdf.cards.properties.mass import PMASS, NSM, NSM1, NSML, NSML1, NSMADD
-#from pyNastran.bdf.cards.constraints import (SPC, SPCADD, SPCAX, SPC1, SPCOFF, SPCOFF1,
-                                #MPC, MPCADD, SUPORT1, SUPORT, SESUP,
-                                #GMSPC)
+from pyNastran.bdf.cards.constraints import (SPC, SPCADD, SPCAX, SPC1, SPCOFF, SPCOFF1,
+                                             MPC, MPCADD, SUPORT1, SUPORT, SESUP,
+                                             GMSPC)
 from pyNastran.bdf.cards.coordinate_systems import (CORD1R, CORD1C, CORD1S,
                                                     CORD2R, CORD2C, CORD2S, #CORD3G,
                                                     GMCORD, transform_coords_vectorized,
                                                     CORDx)
-#from pyNastran.bdf.cards.deqatn import DEQATN
+from pyNastran.bdf.cards.deqatn import DEQATN
 from pyNastran.bdf.cards.dynamic import (
     DELAY, DPHASE, FREQ, FREQ1, FREQ2, FREQ3, FREQ4, FREQ5,
     TSTEP, TSTEP1, TSTEPNL, NLPARM, NLPCI, TF, ROTORG, ROTORD, TIC)
-#from pyNastran.bdf.cards.loads.loads import (
-    #LSEQ, SLOAD, DAREA, RFORCE, RFORCE1, SPCD, DEFORM, LOADCYN, LOADCYH)
+from pyNastran.bdf.cards.loads.loads import (
+    LSEQ, SLOAD, DAREA, RFORCE, RFORCE1, SPCD, DEFORM, LOADCYN, LOADCYH)
 #from pyNastran.bdf.cards.loads.dloads import ACSRCE, DLOAD, TLOAD1, TLOAD2, RLOAD1, RLOAD2
-#from pyNastran.bdf.cards.loads.static_loads import (LOAD, CLOAD, GRAV, ACCEL, ACCEL1, FORCE,
-                                       #FORCE1, FORCE2, MOMENT, MOMENT1, MOMENT2,
+from pyNastran.bdf.cards.loads.static_loads import (LOAD, CLOAD) # , GRAV, ACCEL, ACCEL1,
                                        #PLOAD, PLOAD1, PLOAD2, PLOAD4,
                                        #GMLOAD)
 #from pyNastran.bdf.cards.loads.random_loads import RANDPS, RANDT1
@@ -159,49 +159,49 @@ from pyNastran.bdf.cards.material_deps import (
     MATT1, MATT2, MATT3, MATT4, MATT5, MATT8, MATT9, MATS1)
 
 from pyNastran.bdf.cards.methods import EIGB, EIGC, EIGR, EIGP, EIGRL, MODTRAK
-#from pyNastran.bdf.cards.nodes import GRID, GRDSET, SPOINTs, EPOINTs, POINT, SEQGP, GRIDB
-#from pyNastran.bdf.cards.aero.aero import (
-    #AECOMP, AECOMPL, AEFACT, AELINK, AELIST, AEPARM, AESURF, AESURFS,
-    #CAERO1, CAERO2, CAERO3, CAERO4, CAERO5,
-    #PAERO1, PAERO2, PAERO3, PAERO4, PAERO5,
-    #MONPNT1, MONPNT2, MONPNT3, MONDSP1,
-    #SPLINE1, SPLINE2, SPLINE3, SPLINE4, SPLINE5)
-#from pyNastran.bdf.cards.aero.static_loads import AESTAT, AEROS, CSSCHD, TRIM, TRIM2, DIVERG
-#from pyNastran.bdf.cards.aero.dynamic_loads import AERO, FLFACT, FLUTTER, GUST, MKAERO1, MKAERO2
-#from pyNastran.bdf.cards.optimization import (
-    #DCONADD, DCONSTR, DESVAR, TOPVAR, DDVAL, DOPTPRM, DLINK,
-    #DRESP1, DRESP2, DRESP3,
-    #DVCREL1, DVCREL2,
-    #DVMREL1, DVMREL2,
-    #DVPREL1, DVPREL2,
-    #DVGRID, DSCREEN)
+from pyNastran.bdf.cards.nodes import GRDSET # , GRID, SPOINTs, EPOINTs, POINT, SEQGP, GRIDB
+from pyNastran.bdf.cards.aero.aero import (
+    AECOMP, AECOMPL, AEFACT, AELINK, AELIST, AEPARM, AESURF, AESURFS,
+    CAERO1, CAERO2, CAERO3, CAERO4, CAERO5,
+    PAERO1, PAERO2, PAERO3, PAERO4, PAERO5,
+    MONPNT1, MONPNT2, MONPNT3, MONDSP1,
+    SPLINE1, SPLINE2, SPLINE3, SPLINE4, SPLINE5)
+from pyNastran.bdf.cards.aero.static_loads import AESTAT, AEROS, CSSCHD, TRIM, TRIM2, DIVERG
+from pyNastran.bdf.cards.aero.dynamic_loads import AERO, FLFACT, FLUTTER, GUST, MKAERO1, MKAERO2
+from pyNastran.bdf.cards.optimization import (
+    DCONADD, DCONSTR, DESVAR, TOPVAR, DDVAL, DOPTPRM, DLINK,
+    DRESP1, DRESP2, DRESP3,
+    DVCREL1, DVCREL2,
+    DVMREL1, DVMREL2,
+    DVPREL1, DVPREL2,
+    DVGRID, DSCREEN)
 #from pyNastran.bdf.cards.superelements import (
     #RELEASE, SEBNDRY, SEBULK, SECONCT, SEELT, SEEXCLD,
     #SELABEL, SELOAD, SELOC, SEMPLN, SENQSET, SETREE,
     #CSUPER, CSUPEXT,
 #)
-#from pyNastran.bdf.cards.bdf_sets import (
-    #ASET, BSET, CSET, QSET, USET,
-    #ASET1, BSET1, CSET1, QSET1, USET1,
-    #OMIT, OMIT1,
-    #SET1, SET3,
-    #SEBSET, SECSET, SEQSET, # SEUSET
-    #SEBSET1, SECSET1, SEQSET1, # SEUSET1
-    #SESET, #SEQSEP
-    #RADSET,
-#)
+from pyNastran.bdf.cards.bdf_sets import (
+    ASET, BSET, CSET, QSET, USET,
+    ASET1, BSET1, CSET1, QSET1, USET1,
+    OMIT, OMIT1,
+    SET1, SET3,
+    SEBSET, SECSET, SEQSET, # SEUSET
+    SEBSET1, SECSET1, SEQSET1, # SEUSET1
+    SESET, #SEQSEP
+    RADSET,
+)
 from pyNastran.bdf.cards.params import PARAM, PARAM_MYSTRAN, PARAM_NASA95
 from pyNastran.bdf.cards.dmig import DMIG, DMI, DMIJ, DMIK, DMIJI, DMIG_UACCEL, DTI, DMIAX
 #from pyNastran.bdf.cards.thermal.loads import (QBDY1, QBDY2, QBDY3, QHBDY, TEMP, TEMPD, TEMPB3,
                                   #TEMPRB, QVOL, QVECT)
-#from pyNastran.bdf.cards.thermal.thermal import (CHBDYE, CHBDYG, CHBDYP, PCONV, PCONVM,
-                                    #PHBDY, CONV, CONVM, TEMPBC)
-#from pyNastran.bdf.cards.thermal.radiation import RADM, RADBC, RADCAV, RADLST, RADMTX, VIEW, VIEW3D
-#from pyNastran.bdf.cards.bdf_tables import (TABLED1, TABLED2, TABLED3, TABLED4,
-                               #TABLEM1, TABLEM2, TABLEM3, TABLEM4,
-                               #TABLES1, TABDMP1, TABLEST, TABLEHT, TABLEH1,
-                               #TABRND1, TABRNDG,
-                               #DTABLE)
+from pyNastran.bdf.cards.thermal.thermal import (CHBDYE, CHBDYG, CHBDYP, PCONV, PCONVM,
+                                    PHBDY, CONV, CONVM, TEMPBC)
+from pyNastran.bdf.cards.thermal.radiation import RADM, RADBC, RADCAV, RADLST, RADMTX, VIEW, VIEW3D
+from pyNastran.bdf.cards.bdf_tables import (TABLED1, TABLED2, TABLED3, TABLED4,
+                               TABLEM1, TABLEM2, TABLEM3, TABLEM4,
+                               TABLES1, TABDMP1, TABLEST, TABLEHT, TABLEH1,
+                               TABRND1, TABRNDG,
+                               DTABLE)
 #from pyNastran.bdf.cards.contact import (
     #BCRPARA, BCTADD, BCTSET, BSURF, BSURFS, BCPARA, BCTPARA, BCONP, BLSEG, BFRIC,
     #BCTPARM, BGADD, BGSET, BCBODY)
@@ -1355,7 +1355,8 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
 
         self.log.debug('---finished BDF.read_bdf of %s---' % self.bdf_filename)
         if self.reject_cards:
-            rejected_cards = [card[0] for card in self.reject_cards]
+            rejected_cards = list(set([card[0] for card in self.reject_cards]))
+            rejected_cards.sort()
             self.log.warning(f'rejecting {rejected_cards}')
         #for card_type in self.reject_cards:
 
@@ -2145,9 +2146,9 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
 
             #'CONROD' : (CONROD, self._add_element_object),
             #'CROD' : (CROD, self._add_element_object),
-            #'PROD' : (PROD, self._add_property_object),
+            'PROD' : (PROD, self._add_property_object),
             #'CTUBE' : (CTUBE, self._add_element_object),
-            #'PTUBE' : (PTUBE, self._add_property_object),
+            'PTUBE' : (PTUBE, self._add_property_object),
 
             #'BAROR' : (BAROR, self._add_baror_object),
             #'CBARAO' : (CBARAO, self._add_ao_object),
@@ -2156,8 +2157,8 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             #'PBRSECT' : (PBRSECT, self._add_property_object),
 
             #'BEAMOR' : (BEAMOR, self._add_beamor_object),
-            #'PBEAM' : (PBEAM, self._add_property_object),
-            #'PBEAML' : (PBEAML, self._add_property_object),
+            'PBEAM' : (PBEAM, self._add_property_object),
+            'PBEAML' : (PBEAML, self._add_property_object),
             #'PBCOMP' : (PBCOMP, self._add_property_object),
             #'PBMSECT' : (PBMSECT, self._add_property_object),
 
@@ -2165,26 +2166,8 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             #'PBEAM3' : (PBEAM3, self._add_property_object),
 
             #'CBEND' : (CBEND, self._add_element_object),
-            #'PBEND' : (PBEND, self._add_property_object),
+            'PBEND' : (PBEND, self._add_property_object),
 
-            # ------------------------------------------------------------------
-            'CDAMP1' : self._prepare_cdamp1,
-            'CDAMP2' : self._prepare_cdamp2,
-            'CDAMP3' : self._prepare_cdamp3,
-            'CDAMP4' : self._prepare_cdamp4, # no (???)
-
-            #'CBUSH1D' : self._prepare_cbush1d,
-            #'CBUSH2D' : self._prepare_cbush2d,
-            'CBUSH' : self._prepare_cbush,
-            'CVISC':  self._prepare_cvisc,
-            'PLOTEL':  self._prepare_plotel,
-
-            'CONROD' : self._prepare_conrod,
-            'CROD':  self._prepare_crod,
-            'CTUBE':  self._prepare_ctube,
-
-            'CBAR':  self._prepare_cbar,
-            'CBEAM':  self._prepare_cbeam,
             # ------------------------------------------------------------------
 
             #'CTRSHL' : (CTRSHL, self._add_element_object),  # nasa95
@@ -2209,7 +2192,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             'PSHELL' : (PSHELL, self._add_property_object),
             #'PTRSHL' : (PTRSHL, self._add_property_object),
             #'PQUAD1' : (PQUAD1, self._add_property_object),
-            #'PLPLANE' : (PLPLANE, self._add_property_object),
+            'PLPLANE' : (PLPLANE, self._add_property_object),
             #'CPLSTN3' : (CPLSTN3, self._add_element_object),
             #'CPLSTN4' : (CPLSTN4, self._add_element_object),
             #'CPLSTN6' : (CPLSTN6, self._add_element_object),
@@ -2221,7 +2204,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             #'PPLANE' : (PPLANE, self._add_property_object),
 
             #'CSHEAR' : (CSHEAR, self._add_element_object),
-            #'PSHEAR' : (PSHEAR, self._add_property_object),
+            'PSHEAR' : (PSHEAR, self._add_property_object),
 
             ## nastran95
             #'CIHEX1' : (CIHEX1, self._add_element_object),
@@ -2232,7 +2215,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
 
             ## msc/nx
             'PSOLID' : (PSOLID, self._add_property_object),
-            #'PLSOLID' : (PLSOLID, self._add_property_object),
+            'PLSOLID' : (PLSOLID, self._add_property_object),
             #'PCOMPS' : (PCOMPS, self._add_property_object),
 
             #'CELAS1' : (CELAS1, self._add_element_object),
@@ -2279,14 +2262,14 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             #'AXIF' : (AXIF, self._add_axif_object),
             #'CYAX' : (CYAX, self._add_cyax_object),
 
-            #'RBAR' : (RBAR, self._add_rigid_element_object),
-            #'RBAR1' : (RBAR1, self._add_rigid_element_object),
-            #'RBE1' : (RBE1, self._add_rigid_element_object),
-            #'RBE2' : (RBE2, self._add_rigid_element_object),
-            #'RBE3' : (RBE3, self._add_rigid_element_object),
-            #'RROD' : (RROD, self._add_rigid_element_object),
-            #'RSPLINE' : (RSPLINE, self._add_rigid_element_object),
-            #'RSSCON' : (RSSCON, self._add_rigid_element_object),
+            'RBAR' : (RBAR, self._add_rigid_element_object),
+            'RBAR1' : (RBAR1, self._add_rigid_element_object),
+            'RBE1' : (RBE1, self._add_rigid_element_object),
+            'RBE2' : (RBE2, self._add_rigid_element_object),
+            'RBE3' : (RBE3, self._add_rigid_element_object),
+            'RROD' : (RROD, self._add_rigid_element_object),
+            'RSPLINE' : (RSPLINE, self._add_rigid_element_object),
+            'RSSCON' : (RSSCON, self._add_rigid_element_object),
 
 
             ## there is no MAT6 or MAT7
@@ -2334,33 +2317,26 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             #'CMASS3' : (CMASS3, self._add_mass_object),
             ## CMASS4 - added later because documentation is wrong
 
-            #'MPC' : (MPC, self._add_constraint_mpc_object),
-            #'MPCADD' : (MPCADD, self._add_constraint_mpcadd_object),
+            'MPC' : (MPC, self._add_constraint_mpc_object),
+            'MPCADD' : (MPCADD, self._add_constraint_mpcadd_object),
 
-            #'SPC' : (SPC, self._add_constraint_spc_object),
-            #'SPC1' : (SPC1, self._add_constraint_spc_object),
-            #'SPCOFF' : (SPCOFF, self._add_constraint_spcoff_object),
-            #'SPCOFF1' : (SPCOFF1, self._add_constraint_spcoff_object),
-            #'SPCAX' : (SPCAX, self._add_constraint_spc_object),
-            #'SPCADD' : (SPCADD, self._add_constraint_spcadd_object),
+            'SPC' : (SPC, self._add_constraint_spc_object),
+            'SPC1' : (SPC1, self._add_constraint_spc_object),
+            'SPCOFF' : (SPCOFF, self._add_constraint_spcoff_object),
+            'SPCOFF1' : (SPCOFF1, self._add_constraint_spcoff_object),
+            'SPCAX' : (SPCAX, self._add_constraint_spc_object),
+            'SPCADD' : (SPCADD, self._add_constraint_spcadd_object),
             #'GMSPC' : (GMSPC, self._add_constraint_spc_object),
 
-            #'SESUP' : (SESUP, self._add_sesuport_object), # pseudo-constraint
-            #'SUPORT' : (SUPORT, self._add_suport_object), # pseudo-constraint
-            #'SUPORT1' : (SUPORT1, self._add_suport1_object),  # pseudo-constraint
+            'SESUP' : (SESUP, self._add_sesuport_object), # pseudo-constraint
+            'SUPORT' : (SUPORT, self._add_suport_object), # pseudo-constraint
+            'SUPORT1' : (SUPORT1, self._add_suport1_object),  # pseudo-constraint
 
-            #'FORCE' : (FORCE, self._add_load_object),
-            #'FORCE1' : (FORCE1, self._add_load_object),
-            #'FORCE2' : (FORCE2, self._add_load_object),
-            #'MOMENT' : (MOMENT, self._add_load_object),
-            #'MOMENT1' : (MOMENT1, self._add_load_object),
-            #'MOMENT2' : (MOMENT2, self._add_load_object),
-
-            #'LSEQ' : (LSEQ, self._add_lseq_object),
+            'LSEQ' : (LSEQ, self._add_lseq_object),
             #'LOAD' : (LOAD, self._add_load_combination_object),
-            #'CLOAD' : (CLOAD, self._add_load_combination_object),
-            #'LOADCYN' : (LOADCYN, self._add_load_object),
-            #'LOADCYH' : (LOADCYH, self._add_load_object),
+            'CLOAD' : (CLOAD, self._add_load_combination_object),
+            'LOADCYN' : (LOADCYN, self._add_load_object),
+            'LOADCYH' : (LOADCYH, self._add_load_object),
 
             ## basic static loads
             #'GRAV' : (GRAV, self._add_load_object),
@@ -2393,16 +2369,16 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             #'RANDT1' : (RANDT1, self._add_dload_entry), # random
             #'QVECT' : (QVECT, self._add_dload_entry),
 
-            #'FREQ' : (FREQ, self._add_freq_object),
-            #'FREQ1' : (FREQ1, self._add_freq_object),
-            #'FREQ2' : (FREQ2, self._add_freq_object),
-            #'FREQ3' : (FREQ3, self._add_freq_object),
-            #'FREQ4' : (FREQ4, self._add_freq_object),
-            #'FREQ5' : (FREQ5, self._add_freq_object),
+            'FREQ' : (FREQ, self._add_freq_object),
+            'FREQ1' : (FREQ1, self._add_freq_object),
+            'FREQ2' : (FREQ2, self._add_freq_object),
+            'FREQ3' : (FREQ3, self._add_freq_object),
+            'FREQ4' : (FREQ4, self._add_freq_object),
+            'FREQ5' : (FREQ5, self._add_freq_object),
 
-            #'DOPTPRM' : (DOPTPRM, self._add_doptprm_object),
-            #'DESVAR' : (DESVAR, self._add_desvar_object),
-            #'TOPVAR' : (TOPVAR, self._add_topvar_object),
+            'DOPTPRM' : (DOPTPRM, self._add_doptprm_object),
+            'DESVAR' : (DESVAR, self._add_desvar_object),
+            'TOPVAR' : (TOPVAR, self._add_topvar_object),
             ## BCTSET
 
             #'TEMPRB' : (TEMPRB, self._add_thermal_load_object),
@@ -2424,109 +2400,109 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             #'VIEW3D' : (VIEW3D, self._add_view3d_object),
 
             ## aero
-            #'AECOMP' : (AECOMP, self._add_aecomp_object),
-            #'AECOMPL' : (AECOMPL, self._add_aecomp_object),
-            #'AEFACT' : (AEFACT, self._add_aefact_object),
-            #'AELINK' : (AELINK, self._add_aelink_object),
-            #'AELIST' : (AELIST, self._add_aelist_object),
-            #'AEPARM' : (AEPARM, self._add_aeparm_object),
-            #'AESTAT' : (AESTAT, self._add_aestat_object),
-            #'AESURF' : (AESURF, self._add_aesurf_object),
-            #'AESURFS' : (AESURFS, self._add_aesurfs_object),
+            'AECOMP' : (AECOMP, self._add_aecomp_object),
+            'AECOMPL' : (AECOMPL, self._add_aecomp_object),
+            'AEFACT' : (AEFACT, self._add_aefact_object),
+            'AELINK' : (AELINK, self._add_aelink_object),
+            'AELIST' : (AELIST, self._add_aelist_object),
+            'AEPARM' : (AEPARM, self._add_aeparm_object),
+            'AESTAT' : (AESTAT, self._add_aestat_object),
+            'AESURF' : (AESURF, self._add_aesurf_object),
+            'AESURFS' : (AESURFS, self._add_aesurfs_object),
 
-            #'CAERO1' : (CAERO1, self._add_caero_object),
-            #'CAERO2' : (CAERO2, self._add_caero_object),
-            #'CAERO3' : (CAERO3, self._add_caero_object),
-            #'CAERO4' : (CAERO4, self._add_caero_object),
-            #'CAERO5' : (CAERO5, self._add_caero_object),
+            'CAERO1' : (CAERO1, self._add_caero_object),
+            'CAERO2' : (CAERO2, self._add_caero_object),
+            'CAERO3' : (CAERO3, self._add_caero_object),
+            'CAERO4' : (CAERO4, self._add_caero_object),
+            'CAERO5' : (CAERO5, self._add_caero_object),
 
-            #'PAERO1' : (PAERO1, self._add_paero_object),
-            #'PAERO2' : (PAERO2, self._add_paero_object),
-            #'PAERO3' : (PAERO3, self._add_paero_object),
-            #'PAERO4' : (PAERO4, self._add_paero_object),
-            #'PAERO5' : (PAERO5, self._add_paero_object),
+            'PAERO1' : (PAERO1, self._add_paero_object),
+            'PAERO2' : (PAERO2, self._add_paero_object),
+            'PAERO3' : (PAERO3, self._add_paero_object),
+            'PAERO4' : (PAERO4, self._add_paero_object),
+            'PAERO5' : (PAERO5, self._add_paero_object),
 
-            #'SPLINE1' : (SPLINE1, self._add_spline_object),
-            #'SPLINE2' : (SPLINE2, self._add_spline_object),
-            #'SPLINE3' : (SPLINE3, self._add_spline_object),
-            #'SPLINE4' : (SPLINE4, self._add_spline_object),
-            #'SPLINE5' : (SPLINE5, self._add_spline_object),
+            'SPLINE1' : (SPLINE1, self._add_spline_object),
+            'SPLINE2' : (SPLINE2, self._add_spline_object),
+            'SPLINE3' : (SPLINE3, self._add_spline_object),
+            'SPLINE4' : (SPLINE4, self._add_spline_object),
+            'SPLINE5' : (SPLINE5, self._add_spline_object),
 
             ## SOL 144
-            #'AEROS' : (AEROS, self._add_aeros_object),
-            #'TRIM' : (TRIM, self._add_trim_object),
-            #'TRIM2' : (TRIM2, self._add_trim_object),
-            #'DIVERG' : (DIVERG, self._add_diverg_object),
+            'AEROS' : (AEROS, self._add_aeros_object),
+            'TRIM' : (TRIM, self._add_trim_object),
+            'TRIM2' : (TRIM2, self._add_trim_object),
+            'DIVERG' : (DIVERG, self._add_diverg_object),
 
             ## SOL 145
-            #'AERO' : (AERO, self._add_aero_object),
-            #'FLUTTER' : (FLUTTER, self._add_flutter_object),
-            #'FLFACT' : (FLFACT, self._add_flfact_object),
-            #'MKAERO1' : (MKAERO1, self._add_mkaero_object),
-            #'MKAERO2' : (MKAERO2, self._add_mkaero_object),
+            'AERO' : (AERO, self._add_aero_object),
+            'FLUTTER' : (FLUTTER, self._add_flutter_object),
+            'FLFACT' : (FLFACT, self._add_flfact_object),
+            'MKAERO1' : (MKAERO1, self._add_mkaero_object),
+            'MKAERO2' : (MKAERO2, self._add_mkaero_object),
 
-            #'GUST' : (GUST, self._add_gust_object),
-            #'CSSCHD' : (CSSCHD, self._add_csschd_object),
-            #'MONPNT1' : (MONPNT1, self._add_monpnt_object),
-            #'MONPNT2' : (MONPNT2, self._add_monpnt_object),
-            #'MONPNT3' : (MONPNT3, self._add_monpnt_object),
-            #'MONDSP1' : (MONDSP1, self._add_monpnt_object),
+            'GUST' : (GUST, self._add_gust_object),
+            'CSSCHD' : (CSSCHD, self._add_csschd_object),
+            'MONPNT1' : (MONPNT1, self._add_monpnt_object),
+            'MONPNT2' : (MONPNT2, self._add_monpnt_object),
+            'MONPNT3' : (MONPNT3, self._add_monpnt_object),
+            'MONDSP1' : (MONDSP1, self._add_monpnt_object),
 
             'NLPARM' : (NLPARM, self._add_nlparm_object),
-            #'NLPCI' : (NLPCI, self._add_nlpci_object),
-            #'TSTEP' : (TSTEP, self._add_tstep_object),
-            #'TSTEP1' : (TSTEP1, self._add_tstepnl_object),
-            #'TSTEPNL' : (TSTEPNL, self._add_tstepnl_object),
+            'NLPCI' : (NLPCI, self._add_nlpci_object),
+            'TSTEP' : (TSTEP, self._add_tstep_object),
+            'TSTEP1' : (TSTEP1, self._add_tstepnl_object),
+            'TSTEPNL' : (TSTEPNL, self._add_tstepnl_object),
 
-            #'TF' : (TF, self._add_tf_object),
-            #'TIC' : (TIC, self._add_tic_object),
+            'TF' : (TF, self._add_tf_object),
+            'TIC' : (TIC, self._add_tic_object),
 
-            #'DCONADD' : (DCONADD, self._add_dconstr_object),
-            #'DCONSTR' : (DCONSTR, self._add_dconstr_object),
-            #'DDVAL' : (DDVAL, self._add_ddval_object),
-            #'DLINK' : (DLINK, self._add_dlink_object),
-            #'DSCREEN' : (DSCREEN, self._add_dscreen_object),
+            'DCONADD' : (DCONADD, self._add_dconstr_object),
+            'DCONSTR' : (DCONSTR, self._add_dconstr_object),
+            'DDVAL' : (DDVAL, self._add_ddval_object),
+            'DLINK' : (DLINK, self._add_dlink_object),
+            'DSCREEN' : (DSCREEN, self._add_dscreen_object),
 
-            #'DTABLE' : (DTABLE, self._add_dtable_object),
-            #'DRESP1' : (DRESP1, self._add_dresp_object), # dresps
-            #'DRESP2' : (DRESP2, self._add_dresp_object),
-            #'DRESP3' : (DRESP3, self._add_dresp_object),
-            #'DVCREL1' : (DVCREL1, self._add_dvcrel_object), # dvcrels
-            #'DVCREL2' : (DVCREL2, self._add_dvcrel_object),
-            #'DVPREL1' : (DVPREL1, self._add_dvprel_object), # dvprels
-            #'DVPREL2' : (DVPREL2, self._add_dvprel_object),
-            #'DVMREL1' : (DVMREL1, self._add_dvmrel_object), # ddvmrels
-            #'DVMREL2' : (DVMREL2, self._add_dvmrel_object),
-            #'DVGRID' : (DVGRID, self._add_dvgrid_object), # dvgrids
+            'DTABLE' : (DTABLE, self._add_dtable_object),
+            'DRESP1' : (DRESP1, self._add_dresp_object), # dresps
+            'DRESP2' : (DRESP2, self._add_dresp_object),
+            'DRESP3' : (DRESP3, self._add_dresp_object),
+            'DVCREL1' : (DVCREL1, self._add_dvcrel_object), # dvcrels
+            'DVCREL2' : (DVCREL2, self._add_dvcrel_object),
+            'DVPREL1' : (DVPREL1, self._add_dvprel_object), # dvprels
+            'DVPREL2' : (DVPREL2, self._add_dvprel_object),
+            'DVMREL1' : (DVMREL1, self._add_dvmrel_object), # ddvmrels
+            'DVMREL2' : (DVMREL2, self._add_dvmrel_object),
+            'DVGRID' : (DVGRID, self._add_dvgrid_object), # dvgrids
 
             ## tables
-            #'TABLES1' : (TABLES1, self._add_table_object),
-            #'TABLEST' : (TABLEST, self._add_table_object),
-            #'TABLEHT' : (TABLEHT, self._add_table_object),
-            #'TABLEH1' : (TABLEH1, self._add_table_object),
+            'TABLES1' : (TABLES1, self._add_table_object),
+            'TABLEST' : (TABLEST, self._add_table_object),
+            'TABLEHT' : (TABLEHT, self._add_table_object),
+            'TABLEH1' : (TABLEH1, self._add_table_object),
 
             ## dynamic tables
-            #'TABLED1' : (TABLED1, self._add_tabled_object),
-            #'TABLED2' : (TABLED2, self._add_tabled_object),
-            #'TABLED3' : (TABLED3, self._add_tabled_object),
-            #'TABLED4' : (TABLED4, self._add_tabled_object),
+            'TABLED1' : (TABLED1, self._add_tabled_object),
+            'TABLED2' : (TABLED2, self._add_tabled_object),
+            'TABLED3' : (TABLED3, self._add_tabled_object),
+            'TABLED4' : (TABLED4, self._add_tabled_object),
 
             ## material tables
-            #'TABLEM1' : (TABLEM1, self._add_tablem_object),
-            #'TABLEM2' : (TABLEM2, self._add_tablem_object),
-            #'TABLEM3' : (TABLEM3, self._add_tablem_object),
-            #'TABLEM4' : (TABLEM4, self._add_tablem_object),
+            'TABLEM1' : (TABLEM1, self._add_tablem_object),
+            'TABLEM2' : (TABLEM2, self._add_tablem_object),
+            'TABLEM3' : (TABLEM3, self._add_tablem_object),
+            'TABLEM4' : (TABLEM4, self._add_tablem_object),
 
             ## other tables
-            #'TABDMP1' : (TABDMP1, self._add_table_sdamping_object),
-            #'TABRND1' : (TABRND1, self._add_random_table_object),
-            #'TABRNDG' : (TABRNDG, self._add_random_table_object),
+            'TABDMP1' : (TABDMP1, self._add_table_sdamping_object),
+            'TABRND1' : (TABRND1, self._add_random_table_object),
+            'TABRNDG' : (TABRNDG, self._add_random_table_object),
 
-            #'EIGB' : (EIGB, self._add_method_object),
-            #'EIGR' : (EIGR, self._add_method_object),
+            'EIGB' : (EIGB, self._add_method_object),
+            'EIGR' : (EIGR, self._add_method_object),
             'EIGRL' : (EIGRL, self._add_method_object),
-            #'EIGC' : (EIGC, self._add_cmethod_object),
-            #'EIGP' : (EIGP, self._add_cmethod_object),
+            'EIGC' : (EIGC, self._add_cmethod_object),
+            'EIGP' : (EIGP, self._add_cmethod_object),
 
             #'BCRPARA' : (BCRPARA, self._add_bcrpara_object),
             #'BCTADD' : (BCTADD, self._add_bctadd_object),
@@ -2544,26 +2520,26 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             ##'RADMTX' : (RADMTX, self._add_radmtx_object), # TestOP2.test_bdf_op2_thermal_02
             ##'RADMT' : (Crash, None),
 
-            #'ASET' : (ASET, self._add_aset_object),
-            #'ASET1' : (ASET1, self._add_aset_object),
+            'ASET' : (ASET, self._add_aset_object),
+            'ASET1' : (ASET1, self._add_aset_object),
 
-            #'BSET' : (BSET, self._add_bset_object),
-            #'BSET1' : (BSET1, self._add_bset_object),
+            'BSET' : (BSET, self._add_bset_object),
+            'BSET1' : (BSET1, self._add_bset_object),
 
-            #'CSET' : (CSET, self._add_cset_object),
-            #'CSET1' : (CSET1, self._add_cset_object),
+            'CSET' : (CSET, self._add_cset_object),
+            'CSET1' : (CSET1, self._add_cset_object),
 
-            #'QSET' : (QSET, self._add_qset_object),
-            #'QSET1' : (QSET1, self._add_qset_object),
+            'QSET' : (QSET, self._add_qset_object),
+            'QSET1' : (QSET1, self._add_qset_object),
 
-            #'USET' : (USET, self._add_uset_object),
-            #'USET1' : (USET1, self._add_uset_object),
+            'USET' : (USET, self._add_uset_object),
+            'USET1' : (USET1, self._add_uset_object),
 
-            #'OMIT' : (OMIT, self._add_omit_object),
-            #'OMIT1' : (OMIT1, self._add_omit_object),
+            'OMIT' : (OMIT, self._add_omit_object),
+            'OMIT1' : (OMIT1, self._add_omit_object),
 
-            #'SET1' : (SET1, self._add_set_object),
-            #'SET3' : (SET3, self._add_set_object),
+            'SET1' : (SET1, self._add_set_object),
+            'SET3' : (SET3, self._add_set_object),
 
             ## radset
             #'RADSET' : (RADSET, self._add_radset_object),
@@ -2594,7 +2570,6 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
 
             #'CYJOIN' : (CYJOIN, self._add_cyjoin_object),
         }
-
         self._card_parser_prepare = {
             'PLOTEL': self._prepare_plotel,
             'CBAR' : self._prepare_cbar,
@@ -2658,24 +2633,79 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             'CELAS2' : self._prepare_celas2,
             'CELAS3' : self._prepare_celas3,
             'CELAS4' : self._prepare_celas4,
+
+            # ------------------------------------------------------------------
+            'CDAMP1' : self._prepare_cdamp1,
+            'CDAMP2' : self._prepare_cdamp2,
+            'CDAMP3' : self._prepare_cdamp3,
+            'CDAMP4' : self._prepare_cdamp4, # no (???)
+
+            #'CBUSH1D' : self._prepare_cbush1d,
+            #'CBUSH2D' : self._prepare_cbush2d,
+            'CBUSH' : self._prepare_cbush,
+            'CVISC':  self._prepare_cvisc,
+            'PLOTEL':  self._prepare_plotel,
+            # ------------------------------------------------------------------
+
+            'CONROD' : self._prepare_conrod,
+            'CROD':  self._prepare_crod,
+            'CTUBE':  self._prepare_ctube,
+            # ------------------------------------------------------------------
+
+            'CBAR':  self._prepare_cbar,
+            'CBEAM':  self._prepare_cbeam,
+            # ------------------------------------------------------------------
+            'GRID' : self._prepare_grid,
+            # --------------------------------------
+            'CTRIA3' : self._prepare_ctria3,
+            'CTRIA6' : self._prepare_ctria6,
+            'CTRIAR' : self._prepare_ctriar,
+            'CQUAD4' : self._prepare_cquad4,
+            'CQUAD8' : self._prepare_cquad8,
+
+            'CQUAD' : self._prepare_cquad,
+            'CQUADR' : self._prepare_cquadr,
+            # shears
+            'CSHEAR' : self._prepare_cshear,
+
+            # -------------------------------------------
+            # static loads
+            'GRAV' : self._prepare_grav,
+            'PLOAD' : self._prepare_pload,
+            'PLOAD1' : self._prepare_pload1,
+            'PLOAD2' : self._prepare_pload2,
+            'PLOAD4' : self._prepare_pload4,
+            'FORCE' : self._prepare_force,
+            'FORCE1' : self._prepare_force1,
+            'FORCE2' : self._prepare_force2,
+            'MOMENT' : self._prepare_moment,
+            'MOMENT1' : self._prepare_moment1,
+            'MOMENT2' : self._prepare_moment2,
+            # -------------------------------------------
+            # dynamic loads
         }
+        set_prep = set(self._card_parser_prepare)
+        set_parse = set(self._card_parser)
+        duplicate_names = list(set_prep.intersection(set_parse))
+        duplicate_names.sort()
+        assert len(duplicate_names) == 0, duplicate_names
 
-        new_reject_method = False
-        if new_reject_method:
-            self.cards_to_read.remove('CONM2')
-            # bwb_saero: 6.37-6.57 before using
+        #new_reject_method = False
+        #if new_reject_method:
+            #self.cards_to_read.remove('CONM2')
+            ## bwb_saero: 6.37-6.57 before using
 
-            all_cards = set(self._card_parser.keys() + self._card_parser_prepare.keys())
-            reject_cards = all_cards.difference(self.cards_to_read)
-            #print('reject_cards =', reject_cards)
-            for card_name in reject_cards:
-                if card_name in self._card_parser:
-                    del self._card_parser[card_name]
-                self._card_parser_prepare[card_name] = self._reject_card_obj2
+            #all_cards = set(self._card_parser.keys() + self._card_parser_prepare.keys())
+            #reject_cards = all_cards.difference(self.cards_to_read)
+            ##print('reject_cards =', reject_cards)
+            #for card_name in reject_cards:
+                #if card_name in self._card_parser:
+                    #del self._card_parser[card_name]
+                #self._card_parser_prepare[card_name] = self._reject_card_obj2
 
-    def _reject_card_obj2(self, unused_card_name, card_obj):
-        """rejects a card object"""
-        self.reject_cards.append(card_obj)
+    #def _reject_card_obj2(self, unused_card_name, card_obj):
+        #"""rejects a card object"""
+        #self.reject_cards.append(card_obj)
 
     def reject_card_lines(self, card_name: str, card_lines: List[str],
                           show_log: bool=True, comment: str='') -> None:
@@ -4230,36 +4260,36 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
                 bdf_filename.seek(0)  # need to rewind the buffer!
 
         self._check_pynastran_header(lines, check_header=True)
-        #map_update(self, self.nastran_format)
+        map_update(self, self.nastran_format)
 
-    #def _update_for_nastran(self):
-        #"""updates for msc/nx/optistruct"""
-        ## TODO: undo the changes for zona
-        #card_parser = self._card_parser
-        #CARD_MAP['PARAM'] = PARAM
-        #card_parser['PARAM'] = (PARAM, self._add_param_object)
-        #self.add_param = self._add_param_nastran
+    def _update_for_nastran(self):
+        """updates for msc/nx/optistruct"""
+        # TODO: undo the changes for zona
+        card_parser = self._card_parser
+        CARD_MAP['PARAM'] = PARAM
+        card_parser['PARAM'] = (PARAM, self._add_param_object)
+        self.add_param = self._add_param_nastran
 
-    #def _update_for_optistruct(self):
-        #"""updates for mystran"""
-        #self._update_for_nastran() # copies this...
-        #card_parser = self._card_parser
-        #CARD_MAP['PBUSH_OPTISTRUCT'] = PBUSH_OPTISTRUCT
-        #card_parser['PBUSH'] = (PBUSH_OPTISTRUCT, self._add_property_object)
+    def _update_for_optistruct(self):
+        """updates for mystran"""
+        self._update_for_nastran() # copies this...
+        card_parser = self._card_parser
+        CARD_MAP['PBUSH_OPTISTRUCT'] = PBUSH_OPTISTRUCT
+        card_parser['PBUSH'] = (PBUSH_OPTISTRUCT, self._add_property_object)
 
-    #def _update_for_mystran(self):
-        #"""updates for mystran"""
-        #card_parser = self._card_parser
-        #CARD_MAP['PARAM'] = PARAM_MYSTRAN
-        #card_parser['PARAM'] = (PARAM_MYSTRAN, self._add_param_object)
-        #self.add_param = self._add_param_mystran
+    def _update_for_mystran(self):
+        """updates for mystran"""
+        card_parser = self._card_parser
+        CARD_MAP['PARAM'] = PARAM_MYSTRAN
+        card_parser['PARAM'] = (PARAM_MYSTRAN, self._add_param_object)
+        self.add_param = self._add_param_mystran
 
-    #def _update_for_nasa95(self):
-        #"""updates for nasa95"""
-        #CARD_MAP['PARAM'] = PARAM_NASA95
-        #card_parser = self._card_parser
-        #card_parser['PARAM'] = (PARAM_NASA95, self._add_param_object)
-        #self.add_param = self._add_param_nasa95
+    def _update_for_nasa95(self):
+        """updates for nasa95"""
+        CARD_MAP['PARAM'] = PARAM_NASA95
+        card_parser = self._card_parser
+        card_parser['PARAM'] = (PARAM_NASA95, self._add_param_object)
+        self.add_param = self._add_param_nasa95
 
     def _check_pynastran_header(self, lines: List[str], check_header: bool=True) -> None:
         """updates the $pyNastran: key=value variables"""
@@ -5022,30 +5052,7 @@ class BDF(BDF_):
 
 
     def _update_card_parser(self):
-        #del self._card_parser['GRID']
-        self._card_parser_prepare['GRID'] = self._prepare_grid
-        self._update_card_parser_elements()
         self._update_card_parser_loads()
-
-
-    def _update_card_parser_elements(self):
-        #del self._card_parser['CTRIA3']
-        #del self._card_parser['CTRIA6']
-        #del self._card_parser['CTRIAR']
-        #del self._card_parser['CQUAD4']
-        #del self._card_parser['CQUAD8']
-        #del self._card_parser['CQUAD']
-        #del self._card_parser['CQUADR']
-        self._card_parser_prepare['CTRIA3'] = self._prepare_ctria3
-        self._card_parser_prepare['CTRIA6'] = self._prepare_ctria6
-        self._card_parser_prepare['CTRIAR'] = self._prepare_ctriar
-        self._card_parser_prepare['CQUAD4'] = self._prepare_cquad4
-        self._card_parser_prepare['CQUAD8'] = self._prepare_cquad8
-        self._card_parser_prepare['CQUAD'] = self._prepare_cquad
-        self._card_parser_prepare['CQUADR'] = self._prepare_cquadr
-
-        #del self._card_parser['CSHEAR']
-        self._card_parser_prepare['CSHEAR'] = self._prepare_cshear
 
     def _update_card_parser_loads(self):
         #del self._card_parser['LOAD']
@@ -5077,20 +5084,10 @@ class BDF(BDF_):
         #del self._card_parser['GMLOAD']
         #del self._card_parser['LOADCYN']
         #del self._card_parser['PRESAX']
+
         self._card_parser_prepare['LOAD'] = self._prepare_load
         self._card_parser_prepare['LSEQ'] = self._prepare_lseq
         self._card_parser_prepare['SLOAD'] = self._prepare_sload
-        self._card_parser_prepare['GRAV'] = self._prepare_grav
-        self._card_parser_prepare['PLOAD'] = self._prepare_pload
-        self._card_parser_prepare['PLOAD1'] = self._prepare_pload1
-        self._card_parser_prepare['PLOAD2'] = self._prepare_pload2
-        self._card_parser_prepare['PLOAD4'] = self._prepare_pload4
-        self._card_parser_prepare['FORCE'] = self._prepare_force
-        self._card_parser_prepare['FORCE1'] = self._prepare_force1
-        self._card_parser_prepare['FORCE2'] = self._prepare_force2
-        self._card_parser_prepare['MOMENT'] = self._prepare_moment
-        self._card_parser_prepare['MOMENT1'] = self._prepare_moment1
-        self._card_parser_prepare['MOMENT2'] = self._prepare_moment2
         self._card_parser_prepare['SPCD'] = self._prepare_spcd
 
         self._card_parser_prepare['TEMP'] = self._prepare_temp

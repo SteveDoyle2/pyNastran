@@ -1,9 +1,14 @@
+"""
+defines:
+ - fnames = get_files_of_type(dirname, extension='.txt',
+                              max_size=100., limit_file='no_dig.txt')
+    msg = list_print(lst, float_fmt='%-4.2f')
+
+"""
 import os
 from typing import List, Any
 
 import numpy as np
-
-#from pyNastran.utils import object_attributes
 
 
 def get_files_of_type(dirname: str, extension: str='.txt',

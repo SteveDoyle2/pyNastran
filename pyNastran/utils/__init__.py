@@ -219,6 +219,7 @@ def object_methods(obj: Any, mode: str='public',
     method : List[str]
         sorted list of the names of methods of a given type
         or None if the mode is wrong
+
     """
     return __object_attr(obj, mode, keys_to_skip, lambda x: isinstance(x, MethodType))
 
@@ -265,6 +266,7 @@ def object_attributes(obj: Any, mode: str='public',
     attribute_names : List[str]
         sorted list of the names of attributes of a given type or None
         if the mode is wrong
+
     """
     #if hasattr(obj, '__properties__'):
         #keys_to_skip += obj.__properties__()
