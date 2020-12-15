@@ -1,25 +1,25 @@
 from numpy import arange, array, dot, zeros, unique, searchsorted, transpose
 from numpy.linalg import norm  # type: ignore
 
-from pyNastran.dev.bdf_vectorized.cards.elements.spring.spring_element import SpringElement
+from pyNastran.dev.bdf_vectorized.cards.elements.damper.damp_element import DamperElement
 
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
 from pyNastran.bdf.bdf_interface.assign_type import (integer, integer_or_blank,
     double, double_or_blank)
 
-class CELAS3(SpringElement):
-    type = 'CELAS3'
+class CDAMP3(DamperElement):
+    type = 'CDAMP3'
     def __init__(self, model):
         """
-        Defines the CELAS3 object.
+        Defines the CDAMP3 object.
 
         Parameters
         ----------
         model : BDF
            the BDF object
         """
-        SpringElement.__init__(self, model)
+        DamperElement.__init__(self, model)
 
     def allocate(self, card_count):
         ncards = card_count[self.type]
@@ -33,8 +33,8 @@ class CELAS3(SpringElement):
             self.property_id = zeros(ncards, 'int32')
             # Node IDs
             self.node_ids = zeros((ncards, 2), 'int32')
-            #: stiffness of the scalar spring
-            self.K = zeros(ncards, float_fmt)
+            #: damping of the scalar damper
+            self.B = zeros(ncards, float_fmt)
             #: component number
             self.components = zeros((ncards, 2), 'int32')
             #: damping coefficient
@@ -45,21 +45,21 @@ class CELAS3(SpringElement):
     def add_card(self, card, comment=None):
         i = self.i
         self.element_id[i] = integer(card, 1, 'eid')
-        self.K[i] = double(card, 2, 'k')
+        self.B[i] = double(card, 2, 'k')
         self.node_ids[i, :] = [integer(card, 3, 'G1'),
                                integer(card, 5, 'G2')]
         self.components[i, :] = [integer_or_blank(card, 4, 'C1', 0),
                                  integer_or_blank(card, 6, 'C2', 0)]
         self.ge[i] = double_or_blank(card, 7, 'ge', 0.)
         self.s[i] = double_or_blank(card, 8, 's', 0.)
-        assert len(card) <= 9, 'len(CELAS3 card) = %i\ncard=%s' % (len(card), card) + str(card)
+        assert len(card) <= 9, 'len(CDAMP3 card) = %i\ncard=%s' % (len(card), card) + str(card)
         self.i += 1
 
     def build(self):
         if self.n:
             i = self.element_id.argsort()
             self.element_id = self.element_id[i]
-            self.K = self.K[i]
+            self.B = self.B[i]
             self.node_ids = self.node_ids[i, :]
             self.components = self.components[i, :]
             self.ge = self.ge[i]
@@ -67,7 +67,7 @@ class CELAS3(SpringElement):
 
             unique_eids = unique(self.element_id)
             if len(unique_eids) != len(self.element_id):
-                raise RuntimeError('There are duplicate CELAS3 IDs...')
+                raise RuntimeError('There are duplicate CDAMP3 IDs...')
             self._cards = []
         else:
             self.element_id = array([], dtype='int32')
@@ -99,17 +99,17 @@ class CELAS3(SpringElement):
             C1 = self.components[i, 0]
             C2 = self.components[i, 1]
             for (eid, k, n1, n2, c1, c2, ge, s) in zip(self.element_id[i],
-                    self.K[i], N1, N2, C1, C2, self.ge[i], self.s[i]):
-                card = ['CELAS3', eid, k, n1, c1, n2, c2, ge, s]
+                    self.B[i], N1, N2, C1, C2, self.ge[i], self.s[i]):
+                card = ['CDAMP3', eid, k, n1, c1, n2, c2, ge, s]
                 if size == 8:
                     bdf_file.write(print_card_8(card))
                 else:
                     bdf_file.write(print_card_16(card))
 
-    def get_stiffness_matrix(self, i, model, positions, index0s, fnorm=1.0):
-        """gets the stiffness matrix for CELAS3"""
-        ki = self.K[i]
-        k = ki * array([[1, -1,],
+    def get_damping_matrix(self, i, model, positions, index0s, fnorm=1.0):
+        """gets the damping matrix for CDAMP3"""
+        bi = self.B[i]
+        k = bi * array([[1, -1,],
                         [-1, 1]])
 
         n1, n2 = self.node_ids[i, :]
@@ -138,9 +138,9 @@ class CELAS3(SpringElement):
             du_axial[i] = u_axial[0] - u_axial[1]
 
         s = self.s
-        ki = self.K
+        bi = self.B
 
         e1[ni : ni+n] = du_axial * s
-        f1[ni : ni+n] = ki * du_axial
+        f1[ni : ni+n] = bi * du_axial
         o1[ni : ni+n] = f1[ni: ni+n] * s
         #return (axial_strain, axial_stress, axial_force)

@@ -1,24 +1,24 @@
 from numpy import array, zeros, unique, searchsorted, where, arange
 
-from pyNastran.dev.bdf_vectorized.cards.elements.spring.spring_element import SpringElement
+from pyNastran.dev.bdf_vectorized.cards.elements.damper.damp_element import DamperElement
 
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
 from pyNastran.bdf.bdf_interface.assign_type import integer, integer_or_blank
 
 
-class CELAS1(SpringElement):
-    type = 'CELAS1'
+class CDAMP1(DamperElement):
+    type = 'CDAMP1'
     def __init__(self, model):
         """
-        Defines the CELAS1 object.
+        Defines the CDAMP1 object.
 
         Parameters
         ----------
         model : BDF
            the BDF object
         """
-        SpringElement.__init__(self, model)
+        DamperElement.__init__(self, model)
 
     def allocate(self, card_count):
         ncards = card_count[self.type]
@@ -41,7 +41,7 @@ class CELAS1(SpringElement):
                                integer(card, 5, 'n2')]
         self.components[i, :] = [integer_or_blank(card, 4, 'c1', 0),
                                  integer_or_blank(card, 6, 'c2', 0)]
-        assert len(card) <= 7, 'len(CELAS1 card) = %i\ncard=%s' % (len(card), card)
+        assert len(card) <= 7, 'len(CDAMP1 card) = %i\ncard=%s' % (len(card), card)
         self.i += 1
 
     def build(self):
@@ -54,7 +54,7 @@ class CELAS1(SpringElement):
 
             unique_eids = unique(self.element_id)
             if len(unique_eids) != len(self.element_id):
-                raise RuntimeError('There are duplicate CELAS1 IDs...')
+                raise RuntimeError('There are duplicate CDAMP1 IDs...')
             self._cards = []
         else:
             self.element_id = array([], dtype='int32')
@@ -85,19 +85,19 @@ class CELAS1(SpringElement):
                 i = searchsorted(self.element_id, self.eid)
 
             for (eid, pid, n, c) in zip(self.element_id[i], self.property_id[i], self.node_ids[i], self.components[i]):
-                card = ['CELAS1', eid, pid, n[0], n[1], c[0], c[1]]
+                card = ['CDAMP1', eid, pid, n[0], n[1], c[0], c[1]]
                 if size == 8:
                     bdf_file.write(print_card_8(card))
                 else:
                     bdf_file.write(print_card_16(card))
 
-    def get_stiffness_matrix(self, i, model, positions, index0s, fnorm=1.0):
-        """gets the stiffness matrix for CELAS1"""
+    def get_damping_matrix(self, i, model, positions, index0s, fnorm=1.0):
+        """gets the damping matrix for CDAMP1"""
         #print("----------------")
-        ipid = where(self.model.pelas.property_id==self.property_id[i])[0][0]
-        prop = self.model.pelas
-        ki = prop.K[ipid]
-        k = ki * array([[1, -1,],
+        ipid = where(self.model.pdamp.property_id==self.property_id[i])[0][0]
+        prop = self.model.pdamp
+        bi = prop.B[ipid]
+        k = bi * array([[1, -1,],
                         [-1, 1]])
 
         #========================
@@ -142,10 +142,10 @@ class CELAS1(SpringElement):
             u_axial = q_axial
             du_axial[i] = u_axial[0] - u_axial[1]
 
-        self.model.log.debug("len(pelas) = %s" % self.model.pelas.n)
-        i = searchsorted(self.model.pelas.property_id, self.property_id)
-        k = self.model.pelas.K[i]
-        s = self.model.pelas.s[i]
+        self.model.log.debug("len(pdamp) = %s" % self.model.pdamp.n)
+        i = searchsorted(self.model.pdamp.property_id, self.property_id)
+        k = self.model.pdamp.B[i]
+        s = self.model.pdamp.s[i]
         self.model.log.debug("k=%s s=%s du_axial=%s" % (k, s, du_axial))
 
         e1[ni: ni+n] = du_axial * s

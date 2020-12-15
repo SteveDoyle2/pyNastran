@@ -1,8 +1,8 @@
 
-class ElementsSpring:
+class ElementsDamper:
     def __init__(self, model):
         """
-        Defines the ElementsSpring object.
+        Defines the ElementsDamper object.
 
         Parameters
         ----------
@@ -12,10 +12,10 @@ class ElementsSpring:
         self.model = model
 
         self.n = 0
-        self.celas1 = model.celas1
-        self.celas2 = model.celas2
-        self.celas3 = model.celas3
-        self.celas4 = model.celas4
+        self.cdamp1 = model.cdamp1
+        self.cdamp2 = model.cdamp2
+        self.cdamp3 = model.cdamp3
+        self.cdamp4 = model.cdamp4
 
     def allocate(self, card_count):
         etypes = self._get_types(nlimit=False)
@@ -40,18 +40,18 @@ class ElementsSpring:
     def rebuild(self):
         raise NotImplementedError()
 
-    def add_celas1(self, card, comment):
-        self.celas1.add(card, comment)
+    def add_cdamp1(self, card, comment):
+        self.cdamp1.add(card, comment)
 
-    def add_celas2(self, card, comment):
-        self.celas2.add(card, comment)
+    def add_cdamp2(self, card, comment):
+        self.cdamp2.add(card, comment)
 
-    def add_celas3(self, card, comment):
-        self.celas3.add(card, comment)
+    def add_cdamp3(self, card, comment):
+        self.cdamp3.add(card, comment)
         raise NotImplementedError()
 
-    def add_celas4(self, card, comment):
-        self.celas4.add(card, comment)
+    def add_cdamp4(self, card, comment):
+        self.cdamp4.add(card, comment)
         raise NotImplementedError()
 
     def write_card(self, bdf_file, size=8, eids=None):
@@ -61,10 +61,10 @@ class ElementsSpring:
             element.write_card(bdf_file, size=size, eids=eids)
 
     def _get_types(self, nlimit=True):
-        types = [self.celas1,
-                 self.celas2,
-                 self.celas3,
-                 self.celas4,
+        types = [self.cdamp1,
+                 self.cdamp2,
+                 self.cdamp3,
+                 self.cdamp4,
                  ]
         if nlimit:
             types2 = []

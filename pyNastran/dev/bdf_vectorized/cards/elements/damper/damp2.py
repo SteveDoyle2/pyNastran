@@ -2,25 +2,26 @@ import numpy as np
 from numpy import arange, array, dot, zeros, unique, searchsorted, transpose
 from numpy.linalg import norm  # type: ignore
 
-from pyNastran.dev.bdf_vectorized.cards.elements.spring.spring_element import SpringElement
+from pyNastran.dev.bdf_vectorized.cards.elements.damper.damp_element import DamperElement
 
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
 from pyNastran.bdf.bdf_interface.assign_type import (integer, integer_or_blank,
     double, double_or_blank)
 
-class CELAS2(SpringElement):
-    type = 'CELAS2'
+
+class CDAMP2(DamperElement):
+    type = 'CDAMP2'
     def __init__(self, model):
         """
-        Defines the CELAS2 object.
+        Defines the CDAMP2 object.
 
         Parameters
         ----------
         model : BDF
            the BDF object
         """
-        SpringElement.__init__(self, model)
+        DamperElement.__init__(self, model)
 
 
     def allocate(self, card_count):
@@ -36,8 +37,8 @@ class CELAS2(SpringElement):
             self.node_ids = zeros((ncards, 2), dtype='int32')
             #: component number
             self.components = zeros((ncards, 2), dtype='int32')
-            #: stiffness of the scalar spring
-            self.K = zeros(ncards, dtype=float_fmt)
+            #: damping of the scalar damper
+            self.B = zeros(ncards, dtype=float_fmt)
             #: damping coefficient
             self.ge = zeros(ncards, dtype=float_fmt)
             #: stress coefficient
@@ -46,21 +47,21 @@ class CELAS2(SpringElement):
     def add_card(self, card, comment=None):
         i = self.i
         self.element_id[i] = integer(card, 1, 'eid')
-        self.K[i] = double(card, 2, 'k')
+        self.B[i] = double(card, 2, 'k')
         self.node_ids[i, :] = [integer(card, 3, 'G1'),
                                integer_or_blank(card, 5, 'G2', 0)]
         self.components[i, :] = [integer_or_blank(card, 4, 'C1', 0),
                                  integer_or_blank(card, 6, 'C2', 0)]
         self.ge[i] = double_or_blank(card, 7, 'ge', 0.)
         self.s[i] = double_or_blank(card, 8, 's', 0.)
-        assert len(card) <= 9, 'len(CELAS2 card) = %i\ncard=%s' % (len(card), card) + str(card)
+        assert len(card) <= 9, 'len(CDAMP2 card) = %i\ncard=%s' % (len(card), card) + str(card)
         self.i += 1
 
     def build(self):
         if self.n:
             i = self.element_id.argsort()
             self.element_id = self.element_id[i]
-            self.K = self.K[i]
+            self.B = self.B[i]
             self.node_ids = self.node_ids[i, :]
             self.components = self.components[i, :]
             self.ge = self.ge[i]
@@ -68,7 +69,7 @@ class CELAS2(SpringElement):
 
             unique_eids = unique(self.element_id)
             if len(unique_eids) != len(self.element_id):
-                raise RuntimeError('There are duplicate CELAS2 IDs...')
+                raise RuntimeError('There are duplicate CDAMP2 IDs...')
             self._cards = []
         else:
             self.element_id = array([], dtype='int32')
@@ -100,17 +101,17 @@ class CELAS2(SpringElement):
             C1 = self.components[i, 0]
             C2 = self.components[i, 1]
             for (eid, k, n1, n2, c1, c2, ge, s) in zip(self.element_id[i],
-                    self.K[i], N1, N2, C1, C2, self.ge[i], self.s[i]):
-                card = ['CELAS2', eid, k, n1, c1, n2, c2, ge, s]
+                    self.B[i], N1, N2, C1, C2, self.ge[i], self.s[i]):
+                card = ['CDAMP2', eid, k, n1, c1, n2, c2, ge, s]
                 if size == 8:
                     bdf_file.write(print_card_8(card))
                 else:
                     bdf_file.write(print_card_16(card))
 
-    def get_stiffness_matrix(self, i, model, positions, index0s, fnorm=1.0):
-        """gets the stiffness matrix for CELAS2"""
-        ki = self.K[i]
-        k = ki * array([[1, -1,],
+    def get_damping_matrix(self, i, model, positions, index0s, fnorm=1.0):
+        """gets the damping matrix for CDAMP2"""
+        bi = self.B[i]
+        k = bi * array([[1, -1,],
                         [-1, 1]])
 
         c1, c2 = self.components[i, :]
@@ -147,7 +148,7 @@ class CELAS2(SpringElement):
             c1, c2 = self.components[i, :]
             n1, n2 = self.node_ids[i, :]
             #if n1 == n2:
-                #raise RuntimeError('CELAS2 eid=%s n1=%s n2=%s' % (self.element_id[i], n0, n1))
+                #raise RuntimeError('CDAMP2 eid=%s n1=%s n2=%s' % (self.element_id[i], n0, n1))
 
             delta1 = 0 if c1 in [0, 1, 2, 3] else 3
             delta2 = 0 if c2 in [0, 1, 2, 3] else 3
@@ -162,9 +163,9 @@ class CELAS2(SpringElement):
             du_axial[i] = u_axial[0] - u_axial[1]
 
         s = self.s
-        ki = self.K
+        bi = self.B
 
         e1[ni : ni+n] = du_axial * s
-        f1[ni : ni+n] = ki * du_axial
+        f1[ni : ni+n] = bi * du_axial
         o1[ni : ni+n] = f1[ni: ni+n] * s
         #return (axial_strain, axial_stress, axial_force)
