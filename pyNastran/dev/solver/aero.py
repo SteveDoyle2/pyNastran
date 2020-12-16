@@ -153,9 +153,9 @@ def get_xk_matrix(Cws, node_list, model: BDF,
 
         wai = xK @ Cws
         wa[iaero] = wai[0, 0]
-        # print("w[%s]=%s" % (iaero, wi[0, 0]))
-    # print('---wa---')
-    # print('wa = ', wa)
+        #print("w[%s]=%s" % (iaero, wi[0, 0]))
+    #print('---wa---')
+    #print('wa = ', wa)
     log.info("---finished getXK_matrix---")
     sys.stdout.flush()
     return wa
@@ -180,7 +180,7 @@ def get_ws(node_list: List[int], deflections, log=None):
         w_column[i] = dz
         log.info(f"wS[{inode}={i}]={dz}")
         i += 1
-    print(w_column.max())
+    print('w_column =', w_column.max())
     log.info("---finished get_ws---")
     sys.stdout.flush()
 

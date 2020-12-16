@@ -657,7 +657,7 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
             if func:
                 actions[name].triggered.connect(func)
 
-    def _logg_msg(self, log_type, filename, lineno, msg):
+    def _logg_msg(self, log_type: str, filename: str, lineno: int, msg: str) -> None:
         """
         Add message to log widget trying to choose right color for it.
 
@@ -1297,8 +1297,8 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
             return
         if self.html_logging is True:
             log = SimpleLogger(
-                'debug', 'utf-8',
-                lambda w, x, y, z: self._logg_msg(w, x, y, z))
+                level='debug', encoding='utf-8',
+                log_func=lambda w, x, y, z: self._logg_msg(w, x, y, z))
             # logging needs synchronizing, so the messages from different
             # threads would not be interleave
             self.log_mutex = QtCore.QReadWriteLock()

@@ -1,4 +1,5 @@
-from numpy import arange, zeros, unique, dot, array, transpose
+#from numpy import arange, zeros, unique, dot, array, transpose
+import numpy as np
 from numpy.linalg import norm  # type: ignore
 
 from pyNastran.bdf.field_writer_8 import print_card_8
@@ -28,7 +29,7 @@ def _Lambda(v1, debug=True):
     #l = 1
     #m = 2
     #n = 3
-    Lambda = zeros((2, 6), 'd')
+    Lambda = np.zeros((2, 6), 'd')
     Lambda[0, 0] = Lambda[1, 3] = l
     Lambda[0, 1] = Lambda[1, 4] = m
     Lambda[0, 2] = Lambda[1, 5] = n
@@ -58,13 +59,13 @@ class CONROD(RodElement):
         if ncards:
             self.n = ncards
             float_fmt = self.model.float_fmt
-            self.element_id = zeros(ncards, 'int32')
-            self.material_id = zeros(ncards, 'int32')
-            self.node_ids = zeros((ncards, 2), 'int32')
-            self.A = zeros(ncards, float_fmt)
-            self.J = zeros(ncards, float_fmt)
-            self.c = zeros(ncards, float_fmt)
-            self.nsm = zeros(ncards, float_fmt)
+            self.element_id = np.zeros(ncards, 'int32')
+            self.material_id = np.zeros(ncards, 'int32')
+            self.node_ids = np.zeros((ncards, 2), 'int32')
+            self.A = np.zeros(ncards, float_fmt)
+            self.J = np.zeros(ncards, float_fmt)
+            self.c = np.zeros(ncards, float_fmt)
+            self.nsm = np.zeros(ncards, float_fmt)
 
     def add_card(self, card, comment=''):
         self.model.log.debug('  adding CONROD')
@@ -100,12 +101,12 @@ class CONROD(RodElement):
             self.c = self.c[i]
             self.nsm = self.nsm[i]
 
-            unique_eids = unique(self.element_id)
+            unique_eids = np.unique(self.element_id)
             if len(unique_eids) != len(self.element_id):
                 raise RuntimeError('There are duplicate CONROD IDs...')
         else:
-            self.element_id = array([], dtype='int32')
-            self.property_id = array([], dtype='int32')
+            self.element_id = np.array([], dtype='int32')
+            self.property_id = np.array([], dtype='int32')
 
     def update(self, maps):
         """
@@ -135,7 +136,7 @@ class CONROD(RodElement):
 
     def get_length_by_element_index(self, i=None, grid_cid0=None):
         if i is None:
-            i = arange(self.n)
+            i = np.arange(self.n)
 
         if grid_cid0 is None:
             grid_cid0 = self.model.grid.get_position_by_node_id()
@@ -279,11 +280,11 @@ class CONROD(RodElement):
     def write_card(self, bdf_file, size=8, element_id=None):
         if self.n:
             if element_id is None:
-                i = arange(self.n)
+                i = np.arange(self.n)
             else:
-                i = searchsorted(self.element_id, element_id)
-            if isinstance(i, (int, int64)):
-                i = array([i])
+                i = np.searchsorted(self.element_id, element_id)
+            if isinstance(i, (int, np.int64)):
+                i = np.array([i])
 
             for (eid, n12, mid, A, J, c, nsm) in zip(
                  self.element_id, self.node_ids, self.material_id, self.A, self.J,
@@ -330,14 +331,14 @@ class CONROD(RodElement):
             raise ZeroDivisionError(msg)
         #========================
         mi = (rho * A * L + self.nsm[i]) / 6.
-        m = array([[2., 1.],
-                   [1., 2.]])  # 1D rod
+        m = np.array([[2., 1.],
+                      [1., 2.]])  # 1D rod
 
         Lambda = _Lambda(v1, debug=False)
-        M = dot(dot(transpose(Lambda), m), Lambda)
+        M = (Lambda.T @ m) @ Lambda
 
         Mi, Mj = M.shape
-        dofs = array([
+        dofs = np.array([
             i1, i1+1, i1+2,
             i2, i2+1, i2+2,
         ], 'int32')
@@ -391,21 +392,21 @@ class CONROD(RodElement):
         #k_axial = 1.0
         #k_torsion = 2.0
 
-        k = array([[1., -1.],
-                   [-1., 1.]])  # 1D rod
+        k = np.array([[1., -1.],
+                      [-1., 1.]])  # 1D rod
 
         Lambda = _Lambda(dxyz12, debug=False)
-        K = dot(dot(transpose(Lambda), k), Lambda)
+        K = (Lambda.T @ k) @ Lambda
         Ki, Kj = K.shape
 
-        K2 = zeros((Ki*2, Kj*2), 'float64')
+        K2 = np.zeros((Ki*2, Kj*2), 'float64')
         if k_axial == 0.0 and k_torsion == 0.0:
             dofs = []
             n_ijv = []
             K2 = []
         elif k_torsion == 0.0: # axial; 2D or 3D
             K2 = K * k_axial
-            dofs = array([
+            dofs = np.array([
                 i1, i1+1, i1+2,
                 i2, i2+1, i2+2,
             ], 'int32')
@@ -416,7 +417,7 @@ class CONROD(RodElement):
             ]
         elif k_axial == 0.0: # torsion; assume 3D
             K2 = K * k_torsion
-            dofs = array([
+            dofs = np.array([
                 i1+3, i1+4, i1+5,
                 i2+3, i2+4, i2+5,
             ], 'int32')
@@ -433,7 +434,7 @@ class CONROD(RodElement):
             # u1mx, u1my, u1mz, u2mx, u2my, u2mz
             K2[Ki:, Ki:] = K * k_torsion
 
-            dofs = array([
+            dofs = np.array([
                 i1, i1+1, i1+2,
                 i2, i2+1, i2+2,
 
@@ -466,13 +467,13 @@ class CONROD(RodElement):
 
     def displacement_stress(self, model, positions, q, dofs):
         n = self.n
-        o1 = zeros(n, 'float64')
-        e1 = zeros(n, 'float64')
-        f1 = zeros(n, 'float64')
+        o1 = np.zeros(n, 'float64')
+        e1 = np.zeros(n, 'float64')
+        f1 = np.zeros(n, 'float64')
 
-        o4 = zeros(n, 'float64')
-        e4 = zeros(n, 'float64')
-        f4 = zeros(n, 'float64')
+        o4 = np.zeros(n, 'float64')
+        e4 = np.zeros(n, 'float64')
+        f4 = np.zeros(n, 'float64')
 
         for i in range(n):
             J = self.J[i]
@@ -534,11 +535,11 @@ class CONROD(RodElement):
             n16 = dofs[(n1, 6)]
             n26 = dofs[(n2, 6)]
 
-            q_axial = array([
+            q_axial = np.array([
                 q[n11], q[n12], q[n13],
                 q[n21], q[n22], q[n23]
             ])
-            q_torsion = array([
+            q_torsion = np.array([
                 q[n14], q[n15], q[n16],
                 q[n24], q[n25], q[n26]
             ])
@@ -550,9 +551,9 @@ class CONROD(RodElement):
 
             #print("Lsize = ",Lambda.shape)
             #print("qsize = ",q.shape)
-            u_axial = dot(array(Lambda), q_axial)
+            u_axial = np.array(Lambda) @ q_axial
             du_axial = u_axial[0] - u_axial[1]
-            u_torsion = dot(array(Lambda), q_torsion)
+            u_torsion = np.array(Lambda) @ q_torsion
             du_torsion = u_torsion[0] - u_torsion[1]
 
             #L = self.Length()

@@ -29,36 +29,36 @@ from pyNastran.bdf.bdf import (LOAD, _bool, _check_replicated_cards,
                                _get_coords_to_update, map_update, map_version,
                                _prep_comment, _echo_card, _check_for_spaces)
 #from pyNastran.bdf.bdf import BDF as BDF_, LOAD
-from pyNastran.dev.bdf_vectorized2.cards.nodes import GRIDv, Nodes
-from pyNastran.dev.bdf_vectorized2.cards.elements.elements import Elements
+from .cards.nodes import GRIDv, Nodes
+from .cards.elements.elements import Elements
 
-from pyNastran.dev.bdf_vectorized2.cards.elements.springs import (
+from .cards.elements.springs import (
     CELAS1, CELAS2, CELAS3, CELAS4, Springs)
-from pyNastran.dev.bdf_vectorized2.cards.elements.dampers import (
+from .cards.elements.dampers import (
     CDAMP1, CDAMP2, CDAMP3, CDAMP4, CDAMP5, CVISCv, PLOTELv, Dampers)
-from pyNastran.dev.bdf_vectorized2.cards.elements.bush import (
+from .cards.elements.bush import (
     CBUSHv, Bushes)
 
-from pyNastran.dev.bdf_vectorized2.cards.elements.rods import (
+from .cards.elements.rods import (
     CONRODv, CRODv, CTUBEv, Rods)
-from pyNastran.dev.bdf_vectorized2.cards.elements.masses import (
+from .cards.elements.masses import (
     CONM2v, Masses)
-from pyNastran.dev.bdf_vectorized2.cards.elements.bars import CBARv, Bars
-from pyNastran.dev.bdf_vectorized2.cards.elements.beams import CBEAMv, Beams
-from pyNastran.dev.bdf_vectorized2.cards.elements.shears import CSHEARv, Shears
-from pyNastran.dev.bdf_vectorized2.cards.elements.shells import (
+from .cards.elements.bars import CBARv, Bars
+from .cards.elements.beams import CBEAMv, Beams
+from .cards.elements.shears import CSHEARv, Shears
+from .cards.elements.shells import (
     CTRIA3v, CTRIA6v, CTRIARv, CQUAD4v, CQUAD8v, CQUADv, CQUADRv, Shells)
-from pyNastran.dev.bdf_vectorized2.cards.elements.solids import (
+from .cards.elements.solids import (
     CTETRA4v, CPENTA6v, CHEXA8v, CPYRAM5v,
     CTETRA10v, CPENTA15v, CHEXA20v, CPYRAM13v, Solids)
 
-from pyNastran.dev.bdf_vectorized2.cards.loads.loads import (
+from .cards.loads.loads import (
     Loads, FORCEv, FORCE1v, FORCE2v,
     MOMENTv, MOMENT1v, MOMENT2v,
     SLOADv, SPCDv, GRAVv, LSEQv)
-from pyNastran.dev.bdf_vectorized2.cards.loads.pressure_loads import (
+from .cards.loads.pressure_loads import (
     PLOADv, PLOAD1v, PLOAD2v, PLOAD4v)
-from pyNastran.dev.bdf_vectorized2.cards.loads.thermal_loads import (
+from .cards.loads.thermal_loads import (
     TEMPv, TEMPDv)
 
 # ------------------------------------------------------------------------------
@@ -145,11 +145,10 @@ from pyNastran.bdf.cards.dynamic import (
     TSTEP, TSTEP1, TSTEPNL, NLPARM, NLPCI, TF, ROTORG, ROTORD, TIC)
 from pyNastran.bdf.cards.loads.loads import (
     LSEQ, SLOAD, DAREA, RFORCE, RFORCE1, SPCD, DEFORM, LOADCYN, LOADCYH)
-#from pyNastran.bdf.cards.loads.dloads import ACSRCE, DLOAD, TLOAD1, TLOAD2, RLOAD1, RLOAD2
-from pyNastran.bdf.cards.loads.static_loads import (LOAD, CLOAD) # , GRAV, ACCEL, ACCEL1,
-                                       #PLOAD, PLOAD1, PLOAD2, PLOAD4,
+from pyNastran.bdf.cards.loads.dloads import ACSRCE, DLOAD, TLOAD1, TLOAD2, RLOAD1, RLOAD2
+from pyNastran.bdf.cards.loads.static_loads import (LOAD, CLOAD) # ACCEL, ACCEL1,
                                        #GMLOAD)
-#from pyNastran.bdf.cards.loads.random_loads import RANDPS, RANDT1
+from pyNastran.bdf.cards.loads.random_loads import RANDPS, RANDT1
 
 from pyNastran.bdf.cards.materials import (MAT1, MAT2, MAT3, MAT4, MAT5,
                                            MAT8, MAT9, MAT10, MAT11, MAT3D,
@@ -202,9 +201,9 @@ from pyNastran.bdf.cards.bdf_tables import (TABLED1, TABLED2, TABLED3, TABLED4,
                                TABLES1, TABDMP1, TABLEST, TABLEHT, TABLEH1,
                                TABRND1, TABRNDG,
                                DTABLE)
-#from pyNastran.bdf.cards.contact import (
-    #BCRPARA, BCTADD, BCTSET, BSURF, BSURFS, BCPARA, BCTPARA, BCONP, BLSEG, BFRIC,
-    #BCTPARM, BGADD, BGSET, BCBODY)
+from pyNastran.bdf.cards.contact import (
+    BCRPARA, BCTADD, BCTSET, BSURF, BSURFS, BCPARA, BCTPARA, BCONP, BLSEG, BFRIC,
+    BCTPARM, BGADD, BGSET, BCBODY)
 #from pyNastran.bdf.cards.parametric.geometry import PSET, PVAL, FEEDGE, FEFACE, GMCURV, GMSURF
 
 from pyNastran.bdf.case_control_deck import CaseControlDeck, Subcase
@@ -557,7 +556,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
         self.include_dir = ''
         self.dumplines = False
 
-        self.log = get_logger2(log, debug)
+        self.log = get_logger2(log=log, debug=debug, nlevels=3)
 
         # list of all read in cards - useful in determining if entire BDF
         # was read & really useful in debugging
@@ -2304,7 +2303,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             'NXSTRAT' : (NXSTRAT, self._add_nxstrat_object),
 
             ## hasnt been verified, links up to MAT1, MAT2, MAT9 w/ same MID
-            #'CREEP' : (CREEP, self._add_creep_material_object),
+            'CREEP' : (CREEP, self._add_creep_material_object),
 
             #'NSMADD' : (NSMADD, self._add_nsmadd_object),
             #'NSM1' : (NSM1, self._add_nsm_object),
@@ -2332,20 +2331,16 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             'SUPORT' : (SUPORT, self._add_suport_object), # pseudo-constraint
             'SUPORT1' : (SUPORT1, self._add_suport1_object),  # pseudo-constraint
 
-            'LSEQ' : (LSEQ, self._add_lseq_object),
+            #'LSEQ' : (LSEQ, self._add_lseq_object),
             #'LOAD' : (LOAD, self._add_load_combination_object),
             'CLOAD' : (CLOAD, self._add_load_combination_object),
-            'LOADCYN' : (LOADCYN, self._add_load_object),
+            #'LOADCYN' : (LOADCYN, self._add_load_object),
             'LOADCYH' : (LOADCYH, self._add_load_object),
 
             ## basic static loads
             #'GRAV' : (GRAV, self._add_load_object),
             #'ACCEL' : (ACCEL, self._add_load_object),
             #'ACCEL1' : (ACCEL1, self._add_load_object),
-            #'PLOAD' : (PLOAD, self._add_load_object),
-            #'PLOAD1' : (PLOAD1, self._add_load_object),
-            #'PLOAD2' : (PLOAD2, self._add_load_object),
-            #'PLOAD4' : (PLOAD4, self._add_load_object),
             #'RFORCE' : (RFORCE, self._add_load_object),
             #'RFORCE1' : (RFORCE1, self._add_load_object),
             #'SLOAD' : (SLOAD, self._add_load_object),
@@ -2360,13 +2355,13 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
 
             #'DLOAD' : (DLOAD, self._add_dload_object),
 
-            #'ACSRCE' : (ACSRCE, self._add_dload_entry),
-            #'TLOAD1' : (TLOAD1, self._add_dload_entry),
-            #'TLOAD2' : (TLOAD2, self._add_dload_entry),
-            #'RLOAD1' : (RLOAD1, self._add_dload_entry),
-            #'RLOAD2' : (RLOAD2, self._add_dload_entry),
-            #'RANDPS' : (RANDPS, self._add_dload_entry), # random
-            #'RANDT1' : (RANDT1, self._add_dload_entry), # random
+            'ACSRCE' : (ACSRCE, self._add_dload_entry),
+            'TLOAD1' : (TLOAD1, self._add_dload_entry),
+            'TLOAD2' : (TLOAD2, self._add_dload_entry),
+            'RLOAD1' : (RLOAD1, self._add_dload_entry),
+            'RLOAD2' : (RLOAD2, self._add_dload_entry),
+            'RANDPS' : (RANDPS, self._add_dload_entry), # random
+            'RANDT1' : (RANDT1, self._add_dload_entry), # random
             #'QVECT' : (QVECT, self._add_dload_entry),
 
             'FREQ' : (FREQ, self._add_freq_object),
@@ -2504,11 +2499,11 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             'EIGC' : (EIGC, self._add_cmethod_object),
             'EIGP' : (EIGP, self._add_cmethod_object),
 
-            #'BCRPARA' : (BCRPARA, self._add_bcrpara_object),
-            #'BCTADD' : (BCTADD, self._add_bctadd_object),
-            #'BCTPARA' : (BCTPARA, self._add_bctpara_object),
-            #'BSURF' : (BSURF, self._add_bsurf_object),
-            #'BSURFS' : (BSURFS, self._add_bsurfs_object),
+            'BCRPARA' : (BCRPARA, self._add_bcrpara_object),
+            'BCTADD' : (BCTADD, self._add_bctadd_object),
+            'BCTPARA' : (BCTPARA, self._add_bctpara_object),
+            'BSURF' : (BSURF, self._add_bsurf_object),
+            'BSURFS' : (BSURFS, self._add_bsurfs_object),
             ## 'BOUTPUT', 'BOLT', 'BOLTFOR', 'BOLTFRC',
             #'BOUTPUT': (Crash, None),
             #'BOLT': (Crash, None),
@@ -2544,16 +2539,16 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             ## radset
             #'RADSET' : (RADSET, self._add_radset_object),
 
-            #'SESET' : (SESET, self._add_seset_object),
+            'SESET' : (SESET, self._add_seset_object),
 
-            #'SEBSET' : (SEBSET, self._add_sebset_object),
-            #'SEBSET1' : (SEBSET1, self._add_sebset_object),
+            'SEBSET' : (SEBSET, self._add_sebset_object),
+            'SEBSET1' : (SEBSET1, self._add_sebset_object),
 
-            #'SECSET' : (SECSET, self._add_secset_object),
-            #'SECSET1' : (SECSET1, self._add_secset_object),
+            'SECSET' : (SECSET, self._add_secset_object),
+            'SECSET1' : (SECSET1, self._add_secset_object),
 
-            #'SEQSET' : (SEQSET, self._add_seqset_object),
-            #'SEQSET1' : (SEQSET1, self._add_seqset_object),
+            'SEQSET' : (SEQSET, self._add_seqset_object),
+            'SEQSET1' : (SEQSET1, self._add_seqset_object),
 
             ##'SESUP' : (SESUP, self._add_sesup_object),  # pseudo-constraint
 
@@ -2561,8 +2556,8 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             ##'SEUSET1' : (SEUSET1, self._add_seuset_object),
 
             ## BCTSET
-            #'ROTORG' : (ROTORG, self._add_rotor_object),
-            #'ROTORD' : (ROTORD, self._add_rotor_object),
+            'ROTORG' : (ROTORG, self._add_rotor_object),
+            'ROTORD' : (ROTORD, self._add_rotor_object),
 
             #'DAREA' : (DAREA, self._add_darea_object),
             #'DPHASE' : (DPHASE, self._add_dphase_object),
@@ -2683,6 +2678,28 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             'MOMENT2' : self._prepare_moment2,
             # -------------------------------------------
             # dynamic loads
+            'LOAD': self._prepare_load,
+            'LSEQ': self._prepare_lseq,
+            'SLOAD': self._prepare_sload,
+            'SPCD': self._prepare_spcd,
+
+            'TEMP': self._prepare_temp,
+            'TEMPD': self._prepare_tempd,
+            'PLOADX1': self._prepare_ploadx1,
+            'ACCEL': self._prepare_accel,
+            'ACCEL1': self._prepare_accel1,
+
+            'QVOL': self._prepare_qvol,
+            'QHBDY': self._prepare_qhbdy,
+            'RFORCE': self._prepare_rforce,
+            'RFORCE1': self._prepare_rforce1,
+            'QBDY1': self._prepare_qbdy1,
+            'QBDY2': self._prepare_qbdy2,
+            'QBDY3': self._prepare_qbdy3,
+
+            'GMLOAD': self._prepare_gmload,
+            'LOADCYN': self._prepare_loadcyn,
+            'PRESAX': self._prepare_presax,
         }
         set_prep = set(self._card_parser_prepare)
         set_parse = set(self._card_parser)
@@ -2758,11 +2775,11 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             self._add_plotel_object(plotel)
         return plotels
 
-    def _prepare_cbar(self, unused_card: List[str], card_obj: BDFCard, comment='') -> None:
-        """adds a CBAR"""
-        elem = CBAR.add_card(card_obj, baror=self.baror, comment=comment)
-        self._add_element_object(elem)
-        return elem
+    #def _prepare_cbar(self, unused_card: List[str], card_obj: BDFCard, comment='') -> None:
+        #"""adds a CBAR"""
+        #elem = CBAR.add_card(card_obj, baror=self.baror, comment=comment)
+        #self._add_element_object(elem)
+        #return elem
 
     def _prepare_cbeam(self, unused_card: List[str], card_obj: BDFCard, comment='') -> None:
         """adds a CBEAM"""
@@ -5050,61 +5067,8 @@ class BDF(BDF_):
         if self.card_count['PRESAX'] == 1:
             self.log.warning('skipping %s' % str(card))
 
-
     def _update_card_parser(self):
-        self._update_card_parser_loads()
-
-    def _update_card_parser_loads(self):
-        #del self._card_parser['LOAD']
-        #del self._card_parser['LSEQ']
-        #del self._card_parser['SLOAD']
-        #del self._card_parser['GRAV']
-        #del self._card_parser['PLOAD']
-        #del self._card_parser['PLOAD1']
-        #del self._card_parser['PLOAD2']
-        #del self._card_parser['PLOAD4']
-        #del self._card_parser['FORCE']
-        #del self._card_parser['FORCE1']
-        #del self._card_parser['FORCE2']
-        #del self._card_parser['MOMENT']
-        #del self._card_parser['MOMENT1']
-        #del self._card_parser['MOMENT2']
-        #del self._card_parser['SPCD']
-        #del self._card_parser['TEMP']
-        #del self._card_parser['PLOADX1']
-        #del self._card_parser['ACCEL']
-        #del self._card_parser['ACCEL1']
-        #del self._card_parser['QVOL']
-        #del self._card_parser['QHBDY']
-        #del self._card_parser['RFORCE']
-        #del self._card_parser['RFORCE1']
-        #del self._card_parser['QBDY1']
-        #del self._card_parser['QBDY2']
-        #del self._card_parser['QBDY3']
-        #del self._card_parser['GMLOAD']
-        #del self._card_parser['LOADCYN']
-        #del self._card_parser['PRESAX']
-
-        self._card_parser_prepare['LOAD'] = self._prepare_load
-        self._card_parser_prepare['LSEQ'] = self._prepare_lseq
-        self._card_parser_prepare['SLOAD'] = self._prepare_sload
-        self._card_parser_prepare['SPCD'] = self._prepare_spcd
-
-        self._card_parser_prepare['TEMP'] = self._prepare_temp
-        self._card_parser_prepare['TEMPD'] = self._prepare_tempd
-        self._card_parser_prepare['PLOADX1'] = self._prepare_ploadx1
-        self._card_parser_prepare['ACCEL'] = self._prepare_accel
-        self._card_parser_prepare['ACCEL1'] = self._prepare_accel1
-        self._card_parser_prepare['QVOL'] = self._prepare_qvol
-        self._card_parser_prepare['QHBDY'] = self._prepare_qhbdy
-        self._card_parser_prepare['RFORCE'] = self._prepare_rforce
-        self._card_parser_prepare['RFORCE1'] = self._prepare_rforce1
-        self._card_parser_prepare['QBDY1'] = self._prepare_qbdy1
-        self._card_parser_prepare['QBDY2'] = self._prepare_qbdy2
-        self._card_parser_prepare['QBDY3'] = self._prepare_qbdy3
-        self._card_parser_prepare['GMLOAD'] = self._prepare_gmload
-        self._card_parser_prepare['LOADCYN'] = self._prepare_loadcyn
-        self._card_parser_prepare['PRESAX'] = self._prepare_presax
+        pass
 
 
     #def add_grid(self, nid, xyz, cp=0, cd=0, ps='', seid=0, comment=''):

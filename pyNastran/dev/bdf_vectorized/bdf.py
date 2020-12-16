@@ -257,7 +257,7 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
         # (multiple BDF passes among other things)
         self._fast_add = True
 
-        self.log = get_logger2(log, debug)
+        self.log = get_logger2(log=log, debug=debug, nlevels=2)
 
         #: list of all read in cards - useful in determining if entire BDF
         #: was read & really useful in debugging
@@ -3108,7 +3108,7 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
 
     def _parse_cdamp4(self, card_name, cards):
         """adds cdamp4"""
-        self._parse_multi(card_name, cards, self.cmass4, [5])
+        self._parse_multi(card_name, cards, self.cdamp4, [5])
 
     def _parse_pvisc(self, card_name, cards):
         """adds pvisc"""
@@ -3122,8 +3122,8 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
         """adds pmass"""
         self._parse_multi(card_name, cards, self.pmass, [3, 5, 7])
 
-    def _parse_multi(self, card_name, cards, card_cls, icard):
-        """parses a DAREA/DPHASE/???"""
+    def _parse_multi(self, card_name: str, cards, card_cls, icard: List[int]):
+        """parses a DAREA, DPHASE, CDAMP4, CMASS4, CVISC, PMASS, PDAMP, ???"""
         datas = []
         for comment, card_lines in cards:
             card_obj = self._cardlines_to_card_obj(card_lines, card_name)
@@ -3245,6 +3245,10 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
                 'PDAMP' : self._parse_pdamp,
                 'CMASS4' : self._parse_cmass4,
                 'PMASS' : self._parse_pmass,
+
+                'CDAMP1' : self._parse_cdamp1,
+                'CDAMP2' : self._parse_cdamp2,
+                'CDAMP3' : self._parse_cdamp3,
                 'CDAMP4' : self._parse_cdamp4,
             }
             # self._is_cards_dict = True
@@ -3266,6 +3270,7 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
                 ncards = len(card)
                 if self.is_reject(card_name):# and card_name not in :
                     self.log.warning('n%s = %s (rejecting)' % (card_name, ncards))
+                    asdf
                     #self.log.info('  rejecting card_name = %s' % card_name)
                     for comment, card_lines in card:
                         self.rejects.append([_format_comment(comment)] + card_lines)

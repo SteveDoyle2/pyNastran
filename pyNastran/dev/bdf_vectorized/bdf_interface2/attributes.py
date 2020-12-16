@@ -18,6 +18,11 @@ from pyNastran.dev.bdf_vectorized.cards.elements.spring.celas2 import CELAS2
 from pyNastran.dev.bdf_vectorized.cards.elements.spring.celas3 import CELAS3
 from pyNastran.dev.bdf_vectorized.cards.elements.spring.celas4 import CELAS4
 
+from pyNastran.dev.bdf_vectorized.cards.elements.damper.cdamp1 import CDAMP1
+from pyNastran.dev.bdf_vectorized.cards.elements.damper.cdamp2 import CDAMP2
+from pyNastran.dev.bdf_vectorized.cards.elements.damper.cdamp3 import CDAMP3
+from pyNastran.dev.bdf_vectorized.cards.elements.damper.cdamp4 import CDAMP4
+
 # bush
 from pyNastran.dev.bdf_vectorized.cards.elements.bush.cbush import CBUSH
 from pyNastran.dev.bdf_vectorized.cards.elements.bush.pbush import PBUSH
@@ -187,6 +192,11 @@ class BDFAttributes:
         self.celas3 = CELAS3(self)
         self.celas4 = CELAS4(self)
         self.elements_spring = ElementsSpring(self)
+
+        self.celas1 = CDAMP1(self)
+        self.celas2 = CDAMP2(self)
+        self.celas3 = CDAMP3(self)
+        self.celas4 = CDAMP4(self)
 
         # rods/tubes
         self.prod = PROD(self)

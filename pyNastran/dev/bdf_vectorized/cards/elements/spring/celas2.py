@@ -49,7 +49,6 @@ class CELAS2(SpringElement):
         self.K[i] = double(card, 2, 'k')
         self.node_ids[i, :] = [integer(card, 3, 'G1'),
                                integer_or_blank(card, 5, 'G2', 0)]
-        print(integer_or_blank(card, 6, 'C2', 0))
         self.components[i, :] = [integer_or_blank(card, 4, 'C1', 0),
                                  integer_or_blank(card, 6, 'C2', 0)]
         self.ge[i] = double_or_blank(card, 7, 'ge', 0.)

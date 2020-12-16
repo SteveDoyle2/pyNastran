@@ -89,7 +89,7 @@ class PDAMP(Property):
 
     def write_card_by_index(self, bdf_file, size=8, is_double=False, i=None):
         if self.n:
-            for (pid, k, ge, s) in zip(self.property_id[i], self.K[i], self.ge[i], self.s[i]):
+            for (pid, k, ge, s) in zip(self.property_id[i], self.B[i], self.ge[i], self.s[i]):
                 card = ['PDAMP', pid, k, ge, s]
                 if size == 8:
                     bdf_file.write(print_card_8(card))
@@ -116,7 +116,7 @@ class PDAMP(Property):
         #obj._comments = obj._comments[i]
         #obj.comments = obj.comments[i]
         obj.property_id = self.property_id[i]
-        obj.K = self.K[i]
+        obj.B = self.B[i]
         obj.ge = self.ge[i]
         obj.s = self.s[i]
         return obj

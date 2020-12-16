@@ -523,7 +523,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
         self.include_dir = ''
         self.dumplines = False
 
-        self.log = get_logger2(log, debug)
+        self.log = get_logger2(log=log, debug=debug)
 
         # list of all read in cards - useful in determining if entire BDF
         # was read & really useful in debugging
@@ -4673,9 +4673,8 @@ def read_bdf(bdf_filename: Optional[str]=None, validate: bool=True, xref: bool=T
              skip_cards: Optional[List[str]]=None,
              read_cards: Optional[List[str]]=None,
              encoding: Optional[str]=None,
-             log=None,
+             log: Optional[SimpleLogger]=None,
              debug: bool=True, mode: str='msc') -> BDF:
-    # Optional[SimpleLogger]
     """
     Creates the BDF object
 
