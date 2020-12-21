@@ -13,7 +13,7 @@ from collections import defaultdict
 from typing import List
 
 import numpy as np
-from cpylog import get_logger2
+from cpylog import get_logger2, __version__ as CPYLOG_VERSION
 
 from pyNastran.utils import object_attributes, check_path # _filename
 from pyNastran.bdf.bdf_interface.utils import (
@@ -220,7 +220,7 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
     #: required for sphinx bug
     #: http://stackoverflow.com/questions/11208997/autoclass-and-instance-attributes
     #__slots__ = ['_is_dynamic_syntax']
-    def __init__(self, debug=True, log=None, mode='msc'):
+    def __init__(self, debug: bool=True, log: Optional[SimpleLogger]=None, mode: str='msc'):
         """
         Initializes the BDF object
 
@@ -257,7 +257,8 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
         # (multiple BDF passes among other things)
         self._fast_add = True
 
-        self.log = get_logger2(log=log, debug=debug, nlevels=2)
+        log_args = {} if CPYLOG_VERSION < '1.5.0' else {'nlevels': 2}
+        self.log = get_logger2(log=log, debug=debug, **log_args)
 
         #: list of all read in cards - useful in determining if entire BDF
         #: was read & really useful in debugging
