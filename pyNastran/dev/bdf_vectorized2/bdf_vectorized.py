@@ -556,7 +556,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
         self.include_dir = ''
         self.dumplines = False
 
-        log_args = {} if CPYLOG_VERSION < '1.5.0' else {'nlevels': 3}
+        log_args = {} if CPYLOG_VERSION <= '1.5.0' else {'nlevels': 3}
         self.log = get_logger2(log=log, debug=debug, **log_args)
 
         # list of all read in cards - useful in determining if entire BDF
