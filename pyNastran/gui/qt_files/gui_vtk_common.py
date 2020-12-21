@@ -445,7 +445,7 @@ class GuiVTKCommon(GuiQtCommon):
             self.case_keys = sorted(cases.keys())
             assert isinstance(cases, dict), type(cases)
 
-        self.result_cases = cases
+        self.model_data.result_cases = cases
 
         if len(self.case_keys) > 1:
             self.icase = -1

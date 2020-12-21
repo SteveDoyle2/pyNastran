@@ -659,7 +659,7 @@ class ToolActions:
         self._add_alt_geometry(alt_grid, name)
 
         # set representation to points
-        self.gui.geometry_properties[name].representation = 'point'
+        self.gui.model_data.geometry_properties[name].representation = 'point'
         actor = self.gui.geometry_actors[name]
         prop = actor.GetProperty()
         prop.SetRepresentationToPoints()

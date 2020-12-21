@@ -903,10 +903,10 @@ class GuiQtCommon(GuiAttributes):
         self.icase_disp = None
         self.icase_vector = None
 
-        case = self.result_cases[key]
+        case = self.model_data.result_cases[key]
         label2 = ''
         assert isinstance(key, integer_types), key
-        (obj, (i, name)) = self.result_cases[key]
+        (obj, (i, name)) = self.model_data.result_cases[key]
         subcase_id = obj.subcase_id
         case = obj.get_result(i, name)
         result_type = obj.get_title(i, name)

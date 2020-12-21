@@ -1,5 +1,5 @@
 """Defines the Abaqus class"""
-from typing import List, Tuple, Any
+from typing import Tuple, List, Dict, Optional, Any
 import numpy as np
 from cpylog import SimpleLogger, get_logger2
 from pyNastran.converters.abaqus.abaqus_cards import (
@@ -170,6 +170,17 @@ class Abaqus:
                         raise RuntimeError(msg)
                     self.materials[material.name] = material
                     self.log.debug('end of material')
+                #elif word.startswith('spring'):
+                    #self.log.debug('start of spring...')
+                    #iline, line0, material = self.read_spring(lines, iline, word)
+                    #asdf
+                    #if material.name in self.materials:
+                        #msg = 'material.name=%r is already defined...\n' % material.name
+                        #msg += 'old %s' % self.materials[material.name]
+                        #msg += 'new %s' % material
+                        #raise RuntimeError(msg)
+                    #self.materials[material.name] = material
+                    #self.log.debug('end of spring')
 
                 elif word.startswith('step'):
                     #print('step!!!!!!!')
@@ -279,6 +290,7 @@ class Abaqus:
                     assert iline > iline0
                 elif '*solid section' in line0:
                     iline, solid_section = read_solid_section(line0, lines, iline, self.log)
+                    self.log.debug(f'solid_section = {solid_section}')
                     solid_sections.append(solid_section)
                     #iline -= 1
                     #line0 = lines[iline].strip().lower()
@@ -331,6 +343,38 @@ class Abaqus:
         for unused_mat_name, mat in sorted(self.materials.items()):
             self.log.debug(str(mat))
 
+    def read_spring(self, lines: List[str], iline: int, word: str) -> Material:
+        """
+        *SPRING,ELSET=Eall
+        blank line
+        10.
+
+        Defines a linear spring constant with value 10. for all elements in
+        element set Eall and all temperatures.
+        Example:
+        *SPRING,ELSET=Eall,NONLINEAR
+        0.,0.,293.
+        10.,1.,293.
+        100.,2.,293.
+        0.,0.,393.
+        5.,1.,393.
+        25.,2.,393.
+        """
+        param_map = get_param_map(iline, word, required_keys=['elset'])
+        print(param_map)
+        #name = param_map['name']
+
+        iline += 1
+        word_line = lines[iline].strip().lower()
+        word = word_line.strip('*').lower()
+        unused_allowed_words = ['elastic']
+        unallowed_words = [
+            'shell section', 'solid section',
+            'material', 'step', 'boundary', 'amplitude', 'surface interaction',
+            'assembly', 'spring']
+        iline += 1
+        line0 = lines[iline].strip('\n\r\t, ').lower()
+
     def read_material(self, lines: List[str], iline: int, word: str) -> Material:
         """reads a Material card"""
         param_map = get_param_map(iline, word, required_keys=['name'])
@@ -344,7 +388,7 @@ class Abaqus:
         unallowed_words = [
             'shell section', 'solid section',
             'material', 'step', 'boundary', 'amplitude', 'surface interaction',
-            'assembly']
+            'assembly', 'spring']
         iline += 1
         line0 = lines[iline].strip('\n\r\t, ').lower()
         #print('  wordA =', word)
@@ -798,9 +842,9 @@ class Abaqus:
 
         etype_sline = sline[0]
         assert 'type' in etype_sline, etype_sline
-        etype = etype_sline.split('=')[1]
+        etype = etype_sline.split('=')[1].strip()
         if etype not in allowed_element_types:
-            msg = 'etype=%s allowed=[%s]' % (etype, ','.join(allowed_element_types))
+            msg = 'etype=%r allowed=[%s]' % (etype, ','.join(allowed_element_types))
             raise RuntimeError(msg)
 
         if self.debug:
@@ -1151,6 +1195,10 @@ def read_solid_section(line0, lines, iline, log):
     log.debug('    param_map = %s' % params_map)
     #line0 = lines[iline].strip().lower()
     data_lines, iline, line0 = _read_star_block2(lines, iline, line0, log)
+    #print('line0 =', iline, line0)
+    #print(f'lines[{iline}] = {lines[iline]!r}')
+    #print('lines[iline+1] =', lines[iline+1])
+    #print('data_lines =', data_lines)
     #for line in data_lines:
         #print(line)
     solid_section = SolidSection.add_from_data_lines(params_map, data_lines, log)
@@ -1229,7 +1277,8 @@ def _read_star_block2(lines, iline, line0, log, debug=False):
     line0 = lines[iline].strip().lower()
     data_lines = []
     while not line0.startswith('*'):
-        data_lines.append(line0.strip(', ').split(','))
+        sline = line0.strip(', ').split(',')
+        data_lines.append(sline)
         iline += 1
         line0 = lines[iline].strip().lower()
     if debug:
@@ -1255,7 +1304,7 @@ def read_set(lines, iline, line0, params_map):
             raise
     return set_ids, iline, line0
 
-def get_param_map(iline, word, required_keys=None):
+def get_param_map(iline: int, word: str, required_keys: Optional[List[str]]=None) -> Dict[str, 'str']:
     """
     get the optional arguments on a line
 
@@ -1288,7 +1337,7 @@ def get_param_map(iline, word, required_keys=None):
     msg = ''
     for key in required_keys:
         if key not in param_map:
-            msg += 'line %i: %r not found in %r\n' % (iline, key, word)
+            msg += f'line {iline:d}: {key!r} not found in {word!r}\n'
     if msg:
         raise RuntimeError(msg)
     return param_map

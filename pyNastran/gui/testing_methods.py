@@ -105,7 +105,6 @@ class FakeGUIMethods(GuiVTKCommon):
         self.vtk_interactor = VTKInteractor()
         self.debug = False
         self._form = []
-        self.result_cases = OrderedDict()
         #self.geometry_actors = {
             #'main' : vtkActor(),
         #}
@@ -257,7 +256,7 @@ class FakeGUIMethods(GuiVTKCommon):
             #default_max, default_min = obj.get_default_min_max(i, name)
             unused_min_value, unused_max_value = obj.get_min_max(i, name)
 
-        self.result_cases = cases
+        self.model_data.result_cases = cases
 
         if len(self.case_keys) > 1:
             self.icase = -1

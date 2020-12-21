@@ -6,7 +6,7 @@ import os
 import sys
 import traceback
 from collections import OrderedDict
-from typing import List
+from typing import List, Dict, Any, Optional
 
 import numpy as np
 import vtk
@@ -220,15 +220,8 @@ class GuiAttributes:
         #self.geometry_properties = {
         #    'name' : Geom(),
         #}
-        self.geometry_properties = OrderedDict()
-        self.follower_nodes = {}
-        self.follower_functions = {}
 
-        self.label_actors = {-1 : []}
-        self.label_ids = {}
-        self.label_scale = 1.0 # in percent
-
-        self.result_cases = {}
+        self.model_data = ModelData(self)
         self.num_user_points = 0
 
         self._is_displaced = False
@@ -242,9 +235,6 @@ class GuiAttributes:
         self.eid_maps = {}
         self.name = 'main'
         self.models = {}
-
-        self.groups = {}
-        self.group_active = 'main'
 
         #if not isinstance(res_widget, MockResWidget):
             #if qt_version == 5:
@@ -269,6 +259,69 @@ class GuiAttributes:
         self.color_function_black = vtk.vtkColorTransferFunction()
         self.color_function_black.AddRGBPoint(0.0, 0.0, 0.0, 0.0)
         self.color_function_black.AddRGBPoint(1.0, 0.0, 0.0, 0.0)
+
+    @property
+    def geometry_properties(self):
+        return self.model_data.geometry_properties
+    @geometry_properties.setter
+    def geometry_properties(self, geometry_properties):
+        self.model_data.geometry_properties = geometry_properties
+
+    @property
+    def groups(self):
+        return self.model_data.groups
+    @groups.setter
+    def groups(self, groups: Dict[str, Any]):
+        self.model_data.groups = groups
+
+    @property
+    def group_active(self):
+        return self.model_data.group_active
+    @group_active.setter
+    def group_active(self, group_active: str):
+        self.model_data.group_active = group_active
+
+    @property
+    def follower_nodes(self):
+        return self.model_data.follower_nodes
+    @follower_nodes.setter
+    def follower_nodes(self, follower_nodes):
+        self.model_data.follower_nodes = follower_nodes
+
+    @property
+    def follower_functions(self):
+        return self.model_data.follower_functions
+    @follower_functions.setter
+    def follower_functions(self, follower_functions):
+        self.model_data.follower_functions = follower_functions
+
+    @property
+    def label_actors(self):
+        return self.model_data.label_actors
+    @label_actors.setter
+    def label_ids(self, label_actors: List[Any]):
+        self.model_data.label_actors = label_actors
+
+    @property
+    def label_ids(self):
+        return self.model_data.label_ids
+    @label_ids.setter
+    def label_ids(self, label_ids: List[int]):
+        self.model_data.label_ids = label_ids
+
+    @property
+    def label_scale(self) -> float:
+        return self.model_data.label_scale
+    @property
+    def label_scale(self, label_scale: float):
+        self.model_data.label_scale = label_scale
+
+    @property
+    def result_cases(self):
+        return self.model_data.result_cases
+    @result_cases.setter
+    def result_cases(self, result_cases: Dict[int, Any]):
+        self.model_data.result_cases = result_cases
 
     @property
     def performance_mode(self):
@@ -313,8 +366,7 @@ class GuiAttributes:
 
     #-------------------------------------------------------------------
     # deprecated attributes
-    def deprecated(self, old_name, new_name, deprecated_version):
-        # type: (str, str, str, Optional[List[int]]) -> None
+    def deprecated(self, old_name: str, new_name: str, deprecated_version: Optional[List[int]]) -> None:
         """
         Throws a deprecation message and crashes if past a specific version.
 
@@ -569,7 +621,7 @@ class GuiAttributes:
             self.turn_text_off()
             self.grid.Reset()
 
-            self.result_cases = OrderedDict()
+            self.model_data.result_cases = OrderedDict()
             self.ncases = 0
             for param in params_to_delete:
                 if hasattr(self, param):  # TODO: is this correct???
@@ -657,7 +709,7 @@ class GuiAttributes:
         reset_minus1 = True
         # new geometry
         if reset_minus1:
-            self.label_actors = {-1 : []}
+            self.model_data.label_actors = {-1 : []}
         else:
             for idi in self.label_actors:
                 if idi == -1:
@@ -1669,7 +1721,29 @@ class GuiAttributes:
     def Render(self):  # pragma: no cover
         pass
 
-def _add_fmt(fmts, fmt, geom_results_funcs, data):
+
+class ModelData:
+    def __init__(self, parent: GuiAttributes):
+        self.geometry_properties = OrderedDict()
+
+        self.groups = {}
+        self.group_active = 'main'
+
+        self.follower_nodes = {}
+        self.follower_functions = {}
+
+        self.label_actors = {-1 : []}
+        self.label_ids = {}
+        self.label_scale = 1.0 # in percent
+
+        self.result_cases = {}
+
+    def __repr__(self):
+        msg = ('ModelData:\n'
+               f'result_cases.keys() = {self.result_cases.keys()}')
+        return msg
+
+def _add_fmt(fmts: List[str], fmt: str, geom_results_funcs, data):
     """
     Adds a format
 
