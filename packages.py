@@ -196,14 +196,36 @@ def get_package_requirements(is_gui=True, add_vtk_qt=True, python_version=None, 
             install_requires.append(f'cpylog >= {required_version_str}')  # 1.3.1 used
 
     if not is_rtd:
+        # nptyping, typish
+        # -----------------------------------------------------------
+        # actual rquirement somewhere between 1.6.0 and 1.9.1
+        # 1.5.3 fails
+        # 1.6.0 installs (does it work?)
+        # 1.7.0 according to nptyping
+        # 1.9.1 installs
+        required_version_str = '1.7.0'
+        try:
+            import typish
+            iver = int_version('typish', typish.__version__)
+            all_reqs['typish'] = str_version(iver)
+            if iver < [1, 4, 0]:
+                print(f"typish.__version__ = {typish.__version__!r} != {required_version_str!r}")
+                all_reqs['typish'] = f'>= {required_version_str}'
+                install_requires.append(f'typish >= {required_version_str}')
+        except ImportError:
+            all_reqs['typish'] = f'>= {required_version_str}'
+            install_requires.append(f'typish >= {required_version_str}')  # 1.3.1 used
+
+        # -----------------------------------------------------------
+        required_version_str = '>= 1.0.1, !=1.1.0'
         try:
             import nptyping
-            #iver = int_version('nptyping', nptyping.__version__)
-            #all_reqs['nptyping'] = str_version(iver)
-            #if iver < [1, 0, 1]:
-                #print("nptyping.__version__ = %r < '1.0.0'" % nptyping.__version__)
-            all_reqs['nptyping'] = '>= 1.0.1, !=1.1.0'
-            install_requires.append('nptyping >= 1.0.1, !=1.1.0')
+            iver = int_version('nptyping', nptyping.__version__)
+            all_reqs['nptyping'] = str_version(iver)
+            if iver < [1, 0, 1] or iver == [1, 1, 0]:
+                print(f"nptyping.__version__ = {nptyping.__version__!r} not {required_version_str!r}")
+                all_reqs['nptyping'] = required_version_str
+                install_requires.append(f'nptyping {required_version_str}')
         except ImportError:
             all_reqs['nptyping'] = '>= 1.0.1'
             install_requires.append('nptyping >= 1.0.1, !=1.1.0')  # 1.0.1 used
