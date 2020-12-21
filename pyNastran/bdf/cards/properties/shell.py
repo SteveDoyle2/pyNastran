@@ -1847,8 +1847,8 @@ class PSHEAR(Property):
         t = 0.1
         return PSHEAR(pid, mid, t, nsm=0., f1=0., f2=0., comment='')
 
-    def __init__(self, pid, mid, t, nsm=0., f1=0., f2=0., comment=''):
-        # type: (int, int, float, float, float, float, str) -> None
+    def __init__(self, pid: int, mid: int, t: float, nsm: float=0.,
+                 f1: float=0., f2: float=0., comment: str=''):
         """
         Creates a PSHEAR card
 
@@ -2028,10 +2028,12 @@ class PSHELL(Property):
         8 : 'tst', #'T' : 't',
     }
 
-    def __init__(self, pid, mid1=None, t=None, mid2=None, twelveIt3=1.0,
-                 mid3=None, tst=0.833333, nsm=0.0,
-                 z1=None, z2=None, mid4=None, comment=''):
-        # type: (int, Optional[int], float, Optional[int], float, Optional[int], float, float, Optional[float], Optional[float], Optional[int], str) -> None
+    def __init__(self, pid: int,
+                 mid1: Optional[int]=None, t: Optional[float]=None,
+                 mid2: Optional[int]=None, twelveIt3: float=1.0,
+                 mid3: Optional[int]=None, tst: float=0.833333, nsm: float=0.0,
+                 z1: Optional[float]=None, z2: Optional[float]=None,
+                 mid4: Optional[int]=None, comment: str=''):
         """
         Creates a PSHELL card
 

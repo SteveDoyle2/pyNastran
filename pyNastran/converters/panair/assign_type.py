@@ -42,8 +42,7 @@ def integer_or_blank(value: str, name: str,
         raise RuntimeError('%s=%r is not an integer' % (name, fvalue))
     return int(fvalue)
 
-def double_or_blank(value, name, default=None):
-    # type: (str, str, Optional[float]) -> Optional[float]
+def double_or_blank(value: str, name: str, default: Optional[float]=None) -> Optional[float]:
     value = value.strip()
     if not value:
         return default

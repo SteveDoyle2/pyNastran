@@ -591,8 +591,7 @@ class CTRIA3(TriShell):
                       tflag=tflag, T1=T1, T2=T2, T3=T3, comment=comment)
 
     @classmethod
-    def add_card(cls, card, comment=''):
-        # type: (Any, str) -> CTRIA3
+    def add_card(cls: Any, card: str, comment: str=''):
         """
         Adds a CTRIA3 card from ``BDF.add_card(...)``
 

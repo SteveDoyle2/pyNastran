@@ -15,9 +15,9 @@ if TYPE_CHECKING:  # pragma: no cover
     from cpylog import SimpleLogger
 
 allowed_element_types = [
-    'r2d2', 'conn2d2',
-    'cpe3', 'cpe4', 'cpe4r',
-    'cps3', 'cps4', 'cps4r',
+    'r2d2', 'conn2d2', 'springa',
+    'cpe3', 'cpe4', 'cpe4r', 'cpe8r',
+    'cps3', 'cps4', 'cps4r', 'cps8r',
 
     'coh2d4', 'c3d10h', 'cohax4',
     'cax3', 'cax4r', 'mass', 'rotaryi', 't2d2', 'c3d8r',

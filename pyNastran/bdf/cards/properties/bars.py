@@ -3176,8 +3176,8 @@ class PBEND(LineProperty):
         return self.comment + print_card_16(card)
 
 
-def split_arbitrary_thickness_section(key, value):
-    # type: (str, Union[str, float, List[int]]) -> Tuple[int, Union[float, List[int]]]
+def split_arbitrary_thickness_section(key: str,
+                                      value: Union[str, float, List[int]]) -> Tuple[int, Union[float, List[int]]]:
     """
     Helper method for PBRSECT/PBMSECT
 

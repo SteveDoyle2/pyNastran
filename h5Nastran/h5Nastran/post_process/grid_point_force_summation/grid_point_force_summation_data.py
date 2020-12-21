@@ -1,5 +1,3 @@
-from __future__ import print_function, absolute_import
-
 import numpy as np
 import pandas as pd
 from six.moves import range
@@ -121,11 +119,15 @@ class GridPointForceSummationCalculator(object):
             lci = set(lci)
             return sorted(ei.intersection(ni).intersection(lci))
 
-    def sum(self, detail_id, nodes, elements, refpoint, coord, loadcases=(), load_factors=None):
-        # type: (str, Iterable[int], Iterable[int], Vector, Matrix, Iterable[int], Vector) -> GridPointForceSummationData
-        
-        loadcases = sorted(loadcases)
+    def sum(self, detail_id: str,
+            nodes: Iterable[int],
+            elements: Iterable[int],
+            refpoint: Vector,
+            coord: Matrix,
+            loadcases: Iterable[int]=(),
+            load_factors: Vector=None) -> GridPointForceSummationData:
 
+        loadcases = sorted(loadcases)
         if len(loadcases) == 0:
             loadcases = self._loadcases
 
@@ -140,9 +142,7 @@ class GridPointForceSummationCalculator(object):
 
         for i in range(len(loadcases)):
             lc = loadcases[i]
-
             casei = self._cases[lc]
-
             indices = sorted(_indices.intersection(casei))
 
             if len(indices) == 0:
@@ -162,16 +162,13 @@ class GridPointForceSummationCalculator(object):
             result['M2'] *= load_factors[4]
             result['M3'] *= load_factors[5]
 
-        # print('numpy', result.dtype)
-
+        #print('numpy', result.dtype)
         result = GridPointForceSummationData.from_records(result)
-
-        # print('dataframe', result.dtypes)
+        #print('dataframe', result.dtypes)
 
         return result
 
     def _sum(self, data, detail_id, lcid, refpoint, coord):
-
         fx = 0.
         fy = 0.
         fz = 0.
@@ -190,7 +187,6 @@ class GridPointForceSummationCalculator(object):
         # print(FX.keys())
 
         grid_pos = self.grid_pos
-
         for i in range(data.shape[0]):
             _fx = FX[i]
             _fy = FY[i]
@@ -204,9 +200,7 @@ class GridPointForceSummationCalculator(object):
             fz += _fz
 
             nid = nids[i]
-
             pos = grid_pos[nid]
-
             mx += _mx + _fz * (pos[1] - refpoint[1]) - _fy * (pos[2] - refpoint[2])
             my += _my + _fx * (pos[2] - refpoint[2]) - _fz * (pos[0] - refpoint[0])
             mz += _mz + _fy * (pos[0] - refpoint[0]) - _fx * (pos[1] - refpoint[1])
@@ -220,14 +214,14 @@ class GridPointForceSummationCalculator(object):
 
         return detail_id, lcid, _fx, _fy, _fz, _mx, _my, _mz
 
-# 
+#
 # from zlib import compress as compress_, decompress as decompress_
-# 
-# 
+#
+#
 # def decompress(compressed_data):
 #     return decompress_(compressed_data, -15)
-# 
-# 
+#
+#
 # def compress(uncompressed_data, compression_level=6):
 #     return compress_(uncompressed_data, compression_level)[2:-4]
 

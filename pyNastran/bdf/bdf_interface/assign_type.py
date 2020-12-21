@@ -161,8 +161,7 @@ def blank(card: BDFCard, ifield: int, fieldname: str, default=None) -> None:
     raise SyntaxError('%s = %r (field #%s) on card must be blank (not %s).\n'
                       'card=%s' % (fieldname, svalue, ifield, dtype, card))
 
-#def field(card, ifield, fieldname):
-    ## type: (BDFCard, int, str) -> Optional[Union[int, float, str]]
+#def field(card: BDFCard, ifield: int, fieldname: str) -> Optional[Union[int, float, str]]:
     #"""
     #Parameters
     #----------

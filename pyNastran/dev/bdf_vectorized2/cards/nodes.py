@@ -244,8 +244,7 @@ class GRIDv:
         self._seid = []
         self.comment = defaultdict(str)
 
-    def add(self, nid, xyz, cp=0, cd=0, ps='', seid=0, comment=''):
-        # type: (int, Union[None, List[float], np.ndarray], int, int, str, int, str) -> None
+    def add(self, nid: int, xyz: List[float], cp: int=0, cd: int=0, ps: str='', seid: int=0, comment: str=''):
         """
         Creates the GRID card
 

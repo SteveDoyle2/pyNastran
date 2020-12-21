@@ -23,7 +23,7 @@ from typing import (
 from pickle import load, dump, dumps  # type: ignore
 
 import numpy as np  # type: ignore
-from cpylog import get_logger2
+from cpylog import get_logger2, __version__ as CPYLOG_VERSION
 
 from pyNastran.bdf.bdf import (LOAD, _bool, _check_replicated_cards,
                                _get_coords_to_update, map_update, map_version,
@@ -556,7 +556,8 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
         self.include_dir = ''
         self.dumplines = False
 
-        self.log = get_logger2(log=log, debug=debug, nlevels=3)
+        log_args = {} if CPYLOG_VERSION < '1.5.0' else {'nlevels': 3}
+        self.log = get_logger2(log=log, debug=debug, **log_args)
 
         # list of all read in cards - useful in determining if entire BDF
         # was read & really useful in debugging
@@ -5084,8 +5085,7 @@ class BDF(BDF_):
                        #xref_optimization=True):
         #self.grid.cross_reference(self)
 
-#def _add_node_object(self, node, allow_overwrites=False):
-    ## type: (Any, bool) -> None
+#def _add_node_object(self, node: Any, allow_overwrites: bool=False) -> None:
     #"""adds a GRID card"""
     #key = node.nid
     #if key in self.nodes and not allow_overwrites:
@@ -5137,8 +5137,7 @@ class BDF(BDF_):
             #self._write_executive_control_deck(bdf_file)
             #self._write_case_control_deck(bdf_file)
 
-    #def _write_nodes(self, bdf_file, size=8, is_double=False):
-        ## type: (Any, int, bool) -> None
+    #def _write_nodes(self, bdf_file: Any, size: int=8, is_double: bool=False) -> None:
         #"""
         #Writes the NODE-type cards
         #"""
@@ -5157,8 +5156,8 @@ class BDF(BDF_):
         self._write_elements(bdf_file, size=size, is_double=is_double, is_long_ids=is_long_ids)
         self._write_properties(bdf_file, size=size, is_double=is_double, is_long_ids=is_long_ids)
 
-    def _write_elements(self, bdf_file, size=8, is_double=False, is_long_ids=None):
-        # type: (Any, int, bool, Optional[bool]) -> None
+    def _write_elements(self, bdf_file: Any, size: int=8, is_double: bool=False,
+                        is_long_ids: Optional[bool]=None) -> None:
         """Writes the elements in a sorted order"""
         if self.elements:
             bdf_file.write('$ELEMENTS\n')
@@ -5181,14 +5180,14 @@ class BDF(BDF_):
                 bdf_file.write(element.write_card(size, is_double))
         self._write_nsm(bdf_file, size, is_double, is_long_ids=is_long_ids)
 
-    #def _write_loads(self, bdf_file, size=8, is_double=False):
+    #def _write_loads(self, bdf_file: Any, size: int=8, is_double: bool=False) -> None:
         #"""Writes the loads in a sorted order"""
         #BDF_._write_loads(self, bdf_file, size=size, is_double=is_double)
         ##for key, loadi in sorted(self.loads):
             ##bdf_file.write(loadi.write_card(size=size, is_double=is_double))
 
-    def _write_loads(self, bdf_file, size=8, is_double=False, is_long_ids=None):
-        # type: (Any, int, bool, Optional[bool]) -> None
+    def _write_loads(self, bdf_file: Any, size: int=8, is_double: bool=False,
+                     is_long_ids: Optional[bool]=None) -> None:
         """Writes the load cards sorted by ID"""
         if self.loads or self.tempds:
             #msg = ['$LOADS\n']

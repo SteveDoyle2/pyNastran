@@ -345,8 +345,7 @@ class RINGAX(BaseCard):
         z = 1.
         return RINGAX(nid, R, z, ps=None, comment='')
 
-    def __init__(self, nid, R, z, ps=None, comment=''):  # this card has missing fields
-        # type: (int, float, float, Optional[str], str) -> None
+    def __init__(self, nid: int, R: float, z: float, ps: Optional[str]=None, comment: str=''):  # this card has missing fields
         """
         Creates the RINGAX card
         """

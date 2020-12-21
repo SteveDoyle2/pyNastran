@@ -357,8 +357,7 @@ class CTRSHL(TriShell):
         assert len(set(self.nodes)) == 6, 'nodes=%s; n=%s\n%s' % (self.nodes, len(set(self.nodes)), str(self))
 
     @classmethod
-    def add_card(cls, card, comment=''):
-        # type: (Any, str) -> CTRSHL
+    def add_card(cls: Any, card: Any, comment: str=''):
         """
         Adds a CTRSHL card from ``BDF.add_card(...)``
 

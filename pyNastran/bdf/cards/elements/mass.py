@@ -81,8 +81,7 @@ class CMASS1(PointMassElement):
         nids = [1, 2]
         return CMASS1(eid, pid, nids, c1=0, c2=0, comment='')
 
-    def __init__(self, eid, pid, nids, c1=0, c2=0, comment=''):
-        # type: (int, int, [int, int], int, int, str) -> CMASS1
+    def __init__(self, eid: int, pid: int, nids: List[int], c1: int=0, c2: int=0, comment: str=''):
         """
         Creates a CMASS1 card
 

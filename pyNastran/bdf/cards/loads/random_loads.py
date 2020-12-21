@@ -166,6 +166,7 @@ class RANDPS(RandomLoad):
             return self.comment + print_card_double(card)
         return self.comment + print_card_16(card)
 
+
 class RANDT1(RandomLoad):
     type = 'RANDT1'
 
@@ -177,8 +178,7 @@ class RANDT1(RandomLoad):
         tmax = 1.
         return RANDT1(sid, n, t0, tmax, comment='')
 
-    def __init__(self, sid, n, t0, tmax, comment=''):
-        # type: (int, int, int, float, str) -> None
+    def __init__(self, sid: int, n: int, t0: int, tmax: float, comment: str=''):
         """
         Creates a RANDT1 card
 

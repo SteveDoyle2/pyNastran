@@ -250,8 +250,7 @@ def make_flutter_response(f06_filename, f06_units=None, out_units=None, make_alt
         flutters[subcase] = flutter
     return flutters
 
-def _get_units(units):
-    # type: (Optional[Union[str, Dict[str, str]]]) -> Optional[Union[str, Dict[str, str]]]
+def _get_units(units: Optional[Union[str, Dict[str, str]]]) -> Optional[Union[str, Dict[str, str]]]:
     """gets the units"""
     if units is None:
         units = 'english_in'

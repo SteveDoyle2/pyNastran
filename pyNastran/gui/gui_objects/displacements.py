@@ -383,11 +383,17 @@ class ElementalTableResults(VectorTable):
 
 
 class ForceTableResults(VectorTable):
-    def __init__(self, subcase_id, titles, headers, dxyz, unused_scalar,
-                 scales, data_formats=None,
-                 nlabels=None, labelsize=None, ncolors=None, colormap='jet',
-                 set_max_min=False, uname='ForceTableResults'):
-        # type: (int, List[str], List[str], Any, Any, List[float], Any, Optional[int], Optional[int], Optional[int], str, bool, str) -> None
+    def __init__(self, subcase_id: int, titles: List[str], headers: List[str],
+                 dxyz: Any,
+                 unused_scalar: Any,
+                 scales: List[float],
+                 data_formats: Optional[str]=None,
+                 nlabels: Optional[int]=None,
+                 labelsize: Optional[int]=None,
+                 ncolors: Optional[int]=None,
+                 colormap: str='jet',
+                 set_max_min: bool=False,
+                 uname: str='ForceTableResults'):
         """this is a nodal force result"""
         linked_scale_factor = False
         location = 'node'
