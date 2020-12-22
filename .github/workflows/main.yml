@@ -21,8 +21,22 @@ jobs:
     # The type of runner that the job will run on
     runs-on: ubuntu-latest
     strategy:
-       matrix:
-         python-version: [3.6, 3.7, 3.8]
+#       matrix:
+#         python-version: [3.6, 3.7, 3.8]
+
+    #--------------------------------------------------------------------------------------------------
+    # latest versions of package
+    - name: "Python  ${{ matrix.python-version }} (PyQt5)"
+      python-version: [3.7, 3.8]
+      env:
+      - COVERAGE_RUN='coverage run'
+      - CODECOV='codecov'
+      - NUMPY='numpy scipy matplotlib h5py vtk pyqt5 pandas>=0.25 imageio pillow>5.2,!=7.1.0'
+      #- LIB='libblas-dev liblapack-dev'
+      - LIBH5='libhdf5-dev'
+    #--------------------------------------------------------------------------------------------------
+    # oldest versions of package
+    #--------------------------------------------------------------------------------------------------
 
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
