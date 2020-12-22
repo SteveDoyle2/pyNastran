@@ -159,13 +159,17 @@ jobs:
         if: ${{ matrix.mode == 'latest' || matrix.mode == 'latest_basic' }}
         run: |
          #if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
-         python pyNastran/all_tests_no_gui.py
+         #python pyNastran/all_tests_no_gui.py
+         coverage run pyNastran/all_tests_no_gui.py
+         codecov
 
       - name: Run
         if: ${{ 'latest_pyside_gui' || matrix.mode == 'latest_pyqt_gui' }}
         run: |
          #if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
-         python pyNastran/all_tests.py
+         #python pyNastran/all_tests.py
+         coverage run pyNastran/all_tests.py
+         codecov
 
 #--------------------------------------------------------------------------------------------------
 # https://docs.github.com/en/free-pro-team@latest/actions/guides/building-and-testing-python

@@ -36,6 +36,10 @@ Programmatics:
 
 BDF:
  - 
+
+GUI:
+ - transient/complex fringe only animations now supported
+
 --->
 
 ### v1.3.3

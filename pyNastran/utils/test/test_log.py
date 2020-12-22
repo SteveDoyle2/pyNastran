@@ -2,7 +2,6 @@
 import os
 import unittest
 
-from cpylog.test_log import TestLog
 from pyNastran.utils.log import make_log
 
 class TestMakeLog(unittest.TestCase):
