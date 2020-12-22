@@ -1,6 +1,7 @@
-from itertools import count
 from typing import List, Any
 import numpy as np
+from pyNastran.op2.op2_helper import polar_to_real_imag
+
 
 def reshape_bytes_block(block: bytes) -> bytes:
     nwords = len(block) // 2
@@ -46,8 +47,7 @@ def apply_mag_phase(floats: Any, is_magnitude_phase: bool,
     if is_magnitude_phase:
         mag = floats[:, isave1]
         phase = floats[:, isave2]
-        rtheta = np.radians(phase)
-        real_imag = mag * (np.cos(rtheta) + 1.j * np.sin(rtheta))
+        real_imag = polar_to_real_imag(mag, phase)
     else:
         real = floats[:, isave1]
         imag = floats[:, isave2]

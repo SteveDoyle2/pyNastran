@@ -1334,8 +1334,7 @@ class OP2Common(Op2Codes, F06Writer):
             floats = np.frombuffer(data, dtype=self.fdtype8).reshape(nnodes, 14).copy()
             mag = floats[:, 2:8]
             phase = floats[:, 8:]
-            rtheta = np.radians(phase)
-            real_imag = mag * (np.cos(rtheta) + 1.j * np.sin(rtheta))
+            real_imag = polar_to_real_imag(mag, phase)
             #abs(real_imag), angle(real_imag, deg=True)
 
             obj._times[obj.itime] = dt
@@ -1480,8 +1479,7 @@ class OP2Common(Op2Codes, F06Writer):
 
             mag = floats[:, 2:8]
             phase = floats[:, 8:]
-            rtheta = np.radians(phase)
-            real_imag = mag * (np.cos(rtheta) + 1.j * np.sin(rtheta))
+            real_imag = polar_to_real_imag(mag, phase)
             obj.data[itotal:itotal2, obj.itime, :] = real_imag
             obj.itotal = itotal2
         else:
