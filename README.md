@@ -2,9 +2,11 @@
 |  Version  | Docs  | Status |
 | :--- 	  | :--- 	  | :--- 	  |
 |  [![PyPi Version](https://img.shields.io/pypi/v/pynastran.svg)](https://pypi.python.org/pypi/pyNastran) | [docs](https://pynastran-git.readthedocs.io/en/1.3/) | [![Build Status](https://img.shields.io/travis/SteveDoyle2/pyNastran/1.3.svg)](https://travis-ci.org/SteveDoyle2/pyNastran) [![Coverage Status](https://codecov.io/gh/SteveDoyle2/pyNastran/branch/1.3/graph/badge.svg)](https://codecov.io/gh/SteveDoyle2/pyNastran/branch/1.3) |
-|   Master | [![Documentation Status](https://readthedocs.org/projects/pynastran-git/badge/?version=latest)](http://pynastran-git.readthedocs.io/en/latest/?badge=latest) | [![Linux Status](https://img.shields.io/travis/SteveDoyle2/pyNastran/master.svg)](https://travis-ci.org/SteveDoyle2/pyNastran) [![Coverage Status](https://codecov.io/gh/SteveDoyle2/pyNastran/branch/master/graph/badge.svg)](https://codecov.io/gh/SteveDoyle2/pyNastran) |
+|   Main/Dev | [![Documentation Status](https://readthedocs.org/projects/pynastran-git/badge/?version=latest)](http://pynastran-git.readthedocs.io/en/latest/?badge=latest) | [![Linux Status](https://img.shields.io/travis/SteveDoyle2/pyNastran/master.svg)](https://travis-ci.org/SteveDoyle2/pyNastran) [![Coverage Status](https://codecov.io/gh/SteveDoyle2/pyNastran/branch/master/graph/badge.svg)](https://codecov.io/gh/SteveDoyle2/pyNastran) |
 
+New Main Status
 
+![CI](https://github.com/SteveDoyle2/pyNastran/workflows/CI/badge.svg)
 
 <!---
 [![Windows Status](https://ci.appveyor.com/api/projects/status/1qau107h43mbgghi/branch/master?svg=true)](https://ci.appveyor.com/project/SteveDoyle2/pynastran)
@@ -18,6 +20,22 @@
 [![Build Status](https://travis-ci.org/SteveDoyle2/pyNastran.png)](https://travis-ci.org/SteveDoyle2/pyNastran)
 [![Coverage Status](https://coveralls.io/repos/github/SteveDoyle2/pyNastran/badge.svg?branch=master)](https://coveralls.io/github/SteveDoyle2/pyNastran?branch=master)
 [![Requirements Status](https://img.shields.io/requires/github/SteveDoyle2/pyNastran/master.svg)](https://requires.io/github/SteveDoyle2/pyNastran/requirements/?branch=master)	|
+### v1.4
+
+Not a huge relase, but there it's only 6 months since the last version instead of a year.  Probably the biggest new features are:
+ - MSC 2020 support (including contact)
+ - much improved 64 bit support
+ - improved op2 support
+
+Programmatics:
+ - Supports Python 3.7 - 3.9
+ - GUI is compatible with PyQt5 and PySide2 and VTK 7-9
+ - improved testing of old versions of packages
+ - updated nptyping requirements
+ - added support for MSC 2020
+
+BDF:
+ - 
 --->
 
 ### v1.3.3
