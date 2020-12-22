@@ -25,18 +25,16 @@ jobs:
 #         python-version: [3.6, 3.7, 3.8]
     strategy:
       matrix:
-        - python-version: 3.7
+          python-version: [3.7, 3.8]
           env:
-           - COVERAGE_RUN='coverage run'
-           - CODECOV='codecov'
-           - NUMPY='numpy scipy matplotlib h5py vtk pyqt5 pandas>=0.25 imageio pillow>5.2,!=7.1.0'
-           - LIB='libblas-dev liblapack-dev'
+           - {COVERAGE_RUN='coverage run'  CODECOV='codecov'  NUMPY='numpy scipy matplotlib h5py vtk pyqt5 pandas>=0.25 imageio pillow>5.2,!=7.1.0'  LIB='libblas-dev liblapack-dev'}
 
-        - python-version: 3.8
-           - COVERAGE_RUN='coverage run'
-           - CODECOV='codecov'
-           - NUMPY='numpy scipy matplotlib h5py vtk pyqt5 pandas>=0.25 imageio pillow>5.2,!=7.1.0'
-           - LIB='libblas-dev liblapack-dev'
+          #python-version: 3.8
+          #env:
+          # COVERAGE_RUN='coverage run'
+          # CODECOV='codecov'
+          # NUMPY='numpy scipy matplotlib h5py vtk pyqt5 pandas>=0.25 imageio pillow>5.2,!=7.1.0'
+          # LIB='libblas-dev liblapack-dev'
         
           
 
