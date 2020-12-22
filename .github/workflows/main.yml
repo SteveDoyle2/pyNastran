@@ -23,7 +23,11 @@ jobs:
     strategy:
       matrix:
          python-version: [3.7, 3.8, 3.9]
-    #strategy:
+         #include:
+         #- node: 13
+         #  os: ubuntu-18.04
+         #  experimental: true
+#strategy:
     #  matrix:
           #https://github.com/zopyx/xmldirector.connector/blob/master/.travis.yml#L15-L54
           #python-version: [3.7, 3.8]
