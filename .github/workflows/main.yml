@@ -147,6 +147,7 @@ jobs:
 #-----------------------------------------------------------------------------------
 
       - name: Install dependencies
+        run: |
          python setup.py develop
          pip list
 
