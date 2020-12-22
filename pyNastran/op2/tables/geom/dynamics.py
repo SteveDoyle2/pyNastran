@@ -1577,7 +1577,7 @@ class DYNAMICS(GeomCommon):
         pass
 
     def _read_rspint_32(self, data: bytes, n: int) -> int:
-        """
+        r"""
         RSPINT(11001,110,310) - Record 31
 
         1 RID         I Rotor identification number
@@ -1634,7 +1634,7 @@ class DYNAMICS(GeomCommon):
         return n, rspints
 
     def _read_rspint_56(self, data: bytes, n: int) -> int:
-        """
+        r"""
         RSPINT(11001,110,310) - Record 31
 
         1 RID         I Rotor identification number
@@ -1831,7 +1831,7 @@ class DYNAMICS(GeomCommon):
         return n, dloads
 
     def _read_tload1_msc(self, data: bytes, n: int) -> Tuple[int, List[TLOAD1]]:
-        """
+        r"""
         TLOAD1(7107,71,138) - Record 37
 
         1 SID    I  Load set identification number
@@ -1875,7 +1875,7 @@ class DYNAMICS(GeomCommon):
         return n, dloads
 
     def _read_tload1_36(self, data: bytes, n: int) -> Tuple[int, List[TLOAD1]]:
-        """
+        r"""
         TLOAD1(7107,71,138) - Record 37
 
         1 SID    I  Load set identification number

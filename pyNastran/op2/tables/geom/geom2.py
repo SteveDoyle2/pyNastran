@@ -435,7 +435,7 @@ class GEOM2(GeomCommon):
         }
 
     def _read_cquadx_9508(self, data: bytes, n: int) -> int:
-        """
+        r"""
         ints    = (1, 1, [1, 2,  8,  7], [0, 0, 0, 0, 0, 0, -1],
                    2, 1, [2, 3,  9,  8], [0, 0, 0, 0, 0, 0, -1],
                    3, 1, [3, 4, 10,  9], [0, 0, 0, 0, 0, 0, -1],
@@ -2688,7 +2688,7 @@ class GEOM2(GeomCommon):
         return n
 
     def _run_cquad4_msc(self, element: CQUAD4, data: bytes, n: int) -> Tuple[int, Any]:
-        """
+        r"""
         buggy MSC 2018.2 version
 
         #TODO is this right?  What's with the intermediate zeros?
@@ -3256,7 +3256,7 @@ class GEOM2(GeomCommon):
         return n, elements
 
     def _read_ctria3_56(self, card_obj, data: bytes, n: int) -> int:
-        """
+        r"""
         CTRIA3(5959,59,282) - the marker for Record 94
             eid  pid n1     n2     n3     theta?      ?  ?  ?  ?
             201, 35, 50000, 50001, 50101, 19.2, 0, 0, 0, 0, 0.2, 0.2, 0.2, -1,

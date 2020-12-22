@@ -194,7 +194,7 @@ class GEOM3(GeomCommon):
         return n
 
     def _read_tempb3(self, data: bytes, n: int) -> int:
-        """
+        r"""
         $TEMPB3 SID     EID     TA      TB      TC      TPYA    TPZA    TPYB
         $       TPZB    TPYC    TPZC    TCA     TDA     TEA     TFA     TCB
         $       TDB     TEB     TFB     TCC     TDC     TEC     TFC

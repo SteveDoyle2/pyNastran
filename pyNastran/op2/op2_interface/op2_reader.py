@@ -936,7 +936,7 @@ class OP2Reader:
         #sss
 
     def _read_cmodext_helper(self, marker_orig, debug=False) -> Tuple[int, bool]:
-        """
+        r"""
 
         64-bit:
           C:\MSC.Software\simcenter_nastran_2019.2\tpl_post2\mbdrecvr_c_0.op2
@@ -2749,7 +2749,7 @@ class OP2Reader:
         marker = self.get_marker1(rewind=False, macro_rewind=False)
 
     def read_xcasecc(self):
-        """
+        r"""
         Poorly reads the XCASECC table.
         It's somehow aero related...
 
@@ -4116,7 +4116,7 @@ class OP2Reader:
             raise NotImplementedError(code)
 
     def _read_matpool_mfluid(self, op2: OP2, data, utable_name: str, debug: bool=False):
-        """
+        r"""
         Word Name Type Description
         1 SID       I
         2 CID       I
@@ -4155,7 +4155,7 @@ class OP2Reader:
         self.elist[elist_id] = element_ids
 
     def _read_matpool_bndfl(self, op2: OP2, data: bytes, utable_name: str, debug: bool=False):
-        """
+        r"""
         Word Name Type Description
         1 CSF      I
         2 G        RS

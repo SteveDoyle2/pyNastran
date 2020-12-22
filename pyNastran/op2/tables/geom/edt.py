@@ -622,7 +622,7 @@ class EDT(GeomCommon):
         return n
 
     def _read_paero1(self, data: bytes, n: int) -> int:
-        """
+        r"""
         (3102, 31, 264)
         MSC 2018.2
 

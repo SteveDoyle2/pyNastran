@@ -29,7 +29,13 @@ def polar_to_real_imag(mag, phase):
 
     """
     rtheta = np.radians(phase)
-    return mag * (np.cos(rtheta) + 1.j * np.sin(rtheta))
+    try:
+        out = mag * (np.cos(rtheta) + 1.j * np.sin(rtheta))
+    except FloatingPointError:
+        phase2 = np.asarray(phase, dtype='float64')
+        rtheta = np.radians(phase2)
+        out = mag * (np.cos(rtheta) + 1.j * np.sin(rtheta))
+    return out
     #return rect(mag, radians(phase))
 
 def real_imag_to_mag_phase(real_imag):

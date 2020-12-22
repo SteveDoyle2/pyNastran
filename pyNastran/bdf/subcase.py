@@ -1152,7 +1152,8 @@ class Subcase:
             assert nparams > 0, f'No subcase parameters are defined for isubcase={self.id:d}...'
         return msg
 
-def _load_hdf5_param(group, key: str, encoding: str):
+def _load_hdf5_param(group, key: str, encoding: str) -> Tuple[str, List[str], str]:
+    """('ALL', ['SORT2'], 'STRESS-type')"""
     import h5py
     from pyNastran.utils.dict_to_h5py import _cast
     #print('-----------------------------------------')
@@ -1169,6 +1170,8 @@ def _load_hdf5_param(group, key: str, encoding: str):
         options = _cast(sub_group['options'])
         if isinstance(options, (integer_types, str)):
             pass
+        elif isinstance(options, bytes):
+            options = options.decode(encoding)
         else:
             options = options.tolist()
             options = [

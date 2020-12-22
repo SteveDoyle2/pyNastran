@@ -2,9 +2,10 @@
 import os
 import unittest
 
+from cpylog.test_log import TestLog
 from pyNastran.utils.log import make_log
 
-class TestLog(unittest.TestCase):
+class TestMakeLog(unittest.TestCase):
 
     def test_make_log(self):
         """tests make_log"""
