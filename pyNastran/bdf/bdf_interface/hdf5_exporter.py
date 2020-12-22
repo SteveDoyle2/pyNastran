@@ -6,7 +6,7 @@ from io import StringIO
 import numpy as np
 
 from pyNastran.utils.dict_to_h5py import (
-    _add_list_tuple, integer_types, float_types, string_types)
+    add_list_tuple, integer_types, float_types)
 from pyNastran.bdf.bdf_interface.add_card import CARD_MAP
 from pyNastran.utils import object_attributes
 
@@ -406,16 +406,20 @@ def _export_minor_attributes(hdf5_file, model: BDF, encoding):
 
             #elif isinstance(value, bool):
                 #print('bool: %s %s' % (key, value))
-            elif isinstance(value, (integer_types, float_types, string_types, np.ndarray)):
+            elif isinstance(value, (integer_types, float_types, str, np.ndarray)):
                 try:
                     scalar_group.create_dataset(key, data=value)
                 except TypeError:  # pragma: no cover
                     print('key=%r value=%s type=%s' % (key, str(value), type(value)))
                     raise
             #elif isinstance(value, set):
-                #_add_list_tuple(hdf5_file, key, value, 'set', model.log)
+                #add_list_tuple(hdf5_file, key, value, 'set', model.log)
             elif isinstance(value, StringIO):
                 pass
+            elif isinstance(value, bytes):
+                assert len(value) > 0, key
+                value_bytes = np.void(value)
+                scalar_group.create_dataset(key, data=value_bytes)
             else:
                 #print(key, value)
                 scalar_group.create_dataset(key, data=value)
@@ -509,9 +513,11 @@ def _export_list_keys(model: BDF, hdf5_file, list_keys):
         #indices = list(range(len(list_keys)))
         #group.create_dataset('keys', data=keys)
 
-        if isinstance(list_obj[0], (int, float, string_types)):
+        if isinstance(list_obj[0], bytes):
+            raise RuntimeError(list_obj[0])
+        if isinstance(list_obj[0], (int, float, str)):
             try:
-                _add_list_tuple(hdf5_file, attr, list_obj, Type, model.log)
+                add_list_tuple(hdf5_file, attr, list_obj, Type, model.log)
             except TypeError:  # pragma: no cover
                 print(list_obj)
                 raise
@@ -521,7 +527,7 @@ def _export_list_keys(model: BDF, hdf5_file, list_keys):
             #for keyi, valuei in enumerate(list_obj):
                 ##sub_group = hdf5_file.create_group(str(keyi))
                 ##group
-                #_add_list_tuple(group, str(keyi), valuei, Type, model.log)
+                #add_list_tuple(group, str(keyi), valuei, Type, model.log)
         else:
             raise NotImplementedError(type(list_obj[0]))
         #_hdf5_export_object_dict(group, model, attr, list_obj, indices, encoding)
@@ -551,7 +557,7 @@ def _export_list_obj_keys(model: BDF, hdf5_file, list_obj_keys, encoding):
         indices = list(range(len(list_obj)))
         #group.create_dataset('keys', data=indices)
         #try:
-            #_add_list_tuple(hdf5_file, attr, list_obj, Type, model.log)
+            #add_list_tuple(hdf5_file, attr, list_obj, Type, model.log)
         #except TypeError:
             #print(list_obj)
             #raise
@@ -650,7 +656,7 @@ def _h5_export_class(sub_group: Any, model: BDF, key: str, value: Any,
                     is_none = True
                     #break
                 is_nones.append(is_none)
-        elif isinstance(class_value, (integer_types, float_types, string_types, bool)):
+        elif isinstance(class_value, (integer_types, float_types, str, bool)):
             is_nones = [False]
         #elif isinstance(class_value, dict) and len(class_value) == 0:
             #pass
@@ -731,7 +737,7 @@ def _export_list(h5_group, attr, name, values, encoding):
         #if isinstance(values[0], list):
             #return _export_lists(h5_group, attr, name, values, encoding)
 
-        if not isinstance(values[0], (integer_types, float_types, string_types)):
+        if not isinstance(values[0], (integer_types, float_types, str)):
             raise TypeError('not a base type; %s; %s' % (attr, values2))
         try:
             h5_group.create_dataset(name, data=values2)
@@ -876,7 +882,7 @@ def _hdf5_export_object_dict(group, model: BDF, name, obj_dict, keys, encoding):
                            for key in list(keys_write)])
 
     sub_group = group.create_group('values')
-    assert isinstance(name, string_types), 'name=%s; type=%s' % (name, type(name))
+    assert isinstance(name, str), 'name=%s; type=%s' % (name, type(name))
 
     for key in keys:
         value = obj_dict[key]

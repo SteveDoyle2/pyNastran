@@ -147,6 +147,8 @@ def _cast_str(h5_result_attr, encoding: str) -> List[str]:
 
     if len(h5_result_attr.shape) == 0:
         out = np.array(h5_result_attr).tolist()
+        if isinstance(out, bytes):
+            out = out.decode(encoding)
         return out
         #raise NotImplementedError(h5_result_attr.dtype)
     else:
@@ -158,7 +160,7 @@ def _cast_str(h5_result_attr, encoding: str) -> List[str]:
 # the data fro these keys must be strings
 STRING_KEYS = [
     'result_name', 'superelement_adaptivity_index', 'element_name',
-    'label']
+    'label', 'pval_step', 'title']
 
 TABLE_OBJ_MAP = {
     'displacements' : (RealDisplacementArray, ComplexDisplacementArray),
@@ -1185,7 +1187,7 @@ def _apply_hdf5_attributes_to_object(obj, h5_result, result_name, data_code, str
                 print(f'obj = {obj}')
                 print(f'key={key!r} datai={datai!r}')
                 raise
-            assert not isinstance(datai, bytes), f'key={key!r} data={data}'
+            assert not isinstance(datai, bytes), f'key={key!r} data={datai}'
     return obj
 
 def _get_obj_class(objs, class_name, result_name, unused_is_real,

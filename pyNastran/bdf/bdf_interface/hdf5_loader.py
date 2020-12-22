@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING
 import numpy as np
 import h5py
 
-from pyNastran.utils.dict_to_h5py import _cast, _cast_string
+from pyNastran.utils.dict_to_h5py import _cast, cast_string, cast_strings
 from pyNastran.bdf.bdf_interface.encoding import decode_lines
 from pyNastran.bdf.case_control_deck import CaseControlDeck
 from pyNastran.bdf.bdf_interface.add_card import CARD_MAP
@@ -40,7 +40,7 @@ def load_bdf_from_hdf5_file(h5_file, model):
         the BDF file to put the data into
 
     """
-    encoding = _cast_string(h5_file['minor_attributes']['encoding'], 'latin1')
+    encoding = cast_string(h5_file['minor_attributes']['encoding'], 'latin1')
     assert isinstance(encoding, str), f'encoding={encoding!r}; type={type(encoding)}'
     keys = h5_file.keys()
 
@@ -182,7 +182,7 @@ def load_bdf_from_hdf5_file(h5_file, model):
             for keyi in values.keys():
                 ikey = int(keyi)
                 class_obj_hdf5 = values[keyi]
-                card_type = _cast(class_obj_hdf5['type'])
+                card_type = cast_string(class_obj_hdf5['type'], encoding)
                 class_instance = _load_from_class(class_obj_hdf5, card_type, encoding)
                 lst[ikey] = class_instance
             _put_keys_values_into_list(model, key, keys, lst)
@@ -200,7 +200,7 @@ def load_bdf_from_hdf5_file(h5_file, model):
             #model.log.debug('  scalar_obj')
             keys = list(group.keys())
             keys.remove('type')
-            card_type = _cast(group['type'])
+            card_type = cast_string(group['type'], encoding)
             class_instance = _load_from_class(group, card_type, encoding)
             write_card(class_instance)
             setattr(model, key, class_instance)
@@ -233,7 +233,7 @@ def _load_minor_attributes(unused_key: str, group, model: BDF,
     keys_attrs = group.keys()
     list_attrs = {'case_control_lines', 'executive_control_lines',
                   'system_command_lines', 'active_filenames'}
-    str_attrs = {'nastran_format'}
+    str_attrs = {'nastran_format', 'include_dir'}
     #skip_attrs = []
     for keyi in keys_attrs:
         sub_group = group[keyi]
@@ -287,10 +287,10 @@ def _load_minor_attributes(unused_key: str, group, model: BDF,
                                is_list=True, has_none=True)
             continue
         elif keyi in str_attrs:
-            value = _cast_string(sub_group, encoding)
+            value = cast_string(sub_group, encoding)
             #print(f'adding key={keyi!r} value={value!r}')
             assert isinstance(value, str), value
-            model.nastran_format = value
+
             try:
                 setattr(model, keyi, value)
             except RuntimeError:  # pragma: no cover
@@ -1112,11 +1112,6 @@ def hdf5_load_dconstrs(model, group, encoding):
 
         model.card_count[card_type] = len(keys)
 
-def _cast_strings(group, encoding):
-    bytes_list = _cast(group).tolist()
-    str_list = [bytesi.decode(encoding) for bytesi in bytes_list]
-    return str_list
-
 def hdf5_load_dti(model, group, encoding):
     """loads the dti"""
     group_keys = group.keys()
@@ -1124,7 +1119,7 @@ def hdf5_load_dti(model, group, encoding):
         #model.log.warning('skipping loading %s' % group)
         raise RuntimeError('error loading %s' % group)
 
-    names = _cast_strings(group['keys'], encoding)
+    names = cast_strings(group['keys'], encoding)
     values = group['values']
     for name in names:
         sub_group = values[name]
@@ -1431,7 +1426,7 @@ def hdf5_load_properties(model, properties_group, encoding):
     for prop in model.properties.values():
         write_card(prop)
 
-def _put_keys_values_into_dict(model, name, keys, values, cast_int_keys=True):
+def _put_keys_values_into_dict(model, name: str, keys, values, cast_int_keys: bool=True) -> None:
     """add something like an element to a dictionary"""
     for value in values:
         write_card(value)
@@ -1497,7 +1492,9 @@ def _put_keys_values_into_list(model, name, keys, values):
         card_count[Type] += 1
         model._type_to_id_map[Type].append(key)
 
-def _put_keys_values_into_dict_list(model, name, idi, keys, values):
+def _put_keys_values_into_dict_list(model: Any, name: str, idi: int,
+                                    keys: np.ndarray,
+                                    values: List[Any]):
     """add someting like an SPC into a dictionary that has a list"""
     for value in values:
         #print(value)
@@ -1583,6 +1580,9 @@ def _load_class(key: str, value, card_type: str, encoding: str):
 
         if isinstance(valuei, np.ndarray):
             valuei = valuei.tolist()
+            if isinstance(valuei, list) and isinstance(valuei[0], bytes):
+                valuei = [valueii.decode(encoding) for valueii in valuei]
+
         elif isinstance(valuei, bytes):
             raise TypeError(f'class={card_type} key={key_to_cast} value={valuei} must be a string (not bytes)')
 
@@ -1669,6 +1669,7 @@ def to_list_int_float_str(valueii: Any, encoding: str) -> Any:
 def _load_from_class(value, card_type: str, encoding: str):
     """generic loader that only requires an ``_init_from_empty`` method"""
     keys_to_read = list(value.keys())
+    assert isinstance(card_type, str), card_type
     class_obj = CARD_MAP[card_type]  # see add_card.py ~line 200
     if hasattr(class_obj, '_init_from_empty'):
         class_instance = class_obj._init_from_empty()
