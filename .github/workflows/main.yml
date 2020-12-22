@@ -109,7 +109,7 @@ jobs:
         #       'old_basic', 'old_pyside_gui', 'old_pyqt_gui'.
         #
       - name: Install latest packages - ${{ matrix.mode }}
-        if: ${{ matrix.mode == 'latest' || matrix.mode == 'latest_pyside_gui' || matrix.mode == 'latest_pyqt_gui' || }}
+        if: ${{ matrix.mode == 'latest' || matrix.mode == 'latest_pyside_gui' || matrix.mode == 'latest_pyqt_gui' }}
         #if: matrix.mode == 'latest'
         run: |
           pip install numpy scipy pandas>=0.25 h5py matplotlib
