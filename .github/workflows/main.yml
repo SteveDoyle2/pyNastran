@@ -42,8 +42,8 @@ jobs:
 
     #--------------------------------------------------------------------------------------------------
     # latest versions of package
-    - name: "Python  ${{ matrix.python-version }} (PyQt5)"
-      python-version: [3.7, 3.8, 3.9]
+    #- name: "Python  ${{ matrix.python-version }} (PyQt5)"
+      #python-version: [3.7, 3.8, 3.9]
       #env:
       #- COVERAGE_RUN='coverage run'
       #- CODECOV='codecov'
@@ -55,6 +55,7 @@ jobs:
     #--------------------------------------------------------------------------------------------------
 
     # Steps represent a sequence of tasks that will be executed as part of the job
+    env: ${{ matrix.env }}
     steps:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - uses: actions/checkout@v2
