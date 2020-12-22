@@ -32,9 +32,10 @@ def polar_to_real_imag(mag, phase):
     try:
         out = mag * (np.cos(rtheta) + 1.j * np.sin(rtheta))
     except FloatingPointError:
+        assert phase.dtype.name == 'float32', phase
         phase2 = np.asarray(phase, dtype='float64')
         rtheta = np.radians(phase2)
-        out = mag * (np.cos(rtheta) + 1.j * np.sin(rtheta)).asdtype('complex64')
+        out = np.asarray(mag * (np.cos(rtheta) + 1.j * np.sin(rtheta)), dtype='complex64')
     return out
     #return rect(mag, radians(phase))
 
