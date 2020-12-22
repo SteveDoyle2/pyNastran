@@ -2,7 +2,7 @@
 
 name: CI
 
-# Controls when the action will run. 
+# Controls when the action will run.
 on: [push]
 #on:
   # Triggers the workflow on push or pull request events but only for the master branch
@@ -23,10 +23,15 @@ jobs:
     strategy:
       matrix:
          python-version: [3.7, 3.8, 3.9]
+         os: [ubuntu-latest, macos-latest, windows-latest]
+         mode: ['latest', 'latest_basic']
+                #'latest_pyside_gui', 'latest_pyqt_gui',
+                # 'old', 'old_basic', 'old_pyside_gui', 'old_pyqt_gui'.
          #include:
          #- node: 13
          #  os: ubuntu-18.04
          #  experimental: true
+      fail-fast: false
 #strategy:
     #  matrix:
           #https://github.com/zopyx/xmldirector.connector/blob/master/.travis.yml#L15-L54
@@ -40,8 +45,8 @@ jobs:
           # CODECOV='codecov'
           # NUMPY='numpy scipy matplotlib h5py vtk pyqt5 pandas>=0.25 imageio pillow>5.2,!=7.1.0'
           # LIB='libblas-dev liblapack-dev'
-        
-          
+
+
 
     #--------------------------------------------------------------------------------------------------
     # latest versions of package
@@ -64,14 +69,14 @@ jobs:
       - uses: actions/checkout@v2
 
       # Runs a single command using the runners shell
-      - name: Run a one-line script
-        run: echo Hello, world!
+      #- name: Run a one-line script
+        #run: echo Hello, world!
 
       # Runs a set of commands using the runners shell
-      - name: Run a multi-line script
-        run: |
-          echo Add other actions to build,
-          echo test, and deploy your project.
+      #- name: Run a multi-line script
+        #run: |
+          #echo Add other actions to build,
+          #echo test, and deploy your project.
 
       - name: Print environment variables exposed by GitHub
         run: |
@@ -97,21 +102,79 @@ jobs:
          python -m pip install --upgrade pip
          pip install flake8
          #if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
-         python setup.py develop
+         pip list
 
-      - name: Run
+        #mode: ['latest', 'latest_basic', 'latest_pyside_gui', 'latest_pyqt_gui'
+        #       'old', 'old_basic']
+        #       'old_basic', 'old_pyside_gui', 'old_pyqt_gui'.
+        #
+      - name: Install latest packages - ${{ matrix.mode }}
+        if: ${{ matrix.mode == 'latest' || matrix.mode == 'latest_pyside_gui' || matrix.mode == 'latest_pyqt_gui' || }}
+        #if: matrix.mode == 'latest'
+        run: |
+          pip install numpy scipy pandas>=0.25 h5py matplotlib
+
+      - name: Install latest gui packages (PySide2)
+        if: matrix.mode == 'latest_pyside_gui'
+        run: |
+          pip install PySide2 vtk  imageio pillow>5.2,!=7.1.0
+
+      - name: Install latest gui packages (PyQt5)
+        if: matrix.mode == 'latest_pyqt_gui'
+        run: |
+          pip install PyQt5 vtk  imageio pillow>5.2,!=7.1.0
+
+      - name: Install latest basic packages
+        if: matrix.mode == 'latest_basic'
+        run: |
+          pip install numpy scipy
+#-----------------------------------------------------------------------------------
+# old
+      #- name: Install old packages (3.7)
+      #  if: ${{ matrix.mode == 'basic' || matrix.python-version == '3.7' || }}
+      #  run: |
+      #    pip install numpy==1.14.5 scipy==1.1 matplotlib==2.2 h5py vtk pyqt5 pandas<0.25 pillow>5.2,!=7.1.0'
+
+      #- name: Install old packages (3.8)
+      #  if: ${{ matrix.mode == 'basic' || matrix.python-version == '3.8' || }}
+      #  run: |
+      #    pip install numpy==1.14.5 scipy==1.1 matplotlib==2.2 h5py vtk pyqt5 pandas<0.25 pillow>5.2,!=7.1.0'
+
+      #- name: Install old packages (3.9)
+      #  if: ${{ matrix.mode == 'basic' || matrix.python-version == '3.9' || }}
+      #  run: |
+      #    pip install numpy==1.14.5 scipy==1.1 matplotlib==2.2 h5py vtk pyqt5 pandas<0.25 pillow>5.2,!=7.1.0'
+#-----------------------------------------------------------------------------------
+
+      - name: Install dependencies
+         python setup.py develop
+         pip list
+
+      - name: List dependencies
+        run: |
+         pip list
+
+      - name: Run No GUI
+        if: ${{ matrix.mode == 'latest' || matrix.mode == 'latest_basic' }}
         run: |
          #if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
          python pyNastran/all_tests_no_gui.py
+
+      - name: Run
+        if: ${{ 'latest_pyside_gui' || matrix.mode == 'latest_pyqt_gui' || }}
+        run: |
+         #if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+         python pyNastran/all_tests.py
+
 #--------------------------------------------------------------------------------------------------
 # https://docs.github.com/en/free-pro-team@latest/actions/guides/building-and-testing-python
 # name: Python package
-# 
+#
 # on: [push]
-# 
+#
 # jobs:
 #   build:
-# 
+#
 #     runs-on: ubuntu-latest
 #     strategy:
 #       matrix:
