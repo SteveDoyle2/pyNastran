@@ -1152,7 +1152,7 @@ class Subcase:
             assert nparams > 0, f'No subcase parameters are defined for isubcase={self.id:d}...'
         return msg
 
-def _load_hdf5_param(group, key, encoding):
+def _load_hdf5_param(group, key: str, encoding: str):
     import h5py
     from pyNastran.utils.dict_to_h5py import _cast
     #print('-----------------------------------------')
@@ -1180,6 +1180,8 @@ def _load_hdf5_param(group, key, encoding):
     param_type = None
     if 'param_type' in sub_group:
         param_type = _cast(sub_group['param_type'])
+        if isinstance(param_type, bytes):
+            param_type = param_type.decode(encoding)
         keys.remove('param_type')
 
     #print('param_type ', param_type)

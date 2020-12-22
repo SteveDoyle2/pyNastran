@@ -288,11 +288,17 @@ def _load_minor_attributes(unused_key: str, group, model: BDF,
             continue
         elif keyi in str_attrs:
             value = _cast_string(sub_group, encoding)
+            #print(f'adding key={keyi!r} value={value!r}')
+            assert isinstance(value, str), value
+            model.nastran_format = value
             try:
                 setattr(model, keyi, value)
+            except RuntimeError:  # pragma: no cover
+                model.log.error('cant set minor_attributes/%s as %s' % (keyi, value))
             except AttributeError:  # pragma: no cover
                 model.log.warning('cant set minor_attributes/%s as %s' % (keyi, value))
                 raise
+            continue
         elif keyi == 'is_enddata':
             model.card_count['ENDDATA'] = 1
             continue
@@ -1577,6 +1583,9 @@ def _load_class(key: str, value, card_type: str, encoding: str):
 
         if isinstance(valuei, np.ndarray):
             valuei = valuei.tolist()
+        elif isinstance(valuei, bytes):
+            raise TypeError(f'class={card_type} key={key_to_cast} value={valuei} must be a string (not bytes)')
+
         try:
             setattr(class_instance, key_to_cast, valuei)
             #print('  set %s to %s' % (key_to_cast, valuei))
@@ -1600,10 +1609,14 @@ def _get_casted_value(value, key_to_cast: str, encoding: str) -> Any:
     if isinstance(value_h5, h5py._hl.dataset.Dataset):
         valuei = _cast(value_h5)
         #print(key_to_cast, valuei, type(valuei))
+        if isinstance(valuei, bytes):
+            valuei = valuei.decode(encoding)
     else:
         h5_keys = list(value_h5.keys())
         if len(h5_keys) == 0:
             valuei = _cast(value_h5)
+            if isinstance(valuei, bytes):
+                valuei = valuei.decode(encoding)
         else:
             #print('h5_keys =', h5_keys)
             lst = []

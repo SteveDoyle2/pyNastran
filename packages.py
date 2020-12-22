@@ -10,6 +10,7 @@ import sys
 #  - 1.14: adds proper writing of np.savetxt for open file objects
 #          (used for unicode savetxt using with statement) in Python 3.6
 #  - 1.15: min for Python 3.7? I guess 1.14 is fine for a requirement...
+#  - 1.19.4 : buggy
 # scipy:
 #  - 0.18.1: fixed kdtree used by nodal equivalencing; min for Python 2.7
 #  - 0.19:   min for Python 3.6
@@ -24,12 +25,12 @@ import sys
 # the packages that change requirements based on python version
 REQS = {
     '3.7' : {
-        'numpy' : ('1.14', '>=1.14'),
+        'numpy' : ('1.14', '>=1.14,!=1.19.4'),
         'scipy' : ('1.0', '>=1.0'),
         'matplotlib' : ('2.2', '>=2.2'),  # 2.2.4 adds Python 3.7 support
     },
     '3.8' : {  # TODO: not updated
-        'numpy' : ('1.14', '>=1.14'),
+        'numpy' : ('1.14', '>=1.14,!=1.19.4'),
         'scipy' : ('1.0', '>=1.0'),
         'matplotlib' : ('2.2', '>=2.2'),  # 2.2.4 adds Python 3.7 support
     },
@@ -85,7 +86,11 @@ def get_package_requirements(is_gui=True, add_vtk_qt=True, python_version=None, 
         #'APPVEYOR' in os.environ or
         #'READTHEDOCS' in os.environ
     #)
-    is_travis = 'TRAVIS' in os.environ or 'TRAVIS_PYTHON_VERSION' in os.environ
+    is_travis = (
+        'TRAVIS' in os.environ or
+        'TRAVIS_PYTHON_VERSION' in os.environ or
+        'GITHUB_ACTOR' in os.environ
+    )
     #user_name = getpass.getuser()
     #user_name not in ['travis']
 
@@ -112,8 +117,17 @@ def get_package_requirements(is_gui=True, add_vtk_qt=True, python_version=None, 
             all_reqs['numpy'] = required_version
             install_requires.append('numpy %s' % required_version) # 1.18.1 used
         else:
+            found_numpy = False
             try:
                 import numpy as np
+                found_numpy = True
+            except RuntimeError:
+                raise RuntimeError(f'numpy=1.19.4 is buggy; install a different version')
+            except ImportError:
+                all_reqs['numpy'] = required_version
+                install_requires.append('numpy %s' % required_version) # 1.18.1 used
+
+            if found_numpy:
                 sver = np.lib.NumpyVersion(np.__version__)
                 iver = int_version('numpy', sver.version)
                 all_reqs['numpy'] = sver.version
@@ -126,9 +140,6 @@ def get_package_requirements(is_gui=True, add_vtk_qt=True, python_version=None, 
                     install_requires.append('numpy %s' % required_version)
                     all_reqs['numpy'] = version_check
                     install_requires.append('numpy %s' % required_version)
-            except ImportError:
-                all_reqs['numpy'] = required_version
-                install_requires.append('numpy %s' % required_version) # 1.18.1 used
 
     if is_rtd:
         install_requires.append('scipy')

@@ -492,5 +492,5 @@ def _cast_string(h5_result_attr, encoding: str) -> Optional[str]:
         out_str = out.decode(encoding)
     else:  # pragma: no cover
         raise NotImplementedError(f'dtype={h5_result_attr.dtype}; out={out!r}')
-
+    #print(f'name={h5_result_attr.name} out={out_str!r} type={type(out_str)}')
     return out_str

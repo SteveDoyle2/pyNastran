@@ -1054,6 +1054,7 @@ class BDFAttributes:
 
     @nastran_format.setter
     def nastran_format(self, nastran_format: str) -> None:
+        assert isinstance(nastran_format, str), nastran_format
         fmt_lower = nastran_format.lower().strip()
         if fmt_lower not in BDF_FORMATS:
             raise RuntimeError(nastran_format)
