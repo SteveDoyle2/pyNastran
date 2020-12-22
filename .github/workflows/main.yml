@@ -162,7 +162,7 @@ jobs:
          python pyNastran/all_tests_no_gui.py
 
       - name: Run
-        if: ${{ 'latest_pyside_gui' || matrix.mode == 'latest_pyqt_gui' || }}
+        if: ${{ 'latest_pyside_gui' || matrix.mode == 'latest_pyqt_gui' }}
         run: |
          #if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
          python pyNastran/all_tests.py
