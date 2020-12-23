@@ -23,8 +23,9 @@ jobs:
     strategy:
       matrix:
          python-version: [3.7, 3.8, 3.9]
-         os: [ubuntu-latest, macos-latest, windows-latest]
-         mode: ['latest', 'latest_basic']
+         os: [ubuntu-latest]
+         # , macos-latest, windows-latest
+         mode: ['latest', 'latest_basic', 'old']
                 #'latest_pyside_gui', 'latest_pyqt_gui',
                 # 'old', 'old_basic', 'old_pyside_gui', 'old_pyqt_gui'.
          #include:
@@ -117,12 +118,12 @@ jobs:
       - name: Install latest gui packages (PySide2)
         if: matrix.mode == 'latest_pyside_gui'
         run: |
-          pip install PySide2 vtk  imageio pillow>5.2,!=7.1.0
+          pip install PySide2 vtk imageio pillow>5.2,!=7.1.0
 
       - name: Install latest gui packages (PyQt5)
         if: matrix.mode == 'latest_pyqt_gui'
         run: |
-          pip install PyQt5 vtk  imageio pillow>5.2,!=7.1.0
+          pip install PyQt5 vtk imageio pillow>5.2,!=7.1.0
 
       - name: Install latest basic packages
         if: matrix.mode == 'latest_basic'
@@ -130,41 +131,40 @@ jobs:
           pip install numpy scipy
 #-----------------------------------------------------------------------------------
 # old
-      #- name: Install old packages (3.7)
-      #  if: ${{ matrix.mode == 'basic' || matrix.python-version == '3.7' || }}
-      #  run: |
-      #    pip install numpy==1.14.5 scipy==1.1 matplotlib==2.2 h5py vtk pyqt5 pandas<0.25 pillow>5.2,!=7.1.0'
+      - name: Install old packages (3.7)
+        if: ${{ matrix.mode == 'old' && matrix.python-version == '3.7' }}
+        run: |
+          pip install numpy==1.14.5 scipy==1.1 matplotlib==2.2 h5py==2.8.0 pandas<0.25 pillow>5.2,!=7.1.0'
 
-      #- name: Install old packages (3.8)
-      #  if: ${{ matrix.mode == 'basic' || matrix.python-version == '3.8' || }}
-      #  run: |
-      #    pip install numpy==1.14.5 scipy==1.1 matplotlib==2.2 h5py vtk pyqt5 pandas<0.25 pillow>5.2,!=7.1.0'
+      - name: Install old packages (3.8)
+        if: ${{ matrix.mode == 'old' && matrix.python-version == '3.8' }}
+        run: |
+          pip install numpy==1.17.3 scipy==1.3.2 matplotlib==3.2.0 h5py==2.10.0 pandas==0.25.2 pillow>5.2,!=7.1.0'
 
-      #- name: Install old packages (3.9)
-      #  if: ${{ matrix.mode == 'basic' || matrix.python-version == '3.9' || }}
-      #  run: |
-      #    pip install numpy==1.14.5 scipy==1.1 matplotlib==2.2 h5py vtk pyqt5 pandas<0.25 pillow>5.2,!=7.1.0'
+      - name: Install old packages (3.9)
+        if: ${{ matrix.mode == 'old' && matrix.python-version == '3.9' }}
+        run: |
+          pip install numpy==1.19.4 scipy==1.5.4 matplotlib==3.3.3 h5py==3.0.0 pandas==1.1.3 pillow>5.2,!=7.1.0'
 #-----------------------------------------------------------------------------------
 
       - name: Install dependencies
         run: |
          python setup.py develop
-         pip list
 
       - name: List dependencies
         run: |
          pip list
 
       - name: Run No GUI
-        if: ${{ matrix.mode == 'latest' || matrix.mode == 'latest_basic' }}
+        if: ${{ matrix.mode == 'latest' || matrix.mode == 'latest_basic'  || matrix.mode == 'old' }}
         run: |
          #if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
          #python pyNastran/all_tests_no_gui.py
          coverage run pyNastran/all_tests_no_gui.py
          codecov
 
-      - name: Run
-        if: ${{ 'latest_pyside_gui' || matrix.mode == 'latest_pyqt_gui' }}
+      - name: Run GUI
+        if: ${{ matrix.mode == 'latest_pyside_gui' || matrix.mode == 'latest_pyqt_gui' || matrix.mode == 'old_pyside_gui' || matrix.mode == 'old_pyqt_gui' }}
         run: |
          #if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
          #python pyNastran/all_tests.py
