@@ -1584,7 +1584,8 @@ class TestOP2(Tester):
             subcases=None, exclude=None, short_stats=False,
             compare=True, debug=False, binary_debug=False,
             quiet=True, stop_on_failure=True,
-            dev=False, build_pandas=True, log=log)
+            dev=False, build_pandas=True, log=log,
+            name='_02_geom')
         if IS_PANDAS:
             assert op2.displacements[1].data_frame is not None
 
@@ -1609,7 +1610,8 @@ class TestOP2(Tester):
             subcases=None, exclude=None, short_stats=False,
             compare=True, debug=False, binary_debug=False,
             quiet=True, stop_on_failure=True,
-            dev=False, build_pandas=True, log=log)
+            dev=False, build_pandas=True, log=log,
+            name='_01_geom')
         op2.write_f06(f06_filename)
         os.remove(f06_filename)
 

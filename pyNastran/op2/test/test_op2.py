@@ -138,7 +138,8 @@ def run_op2(op2_filename: str, make_geom: bool=False, combine: bool=True,
             binary_debug: bool=False, quiet: bool=False,
             stop_on_failure: bool=True,
             dev: bool=False, xref_safe: bool=False,
-            post: Any=None, load_as_h5: bool=False) -> Tuple[OP2, bool]:
+            post: Any=None, load_as_h5: bool=False,
+            name: str='') -> Tuple[OP2, bool]:
     """
     Runs an OP2
 
@@ -235,7 +236,7 @@ def run_op2(op2_filename: str, make_geom: bool=False, combine: bool=True,
     is_passed = False
 
     fname_base = os.path.splitext(op2_filename)[0]
-    bdf_filename = fname_base + '.test_op2.bdf'
+    bdf_filename =  f'{fname_base}.test_op2{name}.bdf'
 
     if isinstance(subcases, str):
         if '_' in subcases:
@@ -310,14 +311,14 @@ def run_op2(op2_filename: str, make_geom: bool=False, combine: bool=True,
 
         if IS_HDF5 and write_hdf5:
             from pyNastran.op2.op2_interface.hdf5_interface import load_op2_from_hdf5_filename
-            h5_filename = model + '.test_op2.h5'
+            h5_filename = f'{model}.test_op2{name}.h5'
             op2.export_hdf5_filename(h5_filename)
             load_op2_from_hdf5_filename(h5_filename, log=op2.log)
             if delete_hdf5:
                 remove_file(h5_filename)
         if write_f06:
             for is_sort2i in sort_methods:
-                f06_filename = model + '.test_op2.f06'
+                f06_filename = f'{model}.test_op2{name}.f06'
                 op2.write_f06(f06_filename, is_mag_phase=is_mag_phase,
                               is_sort1=not is_sort2i, quiet=quiet, repr_check=True)
             if delete_f06:
@@ -331,7 +332,7 @@ def run_op2(op2_filename: str, make_geom: bool=False, combine: bool=True,
 
         if write_op2:
             model = os.path.splitext(op2_filename)[0]
-            op2_filename2 = model + '.test_op2.op2'
+            op2_filename2 = f'{model}.test_op2{name}.op2'
             total_case_count = op2.write_op2(op2_filename2,
                                              #is_mag_phase=is_mag_phase,
                                              endian=b'<')
