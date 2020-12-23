@@ -117,14 +117,15 @@ class ResultSet:
             #resulti = r'\w' + result if not result.startswith('*') else result  # old
 
             if '\b' in result:
+                # the user has gotten too fancy, so we'll let them do exactly what they want
                 resulti = result
                 #print(f'A: resulti = {resulti}')
             else:
                 if '*' not in result:
-                    resulti = f'\w{result}\w'
+                    resulti = fr'\w{result}\w'
                     #print(f'B: resulti = {resulti!r}')
                 else:
-                    wdot = '\w.'  # \w or \.
+                    wdot = r'\w.'  # \w or \.
                     if result.startswith('*') and result.endswith('*'):
                         #wdot = '\w'  # works
                         resulti = f'{wdot}{result}'

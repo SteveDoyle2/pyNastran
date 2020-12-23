@@ -1235,10 +1235,13 @@ def _get_obj_class(objs, class_name, result_name, unused_is_real,
 def export_op2_to_hdf5_filename(hdf5_filename: str, op2_model: OP2) -> None:
     """exports an OP2 object to an HDF5 file"""
     #no_sort2_classes = ['RealEigenvalues', 'ComplexEigenvalues', 'BucklingEigenvalues']
-
-    with h5py.File(hdf5_filename, 'w') as hdf5_file:
-        op2_model.log.info(f'starting export_op2_to_hdf5_file of {hdf5_filename!r}')
-        export_op2_to_hdf5_file(hdf5_file, op2_model)
+    try:
+        with h5py.File(hdf5_filename, 'w') as hdf5_file:
+            op2_model.log.info(f'starting export_op2_to_hdf5_file of {hdf5_filename!r}')
+            export_op2_to_hdf5_file(hdf5_file, op2_model)
+    except OSError:
+        op2_model.log.error(f'failed to export {hdf5_filename!r}')
+        raise
 
 def export_op2_to_hdf5_file(hdf5_file, op2_model: OP2) -> None:
     """exports an OP2 object to an HDF5 file object"""

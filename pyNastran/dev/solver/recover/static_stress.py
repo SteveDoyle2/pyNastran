@@ -1,4 +1,4 @@
-"""
+r"""
 Hooke law:
    {\sigma^0} = [D][B]{u_0}
 

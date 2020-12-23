@@ -2,7 +2,7 @@ import unittest
 from pyNastran.op2.op2_interface.result_set import ResultSet
 
 
-class TestResultsSet(unittest.TestCase):
+class TestResultSet(unittest.TestCase):
 
     def test_result_set_print(self):
         allowed_results = ['a', 'b', 'c']
