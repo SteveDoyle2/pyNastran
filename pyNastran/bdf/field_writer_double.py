@@ -2,6 +2,7 @@
 Defines functions for double precision 16 character field writing.
 """
 import sys
+import warnings
 from typing import List, Union
 from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.bdf.cards.utils import wipe_empty_fields
@@ -14,11 +15,11 @@ def print_scientific_double(value: float) -> str:
     Double Precision Scientific Notation:  5.0D+1
     """
     if value < 0:
-        Format = "%16.9e"
+        fmt = "%16.9e"
     else:
-        Format = "%16.10e"
+        fmt = "%16.10e"
 
-    svalue = Format % value
+    svalue = fmt % value
     field = svalue.replace('e', 'D')
 
     if field == '-0.0000000000D+00':
@@ -96,7 +97,7 @@ def print_card_double(fields: List[Union[int, float, str, None]], wipe_fields: b
     try:
         out = '%-8s' % (fields[0] + '*')
     except:
-        print("ERROR!  fields=%s" % fields)
+        warnings.warn("ERROR!  fields=%s" % fields)
         sys.stdout.flush()
         raise
 
@@ -105,7 +106,7 @@ def print_card_double(fields: List[Union[int, float, str, None]], wipe_fields: b
         try:
             out += print_field_double(field)
         except:
-            print("bad fields = %s" % fields)
+            warnings.warn("bad fields = %s" % fields)
             raise
         if i % 4 == 0:  # allow 1+4 fields per line
             out = out.rstrip(' ')

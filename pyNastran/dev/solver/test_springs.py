@@ -813,7 +813,7 @@ class TestShell(unittest.TestCase):
     """tests the shells"""
     def test_cquad4_bad_normal(self):
         """test that the code crashes with a bad normal"""
-        model = BDF(debug=False, log=None, mode='msc')
+        model = BDF(debug=None, log=None, mode='msc')
         model.bdf_filename = 'cquad4_bad_normal.bdf'
         mid = 3
         model.add_grid(1, [0., 0., 0.])
@@ -853,7 +853,7 @@ class TestShell(unittest.TestCase):
 
         The Jacobian is defined between [-1, 1]
         """
-        model = BDF(debug=False, log=None, mode='msc')
+        model = BDF(debug=None, log=None, mode='msc')
         model.bdf_filename = 'cquad4_bad_jacobian.bdf'
         mid = 3
         model.add_grid(1, [0., 0., 0.])
@@ -887,7 +887,7 @@ class TestShell(unittest.TestCase):
 
     def test_cquad4_pshell_mat1(self):
         """Tests a CQUAD4/PSHELL/MAT1"""
-        model = BDF(debug=True, log=None, mode='msc')
+        model = BDF(debug=None, log=None, mode='msc')
         model.bdf_filename = 'cquad4_pshell_mat1.bdf'
         model.add_grid(1, [0., 0., 0., ])
         model.add_grid(2, [1., 0., 0., ])
@@ -955,7 +955,7 @@ class TestShell(unittest.TestCase):
         # 8     6
         # |     |
         # 1--5--2
-        model = BDF(debug=True, log=None, mode='msc')
+        model = BDF(debug=None, log=None, mode='msc')
         model.bdf_filename = 'cquad8_pshell_mat1.bdf'
         model.add_grid(1, [0., 0., 0.])
         model.add_grid(2, [1., 0., 0.])

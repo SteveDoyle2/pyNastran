@@ -1,5 +1,6 @@
 """Defines functions for single precision 8 character field writing."""
 import sys
+import warnings
 from typing import List, Union, Any
 from numpy import float32, isnan
 
@@ -283,7 +284,7 @@ def print_card_8(fields: List[Union[int, float, str, None]]) -> str:
     try:
         out = '%-8s' % fields[0]
     except:
-        print("ERROR!  fields=%s" % fields)
+        warnings.warn("ERROR!  fields=%s" % fields)
         sys.stdout.flush()
         raise
 
@@ -292,7 +293,7 @@ def print_card_8(fields: List[Union[int, float, str, None]]) -> str:
         try:
             out += print_field_8(field)
         except:
-            print("bad fields = %s" % fields)
+            warnings.warn("bad fields = %s" % fields)
             raise
         if i % 8 == 0:  # allow 1+8 fields per line
             out = out.rstrip(' ')
@@ -326,7 +327,7 @@ def print_int_card(fields: List[Union[int]]) -> str:
     try:
         out = '%-8s' % fields[0]
     except:
-        print("ERROR!  fields=%s" % fields)
+        warnings.warn("ERROR!  fields=%s" % fields)
         sys.stdout.flush()
         raise
 
@@ -335,7 +336,7 @@ def print_int_card(fields: List[Union[int]]) -> str:
         try:
             out += "%8i" % field  # balks if you have None or string fields
         except:
-            print("bad fields = %s" % fields)
+            warnings.warn("bad fields = %s" % fields)
             raise
         if i % 8 == 0:  # allow 1+8 fields per line
             out = out.rstrip(' ')

@@ -110,14 +110,19 @@ def main():
              and '.test_bdfv.' not in fname
              and 'tecplot' not in fname
              and os.path.basename(fname) not in skip_files]
+
+    keywords = 'scr=yes old=no news=no notify=no'
     for fname in files:
         #print(fname)
-        fname2 = update_with_post(fname, export_dir)
+        try:
+            fname2 = update_with_post(fname, export_dir)
+        except Exception as e:
+            print(str(e))
+            continue
         if fname2 is None:
             continue
         if not RUN_NASTRAN:
             continue
-        keywords = 'scr=yes old=no news=no notify=no'
         run_nastran(fname2, nastran_cmd=NASTRAN_EXE, keywords=keywords, run=True, run_in_bdf_dir=True)
 
 def load_lines(fname):
@@ -131,7 +136,7 @@ def load_lines(fname):
             continue
     return lines
 
-def update_with_post(fname, dirname):
+def update_with_post(fname: str, dirname: str) -> str:
     #print('-'*40)
     print('fname =', fname)
     basename = os.path.basename(fname)
@@ -245,7 +250,11 @@ def update_with_post(fname, dirname):
     #for line in lines2:
         #print(line)
     with open(bdf_name2, 'w') as bdf_file:
-        bdf_file.writelines(lines2)
+        try:
+            bdf_file.writelines(lines2)
+        except UnicodeEncodeError:
+            # just run the original file
+            return fname
     #sss
     if not RUN_NASTRAN:
         return None

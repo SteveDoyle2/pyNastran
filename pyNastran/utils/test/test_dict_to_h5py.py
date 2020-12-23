@@ -3,7 +3,7 @@
 import os
 import unittest
 import numpy as np
-from cpylog import get_logger
+from cpylog import SimpleLogger
 
 try:
     import h5py  # pylint: disable=unused-import
@@ -21,7 +21,7 @@ class TestDictToH5(unittest.TestCase):
     @unittest.skipIf(not IS_H5PY, "No h5py")
     def test_dict_to_h5py(self):
         model = BDF()
-        log = get_logger(log=None, level='warning', encoding='utf-8')
+        log = SimpleLogger(level='warning', encoding='utf-8')
         obj = {
             'bdf' : model,
             'key' : 'value',

@@ -3,7 +3,7 @@ import warnings
 import unittest
 
 import numpy as np
-from cpylog import get_logger
+from cpylog import SimpleLogger
 
 import pyNastran
 from pyNastran.converters.aflr.aflr2.aflr2 import read_bedge
@@ -30,7 +30,7 @@ class TestBEdgeGUI(unittest.TestCase):
         bedge_filename = os.path.join(MODEL_PATH, 'm3.bedge')
 
         test = BEdge_GUI()
-        test.log = get_logger(log=None, level='warning', encoding='utf-8')
+        test.log = SimpleLogger(level='warning', encoding='utf-8')
         test.on_load_geometry(bedge_filename, geometry_format='bedge', raise_error=True)
         #test.load_bedge_geometry(bedge_filename)
 

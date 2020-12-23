@@ -3,6 +3,7 @@ import os
 import unittest
 
 import numpy as np
+from cpylog import SimpleLogger
 
 import pyNastran
 from pyNastran.bdf.bdf import read_bdf
@@ -77,6 +78,7 @@ class TestOP2Matrix(unittest.TestCase):
 
     def test_op2_dmi_01(self):
         """tests DMI matrix style"""
+        log = SimpleLogger(level='warning', encoding='utf-8')
         bdf_filename = os.path.join(MODEL_PATH, 'matrix', 'matrix.dat')
         op2_filename = os.path.join(MODEL_PATH, 'matrix', 'mymatrix.op2')
         matrices = {
@@ -86,7 +88,7 @@ class TestOP2Matrix(unittest.TestCase):
             'BTA' : False,
             'MYDOF' : True,
         }
-        model = read_bdf(bdf_filename, debug=False)
+        model = read_bdf(bdf_filename, log=log)
 
         dmi_a = model.dmis['A']
         assert dmi_a.shape == (4, 2), 'shape=%s' % (dmi_a.shape)
@@ -95,7 +97,7 @@ class TestOP2Matrix(unittest.TestCase):
         #print('model.dmi.A =\n%s' % dmi_a)
         #print('model.dmi.A =\n%s' % str(a))
         #return
-        op2 = OP2(debug=False)
+        op2 = OP2(log=log)
         op2.set_additional_matrices_to_read(matrices)
         try:
             op2.read_op2(op2_filename)

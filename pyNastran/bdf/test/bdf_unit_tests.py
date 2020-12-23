@@ -2,7 +2,7 @@ import os
 import unittest
 from io import StringIO
 from numpy import allclose, array
-from cpylog import get_logger
+from cpylog import SimpleLogger
 
 import pyNastran
 from pyNastran.utils import object_attributes, object_methods
@@ -37,14 +37,15 @@ class Tester(unittest.TestCase):
 class TestBDF(Tester):
 
     def test_bdf_test(self):
+        #log = SimpleLogger(level='warning', encoding='utf-8')
         filenames = [
             #os.path.join(MODEL_PATH, 'superelements', 'resvec23.bdf'),
             os.path.join(MODEL_PATH, 'elements', 'time_thermal_elements.bdf'),
         ]
-        run_lots_of_files(filenames, folder='', debug=False, xref=True, check=True, punch=False,
+        run_lots_of_files(filenames, folder='', debug=None, xref=True, check=True, punch=False,
                           nastran='', encoding=None, size=None, is_double=None, post=None,
                           sum_load=True, dev=True, crash_cards=None, pickle_obj=True,
-                          write_hdf5=True, quiet=False)
+                          write_hdf5=True, quiet=True)
 
 
     def test_write_path(self):
@@ -115,7 +116,7 @@ class TestBDF(Tester):
     def test_bdf_01(self):
         """checks solid_bending.dat"""
         bdf_filename = os.path.join(MODEL_PATH, 'solid_bending', 'solid_bending.bdf')
-        log = get_logger(log=None, level='error', encoding='utf-8')
+        log = SimpleLogger(level='error', encoding='utf-8')
         self.run_bdf('', bdf_filename, log=log)
         fem1, fem2, diff_cards = self.run_bdf('', bdf_filename, xref=True, log=log)
         diff_cards2 = list(set(diff_cards))
@@ -165,8 +166,9 @@ class TestBDF(Tester):
 
     def test_bdf_02(self):
         """checks plate_py.dat"""
+        log = SimpleLogger(level='warning', encoding='utf-8')
         bdf_filename = os.path.join(MODEL_PATH, 'plate_py', 'plate_py.dat')
-        self.run_bdf('', bdf_filename)
+        self.run_bdf('', bdf_filename, log=log)
         fem1, fem2, diff_cards = self.run_bdf('', bdf_filename, xref=True)
 
         etype_to_eids_pids_nids = fem1.get_elements_properties_nodes_by_element_type()
@@ -199,7 +201,7 @@ class TestBDF(Tester):
     def test_bdf_03(self):
         """checks cbush.dat"""
         bdf_filename = os.path.join(MODEL_PATH, 'unit', 'cbush', 'cbush.dat')
-        log = get_logger(log=None, level='error', encoding='utf-8')
+        log = SimpleLogger(level='error', encoding='utf-8')
         fem1, fem2, diff_cards = self.run_bdf('', bdf_filename, log=log)
 
         diff_cards2 = list(set(diff_cards))
@@ -221,8 +223,9 @@ class TestBDF(Tester):
 
     def test_bdf_04(self):
         """checks beam_modes.dat"""
+        log = SimpleLogger(level='warning', encoding='utf-8')
         bdf_filename = os.path.join(MODEL_PATH, 'beam_modes', 'beam_modes.dat')
-        fem1, fem2, diff_cards = self.run_bdf('', bdf_filename)
+        fem1, fem2, diff_cards = self.run_bdf('', bdf_filename, log=log)
         diff_cards2 = list(set(diff_cards))
         diff_cards2.sort()
         assert len(diff_cards2) == 0, diff_cards2
@@ -537,10 +540,11 @@ class TestBDF(Tester):
             raise AssertionError(msg)
 
         #os.remove(bdf_filename + '_out')
-        #self.run_bdf(folder, bdf_filename, xref=True) # PBEAML is not supported
+        #self.run_bdf(folder, bdf_filename, xref=True, log=log) # PBEAML is not supported
 
     def test_bdf_06(self):
         """checks bar3truss/vared_bar3.bdf"""
+        log = SimpleLogger(level='warning', encoding='utf-8')
         bdf_filename = os.path.join(MODEL_PATH, 'bar3truss', 'vared_bar3.bdf')
 
         dynamic_vars = {
@@ -554,7 +558,7 @@ class TestBDF(Tester):
             'rho': 0.01,
         }
         fem1, fem2, diff_cards = self.run_bdf(
-            '', bdf_filename, dynamic_vars=dynamic_vars)
+            '', bdf_filename, dynamic_vars=dynamic_vars, log=log)
         diff_cards2 = list(set(diff_cards))
         diff_cards2.sort()
         assert len(diff_cards2) == 0, diff_cards2
@@ -575,7 +579,7 @@ class TestBDF(Tester):
     def test_bdf_superelement_1(self):
         """checks resvec23.bdf"""
         bdf_filename = os.path.join(MODEL_PATH, 'superelements', 'resvec23.bdf')
-        log = get_logger(log=None, level='error', encoding='utf-8')
+        log = SimpleLogger(level='error', encoding='utf-8')
         (unused_fem1, unused_fem2, diff_cards) = self.run_bdf(
             '', bdf_filename, xref=True, run_extract_bodies=False,
             save_file_structure=False, log=log,
@@ -590,7 +594,7 @@ class TestBDF(Tester):
     def test_bdf_superelement_2(self):
         """checks superelement.bdf"""
         bdf_filename = os.path.join(MODEL_PATH, 'superelements', 'superelement.bdf')
-        log = get_logger(log=None, level='error', encoding='utf-8')
+        log = SimpleLogger(level='error', encoding='utf-8')
         (fem1, unused_fem2, diff_cards) = self.run_bdf(
             '', bdf_filename, xref=True, run_extract_bodies=False,
             save_file_structure=True, log=log,
@@ -603,12 +607,12 @@ class TestBDF(Tester):
         os.remove('cat.bdf')
 
         #os.remove(bdf_filename + '_out')
-        #self.run_bdf(folder, bdf_filename, xref=True) # PBEAML is not supported
+        #self.run_bdf(folder, bdf_filename, xref=True, log=log) # PBEAML is not supported
 
     def test_bdf_superelement_3(self):
         """checks cqrsee101b2.bdf"""
         bdf_filename = os.path.join(MODEL_PATH, 'superelements', 'cqrsee101b2.bdf')
-        log = get_logger(log=None, level='error', encoding='utf-8')
+        log = SimpleLogger(level='error', encoding='utf-8')
         (fem1, unused_fem2, diff_cards) = self.run_bdf(
             '', bdf_filename, xref=True, run_extract_bodies=False,
             save_file_structure=True, log=log,
@@ -623,7 +627,7 @@ class TestBDF(Tester):
     def test_bdf_superelement_4(self):
         """checks see101l8.bdf"""
         bdf_filename = os.path.join(MODEL_PATH, 'superelements', 'see101l8.bdf')
-        log = get_logger(log=None, level='error', encoding='utf-8')
+        log = SimpleLogger(level='error', encoding='utf-8')
         (unused_fem1, unused_fem2, diff_cards) = self.run_bdf(
             '', bdf_filename, xref=True, run_extract_bodies=False,
             save_file_structure=True, log=log,
@@ -641,7 +645,7 @@ class TestBDF(Tester):
         model_path = os.path.join(MODEL_PATH, 'superelements', 'flyswatter')
         bdf_filename = os.path.join(model_path, 'flyswatter.bdf')
         bdf_filename_out = os.path.join(model_path, 'flyswatter.re.bdf')
-        #log = get_logger(log=None, level='error', encoding='utf-8')
+        #log = SimpleLogger(level='error', encoding='utf-8')
 
         fem1 = read_bdf(bdf_filename, validate=True, xref=True, punch=False,
                         save_file_structure=False, skip_cards=None, read_cards=None,
@@ -669,12 +673,13 @@ class TestBDF(Tester):
         assert len(diff_cards2) == 0, diff_cards2
 
         #os.remove(bdf_filename + '_out')
-        #self.run_bdf(folder, bdf_filename, xref=True) # PBEAML is not supported
+        #self.run_bdf(folder, bdf_filename, xref=True, log=log) # PBEAML is not supported
 
     def test_bdf_thermal_01(self):
         """checks time_thermal_elements.bdf"""
+        log = SimpleLogger(level='warning', encoding='utf-8')
         bdf_filename = os.path.join(MODEL_PATH, 'elements', 'time_thermal_elements.bdf')
-        fem1, fem2, diff_cards = self.run_bdf('', bdf_filename)
+        fem1, fem2, diff_cards = self.run_bdf('', bdf_filename, log=log)
         diff_cards2 = list(set(diff_cards))
         diff_cards2.sort()
         assert len(diff_cards2) == 0, diff_cards2
@@ -694,8 +699,9 @@ class TestBDF(Tester):
 
     def test_bdf_transfer_function_01(self):
         """checks transfer_function/actuator_tf_modeling.bdf"""
+        log = SimpleLogger(level='warning', encoding='utf-8')
         bdf_filename = os.path.join(MODEL_PATH, 'transfer_function', 'actuator_tf_modeling.bdf')
-        fem1, fem2, diff_cards = self.run_bdf('', bdf_filename)
+        fem1, fem2, diff_cards = self.run_bdf('', bdf_filename, log=log)
         diff_cards2 = list(set(diff_cards))
         diff_cards2.sort()
         assert len(diff_cards2) == 0, diff_cards2
@@ -714,8 +720,9 @@ class TestBDF(Tester):
 
     def test_bdf_aero_01(self):
         """checks aero/aerobeam.bdf"""
+        log = SimpleLogger(level='warning', encoding='utf-8')
         bdf_filename = os.path.join(MODEL_PATH, 'aero', 'aerobeam.bdf')
-        fem1, fem2, diff_cards = self.run_bdf('', bdf_filename)
+        fem1, fem2, diff_cards = self.run_bdf('', bdf_filename, log=log)
         diff_cards2 = list(set(diff_cards))
         diff_cards2.sort()
         assert len(diff_cards2) == 0, diff_cards2
@@ -763,7 +770,7 @@ class TestBDF(Tester):
     def test_aero_02(self):
         """checks 0012_flutter.bdf"""
         bdf_filename = os.path.join(MODEL_PATH, 'aero', '2_mode_flutter', '0012_flutter.bdf')
-        #log = get_logger(log=None, level='error', encoding='utf-8')
+        #log = SimpleLogger(level='error', encoding='utf-8')
         argv = ['test_bdf', bdf_filename, '-q']
         test_bdf(argv=argv)
         #self.run_bdf('', bdf_filename, log=log)

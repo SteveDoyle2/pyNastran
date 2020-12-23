@@ -324,7 +324,7 @@ class TestOP2(Tester):
         bdf_filename = os.path.join(MODEL_PATH, 'elements', 'static_elements.bdf')
         #f06_filename = os.path.join(MODEL_PATH, 'elements', 'static_elements.test_op2.f06')
         op2_filename = os.path.join(MODEL_PATH, 'elements', 'static_elements.op2')
-        unused_fem1, unused_fem2, diff_cards = self.run_bdf('', bdf_filename)
+        unused_fem1, unused_fem2, diff_cards = self.run_bdf('', bdf_filename, log=log)
         diff_cards2 = list(set(diff_cards))
         diff_cards2.sort()
         assert len(diff_cards2) == 0, diff_cards2
@@ -362,7 +362,7 @@ class TestOP2(Tester):
         bdf_filename = os.path.join(MODEL_PATH, 'elements', 'modes_elements.bdf')
         #f06_filename = os.path.join(MODEL_PATH, 'elements', 'modes_elements.test_op2.f06')
         op2_filename = os.path.join(MODEL_PATH, 'elements', 'modes_elements.op2')
-        unused_fem1, unused_fem2, diff_cards = self.run_bdf('', bdf_filename)
+        unused_fem1, unused_fem2, diff_cards = self.run_bdf('', bdf_filename, log=log)
         diff_cards2 = list(set(diff_cards))
         diff_cards2.sort()
         assert len(diff_cards2) == 0, diff_cards2
@@ -386,7 +386,7 @@ class TestOP2(Tester):
         bdf_filename = os.path.join(MODEL_PATH, 'elements', 'freq_elements.bdf')
         #f06_filename = os.path.join(MODEL_PATH, 'elements', 'freq_elements.test_op2.f06')
         op2_filename = os.path.join(MODEL_PATH, 'elements', 'freq_elements.op2')
-        unused_fem1, unused_fem2, diff_cards = self.run_bdf('', bdf_filename)
+        unused_fem1, unused_fem2, diff_cards = self.run_bdf('', bdf_filename, log=log)
         diff_cards2 = list(set(diff_cards))
         diff_cards2.sort()
         assert len(diff_cards2) == 0, diff_cards2
@@ -409,7 +409,7 @@ class TestOP2(Tester):
         bdf_filename = os.path.join(MODEL_PATH, 'elements', 'freq_elements2.bdf')
         #f06_filename = os.path.join(MODEL_PATH, 'elements', 'freq_elements2.test_op2.f06')
         op2_filename = os.path.join(MODEL_PATH, 'elements', 'freq_elements2.op2')
-        unused_fem1, unused_fem2, diff_cards = self.run_bdf('', bdf_filename)
+        unused_fem1, unused_fem2, diff_cards = self.run_bdf('', bdf_filename, log=log)
         diff_cards2 = list(set(diff_cards))
         diff_cards2.sort()
         assert len(diff_cards2) == 0, diff_cards2
@@ -432,7 +432,7 @@ class TestOP2(Tester):
         bdf_filename = os.path.join(MODEL_PATH, 'elements', 'loadstep_elements.bdf')
         #f06_filename = os.path.join(MODEL_PATH, 'elements', 'loadstep_elements.test_op2.f06')
         op2_filename = os.path.join(MODEL_PATH, 'elements', 'loadstep_elements.op2')
-        unused_fem1, unused_fem2, diff_cards = self.run_bdf('', bdf_filename)
+        unused_fem1, unused_fem2, diff_cards = self.run_bdf('', bdf_filename, log=log)
         diff_cards2 = list(set(diff_cards))
         diff_cards2.sort()
         assert len(diff_cards2) == 0, diff_cards2
@@ -455,7 +455,7 @@ class TestOP2(Tester):
         bdf_filename = os.path.join(MODEL_PATH, 'elements', 'modes_complex_elements.bdf')
         #f06_filename = os.path.join(MODEL_PATH, 'elements', 'modes_complex_elements.test_op2.f06')
         op2_filename = os.path.join(MODEL_PATH, 'elements', 'modes_complex_elements.op2')
-        unused_fem1, unused_fem2, diff_cards = self.run_bdf('', bdf_filename)
+        unused_fem1, unused_fem2, diff_cards = self.run_bdf('', bdf_filename, log=log)
         diff_cards2 = list(set(diff_cards))
         diff_cards2.sort()
         assert len(diff_cards2) == 0, diff_cards2
@@ -478,7 +478,7 @@ class TestOP2(Tester):
         unused_bdf_filename = os.path.join(MODEL_PATH, 'elements', 'modes_elements_post4.op2')
         #f06_filename = os.path.join(MODEL_PATH, 'elements', 'modes_complex_elements.test_op2.f06')
         op2_filename = os.path.join(MODEL_PATH, 'elements', 'modes_elements_post4.op2')
-        #fem1, fem2, diff_cards = self.run_bdf('', bdf_filename)
+        #fem1, fem2, diff_cards = self.run_bdf('', bdf_filename, log=log)
         #diff_cards2 = list(set(diff_cards))
         #diff_cards2.sort()
         #assert len(diff_cards2) == 0, diff_cards2
@@ -507,7 +507,7 @@ class TestOP2(Tester):
         bdf_filename = os.path.join(MODEL_PATH, 'elements', 'time_thermal_elements.bdf')
         #f06_filename = os.path.join(MODEL_PATH, 'elements', 'modes_complex_elements.test_op2.f06')
         op2_filename = os.path.join(MODEL_PATH, 'elements', 'time_thermal_elements.op2')
-        unused_fem1, unused_fem2, diff_cards = self.run_bdf('', bdf_filename)
+        unused_fem1, unused_fem2, diff_cards = self.run_bdf('', bdf_filename, log=log)
         diff_cards2 = list(set(diff_cards))
         diff_cards2.sort()
         assert len(diff_cards2) == 0, diff_cards2
@@ -556,7 +556,7 @@ class TestOP2(Tester):
         log = get_logger(level='warning')
         bdf_filename = os.path.join(MODEL_PATH, 'elements', 'time_thermal_elements.bdf')
         op2_filename = os.path.join(MODEL_PATH, 'elements', 'time_thermal_elements.op2')
-        unused_fem1, unused_fem2, diff_cards = self.run_bdf('', bdf_filename)
+        unused_fem1, unused_fem2, diff_cards = self.run_bdf('', bdf_filename, log=log)
         diff_cards2 = list(set(diff_cards))
         diff_cards2.sort()
         assert len(diff_cards2) == 0, diff_cards2
@@ -576,7 +576,7 @@ class TestOP2(Tester):
         log = get_logger(level='warning')
         bdf_filename = os.path.join(MODEL_PATH, 'thermal', 'thermal_elements2.bdf')
         op2_filename = os.path.join(MODEL_PATH, 'thermal', 'thermal_elements2.op2')
-        unused_fem1, unused_fem2, diff_cards = self.run_bdf('', bdf_filename)
+        unused_fem1, unused_fem2, diff_cards = self.run_bdf('', bdf_filename, log=log)
         diff_cards2 = list(set(diff_cards))
         diff_cards2.sort()
         assert len(diff_cards2) == 0, diff_cards2
@@ -599,7 +599,7 @@ class TestOP2(Tester):
         log = get_logger(level='warning')
         #bdf_filename = os.path.join(MODEL_PATH, 'thermal', 'htflw47.bdf')
         op2_filename = os.path.join(MODEL_PATH, 'thermal', 'htflw47.op2')
-        #unused_fem1, unused_fem2, diff_cards = self.run_bdf('', bdf_filename)
+        #unused_fem1, unused_fem2, diff_cards = self.run_bdf('', bdf_filename, log=log)
         #diff_cards2 = list(set(diff_cards))
         #diff_cards2.sort()
         #assert len(diff_cards2) == 0, diff_cards2
@@ -624,7 +624,7 @@ class TestOP2(Tester):
         log = get_logger(level='warning')
         bdf_filename = os.path.join(MODEL_PATH, 'unit', 'bars', 'pbarl_bar_100.bdf')
         op2_filename = os.path.join(MODEL_PATH, 'unit', 'bars', 'pbarl_bar_100.op2')
-        unused_fem1, unused_fem2, diff_cards = self.run_bdf('', bdf_filename)
+        unused_fem1, unused_fem2, diff_cards = self.run_bdf('', bdf_filename, log=log)
         diff_cards2 = list(set(diff_cards))
         diff_cards2.sort()
         assert len(diff_cards2) == 0, diff_cards2
@@ -651,7 +651,7 @@ class TestOP2(Tester):
 
         #bdf_filename = os.path.join(MODEL_PATH, 'other', 'ofprand1.bdf')
         op2_filename = os.path.join(MODEL_PATH, 'other', 'ofprand1.op2')
-        #fem1, fem2, diff_cards = self.run_bdf('', bdf_filename)
+        #fem1, fem2, diff_cards = self.run_bdf('', bdf_filename, log=log)
         #diff_cards2 = list(set(diff_cards))
         #diff_cards2.sort()
         #assert len(diff_cards2) == 0, diff_cards2
@@ -677,7 +677,7 @@ class TestOP2(Tester):
         log = get_logger(level='warning')
         bdf_filename = os.path.join(MODEL_PATH, 'other', 'ac10707a.bdf')
         op2_filename = os.path.join(MODEL_PATH, 'other', 'ac10707a.op2')
-        unused_fem1, unused_fem2, diff_cards = self.run_bdf('', bdf_filename)
+        unused_fem1, unused_fem2, diff_cards = self.run_bdf('', bdf_filename, log=log)
         diff_cards2 = list(set(diff_cards))
         diff_cards2.sort()
         assert len(diff_cards2) == 0, diff_cards2
@@ -701,7 +701,7 @@ class TestOP2(Tester):
         log = get_logger(level='warning')
         #bdf_filename = os.path.join(MODEL_PATH, 'other', 'ac10901a.bdf')
         op2_filename = os.path.join(MODEL_PATH, 'other', 'ac10901a.op2')
-        #unused_fem1, unused_fem2, diff_cards = self.run_bdf('', bdf_filename)
+        #unused_fem1, unused_fem2, diff_cards = self.run_bdf('', bdf_filename, log=log)
         #diff_cards2 = list(set(diff_cards))
         #diff_cards2.sort()
         #assert len(diff_cards2) == 0, diff_cards2
@@ -725,7 +725,7 @@ class TestOP2(Tester):
         log = get_logger(level='warning')
         #bdf_filename = os.path.join(MODEL_PATH, 'other', 'v10111.bdf')
         op2_filename = os.path.join(MODEL_PATH, 'other', 'v10111.op2')
-        #unused_fem1, unused_fem2, diff_cards = self.run_bdf('', bdf_filename)
+        #unused_fem1, unused_fem2, diff_cards = self.run_bdf('', bdf_filename, log=log)
         #diff_cards2 = list(set(diff_cards))
         #diff_cards2.sort()
         #assert len(diff_cards2) == 0, diff_cards2
@@ -749,7 +749,7 @@ class TestOP2(Tester):
         log = get_logger(level='warning')
         bdf_filename = os.path.join(MODEL_PATH, 'other', 'ar29sadl.bdf')
         op2_filename = os.path.join(MODEL_PATH, 'other', 'ar29sadl.op2')
-        unused_fem1, unused_fem2, diff_cards = self.run_bdf('', bdf_filename)
+        unused_fem1, unused_fem2, diff_cards = self.run_bdf('', bdf_filename, log=log)
         diff_cards2 = list(set(diff_cards))
         diff_cards2.sort()
         assert len(diff_cards2) == 0, diff_cards2
@@ -773,7 +773,7 @@ class TestOP2(Tester):
         log = get_logger(level='warning')
         bdf_filename = os.path.join(MODEL_PATH, 'other', 'randvar2.bdf')
         op2_filename = os.path.join(MODEL_PATH, 'other', 'randvar2.op2')
-        unused_fem1, unused_fem2, diff_cards = self.run_bdf('', bdf_filename)
+        unused_fem1, unused_fem2, diff_cards = self.run_bdf('', bdf_filename, log=log)
         diff_cards2 = list(set(diff_cards))
         diff_cards2.sort()
         assert len(diff_cards2) == 0, diff_cards2
@@ -797,7 +797,7 @@ class TestOP2(Tester):
         log = get_logger(level='warning')
         bdf_filename = os.path.join(MODEL_PATH, 'other', 'v12902.bdf')
         op2_filename = os.path.join(MODEL_PATH, 'other', 'v12902.op2')
-        unused_fem1, unused_fem2, diff_cards = self.run_bdf('', bdf_filename)
+        unused_fem1, unused_fem2, diff_cards = self.run_bdf('', bdf_filename, log=log)
         diff_cards2 = list(set(diff_cards))
         diff_cards2.sort()
         assert len(diff_cards2) == 0, diff_cards2
@@ -821,7 +821,7 @@ class TestOP2(Tester):
         log = get_logger(level='warning')
         bdf_filename = os.path.join(MODEL_PATH, 'other', 'mne7a.bdf')
         op2_filename = os.path.join(MODEL_PATH, 'other', 'mne7a.op2')
-        unused_fem1, unused_fem2, diff_cards = self.run_bdf('', bdf_filename)
+        unused_fem1, unused_fem2, diff_cards = self.run_bdf('', bdf_filename, log=log)
         diff_cards2 = list(set(diff_cards))
         diff_cards2.sort()
         assert len(diff_cards2) == 0, diff_cards2
@@ -845,7 +845,7 @@ class TestOP2(Tester):
         log = get_logger(level='warning')
         bdf_filename = os.path.join(MODEL_PATH, 'other', 'sdbush10.bdf')
         op2_filename = os.path.join(MODEL_PATH, 'other', 'sdbush10.op2')
-        unused_fem1, unused_fem2, diff_cards = self.run_bdf('', bdf_filename)
+        unused_fem1, unused_fem2, diff_cards = self.run_bdf('', bdf_filename, log=log)
         diff_cards2 = list(set(diff_cards))
         diff_cards2.sort()
         assert len(diff_cards2) == 0, diff_cards2
@@ -869,7 +869,7 @@ class TestOP2(Tester):
         log = get_logger(level='warning')
         bdf_filename = os.path.join(MODEL_PATH, 'other', 'v10112.bdf')
         op2_filename = os.path.join(MODEL_PATH, 'other', 'v10112.op2')
-        unused_fem1, unused_fem2, diff_cards = self.run_bdf('', bdf_filename)
+        unused_fem1, unused_fem2, diff_cards = self.run_bdf('', bdf_filename, log=log)
         diff_cards2 = list(set(diff_cards))
         diff_cards2.sort()
         assert len(diff_cards2) == 0, diff_cards2
@@ -893,7 +893,7 @@ class TestOP2(Tester):
         log = get_logger(level='warning')
         #bdf_filename = os.path.join(MODEL_PATH, 'other', 'cbus129.bdf')
         op2_filename = os.path.join(MODEL_PATH, 'other', 'cbus129.op2')
-        #unused_fem1, unused_fem2, diff_cards = self.run_bdf('', bdf_filename)
+        #unused_fem1, unused_fem2, diff_cards = self.run_bdf('', bdf_filename, log=log)
         #diff_cards2 = list(set(diff_cards))
         #diff_cards2.sort()
         #assert len(diff_cards2) == 0, diff_cards2
@@ -917,7 +917,7 @@ class TestOP2(Tester):
         log = get_logger(level='warning')
         bdf_filename = os.path.join(MODEL_PATH, 'other', 'api3.bdf')
         op2_filename = os.path.join(MODEL_PATH, 'other', 'api3.op2')
-        unused_fem1, unused_fem2, diff_cards = self.run_bdf('', bdf_filename, run_skin_solids=False)
+        unused_fem1, unused_fem2, diff_cards = self.run_bdf('', bdf_filename, run_skin_solids=False, log=log)
         diff_cards2 = list(set(diff_cards))
         diff_cards2.sort()
         assert len(diff_cards2) == 0, diff_cards2
@@ -941,7 +941,7 @@ class TestOP2(Tester):
         log = get_logger(level='warning')
         bdf_filename = os.path.join(MODEL_PATH, 'other', 'v10601s.bdf')
         op2_filename = os.path.join(MODEL_PATH, 'other', 'v10601s.op2')
-        unused_fem1, unused_fem2, diff_cards = self.run_bdf('', bdf_filename)
+        unused_fem1, unused_fem2, diff_cards = self.run_bdf('', bdf_filename, log=log)
         diff_cards2 = list(set(diff_cards))
         diff_cards2.sort()
         assert len(diff_cards2) == 0, diff_cards2
@@ -965,7 +965,7 @@ class TestOP2(Tester):
         log = get_logger(level='warning')
         bdf_filename = os.path.join(MODEL_PATH, 'other', 'sbuckl2a.bdf')
         op2_filename = os.path.join(MODEL_PATH, 'other', 'sbuckl2a.op2')
-        #unused_fem1, unused_fem2, diff_cards = self.run_bdf('', bdf_filename)
+        #unused_fem1, unused_fem2, diff_cards = self.run_bdf('', bdf_filename, log=log)
         #diff_cards2 = list(set(diff_cards))
         #diff_cards2.sort()
         #assert len(diff_cards2) == 0, diff_cards2
@@ -989,7 +989,7 @@ class TestOP2(Tester):
         log = get_logger(level='warning')
         bdf_filename = os.path.join(MODEL_PATH, 'other', 'dbxdra2.bdf')
         op2_filename = os.path.join(MODEL_PATH, 'other', 'dbxdra2.op2')
-        unused_fem1, unused_fem2, diff_cards = self.run_bdf('', bdf_filename)
+        unused_fem1, unused_fem2, diff_cards = self.run_bdf('', bdf_filename, log=log)
         diff_cards2 = list(set(diff_cards))
         diff_cards2.sort()
         assert len(diff_cards2) == 0, diff_cards2
@@ -1013,7 +1013,7 @@ class TestOP2(Tester):
         log = get_logger(level='warning')
         bdf_filename = os.path.join(MODEL_PATH, 'other', 'phsflux4.bdf')
         op2_filename = os.path.join(MODEL_PATH, 'other', 'phsflux4.op2')
-        unused_fem1, unused_fem2, diff_cards = self.run_bdf('', bdf_filename)
+        unused_fem1, unused_fem2, diff_cards = self.run_bdf('', bdf_filename, log=log)
         diff_cards2 = list(set(diff_cards))
         diff_cards2.sort()
         assert len(diff_cards2) == 0, diff_cards2
@@ -1037,7 +1037,7 @@ class TestOP2(Tester):
         log = get_logger(level='warning')
         bdf_filename = os.path.join(MODEL_PATH, 'other', 'cc508a.bdf')
         op2_filename = os.path.join(MODEL_PATH, 'other', 'cc508a.op2')
-        unused_fem1, unused_fem2, diff_cards = self.run_bdf('', bdf_filename)
+        unused_fem1, unused_fem2, diff_cards = self.run_bdf('', bdf_filename, log=log)
         diff_cards2 = list(set(diff_cards))
         diff_cards2.sort()
         assert len(diff_cards2) == 0, diff_cards2
@@ -1061,7 +1061,7 @@ class TestOP2(Tester):
         log = get_logger(level='warning')
         bdf_filename = os.path.join(MODEL_PATH, 'other', 'see101nd.bdf')
         op2_filename = os.path.join(MODEL_PATH, 'other', 'see101nd.op2')
-        unused_fem1, unused_fem2, diff_cards = self.run_bdf('', bdf_filename)
+        unused_fem1, unused_fem2, diff_cards = self.run_bdf('', bdf_filename, log=log)
         diff_cards2 = list(set(diff_cards))
         diff_cards2.sort()
         assert len(diff_cards2) == 0, diff_cards2
@@ -1085,7 +1085,7 @@ class TestOP2(Tester):
         log = get_logger(level='warning')
         bdf_filename = os.path.join(MODEL_PATH, 'other', 'see101ta.bdf')
         op2_filename = os.path.join(MODEL_PATH, 'other', 'see101ta.op2')
-        unused_fem1, unused_fem2, diff_cards = self.run_bdf('', bdf_filename)
+        unused_fem1, unused_fem2, diff_cards = self.run_bdf('', bdf_filename, log=log)
         diff_cards2 = list(set(diff_cards))
         diff_cards2.sort()
         assert len(diff_cards2) == 0, diff_cards2
@@ -1109,7 +1109,7 @@ class TestOP2(Tester):
         log = get_logger(level='error')
         bdf_filename = os.path.join(MODEL_PATH, 'other', 'gpst17.bdf')
         op2_filename = os.path.join(MODEL_PATH, 'other', 'gpst17.op2')
-        unused_fem1, unused_fem2, diff_cards = self.run_bdf('', bdf_filename)
+        unused_fem1, unused_fem2, diff_cards = self.run_bdf('', bdf_filename, log=log)
         diff_cards2 = list(set(diff_cards))
         diff_cards2.sort()
         assert len(diff_cards2) == 0, diff_cards2
@@ -1139,7 +1139,7 @@ class TestOP2(Tester):
         op2_filename = os.path.join(MODEL_PATH, 'other', 'cqra00366.op2')
 
         #  can't parse replication
-        #unused_fem1, unused_fem2, diff_cards = self.run_bdf('', bdf_filename)
+        #unused_fem1, unused_fem2, diff_cards = self.run_bdf('', bdf_filename, log=log)
         #diff_cards2 = list(set(diff_cards))
         #diff_cards2.sort()
         #assert len(diff_cards2) == 0, diff_cards2
@@ -1167,7 +1167,7 @@ class TestOP2(Tester):
         op2_filename = os.path.join(MODEL_PATH, 'other', 'dbxdra7.op2')
 
         #  can't parse replication
-        #unused_fem1, unused_fem2, diff_cards = self.run_bdf('', bdf_filename)
+        #unused_fem1, unused_fem2, diff_cards = self.run_bdf('', bdf_filename, log=log)
         #diff_cards2 = list(set(diff_cards))
         #diff_cards2.sort()
         #assert len(diff_cards2) == 0, diff_cards2
@@ -1197,7 +1197,7 @@ class TestOP2(Tester):
         ##  can't parse replication
         #unused_fem1, unused_fem2, diff_cards = self.run_bdf(
             #'', bdf_filename,
-            #run_skin_solids=False)
+            #run_skin_solids=False, log=log)
         #diff_cards2 = list(set(diff_cards))
         #diff_cards2.sort()
         #assert len(diff_cards2) == 0, diff_cards2
@@ -1228,7 +1228,7 @@ class TestOP2(Tester):
         ##  can't parse replication
         unused_fem1, unused_fem2, diff_cards = self.run_bdf(
             '', bdf_filename,
-            run_skin_solids=False)
+            run_skin_solids=False, log=log)
         diff_cards2 = list(set(diff_cards))
         diff_cards2.sort()
         assert len(diff_cards2) == 0, diff_cards2
@@ -1258,7 +1258,7 @@ class TestOP2(Tester):
         ##  can't parse replication
         unused_fem1, unused_fem2, diff_cards = self.run_bdf(
             '', bdf_filename,
-            run_skin_solids=False)
+            run_skin_solids=False, log=log)
         diff_cards2 = list(set(diff_cards))
         diff_cards2.sort()
         assert len(diff_cards2) == 0, diff_cards2
@@ -1288,7 +1288,7 @@ class TestOP2(Tester):
         ##  can't parse replication
         #unused_fem1, unused_fem2, diff_cards = self.run_bdf(
             #'', bdf_filename,
-            #run_skin_solids=False)
+            #run_skin_solids=False, log=log)
         #diff_cards2 = list(set(diff_cards))
         #diff_cards2.sort()
         #assert len(diff_cards2) == 0, diff_cards2
@@ -1318,7 +1318,7 @@ class TestOP2(Tester):
         ##  can't parse replication
         #unused_fem1, unused_fem2, diff_cards = self.run_bdf(
             #'', bdf_filename,
-            #run_skin_solids=False)
+            #run_skin_solids=False, log=log)
         #diff_cards2 = list(set(diff_cards))
         #diff_cards2.sort()
         #assert len(diff_cards2) == 0, diff_cards2
@@ -1347,7 +1347,7 @@ class TestOP2(Tester):
 
         #  can't parse replication
         #unused_fem1, unused_fem2, diff_cards = self.run_bdf(
-            #'', bdf_filename)
+            #'', bdf_filename, log=log)
         #diff_cards2 = list(set(diff_cards))
         #diff_cards2.sort()
         #assert len(diff_cards2) == 0, diff_cards2
@@ -1376,7 +1376,7 @@ class TestOP2(Tester):
 
         #  can't parse replication
         #unused_fem1, unused_fem2, diff_cards = self.run_bdf(
-            #'', bdf_filename)
+            #'', bdf_filename, log=log)
         #diff_cards2 = list(set(diff_cards))
         #diff_cards2.sort()
         #assert len(diff_cards2) == 0, diff_cards2
@@ -1405,7 +1405,7 @@ class TestOP2(Tester):
 
         #  can't parse replication
         #unused_fem1, unused_fem2, diff_cards = self.run_bdf(
-            #'', bdf_filename)
+            #'', bdf_filename, log=log)
         #diff_cards2 = list(set(diff_cards))
         #diff_cards2.sort()
         #assert len(diff_cards2) == 0, diff_cards2
@@ -1458,7 +1458,7 @@ class TestOP2(Tester):
         debug = False
         #debug_file = 'solid_bending.debug.out'
         model = os.path.splitext(op2_filename)[0]
-        debug_file = model + '.debug.out'
+        debug_file = f'{model}.debug.out'
 
         if os.path.exists(debug_file):
             os.remove(debug_file)
@@ -1492,7 +1492,7 @@ class TestOP2(Tester):
         op2.write_f06(f06_filename)
         os.remove(f06_filename)
 
-    @unittest.skipIf(getpass.getuser() != 'sdoyle', "local test")
+    @unittest.skipIf(getpass.getuser() != 'sdoyle', 'local test')
     def test_op2_bwb(self):  # pragma: no cover
         log = get_logger(level='warning')
         folder = os.path.join(MODEL_PATH, 'bwb')
@@ -1544,7 +1544,7 @@ class TestOP2(Tester):
             model, p1, p2, p3, zaxis,
             method=method, cid_p1=0, cid_p2=0, cid_p3=0,
             cid_zaxis=0, idir=idir, nplanes=100)
-        print(stations)
+        print(f'stations = {stations}')
 
         # i/j/k vector is nan
         print(f'origin: {coord_out.origin}')
@@ -1574,9 +1574,10 @@ class TestOP2(Tester):
 
     def test_op2_solid_bending_02_geom(self):
         log = get_logger(level='warning')
+        #log = get_logger(level='warning')
         folder = os.path.join(MODEL_PATH, 'solid_bending')
         op2_filename = os.path.join(folder, 'solid_bending.op2')
-        hdf5_filename = os.path.join(folder, 'solid_bending.h5')
+        hdf5_filename = os.path.join(folder, 'solid_bending.test_op2_solid_bending_02_geom.h5')
         op2, unused_is_passed = run_op2(
             op2_filename, make_geom=True, write_bdf=False,
             write_f06=True, write_op2=False, write_hdf5=False,
@@ -1764,7 +1765,7 @@ class TestOP2(Tester):
         op2.write_f06(f06_filename)
         os.remove(f06_filename)
 
-        #fem1, fem2, diff_cards = self.run_bdf(folder, bdf_filename)
+        #fem1, fem2, diff_cards = self.run_bdf(folder, bdf_filename, log=log)
         #diff_cards2 = list(set(diff_cards))
         #diff_cards2.sort()
         #assert len(diff_cards2) == 0, diff_cards2
@@ -2733,7 +2734,7 @@ class TestOP2(Tester):
 
         fem1, unused_fem2, diff_cards = self.run_bdf(
             '', bdf_filename,
-            run_skin_solids=False)
+            run_skin_solids=False, log=log)
         diff_cards2 = list(set(diff_cards))
         diff_cards2.sort()
         assert len(diff_cards2) == 0, diff_cards2
@@ -2807,7 +2808,7 @@ class TestOP2(Tester):
         log = get_logger(level='warning')
         bdf_filename = os.path.join(MODEL_PATH, 'other', 'cc188b.bdf')
         op2_filename = os.path.join(MODEL_PATH, 'other', 'cc188b.op2')
-        unused_fem1, unused_fem2, diff_cards = self.run_bdf('', bdf_filename)
+        unused_fem1, unused_fem2, diff_cards = self.run_bdf('', bdf_filename, log=log)
         diff_cards2 = list(set(diff_cards))
         diff_cards2.sort()
         assert len(diff_cards2) == 0, diff_cards2
@@ -2832,7 +2833,7 @@ class TestOP2(Tester):
         op2_filename = os.path.join(OP2_TEST_PATH, 'cbush_nonlinear', 'cbush_106_large_disp.op2')
 
         unused_fem1, unused_fem2, diff_cards = self.run_bdf(
-            '', bdf_filename)
+            '', bdf_filename, log=log)
         diff_cards2 = list(set(diff_cards))
         diff_cards2.sort()
         assert len(diff_cards2) == 0, diff_cards2

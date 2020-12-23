@@ -118,7 +118,7 @@ class TestMeshUtils(unittest.TestCase):
             #cmd_line(argv=['bdf', 'free_faces'])
 
         bdf_filename = os.path.join(MODEL_PATH, 'solid_bending', 'solid_bending.bdf')
-        #log = get_logger(log=None, level='info', encoding='utf-8')
+        #log = SimpleLogger(level='info', encoding='utf-8')
         skin_filename = os.path.join(DIRNAME, 'skin.bdf')
         cmd_line(argv=['bdf', 'free_faces', bdf_filename, skin_filename], quiet=True)
         os.remove(skin_filename)

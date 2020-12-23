@@ -1,3 +1,4 @@
+from typing import Union
 import numpy as np
 from numpy import zeros, empty
 from cpylog import get_logger2
@@ -12,7 +13,7 @@ def read_avus(avus_filename, log=None, debug=False):
     return model
 
 class AvusGrid:
-    def __init__(self, log=None, debug=False):
+    def __init__(self, log=None, debug: Union[str, bool, None]=False):
         self.log = get_logger2(log=log, debug=debug)
         self.infilename = None
 

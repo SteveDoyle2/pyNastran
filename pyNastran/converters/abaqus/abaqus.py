@@ -1,5 +1,5 @@
 """Defines the Abaqus class"""
-from typing import Tuple, List, Dict, Optional, Any
+from typing import Tuple, List, Dict, Union, Optional, Any
 import numpy as np
 from cpylog import SimpleLogger, get_logger2
 from pyNastran.converters.abaqus.abaqus_cards import (
@@ -44,7 +44,7 @@ def _clean_lines(lines):
 
 class Abaqus:
     """defines the abaqus reader"""
-    def __init__(self, log=None, debug=True):
+    def __init__(self, log=None, debug: Union[str, bool, None]=True):
         self.debug = debug
         self.parts = {}
         self.boundaries = {}

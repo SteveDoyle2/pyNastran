@@ -16,7 +16,7 @@ from typing import List, Any, Optional, Union
 from io import StringIO
 
 import numpy as np
-from cpylog import get_logger2, WarningRedirector
+from cpylog import get_logger2, SimpleLogger, WarningRedirector
 #warnings.simplefilter('always')
 warnings.simplefilter('default')
 
@@ -168,7 +168,7 @@ def run_lots_of_files(filenames: List[str], folder: str='',
     npass = 1
     nfailed = 1
     log = get_logger2(log=None, debug=debug, encoding='utf-8')
-    with WarningRedirector(log) as warn:
+    with WarningRedirector(log) as unused_warn:
         for filename in filenames2:
             abs_filename = os.path.abspath(os.path.join(folder, filename))
             if folder != '':
@@ -251,7 +251,7 @@ def run_bdf(folder, bdf_filename, debug=False, xref=True, check=True, punch=Fals
             save_file_structure=False,
             nerrors=0, dev=False, crash_cards=None, safe_xref=False, pickle_obj=False,
             version: Optional[str]=None,
-            stop_on_failure=True, log=None):
+            stop_on_failure=True, log=None, name: str=''):
     """
     Runs a single BDF
 
@@ -344,25 +344,43 @@ def run_bdf(folder, bdf_filename, debug=False, xref=True, check=True, punch=Fals
         pickle_obj=pickle_obj,
         stop_on_failure=stop_on_failure,
         log=log,
+        name=name,
     )
     return fem1, fem2, diff_cards
 
 def run_and_compare_fems(
-        bdf_model, out_model, debug=False, xref=True, check=True,
-        punch=False, mesh_form='combined',
-        print_stats=False, encoding=None,
-        sum_load=True, size=8, is_double=False,
-        save_file_structure=False,
-        stop=False, nastran='', post=-1, hdf5=False,
+        bdf_model: str,
+        out_model: str,
+        debug: bool=False,
+        xref: bool=True,
+        check: bool=True,
+        punch: bool=False,
+        mesh_form: str='combined',
+        print_stats: bool=False,
+        encoding=None,
+        sum_load: bool=True,
+        size: int=8,
+        is_double: bool=False,
+        save_file_structure: bool=False,
+        stop: bool=False,
+        nastran: str='',
+        post: int=-1,
+        hdf5: bool=False,
         dynamic_vars=None,
-        quiet=False, dumplines=False, dictsort=False,
-        nerrors=0, dev=False, crash_cards=None,
+        quiet: bool=False,
+        dumplines: bool=False,
+        dictsort: bool=False,
+        nerrors=0,
+        dev: bool=False,
+        crash_cards=None,
         version: Optional[str]=None,
-        safe_xref=True,
-        run_extract_bodies=False,
-        run_skin_solids=True, pickle_obj=False,
-        stop_on_failure=True, log=None,
-    ):
+        safe_xref: bool=True,
+        run_extract_bodies: bool=False,
+        run_skin_solids: bool=True,
+        pickle_obj: bool=False,
+        stop_on_failure: bool=True,
+        log: Optional[SimpleLogger]=None,
+        name: str=''):
     """runs two fem models and compares them"""
     assert os.path.exists(bdf_model), f'{bdf_model!r} doesnt exist'
     fem1 = BDF(debug=debug, log=log)
@@ -398,7 +416,7 @@ def run_and_compare_fems(
                         save_file_structure=save_file_structure,
                         hdf5=hdf5,
                         encoding=encoding, crash_cards=crash_cards, safe_xref=safe_xref,
-                        pickle_obj=pickle_obj, stop=stop)
+                        pickle_obj=pickle_obj, stop=stop, name=name)
         is_mesh_opt = any([card_name in fem1.card_count for card_name in mesh_opt_cards])
         if dev and is_mesh_opt:
             return None, None, None
@@ -567,7 +585,8 @@ def run_fem1(fem1: BDF, bdf_model: str, out_model: str, mesh_form: str,
              run_extract_bodies: bool=False, run_skin_solids: bool=True,
              save_file_structure: bool=False, hdf5: bool=False,
              encoding: Optional[str]=None, crash_cards: Optional[List[str]]=None,
-             safe_xref: bool=True, pickle_obj: bool=False, stop: bool=False) -> BDF:
+             safe_xref: bool=True, pickle_obj: bool=False, stop: bool=False,
+             name: str='') -> BDF:
     """
     Reads/writes the BDF
 
@@ -665,7 +684,7 @@ def run_fem1(fem1: BDF, bdf_model: str, out_model: str, mesh_form: str,
                 #fem1.uncross_reference()
                 #fem1.cross_reference()
     except:
-        print("failed reading %r" % bdf_model)
+        print(f'failed reading {bdf_model!r}')
         raise
 
     #out_model = bdf_model + '_out'
@@ -673,7 +692,7 @@ def run_fem1(fem1: BDF, bdf_model: str, out_model: str, mesh_form: str,
         #fem1.resolve_grids(cid=cid)
 
     if hdf5:
-        hdf5_filename = out_model + '.h5'
+        hdf5_filename = f'{out_model}{name}.h5'
         fem1.export_hdf5_filename(hdf5_filename)
         fem1a = BDF(log=fem1.log)
         fem1a.load_hdf5_filename(hdf5_filename)
@@ -688,7 +707,7 @@ def run_fem1(fem1: BDF, bdf_model: str, out_model: str, mesh_form: str,
             #if key == 'ENDDATA':
             hdf5_msg = ''
             if key not in fem1a.card_count:
-                hdf5_msg += 'key=%r was not loaded to hdf5\n' % key
+                hdf5_msg += f'key={key!r} was not loaded to hdf5\n'
 
             if hdf5_msg:
                 hdf5_msg += 'expected=%s\nactual=%s' % (
@@ -869,10 +888,10 @@ def run_fem2(bdf_model: str, out_model: str, xref: bool, punch: bool,
         elif xref:
             fem2.cross_reference()
     except:
-        print("failed reading %r" % out_model)
+        print(f'failed reading {out_model!r}')
         raise
 
-    out_model_2 = bdf_model + '_out2'
+    out_model_2 = f'{bdf_model}_out2'
 
     if xref and sum_load:
         if 'POST' in fem2.params:
@@ -967,7 +986,7 @@ def check_for_flag_in_subcases(fem2: BDF, subcase: Any, parameters: List[str]) -
             if any(subcasei.has_parameter(*parameters)):
                 has_flag = True
         if not has_flag:
-            msg = 'sol=%r; %s not in subcase\n' % (fem2.sol, str(parameters))
+            msg = f'sol={fem2.sol!r}; {str(parameters)} not in subcase\n'
             for unused_isubcase, subcasei in fem2.subcases.items():
                 msg += str(subcasei)
             raise RuntimeError(msg)
@@ -1003,7 +1022,7 @@ def check_sol(sol: int,
         if ierror == nerrors:
             raise RuntimeError(msg)
     if case_control_key not in subcase:
-        msg = 'sol=%s is missing %r\n%s' % (sol, case_control_key, subcase)
+        msg = f'sol={sol} is missing {case_control_key!r}\n{subcase}'
         log.error(msg)
         if ierror == nerrors:
             raise RuntimeError(msg)
@@ -1035,17 +1054,17 @@ def check_case(sol, subcase, fem2, p0, isubcase, subcases,
     """
     log = fem2.log
 
+    msg = f'sol={sol}\n{subcase}'
     if sol == 24:
         _assert_has_spc(subcase, fem2)
-        assert True in subcase.has_parameter('LOAD'), 'sol=%s\n%s' % (sol, subcase)
+        assert True in subcase.has_parameter('LOAD'), msg
     elif sol == 64:
         #assert 'NLPARM' in subcase, subcase
         #_assert_has_spc(subcase, fem2)
-        assert True in subcase.has_parameter('LOAD'), 'sol=%s\n%s' % (sol, subcase)
+        assert True in subcase.has_parameter('LOAD'), msg
     elif sol == 66:
         assert 'NLPARM' in subcase, subcase
         _assert_has_spc(subcase, fem2)
-        msg = 'sol=%s\n%s' % (sol, subcase)
         ierror = check_for_optional_param(('LOAD', 'TEMPERATURE(LOAD)'), subcase, msg,
                                           RuntimeError, log, ierror, nerrors)
     elif sol == 99:
@@ -1053,21 +1072,17 @@ def check_case(sol, subcase, fem2, p0, isubcase, subcases,
         assert 'LOADSET' in subcase, subcase
         _assert_has_spc(subcase, fem2)
         #assert True in subcase.has_parameter('LOAD', 'TEMPERATURE'), 'sol=%s\n%s' % (sol, subcase)
-        msg = 'sol=%s\n%s' % (sol, subcase)
         ierror = check_for_optional_param(('TSTEP', 'TSTEPNL'), subcase, msg,
                                           RuntimeError, log, ierror, nerrors)
     elif sol in [1, 101]:
         _assert_has_spc(subcase, fem2)
-        msg = 'sol=%s\n%s' % (sol, subcase)
         ierror = check_for_optional_param(('LOAD', 'TEMPERATURE(LOAD)', 'P2G'), subcase, msg,
                                           RuntimeError, log, ierror, nerrors)
     elif sol in [3, 103]:
-        msg = 'sol=%s\n%s' % (sol, subcase)
         ierror = check_for_optional_param(('METHOD', 'RSMETHOD', 'RIGID', 'BOLTID', 'BGSET'), subcase, msg,
                                           RuntimeError, log, ierror, nerrors)
     elif sol in [5, 105]: # buckling
         _assert_has_spc(subcase, fem2)
-        msg = 'sol=%s\n%s' % (sol, subcase)
         ierror = check_for_optional_param(('LOAD', 'METHOD'), subcase, msg,
                                           RuntimeError, log, ierror, nerrors)
         #if 0:  # pragma: no cover
@@ -1085,12 +1100,10 @@ def check_case(sol, subcase, fem2, p0, isubcase, subcases,
         #assert True in subcase.has_parameter('LOAD', 'TEMPERATURE(LOAD)'), 'sol=%s\n%s' % (sol, subcase)
     elif sol == 106: # freq
         assert 'NLPARM' in subcase, subcase
-        msg = 'sol=%s\n%s' % (sol, subcase)
         ierror = check_for_optional_param(('LOAD', 'TEMPERATURE(LOAD)', 'CLOAD'), subcase, msg,
                                           RuntimeError, log, ierror, nerrors)
     elif sol == 107: # ???
         _assert_has_spc(subcase, fem2)
-        msg = 'sol=%s\n%s' % (sol, subcase)
         ierror = check_for_optional_param(('LOAD', 'TEMPERATURE(LOAD)'), subcase, msg,
                                           RuntimeError, log, ierror, nerrors)
     elif sol in [8, 108]: # freq
@@ -1100,12 +1113,11 @@ def check_case(sol, subcase, fem2, p0, isubcase, subcases,
 
     elif sol == 110:  # ???
         _assert_has_spc(subcase, fem2)
-        msg = 'sol=%s\n%s' % (sol, subcase)
         ierror = check_for_optional_param(('LOAD', 'STATSUB'), subcase, msg,
                                           RuntimeError, log, ierror, nerrors)
     elif sol == 111:  # modal frequency
-        assert subcase.has_parameter('FREQUENCY'), 'sol=%s\n%s' % (sol, subcase)
-        assert any(subcase.has_parameter('METHOD', 'RMETHOD')), 'sol=%s\n%s' % (sol, subcase)
+        assert subcase.has_parameter('FREQUENCY'), msg
+        assert any(subcase.has_parameter('METHOD', 'RMETHOD')), msg
     elif sol == 112:  # modal transient
         check_for_flag_in_subcases(fem2, subcase, ('TIME', 'TSTEP', 'TSTEPNL'))
         #assert any(subcase.has_parameter('TIME', 'TSTEP', 'TSTEPNL')), 'sol=%s\n%s' % (sol, subcase)
@@ -1122,9 +1134,9 @@ def check_case(sol, subcase, fem2, p0, isubcase, subcases,
         _assert_has_spc(subcase, fem2)
 
     elif sol == 129:  # nonlinear transient
-        assert any(subcase.has_parameter('TIME', 'TSTEP', 'TSTEPNL')), 'sol=%s\n%s' % (sol, subcase)
+        assert any(subcase.has_parameter('TIME', 'TSTEP', 'TSTEPNL')), msg
     elif sol == 159:  # thermal transient
-        assert any(subcase.has_parameter('TIME', 'TSTEP', 'TSTEPNL')), 'sol=%s\n%s' % (sol, subcase)
+        assert any(subcase.has_parameter('TIME', 'TSTEP', 'TSTEPNL')), msg
 
     elif sol == 144:
         ierror = _check_static_aero_case(fem2, log, sol, subcase, ierror, nerrors)
@@ -1154,7 +1166,7 @@ def check_case(sol, subcase, fem2, p0, isubcase, subcases,
         #assert any(subcase.has_parameter('TIME', 'TSTEP', 'TSTEPNL')), subcase
         #assert any(subcase.has_parameter('GUST', 'LOAD')), subcase
         if 'ANALYSIS' in subcase and subcase.get_parameter('ANALYSIS')[0] == 'HEAT':
-            assert any(subcase.has_parameter('TEMPERATURE(LOAD)', 'TEMPERATURE(INITIAL)')), 'sol=%s\n%s' % (sol, subcase)
+            assert any(subcase.has_parameter('TEMPERATURE(LOAD)', 'TEMPERATURE(INITIAL)')), msg
 
     elif sol == 200:
         _check_case_sol_200(sol, subcase, fem2, p0, isubcase, subcases, log)
@@ -1197,8 +1209,8 @@ def _check_static_aero_case(fem2: BDF, log: Any, sol: int,
         ierror = stop_if_max_error(msg, RuntimeError, ierror, nerrors)
     return ierror
 
-def _check_flutter_case(fem2, log, sol, subcase, ierror, nerrors):
-    # type: (BDF, Any, int, Any, int, int) -> int
+def _check_flutter_case(fem2: BDF, log: SimpleLogger, sol: int, subcase: Subcase,
+                        ierror: int, nerrors: int) -> None:
     """checks that FLUTTER is valid"""
     if fem2.aero is None:
         msg = 'An AERO card is required for FLUTTER - SOL %i; AERO=%s' % (sol, fem2.aero)
@@ -1241,8 +1253,8 @@ def _check_flutter_case(fem2, log, sol, subcase, ierror, nerrors):
                                RuntimeError, ierror, nerrors)
     return ierror
 
-def _check_gust_case(fem2, log, sol, subcase, ierror, nerrors):
-    # type: (BDF, Any, int, Any, int, int) -> int
+def _check_gust_case(fem2: BDF, log: SimpleLogger, sol: int, subcase: Subcase,
+                     ierror: int, nerrors: int) -> None:
     """checks that GUST is valid"""
     if 'METHOD' not in subcase:  # EIGRL
         msg = 'A METHOD card is required for FLUTTER - SOL %i\n%s' % (sol, subcase)
@@ -1306,7 +1318,7 @@ def _check_case_sol_200(sol: int,
     # BUCKLING
     if 'DESOBJ' in subcase:
         value = subcase.get_parameter('DESOBJ')[0]
-        assert value in fem2.dresps, 'value=%s not in dresps' % value
+        assert value in fem2.dresps, f'value={value} not in dresps'
     else:
         fem2.log.warning('no DESOBJ (DRESPi) in this subcase; is this a buckling preload case?')
         fem2.log.warning('\n%s' % subcase)

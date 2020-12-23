@@ -1,6 +1,7 @@
 import os
 import sys
 import copy
+from typing import Union
 
 import numpy as np
 from cpylog import get_logger2
@@ -17,7 +18,7 @@ AVL_KEYWORDS_LONG = [
 
 AVL_KEYWORDS = [_avl_keyword[:4] for _avl_keyword in AVL_KEYWORDS_LONG]
 
-def read_avl(avl_filename, log=None, debug=False):
+def read_avl(avl_filename, log=None, debug: Union[str, bool, None]=False):
     """reads a *.avl file"""
     avl = AVL(log=log, debug=debug)
     avl.read_avl(avl_filename)

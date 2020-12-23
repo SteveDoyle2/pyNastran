@@ -2,6 +2,7 @@
 Defines functions for single precision 16 character field writing.
 """
 import sys
+import warnings
 from typing import List, Union, Optional, Any
 from numpy import float32, isnan  # type: ignore
 
@@ -269,7 +270,7 @@ def print_card_16(fields: List[Optional[Union[int, float, str]]],
     try:
         out = '%-8s' % (fields[0] + '*')
     except:
-        print("ERROR!  fields=%s" % fields)
+        warnings.warn("ERROR!  fields=%s" % fields)
         sys.stdout.flush()
         raise
 
@@ -278,7 +279,7 @@ def print_card_16(fields: List[Optional[Union[int, float, str]]],
         try:
             out += print_field_16(field)
         except:
-            print("bad fields = %s" % fields)
+            warnings.warn("bad fields = %s" % fields)
             raise
         if i % 4 == 0:  # allow 1+4 fields per line
             out = out.rstrip(' ')

@@ -220,7 +220,8 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
     #: required for sphinx bug
     #: http://stackoverflow.com/questions/11208997/autoclass-and-instance-attributes
     #__slots__ = ['_is_dynamic_syntax']
-    def __init__(self, debug: bool=True, log: Optional[SimpleLogger]=None, mode: str='msc'):
+    def __init__(self, debug: Union[str, bool, None],
+                 log: Optional[SimpleLogger]=None, mode: str='msc'):
         """
         Initializes the BDF object
 

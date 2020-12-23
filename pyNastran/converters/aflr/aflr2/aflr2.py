@@ -12,6 +12,7 @@ defines:
 import os
 import sys
 from copy import deepcopy
+from typing import Union
 
 import numpy as np
 from numpy import (zeros, array, vstack, hstack, where,
@@ -30,7 +31,7 @@ def read_bedge(bedge_filename, beta_reverse=179.7, log=None, debug=False):
 
 class AFLR2:
     """defines methods for reading interfacing with AFLR2"""
-    def __init__(self, log=None, debug=False):
+    def __init__(self, log=None, debug: Union[str, bool, None]=False):
         """
         Initializes the AFLR2 object
 
