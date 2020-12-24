@@ -11,15 +11,13 @@ from pyNastran.bdf.mesh_utils.loads import sum_forces_moments, sum_forces_moment
 model_path = os.path.join(pyNastran.__path__[0], '..', 'models')
 
 
-log = None
 class TestLoadSum(unittest.TestCase):
     def test_loads_sum_01(self):
         """tests FORCE"""
-        model = BDF(log=log, debug=False)
+        model = BDF(log=None, debug=None)
         bdf_filename = os.path.join(model_path, 'solid_bending', 'solid_bending.bdf')
         model.read_bdf(bdf_filename)
         loadcase_id = 1
-        #print("keys1", model.loads.keys())
 
         p0 = array([0., 0., 0.])
         F_expected = array([23000., 0., 0.])
@@ -36,11 +34,10 @@ class TestLoadSum(unittest.TestCase):
 
     def test_loads_sum_02(self):
         """tests FORCE"""
-        model = BDF(log=log, debug=False)
+        model = BDF(log=None, debug=None)
         bdf_filename = os.path.join(model_path, 'sol_101_elements', 'static_solid_shell_bar.bdf')
         model.read_bdf(bdf_filename)
         loadcase_id = 10000
-        #print("keys2", model.loads.keys())
 
         p0 = array([0., 0., 0.])
         F_expected = array([0., 0., 10000.])
@@ -70,11 +67,10 @@ class TestLoadSum(unittest.TestCase):
     def test_loads_sum_03(self):
         """tests N/A"""
         if 0:  # pragma: no cover
-            model = BDF(log=log, debug=False)
+            model = BDF(log=None, debug=False)
             bdf_filename = os.path.join(model_path, 'iSat', 'ISat_Launch_Sm_4pt.dat')
             model.read_bdf(bdf_filename)
             loadcase_id = 1
-            #print("keys3", model.loads.keys())
 
             p0 = array([0., 0., 0.])
             F_expected = array([0., 0., 1.])
@@ -102,11 +98,9 @@ class TestLoadSum(unittest.TestCase):
           - 11=PLOAD4
         """
         p0 = array([0., 0., 0.])
-        model = BDF(log=log, debug=False)
+        model = BDF(log=None, debug=None)
         bdf_filename = os.path.join(model_path, 'plate', 'plate.bdf')
-        #print(bdf_filename)
         model.read_bdf(bdf_filename)
-        #print("keys4", model.loads.keys())
 
         loadcase_id = 1
         F_expected = array([600., 0., 0.])
@@ -231,7 +225,7 @@ class TestLoadSum(unittest.TestCase):
          - 1002=1002
          - 1003=PLOAD
         """
-        model = BDF(log=log, debug=False)
+        model = BDF(log=None, debug=None)
         bdf_filename = os.path.join(model_path, 'real', 'loads', 'loads.bdf')
         model.read_bdf(bdf_filename)
 
@@ -406,7 +400,7 @@ class TestLoadSum(unittest.TestCase):
         model.write_bdf(bdf_file, size=16)
 
     def _test_loads_sum_06(self):
-        model = BDF(log=log, debug=False)
+        model = BDF(log=None, debug=False)
         bdf_filename = os.path.join(model_path, 'real', 'loads', 'bars.bdf')
         model.read_bdf(bdf_filename)
         p0 = array([0., 0., 0.])
@@ -429,7 +423,7 @@ class TestLoadSum(unittest.TestCase):
             self.assertTrue(allclose(M1_expected, M1), 'loadcase_id=%s M_expected=%s M1=%s' % (loadcase_id, M1_expected, M1))
 
     def test_loads_sum_radial_01(self):
-        model = BDF(debug=False)
+        model = BDF(log=None, debug=None)
         model.nodes[1] = GRID(1, cp=1, xyz=[0., 0., 0.], cd=0, ps='', seid=0,
                               comment='')
         cid = 1

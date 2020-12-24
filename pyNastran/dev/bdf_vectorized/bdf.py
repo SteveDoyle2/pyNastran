@@ -10,10 +10,10 @@ import sys
 import traceback
 from pickle import load, dump
 from collections import defaultdict
-from typing import List
+from typing import List, Union
 
 import numpy as np
-from cpylog import get_logger2, __version__ as CPYLOG_VERSION
+from cpylog import SimpleLogger, get_logger2, __version__ as CPYLOG_VERSION
 
 from pyNastran.utils import object_attributes, check_path # _filename
 from pyNastran.bdf.bdf_interface.utils import (
