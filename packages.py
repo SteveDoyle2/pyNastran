@@ -2,6 +2,19 @@
 import os
 import sys
 
+# Get strings from http://pypi.python.org/pypi?%3Aaction=list_classifiers
+CLASSIFIERS = [
+    'Natural Language :: English',
+    'Intended Audience :: Science/Research',
+    'License :: OSI Approved :: BSD License',
+    'Programming Language :: Python :: 3.7',
+    'Programming Language :: Python :: 3.8',
+    'Programming Language :: Python :: 3.9',
+]
+
+PYTHON_REQUIRES = '>=3.7'
+
+
 # features in packages used by pyNastran
 # numpy
 #  - 1.12 min for 3.6
@@ -86,7 +99,7 @@ def get_package_requirements(is_gui=True, add_vtk_qt=True, python_version=None, 
         #'APPVEYOR' in os.environ or
         #'READTHEDOCS' in os.environ
     #)
-    is_travis = (
+    is_continuous_integration = (
         'TRAVIS' in os.environ or
         'TRAVIS_PYTHON_VERSION' in os.environ or
         'GITHUB_ACTOR' in os.environ
@@ -312,7 +325,7 @@ def get_package_requirements(is_gui=True, add_vtk_qt=True, python_version=None, 
 
 
     #is_windows = 'nt' in os.name
-    if is_travis:
+    if is_continuous_integration:
         #install_requires.append('coverage>=4.4.2')
         #install_requires.append('python-coveralls>=2.9')
         #install_requires.append('coveralls>=1.7')

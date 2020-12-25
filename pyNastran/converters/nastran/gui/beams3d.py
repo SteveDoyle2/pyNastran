@@ -1,7 +1,7 @@
 """creates 3d beams"""
 from __future__ import annotations
 from collections import defaultdict
-from typing import List, Dict, Union, TYPE_CHECKING
+from typing import Tuple, List, Dict, Union, TYPE_CHECKING
 
 import numpy as np
 from numpy.linalg import norm
@@ -47,10 +47,11 @@ if TYPE_CHECKING:  # pragma: no cover
     #from pyNastran.nptyping import NDArray3float
     from pyNastran.bdf.bdf import BDF, CBAR, CBEAM
 
-def get_bar_nids(model: BDF, bar_beam_eids: List[int]) -> List[int]:
+def get_bar_nids(model: BDF, bar_beam_eids: List[int]) -> Tuple[List[int],
+                                                                Dict[int, Tuple[int, int]]]:
     """gets the bar nids"""
     nids = set([])
-    nid_release_map = {}
+    nid_release_map = defaultdict(list)
     for eid in bar_beam_eids:
         elem = model.elements[eid]  # type: Union[CBAR, CBEAM]
         nid1, nid2 = elem.node_ids
@@ -63,6 +64,7 @@ def get_bar_nids(model: BDF, bar_beam_eids: List[int]) -> List[int]:
 
     nids = list(nids)
     nids.sort()
+    nid_release_map = dict(nid_release_map)
     return nids, nid_release_map
 
 def get_beam_sections_map(model: BDF,

@@ -1,3 +1,4 @@
+from typing import Tuple, List, Any
 from qtpy import QtGui
 from qtpy.QtWidgets import QWidget, QVBoxLayout, QAbstractItemView
 from pyNastran.gui.utils.qt.qtreeview2 import RightClickTreeView, GenericRightClickTreeView
@@ -8,7 +9,7 @@ class ResultsWindow(QWidget):
     A ResultsWindow creates the box where we actually select our
     results case.  It does not have an apply button.
     """
-    def __init__(self, parent, name, data, choices, actions=None,
+    def __init__(self, parent, name, data, choices, actions: List[Tuple[str, Any, bool]]=None,
                  include_clear=True, include_export_case=True,
                  include_delete=True,
                  include_results=True):
@@ -18,9 +19,9 @@ class ResultsWindow(QWidget):
         self.choices = choices
         self.parent = parent
 
-        def on_modify(icase):
+        def on_modify(icase: int):
             print('modify...%i' % icase)
-        def on_case(icase):
+        def on_case(icase: int):
             print('case...%i' % icase)
         def on_delete():
             print('delete...')

@@ -154,16 +154,18 @@ jobs:
         run: |
          #if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
          python pyNastran/all_tests_no_gui.py
-         #coverage run pyNastran/all_tests_no_gui.py
-         codecov
+         coverage run pyNastran/all_tests_no_gui.py
 
       - name: Run GUI
         if: ${{ matrix.mode == 'latest_pyside_gui' || matrix.mode == 'latest_pyqt_gui' || matrix.mode == 'old_pyside_gui' || matrix.mode == 'old_pyqt_gui' }}
         run: |
          #if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
          python pyNastran/all_tests.py
-         #coverage run pyNastran/all_tests.py
-         #codecov
+         coverage run pyNastran/all_tests.py
+
+      - name: Upload coverage
+        run: |
+         codecov
 
 #--------------------------------------------------------------------------------------------------
 # https://docs.github.com/en/free-pro-team@latest/actions/guides/building-and-testing-python

@@ -113,6 +113,12 @@ if IS_SCINTILLA:
             #else:
                 #self.markerAdd(nline, self.ARROW_MARKER_NUM)
 
+        def add(self, word: str):
+            cursor = self.text.textCursor()
+            pos = cursor.position()
+            self.text.setTextCursor(cursor)
+            self.text.setText(var)
+
         def toPlainText(self):
             data = str(self.text())
             return data
@@ -210,12 +216,22 @@ class PythonConsoleWidget(QDockWidget):
     #def on_clear(self):
         #print(4)
 
+class QTextEditAdd(QTextEdit):
+    def add(self, word: str):
+        cursor = self.textCursor()
+        pos = cursor.position()
+        old_text = self.toPlainText()
+        #self.setTextCursor(cursor)
+        new_text = old_text[:pos] + word + old_text[pos:]
+        self.setText(new_text)
+
+
 def get_code_block():
     if is_pygments and IS_SCINTILLA:
         #self.enter_data = QSyntaxHighlighting()
         enter_data = SimplePythonEditorWidget()
     else:
-        enter_data = QTextEdit()
+        enter_data = QTextEditAdd()
         font = QFont()
         font.setFamily('Courier')
         enter_data.setFont(font)

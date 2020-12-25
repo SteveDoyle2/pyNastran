@@ -1,9 +1,10 @@
 #!/usr/bin/env python
-import os
+#import os
 from setuptools import setup, find_packages
 
 from packages import (check_python_version, get_package_requirements,
-                      update_version_file, LONG_DESCRIPTION)
+                      update_version_file, PYTHON_REQUIRES,
+                      LONG_DESCRIPTION, CLASSIFIERS)
 
 
 check_python_version()
@@ -43,15 +44,9 @@ setup(
     description=pyNastran.__desc__,
     long_description=LONG_DESCRIPTION,
     long_description_content_type='text/x-rst',
-    classifiers=[
-        'Natural Language :: English',
-        'Intended Audience :: Science/Research',
-        'License :: OSI Approved :: BSD License',
-        'Programming Language :: Python :: 3.7',
-        'Programming Language :: Python :: 3.8',
-        ], # Get strings from http://pypi.python.org/pypi?%3Aaction=list_classifiers
+    classifiers=CLASSIFIERS,
     keywords='',
-    python_requires='>=3.7',
+    python_requires=PYTHON_REQUIRES,
     author=pyNastran.__author__,
     author_email=pyNastran.__email__,
     url=pyNastran.__website__,
@@ -84,7 +79,7 @@ setup(
 
             #'pyNastranv = pyNastran.dev.bdf_vectorized.solver.solver:main',
             #'test_bdfv = pyNastran.dev.bdf_vectorized.test.test_bdf_vectorized2:main',
-            'test_bdfv = pyNastran.dev.bdf_vectorized2.test.test_bdf:main',
+            #'test_bdfv = pyNastran.dev.bdf_vectorized2.test.test_bdf:main',
             #'nastran_to_code_aster = pyNastran.converters.dev.code_aster.nastran_to_code_aster:main',
         ]
     },
