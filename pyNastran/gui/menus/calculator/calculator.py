@@ -334,7 +334,7 @@ def load_module_functions(module, func_list, exclusion_set):
         func_list.append(func)
 
 def main(): # pragma: no cover
-    """test example for AnimationWindow"""
+    """test example for CalculatorWindow"""
     # kills the program when you hit Cntl+C from the command line
     # doesn't save the current state as presumably there's been an error
     import signal
