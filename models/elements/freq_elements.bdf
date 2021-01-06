@@ -22,6 +22,7 @@ $ Subcase name : Default
    FREQUENCY = 22  $ defines frequency parameters
    DLOAD     = 32  $ points to the RLOAD2 cards
 BEGIN BULK
+MDLPRM,HDF5,1
 PARAM    POST    -1
 PARAM    AUTOSPC NO
 PARAM   PRTMAXIM YES

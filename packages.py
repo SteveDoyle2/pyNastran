@@ -83,8 +83,22 @@ def str_version(version):
     return '.'.join(str(versioni) for versioni in version)
 
 
-def get_package_requirements(is_gui=True, add_vtk_qt=True, python_version=None, bdist=False):
-    """gets the requirements for setup.py"""
+def get_package_requirements(is_gui: bool=True, add_vtk_qt: bool=True,
+                             python_version: str=None, bdist: bool=False):
+    """
+    Gets the requirements for setup.py
+
+    Parameters
+    ----------
+    is_gui: bool; default=True
+        add matplotlib, qtpy, pillow, imageio
+        not vtk or pyqt/pyside because it's harder to install
+    python_version: str; default=None -> sys.version_info
+        allows us to get dynamic requirements
+    bdist: bool; default=False
+        loosen the requirements on numpy, scipy, etc.
+
+    """
     if python_version is None:
         python_version = '%s.%s' % sys.version_info[:2]
 

@@ -261,8 +261,7 @@ def expand_float(data):
     return out
 
 
-def write_stress_type(key, options, value, spaces=''):
-    # type: (str, List[str], Optional[str], str) -> str
+def write_stress_type(key: str, options: List[str], value: Optional[str], spaces: str='') -> str:
     """
     writes:
      - STRESS(SORT1) = ALL

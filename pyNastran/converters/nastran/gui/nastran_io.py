@@ -1866,7 +1866,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         )
         return out
 
-    def set_caero_grid(self, ncaeros_points, model):
+    def set_caero_grid(self, ncaeros_points: int, model: BDF) -> None:
         """
         Sets the CAERO panel geometry.
 
@@ -1962,7 +1962,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         #gui.alt_grids['caero']
         #edge_mapper.SetResolveCoincidentTopologyToPolygonOffset()
 
-    def set_caero_subpanel_grid(self, ncaero_sub_points, model):
+    def set_caero_subpanel_grid(self, ncaero_sub_points: int, model: BDF) -> None:
         """
         Sets the CAERO sub-panel geometry.
 

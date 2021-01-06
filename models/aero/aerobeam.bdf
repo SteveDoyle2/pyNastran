@@ -49,6 +49,7 @@ SUBCASE 3
   SPC     = 1     $ ANTISYMMETRIC BOUNDARY CONDITION
   TRIM    = 3 $
 BEGIN BULK
+MDLPRM,HDF5,1
 PARAM,POST,-1
 $                                                                       $
 $        THE ANNOTATIONS IN THIS INPUT DECK ARE INTENDED TO             $

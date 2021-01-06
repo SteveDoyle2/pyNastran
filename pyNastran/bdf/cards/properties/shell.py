@@ -941,19 +941,11 @@ class PCOMP(CompositeShellProperty):
             thicknesses.append(t)
             thetas.append(theta)
             souts.append(sout)
-        if ft == 0:
-            ft = None
-        elif ft == 1:
-            ft = 'HILL'
-        elif ft == 2:
-            ft = 'HOFF'
-        elif ft == 3:
-            ft = 'TSAI'
-        elif ft == 4:
-            ft = 'STRN'
-        else:
-            raise RuntimeError(f'unsupported ft.  pid={pid} ft={ft!r}.'
-                               f'\nPCOMP = data')
+            try:
+                map_failure_theory_int(ft)
+            except NotImplementedError:
+                raise RuntimeError(f'unsupported ft.  pid={pid} ft={ft!r}.'
+                               f'\nPCOMP = {data}')
         return PCOMP(pid, mids, thicknesses, thetas, souts,
                      nsm, sb, ft, tref, ge, lam, z0, comment=comment)
 
@@ -1208,6 +1200,20 @@ class PCOMP(CompositeShellProperty):
             return self.comment + print_card_8(card)
         return self.comment + print_card_16(card)
 
+def map_failure_theory_int(ft: int) -> str:
+    if ft == 0:
+        ft_str = None
+    elif ft == 1:
+        ft_str = 'HILL'
+    elif ft == 2:
+        ft_str = 'HOFF'
+    elif ft == 3:
+        ft_str = 'TSAI'
+    elif ft == 4:
+        ft_str = 'STRN'
+    else:
+        raise NotImplementedError(ft)
+    return ft_str
 
 class PCOMPG(CompositeShellProperty):
     """

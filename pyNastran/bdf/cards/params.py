@@ -10,6 +10,7 @@ from pyNastran.bdf.bdf_interface.assign_type import (
     integer_double_string_or_blank)
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
+from pyNastran.utils.numpy_utils import integer_types, float_types
 
 #float_words_1 = [
     #b'K6ROT', b'WTMASS', b'SNORM', b'PATVER', b'MAXRATIO', b'EPSHT',
@@ -324,7 +325,9 @@ class PARAM(BaseCard):
         if comment:
             self.comment = comment
         self.key = key
-        if isinstance(values, (int, float, str)):
+        if isinstance(values, list):
+            pass
+        elif isinstance(values, (integer_types, float_types, str)):
             values = [values]
         self.values = values
 

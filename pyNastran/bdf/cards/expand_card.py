@@ -10,8 +10,7 @@ from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.bdf.bdf_interface.assign_type import interpret_value
 
 
-def expand_thru(fields, set_fields=True, sort_fields=False):
-    # type: (List[str], bool, bool) -> List[int]
+def expand_thru(fields: List[str], set_fields: bool=True, sort_fields: bool=False) -> List[int]:
     """
     Expands a list of values of the form [1,5,THRU,9,13]
     to be [1,5,6,7,8,9,13]

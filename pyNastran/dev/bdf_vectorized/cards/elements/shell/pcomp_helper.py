@@ -6,6 +6,7 @@ from pyNastran.utils.numpy_utils import integer_types
 #from pyNastran.bdf.bdf_interface.assign_type import (integer, integer_or_blank,
                                                     #double_or_blank, integer_double_or_blank, blank, string_or_blank)
 from pyNastran.bdf.bdf_interface.assign_type import integer, double_or_blank, string_or_blank, integer_or_blank
+from pyNastran.bdf.cards.properties.shell import map_failure_theory_int
 from pyNastran.bdf.field_writer_8 import set_blank_if_default, print_card_8
 from pyNastran.bdf.field_writer import print_card
 from pyNastran.bdf.cards.base_card import _format_comment
@@ -709,17 +710,9 @@ class PCOMPi(CompositeShellProperty):
             thicknesses.append(t)
             thetas.append(theta)
             souts.append(sout)
-        if ft == 0:
-            ft = None
-        elif ft == 1:
-            ft = 'HILL'
-        elif ft == 2:
-            ft = 'HOFF'
-        elif ft == 3:
-            ft = 'TSAI'
-        elif ft == 4:
-            ft = 'STRN'
-        else:
+        try:
+            ft = map_failure_theory_int(ft)
+        except NotImplementedError:
             raise RuntimeError('unsupported ft.  pid=%s ft=%r.'
                                '\nPCOMP = %s' % (pid, ft, data))
         return PCOMPi(pid, mids, thicknesses, thetas, souts,
@@ -753,5 +746,3 @@ class PCOMPi(CompositeShellProperty):
     def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.repr_fields()
         return self.comment + print_card_8(card)
-
-

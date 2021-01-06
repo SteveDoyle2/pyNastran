@@ -9,7 +9,8 @@ from vtk.util.numpy_support import (
 
 
 IS_TESTING = 'test' in sys.argv[0]
-VTK_VERSION = [int(val) for val in vtk.VTK_VERSION.split('.')]
+_VTK_VERSION = vtk.vtkVersion.GetVTKVersion()
+VTK_VERSION = [int(val) for val in _VTK_VERSION.split('.')]
 if VTK_VERSION[0] < 7:
     msg = f'VTK version={vtk.VTK_VERSION!r} is no longer supported (use vtk 7 or 8)'
     raise NotImplementedError(msg)

@@ -240,7 +240,7 @@ def validate_dvprel(prop_type, pname_fid, validate):
                 word = pname_fid
                 num = 'A'
                 pname_fid = '%s(%s)' % (pname_fid, num)
-            else:
+            else: # A(1)
                 word, num = break_word_by_trailing_parentheses_integer_ab(
                     pname_fid)
 
@@ -447,7 +447,7 @@ class DVXREL1(BaseCard):
         msg = ''
         assert len(self.dvids) > 0 and len(self.coeffs) > 0, str(self)
         for i, desvar_id, coeff in zip(count(), self.dvids, self.coeffs):
-            if not isinstance(desvar_id, int):
+            if not isinstance(desvar_id, integer_types):
                 msg += '  desvar_id[%i]=%s is not an integer; type=%s\n' % (
                     i, desvar_id, type(desvar_id))
 
@@ -1487,7 +1487,7 @@ def validate_dresp1(property_type, response_type, atta, attb, atti):
             raise RuntimeError(msg)
 
     if response_type == 'FLUTTER':
-        assert property_type in [None, 'PKNL'], msg
+        assert property_type in [None, 'PKNL', 'PK'], msg
         assert atta is None, msg
         assert attb is None, msg
         assert len(atti) == 4, msg
@@ -1516,15 +1516,14 @@ def validate_dresp1(property_type, response_type, atta, attb, atti):
             attb = 1
         msg = 'DRESP1 ptype=%s rtype=%s atta=%s attb=%s atti=%s' % (
             property_type, response_type, atta, attb, atti)
-        if property_type == 'PCOMP':
-            # 11 - max shear stress/strain
-            assert atta in [3, 4, 5, 6, 7, 9, 10, 11], msg
-            assert len(atti) > 0, msg
-        else:
+
+        # 11 - max shear stress/strain
+        assert atta in [3, 4, 5, 6, 7, 9, 10, 11], msg  # stress code
+        if property_type not in ['PCOMP', 'ELEM']:
             raise RuntimeError(msg)
         assert isinstance(attb, integer_types), msg
-        assert attb > 0, msg
-        assert len(atti) > 0, msg
+        assert attb > 0, msg # lamina id
+        assert len(atti) > 0, msg # pid/eids
 
     elif response_type in ['STRESS', 'STRAIN']:
         _validate_dresp1_stress_strain(property_type, response_type, atta, attb, atti)
@@ -1550,7 +1549,7 @@ def _validate_dresp_property_none(property_type, response_type, atta, attb, atti
         property_type, response_type, atta, attb, atti)
 
     if response_type == 'WEIGHT':
-        assert atta in [1, 2, 3, 4, 5, 6, None], msg
+        assert atta in [1, 2, 3, 4, 5, 6, 33, None], msg
         assert attb in [1, 2, 3, 4, 5, 6, None], msg
         if len(atti) == 0:
             atti = ['ALL']
@@ -1564,7 +1563,7 @@ def _validate_dresp_property_none(property_type, response_type, atta, attb, atti
             atti = ['ALL']
         msg = 'DRESP1 ptype=%s rtype=%s atta=%s attb=%s atti=%s' % (
             property_type, response_type, atta, attb, atti)
-        assert atta is None, msg
+        #assert atta is None, msg
         assert attb is None, msg
         for attii in atti:
             assert attii in [0, 'ALL'], msg
@@ -1646,6 +1645,14 @@ def _validate_dresp_property_none(property_type, response_type, atta, attb, atti
         #   2 -> inverse approximation
         assert attb in [None, 1, 2], msg
         assert len(atti) == 0, msg
+    elif response_type == 'STABDER':
+        # atta=517
+        #attb = None
+        #atti = [4]
+        assert isinstance(atta, integer_types), msg
+        assert atta > 0, msg
+        assert attb is None, msg
+        assert len(atti) == 1, msg
     else:
         raise RuntimeError(msg)
     return atta, atti
@@ -1657,13 +1664,15 @@ def _validate_dresp1_stress_strain(property_type, response_type, atta, attb, att
 
     _blank_or_mode(attb, msg)
     if property_type == 'ELEM':
-        assert isinstance(atta, int), msg
+        assert isinstance(atta, integer_types), msg
     elif property_type == 'PBARL':
         assert atta in [2, 3, 4, 5, 7, 8], msg
     elif property_type == 'PBAR':
         assert atta in [2, 6, 7, 8, 14, 15], msg
     elif property_type == 'PBEAM':
         assert atta in [6, 8, 9, 31, 59, 108], msg
+    elif property_type == 'PBEAML':
+        assert atta in [8, 9], msg
     elif property_type == 'PROD':
         assert atta in [2, 3, 7], msg
 
@@ -1814,6 +1823,19 @@ class DRESP1(OptConstraint):
         >>> atti = [pid]
         >>> DRESP1(dresp_id, label, response_type, property_type, region, atta, attb, atti)
 
+        **stress/PCOMP**
+
+        >>> dresp_id = 104
+        >>> label = 'resp2'
+        >>> response_type = 'CSTRESS'
+        >>> property_type = 'ELEM'
+        >>> pid = 3
+        >>> layer = 4
+        >>> atta = 3 # ???
+        >>> region = None
+        >>> attb = layer
+        >>> atti = [eid]
+        >>> DRESP1(dresp_id, label, response_type, property_type, region, atta, attb, atti)
 
         **displacement - not done**
 
@@ -5560,7 +5582,7 @@ def get_dvprel_key(dvprel, prop=None):
     if prop_type == 'PROD':
         if var_to_change in ['A', 'J']:
             pass
-        elif isinstance(var_to_change, int):  # pragma: no cover
+        elif isinstance(var_to_change, integer_types):  # pragma: no cover
             msg = 'prop_type=%r pname/fid=%s is not supported' % (prop_type, var_to_change)
         else:  # pragma: no cover
             msg = 'prop_type=%r pname/fid=%r is not supported' % (prop_type, var_to_change)
@@ -5568,7 +5590,7 @@ def get_dvprel_key(dvprel, prop=None):
     elif prop_type == 'PTUBE':
         if var_to_change in ['OD', 'T']:
             pass
-        elif isinstance(var_to_change, int):  # pragma: no cover
+        elif isinstance(var_to_change, integer_types):  # pragma: no cover
             msg = 'prop_type=%r pname/fid=%s is not supported' % (prop_type, var_to_change)
         else:  # pragma: no cover
             msg = 'prop_type=%r pname/fid=%r is not supported' % (prop_type, var_to_change)
@@ -5580,13 +5602,13 @@ def get_dvprel_key(dvprel, prop=None):
             var_to_change = '12I/t^3'
         elif var_to_change == 8:
             var_to_change = 'Ts/T'
-        elif isinstance(var_to_change, int):  # pragma: no cover
+        elif isinstance(var_to_change, integer_types):  # pragma: no cover
             msg = 'prop_type=%r pname/fid=%s is not supported' % (prop_type, var_to_change)
         else:  # pragma: no cover
             msg = 'prop_type=%r pname/fid=%r is not supported' % (prop_type, var_to_change)
 
     elif prop_type == 'PCOMP':
-        if isinstance(var_to_change, int):
+        if isinstance(var_to_change, integer_types):
             if var_to_change in valid_pcomp_codes:
                 pass
             else:
@@ -5599,13 +5621,13 @@ def get_dvprel_key(dvprel, prop=None):
             msg = 'prop_type=%r pname/fid=%r is not supported' % (prop_type, var_to_change)
 
     elif prop_type == 'PCOMPG':
-        if isinstance(var_to_change, int):
+        if isinstance(var_to_change, integer_types):
             msg = 'prop_type=%r pname/fid=%s is not supported' % (prop_type, var_to_change)
         elif var_to_change.startswith('THETA') or var_to_change.startswith('T'):
             pass
         elif var_to_change in ['Z0', 'SB']:
             pass
-        elif isinstance(var_to_change, int):  # pragma: no cover
+        elif isinstance(var_to_change, integer_types):  # pragma: no cover
             msg = 'prop_type=%r pname/fid=%s is not supported' % (prop_type, var_to_change)
         else:  # pragma: no cover
             msg = 'prop_type=%r pname/fid=%r is not supported' % (prop_type, var_to_change)
@@ -5632,7 +5654,7 @@ def get_dvprel_key(dvprel, prop=None):
         if var_to_change in ['A', 'I1', 'I2', 'J', 'C1', 'C2', 'D1', 'D2',
                              'E1', 'E2', 'F1', 'F2', 'K1', 'K2', 'I12']:
             pass
-        elif isinstance(var_to_change, int):  # pragma: no cover
+        elif isinstance(var_to_change, integer_types):  # pragma: no cover
             if var_to_change in pbar_var_map:
                 var_to_change = pbar_var_map[var_to_change]
             else:
@@ -5650,7 +5672,7 @@ def get_dvprel_key(dvprel, prop=None):
                     var_to_change)
                 var_to_change = '%s(%s)' % (word, num)  # A(A), A(1), A(10)
 
-        elif isinstance(var_to_change, int):  # pragma: no cover
+        elif isinstance(var_to_change, integer_types):  # pragma: no cover
             if var_to_change < 0:
                 # shift to divisible by 16
                 if not (-167 <= var_to_change <= -6):
@@ -5694,7 +5716,7 @@ def get_dvprel_key(dvprel, prop=None):
             msg = 'prop_type=%r pname/fid=%r is not supported' % (prop_type, var_to_change)
 
     elif prop_type == 'PBARL':
-        if isinstance(var_to_change, int):
+        if isinstance(var_to_change, integer_types):
             msg = 'prop_type=%r pname/fid=%s is not supported' % (prop_type, var_to_change)
         elif var_to_change.startswith('DIM'):
             pass
@@ -5706,7 +5728,7 @@ def get_dvprel_key(dvprel, prop=None):
             var_to_change = '%s %s' % (prop.Type, var_to_change)
 
     elif prop_type == 'PBEAML':
-        if isinstance(var_to_change, int):
+        if isinstance(var_to_change, integer_types):
             msg = 'prop_type=%r pname/fid=%s is not supported' % (prop_type, var_to_change)
         elif var_to_change in ['NSM']:
             pass
@@ -5722,7 +5744,7 @@ def get_dvprel_key(dvprel, prop=None):
     elif prop_type == 'PSHEAR':
         if var_to_change in ['T']:
             pass
-        elif isinstance(var_to_change, int):  # pragma: no cover
+        elif isinstance(var_to_change, integer_types):  # pragma: no cover
             msg = 'prop_type=%r pname/fid=%s is not supported' % (prop_type, var_to_change)
         else:  # pragma: no cover
             msg = 'prop_type=%r pname/fid=%r is not supported' % (prop_type, var_to_change)
@@ -5730,14 +5752,14 @@ def get_dvprel_key(dvprel, prop=None):
     elif prop_type == 'PELAS':
         if var_to_change in ['K1', 'GE1']:
             pass
-        elif isinstance(var_to_change, int):  # pragma: no cover
+        elif isinstance(var_to_change, integer_types):  # pragma: no cover
             msg = 'prop_type=%r pname/fid=%s is not supported' % (prop_type, var_to_change)
         else:  # pragma: no cover
             msg = 'prop_type=%r pname/fid=%r is not supported' % (prop_type, var_to_change)
     elif prop_type == 'PELAST':
         if var_to_change in ['TKID']:
             pass
-        elif isinstance(var_to_change, int):  # pragma: no cover
+        elif isinstance(var_to_change, integer_types):  # pragma: no cover
             #if var_to_change == 5:
                 # PID TKID TGEID TKNID
                 #var_to_change = 'TKNID'
@@ -5749,7 +5771,7 @@ def get_dvprel_key(dvprel, prop=None):
     elif prop_type == 'PDAMP':
         if var_to_change in ['B1']:
             pass
-        elif isinstance(var_to_change, int):  # pragma: no cover
+        elif isinstance(var_to_change, integer_types):  # pragma: no cover
             msg = 'prop_type=%r pname/fid=%s is not supported' % (prop_type, var_to_change)
         else:  # pragma: no cover
             msg = 'prop_type=%r pname/fid=%r is not supported' % (prop_type, var_to_change)
@@ -5757,7 +5779,7 @@ def get_dvprel_key(dvprel, prop=None):
     elif prop_type == 'PWELD':
         if var_to_change in ['D']:
             pass
-        elif isinstance(var_to_change, int):  # pragma: no cover
+        elif isinstance(var_to_change, integer_types):  # pragma: no cover
             msg = 'prop_type=%r pname/fid=%s is not supported' % (prop_type, var_to_change)
         else:  # pragma: no cover
             msg = 'prop_type=%r pname/fid=%r is not supported' % (prop_type, var_to_change)
@@ -5778,7 +5800,7 @@ def get_dvprel_key(dvprel, prop=None):
                                'M1', 'M2', 'M3', 'M4', 'M5', 'M6',
                                'GE1', 'GE3', 'GE4', 'GE5', 'GE6',]:
             pass
-        elif isinstance(var_to_change, int):  # pragma: no cover
+        elif isinstance(var_to_change, integer_types):  # pragma: no cover
             msg = 'prop_type=%r pname/fid=%s is not supported' % (prop_type, var_to_change)
         else:  # pragma: no cover
             msg = 'prop_type=%r pname/fid=%r is not supported' % (prop_type, var_to_change)
@@ -5786,14 +5808,14 @@ def get_dvprel_key(dvprel, prop=None):
     elif prop_type == 'PBUSH1D':
         if var_to_change in ['K', 'C', 'M']:
             pass
-        elif isinstance(var_to_change, int):  # pragma: no cover
+        elif isinstance(var_to_change, integer_types):  # pragma: no cover
             msg = 'prop_type=%r pname/fid=%s is not supported' % (prop_type, var_to_change)
         else:  # pragma: no cover
             msg = 'prop_type=%r pname/fid=%r is not supported' % (prop_type, var_to_change)
     elif prop_type == 'PBUSHT':
         if var_to_change in ['TGEID1', 'TGEID2']:
             pass
-        elif isinstance(var_to_change, int):  # pragma: no cover
+        elif isinstance(var_to_change, integer_types):  # pragma: no cover
             msg = 'prop_type=%r pname/fid=%s is not supported' % (prop_type, var_to_change)
         else:  # pragma: no cover
             msg = 'prop_type=%r pname/fid=%r is not supported' % (prop_type, var_to_change)
@@ -5801,7 +5823,7 @@ def get_dvprel_key(dvprel, prop=None):
     elif prop_type == 'PGAP':
         if var_to_change in ['KA',]:
             pass
-        elif isinstance(var_to_change, int):  # pragma: no cover
+        elif isinstance(var_to_change, integer_types):  # pragma: no cover
             msg = 'prop_type=%r pname/fid=%s is not supported' % (prop_type, var_to_change)
         else:  # pragma: no cover
             msg = 'prop_type=%r pname/fid=%r is not supported' % (prop_type, var_to_change)
@@ -5809,7 +5831,7 @@ def get_dvprel_key(dvprel, prop=None):
     elif prop_type == 'PVISC':
         if var_to_change in ['CE1']:
             pass
-        elif isinstance(var_to_change, int):  # pragma: no cover
+        elif isinstance(var_to_change, integer_types):  # pragma: no cover
             msg = 'prop_type=%r pname/fid=%s is not supported' % (prop_type, var_to_change)
         else:  # pragma: no cover
             msg = 'prop_type=%r pname/fid=%r is not supported' % (prop_type, var_to_change)
@@ -5817,7 +5839,7 @@ def get_dvprel_key(dvprel, prop=None):
     elif prop_type == 'PFAST':
         if var_to_change in ['KT1', 'KT2', 'KT3', 'KR1', 'KR2', 'KR3', 'MASS']:
             pass
-        elif isinstance(var_to_change, int):  # pragma: no cover
+        elif isinstance(var_to_change, integer_types):  # pragma: no cover
             msg = 'prop_type=%r pname/fid=%s is not supported' % (prop_type, var_to_change)
         else:  # pragma: no cover
             msg = 'prop_type=%r pname/fid=%r is not supported' % (prop_type, var_to_change)

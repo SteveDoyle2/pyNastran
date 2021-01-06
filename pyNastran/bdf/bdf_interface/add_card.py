@@ -6126,8 +6126,10 @@ class AddCards(AddMethods):
         self._add_dtable_object(dtable)
         return dtable
 
-    def add_tabled1(self, tid, x, y, xaxis='LINEAR', yaxis='LINEAR', extrap=0,
-                    comment='') -> TABLED1:
+    def add_tabled1(self, tid: int,
+                    x: np.ndarray, y: np.ndarray,
+                    xaxis: str='LINEAR', yaxis: str='LINEAR', extrap: int=0,
+                    comment: str='') -> TABLED1:
         """
         Creates a TABLED1, which is a dynamic load card that is applied
         by the DAREA card
@@ -6153,53 +6155,69 @@ class AddCards(AddMethods):
             a comment for the card
 
         """
-        table = TABLED1(tid, x, y, xaxis=xaxis, yaxis=yaxis, extrap=extrap, comment=comment)
+        table = TABLED1(tid, x, y, xaxis=xaxis, yaxis=yaxis,
+                        extrap=extrap, comment=comment)
         self._add_tabled_object(table)
         return table
 
-    def add_tabled2(self, tid, x1, x, y, comment='') -> TABLED2:
+    def add_tabled2(self, tid: int, x1: float,
+                    x: np.ndarray, y: np.ndarray,
+                    extrap: int=0, comment: str='') -> TABLED2:
         """Creates a TABLED2 card"""
-        table = TABLED2(tid, x1, x, y, comment=comment)
+        table = TABLED2(tid, x1, x, y, extrap=extrap, comment=comment)
         self._add_tabled_object(table)
         return table
 
-    def add_tabled3(self, tid, x1, x2, x, y, comment='') -> TABLED3:
+    def add_tabled3(self, tid: int, x1: float, x2: float,
+                    x: np.ndarray, y: np.ndarray,
+                    extrap: int=0, comment: str='') -> TABLED3:
         """Creates a TABLED3 card"""
-        table = TABLED3(tid, x1, x2, x, y, comment=comment)
+        table = TABLED3(tid, x1, x2, x, y, extrap=extrap, comment=comment)
         self._add_tabled_object(table)
         return table
 
-    def add_tabled4(self, tid, x1, x2, x3, x4, a, comment='') -> TABLED4:
+    def add_tabled4(self, tid: int,
+                    x1: float, x2: float, x3: float, x4: float,
+                    a: List[float], comment: str='') -> TABLED4:
         """Creates a TABLED4 card"""
         table = TABLED4(tid, x1, x2, x3, x4, a, comment=comment)
         self._add_tabled_object(table)
         return table
 
-    def add_tablem1(self, tid, x, y, xaxis='LINEAR', yaxis='LINEAR', comment='') -> TABLEM1:
+    def add_tablem1(self, tid: int, x: np.ndarray, y: np.ndarray,
+                    xaxis: str='LINEAR', yaxis: str='LINEAR',
+                    extrap: int=0, comment: str='') -> TABLEM1:
         """Creates a TABLEM1 card"""
         table = TABLEM1(tid, x, y, xaxis=xaxis, yaxis=yaxis, comment=comment)
         self._add_tablem_object(table)
         return table
 
-    def add_tablem2(self, tid, x1, x, y, extrap=0, comment='') -> TABLEM2:
+    def add_tablem2(self, tid: int, x1: float,
+                    x: np.ndarray, y: np.ndarray,
+                    extrap: int=0, comment: str='') -> TABLEM2:
         """Creates a TABLEM2 card"""
         table = TABLEM2(tid, x1, x, y, extrap=extrap, comment=comment)
         self._add_tablem_object(table)
         return table
 
-    def add_tablem3(self, tid, x1, x2, x, y, extrap=0, comment='') -> TABLEM3:
+    def add_tablem3(self, tid: int, x1: float, x2: float,
+                    x: np.ndarray, y: np.ndarray,
+                    extrap: int=0, comment: str='') -> TABLEM3:
         """Creates a TABLEM3 card"""
         table = TABLEM3(tid, x1, x2, x, y, extrap=extrap, comment=comment)
         self._add_tablem_object(table)
         return table
 
-    def add_tablem4(self, tid, x1, x2, x3, x4, a, comment='') -> TABLEM4:
+    def add_tablem4(self, tid: int,
+                    x1: float, x2: float, x3: float, x4: float,
+                    a: List[float], comment: str='') -> TABLEM4:
         """Creates a TABLEM4 card"""
         table = TABLEM4(tid, x1, x2, x3, x4, a, comment=comment)
         self._add_tablem_object(table)
         return table
 
-    def add_tables1(self, tid, x, y, Type=1, comment='') -> TABLES1:
+    def add_tables1(self, tid: int, x: np.ndarray, y: np.ndarray,
+                    Type: int=1, comment: str='') -> TABLES1:
         """
         Adds a TABLES1 card, which defines a stress dependent material
 

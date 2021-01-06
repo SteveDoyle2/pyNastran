@@ -12,6 +12,7 @@ SUBCASE 1
    FMETHOD = 50
 BEGIN BULK
 $
+MDLPRM,HDF5,1
 $--------------------------------------------------------------------------
 include 'aero_cards.inc'
 include 'flutter_cards.inc'

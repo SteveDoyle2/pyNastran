@@ -1,15 +1,16 @@
 #!/usr/bin/env python
-#import os
+import os
 from setuptools import setup, find_packages
 
+import pyNastran
 from packages import (check_python_version, get_package_requirements,
                       update_version_file, PYTHON_REQUIRES,
                       LONG_DESCRIPTION, CLASSIFIERS)
 
 
 check_python_version()
+all_reqs, install_requires = get_package_requirements(is_gui=True)
 
-import pyNastran
 packages = find_packages() + ['gui/icons/*.*']
 
 # set up all icons
@@ -29,7 +30,6 @@ packages = find_packages(exclude=['ez_setup', 'examples', 'tests'] + exclude_wor
 for exclude_word in exclude_words:
     packages = [package for package in packages if exclude_word not in package]
 #print(packages, len(packages)) # 83
-all_reqs, install_requires = get_package_requirements(is_gui=True)
 
 #revision = get_git_revision_short_hash()
 #__version__ = '1.3.0+%s' % revision
