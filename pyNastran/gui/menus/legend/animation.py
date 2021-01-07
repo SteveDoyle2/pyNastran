@@ -1268,7 +1268,8 @@ class AnimationWindow(PyDialog):
         # requires no special validation
         icase_fringe, flag0 = check_int(self.icase_fringe_edit)
         icase_disp, unused_flaga = check_int(self.icase_disp_edit)
-        icase_vector, unused_flagb = check_int(self.icase_vector_edit)
+        #icase_vector, unused_flagb = check_int(self.icase_vector_edit)
+        icase_vector, unused_flagb = None, True
         #icase_disp = self._icase_disp
         #icase_vector = self._icase_vector
 

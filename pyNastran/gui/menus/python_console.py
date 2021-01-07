@@ -124,6 +124,19 @@ if IS_SCINTILLA:
             return data
 
 class PythonConsoleWidget(QDockWidget):
+    def __init__(self, parent):
+        self.parent = parent
+        super(PythonConsoleWidget, self).__init__('Python Console', parent=parent)
+
+        self.vbox = PythonConsoleLayout(parent)
+        self.vbox.setup_connections()
+        #self.vbox.layout()
+        #self.layout()
+
+        vbox_widget = layout_to_widget(self.vbox)
+        self.setWidget(vbox_widget)
+
+class PythonConsoleLayout(QVBoxLayout):
     """
     original code pulled from:
     http://stackoverflow.com/questions/31380457/add-right-click-functionality-to-listwidget-in-pyqt4
@@ -132,7 +145,7 @@ class PythonConsoleWidget(QDockWidget):
     """
     def __init__(self, parent):
         self.parent = parent
-        super(PythonConsoleWidget, self).__init__('Python Console', parent=parent)
+        super(PythonConsoleLayout, self).__init__()
 
         # I think this works by accident in qt4/5
         #super(QDockWidget, self).__init__('Python Console', parent=parent)
@@ -142,20 +155,22 @@ class PythonConsoleWidget(QDockWidget):
 
         self.enter_data = get_code_block()
 
-        self.setup_connections()
-        self.layout()
+        #self.setup_connections()
+        self.setup_layout()
 
-    def layout(self):
-        vbox = QVBoxLayout()
+    def setup_layout(self):
+        #vbox = QVBoxLayout()
         hbox = QHBoxLayout()
 
-        vbox.addWidget(self.enter_data)
+        self.addWidget(self.enter_data)
         hbox.addWidget(self.execute_python_button)
         hbox.addWidget(self.execute_and_clear_python_button)
-        vbox.addLayout(hbox)
+        #vbox.addLayout(hbox)
+        self.addLayout(hbox)
+        #self.layout()
 
-        vbox_widget = layout_to_widget(vbox)
-        self.setWidget(vbox_widget)
+        #vbox_widget = layout_to_widget(vbox)
+        #self.setWidget(vbox_widget)
 
     def setup_connections(self):
         """sets up the callbacks"""
@@ -222,8 +237,12 @@ class QTextEditAdd(QTextEdit):
         pos = cursor.position()
         old_text = self.toPlainText()
         #self.setTextCursor(cursor)
-        new_text = old_text[:pos] + word + old_text[pos:]
+        fore = old_text[:pos] + word
+        new_text = fore + old_text[pos:]
         self.setText(new_text)
+        inside = len(fore) - 1
+        cursor.setPosition(inside)
+        self.setTextCursor(cursor)
 
 
 def get_code_block():

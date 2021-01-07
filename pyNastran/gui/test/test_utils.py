@@ -202,6 +202,37 @@ class GuiUtils(unittest.TestCase):
         expected_scales = [0.0, 0.25*scale, 0.5*scale, 0.75*scale, scale]
         assert_array(scales, expected_scales, 'scales')
 
+    def test_setup_animation_bug(self):
+        """0 to Scale to 0"""
+        scale = 0.225
+        out = setup_animation(
+            scale, istep=None,
+            animate_scale=True, animate_phase=False, animate_time=False,
+            icase_fringe=8, icase_disp=8, icase_vector=None,
+
+            icase_fringe_start=None, icase_fringe_end=None, icase_fringe_delta=None,
+            icase_disp_start=None, icase_disp_end=None, icase_disp_delta=None,
+            icase_vector_start=None, icase_vector_end=None, icase_vector_delta=None,
+
+            time=2.0, animation_profile='0 to Scale to 0',
+            fps=30, animate_in_gui=True)
+        phases, icases_fringe, icases_disp, icases_vector, isteps, scales, analysis_time, onesided, endpoint = out
+        assert len(np.unique(icases_fringe)) == 1
+        assert len(np.unique(icases_disp)) == 1
+        #assert len(np.unique(icases_vector)) == 1  # None vector
+        assert len(np.unique(phases)) == 1
+        nsteps = len(icases_disp)
+        assert np.array_equal(isteps, np.arange(nsteps, dtype='int32'))
+
+        assert np.allclose(analysis_time, 1.0), analysis_time
+        assert np.allclose(scales.min(), 0.), scales
+        assert np.allclose(scales.max(), 0.225), scales
+        expected_scales = np.array([
+            0., 0.0140625, 0.028125 , 0.0421875, 0.05625  , 0.0703125,
+            0.084375 , 0.0984375, 0.1125   , 0.1265625, 0.140625 , 0.1546875,
+            0.16875  , 0.1828125, 0.196875 , 0.2109375, 0.225, ])
+        assert_array(scales, expected_scales, 'scales')
+
     def test_animation_scale_1a(self):
         """0 to scale to 0"""
         scale = 2.0
@@ -400,10 +431,12 @@ class GuiUtils(unittest.TestCase):
     #msg += '%s = %s\n' % (expected_name, expected_array)
 
         msg = ''
-        if not np.allclose(scales.min(), -scale, atol=atol):  # pragma: no cover
-            msg += 'scales=%s min=%s expected=%s\n' % (scales, scales.min(), -scale)
-        if not np.allclose(scales.max(), scale, atol=atol):  # pragma: no cover
-            msg += 'scales=%s max=%s expected=%s' % (scales, scales.max(), scale)
+        min_scale = scales.min()
+        max_scale = scales.max()
+        if not np.allclose(min_scale, -scale, atol=atol):  # pragma: no cover
+            msg += 'scales=%s min=%s expected=%s\n' % (scales, min_scale, -scale)
+        if not np.allclose(max_scale, scale, atol=atol):  # pragma: no cover
+            msg += 'scales=%s max=%s expected=%s' % (scales, max_scale, scale)
         if msg:  # pragma: no cover
             raise ValueError(msg)
 
@@ -411,6 +444,11 @@ class GuiUtils(unittest.TestCase):
         """sinusoidal: 0 to scale to -scale to 0"""
         scale_atols = [(1., 0.00001), (10.0, 0.0001)]
         for scale, atol in scale_atols:
+            # sinusoidal: 0 to scale to -scale to 0
+            #    1
+            # 0     0     0
+            #         -1
+            #
             out = setup_animation(
                 scale, istep=None,
                 animate_scale=True, animate_phase=False, animate_time=False,
@@ -424,10 +462,12 @@ class GuiUtils(unittest.TestCase):
             assert np.allclose(analysis_time, 2.0), analysis_time
 
             msg = ''
-            if not np.allclose(scales.min(), -scale, atol=atol):  # pragma: no cover
-                msg += 'scales=%s min=%s expected=%s\n' % (scales, scales.min(), -scale)
-            if not np.allclose(scales.max(), scale, atol=atol):  # pragma: no cover
-                msg += 'scales=%s max=%s expected=%s' % (scales, scales.max(), scale)
+            min_scale = scales.min()
+            max_scale = scales.max()
+            if not np.allclose(min_scale, -scale, atol=atol):  # pragma: no cover
+                msg += 'scales=%s min=%s expected=%s\n' % (scales, min_scale, -scale)
+            if not np.allclose(max_scale, scale, atol=atol):  # pragma: no cover
+                msg += 'scales=%s max=%s expected=%s' % (scales, max_scale, scale)
             if msg:  # pragma: no cover
                 raise ValueError(msg)
 

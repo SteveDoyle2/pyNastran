@@ -951,7 +951,7 @@ class MOMENT2v(BaseLoad):
         g1 = integer(card, 4, 'g1')
         g2 = integer(card, 5, 'g2')
         g3 = integer(card, 6, 'g3')
-        g4 = integer(card, 7, 'g4', 0)
+        g4 = integer(card, 7, 'g4')
         assert len(card) == 8, 'len(MOMENT2 card) = %i\ncard=%s' % (len(card), card)
         self.add(sid, node, mag, g1, g2, g3, g4, comment=comment)
 

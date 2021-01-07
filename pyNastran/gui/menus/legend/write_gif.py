@@ -6,7 +6,7 @@ Defines:
 
 """
 import os
-from typing import Tuple, List
+from typing import Tuple, List, Optional
 
 import numpy as np
 try:
@@ -30,15 +30,17 @@ if IS_IMAGEIO:
 
 
 def setup_animation(scale, istep=None,
-                    animate_scale=True, animate_phase=False, animate_time=False,
+                    animate_scale: bool=True,
+                    animate_phase: bool=False,
+                    animate_time: bool=False,
                     icase_fringe=None, icase_disp=None, icase_vector=None,
 
                     icase_fringe_start=None, icase_fringe_end=None, icase_fringe_delta=None,
                     icase_disp_start=None, icase_disp_end=None, icase_disp_delta=None,
                     icase_vector_start=None, icase_vector_end=None, icase_vector_delta=None,
 
-                    time=2.0, animation_profile='0 to scale',
-                    fps=30, animate_in_gui=False):
+                    time: float=2.0, animation_profile: str='0 to scale',
+                    fps: int=30, animate_in_gui: bool=False):
     """
     helper method for ``make_gif``
 
@@ -55,10 +57,11 @@ def setup_animation(scale, istep=None,
         the displacement scale factor; true scale
     analysis_time : float
         the time that needs to be simulated for the analysis; not the runtime
+
     """
     if animate_scale or animate_phase:
         # ignored for time
-        assert isinstance(fps, integer_types), 'fps=%s must be an integer'% fps
+        assert isinstance(fps, integer_types), f'fps={fps:d} must be an integer'
 
     phases = None
     onesided = False
@@ -106,6 +109,8 @@ def setup_animation(scale, istep=None,
         #if animate_in_gui:
             # double the number of frames
             # drop the duplicate end frame if necessary
+
+    # grab the ith step
     if istep is not None:
         assert isinstance(istep, integer_types), f'istep={istep!r}'
         scales = (scales2[istep],)
@@ -115,19 +120,26 @@ def setup_animation(scale, istep=None,
     return phases2, icases_fringe2, icases_disp2, icases_vector2, isteps2, scales2, analysis_time, onesided, endpoint
 
 
-def fix_nframes(nframes, profile):
+def fix_nframes(nframes: int, profile: str) -> int:
     """
-    # make sure we break at the "true scale" max
-    #
-    # should this be in terms of fps or nframes?
+    make sure we break at the "true scale" max
+    should this be in terms of fps or nframes? (I think nframes)
     """
+    DIV2_PROFILES = {
+        '0 to scale to 0',
+        '-scale to scale to -scale',
+    }
+    DIV4_PROFILES = {
+        '0 to scale to -scale to 0',
+        'sinusoidal: 0 to scale to -scale to 0',
+        'sinusoidal: scale to -scale to scale',
+    }
+
     fix_nframes_even = nframes == 1 or nframes % 2 == 0
     fix_nframes_sin = nframes == 1 or nframes % 4 != 1
-    is_div_four_profile = (
-        '0 to scale to -scale to 0' in profile or
-        profile == 'sinusoidal: scale to -scale to scale'
-    )
-    if profile in ['0 to scale to 0', '-scale to scale to -scale'] and fix_nframes_even:
+    is_div_two_profile = profile in DIV2_PROFILES
+    is_div_four_profile = profile in DIV4_PROFILES
+    if is_div_two_profile and fix_nframes_even:
         nframes_div_2 = nframes // 2
         nframes = 2 * (nframes_div_2 + 1) + 1
     if is_div_four_profile and fix_nframes_sin:
@@ -135,7 +147,7 @@ def fix_nframes(nframes, profile):
         nframes = 4 * (nframes_div_4 + 1) + 1
     return nframes
 
-def _get_scale_profile_info(profile: str) -> Tuple[bool, bool, bool]:
+def _get_scale_profile_info(profile: str) -> Tuple[str, bool, bool, bool]:
     if isinstance(profile, str):
         profile = profile.lower()
         if profile == '0 to scale':
@@ -189,9 +201,13 @@ def _get_scale_profile_info(profile: str) -> Tuple[bool, bool, bool]:
     else:
         msg = f'profile={profile!r} is not supported'
         raise NotImplementedError(msg)
-    return onesided, endpoint, is_symmetric
+    return profile, onesided, endpoint, is_symmetric
 
-def setup_animate_scale(scale, icase_fringe, icase_disp, icase_vector, time, profile, fps):
+def setup_animate_scale(scale: float,
+                        icase_fringe: int,
+                        icase_disp: int,
+                        icase_vector: Optional[int],
+                        time: float, profile: str, fps: int):
     """
     Gets the inputs for a displacement scale/real modal animation
 
@@ -203,7 +219,7 @@ def setup_animate_scale(scale, icase_fringe, icase_disp, icase_vector, time, pro
     We want to set it to true because if an animation is onesided, we can skip
     making half the images.
     """
-    onesided, endpoint, is_symmetric = _get_scale_profile_info(profile)
+    profile, onesided, endpoint, is_symmetric = _get_scale_profile_info(profile)
 
     analysis_time = get_analysis_time(time, onesided)
     #fps = fix_nframes(fps, profile)

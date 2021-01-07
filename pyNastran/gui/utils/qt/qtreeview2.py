@@ -6,6 +6,7 @@ creates:
 
 """
 from functools import partial
+from typing import Tuple
 from qtpy import QtGui
 from qtpy.QtCore import Qt
 from qtpy.QtWidgets import QTreeView, QMessageBox, QMenu
@@ -222,24 +223,44 @@ class QTreeView2(QTreeView):
         if self.single:
             return True, self.data[0]
 
-        irow = 0
-
         # TODO: what is this for???
-        #     crashes some PyQt4 cases when clicking on the first
+        #     crashes some PyQt cases when clicking on the first
         #     non-results level of the sidebar
         #data = deepcopy(self.data)
+        is_valid, irow, unused_data = self.get_trace()
+        return is_valid, irow
+
+    def get_trace(self) -> Tuple[bool, int, str]:
+        """
+        Returns
+        -------
+        is_valid : bool
+            is this case valid
+        row : None or tuple
+            None : invalid case
+            tuple : valid case
+                ('centroid', None, [])
+                0 - the location (e.g. node, centroid)
+                1 - icase
+                2 - []
+        word : str
+            the 0th index of the tuple; 'centroid' in this case
+        """
+        is_valid = True
+        irow = 0
         data = self.data
+        if len(self.old_rows) == 0:
+            return False, irow, None
+
         for row in self.old_rows:
+            data_old = data
             try:
                 unused_key = data[row][0]
             except IndexError:
-                return False, irow
+                return False, irow, None
             irow = data[row][1]
             data = data[row][2]
-
-        if data:
-            return False, None
-        return True, irow
+        return is_valid, irow, data_old[row][0]
 
     def set_single(self, single):
         self.single = single
