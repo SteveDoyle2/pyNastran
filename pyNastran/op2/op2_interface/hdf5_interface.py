@@ -10,7 +10,7 @@ defines:
  export_op2_to_hdf5_file(hdf5_file, op2_model)
 
 """
-from typing import List, Optional, Any
+from typing import List, Union, Optional, Any
 import numpy as np
 import h5py
 
@@ -1047,12 +1047,16 @@ def _load_grid_point_weight(h5_result):
     obj = GridPointWeight(*datai, *data)
     return obj
 
-def _load_eigenvalue(h5_result, encoding: str, log: SimpleLogger):
+def _load_eigenvalue(h5_result, encoding: str,
+                     log: SimpleLogger) -> Union[RealEigenvalues, ComplexEigenvalues, BucklingEigenvalues]:
     """Loads a RealEigenvalue"""
     class_name = _cast_str(h5_result.get('class_name'), encoding)
     table_name = '???'
     title = ''
     nmodes = _cast(h5_result.get('nmodes'))
+    if nmodes is None:
+        log.warning(f'class_name = {class_name} did not define nmodes')
+        nmodes = 0
     if class_name == 'RealEigenvalues':
         obj = RealEigenvalues(title, table_name, nmodes=nmodes)
     elif class_name == 'ComplexEigenvalues':

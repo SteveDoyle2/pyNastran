@@ -86,6 +86,7 @@ def points_elements_from_quad_points(p1, p2, p3, p4, x, y, dtype='int32'):
     elements (nquads, 4) int ndarray
         series of quad elements
         nquads = (nchord-1) * (nspan-1)
+
     """
     nx = x.shape[0]
     ny = y.shape[0]

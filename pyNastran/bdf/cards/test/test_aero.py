@@ -5,11 +5,13 @@ import os
 from collections import defaultdict
 import unittest
 from io import StringIO
+from typing import Tuple, Optional, Any
+
 import numpy as np
 from cpylog import SimpleLogger
 
 import pyNastran
-from pyNastran.bdf.bdf import BDF, CORD2R, BDFCard, SET1, GRID, read_bdf
+from pyNastran.bdf.bdf import BDF, CORD2R, BDFCard, SET1, read_bdf
 from pyNastran.bdf.test.test_bdf import run_bdf
 from pyNastran.bdf.cards.aero.aero import (
     AEFACT, AELIST, AEPARM,
@@ -22,6 +24,11 @@ from pyNastran.bdf.cards.aero.aero import (
 from pyNastran.bdf.cards.aero.dynamic_loads import AERO, FLFACT, FLUTTER, GUST, MKAERO1, MKAERO2
 from pyNastran.bdf.cards.aero.static_loads import AESTAT, AEROS, CSSCHD, TRIM, TRIM2, DIVERG
 from pyNastran.bdf.cards.test.utils import save_load_deck
+
+IS_MATPLOTLIB = False
+if IS_MATPLOTLIB:
+    import matplotlib.pyplot as plt
+
 
 ROOTPATH = pyNastran.__path__[0]
 MODEL_PATH = os.path.join(ROOTPATH, '..', 'models')
@@ -442,6 +449,129 @@ class TestAero(unittest.TestCase):
         aeros = AEROS(cref, bref, sref, acsid, rcsid, sym_xz=sym_xz, sym_xy=sym_xy)
         with self.assertRaises(TypeError):
             aeros.validate()
+
+    def test_caero1_paneling_nspan_nchord_1(self):
+        """checks the CAERO1/PAERO1/AEFACT card"""
+        log = SimpleLogger(level='warning')
+        model = BDF(log=log)
+        cref = 1.0
+        bref = 1.0
+        sref = 1.0
+        model.add_aeros(cref, bref, sref, acsid=0, rcsid=0, sym_xz=0, sym_xy=0, comment='')
+
+        pid = 1
+        igroup = 1
+        p1 = [0., 0., 0.]
+        p4 = [1., 15., 0.]
+        x12 = 1.
+        x43 = 1.
+        model.add_paero1(pid, caero_body_ids=None, comment='')
+
+        eid = 10000000
+        caero = model.add_caero1(eid, pid, igroup, p1, x12, p4, x43,
+                                 cp=0, nspan=3, lspan=0, nchord=2, lchord=0, comment='')
+        npoints, nelements = caero.get_npanel_points_elements()
+        npoints_expected = 12 # 4*3
+        nelements_expected = 6 # 2*3
+
+        x, y = caero.xy
+        chord_expected = np.array([0., 0.5, 1.])
+        span_expected = np.array([0., 1 / 3, 2 / 3, 1.])
+        assert np.allclose(x, chord_expected)
+        assert np.allclose(y, span_expected)
+        assert npoints_expected == npoints
+        assert nelements_expected == nelements
+
+    def test_caero1_paneling_nspan_lchord(self):
+        """checks the CAERO1/PAERO1/AEFACT card"""
+        fig, ax = _setup_aero_plot()
+
+        log = SimpleLogger(level='warning')
+        model = BDF(log=log)
+        cref = 1.0
+        bref = 1.0
+        sref = 1.0
+        model.add_aeros(cref, bref, sref, acsid=0, rcsid=0, sym_xz=0, sym_xy=0, comment='')
+
+        pid = 1
+        igroup = 1
+        p1 = [0., 0., 0.]
+        p4 = [1., 15., 0.]
+        x12 = 1.
+        x43 = 1.
+        model.add_paero1(pid, caero_body_ids=None, comment='')
+
+        eid = 10000000
+        chord_aefact_id = 10000
+        model.add_aefact(chord_aefact_id, [0., 0.5, 1.0])
+        caero = model.add_caero1(eid, pid, igroup, p1, x12, p4, x43,
+                                  cp=0,
+                                  nspan=3, lspan=0,
+                                  nchord=0, lchord=chord_aefact_id, comment='')
+        model.cross_reference()
+
+        npoints, nelements = caero.get_npanel_points_elements()
+        npoints_expected = 12 # 4*3
+        nelements_expected = 6 # 2*3
+        assert npoints_expected == npoints
+        assert nelements_expected == nelements
+        del model.caeros[eid]
+        del model.aefacts[chord_aefact_id]
+        points, elements = caero.panel_points_elements()
+        x, y = caero.xy
+        chord_expected = np.array([0., 0.5, 1.])
+        span_expected = np.array([0., 1 / 3, 2 / 3, 1.])
+        assert np.allclose(x, chord_expected)
+        assert np.allclose(y, span_expected)
+        if IS_MATPLOTLIB:
+            caero.plot(ax)
+            fig.show()
+
+    def test_caero1_paneling_nspan_nchord_2(self):
+        """checks the CAERO1/PAERO1/AEFACT card"""
+        log = SimpleLogger(level='warning')
+        model = BDF(log=log)
+        cref = 1.0
+        bref = 1.0
+        sref = 1.0
+        model.add_aeros(cref, bref, sref, acsid=0, rcsid=0, sym_xz=0, sym_xy=0, comment='')
+
+        # basic
+        pid = 1
+        igroup = 1
+        p1 = [0., 0., 0.]
+        p4 = [1., 15., 0.]
+        x12 = 1.
+        x43 = 1.
+        fig, ax = _setup_aero_plot(fig_id=None)
+        unused_paero = model.add_paero1(pid, caero_body_ids=None, comment='')
+
+        eid = 1000
+        aelist_id = 10
+        aesurf_id = 10
+        caero = model.add_caero1(eid, pid, igroup, p1, x12, p4, x43,
+                                 cp=0, nspan=3, lspan=0, nchord=1, lchord=0, comment='')
+        x, y = caero.xy
+        chord_expected = np.array([0., 1.])
+        span_expected = np.array([0., 1 / 3, 2 / 3, 1.])
+        assert np.allclose(x, chord_expected)
+        assert np.allclose(y, span_expected)
+
+        elements = [1001, 1003, 1005]
+        unused_aelist = model.add_aelist(aelist_id, elements)
+
+        label = 'FLAP'
+        cid1 = 0
+        alid1 = aelist_id
+        unused_aesurf = model.add_aesurf(
+            aesurf_id, label, cid1, alid1, cid2=None, alid2=None,
+            eff=1.0, ldw='LDW', crefc=1.0, crefs=1.0, pllim=-np.pi/2., pulim=np.pi/2.,
+            hmllim=None, hmulim=None, tqllim=None, tqulim=None, comment='')
+        model.cross_reference()
+        points, elements = caero.panel_points_elements()
+        if IS_MATPLOTLIB:
+            caero.plot(ax)
+            fig.show()
 
     def test_caero1_1(self):
         """checks the CAERO1/PAERO1/AEROS/AEFACT card"""
@@ -2392,6 +2522,18 @@ def get_zona_model():
     )
     bdf_file.seek(0)
     return bdf_file
+
+def _setup_aero_plot(fig_id: Optional[int]=None) -> Tuple[Any, Any]:
+    """helper for plotting aero panels"""
+    fig = None
+    ax = None
+    if IS_MATPLOTLIB:
+        fig = plt.figure(fig_id)
+        ax = fig.gca()
+        ax.set_ylabel('Y')
+        ax.set_xlabel('X')
+        ax.grid()
+    return fig, ax
 
 if __name__ == '__main__':  # pragma: no cover
     unittest.main()

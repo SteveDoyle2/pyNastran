@@ -9,10 +9,32 @@ class ResultsWindow(QWidget):
     A ResultsWindow creates the box where we actually select our
     results case.  It does not have an apply button.
     """
-    def __init__(self, parent, name, data, choices, actions: List[Tuple[str, Any, bool]]=None,
+    def __init__(self, parent, name, data, choices,
+                 actions: List[Tuple[str, Any, bool]]=None,
                  include_clear=True, include_export_case=True,
                  include_delete=True,
                  include_results=True):
+        """
+        Parameters
+        ----------
+        actions : varies
+            None:
+                use the default actions
+            List[Tuple[str, Any, bool]]:
+                action : (name, function, return_icase)
+                name : str
+                    the name of the action
+                function : the callback function of the form:
+                    def return_icase(icase):
+                        pass
+                    def dont_return_icase():
+                        pass
+                    the chosen function (return_icase/dont_return_icase) is determined by
+                    return icase
+                return_icase : bool
+                    selects the corresponding function
+
+        """
         QWidget.__init__(self)
         self.name = name
         self.data = data

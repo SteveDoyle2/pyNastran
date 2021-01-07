@@ -1786,16 +1786,16 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
             try:
                 # apply the deflection
                 self.update_grid_by_icase_scale_phase(icase_disp, scale, phase=phase)
-            except(AttributeError, KeyError):
-                self.log_error(f'Invalid Displacement Case {icase_disp:d}')
+            except(AttributeError, KeyError) as error:
+                self.log_error(f'Invalid Displacement Case {icase_disp:d}{str(error)}')
                 return False
 
         if icase_vector is not None and icase_vector != icase_vector0:
             try:
                 # apply the nodal forces
                 self.update_forces_by_icase_scale_phase(icase_vector, arrow_scale, phase=phase)
-            except(AttributeError, KeyError):
-                self.log_error(f'Invalid Vector Case {icase_vector:d}')
+            except(AttributeError, KeyError) as error:
+                self.log_error(f'Invalid Vector Case {icase_vector:d}{str(error)}')
                 return False
         is_valid = True
         return is_valid

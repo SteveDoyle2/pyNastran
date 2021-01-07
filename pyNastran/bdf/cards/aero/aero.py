@@ -25,7 +25,7 @@ from typing import List, Union, Any, TYPE_CHECKING
 import numpy as np
 
 from pyNastran.utils.numpy_utils import integer_types
-from pyNastran.utils import object_attributes
+#from pyNastran.utils import object_attributes
 from pyNastran.bdf.field_writer_8 import set_blank_if_default, print_card_8, print_float_8
 from pyNastran.bdf.cards.base_card import BaseCard, expand_thru
 from pyNastran.bdf.bdf_interface.assign_type import (
@@ -1829,7 +1829,7 @@ class CAERO1(BaseCard):
             p3 = p4 + self.ascid_ref.transform_vector_to_global(np.array([self.x43, 0., 0.]))
         return [p1, p2, p3, p4]
 
-    def get_box_index(self, box_id):
+    def get_box_index(self, box_id: int) -> Tuple[int, int]:
         """
         Get the index of ``self.box_ids`` that coresponds to the given box id.
 
@@ -1850,7 +1850,7 @@ class CAERO1(BaseCard):
         index = (index[0][0], index[1][0])
         return index
 
-    def get_box_quarter_chord_center(self, box_id):
+    def get_box_quarter_chord_center(self, box_id: int) -> np.ndarray:
         """
         The the location of the quarter chord of the box along the centerline.
 
@@ -1867,7 +1867,7 @@ class CAERO1(BaseCard):
         """
         return self._get_box_x_chord_center(box_id, 0.25)
 
-    def get_box_mid_chord_center(self, box_id):
+    def get_box_mid_chord_center(self, box_id: int) -> np.ndarray:
         """
         The the location of the mid chord of the box along the centerline.
 
@@ -1884,7 +1884,7 @@ class CAERO1(BaseCard):
         """
         return self._get_box_x_chord_center(box_id, 0.5)
 
-    def _get_box_x_chord_center(self, box_id, x_chord):
+    def _get_box_x_chord_center(self, box_id: int, x_chord: float) -> np.ndarray:
         """
         The the location of the x_chord of the box along the centerline.
         """
@@ -1899,12 +1899,13 @@ class CAERO1(BaseCard):
         x = (ichord + x_chord)/self.nchord * chord + self.p1[0] + delta_xyz[0]
         return np.array([x, yz[0], yz[1]])
 
-    def _box_id_error(self, box_id):
+    def _box_id_error(self, box_id: int):
         """
         Raise box_id IndexError.
         """
-        msg = '%i not in range of aero box ids\nRange: %i to %i' % (box_id, self.box_ids[0, 0],
-                                                                    self.box_ids[-1, -1])
+        min_box = self.box_ids[0, 0]
+        max_box = self.box_ids[-1, -1]
+        msg = f'{box_id:d} not in range of aero box ids\nRange: {min_box:d} to {max_box:d}'
         raise IndexError(msg)
 
     @property
@@ -1932,7 +1933,7 @@ class CAERO1(BaseCard):
             raise RuntimeError(msg)
         return nchord, nspan
 
-    def get_npanel_points_elements(self):
+    def get_npanel_points_elements(self) -> Tuple[int, int]:
         """
         Gets the number of sub-points and sub-elements for the CAERO card
 
@@ -1980,7 +1981,7 @@ class CAERO1(BaseCard):
             raise RuntimeError(msg)
         return x, y
 
-    def panel_points_elements(self):
+    def panel_points_elements(self) -> Tuple[np.ndarray, np.ndarray]:
         """
         Gets the sub-points and sub-elements for the CAERO1 card
 
@@ -1999,7 +2000,12 @@ class CAERO1(BaseCard):
         # aero panel forces
         #
         # this gives us chordwise panels and chordwise nodes
-        return points_elements_from_quad_points(p1, p4, p3, p2, y, x, dtype='int32')
+        #
+        # this is wrong...why was it done like this?
+        #return points_elements_from_quad_points(p1, p4, p3, p2, y, x, dtype='int32')
+
+        # this is correct, but the y/x should be flipped...
+        return points_elements_from_quad_points(p1, p2, p3, p4, y, x, dtype='int32')
 
     def set_points(self, points):
         self.p1 = points[0]
@@ -2018,6 +2024,22 @@ class CAERO1(BaseCard):
         """shifts the aero panel"""
         self.p1 += dxyz
         self.p4 += dxyz
+
+    def plot(self, ax):
+        points, elements = self.panel_points_elements()
+        for eid, elem in enumerate(elements[:, [0, 1, 2, 3, 0]]):
+            pointsi = points[elem][:, [0, 1]]
+            x = pointsi[:, 0]
+            y = pointsi[:, 1]
+            ax.plot(x, y, color='b')
+            box_id = self.eid + eid
+            centroid = (x[:-1].sum()/ 4, y[:-1].sum() / 4)
+            elem_name = f'e{box_id}'
+            ax.annotate(elem_name, centroid)
+
+            for pid, point in zip(elem, pointsi):
+                point_name = f'p{pid}'
+                ax.annotate(point_name, point)
 
     def raw_fields(self):
         """
@@ -4149,7 +4171,7 @@ class PAERO1(BaseCard):
             the value for the appropriate field
 
         """
-        return self.Bi[n - 1]
+        return self.caero_body_ids[n - 1]
 
     def _update_field_helper(self, n, value):
         """

@@ -19,6 +19,8 @@ class RealEigenvalues(BaseScalarObject):
         BaseScalarObject.__init__(self)
         self.title = title
         self.table_name = table_name
+        if nmodes is None:
+            raise NotImplementedError(nmodes)
         self.mode = np.zeros(nmodes, dtype='int32')
         self.extraction_order = np.zeros(nmodes, dtype='int32')
         self.eigenvalues = np.zeros(nmodes, dtype='float32')

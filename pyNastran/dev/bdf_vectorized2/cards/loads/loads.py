@@ -560,8 +560,8 @@ class FORCE2v(BaseLoad):
         g1 = integer(card, 4, 'g1')
         g2 = integer(card, 5, 'g2')
         g3 = integer(card, 6, 'g3')
-        g4 = integer_or_blank(card, 7, 'g4', 0)
-        assert len(card) in [7, 8], 'len(FORCE2 card) = %i\ncard=%s' % (len(card), card)
+        g4 = integer(card, 7, 'g4')
+        assert len(card) == 8, 'len(FORCE2 card) = %i\ncard=%s' % (len(card), card)
         self.add(sid, node, mag, g1, g2, g3, g4, comment=comment)
 
     def write_card(self, size=8, is_double=False, bdf_file=None):
@@ -570,8 +570,6 @@ class FORCE2v(BaseLoad):
         msg = ''
         for i, sid, node_id, mag, g1234 in zip(count(), self.sid, self.nid, self.mag, self.g1234):
             nid1, nid2, nid3, nid4 = g1234
-            if nid4 == 0:
-                nid4 = None
             list_fields = ['FORCE2', sid, node_id, mag, nid1, nid2, nid3, nid4]
             msgi = print_card_8(list_fields)
             #if size == 8:
@@ -953,8 +951,8 @@ class MOMENT2v(BaseLoad):
         g1 = integer(card, 4, 'g1')
         g2 = integer(card, 5, 'g2')
         g3 = integer(card, 6, 'g3')
-        g4 = integer_or_blank(card, 7, 'g4', 0)
-        assert len(card) in [7, 8], 'len(MOMENT2 card) = %i\ncard=%s' % (len(card), card)
+        g4 = integer(card, 7, 'g4', 0)
+        assert len(card) == 8, 'len(MOMENT2 card) = %i\ncard=%s' % (len(card), card)
         self.add(sid, node, mag, g1, g2, g3, g4, comment=comment)
 
     def write_card(self, size=8, is_double=False, bdf_file=None):
@@ -963,8 +961,6 @@ class MOMENT2v(BaseLoad):
         msg = ''
         for i, sid, node_id, mag, g1234 in zip(count(), self.sid, self.nid, self.mag, self.g1234):
             nid1, nid2, nid3, nid4 = g1234
-            if nid4 == 0:
-                nid4 = None
             list_fields = ['MOMENT2', sid, node_id, mag, nid1, nid2, nid3, nid4]
             msgi = print_card_8(list_fields)
             #if size == 8:

@@ -909,7 +909,7 @@ class PCOMP(CompositeShellProperty):
         z0 = data[1]
         nsm = data[2]
         sb = data[3]
-        ft = data[4]
+        ft_int = data[4]
         tref = data[5]
         ge = data[6]
         lam = data[7]
@@ -942,9 +942,9 @@ class PCOMP(CompositeShellProperty):
             thetas.append(theta)
             souts.append(sout)
             try:
-                map_failure_theory_int(ft)
+                ft = map_failure_theory_int(ft_int)
             except NotImplementedError:
-                raise RuntimeError(f'unsupported ft.  pid={pid} ft={ft!r}.'
+                raise RuntimeError(f'unsupported ft.  pid={pid} ft={ft_int!r}.'
                                f'\nPCOMP = {data}')
         return PCOMP(pid, mids, thicknesses, thetas, souts,
                      nsm, sb, ft, tref, ge, lam, z0, comment=comment)
