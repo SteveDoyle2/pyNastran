@@ -502,9 +502,10 @@ def get_temperatures_array(model: BDF, load_case_id, nid_map=None, dtype='float3
         'FORCE', 'FORCE1', 'FORCE2',
         'MOMENT', 'MOMENT1', 'MOMENT2',
         'PLOAD', 'PLOAD1', 'PLOAD2', 'PLOAD4',
-        'GRAV', 'ACCEL', 'ACCEL1', 'GMLOAD',
+        'GRAV', 'ACCEL', 'ACCEL1',
         'ACSRCE', 'TLOAD1', 'TLOAD2', 'RLOAD1', 'RLOAD2',
         'RFORCE', 'RFORCE1', 'SPCD', 'DEFORM',
+        # 'GMLOAD',
     ]
     for load, scale in zip(loads, scale_factors):
         if load.type in skip_loads:

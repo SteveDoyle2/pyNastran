@@ -5,6 +5,7 @@ from pyNastran.bdf.field_writer_8 import print_card_8
 
 from pyNastran.bdf.bdf_interface.assign_type import (
     string, string_or_blank, integer, integer_or_blank, double_or_blank)
+from pyNastran.bdf.cards.loads.static_loads import Load
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.bdf.bdf import BDF
 
@@ -260,3 +261,214 @@ class CGEN(BaseCard):
     def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.repr_fields()
         return self.comment + print_card_8(card)
+
+class GMCORD(BaseCard):
+    """defines the GMCOORD class
+
+    GMCORD | CID | ENTITY | ID1 | ID2 |
+    GMCORD | 101 | GMCURV |  26 |  44 |
+    """
+    type = 'GMCORD'
+
+    @classmethod
+    def _init_from_empty(cls):
+        cid = 1
+        entity = 'GMCURV'
+        gm_ids = [34]
+        return GMCORD(cid, entity, gm_ids, comment='')
+
+    def __init__(self, cid, entity, gm_ids, comment=''):
+        """Creates a GMCOORD"""
+        if comment:
+            self.comment = comment
+        self.cid = cid
+        self.entity = entity
+        self.gm_ids = gm_ids
+
+    @classmethod
+    def add_card(cls, card, comment=''):
+        """
+        Adds a GMCORD card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+
+        """
+        cid = integer(card, 1, 'cid')
+        entity = string(card, 2, 'entity')
+        gm_ids = [
+            integer(card, 3, 'GM_ID1'),
+            integer_or_blank(card, 4, 'GM_ID2'),
+        ]
+        return GMCORD(cid, entity, gm_ids, comment=comment)
+
+    @staticmethod
+    def cross_reference(model: BDF) -> None:
+        pass
+
+    @staticmethod
+    def uncross_reference() -> None:
+        """Removes cross-reference links"""
+        pass
+
+    def setup(self):
+        pass
+
+    def raw_fields(self):
+        list_fields = ['GMCORD', self.cid, self.entity] + self.gm_ids
+        return list_fields
+
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
+        card = self.repr_fields()
+        return self.comment + print_card_8(card)
+
+class GMLOAD(Load):
+    """
+    Defines a static concentrated force at a grid point by specification of a
+    magnitude and two grid points that determine the direction.
+
+    """
+    type = 'GMLOAD'
+
+    @classmethod
+    def _init_from_empty(cls):
+        sid = 1
+        normal = [0., 0., 1.]
+        entity = 1
+        entity_id = 1
+        method = 1
+        load_magnitudes = [1., 2.]
+        return GMLOAD(sid, normal, entity, entity_id, method, load_magnitudes, cid=0, comment='')
+
+    def __init__(self, sid, normal, entity, entity_id, method,
+                 load_magnitudes, cid=0, comment=''):
+        """Creates a GMLOAD object"""
+        Load.__init__(self)
+        if comment:
+            self.comment = comment
+        self.sid = sid
+        self.cid = cid
+        self.normal = normal
+        self.entity = entity
+        self.entity_id = entity_id
+        self.method = method
+        self.load_magnitudes = load_magnitudes
+        self.cid_ref = None
+
+    @classmethod
+    def add_card(cls, card, comment=''):
+        """
+        Adds a GMLOAD card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+
+        """
+        sid = integer(card, 1, 'sid')
+        cid = integer_or_blank(card, 2, 'cid', 0)
+        normal = array([
+            double_or_blank(card, 3, 'N1', 0.),
+            double_or_blank(card, 4, 'N2', 0.),
+            double_or_blank(card, 5, 'N3', 1.),
+        ])
+        entity = string(card, 6, 'entity')
+        entity_id = integer(card, 7, 'entity_id')
+        method = string(card, 8, 'method')
+
+        load_magnitudes = []
+        for i in range(9, len(card)):
+            ifield = i - 8
+            load_mag = integer_or_double(card, i, 'load_magnitude_%s' % ifield)
+            load_magnitudes.append(load_mag)
+        return GMLOAD(sid, normal, entity, entity_id, method,
+                      load_magnitudes, cid=cid, comment=comment)
+
+    #def DEquation(self):
+        #if isinstance(self.dequation, int):
+            #return self.dequation
+        #return self.dequation.equation_id
+
+    def cross_reference(self, model: BDF) -> None:
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+
+        """
+        msg = ', which is required by GMLOAD sid=%s' % self.sid
+        self.cid_ref = model.Coord(self.Cid(), msg=msg)
+        #self.node = model.Node(self.node, msg=msg)
+        #self.g1 = model.Node(self.g1, msg=msg)
+        #self.g2 = model.Node(self.g2, msg=msg)
+        #self.xyz = self.g2.get_position() - self.g1.get_position()
+        #normalize(self, msg)
+
+    def safe_cross_reference(self, model: BDF, xref_errors):
+        msg = ', which is required by GMLOAD sid=%s' % self.sid
+        self.cid_ref = model.safe_coord(self.Cid(), self.sid, xref_errors, msg=msg)
+
+    def uncross_reference(self) -> None:
+        """Removes cross-reference links"""
+        self.cid = self.Cid()
+        self.cid_ref = None
+
+    def Cid(self):
+        if self.cid_ref is not None:
+            return self.cid_ref.cid
+        return self.cid
+
+    #def G1(self):
+        #if isinstance(self.g1, (integer_types, float)):
+            #return self.g1
+        #return self.g1_ref.nid
+
+    #def G2(self):
+        #if isinstance(self.g2, (integer_types, float)):
+            #return self.g2
+        #return self.g2_ref.nid
+
+    #def NodeID(self):
+        #if isinstance(self.node, integer_types):
+            #return self.node
+        #return self.node_ref.nid
+
+    def get_loads(self):
+        return [self]
+
+    def raw_fields(self):
+        list_fields = ['GMLOAD', self.sid, self.Cid()] + list(self.normal) + [
+            self.entity, self.entity_id, self.method] + self.load_magnitudes
+        return list_fields
+
+    def repr_fields(self):
+        return self.raw_fields()
+
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
+        """
+        The writer method used by BDF.write_card()
+
+        Parameters
+        -----------
+        size : int; default=8
+            the size of the card (8/16)
+
+        """
+        card = self.raw_fields()
+        if size == 8:
+            return self.comment + print_card_8(card)
+        if is_double:
+            return self.comment + print_card_double(card)
+        return self.comment + print_card_16(card)
+
+

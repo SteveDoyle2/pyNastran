@@ -69,7 +69,7 @@ def numpy_to_vtk(num_array, deep=0, array_type=None):  # pragma: no cover
     Notes
     -----
     This was pulled from VTK and modified to eliminate numpy 1.14 warnings.
-    VTK uses a BSD license, so it's OK to do  that.
+    VTK uses a BSD license, so it's OK to do that.
 
     """
     z = np.asarray(num_array)

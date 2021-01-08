@@ -92,7 +92,7 @@ def remove_unused(bdf_filename, remove_nids=True, remove_cids=True,
         'AECOMP', 'CAERO2', 'CAERO3', 'CAERO4', 'CAERO5',
         'PAERO2', 'PAERO3', 'PAERO4', 'PAERO5',
         'DCONADD',
-        'GMCORD',
+        #'GMCORD',
         'MONPNT1', 'MONPNT2', 'MONPNT3',
         'DSCREEN', 'DTI', 'NSMADD',
         'AESURFS', 'CSSCHD',
@@ -124,10 +124,12 @@ def remove_unused(bdf_filename, remove_nids=True, remove_cids=True,
         'GRAV', 'RANDPS', 'FORCE', 'FORCE1', 'FORCE2',
         'MOMENT', 'MOMENT1', 'MOMENT2',
         'PLOAD', 'PLOAD1', 'PLOAD2', 'PLOAD4', 'SPCD',
-        'GMLOAD', 'RFORCE', 'RFORCE1',
+        'RFORCE', 'RFORCE1',
         'TEMP', 'QBDY1', 'QBDY2', 'QBDY3', 'QHBDY',
         'ACCEL', 'PLOADX1', 'SLOAD', 'ACCEL1', 'LOADCYN', 'LOAD', 'CLOAD',
         'LSEQ', 'DLOAD', 'QVECT', 'RADM', 'TEMPAX', 'DEFORM',
+        # msgmesh
+        #'GMLOAD',
     }
     masses = {'CONM1', 'CONM2', 'CMASS1', 'CMASS2', 'CMASS3', 'CMASS4'}
     elements = {
@@ -704,8 +706,8 @@ def _store_loads(model, unused_card_type, unused_ids, nids_used, eids_used, cids
                 eids_used.add(load.Eid())
             elif load.type == 'SPCD':
                 nids_used.update(load.node_ids)
-            elif load.type == 'GMLOAD':
-                cids_used.add(load.Cid())
+            #elif load.type == 'GMLOAD':
+                #cids_used.add(load.Cid())
             elif load.type in ['RFORCE', 'RFORCE1']:
                 nids_used.add(load.node_id)
                 cids_used.add(load.Cid())

@@ -51,7 +51,7 @@ basic = {
     ## coords
     'CORD1R', 'CORD1C', 'CORD1S',
     'CORD2R', 'CORD2C', 'CORD2S',
-    'GMCORD',
+    #'GMCORD',
 }
 old_axisymmetric_structure = {
     # axixsymmetric
@@ -190,7 +190,10 @@ static_loads = {
     'GRAV', 'ACCEL', 'ACCEL1',
     'PLOAD', 'PLOAD1', 'PLOAD2', 'PLOAD4',
     'PLOADX1', 'RFORCE', 'RFORCE1',
-    'GMLOAD', 'SPCD', 'DEFORM',
+    'SPCD', 'DEFORM',
+
+    # msgmesh
+    #'GMLOAD',
 
     # axisymmetric
     'PRESAX',

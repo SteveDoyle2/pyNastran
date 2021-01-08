@@ -1233,7 +1233,7 @@ def _convert_loads(model: BDF,
         tabled = model.TableD(tid)
         tabled.y *= scale
 
-    skip_cards = {'PLOADX1', 'QVOL', 'QHBDY', 'QBDY1', 'QBDY2', 'QBDY3', 'GMLOAD'}
+    skip_cards = {'PLOADX1', 'QVOL', 'QHBDY', 'QBDY1', 'QBDY2', 'QBDY3', } # 'GMLOAD'
     for loads in model.loads.values():
         assert isinstance(loads, list), loads
         for load in loads: # list

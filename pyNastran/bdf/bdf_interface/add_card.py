@@ -16,7 +16,7 @@ from pyNastran.bdf.cards.elements.elements import CFAST, CGAP, CRAC2D, CRAC3D, P
 from pyNastran.bdf.cards.properties.properties import PFAST, PGAP, PRAC2D, PRAC3D
 from pyNastran.bdf.cards.properties.solid import PLSOLID, PSOLID, PIHEX, PCOMPS
 from pyNastran.bdf.cards.cyclic import CYAX, CYJOIN
-from pyNastran.bdf.cards.msgmesh import CGEN
+#from pyNastran.bdf.cards.msgmesh import CGEN, GMCORD, GMLOAD
 
 from pyNastran.bdf.cards.elements.springs import CELAS1, CELAS2, CELAS3, CELAS4
 from pyNastran.bdf.cards.properties.springs import PELAS, PELAST
@@ -64,8 +64,7 @@ from pyNastran.bdf.cards.constraints import (SPC, SPCADD, SPCAX, SPC1, SPCOFF, S
                                              MPC, MPCADD, SUPORT1, SUPORT, SESUP,
                                              GMSPC)
 from pyNastran.bdf.cards.coordinate_systems import (CORD1R, CORD1C, CORD1S,
-                                                    CORD2R, CORD2C, CORD2S, CORD3G,
-                                                    GMCORD)
+                                                    CORD2R, CORD2C, CORD2S, CORD3G)
 from pyNastran.bdf.cards.deqatn import DEQATN
 from pyNastran.bdf.cards.dynamic import (
     DELAY, DPHASE, FREQ, FREQ1, FREQ2, FREQ3, FREQ4, FREQ5,
@@ -75,8 +74,7 @@ from pyNastran.bdf.cards.loads.loads import (
 from pyNastran.bdf.cards.loads.dloads import ACSRCE, DLOAD, TLOAD1, TLOAD2, RLOAD1, RLOAD2
 from pyNastran.bdf.cards.loads.static_loads import (LOAD, CLOAD, GRAV, ACCEL, ACCEL1, FORCE,
                                                     FORCE1, FORCE2, MOMENT, MOMENT1, MOMENT2,
-                                                    PLOAD, PLOAD1, PLOAD2, PLOAD4,
-                                                    GMLOAD)
+                                                    PLOAD, PLOAD1, PLOAD2, PLOAD4)
 from pyNastran.bdf.cards.loads.random_loads import RANDPS, RANDT1
 
 from pyNastran.bdf.cards.materials import (MAT1, MAT2, MAT3, MAT4, MAT5,
@@ -98,6 +96,7 @@ from pyNastran.bdf.cards.aero.aero import (
 from pyNastran.bdf.cards.aero.static_loads import AESTAT, AEROS, CSSCHD, TRIM, TRIM2, DIVERG
 from pyNastran.bdf.cards.aero.dynamic_loads import AERO, FLFACT, FLUTTER, GUST, MKAERO1, MKAERO2
 from pyNastran.bdf.cards.aero.zona import (
+    CAERO7, PAFOIL7,
     #ACOORD, AEROZ, AESURFZ, BODY7, CAERO7, MKAEROZ, PAFOIL7, PANLST1, PANLST3,
     #SEGMESH, SPLINE1_ZONA, SPLINE2_ZONA, SPLINE3_ZONA, TRIMLNK, TRIMVAR, TRIM_ZONA,
     ZONA)
@@ -231,8 +230,9 @@ CARD_MAP = {
     'CORD2S' : CORD2S,
 
     # msgmesh
-    'GMCORD' : GMCORD,
-    'CGEN' : CGEN,
+    #'GMCORD' : GMCORD,
+    #'CGEN' : CGEN,
+    #'GMLOAD' : GMLOAD,
 
     'PLOTEL' : PLOTEL,
     'RINGFL' : RINGFL,
@@ -476,7 +476,6 @@ CARD_MAP = {
     'RFORCE' : RFORCE,
     'RFORCE1' : RFORCE1,
     'SLOAD' : SLOAD,
-    'GMLOAD' : GMLOAD,
     'SPCD' : SPCD,
     'QVOL' : QVOL,
     'PRESAX' : PRESAX,
@@ -1027,17 +1026,34 @@ class AddCards(AddMethods):
                    method_es, method_int, form,
                    thetas: List[int],
                    rid: int,
-                   comment: str=''):
-        """Creates a GMCORD card"""
+                   comment: str='') -> CORD3G:
+        """Creates a CORD3G card"""
         coord = CORD3G(cid, method_es, method_int, form, thetas, rid, comment=comment)
         self._add_coord_object(coord)
         return coord
 
-    def add_gmcord(self, cid, entity, gm_ids, comment='') -> GMCORD:
-        """Creates a GMCORD card"""
-        coord = GMCORD(cid, entity, gm_ids, comment=comment)
-        self._add_coord_object(coord)
-        return coord
+    #def add_gmcord(self, cid, entity, gm_ids, comment='') -> GMCORD:
+        #"""Creates a GMCORD coordinate card"""
+        #coord = GMCORD(cid, entity, gm_ids, comment=comment)
+        #self._add_coord_object(coord)
+        #return coord
+
+
+    #def add_cgen(self, Type, field_eid, pid, field_id, th_geom_opt,
+                 #eidl, eidh, t_abcd=None, direction='L', comment='') -> CGEN:
+        #"""Creates a CGEN element card"""
+        #elem = CGEN(Type, field_eid, pid, field_id, th_geom_opt,
+                    #eidl, eidh, t_abcd=t_abcd, direction=direction, comment=comment)
+        #self._add_element_object(elem)
+        #return elem
+
+    #def add_gmload(self, sid, normal, entity, entity_id, method, load_magnitudes,
+                   #cid=0, comment='') -> GMLOAD:
+        #"""Creates a GMLOAD load card"""
+        #load = GMLOAD(sid, normal, entity, entity_id, method, load_magnitudes,
+                      #cid=cid, comment=comment)
+        #self._add_load_object(load)
+        #return load
 
     def add_param(self, key: str, values: List[Union[int, float, str]],
                   comment: str='') -> PARAM:
@@ -4513,14 +4529,6 @@ class AddCards(AddMethods):
         self._add_load_object(load)
         return load
 
-    def add_gmload(self, sid, normal, entity, entity_id, method, load_magnitudes,
-                   cid=0, comment='') -> GMLOAD:
-        """Creates a GMLOAD object"""
-        load = GMLOAD(sid, normal, entity, entity_id, method, load_magnitudes,
-                      cid=cid, comment=comment)
-        self._add_load_object(load)
-        return load
-
     def add_spc(self, conid, nodes, components, enforced, comment='') -> SPC:
         """
         Creates an SPC card, which defines the degree of freedoms to be
@@ -4895,6 +4903,19 @@ class AddCards(AddMethods):
         """Creates a CAERO5 card"""
         caero = CAERO5(eid, pid, p1, x12, p4, x43, cp=cp, nspan=nspan, lspan=lspan,
                        ntheory=ntheory, nthick=nthick, comment=comment)
+        self._add_caero_object(caero)
+        return caero
+
+    def add_caero7(self, eid: int, label: str,
+                   p1: np.ndarray, x12: float,
+                   p4: np.ndarray, x43: float,
+                   cp: int=0, nspan: int=0,
+                   nchord: int=0, lspan: int=0,
+                   p_airfoil: Any=None, ztaic: Any=None, comment: str='') -> CAERO7:
+        caero = CAERO7(eid, label, p1, x12, p4, x43,
+                       cp=cp, nspan=nspan,
+                       nchord=nchord, lspan=lspan,
+                       p_airfoil=p_airfoil, ztaic=ztaic, comment='')
         self._add_caero_object(caero)
         return caero
 
@@ -8205,14 +8226,6 @@ class AddCards(AddMethods):
                     GCj, GCi, Real, Complex, comment=comment)
         self._add_dmik_object(dmik)
         return dmik
-
-    def add_cgen(self, Type, field_eid, pid, field_id, th_geom_opt,
-                 eidl, eidh, t_abcd=None, direction='L', comment='') -> CGEN:
-        """Creates a CGEN card"""
-        elem = CGEN(Type, field_eid, pid, field_id, th_geom_opt,
-                    eidl, eidh, t_abcd=t_abcd, direction=direction, comment=comment)
-        self._add_element_object(elem)
-        return elem
 
     #---------------------------------------------------------------------
     # superelements.py

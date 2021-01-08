@@ -817,7 +817,10 @@ class BDFAttributes:
                 'GRAV', 'ACCEL', 'ACCEL1',
                 'PLOAD', 'PLOAD1', 'PLOAD2', 'PLOAD4',
                 'RFORCE', 'RFORCE1', 'SLOAD',
-                'GMLOAD', 'SPCD', 'LOADCYN', 'LOADCYH', 'DEFORM',
+                'SPCD', 'LOADCYN', 'LOADCYH', 'DEFORM',
+
+                # msgmesh
+                #'GMLOAD',
 
                 # thermal
                 'TEMP', 'TEMPB3', 'TEMPRB',

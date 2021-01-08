@@ -9,21 +9,32 @@ If you have a bug/want a new feature or card, leave some feedback on the [Issue 
 Release Notes
 =============
 
-v1.4 (2020/?/?)
+v1.4.0 (2021/1/?)
 ---------------
 Programmatics:
- - Supports Python 3.7 and 3.8
- - Dropping Python 2.7 and 3.6 support
+ - Supports Python 3.7-3.9
+ - much improved MSC 2020 and OptiStruct support
  - GUI is compatible with PyQt5 and PySide2
+ - support for latest numpy/h5py
 
 BDF:
  - new cards:
-   - BGSET, BGADD, BCTPARM
+   - BGSET, BGADD, BCTPARM, BCBODY, TOPVAR, MATEV
  - convert:
    - now supports A/acceleration, V/velocity
+ - new arguments:
+   - adding validate flag (default=False) option to add_flutter method
+   - adding extrap=0 flag (for NX) to TABLED* and TABLEM*
+ - fixing:
+   - CAERO1, CAERO5, CAERO7 paneling bug (nodes and sub-elements should be defined chordwise)
+   - adding more fields to add_* methods for CPLSTS*, CPLSTN*
+   - better DEQATN python-builtin prevention (allows for executing Nastran equations)
+   - better DTABLE handling
+   - DRESP1 checks (with validate=True flag)
 
 OP2:
  - improved NX 64-bit support
+   - matrices should work much better in 64 bit
  - new results (NX):
    - random sort2
      - CTRIA3
@@ -32,6 +43,14 @@ OP2:
    - glue_forces
    - contact_tractions_and_pressures
    - contact_forces
+   - grid_point_strain
+     - GridPointSurfaceStrainsArray
+     - GridPointStrainsVolumeDirectArray
+     - GridPointStrainsVolumePrincipalArray
+     - GridPointStrainsSurfaceDiscontinutiesArray
+ - bug fixes:
+   - PARAM reading is much more robust
+   - improved regex support for including/excluding results
 
 OP2 Geom:
  - added many aero (EDT) and optimization (EDOM) cards
@@ -41,7 +60,9 @@ F06 Flutter Plotter:
 
 GUI:
  - faster 3d bar visualization
-
+ - fixed bug in gif writing for profile='0 to scale to -scale to 0'
+ - NX nonlinear solid element supported
+ 
 v1.3.3 (2020/6/28)
 ------------------
 This is a bug fix only release outside of:

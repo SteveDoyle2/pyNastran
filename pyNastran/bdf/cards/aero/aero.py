@@ -38,6 +38,8 @@ from pyNastran.bdf.cards.aero.utils import (
     points_elements_from_quad_points, create_axisymmetric_body)
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.bdf.bdf import BDF, BDFCard
+    import matplotlib
+    AxesSubplot = matplotlib.axes._subplots.AxesSubplot
 
 
 class AECOMP(BaseCard):
@@ -2020,12 +2022,12 @@ class CAERO1(BaseCard):
         self.p1 = np.asarray(self.p1)
         self.p4 = np.asarray(self.p4)
 
-    def shift(self, dxyz):
+    def shift(self, dxyz) -> None:
         """shifts the aero panel"""
         self.p1 += dxyz
         self.p4 += dxyz
 
-    def plot(self, ax):
+    def plot(self, ax: AxesSubplot) -> None:
         """plots the panels"""
         points, elements = self.panel_points_elements()
         for eid, elem in enumerate(elements[:, [0, 1, 2, 3, 0]]):
@@ -2737,7 +2739,8 @@ class CAERO3(BaseCard):
         """
         p1, p2, p3, p4 = self.get_points()
         x, y = self.xy
-        return points_elements_from_quad_points(p1, p2, p3, p4, x, y, dtype='int32')
+        return points_elements_from_quad_points(p1, p4, p3, p2, y, x, dtype='int32')
+        #return points_elements_from_quad_points(p1, p2, p3, p4, x, y, dtype='int32')
 
     def get_npanel_points_elements(self) -> Tuple[int, int]:
         """
@@ -2757,14 +2760,14 @@ class CAERO3(BaseCard):
         return npoints, nelements
 
     @property
-    def shape(self):
+    def shape(self) -> Tuple[int, int]:
         """returns (nelements_nchord, nelements_span)"""
         nchord = 2
         nspan = self.pid_ref.nbox
         return nchord, nspan
 
     @property
-    def xy(self):
+    def xy(self) -> Tuple[np.ndarray, np.ndarray]:
         """
         Returns
         -------
@@ -2784,7 +2787,7 @@ class CAERO3(BaseCard):
             raise RuntimeError(msg)
         return x, y
 
-    def plot(self, ax):
+    def plot(self, ax: AxesSubplot) -> None:
         """plots the panels"""
         points, elements = self.panel_points_elements()
         for eid, elem in enumerate(elements[:, [0, 1, 2, 3, 0]]):
@@ -3150,7 +3153,24 @@ class CAERO4(BaseCard):
         x, y = self.xy
         return points_elements_from_quad_points(p1, p2, p3, p4, x, y, dtype='int32')
 
-    def get_LSpan(self):
+    def plot(self, ax: AxesSubplot) -> None:
+        """plots the panels"""
+        points, elements = self.panel_points_elements()
+        for eid, elem in enumerate(elements[:, [0, 1, 2, 3, 0]]):
+            pointsi = points[elem][:, [0, 1]]
+            x = pointsi[:, 0]
+            y = pointsi[:, 1]
+            ax.plot(x, y, color='b')
+            box_id = self.eid + eid
+            centroid = (x[:-1].sum() / 4, y[:-1].sum() / 4)
+            elem_name = f'e{box_id}'
+            ax.annotate(elem_name, centroid, ha='center')
+
+            for pid, point in zip(elem, pointsi):
+                point_name = f'p{pid}'
+                ax.annotate(point_name, point, ha='center')
+
+    def get_LSpan(self) -> int:
         if isinstance(self.lspan, integer_types):
             return self.lspan
         return self.lspan_ref.sid
@@ -3349,6 +3369,7 @@ class CAERO5(BaseCard):
         self.cp_ref = model.Coord(self.cp, msg=msg)
         if self.nspan == 0:
             self.lspan_ref = model.AEFact(self.lspan, msg=msg)
+        self._init_ids()
 
     def safe_cross_reference(self, model: BDF, xref_errors):
         xref_errors = {}
@@ -3357,6 +3378,7 @@ class CAERO5(BaseCard):
         self.cp_ref = model.safe_coord(self.cp, self.eid, xref_errors, msg=msg)
         if self.nspan == 0:
             self.lspan_ref = model.safe_aefact(self.lspan, self.eid, xref_errors, msg=msg)
+        self._init_ids()
 
     def uncross_reference(self) -> None:
         """Removes cross-reference links"""
@@ -3390,6 +3412,20 @@ class CAERO5(BaseCard):
         npoints = (nchord + 1) * (nspan + 1)
         return npoints, nelements
 
+
+    @property
+    def nboxes(self):
+        if self.nspan > 0:
+            return self.nspan
+        return len(self.lspan_ref.fractions) # AEFACT
+
+    def _init_ids(self, dtype='int32'):
+        npanels = self.nboxes
+        nspan = npanels
+        #self.box_ids = np.arange(0, self.nboxes, dtype=dtype)
+        self.box_ids = np.arange(self.eid, self.eid + npanels,
+                                 dtype=dtype).reshape(nspan, 1)# .T
+
     def panel_points_elements(self):
         p1, p2, p3, p4 = self.get_points()
 
@@ -3406,7 +3442,7 @@ class CAERO5(BaseCard):
         x = np.array([0., 1.], dtype='float64')
         assert nspan >= 1, msg
 
-        return points_elements_from_quad_points(p1, p2, p3, p4, x, y, dtype='int32')
+        return points_elements_from_quad_points(p1, p4, p3, p2, y, x, dtype='int32')
 
     def c1_c2(self, mach):
         p1, unused_p2, unused_p3, p4 = self.get_points()
@@ -3452,6 +3488,23 @@ class CAERO5(BaseCard):
                 (4 * ma2_sec_lambda2 ** 2)
             )
         return c1, c2
+
+    def plot(self, ax: AxesSubplot) -> None:
+        """plots the panels"""
+        points, elements = self.panel_points_elements()
+        for eid, elem in enumerate(elements[:, [0, 1, 2, 3, 0]]):
+            pointsi = points[elem][:, [0, 1]]
+            x = pointsi[:, 0]
+            y = pointsi[:, 1]
+            ax.plot(x, y, color='b')
+            box_id = self.eid + eid
+            centroid = (x[:-1].sum() / 4, y[:-1].sum() / 4)
+            elem_name = f'e{box_id}'
+            ax.annotate(elem_name, centroid, ha='center')
+
+            for pid, point in zip(elem, pointsi):
+                point_name = f'p{pid}'
+                ax.annotate(point_name, point, ha='center')
 
     def Cp(self):
         if self.cp_ref is not None:
@@ -4834,6 +4887,41 @@ class PAERO4(BaseCard):
 
     def __init__(self, pid, docs, caocs, gapocs,
                  cla=0, lcla=0, circ=0, lcirc=0, comment=''):
+        """
+        Parameters
+        ----------
+        PID : int
+            Property identification number. (Integer > 0)
+        CLA : int; default=0
+            Select Prandtl-Glauert correction. (Integer = -1, 0, 1)
+            -1 Compressibility correction made to lift curve slope data for a reference Mach number.
+            0  No correction and no list needed. (Default)
+            +1 No correction and lift curve slope provided by a list as a
+               function of strip location and Mach number.
+        LCLA : int
+            ID number of the AEFACT entry that lists the lift curve slope
+            on all strips for each Mach number on the MKAEROi entry. See
+            Remark 2 below. (Integer = 0 if CLA = 0, > 0 if CLA ≠ 0)
+        CIRC : int; default=0
+            Select Theodorsen’s function C(k) or the number of exponential
+            coefficients used to approximate C(k).
+            (Integer = 0, 1, 2, 3; Must be zero if CLA ≠ 0.)
+            0 Theodorsen function.
+            1, 2, 3 Approximate function with b0, b1, β1, ..., bn, βn n = 1, 2, 3.
+        LCIRC : int
+            Identification number of the AEFACT entry that lists the b, β values
+            for each Mach number. See Remark 3, 4, and 5 below; variable b’s
+            and β’s for each mi on the MKAEROi entry.
+            (Integer = 0 if CIRC = 0, > 0 if CIRC ≠ 0)
+        DOCi : List[float]
+            d/c = distance of the control surface hinge aft of the quarter-chord
+            divided by the strip chord (Real ≥ 0.0)
+        CAOCi : List[float]
+            ca/c = control surface chord divided by the strip chord. (Real ≥ 0.0)
+        GAPOCi : List[float]
+            g/c = control surface gap divided by the strip chord. (Real ≥ 0.0)
+
+        """
         BaseCard.__init__(self)
         if comment:
             self.comment = comment
@@ -6162,8 +6250,9 @@ def get_caero_points(model: BDF,
     if model.caeros:
         caero_points = []
         for unused_eid, caero in sorted(model.caeros.items()):
-            if caero.type in ('CAERO1', 'CAERO4', 'CAERO7'):
+            if caero.type in ('CAERO1', 'CAERO4', 'CAERO5', 'CAERO7'):
                 box_ids = caero.box_ids
+                assert box_ids.min() > 0, box_ids
                 nboxes = len(box_ids.ravel())
                 if nboxes > 1000:
                     print('skipping nboxes=%s for:\n%s' % (nboxes, str(caero)))

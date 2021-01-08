@@ -137,8 +137,9 @@ from pyNastran.bdf.cards.constraints import (SPC, SPCADD, SPCAX, SPC1, SPCOFF, S
                                              GMSPC)
 from pyNastran.bdf.cards.coordinate_systems import (CORD1R, CORD1C, CORD1S,
                                                     CORD2R, CORD2C, CORD2S, #CORD3G,
-                                                    GMCORD, transform_coords_vectorized,
+                                                    transform_coords_vectorized,
                                                     CORDx)
+#from pyNastran.bdf.cards.msgmesh import CGEN, GMCORD, GMLOAD
 from pyNastran.bdf.cards.deqatn import DEQATN
 from pyNastran.bdf.cards.dynamic import (
     DELAY, DPHASE, FREQ, FREQ1, FREQ2, FREQ3, FREQ4, FREQ5,
@@ -2698,7 +2699,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             'QBDY2': self._prepare_qbdy2,
             'QBDY3': self._prepare_qbdy3,
 
-            'GMLOAD': self._prepare_gmload,
+            #'GMLOAD': self._prepare_gmload,
             'LOADCYN': self._prepare_loadcyn,
             'PRESAX': self._prepare_presax,
         }
@@ -5058,9 +5059,9 @@ class BDF(BDF_):
     def _prepare_qbdy3(self, card, card_obj, comment=''):
         if self.card_count['QBDY3'] == 1:
             self.log.warning('skipping %s' % str(card))
-    def _prepare_gmload(self, card, card_obj, comment=''):
-        if self.card_count['GMLOAD'] == 1:
-            self.log.warning('skipping %s' % str(card))
+    #def _prepare_gmload(self, card, card_obj, comment=''):
+        #if self.card_count['GMLOAD'] == 1:
+            #self.log.warning('skipping %s' % str(card))
     def _prepare_loadcyn(self, card, card_obj, comment=''):
         if self.card_count['LOADCYN'] == 1:
             self.log.warning('skipping %s' % str(card))

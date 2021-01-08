@@ -102,8 +102,9 @@ from .cards.constraints import (SPC, SPCADD, SPCAX, SPC1, SPCOFF, SPCOFF1,
                                 GMSPC)
 from .cards.coordinate_systems import (CORD1R, CORD1C, CORD1S,
                                        CORD2R, CORD2C, CORD2S, #CORD3G,
-                                       GMCORD, transform_coords_vectorized,
+                                       transform_coords_vectorized,
                                        CORDx)
+#from .cards.coordinate_systems.msgmesh import CGEN, GMCORD, GMLOAD
 from .cards.deqatn import DEQATN
 from .cards.dynamic import (
     DELAY, DPHASE, FREQ, FREQ1, FREQ2, FREQ3, FREQ4, FREQ5,
@@ -113,8 +114,8 @@ from .cards.loads.loads import (
 from .cards.loads.dloads import ACSRCE, DLOAD, TLOAD1, TLOAD2, RLOAD1, RLOAD2
 from .cards.loads.static_loads import (LOAD, CLOAD, GRAV, ACCEL, ACCEL1, FORCE,
                                        FORCE1, FORCE2, MOMENT, MOMENT1, MOMENT2,
-                                       PLOAD, PLOAD1, PLOAD2, PLOAD4,
-                                       GMLOAD)
+                                       PLOAD, PLOAD1, PLOAD2, PLOAD4)
+
 from .cards.loads.random_loads import RANDPS, RANDT1
 
 from .cards.materials import (MAT1, MAT2, MAT3, MAT4, MAT5,
@@ -226,6 +227,7 @@ SOL_700 = {
     'YLDSG', 'YLDTM', 'YLDUDS', 'YLDVM', 'YLDZA',
 }
 MISSING_CARDS = {
+    # msgmesh
     'CGEN', 'GMSPC', 'GMCURV', 'GMLOAD', 'FEFACE', 'GMSURF', 'GMINTS', 'PVAL', 'PINTS',
     'EGRID', 'ADAPT', 'GRIDG', 'MESHOPT', 'OUTPUT', 'OUTRCV', 'SPCG', 'GRIDU',
     'GMINTC', 'PINTC', 'GMBNDS', 'GMBC', 'GMCONV', 'PGEN', 'GMQVOL',
@@ -692,7 +694,11 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             'GRAV', 'ACCEL', 'ACCEL1',
             'PLOAD', 'PLOAD1', 'PLOAD2', 'PLOAD4',
             'PLOADX1', 'RFORCE', 'RFORCE1',
-            'GMLOAD', 'SPCD', 'DEFORM',
+            'SPCD', 'DEFORM',
+
+            # msgmesh
+            #'GMLOAD',  # loads
+            #'GMCORD',  # coords
 
             # axisymmetric
             'PRESAX',
@@ -728,7 +734,6 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             ## coords
             'CORD1R', 'CORD1C', 'CORD1S',
             'CORD2R', 'CORD2C', 'CORD2S',
-            'GMCORD',
 
             # temperature cards
             'TEMP', 'TEMPD', 'TEMPB3', 'TEMPAX',
@@ -2083,7 +2088,6 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
 
             #'RADBND' : (Crash, None),
 
-
             # nodes
             'GRID' : (GRID, self._add_node_object),
             'SPOINT' : (SPOINTs, self._add_spoint_object),
@@ -2109,8 +2113,9 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             'FEEDGE' : (FEEDGE, self._add_feedge),
 
             # msgmesh
-            'GMCORD' : (GMCORD, self._add_coord_object),
-            'CGEN' : (CGEN, self._add_element_object),
+            #'GMCORD' : (GMCORD, self._add_coord_object), # coords
+            #'CGEN' : (CGEN, self._add_element_object),   # elements
+            #'GMLOAD' : (GMLOAD, self._add_load_object),  # basic loads
 
             'CONROD' : (CONROD, self._add_element_object),
             'CROD' : (CROD, self._add_element_object),
@@ -2322,7 +2327,6 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             'RFORCE' : (RFORCE, self._add_load_object),
             'RFORCE1' : (RFORCE1, self._add_load_object),
             'SLOAD' : (SLOAD, self._add_load_object),
-            'GMLOAD' : (GMLOAD, self._add_load_object),
             'SPCD' : (SPCD, self._add_load_object),  # enforced displacement
             'QVOL' : (QVOL, self._add_load_object),  # thermal
 

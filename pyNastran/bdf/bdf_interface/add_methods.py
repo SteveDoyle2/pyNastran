@@ -12,7 +12,7 @@ if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.bdf.cards.elements.elements import CFAST, CGAP, CRAC2D, CRAC3D, PLOTEL, GENEL
     from pyNastran.bdf.cards.properties.properties import PFAST, PGAP, PRAC2D, PRAC3D
     from pyNastran.bdf.cards.properties.solid import PLSOLID, PSOLID, PIHEX, PCOMPS
-    from pyNastran.bdf.cards.msgmesh import CGEN
+    #from pyNastran.bdf.cards.msgmesh import CGEN, GMCORD
 
     from pyNastran.bdf.cards.elements.springs import CELAS1, CELAS2, CELAS3, CELAS4
     from pyNastran.bdf.cards.properties.springs import PELAS, PELAST
@@ -57,7 +57,7 @@ if TYPE_CHECKING:  # pragma: no cover
                                                  GMSPC)
     from pyNastran.bdf.cards.coordinate_systems import (CORD1R, CORD1C, CORD1S,
                                                         CORD2R, CORD2C, CORD2S, #CORD3G,
-                                                        GMCORD)
+                                                        )
     from pyNastran.bdf.cards.deqatn import DEQATN
     from pyNastran.bdf.cards.dynamic import (
         DELAY, DPHASE, FREQ, FREQ1, FREQ2, FREQ3, FREQ4, FREQ5,

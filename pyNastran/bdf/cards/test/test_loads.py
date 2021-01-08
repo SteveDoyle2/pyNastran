@@ -257,23 +257,6 @@ class TestLoads(unittest.TestCase):
         assert np.array_equal(moments1, moments2)
         save_load_deck(model)
 
-    def test_gmload(self):
-        """tests GMLOAD"""
-        model = BDF(log=log)
-        sid = 1
-        normal = [1., 2., 3.]
-        entity = 'cat'
-        entity_id = 37
-        method = 'frog'
-        load_magnitudes = [31.]
-        gmload = model.add_gmload(sid, normal, entity, entity_id, method,
-                                  load_magnitudes, cid=0,
-                                  comment='gmload')
-        gmload.raw_fields()
-        model.validate()
-        model.cross_reference()
-        save_load_deck(model, run_convert=False)
-
     def test_pload4_01(self):
         """tests a PLOAD4"""
         lines = ['PLOAD4  1000    1       -60.    -60.    60.             1']

@@ -155,7 +155,8 @@ class LoadCombination(BaseCard):
         load_ids = []
         supported_loads = [
             'FORCE', 'FORCE1', 'FORCE2', 'MOMENT', 'MOMENT1', 'MOMENT2',
-            'PLOAD', 'PLOAD1', 'PLOAD2', 'PLOAD4', 'GRAV', 'SPCD', 'GMLOAD',
+            'PLOAD', 'PLOAD1', 'PLOAD2', 'PLOAD4', 'GRAV', 'SPCD',
+            # 'GMLOAD',
             'RLOAD1', 'RLOAD2', 'TLOAD1', 'TLOAD2', 'PLOADX1', 'LOAD',
             'RFORCE', 'RFORCE1', #'RFORCE2'
             'ACCEL', 'ACCEL1', 'SLOAD', 'ACSRCE',

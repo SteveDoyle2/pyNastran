@@ -57,6 +57,10 @@ def tri_cap(nelements):
     elements[:len(ipoints)-1, 2] = np.hstack([ipoints[2:], 1])
     return elements
 
+#def points_elements_from_quad_points_new(p1, p2, p3, p4, x, y, dtype='int32'):
+    #"""the function doesn't work correctly..."""
+    #return points_elements_from_quad_points(p1, p4, p3, p2, y, x, dtype='int32')
+
 def points_elements_from_quad_points(p1, p2, p3, p4, x, y, dtype='int32'):
     """
     Creates nodes and elements in a structured grid given 4 points.

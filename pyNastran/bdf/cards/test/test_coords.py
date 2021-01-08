@@ -952,16 +952,6 @@ class TestCoords(unittest.TestCase):
             coord.global_to_local
             coord.local_to_global
 
-    def test_gmcord(self):
-        """tests GMCORD"""
-        cid = 1
-        entity = 'GMCURV'
-        gm_ids = [3, 4]
-        model = BDF(debug=False)
-        gmcord = model.add_gmcord(cid, entity, gm_ids)
-        gmcord.raw_fields()
-        save_load_deck(model, run_convert=False)
-
     def test_cord3g(self):
         """tests the CORD3G card"""
         cid = 1

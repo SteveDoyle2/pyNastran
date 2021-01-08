@@ -2601,7 +2601,7 @@ class CAERO7(BaseCard):
         npanels = nchord * nspan
         try:
             self.box_ids = np.arange(self.eid, self.eid + npanels,
-                                     dtype=dtype).reshape(nspan, nchord).T
+                                     dtype=dtype).reshape(nspan, nchord) # .T
         except OverflowError:
             if dtype == 'int64':
                 # we already tried int64
@@ -2630,7 +2630,7 @@ class CAERO7(BaseCard):
             the BDF object
 
         """
-        msg = ', which is required by CAERO1 eid=%s' % self.eid
+        msg = ', which is required by CAERO7 eid=%s' % self.eid
         #self.pid_ref = model.PAero(self.pid, msg=msg)
         self.cp_ref = model.Coord(self.cp, msg=msg)
         self.ascid_ref = model.Acsid(msg=msg)
@@ -2933,6 +2933,28 @@ class CAERO7(BaseCard):
         self.p1 += dxyz
         self.p4 += dxyz
 
+    def plot(self, ax: AxesSubplot) -> None:
+        """plots the panels"""
+        points, elements = self.panel_points_elements()
+        for eid, elem in enumerate(elements[:, [0, 1, 2, 3, 0]]):
+            pointsi = points[elem][:, [0, 1]]
+            x = pointsi[:, 0]
+            y = pointsi[:, 1]
+            ax.plot(x, y, color='b')
+            box_id = self.eid + eid
+            centroid = (x[:-1].sum() / 4, y[:-1].sum() / 4)
+            elem_name = f'e{box_id}'
+            ax.annotate(elem_name, centroid, ha='center')
+
+            for pid, point in zip(elem, pointsi):
+                point_name = f'p{pid}'
+                ax.annotate(point_name, point, ha='center')
+
+    def get_LSpan(self):
+        if self.lspan_ref is not None:
+            return self.lspan_ref.sid
+        return self.lspan
+
     def raw_fields(self):
         """
         Gets the fields in their unmodified form
@@ -2953,11 +2975,6 @@ class CAERO7(BaseCard):
             list(self.p1) + [self.x12, None, None, None, None] +
             list(self.p4) + [self.x43, None, None, None, None])
         return list_fields
-
-    def get_LSpan(self):
-        if self.lspan_ref is not None:
-            return self.lspan_ref.sid
-        return self.lspan
 
     def repr_fields(self):
         """

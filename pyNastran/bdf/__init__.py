@@ -146,7 +146,7 @@ BULK_DATA_CARDS = {
     'GRAV', 'ACCEL', 'ACCEL1',
     'PLOAD', 'PLOAD1', 'PLOAD2', 'PLOAD4',
     'PLOADX1', 'RFORCE', 'RFORCE1',
-    'GMLOAD', 'SPCD', 'DEFORM',
+    'SPCD', 'DEFORM',
 
     # axisymmetric
     'PRESAX',
@@ -179,10 +179,14 @@ BULK_DATA_CARDS = {
     'CSSCHD',  ## csschds
     'DIVERG',  ## divergs
 
+    ## msgmesh
+    # 'GMCORD', # coords
+    # 'GMLOAD', # loads
+    # 'CGEN', # elements
+
     ## coords
     'CORD1R', 'CORD1C', 'CORD1S',
     'CORD2R', 'CORD2C', 'CORD2S',
-    'GMCORD',
 
     # temperature cards
     'TEMP', 'TEMPD', 'TEMPB3', 'TEMPAX',
