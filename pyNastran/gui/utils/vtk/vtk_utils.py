@@ -3,6 +3,7 @@ defines:
  - create_vtk_cells_of_constant_element_type(grid, elements, etype)
 
 """
+import warnings
 from collections import defaultdict
 import numpy as np
 import vtk
@@ -33,7 +34,9 @@ def numpy_to_vtk_points(nodes, points=None, dtype='<f', deep=1):
     return points
 
 
-def create_vtk_cells_of_constant_element_type(grid, elements, etype):
+def create_vtk_cells_of_constant_element_type(grid: vtk.vtkUnstructuredGrid,
+                                              elements: np.ndarray,
+                                              etype: int) -> None:
     """
     Adding constant type elements is overly complicated.
 
@@ -70,6 +73,10 @@ def create_vtk_cells_of_constant_element_type(grid, elements, etype):
         assert nnodes_per_element == 3, elements.shape
     elif etype in [9, 10]:  # quad, tet4
         assert nnodes_per_element == 4, elements.shape
+    elif isinstance(etype, str):
+        raise RuntimeError(etype)
+    else:
+        warnings.warn(f'no recommendation for etype={etype}; nnodes_per_element={nnodes_per_element}')
 
     # We were careful about how we defined the arrays, so the data
     # is contiguous when we ravel it.  Otherwise, you need to

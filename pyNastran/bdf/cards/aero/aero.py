@@ -18,8 +18,9 @@ All cards are BaseCard objects.
 
 """
 from __future__ import annotations
-from itertools import count
 import math
+from itertools import count
+from collections import defaultdict, namedtuple
 from typing import List, Union, Any, TYPE_CHECKING
 
 import numpy as np
@@ -1675,7 +1676,7 @@ class CAERO1(BaseCard):
         npanels = nchord * nspan
         try:
             self.box_ids = np.arange(self.eid, self.eid + npanels,
-                                     dtype=dtype).reshape(nspan, nchord).T
+                                     dtype=dtype).reshape(nspan, nchord)# .T
         except OverflowError:
             if dtype == 'int64':
                 # we already tried int64
@@ -1683,6 +1684,7 @@ class CAERO1(BaseCard):
                     self.eid, self.lchord, self.lspan, nchord)
                 raise OverflowError(msg)
             self._init_ids(dtype='int64')
+        return self.box_ids
 
     def Cp(self):
         if self.cp_ref is not None:
@@ -2000,12 +2002,10 @@ class CAERO1(BaseCard):
         # aero panel forces
         #
         # this gives us chordwise panels and chordwise nodes
-        #
-        # this is wrong...why was it done like this?
-        #return points_elements_from_quad_points(p1, p4, p3, p2, y, x, dtype='int32')
+        return points_elements_from_quad_points(p1, p4, p3, p2, y, x, dtype='int32')
 
-        # this is correct, but the y/x should be flipped...
-        return points_elements_from_quad_points(p1, p2, p3, p4, y, x, dtype='int32')
+        # correct paneling, wrong orientation
+        #return points_elements_from_quad_points(p1, p2, p3, p4, y, x, dtype='int32')
 
     def set_points(self, points):
         self.p1 = points[0]
@@ -2026,6 +2026,7 @@ class CAERO1(BaseCard):
         self.p4 += dxyz
 
     def plot(self, ax):
+        """plots the panels"""
         points, elements = self.panel_points_elements()
         for eid, elem in enumerate(elements[:, [0, 1, 2, 3, 0]]):
             pointsi = points[elem][:, [0, 1]]
@@ -2033,13 +2034,13 @@ class CAERO1(BaseCard):
             y = pointsi[:, 1]
             ax.plot(x, y, color='b')
             box_id = self.eid + eid
-            centroid = (x[:-1].sum()/ 4, y[:-1].sum() / 4)
+            centroid = (x[:-1].sum() / 4, y[:-1].sum() / 4)
             elem_name = f'e{box_id}'
-            ax.annotate(elem_name, centroid)
+            ax.annotate(elem_name, centroid, ha='center')
 
             for pid, point in zip(elem, pointsi):
                 point_name = f'p{pid}'
-                ax.annotate(point_name, point)
+                ax.annotate(point_name, point, ha='center')
 
     def raw_fields(self):
         """
@@ -2554,11 +2555,11 @@ class CAERO3(BaseCard):
         p1 : (3,) float ndarray
             ???
         x12 : float
-            ???
+            distance from p1 to p3
         p4 : (3,) float ndarray
             ???
         x43 : float
-            ???
+            distance from p4 to p3
         cp : int; default=0
             coordinate system for locating point 1
         list_w : int
@@ -2570,6 +2571,12 @@ class CAERO3(BaseCard):
         comment : str; default=''
             a comment for the card
 
+
+        1--------5----------4
+        |                   |
+        |     7--9---11     |
+        |     |       |     |
+        2-----8--10--12-----3
         """
         assert cp != 100
         BaseCard.__init__(self)
@@ -2586,6 +2593,8 @@ class CAERO3(BaseCard):
 
         #: Coordinate system for locating point 1.
         self.cp = cp
+
+        # aefacts
         self.list_w = list_w
         self.list_c1 = list_c1
         self.list_c2 = list_c2
@@ -2730,7 +2739,7 @@ class CAERO3(BaseCard):
         x, y = self.xy
         return points_elements_from_quad_points(p1, p2, p3, p4, x, y, dtype='int32')
 
-    def get_npanel_points_elements(self):
+    def get_npanel_points_elements(self) -> Tuple[int, int]:
         """
         Gets the number of sub-points and sub-elements for the CAERO card
 
@@ -2774,6 +2783,23 @@ class CAERO3(BaseCard):
                 self.eid, nchord, nspan)
             raise RuntimeError(msg)
         return x, y
+
+    def plot(self, ax):
+        """plots the panels"""
+        points, elements = self.panel_points_elements()
+        for eid, elem in enumerate(elements[:, [0, 1, 2, 3, 0]]):
+            pointsi = points[elem][:, [0, 1]]
+            x = pointsi[:, 0]
+            y = pointsi[:, 1]
+            ax.plot(x, y, color='b')
+            box_id = self.eid + eid
+            centroid = (x[:-1].sum() / 4, y[:-1].sum() / 4)
+            elem_name = f'e{box_id}'
+            ax.annotate(elem_name, centroid, ha='center')
+
+            for pid, point in zip(elem, pointsi):
+                point_name = f'p{pid}'
+                ax.annotate(point_name, point, ha='center')
 
     #def get_points_elements_3d(self):
         #"""
@@ -6092,3 +6118,230 @@ class SPLINE5(Spline):
     def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.repr_fields()
         return self.comment + print_card_8(card)
+
+
+def get_caero_count(model: BDF) -> Tuple[int, int, int, int]:
+    ncaeros = 0
+    ncaeros_sub = 0
+    #ncaeros_cs = 0
+    ncaeros_points = 0
+    ncaero_sub_points = 0
+    # count caeros
+    # sorting doesn't matter here because we're just trying to size the array
+    for caero in model.caeros.values():
+        if hasattr(caero, 'panel_points_elements'):
+            npoints, ncelements = caero.get_npanel_points_elements()
+            ncaeros_sub += npoints
+            ncaero_sub_points += ncelements
+        elif isinstance(caero, CAERO2) or caero.type == 'BODY7':
+            pass
+        else:  # pragma: no cover
+            msg = '%r doesnt support panel_points_elements\n%s' % (caero.type, caero.rstrip())
+            raise NotImplementedError(msg)
+
+    for unused_eid, caero in sorted(model.caeros.items()):
+        if isinstance(caero, (CAERO1, CAERO3, CAERO4, CAERO5)) or caero.type == 'CAERO7':
+            ncaeros_points += 4
+            ncaeros += 1
+        elif isinstance(caero, CAERO2) or caero.type == 'BODY7':
+            points, elems = caero.get_points_elements_3d()
+            if points is None:
+                continue
+            ncaeros_points += points.shape[0]
+            ncaeros += elems.shape[0]
+        else:  # pragma: no cover
+            msg = '%r doesnt support panel counter\n%s' % (caero.type, caero.rstrip())
+            raise NotImplementedError(msg)
+    return ncaeros, ncaeros_sub, ncaeros_points, ncaero_sub_points
+
+def get_caero_points(model: BDF,
+                     box_id_to_caero_element_map: Dict[int, np.ndarray]) -> Tuple[np.ndarray, bool]:
+    has_caero = False
+    num_prev = 0
+    ncaeros_sub = 0
+    if model.caeros:
+        caero_points = []
+        for unused_eid, caero in sorted(model.caeros.items()):
+            if caero.type in ('CAERO1', 'CAERO4', 'CAERO7'):
+                box_ids = caero.box_ids
+                nboxes = len(box_ids.ravel())
+                if nboxes > 1000:
+                    print('skipping nboxes=%s for:\n%s' % (nboxes, str(caero)))
+                    continue
+
+                ncaeros_sub += 1
+                pointsi, elementsi = caero.panel_points_elements()
+                caero_points.append(pointsi)
+
+                for i, box_id in enumerate(caero.box_ids.flat):
+                    box_id_to_caero_element_map[box_id] = elementsi[i, :] + num_prev
+                num_prev += pointsi.shape[0]
+            elif caero.type in ('CAERO2', 'BODY7'):
+                pass
+            else:
+                print('caero\n%s' % caero)
+        if ncaeros_sub:
+            caero_points = np.vstack(caero_points)
+        has_caero = True
+
+    if ncaeros_sub == 0:
+        caero_points = np.empty((0, 3))
+    return caero_points, has_caero
+
+def get_caero_subpanel_grid(model: BDF) -> Tuple[np.ndarray, np.ndarray]:
+    """builds the CAERO subpanel grid in 3d space"""
+    j = 0
+    points = []
+    elements = []
+    for unused_eid, element in sorted(model.caeros.items()):
+        if isinstance(element, (CAERO1, CAERO3, CAERO4, CAERO5)) or element.type == 'CAERO7':
+            pointsi, elementsi = element.panel_points_elements()
+            points.append(pointsi)
+            elements.append(j + elementsi)
+            #j += ipoint + 1
+            j += len(pointsi)
+        else:
+            model.log.info(f'skipping {element.type}')
+    if len(points) == 0:
+        points_array = np.zeros((0, 3), dtype='float32')
+        elements_array = np.zeros((0, 4), dtype='int32')
+        return points_array, elements_array
+
+    if len(elements) == 1:
+        points_array = np.vstack(points)
+        elements_array = elements[0].rehape(1, 4)
+    else:
+        points_array = np.vstack(points)
+        elements_array = np.vstack(elements)
+    return points_array, elements_array
+
+def build_caero_paneling(model: BDF) -> Tuple[str, List[str], Any]:
+    """
+    Creates the CAERO panel inputs including:
+     - caero
+     - caero_subpanels
+     - caero_control_surfaces
+     - N control surfaces
+
+    Parameters
+    ----------
+    model : BDF()
+        the bdf model
+
+    Returns
+    -------
+    caero_points : (N_aero_points, 3) float ndarray
+        the xyz points for the aero panels
+        N_aero_points can be 0
+    ncaeros : int
+        the number of aero sub-panels?
+    ncaeros_sub : int
+        ???
+    ncaeros_cs : int
+        ???
+    ncaeros_points : int
+        number of points for the caero coarse grid
+    ncaero_sub_points : int
+        number of points for the caero fine/subpanel grid
+    has_control_surface : bool
+        is there a control surface
+    box_id_to_caero_element_map : dict[box_id] = box_index
+        used to map the CAEROx box id to index in the ???
+        (aero panel elements) array, which will be used with
+        cs_box_ids
+    cs_box_ids : dict[control_surface_name] : List[panel ids]
+        list of panels used by each aero panel
+
+    """
+    has_caero = False
+    ncaeros = 0
+    ncaeros_sub = 0
+    ncaeros_cs = 0
+    ncaeros_points = 0
+    ncaero_sub_points = 0
+    has_control_surface = False
+    box_id_to_caero_element_map = {}
+    cs_box_ids = defaultdict(list)
+
+    all_control_surface_name = ''
+    caero_control_surface_names = []
+
+    log = model.log
+    # when caeros is empty, SPLINEx/AESURF cannot be defined
+    if len(model.caeros) == 0:
+        caero_points = np.empty((0, 3))
+        out = (
+            has_caero, caero_points, ncaeros, ncaeros_sub, ncaeros_cs,
+            ncaeros_points, ncaero_sub_points,
+            has_control_surface, box_id_to_caero_element_map, cs_box_ids,
+        )
+        return all_control_surface_name, caero_control_surface_names, out
+
+    ncaeros, ncaeros_sub, ncaeros_points, ncaero_sub_points = get_caero_count(model)
+    caero_points, has_caero = get_caero_points(model, box_id_to_caero_element_map)
+
+    # check for any control surfcaes
+    if model.aesurf:
+        has_control_surface = True
+        #ncaero_cs_points = 0
+        #self.gui.create_alternate_vtk_grid(
+            #'caero_control_surfaces', color=PINK_FLOAT, line_width=5, opacity=1.0,
+            #representation='surface', is_visible=False)
+        all_control_surface_name = 'caero_control_surfaces'
+        # sort the control surfaces
+        labels_to_aesurfs = {aesurf.label: aesurf for aesurf in model.aesurf.values()}
+        if len(labels_to_aesurfs) != len(model.aesurf):
+            msg = (
+                'Expected same number of label->aesurf as aid->aesurf\n'
+                'labels_to_aesurfs = %r\n'
+                'model.aesurf = %r\n' % (labels_to_aesurfs, model.aesurf))
+            raise RuntimeError(msg)
+
+        for unused_label, aesurf in sorted(model.aesurf.items()):
+            if aesurf.type == 'AESURFZ':
+                aero_element_ids = aesurf.aero_element_ids
+                ncaeros_cs += len(aero_element_ids)
+
+                cs_name = '%s_control_surface' % aesurf.label
+                caero_control_surface_names.append(cs_name)
+                #self.gui.create_alternate_vtk_grid(
+                    #cs_name, color=PINK_FLOAT, line_width=5, opacity=0.5,
+                    #representation='surface')
+
+                cs_box_ids['caero_control_surfaces'].extend(aero_element_ids)
+                cs_box_ids[cs_name].extend(aero_element_ids)
+            else:
+                aelist_ref = aesurf.alid1_ref
+                if aelist_ref is None:
+                    log.error('AESURF does not reference an AELIST\n%s' % (
+                        aesurf.rstrip()))
+                    continue
+                ncaeros_cs += len(aelist_ref.elements)
+
+                cs_name = '%s_control_surface' % aesurf.label
+                #self.gui.create_alternate_vtk_grid(
+                    #cs_name, color=PINK_FLOAT, line_width=5, opacity=0.5,
+                    #representation='surface')
+                caero_control_surface_names.append(cs_name)
+
+                cs_box_ids['caero_control_surfaces'].extend(aelist_ref.elements)
+                cs_box_ids[cs_name].extend(aelist_ref.elements)
+                if aesurf.alid2 is not None:
+                    aelist_ref = aesurf.alid2_ref
+                    ncaeros_cs += len(aelist_ref.elements)
+                    cs_box_ids[cs_name].extend(aelist_ref.elements)
+                    cs_box_ids['caero_control_surfaces'].extend(aelist_ref.elements)
+
+    field_names = [
+        'has_caero', 'caero_points', 'ncaeros', 'ncaeros_sub', 'ncaeros_cs',
+        'ncaeros_points', 'ncaero_sub_points',
+        'has_control_surface', 'box_id_to_caero_element_map', 'cs_box_ids',
+    ]
+    AeroPaneling = namedtuple('AeroPaneling', field_names)
+    out = AeroPaneling(
+        has_caero, caero_points, ncaeros, ncaeros_sub, ncaeros_cs,
+        ncaeros_points, ncaero_sub_points,
+        has_control_surface, box_id_to_caero_element_map, cs_box_ids,
+    )
+    #print(all_control_surface_name, caero_control_surface_names)
+    return all_control_surface_name, caero_control_surface_names, out

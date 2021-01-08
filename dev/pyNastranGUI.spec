@@ -497,8 +497,8 @@ exe = EXE(pyz,
           #exclude_binaries=True,
           name=os.path.join('build\\pyi.win32\\pyNastranGUI', 'pyNastranGUI.exe'),
           debug=DEBUG,
-          strip=None,
-          #upx=True,
+          strip=None, #
+          #upx=True,  # some compression thing; uses upx-dir defined somewhere...
           icon=icon_main,
           console=True )
 

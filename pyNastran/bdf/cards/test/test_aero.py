@@ -19,7 +19,8 @@ from pyNastran.bdf.cards.aero.aero import (
     PAERO1, PAERO2, PAERO4, #PAERO3, PAERO5,
     AESURF, AESURFS,
     AELINK, AECOMP,
-    SPLINE1, SPLINE2 #, SPLINE3, SPLINE4, SPLINE5
+    SPLINE1, SPLINE2, #, SPLINE3, SPLINE4, SPLINE5
+    build_caero_paneling
 )
 from pyNastran.bdf.cards.aero.dynamic_loads import AERO, FLFACT, FLUTTER, GUST, MKAERO1, MKAERO2
 from pyNastran.bdf.cards.aero.static_loads import AESTAT, AEROS, CSSCHD, TRIM, TRIM2, DIVERG
@@ -527,6 +528,125 @@ class TestAero(unittest.TestCase):
             caero.plot(ax)
             fig.show()
 
+    def test_caero1_paneling_transpose(self):
+        fig, ax = _setup_aero_plot()
+
+        log = SimpleLogger(level='warning')
+        model = BDF(log=log)
+        cref = 1.0
+        bref = 1.0
+        sref = 1.0
+        model.add_aeros(cref, bref, sref, acsid=0, rcsid=0, sym_xz=0, sym_xy=0, comment='')
+
+        #['CAERO1', '2000', '2000', '0', '15', '10', '1', '0', None, '7.314386', '0.', '-0.18288', '1.463854', '8.222755', '1.573341', '-0.18288', '0.365963']
+        #card_lines = [
+            #'CAERO1,2000,2000,0,15,10,1,0,1',
+            #'+,7.314386,0.,-0.18288,1.463854,8.222755,1.573341,-0.18288,0.365963',
+        #]
+        #model.add_card(card_lines, 'CAERO1', comment='', ifile=None, is_list=False, has_none=True)
+
+        eid = 2000
+        #caero = model.caeros[eid]
+        #print(caero.get_stats())
+
+        pid = 1
+        igroup = 1
+        p1 = [7.3, 0., 0.]
+        p4 = [8.2, 1.6, 0.]
+        x12 = 1.4
+        x43 = 0.3
+        model.add_paero1(pid, caero_body_ids=None, comment='')
+
+        caero = model.add_caero1(
+            eid, pid, igroup, p1, x12, p4, x43,
+            cp=0, nspan=5, lspan=0, nchord=2, lchord=0, comment='')
+        caero.validate()
+        x, y = caero.xy
+        x_expected = np.array([0., 0.5, 1.])
+        y_expected = np.array([0., 0.2, 0.4, 0.6, 0.8, 1.])
+        assert np.allclose(x, x_expected)
+        assert np.allclose(y, y_expected)
+
+        print(caero.get_stats())
+        caero.cross_reference(model)
+        all_control_surface_name, caero_control_surfaces, out = build_caero_paneling(model)
+        box_id_to_caero_element_map_expected = {
+            2000: np.array([0, 3, 4, 1]),
+            2001: np.array([1, 4, 5, 2]),
+            2002: np.array([3, 6, 7, 4]),
+            2003: np.array([4, 7, 8, 5]),
+            2004: np.array([ 6,  9, 10,  7]),
+            2005: np.array([ 7, 10, 11,  8]),
+            2006: np.array([ 9, 12, 13, 10]),
+            2007: np.array([10, 13, 14, 11]),
+            2008: np.array([12, 15, 16, 13]),
+            2009: np.array([13, 16, 17, 14]),
+        }
+        for key, data in out.box_id_to_caero_element_map.items():
+            assert np.array_equal(data, box_id_to_caero_element_map_expected[key])
+
+        if IS_MATPLOTLIB:
+            caero.plot(ax)
+            fig.show()
+        #x = 1
+
+    def test_caero1_paneling_multi(self):
+        """checks the CAERO1/PAERO1/AEFACT card"""
+        fig, ax = _setup_aero_plot()
+
+        log = SimpleLogger(level='warning')
+        model = BDF(log=log)
+        cref = 1.0
+        bref = 1.0
+        sref = 1.0
+        model.add_aeros(cref, bref, sref, acsid=0, rcsid=0, sym_xz=0, sym_xy=0, comment='')
+
+        pid = 1
+        igroup = 1
+        p1 = [0., 0., 0.]
+        p4 = [1., 15., 0.]
+        x12 = 1.
+        x43 = 1.
+        model.add_paero1(pid, caero_body_ids=None, comment='')
+
+        eid = 1000
+        chord_aefact_id = 10000
+        model.add_aefact(chord_aefact_id, [0., 0.5, 1.0])
+        caero1a = model.add_caero1(eid, pid, igroup, p1, x12, p4, x43,
+                                   cp=0,
+                                   nspan=3, lspan=0,
+                                   nchord=0, lchord=chord_aefact_id, comment='')
+
+        eid = 2000
+        p1 = [1., 16., 0.]
+        p4 = [1., 30., 0.]
+        x12 = 1.
+        x43 = 1.
+        caero1b = model.add_caero1(eid, pid, igroup, p1, x12, p4, x43,
+                                   cp=0,
+                                   nspan=3, lspan=0,
+                                   nchord=2, lchord=0, comment='')
+        model.cross_reference()
+
+        npoints, nelements = caero1a.get_npanel_points_elements()
+        npoints_expected = 12 # 4*3
+        nelements_expected = 6 # 2*3
+        assert npoints_expected == npoints
+        assert nelements_expected == nelements
+        del model.caeros[eid]
+        del model.aefacts[chord_aefact_id]
+        #points, elements = caero.panel_points_elements()
+        #x, y = caero.xy
+        #chord_expected = np.array([0., 0.5, 1.])
+        #span_expected = np.array([0., 1 / 3, 2 / 3, 1.])
+        #assert np.allclose(x, chord_expected)
+        #assert np.allclose(y, span_expected)
+        if IS_MATPLOTLIB:
+            caero1a.plot(ax)
+            caero1b.plot(ax)
+            fig.show()
+            x = 1
+
     def test_caero1_paneling_nspan_nchord_2(self):
         """checks the CAERO1/PAERO1/AEFACT card"""
         log = SimpleLogger(level='warning')
@@ -572,6 +692,39 @@ class TestAero(unittest.TestCase):
         if IS_MATPLOTLIB:
             caero.plot(ax)
             fig.show()
+
+    def _test_caero3_paneling(self):
+        """checks the CAERO3/PAERO1/AEFACT card"""
+        log = SimpleLogger(level='warning')
+        model = BDF(log=log)
+        cref = 1.0
+        bref = 1.0
+        sref = 1.0
+        model.add_aeros(cref, bref, sref, acsid=0, rcsid=0, sym_xz=0, sym_xy=0, comment='')
+
+        pid = 1
+        igroup = 1
+        p1 = [0., 0., 0.]
+        p4 = [1., 15., 0.]
+        x12 = 1.
+        x43 = 1.
+        model.add_paero1(pid, caero_body_ids=None, comment='')
+
+        eid = 1000
+        caero = model.add_caero3(eid, pid, list_w, p1, x12, p4, x43,
+                                 cp=0, list_c1=None, list_c2=None, comment='')
+        caero.validate()
+        npoints, nelements = caero.get_npanel_points_elements()
+        npoints_expected = 12 # 4*3
+        nelements_expected = 6 # 2*3
+
+        x, y = caero.xy
+        chord_expected = np.array([0., 0.5, 1.])
+        span_expected = np.array([0., 1 / 3, 2 / 3, 1.])
+        assert np.allclose(x, chord_expected)
+        assert np.allclose(y, span_expected)
+        assert npoints_expected == npoints
+        assert nelements_expected == nelements
 
     def test_caero1_1(self):
         """checks the CAERO1/PAERO1/AEROS/AEFACT card"""
@@ -1216,9 +1369,18 @@ class TestAero(unittest.TestCase):
         xref_errors = defaultdict(list)
         caero3b.safe_cross_reference(model, xref_errors)
 
-        caero3b.get_npanel_points_elements()
+        npoints_expected = 33
+        nelements_expected = 20
+        npoints, nelements = caero3b.get_npanel_points_elements()
+        assert npoints == npoints_expected
+        assert nelements == nelements_expected
+
         caero3b.get_points()
         caero3b.panel_points_elements()
+        if IS_MATPLOTLIB:
+            fig, ax = _setup_aero_plot()
+            caero3b.plot(ax)
+            fig.show()
 
         model.get_bdf_stats()
         save_load_deck(model, run_convert=True, run_mirror=False)
