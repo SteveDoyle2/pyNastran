@@ -5844,6 +5844,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         """
         pressure act normal to a shell (as opposed to anti-normal to a solid face)
         """
+        fdtype = 'float32'
         # quit out if we're going to make pressure plots anyways
         #if self.plot_applied_loads:
             #return icase
@@ -5866,7 +5867,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
             return icase
 
         is_pressure, pressures = get_pressure_array(
-            model, load_case_id, eids=self.element_ids, stop_on_failure=False)
+            model, load_case_id, eids=self.element_ids, stop_on_failure=False, fdtype=fdtype)
         if not is_pressure:
             return icase
 

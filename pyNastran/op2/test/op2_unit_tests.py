@@ -1019,6 +1019,12 @@ class TestOP2(Tester):
         assert len(diff_cards2) == 0, diff_cards2
 
         model = read_bdf(bdf_filename, debug=False, log=log, xref=False)
+        nid = 1
+        sid = 601
+        mag = 1.0
+        fxyz = [0., 0., 1.]
+        model.add_force(sid, nid, mag, fxyz)
+        model.log.warning('faking GMLOAD sid=601')
         model.safe_cross_reference()
         save_load_deck(model, run_renumber=False)  # GMSPC
 

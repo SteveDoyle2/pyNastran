@@ -1538,16 +1538,16 @@ def _check_case_parameters(subcase, fem2: BDF, p0, isubcase: int, sol: int,
     nid_map = fem2.nid_map
     if 'TEMPERATURE(LOAD)' in subcase:
         loadcase_id = subcase.get_parameter('TEMPERATURE(LOAD)')[0]
-        get_temperatures_array(fem2, loadcase_id, nid_map=nid_map, dtype='float32')
+        get_temperatures_array(fem2, loadcase_id, nid_map=nid_map, fdtype='float32')
     if 'TEMPERATURE(BOTH)' in subcase:
         loadcase_id = subcase.get_parameter('TEMPERATURE(BOTH)')[0]
-        get_temperatures_array(fem2, loadcase_id, nid_map=nid_map, dtype='float32')
+        get_temperatures_array(fem2, loadcase_id, nid_map=nid_map, fdtype='float32')
     if 'TEMPERATURE(INITIAL)' in subcase:
         loadcase_id = subcase.get_parameter('TEMPERATURE(INITIAL)')[0]
-        get_temperatures_array(fem2, loadcase_id, nid_map=nid_map, dtype='float32')
+        get_temperatures_array(fem2, loadcase_id, nid_map=nid_map, fdtype='float32')
     if 'TEMPERATURE(MATERIAL)' in subcase:
         loadcase_id = subcase.get_parameter('TEMPERATURE(MATERIAL)')[0]
-        get_temperatures_array(fem2, loadcase_id, nid_map=nid_map, dtype='float32')
+        get_temperatures_array(fem2, loadcase_id, nid_map=nid_map, fdtype='float32')
 
     if 'LOAD' in subcase:
         cid_new = 0

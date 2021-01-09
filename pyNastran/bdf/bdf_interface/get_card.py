@@ -37,10 +37,6 @@ from pyNastran.bdf.bdf_interface.get_methods import GetMethods
 from pyNastran.utils.numpy_utils import integer_types
 
 from pyNastran.bdf.mesh_utils.dvxrel import get_dvprel_ndarrays
-#from pyNastran.bdf.mesh_utils.forces_moments import (
-    # get_load_arrays, get_forces_moments_array,
-    #get_pressure_array, get_temperatures_array,
-#)
 from pyNastran.bdf.mesh_utils.mpc_dependency import (
     get_mpc_node_ids, get_mpc_node_ids_c1,
     get_rigid_elements_with_node_ids, get_dependent_nid_to_components,
@@ -480,33 +476,6 @@ class GetCard(GetMethods):
         dvprel_dict = get_dvprel_ndarrays(
             self, nelements, pids, fdtype=fdtype, idtype=idtype)
         return dvprel_dict
-
-    #def get_load_arrays(self, subcase_id, eid_map, node_ids, normals, nid_map=None,
-                        #stop_on_failure=True):
-        #"""see ``pyNastran.bdf.mesh_utils.forces_moments.get_load_arrays(...)``"""
-        #out = get_load_arrays(self, subcase_id, eid_map, node_ids, normals,
-                              #nid_map=nid_map, stop_on_failure=stop_on_failure)
-        #return out
-
-    #def _get_forces_moments_array(self, p0, load_case_id,
-                                  #eid_map, nnodes, normals, dependents_nodes,
-                                  #nid_map=None, include_grav=False):
-        #"""see ``pyNastran.bdf.mesh_utils.forces_moments.get_forces_moments_array(...)``"""
-        #centroidal_pressures, forces, spcd = get_forces_moments_array(
-            #self, p0, load_case_id,
-            #eid_map, nnodes, normals, dependents_nodes,
-            #nid_map=nid_map, include_grav=include_grav)
-        #return centroidal_pressures, forces, spcd
-
-    #def get_pressure_array(self, load_case_id, eids, stop_on_failure=True):
-        #"""see ``pyNastran.bdf.mesh_utils.forces_moments.get_pressure_array(...)``"""
-        #return get_pressure_array(
-            #self, load_case_id, eids, stop_on_failure=stop_on_failure)
-
-    #def _get_temperatures_array(self, load_case_id, nid_map=None, dtype='float32'):
-        #"""see ``pyNastran.bdf.mesh_utils.forces_moments.get_temperatures_array(...)``"""
-        #return get_temperatures_array(self, load_case_id, nid_map=nid_map, dtype=dtype)
-
     def get_reduced_loads(self, load_case_id, scale=1.,
                           consider_load_combinations=True,
                           skip_scale_factor0=False,

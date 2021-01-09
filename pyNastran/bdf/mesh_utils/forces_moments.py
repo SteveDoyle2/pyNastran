@@ -4,7 +4,8 @@ defines methods to access force/moment/pressure/temperature data:
                             eid_map, nnodes, normals, dependents_nodes,
                             nid_map=None, include_grav=False)
   - get_pressure_array(model, load_case, eids, stop_on_failure=True)
-  - get_temperatures_array(model: BDF, load_case_id, nid_map=None, dtype='float32')
+  - get_temperatures_array(model, load_case_id, nid_map=None,
+                           fdtype='float32')
   - get_load_arrays(model, subcase_id, nid_map, eid_map, node_ids, normals)
 
 """
@@ -22,7 +23,7 @@ if TYPE_CHECKING:  # pragma: no cover
 
 def get_forces_moments_array(model: BDF, p0, load_case_id : int,
                              eid_map, nnodes, normals, dependents_nodes,
-                             nid_map=None, include_grav=False):
+                             nid_map=None, include_grav=False, fdtype='float32'):
     """
     Gets the forces/moments on the nodes.
 
@@ -87,11 +88,11 @@ def get_forces_moments_array(model: BDF, p0, load_case_id : int,
         load_case_id, skip_scale_factor0=True)[:2]
 
     #eids = sorted(model.elements.keys())
-    centroidal_pressures = np.zeros(len(model.elements), dtype='float32')
-    nodal_pressures = np.zeros(len(model.node_ids), dtype='float32')
+    centroidal_pressures = np.zeros(len(model.elements), dtype=fdtype)
+    nodal_pressures = np.zeros(len(model.node_ids), dtype=fdtype)
 
-    forces = np.zeros((nnodes, 3), dtype='float32')
-    spcd = np.zeros((nnodes, 3), dtype='float32')
+    forces = np.zeros((nnodes, 3), dtype=fdtype)
+    spcd = np.zeros((nnodes, 3), dtype=fdtype)
     # loop thru scaled loads and plot the pressure
     cards_ignored = set()
 
@@ -100,6 +101,7 @@ def get_forces_moments_array(model: BDF, p0, load_case_id : int,
     fail_count = 0
     fail_count_max = 3
     loads_to_skip = ['MOMENT', 'MOMENT1', 'MOMENT2', 'FORCE1', 'TEMP']
+    log = model.log
     nodes = model.nodes
     for load, scale in zip(loads, scale_factors):
         load_type = load.type
@@ -112,7 +114,7 @@ def get_forces_moments_array(model: BDF, p0, load_case_id : int,
                 fail_nids.add(nid)
                 fail_count += 1
                 if fail_count < fail_count_max:
-                    print('    nid=%s is a dependent node and has a FORCE applied\n%s' % (
+                    log.warning('    nid=%s is a dependent node and has a FORCE applied\n%s' % (
                         nid, str(load)))
             forces[nid_map[nid]] += load.xyz * scale2
 
@@ -160,8 +162,8 @@ def get_forces_moments_array(model: BDF, p0, load_case_id : int,
                             fail_nids.add(nid)
                             fail_count += 1
                             if fail_count < fail_count_max:
-                                print(f'    nid={nid} is a dependent node and has a '
-                                      f'PLOAD2 applied\n{load}')
+                                log.warning(f'    nid={nid} is a dependent node and has a '
+                                            f'PLOAD2 applied\n{load}')
                         forces[nid_map[nid]] += forcei
                     forces += forcei
                     # F += f
@@ -352,12 +354,13 @@ def get_forces_moments_array(model: BDF, p0, load_case_id : int,
                 model.log.warning('  get_forces_moments_array - unsupported '
                                   f'load.type = {load_type}')
     if fail_count:
-        fail_nids_list = list(fail_nids)
-        fail_nids_list.sort()
-        model.log.warning('fail_nids = %s' % np.array(fail_nids_list))
+        fail_nids_array = np.array(list(fail_nids))
+        fail_nids_array.sort()
+        model.log.warning('fail_nids = %s' % fail_nids_array)
     return centroidal_pressures, forces, spcd
 
-def get_pressure_array(model: BDF, load_case_id, eids, stop_on_failure=True):
+def get_pressure_array(model: BDF, load_case_id, eids, stop_on_failure=True,
+                       fdtype='float32'):
     """
     Gets the shell pressures for a load case.
 
@@ -394,7 +397,7 @@ def get_pressure_array(model: BDF, load_case_id, eids, stop_on_failure=True):
         load_case_id, stop_on_failure=stop_on_failure)[:2]
     if len(scale_factors) == 0:
         return False, None
-    pressures = np.zeros(len(model.elements), dtype='float32')
+    pressures = np.zeros(len(model.elements), dtype=fdtype)
 
     shells = {
         'CTRIA3', 'CTRIA6', 'CTRIA', 'CTRIAR',
@@ -467,7 +470,8 @@ def get_pressure_array(model: BDF, load_case_id, eids, stop_on_failure=True):
         model.log.warning(f'skipping pressure on {list(etypes_skipped)}')
     return True, pressures
 
-def get_temperatures_array(model: BDF, load_case_id, nid_map=None, dtype='float32'):
+def get_temperatures_array(model: BDF, load_case_id, nid_map=None,
+                           fdtype='float32'):
     """
     Builds the temperature array based on thermal cards.
 
@@ -496,7 +500,7 @@ def get_temperatures_array(model: BDF, load_case_id, nid_map=None, dtype='float3
         nid_map = model.nid_map
     loads, scale_factors = model.get_reduced_loads(load_case_id)[:2]
     tempd = model.tempds[load_case_id].temperature if load_case_id in model.tempds else 0.
-    temperatures = np.ones(len(nid_map), dtype=dtype) * tempd
+    temperatures = np.ones(len(nid_map), dtype=fdtype) * tempd
 
     skip_loads = [
         'FORCE', 'FORCE1', 'FORCE2',
@@ -522,7 +526,7 @@ def get_temperatures_array(model: BDF, load_case_id, nid_map=None, dtype='float3
     return is_temperatures, temperatures
 
 def get_load_arrays(model: BDF, subcase_id, eid_map, node_ids, normals,
-                    nid_map=None, stop_on_failure=True):
+                    nid_map=None, stop_on_failure=True, fdtype='float32'):
     """
     Gets the following load arrays
 
@@ -613,7 +617,7 @@ def get_load_arrays(model: BDF, subcase_id, eid_map, node_ids, normals,
             continue
 
         if key == 'LOAD':
-            p0 = np.array([0., 0., 0.], dtype='float32')
+            p0 = np.array([0., 0., 0.], dtype=fdtype)
             centroidal_pressures, forces, spcd = get_forces_moments_array(
                 model, p0, load_case_id,
                 eid_map=eid_map,
@@ -626,7 +630,7 @@ def get_load_arrays(model: BDF, subcase_id, eid_map, node_ids, normals,
                 is_loads = True
         elif key in temperature_keys:
             is_temperatures, temperatures = get_temperatures_array(
-                model, load_case_id, nid_map=nid_map)
+                model, load_case_id, nid_map=nid_map, fdtype=fdtype)
             temperature_key = key
         else:  # pragma: no cover
             raise NotImplementedError(key)

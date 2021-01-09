@@ -2,6 +2,8 @@
 import os
 from io import StringIO
 import inspect
+from typing import Tuple, List, Dict
+
 import numpy as np
 from cpylog import SimpleLogger
 
@@ -189,13 +191,11 @@ def _run_mass_properties(model2, nnodes, nelements, run_mass_properties=True):
     #assert np.allclose(mass1, mass3), 'mass1=%s mass3=%s' % (mass1, mass3)
     #assert np.allclose(cg1, cg3), 'mass=%s\ncg1=%s cg3=%s' % (mass1, cg1, cg3)
 
-def _run_loads(model, nelements, run_loads=True):
+def _run_loads(model, nelements: int, run_loads=True):
     """helper method"""
     if not run_loads:
         return
-    eid_map = {}
-    normals = np.zeros((nelements, 3), dtype='float64')
-    ieid = 0
+    assert isinstance(nelements, int), nelements
     #node_ids = None
 
     #nnodes = model.nnodes
@@ -207,28 +207,39 @@ def _run_loads(model, nelements, run_loads=True):
         return
     unused_icd_transformi, unused_icp_transformi, unused_xyz_cpi, nid_cp_cd = out
     node_ids = nid_cp_cd[:, 0]
-    eids = []
-    for eid, elem in model.elements.items():
-        if hasattr(elem, 'Normal'):
-            normals[ieid, :] = elem.Normal()
-        eid_map[eid] = ieid
-        eids.append(eid)
-        ieid += 1
+    normals, eids, eid_map = _normals_eid_map(model, nelements, fdtype='float64')
 
     nsubcases = len(model.subcases)
     if nsubcases == 0:
         load_ids = list(set(list(model.load_combinations) + list(model.loads)))
         for load_id in sorted(load_ids):
             unused_subcase = model.case_control_deck.add_subcase(load_id)
-            get_pressure_array(model, load_id, eids, stop_on_failure=True)
+            get_pressure_array(model, load_id, eids, stop_on_failure=True,
+                               fdtype='float32')
 
     load_ids = list(set(list(model.load_combinations) + list(model.loads)))
     for subcase_id in model.subcases:
-        get_load_arrays(model, subcase_id, eid_map, node_ids, normals, nid_map=None)
+        get_load_arrays(model, subcase_id, eid_map, node_ids, normals, nid_map=None,
+                        fdtype='float32')
 
     if nsubcases == 0:
         del model.case_control_deck
 
+def _normals_eid_map(model: BDF, nelements: int,
+                     fdtype='float64') -> Tuple[np.ndarray,
+                                                List[int],
+                                                Dict[int, int]]:
+    ieid = 0
+    eids = []
+    eid_map = {}
+    normals = np.zeros((nelements, 3), dtype=fdtype)
+    for eid, elem in model.elements.items():
+        if hasattr(elem, 'Normal'):
+            normals[ieid, :] = elem.Normal()
+        eid_map[eid] = ieid
+        eids.append(eid)
+        ieid += 1
+    return normals, eids, eid_map
 
 def _cross_reference(model, xref):
     """helper method for ``_cross_reference``"""
