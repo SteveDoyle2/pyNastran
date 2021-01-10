@@ -22,8 +22,8 @@ def numpy_to_vtk_points(nodes, points=None, dtype='<f', deep=1):
         assert ndim == 3, nodes.shape
         points.SetNumberOfPoints(nnodes)
 
-        # if we're in big endian, VTK won't work, so we byte swap
-        nodes = np.asarray(nodes, dtype=np.dtype(dtype))
+    # if we're in big endian, VTK won't work, so we byte swap
+    nodes = np.asarray(nodes, dtype=np.dtype(dtype))
 
     points_array = numpy_to_vtk(
         num_array=nodes,
@@ -33,6 +33,47 @@ def numpy_to_vtk_points(nodes, points=None, dtype='<f', deep=1):
     points.SetData(points_array)
     return points
 
+
+def _check_shape(etype: int, elements: np.ndarray, nnodes_per_element: int) -> None:
+    """
+    The following table lists the supported vtk types
+
+    ID  Class.GetCellType()
+    ==  ===================
+    1   vtkVertex
+    3   vtkLine
+    5   vtkTriangle
+    12  vtkHexa
+    9   vtkQuad
+    10  vtkTetra
+    13  vtkPenta
+    14  vtkPyram
+    13  vtkWedge
+    25  vtkQuadraticHexahedron
+    26  vtkQuadraticWedge
+    27  vtkQuadraticPyramid
+
+    """
+    if etype == 1: # vertex
+        assert nnodes_per_element == 1, elements.shape
+    if etype == 3: # line
+        assert nnodes_per_element == 2, elements.shape
+    elif etype == 5:  # tri3
+        assert nnodes_per_element == 3, elements.shape
+    elif etype in [9, 10]:  # quad4, tet4
+        assert nnodes_per_element == 4, elements.shape
+    elif etype == 14: # CPYRAM5
+        assert nnodes_per_element == 5, elements.shape
+    elif etype == 12:  # hexa8
+        assert nnodes_per_element == 8, elements.shape
+    elif etype in [13, 22]:  # penta6,tri6
+        assert nnodes_per_element == 6, elements.shape
+    elif etype == 27: # CPYRAM13
+        assert nnodes_per_element == 13, elements.shape
+    elif isinstance(etype, str):
+        raise RuntimeError(etype)
+    else:
+        warnings.warn(f'no recommendation for etype={etype}; nnodes_per_element={nnodes_per_element}')
 
 def create_vtk_cells_of_constant_element_type(grid: vtk.vtkUnstructuredGrid,
                                               elements: np.ndarray,
@@ -54,29 +95,9 @@ def create_vtk_cells_of_constant_element_type(grid: vtk.vtkUnstructuredGrid,
     The documentation in this method is triangle-specific as it was
     developed for a tri mesh.  It's more general than that though.
 
-    1 = vtk.vtkVertex().GetCellType()
-    3 = vtkLine().GetCellType()
-    5 = vtkTriangle().GetCellType()
-    9 = vtk.vtkQuad().GetCellType()
-    10 = vtkTetra().GetCellType()
-    #vtkPenta().GetCellType()
-    #vtkHexa().GetCellType()
-    #vtkPyram().GetCellType()
-
     """
     nelements, nnodes_per_element = elements.shape
-    if etype == 1: # vertex
-        assert nnodes_per_element == 1, elements.shape
-    if etype == 3: # line
-        assert nnodes_per_element == 2, elements.shape
-    elif etype == 5:  # tri
-        assert nnodes_per_element == 3, elements.shape
-    elif etype in [9, 10]:  # quad, tet4
-        assert nnodes_per_element == 4, elements.shape
-    elif isinstance(etype, str):
-        raise RuntimeError(etype)
-    else:
-        warnings.warn(f'no recommendation for etype={etype}; nnodes_per_element={nnodes_per_element}')
+    _check_shape(etype, elements, nnodes_per_element)
 
     # We were careful about how we defined the arrays, so the data
     # is contiguous when we ravel it.  Otherwise, you need to
@@ -86,6 +107,9 @@ def create_vtk_cells_of_constant_element_type(grid: vtk.vtkUnstructuredGrid,
 
     #nodes = numpy_to_vtk(elements, deep=0, array_type=vtk.VTK_ID_TYPE)
     # (nnodes_per_element + 1)  # TODO: was 4; for a tri...didn't seem to crash???
+    # int8:  [-128 to 127]
+    # int32: [-2_147_483_648 to 2_147_483_647]  # 2.1 billion
+    # int64: [-9223372036854775808 to 9223372036854775807]
     cell_offsets = np.arange(0, nelements, dtype='int32') * (nnodes_per_element + 1)
     assert len(cell_offsets) == nelements
 
@@ -103,7 +127,7 @@ def create_vtk_cells_of_constant_element_type(grid: vtk.vtkUnstructuredGrid,
 
     # Cell types
     # 5 = vtkTriangle().GetCellType()
-    cell_types = np.ones(nelements, dtype='int32') * etype
+    cell_types = np.full(nelements, etype, dtype='int8')
     vtk_cell_types = numpy_to_vtk(
         cell_types, deep=0,
         array_type=vtk.vtkUnsignedCharArray().GetDataType())

@@ -71,6 +71,11 @@ def numpy_to_vtk(num_array, deep=0, array_type=None):  # pragma: no cover
     This was pulled from VTK and modified to eliminate numpy 1.14 warnings.
     VTK uses a BSD license, so it's OK to do that.
 
+    #vtk_typecode = int64 3
+    #vtk_typecode = int64 12
+    #vtk_typecode = int64 16
+    #vtk_typecode = float32 10
+    #vtk_typecode = float64 11
     """
     z = np.asarray(num_array)
     if not z.flags.contiguous:
@@ -90,6 +95,7 @@ def numpy_to_vtk(num_array, deep=0, array_type=None):  # pragma: no cover
         vtk_typecode = array_type
     else:
         vtk_typecode = get_vtk_array_type(z.dtype)
+    #print('vtk_typecode =', z.dtype, vtk_typecode)
     result_array = create_vtk_array(vtk_typecode)
 
     # Fixup shape in case its empty or scalar.

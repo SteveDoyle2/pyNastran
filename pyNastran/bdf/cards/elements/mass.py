@@ -13,6 +13,7 @@ All mass elements are PointMassElement and Element objects.
 
 """
 from __future__ import annotations
+import warnings
 from typing import TYPE_CHECKING
 import numpy as np
 
@@ -29,7 +30,7 @@ if TYPE_CHECKING:  # pragma: no cover
 
 def is_positive_semi_definite(A, tol=1e-8):
     """is the 3x3 matrix positive within tolerance"""
-    vals = np.linalg.eigh(A)[0]
+    vals = np.linalg.eigvalsh(A)
     return np.all(vals > -tol), vals
 
 class PointMassElement(Element):
@@ -1294,10 +1295,10 @@ class CONM2(PointMassElement):
         ], dtype='float32')
         is_psd, eigi = is_positive_semi_definite(I)
         if not is_psd:
-            msg = 'The eig(I) >= 0.\n'
-            msg += 'I=\n%s\n' % str(I)
-            msg += 'eigenvalues=%s' % str(eigi)
-            raise RuntimeError(msg)
+            msg = (f'The eig(I) >= 0. for CONM2 eid={self.eid:d}\n'
+                   f'I=\n{I}\n'
+                   f'eigenvalues={eigi}')
+            warnings.warn(msg)
 
     @classmethod
     def add_card(cls, card, comment=''):
