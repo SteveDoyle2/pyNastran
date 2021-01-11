@@ -1,12 +1,9 @@
 
 |  Version  | Docs  | Status |
 | :--- 	  | :--- 	  | :--- 	  |
-|  [![PyPi Version](https://img.shields.io/pypi/v/pynastran.svg)](https://pypi.python.org/pypi/pyNastran) | [docs](https://pynastran-git.readthedocs.io/en/1.3/) | [![Build Status](https://img.shields.io/travis/SteveDoyle2/pyNastran/1.3.svg)](https://travis-ci.org/SteveDoyle2/pyNastran) [![Coverage Status](https://codecov.io/gh/SteveDoyle2/pyNastran/branch/1.3/graph/badge.svg)](https://codecov.io/gh/SteveDoyle2/pyNastran/branch/1.3) |
-|   Main/Dev | [![Documentation Status](https://readthedocs.org/projects/pynastran-git/badge/?version=latest)](http://pynastran-git.readthedocs.io/en/latest/?badge=latest) | [![Linux Status](https://img.shields.io/travis/SteveDoyle2/pyNastran/master.svg)](https://travis-ci.org/SteveDoyle2/pyNastran) [![Coverage Status](https://codecov.io/gh/SteveDoyle2/pyNastran/branch/master/graph/badge.svg)](https://codecov.io/gh/SteveDoyle2/pyNastran) |
+|  [![PyPi Version](https://img.shields.io/pypi/v/pynastran.svg)](https://pypi.python.org/pypi/pyNastran) | [docs](https://pynastran-git.readthedocs.io/en/1.3/) |  [![Coverage Status](https://codecov.io/gh/SteveDoyle2/pyNastran/branch/1.3/graph/badge.svg)](https://codecov.io/gh/SteveDoyle2/pyNastran/branch/1.3) |
+|   Main/Dev | [![Documentation Status](https://readthedocs.org/projects/pynastran-git/badge/?version=latest)](http://pynastran-git.readthedocs.io/en/latest/?badge=latest) | [![Linux Status](https://github.com/SteveDoyle2/pyNastran/workflows/CI/badge.svg)](https://github.com/SteveDoyle2/pyNastran/actions?query=workflow%3ACI+branch%3Amaster)  [![Coverage Status](https://codecov.io/gh/SteveDoyle2/pyNastran/branch/master/graph/badge.svg)](https://codecov.io/gh/SteveDoyle2/pyNastran) |
 
-New Main Status
-
-![CI](https://github.com/SteveDoyle2/pyNastran/workflows/CI/badge.svg)
 
 <!---
 [![Windows Status](https://ci.appveyor.com/api/projects/status/1qau107h43mbgghi/branch/master?svg=true)](https://ci.appveyor.com/project/SteveDoyle2/pynastran)
@@ -35,7 +32,7 @@ Programmatics:
  - added support for MSC 2020
 
 BDF:
- - 
+ - fixed CAERO1 paneling bug
 
 GUI:
  - transient/complex fringe only animations now supported
@@ -50,6 +47,7 @@ Also, check out the:
   * [Discussion forum](http://groups.google.com/group/pynastran-discuss) (intended for questions about the latest release)
   * [Developer forum](http://groups.google.com/group/pynastran-dev) (intended for questions about the master branch)
   * [Docs](https://pynastran-git.readthedocs.io/en/1.3/)
+  * [Code of Conduct](https://github.com/SteveDoyle2/pyNastran/blob/master/code_of_conduct.md)
 
 for more detailed information.
 
@@ -303,7 +301,7 @@ This result has been superseeded by 1.2.1.  See release notes for details.
 
 |  Version  | Docs  | Status |
 | :--- 	  | :--- 	  | :--- 	  |
-|  [![PyPi Version](https://img.shields.io/pypi/v/pynastran.svg)](https://pypi.python.org/pypi/pyNastran) |  | [![Build Status](https://img.shields.io/travis/SteveDoyle2/pyNastran/v1.1.svg)](https://travis-ci.org/SteveDoyle2/pyNastran) [![Coverage Status](https://img.shields.io/coveralls/SteveDoyle2/pyNastran/v1.1.svg)](https://coveralls.io/github/SteveDoyle2/pyNastran?branch=v1.1) |
+|  [![PyPi Version](https://img.shields.io/pypi/v/pynastran.svg)](https://pypi.python.org/pypi/pyNastran) |  |  [![Coverage Status](https://img.shields.io/coveralls/SteveDoyle2/pyNastran/v1.1.svg)](https://coveralls.io/github/SteveDoyle2/pyNastran?branch=v1.1) |
 
 It's been roughly a year and ~100 tickets closed since the last version, so it's probably
 time for another release!  I want to thank everybody who helped with this release, especially
