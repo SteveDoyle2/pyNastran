@@ -88,15 +88,8 @@ def read_op2_geom(op2_filename: Optional[str]=None,
     """
     model = OP2Geom(log=log, debug=debug, debug_file=debug_file, mode=mode)
     model.set_subcases(subcases)
-    if exclude_results and include_results:
-        msg = 'exclude_results or include_results must be None\n'
-        msg += 'exclude_results=%r\n' % exclude_results
-        msg += 'include_results=%r\n' % include_results
-        raise RuntimeError(msg)
-    elif exclude_results:
-        model.remove_results(exclude_results)
-    elif include_results:
-        model.set_results(include_results)
+    model.include_exclude_results(exclude_results=exclude_results,
+                                  include_results=include_results)
 
     model.read_op2(op2_filename=op2_filename, build_dataframe=build_dataframe,
                    skip_undefined_matrices=skip_undefined_matrices, combine=combine,
