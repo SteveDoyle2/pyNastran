@@ -4,6 +4,29 @@
 |  [![PyPi Version](https://img.shields.io/pypi/v/pynastran.svg)](https://pypi.python.org/pypi/pyNastran) | [docs](https://pynastran-git.readthedocs.io/en/1.3/) |  [![Coverage Status](https://codecov.io/gh/SteveDoyle2/pyNastran/branch/1.3/graph/badge.svg)](https://codecov.io/gh/SteveDoyle2/pyNastran/branch/1.3) |
 |   Main/Dev | [![Documentation Status](https://readthedocs.org/projects/pynastran-git/badge/?version=latest)](http://pynastran-git.readthedocs.io/en/latest/?badge=latest) | [![Linux Status](https://github.com/SteveDoyle2/pyNastran/workflows/CI/badge.svg)](https://github.com/SteveDoyle2/pyNastran/actions?query=workflow%3ACI+branch%3Amaster)  [![Coverage Status](https://codecov.io/gh/SteveDoyle2/pyNastran/branch/master/graph/badge.svg)](https://codecov.io/gh/SteveDoyle2/pyNastran) |
 
+See the  [Installation Instructions](https://pynastran-git.readthedocs.io/en/1.3/installation/installation.html#installation-from-release) 
+for instructions on installing pyNastran.
+
+### v1.3.3
+
+[Download GUI](https://sourceforge.net/projects/pynastran/files/?source=navbar) (latest is from 2020/6/28)
+
+Also, check out the:
+  * [Discussion forum](http://groups.google.com/group/pynastran-discuss) (intended for questions about the latest release)
+  * [Developer forum](http://groups.google.com/group/pynastran-dev) (intended for questions about the master branch)
+  * [Docs](https://pynastran-git.readthedocs.io/en/1.3/)
+  * [Code of Conduct](https://github.com/SteveDoyle2/pyNastran/blob/master/code_of_conduct.md)
+
+for more detailed information.
+
+### Blogs
+  * [Flutter Analysis in pyNastran](https://www.m4-engineering.com/flutter-analysis-with-pynastran/)
+
+
+### Code of Conduct
+
+Everyone interacting in the setuptools project’s codebases, issue trackers, chat room/Discord, and mailing lists is expected to follow the [Code of Conduct](https://github.com/SteveDoyle2/pyNastran/blob/master/code_of_conduct.md).
+
 
 <!---
 [![Windows Status](https://ci.appveyor.com/api/projects/status/1qau107h43mbgghi/branch/master?svg=true)](https://ci.appveyor.com/project/SteveDoyle2/pynastran)
@@ -19,7 +42,7 @@
 [![Requirements Status](https://img.shields.io/requires/github/SteveDoyle2/pyNastran/master.svg)](https://requires.io/github/SteveDoyle2/pyNastran/requirements/?branch=master)	|
 ### v1.4
 
-Not a huge relase, but there it's only 6 months since the last version instead of a year.  Probably the biggest new features are:
+Not a huge release, but there it's only 6 months since the last version instead of a year.  Probably the biggest new features are:
  - MSC 2020 support (including contact)
  - much improved 64 bit support
  - improved op2 support
@@ -38,23 +61,6 @@ GUI:
  - transient/complex fringe only animations now supported
 
 --->
-
-### v1.3.3
-
-[Download GUI](https://sourceforge.net/projects/pynastran/files/?source=navbar) (latest is from 2020/6/28)
-
-Also, check out the:
-  * [Discussion forum](http://groups.google.com/group/pynastran-discuss) (intended for questions about the latest release)
-  * [Developer forum](http://groups.google.com/group/pynastran-dev) (intended for questions about the master branch)
-  * [Docs](https://pynastran-git.readthedocs.io/en/1.3/)
-  * [Code of Conduct](https://github.com/SteveDoyle2/pyNastran/blob/master/code_of_conduct.md)
-
-for more detailed information.
-
-### Blogs
-  * [Flutter Analysis in pyNastran](https://www.m4-engineering.com/flutter-analysis-with-pynastran/)
-
-
 
 # Overview
 
