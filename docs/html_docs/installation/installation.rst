@@ -12,17 +12,24 @@ Just type on the command line:
 
 ``pip install pyNastran``
 
+That will install the minimum set of what you need to run pyNastran (so no GUI).
+If you want GUI functionality, chances are you have PyQt5 or PySide2, but don't have vtk.
+Vtk is a bit more challenging on Windows, but there is website to help with that.
+
+Additionally, the software can **optionally** use matplotlib, pandas, h5py, colorama,
+but chances are you already have those.  If you don't, they're very easy to install.
 
 Python
 ------
 The software is tested against:
  * Python 3.7 **(Windows/Linux)**
  * Python 3.8 **(Windows/Linux)**
+ * Python 3.9 **(Windows/Linux)**  (availible in pyNastran 1.4)
 
 Packages
 --------
 pyNastran is tested against a range of package versions (lowest to highest
-based on availbility), so should work.  The recommended set of packages are:
+based on availbility), so it should work.  The recommended set of packages are:
 
  * **Required**:
 
@@ -50,9 +57,9 @@ based on availbility), so should work.  The recommended set of packages are:
    * pygments >= 2.2.0 **(optional for fancy scripting; PyQt5 only)**
    * imageio >= 2.4.1  **(optional for animation support)**
 
-***************************************************
-Install Procedure - From Anaconda (not recommended)
-***************************************************
+*****************************************************
+Install Procedure - From Regular Python (recommended)
+*****************************************************
 Base functionality:
  * `64-bit Python <https://www.python.org/downloads/>`_
  * ``pip install numpy``
@@ -92,110 +99,12 @@ You've been warned, but in general Anaconda doesn't work well with pip.  You nee
  * ``pip install cpylog``
  * ``pip install pyNastran``
 
-Use Web docs
-------------
-See `docs <https://pynastran-git.readthedocs.io/en/latest/>`_
-
--------------------------
-Installation From Source
--------------------------
-
-pyNastran is meant to an easy package to install once you have the required Python modules.
-It's a pure Python package so you shouldn't have too many problems.
-
-Installing from source is recommened if:
- - You want the most recent version (see installation.rst-master)
- - You want easier access to the source
- - You're on an air-gapped machine
-
-Overview
-========
- * Install Python (see :doc:`installation_release`)
-
-   * skip the ``pip install pyNastran`` step
- * Install Sphinx, GraphViz, alabaster **(for documentation)**
-
- * Install Git
- * Clone pyNastran-master from Github
- * Install pyNastran
-
-Install extra packages (for Doucmentation)
-==========================================
-
-Install `GraphViz  <https://www.graphviz.org/>`_
-
-Install additional python packages
-
-.. code-block:: console
-
-  pip install Sphinx
-  pip install alabaster
-  pip install numpydoc
-
-Install Git
-===========
-
- * Download & install `Git <http://git-scm.com/>`_
- * Download a GUI for Git (optional)
-    * `TortoiseGit <https://code.google.com/p/tortoisegit/>`_ (recommended for Windows)
-
-
-Install pyNastran
-=================
-There are two ways to install the master/dev version of pyNastran
-
- 1. Download the most recent `zip version <https://github.com/SteveDoyle2/pyNastran/archive/master.zip>`_
-
- 2. Clone pyNastran (see below).  Using Git allows you to easily update to the
-    latest dev version when you want to as well as push any commits of your own.
-
-If you don't want the gui, use ``setup_no_gui.py`` instead of ``setup.py``.
-
-.. code-block:: console
-
-  >>> python setup.py install
-
-or:
-
-.. code-block:: console
-
-  >>> python setup_no_gui.py install
-
-
-Cloning pyNastran using TortoiseGit
-===================================
-Right-click in a folder and select ``Git Clone``.
-
-.. image:: clone.png
-
-Enter the above information.  If desired, click the branch box and and enter a branch name
-and click ``OK``.
-
-Cloning pyNastran Using Command Line
-====================================
-Checkout/clone the dev code by typing **(preferred)**:
-
-.. code-block:: console
-
-  >>> git clone https://github.com/SteveDoyle2/pynastran
-
-
-To checkout a branch
-
-.. code-block:: console
-
-  >>> git.exe clone --branch 1.3 --progress -v "https://github.com/SteveDoyle2/pyNastran.git" "C:\\work\\pyNastran_1.3"
-
-
 Documentation
 =============
 Two options for documentation exist.
 
-Build Docs
-----------
-Navigate to ``pyNastran/docs_sphinx`` directory on the command line.
+ - https://pynastran-git.readthedocs.io/en/latest/installation/building_docs.html
 
-.. code-block:: console
+If you don't want to use build the docs, just use the docs on the web.
 
-  >>> make html
-
+See `docs <https://pynastran-git.readthedocs.io/en/latest/>`_

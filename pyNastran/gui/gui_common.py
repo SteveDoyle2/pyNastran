@@ -1,8 +1,9 @@
 # coding: utf-8
 # pylint: disable=W0201,C0301
 import os.path
-from collections import OrderedDict
 from math import ceil
+from collections import OrderedDict
+from typing import Tuple, List, Dict, Callable
 
 import numpy as np
 from cpylog import SimpleLogger
@@ -212,12 +213,20 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
 
     def _on_execute_python_button(self, clear=False):
         """executes the docked python console"""
-        txt = str(self.python_dock_widget.enter_data.toPlainText()).rstrip()
+        try:
+            enter_data = self.python_dock_widget.enter_data
+        except Exception as error:
+            self.log_error(str(error))
+            self.log_error('problem getting enter_data from python console')
+            return
+        txt = str(enter_data.toPlainText()).rstrip()
         is_passed = self._execute_python_code(txt)
         if is_passed and clear:
-            self.python_dock_widget.enter_data.clear()
+            enter_data.clear()
 
-    def set_tools(self, tools=None, checkables=None):
+    def set_tools(self,
+                  tools: List[Tuple[str, str, str, Optional[str], str, Callable]]=None,
+                  checkables: Optional[Dict[str, bool]]=None):
         """Creates the GUI tools"""
         if checkables is None:
             checkables = {
@@ -379,7 +388,7 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
         #print('qkey_event =', qkey_event.key())
         super(GuiCommon, self).keyPressEvent(qkey_event)
 
-    def _create_menu_bar(self, menu_bar_order=None):
+    def _create_menu_bar(self, menu_bar_order: Optional[List[str]]=None):
         self.menu_bar_oder = menu_bar_order
         if menu_bar_order is None:
             menu_bar_order = ['menu_file', 'menu_view', 'menu_window', 'menu_help']
@@ -486,11 +495,11 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
             menu_items['hidden'] = (self.menu_hidden, hidden_tools)
         return menu_items
 
-    def _hide_menubar(self):
+    def _hide_menubar(self) -> None:
         self.toolbar.setVisible(False)
         #self.menuBar.setVisible(False)
 
-    def _build_menubar(self):
+    def _build_menubar(self) -> None:
         ## toolbar
         self.toolbar = self.addToolBar('Show toolbar')
         self.toolbar.setObjectName('main_toolbar')
@@ -518,7 +527,8 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
         self.actions['show_error'].setChecked(self.settings.show_error)
 
 
-    def _populate_menu(self, menu_items, actions=None):
+    def _populate_menu(self, menu_items: Dict[str, Tuple[Any, Any]],
+                       actions=None) -> None:
         """populate menus and toolbar"""
         assert isinstance(menu_items, dict), menu_items
 
@@ -605,7 +615,7 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
         #y_limits = [0., 1.]
         #return origin, vx, vy, vz, x_limits, y_limits
 
-    def _prepare_actions(self, icon_path, tools, checkables=None):
+    def _prepare_actions(self, icon_path: str, tools, checkables=None):
         """
         Prepare actions that will  be used in application in a way
         that's independent of the  menus & toolbar
@@ -620,7 +630,7 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
         self.actions['reswidget'].setStatusTip('Show/Hide results selection')
         return self.actions
 
-    def _prepare_actions_helper(self, icon_path, tools, actions, checkables=None):
+    def _prepare_actions_helper(self, icon_path: str, tools, actions, checkables=None):
         """
         Prepare actions that will  be used in application in a way
         that's independent of the  menus & toolbar
@@ -701,7 +711,7 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
         else:
             self._log_msg(html_msg)
 
-    def _log_msg(self, msg):
+    def _log_msg(self, msg: str) -> None:
         """prints an HTML log message"""
         self.log_mutex.lockForWrite()
         text_cursor = self.log_widget.textCursor()
@@ -711,48 +721,48 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
         self.log_widget.ensureCursorVisible() # new message will be visible
         self.log_mutex.unlock()
 
-    def log_info(self, msg):
+    def log_info(self, msg: str) -> None:
         """ Helper funtion: log a message msg with a 'INFO:' prefix """
         if msg is None:
             msg = 'msg is None; must be a string'
             return self.log.simple_msg(msg, 'GUI ERROR')
         return self.log.simple_msg(msg, 'GUI INFO')
 
-    def log_debug(self, msg):
+    def log_debug(self, msg: str) -> None:
         """ Helper funtion: log a message msg with a 'DEBUG:' prefix """
         if msg is None:
             msg = 'msg is None; must be a string'
             return self.log.simple_msg(msg, 'GUI ERROR')
         return self.log.simple_msg(msg, 'GUI DEBUG')
 
-    def log_command(self, msg):
+    def log_command(self, msg: str) -> None:
         """ Helper funtion: log a message msg with a 'COMMAND:' prefix """
         if msg is None:
             msg = 'msg is None; must be a string'
             return self.log.simple_msg(msg, 'GUI ERROR')
         return self.log.simple_msg(msg, 'GUI COMMAND')
 
-    def log_error(self, msg):
+    def log_error(self, msg: str) -> None:
         """ Helper funtion: log a message msg with a 'GUI ERROR:' prefix """
         if msg is None:
             msg = 'msg is None; must be a string'
             return self.log.simple_msg(msg, 'GUI ERROR')
         return self.log.simple_msg(msg, 'GUI ERROR')
 
-    def log_warning(self, msg):
+    def log_warning(self, msg: str) -> None:
         """ Helper funtion: log a message msg with a 'WARNING:' prefix """
         if msg is None:
             msg = 'msg is None; must be a string'
             return self.log.simple_msg(msg, 'GUI ERROR')
         return self.log.simple_msg(msg, 'GUI WARNING')
 
-    def on_escape_null(self):
+    def on_escape_null(self) -> None:
         """
         The default state for Escape key is nothing.
         """
         pass
 
-    def on_escape(self):
+    def on_escape(self) -> None:
         """
         Escape key should cancel:
          - on_rotation_center
@@ -764,21 +774,16 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
     #def remove_picker(self):
         #self.vtk_interactor.
 
-    def set_node_picker(self):
+    def set_node_picker(self) -> None:
         self.vtk_interactor.SetPicker(self.node_picker)
 
-    def set_cell_picker(self):
+    def set_cell_picker(self) -> None:
         self.vtk_interactor.SetPicker(self.cell_picker)
 
-    def set_background_image(self, image_filename='GeologicalExfoliationOfGraniteRock.jpg'):
+    def set_background_image(self, image_filename: str='GeologicalExfoliationOfGraniteRock.jpg'):
         """adds a background image"""
         if not os.path.exists(image_filename):
             return
-
-        fmt = os.path.splitext(image_filename)[1].lower()
-        if fmt not in ['.jpg', '.jpeg', '.png', '.tif', '.tiff', '.bmp']:
-            msg = f'invalid image type={fmt!r}; filename={image_filename!r}'
-            raise NotImplementedError(msg)
 
         #image_reader = vtk.vtkJPEGReader()
         #image_reader = vtk.vtkPNGReader()
@@ -791,28 +796,16 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
         #if has_background_image:
             #self.image_reader.Delete()
 
-
-        if fmt in ['.jpg', '.jpeg']:
-            self.image_reader = vtk.vtkJPEGReader()
-        elif fmt == '.png':
-            self.image_reader = vtk.vtkPNGReader()
-        elif fmt in ['.tif', '.tiff']:
-            self.image_reader = vtk.vtkTIFFReader()
-        elif fmt == '.bmp':
-            self.image_reader = vtk.vtkBMPReader()
-        #elif fmt == '.ps': # doesn't exist?
-            #self.image_reader = vtk.vtkPostScriptReader()
-        else:
-            raise NotImplementedError(f'invalid image type={fmt!r}; filename={image_filename!r}')
-
-        if not self.image_reader.CanReadFile(image_filename):
+        image_reader = get_image_reader(image_filename)
+        if not image_reader.CanReadFile(image_filename):
             print(f'Error reading file {image_filename}')
             return
 
-        self.image_reader.SetFileName(image_filename)
-        self.image_reader.Update()
-        image_data = self.image_reader.GetOutput()
+        image_reader.SetFileName(image_filename)
+        image_reader.Update()
+        image_data = image_reader.GetOutput()
 
+        self.image_reader = image_reader
         if has_background_image:
             self.image_actor.SetInputData(image_data)
             self.Render()
@@ -2246,3 +2239,24 @@ def populate_sub_qtoolbar(toolbar, items, actions):
         #if ii_count > 0:
             #action.setChecked(False)
         drop_down_menu.addAction(action)  # thrown in the trash?
+
+def get_image_reader(image_filename: str):
+    fmt = os.path.splitext(image_filename)[1].lower()
+    if fmt not in ['.jpg', '.jpeg', '.png', '.tif', '.tiff', '.bmp']:
+        msg = f'invalid image type={fmt!r}; filename={image_filename!r}'
+        raise NotImplementedError(msg)
+
+    if fmt in ['.jpg', '.jpeg']:
+        image_reader = vtk.vtkJPEGReader()
+    elif fmt == '.png':
+        image_reader = vtk.vtkPNGReader()
+    elif fmt in ['.tif', '.tiff']:
+        image_reader = vtk.vtkTIFFReader()
+    elif fmt == '.bmp':
+        image_reader = vtk.vtkBMPReader()
+    #elif fmt == '.ps': # doesn't exist?
+        #self.image_reader = vtk.vtkPostScriptReader()
+    else:
+        raise NotImplementedError(f'invalid image type={fmt!r}; filename={image_filename!r}')
+    return image_reader
+

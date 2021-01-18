@@ -282,7 +282,7 @@ class MPT(GeomCommon):
                  rho, a1, a2, a3, a4, a5, a6, tref, ge,
                  blank1, blank2, blank3, blank4, *blanks) = out
                 self.show_data(data[n:n+ntotal], types='if')
-                self.log.debug(blanks)
+                self.log.debug(str(blanks))
             assert blank1 == 0, blank1
             data_in = [mid, [g1, g2, g3, g4, g5, g6, g7, g8, g9, g10,
                              g11, g12, g13, g14, g15, g16, g17, g18, g19, g20, g21],
@@ -805,7 +805,8 @@ class MPT(GeomCommon):
                          g44, g45, g46, g55, g56, g66)
             #(mid, tc_tables, *other) = out
             #print(mid, tc_tables, *other)
-            assert sum(other) == 0, f'mid={mid} other={other}'
+            if sum(other) != 0:
+                self.log.warning(f'mATT9 mid={mid} other={other} flags are dropped...')
             if self.is_debug_file:
                 self.binary_debug.write('  MATT9=%s\n' % str(out))
 

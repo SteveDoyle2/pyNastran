@@ -3,7 +3,7 @@
 #CASE_CONTROL_CARDS = CASE_CONTROL_INT_CARDS.union(CASE_CONTROL_PLOTTABLE_TYPES)
 
 # case control cards that are also bulk data cards
-FLAGGED_CARDS = {
+CASE_BULK_CARDS = {
     # of the form 'LOAD = 5', so 'PARAM,POST,-1' doesn't count
     'LOAD', 'SPC', 'FREQ', 'MPC',  # case control + bulk data cards
     'FORCE', 'TRIM', 'DESVAR', 'TSTEP', 'TSTEPNL', 'NSM', 'CLOAD', 'SUPORT1',
@@ -12,6 +12,7 @@ FLAGGED_CARDS = {
     'ACCEL',  # short for ACCELERATION
     # 'PARAM', # equals sign is problematic
 }
+FLAGGED_CARDS = CASE_BULK_CARDS
 
 # we're going to say that all these cards are are BDF cards, not that they are
 # all read

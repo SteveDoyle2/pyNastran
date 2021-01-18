@@ -1375,7 +1375,7 @@ def _cast_matrix_matpool(table_name: str,
     m.row_dof = row_dofs_array
     m.form = matrix_shape
     #print(m)
-    log.debug(m)
+    log.debug(str(m))
     return m
 
 

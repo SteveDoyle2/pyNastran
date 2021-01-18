@@ -136,6 +136,16 @@ class PythonConsoleWidget(QDockWidget):
         vbox_widget = layout_to_widget(self.vbox)
         self.setWidget(vbox_widget)
 
+    @property
+    def enter_data(self):
+        return self.vbox.enter_data
+    @property
+    def execute_python_button(self):
+        return self.vbox.execute_python_button
+    @property
+    def execute_and_clear_python_button(self):
+        return self.vbox.execute_and_clear_python_button
+
 class PythonConsoleLayout(QVBoxLayout):
     """
     original code pulled from:

@@ -15,18 +15,113 @@ from cpylog import get_logger2
 from pyNastran.nptyping import NDArrayN2int
 from pyNastran.utils import print_bad_path, _filename
 
-from pyNastran.bdf import BULK_DATA_CARDS, FLAGGED_CARDS
+from pyNastran.bdf import BULK_DATA_CARDS, CASE_BULK_CARDS
 from pyNastran.bdf.errors import MissingDeckSections
 from pyNastran.bdf.bdf_interface.utils import _parse_pynastran_header
 from pyNastran.bdf.bdf_interface.include_file import get_include_filename
 
+# these allow spaces
 FILE_MANAGEMENT = (
     'ACQUIRE ', 'ASSIGN ', 'CONNECT ', 'DBCLEAN ', 'DBDICT ', 'DBDIR ',
     'DBFIX ', 'DBLOAD ', 'DBLOCATE ', 'DBSETDEL ', 'DBUNLOAD ',
     'DBUPDATE ', 'ENDJOB ', 'EXPAND ', 'INCLUDE ', 'INIT ', 'NASTRAN ',
     'PROJ ',
 )
-EXECUTIVE_CASE_SPACES = tuple(list(FILE_MANAGEMENT) + ['SOL ', 'SET ', 'SUBCASE '])
+EXECUTIVE_SPACES = ('ALTER ', 'APP ', 'COMPILE ', 'COMPILER ', 'DIAG ',
+                    'GEOMCHECK ', 'ID ', 'LINK ', 'MALTER ', 'SOL ', 'TIME ')
+
+#CASE_BULK_CARDS = {
+    ## of the form 'LOAD = 5', so 'PARAM,POST,-1' doesn't count
+    #'LOAD', 'SPC', 'FREQ', 'MPC',  # case control + bulk data cards
+    #'FORCE', 'TRIM', 'DESVAR', 'TSTEP', 'TSTEPNL', 'NSM', 'CLOAD', 'SUPORT1',
+    #'CSSCHD', 'SDAMPING', 'DLOAD', 'TRIM',
+    #'SUPORT', # short for SUPORT1
+    #'ACCEL',  # short for ACCELERATION
+    ## 'PARAM', # equals sign is problematic
+#}
+
+CASE_CARDS_NO_BULK = (
+    #'LOAD'
+    #NX 2019.2
+    'A2GG', 'ACCE', # ACCELERATION
+    'ACINTENSITY', 'ACORDCHK', 'ACPOWER', 'ACVELOCITY', 'ADAMSMNF',
+    'ADAPTERR', 'ADMRECVR', 'AECONFIG', 'AEROF', 'AESYMXY', 'AESYMXZ', 'ALOAD',
+    'ANALYSIS', 'APRESSURE', 'ATVOUT', 'AUXCASE', 'B2GG', 'B2PP', 'BC', 'BCRESULTS',
+    'BCSET', 'BGRESULTS', 'BGSET', 'BOLTID', 'BOLTRESULTS', 'BOUTPUT', 'CKGAP',
+    #CLOAD - in bulk
+    'CMETHOD', 'CRSTRN', 'CSMSET',
+    #CSSCHD - in bulk
+    'CYCFORCES', 'CYCSET', 'CZRESULTS',
+    'DEFORM', 'DESGLB', 'DESOBJ', 'DESSUB',
+    'DISP', # DISPLACEMENT
+    #DIVERG - in bulk
+    #DLOAD - in bulk
+    'DMTRCOEF', 'DMTRLOSS', 'DRSPAN', 'DSAPRT', 'DSYM', 'DTEMP', 'EBDSET',
+    #'ECHO'
+    'EDE', 'EFLOAD', 'EKE', 'ELAR', 'ELAROUT', 'ELSDCON', 'ELSTRN', 'ELSUM',
+    'ENTHALPY', 'ERP', 'ESE', 'EXTSEOUT', 'FLSFSEL', 'FLSPOUT', 'FLSTCNT',
+    'FLUX', 'FLXSLI', 'FLXRESULTS', 'FMETHOD',
+    #FORCE - in bulk
+    'FREQU', # 'FREQUENCY',
+    'FRFIN',
+    'GCRSTRN', 'GELSTRN', 'GKRESULTS', 'GPFORCE', 'GPKE', 'GPLSTRN', 'GPRSORT',
+    'GPSDCON', 'GPSTRAIN', 'GPSTRESS', 'GRDCON', 'GROUNDCHECK', 'GSTRAIN', 'GSTRESS',
+    'GTHSTRN', 'GUST', 'HARMONICS', 'HDOT', 'HOUTPUT', 'IC', 'IMPERF',
+    #INCLUDE - already handled
+    'INITS', 'INPOWER', 'JCONSET', 'JRESULTS', 'JINTEG', 'K2GG', 'K2PP', 'LABEL',
+    'LINE',
+    #LOAD - in bulk
+    'LOADSET', 'M2GG', 'M2PP', 'MASTER', 'MAXLINES', 'MAXMIN', 'MBDEXPORT', 'MBDRECVR',
+    'MEFFMASS', 'METHOD', 'MFLUID', 'MODALE', 'MODCON', 'MODES', 'MODSEL',
+    'MODTRAK', 'MONITOR', 'MONVAR'
+    #MPC - in bulk
+    'MPCF', # MPCFORCES
+    'MPRES', 'NLARCL', 'NLCNTL', 'NLLOAD', 'NLPARM', 'NLSTRESS', 'NONLINEAR',
+    'NOUTPUT',
+    #NSM - in bulk
+    'OFREQUENCY', 'OLOAD', 'OMODES', 'OPRESS', 'OSTNINI', 'OTEMP', 'OTIME',
+    'OTMFORC', 'OUTPUT', 'P2G', 'PANCON',
+    #PARAM - in bulk
+    'PARTN', 'PEAKOUT', 'PFRESULTS', 'PLOTID', 'PLSTRN', 'PRESSURE',
+    'RANDOM', 'RCROSS', 'REPCASE', 'RESVEC', 'RIGID', 'RMAXMIN', 'RMETHOD',
+    'RSMETHOD',
+    'SACCEL' # SACCELERATION
+    'SDAMPING',
+    'SDISP', # SDISPLACEMENT
+    'SEALL', 'SEDR', 'SEDV',
+    'SEEXCLUDE', 'SEFINAL',
+    'SEKREDUCE',
+    'SELGENERATE', 'SELREDUCE',
+    'SEMGENERATE', 'SEMREDUCE',
+    'SEQDEP', 'SERESP',
+    #SET - in bulk
+    'SETMC', 'SETMCNAME', 'SETS DEFINITION', 'SHELLTHK', 'SKIP',
+    'SMETHOD',
+    # SPC - in bulk
+    'SPCF', # SPCFORCES
+    'STATSUB', 'STATVAR', 'STRAIN', 'STRESS', 'STRFIELD', 'SUBCASE', 'SUBCOM',
+    'SUBSEQ',
+    'SUBT', # SUBTITLE
+    #'SUPER',
+    #SUPORT - in bulk
+    #SUPORT1 - in bulk
+    'SVECTOR',
+    'SVELO', # SVELOCITY
+    'SYM', 'SYMCOM', 'SYMSEQ', 'TEMPERATURE', 'TFL', 'THERMAL', 'TITLE'
+    #TRIM - in bulk
+    'TRLOSS', 'TRPOWER',
+    # TSTEP - in bulk
+    # TSTEPNL - in bulk
+    'TSTRU', 'VATVOUT',
+    'VELO', # VELOCITY
+    'VOLUME', 'WEIGHTCHECK'
+)
+
+EXECUTIVE_CASE_SPACES = tuple(
+    list(FILE_MANAGEMENT) +
+    list(EXECUTIVE_SPACES) +
+    ['SET ', 'SUBCASE '],
+)
 
 
 class BDFInputPy:
@@ -247,8 +342,8 @@ class BDFInputPy:
                 line = lines[i].rstrip('\r\n\t')
             except IndexError:
                 break
-            uline = line.upper()
-            if uline.startswith('INCLUDE'):
+            line_upper = line.upper()
+            if line_upper.startswith('INCLUDE'):
                 j, include_lines = self._get_include_lines(lines, line, i, nlines)
                 bdf_filename2 = get_include_filename(include_lines, include_dir=self.include_dir)
                 #bdf_filenames.append(bdf_filename2)
@@ -643,13 +738,33 @@ def _is_bulk_data_line(text: str) -> bool:
     # bulk data cards
     if card_name in BULK_DATA_CARDS:
         # case control + bulk data cards
-        if '=' in text2 and card_name in FLAGGED_CARDS or text2.startswith(' '):
+        if '=' in text2 and card_name in CASE_BULK_CARDS or text2.startswith(' '):
             return False
         elif card_name == 'PARAM':
             # The PARAM card can have a comma or tab, but no equals sign.
             # If there is a PARAM card, we have to assume we're not in the
             # case control.
             return False
+        return True
+    return False
+
+def _is_case_control_line(text: str) -> bool:
+    """
+    Returns True if there is a Case Control Deck
+
+    Parameters
+    ----------
+    text : str
+        a line in the deck
+
+    Returns
+    -------
+    is_case_line : bool
+        is this a case control line
+
+    """
+    line_upper = text.split('$')[0].strip().upper()
+    if line_upper.startswith(CASE_CARDS):
         return True
     return False
 
@@ -920,10 +1035,10 @@ def _lines_to_decks_main(lines: List[str],
     current_lines = executive_control_lines
 
     if nastran_format in ['msc', 'nx', 'nasa95', 'mystran', 'zona']:
-        #flag_word = 'executive'
+        flag_word = 'executive'
         flag = 1  # start from executive control deck
     elif nastran_format == 'optistruct':
-        #flag_word = 'case control'
+        flag_word = 'case control'
         flag = 2  # case from control deck
     else:  # pragma: no cover
         raise RuntimeError(nastran_format)
@@ -933,20 +1048,22 @@ def _lines_to_decks_main(lines: List[str],
     if ilines is None:
         ilines = count()
 
+    #guess_deck_sections = True
     #print('guess_deck_sections =', guess_deck_sections, punch)
     for i, ifile_iline, line in zip(count(), ilines, lines):
         #print('%s %-8s %s' % (ifile_iline, flag_word, line.rstrip()))
         #print('%s %i %s' % (ifile_iline, flag, line.rstrip()))
-        uline = line.split('$')[0].upper().strip()
+        line_upper = line.split('$')[0].upper().strip()
 
-        if guess_deck_sections and flag == 1 and uline.startswith('BEGIN'):
+        if guess_deck_sections and flag == 1 and line_upper.startswith('BEGIN'):
+            # we're in the executive deck and found the bulk data deck
             section_name_map = {
                 1 : 'executive control',
                 2 : 'case control',
             }
             section_name = section_name_map[flag]
 
-            if _is_begin_bulk(uline):
+            if _is_begin_bulk(line_upper):
                 #old_flags.append(flag)
                 log.warning(f'currently in {section_name} deck and skipping '
                             'directly to bulk data section')
@@ -962,6 +1079,8 @@ def _lines_to_decks_main(lines: List[str],
             break
 
         if guess_deck_sections and flag in [1, 2] and _is_bulk_data_line(line):
+            # we found the case control deck successfully from the executive deck
+            # then we found the bulk data deck unexpectedly
             section_name_map = {
                 1 : 'executive control',
                 2 : 'case control',
@@ -979,9 +1098,8 @@ def _lines_to_decks_main(lines: List[str],
             break
 
         elif flag == 1:
-            # I don't think we need to handle the comment because
-            # this uses a startswith
-            if line.upper().startswith('CEND'):
+            # handles ' CEND'
+            if line_upper.startswith('CEND'):
                 # case control
                 old_flags.append(flag)
                 if flag != 1:
@@ -989,7 +1107,7 @@ def _lines_to_decks_main(lines: List[str],
                                        'when going to the case control deck')
 
                 flag = 2
-                #flag_word = 'case'
+                flag_word = 'case'
                 current_lines = case_control_lines
             #print('executive: ', line.rstrip())
             executive_control_lines.append(line.rstrip())
@@ -1020,9 +1138,10 @@ def _lines_to_decks_main(lines: List[str],
                 current_lines.append('$' + comment.rstrip())
                 #print('%s: %s' % (flag_word, '$' + comment.rstrip()))
 
-            uline = line.upper().strip()
-            if uline.startswith('BEGIN'):
-                if _is_begin_bulk(uline):
+            # just reuse the existing one
+            #line_upper = line.upper().strip()
+            if line_upper.startswith('BEGIN'):
+                if _is_begin_bulk(line_upper):
                     old_flags.append(flag)
                     #assert flag == 2, flag
 
@@ -1042,20 +1161,20 @@ def _lines_to_decks_main(lines: List[str],
                         break
                     #print('setting lines to bulk---')
                     current_lines = bulk_data_lines
-                    #flag_word = 'bulk'
+                    flag_word = 'bulk'
                     #print('case: %s' % (line.rstrip()))
                     case_control_lines.append(line.rstrip())
                     continue
 
-                elif 'SUPER' in uline and '=' in uline:
-                    super_id = _get_super_id(line, uline)
+                elif 'SUPER' in line_upper and '=' in line_upper:
+                    super_id = _get_super_id(line, line_upper)
                     old_flags.append(flag)
                     flag = -super_id
-                    #flag_word = 'SUPER=%s' % super_id
+                    flag_word = 'SUPER=%s' % super_id
                     current_lines = superelement_lines[super_id]
                     current_ilines = superelement_ilines[super_id]
 
-                elif ('AUXMODEL' in uline or 'AFPM' in uline) and '=' in uline:
+                elif ('AUXMODEL' in line_upper or 'AFPM' in line_upper) and '=' in line_upper:
                     out = _read_bulk_for_auxmodel(
                         ifile_iline, line, flag, bulk_data_lines,
                         current_lines, current_ilines,
@@ -1076,31 +1195,31 @@ def _lines_to_decks_main(lines: List[str],
                     msg = f'expected "BEGIN BULK" or "BEGIN SUPER=1"\nline = {line}'
                     raise RuntimeError(msg)
 
-                #print('%s: %s' % (flag_word, line.rstrip()))
+                print('%s: %s' % (flag_word, line.rstrip()))
                 current_lines.append(line.rstrip())
-            elif uline.startswith('SUPER'):
+            elif line_upper.startswith('SUPER'):
                 # case control line
                 # SUPER = ALL
-                #auxmodel_idi = int(uline.split('=')[1])
+                #auxmodel_idi = int(line_upper.split('=')[1])
                 #auxmodels_to_find.append(auxmodel_idi)
                 if flag != 2:
                     raise RuntimeError('expected a flag of 2 (case control deck) '
                                        'when going to an SUPER model')
 
                 is_superelement = True
-            elif uline.startswith('AUXMODEL'):
+            elif line_upper.startswith('AUXMODEL'):
                 # case control line
                 # AUXMODEL = 10
-                auxmodel_idi = int(uline.split('=')[1])
+                auxmodel_idi = int(line_upper.split('=')[1])
                 auxmodels_to_find.append(auxmodel_idi)
                 if flag != 2:
                     raise RuntimeError('expected a flag of 2 (case control deck) '
                                        'when going to an AUXMODEL')
                 is_auxmodel = True
-            elif uline.startswith('AFPM'):
+            elif line_upper.startswith('AFPM'):
                 # case control line
                 # AFPM = 10
-                afpm_idi = int(uline.split('=')[1])
+                afpm_idi = int(line_upper.split('=')[1])
                 afpms_to_find.append(afpm_idi)
                 if flag != 2:
                     raise RuntimeError('expected a flag of 2 (case control deck) '
@@ -1199,7 +1318,7 @@ def _bulk_data_lines_extract(lines: List[str],
         #raise RuntimeError(msg)
     return bulk_data_ilines
 
-def _is_begin_bulk(uline: str) -> bool:
+def _is_begin_bulk(line_upper: str) -> bool:
     """
     is this a:
       'BEGIN BULK'
@@ -1209,10 +1328,10 @@ def _is_begin_bulk(uline: str) -> bool:
       'BEGIN BULK AFPM=2'
 
     """
-    is_begin_bulk = 'BULK' in uline and (
-        'AUXMODEL' not in uline and
-        'AFPM' not in uline and
-        'SUPER' not in uline)
+    is_begin_bulk = 'BULK' in line_upper and (
+        'AUXMODEL' not in line_upper and
+        'AFPM' not in line_upper and
+        'SUPER' not in line_upper)
     return is_begin_bulk
 
 def _read_bulk_for_auxmodel(ifile_iline, line, flag: int, bulk_data_lines: List[str],
@@ -1241,11 +1360,11 @@ def _read_bulk_for_auxmodel(ifile_iline, line, flag: int, bulk_data_lines: List[
         #is_broken = True
         #return is_broken, auxmodel_id, is_auxmodel_active, flag, current_lines
 
-    uline = line.upper().strip()
-    if uline.startswith('BEGIN'):
-        if 'AUXMODEL' in uline:
+    line_upper = line.upper().strip()
+    if line_upper.startswith('BEGIN'):
+        if 'AUXMODEL' in line_upper:
             is_auxmodel_active = True
-            auxmodel_id = _get_auxmodel_id(line, uline)
+            auxmodel_id = _get_auxmodel_id(line, line_upper)
             old_flags.append(flag)
             flag = -auxmodel_id
             current_lines = auxmodel_lines[auxmodel_id]
@@ -1259,15 +1378,15 @@ def _read_bulk_for_auxmodel(ifile_iline, line, flag: int, bulk_data_lines: List[
                        afpm_id, is_afpm_active,
                        flag, current_lines)
                 return out
-        elif 'SUPER' in uline:
-            super_id = _get_super_id(line, uline)
+        elif 'SUPER' in line_upper:
+            super_id = _get_super_id(line, line_upper)
             old_flags.append(flag)
             flag = -super_id
             current_lines = superelement_lines[super_id]
             current_ilines = superelement_ilines[super_id]
-        elif 'AFPM' in uline:
+        elif 'AFPM' in line_upper:
             is_afpm_active = True
-            afpm_id = _get_afpm_id(line, uline)
+            afpm_id = _get_afpm_id(line, line_upper)
             old_flags.append(flag)
             flag = -afpm_id
             current_lines = afpm_lines[afpm_id]
@@ -1317,6 +1436,7 @@ def _break_system_lines(executive_control_lines: List[str]) -> Tuple[List[str], 
     DBUPDATE  Specifies the time between updates of the database directory.
     ENDJOB    Terminates a job upon completion of FMS statements.
     EXPAND    Concatenates additional DBset members to an existing DBset.
+    ID        Flag to name the run.
     INCLUDE   Inserts an external file in the input file.
     INIT      Creates a temporary or permanent DBset.
     NASTRAN   Specifies values for system cells.
@@ -1449,7 +1569,7 @@ def _show_bad_file(self: Any, bdf_filename: Union[str, StringIO],
             iline += 1
             lines.append(line)
 
-def _get_auxmodel_id(line: str, uline: str) -> int:
+def _get_auxmodel_id(line: str, line_upper: str) -> int:
     """
     parses the superelement header::
 
@@ -1458,10 +1578,10 @@ def _get_auxmodel_id(line: str, uline: str) -> int:
         BEGIN BULK AUXMODEL = 2
 
     """
-    #if '=' in uline:
-    sline = uline.split('=')
+    #if '=' in line_upper:
+    sline = line_upper.split('=')
     #else:
-        #sline = uline.split()
+        #sline = line_upper.split()
     try:
         auxmodel_id = int(sline[1])
     except (IndexError, ValueError):
@@ -1473,7 +1593,7 @@ def _get_auxmodel_id(line: str, uline: str) -> int:
             auxmodel_id, line))
     return auxmodel_id
 
-def _get_afpm_id(line: str, uline: str) -> int:
+def _get_afpm_id(line: str, line_upper: str) -> int:
     """
     parses the superelement header::
 
@@ -1482,7 +1602,7 @@ def _get_afpm_id(line: str, uline: str) -> int:
         BEGIN BULK AFPM = 2
 
     """
-    sline = uline.split('=')
+    sline = line_upper.split('=')
     try:
         afpm_id = int(sline[1])
     except (IndexError, ValueError):
@@ -1494,7 +1614,7 @@ def _get_afpm_id(line: str, uline: str) -> int:
             afpm_id, line))
     return afpm_id
 
-def _get_super_id(line: str, uline: str) -> int:
+def _get_super_id(line: str, line_upper: str) -> int:
     """
     parses the superelement header::
 
@@ -1504,14 +1624,14 @@ def _get_super_id(line: str, uline: str) -> int:
         BEGIN BULK SUPER 2
 
     """
-    if '=' in uline:
-        sline = uline.split('=')
+    if '=' in line_upper:
+        sline = line_upper.split('=')
         super_id_str = sline[1]
         if len(sline) != 2:
             msg = 'expected "BEGIN SUPER=1"\nline = %s' % line
             raise SyntaxError(msg)
     else:
-        sline = uline.split()
+        sline = line_upper.split()
         if len(sline) not in [3, 4]:
             msg = 'expected "BEGIN SUPER=1"\nline = %s' % line
             raise SyntaxError(msg)

@@ -1,0 +1,111 @@
+$
+$
+$ $ Created by MSC Apex Version 2021 on Jan 17, 2021 at 17:02:13
+$
+$ Values exported in this file are expressed using the consistent SI_K unit
+$ system
+$   Length m
+$   Mass kg
+$   Time s
+$   Force N
+$   Temperature K
+$ NOTE: Nastran requires the following angle values always be defined in
+$ degrees, while all other rotational quantities will be defined in terms of
+$ radians
+$ PCOMPG  (THETAi - ply orientation angle)
+$ TABLED1 (yi - phase angle data when referenced in TP field of RLOAD2)
+$
+$ Linear Static Scenario Static Scenario 1
+$ Scenario description
+SOL 101
+CEND
+$
+$ Output Requests
+$
+$ Displacement
+DISP(PLOT) = ALL
+$ Element Stress
+STRESS(PLOT,VONMISES,CORNER) = ALL
+$ Applied Loads
+OLOAD(PLOT) = ALL
+$ SPC Forces
+SPCFORCES(PLOT) = ALL
+$ Grid Point Force
+GPFORCE(PLOT) = ALL
+$ Element Force
+FORCE(PLOT) = ALL
+PARAM,AUTOMSET,YES
+$ Automatic Stiffness Singularity Constraints
+AUTOSPC(NOPRINT) = YES
+$ Attachment Forces
+MPCFORCES(SORT1,PLOT) = ALL
+PARAM,PRTMAXIM,YES
+$ OUTPUT2 Results file
+PARAM,POST,1
+$ Event name: Event 1
+$ Event description:
+SUBCASE 1
+ SUBTITLE=Event 1
+ SPC = 1
+ LOAD = 1
+BEGIN BULK
+$
+$
+$ Part Part_1
+$
+$       2       3       4       5       6       7       8       9      0
+$
+$
+ABSNMVS 1                                                               +
++       ABSNAME Constraint 1
+ABSNMVS 2                                                               +
++       ABSNAME Constraint_definition
+ABSNMVS 3                                                               +
++       ABSNAME Apply gravity 1
+ABSNMVS 4                                                               +
++       ABSNAME Gravity 1
+ABSTRCT BCEVENT 1       SPC     1
+ABSTRCT CONSTRNT2       SPC     1
+ABSTRCT LDEVENT 3       GRAV    1
+ABSTRCT LOAD    4       GRAV    1
+CHEXA   1       1       2       3       4       1       5       7       +
++       8       6       12      14      10      9       13      15      +
++       16      11      18      20      19      17
+$ Grav: Gravity 1
+GRAV    1               9.80665 -1.     0.      0.
+GRID    1               .0025   0.      .01
+GRID    2               .0025   .005    .01
+GRID    3               .0025   .005    0.
+GRID    4               .0025   0.      0.
+GRID    5               0.      .005    .01
+GRID    6               0.      0.      .01
+GRID    7               0.      .005    0.
+GRID    8               0.      0.      0.
+GRID    9               .0025   .0025   .01
+GRID    10              .0025   0.      .005
+GRID    11              .00125  0.      .01
+GRID    12              .0025   .005    .005
+GRID    13              .00125  .005    .01
+GRID    14              .0025   .0025   0.
+GRID    15              .00125  .005    0.
+GRID    16              .00125  0.      0.
+GRID    17              0.      .0025   .01
+GRID    18              0.      .005    .005
+GRID    19              0.      0.      .005
+GRID    20              0.      .0025   0.
+$ Material Record: test_material
+MAT1    1       7.2+10          .33     2660.
+$ Elements and Element Properties for Part: Part_1
+PSOLID  1       1
+$ Constraint: Constraint_definition
+SPC     1       1       123456
+SPC     1       2       123456
+SPC     1       5       123456
+SPC     1       6       123456
+SPC     1       9       123456
+SPC     1       11      123456
+SPC     1       13      123456
+SPC     1       17      123456
+MDLPRM  OFFDEF  LROFF
+PARAM   WTMASS  1.
+ENDDATA

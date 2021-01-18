@@ -4074,6 +4074,7 @@ class OP2Reader:
         #self.show(200, types='ifsq')
         return data, ndatas
 
+
     def read_matpool_result(self, code, op2, data, utable_name):
         if code == (114, 1, 120):
             self.log.debug(f'  code = {code}')
@@ -4087,7 +4088,7 @@ class OP2Reader:
             except Exception as excep:
                 self.log.error(str(excep))
                 self.log.warning('  skipping MATPOOL-DMIG')
-                raise
+                #raise
         elif code == (314, 3, 279):
             # geom
             self._read_matpool_elist(op2, data, utable_name, debug=False)
