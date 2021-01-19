@@ -195,4 +195,4 @@ API. Changing the existing API is cumbersome. Therefore, take particular care wh
   __ https://emptysqua.re/blog/api-evolution-the-right-way/#adding-parameters
 
 
-Thanks to https://github.com/matplotlib/matplotlib for their very well done contributors guide.
+Thanks to https://github.com/matplotlib/matplotlib for their contributor's guide.  It's very well done and a great template!
