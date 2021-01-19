@@ -7,6 +7,13 @@
 See the  [Installation Instructions](https://pynastran-git.readthedocs.io/en/1.3/installation/installation.html#installation-from-release) 
 for instructions on installing pyNastran.
 
+[Discord](https://img.shields.io/badge/help_forum-discourse-blue.svg)](https://discord.gg/s8RfSkZDHA)
+
+<!---
+.. |DiscourseBadge| image:: https://img.shields.io/badge/help_forum-discourse-blue.svg
+.. _DiscourseBadge: https://discourse.matplotlib.org
+--->
+
 ### v1.3.3
 
 [Download GUI](https://sourceforge.net/projects/pynastran/files/?source=navbar) (latest is from 2020/6/28)
