@@ -24,7 +24,7 @@ Also, check out the:
   * [Developer forum](http://groups.google.com/group/pynastran-dev) (intended for questions about the master branch)
   * [Docs](https://pynastran-git.readthedocs.io/en/1.3/)
   * [Code of Conduct](https://github.com/SteveDoyle2/pyNastran/blob/master/code_of_conduct.md)
-  * [Contributing](https://github.com/SteveDoyle2/pyNastran/blob/master/contributing.md)
+  * [Contributing](https://github.com/SteveDoyle2/pyNastran/blob/master/contributing.rst)
 
 for more detailed information.
 
