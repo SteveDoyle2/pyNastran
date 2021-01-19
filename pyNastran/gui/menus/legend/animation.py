@@ -16,6 +16,7 @@ from qtpy.QtWidgets import (
     QCheckBox, QGroupBox, QComboBox, QFileDialog)
 from qtpy.compat import getexistingdirectory
 
+from pyNastran.gui.utils.locale import func_str
 from pyNastran.gui.utils.qt.pydialog import PyDialog, set_combo_box_text
 from pyNastran.gui.utils.qt.checks.qlineedit import (
     check_int, check_float, check_name_str, check_path)
@@ -200,13 +201,13 @@ class AnimationWindow(PyDialog):
             self.icase_vector_edit.setValue(self._icase_vector)
 
         self.scale_label = QLabel("True Scale:")
-        self.scale_edit = QLineEdit(str(self._scale))
+        self.scale_edit = QLineEdit(func_str(self._scale))
         self.scale_button = QPushButton("Default")
         self.scale_edit.setToolTip('Scale factor of the "deflection"')
         self.scale_button.setToolTip('Sets the scale factor of the gif to %s' % self._scale)
 
         self.arrow_scale_label = QLabel("Arrow Scale:")
-        self.arrow_scale_edit = QLineEdit(str(self._scale))
+        self.arrow_scale_edit = QLineEdit(func_str(self._scale))
         self.arrow_scale_button = QPushButton("Default")
         self.arrow_scale_edit.setToolTip('Scale factor of the "arrows"')
         self.arrow_scale_button.setToolTip('Sets the arrow scale factor of the gif to %s' % (
@@ -823,7 +824,7 @@ class AnimationWindow(PyDialog):
         """When max default icase is pressued, update the value"""
         icase = self.icase_disp_start_edit.value()
         max_value = self.get_min_max(icase)[1]
-        self.max_value_edit.setText(str(max_value))
+        self.max_value_edit.setText(func_str(max_value))
         self.max_value_edit.setStyleSheet("QLineEdit{background: white;}")
 
     def on_browse_folder(self):
@@ -857,7 +858,7 @@ class AnimationWindow(PyDialog):
             unused_scale, unused_phase, default_scale, unused_default_phase = out
         else:
             default_scale = self._default_scale
-        self.scale_edit.setText(str(default_scale))
+        self.scale_edit.setText(func_str(default_scale))
         self.scale_edit.setStyleSheet("QLineEdit{background: white;}")
 
     def on_default_arrow_scale(self):
@@ -868,7 +869,7 @@ class AnimationWindow(PyDialog):
             unused_arrow_scale, default_arrow_scale = out
         else:
             default_arrow_scale = self._default_arrow_scale
-        self.arrow_scale_edit.setText(str(default_arrow_scale))
+        self.arrow_scale_edit.setText(func_str(default_arrow_scale))
         self.arrow_scale_edit.setStyleSheet("QLineEdit{background: white;}")
 
     def on_default_time(self):

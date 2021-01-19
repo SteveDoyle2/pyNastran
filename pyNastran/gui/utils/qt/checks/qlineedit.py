@@ -1,4 +1,6 @@
 import os
+from typing import Tuple, Optional
+from functools import wraps
 
 QLINE_EDIT_BASIC = 'QLineEdit{background: white;}'
 QLINE_EDIT_ERROR = 'QLineEdit{background: red;}'
@@ -94,14 +96,45 @@ def check_float(cell):
         is this a valid float
     """
     text = cell.text()
-    try:
-        value = float(text)
+    value, is_valid = _check_float(text)
+    if is_valid:
         cell.setStyleSheet("QLineEdit{background: white;}")
         return value, True
-    except ValueError:
+    else:
         cell.setStyleSheet("QLineEdit{background: red;}")
         return None, False
 
+def _check_float(text: str) -> Tuple[Optional[str], bool]:
+    """
+    This is intended as a locale safe way to parse a float.
+    It supports various types of floats.
+
+    Example
+    -------
+    >>> _check_float('3.14')
+    3.14, True
+    >>> _check_float('2,557')
+    2,557, True
+    """
+    value = None
+    is_valid = False
+    try:
+        value = float(text)
+        is_valid = True
+    except ValueError:
+        #'2,557'
+        if ',' not in text:  # not valid
+            pass
+        elif '.' in text and ',' in text:  # might be valid; 1,234.56  -> 1.234,56
+            # not supported
+            pass
+        else:
+            text2 = text.replace(',', '.')
+            value = float(text2)
+            is_valid = True
+    except:
+        pass
+    return value, is_valid
 
 def check_float_ranged(cell, min_value=None, max_value=None,
                        min_inclusive=True, max_inclusive=True):
@@ -279,7 +312,19 @@ def check_format(cell):
     cell.setStyleSheet("QLineEdit{background: red;}")
     return None, False
 
-def check_format_str(text):
+def nocrash_str_bool(func):
+    @wraps(func)
+    def wrapper(_str):
+        try:
+            out = func(_str)
+        except:
+            print('dont crash...')
+            out = (_str, False)
+        return out
+    return wrapper
+
+@nocrash_str_bool
+def check_format_str(text: str) -> Tuple[str, bool]:
     """
     Checks a QLineEdit string formatter
 
@@ -296,7 +341,13 @@ def check_format_str(text):
         None : the format is invalid
     is_valid : bool
         The str/None flag to indicate if the string formatter is valid
+
+    >>> check_format_str(".3E")
+    >>> check_format_str(".3g")
+    >>> check_format_str(".4f")
+    >>> check_format_str("08,.1f")
     """
+
     text = text.strip()
     is_valid = True
 
@@ -311,20 +362,37 @@ def check_format_str(text):
         is_valid = False
 
     # the float formatter handles ints/floats?
+    text_no_percent = text[1:]
     try:
-        text % 1
-        text % .2
-        text % 1e3
-        text % -5.
-        text % -5
+        format(1, text_no_percent)
+        format(.2, text_no_percent)
+        format(1e3, text_no_percent)
+        format(-5., text_no_percent)
+        format(-5, text_no_percent)
     except ValueError:
         is_valid = False
+    except TypeError:
+        is_valid = False
+
+    if not is_valid:
+        return text, is_valid
 
     # the float formatter isn't supposed to handle strings?
     # doesn't this break %g?
     try:
         text % 's'
         is_valid = False
-    except TypeError:
+    except (ValueError, TypeError):
         pass
     return text, is_valid
+
+
+if __name__ == '__main__':
+    #assert check_format_str('%.3E')[1] is True
+    #assert check_format_str('%.3g')[1] is True
+    #assert check_format_str('%.4f')[1] is True
+    #assert check_format_str('%08,.1f')[1] is True
+    assert check_format_str('%08,.p1f')[1] is False
+    assert _check_float('3.14') == 3.14
+    assert _check_float('2,557') == 2.557
+

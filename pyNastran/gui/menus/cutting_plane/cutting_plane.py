@@ -17,6 +17,7 @@ from qtpy.QtWidgets import (
     QLabel, QPushButton, QGridLayout, QApplication, QHBoxLayout, QVBoxLayout,
     QColorDialog, QLineEdit, QCheckBox, QComboBox)
 
+from pyNastran.gui.utils.locale import func_str
 from pyNastran.gui.utils.qt.pydialog import PyDialog, check_color
 from pyNastran.gui.utils.qt.qpush_button_color import QPushButtonColor
 from pyNastran.gui.utils.qt.dialogs import save_file_dialog
@@ -141,8 +142,10 @@ class CuttingPlaneWindow(PyDialog):
         self.ytol_label = QLabel('Y Tolerance:')
         self.zero_tol_label = QLabel('Zero Tolerance:')
 
-        self.ytol_edit = QLineEdit('10.0')
-        self.zero_tol_edit = QLineEdit('1e-5')
+        ytol = 10.
+        zero_tol = 1e-5
+        self.ytol_edit = QLineEdit(func_str(ytol))
+        self.zero_tol_edit = QLineEdit(func_str(zero_tol))
 
         if not show_tol:
             self.ytol_label.setVisible(False)

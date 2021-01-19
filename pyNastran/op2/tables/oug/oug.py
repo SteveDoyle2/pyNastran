@@ -856,8 +856,10 @@ class OUG(OP2Common):
             result_name = 'solution_set.displacements'
         elif self.table_name == b'OUPV1':
             #result_name = 'temperatures'
-            assert self.thermal in [2, 4, 8], self.code_information()
-            if self.thermal == 2:
+            assert self.thermal in [0, 2, 4, 8], self.code_information()
+            if self.thermal == 0:
+                result_name = 'displacement' # is this right?
+            elif self.thermal == 2:
                 result_name = 'displacement_scaled_response_spectra_abs'
             elif self.thermal == 4:
                 result_name = 'displacement_scaled_response_spectra_srss'
@@ -1016,8 +1018,10 @@ class OUG(OP2Common):
             assert self.thermal == 0, self.code_information()
             pass
         elif self.table_name == b'OUPV1':
-            assert self.thermal in [2, 4], self.thermal
-            if self.thermal == 2:
+            assert self.thermal in [0, 2, 4], self.thermal
+            if self.thermal == 0:
+                result_name = 'acceleration_scaled'
+            elif self.thermal == 2:
                 result_name = 'acceleration_scaled_response_spectra_abs'
             elif self.thermal == 4:
                 result_name = 'acceleration_scaled_response_spectra_nrl'
@@ -1029,7 +1033,7 @@ class OUG(OP2Common):
             raise NotImplementedError(msg)
 
         if self.thermal == 0:
-            if self.table_name in [b'OUGV1', b'OUGV2', b'ROUGV1', b'ROUGV2', b'OAG1', b'BOUGV1', b'OUXY1', b'OUXY2']:
+            if self.table_name in [b'OUGV1', b'OUGV2', b'ROUGV1', b'ROUGV2', b'OAG1', b'BOUGV1', b'OUXY1', b'OUXY2', b'OUPV1']:
                 assert result_name is not None, self.table_name
                 if self._results.is_not_saved(result_name):
                     return ndata

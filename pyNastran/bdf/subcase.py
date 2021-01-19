@@ -538,7 +538,8 @@ class Subcase:
             print(msg)
             print(data_code)
             raise RuntimeError(data_code)
-        raise RuntimeError(data_code)
+        log.error(str(data_code))
+        #raise RuntimeError(data_code)
 
     def __contains__(self, param_name: str) -> bool:
         """

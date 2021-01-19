@@ -341,7 +341,7 @@ class OQG(OP2Common):
                 result_name = 'spc_forces'
             #elif self.table_name in [b'OQGV1']:
                 #result_name = 'spc_forces_v'
-            elif self.table_name in [b'OQGV1']:
+            elif self.table_name in [b'OQGV1', b'OQP1']:
                 result_name = 'spc_forces'
             else:
                 raise NotImplementedError(self.table_name_str)

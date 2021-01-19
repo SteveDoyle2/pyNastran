@@ -16,6 +16,7 @@ from qtpy.QtWidgets import (
     QLabel, QPushButton, QGridLayout, QApplication, QHBoxLayout, QVBoxLayout,
     QSpinBox, QDoubleSpinBox, QColorDialog, QLineEdit, QCheckBox)
 
+from pyNastran.gui.utils.locale import func_str, float_locale
 from pyNastran.gui.utils.qt.pydialog import PyDialog, make_font, check_color
 from pyNastran.gui.utils.qt.qpush_button_color import QPushButtonColor
 from pyNastran.gui.menus.menu_utils import eval_float_from_string
@@ -200,12 +201,12 @@ class PreferencesWindow(PyDialog):
         #-----------------------------------------------------------------------
         # Clipping Min
         self.clipping_min_label = QLabel("Clipping Min:")
-        self.clipping_min_edit = QLineEdit(str(self._default_clipping_min))
+        self.clipping_min_edit = QLineEdit(func_str(self._default_clipping_min))
         self.clipping_min_button = QPushButton("Default")
 
         # Clipping Max
         self.clipping_max_label = QLabel("Clipping Max:")
-        self.clipping_max_edit = QLineEdit(str(self._default_clipping_max))
+        self.clipping_max_edit = QLineEdit(func_str(self._default_clipping_max))
         self.clipping_max_button = QPushButton("Default")
 
         #-----------------------------------------------------------------------
@@ -597,7 +598,7 @@ class PreferencesWindow(PyDialog):
             value = int(self.annotation_size_edit.text())
         self._annotation_size = value
         #self.on_apply(force=True)
-        #self.min_edit.setText(str(self._default_min))
+        #self.min_edit.setText(func_str(self._default_min))
         #self.min_edit.setStyleSheet("QLineEdit{background: white;}")
         self.update_annotation_size_color()
 
@@ -725,7 +726,7 @@ class PreferencesWindow(PyDialog):
         return True, color_int, color_float
 
     def on_picker_size(self):
-        self._picker_size = float(self.picker_size_edit.text())
+        self._picker_size = float_locale(self.picker_size_edit.text())
         if self.win_parent is not None:
             self.win_parent.element_picker_size = self._picker_size / 100.
         #self.on_apply(force=True)
@@ -770,11 +771,11 @@ class PreferencesWindow(PyDialog):
         self.on_annotation_size(self._default_annotation_size)
 
     def on_default_clipping_min(self):
-        self.clipping_min_edit.setText(str(self._default_clipping_min))
+        self.clipping_min_edit.setText(func_str(self._default_clipping_min))
         self.clipping_min_edit.setStyleSheet("QLineEdit{background: white;}")
 
     def on_default_clipping_max(self):
-        self.clipping_max_edit.setText(str(self._default_clipping_max))
+        self.clipping_max_edit.setText(func_str(self._default_clipping_max))
         self.clipping_max_edit.setStyleSheet("QLineEdit{background: white;}")
 
     def on_validate(self):
@@ -823,7 +824,7 @@ class PreferencesWindow(PyDialog):
 
 def check_float(cell):
     text = cell.text()
-    value = float(text)
+    value = float_locale(text)
     return value, True
 
 def check_label_float(cell):

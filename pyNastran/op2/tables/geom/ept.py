@@ -2742,7 +2742,7 @@ class EPT(GeomCommon):
                 self.log.error(f'PSHELL is also {propi.type} (skipping PSHELL):\n{propi}{prop}')
                 nproperties -= 1
                 continue
-
+            #continue
             if max(pid, mid1, mid2, mid3, mid4) > 1e8:
                 self.big_properties[pid] = prop
             else:
