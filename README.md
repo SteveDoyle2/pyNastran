@@ -1,13 +1,13 @@
 
-|  Version  | Docs  | Status |
-| :--- 	  | :--- 	  | :--- 	  |
-|  [![PyPi Version](https://img.shields.io/pypi/v/pynastran.svg)](https://pypi.python.org/pypi/pyNastran) | [docs](https://pynastran-git.readthedocs.io/en/1.3/) |  [![Coverage Status](https://codecov.io/gh/SteveDoyle2/pyNastran/branch/1.3/graph/badge.svg)](https://codecov.io/gh/SteveDoyle2/pyNastran/branch/1.3) |
-|   Main/Dev | [![Documentation Status](https://readthedocs.org/projects/pynastran-git/badge/?version=latest)](http://pynastran-git.readthedocs.io/en/latest/?badge=latest) | [![Linux Status](https://github.com/SteveDoyle2/pyNastran/workflows/CI/badge.svg)](https://github.com/SteveDoyle2/pyNastran/actions?query=workflow%3ACI+branch%3Amaster)  [![Coverage Status](https://codecov.io/gh/SteveDoyle2/pyNastran/branch/master/graph/badge.svg)](https://codecov.io/gh/SteveDoyle2/pyNastran) |
+Main/dev: 
+[![Documentation Status](https://readthedocs.org/projects/pynastran-git/badge/?version=latest)](http://pynastran-git.readthedocs.io/en/latest/?badge=latest) 
+[![Linux Status](https://github.com/SteveDoyle2/pyNastran/workflows/CI/badge.svg)](https://github.com/SteveDoyle2/pyNastran/actions?query=workflow%3ACI+branch%3Amaster)
+[![Coverage Status](https://codecov.io/gh/SteveDoyle2/pyNastran/branch/master/graph/badge.svg)](https://codecov.io/gh/SteveDoyle2/pyNastran) 
+[![Discord](https://img.shields.io/badge/help_forum-discourse-blue.svg)](https://discord.gg/s8RfSkZDHA)
 
 See the  [Installation Instructions](https://pynastran-git.readthedocs.io/en/1.3/installation/installation.html#installation-from-release) 
 for instructions on installing pyNastran.
 
-[Discord](https://img.shields.io/badge/help_forum-discourse-blue.svg)](https://discord.gg/s8RfSkZDHA)
 
 <!---
 .. |DiscourseBadge| image:: https://img.shields.io/badge/help_forum-discourse-blue.svg
@@ -19,10 +19,12 @@ for instructions on installing pyNastran.
 [Download GUI](https://sourceforge.net/projects/pynastran/files/?source=navbar) (latest is from 2020/6/28)
 
 Also, check out the:
+  * [![PyPi Version](https://img.shields.io/pypi/v/pynastran.svg)](https://pypi.python.org/pypi/pyNastran)
   * [Discussion forum](http://groups.google.com/group/pynastran-discuss) (intended for questions about the latest release)
   * [Developer forum](http://groups.google.com/group/pynastran-dev) (intended for questions about the master branch)
   * [Docs](https://pynastran-git.readthedocs.io/en/1.3/)
   * [Code of Conduct](https://github.com/SteveDoyle2/pyNastran/blob/master/code_of_conduct.md)
+  * [Contributing](https://github.com/SteveDoyle2/pyNastran/blob/master/contributing.md)
 
 for more detailed information.
 
