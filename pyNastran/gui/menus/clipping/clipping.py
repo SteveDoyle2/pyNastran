@@ -8,7 +8,7 @@ from qtpy.QtWidgets import (
     QLabel, QLineEdit, QPushButton, QGridLayout, QApplication, QVBoxLayout)
 
 from pyNastran.gui.utils.locale import func_str
-from pyNastran.gui.utils.qt.pydialog import PyDialog
+from pyNastran.gui.utils.qt.pydialog import PyDialog, QFloatEdit
 from pyNastran.gui.utils.qt.checks.qlineedit import check_float
 
 
@@ -45,12 +45,12 @@ class ClippingPropertiesWindow(PyDialog):
     def create_widgets(self):
         # Min
         self.min_label = QLabel("Min:")
-        self.min_edit = QLineEdit(func_str(self._default_min))
+        self.min_edit = QFloatEdit(func_str(self._default_min))
         self.min_button = QPushButton("Default")
 
         # Max
         self.max_label = QLabel("Max:")
-        self.max_edit = QLineEdit(func_str(self._default_max))
+        self.max_edit = QFloatEdit(func_str(self._default_max))
         self.max_button = QPushButton("Default")
 
         # closing

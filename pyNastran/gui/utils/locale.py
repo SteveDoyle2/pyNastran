@@ -1,9 +1,11 @@
+import getpass
 import locale
-locale.setlocale(locale.LC_NUMERIC, "en_DK.UTF-8")
 
-#from qtpy.QtCore import QLocale
-#QLocale.setDefault(QLocale(QLocale.German))
-
+USER_NAME = getpass.getuser()
+if USER_NAME == 'sdoyle': # or 'id' in msg:
+    locale.setlocale(locale.LC_NUMERIC, "en_DK.UTF-8")
+    from qtpy.QtCore import QLocale
+    QLocale.setDefault(QLocale(QLocale.German))
 
 def func_str(value: float) -> str:
     """

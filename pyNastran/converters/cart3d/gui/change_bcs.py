@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from numpy import setdiff1d, unique, array, hstack
+from numpy import setdiff1d, unique, hstack
 
 from qtpy import QtCore
 from qtpy.QtWidgets import (
@@ -10,6 +10,8 @@ from qtpy.QtGui import QColor
 
 from pyNastran.bdf.utils import parse_patran_syntax, parse_patran_syntax_dict
 from pyNastran.bdf.cards.collpase_card import collapse_colon_packs
+from pyNastran.gui.utils.qt.pydialog import QFloatEdit
+from pyNastran.gui.utils.locale import func_str
 
 
 class ChangeBCs(QDialog):
@@ -56,10 +58,9 @@ class ChangeBCs(QDialog):
         self.elements_edit = QLineEdit(str(self._default_elements).strip())
         self.elements_button = QPushButton("Default")
 
-
         # elements
         self.theta = QLabel("Theta Neighbor Max:")
-        self.theta_edit = QLineEdit(str(self._default_theta).strip())
+        self.theta_edit = QFloatEdit(func_str(self._default_theta).strip())
         self.theta_button = QPushButton("Default")
 
         # applies a unique implicitly

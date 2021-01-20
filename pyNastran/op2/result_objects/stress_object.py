@@ -6,11 +6,14 @@ from typing import Dict, Union, Any, TYPE_CHECKING
 import numpy as np
 from pyNastran.femutils.utils import pivot_table
 
+from pyNastran.gui.utils.locale import func_str
 from pyNastran.op2.tables.oes_stressStrain.real.oes_solids import RealSolidArray
 from pyNastran.op2.tables.oes_stressStrain.real.oes_solids_nx import RealSolidArrayNx
 if TYPE_CHECKING: # pragma: no cover
     from pyNastran.op2.op2 import OP2
 
+float_types = (float, np.float32, np.float64)
+int_types = (int, np.int32, np.int64)
 
 #vm_word = get_plate_stress_strain(
     #model, key, is_stress, vm_word, itime,
@@ -327,9 +330,13 @@ def _get_nastran_header(case: Any, dt: Union[int, float], itime: int) -> str:
     except KeyError:
         return 'Static'
 
-    if isinstance(dt, (float, np.float32, np.float64)):
+    if code_name == 'mode' and isinstance(dt, float_types):
+        dt = int(dt)
+        #print(f'code_name={code_name}; dt={dt}; type={type(dt)}')
+
+    if isinstance(dt, float_types):
         header = ' %s = %.4E' % (code_name, dt)
-    elif isinstance(dt, (int, np.int32, np.int64)):
+    elif isinstance(dt, int_types):
         header = ' %s = %i' % (code_name, dt)
     elif dt is None:
         return 'Static'
@@ -342,44 +349,44 @@ def _get_nastran_header(case: Any, dt: Union[int, float], itime: int) -> str:
     #   3. lsdvmns, eigrs
     #   ???
     if hasattr(case, 'mode_cycle'):
-        header += '; freq = %g Hz' % case.mode_cycles[itime]
+        header += '; freq = %s Hz' % func_str(case.mode_cycles[itime])
     elif hasattr(case, 'cycles'):
-        header += '; freq = %g Hz' % case.cycles[itime]
+        header += '; freq = %s Hz' % func_str(case.cycles[itime])
     elif hasattr(case, 'eigis'):
         eigi = case.eigis[itime]
         cycle = np.abs(eigi) / (2. * np.pi)
-        header += '; freq = %g Hz' % cycle
+        header += '; freq = %s Hz' % func_str(cycle)
     elif hasattr(case, 'eigns'):  #  eign is not eigr; it's more like eigi
         eigi = case.eigns[itime] #  but |eigi| = sqrt(|eign|)
         freq = np.sqrt(np.abs(eigi))
         cycle = freq / (2. * np.pi)
-        header += '; freq = %g Hz' % freq
+        header += '; freq = %s Hz' % func_str(freq)
     elif hasattr(case, 'freqs'):
-        header += '; freq = %g Hz' % case.freqs[itime]
+        header += '; freq = %s Hz' % func_str(case.freqs[itime])
 
     elif hasattr(case, 'times'):
         time = case._times[itime]
-        header += '; time = %g sec' % time
+        header += '; time = %s sec' % func_str(time)
     elif hasattr(case, 'dts'):
         time = case._times[itime]
-        header += '; time = %g sec' % time
+        header += '; time = %s sec' % func_str(time)
         #print(header)
 
     elif hasattr(case, 'lftsfqs'):
         step = case.lftsfqs[itime]
-        header += '; step = %g' % step
+        header += '; step = %s' % func_str(step)
     elif hasattr(case, 'lsdvmns'):
         step = case.lsdvmns[itime]
-        header += '; step = %g' % step
+        header += '; step = %s' % func_str(step)
     elif hasattr(case, 'loadIDs'):
         step = case.loadIDs[itime]
-        header += '; step = %g' % step
+        header += '; step = %s' % func_str(step)
     elif hasattr(case, 'loadFactors'):
         step = case.loadFactors[itime]
-        header += '; step = %g' % step
+        header += '; step = %s' % func_str(step)
     elif hasattr(case, 'load_steps'):
         step = case.load_steps[itime]
-        header += '; step = %g' % step
+        header += '; step = %s' % func_str(step)
     else:
         msg = 'unhandled case; header=%r\n%s' % (header, str(case))
         print(msg)

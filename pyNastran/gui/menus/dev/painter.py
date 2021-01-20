@@ -1,10 +1,16 @@
-from pyNastran.gui.menus.manage_actors import SingleChoiceQTableView
-from PyQt4 import QtCore, QtGui
-from QtGui import QColorDialog
-from pyNastran.gui.utils.qt.pydialog import check_float
+from pyNastran.gui.menus.edit_geometry_properties.manage_actors import SingleChoiceQTableView, AltGeometry, Model
+from qtpy import QtCore, QtGui
+from qtpy.QtWidgets import (
+    QLabel, QLineEdit, QPushButton, QCheckBox, QSpinBox,
+    QDoubleSpinBox, QColorDialog, QApplication,
+    QHBoxLayout, QGridLayout, QVBoxLayout, QButtonGroup)
+from pyNastran.gui.utils.locale import func_str
+from pyNastran.gui.utils.qt.pydialog import QDialog, QFloatEdit
+#from pyNastran.gui.utils.qt.
+#check_float
 
 
-class EditBoundaryConditions(QtGui.QDialog):
+class EditBoundaryConditions(QDialog):
     def __init__(self, data, win_parent=None):
         """
         +---------+
@@ -25,7 +31,7 @@ class EditBoundaryConditions(QtGui.QDialog):
         | Apply  OK  Cancel |
         +-------------------+
         """
-        QtGui.QDialog.__init__(self, win_parent)
+        QDialog.__init__(self, win_parent)
         self.setWindowTitle('Edit Boundary Conditions')
 
         #default
@@ -43,7 +49,7 @@ class EditBoundaryConditions(QtGui.QDialog):
         table_model = Model(items, header_labels, self)
         view = SingleChoiceQTableView(self) #Call your custom QTableView here
         view.setModel(table_model)
-        view.horizontalHeader().setResizeMode(QtGui.QHeaderView.Stretch)
+        #view.horizontalHeader().setResizeMode(QtGui.QHeaderView.Stretch)  #TODO: fixme
         self.table = view
 
         actor_obj = data[self.active_key]
@@ -62,12 +68,12 @@ class EditBoundaryConditions(QtGui.QDialog):
         header.setStretchLastSection(True)
 
         self._default_is_apply = False
-        self.name = QtGui.QLabel("Name:")
-        self.name_edit = QtGui.QLineEdit(str(name))
+        self.name = QLabel("Name:")
+        self.name_edit = QLineEdit(str(name))
         self.name_edit.setDisabled(True)
 
-        self.color = QtGui.QLabel("Color:")
-        self.color_edit = QtGui.QPushButton()
+        self.color = QLabel("Color:")
+        self.color_edit = QPushButton()
         #self.color_edit.setFlat(True)
 
         color = self.out_data[self.active_key].color
@@ -86,15 +92,15 @@ class EditBoundaryConditions(QtGui.QDialog):
                                       "}")
 
 
-        self.opacity = QtGui.QLabel("Opacity:")
-        self.opacity_edit = QtGui.QDoubleSpinBox(self)
+        self.opacity = QLabel('Opacity:')
+        self.opacity_edit = QDoubleSpinBox(self)
         self.opacity_edit.setRange(0.1, 1.0)
         self.opacity_edit.setDecimals(1)
         self.opacity_edit.setSingleStep(0.1)
         self.opacity_edit.setValue(opacity)
 
-        self.line_width = QtGui.QLabel("Line Width:")
-        self.line_width_edit = QtGui.QSpinBox(self)
+        self.line_width = QLabel('Line Width:')
+        self.line_width_edit = QSpinBox(self)
         self.line_width_edit.setRange(1, 10)
         self.line_width_edit.setSingleStep(1)
         self.line_width_edit.setValue(line_width)
@@ -102,8 +108,8 @@ class EditBoundaryConditions(QtGui.QDialog):
             self.line_width.setEnabled(False)
             self.line_width_edit.setEnabled(False)
 
-        self.point_size = QtGui.QLabel("Point Size:")
-        self.point_size_edit = QtGui.QSpinBox(self)
+        self.point_size = QLabel('Point Size:')
+        self.point_size_edit = QSpinBox(self)
         self.point_size_edit.setRange(1, 10)
         self.point_size_edit.setSingleStep(1)
         self.point_size_edit.setValue(point_size)
@@ -112,18 +118,18 @@ class EditBoundaryConditions(QtGui.QDialog):
             self.point_size_edit.setEnabled(False)
 
         # show/hide
-        self.checkbox_show = QtGui.QCheckBox("Show")
-        self.checkbox_hide = QtGui.QCheckBox("Hide")
+        self.checkbox_show = QCheckBox("Show")
+        self.checkbox_hide = QCheckBox("Hide")
         self.checkbox_show.setChecked(show)
         self.checkbox_hide.setChecked(not show)
 
         # closing
-        self.apply_button = QtGui.QPushButton("Apply")
+        self.apply_button = QPushButton("Apply")
         #if self._default_is_apply:
             #self.apply_button.setDisabled(True)
 
-        self.ok_button = QtGui.QPushButton("OK")
-        self.cancel_button = QtGui.QPushButton("Cancel")
+        self.ok_button = QPushButton("OK")
+        self.cancel_button = QPushButton("Cancel")
 
         self.create_layout()
         self.set_connections()
@@ -135,7 +141,7 @@ class EditBoundaryConditions(QtGui.QDialog):
         old_obj.opacity = self.opacity_edit.value()
         old_obj.is_visible = self.checkbox_show.isChecked()
 
-        name = str(index.data().toString())
+        name = index.data()
         #i = self.keys.index(self.active_key)
 
         self.active_key = name
@@ -180,12 +186,12 @@ class EditBoundaryConditions(QtGui.QDialog):
         #return
 
     def create_layout(self):
-        ok_cancel_box = QtGui.QHBoxLayout()
+        ok_cancel_box = QHBoxLayout()
         ok_cancel_box.addWidget(self.apply_button)
         ok_cancel_box.addWidget(self.ok_button)
         ok_cancel_box.addWidget(self.cancel_button)
 
-        grid = QtGui.QGridLayout()
+        grid = QGridLayout()
 
         irow = 0
         grid.addWidget(self.name, irow, 0)
@@ -208,11 +214,11 @@ class EditBoundaryConditions(QtGui.QDialog):
         grid.addWidget(self.point_size_edit, irow, 1)
         irow += 1
 
-        checkboxs = QtGui.QButtonGroup(self)
+        checkboxs = QButtonGroup(self)
         checkboxs.addButton(self.checkbox_show)
         checkboxs.addButton(self.checkbox_hide)
 
-        vbox = QtGui.QVBoxLayout()
+        vbox = QVBoxLayout()
         vbox.addWidget(self.table)
         vbox.addLayout(grid)
 
@@ -220,7 +226,7 @@ class EditBoundaryConditions(QtGui.QDialog):
             vbox.addWidget(self.checkbox_show)
             vbox.addWidget(self.checkbox_hide)
         else:
-            vbox1 = QtGui.QVBoxLayout()
+            vbox1 = QVBoxLayout()
             vbox1.addWidget(self.checkbox_show)
             vbox1.addWidget(self.checkbox_hide)
             vbox.addLayout(vbox1)
@@ -232,18 +238,30 @@ class EditBoundaryConditions(QtGui.QDialog):
 
     def set_connections(self):
         """creates the actions for the menu"""
-        self.connect(self.opacity_edit, QtCore.SIGNAL('clicked()'), self.on_opacity)
-        self.connect(self.line_width, QtCore.SIGNAL('clicked()'), self.on_line_width)
-        self.connect(self.point_size, QtCore.SIGNAL('clicked()'), self.on_point_size)
-        self.connect(self.color_edit, QtCore.SIGNAL('clicked()'), self.on_color)
-        self.connect(self.checkbox_show, QtCore.SIGNAL('clicked()'), self.on_show)
-        self.connect(self.checkbox_hide, QtCore.SIGNAL('clicked()'), self.on_hide)
+        self.opacity_edit.valueChanged.connect(self.on_opacity)        # clicked?
+        self.line_width_edit.valueChanged.connect(self.on_line_width)  # clicked?
+        self.point_size_edit.valueChanged.connect(self.on_point_size)  # clicked?
+        self.color_edit.clicked.connect(self.on_color)
+        self.checkbox_show.clicked.connect(self.on_show)
+        self.checkbox_hide.clicked.connect(self.on_hide)
+        #self.opacity_edit.clicked.connect(self.on_opacity)
+
+        #self.connect(self.opacity_edit, QtCore.SIGNAL('clicked()'), self.on_opacity)
+        #self.connect(self.line_width, QtCore.SIGNAL('clicked()'), self.on_line_width)
+        #self.connect(self.point_size, QtCore.SIGNAL('clicked()'), self.on_point_size)
+        #self.connect(self.color_edit, QtCore.SIGNAL('clicked()'), self.on_color)
+        #self.connect(self.checkbox_show, QtCore.SIGNAL('clicked()'), self.on_show)
+        #self.connect(self.checkbox_hide, QtCore.SIGNAL('clicked()'), self.on_hide)
         #self.connect(self.check_apply, QtCore.SIGNAL('clicked()'), self.on_check_apply)
 
-        self.connect(self.apply_button, QtCore.SIGNAL('clicked()'), self.on_apply)
-        self.connect(self.ok_button, QtCore.SIGNAL('clicked()'), self.on_ok)
-        self.connect(self.cancel_button, QtCore.SIGNAL('clicked()'), self.on_cancel)
-        self.connect(self, QtCore.SIGNAL('triggered()'), self.closeEvent)
+        self.apply_button.clicked.connect(self.on_apply)
+        self.ok_button.clicked.connect(self.on_ok)
+        self.cancel_button.clicked.connect(self.on_cancel)
+
+        #self.connect(self.apply_button, QtCore.SIGNAL('clicked()'), self.on_apply)
+        #self.connect(self.ok_button, QtCore.SIGNAL('clicked()'), self.on_ok)
+        #self.connect(self.cancel_button, QtCore.SIGNAL('clicked()'), self.on_cancel)
+        #self.connect(self, QtCore.SIGNAL('triggered()'), self.closeEvent)
 
     def keyPressEvent(self, event):
         if event.key() == QtCore.Qt.Key_Escape:
@@ -374,7 +392,7 @@ def main():  # pragma: no cover
     import sys
     # Someone is launching this directly
     # Create the QApplication
-    app = QtGui.QApplication(sys.argv)
+    app = QApplication(sys.argv)
     #The Main window
     #g = GeometryHandle()
     #g.add('main', color=(0, 0, 0), line_thickness=0.0)
@@ -393,7 +411,7 @@ def main():  # pragma: no cover
         'caero' : AltGeometry(parent, 'caero', color=blue, line_width=2, opacity=0.1),
         'main' : AltGeometry(parent, 'main', color=red, line_width=1, opacity=0.0),
     }
-    main_window = EditGroupProperties(d, win_parent=None)
+    main_window = EditBoundaryConditions(d, win_parent=None)
     main_window.show()
     # Enter the main loop
     app.exec_()

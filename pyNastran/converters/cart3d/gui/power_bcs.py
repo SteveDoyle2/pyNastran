@@ -12,8 +12,9 @@ from qtpy.QtWidgets import (
     QVBoxLayout, QGridLayout, QPushButton, QHeaderView,
 )
 from qtpy import QtGui
+from pyNastran.gui.utils.locale import func_str
 from pyNastran.gui.gui_objects.alt_geometry_storage import AltGeometry
-from pyNastran.gui.menus.manage_actors import Model, SingleChoiceQTableView
+from pyNastran.gui.menus.edit_geometry_properties.manage_actors import Model, SingleChoiceQTableView
 #from pyNastran.gui.qutils.pydialog import check_format
 
 
@@ -91,13 +92,13 @@ class BreakSurfaceMenu(QDialog):
         pick_angle = 20.0
         region_id = 4
         all_regions = True
-        self.region_id = QLabel("Region ID:")
+        self.region_id = QLabel('Region ID:')
         self.region_id_edit = QSpinBox(self)
         self.region_id_edit.setRange(1, nregions_max)
         self.region_id_edit.setSingleStep(1)
         self.region_id_edit.setValue(region_id)
 
-        self.pick_angle = QLabel("Pick Angle:")
+        self.pick_angle = QLabel('Pick Angle:')
         self.pick_angle_edit = QDoubleSpinBox(self)
         self.pick_angle_edit.setRange(0.0, 360.0)
         self.pick_angle_edit.setDecimals(3)
@@ -105,29 +106,29 @@ class BreakSurfaceMenu(QDialog):
         self.pick_angle_edit.setValue(pick_angle)
 
         # region IDs/all
-        self.checkbox_region_ids = QCheckBox("Region IDs")
-        self.checkbox_region_all = QCheckBox("All Regions")
+        self.checkbox_region_ids = QCheckBox('Region IDs')
+        self.checkbox_region_all = QCheckBox('All Regions')
         self.checkbox_region_all.setChecked(all_regions)
         self.checkbox_region_ids.setChecked(not all_regions)
 
         # pick mode
-        self.checkbox_pick_mode = QCheckBox("Pick Mode  (Off=label)")
+        self.checkbox_pick_mode = QCheckBox('Pick Mode  (Off=label)')
         self.checkbox_pick_mode.setChecked(False)
 
         #----------------------------------------------
-        self.nodes_header = QLabel("Single Node:")
-        self.name = QLabel("ID:")
-        self.name_edit = QLineEdit('Node %i' % name)
+        self.nodes_header = QLabel('Single Node:')
+        self.name = QLabel('ID:')
+        self.name_edit = QLineEdit('Node %d' % name)
         self.name_edit.setDisabled(True)
 
         #----------------------------------------------
-        self.location_x = QLabel("X:")
+        self.location_x = QLabel('X:')
         self.location_x_edit = QLineEdit('X')
 
-        self.location_y = QLabel("Y:")
+        self.location_y = QLabel('Y:')
         self.location_y_edit = QLineEdit('Y')
 
-        self.location_z = QLabel("Z:")
+        self.location_z = QLabel('Z:')
         self.location_z_edit = QLineEdit('Z')
 
         #----------------------------------------------
@@ -142,7 +143,7 @@ class BreakSurfaceMenu(QDialog):
         #if self._default_is_apply:
             #self.apply_button.setDisabled(True)
 
-        self.close_button = QPushButton("Close")
+        self.close_button = QPushButton('Close')
 
         self.create_layout()
         #self.set_connections()
@@ -176,9 +177,9 @@ class BreakSurfaceMenu(QDialog):
         elif point[2] == 'S':
             self.radio_spherical.setChecked(True)
 
-        self.location_x_edit.setText(str(point[3]))
-        self.location_y_edit.setText(str(point[4]))
-        self.location_z_edit.setText(str(point[5]))
+        self.location_x_edit.setText(func_str(point[3]))
+        self.location_y_edit.setText(func_str(point[4]))
+        self.location_z_edit.setText(func_str(point[5]))
         #obj = self.out_data[name]
         #point_size = obj.point_size
         #opacity = obj.opacity

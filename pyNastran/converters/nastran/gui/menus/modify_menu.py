@@ -1,3 +1,5 @@
+from __future__ import annotations
+from typing import List, Any, TYPE_CHECKING
 from qtpy import QtGui
 from qtpy.QtWidgets import (
     QVBoxLayout, QPushButton,
@@ -5,8 +7,11 @@ from qtpy.QtWidgets import (
     QGridLayout, QTextEdit, QLineEdit)
 
 import numpy as np
+from pyNastran.gui.utils.locale import func_str
 from pyNastran.gui.utils.qt.pydialog import PyDialog
-from .modify_map import Var, TransposedVars
+from pyNastran.converters.nastran.gui.menus.modify_map import Var, TransposedVars
+if TYPE_CHECKING:
+    from pyNastran.bdf.bdf import BDF
 
 
 class ModifyMenu(PyDialog):
@@ -21,28 +26,15 @@ class ModifyMenu(PyDialog):
 
         self._default_font_size = data['font_size']
 
-        model = data['model']
-        obj = data['obj']
-        variables = data['variables']
+        model = data['model']  # type: BDF
+        obj = data['obj']  # type: ???
+        variables = data['variables']  # type: List[???]
         self.obj = obj
         self.variables = variables
         self.update_function_name = data['update_function_name']
         self.nastran_io = nastran_io
         #--------------------------------------------
-        i = 0
-        grid_objs = {}
-        grid = QGridLayout()
-        for ivar, var in enumerate(variables):
-            if isinstance(var, Var):
-                i = add_scalar_var(model, var, obj, grid, grid_objs, i)
-            elif isinstance(var, TransposedVars):
-                i = add_transposed_vars(model, var, obj, grid, grid_objs, i)
-            elif isinstance(var, list): # row-based list
-                i = add_list_var(model, var, obj, grid, grid_objs, i)
-            else:
-                raise NotImplementedError(var)
-            i += 1
-
+        grid_objs, grid = create_grid_objs_from_model(model, variables, obj)
         self.setWindowTitle('Modify %s' % obj.type)
         self.grid_objs = grid_objs
 
@@ -129,6 +121,23 @@ class ModifyMenu(PyDialog):
         font = QtGui.QFont()
         font.setPointSize(value)
         self.setFont(font)
+
+def create_grid_objs_from_model(model: BDF, variables: List[Any], obj: Any) -> Tuple[Dict[int, int],
+                                                                                     QGridLayout]:
+    i = 0
+    grid_objs = {}
+    grid = QGridLayout()
+    for ivar, var in enumerate(variables):
+        if isinstance(var, Var):
+            i = add_scalar_var(model, var, obj, grid, grid_objs, i)
+        elif isinstance(var, TransposedVars):
+            i = add_transposed_vars(model, var, obj, grid, grid_objs, i)
+        elif isinstance(var, list): # row-based list
+            i = add_list_var(model, var, obj, grid, grid_objs, i)
+        else:
+            raise NotImplementedError(var)
+        i += 1
+    return grid_objs, grid
 
 def cast(value_original, value_new):
     """
@@ -389,7 +398,11 @@ def add_transposed_vars(model, variables_tranposed, obj, grid, grid_objs, i):
 def set_qlineedit(value):
     box = QLineEdit()
     if value is not None:
-        box.setText(str(value))
+        if isinstance(value, float):
+            func_val = func_str(value)
+        else:
+            func_val = str(value)
+        box.setText(func_val)
     return box
 
 def get_pulldown_items(model, var, value):

@@ -17,7 +17,7 @@ from qtpy.QtWidgets import (
 from qtpy.compat import getexistingdirectory
 
 from pyNastran.gui.utils.locale import func_str
-from pyNastran.gui.utils.qt.pydialog import PyDialog, set_combo_box_text
+from pyNastran.gui.utils.qt.pydialog import PyDialog, QFloatEdit, set_combo_box_text
 from pyNastran.gui.utils.qt.checks.qlineedit import (
     check_int, check_float, check_name_str, check_path)
 from pyNastran.gui.utils.qt.dialogs import open_file_dialog
@@ -201,13 +201,13 @@ class AnimationWindow(PyDialog):
             self.icase_vector_edit.setValue(self._icase_vector)
 
         self.scale_label = QLabel("True Scale:")
-        self.scale_edit = QLineEdit(func_str(self._scale))
+        self.scale_edit = QFloatEdit(func_str(self._scale))
         self.scale_button = QPushButton("Default")
         self.scale_edit.setToolTip('Scale factor of the "deflection"')
         self.scale_button.setToolTip('Sets the scale factor of the gif to %s' % self._scale)
 
         self.arrow_scale_label = QLabel("Arrow Scale:")
-        self.arrow_scale_edit = QLineEdit(func_str(self._scale))
+        self.arrow_scale_edit = QFloatEdit(func_str(self._scale))
         self.arrow_scale_button = QPushButton("Default")
         self.arrow_scale_edit.setToolTip('Scale factor of the "arrows"')
         self.arrow_scale_button.setToolTip('Sets the arrow scale factor of the gif to %s' % (
@@ -310,7 +310,7 @@ class AnimationWindow(PyDialog):
 
         self.min_value_enable = QCheckBox()
         self.min_value_label = QLabel('Min Fringe:')
-        self.min_value_edit = QLineEdit('')
+        self.min_value_edit = QFloatEdit('')
         #self.min_value_edit.setRange(1, 1000)
         #self.min_value_edit.setSingleStep(1)
         #self.min_value_edit.setValue(1)
@@ -318,7 +318,7 @@ class AnimationWindow(PyDialog):
 
         self.max_value_enable = QCheckBox()
         self.max_value_label = QLabel('Max Fringe:')
-        self.max_value_edit = QLineEdit('')
+        self.max_value_edit = QFloatEdit('')
         #self.min_value_edit.setRange(1, 1000)  # TODO: update 1000
         #self.min_value_edit.setSingleStep(1)
         #self.min_value_edit.setValue(1)

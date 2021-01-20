@@ -1,8 +1,14 @@
 from qtpy import QtCore, QtGui
+from qtpy.QtWidgets import (
+    QDialog, QApplication, QLabel, QLineEdit, QPushButton,
+    QComboBox, QCheckBox, QHBoxLayout, QVBoxLayout, QGridLayout)
 from pyNastran.gui.menus.menu_utils import eval_float_from_string
-from pyNastran.gui.utils.qt.pydialog import check_float
+from pyNastran.gui.utils.qt.pydialog import QFloatEdit
+from pyNastran.gui.utils.qt.checks.qlineedit import check_float
+from pyNastran.gui.utils.locale import func_str
 
-class BCMap(QtGui.QDialog):
+
+class BCMap(QDialog):
     def __init__(self, data, win_parent=None):
         """
         +--------+
@@ -20,7 +26,7 @@ class BCMap(QtGui.QDialog):
         |    Apply   OK  Cancel  |
         +--------+---------------+
         """
-        QtGui.QDialog.__init__(self, win_parent)
+        QDialog.__init__(self, win_parent)
 
         self._default_name = 'Plane'
         self.out_data = data
@@ -50,67 +56,67 @@ class BCMap(QtGui.QDialog):
 
         self._default_is_apply = True
 
-        self.name = QtGui.QLabel("Title:")
-        self.name_edit = QtGui.QLineEdit(str(self._default_name))
-        self.name_button = QtGui.QPushButton("Default")
+        self.name = QLabel("Title:")
+        self.name_edit = QLineEdit(str(self._default_name))
+        self.name_button = QPushButton("Default")
 
-        self.axis = QtGui.QLabel("Point on ? Axis:")
-        self.combo_axis = QtGui.QComboBox(self)
+        self.axis = QLabel("Point on ? Axis:")
+        self.combo_axis = QComboBox(self)
         self.combo_axis.addItem("X")
         self.combo_axis.addItem("Y")
         self.combo_axis.addItem("Z")
 
-        self.plane = QtGui.QLabel("Point on %s? Plane:" % self._axis)
-        self.combo_plane = QtGui.QComboBox(self)
+        self.plane = QLabel("Point on %s? Plane:" % self._axis)
+        self.combo_plane = QComboBox(self)
         self.combo_plane.addItem("X")
         self.combo_plane.addItem("Y")
         self.combo_plane.addItem("Z")
 
-        self.origin = QtGui.QLabel("Origin:")
-        self.origin_x_edit = QtGui.QLineEdit(str(self._origin_x_default))
-        self.origin_y_edit = QtGui.QLineEdit(str(self._origin_y_default))
-        self.origin_z_edit = QtGui.QLineEdit(str(self._origin_z_default))
-        self.origin_default_button = QtGui.QPushButton("Default")
-        #self.name_button = QtGui.QPushButton("Default")
+        self.origin = QLabel("Origin:")
+        self.origin_x_edit = QFloatEdit(func_str(self._origin_x_default))
+        self.origin_y_edit = QFloatEdit(func_str(self._origin_y_default))
+        self.origin_z_edit = QFloatEdit(func_str(self._origin_z_default))
+        self.origin_default_button = QPushButton("Default")
+        #self.name_button = QPushButton("Default")
 
-        self.normal = QtGui.QLabel("Normal:")
-        self.normal_x_edit = QtGui.QLineEdit(str(self._normal_x_default))
-        self.normal_y_edit = QtGui.QLineEdit(str(self._normal_y_default))
-        self.normal_z_edit = QtGui.QLineEdit(str(self._normal_z_default))
-        self.normal_default_button = QtGui.QPushButton("Default")
+        self.normal = QLabel("Normal:")
+        self.normal_x_edit = QFloatEdit(func_str(self._normal_x_default))
+        self.normal_y_edit = QFloatEdit(func_str(self._normal_y_default))
+        self.normal_z_edit = QFloatEdit(func_str(self._normal_z_default))
+        self.normal_default_button = QPushButton("Default")
 
-        self.snap = QtGui.QLabel("Snap Normal:")
-        self.snap_normal_xy_button = QtGui.QPushButton("XY Plane")
-        self.snap_normal_yz_button = QtGui.QPushButton("YZ Plane")
-        self.snap_normal_xz_button = QtGui.QPushButton("XZ Plane")
-
-
-        self.point_a = QtGui.QLabel("Point on %s Axis:" % self._axis)
-        self.ax_edit = QtGui.QLineEdit(str(self._ax_default))
-        self.ay_edit = QtGui.QLineEdit(str(self._ay_default))
-        self.az_edit = QtGui.QLineEdit(str(self._az_default))
-
-        self.point_b = QtGui.QLabel("Point on %s%s Plane:" % (self._axis, self._plane))
-        self.bx_edit = QtGui.QLineEdit(str(self._bx_default))
-        self.by_edit = QtGui.QLineEdit(str(self._by_default))
-        self.bz_edit = QtGui.QLineEdit(str(self._bz_default))
+        self.snap = QLabel("Snap Normal:")
+        self.snap_normal_xy_button = QPushButton("XY Plane")
+        self.snap_normal_yz_button = QPushButton("YZ Plane")
+        self.snap_normal_xz_button = QPushButton("XZ Plane")
 
 
-        self.check_apply = QtGui.QCheckBox("Automatically apply results")
+        self.point_a = QLabel("Point on %s Axis:" % self._axis)
+        self.ax_edit = QFloatEdit(func_str(self._ax_default))
+        self.ay_edit = QFloatEdit(func_str(self._ay_default))
+        self.az_edit = QFloatEdit(func_str(self._az_default))
+
+        self.point_b = QLabel("Point on %s%s Plane:" % (self._axis, self._plane))
+        self.bx_edit = QFloatEdit(func_str(self._bx_default))
+        self.by_edit = QFloatEdit(func_str(self._by_default))
+        self.bz_edit = QFloatEdit(func_str(self._bz_default))
+
+
+        self.check_apply = QCheckBox("Automatically apply results")
         self.check_apply.setChecked(self._default_is_apply)
 
         # closing
-        self.apply_button = QtGui.QPushButton("Apply")
+        self.apply_button = QPushButton("Apply")
         if self._default_is_apply:
             self.apply_button.setDisabled(True)
 
-        self.ok_button = QtGui.QPushButton("OK")
-        self.cancel_button = QtGui.QPushButton("Cancel")
+        self.ok_button = QPushButton("OK")
+        self.cancel_button = QPushButton("Cancel")
         self.create_layout()
         self.set_connections()
 
     def create_layout(self):
-        ok_cancel_box = QtGui.QHBoxLayout()
+        ok_cancel_box = QHBoxLayout()
         ok_cancel_box.addWidget(self.apply_button)
         ok_cancel_box.addWidget(self.ok_button)
         ok_cancel_box.addWidget(self.cancel_button)
@@ -119,7 +125,7 @@ class BCMap(QtGui.QDialog):
         # x axis; zplane
         mode = 2
 
-        grid = QtGui.QGridLayout()
+        grid = QGridLayout()
 
         irow = 0
         grid.addWidget(self.axis, irow, 0)
@@ -165,7 +171,7 @@ class BCMap(QtGui.QDialog):
 
 
 
-        vbox = QtGui.QVBoxLayout()
+        vbox = QVBoxLayout()
         vbox.addWidget(self.name)
 
         vbox.addLayout(grid)
@@ -181,30 +187,30 @@ class BCMap(QtGui.QDialog):
 
     def set_connections(self):
         """creates the actions for the menu"""
-        self.connect(self.name_button, QtCore.SIGNAL('clicked()'), self.on_default_name)
+        self.name_button.clicked.connect(self.on_default_name)
         #combo.activated[str].connect(self.onActivated)
         self.combo_axis.activated[str].connect(self.on_axis)
         self.combo_plane.activated[str].connect(self.on_plane)
         #self.combo_axis.connect(self.on_axis)
         #self.combo_plane.connect(self.on_plane)
 
-        self.connect(self.origin_default_button, QtCore.SIGNAL('clicked()'), self.on_default_origin)
-        self.connect(self.normal_default_button, QtCore.SIGNAL('clicked()'), self.on_default_normal)
+        self.origin_default_button.clicked.connect(self.on_default_origin)
+        self.normal_default_button.clicked.connect(self.on_default_normal)
 
-        self.connect(self.origin_x_edit, QtCore.SIGNAL('edited()'), self.on_origin_x)
-        self.connect(self.origin_y_edit, QtCore.SIGNAL('edited()'), self.on_origin_y)
-        self.connect(self.origin_z_edit, QtCore.SIGNAL('edited()'), self.on_origin_z)
+        self.origin_x_edit.textChanged.connect(self.on_origin_x)  # was edited...
+        self.origin_y_edit.textChanged.connect(self.on_origin_y)  # was edited...
+        self.origin_z_edit.textChanged.connect(self.on_origin_z)  # was edited...
 
-        self.connect(self.snap_normal_xy_button, QtCore.SIGNAL('clicked()'), self.on_snap_xy)
-        self.connect(self.snap_normal_yz_button, QtCore.SIGNAL('clicked()'), self.on_snap_yz)
-        self.connect(self.snap_normal_xz_button, QtCore.SIGNAL('clicked()'), self.on_snap_xz)
+        self.snap_normal_xy_button.clicked.connect(self.on_snap_xy)
+        self.snap_normal_yz_button.clicked.connect(self.on_snap_yz)
+        self.snap_normal_xz_button.clicked.connect(self.on_snap_xz)
 
 
-        self.connect(self.check_apply, QtCore.SIGNAL('clicked()'), self.on_check_apply)
+        self.check_apply.clicked.connect(self.on_check_apply)
 
-        self.connect(self.apply_button, QtCore.SIGNAL('clicked()'), self.on_apply)
-        self.connect(self.ok_button, QtCore.SIGNAL('clicked()'), self.on_ok)
-        self.connect(self.cancel_button, QtCore.SIGNAL('clicked()'), self.on_cancel)
+        self.apply_button.clicked.connect(self.on_apply)
+        self.ok_button.clicked.connect(self.on_ok)
+        self.cancel_button.clicked.connect(self.on_cancel)
 
     def on_axis(self, text):
         #print(self.combo_axis.itemText())
@@ -222,19 +228,19 @@ class BCMap(QtGui.QDialog):
         self.apply_button.setDisabled(is_checked)
 
     def on_snap_xy(self):
-        self.normal_x_edit.setText(str(0.0))
-        self.normal_y_edit.setText(str(0.0))
-        self.normal_z_edit.setText(str(1.0))
+        self.normal_x_edit.setText(func_str(0.0))
+        self.normal_y_edit.setText(func_str(0.0))
+        self.normal_z_edit.setText(func_str(1.0))
 
     def on_snap_yz(self):
-        self.normal_x_edit.setText(str(1.0))
-        self.normal_y_edit.setText(str(0.0))
-        self.normal_z_edit.setText(str(0.0))
+        self.normal_x_edit.setText(func_str(1.0))
+        self.normal_y_edit.setText(func_str(0.0))
+        self.normal_z_edit.setText(func_str(0.0))
 
     def on_snap_xz(self):
-        self.normal_x_edit.setText(str(0.0))
-        self.normal_y_edit.setText(str(1.0))
-        self.normal_z_edit.setText(str(0.0))
+        self.normal_x_edit.setText(func_str(0.0))
+        self.normal_y_edit.setText(func_str(1.0))
+        self.normal_z_edit.setText(func_str(0.0))
 
     def on_origin_x(self):
         _on_float(self.origin_x_edit)
@@ -338,7 +344,7 @@ def main():  # pragma: no cover
     import sys
     # Someone is launching this directly
     # Create the QApplication
-    app = QtGui.QApplication(sys.argv)
+    app = QApplication(sys.argv)
     #The Main window
     d = {
         'name' : 'plane_test',
