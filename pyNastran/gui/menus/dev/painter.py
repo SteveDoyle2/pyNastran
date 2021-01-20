@@ -4,7 +4,7 @@ from qtpy.QtWidgets import (
     QLabel, QLineEdit, QPushButton, QCheckBox, QSpinBox,
     QDoubleSpinBox, QColorDialog, QApplication,
     QHBoxLayout, QGridLayout, QVBoxLayout, QButtonGroup)
-from pyNastran.gui.utils.locale import func_str
+from pyNastran.utils.locale import func_str
 from pyNastran.gui.utils.qt.pydialog import QDialog, QFloatEdit
 #from pyNastran.gui.utils.qt.
 #check_float

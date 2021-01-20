@@ -6,7 +6,7 @@ from typing import Dict, Union, Any, TYPE_CHECKING
 import numpy as np
 from pyNastran.femutils.utils import pivot_table
 
-from pyNastran.gui.utils.locale import func_str
+from pyNastran.utils.locale import func_str
 from pyNastran.op2.tables.oes_stressStrain.real.oes_solids import RealSolidArray
 from pyNastran.op2.tables.oes_stressStrain.real.oes_solids_nx import RealSolidArrayNx
 if TYPE_CHECKING: # pragma: no cover

@@ -7,7 +7,7 @@ from qtpy import QtCore
 from qtpy.QtWidgets import (
     QLabel, QLineEdit, QPushButton, QGridLayout, QApplication, QVBoxLayout)
 
-from pyNastran.gui.utils.locale import func_str
+from pyNastran.utils.locale import func_str
 from pyNastran.gui.utils.qt.pydialog import PyDialog, QFloatEdit
 from pyNastran.gui.utils.qt.checks.qlineedit import check_float
 

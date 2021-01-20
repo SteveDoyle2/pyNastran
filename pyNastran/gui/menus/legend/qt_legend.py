@@ -13,7 +13,7 @@ from qtpy.QtWidgets import (
     QButtonGroup, QGridLayout, QHBoxLayout, QVBoxLayout)
 
 from pyNastran.utils.numpy_utils import float_types
-from pyNastran.gui.utils.locale import func_str
+from pyNastran.utils.locale import func_str
 from pyNastran.gui.utils.colormaps import colormap_keys
 from pyNastran.gui.utils.qt.pydialog import PyDialog, QIntEdit, QFloatEdit
 from pyNastran.gui.utils.qt.checks.qlineedit import (

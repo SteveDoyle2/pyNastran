@@ -12,7 +12,7 @@ from qtpy.QtWidgets import (
     QVBoxLayout, QGridLayout, QPushButton, QHeaderView,
 )
 from qtpy import QtGui
-from pyNastran.gui.utils.locale import func_str
+from pyNastran.utils.locale import func_str
 from pyNastran.gui.gui_objects.alt_geometry_storage import AltGeometry
 from pyNastran.gui.menus.edit_geometry_properties.manage_actors import Model, SingleChoiceQTableView
 #from pyNastran.gui.qutils.pydialog import check_format

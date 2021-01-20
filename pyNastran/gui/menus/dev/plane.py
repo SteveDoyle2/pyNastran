@@ -5,7 +5,7 @@ from qtpy.QtWidgets import (
 from pyNastran.gui.menus.menu_utils import eval_float_from_string
 from pyNastran.gui.utils.qt.pydialog import QFloatEdit
 from pyNastran.gui.utils.qt.checks.qlineedit import check_float
-from pyNastran.gui.utils.locale import func_str
+from pyNastran.utils.locale import func_str
 
 
 class BCMap(QDialog):

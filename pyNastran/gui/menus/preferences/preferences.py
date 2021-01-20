@@ -16,7 +16,7 @@ from qtpy.QtWidgets import (
     QLabel, QPushButton, QGridLayout, QApplication, QHBoxLayout, QVBoxLayout,
     QSpinBox, QDoubleSpinBox, QColorDialog, QLineEdit, QCheckBox)
 
-from pyNastran.gui.utils.locale import func_str, float_locale
+from pyNastran.utils.locale import func_str, float_locale
 from pyNastran.gui.utils.qt.pydialog import PyDialog, make_font, check_color
 from pyNastran.gui.utils.qt.qpush_button_color import QPushButtonColor
 from pyNastran.gui.menus.menu_utils import eval_float_from_string

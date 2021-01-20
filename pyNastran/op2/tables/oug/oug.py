@@ -233,7 +233,16 @@ class OUG(OP2Common):
             self.binary_debug.write('  isubcase       = %r\n' % self.isubcase)
         self._read_title(data)
         self._write_debug_bits()
+        self._correct_eigenvalue()
 
+    def _correct_eigenvalue(self):
+        """Nastran 95 gets the frequency wrong"""
+        if self._nastran_format == 'nasa95' and self.analysis_code == 2:  # real eigenvalues
+            #print(self.mode, self.eign, self.mode_cycle)
+            # sqrt(lambda) = omega = 2*pi*f
+            freq = (self.eign) ** 0.5 / (2 * np.pi)
+            self.mode_cycle = freq
+            self.data_code['mode_cycle'] = freq
 
     def _read_oug2_3(self, data: bytes, ndata: int):
         """reads the SORT2 version of table 4 (the data table)"""

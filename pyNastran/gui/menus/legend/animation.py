@@ -16,7 +16,7 @@ from qtpy.QtWidgets import (
     QCheckBox, QGroupBox, QComboBox, QFileDialog)
 from qtpy.compat import getexistingdirectory
 
-from pyNastran.gui.utils.locale import func_str
+from pyNastran.utils.locale import func_str
 from pyNastran.gui.utils.qt.pydialog import PyDialog, QFloatEdit, set_combo_box_text
 from pyNastran.gui.utils.qt.checks.qlineedit import (
     check_int, check_float, check_name_str, check_path)

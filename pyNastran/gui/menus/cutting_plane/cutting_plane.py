@@ -17,7 +17,7 @@ from qtpy.QtWidgets import (
     QLabel, QPushButton, QGridLayout, QApplication, QHBoxLayout, QVBoxLayout,
     QColorDialog, QLineEdit, QCheckBox, QComboBox)
 
-from pyNastran.gui.utils.locale import func_str
+from pyNastran.utils.locale import func_str
 from pyNastran.gui.utils.qt.pydialog import PyDialog, QFloatEdit, check_color
 from pyNastran.gui.utils.qt.qpush_button_color import QPushButtonColor
 from pyNastran.gui.utils.qt.dialogs import save_file_dialog

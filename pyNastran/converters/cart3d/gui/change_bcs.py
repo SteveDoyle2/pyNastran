@@ -11,7 +11,7 @@ from qtpy.QtGui import QColor
 from pyNastran.bdf.utils import parse_patran_syntax, parse_patran_syntax_dict
 from pyNastran.bdf.cards.collpase_card import collapse_colon_packs
 from pyNastran.gui.utils.qt.pydialog import QFloatEdit
-from pyNastran.gui.utils.locale import func_str
+from pyNastran.utils.locale import func_str
 
 
 class ChangeBCs(QDialog):

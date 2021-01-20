@@ -7,7 +7,7 @@ from qtpy.QtWidgets import (
     QGridLayout, QTextEdit, QLineEdit)
 
 import numpy as np
-from pyNastran.gui.utils.locale import func_str
+from pyNastran.utils.locale import func_str
 from pyNastran.gui.utils.qt.pydialog import PyDialog
 from pyNastran.converters.nastran.gui.menus.modify_map import Var, TransposedVars
 if TYPE_CHECKING:

@@ -11,7 +11,7 @@ from qtpy.compat import getsavefilename
 
 from pyNastran.utils import check_path
 from pyNastran.utils.numpy_utils import integer_types
-from pyNastran.gui.utils.locale import func_str
+from pyNastran.utils.locale import func_str
 from pyNastran.gui import font_file
 from pyNastran.gui.gui_objects.coord_properties import CoordProperties
 from pyNastran.gui.utils.vtk.vtk_utils import numpy_to_vtk_points, update_axis_text_size
