@@ -22,10 +22,12 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-         python-version: [3.7, 3.8, 3.9]
+         python-version: [3.7]
+         #python-version: [3.7, 3.8, 3.9]   # TODO: should be enabled...disabled for testing...
          os: [ubuntu-latest]
          # , macos-latest, windows-latest
-         mode: ['latest', 'latest_basic', 'old']
+         #mode: ['latest', 'latest_basic', 'old']  # works...
+         mode: ['latest_pyside_gui', 'latest_pyqt_gui']  # spike...
                 #'latest_pyside_gui', 'latest_pyqt_gui',
                 # 'old', 'old_basic', 'old_pyside_gui', 'old_pyqt_gui'.
          #include:
