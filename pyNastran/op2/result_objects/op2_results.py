@@ -363,10 +363,6 @@ class Force:
         self.cshear_force = {}
         self.cconeax_force = {}
 
-        self.cbeam_force_vu = {}
-        self.vu_tria_force = {}
-        self.vu_quad_force = {}
-
         # solidPressureForces
         self.chexa_pressure_force = {}
         self.cpenta_pressure_force = {}
@@ -394,9 +390,6 @@ class Force:
             # solid pressure forces
             'chexa_pressure_force', 'cpenta_pressure_force',
             'ctetra_pressure_force', 'cpyram_pressure_force',
-
-            # vu-elements
-            'vu_tria_force', 'vu_quad_force', 'cbeam_force_vu',
         ]
         return ['force.' + table for table in tables]
 
@@ -446,10 +439,6 @@ class ThermalLoad:
         self.ctetra_thermal_load_flux = {}
         self.chexa_thermal_load_flux = {}
         self.cpenta_thermal_load_flux = {}
-
-        self.vu_2d_thermal_load = {}
-        self.vu_3d_thermal_load = {}
-        self.vu_beam_thermal_load = {}
         #self.temperatureForces = {}
 
     def get_table_types(self):
@@ -496,11 +485,6 @@ class ThermalLoad:
             'ctetra_thermal_load_flux',
             'chexa_thermal_load_flux',
             'cpenta_thermal_load_flux',
-
-            # vu-elements
-            'vu_2d_thermal_load',
-            'vu_3d_thermal_load',
-            'vu_beam_thermal_load',
         ]
         return ['thermal_load.' + table for table in tables]
 

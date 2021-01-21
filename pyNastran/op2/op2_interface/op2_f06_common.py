@@ -515,29 +515,10 @@ class OP2_F06_Common:
 
     @property
     def cvisc_force(self):
-        return self.op2_results.force.vu_tria_force
-    @property
-    def vu_tria_force(self):
-        return self.op2_results.force.vu_tria_force
-    @property
-    def vu_quad_force(self):
-        return self.op2_results.force.vu_quad_force
-    @property
-    def cbeam_force_vu(self):
-        return self.op2_results.force.cbeam_force_vu
-
+        return self.op2_results.force.cvisc_force
     @cvisc_force.setter
     def cvisc_force(self, cvisc_force):
-        self.op2_results.force.vu_tria_force = cvisc_force
-    @vu_tria_force.setter
-    def vu_tria_force(self, vu_tria_force):
-        self.op2_results.force.vu_tria_force = vu_tria_force
-    @vu_quad_force.setter
-    def vu_quad_force(self, vu_quad_force):
-        self.op2_results.force.vu_quad_force = vu_quad_force
-    @cbeam_force_vu.setter
-    def cbeam_force_vu(self, cbeam_force_vu):
-        self.op2_results.force.cbeam_force_vu = cbeam_force_vu
+        self.op2_results.force.cvisc_force = cvisc_force
 
     @property
     def crod_force(self):

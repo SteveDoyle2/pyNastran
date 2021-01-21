@@ -23,9 +23,53 @@ from pyNastran.gui.menus.results_sidebar_utils import get_cases_from_tree, build
 PKG_PATH = pyNastran.__path__[0]
 MODEL_PATH = os.path.join(PKG_PATH, '..', 'models')
 from pyNastran.gui.gui_objects.gui_result import GuiResult
+from pyNastran.gui.utils.utils import find_next_value_in_sorted_list
 
 
 class GuiUtils(unittest.TestCase):
+    def test_find_next_value_in_sorted_list(self):
+        """"
+        This method is used by the gui to get the next result.
+        We may have missing values because they were deleted.
+
+        """ 
+        # ascending
+        lst = [1, 2, 3, 4, 5]
+        old = 1
+        new = 2
+        value = find_next_value_in_sorted_list(lst, old, new)
+        assert value == 2, value
+
+        lst = [1, 3, 4, 5]
+        old = 1
+        new = 2
+        value = find_next_value_in_sorted_list(lst, old, new)
+        assert value == 3, value
+
+        lst = [1, 3, 4, 5]
+        old = 5
+        new = 6
+        value = find_next_value_in_sorted_list(lst, old, new)
+        assert value == 1, value
+        # ---------------------------------
+        # descending
+        lst = [1, 2, 3, 4, 5]
+        old = 1
+        new = 0
+        value = find_next_value_in_sorted_list(lst, old, new)
+        assert value == 5, value
+
+        old = 2
+        new = 1
+        value = find_next_value_in_sorted_list(lst, old, new)
+        assert value == 1, value
+
+        lst = [1, 2, 4, 5]
+        old = 4
+        new = 3
+        value = find_next_value_in_sorted_list(lst, old, new)
+        assert value == 2, value
+
     def test_gui_result(self):
         """tests GuiResult"""
         subcase_id = 1

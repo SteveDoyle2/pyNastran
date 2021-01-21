@@ -100,28 +100,25 @@ from pyNastran.op2.tables.ogf_gridPointForces.ogf_objects import RealGridPointFo
 from pyNastran.op2.tables.oef_forces.oef_force_objects import (
     FailureIndicesArray,
     RealBendForceArray, RealCBar100ForceArray, RealCBarForceArray, RealCBeamForceArray,
-    RealCBeamForceVUArray, RealCBushForceArray, RealCGapForceArray, RealConeAxForceArray,
-    RealCShearForceArray, RealDamperForceArray, RealForceVU2DArray, RealPlateBilinearForceArray,
+    RealCBushForceArray, RealCGapForceArray, RealConeAxForceArray,
+    RealCShearForceArray, RealDamperForceArray, RealPlateBilinearForceArray,
     RealPlateForceArray, RealRodForceArray, RealSolidPressureForceArray, RealSpringForceArray,
     RealViscForceArray, RealCWeldForceArray, RealCFastForceArrayNX, RealCFastForceArrayMSC,
     RealCBearForceArray,
 )
 from pyNastran.op2.tables.oef_forces.oef_complex_force_objects import (
-    ComplexCBarForceArray, ComplexCBeamForceArray, ComplexCBeamForceVUArray,
+    ComplexCBarForceArray, ComplexCBeamForceArray,
     ComplexCBendForceArray, ComplexCBushForceArray, ComplexCShearForceArray,
     ComplexDamperForceArray, ComplexPlate2ForceArray, ComplexPlateForceArray,
     ComplexRodForceArray, ComplexSolidPressureForceArray, ComplexSpringForceArray,
-    ComplexViscForceArray, ComplexForceVU_2DArray, ComplexCBearForceArray,
+    ComplexViscForceArray, ComplexCBearForceArray,
     ComplexCWeldForceArray,
 )
 from pyNastran.op2.tables.oef_forces.oef_thermal_objects import (
     RealChbdyHeatFluxArray, RealConvHeatFluxArray,
     Real1DHeatFluxArray,
     #RealElementTableArray, RealHeatFluxVUArray,
-    RealHeatFluxVUBeamArray,
-    RealHeatFluxVU3DArray,
     RealHeatFlux_2D_3DArray,
-    RealHeatFluxVUShellArray,
 )
 #from pyNastran.op2.tables.oqg_constraintForces.oqg_thermal_gradient_and_flux import RealTemperatureGradientAndFluxArray
 from pyNastran.utils import check_path
@@ -943,7 +940,6 @@ TABLE_OBJ_MAP = {
     'force.cpenta_pressure_force' : (RealSolidPressureForceArray, ComplexSolidPressureForceArray,),
     'force.chexa_pressure_force' : (RealSolidPressureForceArray, ComplexSolidPressureForceArray,),
     'force.cpyram_pressure_force' : (RealSolidPressureForceArray, ComplexSolidPressureForceArray,),
-    'force.cbeam_force_vu' : (RealCBeamForceVUArray, ComplexCBeamForceVUArray),
 
     'grid_point_surface_stresses' : (GridPointSurfaceStressesArray, ),
     'grid_point_stresses_volume_direct' : (GridPointStressesVolumeDirectArray, ),
@@ -982,9 +978,6 @@ TABLE_OBJ_MAP = {
     'thermal_load.chbdye_thermal_load' :  (RealChbdyHeatFluxArray, ),
     'thermal_load.chbdyp_thermal_load' : (RealChbdyHeatFluxArray, ),
     'thermal_load.chbdyg_thermal_load' : (RealChbdyHeatFluxArray, ),
-    'thermal_load.vu_2d_thermal_load' : (RealHeatFluxVUShellArray, ),
-    'thermal_load.vu_3d_thermal_load' : (RealHeatFluxVU3DArray, ),
-    'thermal_load.vu_beam_thermal_load' : (RealHeatFluxVUBeamArray, ),
 
     # ----------------------------------------------------------
     'thermal_load.crod_thermal_load_flux' :  (Real1DHeatFluxArray, ),
@@ -1009,9 +1002,6 @@ TABLE_OBJ_MAP = {
     'thermal_load.chbdyp_thermal_load_flux' : (RealChbdyHeatFluxArray, ),
     'thermal_load.chbdyg_thermal_load_flux' : (RealChbdyHeatFluxArray, ),
     # ----------------------------------------------------------
-
-    'force.vu_tria_force' : (RealForceVU2DArray, ComplexForceVU_2DArray),
-    'force.vu_quad_force' : (RealForceVU2DArray, ComplexForceVU_2DArray),
 
     'temperatures' : (RealTemperatureArray, ),
     'thermal_gradient_and_flux' : (RealTemperatureGradientAndFluxArray, ),

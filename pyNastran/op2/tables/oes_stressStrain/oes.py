@@ -961,9 +961,9 @@ class OES(OP2Common):
             (190, 3, 87, b'OES1X') : ('NA', 'NA'),
 
             # 191-VUBEAM
-            (191, 1, 60, b'OES1X1') : ('vubeam', 'NA'),
-            (191, 2, 80, b'OES1X') : ('vubeam', 'NA'),
-            (191, 3, 80, b'OES1X') : ('vubeam', 'NA'),
+            #(191, 1, 60, b'OES1X1') : ('vubeam', 'NA'),
+            #(191, 2, 80, b'OES1X') : ('vubeam', 'NA'),
+            #(191, 3, 80, b'OES1X') : ('vubeam', 'NA'),
 
             # 203-SLIF1D?
             (203, 1, 14, b'OESNLBR') : ('slif1d', 'NA'),
@@ -1674,19 +1674,11 @@ class OES(OP2Common):
             n, nelements, ntotal = self._oes_cbar_100(data, ndata, dt, is_magnitude_phase,
                                                       result_type, prefix, postfix)
 
-        elif self.element_type in [145, 146, 147]:
-            n, nelements, ntotal = self._oes_vu_solid(data, ndata, dt, is_magnitude_phase, stress_name,
-                                                      result_type, prefix, postfix)
-
         #-----------------------------------------------------------------------
 
         elif self.element_type == 139:
             n, nelements, ntotal = self._oes_hyperelastic_quad(data, ndata, dt, is_magnitude_phase,
                                                                result_type, prefix, postfix)
-
-        elif self.element_type == 189: # VUQUAD
-            n, nelements, ntotal = self._oes_vu_quad(data, ndata, dt, is_magnitude_phase,
-                                                     result_type, prefix, postfix)
 
         elif self.element_type == 226:
             # 226-BUSHNL
@@ -1769,6 +1761,11 @@ class OES(OP2Common):
             # 232-QUADRLC
             # 235-CQUADR
             return self._not_implemented_or_skip(data, ndata, self.code_information())
+        elif self.element_type in [145, 146, 147, # VU-solid
+                                   189]:  # VUQUAD
+            # removed
+            return self._not_implemented_or_skip(data, ndata, msg)
+
         else:
             #msg = 'sort1 Type=%s num=%s' % (self.element_name, self.element_type)
             msg = self.code_information()
@@ -7043,102 +7040,6 @@ class OES(OP2Common):
             raise RuntimeError(self.code_information())
         return n, nelements, ntotal
 
-    def _oes_vu_solid(self, data, ndata, dt, unused_is_magnitude_phase,
-                      unused_stress_name, result_type, unused_prefix, unused_postfix):
-        # TODO: vectorize
-        if self.read_mode == 1:
-            return ndata, None, None
-
-        # 145-VUHEXA  (8 nodes)
-        # 146-VUPENTA (6 nodes)
-        # 147-VUTETRA (4 nodes)
-        self.log.warning(f'skipping oes_vu_solid; {self.element_name}-{self.element_type} '
-                         f'(numwide={self.num_wide})')
-        if self.element_type == 147:
-            etype = 'VUTETRA'
-            nnodes = 4
-            #numwide_a = 2 + (14 - 2) * nnodes  # 50
-            #numwide_b = 2 + (9 - 2) * nnodes  # 30
-            #numwide_c = 2 + 13 * nnodes  # 54
-        elif self.element_type == 146:
-            etype = 'VUPENTA'
-            nnodes = 6
-        elif self.element_type == 145:
-            etype = 'VUHEXA'
-            nnodes = 8
-            # numwide=145
-        else:  # pragma: no cover
-            raise RuntimeError(self.code_information())
-
-        #num_wideA = 2 + 12 * nnodes
-        #ntotal = 8 + 48 * nnodes
-
-        n = 0
-        if self.format_code == 1: # real
-            # assuming TETRA...
-            # TODO: vectorize
-            numwide_a = 2 + (14 - 2) * nnodes  # 50
-            numwide_b = 2 + (9 - 2) * nnodes  # 30
-            numwide_c = 2 + 13 * nnodes  # 54
-            if self.num_wide == numwide_a:
-                ntotal = numwide_a * 4
-                s1 = self.struct_2i
-                s2 = Struct(self._endian + b'i11f')
-                nelements = ndata // ntotal  # 2+16*9 = 146 -> 146*4 = 584
-
-                ntotal1 = 8 * self.factor
-                ntotal2 = 48 * self.factor
-                for unused_i in range(nelements):
-                    edata = data[n:n+ntotal1]
-                    out = s1.unpack(edata)
-                    (eid_device, parent_id) = out
-                    eid, dt = get_eid_dt_from_eid_device(
-                        eid_device, self.nonlinear_factor, self.sort_method)
-
-                    for unused_j in range(nnodes):
-                        edata = data[n:n+ntotal2]
-                        out = s2.unpack(edata)
-                        if self.is_debug_file:
-                            self.binary_debug.write('%s-%s - %s\n' % (etype, self.element_type, str(out)))
-                        assert len(out) == 12
-                        (grid, xnorm, ynorm, znorm, txy, tyz, txz,
-                         prin1, prin2, prin3, smean, vono_roct) = out
-                        del grid, xnorm, ynorm, znorm, txy, tyz, txz
-                        del prin1, prin2, prin3, smean, vono_roct
-                n = ndata
-            elif self.num_wide == numwide_b:
-                ntotal = numwide_b * 4
-                nelements = ndata // ntotal
-                n = nelements * ntotal
-            elif self.num_wide == numwide_c:
-                ntotal = numwide_c * 4
-                nelements = ndata // ntotal
-                n = nelements * ntotal
-            else:
-                msg = f'numwide={self.num_wide} A={numwide_a} B={numwide_b} C={numwide_c}'
-                raise RuntimeError(self.code_information() + msg)
-        elif result_type == 1:  # complex
-            if self.num_wide == 54:  # VU-TETRA
-                pass
-            elif self.num_wide == 80:  # VU-PENTA
-                pass
-            elif self.num_wide == 106:  # VU-HEXA
-                pass
-            else:
-                raise RuntimeError(self.code_information())
-            # C:\NASA\m4\formats\git\examples\move_tpl\pe108p04.op2
-            # analysis_code = 5   Frequency
-            # element_type  = 146 VUPENTA
-            # num_wide      = 80
-        else:
-            raise RuntimeError(self.code_information())
-            #raise RuntimeError(self.code_information())
-            #msg = self.code_information()
-            #raise RuntimeError(msg)
-            #return self._not_implemented_or_skip(data, ndata, msg), None, None
-        return ndata, None, None
-        return n, nelements, ntotal
-
     def _oes_hyperelastic_quad(self, data, ndata, dt, unused_is_magnitude_phase,
                                result_type, prefix, postfix):
         """
@@ -7240,101 +7141,6 @@ class OES(OP2Common):
             raise RuntimeError(self.code_information())
             #msg = 'numwide=%s element_num=%s etype=%s' % (
                 #self.num_wide, self.element_type, self.element_name)
-            #return self._not_implemented_or_skip(data, ndata, msg), None, None
-        return n, nelements, ntotal
-
-    def _oes_vu_quad(self, data, ndata, unused_dt, unused_is_magnitude_phase,
-                     result_type, unused_prefix, unused_postfix):
-        """Adds an adaptive VUQUAD"""
-        n = 0
-        if self.element_type == 189:  # VQUAD
-            if self.read_mode == 1:
-                return ndata, None, None
-            #ntotal = 440  # 6+(33-7)*4 =  -> 110*4 = 440
-            nnodes = 4    # 4 corner points + 1 centroid
-            etype = 'VUQUAD4'
-        #elif self.element_type == 144:  # CQUAD4
-            #ntotal = 440  # 6+(33-7)*4 =  -> 110*4 = 440
-            #nnodes = 4    # 4 corner points
-            #etype = 'CQUAD4'
-        #elif self.element_type == 64:  # CQUAD8
-            #ntotal = 348  # 2+17*5 = 87 -> 87*4 = 348
-            #nnodes = 4    # centroid + 4 corner points
-            #etype = 'CQUAD8'
-        #elif self.element_type == 82:  # CQUADR
-            #ntotal = 348  # 2+17*5 = 87 -> 87*4 = 348
-            #nnodes = 4    # centroid + 4 corner points
-            #etype = 'CQUADR'
-        #elif self.element_type == 75:  # CTRIA6
-            #ntotal = 280  # 2+17*3 = 70 -> 70*4 = 280
-            #nnodes = 3    # centroid + 3 corner points
-            #etype = 'CTRIA6'
-        #elif self.element_type == 70:  # CTRIAR
-            #ntotal = 280  # 2+17*3 = 70 -> 70*4 = 280
-            #nnodes = 3    # centroid + 3 corner points
-            #etype = 'CTRIAR'
-        else:
-            return self._not_implemented_or_skip(data, ndata, self.code_information()), None, None
-
-        numwide_real = 6 + (23 - 6) * nnodes  # real???
-        numwide_imag = 6 + (33 - 6) * nnodes  # imag???
-
-        if result_type == 0 and self.num_wide == numwide_real:  # real???
-            ntotal = numwide_real * 4 * self.factor
-            if self.size == 4:
-                s2 = Struct(self._endian + b'3i4s2i')
-            else:
-                s2 = Struct(self._endian + b'3q8s2q')
-            s3 = Struct(mapfmt(self._endian + b'i16f', self.size))
-            nelements = ndata // ntotal
-            ntotal1 = 24 * self.factor
-            ntotal2 = 68 * self.factor
-            for unused_i in range(nelements):
-                out = s2.unpack(data[n:n + ntotal1])
-                (eid_device, unused_parent, coord, icord, unused_theta, unused_itype) = out
-                n += ntotal1
-                eid, dt = get_eid_dt_from_eid_device(
-                    eid_device, self.nonlinear_factor, self.sort_method)
-                edata = data[n:n + ntotal2]
-                out = s3.unpack(edata)  # len=17*4
-                n += ntotal2
-
-                if self.is_debug_file:
-                    self.binary_debug.write('%s-%s - %s\n' % (etype, self.element_type, str(out)))
-
-                #obj.add_new_node_sort1(dt, eid, parent, coord, icord, theta, itype)
-                #obj.add_new_eid_sort1(eType, dt, eid, parent, coord, icord, theta, itype)
-                for unused_node_id in range(nnodes - 1):  # nodes pts
-                    edata = data[n:n + ntotal2]
-                    n += ntotal2
-                    out = s3.unpack(edata)
-                    if self.is_debug_file:
-                        self.binary_debug.write('              %s\n' % (str(out)))
-
-                    (unused_vuid, unused_dummy, unused_dummy2,
-                     unused_msx, unused_msy, unused_mxy,
-                     unused_dummy3, unused_dummy4, unused_dummy5,
-                     unused_bcx, unused_bcy, unused_bcxy, unused_tyz, unused_tzx,
-                     unused_dummy6, unused_dummy7, unused_dummy8) = out
-                    #obj.add_sort1(vuid, dummy, dummy2, msx, msy, mxy,
-                                   #dummy3, dummy4, dummy5,
-                                   #bcx, bcy, bcxy, tyz, tzx,
-                                   #dummy6, dummy7, dummy8)
-            nelements = None
-            ntotal = None
-            self.log.warning(f'skipping oes_vu_quad; {self.element_name}-{self.element_type} '
-                             f'(numwide={self.num_wide})')
-        elif result_type == 1 and self.num_wide == numwide_imag:
-            ntotal = (numwide_imag * 4) * self.factor
-            nelements = ndata // ntotal
-            n = nelements * ntotal
-            nelements = None
-            ntotal = None
-            self.log.warning(f'skipping oes_vu_quad; {self.element_name}-{self.element_type} '
-                             f'(numwide={self.num_wide})')
-        else:
-            raise RuntimeError(self.code_information())
-            #msg = 'numwide=%s' % self.num_wide
             #return self._not_implemented_or_skip(data, ndata, msg), None, None
         return n, nelements, ntotal
 
