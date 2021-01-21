@@ -152,14 +152,15 @@ jobs:
          pip list
 
       - name: Run No GUI
-        if: ${{ matrix.mode == 'latest' || matrix.mode == 'latest_basic'  || matrix.mode == 'old' }}
+        if: ${{ matrix.python-version == '3.9' || matrix.mode == 'latest' || matrix.mode == 'latest_basic' || matrix.mode == 'old' }}
         run: |
          #if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
          python pyNastran/all_tests_no_gui.py
          coverage run pyNastran/all_tests_no_gui.py
 
+        # 3.9 - No matching distribution found for vtk
       - name: Run GUI
-        if: ${{ matrix.mode == 'latest_pyside_gui' || matrix.mode == 'latest_pyqt_gui' || matrix.mode == 'old_pyside_gui' || matrix.mode == 'old_pyqt_gui' }}
+        if: ${{ matrix.python-version != '3.9' && (matrix.mode == 'latest_pyside_gui' || matrix.mode == 'latest_pyqt_gui' || matrix.mode == 'old_pyside_gui' || matrix.mode == 'old_pyqt_gui') }}
         run: |
          #if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
          python pyNastran/all_tests.py
