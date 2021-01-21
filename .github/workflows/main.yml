@@ -22,12 +22,13 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-         python-version: [3.7]
-         #python-version: [3.7, 3.8, 3.9]   # TODO: should be enabled...disabled for testing...
+         #python-version: [3.7]
+         python-version: [3.7, 3.8, 3.9]   # TODO: should be enabled...disabled for testing...
          os: [ubuntu-latest]
          # , macos-latest, windows-latest
          #mode: ['latest', 'latest_basic', 'old']  # works...
-         mode: ['latest_pyside_gui', 'latest_pyqt_gui']  # spike...
+         mode: ['latest', 'latest_basic', 'old', 'latest_pyqt_gui']  # testing...
+         #mode: ['latest_pyside_gui', 'latest_pyqt_gui']  # spike...
                 #'latest_pyside_gui', 'latest_pyqt_gui',
                 # 'old', 'old_basic', 'old_pyside_gui', 'old_pyqt_gui'.
          #include:
@@ -103,7 +104,6 @@ jobs:
         #
       - name: Install latest packages - ${{ matrix.mode }}
         if: ${{ matrix.mode == 'latest' || matrix.mode == 'latest_pyside_gui' || matrix.mode == 'latest_pyqt_gui' }}
-        #if: matrix.mode == 'latest'
         run: |
           pip install numpy scipy pandas>=0.25 h5py matplotlib
 
