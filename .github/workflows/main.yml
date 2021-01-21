@@ -22,12 +22,13 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-         #python-version: [3.7]
-         python-version: [3.7, 3.8, 3.9]   # TODO: should be enabled...disabled for testing...
+         python-version: [3.9]  # testing
+         #python-version: [3.7, 3.8, 3.9]   # TODO: should be enabled...disabled for testing...
          os: [ubuntu-latest]
          # , macos-latest, windows-latest
          #mode: ['latest', 'latest_basic', 'old']  # works...
-         mode: ['latest', 'latest_basic', 'old', 'latest_pyqt_gui']  # testing...
+         #mode: ['latest', 'latest_basic', 'old', 'latest_pyqt_gui']  # testing...
+         mode: ['latest', 'latest_pyqt_gui']  # testing...
          #mode: ['latest_pyside_gui', 'latest_pyqt_gui']  # spike...
                 #'latest_pyside_gui', 'latest_pyqt_gui',
                 # 'old', 'old_basic', 'old_pyside_gui', 'old_pyqt_gui'.
@@ -113,7 +114,7 @@ jobs:
           pip install PySide2 vtk imageio pillow>5.2,!=7.1.0
 
       - name: Install latest gui packages (PyQt5)
-        if: matrix.mode == 'latest_pyqt_gui'
+        if: ${{ matrix.mode == 'latest_pyqt_gui' && matrix.python-version != '3.9' }}
         run: |
           pip install PyQt5 vtk imageio pillow>5.2,!=7.1.0
 
