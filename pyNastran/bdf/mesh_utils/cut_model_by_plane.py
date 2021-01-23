@@ -36,7 +36,7 @@ def get_nid_cd_xyz_cid0(model: BDF) -> Tuple[NDArrayNint, NDArrayNint,
         cid=0)
     return nids, nid_cd, icd_transform, xyz_cid0
 
-def get_element_centroids(model: BDF) -> Tuple[NDArrayNint, NDArray3float]:
+def get_element_centroids(model: BDF, idtype='int32', fdtype='float32') -> Tuple[NDArrayNint, NDArray3float]:
     """gets the element ids and their centroids"""
     eids = []
     element_centroids_cid0 = []
@@ -44,8 +44,8 @@ def get_element_centroids(model: BDF) -> Tuple[NDArrayNint, NDArray3float]:
         eids.append(eid)
         element_centroids_cid0.append(elem.Centroid())
 
-    eids = np.array(eids, dtype='int32')
-    element_centroids_cid0 = np.array(element_centroids_cid0, dtype='float64')
+    eids = np.array(eids, dtype=idtype)
+    element_centroids_cid0 = np.array(element_centroids_cid0, dtype=fdtype)
     return eids, element_centroids_cid0
 
 

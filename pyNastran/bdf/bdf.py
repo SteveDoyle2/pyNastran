@@ -191,8 +191,11 @@ from .bdf_interface.pybdf import (
     BDFInputPy, _clean_comment, _clean_comment_bulk, EXECUTIVE_CASE_SPACES)
 
 #from .bdf_interface.add_card import CARD_MAP
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     from cpylog import SimpleLogger
+
+CORD = Union[CORD1R, CORD1C, CORD1S,
+             CORD2R, CORD2C, CORD2S]
 
 SOL_700 = {
     ## Explicit Nonlinear (SOL 700)
@@ -3374,7 +3377,8 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
         """
         return get_bdf_stats(self, return_type=return_type)
 
-    def get_displacement_index_xyz_cp_cd(self, fdtype: str='float64', idtype: str='int32',
+    def get_displacement_index_xyz_cp_cd(self, fdtype: str='float64',
+                                         idtype: str='int32',
                                          sort_ids: bool=True) -> Any:
         """
         Get index and transformation matricies for nodes with
@@ -3487,8 +3491,9 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
         return icd_transform, icp_transform, xyz_cp, nid_cp_cd
 
     def get_xyz_in_coord_array(self, cid: int=0,
-                               fdtype: str='float64', idtype: str='int32') -> Tuple[Any, Any, Any,
-                                                                                    Dict[int, Any], Dict[int, Any]]:
+                               fdtype: str='float64',
+                               idtype: str='int32') -> Tuple[np.ndarray, np.ndarray, np.ndarray,
+                                                             Dict[int, np.ndarray], Dict[int, np.ndarray]]:
         """
         Gets the xyzs as an array in an arbitrary coordinate system
 
@@ -3532,8 +3537,12 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
                                                   cid=cid, in_place=False, atol=1e-6)
         return nid_cp_cd, xyz_cid, xyz_cp, icd_transform, icp_transform
 
-    def transform_xyzcp_to_xyz_cid(self, xyz_cp: Any, nids: Any, icp_transform: Any,
-                                   cid: int=0, in_place: bool=False, atol: float=1e-6) -> Any:
+    def transform_xyzcp_to_xyz_cid(self, xyz_cp: np.ndarray,
+                                   nids: np.ndarray,
+                                   icp_transform: Dict[int, np.ndarray],
+                                   cid: int=0,
+                                   in_place: bool=False,
+                                   atol: float=1e-6) -> np.ndarray:
         """
         Vectorized method for calculating node locations in an arbitrary
         coordinate system.

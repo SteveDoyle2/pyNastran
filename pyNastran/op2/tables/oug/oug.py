@@ -950,7 +950,7 @@ class OUG(OP2Common):
         table_code = 10
         """
         self._setup_op2_subcase('velocity')
-        if self.table_name in [b'OUGV1', b'OUGV2', b'BOUGV1']:
+        if self.table_name in [b'OUGV1', b'OUGV2', b'BOUGV1', b'OVG1']:
             assert self.thermal in [0, 1], self.code_information()
             result_name = 'velocities'
         elif self.table_name in [b'OUXY1', b'OUXY2']:

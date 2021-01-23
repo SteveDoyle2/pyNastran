@@ -1,0 +1,67 @@
+$ASSIGN MASTER='S:\beam_ra.MASTER', DELETE
+$ASSIGN DBALL='S:\beam_ra.DBALL', DELETE
+$*
+SOL 101
+$
+$INCLUDE 'pchdispa.alt'
+$*
+CEND
+$*
+$*$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+$*
+$*  CASE CONTROL        
+$*
+$*$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+$*
+TITLE    = Simple Beam Example
+ECHO     = SORT
+$*
+$* GLOBAL CASE
+$*
+SUBCASE 1
+  SPC = 1
+  GPFORCE(PLOT)=ALL
+  ELFORCE(PRINT,PLOT)=ALL
+  STRESS(PRINT,PLOT)=ALL
+  LOAD = 10
+  DISP(PLOT) = ALL
+$*
+$*$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+$*
+$*  BULK DATA           
+$*
+$*$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+$*
+BEGIN BULK
+$*
+$*  PARAM CARDS
+$*
+PARAM   AUTOSPC YES 
+PARAM   GRDPNT         0
+PARAM   K6ROT   100.0000
+$PARAM   OUGCORD GLOBAL
+PARAM   POST          -1
+$*
+$    sid,eid,p,     x1, p
+PLOAD1,10,1,FZ,LE,  0.0,1.0,1.0,1.0
+PLOAD1,10,2,FZ,LE,  0.0,1.0,1.0,1.0
+PLOAD1,10,3,FZ,LE,  0.0,1.0,1.0,1.0
+PLOAD1,10,4,FZ,LE,  0.0,1.0,1.0,1.0
+PLOAD1,10,5,FZ,LE,  0.0,1.0,1.0,1.0
+PLOAD1,10,6,FZ,LE,  0.0,1.0,1.0,1.0
+PLOAD1,10,7,FZ,LE,  0.0,1.0,1.0,1.0
+PLOAD1,10,8,FZ,LE,  0.0,1.0,1.0,1.0
+PLOAD1,10,9,FZ,LE,  0.0,1.0,1.0,1.0
+PLOAD1,10,10,FZ,LE,  0.0,1.0,1.0,1.0
+$*
+INCLUDE 'cbar_cbeam.blk'
+$*
+$*  RESTRAINT CARDS
+$*
+SPC            1       1  123456     0.0
+$*
+$*  USET, U2 CARDS
+$*
+$USET    U2             1     123
+$*
+ENDDATA

@@ -10,7 +10,7 @@ import numpy as np
 from pyNastran.utils.locale import func_str
 from pyNastran.gui.utils.qt.pydialog import PyDialog
 from pyNastran.converters.nastran.gui.menus.modify_map import Var, TransposedVars
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.bdf.bdf import BDF
 
 

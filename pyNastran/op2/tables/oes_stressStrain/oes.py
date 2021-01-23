@@ -1730,9 +1730,6 @@ class OES(OP2Common):
             # 189-???
             # 190-VUTRIA
             return ndata
-        elif self.element_type == 191:
-            # 191-VUBEAM
-            return ndata
         elif self.element_type in [50, 51, 203]:
             # 203-SLIF1D?
             # 50-SLOT3
@@ -1762,8 +1759,9 @@ class OES(OP2Common):
             # 235-CQUADR
             return self._not_implemented_or_skip(data, ndata, self.code_information())
         elif self.element_type in [145, 146, 147, # VU-solid
-                                   189]:  # VUQUAD
-            # removed
+                                   189,  # VUQUAD
+                                   191]: # VUBEAM
+            msg = f'{self.element_name}-{self.element_type} has been removed'
             return self._not_implemented_or_skip(data, ndata, msg)
 
         else:

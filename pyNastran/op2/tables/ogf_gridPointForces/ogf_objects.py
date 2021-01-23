@@ -1,7 +1,8 @@
+from __future__ import annotations
 import sys
 import inspect
 from struct import Struct, pack
-from typing import List
+from typing import List, Dict, TYPE_CHECKING
 
 import numpy as np
 from numpy import zeros, unique, array_equal, empty
@@ -13,6 +14,11 @@ from pyNastran.op2.vector_utils import (
     transform_force_moment, transform_force_moment_sum, sortedsum1d)
 from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.op2.op2_interface.write_utils import set_table3_field
+
+if TYPE_CHECKING:
+    from pyNastran.nptyping import NDArrayN3float, NDArray3float, NDArrayN2int, NDArrayNint
+    from pyNastran.bdf.bdf import (BDF, CORD,
+                                   SimpleLogger)
 
 
 class GridPointForces(BaseElement):
@@ -154,7 +160,7 @@ class RealGridPointForcesArray(GridPointForces):
         #self.nelements = 0  # result specific
         #self.nnodes = None
 
-    def finalize(self):
+    def finalize(self) -> bool:
         """required so the OP2 writer works..."""
         self.format_code = 1
 
@@ -171,12 +177,12 @@ class RealGridPointForcesArray(GridPointForces):
         #self.ielement = 0
 
     @property
-    def element_name(self):
+    def element_name(self) -> str:
         headers = [name.strip() for name in unique(self.element_names) if name.strip()]
         #headers = unique(self.element_names)
         return str(', '.join(headers))
 
-    def build(self):
+    def build(self) -> None:
         """sizes the vectorized attributes of the RealGridPointForcesArray"""
         #print("self.ielement = %s" % self.ielement)
         #print('ntimes=%s nelements=%s ntotal=%s' % (self.ntimes, self.nelements, self.ntotal))
@@ -218,7 +224,7 @@ class RealGridPointForcesArray(GridPointForces):
         #[t1, t2, t3, r1, r2, r3]
         self.data = zeros((self.ntimes, self.ntotal, 6), dtype=fdtype)
 
-    def build_dataframe(self):
+    def build_dataframe(self) -> None:
         """
         major-axis - the axis
 
@@ -272,7 +278,7 @@ class RealGridPointForcesArray(GridPointForces):
                     df = pd.DataFrame(self.data[:, :, i].ravel())
                     df.columns = [header]
                     dfs.append(df)
-                self.data_frame = df1.join(dfs)
+                data_frame = df1.join(dfs)
                 #print(self.data_frame)
             else:
                 df1 = pd.DataFrame(node_element)
@@ -281,24 +287,25 @@ class RealGridPointForcesArray(GridPointForces):
                 df2.columns = ['ElementType']
                 df3 = pd.DataFrame(self.data[0])
                 df3.columns = headers
-                self.data_frame = df1.join([df2, df3])
-                #print(self.data_frame)
+                data_frame = df1.join([df2, df3])
+                #print(data_frame)
         else:
             node_element = [self.node_element[:, 0], self.node_element[:, 1]]
             if self.nonlinear_factor not in (None, np.nan):
                 column_names, column_values = self._build_dataframe_transient_header()
-                self.data_frame = pd.Panel(
+                data_frame = pd.Panel(
                     self.data, items=column_values,
                     major_axis=node_element, minor_axis=headers).to_frame()
-                self.data_frame.columns.names = column_names
-                self.data_frame.index.names = ['NodeID', 'ElementID', 'Item']
+                data_frame.columns.names = column_names
+                data_frame.index.names = ['NodeID', 'ElementID', 'Item']
             else:
-                self.data_frame = pd.Panel(
+                data_frame = pd.Panel(
                     self.data,
                     major_axis=node_element, minor_axis=headers).to_frame()
-                self.data_frame.columns.names = ['Static']
-                self.data_frame.index.names = ['NodeID', 'ElementID', 'Item']
+                data_frame.columns.names = ['Static']
+                data_frame.index.names = ['NodeID', 'ElementID', 'Item']
             #print(self.data_frame)
+        self.data_frame = data_frame
 
     def __eq__(self, table):  # pragma: no cover
         is_valid = False
@@ -410,9 +417,13 @@ class RealGridPointForcesArray(GridPointForces):
                         raise ValueError(msg)
         return True
 
-    def extract_freebody_loads(self, eids,
-                               coord_out, coords, nid_cd, icd_transform,
-                               itime=0, debug=True, log=None):
+    def extract_freebody_loads(self, eids: NDArrayNint,
+                               coord_out: CORD,
+                               coords: Dict[int, CORD],
+                               nid_cd: NDArrayN2int,
+                               icd_transform: Dict[int, NDArrayNint],
+                               itime: int=0, debug: bool=True,
+                               log: Optional[SimpleLogger]=None):
         """
         Extracts Patran-style freebody loads.  Freebody loads are the
         external loads.
@@ -429,7 +440,7 @@ class RealGridPointForcesArray(GridPointForces):
             value : CORDx
         nid_cd : (Nnodes, 2) int ndarray
             the (BDF.point_ids, cd) array
-        icd_transform : dict[cd] = (Nondesi, ) int ndarray
+        icd_transform : dict[cd] = (Nnodesi, ) int ndarray
             the mapping for nid_cd
         summation_point : (3, ) float ndarray
             the summation point in output??? coordinate system
@@ -451,6 +462,7 @@ class RealGridPointForcesArray(GridPointForces):
         .. todo:: doesn't seem to handle cylindrical/spherical systems
         .. warning:: not done
         """
+        nid_cd = _get_nid_cd_from_nid_cp_cd(nid_cd)
         eids = np.asarray(eids)
         #nids = np.asarray(nids)
 
@@ -499,12 +511,20 @@ class RealGridPointForcesArray(GridPointForces):
             debug=debug, log=log)
         return force, moment
 
-    def extract_interface_loads(self, nids, eids,
-                                coord_out, coords, nid_cd, icd_transform,
-                                xyz_cid0, summation_point=None,
-                                consider_rxf=True,
-                                itime=0, debug=True, log=None,
-                                idtype='int32'):
+    def extract_interface_loads(self,
+                                nids: NDArrayNint,
+                                eids: NDArrayNint,
+                                coord_out: CORD,
+                                coords: Dict[int, CORD],
+                                nid_cd: NDArrayN2int,
+                                icd_transform: Dict[int, CORD],
+                                xyz_cid0: NDArrayN3float,
+                                summation_point: Optional[NDArray3float]=None,
+                                consider_rxf: bool=True,
+                                itime: int=0,
+                                debug: bool=True,
+                                log: Optional[SimpleLogger]=None,
+                                idtype: str='int32'):
         """
         Extracts Patran-style interface loads.  Interface loads are the
         internal loads at a cut.
@@ -562,6 +582,7 @@ class RealGridPointForcesArray(GridPointForces):
                     - Make loads in the direction of the element
                   This process can't be done for 0D or 3D elements
         """
+        nid_cd = _get_nid_cd_from_nid_cp_cd(nid_cd)
         if summation_point is not None:
             summation_point = np.asarray(summation_point)
         #assert coord_in.Type == 'R', 'Only rectangular coordinate systems are supported; coord_in=\n%s' % str(coord_in)
@@ -662,10 +683,18 @@ class RealGridPointForcesArray(GridPointForces):
         """
         raise NotImplementedError()
 
-    def shear_moment_diagram(self, xyz_cid0, eids, nids, icd_transform,
-                             element_centroids_cid0,
-                             coords, nid_cd, stations, coord_out,
-                             idir=0, itime=0, debug=False, log=None):
+    def shear_moment_diagram(self, xyz_cid0: np.ndarray,
+                             eids: np.ndarray,
+                             nids: np.ndarray,
+                             icd_transform: Dict[int, np.ndarray],
+                             element_centroids_cid0: np.ndarray,
+                             coords: Dict[int, CORD],
+                             nid_cd: np.ndarray,
+                             stations: np.ndarray,
+                             coord_out: CORD,
+                             idir: int=0, itime: int=0,
+                             debug: bool=False,
+                             log: Optional[SimpleLogger]=None):
         """
         Computes a series of forces/moments at various stations along a
         structure.
@@ -720,6 +749,7 @@ class RealGridPointForcesArray(GridPointForces):
         .. todo:: Not Tested...Does 3b work?  Can 3a give the right answer?
 
         """
+        nid_cd = _get_nid_cd_from_nid_cp_cd(nid_cd)
         nstations = len(stations)
         assert coord_out.type in ['CORD2R', 'CORD1R'], coord_out.type
         beta = coord_out.beta()
@@ -772,8 +802,10 @@ class RealGridPointForcesArray(GridPointForces):
                 #       sum loads about summation point
                 moment_sum[istation, :] = momenti.sum(axis=0)
             else:
+                eidsi = eids[i]
+                nidsj = nids[i]
                 forcei, momenti, force_sumi, moment_sumi = self.extract_interface_loads(
-                    eids[i], nids[j],
+                    eidsi, nidsj,
                     coord_out, coords, nid_cd, icd_transform,
                     xyz_cid0, summation_point, itime=itime, debug=debug,
                     log=log)
@@ -1727,3 +1759,10 @@ class ComplexGridPointForcesArray(GridPointForces):
             op2_ascii.write('footer = %s\n' % header)
             new_result = False
         return itable
+
+def _get_nid_cd_from_nid_cp_cd(nid_cd: np.ndarray) -> np.ndarray:
+    if nid_cd.shape[1] == 3:
+        assert isinstance(nid_cd[0, :].tolist()[0], int), nid_cd
+        nid_cp_cd = nid_cd
+        nid_cd = nid_cp_cd[:, [0, 2]]
+    return nid_cd

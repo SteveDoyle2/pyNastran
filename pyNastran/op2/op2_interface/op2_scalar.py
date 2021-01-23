@@ -965,7 +965,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             # OUG
             # displacement/velocity/acceleration/eigenvector/temperature
             b'OUG1'    : [self._read_oug1_3, self._read_oug_4],  # displacements in nodal frame
-            # OVG1?
+            b'OVG1'    : [self._read_oug1_3, self._read_oug_4],  # velocity in nodal frame
             b'OAG1'    : [self._read_oug1_3, self._read_oug_4],  # accelerations in nodal frame
 
             b'OUG1F'    : [self._read_oug1_3, self._read_oug_4],  # acoustic displacements in ? frame

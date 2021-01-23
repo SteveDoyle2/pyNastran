@@ -2,7 +2,7 @@
 defines:
  - fnames = get_files_of_type(dirname, extension='.txt',
                               max_size=100., limit_file='no_dig.txt')
-    msg = list_print(lst, float_fmt='%-4.2f')
+ - msg = list_print(lst, float_fmt='%-4.2f')
 
 """
 import os
@@ -12,7 +12,8 @@ import numpy as np
 
 
 def get_files_of_type(dirname: str, extension: str='.txt',
-                      max_size: float=100., limit_file: str='no_dig.txt') -> List[str]:
+                      max_size: float=100., limit_file: str='no_dig.txt',
+                      skip_folder_file: str='skip_folder.txt') -> List[str]:
     """
     Gets the list of all the files with a given extension in the specified directory
 
@@ -27,6 +28,9 @@ def get_files_of_type(dirname: str, extension: str='.txt',
     limit_file : str; default=no_dig.txt
         the presence of this file indicates no folder digging
         should be done on this folder
+    skip_file : str; skip_folder.txt
+        the presence of this file indicates the folder should be skipped
+        should be done on this folder
 
     Returns
     -------
@@ -34,14 +38,19 @@ def get_files_of_type(dirname: str, extension: str='.txt',
         list of all the files with a given extension in the specified directory
 
     """
-    if not os.path.exists(dirname):
-        return []
-
     filenames2 = []  # type: List[str]
+    if not os.path.exists(dirname):
+        return filenames2
+
     filenames = os.listdir(dirname)
+    if skip_folder_file in filenames:
+        print(f'found skip_file in dirname={dirname}')
+        return filenames2
+
     allow_digging = True
     if limit_file in filenames:
         allow_digging = False
+
     for filenamei in filenames:
         filename = os.path.join(dirname, filenamei)
         if os.path.isdir(filename):
@@ -71,6 +80,7 @@ def list_print(lst: List[Any], float_fmt: str='%-4.2f') -> str:
     -------
     msg : str
         the clean string representation of the object
+
     """
     def _print(val):
         if val is None or isinstance(val, str):

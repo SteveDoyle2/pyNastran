@@ -1,7 +1,7 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING
 from pyNastran.bdf.bdf import BDF
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     from pygmsh.geo import Geometry
 
 ELEMENT_TYPE_MAPPER = {

@@ -318,7 +318,7 @@ def nocrash_str_bool(func):
         try:
             out = func(_str)
         except:
-            print('dont crash...')
+            #print('dont crash...')
             out = (_str, False)
         return out
     return wrapper
@@ -387,7 +387,7 @@ def check_format_str(text: str) -> Tuple[str, bool]:
     return text, is_valid
 
 
-if __name__ == '__main__':
+if __name__ == '__main__':  # pragma: no cover
     #assert check_format_str('%.3E')[1] is True
     #assert check_format_str('%.3g')[1] is True
     #assert check_format_str('%.4f')[1] is True

@@ -475,6 +475,7 @@ class OEF(OP2Common):
                                    189, 190,  # VUQUAD,VUTRIA
                                    191]:  # VUBEAM
             # removed by msc/nx
+            msg = f'{self.element_name}-{self.element_type} has been removed'
             return self._not_implemented_or_skip(data, ndata, msg)
         else:
             msg = 'OEF sort1 thermal Type=%s num=%s' % (self.element_name, self.element_type)
@@ -1166,7 +1167,8 @@ class OEF(OP2Common):
                                                       #result_type, prefix, postfix)
             #n, nelements, ntotal = self._oef_vu_beam(data, ndata, dt, is_magnitude_phase,
                                                      #result_type, prefix, postfix)
-            pass
+            msg = f'{self.element_name}-{self.element_type} has been removed'
+            return self._not_implemented_or_skip(data, ndata, msg)
         elif self.is_nx:
             if self.element_type in [118, 343, 344, 345, 346, 347, 348, 349, 350, 351, 352,
                                      356, 357, 363]:
@@ -3141,7 +3143,15 @@ def oef_shells_composite_real_9(self, data: bytes,
                   #f'max_value={max_value} failure_flag={failure_flag!r}')
             eid_old = eid
         assert flag in ['', '-1', '-2', '-12', 'IN'], f'flag={flag!r} flagb={flagb!r}'
-        assert failure_theory in ['TSAI-WU', 'STRAIN', 'HILL', 'HOFFMAN', ''], f'failure_theory={failure_theory!r}'
+
+        # 'HILL' for the Hill theory.
+        # 'HOFF' for the Hoffman theory.
+        # 'TSAI' for the Tsai-Wu theory.
+        # 'STRN' for the Maximum Strain theory.
+        # 'HFAIL' for the Hashin failure criterion
+        # 'HTAPE' for the Hashin tape criterion
+        # 'HFABR' for the Hashin fabric criterion
+        assert failure_theory in ['TSAI-WU', 'STRAIN', 'HILL', 'HOFFMAN', 'HFAIL', 'HFABRIC', ''], f'failure_theory={failure_theory!r}'
         assert failure_flag in ['', '***'], 'failure_flag=%r' % failure_flag
         obj.add_sort1(dt, eid, failure_theory, ply_id, failure_stress_for_ply, flag,
                       interlaminar_stress, max_value, failure_flag)

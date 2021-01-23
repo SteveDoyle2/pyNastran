@@ -99,7 +99,7 @@ class RandomSolidArray(OES_Object):
 
     def add_eid_sort1(self, unused_etype, cid, dt, eid, unused_node_id,
                       oxx, oyy, ozz, txy, tyz, txz):
-        assert cid >= -1, cid
+        assert cid >= -2, cid
         assert eid >= 0, eid
 
         #print "dt=%s eid=%s eType=%s" %(dt,eid,eType)

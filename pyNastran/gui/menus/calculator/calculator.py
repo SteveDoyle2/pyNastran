@@ -45,7 +45,7 @@ from pyNastran.gui.menus.results_sidebar_utils import (
     get_cases_from_tree, #build_pruned_tree
 )
 
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.gui.main_window import MainWindow
 
 IS_RESULTS_SELECTOR = True

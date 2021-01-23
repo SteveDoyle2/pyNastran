@@ -15,7 +15,7 @@ from pyNastran.bdf.bdf_interface.attributes import BDFAttributes
 from pyNastran.bdf.bdf_interface.write_mesh_utils import (
     find_aero_location, write_dict, get_properties_by_element_type)
 from pyNastran.bdf.cards.nodes import write_xpoints
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     from io import StringIO
 
 

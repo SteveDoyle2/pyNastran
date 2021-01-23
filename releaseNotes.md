@@ -48,6 +48,8 @@ OP2:
      - GridPointStrainsVolumeDirectArray
      - GridPointStrainsVolumePrincipalArray
      - GridPointStrainsSurfaceDiscontinutiesArray
+ - removed:
+   - VU elements (MSC/NX recently removed these)
  - bug fixes:
    - PARAM reading is much more robust
    - improved regex support for including/excluding results

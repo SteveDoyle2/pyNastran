@@ -27,7 +27,7 @@ from pyNastran.gui.menus.results_sidebar_utils import (
 )
 
 from pyNastran.gui.menus.legend.write_gif import IS_IMAGEIO
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.gui.main_window import MainWindow
 
 ANIMATION_PROFILES = [

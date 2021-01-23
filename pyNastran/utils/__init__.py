@@ -290,7 +290,7 @@ def object_attributes(obj: Any, mode: str='public',
 
 def int_version(name: str, version: str) -> List[int]:
     """splits the version into a tuple of integers"""
-    sversion = version.split('-')[0]
+    sversion = version.split('-')[0].split('+')[0]
     #numpy
     #scipy
     #matplotlib
@@ -298,6 +298,8 @@ def int_version(name: str, version: str) -> List[int]:
     #vtk
     #cpylog
     #pyNastran
+    # '1.20.0rc1'
+    # '1.4.0+dev.8913610a0'
     if 'rc' not in name:
         # it's gotta be something...
         # matplotlib3.1rc1

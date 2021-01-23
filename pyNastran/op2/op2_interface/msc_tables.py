@@ -298,6 +298,8 @@ MSC_GEOM_TABLES = [
 
 MSC_MATRIX_TABLES = [
     # 2020
+    b'MATB', b'MATK4', b'MATP', b'MUG1', b'MUG1O', # b'TQG1', # b'TUG1',
+    #b'MUG1B',
     b'MATAKA',
     b'MATPH2',
     b'MATAMA',
@@ -385,6 +387,7 @@ MSC_RESULT_TABLES = [b'ASSIG', b'ASEPS'] + [
     # Qualifier Information Table - which is what???
     b'QUALINFO',
 
+
     # new
     b'TOLD',
     b'RAPCONS', b'RAQCONS', b'RADCONS', b'RASCONS', b'RAFCONS', b'RAECONS',
@@ -411,6 +414,7 @@ MSC_RESULT_TABLES = [b'ASSIG', b'ASEPS'] + [
     # DOEF1 - Scaled Response Spectra
     b'OEFIT', b'OEF1X', b'OEF1', b'DOEF1',
     b'OEFITSTN', # output.op2
+    b'OGPSTRS', b'OGPFI', b'OQS2SGT1', b'OGTEMP', b'OERPM',
 
 
     # Table of Max values?
@@ -581,6 +585,10 @@ MSC_RESULT_TABLES = [b'ASSIG', b'ASEPS'] + [
     b'AEMONPT',
     #b'KDICT',
     #---------------------
+    # 2020
+    b'OCNTCHK0', b'OCOMP', b'META', b'OFCRFMD', b'OEXTFIB', b'OELAFG', b'OQS2SGN1',
+    b'OSMPF1', b'MATRV', b'TUG1', # b'MUG1',
+
     #2020 - could these be matrices?
     b'OFCON3DD', b'OFCON3D0',
     b'OFGCOND',

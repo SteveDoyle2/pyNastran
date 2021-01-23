@@ -785,8 +785,8 @@ class PreferencesWindow(PyDialog):
         assert isinstance(self.annotation_color_int[0], int), self.annotation_color_int
         picker_size_value, flag2 = check_float(self.picker_size_edit)
 
-        clipping_min_value, flag3 = check_label_float(self.clipping_min_edit)
-        clipping_max_value, flag4 = check_label_float(self.clipping_max_edit)
+        clipping_min_value, flag3 = check_float(self.clipping_min_edit)
+        clipping_max_value, flag4 = check_float(self.clipping_max_edit)
 
         if all([flag0, flag1, flag2, flag3, flag4]):
             self._annotation_size = annotation_size_value

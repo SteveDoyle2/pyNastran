@@ -11,7 +11,7 @@ from pyNastran.nptyping import NDArrayNint
 from pyNastran.op2.result_objects.matrix import Matrix
 from pyNastran.op2.op2_interface.utils import reshape_bytes_block
 
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.op2.op2 import OP2
 
 def read_matpool_dmig_4(op2: OP2, data: bytes,

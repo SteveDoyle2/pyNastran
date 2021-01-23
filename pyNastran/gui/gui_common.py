@@ -558,7 +558,8 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
                     try:
                         action = self.actions[item] #if isinstance(item, str) else item()
                     except:
-                        print(self.actions.keys())
+                        keysi = list(self.actions.keys())
+                        self.log.error(str(keysi))
                         raise
                     menu.addAction(action)
         #self._create_plane_from_points(None)

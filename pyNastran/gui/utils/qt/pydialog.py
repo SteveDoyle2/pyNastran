@@ -12,7 +12,7 @@ from qtpy.QtWidgets import QDialog, QComboBox, QLineEdit
 
 from pyNastran.bdf.utils import (
     parse_patran_syntax, parse_patran_syntax_dict)
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.gui.main_window import MainWindow
 
 

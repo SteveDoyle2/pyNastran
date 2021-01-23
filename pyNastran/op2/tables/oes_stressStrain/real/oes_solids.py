@@ -204,7 +204,13 @@ class RealSolidArray(OES_Object):
     def add_eid_sort1(self, unused_etype, cid, dt, eid, unused_node_id,
                       oxx, oyy, ozz, txy, tyz, txz, o1, o2, o3,
                       unused_acos, unused_bcos, unused_ccos, unused_pressure, ovm):
-        assert cid >= -1, cid
+        # See the CHEXA, CPENTA, or CTETRA entry for the definition of the element coordinate systems.
+        # The material coordinate system (CORDM) may be the basic system (0 or blank), any defined system
+        # (Integer > 0), or the standard internal coordinate system of the element designated as:
+        # -1: element coordinate system (-1)
+        # -2: element system based on eigenvalue techniques to insure non bias in the element formulation(-2).
+        #     C:\MSC.Software\msc_nastran_runs\ecs-2-rg.op2
+        assert cid >= -2, cid
         assert eid >= 0, eid
 
         #print(f'dt={dt} eid={eid}')
@@ -261,7 +267,7 @@ class RealSolidArray(OES_Object):
         itime = self.itotal // self.nnodes
         ielement = self.itime
         itotal = self.itotal
-        assert cid >= -1, cid
+        assert cid >= -2, cid
         assert eid >= 0, eid
 
         #try:
