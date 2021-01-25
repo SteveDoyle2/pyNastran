@@ -4,10 +4,10 @@ from cpylog import SimpleLogger
 
 import pyNastran
 #from pyNastran.bdf.bdf import BDF
-#from pyNastran.op2.op2 import OP2, FatalError, read_op2
+#from pyNastran.op2.op2 import FatalError
 #from pyNastran.op2.op2_interface.op2_common import get_scode_word
-from pyNastran.op2.op2_geom import read_op2_geom #, OP2Geom,
-from pyNastran.op2.op2 import read_op2
+from pyNastran.op2.op2_geom import OP2Geom, read_op2_geom
+from pyNastran.op2.op2 import OP2, read_op2
 #from pyNastran.op2.test.test_op2 import run_op2
 #from pyNastran.op2.writer.op2_writer import OP2Writer
 
@@ -47,11 +47,13 @@ class TestOP2Writer(unittest.TestCase):
         #model = os.path.splitext(op2_filename)[0]
         #debug_file = model + '.debug.out'
 
-        op2 = read_op2(op2_filename, debug_file=op2_filename_debug, log=log)
+        op2 = OP2(debug=True, log=log, debug_file=op2_filename_debug, mode=None)
+        op2.read_op2(op2_filename)
 
         op2.write_op2(op2_filename_out) #, is_mag_phase=False)
         op2b = read_op2_geom(op2_filename_out, debug_file=op2_filename_debug_out, log=log)
         assert op2 == op2b
+        os.remove(op2_filename_debug_out)
 
     def _test_write_3(self):
         """tests basic op2 writing"""
@@ -69,6 +71,7 @@ class TestOP2Writer(unittest.TestCase):
 
         op2.write_op2(op2_filename_out) #, is_mag_phase=False)
         unused_op2b = read_op2_geom(op2_filename_out, debug_file=op2_filename_debug_out)
+        os.remove(op2_filename_debug_out)
 
     def test_write_4(self):
         """tests basic op2 writing"""
@@ -89,6 +92,7 @@ class TestOP2Writer(unittest.TestCase):
         op2.assert_op2_equal(op2b,
                              skip_results=['params', ],
                              stop_on_failure=True, debug=False)
+        os.remove(op2_filename_debug_out)
 
     def test_write_5(self):
         """tests basic op2 writing"""
@@ -115,6 +119,7 @@ class TestOP2Writer(unittest.TestCase):
         op2.assert_op2_equal(op2b,
                              skip_results=['params', ],
                              stop_on_failure=True, debug=False)
+        os.remove(op2_filename_debug_out)
 
     def test_write_6(self):
         """tests basic op2 writing"""
@@ -137,6 +142,7 @@ class TestOP2Writer(unittest.TestCase):
         op2.assert_op2_equal(op2b,
                              skip_results=['params', ],
                              stop_on_failure=True, debug=False)
+        os.remove(op2_filename_debug_out)
 
     def test_write_7(self):
         """tests basic op2 writing"""
@@ -157,6 +163,7 @@ class TestOP2Writer(unittest.TestCase):
         op2.assert_op2_equal(op2b,
                              skip_results=['params', ],
                              stop_on_failure=True, debug=False)
+        os.remove(op2_filename_debug_out)
 
     def test_write_elements_1(self):
         """tests basic op2 writing"""
@@ -174,6 +181,7 @@ class TestOP2Writer(unittest.TestCase):
         op2.assert_op2_equal(op2b,
                              skip_results=['params', ],
                              stop_on_failure=True, debug=False)
+        os.remove(op2_filename_debug_out)
 
     def test_write_elements_2(self):
         """tests basic op2 writing"""
@@ -196,6 +204,7 @@ class TestOP2Writer(unittest.TestCase):
         #op2.assert_op2_equal(op2b,
                              #skip_results=['params', ],
                              #stop_on_failure=True, debug=False)
+        os.remove(op2_filename_debug_out)
 
     def test_write_elements_3(self):
         """tests basic op2 writing"""
@@ -218,6 +227,7 @@ class TestOP2Writer(unittest.TestCase):
         op2.assert_op2_equal(op2b,
                              skip_results=['params', ],
                              stop_on_failure=True, debug=False)
+        os.remove(op2_filename_debug_out)
 
     def test_write_elements_4(self):
         """tests basic op2 writing"""
@@ -241,6 +251,7 @@ class TestOP2Writer(unittest.TestCase):
         op2.assert_op2_equal(op2b,
                              skip_results=['params', ],
                              stop_on_failure=True, debug=False)
+        os.remove(op2_filename_debug_out)
 
     def test_write_elements_5(self):
         """tests basic op2 writing"""
@@ -264,6 +275,7 @@ class TestOP2Writer(unittest.TestCase):
         op2.assert_op2_equal(op2b,
                              skip_results=['params', ],
                              stop_on_failure=True, debug=False)
+        os.remove(op2_filename_debug_out)
 
     def test_thermal_1(self):
         """tests basic op2 thermal writing"""
@@ -288,6 +300,7 @@ class TestOP2Writer(unittest.TestCase):
         op2.assert_op2_equal(op2b,
                              skip_results=['params', ],
                              stop_on_failure=True, debug=False)
+        os.remove(op2_filename_debug_out)
 
     def test_thermal_2(self):
         """tests basic op2 thermal writing"""
@@ -314,6 +327,7 @@ class TestOP2Writer(unittest.TestCase):
         op2.assert_op2_equal(op2b,
                              skip_results=['params', ],
                              stop_on_failure=True, debug=False)
+        os.remove(op2_filename_debug_out)
 
     #def test_thermal_3(self):
         #"""tests basic op2 thermal writing"""

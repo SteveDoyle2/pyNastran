@@ -8,7 +8,7 @@ from cpylog import get_logger
 
 import pyNastran
 from pyNastran.bdf.bdf import BDF, read_bdf
-from pyNastran.op2.op2 import read_op2
+from pyNastran.op2.op2 import OP2, read_op2
 from pyNastran.bdf.cards.test.utils import save_load_deck
 from pyNastran.bdf.cards.optimization import break_word_by_trailing_integer
 
@@ -29,7 +29,9 @@ class TestOpt(unittest.TestCase):
         #bdf, op2 = run_model(bdf_filename, op2_filename,
                              #f06_has_weight=False, vectorized=True,
                              #encoding='utf-8')
-        op2 = read_op2(op2_filename, log=log, debug=True, debug_file='temp.debug')
+
+        op2 = OP2(log=log, debug=True, debug_file='temp.debug')
+        op2.read_op2(op2_filename)
         unused_subcase_ids = op2.subcase_key.keys()
         #for subcase_id in subcase_ids:
             #assert isinstance(subcase_id, integer_types), subcase_id

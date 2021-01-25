@@ -297,10 +297,10 @@ class OP2Geom(BDF, OP2GeomCommon):
                                debug=debug, log=log, debug_file=debug_file, mode=mode)
 
     @property
-    def is_geometry(self):
+    def is_geometry(self) -> bool:
         return True
 
-    def read_op2(self, op2_filename=None, combine=True,
+    def read_op2(self, op2_filename=None, combine: bool=True,
                  build_dataframe=None, skip_undefined_matrices=False, encoding=None):
         """see ``OP2.read_op2``"""
         OP2.read_op2(self, op2_filename=op2_filename, combine=combine,

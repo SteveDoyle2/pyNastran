@@ -1,4 +1,3 @@
-
 Manipulating the Pandas DataFrame
 =================================
 
@@ -26,23 +25,20 @@ columns. First let’s read in some data:
     isat = read_op2(op2_filename, build_dataframe=True, debug=False, skip_undefined_matrices=True)
 
 
+
+.. raw:: html
+
+    <text style=color:green>INFO:    op2_scalar.py:1588           op2_filename = 'c:\\nasa\\m4\\formats\\git\\pynastran\\pyNastran\\..\\models\\iSat\\iSat_launch_100Hz.op2'
+    </text>
+
+
 .. parsed-literal::
 
-    INFO:      fname=op2_scalar.py             lineNo=1176   op2_filename = 'f:\\work\\pynastran\\pynastran\\master3\\pyNastran\\..\\models\\iSat\\iSat_launch_100Hz.op2'
-    INFO:      fname=fortran_format.py         lineNo=321    skipping table_name = 'RAPCONS'
-    INFO:      fname=fortran_format.py         lineNo=321    skipping table_name = 'RAQCONS'
-    INFO:      fname=fortran_format.py         lineNo=321    skipping table_name = 'RASCONS'
-    INFO:      fname=fortran_format.py         lineNo=321    skipping table_name = 'RAFCONS'
-    INFO:      fname=fortran_format.py         lineNo=321    skipping table_name = 'RAECONS'
-    INFO:      fname=fortran_format.py         lineNo=321    skipping table_name = 'RANCONS'
-    INFO:      fname=fortran_format.py         lineNo=321    skipping table_name = 'RAGCONS'
-    INFO:      fname=fortran_format.py         lineNo=321    skipping table_name = 'RAPEATC'
-    INFO:      fname=fortran_format.py         lineNo=321    skipping table_name = 'RAQEATC'
-    INFO:      fname=fortran_format.py         lineNo=321    skipping table_name = 'RASEATC'
-    INFO:      fname=fortran_format.py         lineNo=321    skipping table_name = 'RAFEATC'
-    INFO:      fname=fortran_format.py         lineNo=321    skipping table_name = 'RAEEATC'
-    INFO:      fname=fortran_format.py         lineNo=321    skipping table_name = 'RANEATC'
-    INFO:      fname=fortran_format.py         lineNo=321    skipping table_name = 'RAGEATC'
+    self.cannot apply column_names=['Mode', 'Freq'] to RealStrainEnergyArray: 'QUAD4'
+    self.cannot apply column_names=['Mode', 'Freq'] to RealStrainEnergyArray: 'TRIA3'
+    self.cannot apply column_names=['Mode', 'Freq'] to RealStrainEnergyArray: 'HEXA'
+    self.cannot apply column_names=['Mode', 'Freq'] to RealStrainEnergyArray: 'BAR'
+    self.cannot apply column_names=['Mode', 'Freq'] to RealStrainEnergyArray: 'BUSH'
     
 
 .. code:: ipython3
@@ -59,6 +55,23 @@ columns. First let’s read in some data:
 .. raw:: html
 
     <div>
+    <style scoped>
+        .dataframe tbody tr th:only-of-type {
+            vertical-align: middle;
+        }
+    
+        .dataframe tbody tr th {
+            vertical-align: top;
+        }
+    
+        .dataframe thead tr th {
+            text-align: left;
+        }
+    
+        .dataframe thead tr:last-of-type th {
+            text-align: right;
+        }
+    </style>
     <table border="1" class="dataframe">
       <thead>
         <tr>
@@ -88,31 +101,6 @@ columns. First let’s read in some data:
         </tr>
         <tr>
           <th></th>
-          <th>EigenvalueReal</th>
-          <th>2758.15</th>
-          <th>3568.63</th>
-          <th>9689.31</th>
-          <th>16168.10</th>
-          <th>16278.22</th>
-          <th>16679.71</th>
-          <th>18248.43</th>
-          <th>18600.70</th>
-          <th>18632.55</th>
-          <th>32147.81</th>
-          <th>...</th>
-          <th>253140.88</th>
-          <th>295297.75</th>
-          <th>306885.91</th>
-          <th>309040.66</th>
-          <th>319227.72</th>
-          <th>350984.50</th>
-          <th>351566.19</th>
-          <th>364166.16</th>
-          <th>384601.34</th>
-          <th>386090.44</th>
-        </tr>
-        <tr>
-          <th></th>
           <th>Freq</th>
           <th>8.36</th>
           <th>9.51</th>
@@ -129,7 +117,7 @@ columns. First let’s read in some data:
           <th>86.49</th>
           <th>88.17</th>
           <th>88.48</th>
-          <th>89.92</th>
+          <th>89.93</th>
           <th>94.29</th>
           <th>94.37</th>
           <th>96.04</th>
@@ -138,23 +126,48 @@ columns. First let’s read in some data:
         </tr>
         <tr>
           <th></th>
+          <th>Eigenvalue</th>
+          <th>2758.15</th>
+          <th>3568.63</th>
+          <th>9689.98</th>
+          <th>16168.04</th>
+          <th>16278.16</th>
+          <th>16679.71</th>
+          <th>18248.43</th>
+          <th>18600.70</th>
+          <th>18632.55</th>
+          <th>32159.89</th>
+          <th>...</th>
+          <th>253141.17</th>
+          <th>295300.94</th>
+          <th>306886.00</th>
+          <th>309040.66</th>
+          <th>319267.09</th>
+          <th>350984.50</th>
+          <th>351566.19</th>
+          <th>364166.31</th>
+          <th>384601.34</th>
+          <th>386090.47</th>
+        </tr>
+        <tr>
+          <th></th>
           <th>Radians</th>
           <th>52.52</th>
           <th>59.74</th>
-          <th>98.43</th>
+          <th>98.44</th>
           <th>127.15</th>
           <th>127.59</th>
           <th>129.15</th>
           <th>135.09</th>
           <th>136.38</th>
           <th>136.50</th>
-          <th>179.30</th>
+          <th>179.33</th>
           <th>...</th>
           <th>503.13</th>
-          <th>543.41</th>
+          <th>543.42</th>
           <th>553.97</th>
           <th>555.91</th>
-          <th>565.00</th>
+          <th>565.04</th>
           <th>592.44</th>
           <th>592.93</th>
           <th>603.46</th>
@@ -192,21 +205,21 @@ columns. First let’s read in some data:
           <th rowspan="5" valign="top">3323</th>
           <th>bending_moment_a1</th>
           <td>-0.16</td>
-          <td>0.23</td>
+          <td>-0.23</td>
           <td>-1.33</td>
           <td>-2.32e+00</td>
-          <td>1.88</td>
+          <td>-1.88</td>
           <td>-0.80</td>
           <td>-1.34e-03</td>
           <td>1.42</td>
           <td>1.47</td>
-          <td>4.64</td>
+          <td>4.65</td>
           <td>...</td>
-          <td>-43.49</td>
-          <td>63.35</td>
-          <td>-43.08</td>
+          <td>-43.42</td>
+          <td>63.36</td>
+          <td>-43.07</td>
           <td>-3.35</td>
-          <td>11.10</td>
+          <td>11.08</td>
           <td>-14.38</td>
           <td>0.75</td>
           <td>29.36</td>
@@ -216,21 +229,21 @@ columns. First let’s read in some data:
         <tr>
           <th>bending_moment_a2</th>
           <td>0.19</td>
-          <td>-0.05</td>
+          <td>0.05</td>
           <td>0.18</td>
-          <td>5.61e-03</td>
-          <td>0.11</td>
+          <td>5.58e-03</td>
+          <td>-0.11</td>
           <td>-0.42</td>
           <td>-4.19e-03</td>
           <td>-1.11</td>
           <td>0.10</td>
           <td>-1.57</td>
           <td>...</td>
-          <td>-4.46</td>
+          <td>-4.50</td>
           <td>5.33</td>
           <td>1.63</td>
           <td>4.86</td>
-          <td>2.14</td>
+          <td>2.15</td>
           <td>0.09</td>
           <td>-1.27</td>
           <td>-10.58</td>
@@ -240,21 +253,21 @@ columns. First let’s read in some data:
         <tr>
           <th>bending_moment_b1</th>
           <td>0.17</td>
-          <td>-0.21</td>
+          <td>0.21</td>
           <td>2.01</td>
           <td>2.66e+00</td>
-          <td>-1.88</td>
+          <td>1.88</td>
           <td>0.73</td>
           <td>2.29e-03</td>
           <td>-1.38</td>
           <td>-1.31</td>
-          <td>-3.97</td>
+          <td>-3.98</td>
           <td>...</td>
-          <td>34.78</td>
+          <td>34.70</td>
           <td>-74.02</td>
-          <td>35.14</td>
+          <td>35.13</td>
           <td>3.54</td>
-          <td>-15.06</td>
+          <td>-15.03</td>
           <td>10.97</td>
           <td>-0.67</td>
           <td>-17.69</td>
@@ -264,17 +277,17 @@ columns. First let’s read in some data:
         <tr>
           <th>bending_moment_b2</th>
           <td>-0.19</td>
-          <td>0.05</td>
+          <td>-0.05</td>
           <td>-0.18</td>
-          <td>-3.57e-03</td>
-          <td>-0.11</td>
+          <td>-3.54e-03</td>
+          <td>0.11</td>
           <td>0.43</td>
           <td>4.18e-03</td>
           <td>1.11</td>
           <td>-0.10</td>
           <td>1.57</td>
           <td>...</td>
-          <td>4.45</td>
+          <td>4.50</td>
           <td>-5.34</td>
           <td>-1.62</td>
           <td>-4.86</td>
@@ -283,26 +296,26 @@ columns. First let’s read in some data:
           <td>1.27</td>
           <td>10.56</td>
           <td>0.67</td>
-          <td>-3.48</td>
+          <td>-3.49</td>
         </tr>
         <tr>
           <th>shear1</th>
           <td>-0.13</td>
-          <td>0.18</td>
+          <td>-0.18</td>
           <td>-1.33</td>
           <td>-1.99e+00</td>
-          <td>1.50</td>
+          <td>-1.50</td>
           <td>-0.61</td>
           <td>-1.45e-03</td>
           <td>1.12</td>
           <td>1.11</td>
-          <td>3.44</td>
+          <td>3.45</td>
           <td>...</td>
-          <td>-31.31</td>
+          <td>-31.25</td>
           <td>54.95</td>
-          <td>-31.29</td>
+          <td>-31.28</td>
           <td>-2.76</td>
-          <td>10.47</td>
+          <td>10.44</td>
           <td>-10.14</td>
           <td>0.57</td>
           <td>18.82</td>
@@ -329,6 +342,23 @@ First I’m going to pull out a small subset to work with
 .. raw:: html
 
     <div>
+    <style scoped>
+        .dataframe tbody tr th:only-of-type {
+            vertical-align: middle;
+        }
+    
+        .dataframe tbody tr th {
+            vertical-align: top;
+        }
+    
+        .dataframe thead tr th {
+            text-align: left;
+        }
+    
+        .dataframe thead tr:last-of-type th {
+            text-align: right;
+        }
+    </style>
     <table border="1" class="dataframe">
       <thead>
         <tr>
@@ -339,15 +369,15 @@ First I’m going to pull out a small subset to work with
         </tr>
         <tr>
           <th></th>
-          <th>EigenvalueReal</th>
-          <th>2758.15</th>
-          <th>3568.63</th>
-        </tr>
-        <tr>
-          <th></th>
           <th>Freq</th>
           <th>8.36</th>
           <th>9.51</th>
+        </tr>
+        <tr>
+          <th></th>
+          <th>Eigenvalue</th>
+          <th>2758.15</th>
+          <th>3568.63</th>
         </tr>
         <tr>
           <th></th>
@@ -367,83 +397,83 @@ First I’m going to pull out a small subset to work with
           <th rowspan="8" valign="top">3323</th>
           <th>bending_moment_a1</th>
           <td>-0.16</td>
-          <td>0.23</td>
+          <td>-0.23</td>
         </tr>
         <tr>
           <th>bending_moment_a2</th>
           <td>0.19</td>
-          <td>-0.05</td>
+          <td>0.05</td>
         </tr>
         <tr>
           <th>bending_moment_b1</th>
           <td>0.17</td>
-          <td>-0.21</td>
+          <td>0.21</td>
         </tr>
         <tr>
           <th>bending_moment_b2</th>
           <td>-0.19</td>
-          <td>0.05</td>
+          <td>-0.05</td>
         </tr>
         <tr>
           <th>shear1</th>
           <td>-0.13</td>
-          <td>0.18</td>
+          <td>-0.18</td>
         </tr>
         <tr>
           <th>shear2</th>
           <td>0.15</td>
-          <td>-0.04</td>
+          <td>0.04</td>
         </tr>
         <tr>
           <th>axial</th>
           <td>0.80</td>
-          <td>0.21</td>
+          <td>-0.21</td>
         </tr>
         <tr>
           <th>torque</th>
           <td>-0.04</td>
-          <td>-0.06</td>
+          <td>0.06</td>
         </tr>
         <tr>
           <th rowspan="8" valign="top">3324</th>
           <th>bending_moment_a1</th>
           <td>0.14</td>
-          <td>-0.29</td>
+          <td>0.29</td>
         </tr>
         <tr>
           <th>bending_moment_a2</th>
           <td>-0.19</td>
-          <td>0.05</td>
+          <td>-0.05</td>
         </tr>
         <tr>
           <th>bending_moment_b1</th>
           <td>-0.15</td>
-          <td>0.26</td>
+          <td>-0.26</td>
         </tr>
         <tr>
           <th>bending_moment_b2</th>
           <td>0.19</td>
-          <td>-0.05</td>
+          <td>0.05</td>
         </tr>
         <tr>
           <th>shear1</th>
           <td>0.12</td>
-          <td>-0.22</td>
+          <td>0.22</td>
         </tr>
         <tr>
           <th>shear2</th>
           <td>-0.15</td>
-          <td>0.04</td>
+          <td>-0.04</td>
         </tr>
         <tr>
           <th>axial</th>
           <td>-0.80</td>
-          <td>-0.21</td>
+          <td>0.21</td>
         </tr>
         <tr>
           <th>torque</th>
           <td>0.04</td>
-          <td>0.06</td>
+          <td>-0.06</td>
         </tr>
       </tbody>
     </table>
@@ -466,6 +496,19 @@ columns using a .unstack(level=0) and the transpose the result:
 .. raw:: html
 
     <div>
+    <style scoped>
+        .dataframe tbody tr th:only-of-type {
+            vertical-align: middle;
+        }
+    
+        .dataframe tbody tr th {
+            vertical-align: top;
+        }
+    
+        .dataframe thead th {
+            text-align: right;
+        }
+    </style>
     <table border="1" class="dataframe">
       <thead>
         <tr style="text-align: right;">
@@ -474,19 +517,19 @@ columns using a .unstack(level=0) and the transpose the result:
           <th></th>
           <th></th>
           <th>Item</th>
+          <th>axial</th>
           <th>bending_moment_a1</th>
           <th>bending_moment_a2</th>
           <th>bending_moment_b1</th>
           <th>bending_moment_b2</th>
           <th>shear1</th>
           <th>shear2</th>
-          <th>axial</th>
           <th>torque</th>
         </tr>
         <tr>
           <th>Mode</th>
-          <th>EigenvalueReal</th>
           <th>Freq</th>
+          <th>Eigenvalue</th>
           <th>Radians</th>
           <th>ElementID</th>
           <th></th>
@@ -502,55 +545,55 @@ columns using a .unstack(level=0) and the transpose the result:
       <tbody>
         <tr>
           <th rowspan="2" valign="top">1</th>
-          <th rowspan="2" valign="top">2758.15</th>
           <th rowspan="2" valign="top">8.36</th>
+          <th rowspan="2" valign="top">2758.15</th>
           <th rowspan="2" valign="top">52.52</th>
           <th>3323</th>
+          <td>0.80</td>
           <td>-0.16</td>
           <td>0.19</td>
           <td>0.17</td>
           <td>-0.19</td>
           <td>-0.13</td>
           <td>0.15</td>
-          <td>0.80</td>
           <td>-0.04</td>
         </tr>
         <tr>
           <th>3324</th>
+          <td>-0.80</td>
           <td>0.14</td>
           <td>-0.19</td>
           <td>-0.15</td>
           <td>0.19</td>
           <td>0.12</td>
           <td>-0.15</td>
-          <td>-0.80</td>
           <td>0.04</td>
         </tr>
         <tr>
           <th rowspan="2" valign="top">2</th>
-          <th rowspan="2" valign="top">3568.63</th>
           <th rowspan="2" valign="top">9.51</th>
+          <th rowspan="2" valign="top">3568.63</th>
           <th rowspan="2" valign="top">59.74</th>
           <th>3323</th>
-          <td>0.23</td>
-          <td>-0.05</td>
           <td>-0.21</td>
+          <td>-0.23</td>
           <td>0.05</td>
-          <td>0.18</td>
-          <td>-0.04</td>
           <td>0.21</td>
-          <td>-0.06</td>
+          <td>-0.05</td>
+          <td>-0.18</td>
+          <td>0.04</td>
+          <td>0.06</td>
         </tr>
         <tr>
           <th>3324</th>
-          <td>-0.29</td>
-          <td>0.05</td>
-          <td>0.26</td>
+          <td>0.21</td>
+          <td>0.29</td>
           <td>-0.05</td>
-          <td>-0.22</td>
-          <td>0.04</td>
-          <td>-0.21</td>
-          <td>0.06</td>
+          <td>-0.26</td>
+          <td>0.05</td>
+          <td>0.22</td>
+          <td>-0.04</td>
+          <td>-0.06</td>
         </tr>
       </tbody>
     </table>
@@ -573,6 +616,23 @@ pull out the first two elements and first two modes:
 .. raw:: html
 
     <div>
+    <style scoped>
+        .dataframe tbody tr th:only-of-type {
+            vertical-align: middle;
+        }
+    
+        .dataframe tbody tr th {
+            vertical-align: top;
+        }
+    
+        .dataframe thead tr th {
+            text-align: left;
+        }
+    
+        .dataframe thead tr:last-of-type th {
+            text-align: right;
+        }
+    </style>
     <table border="1" class="dataframe">
       <thead>
         <tr>
@@ -585,16 +645,16 @@ pull out the first two elements and first two modes:
         <tr>
           <th></th>
           <th></th>
-          <th>EigenvalueReal</th>
-          <th>2758.15</th>
-          <th>3568.63</th>
+          <th>Freq</th>
+          <th>8.36</th>
+          <th>9.51</th>
         </tr>
         <tr>
           <th></th>
           <th></th>
-          <th>Freq</th>
-          <th>8.36</th>
-          <th>9.51</th>
+          <th>Eigenvalue</th>
+          <th>2758.15</th>
+          <th>3568.63</th>
         </tr>
         <tr>
           <th></th>
@@ -613,158 +673,31 @@ pull out the first two elements and first two modes:
       </thead>
       <tbody>
         <tr>
-          <th rowspan="30" valign="top">3684</th>
-          <th rowspan="10" valign="top">0</th>
+          <th rowspan="5" valign="top">3684</th>
+          <th rowspan="5" valign="top">0</th>
           <th>oxx</th>
-          <td>7.93e-12</td>
-          <td>1.14e-13</td>
+          <td>1.22e-12</td>
+          <td>-3.41e-13</td>
         </tr>
         <tr>
           <th>oyy</th>
-          <td>-3.58e-12</td>
-          <td>-7.96e-13</td>
+          <td>-3.35e-12</td>
+          <td>-2.27e-13</td>
         </tr>
         <tr>
           <th>ozz</th>
-          <td>-3.41e-13</td>
-          <td>2.27e-13</td>
+          <td>1.25e-12</td>
+          <td>4.55e-13</td>
         </tr>
         <tr>
           <th>txy</th>
-          <td>-1.99e-13</td>
-          <td>0.00e+00</td>
+          <td>-3.27e-13</td>
+          <td>1.82e-12</td>
         </tr>
         <tr>
           <th>tyz</th>
           <td>2.84e-14</td>
-          <td>5.68e-14</td>
-        </tr>
-        <tr>
-          <th>txz</th>
-          <td>5.12e-13</td>
-          <td>-2.27e-13</td>
-        </tr>
-        <tr>
-          <th>omax</th>
-          <td>7.96e-12</td>
-          <td>4.07e-13</td>
-        </tr>
-        <tr>
-          <th>omid</th>
-          <td>-3.72e-13</td>
-          <td>-6.22e-14</td>
-        </tr>
-        <tr>
-          <th>omin</th>
-          <td>-3.59e-12</td>
-          <td>-7.99e-13</td>
-        </tr>
-        <tr>
-          <th>von_mises</th>
-          <td>1.03e-11</td>
-          <td>1.05e-12</td>
-        </tr>
-        <tr>
-          <th rowspan="10" valign="top">55</th>
-          <th>oxx</th>
-          <td>2.33e-12</td>
-          <td>-2.10e-12</td>
-        </tr>
-        <tr>
-          <th>oyy</th>
-          <td>1.18e-12</td>
-          <td>-1.93e-12</td>
-        </tr>
-        <tr>
-          <th>ozz</th>
-          <td>-9.45e-13</td>
-          <td>-1.05e-12</td>
-        </tr>
-        <tr>
-          <th>txy</th>
-          <td>-3.98e-13</td>
-          <td>-9.09e-13</td>
-        </tr>
-        <tr>
-          <th>tyz</th>
-          <td>-2.62e-14</td>
-          <td>-9.88e-14</td>
-        </tr>
-        <tr>
-          <th>txz</th>
-          <td>-4.76e-13</td>
-          <td>-6.53e-13</td>
-        </tr>
-        <tr>
-          <th>omax</th>
-          <td>2.51e-12</td>
-          <td>-6.34e-13</td>
-        </tr>
-        <tr>
-          <th>omid</th>
-          <td>1.07e-12</td>
-          <td>-1.37e-12</td>
-        </tr>
-        <tr>
-          <th>omin</th>
-          <td>-1.02e-12</td>
-          <td>-3.08e-12</td>
-        </tr>
-        <tr>
-          <th>von_mises</th>
-          <td>3.07e-12</td>
-          <td>2.18e-12</td>
-        </tr>
-        <tr>
-          <th rowspan="10" valign="top">51</th>
-          <th>oxx</th>
-          <td>-8.67e-13</td>
-          <td>-3.98e-13</td>
-        </tr>
-        <tr>
-          <th>oyy</th>
-          <td>2.29e-12</td>
-          <td>9.66e-13</td>
-        </tr>
-        <tr>
-          <th>ozz</th>
-          <td>-2.53e-12</td>
-          <td>7.11e-13</td>
-        </tr>
-        <tr>
-          <th>txy</th>
-          <td>-3.15e-13</td>
-          <td>-1.98e-12</td>
-        </tr>
-        <tr>
-          <th>tyz</th>
-          <td>2.17e-14</td>
-          <td>-3.56e-13</td>
-        </tr>
-        <tr>
-          <th>txz</th>
-          <td>1.95e-13</td>
-          <td>-1.58e-13</td>
-        </tr>
-        <tr>
-          <th>omax</th>
-          <td>2.32e-12</td>
-          <td>2.40e-12</td>
-        </tr>
-        <tr>
-          <th>omid</th>
-          <td>-8.75e-13</td>
-          <td>7.31e-13</td>
-        </tr>
-        <tr>
-          <th>omin</th>
-          <td>-2.55e-12</td>
-          <td>-1.85e-12</td>
-        </tr>
-        <tr>
-          <th>von_mises</th>
-          <td>4.29e-12</td>
-          <td>3.71e-12</td>
+          <td>3.98e-13</td>
         </tr>
         <tr>
           <th>...</th>
@@ -774,158 +707,31 @@ pull out the first two elements and first two modes:
           <td>...</td>
         </tr>
         <tr>
-          <th rowspan="30" valign="top">3685</th>
-          <th rowspan="10" valign="top">46</th>
-          <th>oxx</th>
-          <td>-2.38e-13</td>
-          <td>2.84e-13</td>
-        </tr>
-        <tr>
-          <th>oyy</th>
-          <td>6.68e-13</td>
-          <td>-3.41e-13</td>
-        </tr>
-        <tr>
-          <th>ozz</th>
-          <td>1.28e-13</td>
-          <td>1.14e-13</td>
-        </tr>
-        <tr>
-          <th>txy</th>
-          <td>1.05e-13</td>
-          <td>3.84e-16</td>
-        </tr>
-        <tr>
-          <th>tyz</th>
-          <td>-2.84e-14</td>
-          <td>0.00e+00</td>
-        </tr>
-        <tr>
+          <th rowspan="5" valign="top">3685</th>
+          <th rowspan="5" valign="top">1037</th>
           <th>txz</th>
-          <td>2.14e-13</td>
-          <td>-9.59e-14</td>
+          <td>-2.84e-13</td>
+          <td>-1.82e-12</td>
         </tr>
         <tr>
           <th>omax</th>
-          <td>6.80e-13</td>
-          <td>3.27e-13</td>
+          <td>-7.47e-15</td>
+          <td>2.08e-12</td>
         </tr>
         <tr>
           <th>omid</th>
-          <td>2.26e-13</td>
-          <td>7.06e-14</td>
+          <td>-1.15e-13</td>
+          <td>-2.71e-13</td>
         </tr>
         <tr>
           <th>omin</th>
-          <td>-3.48e-13</td>
-          <td>-3.41e-13</td>
+          <td>-1.00e-12</td>
+          <td>-1.70e-12</td>
         </tr>
         <tr>
           <th>von_mises</th>
-          <td>8.92e-13</td>
-          <td>5.84e-13</td>
-        </tr>
-        <tr>
-          <th rowspan="10" valign="top">1031</th>
-          <th>oxx</th>
-          <td>-2.74e-12</td>
-          <td>-3.41e-13</td>
-        </tr>
-        <tr>
-          <th>oyy</th>
-          <td>-5.68e-13</td>
-          <td>3.41e-13</td>
-        </tr>
-        <tr>
-          <th>ozz</th>
-          <td>-1.42e-12</td>
-          <td>-4.55e-13</td>
-        </tr>
-        <tr>
-          <th>txy</th>
-          <td>1.07e-13</td>
-          <td>0.00e+00</td>
-        </tr>
-        <tr>
-          <th>tyz</th>
-          <td>0.00e+00</td>
-          <td>-2.27e-13</td>
-        </tr>
-        <tr>
-          <th>txz</th>
-          <td>-4.55e-13</td>
-          <td>4.55e-13</td>
-        </tr>
-        <tr>
-          <th>omax</th>
-          <td>-5.63e-13</td>
-          <td>4.26e-13</td>
-        </tr>
-        <tr>
-          <th>omid</th>
-          <td>-1.28e-12</td>
-          <td>-1.01e-28</td>
-        </tr>
-        <tr>
-          <th>omin</th>
-          <td>-2.89e-12</td>
-          <td>-8.80e-13</td>
-        </tr>
-        <tr>
-          <th>von_mises</th>
-          <td>2.06e-12</td>
-          <td>1.15e-12</td>
-        </tr>
-        <tr>
-          <th rowspan="10" valign="top">1037</th>
-          <th>oxx</th>
-          <td>2.42e-13</td>
-          <td>-1.14e-13</td>
-        </tr>
-        <tr>
-          <th>oyy</th>
-          <td>-1.28e-13</td>
-          <td>-4.55e-13</td>
-        </tr>
-        <tr>
-          <th>ozz</th>
-          <td>1.14e-13</td>
-          <td>0.00e+00</td>
-        </tr>
-        <tr>
-          <th>txy</th>
-          <td>-7.11e-15</td>
-          <td>2.84e-13</td>
-        </tr>
-        <tr>
-          <th>tyz</th>
-          <td>-1.42e-14</td>
-          <td>-1.14e-13</td>
-        </tr>
-        <tr>
-          <th>txz</th>
-          <td>-2.27e-13</td>
-          <td>4.55e-13</td>
-        </tr>
-        <tr>
-          <th>omax</th>
-          <td>4.14e-13</td>
-          <td>4.15e-13</td>
-        </tr>
-        <tr>
-          <th>omid</th>
-          <td>-5.52e-14</td>
-          <td>-2.05e-13</td>
-        </tr>
-        <tr>
-          <th>omin</th>
-          <td>-1.31e-13</td>
-          <td>-7.79e-13</td>
-        </tr>
-        <tr>
-          <th>von_mises</th>
-          <td>5.11e-13</td>
-          <td>1.03e-12</td>
+          <td>9.43e-13</td>
+          <td>3.30e-12</td>
         </tr>
       </tbody>
     </table>
@@ -948,6 +754,19 @@ Load ID, and have the items in the columns:
 .. raw:: html
 
     <div>
+    <style scoped>
+        .dataframe tbody tr th:only-of-type {
+            vertical-align: middle;
+        }
+    
+        .dataframe tbody tr th {
+            vertical-align: top;
+        }
+    
+        .dataframe thead th {
+            text-align: right;
+        }
+    </style>
     <table border="1" class="dataframe">
       <thead>
         <tr style="text-align: right;">
@@ -957,21 +776,21 @@ Load ID, and have the items in the columns:
           <th></th>
           <th></th>
           <th>Item</th>
+          <th>omax</th>
+          <th>omid</th>
+          <th>omin</th>
           <th>oxx</th>
           <th>oyy</th>
           <th>ozz</th>
           <th>txy</th>
-          <th>tyz</th>
           <th>txz</th>
-          <th>omax</th>
-          <th>omid</th>
-          <th>omin</th>
+          <th>tyz</th>
           <th>von_mises</th>
         </tr>
         <tr>
           <th>Mode</th>
-          <th>EigenvalueReal</th>
           <th>Freq</th>
+          <th>Eigenvalue</th>
           <th>Radians</th>
           <th>ElementID</th>
           <th>NodeID</th>
@@ -989,814 +808,162 @@ Load ID, and have the items in the columns:
       </thead>
       <tbody>
         <tr>
-          <th rowspan="30" valign="top">1</th>
-          <th rowspan="30" valign="top">2758.15</th>
-          <th rowspan="30" valign="top">8.36</th>
-          <th rowspan="30" valign="top">52.52</th>
-          <th rowspan="17" valign="top">3684</th>
+          <th rowspan="5" valign="top">1</th>
+          <th rowspan="5" valign="top">8.36</th>
+          <th rowspan="5" valign="top">2758.15</th>
+          <th rowspan="5" valign="top">52.52</th>
+          <th rowspan="5" valign="top">3684</th>
           <th>0</th>
-          <td>7.93e-12</td>
-          <td>-3.58e-12</td>
-          <td>-3.41e-13</td>
-          <td>-1.99e-13</td>
-          <td>2.84e-14</td>
-          <td>5.12e-13</td>
-          <td>7.96e-12</td>
-          <td>-3.72e-13</td>
-          <td>-3.59e-12</td>
-          <td>1.03e-11</td>
-        </tr>
-        <tr>
-          <th>41</th>
-          <td>NaN</td>
-          <td>NaN</td>
-          <td>NaN</td>
-          <td>NaN</td>
-          <td>NaN</td>
-          <td>NaN</td>
-          <td>NaN</td>
-          <td>NaN</td>
-          <td>NaN</td>
-          <td>NaN</td>
-        </tr>
-        <tr>
-          <th>45</th>
-          <td>NaN</td>
-          <td>NaN</td>
-          <td>NaN</td>
-          <td>NaN</td>
-          <td>NaN</td>
-          <td>NaN</td>
-          <td>NaN</td>
-          <td>NaN</td>
-          <td>NaN</td>
-          <td>NaN</td>
-        </tr>
-        <tr>
-          <th>46</th>
-          <td>NaN</td>
-          <td>NaN</td>
-          <td>NaN</td>
-          <td>NaN</td>
-          <td>NaN</td>
-          <td>NaN</td>
-          <td>NaN</td>
-          <td>NaN</td>
-          <td>NaN</td>
-          <td>NaN</td>
-        </tr>
-        <tr>
-          <th>50</th>
-          <td>NaN</td>
-          <td>NaN</td>
-          <td>NaN</td>
-          <td>NaN</td>
-          <td>NaN</td>
-          <td>NaN</td>
-          <td>NaN</td>
-          <td>NaN</td>
-          <td>NaN</td>
-          <td>NaN</td>
-        </tr>
-        <tr>
-          <th>51</th>
-          <td>-8.67e-13</td>
-          <td>2.29e-12</td>
-          <td>-2.53e-12</td>
-          <td>-3.15e-13</td>
-          <td>2.17e-14</td>
-          <td>1.95e-13</td>
-          <td>2.32e-12</td>
-          <td>-8.75e-13</td>
-          <td>-2.55e-12</td>
-          <td>4.29e-12</td>
-        </tr>
-        <tr>
-          <th>55</th>
-          <td>2.33e-12</td>
-          <td>1.18e-12</td>
-          <td>-9.45e-13</td>
-          <td>-3.98e-13</td>
-          <td>-2.62e-14</td>
-          <td>-4.76e-13</td>
-          <td>2.51e-12</td>
-          <td>1.07e-12</td>
-          <td>-1.02e-12</td>
-          <td>3.07e-12</td>
-        </tr>
-        <tr>
-          <th>56</th>
-          <td>-5.37e-12</td>
-          <td>-2.76e-12</td>
-          <td>-2.43e-12</td>
-          <td>-4.92e-13</td>
-          <td>1.14e-13</td>
-          <td>-1.95e-13</td>
-          <td>-2.35e-12</td>
-          <td>-2.74e-12</td>
-          <td>-5.47e-12</td>
-          <td>2.95e-12</td>
-        </tr>
-        <tr>
-          <th>60</th>
-          <td>8.81e-13</td>
-          <td>-2.10e-12</td>
-          <td>-4.97e-13</td>
-          <td>5.68e-14</td>
-          <td>1.14e-13</td>
-          <td>-2.93e-13</td>
-          <td>9.41e-13</td>
-          <td>-5.47e-13</td>
-          <td>-2.11e-12</td>
-          <td>2.65e-12</td>
-        </tr>
-        <tr>
-          <th>758</th>
-          <td>2.22e-12</td>
-          <td>1.63e-12</td>
-          <td>2.43e-12</td>
-          <td>-1.99e-13</td>
-          <td>-2.49e-14</td>
-          <td>-3.41e-13</td>
-          <td>2.69e-12</td>
-          <td>2.04e-12</td>
-          <td>1.55e-12</td>
-          <td>9.89e-13</td>
-        </tr>
-        <tr>
-          <th>778</th>
-          <td>-3.24e-12</td>
-          <td>-1.88e-12</td>
-          <td>-4.99e-12</td>
-          <td>-1.15e-13</td>
-          <td>-5.52e-15</td>
-          <td>-3.41e-13</td>
-          <td>-1.87e-12</td>
-          <td>-3.19e-12</td>
-          <td>-5.05e-12</td>
-          <td>2.77e-12</td>
-        </tr>
-        <tr>
-          <th>880</th>
-          <td>1.76e-12</td>
-          <td>1.88e-12</td>
-          <td>1.82e-12</td>
-          <td>-5.26e-13</td>
-          <td>1.14e-13</td>
-          <td>0.00e+00</td>
-          <td>2.36e-12</td>
-          <td>1.82e-12</td>
-          <td>1.28e-12</td>
-          <td>9.37e-13</td>
-        </tr>
-        <tr>
-          <th>952</th>
-          <td>-5.29e-12</td>
-          <td>-7.11e-13</td>
-          <td>-1.93e-12</td>
-          <td>-1.71e-13</td>
-          <td>5.68e-14</td>
-          <td>2.27e-13</td>
-          <td>-7.02e-13</td>
-          <td>-1.92e-12</td>
-          <td>-5.31e-12</td>
-          <td>4.13e-12</td>
-        </tr>
-        <tr>
-          <th>1015</th>
-          <td>NaN</td>
-          <td>NaN</td>
-          <td>NaN</td>
-          <td>NaN</td>
-          <td>NaN</td>
-          <td>NaN</td>
-          <td>NaN</td>
-          <td>NaN</td>
-          <td>NaN</td>
-          <td>NaN</td>
-        </tr>
-        <tr>
-          <th>1021</th>
-          <td>NaN</td>
-          <td>NaN</td>
-          <td>NaN</td>
-          <td>NaN</td>
-          <td>NaN</td>
-          <td>NaN</td>
-          <td>NaN</td>
-          <td>NaN</td>
-          <td>NaN</td>
-          <td>NaN</td>
-        </tr>
-        <tr>
-          <th>1031</th>
-          <td>NaN</td>
-          <td>NaN</td>
-          <td>NaN</td>
-          <td>NaN</td>
-          <td>NaN</td>
-          <td>NaN</td>
-          <td>NaN</td>
-          <td>NaN</td>
-          <td>NaN</td>
-          <td>NaN</td>
-        </tr>
-        <tr>
-          <th>1037</th>
-          <td>NaN</td>
-          <td>NaN</td>
-          <td>NaN</td>
-          <td>NaN</td>
-          <td>NaN</td>
-          <td>NaN</td>
-          <td>NaN</td>
-          <td>NaN</td>
-          <td>NaN</td>
-          <td>NaN</td>
-        </tr>
-        <tr>
-          <th rowspan="13" valign="top">3685</th>
-          <th>0</th>
-          <td>7.18e-13</td>
-          <td>1.85e-13</td>
-          <td>-2.13e-13</td>
-          <td>1.17e-13</td>
-          <td>-3.55e-14</td>
-          <td>3.41e-13</td>
-          <td>8.45e-13</td>
-          <td>1.79e-13</td>
-          <td>-3.34e-13</td>
+          <td>1.48e-12</td>
           <td>1.02e-12</td>
-        </tr>
-        <tr>
-          <th>41</th>
-          <td>-8.46e-13</td>
-          <td>-6.04e-13</td>
-          <td>-6.04e-14</td>
-          <td>2.20e-13</td>
-          <td>-3.50e-15</td>
-          <td>1.71e-13</td>
-          <td>-2.15e-14</td>
-          <td>-4.89e-13</td>
-          <td>-1.00e-12</td>
-          <td>8.48e-13</td>
-        </tr>
-        <tr>
-          <th>45</th>
-          <td>1.06e-12</td>
-          <td>-5.65e-13</td>
-          <td>5.68e-13</td>
-          <td>3.55e-14</td>
-          <td>-5.37e-15</td>
-          <td>-1.18e-13</td>
-          <td>1.09e-12</td>
-          <td>5.42e-13</td>
-          <td>-5.66e-13</td>
-          <td>1.46e-12</td>
-        </tr>
-        <tr>
-          <th>46</th>
-          <td>-2.38e-13</td>
-          <td>6.68e-13</td>
-          <td>1.28e-13</td>
-          <td>1.05e-13</td>
-          <td>-2.84e-14</td>
-          <td>2.14e-13</td>
-          <td>6.80e-13</td>
-          <td>2.26e-13</td>
-          <td>-3.48e-13</td>
-          <td>8.92e-13</td>
-        </tr>
-        <tr>
-          <th>50</th>
-          <td>-6.04e-14</td>
-          <td>1.14e-13</td>
-          <td>6.39e-14</td>
-          <td>-4.26e-14</td>
-          <td>-2.84e-14</td>
-          <td>-9.99e-14</td>
-          <td>1.27e-13</td>
-          <td>1.17e-13</td>
-          <td>-1.27e-13</td>
-          <td>2.49e-13</td>
-        </tr>
-        <tr>
-          <th>51</th>
-          <td>NaN</td>
-          <td>NaN</td>
-          <td>NaN</td>
-          <td>NaN</td>
-          <td>NaN</td>
-          <td>NaN</td>
-          <td>NaN</td>
-          <td>NaN</td>
-          <td>NaN</td>
-          <td>NaN</td>
+          <td>-3.38e-12</td>
+          <td>1.22e-12</td>
+          <td>-3.35e-12</td>
+          <td>1.25e-12</td>
+          <td>-3.27e-13</td>
+          <td>-2.27e-13</td>
+          <td>2.84e-14</td>
+          <td>4.64e-12</td>
         </tr>
         <tr>
           <th>55</th>
-          <td>NaN</td>
-          <td>NaN</td>
-          <td>NaN</td>
-          <td>NaN</td>
-          <td>NaN</td>
-          <td>NaN</td>
-          <td>NaN</td>
-          <td>NaN</td>
-          <td>NaN</td>
-          <td>NaN</td>
-        </tr>
-        <tr>
-          <th>56</th>
-          <td>NaN</td>
-          <td>NaN</td>
-          <td>NaN</td>
-          <td>NaN</td>
-          <td>NaN</td>
-          <td>NaN</td>
-          <td>NaN</td>
-          <td>NaN</td>
-          <td>NaN</td>
-          <td>NaN</td>
-        </tr>
-        <tr>
-          <th>60</th>
-          <td>NaN</td>
-          <td>NaN</td>
-          <td>NaN</td>
-          <td>NaN</td>
-          <td>NaN</td>
-          <td>NaN</td>
-          <td>NaN</td>
-          <td>NaN</td>
-          <td>NaN</td>
-          <td>NaN</td>
-        </tr>
-        <tr>
-          <th>758</th>
-          <td>NaN</td>
-          <td>NaN</td>
-          <td>NaN</td>
-          <td>NaN</td>
-          <td>NaN</td>
-          <td>NaN</td>
-          <td>NaN</td>
-          <td>NaN</td>
-          <td>NaN</td>
-          <td>NaN</td>
-        </tr>
-        <tr>
-          <th>778</th>
-          <td>NaN</td>
-          <td>NaN</td>
-          <td>NaN</td>
-          <td>NaN</td>
-          <td>NaN</td>
-          <td>NaN</td>
-          <td>NaN</td>
-          <td>NaN</td>
-          <td>NaN</td>
-          <td>NaN</td>
-        </tr>
-        <tr>
-          <th>880</th>
-          <td>NaN</td>
-          <td>NaN</td>
-          <td>NaN</td>
-          <td>NaN</td>
-          <td>NaN</td>
-          <td>NaN</td>
-          <td>NaN</td>
-          <td>NaN</td>
-          <td>NaN</td>
-          <td>NaN</td>
-        </tr>
-        <tr>
-          <th>952</th>
-          <td>NaN</td>
-          <td>NaN</td>
-          <td>NaN</td>
-          <td>NaN</td>
-          <td>NaN</td>
-          <td>NaN</td>
-          <td>NaN</td>
-          <td>NaN</td>
-          <td>NaN</td>
-          <td>NaN</td>
-        </tr>
-        <tr>
-          <th>...</th>
-          <th>...</th>
-          <th>...</th>
-          <th>...</th>
-          <th>...</th>
-          <th>...</th>
-          <td>...</td>
-          <td>...</td>
-          <td>...</td>
-          <td>...</td>
-          <td>...</td>
-          <td>...</td>
-          <td>...</td>
-          <td>...</td>
-          <td>...</td>
-          <td>...</td>
-        </tr>
-        <tr>
-          <th rowspan="30" valign="top">2</th>
-          <th rowspan="30" valign="top">3568.63</th>
-          <th rowspan="30" valign="top">9.51</th>
-          <th rowspan="30" valign="top">59.74</th>
-          <th rowspan="13" valign="top">3684</th>
-          <th>50</th>
-          <td>NaN</td>
-          <td>NaN</td>
-          <td>NaN</td>
-          <td>NaN</td>
-          <td>NaN</td>
-          <td>NaN</td>
-          <td>NaN</td>
-          <td>NaN</td>
-          <td>NaN</td>
-          <td>NaN</td>
+          <td>4.81e-12</td>
+          <td>1.92e-13</td>
+          <td>-3.57e-13</td>
+          <td>4.53e-12</td>
+          <td>-2.42e-13</td>
+          <td>3.55e-13</td>
+          <td>-6.54e-13</td>
+          <td>-9.30e-13</td>
+          <td>2.20e-15</td>
+          <td>4.92e-12</td>
         </tr>
         <tr>
           <th>51</th>
-          <td>-3.98e-13</td>
-          <td>9.66e-13</td>
-          <td>7.11e-13</td>
-          <td>-1.98e-12</td>
-          <td>-3.56e-13</td>
-          <td>-1.58e-13</td>
-          <td>2.40e-12</td>
-          <td>7.31e-13</td>
-          <td>-1.85e-12</td>
-          <td>3.71e-12</td>
-        </tr>
-        <tr>
-          <th>55</th>
-          <td>-2.10e-12</td>
-          <td>-1.93e-12</td>
-          <td>-1.05e-12</td>
-          <td>-9.09e-13</td>
-          <td>-9.88e-14</td>
-          <td>-6.53e-13</td>
-          <td>-6.34e-13</td>
-          <td>-1.37e-12</td>
-          <td>-3.08e-12</td>
-          <td>2.18e-12</td>
-        </tr>
-        <tr>
-          <th>56</th>
-          <td>2.84e-13</td>
-          <td>-4.55e-13</td>
-          <td>-8.53e-13</td>
-          <td>-9.09e-13</td>
-          <td>-2.27e-13</td>
-          <td>9.52e-14</td>
-          <td>9.20e-13</td>
-          <td>-8.07e-13</td>
-          <td>-1.14e-12</td>
-          <td>1.91e-12</td>
-        </tr>
-        <tr>
-          <th>60</th>
-          <td>5.12e-13</td>
-          <td>1.14e-12</td>
-          <td>5.12e-13</td>
-          <td>-9.09e-13</td>
-          <td>-2.27e-13</td>
-          <td>-3.68e-14</td>
-          <td>1.81e-12</td>
-          <td>5.30e-13</td>
-          <td>-1.76e-13</td>
-          <td>1.74e-12</td>
-        </tr>
-        <tr>
-          <th>758</th>
-          <td>3.41e-13</td>
-          <td>2.05e-12</td>
-          <td>1.08e-12</td>
-          <td>-9.09e-13</td>
-          <td>-3.40e-13</td>
-          <td>4.55e-13</td>
-          <td>2.60e-12</td>
-          <td>9.89e-13</td>
-          <td>-1.25e-13</td>
-          <td>2.38e-12</td>
+          <td>2.32e-12</td>
+          <td>1.49e-13</td>
+          <td>-1.41e-12</td>
+          <td>-1.39e-12</td>
+          <td>2.32e-12</td>
+          <td>1.35e-13</td>
+          <td>-1.30e-13</td>
+          <td>-1.46e-13</td>
+          <td>7.51e-15</td>
+          <td>3.25e-12</td>
         </tr>
         <tr>
           <th>778</th>
-          <td>2.27e-13</td>
-          <td>2.27e-13</td>
-          <td>3.98e-13</td>
-          <td>-1.03e-12</td>
-          <td>2.30e-14</td>
-          <td>4.55e-13</td>
-          <td>1.36e-12</td>
-          <td>3.87e-13</td>
-          <td>-8.99e-13</td>
-          <td>1.97e-12</td>
-        </tr>
-        <tr>
-          <th>880</th>
-          <td>-1.71e-12</td>
-          <td>1.59e-12</td>
-          <td>9.09e-13</td>
-          <td>-9.09e-13</td>
-          <td>-2.27e-13</td>
-          <td>4.55e-13</td>
-          <td>1.94e-12</td>
-          <td>8.48e-13</td>
-          <td>-1.99e-12</td>
-          <td>3.51e-12</td>
-        </tr>
-        <tr>
-          <th>952</th>
-          <td>-1.02e-12</td>
-          <td>1.36e-12</td>
-          <td>-1.36e-12</td>
-          <td>-9.09e-13</td>
-          <td>0.00e+00</td>
-          <td>4.55e-13</td>
-          <td>1.68e-12</td>
-          <td>-9.20e-13</td>
-          <td>-1.78e-12</td>
-          <td>3.12e-12</td>
-        </tr>
-        <tr>
-          <th>1015</th>
-          <td>NaN</td>
-          <td>NaN</td>
-          <td>NaN</td>
-          <td>NaN</td>
-          <td>NaN</td>
-          <td>NaN</td>
-          <td>NaN</td>
-          <td>NaN</td>
-          <td>NaN</td>
-          <td>NaN</td>
-        </tr>
-        <tr>
-          <th>1021</th>
-          <td>NaN</td>
-          <td>NaN</td>
-          <td>NaN</td>
-          <td>NaN</td>
-          <td>NaN</td>
-          <td>NaN</td>
-          <td>NaN</td>
-          <td>NaN</td>
-          <td>NaN</td>
-          <td>NaN</td>
-        </tr>
-        <tr>
-          <th>1031</th>
-          <td>NaN</td>
-          <td>NaN</td>
-          <td>NaN</td>
-          <td>NaN</td>
-          <td>NaN</td>
-          <td>NaN</td>
-          <td>NaN</td>
-          <td>NaN</td>
-          <td>NaN</td>
-          <td>NaN</td>
-        </tr>
-        <tr>
-          <th>1037</th>
-          <td>NaN</td>
-          <td>NaN</td>
-          <td>NaN</td>
-          <td>NaN</td>
-          <td>NaN</td>
-          <td>NaN</td>
-          <td>NaN</td>
-          <td>NaN</td>
-          <td>NaN</td>
-          <td>NaN</td>
-        </tr>
-        <tr>
-          <th rowspan="17" valign="top">3685</th>
-          <th>0</th>
-          <td>1.14e-13</td>
-          <td>-3.41e-13</td>
-          <td>2.27e-13</td>
-          <td>-2.84e-14</td>
-          <td>-5.68e-14</td>
-          <td>6.82e-13</td>
-          <td>8.58e-13</td>
-          <td>-3.42e-13</td>
-          <td>-5.16e-13</td>
-          <td>1.30e-12</td>
-        </tr>
-        <tr>
-          <th>41</th>
-          <td>-2.84e-13</td>
-          <td>2.27e-13</td>
-          <td>-2.84e-14</td>
-          <td>-9.02e-13</td>
-          <td>-3.56e-13</td>
-          <td>1.07e-12</td>
-          <td>1.53e-12</td>
-          <td>-2.31e-13</td>
           <td>-1.38e-12</td>
-          <td>2.54e-12</td>
-        </tr>
-        <tr>
-          <th>45</th>
-          <td>-5.68e-13</td>
-          <td>0.00e+00</td>
-          <td>1.14e-13</td>
-          <td>2.27e-13</td>
-          <td>-3.26e-13</td>
-          <td>6.52e-13</td>
-          <td>5.63e-13</td>
-          <td>6.88e-14</td>
-          <td>-1.09e-12</td>
-          <td>1.47e-12</td>
-        </tr>
-        <tr>
-          <th>46</th>
-          <td>2.84e-13</td>
+          <td>-3.27e-12</td>
+          <td>-6.12e-12</td>
+          <td>-6.08e-12</td>
+          <td>-1.38e-12</td>
+          <td>-3.31e-12</td>
+          <td>-5.81e-14</td>
           <td>-3.41e-13</td>
-          <td>1.14e-13</td>
-          <td>3.84e-16</td>
-          <td>0.00e+00</td>
-          <td>-9.59e-14</td>
-          <td>3.27e-13</td>
-          <td>7.06e-14</td>
-          <td>-3.41e-13</td>
-          <td>5.84e-13</td>
-        </tr>
-        <tr>
-          <th>50</th>
-          <td>5.12e-13</td>
-          <td>6.82e-13</td>
-          <td>3.98e-13</td>
-          <td>4.55e-13</td>
-          <td>0.00e+00</td>
-          <td>9.45e-13</td>
-          <td>1.54e-12</td>
-          <td>6.27e-13</td>
-          <td>-5.73e-13</td>
-          <td>1.83e-12</td>
-        </tr>
-        <tr>
-          <th>51</th>
-          <td>NaN</td>
-          <td>NaN</td>
-          <td>NaN</td>
-          <td>NaN</td>
-          <td>NaN</td>
-          <td>NaN</td>
-          <td>NaN</td>
-          <td>NaN</td>
-          <td>NaN</td>
-          <td>NaN</td>
-        </tr>
-        <tr>
-          <th>55</th>
-          <td>NaN</td>
-          <td>NaN</td>
-          <td>NaN</td>
-          <td>NaN</td>
-          <td>NaN</td>
-          <td>NaN</td>
-          <td>NaN</td>
-          <td>NaN</td>
-          <td>NaN</td>
-          <td>NaN</td>
-        </tr>
-        <tr>
-          <th>56</th>
-          <td>NaN</td>
-          <td>NaN</td>
-          <td>NaN</td>
-          <td>NaN</td>
-          <td>NaN</td>
-          <td>NaN</td>
-          <td>NaN</td>
-          <td>NaN</td>
-          <td>NaN</td>
-          <td>NaN</td>
-        </tr>
-        <tr>
-          <th>60</th>
-          <td>NaN</td>
-          <td>NaN</td>
-          <td>NaN</td>
-          <td>NaN</td>
-          <td>NaN</td>
-          <td>NaN</td>
-          <td>NaN</td>
-          <td>NaN</td>
-          <td>NaN</td>
-          <td>NaN</td>
+          <td>-1.97e-14</td>
+          <td>4.14e-12</td>
         </tr>
         <tr>
           <th>758</th>
-          <td>NaN</td>
-          <td>NaN</td>
-          <td>NaN</td>
-          <td>NaN</td>
-          <td>NaN</td>
-          <td>NaN</td>
-          <td>NaN</td>
-          <td>NaN</td>
-          <td>NaN</td>
-          <td>NaN</td>
-        </tr>
-        <tr>
-          <th>778</th>
-          <td>NaN</td>
-          <td>NaN</td>
-          <td>NaN</td>
-          <td>NaN</td>
-          <td>NaN</td>
-          <td>NaN</td>
-          <td>NaN</td>
-          <td>NaN</td>
-          <td>NaN</td>
-          <td>NaN</td>
-        </tr>
-        <tr>
-          <th>880</th>
-          <td>NaN</td>
-          <td>NaN</td>
-          <td>NaN</td>
-          <td>NaN</td>
-          <td>NaN</td>
-          <td>NaN</td>
-          <td>NaN</td>
-          <td>NaN</td>
-          <td>NaN</td>
-          <td>NaN</td>
-        </tr>
-        <tr>
-          <th>952</th>
-          <td>NaN</td>
-          <td>NaN</td>
-          <td>NaN</td>
-          <td>NaN</td>
-          <td>NaN</td>
-          <td>NaN</td>
-          <td>NaN</td>
-          <td>NaN</td>
-          <td>NaN</td>
-          <td>NaN</td>
-        </tr>
-        <tr>
-          <th>1015</th>
-          <td>-1.14e-13</td>
-          <td>5.68e-14</td>
-          <td>1.71e-13</td>
+          <td>5.79e-12</td>
+          <td>4.11e-12</td>
+          <td>7.57e-14</td>
+          <td>5.68e-12</td>
           <td>1.14e-13</td>
-          <td>-1.13e-13</td>
-          <td>4.55e-13</td>
-          <td>5.06e-13</td>
-          <td>1.01e-13</td>
-          <td>-4.94e-13</td>
-          <td>8.71e-13</td>
+          <td>4.18e-12</td>
+          <td>-4.55e-13</td>
+          <td>-3.41e-13</td>
+          <td>-3.91e-14</td>
+          <td>5.09e-12</td>
         </tr>
         <tr>
-          <th>1021</th>
+          <th>...</th>
+          <th>...</th>
+          <th>...</th>
+          <th>...</th>
+          <th>...</th>
+          <th>...</th>
+          <td>...</td>
+          <td>...</td>
+          <td>...</td>
+          <td>...</td>
+          <td>...</td>
+          <td>...</td>
+          <td>...</td>
+          <td>...</td>
+          <td>...</td>
+          <td>...</td>
+        </tr>
+        <tr>
+          <th rowspan="5" valign="top">2</th>
+          <th rowspan="5" valign="top">9.51</th>
+          <th rowspan="5" valign="top">3568.63</th>
+          <th rowspan="5" valign="top">59.74</th>
+          <th rowspan="5" valign="top">3685</th>
+          <th>1015</th>
+          <td>1.19e-12</td>
+          <td>-9.78e-14</td>
+          <td>-6.96e-13</td>
+          <td>3.41e-13</td>
+          <td>-5.68e-14</td>
+          <td>1.14e-13</td>
+          <td>-2.27e-13</td>
+          <td>-9.09e-13</td>
+          <td>1.13e-13</td>
+          <td>1.67e-12</td>
+        </tr>
+        <tr>
+          <th>50</th>
+          <td>4.88e-13</td>
+          <td>-1.28e-13</td>
+          <td>-1.21e-12</td>
+          <td>-3.98e-13</td>
+          <td>1.14e-13</td>
+          <td>-5.68e-13</td>
+          <td>-5.68e-13</td>
+          <td>-4.90e-13</td>
+          <td>-2.27e-13</td>
+          <td>1.49e-12</td>
+        </tr>
+        <tr>
+          <th>46</th>
+          <td>6.22e-13</td>
+          <td>2.26e-14</td>
+          <td>-5.87e-13</td>
+          <td>-2.84e-13</td>
+          <td>3.41e-13</td>
           <td>0.00e+00</td>
-          <td>5.68e-14</td>
-          <td>1.71e-13</td>
-          <td>9.15e-13</td>
-          <td>-9.06e-14</td>
-          <td>-4.55e-13</td>
-          <td>1.11e-12</td>
-          <td>7.50e-14</td>
-          <td>-9.53e-13</td>
-          <td>1.78e-12</td>
+          <td>4.54e-13</td>
+          <td>9.59e-14</td>
+          <td>-2.27e-13</td>
+          <td>1.05e-12</td>
         </tr>
         <tr>
           <th>1031</th>
-          <td>-3.41e-13</td>
-          <td>3.41e-13</td>
-          <td>-4.55e-13</td>
-          <td>0.00e+00</td>
+          <td>2.32e-12</td>
+          <td>-6.90e-13</td>
+          <td>-1.63e-12</td>
           <td>-2.27e-13</td>
+          <td>-6.82e-13</td>
+          <td>9.09e-13</td>
           <td>4.55e-13</td>
-          <td>4.26e-13</td>
-          <td>-1.01e-28</td>
-          <td>-8.80e-13</td>
-          <td>1.15e-12</td>
+          <td>-1.82e-12</td>
+          <td>-2.27e-13</td>
+          <td>3.57e-12</td>
         </tr>
         <tr>
           <th>1037</th>
-          <td>-1.14e-13</td>
-          <td>-4.55e-13</td>
-          <td>0.00e+00</td>
-          <td>2.84e-13</td>
-          <td>-1.14e-13</td>
+          <td>2.08e-12</td>
+          <td>-2.71e-13</td>
+          <td>-1.70e-12</td>
           <td>4.55e-13</td>
-          <td>4.15e-13</td>
-          <td>-2.05e-13</td>
-          <td>-7.79e-13</td>
-          <td>1.03e-12</td>
+          <td>-3.41e-13</td>
+          <td>0.00e+00</td>
+          <td>-3.98e-13</td>
+          <td>-1.82e-12</td>
+          <td>-1.14e-13</td>
+          <td>3.30e-12</td>
         </tr>
       </tbody>
     </table>
@@ -1821,6 +988,19 @@ We actually need to get rid of the extra rows using dropna():
 .. raw:: html
 
     <div>
+    <style scoped>
+        .dataframe tbody tr th:only-of-type {
+            vertical-align: middle;
+        }
+    
+        .dataframe tbody tr th {
+            vertical-align: top;
+        }
+    
+        .dataframe thead th {
+            text-align: right;
+        }
+    </style>
     <table border="1" class="dataframe">
       <thead>
         <tr style="text-align: right;">
@@ -1830,21 +1010,21 @@ We actually need to get rid of the extra rows using dropna():
           <th></th>
           <th></th>
           <th>Item</th>
+          <th>omax</th>
+          <th>omid</th>
+          <th>omin</th>
           <th>oxx</th>
           <th>oyy</th>
           <th>ozz</th>
           <th>txy</th>
-          <th>tyz</th>
           <th>txz</th>
-          <th>omax</th>
-          <th>omid</th>
-          <th>omin</th>
+          <th>tyz</th>
           <th>von_mises</th>
         </tr>
         <tr>
           <th>Mode</th>
-          <th>EigenvalueReal</th>
           <th>Freq</th>
+          <th>Eigenvalue</th>
           <th>Radians</th>
           <th>ElementID</th>
           <th>NodeID</th>
@@ -1863,483 +1043,483 @@ We actually need to get rid of the extra rows using dropna():
       <tbody>
         <tr>
           <th rowspan="18" valign="top">1</th>
-          <th rowspan="18" valign="top">2758.15</th>
           <th rowspan="18" valign="top">8.36</th>
+          <th rowspan="18" valign="top">2758.15</th>
           <th rowspan="18" valign="top">52.52</th>
           <th rowspan="9" valign="top">3684</th>
           <th>0</th>
-          <td>7.93e-12</td>
-          <td>-3.58e-12</td>
-          <td>-3.41e-13</td>
-          <td>-1.99e-13</td>
+          <td>1.48e-12</td>
+          <td>1.02e-12</td>
+          <td>-3.38e-12</td>
+          <td>1.22e-12</td>
+          <td>-3.35e-12</td>
+          <td>1.25e-12</td>
+          <td>-3.27e-13</td>
+          <td>-2.27e-13</td>
           <td>2.84e-14</td>
-          <td>5.12e-13</td>
-          <td>7.96e-12</td>
-          <td>-3.72e-13</td>
-          <td>-3.59e-12</td>
-          <td>1.03e-11</td>
-        </tr>
-        <tr>
-          <th>51</th>
-          <td>-8.67e-13</td>
-          <td>2.29e-12</td>
-          <td>-2.53e-12</td>
-          <td>-3.15e-13</td>
-          <td>2.17e-14</td>
-          <td>1.95e-13</td>
-          <td>2.32e-12</td>
-          <td>-8.75e-13</td>
-          <td>-2.55e-12</td>
-          <td>4.29e-12</td>
+          <td>4.64e-12</td>
         </tr>
         <tr>
           <th>55</th>
-          <td>2.33e-12</td>
-          <td>1.18e-12</td>
-          <td>-9.45e-13</td>
-          <td>-3.98e-13</td>
-          <td>-2.62e-14</td>
-          <td>-4.76e-13</td>
-          <td>2.51e-12</td>
-          <td>1.07e-12</td>
-          <td>-1.02e-12</td>
-          <td>3.07e-12</td>
+          <td>4.81e-12</td>
+          <td>1.92e-13</td>
+          <td>-3.57e-13</td>
+          <td>4.53e-12</td>
+          <td>-2.42e-13</td>
+          <td>3.55e-13</td>
+          <td>-6.54e-13</td>
+          <td>-9.30e-13</td>
+          <td>2.20e-15</td>
+          <td>4.92e-12</td>
         </tr>
         <tr>
-          <th>56</th>
-          <td>-5.37e-12</td>
-          <td>-2.76e-12</td>
-          <td>-2.43e-12</td>
-          <td>-4.92e-13</td>
-          <td>1.14e-13</td>
-          <td>-1.95e-13</td>
-          <td>-2.35e-12</td>
-          <td>-2.74e-12</td>
-          <td>-5.47e-12</td>
-          <td>2.95e-12</td>
-        </tr>
-        <tr>
-          <th>60</th>
-          <td>8.81e-13</td>
-          <td>-2.10e-12</td>
-          <td>-4.97e-13</td>
-          <td>5.68e-14</td>
-          <td>1.14e-13</td>
-          <td>-2.93e-13</td>
-          <td>9.41e-13</td>
-          <td>-5.47e-13</td>
-          <td>-2.11e-12</td>
-          <td>2.65e-12</td>
-        </tr>
-        <tr>
-          <th>758</th>
-          <td>2.22e-12</td>
-          <td>1.63e-12</td>
-          <td>2.43e-12</td>
-          <td>-1.99e-13</td>
-          <td>-2.49e-14</td>
-          <td>-3.41e-13</td>
-          <td>2.69e-12</td>
-          <td>2.04e-12</td>
-          <td>1.55e-12</td>
-          <td>9.89e-13</td>
+          <th>51</th>
+          <td>2.32e-12</td>
+          <td>1.49e-13</td>
+          <td>-1.41e-12</td>
+          <td>-1.39e-12</td>
+          <td>2.32e-12</td>
+          <td>1.35e-13</td>
+          <td>-1.30e-13</td>
+          <td>-1.46e-13</td>
+          <td>7.51e-15</td>
+          <td>3.25e-12</td>
         </tr>
         <tr>
           <th>778</th>
-          <td>-3.24e-12</td>
-          <td>-1.88e-12</td>
-          <td>-4.99e-12</td>
-          <td>-1.15e-13</td>
-          <td>-5.52e-15</td>
+          <td>-1.38e-12</td>
+          <td>-3.27e-12</td>
+          <td>-6.12e-12</td>
+          <td>-6.08e-12</td>
+          <td>-1.38e-12</td>
+          <td>-3.31e-12</td>
+          <td>-5.81e-14</td>
           <td>-3.41e-13</td>
-          <td>-1.87e-12</td>
-          <td>-3.19e-12</td>
-          <td>-5.05e-12</td>
-          <td>2.77e-12</td>
+          <td>-1.97e-14</td>
+          <td>4.14e-12</td>
+        </tr>
+        <tr>
+          <th>758</th>
+          <td>5.79e-12</td>
+          <td>4.11e-12</td>
+          <td>7.57e-14</td>
+          <td>5.68e-12</td>
+          <td>1.14e-13</td>
+          <td>4.18e-12</td>
+          <td>-4.55e-13</td>
+          <td>-3.41e-13</td>
+          <td>-3.91e-14</td>
+          <td>5.09e-12</td>
+        </tr>
+        <tr>
+          <th>60</th>
+          <td>2.88e-12</td>
+          <td>1.71e-12</td>
+          <td>-4.27e-12</td>
+          <td>2.63e-12</td>
+          <td>1.90e-12</td>
+          <td>-4.21e-12</td>
+          <td>-4.26e-13</td>
+          <td>-6.34e-13</td>
+          <td>8.53e-14</td>
+          <td>6.64e-12</td>
+        </tr>
+        <tr>
+          <th>56</th>
+          <td>1.66e-12</td>
+          <td>-1.65e-12</td>
+          <td>-5.92e-12</td>
+          <td>-5.87e-12</td>
+          <td>1.65e-12</td>
+          <td>-1.69e-12</td>
+          <td>-3.07e-13</td>
+          <td>-4.22e-13</td>
+          <td>8.53e-14</td>
+          <td>6.59e-12</td>
         </tr>
         <tr>
           <th>880</th>
-          <td>1.76e-12</td>
-          <td>1.88e-12</td>
-          <td>1.82e-12</td>
-          <td>-5.26e-13</td>
-          <td>1.14e-13</td>
+          <td>2.63e-12</td>
+          <td>2.11e-12</td>
+          <td>-4.74e-12</td>
+          <td>-4.72e-12</td>
+          <td>2.10e-12</td>
+          <td>2.61e-12</td>
+          <td>-3.41e-13</td>
           <td>0.00e+00</td>
-          <td>2.36e-12</td>
-          <td>1.82e-12</td>
-          <td>1.28e-12</td>
-          <td>9.37e-13</td>
+          <td>8.53e-14</td>
+          <td>7.12e-12</td>
         </tr>
         <tr>
           <th>952</th>
-          <td>-5.29e-12</td>
-          <td>-7.11e-13</td>
-          <td>-1.93e-12</td>
-          <td>-1.71e-13</td>
-          <td>5.68e-14</td>
+          <td>-8.35e-15</td>
+          <td>-1.79e-12</td>
+          <td>-3.00e-12</td>
+          <td>-1.73e-12</td>
+          <td>-1.14e-13</td>
+          <td>-2.96e-12</td>
+          <td>-4.26e-13</td>
           <td>2.27e-13</td>
-          <td>-7.02e-13</td>
-          <td>-1.92e-12</td>
-          <td>-5.31e-12</td>
-          <td>4.13e-12</td>
+          <td>5.68e-14</td>
+          <td>2.61e-12</td>
         </tr>
         <tr>
           <th rowspan="9" valign="top">3685</th>
           <th>0</th>
-          <td>7.18e-13</td>
-          <td>1.85e-13</td>
-          <td>-2.13e-13</td>
-          <td>1.17e-13</td>
-          <td>-3.55e-14</td>
-          <td>3.41e-13</td>
-          <td>8.45e-13</td>
-          <td>1.79e-13</td>
-          <td>-3.34e-13</td>
-          <td>1.02e-12</td>
-        </tr>
-        <tr>
-          <th>41</th>
-          <td>-8.46e-13</td>
-          <td>-6.04e-13</td>
-          <td>-6.04e-14</td>
-          <td>2.20e-13</td>
-          <td>-3.50e-15</td>
-          <td>1.71e-13</td>
-          <td>-2.15e-14</td>
-          <td>-4.89e-13</td>
-          <td>-1.00e-12</td>
-          <td>8.48e-13</td>
+          <td>5.11e-13</td>
+          <td>1.44e-13</td>
+          <td>-5.41e-13</td>
+          <td>4.97e-13</td>
+          <td>1.56e-13</td>
+          <td>-5.40e-13</td>
+          <td>6.75e-14</td>
+          <td>-2.84e-14</td>
+          <td>1.42e-14</td>
+          <td>9.25e-13</td>
         </tr>
         <tr>
           <th>45</th>
-          <td>1.06e-12</td>
-          <td>-5.65e-13</td>
-          <td>5.68e-13</td>
-          <td>3.55e-14</td>
-          <td>-5.37e-15</td>
-          <td>-1.18e-13</td>
-          <td>1.09e-12</td>
-          <td>5.42e-13</td>
-          <td>-5.66e-13</td>
-          <td>1.46e-12</td>
-        </tr>
-        <tr>
-          <th>46</th>
-          <td>-2.38e-13</td>
-          <td>6.68e-13</td>
-          <td>1.28e-13</td>
-          <td>1.05e-13</td>
-          <td>-2.84e-14</td>
-          <td>2.14e-13</td>
-          <td>6.80e-13</td>
-          <td>2.26e-13</td>
-          <td>-3.48e-13</td>
-          <td>8.92e-13</td>
-        </tr>
-        <tr>
-          <th>50</th>
-          <td>-6.04e-14</td>
-          <td>1.14e-13</td>
+          <td>8.09e-13</td>
+          <td>-5.47e-13</td>
+          <td>-8.09e-13</td>
+          <td>6.79e-13</td>
+          <td>-7.89e-13</td>
+          <td>-4.37e-13</td>
           <td>6.39e-14</td>
-          <td>-4.26e-14</td>
-          <td>-2.84e-14</td>
-          <td>-9.99e-14</td>
-          <td>1.27e-13</td>
-          <td>1.17e-13</td>
-          <td>-1.27e-13</td>
-          <td>2.49e-13</td>
+          <td>-4.02e-13</td>
+          <td>5.15e-14</td>
+          <td>1.50e-12</td>
         </tr>
         <tr>
-          <th>1015</th>
-          <td>-5.68e-14</td>
-          <td>-7.85e-13</td>
-          <td>-2.70e-13</td>
-          <td>3.55e-14</td>
-          <td>-1.18e-14</td>
-          <td>-3.41e-13</td>
-          <td>1.95e-13</td>
-          <td>-5.20e-13</td>
-          <td>-7.87e-13</td>
-          <td>8.80e-13</td>
+          <th>41</th>
+          <td>7.67e-13</td>
+          <td>-1.49e-13</td>
+          <td>-4.37e-13</td>
+          <td>-1.49e-13</td>
+          <td>7.21e-13</td>
+          <td>-3.91e-13</td>
+          <td>1.92e-13</td>
+          <td>1.14e-13</td>
+          <td>5.33e-14</td>
+          <td>1.09e-12</td>
         </tr>
         <tr>
           <th>1021</th>
-          <td>9.66e-13</td>
-          <td>2.17e-13</td>
-          <td>8.60e-13</td>
-          <td>4.43e-13</td>
-          <td>-2.10e-15</td>
-          <td>-6.82e-13</td>
-          <td>1.67e-12</td>
-          <td>4.79e-13</td>
-          <td>-1.10e-13</td>
-          <td>1.57e-12</td>
+          <td>7.75e-13</td>
+          <td>1.86e-13</td>
+          <td>-5.38e-13</td>
+          <td>1.56e-13</td>
+          <td>1.60e-13</td>
+          <td>1.07e-13</td>
+          <td>1.94e-13</td>
+          <td>-6.25e-13</td>
+          <td>5.47e-14</td>
+          <td>1.14e-12</td>
+        </tr>
+        <tr>
+          <th>1015</th>
+          <td>8.67e-13</td>
+          <td>1.56e-13</td>
+          <td>-6.65e-13</td>
+          <td>2.98e-13</td>
+          <td>1.53e-13</td>
+          <td>-9.24e-14</td>
+          <td>2.84e-14</td>
+          <td>-7.39e-13</td>
+          <td>4.51e-14</td>
+          <td>1.33e-12</td>
+        </tr>
+        <tr>
+          <th>50</th>
+          <td>9.64e-13</td>
+          <td>7.11e-13</td>
+          <td>-6.57e-14</td>
+          <td>-3.91e-14</td>
+          <td>7.11e-13</td>
+          <td>9.38e-13</td>
+          <td>-4.26e-14</td>
+          <td>-1.57e-13</td>
+          <td>1.42e-14</td>
+          <td>9.29e-13</td>
+        </tr>
+        <tr>
+          <th>46</th>
+          <td>2.26e-12</td>
+          <td>7.91e-13</td>
+          <td>7.55e-14</td>
+          <td>2.25e-12</td>
+          <td>7.96e-13</td>
+          <td>7.82e-14</td>
+          <td>8.37e-14</td>
+          <td>-7.01e-14</td>
+          <td>1.42e-14</td>
+          <td>1.93e-12</td>
         </tr>
         <tr>
           <th>1031</th>
-          <td>-2.74e-12</td>
-          <td>-5.68e-13</td>
+          <td>-8.72e-13</td>
+          <td>-1.24e-12</td>
+          <td>-1.87e-12</td>
+          <td>-1.68e-12</td>
+          <td>-8.81e-13</td>
           <td>-1.42e-12</td>
-          <td>1.07e-13</td>
-          <td>0.00e+00</td>
-          <td>-4.55e-13</td>
-          <td>-5.63e-13</td>
-          <td>-1.28e-12</td>
-          <td>-2.89e-12</td>
-          <td>2.06e-12</td>
+          <td>8.53e-14</td>
+          <td>-2.84e-13</td>
+          <td>4.26e-14</td>
+          <td>8.75e-13</td>
         </tr>
         <tr>
           <th>1037</th>
-          <td>2.42e-13</td>
-          <td>-1.28e-13</td>
-          <td>1.14e-13</td>
+          <td>-7.47e-15</td>
+          <td>-1.15e-13</td>
+          <td>-1.00e-12</td>
+          <td>-9.95e-14</td>
+          <td>-1.14e-13</td>
+          <td>-9.09e-13</td>
           <td>-7.11e-15</td>
-          <td>-1.42e-14</td>
-          <td>-2.27e-13</td>
-          <td>4.14e-13</td>
-          <td>-5.52e-14</td>
-          <td>-1.31e-13</td>
-          <td>5.11e-13</td>
+          <td>-2.84e-13</td>
+          <td>2.84e-14</td>
+          <td>9.43e-13</td>
         </tr>
         <tr>
           <th rowspan="18" valign="top">2</th>
-          <th rowspan="18" valign="top">3568.63</th>
           <th rowspan="18" valign="top">9.51</th>
+          <th rowspan="18" valign="top">3568.63</th>
           <th rowspan="18" valign="top">59.74</th>
           <th rowspan="9" valign="top">3684</th>
           <th>0</th>
-          <td>1.14e-13</td>
-          <td>-7.96e-13</td>
-          <td>2.27e-13</td>
-          <td>0.00e+00</td>
-          <td>5.68e-14</td>
+          <td>2.22e-12</td>
+          <td>-1.06e-13</td>
+          <td>-2.23e-12</td>
+          <td>-3.41e-13</td>
           <td>-2.27e-13</td>
-          <td>4.07e-13</td>
-          <td>-6.22e-14</td>
-          <td>-7.99e-13</td>
-          <td>1.05e-12</td>
-        </tr>
-        <tr>
-          <th>51</th>
-          <td>-3.98e-13</td>
-          <td>9.66e-13</td>
-          <td>7.11e-13</td>
-          <td>-1.98e-12</td>
-          <td>-3.56e-13</td>
-          <td>-1.58e-13</td>
-          <td>2.40e-12</td>
-          <td>7.31e-13</td>
-          <td>-1.85e-12</td>
-          <td>3.71e-12</td>
+          <td>4.55e-13</td>
+          <td>1.82e-12</td>
+          <td>1.14e-12</td>
+          <td>3.98e-13</td>
+          <td>3.85e-12</td>
         </tr>
         <tr>
           <th>55</th>
-          <td>-2.10e-12</td>
-          <td>-1.93e-12</td>
-          <td>-1.05e-12</td>
-          <td>-9.09e-13</td>
-          <td>-9.88e-14</td>
-          <td>-6.53e-13</td>
-          <td>-6.34e-13</td>
-          <td>-1.37e-12</td>
-          <td>-3.08e-12</td>
-          <td>2.18e-12</td>
+          <td>3.64e-12</td>
+          <td>9.55e-13</td>
+          <td>-1.33e-12</td>
+          <td>2.33e-12</td>
+          <td>-5.68e-14</td>
+          <td>9.95e-13</td>
+          <td>1.82e-12</td>
+          <td>4.26e-13</td>
+          <td>1.12e-12</td>
+          <td>4.31e-12</td>
         </tr>
         <tr>
-          <th>56</th>
-          <td>2.84e-13</td>
-          <td>-4.55e-13</td>
-          <td>-8.53e-13</td>
-          <td>-9.09e-13</td>
-          <td>-2.27e-13</td>
-          <td>9.52e-14</td>
-          <td>9.20e-13</td>
-          <td>-8.07e-13</td>
-          <td>-1.14e-12</td>
+          <th>51</th>
+          <td>7.48e-13</td>
+          <td>-3.94e-13</td>
+          <td>-1.46e-12</td>
+          <td>-3.41e-13</td>
+          <td>5.68e-14</td>
+          <td>-8.24e-13</td>
+          <td>1.57e-13</td>
+          <td>3.85e-13</td>
+          <td>9.24e-13</td>
           <td>1.91e-12</td>
         </tr>
         <tr>
-          <th>60</th>
-          <td>5.12e-13</td>
-          <td>1.14e-12</td>
-          <td>5.12e-13</td>
-          <td>-9.09e-13</td>
+          <th>778</th>
+          <td>1.24e-12</td>
+          <td>-5.76e-13</td>
+          <td>-2.37e-12</td>
+          <td>-2.27e-12</td>
+          <td>7.96e-13</td>
           <td>-2.27e-13</td>
-          <td>-3.68e-14</td>
-          <td>1.81e-12</td>
-          <td>5.30e-13</td>
-          <td>-1.76e-13</td>
-          <td>1.74e-12</td>
+          <td>1.25e-13</td>
+          <td>4.55e-13</td>
+          <td>7.73e-13</td>
+          <td>3.13e-12</td>
         </tr>
         <tr>
           <th>758</th>
-          <td>3.41e-13</td>
-          <td>2.05e-12</td>
-          <td>1.08e-12</td>
-          <td>-9.09e-13</td>
-          <td>-3.40e-13</td>
+          <td>1.03e-12</td>
+          <td>-1.04e-12</td>
+          <td>-3.57e-12</td>
+          <td>-5.68e-13</td>
+          <td>-2.33e-12</td>
+          <td>-6.82e-13</td>
+          <td>1.82e-12</td>
           <td>4.55e-13</td>
-          <td>2.60e-12</td>
-          <td>9.89e-13</td>
-          <td>-1.25e-13</td>
-          <td>2.38e-12</td>
+          <td>9.08e-13</td>
+          <td>3.99e-12</td>
         </tr>
         <tr>
-          <th>778</th>
-          <td>2.27e-13</td>
-          <td>2.27e-13</td>
+          <th>60</th>
+          <td>1.02e-12</td>
+          <td>-2.20e-12</td>
+          <td>-2.85e-12</td>
+          <td>-1.48e-12</td>
+          <td>-3.41e-13</td>
+          <td>-2.22e-12</td>
+          <td>1.82e-12</td>
+          <td>2.64e-13</td>
+          <td>1.14e-13</td>
+          <td>3.59e-12</td>
+        </tr>
+        <tr>
+          <th>56</th>
+          <td>5.04e-13</td>
+          <td>-3.52e-13</td>
+          <td>-2.37e-12</td>
+          <td>-1.82e-12</td>
+          <td>-7.96e-13</td>
           <td>3.98e-13</td>
-          <td>-1.03e-12</td>
-          <td>2.30e-14</td>
-          <td>4.55e-13</td>
-          <td>1.36e-12</td>
-          <td>3.87e-13</td>
-          <td>-8.99e-13</td>
-          <td>1.97e-12</td>
+          <td>-9.10e-13</td>
+          <td>-3.23e-13</td>
+          <td>1.14e-13</td>
+          <td>2.55e-12</td>
         </tr>
         <tr>
           <th>880</th>
-          <td>-1.71e-12</td>
-          <td>1.59e-12</td>
+          <td>1.79e-12</td>
+          <td>6.09e-13</td>
+          <td>-2.51e-12</td>
+          <td>1.25e-12</td>
+          <td>-2.27e-12</td>
           <td>9.09e-13</td>
           <td>-9.09e-13</td>
-          <td>-2.27e-13</td>
-          <td>4.55e-13</td>
-          <td>1.94e-12</td>
-          <td>8.48e-13</td>
-          <td>-1.99e-12</td>
-          <td>3.51e-12</td>
+          <td>-4.55e-13</td>
+          <td>3.41e-13</td>
+          <td>3.85e-12</td>
         </tr>
         <tr>
           <th>952</th>
-          <td>-1.02e-12</td>
-          <td>1.36e-12</td>
-          <td>-1.36e-12</td>
+          <td>1.30e-12</td>
+          <td>1.93e-13</td>
+          <td>-2.63e-12</td>
           <td>-9.09e-13</td>
-          <td>0.00e+00</td>
+          <td>-6.82e-13</td>
           <td>4.55e-13</td>
-          <td>1.68e-12</td>
-          <td>-9.20e-13</td>
-          <td>-1.78e-12</td>
-          <td>3.12e-12</td>
+          <td>1.82e-12</td>
+          <td>4.55e-13</td>
+          <td>2.27e-13</td>
+          <td>3.51e-12</td>
         </tr>
         <tr>
           <th rowspan="9" valign="top">3685</th>
           <th>0</th>
+          <td>1.18e-12</td>
+          <td>-3.91e-15</td>
+          <td>-9.47e-13</td>
+          <td>-1.14e-13</td>
           <td>1.14e-13</td>
-          <td>-3.41e-13</td>
           <td>2.27e-13</td>
-          <td>-2.84e-14</td>
-          <td>-5.68e-14</td>
-          <td>6.82e-13</td>
-          <td>8.58e-13</td>
-          <td>-3.42e-13</td>
-          <td>-5.16e-13</td>
-          <td>1.30e-12</td>
-        </tr>
-        <tr>
-          <th>41</th>
-          <td>-2.84e-13</td>
-          <td>2.27e-13</td>
-          <td>-2.84e-14</td>
-          <td>-9.02e-13</td>
-          <td>-3.56e-13</td>
-          <td>1.07e-12</td>
-          <td>1.53e-12</td>
-          <td>-2.31e-13</td>
-          <td>-1.38e-12</td>
-          <td>2.54e-12</td>
+          <td>4.97e-13</td>
+          <td>-9.09e-13</td>
+          <td>-1.71e-13</td>
+          <td>1.84e-12</td>
         </tr>
         <tr>
           <th>45</th>
-          <td>-5.68e-13</td>
-          <td>0.00e+00</td>
-          <td>1.14e-13</td>
+          <td>8.96e-13</td>
+          <td>-2.21e-13</td>
+          <td>-1.07e-12</td>
           <td>2.27e-13</td>
-          <td>-3.26e-13</td>
-          <td>6.52e-13</td>
-          <td>5.63e-13</td>
-          <td>6.88e-14</td>
-          <td>-1.09e-12</td>
-          <td>1.47e-12</td>
+          <td>-5.68e-14</td>
+          <td>-5.68e-13</td>
+          <td>-2.84e-13</td>
+          <td>-6.52e-13</td>
+          <td>5.54e-13</td>
+          <td>1.71e-12</td>
         </tr>
         <tr>
-          <th>46</th>
-          <td>2.84e-13</td>
-          <td>-3.41e-13</td>
-          <td>1.14e-13</td>
-          <td>3.84e-16</td>
+          <th>41</th>
+          <td>8.01e-13</td>
+          <td>-3.97e-13</td>
+          <td>-8.59e-13</td>
+          <td>-2.84e-13</td>
           <td>0.00e+00</td>
-          <td>-9.59e-14</td>
-          <td>3.27e-13</td>
-          <td>7.06e-14</td>
-          <td>-3.41e-13</td>
-          <td>5.84e-13</td>
-        </tr>
-        <tr>
-          <th>50</th>
-          <td>5.12e-13</td>
-          <td>6.82e-13</td>
-          <td>3.98e-13</td>
-          <td>4.55e-13</td>
-          <td>0.00e+00</td>
-          <td>9.45e-13</td>
-          <td>1.54e-12</td>
-          <td>6.27e-13</td>
-          <td>-5.73e-13</td>
-          <td>1.83e-12</td>
-        </tr>
-        <tr>
-          <th>1015</th>
-          <td>-1.14e-13</td>
-          <td>5.68e-14</td>
-          <td>1.71e-13</td>
-          <td>1.14e-13</td>
-          <td>-1.13e-13</td>
-          <td>4.55e-13</td>
-          <td>5.06e-13</td>
-          <td>1.01e-13</td>
-          <td>-4.94e-13</td>
-          <td>8.71e-13</td>
+          <td>-1.71e-13</td>
+          <td>-4.62e-13</td>
+          <td>-6.12e-13</td>
+          <td>3.56e-13</td>
+          <td>1.48e-12</td>
         </tr>
         <tr>
           <th>1021</th>
+          <td>9.04e-13</td>
+          <td>4.58e-13</td>
+          <td>-3.01e-12</td>
+          <td>-1.48e-12</td>
+          <td>5.68e-13</td>
+          <td>-7.39e-13</td>
+          <td>4.50e-13</td>
+          <td>-1.82e-12</td>
+          <td>9.06e-14</td>
+          <td>3.71e-12</td>
+        </tr>
+        <tr>
+          <th>1015</th>
+          <td>1.19e-12</td>
+          <td>-9.78e-14</td>
+          <td>-6.96e-13</td>
+          <td>3.41e-13</td>
+          <td>-5.68e-14</td>
+          <td>1.14e-13</td>
+          <td>-2.27e-13</td>
+          <td>-9.09e-13</td>
+          <td>1.13e-13</td>
+          <td>1.67e-12</td>
+        </tr>
+        <tr>
+          <th>50</th>
+          <td>4.88e-13</td>
+          <td>-1.28e-13</td>
+          <td>-1.21e-12</td>
+          <td>-3.98e-13</td>
+          <td>1.14e-13</td>
+          <td>-5.68e-13</td>
+          <td>-5.68e-13</td>
+          <td>-4.90e-13</td>
+          <td>-2.27e-13</td>
+          <td>1.49e-12</td>
+        </tr>
+        <tr>
+          <th>46</th>
+          <td>6.22e-13</td>
+          <td>2.26e-14</td>
+          <td>-5.87e-13</td>
+          <td>-2.84e-13</td>
+          <td>3.41e-13</td>
           <td>0.00e+00</td>
-          <td>5.68e-14</td>
-          <td>1.71e-13</td>
-          <td>9.15e-13</td>
-          <td>-9.06e-14</td>
-          <td>-4.55e-13</td>
-          <td>1.11e-12</td>
-          <td>7.50e-14</td>
-          <td>-9.53e-13</td>
-          <td>1.78e-12</td>
+          <td>4.54e-13</td>
+          <td>9.59e-14</td>
+          <td>-2.27e-13</td>
+          <td>1.05e-12</td>
         </tr>
         <tr>
           <th>1031</th>
-          <td>-3.41e-13</td>
-          <td>3.41e-13</td>
-          <td>-4.55e-13</td>
-          <td>0.00e+00</td>
+          <td>2.32e-12</td>
+          <td>-6.90e-13</td>
+          <td>-1.63e-12</td>
           <td>-2.27e-13</td>
+          <td>-6.82e-13</td>
+          <td>9.09e-13</td>
           <td>4.55e-13</td>
-          <td>4.26e-13</td>
-          <td>-1.01e-28</td>
-          <td>-8.80e-13</td>
-          <td>1.15e-12</td>
+          <td>-1.82e-12</td>
+          <td>-2.27e-13</td>
+          <td>3.57e-12</td>
         </tr>
         <tr>
           <th>1037</th>
-          <td>-1.14e-13</td>
-          <td>-4.55e-13</td>
-          <td>0.00e+00</td>
-          <td>2.84e-13</td>
-          <td>-1.14e-13</td>
+          <td>2.08e-12</td>
+          <td>-2.71e-13</td>
+          <td>-1.70e-12</td>
           <td>4.55e-13</td>
-          <td>4.15e-13</td>
-          <td>-2.05e-13</td>
-          <td>-7.79e-13</td>
-          <td>1.03e-12</td>
+          <td>-3.41e-13</td>
+          <td>0.00e+00</td>
+          <td>-3.98e-13</td>
+          <td>-1.82e-12</td>
+          <td>-1.14e-13</td>
+          <td>3.30e-12</td>
         </tr>
       </tbody>
     </table>
@@ -2360,6 +1540,19 @@ We actually need to get rid of the extra rows using dropna():
 .. raw:: html
 
     <div>
+    <style scoped>
+        .dataframe tbody tr th:only-of-type {
+            vertical-align: middle;
+        }
+    
+        .dataframe tbody tr th {
+            vertical-align: top;
+        }
+    
+        .dataframe thead th {
+            text-align: right;
+        }
+    </style>
     <table border="1" class="dataframe">
       <thead>
         <tr style="text-align: right;">
@@ -2369,23 +1562,23 @@ We actually need to get rid of the extra rows using dropna():
           <th></th>
           <th></th>
           <th>Item</th>
+          <th>omax</th>
+          <th>omid</th>
+          <th>omin</th>
           <th>oxx</th>
           <th>oyy</th>
           <th>ozz</th>
           <th>txy</th>
-          <th>tyz</th>
           <th>txz</th>
-          <th>omax</th>
-          <th>omid</th>
-          <th>omin</th>
+          <th>tyz</th>
           <th>von_mises</th>
         </tr>
         <tr>
           <th>ElementID</th>
           <th>NodeID</th>
-          <th>EigenvalueReal</th>
-          <th>Radians</th>
           <th>Freq</th>
+          <th>Radians</th>
+          <th>Eigenvalue</th>
           <th>Mode</th>
           <th></th>
           <th></th>
@@ -2403,618 +1596,618 @@ We actually need to get rid of the extra rows using dropna():
         <tr>
           <th rowspan="9" valign="top">3684</th>
           <th>0</th>
-          <th>2758.15</th>
-          <th>52.52</th>
           <th>8.36</th>
+          <th>52.52</th>
+          <th>2758.15</th>
           <th>1</th>
-          <td>7.93e-12</td>
-          <td>-3.58e-12</td>
-          <td>-3.41e-13</td>
-          <td>-1.99e-13</td>
+          <td>1.48e-12</td>
+          <td>1.02e-12</td>
+          <td>-3.38e-12</td>
+          <td>1.22e-12</td>
+          <td>-3.35e-12</td>
+          <td>1.25e-12</td>
+          <td>-3.27e-13</td>
+          <td>-2.27e-13</td>
           <td>2.84e-14</td>
-          <td>5.12e-13</td>
-          <td>7.96e-12</td>
-          <td>-3.72e-13</td>
-          <td>-3.59e-12</td>
-          <td>1.03e-11</td>
-        </tr>
-        <tr>
-          <th>51</th>
-          <th>2758.15</th>
-          <th>52.52</th>
-          <th>8.36</th>
-          <th>1</th>
-          <td>-8.67e-13</td>
-          <td>2.29e-12</td>
-          <td>-2.53e-12</td>
-          <td>-3.15e-13</td>
-          <td>2.17e-14</td>
-          <td>1.95e-13</td>
-          <td>2.32e-12</td>
-          <td>-8.75e-13</td>
-          <td>-2.55e-12</td>
-          <td>4.29e-12</td>
+          <td>4.64e-12</td>
         </tr>
         <tr>
           <th>55</th>
-          <th>2758.15</th>
-          <th>52.52</th>
           <th>8.36</th>
+          <th>52.52</th>
+          <th>2758.15</th>
           <th>1</th>
-          <td>2.33e-12</td>
-          <td>1.18e-12</td>
-          <td>-9.45e-13</td>
-          <td>-3.98e-13</td>
-          <td>-2.62e-14</td>
-          <td>-4.76e-13</td>
-          <td>2.51e-12</td>
-          <td>1.07e-12</td>
-          <td>-1.02e-12</td>
-          <td>3.07e-12</td>
+          <td>4.81e-12</td>
+          <td>1.92e-13</td>
+          <td>-3.57e-13</td>
+          <td>4.53e-12</td>
+          <td>-2.42e-13</td>
+          <td>3.55e-13</td>
+          <td>-6.54e-13</td>
+          <td>-9.30e-13</td>
+          <td>2.20e-15</td>
+          <td>4.92e-12</td>
         </tr>
         <tr>
-          <th>56</th>
-          <th>2758.15</th>
-          <th>52.52</th>
+          <th>51</th>
           <th>8.36</th>
-          <th>1</th>
-          <td>-5.37e-12</td>
-          <td>-2.76e-12</td>
-          <td>-2.43e-12</td>
-          <td>-4.92e-13</td>
-          <td>1.14e-13</td>
-          <td>-1.95e-13</td>
-          <td>-2.35e-12</td>
-          <td>-2.74e-12</td>
-          <td>-5.47e-12</td>
-          <td>2.95e-12</td>
-        </tr>
-        <tr>
-          <th>60</th>
-          <th>2758.15</th>
           <th>52.52</th>
-          <th>8.36</th>
-          <th>1</th>
-          <td>8.81e-13</td>
-          <td>-2.10e-12</td>
-          <td>-4.97e-13</td>
-          <td>5.68e-14</td>
-          <td>1.14e-13</td>
-          <td>-2.93e-13</td>
-          <td>9.41e-13</td>
-          <td>-5.47e-13</td>
-          <td>-2.11e-12</td>
-          <td>2.65e-12</td>
-        </tr>
-        <tr>
-          <th>758</th>
           <th>2758.15</th>
-          <th>52.52</th>
-          <th>8.36</th>
           <th>1</th>
-          <td>2.22e-12</td>
-          <td>1.63e-12</td>
-          <td>2.43e-12</td>
-          <td>-1.99e-13</td>
-          <td>-2.49e-14</td>
-          <td>-3.41e-13</td>
-          <td>2.69e-12</td>
-          <td>2.04e-12</td>
-          <td>1.55e-12</td>
-          <td>9.89e-13</td>
+          <td>2.32e-12</td>
+          <td>1.49e-13</td>
+          <td>-1.41e-12</td>
+          <td>-1.39e-12</td>
+          <td>2.32e-12</td>
+          <td>1.35e-13</td>
+          <td>-1.30e-13</td>
+          <td>-1.46e-13</td>
+          <td>7.51e-15</td>
+          <td>3.25e-12</td>
         </tr>
         <tr>
           <th>778</th>
-          <th>2758.15</th>
-          <th>52.52</th>
           <th>8.36</th>
+          <th>52.52</th>
+          <th>2758.15</th>
           <th>1</th>
-          <td>-3.24e-12</td>
-          <td>-1.88e-12</td>
-          <td>-4.99e-12</td>
-          <td>-1.15e-13</td>
-          <td>-5.52e-15</td>
+          <td>-1.38e-12</td>
+          <td>-3.27e-12</td>
+          <td>-6.12e-12</td>
+          <td>-6.08e-12</td>
+          <td>-1.38e-12</td>
+          <td>-3.31e-12</td>
+          <td>-5.81e-14</td>
           <td>-3.41e-13</td>
-          <td>-1.87e-12</td>
-          <td>-3.19e-12</td>
-          <td>-5.05e-12</td>
-          <td>2.77e-12</td>
+          <td>-1.97e-14</td>
+          <td>4.14e-12</td>
+        </tr>
+        <tr>
+          <th>758</th>
+          <th>8.36</th>
+          <th>52.52</th>
+          <th>2758.15</th>
+          <th>1</th>
+          <td>5.79e-12</td>
+          <td>4.11e-12</td>
+          <td>7.57e-14</td>
+          <td>5.68e-12</td>
+          <td>1.14e-13</td>
+          <td>4.18e-12</td>
+          <td>-4.55e-13</td>
+          <td>-3.41e-13</td>
+          <td>-3.91e-14</td>
+          <td>5.09e-12</td>
+        </tr>
+        <tr>
+          <th>60</th>
+          <th>8.36</th>
+          <th>52.52</th>
+          <th>2758.15</th>
+          <th>1</th>
+          <td>2.88e-12</td>
+          <td>1.71e-12</td>
+          <td>-4.27e-12</td>
+          <td>2.63e-12</td>
+          <td>1.90e-12</td>
+          <td>-4.21e-12</td>
+          <td>-4.26e-13</td>
+          <td>-6.34e-13</td>
+          <td>8.53e-14</td>
+          <td>6.64e-12</td>
+        </tr>
+        <tr>
+          <th>56</th>
+          <th>8.36</th>
+          <th>52.52</th>
+          <th>2758.15</th>
+          <th>1</th>
+          <td>1.66e-12</td>
+          <td>-1.65e-12</td>
+          <td>-5.92e-12</td>
+          <td>-5.87e-12</td>
+          <td>1.65e-12</td>
+          <td>-1.69e-12</td>
+          <td>-3.07e-13</td>
+          <td>-4.22e-13</td>
+          <td>8.53e-14</td>
+          <td>6.59e-12</td>
         </tr>
         <tr>
           <th>880</th>
-          <th>2758.15</th>
-          <th>52.52</th>
           <th>8.36</th>
+          <th>52.52</th>
+          <th>2758.15</th>
           <th>1</th>
-          <td>1.76e-12</td>
-          <td>1.88e-12</td>
-          <td>1.82e-12</td>
-          <td>-5.26e-13</td>
-          <td>1.14e-13</td>
+          <td>2.63e-12</td>
+          <td>2.11e-12</td>
+          <td>-4.74e-12</td>
+          <td>-4.72e-12</td>
+          <td>2.10e-12</td>
+          <td>2.61e-12</td>
+          <td>-3.41e-13</td>
           <td>0.00e+00</td>
-          <td>2.36e-12</td>
-          <td>1.82e-12</td>
-          <td>1.28e-12</td>
-          <td>9.37e-13</td>
+          <td>8.53e-14</td>
+          <td>7.12e-12</td>
         </tr>
         <tr>
           <th>952</th>
-          <th>2758.15</th>
-          <th>52.52</th>
           <th>8.36</th>
+          <th>52.52</th>
+          <th>2758.15</th>
           <th>1</th>
-          <td>-5.29e-12</td>
-          <td>-7.11e-13</td>
-          <td>-1.93e-12</td>
-          <td>-1.71e-13</td>
-          <td>5.68e-14</td>
+          <td>-8.35e-15</td>
+          <td>-1.79e-12</td>
+          <td>-3.00e-12</td>
+          <td>-1.73e-12</td>
+          <td>-1.14e-13</td>
+          <td>-2.96e-12</td>
+          <td>-4.26e-13</td>
           <td>2.27e-13</td>
-          <td>-7.02e-13</td>
-          <td>-1.92e-12</td>
-          <td>-5.31e-12</td>
-          <td>4.13e-12</td>
+          <td>5.68e-14</td>
+          <td>2.61e-12</td>
         </tr>
         <tr>
           <th rowspan="9" valign="top">3685</th>
           <th>0</th>
-          <th>2758.15</th>
-          <th>52.52</th>
           <th>8.36</th>
-          <th>1</th>
-          <td>7.18e-13</td>
-          <td>1.85e-13</td>
-          <td>-2.13e-13</td>
-          <td>1.17e-13</td>
-          <td>-3.55e-14</td>
-          <td>3.41e-13</td>
-          <td>8.45e-13</td>
-          <td>1.79e-13</td>
-          <td>-3.34e-13</td>
-          <td>1.02e-12</td>
-        </tr>
-        <tr>
-          <th>41</th>
-          <th>2758.15</th>
           <th>52.52</th>
-          <th>8.36</th>
+          <th>2758.15</th>
           <th>1</th>
-          <td>-8.46e-13</td>
-          <td>-6.04e-13</td>
-          <td>-6.04e-14</td>
-          <td>2.20e-13</td>
-          <td>-3.50e-15</td>
-          <td>1.71e-13</td>
-          <td>-2.15e-14</td>
-          <td>-4.89e-13</td>
-          <td>-1.00e-12</td>
-          <td>8.48e-13</td>
+          <td>5.11e-13</td>
+          <td>1.44e-13</td>
+          <td>-5.41e-13</td>
+          <td>4.97e-13</td>
+          <td>1.56e-13</td>
+          <td>-5.40e-13</td>
+          <td>6.75e-14</td>
+          <td>-2.84e-14</td>
+          <td>1.42e-14</td>
+          <td>9.25e-13</td>
         </tr>
         <tr>
           <th>45</th>
-          <th>2758.15</th>
-          <th>52.52</th>
           <th>8.36</th>
-          <th>1</th>
-          <td>1.06e-12</td>
-          <td>-5.65e-13</td>
-          <td>5.68e-13</td>
-          <td>3.55e-14</td>
-          <td>-5.37e-15</td>
-          <td>-1.18e-13</td>
-          <td>1.09e-12</td>
-          <td>5.42e-13</td>
-          <td>-5.66e-13</td>
-          <td>1.46e-12</td>
-        </tr>
-        <tr>
-          <th>46</th>
-          <th>2758.15</th>
           <th>52.52</th>
-          <th>8.36</th>
-          <th>1</th>
-          <td>-2.38e-13</td>
-          <td>6.68e-13</td>
-          <td>1.28e-13</td>
-          <td>1.05e-13</td>
-          <td>-2.84e-14</td>
-          <td>2.14e-13</td>
-          <td>6.80e-13</td>
-          <td>2.26e-13</td>
-          <td>-3.48e-13</td>
-          <td>8.92e-13</td>
-        </tr>
-        <tr>
-          <th>50</th>
           <th>2758.15</th>
-          <th>52.52</th>
-          <th>8.36</th>
           <th>1</th>
-          <td>-6.04e-14</td>
-          <td>1.14e-13</td>
+          <td>8.09e-13</td>
+          <td>-5.47e-13</td>
+          <td>-8.09e-13</td>
+          <td>6.79e-13</td>
+          <td>-7.89e-13</td>
+          <td>-4.37e-13</td>
           <td>6.39e-14</td>
-          <td>-4.26e-14</td>
-          <td>-2.84e-14</td>
-          <td>-9.99e-14</td>
-          <td>1.27e-13</td>
-          <td>1.17e-13</td>
-          <td>-1.27e-13</td>
-          <td>2.49e-13</td>
+          <td>-4.02e-13</td>
+          <td>5.15e-14</td>
+          <td>1.50e-12</td>
         </tr>
         <tr>
-          <th>1015</th>
-          <th>2758.15</th>
-          <th>52.52</th>
+          <th>41</th>
           <th>8.36</th>
+          <th>52.52</th>
+          <th>2758.15</th>
           <th>1</th>
-          <td>-5.68e-14</td>
-          <td>-7.85e-13</td>
-          <td>-2.70e-13</td>
-          <td>3.55e-14</td>
-          <td>-1.18e-14</td>
-          <td>-3.41e-13</td>
-          <td>1.95e-13</td>
-          <td>-5.20e-13</td>
-          <td>-7.87e-13</td>
-          <td>8.80e-13</td>
+          <td>7.67e-13</td>
+          <td>-1.49e-13</td>
+          <td>-4.37e-13</td>
+          <td>-1.49e-13</td>
+          <td>7.21e-13</td>
+          <td>-3.91e-13</td>
+          <td>1.92e-13</td>
+          <td>1.14e-13</td>
+          <td>5.33e-14</td>
+          <td>1.09e-12</td>
         </tr>
         <tr>
           <th>1021</th>
-          <th>2758.15</th>
-          <th>52.52</th>
           <th>8.36</th>
+          <th>52.52</th>
+          <th>2758.15</th>
           <th>1</th>
-          <td>9.66e-13</td>
-          <td>2.17e-13</td>
-          <td>8.60e-13</td>
-          <td>4.43e-13</td>
-          <td>-2.10e-15</td>
-          <td>-6.82e-13</td>
-          <td>1.67e-12</td>
-          <td>4.79e-13</td>
-          <td>-1.10e-13</td>
-          <td>1.57e-12</td>
+          <td>7.75e-13</td>
+          <td>1.86e-13</td>
+          <td>-5.38e-13</td>
+          <td>1.56e-13</td>
+          <td>1.60e-13</td>
+          <td>1.07e-13</td>
+          <td>1.94e-13</td>
+          <td>-6.25e-13</td>
+          <td>5.47e-14</td>
+          <td>1.14e-12</td>
+        </tr>
+        <tr>
+          <th>1015</th>
+          <th>8.36</th>
+          <th>52.52</th>
+          <th>2758.15</th>
+          <th>1</th>
+          <td>8.67e-13</td>
+          <td>1.56e-13</td>
+          <td>-6.65e-13</td>
+          <td>2.98e-13</td>
+          <td>1.53e-13</td>
+          <td>-9.24e-14</td>
+          <td>2.84e-14</td>
+          <td>-7.39e-13</td>
+          <td>4.51e-14</td>
+          <td>1.33e-12</td>
+        </tr>
+        <tr>
+          <th>50</th>
+          <th>8.36</th>
+          <th>52.52</th>
+          <th>2758.15</th>
+          <th>1</th>
+          <td>9.64e-13</td>
+          <td>7.11e-13</td>
+          <td>-6.57e-14</td>
+          <td>-3.91e-14</td>
+          <td>7.11e-13</td>
+          <td>9.38e-13</td>
+          <td>-4.26e-14</td>
+          <td>-1.57e-13</td>
+          <td>1.42e-14</td>
+          <td>9.29e-13</td>
+        </tr>
+        <tr>
+          <th>46</th>
+          <th>8.36</th>
+          <th>52.52</th>
+          <th>2758.15</th>
+          <th>1</th>
+          <td>2.26e-12</td>
+          <td>7.91e-13</td>
+          <td>7.55e-14</td>
+          <td>2.25e-12</td>
+          <td>7.96e-13</td>
+          <td>7.82e-14</td>
+          <td>8.37e-14</td>
+          <td>-7.01e-14</td>
+          <td>1.42e-14</td>
+          <td>1.93e-12</td>
         </tr>
         <tr>
           <th>1031</th>
-          <th>2758.15</th>
-          <th>52.52</th>
           <th>8.36</th>
+          <th>52.52</th>
+          <th>2758.15</th>
           <th>1</th>
-          <td>-2.74e-12</td>
-          <td>-5.68e-13</td>
+          <td>-8.72e-13</td>
+          <td>-1.24e-12</td>
+          <td>-1.87e-12</td>
+          <td>-1.68e-12</td>
+          <td>-8.81e-13</td>
           <td>-1.42e-12</td>
-          <td>1.07e-13</td>
-          <td>0.00e+00</td>
-          <td>-4.55e-13</td>
-          <td>-5.63e-13</td>
-          <td>-1.28e-12</td>
-          <td>-2.89e-12</td>
-          <td>2.06e-12</td>
+          <td>8.53e-14</td>
+          <td>-2.84e-13</td>
+          <td>4.26e-14</td>
+          <td>8.75e-13</td>
         </tr>
         <tr>
           <th>1037</th>
-          <th>2758.15</th>
-          <th>52.52</th>
           <th>8.36</th>
+          <th>52.52</th>
+          <th>2758.15</th>
           <th>1</th>
-          <td>2.42e-13</td>
-          <td>-1.28e-13</td>
-          <td>1.14e-13</td>
+          <td>-7.47e-15</td>
+          <td>-1.15e-13</td>
+          <td>-1.00e-12</td>
+          <td>-9.95e-14</td>
+          <td>-1.14e-13</td>
+          <td>-9.09e-13</td>
           <td>-7.11e-15</td>
-          <td>-1.42e-14</td>
-          <td>-2.27e-13</td>
-          <td>4.14e-13</td>
-          <td>-5.52e-14</td>
-          <td>-1.31e-13</td>
-          <td>5.11e-13</td>
+          <td>-2.84e-13</td>
+          <td>2.84e-14</td>
+          <td>9.43e-13</td>
         </tr>
         <tr>
           <th rowspan="9" valign="top">3684</th>
           <th>0</th>
-          <th>3568.63</th>
-          <th>59.74</th>
           <th>9.51</th>
+          <th>59.74</th>
+          <th>3568.63</th>
           <th>2</th>
-          <td>1.14e-13</td>
-          <td>-7.96e-13</td>
-          <td>2.27e-13</td>
-          <td>0.00e+00</td>
-          <td>5.68e-14</td>
+          <td>2.22e-12</td>
+          <td>-1.06e-13</td>
+          <td>-2.23e-12</td>
+          <td>-3.41e-13</td>
           <td>-2.27e-13</td>
-          <td>4.07e-13</td>
-          <td>-6.22e-14</td>
-          <td>-7.99e-13</td>
-          <td>1.05e-12</td>
-        </tr>
-        <tr>
-          <th>51</th>
-          <th>3568.63</th>
-          <th>59.74</th>
-          <th>9.51</th>
-          <th>2</th>
-          <td>-3.98e-13</td>
-          <td>9.66e-13</td>
-          <td>7.11e-13</td>
-          <td>-1.98e-12</td>
-          <td>-3.56e-13</td>
-          <td>-1.58e-13</td>
-          <td>2.40e-12</td>
-          <td>7.31e-13</td>
-          <td>-1.85e-12</td>
-          <td>3.71e-12</td>
+          <td>4.55e-13</td>
+          <td>1.82e-12</td>
+          <td>1.14e-12</td>
+          <td>3.98e-13</td>
+          <td>3.85e-12</td>
         </tr>
         <tr>
           <th>55</th>
-          <th>3568.63</th>
-          <th>59.74</th>
           <th>9.51</th>
+          <th>59.74</th>
+          <th>3568.63</th>
           <th>2</th>
-          <td>-2.10e-12</td>
-          <td>-1.93e-12</td>
-          <td>-1.05e-12</td>
-          <td>-9.09e-13</td>
-          <td>-9.88e-14</td>
-          <td>-6.53e-13</td>
-          <td>-6.34e-13</td>
-          <td>-1.37e-12</td>
-          <td>-3.08e-12</td>
-          <td>2.18e-12</td>
+          <td>3.64e-12</td>
+          <td>9.55e-13</td>
+          <td>-1.33e-12</td>
+          <td>2.33e-12</td>
+          <td>-5.68e-14</td>
+          <td>9.95e-13</td>
+          <td>1.82e-12</td>
+          <td>4.26e-13</td>
+          <td>1.12e-12</td>
+          <td>4.31e-12</td>
         </tr>
         <tr>
-          <th>56</th>
-          <th>3568.63</th>
-          <th>59.74</th>
+          <th>51</th>
           <th>9.51</th>
+          <th>59.74</th>
+          <th>3568.63</th>
           <th>2</th>
-          <td>2.84e-13</td>
-          <td>-4.55e-13</td>
-          <td>-8.53e-13</td>
-          <td>-9.09e-13</td>
-          <td>-2.27e-13</td>
-          <td>9.52e-14</td>
-          <td>9.20e-13</td>
-          <td>-8.07e-13</td>
-          <td>-1.14e-12</td>
+          <td>7.48e-13</td>
+          <td>-3.94e-13</td>
+          <td>-1.46e-12</td>
+          <td>-3.41e-13</td>
+          <td>5.68e-14</td>
+          <td>-8.24e-13</td>
+          <td>1.57e-13</td>
+          <td>3.85e-13</td>
+          <td>9.24e-13</td>
           <td>1.91e-12</td>
         </tr>
         <tr>
-          <th>60</th>
-          <th>3568.63</th>
-          <th>59.74</th>
+          <th>778</th>
           <th>9.51</th>
+          <th>59.74</th>
+          <th>3568.63</th>
           <th>2</th>
-          <td>5.12e-13</td>
-          <td>1.14e-12</td>
-          <td>5.12e-13</td>
-          <td>-9.09e-13</td>
+          <td>1.24e-12</td>
+          <td>-5.76e-13</td>
+          <td>-2.37e-12</td>
+          <td>-2.27e-12</td>
+          <td>7.96e-13</td>
           <td>-2.27e-13</td>
-          <td>-3.68e-14</td>
-          <td>1.81e-12</td>
-          <td>5.30e-13</td>
-          <td>-1.76e-13</td>
-          <td>1.74e-12</td>
+          <td>1.25e-13</td>
+          <td>4.55e-13</td>
+          <td>7.73e-13</td>
+          <td>3.13e-12</td>
         </tr>
         <tr>
           <th>758</th>
-          <th>3568.63</th>
-          <th>59.74</th>
           <th>9.51</th>
+          <th>59.74</th>
+          <th>3568.63</th>
           <th>2</th>
-          <td>3.41e-13</td>
-          <td>2.05e-12</td>
-          <td>1.08e-12</td>
-          <td>-9.09e-13</td>
-          <td>-3.40e-13</td>
+          <td>1.03e-12</td>
+          <td>-1.04e-12</td>
+          <td>-3.57e-12</td>
+          <td>-5.68e-13</td>
+          <td>-2.33e-12</td>
+          <td>-6.82e-13</td>
+          <td>1.82e-12</td>
           <td>4.55e-13</td>
-          <td>2.60e-12</td>
-          <td>9.89e-13</td>
-          <td>-1.25e-13</td>
-          <td>2.38e-12</td>
+          <td>9.08e-13</td>
+          <td>3.99e-12</td>
         </tr>
         <tr>
-          <th>778</th>
-          <th>3568.63</th>
-          <th>59.74</th>
+          <th>60</th>
           <th>9.51</th>
+          <th>59.74</th>
+          <th>3568.63</th>
           <th>2</th>
-          <td>2.27e-13</td>
-          <td>2.27e-13</td>
+          <td>1.02e-12</td>
+          <td>-2.20e-12</td>
+          <td>-2.85e-12</td>
+          <td>-1.48e-12</td>
+          <td>-3.41e-13</td>
+          <td>-2.22e-12</td>
+          <td>1.82e-12</td>
+          <td>2.64e-13</td>
+          <td>1.14e-13</td>
+          <td>3.59e-12</td>
+        </tr>
+        <tr>
+          <th>56</th>
+          <th>9.51</th>
+          <th>59.74</th>
+          <th>3568.63</th>
+          <th>2</th>
+          <td>5.04e-13</td>
+          <td>-3.52e-13</td>
+          <td>-2.37e-12</td>
+          <td>-1.82e-12</td>
+          <td>-7.96e-13</td>
           <td>3.98e-13</td>
-          <td>-1.03e-12</td>
-          <td>2.30e-14</td>
-          <td>4.55e-13</td>
-          <td>1.36e-12</td>
-          <td>3.87e-13</td>
-          <td>-8.99e-13</td>
-          <td>1.97e-12</td>
+          <td>-9.10e-13</td>
+          <td>-3.23e-13</td>
+          <td>1.14e-13</td>
+          <td>2.55e-12</td>
         </tr>
         <tr>
           <th>880</th>
-          <th>3568.63</th>
-          <th>59.74</th>
           <th>9.51</th>
+          <th>59.74</th>
+          <th>3568.63</th>
           <th>2</th>
-          <td>-1.71e-12</td>
-          <td>1.59e-12</td>
+          <td>1.79e-12</td>
+          <td>6.09e-13</td>
+          <td>-2.51e-12</td>
+          <td>1.25e-12</td>
+          <td>-2.27e-12</td>
           <td>9.09e-13</td>
           <td>-9.09e-13</td>
-          <td>-2.27e-13</td>
-          <td>4.55e-13</td>
-          <td>1.94e-12</td>
-          <td>8.48e-13</td>
-          <td>-1.99e-12</td>
-          <td>3.51e-12</td>
+          <td>-4.55e-13</td>
+          <td>3.41e-13</td>
+          <td>3.85e-12</td>
         </tr>
         <tr>
           <th>952</th>
-          <th>3568.63</th>
-          <th>59.74</th>
           <th>9.51</th>
+          <th>59.74</th>
+          <th>3568.63</th>
           <th>2</th>
-          <td>-1.02e-12</td>
-          <td>1.36e-12</td>
-          <td>-1.36e-12</td>
+          <td>1.30e-12</td>
+          <td>1.93e-13</td>
+          <td>-2.63e-12</td>
           <td>-9.09e-13</td>
-          <td>0.00e+00</td>
+          <td>-6.82e-13</td>
           <td>4.55e-13</td>
-          <td>1.68e-12</td>
-          <td>-9.20e-13</td>
-          <td>-1.78e-12</td>
-          <td>3.12e-12</td>
+          <td>1.82e-12</td>
+          <td>4.55e-13</td>
+          <td>2.27e-13</td>
+          <td>3.51e-12</td>
         </tr>
         <tr>
           <th rowspan="9" valign="top">3685</th>
           <th>0</th>
-          <th>3568.63</th>
-          <th>59.74</th>
           <th>9.51</th>
+          <th>59.74</th>
+          <th>3568.63</th>
           <th>2</th>
+          <td>1.18e-12</td>
+          <td>-3.91e-15</td>
+          <td>-9.47e-13</td>
+          <td>-1.14e-13</td>
           <td>1.14e-13</td>
-          <td>-3.41e-13</td>
           <td>2.27e-13</td>
-          <td>-2.84e-14</td>
-          <td>-5.68e-14</td>
-          <td>6.82e-13</td>
-          <td>8.58e-13</td>
-          <td>-3.42e-13</td>
-          <td>-5.16e-13</td>
-          <td>1.30e-12</td>
-        </tr>
-        <tr>
-          <th>41</th>
-          <th>3568.63</th>
-          <th>59.74</th>
-          <th>9.51</th>
-          <th>2</th>
-          <td>-2.84e-13</td>
-          <td>2.27e-13</td>
-          <td>-2.84e-14</td>
-          <td>-9.02e-13</td>
-          <td>-3.56e-13</td>
-          <td>1.07e-12</td>
-          <td>1.53e-12</td>
-          <td>-2.31e-13</td>
-          <td>-1.38e-12</td>
-          <td>2.54e-12</td>
+          <td>4.97e-13</td>
+          <td>-9.09e-13</td>
+          <td>-1.71e-13</td>
+          <td>1.84e-12</td>
         </tr>
         <tr>
           <th>45</th>
-          <th>3568.63</th>
-          <th>59.74</th>
           <th>9.51</th>
+          <th>59.74</th>
+          <th>3568.63</th>
           <th>2</th>
-          <td>-5.68e-13</td>
-          <td>0.00e+00</td>
-          <td>1.14e-13</td>
+          <td>8.96e-13</td>
+          <td>-2.21e-13</td>
+          <td>-1.07e-12</td>
           <td>2.27e-13</td>
-          <td>-3.26e-13</td>
-          <td>6.52e-13</td>
-          <td>5.63e-13</td>
-          <td>6.88e-14</td>
-          <td>-1.09e-12</td>
-          <td>1.47e-12</td>
+          <td>-5.68e-14</td>
+          <td>-5.68e-13</td>
+          <td>-2.84e-13</td>
+          <td>-6.52e-13</td>
+          <td>5.54e-13</td>
+          <td>1.71e-12</td>
         </tr>
         <tr>
-          <th>46</th>
-          <th>3568.63</th>
-          <th>59.74</th>
+          <th>41</th>
           <th>9.51</th>
+          <th>59.74</th>
+          <th>3568.63</th>
           <th>2</th>
-          <td>2.84e-13</td>
-          <td>-3.41e-13</td>
-          <td>1.14e-13</td>
-          <td>3.84e-16</td>
+          <td>8.01e-13</td>
+          <td>-3.97e-13</td>
+          <td>-8.59e-13</td>
+          <td>-2.84e-13</td>
           <td>0.00e+00</td>
-          <td>-9.59e-14</td>
-          <td>3.27e-13</td>
-          <td>7.06e-14</td>
-          <td>-3.41e-13</td>
-          <td>5.84e-13</td>
-        </tr>
-        <tr>
-          <th>50</th>
-          <th>3568.63</th>
-          <th>59.74</th>
-          <th>9.51</th>
-          <th>2</th>
-          <td>5.12e-13</td>
-          <td>6.82e-13</td>
-          <td>3.98e-13</td>
-          <td>4.55e-13</td>
-          <td>0.00e+00</td>
-          <td>9.45e-13</td>
-          <td>1.54e-12</td>
-          <td>6.27e-13</td>
-          <td>-5.73e-13</td>
-          <td>1.83e-12</td>
-        </tr>
-        <tr>
-          <th>1015</th>
-          <th>3568.63</th>
-          <th>59.74</th>
-          <th>9.51</th>
-          <th>2</th>
-          <td>-1.14e-13</td>
-          <td>5.68e-14</td>
-          <td>1.71e-13</td>
-          <td>1.14e-13</td>
-          <td>-1.13e-13</td>
-          <td>4.55e-13</td>
-          <td>5.06e-13</td>
-          <td>1.01e-13</td>
-          <td>-4.94e-13</td>
-          <td>8.71e-13</td>
+          <td>-1.71e-13</td>
+          <td>-4.62e-13</td>
+          <td>-6.12e-13</td>
+          <td>3.56e-13</td>
+          <td>1.48e-12</td>
         </tr>
         <tr>
           <th>1021</th>
-          <th>3568.63</th>
-          <th>59.74</th>
           <th>9.51</th>
+          <th>59.74</th>
+          <th>3568.63</th>
           <th>2</th>
+          <td>9.04e-13</td>
+          <td>4.58e-13</td>
+          <td>-3.01e-12</td>
+          <td>-1.48e-12</td>
+          <td>5.68e-13</td>
+          <td>-7.39e-13</td>
+          <td>4.50e-13</td>
+          <td>-1.82e-12</td>
+          <td>9.06e-14</td>
+          <td>3.71e-12</td>
+        </tr>
+        <tr>
+          <th>1015</th>
+          <th>9.51</th>
+          <th>59.74</th>
+          <th>3568.63</th>
+          <th>2</th>
+          <td>1.19e-12</td>
+          <td>-9.78e-14</td>
+          <td>-6.96e-13</td>
+          <td>3.41e-13</td>
+          <td>-5.68e-14</td>
+          <td>1.14e-13</td>
+          <td>-2.27e-13</td>
+          <td>-9.09e-13</td>
+          <td>1.13e-13</td>
+          <td>1.67e-12</td>
+        </tr>
+        <tr>
+          <th>50</th>
+          <th>9.51</th>
+          <th>59.74</th>
+          <th>3568.63</th>
+          <th>2</th>
+          <td>4.88e-13</td>
+          <td>-1.28e-13</td>
+          <td>-1.21e-12</td>
+          <td>-3.98e-13</td>
+          <td>1.14e-13</td>
+          <td>-5.68e-13</td>
+          <td>-5.68e-13</td>
+          <td>-4.90e-13</td>
+          <td>-2.27e-13</td>
+          <td>1.49e-12</td>
+        </tr>
+        <tr>
+          <th>46</th>
+          <th>9.51</th>
+          <th>59.74</th>
+          <th>3568.63</th>
+          <th>2</th>
+          <td>6.22e-13</td>
+          <td>2.26e-14</td>
+          <td>-5.87e-13</td>
+          <td>-2.84e-13</td>
+          <td>3.41e-13</td>
           <td>0.00e+00</td>
-          <td>5.68e-14</td>
-          <td>1.71e-13</td>
-          <td>9.15e-13</td>
-          <td>-9.06e-14</td>
-          <td>-4.55e-13</td>
-          <td>1.11e-12</td>
-          <td>7.50e-14</td>
-          <td>-9.53e-13</td>
-          <td>1.78e-12</td>
+          <td>4.54e-13</td>
+          <td>9.59e-14</td>
+          <td>-2.27e-13</td>
+          <td>1.05e-12</td>
         </tr>
         <tr>
           <th>1031</th>
-          <th>3568.63</th>
-          <th>59.74</th>
           <th>9.51</th>
+          <th>59.74</th>
+          <th>3568.63</th>
           <th>2</th>
-          <td>-3.41e-13</td>
-          <td>3.41e-13</td>
-          <td>-4.55e-13</td>
-          <td>0.00e+00</td>
+          <td>2.32e-12</td>
+          <td>-6.90e-13</td>
+          <td>-1.63e-12</td>
           <td>-2.27e-13</td>
+          <td>-6.82e-13</td>
+          <td>9.09e-13</td>
           <td>4.55e-13</td>
-          <td>4.26e-13</td>
-          <td>-1.01e-28</td>
-          <td>-8.80e-13</td>
-          <td>1.15e-12</td>
+          <td>-1.82e-12</td>
+          <td>-2.27e-13</td>
+          <td>3.57e-12</td>
         </tr>
         <tr>
           <th>1037</th>
-          <th>3568.63</th>
-          <th>59.74</th>
           <th>9.51</th>
+          <th>59.74</th>
+          <th>3568.63</th>
           <th>2</th>
-          <td>-1.14e-13</td>
-          <td>-4.55e-13</td>
-          <td>0.00e+00</td>
-          <td>2.84e-13</td>
-          <td>-1.14e-13</td>
+          <td>2.08e-12</td>
+          <td>-2.71e-13</td>
+          <td>-1.70e-12</td>
           <td>4.55e-13</td>
-          <td>4.15e-13</td>
-          <td>-2.05e-13</td>
-          <td>-7.79e-13</td>
-          <td>1.03e-12</td>
+          <td>-3.41e-13</td>
+          <td>0.00e+00</td>
+          <td>-3.98e-13</td>
+          <td>-1.82e-12</td>
+          <td>-1.14e-13</td>
+          <td>3.30e-12</td>
         </tr>
       </tbody>
     </table>
@@ -3036,6 +2229,19 @@ columns I want as my index:
 .. raw:: html
 
     <div>
+    <style scoped>
+        .dataframe tbody tr th:only-of-type {
+            vertical-align: middle;
+        }
+    
+        .dataframe tbody tr th {
+            vertical-align: top;
+        }
+    
+        .dataframe thead th {
+            text-align: right;
+        }
+    </style>
     <table border="1" class="dataframe">
       <thead>
         <tr style="text-align: right;">
@@ -3043,17 +2249,17 @@ columns I want as my index:
           <th></th>
           <th></th>
           <th>Item</th>
-          <th>EigenvalueReal</th>
+          <th>Eigenvalue</th>
           <th>Radians</th>
+          <th>omax</th>
+          <th>omid</th>
+          <th>omin</th>
           <th>oxx</th>
           <th>oyy</th>
           <th>ozz</th>
           <th>txy</th>
-          <th>tyz</th>
           <th>txz</th>
-          <th>omax</th>
-          <th>omid</th>
-          <th>omin</th>
+          <th>tyz</th>
           <th>von_mises</th>
         </tr>
         <tr>
@@ -3083,32 +2289,32 @@ columns I want as my index:
           <th>8.36</th>
           <td>2758.15</td>
           <td>52.52</td>
-          <td>7.93e-12</td>
-          <td>-3.58e-12</td>
-          <td>-3.41e-13</td>
-          <td>-1.99e-13</td>
+          <td>1.48e-12</td>
+          <td>1.02e-12</td>
+          <td>-3.38e-12</td>
+          <td>1.22e-12</td>
+          <td>-3.35e-12</td>
+          <td>1.25e-12</td>
+          <td>-3.27e-13</td>
+          <td>-2.27e-13</td>
           <td>2.84e-14</td>
-          <td>5.12e-13</td>
-          <td>7.96e-12</td>
-          <td>-3.72e-13</td>
-          <td>-3.59e-12</td>
-          <td>1.03e-11</td>
+          <td>4.64e-12</td>
         </tr>
         <tr>
           <th>2</th>
           <th>9.51</th>
           <td>3568.63</td>
           <td>59.74</td>
-          <td>1.14e-13</td>
-          <td>-7.96e-13</td>
-          <td>2.27e-13</td>
-          <td>0.00e+00</td>
-          <td>5.68e-14</td>
+          <td>2.22e-12</td>
+          <td>-1.06e-13</td>
+          <td>-2.23e-12</td>
+          <td>-3.41e-13</td>
           <td>-2.27e-13</td>
-          <td>4.07e-13</td>
-          <td>-6.22e-14</td>
-          <td>-7.99e-13</td>
-          <td>1.05e-12</td>
+          <td>4.55e-13</td>
+          <td>1.82e-12</td>
+          <td>1.14e-12</td>
+          <td>3.98e-13</td>
+          <td>3.85e-12</td>
         </tr>
         <tr>
           <th rowspan="2" valign="top">51</th>
@@ -3116,32 +2322,32 @@ columns I want as my index:
           <th>8.36</th>
           <td>2758.15</td>
           <td>52.52</td>
-          <td>-8.67e-13</td>
-          <td>2.29e-12</td>
-          <td>-2.53e-12</td>
-          <td>-3.15e-13</td>
-          <td>2.17e-14</td>
-          <td>1.95e-13</td>
           <td>2.32e-12</td>
-          <td>-8.75e-13</td>
-          <td>-2.55e-12</td>
-          <td>4.29e-12</td>
+          <td>1.49e-13</td>
+          <td>-1.41e-12</td>
+          <td>-1.39e-12</td>
+          <td>2.32e-12</td>
+          <td>1.35e-13</td>
+          <td>-1.30e-13</td>
+          <td>-1.46e-13</td>
+          <td>7.51e-15</td>
+          <td>3.25e-12</td>
         </tr>
         <tr>
           <th>2</th>
           <th>9.51</th>
           <td>3568.63</td>
           <td>59.74</td>
-          <td>-3.98e-13</td>
-          <td>9.66e-13</td>
-          <td>7.11e-13</td>
-          <td>-1.98e-12</td>
-          <td>-3.56e-13</td>
-          <td>-1.58e-13</td>
-          <td>2.40e-12</td>
-          <td>7.31e-13</td>
-          <td>-1.85e-12</td>
-          <td>3.71e-12</td>
+          <td>7.48e-13</td>
+          <td>-3.94e-13</td>
+          <td>-1.46e-12</td>
+          <td>-3.41e-13</td>
+          <td>5.68e-14</td>
+          <td>-8.24e-13</td>
+          <td>1.57e-13</td>
+          <td>3.85e-13</td>
+          <td>9.24e-13</td>
+          <td>1.91e-12</td>
         </tr>
         <tr>
           <th rowspan="2" valign="top">55</th>
@@ -3149,32 +2355,32 @@ columns I want as my index:
           <th>8.36</th>
           <td>2758.15</td>
           <td>52.52</td>
-          <td>2.33e-12</td>
-          <td>1.18e-12</td>
-          <td>-9.45e-13</td>
-          <td>-3.98e-13</td>
-          <td>-2.62e-14</td>
-          <td>-4.76e-13</td>
-          <td>2.51e-12</td>
-          <td>1.07e-12</td>
-          <td>-1.02e-12</td>
-          <td>3.07e-12</td>
+          <td>4.81e-12</td>
+          <td>1.92e-13</td>
+          <td>-3.57e-13</td>
+          <td>4.53e-12</td>
+          <td>-2.42e-13</td>
+          <td>3.55e-13</td>
+          <td>-6.54e-13</td>
+          <td>-9.30e-13</td>
+          <td>2.20e-15</td>
+          <td>4.92e-12</td>
         </tr>
         <tr>
           <th>2</th>
           <th>9.51</th>
           <td>3568.63</td>
           <td>59.74</td>
-          <td>-2.10e-12</td>
-          <td>-1.93e-12</td>
-          <td>-1.05e-12</td>
-          <td>-9.09e-13</td>
-          <td>-9.88e-14</td>
-          <td>-6.53e-13</td>
-          <td>-6.34e-13</td>
-          <td>-1.37e-12</td>
-          <td>-3.08e-12</td>
-          <td>2.18e-12</td>
+          <td>3.64e-12</td>
+          <td>9.55e-13</td>
+          <td>-1.33e-12</td>
+          <td>2.33e-12</td>
+          <td>-5.68e-14</td>
+          <td>9.95e-13</td>
+          <td>1.82e-12</td>
+          <td>4.26e-13</td>
+          <td>1.12e-12</td>
+          <td>4.31e-12</td>
         </tr>
         <tr>
           <th rowspan="2" valign="top">56</th>
@@ -3182,32 +2388,32 @@ columns I want as my index:
           <th>8.36</th>
           <td>2758.15</td>
           <td>52.52</td>
-          <td>-5.37e-12</td>
-          <td>-2.76e-12</td>
-          <td>-2.43e-12</td>
-          <td>-4.92e-13</td>
-          <td>1.14e-13</td>
-          <td>-1.95e-13</td>
-          <td>-2.35e-12</td>
-          <td>-2.74e-12</td>
-          <td>-5.47e-12</td>
-          <td>2.95e-12</td>
+          <td>1.66e-12</td>
+          <td>-1.65e-12</td>
+          <td>-5.92e-12</td>
+          <td>-5.87e-12</td>
+          <td>1.65e-12</td>
+          <td>-1.69e-12</td>
+          <td>-3.07e-13</td>
+          <td>-4.22e-13</td>
+          <td>8.53e-14</td>
+          <td>6.59e-12</td>
         </tr>
         <tr>
           <th>2</th>
           <th>9.51</th>
           <td>3568.63</td>
           <td>59.74</td>
-          <td>2.84e-13</td>
-          <td>-4.55e-13</td>
-          <td>-8.53e-13</td>
-          <td>-9.09e-13</td>
-          <td>-2.27e-13</td>
-          <td>9.52e-14</td>
-          <td>9.20e-13</td>
-          <td>-8.07e-13</td>
-          <td>-1.14e-12</td>
-          <td>1.91e-12</td>
+          <td>5.04e-13</td>
+          <td>-3.52e-13</td>
+          <td>-2.37e-12</td>
+          <td>-1.82e-12</td>
+          <td>-7.96e-13</td>
+          <td>3.98e-13</td>
+          <td>-9.10e-13</td>
+          <td>-3.23e-13</td>
+          <td>1.14e-13</td>
+          <td>2.55e-12</td>
         </tr>
         <tr>
           <th rowspan="2" valign="top">60</th>
@@ -3215,32 +2421,32 @@ columns I want as my index:
           <th>8.36</th>
           <td>2758.15</td>
           <td>52.52</td>
-          <td>8.81e-13</td>
-          <td>-2.10e-12</td>
-          <td>-4.97e-13</td>
-          <td>5.68e-14</td>
-          <td>1.14e-13</td>
-          <td>-2.93e-13</td>
-          <td>9.41e-13</td>
-          <td>-5.47e-13</td>
-          <td>-2.11e-12</td>
-          <td>2.65e-12</td>
+          <td>2.88e-12</td>
+          <td>1.71e-12</td>
+          <td>-4.27e-12</td>
+          <td>2.63e-12</td>
+          <td>1.90e-12</td>
+          <td>-4.21e-12</td>
+          <td>-4.26e-13</td>
+          <td>-6.34e-13</td>
+          <td>8.53e-14</td>
+          <td>6.64e-12</td>
         </tr>
         <tr>
           <th>2</th>
           <th>9.51</th>
           <td>3568.63</td>
           <td>59.74</td>
-          <td>5.12e-13</td>
-          <td>1.14e-12</td>
-          <td>5.12e-13</td>
-          <td>-9.09e-13</td>
-          <td>-2.27e-13</td>
-          <td>-3.68e-14</td>
-          <td>1.81e-12</td>
-          <td>5.30e-13</td>
-          <td>-1.76e-13</td>
-          <td>1.74e-12</td>
+          <td>1.02e-12</td>
+          <td>-2.20e-12</td>
+          <td>-2.85e-12</td>
+          <td>-1.48e-12</td>
+          <td>-3.41e-13</td>
+          <td>-2.22e-12</td>
+          <td>1.82e-12</td>
+          <td>2.64e-13</td>
+          <td>1.14e-13</td>
+          <td>3.59e-12</td>
         </tr>
         <tr>
           <th rowspan="2" valign="top">758</th>
@@ -3248,32 +2454,32 @@ columns I want as my index:
           <th>8.36</th>
           <td>2758.15</td>
           <td>52.52</td>
-          <td>2.22e-12</td>
-          <td>1.63e-12</td>
-          <td>2.43e-12</td>
-          <td>-1.99e-13</td>
-          <td>-2.49e-14</td>
+          <td>5.79e-12</td>
+          <td>4.11e-12</td>
+          <td>7.57e-14</td>
+          <td>5.68e-12</td>
+          <td>1.14e-13</td>
+          <td>4.18e-12</td>
+          <td>-4.55e-13</td>
           <td>-3.41e-13</td>
-          <td>2.69e-12</td>
-          <td>2.04e-12</td>
-          <td>1.55e-12</td>
-          <td>9.89e-13</td>
+          <td>-3.91e-14</td>
+          <td>5.09e-12</td>
         </tr>
         <tr>
           <th>2</th>
           <th>9.51</th>
           <td>3568.63</td>
           <td>59.74</td>
-          <td>3.41e-13</td>
-          <td>2.05e-12</td>
-          <td>1.08e-12</td>
-          <td>-9.09e-13</td>
-          <td>-3.40e-13</td>
+          <td>1.03e-12</td>
+          <td>-1.04e-12</td>
+          <td>-3.57e-12</td>
+          <td>-5.68e-13</td>
+          <td>-2.33e-12</td>
+          <td>-6.82e-13</td>
+          <td>1.82e-12</td>
           <td>4.55e-13</td>
-          <td>2.60e-12</td>
-          <td>9.89e-13</td>
-          <td>-1.25e-13</td>
-          <td>2.38e-12</td>
+          <td>9.08e-13</td>
+          <td>3.99e-12</td>
         </tr>
         <tr>
           <th rowspan="2" valign="top">778</th>
@@ -3281,32 +2487,32 @@ columns I want as my index:
           <th>8.36</th>
           <td>2758.15</td>
           <td>52.52</td>
-          <td>-3.24e-12</td>
-          <td>-1.88e-12</td>
-          <td>-4.99e-12</td>
-          <td>-1.15e-13</td>
-          <td>-5.52e-15</td>
+          <td>-1.38e-12</td>
+          <td>-3.27e-12</td>
+          <td>-6.12e-12</td>
+          <td>-6.08e-12</td>
+          <td>-1.38e-12</td>
+          <td>-3.31e-12</td>
+          <td>-5.81e-14</td>
           <td>-3.41e-13</td>
-          <td>-1.87e-12</td>
-          <td>-3.19e-12</td>
-          <td>-5.05e-12</td>
-          <td>2.77e-12</td>
+          <td>-1.97e-14</td>
+          <td>4.14e-12</td>
         </tr>
         <tr>
           <th>2</th>
           <th>9.51</th>
           <td>3568.63</td>
           <td>59.74</td>
-          <td>2.27e-13</td>
-          <td>2.27e-13</td>
-          <td>3.98e-13</td>
-          <td>-1.03e-12</td>
-          <td>2.30e-14</td>
+          <td>1.24e-12</td>
+          <td>-5.76e-13</td>
+          <td>-2.37e-12</td>
+          <td>-2.27e-12</td>
+          <td>7.96e-13</td>
+          <td>-2.27e-13</td>
+          <td>1.25e-13</td>
           <td>4.55e-13</td>
-          <td>1.36e-12</td>
-          <td>3.87e-13</td>
-          <td>-8.99e-13</td>
-          <td>1.97e-12</td>
+          <td>7.73e-13</td>
+          <td>3.13e-12</td>
         </tr>
         <tr>
           <th rowspan="2" valign="top">880</th>
@@ -3314,32 +2520,32 @@ columns I want as my index:
           <th>8.36</th>
           <td>2758.15</td>
           <td>52.52</td>
-          <td>1.76e-12</td>
-          <td>1.88e-12</td>
-          <td>1.82e-12</td>
-          <td>-5.26e-13</td>
-          <td>1.14e-13</td>
+          <td>2.63e-12</td>
+          <td>2.11e-12</td>
+          <td>-4.74e-12</td>
+          <td>-4.72e-12</td>
+          <td>2.10e-12</td>
+          <td>2.61e-12</td>
+          <td>-3.41e-13</td>
           <td>0.00e+00</td>
-          <td>2.36e-12</td>
-          <td>1.82e-12</td>
-          <td>1.28e-12</td>
-          <td>9.37e-13</td>
+          <td>8.53e-14</td>
+          <td>7.12e-12</td>
         </tr>
         <tr>
           <th>2</th>
           <th>9.51</th>
           <td>3568.63</td>
           <td>59.74</td>
-          <td>-1.71e-12</td>
-          <td>1.59e-12</td>
+          <td>1.79e-12</td>
+          <td>6.09e-13</td>
+          <td>-2.51e-12</td>
+          <td>1.25e-12</td>
+          <td>-2.27e-12</td>
           <td>9.09e-13</td>
           <td>-9.09e-13</td>
-          <td>-2.27e-13</td>
-          <td>4.55e-13</td>
-          <td>1.94e-12</td>
-          <td>8.48e-13</td>
-          <td>-1.99e-12</td>
-          <td>3.51e-12</td>
+          <td>-4.55e-13</td>
+          <td>3.41e-13</td>
+          <td>3.85e-12</td>
         </tr>
         <tr>
           <th rowspan="2" valign="top">952</th>
@@ -3347,32 +2553,32 @@ columns I want as my index:
           <th>8.36</th>
           <td>2758.15</td>
           <td>52.52</td>
-          <td>-5.29e-12</td>
-          <td>-7.11e-13</td>
-          <td>-1.93e-12</td>
-          <td>-1.71e-13</td>
-          <td>5.68e-14</td>
+          <td>-8.35e-15</td>
+          <td>-1.79e-12</td>
+          <td>-3.00e-12</td>
+          <td>-1.73e-12</td>
+          <td>-1.14e-13</td>
+          <td>-2.96e-12</td>
+          <td>-4.26e-13</td>
           <td>2.27e-13</td>
-          <td>-7.02e-13</td>
-          <td>-1.92e-12</td>
-          <td>-5.31e-12</td>
-          <td>4.13e-12</td>
+          <td>5.68e-14</td>
+          <td>2.61e-12</td>
         </tr>
         <tr>
           <th>2</th>
           <th>9.51</th>
           <td>3568.63</td>
           <td>59.74</td>
-          <td>-1.02e-12</td>
-          <td>1.36e-12</td>
-          <td>-1.36e-12</td>
+          <td>1.30e-12</td>
+          <td>1.93e-13</td>
+          <td>-2.63e-12</td>
           <td>-9.09e-13</td>
-          <td>0.00e+00</td>
+          <td>-6.82e-13</td>
           <td>4.55e-13</td>
-          <td>1.68e-12</td>
-          <td>-9.20e-13</td>
-          <td>-1.78e-12</td>
-          <td>3.12e-12</td>
+          <td>1.82e-12</td>
+          <td>4.55e-13</td>
+          <td>2.27e-13</td>
+          <td>3.51e-12</td>
         </tr>
         <tr>
           <th rowspan="18" valign="top">3685</th>
@@ -3381,32 +2587,32 @@ columns I want as my index:
           <th>8.36</th>
           <td>2758.15</td>
           <td>52.52</td>
-          <td>7.18e-13</td>
-          <td>1.85e-13</td>
-          <td>-2.13e-13</td>
-          <td>1.17e-13</td>
-          <td>-3.55e-14</td>
-          <td>3.41e-13</td>
-          <td>8.45e-13</td>
-          <td>1.79e-13</td>
-          <td>-3.34e-13</td>
-          <td>1.02e-12</td>
+          <td>5.11e-13</td>
+          <td>1.44e-13</td>
+          <td>-5.41e-13</td>
+          <td>4.97e-13</td>
+          <td>1.56e-13</td>
+          <td>-5.40e-13</td>
+          <td>6.75e-14</td>
+          <td>-2.84e-14</td>
+          <td>1.42e-14</td>
+          <td>9.25e-13</td>
         </tr>
         <tr>
           <th>2</th>
           <th>9.51</th>
           <td>3568.63</td>
           <td>59.74</td>
+          <td>1.18e-12</td>
+          <td>-3.91e-15</td>
+          <td>-9.47e-13</td>
+          <td>-1.14e-13</td>
           <td>1.14e-13</td>
-          <td>-3.41e-13</td>
           <td>2.27e-13</td>
-          <td>-2.84e-14</td>
-          <td>-5.68e-14</td>
-          <td>6.82e-13</td>
-          <td>8.58e-13</td>
-          <td>-3.42e-13</td>
-          <td>-5.16e-13</td>
-          <td>1.30e-12</td>
+          <td>4.97e-13</td>
+          <td>-9.09e-13</td>
+          <td>-1.71e-13</td>
+          <td>1.84e-12</td>
         </tr>
         <tr>
           <th rowspan="2" valign="top">41</th>
@@ -3414,32 +2620,32 @@ columns I want as my index:
           <th>8.36</th>
           <td>2758.15</td>
           <td>52.52</td>
-          <td>-8.46e-13</td>
-          <td>-6.04e-13</td>
-          <td>-6.04e-14</td>
-          <td>2.20e-13</td>
-          <td>-3.50e-15</td>
-          <td>1.71e-13</td>
-          <td>-2.15e-14</td>
-          <td>-4.89e-13</td>
-          <td>-1.00e-12</td>
-          <td>8.48e-13</td>
+          <td>7.67e-13</td>
+          <td>-1.49e-13</td>
+          <td>-4.37e-13</td>
+          <td>-1.49e-13</td>
+          <td>7.21e-13</td>
+          <td>-3.91e-13</td>
+          <td>1.92e-13</td>
+          <td>1.14e-13</td>
+          <td>5.33e-14</td>
+          <td>1.09e-12</td>
         </tr>
         <tr>
           <th>2</th>
           <th>9.51</th>
           <td>3568.63</td>
           <td>59.74</td>
+          <td>8.01e-13</td>
+          <td>-3.97e-13</td>
+          <td>-8.59e-13</td>
           <td>-2.84e-13</td>
-          <td>2.27e-13</td>
-          <td>-2.84e-14</td>
-          <td>-9.02e-13</td>
-          <td>-3.56e-13</td>
-          <td>1.07e-12</td>
-          <td>1.53e-12</td>
-          <td>-2.31e-13</td>
-          <td>-1.38e-12</td>
-          <td>2.54e-12</td>
+          <td>0.00e+00</td>
+          <td>-1.71e-13</td>
+          <td>-4.62e-13</td>
+          <td>-6.12e-13</td>
+          <td>3.56e-13</td>
+          <td>1.48e-12</td>
         </tr>
         <tr>
           <th rowspan="2" valign="top">45</th>
@@ -3447,32 +2653,32 @@ columns I want as my index:
           <th>8.36</th>
           <td>2758.15</td>
           <td>52.52</td>
-          <td>1.06e-12</td>
-          <td>-5.65e-13</td>
-          <td>5.68e-13</td>
-          <td>3.55e-14</td>
-          <td>-5.37e-15</td>
-          <td>-1.18e-13</td>
-          <td>1.09e-12</td>
-          <td>5.42e-13</td>
-          <td>-5.66e-13</td>
-          <td>1.46e-12</td>
+          <td>8.09e-13</td>
+          <td>-5.47e-13</td>
+          <td>-8.09e-13</td>
+          <td>6.79e-13</td>
+          <td>-7.89e-13</td>
+          <td>-4.37e-13</td>
+          <td>6.39e-14</td>
+          <td>-4.02e-13</td>
+          <td>5.15e-14</td>
+          <td>1.50e-12</td>
         </tr>
         <tr>
           <th>2</th>
           <th>9.51</th>
           <td>3568.63</td>
           <td>59.74</td>
-          <td>-5.68e-13</td>
-          <td>0.00e+00</td>
-          <td>1.14e-13</td>
+          <td>8.96e-13</td>
+          <td>-2.21e-13</td>
+          <td>-1.07e-12</td>
           <td>2.27e-13</td>
-          <td>-3.26e-13</td>
-          <td>6.52e-13</td>
-          <td>5.63e-13</td>
-          <td>6.88e-14</td>
-          <td>-1.09e-12</td>
-          <td>1.47e-12</td>
+          <td>-5.68e-14</td>
+          <td>-5.68e-13</td>
+          <td>-2.84e-13</td>
+          <td>-6.52e-13</td>
+          <td>5.54e-13</td>
+          <td>1.71e-12</td>
         </tr>
         <tr>
           <th rowspan="2" valign="top">46</th>
@@ -3480,32 +2686,32 @@ columns I want as my index:
           <th>8.36</th>
           <td>2758.15</td>
           <td>52.52</td>
-          <td>-2.38e-13</td>
-          <td>6.68e-13</td>
-          <td>1.28e-13</td>
-          <td>1.05e-13</td>
-          <td>-2.84e-14</td>
-          <td>2.14e-13</td>
-          <td>6.80e-13</td>
-          <td>2.26e-13</td>
-          <td>-3.48e-13</td>
-          <td>8.92e-13</td>
+          <td>2.26e-12</td>
+          <td>7.91e-13</td>
+          <td>7.55e-14</td>
+          <td>2.25e-12</td>
+          <td>7.96e-13</td>
+          <td>7.82e-14</td>
+          <td>8.37e-14</td>
+          <td>-7.01e-14</td>
+          <td>1.42e-14</td>
+          <td>1.93e-12</td>
         </tr>
         <tr>
           <th>2</th>
           <th>9.51</th>
           <td>3568.63</td>
           <td>59.74</td>
-          <td>2.84e-13</td>
-          <td>-3.41e-13</td>
-          <td>1.14e-13</td>
-          <td>3.84e-16</td>
+          <td>6.22e-13</td>
+          <td>2.26e-14</td>
+          <td>-5.87e-13</td>
+          <td>-2.84e-13</td>
+          <td>3.41e-13</td>
           <td>0.00e+00</td>
-          <td>-9.59e-14</td>
-          <td>3.27e-13</td>
-          <td>7.06e-14</td>
-          <td>-3.41e-13</td>
-          <td>5.84e-13</td>
+          <td>4.54e-13</td>
+          <td>9.59e-14</td>
+          <td>-2.27e-13</td>
+          <td>1.05e-12</td>
         </tr>
         <tr>
           <th rowspan="2" valign="top">50</th>
@@ -3513,32 +2719,32 @@ columns I want as my index:
           <th>8.36</th>
           <td>2758.15</td>
           <td>52.52</td>
-          <td>-6.04e-14</td>
-          <td>1.14e-13</td>
-          <td>6.39e-14</td>
+          <td>9.64e-13</td>
+          <td>7.11e-13</td>
+          <td>-6.57e-14</td>
+          <td>-3.91e-14</td>
+          <td>7.11e-13</td>
+          <td>9.38e-13</td>
           <td>-4.26e-14</td>
-          <td>-2.84e-14</td>
-          <td>-9.99e-14</td>
-          <td>1.27e-13</td>
-          <td>1.17e-13</td>
-          <td>-1.27e-13</td>
-          <td>2.49e-13</td>
+          <td>-1.57e-13</td>
+          <td>1.42e-14</td>
+          <td>9.29e-13</td>
         </tr>
         <tr>
           <th>2</th>
           <th>9.51</th>
           <td>3568.63</td>
           <td>59.74</td>
-          <td>5.12e-13</td>
-          <td>6.82e-13</td>
-          <td>3.98e-13</td>
-          <td>4.55e-13</td>
-          <td>0.00e+00</td>
-          <td>9.45e-13</td>
-          <td>1.54e-12</td>
-          <td>6.27e-13</td>
-          <td>-5.73e-13</td>
-          <td>1.83e-12</td>
+          <td>4.88e-13</td>
+          <td>-1.28e-13</td>
+          <td>-1.21e-12</td>
+          <td>-3.98e-13</td>
+          <td>1.14e-13</td>
+          <td>-5.68e-13</td>
+          <td>-5.68e-13</td>
+          <td>-4.90e-13</td>
+          <td>-2.27e-13</td>
+          <td>1.49e-12</td>
         </tr>
         <tr>
           <th rowspan="2" valign="top">1015</th>
@@ -3546,32 +2752,32 @@ columns I want as my index:
           <th>8.36</th>
           <td>2758.15</td>
           <td>52.52</td>
-          <td>-5.68e-14</td>
-          <td>-7.85e-13</td>
-          <td>-2.70e-13</td>
-          <td>3.55e-14</td>
-          <td>-1.18e-14</td>
-          <td>-3.41e-13</td>
-          <td>1.95e-13</td>
-          <td>-5.20e-13</td>
-          <td>-7.87e-13</td>
-          <td>8.80e-13</td>
+          <td>8.67e-13</td>
+          <td>1.56e-13</td>
+          <td>-6.65e-13</td>
+          <td>2.98e-13</td>
+          <td>1.53e-13</td>
+          <td>-9.24e-14</td>
+          <td>2.84e-14</td>
+          <td>-7.39e-13</td>
+          <td>4.51e-14</td>
+          <td>1.33e-12</td>
         </tr>
         <tr>
           <th>2</th>
           <th>9.51</th>
           <td>3568.63</td>
           <td>59.74</td>
-          <td>-1.14e-13</td>
-          <td>5.68e-14</td>
-          <td>1.71e-13</td>
+          <td>1.19e-12</td>
+          <td>-9.78e-14</td>
+          <td>-6.96e-13</td>
+          <td>3.41e-13</td>
+          <td>-5.68e-14</td>
           <td>1.14e-13</td>
-          <td>-1.13e-13</td>
-          <td>4.55e-13</td>
-          <td>5.06e-13</td>
-          <td>1.01e-13</td>
-          <td>-4.94e-13</td>
-          <td>8.71e-13</td>
+          <td>-2.27e-13</td>
+          <td>-9.09e-13</td>
+          <td>1.13e-13</td>
+          <td>1.67e-12</td>
         </tr>
         <tr>
           <th rowspan="2" valign="top">1021</th>
@@ -3579,32 +2785,32 @@ columns I want as my index:
           <th>8.36</th>
           <td>2758.15</td>
           <td>52.52</td>
-          <td>9.66e-13</td>
-          <td>2.17e-13</td>
-          <td>8.60e-13</td>
-          <td>4.43e-13</td>
-          <td>-2.10e-15</td>
-          <td>-6.82e-13</td>
-          <td>1.67e-12</td>
-          <td>4.79e-13</td>
-          <td>-1.10e-13</td>
-          <td>1.57e-12</td>
+          <td>7.75e-13</td>
+          <td>1.86e-13</td>
+          <td>-5.38e-13</td>
+          <td>1.56e-13</td>
+          <td>1.60e-13</td>
+          <td>1.07e-13</td>
+          <td>1.94e-13</td>
+          <td>-6.25e-13</td>
+          <td>5.47e-14</td>
+          <td>1.14e-12</td>
         </tr>
         <tr>
           <th>2</th>
           <th>9.51</th>
           <td>3568.63</td>
           <td>59.74</td>
-          <td>0.00e+00</td>
-          <td>5.68e-14</td>
-          <td>1.71e-13</td>
-          <td>9.15e-13</td>
-          <td>-9.06e-14</td>
-          <td>-4.55e-13</td>
-          <td>1.11e-12</td>
-          <td>7.50e-14</td>
-          <td>-9.53e-13</td>
-          <td>1.78e-12</td>
+          <td>9.04e-13</td>
+          <td>4.58e-13</td>
+          <td>-3.01e-12</td>
+          <td>-1.48e-12</td>
+          <td>5.68e-13</td>
+          <td>-7.39e-13</td>
+          <td>4.50e-13</td>
+          <td>-1.82e-12</td>
+          <td>9.06e-14</td>
+          <td>3.71e-12</td>
         </tr>
         <tr>
           <th rowspan="2" valign="top">1031</th>
@@ -3612,32 +2818,32 @@ columns I want as my index:
           <th>8.36</th>
           <td>2758.15</td>
           <td>52.52</td>
-          <td>-2.74e-12</td>
-          <td>-5.68e-13</td>
+          <td>-8.72e-13</td>
+          <td>-1.24e-12</td>
+          <td>-1.87e-12</td>
+          <td>-1.68e-12</td>
+          <td>-8.81e-13</td>
           <td>-1.42e-12</td>
-          <td>1.07e-13</td>
-          <td>0.00e+00</td>
-          <td>-4.55e-13</td>
-          <td>-5.63e-13</td>
-          <td>-1.28e-12</td>
-          <td>-2.89e-12</td>
-          <td>2.06e-12</td>
+          <td>8.53e-14</td>
+          <td>-2.84e-13</td>
+          <td>4.26e-14</td>
+          <td>8.75e-13</td>
         </tr>
         <tr>
           <th>2</th>
           <th>9.51</th>
           <td>3568.63</td>
           <td>59.74</td>
-          <td>-3.41e-13</td>
-          <td>3.41e-13</td>
-          <td>-4.55e-13</td>
-          <td>0.00e+00</td>
+          <td>2.32e-12</td>
+          <td>-6.90e-13</td>
+          <td>-1.63e-12</td>
           <td>-2.27e-13</td>
+          <td>-6.82e-13</td>
+          <td>9.09e-13</td>
           <td>4.55e-13</td>
-          <td>4.26e-13</td>
-          <td>-1.01e-28</td>
-          <td>-8.80e-13</td>
-          <td>1.15e-12</td>
+          <td>-1.82e-12</td>
+          <td>-2.27e-13</td>
+          <td>3.57e-12</td>
         </tr>
         <tr>
           <th rowspan="2" valign="top">1037</th>
@@ -3645,32 +2851,32 @@ columns I want as my index:
           <th>8.36</th>
           <td>2758.15</td>
           <td>52.52</td>
-          <td>2.42e-13</td>
-          <td>-1.28e-13</td>
-          <td>1.14e-13</td>
+          <td>-7.47e-15</td>
+          <td>-1.15e-13</td>
+          <td>-1.00e-12</td>
+          <td>-9.95e-14</td>
+          <td>-1.14e-13</td>
+          <td>-9.09e-13</td>
           <td>-7.11e-15</td>
-          <td>-1.42e-14</td>
-          <td>-2.27e-13</td>
-          <td>4.14e-13</td>
-          <td>-5.52e-14</td>
-          <td>-1.31e-13</td>
-          <td>5.11e-13</td>
+          <td>-2.84e-13</td>
+          <td>2.84e-14</td>
+          <td>9.43e-13</td>
         </tr>
         <tr>
           <th>2</th>
           <th>9.51</th>
           <td>3568.63</td>
           <td>59.74</td>
-          <td>-1.14e-13</td>
-          <td>-4.55e-13</td>
-          <td>0.00e+00</td>
-          <td>2.84e-13</td>
-          <td>-1.14e-13</td>
+          <td>2.08e-12</td>
+          <td>-2.71e-13</td>
+          <td>-1.70e-12</td>
           <td>4.55e-13</td>
-          <td>4.15e-13</td>
-          <td>-2.05e-13</td>
-          <td>-7.79e-13</td>
-          <td>1.03e-12</td>
+          <td>-3.41e-13</td>
+          <td>0.00e+00</td>
+          <td>-3.98e-13</td>
+          <td>-1.82e-12</td>
+          <td>-1.14e-13</td>
+          <td>3.30e-12</td>
         </tr>
       </tbody>
     </table>

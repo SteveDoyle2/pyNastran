@@ -44,3 +44,6 @@ def create_rst_from_ipython_notebooks():
             os.rename(rst_name, moved_rst_name)
         except:
             pass
+
+if __name__ == '__main__':  # pragma: no cover
+    create_rst_from_ipython_notebooks()

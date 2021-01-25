@@ -37,7 +37,7 @@ from pyNastran.op2.result_objects.monpnt import MONPNT1, MONPNT3
 
 from pyNastran.f06.errors import FatalError
 from pyNastran.op2.errors import (SortCodeError, DeviceCodeError,
-                                  FortranMarkerError,  SixtyFourBitError,
+                                  FortranMarkerError, SixtyFourBitError,
                                   OverwriteTableError)
 from pyNastran.op2.writer.op2_writer import OP2Writer
 #from pyNastran.op2.op2_interface.op2_f06_common import Op2F06Attributes
@@ -1250,7 +1250,6 @@ def read_op2(op2_filename: Optional[str]=None,
              include_results: Optional[List[str]]=None,
              log: Any=None,
              debug: Optional[bool]=True,
-             debug_file: Optional[str]=None,
              build_dataframe: Optional[bool]=None,
              skip_undefined_matrices: bool=True,
              mode: Optional[str]=None,
@@ -1289,8 +1288,6 @@ def read_op2(op2_filename: Optional[str]=None,
     mode : str; default=None -> 'msc'
         the version of the Nastran you're using
         {nx, msc, autodesk, optistruct, nasa95}
-    debug_file : str; default=None (No debug)
-        sets the filename that will be written to
     encoding : str
         the unicode encoding (default=None; system default)
 
@@ -1316,9 +1313,9 @@ def read_op2(op2_filename: Optional[str]=None,
             validate=True, xref=True,
             build_dataframe=build_dataframe,
             skip_undefined_matrices=skip_undefined_matrices,
-            mode=mode, log=log, debug=debug, debug_file=debug_file, encoding=encoding)
+            mode=mode, log=log, debug=debug, encoding=encoding)
     else:
-        model = OP2(log=log, debug=debug, debug_file=debug_file, mode=mode)
+        model = OP2(log=log, debug=debug, mode=mode)
         model.set_subcases(subcases)
         model.include_exclude_results(exclude_results=exclude_results,
                                       include_results=include_results)
@@ -1339,7 +1336,7 @@ def read_op2(op2_filename: Optional[str]=None,
     return model
 
 
-def _create_hdf5_info(h5_file, op2_model):
+def _create_hdf5_info(h5_file: H5File, op2_model: OP2) -> None:
     """exports the h5 info group"""
     load_as_h5 = False
     if hasattr(op2_model, 'load_as_h5'):

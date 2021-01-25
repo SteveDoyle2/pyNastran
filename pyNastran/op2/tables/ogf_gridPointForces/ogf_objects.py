@@ -16,7 +16,8 @@ from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.op2.op2_interface.write_utils import set_table3_field
 
 if TYPE_CHECKING:
-    from pyNastran.nptyping import NDArrayN3float, NDArray3float, NDArrayN2int, NDArrayNint
+    from pyNastran.nptyping import (
+        NDArrayN3float, NDArray3float, NDArrayN2int, NDArrayNint, NDArrayNfloat)
     from pyNastran.bdf.bdf import (BDF, CORD,
                                    SimpleLogger)
 
@@ -522,9 +523,10 @@ class RealGridPointForcesArray(GridPointForces):
                                 summation_point: Optional[NDArray3float]=None,
                                 consider_rxf: bool=True,
                                 itime: int=0,
+                                assume_sorted: bool=False,
                                 debug: bool=True,
                                 log: Optional[SimpleLogger]=None,
-                                idtype: str='int32'):
+                                idtype: str='int32') -> Tuple[NDArrayN3float, NDArrayN3float, NDArray3float, NDArray3float]:
         """
         Extracts Patran-style interface loads.  Interface loads are the
         internal loads at a cut.
@@ -582,6 +584,7 @@ class RealGridPointForcesArray(GridPointForces):
                     - Make loads in the direction of the element
                   This process can't be done for 0D or 3D elements
         """
+        fdtype = self.data.dtype
         nid_cd = _get_nid_cd_from_nid_cp_cd(nid_cd)
         if summation_point is not None:
             summation_point = np.asarray(summation_point)
@@ -589,11 +592,69 @@ class RealGridPointForcesArray(GridPointForces):
         #assert coord_out.Type == 'R', 'Only rectangular coordinate systems are supported; coord_out=\n%s' % str(coord_out)
         assert eids is not None, eids
         assert nids is not None, nids
+        assert isinstance(itime, integer_types), type(itime)
         eids = np.asarray(eids)
         nids = np.asarray(nids)
-        eids.sort()
-        nids.sort()
+        if not assume_sorted:
+            eids.sort()
+            nids.sort()
+        out = self._extract_interface_loads_helper(
+            nids, eids, log, idtype, fdtype,
+            itime=itime, debug=debug)
+        gpforce_nids, gpforce_eids, irange, force_out, moment_out = out
+        if len(irange) == 0:
+            force_out = None
+            moment_out = None
+            force_out_sum = None
+            moment_out_sum = None
+            return force_out, moment_out, force_out_sum, moment_out_sum
 
+        if debug:
+            f06_filename = f'grid_point_forcesi_itime={itime}.debug.f06'
+            with open(f06_filename, 'w') as f06_file:
+                self.write_f06_time(f06_file, itime=itime, i=irange)
+
+            #log.debug('gpforce_eids =' % gpforce_eids[is_in])
+            log.debug('gpforce_nids = %s' % gpforce_nids[irange])
+            log.debug('gpforce_eids = %s' % gpforce_eids[irange])
+
+        # get analysis coordinate systems
+        try:
+            is_in_cd = np.in1d(nid_cd[:, 0], nids, assume_unique=False)
+        except IndexError:
+            msg = 'nids_cd=%s nids=%s' % (nid_cd, nids)
+            raise IndexError(msg)
+
+        nid_cd_used = nid_cd[is_in_cd, :]
+        nids_used = nid_cd_used[:, 0]
+        gp_nids_used = gpforce_nids[irange]
+        isort = np.searchsorted(nids_used, gp_nids_used)
+
+        force_global = self.data[itime, irange, :3]
+        moment_global = self.data[itime, irange, 3:]
+
+        # update only the nodes that are in the CD coordinate systems (is_in_cd)
+        #force_out_sum = np.full(3, np.nan, dtype=fdtype)
+        #moment_out_sum = np.full(3, np.nan, dtype=fdtype)
+        force_out, moment_out, force_out_sum, moment_out_sum = transform_force_moment_sum(
+            force_global, moment_global,
+            coord_out, coords, nid_cd[is_in_cd, :][isort],
+            icd_transform,
+            xyz_cid0[is_in_cd, :][isort], summation_point_cid0=summation_point,
+            consider_rxf=consider_rxf,
+            debug=debug, log=log)
+        return force_out, moment_out, force_out_sum, moment_out_sum
+
+    def _extract_interface_loads_helper(self, nids: NDArrayNint, eids: NDArrayNint,
+                                        log: SimpleLogger,
+                                        idtype: str,
+                                        fdtype: str,
+                                        itime:int=0,
+                                        debug: bool=True) -> Tuple[NDArrayNint, NDArrayN3float, NDArrayN3float]:
+        force_out = np.full((0, 3), np.nan, dtype=fdtype)
+        moment_out = np.full((0, 3), np.nan, dtype=fdtype)
+        #force_out_sum = np.full(3, np.nan, dtype=fdtype)
+        #moment_out_sum = np.full(3, np.nan, dtype=fdtype)
         # TODO: Handle multiple values for itime
         #       Is this even possible?
         gpforce_nids = self.node_element[itime, :, 0]
@@ -604,47 +665,38 @@ class RealGridPointForcesArray(GridPointForces):
 
         assert isinstance(eids[0], integer_types), type(eids[0])
         assert isinstance(nids[0], integer_types), type(nids[0])
+        # filter out rows not in the node set
         is_in = np.in1d(gpforce_nids, nids, assume_unique=False)
+        if not np.any(is_in):
+            msg = 'no nodes found\n'
+            log.warning(msg)
+            irange = np.array([], dtype='int32')
+            return gpforce_nids, gpforce_eids, irange, force_out, moment_out
+
+        # filter out rows not in the element set
         is_in2 = np.in1d(gpforce_eids[is_in], eids, assume_unique=False)
-        irange = np.arange(len(gpforce_nids), dtype=idtype)[is_in][is_in2]
+        if not np.any(is_in2):
+            msg = 'no elements found\n'
+            log.warning(msg)
+            irange = np.array([], dtype='int32')
+            return gpforce_nids, gpforce_eids, irange, force_out, moment_out
+
+        igpforce_nids = np.arange(len(gpforce_nids), dtype=idtype)
+        irange = igpforce_nids[is_in][is_in2]
         if irange.size == 0:
-            msg = 'no nodes/elements found\n'
-            msg += 'eids=%s\n' % (eids)
-            msg += 'gpforce_eids=%s\n' % (gpforce_eids)
-            raise RuntimeError(msg)
+            msg = (
+                'no nodes/elements found\n'
+                f'eids={eids}\n'
+                f'gpforce_nids={gpforce_nids}\n'
+                f'gpforce_eids={gpforce_eids}\n'
+                f'gpforce_nids_found={gpforce_nids[is_in][is_in2]}\n'
+                f'gpforce_eids_found={gpforce_eids[is_in][is_in2]}\n'
+            )
+            log.warning(msg)
+            #raise RuntimeError(msg)
+        return gpforce_nids, gpforce_eids, irange, force_out, moment_out
 
-        if debug:
-            f06_filename = 'grid_point_forcesi_itime.debug.f06'
-            with open(f06_filename, 'w') as f06_file:
-                self.write_f06_time(f06_file, itime=0, i=irange)
-
-            log.debug('gpforce_eids =' % gpforce_eids[is_in])
-            log.debug('nids = %s' % gpforce_nids[irange])
-            log.debug('eids = %s' % gpforce_eids[irange])
-
-        try:
-            is_in3 = np.in1d(nid_cd[:, 0], nids, assume_unique=False)
-        except IndexError:
-            msg = 'nids_cd=%s nids=%s' % (nid_cd, nids)
-            raise IndexError(msg)
-
-        nid_cd_used = nid_cd[is_in3, :]
-        nids_used = nid_cd_used[:, 0]
-        gp_nids_used = gpforce_nids[irange]
-        isort = np.searchsorted(nids_used, gp_nids_used)
-
-        force_global = self.data[itime, irange, :3]
-        moment_global = self.data[itime, irange, 3:]
-        force_out, moment_out, force_out_sum, moment_out_sum = transform_force_moment_sum(
-            force_global, moment_global,
-            coord_out, coords, nid_cd[is_in3, :][isort],
-            icd_transform,
-            xyz_cid0[is_in3, :][isort], summation_point_cid0=summation_point,
-            consider_rxf=consider_rxf,
-            debug=debug, log=log)
-        return force_out, moment_out, force_out_sum, moment_out_sum
-
-    def find_centroid_of_load(self, f, m):
+    def find_centroid_of_load(self, f, m):  # pragma: no cover
         """
         Mx = ry*Fz - rz*Fy
         My = rz*Fx - rx*Fz
@@ -686,11 +738,11 @@ class RealGridPointForcesArray(GridPointForces):
     def shear_moment_diagram(self, xyz_cid0: np.ndarray,
                              eids: np.ndarray,
                              nids: np.ndarray,
-                             icd_transform: Dict[int, np.ndarray],
-                             element_centroids_cid0: np.ndarray,
+                             icd_transform: Dict[int, NDArrayNint],
+                             element_centroids_cid0: NDArrayN3float,
                              coords: Dict[int, CORD],
-                             nid_cd: np.ndarray,
-                             stations: np.ndarray,
+                             nid_cd: NDArrayN2int,
+                             stations: NDArrayNfloat,
                              coord_out: CORD,
                              idir: int=0, itime: int=0,
                              debug: bool=False,
@@ -718,15 +770,20 @@ class RealGridPointForcesArray(GridPointForces):
         nid_cd : (Nnodes, 2) int ndarray
             the (BDF.point_ids, cd) array
         stations : (nstations, ) float ndarray
-            the station to sum forces/moments about
-            be careful of picking exactly on symmetry planes/boundaries
-            of elements or nodes
-            this list should be sorted (negative to positive)
+            The station to sum forces/moments about, where a station is
+            the value of coord_out in the idir (e.g., for station=1, cid=0,
+            idir=0, then x=1).
+            Be careful of picking exactly on symmetry planes/boundaries
+            of elements or nodes.
+            Stations should be sorted (negative to positive), but it not
+            necessary (it makes it easier to see a monotonic change in
+            the number of nodes/elements).
         coord_out : CORD2R()
             the output coordinate system
         idir : int; default=0
-            the axis of the coordinate system to consider
-            as the axial direction
+            The axis of the coordinate system to consider
+            as the axial direction. This will be the direction that
+            we're marching.
 
         Notes
         -----
@@ -749,12 +806,18 @@ class RealGridPointForcesArray(GridPointForces):
         .. todo:: Not Tested...Does 3b work?  Can 3a give the right answer?
 
         """
+        #eids = np.asarray(eids, dtype='int32')
+        eids = np.asarray(eids, dtype=nid_cd.dtype)
+        nids = np.asarray(nids, dtype=nid_cd.dtype)
+        assert len(eids.shape) == 1, eids.shape
+        assert len(nids.shape) == 1, nids.shape
+        assert len(stations.shape) == 1, stations.shape
         nid_cd = _get_nid_cd_from_nid_cp_cd(nid_cd)
         nstations = len(stations)
         assert coord_out.type in ['CORD2R', 'CORD1R'], coord_out.type
         beta = coord_out.beta()
-        element_centroids_coord = element_centroids_cid0.dot(beta)
-        xyz_coord = xyz_cid0.dot(beta)
+        element_centroids_coord = element_centroids_cid0 @ beta
+        xyz_coord = xyz_cid0 @ beta
         x_centroid = element_centroids_coord[:, idir]
         x_coord = xyz_coord[:, idir]
         #print(f'xmin={x_centroid.min()} xmax={x_centroid.max()} (centroids)')
@@ -763,29 +826,34 @@ class RealGridPointForcesArray(GridPointForces):
         fdtype = xyz_cid0.dtype
 
         eids = np.unique(eids)
-        force_sum = zeros((nstations, 3), dtype=fdtype)
-        moment_sum = zeros((nstations, 3), dtype=fdtype)
+        force_sum = np.full((nstations, 3), np.nan, dtype=fdtype)
+        moment_sum = np.full((nstations, 3), np.nan, dtype=fdtype)
 
+        offset = np.zeros(3, dtype='float64')
         for istation, station in enumerate(stations):
             # we're picking the elements on one side of the centroid
             # and nodes on the other side
 
             # Calculate the nodes on the boundary.
+            #
             # If we make a cutting plane and find all the nodes on
             # one side of the cutting plane, we can take all the
             # nodes within some tolerance of the station direction and
             # find the free nodes
             i = np.where(x_centroid <= station)[0]
-            j = np.where(x_coord >= station)[0]
+
+            # We want to do this similarly for the elements.  Ideally,
+            # we want a single line of elements (and not include extra)
+            # to reduce the size of the array sooner.
+            #
+            # can this be >=? it technically shouldn't matter, but we could speed things up
+            j = np.where(x_coord <= station)[0]
 
             # we'd break if we knew the user was traveling in the
             # "correct" direction, but we don't
-            if len(i) == 0:
-                continue
-            if len(j) == 0:
+            if len(i) == 0 or len(j) == 0:
                 continue
             # summation point creation
-            offset = np.zeros(3, dtype='float64')
             offset[idir] = station
             summation_point = coord_out.origin + offset
 
@@ -803,15 +871,17 @@ class RealGridPointForcesArray(GridPointForces):
                 moment_sum[istation, :] = momenti.sum(axis=0)
             else:
                 eidsi = eids[i]
-                nidsj = nids[i]
+                nidsj = nids[j]
+                #print(f'eids={eidsi}; nids={nidsj}')
                 forcei, momenti, force_sumi, moment_sumi = self.extract_interface_loads(
                     eidsi, nidsj,
                     coord_out, coords, nid_cd, icd_transform,
-                    xyz_cid0, summation_point, itime=itime, debug=debug,
+                    xyz_cid0, summation_point, assume_sorted=True,
+                    itime=itime, # debug=debug,
                     log=log)
-                log.info('neids=%s nnodes=%s force=%s moment=%s' % (
-                    len(i), len(j), force_sumi, moment_sumi
-                ))
+                log.info(f'neids={len(i):d} nnodes={len(j):d} force={force_sumi} moment={moment_sumi}')
+                if force_sumi is None:
+                    continue
                 force_sum[istation, :] = force_sumi
                 moment_sum[istation, :] = moment_sumi
         return force_sum, moment_sum
@@ -1292,24 +1362,25 @@ class ComplexGridPointForcesArray(GridPointForces):
             df2.columns = ['ElementType']
             df3 = pd.DataFrame(self.data[0])
             df3.columns = headers
-            self.data_frame = df1.join([df2, df3])
-            #print(self.data_frame)
+            data_frame = df1.join([df2, df3])
+            #print(data_frame)
         else:
             node_element = [self.node_element[:, 0], self.node_element[:, 1]]
             if self.nonlinear_factor not in (None, np.nan):
                 column_names, column_values = self._build_dataframe_transient_header()
-                self.data_frame = pd.Panel(
+                data_frame = pd.Panel(
                     self.data, items=column_values,
                     major_axis=node_element, minor_axis=headers).to_frame()
-                self.data_frame.columns.names = column_names
-                self.data_frame.index.names = ['NodeID', 'ElementID', 'Item']
+                data_frame.columns.names = column_names
+                data_frame.index.names = ['NodeID', 'ElementID', 'Item']
             else:
-                self.data_frame = pd.Panel(
+                data_frame = pd.Panel(
                     self.data,
                     major_axis=node_element, minor_axis=headers).to_frame()
-                self.data_frame.columns.names = ['Static']
-                self.data_frame.index.names = ['NodeID', 'ElementID', 'Item']
+                data_frame.columns.names = ['Static']
+                data_frame.index.names = ['NodeID', 'ElementID', 'Item']
             #print(self.data_frame)
+            self.data_frame = data_frame
 
     def _build_dataframe(self):
         """::

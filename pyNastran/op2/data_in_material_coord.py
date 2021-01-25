@@ -5,7 +5,8 @@ Defines:
 """
 from __future__ import annotations
 import copy
-from typing import Optional, TYPE_CHECKING
+from itertools import count
+from typing import TYPE_CHECKING
 
 import numpy as np
 from numpy import cos, sin, cross
@@ -25,7 +26,7 @@ strain_vectors = ['cquad4_strain', 'cquad8_strain', 'cquadr_strain',
                   'ctria3_strain', 'ctria6_strain', 'ctriar_strain']
 
 
-def __transform_solids(model: OP2):
+def __transform_solids(model: OP2):  # pragma: no cover
     """http://web.mit.edu/course/3/3.11/www/modules/trans.pdf"""
     R = np.array([
         [1., 0., 0.],
@@ -148,9 +149,15 @@ def transform_solids(bdf_model: BDF, op2_model: OP2, cid: int):
     #strain_obj = model.op2_results.strain.ctetra_strain[1]
 
     # TODO: all we have for now
-    stress_obj = op2_model.ctetra_stress[1]
+    #stress_obj = op2_model.ctetra_stress[1]
+    result_types = ['ctetra_stress', 'cpenta_stress', 'cpyram_stress', 'chexa_stress']
+    for res_type in result_types:
+        res_dict = getattr(op2_model, res_type)
+        for subcase, stress_obj in res_dict.items():
+            _transform_solid_stress_obj(bdf_model, stress_obj, Tout)
 
-    #['oxx', 'oyy', 'ozz', 'txy', 'tyz', 'txz', 'omax', 'omid', 'omin', 'von_mises']
+def _transform_solid_stress_obj(bdf_model: BDF, stress_obj, Tout):
+   #['oxx', 'oyy', 'ozz', 'txy', 'tyz', 'txz', 'omax', 'omid', 'omin', 'von_mises']
     data = stress_obj.data
     nmodes = data.shape[0]
     if stress_obj.is_stress:
@@ -261,10 +268,10 @@ def transform_solids(bdf_model: BDF, op2_model: OP2, cid: int):
                     #[stress_out] = [T] [stress_in] [T]^T
                     T11 = T[0, 0]
                     T22 = T[1, 1]
-                    T33 = T[2, 2]
+                    #T33 = T[2, 2]
                     T12 = T[0, 1]
                     T13 = T[0, 2]
-                    T23 = T[1, 2]
+                    T32 = T23 = T[1, 2]
 
                     T21 = T[1, 0]
                     T31 = T[2, 0]
@@ -276,14 +283,14 @@ def transform_solids(bdf_model: BDF, op2_model: OP2, cid: int):
                     print(eid)
                     print(stress)
                     print(stress2)
-                    ss
+                    #ss
 
     inid0 = 0
     for ieid, eid in enumerate(ueids):
 
         # ------------------------------------------
         # this is ACTUALLY the element coordinate system
-        ctetra = model.elements[eid]
+        ctetra = bdf_model.elements[eid]
         #print(ctetra)
         T = get_transform(T1, Te)
 
@@ -304,8 +311,8 @@ def transform_solids(bdf_model: BDF, op2_model: OP2, cid: int):
                 data[imode, inid0, :6] = exxiit, eyyiit, ezziit, exyiit, eyziit, exziit
             inid0 += 1
 
-    op2_filename_out = os.path.join(dirname, f'xform.op2')
-    op2_model.write_op2(op2_filename_out, post=-1, endian=b'<', skips=None, nastran_format='nx')
+    #op2_filename_out = os.path.join(dirname, f'xform.op2')
+    #op2_model.write_op2(op2_filename_out, post=-1, endian=b'<', skips=None, nastran_format='nx')
 
 def get_transform(T1, Te):
     """
@@ -770,10 +777,13 @@ def data_in_material_coord(bdf: BDF, op2: OP2, in_place: bool=False) -> OP2:
                     new_vector.data[:, i, :] = 0
     return op2_new
 
-if __name__ == '__main__':   # pragma: no cover
+def main():  # pragma: no cover
     op2_filename = r'C:\NASA\m4\formats\git\pyNastran\models\solid_bending\solid_bending_coord1.op2'
     from pyNastran.op2.op2 import read_op2
-    from pyNastran.op2.op2_geom import read_op2_geom
-    model = read_op2_geom(op2_filename)
+    #from pyNastran.op2.op2_geom import read_op2_geom
+    model = read_op2(op2_filename, load_geometry=True)
     cid = 0
     transform_solids(model, model, cid)
+
+if __name__ == '__main__':  # pragma: no cover
+    main()

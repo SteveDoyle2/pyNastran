@@ -291,7 +291,8 @@ class TestOP2(Tester):
             PKG_PATH, 'op2', 'test', 'examples', 'ibulk', 'model1_sim1-solution_1.test_op2.f06'))
         op2_filename = os.path.abspath(os.path.join(
             PKG_PATH, 'op2', 'test', 'examples', 'ibulk', 'model1_sim1-solution_1.op2'))
-        op2 = read_op2_geom(op2_filename, xref=False, debug=False, debug_file='temp.debug', log=log)
+        op2 = OP2Geom(log=log, debug=False, debug_file='temp.debug')
+        op2.read_op2(op2_filename)
         op2.write_f06(f06_filename)
         os.remove(f06_filename)
         os.remove('temp.debug')
@@ -308,7 +309,8 @@ class TestOP2(Tester):
         op2_filename_m1_out = os.path.join(dirname, 'beam_modes_m1_out.op2')
         op2_filename_m2_out = os.path.join(dirname, 'beam_modes_m2_out.op2')
         op2_1 = read_op2(op2_filename_m1, debug=False, log=log)
-        op2_2 = read_op2_geom(op2_filename_m2, debug=False, debug_file='temp.debug', log=log)
+        op2_2 = OP2Geom(log=log, debug=False, debug_file='temp.debug')
+        op2_2.read_op2(op2_filename_m2)
         op2_1.write_f06(f06_filename)
 
         op2_1.write_op2(op2_filename_m1_out, skips=['grid_point_weight']) #, is_mag_phase=False)
@@ -1794,7 +1796,8 @@ class TestOP2(Tester):
         folder = os.path.join(MODEL_PATH, 'aero', 'monpnt3')
         op2_filename = os.path.join(folder, 'Monitor_Points_data_LINE5000000_10FREQs.op2')
         f06_filename = os.path.join(folder, 'Monitor_Points_data_LINE5000000_10FREQs.test_op2.f06')
-        op2 = read_op2(op2_filename, debug=False, debug_file='temp.debug', log=log)
+        op2 = OP2Geom(log=log, debug=False, debug_file='temp.debug')
+        op2.read_op2(op2_filename)
         monitor3 = op2.monitor3
         assert len(monitor3.frequencies) == 11, monitor3
         str(monitor3)
