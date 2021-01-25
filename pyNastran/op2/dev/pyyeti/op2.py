@@ -2970,12 +2970,12 @@ def read_post_op2(op2_filename, verbose=False, getougv1=False):
                     o2.skip_op2_table()
                     continue
 
-                # if name.find('CSTM') == 0:
-                #     if verbose:
-                #         print("Reading table {}...".format(name))
-                #     cstm = o2._rdop2cstm68().reshape((-1, 14))
-                #     cstm = np.vstack((bc, cstm))
-                #     continue
+                #if name.find('CSTM') == 0:
+                    #if verbose:
+                        #print("Reading table {0}...".format(name))
+                    #cstm = o2._rdop2cstm68().reshape((-1, 14))
+                    #cstm = np.vstack((bc, cstm))
+                    #continue
 
                 elif name.find('GEOM1') == 0:
                     if verbose:

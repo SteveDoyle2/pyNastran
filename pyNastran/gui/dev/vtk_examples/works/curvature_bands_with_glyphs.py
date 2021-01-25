@@ -460,7 +460,7 @@ def DisplaySurface(st):
     # We will use the midpoint of the band as the label.
     labels = []
     for i in range(nbands):
-        labels.append('{:4.2f}'.format(bands[i][1]))
+        labels.append(f'{bands[i][1]:4.2f}')
 
     # Annotate
     values = vtk.vtkVariantArray()

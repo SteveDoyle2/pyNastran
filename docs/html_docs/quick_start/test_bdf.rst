@@ -1,4 +1,3 @@
-
 test_bdf demo
 =============
 
@@ -111,7 +110,7 @@ In this demo, we’ll show off test_bdf
     #           norm=None, options=None, values=None)
     eigrl = model.add_eigrl(42, nd=42)
     
-    model.sol = 200  # start with 103
+    model.sol = 103  # start=103
     cc = CaseControlDeck([
         'DESOBJ = 102',  # DRESP1
         'DESSUB = %s' % dconstr_id,  # DCONSTR
@@ -119,30 +118,120 @@ In this demo, we’ll show off test_bdf
         '  METHOD = 42',  # TODO: remove
         '  LOAD = %s' % load_id,  # TODO: remove
         '  SPC = %s' % spc_id,
-        '  TRIM = 42',  # TODO: add
+        #'  TRIM = 42',  # TODO: add
         'ANALYSIS = SAERO',
     ])
     #print(cc)
     model.case_control_deck = cc
     model.validate()
     
-    
+    # rerun between each change
+    # 1. change SOL=103 -> SOL=144
+    model.sol = 144
+    # 2. add the trim in the case control deck
+    #help(model.add_trim)
+    mach = 0.8
+    q = 100.
+    labels = ['Z']
+    uxs = [2.5]
+    trim = model.add_trim(42, mach, q, labels, uxs, aeqr=1.0, trim_type=1)
+    print(trim)
+    # 3. add a trim card
+    # x. change to SOL=200
+    print(model.trims)
     model.write_bdf('junk.bdf')
-    #!cat junk.bdf
+    !cat junk.bdf
     print('----------------------------------------------------------------------------------------------------')
-    
 
+
+.. parsed-literal::
+
+    TRIM          42      .8    100.       Z     2.5
+    
+    {42: TRIM          42      .8    100.       Z     2.5
+    }
+    
 
 
 .. raw:: html
 
-    <text style=color:blue>DEBUG:   write_mesh.py:245            ---starting BDF.write_bdf of junk.bdf---
+    <text style=color:blue>DEBUG:   write_mesh.py:145            ---starting BDF.write_bdf of junk.bdf---
     </text>
 
 
 .. parsed-literal::
 
+    $pyNastran: version=msc
+    $pyNastran: punch=False
+    $pyNastran: encoding=utf-8
+    $pyNastran: nnodes=4
+    $pyNastran: nelements=5
+    $EXECUTIVE CONTROL DECK
+    SOL 144
+    CEND
+    $CASE CONTROL DECK
+    DESOBJ = 102
+    DESSUB = 10000
+    SUBCASE 1
+        ANALYSIS = SAERO
+        LOAD = 1
+        METHOD = 42
+        SPC = 1
+    BEGIN BULK
+    $NODES
+    GRID           1              0.      0.      0.
+    GRID           2              1.      0.      0.
+    GRID           3              1.      1.      0.
+    GRID           4              0.      1.      0.
+    $ELEMENTS
+    CBAR          10     100       1       2      0.      0.      1.
+    CBAR          11     100       2       3      0.      0.      1.
+    CBAR          12     100       3       4      0.      0.      1.
+    CBAR          13     100       4       1      0.      0.      1.
+    CQUAD4        15     101       1       2       3       4
+    $PROPERTIES
+    PBARL        100    1000             BOX
+                  3.      3.      1.      1.      0.
+    PSHELL       101    1000      .1    1000            1000
+    $MATERIALS
+    MAT1        1000    3.+7              .3
+    $LOADS
+    $ load
+    PLOAD4         1      15      1.
+                   0      0.      0.      0.    SURF
+    PLOAD1         1      10      FZ      LE      0.      1.      0.      1.
+    $DYNAMIC
+    EIGRL         42                      42
+    $STATIC AERO
+    TRIM          42      .8    100.       Z     2.5
+    $SPCs
+    SPC1           1  123456       1
+    $OPTIMIZATION
+    DCONSTR    10000     101 -35000.  35000.
+    DESVAR         1   DIM1       .1  .00001
+    DESVAR         2   DIM2       .2  .00001
+    DESVAR         3   DIM3       .3  .00001
+    DESVAR         4   DIM4       .4  .00001
+    DESVAR         5    DV5       .1  .00001
+    DRESP1       100   resp1  STRESS  PSHELL               9             101
+    DRESP1       101   resp1  STRESS  PSHELL              17             101
+    DRESP1       102      WT  WEIGHT                                     ALL
+    DVPREL1     1000  PSHELL     101       T
+                   1      1.
     ----------------------------------------------------------------------------------------------------
+    
+
+.. parsed-literal::
+
+    c:\python37\lib\site-packages\IPython\utils\_process_win32.py:131: ResourceWarning: unclosed file <_io.BufferedWriter name=5>
+      return process_handler(cmd, _system_body)
+    ResourceWarning: Enable tracemalloc to get the object allocation traceback
+    c:\python37\lib\site-packages\IPython\utils\_process_win32.py:131: ResourceWarning: unclosed file <_io.BufferedReader name=6>
+      return process_handler(cmd, _system_body)
+    ResourceWarning: Enable tracemalloc to get the object allocation traceback
+    c:\python37\lib\site-packages\IPython\utils\_process_win32.py:131: ResourceWarning: unclosed file <_io.BufferedReader name=7>
+      return process_handler(cmd, _system_body)
+    ResourceWarning: Enable tracemalloc to get the object allocation traceback
     
 
 .. code:: ipython3
@@ -155,7 +244,7 @@ In this demo, we’ll show off test_bdf
 
 .. raw:: html
 
-    <text style=color:blue>DEBUG:   write_mesh.py:245            ---starting BDF.write_bdf of junk.bdf---
+    <text style=color:blue>DEBUG:   write_mesh.py:145            ---starting BDF.write_bdf of junk.bdf---
     </text>
 
 
@@ -168,42 +257,36 @@ In this demo, we’ll show off test_bdf
 
 .. raw:: html
 
-    <text style=color:green>INFO:    test_bdf.py:347              starting fem1
+    <text style=color:green>INFO:    test_bdf.py:374              starting fem1
     </text>
 
 
 
 .. raw:: html
 
-    <text style=color:green>INFO:    test_bdf.py:797              starting fem2
+    <text style=color:green>INFO:    test_bdf.py:841              starting fem2
     </text>
 
 
 
 .. raw:: html
 
-    <text style=color:orange>WARNING: test_bdf.py:819              PARAM,POST,0 is not supported by the OP2 reader
+    <text style=color:orange>WARNING: test_bdf.py:863              PARAM,POST,0 is not supported by the OP2 reader
     </text>
 
 
 
 .. raw:: html
 
-    <text style=color:red>ERROR:   test_bdf.py:1106             An AEROS card is required for STATIC AERO - SOL 144; AEROS=None
-    </text>
-
-
-
-.. raw:: html
-
-    <text style=color:red>ERROR:   test_bdf.py:1110             An CAEROx card is required for STATIC AERO - SOL 144
-    </text>
-
-
-
-.. raw:: html
-
-    <text style=color:red>ERROR:   test_bdf.py:1114             An SPLINEx card is required for STATIC AERO - SOL 144
+    <text style=color:red>ERROR:   test_bdf.py:1162             A TRIM or DIVERG card is required for STATIC AERO - SOL 144
+    SUBCASE 1
+        ANALYSIS = SAERO
+        DESOBJ = 102
+        DESSUB = 10000
+        LOAD = 1
+        METHOD = 42
+        SPC = 1
+    
     </text>
 
 
@@ -214,79 +297,69 @@ In this demo, we’ll show off test_bdf
 
     RuntimeError                              Traceback (most recent call last)
 
-    <ipython-input-3-746e54da5a3e> in <module>
+    <ipython-input-22-746e54da5a3e> in <module>
           1 from pyNastran.bdf.test.test_bdf import run_bdf as test_bdf
           2 model.write_bdf('junk.bdf')
     ----> 3 test_bdf('.', 'junk.bdf')
     
 
-    c:\nasa\m4\formats\git\pynastran\pyNastran\bdf\test\test_bdf.py in run_bdf(folder, bdf_filename, debug, xref, check, punch, mesh_form, is_folder, print_stats, encoding, sum_load, size, is_double, hdf5, stop, nastran, post, dynamic_vars, quiet, dumplines, dictsort, run_extract_bodies, save_file_structure, nerrors, dev, crash_cards, safe_xref, pickle_obj, stop_on_failure, log)
-        317         pickle_obj=pickle_obj,
-        318         stop_on_failure=stop_on_failure,
-    --> 319         log=log,
-        320     )
-        321     return fem1, fem2, diff_cards
+    c:\nasa\m4\formats\git\pynastran\pyNastran\bdf\test\test_bdf.py in run_bdf(folder, bdf_filename, debug, xref, check, punch, mesh_form, is_folder, print_stats, encoding, sum_load, size, is_double, hdf5, stop, nastran, post, dynamic_vars, quiet, dumplines, dictsort, run_extract_bodies, run_skin_solids, save_file_structure, nerrors, dev, crash_cards, safe_xref, pickle_obj, stop_on_failure, log)
+        342         pickle_obj=pickle_obj,
+        343         stop_on_failure=stop_on_failure,
+    --> 344         log=log,
+        345     )
+        346     return fem1, fem2, diff_cards
     
 
-    c:\nasa\m4\formats\git\pynastran\pyNastran\bdf\test\test_bdf.py in run_and_compare_fems(bdf_model, out_model, debug, xref, check, punch, mesh_form, print_stats, encoding, sum_load, size, is_double, save_file_structure, stop, nastran, post, hdf5, dynamic_vars, quiet, dumplines, dictsort, nerrors, dev, crash_cards, safe_xref, run_extract_bodies, pickle_obj, stop_on_failure, log)
-        384                         encoding=encoding, debug=debug, quiet=quiet,
-        385                         ierror=ierror, nerrors=nerrors,
-    --> 386                         stop_on_failure=stop_on_failure, log=log)
-        387 
-        388         diff_cards = compare(fem1, fem2, xref=xref, check=check,
+    c:\nasa\m4\formats\git\pynastran\pyNastran\bdf\test\test_bdf.py in run_and_compare_fems(bdf_model, out_model, debug, xref, check, punch, mesh_form, print_stats, encoding, sum_load, size, is_double, save_file_structure, stop, nastran, post, hdf5, dynamic_vars, quiet, dumplines, dictsort, nerrors, dev, crash_cards, safe_xref, run_extract_bodies, run_skin_solids, pickle_obj, stop_on_failure, log)
+        412                         encoding=encoding, debug=debug, quiet=quiet,
+        413                         ierror=ierror, nerrors=nerrors,
+    --> 414                         stop_on_failure=stop_on_failure, log=log)
+        415 
+        416         diff_cards = compare(fem1, fem2, xref=xref, check=check,
     
 
     c:\nasa\m4\formats\git\pynastran\pyNastran\bdf\test\test_bdf.py in run_fem2(bdf_model, out_model, xref, punch, sum_load, size, is_double, mesh_form, safe_xref, encoding, debug, quiet, stop_on_failure, ierror, nerrors, log)
-        834                 fem2, p0, sol_base, subcase_keys, subcases, sol_200_map,
-        835                 ierror=ierror, nerrors=nerrors,
-    --> 836                 stop_on_failure=stop_on_failure)
-        837 
-        838     if mesh_form is not None:
+        878                 fem2, p0, sol_base, subcase_keys, subcases, sol_200_map,
+        879                 ierror=ierror, nerrors=nerrors,
+    --> 880                 stop_on_failure=stop_on_failure)
+        881 
+        882     if mesh_form is not None:
     
 
     c:\nasa\m4\formats\git\pynastran\pyNastran\bdf\test\test_bdf.py in validate_case_control(fem2, p0, sol_base, subcase_keys, subcases, unused_sol_200_map, stop_on_failure, ierror, nerrors)
-        872         ierror = check_case(
-        873             sol_base, subcase, fem2, p0, isubcase, subcases,
-    --> 874             ierror=ierror, nerrors=nerrors, stop_on_failure=stop_on_failure)
-        875     return ierror
-        876 
+        922         ierror = check_case(
+        923             sol_base, subcase, fem2, p0, isubcase, subcases,
+    --> 924             ierror=ierror, nerrors=nerrors, stop_on_failure=stop_on_failure)
+        925     return ierror
+        926 
     
 
     c:\nasa\m4\formats\git\pynastran\pyNastran\bdf\test\test_bdf.py in check_case(sol, subcase, fem2, p0, isubcase, subcases, ierror, nerrors, stop_on_failure)
-       1079 
-       1080     elif sol == 200:
-    -> 1081         _check_case_sol_200(sol, subcase, fem2, p0, isubcase, subcases, log)
-       1082     elif sol in [114, 115, 116, 118]:
-       1083         # cyclic statics, modes, buckling, frequency
+       1106 
+       1107     elif sol == 144:
+    -> 1108         ierror = _check_static_aero_case(fem2, log, sol, subcase, ierror, nerrors)
+       1109     elif sol == 145:
+       1110         ierror = _check_flutter_case(fem2, log, sol, subcase, ierror, nerrors)
     
 
-    c:\nasa\m4\formats\git\pynastran\pyNastran\bdf\test\test_bdf.py in _check_case_sol_200(sol, subcase, fem2, p0, isubcase, subcases, log)
-       1270     elif analysis in ['SAERO', 'DIVERG', 'DIVERGE']:
-       1271         solution = 144
-    -> 1272         check_case(solution, subcase, fem2, p0, isubcase, subcases)
-       1273     elif analysis == 'FLUTTER':
-       1274         solution = 145
+    c:\nasa\m4\formats\git\pynastran\pyNastran\bdf\test\test_bdf.py in _check_static_aero_case(fem2, log, sol, subcase, ierror, nerrors)
+       1161             sol, subcase)
+       1162         log.error(msg)
+    -> 1163         ierror = stop_if_max_error(msg, RuntimeError, ierror, nerrors)
+       1164     if fem2.aeros is None:
+       1165         msg = 'An AEROS card is required for STATIC AERO - SOL %i; AEROS=%s' % (sol, fem2.aeros)
     
 
-    c:\nasa\m4\formats\git\pynastran\pyNastran\bdf\test\test_bdf.py in check_case(sol, subcase, fem2, p0, isubcase, subcases, ierror, nerrors, stop_on_failure)
-       1092         subcase, fem2, p0, isubcase, sol,
-       1093         ierror=ierror, nerrors=nerrors,
-    -> 1094         stop_on_failure=stop_on_failure)
-       1095     return ierror
-       1096 
+    c:\nasa\m4\formats\git\pynastran\pyNastran\bdf\test\test_bdf.py in stop_if_max_error(msg, error, ierror, nerrors)
+        954     """if the error count is greater than nerrors, stop"""
+        955     if ierror == nerrors:
+    --> 956         raise error(msg)
+        957     ierror += 1
+        958     return ierror
     
 
-    c:\nasa\m4\formats\git\pynastran\pyNastran\bdf\test\test_bdf.py in _check_case_parameters(subcase, fem2, p0, isubcase, sol, ierror, nerrors, stop_on_failure)
-       1339                 'trims=%s\n'
-       1340                 'subcase:\n%s' % (trim_id, str(fem2.trims), str(subcase)))
-    -> 1341             raise RuntimeError(msg)
-       1342         trim = fem2.trims[trim_id]
-       1343 
-    
-
-    RuntimeError: TRIM = 42
-    trims={}
-    subcase:
+    RuntimeError: A TRIM or DIVERG card is required for STATIC AERO - SOL 144
     SUBCASE 1
         ANALYSIS = SAERO
         DESOBJ = 102
@@ -294,6 +367,5 @@ In this demo, we’ll show off test_bdf
         LOAD = 1
         METHOD = 42
         SPC = 1
-        TRIM = 42
     
 

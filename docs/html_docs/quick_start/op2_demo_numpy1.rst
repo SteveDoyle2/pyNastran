@@ -1,4 +1,3 @@
-
 OP2: Numpy Demo #1 (Displacement, Solid Stress)
 ===============================================
 
@@ -14,6 +13,11 @@ think of a single element.
 
 If you code like that, your code will be slow, so let’s show you how to
 really use the numpy-style with the OP2.
+
+.. figure:: attachment:image.png
+   :alt: image.png
+
+   image.png
 
 Import the packages
 ~~~~~~~~~~~~~~~~~~~
@@ -46,7 +50,7 @@ Load the model
 
 .. raw:: html
 
-    <text style=color:green>INFO:    op2_scalar.py:1469           op2_filename = 'c:\\nasa\\m4\\formats\\git\\pynastran_1.2\\pyNastran\\..\\models\\solid_bending\\solid_bending.op2'
+    <text style=color:green>INFO:    op2_scalar.py:1588           op2_filename = 'c:\\nasa\\m4\\formats\\git\\pynastran\\pyNastran\\..\\models\\solid_bending\\solid_bending.op2'
     </text>
 
 
@@ -79,14 +83,14 @@ arrays just to make sure you get the **axis=1** parameter correct.
     max_nodes = all_nodes[inid_max]
     min_nodes = all_nodes[inid_min]
     print('max displacement=%s max_nodes=%s' % (txyz_mag_max, max_nodes))
-    print('min displacement=%s max_nodes=%s' % (txyz_mag_min, min_nodes))
+    print('min displacement=%s min_nodes=%s' % (txyz_mag_min, min_nodes))
 
 
 .. parsed-literal::
 
     disp_headers = ['t1', 't2', 't3', 'r1', 'r2', 'r3']
     max displacement=0.012376265 max_nodes=[23]
-    min displacement=0.0 max_nodes=[31 35 39 43 47 48 53 63 64 69 70 71 72]
+    min displacement=0.0 min_nodes=[31 35 39 43 47 48 53 63 64 69 70 71 72]
     
 
 Find the max centroidal stress on the CTETRA elements

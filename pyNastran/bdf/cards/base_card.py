@@ -560,7 +560,7 @@ def _format_comment(comment: str) -> str:
     """
     if comment.strip() == '':  # deals with a bunch of spaces
         return ''
-    return ''.join([u'${}\n'.format(comment_line)
+    return ''.join(['${}\n'.format(comment_line)
                     for comment_line in comment.rstrip().split('\n')])
 
 

@@ -1,4 +1,3 @@
-
 Static & Transient DataFrames in PyNastran
 ==========================================
 
@@ -31,24 +30,13 @@ Let’s show off ``combine=True/False``. We’ll talk about the keys soon.
 
 .. raw:: html
 
-    <text style=color:green>INFO:    op2_scalar.py:1459           op2_filename = 'c:\\nasa\\m4\\formats\\git\\pynastran\\pyNastran\\..\\models\\solid_bending\\solid_bending.op2'
+    <text style=color:green>INFO:    op2_scalar.py:1588           op2_filename = 'c:\\nasa\\m4\\formats\\git\\pynastran\\pyNastran\\..\\models\\solid_bending\\solid_bending.op2'
     </text>
 
 
 .. parsed-literal::
 
     dict_keys([(1, 1, 1, 0, 0, '', '')])
-    
-
-.. parsed-literal::
-
-    c:\nasa\m4\formats\git\pynastran\pyNastran\op2\op2.py:740: FutureWarning: 
-    Panel is deprecated and will be removed in a future version.
-    The recommended way to represent these types of 3-dimensional data are with a MultiIndex on a DataFrame, via the Panel.to_frame() method
-    Alternatively, you can use the xarray package http://xarray.pydata.org/en/stable/.
-    Pandas provides a `.to_xarray()` method to help automate this conversion.
-    
-      obj.build_dataframe()
     
 
 .. code:: ipython3
@@ -61,7 +49,7 @@ Let’s show off ``combine=True/False``. We’ll talk about the keys soon.
 
 .. raw:: html
 
-    <text style=color:green>INFO:    op2_scalar.py:1459           op2_filename = 'c:\\nasa\\m4\\formats\\git\\pynastran\\pyNastran\\..\\models\\solid_bending\\solid_bending.op2'
+    <text style=color:green>INFO:    op2_scalar.py:1588           op2_filename = 'c:\\nasa\\m4\\formats\\git\\pynastran\\pyNastran\\..\\models\\solid_bending\\solid_bending.op2'
     </text>
 
 
@@ -123,7 +111,7 @@ It does not always do multi-step optimization.
 
 .. raw:: html
 
-    <text style=color:green>INFO:    op2_scalar.py:1459           op2_filename = 'c:\\nasa\\m4\\formats\\git\\pynastran\\pyNastran\\..\\models\\sol_101_elements\\buckling_solid_shell_bar.op2'
+    <text style=color:green>INFO:    op2_scalar.py:1588           op2_filename = 'c:\\nasa\\m4\\formats\\git\\pynastran\\pyNastran\\..\\models\\sol_101_elements\\buckling_solid_shell_bar.op2'
     </text>
 
 
@@ -542,8 +530,8 @@ Transient Table
         <tr>
           <th></th>
           <th></th>
+          <th></th>
           <th>LoadStep</th>
-          <th>Item</th>
           <th>1</th>
           <th>2</th>
           <th>3</th>
@@ -552,18 +540,18 @@ Transient Table
         <tr>
           <th></th>
           <th></th>
-          <th>EigenvalueReal</th>
           <th></th>
-          <th>-49357660160.0</th>
-          <th>-58001940480.0</th>
-          <th>-379750744064.0</th>
-          <th>-428462538752.0</th>
+          <th>EigenvalueReal</th>
+          <th>-4.936e+10</th>
+          <th>-5.800e+10</th>
+          <th>-3.798e+11</th>
+          <th>-4.285e+11</th>
         </tr>
         <tr>
           <th>ElementID</th>
           <th>NodeID</th>
           <th>Location</th>
-          <th></th>
+          <th>Item</th>
           <th></th>
           <th></th>
           <th></th>
@@ -572,74 +560,78 @@ Transient Table
       </thead>
       <tbody>
         <tr>
-          <th rowspan="20" valign="top">6</th>
-          <th rowspan="16" valign="top">CEN</th>
+          <th rowspan="10" valign="top">6</th>
+          <th rowspan="2" valign="top">CEN</th>
           <th>Top</th>
-          <td>fiber_distance</td>
+          <th>fiber_distance</th>
           <td>-1.250e-01</td>
           <td>-1.250e-01</td>
           <td>-1.250e-01</td>
           <td>-1.250e-01</td>
         </tr>
         <tr>
-          <th>Top</th>
-          <td>oxx</td>
+          <th>Bottom</th>
+          <th>oxx</th>
           <td>-3.657e+04</td>
           <td>-1.587e+05</td>
           <td>-1.497e+05</td>
           <td>1.069e+06</td>
         </tr>
         <tr>
+          <th rowspan="2" valign="top">4</th>
           <th>Top</th>
-          <td>oyy</td>
+          <th>oyy</th>
           <td>2.064e+05</td>
           <td>1.084e+06</td>
           <td>4.032e+05</td>
           <td>6.158e+06</td>
         </tr>
         <tr>
-          <th>Top</th>
-          <td>txy</td>
+          <th>Bottom</th>
+          <th>txy</th>
           <td>2.296e+02</td>
           <td>-1.267e+04</td>
           <td>4.394e+06</td>
           <td>-3.572e+05</td>
         </tr>
         <tr>
+          <th rowspan="2" valign="top">1</th>
           <th>Top</th>
-          <td>angle</td>
+          <th>angle</th>
           <td>8.995e+01</td>
           <td>-8.942e+01</td>
           <td>4.680e+01</td>
           <td>-8.601e+01</td>
         </tr>
         <tr>
-          <th>Top</th>
-          <td>omax</td>
+          <th>Bottom</th>
+          <th>omax</th>
           <td>2.064e+05</td>
           <td>1.084e+06</td>
           <td>4.530e+06</td>
           <td>6.183e+06</td>
         </tr>
         <tr>
+          <th rowspan="2" valign="top">14</th>
           <th>Top</th>
-          <td>omin</td>
+          <th>omin</th>
           <td>-3.657e+04</td>
           <td>-1.588e+05</td>
           <td>-4.276e+06</td>
           <td>1.044e+06</td>
         </tr>
         <tr>
-          <th>Top</th>
-          <td>von_mises</td>
+          <th>Bottom</th>
+          <th>von_mises</th>
           <td>2.269e+05</td>
           <td>1.171e+06</td>
           <td>7.627e+06</td>
           <td>5.733e+06</td>
         </tr>
         <tr>
-          <th>Bottom</th>
-          <td>fiber_distance</td>
+          <th rowspan="2" valign="top">15</th>
+          <th>Top</th>
+          <th>fiber_distance</th>
           <td>1.250e-01</td>
           <td>1.250e-01</td>
           <td>1.250e-01</td>
@@ -647,15 +639,17 @@ Transient Table
         </tr>
         <tr>
           <th>Bottom</th>
-          <td>oxx</td>
+          <th>oxx</th>
           <td>-2.816e+04</td>
           <td>-9.555e+04</td>
           <td>-1.942e+05</td>
           <td>-4.882e+05</td>
         </tr>
         <tr>
-          <th>Bottom</th>
-          <td>oyy</td>
+          <th rowspan="10" valign="top">7</th>
+          <th rowspan="2" valign="top">CEN</th>
+          <th>Top</th>
+          <th>oyy</th>
           <td>1.402e+05</td>
           <td>7.325e+05</td>
           <td>7.017e+03</td>
@@ -663,15 +657,16 @@ Transient Table
         </tr>
         <tr>
           <th>Bottom</th>
-          <td>txy</td>
+          <th>txy</th>
           <td>7.409e+04</td>
           <td>-3.522e+04</td>
           <td>4.535e+06</td>
           <td>-3.533e+05</td>
         </tr>
         <tr>
-          <th>Bottom</th>
-          <td>angle</td>
+          <th rowspan="2" valign="top">3</th>
+          <th>Top</th>
+          <th>angle</th>
           <td>6.933e+01</td>
           <td>-8.757e+01</td>
           <td>4.564e+01</td>
@@ -679,15 +674,16 @@ Transient Table
         </tr>
         <tr>
           <th>Bottom</th>
-          <td>omax</td>
+          <th>omax</th>
           <td>1.682e+05</td>
           <td>7.340e+05</td>
           <td>4.442e+06</td>
           <td>-1.480e+04</td>
         </tr>
         <tr>
-          <th>Bottom</th>
-          <td>omin</td>
+          <th rowspan="2" valign="top">2</th>
+          <th>Top</th>
+          <th>omin</th>
           <td>-5.611e+04</td>
           <td>-9.705e+04</td>
           <td>-4.630e+06</td>
@@ -695,40 +691,41 @@ Transient Table
         </tr>
         <tr>
           <th>Bottom</th>
-          <td>von_mises</td>
+          <th>von_mises</th>
           <td>2.022e+05</td>
           <td>7.870e+05</td>
           <td>7.857e+06</td>
           <td>7.446e+05</td>
         </tr>
         <tr>
-          <th rowspan="4" valign="top">4</th>
+          <th rowspan="2" valign="top">17</th>
           <th>Top</th>
-          <td>fiber_distance</td>
+          <th>fiber_distance</th>
           <td>-1.250e-01</td>
           <td>-1.250e-01</td>
           <td>-1.250e-01</td>
           <td>-1.250e-01</td>
         </tr>
         <tr>
-          <th>Top</th>
-          <td>oxx</td>
+          <th>Bottom</th>
+          <th>oxx</th>
           <td>-9.976e+04</td>
           <td>-5.802e+05</td>
           <td>-2.925e+05</td>
           <td>7.936e+05</td>
         </tr>
         <tr>
+          <th rowspan="2" valign="top">16</th>
           <th>Top</th>
-          <td>oyy</td>
+          <th>oyy</th>
           <td>-1.102e+06</td>
           <td>1.461e+06</td>
           <td>-3.138e+06</td>
           <td>6.441e+06</td>
         </tr>
         <tr>
-          <th>Top</th>
-          <td>txy</td>
+          <th>Bottom</th>
+          <th>txy</th>
           <td>2.296e+02</td>
           <td>-1.267e+04</td>
           <td>4.394e+06</td>

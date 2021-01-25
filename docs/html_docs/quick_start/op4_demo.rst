@@ -1,4 +1,3 @@
-
 OP4 Demo
 --------
 
@@ -49,27 +48,27 @@ Print the docstring
         
         .. code-block:: python
         
-          >>> from pyNastran.op4.op4 import OP4
-          >>> op4 = OP4()
+           >>> from pyNastran.op4.op4 import OP4
+           >>> op4 = OP4()
         
-          # get all the matrices
-          >>> matrices = op4.read_op4(op4_filename)
-          >>> (formA, A) = matrices['A']
-          >>> (formB, B) = matrices['B']
-          >>> (formC, C) = matrices['C']
+           # get all the matrices
+           >>> matrices = op4.read_op4(op4_filename)
+           >>> (formA, A) = matrices['A']
+           >>> (formB, B) = matrices['B']
+           >>> (formC, C) = matrices['C']
         
-          # or to reduce memory usage
-          >>> matrices = op4.read_op4(op4_filename, matrix_names=['A', 'B'])
-          >>> (formA, A) = matrices['A']
-          >>> (formB, B) = matrices['B']
+           # or to reduce memory usage
+           >>> matrices = op4.read_op4(op4_filename, matrix_names=['A', 'B'])
+           >>> (formA, A) = matrices['A']
+           >>> (formB, B) = matrices['B']
         
-          # or because you only want A
-          >>> matrices = op4.read_op4(op4_filename, matrix_names='A')
-          >>> (formA, A) = matrices['A']
+           # or because you only want A
+           >>> matrices = op4.read_op4(op4_filename, matrix_names='A')
+           >>> (formA, A) = matrices['A']
         
-          # get all the matrices, but select the file using a file dialog
-          >>> matrices = op4.read_op4()
-          >>>
+           # get all the matrices, but select the file using a file dialog
+           >>> matrices = op4.read_op4()
+           >>>
         
         Parameters
         ----------
@@ -201,11 +200,11 @@ There are more ways to read an OP4
 
 .. parsed-literal::
 
-    [[-5.548e-03  4.671e-06 -1.816e-04 ... -1.037e-01  6.919e-02  1.904e-02]
-     [ 2.133e-04  5.699e-03  2.393e-02 ... -1.050e-02 -5.252e-02 -1.187e-01]
-     [-8.469e-04  1.512e-03  7.038e-03 ...  2.626e-01 -2.141e-01  1.472e-01]
+    [[ 5.548e-03  4.669e-06  1.816e-04 ...  1.038e-01  6.898e-02  1.901e-02]
+     [-2.133e-04  5.699e-03 -2.393e-02 ...  1.038e-02 -5.254e-02 -1.187e-01]
+     [ 8.469e-04  1.512e-03 -7.038e-03 ... -2.629e-01 -2.135e-01  1.474e-01]
      ...
-     [ 3.006e-07  5.476e-05  6.343e-04 ... -8.222e-03 -2.789e-02  2.645e-02]
-     [ 1.723e-06  1.278e-06 -1.805e-06 ...  4.866e-03 -4.639e-03 -6.872e-03]
-     [-7.271e-06  3.394e-06 -2.717e-06 ...  7.772e-03 -7.160e-03 -8.942e-03]]
+     [-3.006e-07  5.476e-05 -6.343e-04 ...  8.170e-03 -2.790e-02  2.645e-02]
+     [-1.723e-06  1.278e-06  1.805e-06 ... -4.877e-03 -4.630e-03 -6.870e-03]
+     [ 7.271e-06  3.394e-06  2.716e-06 ... -7.789e-03 -7.146e-03 -8.940e-03]]
     

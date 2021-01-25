@@ -1,4 +1,3 @@
-
 Transient DataFrames in PyNastran
 =================================
 
@@ -18,8 +17,14 @@ We’ll use standard pyNastran methods to load a model. We’ll set ``build_data
     import pyNastran
     pkg_path = pyNastran.__path__[0]
     from pyNastran.op2.op2 import read_op2
+    from pyNastran.utils.nastran_utils import run_nastran
     
+    bdf_filename = os.path.join(pkg_path, '..', 'models', 'iSat', 'iSat_launch_100Hz.dat')
     op2_filename = os.path.join(pkg_path, '..', 'models', 'iSat', 'iSat_launch_100Hz.op2')
+    if not os.path.exists(op2_filename):
+        run_nastran(bdf_filename)
+        assert os.path.exists(op2_filename)
+    
     isat = read_op2(op2_filename, build_dataframe=True, debug=False, skip_undefined_matrices=True,
                     exclude_results='*strain_energy')
 
@@ -27,716 +32,9 @@ We’ll use standard pyNastran methods to load a model. We’ll set ``build_data
 
 .. raw:: html
 
-    <text style=color:green>INFO:    op2_scalar.py:1459           op2_filename = 'c:\\nasa\\m4\\formats\\git\\pynastran\\pyNastran\\..\\models\\iSat\\iSat_launch_100Hz.op2'
+    <text style=color:green>INFO:    op2_scalar.py:1588           op2_filename = 'c:\\nasa\\m4\\formats\\git\\pynastran\\pyNastran\\..\\models\\iSat\\iSat_launch_100Hz.op2'
     </text>
 
-
-
-.. raw:: html
-
-    <text style=color:orange>WARNING: op2_common.py:1470           --Table3Data--
-    
-      device_code   = 2   Plot
-      analysis_code = 2   Normal modes or buckling (real eigenvalues)
-      table_code    = 5   RAQCONS-OES - Element Stress
-      format_code   = 2   Real/Imaginary
-      sort_method   = 1
-      sort_code     = 0
-        sort_bits   = (0, 0, 0)
-        data_format = 0   Real
-        sort_type   = 0   Sort1
-        is_random   = 0   Sorted Responses
-      random_code   = 0  
-      s_code        = None ???
-      thermal       = 0   isHeatTransfer = False
-      thermal_bits  = [0, 0, 0, 0, 0]
-      num_wide      = 11 
-      isubcase      = 1  
-      mode          = 1
-      eign          = 0.0
-      mode2         = 0
-      NX Nastran
-    
-    </text>
-
-
-
-.. raw:: html
-
-    <text style=color:orange>WARNING: op2_common.py:1470           --Table3Data--
-    
-      device_code   = 2   Plot
-      analysis_code = 2   Normal modes or buckling (real eigenvalues)
-      table_code    = 5   RAQCONS-OES - Element Stress
-      format_code   = 2   Real/Imaginary
-      sort_method   = 1
-      sort_code     = 0
-        sort_bits   = (0, 0, 0)
-        data_format = 0   Real
-        sort_type   = 0   Sort1
-        is_random   = 0   Sorted Responses
-      random_code   = 0  
-      s_code        = None ???
-      thermal       = 0   isHeatTransfer = False
-      thermal_bits  = [0, 0, 0, 0, 0]
-      num_wide      = 11 
-      isubcase      = 1  
-      mode          = 2
-      eign          = 0.0
-      mode2         = 0
-      NX Nastran
-    
-    </text>
-
-
-
-.. raw:: html
-
-    <text style=color:orange>WARNING: op2_common.py:1470           --Table3Data--
-    
-      device_code   = 2   Plot
-      analysis_code = 2   Normal modes or buckling (real eigenvalues)
-      table_code    = 5   RAQCONS-OES - Element Stress
-      format_code   = 2   Real/Imaginary
-      sort_method   = 1
-      sort_code     = 0
-        sort_bits   = (0, 0, 0)
-        data_format = 0   Real
-        sort_type   = 0   Sort1
-        is_random   = 0   Sorted Responses
-      random_code   = 0  
-      s_code        = None ???
-      thermal       = 0   isHeatTransfer = False
-      thermal_bits  = [0, 0, 0, 0, 0]
-      num_wide      = 11 
-      isubcase      = 1  
-      mode          = 3
-      eign          = 0.0
-      mode2         = 0
-      NX Nastran
-    
-    </text>
-
-
-
-.. raw:: html
-
-    <text style=color:orange>WARNING: op2_common.py:1470           --Table3Data--
-    
-      device_code   = 2   Plot
-      analysis_code = 2   Normal modes or buckling (real eigenvalues)
-      table_code    = 5   RAQCONS-OES - Element Stress
-      format_code   = 2   Real/Imaginary
-      sort_method   = 1
-      sort_code     = 0
-        sort_bits   = (0, 0, 0)
-        data_format = 0   Real
-        sort_type   = 0   Sort1
-        is_random   = 0   Sorted Responses
-      random_code   = 0  
-      s_code        = None ???
-      thermal       = 0   isHeatTransfer = False
-      thermal_bits  = [0, 0, 0, 0, 0]
-      num_wide      = 11 
-      isubcase      = 1  
-      mode          = 4
-      eign          = 0.0
-      mode2         = 0
-      NX Nastran
-    
-    </text>
-
-
-
-.. raw:: html
-
-    <text style=color:orange>WARNING: op2_common.py:1470           --Table3Data--
-    
-      device_code   = 2   Plot
-      analysis_code = 2   Normal modes or buckling (real eigenvalues)
-      table_code    = 5   RAQCONS-OES - Element Stress
-      format_code   = 2   Real/Imaginary
-      sort_method   = 1
-      sort_code     = 0
-        sort_bits   = (0, 0, 0)
-        data_format = 0   Real
-        sort_type   = 0   Sort1
-        is_random   = 0   Sorted Responses
-      random_code   = 0  
-      s_code        = None ???
-      thermal       = 0   isHeatTransfer = False
-      thermal_bits  = [0, 0, 0, 0, 0]
-      num_wide      = 11 
-      isubcase      = 1  
-      mode          = 5
-      eign          = 0.0
-      mode2         = 0
-      NX Nastran
-    
-    </text>
-
-
-
-.. raw:: html
-
-    <text style=color:orange>WARNING: op2_common.py:1470           --Table3Data--
-    
-      device_code   = 2   Plot
-      analysis_code = 2   Normal modes or buckling (real eigenvalues)
-      table_code    = 5   RAQCONS-OES - Element Stress
-      format_code   = 2   Real/Imaginary
-      sort_method   = 1
-      sort_code     = 0
-        sort_bits   = (0, 0, 0)
-        data_format = 0   Real
-        sort_type   = 0   Sort1
-        is_random   = 0   Sorted Responses
-      random_code   = 0  
-      s_code        = None ???
-      thermal       = 0   isHeatTransfer = False
-      thermal_bits  = [0, 0, 0, 0, 0]
-      num_wide      = 11 
-      isubcase      = 1  
-      mode          = 6
-      eign          = 0.0
-      mode2         = 0
-      NX Nastran
-    
-    </text>
-
-
-
-.. raw:: html
-
-    <text style=color:orange>WARNING: op2_common.py:1470           --Table3Data--
-    
-      device_code   = 2   Plot
-      analysis_code = 2   Normal modes or buckling (real eigenvalues)
-      table_code    = 5   RAQCONS-OES - Element Stress
-      format_code   = 2   Real/Imaginary
-      sort_method   = 1
-      sort_code     = 0
-        sort_bits   = (0, 0, 0)
-        data_format = 0   Real
-        sort_type   = 0   Sort1
-        is_random   = 0   Sorted Responses
-      random_code   = 0  
-      s_code        = None ???
-      thermal       = 0   isHeatTransfer = False
-      thermal_bits  = [0, 0, 0, 0, 0]
-      num_wide      = 11 
-      isubcase      = 1  
-      mode          = 7
-      eign          = 0.0
-      mode2         = 0
-      NX Nastran
-    
-    </text>
-
-
-
-.. raw:: html
-
-    <text style=color:orange>WARNING: op2_common.py:1470           --Table3Data--
-    
-      device_code   = 2   Plot
-      analysis_code = 2   Normal modes or buckling (real eigenvalues)
-      table_code    = 5   RAQCONS-OES - Element Stress
-      format_code   = 2   Real/Imaginary
-      sort_method   = 1
-      sort_code     = 0
-        sort_bits   = (0, 0, 0)
-        data_format = 0   Real
-        sort_type   = 0   Sort1
-        is_random   = 0   Sorted Responses
-      random_code   = 0  
-      s_code        = None ???
-      thermal       = 0   isHeatTransfer = False
-      thermal_bits  = [0, 0, 0, 0, 0]
-      num_wide      = 11 
-      isubcase      = 1  
-      mode          = 8
-      eign          = 0.0
-      mode2         = 0
-      NX Nastran
-    
-    </text>
-
-
-
-.. raw:: html
-
-    <text style=color:orange>WARNING: op2_common.py:1470           --Table3Data--
-    
-      device_code   = 2   Plot
-      analysis_code = 2   Normal modes or buckling (real eigenvalues)
-      table_code    = 5   RAQCONS-OES - Element Stress
-      format_code   = 2   Real/Imaginary
-      sort_method   = 1
-      sort_code     = 0
-        sort_bits   = (0, 0, 0)
-        data_format = 0   Real
-        sort_type   = 0   Sort1
-        is_random   = 0   Sorted Responses
-      random_code   = 0  
-      s_code        = None ???
-      thermal       = 0   isHeatTransfer = False
-      thermal_bits  = [0, 0, 0, 0, 0]
-      num_wide      = 11 
-      isubcase      = 1  
-      mode          = 9
-      eign          = 0.0
-      mode2         = 0
-      NX Nastran
-    
-    </text>
-
-
-
-.. raw:: html
-
-    <text style=color:orange>WARNING: op2_common.py:1470           --Table3Data--
-    
-      device_code   = 2   Plot
-      analysis_code = 2   Normal modes or buckling (real eigenvalues)
-      table_code    = 5   RAQCONS-OES - Element Stress
-      format_code   = 2   Real/Imaginary
-      sort_method   = 1
-      sort_code     = 0
-        sort_bits   = (0, 0, 0)
-        data_format = 0   Real
-        sort_type   = 0   Sort1
-        is_random   = 0   Sorted Responses
-      random_code   = 0  
-      s_code        = None ???
-      thermal       = 0   isHeatTransfer = False
-      thermal_bits  = [0, 0, 0, 0, 0]
-      num_wide      = 11 
-      isubcase      = 1  
-      mode          = 10
-      eign          = 0.0
-      mode2         = 0
-      NX Nastran
-    
-    </text>
-
-
-
-.. raw:: html
-
-    <text style=color:orange>WARNING: op2_common.py:1470           --Table3Data--
-    
-      device_code   = 2   Plot
-      analysis_code = 2   Normal modes or buckling (real eigenvalues)
-      table_code    = 5   RAQCONS-OES - Element Stress
-      format_code   = 2   Real/Imaginary
-      sort_method   = 1
-      sort_code     = 0
-        sort_bits   = (0, 0, 0)
-        data_format = 0   Real
-        sort_type   = 0   Sort1
-        is_random   = 0   Sorted Responses
-      random_code   = 0  
-      s_code        = None ???
-      thermal       = 0   isHeatTransfer = False
-      thermal_bits  = [0, 0, 0, 0, 0]
-      num_wide      = 11 
-      isubcase      = 1  
-      mode          = 11
-      eign          = 0.0
-      mode2         = 0
-      NX Nastran
-    
-    </text>
-
-
-
-.. raw:: html
-
-    <text style=color:orange>WARNING: op2_common.py:1470           --Table3Data--
-    
-      device_code   = 2   Plot
-      analysis_code = 2   Normal modes or buckling (real eigenvalues)
-      table_code    = 5   RAQCONS-OES - Element Stress
-      format_code   = 2   Real/Imaginary
-      sort_method   = 1
-      sort_code     = 0
-        sort_bits   = (0, 0, 0)
-        data_format = 0   Real
-        sort_type   = 0   Sort1
-        is_random   = 0   Sorted Responses
-      random_code   = 0  
-      s_code        = None ???
-      thermal       = 0   isHeatTransfer = False
-      thermal_bits  = [0, 0, 0, 0, 0]
-      num_wide      = 11 
-      isubcase      = 1  
-      mode          = 12
-      eign          = 0.0
-      mode2         = 0
-      NX Nastran
-    
-    </text>
-
-
-
-.. raw:: html
-
-    <text style=color:orange>WARNING: op2_common.py:1470           --Table3Data--
-    
-      device_code   = 2   Plot
-      analysis_code = 2   Normal modes or buckling (real eigenvalues)
-      table_code    = 5   RAQEATC-OES - Element Stress
-      format_code   = 2   Real/Imaginary
-      sort_method   = 1
-      sort_code     = 0
-        sort_bits   = (0, 0, 0)
-        data_format = 0   Real
-        sort_type   = 0   Sort1
-        is_random   = 0   Sorted Responses
-      random_code   = 0  
-      s_code        = None ???
-      thermal       = 0   isHeatTransfer = False
-      thermal_bits  = [0, 0, 0, 0, 0]
-      num_wide      = 11 
-      isubcase      = 1  
-      mode          = 1
-      eign          = 0.0
-      mode2         = 0
-      NX Nastran
-    
-    </text>
-
-
-
-.. raw:: html
-
-    <text style=color:orange>WARNING: op2_common.py:1470           --Table3Data--
-    
-      device_code   = 2   Plot
-      analysis_code = 2   Normal modes or buckling (real eigenvalues)
-      table_code    = 5   RAQEATC-OES - Element Stress
-      format_code   = 2   Real/Imaginary
-      sort_method   = 1
-      sort_code     = 0
-        sort_bits   = (0, 0, 0)
-        data_format = 0   Real
-        sort_type   = 0   Sort1
-        is_random   = 0   Sorted Responses
-      random_code   = 0  
-      s_code        = None ???
-      thermal       = 0   isHeatTransfer = False
-      thermal_bits  = [0, 0, 0, 0, 0]
-      num_wide      = 11 
-      isubcase      = 1  
-      mode          = 2
-      eign          = 0.0
-      mode2         = 0
-      NX Nastran
-    
-    </text>
-
-
-
-.. raw:: html
-
-    <text style=color:orange>WARNING: op2_common.py:1470           --Table3Data--
-    
-      device_code   = 2   Plot
-      analysis_code = 2   Normal modes or buckling (real eigenvalues)
-      table_code    = 5   RAQEATC-OES - Element Stress
-      format_code   = 2   Real/Imaginary
-      sort_method   = 1
-      sort_code     = 0
-        sort_bits   = (0, 0, 0)
-        data_format = 0   Real
-        sort_type   = 0   Sort1
-        is_random   = 0   Sorted Responses
-      random_code   = 0  
-      s_code        = None ???
-      thermal       = 0   isHeatTransfer = False
-      thermal_bits  = [0, 0, 0, 0, 0]
-      num_wide      = 11 
-      isubcase      = 1  
-      mode          = 3
-      eign          = 0.0
-      mode2         = 0
-      NX Nastran
-    
-    </text>
-
-
-
-.. raw:: html
-
-    <text style=color:orange>WARNING: op2_common.py:1470           --Table3Data--
-    
-      device_code   = 2   Plot
-      analysis_code = 2   Normal modes or buckling (real eigenvalues)
-      table_code    = 5   RAQEATC-OES - Element Stress
-      format_code   = 2   Real/Imaginary
-      sort_method   = 1
-      sort_code     = 0
-        sort_bits   = (0, 0, 0)
-        data_format = 0   Real
-        sort_type   = 0   Sort1
-        is_random   = 0   Sorted Responses
-      random_code   = 0  
-      s_code        = None ???
-      thermal       = 0   isHeatTransfer = False
-      thermal_bits  = [0, 0, 0, 0, 0]
-      num_wide      = 11 
-      isubcase      = 1  
-      mode          = 4
-      eign          = 0.0
-      mode2         = 0
-      NX Nastran
-    
-    </text>
-
-
-
-.. raw:: html
-
-    <text style=color:orange>WARNING: op2_common.py:1470           --Table3Data--
-    
-      device_code   = 2   Plot
-      analysis_code = 2   Normal modes or buckling (real eigenvalues)
-      table_code    = 5   RAQEATC-OES - Element Stress
-      format_code   = 2   Real/Imaginary
-      sort_method   = 1
-      sort_code     = 0
-        sort_bits   = (0, 0, 0)
-        data_format = 0   Real
-        sort_type   = 0   Sort1
-        is_random   = 0   Sorted Responses
-      random_code   = 0  
-      s_code        = None ???
-      thermal       = 0   isHeatTransfer = False
-      thermal_bits  = [0, 0, 0, 0, 0]
-      num_wide      = 11 
-      isubcase      = 1  
-      mode          = 5
-      eign          = 0.0
-      mode2         = 0
-      NX Nastran
-    
-    </text>
-
-
-
-.. raw:: html
-
-    <text style=color:orange>WARNING: op2_common.py:1470           --Table3Data--
-    
-      device_code   = 2   Plot
-      analysis_code = 2   Normal modes or buckling (real eigenvalues)
-      table_code    = 5   RAQEATC-OES - Element Stress
-      format_code   = 2   Real/Imaginary
-      sort_method   = 1
-      sort_code     = 0
-        sort_bits   = (0, 0, 0)
-        data_format = 0   Real
-        sort_type   = 0   Sort1
-        is_random   = 0   Sorted Responses
-      random_code   = 0  
-      s_code        = None ???
-      thermal       = 0   isHeatTransfer = False
-      thermal_bits  = [0, 0, 0, 0, 0]
-      num_wide      = 11 
-      isubcase      = 1  
-      mode          = 6
-      eign          = 0.0
-      mode2         = 0
-      NX Nastran
-    
-    </text>
-
-
-
-.. raw:: html
-
-    <text style=color:orange>WARNING: op2_common.py:1470           --Table3Data--
-    
-      device_code   = 2   Plot
-      analysis_code = 2   Normal modes or buckling (real eigenvalues)
-      table_code    = 5   RAQEATC-OES - Element Stress
-      format_code   = 2   Real/Imaginary
-      sort_method   = 1
-      sort_code     = 0
-        sort_bits   = (0, 0, 0)
-        data_format = 0   Real
-        sort_type   = 0   Sort1
-        is_random   = 0   Sorted Responses
-      random_code   = 0  
-      s_code        = None ???
-      thermal       = 0   isHeatTransfer = False
-      thermal_bits  = [0, 0, 0, 0, 0]
-      num_wide      = 11 
-      isubcase      = 1  
-      mode          = 7
-      eign          = 0.0
-      mode2         = 0
-      NX Nastran
-    
-    </text>
-
-
-
-.. raw:: html
-
-    <text style=color:orange>WARNING: op2_common.py:1470           --Table3Data--
-    
-      device_code   = 2   Plot
-      analysis_code = 2   Normal modes or buckling (real eigenvalues)
-      table_code    = 5   RAQEATC-OES - Element Stress
-      format_code   = 2   Real/Imaginary
-      sort_method   = 1
-      sort_code     = 0
-        sort_bits   = (0, 0, 0)
-        data_format = 0   Real
-        sort_type   = 0   Sort1
-        is_random   = 0   Sorted Responses
-      random_code   = 0  
-      s_code        = None ???
-      thermal       = 0   isHeatTransfer = False
-      thermal_bits  = [0, 0, 0, 0, 0]
-      num_wide      = 11 
-      isubcase      = 1  
-      mode          = 8
-      eign          = 0.0
-      mode2         = 0
-      NX Nastran
-    
-    </text>
-
-
-
-.. raw:: html
-
-    <text style=color:orange>WARNING: op2_common.py:1470           --Table3Data--
-    
-      device_code   = 2   Plot
-      analysis_code = 2   Normal modes or buckling (real eigenvalues)
-      table_code    = 5   RAQEATC-OES - Element Stress
-      format_code   = 2   Real/Imaginary
-      sort_method   = 1
-      sort_code     = 0
-        sort_bits   = (0, 0, 0)
-        data_format = 0   Real
-        sort_type   = 0   Sort1
-        is_random   = 0   Sorted Responses
-      random_code   = 0  
-      s_code        = None ???
-      thermal       = 0   isHeatTransfer = False
-      thermal_bits  = [0, 0, 0, 0, 0]
-      num_wide      = 11 
-      isubcase      = 1  
-      mode          = 9
-      eign          = 0.0
-      mode2         = 0
-      NX Nastran
-    
-    </text>
-
-
-
-.. raw:: html
-
-    <text style=color:orange>WARNING: op2_common.py:1470           --Table3Data--
-    
-      device_code   = 2   Plot
-      analysis_code = 2   Normal modes or buckling (real eigenvalues)
-      table_code    = 5   RAQEATC-OES - Element Stress
-      format_code   = 2   Real/Imaginary
-      sort_method   = 1
-      sort_code     = 0
-        sort_bits   = (0, 0, 0)
-        data_format = 0   Real
-        sort_type   = 0   Sort1
-        is_random   = 0   Sorted Responses
-      random_code   = 0  
-      s_code        = None ???
-      thermal       = 0   isHeatTransfer = False
-      thermal_bits  = [0, 0, 0, 0, 0]
-      num_wide      = 11 
-      isubcase      = 1  
-      mode          = 10
-      eign          = 0.0
-      mode2         = 0
-      NX Nastran
-    
-    </text>
-
-
-
-.. raw:: html
-
-    <text style=color:orange>WARNING: op2_common.py:1470           --Table3Data--
-    
-      device_code   = 2   Plot
-      analysis_code = 2   Normal modes or buckling (real eigenvalues)
-      table_code    = 5   RAQEATC-OES - Element Stress
-      format_code   = 2   Real/Imaginary
-      sort_method   = 1
-      sort_code     = 0
-        sort_bits   = (0, 0, 0)
-        data_format = 0   Real
-        sort_type   = 0   Sort1
-        is_random   = 0   Sorted Responses
-      random_code   = 0  
-      s_code        = None ???
-      thermal       = 0   isHeatTransfer = False
-      thermal_bits  = [0, 0, 0, 0, 0]
-      num_wide      = 11 
-      isubcase      = 1  
-      mode          = 11
-      eign          = 0.0
-      mode2         = 0
-      NX Nastran
-    
-    </text>
-
-
-
-.. raw:: html
-
-    <text style=color:orange>WARNING: op2_common.py:1470           --Table3Data--
-    
-      device_code   = 2   Plot
-      analysis_code = 2   Normal modes or buckling (real eigenvalues)
-      table_code    = 5   RAQEATC-OES - Element Stress
-      format_code   = 2   Real/Imaginary
-      sort_method   = 1
-      sort_code     = 0
-        sort_bits   = (0, 0, 0)
-        data_format = 0   Real
-        sort_type   = 0   Sort1
-        is_random   = 0   Sorted Responses
-      random_code   = 0  
-      s_code        = None ???
-      thermal       = 0   isHeatTransfer = False
-      thermal_bits  = [0, 0, 0, 0, 0]
-      num_wide      = 11 
-      isubcase      = 1  
-      mode          = 12
-      eign          = 0.0
-      mode2         = 0
-      NX Nastran
-    
-    </text>
-
-
-.. parsed-literal::
-
-    c:\nasa\m4\formats\git\pynastran\pyNastran\op2\op2.py:740: FutureWarning: 
-    Panel is deprecated and will be removed in a future version.
-    The recommended way to represent these types of 3-dimensional data are with a MultiIndex on a DataFrame, via the Panel.to_frame() method
-    Alternatively, you can use the xarray package http://xarray.pydata.org/en/stable/.
-    Pandas provides a `.to_xarray()` method to help automate this conversion.
-    
-      obj.build_dataframe()
-    
 
 Get a list of all objects:
 
@@ -747,75 +45,20 @@ Get a list of all objects:
 
 .. parsed-literal::
 
-    GridPointWeight: ref_point=0 mass=1.79373; [reference_point, M0, S, mass, cg, IS, IQ, Q]
-    EQEXIN(nid, ndof, doftype); nnodes=5383
-    RADEFFM.eigenvectors[1]
-    RADCONS.eigenvectors[1]
-    RAFCONS.cbar_force[1]
-    RAFCONS.cquad4_force[1]
-    RAFCONS.cbush_force[1]
-    RASCONS.cquad4_stress[1]
-    RASCONS.chexa_stress[1]
-    RAECONS.chexa_strain[1]
-    RAECONS.ctria3_strain[1]
-    RAECONS.cquad4_strain[1]
-    RAGCONS.grid_point_forces[1]
-    RAPCONS.cquad4_composite_stress[1]
-    RAPCONS.ctria3_composite_stress[1]
-    RANCONS.cbar_strain_energy[1]
-    RANCONS.cbush_strain_energy[1]
-    RANCONS.chexa_strain_energy[1]
-    RANCONS.ctria3_strain_energy[1]
-    RANCONS.cquad4_strain_energy[1]
-    RADEATC.eigenvectors[1]
-    RAFEATC.cbar_force[1]
-    RAFEATC.cquad4_force[1]
-    RAFEATC.cbush_force[1]
-    RASEATC.chexa_stress[1]
-    RASEATC.cquad4_stress[1]
-    RAEEATC.chexa_strain[1]
-    RAEEATC.ctria3_strain[1]
-    RAEEATC.cquad4_strain[1]
-    RAGEATC.grid_point_forces[1]
-    RAPEATC.cquad4_composite_stress[1]
-    RAPEATC.ctria3_composite_stress[1]
-    RANEATC.cbar_strain_energy[1]
-    RANEATC.cbush_strain_energy[1]
-    RANEATC.chexa_strain_energy[1]
-    RANEATC.ctria3_strain_energy[1]
-    RANEATC.cquad4_strain_energy[1]
+    op2_results.force.cbush_force[1]
+    op2_results.force.cbar_force[1]
+    op2_results.force.cquad4_force[1]
+    op2_results.stress.chexa_stress[1]
+    op2_results.strain.chexa_strain[1]
     eigenvectors[1]
     mpc_forces[1]
     grid_point_forces[1]
-    cbar_force[1]
     cquad4_stress[1]
     cquad4_strain[1]
-    chexa_stress[1]
-    chexa_strain[1]
-    PARAM[GRDPNT] = [0]
-    PARAM[POST] = [-1]
-    PARAM[RSCON] = ['YES']
-    PARAM[RSOPT] = [1]
-    eigenvalues['ISAT_SM_LAUNCH_4PT MODES TO 100 HZ']
-    cbush_force[1]
-    cquad4_force[1]
     cquad4_composite_stress[1]
     ctria3_composite_stress[1]
     cquad4_composite_strain[1]
     ctria3_composite_strain[1]
-    Matrix['BHH'];      shape=(33, 33);   type=scipy.sparse.coo.coo_matrix;      dtype=float64;   desc=symmetric
-    Matrix['EFMASSS'];  shape=(6, 6);     type=scipy.sparse.coo.coo_matrix;      dtype=float64;   desc=square
-    Matrix['EFMFACS'];  shape=(6, 33);    type=scipy.sparse.coo.coo_matrix;      dtype=float64;   desc=rectangular
-    Matrix['EFMFSMS'];  shape=(6, 1);     type=scipy.sparse.coo.coo_matrix;      dtype=float64;   desc=rectangular
-    Matrix['K4HH'];     shape=(33, 33);   type=scipy.sparse.coo.coo_matrix;      dtype=float64;   desc=symmetric
-    Matrix['MEFMASS'];  shape=(6, 33);    type=scipy.sparse.coo.coo_matrix;      dtype=float64;   desc=rectangular
-    Matrix['MEFWTS'];   shape=(6, 33);    type=scipy.sparse.coo.coo_matrix;      dtype=float64;   desc=rectangular
-    Matrix['MPFACS'];   shape=(6, 33);    type=scipy.sparse.coo.coo_matrix;      dtype=float64;   desc=rectangular
-    Matrix['RADAMPG'];  shape=(33, 33);   type=scipy.sparse.coo.coo_matrix;      dtype=float64;   desc=symmetric
-    Matrix['RADAMPZ'];  shape=(33, 33);   type=scipy.sparse.coo.coo_matrix;      dtype=float64;   desc=symmetric
-    Matrix['RADEFMP'];  shape=(33, 12);   type=scipy.sparse.coo.coo_matrix;      dtype=float64;   desc=rectangular
-    Matrix['RAFGEN'];   shape=(33, 1);    type=scipy.sparse.coo.coo_matrix;      dtype=float64;   desc=rectangular
-    Matrix['RBMASSS'];  shape=(6, 6);     type=scipy.sparse.coo.coo_matrix;      dtype=float64;   desc=square
     
     
 
@@ -823,7 +66,10 @@ Access the DataFrames
 
 .. code:: ipython3
 
-    eigenvalues             = isat.eigenvalues[u'ISAT_SM_LAUNCH_4PT MODES TO 100 HZ'].data_frame
+    eigenvalues = None
+    if len(isat.eigenvalues):
+        print(isat.eigenvalues.keys())
+        eigenvalues         = isat.eigenvalues[u'ISAT_SM_LAUNCH_4PT MODES TO 100 HZ'].data_frame
     eigenvectors            = isat.eigenvectors[1].data_frame
     mpc_forces              = isat.mpc_forces[1].data_frame
     grid_point_forces       = isat.grid_point_forces[1].data_frame
@@ -845,375 +91,6 @@ Now list each of the objects and be amazed!
 .. code:: ipython3
 
     eigenvalues
-
-
-
-
-.. raw:: html
-
-    <div>
-    <style scoped>
-        .dataframe tbody tr th:only-of-type {
-            vertical-align: middle;
-        }
-    
-        .dataframe tbody tr th {
-            vertical-align: top;
-        }
-    
-        .dataframe thead th {
-            text-align: right;
-        }
-    </style>
-    <table border="1" class="dataframe">
-      <thead>
-        <tr style="text-align: right;">
-          <th></th>
-          <th>Mode</th>
-          <th>ExtractionOrder</th>
-          <th>eigenvalue</th>
-          <th>radians</th>
-          <th>cycle</th>
-          <th>generalized_mass</th>
-          <th>generalized_stiffness</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <th>0</th>
-          <td>1</td>
-          <td>1</td>
-          <td>2758.149</td>
-          <td>52.518</td>
-          <td>8.359</td>
-          <td>1.0</td>
-          <td>2758.149</td>
-        </tr>
-        <tr>
-          <th>1</th>
-          <td>2</td>
-          <td>2</td>
-          <td>3568.632</td>
-          <td>59.738</td>
-          <td>9.508</td>
-          <td>1.0</td>
-          <td>3568.632</td>
-        </tr>
-        <tr>
-          <th>2</th>
-          <td>3</td>
-          <td>3</td>
-          <td>9689.306</td>
-          <td>98.434</td>
-          <td>15.666</td>
-          <td>1.0</td>
-          <td>9689.306</td>
-        </tr>
-        <tr>
-          <th>3</th>
-          <td>4</td>
-          <td>4</td>
-          <td>16168.100</td>
-          <td>127.154</td>
-          <td>20.237</td>
-          <td>1.0</td>
-          <td>16168.100</td>
-        </tr>
-        <tr>
-          <th>4</th>
-          <td>5</td>
-          <td>5</td>
-          <td>16278.223</td>
-          <td>127.586</td>
-          <td>20.306</td>
-          <td>1.0</td>
-          <td>16278.223</td>
-        </tr>
-        <tr>
-          <th>5</th>
-          <td>6</td>
-          <td>6</td>
-          <td>16679.709</td>
-          <td>129.150</td>
-          <td>20.555</td>
-          <td>1.0</td>
-          <td>16679.709</td>
-        </tr>
-        <tr>
-          <th>6</th>
-          <td>7</td>
-          <td>7</td>
-          <td>18248.434</td>
-          <td>135.087</td>
-          <td>21.500</td>
-          <td>1.0</td>
-          <td>18248.434</td>
-        </tr>
-        <tr>
-          <th>7</th>
-          <td>8</td>
-          <td>8</td>
-          <td>18600.697</td>
-          <td>136.384</td>
-          <td>21.706</td>
-          <td>1.0</td>
-          <td>18600.697</td>
-        </tr>
-        <tr>
-          <th>8</th>
-          <td>9</td>
-          <td>9</td>
-          <td>18632.551</td>
-          <td>136.501</td>
-          <td>21.725</td>
-          <td>1.0</td>
-          <td>18632.551</td>
-        </tr>
-        <tr>
-          <th>9</th>
-          <td>10</td>
-          <td>10</td>
-          <td>32147.814</td>
-          <td>179.298</td>
-          <td>28.536</td>
-          <td>1.0</td>
-          <td>32147.814</td>
-        </tr>
-        <tr>
-          <th>10</th>
-          <td>11</td>
-          <td>11</td>
-          <td>38660.684</td>
-          <td>196.623</td>
-          <td>31.294</td>
-          <td>1.0</td>
-          <td>38660.684</td>
-        </tr>
-        <tr>
-          <th>11</th>
-          <td>12</td>
-          <td>12</td>
-          <td>48432.578</td>
-          <td>220.074</td>
-          <td>35.026</td>
-          <td>1.0</td>
-          <td>48432.578</td>
-        </tr>
-        <tr>
-          <th>12</th>
-          <td>13</td>
-          <td>13</td>
-          <td>112409.023</td>
-          <td>335.275</td>
-          <td>53.361</td>
-          <td>1.0</td>
-          <td>112409.023</td>
-        </tr>
-        <tr>
-          <th>13</th>
-          <td>14</td>
-          <td>14</td>
-          <td>113042.672</td>
-          <td>336.218</td>
-          <td>53.511</td>
-          <td>1.0</td>
-          <td>113042.672</td>
-        </tr>
-        <tr>
-          <th>14</th>
-          <td>15</td>
-          <td>15</td>
-          <td>113475.180</td>
-          <td>336.861</td>
-          <td>53.613</td>
-          <td>1.0</td>
-          <td>113475.180</td>
-        </tr>
-        <tr>
-          <th>15</th>
-          <td>16</td>
-          <td>16</td>
-          <td>131635.375</td>
-          <td>362.816</td>
-          <td>57.744</td>
-          <td>1.0</td>
-          <td>131635.375</td>
-        </tr>
-        <tr>
-          <th>16</th>
-          <td>17</td>
-          <td>17</td>
-          <td>148774.906</td>
-          <td>385.714</td>
-          <td>61.388</td>
-          <td>1.0</td>
-          <td>148774.906</td>
-        </tr>
-        <tr>
-          <th>17</th>
-          <td>18</td>
-          <td>18</td>
-          <td>161249.031</td>
-          <td>401.558</td>
-          <td>63.910</td>
-          <td>1.0</td>
-          <td>161249.031</td>
-        </tr>
-        <tr>
-          <th>18</th>
-          <td>19</td>
-          <td>19</td>
-          <td>191365.172</td>
-          <td>437.453</td>
-          <td>69.623</td>
-          <td>1.0</td>
-          <td>191365.172</td>
-        </tr>
-        <tr>
-          <th>19</th>
-          <td>20</td>
-          <td>20</td>
-          <td>204148.297</td>
-          <td>451.828</td>
-          <td>71.911</td>
-          <td>1.0</td>
-          <td>204148.297</td>
-        </tr>
-        <tr>
-          <th>20</th>
-          <td>21</td>
-          <td>21</td>
-          <td>248182.016</td>
-          <td>498.179</td>
-          <td>79.288</td>
-          <td>1.0</td>
-          <td>248182.016</td>
-        </tr>
-        <tr>
-          <th>21</th>
-          <td>22</td>
-          <td>22</td>
-          <td>249137.609</td>
-          <td>499.137</td>
-          <td>79.440</td>
-          <td>1.0</td>
-          <td>249137.609</td>
-        </tr>
-        <tr>
-          <th>22</th>
-          <td>23</td>
-          <td>23</td>
-          <td>251654.172</td>
-          <td>501.651</td>
-          <td>79.840</td>
-          <td>1.0</td>
-          <td>251654.172</td>
-        </tr>
-        <tr>
-          <th>23</th>
-          <td>24</td>
-          <td>24</td>
-          <td>253140.875</td>
-          <td>503.131</td>
-          <td>80.076</td>
-          <td>1.0</td>
-          <td>253140.875</td>
-        </tr>
-        <tr>
-          <th>24</th>
-          <td>25</td>
-          <td>25</td>
-          <td>295297.750</td>
-          <td>543.413</td>
-          <td>86.487</td>
-          <td>1.0</td>
-          <td>295297.750</td>
-        </tr>
-        <tr>
-          <th>25</th>
-          <td>26</td>
-          <td>26</td>
-          <td>306885.906</td>
-          <td>553.973</td>
-          <td>88.168</td>
-          <td>1.0</td>
-          <td>306885.906</td>
-        </tr>
-        <tr>
-          <th>26</th>
-          <td>27</td>
-          <td>27</td>
-          <td>309040.656</td>
-          <td>555.914</td>
-          <td>88.477</td>
-          <td>1.0</td>
-          <td>309040.656</td>
-        </tr>
-        <tr>
-          <th>27</th>
-          <td>28</td>
-          <td>28</td>
-          <td>319227.719</td>
-          <td>565.002</td>
-          <td>89.923</td>
-          <td>1.0</td>
-          <td>319227.719</td>
-        </tr>
-        <tr>
-          <th>28</th>
-          <td>29</td>
-          <td>29</td>
-          <td>350984.500</td>
-          <td>592.439</td>
-          <td>94.290</td>
-          <td>1.0</td>
-          <td>350984.500</td>
-        </tr>
-        <tr>
-          <th>29</th>
-          <td>30</td>
-          <td>30</td>
-          <td>351566.188</td>
-          <td>592.930</td>
-          <td>94.368</td>
-          <td>1.0</td>
-          <td>351566.188</td>
-        </tr>
-        <tr>
-          <th>30</th>
-          <td>31</td>
-          <td>31</td>
-          <td>364166.156</td>
-          <td>603.462</td>
-          <td>96.044</td>
-          <td>1.0</td>
-          <td>364166.156</td>
-        </tr>
-        <tr>
-          <th>31</th>
-          <td>32</td>
-          <td>32</td>
-          <td>384601.344</td>
-          <td>620.162</td>
-          <td>98.702</td>
-          <td>1.0</td>
-          <td>384601.344</td>
-        </tr>
-        <tr>
-          <th>32</th>
-          <td>33</td>
-          <td>33</td>
-          <td>386090.438</td>
-          <td>621.362</td>
-          <td>98.893</td>
-          <td>1.0</td>
-          <td>386090.438</td>
-        </tr>
-      </tbody>
-    </table>
-    </div>
-
-
 
 .. code:: ipython3
 
@@ -1274,20 +151,20 @@ Now list each of the objects and be amazed!
           <th>Freq</th>
           <th>8.359</th>
           <th>9.508</th>
-          <th>15.666</th>
+          <th>15.667</th>
           <th>20.237</th>
           <th>20.306</th>
           <th>20.555</th>
           <th>21.500</th>
           <th>21.706</th>
           <th>21.725</th>
-          <th>28.536</th>
+          <th>28.542</th>
           <th>...</th>
           <th>80.076</th>
           <th>86.487</th>
           <th>88.168</th>
           <th>88.477</th>
-          <th>89.923</th>
+          <th>89.928</th>
           <th>94.290</th>
           <th>94.368</th>
           <th>96.044</th>
@@ -1299,45 +176,45 @@ Now list each of the objects and be amazed!
           <th>Eigenvalue</th>
           <th>2758.149</th>
           <th>3568.632</th>
-          <th>9689.306</th>
-          <th>16168.100</th>
-          <th>16278.223</th>
-          <th>16679.709</th>
-          <th>18248.434</th>
+          <th>9689.982</th>
+          <th>16168.038</th>
+          <th>16278.158</th>
+          <th>16679.707</th>
+          <th>18248.432</th>
           <th>18600.697</th>
           <th>18632.551</th>
-          <th>32147.814</th>
+          <th>32159.891</th>
           <th>...</th>
-          <th>253140.875</th>
-          <th>295297.750</th>
-          <th>306885.906</th>
+          <th>253141.172</th>
+          <th>295300.938</th>
+          <th>306886.000</th>
           <th>309040.656</th>
-          <th>319227.719</th>
+          <th>319267.094</th>
           <th>350984.500</th>
           <th>351566.188</th>
-          <th>364166.156</th>
+          <th>364166.312</th>
           <th>384601.344</th>
-          <th>386090.438</th>
+          <th>386090.469</th>
         </tr>
         <tr>
           <th></th>
           <th>Radians</th>
           <th>52.518</th>
           <th>59.738</th>
-          <th>98.434</th>
+          <th>98.438</th>
           <th>127.154</th>
           <th>127.586</th>
           <th>129.150</th>
           <th>135.087</th>
           <th>136.384</th>
           <th>136.501</th>
-          <th>179.298</th>
+          <th>179.332</th>
           <th>...</th>
           <th>503.131</th>
-          <th>543.413</th>
+          <th>543.416</th>
           <th>553.973</th>
           <th>555.914</th>
-          <th>565.002</th>
+          <th>565.037</th>
           <th>592.439</th>
           <th>592.930</th>
           <th>603.462</th>
@@ -1372,729 +249,125 @@ Now list each of the objects and be amazed!
       </thead>
       <tbody>
         <tr>
-          <th rowspan="6" valign="top">1</th>
+          <th rowspan="5" valign="top">1</th>
           <th>t1</th>
           <td>4.783e-03</td>
-          <td>-4.603e-06</td>
-          <td>-1.897e-04</td>
+          <td>4.603e-06</td>
+          <td>-1.895e-04</td>
           <td>4.649e-02</td>
-          <td>1.610e-04</td>
+          <td>-1.608e-04</td>
           <td>3.418e-02</td>
           <td>-6.925e-05</td>
           <td>-1.378e-03</td>
           <td>6.644e-04</td>
-          <td>-1.026e-01</td>
+          <td>-1.029e-01</td>
           <td>...</td>
-          <td>6.956e-02</td>
+          <td>6.944e-02</td>
           <td>-1.152e-02</td>
-          <td>-5.199e-03</td>
+          <td>-5.198e-03</td>
           <td>7.273e-04</td>
-          <td>-1.588e-03</td>
-          <td>-4.755e-02</td>
+          <td>-1.586e-03</td>
+          <td>-0.048</td>
           <td>-3.118e-04</td>
-          <td>2.620e-01</td>
+          <td>0.262</td>
           <td>-5.739e-04</td>
-          <td>8.475e-02</td>
+          <td>0.085</td>
         </tr>
         <tr>
           <th>t2</th>
           <td>-1.520e-04</td>
-          <td>-4.498e-03</td>
-          <td>1.997e-02</td>
-          <td>-5.473e-04</td>
-          <td>8.291e-05</td>
+          <td>4.498e-03</td>
+          <td>1.998e-02</td>
+          <td>-5.474e-04</td>
+          <td>-8.295e-05</td>
           <td>-2.297e-04</td>
           <td>4.005e-05</td>
           <td>-1.423e-02</td>
           <td>-3.019e-02</td>
-          <td>-8.731e-03</td>
+          <td>-8.729e-03</td>
           <td>...</td>
-          <td>5.743e-02</td>
+          <td>5.747e-02</td>
           <td>-2.854e-01</td>
-          <td>7.239e-03</td>
-          <td>6.322e-03</td>
-          <td>-5.218e-03</td>
-          <td>9.643e-03</td>
-          <td>1.106e-04</td>
-          <td>-3.971e-02</td>
+          <td>7.230e-03</td>
+          <td>6.321e-03</td>
+          <td>-5.092e-03</td>
+          <td>0.010</td>
+          <td>1.104e-04</td>
+          <td>-0.040</td>
           <td>-6.828e-04</td>
-          <td>-5.038e-03</td>
+          <td>-0.005</td>
         </tr>
         <tr>
           <th>t3</th>
           <td>8.177e-04</td>
-          <td>-1.411e-03</td>
-          <td>6.603e-03</td>
+          <td>1.411e-03</td>
+          <td>6.604e-03</td>
           <td>7.383e-03</td>
-          <td>-1.335e-03</td>
+          <td>1.335e-03</td>
           <td>5.795e-03</td>
           <td>-1.029e-04</td>
           <td>-4.668e-03</td>
           <td>-9.329e-03</td>
-          <td>-2.086e-02</td>
+          <td>-2.090e-02</td>
           <td>...</td>
-          <td>-7.069e-03</td>
+          <td>-7.095e-03</td>
           <td>1.501e-02</td>
           <td>2.409e-02</td>
           <td>2.687e-03</td>
-          <td>1.777e-02</td>
-          <td>1.803e-02</td>
+          <td>1.775e-02</td>
+          <td>0.018</td>
           <td>-7.755e-03</td>
-          <td>-7.859e-02</td>
+          <td>-0.079</td>
           <td>7.459e-03</td>
-          <td>-2.079e-02</td>
+          <td>-0.021</td>
         </tr>
         <tr>
           <th>r1</th>
           <td>7.844e-06</td>
-          <td>1.974e-04</td>
-          <td>-9.370e-04</td>
+          <td>-1.974e-04</td>
+          <td>-9.371e-04</td>
           <td>4.649e-05</td>
-          <td>5.713e-05</td>
+          <td>-5.713e-05</td>
           <td>1.262e-05</td>
           <td>-1.822e-06</td>
           <td>5.970e-04</td>
           <td>1.275e-03</td>
           <td>4.882e-04</td>
           <td>...</td>
-          <td>1.328e-03</td>
-          <td>-2.209e-02</td>
-          <td>5.989e-04</td>
-          <td>4.577e-04</td>
-          <td>-7.003e-03</td>
-          <td>1.504e-03</td>
-          <td>1.094e-04</td>
-          <td>-6.754e-03</td>
+          <td>1.329e-03</td>
+          <td>-2.210e-02</td>
+          <td>5.975e-04</td>
+          <td>4.576e-04</td>
+          <td>-6.993e-03</td>
+          <td>0.002</td>
+          <td>1.095e-04</td>
+          <td>-0.007</td>
           <td>-1.151e-04</td>
-          <td>-2.408e-03</td>
+          <td>-0.002</td>
         </tr>
         <tr>
           <th>r2</th>
           <td>2.356e-04</td>
-          <td>-1.469e-06</td>
-          <td>-7.085e-06</td>
+          <td>1.469e-06</td>
+          <td>-7.073e-06</td>
           <td>2.291e-03</td>
-          <td>5.973e-06</td>
+          <td>-5.968e-06</td>
           <td>1.604e-03</td>
           <td>-3.388e-06</td>
           <td>-6.959e-05</td>
           <td>2.359e-05</td>
-          <td>-4.935e-03</td>
+          <td>-4.947e-03</td>
           <td>...</td>
-          <td>4.963e-04</td>
-          <td>-8.451e-04</td>
+          <td>4.910e-04</td>
+          <td>-8.452e-04</td>
           <td>6.328e-03</td>
           <td>-1.456e-04</td>
-          <td>1.215e-04</td>
-          <td>4.780e-03</td>
+          <td>1.214e-04</td>
+          <td>0.005</td>
           <td>4.534e-05</td>
-          <td>-1.864e-02</td>
+          <td>-0.019</td>
           <td>1.826e-05</td>
-          <td>-4.895e-03</td>
-        </tr>
-        <tr>
-          <th>r3</th>
-          <td>3.808e-05</td>
-          <td>1.405e-06</td>
-          <td>-2.035e-04</td>
-          <td>1.292e-04</td>
-          <td>-2.965e-05</td>
-          <td>5.825e-05</td>
-          <td>6.086e-08</td>
-          <td>-1.498e-04</td>
-          <td>6.374e-05</td>
-          <td>8.817e-04</td>
-          <td>...</td>
-          <td>-8.750e-03</td>
-          <td>-9.315e-03</td>
-          <td>-4.098e-03</td>
-          <td>3.825e-04</td>
-          <td>-8.811e-04</td>
-          <td>-1.678e-03</td>
-          <td>-4.572e-05</td>
-          <td>7.115e-03</td>
-          <td>-5.625e-05</td>
-          <td>8.746e-04</td>
-        </tr>
-        <tr>
-          <th rowspan="6" valign="top">2</th>
-          <th>t1</th>
-          <td>4.783e-03</td>
-          <td>-4.603e-06</td>
-          <td>-1.897e-04</td>
-          <td>4.649e-02</td>
-          <td>1.610e-04</td>
-          <td>3.418e-02</td>
-          <td>-6.925e-05</td>
-          <td>-1.378e-03</td>
-          <td>6.644e-04</td>
-          <td>-1.026e-01</td>
-          <td>...</td>
-          <td>6.956e-02</td>
-          <td>-1.152e-02</td>
-          <td>-5.199e-03</td>
-          <td>7.273e-04</td>
-          <td>-1.588e-03</td>
-          <td>-4.755e-02</td>
-          <td>-3.118e-04</td>
-          <td>2.620e-01</td>
-          <td>-5.739e-04</td>
-          <td>8.475e-02</td>
-        </tr>
-        <tr>
-          <th>t2</th>
-          <td>-7.586e-05</td>
-          <td>-4.495e-03</td>
-          <td>1.957e-02</td>
-          <td>-2.889e-04</td>
-          <td>2.362e-05</td>
-          <td>-1.132e-04</td>
-          <td>4.017e-05</td>
-          <td>-1.453e-02</td>
-          <td>-3.007e-02</td>
-          <td>-6.967e-03</td>
-          <td>...</td>
-          <td>3.992e-02</td>
-          <td>-3.041e-01</td>
-          <td>-9.565e-04</td>
-          <td>7.087e-03</td>
-          <td>-6.980e-03</td>
-          <td>6.288e-03</td>
-          <td>1.914e-05</td>
-          <td>-2.548e-02</td>
-          <td>-7.953e-04</td>
-          <td>-3.289e-03</td>
-        </tr>
-        <tr>
-          <th>t3</th>
-          <td>3.465e-04</td>
-          <td>-1.408e-03</td>
-          <td>6.617e-03</td>
-          <td>2.801e-03</td>
-          <td>-1.347e-03</td>
-          <td>2.588e-03</td>
-          <td>-9.610e-05</td>
-          <td>-4.528e-03</td>
-          <td>-9.376e-03</td>
-          <td>-1.099e-02</td>
-          <td>...</td>
-          <td>-8.062e-03</td>
-          <td>1.670e-02</td>
-          <td>1.143e-02</td>
-          <td>2.978e-03</td>
-          <td>1.753e-02</td>
-          <td>8.466e-03</td>
-          <td>-7.846e-03</td>
-          <td>-4.130e-02</td>
-          <td>7.422e-03</td>
-          <td>-1.100e-02</td>
-        </tr>
-        <tr>
-          <th>r1</th>
-          <td>7.844e-06</td>
-          <td>1.974e-04</td>
-          <td>-9.370e-04</td>
-          <td>4.649e-05</td>
-          <td>5.713e-05</td>
-          <td>1.262e-05</td>
-          <td>-1.822e-06</td>
-          <td>5.970e-04</td>
-          <td>1.275e-03</td>
-          <td>4.882e-04</td>
-          <td>...</td>
-          <td>1.328e-03</td>
-          <td>-2.209e-02</td>
-          <td>5.989e-04</td>
-          <td>4.577e-04</td>
-          <td>-7.003e-03</td>
-          <td>1.504e-03</td>
-          <td>1.094e-04</td>
-          <td>-6.754e-03</td>
-          <td>-1.151e-04</td>
-          <td>-2.408e-03</td>
-        </tr>
-        <tr>
-          <th>r2</th>
-          <td>2.356e-04</td>
-          <td>-1.469e-06</td>
-          <td>-7.085e-06</td>
-          <td>2.291e-03</td>
-          <td>5.973e-06</td>
-          <td>1.604e-03</td>
-          <td>-3.388e-06</td>
-          <td>-6.959e-05</td>
-          <td>2.359e-05</td>
-          <td>-4.935e-03</td>
-          <td>...</td>
-          <td>4.963e-04</td>
-          <td>-8.451e-04</td>
-          <td>6.328e-03</td>
-          <td>-1.456e-04</td>
-          <td>1.215e-04</td>
-          <td>4.780e-03</td>
-          <td>4.534e-05</td>
-          <td>-1.864e-02</td>
-          <td>1.826e-05</td>
-          <td>-4.895e-03</td>
-        </tr>
-        <tr>
-          <th>r3</th>
-          <td>3.808e-05</td>
-          <td>1.405e-06</td>
-          <td>-2.035e-04</td>
-          <td>1.292e-04</td>
-          <td>-2.965e-05</td>
-          <td>5.825e-05</td>
-          <td>6.086e-08</td>
-          <td>-1.498e-04</td>
-          <td>6.374e-05</td>
-          <td>8.817e-04</td>
-          <td>...</td>
-          <td>-8.750e-03</td>
-          <td>-9.315e-03</td>
-          <td>-4.098e-03</td>
-          <td>3.825e-04</td>
-          <td>-8.811e-04</td>
-          <td>-1.678e-03</td>
-          <td>-4.572e-05</td>
-          <td>7.115e-03</td>
-          <td>-5.625e-05</td>
-          <td>8.746e-04</td>
-        </tr>
-        <tr>
-          <th rowspan="6" valign="top">3</th>
-          <th>t1</th>
-          <td>5.366e-03</td>
-          <td>-8.268e-06</td>
-          <td>-2.216e-04</td>
-          <td>5.218e-02</td>
-          <td>1.778e-04</td>
-          <td>3.818e-02</td>
-          <td>-7.766e-05</td>
-          <td>-1.526e-03</td>
-          <td>7.134e-04</td>
-          <td>-1.149e-01</td>
-          <td>...</td>
-          <td>7.093e-02</td>
-          <td>-1.334e-02</td>
-          <td>1.064e-02</td>
-          <td>4.827e-04</td>
-          <td>-1.207e-03</td>
-          <td>-3.557e-02</td>
-          <td>-2.138e-04</td>
-          <td>2.154e-01</td>
-          <td>-5.517e-04</td>
-          <td>7.238e-02</td>
-        </tr>
-        <tr>
-          <th>t2</th>
-          <td>-1.665e-04</td>
-          <td>-4.985e-03</td>
-          <td>2.219e-02</td>
-          <td>-5.796e-04</td>
-          <td>-1.982e-07</td>
-          <td>-2.302e-04</td>
-          <td>4.437e-05</td>
-          <td>-1.573e-02</td>
-          <td>-3.333e-02</td>
-          <td>-9.943e-03</td>
-          <td>...</td>
-          <td>5.474e-02</td>
-          <td>-2.310e-01</td>
-          <td>6.516e-03</td>
-          <td>5.141e-03</td>
-          <td>1.281e-02</td>
-          <td>5.925e-03</td>
-          <td>-1.468e-04</td>
-          <td>-2.186e-02</td>
-          <td>-4.073e-04</td>
-          <td>1.324e-03</td>
-        </tr>
-        <tr>
-          <th>t3</th>
-          <td>8.168e-04</td>
-          <td>-1.411e-03</td>
-          <td>6.599e-03</td>
-          <td>7.365e-03</td>
-          <td>-1.336e-03</td>
-          <td>5.787e-03</td>
-          <td>-1.029e-04</td>
-          <td>-4.668e-03</td>
-          <td>-9.329e-03</td>
-          <td>-2.084e-02</td>
-          <td>...</td>
-          <td>-7.047e-03</td>
-          <td>1.503e-02</td>
-          <td>2.408e-02</td>
-          <td>2.669e-03</td>
-          <td>1.778e-02</td>
-          <td>1.801e-02</td>
-          <td>-7.748e-03</td>
-          <td>-7.858e-02</td>
-          <td>7.459e-03</td>
-          <td>-2.076e-02</td>
-        </tr>
-        <tr>
-          <th>r1</th>
-          <td>8.172e-06</td>
-          <td>1.972e-04</td>
-          <td>-9.380e-04</td>
-          <td>5.422e-05</td>
-          <td>6.038e-05</td>
-          <td>1.025e-05</td>
-          <td>-1.811e-06</td>
-          <td>5.961e-04</td>
-          <td>1.275e-03</td>
-          <td>5.058e-04</td>
-          <td>...</td>
-          <td>1.260e-03</td>
-          <td>-2.190e-02</td>
-          <td>6.328e-04</td>
-          <td>4.519e-04</td>
-          <td>-7.011e-03</td>
-          <td>1.567e-03</td>
-          <td>1.114e-04</td>
-          <td>-7.087e-03</td>
-          <td>-1.132e-04</td>
-          <td>-2.529e-03</td>
-        </tr>
-        <tr>
-          <th>r2</th>
-          <td>2.356e-04</td>
-          <td>-1.469e-06</td>
-          <td>-7.091e-06</td>
-          <td>2.291e-03</td>
-          <td>5.975e-06</td>
-          <td>1.604e-03</td>
-          <td>-3.388e-06</td>
-          <td>-6.959e-05</td>
-          <td>2.359e-05</td>
-          <td>-4.935e-03</td>
-          <td>...</td>
-          <td>4.963e-04</td>
-          <td>-8.450e-04</td>
-          <td>6.328e-03</td>
-          <td>-1.456e-04</td>
-          <td>1.215e-04</td>
-          <td>4.780e-03</td>
-          <td>4.535e-05</td>
-          <td>-1.864e-02</td>
-          <td>1.825e-05</td>
-          <td>-4.895e-03</td>
-        </tr>
-        <tr>
-          <th>r3</th>
-          <td>3.150e-05</td>
-          <td>-2.537e-06</td>
-          <td>-1.159e-05</td>
-          <td>3.114e-05</td>
-          <td>7.084e-06</td>
-          <td>5.241e-06</td>
-          <td>8.916e-08</td>
-          <td>-1.278e-04</td>
-          <td>4.439e-05</td>
-          <td>6.552e-04</td>
-          <td>...</td>
-          <td>-6.064e-03</td>
-          <td>-4.016e-03</td>
-          <td>-9.461e-04</td>
-          <td>1.519e-04</td>
-          <td>-8.794e-04</td>
-          <td>6.687e-04</td>
-          <td>7.993e-07</td>
-          <td>-4.101e-03</td>
-          <td>-3.794e-05</td>
-          <td>-1.265e-03</td>
-        </tr>
-        <tr>
-          <th rowspan="6" valign="top">4</th>
-          <th>t1</th>
-          <td>5.366e-03</td>
-          <td>-8.330e-06</td>
-          <td>-2.211e-04</td>
-          <td>5.219e-02</td>
-          <td>1.787e-04</td>
-          <td>3.818e-02</td>
-          <td>-7.766e-05</td>
-          <td>-1.526e-03</td>
-          <td>7.133e-04</td>
-          <td>-1.149e-01</td>
-          <td>...</td>
-          <td>7.093e-02</td>
-          <td>-1.326e-02</td>
-          <td>1.065e-02</td>
-          <td>4.918e-04</td>
-          <td>-1.193e-03</td>
-          <td>-3.557e-02</td>
-          <td>-2.154e-04</td>
-          <td>2.154e-01</td>
-          <td>-5.525e-04</td>
-          <td>7.238e-02</td>
-        </tr>
-        <tr>
-          <th>t2</th>
-          <td>-9.532e-05</td>
-          <td>-4.985e-03</td>
-          <td>2.198e-02</td>
-          <td>-4.398e-04</td>
-          <td>-7.593e-05</td>
-          <td>-1.697e-04</td>
-          <td>4.474e-05</td>
-          <td>-1.601e-02</td>
-          <td>-3.322e-02</td>
-          <td>-7.928e-03</td>
-          <td>...</td>
-          <td>3.569e-02</td>
-          <td>-2.477e-01</td>
-          <td>-2.925e-03</td>
-          <td>5.861e-03</td>
-          <td>1.027e-02</td>
-          <td>2.880e-03</td>
-          <td>-2.270e-04</td>
-          <td>-1.129e-02</td>
-          <td>-4.901e-04</td>
-          <td>1.409e-03</td>
-        </tr>
-        <tr>
-          <th>t3</th>
-          <td>3.475e-04</td>
-          <td>-1.408e-03</td>
-          <td>6.621e-03</td>
-          <td>2.819e-03</td>
-          <td>-1.346e-03</td>
-          <td>2.597e-03</td>
-          <td>-9.612e-05</td>
-          <td>-4.528e-03</td>
-          <td>-9.377e-03</td>
-          <td>-1.100e-02</td>
-          <td>...</td>
-          <td>-8.087e-03</td>
-          <td>1.666e-02</td>
-          <td>1.143e-02</td>
-          <td>3.004e-03</td>
-          <td>1.752e-02</td>
-          <td>8.480e-03</td>
-          <td>-7.853e-03</td>
-          <td>-4.132e-02</td>
-          <td>7.420e-03</td>
-          <td>-1.102e-02</td>
-        </tr>
-        <tr>
-          <th>r1</th>
-          <td>7.323e-06</td>
-          <td>1.976e-04</td>
-          <td>-9.387e-04</td>
-          <td>3.944e-05</td>
-          <td>5.584e-05</td>
-          <td>1.423e-05</td>
-          <td>-1.836e-06</td>
-          <td>5.980e-04</td>
-          <td>1.273e-03</td>
-          <td>4.655e-04</td>
-          <td>...</td>
-          <td>1.348e-03</td>
-          <td>-2.229e-02</td>
-          <td>4.951e-04</td>
-          <td>4.631e-04</td>
-          <td>-6.966e-03</td>
-          <td>1.396e-03</td>
-          <td>1.074e-04</td>
-          <td>-6.239e-03</td>
-          <td>-1.164e-04</td>
-          <td>-2.227e-03</td>
-        </tr>
-        <tr>
-          <th>r2</th>
-          <td>2.356e-04</td>
-          <td>-1.469e-06</td>
-          <td>-7.088e-06</td>
-          <td>2.291e-03</td>
-          <td>5.971e-06</td>
-          <td>1.604e-03</td>
-          <td>-3.388e-06</td>
-          <td>-6.959e-05</td>
-          <td>2.359e-05</td>
-          <td>-4.935e-03</td>
-          <td>...</td>
-          <td>4.964e-04</td>
-          <td>-8.448e-04</td>
-          <td>6.328e-03</td>
-          <td>-1.456e-04</td>
-          <td>1.216e-04</td>
-          <td>4.780e-03</td>
-          <td>4.534e-05</td>
-          <td>-1.864e-02</td>
-          <td>1.826e-05</td>
-          <td>-4.895e-03</td>
-        </tr>
-        <tr>
-          <th>r3</th>
-          <td>3.222e-05</td>
-          <td>-8.046e-07</td>
-          <td>5.499e-05</td>
-          <td>3.545e-05</td>
-          <td>2.334e-06</td>
-          <td>6.479e-06</td>
-          <td>1.232e-07</td>
-          <td>-1.226e-04</td>
-          <td>6.149e-05</td>
-          <td>7.328e-04</td>
-          <td>...</td>
-          <td>-6.690e-03</td>
-          <td>-3.144e-03</td>
-          <td>-1.442e-03</td>
-          <td>1.254e-04</td>
-          <td>-1.175e-03</td>
-          <td>3.937e-04</td>
-          <td>8.474e-06</td>
-          <td>-3.010e-03</td>
-          <td>-3.323e-05</td>
-          <td>-1.213e-03</td>
-        </tr>
-        <tr>
-          <th rowspan="6" valign="top">5</th>
-          <th>t1</th>
-          <td>5.961e-03</td>
-          <td>-1.195e-05</td>
-          <td>-2.252e-04</td>
-          <td>5.794e-02</td>
-          <td>1.908e-04</td>
-          <td>4.219e-02</td>
-          <td>-8.619e-05</td>
-          <td>-1.726e-03</td>
-          <td>7.824e-04</td>
-          <td>-1.273e-01</td>
-          <td>...</td>
-          <td>7.204e-02</td>
-          <td>-1.574e-02</td>
-          <td>2.644e-02</td>
-          <td>-6.614e-07</td>
-          <td>-9.805e-04</td>
-          <td>-2.365e-02</td>
-          <td>-8.509e-05</td>
-          <td>1.687e-01</td>
-          <td>-4.826e-04</td>
-          <td>6.027e-02</td>
-        </tr>
-        <tr>
-          <th>t2</th>
-          <td>-1.912e-04</td>
-          <td>-5.485e-03</td>
-          <td>2.466e-02</td>
-          <td>-7.798e-04</td>
-          <td>-2.027e-04</td>
-          <td>-2.928e-04</td>
-          <td>4.916e-05</td>
-          <td>-1.722e-02</td>
-          <td>-3.657e-02</td>
-          <td>-1.117e-02</td>
-          <td>...</td>
-          <td>5.078e-02</td>
-          <td>-1.750e-01</td>
-          <td>4.245e-03</td>
-          <td>4.033e-03</td>
-          <td>2.980e-02</td>
-          <td>2.121e-03</td>
-          <td>-4.367e-04</td>
-          <td>-5.935e-03</td>
-          <td>-1.071e-04</td>
-          <td>7.004e-03</td>
-        </tr>
-        <tr>
-          <th>t3</th>
-          <td>8.177e-04</td>
-          <td>-1.411e-03</td>
-          <td>6.603e-03</td>
-          <td>7.383e-03</td>
-          <td>-1.335e-03</td>
-          <td>5.795e-03</td>
-          <td>-1.029e-04</td>
-          <td>-4.668e-03</td>
-          <td>-9.329e-03</td>
-          <td>-2.086e-02</td>
-          <td>...</td>
-          <td>-7.069e-03</td>
-          <td>1.501e-02</td>
-          <td>2.409e-02</td>
-          <td>2.687e-03</td>
-          <td>1.777e-02</td>
-          <td>1.803e-02</td>
-          <td>-7.755e-03</td>
-          <td>-7.859e-02</td>
-          <td>7.459e-03</td>
-          <td>-2.079e-02</td>
-        </tr>
-        <tr>
-          <th>r1</th>
-          <td>7.844e-06</td>
-          <td>1.974e-04</td>
-          <td>-9.370e-04</td>
-          <td>4.649e-05</td>
-          <td>5.713e-05</td>
-          <td>1.262e-05</td>
-          <td>-1.822e-06</td>
-          <td>5.970e-04</td>
-          <td>1.275e-03</td>
-          <td>4.882e-04</td>
-          <td>...</td>
-          <td>1.328e-03</td>
-          <td>-2.209e-02</td>
-          <td>5.989e-04</td>
-          <td>4.577e-04</td>
-          <td>-7.003e-03</td>
-          <td>1.504e-03</td>
-          <td>1.094e-04</td>
-          <td>-6.754e-03</td>
-          <td>-1.151e-04</td>
-          <td>-2.408e-03</td>
-        </tr>
-        <tr>
-          <th>r2</th>
-          <td>2.356e-04</td>
-          <td>-1.469e-06</td>
-          <td>-7.085e-06</td>
-          <td>2.291e-03</td>
-          <td>5.973e-06</td>
-          <td>1.604e-03</td>
-          <td>-3.388e-06</td>
-          <td>-6.959e-05</td>
-          <td>2.359e-05</td>
-          <td>-4.935e-03</td>
-          <td>...</td>
-          <td>4.963e-04</td>
-          <td>-8.451e-04</td>
-          <td>6.328e-03</td>
-          <td>-1.456e-04</td>
-          <td>1.215e-04</td>
-          <td>4.780e-03</td>
-          <td>4.534e-05</td>
-          <td>-1.864e-02</td>
-          <td>1.826e-05</td>
-          <td>-4.895e-03</td>
-        </tr>
-        <tr>
-          <th>r3</th>
-          <td>3.808e-05</td>
-          <td>1.405e-06</td>
-          <td>-2.035e-04</td>
-          <td>1.292e-04</td>
-          <td>-2.965e-05</td>
-          <td>5.825e-05</td>
-          <td>6.086e-08</td>
-          <td>-1.498e-04</td>
-          <td>6.374e-05</td>
-          <td>8.817e-04</td>
-          <td>...</td>
-          <td>-8.750e-03</td>
-          <td>-9.315e-03</td>
-          <td>-4.098e-03</td>
-          <td>3.825e-04</td>
-          <td>-8.811e-04</td>
-          <td>-1.678e-03</td>
-          <td>-4.572e-05</td>
-          <td>7.115e-03</td>
-          <td>-5.625e-05</td>
-          <td>8.746e-04</td>
+          <td>-0.005</td>
         </tr>
         <tr>
           <th>...</th>
@@ -2122,733 +395,129 @@ Now list each of the objects and be amazed!
           <td>...</td>
         </tr>
         <tr>
-          <th rowspan="2" valign="top">5629</th>
-          <th>r2</th>
-          <td>-2.652e-05</td>
-          <td>1.424e-05</td>
-          <td>-9.370e-05</td>
-          <td>-2.956e-04</td>
-          <td>3.750e-06</td>
-          <td>-1.464e-04</td>
-          <td>3.768e-07</td>
-          <td>5.684e-05</td>
-          <td>9.662e-05</td>
-          <td>1.169e-04</td>
-          <td>...</td>
-          <td>1.147e-03</td>
-          <td>1.045e-03</td>
-          <td>-9.297e-03</td>
-          <td>8.883e-05</td>
-          <td>-8.159e-04</td>
-          <td>-1.083e-02</td>
-          <td>-7.433e-05</td>
-          <td>4.795e-02</td>
-          <td>-5.038e-05</td>
-          <td>1.669e-02</td>
-        </tr>
-        <tr>
-          <th>r3</th>
-          <td>-1.360e-05</td>
-          <td>-1.463e-05</td>
-          <td>6.278e-05</td>
-          <td>-1.863e-05</td>
-          <td>-3.205e-06</td>
-          <td>-4.586e-05</td>
-          <td>-1.952e-07</td>
-          <td>-3.109e-05</td>
-          <td>-1.056e-04</td>
-          <td>-4.573e-04</td>
-          <td>...</td>
-          <td>-4.006e-02</td>
-          <td>-7.522e-04</td>
-          <td>-4.113e-02</td>
-          <td>5.235e-04</td>
-          <td>-9.704e-04</td>
-          <td>-2.391e-02</td>
-          <td>-1.532e-04</td>
-          <td>9.419e-02</td>
-          <td>-1.224e-04</td>
-          <td>2.540e-02</td>
-        </tr>
-        <tr>
-          <th rowspan="6" valign="top">5630</th>
-          <th>t1</th>
-          <td>0.000e+00</td>
-          <td>0.000e+00</td>
-          <td>0.000e+00</td>
-          <td>0.000e+00</td>
-          <td>0.000e+00</td>
-          <td>0.000e+00</td>
-          <td>0.000e+00</td>
-          <td>0.000e+00</td>
-          <td>0.000e+00</td>
-          <td>0.000e+00</td>
-          <td>...</td>
-          <td>0.000e+00</td>
-          <td>0.000e+00</td>
-          <td>0.000e+00</td>
-          <td>0.000e+00</td>
-          <td>0.000e+00</td>
-          <td>0.000e+00</td>
-          <td>0.000e+00</td>
-          <td>0.000e+00</td>
-          <td>0.000e+00</td>
-          <td>0.000e+00</td>
-        </tr>
-        <tr>
-          <th>t2</th>
-          <td>0.000e+00</td>
-          <td>0.000e+00</td>
-          <td>0.000e+00</td>
-          <td>0.000e+00</td>
-          <td>0.000e+00</td>
-          <td>0.000e+00</td>
-          <td>0.000e+00</td>
-          <td>0.000e+00</td>
-          <td>0.000e+00</td>
-          <td>0.000e+00</td>
-          <td>...</td>
-          <td>0.000e+00</td>
-          <td>0.000e+00</td>
-          <td>0.000e+00</td>
-          <td>0.000e+00</td>
-          <td>0.000e+00</td>
-          <td>0.000e+00</td>
-          <td>0.000e+00</td>
-          <td>0.000e+00</td>
-          <td>0.000e+00</td>
-          <td>0.000e+00</td>
-        </tr>
-        <tr>
-          <th>t3</th>
-          <td>0.000e+00</td>
-          <td>0.000e+00</td>
-          <td>0.000e+00</td>
-          <td>0.000e+00</td>
-          <td>0.000e+00</td>
-          <td>0.000e+00</td>
-          <td>0.000e+00</td>
-          <td>0.000e+00</td>
-          <td>0.000e+00</td>
-          <td>0.000e+00</td>
-          <td>...</td>
-          <td>0.000e+00</td>
-          <td>0.000e+00</td>
-          <td>0.000e+00</td>
-          <td>0.000e+00</td>
-          <td>0.000e+00</td>
-          <td>0.000e+00</td>
-          <td>0.000e+00</td>
-          <td>0.000e+00</td>
-          <td>0.000e+00</td>
-          <td>0.000e+00</td>
-        </tr>
-        <tr>
-          <th>r1</th>
-          <td>-9.236e-06</td>
-          <td>5.989e-05</td>
-          <td>-2.115e-04</td>
-          <td>3.352e-05</td>
-          <td>7.314e-06</td>
-          <td>2.656e-05</td>
-          <td>-6.836e-07</td>
-          <td>2.610e-04</td>
-          <td>3.961e-04</td>
-          <td>-3.628e-04</td>
-          <td>...</td>
-          <td>-1.009e-03</td>
-          <td>2.484e-02</td>
-          <td>-4.151e-05</td>
-          <td>-6.733e-04</td>
-          <td>4.820e-03</td>
-          <td>2.007e-04</td>
-          <td>6.944e-09</td>
-          <td>-2.006e-03</td>
-          <td>1.454e-04</td>
-          <td>-1.561e-03</td>
-        </tr>
-        <tr>
-          <th>r2</th>
-          <td>-1.465e-04</td>
-          <td>-1.370e-06</td>
-          <td>-5.205e-07</td>
-          <td>-1.550e-03</td>
-          <td>1.280e-05</td>
-          <td>-9.804e-04</td>
-          <td>7.567e-07</td>
-          <td>-1.124e-05</td>
-          <td>-2.168e-05</td>
-          <td>3.064e-03</td>
-          <td>...</td>
-          <td>-4.260e-03</td>
-          <td>2.232e-03</td>
-          <td>-1.665e-02</td>
-          <td>9.862e-04</td>
-          <td>7.816e-04</td>
-          <td>-1.174e-02</td>
-          <td>-1.524e-04</td>
-          <td>4.781e-02</td>
-          <td>-7.502e-04</td>
-          <td>1.181e-02</td>
-        </tr>
-        <tr>
-          <th>r3</th>
-          <td>8.294e-06</td>
-          <td>-3.527e-05</td>
-          <td>2.780e-04</td>
-          <td>1.163e-05</td>
-          <td>-7.742e-07</td>
-          <td>1.042e-05</td>
-          <td>5.294e-07</td>
-          <td>-1.103e-04</td>
-          <td>-1.976e-04</td>
-          <td>3.373e-04</td>
-          <td>...</td>
-          <td>1.393e-02</td>
-          <td>2.556e-02</td>
-          <td>1.862e-02</td>
-          <td>-8.446e-04</td>
-          <td>7.201e-03</td>
-          <td>1.050e-02</td>
-          <td>-1.112e-06</td>
-          <td>-4.164e-02</td>
-          <td>1.661e-04</td>
-          <td>-1.112e-02</td>
-        </tr>
-        <tr>
-          <th rowspan="6" valign="top">5631</th>
-          <th>t1</th>
-          <td>0.000e+00</td>
-          <td>0.000e+00</td>
-          <td>0.000e+00</td>
-          <td>0.000e+00</td>
-          <td>0.000e+00</td>
-          <td>0.000e+00</td>
-          <td>0.000e+00</td>
-          <td>0.000e+00</td>
-          <td>0.000e+00</td>
-          <td>0.000e+00</td>
-          <td>...</td>
-          <td>0.000e+00</td>
-          <td>0.000e+00</td>
-          <td>0.000e+00</td>
-          <td>0.000e+00</td>
-          <td>0.000e+00</td>
-          <td>0.000e+00</td>
-          <td>0.000e+00</td>
-          <td>0.000e+00</td>
-          <td>0.000e+00</td>
-          <td>0.000e+00</td>
-        </tr>
-        <tr>
-          <th>t2</th>
-          <td>0.000e+00</td>
-          <td>0.000e+00</td>
-          <td>0.000e+00</td>
-          <td>0.000e+00</td>
-          <td>0.000e+00</td>
-          <td>0.000e+00</td>
-          <td>0.000e+00</td>
-          <td>0.000e+00</td>
-          <td>0.000e+00</td>
-          <td>0.000e+00</td>
-          <td>...</td>
-          <td>0.000e+00</td>
-          <td>0.000e+00</td>
-          <td>0.000e+00</td>
-          <td>0.000e+00</td>
-          <td>0.000e+00</td>
-          <td>0.000e+00</td>
-          <td>0.000e+00</td>
-          <td>0.000e+00</td>
-          <td>0.000e+00</td>
-          <td>0.000e+00</td>
-        </tr>
-        <tr>
-          <th>t3</th>
-          <td>0.000e+00</td>
-          <td>0.000e+00</td>
-          <td>0.000e+00</td>
-          <td>0.000e+00</td>
-          <td>0.000e+00</td>
-          <td>0.000e+00</td>
-          <td>0.000e+00</td>
-          <td>0.000e+00</td>
-          <td>0.000e+00</td>
-          <td>0.000e+00</td>
-          <td>...</td>
-          <td>0.000e+00</td>
-          <td>0.000e+00</td>
-          <td>0.000e+00</td>
-          <td>0.000e+00</td>
-          <td>0.000e+00</td>
-          <td>0.000e+00</td>
-          <td>0.000e+00</td>
-          <td>0.000e+00</td>
-          <td>0.000e+00</td>
-          <td>0.000e+00</td>
-        </tr>
-        <tr>
-          <th>r1</th>
-          <td>-1.170e-06</td>
-          <td>-1.010e-04</td>
-          <td>6.944e-04</td>
-          <td>-1.343e-05</td>
-          <td>5.211e-05</td>
-          <td>-8.947e-06</td>
-          <td>2.129e-06</td>
-          <td>-2.893e-04</td>
-          <td>-5.853e-04</td>
-          <td>-8.865e-05</td>
-          <td>...</td>
-          <td>-2.248e-03</td>
-          <td>5.030e-02</td>
-          <td>2.303e-03</td>
-          <td>-1.153e-03</td>
-          <td>1.248e-02</td>
-          <td>-8.466e-05</td>
-          <td>-1.497e-04</td>
-          <td>6.619e-04</td>
-          <td>2.399e-04</td>
-          <td>2.644e-05</td>
-        </tr>
-        <tr>
-          <th>r2</th>
-          <td>-7.324e-06</td>
-          <td>1.965e-06</td>
-          <td>-5.376e-06</td>
-          <td>-5.817e-05</td>
-          <td>6.001e-09</td>
-          <td>3.957e-05</td>
-          <td>-2.939e-08</td>
-          <td>3.560e-05</td>
-          <td>-4.600e-06</td>
-          <td>-1.047e-04</td>
-          <td>...</td>
-          <td>6.757e-03</td>
-          <td>2.301e-03</td>
-          <td>-1.309e-04</td>
-          <td>-1.111e-04</td>
-          <td>4.543e-04</td>
-          <td>-6.065e-04</td>
-          <td>2.829e-05</td>
-          <td>1.562e-03</td>
-          <td>4.085e-05</td>
-          <td>-8.502e-04</td>
-        </tr>
-        <tr>
-          <th>r3</th>
-          <td>-4.675e-05</td>
-          <td>-2.844e-06</td>
-          <td>-8.917e-07</td>
-          <td>-3.364e-04</td>
-          <td>4.249e-08</td>
-          <td>-2.102e-04</td>
-          <td>2.663e-07</td>
-          <td>2.020e-05</td>
-          <td>-2.852e-05</td>
-          <td>4.406e-05</td>
-          <td>...</td>
-          <td>-2.593e-02</td>
-          <td>1.120e-03</td>
-          <td>-3.532e-02</td>
-          <td>3.738e-04</td>
-          <td>-9.731e-04</td>
-          <td>-2.265e-02</td>
-          <td>-1.344e-04</td>
-          <td>9.203e-02</td>
-          <td>-7.585e-05</td>
-          <td>2.482e-02</td>
-        </tr>
-        <tr>
-          <th rowspan="6" valign="top">5632</th>
-          <th>t1</th>
-          <td>0.000e+00</td>
-          <td>0.000e+00</td>
-          <td>0.000e+00</td>
-          <td>0.000e+00</td>
-          <td>0.000e+00</td>
-          <td>0.000e+00</td>
-          <td>0.000e+00</td>
-          <td>0.000e+00</td>
-          <td>0.000e+00</td>
-          <td>0.000e+00</td>
-          <td>...</td>
-          <td>0.000e+00</td>
-          <td>0.000e+00</td>
-          <td>0.000e+00</td>
-          <td>0.000e+00</td>
-          <td>0.000e+00</td>
-          <td>0.000e+00</td>
-          <td>0.000e+00</td>
-          <td>0.000e+00</td>
-          <td>0.000e+00</td>
-          <td>0.000e+00</td>
-        </tr>
-        <tr>
-          <th>t2</th>
-          <td>0.000e+00</td>
-          <td>0.000e+00</td>
-          <td>0.000e+00</td>
-          <td>0.000e+00</td>
-          <td>0.000e+00</td>
-          <td>0.000e+00</td>
-          <td>0.000e+00</td>
-          <td>0.000e+00</td>
-          <td>0.000e+00</td>
-          <td>0.000e+00</td>
-          <td>...</td>
-          <td>0.000e+00</td>
-          <td>0.000e+00</td>
-          <td>0.000e+00</td>
-          <td>0.000e+00</td>
-          <td>0.000e+00</td>
-          <td>0.000e+00</td>
-          <td>0.000e+00</td>
-          <td>0.000e+00</td>
-          <td>0.000e+00</td>
-          <td>0.000e+00</td>
-        </tr>
-        <tr>
-          <th>t3</th>
-          <td>0.000e+00</td>
-          <td>0.000e+00</td>
-          <td>0.000e+00</td>
-          <td>0.000e+00</td>
-          <td>0.000e+00</td>
-          <td>0.000e+00</td>
-          <td>0.000e+00</td>
-          <td>0.000e+00</td>
-          <td>0.000e+00</td>
-          <td>0.000e+00</td>
-          <td>...</td>
-          <td>0.000e+00</td>
-          <td>0.000e+00</td>
-          <td>0.000e+00</td>
-          <td>0.000e+00</td>
-          <td>0.000e+00</td>
-          <td>0.000e+00</td>
-          <td>0.000e+00</td>
-          <td>0.000e+00</td>
-          <td>0.000e+00</td>
-          <td>0.000e+00</td>
-        </tr>
-        <tr>
-          <th>r1</th>
-          <td>8.507e-06</td>
-          <td>6.140e-05</td>
-          <td>-2.039e-04</td>
-          <td>-4.113e-05</td>
-          <td>5.478e-06</td>
-          <td>-3.081e-05</td>
-          <td>-4.477e-07</td>
-          <td>1.620e-04</td>
-          <td>4.590e-04</td>
-          <td>5.116e-04</td>
-          <td>...</td>
-          <td>-9.596e-04</td>
-          <td>2.027e-02</td>
-          <td>2.238e-03</td>
-          <td>-4.459e-04</td>
-          <td>3.836e-03</td>
-          <td>-2.446e-04</td>
-          <td>-6.799e-05</td>
-          <td>2.748e-03</td>
-          <td>5.174e-05</td>
-          <td>1.719e-03</td>
-        </tr>
-        <tr>
-          <th>r2</th>
-          <td>-1.461e-04</td>
-          <td>1.415e-06</td>
-          <td>7.950e-06</td>
-          <td>-1.547e-03</td>
-          <td>-2.199e-05</td>
-          <td>-9.785e-04</td>
-          <td>3.209e-06</td>
-          <td>1.002e-05</td>
-          <td>2.172e-05</td>
-          <td>3.067e-03</td>
-          <td>...</td>
-          <td>-3.921e-03</td>
-          <td>4.023e-05</td>
-          <td>-1.671e-02</td>
-          <td>-6.969e-04</td>
-          <td>-1.544e-03</td>
-          <td>-1.169e-02</td>
-          <td>3.661e-05</td>
-          <td>4.747e-02</td>
-          <td>7.280e-04</td>
-          <td>1.162e-02</td>
-        </tr>
-        <tr>
-          <th>r3</th>
-          <td>8.601e-06</td>
-          <td>3.978e-05</td>
-          <td>-2.679e-04</td>
-          <td>1.585e-05</td>
-          <td>-4.958e-06</td>
-          <td>1.330e-05</td>
-          <td>-2.530e-07</td>
-          <td>1.031e-04</td>
-          <td>2.340e-04</td>
-          <td>4.165e-04</td>
-          <td>...</td>
-          <td>1.633e-02</td>
-          <td>-2.633e-02</td>
-          <td>1.632e-02</td>
-          <td>4.668e-04</td>
-          <td>-6.273e-03</td>
-          <td>1.068e-02</td>
-          <td>1.079e-04</td>
-          <td>-4.284e-02</td>
-          <td>-7.702e-05</td>
-          <td>-1.140e-02</td>
-        </tr>
-        <tr>
-          <th rowspan="6" valign="top">5633</th>
-          <th>t1</th>
-          <td>0.000e+00</td>
-          <td>0.000e+00</td>
-          <td>0.000e+00</td>
-          <td>0.000e+00</td>
-          <td>0.000e+00</td>
-          <td>0.000e+00</td>
-          <td>0.000e+00</td>
-          <td>0.000e+00</td>
-          <td>0.000e+00</td>
-          <td>0.000e+00</td>
-          <td>...</td>
-          <td>0.000e+00</td>
-          <td>0.000e+00</td>
-          <td>0.000e+00</td>
-          <td>0.000e+00</td>
-          <td>0.000e+00</td>
-          <td>0.000e+00</td>
-          <td>0.000e+00</td>
-          <td>0.000e+00</td>
-          <td>0.000e+00</td>
-          <td>0.000e+00</td>
-        </tr>
-        <tr>
-          <th>t2</th>
-          <td>0.000e+00</td>
-          <td>0.000e+00</td>
-          <td>0.000e+00</td>
-          <td>0.000e+00</td>
-          <td>0.000e+00</td>
-          <td>0.000e+00</td>
-          <td>0.000e+00</td>
-          <td>0.000e+00</td>
-          <td>0.000e+00</td>
-          <td>0.000e+00</td>
-          <td>...</td>
-          <td>0.000e+00</td>
-          <td>0.000e+00</td>
-          <td>0.000e+00</td>
-          <td>0.000e+00</td>
-          <td>0.000e+00</td>
-          <td>0.000e+00</td>
-          <td>0.000e+00</td>
-          <td>0.000e+00</td>
-          <td>0.000e+00</td>
-          <td>0.000e+00</td>
-        </tr>
-        <tr>
-          <th>t3</th>
-          <td>0.000e+00</td>
-          <td>0.000e+00</td>
-          <td>0.000e+00</td>
-          <td>0.000e+00</td>
-          <td>0.000e+00</td>
-          <td>0.000e+00</td>
-          <td>0.000e+00</td>
-          <td>0.000e+00</td>
-          <td>0.000e+00</td>
-          <td>0.000e+00</td>
-          <td>...</td>
-          <td>0.000e+00</td>
-          <td>0.000e+00</td>
-          <td>0.000e+00</td>
-          <td>0.000e+00</td>
-          <td>0.000e+00</td>
-          <td>0.000e+00</td>
-          <td>0.000e+00</td>
-          <td>0.000e+00</td>
-          <td>0.000e+00</td>
-          <td>0.000e+00</td>
-        </tr>
-        <tr>
-          <th>r1</th>
-          <td>-5.391e-07</td>
-          <td>-9.719e-05</td>
-          <td>7.383e-04</td>
-          <td>-9.419e-06</td>
-          <td>9.568e-06</td>
-          <td>-5.752e-06</td>
-          <td>-6.665e-08</td>
-          <td>-2.912e-04</td>
-          <td>-5.884e-04</td>
-          <td>-1.044e-04</td>
-          <td>...</td>
-          <td>-2.426e-03</td>
-          <td>5.882e-02</td>
-          <td>2.815e-03</td>
-          <td>-1.555e-03</td>
-          <td>1.707e-02</td>
-          <td>-1.970e-04</td>
-          <td>-6.888e-05</td>
-          <td>1.696e-03</td>
-          <td>2.038e-04</td>
-          <td>6.063e-04</td>
-        </tr>
-        <tr>
-          <th>r2</th>
-          <td>-4.001e-05</td>
-          <td>-1.215e-06</td>
-          <td>-3.020e-06</td>
-          <td>-4.822e-04</td>
-          <td>-5.950e-07</td>
-          <td>-2.615e-04</td>
-          <td>4.786e-07</td>
-          <td>-1.794e-05</td>
-          <td>1.429e-06</td>
-          <td>6.348e-04</td>
-          <td>...</td>
-          <td>1.515e-03</td>
-          <td>1.627e-03</td>
-          <td>-1.129e-02</td>
-          <td>1.319e-04</td>
-          <td>-2.081e-04</td>
-          <td>-1.293e-02</td>
-          <td>-9.682e-05</td>
-          <td>5.764e-02</td>
-          <td>-8.163e-05</td>
-          <td>1.945e-02</td>
-        </tr>
-        <tr>
+          <th>5633</th>
           <th>r3</th>
           <td>-3.599e-06</td>
-          <td>-3.174e-06</td>
-          <td>-4.421e-06</td>
+          <td>3.174e-06</td>
+          <td>-4.415e-06</td>
           <td>1.197e-04</td>
-          <td>1.557e-08</td>
-          <td>3.943e-05</td>
+          <td>-1.459e-08</td>
+          <td>3.944e-05</td>
           <td>-2.706e-07</td>
           <td>2.433e-05</td>
           <td>-3.509e-05</td>
-          <td>-8.412e-04</td>
+          <td>-8.416e-04</td>
           <td>...</td>
-          <td>-4.033e-02</td>
-          <td>-1.184e-03</td>
+          <td>-4.034e-02</td>
+          <td>-1.183e-03</td>
           <td>-3.966e-02</td>
-          <td>4.916e-04</td>
-          <td>-1.421e-03</td>
-          <td>-2.236e-02</td>
+          <td>4.915e-04</td>
+          <td>-1.417e-03</td>
+          <td>-0.022</td>
           <td>-1.365e-04</td>
-          <td>8.701e-02</td>
-          <td>-9.924e-05</td>
-          <td>2.335e-02</td>
+          <td>0.087</td>
+          <td>-9.923e-05</td>
+          <td>0.023</td>
         </tr>
         <tr>
           <th>10001</th>
           <th>S</th>
           <td>-6.046e-03</td>
-          <td>2.173e-03</td>
+          <td>-2.173e-03</td>
           <td>-1.196e-02</td>
           <td>-6.238e-02</td>
-          <td>4.140e-04</td>
+          <td>-4.141e-04</td>
           <td>-4.187e-02</td>
           <td>4.991e-06</td>
           <td>7.265e-03</td>
           <td>1.305e-02</td>
-          <td>1.276e-01</td>
+          <td>1.279e-01</td>
           <td>...</td>
-          <td>-1.767e-01</td>
+          <td>-1.766e-01</td>
           <td>-1.924e-01</td>
           <td>-5.082e-01</td>
           <td>7.830e-02</td>
-          <td>-4.204e-02</td>
-          <td>-2.491e-02</td>
+          <td>-4.190e-02</td>
+          <td>-0.025</td>
           <td>2.880e-01</td>
-          <td>1.334e+00</td>
+          <td>1.334</td>
           <td>-1.396e-01</td>
-          <td>2.122e-01</td>
+          <td>0.212</td>
         </tr>
         <tr>
           <th>10002</th>
           <th>S</th>
           <td>-5.565e-03</td>
-          <td>-2.292e-03</td>
+          <td>2.292e-03</td>
           <td>1.160e-02</td>
           <td>-6.046e-02</td>
-          <td>7.144e-04</td>
-          <td>-4.064e-02</td>
+          <td>-7.145e-04</td>
+          <td>-4.065e-02</td>
           <td>4.942e-05</td>
           <td>-8.080e-03</td>
           <td>-1.509e-02</td>
-          <td>1.316e-01</td>
+          <td>1.319e-01</td>
           <td>...</td>
-          <td>-2.144e-01</td>
-          <td>2.776e-01</td>
+          <td>-2.143e-01</td>
+          <td>2.777e-01</td>
           <td>-4.068e-01</td>
           <td>6.402e-02</td>
-          <td>1.275e-01</td>
-          <td>5.951e-02</td>
+          <td>1.274e-01</td>
+          <td>0.060</td>
           <td>2.877e-01</td>
-          <td>9.576e-01</td>
+          <td>0.958</td>
           <td>-1.356e-01</td>
-          <td>7.489e-02</td>
+          <td>0.075</td>
         </tr>
         <tr>
           <th>10003</th>
           <th>S</th>
           <td>-6.044e-03</td>
-          <td>-2.256e-03</td>
+          <td>2.256e-03</td>
           <td>1.223e-02</td>
           <td>-6.248e-02</td>
-          <td>-7.933e-04</td>
+          <td>7.931e-04</td>
           <td>-4.195e-02</td>
           <td>1.607e-04</td>
           <td>-6.251e-03</td>
           <td>-1.424e-02</td>
-          <td>1.231e-01</td>
+          <td>1.234e-01</td>
           <td>...</td>
-          <td>-1.840e-01</td>
+          <td>-1.839e-01</td>
           <td>2.654e-01</td>
           <td>-4.871e-01</td>
           <td>-6.867e-02</td>
-          <td>2.093e-02</td>
-          <td>-2.570e-02</td>
+          <td>2.085e-02</td>
+          <td>-0.026</td>
           <td>-2.919e-01</td>
-          <td>1.339e+00</td>
+          <td>1.339</td>
           <td>1.410e-01</td>
-          <td>2.102e-01</td>
+          <td>0.210</td>
         </tr>
         <tr>
           <th>10004</th>
           <th>S</th>
           <td>-5.553e-03</td>
-          <td>2.316e-03</td>
+          <td>-2.316e-03</td>
           <td>-1.095e-02</td>
           <td>-6.020e-02</td>
-          <td>-1.098e-03</td>
+          <td>1.098e-03</td>
           <td>-4.048e-02</td>
           <td>1.170e-04</td>
-          <td>7.149e-03</td>
+          <td>7.148e-03</td>
           <td>1.569e-02</td>
-          <td>1.364e-01</td>
+          <td>1.367e-01</td>
           <td>...</td>
-          <td>-1.782e-01</td>
-          <td>-3.088e-01</td>
+          <td>-1.781e-01</td>
+          <td>-3.089e-01</td>
           <td>-4.325e-01</td>
           <td>-5.553e-02</td>
-          <td>-1.632e-01</td>
-          <td>6.361e-02</td>
+          <td>-1.630e-01</td>
+          <td>0.064</td>
           <td>-2.893e-01</td>
-          <td>9.270e-01</td>
+          <td>0.927</td>
           <td>1.387e-01</td>
-          <td>6.345e-02</td>
+          <td>0.063</td>
         </tr>
       </tbody>
     </table>
@@ -2916,20 +585,20 @@ Now list each of the objects and be amazed!
           <th>Freq</th>
           <th>8.359</th>
           <th>9.508</th>
-          <th>15.666</th>
+          <th>15.667</th>
           <th>20.237</th>
           <th>20.306</th>
           <th>20.555</th>
           <th>21.500</th>
           <th>21.706</th>
           <th>21.725</th>
-          <th>28.536</th>
+          <th>28.542</th>
           <th>...</th>
           <th>80.076</th>
           <th>86.487</th>
           <th>88.168</th>
           <th>88.477</th>
-          <th>89.923</th>
+          <th>89.928</th>
           <th>94.290</th>
           <th>94.368</th>
           <th>96.044</th>
@@ -2941,45 +610,45 @@ Now list each of the objects and be amazed!
           <th>Eigenvalue</th>
           <th>2758.149</th>
           <th>3568.632</th>
-          <th>9689.306</th>
-          <th>16168.100</th>
-          <th>16278.223</th>
-          <th>16679.709</th>
-          <th>18248.434</th>
+          <th>9689.982</th>
+          <th>16168.038</th>
+          <th>16278.158</th>
+          <th>16679.707</th>
+          <th>18248.432</th>
           <th>18600.697</th>
           <th>18632.551</th>
-          <th>32147.814</th>
+          <th>32159.891</th>
           <th>...</th>
-          <th>253140.875</th>
-          <th>295297.750</th>
-          <th>306885.906</th>
+          <th>253141.172</th>
+          <th>295300.938</th>
+          <th>306886.000</th>
           <th>309040.656</th>
-          <th>319227.719</th>
+          <th>319267.094</th>
           <th>350984.500</th>
           <th>351566.188</th>
-          <th>364166.156</th>
+          <th>364166.312</th>
           <th>384601.344</th>
-          <th>386090.438</th>
+          <th>386090.469</th>
         </tr>
         <tr>
           <th></th>
           <th>Radians</th>
           <th>52.518</th>
           <th>59.738</th>
-          <th>98.434</th>
+          <th>98.438</th>
           <th>127.154</th>
           <th>127.586</th>
           <th>129.150</th>
           <th>135.087</th>
           <th>136.384</th>
           <th>136.501</th>
-          <th>179.298</th>
+          <th>179.332</th>
           <th>...</th>
           <th>503.131</th>
-          <th>543.413</th>
+          <th>543.416</th>
           <th>553.973</th>
           <th>555.914</th>
-          <th>565.002</th>
+          <th>565.037</th>
           <th>592.439</th>
           <th>592.930</th>
           <th>603.462</th>
@@ -4309,7 +1978,7 @@ Cycles, at the top.
           <td>5346</td>
           <td>BAR</td>
           <td>-0.060</td>
-          <td>-2.243e-02</td>
+          <td>-0.022</td>
           <td>-2.764e-02</td>
           <td>8.066e-02</td>
           <td>-2.382e-01</td>
@@ -4325,7 +1994,7 @@ Cycles, at the top.
           <td>5363</td>
           <td>BAR</td>
           <td>-0.359</td>
-          <td>-3.031e-02</td>
+          <td>-0.030</td>
           <td>1.490e-02</td>
           <td>-1.058e-01</td>
           <td>6.810e-02</td>
@@ -4341,7 +2010,7 @@ Cycles, at the top.
           <td>5367</td>
           <td>BAR</td>
           <td>0.613</td>
-          <td>8.965e-02</td>
+          <td>0.090</td>
           <td>-1.151e-01</td>
           <td>-7.916e-02</td>
           <td>1.702e-01</td>
@@ -4357,7 +2026,7 @@ Cycles, at the top.
           <td>5328</td>
           <td>QUAD4</td>
           <td>-0.192</td>
-          <td>-3.259e-02</td>
+          <td>-0.033</td>
           <td>1.284e-01</td>
           <td>1.043e-01</td>
           <td>-1.460e-05</td>
@@ -4373,411 +2042,11 @@ Cycles, at the top.
           <td>0</td>
           <td>*TOTALS*</td>
           <td>0.002</td>
-          <td>4.326e-03</td>
+          <td>0.004</td>
           <td>5.683e-04</td>
-          <td>-1.079e-11</td>
-          <td>2.391e-11</td>
-          <td>3.351e-11</td>
-        </tr>
-        <tr>
-          <th>5</th>
-          <td>1.0</td>
-          <td>0.0</td>
-          <td>0.0</td>
-          <td>0.0</td>
-          <td>5300</td>
-          <td>5348</td>
-          <td>BAR</td>
-          <td>0.050</td>
-          <td>5.347e-03</td>
-          <td>1.100e-01</td>
-          <td>3.602e-02</td>
-          <td>-2.317e-01</td>
-          <td>5.467e-02</td>
-        </tr>
-        <tr>
-          <th>6</th>
-          <td>1.0</td>
-          <td>0.0</td>
-          <td>0.0</td>
-          <td>0.0</td>
-          <td>5300</td>
-          <td>5349</td>
-          <td>BAR</td>
-          <td>-0.096</td>
-          <td>3.899e-03</td>
-          <td>-7.795e-03</td>
-          <td>-6.495e-02</td>
-          <td>-3.274e-02</td>
-          <td>-1.310e-01</td>
-        </tr>
-        <tr>
-          <th>7</th>
-          <td>1.0</td>
-          <td>0.0</td>
-          <td>0.0</td>
-          <td>0.0</td>
-          <td>5300</td>
-          <td>5365</td>
-          <td>BAR</td>
-          <td>0.008</td>
-          <td>-1.007e-02</td>
-          <td>-1.741e-01</td>
-          <td>-5.511e-02</td>
-          <td>2.644e-01</td>
-          <td>1.638e-01</td>
-        </tr>
-        <tr>
-          <th>8</th>
-          <td>1.0</td>
-          <td>0.0</td>
-          <td>0.0</td>
-          <td>0.0</td>
-          <td>5300</td>
-          <td>5330</td>
-          <td>QUAD4</td>
-          <td>0.040</td>
-          <td>5.826e-03</td>
-          <td>7.251e-02</td>
-          <td>8.404e-02</td>
-          <td>-2.549e-05</td>
-          <td>-8.742e-02</td>
-        </tr>
-        <tr>
-          <th>9</th>
-          <td>1.0</td>
-          <td>0.0</td>
-          <td>0.0</td>
-          <td>0.0</td>
-          <td>5300</td>
-          <td>0</td>
-          <td>*TOTALS*</td>
-          <td>0.002</td>
-          <td>4.998e-03</td>
-          <td>5.686e-04</td>
-          <td>3.265e-12</td>
-          <td>6.031e-11</td>
-          <td>-5.578e-13</td>
-        </tr>
-        <tr>
-          <th>10</th>
-          <td>1.0</td>
-          <td>0.0</td>
-          <td>0.0</td>
-          <td>0.0</td>
-          <td>5321</td>
-          <td>5357</td>
-          <td>BAR</td>
-          <td>-0.058</td>
-          <td>1.775e-02</td>
-          <td>-3.708e-02</td>
-          <td>-1.104e-01</td>
-          <td>-2.457e-01</td>
-          <td>-4.541e-02</td>
-        </tr>
-        <tr>
-          <th>11</th>
-          <td>1.0</td>
-          <td>0.0</td>
-          <td>0.0</td>
-          <td>0.0</td>
-          <td>5321</td>
-          <td>5358</td>
-          <td>BAR</td>
-          <td>-0.040</td>
-          <td>6.789e-03</td>
-          <td>4.204e-04</td>
-          <td>4.374e-02</td>
-          <td>1.662e-03</td>
-          <td>1.106e-01</td>
-        </tr>
-        <tr>
-          <th>12</th>
-          <td>1.0</td>
-          <td>0.0</td>
-          <td>0.0</td>
-          <td>0.0</td>
-          <td>5321</td>
-          <td>5366</td>
-          <td>BAR</td>
-          <td>0.182</td>
-          <td>-4.202e-02</td>
-          <td>1.145e-01</td>
-          <td>1.923e-01</td>
-          <td>2.440e-01</td>
-          <td>-1.592e-01</td>
-        </tr>
-        <tr>
-          <th>13</th>
-          <td>1.0</td>
-          <td>0.0</td>
-          <td>0.0</td>
-          <td>0.0</td>
-          <td>5321</td>
-          <td>5343</td>
-          <td>QUAD4</td>
-          <td>-0.083</td>
-          <td>1.733e-02</td>
-          <td>-7.775e-02</td>
-          <td>-1.256e-01</td>
-          <td>-2.249e-05</td>
-          <td>9.405e-02</td>
-        </tr>
-        <tr>
-          <th>14</th>
-          <td>1.0</td>
-          <td>0.0</td>
-          <td>0.0</td>
-          <td>0.0</td>
-          <td>5321</td>
-          <td>0</td>
-          <td>*TOTALS*</td>
-          <td>0.002</td>
-          <td>-1.534e-04</td>
-          <td>1.224e-04</td>
-          <td>-1.230e-11</td>
-          <td>-3.808e-11</td>
-          <td>6.874e-11</td>
-        </tr>
-        <tr>
-          <th>15</th>
-          <td>1.0</td>
-          <td>0.0</td>
-          <td>0.0</td>
-          <td>0.0</td>
-          <td>5324</td>
-          <td>5354</td>
-          <td>BAR</td>
-          <td>0.418</td>
-          <td>-3.375e-02</td>
-          <td>-1.030e-02</td>
-          <td>8.007e-02</td>
-          <td>4.526e-02</td>
-          <td>-2.407e-01</td>
-        </tr>
-        <tr>
-          <th>16</th>
-          <td>1.0</td>
-          <td>0.0</td>
-          <td>0.0</td>
-          <td>0.0</td>
-          <td>5324</td>
-          <td>5355</td>
-          <td>BAR</td>
-          <td>0.064</td>
-          <td>-1.910e-02</td>
-          <td>-2.882e-02</td>
-          <td>-5.490e-02</td>
-          <td>-2.576e-01</td>
-          <td>4.488e-02</td>
-        </tr>
-        <tr>
-          <th>17</th>
-          <td>1.0</td>
-          <td>0.0</td>
-          <td>0.0</td>
-          <td>0.0</td>
-          <td>5324</td>
-          <td>5364</td>
-          <td>BAR</td>
-          <td>-0.694</td>
-          <td>8.436e-02</td>
-          <td>1.931e-01</td>
-          <td>9.781e-02</td>
-          <td>2.123e-01</td>
-          <td>3.349e-01</td>
-        </tr>
-        <tr>
-          <th>18</th>
-          <td>1.0</td>
-          <td>0.0</td>
-          <td>0.0</td>
-          <td>0.0</td>
-          <td>5324</td>
-          <td>5345</td>
-          <td>QUAD4</td>
-          <td>0.214</td>
-          <td>-3.159e-02</td>
-          <td>-1.538e-01</td>
-          <td>-1.230e-01</td>
-          <td>-1.884e-05</td>
-          <td>-1.391e-01</td>
-        </tr>
-        <tr>
-          <th>19</th>
-          <td>1.0</td>
-          <td>0.0</td>
-          <td>0.0</td>
-          <td>0.0</td>
-          <td>5324</td>
-          <td>0</td>
-          <td>*TOTALS*</td>
-          <td>0.002</td>
-          <td>-8.632e-05</td>
-          <td>1.224e-04</td>
-          <td>-1.509e-12</td>
-          <td>-5.693e-12</td>
-          <td>2.499e-11</td>
-        </tr>
-        <tr>
-          <th>20</th>
-          <td>1.0</td>
-          <td>0.0</td>
-          <td>0.0</td>
-          <td>0.0</td>
-          <td>5489</td>
-          <td>5538</td>
-          <td>BAR</td>
-          <td>-0.050</td>
-          <td>-5.435e-03</td>
-          <td>1.105e-01</td>
-          <td>3.598e-02</td>
-          <td>-2.340e-01</td>
-          <td>-5.410e-02</td>
-        </tr>
-        <tr>
-          <th>21</th>
-          <td>1.0</td>
-          <td>0.0</td>
-          <td>0.0</td>
-          <td>0.0</td>
-          <td>5489</td>
-          <td>5555</td>
-          <td>BAR</td>
-          <td>0.093</td>
-          <td>-4.224e-03</td>
-          <td>-7.878e-03</td>
-          <td>-6.488e-02</td>
-          <td>-3.309e-02</td>
-          <td>1.341e-01</td>
-        </tr>
-        <tr>
-          <th>22</th>
-          <td>1.0</td>
-          <td>0.0</td>
-          <td>0.0</td>
-          <td>0.0</td>
-          <td>5489</td>
-          <td>5559</td>
-          <td>BAR</td>
-          <td>-0.002</td>
-          <td>1.072e-02</td>
-          <td>-1.755e-01</td>
-          <td>-5.628e-02</td>
-          <td>2.671e-01</td>
-          <td>-1.691e-01</td>
-        </tr>
-        <tr>
-          <th>23</th>
-          <td>1.0</td>
-          <td>0.0</td>
-          <td>0.0</td>
-          <td>0.0</td>
-          <td>5489</td>
-          <td>5520</td>
-          <td>QUAD4</td>
-          <td>-0.042</td>
-          <td>-6.054e-03</td>
-          <td>7.352e-02</td>
-          <td>8.518e-02</td>
-          <td>-2.573e-05</td>
-          <td>8.907e-02</td>
-        </tr>
-        <tr>
-          <th>24</th>
-          <td>1.0</td>
-          <td>0.0</td>
-          <td>0.0</td>
-          <td>0.0</td>
-          <td>5489</td>
-          <td>0</td>
-          <td>*TOTALS*</td>
-          <td>-0.002</td>
-          <td>-4.999e-03</td>
-          <td>5.680e-04</td>
-          <td>-2.242e-12</td>
-          <td>-9.261e-12</td>
-          <td>2.911e-11</td>
-        </tr>
-        <tr>
-          <th>25</th>
-          <td>1.0</td>
-          <td>0.0</td>
-          <td>0.0</td>
-          <td>0.0</td>
-          <td>5492</td>
-          <td>5540</td>
-          <td>BAR</td>
-          <td>0.061</td>
-          <td>2.256e-02</td>
-          <td>-2.865e-02</td>
-          <td>8.120e-02</td>
-          <td>-2.404e-01</td>
-          <td>8.401e-02</td>
-        </tr>
-        <tr>
-          <th>26</th>
-          <td>1.0</td>
-          <td>0.0</td>
-          <td>0.0</td>
-          <td>0.0</td>
-          <td>5492</td>
-          <td>5541</td>
-          <td>BAR</td>
-          <td>0.367</td>
-          <td>3.053e-02</td>
-          <td>1.501e-02</td>
-          <td>-1.059e-01</td>
-          <td>6.863e-02</td>
-          <td>-1.633e-01</td>
-        </tr>
-        <tr>
-          <th>27</th>
-          <td>1.0</td>
-          <td>0.0</td>
-          <td>0.0</td>
-          <td>0.0</td>
-          <td>5492</td>
-          <td>5557</td>
-          <td>BAR</td>
-          <td>-0.625</td>
-          <td>-9.022e-02</td>
-          <td>-1.156e-01</td>
-          <td>-8.058e-02</td>
-          <td>1.717e-01</td>
-          <td>1.774e-01</td>
-        </tr>
-        <tr>
-          <th>28</th>
-          <td>1.0</td>
-          <td>0.0</td>
-          <td>0.0</td>
-          <td>0.0</td>
-          <td>5492</td>
-          <td>5522</td>
-          <td>QUAD4</td>
-          <td>0.195</td>
-          <td>3.280e-02</td>
-          <td>1.298e-01</td>
-          <td>1.053e-01</td>
-          <td>-1.472e-05</td>
-          <td>-9.806e-02</td>
-        </tr>
-        <tr>
-          <th>29</th>
-          <td>1.0</td>
-          <td>0.0</td>
-          <td>0.0</td>
-          <td>0.0</td>
-          <td>5492</td>
-          <td>0</td>
-          <td>*TOTALS*</td>
-          <td>-0.002</td>
-          <td>-4.325e-03</td>
-          <td>5.677e-04</td>
-          <td>-5.622e-12</td>
-          <td>-7.751e-12</td>
-          <td>-2.005e-11</td>
+          <td>-5.509e-12</td>
+          <td>3.293e-11</td>
+          <td>5.565e-11</td>
         </tr>
         <tr>
           <th>...</th>
@@ -4796,406 +2065,6 @@ Cycles, at the top.
           <td>...</td>
         </tr>
         <tr>
-          <th>1290</th>
-          <td>33.0</td>
-          <td>0.0</td>
-          <td>0.0</td>
-          <td>0.0</td>
-          <td>5321</td>
-          <td>5357</td>
-          <td>BAR</td>
-          <td>-92.830</td>
-          <td>-3.867e+01</td>
-          <td>-4.004e+00</td>
-          <td>-8.363e+02</td>
-          <td>-3.982e+02</td>
-          <td>-1.335e+03</td>
-        </tr>
-        <tr>
-          <th>1291</th>
-          <td>33.0</td>
-          <td>0.0</td>
-          <td>0.0</td>
-          <td>0.0</td>
-          <td>5321</td>
-          <td>5358</td>
-          <td>BAR</td>
-          <td>-474.310</td>
-          <td>-8.700e+02</td>
-          <td>-6.287e+00</td>
-          <td>1.539e+02</td>
-          <td>-2.862e+01</td>
-          <td>-5.414e+03</td>
-        </tr>
-        <tr>
-          <th>1292</th>
-          <td>33.0</td>
-          <td>0.0</td>
-          <td>0.0</td>
-          <td>0.0</td>
-          <td>5321</td>
-          <td>5366</td>
-          <td>BAR</td>
-          <td>819.168</td>
-          <td>1.379e+03</td>
-          <td>2.195e+02</td>
-          <td>-6.429e+02</td>
-          <td>4.268e+02</td>
-          <td>9.465e+03</td>
-        </tr>
-        <tr>
-          <th>1293</th>
-          <td>33.0</td>
-          <td>0.0</td>
-          <td>0.0</td>
-          <td>0.0</td>
-          <td>5321</td>
-          <td>5343</td>
-          <td>QUAD4</td>
-          <td>-268.240</td>
-          <td>-4.579e+02</td>
-          <td>-1.901e+02</td>
-          <td>1.325e+03</td>
-          <td>-4.288e-02</td>
-          <td>-2.717e+03</td>
-        </tr>
-        <tr>
-          <th>1294</th>
-          <td>33.0</td>
-          <td>0.0</td>
-          <td>0.0</td>
-          <td>0.0</td>
-          <td>5321</td>
-          <td>0</td>
-          <td>*TOTALS*</td>
-          <td>-16.211</td>
-          <td>1.237e+01</td>
-          <td>1.915e+01</td>
-          <td>-2.046e-12</td>
-          <td>2.005e-11</td>
-          <td>8.185e-12</td>
-        </tr>
-        <tr>
-          <th>1295</th>
-          <td>33.0</td>
-          <td>0.0</td>
-          <td>0.0</td>
-          <td>0.0</td>
-          <td>5324</td>
-          <td>5354</td>
-          <td>BAR</td>
-          <td>-951.107</td>
-          <td>-8.312e+02</td>
-          <td>8.138e+00</td>
-          <td>-2.805e+02</td>
-          <td>-8.444e+01</td>
-          <td>-5.200e+03</td>
-        </tr>
-        <tr>
-          <th>1296</th>
-          <td>33.0</td>
-          <td>0.0</td>
-          <td>0.0</td>
-          <td>0.0</td>
-          <td>5324</td>
-          <td>5355</td>
-          <td>BAR</td>
-          <td>62.716</td>
-          <td>-7.837e+01</td>
-          <td>-2.113e+02</td>
-          <td>5.309e+02</td>
-          <td>-3.133e+02</td>
-          <td>-1.361e+03</td>
-        </tr>
-        <tr>
-          <th>1297</th>
-          <td>33.0</td>
-          <td>0.0</td>
-          <td>0.0</td>
-          <td>0.0</td>
-          <td>5324</td>
-          <td>5364</td>
-          <td>BAR</td>
-          <td>1058.673</td>
-          <td>1.383e+03</td>
-          <td>2.197e+02</td>
-          <td>1.247e+03</td>
-          <td>3.978e+02</td>
-          <td>9.268e+03</td>
-        </tr>
-        <tr>
-          <th>1298</th>
-          <td>33.0</td>
-          <td>0.0</td>
-          <td>0.0</td>
-          <td>0.0</td>
-          <td>5324</td>
-          <td>5345</td>
-          <td>QUAD4</td>
-          <td>-180.502</td>
-          <td>-4.726e+02</td>
-          <td>2.581e+00</td>
-          <td>-1.497e+03</td>
-          <td>-4.186e-02</td>
-          <td>-2.706e+03</td>
-        </tr>
-        <tr>
-          <th>1299</th>
-          <td>33.0</td>
-          <td>0.0</td>
-          <td>0.0</td>
-          <td>0.0</td>
-          <td>5324</td>
-          <td>0</td>
-          <td>*TOTALS*</td>
-          <td>-10.220</td>
-          <td>1.157e+00</td>
-          <td>1.911e+01</td>
-          <td>-4.775e-12</td>
-          <td>-1.782e-11</td>
-          <td>-1.000e-11</td>
-        </tr>
-        <tr>
-          <th>1300</th>
-          <td>33.0</td>
-          <td>0.0</td>
-          <td>0.0</td>
-          <td>0.0</td>
-          <td>5489</td>
-          <td>5538</td>
-          <td>BAR</td>
-          <td>3.247</td>
-          <td>1.674e+02</td>
-          <td>-2.370e+02</td>
-          <td>-4.606e+02</td>
-          <td>1.108e+02</td>
-          <td>2.695e+02</td>
-        </tr>
-        <tr>
-          <th>1301</th>
-          <td>33.0</td>
-          <td>0.0</td>
-          <td>0.0</td>
-          <td>0.0</td>
-          <td>5489</td>
-          <td>5555</td>
-          <td>BAR</td>
-          <td>-1058.828</td>
-          <td>4.548e+02</td>
-          <td>2.440e+01</td>
-          <td>5.859e+02</td>
-          <td>1.248e+02</td>
-          <td>-7.428e+02</td>
-        </tr>
-        <tr>
-          <th>1302</th>
-          <td>33.0</td>
-          <td>0.0</td>
-          <td>0.0</td>
-          <td>0.0</td>
-          <td>5489</td>
-          <td>5559</td>
-          <td>BAR</td>
-          <td>1345.702</td>
-          <td>-1.013e+03</td>
-          <td>1.349e+02</td>
-          <td>1.087e+02</td>
-          <td>-2.357e+02</td>
-          <td>7.631e+02</td>
-        </tr>
-        <tr>
-          <th>1303</th>
-          <td>33.0</td>
-          <td>0.0</td>
-          <td>0.0</td>
-          <td>0.0</td>
-          <td>5489</td>
-          <td>5520</td>
-          <td>QUAD4</td>
-          <td>-282.304</td>
-          <td>3.662e+02</td>
-          <td>8.156e+01</td>
-          <td>-2.340e+02</td>
-          <td>2.748e-02</td>
-          <td>-2.898e+02</td>
-        </tr>
-        <tr>
-          <th>1304</th>
-          <td>33.0</td>
-          <td>0.0</td>
-          <td>0.0</td>
-          <td>0.0</td>
-          <td>5489</td>
-          <td>0</td>
-          <td>*TOTALS*</td>
-          <td>7.816</td>
-          <td>-2.443e+01</td>
-          <td>3.854e+00</td>
-          <td>8.441e-12</td>
-          <td>3.591e-12</td>
-          <td>-1.182e-11</td>
-        </tr>
-        <tr>
-          <th>1305</th>
-          <td>33.0</td>
-          <td>0.0</td>
-          <td>0.0</td>
-          <td>0.0</td>
-          <td>5492</td>
-          <td>5540</td>
-          <td>BAR</td>
-          <td>-102.959</td>
-          <td>1.626e+02</td>
-          <td>9.553e+01</td>
-          <td>4.068e+02</td>
-          <td>3.659e+02</td>
-          <td>3.714e+02</td>
-        </tr>
-        <tr>
-          <th>1306</th>
-          <td>33.0</td>
-          <td>0.0</td>
-          <td>0.0</td>
-          <td>0.0</td>
-          <td>5492</td>
-          <td>5541</td>
-          <td>BAR</td>
-          <td>-711.615</td>
-          <td>4.815e+02</td>
-          <td>-3.180e+01</td>
-          <td>-7.200e+02</td>
-          <td>-1.152e+02</td>
-          <td>-8.347e+02</td>
-        </tr>
-        <tr>
-          <th>1307</th>
-          <td>33.0</td>
-          <td>0.0</td>
-          <td>0.0</td>
-          <td>0.0</td>
-          <td>5492</td>
-          <td>5557</td>
-          <td>BAR</td>
-          <td>1183.858</td>
-          <td>-1.044e+03</td>
-          <td>1.629e+02</td>
-          <td>1.073e+02</td>
-          <td>-2.506e+02</td>
-          <td>7.746e+02</td>
-        </tr>
-        <tr>
-          <th>1308</th>
-          <td>33.0</td>
-          <td>0.0</td>
-          <td>0.0</td>
-          <td>0.0</td>
-          <td>5492</td>
-          <td>5522</td>
-          <td>QUAD4</td>
-          <td>-354.190</td>
-          <td>3.738e+02</td>
-          <td>-2.227e+02</td>
-          <td>2.059e+02</td>
-          <td>2.097e-02</td>
-          <td>-3.114e+02</td>
-        </tr>
-        <tr>
-          <th>1309</th>
-          <td>33.0</td>
-          <td>0.0</td>
-          <td>0.0</td>
-          <td>0.0</td>
-          <td>5492</td>
-          <td>0</td>
-          <td>*TOTALS*</td>
-          <td>15.094</td>
-          <td>-2.639e+01</td>
-          <td>3.938e+00</td>
-          <td>-1.180e-11</td>
-          <td>1.193e-11</td>
-          <td>-1.205e-11</td>
-        </tr>
-        <tr>
-          <th>1310</th>
-          <td>33.0</td>
-          <td>0.0</td>
-          <td>0.0</td>
-          <td>0.0</td>
-          <td>5513</td>
-          <td>5549</td>
-          <td>BAR</td>
-          <td>-62.814</td>
-          <td>7.758e+01</td>
-          <td>-2.112e+02</td>
-          <td>5.136e+02</td>
-          <td>-3.144e+02</td>
-          <td>1.330e+03</td>
-        </tr>
-        <tr>
-          <th>1311</th>
-          <td>33.0</td>
-          <td>0.0</td>
-          <td>0.0</td>
-          <td>0.0</td>
-          <td>5513</td>
-          <td>5550</td>
-          <td>BAR</td>
-          <td>944.898</td>
-          <td>8.126e+02</td>
-          <td>8.459e+00</td>
-          <td>-2.753e+02</td>
-          <td>-8.660e+01</td>
-          <td>5.083e+03</td>
-        </tr>
-        <tr>
-          <th>1312</th>
-          <td>33.0</td>
-          <td>0.0</td>
-          <td>0.0</td>
-          <td>0.0</td>
-          <td>5513</td>
-          <td>5558</td>
-          <td>BAR</td>
-          <td>-1051.532</td>
-          <td>-1.354e+03</td>
-          <td>2.202e+02</td>
-          <td>1.229e+03</td>
-          <td>4.010e+02</td>
-          <td>-9.060e+03</td>
-        </tr>
-        <tr>
-          <th>1313</th>
-          <td>33.0</td>
-          <td>0.0</td>
-          <td>0.0</td>
-          <td>0.0</td>
-          <td>5513</td>
-          <td>5535</td>
-          <td>QUAD4</td>
-          <td>178.990</td>
-          <td>4.628e+02</td>
-          <td>2.070e+00</td>
-          <td>-1.467e+03</td>
-          <td>-4.224e-02</td>
-          <td>2.647e+03</td>
-        </tr>
-        <tr>
-          <th>1314</th>
-          <td>33.0</td>
-          <td>0.0</td>
-          <td>0.0</td>
-          <td>0.0</td>
-          <td>5513</td>
-          <td>0</td>
-          <td>*TOTALS*</td>
-          <td>9.542</td>
-          <td>-1.325e+00</td>
-          <td>1.955e+01</td>
-          <td>1.592e-12</td>
-          <td>-1.167e-11</td>
-          <td>-6.366e-12</td>
-        </tr>
-        <tr>
           <th>1315</th>
           <td>33.0</td>
           <td>0.0</td>
@@ -5204,8 +2073,8 @@ Cycles, at the top.
           <td>5516</td>
           <td>5546</td>
           <td>BAR</td>
-          <td>472.572</td>
-          <td>8.511e+02</td>
+          <td>472.574</td>
+          <td>851.095</td>
           <td>-6.422e+00</td>
           <td>1.504e+02</td>
           <td>-2.873e+01</td>
@@ -5221,8 +2090,8 @@ Cycles, at the top.
           <td>5547</td>
           <td>BAR</td>
           <td>93.582</td>
-          <td>3.738e+01</td>
-          <td>-4.747e+00</td>
+          <td>37.378</td>
+          <td>-4.746e+00</td>
           <td>-8.224e+02</td>
           <td>-4.008e+02</td>
           <td>1.306e+03</td>
@@ -5236,8 +2105,8 @@ Cycles, at the top.
           <td>5516</td>
           <td>5556</td>
           <td>BAR</td>
-          <td>-818.566</td>
-          <td>-1.349e+03</td>
+          <td>-818.569</td>
+          <td>-1348.531</td>
           <td>2.214e+02</td>
           <td>-6.220e+02</td>
           <td>4.295e+02</td>
@@ -5252,8 +2121,8 @@ Cycles, at the top.
           <td>5516</td>
           <td>5537</td>
           <td>QUAD4</td>
-          <td>268.422</td>
-          <td>4.476e+02</td>
+          <td>268.423</td>
+          <td>447.600</td>
           <td>-1.907e+02</td>
           <td>1.294e+03</td>
           <td>-4.314e-02</td>
@@ -5269,11 +2138,11 @@ Cycles, at the top.
           <td>0</td>
           <td>*TOTALS*</td>
           <td>16.010</td>
-          <td>-1.246e+01</td>
+          <td>-12.457</td>
           <td>1.959e+01</td>
-          <td>9.095e-13</td>
-          <td>-2.988e-11</td>
-          <td>-4.547e-12</td>
+          <td>-8.185e-12</td>
+          <td>3.750e-11</td>
+          <td>1.819e-12</td>
         </tr>
       </tbody>
     </table>
@@ -5341,20 +2210,20 @@ Cycles, at the top.
           <th>Freq</th>
           <th>8.359</th>
           <th>9.508</th>
-          <th>15.666</th>
+          <th>15.667</th>
           <th>20.237</th>
           <th>20.306</th>
           <th>20.555</th>
           <th>21.500</th>
           <th>21.706</th>
           <th>21.725</th>
-          <th>28.536</th>
+          <th>28.542</th>
           <th>...</th>
           <th>80.076</th>
           <th>86.487</th>
           <th>88.168</th>
           <th>88.477</th>
-          <th>89.923</th>
+          <th>89.928</th>
           <th>94.290</th>
           <th>94.368</th>
           <th>96.044</th>
@@ -5366,45 +2235,45 @@ Cycles, at the top.
           <th>Eigenvalue</th>
           <th>2758.149</th>
           <th>3568.632</th>
-          <th>9689.306</th>
-          <th>16168.100</th>
-          <th>16278.223</th>
-          <th>16679.709</th>
-          <th>18248.434</th>
+          <th>9689.982</th>
+          <th>16168.038</th>
+          <th>16278.158</th>
+          <th>16679.707</th>
+          <th>18248.432</th>
           <th>18600.697</th>
           <th>18632.551</th>
-          <th>32147.814</th>
+          <th>32159.891</th>
           <th>...</th>
-          <th>253140.875</th>
-          <th>295297.750</th>
-          <th>306885.906</th>
+          <th>253141.172</th>
+          <th>295300.938</th>
+          <th>306886.000</th>
           <th>309040.656</th>
-          <th>319227.719</th>
+          <th>319267.094</th>
           <th>350984.500</th>
           <th>351566.188</th>
-          <th>364166.156</th>
+          <th>364166.312</th>
           <th>384601.344</th>
-          <th>386090.438</th>
+          <th>386090.469</th>
         </tr>
         <tr>
           <th></th>
           <th>Radians</th>
           <th>52.518</th>
           <th>59.738</th>
-          <th>98.434</th>
+          <th>98.438</th>
           <th>127.154</th>
           <th>127.586</th>
           <th>129.150</th>
           <th>135.087</th>
           <th>136.384</th>
           <th>136.501</th>
-          <th>179.298</th>
+          <th>179.332</th>
           <th>...</th>
           <th>503.131</th>
-          <th>543.413</th>
+          <th>543.416</th>
           <th>553.973</th>
           <th>555.914</th>
-          <th>565.002</th>
+          <th>565.037</th>
           <th>592.439</th>
           <th>592.930</th>
           <th>603.462</th>
@@ -5439,730 +2308,127 @@ Cycles, at the top.
       </thead>
       <tbody>
         <tr>
-          <th rowspan="8" valign="top">3323</th>
+          <th rowspan="5" valign="top">3323</th>
           <th>bending_moment_a1</th>
           <td>-0.159</td>
-          <td>2.322e-01</td>
+          <td>-0.232</td>
           <td>-1.325</td>
           <td>-2.320</td>
-          <td>1.883</td>
+          <td>-1.883</td>
           <td>-0.800</td>
           <td>-1.344e-03</td>
           <td>1.423</td>
           <td>1.467</td>
-          <td>4.636</td>
+          <td>4.649</td>
           <td>...</td>
-          <td>-43.493</td>
-          <td>63.353</td>
-          <td>-43.076</td>
-          <td>-3.346</td>
-          <td>11.101</td>
+          <td>-43.417</td>
+          <td>63.358</td>
+          <td>-43.073</td>
+          <td>-3.345</td>
+          <td>11.078</td>
           <td>-14.381</td>
           <td>0.750</td>
-          <td>29.359</td>
+          <td>29.360</td>
           <td>0.486</td>
-          <td>-4.565</td>
+          <td>-4.564</td>
         </tr>
         <tr>
           <th>bending_moment_a2</th>
           <td>0.187</td>
-          <td>-5.024e-02</td>
+          <td>0.050</td>
           <td>0.181</td>
           <td>0.006</td>
-          <td>0.107</td>
+          <td>-0.107</td>
           <td>-0.424</td>
           <td>-4.186e-03</td>
           <td>-1.106</td>
           <td>0.102</td>
-          <td>-1.573</td>
+          <td>-1.569</td>
           <td>...</td>
-          <td>-4.458</td>
+          <td>-4.503</td>
           <td>5.332</td>
           <td>1.627</td>
           <td>4.864</td>
-          <td>2.144</td>
-          <td>0.089</td>
+          <td>2.146</td>
+          <td>0.088</td>
           <td>-1.271</td>
-          <td>-10.583</td>
+          <td>-10.582</td>
           <td>-0.670</td>
-          <td>3.476</td>
+          <td>3.477</td>
         </tr>
         <tr>
           <th>bending_moment_b1</th>
           <td>0.166</td>
-          <td>-2.080e-01</td>
+          <td>0.208</td>
           <td>2.010</td>
           <td>2.657</td>
-          <td>-1.879</td>
+          <td>1.879</td>
           <td>0.729</td>
           <td>2.291e-03</td>
           <td>-1.376</td>
           <td>-1.308</td>
-          <td>-3.973</td>
+          <td>-3.985</td>
           <td>...</td>
-          <td>34.783</td>
-          <td>-74.016</td>
-          <td>35.138</td>
+          <td>34.704</td>
+          <td>-74.023</td>
+          <td>35.134</td>
           <td>3.543</td>
-          <td>-15.062</td>
+          <td>-15.034</td>
           <td>10.974</td>
           <td>-0.674</td>
-          <td>-17.689</td>
+          <td>-17.690</td>
           <td>-0.626</td>
           <td>6.393</td>
         </tr>
         <tr>
           <th>bending_moment_b2</th>
           <td>-0.187</td>
-          <td>5.022e-02</td>
+          <td>-0.050</td>
           <td>-0.181</td>
           <td>-0.004</td>
-          <td>-0.107</td>
+          <td>0.107</td>
           <td>0.425</td>
           <td>4.183e-03</td>
           <td>1.106</td>
           <td>-0.102</td>
-          <td>1.571</td>
+          <td>1.567</td>
           <td>...</td>
-          <td>4.455</td>
+          <td>4.501</td>
           <td>-5.342</td>
           <td>-1.624</td>
           <td>-4.862</td>
-          <td>-2.146</td>
-          <td>-0.083</td>
+          <td>-2.148</td>
+          <td>-0.082</td>
           <td>1.271</td>
-          <td>10.560</td>
+          <td>10.558</td>
           <td>0.669</td>
           <td>-3.485</td>
         </tr>
         <tr>
           <th>shear1</th>
           <td>-0.130</td>
-          <td>1.760e-01</td>
+          <td>-0.176</td>
           <td>-1.334</td>
           <td>-1.991</td>
-          <td>1.505</td>
+          <td>-1.505</td>
           <td>-0.611</td>
           <td>-1.454e-03</td>
           <td>1.120</td>
           <td>1.110</td>
-          <td>3.443</td>
+          <td>3.453</td>
           <td>...</td>
-          <td>-31.310</td>
-          <td>54.947</td>
-          <td>-31.285</td>
-          <td>-2.756</td>
-          <td>10.465</td>
+          <td>-31.248</td>
+          <td>54.952</td>
+          <td>-31.283</td>
+          <td>-2.755</td>
+          <td>10.445</td>
           <td>-10.142</td>
           <td>0.570</td>
-          <td>18.819</td>
+          <td>18.820</td>
           <td>0.445</td>
           <td>-4.383</td>
         </tr>
         <tr>
-          <th>shear2</th>
-          <td>0.150</td>
-          <td>-4.018e-02</td>
-          <td>0.145</td>
-          <td>0.004</td>
-          <td>0.086</td>
-          <td>-0.340</td>
-          <td>-3.348e-03</td>
-          <td>-0.885</td>
-          <td>0.082</td>
-          <td>-1.258</td>
-          <td>...</td>
-          <td>-3.565</td>
-          <td>4.269</td>
-          <td>1.301</td>
-          <td>3.890</td>
-          <td>1.716</td>
-          <td>0.069</td>
-          <td>-1.017</td>
-          <td>-8.457</td>
-          <td>-0.536</td>
-          <td>2.784</td>
-        </tr>
-        <tr>
-          <th>axial</th>
-          <td>0.798</td>
-          <td>2.069e-01</td>
-          <td>-4.245</td>
-          <td>16.966</td>
-          <td>-0.791</td>
-          <td>8.127</td>
-          <td>-7.815e-03</td>
-          <td>1.476</td>
-          <td>0.926</td>
-          <td>-14.693</td>
-          <td>...</td>
-          <td>-5.960</td>
-          <td>-76.450</td>
-          <td>21.821</td>
-          <td>-10.654</td>
-          <td>-10.418</td>
-          <td>32.557</td>
-          <td>5.958</td>
-          <td>-103.311</td>
-          <td>-1.003</td>
-          <td>-46.390</td>
-        </tr>
-        <tr>
-          <th>torque</th>
-          <td>-0.040</td>
-          <td>-5.512e-02</td>
-          <td>-0.784</td>
-          <td>-0.910</td>
-          <td>-0.750</td>
-          <td>-0.463</td>
-          <td>7.175e-04</td>
-          <td>-0.115</td>
-          <td>-0.606</td>
-          <td>-1.909</td>
-          <td>...</td>
-          <td>29.550</td>
-          <td>9.498</td>
-          <td>31.150</td>
-          <td>0.148</td>
-          <td>10.121</td>
-          <td>25.318</td>
-          <td>-0.334</td>
-          <td>-121.477</td>
-          <td>0.198</td>
-          <td>-23.504</td>
-        </tr>
-        <tr>
-          <th rowspan="8" valign="top">3324</th>
-          <th>bending_moment_a1</th>
-          <td>0.142</td>
-          <td>-2.855e-01</td>
-          <td>-0.185</td>
-          <td>1.575</td>
-          <td>-1.893</td>
-          <td>0.957</td>
-          <td>-7.459e-04</td>
-          <td>-1.527</td>
-          <td>-1.816</td>
-          <td>-6.099</td>
-          <td>...</td>
-          <td>62.709</td>
-          <td>-39.827</td>
-          <td>60.589</td>
-          <td>2.909</td>
-          <td>-2.364</td>
-          <td>21.896</td>
-          <td>-0.919</td>
-          <td>-55.106</td>
-          <td>-0.177</td>
-          <td>0.531</td>
-        </tr>
-        <tr>
-          <th>bending_moment_a2</th>
-          <td>-0.188</td>
-          <td>5.027e-02</td>
-          <td>-0.179</td>
-          <td>-0.010</td>
-          <td>-0.107</td>
-          <td>0.422</td>
-          <td>4.192e-03</td>
-          <td>1.106</td>
-          <td>-0.102</td>
-          <td>1.577</td>
-          <td>...</td>
-          <td>4.464</td>
-          <td>-5.310</td>
-          <td>-1.633</td>
-          <td>-4.867</td>
-          <td>-2.140</td>
-          <td>-0.101</td>
-          <td>1.270</td>
-          <td>10.635</td>
-          <td>0.673</td>
-          <td>-3.457</td>
-        </tr>
-        <tr>
-          <th>bending_moment_b1</th>
-          <td>-0.149</td>
-          <td>2.613e-01</td>
-          <td>-0.499</td>
-          <td>-1.913</td>
-          <td>1.889</td>
-          <td>-0.886</td>
-          <td>-2.012e-04</td>
-          <td>1.480</td>
-          <td>1.658</td>
-          <td>5.436</td>
-          <td>...</td>
-          <td>-53.999</td>
-          <td>50.490</td>
-          <td>-52.651</td>
-          <td>-3.107</td>
-          <td>6.324</td>
-          <td>-18.490</td>
-          <td>0.842</td>
-          <td>43.436</td>
-          <td>0.317</td>
-          <td>-2.359</td>
-        </tr>
-        <tr>
-          <th>bending_moment_b2</th>
-          <td>0.187</td>
-          <td>-5.026e-02</td>
-          <td>0.180</td>
-          <td>0.008</td>
-          <td>0.107</td>
-          <td>-0.423</td>
-          <td>-4.189e-03</td>
-          <td>-1.106</td>
-          <td>0.102</td>
-          <td>-1.575</td>
-          <td>...</td>
-          <td>-4.461</td>
-          <td>5.320</td>
-          <td>1.631</td>
-          <td>4.866</td>
-          <td>2.142</td>
-          <td>0.096</td>
-          <td>-1.270</td>
-          <td>-10.611</td>
-          <td>-0.672</td>
-          <td>3.466</td>
-        </tr>
-        <tr>
-          <th>shear1</th>
-          <td>0.116</td>
-          <td>-2.187e-01</td>
-          <td>0.126</td>
-          <td>1.395</td>
-          <td>-1.513</td>
-          <td>0.737</td>
-          <td>-2.179e-04</td>
-          <td>-1.203</td>
-          <td>-1.389</td>
-          <td>-4.614</td>
-          <td>...</td>
-          <td>46.683</td>
-          <td>-36.127</td>
-          <td>45.296</td>
-          <td>2.406</td>
-          <td>-3.475</td>
-          <td>16.154</td>
-          <td>-0.704</td>
-          <td>-39.417</td>
-          <td>-0.198</td>
-          <td>1.156</td>
-        </tr>
-        <tr>
-          <th>shear2</th>
-          <td>-0.150</td>
-          <td>4.021e-02</td>
-          <td>-0.144</td>
-          <td>-0.007</td>
-          <td>-0.086</td>
-          <td>0.338</td>
-          <td>3.352e-03</td>
-          <td>0.885</td>
-          <td>-0.082</td>
-          <td>1.261</td>
-          <td>...</td>
-          <td>3.570</td>
-          <td>-4.252</td>
-          <td>-1.306</td>
-          <td>-3.893</td>
-          <td>-1.712</td>
-          <td>-0.079</td>
-          <td>1.016</td>
-          <td>8.499</td>
-          <td>0.538</td>
-          <td>-2.769</td>
-        </tr>
-        <tr>
-          <th>axial</th>
-          <td>-0.798</td>
-          <td>-2.069e-01</td>
-          <td>4.245</td>
-          <td>-16.966</td>
-          <td>0.791</td>
-          <td>-8.127</td>
-          <td>7.815e-03</td>
-          <td>-1.476</td>
-          <td>-0.926</td>
-          <td>14.693</td>
-          <td>...</td>
-          <td>5.960</td>
-          <td>76.450</td>
-          <td>-21.821</td>
-          <td>10.654</td>
-          <td>10.418</td>
-          <td>-32.557</td>
-          <td>-5.958</td>
-          <td>103.311</td>
-          <td>1.003</td>
-          <td>46.390</td>
-        </tr>
-        <tr>
-          <th>torque</th>
-          <td>0.040</td>
-          <td>5.512e-02</td>
-          <td>0.784</td>
-          <td>0.910</td>
-          <td>0.750</td>
-          <td>0.463</td>
-          <td>-7.175e-04</td>
-          <td>0.115</td>
-          <td>0.606</td>
-          <td>1.909</td>
-          <td>...</td>
-          <td>-29.550</td>
-          <td>-9.498</td>
-          <td>-31.150</td>
-          <td>-0.148</td>
-          <td>-10.121</td>
-          <td>-25.318</td>
-          <td>0.334</td>
-          <td>121.477</td>
-          <td>-0.198</td>
-          <td>23.504</td>
-        </tr>
-        <tr>
-          <th rowspan="8" valign="top">3325</th>
-          <th>bending_moment_a1</th>
-          <td>-0.106</td>
-          <td>3.317e-01</td>
-          <td>-5.500</td>
-          <td>-2.887</td>
-          <td>4.495</td>
-          <td>-0.720</td>
-          <td>-4.811e-03</td>
-          <td>2.206</td>
-          <td>2.610</td>
-          <td>7.261</td>
-          <td>...</td>
-          <td>3.946</td>
-          <td>13.702</td>
-          <td>16.914</td>
-          <td>-5.397</td>
-          <td>19.343</td>
-          <td>27.801</td>
-          <td>2.392</td>
-          <td>-144.077</td>
-          <td>0.007</td>
-          <td>-54.887</td>
-        </tr>
-        <tr>
-          <th>bending_moment_a2</th>
-          <td>0.280</td>
-          <td>-1.117e-03</td>
-          <td>-0.172</td>
-          <td>1.093</td>
-          <td>0.556</td>
-          <td>0.258</td>
-          <td>2.500e-03</td>
-          <td>-1.270</td>
-          <td>0.418</td>
-          <td>-3.938</td>
-          <td>...</td>
-          <td>-29.645</td>
-          <td>-6.992</td>
-          <td>-27.543</td>
-          <td>10.568</td>
-          <td>3.315</td>
-          <td>-22.856</td>
-          <td>-2.201</td>
-          <td>92.207</td>
-          <td>-2.224</td>
-          <td>31.617</td>
-        </tr>
-        <tr>
-          <th>bending_moment_b1</th>
-          <td>0.132</td>
-          <td>-3.120e-01</td>
-          <td>6.719</td>
-          <td>3.662</td>
-          <td>-4.772</td>
-          <td>0.642</td>
-          <td>8.442e-03</td>
-          <td>-2.156</td>
-          <td>-2.377</td>
-          <td>-5.712</td>
-          <td>...</td>
-          <td>-7.081</td>
-          <td>-17.435</td>
-          <td>-15.147</td>
-          <td>5.427</td>
-          <td>-26.582</td>
-          <td>-24.443</td>
-          <td>-2.223</td>
-          <td>128.023</td>
-          <td>-0.137</td>
-          <td>47.225</td>
-        </tr>
-        <tr>
-          <th>bending_moment_b2</th>
-          <td>-0.280</td>
-          <td>1.078e-03</td>
-          <td>0.171</td>
-          <td>-1.092</td>
-          <td>-0.557</td>
-          <td>-0.257</td>
-          <td>-2.505e-03</td>
-          <td>1.270</td>
-          <td>-0.418</td>
-          <td>3.937</td>
-          <td>...</td>
-          <td>29.642</td>
-          <td>6.985</td>
-          <td>27.544</td>
-          <td>-10.566</td>
-          <td>-3.317</td>
-          <td>22.859</td>
-          <td>2.201</td>
-          <td>-92.222</td>
-          <td>2.224</td>
-          <td>-31.622</td>
-        </tr>
-        <tr>
-          <th>shear1</th>
-          <td>-0.095</td>
-          <td>2.575e-01</td>
-          <td>-4.888</td>
-          <td>-2.620</td>
-          <td>3.707</td>
-          <td>-0.545</td>
-          <td>-5.301e-03</td>
-          <td>1.745</td>
-          <td>1.995</td>
-          <td>5.189</td>
-          <td>...</td>
-          <td>4.411</td>
-          <td>12.455</td>
-          <td>12.824</td>
-          <td>-4.329</td>
-          <td>18.370</td>
-          <td>20.897</td>
-          <td>1.846</td>
-          <td>-108.840</td>
-          <td>0.058</td>
-          <td>-40.845</td>
-        </tr>
-        <tr>
-          <th>shear2</th>
-          <td>0.224</td>
-          <td>-8.781e-04</td>
-          <td>-0.137</td>
-          <td>0.874</td>
-          <td>0.445</td>
-          <td>0.206</td>
-          <td>2.002e-03</td>
-          <td>-1.016</td>
-          <td>0.335</td>
-          <td>-3.150</td>
-          <td>...</td>
-          <td>-23.714</td>
-          <td>-5.591</td>
-          <td>-22.035</td>
-          <td>8.454</td>
-          <td>2.653</td>
-          <td>-18.286</td>
-          <td>-1.761</td>
-          <td>73.772</td>
-          <td>-1.779</td>
-          <td>25.295</td>
-        </tr>
-        <tr>
-          <th>axial</th>
-          <td>1.169</td>
-          <td>3.563e-02</td>
-          <td>-9.525</td>
-          <td>25.825</td>
-          <td>-2.350</td>
-          <td>8.444</td>
-          <td>-4.220e-02</td>
-          <td>0.614</td>
-          <td>0.391</td>
-          <td>-16.175</td>
-          <td>...</td>
-          <td>-25.936</td>
-          <td>-79.791</td>
-          <td>28.274</td>
-          <td>12.846</td>
-          <td>-8.970</td>
-          <td>52.065</td>
-          <td>1.137</td>
-          <td>-206.909</td>
-          <td>-6.252</td>
-          <td>-74.468</td>
-        </tr>
-        <tr>
-          <th>torque</th>
-          <td>0.073</td>
-          <td>-1.759e-03</td>
-          <td>3.763</td>
-          <td>0.174</td>
-          <td>-0.440</td>
-          <td>-0.402</td>
-          <td>3.038e-03</td>
-          <td>-0.318</td>
-          <td>0.170</td>
-          <td>2.675</td>
-          <td>...</td>
-          <td>17.865</td>
-          <td>6.429</td>
-          <td>37.804</td>
-          <td>-0.508</td>
-          <td>-14.531</td>
-          <td>35.882</td>
-          <td>0.357</td>
-          <td>-170.333</td>
-          <td>0.078</td>
-          <td>-46.281</td>
-        </tr>
-        <tr>
-          <th rowspan="6" valign="top">3326</th>
-          <th>bending_moment_a1</th>
-          <td>0.048</td>
-          <td>-3.754e-01</td>
-          <td>2.810</td>
-          <td>1.177</td>
-          <td>-3.883</td>
-          <td>0.892</td>
-          <td>-3.199e-03</td>
-          <td>-2.315</td>
-          <td>-3.125</td>
-          <td>-10.679</td>
-          <td>...</td>
-          <td>2.972</td>
-          <td>-5.465</td>
-          <td>-20.811</td>
-          <td>5.330</td>
-          <td>-3.372</td>
-          <td>-35.209</td>
-          <td>-2.765</td>
-          <td>179.496</td>
-          <td>0.281</td>
-          <td>71.791</td>
-        </tr>
-        <tr>
-          <th>bending_moment_a2</th>
-          <td>-0.280</td>
-          <td>1.205e-03</td>
-          <td>0.173</td>
-          <td>-1.097</td>
-          <td>-0.556</td>
-          <td>-0.259</td>
-          <td>-2.488e-03</td>
-          <td>1.270</td>
-          <td>-0.418</td>
-          <td>3.940</td>
-          <td>...</td>
-          <td>29.651</td>
-          <td>7.005</td>
-          <td>27.541</td>
-          <td>-10.571</td>
-          <td>-3.311</td>
-          <td>22.849</td>
-          <td>2.201</td>
-          <td>-92.176</td>
-          <td>2.226</td>
-          <td>-31.606</td>
-        </tr>
-        <tr>
-          <th>bending_moment_b1</th>
-          <td>-0.074</td>
-          <td>3.556e-01</td>
-          <td>-4.029</td>
-          <td>-1.952</td>
-          <td>4.161</td>
-          <td>-0.814</td>
-          <td>-4.320e-04</td>
-          <td>2.265</td>
-          <td>2.891</td>
-          <td>9.130</td>
-          <td>...</td>
-          <td>0.164</td>
-          <td>9.199</td>
-          <td>19.045</td>
-          <td>-5.360</td>
-          <td>10.611</td>
-          <td>31.851</td>
-          <td>2.596</td>
-          <td>-163.442</td>
-          <td>-0.150</td>
-          <td>-64.129</td>
-        </tr>
-        <tr>
-          <th>bending_moment_b2</th>
-          <td>0.280</td>
-          <td>-1.165e-03</td>
-          <td>-0.172</td>
-          <td>1.095</td>
-          <td>0.556</td>
-          <td>0.259</td>
-          <td>2.493e-03</td>
-          <td>-1.270</td>
-          <td>0.418</td>
-          <td>-3.939</td>
-          <td>...</td>
-          <td>-29.648</td>
-          <td>-6.999</td>
-          <td>-27.542</td>
-          <td>10.570</td>
-          <td>3.313</td>
-          <td>-22.852</td>
-          <td>-2.201</td>
-          <td>92.190</td>
-          <td>-2.225</td>
-          <td>31.611</td>
-        </tr>
-        <tr>
-          <th>shear1</th>
-          <td>0.049</td>
-          <td>-2.924e-01</td>
-          <td>2.735</td>
-          <td>1.252</td>
-          <td>-3.218</td>
-          <td>0.682</td>
-          <td>-1.107e-03</td>
-          <td>-1.832</td>
-          <td>-2.406</td>
-          <td>-7.924</td>
-          <td>...</td>
-          <td>1.123</td>
-          <td>-5.866</td>
-          <td>-15.942</td>
-          <td>4.276</td>
-          <td>-5.593</td>
-          <td>-26.824</td>
-          <td>-2.144</td>
-          <td>137.175</td>
-          <td>0.172</td>
-          <td>54.368</td>
-        </tr>
-        <tr>
-          <th>shear2</th>
-          <td>-0.224</td>
-          <td>9.482e-04</td>
-          <td>0.138</td>
-          <td>-0.877</td>
-          <td>-0.445</td>
-          <td>-0.207</td>
-          <td>-1.993e-03</td>
-          <td>1.016</td>
-          <td>-0.334</td>
-          <td>3.152</td>
-          <td>...</td>
-          <td>23.720</td>
-          <td>5.602</td>
-          <td>22.033</td>
-          <td>-8.456</td>
-          <td>-2.650</td>
-          <td>18.280</td>
-          <td>1.761</td>
-          <td>-73.746</td>
-          <td>1.781</td>
-          <td>-25.286</td>
-        </tr>
-        <tr>
           <th>...</th>
           <th>...</th>
           <td>...</td>
@@ -6188,723 +2454,120 @@ Cycles, at the top.
           <td>...</td>
         </tr>
         <tr>
-          <th rowspan="6" valign="top">5670</th>
-          <th>bending_moment_b1</th>
-          <td>-3.339</td>
-          <td>5.380e-01</td>
-          <td>-15.324</td>
-          <td>-26.822</td>
-          <td>-0.834</td>
-          <td>-21.393</td>
-          <td>2.495e-02</td>
-          <td>1.866</td>
-          <td>2.052</td>
-          <td>47.998</td>
-          <td>...</td>
-          <td>105.627</td>
-          <td>-502.927</td>
-          <td>-14.761</td>
-          <td>-4.548</td>
-          <td>-35.620</td>
-          <td>-29.337</td>
-          <td>3.047</td>
-          <td>160.708</td>
-          <td>0.560</td>
-          <td>57.898</td>
-        </tr>
-        <tr>
-          <th>bending_moment_b2</th>
-          <td>-3.621</td>
-          <td>-2.502e+00</td>
-          <td>20.944</td>
-          <td>-49.275</td>
-          <td>0.927</td>
-          <td>-34.695</td>
-          <td>9.727e-02</td>
-          <td>-12.715</td>
-          <td>-14.466</td>
-          <td>130.109</td>
-          <td>...</td>
-          <td>-64.354</td>
-          <td>-953.659</td>
-          <td>137.681</td>
-          <td>16.176</td>
-          <td>-234.157</td>
-          <td>206.144</td>
-          <td>-2.940</td>
-          <td>-994.719</td>
-          <td>12.171</td>
-          <td>-367.928</td>
-        </tr>
-        <tr>
-          <th>shear1</th>
-          <td>2.622</td>
-          <td>-5.500e-01</td>
-          <td>10.844</td>
-          <td>27.844</td>
-          <td>0.718</td>
-          <td>19.658</td>
-          <td>-3.016e-02</td>
-          <td>-0.525</td>
-          <td>-3.371</td>
-          <td>-60.352</td>
-          <td>...</td>
-          <td>-60.392</td>
-          <td>420.128</td>
-          <td>29.043</td>
-          <td>5.720</td>
-          <td>56.698</td>
-          <td>24.313</td>
-          <td>-5.620</td>
-          <td>-121.411</td>
-          <td>4.401</td>
-          <td>-41.888</td>
-        </tr>
-        <tr>
-          <th>shear2</th>
-          <td>3.266</td>
-          <td>2.809e+00</td>
-          <td>-21.138</td>
-          <td>47.373</td>
-          <td>-2.217</td>
-          <td>32.624</td>
-          <td>-1.229e-01</td>
-          <td>12.595</td>
-          <td>15.021</td>
-          <td>-125.358</td>
-          <td>...</td>
-          <td>-90.177</td>
-          <td>993.535</td>
-          <td>-154.049</td>
-          <td>-18.174</td>
-          <td>288.808</td>
-          <td>-152.619</td>
-          <td>-3.696</td>
-          <td>649.406</td>
-          <td>8.894</td>
-          <td>177.785</td>
-        </tr>
-        <tr>
-          <th>axial</th>
-          <td>3.641</td>
-          <td>5.476e-01</td>
-          <td>0.831</td>
-          <td>56.792</td>
-          <td>-0.057</td>
-          <td>36.453</td>
-          <td>-9.411e-02</td>
-          <td>6.094</td>
-          <td>-0.775</td>
-          <td>-156.813</td>
-          <td>...</td>
-          <td>-368.710</td>
-          <td>548.856</td>
-          <td>-319.507</td>
-          <td>2.729</td>
-          <td>121.381</td>
-          <td>-217.780</td>
-          <td>-6.697</td>
-          <td>887.148</td>
-          <td>6.721</td>
-          <td>274.097</td>
-        </tr>
-        <tr>
-          <th>torque</th>
-          <td>-0.258</td>
-          <td>-1.324e-01</td>
-          <td>-1.876</td>
-          <td>2.434</td>
-          <td>0.254</td>
-          <td>0.520</td>
-          <td>7.498e-03</td>
-          <td>0.743</td>
-          <td>-1.394</td>
-          <td>-14.401</td>
-          <td>...</td>
-          <td>47.318</td>
-          <td>99.730</td>
-          <td>24.445</td>
-          <td>-1.667</td>
-          <td>43.624</td>
-          <td>-3.545</td>
-          <td>0.408</td>
-          <td>34.847</td>
-          <td>0.689</td>
-          <td>18.950</td>
-        </tr>
-        <tr>
-          <th rowspan="8" valign="top">5671</th>
-          <th>bending_moment_a1</th>
-          <td>-5.659</td>
-          <td>-1.121e-01</td>
-          <td>0.462</td>
-          <td>-60.422</td>
-          <td>-0.300</td>
-          <td>-43.413</td>
-          <td>8.199e-02</td>
-          <td>-2.289</td>
-          <td>-1.846</td>
-          <td>130.339</td>
-          <td>...</td>
-          <td>87.918</td>
-          <td>-1274.001</td>
-          <td>257.847</td>
-          <td>37.582</td>
-          <td>-202.402</td>
-          <td>315.975</td>
-          <td>3.916</td>
-          <td>-1440.540</td>
-          <td>-10.429</td>
-          <td>-445.418</td>
-        </tr>
-        <tr>
-          <th>bending_moment_a2</th>
-          <td>13.068</td>
-          <td>-3.904e+00</td>
-          <td>22.973</td>
-          <td>150.782</td>
-          <td>2.061</td>
-          <td>102.018</td>
-          <td>-1.118e-01</td>
-          <td>-9.722</td>
-          <td>-28.964</td>
-          <td>-352.315</td>
-          <td>...</td>
-          <td>-543.115</td>
-          <td>1400.578</td>
-          <td>88.711</td>
-          <td>-54.877</td>
-          <td>388.654</td>
-          <td>71.517</td>
-          <td>-15.218</td>
-          <td>-347.654</td>
-          <td>57.939</td>
-          <td>-145.095</td>
-        </tr>
-        <tr>
-          <th>bending_moment_b1</th>
-          <td>5.620</td>
-          <td>-3.280e-01</td>
-          <td>-4.895</td>
-          <td>76.419</td>
-          <td>-1.168</td>
-          <td>49.203</td>
-          <td>-1.073e-01</td>
-          <td>6.311</td>
-          <td>-2.011</td>
-          <td>-187.096</td>
-          <td>...</td>
-          <td>395.862</td>
-          <td>3012.305</td>
-          <td>-144.729</td>
-          <td>-79.467</td>
-          <td>823.969</td>
-          <td>-373.349</td>
-          <td>-16.024</td>
-          <td>1676.430</td>
-          <td>42.875</td>
-          <td>463.680</td>
-        </tr>
-        <tr>
-          <th>bending_moment_b2</th>
-          <td>-10.646</td>
-          <td>4.252e+00</td>
-          <td>-29.301</td>
-          <td>-116.967</td>
-          <td>-3.268</td>
-          <td>-80.632</td>
-          <td>6.113e-02</td>
-          <td>13.298</td>
-          <td>30.756</td>
-          <td>269.784</td>
-          <td>...</td>
-          <td>1044.519</td>
-          <td>-1975.002</td>
-          <td>131.106</td>
-          <td>94.070</td>
-          <td>-527.551</td>
-          <td>-38.476</td>
-          <td>13.150</td>
-          <td>471.400</td>
-          <td>-82.329</td>
-          <td>284.392</td>
-        </tr>
-        <tr>
-          <th>shear1</th>
-          <td>-4.433</td>
-          <td>8.488e-02</td>
-          <td>2.105</td>
-          <td>-53.783</td>
-          <td>0.341</td>
-          <td>-36.401</td>
-          <td>7.441e-02</td>
-          <td>-3.380</td>
-          <td>0.065</td>
-          <td>124.761</td>
-          <td>...</td>
-          <td>-121.031</td>
-          <td>-1684.646</td>
-          <td>158.224</td>
-          <td>46.004</td>
-          <td>-403.394</td>
-          <td>270.925</td>
-          <td>7.837</td>
-          <td>-1225.062</td>
-          <td>-20.950</td>
-          <td>-357.303</td>
-        </tr>
-        <tr>
-          <th>shear2</th>
-          <td>9.320</td>
-          <td>-3.205e+00</td>
-          <td>20.546</td>
-          <td>105.233</td>
-          <td>2.095</td>
-          <td>71.787</td>
-          <td>-6.798e-02</td>
-          <td>-9.048</td>
-          <td>-23.472</td>
-          <td>-244.504</td>
-          <td>...</td>
-          <td>-623.988</td>
-          <td>1326.704</td>
-          <td>-16.662</td>
-          <td>-58.540</td>
-          <td>360.096</td>
-          <td>43.230</td>
-          <td>-11.149</td>
-          <td>-321.912</td>
-          <td>55.130</td>
-          <td>-168.801</td>
-        </tr>
-        <tr>
-          <th>axial</th>
-          <td>-1.774</td>
-          <td>-5.488e-01</td>
-          <td>4.150</td>
-          <td>-30.823</td>
-          <td>0.380</td>
-          <td>-20.689</td>
-          <td>5.315e-02</td>
-          <td>-3.814</td>
-          <td>-1.196</td>
-          <td>97.810</td>
-          <td>...</td>
-          <td>539.625</td>
-          <td>786.469</td>
-          <td>643.566</td>
-          <td>-36.202</td>
-          <td>392.031</td>
-          <td>474.122</td>
-          <td>-3.562</td>
-          <td>-2104.999</td>
-          <td>37.386</td>
-          <td>-812.896</td>
-        </tr>
-        <tr>
-          <th>torque</th>
-          <td>0.581</td>
-          <td>2.120e-01</td>
-          <td>-0.724</td>
-          <td>6.864</td>
-          <td>0.068</td>
-          <td>4.787</td>
-          <td>-1.673e-02</td>
-          <td>1.138</td>
-          <td>1.523</td>
-          <td>-16.465</td>
-          <td>...</td>
-          <td>88.429</td>
-          <td>-158.572</td>
-          <td>16.796</td>
-          <td>5.639</td>
-          <td>-55.123</td>
-          <td>-13.846</td>
-          <td>0.928</td>
-          <td>129.659</td>
-          <td>-6.680</td>
-          <td>62.655</td>
-        </tr>
-        <tr>
-          <th rowspan="8" valign="top">5672</th>
-          <th>bending_moment_a1</th>
-          <td>1.179</td>
-          <td>-5.181e-01</td>
-          <td>3.781</td>
-          <td>24.786</td>
-          <td>0.310</td>
-          <td>14.652</td>
-          <td>-7.648e-03</td>
-          <td>-5.836</td>
-          <td>-19.213</td>
-          <td>-85.594</td>
-          <td>...</td>
-          <td>-568.087</td>
-          <td>-4959.613</td>
-          <td>-75.481</td>
-          <td>110.251</td>
-          <td>-788.183</td>
-          <td>331.030</td>
-          <td>17.773</td>
-          <td>-1643.599</td>
-          <td>-48.609</td>
-          <td>-194.918</td>
-        </tr>
-        <tr>
-          <th>bending_moment_a2</th>
-          <td>-16.173</td>
-          <td>6.802e-01</td>
-          <td>0.867</td>
-          <td>-206.958</td>
-          <td>0.557</td>
-          <td>-142.710</td>
-          <td>2.963e-01</td>
-          <td>-10.285</td>
-          <td>2.622</td>
-          <td>524.047</td>
-          <td>...</td>
-          <td>-3962.894</td>
-          <td>10312.055</td>
-          <td>-1357.529</td>
-          <td>-336.873</td>
-          <td>3180.764</td>
-          <td>28.351</td>
-          <td>-52.440</td>
-          <td>-3065.015</td>
-          <td>316.144</td>
-          <td>-2117.626</td>
-        </tr>
-        <tr>
-          <th>bending_moment_b1</th>
-          <td>-0.983</td>
-          <td>2.502e-01</td>
-          <td>-2.850</td>
-          <td>-13.705</td>
-          <td>-0.846</td>
-          <td>-8.170</td>
-          <td>5.725e-03</td>
-          <td>3.120</td>
-          <td>10.754</td>
-          <td>34.945</td>
-          <td>...</td>
-          <td>-177.240</td>
-          <td>1636.400</td>
-          <td>-379.023</td>
-          <td>-13.094</td>
-          <td>-87.906</td>
-          <td>-458.433</td>
-          <td>-5.134</td>
-          <td>2158.938</td>
-          <td>-11.777</td>
-          <td>632.254</td>
-        </tr>
-        <tr>
-          <th>bending_moment_b2</th>
-          <td>10.580</td>
-          <td>-3.701e-01</td>
-          <td>-3.505</td>
-          <td>136.870</td>
-          <td>-0.825</td>
-          <td>92.853</td>
-          <td>-2.029e-01</td>
-          <td>8.873</td>
-          <td>0.200</td>
-          <td>-342.117</td>
-          <td>...</td>
-          <td>2735.206</td>
-          <td>-5677.467</td>
-          <td>883.585</td>
-          <td>191.532</td>
-          <td>-1785.922</td>
-          <td>-86.016</td>
-          <td>30.428</td>
-          <td>2283.334</td>
-          <td>-195.530</td>
-          <td>1454.442</td>
-        </tr>
-        <tr>
-          <th>shear1</th>
-          <td>0.674</td>
-          <td>-2.396e-01</td>
-          <td>2.068</td>
-          <td>12.001</td>
-          <td>0.360</td>
-          <td>7.116</td>
-          <td>-4.170e-03</td>
-          <td>-2.792</td>
-          <td>-9.344</td>
-          <td>-37.584</td>
-          <td>...</td>
-          <td>-121.866</td>
-          <td>-2056.625</td>
-          <td>94.644</td>
-          <td>38.459</td>
-          <td>-218.345</td>
-          <td>246.153</td>
-          <td>7.143</td>
-          <td>-1185.625</td>
-          <td>-11.484</td>
-          <td>-257.911</td>
-        </tr>
-        <tr>
-          <th>shear2</th>
-          <td>-8.341</td>
-          <td>3.275e-01</td>
-          <td>1.363</td>
-          <td>-107.205</td>
-          <td>0.431</td>
-          <td>-73.448</td>
-          <td>1.557e-01</td>
-          <td>-5.973</td>
-          <td>0.755</td>
-          <td>270.068</td>
-          <td>...</td>
-          <td>-2088.456</td>
-          <td>4985.505</td>
-          <td>-698.776</td>
-          <td>-164.756</td>
-          <td>1548.604</td>
-          <td>35.659</td>
-          <td>-25.838</td>
-          <td>-1667.606</td>
-          <td>159.539</td>
-          <td>-1113.765</td>
-        </tr>
-        <tr>
-          <th>axial</th>
-          <td>-1.195</td>
-          <td>-4.812e-01</td>
-          <td>8.502</td>
-          <td>-1.983</td>
-          <td>0.866</td>
-          <td>0.808</td>
-          <td>2.142e-02</td>
-          <td>-7.725</td>
-          <td>-14.430</td>
-          <td>-50.811</td>
-          <td>...</td>
-          <td>1490.182</td>
-          <td>-7709.150</td>
-          <td>48.365</td>
-          <td>220.657</td>
-          <td>-1772.561</td>
-          <td>-214.154</td>
-          <td>26.928</td>
-          <td>1953.687</td>
-          <td>-131.674</td>
-          <td>930.862</td>
-        </tr>
-        <tr>
-          <th>torque</th>
-          <td>-0.248</td>
-          <td>-1.712e-02</td>
-          <td>-0.338</td>
-          <td>-1.718</td>
-          <td>-0.108</td>
-          <td>-1.640</td>
-          <td>1.188e-03</td>
-          <td>0.342</td>
-          <td>-0.009</td>
-          <td>3.011</td>
-          <td>...</td>
-          <td>10.192</td>
-          <td>486.360</td>
-          <td>14.983</td>
-          <td>-14.350</td>
-          <td>151.037</td>
-          <td>6.579</td>
-          <td>-2.652</td>
-          <td>-76.869</td>
-          <td>12.281</td>
-          <td>-66.087</td>
-        </tr>
-        <tr>
-          <th rowspan="8" valign="top">5673</th>
-          <th>bending_moment_a1</th>
-          <td>3.874</td>
-          <td>-1.704e-01</td>
-          <td>-2.119</td>
-          <td>20.828</td>
-          <td>-0.324</td>
-          <td>13.227</td>
-          <td>-2.564e-02</td>
-          <td>3.424</td>
-          <td>6.203</td>
-          <td>29.127</td>
-          <td>...</td>
-          <td>-1080.442</td>
-          <td>1796.585</td>
-          <td>-1178.649</td>
-          <td>-15.311</td>
-          <td>121.344</td>
-          <td>-797.271</td>
-          <td>2.236</td>
-          <td>3093.695</td>
-          <td>-74.858</td>
-          <td>1463.576</td>
-        </tr>
-        <tr>
-          <th>bending_moment_a2</th>
-          <td>7.571</td>
-          <td>-1.505e-01</td>
-          <td>4.920</td>
-          <td>98.786</td>
-          <td>0.107</td>
-          <td>68.431</td>
-          <td>-1.098e-01</td>
-          <td>-1.673</td>
-          <td>-14.352</td>
-          <td>-259.623</td>
-          <td>...</td>
-          <td>-1314.865</td>
-          <td>4576.052</td>
-          <td>448.433</td>
-          <td>-171.223</td>
-          <td>1841.507</td>
-          <td>824.729</td>
-          <td>-38.126</td>
-          <td>-4667.893</td>
-          <td>244.248</td>
-          <td>-2400.134</td>
-        </tr>
-        <tr>
-          <th>bending_moment_b1</th>
-          <td>-3.751</td>
-          <td>1.467e-01</td>
-          <td>-3.097</td>
-          <td>-19.496</td>
-          <td>-0.143</td>
-          <td>-11.909</td>
-          <td>3.264e-02</td>
-          <td>-4.427</td>
-          <td>-8.789</td>
-          <td>-33.298</td>
-          <td>...</td>
-          <td>579.107</td>
-          <td>-3532.167</td>
-          <td>825.902</td>
-          <td>71.978</td>
-          <td>-609.247</td>
-          <td>650.375</td>
-          <td>4.871</td>
-          <td>-2487.016</td>
-          <td>29.208</td>
-          <td>-1066.517</td>
-        </tr>
-        <tr>
+          <th rowspan="5" valign="top">5673</th>
           <th>bending_moment_b2</th>
           <td>-4.887</td>
-          <td>7.709e-01</td>
-          <td>-5.511</td>
-          <td>-64.277</td>
-          <td>-0.708</td>
-          <td>-45.138</td>
+          <td>-0.771</td>
+          <td>-5.513</td>
+          <td>-64.275</td>
+          <td>0.708</td>
+          <td>-45.140</td>
           <td>4.117e-02</td>
           <td>4.519</td>
           <td>15.583</td>
-          <td>177.852</td>
+          <td>178.278</td>
           <td>...</td>
-          <td>1220.512</td>
-          <td>-2166.852</td>
-          <td>-139.431</td>
-          <td>90.474</td>
-          <td>-996.507</td>
-          <td>-521.445</td>
-          <td>20.893</td>
-          <td>3043.982</td>
+          <td>1221.807</td>
+          <td>-2167.272</td>
+          <td>-139.608</td>
+          <td>90.460</td>
+          <td>-995.605</td>
+          <td>-521.442</td>
+          <td>20.895</td>
+          <td>3044.015</td>
           <td>-150.282</td>
-          <td>1542.757</td>
+          <td>1542.777</td>
         </tr>
         <tr>
           <th>shear1</th>
           <td>1.530</td>
-          <td>-6.362e-02</td>
+          <td>0.064</td>
           <td>0.196</td>
-          <td>8.092</td>
-          <td>-0.036</td>
+          <td>8.091</td>
+          <td>0.036</td>
           <td>5.044</td>
-          <td>-1.169e-02</td>
+          <td>-1.170e-02</td>
           <td>1.575</td>
           <td>3.008</td>
-          <td>12.527</td>
+          <td>12.579</td>
           <td>...</td>
-          <td>-333.013</td>
-          <td>1069.293</td>
-          <td>-402.243</td>
-          <td>-17.516</td>
-          <td>146.604</td>
-          <td>-290.492</td>
+          <td>-333.076</td>
+          <td>1069.363</td>
+          <td>-402.194</td>
+          <td>-17.513</td>
+          <td>146.144</td>
+          <td>-290.489</td>
           <td>-0.529</td>
-          <td>1119.853</td>
+          <td>1119.859</td>
           <td>-20.882</td>
-          <td>507.701</td>
+          <td>507.706</td>
         </tr>
         <tr>
           <th>shear2</th>
           <td>2.500</td>
-          <td>-1.849e-01</td>
-          <td>2.093</td>
-          <td>32.721</td>
-          <td>0.164</td>
-          <td>22.789</td>
+          <td>0.185</td>
+          <td>2.094</td>
+          <td>32.720</td>
+          <td>-0.164</td>
+          <td>22.790</td>
           <td>-3.028e-02</td>
           <td>-1.243</td>
           <td>-6.007</td>
-          <td>-87.786</td>
+          <td>-87.993</td>
           <td>...</td>
-          <td>-508.761</td>
-          <td>1353.064</td>
-          <td>117.964</td>
-          <td>-52.513</td>
-          <td>569.490</td>
-          <td>270.130</td>
-          <td>-11.843</td>
-          <td>-1547.502</td>
+          <td>-509.317</td>
+          <td>1353.304</td>
+          <td>118.067</td>
+          <td>-52.505</td>
+          <td>568.911</td>
+          <td>270.128</td>
+          <td>-11.844</td>
+          <td>-1547.519</td>
           <td>79.168</td>
-          <td>-791.200</td>
+          <td>-791.210</td>
         </tr>
         <tr>
           <th>axial</th>
           <td>1.087</td>
-          <td>-5.310e-01</td>
-          <td>6.834</td>
+          <td>0.531</td>
+          <td>6.835</td>
           <td>-0.771</td>
-          <td>0.603</td>
+          <td>-0.603</td>
           <td>-0.734</td>
           <td>3.275e-02</td>
           <td>-8.155</td>
           <td>-14.764</td>
-          <td>40.010</td>
+          <td>40.129</td>
           <td>...</td>
-          <td>-1066.870</td>
-          <td>919.347</td>
-          <td>-107.465</td>
-          <td>-59.717</td>
-          <td>778.357</td>
-          <td>357.510</td>
-          <td>-1.987</td>
-          <td>-2290.304</td>
+          <td>-1067.977</td>
+          <td>919.702</td>
+          <td>-107.349</td>
+          <td>-59.708</td>
+          <td>777.990</td>
+          <td>357.506</td>
+          <td>-1.989</td>
+          <td>-2290.321</td>
           <td>58.945</td>
-          <td>-969.822</td>
+          <td>-969.833</td>
         </tr>
         <tr>
           <th>torque</th>
           <td>0.051</td>
-          <td>-3.749e-02</td>
+          <td>0.037</td>
           <td>-0.309</td>
           <td>2.623</td>
-          <td>-0.036</td>
+          <td>0.036</td>
           <td>1.727</td>
           <td>7.360e-04</td>
           <td>-0.236</td>
           <td>-1.174</td>
-          <td>-12.071</td>
+          <td>-12.099</td>
           <td>...</td>
-          <td>-40.913</td>
-          <td>-357.196</td>
-          <td>-5.310</td>
-          <td>9.919</td>
-          <td>-82.996</td>
+          <td>-40.983</td>
+          <td>-357.232</td>
+          <td>-5.330</td>
+          <td>9.918</td>
+          <td>-82.831</td>
           <td>11.710</td>
           <td>1.341</td>
           <td>-37.390</td>
@@ -6977,20 +2640,20 @@ Cycles, at the top.
           <th>Freq</th>
           <th>8.359</th>
           <th>9.508</th>
-          <th>15.666</th>
+          <th>15.667</th>
           <th>20.237</th>
           <th>20.306</th>
           <th>20.555</th>
           <th>21.500</th>
           <th>21.706</th>
           <th>21.725</th>
-          <th>28.536</th>
+          <th>28.542</th>
           <th>...</th>
           <th>80.076</th>
           <th>86.487</th>
           <th>88.168</th>
           <th>88.477</th>
-          <th>89.923</th>
+          <th>89.928</th>
           <th>94.290</th>
           <th>94.368</th>
           <th>96.044</th>
@@ -7002,45 +2665,45 @@ Cycles, at the top.
           <th>Eigenvalue</th>
           <th>2758.149</th>
           <th>3568.632</th>
-          <th>9689.306</th>
-          <th>16168.100</th>
-          <th>16278.223</th>
-          <th>16679.709</th>
-          <th>18248.434</th>
+          <th>9689.982</th>
+          <th>16168.038</th>
+          <th>16278.158</th>
+          <th>16679.707</th>
+          <th>18248.432</th>
           <th>18600.697</th>
           <th>18632.551</th>
-          <th>32147.814</th>
+          <th>32159.891</th>
           <th>...</th>
-          <th>253140.875</th>
-          <th>295297.750</th>
-          <th>306885.906</th>
+          <th>253141.172</th>
+          <th>295300.938</th>
+          <th>306886.000</th>
           <th>309040.656</th>
-          <th>319227.719</th>
+          <th>319267.094</th>
           <th>350984.500</th>
           <th>351566.188</th>
-          <th>364166.156</th>
+          <th>364166.312</th>
           <th>384601.344</th>
-          <th>386090.438</th>
+          <th>386090.469</th>
         </tr>
         <tr>
           <th></th>
           <th>Radians</th>
           <th>52.518</th>
           <th>59.738</th>
-          <th>98.434</th>
+          <th>98.438</th>
           <th>127.154</th>
           <th>127.586</th>
           <th>129.150</th>
           <th>135.087</th>
           <th>136.384</th>
           <th>136.501</th>
-          <th>179.298</th>
+          <th>179.332</th>
           <th>...</th>
           <th>503.131</th>
-          <th>543.413</th>
+          <th>543.416</th>
           <th>553.973</th>
           <th>555.914</th>
-          <th>565.002</th>
+          <th>565.037</th>
           <th>592.439</th>
           <th>592.930</th>
           <th>603.462</th>
@@ -7075,85 +2738,85 @@ Cycles, at the top.
       </thead>
       <tbody>
         <tr>
-          <th rowspan="6" valign="top">3736</th>
+          <th rowspan="5" valign="top">3736</th>
           <th>fx</th>
           <td>-2.840</td>
-          <td>-0.740</td>
+          <td>0.740</td>
           <td>1.768</td>
-          <td>-46.229</td>
-          <td>1.189</td>
-          <td>-26.766</td>
+          <td>-46.228</td>
+          <td>-1.190</td>
+          <td>-26.767</td>
           <td>-0.046</td>
           <td>-8.746</td>
-          <td>-4.972</td>
-          <td>81.300</td>
+          <td>-4.973</td>
+          <td>81.487</td>
           <td>...</td>
-          <td>393.928</td>
-          <td>-1072.844</td>
-          <td>286.057</td>
-          <td>-514.816</td>
-          <td>-193.791</td>
-          <td>-42.189</td>
+          <td>393.464</td>
+          <td>-1072.932</td>
+          <td>286.009</td>
+          <td>-514.819</td>
+          <td>-193.329</td>
+          <td>-42.187</td>
           <td>88.025</td>
-          <td>490.182</td>
+          <td>490.178</td>
           <td>93.169</td>
-          <td>262.898</td>
+          <td>262.899</td>
         </tr>
         <tr>
           <th>fy</th>
           <td>3.374</td>
-          <td>0.809</td>
+          <td>-0.809</td>
           <td>0.580</td>
-          <td>46.109</td>
-          <td>-0.300</td>
-          <td>28.257</td>
+          <td>46.108</td>
+          <td>0.300</td>
+          <td>28.258</td>
           <td>0.032</td>
           <td>7.206</td>
           <td>5.679</td>
-          <td>-82.508</td>
+          <td>-82.707</td>
           <td>...</td>
-          <td>-315.874</td>
-          <td>1119.018</td>
-          <td>-206.185</td>
-          <td>438.919</td>
-          <td>199.036</td>
-          <td>68.433</td>
+          <td>-315.394</td>
+          <td>1119.104</td>
+          <td>-206.135</td>
+          <td>438.922</td>
+          <td>198.549</td>
+          <td>68.430</td>
           <td>-66.234</td>
-          <td>-527.738</td>
+          <td>-527.734</td>
           <td>-91.114</td>
           <td>-277.767</td>
         </tr>
         <tr>
           <th>fz</th>
           <td>-0.617</td>
-          <td>-8.572</td>
-          <td>43.047</td>
+          <td>8.572</td>
+          <td>43.051</td>
           <td>-10.336</td>
-          <td>-7.485</td>
+          <td>7.485</td>
           <td>-17.494</td>
           <td>0.185</td>
           <td>-31.983</td>
           <td>-51.687</td>
-          <td>67.785</td>
+          <td>67.928</td>
           <td>...</td>
-          <td>-285.425</td>
-          <td>-751.421</td>
-          <td>11.519</td>
-          <td>67.315</td>
-          <td>-188.785</td>
-          <td>78.174</td>
-          <td>-54.882</td>
-          <td>-631.519</td>
+          <td>-285.806</td>
+          <td>-751.496</td>
+          <td>11.479</td>
+          <td>67.312</td>
+          <td>-188.466</td>
+          <td>78.173</td>
+          <td>-54.881</td>
+          <td>-631.523</td>
           <td>-35.506</td>
-          <td>-183.888</td>
+          <td>-183.889</td>
         </tr>
         <tr>
           <th>mx</th>
           <td>-0.000</td>
-          <td>0.000</td>
           <td>-0.000</td>
           <td>-0.000</td>
-          <td>0.000</td>
+          <td>-0.000</td>
+          <td>-0.000</td>
           <td>-0.000</td>
           <td>-0.000</td>
           <td>0.000</td>
@@ -7174,40 +2837,6 @@ Cycles, at the top.
         <tr>
           <th>my</th>
           <td>0.000</td>
-          <td>-0.000</td>
-          <td>0.000</td>
-          <td>0.000</td>
-          <td>-0.000</td>
-          <td>0.000</td>
-          <td>0.000</td>
-          <td>-0.000</td>
-          <td>-0.000</td>
-          <td>-0.000</td>
-          <td>...</td>
-          <td>-0.000</td>
-          <td>0.000</td>
-          <td>-0.000</td>
-          <td>0.000</td>
-          <td>0.000</td>
-          <td>0.000</td>
-          <td>0.000</td>
-          <td>-0.000</td>
-          <td>0.000</td>
-          <td>-0.000</td>
-        </tr>
-        <tr>
-          <th>mz</th>
-          <td>-0.000</td>
-          <td>-0.000</td>
-          <td>0.000</td>
-          <td>0.000</td>
-          <td>-0.000</td>
-          <td>0.000</td>
-          <td>0.000</td>
-          <td>0.000</td>
-          <td>0.000</td>
-          <td>-0.000</td>
-          <td>...</td>
           <td>0.000</td>
           <td>0.000</td>
           <td>0.000</td>
@@ -7216,141 +2845,6 @@ Cycles, at the top.
           <td>0.000</td>
           <td>-0.000</td>
           <td>-0.000</td>
-          <td>0.000</td>
-          <td>-0.000</td>
-        </tr>
-        <tr>
-          <th rowspan="6" valign="top">4575</th>
-          <th>fx</th>
-          <td>-4.615</td>
-          <td>3.233</td>
-          <td>-40.728</td>
-          <td>-51.247</td>
-          <td>1.933</td>
-          <td>-29.247</td>
-          <td>-0.015</td>
-          <td>10.464</td>
-          <td>17.410</td>
-          <td>90.049</td>
-          <td>...</td>
-          <td>-65.030</td>
-          <td>-1095.469</td>
-          <td>-88.056</td>
-          <td>146.891</td>
-          <td>-58.260</td>
-          <td>-16.733</td>
-          <td>-58.451</td>
-          <td>-140.014</td>
-          <td>-15.888</td>
-          <td>-15.923</td>
-        </tr>
-        <tr>
-          <th>fy</th>
-          <td>4.700</td>
-          <td>-4.325</td>
-          <td>45.481</td>
-          <td>50.621</td>
-          <td>0.536</td>
-          <td>31.404</td>
-          <td>0.064</td>
-          <td>-12.966</td>
-          <td>-24.141</td>
-          <td>-91.806</td>
-          <td>...</td>
-          <td>129.430</td>
-          <td>1193.951</td>
-          <td>125.585</td>
-          <td>-108.001</td>
-          <td>93.591</td>
-          <td>31.062</td>
-          <td>41.832</td>
-          <td>56.625</td>
-          <td>20.402</td>
-          <td>-19.499</td>
-        </tr>
-        <tr>
-          <th>fz</th>
-          <td>-2.075</td>
-          <td>-8.342</td>
-          <td>38.919</td>
-          <td>-29.978</td>
-          <td>-4.384</td>
-          <td>-27.389</td>
-          <td>0.167</td>
-          <td>-32.009</td>
-          <td>-51.189</td>
-          <td>100.340</td>
-          <td>...</td>
-          <td>-206.343</td>
-          <td>-1215.355</td>
-          <td>9.171</td>
-          <td>-5.366</td>
-          <td>-254.791</td>
-          <td>19.716</td>
-          <td>-75.929</td>
-          <td>-479.696</td>
-          <td>-38.375</td>
-          <td>-139.608</td>
-        </tr>
-        <tr>
-          <th>mx</th>
-          <td>-0.000</td>
-          <td>0.000</td>
-          <td>-0.000</td>
-          <td>-0.000</td>
-          <td>0.000</td>
-          <td>-0.000</td>
-          <td>-0.000</td>
-          <td>0.000</td>
-          <td>0.000</td>
-          <td>-0.000</td>
-          <td>...</td>
-          <td>0.000</td>
-          <td>-0.000</td>
-          <td>0.000</td>
-          <td>-0.000</td>
-          <td>-0.000</td>
-          <td>-0.000</td>
-          <td>0.000</td>
-          <td>0.000</td>
-          <td>0.000</td>
-          <td>0.000</td>
-        </tr>
-        <tr>
-          <th>my</th>
-          <td>0.000</td>
-          <td>0.000</td>
-          <td>0.000</td>
-          <td>0.000</td>
-          <td>-0.000</td>
-          <td>0.000</td>
-          <td>0.000</td>
-          <td>0.000</td>
-          <td>0.000</td>
-          <td>-0.000</td>
-          <td>...</td>
-          <td>0.000</td>
-          <td>0.000</td>
-          <td>0.000</td>
-          <td>-0.000</td>
-          <td>0.000</td>
-          <td>0.000</td>
-          <td>0.000</td>
-          <td>-0.000</td>
-          <td>0.000</td>
-          <td>-0.000</td>
-        </tr>
-        <tr>
-          <th>mz</th>
-          <td>-0.000</td>
-          <td>0.000</td>
-          <td>-0.000</td>
-          <td>0.000</td>
-          <td>-0.000</td>
-          <td>0.000</td>
-          <td>0.000</td>
-          <td>0.000</td>
-          <td>0.000</td>
           <td>-0.000</td>
           <td>...</td>
           <td>-0.000</td>
@@ -7358,446 +2852,11 @@ Cycles, at the top.
           <td>-0.000</td>
           <td>0.000</td>
           <td>0.000</td>
-          <td>-0.000</td>
-          <td>0.000</td>
-          <td>0.000</td>
-          <td>-0.000</td>
-          <td>0.000</td>
-        </tr>
-        <tr>
-          <th rowspan="6" valign="top">4576</th>
-          <th>fx</th>
-          <td>-2.247</td>
-          <td>1.848</td>
-          <td>-26.540</td>
-          <td>-17.940</td>
-          <td>0.093</td>
-          <td>-13.830</td>
-          <td>-0.006</td>
-          <td>6.068</td>
-          <td>9.472</td>
-          <td>35.136</td>
-          <td>...</td>
-          <td>-49.047</td>
-          <td>-533.915</td>
-          <td>-79.183</td>
-          <td>169.223</td>
-          <td>34.724</td>
-          <td>-23.188</td>
-          <td>-45.043</td>
-          <td>5.981</td>
-          <td>-27.096</td>
-          <td>-5.814</td>
-        </tr>
-        <tr>
-          <th>fy</th>
-          <td>2.057</td>
-          <td>-1.814</td>
-          <td>26.044</td>
-          <td>24.129</td>
-          <td>-2.022</td>
-          <td>16.564</td>
-          <td>0.030</td>
-          <td>-4.605</td>
-          <td>-10.738</td>
-          <td>-49.552</td>
-          <td>...</td>
-          <td>165.480</td>
-          <td>381.053</td>
-          <td>47.227</td>
-          <td>-113.319</td>
-          <td>-24.250</td>
-          <td>-53.492</td>
-          <td>35.471</td>
-          <td>423.088</td>
-          <td>14.753</td>
-          <td>106.628</td>
-        </tr>
-        <tr>
-          <th>fz</th>
-          <td>-2.549</td>
-          <td>-9.968</td>
-          <td>45.415</td>
-          <td>-36.374</td>
-          <td>-4.519</td>
-          <td>-34.071</td>
-          <td>0.204</td>
-          <td>-38.398</td>
-          <td>-61.179</td>
-          <td>125.581</td>
-          <td>...</td>
-          <td>-373.693</td>
-          <td>-1540.113</td>
-          <td>-16.216</td>
-          <td>73.278</td>
-          <td>-325.309</td>
-          <td>79.769</td>
-          <td>-81.809</td>
-          <td>-779.614</td>
-          <td>-34.205</td>
-          <td>-212.688</td>
-        </tr>
-        <tr>
-          <th>mx</th>
-          <td>-0.000</td>
-          <td>0.000</td>
-          <td>-0.000</td>
-          <td>-0.000</td>
-          <td>0.000</td>
-          <td>-0.000</td>
-          <td>-0.000</td>
-          <td>0.000</td>
-          <td>0.000</td>
-          <td>0.000</td>
-          <td>...</td>
-          <td>0.000</td>
-          <td>-0.000</td>
-          <td>-0.000</td>
-          <td>-0.000</td>
-          <td>-0.000</td>
-          <td>-0.000</td>
-          <td>0.000</td>
-          <td>0.000</td>
-          <td>0.000</td>
-          <td>0.000</td>
-        </tr>
-        <tr>
-          <th>my</th>
-          <td>-0.000</td>
-          <td>0.000</td>
-          <td>-0.000</td>
-          <td>-0.000</td>
-          <td>0.000</td>
-          <td>-0.000</td>
-          <td>-0.000</td>
-          <td>0.000</td>
-          <td>0.000</td>
-          <td>0.000</td>
-          <td>...</td>
-          <td>0.000</td>
-          <td>0.000</td>
-          <td>0.000</td>
-          <td>0.000</td>
-          <td>0.000</td>
-          <td>-0.000</td>
-          <td>0.000</td>
-          <td>0.000</td>
-          <td>-0.000</td>
-          <td>0.000</td>
-        </tr>
-        <tr>
-          <th>mz</th>
-          <td>-0.000</td>
-          <td>0.000</td>
-          <td>-0.000</td>
-          <td>0.000</td>
-          <td>-0.000</td>
-          <td>-0.000</td>
-          <td>-0.000</td>
-          <td>0.000</td>
-          <td>0.000</td>
-          <td>-0.000</td>
-          <td>...</td>
-          <td>0.000</td>
-          <td>0.000</td>
-          <td>-0.000</td>
-          <td>-0.000</td>
-          <td>0.000</td>
-          <td>-0.000</td>
-          <td>0.000</td>
-          <td>0.000</td>
-          <td>-0.000</td>
-          <td>0.000</td>
-        </tr>
-        <tr>
-          <th rowspan="6" valign="top">4577</th>
-          <th>fx</th>
-          <td>-1.240</td>
-          <td>1.269</td>
-          <td>-13.710</td>
-          <td>-7.363</td>
-          <td>0.241</td>
-          <td>-7.121</td>
-          <td>-0.026</td>
-          <td>3.880</td>
-          <td>6.272</td>
-          <td>14.665</td>
-          <td>...</td>
-          <td>-18.743</td>
-          <td>-239.325</td>
-          <td>-39.057</td>
-          <td>70.519</td>
-          <td>38.673</td>
-          <td>-30.699</td>
-          <td>-19.362</td>
-          <td>124.481</td>
-          <td>-11.337</td>
-          <td>42.888</td>
-        </tr>
-        <tr>
-          <th>fy</th>
-          <td>1.229</td>
-          <td>-1.329</td>
-          <td>14.292</td>
-          <td>10.720</td>
-          <td>-0.881</td>
-          <td>8.623</td>
-          <td>0.020</td>
-          <td>-4.856</td>
-          <td>-8.030</td>
-          <td>-26.645</td>
-          <td>...</td>
-          <td>82.012</td>
-          <td>-64.282</td>
-          <td>-42.989</td>
-          <td>-70.577</td>
-          <td>-65.170</td>
-          <td>-77.781</td>
-          <td>23.042</td>
-          <td>436.958</td>
-          <td>11.037</td>
-          <td>114.356</td>
-        </tr>
-        <tr>
-          <th>fz</th>
-          <td>-2.808</td>
-          <td>-10.629</td>
-          <td>45.602</td>
-          <td>-39.093</td>
-          <td>-6.064</td>
-          <td>-38.777</td>
-          <td>0.214</td>
-          <td>-41.904</td>
-          <td>-65.485</td>
-          <td>142.667</td>
-          <td>...</td>
-          <td>-491.891</td>
-          <td>-1834.910</td>
-          <td>-1.304</td>
-          <td>74.157</td>
-          <td>-369.530</td>
-          <td>145.997</td>
-          <td>-57.207</td>
-          <td>-989.443</td>
-          <td>-9.558</td>
-          <td>-243.333</td>
-        </tr>
-        <tr>
-          <th>mx</th>
-          <td>-0.000</td>
-          <td>0.000</td>
-          <td>-0.000</td>
-          <td>0.000</td>
-          <td>0.000</td>
-          <td>0.000</td>
-          <td>-0.000</td>
-          <td>0.000</td>
-          <td>0.000</td>
-          <td>-0.000</td>
-          <td>...</td>
-          <td>0.000</td>
-          <td>0.000</td>
-          <td>-0.000</td>
-          <td>0.000</td>
-          <td>0.000</td>
-          <td>-0.000</td>
-          <td>-0.000</td>
-          <td>0.000</td>
-          <td>-0.000</td>
-          <td>0.000</td>
-        </tr>
-        <tr>
-          <th>my</th>
-          <td>0.000</td>
-          <td>0.000</td>
-          <td>-0.000</td>
-          <td>0.000</td>
-          <td>0.000</td>
           <td>0.000</td>
-          <td>-0.000</td>
-          <td>0.000</td>
-          <td>0.000</td>
-          <td>-0.000</td>
-          <td>...</td>
-          <td>0.000</td>
-          <td>0.000</td>
-          <td>-0.000</td>
-          <td>0.000</td>
-          <td>0.000</td>
-          <td>-0.000</td>
-          <td>-0.000</td>
-          <td>0.000</td>
-          <td>-0.000</td>
-          <td>0.000</td>
-        </tr>
-        <tr>
-          <th>mz</th>
-          <td>-0.000</td>
-          <td>0.000</td>
-          <td>-0.000</td>
-          <td>0.000</td>
-          <td>-0.000</td>
-          <td>-0.000</td>
-          <td>-0.000</td>
-          <td>0.000</td>
-          <td>0.000</td>
-          <td>0.000</td>
-          <td>...</td>
-          <td>0.000</td>
-          <td>0.000</td>
-          <td>-0.000</td>
-          <td>-0.000</td>
-          <td>0.000</td>
-          <td>-0.000</td>
-          <td>0.000</td>
-          <td>0.000</td>
-          <td>0.000</td>
-          <td>0.000</td>
-        </tr>
-        <tr>
-          <th rowspan="6" valign="top">4578</th>
-          <th>fx</th>
-          <td>-0.755</td>
-          <td>0.248</td>
-          <td>-3.209</td>
-          <td>-7.681</td>
-          <td>2.184</td>
-          <td>-5.202</td>
-          <td>-0.019</td>
-          <td>0.035</td>
-          <td>-0.236</td>
-          <td>12.252</td>
-          <td>...</td>
-          <td>31.103</td>
-          <td>-456.721</td>
-          <td>-47.699</td>
-          <td>34.076</td>
-          <td>-26.907</td>
-          <td>-71.597</td>
-          <td>-5.929</td>
-          <td>396.100</td>
-          <td>1.227</td>
-          <td>137.669</td>
-        </tr>
-        <tr>
-          <th>fy</th>
-          <td>0.763</td>
-          <td>-0.516</td>
-          <td>4.834</td>
-          <td>9.350</td>
-          <td>-1.765</td>
-          <td>6.775</td>
-          <td>0.017</td>
-          <td>-2.286</td>
-          <td>-3.628</td>
-          <td>-24.866</td>
-          <td>...</td>
-          <td>-7.259</td>
-          <td>-265.697</td>
-          <td>-254.456</td>
-          <td>-22.488</td>
-          <td>-69.220</td>
-          <td>-221.294</td>
-          <td>6.878</td>
-          <td>969.605</td>
-          <td>-4.282</td>
-          <td>243.613</td>
-        </tr>
-        <tr>
-          <th>fz</th>
-          <td>-3.211</td>
-          <td>-10.575</td>
-          <td>43.289</td>
-          <td>-43.712</td>
-          <td>-7.176</td>
-          <td>-43.507</td>
-          <td>0.209</td>
-          <td>-42.639</td>
-          <td>-65.640</td>
-          <td>161.256</td>
-          <td>...</td>
-          <td>-609.264</td>
-          <td>-2189.442</td>
-          <td>9.400</td>
-          <td>59.749</td>
-          <td>-430.964</td>
-          <td>206.684</td>
-          <td>-32.809</td>
-          <td>-1185.212</td>
-          <td>15.707</td>
-          <td>-272.111</td>
-        </tr>
-        <tr>
-          <th>mx</th>
-          <td>-0.000</td>
-          <td>0.000</td>
-          <td>-0.000</td>
-          <td>-0.000</td>
-          <td>-0.000</td>
-          <td>0.000</td>
-          <td>-0.000</td>
-          <td>0.000</td>
-          <td>0.000</td>
-          <td>-0.000</td>
-          <td>...</td>
-          <td>0.000</td>
-          <td>-0.000</td>
-          <td>-0.000</td>
-          <td>0.000</td>
-          <td>0.000</td>
-          <td>-0.000</td>
-          <td>-0.000</td>
-          <td>0.000</td>
-          <td>-0.000</td>
-          <td>0.000</td>
-        </tr>
-        <tr>
-          <th>my</th>
-          <td>-0.000</td>
-          <td>0.000</td>
-          <td>-0.000</td>
-          <td>-0.000</td>
-          <td>0.000</td>
-          <td>-0.000</td>
-          <td>-0.000</td>
-          <td>0.000</td>
-          <td>0.000</td>
-          <td>-0.000</td>
-          <td>...</td>
-          <td>0.000</td>
-          <td>0.000</td>
-          <td>0.000</td>
           <td>0.000</td>
-          <td>0.000</td>
-          <td>-0.000</td>
-          <td>-0.000</td>
-          <td>0.000</td>
-          <td>-0.000</td>
-          <td>0.000</td>
-        </tr>
-        <tr>
-          <th>mz</th>
-          <td>-0.000</td>
-          <td>0.000</td>
-          <td>-0.000</td>
-          <td>0.000</td>
-          <td>-0.000</td>
           <td>-0.000</td>
-          <td>-0.000</td>
-          <td>0.000</td>
-          <td>0.000</td>
-          <td>0.000</td>
-          <td>...</td>
-          <td>-0.000</td>
-          <td>0.000</td>
-          <td>-0.000</td>
-          <td>-0.000</td>
           <td>0.000</td>
           <td>-0.000</td>
-          <td>0.000</td>
-          <td>0.000</td>
-          <td>0.000</td>
-          <td>0.000</td>
         </tr>
         <tr>
           <th>...</th>
@@ -7825,665 +2884,61 @@ Cycles, at the top.
           <td>...</td>
         </tr>
         <tr>
-          <th rowspan="6" valign="top">5637</th>
-          <th>fx</th>
-          <td>49.162</td>
-          <td>51.177</td>
-          <td>-248.014</td>
-          <td>425.160</td>
-          <td>-12.913</td>
-          <td>268.884</td>
-          <td>-1.781</td>
-          <td>133.765</td>
-          <td>343.959</td>
-          <td>-572.803</td>
-          <td>...</td>
-          <td>-410.472</td>
-          <td>-463.618</td>
-          <td>5454.213</td>
-          <td>128.519</td>
-          <td>-143.925</td>
-          <td>3830.929</td>
-          <td>8.627</td>
-          <td>-15633.250</td>
-          <td>-114.476</td>
-          <td>-3649.778</td>
-        </tr>
-        <tr>
-          <th>fy</th>
-          <td>54.530</td>
-          <td>111.966</td>
-          <td>-539.890</td>
-          <td>447.818</td>
-          <td>-36.786</td>
-          <td>280.238</td>
-          <td>-3.555</td>
-          <td>317.564</td>
-          <td>741.795</td>
-          <td>-461.717</td>
-          <td>...</td>
-          <td>-752.865</td>
-          <td>3026.821</td>
-          <td>7008.661</td>
-          <td>81.345</td>
-          <td>547.870</td>
-          <td>4861.486</td>
-          <td>16.281</td>
-          <td>-19884.789</td>
-          <td>-157.159</td>
-          <td>-4674.805</td>
-        </tr>
-        <tr>
-          <th>fz</th>
-          <td>-73.578</td>
-          <td>-151.078</td>
-          <td>728.482</td>
-          <td>-604.248</td>
-          <td>49.636</td>
-          <td>-378.129</td>
-          <td>4.797</td>
-          <td>-428.494</td>
-          <td>-1000.915</td>
-          <td>623.002</td>
-          <td>...</td>
-          <td>1015.853</td>
-          <td>-4084.136</td>
-          <td>-9456.893</td>
-          <td>-109.759</td>
-          <td>-739.250</td>
-          <td>-6559.677</td>
-          <td>-21.969</td>
-          <td>26830.850</td>
-          <td>212.057</td>
-          <td>6307.785</td>
-        </tr>
-        <tr>
-          <th>mx</th>
-          <td>-0.000</td>
-          <td>-0.000</td>
-          <td>0.000</td>
-          <td>-0.000</td>
-          <td>0.000</td>
-          <td>-0.000</td>
-          <td>0.000</td>
-          <td>-0.000</td>
-          <td>-0.000</td>
-          <td>-0.000</td>
-          <td>...</td>
-          <td>-0.000</td>
-          <td>0.000</td>
-          <td>-0.000</td>
-          <td>-0.000</td>
-          <td>0.000</td>
-          <td>-0.000</td>
-          <td>-0.000</td>
-          <td>0.000</td>
-          <td>0.000</td>
-          <td>0.000</td>
-        </tr>
-        <tr>
-          <th>my</th>
-          <td>-0.000</td>
-          <td>0.000</td>
-          <td>-0.000</td>
-          <td>-0.000</td>
-          <td>-0.000</td>
-          <td>-0.000</td>
-          <td>-0.000</td>
-          <td>0.000</td>
-          <td>0.000</td>
-          <td>0.000</td>
-          <td>...</td>
-          <td>-0.000</td>
-          <td>-0.000</td>
-          <td>-0.000</td>
-          <td>0.000</td>
-          <td>-0.000</td>
-          <td>-0.000</td>
-          <td>-0.000</td>
-          <td>0.000</td>
-          <td>-0.000</td>
-          <td>0.000</td>
-        </tr>
-        <tr>
-          <th>mz</th>
-          <td>-0.000</td>
-          <td>0.000</td>
-          <td>-0.000</td>
-          <td>0.000</td>
-          <td>-0.000</td>
-          <td>0.000</td>
-          <td>-0.000</td>
-          <td>0.000</td>
-          <td>0.000</td>
-          <td>-0.000</td>
-          <td>...</td>
-          <td>-0.000</td>
-          <td>0.000</td>
-          <td>-0.000</td>
-          <td>0.000</td>
-          <td>-0.000</td>
-          <td>-0.000</td>
-          <td>-0.000</td>
-          <td>0.000</td>
-          <td>-0.000</td>
-          <td>0.000</td>
-        </tr>
-        <tr>
-          <th rowspan="6" valign="top">5638</th>
-          <th>fx</th>
-          <td>-83.782</td>
-          <td>-49.658</td>
-          <td>344.856</td>
-          <td>-934.568</td>
-          <td>-9.082</td>
-          <td>-672.234</td>
-          <td>3.848</td>
-          <td>-157.479</td>
-          <td>-255.458</td>
-          <td>2072.417</td>
-          <td>...</td>
-          <td>-4721.764</td>
-          <td>25538.203</td>
-          <td>334.886</td>
-          <td>-730.157</td>
-          <td>5476.981</td>
-          <td>-224.659</td>
-          <td>-62.828</td>
-          <td>1499.378</td>
-          <td>556.397</td>
-          <td>594.434</td>
-        </tr>
-        <tr>
-          <th>fy</th>
-          <td>-36.551</td>
-          <td>-41.543</td>
-          <td>280.189</td>
-          <td>-428.042</td>
-          <td>0.283</td>
-          <td>-306.261</td>
-          <td>1.748</td>
-          <td>-137.416</td>
-          <td>-222.547</td>
-          <td>915.213</td>
-          <td>...</td>
-          <td>-4287.155</td>
-          <td>21782.676</td>
-          <td>-1443.226</td>
-          <td>-1572.463</td>
-          <td>5194.899</td>
-          <td>-1291.968</td>
-          <td>247.753</td>
-          <td>4579.679</td>
-          <td>64.200</td>
-          <td>1903.822</td>
-        </tr>
-        <tr>
-          <th>fz</th>
-          <td>-113.049</td>
-          <td>-67.004</td>
-          <td>465.320</td>
-          <td>-1261.026</td>
-          <td>-12.255</td>
-          <td>-907.055</td>
-          <td>5.192</td>
-          <td>-212.489</td>
-          <td>-344.693</td>
-          <td>2796.343</td>
-          <td>...</td>
-          <td>-6371.148</td>
-          <td>34459.086</td>
-          <td>451.867</td>
-          <td>-985.212</td>
-          <td>7390.175</td>
-          <td>-303.135</td>
-          <td>-84.775</td>
-          <td>2023.133</td>
-          <td>750.755</td>
-          <td>802.079</td>
-        </tr>
-        <tr>
-          <th>mx</th>
-          <td>0.000</td>
-          <td>0.000</td>
-          <td>-0.000</td>
-          <td>0.000</td>
-          <td>-0.000</td>
-          <td>0.000</td>
-          <td>-0.000</td>
-          <td>0.000</td>
-          <td>0.000</td>
-          <td>-0.000</td>
-          <td>...</td>
-          <td>-0.000</td>
-          <td>-0.000</td>
-          <td>-0.000</td>
-          <td>-0.000</td>
-          <td>-0.000</td>
-          <td>-0.000</td>
-          <td>0.000</td>
-          <td>-0.000</td>
-          <td>0.000</td>
-          <td>-0.000</td>
-        </tr>
-        <tr>
-          <th>my</th>
-          <td>-0.000</td>
-          <td>-0.000</td>
-          <td>0.000</td>
-          <td>-0.000</td>
-          <td>-0.000</td>
-          <td>-0.000</td>
-          <td>0.000</td>
-          <td>-0.000</td>
-          <td>-0.000</td>
-          <td>0.000</td>
-          <td>...</td>
-          <td>-0.000</td>
-          <td>0.000</td>
-          <td>-0.000</td>
-          <td>0.000</td>
-          <td>-0.000</td>
-          <td>-0.000</td>
-          <td>-0.000</td>
-          <td>0.000</td>
-          <td>0.000</td>
-          <td>0.000</td>
-        </tr>
-        <tr>
-          <th>mz</th>
-          <td>-0.000</td>
-          <td>-0.000</td>
-          <td>-0.000</td>
-          <td>-0.000</td>
-          <td>0.000</td>
-          <td>-0.000</td>
-          <td>0.000</td>
-          <td>0.000</td>
-          <td>-0.000</td>
-          <td>0.000</td>
-          <td>...</td>
-          <td>0.000</td>
-          <td>-0.000</td>
-          <td>0.000</td>
-          <td>-0.000</td>
-          <td>-0.000</td>
-          <td>0.000</td>
-          <td>0.000</td>
-          <td>-0.000</td>
-          <td>0.000</td>
-          <td>-0.000</td>
-        </tr>
-        <tr>
-          <th rowspan="6" valign="top">5639</th>
-          <th>fx</th>
-          <td>-81.377</td>
-          <td>51.930</td>
-          <td>-326.802</td>
-          <td>-793.303</td>
-          <td>-23.290</td>
-          <td>-578.855</td>
-          <td>2.817</td>
-          <td>186.245</td>
-          <td>311.800</td>
-          <td>1920.247</td>
-          <td>...</td>
-          <td>-2.596</td>
-          <td>-27421.629</td>
-          <td>1257.755</td>
-          <td>530.293</td>
-          <td>-8325.014</td>
-          <td>4120.024</td>
-          <td>77.170</td>
-          <td>-19116.590</td>
-          <td>368.111</td>
-          <td>-7227.045</td>
-        </tr>
-        <tr>
-          <th>fy</th>
-          <td>34.523</td>
-          <td>-44.128</td>
-          <td>286.236</td>
-          <td>308.910</td>
-          <td>11.699</td>
-          <td>227.512</td>
-          <td>-0.878</td>
-          <td>-152.454</td>
-          <td>-255.834</td>
-          <td>-786.886</td>
-          <td>...</td>
-          <td>307.377</td>
-          <td>22879.516</td>
-          <td>664.951</td>
-          <td>509.497</td>
-          <td>6444.627</td>
-          <td>-2371.999</td>
-          <td>-365.816</td>
-          <td>12806.220</td>
-          <td>94.586</td>
-          <td>4692.204</td>
-        </tr>
-        <tr>
-          <th>fz</th>
-          <td>-109.803</td>
-          <td>70.070</td>
-          <td>-440.959</td>
-          <td>-1070.416</td>
-          <td>-31.425</td>
-          <td>-781.058</td>
-          <td>3.800</td>
-          <td>251.304</td>
-          <td>420.717</td>
-          <td>2591.019</td>
-          <td>...</td>
-          <td>-3.503</td>
-          <td>-37000.422</td>
-          <td>1697.108</td>
-          <td>715.532</td>
-          <td>-11233.067</td>
-          <td>5559.211</td>
-          <td>104.126</td>
-          <td>-25794.305</td>
-          <td>496.698</td>
-          <td>-9751.562</td>
-        </tr>
-        <tr>
-          <th>mx</th>
-          <td>-0.000</td>
-          <td>0.000</td>
-          <td>-0.000</td>
-          <td>-0.000</td>
-          <td>-0.000</td>
-          <td>-0.000</td>
-          <td>0.000</td>
-          <td>0.000</td>
-          <td>0.000</td>
-          <td>0.000</td>
-          <td>...</td>
-          <td>-0.000</td>
-          <td>-0.000</td>
-          <td>0.000</td>
-          <td>0.000</td>
-          <td>-0.000</td>
-          <td>0.000</td>
-          <td>-0.000</td>
-          <td>-0.000</td>
-          <td>-0.000</td>
-          <td>-0.000</td>
-        </tr>
-        <tr>
-          <th>my</th>
-          <td>-0.000</td>
-          <td>0.000</td>
-          <td>-0.000</td>
-          <td>-0.000</td>
-          <td>-0.000</td>
-          <td>-0.000</td>
-          <td>0.000</td>
-          <td>0.000</td>
-          <td>0.000</td>
-          <td>0.000</td>
-          <td>...</td>
-          <td>-0.000</td>
-          <td>-0.000</td>
-          <td>-0.000</td>
-          <td>0.000</td>
-          <td>-0.000</td>
-          <td>-0.000</td>
-          <td>-0.000</td>
-          <td>0.000</td>
-          <td>0.000</td>
-          <td>0.000</td>
-        </tr>
-        <tr>
-          <th>mz</th>
-          <td>0.000</td>
-          <td>0.000</td>
-          <td>-0.000</td>
-          <td>0.000</td>
-          <td>-0.000</td>
-          <td>0.000</td>
-          <td>-0.000</td>
-          <td>0.000</td>
-          <td>-0.000</td>
-          <td>-0.000</td>
-          <td>...</td>
-          <td>0.000</td>
-          <td>-0.000</td>
-          <td>0.000</td>
-          <td>0.000</td>
-          <td>-0.000</td>
-          <td>0.000</td>
-          <td>-0.000</td>
-          <td>-0.000</td>
-          <td>-0.000</td>
-          <td>0.000</td>
-        </tr>
-        <tr>
-          <th rowspan="6" valign="top">5640</th>
-          <th>fx</th>
-          <td>20.780</td>
-          <td>-39.010</td>
-          <td>206.631</td>
-          <td>286.640</td>
-          <td>2.707</td>
-          <td>176.553</td>
-          <td>-0.478</td>
-          <td>-95.203</td>
-          <td>-278.874</td>
-          <td>-875.002</td>
-          <td>...</td>
-          <td>-249.303</td>
-          <td>-7951.638</td>
-          <td>2744.969</td>
-          <td>322.568</td>
-          <td>-1054.838</td>
-          <td>3240.595</td>
-          <td>34.088</td>
-          <td>-14998.981</td>
-          <td>-126.954</td>
-          <td>-4217.740</td>
-        </tr>
-        <tr>
-          <th>fy</th>
-          <td>-24.990</td>
-          <td>100.678</td>
-          <td>-547.581</td>
-          <td>-343.526</td>
-          <td>15.780</td>
-          <td>-211.440</td>
-          <td>1.334</td>
-          <td>299.794</td>
-          <td>708.537</td>
-          <td>1114.929</td>
-          <td>...</td>
-          <td>1048.101</td>
-          <td>-4288.459</td>
-          <td>-3900.156</td>
-          <td>-0.429</td>
-          <td>-4419.413</td>
-          <td>-3765.691</td>
-          <td>-10.749</td>
-          <td>17141.201</td>
-          <td>127.006</td>
-          <td>4660.953</td>
-        </tr>
-        <tr>
-          <th>fz</th>
-          <td>-33.720</td>
-          <td>135.846</td>
-          <td>-738.859</td>
-          <td>-463.525</td>
-          <td>21.292</td>
-          <td>-285.299</td>
-          <td>1.800</td>
-          <td>404.517</td>
-          <td>956.040</td>
-          <td>1504.391</td>
-          <td>...</td>
-          <td>1414.219</td>
-          <td>-5786.483</td>
-          <td>-5262.540</td>
-          <td>-0.578</td>
-          <td>-5963.182</td>
-          <td>-5081.104</td>
-          <td>-14.503</td>
-          <td>23128.883</td>
-          <td>171.372</td>
-          <td>6289.095</td>
-        </tr>
-        <tr>
-          <th>mx</th>
-          <td>-0.000</td>
-          <td>-0.000</td>
-          <td>0.000</td>
-          <td>-0.000</td>
-          <td>0.000</td>
-          <td>-0.000</td>
-          <td>0.000</td>
-          <td>-0.000</td>
-          <td>-0.000</td>
-          <td>0.000</td>
-          <td>...</td>
-          <td>-0.000</td>
-          <td>0.000</td>
-          <td>-0.000</td>
-          <td>-0.000</td>
-          <td>0.000</td>
-          <td>-0.000</td>
-          <td>0.000</td>
-          <td>0.000</td>
-          <td>0.000</td>
-          <td>0.000</td>
-        </tr>
-        <tr>
-          <th>my</th>
-          <td>-0.000</td>
-          <td>-0.000</td>
-          <td>0.000</td>
-          <td>-0.000</td>
-          <td>-0.000</td>
-          <td>-0.000</td>
-          <td>0.000</td>
-          <td>-0.000</td>
-          <td>-0.000</td>
-          <td>0.000</td>
-          <td>...</td>
-          <td>0.000</td>
-          <td>0.000</td>
-          <td>0.000</td>
-          <td>-0.000</td>
-          <td>0.000</td>
-          <td>0.000</td>
-          <td>-0.000</td>
-          <td>0.000</td>
-          <td>-0.000</td>
-          <td>0.000</td>
-        </tr>
-        <tr>
-          <th>mz</th>
-          <td>-0.000</td>
-          <td>0.000</td>
-          <td>-0.000</td>
-          <td>-0.000</td>
-          <td>-0.000</td>
-          <td>-0.000</td>
-          <td>0.000</td>
-          <td>0.000</td>
-          <td>0.000</td>
-          <td>0.000</td>
-          <td>...</td>
-          <td>-0.000</td>
-          <td>-0.000</td>
-          <td>-0.000</td>
-          <td>0.000</td>
-          <td>-0.000</td>
-          <td>-0.000</td>
-          <td>-0.000</td>
-          <td>0.000</td>
-          <td>-0.000</td>
-          <td>0.000</td>
-        </tr>
-        <tr>
-          <th rowspan="6" valign="top">5641</th>
-          <th>fx</th>
-          <td>21.234</td>
-          <td>37.500</td>
-          <td>-214.067</td>
-          <td>293.422</td>
-          <td>0.372</td>
-          <td>181.048</td>
-          <td>-0.318</td>
-          <td>159.321</td>
-          <td>234.834</td>
-          <td>-796.708</td>
-          <td>...</td>
-          <td>-1121.195</td>
-          <td>9857.283</td>
-          <td>3603.727</td>
-          <td>-485.792</td>
-          <td>1773.707</td>
-          <td>3229.751</td>
-          <td>21.581</td>
-          <td>-14775.447</td>
-          <td>167.911</td>
-          <td>-4165.658</td>
-        </tr>
-        <tr>
+          <th rowspan="5" valign="top">5641</th>
           <th>fy</th>
           <td>24.829</td>
-          <td>98.887</td>
-          <td>-556.398</td>
-          <td>344.303</td>
-          <td>19.430</td>
-          <td>212.598</td>
+          <td>-98.887</td>
+          <td>-556.445</td>
+          <td>344.300</td>
+          <td>-19.428</td>
+          <td>212.605</td>
           <td>0.389</td>
-          <td>375.824</td>
+          <td>375.821</td>
           <td>656.316</td>
-          <td>-867.362</td>
+          <td>-868.910</td>
           <td>...</td>
-          <td>-577.016</td>
-          <td>-2028.771</td>
-          <td>3628.043</td>
-          <td>-193.977</td>
-          <td>-3566.988</td>
-          <td>3906.759</td>
-          <td>55.263</td>
-          <td>-18164.920</td>
-          <td>175.573</td>
-          <td>-5279.969</td>
+          <td>-573.390</td>
+          <td>-2030.561</td>
+          <td>3627.555</td>
+          <td>-194.011</td>
+          <td>-3566.293</td>
+          <td>3906.700</td>
+          <td>55.275</td>
+          <td>-18164.916</td>
+          <td>175.571</td>
+          <td>-5279.999</td>
         </tr>
         <tr>
           <th>fz</th>
           <td>33.502</td>
-          <td>133.430</td>
-          <td>-750.757</td>
-          <td>464.574</td>
-          <td>26.218</td>
-          <td>286.862</td>
+          <td>-133.430</td>
+          <td>-750.819</td>
+          <td>464.569</td>
+          <td>-26.214</td>
+          <td>286.871</td>
           <td>0.525</td>
-          <td>507.105</td>
+          <td>507.101</td>
           <td>885.577</td>
-          <td>-1170.344</td>
+          <td>-1172.433</td>
           <td>...</td>
-          <td>-778.577</td>
-          <td>-2737.451</td>
-          <td>4895.374</td>
-          <td>-261.737</td>
-          <td>-4812.991</td>
-          <td>5271.450</td>
-          <td>74.567</td>
-          <td>-24510.203</td>
-          <td>236.903</td>
-          <td>-7124.343</td>
+          <td>-773.684</td>
+          <td>-2739.867</td>
+          <td>4894.715</td>
+          <td>-261.781</td>
+          <td>-4812.053</td>
+          <td>5271.370</td>
+          <td>74.583</td>
+          <td>-24510.199</td>
+          <td>236.901</td>
+          <td>-7124.383</td>
         </tr>
         <tr>
           <th>mx</th>
           <td>0.000</td>
+          <td>0.000</td>
+          <td>0.000</td>
+          <td>0.000</td>
           <td>-0.000</td>
-          <td>0.000</td>
-          <td>0.000</td>
-          <td>0.000</td>
           <td>0.000</td>
           <td>0.000</td>
           <td>-0.000</td>
@@ -8504,10 +2959,10 @@ Cycles, at the top.
         <tr>
           <th>my</th>
           <td>-0.000</td>
+          <td>-0.000</td>
+          <td>-0.000</td>
+          <td>-0.000</td>
           <td>0.000</td>
-          <td>-0.000</td>
-          <td>-0.000</td>
-          <td>-0.000</td>
           <td>-0.000</td>
           <td>0.000</td>
           <td>0.000</td>
@@ -8528,10 +2983,10 @@ Cycles, at the top.
         <tr>
           <th>mz</th>
           <td>-0.000</td>
-          <td>-0.000</td>
+          <td>0.000</td>
           <td>0.000</td>
           <td>-0.000</td>
-          <td>-0.000</td>
+          <td>0.000</td>
           <td>-0.000</td>
           <td>0.000</td>
           <td>-0.000</td>
@@ -8587,8 +3042,8 @@ Cycles, at the top.
       <thead>
         <tr>
           <th></th>
+          <th></th>
           <th>Mode</th>
-          <th>Item</th>
           <th>1</th>
           <th>2</th>
           <th>3</th>
@@ -8598,6 +3053,7 @@ Cycles, at the top.
           <th>7</th>
           <th>8</th>
           <th>9</th>
+          <th>10</th>
           <th>...</th>
           <th>24</th>
           <th>25</th>
@@ -8612,82 +3068,86 @@ Cycles, at the top.
         </tr>
         <tr>
           <th></th>
-          <th>Freq</th>
           <th></th>
-          <th>8.35851270500045</th>
-          <th>9.507602892871455</th>
-          <th>15.666300764341436</th>
-          <th>20.23716253374651</th>
-          <th>20.30596456170434</th>
-          <th>20.55485257248645</th>
-          <th>21.49972611068191</th>
-          <th>21.70624716254471</th>
-          <th>21.724825082335045</th>
+          <th>Freq</th>
+          <th>8.359</th>
+          <th>9.508</th>
+          <th>15.667</th>
+          <th>20.237</th>
+          <th>20.306</th>
+          <th>20.555</th>
+          <th>21.500</th>
+          <th>21.706</th>
+          <th>21.725</th>
+          <th>28.542</th>
           <th>...</th>
-          <th>80.07579703514831</th>
-          <th>86.4868740863594</th>
-          <th>88.16751565117606</th>
-          <th>88.47650123741167</th>
-          <th>89.9229257686733</th>
-          <th>94.28966669274277</th>
-          <th>94.36776759853447</th>
-          <th>96.0439300447073</th>
-          <th>98.70190395729915</th>
-          <th>98.89279564317114</th>
+          <th>80.076</th>
+          <th>86.487</th>
+          <th>88.168</th>
+          <th>88.477</th>
+          <th>89.928</th>
+          <th>94.290</th>
+          <th>94.368</th>
+          <th>96.044</th>
+          <th>98.702</th>
+          <th>98.893</th>
         </tr>
         <tr>
+          <th></th>
           <th></th>
           <th>Eigenvalue</th>
-          <th></th>
-          <th>2758.149169921875</th>
-          <th>3568.63232421875</th>
-          <th>9689.3056640625</th>
-          <th>16168.099609375</th>
-          <th>16278.22265625</th>
-          <th>16679.708984375</th>
-          <th>18248.43359375</th>
-          <th>18600.697265625</th>
-          <th>18632.55078125</th>
+          <th>2758.149</th>
+          <th>3568.632</th>
+          <th>9689.982</th>
+          <th>16168.038</th>
+          <th>16278.158</th>
+          <th>16679.707</th>
+          <th>18248.432</th>
+          <th>18600.697</th>
+          <th>18632.551</th>
+          <th>32159.891</th>
           <th>...</th>
-          <th>253140.875</th>
-          <th>295297.75</th>
-          <th>306885.90625</th>
-          <th>309040.65625</th>
-          <th>319227.71875</th>
-          <th>350984.5</th>
-          <th>351566.1875</th>
-          <th>364166.15625</th>
-          <th>384601.34375</th>
-          <th>386090.4375</th>
+          <th>253141.172</th>
+          <th>295300.938</th>
+          <th>306886.000</th>
+          <th>309040.656</th>
+          <th>319267.094</th>
+          <th>350984.500</th>
+          <th>351566.188</th>
+          <th>364166.312</th>
+          <th>384601.344</th>
+          <th>386090.469</th>
         </tr>
         <tr>
           <th></th>
-          <th>Radians</th>
           <th></th>
-          <th>52.518084217932724</th>
-          <th>59.73803080298806</th>
-          <th>98.43427078036643</th>
-          <th>127.15384229104127</th>
-          <th>127.58613818221008</th>
-          <th>129.14994767468937</th>
-          <th>135.08676320702187</th>
-          <th>136.3843732457095</th>
-          <th>136.5011017583741</th>
+          <th>Radians</th>
+          <th>52.518</th>
+          <th>59.738</th>
+          <th>98.438</th>
+          <th>127.154</th>
+          <th>127.586</th>
+          <th>129.150</th>
+          <th>135.087</th>
+          <th>136.384</th>
+          <th>136.501</th>
+          <th>179.332</th>
           <th>...</th>
-          <th>503.1310713919386</th>
-          <th>543.4130565233044</th>
-          <th>553.9728389099956</th>
-          <th>555.9142526055615</th>
-          <th>565.0024059683286</th>
-          <th>592.4394483827018</th>
-          <th>592.9301708464496</th>
-          <th>603.4618101006889</th>
-          <th>620.1623527351527</th>
-          <th>621.3617605710863</th>
+          <th>503.131</th>
+          <th>543.416</th>
+          <th>553.973</th>
+          <th>555.914</th>
+          <th>565.037</th>
+          <th>592.439</th>
+          <th>592.930</th>
+          <th>603.462</th>
+          <th>620.162</th>
+          <th>621.362</th>
         </tr>
         <tr>
           <th>ElementID</th>
           <th>NodeID</th>
+          <th>Item</th>
           <th></th>
           <th></th>
           <th></th>
@@ -8713,727 +3173,133 @@ Cycles, at the top.
       </thead>
       <tbody>
         <tr>
-          <th rowspan="30" valign="top">4670</th>
-          <th>CEN</th>
-          <td>mx</td>
+          <th rowspan="5" valign="top">4670</th>
+          <th>0</th>
+          <th>mx</th>
           <td>-16.088</td>
-          <td>4.299</td>
-          <td>6.971e-02</td>
-          <td>-29.002</td>
-          <td>-4.571e-01</td>
-          <td>-186.938</td>
+          <td>-4.299</td>
+          <td>0.070</td>
+          <td>-28.998</td>
+          <td>4.570e-01</td>
+          <td>-186.939</td>
           <td>-603.215</td>
           <td>47.768</td>
           <td>-107.817</td>
+          <td>-5.846</td>
           <td>...</td>
-          <td>3.552</td>
+          <td>3.548</td>
           <td>-10.621</td>
-          <td>3.549</td>
+          <td>3.548</td>
           <td>-0.028</td>
-          <td>0.374</td>
+          <td>0.379</td>
           <td>1.788</td>
-          <td>-4.315e-01</td>
+          <td>-0.431</td>
           <td>-6.105</td>
-          <td>6.283e-01</td>
+          <td>0.628</td>
           <td>-0.340</td>
         </tr>
         <tr>
-          <th>CEN</th>
-          <td>my</td>
+          <th>4670</th>
+          <th>my</th>
           <td>-88.183</td>
-          <td>73.038</td>
-          <td>1.312e+00</td>
-          <td>-50.877</td>
-          <td>-1.207e+00</td>
-          <td>-324.953</td>
-          <td>-149.852</td>
+          <td>-73.038</td>
+          <td>1.312</td>
+          <td>-50.870</td>
+          <td>1.207e+00</td>
+          <td>-324.954</td>
+          <td>-149.853</td>
           <td>87.416</td>
           <td>12.643</td>
+          <td>-9.902</td>
           <td>...</td>
-          <td>19.560</td>
-          <td>72.406</td>
-          <td>36.207</td>
-          <td>-1.032</td>
-          <td>52.990</td>
+          <td>19.580</td>
+          <td>72.428</td>
+          <td>36.214</td>
+          <td>-1.031</td>
+          <td>52.952</td>
           <td>23.808</td>
-          <td>-3.855e+00</td>
+          <td>-3.855</td>
           <td>-98.772</td>
-          <td>4.841e+00</td>
-          <td>-36.233</td>
+          <td>4.841</td>
+          <td>-36.234</td>
         </tr>
         <tr>
-          <th>CEN</th>
-          <td>mxy</td>
+          <th>4671</th>
+          <th>mxy</th>
           <td>-35.416</td>
-          <td>-22.025</td>
-          <td>6.320e-02</td>
-          <td>-20.037</td>
-          <td>-2.038e-01</td>
+          <td>22.025</td>
+          <td>0.063</td>
+          <td>-20.034</td>
+          <td>2.038e-01</td>
           <td>-127.819</td>
           <td>3.770</td>
           <td>58.400</td>
           <td>-24.900</td>
+          <td>-3.556</td>
           <td>...</td>
-          <td>-9.564</td>
+          <td>-9.565</td>
           <td>5.375</td>
           <td>-16.705</td>
           <td>0.338</td>
-          <td>-0.174</td>
+          <td>-0.175</td>
           <td>-11.625</td>
-          <td>-4.458e-02</td>
+          <td>-0.045</td>
           <td>45.932</td>
-          <td>-1.926e-01</td>
+          <td>-0.193</td>
           <td>13.473</td>
         </tr>
         <tr>
-          <th>CEN</th>
-          <td>bmx</td>
+          <th>4674</th>
+          <th>bmx</th>
           <td>-2.664</td>
-          <td>-9.183</td>
-          <td>-1.221e+00</td>
-          <td>-29.954</td>
-          <td>-9.126e-01</td>
-          <td>-189.687</td>
+          <td>9.183</td>
+          <td>-1.222</td>
+          <td>-29.950</td>
+          <td>9.125e-01</td>
+          <td>-189.689</td>
           <td>-7.586</td>
           <td>53.520</td>
           <td>56.479</td>
+          <td>-4.086</td>
           <td>...</td>
-          <td>2.737</td>
-          <td>-14.828</td>
-          <td>2.042</td>
+          <td>2.742</td>
+          <td>-14.829</td>
+          <td>2.041</td>
           <td>0.111</td>
-          <td>-2.442</td>
+          <td>-2.436</td>
           <td>2.162</td>
-          <td>4.964e-02</td>
+          <td>0.050</td>
           <td>-9.309</td>
-          <td>3.261e-02</td>
+          <td>0.033</td>
           <td>-4.001</td>
         </tr>
         <tr>
-          <th>CEN</th>
-          <td>bmy</td>
+          <th>4673</th>
+          <th>bmy</th>
           <td>-3.037</td>
-          <td>-9.879</td>
-          <td>-1.313e+00</td>
-          <td>-30.303</td>
-          <td>-9.188e-01</td>
-          <td>-192.162</td>
+          <td>9.879</td>
+          <td>-1.313</td>
+          <td>-30.299</td>
+          <td>9.187e-01</td>
+          <td>-192.163</td>
           <td>-20.070</td>
           <td>80.239</td>
           <td>42.297</td>
+          <td>-4.087</td>
           <td>...</td>
-          <td>2.539</td>
-          <td>-15.439</td>
+          <td>2.543</td>
+          <td>-15.440</td>
           <td>1.955</td>
           <td>0.126</td>
-          <td>-2.102</td>
+          <td>-2.095</td>
           <td>2.172</td>
-          <td>1.985e-02</td>
+          <td>0.020</td>
           <td>-9.370</td>
-          <td>6.778e-02</td>
+          <td>0.068</td>
           <td>-4.156</td>
         </tr>
         <tr>
-          <th>CEN</th>
-          <td>bmxy</td>
-          <td>-0.358</td>
-          <td>0.050</td>
-          <td>3.042e-03</td>
-          <td>-0.291</td>
-          <td>-1.361e-03</td>
-          <td>-1.874</td>
-          <td>-1.445</td>
-          <td>2.023</td>
-          <td>-3.839</td>
-          <td>...</td>
-          <td>0.013</td>
-          <td>-0.050</td>
-          <td>-0.019</td>
-          <td>0.002</td>
-          <td>-0.013</td>
-          <td>-0.021</td>
-          <td>3.219e-04</td>
-          <td>0.096</td>
-          <td>-1.092e-03</td>
-          <td>0.028</td>
-        </tr>
-        <tr>
-          <th>CEN</th>
-          <td>tx</td>
-          <td>-1.359</td>
-          <td>-0.059</td>
-          <td>-5.548e-02</td>
-          <td>-15.393</td>
-          <td>-1.850e-01</td>
-          <td>-97.674</td>
-          <td>18.589</td>
-          <td>-2.787</td>
-          <td>28.395</td>
-          <td>...</td>
-          <td>1.073</td>
-          <td>-0.216</td>
-          <td>1.152</td>
-          <td>0.034</td>
-          <td>-0.193</td>
-          <td>0.950</td>
-          <td>2.707e-02</td>
-          <td>-4.109</td>
-          <td>-3.429e-02</td>
-          <td>-1.962</td>
-        </tr>
-        <tr>
-          <th>CEN</th>
-          <td>ty</td>
-          <td>0.078</td>
-          <td>-0.845</td>
-          <td>1.623e-01</td>
-          <td>-7.119</td>
-          <td>3.640e-02</td>
-          <td>-45.621</td>
-          <td>-7.405</td>
-          <td>21.384</td>
-          <td>-23.049</td>
-          <td>...</td>
-          <td>0.015</td>
-          <td>-2.778</td>
-          <td>-0.444</td>
-          <td>0.124</td>
-          <td>-2.299</td>
-          <td>-0.534</td>
-          <td>6.097e-02</td>
-          <td>2.616</td>
-          <td>-1.224e-01</td>
-          <td>1.392</td>
-        </tr>
-        <tr>
-          <th>4670</th>
-          <td>mx</td>
-          <td>-10.939</td>
-          <td>-8.192</td>
-          <td>8.685e-01</td>
-          <td>-45.225</td>
-          <td>-4.504e-01</td>
-          <td>-288.633</td>
-          <td>-1489.487</td>
-          <td>-16.358</td>
-          <td>-217.844</td>
-          <td>...</td>
-          <td>6.022</td>
-          <td>-21.511</td>
-          <td>7.653</td>
-          <td>0.925</td>
-          <td>0.722</td>
-          <td>5.513</td>
-          <td>-1.434e+00</td>
-          <td>-22.443</td>
-          <td>1.513e+00</td>
-          <td>-6.056</td>
-        </tr>
-        <tr>
-          <th>4670</th>
-          <td>my</td>
-          <td>-163.049</td>
-          <td>-89.888</td>
-          <td>-8.778e-01</td>
-          <td>-74.092</td>
-          <td>-2.083e+00</td>
-          <td>-475.452</td>
-          <td>-419.386</td>
-          <td>134.147</td>
-          <td>129.931</td>
-          <td>...</td>
-          <td>35.554</td>
-          <td>73.426</td>
-          <td>56.108</td>
-          <td>-2.229</td>
-          <td>56.483</td>
-          <td>36.101</td>
-          <td>-3.109e+00</td>
-          <td>-146.387</td>
-          <td>4.478e+00</td>
-          <td>-49.037</td>
-        </tr>
-        <tr>
-          <th>4670</th>
-          <td>mxy</td>
-          <td>-34.993</td>
-          <td>-20.796</td>
-          <td>6.713e-02</td>
-          <td>-19.673</td>
-          <td>-1.982e-01</td>
-          <td>-125.508</td>
-          <td>17.081</td>
-          <td>58.929</td>
-          <td>-24.235</td>
-          <td>...</td>
-          <td>-9.701</td>
-          <td>5.510</td>
-          <td>-16.889</td>
-          <td>0.334</td>
-          <td>-0.202</td>
-          <td>-11.754</td>
-          <td>-3.641e-02</td>
-          <td>46.457</td>
-          <td>-2.017e-01</td>
-          <td>13.631</td>
-        </tr>
-        <tr>
-          <th>4670</th>
-          <td>bmx</td>
-          <td>-0.892</td>
-          <td>-9.041</td>
-          <td>-1.218e+00</td>
-          <td>-42.937</td>
-          <td>-1.004e+00</td>
-          <td>-273.216</td>
-          <td>-2.317</td>
-          <td>66.210</td>
-          <td>13.105</td>
-          <td>...</td>
-          <td>4.885</td>
-          <td>-14.733</td>
-          <td>5.228</td>
-          <td>0.072</td>
-          <td>-1.925</td>
-          <td>4.002</td>
-          <td>6.460e-02</td>
-          <td>-16.026</td>
-          <td>3.136e-02</td>
-          <td>-5.867</td>
-        </tr>
-        <tr>
-          <th>4670</th>
-          <td>bmy</td>
-          <td>-3.528</td>
-          <td>-6.936</td>
-          <td>-9.190e-01</td>
-          <td>-31.125</td>
-          <td>-9.018e-01</td>
-          <td>-197.643</td>
-          <td>-110.551</td>
-          <td>50.233</td>
-          <td>-87.744</td>
-          <td>...</td>
-          <td>2.563</td>
-          <td>-18.962</td>
-          <td>1.795</td>
-          <td>0.139</td>
-          <td>-4.649</td>
-          <td>2.136</td>
-          <td>1.424e-01</td>
-          <td>-9.097</td>
-          <td>-5.217e-02</td>
-          <td>-4.058</td>
-        </tr>
-        <tr>
-          <th>4670</th>
-          <td>bmxy</td>
-          <td>-0.378</td>
-          <td>0.029</td>
-          <td>4.135e-04</td>
-          <td>-0.117</td>
-          <td>-2.825e-04</td>
-          <td>-0.750</td>
-          <td>-0.921</td>
-          <td>2.054</td>
-          <td>-2.423</td>
-          <td>...</td>
-          <td>-0.015</td>
-          <td>-0.028</td>
-          <td>-0.059</td>
-          <td>0.003</td>
-          <td>-0.003</td>
-          <td>-0.044</td>
-          <td>-6.753e-04</td>
-          <td>0.182</td>
-          <td>-2.908e-04</td>
-          <td>0.051</td>
-        </tr>
-        <tr>
-          <th>4670</th>
-          <td>tx</td>
-          <td>-1.359</td>
-          <td>-0.059</td>
-          <td>-5.548e-02</td>
-          <td>-15.393</td>
-          <td>-1.850e-01</td>
-          <td>-97.674</td>
-          <td>18.589</td>
-          <td>-2.787</td>
-          <td>28.395</td>
-          <td>...</td>
-          <td>1.073</td>
-          <td>-0.216</td>
-          <td>1.152</td>
-          <td>0.034</td>
-          <td>-0.193</td>
-          <td>0.950</td>
-          <td>2.707e-02</td>
-          <td>-4.109</td>
-          <td>-3.429e-02</td>
-          <td>-1.962</td>
-        </tr>
-        <tr>
-          <th>4670</th>
-          <td>ty</td>
-          <td>0.078</td>
-          <td>-0.845</td>
-          <td>1.623e-01</td>
-          <td>-7.119</td>
-          <td>3.640e-02</td>
-          <td>-45.621</td>
-          <td>-7.405</td>
-          <td>21.384</td>
-          <td>-23.049</td>
-          <td>...</td>
-          <td>0.015</td>
-          <td>-2.778</td>
-          <td>-0.444</td>
-          <td>0.124</td>
-          <td>-2.299</td>
-          <td>-0.534</td>
-          <td>6.097e-02</td>
-          <td>2.616</td>
-          <td>-1.224e-01</td>
-          <td>1.392</td>
-        </tr>
-        <tr>
-          <th>4671</th>
-          <td>mx</td>
-          <td>-10.933</td>
-          <td>-8.178</td>
-          <td>8.687e-01</td>
-          <td>-45.223</td>
-          <td>-4.504e-01</td>
-          <td>-288.620</td>
-          <td>-1489.464</td>
-          <td>-16.362</td>
-          <td>-217.854</td>
-          <td>...</td>
-          <td>6.021</td>
-          <td>-21.511</td>
-          <td>7.651</td>
-          <td>0.925</td>
-          <td>0.722</td>
-          <td>5.512</td>
-          <td>-1.434e+00</td>
-          <td>-22.439</td>
-          <td>1.513e+00</td>
-          <td>-6.055</td>
-        </tr>
-        <tr>
-          <th>4671</th>
-          <td>my</td>
-          <td>-13.316</td>
-          <td>235.961</td>
-          <td>3.502e+00</td>
-          <td>-27.667</td>
-          <td>-3.309e-01</td>
-          <td>-174.488</td>
-          <td>119.380</td>
-          <td>40.663</td>
-          <td>-104.682</td>
-          <td>...</td>
-          <td>3.566</td>
-          <td>71.383</td>
-          <td>16.307</td>
-          <td>0.166</td>
-          <td>49.498</td>
-          <td>11.517</td>
-          <td>-4.601e+00</td>
-          <td>-51.162</td>
-          <td>5.204e+00</td>
-          <td>-23.432</td>
-        </tr>
-        <tr>
-          <th>4671</th>
-          <td>mxy</td>
-          <td>-35.974</td>
-          <td>-22.930</td>
-          <td>3.845e-02</td>
-          <td>-19.977</td>
-          <td>-2.097e-01</td>
-          <td>-127.479</td>
-          <td>13.553</td>
-          <td>59.542</td>
-          <td>-22.698</td>
-          <td>...</td>
-          <td>-9.491</td>
-          <td>5.523</td>
-          <td>-16.628</td>
-          <td>0.318</td>
-          <td>-0.156</td>
-          <td>-11.593</td>
-          <td>-2.663e-02</td>
-          <td>45.833</td>
-          <td>-2.065e-01</td>
-          <td>13.464</td>
-        </tr>
-        <tr>
-          <th>4671</th>
-          <td>bmx</td>
-          <td>-0.892</td>
-          <td>-9.041</td>
-          <td>-1.218e+00</td>
-          <td>-42.937</td>
-          <td>-1.004e+00</td>
-          <td>-273.216</td>
-          <td>-2.310</td>
-          <td>66.212</td>
-          <td>13.116</td>
-          <td>...</td>
-          <td>4.885</td>
-          <td>-14.732</td>
-          <td>5.228</td>
-          <td>0.072</td>
-          <td>-1.925</td>
-          <td>4.002</td>
-          <td>6.459e-02</td>
-          <td>-16.026</td>
-          <td>3.137e-02</td>
-          <td>-5.867</td>
-        </tr>
-        <tr>
-          <th>4671</th>
-          <td>bmy</td>
-          <td>-2.546</td>
-          <td>-12.823</td>
-          <td>-1.706e+00</td>
-          <td>-29.485</td>
-          <td>-9.357e-01</td>
-          <td>-186.709</td>
-          <td>70.412</td>
-          <td>110.250</td>
-          <td>172.324</td>
-          <td>...</td>
-          <td>2.516</td>
-          <td>-11.916</td>
-          <td>2.117</td>
-          <td>0.113</td>
-          <td>0.446</td>
-          <td>2.209</td>
-          <td>-1.027e-01</td>
-          <td>-9.645</td>
-          <td>1.877e-01</td>
-          <td>-4.255</td>
-        </tr>
-        <tr>
-          <th>4671</th>
-          <td>bmxy</td>
-          <td>-0.384</td>
-          <td>0.068</td>
-          <td>5.569e-03</td>
-          <td>-0.128</td>
-          <td>-6.048e-05</td>
-          <td>-0.822</td>
-          <td>-2.106</td>
-          <td>1.661</td>
-          <td>-4.126</td>
-          <td>...</td>
-          <td>-0.015</td>
-          <td>-0.074</td>
-          <td>-0.061</td>
-          <td>0.003</td>
-          <td>-0.037</td>
-          <td>-0.045</td>
-          <td>9.297e-04</td>
-          <td>0.186</td>
-          <td>-1.862e-03</td>
-          <td>0.052</td>
-        </tr>
-        <tr>
-          <th>4671</th>
-          <td>tx</td>
-          <td>-1.359</td>
-          <td>-0.059</td>
-          <td>-5.548e-02</td>
-          <td>-15.393</td>
-          <td>-1.850e-01</td>
-          <td>-97.674</td>
-          <td>18.589</td>
-          <td>-2.787</td>
-          <td>28.395</td>
-          <td>...</td>
-          <td>1.073</td>
-          <td>-0.216</td>
-          <td>1.152</td>
-          <td>0.034</td>
-          <td>-0.193</td>
-          <td>0.950</td>
-          <td>2.707e-02</td>
-          <td>-4.109</td>
-          <td>-3.429e-02</td>
-          <td>-1.962</td>
-        </tr>
-        <tr>
-          <th>4671</th>
-          <td>ty</td>
-          <td>0.078</td>
-          <td>-0.845</td>
-          <td>1.623e-01</td>
-          <td>-7.119</td>
-          <td>3.640e-02</td>
-          <td>-45.621</td>
-          <td>-7.405</td>
-          <td>21.384</td>
-          <td>-23.049</td>
-          <td>...</td>
-          <td>0.015</td>
-          <td>-2.778</td>
-          <td>-0.444</td>
-          <td>0.124</td>
-          <td>-2.299</td>
-          <td>-0.534</td>
-          <td>6.097e-02</td>
-          <td>2.616</td>
-          <td>-1.224e-01</td>
-          <td>1.392</td>
-        </tr>
-        <tr>
-          <th>4674</th>
-          <td>mx</td>
-          <td>-21.143</td>
-          <td>16.562</td>
-          <td>-7.145e-01</td>
-          <td>-13.074</td>
-          <td>-4.636e-01</td>
-          <td>-87.099</td>
-          <td>266.893</td>
-          <td>110.724</td>
-          <td>0.203</td>
-          <td>...</td>
-          <td>1.127</td>
-          <td>0.070</td>
-          <td>-0.481</td>
-          <td>-0.963</td>
-          <td>0.032</td>
-          <td>-1.869</td>
-          <td>5.523e-01</td>
-          <td>9.934</td>
-          <td>-2.407e-01</td>
-          <td>5.271</td>
-        </tr>
-        <tr>
-          <th>4674</th>
-          <td>my</td>
-          <td>-17.340</td>
-          <td>227.210</td>
-          <td>3.384e+00</td>
-          <td>-28.909</td>
-          <td>-3.780e-01</td>
-          <td>-182.539</td>
-          <td>105.203</td>
-          <td>43.197</td>
-          <td>-98.342</td>
-          <td>...</td>
-          <td>4.425</td>
-          <td>71.441</td>
-          <td>17.375</td>
-          <td>0.101</td>
-          <td>49.686</td>
-          <td>12.176</td>
-          <td>-4.560e+00</td>
-          <td>-53.715</td>
-          <td>5.184e+00</td>
-          <td>-24.118</td>
-        </tr>
-        <tr>
-          <th>4674</th>
-          <td>mxy</td>
-          <td>-35.814</td>
-          <td>-23.195</td>
-          <td>5.985e-02</td>
-          <td>-20.388</td>
-          <td>-2.092e-01</td>
-          <td>-130.052</td>
-          <td>-9.236</td>
-          <td>57.870</td>
-          <td>-25.580</td>
-          <td>...</td>
-          <td>-9.433</td>
-          <td>5.242</td>
-          <td>-16.529</td>
-          <td>0.343</td>
-          <td>-0.148</td>
-          <td>-11.501</td>
-          <td>-5.277e-02</td>
-          <td>45.428</td>
-          <td>-1.835e-01</td>
-          <td>13.321</td>
-        </tr>
-        <tr>
-          <th>4674</th>
-          <td>bmx</td>
-          <td>-4.403</td>
-          <td>-9.323</td>
-          <td>-1.225e+00</td>
-          <td>-17.207</td>
-          <td>-8.230e-01</td>
-          <td>-107.682</td>
-          <td>-12.759</td>
-          <td>41.062</td>
-          <td>99.062</td>
-          <td>...</td>
-          <td>0.629</td>
-          <td>-14.921</td>
-          <td>-1.087</td>
-          <td>0.149</td>
-          <td>-2.950</td>
-          <td>0.356</td>
-          <td>3.497e-02</td>
-          <td>-2.714</td>
-          <td>3.382e-02</td>
-          <td>-2.170</td>
-        </tr>
-        <tr>
-          <th>4674</th>
-          <td>bmy</td>
-          <td>-2.573</td>
-          <td>-12.665</td>
-          <td>-1.685e+00</td>
-          <td>-29.524</td>
-          <td>-9.348e-01</td>
-          <td>-186.974</td>
-          <td>65.548</td>
-          <td>108.633</td>
-          <td>165.351</td>
-          <td>...</td>
-          <td>2.517</td>
-          <td>-12.106</td>
-          <td>2.107</td>
-          <td>0.114</td>
-          <td>0.309</td>
-          <td>2.206</td>
-          <td>-9.611e-02</td>
-          <td>-9.628</td>
-          <td>1.813e-01</td>
-          <td>-4.249</td>
-        </tr>
-        <tr>
-          <th>4674</th>
-          <td>bmxy</td>
-          <td>-0.338</td>
-          <td>0.070</td>
-          <td>5.532e-03</td>
-          <td>-0.462</td>
-          <td>-2.425e-03</td>
-          <td>-2.977</td>
-          <td>-1.938</td>
-          <td>1.999</td>
-          <td>-5.200</td>
-          <td>...</td>
-          <td>0.041</td>
-          <td>-0.071</td>
-          <td>0.021</td>
-          <td>0.002</td>
-          <td>-0.022</td>
-          <td>0.003</td>
-          <td>1.272e-03</td>
-          <td>0.012</td>
-          <td>-1.852e-03</td>
-          <td>0.004</td>
-        </tr>
-        <tr>
+          <th>...</th>
           <th>...</th>
           <th>...</th>
           <td>...</td>
@@ -9459,729 +3325,134 @@ Cycles, at the top.
           <td>...</td>
         </tr>
         <tr>
-          <th rowspan="30" valign="top">4757</th>
-          <th>4783</th>
-          <td>mxy</td>
-          <td>-31.271</td>
-          <td>-19.668</td>
-          <td>-8.401e-02</td>
-          <td>5.348</td>
-          <td>1.492e-01</td>
-          <td>32.073</td>
-          <td>34.216</td>
-          <td>14.677</td>
-          <td>-12.580</td>
-          <td>...</td>
-          <td>2.446</td>
-          <td>10.287</td>
-          <td>4.439</td>
-          <td>-0.554</td>
-          <td>6.576</td>
-          <td>2.705</td>
-          <td>-1.956e-01</td>
-          <td>-10.752</td>
-          <td>4.575e-01</td>
-          <td>-3.907</td>
-        </tr>
-        <tr>
-          <th>4783</th>
-          <td>bmx</td>
-          <td>0.500</td>
-          <td>-11.062</td>
-          <td>-1.872e-02</td>
-          <td>3.006</td>
-          <td>2.538e-02</td>
-          <td>19.305</td>
-          <td>5.262</td>
-          <td>1.870</td>
-          <td>-18.221</td>
-          <td>...</td>
-          <td>-1.223</td>
-          <td>2.035</td>
-          <td>-1.199</td>
-          <td>-0.053</td>
-          <td>1.379</td>
-          <td>-0.663</td>
-          <td>-7.218e-02</td>
-          <td>2.315</td>
-          <td>1.015e-01</td>
-          <td>0.436</td>
-        </tr>
-        <tr>
-          <th>4783</th>
-          <td>bmy</td>
-          <td>-28.893</td>
-          <td>-38.137</td>
-          <td>-2.123e-01</td>
-          <td>3.596</td>
-          <td>2.565e-02</td>
-          <td>21.675</td>
-          <td>8.080</td>
-          <td>-4.258</td>
-          <td>1.639</td>
-          <td>...</td>
-          <td>-0.154</td>
-          <td>-1.273</td>
-          <td>1.059</td>
-          <td>-0.029</td>
-          <td>1.373</td>
-          <td>1.077</td>
-          <td>-2.056e-01</td>
-          <td>-4.743</td>
-          <td>2.934e-01</td>
-          <td>-1.741</td>
-        </tr>
-        <tr>
-          <th>4783</th>
-          <td>bmxy</td>
-          <td>-0.247</td>
-          <td>0.824</td>
-          <td>4.673e-03</td>
-          <td>-0.003</td>
-          <td>-5.033e-04</td>
-          <td>-0.013</td>
-          <td>-0.230</td>
-          <td>0.269</td>
-          <td>-0.273</td>
-          <td>...</td>
-          <td>-0.080</td>
-          <td>0.030</td>
-          <td>-0.167</td>
-          <td>0.003</td>
-          <td>0.015</td>
-          <td>-0.110</td>
-          <td>-2.732e-03</td>
-          <td>0.425</td>
-          <td>1.975e-03</td>
-          <td>0.109</td>
-        </tr>
-        <tr>
-          <th>4783</th>
-          <td>tx</td>
-          <td>-18.875</td>
-          <td>-20.105</td>
-          <td>-8.804e-02</td>
-          <td>1.690</td>
-          <td>-1.164e-03</td>
-          <td>10.319</td>
-          <td>-2.478</td>
-          <td>5.951</td>
-          <td>-7.828</td>
-          <td>...</td>
-          <td>-1.793</td>
-          <td>-1.240</td>
-          <td>-3.321</td>
-          <td>0.085</td>
-          <td>-0.974</td>
-          <td>-2.108</td>
-          <td>3.881e-02</td>
-          <td>8.108</td>
-          <td>-8.111e-02</td>
-          <td>2.232</td>
-        </tr>
-        <tr>
-          <th>4783</th>
-          <td>ty</td>
-          <td>11.037</td>
-          <td>28.188</td>
-          <td>9.798e-02</td>
-          <td>0.929</td>
-          <td>-8.697e-03</td>
-          <td>6.668</td>
-          <td>-3.198</td>
-          <td>-7.155</td>
-          <td>9.551</td>
-          <td>...</td>
-          <td>-2.192</td>
-          <td>1.785</td>
-          <td>-3.206</td>
-          <td>-0.004</td>
-          <td>1.057</td>
-          <td>-1.967</td>
-          <td>-5.582e-02</td>
-          <td>7.324</td>
-          <td>5.490e-02</td>
-          <td>1.845</td>
-        </tr>
-        <tr>
-          <th>4771</th>
-          <td>mx</td>
-          <td>-41.074</td>
-          <td>172.091</td>
-          <td>1.064e+00</td>
-          <td>-4.664</td>
-          <td>-2.443e-01</td>
-          <td>-30.595</td>
-          <td>-10.668</td>
-          <td>155.950</td>
-          <td>-183.653</td>
-          <td>...</td>
-          <td>-0.829</td>
-          <td>6.260</td>
-          <td>-1.958</td>
-          <td>0.195</td>
-          <td>8.391</td>
-          <td>-1.345</td>
-          <td>-9.970e-01</td>
-          <td>4.431</td>
-          <td>1.107e+00</td>
-          <td>0.114</td>
-        </tr>
-        <tr>
-          <th>4771</th>
-          <td>my</td>
-          <td>-76.876</td>
-          <td>-91.002</td>
-          <td>-4.028e-01</td>
-          <td>-4.428</td>
-          <td>2.270e-03</td>
-          <td>-32.129</td>
-          <td>4.183</td>
-          <td>36.880</td>
-          <td>-28.601</td>
-          <td>...</td>
-          <td>5.933</td>
-          <td>1.610</td>
-          <td>8.367</td>
-          <td>-0.258</td>
-          <td>-0.306</td>
-          <td>4.306</td>
-          <td>2.155e-01</td>
-          <td>-14.746</td>
-          <td>-1.668e-01</td>
-          <td>-2.940</td>
-        </tr>
-        <tr>
-          <th>4771</th>
-          <td>mxy</td>
-          <td>-27.436</td>
-          <td>-15.481</td>
-          <td>-6.264e-02</td>
-          <td>5.521</td>
-          <td>1.512e-01</td>
-          <td>33.342</td>
-          <td>34.735</td>
-          <td>16.124</td>
-          <td>-14.054</td>
-          <td>...</td>
-          <td>2.310</td>
-          <td>10.489</td>
-          <td>4.220</td>
-          <td>-0.555</td>
-          <td>6.681</td>
-          <td>2.572</td>
-          <td>-2.012e-01</td>
-          <td>-10.271</td>
-          <td>4.636e-01</td>
-          <td>-3.794</td>
-        </tr>
-        <tr>
-          <th>4771</th>
-          <td>bmx</td>
-          <td>0.511</td>
-          <td>-11.049</td>
-          <td>-1.865e-02</td>
-          <td>3.005</td>
-          <td>2.536e-02</td>
-          <td>19.297</td>
-          <td>5.258</td>
-          <td>1.868</td>
-          <td>-18.219</td>
-          <td>...</td>
-          <td>-1.223</td>
-          <td>2.036</td>
-          <td>-1.200</td>
-          <td>-0.053</td>
-          <td>1.379</td>
-          <td>-0.664</td>
-          <td>-7.214e-02</td>
-          <td>2.318</td>
-          <td>1.015e-01</td>
-          <td>0.437</td>
-        </tr>
-        <tr>
-          <th>4771</th>
-          <td>bmy</td>
-          <td>19.867</td>
-          <td>21.334</td>
-          <td>8.537e-02</td>
-          <td>-2.585</td>
-          <td>-4.747e-02</td>
-          <td>-15.309</td>
-          <td>-11.650</td>
-          <td>-10.143</td>
-          <td>15.039</td>
-          <td>...</td>
-          <td>-2.231</td>
-          <td>4.127</td>
-          <td>-3.384</td>
-          <td>-0.043</td>
-          <td>1.919</td>
-          <td>-2.193</td>
-          <td>-6.266e-02</td>
-          <td>8.235</td>
-          <td>6.106e-02</td>
-          <td>2.047</td>
-        </tr>
-        <tr>
-          <th>4771</th>
-          <td>bmxy</td>
-          <td>-0.967</td>
-          <td>-0.054</td>
-          <td>2.786e-04</td>
-          <td>0.088</td>
-          <td>5.759e-04</td>
-          <td>0.533</td>
-          <td>0.062</td>
-          <td>0.355</td>
-          <td>-0.471</td>
-          <td>...</td>
-          <td>-0.049</td>
-          <td>-0.050</td>
-          <td>-0.101</td>
-          <td>0.003</td>
-          <td>0.007</td>
-          <td>-0.062</td>
-          <td>-4.841e-03</td>
-          <td>0.234</td>
-          <td>5.404e-03</td>
-          <td>0.053</td>
-        </tr>
-        <tr>
-          <th>4771</th>
-          <td>tx</td>
-          <td>-18.875</td>
-          <td>-20.105</td>
-          <td>-8.804e-02</td>
-          <td>1.690</td>
-          <td>-1.164e-03</td>
-          <td>10.319</td>
-          <td>-2.478</td>
-          <td>5.951</td>
-          <td>-7.828</td>
-          <td>...</td>
-          <td>-1.793</td>
-          <td>-1.240</td>
-          <td>-3.321</td>
-          <td>0.085</td>
-          <td>-0.974</td>
-          <td>-2.108</td>
-          <td>3.881e-02</td>
-          <td>8.108</td>
-          <td>-8.111e-02</td>
-          <td>2.232</td>
-        </tr>
-        <tr>
-          <th>4771</th>
-          <td>ty</td>
-          <td>11.037</td>
-          <td>28.188</td>
-          <td>9.798e-02</td>
-          <td>0.929</td>
-          <td>-8.697e-03</td>
-          <td>6.668</td>
-          <td>-3.198</td>
-          <td>-7.155</td>
-          <td>9.551</td>
-          <td>...</td>
-          <td>-2.192</td>
-          <td>1.785</td>
-          <td>-3.206</td>
-          <td>-0.004</td>
-          <td>1.057</td>
-          <td>-1.967</td>
-          <td>-5.582e-02</td>
-          <td>7.324</td>
-          <td>5.490e-02</td>
-          <td>1.845</td>
-        </tr>
-        <tr>
-          <th>4774</th>
-          <td>mx</td>
-          <td>135.392</td>
-          <td>-619.010</td>
-          <td>-2.796e+00</td>
-          <td>-1.564</td>
-          <td>1.704e-02</td>
-          <td>-5.020</td>
-          <td>6.183</td>
-          <td>87.942</td>
-          <td>-37.601</td>
-          <td>...</td>
-          <td>4.385</td>
-          <td>-43.228</td>
-          <td>-2.125</td>
-          <td>1.280</td>
-          <td>-44.739</td>
-          <td>-2.924</td>
-          <td>3.587e+00</td>
-          <td>16.870</td>
-          <td>-4.872e+00</td>
-          <td>12.102</td>
-        </tr>
-        <tr>
-          <th>4774</th>
-          <td>my</td>
-          <td>-79.810</td>
-          <td>-94.228</td>
-          <td>-4.193e-01</td>
-          <td>-4.561</td>
-          <td>7.967e-04</td>
-          <td>-33.100</td>
-          <td>3.785</td>
-          <td>35.769</td>
-          <td>-27.467</td>
-          <td>...</td>
-          <td>6.038</td>
-          <td>1.454</td>
-          <td>8.535</td>
-          <td>-0.256</td>
-          <td>-0.388</td>
-          <td>4.407</td>
-          <td>2.199e-01</td>
-          <td>-15.114</td>
-          <td>-1.716e-01</td>
-          <td>-3.026</td>
-        </tr>
-        <tr>
-          <th>4774</th>
-          <td>mxy</td>
-          <td>-28.242</td>
-          <td>-11.623</td>
-          <td>-4.381e-02</td>
-          <td>5.508</td>
-          <td>1.499e-01</td>
-          <td>33.233</td>
-          <td>34.660</td>
-          <td>16.468</td>
-          <td>-14.775</td>
-          <td>...</td>
-          <td>2.283</td>
-          <td>10.730</td>
-          <td>4.218</td>
-          <td>-0.560</td>
-          <td>6.938</td>
-          <td>2.578</td>
-          <td>-2.233e-01</td>
-          <td>-10.325</td>
-          <td>4.924e-01</td>
-          <td>-3.851</td>
-        </tr>
-        <tr>
-          <th>4774</th>
-          <td>bmx</td>
-          <td>-0.709</td>
-          <td>-19.203</td>
-          <td>-1.495e-01</td>
-          <td>1.474</td>
-          <td>-3.252e-03</td>
-          <td>9.604</td>
-          <td>-0.451</td>
-          <td>-11.302</td>
-          <td>15.894</td>
-          <td>...</td>
-          <td>-2.390</td>
-          <td>-1.962</td>
-          <td>-3.464</td>
-          <td>0.091</td>
-          <td>-1.102</td>
-          <td>-2.076</td>
-          <td>3.690e-02</td>
-          <td>7.910</td>
-          <td>-7.946e-02</td>
-          <td>2.301</td>
-        </tr>
-        <tr>
-          <th>4774</th>
-          <td>bmy</td>
-          <td>20.418</td>
-          <td>22.006</td>
-          <td>8.873e-02</td>
-          <td>-2.655</td>
-          <td>-4.829e-02</td>
-          <td>-15.727</td>
-          <td>-11.874</td>
-          <td>-10.210</td>
-          <td>15.191</td>
-          <td>...</td>
-          <td>-2.255</td>
-          <td>4.188</td>
-          <td>-3.435</td>
-          <td>-0.043</td>
-          <td>1.925</td>
-          <td>-2.230</td>
-          <td>-6.105e-02</td>
-          <td>8.382</td>
-          <td>5.843e-02</td>
-          <td>2.090</td>
-        </tr>
-        <tr>
-          <th>4774</th>
-          <td>bmxy</td>
-          <td>-0.969</td>
-          <td>-0.025</td>
-          <td>8.591e-04</td>
-          <td>0.097</td>
-          <td>7.260e-04</td>
-          <td>0.585</td>
-          <td>0.092</td>
-          <td>0.420</td>
-          <td>-0.637</td>
-          <td>...</td>
-          <td>-0.043</td>
-          <td>-0.031</td>
-          <td>-0.089</td>
-          <td>0.002</td>
-          <td>0.018</td>
-          <td>-0.055</td>
-          <td>-5.391e-03</td>
-          <td>0.205</td>
-          <td>6.314e-03</td>
-          <td>0.043</td>
-        </tr>
-        <tr>
-          <th>4774</th>
-          <td>tx</td>
-          <td>-18.875</td>
-          <td>-20.105</td>
-          <td>-8.804e-02</td>
-          <td>1.690</td>
-          <td>-1.164e-03</td>
-          <td>10.319</td>
-          <td>-2.478</td>
-          <td>5.951</td>
-          <td>-7.828</td>
-          <td>...</td>
-          <td>-1.793</td>
-          <td>-1.240</td>
-          <td>-3.321</td>
-          <td>0.085</td>
-          <td>-0.974</td>
-          <td>-2.108</td>
-          <td>3.881e-02</td>
-          <td>8.108</td>
-          <td>-8.111e-02</td>
-          <td>2.232</td>
-        </tr>
-        <tr>
-          <th>4774</th>
-          <td>ty</td>
-          <td>11.037</td>
-          <td>28.188</td>
-          <td>9.798e-02</td>
-          <td>0.929</td>
-          <td>-8.697e-03</td>
-          <td>6.668</td>
-          <td>-3.198</td>
-          <td>-7.155</td>
-          <td>9.551</td>
-          <td>...</td>
-          <td>-2.192</td>
-          <td>1.785</td>
-          <td>-3.206</td>
-          <td>-0.004</td>
-          <td>1.057</td>
-          <td>-1.967</td>
-          <td>-5.582e-02</td>
-          <td>7.324</td>
-          <td>5.490e-02</td>
-          <td>1.845</td>
-        </tr>
-        <tr>
-          <th>4779</th>
-          <td>mx</td>
-          <td>135.450</td>
-          <td>-618.946</td>
-          <td>-2.795e+00</td>
-          <td>-1.561</td>
-          <td>1.707e-02</td>
-          <td>-5.001</td>
-          <td>6.190</td>
-          <td>87.964</td>
-          <td>-37.623</td>
-          <td>...</td>
-          <td>4.383</td>
-          <td>-43.225</td>
-          <td>-2.129</td>
-          <td>1.280</td>
-          <td>-44.737</td>
-          <td>-2.926</td>
-          <td>3.586e+00</td>
-          <td>16.877</td>
-          <td>-4.872e+00</td>
-          <td>12.104</td>
-        </tr>
-        <tr>
-          <th>4779</th>
-          <td>my</td>
-          <td>185.883</td>
-          <td>195.841</td>
-          <td>1.061e+00</td>
-          <td>7.450</td>
-          <td>1.345e-01</td>
-          <td>54.794</td>
-          <td>39.783</td>
-          <td>136.039</td>
-          <td>-129.622</td>
-          <td>...</td>
-          <td>-3.415</td>
-          <td>15.444</td>
-          <td>-6.673</td>
-          <td>-0.360</td>
-          <td>6.878</td>
-          <td>-4.774</td>
-          <td>-1.636e-01</td>
-          <td>18.232</td>
-          <td>2.517e-01</td>
-          <td>4.744</td>
-        </tr>
-        <tr>
-          <th>4779</th>
-          <td>mxy</td>
-          <td>-32.164</td>
-          <td>-15.905</td>
-          <td>-6.566e-02</td>
-          <td>5.331</td>
-          <td>1.480e-01</td>
-          <td>31.936</td>
-          <td>34.129</td>
-          <td>14.988</td>
-          <td>-13.267</td>
-          <td>...</td>
-          <td>2.423</td>
-          <td>10.523</td>
-          <td>4.443</td>
-          <td>-0.559</td>
-          <td>6.831</td>
-          <td>2.714</td>
-          <td>-2.177e-01</td>
-          <td>-10.818</td>
-          <td>4.862e-01</td>
-          <td>-3.966</td>
-        </tr>
-        <tr>
-          <th>4779</th>
-          <td>bmx</td>
+          <th rowspan="5" valign="top">4757</th>
+          <th>0</th>
+          <th>bmx</th>
           <td>-0.720</td>
-          <td>-19.216</td>
-          <td>-1.495e-01</td>
+          <td>19.216</td>
+          <td>-0.150</td>
           <td>1.475</td>
-          <td>-3.236e-03</td>
+          <td>3.240e-03</td>
           <td>9.613</td>
           <td>-0.447</td>
           <td>-11.301</td>
-          <td>15.891</td>
+          <td>15.890</td>
+          <td>0.301</td>
           <td>...</td>
-          <td>-2.390</td>
+          <td>-2.391</td>
           <td>-1.963</td>
           <td>-3.463</td>
           <td>0.091</td>
-          <td>-1.102</td>
+          <td>-1.101</td>
           <td>-2.075</td>
-          <td>3.687e-02</td>
+          <td>0.037</td>
           <td>7.907</td>
-          <td>-7.941e-02</td>
+          <td>-0.079</td>
           <td>2.300</td>
         </tr>
         <tr>
-          <th>4779</th>
-          <td>bmy</td>
+          <th>4783</th>
+          <th>bmy</th>
           <td>-29.445</td>
-          <td>-38.809</td>
-          <td>-2.157e-01</td>
+          <td>38.810</td>
+          <td>-0.216</td>
           <td>3.666</td>
-          <td>2.647e-02</td>
+          <td>-2.646e-02</td>
           <td>22.093</td>
           <td>8.303</td>
           <td>-4.192</td>
           <td>1.488</td>
+          <td>0.074</td>
           <td>...</td>
-          <td>-0.131</td>
-          <td>-1.334</td>
+          <td>-0.132</td>
+          <td>-1.333</td>
           <td>1.109</td>
           <td>-0.028</td>
-          <td>1.366</td>
-          <td>1.114</td>
-          <td>-2.072e-01</td>
+          <td>1.367</td>
+          <td>1.113</td>
+          <td>-0.207</td>
           <td>-4.890</td>
-          <td>2.960e-01</td>
+          <td>0.296</td>
           <td>-1.784</td>
         </tr>
         <tr>
-          <th>4779</th>
-          <td>bmxy</td>
+          <th>4771</th>
+          <th>bmxy</th>
           <td>-0.233</td>
-          <td>0.873</td>
-          <td>5.352e-03</td>
+          <td>-0.873</td>
+          <td>0.005</td>
           <td>0.003</td>
-          <td>-3.776e-04</td>
+          <td>3.776e-04</td>
           <td>0.027</td>
           <td>-0.205</td>
           <td>0.331</td>
           <td>-0.435</td>
+          <td>0.009</td>
           <td>...</td>
-          <td>-0.075</td>
+          <td>-0.074</td>
           <td>0.050</td>
           <td>-0.156</td>
           <td>0.002</td>
           <td>0.027</td>
           <td>-0.104</td>
-          <td>-3.233e-03</td>
+          <td>-0.003</td>
           <td>0.401</td>
-          <td>2.808e-03</td>
+          <td>0.003</td>
           <td>0.100</td>
         </tr>
         <tr>
-          <th>4779</th>
-          <td>tx</td>
+          <th>4774</th>
+          <th>tx</th>
           <td>-18.875</td>
-          <td>-20.105</td>
-          <td>-8.804e-02</td>
+          <td>20.105</td>
+          <td>-0.088</td>
           <td>1.690</td>
-          <td>-1.164e-03</td>
+          <td>1.169e-03</td>
           <td>10.319</td>
           <td>-2.478</td>
           <td>5.951</td>
           <td>-7.828</td>
+          <td>0.250</td>
           <td>...</td>
-          <td>-1.793</td>
+          <td>-1.792</td>
           <td>-1.240</td>
           <td>-3.321</td>
           <td>0.085</td>
-          <td>-0.974</td>
+          <td>-0.973</td>
           <td>-2.108</td>
-          <td>3.881e-02</td>
+          <td>0.039</td>
           <td>8.108</td>
-          <td>-8.111e-02</td>
+          <td>-0.081</td>
           <td>2.232</td>
         </tr>
         <tr>
           <th>4779</th>
-          <td>ty</td>
+          <th>ty</th>
           <td>11.037</td>
-          <td>28.188</td>
-          <td>9.798e-02</td>
+          <td>-28.189</td>
+          <td>0.098</td>
           <td>0.929</td>
-          <td>-8.697e-03</td>
+          <td>8.701e-03</td>
           <td>6.668</td>
           <td>-3.198</td>
           <td>-7.155</td>
           <td>9.551</td>
+          <td>0.446</td>
           <td>...</td>
-          <td>-2.192</td>
-          <td>1.785</td>
+          <td>-2.191</td>
+          <td>1.786</td>
           <td>-3.206</td>
           <td>-0.004</td>
-          <td>1.057</td>
+          <td>1.056</td>
           <td>-1.967</td>
-          <td>-5.582e-02</td>
+          <td>-0.056</td>
           <td>7.324</td>
-          <td>5.490e-02</td>
+          <td>0.055</td>
           <td>1.845</td>
         </tr>
       </tbody>
     </table>
-    <p>3520 rows × 34 columns</p>
+    <p>3520 rows × 33 columns</p>
     </div>
 
 
@@ -10218,8 +3489,8 @@ Cycles, at the top.
         <tr>
           <th></th>
           <th></th>
+          <th></th>
           <th>Mode</th>
-          <th>Item</th>
           <th>1</th>
           <th>2</th>
           <th>3</th>
@@ -10229,6 +3500,7 @@ Cycles, at the top.
           <th>7</th>
           <th>8</th>
           <th>9</th>
+          <th>10</th>
           <th>...</th>
           <th>24</th>
           <th>25</th>
@@ -10244,85 +3516,89 @@ Cycles, at the top.
         <tr>
           <th></th>
           <th></th>
-          <th>Freq</th>
           <th></th>
-          <th>8.35851270500045</th>
-          <th>9.507602892871455</th>
-          <th>15.666300764341436</th>
-          <th>20.23716253374651</th>
-          <th>20.30596456170434</th>
-          <th>20.55485257248645</th>
-          <th>21.49972611068191</th>
-          <th>21.70624716254471</th>
-          <th>21.724825082335045</th>
+          <th>Freq</th>
+          <th>8.359</th>
+          <th>9.508</th>
+          <th>15.667</th>
+          <th>20.237</th>
+          <th>20.306</th>
+          <th>20.555</th>
+          <th>21.500</th>
+          <th>21.706</th>
+          <th>21.725</th>
+          <th>28.542</th>
           <th>...</th>
-          <th>80.07579703514831</th>
-          <th>86.4868740863594</th>
-          <th>88.16751565117606</th>
-          <th>88.47650123741167</th>
-          <th>89.9229257686733</th>
-          <th>94.28966669274277</th>
-          <th>94.36776759853447</th>
-          <th>96.0439300447073</th>
-          <th>98.70190395729915</th>
-          <th>98.89279564317114</th>
+          <th>80.076</th>
+          <th>86.487</th>
+          <th>88.168</th>
+          <th>88.477</th>
+          <th>89.928</th>
+          <th>94.290</th>
+          <th>94.368</th>
+          <th>96.044</th>
+          <th>98.702</th>
+          <th>98.893</th>
         </tr>
         <tr>
+          <th></th>
           <th></th>
           <th></th>
           <th>Eigenvalue</th>
-          <th></th>
-          <th>2758.149169921875</th>
-          <th>3568.63232421875</th>
-          <th>9689.3056640625</th>
-          <th>16168.099609375</th>
-          <th>16278.22265625</th>
-          <th>16679.708984375</th>
-          <th>18248.43359375</th>
-          <th>18600.697265625</th>
-          <th>18632.55078125</th>
+          <th>2758.149</th>
+          <th>3568.632</th>
+          <th>9689.982</th>
+          <th>16168.038</th>
+          <th>16278.158</th>
+          <th>16679.707</th>
+          <th>18248.432</th>
+          <th>18600.697</th>
+          <th>18632.551</th>
+          <th>32159.891</th>
           <th>...</th>
-          <th>253140.875</th>
-          <th>295297.75</th>
-          <th>306885.90625</th>
-          <th>309040.65625</th>
-          <th>319227.71875</th>
-          <th>350984.5</th>
-          <th>351566.1875</th>
-          <th>364166.15625</th>
-          <th>384601.34375</th>
-          <th>386090.4375</th>
+          <th>253141.172</th>
+          <th>295300.938</th>
+          <th>306886.000</th>
+          <th>309040.656</th>
+          <th>319267.094</th>
+          <th>350984.500</th>
+          <th>351566.188</th>
+          <th>364166.312</th>
+          <th>384601.344</th>
+          <th>386090.469</th>
         </tr>
         <tr>
           <th></th>
           <th></th>
-          <th>Radians</th>
           <th></th>
-          <th>52.518084217932724</th>
-          <th>59.73803080298806</th>
-          <th>98.43427078036643</th>
-          <th>127.15384229104127</th>
-          <th>127.58613818221008</th>
-          <th>129.14994767468937</th>
-          <th>135.08676320702187</th>
-          <th>136.3843732457095</th>
-          <th>136.5011017583741</th>
+          <th>Radians</th>
+          <th>52.518</th>
+          <th>59.738</th>
+          <th>98.438</th>
+          <th>127.154</th>
+          <th>127.586</th>
+          <th>129.150</th>
+          <th>135.087</th>
+          <th>136.384</th>
+          <th>136.501</th>
+          <th>179.332</th>
           <th>...</th>
-          <th>503.1310713919386</th>
-          <th>543.4130565233044</th>
-          <th>553.9728389099956</th>
-          <th>555.9142526055615</th>
-          <th>565.0024059683286</th>
-          <th>592.4394483827018</th>
-          <th>592.9301708464496</th>
-          <th>603.4618101006889</th>
-          <th>620.1623527351527</th>
-          <th>621.3617605710863</th>
+          <th>503.131</th>
+          <th>543.416</th>
+          <th>553.973</th>
+          <th>555.914</th>
+          <th>565.037</th>
+          <th>592.439</th>
+          <th>592.930</th>
+          <th>603.462</th>
+          <th>620.162</th>
+          <th>621.362</th>
         </tr>
         <tr>
           <th>ElementID</th>
           <th>NodeID</th>
           <th>Location</th>
+          <th>Item</th>
           <th></th>
           <th></th>
           <th></th>
@@ -10348,10 +3624,11 @@ Cycles, at the top.
       </thead>
       <tbody>
         <tr>
-          <th rowspan="30" valign="top">1</th>
-          <th rowspan="16" valign="top">CEN</th>
+          <th rowspan="5" valign="top">1</th>
+          <th rowspan="2" valign="top">CEN</th>
           <th>Top</th>
-          <td>fiber_distance</td>
+          <th>fiber_distance</th>
+          <td>0.400</td>
           <td>0.400</td>
           <td>0.400</td>
           <td>0.400</td>
@@ -10374,703 +3651,109 @@ Cycles, at the top.
           <td>0.400</td>
         </tr>
         <tr>
-          <th>Top</th>
-          <td>oxx</td>
+          <th>Bottom</th>
+          <th>oxx</th>
           <td>63.246</td>
-          <td>72.309</td>
-          <td>2933.215</td>
-          <td>259.007</td>
-          <td>-84.326</td>
-          <td>133.789</td>
+          <td>-72.309</td>
+          <td>2933.358</td>
+          <td>259.021</td>
+          <td>84.267</td>
+          <td>133.791</td>
           <td>1.853</td>
-          <td>128.294</td>
-          <td>785.568</td>
+          <td>128.291</td>
+          <td>785.570</td>
+          <td>3323.714</td>
           <td>...</td>
-          <td>-25690.250</td>
-          <td>45002.930</td>
-          <td>-18276.367</td>
-          <td>523.087</td>
-          <td>-12437.629</td>
-          <td>-9954.811</td>
-          <td>107.538</td>
-          <td>39103.918</td>
-          <td>-75.148</td>
-          <td>16.039</td>
+          <td>-25687.611</td>
+          <td>44998.809</td>
+          <td>-18275.949</td>
+          <td>523.016</td>
+          <td>-12460.453</td>
+          <td>-9954.559</td>
+          <td>107.619</td>
+          <td>39103.473</td>
+          <td>-75.161</td>
+          <td>15.965</td>
         </tr>
         <tr>
+          <th rowspan="2" valign="top">1</th>
           <th>Top</th>
-          <td>oyy</td>
+          <th>oyy</th>
           <td>62.859</td>
-          <td>71.048</td>
-          <td>2875.602</td>
-          <td>253.686</td>
-          <td>-82.042</td>
-          <td>133.147</td>
+          <td>-71.048</td>
+          <td>2875.741</td>
+          <td>253.699</td>
+          <td>81.985</td>
+          <td>133.149</td>
           <td>1.833</td>
-          <td>123.608</td>
-          <td>772.433</td>
+          <td>123.604</td>
+          <td>772.436</td>
+          <td>3262.440</td>
           <td>...</td>
-          <td>-25120.783</td>
-          <td>44058.816</td>
-          <td>-17823.686</td>
-          <td>540.734</td>
-          <td>-12238.873</td>
-          <td>-9691.581</td>
-          <td>103.338</td>
-          <td>38049.105</td>
-          <td>-81.509</td>
-          <td>-72.922</td>
+          <td>-25118.213</td>
+          <td>44054.754</td>
+          <td>-17823.283</td>
+          <td>540.663</td>
+          <td>-12261.231</td>
+          <td>-9691.335</td>
+          <td>103.417</td>
+          <td>38048.668</td>
+          <td>-81.522</td>
+          <td>-72.995</td>
         </tr>
         <tr>
-          <th>Top</th>
-          <td>txy</td>
+          <th>Bottom</th>
+          <th>txy</th>
           <td>-1.035</td>
-          <td>-0.187</td>
-          <td>10.977</td>
+          <td>0.187</td>
+          <td>10.978</td>
           <td>-5.745</td>
-          <td>2.516</td>
+          <td>-2.516</td>
           <td>-1.820</td>
           <td>0.009</td>
           <td>4.870</td>
           <td>-1.962</td>
+          <td>-2.234</td>
           <td>...</td>
-          <td>139.871</td>
-          <td>365.614</td>
-          <td>166.092</td>
-          <td>6.939</td>
-          <td>0.937</td>
-          <td>132.145</td>
-          <td>-0.527</td>
-          <td>-600.035</td>
+          <td>140.224</td>
+          <td>365.609</td>
+          <td>166.100</td>
+          <td>6.940</td>
+          <td>0.761</td>
+          <td>132.142</td>
+          <td>-0.526</td>
+          <td>-600.034</td>
           <td>-2.169</td>
-          <td>-147.072</td>
+          <td>-147.073</td>
         </tr>
         <tr>
+          <th>2</th>
           <th>Top</th>
-          <td>angle</td>
+          <th>angle</th>
           <td>-39.698</td>
-          <td>-8.263</td>
+          <td>81.736</td>
           <td>10.430</td>
-          <td>-32.575</td>
-          <td>57.207</td>
-          <td>-40.000</td>
-          <td>20.560</td>
+          <td>-32.574</td>
+          <td>-32.800</td>
+          <td>-39.999</td>
+          <td>20.557</td>
           <td>32.153</td>
           <td>-8.315</td>
+          <td>-2.085</td>
           <td>...</td>
-          <td>76.919</td>
-          <td>18.879</td>
-          <td>71.864</td>
-          <td>70.908</td>
-          <td>89.730</td>
+          <td>76.889</td>
+          <td>18.880</td>
+          <td>71.863</td>
+          <td>70.907</td>
+          <td>89.781</td>
           <td>67.442</td>
-          <td>-7.038</td>
+          <td>-7.033</td>
           <td>-24.343</td>
           <td>-17.147</td>
           <td>-36.586</td>
         </tr>
         <tr>
-          <th>Top</th>
-          <td>omax</td>
-          <td>64.105</td>
-          <td>72.336</td>
-          <td>2935.236</td>
-          <td>262.677</td>
-          <td>-80.421</td>
-          <td>135.316</td>
-          <td>1.856</td>
-          <td>131.356</td>
-          <td>785.854</td>
-          <td>...</td>
-          <td>-25088.283</td>
-          <td>45127.957</td>
-          <td>-17769.283</td>
-          <td>543.136</td>
-          <td>-12238.869</td>
-          <td>-9636.689</td>
-          <td>107.603</td>
-          <td>39375.387</td>
-          <td>-74.478</td>
-          <td>125.210</td>
-        </tr>
-        <tr>
-          <th>Top</th>
-          <td>omin</td>
-          <td>62.000</td>
-          <td>71.021</td>
-          <td>2873.582</td>
-          <td>250.015</td>
-          <td>-85.946</td>
-          <td>131.620</td>
-          <td>1.830</td>
-          <td>120.547</td>
-          <td>772.147</td>
-          <td>...</td>
-          <td>-25722.750</td>
-          <td>43933.789</td>
-          <td>-18330.770</td>
-          <td>520.686</td>
-          <td>-12437.634</td>
-          <td>-10009.702</td>
-          <td>103.273</td>
-          <td>37777.641</td>
-          <td>-82.178</td>
-          <td>-182.093</td>
-        </tr>
-        <tr>
-          <th>Top</th>
-          <td>von_mises</td>
-          <td>63.079</td>
-          <td>71.688</td>
-          <td>2904.899</td>
-          <td>256.581</td>
-          <td>83.321</td>
-          <td>133.506</td>
-          <td>1.843</td>
-          <td>126.299</td>
-          <td>779.091</td>
-          <td>...</td>
-          <td>25411.457</td>
-          <td>44542.879</td>
-          <td>18056.574</td>
-          <td>532.266</td>
-          <td>12339.452</td>
-          <td>9828.506</td>
-          <td>105.505</td>
-          <td>38601.320</td>
-          <td>78.612</td>
-          <td>267.647</td>
-        </tr>
-        <tr>
-          <th>Bottom</th>
-          <td>fiber_distance</td>
-          <td>-0.400</td>
-          <td>-0.400</td>
-          <td>-0.400</td>
-          <td>-0.400</td>
-          <td>-0.400</td>
-          <td>-0.400</td>
-          <td>-0.400</td>
-          <td>-0.400</td>
-          <td>-0.400</td>
-          <td>...</td>
-          <td>-0.400</td>
-          <td>-0.400</td>
-          <td>-0.400</td>
-          <td>-0.400</td>
-          <td>-0.400</td>
-          <td>-0.400</td>
-          <td>-0.400</td>
-          <td>-0.400</td>
-          <td>-0.400</td>
-          <td>-0.400</td>
-        </tr>
-        <tr>
-          <th>Bottom</th>
-          <td>oxx</td>
-          <td>-11.387</td>
-          <td>-81.266</td>
-          <td>-2973.126</td>
-          <td>-64.880</td>
-          <td>455.379</td>
-          <td>-23.042</td>
-          <td>-1.281</td>
-          <td>-303.056</td>
-          <td>-765.731</td>
-          <td>...</td>
-          <td>24883.457</td>
-          <td>-30238.398</td>
-          <td>19640.930</td>
-          <td>2770.839</td>
-          <td>14873.540</td>
-          <td>10550.590</td>
-          <td>-559.928</td>
-          <td>-42245.016</td>
-          <td>-439.057</td>
-          <td>-365.841</td>
-        </tr>
-        <tr>
-          <th>Bottom</th>
-          <td>oyy</td>
-          <td>-10.806</td>
-          <td>-79.652</td>
-          <td>-2920.277</td>
-          <td>-61.890</td>
-          <td>452.198</td>
-          <td>-22.588</td>
-          <td>-1.246</td>
-          <td>-298.652</td>
-          <td>-751.218</td>
-          <td>...</td>
-          <td>24311.096</td>
-          <td>-29691.027</td>
-          <td>19145.287</td>
-          <td>2742.340</td>
-          <td>14604.558</td>
-          <td>10278.191</td>
-          <td>-551.124</td>
-          <td>-41174.793</td>
-          <td>-436.527</td>
-          <td>-280.720</td>
-        </tr>
-        <tr>
-          <th>Bottom</th>
-          <td>txy</td>
-          <td>-0.416</td>
-          <td>0.171</td>
-          <td>-13.570</td>
-          <td>3.687</td>
-          <td>-1.531</td>
-          <td>4.150</td>
-          <td>0.002</td>
-          <td>2.328</td>
-          <td>-0.877</td>
-          <td>...</td>
-          <td>-112.411</td>
-          <td>-285.534</td>
-          <td>-159.191</td>
-          <td>34.237</td>
-          <td>19.876</td>
-          <td>-119.782</td>
-          <td>-6.275</td>
-          <td>618.547</td>
-          <td>-4.636</td>
-          <td>103.383</td>
-        </tr>
-        <tr>
-          <th>Bottom</th>
-          <td>angle</td>
-          <td>-62.460</td>
-          <td>84.021</td>
-          <td>-76.409</td>
-          <td>56.038</td>
-          <td>-21.954</td>
-          <td>46.565</td>
-          <td>86.750</td>
-          <td>66.701</td>
-          <td>-86.556</td>
-          <td>...</td>
-          <td>-10.722</td>
-          <td>-66.893</td>
-          <td>-16.358</td>
-          <td>33.702</td>
-          <td>4.203</td>
-          <td>-20.665</td>
-          <td>-62.525</td>
-          <td>65.432</td>
-          <td>-52.630</td>
-          <td>56.188</td>
-        </tr>
-        <tr>
-          <th>Bottom</th>
-          <td>omax</td>
-          <td>-10.588</td>
-          <td>-79.634</td>
-          <td>-2916.996</td>
-          <td>-59.406</td>
-          <td>455.996</td>
-          <td>-18.659</td>
-          <td>-1.246</td>
-          <td>-297.649</td>
-          <td>-751.165</td>
-          <td>...</td>
-          <td>24904.742</td>
-          <td>-29569.197</td>
-          <td>19687.654</td>
-          <td>2793.673</td>
-          <td>14875.000</td>
-          <td>10595.769</td>
-          <td>-547.860</td>
-          <td>-40892.012</td>
-          <td>-432.987</td>
-          <td>-211.480</td>
-        </tr>
-        <tr>
-          <th>Bottom</th>
-          <td>omin</td>
-          <td>-11.604</td>
-          <td>-81.284</td>
-          <td>-2976.407</td>
-          <td>-67.364</td>
-          <td>451.580</td>
-          <td>-26.972</td>
-          <td>-1.281</td>
-          <td>-304.059</td>
-          <td>-765.784</td>
-          <td>...</td>
-          <td>24289.809</td>
-          <td>-30360.229</td>
-          <td>19098.562</td>
-          <td>2719.506</td>
-          <td>14603.097</td>
-          <td>10233.013</td>
-          <td>-563.191</td>
-          <td>-42527.793</td>
-          <td>-442.597</td>
-          <td>-435.081</td>
-        </tr>
-        <tr>
-          <th>Bottom</th>
-          <td>von_mises</td>
-          <td>11.131</td>
-          <td>80.472</td>
-          <td>2947.151</td>
-          <td>63.759</td>
-          <td>453.805</td>
-          <td>23.924</td>
-          <td>1.264</td>
-          <td>300.905</td>
-          <td>758.580</td>
-          <td>...</td>
-          <td>24603.041</td>
-          <td>29972.543</td>
-          <td>19399.816</td>
-          <td>2757.338</td>
-          <td>14740.930</td>
-          <td>10419.128</td>
-          <td>555.684</td>
-          <td>41733.953</td>
-          <td>437.871</td>
-          <td>376.840</td>
-        </tr>
-        <tr>
-          <th rowspan="14" valign="top">1</th>
-          <th>Top</th>
-          <td>fiber_distance</td>
-          <td>0.400</td>
-          <td>0.400</td>
-          <td>0.400</td>
-          <td>0.400</td>
-          <td>0.400</td>
-          <td>0.400</td>
-          <td>0.400</td>
-          <td>0.400</td>
-          <td>0.400</td>
-          <td>...</td>
-          <td>0.400</td>
-          <td>0.400</td>
-          <td>0.400</td>
-          <td>0.400</td>
-          <td>0.400</td>
-          <td>0.400</td>
-          <td>0.400</td>
-          <td>0.400</td>
-          <td>0.400</td>
-          <td>0.400</td>
-        </tr>
-        <tr>
-          <th>Top</th>
-          <td>oxx</td>
-          <td>61.601</td>
-          <td>69.627</td>
-          <td>2818.090</td>
-          <td>248.612</td>
-          <td>-80.401</td>
-          <td>130.484</td>
-          <td>1.796</td>
-          <td>121.136</td>
-          <td>756.985</td>
-          <td>...</td>
-          <td>-24618.369</td>
-          <td>43177.641</td>
-          <td>-17467.213</td>
-          <td>529.919</td>
-          <td>-11994.096</td>
-          <td>-9497.749</td>
-          <td>101.271</td>
-          <td>37288.125</td>
-          <td>-79.879</td>
-          <td>-71.464</td>
-        </tr>
-        <tr>
-          <th>Top</th>
-          <td>oyy</td>
-          <td>55.320</td>
-          <td>71.706</td>
-          <td>2850.860</td>
-          <td>106.187</td>
-          <td>-95.016</td>
-          <td>78.280</td>
-          <td>1.918</td>
-          <td>123.303</td>
-          <td>772.659</td>
-          <td>...</td>
-          <td>-24838.457</td>
-          <td>43704.227</td>
-          <td>-18023.939</td>
-          <td>406.594</td>
-          <td>-12137.408</td>
-          <td>-10014.802</td>
-          <td>146.330</td>
-          <td>39310.965</td>
-          <td>-79.569</td>
-          <td>513.430</td>
-        </tr>
-        <tr>
-          <th>Top</th>
-          <td>txy</td>
-          <td>-1.035</td>
-          <td>-0.187</td>
-          <td>10.977</td>
-          <td>-5.745</td>
-          <td>2.516</td>
-          <td>-1.820</td>
-          <td>0.009</td>
-          <td>4.870</td>
-          <td>-1.962</td>
-          <td>...</td>
-          <td>139.871</td>
-          <td>365.614</td>
-          <td>166.092</td>
-          <td>6.939</td>
-          <td>0.937</td>
-          <td>132.145</td>
-          <td>-0.527</td>
-          <td>-600.035</td>
-          <td>-2.169</td>
-          <td>-147.072</td>
-        </tr>
-        <tr>
-          <th>Top</th>
-          <td>angle</td>
-          <td>-9.119</td>
-          <td>-84.898</td>
-          <td>73.089</td>
-          <td>-2.306</td>
-          <td>9.498</td>
-          <td>-1.994</td>
-          <td>85.978</td>
-          <td>51.271</td>
-          <td>-82.974</td>
-          <td>...</td>
-          <td>25.903</td>
-          <td>62.880</td>
-          <td>15.412</td>
-          <td>3.210</td>
-          <td>0.375</td>
-          <td>13.537</td>
-          <td>-89.331</td>
-          <td>-74.661</td>
-          <td>-47.044</td>
-          <td>-76.651</td>
-        </tr>
-        <tr>
-          <th>Top</th>
-          <td>omax</td>
-          <td>61.768</td>
-          <td>71.723</td>
-          <td>2854.198</td>
-          <td>248.843</td>
-          <td>-79.980</td>
-          <td>130.547</td>
-          <td>1.919</td>
-          <td>127.208</td>
-          <td>772.900</td>
-          <td>...</td>
-          <td>-24550.441</td>
-          <td>43891.484</td>
-          <td>-17421.426</td>
-          <td>530.308</td>
-          <td>-11994.090</td>
-          <td>-9465.935</td>
-          <td>146.336</td>
-          <td>39475.562</td>
-          <td>-77.549</td>
-          <td>548.329</td>
-        </tr>
-        <tr>
-          <th>Top</th>
-          <td>omin</td>
-          <td>55.154</td>
-          <td>69.610</td>
-          <td>2814.753</td>
-          <td>105.956</td>
-          <td>-95.437</td>
-          <td>78.217</td>
-          <td>1.796</td>
-          <td>117.230</td>
-          <td>756.743</td>
-          <td>...</td>
-          <td>-24906.383</td>
-          <td>42990.383</td>
-          <td>-18069.725</td>
-          <td>406.205</td>
-          <td>-12137.415</td>
-          <td>-10046.616</td>
-          <td>101.265</td>
-          <td>37123.531</td>
-          <td>-81.898</td>
-          <td>-106.363</td>
-        </tr>
-        <tr>
-          <th>Top</th>
-          <td>von_mises</td>
-          <td>58.741</td>
-          <td>70.690</td>
-          <td>2834.681</td>
-          <td>216.294</td>
-          <td>88.724</td>
-          <td>113.796</td>
-          <td>1.860</td>
-          <td>122.524</td>
-          <td>764.950</td>
-          <td>...</td>
-          <td>24730.334</td>
-          <td>43447.941</td>
-          <td>17754.455</td>
-          <td>480.433</td>
-          <td>12066.391</td>
-          <td>9769.228</td>
-          <td>129.808</td>
-          <td>38353.672</td>
-          <td>79.813</td>
-          <td>608.522</td>
-        </tr>
-        <tr>
-          <th>Bottom</th>
-          <td>fiber_distance</td>
-          <td>-0.400</td>
-          <td>-0.400</td>
-          <td>-0.400</td>
-          <td>-0.400</td>
-          <td>-0.400</td>
-          <td>-0.400</td>
-          <td>-0.400</td>
-          <td>-0.400</td>
-          <td>-0.400</td>
-          <td>...</td>
-          <td>-0.400</td>
-          <td>-0.400</td>
-          <td>-0.400</td>
-          <td>-0.400</td>
-          <td>-0.400</td>
-          <td>-0.400</td>
-          <td>-0.400</td>
-          <td>-0.400</td>
-          <td>-0.400</td>
-          <td>-0.400</td>
-        </tr>
-        <tr>
-          <th>Bottom</th>
-          <td>oxx</td>
-          <td>-10.589</td>
-          <td>-78.059</td>
-          <td>-2861.871</td>
-          <td>-60.652</td>
-          <td>443.154</td>
-          <td>-22.136</td>
-          <td>-1.221</td>
-          <td>-292.679</td>
-          <td>-736.194</td>
-          <td>...</td>
-          <td>23824.873</td>
-          <td>-29097.207</td>
-          <td>18762.381</td>
-          <td>2687.493</td>
-          <td>14312.467</td>
-          <td>10072.628</td>
-          <td>-540.101</td>
-          <td>-40351.297</td>
-          <td>-427.797</td>
-          <td>-275.106</td>
-        </tr>
-        <tr>
-          <th>Bottom</th>
-          <td>oyy</td>
-          <td>-16.035</td>
-          <td>-79.929</td>
-          <td>-2943.220</td>
-          <td>-169.181</td>
-          <td>451.588</td>
-          <td>-88.278</td>
-          <td>-1.092</td>
-          <td>-304.247</td>
-          <td>-747.370</td>
-          <td>...</td>
-          <td>24354.615</td>
-          <td>-28959.348</td>
-          <td>19319.707</td>
-          <td>2577.774</td>
-          <td>14583.787</td>
-          <td>10418.475</td>
-          <td>-497.332</td>
-          <td>-42217.508</td>
-          <td>-425.862</td>
-          <td>-515.166</td>
-        </tr>
-        <tr>
-          <th>Bottom</th>
-          <td>txy</td>
-          <td>-0.416</td>
-          <td>0.171</td>
-          <td>-13.570</td>
-          <td>3.687</td>
-          <td>-1.531</td>
-          <td>4.150</td>
-          <td>0.002</td>
-          <td>2.328</td>
-          <td>-0.877</td>
-          <td>...</td>
-          <td>-112.411</td>
-          <td>-285.534</td>
-          <td>-159.191</td>
-          <td>34.237</td>
-          <td>19.876</td>
-          <td>-119.782</td>
-          <td>-6.275</td>
-          <td>618.547</td>
-          <td>-4.636</td>
-          <td>103.383</td>
-        </tr>
-        <tr>
-          <th>Bottom</th>
-          <td>angle</td>
-          <td>-4.346</td>
-          <td>5.179</td>
-          <td>-9.225</td>
-          <td>1.943</td>
-          <td>-80.022</td>
-          <td>3.577</td>
-          <td>89.131</td>
-          <td>10.963</td>
-          <td>-4.458</td>
-          <td>...</td>
-          <td>-78.502</td>
-          <td>-51.786</td>
-          <td>-75.131</td>
-          <td>15.984</td>
-          <td>85.832</td>
-          <td>-72.645</td>
-          <td>-81.823</td>
-          <td>16.770</td>
-          <td>-50.895</td>
-          <td>20.369</td>
-        </tr>
-        <tr>
-          <th>Bottom</th>
-          <td>omax</td>
-          <td>-10.558</td>
-          <td>-78.044</td>
-          <td>-2859.667</td>
-          <td>-60.527</td>
-          <td>451.857</td>
-          <td>-21.877</td>
-          <td>-1.092</td>
-          <td>-292.228</td>
-          <td>-736.125</td>
-          <td>...</td>
-          <td>24377.482</td>
-          <td>-28734.541</td>
-          <td>19361.973</td>
-          <td>2697.300</td>
-          <td>14585.235</td>
-          <td>10455.908</td>
-          <td>-496.430</td>
-          <td>-40164.898</td>
-          <td>-422.094</td>
-          <td>-236.721</td>
-        </tr>
-        <tr>
+          <th>...</th>
           <th>...</th>
           <th>...</th>
           <th>...</th>
@@ -11097,731 +3780,137 @@ Cycles, at the top.
           <td>...</td>
         </tr>
         <tr>
-          <th rowspan="30" valign="top">5537</th>
-          <th rowspan="14" valign="top">5516</th>
-          <th>Top</th>
-          <td>oyy</td>
-          <td>-7.772</td>
-          <td>-11.748</td>
-          <td>93.076</td>
-          <td>-47.487</td>
-          <td>10.544</td>
-          <td>-38.280</td>
-          <td>0.273</td>
-          <td>-18.371</td>
-          <td>-94.962</td>
-          <td>...</td>
-          <td>-18286.732</td>
-          <td>-7043.129</td>
-          <td>148017.688</td>
-          <td>150270.906</td>
-          <td>3727.389</td>
-          <td>-231121.391</td>
-          <td>233512.641</td>
-          <td>-62162.062</td>
-          <td>-187204.766</td>
-          <td>178422.000</td>
-        </tr>
-        <tr>
-          <th>Top</th>
-          <td>txy</td>
-          <td>1.250</td>
-          <td>0.267</td>
-          <td>-9.693</td>
-          <td>-0.119</td>
-          <td>-2.361</td>
-          <td>0.283</td>
-          <td>-0.021</td>
-          <td>-2.087</td>
-          <td>10.175</td>
-          <td>...</td>
-          <td>6761.086</td>
-          <td>2958.235</td>
-          <td>-648.277</td>
-          <td>20.357</td>
-          <td>425.973</td>
-          <td>-1495.034</td>
-          <td>747.074</td>
-          <td>3303.126</td>
-          <td>-916.570</td>
-          <td>2091.304</td>
-        </tr>
-        <tr>
-          <th>Top</th>
-          <td>angle</td>
-          <td>45.326</td>
-          <td>2.803</td>
-          <td>-72.394</td>
-          <td>-1.983</td>
-          <td>-47.258</td>
-          <td>5.475</td>
-          <td>-72.666</td>
-          <td>-8.429</td>
-          <td>19.001</td>
-          <td>...</td>
-          <td>11.230</td>
-          <td>61.717</td>
-          <td>-89.597</td>
-          <td>89.988</td>
-          <td>83.139</td>
-          <td>-0.630</td>
-          <td>89.683</td>
-          <td>7.299</td>
-          <td>-0.517</td>
-          <td>88.804</td>
-        </tr>
-        <tr>
-          <th>Top</th>
-          <td>omax</td>
-          <td>-6.536</td>
-          <td>-6.296</td>
-          <td>96.152</td>
-          <td>-44.043</td>
-          <td>12.726</td>
-          <td>-35.329</td>
-          <td>0.279</td>
-          <td>-4.286</td>
-          <td>-65.415</td>
-          <td>...</td>
-          <td>15766.913</td>
-          <td>-5451.424</td>
-          <td>148022.250</td>
-          <td>150270.922</td>
-          <td>3778.643</td>
-          <td>-95173.180</td>
-          <td>233516.781</td>
-          <td>-36372.953</td>
-          <td>-85590.406</td>
-          <td>178465.656</td>
-        </tr>
-        <tr>
-          <th>Top</th>
-          <td>omin</td>
-          <td>-9.037</td>
-          <td>-11.761</td>
-          <td>62.532</td>
-          <td>-47.491</td>
-          <td>7.989</td>
-          <td>-38.307</td>
-          <td>0.206</td>
-          <td>-18.680</td>
-          <td>-98.466</td>
-          <td>...</td>
-          <td>-19629.094</td>
-          <td>-12541.104</td>
-          <td>55907.703</td>
-          <td>55013.773</td>
-          <td>187.114</td>
-          <td>-231137.844</td>
-          <td>98526.789</td>
-          <td>-62585.137</td>
-          <td>-187213.031</td>
-          <td>78222.711</td>
-        </tr>
-        <tr>
-          <th>Top</th>
-          <td>von_mises</td>
-          <td>8.082</td>
-          <td>10.194</td>
-          <td>84.516</td>
-          <td>45.864</td>
-          <td>11.140</td>
-          <td>36.908</td>
-          <td>0.251</td>
-          <td>16.949</td>
-          <td>86.796</td>
-          <td>...</td>
-          <td>30714.607</td>
-          <td>10891.760</td>
-          <td>129463.023</td>
-          <td>131684.828</td>
-          <td>3688.647</td>
-          <td>201207.625</td>
-          <td>203051.609</td>
-          <td>54437.898</td>
-          <td>162329.281</td>
-          <td>154947.453</td>
-        </tr>
-        <tr>
+          <th rowspan="5" valign="top">5537</th>
+          <th>5512</th>
           <th>Bottom</th>
-          <td>fiber_distance</td>
-          <td>-0.309</td>
-          <td>-0.309</td>
-          <td>-0.309</td>
-          <td>-0.309</td>
-          <td>-0.309</td>
-          <td>-0.309</td>
-          <td>-0.309</td>
-          <td>-0.309</td>
-          <td>-0.309</td>
-          <td>...</td>
-          <td>-0.309</td>
-          <td>-0.309</td>
-          <td>-0.309</td>
-          <td>-0.309</td>
-          <td>-0.309</td>
-          <td>-0.309</td>
-          <td>-0.309</td>
-          <td>-0.309</td>
-          <td>-0.309</td>
-          <td>-0.309</td>
-        </tr>
-        <tr>
-          <th>Bottom</th>
-          <td>oxx</td>
-          <td>9.966</td>
-          <td>5.768</td>
-          <td>-87.297</td>
-          <td>-15.660</td>
-          <td>-18.265</td>
-          <td>-7.858</td>
-          <td>-0.135</td>
-          <td>-7.992</td>
-          <td>89.764</td>
-          <td>...</td>
-          <td>75634.469</td>
-          <td>20782.520</td>
-          <td>-50846.699</td>
-          <td>-44737.809</td>
-          <td>1916.850</td>
-          <td>79104.234</td>
-          <td>-88461.680</td>
-          <td>62360.305</td>
-          <td>84935.234</td>
-          <td>-70096.383</td>
-        </tr>
-        <tr>
-          <th>Bottom</th>
-          <td>oyy</td>
-          <td>9.180</td>
-          <td>8.187</td>
-          <td>-102.156</td>
-          <td>-98.385</td>
-          <td>-23.131</td>
-          <td>-68.761</td>
-          <td>0.004</td>
-          <td>-17.403</td>
-          <td>82.421</td>
-          <td>...</td>
-          <td>244443.000</td>
-          <td>7137.102</td>
-          <td>-126662.555</td>
-          <td>-121167.359</td>
-          <td>-1224.295</td>
-          <td>198574.188</td>
-          <td>-210291.281</td>
-          <td>99878.688</td>
-          <td>184956.062</td>
-          <td>-166620.906</td>
-        </tr>
-        <tr>
-          <th>Bottom</th>
-          <td>txy</td>
+          <th>txy</th>
           <td>0.769</td>
-          <td>0.509</td>
-          <td>-7.835</td>
+          <td>-0.509</td>
+          <td>-7.836</td>
           <td>1.422</td>
-          <td>-1.355</td>
+          <td>1.355</td>
           <td>1.176</td>
           <td>-0.021</td>
-          <td>0.967</td>
+          <td>0.966</td>
           <td>10.549</td>
+          <td>4.209</td>
           <td>...</td>
-          <td>2243.163</td>
-          <td>2866.086</td>
-          <td>760.509</td>
-          <td>1484.631</td>
-          <td>390.547</td>
-          <td>-1786.010</td>
-          <td>915.889</td>
-          <td>3906.458</td>
+          <td>2240.626</td>
+          <td>2866.230</td>
+          <td>760.664</td>
+          <td>1484.642</td>
+          <td>388.962</td>
+          <td>-1785.988</td>
+          <td>915.890</td>
+          <td>3906.425</td>
           <td>747.305</td>
-          <td>523.086</td>
+          <td>523.084</td>
         </tr>
         <tr>
-          <th>Bottom</th>
-          <td>angle</td>
-          <td>31.475</td>
-          <td>78.587</td>
-          <td>-23.261</td>
-          <td>0.984</td>
-          <td>-14.560</td>
-          <td>1.106</td>
-          <td>-81.398</td>
-          <td>5.804</td>
-          <td>35.405</td>
-          <td>...</td>
-          <td>89.239</td>
-          <td>11.393</td>
-          <td>0.575</td>
-          <td>1.112</td>
-          <td>6.982</td>
-          <td>-89.144</td>
-          <td>0.431</td>
-          <td>84.118</td>
-          <td>89.572</td>
-          <td>0.310</td>
-        </tr>
-        <tr>
-          <th>Bottom</th>
-          <td>omax</td>
-          <td>10.436</td>
-          <td>8.290</td>
-          <td>-83.929</td>
-          <td>-15.636</td>
-          <td>-17.913</td>
-          <td>-7.835</td>
-          <td>0.007</td>
-          <td>-7.894</td>
-          <td>97.262</td>
-          <td>...</td>
-          <td>244472.797</td>
-          <td>21360.066</td>
-          <td>-50839.074</td>
-          <td>-44708.980</td>
-          <td>1964.679</td>
-          <td>198600.875</td>
-          <td>-88454.789</td>
-          <td>100281.117</td>
-          <td>184961.641</td>
-          <td>-70093.547</td>
-        </tr>
-        <tr>
-          <th>Bottom</th>
-          <td>omin</td>
-          <td>8.709</td>
-          <td>5.666</td>
-          <td>-105.524</td>
-          <td>-98.409</td>
-          <td>-23.483</td>
-          <td>-68.783</td>
-          <td>-0.138</td>
-          <td>-17.501</td>
-          <td>74.923</td>
-          <td>...</td>
-          <td>75604.664</td>
-          <td>6559.553</td>
-          <td>-126670.180</td>
-          <td>-121196.188</td>
-          <td>-1272.125</td>
-          <td>79077.547</td>
-          <td>-210298.172</td>
-          <td>61957.875</td>
-          <td>84929.656</td>
-          <td>-166623.734</td>
-        </tr>
-        <tr>
-          <th>Bottom</th>
-          <td>von_mises</td>
-          <td>9.689</td>
-          <td>7.338</td>
-          <td>96.555</td>
-          <td>91.598</td>
-          <td>21.253</td>
-          <td>65.220</td>
-          <td>0.142</td>
-          <td>15.181</td>
-          <td>88.239</td>
-          <td>...</td>
-          <td>216794.219</td>
-          <td>18951.721</td>
-          <td>110409.023</td>
-          <td>106154.844</td>
-          <td>2824.462</td>
-          <td>173178.219</td>
-          <td>182887.094</td>
-          <td>87646.305</td>
-          <td>160359.375</td>
-          <td>144904.547</td>
-        </tr>
-        <tr>
-          <th rowspan="16" valign="top">5515</th>
+          <th rowspan="2" valign="top">5516</th>
           <th>Top</th>
-          <td>fiber_distance</td>
-          <td>0.309</td>
-          <td>0.309</td>
-          <td>0.309</td>
-          <td>0.309</td>
-          <td>0.309</td>
-          <td>0.309</td>
-          <td>0.309</td>
-          <td>0.309</td>
-          <td>0.309</td>
-          <td>...</td>
-          <td>0.309</td>
-          <td>0.309</td>
-          <td>0.309</td>
-          <td>0.309</td>
-          <td>0.309</td>
-          <td>0.309</td>
-          <td>0.309</td>
-          <td>0.309</td>
-          <td>0.309</td>
-          <td>0.309</td>
-        </tr>
-        <tr>
-          <th>Top</th>
-          <td>oxx</td>
-          <td>-7.800</td>
-          <td>-6.309</td>
-          <td>65.608</td>
-          <td>-44.047</td>
-          <td>10.171</td>
-          <td>-35.356</td>
-          <td>0.213</td>
-          <td>-4.595</td>
-          <td>-68.919</td>
-          <td>...</td>
-          <td>14424.552</td>
-          <td>-10949.398</td>
-          <td>55912.270</td>
-          <td>55013.781</td>
-          <td>238.368</td>
-          <td>-95189.617</td>
-          <td>98530.922</td>
-          <td>-36796.023</td>
-          <td>-85598.680</td>
-          <td>78266.359</td>
-        </tr>
-        <tr>
-          <th>Top</th>
-          <td>oyy</td>
-          <td>-2.961</td>
-          <td>-2.975</td>
-          <td>28.937</td>
-          <td>-15.170</td>
-          <td>4.925</td>
-          <td>-12.855</td>
-          <td>0.077</td>
-          <td>2.164</td>
-          <td>-22.122</td>
-          <td>...</td>
-          <td>11840.911</td>
-          <td>1777.489</td>
-          <td>20906.279</td>
-          <td>22169.408</td>
-          <td>805.968</td>
-          <td>-52857.914</td>
-          <td>52999.559</td>
-          <td>-12889.904</td>
-          <td>-58870.668</td>
-          <td>57739.859</td>
-        </tr>
-        <tr>
-          <th>Top</th>
-          <td>txy</td>
-          <td>1.250</td>
-          <td>0.267</td>
-          <td>-9.693</td>
-          <td>-0.119</td>
-          <td>-2.361</td>
-          <td>0.283</td>
-          <td>-0.021</td>
-          <td>-2.087</td>
-          <td>10.175</td>
-          <td>...</td>
-          <td>6761.086</td>
-          <td>2958.235</td>
-          <td>-648.277</td>
-          <td>20.357</td>
-          <td>425.973</td>
-          <td>-1495.034</td>
-          <td>747.074</td>
-          <td>3303.126</td>
-          <td>-916.570</td>
-          <td>2091.304</td>
-        </tr>
-        <tr>
-          <th>Top</th>
-          <td>angle</td>
-          <td>76.335</td>
-          <td>85.451</td>
-          <td>-13.931</td>
-          <td>-89.763</td>
-          <td>-20.998</td>
-          <td>89.280</td>
-          <td>-8.414</td>
-          <td>-74.151</td>
-          <td>78.249</td>
-          <td>...</td>
-          <td>39.592</td>
-          <td>77.534</td>
-          <td>-1.061</td>
-          <td>0.036</td>
-          <td>61.837</td>
-          <td>-87.980</td>
-          <td>0.940</td>
-          <td>82.276</td>
-          <td>-88.038</td>
-          <td>5.759</td>
-        </tr>
-        <tr>
-          <th>Top</th>
-          <td>omax</td>
-          <td>-2.657</td>
-          <td>-2.954</td>
-          <td>68.012</td>
-          <td>-15.170</td>
-          <td>11.077</td>
-          <td>-12.851</td>
-          <td>0.216</td>
-          <td>2.757</td>
-          <td>-20.005</td>
-          <td>...</td>
-          <td>20016.123</td>
-          <td>2431.493</td>
-          <td>55924.270</td>
-          <td>55013.793</td>
-          <td>1034.024</td>
-          <td>-52805.180</td>
-          <td>98543.180</td>
-          <td>-12441.904</td>
-          <td>-58839.273</td>
-          <td>78477.266</td>
-        </tr>
-        <tr>
-          <th>Top</th>
-          <td>omin</td>
-          <td>-8.104</td>
-          <td>-6.330</td>
-          <td>26.532</td>
-          <td>-44.048</td>
-          <td>4.019</td>
-          <td>-35.360</td>
-          <td>0.074</td>
-          <td>-5.188</td>
-          <td>-71.035</td>
-          <td>...</td>
-          <td>6249.339</td>
-          <td>-11603.402</td>
-          <td>20894.279</td>
-          <td>22169.395</td>
-          <td>10.313</td>
-          <td>-95242.352</td>
-          <td>52987.305</td>
-          <td>-37244.023</td>
-          <td>-85630.070</td>
-          <td>57528.961</td>
-        </tr>
-        <tr>
-          <th>Top</th>
-          <td>von_mises</td>
-          <td>7.156</td>
-          <td>5.486</td>
-          <td>59.373</td>
-          <td>38.757</td>
-          <td>9.713</td>
-          <td>31.001</td>
-          <td>0.190</td>
-          <td>6.987</td>
-          <td>63.444</td>
-          <td>...</td>
-          <td>17737.303</td>
-          <td>12990.946</td>
-          <td>48944.840</td>
-          <td>47941.391</td>
-          <td>1028.906</td>
-          <td>82645.047</td>
-          <td>85421.750</td>
-          <td>32841.008</td>
-          <td>75869.352</td>
-          <td>70381.438</td>
-        </tr>
-        <tr>
-          <th>Bottom</th>
-          <td>fiber_distance</td>
-          <td>-0.309</td>
-          <td>-0.309</td>
-          <td>-0.309</td>
-          <td>-0.309</td>
-          <td>-0.309</td>
-          <td>-0.309</td>
-          <td>-0.309</td>
-          <td>-0.309</td>
-          <td>-0.309</td>
-          <td>...</td>
-          <td>-0.309</td>
-          <td>-0.309</td>
-          <td>-0.309</td>
-          <td>-0.309</td>
-          <td>-0.309</td>
-          <td>-0.309</td>
-          <td>-0.309</td>
-          <td>-0.309</td>
-          <td>-0.309</td>
-          <td>-0.309</td>
-        </tr>
-        <tr>
-          <th>Bottom</th>
-          <td>oxx</td>
-          <td>9.966</td>
-          <td>5.768</td>
-          <td>-87.297</td>
-          <td>-15.660</td>
-          <td>-18.265</td>
-          <td>-7.858</td>
-          <td>-0.135</td>
-          <td>-7.992</td>
-          <td>89.764</td>
-          <td>...</td>
-          <td>75634.469</td>
-          <td>20782.520</td>
-          <td>-50846.699</td>
-          <td>-44737.809</td>
-          <td>1916.850</td>
-          <td>79104.234</td>
-          <td>-88461.680</td>
-          <td>62360.305</td>
-          <td>84935.234</td>
-          <td>-70096.383</td>
-        </tr>
-        <tr>
-          <th>Bottom</th>
-          <td>oyy</td>
-          <td>4.512</td>
-          <td>3.799</td>
-          <td>-45.628</td>
-          <td>12.561</td>
-          <td>-7.796</td>
-          <td>11.127</td>
-          <td>-0.114</td>
-          <td>1.593</td>
-          <td>49.799</td>
-          <td>...</td>
-          <td>-1312.446</td>
-          <td>9070.467</td>
-          <td>-22057.523</td>
-          <td>-20766.449</td>
-          <td>608.554</td>
-          <td>48012.812</td>
-          <td>-51202.617</td>
-          <td>26673.715</td>
-          <td>58790.070</td>
-          <td>-53056.406</td>
-        </tr>
-        <tr>
-          <th>Bottom</th>
-          <td>txy</td>
-          <td>0.769</td>
-          <td>0.509</td>
-          <td>-7.835</td>
-          <td>1.422</td>
-          <td>-1.355</td>
-          <td>1.176</td>
-          <td>-0.021</td>
-          <td>0.967</td>
-          <td>10.549</td>
-          <td>...</td>
-          <td>2243.163</td>
-          <td>2866.086</td>
-          <td>760.509</td>
-          <td>1484.631</td>
-          <td>390.547</td>
-          <td>-1786.010</td>
-          <td>915.889</td>
-          <td>3906.458</td>
-          <td>747.305</td>
-          <td>523.086</td>
-        </tr>
-        <tr>
-          <th>Bottom</th>
-          <td>angle</td>
+          <th>angle</th>
           <td>7.874</td>
-          <td>13.669</td>
+          <td>-76.331</td>
           <td>-79.695</td>
           <td>87.123</td>
-          <td>-82.741</td>
+          <td>7.259</td>
           <td>86.468</td>
-          <td>-58.090</td>
+          <td>-58.092</td>
           <td>84.299</td>
           <td>13.915</td>
+          <td>1.319</td>
           <td>...</td>
-          <td>1.668</td>
-          <td>13.039</td>
+          <td>1.667</td>
+          <td>13.038</td>
           <td>88.488</td>
           <td>86.469</td>
-          <td>15.419</td>
+          <td>15.395</td>
           <td>-3.277</td>
           <td>88.593</td>
-          <td>6.175</td>
+          <td>6.174</td>
           <td>1.636</td>
           <td>88.243</td>
         </tr>
         <tr>
           <th>Bottom</th>
-          <td>omax</td>
+          <th>omax</th>
           <td>10.072</td>
-          <td>5.892</td>
-          <td>-44.204</td>
+          <td>-3.675</td>
+          <td>-44.207</td>
           <td>12.633</td>
-          <td>-7.623</td>
+          <td>18.438</td>
           <td>11.200</td>
           <td>-0.101</td>
           <td>1.689</td>
           <td>92.377</td>
+          <td>162.953</td>
           <td>...</td>
-          <td>75699.805</td>
-          <td>21446.270</td>
-          <td>-22037.447</td>
-          <td>-20674.852</td>
-          <td>2024.566</td>
-          <td>79206.492</td>
-          <td>-51180.113</td>
-          <td>62782.922</td>
-          <td>84956.578</td>
-          <td>-53040.363</td>
+          <td>75666.742</td>
+          <td>21448.652</td>
+          <td>-22037.004</td>
+          <td>-20674.857</td>
+          <td>2019.026</td>
+          <td>79206.766</td>
+          <td>-51180.082</td>
+          <td>62782.621</td>
+          <td>84956.586</td>
+          <td>-53040.340</td>
         </tr>
         <tr>
-          <th>Bottom</th>
-          <td>omin</td>
+          <th rowspan="2" valign="top">5515</th>
+          <th>Top</th>
+          <th>omin</th>
           <td>4.405</td>
-          <td>3.675</td>
-          <td>-88.721</td>
-          <td>-15.732</td>
-          <td>-18.437</td>
-          <td>-7.930</td>
+          <td>-5.892</td>
+          <td>-88.728</td>
+          <td>-15.731</td>
+          <td>7.623</td>
+          <td>-7.931</td>
           <td>-0.149</td>
           <td>-8.089</td>
           <td>47.185</td>
+          <td>-19.895</td>
           <td>...</td>
-          <td>-1377.783</td>
-          <td>8406.716</td>
-          <td>-50866.777</td>
-          <td>-44829.406</td>
-          <td>500.838</td>
-          <td>47910.555</td>
-          <td>-88484.180</td>
-          <td>26251.096</td>
+          <td>-1384.560</td>
+          <td>8407.658</td>
+          <td>-50865.668</td>
+          <td>-44829.422</td>
+          <td>499.341</td>
+          <td>47910.672</td>
+          <td>-88484.125</td>
+          <td>26250.986</td>
           <td>58768.730</td>
-          <td>-70112.422</td>
+          <td>-70112.367</td>
         </tr>
         <tr>
           <th>Bottom</th>
-          <td>von_mises</td>
+          <th>von_mises</th>
           <td>8.745</td>
           <td>5.155</td>
-          <td>76.835</td>
-          <td>24.613</td>
+          <td>76.841</td>
+          <td>24.612</td>
           <td>16.047</td>
           <td>16.648</td>
           <td>0.131</td>
           <td>9.052</td>
           <td>80.007</td>
+          <td>173.757</td>
           <td>...</td>
-          <td>76398.016</td>
-          <td>18716.908</td>
-          <td>44182.621</td>
-          <td>38862.371</td>
-          <td>1826.397</td>
-          <td>69096.039</td>
-          <td>76942.992</td>
-          <td>54614.055</td>
+          <td>76368.430</td>
+          <td>18718.986</td>
+          <td>44181.656</td>
+          <td>38862.383</td>
+          <td>1821.435</td>
+          <td>69096.273</td>
+          <td>76942.945</td>
+          <td>54613.789</td>
           <td>75356.445</td>
-          <td>63326.484</td>
+          <td>63326.438</td>
         </tr>
       </tbody>
     </table>
-    <p>306880 rows × 34 columns</p>
+    <p>306880 rows × 33 columns</p>
     </div>
 
 
@@ -11887,20 +3976,20 @@ Cycles, at the top.
           <th>Freq</th>
           <th>8.359</th>
           <th>9.508</th>
-          <th>15.666</th>
+          <th>15.667</th>
           <th>20.237</th>
           <th>20.306</th>
           <th>20.555</th>
           <th>21.500</th>
           <th>21.706</th>
           <th>21.725</th>
-          <th>28.536</th>
+          <th>28.542</th>
           <th>...</th>
           <th>80.076</th>
           <th>86.487</th>
           <th>88.168</th>
           <th>88.477</th>
-          <th>89.923</th>
+          <th>89.928</th>
           <th>94.290</th>
           <th>94.368</th>
           <th>96.044</th>
@@ -11913,25 +4002,25 @@ Cycles, at the top.
           <th>Eigenvalue</th>
           <th>2758.149</th>
           <th>3568.632</th>
-          <th>9689.306</th>
-          <th>16168.100</th>
-          <th>16278.223</th>
-          <th>16679.709</th>
-          <th>18248.434</th>
+          <th>9689.982</th>
+          <th>16168.038</th>
+          <th>16278.158</th>
+          <th>16679.707</th>
+          <th>18248.432</th>
           <th>18600.697</th>
           <th>18632.551</th>
-          <th>32147.814</th>
+          <th>32159.891</th>
           <th>...</th>
-          <th>253140.875</th>
-          <th>295297.750</th>
-          <th>306885.906</th>
+          <th>253141.172</th>
+          <th>295300.938</th>
+          <th>306886.000</th>
           <th>309040.656</th>
-          <th>319227.719</th>
+          <th>319267.094</th>
           <th>350984.500</th>
           <th>351566.188</th>
-          <th>364166.156</th>
+          <th>364166.312</th>
           <th>384601.344</th>
-          <th>386090.438</th>
+          <th>386090.469</th>
         </tr>
         <tr>
           <th></th>
@@ -11939,20 +4028,20 @@ Cycles, at the top.
           <th>Radians</th>
           <th>52.518</th>
           <th>59.738</th>
-          <th>98.434</th>
+          <th>98.438</th>
           <th>127.154</th>
           <th>127.586</th>
           <th>129.150</th>
           <th>135.087</th>
           <th>136.384</th>
           <th>136.501</th>
-          <th>179.298</th>
+          <th>179.332</th>
           <th>...</th>
           <th>503.131</th>
-          <th>543.413</th>
+          <th>543.416</th>
           <th>553.973</th>
           <th>555.914</th>
-          <th>565.002</th>
+          <th>565.037</th>
           <th>592.439</th>
           <th>592.930</th>
           <th>603.462</th>
@@ -11988,1478 +4077,274 @@ Cycles, at the top.
       </thead>
       <tbody>
         <tr>
-          <th rowspan="30" valign="top">3684</th>
-          <th rowspan="10" valign="top">0</th>
+          <th rowspan="5" valign="top">3684</th>
+          <th rowspan="5" valign="top">0</th>
           <th>oxx</th>
-          <td>3.865e-12</td>
-          <td>6.821e-13</td>
-          <td>-4.547e-13</td>
-          <td>-1.137e-12</td>
-          <td>-1.137e-13</td>
-          <td>3.183e-12</td>
-          <td>2.842e-14</td>
-          <td>-6.821e-13</td>
-          <td>3.183e-12</td>
-          <td>-2.638e-11</td>
+          <td>1.222e-12</td>
+          <td>-3.411e-13</td>
+          <td>-3.638e-12</td>
+          <td>-6.912e-11</td>
+          <td>5.684e-14</td>
+          <td>-2.956e-12</td>
+          <td>4.619e-14</td>
+          <td>1.592e-12</td>
+          <td>9.095e-13</td>
+          <td>-1.028e-10</td>
           <td>...</td>
-          <td>-2.728e-11</td>
-          <td>5.457e-11</td>
-          <td>4.411e-11</td>
-          <td>1.577e-12</td>
-          <td>1.273e-11</td>
-          <td>1.054e-10</td>
-          <td>4.547e-13</td>
-          <td>-1.933e-10</td>
-          <td>-1.592e-12</td>
-          <td>-8.740e-11</td>
+          <td>3.638e-11</td>
+          <td>3.638e-11</td>
+          <td>-5.321e-11</td>
+          <td>1.762e-12</td>
+          <td>-1.819e-12</td>
+          <td>-3.809e-11</td>
+          <td>-4.547e-13</td>
+          <td>3.311e-10</td>
+          <td>-6.821e-13</td>
+          <td>-4.923e-11</td>
         </tr>
         <tr>
           <th>oyy</th>
-          <td>1.478e-12</td>
-          <td>-4.547e-13</td>
-          <td>4.547e-13</td>
-          <td>6.821e-13</td>
+          <td>-3.354e-12</td>
+          <td>-2.274e-13</td>
+          <td>2.728e-12</td>
+          <td>2.069e-11</td>
           <td>0.000e+00</td>
           <td>-7.049e-12</td>
-          <td>3.553e-15</td>
-          <td>2.274e-13</td>
-          <td>-9.550e-12</td>
-          <td>3.456e-11</td>
+          <td>-4.619e-14</td>
+          <td>-2.956e-12</td>
+          <td>9.095e-12</td>
+          <td>-8.185e-12</td>
           <td>...</td>
-          <td>9.095e-12</td>
-          <td>-1.055e-10</td>
-          <td>-1.046e-11</td>
-          <td>-6.963e-13</td>
-          <td>9.095e-12</td>
-          <td>4.536e-11</td>
-          <td>6.821e-13</td>
-          <td>-1.896e-10</td>
-          <td>-2.274e-13</td>
-          <td>-1.338e-10</td>
+          <td>-1.091e-11</td>
+          <td>6.548e-11</td>
+          <td>8.640e-12</td>
+          <td>-1.876e-12</td>
+          <td>3.638e-12</td>
+          <td>-2.080e-11</td>
+          <td>9.095e-13</td>
+          <td>4.111e-10</td>
+          <td>-9.095e-13</td>
+          <td>-3.752e-12</td>
         </tr>
         <tr>
           <th>ozz</th>
-          <td>-1.478e-12</td>
-          <td>-2.274e-13</td>
-          <td>1.819e-12</td>
-          <td>1.864e-11</td>
-          <td>0.000e+00</td>
-          <td>1.228e-11</td>
-          <td>7.105e-15</td>
-          <td>2.728e-12</td>
-          <td>0.000e+00</td>
-          <td>5.457e-12</td>
-          <td>...</td>
-          <td>3.274e-11</td>
-          <td>1.455e-11</td>
-          <td>1.637e-11</td>
-          <td>-1.677e-12</td>
-          <td>1.091e-11</td>
-          <td>-4.297e-11</td>
-          <td>9.095e-13</td>
-          <td>2.365e-11</td>
+          <td>1.251e-12</td>
+          <td>4.547e-13</td>
           <td>-9.095e-13</td>
-          <td>7.623e-11</td>
+          <td>-1.819e-12</td>
+          <td>-1.137e-13</td>
+          <td>-1.955e-11</td>
+          <td>-7.105e-15</td>
+          <td>-9.095e-13</td>
+          <td>9.095e-13</td>
+          <td>2.547e-11</td>
+          <td>...</td>
+          <td>2.001e-11</td>
+          <td>-6.548e-11</td>
+          <td>-5.821e-11</td>
+          <td>-3.837e-12</td>
+          <td>-7.276e-12</td>
+          <td>-8.549e-11</td>
+          <td>-9.095e-13</td>
+          <td>-2.274e-11</td>
+          <td>-4.547e-13</td>
+          <td>6.395e-11</td>
         </tr>
         <tr>
           <th>txy</th>
           <td>-3.268e-13</td>
-          <td>9.095e-13</td>
           <td>1.819e-12</td>
-          <td>-5.315e-12</td>
-          <td>-4.263e-14</td>
-          <td>-1.450e-12</td>
-          <td>7.105e-15</td>
           <td>3.638e-12</td>
-          <td>3.638e-12</td>
-          <td>5.912e-12</td>
-          <td>...</td>
-          <td>2.183e-11</td>
-          <td>-1.164e-10</td>
-          <td>3.638e-12</td>
-          <td>0.000e+00</td>
-          <td>7.276e-12</td>
-          <td>1.182e-11</td>
-          <td>4.690e-13</td>
-          <td>3.274e-11</td>
-          <td>-3.411e-13</td>
-          <td>7.276e-12</td>
-        </tr>
-        <tr>
-          <th>tyz</th>
-          <td>5.684e-14</td>
-          <td>-1.137e-13</td>
-          <td>1.364e-12</td>
-          <td>2.274e-13</td>
-          <td>-8.527e-14</td>
-          <td>4.547e-13</td>
-          <td>-1.243e-14</td>
-          <td>-2.274e-13</td>
-          <td>-2.274e-12</td>
-          <td>-4.547e-13</td>
-          <td>...</td>
-          <td>-4.093e-12</td>
-          <td>1.819e-11</td>
-          <td>-4.547e-13</td>
-          <td>-7.745e-13</td>
-          <td>0.000e+00</td>
-          <td>7.958e-13</td>
-          <td>-2.274e-13</td>
-          <td>-4.547e-12</td>
-          <td>-4.547e-13</td>
-          <td>-2.274e-13</td>
-        </tr>
-        <tr>
-          <th>txz</th>
-          <td>5.684e-14</td>
-          <td>2.274e-13</td>
-          <td>1.819e-12</td>
-          <td>3.183e-12</td>
-          <td>-2.274e-13</td>
-          <td>2.274e-12</td>
-          <td>7.105e-15</td>
-          <td>-1.819e-12</td>
-          <td>-1.819e-12</td>
-          <td>0.000e+00</td>
-          <td>...</td>
-          <td>3.638e-12</td>
-          <td>1.455e-11</td>
-          <td>-5.457e-12</td>
-          <td>-5.684e-14</td>
-          <td>7.276e-12</td>
-          <td>-2.956e-12</td>
-          <td>-1.819e-12</td>
-          <td>4.002e-11</td>
-          <td>-9.095e-13</td>
-          <td>-6.025e-12</td>
-        </tr>
-        <tr>
-          <th>omax</th>
-          <td>3.910e-12</td>
-          <td>1.201e-12</td>
-          <td>4.071e-12</td>
-          <td>1.917e-11</td>
-          <td>1.873e-13</td>
-          <td>1.282e-11</td>
-          <td>3.108e-14</td>
-          <td>4.571e-12</td>
-          <td>5.236e-12</td>
-          <td>3.514e-11</td>
-          <td>...</td>
-          <td>3.343e-11</td>
-          <td>1.160e-10</td>
-          <td>4.539e-11</td>
-          <td>1.578e-12</td>
-          <td>2.178e-11</td>
-          <td>1.077e-10</td>
-          <td>2.634e-12</td>
-          <td>3.080e-11</td>
-          <td>1.304e-14</td>
-          <td>7.645e-11</td>
-        </tr>
-        <tr>
-          <th>omid</th>
-          <td>1.435e-12</td>
-          <td>-1.856e-13</td>
-          <td>-2.412e-13</td>
-          <td>4.919e-12</td>
-          <td>1.401e-14</td>
-          <td>2.878e-12</td>
-          <td>1.785e-14</td>
-          <td>1.820e-12</td>
-          <td>-7.997e-13</td>
-          <td>5.450e-12</td>
-          <td>...</td>
-          <td>1.899e-11</td>
-          <td>1.720e-11</td>
-          <td>1.534e-11</td>
-          <td>-2.704e-13</td>
-          <td>1.003e-11</td>
-          <td>4.314e-11</td>
-          <td>5.856e-13</td>
-          <td>-1.616e-10</td>
-          <td>-3.822e-13</td>
-          <td>-8.650e-11</td>
-        </tr>
-        <tr>
-          <th>omin</th>
-          <td>-1.480e-12</td>
-          <td>-1.015e-12</td>
-          <td>-2.011e-12</td>
-          <td>-5.894e-12</td>
-          <td>-3.150e-13</td>
-          <td>-7.280e-12</td>
-          <td>-9.858e-15</td>
-          <td>-4.117e-12</td>
-          <td>-1.080e-11</td>
-          <td>-2.694e-11</td>
-          <td>...</td>
-          <td>-3.787e-11</td>
-          <td>-1.696e-10</td>
-          <td>-1.070e-11</td>
-          <td>-2.104e-12</td>
-          <td>9.372e-13</td>
-          <td>-4.304e-11</td>
-          <td>-1.174e-12</td>
-          <td>-2.285e-10</td>
-          <td>-2.359e-12</td>
-          <td>-1.349e-10</td>
-        </tr>
-        <tr>
-          <th>von_mises</th>
-          <td>4.673e-12</td>
-          <td>1.939e-12</td>
-          <td>5.419e-12</td>
-          <td>2.177e-11</td>
-          <td>4.419e-13</td>
-          <td>1.740e-11</td>
-          <td>3.619e-14</td>
-          <td>7.690e-12</td>
-          <td>1.403e-11</td>
-          <td>5.378e-11</td>
-          <td>...</td>
-          <td>6.529e-11</td>
-          <td>2.512e-10</td>
-          <td>4.861e-11</td>
-          <td>3.189e-12</td>
-          <td>1.810e-11</td>
-          <td>1.310e-10</td>
-          <td>3.301e-12</td>
-          <td>2.331e-10</td>
-          <td>2.202e-12</td>
-          <td>1.918e-10</td>
-        </tr>
-        <tr>
-          <th rowspan="10" valign="top">55</th>
-          <th>oxx</th>
-          <td>-1.577e-12</td>
-          <td>-1.535e-12</td>
-          <td>6.821e-12</td>
-          <td>3.740e-11</td>
-          <td>-8.527e-14</td>
-          <td>-1.114e-11</td>
-          <td>6.040e-14</td>
-          <td>-2.387e-12</td>
-          <td>-1.342e-11</td>
-          <td>6.366e-12</td>
-          <td>...</td>
-          <td>-6.094e-11</td>
-          <td>-1.692e-10</td>
-          <td>5.048e-11</td>
-          <td>7.745e-13</td>
-          <td>-1.273e-11</td>
-          <td>-3.246e-11</td>
-          <td>1.137e-13</td>
-          <td>-1.978e-11</td>
-          <td>0.000e+00</td>
-          <td>-1.227e-10</td>
-        </tr>
-        <tr>
-          <th>oyy</th>
-          <td>-9.663e-13</td>
-          <td>-7.958e-13</td>
-          <td>3.865e-12</td>
-          <td>7.049e-12</td>
-          <td>2.842e-14</td>
-          <td>3.070e-12</td>
-          <td>-2.132e-14</td>
-          <td>-7.958e-12</td>
-          <td>-1.455e-11</td>
-          <td>1.273e-11</td>
-          <td>...</td>
-          <td>3.774e-11</td>
-          <td>-1.528e-10</td>
-          <td>1.478e-11</td>
-          <td>4.846e-12</td>
-          <td>-9.095e-12</td>
-          <td>-2.501e-11</td>
-          <td>-7.958e-13</td>
-          <td>-1.462e-10</td>
-          <td>3.411e-13</td>
-          <td>2.414e-11</td>
-        </tr>
-        <tr>
-          <th>ozz</th>
-          <td>-8.384e-13</td>
-          <td>-1.762e-12</td>
-          <td>8.299e-12</td>
-          <td>1.063e-11</td>
-          <td>-2.700e-13</td>
-          <td>-1.558e-11</td>
-          <td>2.309e-14</td>
-          <td>-6.594e-12</td>
-          <td>-6.594e-12</td>
-          <td>-6.253e-11</td>
-          <td>...</td>
-          <td>-5.002e-12</td>
-          <td>-7.640e-11</td>
-          <td>1.032e-10</td>
-          <td>2.327e-12</td>
-          <td>6.366e-12</td>
-          <td>2.987e-11</td>
-          <td>9.095e-13</td>
-          <td>-3.993e-10</td>
-          <td>-1.137e-12</td>
-          <td>-2.980e-11</td>
-        </tr>
-        <tr>
-          <th>txy</th>
-          <td>-4.263e-13</td>
-          <td>9.095e-13</td>
-          <td>-3.638e-12</td>
-          <td>-5.173e-12</td>
-          <td>1.421e-14</td>
-          <td>-6.537e-12</td>
-          <td>2.842e-14</td>
-          <td>5.457e-12</td>
-          <td>0.000e+00</td>
-          <td>2.638e-11</td>
-          <td>...</td>
-          <td>-7.276e-12</td>
-          <td>-1.164e-10</td>
-          <td>1.273e-11</td>
-          <td>-9.095e-13</td>
-          <td>-1.273e-11</td>
-          <td>1.819e-11</td>
-          <td>2.274e-13</td>
-          <td>-3.638e-11</td>
-          <td>0.000e+00</td>
-          <td>0.000e+00</td>
-        </tr>
-        <tr>
-          <th>tyz</th>
-          <td>5.904e-14</td>
-          <td>1.486e-14</td>
-          <td>3.569e-12</td>
-          <td>-4.496e-13</td>
-          <td>-1.514e-13</td>
-          <td>4.835e-13</td>
-          <td>-1.622e-14</td>
-          <td>-1.314e-12</td>
-          <td>-4.448e-12</td>
-          <td>2.933e-13</td>
-          <td>...</td>
-          <td>-8.148e-12</td>
-          <td>4.401e-11</td>
-          <td>-2.143e-12</td>
-          <td>-1.788e-12</td>
-          <td>1.086e-11</td>
-          <td>-3.935e-12</td>
-          <td>-7.989e-13</td>
-          <td>5.831e-12</td>
-          <td>-1.014e-12</td>
-          <td>3.987e-12</td>
-        </tr>
-        <tr>
-          <th>txz</th>
-          <td>-2.083e-14</td>
-          <td>-6.529e-13</td>
-          <td>2.244e-12</td>
-          <td>-6.709e-12</td>
-          <td>-2.127e-13</td>
-          <td>-5.544e-12</td>
-          <td>1.583e-14</td>
-          <td>-2.999e-12</td>
-          <td>3.172e-12</td>
-          <td>1.138e-11</td>
-          <td>...</td>
-          <td>-1.371e-12</td>
-          <td>2.456e-12</td>
-          <td>-2.013e-11</td>
-          <td>-8.497e-13</td>
-          <td>2.769e-12</td>
-          <td>-1.149e-11</td>
-          <td>2.382e-12</td>
-          <td>3.173e-11</td>
-          <td>1.292e-12</td>
-          <td>-3.442e-12</td>
-        </tr>
-        <tr>
-          <th>omax</th>
-          <td>-7.159e-13</td>
-          <td>-1.016e-13</td>
-          <td>1.031e-11</td>
-          <td>3.974e-11</td>
-          <td>1.489e-13</td>
-          <td>5.920e-12</td>
-          <td>7.167e-14</td>
-          <td>2.158e-12</td>
-          <td>-3.727e-12</td>
-          <td>3.673e-11</td>
-          <td>...</td>
-          <td>3.972e-11</td>
-          <td>-2.474e-11</td>
-          <td>1.104e-10</td>
-          <td>5.810e-12</td>
-          <td>1.255e-11</td>
-          <td>3.286e-11</td>
-          <td>2.985e-12</td>
-          <td>-7.882e-12</td>
-          <td>1.275e-12</td>
-          <td>2.444e-11</td>
-        </tr>
-        <tr>
-          <th>omid</th>
-          <td>-8.698e-13</td>
-          <td>-1.436e-12</td>
-          <td>9.257e-12</td>
-          <td>9.786e-12</td>
-          <td>-3.493e-14</td>
-          <td>-9.713e-12</td>
-          <td>2.763e-14</td>
-          <td>-7.747e-12</td>
-          <td>-1.374e-11</td>
-          <td>-1.558e-11</td>
-          <td>...</td>
-          <td>-6.375e-12</td>
-          <td>-9.094e-11</td>
-          <td>4.755e-11</td>
-          <td>2.283e-12</td>
-          <td>-1.538e-12</td>
-          <td>-1.260e-11</td>
-          <td>-5.153e-13</td>
-          <td>-1.552e-10</td>
-          <td>1.969e-13</td>
-          <td>-2.997e-11</td>
-        </tr>
-        <tr>
-          <th>omin</th>
-          <td>-1.796e-12</td>
-          <td>-2.555e-12</td>
-          <td>-5.832e-13</td>
-          <td>5.560e-12</td>
-          <td>-4.408e-13</td>
-          <td>-1.985e-11</td>
-          <td>-3.713e-14</td>
-          <td>-1.135e-11</td>
-          <td>-1.710e-11</td>
-          <td>-6.458e-11</td>
-          <td>...</td>
-          <td>-6.154e-11</td>
-          <td>-2.827e-10</td>
-          <td>1.050e-11</td>
-          <td>-1.454e-13</td>
-          <td>-2.648e-11</td>
-          <td>-4.785e-11</td>
-          <td>-2.242e-12</td>
-          <td>-4.022e-10</td>
-          <td>-2.267e-12</td>
-          <td>-1.228e-10</td>
-        </tr>
-        <tr>
-          <th>von_mises</th>
-          <td>1.012e-12</td>
-          <td>2.128e-12</td>
-          <td>1.041e-11</td>
-          <td>3.227e-11</td>
-          <td>5.226e-13</td>
-          <td>2.249e-11</td>
-          <td>9.479e-14</td>
-          <td>1.212e-11</td>
-          <td>1.205e-11</td>
-          <td>8.776e-11</td>
-          <td>...</td>
-          <td>8.781e-11</td>
-          <td>2.320e-10</td>
-          <td>8.750e-11</td>
-          <td>5.187e-12</td>
-          <td>3.423e-11</td>
-          <td>7.008e-11</td>
-          <td>4.613e-12</td>
-          <td>3.451e-10</td>
-          <td>3.145e-12</td>
-          <td>1.290e-10</td>
-        </tr>
-        <tr>
-          <th rowspan="10" valign="top">51</th>
-          <th>oxx</th>
-          <td>3.453e-12</td>
-          <td>3.979e-13</td>
-          <td>-1.137e-12</td>
-          <td>-2.922e-11</td>
-          <td>5.684e-14</td>
-          <td>1.251e-11</td>
-          <td>3.197e-14</td>
-          <td>2.046e-12</td>
-          <td>-2.274e-13</td>
-          <td>-4.138e-11</td>
-          <td>...</td>
-          <td>4.547e-11</td>
-          <td>-8.004e-11</td>
-          <td>1.796e-11</td>
-          <td>1.563e-12</td>
-          <td>-8.185e-12</td>
-          <td>-1.168e-10</td>
-          <td>0.000e+00</td>
-          <td>1.569e-10</td>
           <td>-1.023e-12</td>
-          <td>-9.032e-11</td>
-        </tr>
-        <tr>
-          <th>oyy</th>
-          <td>7.958e-13</td>
-          <td>1.705e-13</td>
-          <td>-4.093e-12</td>
-          <td>8.754e-12</td>
-          <td>8.527e-14</td>
-          <td>-8.868e-12</td>
-          <td>1.776e-14</td>
-          <td>2.046e-12</td>
-          <td>-6.821e-13</td>
-          <td>-2.456e-11</td>
-          <td>...</td>
-          <td>-3.274e-11</td>
-          <td>1.201e-10</td>
-          <td>2.797e-11</td>
-          <td>1.222e-12</td>
-          <td>-3.183e-11</td>
-          <td>4.377e-12</td>
-          <td>-3.411e-13</td>
-          <td>4.320e-11</td>
-          <td>-2.274e-13</td>
-          <td>-6.168e-11</td>
-        </tr>
-        <tr>
-          <th>ozz</th>
-          <td>1.663e-12</td>
-          <td>8.527e-14</td>
-          <td>2.274e-13</td>
-          <td>2.723e-11</td>
-          <td>-1.847e-13</td>
-          <td>4.150e-12</td>
-          <td>2.665e-15</td>
-          <td>-1.251e-12</td>
-          <td>-5.684e-12</td>
-          <td>-2.387e-11</td>
-          <td>...</td>
-          <td>2.956e-11</td>
-          <td>-6.366e-11</td>
-          <td>6.048e-11</td>
-          <td>-7.176e-13</td>
-          <td>-9.095e-12</td>
-          <td>8.623e-11</td>
-          <td>5.684e-13</td>
-          <td>-7.230e-11</td>
+          <td>4.263e-14</td>
+          <td>-3.979e-13</td>
+          <td>7.105e-15</td>
           <td>0.000e+00</td>
-          <td>8.328e-12</td>
-        </tr>
-        <tr>
-          <th>txy</th>
-          <td>6.899e-14</td>
-          <td>-1.066e-12</td>
-          <td>6.915e-13</td>
-          <td>-1.368e-12</td>
-          <td>3.089e-14</td>
-          <td>9.440e-13</td>
-          <td>-5.351e-15</td>
-          <td>-1.397e-12</td>
-          <td>-4.697e-12</td>
-          <td>-7.050e-12</td>
-          <td>...</td>
-          <td>-1.234e-11</td>
-          <td>-6.904e-11</td>
-          <td>4.515e-12</td>
-          <td>2.048e-12</td>
-          <td>1.422e-11</td>
-          <td>3.017e-11</td>
-          <td>2.368e-13</td>
-          <td>8.251e-11</td>
-          <td>-4.745e-13</td>
-          <td>-1.218e-12</td>
-        </tr>
-        <tr>
-          <th>tyz</th>
-          <td>9.278e-14</td>
-          <td>-3.556e-13</td>
-          <td>2.800e-12</td>
-          <td>-2.852e-13</td>
-          <td>-1.618e-13</td>
-          <td>5.244e-13</td>
-          <td>-1.679e-14</td>
-          <td>-9.524e-13</td>
-          <td>-4.640e-12</td>
-          <td>-8.046e-13</td>
-          <td>...</td>
-          <td>-1.025e-11</td>
-          <td>6.060e-11</td>
-          <td>-1.459e-12</td>
-          <td>-1.129e-12</td>
-          <td>4.413e-12</td>
-          <td>-2.182e-12</td>
-          <td>-8.646e-13</td>
-          <td>-7.151e-13</td>
-          <td>-9.491e-13</td>
-          <td>2.279e-12</td>
-        </tr>
-        <tr>
-          <th>txz</th>
-          <td>-3.204e-14</td>
-          <td>-6.126e-13</td>
-          <td>2.052e-12</td>
-          <td>-1.356e-12</td>
-          <td>-1.925e-13</td>
-          <td>-1.079e-12</td>
-          <td>1.715e-14</td>
-          <td>7.684e-13</td>
-          <td>-2.019e-13</td>
-          <td>4.442e-12</td>
-          <td>...</td>
-          <td>-1.031e-12</td>
-          <td>3.874e-12</td>
-          <td>-1.301e-11</td>
-          <td>6.473e-14</td>
-          <td>1.787e-12</td>
-          <td>-4.262e-12</td>
-          <td>6.862e-13</td>
-          <td>1.740e-11</td>
-          <td>-2.466e-12</td>
-          <td>-7.064e-12</td>
-        </tr>
-        <tr>
-          <th>omax</th>
-          <td>3.456e-12</td>
-          <td>1.399e-12</td>
-          <td>2.783e-12</td>
-          <td>2.726e-11</td>
-          <td>2.473e-13</td>
-          <td>1.268e-11</td>
-          <td>4.564e-14</td>
-          <td>3.740e-12</td>
-          <td>5.208e-12</td>
-          <td>-2.026e-11</td>
-          <td>...</td>
-          <td>4.739e-11</td>
-          <td>1.563e-10</td>
-          <td>6.434e-11</td>
-          <td>3.573e-12</td>
-          <td>-1.149e-13</td>
-          <td>8.642e-11</td>
-          <td>1.281e-12</td>
-          <td>2.011e-10</td>
-          <td>2.096e-12</td>
-          <td>8.910e-12</td>
-        </tr>
-        <tr>
-          <th>omid</th>
-          <td>1.672e-12</td>
-          <td>4.131e-13</td>
-          <td>-2.294e-12</td>
-          <td>8.800e-12</td>
-          <td>4.195e-14</td>
-          <td>4.044e-12</td>
-          <td>1.837e-14</td>
-          <td>6.562e-13</td>
-          <td>-2.486e-12</td>
-          <td>-2.487e-11</td>
-          <td>...</td>
-          <td>3.115e-11</td>
-          <td>-6.592e-11</td>
-          <td>2.884e-11</td>
-          <td>1.139e-13</td>
-          <td>-1.014e-11</td>
-          <td>1.134e-11</td>
-          <td>1.028e-13</td>
-          <td>8.739e-13</td>
-          <td>-1.189e-14</td>
-          <td>-6.172e-11</td>
-        </tr>
-        <tr>
-          <th>omin</th>
-          <td>7.840e-13</td>
-          <td>-1.159e-12</td>
-          <td>-5.491e-12</td>
-          <td>-2.930e-11</td>
-          <td>-3.319e-13</td>
-          <td>-8.934e-12</td>
-          <td>-1.160e-14</td>
-          <td>-1.554e-12</td>
-          <td>-9.316e-12</td>
-          <td>-4.468e-11</td>
-          <td>...</td>
-          <td>-3.625e-11</td>
-          <td>-1.140e-10</td>
-          <td>1.323e-11</td>
-          <td>-1.619e-12</td>
-          <td>-3.886e-11</td>
-          <td>-1.240e-10</td>
-          <td>-1.156e-12</td>
-          <td>-7.416e-11</td>
-          <td>-3.335e-12</td>
-          <td>-9.087e-11</td>
-        </tr>
-        <tr>
-          <th>von_mises</th>
-          <td>2.356e-12</td>
-          <td>2.235e-12</td>
-          <td>7.227e-12</td>
-          <td>4.996e-11</td>
-          <td>5.086e-13</td>
-          <td>1.884e-11</td>
-          <td>4.959e-14</td>
-          <td>4.606e-12</td>
-          <td>1.259e-11</td>
-          <td>2.248e-11</td>
-          <td>...</td>
-          <td>7.682e-11</td>
-          <td>2.498e-10</td>
-          <td>4.537e-11</td>
-          <td>4.579e-12</td>
-          <td>3.483e-11</td>
-          <td>1.847e-10</td>
-          <td>2.111e-12</td>
-          <td>2.464e-10</td>
-          <td>4.742e-12</td>
-          <td>8.886e-11</td>
-        </tr>
-        <tr>
-          <th>...</th>
-          <th>...</th>
-          <th>...</th>
-          <td>...</td>
-          <td>...</td>
-          <td>...</td>
-          <td>...</td>
-          <td>...</td>
-          <td>...</td>
-          <td>...</td>
-          <td>...</td>
-          <td>...</td>
-          <td>...</td>
-          <td>...</td>
-          <td>...</td>
-          <td>...</td>
-          <td>...</td>
-          <td>...</td>
-          <td>...</td>
-          <td>...</td>
-          <td>...</td>
-          <td>...</td>
-          <td>...</td>
-          <td>...</td>
-        </tr>
-        <tr>
-          <th rowspan="30" valign="top">5568</th>
-          <th rowspan="10" valign="top">5593</th>
-          <th>oxx</th>
-          <td>2.684e-12</td>
-          <td>-4.547e-13</td>
-          <td>-9.095e-12</td>
-          <td>-2.592e-11</td>
-          <td>-9.663e-13</td>
-          <td>-1.086e-11</td>
-          <td>-7.105e-15</td>
-          <td>-9.095e-12</td>
-          <td>-1.819e-12</td>
-          <td>-1.592e-11</td>
-          <td>...</td>
-          <td>-1.019e-10</td>
-          <td>4.657e-10</td>
-          <td>-3.638e-11</td>
-          <td>-4.093e-11</td>
-          <td>-1.237e-10</td>
-          <td>9.095e-11</td>
-          <td>-2.558e-12</td>
-          <td>-4.366e-11</td>
-          <td>8.185e-12</td>
-          <td>5.093e-11</td>
-        </tr>
-        <tr>
-          <th>oyy</th>
-          <td>-1.931e-12</td>
-          <td>1.251e-11</td>
-          <td>-3.001e-11</td>
-          <td>-2.063e-11</td>
-          <td>-1.450e-12</td>
-          <td>-1.218e-11</td>
-          <td>-1.332e-13</td>
-          <td>1.864e-11</td>
-          <td>5.002e-11</td>
-          <td>1.005e-10</td>
-          <td>...</td>
-          <td>-5.530e-10</td>
-          <td>1.382e-09</td>
-          <td>-2.110e-10</td>
-          <td>-2.780e-11</td>
-          <td>1.637e-10</td>
-          <td>-2.183e-10</td>
-          <td>-2.451e-12</td>
-          <td>5.239e-10</td>
-          <td>9.322e-12</td>
-          <td>8.731e-11</td>
-        </tr>
-        <tr>
-          <th>ozz</th>
-          <td>-2.984e-12</td>
-          <td>2.274e-12</td>
-          <td>-8.185e-12</td>
-          <td>-5.952e-11</td>
-          <td>1.137e-13</td>
-          <td>-3.303e-11</td>
-          <td>8.171e-14</td>
-          <td>4.547e-12</td>
-          <td>2.365e-11</td>
-          <td>1.146e-10</td>
-          <td>...</td>
-          <td>-5.675e-10</td>
-          <td>1.441e-09</td>
-          <td>-1.019e-10</td>
-          <td>-5.633e-11</td>
-          <td>4.475e-10</td>
-          <td>-4.729e-11</td>
-          <td>-2.871e-12</td>
-          <td>-2.328e-10</td>
-          <td>3.183e-11</td>
-          <td>-1.091e-10</td>
-        </tr>
-        <tr>
-          <th>txy</th>
-          <td>1.019e-13</td>
-          <td>3.859e-13</td>
-          <td>2.657e-13</td>
-          <td>1.481e-11</td>
-          <td>-3.401e-13</td>
-          <td>2.965e-12</td>
-          <td>-2.543e-14</td>
-          <td>3.328e-12</td>
-          <td>6.831e-12</td>
-          <td>-1.006e-11</td>
-          <td>...</td>
-          <td>2.791e-11</td>
-          <td>4.518e-10</td>
-          <td>8.591e-12</td>
-          <td>-1.679e-12</td>
-          <td>5.879e-11</td>
-          <td>-2.738e-11</td>
-          <td>1.175e-12</td>
-          <td>-7.018e-11</td>
-          <td>1.554e-12</td>
-          <td>6.248e-12</td>
-        </tr>
-        <tr>
-          <th>tyz</th>
-          <td>5.483e-13</td>
-          <td>3.287e-12</td>
-          <td>-1.896e-11</td>
-          <td>1.095e-11</td>
-          <td>-1.666e-12</td>
-          <td>7.857e-12</td>
-          <td>-8.149e-14</td>
-          <td>9.470e-12</td>
-          <td>2.980e-11</td>
-          <td>-2.198e-11</td>
-          <td>...</td>
-          <td>5.658e-10</td>
-          <td>-2.556e-10</td>
-          <td>9.995e-11</td>
-          <td>2.427e-12</td>
-          <td>-5.129e-11</td>
-          <td>4.116e-11</td>
-          <td>5.419e-13</td>
-          <td>-4.190e-11</td>
-          <td>-1.739e-12</td>
-          <td>-2.480e-12</td>
-        </tr>
-        <tr>
-          <th>txz</th>
-          <td>-9.097e-13</td>
-          <td>-1.659e-12</td>
-          <td>1.292e-11</td>
-          <td>1.107e-14</td>
-          <td>8.598e-13</td>
-          <td>4.500e-15</td>
-          <td>4.302e-14</td>
-          <td>-2.407e-12</td>
-          <td>-1.506e-11</td>
-          <td>-2.920e-11</td>
-          <td>...</td>
-          <td>-4.904e-11</td>
-          <td>1.143e-10</td>
-          <td>-1.736e-10</td>
-          <td>-1.090e-11</td>
-          <td>1.169e-10</td>
-          <td>6.750e-13</td>
-          <td>-1.821e-12</td>
-          <td>-2.833e-12</td>
-          <td>1.823e-11</td>
-          <td>-5.916e-11</td>
-        </tr>
-        <tr>
-          <th>omax</th>
-          <td>2.827e-12</td>
-          <td>1.347e-11</td>
-          <td>9.627e-12</td>
-          <td>-6.848e-12</td>
-          <td>1.507e-12</td>
-          <td>-7.303e-12</td>
-          <td>1.270e-13</td>
-          <td>2.351e-11</td>
-          <td>6.951e-11</td>
-          <td>1.329e-10</td>
-          <td>...</td>
-          <td>7.561e-12</td>
-          <td>1.718e-09</td>
-          <td>1.181e-10</td>
-          <td>-2.693e-11</td>
-          <td>4.755e-10</td>
-          <td>9.342e-11</td>
-          <td>-7.056e-13</td>
-          <td>5.346e-10</td>
-          <td>4.176e-11</td>
-          <td>8.965e-11</td>
-        </tr>
-        <tr>
-          <th>omid</th>
-          <td>-1.711e-12</td>
-          <td>2.342e-12</td>
-          <td>-1.448e-11</td>
-          <td>-3.640e-11</td>
-          <td>-1.278e-12</td>
-          <td>-1.307e-11</td>
-          <td>-2.423e-14</td>
-          <td>1.076e-12</td>
-          <td>1.780e-11</td>
-          <td>9.011e-11</td>
-          <td>...</td>
-          <td>-1.010e-10</td>
-          <td>1.326e-09</td>
-          <td>-1.515e-10</td>
-          <td>-3.609e-11</td>
-          <td>1.729e-10</td>
-          <td>-3.812e-11</td>
-          <td>-2.081e-12</td>
-          <td>-5.187e-11</td>
-          <td>9.724e-12</td>
-          <td>6.808e-11</td>
-        </tr>
-        <tr>
-          <th>omin</th>
-          <td>-3.346e-12</td>
-          <td>-1.489e-12</td>
-          <td>-4.244e-11</td>
-          <td>-6.282e-11</td>
-          <td>-2.531e-12</td>
-          <td>-3.569e-11</td>
-          <td>-1.614e-13</td>
-          <td>-1.049e-11</td>
-          <td>-1.546e-11</td>
-          <td>-2.386e-11</td>
-          <td>...</td>
-          <td>-1.129e-09</td>
-          <td>2.452e-10</td>
-          <td>-3.158e-10</td>
-          <td>-6.204e-11</td>
-          <td>-1.609e-10</td>
-          <td>-2.299e-10</td>
-          <td>-5.093e-12</td>
-          <td>-2.354e-10</td>
-          <td>-2.144e-12</td>
-          <td>-1.286e-10</td>
-        </tr>
-        <tr>
-          <th>von_mises</th>
-          <td>5.539e-12</td>
-          <td>1.346e-11</td>
-          <td>4.513e-11</td>
-          <td>4.850e-11</td>
-          <td>3.580e-12</td>
-          <td>2.599e-11</td>
-          <td>2.498e-13</td>
-          <td>2.995e-11</td>
-          <td>7.416e-11</td>
-          <td>1.404e-10</td>
-          <td>...</td>
-          <td>1.086e-09</td>
-          <td>1.321e-09</td>
-          <td>3.794e-10</td>
-          <td>3.154e-11</td>
-          <td>5.513e-10</td>
-          <td>2.816e-10</td>
-          <td>3.887e-12</td>
-          <td>6.966e-10</td>
-          <td>3.934e-11</td>
-          <td>2.083e-10</td>
-        </tr>
-        <tr>
-          <th rowspan="10" valign="top">5594</th>
-          <th>oxx</th>
-          <td>6.555e-12</td>
-          <td>-1.819e-12</td>
-          <td>1.091e-11</td>
-          <td>8.390e-11</td>
-          <td>2.274e-13</td>
-          <td>4.388e-11</td>
-          <td>-9.237e-14</td>
-          <td>0.000e+00</td>
-          <td>-7.276e-12</td>
-          <td>-3.311e-10</td>
-          <td>...</td>
-          <td>4.075e-10</td>
-          <td>-8.731e-10</td>
-          <td>-2.619e-10</td>
-          <td>3.956e-11</td>
-          <td>-3.783e-10</td>
-          <td>-1.019e-10</td>
-          <td>3.524e-12</td>
-          <td>1.164e-09</td>
-          <td>-2.819e-11</td>
-          <td>5.384e-10</td>
-        </tr>
-        <tr>
-          <th>oyy</th>
-          <td>4.595e-12</td>
-          <td>-9.095e-12</td>
-          <td>3.456e-11</td>
-          <td>6.924e-11</td>
-          <td>8.527e-13</td>
-          <td>5.718e-11</td>
-          <td>-6.750e-14</td>
-          <td>-3.911e-11</td>
-          <td>-8.185e-11</td>
-          <td>-2.519e-10</td>
-          <td>...</td>
-          <td>7.276e-10</td>
-          <td>-2.285e-09</td>
-          <td>1.528e-10</td>
-          <td>3.365e-11</td>
-          <td>-3.747e-10</td>
-          <td>8.004e-11</td>
-          <td>4.150e-12</td>
-          <td>8.440e-10</td>
-          <td>-3.001e-11</td>
-          <td>2.692e-10</td>
-        </tr>
-        <tr>
-          <th>ozz</th>
-          <td>3.380e-12</td>
-          <td>-4.547e-12</td>
-          <td>1.182e-11</td>
-          <td>4.241e-11</td>
-          <td>7.958e-13</td>
-          <td>3.976e-11</td>
-          <td>7.105e-14</td>
-          <td>-1.819e-12</td>
-          <td>-7.276e-12</td>
-          <td>-1.774e-10</td>
-          <td>...</td>
-          <td>-2.037e-10</td>
-          <td>-1.834e-09</td>
-          <td>-1.819e-10</td>
-          <td>3.109e-11</td>
-          <td>-4.184e-10</td>
-          <td>-1.601e-10</td>
-          <td>3.482e-12</td>
-          <td>6.694e-10</td>
-          <td>-2.956e-11</td>
-          <td>4.075e-10</td>
-        </tr>
-        <tr>
-          <th>txy</th>
-          <td>-2.199e-12</td>
-          <td>-1.364e-12</td>
-          <td>1.091e-11</td>
-          <td>-1.876e-11</td>
-          <td>1.137e-13</td>
-          <td>-1.165e-11</td>
-          <td>5.684e-14</td>
-          <td>-5.457e-12</td>
-          <td>-7.276e-12</td>
-          <td>9.004e-11</td>
-          <td>...</td>
-          <td>5.821e-11</td>
-          <td>3.492e-10</td>
-          <td>7.276e-11</td>
-          <td>-2.490e-11</td>
-          <td>1.746e-10</td>
-          <td>6.548e-11</td>
-          <td>-1.648e-12</td>
-          <td>-6.694e-10</td>
-          <td>6.821e-12</td>
-          <td>-1.164e-10</td>
-        </tr>
-        <tr>
-          <th>tyz</th>
-          <td>6.181e-13</td>
-          <td>2.691e-12</td>
-          <td>-1.703e-11</td>
-          <td>1.158e-11</td>
-          <td>-1.780e-12</td>
-          <td>8.389e-12</td>
-          <td>-7.313e-14</td>
-          <td>8.704e-12</td>
-          <td>2.823e-11</td>
-          <td>-2.288e-11</td>
-          <td>...</td>
-          <td>4.681e-10</td>
-          <td>-2.767e-10</td>
-          <td>1.057e-10</td>
-          <td>5.093e-12</td>
-          <td>-7.499e-11</td>
-          <td>5.553e-11</td>
-          <td>1.124e-12</td>
-          <td>2.552e-11</td>
-          <td>-2.556e-12</td>
-          <td>2.972e-12</td>
-        </tr>
-        <tr>
-          <th>txz</th>
-          <td>4.545e-13</td>
-          <td>6.079e-13</td>
-          <td>-1.598e-12</td>
-          <td>-7.263e-12</td>
-          <td>-4.852e-14</td>
-          <td>5.250e-15</td>
-          <td>4.510e-16</td>
-          <td>3.028e-12</td>
-          <td>-7.836e-12</td>
-          <td>-2.921e-11</td>
-          <td>...</td>
-          <td>1.259e-10</td>
-          <td>-1.189e-10</td>
-          <td>-2.789e-11</td>
-          <td>-7.263e-12</td>
-          <td>-2.854e-11</td>
-          <td>7.875e-13</td>
-          <td>-9.116e-13</td>
-          <td>-3.305e-12</td>
-          <td>5.158e-14</td>
-          <td>-5.932e-11</td>
-        </tr>
-        <tr>
-          <th>omax</th>
-          <td>7.983e-12</td>
-          <td>-1.565e-12</td>
-          <td>4.670e-11</td>
-          <td>9.949e-11</td>
-          <td>2.610e-12</td>
-          <td>6.600e-11</td>
-          <td>1.052e-13</td>
-          <td>2.279e-12</td>
-          <td>8.356e-12</td>
-          <td>-1.489e-10</td>
-          <td>...</td>
-          <td>9.420e-10</td>
-          <td>-7.606e-10</td>
-          <td>1.920e-10</td>
-          <td>6.404e-11</td>
-          <td>-1.791e-10</td>
-          <td>1.116e-10</td>
-          <td>6.267e-12</td>
-          <td>1.693e-09</td>
-          <td>-2.186e-11</td>
-          <td>5.986e-10</td>
-        </tr>
-        <tr>
-          <th>omid</th>
-          <td>4.047e-12</td>
-          <td>-3.299e-12</td>
-          <td>9.731e-12</td>
-          <td>5.795e-11</td>
-          <td>2.235e-13</td>
-          <td>4.149e-11</td>
-          <td>-4.489e-14</td>
-          <td>-1.311e-12</td>
-          <td>-1.319e-11</td>
-          <td>-2.209e-10</td>
-          <td>...</td>
-          <td>3.986e-10</td>
-          <td>-1.768e-09</td>
-          <td>-1.867e-10</td>
-          <td>2.879e-11</td>
-          <td>-4.328e-10</td>
-          <td>-1.181e-10</td>
-          <td>2.730e-12</td>
-          <td>6.700e-10</td>
-          <td>-2.936e-11</td>
-          <td>3.924e-10</td>
-        </tr>
-        <tr>
-          <th>omin</th>
-          <td>2.501e-12</td>
-          <td>-1.060e-11</td>
-          <td>8.646e-13</td>
-          <td>3.810e-11</td>
-          <td>-9.573e-13</td>
-          <td>3.334e-11</td>
-          <td>-1.491e-13</td>
-          <td>-4.190e-11</td>
-          <td>-9.157e-11</td>
-          <td>-3.905e-10</td>
-          <td>...</td>
-          <td>-4.093e-10</td>
-          <td>-2.463e-09</td>
-          <td>-2.963e-10</td>
-          <td>1.148e-11</td>
-          <td>-5.595e-10</td>
-          <td>-1.753e-10</td>
-          <td>2.159e-12</td>
-          <td>3.149e-10</td>
-          <td>-3.655e-11</td>
-          <td>2.240e-10</td>
-        </tr>
-        <tr>
-          <th>von_mises</th>
-          <td>4.896e-12</td>
-          <td>8.303e-12</td>
-          <td>4.211e-11</td>
-          <td>5.426e-11</td>
-          <td>3.147e-12</td>
-          <td>2.945e-11</td>
-          <td>2.214e-13</td>
-          <td>4.249e-11</td>
-          <td>9.108e-11</td>
-          <td>2.149e-10</td>
-          <td>...</td>
-          <td>1.178e-09</td>
-          <td>1.482e-09</td>
-          <td>4.438e-10</td>
-          <td>4.639e-11</td>
-          <td>3.355e-10</td>
-          <td>2.630e-10</td>
-          <td>3.854e-12</td>
-          <td>1.239e-09</td>
-          <td>1.272e-11</td>
-          <td>3.250e-10</td>
-        </tr>
-        <tr>
-          <th rowspan="10" valign="top">5595</th>
-          <th>oxx</th>
-          <td>1.021e-11</td>
-          <td>-1.819e-12</td>
-          <td>2.910e-11</td>
-          <td>1.119e-10</td>
-          <td>9.095e-13</td>
-          <td>1.017e-10</td>
-          <td>-7.105e-14</td>
-          <td>-1.091e-11</td>
-          <td>-4.366e-11</td>
-          <td>-3.220e-10</td>
-          <td>...</td>
-          <td>-2.619e-10</td>
-          <td>-2.503e-09</td>
-          <td>-8.440e-10</td>
-          <td>9.663e-11</td>
-          <td>-1.128e-09</td>
-          <td>-4.075e-10</td>
-          <td>1.097e-11</td>
-          <td>3.318e-09</td>
-          <td>-7.549e-11</td>
-          <td>1.091e-09</td>
-        </tr>
-        <tr>
-          <th>oyy</th>
-          <td>2.387e-12</td>
-          <td>0.000e+00</td>
-          <td>-1.455e-11</td>
-          <td>1.000e-11</td>
-          <td>2.274e-12</td>
-          <td>2.001e-11</td>
-          <td>0.000e+00</td>
-          <td>2.910e-11</td>
-          <td>0.000e+00</td>
-          <td>-1.310e-10</td>
-          <td>...</td>
-          <td>-4.657e-10</td>
-          <td>-9.313e-10</td>
-          <td>-1.164e-10</td>
-          <td>8.185e-12</td>
-          <td>-1.746e-10</td>
-          <td>-1.164e-10</td>
-          <td>1.478e-12</td>
-          <td>9.313e-10</td>
-          <td>-1.091e-11</td>
-          <td>1.164e-10</td>
-        </tr>
-        <tr>
-          <th>ozz</th>
-          <td>8.843e-12</td>
-          <td>-1.819e-12</td>
           <td>-3.638e-12</td>
-          <td>1.194e-10</td>
-          <td>-1.819e-12</td>
-          <td>9.447e-11</td>
-          <td>-1.776e-13</td>
-          <td>-7.276e-12</td>
-          <td>-5.821e-11</td>
-          <td>-3.820e-10</td>
-          <td>...</td>
-          <td>4.366e-10</td>
-          <td>-3.143e-09</td>
-          <td>-6.694e-10</td>
-          <td>1.041e-10</td>
-          <td>-6.548e-10</td>
-          <td>-2.765e-10</td>
-          <td>6.850e-12</td>
-          <td>1.746e-09</td>
-          <td>-6.366e-11</td>
-          <td>7.858e-10</td>
-        </tr>
-        <tr>
-          <th>txy</th>
-          <td>-3.659e-13</td>
-          <td>-1.819e-12</td>
-          <td>1.091e-11</td>
-          <td>-1.944e-11</td>
-          <td>2.274e-13</td>
-          <td>-4.604e-12</td>
-          <td>1.421e-14</td>
-          <td>-5.457e-12</td>
-          <td>-3.638e-12</td>
-          <td>2.274e-11</td>
-          <td>...</td>
-          <td>8.731e-11</td>
-          <td>3.492e-10</td>
-          <td>1.455e-11</td>
-          <td>-3.752e-12</td>
-          <td>-8.731e-11</td>
-          <td>2.183e-11</td>
-          <td>-6.253e-13</td>
-          <td>-6.112e-10</td>
-          <td>1.137e-11</td>
-          <td>-1.164e-10</td>
-        </tr>
-        <tr>
-          <th>tyz</th>
-          <td>-7.674e-13</td>
           <td>-2.274e-12</td>
-          <td>1.273e-11</td>
-          <td>-9.891e-12</td>
-          <td>3.411e-13</td>
-          <td>-2.728e-12</td>
-          <td>4.974e-14</td>
-          <td>-7.276e-12</td>
-          <td>-1.455e-11</td>
-          <td>1.364e-11</td>
           <td>...</td>
-          <td>-5.821e-11</td>
-          <td>2.037e-10</td>
-          <td>-1.601e-10</td>
-          <td>-1.285e-11</td>
-          <td>1.164e-10</td>
-          <td>0.000e+00</td>
-          <td>-1.393e-12</td>
-          <td>8.731e-11</td>
-          <td>1.046e-11</td>
-          <td>0.000e+00</td>
+          <td>2.547e-11</td>
+          <td>1.455e-10</td>
+          <td>-9.095e-13</td>
+          <td>-9.095e-13</td>
+          <td>7.276e-12</td>
+          <td>-4.547e-12</td>
+          <td>-3.411e-13</td>
+          <td>-4.366e-11</td>
+          <td>-4.547e-13</td>
+          <td>6.366e-12</td>
         </tr>
         <tr>
-          <th>txz</th>
-          <td>-4.547e-13</td>
-          <td>-1.608e-12</td>
-          <td>5.418e-12</td>
-          <td>-1.455e-11</td>
-          <td>6.238e-13</td>
-          <td>-7.277e-12</td>
-          <td>1.413e-14</td>
-          <td>-4.065e-12</td>
-          <td>-1.836e-11</td>
-          <td>-2.908e-11</td>
+          <th>tyz</th>
+          <td>2.842e-14</td>
+          <td>3.979e-13</td>
+          <td>0.000e+00</td>
+          <td>1.137e-13</td>
+          <td>2.842e-14</td>
+          <td>2.274e-13</td>
+          <td>-8.882e-15</td>
+          <td>0.000e+00</td>
+          <td>1.819e-12</td>
+          <td>-2.274e-12</td>
           <td>...</td>
-          <td>-1.095e-10</td>
-          <td>4.346e-13</td>
-          <td>-1.457e-10</td>
-          <td>-7.278e-12</td>
-          <td>8.721e-11</td>
+          <td>-3.183e-12</td>
+          <td>1.091e-11</td>
+          <td>-9.095e-13</td>
+          <td>5.045e-13</td>
+          <td>1.091e-11</td>
+          <td>2.842e-13</td>
+          <td>-2.274e-13</td>
+          <td>1.410e-11</td>
+          <td>0.000e+00</td>
+          <td>-5.969e-13</td>
+        </tr>
+        <tr>
+          <th>...</th>
+          <th>...</th>
+          <th>...</th>
+          <td>...</td>
+          <td>...</td>
+          <td>...</td>
+          <td>...</td>
+          <td>...</td>
+          <td>...</td>
+          <td>...</td>
+          <td>...</td>
+          <td>...</td>
+          <td>...</td>
+          <td>...</td>
+          <td>...</td>
+          <td>...</td>
+          <td>...</td>
+          <td>...</td>
+          <td>...</td>
+          <td>...</td>
+          <td>...</td>
+          <td>...</td>
+          <td>...</td>
+          <td>...</td>
+        </tr>
+        <tr>
+          <th rowspan="5" valign="top">5568</th>
+          <th rowspan="5" valign="top">5595</th>
+          <th>txz</th>
+          <td>4.548e-13</td>
+          <td>-1.944e-14</td>
+          <td>1.406e-11</td>
+          <td>-1.455e-11</td>
+          <td>-9.080e-13</td>
+          <td>-1.819e-11</td>
+          <td>-8.026e-17</td>
+          <td>-1.225e-11</td>
+          <td>-1.495e-11</td>
+          <td>4.367e-11</td>
+          <td>...</td>
+          <td>-5.860e-11</td>
+          <td>3.497e-10</td>
+          <td>-8.753e-11</td>
+          <td>-2.253e-15</td>
+          <td>5.811e-11</td>
           <td>-1.401e-13</td>
-          <td>-1.819e-12</td>
-          <td>5.881e-13</td>
-          <td>1.454e-11</td>
-          <td>-5.801e-11</td>
+          <td>-1.364e-12</td>
+          <td>-2.322e-10</td>
+          <td>3.629e-12</td>
+          <td>5.841e-11</td>
         </tr>
         <tr>
           <th>omax</th>
-          <td>1.035e-11</td>
-          <td>1.691e-12</td>
-          <td>3.361e-11</td>
-          <td>1.308e-10</td>
-          <td>2.359e-12</td>
-          <td>1.063e-10</td>
-          <td>1.643e-14</td>
-          <td>3.102e-11</td>
-          <td>3.446e-12</td>
-          <td>-1.279e-10</td>
+          <td>5.819e-12</td>
+          <td>1.221e-11</td>
+          <td>7.609e-11</td>
+          <td>1.018e-10</td>
+          <td>-3.954e-13</td>
+          <td>8.336e-11</td>
+          <td>9.825e-14</td>
+          <td>-1.606e-11</td>
+          <td>1.108e-12</td>
+          <td>1.220e-10</td>
           <td>...</td>
-          <td>4.588e-10</td>
-          <td>-8.399e-10</td>
-          <td>-6.981e-11</td>
-          <td>1.094e-10</td>
-          <td>-1.434e-10</td>
-          <td>-1.148e-10</td>
-          <td>1.166e-11</td>
-          <td>3.465e-09</td>
-          <td>-6.033e-12</td>
-          <td>1.115e-09</td>
+          <td>2.013e-10</td>
+          <td>2.213e-09</td>
+          <td>-1.527e-10</td>
+          <td>8.035e-11</td>
+          <td>4.857e-10</td>
+          <td>1.316e-10</td>
+          <td>8.612e-12</td>
+          <td>1.728e-09</td>
+          <td>3.570e-11</td>
+          <td>5.262e-10</td>
         </tr>
         <tr>
           <th>omid</th>
-          <td>8.815e-12</td>
-          <td>-2.472e-13</td>
-          <td>1.018e-12</td>
-          <td>1.054e-10</td>
-          <td>9.796e-13</td>
-          <td>9.029e-11</td>
-          <td>-7.365e-14</td>
-          <td>-4.874e-12</td>
-          <td>-3.191e-11</td>
-          <td>-3.115e-10</td>
+          <td>1.003e-12</td>
+          <td>1.003e-11</td>
+          <td>4.388e-11</td>
+          <td>1.683e-11</td>
+          <td>-1.421e-12</td>
+          <td>2.142e-11</td>
+          <td>4.564e-14</td>
+          <td>-2.840e-11</td>
+          <td>-7.396e-11</td>
+          <td>-8.451e-11</td>
           <td>...</td>
-          <td>-2.516e-10</td>
-          <td>-2.574e-09</td>
-          <td>-6.276e-10</td>
-          <td>9.328e-11</td>
-          <td>-6.587e-10</td>
-          <td>-2.765e-10</td>
-          <td>6.614e-12</td>
-          <td>1.753e-09</td>
-          <td>-5.857e-11</td>
-          <td>7.758e-10</td>
+          <td>-4.313e-11</td>
+          <td>-1.228e-09</td>
+          <td>-2.507e-10</td>
+          <td>3.745e-11</td>
+          <td>-1.008e-10</td>
+          <td>2.860e-11</td>
+          <td>4.314e-12</td>
+          <td>-1.323e-10</td>
+          <td>-1.073e-11</td>
+          <td>-3.357e-11</td>
         </tr>
         <tr>
           <th>omin</th>
-          <td>2.276e-12</td>
-          <td>-5.082e-12</td>
-          <td>-2.372e-11</td>
-          <td>5.066e-12</td>
-          <td>-1.974e-12</td>
-          <td>1.962e-11</td>
-          <td>-1.915e-13</td>
-          <td>-1.523e-11</td>
-          <td>-7.340e-11</td>
-          <td>-3.955e-10</td>
+          <td>-3.504e-12</td>
+          <td>3.222e-12</td>
+          <td>-3.550e-12</td>
+          <td>-3.721e-11</td>
+          <td>-3.072e-12</td>
+          <td>-3.554e-11</td>
+          <td>3.375e-14</td>
+          <td>-4.285e-11</td>
+          <td>-1.163e-10</td>
+          <td>-2.739e-10</td>
           <td>...</td>
-          <td>-4.983e-10</td>
-          <td>-3.163e-09</td>
-          <td>-9.324e-10</td>
-          <td>6.253e-12</td>
-          <td>-1.155e-09</td>
-          <td>-4.091e-10</td>
-          <td>1.025e-12</td>
-          <td>7.765e-10</td>
-          <td>-8.547e-11</td>
-          <td>1.026e-10</td>
+          <td>-7.112e-10</td>
+          <td>-2.091e-09</td>
+          <td>-3.533e-10</td>
+          <td>-4.072e-11</td>
+          <td>-6.613e-10</td>
+          <td>-3.785e-10</td>
+          <td>-6.303e-12</td>
+          <td>-4.902e-10</td>
+          <td>-4.862e-11</td>
+          <td>-2.453e-10</td>
         </tr>
         <tr>
           <th>von_mises</th>
-          <td>7.427e-12</td>
-          <td>6.041e-12</td>
-          <td>4.980e-11</td>
-          <td>1.151e-10</td>
-          <td>3.834e-12</td>
-          <td>7.990e-11</td>
-          <td>1.806e-13</td>
-          <td>4.203e-11</td>
-          <td>6.662e-11</td>
-          <td>2.371e-10</td>
+          <td>8.075e-12</td>
+          <td>8.122e-12</td>
+          <td>6.939e-11</td>
+          <td>1.213e-10</td>
+          <td>2.339e-12</td>
+          <td>1.030e-10</td>
+          <td>5.945e-14</td>
+          <td>2.323e-11</td>
+          <td>1.030e-10</td>
+          <td>3.430e-10</td>
           <td>...</td>
-          <td>8.607e-10</td>
-          <td>2.092e-09</td>
-          <td>7.577e-10</td>
-          <td>9.612e-11</td>
-          <td>8.762e-10</td>
-          <td>2.553e-10</td>
-          <td>9.214e-12</td>
-          <td>2.358e-09</td>
-          <td>6.998e-11</td>
-          <td>8.926e-10</td>
+          <td>8.181e-10</td>
+          <td>3.944e-09</td>
+          <td>1.737e-10</td>
+          <td>1.063e-10</td>
+          <td>9.934e-10</td>
+          <td>4.671e-10</td>
+          <td>1.330e-11</td>
+          <td>2.063e-09</td>
+          <td>7.315e-11</td>
+          <td>6.905e-10</td>
         </tr>
       </tbody>
     </table>
@@ -13472,3293 +4357,9 @@ Cycles, at the top.
 
     cquad4_composite_stress
 
-
-
-
-.. raw:: html
-
-    <div>
-    <style scoped>
-        .dataframe tbody tr th:only-of-type {
-            vertical-align: middle;
-        }
-    
-        .dataframe tbody tr th {
-            vertical-align: top;
-        }
-    
-        .dataframe thead tr th {
-            text-align: left;
-        }
-    
-        .dataframe thead tr:last-of-type th {
-            text-align: right;
-        }
-    </style>
-    <table border="1" class="dataframe">
-      <thead>
-        <tr>
-          <th></th>
-          <th></th>
-          <th>Mode</th>
-          <th>1</th>
-          <th>2</th>
-          <th>3</th>
-          <th>4</th>
-          <th>5</th>
-          <th>6</th>
-          <th>7</th>
-          <th>8</th>
-          <th>9</th>
-          <th>10</th>
-          <th>...</th>
-          <th>24</th>
-          <th>25</th>
-          <th>26</th>
-          <th>27</th>
-          <th>28</th>
-          <th>29</th>
-          <th>30</th>
-          <th>31</th>
-          <th>32</th>
-          <th>33</th>
-        </tr>
-        <tr>
-          <th></th>
-          <th></th>
-          <th>Freq</th>
-          <th>8.359</th>
-          <th>9.508</th>
-          <th>15.666</th>
-          <th>20.237</th>
-          <th>20.306</th>
-          <th>20.555</th>
-          <th>21.500</th>
-          <th>21.706</th>
-          <th>21.725</th>
-          <th>28.536</th>
-          <th>...</th>
-          <th>80.076</th>
-          <th>86.487</th>
-          <th>88.168</th>
-          <th>88.477</th>
-          <th>89.923</th>
-          <th>94.290</th>
-          <th>94.368</th>
-          <th>96.044</th>
-          <th>98.702</th>
-          <th>98.893</th>
-        </tr>
-        <tr>
-          <th></th>
-          <th></th>
-          <th>Eigenvalue</th>
-          <th>2758.149</th>
-          <th>3568.632</th>
-          <th>9689.306</th>
-          <th>16168.100</th>
-          <th>16278.223</th>
-          <th>16679.709</th>
-          <th>18248.434</th>
-          <th>18600.697</th>
-          <th>18632.551</th>
-          <th>32147.814</th>
-          <th>...</th>
-          <th>253140.875</th>
-          <th>295297.750</th>
-          <th>306885.906</th>
-          <th>309040.656</th>
-          <th>319227.719</th>
-          <th>350984.500</th>
-          <th>351566.188</th>
-          <th>364166.156</th>
-          <th>384601.344</th>
-          <th>386090.438</th>
-        </tr>
-        <tr>
-          <th></th>
-          <th></th>
-          <th>Radians</th>
-          <th>52.518</th>
-          <th>59.738</th>
-          <th>98.434</th>
-          <th>127.154</th>
-          <th>127.586</th>
-          <th>129.150</th>
-          <th>135.087</th>
-          <th>136.384</th>
-          <th>136.501</th>
-          <th>179.298</th>
-          <th>...</th>
-          <th>503.131</th>
-          <th>543.413</th>
-          <th>553.973</th>
-          <th>555.914</th>
-          <th>565.002</th>
-          <th>592.439</th>
-          <th>592.930</th>
-          <th>603.462</th>
-          <th>620.162</th>
-          <th>621.362</th>
-        </tr>
-        <tr>
-          <th>ElementID</th>
-          <th>Layer</th>
-          <th>Item</th>
-          <th></th>
-          <th></th>
-          <th></th>
-          <th></th>
-          <th></th>
-          <th></th>
-          <th></th>
-          <th></th>
-          <th></th>
-          <th></th>
-          <th></th>
-          <th></th>
-          <th></th>
-          <th></th>
-          <th></th>
-          <th></th>
-          <th></th>
-          <th></th>
-          <th></th>
-          <th></th>
-          <th></th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <th rowspan="27" valign="top">3463</th>
-          <th rowspan="9" valign="top">1</th>
-          <th>o11</th>
-          <td>1.653e+00</td>
-          <td>-1.336e+01</td>
-          <td>9.831e+01</td>
-          <td>-3.457e+01</td>
-          <td>1.091e+01</td>
-          <td>-1.487e+01</td>
-          <td>2.531e-01</td>
-          <td>-5.527e+01</td>
-          <td>-7.705e+01</td>
-          <td>1.094e+02</td>
-          <td>...</td>
-          <td>298.963</td>
-          <td>-478.466</td>
-          <td>540.027</td>
-          <td>-5.842e+02</td>
-          <td>-306.510</td>
-          <td>159.360</td>
-          <td>7.806e+01</td>
-          <td>-548.718</td>
-          <td>6.558e+01</td>
-          <td>-1.424e+02</td>
-        </tr>
-        <tr>
-          <th>o22</th>
-          <td>2.683e+01</td>
-          <td>-8.991e+00</td>
-          <td>1.208e+02</td>
-          <td>3.412e+02</td>
-          <td>9.045e+00</td>
-          <td>1.995e+02</td>
-          <td>3.961e-01</td>
-          <td>-4.688e-01</td>
-          <td>-4.120e+01</td>
-          <td>-5.672e+02</td>
-          <td>...</td>
-          <td>-3469.760</td>
-          <td>8798.746</td>
-          <td>-1987.453</td>
-          <td>3.775e+03</td>
-          <td>1088.025</td>
-          <td>574.552</td>
-          <td>-6.638e+02</td>
-          <td>-5165.128</td>
-          <td>-7.900e+02</td>
-          <td>-2.460e+03</td>
-        </tr>
-        <tr>
-          <th>t12</th>
-          <td>-1.071e+01</td>
-          <td>2.799e+01</td>
-          <td>-1.993e+02</td>
-          <td>-6.985e+01</td>
-          <td>-4.540e+00</td>
-          <td>-3.400e+01</td>
-          <td>-6.632e-01</td>
-          <td>9.785e+01</td>
-          <td>1.596e+02</td>
-          <td>-4.861e+00</td>
-          <td>...</td>
-          <td>1207.068</td>
-          <td>-1911.973</td>
-          <td>72.094</td>
-          <td>-7.483e+02</td>
-          <td>129.985</td>
-          <td>-477.285</td>
-          <td>2.087e+02</td>
-          <td>3220.338</td>
-          <td>2.484e+02</td>
-          <td>1.257e+03</td>
-        </tr>
-        <tr>
-          <th>t1z</th>
-          <td>-3.346e-02</td>
-          <td>2.238e-02</td>
-          <td>-2.830e-01</td>
-          <td>2.261e-03</td>
-          <td>-8.003e-02</td>
-          <td>-1.315e-01</td>
-          <td>-1.118e-03</td>
-          <td>1.174e-01</td>
-          <td>1.051e-01</td>
-          <td>-1.493e-01</td>
-          <td>...</td>
-          <td>-4.154</td>
-          <td>-8.090</td>
-          <td>-4.946</td>
-          <td>3.212e+00</td>
-          <td>-0.981</td>
-          <td>-2.215</td>
-          <td>-8.716e-01</td>
-          <td>6.843</td>
-          <td>-2.002e-01</td>
-          <td>2.757e+00</td>
-        </tr>
-        <tr>
-          <th>t2z</th>
-          <td>9.391e-02</td>
-          <td>-5.794e-02</td>
-          <td>6.987e-01</td>
-          <td>5.875e-02</td>
-          <td>2.222e-01</td>
-          <td>3.930e-01</td>
-          <td>2.321e-03</td>
-          <td>-3.266e-01</td>
-          <td>-2.814e-01</td>
-          <td>4.888e-02</td>
-          <td>...</td>
-          <td>12.397</td>
-          <td>17.850</td>
-          <td>12.708</td>
-          <td>-8.759e+00</td>
-          <td>2.423</td>
-          <td>4.912</td>
-          <td>2.386e+00</td>
-          <td>-12.872</td>
-          <td>4.679e-01</td>
-          <td>-5.417e+00</td>
-        </tr>
-        <tr>
-          <th>angle</th>
-          <td>-6.981e+01</td>
-          <td>4.723e+01</td>
-          <td>-4.661e+01</td>
-          <td>-7.980e+01</td>
-          <td>-3.921e+01</td>
-          <td>-8.120e+01</td>
-          <td>-4.808e+01</td>
-          <td>5.282e+01</td>
-          <td>4.820e+01</td>
-          <td>-4.116e-01</td>
-          <td>...</td>
-          <td>16.321</td>
-          <td>-78.800</td>
-          <td>1.633</td>
-          <td>-8.053e+01</td>
-          <td>84.720</td>
-          <td>-56.753</td>
-          <td>1.468e+01</td>
-          <td>27.184</td>
-          <td>1.507e+01</td>
-          <td>2.366e+01</td>
-        </tr>
-        <tr>
-          <th>major</th>
-          <td>3.076e+01</td>
-          <td>1.689e+01</td>
-          <td>3.092e+02</td>
-          <td>3.538e+02</td>
-          <td>1.461e+01</td>
-          <td>2.048e+02</td>
-          <td>9.917e-01</td>
-          <td>7.374e+01</td>
-          <td>1.015e+02</td>
-          <td>1.094e+02</td>
-          <td>...</td>
-          <td>652.421</td>
-          <td>9177.341</td>
-          <td>542.082</td>
-          <td>3.900e+03</td>
-          <td>1100.037</td>
-          <td>887.434</td>
-          <td>1.327e+02</td>
-          <td>1105.195</td>
-          <td>1.325e+02</td>
-          <td>4.083e+02</td>
-        </tr>
-        <tr>
-          <th>minor</th>
-          <td>-2.284e+00</td>
-          <td>-3.925e+01</td>
-          <td>-9.011e+01</td>
-          <td>-4.714e+01</td>
-          <td>5.341e+00</td>
-          <td>-2.014e+01</td>
-          <td>-3.425e-01</td>
-          <td>-1.295e+02</td>
-          <td>-2.197e+02</td>
-          <td>-5.672e+02</td>
-          <td>...</td>
-          <td>-3823.217</td>
-          <td>-857.061</td>
-          <td>-1989.508</td>
-          <td>-7.091e+02</td>
-          <td>-318.523</td>
-          <td>-153.522</td>
-          <td>-7.185e+02</td>
-          <td>-6819.042</td>
-          <td>-8.569e+02</td>
-          <td>-3.010e+03</td>
-        </tr>
-        <tr>
-          <th>max_shear</th>
-          <td>1.652e+01</td>
-          <td>2.807e+01</td>
-          <td>1.997e+02</td>
-          <td>2.004e+02</td>
-          <td>4.635e+00</td>
-          <td>1.124e+02</td>
-          <td>6.671e-01</td>
-          <td>1.016e+02</td>
-          <td>1.606e+02</td>
-          <td>3.383e+02</td>
-          <td>...</td>
-          <td>2237.819</td>
-          <td>5017.201</td>
-          <td>1265.795</td>
-          <td>2.305e+03</td>
-          <td>709.280</td>
-          <td>520.478</td>
-          <td>4.256e+02</td>
-          <td>3962.119</td>
-          <td>4.947e+02</td>
-          <td>1.709e+03</td>
-        </tr>
-        <tr>
-          <th rowspan="9" valign="top">2</th>
-          <th>o11</th>
-          <td>-6.819e-05</td>
-          <td>-7.947e-05</td>
-          <td>4.139e-04</td>
-          <td>-1.110e-03</td>
-          <td>2.354e-05</td>
-          <td>-6.985e-04</td>
-          <td>1.405e-07</td>
-          <td>-4.194e-04</td>
-          <td>-4.931e-04</td>
-          <td>2.203e-03</td>
-          <td>...</td>
-          <td>0.008</td>
-          <td>-0.030</td>
-          <td>0.006</td>
-          <td>-1.208e-02</td>
-          <td>-0.006</td>
-          <td>-0.001</td>
-          <td>1.748e-03</td>
-          <td>0.010</td>
-          <td>2.220e-03</td>
-          <td>5.961e-03</td>
-        </tr>
-        <tr>
-          <th>o22</th>
-          <td>2.610e-04</td>
-          <td>-9.335e-05</td>
-          <td>9.947e-04</td>
-          <td>3.668e-03</td>
-          <td>-6.263e-05</td>
-          <td>2.094e-03</td>
-          <td>5.855e-06</td>
-          <td>7.387e-05</td>
-          <td>-4.815e-04</td>
-          <td>-6.056e-03</td>
-          <td>...</td>
-          <td>-0.030</td>
-          <td>0.084</td>
-          <td>-0.018</td>
-          <td>3.737e-02</td>
-          <td>0.013</td>
-          <td>0.005</td>
-          <td>-6.589e-03</td>
-          <td>-0.046</td>
-          <td>-7.543e-03</td>
-          <td>-2.268e-02</td>
-        </tr>
-        <tr>
-          <th>t12</th>
-          <td>-2.075e-04</td>
-          <td>6.765e-04</td>
-          <td>-4.305e-03</td>
-          <td>-2.414e-03</td>
-          <td>3.463e-04</td>
-          <td>-7.801e-04</td>
-          <td>-1.621e-05</td>
-          <td>2.197e-03</td>
-          <td>3.982e-03</td>
-          <td>1.179e-03</td>
-          <td>...</td>
-          <td>0.035</td>
-          <td>-0.029</td>
-          <td>0.010</td>
-          <td>-2.648e-02</td>
-          <td>0.003</td>
-          <td>-0.008</td>
-          <td>7.190e-03</td>
-          <td>0.064</td>
-          <td>6.901e-03</td>
-          <td>2.529e-02</td>
-        </tr>
-        <tr>
-          <th>t1z</th>
-          <td>-3.346e-02</td>
-          <td>2.238e-02</td>
-          <td>-2.830e-01</td>
-          <td>2.261e-03</td>
-          <td>-8.003e-02</td>
-          <td>-1.315e-01</td>
-          <td>-1.118e-03</td>
-          <td>1.174e-01</td>
-          <td>1.051e-01</td>
-          <td>-1.493e-01</td>
-          <td>...</td>
-          <td>-4.154</td>
-          <td>-8.090</td>
-          <td>-4.946</td>
-          <td>3.212e+00</td>
-          <td>-0.981</td>
-          <td>-2.215</td>
-          <td>-8.716e-01</td>
-          <td>6.843</td>
-          <td>-2.002e-01</td>
-          <td>2.757e+00</td>
-        </tr>
-        <tr>
-          <th>t2z</th>
-          <td>9.391e-02</td>
-          <td>-5.794e-02</td>
-          <td>6.987e-01</td>
-          <td>5.875e-02</td>
-          <td>2.222e-01</td>
-          <td>3.930e-01</td>
-          <td>2.321e-03</td>
-          <td>-3.266e-01</td>
-          <td>-2.814e-01</td>
-          <td>4.888e-02</td>
-          <td>...</td>
-          <td>12.397</td>
-          <td>17.850</td>
-          <td>12.708</td>
-          <td>-8.759e+00</td>
-          <td>2.423</td>
-          <td>4.912</td>
-          <td>2.386e+00</td>
-          <td>-12.872</td>
-          <td>4.679e-01</td>
-          <td>-5.417e+00</td>
-        </tr>
-        <tr>
-          <th>angle</th>
-          <td>-6.421e+01</td>
-          <td>4.471e+01</td>
-          <td>-4.693e+01</td>
-          <td>-6.735e+01</td>
-          <td>4.145e+01</td>
-          <td>-7.540e+01</td>
-          <td>-5.000e+01</td>
-          <td>4.820e+01</td>
-          <td>4.504e+01</td>
-          <td>7.968e+00</td>
-          <td>...</td>
-          <td>30.969</td>
-          <td>-76.591</td>
-          <td>19.141</td>
-          <td>-6.652e+01</td>
-          <td>80.821</td>
-          <td>-56.005</td>
-          <td>2.995e+01</td>
-          <td>33.244</td>
-          <td>2.736e+01</td>
-          <td>3.024e+01</td>
-        </tr>
-        <tr>
-          <th>major</th>
-          <td>3.612e-04</td>
-          <td>5.901e-04</td>
-          <td>5.019e-03</td>
-          <td>4.675e-03</td>
-          <td>3.294e-04</td>
-          <td>2.297e-03</td>
-          <td>1.946e-05</td>
-          <td>2.038e-03</td>
-          <td>3.495e-03</td>
-          <td>2.368e-03</td>
-          <td>...</td>
-          <td>0.028</td>
-          <td>0.091</td>
-          <td>0.010</td>
-          <td>4.888e-02</td>
-          <td>0.013</td>
-          <td>0.010</td>
-          <td>5.890e-03</td>
-          <td>0.053</td>
-          <td>5.791e-03</td>
-          <td>2.070e-02</td>
-        </tr>
-        <tr>
-          <th>minor</th>
-          <td>-1.685e-04</td>
-          <td>-7.629e-04</td>
-          <td>-3.610e-03</td>
-          <td>-2.117e-03</td>
-          <td>-3.685e-04</td>
-          <td>-9.017e-04</td>
-          <td>-1.347e-05</td>
-          <td>-2.384e-03</td>
-          <td>-4.469e-03</td>
-          <td>-6.222e-03</td>
-          <td>...</td>
-          <td>-0.050</td>
-          <td>-0.037</td>
-          <td>-0.021</td>
-          <td>-2.358e-02</td>
-          <td>-0.007</td>
-          <td>-0.006</td>
-          <td>-1.073e-02</td>
-          <td>-0.088</td>
-          <td>-1.111e-02</td>
-          <td>-3.742e-02</td>
-        </tr>
-        <tr>
-          <th>max_shear</th>
-          <td>2.649e-04</td>
-          <td>6.765e-04</td>
-          <td>4.315e-03</td>
-          <td>3.396e-03</td>
-          <td>3.489e-04</td>
-          <td>1.599e-03</td>
-          <td>1.646e-05</td>
-          <td>2.211e-03</td>
-          <td>3.982e-03</td>
-          <td>4.295e-03</td>
-          <td>...</td>
-          <td>0.039</td>
-          <td>0.064</td>
-          <td>0.015</td>
-          <td>3.623e-02</td>
-          <td>0.010</td>
-          <td>0.008</td>
-          <td>8.311e-03</td>
-          <td>0.070</td>
-          <td>8.453e-03</td>
-          <td>2.906e-02</td>
-        </tr>
-        <tr>
-          <th rowspan="9" valign="top">3</th>
-          <th>o11</th>
-          <td>-3.061e+00</td>
-          <td>-1.003e+01</td>
-          <td>5.135e+01</td>
-          <td>-2.009e+01</td>
-          <td>-8.917e+00</td>
-          <td>-3.125e+01</td>
-          <td>9.960e-02</td>
-          <td>-3.718e+01</td>
-          <td>-6.273e+01</td>
-          <td>6.592e+01</td>
-          <td>...</td>
-          <td>-178.340</td>
-          <td>-1736.328</td>
-          <td>-74.682</td>
-          <td>-1.488e+02</td>
-          <td>-406.984</td>
-          <td>-134.962</td>
-          <td>-3.641e+01</td>
-          <td>447.785</td>
-          <td>3.250e+01</td>
-          <td>2.724e+02</td>
-        </tr>
-        <tr>
-          <th>o22</th>
-          <td>2.948e+01</td>
-          <td>-1.683e+01</td>
-          <td>1.307e+02</td>
-          <td>4.420e+02</td>
-          <td>-2.217e+01</td>
-          <td>2.440e+02</td>
-          <td>9.586e-01</td>
-          <td>-5.487e+00</td>
-          <td>-9.655e+01</td>
-          <td>-7.056e+02</td>
-          <td>...</td>
-          <td>-2915.432</td>
-          <td>9012.891</td>
-          <td>-1795.942</td>
-          <td>4.162e+03</td>
-          <td>1455.565</td>
-          <td>537.531</td>
-          <td>-7.564e+02</td>
-          <td>-4742.028</td>
-          <td>-8.238e+02</td>
-          <td>-2.433e+03</td>
-        </tr>
-        <tr>
-          <th>t12</th>
-          <td>-5.834e+00</td>
-          <td>2.593e+01</td>
-          <td>-1.437e+02</td>
-          <td>-1.225e+02</td>
-          <td>3.214e+01</td>
-          <td>-2.817e+01</td>
-          <td>-6.290e-01</td>
-          <td>7.727e+01</td>
-          <td>1.578e+02</td>
-          <td>9.884e+01</td>
-          <td>...</td>
-          <td>1566.515</td>
-          <td>-388.872</td>
-          <td>690.010</td>
-          <td>-1.362e+03</td>
-          <td>115.661</td>
-          <td>-134.280</td>
-          <td>3.644e+02</td>
-          <td>1902.531</td>
-          <td>3.016e+02</td>
-          <td>7.588e+02</td>
-        </tr>
-        <tr>
-          <th>t1z</th>
-          <td>0.000e+00</td>
-          <td>-0.000e+00</td>
-          <td>0.000e+00</td>
-          <td>-0.000e+00</td>
-          <td>0.000e+00</td>
-          <td>0.000e+00</td>
-          <td>0.000e+00</td>
-          <td>-0.000e+00</td>
-          <td>-0.000e+00</td>
-          <td>0.000e+00</td>
-          <td>...</td>
-          <td>0.000</td>
-          <td>0.000</td>
-          <td>0.000</td>
-          <td>-0.000e+00</td>
-          <td>0.000</td>
-          <td>0.000</td>
-          <td>0.000e+00</td>
-          <td>-0.000</td>
-          <td>0.000e+00</td>
-          <td>-0.000e+00</td>
-        </tr>
-        <tr>
-          <th>t2z</th>
-          <td>-0.000e+00</td>
-          <td>0.000e+00</td>
-          <td>-0.000e+00</td>
-          <td>-0.000e+00</td>
-          <td>-0.000e+00</td>
-          <td>-0.000e+00</td>
-          <td>-0.000e+00</td>
-          <td>0.000e+00</td>
-          <td>0.000e+00</td>
-          <td>-0.000e+00</td>
-          <td>...</td>
-          <td>-0.000</td>
-          <td>-0.000</td>
-          <td>-0.000</td>
-          <td>0.000e+00</td>
-          <td>-0.000</td>
-          <td>-0.000</td>
-          <td>-0.000e+00</td>
-          <td>0.000</td>
-          <td>-0.000e+00</td>
-          <td>0.000e+00</td>
-        </tr>
-        <tr>
-          <th>angle</th>
-          <td>-8.014e+01</td>
-          <td>4.126e+01</td>
-          <td>-5.272e+01</td>
-          <td>-7.603e+01</td>
-          <td>3.918e+01</td>
-          <td>-8.422e+01</td>
-          <td>-6.216e+01</td>
-          <td>5.080e+01</td>
-          <td>4.194e+01</td>
-          <td>7.185e+00</td>
-          <td>...</td>
-          <td>24.429</td>
-          <td>-87.931</td>
-          <td>19.360</td>
-          <td>-7.385e+01</td>
-          <td>86.460</td>
-          <td>-79.115</td>
-          <td>2.267e+01</td>
-          <td>18.124</td>
-          <td>1.758e+01</td>
-          <td>1.465e+01</td>
-        </tr>
-        <tr>
-          <th>major</th>
-          <td>3.049e+01</td>
-          <td>1.272e+01</td>
-          <td>2.402e+02</td>
-          <td>4.724e+02</td>
-          <td>1.727e+01</td>
-          <td>2.469e+02</td>
-          <td>1.291e+00</td>
-          <td>5.754e+01</td>
-          <td>7.902e+01</td>
-          <td>7.838e+01</td>
-          <td>...</td>
-          <td>533.232</td>
-          <td>9026.940</td>
-          <td>167.774</td>
-          <td>4.556e+03</td>
-          <td>1462.720</td>
-          <td>563.352</td>
-          <td>1.158e+02</td>
-          <td>1070.512</td>
-          <td>1.281e+02</td>
-          <td>4.708e+02</td>
-        </tr>
-        <tr>
-          <th>minor</th>
-          <td>-4.076e+00</td>
-          <td>-3.958e+01</td>
-          <td>-5.809e+01</td>
-          <td>-5.057e+01</td>
-          <td>-4.835e+01</td>
-          <td>-3.410e+01</td>
-          <td>-2.326e-01</td>
-          <td>-1.002e+02</td>
-          <td>-2.383e+02</td>
-          <td>-7.181e+02</td>
-          <td>...</td>
-          <td>-3627.004</td>
-          <td>-1750.378</td>
-          <td>-2038.398</td>
-          <td>-5.433e+02</td>
-          <td>-414.139</td>
-          <td>-160.783</td>
-          <td>-9.086e+02</td>
-          <td>-5364.755</td>
-          <td>-9.194e+02</td>
-          <td>-2.631e+03</td>
-        </tr>
-        <tr>
-          <th>max_shear</th>
-          <td>1.728e+01</td>
-          <td>2.615e+01</td>
-          <td>1.491e+02</td>
-          <td>2.615e+02</td>
-          <td>3.281e+01</td>
-          <td>1.405e+02</td>
-          <td>7.617e-01</td>
-          <td>7.887e+01</td>
-          <td>1.587e+02</td>
-          <td>3.982e+02</td>
-          <td>...</td>
-          <td>2080.118</td>
-          <td>5388.659</td>
-          <td>1103.086</td>
-          <td>2.550e+03</td>
-          <td>938.430</td>
-          <td>362.067</td>
-          <td>5.122e+02</td>
-          <td>3217.633</td>
-          <td>5.237e+02</td>
-          <td>1.551e+03</td>
-        </tr>
-        <tr>
-          <th rowspan="3" valign="top">3604</th>
-          <th rowspan="3" valign="top">1</th>
-          <th>o11</th>
-          <td>-2.729e+00</td>
-          <td>9.864e+00</td>
-          <td>-4.650e+01</td>
-          <td>-5.289e+01</td>
-          <td>2.258e+01</td>
-          <td>-1.050e+01</td>
-          <td>-3.169e-01</td>
-          <td>2.859e+01</td>
-          <td>5.915e+01</td>
-          <td>2.065e+01</td>
-          <td>...</td>
-          <td>281.294</td>
-          <td>-293.702</td>
-          <td>-89.885</td>
-          <td>-2.844e+02</td>
-          <td>-8.555</td>
-          <td>-201.463</td>
-          <td>7.635e+01</td>
-          <td>1174.450</td>
-          <td>9.900e+01</td>
-          <td>3.894e+02</td>
-        </tr>
-        <tr>
-          <th>o22</th>
-          <td>2.430e+01</td>
-          <td>-5.286e+01</td>
-          <td>4.502e+02</td>
-          <td>2.613e+02</td>
-          <td>2.821e+01</td>
-          <td>1.188e+02</td>
-          <td>6.862e-01</td>
-          <td>-1.739e+02</td>
-          <td>-2.993e+02</td>
-          <td>-3.452e+02</td>
-          <td>...</td>
-          <td>-4581.175</td>
-          <td>5874.922</td>
-          <td>-2221.164</td>
-          <td>3.347e+03</td>
-          <td>-505.853</td>
-          <td>357.264</td>
-          <td>-7.946e+02</td>
-          <td>-5085.291</td>
-          <td>-7.311e+02</td>
-          <td>-2.168e+03</td>
-        </tr>
-        <tr>
-          <th>t12</th>
-          <td>-6.763e+00</td>
-          <td>1.181e+01</td>
-          <td>-1.478e+02</td>
-          <td>3.586e+01</td>
-          <td>-5.716e+01</td>
-          <td>-2.018e+01</td>
-          <td>-6.787e-02</td>
-          <td>5.475e+01</td>
-          <td>6.191e+01</td>
-          <td>-3.043e+01</td>
-          <td>...</td>
-          <td>-569.531</td>
-          <td>-1248.015</td>
-          <td>-601.501</td>
-          <td>7.869e+02</td>
-          <td>295.698</td>
-          <td>-110.241</td>
-          <td>-1.399e+02</td>
-          <td>142.815</td>
-          <td>-1.121e+02</td>
-          <td>1.002e+02</td>
-        </tr>
-        <tr>
-          <th>...</th>
-          <th>...</th>
-          <th>...</th>
-          <td>...</td>
-          <td>...</td>
-          <td>...</td>
-          <td>...</td>
-          <td>...</td>
-          <td>...</td>
-          <td>...</td>
-          <td>...</td>
-          <td>...</td>
-          <td>...</td>
-          <td>...</td>
-          <td>...</td>
-          <td>...</td>
-          <td>...</td>
-          <td>...</td>
-          <td>...</td>
-          <td>...</td>
-          <td>...</td>
-          <td>...</td>
-          <td>...</td>
-          <td>...</td>
-        </tr>
-        <tr>
-          <th rowspan="3" valign="top">4553</th>
-          <th rowspan="3" valign="top">3</th>
-          <th>major</th>
-          <td>1.556e+01</td>
-          <td>-1.166e+00</td>
-          <td>4.272e+01</td>
-          <td>5.027e+01</td>
-          <td>9.330e+00</td>
-          <td>4.025e+01</td>
-          <td>2.189e-01</td>
-          <td>-6.226e+00</td>
-          <td>-8.880e+00</td>
-          <td>2.065e+02</td>
-          <td>...</td>
-          <td>369.579</td>
-          <td>227.019</td>
-          <td>30.605</td>
-          <td>6.468e+02</td>
-          <td>-109.168</td>
-          <td>790.577</td>
-          <td>9.127e+01</td>
-          <td>1745.064</td>
-          <td>-3.686e+00</td>
-          <td>5.859e+02</td>
-        </tr>
-        <tr>
-          <th>minor</th>
-          <td>1.481e-01</td>
-          <td>-9.483e+00</td>
-          <td>-3.262e+01</td>
-          <td>4.540e+00</td>
-          <td>7.763e-02</td>
-          <td>4.110e+00</td>
-          <td>-3.344e-02</td>
-          <td>-5.953e+01</td>
-          <td>-9.733e+01</td>
-          <td>-3.937e+01</td>
-          <td>...</td>
-          <td>-6470.115</td>
-          <td>-22124.072</td>
-          <td>-4523.191</td>
-          <td>-1.092e+01</td>
-          <td>-3904.854</td>
-          <td>-360.915</td>
-          <td>-2.055e+00</td>
-          <td>-7143.062</td>
-          <td>-1.388e+02</td>
-          <td>-3.703e+03</td>
-        </tr>
-        <tr>
-          <th>max_shear</th>
-          <td>7.704e+00</td>
-          <td>4.158e+00</td>
-          <td>3.767e+01</td>
-          <td>2.287e+01</td>
-          <td>4.626e+00</td>
-          <td>1.807e+01</td>
-          <td>1.262e-01</td>
-          <td>2.665e+01</td>
-          <td>4.423e+01</td>
-          <td>1.229e+02</td>
-          <td>...</td>
-          <td>3419.847</td>
-          <td>11175.545</td>
-          <td>2276.898</td>
-          <td>3.289e+02</td>
-          <td>1897.844</td>
-          <td>575.746</td>
-          <td>4.666e+01</td>
-          <td>4444.063</td>
-          <td>6.755e+01</td>
-          <td>2.145e+03</td>
-        </tr>
-        <tr>
-          <th rowspan="27" valign="top">4554</th>
-          <th rowspan="9" valign="top">1</th>
-          <th>o11</th>
-          <td>-3.799e-01</td>
-          <td>1.518e+00</td>
-          <td>-6.887e+00</td>
-          <td>-2.059e+00</td>
-          <td>-2.619e+00</td>
-          <td>-4.991e+00</td>
-          <td>6.262e-02</td>
-          <td>6.639e+00</td>
-          <td>6.563e+00</td>
-          <td>1.629e+01</td>
-          <td>...</td>
-          <td>-398.599</td>
-          <td>-366.898</td>
-          <td>-171.235</td>
-          <td>5.664e+00</td>
-          <td>71.562</td>
-          <td>115.893</td>
-          <td>1.127e+01</td>
-          <td>-759.561</td>
-          <td>5.186e+00</td>
-          <td>-3.339e+02</td>
-        </tr>
-        <tr>
-          <th>o22</th>
-          <td>-7.182e+00</td>
-          <td>6.814e+00</td>
-          <td>-3.162e+01</td>
-          <td>-9.531e+01</td>
-          <td>-1.798e+00</td>
-          <td>-7.645e+01</td>
-          <td>9.292e-02</td>
-          <td>2.102e+01</td>
-          <td>2.127e+01</td>
-          <td>3.569e+02</td>
-          <td>...</td>
-          <td>-2936.482</td>
-          <td>-6111.822</td>
-          <td>-1000.820</td>
-          <td>1.957e+02</td>
-          <td>-594.632</td>
-          <td>1211.643</td>
-          <td>-3.038e+01</td>
-          <td>-7660.046</td>
-          <td>9.291e+00</td>
-          <td>-2.967e+03</td>
-        </tr>
-        <tr>
-          <th>t12</th>
-          <td>8.521e-01</td>
-          <td>-1.602e+00</td>
-          <td>1.086e+01</td>
-          <td>2.662e+01</td>
-          <td>1.064e+00</td>
-          <td>2.297e+01</td>
-          <td>-9.517e-02</td>
-          <td>-3.413e+00</td>
-          <td>2.599e+00</td>
-          <td>-1.433e+02</td>
-          <td>...</td>
-          <td>1857.692</td>
-          <td>4829.781</td>
-          <td>890.761</td>
-          <td>-1.278e+02</td>
-          <td>703.258</td>
-          <td>-575.852</td>
-          <td>-1.286e+01</td>
-          <td>3861.737</td>
-          <td>4.822e+00</td>
-          <td>1.601e+03</td>
-        </tr>
-        <tr>
-          <th>t1z</th>
-          <td>-2.126e-02</td>
-          <td>2.102e-02</td>
-          <td>-1.776e-01</td>
-          <td>-1.936e-01</td>
-          <td>-1.741e-02</td>
-          <td>-1.522e-01</td>
-          <td>-1.739e-04</td>
-          <td>9.116e-02</td>
-          <td>1.383e-01</td>
-          <td>5.658e-01</td>
-          <td>...</td>
-          <td>1.227</td>
-          <td>-4.370</td>
-          <td>3.861</td>
-          <td>-6.915e-02</td>
-          <td>-1.600</td>
-          <td>3.567</td>
-          <td>-1.099e-01</td>
-          <td>-17.087</td>
-          <td>2.559e-01</td>
-          <td>-4.558e+00</td>
-        </tr>
-        <tr>
-          <th>t2z</th>
-          <td>7.182e-02</td>
-          <td>-7.457e-02</td>
-          <td>5.032e-01</td>
-          <td>6.753e-01</td>
-          <td>2.741e-02</td>
-          <td>5.195e-01</td>
-          <td>3.520e-04</td>
-          <td>-3.048e-01</td>
-          <td>-4.732e-01</td>
-          <td>-1.845e+00</td>
-          <td>...</td>
-          <td>0.981</td>
-          <td>-11.889</td>
-          <td>-7.704</td>
-          <td>2.743e-01</td>
-          <td>-3.955</td>
-          <td>-7.944</td>
-          <td>4.847e-01</td>
-          <td>40.091</td>
-          <td>-5.359e-01</td>
-          <td>1.185e+01</td>
-        </tr>
-        <tr>
-          <th>angle</th>
-          <td>7.033e+00</td>
-          <td>-7.441e+01</td>
-          <td>2.065e+01</td>
-          <td>1.486e+01</td>
-          <td>5.554e+01</td>
-          <td>1.637e+01</td>
-          <td>-4.952e+01</td>
-          <td>-7.731e+01</td>
-          <td>8.026e+01</td>
-          <td>-6.996e+01</td>
-          <td>...</td>
-          <td>27.832</td>
-          <td>29.629</td>
-          <td>32.515</td>
-          <td>-6.332e+01</td>
-          <td>32.328</td>
-          <td>-66.787</td>
-          <td>-1.584e+01</td>
-          <td>24.111</td>
-          <td>5.653e+01</td>
-          <td>2.528e+01</td>
-        </tr>
-        <tr>
-          <th>major</th>
-          <td>-2.748e-01</td>
-          <td>7.261e+00</td>
-          <td>-2.794e+00</td>
-          <td>5.006e+00</td>
-          <td>-1.068e+00</td>
-          <td>1.755e+00</td>
-          <td>1.741e-01</td>
-          <td>2.179e+01</td>
-          <td>2.171e+01</td>
-          <td>4.091e+02</td>
-          <td>...</td>
-          <td>582.178</td>
-          <td>2380.055</td>
-          <td>396.575</td>
-          <td>2.599e+02</td>
-          <td>516.620</td>
-          <td>1458.610</td>
-          <td>1.492e+01</td>
-          <td>968.727</td>
-          <td>1.248e+01</td>
-          <td>4.223e+02</td>
-        </tr>
-        <tr>
-          <th>minor</th>
-          <td>-7.287e+00</td>
-          <td>1.071e+00</td>
-          <td>-3.571e+01</td>
-          <td>-1.024e+02</td>
-          <td>-3.349e+00</td>
-          <td>-8.320e+01</td>
-          <td>-1.860e-02</td>
-          <td>5.870e+00</td>
-          <td>6.117e+00</td>
-          <td>-3.598e+01</td>
-          <td>...</td>
-          <td>-3917.259</td>
-          <td>-8858.774</td>
-          <td>-1568.630</td>
-          <td>-5.854e+01</td>
-          <td>-1039.690</td>
-          <td>-131.074</td>
-          <td>-3.403e+01</td>
-          <td>-9388.334</td>
-          <td>1.997e+00</td>
-          <td>-3.723e+03</td>
-        </tr>
-        <tr>
-          <th>max_shear</th>
-          <td>3.506e+00</td>
-          <td>3.095e+00</td>
-          <td>1.646e+01</td>
-          <td>5.369e+01</td>
-          <td>1.140e+00</td>
-          <td>4.248e+01</td>
-          <td>9.637e-02</td>
-          <td>7.960e+00</td>
-          <td>7.798e+00</td>
-          <td>2.226e+02</td>
-          <td>...</td>
-          <td>2249.718</td>
-          <td>5619.415</td>
-          <td>982.603</td>
-          <td>1.592e+02</td>
-          <td>778.155</td>
-          <td>794.842</td>
-          <td>2.447e+01</td>
-          <td>5178.531</td>
-          <td>5.241e+00</td>
-          <td>2.073e+03</td>
-        </tr>
-        <tr>
-          <th rowspan="9" valign="top">2</th>
-          <th>o11</th>
-          <td>-5.422e-07</td>
-          <td>1.670e-05</td>
-          <td>-1.582e-04</td>
-          <td>4.606e-05</td>
-          <td>-2.581e-05</td>
-          <td>1.859e-05</td>
-          <td>2.650e-07</td>
-          <td>8.222e-05</td>
-          <td>1.234e-04</td>
-          <td>-2.097e-04</td>
-          <td>...</td>
-          <td>0.003</td>
-          <td>0.008</td>
-          <td>0.003</td>
-          <td>-3.610e-04</td>
-          <td>0.002</td>
-          <td>0.001</td>
-          <td>6.110e-05</td>
-          <td>-0.003</td>
-          <td>1.408e-04</td>
-          <td>-3.519e-04</td>
-        </tr>
-        <tr>
-          <th>o22</th>
-          <td>-2.586e-06</td>
-          <td>5.527e-06</td>
-          <td>-7.895e-05</td>
-          <td>-3.345e-04</td>
-          <td>1.352e-05</td>
-          <td>-2.692e-04</td>
-          <td>8.079e-07</td>
-          <td>-5.068e-05</td>
-          <td>-1.516e-04</td>
-          <td>2.017e-03</td>
-          <td>...</td>
-          <td>-0.026</td>
-          <td>-0.077</td>
-          <td>-0.015</td>
-          <td>2.215e-03</td>
-          <td>-0.012</td>
-          <td>0.006</td>
-          <td>7.663e-05</td>
-          <td>-0.045</td>
-          <td>-2.265e-04</td>
-          <td>-1.966e-02</td>
-        </tr>
-        <tr>
-          <th>t12</th>
-          <td>-1.297e-05</td>
-          <td>-3.429e-05</td>
-          <td>5.406e-04</td>
-          <td>4.940e-04</td>
-          <td>2.530e-06</td>
-          <td>4.123e-04</td>
-          <td>-2.199e-06</td>
-          <td>-2.483e-05</td>
-          <td>1.012e-04</td>
-          <td>-3.553e-03</td>
-          <td>...</td>
-          <td>0.050</td>
-          <td>0.144</td>
-          <td>0.024</td>
-          <td>-3.905e-03</td>
-          <td>0.023</td>
-          <td>-0.016</td>
-          <td>-3.749e-04</td>
-          <td>0.103</td>
-          <td>1.928e-04</td>
-          <td>4.292e-02</td>
-        </tr>
-        <tr>
-          <th>t1z</th>
-          <td>-2.126e-02</td>
-          <td>2.102e-02</td>
-          <td>-1.776e-01</td>
-          <td>-1.936e-01</td>
-          <td>-1.741e-02</td>
-          <td>-1.522e-01</td>
-          <td>-1.739e-04</td>
-          <td>9.116e-02</td>
-          <td>1.383e-01</td>
-          <td>5.658e-01</td>
-          <td>...</td>
-          <td>1.227</td>
-          <td>-4.370</td>
-          <td>3.861</td>
-          <td>-6.915e-02</td>
-          <td>-1.600</td>
-          <td>3.567</td>
-          <td>-1.099e-01</td>
-          <td>-17.087</td>
-          <td>2.559e-01</td>
-          <td>-4.558e+00</td>
-        </tr>
-        <tr>
-          <th>t2z</th>
-          <td>7.182e-02</td>
-          <td>-7.457e-02</td>
-          <td>5.032e-01</td>
-          <td>6.753e-01</td>
-          <td>2.741e-02</td>
-          <td>5.195e-01</td>
-          <td>3.520e-04</td>
-          <td>-3.048e-01</td>
-          <td>-4.732e-01</td>
-          <td>-1.845e+00</td>
-          <td>...</td>
-          <td>0.981</td>
-          <td>-11.889</td>
-          <td>-7.704</td>
-          <td>2.743e-01</td>
-          <td>-3.955</td>
-          <td>-7.944</td>
-          <td>4.847e-01</td>
-          <td>40.091</td>
-          <td>-5.359e-01</td>
-          <td>1.185e+01</td>
-        </tr>
-        <tr>
-          <th>angle</th>
-          <td>-4.275e+01</td>
-          <td>-4.037e+01</td>
-          <td>4.710e+01</td>
-          <td>3.447e+01</td>
-          <td>8.633e+01</td>
-          <td>3.538e+01</td>
-          <td>-4.852e+01</td>
-          <td>-1.025e+01</td>
-          <td>1.818e+01</td>
-          <td>-5.370e+01</td>
-          <td>...</td>
-          <td>36.834</td>
-          <td>36.815</td>
-          <td>35.039</td>
-          <td>-5.413e+01</td>
-          <td>36.629</td>
-          <td>-49.667</td>
-          <td>-4.559e+01</td>
-          <td>39.293</td>
-          <td>2.320e+01</td>
-          <td>3.866e+01</td>
-        </tr>
-        <tr>
-          <th>major</th>
-          <td>1.144e-05</td>
-          <td>4.586e-05</td>
-          <td>4.235e-04</td>
-          <td>3.852e-04</td>
-          <td>1.368e-05</td>
-          <td>3.113e-04</td>
-          <td>2.752e-06</td>
-          <td>8.671e-05</td>
-          <td>1.567e-04</td>
-          <td>4.628e-03</td>
-          <td>...</td>
-          <td>0.040</td>
-          <td>0.116</td>
-          <td>0.020</td>
-          <td>5.039e-03</td>
-          <td>0.019</td>
-          <td>0.019</td>
-          <td>4.438e-04</td>
-          <td>0.082</td>
-          <td>2.234e-04</td>
-          <td>3.398e-02</td>
-        </tr>
-        <tr>
-          <th>minor</th>
-          <td>-1.457e-05</td>
-          <td>-2.363e-05</td>
-          <td>-6.606e-04</td>
-          <td>-6.736e-04</td>
-          <td>-2.598e-05</td>
-          <td>-5.619e-04</td>
-          <td>-1.679e-06</td>
-          <td>-5.517e-05</td>
-          <td>-1.848e-04</td>
-          <td>-2.820e-03</td>
-          <td>...</td>
-          <td>-0.064</td>
-          <td>-0.185</td>
-          <td>-0.032</td>
-          <td>-3.185e-03</td>
-          <td>-0.029</td>
-          <td>-0.012</td>
-          <td>-3.061e-04</td>
-          <td>-0.130</td>
-          <td>-3.091e-04</td>
-          <td>-5.399e-02</td>
-        </tr>
-        <tr>
-          <th>max_shear</th>
-          <td>1.301e-05</td>
-          <td>3.475e-05</td>
-          <td>5.420e-04</td>
-          <td>5.294e-04</td>
-          <td>1.983e-05</td>
-          <td>4.366e-04</td>
-          <td>2.215e-06</td>
-          <td>7.094e-05</td>
-          <td>1.708e-04</td>
-          <td>3.724e-03</td>
-          <td>...</td>
-          <td>0.052</td>
-          <td>0.150</td>
-          <td>0.026</td>
-          <td>4.112e-03</td>
-          <td>0.024</td>
-          <td>0.016</td>
-          <td>3.750e-04</td>
-          <td>0.106</td>
-          <td>2.663e-04</td>
-          <td>4.399e-02</td>
-        </tr>
-        <tr>
-          <th rowspan="9" valign="top">3</th>
-          <th>o11</th>
-          <td>1.137e-01</td>
-          <td>2.626e+00</td>
-          <td>-3.382e+01</td>
-          <td>-5.651e+00</td>
-          <td>-2.580e+00</td>
-          <td>-5.461e+00</td>
-          <td>4.256e-02</td>
-          <td>9.504e+00</td>
-          <td>1.354e+01</td>
-          <td>4.585e+01</td>
-          <td>...</td>
-          <td>-425.599</td>
-          <td>-1993.954</td>
-          <td>47.327</td>
-          <td>3.247e+01</td>
-          <td>-323.378</td>
-          <td>448.541</td>
-          <td>6.979e+00</td>
-          <td>-2412.292</td>
-          <td>1.480e+01</td>
-          <td>-8.227e+02</td>
-        </tr>
-        <tr>
-          <th>o22</th>
-          <td>6.557e+00</td>
-          <td>-4.629e+00</td>
-          <td>4.801e+00</td>
-          <td>2.087e+01</td>
-          <td>3.496e+00</td>
-          <td>1.554e+01</td>
-          <td>1.074e-01</td>
-          <td>-2.818e+01</td>
-          <td>-4.939e+01</td>
-          <td>9.572e+01</td>
-          <td>...</td>
-          <td>-3005.632</td>
-          <td>-11119.231</td>
-          <td>-2199.244</td>
-          <td>2.941e+02</td>
-          <td>-2065.655</td>
-          <td>247.226</td>
-          <td>5.135e+01</td>
-          <td>-2837.432</td>
-          <td>-5.370e+01</td>
-          <td>-1.575e+03</td>
-        </tr>
-        <tr>
-          <th>t12</th>
-          <td>-1.886e+00</td>
-          <td>-1.131e+00</td>
-          <td>3.222e+01</td>
-          <td>1.275e+01</td>
-          <td>-8.624e-01</td>
-          <td>9.888e+00</td>
-          <td>-8.006e-02</td>
-          <td>1.433e+00</td>
-          <td>5.468e+00</td>
-          <td>-1.399e+02</td>
-          <td>...</td>
-          <td>2111.848</td>
-          <td>6675.612</td>
-          <td>1038.234</td>
-          <td>-1.835e+02</td>
-          <td>1116.382</td>
-          <td>-660.964</td>
-          <td>-1.702e+01</td>
-          <td>4384.203</td>
-          <td>1.054e+01</td>
-          <td>1.819e+03</td>
-        </tr>
-        <tr>
-          <th>t1z</th>
-          <td>0.000e+00</td>
-          <td>-0.000e+00</td>
-          <td>0.000e+00</td>
-          <td>0.000e+00</td>
-          <td>0.000e+00</td>
-          <td>0.000e+00</td>
-          <td>0.000e+00</td>
-          <td>-0.000e+00</td>
-          <td>-0.000e+00</td>
-          <td>-0.000e+00</td>
-          <td>...</td>
-          <td>-0.000</td>
-          <td>0.000</td>
-          <td>-0.000</td>
-          <td>0.000e+00</td>
-          <td>0.000</td>
-          <td>-0.000</td>
-          <td>0.000e+00</td>
-          <td>0.000</td>
-          <td>-0.000e+00</td>
-          <td>0.000e+00</td>
-        </tr>
-        <tr>
-          <th>t2z</th>
-          <td>-0.000e+00</td>
-          <td>0.000e+00</td>
-          <td>-0.000e+00</td>
-          <td>-0.000e+00</td>
-          <td>-0.000e+00</td>
-          <td>-0.000e+00</td>
-          <td>-0.000e+00</td>
-          <td>0.000e+00</td>
-          <td>0.000e+00</td>
-          <td>0.000e+00</td>
-          <td>...</td>
-          <td>-0.000</td>
-          <td>0.000</td>
-          <td>0.000</td>
-          <td>-0.000e+00</td>
-          <td>0.000</td>
-          <td>0.000</td>
-          <td>-0.000e+00</td>
-          <td>-0.000</td>
-          <td>0.000e+00</td>
-          <td>-0.000e+00</td>
-        </tr>
-        <tr>
-          <th>angle</th>
-          <td>-7.483e+01</td>
-          <td>-8.659e+00</td>
-          <td>6.047e+01</td>
-          <td>6.806e+01</td>
-          <td>-8.208e+01</td>
-          <td>6.836e+01</td>
-          <td>-5.603e+01</td>
-          <td>2.175e+00</td>
-          <td>4.929e+00</td>
-          <td>-5.005e+01</td>
-          <td>...</td>
-          <td>29.291</td>
-          <td>27.824</td>
-          <td>21.373</td>
-          <td>-6.274e+01</td>
-          <td>26.017</td>
-          <td>-40.671</td>
-          <td>-7.125e+01</td>
-          <td>43.612</td>
-          <td>8.554e+00</td>
-          <td>3.916e+01</td>
-        </tr>
-        <tr>
-          <th>major</th>
-          <td>7.068e+00</td>
-          <td>2.798e+00</td>
-          <td>2.306e+01</td>
-          <td>2.601e+01</td>
-          <td>3.616e+00</td>
-          <td>1.946e+01</td>
-          <td>1.614e-01</td>
-          <td>9.558e+00</td>
-          <td>1.401e+01</td>
-          <td>2.129e+02</td>
-          <td>...</td>
-          <td>759.065</td>
-          <td>1529.288</td>
-          <td>453.650</td>
-          <td>3.886e+02</td>
-          <td>221.531</td>
-          <td>1016.469</td>
-          <td>5.713e+01</td>
-          <td>1764.491</td>
-          <td>1.639e+01</td>
-          <td>6.591e+02</td>
-        </tr>
-        <tr>
-          <th>minor</th>
-          <td>-3.976e-01</td>
-          <td>-4.801e+00</td>
-          <td>-5.207e+01</td>
-          <td>-1.079e+01</td>
-          <td>-2.700e+00</td>
-          <td>-9.384e+00</td>
-          <td>-1.139e-02</td>
-          <td>-2.824e+01</td>
-          <td>-4.986e+01</td>
-          <td>-7.134e+01</td>
-          <td>...</td>
-          <td>-4190.296</td>
-          <td>-14642.474</td>
-          <td>-2605.566</td>
-          <td>-6.205e+01</td>
-          <td>-2610.564</td>
-          <td>-320.701</td>
-          <td>1.200e+00</td>
-          <td>-7014.215</td>
-          <td>-5.529e+01</td>
-          <td>-3.056e+03</td>
-        </tr>
-        <tr>
-          <th>max_shear</th>
-          <td>3.733e+00</td>
-          <td>3.800e+00</td>
-          <td>3.756e+01</td>
-          <td>1.840e+01</td>
-          <td>3.158e+00</td>
-          <td>1.442e+01</td>
-          <td>8.639e-02</td>
-          <td>1.890e+01</td>
-          <td>3.194e+01</td>
-          <td>1.421e+02</td>
-          <td>...</td>
-          <td>2474.681</td>
-          <td>8085.881</td>
-          <td>1529.608</td>
-          <td>2.253e+02</td>
-          <td>1416.047</td>
-          <td>668.585</td>
-          <td>2.796e+01</td>
-          <td>4389.354</td>
-          <td>3.584e+01</td>
-          <td>1.858e+03</td>
-        </tr>
-      </tbody>
-    </table>
-    <p>20088 rows × 33 columns</p>
-    </div>
-
-
-
 .. code:: ipython3
 
     ctria3_composite_stress
-
-
-
-
-.. raw:: html
-
-    <div>
-    <style scoped>
-        .dataframe tbody tr th:only-of-type {
-            vertical-align: middle;
-        }
-    
-        .dataframe tbody tr th {
-            vertical-align: top;
-        }
-    
-        .dataframe thead tr th {
-            text-align: left;
-        }
-    
-        .dataframe thead tr:last-of-type th {
-            text-align: right;
-        }
-    </style>
-    <table border="1" class="dataframe">
-      <thead>
-        <tr>
-          <th></th>
-          <th></th>
-          <th>Mode</th>
-          <th>1</th>
-          <th>2</th>
-          <th>3</th>
-          <th>4</th>
-          <th>5</th>
-          <th>6</th>
-          <th>7</th>
-          <th>8</th>
-          <th>9</th>
-          <th>10</th>
-          <th>...</th>
-          <th>24</th>
-          <th>25</th>
-          <th>26</th>
-          <th>27</th>
-          <th>28</th>
-          <th>29</th>
-          <th>30</th>
-          <th>31</th>
-          <th>32</th>
-          <th>33</th>
-        </tr>
-        <tr>
-          <th></th>
-          <th></th>
-          <th>Freq</th>
-          <th>8.359</th>
-          <th>9.508</th>
-          <th>15.666</th>
-          <th>20.237</th>
-          <th>20.306</th>
-          <th>20.555</th>
-          <th>21.500</th>
-          <th>21.706</th>
-          <th>21.725</th>
-          <th>28.536</th>
-          <th>...</th>
-          <th>80.076</th>
-          <th>86.487</th>
-          <th>88.168</th>
-          <th>88.477</th>
-          <th>89.923</th>
-          <th>94.290</th>
-          <th>94.368</th>
-          <th>96.044</th>
-          <th>98.702</th>
-          <th>98.893</th>
-        </tr>
-        <tr>
-          <th></th>
-          <th></th>
-          <th>Eigenvalue</th>
-          <th>2758.149</th>
-          <th>3568.632</th>
-          <th>9689.306</th>
-          <th>16168.100</th>
-          <th>16278.223</th>
-          <th>16679.709</th>
-          <th>18248.434</th>
-          <th>18600.697</th>
-          <th>18632.551</th>
-          <th>32147.814</th>
-          <th>...</th>
-          <th>253140.875</th>
-          <th>295297.750</th>
-          <th>306885.906</th>
-          <th>309040.656</th>
-          <th>319227.719</th>
-          <th>350984.500</th>
-          <th>351566.188</th>
-          <th>364166.156</th>
-          <th>384601.344</th>
-          <th>386090.438</th>
-        </tr>
-        <tr>
-          <th></th>
-          <th></th>
-          <th>Radians</th>
-          <th>52.518</th>
-          <th>59.738</th>
-          <th>98.434</th>
-          <th>127.154</th>
-          <th>127.586</th>
-          <th>129.150</th>
-          <th>135.087</th>
-          <th>136.384</th>
-          <th>136.501</th>
-          <th>179.298</th>
-          <th>...</th>
-          <th>503.131</th>
-          <th>543.413</th>
-          <th>553.973</th>
-          <th>555.914</th>
-          <th>565.002</th>
-          <th>592.439</th>
-          <th>592.930</th>
-          <th>603.462</th>
-          <th>620.162</th>
-          <th>621.362</th>
-        </tr>
-        <tr>
-          <th>ElementID</th>
-          <th>Layer</th>
-          <th>Item</th>
-          <th></th>
-          <th></th>
-          <th></th>
-          <th></th>
-          <th></th>
-          <th></th>
-          <th></th>
-          <th></th>
-          <th></th>
-          <th></th>
-          <th></th>
-          <th></th>
-          <th></th>
-          <th></th>
-          <th></th>
-          <th></th>
-          <th></th>
-          <th></th>
-          <th></th>
-          <th></th>
-          <th></th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <th rowspan="27" valign="top">3730</th>
-          <th rowspan="9" valign="top">1</th>
-          <th>o11</th>
-          <td>7.472e+00</td>
-          <td>-1.610e+01</td>
-          <td>1.216e+02</td>
-          <td>5.521e+01</td>
-          <td>-2.491e+01</td>
-          <td>1.036e+01</td>
-          <td>3.006e-01</td>
-          <td>-4.967e+01</td>
-          <td>-8.549e+01</td>
-          <td>9.623e+01</td>
-          <td>...</td>
-          <td>-2428.613</td>
-          <td>3445.647</td>
-          <td>94.165</td>
-          <td>-2.467e+02</td>
-          <td>2.212e+01</td>
-          <td>1032.241</td>
-          <td>3.127e+01</td>
-          <td>-6045.866</td>
-          <td>1.999e+01</td>
-          <td>-1780.650</td>
-        </tr>
-        <tr>
-          <th>o22</th>
-          <td>2.065e+00</td>
-          <td>3.429e+00</td>
-          <td>1.118e+01</td>
-          <td>7.541e+01</td>
-          <td>-1.917e+01</td>
-          <td>3.913e+01</td>
-          <td>4.003e-01</td>
-          <td>3.389e+01</td>
-          <td>2.287e+01</td>
-          <td>-2.450e+01</td>
-          <td>...</td>
-          <td>-809.614</td>
-          <td>1612.271</td>
-          <td>-612.437</td>
-          <td>4.699e+02</td>
-          <td>6.439e+01</td>
-          <td>-225.460</td>
-          <td>-5.340e+01</td>
-          <td>955.208</td>
-          <td>-3.297e+01</td>
-          <td>-113.679</td>
-        </tr>
-        <tr>
-          <th>t12</th>
-          <td>2.229e+00</td>
-          <td>-4.995e+00</td>
-          <td>4.908e+01</td>
-          <td>2.082e+01</td>
-          <td>1.760e+01</td>
-          <td>3.814e+01</td>
-          <td>2.057e-01</td>
-          <td>-1.904e+01</td>
-          <td>-3.857e+01</td>
-          <td>-1.401e+02</td>
-          <td>...</td>
-          <td>2111.900</td>
-          <td>-1254.861</td>
-          <td>174.220</td>
-          <td>4.577e-02</td>
-          <td>2.268e+00</td>
-          <td>-777.952</td>
-          <td>-7.980e+00</td>
-          <td>4676.300</td>
-          <td>-3.000e+01</td>
-          <td>1139.945</td>
-        </tr>
-        <tr>
-          <th>t1z</th>
-          <td>2.330e-02</td>
-          <td>8.382e-02</td>
-          <td>-4.502e-01</td>
-          <td>2.978e-01</td>
-          <td>4.295e-02</td>
-          <td>3.173e-01</td>
-          <td>-2.942e-03</td>
-          <td>2.667e-01</td>
-          <td>5.215e-01</td>
-          <td>-1.673e+00</td>
-          <td>...</td>
-          <td>13.159</td>
-          <td>-5.358</td>
-          <td>4.254</td>
-          <td>-1.977e+00</td>
-          <td>-1.060e+00</td>
-          <td>-1.035</td>
-          <td>7.896e-01</td>
-          <td>12.939</td>
-          <td>1.219e-01</td>
-          <td>4.886</td>
-        </tr>
-        <tr>
-          <th>t2z</th>
-          <td>-6.477e-03</td>
-          <td>-4.634e-02</td>
-          <td>1.410e-01</td>
-          <td>-2.788e-01</td>
-          <td>9.807e-02</td>
-          <td>-9.623e-02</td>
-          <td>-4.129e-04</td>
-          <td>-2.479e-01</td>
-          <td>-3.383e-01</td>
-          <td>-1.465e-01</td>
-          <td>...</td>
-          <td>8.970</td>
-          <td>-14.149</td>
-          <td>1.106</td>
-          <td>-1.944e+00</td>
-          <td>-2.206e-01</td>
-          <td>-2.741</td>
-          <td>3.766e-01</td>
-          <td>15.930</td>
-          <td>3.505e-02</td>
-          <td>5.875</td>
-        </tr>
-        <tr>
-          <th>angle</th>
-          <td>1.975e+01</td>
-          <td>-7.645e+01</td>
-          <td>2.082e+01</td>
-          <td>5.794e+01</td>
-          <td>4.963e+01</td>
-          <td>5.533e+01</td>
-          <td>5.181e+01</td>
-          <td>-7.775e+01</td>
-          <td>-7.228e+01</td>
-          <td>-3.335e+01</td>
-          <td>...</td>
-          <td>55.486</td>
-          <td>-26.926</td>
-          <td>13.124</td>
-          <td>9.000e+01</td>
-          <td>8.694e+01</td>
-          <td>-25.525</td>
-          <td>-5.338e+00</td>
-          <td>63.409</td>
-          <td>-2.428e+01</td>
-          <td>63.086</td>
-        </tr>
-        <tr>
-          <th>major</th>
-          <td>8.272e+00</td>
-          <td>4.632e+00</td>
-          <td>1.402e+02</td>
-          <td>8.845e+01</td>
-          <td>-4.213e+00</td>
-          <td>6.550e+01</td>
-          <td>5.621e-01</td>
-          <td>3.803e+01</td>
-          <td>3.520e+01</td>
-          <td>1.884e+02</td>
-          <td>...</td>
-          <td>642.614</td>
-          <td>4082.984</td>
-          <td>134.786</td>
-          <td>4.699e+02</td>
-          <td>6.451e+01</td>
-          <td>1403.721</td>
-          <td>3.202e+01</td>
-          <td>3296.036</td>
-          <td>3.352e+01</td>
-          <td>464.987</td>
-        </tr>
-        <tr>
-          <th>minor</th>
-          <td>1.265e+00</td>
-          <td>-1.731e+01</td>
-          <td>-7.488e+00</td>
-          <td>4.217e+01</td>
-          <td>-3.987e+01</td>
-          <td>-1.602e+01</td>
-          <td>1.388e-01</td>
-          <td>-5.381e+01</td>
-          <td>-9.781e+01</td>
-          <td>-1.167e+02</td>
-          <td>...</td>
-          <td>-3880.840</td>
-          <td>974.934</td>
-          <td>-653.058</td>
-          <td>-2.467e+02</td>
-          <td>2.200e+01</td>
-          <td>-596.941</td>
-          <td>-5.415e+01</td>
-          <td>-8386.694</td>
-          <td>-4.651e+01</td>
-          <td>-2359.316</td>
-        </tr>
-        <tr>
-          <th>max_shear</th>
-          <td>3.504e+00</td>
-          <td>1.097e+01</td>
-          <td>7.386e+01</td>
-          <td>2.314e+01</td>
-          <td>1.783e+01</td>
-          <td>4.076e+01</td>
-          <td>2.117e-01</td>
-          <td>4.592e+01</td>
-          <td>6.651e+01</td>
-          <td>1.526e+02</td>
-          <td>...</td>
-          <td>2261.727</td>
-          <td>1554.025</td>
-          <td>393.922</td>
-          <td>3.583e+02</td>
-          <td>2.126e+01</td>
-          <td>1000.331</td>
-          <td>4.308e+01</td>
-          <td>5841.365</td>
-          <td>4.001e+01</td>
-          <td>1412.151</td>
-        </tr>
-        <tr>
-          <th rowspan="9" valign="top">2</th>
-          <th>o11</th>
-          <td>7.033e-05</td>
-          <td>-1.017e-04</td>
-          <td>7.746e-04</td>
-          <td>5.159e-04</td>
-          <td>-2.031e-04</td>
-          <td>1.524e-04</td>
-          <td>1.747e-07</td>
-          <td>-3.528e-04</td>
-          <td>-5.120e-04</td>
-          <td>2.407e-05</td>
-          <td>...</td>
-          <td>-0.014</td>
-          <td>0.022</td>
-          <td>0.003</td>
-          <td>-4.381e-03</td>
-          <td>-9.001e-04</td>
-          <td>0.008</td>
-          <td>9.453e-04</td>
-          <td>-0.044</td>
-          <td>4.002e-04</td>
-          <td>-0.011</td>
-        </tr>
-        <tr>
-          <th>o22</th>
-          <td>1.753e-06</td>
-          <td>-9.580e-06</td>
-          <td>1.200e-04</td>
-          <td>3.199e-04</td>
-          <td>-1.704e-05</td>
-          <td>2.455e-04</td>
-          <td>2.747e-06</td>
-          <td>4.406e-05</td>
-          <td>-1.355e-04</td>
-          <td>-6.819e-04</td>
-          <td>...</td>
-          <td>0.008</td>
-          <td>-0.010</td>
-          <td>-0.003</td>
-          <td>3.266e-03</td>
-          <td>1.971e-04</td>
-          <td>-0.006</td>
-          <td>-5.314e-04</td>
-          <td>0.034</td>
-          <td>-6.362e-04</td>
-          <td>0.007</td>
-        </tr>
-        <tr>
-          <th>t12</th>
-          <td>4.477e-05</td>
-          <td>-4.989e-05</td>
-          <td>8.313e-04</td>
-          <td>9.549e-04</td>
-          <td>1.880e-04</td>
-          <td>9.923e-04</td>
-          <td>4.721e-06</td>
-          <td>-1.229e-04</td>
-          <td>-4.954e-04</td>
-          <td>-3.623e-03</td>
-          <td>...</td>
-          <td>0.042</td>
-          <td>-0.025</td>
-          <td>-0.001</td>
-          <td>2.545e-03</td>
-          <td>-1.918e-04</td>
-          <td>-0.020</td>
-          <td>-4.725e-04</td>
-          <td>0.116</td>
-          <td>-7.895e-04</td>
-          <td>0.028</td>
-        </tr>
-        <tr>
-          <th>t1z</th>
-          <td>2.330e-02</td>
-          <td>8.382e-02</td>
-          <td>-4.502e-01</td>
-          <td>2.978e-01</td>
-          <td>4.295e-02</td>
-          <td>3.173e-01</td>
-          <td>-2.942e-03</td>
-          <td>2.667e-01</td>
-          <td>5.215e-01</td>
-          <td>-1.673e+00</td>
-          <td>...</td>
-          <td>13.159</td>
-          <td>-5.358</td>
-          <td>4.254</td>
-          <td>-1.977e+00</td>
-          <td>-1.060e+00</td>
-          <td>-1.035</td>
-          <td>7.896e-01</td>
-          <td>12.939</td>
-          <td>1.219e-01</td>
-          <td>4.886</td>
-        </tr>
-        <tr>
-          <th>t2z</th>
-          <td>-6.477e-03</td>
-          <td>-4.634e-02</td>
-          <td>1.410e-01</td>
-          <td>-2.788e-01</td>
-          <td>9.807e-02</td>
-          <td>-9.623e-02</td>
-          <td>-4.129e-04</td>
-          <td>-2.479e-01</td>
-          <td>-3.383e-01</td>
-          <td>-1.465e-01</td>
-          <td>...</td>
-          <td>8.970</td>
-          <td>-14.149</td>
-          <td>1.106</td>
-          <td>-1.944e+00</td>
-          <td>-2.206e-01</td>
-          <td>-2.741</td>
-          <td>3.766e-01</td>
-          <td>15.930</td>
-          <td>3.505e-02</td>
-          <td>5.875</td>
-        </tr>
-        <tr>
-          <th>angle</th>
-          <td>2.628e+01</td>
-          <td>-6.637e+01</td>
-          <td>3.425e+01</td>
-          <td>4.207e+01</td>
-          <td>5.817e+01</td>
-          <td>4.634e+01</td>
-          <td>5.262e+01</td>
-          <td>-7.411e+01</td>
-          <td>-5.540e+01</td>
-          <td>-4.222e+01</td>
-          <td>...</td>
-          <td>52.217</td>
-          <td>-28.572</td>
-          <td>-10.209</td>
-          <td>7.318e+01</td>
-          <td>-8.037e+01</td>
-          <td>-35.071</td>
-          <td>-1.631e+01</td>
-          <td>54.276</td>
-          <td>-2.836e+01</td>
-          <td>54.414</td>
-        </tr>
-        <tr>
-          <th>major</th>
-          <td>9.243e-05</td>
-          <td>1.225e-05</td>
-          <td>1.341e-03</td>
-          <td>1.378e-03</td>
-          <td>9.965e-05</td>
-          <td>1.192e-03</td>
-          <td>6.354e-06</td>
-          <td>7.903e-05</td>
-          <td>2.062e-04</td>
-          <td>3.312e-03</td>
-          <td>...</td>
-          <td>0.040</td>
-          <td>0.036</td>
-          <td>0.003</td>
-          <td>4.035e-03</td>
-          <td>2.297e-04</td>
-          <td>0.022</td>
-          <td>1.084e-03</td>
-          <td>0.118</td>
-          <td>8.264e-04</td>
-          <td>0.027</td>
-        </tr>
-        <tr>
-          <th>minor</th>
-          <td>-2.035e-05</td>
-          <td>-1.236e-04</td>
-          <td>-4.461e-04</td>
-          <td>-5.420e-04</td>
-          <td>-3.198e-04</td>
-          <td>-7.945e-04</td>
-          <td>-3.432e-06</td>
-          <td>-3.878e-04</td>
-          <td>-8.538e-04</td>
-          <td>-3.969e-03</td>
-          <td>...</td>
-          <td>-0.046</td>
-          <td>-0.024</td>
-          <td>-0.004</td>
-          <td>-5.151e-03</td>
-          <td>-9.326e-04</td>
-          <td>-0.020</td>
-          <td>-6.696e-04</td>
-          <td>-0.128</td>
-          <td>-1.062e-03</td>
-          <td>-0.031</td>
-        </tr>
-        <tr>
-          <th>max_shear</th>
-          <td>5.639e-05</td>
-          <td>6.791e-05</td>
-          <td>8.934e-04</td>
-          <td>9.599e-04</td>
-          <td>2.097e-04</td>
-          <td>9.934e-04</td>
-          <td>4.893e-06</td>
-          <td>2.334e-04</td>
-          <td>5.300e-04</td>
-          <td>3.641e-03</td>
-          <td>...</td>
-          <td>0.043</td>
-          <td>0.030</td>
-          <td>0.003</td>
-          <td>4.593e-03</td>
-          <td>5.812e-04</td>
-          <td>0.021</td>
-          <td>8.766e-04</td>
-          <td>0.123</td>
-          <td>9.444e-04</td>
-          <td>0.029</td>
-        </tr>
-        <tr>
-          <th rowspan="9" valign="top">3</th>
-          <th>o11</th>
-          <td>8.802e+00</td>
-          <td>-7.829e+00</td>
-          <td>6.322e+01</td>
-          <td>8.098e+01</td>
-          <td>-2.276e+01</td>
-          <td>3.813e+01</td>
-          <td>-1.101e-01</td>
-          <td>-2.908e+01</td>
-          <td>-3.972e+01</td>
-          <td>-1.280e+02</td>
-          <td>...</td>
-          <td>-324.222</td>
-          <td>1146.779</td>
-          <td>376.124</td>
-          <td>-5.825e+02</td>
-          <td>-2.184e+02</td>
-          <td>475.126</td>
-          <td>1.571e+02</td>
-          <td>-2255.779</td>
-          <td>3.727e+01</td>
-          <td>-413.845</td>
-        </tr>
-        <tr>
-          <th>o22</th>
-          <td>2.186e+00</td>
-          <td>-1.120e+01</td>
-          <td>5.881e+01</td>
-          <td>2.642e+01</td>
-          <td>4.139e+00</td>
-          <td>2.568e+01</td>
-          <td>2.413e-01</td>
-          <td>-4.306e+01</td>
-          <td>-8.207e+01</td>
-          <td>-1.311e+02</td>
-          <td>...</td>
-          <td>1823.941</td>
-          <td>-2741.139</td>
-          <td>-27.261</td>
-          <td>4.170e+01</td>
-          <td>-6.829e+01</td>
-          <td>-793.626</td>
-          <td>-1.712e+01</td>
-          <td>4439.032</td>
-          <td>-9.149e+01</td>
-          <td>1209.300</td>
-        </tr>
-        <tr>
-          <th>t12</th>
-          <td>1.340e+00</td>
-          <td>1.020e+00</td>
-          <td>1.717e+01</td>
-          <td>5.529e+01</td>
-          <td>-2.615e+00</td>
-          <td>4.095e+01</td>
-          <td>1.705e-01</td>
-          <td>9.250e+00</td>
-          <td>-9.189e-01</td>
-          <td>-1.487e+02</td>
-          <td>...</td>
-          <td>1214.594</td>
-          <td>-758.496</td>
-          <td>-268.132</td>
-          <td>2.028e+02</td>
-          <td>-1.755e+01</td>
-          <td>-811.876</td>
-          <td>-2.968e+01</td>
-          <td>4598.884</td>
-          <td>-3.293e+01</td>
-          <td>1052.994</td>
-        </tr>
-        <tr>
-          <th>t1z</th>
-          <td>-0.000e+00</td>
-          <td>-0.000e+00</td>
-          <td>0.000e+00</td>
-          <td>-0.000e+00</td>
-          <td>-0.000e+00</td>
-          <td>-0.000e+00</td>
-          <td>0.000e+00</td>
-          <td>-0.000e+00</td>
-          <td>-0.000e+00</td>
-          <td>0.000e+00</td>
-          <td>...</td>
-          <td>-0.000</td>
-          <td>0.000</td>
-          <td>-0.000</td>
-          <td>0.000e+00</td>
-          <td>0.000e+00</td>
-          <td>0.000</td>
-          <td>-0.000e+00</td>
-          <td>-0.000</td>
-          <td>-0.000e+00</td>
-          <td>-0.000</td>
-        </tr>
-        <tr>
-          <th>t2z</th>
-          <td>0.000e+00</td>
-          <td>0.000e+00</td>
-          <td>-0.000e+00</td>
-          <td>0.000e+00</td>
-          <td>-0.000e+00</td>
-          <td>0.000e+00</td>
-          <td>0.000e+00</td>
-          <td>0.000e+00</td>
-          <td>0.000e+00</td>
-          <td>0.000e+00</td>
-          <td>...</td>
-          <td>-0.000</td>
-          <td>0.000</td>
-          <td>-0.000</td>
-          <td>0.000e+00</td>
-          <td>0.000e+00</td>
-          <td>0.000</td>
-          <td>-0.000e+00</td>
-          <td>-0.000</td>
-          <td>-0.000e+00</td>
-          <td>-0.000</td>
-        </tr>
-        <tr>
-          <th>angle</th>
-          <td>1.102e+01</td>
-          <td>1.559e+01</td>
-          <td>4.134e+01</td>
-          <td>3.187e+01</td>
-          <td>-8.450e+01</td>
-          <td>4.068e+01</td>
-          <td>6.793e+01</td>
-          <td>2.647e+01</td>
-          <td>-1.242e+00</td>
-          <td>-4.471e+01</td>
-          <td>...</td>
-          <td>65.743</td>
-          <td>-10.657</td>
-          <td>-26.525</td>
-          <td>7.349e+01</td>
-          <td>-8.342e+01</td>
-          <td>-25.998</td>
-          <td>-9.406e+00</td>
-          <td>63.025</td>
-          <td>-1.354e+01</td>
-          <td>63.811</td>
-        </tr>
-        <tr>
-          <th>major</th>
-          <td>9.063e+00</td>
-          <td>-7.545e+00</td>
-          <td>7.833e+01</td>
-          <td>1.154e+02</td>
-          <td>4.391e+00</td>
-          <td>7.333e+01</td>
-          <td>3.104e-01</td>
-          <td>-2.448e+01</td>
-          <td>-3.970e+01</td>
-          <td>1.915e+01</td>
-          <td>...</td>
-          <td>2371.244</td>
-          <td>1289.514</td>
-          <td>509.952</td>
-          <td>1.018e+02</td>
-          <td>-6.627e+01</td>
-          <td>871.078</td>
-          <td>1.620e+02</td>
-          <td>6779.760</td>
-          <td>4.520e+01</td>
-          <td>1727.180</td>
-        </tr>
-        <tr>
-          <th>minor</th>
-          <td>1.925e+00</td>
-          <td>-1.148e+01</td>
-          <td>4.370e+01</td>
-          <td>-7.950e+00</td>
-          <td>-2.301e+01</td>
-          <td>-9.512e+00</td>
-          <td>-1.792e-01</td>
-          <td>-4.766e+01</td>
-          <td>-8.209e+01</td>
-          <td>-2.782e+02</td>
-          <td>...</td>
-          <td>-871.525</td>
-          <td>-2883.874</td>
-          <td>-161.090</td>
-          <td>-6.426e+02</td>
-          <td>-2.204e+02</td>
-          <td>-1189.578</td>
-          <td>-2.204e+01</td>
-          <td>-4596.507</td>
-          <td>-9.942e+01</td>
-          <td>-931.725</td>
-        </tr>
-        <tr>
-          <th>max_shear</th>
-          <td>3.569e+00</td>
-          <td>1.970e+00</td>
-          <td>1.732e+01</td>
-          <td>6.165e+01</td>
-          <td>1.370e+01</td>
-          <td>4.142e+01</td>
-          <td>2.448e-01</td>
-          <td>1.159e+01</td>
-          <td>2.119e+01</td>
-          <td>1.487e+02</td>
-          <td>...</td>
-          <td>1621.385</td>
-          <td>2086.694</td>
-          <td>335.521</td>
-          <td>3.722e+02</td>
-          <td>7.708e+01</td>
-          <td>1030.328</td>
-          <td>9.204e+01</td>
-          <td>5688.133</td>
-          <td>7.231e+01</td>
-          <td>1329.453</td>
-        </tr>
-        <tr>
-          <th rowspan="3" valign="top">3731</th>
-          <th rowspan="3" valign="top">1</th>
-          <th>o11</th>
-          <td>6.196e+00</td>
-          <td>-1.581e+01</td>
-          <td>5.625e+01</td>
-          <td>7.677e+01</td>
-          <td>-2.816e+01</td>
-          <td>1.863e+01</td>
-          <td>2.620e-01</td>
-          <td>-4.003e+01</td>
-          <td>-6.873e+01</td>
-          <td>-1.386e+01</td>
-          <td>...</td>
-          <td>51.722</td>
-          <td>4993.935</td>
-          <td>1034.907</td>
-          <td>6.985e+01</td>
-          <td>1.014e+02</td>
-          <td>939.095</td>
-          <td>8.015e+00</td>
-          <td>-4427.462</td>
-          <td>1.983e+01</td>
-          <td>-1108.960</td>
-        </tr>
-        <tr>
-          <th>o22</th>
-          <td>1.258e+00</td>
-          <td>-7.183e+00</td>
-          <td>9.891e+01</td>
-          <td>-7.885e+01</td>
-          <td>4.024e+01</td>
-          <td>-1.265e+01</td>
-          <td>4.995e-01</td>
-          <td>-3.012e+01</td>
-          <td>-4.179e+01</td>
-          <td>2.791e+02</td>
-          <td>...</td>
-          <td>-1282.336</td>
-          <td>1020.841</td>
-          <td>-525.215</td>
-          <td>1.765e+01</td>
-          <td>3.270e+01</td>
-          <td>39.471</td>
-          <td>2.495e+01</td>
-          <td>-714.833</td>
-          <td>6.607e+01</td>
-          <td>-729.907</td>
-        </tr>
-        <tr>
-          <th>t12</th>
-          <td>-3.101e+00</td>
-          <td>4.600e-01</td>
-          <td>-1.210e+01</td>
-          <td>-5.428e+01</td>
-          <td>4.700e+00</td>
-          <td>-3.678e+01</td>
-          <td>-2.200e-01</td>
-          <td>7.542e+00</td>
-          <td>2.433e+01</td>
-          <td>1.069e+02</td>
-          <td>...</td>
-          <td>-63.243</td>
-          <td>3751.585</td>
-          <td>800.291</td>
-          <td>-2.454e+02</td>
-          <td>3.349e+01</td>
-          <td>711.863</td>
-          <td>1.767e+01</td>
-          <td>-3598.268</td>
-          <td>7.265e+01</td>
-          <td>-709.457</td>
-        </tr>
-        <tr>
-          <th>...</th>
-          <th>...</th>
-          <th>...</th>
-          <td>...</td>
-          <td>...</td>
-          <td>...</td>
-          <td>...</td>
-          <td>...</td>
-          <td>...</td>
-          <td>...</td>
-          <td>...</td>
-          <td>...</td>
-          <td>...</td>
-          <td>...</td>
-          <td>...</td>
-          <td>...</td>
-          <td>...</td>
-          <td>...</td>
-          <td>...</td>
-          <td>...</td>
-          <td>...</td>
-          <td>...</td>
-          <td>...</td>
-          <td>...</td>
-        </tr>
-        <tr>
-          <th rowspan="3" valign="top">4538</th>
-          <th rowspan="3" valign="top">3</th>
-          <th>major</th>
-          <td>3.261e+00</td>
-          <td>6.140e+00</td>
-          <td>6.117e+01</td>
-          <td>5.213e+01</td>
-          <td>-1.178e+01</td>
-          <td>3.514e+01</td>
-          <td>2.577e-01</td>
-          <td>3.147e+01</td>
-          <td>4.842e+01</td>
-          <td>1.076e+02</td>
-          <td>...</td>
-          <td>2775.815</td>
-          <td>5157.465</td>
-          <td>1590.138</td>
-          <td>2.951e+02</td>
-          <td>5.161e+02</td>
-          <td>1321.848</td>
-          <td>4.539e+01</td>
-          <td>2978.174</td>
-          <td>5.803e+00</td>
-          <td>1377.184</td>
-        </tr>
-        <tr>
-          <th>minor</th>
-          <td>1.945e+00</td>
-          <td>-9.949e+00</td>
-          <td>-8.764e+01</td>
-          <td>1.414e+01</td>
-          <td>-1.885e+01</td>
-          <td>-4.231e+00</td>
-          <td>-1.124e-02</td>
-          <td>-3.851e+01</td>
-          <td>-7.956e+01</td>
-          <td>-1.932e+02</td>
-          <td>...</td>
-          <td>-975.253</td>
-          <td>-10130.497</td>
-          <td>-326.651</td>
-          <td>-1.455e+02</td>
-          <td>-1.653e+03</td>
-          <td>-382.948</td>
-          <td>-5.196e+01</td>
-          <td>-7206.313</td>
-          <td>-1.096e+02</td>
-          <td>-2564.618</td>
-        </tr>
-        <tr>
-          <th>max_shear</th>
-          <td>6.580e-01</td>
-          <td>8.044e+00</td>
-          <td>7.440e+01</td>
-          <td>1.899e+01</td>
-          <td>3.535e+00</td>
-          <td>1.969e+01</td>
-          <td>1.345e-01</td>
-          <td>3.499e+01</td>
-          <td>6.399e+01</td>
-          <td>1.504e+02</td>
-          <td>...</td>
-          <td>1875.534</td>
-          <td>7643.981</td>
-          <td>958.394</td>
-          <td>2.203e+02</td>
-          <td>1.085e+03</td>
-          <td>852.398</td>
-          <td>4.867e+01</td>
-          <td>5092.244</td>
-          <td>5.772e+01</td>
-          <td>1970.901</td>
-        </tr>
-        <tr>
-          <th rowspan="27" valign="top">4539</th>
-          <th rowspan="9" valign="top">1</th>
-          <th>o11</th>
-          <td>-1.092e+01</td>
-          <td>1.670e+01</td>
-          <td>-8.391e+01</td>
-          <td>-7.108e+01</td>
-          <td>-2.118e+01</td>
-          <td>-7.498e+01</td>
-          <td>2.821e-01</td>
-          <td>7.256e+01</td>
-          <td>8.984e+01</td>
-          <td>1.836e+02</td>
-          <td>...</td>
-          <td>-600.259</td>
-          <td>610.081</td>
-          <td>817.767</td>
-          <td>-5.488e+01</td>
-          <td>1.055e+03</td>
-          <td>1230.024</td>
-          <td>-6.172e+00</td>
-          <td>-6310.631</td>
-          <td>8.169e+01</td>
-          <td>-2023.389</td>
-        </tr>
-        <tr>
-          <th>o22</th>
-          <td>2.478e+00</td>
-          <td>-1.029e-01</td>
-          <td>2.695e+00</td>
-          <td>4.386e+01</td>
-          <td>-2.424e+00</td>
-          <td>3.185e+01</td>
-          <td>1.393e-02</td>
-          <td>3.562e+00</td>
-          <td>1.056e+01</td>
-          <td>-1.691e+02</td>
-          <td>...</td>
-          <td>969.637</td>
-          <td>5536.964</td>
-          <td>127.509</td>
-          <td>-1.611e+02</td>
-          <td>1.052e+03</td>
-          <td>-810.844</td>
-          <td>1.638e+01</td>
-          <td>4552.521</td>
-          <td>-6.186e+00</td>
-          <td>1531.135</td>
-        </tr>
-        <tr>
-          <th>t12</th>
-          <td>-1.778e+00</td>
-          <td>2.173e+00</td>
-          <td>-3.287e+00</td>
-          <td>-3.515e+01</td>
-          <td>-1.380e+00</td>
-          <td>-3.123e+01</td>
-          <td>7.862e-02</td>
-          <td>1.692e+00</td>
-          <td>-3.691e+00</td>
-          <td>1.795e+02</td>
-          <td>...</td>
-          <td>-2277.144</td>
-          <td>-5420.437</td>
-          <td>-1301.691</td>
-          <td>1.683e+02</td>
-          <td>-6.464e+02</td>
-          <td>393.289</td>
-          <td>-1.620e+00</td>
-          <td>-3227.981</td>
-          <td>-2.230e+01</td>
-          <td>-1506.269</td>
-        </tr>
-        <tr>
-          <th>t1z</th>
-          <td>-1.453e-01</td>
-          <td>1.053e-01</td>
-          <td>-1.052e-01</td>
-          <td>-1.149e+00</td>
-          <td>-6.031e-02</td>
-          <td>-9.531e-01</td>
-          <td>-1.400e-05</td>
-          <td>4.700e-01</td>
-          <td>6.529e-01</td>
-          <td>2.503e+00</td>
-          <td>...</td>
-          <td>1.069</td>
-          <td>61.705</td>
-          <td>10.774</td>
-          <td>-1.041e+00</td>
-          <td>1.710e+01</td>
-          <td>7.562</td>
-          <td>-7.779e-01</td>
-          <td>-37.517</td>
-          <td>6.498e-01</td>
-          <td>-10.591</td>
-        </tr>
-        <tr>
-          <th>t2z</th>
-          <td>-5.111e-02</td>
-          <td>4.426e-02</td>
-          <td>-2.532e-01</td>
-          <td>-4.412e-01</td>
-          <td>-3.177e-02</td>
-          <td>-3.711e-01</td>
-          <td>-2.781e-04</td>
-          <td>1.909e-01</td>
-          <td>2.893e-01</td>
-          <td>1.281e+00</td>
-          <td>...</td>
-          <td>0.983</td>
-          <td>0.126</td>
-          <td>6.611</td>
-          <td>-2.028e-02</td>
-          <td>-6.387e-01</td>
-          <td>6.399</td>
-          <td>-2.602e-01</td>
-          <td>-31.119</td>
-          <td>5.268e-01</td>
-          <td>-8.506</td>
-        </tr>
-        <tr>
-          <th>angle</th>
-          <td>-8.257e+01</td>
-          <td>7.253e+00</td>
-          <td>-8.783e+01</td>
-          <td>-7.428e+01</td>
-          <td>-8.582e+01</td>
-          <td>-7.484e+01</td>
-          <td>1.519e+01</td>
-          <td>1.404e+00</td>
-          <td>-2.660e+00</td>
-          <td>2.276e+01</td>
-          <td>...</td>
-          <td>-54.510</td>
-          <td>-57.220</td>
-          <td>-37.575</td>
-          <td>3.625e+01</td>
-          <td>-4.495e+01</td>
-          <td>10.539</td>
-          <td>-8.591e+01</td>
-          <td>-74.639</td>
-          <td>-1.346e+01</td>
-          <td>-69.859</td>
-        </tr>
-        <tr>
-          <th>major</th>
-          <td>2.710e+00</td>
-          <td>1.697e+01</td>
-          <td>2.819e+00</td>
-          <td>5.376e+01</td>
-          <td>-2.323e+00</td>
-          <td>4.031e+01</td>
-          <td>3.034e-01</td>
-          <td>7.261e+01</td>
-          <td>9.001e+01</td>
-          <td>2.590e+02</td>
-          <td>...</td>
-          <td>2593.325</td>
-          <td>9027.485</td>
-          <td>1819.306</td>
-          <td>6.855e+01</td>
-          <td>1.700e+03</td>
-          <td>1303.191</td>
-          <td>1.650e+01</td>
-          <td>5439.320</td>
-          <td>8.702e+01</td>
-          <td>2083.574</td>
-        </tr>
-        <tr>
-          <th>minor</th>
-          <td>-1.115e+01</td>
-          <td>-3.795e-01</td>
-          <td>-8.404e+01</td>
-          <td>-8.098e+01</td>
-          <td>-2.128e+01</td>
-          <td>-8.344e+01</td>
-          <td>-7.420e-03</td>
-          <td>3.521e+00</td>
-          <td>1.039e+01</td>
-          <td>-2.444e+02</td>
-          <td>...</td>
-          <td>-2223.947</td>
-          <td>-2880.441</td>
-          <td>-874.030</td>
-          <td>-2.845e+02</td>
-          <td>4.070e+02</td>
-          <td>-884.010</td>
-          <td>-6.288e+00</td>
-          <td>-7197.432</td>
-          <td>-1.152e+01</td>
-          <td>-2575.828</td>
-        </tr>
-        <tr>
-          <th>max_shear</th>
-          <td>6.931e+00</td>
-          <td>8.676e+00</td>
-          <td>4.343e+01</td>
-          <td>6.737e+01</td>
-          <td>9.478e+00</td>
-          <td>6.187e+01</td>
-          <td>1.554e-01</td>
-          <td>3.454e+01</td>
-          <td>3.981e+01</td>
-          <td>2.517e+02</td>
-          <td>...</td>
-          <td>2408.636</td>
-          <td>5953.963</td>
-          <td>1346.668</td>
-          <td>1.765e+02</td>
-          <td>6.464e+02</td>
-          <td>1093.601</td>
-          <td>1.139e+01</td>
-          <td>6318.376</td>
-          <td>4.927e+01</td>
-          <td>2329.701</td>
-        </tr>
-        <tr>
-          <th rowspan="9" valign="top">2</th>
-          <th>o11</th>
-          <td>-3.672e-05</td>
-          <td>9.724e-05</td>
-          <td>-6.725e-04</td>
-          <td>-1.638e-04</td>
-          <td>-1.670e-04</td>
-          <td>-2.885e-04</td>
-          <td>2.551e-06</td>
-          <td>4.220e-04</td>
-          <td>4.620e-04</td>
-          <td>7.791e-04</td>
-          <td>...</td>
-          <td>-0.007</td>
-          <td>-0.037</td>
-          <td>0.002</td>
-          <td>2.313e-04</td>
-          <td>-2.027e-03</td>
-          <td>0.009</td>
-          <td>3.497e-04</td>
-          <td>-0.046</td>
-          <td>5.453e-04</td>
-          <td>-0.015</td>
-        </tr>
-        <tr>
-          <th>o22</th>
-          <td>3.122e-06</td>
-          <td>1.117e-05</td>
-          <td>-1.270e-04</td>
-          <td>1.004e-04</td>
-          <td>6.427e-06</td>
-          <td>1.061e-04</td>
-          <td>-7.322e-07</td>
-          <td>5.735e-05</td>
-          <td>1.915e-04</td>
-          <td>-6.960e-04</td>
-          <td>...</td>
-          <td>0.011</td>
-          <td>0.048</td>
-          <td>0.007</td>
-          <td>-1.229e-03</td>
-          <td>8.021e-03</td>
-          <td>-0.002</td>
-          <td>-1.323e-04</td>
-          <td>0.016</td>
-          <td>1.140e-04</td>
-          <td>0.007</td>
-        </tr>
-        <tr>
-          <th>t12</th>
-          <td>-4.517e-05</td>
-          <td>7.143e-05</td>
-          <td>-4.378e-04</td>
-          <td>-9.846e-04</td>
-          <td>-2.529e-05</td>
-          <td>-8.287e-04</td>
-          <td>1.682e-06</td>
-          <td>9.339e-05</td>
-          <td>1.763e-05</td>
-          <td>5.004e-03</td>
-          <td>...</td>
-          <td>-0.059</td>
-          <td>-0.150</td>
-          <td>-0.031</td>
-          <td>4.357e-03</td>
-          <td>-1.933e-02</td>
-          <td>0.013</td>
-          <td>-8.495e-05</td>
-          <td>-0.098</td>
-          <td>-3.530e-04</td>
-          <td>-0.043</td>
-        </tr>
-        <tr>
-          <th>t1z</th>
-          <td>-1.453e-01</td>
-          <td>1.053e-01</td>
-          <td>-1.052e-01</td>
-          <td>-1.149e+00</td>
-          <td>-6.031e-02</td>
-          <td>-9.531e-01</td>
-          <td>-1.400e-05</td>
-          <td>4.700e-01</td>
-          <td>6.529e-01</td>
-          <td>2.503e+00</td>
-          <td>...</td>
-          <td>1.069</td>
-          <td>61.705</td>
-          <td>10.774</td>
-          <td>-1.041e+00</td>
-          <td>1.710e+01</td>
-          <td>7.562</td>
-          <td>-7.779e-01</td>
-          <td>-37.517</td>
-          <td>6.498e-01</td>
-          <td>-10.591</td>
-        </tr>
-        <tr>
-          <th>t2z</th>
-          <td>-5.111e-02</td>
-          <td>4.426e-02</td>
-          <td>-2.532e-01</td>
-          <td>-4.412e-01</td>
-          <td>-3.177e-02</td>
-          <td>-3.711e-01</td>
-          <td>-2.781e-04</td>
-          <td>1.909e-01</td>
-          <td>2.893e-01</td>
-          <td>1.281e+00</td>
-          <td>...</td>
-          <td>0.983</td>
-          <td>0.126</td>
-          <td>6.611</td>
-          <td>-2.028e-02</td>
-          <td>-6.387e-01</td>
-          <td>6.399</td>
-          <td>-2.602e-01</td>
-          <td>-31.119</td>
-          <td>5.268e-01</td>
-          <td>-8.506</td>
-        </tr>
-        <tr>
-          <th>angle</th>
-          <td>-5.690e+01</td>
-          <td>2.947e+01</td>
-          <td>-6.096e+01</td>
-          <td>-4.882e+01</td>
-          <td>-8.187e+01</td>
-          <td>-5.170e+01</td>
-          <td>2.284e+01</td>
-          <td>1.356e+01</td>
-          <td>3.712e+00</td>
-          <td>4.081e+01</td>
-          <td>...</td>
-          <td>-49.366</td>
-          <td>-52.901</td>
-          <td>-47.411</td>
-          <td>4.024e+01</td>
-          <td>-5.228e+01</td>
-          <td>33.998</td>
-          <td>-9.707e+00</td>
-          <td>-53.690</td>
-          <td>-2.929e+01</td>
-          <td>-52.241</td>
-        </tr>
-        <tr>
-          <th>major</th>
-          <td>3.256e-05</td>
-          <td>1.376e-04</td>
-          <td>1.160e-04</td>
-          <td>9.617e-04</td>
-          <td>1.004e-05</td>
-          <td>7.607e-04</td>
-          <td>3.260e-06</td>
-          <td>4.445e-04</td>
-          <td>4.631e-04</td>
-          <td>5.100e-03</td>
-          <td>...</td>
-          <td>0.061</td>
-          <td>0.161</td>
-          <td>0.035</td>
-          <td>3.919e-03</td>
-          <td>2.297e-02</td>
-          <td>0.018</td>
-          <td>3.643e-04</td>
-          <td>0.088</td>
-          <td>7.434e-04</td>
-          <td>0.040</td>
-        </tr>
-        <tr>
-          <th>minor</th>
-          <td>-6.616e-05</td>
-          <td>-2.919e-05</td>
-          <td>-9.155e-04</td>
-          <td>-1.025e-03</td>
-          <td>-1.706e-04</td>
-          <td>-9.431e-04</td>
-          <td>-1.441e-06</td>
-          <td>3.482e-05</td>
-          <td>1.903e-04</td>
-          <td>-5.016e-03</td>
-          <td>...</td>
-          <td>-0.058</td>
-          <td>-0.151</td>
-          <td>-0.027</td>
-          <td>-4.917e-03</td>
-          <td>-1.698e-02</td>
-          <td>-0.011</td>
-          <td>-1.468e-04</td>
-          <td>-0.118</td>
-          <td>-8.403e-05</td>
-          <td>-0.049</td>
-        </tr>
-        <tr>
-          <th>max_shear</th>
-          <td>4.936e-05</td>
-          <td>8.339e-05</td>
-          <td>5.158e-04</td>
-          <td>9.934e-04</td>
-          <td>9.033e-05</td>
-          <td>8.519e-04</td>
-          <td>2.350e-06</td>
-          <td>2.049e-04</td>
-          <td>1.364e-04</td>
-          <td>5.058e-03</td>
-          <td>...</td>
-          <td>0.059</td>
-          <td>0.156</td>
-          <td>0.031</td>
-          <td>4.418e-03</td>
-          <td>1.997e-02</td>
-          <td>0.014</td>
-          <td>2.556e-04</td>
-          <td>0.103</td>
-          <td>4.137e-04</td>
-          <td>0.044</td>
-        </tr>
-        <tr>
-          <th rowspan="9" valign="top">3</th>
-          <th>o11</th>
-          <td>2.643e+00</td>
-          <td>6.286e+00</td>
-          <td>-7.775e+01</td>
-          <td>3.889e+01</td>
-          <td>-1.689e+01</td>
-          <td>1.442e+01</td>
-          <td>2.649e-01</td>
-          <td>2.766e+01</td>
-          <td>2.692e+01</td>
-          <td>-4.249e+01</td>
-          <td>...</td>
-          <td>-516.939</td>
-          <td>-6597.678</td>
-          <td>-22.685</td>
-          <td>4.082e+01</td>
-          <td>-1.082e+03</td>
-          <td>662.532</td>
-          <td>7.939e+01</td>
-          <td>-3366.468</td>
-          <td>5.001e+01</td>
-          <td>-1120.458</td>
-        </tr>
-        <tr>
-          <th>o22</th>
-          <td>-3.769e+00</td>
-          <td>7.993e+00</td>
-          <td>-6.871e+01</td>
-          <td>-2.974e+01</td>
-          <td>-5.237e+00</td>
-          <td>-2.322e+01</td>
-          <td>-4.276e-02</td>
-          <td>3.272e+01</td>
-          <td>5.877e+01</td>
-          <td>5.160e+01</td>
-          <td>...</td>
-          <td>1065.680</td>
-          <td>3361.061</td>
-          <td>1581.236</td>
-          <td>-1.091e+02</td>
-          <td>6.821e+02</td>
-          <td>834.425</td>
-          <td>-2.769e+01</td>
-          <td>-3476.855</td>
-          <td>6.225e+01</td>
-          <td>-777.069</td>
-        </tr>
-        <tr>
-          <th>t12</th>
-          <td>-1.822e+00</td>
-          <td>3.519e+00</td>
-          <td>-3.160e+01</td>
-          <td>-4.333e+01</td>
-          <td>-6.356e-01</td>
-          <td>-3.482e+01</td>
-          <td>5.543e-02</td>
-          <td>5.751e+00</td>
-          <td>5.096e+00</td>
-          <td>2.193e+02</td>
-          <td>...</td>
-          <td>-2387.820</td>
-          <td>-6533.914</td>
-          <td>-1160.150</td>
-          <td>1.789e+02</td>
-          <td>-8.944e+02</td>
-          <td>657.872</td>
-          <td>-5.150e+00</td>
-          <td>-4580.141</td>
-          <td>-5.833e+00</td>
-          <td>-1923.501</td>
-        </tr>
-        <tr>
-          <th>t1z</th>
-          <td>0.000e+00</td>
-          <td>-0.000e+00</td>
-          <td>0.000e+00</td>
-          <td>0.000e+00</td>
-          <td>0.000e+00</td>
-          <td>0.000e+00</td>
-          <td>0.000e+00</td>
-          <td>-0.000e+00</td>
-          <td>-0.000e+00</td>
-          <td>-0.000e+00</td>
-          <td>...</td>
-          <td>-0.000</td>
-          <td>-0.000</td>
-          <td>-0.000</td>
-          <td>0.000e+00</td>
-          <td>-0.000e+00</td>
-          <td>-0.000</td>
-          <td>0.000e+00</td>
-          <td>0.000</td>
-          <td>-0.000e+00</td>
-          <td>0.000</td>
-        </tr>
-        <tr>
-          <th>t2z</th>
-          <td>0.000e+00</td>
-          <td>-0.000e+00</td>
-          <td>0.000e+00</td>
-          <td>0.000e+00</td>
-          <td>0.000e+00</td>
-          <td>0.000e+00</td>
-          <td>0.000e+00</td>
-          <td>-0.000e+00</td>
-          <td>-0.000e+00</td>
-          <td>-0.000e+00</td>
-          <td>...</td>
-          <td>-0.000</td>
-          <td>-0.000</td>
-          <td>-0.000</td>
-          <td>0.000e+00</td>
-          <td>0.000e+00</td>
-          <td>-0.000</td>
-          <td>0.000e+00</td>
-          <td>0.000</td>
-          <td>-0.000e+00</td>
-          <td>0.000</td>
-        </tr>
-        <tr>
-          <th>angle</th>
-          <td>-1.480e+01</td>
-          <td>5.182e+01</td>
-          <td>-4.907e+01</td>
-          <td>-2.581e+01</td>
-          <td>-8.689e+01</td>
-          <td>-3.081e+01</td>
-          <td>9.908e+00</td>
-          <td>5.688e+01</td>
-          <td>8.113e+01</td>
-          <td>5.105e+01</td>
-          <td>...</td>
-          <td>-54.167</td>
-          <td>-63.655</td>
-          <td>-62.327</td>
-          <td>3.364e+01</td>
-          <td>-6.730e+01</td>
-          <td>48.722</td>
-          <td>-2.747e+00</td>
-          <td>-44.655</td>
-          <td>-6.819e+01</td>
-          <td>-47.550</td>
-        </tr>
-        <tr>
-          <th>major</th>
-          <td>3.124e+00</td>
-          <td>1.076e+01</td>
-          <td>-4.131e+01</td>
-          <td>5.984e+01</td>
-          <td>-5.202e+00</td>
-          <td>3.518e+01</td>
-          <td>2.745e-01</td>
-          <td>3.648e+01</td>
-          <td>5.956e+01</td>
-          <td>2.288e+02</td>
-          <td>...</td>
-          <td>2789.894</td>
-          <td>6596.687</td>
-          <td>2189.626</td>
-          <td>1.599e+02</td>
-          <td>1.056e+03</td>
-          <td>1411.941</td>
-          <td>7.964e+01</td>
-          <td>1158.812</td>
-          <td>6.459e+01</td>
-          <td>982.385</td>
-        </tr>
-        <tr>
-          <th>minor</th>
-          <td>-4.251e+00</td>
-          <td>3.518e+00</td>
-          <td>-1.052e+02</td>
-          <td>-5.069e+01</td>
-          <td>-1.693e+01</td>
-          <td>-4.399e+01</td>
-          <td>-5.244e-02</td>
-          <td>2.391e+01</td>
-          <td>2.613e+01</td>
-          <td>-2.197e+02</td>
-          <td>...</td>
-          <td>-2241.153</td>
-          <td>-9833.304</td>
-          <td>-631.075</td>
-          <td>-2.281e+02</td>
-          <td>-1.456e+03</td>
-          <td>85.016</td>
-          <td>-2.793e+01</td>
-          <td>-8002.134</td>
-          <td>4.768e+01</td>
-          <td>-2879.912</td>
-        </tr>
-        <tr>
-          <th>max_shear</th>
-          <td>3.687e+00</td>
-          <td>3.621e+00</td>
-          <td>3.192e+01</td>
-          <td>5.527e+01</td>
-          <td>5.863e+00</td>
-          <td>3.958e+01</td>
-          <td>1.635e-01</td>
-          <td>6.284e+00</td>
-          <td>1.672e+01</td>
-          <td>2.243e+02</td>
-          <td>...</td>
-          <td>2515.523</td>
-          <td>8214.995</td>
-          <td>1410.350</td>
-          <td>1.940e+02</td>
-          <td>1.256e+03</td>
-          <td>663.463</td>
-          <td>5.378e+01</td>
-          <td>4580.473</td>
-          <td>8.456e+00</td>
-          <td>1931.148</td>
-        </tr>
-      </tbody>
-    </table>
-    <p>864 rows × 33 columns</p>
-    </div>
-
-
 
 .. code:: ipython3
 
@@ -16792,8 +4393,8 @@ Cycles, at the top.
         <tr>
           <th></th>
           <th></th>
+          <th></th>
           <th>Mode</th>
-          <th>Item</th>
           <th>1</th>
           <th>2</th>
           <th>3</th>
@@ -16803,6 +4404,7 @@ Cycles, at the top.
           <th>7</th>
           <th>8</th>
           <th>9</th>
+          <th>10</th>
           <th>...</th>
           <th>24</th>
           <th>25</th>
@@ -16818,85 +4420,89 @@ Cycles, at the top.
         <tr>
           <th></th>
           <th></th>
-          <th>Freq</th>
           <th></th>
-          <th>8.35851270500045</th>
-          <th>9.507602892871455</th>
-          <th>15.666300764341436</th>
-          <th>20.23716253374651</th>
-          <th>20.30596456170434</th>
-          <th>20.55485257248645</th>
-          <th>21.49972611068191</th>
-          <th>21.70624716254471</th>
-          <th>21.724825082335045</th>
+          <th>Freq</th>
+          <th>8.359</th>
+          <th>9.508</th>
+          <th>15.667</th>
+          <th>20.237</th>
+          <th>20.306</th>
+          <th>20.555</th>
+          <th>21.500</th>
+          <th>21.706</th>
+          <th>21.725</th>
+          <th>28.542</th>
           <th>...</th>
-          <th>80.07579703514831</th>
-          <th>86.4868740863594</th>
-          <th>88.16751565117606</th>
-          <th>88.47650123741167</th>
-          <th>89.9229257686733</th>
-          <th>94.28966669274277</th>
-          <th>94.36776759853447</th>
-          <th>96.0439300447073</th>
-          <th>98.70190395729915</th>
-          <th>98.89279564317114</th>
+          <th>80.076</th>
+          <th>86.487</th>
+          <th>88.168</th>
+          <th>88.477</th>
+          <th>89.928</th>
+          <th>94.290</th>
+          <th>94.368</th>
+          <th>96.044</th>
+          <th>98.702</th>
+          <th>98.893</th>
         </tr>
         <tr>
+          <th></th>
           <th></th>
           <th></th>
           <th>Eigenvalue</th>
-          <th></th>
-          <th>2758.149169921875</th>
-          <th>3568.63232421875</th>
-          <th>9689.3056640625</th>
-          <th>16168.099609375</th>
-          <th>16278.22265625</th>
-          <th>16679.708984375</th>
-          <th>18248.43359375</th>
-          <th>18600.697265625</th>
-          <th>18632.55078125</th>
+          <th>2758.149</th>
+          <th>3568.632</th>
+          <th>9689.982</th>
+          <th>16168.038</th>
+          <th>16278.158</th>
+          <th>16679.707</th>
+          <th>18248.432</th>
+          <th>18600.697</th>
+          <th>18632.551</th>
+          <th>32159.891</th>
           <th>...</th>
-          <th>253140.875</th>
-          <th>295297.75</th>
-          <th>306885.90625</th>
-          <th>309040.65625</th>
-          <th>319227.71875</th>
-          <th>350984.5</th>
-          <th>351566.1875</th>
-          <th>364166.15625</th>
-          <th>384601.34375</th>
-          <th>386090.4375</th>
+          <th>253141.172</th>
+          <th>295300.938</th>
+          <th>306886.000</th>
+          <th>309040.656</th>
+          <th>319267.094</th>
+          <th>350984.500</th>
+          <th>351566.188</th>
+          <th>364166.312</th>
+          <th>384601.344</th>
+          <th>386090.469</th>
         </tr>
         <tr>
           <th></th>
           <th></th>
-          <th>Radians</th>
           <th></th>
-          <th>52.518084217932724</th>
-          <th>59.73803080298806</th>
-          <th>98.43427078036643</th>
-          <th>127.15384229104127</th>
-          <th>127.58613818221008</th>
-          <th>129.14994767468937</th>
-          <th>135.08676320702187</th>
-          <th>136.3843732457095</th>
-          <th>136.5011017583741</th>
+          <th>Radians</th>
+          <th>52.518</th>
+          <th>59.738</th>
+          <th>98.438</th>
+          <th>127.154</th>
+          <th>127.586</th>
+          <th>129.150</th>
+          <th>135.087</th>
+          <th>136.384</th>
+          <th>136.501</th>
+          <th>179.332</th>
           <th>...</th>
-          <th>503.1310713919386</th>
-          <th>543.4130565233044</th>
-          <th>553.9728389099956</th>
-          <th>555.9142526055615</th>
-          <th>565.0024059683286</th>
-          <th>592.4394483827018</th>
-          <th>592.9301708464496</th>
-          <th>603.4618101006889</th>
-          <th>620.1623527351527</th>
-          <th>621.3617605710863</th>
+          <th>503.131</th>
+          <th>543.416</th>
+          <th>553.973</th>
+          <th>555.914</th>
+          <th>565.037</th>
+          <th>592.439</th>
+          <th>592.930</th>
+          <th>603.462</th>
+          <th>620.162</th>
+          <th>621.362</th>
         </tr>
         <tr>
           <th>ElementID</th>
           <th>NodeID</th>
           <th>Location</th>
+          <th>Item</th>
           <th></th>
           <th></th>
           <th></th>
@@ -16922,10 +4528,11 @@ Cycles, at the top.
       </thead>
       <tbody>
         <tr>
-          <th rowspan="30" valign="top">1</th>
-          <th rowspan="16" valign="top">CEN</th>
+          <th rowspan="5" valign="top">1</th>
+          <th rowspan="2" valign="top">CEN</th>
           <th>Top</th>
-          <td>fiber_distance</td>
+          <th>fiber_distance</th>
+          <td>4.000e-01</td>
           <td>4.000e-01</td>
           <td>4.000e-01</td>
           <td>4.000e-01</td>
@@ -16948,47 +4555,50 @@ Cycles, at the top.
           <td>4.000e-01</td>
         </tr>
         <tr>
-          <th>Top</th>
-          <td>exx</td>
+          <th>Bottom</th>
+          <th>exx</th>
           <td>9.675e-08</td>
-          <td>1.578e-07</td>
+          <td>-1.578e-07</td>
           <td>6.772e-06</td>
           <td>6.115e-07</td>
-          <td>-2.309e-07</td>
+          <td>2.307e-07</td>
           <td>1.944e-07</td>
           <td>3.318e-09</td>
           <td>4.211e-07</td>
           <td>1.681e-06</td>
+          <td>7.442e-06</td>
           <td>...</td>
-          <td>-6.305e-05</td>
+          <td>-6.304e-05</td>
           <td>1.074e-04</td>
           <td>-4.760e-05</td>
-          <td>-4.019e-07</td>
-          <td>-2.609e-05</td>
+          <td>-4.020e-07</td>
+          <td>-2.614e-05</td>
           <td>-2.689e-05</td>
-          <td>3.686e-07</td>
+          <td>3.688e-07</td>
           <td>1.068e-04</td>
           <td>2.783e-07</td>
           <td>5.147e-06</td>
         </tr>
         <tr>
+          <th rowspan="2" valign="top">1</th>
           <th>Top</th>
-          <td>eyy</td>
+          <th>eyy</th>
           <td>5.161e-08</td>
-          <td>1.089e-08</td>
-          <td>6.183e-08</td>
-          <td>-8.304e-09</td>
-          <td>3.513e-08</td>
+          <td>-1.089e-08</td>
+          <td>6.181e-08</td>
+          <td>-8.301e-09</td>
+          <td>-3.513e-08</td>
           <td>1.196e-07</td>
           <td>1.018e-09</td>
           <td>-1.247e-07</td>
           <td>1.516e-07</td>
+          <td>3.059e-07</td>
           <td>...</td>
-          <td>3.274e-06</td>
-          <td>-2.591e-06</td>
-          <td>5.127e-06</td>
+          <td>3.273e-06</td>
+          <td>-2.593e-06</td>
+          <td>5.126e-06</td>
           <td>1.653e-06</td>
-          <td>-2.941e-06</td>
+          <td>-2.940e-06</td>
           <td>3.773e-06</td>
           <td>-1.205e-07</td>
           <td>-1.604e-05</td>
@@ -16996,655 +4606,58 @@ Cycles, at the top.
           <td>-5.214e-06</td>
         </tr>
         <tr>
-          <th>Top</th>
-          <td>exy</td>
+          <th>Bottom</th>
+          <th>exy</th>
           <td>-3.044e-06</td>
-          <td>-5.503e-07</td>
+          <td>5.503e-07</td>
           <td>3.229e-05</td>
           <td>-1.690e-05</td>
-          <td>7.399e-06</td>
+          <td>-7.400e-06</td>
           <td>-5.353e-06</td>
           <td>2.535e-08</td>
           <td>1.432e-05</td>
           <td>-5.769e-06</td>
+          <td>-6.571e-06</td>
           <td>...</td>
-          <td>4.114e-04</td>
+          <td>4.124e-04</td>
           <td>1.075e-03</td>
           <td>4.885e-04</td>
           <td>2.041e-05</td>
-          <td>2.756e-06</td>
+          <td>2.237e-06</td>
           <td>3.887e-04</td>
-          <td>-1.549e-06</td>
+          <td>-1.548e-06</td>
           <td>-1.765e-03</td>
           <td>-6.380e-06</td>
           <td>-4.326e-04</td>
         </tr>
         <tr>
+          <th>2</th>
           <th>Top</th>
-          <td>angle</td>
+          <th>angle</th>
           <td>-4.458e+01</td>
-          <td>-3.753e+01</td>
+          <td>5.247e+01</td>
           <td>3.913e+01</td>
           <td>-4.395e+01</td>
-          <td>4.603e+01</td>
+          <td>-4.397e+01</td>
           <td>-4.460e+01</td>
           <td>4.241e+01</td>
           <td>4.391e+01</td>
           <td>-3.757e+01</td>
+          <td>-2.132e+01</td>
           <td>...</td>
-          <td>4.958e+01</td>
+          <td>4.957e+01</td>
           <td>4.208e+01</td>
           <td>4.808e+01</td>
           <td>4.788e+01</td>
-          <td>8.660e+01</td>
+          <td>8.725e+01</td>
           <td>4.726e+01</td>
-          <td>-3.624e+01</td>
+          <td>-3.623e+01</td>
           <td>-4.301e+01</td>
           <td>-4.169e+01</td>
           <td>-4.431e+01</td>
         </tr>
         <tr>
-          <th>Top</th>
-          <td>emax</td>
-          <td>1.596e-06</td>
-          <td>3.691e-07</td>
-          <td>1.991e-05</td>
-          <td>8.755e-06</td>
-          <td>3.604e-06</td>
-          <td>2.834e-06</td>
-          <td>1.490e-08</td>
-          <td>7.315e-06</td>
-          <td>3.901e-06</td>
-          <td>...</td>
-          <td>1.785e-04</td>
-          <td>5.929e-04</td>
-          <td>2.244e-04</td>
-          <td>1.088e-05</td>
-          <td>-2.859e-06</td>
-          <td>1.834e-04</td>
-          <td>9.361e-07</td>
-          <td>9.299e-04</td>
-          <td>3.119e-06</td>
-          <td>2.163e-04</td>
-        </tr>
-        <tr>
-          <th>Top</th>
-          <td>emin</td>
-          <td>-1.448e-06</td>
-          <td>-2.005e-07</td>
-          <td>-1.307e-05</td>
-          <td>-8.152e-06</td>
-          <td>-3.800e-06</td>
-          <td>-2.520e-06</td>
-          <td>-1.056e-08</td>
-          <td>-7.019e-06</td>
-          <td>-2.068e-06</td>
-          <td>...</td>
-          <td>-2.382e-04</td>
-          <td>-4.881e-04</td>
-          <td>-2.669e-04</td>
-          <td>-9.631e-06</td>
-          <td>-2.617e-05</td>
-          <td>-2.065e-04</td>
-          <td>-6.880e-07</td>
-          <td>-8.392e-04</td>
-          <td>-3.303e-06</td>
-          <td>-2.164e-04</td>
-        </tr>
-        <tr>
-          <th>Top</th>
-          <td>von_mises</td>
-          <td>1.758e-06</td>
-          <td>3.336e-07</td>
-          <td>1.917e-05</td>
-          <td>9.764e-06</td>
-          <td>4.275e-06</td>
-          <td>3.092e-06</td>
-          <td>1.477e-08</td>
-          <td>8.276e-06</td>
-          <td>3.500e-06</td>
-          <td>...</td>
-          <td>2.414e-04</td>
-          <td>6.251e-04</td>
-          <td>2.840e-04</td>
-          <td>1.185e-05</td>
-          <td>1.658e-05</td>
-          <td>2.252e-04</td>
-          <td>9.413e-07</td>
-          <td>1.022e-03</td>
-          <td>3.709e-06</td>
-          <td>2.498e-04</td>
-        </tr>
-        <tr>
-          <th>Bottom</th>
-          <td>fiber_distance</td>
-          <td>-4.000e-01</td>
-          <td>-4.000e-01</td>
-          <td>-4.000e-01</td>
-          <td>-4.000e-01</td>
-          <td>-4.000e-01</td>
-          <td>-4.000e-01</td>
-          <td>-4.000e-01</td>
-          <td>-4.000e-01</td>
-          <td>-4.000e-01</td>
-          <td>...</td>
-          <td>-4.000e-01</td>
-          <td>-4.000e-01</td>
-          <td>-4.000e-01</td>
-          <td>-4.000e-01</td>
-          <td>-4.000e-01</td>
-          <td>-4.000e-01</td>
-          <td>-4.000e-01</td>
-          <td>-4.000e-01</td>
-          <td>-4.000e-01</td>
-          <td>-4.000e-01</td>
-        </tr>
-        <tr>
-          <th>Bottom</th>
-          <td>exx</td>
-          <td>-4.690e-08</td>
-          <td>-1.886e-07</td>
-          <td>-6.544e-06</td>
-          <td>-2.487e-07</td>
-          <td>7.191e-07</td>
-          <td>-5.327e-08</td>
-          <td>-3.494e-09</td>
-          <td>-6.104e-07</td>
-          <td>-1.738e-06</td>
-          <td>...</td>
-          <td>6.227e-05</td>
-          <td>-6.713e-05</td>
-          <td>5.168e-05</td>
-          <td>4.903e-06</td>
-          <td>3.300e-05</td>
-          <td>2.812e-05</td>
-          <td>-1.166e-06</td>
-          <td>-1.114e-04</td>
-          <td>-6.623e-07</td>
-          <td>-5.337e-06</td>
-        </tr>
-        <tr>
-          <th>Bottom</th>
-          <td>eyy</td>
-          <td>2.079e-08</td>
-          <td>-6.933e-10</td>
-          <td>-3.890e-07</td>
-          <td>9.960e-08</td>
-          <td>3.486e-07</td>
-          <td>-4.112e-10</td>
-          <td>5.211e-10</td>
-          <td>-9.747e-08</td>
-          <td>-4.714e-08</td>
-          <td>...</td>
-          <td>-4.394e-06</td>
-          <td>-3.376e-06</td>
-          <td>-6.049e-06</td>
-          <td>1.583e-06</td>
-          <td>1.676e-06</td>
-          <td>-3.611e-06</td>
-          <td>-1.408e-07</td>
-          <td>1.325e-05</td>
-          <td>-3.678e-07</td>
-          <td>4.577e-06</td>
-        </tr>
-        <tr>
-          <th>Bottom</th>
-          <td>exy</td>
-          <td>-1.224e-06</td>
-          <td>5.025e-07</td>
-          <td>-3.991e-05</td>
-          <td>1.084e-05</td>
-          <td>-4.504e-06</td>
-          <td>1.221e-05</td>
-          <td>5.775e-09</td>
-          <td>6.848e-06</td>
-          <td>-2.579e-06</td>
-          <td>...</td>
-          <td>-3.306e-04</td>
-          <td>-8.398e-04</td>
-          <td>-4.682e-04</td>
-          <td>1.007e-04</td>
-          <td>5.846e-05</td>
-          <td>-3.523e-04</td>
-          <td>-1.846e-05</td>
-          <td>1.819e-03</td>
-          <td>-1.363e-05</td>
-          <td>3.041e-04</td>
-        </tr>
-        <tr>
-          <th>Bottom</th>
-          <td>angle</td>
-          <td>-4.658e+01</td>
-          <td>5.525e+01</td>
-          <td>-4.938e+01</td>
-          <td>4.592e+01</td>
-          <td>-4.265e+01</td>
-          <td>4.512e+01</td>
-          <td>6.240e+01</td>
-          <td>4.714e+01</td>
-          <td>-6.162e+01</td>
-          <td>...</td>
-          <td>-3.930e+01</td>
-          <td>-4.717e+01</td>
-          <td>-4.149e+01</td>
-          <td>4.406e+01</td>
-          <td>3.091e+01</td>
-          <td>-4.243e+01</td>
-          <td>-4.659e+01</td>
-          <td>4.696e+01</td>
-          <td>-4.562e+01</td>
-          <td>4.593e+01</td>
-        </tr>
-        <tr>
-          <th>Bottom</th>
-          <td>emax</td>
-          <td>6.000e-07</td>
-          <td>1.736e-07</td>
-          <td>1.673e-05</td>
-          <td>5.350e-06</td>
-          <td>2.793e-06</td>
-          <td>6.077e-06</td>
-          <td>2.030e-09</td>
-          <td>3.080e-06</td>
-          <td>6.493e-07</td>
-          <td>...</td>
-          <td>1.976e-04</td>
-          <td>3.859e-04</td>
-          <td>2.587e-04</td>
-          <td>5.362e-05</td>
-          <td>5.050e-05</td>
-          <td>1.891e-04</td>
-          <td>8.589e-06</td>
-          <td>8.627e-04</td>
-          <td>6.304e-06</td>
-          <td>1.517e-04</td>
-        </tr>
-        <tr>
-          <th>Bottom</th>
-          <td>emin</td>
-          <td>-6.261e-07</td>
-          <td>-3.629e-07</td>
-          <td>-2.366e-05</td>
-          <td>-5.499e-06</td>
-          <td>-1.726e-06</td>
-          <td>-6.130e-06</td>
-          <td>-5.003e-09</td>
-          <td>-3.788e-06</td>
-          <td>-2.434e-06</td>
-          <td>...</td>
-          <td>-1.397e-04</td>
-          <td>-4.564e-04</td>
-          <td>-2.131e-04</td>
-          <td>-4.713e-05</td>
-          <td>-1.582e-05</td>
-          <td>-1.646e-04</td>
-          <td>-9.896e-06</td>
-          <td>-9.608e-04</td>
-          <td>-7.334e-06</td>
-          <td>-1.525e-04</td>
-        </tr>
-        <tr>
-          <th>Bottom</th>
-          <td>von_mises</td>
-          <td>7.080e-07</td>
-          <td>3.161e-07</td>
-          <td>2.343e-05</td>
-          <td>6.264e-06</td>
-          <td>2.633e-06</td>
-          <td>7.048e-06</td>
-          <td>4.180e-09</td>
-          <td>3.972e-06</td>
-          <td>1.877e-06</td>
-          <td>...</td>
-          <td>1.957e-04</td>
-          <td>4.868e-04</td>
-          <td>2.728e-04</td>
-          <td>5.821e-05</td>
-          <td>4.000e-05</td>
-          <td>2.044e-04</td>
-          <td>1.068e-05</td>
-          <td>1.053e-03</td>
-          <td>7.881e-06</td>
-          <td>1.756e-04</td>
-        </tr>
-        <tr>
-          <th rowspan="14" valign="top">1</th>
-          <th>Top</th>
-          <td>fiber_distance</td>
-          <td>4.000e-01</td>
-          <td>4.000e-01</td>
-          <td>4.000e-01</td>
-          <td>4.000e-01</td>
-          <td>4.000e-01</td>
-          <td>4.000e-01</td>
-          <td>4.000e-01</td>
-          <td>4.000e-01</td>
-          <td>4.000e-01</td>
-          <td>...</td>
-          <td>4.000e-01</td>
-          <td>4.000e-01</td>
-          <td>4.000e-01</td>
-          <td>4.000e-01</td>
-          <td>4.000e-01</td>
-          <td>4.000e-01</td>
-          <td>4.000e-01</td>
-          <td>4.000e-01</td>
-          <td>4.000e-01</td>
-          <td>4.000e-01</td>
-        </tr>
-        <tr>
-          <th>Top</th>
-          <td>exx</td>
-          <td>4.346e-07</td>
-          <td>-3.794e-08</td>
-          <td>1.426e-06</td>
-          <td>8.503e-06</td>
-          <td>7.479e-07</td>
-          <td>3.163e-06</td>
-          <td>-4.920e-09</td>
-          <td>1.761e-08</td>
-          <td>-1.299e-08</td>
-          <td>...</td>
-          <td>-1.628e-05</td>
-          <td>2.044e-05</td>
-          <td>1.154e-05</td>
-          <td>7.733e-06</td>
-          <td>-5.849e-06</td>
-          <td>1.863e-05</td>
-          <td>-2.478e-06</td>
-          <td>-7.274e-05</td>
-          <td>-1.118e-07</td>
-          <td>-3.380e-05</td>
-        </tr>
-        <tr>
-          <th>Top</th>
-          <td>eyy</td>
-          <td>-2.970e-07</td>
-          <td>2.042e-07</td>
-          <td>5.243e-06</td>
-          <td>-8.085e-06</td>
-          <td>-9.543e-07</td>
-          <td>-2.917e-06</td>
-          <td>9.290e-09</td>
-          <td>2.700e-07</td>
-          <td>1.813e-06</td>
-          <td>...</td>
-          <td>-4.191e-05</td>
-          <td>8.177e-05</td>
-          <td>-5.330e-05</td>
-          <td>-6.631e-06</td>
-          <td>-2.254e-05</td>
-          <td>-4.159e-05</td>
-          <td>2.770e-06</td>
-          <td>1.629e-04</td>
-          <td>-7.574e-08</td>
-          <td>3.432e-05</td>
-        </tr>
-        <tr>
-          <th>Top</th>
-          <td>exy</td>
-          <td>-3.044e-06</td>
-          <td>-5.503e-07</td>
-          <td>3.229e-05</td>
-          <td>-1.690e-05</td>
-          <td>7.399e-06</td>
-          <td>-5.353e-06</td>
-          <td>2.535e-08</td>
-          <td>1.432e-05</td>
-          <td>-5.769e-06</td>
-          <td>...</td>
-          <td>4.114e-04</td>
-          <td>1.075e-03</td>
-          <td>4.885e-04</td>
-          <td>2.041e-05</td>
-          <td>2.756e-06</td>
-          <td>3.887e-04</td>
-          <td>-1.549e-06</td>
-          <td>-1.765e-03</td>
-          <td>-6.380e-06</td>
-          <td>-4.326e-04</td>
-        </tr>
-        <tr>
-          <th>Top</th>
-          <td>angle</td>
-          <td>-3.824e+01</td>
-          <td>-5.688e+01</td>
-          <td>4.837e+01</td>
-          <td>-2.276e+01</td>
-          <td>3.852e+01</td>
-          <td>-2.068e+01</td>
-          <td>5.963e+01</td>
-          <td>4.550e+01</td>
-          <td>-5.378e+01</td>
-          <td>...</td>
-          <td>4.322e+01</td>
-          <td>4.663e+01</td>
-          <td>4.122e+01</td>
-          <td>2.743e+01</td>
-          <td>4.688e+00</td>
-          <td>4.060e+01</td>
-          <td>-8.178e+01</td>
-          <td>-4.880e+01</td>
-          <td>-4.516e+01</td>
-          <td>-4.947e+01</td>
-        </tr>
-        <tr>
-          <th>Top</th>
-          <td>emax</td>
-          <td>1.634e-06</td>
-          <td>3.837e-07</td>
-          <td>1.959e-05</td>
-          <td>1.205e-05</td>
-          <td>3.693e-06</td>
-          <td>4.173e-06</td>
-          <td>1.672e-08</td>
-          <td>7.307e-06</td>
-          <td>3.925e-06</td>
-          <td>...</td>
-          <td>1.770e-04</td>
-          <td>5.896e-04</td>
-          <td>2.255e-04</td>
-          <td>1.303e-05</td>
-          <td>-5.736e-06</td>
-          <td>1.852e-04</td>
-          <td>2.882e-06</td>
-          <td>9.353e-04</td>
-          <td>3.096e-06</td>
-          <td>2.192e-04</td>
-        </tr>
-        <tr>
-          <th>Top</th>
-          <td>emin</td>
-          <td>-1.496e-06</td>
-          <td>-2.175e-07</td>
-          <td>-1.292e-05</td>
-          <td>-1.163e-05</td>
-          <td>-3.899e-06</td>
-          <td>-3.928e-06</td>
-          <td>-1.235e-08</td>
-          <td>-7.019e-06</td>
-          <td>-2.126e-06</td>
-          <td>...</td>
-          <td>-2.352e-04</td>
-          <td>-4.874e-04</td>
-          <td>-2.673e-04</td>
-          <td>-1.193e-05</td>
-          <td>-2.265e-05</td>
-          <td>-2.081e-04</td>
-          <td>-2.590e-06</td>
-          <td>-8.452e-04</td>
-          <td>-3.284e-06</td>
-          <td>-2.187e-04</td>
-        </tr>
-        <tr>
-          <th>Top</th>
-          <td>von_mises</td>
-          <td>1.808e-06</td>
-          <td>3.515e-07</td>
-          <td>1.890e-05</td>
-          <td>1.367e-05</td>
-          <td>4.384e-06</td>
-          <td>4.678e-06</td>
-          <td>1.684e-08</td>
-          <td>8.271e-06</td>
-          <td>3.545e-06</td>
-          <td>...</td>
-          <td>2.388e-04</td>
-          <td>6.228e-04</td>
-          <td>2.849e-04</td>
-          <td>1.441e-05</td>
-          <td>1.360e-05</td>
-          <td>2.272e-04</td>
-          <td>3.161e-06</td>
-          <td>1.028e-03</td>
-          <td>3.684e-06</td>
-          <td>2.528e-04</td>
-        </tr>
-        <tr>
-          <th>Bottom</th>
-          <td>fiber_distance</td>
-          <td>-4.000e-01</td>
-          <td>-4.000e-01</td>
-          <td>-4.000e-01</td>
-          <td>-4.000e-01</td>
-          <td>-4.000e-01</td>
-          <td>-4.000e-01</td>
-          <td>-4.000e-01</td>
-          <td>-4.000e-01</td>
-          <td>-4.000e-01</td>
-          <td>...</td>
-          <td>-4.000e-01</td>
-          <td>-4.000e-01</td>
-          <td>-4.000e-01</td>
-          <td>-4.000e-01</td>
-          <td>-4.000e-01</td>
-          <td>-4.000e-01</td>
-          <td>-4.000e-01</td>
-          <td>-4.000e-01</td>
-          <td>-4.000e-01</td>
-          <td>-4.000e-01</td>
-        </tr>
-        <tr>
-          <th>Bottom</th>
-          <td>exx</td>
-          <td>3.015e-07</td>
-          <td>1.595e-08</td>
-          <td>1.323e-06</td>
-          <td>6.185e-06</td>
-          <td>3.516e-08</td>
-          <td>3.787e-06</td>
-          <td>-8.894e-09</td>
-          <td>3.226e-07</td>
-          <td>-2.218e-07</td>
-          <td>...</td>
-          <td>-2.509e-06</td>
-          <td>-4.218e-05</td>
-          <td>-1.005e-05</td>
-          <td>9.487e-06</td>
-          <td>1.197e-06</td>
-          <td>-8.087e-06</td>
-          <td>-3.101e-06</td>
-          <td>6.011e-05</td>
-          <td>-6.148e-07</td>
-          <td>1.352e-05</td>
-        </tr>
-        <tr>
-          <th>Bottom</th>
-          <td>eyy</td>
-          <td>-3.328e-07</td>
-          <td>-2.018e-07</td>
-          <td>-8.152e-06</td>
-          <td>-6.455e-06</td>
-          <td>1.017e-06</td>
-          <td>-3.917e-06</td>
-          <td>6.172e-09</td>
-          <td>-1.025e-06</td>
-          <td>-1.524e-06</td>
-          <td>...</td>
-          <td>5.919e-05</td>
-          <td>-2.612e-05</td>
-          <td>5.486e-05</td>
-          <td>-3.292e-06</td>
-          <td>3.280e-05</td>
-          <td>3.219e-05</td>
-          <td>1.880e-06</td>
-          <td>-1.572e-04</td>
-          <td>-3.895e-07</td>
-          <td>-1.444e-05</td>
-        </tr>
-        <tr>
-          <th>Bottom</th>
-          <td>exy</td>
-          <td>-1.224e-06</td>
-          <td>5.025e-07</td>
-          <td>-3.991e-05</td>
-          <td>1.084e-05</td>
-          <td>-4.504e-06</td>
-          <td>1.221e-05</td>
-          <td>5.775e-09</td>
-          <td>6.848e-06</td>
-          <td>-2.579e-06</td>
-          <td>...</td>
-          <td>-3.306e-04</td>
-          <td>-8.398e-04</td>
-          <td>-4.682e-04</td>
-          <td>1.007e-04</td>
-          <td>5.846e-05</td>
-          <td>-3.523e-04</td>
-          <td>-1.846e-05</td>
-          <td>1.819e-03</td>
-          <td>-1.363e-05</td>
-          <td>3.041e-04</td>
-        </tr>
-        <tr>
-          <th>Bottom</th>
-          <td>angle</td>
-          <td>-3.131e+01</td>
-          <td>3.329e+01</td>
-          <td>-3.832e+01</td>
-          <td>2.031e+01</td>
-          <td>-5.115e+01</td>
-          <td>2.887e+01</td>
-          <td>7.951e+01</td>
-          <td>3.943e+01</td>
-          <td>-3.161e+01</td>
-          <td>...</td>
-          <td>-5.029e+01</td>
-          <td>-4.555e+01</td>
-          <td>-4.895e+01</td>
-          <td>4.138e+01</td>
-          <td>5.920e+01</td>
-          <td>-4.826e+01</td>
-          <td>-5.255e+01</td>
-          <td>4.159e+01</td>
-          <td>-4.547e+01</td>
-          <td>4.237e+01</td>
-        </tr>
-        <tr>
-          <th>Bottom</th>
-          <td>emax</td>
-          <td>6.737e-07</td>
-          <td>1.809e-07</td>
-          <td>1.710e-05</td>
-          <td>8.192e-06</td>
-          <td>2.831e-06</td>
-          <td>7.152e-06</td>
-          <td>6.707e-09</td>
-          <td>3.139e-06</td>
-          <td>5.715e-07</td>
-          <td>...</td>
-          <td>1.965e-04</td>
-          <td>3.858e-04</td>
-          <td>2.587e-04</td>
-          <td>5.385e-05</td>
-          <td>5.022e-05</td>
-          <td>1.894e-04</td>
-          <td>8.948e-06</td>
-          <td>8.675e-04</td>
-          <td>6.316e-06</td>
-          <td>1.522e-04</td>
-        </tr>
-        <tr>
+          <th>...</th>
           <th>...</th>
           <th>...</th>
           <th>...</th>
@@ -17671,241 +4684,26 @@ Cycles, at the top.
           <td>...</td>
         </tr>
         <tr>
-          <th rowspan="30" valign="top">5537</th>
-          <th rowspan="14" valign="top">5516</th>
-          <th>Top</th>
-          <td>eyy</td>
-          <td>-7.650e-08</td>
-          <td>-4.020e-07</td>
-          <td>2.357e-06</td>
-          <td>-8.119e-07</td>
-          <td>1.178e-07</td>
-          <td>-6.523e-07</td>
-          <td>6.119e-09</td>
-          <td>-9.158e-07</td>
-          <td>-2.309e-06</td>
-          <td>...</td>
-          <td>-1.559e-03</td>
-          <td>1.430e-04</td>
-          <td>6.128e-03</td>
-          <td>6.322e-03</td>
-          <td>2.176e-04</td>
-          <td>-9.235e-03</td>
-          <td>9.199e-03</td>
-          <td>-1.858e-03</td>
-          <td>-7.079e-03</td>
-          <td>6.933e-03</td>
-        </tr>
-        <tr>
-          <th>Top</th>
-          <td>exy</td>
-          <td>3.678e-06</td>
-          <td>7.852e-07</td>
-          <td>-2.851e-05</td>
-          <td>-3.508e-07</td>
-          <td>-6.945e-06</td>
-          <td>8.320e-07</td>
-          <td>-6.064e-08</td>
-          <td>-6.139e-06</td>
-          <td>2.993e-05</td>
-          <td>...</td>
-          <td>1.989e-02</td>
-          <td>8.701e-03</td>
-          <td>-1.907e-03</td>
-          <td>5.987e-05</td>
-          <td>1.253e-03</td>
-          <td>-4.397e-03</td>
-          <td>2.197e-03</td>
-          <td>9.715e-03</td>
-          <td>-2.696e-03</td>
-          <td>6.151e-03</td>
-        </tr>
-        <tr>
-          <th>Top</th>
-          <td>angle</td>
-          <td>4.436e+01</td>
-          <td>2.372e+01</td>
-          <td>-4.899e+01</td>
-          <td>-9.154e+00</td>
-          <td>-4.560e+01</td>
-          <td>2.205e+01</td>
-          <td>-4.959e+01</td>
-          <td>-3.713e+01</td>
-          <td>4.129e+01</td>
-          <td>...</td>
-          <td>4.007e+01</td>
-          <td>4.611e+01</td>
-          <td>-8.530e+01</td>
-          <td>8.986e+01</td>
-          <td>5.421e+01</td>
-          <td>-7.195e+00</td>
-          <td>8.633e+01</td>
-          <td>3.545e+01</td>
-          <td>-5.879e+00</td>
-          <td>7.709e+01</td>
-        </tr>
-        <tr>
-          <th>Top</th>
-          <td>emax</td>
-          <td>1.804e-06</td>
-          <td>4.915e-07</td>
-          <td>1.475e-05</td>
-          <td>2.766e-07</td>
-          <td>3.518e-06</td>
-          <td>3.749e-07</td>
-          <td>3.193e-08</td>
-          <td>3.138e-06</td>
-          <td>1.473e-05</td>
-          <td>...</td>
-          <td>1.026e-02</td>
-          <td>4.328e-03</td>
-          <td>6.207e-03</td>
-          <td>6.322e-03</td>
-          <td>6.692e-04</td>
-          <td>8.179e-03</td>
-          <td>9.269e-03</td>
-          <td>4.966e-03</td>
-          <td>6.012e-03</td>
-          <td>7.638e-03</td>
-        </tr>
-        <tr>
-          <th>Top</th>
-          <td>emin</td>
-          <td>-1.875e-06</td>
-          <td>-5.745e-07</td>
-          <td>-1.404e-05</td>
-          <td>-8.402e-07</td>
-          <td>-3.429e-06</td>
-          <td>-8.208e-07</td>
-          <td>-2.949e-08</td>
-          <td>-3.240e-06</td>
-          <td>-1.545e-05</td>
-          <td>...</td>
-          <td>-9.922e-03</td>
-          <td>-4.380e-03</td>
-          <td>-5.463e-03</td>
-          <td>-5.561e-03</td>
-          <td>-6.513e-04</td>
-          <td>-9.513e-03</td>
-          <td>-7.924e-03</td>
-          <td>-5.316e-03</td>
-          <td>-7.218e-03</td>
-          <td>-6.482e-03</td>
-        </tr>
-        <tr>
-          <th>Top</th>
-          <td>von_mises</td>
-          <td>2.124e-06</td>
-          <td>6.161e-07</td>
-          <td>1.662e-05</td>
-          <td>6.716e-07</td>
-          <td>4.011e-06</td>
-          <td>7.062e-07</td>
-          <td>3.547e-08</td>
-          <td>3.683e-06</td>
-          <td>1.743e-05</td>
-          <td>...</td>
-          <td>1.165e-02</td>
-          <td>5.027e-03</td>
-          <td>6.742e-03</td>
-          <td>6.866e-03</td>
-          <td>7.624e-04</td>
-          <td>1.022e-02</td>
-          <td>9.937e-03</td>
-          <td>5.937e-03</td>
-          <td>7.649e-03</td>
-          <td>8.161e-03</td>
-        </tr>
-        <tr>
+          <th rowspan="5" valign="top">5537</th>
+          <th>5512</th>
           <th>Bottom</th>
-          <td>fiber_distance</td>
-          <td>-3.090e-01</td>
-          <td>-3.090e-01</td>
-          <td>-3.090e-01</td>
-          <td>-3.090e-01</td>
-          <td>-3.090e-01</td>
-          <td>-3.090e-01</td>
-          <td>-3.090e-01</td>
-          <td>-3.090e-01</td>
-          <td>-3.090e-01</td>
-          <td>...</td>
-          <td>-3.090e-01</td>
-          <td>-3.090e-01</td>
-          <td>-3.090e-01</td>
-          <td>-3.090e-01</td>
-          <td>-3.090e-01</td>
-          <td>-3.090e-01</td>
-          <td>-3.090e-01</td>
-          <td>-3.090e-01</td>
-          <td>-3.090e-01</td>
-          <td>-3.090e-01</td>
-        </tr>
-        <tr>
-          <th>Bottom</th>
-          <td>exx</td>
-          <td>3.795e-08</td>
-          <td>-1.402e-07</td>
-          <td>9.043e-07</td>
-          <td>4.864e-06</td>
-          <td>2.968e-07</td>
-          <td>3.579e-06</td>
-          <td>-8.105e-09</td>
-          <td>5.681e-07</td>
-          <td>3.885e-07</td>
-          <td>...</td>
-          <td>-9.943e-03</td>
-          <td>7.726e-04</td>
-          <td>4.427e-03</td>
-          <td>4.453e-03</td>
-          <td>1.794e-04</td>
-          <td>-6.929e-03</td>
-          <td>7.076e-03</td>
-          <td>-2.222e-03</td>
-          <td>-5.781e-03</td>
-          <td>5.564e-03</td>
-        </tr>
-        <tr>
-          <th>Bottom</th>
-          <td>eyy</td>
-          <td>5.407e-08</td>
-          <td>2.063e-07</td>
-          <td>-1.806e-06</td>
-          <td>-5.233e-06</td>
-          <td>-4.888e-07</td>
-          <td>-3.814e-06</td>
-          <td>7.161e-09</td>
-          <td>-6.771e-07</td>
-          <td>4.500e-07</td>
-          <td>...</td>
-          <td>1.105e-02</td>
-          <td>-6.414e-04</td>
-          <td>-5.059e-03</td>
-          <td>-5.036e-03</td>
-          <td>-1.721e-04</td>
-          <td>8.031e-03</td>
-          <td>-8.268e-03</td>
-          <td>2.901e-03</td>
-          <td>6.973e-03</td>
-          <td>-6.616e-03</td>
-        </tr>
-        <tr>
-          <th>Bottom</th>
-          <td>exy</td>
+          <th>exy</th>
           <td>2.262e-06</td>
-          <td>1.497e-06</td>
-          <td>-2.304e-05</td>
+          <td>-1.497e-06</td>
+          <td>-2.305e-05</td>
           <td>4.182e-06</td>
-          <td>-3.986e-06</td>
+          <td>3.987e-06</td>
           <td>3.460e-06</td>
           <td>-6.318e-08</td>
           <td>2.843e-06</td>
           <td>3.103e-05</td>
+          <td>1.238e-05</td>
           <td>...</td>
-          <td>6.598e-03</td>
+          <td>6.590e-03</td>
           <td>8.430e-03</td>
           <td>2.237e-03</td>
           <td>4.367e-03</td>
-          <td>1.149e-03</td>
+          <td>1.144e-03</td>
           <td>-5.253e-03</td>
           <td>2.694e-03</td>
           <td>1.149e-02</td>
@@ -17913,489 +4711,110 @@ Cycles, at the top.
           <td>1.538e-03</td>
         </tr>
         <tr>
-          <th>Bottom</th>
-          <td>angle</td>
-          <td>4.520e+01</td>
-          <td>5.152e+01</td>
-          <td>-4.165e+01</td>
-          <td>1.125e+01</td>
-          <td>-3.943e+01</td>
-          <td>1.254e+01</td>
-          <td>-5.179e+01</td>
-          <td>3.317e+01</td>
-          <td>4.506e+01</td>
+          <th rowspan="2" valign="top">5516</th>
+          <th>Top</th>
+          <th>angle</th>
+          <td>3.794e+01</td>
+          <td>-4.862e+01</td>
+          <td>-5.024e+01</td>
+          <td>6.368e+01</td>
+          <td>3.730e+01</td>
+          <td>6.102e+01</td>
+          <td>-4.569e+01</td>
+          <td>5.527e+01</td>
+          <td>4.128e+01</td>
+          <td>1.573e+01</td>
           <td>...</td>
-          <td>8.128e+01</td>
-          <td>4.024e+01</td>
-          <td>6.634e+00</td>
-          <td>1.236e+01</td>
-          <td>3.649e+01</td>
-          <td>-8.033e+01</td>
-          <td>4.979e+00</td>
-          <td>5.702e+01</td>
-          <td>8.511e+01</td>
-          <td>3.600e+00</td>
-        </tr>
-        <tr>
-          <th>Bottom</th>
-          <td>emax</td>
-          <td>1.177e-06</td>
-          <td>8.013e-07</td>
-          <td>1.115e-05</td>
-          <td>5.280e-06</td>
-          <td>1.936e-06</td>
-          <td>3.964e-06</td>
-          <td>3.203e-08</td>
-          <td>1.497e-06</td>
-          <td>1.593e-05</td>
-          <td>...</td>
-          <td>1.155e-02</td>
-          <td>4.339e-03</td>
-          <td>4.557e-03</td>
-          <td>4.931e-03</td>
-          <td>6.043e-04</td>
-          <td>8.479e-03</td>
-          <td>7.193e-03</td>
-          <td>6.629e-03</td>
-          <td>7.067e-03</td>
-          <td>5.612e-03</td>
+          <td>1.894e+01</td>
+          <td>4.086e+01</td>
+          <td>7.171e+01</td>
+          <td>5.986e+01</td>
+          <td>4.153e+01</td>
+          <td>-2.978e+01</td>
+          <td>7.213e+01</td>
+          <td>3.598e+01</td>
+          <td>2.085e+01</td>
+          <td>6.719e+01</td>
         </tr>
         <tr>
           <th>Bottom</th>
-          <td>emin</td>
-          <td>-1.085e-06</td>
-          <td>-7.353e-07</td>
-          <td>-1.205e-05</td>
-          <td>-5.649e-06</td>
-          <td>-2.128e-06</td>
-          <td>-4.199e-06</td>
-          <td>-3.297e-08</td>
-          <td>-1.606e-06</td>
-          <td>-1.509e-05</td>
+          <th>emax</th>
+          <td>1.190e-06</td>
+          <td>7.360e-07</td>
+          <td>1.149e-05</td>
+          <td>2.672e-06</td>
+          <td>2.109e-06</td>
+          <td>2.081e-06</td>
+          <td>3.107e-08</td>
+          <td>1.520e-06</td>
+          <td>1.590e-05</td>
+          <td>1.187e-05</td>
           <td>...</td>
-          <td>-1.045e-02</td>
-          <td>-4.208e-03</td>
-          <td>-5.189e-03</td>
-          <td>-5.514e-03</td>
-          <td>-5.970e-04</td>
-          <td>-7.377e-03</td>
-          <td>-8.385e-03</td>
-          <td>-5.951e-03</td>
-          <td>-5.875e-03</td>
-          <td>-6.664e-03</td>
+          <td>5.403e-03</td>
+          <td>4.307e-03</td>
+          <td>1.760e-03</td>
+          <td>2.405e-03</td>
+          <td>5.797e-04</td>
+          <td>3.284e-03</td>
+          <td>2.050e-03</td>
+          <td>6.184e-03</td>
+          <td>1.936e-03</td>
+          <td>8.238e-04</td>
+        </tr>
+        <tr>
+          <th rowspan="2" valign="top">5515</th>
+          <th>Top</th>
+          <th>emin</th>
+          <td>-1.142e-06</td>
+          <td>-7.730e-07</td>
+          <td>-1.195e-05</td>
+          <td>-2.588e-06</td>
+          <td>-2.026e-06</td>
+          <td>-2.000e-06</td>
+          <td>-3.213e-08</td>
+          <td>-1.516e-06</td>
+          <td>-1.539e-05</td>
+          <td>-1.185e-05</td>
+          <td>...</td>
+          <td>-5.329e-03</td>
+          <td>-4.211e-03</td>
+          <td>-1.994e-03</td>
+          <td>-2.622e-03</td>
+          <td>-5.727e-04</td>
+          <td>-2.809e-03</td>
+          <td>-2.561e-03</td>
+          <td>-5.899e-03</td>
+          <td>-1.368e-03</td>
+          <td>-1.329e-03</td>
         </tr>
         <tr>
           <th>Bottom</th>
-          <td>von_mises</td>
-          <td>1.306e-06</td>
-          <td>8.874e-07</td>
-          <td>1.340e-05</td>
-          <td>6.311e-06</td>
-          <td>2.347e-06</td>
-          <td>4.713e-06</td>
-          <td>3.753e-08</td>
-          <td>1.792e-06</td>
-          <td>1.792e-05</td>
-          <td>...</td>
-          <td>1.271e-02</td>
-          <td>4.935e-03</td>
-          <td>5.631e-03</td>
-          <td>6.034e-03</td>
-          <td>6.935e-04</td>
-          <td>9.162e-03</td>
-          <td>9.003e-03</td>
-          <td>7.267e-03</td>
-          <td>7.483e-03</td>
-          <td>7.096e-03</td>
-        </tr>
-        <tr>
-          <th rowspan="16" valign="top">5515</th>
-          <th>Top</th>
-          <td>fiber_distance</td>
-          <td>3.090e-01</td>
-          <td>3.090e-01</td>
-          <td>3.090e-01</td>
-          <td>3.090e-01</td>
-          <td>3.090e-01</td>
-          <td>3.090e-01</td>
-          <td>3.090e-01</td>
-          <td>3.090e-01</td>
-          <td>3.090e-01</td>
-          <td>...</td>
-          <td>3.090e-01</td>
-          <td>3.090e-01</td>
-          <td>3.090e-01</td>
-          <td>3.090e-01</td>
-          <td>3.090e-01</td>
-          <td>3.090e-01</td>
-          <td>3.090e-01</td>
-          <td>3.090e-01</td>
-          <td>3.090e-01</td>
-          <td>3.090e-01</td>
-        </tr>
-        <tr>
-          <th>Top</th>
-          <td>exx</td>
-          <td>-2.885e-07</td>
-          <td>-2.184e-07</td>
-          <td>2.288e-06</td>
-          <td>-1.731e-06</td>
-          <td>3.160e-07</td>
-          <td>-1.351e-06</td>
-          <td>8.326e-09</td>
-          <td>-4.430e-07</td>
-          <td>-2.872e-06</td>
-          <td>...</td>
-          <td>5.417e-05</td>
-          <td>-7.351e-04</td>
-          <td>2.401e-03</td>
-          <td>2.285e-03</td>
-          <td>-2.070e-05</td>
-          <td>-3.017e-03</td>
-          <td>3.203e-03</td>
-          <td>-1.510e-03</td>
-          <td>-1.987e-03</td>
-          <td>1.615e-03</td>
-        </tr>
-        <tr>
-          <th>Top</th>
-          <td>eyy</td>
-          <td>2.242e-07</td>
-          <td>1.463e-07</td>
-          <td>-1.652e-06</td>
-          <td>1.208e-06</td>
-          <td>-2.333e-07</td>
-          <td>9.368e-07</td>
-          <td>-6.129e-09</td>
-          <td>3.676e-07</td>
-          <td>2.244e-06</td>
-          <td>...</td>
-          <td>3.236e-04</td>
-          <td>6.943e-04</td>
-          <td>-1.816e-03</td>
-          <td>-1.684e-03</td>
-          <td>3.499e-05</td>
-          <td>1.906e-03</td>
-          <td>-2.083e-03</td>
-          <td>1.222e-03</td>
-          <td>9.419e-04</td>
-          <td>-6.098e-04</td>
-        </tr>
-        <tr>
-          <th>Top</th>
-          <td>exy</td>
-          <td>3.678e-06</td>
-          <td>7.852e-07</td>
-          <td>-2.851e-05</td>
-          <td>-3.508e-07</td>
-          <td>-6.945e-06</td>
-          <td>8.320e-07</td>
-          <td>-6.064e-08</td>
-          <td>-6.139e-06</td>
-          <td>2.993e-05</td>
-          <td>...</td>
-          <td>1.989e-02</td>
-          <td>8.701e-03</td>
-          <td>-1.907e-03</td>
-          <td>5.987e-05</td>
-          <td>1.253e-03</td>
-          <td>-4.397e-03</td>
-          <td>2.197e-03</td>
-          <td>9.715e-03</td>
-          <td>-2.696e-03</td>
-          <td>6.151e-03</td>
-        </tr>
-        <tr>
-          <th>Top</th>
-          <td>angle</td>
-          <td>4.897e+01</td>
-          <td>5.746e+01</td>
-          <td>-4.107e+01</td>
-          <td>-8.660e+01</td>
-          <td>-4.274e+01</td>
-          <td>8.001e+01</td>
-          <td>-3.830e+01</td>
-          <td>-4.876e+01</td>
-          <td>4.985e+01</td>
-          <td>...</td>
-          <td>4.539e+01</td>
-          <td>4.966e+01</td>
-          <td>-1.217e+01</td>
-          <td>4.321e-01</td>
-          <td>4.627e+01</td>
-          <td>-6.911e+01</td>
-          <td>1.129e+01</td>
-          <td>5.285e+01</td>
-          <td>-6.869e+01</td>
-          <td>3.506e+01</td>
-        </tr>
-        <tr>
-          <th>Top</th>
-          <td>emax</td>
-          <td>1.825e-06</td>
-          <td>3.968e-07</td>
-          <td>1.471e-05</td>
-          <td>1.218e-06</td>
-          <td>3.525e-06</td>
-          <td>1.010e-06</td>
-          <td>3.227e-08</td>
-          <td>3.058e-06</td>
-          <td>1.487e-05</td>
-          <td>...</td>
-          <td>1.013e-02</td>
-          <td>4.388e-03</td>
-          <td>2.606e-03</td>
-          <td>2.285e-03</td>
-          <td>6.342e-04</td>
-          <td>2.745e-03</td>
-          <td>3.422e-03</td>
-          <td>4.902e-03</td>
-          <td>1.468e-03</td>
-          <td>3.773e-03</td>
-        </tr>
-        <tr>
-          <th>Top</th>
-          <td>emin</td>
-          <td>-1.889e-06</td>
-          <td>-4.689e-07</td>
-          <td>-1.407e-05</td>
-          <td>-1.742e-06</td>
-          <td>-3.442e-06</td>
-          <td>-1.424e-06</td>
-          <td>-3.007e-08</td>
-          <td>-3.134e-06</td>
-          <td>-1.549e-05</td>
-          <td>...</td>
-          <td>-9.755e-03</td>
-          <td>-4.429e-03</td>
-          <td>-2.022e-03</td>
-          <td>-1.684e-03</td>
-          <td>-6.199e-04</td>
-          <td>-3.856e-03</td>
-          <td>-2.303e-03</td>
-          <td>-5.190e-03</td>
-          <td>-2.513e-03</td>
-          <td>-2.768e-03</td>
-        </tr>
-        <tr>
-          <th>Top</th>
-          <td>von_mises</td>
-          <td>2.144e-06</td>
-          <td>5.004e-07</td>
-          <td>1.662e-05</td>
-          <td>1.718e-06</td>
-          <td>4.022e-06</td>
-          <td>1.412e-06</td>
-          <td>3.600e-08</td>
-          <td>3.575e-06</td>
-          <td>1.753e-05</td>
-          <td>...</td>
-          <td>1.148e-02</td>
-          <td>5.091e-03</td>
-          <td>2.679e-03</td>
-          <td>2.301e-03</td>
-          <td>7.241e-04</td>
-          <td>3.829e-03</td>
-          <td>3.326e-03</td>
-          <td>5.827e-03</td>
-          <td>2.324e-03</td>
-          <td>3.791e-03</td>
-        </tr>
-        <tr>
-          <th>Bottom</th>
-          <td>fiber_distance</td>
-          <td>-3.090e-01</td>
-          <td>-3.090e-01</td>
-          <td>-3.090e-01</td>
-          <td>-3.090e-01</td>
-          <td>-3.090e-01</td>
-          <td>-3.090e-01</td>
-          <td>-3.090e-01</td>
-          <td>-3.090e-01</td>
-          <td>-3.090e-01</td>
-          <td>...</td>
-          <td>-3.090e-01</td>
-          <td>-3.090e-01</td>
-          <td>-3.090e-01</td>
-          <td>-3.090e-01</td>
-          <td>-3.090e-01</td>
-          <td>-3.090e-01</td>
-          <td>-3.090e-01</td>
-          <td>-3.090e-01</td>
-          <td>-3.090e-01</td>
-          <td>-3.090e-01</td>
-        </tr>
-        <tr>
-          <th>Bottom</th>
-          <td>exx</td>
-          <td>3.239e-07</td>
-          <td>1.285e-07</td>
-          <td>-2.558e-06</td>
-          <td>-1.931e-06</td>
-          <td>-6.425e-07</td>
-          <td>-1.314e-06</td>
-          <td>-8.998e-10</td>
-          <td>-5.954e-07</td>
+          <th>von_mises</th>
+          <td>1.347e-06</td>
+          <td>8.714e-07</td>
+          <td>1.353e-05</td>
+          <td>3.037e-06</td>
           <td>2.387e-06</td>
+          <td>2.357e-06</td>
+          <td>3.649e-08</td>
+          <td>1.753e-06</td>
+          <td>1.807e-05</td>
+          <td>1.369e-05</td>
           <td>...</td>
-          <td>5.110e-03</td>
-          <td>6.542e-04</td>
-          <td>-1.980e-03</td>
-          <td>-1.696e-03</td>
-          <td>6.712e-05</td>
-          <td>2.293e-03</td>
-          <td>-2.668e-03</td>
-          <td>2.261e-03</td>
-          <td>1.947e-03</td>
-          <td>-1.392e-03</td>
-        </tr>
-        <tr>
-          <th>Bottom</th>
-          <td>eyy</td>
-          <td>-2.377e-07</td>
-          <td>-6.795e-08</td>
-          <td>1.727e-06</td>
-          <td>1.701e-06</td>
-          <td>4.696e-07</td>
-          <td>1.179e-06</td>
-          <td>-1.916e-10</td>
-          <td>5.101e-07</td>
-          <td>-1.589e-06</td>
-          <td>...</td>
-          <td>-4.314e-03</td>
-          <td>-5.205e-04</td>
-          <td>1.479e-03</td>
-          <td>1.239e-03</td>
-          <td>-5.755e-05</td>
-          <td>-1.379e-03</td>
-          <td>1.675e-03</td>
-          <td>-1.674e-03</td>
-          <td>-9.121e-04</td>
-          <td>4.821e-04</td>
-        </tr>
-        <tr>
-          <th>Bottom</th>
-          <td>exy</td>
-          <td>2.262e-06</td>
-          <td>1.497e-06</td>
-          <td>-2.304e-05</td>
-          <td>4.182e-06</td>
-          <td>-3.986e-06</td>
-          <td>3.460e-06</td>
-          <td>-6.318e-08</td>
-          <td>2.843e-06</td>
-          <td>3.103e-05</td>
-          <td>...</td>
-          <td>6.598e-03</td>
-          <td>8.430e-03</td>
-          <td>2.237e-03</td>
-          <td>4.367e-03</td>
-          <td>1.149e-03</td>
-          <td>-5.253e-03</td>
-          <td>2.694e-03</td>
-          <td>1.149e-02</td>
-          <td>2.198e-03</td>
-          <td>1.538e-03</td>
-        </tr>
-        <tr>
-          <th>Bottom</th>
-          <td>angle</td>
-          <td>3.803e+01</td>
-          <td>4.126e+01</td>
-          <td>-5.027e+01</td>
-          <td>6.549e+01</td>
-          <td>-5.279e+01</td>
-          <td>6.289e+01</td>
-          <td>-4.532e+01</td>
-          <td>5.563e+01</td>
-          <td>4.135e+01</td>
-          <td>...</td>
-          <td>1.750e+01</td>
-          <td>4.103e+01</td>
-          <td>7.356e+01</td>
-          <td>6.196e+01</td>
-          <td>4.190e+01</td>
-          <td>-2.752e+01</td>
-          <td>7.410e+01</td>
-          <td>3.555e+01</td>
-          <td>1.878e+01</td>
-          <td>7.031e+01</td>
-        </tr>
-        <tr>
-          <th>Bottom</th>
-          <td>emax</td>
-          <td>1.208e-06</td>
-          <td>7.852e-07</td>
-          <td>1.130e-05</td>
-          <td>2.654e-06</td>
-          <td>1.983e-06</td>
-          <td>2.065e-06</td>
-          <td>3.105e-08</td>
-          <td>1.482e-06</td>
-          <td>1.604e-05</td>
-          <td>...</td>
-          <td>6.150e-03</td>
-          <td>4.322e-03</td>
-          <td>1.809e-03</td>
-          <td>2.402e-03</td>
-          <td>5.825e-04</td>
-          <td>3.662e-03</td>
-          <td>2.059e-03</td>
-          <td>6.366e-03</td>
-          <td>2.321e-03</td>
-          <td>7.574e-04</td>
-        </tr>
-        <tr>
-          <th>Bottom</th>
-          <td>emin</td>
-          <td>-1.122e-06</td>
-          <td>-7.246e-07</td>
-          <td>-1.214e-05</td>
-          <td>-2.885e-06</td>
-          <td>-2.156e-06</td>
-          <td>-2.200e-06</td>
-          <td>-3.214e-08</td>
-          <td>-1.568e-06</td>
-          <td>-1.524e-05</td>
-          <td>...</td>
-          <td>-5.354e-03</td>
-          <td>-4.189e-03</td>
-          <td>-2.310e-03</td>
-          <td>-2.859e-03</td>
-          <td>-5.729e-04</td>
-          <td>-2.747e-03</td>
-          <td>-3.052e-03</td>
-          <td>-5.779e-03</td>
-          <td>-1.286e-03</td>
-          <td>-1.667e-03</td>
-        </tr>
-        <tr>
-          <th>Bottom</th>
-          <td>von_mises</td>
-          <td>1.346e-06</td>
-          <td>8.720e-07</td>
-          <td>1.354e-05</td>
-          <td>3.199e-06</td>
-          <td>2.390e-06</td>
-          <td>2.463e-06</td>
-          <td>3.648e-08</td>
-          <td>1.761e-06</td>
-          <td>1.806e-05</td>
-          <td>...</td>
-          <td>6.647e-03</td>
-          <td>4.914e-03</td>
-          <td>2.384e-03</td>
-          <td>3.042e-03</td>
-          <td>6.671e-04</td>
-          <td>3.713e-03</td>
-          <td>2.969e-03</td>
-          <td>7.015e-03</td>
-          <td>2.111e-03</td>
-          <td>1.432e-03</td>
+          <td>6.196e-03</td>
+          <td>4.918e-03</td>
+          <td>2.168e-03</td>
+          <td>2.904e-03</td>
+          <td>6.654e-04</td>
+          <td>3.521e-03</td>
+          <td>2.668e-03</td>
+          <td>6.977e-03</td>
+          <td>1.917e-03</td>
+          <td>1.254e-03</td>
         </tr>
       </tbody>
     </table>
-    <p>306880 rows × 34 columns</p>
+    <p>306880 rows × 33 columns</p>
     </div>
 
 
@@ -18461,20 +4880,20 @@ Cycles, at the top.
           <th>Freq</th>
           <th>8.359</th>
           <th>9.508</th>
-          <th>15.666</th>
+          <th>15.667</th>
           <th>20.237</th>
           <th>20.306</th>
           <th>20.555</th>
           <th>21.500</th>
           <th>21.706</th>
           <th>21.725</th>
-          <th>28.536</th>
+          <th>28.542</th>
           <th>...</th>
           <th>80.076</th>
           <th>86.487</th>
           <th>88.168</th>
           <th>88.477</th>
-          <th>89.923</th>
+          <th>89.928</th>
           <th>94.290</th>
           <th>94.368</th>
           <th>96.044</th>
@@ -18487,25 +4906,25 @@ Cycles, at the top.
           <th>Eigenvalue</th>
           <th>2758.149</th>
           <th>3568.632</th>
-          <th>9689.306</th>
-          <th>16168.100</th>
-          <th>16278.223</th>
-          <th>16679.709</th>
-          <th>18248.434</th>
+          <th>9689.982</th>
+          <th>16168.038</th>
+          <th>16278.158</th>
+          <th>16679.707</th>
+          <th>18248.432</th>
           <th>18600.697</th>
           <th>18632.551</th>
-          <th>32147.814</th>
+          <th>32159.891</th>
           <th>...</th>
-          <th>253140.875</th>
-          <th>295297.750</th>
-          <th>306885.906</th>
+          <th>253141.172</th>
+          <th>295300.938</th>
+          <th>306886.000</th>
           <th>309040.656</th>
-          <th>319227.719</th>
+          <th>319267.094</th>
           <th>350984.500</th>
           <th>351566.188</th>
-          <th>364166.156</th>
+          <th>364166.312</th>
           <th>384601.344</th>
-          <th>386090.438</th>
+          <th>386090.469</th>
         </tr>
         <tr>
           <th></th>
@@ -18513,20 +4932,20 @@ Cycles, at the top.
           <th>Radians</th>
           <th>52.518</th>
           <th>59.738</th>
-          <th>98.434</th>
+          <th>98.438</th>
           <th>127.154</th>
           <th>127.586</th>
           <th>129.150</th>
           <th>135.087</th>
           <th>136.384</th>
           <th>136.501</th>
-          <th>179.298</th>
+          <th>179.332</th>
           <th>...</th>
           <th>503.131</th>
-          <th>543.413</th>
+          <th>543.416</th>
           <th>553.973</th>
           <th>555.914</th>
-          <th>565.002</th>
+          <th>565.037</th>
           <th>592.439</th>
           <th>592.930</th>
           <th>603.462</th>
@@ -18562,1478 +4981,274 @@ Cycles, at the top.
       </thead>
       <tbody>
         <tr>
-          <th rowspan="30" valign="top">3684</th>
-          <th rowspan="10" valign="top">0</th>
+          <th rowspan="5" valign="top">3684</th>
+          <th rowspan="5" valign="top">0</th>
           <th>oxx</th>
-          <td>3.865e-12</td>
-          <td>6.821e-13</td>
-          <td>-4.547e-13</td>
-          <td>-1.137e-12</td>
-          <td>-1.137e-13</td>
-          <td>3.183e-12</td>
-          <td>2.842e-14</td>
-          <td>-6.821e-13</td>
-          <td>3.183e-12</td>
-          <td>-2.638e-11</td>
+          <td>1.222e-12</td>
+          <td>-3.411e-13</td>
+          <td>-3.638e-12</td>
+          <td>-6.912e-11</td>
+          <td>5.684e-14</td>
+          <td>-2.956e-12</td>
+          <td>4.619e-14</td>
+          <td>1.592e-12</td>
+          <td>9.095e-13</td>
+          <td>-1.028e-10</td>
           <td>...</td>
-          <td>-2.728e-11</td>
-          <td>5.457e-11</td>
-          <td>4.411e-11</td>
-          <td>1.577e-12</td>
-          <td>1.273e-11</td>
-          <td>1.054e-10</td>
-          <td>4.547e-13</td>
-          <td>-1.933e-10</td>
-          <td>-1.592e-12</td>
-          <td>-8.740e-11</td>
+          <td>3.638e-11</td>
+          <td>3.638e-11</td>
+          <td>-5.321e-11</td>
+          <td>1.762e-12</td>
+          <td>-1.819e-12</td>
+          <td>-3.809e-11</td>
+          <td>-4.547e-13</td>
+          <td>3.311e-10</td>
+          <td>-6.821e-13</td>
+          <td>-4.923e-11</td>
         </tr>
         <tr>
           <th>oyy</th>
-          <td>1.478e-12</td>
-          <td>-4.547e-13</td>
-          <td>4.547e-13</td>
-          <td>6.821e-13</td>
+          <td>-3.354e-12</td>
+          <td>-2.274e-13</td>
+          <td>2.728e-12</td>
+          <td>2.069e-11</td>
           <td>0.000e+00</td>
           <td>-7.049e-12</td>
-          <td>3.553e-15</td>
-          <td>2.274e-13</td>
-          <td>-9.550e-12</td>
-          <td>3.456e-11</td>
+          <td>-4.619e-14</td>
+          <td>-2.956e-12</td>
+          <td>9.095e-12</td>
+          <td>-8.185e-12</td>
           <td>...</td>
-          <td>9.095e-12</td>
-          <td>-1.055e-10</td>
-          <td>-1.046e-11</td>
-          <td>-6.963e-13</td>
-          <td>9.095e-12</td>
-          <td>4.536e-11</td>
-          <td>6.821e-13</td>
-          <td>-1.896e-10</td>
-          <td>-2.274e-13</td>
-          <td>-1.338e-10</td>
+          <td>-1.091e-11</td>
+          <td>6.548e-11</td>
+          <td>8.640e-12</td>
+          <td>-1.876e-12</td>
+          <td>3.638e-12</td>
+          <td>-2.080e-11</td>
+          <td>9.095e-13</td>
+          <td>4.111e-10</td>
+          <td>-9.095e-13</td>
+          <td>-3.752e-12</td>
         </tr>
         <tr>
           <th>ozz</th>
-          <td>-1.478e-12</td>
-          <td>-2.274e-13</td>
-          <td>1.819e-12</td>
-          <td>1.864e-11</td>
-          <td>0.000e+00</td>
-          <td>1.228e-11</td>
-          <td>7.105e-15</td>
-          <td>2.728e-12</td>
-          <td>0.000e+00</td>
-          <td>5.457e-12</td>
-          <td>...</td>
-          <td>3.274e-11</td>
-          <td>1.455e-11</td>
-          <td>1.637e-11</td>
-          <td>-1.677e-12</td>
-          <td>1.091e-11</td>
-          <td>-4.297e-11</td>
-          <td>9.095e-13</td>
-          <td>2.365e-11</td>
+          <td>1.251e-12</td>
+          <td>4.547e-13</td>
           <td>-9.095e-13</td>
-          <td>7.623e-11</td>
+          <td>-1.819e-12</td>
+          <td>-1.137e-13</td>
+          <td>-1.955e-11</td>
+          <td>-7.105e-15</td>
+          <td>-9.095e-13</td>
+          <td>9.095e-13</td>
+          <td>2.547e-11</td>
+          <td>...</td>
+          <td>2.001e-11</td>
+          <td>-6.548e-11</td>
+          <td>-5.821e-11</td>
+          <td>-3.837e-12</td>
+          <td>-7.276e-12</td>
+          <td>-8.549e-11</td>
+          <td>-9.095e-13</td>
+          <td>-2.274e-11</td>
+          <td>-4.547e-13</td>
+          <td>6.395e-11</td>
         </tr>
         <tr>
           <th>txy</th>
           <td>-3.268e-13</td>
-          <td>9.095e-13</td>
           <td>1.819e-12</td>
-          <td>-5.315e-12</td>
-          <td>-4.263e-14</td>
-          <td>-1.450e-12</td>
-          <td>7.105e-15</td>
           <td>3.638e-12</td>
-          <td>3.638e-12</td>
-          <td>5.912e-12</td>
-          <td>...</td>
-          <td>2.183e-11</td>
-          <td>-1.164e-10</td>
-          <td>3.638e-12</td>
-          <td>0.000e+00</td>
-          <td>7.276e-12</td>
-          <td>1.182e-11</td>
-          <td>4.690e-13</td>
-          <td>3.274e-11</td>
-          <td>-3.411e-13</td>
-          <td>7.276e-12</td>
-        </tr>
-        <tr>
-          <th>tyz</th>
-          <td>5.684e-14</td>
-          <td>-1.137e-13</td>
-          <td>1.364e-12</td>
-          <td>2.274e-13</td>
-          <td>-8.527e-14</td>
-          <td>4.547e-13</td>
-          <td>-1.243e-14</td>
-          <td>-2.274e-13</td>
-          <td>-2.274e-12</td>
-          <td>-4.547e-13</td>
-          <td>...</td>
-          <td>-4.093e-12</td>
-          <td>1.819e-11</td>
-          <td>-4.547e-13</td>
-          <td>-7.745e-13</td>
-          <td>0.000e+00</td>
-          <td>7.958e-13</td>
-          <td>-2.274e-13</td>
-          <td>-4.547e-12</td>
-          <td>-4.547e-13</td>
-          <td>-2.274e-13</td>
-        </tr>
-        <tr>
-          <th>txz</th>
-          <td>5.684e-14</td>
-          <td>2.274e-13</td>
-          <td>1.819e-12</td>
-          <td>3.183e-12</td>
-          <td>-2.274e-13</td>
-          <td>2.274e-12</td>
-          <td>7.105e-15</td>
-          <td>-1.819e-12</td>
-          <td>-1.819e-12</td>
-          <td>0.000e+00</td>
-          <td>...</td>
-          <td>3.638e-12</td>
-          <td>1.455e-11</td>
-          <td>-5.457e-12</td>
-          <td>-5.684e-14</td>
-          <td>7.276e-12</td>
-          <td>-2.956e-12</td>
-          <td>-1.819e-12</td>
-          <td>4.002e-11</td>
-          <td>-9.095e-13</td>
-          <td>-6.025e-12</td>
-        </tr>
-        <tr>
-          <th>omax</th>
-          <td>3.910e-12</td>
-          <td>1.201e-12</td>
-          <td>4.071e-12</td>
-          <td>1.917e-11</td>
-          <td>1.873e-13</td>
-          <td>1.282e-11</td>
-          <td>3.108e-14</td>
-          <td>4.571e-12</td>
-          <td>5.236e-12</td>
-          <td>3.514e-11</td>
-          <td>...</td>
-          <td>3.343e-11</td>
-          <td>1.160e-10</td>
-          <td>4.539e-11</td>
-          <td>1.578e-12</td>
-          <td>2.178e-11</td>
-          <td>1.077e-10</td>
-          <td>2.634e-12</td>
-          <td>3.080e-11</td>
-          <td>1.304e-14</td>
-          <td>7.645e-11</td>
-        </tr>
-        <tr>
-          <th>omid</th>
-          <td>1.435e-12</td>
-          <td>-1.856e-13</td>
-          <td>-2.412e-13</td>
-          <td>4.919e-12</td>
-          <td>1.401e-14</td>
-          <td>2.878e-12</td>
-          <td>1.785e-14</td>
-          <td>1.820e-12</td>
-          <td>-7.997e-13</td>
-          <td>5.450e-12</td>
-          <td>...</td>
-          <td>1.899e-11</td>
-          <td>1.720e-11</td>
-          <td>1.534e-11</td>
-          <td>-2.704e-13</td>
-          <td>1.003e-11</td>
-          <td>4.314e-11</td>
-          <td>5.856e-13</td>
-          <td>-1.616e-10</td>
-          <td>-3.822e-13</td>
-          <td>-8.650e-11</td>
-        </tr>
-        <tr>
-          <th>omin</th>
-          <td>-1.480e-12</td>
-          <td>-1.015e-12</td>
-          <td>-2.011e-12</td>
-          <td>-5.894e-12</td>
-          <td>-3.150e-13</td>
-          <td>-7.280e-12</td>
-          <td>-9.858e-15</td>
-          <td>-4.117e-12</td>
-          <td>-1.080e-11</td>
-          <td>-2.694e-11</td>
-          <td>...</td>
-          <td>-3.787e-11</td>
-          <td>-1.696e-10</td>
-          <td>-1.070e-11</td>
-          <td>-2.104e-12</td>
-          <td>9.372e-13</td>
-          <td>-4.304e-11</td>
-          <td>-1.174e-12</td>
-          <td>-2.285e-10</td>
-          <td>-2.359e-12</td>
-          <td>-1.349e-10</td>
-        </tr>
-        <tr>
-          <th>von_mises</th>
-          <td>4.673e-12</td>
-          <td>1.939e-12</td>
-          <td>5.419e-12</td>
-          <td>2.177e-11</td>
-          <td>4.419e-13</td>
-          <td>1.740e-11</td>
-          <td>3.619e-14</td>
-          <td>7.690e-12</td>
-          <td>1.403e-11</td>
-          <td>5.378e-11</td>
-          <td>...</td>
-          <td>6.529e-11</td>
-          <td>2.512e-10</td>
-          <td>4.861e-11</td>
-          <td>3.189e-12</td>
-          <td>1.810e-11</td>
-          <td>1.310e-10</td>
-          <td>3.301e-12</td>
-          <td>2.331e-10</td>
-          <td>2.202e-12</td>
-          <td>1.918e-10</td>
-        </tr>
-        <tr>
-          <th rowspan="10" valign="top">55</th>
-          <th>oxx</th>
-          <td>-1.577e-12</td>
-          <td>-1.535e-12</td>
-          <td>6.821e-12</td>
-          <td>3.740e-11</td>
-          <td>-8.527e-14</td>
-          <td>-1.114e-11</td>
-          <td>6.040e-14</td>
-          <td>-2.387e-12</td>
-          <td>-1.342e-11</td>
-          <td>6.366e-12</td>
-          <td>...</td>
-          <td>-6.094e-11</td>
-          <td>-1.692e-10</td>
-          <td>5.048e-11</td>
-          <td>7.745e-13</td>
-          <td>-1.273e-11</td>
-          <td>-3.246e-11</td>
-          <td>1.137e-13</td>
-          <td>-1.978e-11</td>
-          <td>0.000e+00</td>
-          <td>-1.227e-10</td>
-        </tr>
-        <tr>
-          <th>oyy</th>
-          <td>-9.663e-13</td>
-          <td>-7.958e-13</td>
-          <td>3.865e-12</td>
-          <td>7.049e-12</td>
-          <td>2.842e-14</td>
-          <td>3.070e-12</td>
-          <td>-2.132e-14</td>
-          <td>-7.958e-12</td>
-          <td>-1.455e-11</td>
-          <td>1.273e-11</td>
-          <td>...</td>
-          <td>3.774e-11</td>
-          <td>-1.528e-10</td>
-          <td>1.478e-11</td>
-          <td>4.846e-12</td>
-          <td>-9.095e-12</td>
-          <td>-2.501e-11</td>
-          <td>-7.958e-13</td>
-          <td>-1.462e-10</td>
-          <td>3.411e-13</td>
-          <td>2.414e-11</td>
-        </tr>
-        <tr>
-          <th>ozz</th>
-          <td>-8.384e-13</td>
-          <td>-1.762e-12</td>
-          <td>8.299e-12</td>
-          <td>1.063e-11</td>
-          <td>-2.700e-13</td>
-          <td>-1.558e-11</td>
-          <td>2.309e-14</td>
-          <td>-6.594e-12</td>
-          <td>-6.594e-12</td>
-          <td>-6.253e-11</td>
-          <td>...</td>
-          <td>-5.002e-12</td>
-          <td>-7.640e-11</td>
-          <td>1.032e-10</td>
-          <td>2.327e-12</td>
-          <td>6.366e-12</td>
-          <td>2.987e-11</td>
-          <td>9.095e-13</td>
-          <td>-3.993e-10</td>
-          <td>-1.137e-12</td>
-          <td>-2.980e-11</td>
-        </tr>
-        <tr>
-          <th>txy</th>
-          <td>-4.263e-13</td>
-          <td>9.095e-13</td>
-          <td>-3.638e-12</td>
-          <td>-5.173e-12</td>
-          <td>1.421e-14</td>
-          <td>-6.537e-12</td>
-          <td>2.842e-14</td>
-          <td>5.457e-12</td>
-          <td>0.000e+00</td>
-          <td>2.638e-11</td>
-          <td>...</td>
-          <td>-7.276e-12</td>
-          <td>-1.164e-10</td>
-          <td>1.273e-11</td>
-          <td>-9.095e-13</td>
-          <td>-1.273e-11</td>
-          <td>1.819e-11</td>
-          <td>2.274e-13</td>
-          <td>-3.638e-11</td>
-          <td>0.000e+00</td>
-          <td>0.000e+00</td>
-        </tr>
-        <tr>
-          <th>tyz</th>
-          <td>5.904e-14</td>
-          <td>1.486e-14</td>
-          <td>3.569e-12</td>
-          <td>-4.496e-13</td>
-          <td>-1.514e-13</td>
-          <td>4.835e-13</td>
-          <td>-1.622e-14</td>
-          <td>-1.314e-12</td>
-          <td>-4.448e-12</td>
-          <td>2.933e-13</td>
-          <td>...</td>
-          <td>-8.148e-12</td>
-          <td>4.401e-11</td>
-          <td>-2.143e-12</td>
-          <td>-1.788e-12</td>
-          <td>1.086e-11</td>
-          <td>-3.935e-12</td>
-          <td>-7.989e-13</td>
-          <td>5.831e-12</td>
-          <td>-1.014e-12</td>
-          <td>3.987e-12</td>
-        </tr>
-        <tr>
-          <th>txz</th>
-          <td>-2.083e-14</td>
-          <td>-6.529e-13</td>
-          <td>2.244e-12</td>
-          <td>-6.709e-12</td>
-          <td>-2.127e-13</td>
-          <td>-5.544e-12</td>
-          <td>1.583e-14</td>
-          <td>-2.999e-12</td>
-          <td>3.172e-12</td>
-          <td>1.138e-11</td>
-          <td>...</td>
-          <td>-1.371e-12</td>
-          <td>2.456e-12</td>
-          <td>-2.013e-11</td>
-          <td>-8.497e-13</td>
-          <td>2.769e-12</td>
-          <td>-1.149e-11</td>
-          <td>2.382e-12</td>
-          <td>3.173e-11</td>
-          <td>1.292e-12</td>
-          <td>-3.442e-12</td>
-        </tr>
-        <tr>
-          <th>omax</th>
-          <td>-7.159e-13</td>
-          <td>-1.016e-13</td>
-          <td>1.031e-11</td>
-          <td>3.974e-11</td>
-          <td>1.489e-13</td>
-          <td>5.920e-12</td>
-          <td>7.167e-14</td>
-          <td>2.158e-12</td>
-          <td>-3.727e-12</td>
-          <td>3.673e-11</td>
-          <td>...</td>
-          <td>3.972e-11</td>
-          <td>-2.474e-11</td>
-          <td>1.104e-10</td>
-          <td>5.810e-12</td>
-          <td>1.255e-11</td>
-          <td>3.286e-11</td>
-          <td>2.985e-12</td>
-          <td>-7.882e-12</td>
-          <td>1.275e-12</td>
-          <td>2.444e-11</td>
-        </tr>
-        <tr>
-          <th>omid</th>
-          <td>-8.698e-13</td>
-          <td>-1.436e-12</td>
-          <td>9.257e-12</td>
-          <td>9.786e-12</td>
-          <td>-3.493e-14</td>
-          <td>-9.713e-12</td>
-          <td>2.763e-14</td>
-          <td>-7.747e-12</td>
-          <td>-1.374e-11</td>
-          <td>-1.558e-11</td>
-          <td>...</td>
-          <td>-6.375e-12</td>
-          <td>-9.094e-11</td>
-          <td>4.755e-11</td>
-          <td>2.283e-12</td>
-          <td>-1.538e-12</td>
-          <td>-1.260e-11</td>
-          <td>-5.153e-13</td>
-          <td>-1.552e-10</td>
-          <td>1.969e-13</td>
-          <td>-2.997e-11</td>
-        </tr>
-        <tr>
-          <th>omin</th>
-          <td>-1.796e-12</td>
-          <td>-2.555e-12</td>
-          <td>-5.832e-13</td>
-          <td>5.560e-12</td>
-          <td>-4.408e-13</td>
-          <td>-1.985e-11</td>
-          <td>-3.713e-14</td>
-          <td>-1.135e-11</td>
-          <td>-1.710e-11</td>
-          <td>-6.458e-11</td>
-          <td>...</td>
-          <td>-6.154e-11</td>
-          <td>-2.827e-10</td>
-          <td>1.050e-11</td>
-          <td>-1.454e-13</td>
-          <td>-2.648e-11</td>
-          <td>-4.785e-11</td>
-          <td>-2.242e-12</td>
-          <td>-4.022e-10</td>
-          <td>-2.267e-12</td>
-          <td>-1.228e-10</td>
-        </tr>
-        <tr>
-          <th>von_mises</th>
-          <td>1.012e-12</td>
-          <td>2.128e-12</td>
-          <td>1.041e-11</td>
-          <td>3.227e-11</td>
-          <td>5.226e-13</td>
-          <td>2.249e-11</td>
-          <td>9.479e-14</td>
-          <td>1.212e-11</td>
-          <td>1.205e-11</td>
-          <td>8.776e-11</td>
-          <td>...</td>
-          <td>8.781e-11</td>
-          <td>2.320e-10</td>
-          <td>8.750e-11</td>
-          <td>5.187e-12</td>
-          <td>3.423e-11</td>
-          <td>7.008e-11</td>
-          <td>4.613e-12</td>
-          <td>3.451e-10</td>
-          <td>3.145e-12</td>
-          <td>1.290e-10</td>
-        </tr>
-        <tr>
-          <th rowspan="10" valign="top">51</th>
-          <th>oxx</th>
-          <td>3.453e-12</td>
-          <td>3.979e-13</td>
-          <td>-1.137e-12</td>
-          <td>-2.922e-11</td>
-          <td>5.684e-14</td>
-          <td>1.251e-11</td>
-          <td>3.197e-14</td>
-          <td>2.046e-12</td>
-          <td>-2.274e-13</td>
-          <td>-4.138e-11</td>
-          <td>...</td>
-          <td>4.547e-11</td>
-          <td>-8.004e-11</td>
-          <td>1.796e-11</td>
-          <td>1.563e-12</td>
-          <td>-8.185e-12</td>
-          <td>-1.168e-10</td>
-          <td>0.000e+00</td>
-          <td>1.569e-10</td>
           <td>-1.023e-12</td>
-          <td>-9.032e-11</td>
-        </tr>
-        <tr>
-          <th>oyy</th>
-          <td>7.958e-13</td>
-          <td>1.705e-13</td>
-          <td>-4.093e-12</td>
-          <td>8.754e-12</td>
-          <td>8.527e-14</td>
-          <td>-8.868e-12</td>
-          <td>1.776e-14</td>
-          <td>2.046e-12</td>
-          <td>-6.821e-13</td>
-          <td>-2.456e-11</td>
-          <td>...</td>
-          <td>-3.274e-11</td>
-          <td>1.201e-10</td>
-          <td>2.797e-11</td>
-          <td>1.222e-12</td>
-          <td>-3.183e-11</td>
-          <td>4.377e-12</td>
-          <td>-3.411e-13</td>
-          <td>4.320e-11</td>
-          <td>-2.274e-13</td>
-          <td>-6.168e-11</td>
-        </tr>
-        <tr>
-          <th>ozz</th>
-          <td>1.663e-12</td>
-          <td>8.527e-14</td>
-          <td>2.274e-13</td>
-          <td>2.723e-11</td>
-          <td>-1.847e-13</td>
-          <td>4.150e-12</td>
-          <td>2.665e-15</td>
-          <td>-1.251e-12</td>
-          <td>-5.684e-12</td>
-          <td>-2.387e-11</td>
-          <td>...</td>
-          <td>2.956e-11</td>
-          <td>-6.366e-11</td>
-          <td>6.048e-11</td>
-          <td>-7.176e-13</td>
-          <td>-9.095e-12</td>
-          <td>8.623e-11</td>
-          <td>5.684e-13</td>
-          <td>-7.230e-11</td>
+          <td>4.263e-14</td>
+          <td>-3.979e-13</td>
+          <td>7.105e-15</td>
           <td>0.000e+00</td>
-          <td>8.328e-12</td>
-        </tr>
-        <tr>
-          <th>txy</th>
-          <td>6.899e-14</td>
-          <td>-1.066e-12</td>
-          <td>6.915e-13</td>
-          <td>-1.368e-12</td>
-          <td>3.089e-14</td>
-          <td>9.440e-13</td>
-          <td>-5.351e-15</td>
-          <td>-1.397e-12</td>
-          <td>-4.697e-12</td>
-          <td>-7.050e-12</td>
-          <td>...</td>
-          <td>-1.234e-11</td>
-          <td>-6.904e-11</td>
-          <td>4.515e-12</td>
-          <td>2.048e-12</td>
-          <td>1.422e-11</td>
-          <td>3.017e-11</td>
-          <td>2.368e-13</td>
-          <td>8.251e-11</td>
-          <td>-4.745e-13</td>
-          <td>-1.218e-12</td>
-        </tr>
-        <tr>
-          <th>tyz</th>
-          <td>9.278e-14</td>
-          <td>-3.556e-13</td>
-          <td>2.800e-12</td>
-          <td>-2.852e-13</td>
-          <td>-1.618e-13</td>
-          <td>5.244e-13</td>
-          <td>-1.679e-14</td>
-          <td>-9.524e-13</td>
-          <td>-4.640e-12</td>
-          <td>-8.046e-13</td>
-          <td>...</td>
-          <td>-1.025e-11</td>
-          <td>6.060e-11</td>
-          <td>-1.459e-12</td>
-          <td>-1.129e-12</td>
-          <td>4.413e-12</td>
-          <td>-2.182e-12</td>
-          <td>-8.646e-13</td>
-          <td>-7.151e-13</td>
-          <td>-9.491e-13</td>
-          <td>2.279e-12</td>
-        </tr>
-        <tr>
-          <th>txz</th>
-          <td>-3.204e-14</td>
-          <td>-6.126e-13</td>
-          <td>2.052e-12</td>
-          <td>-1.356e-12</td>
-          <td>-1.925e-13</td>
-          <td>-1.079e-12</td>
-          <td>1.715e-14</td>
-          <td>7.684e-13</td>
-          <td>-2.019e-13</td>
-          <td>4.442e-12</td>
-          <td>...</td>
-          <td>-1.031e-12</td>
-          <td>3.874e-12</td>
-          <td>-1.301e-11</td>
-          <td>6.473e-14</td>
-          <td>1.787e-12</td>
-          <td>-4.262e-12</td>
-          <td>6.862e-13</td>
-          <td>1.740e-11</td>
-          <td>-2.466e-12</td>
-          <td>-7.064e-12</td>
-        </tr>
-        <tr>
-          <th>omax</th>
-          <td>3.456e-12</td>
-          <td>1.399e-12</td>
-          <td>2.783e-12</td>
-          <td>2.726e-11</td>
-          <td>2.473e-13</td>
-          <td>1.268e-11</td>
-          <td>4.564e-14</td>
-          <td>3.740e-12</td>
-          <td>5.208e-12</td>
-          <td>-2.026e-11</td>
-          <td>...</td>
-          <td>4.739e-11</td>
-          <td>1.563e-10</td>
-          <td>6.434e-11</td>
-          <td>3.573e-12</td>
-          <td>-1.149e-13</td>
-          <td>8.642e-11</td>
-          <td>1.281e-12</td>
-          <td>2.011e-10</td>
-          <td>2.096e-12</td>
-          <td>8.910e-12</td>
-        </tr>
-        <tr>
-          <th>omid</th>
-          <td>1.672e-12</td>
-          <td>4.131e-13</td>
-          <td>-2.294e-12</td>
-          <td>8.800e-12</td>
-          <td>4.195e-14</td>
-          <td>4.044e-12</td>
-          <td>1.837e-14</td>
-          <td>6.562e-13</td>
-          <td>-2.486e-12</td>
-          <td>-2.487e-11</td>
-          <td>...</td>
-          <td>3.115e-11</td>
-          <td>-6.592e-11</td>
-          <td>2.884e-11</td>
-          <td>1.139e-13</td>
-          <td>-1.014e-11</td>
-          <td>1.134e-11</td>
-          <td>1.028e-13</td>
-          <td>8.739e-13</td>
-          <td>-1.189e-14</td>
-          <td>-6.172e-11</td>
-        </tr>
-        <tr>
-          <th>omin</th>
-          <td>7.840e-13</td>
-          <td>-1.159e-12</td>
-          <td>-5.491e-12</td>
-          <td>-2.930e-11</td>
-          <td>-3.319e-13</td>
-          <td>-8.934e-12</td>
-          <td>-1.160e-14</td>
-          <td>-1.554e-12</td>
-          <td>-9.316e-12</td>
-          <td>-4.468e-11</td>
-          <td>...</td>
-          <td>-3.625e-11</td>
-          <td>-1.140e-10</td>
-          <td>1.323e-11</td>
-          <td>-1.619e-12</td>
-          <td>-3.886e-11</td>
-          <td>-1.240e-10</td>
-          <td>-1.156e-12</td>
-          <td>-7.416e-11</td>
-          <td>-3.335e-12</td>
-          <td>-9.087e-11</td>
-        </tr>
-        <tr>
-          <th>von_mises</th>
-          <td>2.356e-12</td>
-          <td>2.235e-12</td>
-          <td>7.227e-12</td>
-          <td>4.996e-11</td>
-          <td>5.086e-13</td>
-          <td>1.884e-11</td>
-          <td>4.959e-14</td>
-          <td>4.606e-12</td>
-          <td>1.259e-11</td>
-          <td>2.248e-11</td>
-          <td>...</td>
-          <td>7.682e-11</td>
-          <td>2.498e-10</td>
-          <td>4.537e-11</td>
-          <td>4.579e-12</td>
-          <td>3.483e-11</td>
-          <td>1.847e-10</td>
-          <td>2.111e-12</td>
-          <td>2.464e-10</td>
-          <td>4.742e-12</td>
-          <td>8.886e-11</td>
-        </tr>
-        <tr>
-          <th>...</th>
-          <th>...</th>
-          <th>...</th>
-          <td>...</td>
-          <td>...</td>
-          <td>...</td>
-          <td>...</td>
-          <td>...</td>
-          <td>...</td>
-          <td>...</td>
-          <td>...</td>
-          <td>...</td>
-          <td>...</td>
-          <td>...</td>
-          <td>...</td>
-          <td>...</td>
-          <td>...</td>
-          <td>...</td>
-          <td>...</td>
-          <td>...</td>
-          <td>...</td>
-          <td>...</td>
-          <td>...</td>
-          <td>...</td>
-        </tr>
-        <tr>
-          <th rowspan="30" valign="top">5568</th>
-          <th rowspan="10" valign="top">5593</th>
-          <th>oxx</th>
-          <td>2.684e-12</td>
-          <td>-4.547e-13</td>
-          <td>-9.095e-12</td>
-          <td>-2.592e-11</td>
-          <td>-9.663e-13</td>
-          <td>-1.086e-11</td>
-          <td>-7.105e-15</td>
-          <td>-9.095e-12</td>
-          <td>-1.819e-12</td>
-          <td>-1.592e-11</td>
-          <td>...</td>
-          <td>-1.019e-10</td>
-          <td>4.657e-10</td>
-          <td>-3.638e-11</td>
-          <td>-4.093e-11</td>
-          <td>-1.237e-10</td>
-          <td>9.095e-11</td>
-          <td>-2.558e-12</td>
-          <td>-4.366e-11</td>
-          <td>8.185e-12</td>
-          <td>5.093e-11</td>
-        </tr>
-        <tr>
-          <th>oyy</th>
-          <td>-1.931e-12</td>
-          <td>1.251e-11</td>
-          <td>-3.001e-11</td>
-          <td>-2.063e-11</td>
-          <td>-1.450e-12</td>
-          <td>-1.218e-11</td>
-          <td>-1.332e-13</td>
-          <td>1.864e-11</td>
-          <td>5.002e-11</td>
-          <td>1.005e-10</td>
-          <td>...</td>
-          <td>-5.530e-10</td>
-          <td>1.382e-09</td>
-          <td>-2.110e-10</td>
-          <td>-2.780e-11</td>
-          <td>1.637e-10</td>
-          <td>-2.183e-10</td>
-          <td>-2.451e-12</td>
-          <td>5.239e-10</td>
-          <td>9.322e-12</td>
-          <td>8.731e-11</td>
-        </tr>
-        <tr>
-          <th>ozz</th>
-          <td>-2.984e-12</td>
-          <td>2.274e-12</td>
-          <td>-8.185e-12</td>
-          <td>-5.952e-11</td>
-          <td>1.137e-13</td>
-          <td>-3.303e-11</td>
-          <td>8.171e-14</td>
-          <td>4.547e-12</td>
-          <td>2.365e-11</td>
-          <td>1.146e-10</td>
-          <td>...</td>
-          <td>-5.675e-10</td>
-          <td>1.441e-09</td>
-          <td>-1.019e-10</td>
-          <td>-5.633e-11</td>
-          <td>4.475e-10</td>
-          <td>-4.729e-11</td>
-          <td>-2.871e-12</td>
-          <td>-2.328e-10</td>
-          <td>3.183e-11</td>
-          <td>-1.091e-10</td>
-        </tr>
-        <tr>
-          <th>txy</th>
-          <td>1.019e-13</td>
-          <td>3.859e-13</td>
-          <td>2.657e-13</td>
-          <td>1.481e-11</td>
-          <td>-3.401e-13</td>
-          <td>2.965e-12</td>
-          <td>-2.543e-14</td>
-          <td>3.328e-12</td>
-          <td>6.831e-12</td>
-          <td>-1.006e-11</td>
-          <td>...</td>
-          <td>2.791e-11</td>
-          <td>4.518e-10</td>
-          <td>8.591e-12</td>
-          <td>-1.679e-12</td>
-          <td>5.879e-11</td>
-          <td>-2.738e-11</td>
-          <td>1.175e-12</td>
-          <td>-7.018e-11</td>
-          <td>1.554e-12</td>
-          <td>6.248e-12</td>
-        </tr>
-        <tr>
-          <th>tyz</th>
-          <td>5.483e-13</td>
-          <td>3.287e-12</td>
-          <td>-1.896e-11</td>
-          <td>1.095e-11</td>
-          <td>-1.666e-12</td>
-          <td>7.857e-12</td>
-          <td>-8.149e-14</td>
-          <td>9.470e-12</td>
-          <td>2.980e-11</td>
-          <td>-2.198e-11</td>
-          <td>...</td>
-          <td>5.658e-10</td>
-          <td>-2.556e-10</td>
-          <td>9.995e-11</td>
-          <td>2.427e-12</td>
-          <td>-5.129e-11</td>
-          <td>4.116e-11</td>
-          <td>5.419e-13</td>
-          <td>-4.190e-11</td>
-          <td>-1.739e-12</td>
-          <td>-2.480e-12</td>
-        </tr>
-        <tr>
-          <th>txz</th>
-          <td>-9.097e-13</td>
-          <td>-1.659e-12</td>
-          <td>1.292e-11</td>
-          <td>1.107e-14</td>
-          <td>8.598e-13</td>
-          <td>4.500e-15</td>
-          <td>4.302e-14</td>
-          <td>-2.407e-12</td>
-          <td>-1.506e-11</td>
-          <td>-2.920e-11</td>
-          <td>...</td>
-          <td>-4.904e-11</td>
-          <td>1.143e-10</td>
-          <td>-1.736e-10</td>
-          <td>-1.090e-11</td>
-          <td>1.169e-10</td>
-          <td>6.750e-13</td>
-          <td>-1.821e-12</td>
-          <td>-2.833e-12</td>
-          <td>1.823e-11</td>
-          <td>-5.916e-11</td>
-        </tr>
-        <tr>
-          <th>omax</th>
-          <td>2.827e-12</td>
-          <td>1.347e-11</td>
-          <td>9.627e-12</td>
-          <td>-6.848e-12</td>
-          <td>1.507e-12</td>
-          <td>-7.303e-12</td>
-          <td>1.270e-13</td>
-          <td>2.351e-11</td>
-          <td>6.951e-11</td>
-          <td>1.329e-10</td>
-          <td>...</td>
-          <td>7.561e-12</td>
-          <td>1.718e-09</td>
-          <td>1.181e-10</td>
-          <td>-2.693e-11</td>
-          <td>4.755e-10</td>
-          <td>9.342e-11</td>
-          <td>-7.056e-13</td>
-          <td>5.346e-10</td>
-          <td>4.176e-11</td>
-          <td>8.965e-11</td>
-        </tr>
-        <tr>
-          <th>omid</th>
-          <td>-1.711e-12</td>
-          <td>2.342e-12</td>
-          <td>-1.448e-11</td>
-          <td>-3.640e-11</td>
-          <td>-1.278e-12</td>
-          <td>-1.307e-11</td>
-          <td>-2.423e-14</td>
-          <td>1.076e-12</td>
-          <td>1.780e-11</td>
-          <td>9.011e-11</td>
-          <td>...</td>
-          <td>-1.010e-10</td>
-          <td>1.326e-09</td>
-          <td>-1.515e-10</td>
-          <td>-3.609e-11</td>
-          <td>1.729e-10</td>
-          <td>-3.812e-11</td>
-          <td>-2.081e-12</td>
-          <td>-5.187e-11</td>
-          <td>9.724e-12</td>
-          <td>6.808e-11</td>
-        </tr>
-        <tr>
-          <th>omin</th>
-          <td>-3.346e-12</td>
-          <td>-1.489e-12</td>
-          <td>-4.244e-11</td>
-          <td>-6.282e-11</td>
-          <td>-2.531e-12</td>
-          <td>-3.569e-11</td>
-          <td>-1.614e-13</td>
-          <td>-1.049e-11</td>
-          <td>-1.546e-11</td>
-          <td>-2.386e-11</td>
-          <td>...</td>
-          <td>-1.129e-09</td>
-          <td>2.452e-10</td>
-          <td>-3.158e-10</td>
-          <td>-6.204e-11</td>
-          <td>-1.609e-10</td>
-          <td>-2.299e-10</td>
-          <td>-5.093e-12</td>
-          <td>-2.354e-10</td>
-          <td>-2.144e-12</td>
-          <td>-1.286e-10</td>
-        </tr>
-        <tr>
-          <th>von_mises</th>
-          <td>5.539e-12</td>
-          <td>1.346e-11</td>
-          <td>4.513e-11</td>
-          <td>4.850e-11</td>
-          <td>3.580e-12</td>
-          <td>2.599e-11</td>
-          <td>2.498e-13</td>
-          <td>2.995e-11</td>
-          <td>7.416e-11</td>
-          <td>1.404e-10</td>
-          <td>...</td>
-          <td>1.086e-09</td>
-          <td>1.321e-09</td>
-          <td>3.794e-10</td>
-          <td>3.154e-11</td>
-          <td>5.513e-10</td>
-          <td>2.816e-10</td>
-          <td>3.887e-12</td>
-          <td>6.966e-10</td>
-          <td>3.934e-11</td>
-          <td>2.083e-10</td>
-        </tr>
-        <tr>
-          <th rowspan="10" valign="top">5594</th>
-          <th>oxx</th>
-          <td>6.555e-12</td>
-          <td>-1.819e-12</td>
-          <td>1.091e-11</td>
-          <td>8.390e-11</td>
-          <td>2.274e-13</td>
-          <td>4.388e-11</td>
-          <td>-9.237e-14</td>
-          <td>0.000e+00</td>
-          <td>-7.276e-12</td>
-          <td>-3.311e-10</td>
-          <td>...</td>
-          <td>4.075e-10</td>
-          <td>-8.731e-10</td>
-          <td>-2.619e-10</td>
-          <td>3.956e-11</td>
-          <td>-3.783e-10</td>
-          <td>-1.019e-10</td>
-          <td>3.524e-12</td>
-          <td>1.164e-09</td>
-          <td>-2.819e-11</td>
-          <td>5.384e-10</td>
-        </tr>
-        <tr>
-          <th>oyy</th>
-          <td>4.595e-12</td>
-          <td>-9.095e-12</td>
-          <td>3.456e-11</td>
-          <td>6.924e-11</td>
-          <td>8.527e-13</td>
-          <td>5.718e-11</td>
-          <td>-6.750e-14</td>
-          <td>-3.911e-11</td>
-          <td>-8.185e-11</td>
-          <td>-2.519e-10</td>
-          <td>...</td>
-          <td>7.276e-10</td>
-          <td>-2.285e-09</td>
-          <td>1.528e-10</td>
-          <td>3.365e-11</td>
-          <td>-3.747e-10</td>
-          <td>8.004e-11</td>
-          <td>4.150e-12</td>
-          <td>8.440e-10</td>
-          <td>-3.001e-11</td>
-          <td>2.692e-10</td>
-        </tr>
-        <tr>
-          <th>ozz</th>
-          <td>3.380e-12</td>
-          <td>-4.547e-12</td>
-          <td>1.182e-11</td>
-          <td>4.241e-11</td>
-          <td>7.958e-13</td>
-          <td>3.976e-11</td>
-          <td>7.105e-14</td>
-          <td>-1.819e-12</td>
-          <td>-7.276e-12</td>
-          <td>-1.774e-10</td>
-          <td>...</td>
-          <td>-2.037e-10</td>
-          <td>-1.834e-09</td>
-          <td>-1.819e-10</td>
-          <td>3.109e-11</td>
-          <td>-4.184e-10</td>
-          <td>-1.601e-10</td>
-          <td>3.482e-12</td>
-          <td>6.694e-10</td>
-          <td>-2.956e-11</td>
-          <td>4.075e-10</td>
-        </tr>
-        <tr>
-          <th>txy</th>
-          <td>-2.199e-12</td>
-          <td>-1.364e-12</td>
-          <td>1.091e-11</td>
-          <td>-1.876e-11</td>
-          <td>1.137e-13</td>
-          <td>-1.165e-11</td>
-          <td>5.684e-14</td>
-          <td>-5.457e-12</td>
-          <td>-7.276e-12</td>
-          <td>9.004e-11</td>
-          <td>...</td>
-          <td>5.821e-11</td>
-          <td>3.492e-10</td>
-          <td>7.276e-11</td>
-          <td>-2.490e-11</td>
-          <td>1.746e-10</td>
-          <td>6.548e-11</td>
-          <td>-1.648e-12</td>
-          <td>-6.694e-10</td>
-          <td>6.821e-12</td>
-          <td>-1.164e-10</td>
-        </tr>
-        <tr>
-          <th>tyz</th>
-          <td>6.181e-13</td>
-          <td>2.691e-12</td>
-          <td>-1.703e-11</td>
-          <td>1.158e-11</td>
-          <td>-1.780e-12</td>
-          <td>8.389e-12</td>
-          <td>-7.313e-14</td>
-          <td>8.704e-12</td>
-          <td>2.823e-11</td>
-          <td>-2.288e-11</td>
-          <td>...</td>
-          <td>4.681e-10</td>
-          <td>-2.767e-10</td>
-          <td>1.057e-10</td>
-          <td>5.093e-12</td>
-          <td>-7.499e-11</td>
-          <td>5.553e-11</td>
-          <td>1.124e-12</td>
-          <td>2.552e-11</td>
-          <td>-2.556e-12</td>
-          <td>2.972e-12</td>
-        </tr>
-        <tr>
-          <th>txz</th>
-          <td>4.545e-13</td>
-          <td>6.079e-13</td>
-          <td>-1.598e-12</td>
-          <td>-7.263e-12</td>
-          <td>-4.852e-14</td>
-          <td>5.250e-15</td>
-          <td>4.510e-16</td>
-          <td>3.028e-12</td>
-          <td>-7.836e-12</td>
-          <td>-2.921e-11</td>
-          <td>...</td>
-          <td>1.259e-10</td>
-          <td>-1.189e-10</td>
-          <td>-2.789e-11</td>
-          <td>-7.263e-12</td>
-          <td>-2.854e-11</td>
-          <td>7.875e-13</td>
-          <td>-9.116e-13</td>
-          <td>-3.305e-12</td>
-          <td>5.158e-14</td>
-          <td>-5.932e-11</td>
-        </tr>
-        <tr>
-          <th>omax</th>
-          <td>7.983e-12</td>
-          <td>-1.565e-12</td>
-          <td>4.670e-11</td>
-          <td>9.949e-11</td>
-          <td>2.610e-12</td>
-          <td>6.600e-11</td>
-          <td>1.052e-13</td>
-          <td>2.279e-12</td>
-          <td>8.356e-12</td>
-          <td>-1.489e-10</td>
-          <td>...</td>
-          <td>9.420e-10</td>
-          <td>-7.606e-10</td>
-          <td>1.920e-10</td>
-          <td>6.404e-11</td>
-          <td>-1.791e-10</td>
-          <td>1.116e-10</td>
-          <td>6.267e-12</td>
-          <td>1.693e-09</td>
-          <td>-2.186e-11</td>
-          <td>5.986e-10</td>
-        </tr>
-        <tr>
-          <th>omid</th>
-          <td>4.047e-12</td>
-          <td>-3.299e-12</td>
-          <td>9.731e-12</td>
-          <td>5.795e-11</td>
-          <td>2.235e-13</td>
-          <td>4.149e-11</td>
-          <td>-4.489e-14</td>
-          <td>-1.311e-12</td>
-          <td>-1.319e-11</td>
-          <td>-2.209e-10</td>
-          <td>...</td>
-          <td>3.986e-10</td>
-          <td>-1.768e-09</td>
-          <td>-1.867e-10</td>
-          <td>2.879e-11</td>
-          <td>-4.328e-10</td>
-          <td>-1.181e-10</td>
-          <td>2.730e-12</td>
-          <td>6.700e-10</td>
-          <td>-2.936e-11</td>
-          <td>3.924e-10</td>
-        </tr>
-        <tr>
-          <th>omin</th>
-          <td>2.501e-12</td>
-          <td>-1.060e-11</td>
-          <td>8.646e-13</td>
-          <td>3.810e-11</td>
-          <td>-9.573e-13</td>
-          <td>3.334e-11</td>
-          <td>-1.491e-13</td>
-          <td>-4.190e-11</td>
-          <td>-9.157e-11</td>
-          <td>-3.905e-10</td>
-          <td>...</td>
-          <td>-4.093e-10</td>
-          <td>-2.463e-09</td>
-          <td>-2.963e-10</td>
-          <td>1.148e-11</td>
-          <td>-5.595e-10</td>
-          <td>-1.753e-10</td>
-          <td>2.159e-12</td>
-          <td>3.149e-10</td>
-          <td>-3.655e-11</td>
-          <td>2.240e-10</td>
-        </tr>
-        <tr>
-          <th>von_mises</th>
-          <td>4.896e-12</td>
-          <td>8.303e-12</td>
-          <td>4.211e-11</td>
-          <td>5.426e-11</td>
-          <td>3.147e-12</td>
-          <td>2.945e-11</td>
-          <td>2.214e-13</td>
-          <td>4.249e-11</td>
-          <td>9.108e-11</td>
-          <td>2.149e-10</td>
-          <td>...</td>
-          <td>1.178e-09</td>
-          <td>1.482e-09</td>
-          <td>4.438e-10</td>
-          <td>4.639e-11</td>
-          <td>3.355e-10</td>
-          <td>2.630e-10</td>
-          <td>3.854e-12</td>
-          <td>1.239e-09</td>
-          <td>1.272e-11</td>
-          <td>3.250e-10</td>
-        </tr>
-        <tr>
-          <th rowspan="10" valign="top">5595</th>
-          <th>oxx</th>
-          <td>1.021e-11</td>
-          <td>-1.819e-12</td>
-          <td>2.910e-11</td>
-          <td>1.119e-10</td>
-          <td>9.095e-13</td>
-          <td>1.017e-10</td>
-          <td>-7.105e-14</td>
-          <td>-1.091e-11</td>
-          <td>-4.366e-11</td>
-          <td>-3.220e-10</td>
-          <td>...</td>
-          <td>-2.619e-10</td>
-          <td>-2.503e-09</td>
-          <td>-8.440e-10</td>
-          <td>9.663e-11</td>
-          <td>-1.128e-09</td>
-          <td>-4.075e-10</td>
-          <td>1.097e-11</td>
-          <td>3.318e-09</td>
-          <td>-7.549e-11</td>
-          <td>1.091e-09</td>
-        </tr>
-        <tr>
-          <th>oyy</th>
-          <td>2.387e-12</td>
-          <td>0.000e+00</td>
-          <td>-1.455e-11</td>
-          <td>1.000e-11</td>
-          <td>2.274e-12</td>
-          <td>2.001e-11</td>
-          <td>0.000e+00</td>
-          <td>2.910e-11</td>
-          <td>0.000e+00</td>
-          <td>-1.310e-10</td>
-          <td>...</td>
-          <td>-4.657e-10</td>
-          <td>-9.313e-10</td>
-          <td>-1.164e-10</td>
-          <td>8.185e-12</td>
-          <td>-1.746e-10</td>
-          <td>-1.164e-10</td>
-          <td>1.478e-12</td>
-          <td>9.313e-10</td>
-          <td>-1.091e-11</td>
-          <td>1.164e-10</td>
-        </tr>
-        <tr>
-          <th>ozz</th>
-          <td>8.843e-12</td>
-          <td>-1.819e-12</td>
           <td>-3.638e-12</td>
-          <td>1.194e-10</td>
-          <td>-1.819e-12</td>
-          <td>9.447e-11</td>
-          <td>-1.776e-13</td>
-          <td>-7.276e-12</td>
-          <td>-5.821e-11</td>
-          <td>-3.820e-10</td>
-          <td>...</td>
-          <td>4.366e-10</td>
-          <td>-3.143e-09</td>
-          <td>-6.694e-10</td>
-          <td>1.041e-10</td>
-          <td>-6.548e-10</td>
-          <td>-2.765e-10</td>
-          <td>6.850e-12</td>
-          <td>1.746e-09</td>
-          <td>-6.366e-11</td>
-          <td>7.858e-10</td>
-        </tr>
-        <tr>
-          <th>txy</th>
-          <td>-3.659e-13</td>
-          <td>-1.819e-12</td>
-          <td>1.091e-11</td>
-          <td>-1.944e-11</td>
-          <td>2.274e-13</td>
-          <td>-4.604e-12</td>
-          <td>1.421e-14</td>
-          <td>-5.457e-12</td>
-          <td>-3.638e-12</td>
-          <td>2.274e-11</td>
-          <td>...</td>
-          <td>8.731e-11</td>
-          <td>3.492e-10</td>
-          <td>1.455e-11</td>
-          <td>-3.752e-12</td>
-          <td>-8.731e-11</td>
-          <td>2.183e-11</td>
-          <td>-6.253e-13</td>
-          <td>-6.112e-10</td>
-          <td>1.137e-11</td>
-          <td>-1.164e-10</td>
-        </tr>
-        <tr>
-          <th>tyz</th>
-          <td>-7.674e-13</td>
           <td>-2.274e-12</td>
-          <td>1.273e-11</td>
-          <td>-9.891e-12</td>
-          <td>3.411e-13</td>
-          <td>-2.728e-12</td>
-          <td>4.974e-14</td>
-          <td>-7.276e-12</td>
-          <td>-1.455e-11</td>
-          <td>1.364e-11</td>
           <td>...</td>
-          <td>-5.821e-11</td>
-          <td>2.037e-10</td>
-          <td>-1.601e-10</td>
-          <td>-1.285e-11</td>
-          <td>1.164e-10</td>
-          <td>0.000e+00</td>
-          <td>-1.393e-12</td>
-          <td>8.731e-11</td>
-          <td>1.046e-11</td>
-          <td>0.000e+00</td>
+          <td>2.547e-11</td>
+          <td>1.455e-10</td>
+          <td>-9.095e-13</td>
+          <td>-9.095e-13</td>
+          <td>7.276e-12</td>
+          <td>-4.547e-12</td>
+          <td>-3.411e-13</td>
+          <td>-4.366e-11</td>
+          <td>-4.547e-13</td>
+          <td>6.366e-12</td>
         </tr>
         <tr>
-          <th>txz</th>
-          <td>-4.547e-13</td>
-          <td>-1.608e-12</td>
-          <td>5.418e-12</td>
-          <td>-1.455e-11</td>
-          <td>6.238e-13</td>
-          <td>-7.277e-12</td>
-          <td>1.413e-14</td>
-          <td>-4.065e-12</td>
-          <td>-1.836e-11</td>
-          <td>-2.908e-11</td>
+          <th>tyz</th>
+          <td>2.842e-14</td>
+          <td>3.979e-13</td>
+          <td>0.000e+00</td>
+          <td>1.137e-13</td>
+          <td>2.842e-14</td>
+          <td>2.274e-13</td>
+          <td>-8.882e-15</td>
+          <td>0.000e+00</td>
+          <td>1.819e-12</td>
+          <td>-2.274e-12</td>
           <td>...</td>
-          <td>-1.095e-10</td>
-          <td>4.346e-13</td>
-          <td>-1.457e-10</td>
-          <td>-7.278e-12</td>
-          <td>8.721e-11</td>
+          <td>-3.183e-12</td>
+          <td>1.091e-11</td>
+          <td>-9.095e-13</td>
+          <td>5.045e-13</td>
+          <td>1.091e-11</td>
+          <td>2.842e-13</td>
+          <td>-2.274e-13</td>
+          <td>1.410e-11</td>
+          <td>0.000e+00</td>
+          <td>-5.969e-13</td>
+        </tr>
+        <tr>
+          <th>...</th>
+          <th>...</th>
+          <th>...</th>
+          <td>...</td>
+          <td>...</td>
+          <td>...</td>
+          <td>...</td>
+          <td>...</td>
+          <td>...</td>
+          <td>...</td>
+          <td>...</td>
+          <td>...</td>
+          <td>...</td>
+          <td>...</td>
+          <td>...</td>
+          <td>...</td>
+          <td>...</td>
+          <td>...</td>
+          <td>...</td>
+          <td>...</td>
+          <td>...</td>
+          <td>...</td>
+          <td>...</td>
+          <td>...</td>
+        </tr>
+        <tr>
+          <th rowspan="5" valign="top">5568</th>
+          <th rowspan="5" valign="top">5595</th>
+          <th>txz</th>
+          <td>4.548e-13</td>
+          <td>-1.944e-14</td>
+          <td>1.406e-11</td>
+          <td>-1.455e-11</td>
+          <td>-9.080e-13</td>
+          <td>-1.819e-11</td>
+          <td>-8.026e-17</td>
+          <td>-1.225e-11</td>
+          <td>-1.495e-11</td>
+          <td>4.367e-11</td>
+          <td>...</td>
+          <td>-5.860e-11</td>
+          <td>3.497e-10</td>
+          <td>-8.753e-11</td>
+          <td>-2.253e-15</td>
+          <td>5.811e-11</td>
           <td>-1.401e-13</td>
-          <td>-1.819e-12</td>
-          <td>5.881e-13</td>
-          <td>1.454e-11</td>
-          <td>-5.801e-11</td>
+          <td>-1.364e-12</td>
+          <td>-2.322e-10</td>
+          <td>3.629e-12</td>
+          <td>5.841e-11</td>
         </tr>
         <tr>
           <th>omax</th>
-          <td>1.035e-11</td>
-          <td>1.691e-12</td>
-          <td>3.361e-11</td>
-          <td>1.308e-10</td>
-          <td>2.359e-12</td>
-          <td>1.063e-10</td>
-          <td>1.643e-14</td>
-          <td>3.102e-11</td>
-          <td>3.446e-12</td>
-          <td>-1.279e-10</td>
+          <td>5.819e-12</td>
+          <td>1.221e-11</td>
+          <td>7.609e-11</td>
+          <td>1.018e-10</td>
+          <td>-3.954e-13</td>
+          <td>8.336e-11</td>
+          <td>9.825e-14</td>
+          <td>-1.606e-11</td>
+          <td>1.108e-12</td>
+          <td>1.220e-10</td>
           <td>...</td>
-          <td>4.588e-10</td>
-          <td>-8.399e-10</td>
-          <td>-6.981e-11</td>
-          <td>1.094e-10</td>
-          <td>-1.434e-10</td>
-          <td>-1.148e-10</td>
-          <td>1.166e-11</td>
-          <td>3.465e-09</td>
-          <td>-6.033e-12</td>
-          <td>1.115e-09</td>
+          <td>2.013e-10</td>
+          <td>2.213e-09</td>
+          <td>-1.527e-10</td>
+          <td>8.035e-11</td>
+          <td>4.857e-10</td>
+          <td>1.316e-10</td>
+          <td>8.612e-12</td>
+          <td>1.728e-09</td>
+          <td>3.570e-11</td>
+          <td>5.262e-10</td>
         </tr>
         <tr>
           <th>omid</th>
-          <td>8.815e-12</td>
-          <td>-2.472e-13</td>
-          <td>1.018e-12</td>
-          <td>1.054e-10</td>
-          <td>9.796e-13</td>
-          <td>9.029e-11</td>
-          <td>-7.365e-14</td>
-          <td>-4.874e-12</td>
-          <td>-3.191e-11</td>
-          <td>-3.115e-10</td>
+          <td>1.003e-12</td>
+          <td>1.003e-11</td>
+          <td>4.388e-11</td>
+          <td>1.683e-11</td>
+          <td>-1.421e-12</td>
+          <td>2.142e-11</td>
+          <td>4.564e-14</td>
+          <td>-2.840e-11</td>
+          <td>-7.396e-11</td>
+          <td>-8.451e-11</td>
           <td>...</td>
-          <td>-2.516e-10</td>
-          <td>-2.574e-09</td>
-          <td>-6.276e-10</td>
-          <td>9.328e-11</td>
-          <td>-6.587e-10</td>
-          <td>-2.765e-10</td>
-          <td>6.614e-12</td>
-          <td>1.753e-09</td>
-          <td>-5.857e-11</td>
-          <td>7.758e-10</td>
+          <td>-4.313e-11</td>
+          <td>-1.228e-09</td>
+          <td>-2.507e-10</td>
+          <td>3.745e-11</td>
+          <td>-1.008e-10</td>
+          <td>2.860e-11</td>
+          <td>4.314e-12</td>
+          <td>-1.323e-10</td>
+          <td>-1.073e-11</td>
+          <td>-3.357e-11</td>
         </tr>
         <tr>
           <th>omin</th>
-          <td>2.276e-12</td>
-          <td>-5.082e-12</td>
-          <td>-2.372e-11</td>
-          <td>5.066e-12</td>
-          <td>-1.974e-12</td>
-          <td>1.962e-11</td>
-          <td>-1.915e-13</td>
-          <td>-1.523e-11</td>
-          <td>-7.340e-11</td>
-          <td>-3.955e-10</td>
+          <td>-3.504e-12</td>
+          <td>3.222e-12</td>
+          <td>-3.550e-12</td>
+          <td>-3.721e-11</td>
+          <td>-3.072e-12</td>
+          <td>-3.554e-11</td>
+          <td>3.375e-14</td>
+          <td>-4.285e-11</td>
+          <td>-1.163e-10</td>
+          <td>-2.739e-10</td>
           <td>...</td>
-          <td>-4.983e-10</td>
-          <td>-3.163e-09</td>
-          <td>-9.324e-10</td>
-          <td>6.253e-12</td>
-          <td>-1.155e-09</td>
-          <td>-4.091e-10</td>
-          <td>1.025e-12</td>
-          <td>7.765e-10</td>
-          <td>-8.547e-11</td>
-          <td>1.026e-10</td>
+          <td>-7.112e-10</td>
+          <td>-2.091e-09</td>
+          <td>-3.533e-10</td>
+          <td>-4.072e-11</td>
+          <td>-6.613e-10</td>
+          <td>-3.785e-10</td>
+          <td>-6.303e-12</td>
+          <td>-4.902e-10</td>
+          <td>-4.862e-11</td>
+          <td>-2.453e-10</td>
         </tr>
         <tr>
           <th>von_mises</th>
-          <td>7.427e-12</td>
-          <td>6.041e-12</td>
-          <td>4.980e-11</td>
-          <td>1.151e-10</td>
-          <td>3.834e-12</td>
-          <td>7.990e-11</td>
-          <td>1.806e-13</td>
-          <td>4.203e-11</td>
-          <td>6.662e-11</td>
-          <td>2.371e-10</td>
+          <td>8.075e-12</td>
+          <td>8.122e-12</td>
+          <td>6.939e-11</td>
+          <td>1.213e-10</td>
+          <td>2.339e-12</td>
+          <td>1.030e-10</td>
+          <td>5.945e-14</td>
+          <td>2.323e-11</td>
+          <td>1.030e-10</td>
+          <td>3.430e-10</td>
           <td>...</td>
-          <td>8.607e-10</td>
-          <td>2.092e-09</td>
-          <td>7.577e-10</td>
-          <td>9.612e-11</td>
-          <td>8.762e-10</td>
-          <td>2.553e-10</td>
-          <td>9.214e-12</td>
-          <td>2.358e-09</td>
-          <td>6.998e-11</td>
-          <td>8.926e-10</td>
+          <td>8.181e-10</td>
+          <td>3.944e-09</td>
+          <td>1.737e-10</td>
+          <td>1.063e-10</td>
+          <td>9.934e-10</td>
+          <td>4.671e-10</td>
+          <td>1.330e-11</td>
+          <td>2.063e-09</td>
+          <td>7.315e-11</td>
+          <td>6.905e-10</td>
         </tr>
       </tbody>
     </table>
@@ -20103,20 +5318,20 @@ Cycles, at the top.
           <th>Freq</th>
           <th>8.359</th>
           <th>9.508</th>
-          <th>15.666</th>
+          <th>15.667</th>
           <th>20.237</th>
           <th>20.306</th>
           <th>20.555</th>
           <th>21.500</th>
           <th>21.706</th>
           <th>21.725</th>
-          <th>28.536</th>
+          <th>28.542</th>
           <th>...</th>
           <th>80.076</th>
           <th>86.487</th>
           <th>88.168</th>
           <th>88.477</th>
-          <th>89.923</th>
+          <th>89.928</th>
           <th>94.290</th>
           <th>94.368</th>
           <th>96.044</th>
@@ -20129,25 +5344,25 @@ Cycles, at the top.
           <th>Eigenvalue</th>
           <th>2758.149</th>
           <th>3568.632</th>
-          <th>9689.306</th>
-          <th>16168.100</th>
-          <th>16278.223</th>
-          <th>16679.709</th>
-          <th>18248.434</th>
+          <th>9689.982</th>
+          <th>16168.038</th>
+          <th>16278.158</th>
+          <th>16679.707</th>
+          <th>18248.432</th>
           <th>18600.697</th>
           <th>18632.551</th>
-          <th>32147.814</th>
+          <th>32159.891</th>
           <th>...</th>
-          <th>253140.875</th>
-          <th>295297.750</th>
-          <th>306885.906</th>
+          <th>253141.172</th>
+          <th>295300.938</th>
+          <th>306886.000</th>
           <th>309040.656</th>
-          <th>319227.719</th>
+          <th>319267.094</th>
           <th>350984.500</th>
           <th>351566.188</th>
-          <th>364166.156</th>
+          <th>364166.312</th>
           <th>384601.344</th>
-          <th>386090.438</th>
+          <th>386090.469</th>
         </tr>
         <tr>
           <th></th>
@@ -20155,20 +5370,20 @@ Cycles, at the top.
           <th>Radians</th>
           <th>52.518</th>
           <th>59.738</th>
-          <th>98.434</th>
+          <th>98.438</th>
           <th>127.154</th>
           <th>127.586</th>
           <th>129.150</th>
           <th>135.087</th>
           <th>136.384</th>
           <th>136.501</th>
-          <th>179.298</th>
+          <th>179.332</th>
           <th>...</th>
           <th>503.131</th>
-          <th>543.413</th>
+          <th>543.416</th>
           <th>553.973</th>
           <th>555.914</th>
-          <th>565.002</th>
+          <th>565.037</th>
           <th>592.439</th>
           <th>592.930</th>
           <th>603.462</th>
@@ -20204,1478 +5419,274 @@ Cycles, at the top.
       </thead>
       <tbody>
         <tr>
-          <th rowspan="30" valign="top">3684</th>
-          <th rowspan="10" valign="top">0</th>
+          <th rowspan="5" valign="top">3684</th>
+          <th rowspan="5" valign="top">0</th>
           <th>exx</th>
-          <td>1.078e-19</td>
-          <td>-6.378e-21</td>
-          <td>3.494e-20</td>
-          <td>-5.056e-21</td>
-          <td>-4.111e-21</td>
-          <td>-8.712e-19</td>
-          <td>-1.602e-21</td>
-          <td>4.810e-20</td>
-          <td>-6.750e-20</td>
-          <td>3.478e-18</td>
+          <td>1.079e-19</td>
+          <td>-4.132e-21</td>
+          <td>-4.924e-20</td>
+          <td>2.597e-18</td>
+          <td>-4.290e-21</td>
+          <td>8.636e-19</td>
+          <td>-1.635e-21</td>
+          <td>-4.844e-20</td>
+          <td>1.182e-20</td>
+          <td>-1.719e-18</td>
           <td>...</td>
-          <td>5.009e-19</td>
-          <td>-3.660e-19</td>
-          <td>-3.466e-18</td>
-          <td>1.145e-19</td>
-          <td>-4.873e-19</td>
-          <td>-3.459e-18</td>
-          <td>5.628e-21</td>
-          <td>6.894e-18</td>
-          <td>-3.309e-20</td>
-          <td>-1.024e-20</td>
+          <td>1.524e-20</td>
+          <td>-9.929e-20</td>
+          <td>-3.477e-18</td>
+          <td>2.219e-22</td>
+          <td>-4.775e-19</td>
+          <td>-2.146e-21</td>
+          <td>3.259e-20</td>
+          <td>-2.775e-17</td>
+          <td>-5.352e-21</td>
+          <td>-6.938e-18</td>
         </tr>
         <tr>
           <th>eyy</th>
-          <td>-1.694e-21</td>
+          <td>-8.470e-22</td>
           <td>-2.711e-20</td>
-          <td>1.084e-19</td>
-          <td>-1.355e-20</td>
-          <td>2.541e-21</td>
-          <td>-8.470e-21</td>
-          <td>-4.235e-22</td>
-          <td>1.084e-19</td>
           <td>0.000e+00</td>
+          <td>-3.388e-21</td>
+          <td>-8.470e-22</td>
+          <td>-1.694e-21</td>
+          <td>-2.118e-22</td>
           <td>0.000e+00</td>
+          <td>-2.168e-19</td>
+          <td>-5.421e-20</td>
           <td>...</td>
-          <td>1.301e-18</td>
+          <td>8.674e-19</td>
           <td>-1.735e-18</td>
-          <td>3.795e-19</td>
-          <td>1.355e-19</td>
-          <td>-6.505e-19</td>
-          <td>3.253e-19</td>
-          <td>3.388e-21</td>
-          <td>-2.168e-18</td>
-          <td>-1.694e-20</td>
-          <td>-7.589e-19</td>
+          <td>2.168e-19</td>
+          <td>0.000e+00</td>
+          <td>0.000e+00</td>
+          <td>2.168e-19</td>
+          <td>9.317e-21</td>
+          <td>-4.337e-19</td>
+          <td>-1.355e-20</td>
+          <td>-2.168e-19</td>
         </tr>
         <tr>
           <th>ezz</th>
           <td>0.000e+00</td>
+          <td>-1.355e-20</td>
+          <td>-5.421e-20</td>
           <td>0.000e+00</td>
           <td>0.000e+00</td>
           <td>0.000e+00</td>
           <td>0.000e+00</td>
-          <td>0.000e+00</td>
-          <td>0.000e+00</td>
-          <td>0.000e+00</td>
+          <td>2.711e-20</td>
           <td>0.000e+00</td>
           <td>-1.084e-19</td>
           <td>...</td>
           <td>-1.084e-19</td>
-          <td>0.000e+00</td>
+          <td>4.337e-19</td>
           <td>0.000e+00</td>
           <td>1.694e-21</td>
           <td>0.000e+00</td>
           <td>0.000e+00</td>
           <td>0.000e+00</td>
-          <td>-2.711e-19</td>
-          <td>0.000e+00</td>
-          <td>3.388e-21</td>
-        </tr>
-        <tr>
-          <th>exy</th>
-          <td>3.049e-20</td>
-          <td>-1.084e-19</td>
-          <td>-4.337e-19</td>
-          <td>-8.877e-19</td>
-          <td>1.016e-20</td>
-          <td>-5.929e-19</td>
-          <td>8.470e-22</td>
-          <td>-4.337e-19</td>
-          <td>-3.903e-18</td>
-          <td>1.084e-18</td>
-          <td>...</td>
-          <td>5.204e-18</td>
-          <td>-4.857e-17</td>
-          <td>1.518e-18</td>
-          <td>1.626e-18</td>
-          <td>-4.337e-18</td>
-          <td>4.337e-19</td>
-          <td>7.454e-20</td>
-          <td>0.000e+00</td>
-          <td>-3.253e-19</td>
-          <td>1.735e-18</td>
-        </tr>
-        <tr>
-          <th>eyz</th>
-          <td>6.776e-21</td>
-          <td>1.220e-19</td>
-          <td>-3.253e-19</td>
-          <td>-1.084e-19</td>
-          <td>1.355e-20</td>
-          <td>-5.421e-20</td>
-          <td>-4.235e-22</td>
-          <td>3.795e-19</td>
-          <td>9.758e-19</td>
-          <td>6.505e-19</td>
-          <td>...</td>
-          <td>4.337e-19</td>
-          <td>-8.674e-19</td>
-          <td>5.421e-20</td>
-          <td>-5.082e-21</td>
-          <td>-2.602e-18</td>
-          <td>3.524e-19</td>
-          <td>0.000e+00</td>
-          <td>-2.385e-18</td>
-          <td>-3.253e-19</td>
-          <td>-5.760e-19</td>
-        </tr>
-        <tr>
-          <th>exz</th>
-          <td>-1.084e-19</td>
-          <td>1.084e-19</td>
-          <td>-4.337e-19</td>
-          <td>-1.084e-19</td>
-          <td>5.421e-20</td>
-          <td>-1.084e-19</td>
-          <td>-1.016e-20</td>
-          <td>-4.337e-19</td>
-          <td>0.000e+00</td>
-          <td>-8.674e-19</td>
-          <td>...</td>
-          <td>0.000e+00</td>
-          <td>3.469e-18</td>
-          <td>-2.385e-18</td>
-          <td>3.388e-20</td>
-          <td>5.204e-18</td>
-          <td>-1.409e-18</td>
-          <td>2.168e-19</td>
-          <td>8.890e-18</td>
-          <td>1.084e-18</td>
-          <td>1.084e-19</td>
-        </tr>
-        <tr>
-          <th>emax</th>
-          <td>1.316e-19</td>
-          <td>5.355e-20</td>
-          <td>2.935e-19</td>
-          <td>4.346e-19</td>
-          <td>2.792e-20</td>
-          <td>8.476e-20</td>
-          <td>4.384e-21</td>
-          <td>4.711e-19</td>
-          <td>1.980e-18</td>
-          <td>3.600e-18</td>
-          <td>...</td>
-          <td>3.541e-18</td>
-          <td>2.335e-17</td>
-          <td>6.445e-19</td>
-          <td>9.384e-19</td>
-          <td>3.733e-18</td>
-          <td>4.050e-19</td>
-          <td>1.177e-19</td>
-          <td>9.045e-18</td>
-          <td>6.101e-19</td>
-          <td>5.836e-19</td>
-        </tr>
-        <tr>
-          <th>emid</th>
-          <td>5.434e-22</td>
-          <td>3.807e-20</td>
-          <td>2.046e-19</td>
-          <td>1.262e-20</td>
-          <td>-2.310e-22</td>
-          <td>2.516e-21</td>
-          <td>-4.569e-22</td>
-          <td>-1.204e-19</td>
-          <td>-3.970e-21</td>
-          <td>2.710e-19</td>
-          <td>...</td>
-          <td>-1.036e-19</td>
-          <td>-7.060e-20</td>
-          <td>2.297e-19</td>
-          <td>1.863e-21</td>
-          <td>-1.663e-18</td>
-          <td>7.385e-20</td>
-          <td>3.030e-21</td>
-          <td>-1.215e-18</td>
-          <td>-1.013e-19</td>
-          <td>3.288e-20</td>
-        </tr>
-        <tr>
-          <th>emin</th>
-          <td>-2.601e-20</td>
-          <td>-1.251e-19</td>
-          <td>-3.548e-19</td>
-          <td>-4.658e-19</td>
-          <td>-2.926e-20</td>
-          <td>-9.670e-19</td>
-          <td>-5.952e-21</td>
-          <td>-1.942e-19</td>
-          <td>-2.044e-18</td>
-          <td>-5.013e-19</td>
-          <td>...</td>
-          <td>-1.744e-18</td>
-          <td>-2.538e-17</td>
-          <td>-3.961e-18</td>
-          <td>-6.885e-19</td>
-          <td>-3.208e-18</td>
-          <td>-3.612e-18</td>
-          <td>-1.117e-19</td>
-          <td>-3.375e-18</td>
-          <td>-5.589e-19</td>
-          <td>-1.382e-18</td>
-        </tr>
-        <tr>
-          <th>von_mises</th>
-          <td>9.742e-20</td>
-          <td>1.143e-19</td>
-          <td>4.059e-19</td>
-          <td>5.202e-19</td>
-          <td>3.302e-20</td>
-          <td>6.754e-19</td>
-          <td>5.971e-21</td>
-          <td>4.211e-19</td>
-          <td>2.323e-18</td>
-          <td>2.516e-18</td>
-          <td>...</td>
-          <td>3.124e-18</td>
-          <td>2.814e-17</td>
-          <td>2.942e-18</td>
-          <td>9.428e-19</td>
-          <td>4.208e-18</td>
-          <td>2.575e-18</td>
-          <td>1.324e-19</td>
-          <td>7.662e-18</td>
-          <td>6.802e-19</td>
-          <td>1.171e-18</td>
-        </tr>
-        <tr>
-          <th rowspan="10" valign="top">55</th>
-          <th>exx</th>
-          <td>1.381e-19</td>
-          <td>-3.388e-20</td>
-          <td>2.304e-19</td>
-          <td>1.287e-18</td>
-          <td>-1.186e-20</td>
-          <td>9.453e-19</td>
-          <td>5.294e-21</td>
-          <td>6.776e-20</td>
-          <td>-9.487e-20</td>
-          <td>-2.792e-18</td>
-          <td>...</td>
-          <td>3.524e-19</td>
-          <td>-4.554e-18</td>
-          <td>5.353e-19</td>
-          <td>2.329e-21</td>
-          <td>-6.505e-19</td>
-          <td>2.944e-18</td>
-          <td>-2.711e-20</td>
-          <td>1.983e-17</td>
-          <td>-1.084e-19</td>
-          <td>5.612e-18</td>
-        </tr>
-        <tr>
-          <th>eyy</th>
-          <td>-9.317e-21</td>
-          <td>-2.033e-20</td>
-          <td>-1.152e-19</td>
-          <td>7.115e-20</td>
-          <td>2.541e-21</td>
-          <td>5.760e-20</td>
-          <td>1.959e-21</td>
-          <td>-3.862e-19</td>
-          <td>-3.388e-19</td>
-          <td>-1.830e-18</td>
-          <td>...</td>
-          <td>1.938e-18</td>
-          <td>-4.662e-18</td>
-          <td>5.218e-19</td>
-          <td>3.278e-19</td>
-          <td>1.084e-19</td>
-          <td>-2.153e-18</td>
-          <td>1.355e-20</td>
-          <td>7.047e-18</td>
-          <td>7.454e-20</td>
-          <td>4.625e-19</td>
-        </tr>
-        <tr>
-          <th>ezz</th>
-          <td>-4.713e-20</td>
-          <td>-3.066e-21</td>
-          <td>1.024e-19</td>
-          <td>-2.074e-19</td>
-          <td>5.670e-21</td>
-          <td>-5.166e-19</td>
-          <td>9.982e-22</td>
-          <td>-1.794e-20</td>
-          <td>-1.948e-19</td>
-          <td>1.390e-18</td>
-          <td>...</td>
-          <td>-1.207e-18</td>
-          <td>-2.255e-20</td>
-          <td>4.324e-19</td>
-          <td>-5.802e-20</td>
-          <td>7.836e-19</td>
-          <td>3.454e-18</td>
-          <td>5.008e-20</td>
-          <td>-4.965e-18</td>
-          <td>2.012e-20</td>
-          <td>-4.652e-18</td>
-        </tr>
-        <tr>
-          <th>exy</th>
-          <td>1.762e-19</td>
-          <td>4.337e-19</td>
-          <td>-8.674e-19</td>
-          <td>8.538e-19</td>
-          <td>-3.388e-21</td>
-          <td>-1.179e-18</td>
-          <td>-1.694e-21</td>
-          <td>4.337e-19</td>
-          <td>-8.674e-19</td>
-          <td>-2.602e-18</td>
-          <td>...</td>
-          <td>-6.939e-18</td>
-          <td>-2.776e-17</td>
-          <td>-1.735e-18</td>
-          <td>4.337e-19</td>
-          <td>-8.674e-19</td>
-          <td>-8.674e-19</td>
-          <td>-1.355e-20</td>
-          <td>6.939e-18</td>
-          <td>-1.084e-19</td>
-          <td>6.505e-18</td>
-        </tr>
-        <tr>
-          <th>eyz</th>
-          <td>3.754e-21</td>
-          <td>9.391e-20</td>
-          <td>7.181e-20</td>
-          <td>-1.366e-19</td>
-          <td>-1.884e-20</td>
-          <td>1.216e-20</td>
-          <td>-1.611e-21</td>
-          <td>2.822e-19</td>
-          <td>1.240e-19</td>
-          <td>4.240e-19</td>
-          <td>...</td>
-          <td>-1.107e-18</td>
-          <td>4.086e-18</td>
-          <td>-2.184e-19</td>
-          <td>-1.775e-19</td>
-          <td>-1.038e-19</td>
-          <td>-2.446e-19</td>
-          <td>4.249e-20</td>
-          <td>-1.955e-18</td>
-          <td>-2.542e-19</td>
-          <td>2.853e-19</td>
-        </tr>
-        <tr>
-          <th>exz</th>
-          <td>-3.349e-20</td>
-          <td>-3.850e-20</td>
-          <td>1.826e-19</td>
-          <td>-1.769e-20</td>
-          <td>-1.888e-20</td>
-          <td>-6.765e-20</td>
-          <td>-4.791e-21</td>
-          <td>-7.759e-19</td>
-          <td>-2.512e-19</td>
-          <td>-5.416e-19</td>
-          <td>...</td>
-          <td>-7.416e-19</td>
-          <td>-1.390e-18</td>
-          <td>1.241e-18</td>
-          <td>-1.143e-19</td>
-          <td>1.808e-18</td>
-          <td>-2.410e-18</td>
-          <td>3.172e-19</td>
-          <td>2.739e-18</td>
-          <td>3.307e-19</td>
-          <td>-1.881e-18</td>
-        </tr>
-        <tr>
-          <th>emax</th>
-          <td>1.801e-19</td>
-          <td>1.920e-19</td>
-          <td>5.317e-19</td>
-          <td>1.423e-18</td>
-          <td>1.519e-20</td>
-          <td>1.240e-18</td>
-          <td>6.410e-21</td>
-          <td>4.214e-19</td>
-          <td>2.741e-19</td>
-          <td>1.437e-18</td>
-          <td>...</td>
-          <td>4.711e-18</td>
-          <td>9.658e-18</td>
-          <td>1.632e-18</td>
-          <td>4.575e-19</td>
-          <td>1.270e-18</td>
-          <td>4.436e-18</td>
-          <td>1.757e-19</td>
-          <td>2.075e-17</td>
-          <td>2.432e-19</td>
-          <td>7.237e-18</td>
-        </tr>
-        <tr>
-          <th>emid</th>
-          <td>-4.040e-20</td>
-          <td>3.456e-21</td>
-          <td>1.077e-19</td>
-          <td>-4.044e-20</td>
-          <td>-1.266e-21</td>
-          <td>-2.362e-19</td>
-          <td>2.385e-21</td>
-          <td>-1.298e-19</td>
-          <td>-2.337e-19</td>
-          <td>-9.693e-19</td>
-          <td>...</td>
-          <td>-9.401e-19</td>
-          <td>-3.604e-19</td>
-          <td>3.593e-19</td>
-          <td>-7.529e-20</td>
-          <td>1.641e-19</td>
-          <td>2.009e-18</td>
-          <td>1.462e-20</td>
-          <td>6.311e-18</td>
-          <td>-3.244e-20</td>
-          <td>-1.033e-18</td>
-        </tr>
-        <tr>
-          <th>emin</th>
-          <td>-5.811e-20</td>
-          <td>-2.527e-19</td>
-          <td>-4.218e-19</td>
-          <td>-2.312e-19</td>
-          <td>-1.757e-20</td>
-          <td>-5.176e-19</td>
-          <td>-5.437e-22</td>
-          <td>-6.281e-19</td>
-          <td>-6.689e-19</td>
-          <td>-3.700e-18</td>
-          <td>...</td>
-          <td>-2.687e-18</td>
-          <td>-1.854e-17</td>
-          <td>-5.018e-19</td>
-          <td>-1.101e-19</td>
-          <td>-1.193e-18</td>
-          <td>-2.199e-18</td>
-          <td>-1.538e-19</td>
-          <td>-5.157e-18</td>
-          <td>-2.245e-19</td>
-          <td>-4.783e-18</td>
-        </tr>
-        <tr>
-          <th>von_mises</th>
-          <td>1.533e-19</td>
-          <td>2.578e-19</td>
-          <td>5.516e-19</td>
-          <td>1.045e-18</td>
-          <td>1.891e-20</td>
-          <td>1.090e-18</td>
-          <td>4.031e-21</td>
-          <td>6.062e-19</td>
-          <td>5.450e-19</td>
-          <td>2.968e-18</td>
-          <td>...</td>
-          <td>4.465e-18</td>
-          <td>1.650e-17</td>
-          <td>1.239e-18</td>
-          <td>3.674e-19</td>
-          <td>1.425e-18</td>
-          <td>3.876e-18</td>
-          <td>1.903e-19</td>
-          <td>1.499e-17</td>
-          <td>2.714e-19</td>
-          <td>7.101e-18</td>
-        </tr>
-        <tr>
-          <th rowspan="10" valign="top">51</th>
-          <th>exx</th>
-          <td>-5.845e-20</td>
-          <td>-2.372e-20</td>
-          <td>5.421e-20</td>
-          <td>-1.823e-18</td>
-          <td>-2.541e-21</td>
-          <td>4.405e-19</td>
-          <td>4.923e-21</td>
-          <td>4.743e-20</td>
-          <td>-1.626e-19</td>
-          <td>8.511e-18</td>
-          <td>...</td>
-          <td>-9.216e-19</td>
-          <td>-1.409e-18</td>
-          <td>6.383e-18</td>
-          <td>2.668e-20</td>
           <td>1.626e-19</td>
-          <td>-4.293e-18</td>
-          <td>7.454e-20</td>
-          <td>-7.477e-17</td>
-          <td>2.711e-20</td>
-          <td>-9.834e-18</td>
-        </tr>
-        <tr>
-          <th>eyy</th>
-          <td>-4.405e-20</td>
-          <td>1.016e-20</td>
-          <td>3.388e-20</td>
-          <td>2.372e-19</td>
-          <td>4.235e-21</td>
-          <td>-1.118e-19</td>
-          <td>-9.000e-22</td>
-          <td>6.099e-20</td>
-          <td>-1.897e-19</td>
-          <td>5.285e-19</td>
-          <td>...</td>
-          <td>1.504e-18</td>
-          <td>-9.758e-18</td>
-          <td>-8.335e-19</td>
-          <td>1.976e-19</td>
-          <td>-5.963e-19</td>
-          <td>1.857e-18</td>
-          <td>1.355e-20</td>
-          <td>-2.074e-18</td>
-          <td>6.776e-21</td>
-          <td>1.687e-18</td>
-        </tr>
-        <tr>
-          <th>ezz</th>
-          <td>-2.354e-20</td>
-          <td>3.421e-20</td>
-          <td>6.292e-20</td>
-          <td>-2.538e-19</td>
-          <td>-7.354e-21</td>
-          <td>2.775e-19</td>
-          <td>-2.473e-22</td>
-          <td>-8.297e-20</td>
-          <td>-3.244e-20</td>
-          <td>-4.237e-19</td>
-          <td>...</td>
-          <td>-1.521e-18</td>
-          <td>-5.731e-19</td>
-          <td>1.246e-18</td>
-          <td>2.547e-20</td>
-          <td>-4.913e-19</td>
-          <td>-4.450e-19</td>
-          <td>-3.431e-20</td>
-          <td>-1.861e-18</td>
-          <td>-2.174e-20</td>
-          <td>3.335e-19</td>
+          <td>0.000e+00</td>
+          <td>5.082e-20</td>
         </tr>
         <tr>
           <th>exy</th>
-          <td>-7.499e-21</td>
-          <td>-4.483e-20</td>
-          <td>-6.697e-19</td>
-          <td>-1.101e-19</td>
-          <td>-6.049e-21</td>
-          <td>3.924e-19</td>
-          <td>-3.621e-22</td>
-          <td>2.937e-19</td>
-          <td>-3.026e-19</td>
-          <td>-3.936e-19</td>
-          <td>...</td>
-          <td>6.308e-19</td>
-          <td>-3.087e-17</td>
-          <td>6.302e-18</td>
-          <td>-1.235e-18</td>
-          <td>1.031e-17</td>
-          <td>5.484e-18</td>
-          <td>5.674e-20</td>
-          <td>5.685e-18</td>
-          <td>-6.018e-20</td>
-          <td>1.422e-18</td>
-        </tr>
-        <tr>
-          <th>eyz</th>
-          <td>3.420e-21</td>
-          <td>9.511e-20</td>
-          <td>6.609e-20</td>
-          <td>-1.397e-19</td>
-          <td>-1.824e-20</td>
-          <td>9.684e-21</td>
-          <td>-1.572e-21</td>
-          <td>2.861e-19</td>
-          <td>1.319e-19</td>
-          <td>4.342e-19</td>
-          <td>...</td>
-          <td>-1.097e-18</td>
-          <td>4.019e-18</td>
-          <td>-2.232e-19</td>
-          <td>-1.773e-19</td>
-          <td>-1.330e-19</td>
-          <td>-2.460e-19</td>
-          <td>4.615e-20</td>
-          <td>-1.948e-18</td>
-          <td>-2.578e-19</td>
-          <td>2.858e-19</td>
-        </tr>
-        <tr>
-          <th>exz</th>
-          <td>-1.708e-20</td>
-          <td>-3.679e-23</td>
-          <td>4.332e-19</td>
-          <td>-1.418e-18</td>
-          <td>3.565e-22</td>
-          <td>-5.805e-19</td>
-          <td>-1.031e-20</td>
-          <td>-2.191e-19</td>
-          <td>8.515e-22</td>
-          <td>1.519e-18</td>
-          <td>...</td>
-          <td>-4.169e-19</td>
-          <td>-3.806e-20</td>
-          <td>-2.383e-18</td>
-          <td>-1.095e-19</td>
-          <td>8.714e-19</td>
-          <td>-2.455e-18</td>
-          <td>4.343e-19</td>
-          <td>2.947e-18</td>
-          <td>2.165e-19</td>
-          <td>-1.302e-19</td>
-        </tr>
-        <tr>
-          <th>emax</th>
-          <td>-2.128e-20</td>
-          <td>7.327e-20</td>
-          <td>4.326e-19</td>
-          <td>2.487e-19</td>
-          <td>9.855e-21</td>
-          <td>6.907e-19</td>
-          <td>8.112e-21</td>
-          <td>2.054e-19</td>
-          <td>1.929e-20</td>
-          <td>8.579e-18</td>
-          <td>...</td>
-          <td>1.648e-18</td>
-          <td>1.055e-17</td>
-          <td>7.770e-18</td>
-          <td>7.367e-19</td>
-          <td>4.966e-18</td>
-          <td>2.994e-18</td>
-          <td>2.496e-19</td>
-          <td>-9.779e-19</td>
-          <td>1.838e-19</td>
-          <td>1.745e-18</td>
-        </tr>
-        <tr>
-          <th>emid</th>
-          <td>-4.369e-20</td>
-          <td>-8.801e-21</td>
-          <td>8.450e-20</td>
-          <td>1.020e-20</td>
-          <td>-2.974e-21</td>
-          <td>1.134e-19</td>
-          <td>-6.941e-22</td>
-          <td>8.676e-20</td>
-          <td>-6.794e-20</td>
-          <td>5.756e-19</td>
-          <td>...</td>
-          <td>-9.356e-19</td>
-          <td>-5.925e-19</td>
-          <td>1.072e-18</td>
-          <td>4.201e-20</td>
-          <td>-4.808e-19</td>
-          <td>-2.987e-19</td>
-          <td>7.893e-21</td>
-          <td>-2.814e-18</td>
-          <td>-1.103e-20</td>
-          <td>3.204e-19</td>
-        </tr>
-        <tr>
-          <th>emin</th>
-          <td>-6.106e-20</td>
-          <td>-4.381e-20</td>
-          <td>-3.661e-19</td>
-          <td>-2.098e-18</td>
-          <td>-1.254e-20</td>
-          <td>-1.979e-19</td>
-          <td>-3.642e-21</td>
-          <td>-2.668e-19</td>
-          <td>-3.362e-19</td>
-          <td>-5.388e-19</td>
-          <td>...</td>
-          <td>-1.650e-18</td>
-          <td>-2.169e-17</td>
-          <td>-2.047e-18</td>
-          <td>-5.289e-19</td>
-          <td>-5.410e-18</td>
-          <td>-5.577e-18</td>
-          <td>-2.037e-19</td>
-          <td>-7.491e-17</td>
-          <td>-1.607e-19</td>
-          <td>-9.878e-18</td>
-        </tr>
-        <tr>
-          <th>von_mises</th>
-          <td>2.303e-20</td>
-          <td>6.939e-20</td>
-          <td>4.624e-19</td>
-          <td>1.492e-18</td>
-          <td>1.298e-20</td>
-          <td>5.206e-19</td>
-          <td>7.061e-21</td>
-          <td>2.836e-19</td>
-          <td>2.139e-19</td>
-          <td>5.743e-18</td>
-          <td>...</td>
-          <td>2.003e-18</td>
-          <td>1.891e-17</td>
-          <td>5.792e-18</td>
-          <td>7.319e-19</td>
-          <td>5.993e-18</td>
-          <td>4.993e-18</td>
-          <td>2.620e-19</td>
-          <td>4.869e-17</td>
-          <td>1.995e-19</td>
-          <td>7.320e-18</td>
-        </tr>
-        <tr>
-          <th>...</th>
-          <th>...</th>
-          <th>...</th>
-          <td>...</td>
-          <td>...</td>
-          <td>...</td>
-          <td>...</td>
-          <td>...</td>
-          <td>...</td>
-          <td>...</td>
-          <td>...</td>
-          <td>...</td>
-          <td>...</td>
-          <td>...</td>
-          <td>...</td>
-          <td>...</td>
-          <td>...</td>
-          <td>...</td>
-          <td>...</td>
-          <td>...</td>
-          <td>...</td>
-          <td>...</td>
-          <td>...</td>
-          <td>...</td>
-        </tr>
-        <tr>
-          <th rowspan="30" valign="top">5568</th>
-          <th rowspan="10" valign="top">5593</th>
-          <th>exx</th>
-          <td>2.403e-20</td>
-          <td>-6.776e-20</td>
-          <td>4.879e-19</td>
-          <td>-1.863e-19</td>
-          <td>-6.099e-20</td>
-          <td>3.608e-19</td>
-          <td>-4.765e-21</td>
-          <td>1.626e-19</td>
-          <td>4.337e-19</td>
-          <td>2.819e-18</td>
-          <td>...</td>
-          <td>1.691e-17</td>
-          <td>2.299e-17</td>
-          <td>1.084e-17</td>
-          <td>3.009e-18</td>
-          <td>-5.421e-19</td>
-          <td>5.855e-18</td>
-          <td>-1.681e-19</td>
-          <td>1.561e-17</td>
-          <td>-1.437e-18</td>
-          <td>-5.421e-18</td>
-        </tr>
-        <tr>
-          <th>eyy</th>
-          <td>-1.973e-19</td>
-          <td>-2.890e-19</td>
-          <td>1.419e-18</td>
-          <td>-1.581e-18</td>
-          <td>2.508e-20</td>
-          <td>-1.499e-18</td>
-          <td>7.517e-21</td>
-          <td>-1.236e-18</td>
-          <td>-8.059e-20</td>
-          <td>2.225e-18</td>
-          <td>...</td>
-          <td>9.085e-18</td>
-          <td>-9.186e-17</td>
-          <td>4.272e-18</td>
-          <td>1.129e-18</td>
-          <td>7.202e-18</td>
-          <td>1.405e-17</td>
-          <td>2.500e-19</td>
-          <td>-5.847e-17</td>
-          <td>-3.530e-20</td>
-          <td>-8.249e-18</td>
-        </tr>
-        <tr>
-          <th>ezz</th>
-          <td>-3.731e-19</td>
-          <td>-7.183e-19</td>
-          <td>1.735e-18</td>
-          <td>-4.472e-18</td>
-          <td>1.423e-19</td>
-          <td>-3.158e-18</td>
-          <td>1.038e-20</td>
-          <td>-1.708e-18</td>
-          <td>-1.409e-18</td>
-          <td>7.454e-18</td>
-          <td>...</td>
-          <td>-3.773e-17</td>
-          <td>1.158e-16</td>
-          <td>-1.518e-17</td>
-          <td>-3.005e-18</td>
-          <td>2.765e-17</td>
-          <td>-6.505e-19</td>
-          <td>-4.942e-19</td>
-          <td>-2.342e-17</td>
-          <td>2.209e-18</td>
-          <td>-1.735e-17</td>
-        </tr>
-        <tr>
-          <th>exy</th>
-          <td>8.951e-20</td>
-          <td>-6.157e-19</td>
-          <td>3.295e-18</td>
-          <td>2.513e-18</td>
-          <td>6.968e-20</td>
-          <td>6.450e-19</td>
-          <td>4.244e-21</td>
-          <td>-1.608e-18</td>
-          <td>-3.259e-18</td>
-          <td>-4.253e-18</td>
-          <td>...</td>
-          <td>3.128e-17</td>
-          <td>-9.132e-17</td>
-          <td>8.991e-18</td>
-          <td>3.766e-18</td>
-          <td>-1.350e-17</td>
-          <td>-4.728e-18</td>
-          <td>3.613e-19</td>
-          <td>2.721e-17</td>
-          <td>-4.604e-19</td>
-          <td>-2.319e-17</td>
-        </tr>
-        <tr>
-          <th>eyz</th>
-          <td>4.910e-20</td>
-          <td>1.118e-18</td>
-          <td>-3.098e-18</td>
-          <td>2.415e-18</td>
-          <td>-1.694e-19</td>
-          <td>2.209e-18</td>
-          <td>-9.028e-21</td>
-          <td>1.488e-18</td>
-          <td>4.710e-18</td>
-          <td>-4.552e-18</td>
-          <td>...</td>
-          <td>9.645e-17</td>
-          <td>-1.186e-17</td>
-          <td>3.868e-17</td>
-          <td>-3.548e-19</td>
-          <td>2.104e-17</td>
-          <td>1.649e-17</td>
-          <td>1.681e-19</td>
-          <td>-3.957e-17</td>
-          <td>1.310e-18</td>
-          <td>-5.472e-18</td>
-        </tr>
-        <tr>
-          <th>exz</th>
-          <td>2.168e-19</td>
-          <td>5.545e-20</td>
-          <td>1.050e-18</td>
-          <td>-1.732e-18</td>
-          <td>1.534e-20</td>
-          <td>1.129e-21</td>
-          <td>9.702e-23</td>
-          <td>9.425e-19</td>
-          <td>-2.240e-18</td>
-          <td>3.446e-18</td>
-          <td>...</td>
-          <td>3.517e-17</td>
-          <td>2.723e-17</td>
-          <td>-6.678e-18</td>
-          <td>-1.732e-18</td>
-          <td>1.400e-17</td>
-          <td>7.108e-18</td>
-          <td>-2.173e-19</td>
-          <td>-8.398e-17</td>
-          <td>8.785e-19</td>
-          <td>-1.412e-17</td>
-        </tr>
-        <tr>
-          <th>emax</th>
-          <td>6.116e-20</td>
-          <td>2.752e-19</td>
-          <td>3.372e-18</td>
-          <td>5.575e-19</td>
-          <td>1.871e-19</td>
-          <td>4.265e-19</td>
-          <td>1.376e-20</td>
-          <td>5.365e-19</td>
-          <td>3.143e-18</td>
-          <td>9.211e-18</td>
-          <td>...</td>
-          <td>5.341e-17</td>
-          <td>1.186e-16</td>
-          <td>1.697e-17</td>
-          <td>4.268e-18</td>
-          <td>3.257e-17</td>
-          <td>1.779e-17</td>
-          <td>3.194e-19</td>
-          <td>4.707e-17</td>
-          <td>2.421e-18</td>
-          <td>5.424e-18</td>
-        </tr>
-        <tr>
-          <th>emid</th>
-          <td>-2.060e-19</td>
-          <td>-2.099e-19</td>
-          <td>1.657e-18</td>
-          <td>-1.568e-18</td>
-          <td>-3.698e-23</td>
-          <td>-1.008e-18</td>
-          <td>4.532e-21</td>
-          <td>-7.861e-19</td>
-          <td>-1.004e-18</td>
-          <td>2.976e-18</td>
-          <td>...</td>
-          <td>3.332e-18</td>
-          <td>3.617e-17</td>
-          <td>1.076e-17</td>
-          <td>-6.438e-21</td>
-          <td>9.936e-18</td>
-          <td>7.326e-18</td>
-          <td>-1.810e-19</td>
-          <td>-4.548e-17</td>
-          <td>-1.291e-19</td>
-          <td>-1.157e-17</td>
-        </tr>
-        <tr>
-          <th>emin</th>
-          <td>-4.016e-19</td>
-          <td>-1.140e-18</td>
-          <td>-1.387e-18</td>
-          <td>-5.229e-18</td>
-          <td>-8.064e-20</td>
-          <td>-3.715e-18</td>
-          <td>-5.166e-21</td>
-          <td>-2.532e-18</td>
-          <td>-3.195e-18</td>
-          <td>3.106e-19</td>
-          <td>...</td>
-          <td>-6.847e-17</td>
-          <td>-1.078e-16</td>
-          <td>-2.780e-17</td>
-          <td>-3.130e-18</td>
-          <td>-8.200e-18</td>
-          <td>-5.862e-18</td>
-          <td>-5.507e-19</td>
-          <td>-6.787e-17</td>
-          <td>-1.555e-18</td>
-          <td>-2.487e-17</td>
-        </tr>
-        <tr>
-          <th>von_mises</th>
-          <td>2.682e-19</td>
-          <td>8.306e-19</td>
-          <td>2.783e-18</td>
-          <td>3.380e-18</td>
-          <td>1.586e-19</td>
-          <td>2.428e-18</td>
-          <td>1.093e-20</td>
-          <td>1.777e-18</td>
-          <td>3.717e-18</td>
-          <td>5.275e-18</td>
-          <td>...</td>
-          <td>7.074e-17</td>
-          <td>1.323e-16</td>
-          <td>2.801e-17</td>
-          <td>4.288e-18</td>
-          <td>2.359e-17</td>
-          <td>1.368e-17</td>
-          <td>5.042e-19</td>
-          <td>7.036e-17</td>
-          <td>2.326e-18</td>
-          <td>1.754e-17</td>
-        </tr>
-        <tr>
-          <th rowspan="10" valign="top">5594</th>
-          <th>exx</th>
-          <td>-1.692e-19</td>
-          <td>1.626e-19</td>
-          <td>-8.674e-19</td>
-          <td>-3.131e-18</td>
-          <td>-5.421e-20</td>
-          <td>-1.504e-18</td>
-          <td>-2.118e-21</td>
-          <td>2.168e-19</td>
-          <td>1.735e-18</td>
-          <td>5.638e-18</td>
-          <td>...</td>
-          <td>-1.041e-17</td>
-          <td>1.041e-16</td>
-          <td>1.214e-17</td>
-          <td>-2.521e-18</td>
-          <td>2.429e-17</td>
-          <td>7.806e-18</td>
-          <td>-2.778e-19</td>
-          <td>-7.980e-17</td>
-          <td>9.216e-19</td>
-          <td>-4.337e-17</td>
-        </tr>
-        <tr>
-          <th>eyy</th>
-          <td>5.468e-20</td>
-          <td>-1.330e-18</td>
-          <td>4.611e-18</td>
-          <td>2.576e-18</td>
-          <td>3.187e-19</td>
-          <td>1.724e-18</td>
-          <td>1.519e-20</td>
-          <td>-4.866e-18</td>
-          <td>-1.204e-17</td>
-          <td>-1.193e-17</td>
-          <td>...</td>
-          <td>4.759e-17</td>
-          <td>-1.755e-16</td>
-          <td>1.144e-17</td>
-          <td>4.311e-18</td>
-          <td>-1.502e-17</td>
-          <td>2.444e-17</td>
-          <td>2.753e-19</td>
-          <td>-6.274e-17</td>
-          <td>-9.711e-19</td>
-          <td>-4.703e-18</td>
-        </tr>
-        <tr>
-          <th>ezz</th>
-          <td>2.646e-19</td>
-          <td>-2.846e-19</td>
-          <td>2.548e-18</td>
-          <td>3.608e-18</td>
-          <td>1.338e-19</td>
-          <td>1.425e-18</td>
-          <td>-9.529e-22</td>
-          <td>-4.608e-19</td>
-          <td>-2.927e-18</td>
-          <td>-9.216e-18</td>
-          <td>...</td>
-          <td>-2.602e-18</td>
-          <td>-8.890e-17</td>
-          <td>-1.735e-17</td>
-          <td>1.708e-18</td>
-          <td>-2.060e-17</td>
-          <td>-1.301e-17</td>
-          <td>2.223e-19</td>
-          <td>6.418e-17</td>
-          <td>-1.111e-18</td>
-          <td>2.038e-17</td>
-        </tr>
-        <tr>
-          <th>exy</th>
-          <td>-5.734e-19</td>
-          <td>-5.421e-19</td>
-          <td>3.469e-18</td>
-          <td>-4.499e-18</td>
-          <td>1.084e-19</td>
-          <td>-9.392e-18</td>
-          <td>2.202e-20</td>
-          <td>-2.168e-18</td>
-          <td>-3.469e-18</td>
-          <td>3.057e-17</td>
-          <td>...</td>
-          <td>2.082e-17</td>
-          <td>1.318e-16</td>
-          <td>4.163e-17</td>
-          <td>-3.849e-18</td>
-          <td>2.776e-17</td>
-          <td>1.388e-17</td>
-          <td>-3.930e-19</td>
-          <td>-2.637e-16</td>
-          <td>3.469e-18</td>
-          <td>-3.469e-17</td>
-        </tr>
-        <tr>
-          <th>eyz</th>
-          <td>1.722e-19</td>
-          <td>8.673e-19</td>
-          <td>-6.071e-18</td>
-          <td>2.874e-18</td>
-          <td>-4.333e-19</td>
-          <td>2.698e-18</td>
-          <td>-2.025e-20</td>
-          <td>1.732e-18</td>
-          <td>6.942e-18</td>
-          <td>-6.788e-18</td>
-          <td>...</td>
-          <td>1.317e-16</td>
-          <td>-1.099e-16</td>
-          <td>4.880e-17</td>
-          <td>8.306e-19</td>
-          <td>-1.440e-17</td>
-          <td>2.102e-17</td>
-          <td>1.587e-19</td>
-          <td>-2.183e-17</td>
-          <td>-1.345e-19</td>
-          <td>-4.070e-19</td>
-        </tr>
-        <tr>
-          <th>exz</th>
-          <td>2.168e-19</td>
-          <td>5.368e-20</td>
-          <td>1.058e-18</td>
-          <td>-1.731e-18</td>
-          <td>1.564e-20</td>
-          <td>1.317e-21</td>
-          <td>1.132e-22</td>
-          <td>5.032e-19</td>
-          <td>-2.252e-18</td>
-          <td>3.443e-18</td>
-          <td>...</td>
-          <td>3.525e-17</td>
-          <td>2.714e-17</td>
-          <td>-6.634e-18</td>
-          <td>-1.732e-18</td>
-          <td>2.790e-17</td>
-          <td>7.137e-18</td>
-          <td>-2.174e-19</td>
-          <td>-8.410e-17</td>
-          <td>8.803e-19</td>
-          <td>-1.416e-17</td>
-        </tr>
-        <tr>
-          <th>emax</th>
-          <td>2.957e-19</td>
-          <td>2.165e-19</td>
-          <td>6.947e-18</td>
-          <td>5.136e-18</td>
-          <td>4.650e-19</td>
-          <td>5.385e-18</td>
-          <td>2.394e-20</td>
-          <td>4.455e-19</td>
-          <td>2.463e-18</td>
-          <td>1.449e-17</td>
-          <td>...</td>
-          <td>9.624e-17</td>
-          <td>1.189e-16</td>
-          <td>3.731e-17</td>
-          <td>4.938e-18</td>
-          <td>3.120e-17</td>
-          <td>2.983e-17</td>
-          <td>4.056e-19</td>
-          <td>8.624e-17</td>
-          <td>1.990e-18</td>
-          <td>2.129e-17</td>
-        </tr>
-        <tr>
-          <th>emid</th>
-          <td>2.485e-19</td>
-          <td>-1.406e-19</td>
-          <td>1.258e-18</td>
-          <td>1.846e-18</td>
-          <td>1.019e-20</td>
-          <td>1.214e-18</td>
-          <td>-1.406e-21</td>
-          <td>-2.994e-19</td>
-          <td>-2.373e-18</td>
-          <td>-8.080e-18</td>
-          <td>...</td>
-          <td>-1.167e-17</td>
-          <td>-6.361e-17</td>
-          <td>4.260e-18</td>
-          <td>1.697e-18</td>
-          <td>-1.030e-17</td>
-          <td>5.294e-18</td>
-          <td>1.661e-19</td>
-          <td>4.416e-17</td>
-          <td>-1.065e-18</td>
-          <td>1.659e-18</td>
-        </tr>
-        <tr>
-          <th>emin</th>
-          <td>-3.940e-19</td>
-          <td>-1.528e-18</td>
-          <td>-1.914e-18</td>
-          <td>-3.928e-18</td>
-          <td>-7.691e-20</td>
-          <td>-4.954e-18</td>
-          <td>-1.042e-20</td>
-          <td>-5.256e-18</td>
-          <td>-1.333e-17</td>
-          <td>-2.191e-17</td>
-          <td>...</td>
-          <td>-4.999e-17</td>
-          <td>-2.156e-16</td>
-          <td>-3.533e-17</td>
-          <td>-3.137e-18</td>
-          <td>-3.223e-17</td>
-          <td>-1.589e-17</td>
-          <td>-3.519e-19</td>
-          <td>-2.087e-16</td>
-          <td>-2.085e-18</td>
-          <td>-5.064e-17</td>
-        </tr>
-        <tr>
-          <th>von_mises</th>
-          <td>4.449e-19</td>
-          <td>1.064e-18</td>
-          <td>5.184e-18</td>
-          <td>5.298e-18</td>
-          <td>3.360e-19</td>
-          <td>6.006e-18</td>
-          <td>2.057e-20</td>
-          <td>3.578e-18</td>
-          <td>9.340e-18</td>
-          <td>2.122e-17</td>
-          <td>...</td>
-          <td>8.755e-17</td>
-          <td>1.933e-16</td>
-          <td>4.200e-17</td>
-          <td>4.693e-18</td>
-          <td>3.719e-17</td>
-          <td>2.642e-17</td>
-          <td>4.471e-19</td>
-          <td>1.842e-16</td>
-          <td>2.449e-18</td>
-          <td>4.293e-17</td>
-        </tr>
-        <tr>
-          <th rowspan="10" valign="top">5595</th>
-          <th>exx</th>
-          <td>-2.647e-19</td>
-          <td>-4.879e-19</td>
-          <td>1.518e-18</td>
-          <td>-3.253e-19</td>
-          <td>6.776e-20</td>
-          <td>-2.236e-19</td>
-          <td>5.929e-21</td>
-          <td>-8.674e-19</td>
-          <td>-3.469e-18</td>
-          <td>-5.746e-18</td>
-          <td>...</td>
-          <td>1.388e-17</td>
-          <td>-5.204e-17</td>
-          <td>1.735e-18</td>
-          <td>4.269e-18</td>
-          <td>-9.541e-18</td>
-          <td>6.939e-18</td>
-          <td>2.778e-19</td>
-          <td>-3.469e-17</td>
-          <td>8.132e-19</td>
-          <td>-1.214e-17</td>
-        </tr>
-        <tr>
-          <th>eyy</th>
-          <td>1.084e-19</td>
-          <td>1.084e-18</td>
-          <td>-5.204e-18</td>
-          <td>7.589e-19</td>
-          <td>-1.626e-19</td>
-          <td>4.337e-19</td>
-          <td>-1.016e-20</td>
-          <td>3.469e-18</td>
-          <td>5.204e-18</td>
-          <td>-8.674e-19</td>
-          <td>...</td>
-          <td>-4.163e-17</td>
-          <td>8.327e-17</td>
-          <td>-2.082e-17</td>
-          <td>-1.030e-18</td>
-          <td>-3.469e-18</td>
-          <td>-1.388e-17</td>
-          <td>-2.711e-20</td>
-          <td>5.551e-17</td>
-          <td>-8.674e-19</td>
-          <td>2.082e-17</td>
-        </tr>
-        <tr>
-          <th>ezz</th>
-          <td>2.768e-19</td>
-          <td>-2.168e-19</td>
-          <td>1.084e-18</td>
-          <td>2.751e-18</td>
-          <td>8.132e-20</td>
-          <td>1.525e-18</td>
-          <td>8.470e-22</td>
-          <td>8.674e-19</td>
-          <td>-2.168e-18</td>
-          <td>-9.541e-18</td>
-          <td>...</td>
-          <td>6.939e-17</td>
-          <td>-1.006e-16</td>
-          <td>0.000e+00</td>
-          <td>3.009e-18</td>
-          <td>-1.475e-17</td>
-          <td>-6.072e-18</td>
-          <td>1.626e-19</td>
-          <td>3.816e-17</td>
-          <td>-4.012e-18</td>
-          <td>1.561e-17</td>
-        </tr>
-        <tr>
-          <th>exy</th>
-          <td>-6.785e-19</td>
-          <td>-1.084e-19</td>
-          <td>8.674e-19</td>
-          <td>-6.451e-18</td>
-          <td>0.000e+00</td>
-          <td>-6.017e-18</td>
-          <td>8.470e-21</td>
-          <td>-8.674e-19</td>
-          <td>8.674e-19</td>
-          <td>1.149e-17</td>
-          <td>...</td>
-          <td>0.000e+00</td>
-          <td>2.220e-16</td>
-          <td>3.469e-18</td>
-          <td>-3.198e-18</td>
-          <td>5.204e-18</td>
-          <td>1.561e-17</td>
-          <td>-4.676e-19</td>
-          <td>-2.359e-16</td>
-          <td>3.469e-18</td>
-          <td>-3.123e-17</td>
-        </tr>
-        <tr>
-          <th>eyz</th>
-          <td>-1.618e-19</td>
-          <td>-8.674e-19</td>
-          <td>5.204e-18</td>
-          <td>-2.223e-18</td>
-          <td>8.132e-20</td>
-          <td>-2.711e-19</td>
-          <td>1.016e-20</td>
-          <td>-4.337e-19</td>
-          <td>-1.735e-18</td>
-          <td>1.518e-18</td>
-          <td>...</td>
-          <td>-8.327e-17</td>
-          <td>1.110e-16</td>
-          <td>-3.816e-17</td>
-          <td>-1.572e-18</td>
-          <td>1.908e-17</td>
-          <td>0.000e+00</td>
-          <td>-2.372e-19</td>
-          <td>2.776e-17</td>
+          <td>-1.050e-19</td>
+          <td>5.421e-19</td>
           <td>1.301e-18</td>
-          <td>3.469e-18</td>
+          <td>-4.743e-19</td>
+          <td>-1.186e-20</td>
+          <td>-8.674e-19</td>
+          <td>0.000e+00</td>
+          <td>-8.674e-19</td>
+          <td>-1.735e-18</td>
+          <td>-6.505e-19</td>
+          <td>...</td>
+          <td>9.541e-18</td>
+          <td>-2.776e-17</td>
+          <td>0.000e+00</td>
+          <td>6.505e-19</td>
+          <td>-2.819e-18</td>
+          <td>1.735e-18</td>
+          <td>-7.115e-20</td>
+          <td>-3.469e-18</td>
+          <td>-1.220e-19</td>
+          <td>1.084e-18</td>
         </tr>
         <tr>
+          <th>eyz</th>
+          <td>-1.016e-20</td>
+          <td>-5.421e-20</td>
+          <td>-6.505e-19</td>
+          <td>-1.084e-19</td>
+          <td>-5.421e-20</td>
+          <td>-2.711e-20</td>
+          <td>1.271e-21</td>
+          <td>4.879e-19</td>
+          <td>7.589e-19</td>
+          <td>3.253e-19</td>
+          <td>...</td>
+          <td>9.758e-19</td>
+          <td>-6.072e-18</td>
+          <td>5.421e-20</td>
+          <td>3.049e-19</td>
+          <td>-4.337e-19</td>
+          <td>1.762e-19</td>
+          <td>1.084e-19</td>
+          <td>1.193e-18</td>
+          <td>-2.168e-19</td>
+          <td>-6.031e-19</td>
+        </tr>
+        <tr>
+          <th>...</th>
+          <th>...</th>
+          <th>...</th>
+          <td>...</td>
+          <td>...</td>
+          <td>...</td>
+          <td>...</td>
+          <td>...</td>
+          <td>...</td>
+          <td>...</td>
+          <td>...</td>
+          <td>...</td>
+          <td>...</td>
+          <td>...</td>
+          <td>...</td>
+          <td>...</td>
+          <td>...</td>
+          <td>...</td>
+          <td>...</td>
+          <td>...</td>
+          <td>...</td>
+          <td>...</td>
+          <td>...</td>
+          <td>...</td>
+        </tr>
+        <tr>
+          <th rowspan="5" valign="top">5568</th>
+          <th rowspan="5" valign="top">5595</th>
           <th>exz</th>
-          <td>2.169e-19</td>
-          <td>1.767e-19</td>
-          <td>1.257e-19</td>
-          <td>-1.735e-18</td>
-          <td>1.318e-20</td>
+          <td>1.084e-19</td>
+          <td>-2.394e-19</td>
+          <td>1.528e-19</td>
+          <td>3.469e-18</td>
+          <td>-1.318e-20</td>
           <td>-2.344e-22</td>
           <td>-2.014e-23</td>
-          <td>9.827e-19</td>
-          <td>-2.154e-18</td>
-          <td>3.474e-18</td>
+          <td>-7.520e-19</td>
+          <td>-2.020e-19</td>
+          <td>6.944e-18</td>
           <td>...</td>
-          <td>3.460e-17</td>
+          <td>6.840e-18</td>
           <td>2.786e-17</td>
-          <td>-6.993e-18</td>
+          <td>6.885e-18</td>
           <td>-1.735e-18</td>
           <td>1.385e-17</td>
-          <td>6.904e-18</td>
-          <td>-2.167e-19</td>
-          <td>-8.312e-17</td>
-          <td>-8.697e-19</td>
+          <td>1.384e-17</td>
+          <td>-3.252e-19</td>
+          <td>-5.536e-17</td>
+          <td>8.651e-19</td>
           <td>-1.383e-17</td>
         </tr>
         <tr>
           <th>emax</th>
-          <td>4.201e-19</td>
-          <td>1.219e-18</td>
-          <td>2.097e-18</td>
-          <td>3.628e-18</td>
-          <td>8.983e-20</td>
-          <td>3.138e-18</td>
-          <td>7.263e-21</td>
-          <td>3.539e-18</td>
-          <td>5.340e-18</td>
-          <td>3.137e-18</td>
+          <td>2.747e-19</td>
+          <td>6.979e-19</td>
+          <td>2.794e-18</td>
+          <td>3.923e-18</td>
+          <td>2.328e-19</td>
+          <td>2.143e-18</td>
+          <td>6.899e-21</td>
+          <td>2.686e-18</td>
+          <td>7.414e-18</td>
+          <td>1.155e-17</td>
           <td>...</td>
-          <td>8.696e-17</td>
-          <td>1.575e-16</td>
-          <td>1.271e-17</td>
-          <td>4.935e-18</td>
-          <td>4.451e-18</td>
-          <td>1.020e-17</td>
-          <td>4.118e-19</td>
-          <td>1.481e-16</td>
-          <td>1.900e-18</td>
-          <td>2.847e-17</td>
+          <td>6.771e-18</td>
+          <td>1.769e-16</td>
+          <td>1.354e-17</td>
+          <td>2.629e-18</td>
+          <td>3.547e-17</td>
+          <td>2.259e-17</td>
+          <td>4.898e-19</td>
+          <td>6.536e-17</td>
+          <td>2.485e-18</td>
+          <td>2.635e-17</td>
         </tr>
         <tr>
           <th>emid</th>
-          <td>1.694e-19</td>
-          <td>-3.205e-19</td>
-          <td>1.462e-18</td>
-          <td>2.923e-18</td>
-          <td>6.585e-20</td>
-          <td>1.520e-18</td>
-          <td>2.331e-21</td>
-          <td>9.571e-19</td>
-          <td>-1.697e-18</td>
-          <td>-8.620e-18</td>
+          <td>4.887e-20</td>
+          <td>2.480e-19</td>
+          <td>2.309e-18</td>
+          <td>-3.899e-19</td>
+          <td>-6.916e-20</td>
+          <td>4.746e-19</td>
+          <td>1.974e-21</td>
+          <td>-1.193e-18</td>
+          <td>-1.490e-18</td>
+          <td>-2.978e-18</td>
           <td>...</td>
-          <td>1.062e-17</td>
-          <td>-9.870e-17</td>
-          <td>3.566e-19</td>
-          <td>3.000e-18</td>
-          <td>-1.004e-17</td>
-          <td>-6.615e-18</td>
-          <td>2.196e-19</td>
-          <td>3.127e-17</td>
-          <td>-1.691e-18</td>
-          <td>1.515e-17</td>
+          <td>-2.984e-18</td>
+          <td>-7.979e-17</td>
+          <td>8.286e-18</td>
+          <td>1.336e-18</td>
+          <td>-3.547e-18</td>
+          <td>2.045e-18</td>
+          <td>1.641e-19</td>
+          <td>7.327e-18</td>
+          <td>-7.795e-19</td>
+          <td>1.230e-17</td>
         </tr>
         <tr>
           <th>emin</th>
-          <td>-4.690e-19</td>
-          <td>-5.191e-19</td>
-          <td>-6.161e-18</td>
-          <td>-3.366e-18</td>
-          <td>-1.692e-19</td>
-          <td>-2.923e-18</td>
-          <td>-1.298e-20</td>
-          <td>-1.027e-18</td>
-          <td>-4.077e-18</td>
-          <td>-1.067e-17</td>
+          <td>-3.994e-19</td>
+          <td>-1.108e-18</td>
+          <td>-2.067e-18</td>
+          <td>-4.414e-18</td>
+          <td>-1.095e-19</td>
+          <td>-5.017e-18</td>
+          <td>-8.449e-21</td>
+          <td>-2.578e-18</td>
+          <td>-3.756e-18</td>
+          <td>-5.640e-18</td>
           <td>...</td>
-          <td>-5.595e-17</td>
-          <td>-1.282e-16</td>
-          <td>-3.215e-17</td>
-          <td>-1.687e-18</td>
-          <td>-2.217e-17</td>
-          <td>-1.660e-17</td>
-          <td>-2.180e-19</td>
-          <td>-1.204e-16</td>
-          <td>-4.275e-18</td>
-          <td>-1.933e-17</td>
+          <td>-4.542e-17</td>
+          <td>-1.457e-16</td>
+          <td>-3.050e-17</td>
+          <td>-2.949e-18</td>
+          <td>-1.111e-17</td>
+          <td>-1.683e-17</td>
+          <td>-4.642e-19</td>
+          <td>-1.039e-16</td>
+          <td>-1.434e-18</td>
+          <td>-1.437e-17</td>
         </tr>
         <tr>
           <th>von_mises</th>
-          <td>5.294e-19</td>
-          <td>1.099e-18</td>
-          <td>5.306e-18</td>
-          <td>4.446e-18</td>
-          <td>1.653e-19</td>
-          <td>3.624e-18</td>
-          <td>1.219e-20</td>
-          <td>2.644e-18</td>
-          <td>5.654e-18</td>
-          <td>8.604e-18</td>
+          <td>3.962e-19</td>
+          <td>1.086e-18</td>
+          <td>3.092e-18</td>
+          <td>4.814e-18</td>
+          <td>2.160e-19</td>
+          <td>4.326e-18</td>
+          <td>9.048e-21</td>
+          <td>3.151e-18</td>
+          <td>6.818e-18</td>
+          <td>1.068e-17</td>
           <td>...</td>
-          <td>8.258e-17</td>
-          <td>1.814e-16</td>
-          <td>2.675e-17</td>
-          <td>3.931e-18</td>
-          <td>1.539e-17</td>
-          <td>1.564e-17</td>
-          <td>3.727e-19</td>
-          <td>1.555e-16</td>
-          <td>3.581e-18</td>
-          <td>2.848e-17</td>
+          <td>3.204e-17</td>
+          <td>1.968e-16</td>
+          <td>2.778e-17</td>
+          <td>3.371e-18</td>
+          <td>2.887e-17</td>
+          <td>2.277e-17</td>
+          <td>5.599e-19</td>
+          <td>9.932e-17</td>
+          <td>2.424e-18</td>
+          <td>2.389e-17</td>
         </tr>
       </tbody>
     </table>
@@ -21688,3291 +5699,7 @@ Cycles, at the top.
 
     cquad4_composite_strain
 
-
-
-
-.. raw:: html
-
-    <div>
-    <style scoped>
-        .dataframe tbody tr th:only-of-type {
-            vertical-align: middle;
-        }
-    
-        .dataframe tbody tr th {
-            vertical-align: top;
-        }
-    
-        .dataframe thead tr th {
-            text-align: left;
-        }
-    
-        .dataframe thead tr:last-of-type th {
-            text-align: right;
-        }
-    </style>
-    <table border="1" class="dataframe">
-      <thead>
-        <tr>
-          <th></th>
-          <th></th>
-          <th>Mode</th>
-          <th>1</th>
-          <th>2</th>
-          <th>3</th>
-          <th>4</th>
-          <th>5</th>
-          <th>6</th>
-          <th>7</th>
-          <th>8</th>
-          <th>9</th>
-          <th>10</th>
-          <th>...</th>
-          <th>24</th>
-          <th>25</th>
-          <th>26</th>
-          <th>27</th>
-          <th>28</th>
-          <th>29</th>
-          <th>30</th>
-          <th>31</th>
-          <th>32</th>
-          <th>33</th>
-        </tr>
-        <tr>
-          <th></th>
-          <th></th>
-          <th>Freq</th>
-          <th>8.359</th>
-          <th>9.508</th>
-          <th>15.666</th>
-          <th>20.237</th>
-          <th>20.306</th>
-          <th>20.555</th>
-          <th>21.500</th>
-          <th>21.706</th>
-          <th>21.725</th>
-          <th>28.536</th>
-          <th>...</th>
-          <th>80.076</th>
-          <th>86.487</th>
-          <th>88.168</th>
-          <th>88.477</th>
-          <th>89.923</th>
-          <th>94.290</th>
-          <th>94.368</th>
-          <th>96.044</th>
-          <th>98.702</th>
-          <th>98.893</th>
-        </tr>
-        <tr>
-          <th></th>
-          <th></th>
-          <th>Eigenvalue</th>
-          <th>2758.149</th>
-          <th>3568.632</th>
-          <th>9689.306</th>
-          <th>16168.100</th>
-          <th>16278.223</th>
-          <th>16679.709</th>
-          <th>18248.434</th>
-          <th>18600.697</th>
-          <th>18632.551</th>
-          <th>32147.814</th>
-          <th>...</th>
-          <th>253140.875</th>
-          <th>295297.750</th>
-          <th>306885.906</th>
-          <th>309040.656</th>
-          <th>319227.719</th>
-          <th>350984.500</th>
-          <th>351566.188</th>
-          <th>364166.156</th>
-          <th>384601.344</th>
-          <th>386090.438</th>
-        </tr>
-        <tr>
-          <th></th>
-          <th></th>
-          <th>Radians</th>
-          <th>52.518</th>
-          <th>59.738</th>
-          <th>98.434</th>
-          <th>127.154</th>
-          <th>127.586</th>
-          <th>129.150</th>
-          <th>135.087</th>
-          <th>136.384</th>
-          <th>136.501</th>
-          <th>179.298</th>
-          <th>...</th>
-          <th>503.131</th>
-          <th>543.413</th>
-          <th>553.973</th>
-          <th>555.914</th>
-          <th>565.002</th>
-          <th>592.439</th>
-          <th>592.930</th>
-          <th>603.462</th>
-          <th>620.162</th>
-          <th>621.362</th>
-        </tr>
-        <tr>
-          <th>ElementID</th>
-          <th>Layer</th>
-          <th>Item</th>
-          <th></th>
-          <th></th>
-          <th></th>
-          <th></th>
-          <th></th>
-          <th></th>
-          <th></th>
-          <th></th>
-          <th></th>
-          <th></th>
-          <th></th>
-          <th></th>
-          <th></th>
-          <th></th>
-          <th></th>
-          <th></th>
-          <th></th>
-          <th></th>
-          <th></th>
-          <th></th>
-          <th></th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <th rowspan="27" valign="top">3463</th>
-          <th rowspan="9" valign="top">1</th>
-          <th>e11</th>
-          <td>-6.793e-07</td>
-          <td>-9.809e-07</td>
-          <td>5.514e-06</td>
-          <td>-1.388e-05</td>
-          <td>7.473e-07</td>
-          <td>-7.614e-06</td>
-          <td>1.155e-08</td>
-          <td>-5.200e-06</td>
-          <td>-5.986e-06</td>
-          <td>2.798e-05</td>
-          <td>...</td>
-          <td>1.362e-04</td>
-          <td>-3.191e-04</td>
-          <td>1.128e-04</td>
-          <td>-1.727e-04</td>
-          <td>-6.279e-05</td>
-          <td>-2.853e-06</td>
-          <td>2.803e-05</td>
-          <td>1.090e-04</td>
-          <td>3.078e-05</td>
-          <td>6.314e-05</td>
-        </tr>
-        <tr>
-          <th>e22</th>
-          <td>2.479e-06</td>
-          <td>-4.321e-07</td>
-          <td>8.334e-06</td>
-          <td>3.326e-05</td>
-          <td>5.138e-07</td>
-          <td>1.928e-05</td>
-          <td>2.949e-08</td>
-          <td>1.676e-06</td>
-          <td>-1.488e-06</td>
-          <td>-5.691e-05</td>
-          <td>...</td>
-          <td>-3.366e-04</td>
-          <td>8.450e-04</td>
-          <td>-2.043e-04</td>
-          <td>3.744e-04</td>
-          <td>1.122e-04</td>
-          <td>4.924e-05</td>
-          <td>-6.505e-05</td>
-          <td>-4.702e-04</td>
-          <td>-7.657e-05</td>
-          <td>-2.276e-04</td>
-        </tr>
-        <tr>
-          <th>e12</th>
-          <td>-2.687e-06</td>
-          <td>7.023e-06</td>
-          <td>-5.002e-05</td>
-          <td>-1.753e-05</td>
-          <td>-1.139e-06</td>
-          <td>-8.533e-06</td>
-          <td>-1.664e-07</td>
-          <td>2.455e-05</td>
-          <td>4.005e-05</td>
-          <td>-1.220e-06</td>
-          <td>...</td>
-          <td>3.029e-04</td>
-          <td>-4.798e-04</td>
-          <td>1.809e-05</td>
-          <td>-1.878e-04</td>
-          <td>3.262e-05</td>
-          <td>-1.198e-04</td>
-          <td>5.236e-05</td>
-          <td>8.081e-04</td>
-          <td>6.233e-05</td>
-          <td>3.154e-04</td>
-        </tr>
-        <tr>
-          <th>e1z</th>
-          <td>-8.396e-09</td>
-          <td>5.616e-09</td>
-          <td>-7.103e-08</td>
-          <td>5.674e-10</td>
-          <td>-2.008e-08</td>
-          <td>-3.301e-08</td>
-          <td>-2.806e-10</td>
-          <td>2.947e-08</td>
-          <td>2.636e-08</td>
-          <td>-3.746e-08</td>
-          <td>...</td>
-          <td>-1.042e-06</td>
-          <td>-2.030e-06</td>
-          <td>-1.241e-06</td>
-          <td>8.061e-07</td>
-          <td>-2.463e-07</td>
-          <td>-5.559e-07</td>
-          <td>-2.187e-07</td>
-          <td>1.717e-06</td>
-          <td>-5.025e-08</td>
-          <td>6.918e-07</td>
-        </tr>
-        <tr>
-          <th>e2z</th>
-          <td>2.357e-08</td>
-          <td>-1.454e-08</td>
-          <td>1.753e-07</td>
-          <td>1.474e-08</td>
-          <td>5.575e-08</td>
-          <td>9.862e-08</td>
-          <td>5.825e-10</td>
-          <td>-8.195e-08</td>
-          <td>-7.061e-08</td>
-          <td>1.227e-08</td>
-          <td>...</td>
-          <td>3.111e-06</td>
-          <td>4.479e-06</td>
-          <td>3.189e-06</td>
-          <td>-2.198e-06</td>
-          <td>6.080e-07</td>
-          <td>1.233e-06</td>
-          <td>5.988e-07</td>
-          <td>-3.230e-06</td>
-          <td>1.174e-07</td>
-          <td>-1.359e-06</td>
-        </tr>
-        <tr>
-          <th>angle</th>
-          <td>-6.981e+01</td>
-          <td>4.723e+01</td>
-          <td>-4.661e+01</td>
-          <td>-7.980e+01</td>
-          <td>-3.921e+01</td>
-          <td>-8.120e+01</td>
-          <td>-4.808e+01</td>
-          <td>5.282e+01</td>
-          <td>4.820e+01</td>
-          <td>-4.116e-01</td>
-          <td>...</td>
-          <td>1.632e+01</td>
-          <td>-7.880e+01</td>
-          <td>1.633e+00</td>
-          <td>-8.053e+01</td>
-          <td>8.472e+01</td>
-          <td>-5.675e+01</td>
-          <td>1.468e+01</td>
-          <td>2.718e+01</td>
-          <td>1.507e+01</td>
-          <td>2.366e+01</td>
-        </tr>
-        <tr>
-          <th>major</th>
-          <td>2.973e-06</td>
-          <td>2.816e-06</td>
-          <td>3.198e-05</td>
-          <td>3.484e-05</td>
-          <td>1.212e-06</td>
-          <td>1.994e-05</td>
-          <td>1.042e-07</td>
-          <td>1.099e-05</td>
-          <td>1.641e-05</td>
-          <td>2.798e-05</td>
-          <td>...</td>
-          <td>1.806e-04</td>
-          <td>8.925e-04</td>
-          <td>1.131e-04</td>
-          <td>3.900e-04</td>
-          <td>1.137e-04</td>
-          <td>8.850e-05</td>
-          <td>3.489e-05</td>
-          <td>3.166e-04</td>
-          <td>3.917e-05</td>
-          <td>1.322e-04</td>
-        </tr>
-        <tr>
-          <th>minor</th>
-          <td>-1.173e-06</td>
-          <td>-4.229e-06</td>
-          <td>-1.813e-05</td>
-          <td>-1.546e-05</td>
-          <td>4.900e-08</td>
-          <td>-8.274e-06</td>
-          <td>-6.318e-08</td>
-          <td>-1.451e-05</td>
-          <td>-2.389e-05</td>
-          <td>-5.692e-05</td>
-          <td>...</td>
-          <td>-3.810e-04</td>
-          <td>-3.666e-04</td>
-          <td>-2.046e-04</td>
-          <td>-1.883e-04</td>
-          <td>-6.430e-05</td>
-          <td>-4.211e-05</td>
-          <td>-7.191e-05</td>
-          <td>-6.777e-04</td>
-          <td>-8.496e-05</td>
-          <td>-2.967e-04</td>
-        </tr>
-        <tr>
-          <th>max_shear</th>
-          <td>4.147e-06</td>
-          <td>7.045e-06</td>
-          <td>5.010e-05</td>
-          <td>5.030e-05</td>
-          <td>1.163e-06</td>
-          <td>2.822e-05</td>
-          <td>1.674e-07</td>
-          <td>2.550e-05</td>
-          <td>4.030e-05</td>
-          <td>8.490e-05</td>
-          <td>...</td>
-          <td>5.616e-04</td>
-          <td>1.259e-03</td>
-          <td>3.176e-04</td>
-          <td>5.784e-04</td>
-          <td>1.780e-04</td>
-          <td>1.306e-04</td>
-          <td>1.068e-04</td>
-          <td>9.943e-04</td>
-          <td>1.241e-04</td>
-          <td>4.289e-04</td>
-        </tr>
-        <tr>
-          <th rowspan="9" valign="top">2</th>
-          <th>e11</th>
-          <td>-9.429e-07</td>
-          <td>-7.014e-07</td>
-          <td>3.144e-06</td>
-          <td>-1.477e-05</td>
-          <td>2.981e-07</td>
-          <td>-9.079e-06</td>
-          <td>-4.451e-09</td>
-          <td>-4.268e-06</td>
-          <td>-4.449e-06</td>
-          <td>2.808e-05</td>
-          <td>...</td>
-          <td>1.051e-04</td>
-          <td>-3.817e-04</td>
-          <td>8.084e-05</td>
-          <td>-1.581e-04</td>
-          <td>-7.325e-05</td>
-          <td>-1.616e-05</td>
-          <td>2.407e-05</td>
-          <td>1.495e-04</td>
-          <td>2.975e-05</td>
-          <td>8.229e-05</td>
-        </tr>
-        <tr>
-          <th>e22</th>
-          <td>2.678e-06</td>
-          <td>-8.541e-07</td>
-          <td>9.534e-06</td>
-          <td>3.779e-05</td>
-          <td>-6.499e-07</td>
-          <td>2.164e-05</td>
-          <td>5.841e-08</td>
-          <td>1.158e-06</td>
-          <td>-4.322e-06</td>
-          <td>-6.277e-05</td>
-          <td>...</td>
-          <td>-3.031e-04</td>
-          <td>8.746e-04</td>
-          <td>-1.857e-04</td>
-          <td>3.858e-04</td>
-          <td>1.311e-04</td>
-          <td>5.208e-05</td>
-          <td>-6.764e-05</td>
-          <td>-4.657e-04</td>
-          <td>-7.765e-05</td>
-          <td>-2.328e-04</td>
-        </tr>
-        <tr>
-          <th>e12</th>
-          <td>-2.075e-06</td>
-          <td>6.765e-06</td>
-          <td>-4.305e-05</td>
-          <td>-2.414e-05</td>
-          <td>3.463e-06</td>
-          <td>-7.801e-06</td>
-          <td>-1.621e-07</td>
-          <td>2.197e-05</td>
-          <td>3.982e-05</td>
-          <td>1.179e-05</td>
-          <td>...</td>
-          <td>3.480e-04</td>
-          <td>-2.887e-04</td>
-          <td>9.562e-05</td>
-          <td>-2.648e-04</td>
-          <td>3.082e-05</td>
-          <td>-7.673e-05</td>
-          <td>7.190e-05</td>
-          <td>6.428e-04</td>
-          <td>6.901e-05</td>
-          <td>2.529e-04</td>
-        </tr>
-        <tr>
-          <th>e1z</th>
-          <td>-7.435e-07</td>
-          <td>4.973e-07</td>
-          <td>-6.290e-06</td>
-          <td>5.024e-08</td>
-          <td>-1.778e-06</td>
-          <td>-2.923e-06</td>
-          <td>-2.485e-08</td>
-          <td>2.610e-06</td>
-          <td>2.335e-06</td>
-          <td>-3.317e-06</td>
-          <td>...</td>
-          <td>-9.231e-05</td>
-          <td>-1.798e-04</td>
-          <td>-1.099e-04</td>
-          <td>7.138e-05</td>
-          <td>-2.181e-05</td>
-          <td>-4.923e-05</td>
-          <td>-1.937e-05</td>
-          <td>1.521e-04</td>
-          <td>-4.450e-06</td>
-          <td>6.127e-05</td>
-        </tr>
-        <tr>
-          <th>e2z</th>
-          <td>4.269e-06</td>
-          <td>-2.633e-06</td>
-          <td>3.176e-05</td>
-          <td>2.671e-06</td>
-          <td>1.010e-05</td>
-          <td>1.786e-05</td>
-          <td>1.055e-07</td>
-          <td>-1.484e-05</td>
-          <td>-1.279e-05</td>
-          <td>2.222e-06</td>
-          <td>...</td>
-          <td>5.635e-04</td>
-          <td>8.114e-04</td>
-          <td>5.776e-04</td>
-          <td>-3.981e-04</td>
-          <td>1.101e-04</td>
-          <td>2.233e-04</td>
-          <td>1.085e-04</td>
-          <td>-5.851e-04</td>
-          <td>2.127e-05</td>
-          <td>-2.462e-04</td>
-        </tr>
-        <tr>
-          <th>angle</th>
-          <td>-7.509e+01</td>
-          <td>4.435e+01</td>
-          <td>-4.922e+01</td>
-          <td>-7.767e+01</td>
-          <td>3.734e+01</td>
-          <td>-8.288e+01</td>
-          <td>-5.560e+01</td>
-          <td>5.194e+01</td>
-          <td>4.509e+01</td>
-          <td>3.698e+00</td>
-          <td>...</td>
-          <td>2.023e+01</td>
-          <td>-8.353e+01</td>
-          <td>9.868e+00</td>
-          <td>-7.702e+01</td>
-          <td>8.571e+01</td>
-          <td>-6.582e+01</td>
-          <td>1.905e+01</td>
-          <td>2.313e+01</td>
-          <td>1.636e+01</td>
-          <td>1.938e+01</td>
-        </tr>
-        <tr>
-          <th>major</th>
-          <td>2.954e-06</td>
-          <td>2.605e-06</td>
-          <td>2.810e-05</td>
-          <td>4.043e-05</td>
-          <td>1.619e-06</td>
-          <td>2.213e-05</td>
-          <td>1.139e-07</td>
-          <td>9.761e-06</td>
-          <td>1.552e-05</td>
-          <td>2.846e-05</td>
-          <td>...</td>
-          <td>1.692e-04</td>
-          <td>8.910e-04</td>
-          <td>8.916e-05</td>
-          <td>4.163e-04</td>
-          <td>1.322e-04</td>
-          <td>6.930e-05</td>
-          <td>3.648e-05</td>
-          <td>2.867e-04</td>
-          <td>3.988e-05</td>
-          <td>1.268e-04</td>
-        </tr>
-        <tr>
-          <th>minor</th>
-          <td>-1.219e-06</td>
-          <td>-4.161e-06</td>
-          <td>-1.542e-05</td>
-          <td>-1.741e-05</td>
-          <td>-1.971e-06</td>
-          <td>-9.567e-06</td>
-          <td>-5.997e-08</td>
-          <td>-1.287e-05</td>
-          <td>-2.430e-05</td>
-          <td>-6.315e-05</td>
-          <td>...</td>
-          <td>-3.672e-04</td>
-          <td>-3.981e-04</td>
-          <td>-1.940e-04</td>
-          <td>-1.886e-04</td>
-          <td>-7.440e-05</td>
-          <td>-3.338e-05</td>
-          <td>-8.005e-05</td>
-          <td>-6.030e-04</td>
-          <td>-8.778e-05</td>
-          <td>-2.773e-04</td>
-        </tr>
-        <tr>
-          <th>max_shear</th>
-          <td>4.173e-06</td>
-          <td>6.766e-06</td>
-          <td>4.352e-05</td>
-          <td>5.784e-05</td>
-          <td>3.590e-06</td>
-          <td>3.169e-05</td>
-          <td>1.739e-07</td>
-          <td>2.263e-05</td>
-          <td>3.982e-05</td>
-          <td>9.161e-05</td>
-          <td>...</td>
-          <td>5.364e-04</td>
-          <td>1.289e-03</td>
-          <td>2.832e-04</td>
-          <td>6.050e-04</td>
-          <td>2.066e-04</td>
-          <td>1.027e-04</td>
-          <td>1.165e-04</td>
-          <td>8.897e-04</td>
-          <td>1.277e-04</td>
-          <td>4.040e-04</td>
-        </tr>
-        <tr>
-          <th rowspan="9" valign="top">3</th>
-          <th>e11</th>
-          <td>-1.206e-06</td>
-          <td>-4.218e-07</td>
-          <td>7.749e-07</td>
-          <td>-1.565e-05</td>
-          <td>-1.511e-07</td>
-          <td>-1.054e-05</td>
-          <td>-2.045e-08</td>
-          <td>-3.337e-06</td>
-          <td>-2.912e-06</td>
-          <td>2.819e-05</td>
-          <td>...</td>
-          <td>7.394e-05</td>
-          <td>-4.444e-04</td>
-          <td>4.887e-05</td>
-          <td>-1.436e-04</td>
-          <td>-8.371e-05</td>
-          <td>-2.947e-05</td>
-          <td>2.011e-05</td>
-          <td>1.899e-04</td>
-          <td>2.871e-05</td>
-          <td>1.014e-04</td>
-        </tr>
-        <tr>
-          <th>e22</th>
-          <td>2.876e-06</td>
-          <td>-1.276e-06</td>
-          <td>1.073e-05</td>
-          <td>4.232e-05</td>
-          <td>-1.814e-06</td>
-          <td>2.399e-05</td>
-          <td>8.733e-08</td>
-          <td>6.399e-07</td>
-          <td>-7.155e-06</td>
-          <td>-6.862e-05</td>
-          <td>...</td>
-          <td>-2.695e-04</td>
-          <td>9.043e-04</td>
-          <td>-1.671e-04</td>
-          <td>3.972e-04</td>
-          <td>1.500e-04</td>
-          <td>5.491e-05</td>
-          <td>-7.022e-05</td>
-          <td>-4.613e-04</td>
-          <td>-7.873e-05</td>
-          <td>-2.380e-04</td>
-        </tr>
-        <tr>
-          <th>e12</th>
-          <td>-1.464e-06</td>
-          <td>6.506e-06</td>
-          <td>-3.607e-05</td>
-          <td>-3.075e-05</td>
-          <td>8.065e-06</td>
-          <td>-7.069e-06</td>
-          <td>-1.578e-07</td>
-          <td>1.939e-05</td>
-          <td>3.959e-05</td>
-          <td>2.480e-05</td>
-          <td>...</td>
-          <td>3.931e-04</td>
-          <td>-9.758e-05</td>
-          <td>1.732e-04</td>
-          <td>-3.419e-04</td>
-          <td>2.902e-05</td>
-          <td>-3.370e-05</td>
-          <td>9.143e-05</td>
-          <td>4.774e-04</td>
-          <td>7.569e-05</td>
-          <td>1.904e-04</td>
-        </tr>
-        <tr>
-          <th>e1z</th>
-          <td>0.000e+00</td>
-          <td>-0.000e+00</td>
-          <td>0.000e+00</td>
-          <td>-0.000e+00</td>
-          <td>0.000e+00</td>
-          <td>0.000e+00</td>
-          <td>0.000e+00</td>
-          <td>-0.000e+00</td>
-          <td>-0.000e+00</td>
-          <td>0.000e+00</td>
-          <td>...</td>
-          <td>0.000e+00</td>
-          <td>0.000e+00</td>
-          <td>0.000e+00</td>
-          <td>-0.000e+00</td>
-          <td>0.000e+00</td>
-          <td>0.000e+00</td>
-          <td>0.000e+00</td>
-          <td>-0.000e+00</td>
-          <td>0.000e+00</td>
-          <td>-0.000e+00</td>
-        </tr>
-        <tr>
-          <th>e2z</th>
-          <td>-0.000e+00</td>
-          <td>0.000e+00</td>
-          <td>-0.000e+00</td>
-          <td>-0.000e+00</td>
-          <td>-0.000e+00</td>
-          <td>-0.000e+00</td>
-          <td>-0.000e+00</td>
-          <td>0.000e+00</td>
-          <td>0.000e+00</td>
-          <td>-0.000e+00</td>
-          <td>...</td>
-          <td>-0.000e+00</td>
-          <td>-0.000e+00</td>
-          <td>-0.000e+00</td>
-          <td>0.000e+00</td>
-          <td>-0.000e+00</td>
-          <td>-0.000e+00</td>
-          <td>-0.000e+00</td>
-          <td>0.000e+00</td>
-          <td>-0.000e+00</td>
-          <td>0.000e+00</td>
-        </tr>
-        <tr>
-          <th>angle</th>
-          <td>-8.014e+01</td>
-          <td>4.126e+01</td>
-          <td>-5.272e+01</td>
-          <td>-7.603e+01</td>
-          <td>3.918e+01</td>
-          <td>-8.422e+01</td>
-          <td>-6.216e+01</td>
-          <td>5.080e+01</td>
-          <td>4.194e+01</td>
-          <td>7.185e+00</td>
-          <td>...</td>
-          <td>2.443e+01</td>
-          <td>-8.793e+01</td>
-          <td>1.936e+01</td>
-          <td>-7.385e+01</td>
-          <td>8.646e+01</td>
-          <td>-7.912e+01</td>
-          <td>2.267e+01</td>
-          <td>1.812e+01</td>
-          <td>1.758e+01</td>
-          <td>1.465e+01</td>
-        </tr>
-        <tr>
-          <th>major</th>
-          <td>3.003e-06</td>
-          <td>2.432e-06</td>
-          <td>2.446e-05</td>
-          <td>4.614e-05</td>
-          <td>3.135e-06</td>
-          <td>2.435e-05</td>
-          <td>1.290e-07</td>
-          <td>8.548e-06</td>
-          <td>1.487e-05</td>
-          <td>2.975e-05</td>
-          <td>...</td>
-          <td>1.632e-04</td>
-          <td>9.061e-04</td>
-          <td>7.929e-05</td>
-          <td>4.467e-04</td>
-          <td>1.509e-04</td>
-          <td>5.815e-05</td>
-          <td>3.921e-05</td>
-          <td>2.680e-04</td>
-          <td>4.070e-05</td>
-          <td>1.263e-04</td>
-        </tr>
-        <tr>
-          <th>minor</th>
-          <td>-1.334e-06</td>
-          <td>-4.130e-06</td>
-          <td>-1.296e-05</td>
-          <td>-1.948e-05</td>
-          <td>-5.099e-06</td>
-          <td>-1.090e-05</td>
-          <td>-6.212e-08</td>
-          <td>-1.125e-05</td>
-          <td>-2.494e-05</td>
-          <td>-7.018e-05</td>
-          <td>...</td>
-          <td>-3.588e-04</td>
-          <td>-4.462e-04</td>
-          <td>-1.975e-04</td>
-          <td>-1.931e-04</td>
-          <td>-8.461e-05</td>
-          <td>-3.271e-05</td>
-          <td>-8.932e-05</td>
-          <td>-5.394e-04</td>
-          <td>-9.072e-05</td>
-          <td>-2.629e-04</td>
-        </tr>
-        <tr>
-          <th>max_shear</th>
-          <td>4.337e-06</td>
-          <td>6.562e-06</td>
-          <td>3.742e-05</td>
-          <td>6.562e-05</td>
-          <td>8.234e-06</td>
-          <td>3.525e-05</td>
-          <td>1.911e-07</td>
-          <td>1.979e-05</td>
-          <td>3.981e-05</td>
-          <td>9.993e-05</td>
-          <td>...</td>
-          <td>5.220e-04</td>
-          <td>1.352e-03</td>
-          <td>2.768e-04</td>
-          <td>6.398e-04</td>
-          <td>2.355e-04</td>
-          <td>9.086e-05</td>
-          <td>1.285e-04</td>
-          <td>8.074e-04</td>
-          <td>1.314e-04</td>
-          <td>3.892e-04</td>
-        </tr>
-        <tr>
-          <th rowspan="3" valign="top">3604</th>
-          <th rowspan="3" valign="top">1</th>
-          <th>e11</th>
-          <td>-1.014e-06</td>
-          <td>2.576e-06</td>
-          <td>-1.840e-05</td>
-          <td>-1.312e-05</td>
-          <td>1.252e-06</td>
-          <td>-4.688e-06</td>
-          <td>-5.126e-08</td>
-          <td>8.111e-06</td>
-          <td>1.490e-05</td>
-          <td>1.270e-05</td>
-          <td>...</td>
-          <td>1.692e-04</td>
-          <td>-2.106e-04</td>
-          <td>6.067e-05</td>
-          <td>-1.310e-04</td>
-          <td>1.494e-05</td>
-          <td>-3.013e-05</td>
-          <td>3.194e-05</td>
-          <td>2.691e-04</td>
-          <td>3.210e-05</td>
-          <td>1.042e-04</td>
-        </tr>
-        <tr>
-          <th>e22</th>
-          <td>2.378e-06</td>
-          <td>-5.294e-06</td>
-          <td>4.391e-05</td>
-          <td>2.630e-05</td>
-          <td>1.958e-06</td>
-          <td>1.153e-05</td>
-          <td>7.460e-08</td>
-          <td>-1.730e-05</td>
-          <td>-3.008e-05</td>
-          <td>-3.321e-05</td>
-          <td>...</td>
-          <td>-4.409e-04</td>
-          <td>5.634e-04</td>
-          <td>-2.067e-04</td>
-          <td>3.246e-04</td>
-          <td>-4.746e-05</td>
-          <td>3.998e-05</td>
-          <td>-7.734e-05</td>
-          <td>-5.163e-04</td>
-          <td>-7.205e-05</td>
-          <td>-2.167e-04</td>
-        </tr>
-        <tr>
-          <th>e12</th>
-          <td>-1.697e-06</td>
-          <td>2.965e-06</td>
-          <td>-3.709e-05</td>
-          <td>8.999e-06</td>
-          <td>-1.434e-05</td>
-          <td>-5.064e-06</td>
-          <td>-1.703e-08</td>
-          <td>1.374e-05</td>
-          <td>1.554e-05</td>
-          <td>-7.637e-06</td>
-          <td>...</td>
-          <td>-1.429e-04</td>
-          <td>-3.132e-04</td>
-          <td>-1.509e-04</td>
-          <td>1.975e-04</td>
-          <td>7.420e-05</td>
-          <td>-2.766e-05</td>
-          <td>-3.510e-05</td>
-          <td>3.584e-05</td>
-          <td>-2.814e-05</td>
-          <td>2.515e-05</td>
-        </tr>
-        <tr>
-          <th>...</th>
-          <th>...</th>
-          <th>...</th>
-          <td>...</td>
-          <td>...</td>
-          <td>...</td>
-          <td>...</td>
-          <td>...</td>
-          <td>...</td>
-          <td>...</td>
-          <td>...</td>
-          <td>...</td>
-          <td>...</td>
-          <td>...</td>
-          <td>...</td>
-          <td>...</td>
-          <td>...</td>
-          <td>...</td>
-          <td>...</td>
-          <td>...</td>
-          <td>...</td>
-          <td>...</td>
-          <td>...</td>
-          <td>...</td>
-        </tr>
-        <tr>
-          <th rowspan="3" valign="top">4553</th>
-          <th rowspan="3" valign="top">3</th>
-          <th>major</th>
-          <td>1.463e-06</td>
-          <td>1.852e-07</td>
-          <td>5.046e-06</td>
-          <td>4.602e-06</td>
-          <td>8.778e-07</td>
-          <td>3.670e-06</td>
-          <td>2.169e-08</td>
-          <td>1.266e-06</td>
-          <td>2.192e-06</td>
-          <td>2.071e-05</td>
-          <td>...</td>
-          <td>2.363e-04</td>
-          <td>7.102e-04</td>
-          <td>1.437e-04</td>
-          <td>6.136e-05</td>
-          <td>1.113e-04</td>
-          <td>8.582e-05</td>
-          <td>8.674e-06</td>
-          <td>3.870e-04</td>
-          <td>3.973e-06</td>
-          <td>1.706e-04</td>
-        </tr>
-        <tr>
-          <th>minor</th>
-          <td>-4.703e-07</td>
-          <td>-8.583e-07</td>
-          <td>-4.407e-06</td>
-          <td>-1.137e-06</td>
-          <td>-2.831e-07</td>
-          <td>-8.655e-07</td>
-          <td>-9.969e-09</td>
-          <td>-5.422e-06</td>
-          <td>-8.906e-06</td>
-          <td>-1.014e-05</td>
-          <td>...</td>
-          <td>-6.219e-04</td>
-          <td>-2.094e-03</td>
-          <td>-4.277e-04</td>
-          <td>-2.117e-05</td>
-          <td>-3.650e-04</td>
-          <td>-5.866e-05</td>
-          <td>-3.035e-06</td>
-          <td>-7.282e-04</td>
-          <td>-1.298e-05</td>
-          <td>-3.676e-04</td>
-        </tr>
-        <tr>
-          <th>max_shear</th>
-          <td>1.933e-06</td>
-          <td>1.044e-06</td>
-          <td>9.453e-06</td>
-          <td>5.738e-06</td>
-          <td>1.161e-06</td>
-          <td>4.535e-06</td>
-          <td>3.166e-08</td>
-          <td>6.688e-06</td>
-          <td>1.110e-05</td>
-          <td>3.085e-05</td>
-          <td>...</td>
-          <td>8.582e-04</td>
-          <td>2.804e-03</td>
-          <td>5.714e-04</td>
-          <td>8.252e-05</td>
-          <td>4.763e-04</td>
-          <td>1.445e-04</td>
-          <td>1.171e-05</td>
-          <td>1.115e-03</td>
-          <td>1.695e-05</td>
-          <td>5.382e-04</td>
-        </tr>
-        <tr>
-          <th rowspan="27" valign="top">4554</th>
-          <th rowspan="9" valign="top">1</th>
-          <th>e11</th>
-          <td>1.877e-07</td>
-          <td>-6.893e-08</td>
-          <td>3.346e-07</td>
-          <td>2.773e-06</td>
-          <td>-1.911e-07</td>
-          <td>1.909e-06</td>
-          <td>3.015e-09</td>
-          <td>-2.814e-08</td>
-          <td>-4.295e-08</td>
-          <td>-9.573e-06</td>
-          <td>...</td>
-          <td>5.382e-05</td>
-          <td>1.557e-04</td>
-          <td>1.500e-05</td>
-          <td>-5.557e-06</td>
-          <td>2.526e-05</td>
-          <td>-2.679e-05</td>
-          <td>2.009e-06</td>
-          <td>1.668e-04</td>
-          <td>1.999e-07</td>
-          <td>6.087e-05</td>
-        </tr>
-        <tr>
-          <th>e22</th>
-          <td>-6.657e-07</td>
-          <td>5.956e-07</td>
-          <td>-2.769e-06</td>
-          <td>-8.927e-06</td>
-          <td>-8.811e-08</td>
-          <td>-7.057e-06</td>
-          <td>6.816e-09</td>
-          <td>1.777e-06</td>
-          <td>1.802e-06</td>
-          <td>3.316e-05</td>
-          <td>...</td>
-          <td>-2.646e-04</td>
-          <td>-5.652e-04</td>
-          <td>-8.909e-05</td>
-          <td>1.828e-05</td>
-          <td>-5.833e-05</td>
-          <td>1.107e-04</td>
-          <td>-3.217e-06</td>
-          <td>-6.990e-04</td>
-          <td>7.151e-07</td>
-          <td>-2.695e-04</td>
-        </tr>
-        <tr>
-          <th>e12</th>
-          <td>2.138e-07</td>
-          <td>-4.020e-07</td>
-          <td>2.726e-06</td>
-          <td>6.680e-06</td>
-          <td>2.670e-07</td>
-          <td>5.764e-06</td>
-          <td>-2.388e-08</td>
-          <td>-8.564e-07</td>
-          <td>6.523e-07</td>
-          <td>-3.596e-05</td>
-          <td>...</td>
-          <td>4.662e-04</td>
-          <td>1.212e-03</td>
-          <td>2.235e-04</td>
-          <td>-3.206e-05</td>
-          <td>1.765e-04</td>
-          <td>-1.445e-04</td>
-          <td>-3.226e-06</td>
-          <td>9.691e-04</td>
-          <td>1.210e-06</td>
-          <td>4.017e-04</td>
-        </tr>
-        <tr>
-          <th>e1z</th>
-          <td>-5.334e-09</td>
-          <td>5.274e-09</td>
-          <td>-4.456e-08</td>
-          <td>-4.859e-08</td>
-          <td>-4.368e-09</td>
-          <td>-3.819e-08</td>
-          <td>-4.365e-11</td>
-          <td>2.288e-08</td>
-          <td>3.471e-08</td>
-          <td>1.420e-07</td>
-          <td>...</td>
-          <td>3.078e-07</td>
-          <td>-1.097e-06</td>
-          <td>9.689e-07</td>
-          <td>-1.735e-08</td>
-          <td>-4.014e-07</td>
-          <td>8.952e-07</td>
-          <td>-2.757e-08</td>
-          <td>-4.288e-06</td>
-          <td>6.422e-08</td>
-          <td>-1.144e-06</td>
-        </tr>
-        <tr>
-          <th>e2z</th>
-          <td>1.802e-08</td>
-          <td>-1.871e-08</td>
-          <td>1.263e-07</td>
-          <td>1.695e-07</td>
-          <td>6.878e-09</td>
-          <td>1.304e-07</td>
-          <td>8.833e-11</td>
-          <td>-7.649e-08</td>
-          <td>-1.187e-07</td>
-          <td>-4.630e-07</td>
-          <td>...</td>
-          <td>2.461e-07</td>
-          <td>-2.984e-06</td>
-          <td>-1.933e-06</td>
-          <td>6.884e-08</td>
-          <td>-9.924e-07</td>
-          <td>-1.994e-06</td>
-          <td>1.216e-07</td>
-          <td>1.006e-05</td>
-          <td>-1.345e-07</td>
-          <td>2.974e-06</td>
-        </tr>
-        <tr>
-          <th>angle</th>
-          <td>7.033e+00</td>
-          <td>-7.441e+01</td>
-          <td>2.065e+01</td>
-          <td>1.486e+01</td>
-          <td>5.554e+01</td>
-          <td>1.637e+01</td>
-          <td>-4.952e+01</td>
-          <td>-7.731e+01</td>
-          <td>8.026e+01</td>
-          <td>-6.996e+01</td>
-          <td>...</td>
-          <td>2.783e+01</td>
-          <td>2.963e+01</td>
-          <td>3.252e+01</td>
-          <td>-6.332e+01</td>
-          <td>3.233e+01</td>
-          <td>-6.679e+01</td>
-          <td>-1.584e+01</td>
-          <td>2.411e+01</td>
-          <td>5.653e+01</td>
-          <td>2.528e+01</td>
-        </tr>
-        <tr>
-          <th>major</th>
-          <td>2.009e-07</td>
-          <td>6.516e-07</td>
-          <td>8.483e-07</td>
-          <td>3.659e-06</td>
-          <td>3.497e-09</td>
-          <td>2.756e-06</td>
-          <td>1.701e-08</td>
-          <td>1.873e-06</td>
-          <td>1.858e-06</td>
-          <td>3.972e-05</td>
-          <td>...</td>
-          <td>1.769e-04</td>
-          <td>5.003e-04</td>
-          <td>8.625e-05</td>
-          <td>2.634e-05</td>
-          <td>8.111e-05</td>
-          <td>1.417e-04</td>
-          <td>2.467e-06</td>
-          <td>3.837e-04</td>
-          <td>1.115e-06</td>
-          <td>1.558e-04</td>
-        </tr>
-        <tr>
-          <th>minor</th>
-          <td>-6.789e-07</td>
-          <td>-1.250e-07</td>
-          <td>-3.282e-06</td>
-          <td>-9.814e-06</td>
-          <td>-2.827e-07</td>
-          <td>-7.904e-06</td>
-          <td>-7.176e-09</td>
-          <td>-1.246e-07</td>
-          <td>-9.891e-08</td>
-          <td>-1.613e-05</td>
-          <td>...</td>
-          <td>-3.877e-04</td>
-          <td>-9.098e-04</td>
-          <td>-1.603e-04</td>
-          <td>-1.361e-05</td>
-          <td>-1.142e-04</td>
-          <td>-5.777e-05</td>
-          <td>-3.675e-06</td>
-          <td>-9.159e-04</td>
-          <td>-2.001e-07</td>
-          <td>-3.644e-04</td>
-        </tr>
-        <tr>
-          <th>max_shear</th>
-          <td>8.798e-07</td>
-          <td>7.766e-07</td>
-          <td>4.130e-06</td>
-          <td>1.347e-05</td>
-          <td>2.862e-07</td>
-          <td>1.066e-05</td>
-          <td>2.418e-08</td>
-          <td>1.998e-06</td>
-          <td>1.957e-06</td>
-          <td>5.585e-05</td>
-          <td>...</td>
-          <td>5.646e-04</td>
-          <td>1.410e-03</td>
-          <td>2.466e-04</td>
-          <td>3.995e-05</td>
-          <td>1.953e-04</td>
-          <td>1.995e-04</td>
-          <td>6.141e-06</td>
-          <td>1.300e-03</td>
-          <td>1.315e-06</td>
-          <td>5.202e-04</td>
-        </tr>
-        <tr>
-          <th rowspan="9" valign="top">2</th>
-          <th>e11</th>
-          <td>-2.837e-09</td>
-          <td>1.615e-07</td>
-          <td>-1.503e-06</td>
-          <td>7.951e-07</td>
-          <td>-2.717e-07</td>
-          <td>4.551e-07</td>
-          <td>1.842e-09</td>
-          <td>8.729e-07</td>
-          <td>1.386e-06</td>
-          <td>-4.114e-06</td>
-          <td>...</td>
-          <td>5.362e-05</td>
-          <td>1.569e-04</td>
-          <td>4.397e-05</td>
-          <td>-5.825e-06</td>
-          <td>2.953e-05</td>
-          <td>3.915e-06</td>
-          <td>5.344e-07</td>
-          <td>1.379e-05</td>
-          <td>1.634e-06</td>
-          <td>1.614e-05</td>
-        </tr>
-        <tr>
-          <th>e22</th>
-          <td>-2.531e-08</td>
-          <td>3.857e-08</td>
-          <td>-6.314e-07</td>
-          <td>-3.391e-06</td>
-          <td>1.610e-07</td>
-          <td>-2.711e-06</td>
-          <td>7.814e-09</td>
-          <td>-5.891e-07</td>
-          <td>-1.639e-06</td>
-          <td>2.038e-05</td>
-          <td>...</td>
-          <td>-2.675e-04</td>
-          <td>-7.760e-04</td>
-          <td>-1.490e-04</td>
-          <td>2.251e-05</td>
-          <td>-1.216e-04</td>
-          <td>6.003e-05</td>
-          <td>7.052e-07</td>
-          <td>-4.458e-04</td>
-          <td>-2.406e-06</td>
-          <td>-1.962e-04</td>
-        </tr>
-        <tr>
-          <th>e12</th>
-          <td>-1.297e-07</td>
-          <td>-3.429e-07</td>
-          <td>5.406e-06</td>
-          <td>4.940e-06</td>
-          <td>2.530e-08</td>
-          <td>4.123e-06</td>
-          <td>-2.199e-08</td>
-          <td>-2.483e-07</td>
-          <td>1.012e-06</td>
-          <td>-3.553e-05</td>
-          <td>...</td>
-          <td>4.981e-04</td>
-          <td>1.444e-03</td>
-          <td>2.420e-04</td>
-          <td>-3.905e-05</td>
-          <td>2.283e-04</td>
-          <td>-1.552e-04</td>
-          <td>-3.749e-06</td>
-          <td>1.035e-03</td>
-          <td>1.928e-06</td>
-          <td>4.292e-04</td>
-        </tr>
-        <tr>
-          <th>e1z</th>
-          <td>-4.723e-07</td>
-          <td>4.670e-07</td>
-          <td>-3.946e-06</td>
-          <td>-4.303e-06</td>
-          <td>-3.868e-07</td>
-          <td>-3.382e-06</td>
-          <td>-3.865e-09</td>
-          <td>2.026e-06</td>
-          <td>3.074e-06</td>
-          <td>1.257e-05</td>
-          <td>...</td>
-          <td>2.726e-05</td>
-          <td>-9.710e-05</td>
-          <td>8.580e-05</td>
-          <td>-1.537e-06</td>
-          <td>-3.555e-05</td>
-          <td>7.927e-05</td>
-          <td>-2.442e-06</td>
-          <td>-3.797e-04</td>
-          <td>5.687e-06</td>
-          <td>-1.013e-04</td>
-        </tr>
-        <tr>
-          <th>e2z</th>
-          <td>3.264e-06</td>
-          <td>-3.390e-06</td>
-          <td>2.287e-05</td>
-          <td>3.070e-05</td>
-          <td>1.246e-06</td>
-          <td>2.361e-05</td>
-          <td>1.600e-08</td>
-          <td>-1.385e-05</td>
-          <td>-2.151e-05</td>
-          <td>-8.387e-05</td>
-          <td>...</td>
-          <td>4.457e-05</td>
-          <td>-5.404e-04</td>
-          <td>-3.502e-04</td>
-          <td>1.247e-05</td>
-          <td>-1.798e-04</td>
-          <td>-3.611e-04</td>
-          <td>2.203e-05</td>
-          <td>1.822e-03</td>
-          <td>-2.436e-05</td>
-          <td>5.386e-04</td>
-        </tr>
-        <tr>
-          <th>angle</th>
-          <td>-4.008e+01</td>
-          <td>-3.514e+01</td>
-          <td>4.958e+01</td>
-          <td>2.486e+01</td>
-          <td>8.833e+01</td>
-          <td>2.624e+01</td>
-          <td>-5.260e+01</td>
-          <td>-4.820e+00</td>
-          <td>9.250e+00</td>
-          <td>-6.229e+01</td>
-          <td>...</td>
-          <td>2.860e+01</td>
-          <td>2.856e+01</td>
-          <td>2.572e+01</td>
-          <td>-6.298e+01</td>
-          <td>2.825e+01</td>
-          <td>-5.494e+01</td>
-          <td>-4.630e+01</td>
-          <td>3.302e+01</td>
-          <td>1.276e+01</td>
-          <td>3.184e+01</td>
-        </tr>
-        <tr>
-          <th>major</th>
-          <td>5.173e-08</td>
-          <td>2.822e-07</td>
-          <td>1.671e-06</td>
-          <td>1.940e-06</td>
-          <td>1.614e-07</td>
-          <td>1.471e-06</td>
-          <td>1.622e-08</td>
-          <td>8.834e-07</td>
-          <td>1.468e-06</td>
-          <td>2.971e-05</td>
-          <td>...</td>
-          <td>1.894e-04</td>
-          <td>5.498e-04</td>
-          <td>1.023e-04</td>
-          <td>3.247e-05</td>
-          <td>9.088e-05</td>
-          <td>1.145e-04</td>
-          <td>2.496e-06</td>
-          <td>3.501e-04</td>
-          <td>1.852e-06</td>
-          <td>1.494e-04</td>
-        </tr>
-        <tr>
-          <th>minor</th>
-          <td>-7.988e-08</td>
-          <td>-8.213e-08</td>
-          <td>-3.805e-06</td>
-          <td>-4.536e-06</td>
-          <td>-2.720e-07</td>
-          <td>-3.727e-06</td>
-          <td>-6.564e-09</td>
-          <td>-5.995e-07</td>
-          <td>-1.722e-06</td>
-          <td>-1.345e-05</td>
-          <td>...</td>
-          <td>-4.032e-04</td>
-          <td>-1.169e-03</td>
-          <td>-2.073e-04</td>
-          <td>-1.578e-05</td>
-          <td>-1.829e-04</td>
-          <td>-5.054e-05</td>
-          <td>-1.257e-06</td>
-          <td>-7.821e-04</td>
-          <td>-2.624e-06</td>
-          <td>-3.295e-04</td>
-        </tr>
-        <tr>
-          <th>max_shear</th>
-          <td>1.316e-07</td>
-          <td>3.643e-07</td>
-          <td>5.476e-06</td>
-          <td>6.475e-06</td>
-          <td>4.334e-07</td>
-          <td>5.198e-06</td>
-          <td>2.278e-08</td>
-          <td>1.483e-06</td>
-          <td>3.190e-06</td>
-          <td>4.316e-05</td>
-          <td>...</td>
-          <td>5.926e-04</td>
-          <td>1.719e-03</td>
-          <td>3.096e-04</td>
-          <td>4.825e-05</td>
-          <td>2.738e-04</td>
-          <td>1.650e-04</td>
-          <td>3.753e-06</td>
-          <td>1.132e-03</td>
-          <td>4.477e-06</td>
-          <td>4.788e-04</td>
-        </tr>
-        <tr>
-          <th rowspan="9" valign="top">3</th>
-          <th>e11</th>
-          <td>-1.934e-07</td>
-          <td>3.918e-07</td>
-          <td>-3.340e-06</td>
-          <td>-1.183e-06</td>
-          <td>-3.523e-07</td>
-          <td>-9.991e-07</td>
-          <td>6.699e-10</td>
-          <td>1.774e-06</td>
-          <td>2.815e-06</td>
-          <td>1.345e-06</td>
-          <td>...</td>
-          <td>5.342e-05</td>
-          <td>1.581e-04</td>
-          <td>7.293e-05</td>
-          <td>-6.093e-06</td>
-          <td>3.380e-05</td>
-          <td>3.462e-05</td>
-          <td>-9.403e-07</td>
-          <td>-1.392e-04</td>
-          <td>3.068e-06</td>
-          <td>-2.859e-05</td>
-        </tr>
-        <tr>
-          <th>e22</th>
-          <td>6.150e-07</td>
-          <td>-5.184e-07</td>
-          <td>1.506e-06</td>
-          <td>2.145e-06</td>
-          <td>4.101e-07</td>
-          <td>1.636e-06</td>
-          <td>8.811e-09</td>
-          <td>-2.955e-06</td>
-          <td>-5.081e-06</td>
-          <td>7.603e-06</td>
-          <td>...</td>
-          <td>-2.703e-04</td>
-          <td>-9.869e-04</td>
-          <td>-2.089e-04</td>
-          <td>2.674e-05</td>
-          <td>-1.848e-04</td>
-          <td>9.359e-06</td>
-          <td>4.627e-06</td>
-          <td>-1.926e-04</td>
-          <td>-5.527e-06</td>
-          <td>-1.229e-04</td>
-        </tr>
-        <tr>
-          <th>e12</th>
-          <td>-4.732e-07</td>
-          <td>-2.838e-07</td>
-          <td>8.086e-06</td>
-          <td>3.200e-06</td>
-          <td>-2.164e-07</td>
-          <td>2.481e-06</td>
-          <td>-2.009e-08</td>
-          <td>3.597e-07</td>
-          <td>1.372e-06</td>
-          <td>-3.511e-05</td>
-          <td>...</td>
-          <td>5.300e-04</td>
-          <td>1.675e-03</td>
-          <td>2.605e-04</td>
-          <td>-4.604e-05</td>
-          <td>2.801e-04</td>
-          <td>-1.659e-04</td>
-          <td>-4.272e-06</td>
-          <td>1.100e-03</td>
-          <td>2.646e-06</td>
-          <td>4.566e-04</td>
-        </tr>
-        <tr>
-          <th>e1z</th>
-          <td>0.000e+00</td>
-          <td>-0.000e+00</td>
-          <td>0.000e+00</td>
-          <td>0.000e+00</td>
-          <td>0.000e+00</td>
-          <td>0.000e+00</td>
-          <td>0.000e+00</td>
-          <td>-0.000e+00</td>
-          <td>-0.000e+00</td>
-          <td>-0.000e+00</td>
-          <td>...</td>
-          <td>-0.000e+00</td>
-          <td>0.000e+00</td>
-          <td>-0.000e+00</td>
-          <td>0.000e+00</td>
-          <td>0.000e+00</td>
-          <td>-0.000e+00</td>
-          <td>0.000e+00</td>
-          <td>0.000e+00</td>
-          <td>-0.000e+00</td>
-          <td>0.000e+00</td>
-        </tr>
-        <tr>
-          <th>e2z</th>
-          <td>-0.000e+00</td>
-          <td>0.000e+00</td>
-          <td>-0.000e+00</td>
-          <td>-0.000e+00</td>
-          <td>-0.000e+00</td>
-          <td>-0.000e+00</td>
-          <td>-0.000e+00</td>
-          <td>0.000e+00</td>
-          <td>0.000e+00</td>
-          <td>0.000e+00</td>
-          <td>...</td>
-          <td>-0.000e+00</td>
-          <td>0.000e+00</td>
-          <td>0.000e+00</td>
-          <td>-0.000e+00</td>
-          <td>0.000e+00</td>
-          <td>0.000e+00</td>
-          <td>-0.000e+00</td>
-          <td>-0.000e+00</td>
-          <td>0.000e+00</td>
-          <td>-0.000e+00</td>
-        </tr>
-        <tr>
-          <th>angle</th>
-          <td>-7.483e+01</td>
-          <td>-8.659e+00</td>
-          <td>6.047e+01</td>
-          <td>6.806e+01</td>
-          <td>-8.208e+01</td>
-          <td>6.836e+01</td>
-          <td>-5.603e+01</td>
-          <td>2.175e+00</td>
-          <td>4.929e+00</td>
-          <td>-5.005e+01</td>
-          <td>...</td>
-          <td>2.929e+01</td>
-          <td>2.782e+01</td>
-          <td>2.137e+01</td>
-          <td>-6.274e+01</td>
-          <td>2.602e+01</td>
-          <td>-4.067e+01</td>
-          <td>-7.125e+01</td>
-          <td>4.361e+01</td>
-          <td>8.554e+00</td>
-          <td>3.916e+01</td>
-        </tr>
-        <tr>
-          <th>major</th>
-          <td>6.792e-07</td>
-          <td>4.135e-07</td>
-          <td>3.796e-06</td>
-          <td>2.789e-06</td>
-          <td>4.252e-07</td>
-          <td>2.128e-06</td>
-          <td>1.558e-08</td>
-          <td>1.781e-06</td>
-          <td>2.874e-06</td>
-          <td>2.231e-05</td>
-          <td>...</td>
-          <td>2.021e-04</td>
-          <td>6.001e-04</td>
-          <td>1.239e-04</td>
-          <td>3.860e-05</td>
-          <td>1.022e-04</td>
-          <td>1.059e-04</td>
-          <td>5.352e-06</td>
-          <td>3.848e-04</td>
-          <td>3.267e-06</td>
-          <td>1.573e-04</td>
-        </tr>
-        <tr>
-          <th>minor</th>
-          <td>-2.576e-07</td>
-          <td>-5.400e-07</td>
-          <td>-5.630e-06</td>
-          <td>-1.827e-06</td>
-          <td>-3.673e-07</td>
-          <td>-1.491e-06</td>
-          <td>-6.099e-09</td>
-          <td>-2.961e-06</td>
-          <td>-5.140e-06</td>
-          <td>-1.336e-05</td>
-          <td>...</td>
-          <td>-4.189e-04</td>
-          <td>-1.429e-03</td>
-          <td>-2.599e-04</td>
-          <td>-1.795e-05</td>
-          <td>-2.532e-04</td>
-          <td>-6.190e-05</td>
-          <td>-1.665e-06</td>
-          <td>-7.167e-04</td>
-          <td>-5.726e-06</td>
-          <td>-3.089e-04</td>
-        </tr>
-        <tr>
-          <th>max_shear</th>
-          <td>9.368e-07</td>
-          <td>9.535e-07</td>
-          <td>9.426e-06</td>
-          <td>4.617e-06</td>
-          <td>7.925e-07</td>
-          <td>3.620e-06</td>
-          <td>2.168e-08</td>
-          <td>4.742e-06</td>
-          <td>8.014e-06</td>
-          <td>3.566e-05</td>
-          <td>...</td>
-          <td>6.210e-04</td>
-          <td>2.029e-03</td>
-          <td>3.838e-04</td>
-          <td>5.655e-05</td>
-          <td>3.553e-04</td>
-          <td>1.678e-04</td>
-          <td>7.018e-06</td>
-          <td>1.101e-03</td>
-          <td>8.993e-06</td>
-          <td>4.662e-04</td>
-        </tr>
-      </tbody>
-    </table>
-    <p>20088 rows × 33 columns</p>
-    </div>
-
-
-
 .. code:: ipython3
 
     ctria3_composite_strain
-
-
-
-
-.. raw:: html
-
-    <div>
-    <style scoped>
-        .dataframe tbody tr th:only-of-type {
-            vertical-align: middle;
-        }
-    
-        .dataframe tbody tr th {
-            vertical-align: top;
-        }
-    
-        .dataframe thead tr th {
-            text-align: left;
-        }
-    
-        .dataframe thead tr:last-of-type th {
-            text-align: right;
-        }
-    </style>
-    <table border="1" class="dataframe">
-      <thead>
-        <tr>
-          <th></th>
-          <th></th>
-          <th>Mode</th>
-          <th>1</th>
-          <th>2</th>
-          <th>3</th>
-          <th>4</th>
-          <th>5</th>
-          <th>6</th>
-          <th>7</th>
-          <th>8</th>
-          <th>9</th>
-          <th>10</th>
-          <th>...</th>
-          <th>24</th>
-          <th>25</th>
-          <th>26</th>
-          <th>27</th>
-          <th>28</th>
-          <th>29</th>
-          <th>30</th>
-          <th>31</th>
-          <th>32</th>
-          <th>33</th>
-        </tr>
-        <tr>
-          <th></th>
-          <th></th>
-          <th>Freq</th>
-          <th>8.359</th>
-          <th>9.508</th>
-          <th>15.666</th>
-          <th>20.237</th>
-          <th>20.306</th>
-          <th>20.555</th>
-          <th>21.500</th>
-          <th>21.706</th>
-          <th>21.725</th>
-          <th>28.536</th>
-          <th>...</th>
-          <th>80.076</th>
-          <th>86.487</th>
-          <th>88.168</th>
-          <th>88.477</th>
-          <th>89.923</th>
-          <th>94.290</th>
-          <th>94.368</th>
-          <th>96.044</th>
-          <th>98.702</th>
-          <th>98.893</th>
-        </tr>
-        <tr>
-          <th></th>
-          <th></th>
-          <th>Eigenvalue</th>
-          <th>2758.149</th>
-          <th>3568.632</th>
-          <th>9689.306</th>
-          <th>16168.100</th>
-          <th>16278.223</th>
-          <th>16679.709</th>
-          <th>18248.434</th>
-          <th>18600.697</th>
-          <th>18632.551</th>
-          <th>32147.814</th>
-          <th>...</th>
-          <th>253140.875</th>
-          <th>295297.750</th>
-          <th>306885.906</th>
-          <th>309040.656</th>
-          <th>319227.719</th>
-          <th>350984.500</th>
-          <th>351566.188</th>
-          <th>364166.156</th>
-          <th>384601.344</th>
-          <th>386090.438</th>
-        </tr>
-        <tr>
-          <th></th>
-          <th></th>
-          <th>Radians</th>
-          <th>52.518</th>
-          <th>59.738</th>
-          <th>98.434</th>
-          <th>127.154</th>
-          <th>127.586</th>
-          <th>129.150</th>
-          <th>135.087</th>
-          <th>136.384</th>
-          <th>136.501</th>
-          <th>179.298</th>
-          <th>...</th>
-          <th>503.131</th>
-          <th>543.413</th>
-          <th>553.973</th>
-          <th>555.914</th>
-          <th>565.002</th>
-          <th>592.439</th>
-          <th>592.930</th>
-          <th>603.462</th>
-          <th>620.162</th>
-          <th>621.362</th>
-        </tr>
-        <tr>
-          <th>ElementID</th>
-          <th>Layer</th>
-          <th>Item</th>
-          <th></th>
-          <th></th>
-          <th></th>
-          <th></th>
-          <th></th>
-          <th></th>
-          <th></th>
-          <th></th>
-          <th></th>
-          <th></th>
-          <th></th>
-          <th></th>
-          <th></th>
-          <th></th>
-          <th></th>
-          <th></th>
-          <th></th>
-          <th></th>
-          <th></th>
-          <th></th>
-          <th></th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <th rowspan="27" valign="top">3730</th>
-          <th rowspan="9" valign="top">1</th>
-          <th>e11</th>
-          <td>6.406e-07</td>
-          <td>-1.626e-06</td>
-          <td>1.112e-05</td>
-          <td>2.861e-06</td>
-          <td>-1.753e-06</td>
-          <td>-2.409e-07</td>
-          <td>1.590e-08</td>
-          <td>-5.741e-06</td>
-          <td>-8.777e-06</td>
-          <td>9.841e-06</td>
-          <td>...</td>
-          <td>-2.039e-04</td>
-          <td>2.749e-04</td>
-          <td>2.795e-05</td>
-          <td>-3.791e-05</td>
-          <td>8.208e-08</td>
-          <td>1.044e-04</td>
-          <td>4.612e-06</td>
-          <td>-6.001e-04</td>
-          <td>2.912e-06</td>
-          <td>-1.644e-04</td>
-        </tr>
-        <tr>
-          <th>e22</th>
-          <td>-3.780e-08</td>
-          <td>8.248e-07</td>
-          <td>-2.730e-06</td>
-          <td>5.395e-06</td>
-          <td>-1.033e-06</td>
-          <td>3.369e-06</td>
-          <td>2.840e-08</td>
-          <td>4.743e-06</td>
-          <td>4.819e-06</td>
-          <td>-5.307e-06</td>
-          <td>...</td>
-          <td>-7.709e-07</td>
-          <td>4.483e-05</td>
-          <td>-6.071e-05</td>
-          <td>5.201e-05</td>
-          <td>5.386e-06</td>
-          <td>-5.341e-05</td>
-          <td>-6.011e-06</td>
-          <td>2.783e-04</td>
-          <td>-3.733e-06</td>
-          <td>4.471e-05</td>
-        </tr>
-        <tr>
-          <th>e12</th>
-          <td>5.593e-07</td>
-          <td>-1.254e-06</td>
-          <td>1.232e-05</td>
-          <td>5.224e-06</td>
-          <td>4.416e-06</td>
-          <td>9.570e-06</td>
-          <td>5.163e-08</td>
-          <td>-4.779e-06</td>
-          <td>-9.678e-06</td>
-          <td>-3.516e-05</td>
-          <td>...</td>
-          <td>5.300e-04</td>
-          <td>-3.149e-04</td>
-          <td>4.372e-05</td>
-          <td>1.149e-08</td>
-          <td>5.692e-07</td>
-          <td>-1.952e-04</td>
-          <td>-2.003e-06</td>
-          <td>1.173e-03</td>
-          <td>-7.528e-06</td>
-          <td>2.861e-04</td>
-        </tr>
-        <tr>
-          <th>e1z</th>
-          <td>5.847e-09</td>
-          <td>2.103e-08</td>
-          <td>-1.130e-07</td>
-          <td>7.474e-08</td>
-          <td>1.078e-08</td>
-          <td>7.962e-08</td>
-          <td>-7.384e-10</td>
-          <td>6.694e-08</td>
-          <td>1.309e-07</td>
-          <td>-4.199e-07</td>
-          <td>...</td>
-          <td>3.302e-06</td>
-          <td>-1.345e-06</td>
-          <td>1.067e-06</td>
-          <td>-4.962e-07</td>
-          <td>-2.659e-07</td>
-          <td>-2.598e-07</td>
-          <td>1.982e-07</td>
-          <td>3.247e-06</td>
-          <td>3.058e-08</td>
-          <td>1.226e-06</td>
-        </tr>
-        <tr>
-          <th>e2z</th>
-          <td>-1.625e-09</td>
-          <td>-1.163e-08</td>
-          <td>3.538e-08</td>
-          <td>-6.998e-08</td>
-          <td>2.461e-08</td>
-          <td>-2.415e-08</td>
-          <td>-1.036e-10</td>
-          <td>-6.220e-08</td>
-          <td>-8.490e-08</td>
-          <td>-3.677e-08</td>
-          <td>...</td>
-          <td>2.251e-06</td>
-          <td>-3.551e-06</td>
-          <td>2.776e-07</td>
-          <td>-4.879e-07</td>
-          <td>-5.536e-08</td>
-          <td>-6.877e-07</td>
-          <td>9.451e-08</td>
-          <td>3.997e-06</td>
-          <td>8.797e-09</td>
-          <td>1.474e-06</td>
-        </tr>
-        <tr>
-          <th>angle</th>
-          <td>1.975e+01</td>
-          <td>-7.645e+01</td>
-          <td>2.082e+01</td>
-          <td>5.794e+01</td>
-          <td>4.963e+01</td>
-          <td>5.533e+01</td>
-          <td>5.181e+01</td>
-          <td>-7.775e+01</td>
-          <td>-7.228e+01</td>
-          <td>-3.335e+01</td>
-          <td>...</td>
-          <td>5.549e+01</td>
-          <td>-2.693e+01</td>
-          <td>1.312e+01</td>
-          <td>9.000e+01</td>
-          <td>8.694e+01</td>
-          <td>-2.552e+01</td>
-          <td>-5.338e+00</td>
-          <td>6.341e+01</td>
-          <td>-2.428e+01</td>
-          <td>6.309e+01</td>
-        </tr>
-        <tr>
-          <th>major</th>
-          <td>7.410e-07</td>
-          <td>9.758e-07</td>
-          <td>1.346e-05</td>
-          <td>7.031e-06</td>
-          <td>8.438e-07</td>
-          <td>6.678e-06</td>
-          <td>4.871e-08</td>
-          <td>5.262e-06</td>
-          <td>6.366e-06</td>
-          <td>2.141e-05</td>
-          <td>...</td>
-          <td>1.814e-04</td>
-          <td>3.548e-04</td>
-          <td>3.305e-05</td>
-          <td>5.201e-05</td>
-          <td>5.401e-06</td>
-          <td>1.510e-04</td>
-          <td>4.706e-06</td>
-          <td>5.720e-04</td>
-          <td>4.610e-06</td>
-          <td>1.173e-04</td>
-        </tr>
-        <tr>
-          <th>minor</th>
-          <td>-1.382e-07</td>
-          <td>-1.777e-06</td>
-          <td>-5.072e-06</td>
-          <td>1.225e-06</td>
-          <td>-3.630e-06</td>
-          <td>-3.550e-06</td>
-          <td>-4.408e-09</td>
-          <td>-6.260e-06</td>
-          <td>-1.032e-05</td>
-          <td>-1.687e-05</td>
-          <td>...</td>
-          <td>-3.861e-04</td>
-          <td>-3.514e-05</td>
-          <td>-6.581e-05</td>
-          <td>-3.791e-05</td>
-          <td>6.685e-08</td>
-          <td>-1.000e-04</td>
-          <td>-6.105e-06</td>
-          <td>-8.938e-04</td>
-          <td>-5.431e-06</td>
-          <td>-2.371e-04</td>
-        </tr>
-        <tr>
-          <th>max_shear</th>
-          <td>8.792e-07</td>
-          <td>2.753e-06</td>
-          <td>1.853e-05</td>
-          <td>5.806e-06</td>
-          <td>4.474e-06</td>
-          <td>1.023e-05</td>
-          <td>5.312e-08</td>
-          <td>1.152e-05</td>
-          <td>1.669e-05</td>
-          <td>3.828e-05</td>
-          <td>...</td>
-          <td>5.676e-04</td>
-          <td>3.900e-04</td>
-          <td>9.885e-05</td>
-          <td>8.992e-05</td>
-          <td>5.334e-06</td>
-          <td>2.510e-04</td>
-          <td>1.081e-05</td>
-          <td>1.466e-03</td>
-          <td>1.004e-05</td>
-          <td>3.544e-04</td>
-        </tr>
-        <tr>
-          <th rowspan="9" valign="top">2</th>
-          <th>e11</th>
-          <td>7.015e-07</td>
-          <td>-1.008e-06</td>
-          <td>7.626e-06</td>
-          <td>4.839e-06</td>
-          <td>-2.014e-06</td>
-          <td>1.279e-06</td>
-          <td>-1.000e-09</td>
-          <td>-3.572e-06</td>
-          <td>-4.985e-06</td>
-          <td>9.226e-07</td>
-          <td>...</td>
-          <td>-1.456e-04</td>
-          <td>2.342e-04</td>
-          <td>3.214e-05</td>
-          <td>-4.708e-05</td>
-          <td>-9.198e-06</td>
-          <td>8.697e-05</td>
-          <td>9.984e-06</td>
-          <td>-4.756e-04</td>
-          <td>4.639e-06</td>
-          <td>-1.206e-04</td>
-        </tr>
-        <tr>
-          <th>e22</th>
-          <td>-5.279e-08</td>
-          <td>5.945e-09</td>
-          <td>4.250e-07</td>
-          <td>2.683e-06</td>
-          <td>3.276e-08</td>
-          <td>2.302e-06</td>
-          <td>2.730e-08</td>
-          <td>7.934e-07</td>
-          <td>-8.433e-07</td>
-          <td>-6.843e-06</td>
-          <td>...</td>
-          <td>9.070e-05</td>
-          <td>-1.247e-04</td>
-          <td>-3.749e-05</td>
-          <td>3.704e-05</td>
-          <td>2.871e-06</td>
-          <td>-7.153e-05</td>
-          <td>-6.259e-06</td>
-          <td>3.837e-04</td>
-          <td>-6.762e-06</td>
-          <td>8.584e-05</td>
-        </tr>
-        <tr>
-          <th>e12</th>
-          <td>4.477e-07</td>
-          <td>-4.989e-07</td>
-          <td>8.313e-06</td>
-          <td>9.549e-06</td>
-          <td>1.880e-06</td>
-          <td>9.923e-06</td>
-          <td>4.721e-08</td>
-          <td>-1.229e-06</td>
-          <td>-4.954e-06</td>
-          <td>-3.623e-05</td>
-          <td>...</td>
-          <td>4.174e-04</td>
-          <td>-2.526e-04</td>
-          <td>-1.178e-05</td>
-          <td>2.545e-05</td>
-          <td>-1.918e-06</td>
-          <td>-1.995e-04</td>
-          <td>-4.725e-06</td>
-          <td>1.164e-03</td>
-          <td>-7.895e-06</td>
-          <td>2.752e-04</td>
-        </tr>
-        <tr>
-          <th>e1z</th>
-          <td>5.178e-07</td>
-          <td>1.863e-06</td>
-          <td>-1.000e-05</td>
-          <td>6.618e-06</td>
-          <td>9.545e-07</td>
-          <td>7.050e-06</td>
-          <td>-6.539e-08</td>
-          <td>5.928e-06</td>
-          <td>1.159e-05</td>
-          <td>-3.718e-05</td>
-          <td>...</td>
-          <td>2.924e-04</td>
-          <td>-1.191e-04</td>
-          <td>9.453e-05</td>
-          <td>-4.394e-05</td>
-          <td>-2.355e-05</td>
-          <td>-2.301e-05</td>
-          <td>1.755e-05</td>
-          <td>2.875e-04</td>
-          <td>2.708e-06</td>
-          <td>1.086e-04</td>
-        </tr>
-        <tr>
-          <th>e2z</th>
-          <td>-2.944e-07</td>
-          <td>-2.106e-06</td>
-          <td>6.409e-06</td>
-          <td>-1.267e-05</td>
-          <td>4.458e-06</td>
-          <td>-4.374e-06</td>
-          <td>-1.877e-08</td>
-          <td>-1.127e-05</td>
-          <td>-1.538e-05</td>
-          <td>-6.661e-06</td>
-          <td>...</td>
-          <td>4.077e-04</td>
-          <td>-6.431e-04</td>
-          <td>5.028e-05</td>
-          <td>-8.837e-05</td>
-          <td>-1.003e-05</td>
-          <td>-1.246e-04</td>
-          <td>1.712e-05</td>
-          <td>7.241e-04</td>
-          <td>1.593e-06</td>
-          <td>2.670e-04</td>
-        </tr>
-        <tr>
-          <th>angle</th>
-          <td>1.535e+01</td>
-          <td>-7.690e+01</td>
-          <td>2.455e+01</td>
-          <td>3.864e+01</td>
-          <td>6.872e+01</td>
-          <td>4.794e+01</td>
-          <td>6.047e+01</td>
-          <td>-8.214e+01</td>
-          <td>-6.495e+01</td>
-          <td>-3.895e+01</td>
-          <td>...</td>
-          <td>5.976e+01</td>
-          <td>-1.757e+01</td>
-          <td>-4.802e+00</td>
-          <td>8.158e+01</td>
-          <td>-8.549e+01</td>
-          <td>-2.577e+01</td>
-          <td>-8.110e+00</td>
-          <td>6.322e+01</td>
-          <td>-1.735e+01</td>
-          <td>6.344e+01</td>
-        </tr>
-        <tr>
-          <th>major</th>
-          <td>7.629e-07</td>
-          <td>6.399e-08</td>
-          <td>9.525e-06</td>
-          <td>8.656e-06</td>
-          <td>3.988e-07</td>
-          <td>6.778e-06</td>
-          <td>4.067e-08</td>
-          <td>8.782e-07</td>
-          <td>3.147e-07</td>
-          <td>1.557e-05</td>
-          <td>...</td>
-          <td>2.124e-04</td>
-          <td>2.742e-04</td>
-          <td>3.264e-05</td>
-          <td>3.892e-05</td>
-          <td>2.947e-06</td>
-          <td>1.351e-04</td>
-          <td>1.032e-05</td>
-          <td>6.774e-04</td>
-          <td>5.872e-06</td>
-          <td>1.546e-04</td>
-        </tr>
-        <tr>
-          <th>minor</th>
-          <td>-1.142e-07</td>
-          <td>-1.066e-06</td>
-          <td>-1.474e-06</td>
-          <td>-1.133e-06</td>
-          <td>-2.380e-06</td>
-          <td>-3.198e-06</td>
-          <td>-1.437e-08</td>
-          <td>-3.657e-06</td>
-          <td>-6.142e-06</td>
-          <td>-2.149e-05</td>
-          <td>...</td>
-          <td>-2.673e-04</td>
-          <td>-1.647e-04</td>
-          <td>-3.799e-05</td>
-          <td>-4.896e-05</td>
-          <td>-9.274e-06</td>
-          <td>-1.197e-04</td>
-          <td>-6.596e-06</td>
-          <td>-7.692e-04</td>
-          <td>-7.996e-06</td>
-          <td>-1.893e-04</td>
-        </tr>
-        <tr>
-          <th>max_shear</th>
-          <td>8.772e-07</td>
-          <td>1.130e-06</td>
-          <td>1.100e-05</td>
-          <td>9.789e-06</td>
-          <td>2.779e-06</td>
-          <td>9.976e-06</td>
-          <td>5.504e-08</td>
-          <td>4.535e-06</td>
-          <td>6.457e-06</td>
-          <td>3.706e-05</td>
-          <td>...</td>
-          <td>4.796e-04</td>
-          <td>4.389e-04</td>
-          <td>7.063e-05</td>
-          <td>8.789e-05</td>
-          <td>1.222e-05</td>
-          <td>2.548e-04</td>
-          <td>1.692e-05</td>
-          <td>1.447e-03</td>
-          <td>1.387e-05</td>
-          <td>3.440e-04</td>
-        </tr>
-        <tr>
-          <th rowspan="9" valign="top">3</th>
-          <th>e11</th>
-          <td>7.624e-07</td>
-          <td>-3.899e-07</td>
-          <td>4.133e-06</td>
-          <td>6.817e-06</td>
-          <td>-2.276e-06</td>
-          <td>2.798e-06</td>
-          <td>-1.790e-08</td>
-          <td>-1.403e-06</td>
-          <td>-1.192e-06</td>
-          <td>-7.996e-06</td>
-          <td>...</td>
-          <td>-8.737e-05</td>
-          <td>1.935e-04</td>
-          <td>3.633e-05</td>
-          <td>-5.625e-05</td>
-          <td>-1.848e-05</td>
-          <td>6.953e-05</td>
-          <td>1.536e-05</td>
-          <td>-3.510e-04</td>
-          <td>6.365e-06</td>
-          <td>-7.669e-05</td>
-        </tr>
-        <tr>
-          <th>e22</th>
-          <td>-6.778e-08</td>
-          <td>-8.129e-07</td>
-          <td>3.580e-06</td>
-          <td>-2.839e-08</td>
-          <td>1.099e-06</td>
-          <td>1.236e-06</td>
-          <td>2.619e-08</td>
-          <td>-3.157e-06</td>
-          <td>-6.506e-06</td>
-          <td>-8.379e-06</td>
-          <td>...</td>
-          <td>1.822e-04</td>
-          <td>-2.943e-04</td>
-          <td>-1.428e-05</td>
-          <td>2.207e-05</td>
-          <td>3.565e-07</td>
-          <td>-8.966e-05</td>
-          <td>-6.507e-06</td>
-          <td>4.890e-04</td>
-          <td>-9.791e-06</td>
-          <td>1.270e-04</td>
-        </tr>
-        <tr>
-          <th>e12</th>
-          <td>3.362e-07</td>
-          <td>2.559e-07</td>
-          <td>4.310e-06</td>
-          <td>1.387e-05</td>
-          <td>-6.563e-07</td>
-          <td>1.028e-05</td>
-          <td>4.279e-08</td>
-          <td>2.321e-06</td>
-          <td>-2.306e-07</td>
-          <td>-3.731e-05</td>
-          <td>...</td>
-          <td>3.048e-04</td>
-          <td>-1.903e-04</td>
-          <td>-6.729e-05</td>
-          <td>5.089e-05</td>
-          <td>-4.405e-06</td>
-          <td>-2.037e-04</td>
-          <td>-7.448e-06</td>
-          <td>1.154e-03</td>
-          <td>-8.263e-06</td>
-          <td>2.642e-04</td>
-        </tr>
-        <tr>
-          <th>e1z</th>
-          <td>-0.000e+00</td>
-          <td>-0.000e+00</td>
-          <td>0.000e+00</td>
-          <td>-0.000e+00</td>
-          <td>-0.000e+00</td>
-          <td>-0.000e+00</td>
-          <td>0.000e+00</td>
-          <td>-0.000e+00</td>
-          <td>-0.000e+00</td>
-          <td>0.000e+00</td>
-          <td>...</td>
-          <td>-0.000e+00</td>
-          <td>0.000e+00</td>
-          <td>-0.000e+00</td>
-          <td>0.000e+00</td>
-          <td>0.000e+00</td>
-          <td>0.000e+00</td>
-          <td>-0.000e+00</td>
-          <td>-0.000e+00</td>
-          <td>-0.000e+00</td>
-          <td>-0.000e+00</td>
-        </tr>
-        <tr>
-          <th>e2z</th>
-          <td>0.000e+00</td>
-          <td>0.000e+00</td>
-          <td>-0.000e+00</td>
-          <td>0.000e+00</td>
-          <td>-0.000e+00</td>
-          <td>0.000e+00</td>
-          <td>0.000e+00</td>
-          <td>0.000e+00</td>
-          <td>0.000e+00</td>
-          <td>0.000e+00</td>
-          <td>...</td>
-          <td>-0.000e+00</td>
-          <td>0.000e+00</td>
-          <td>-0.000e+00</td>
-          <td>0.000e+00</td>
-          <td>0.000e+00</td>
-          <td>0.000e+00</td>
-          <td>-0.000e+00</td>
-          <td>-0.000e+00</td>
-          <td>-0.000e+00</td>
-          <td>-0.000e+00</td>
-        </tr>
-        <tr>
-          <th>angle</th>
-          <td>1.102e+01</td>
-          <td>1.559e+01</td>
-          <td>4.134e+01</td>
-          <td>3.187e+01</td>
-          <td>-8.450e+01</td>
-          <td>4.068e+01</td>
-          <td>6.793e+01</td>
-          <td>2.647e+01</td>
-          <td>-1.242e+00</td>
-          <td>-4.471e+01</td>
-          <td>...</td>
-          <td>6.574e+01</td>
-          <td>-1.066e+01</td>
-          <td>-2.652e+01</td>
-          <td>7.349e+01</td>
-          <td>-8.342e+01</td>
-          <td>-2.600e+01</td>
-          <td>-9.406e+00</td>
-          <td>6.302e+01</td>
-          <td>-1.354e+01</td>
-          <td>6.381e+01</td>
-        </tr>
-        <tr>
-          <th>major</th>
-          <td>7.951e-07</td>
-          <td>-3.542e-07</td>
-          <td>6.029e-06</td>
-          <td>1.113e-05</td>
-          <td>1.131e-06</td>
-          <td>7.214e-06</td>
-          <td>3.487e-08</td>
-          <td>-8.253e-07</td>
-          <td>-1.189e-06</td>
-          <td>1.047e-05</td>
-          <td>...</td>
-          <td>2.508e-04</td>
-          <td>2.114e-04</td>
-          <td>5.312e-05</td>
-          <td>2.961e-05</td>
-          <td>6.107e-07</td>
-          <td>1.192e-04</td>
-          <td>1.597e-05</td>
-          <td>7.827e-04</td>
-          <td>7.360e-06</td>
-          <td>1.919e-04</td>
-        </tr>
-        <tr>
-          <th>minor</th>
-          <td>-1.005e-07</td>
-          <td>-8.486e-07</td>
-          <td>1.684e-06</td>
-          <td>-4.341e-06</td>
-          <td>-2.307e-06</td>
-          <td>-3.180e-06</td>
-          <td>-2.657e-08</td>
-          <td>-3.734e-06</td>
-          <td>-6.508e-06</td>
-          <td>-2.684e-05</td>
-          <td>...</td>
-          <td>-1.560e-04</td>
-          <td>-3.122e-04</td>
-          <td>-3.107e-05</td>
-          <td>-6.379e-05</td>
-          <td>-1.873e-05</td>
-          <td>-1.393e-04</td>
-          <td>-7.124e-06</td>
-          <td>-6.447e-04</td>
-          <td>-1.079e-05</td>
-          <td>-1.417e-04</td>
-        </tr>
-        <tr>
-          <th>max_shear</th>
-          <td>8.956e-07</td>
-          <td>4.943e-07</td>
-          <td>4.345e-06</td>
-          <td>1.547e-05</td>
-          <td>3.438e-06</td>
-          <td>1.039e-05</td>
-          <td>6.144e-08</td>
-          <td>2.909e-06</td>
-          <td>5.319e-06</td>
-          <td>3.731e-05</td>
-          <td>...</td>
-          <td>4.069e-04</td>
-          <td>5.236e-04</td>
-          <td>8.420e-05</td>
-          <td>9.340e-05</td>
-          <td>1.934e-05</td>
-          <td>2.586e-04</td>
-          <td>2.310e-05</td>
-          <td>1.427e-03</td>
-          <td>1.815e-05</td>
-          <td>3.336e-04</td>
-        </tr>
-        <tr>
-          <th rowspan="3" valign="top">3731</th>
-          <th rowspan="3" valign="top">1</th>
-          <th>e11</th>
-          <td>5.454e-07</td>
-          <td>-1.268e-06</td>
-          <td>2.228e-06</td>
-          <td>9.697e-06</td>
-          <td>-3.909e-06</td>
-          <td>2.151e-06</td>
-          <td>9.166e-09</td>
-          <td>-2.838e-06</td>
-          <td>-5.183e-06</td>
-          <td>-9.997e-06</td>
-          <td>...</td>
-          <td>4.480e-05</td>
-          <td>4.393e-04</td>
-          <td>1.140e-04</td>
-          <td>6.040e-06</td>
-          <td>8.548e-06</td>
-          <td>8.737e-05</td>
-          <td>-2.054e-08</td>
-          <td>-3.954e-04</td>
-          <td>-1.864e-07</td>
-          <td>-8.190e-05</td>
-        </tr>
-        <tr>
-          <th>e22</th>
-          <td>-7.426e-08</td>
-          <td>-1.854e-07</td>
-          <td>7.580e-06</td>
-          <td>-9.829e-06</td>
-          <td>4.673e-06</td>
-          <td>-1.773e-06</td>
-          <td>3.897e-08</td>
-          <td>-1.596e-06</td>
-          <td>-1.803e-06</td>
-          <td>2.676e-05</td>
-          <td>...</td>
-          <td>-1.226e-04</td>
-          <td>-5.917e-05</td>
-          <td>-8.177e-05</td>
-          <td>-5.099e-07</td>
-          <td>-7.221e-08</td>
-          <td>-2.551e-05</td>
-          <td>2.104e-06</td>
-          <td>7.040e-05</td>
-          <td>5.615e-06</td>
-          <td>-3.433e-05</td>
-        </tr>
-        <tr>
-          <th>e12</th>
-          <td>-7.782e-07</td>
-          <td>1.154e-07</td>
-          <td>-3.036e-06</td>
-          <td>-1.362e-05</td>
-          <td>1.179e-06</td>
-          <td>-9.231e-06</td>
-          <td>-5.520e-08</td>
-          <td>1.893e-06</td>
-          <td>6.107e-06</td>
-          <td>2.682e-05</td>
-          <td>...</td>
-          <td>-1.587e-05</td>
-          <td>9.414e-04</td>
-          <td>2.008e-04</td>
-          <td>-6.159e-05</td>
-          <td>8.405e-06</td>
-          <td>1.786e-04</td>
-          <td>4.434e-06</td>
-          <td>-9.030e-04</td>
-          <td>1.823e-05</td>
-          <td>-1.780e-04</td>
-        </tr>
-        <tr>
-          <th>...</th>
-          <th>...</th>
-          <th>...</th>
-          <td>...</td>
-          <td>...</td>
-          <td>...</td>
-          <td>...</td>
-          <td>...</td>
-          <td>...</td>
-          <td>...</td>
-          <td>...</td>
-          <td>...</td>
-          <td>...</td>
-          <td>...</td>
-          <td>...</td>
-          <td>...</td>
-          <td>...</td>
-          <td>...</td>
-          <td>...</td>
-          <td>...</td>
-          <td>...</td>
-          <td>...</td>
-          <td>...</td>
-          <td>...</td>
-        </tr>
-        <tr>
-          <th rowspan="3" valign="top">4538</th>
-          <th rowspan="3" valign="top">3</th>
-          <th>major</th>
-          <td>2.471e-07</td>
-          <td>8.890e-07</td>
-          <td>8.499e-06</td>
-          <td>4.477e-06</td>
-          <td>-5.247e-07</td>
-          <td>3.447e-06</td>
-          <td>2.466e-08</td>
-          <td>4.167e-06</td>
-          <td>7.045e-06</td>
-          <td>1.616e-05</td>
-          <td>...</td>
-          <td>2.922e-04</td>
-          <td>8.019e-04</td>
-          <td>1.602e-04</td>
-          <td>3.237e-05</td>
-          <td>1.002e-04</td>
-          <td>1.366e-04</td>
-          <td>5.899e-06</td>
-          <td>5.053e-04</td>
-          <td>3.961e-06</td>
-          <td>2.098e-04</td>
-        </tr>
-        <tr>
-          <th>minor</th>
-          <td>8.196e-08</td>
-          <td>-1.130e-06</td>
-          <td>-1.017e-05</td>
-          <td>-2.891e-07</td>
-          <td>-1.412e-06</td>
-          <td>-1.493e-06</td>
-          <td>-9.082e-09</td>
-          <td>-4.612e-06</td>
-          <td>-9.013e-06</td>
-          <td>-2.158e-05</td>
-          <td>...</td>
-          <td>-1.784e-04</td>
-          <td>-1.116e-03</td>
-          <td>-8.032e-05</td>
-          <td>-2.292e-05</td>
-          <td>-1.720e-04</td>
-          <td>-7.728e-05</td>
-          <td>-6.314e-06</td>
-          <td>-7.726e-04</td>
-          <td>-1.052e-05</td>
-          <td>-2.848e-04</td>
-        </tr>
-        <tr>
-          <th>max_shear</th>
-          <td>1.651e-07</td>
-          <td>2.019e-06</td>
-          <td>1.867e-05</td>
-          <td>4.767e-06</td>
-          <td>8.870e-07</td>
-          <td>4.940e-06</td>
-          <td>3.374e-08</td>
-          <td>8.780e-06</td>
-          <td>1.606e-05</td>
-          <td>3.774e-05</td>
-          <td>...</td>
-          <td>4.707e-04</td>
-          <td>1.918e-03</td>
-          <td>2.405e-04</td>
-          <td>5.529e-05</td>
-          <td>2.722e-04</td>
-          <td>2.139e-04</td>
-          <td>1.221e-05</td>
-          <td>1.278e-03</td>
-          <td>1.448e-05</td>
-          <td>4.946e-04</td>
-        </tr>
-        <tr>
-          <th rowspan="27" valign="top">4539</th>
-          <th rowspan="9" valign="top">1</th>
-          <th>e11</th>
-          <td>-1.107e-06</td>
-          <td>1.578e-06</td>
-          <td>-8.000e-06</td>
-          <td>-8.072e-06</td>
-          <td>-1.923e-06</td>
-          <td>-8.065e-06</td>
-          <td>2.618e-08</td>
-          <td>6.735e-06</td>
-          <td>8.147e-06</td>
-          <td>2.259e-05</td>
-          <td>...</td>
-          <td>-8.682e-05</td>
-          <td>-1.148e-04</td>
-          <td>7.318e-05</td>
-          <td>-1.630e-07</td>
-          <td>6.673e-05</td>
-          <td>1.413e-04</td>
-          <td>-1.092e-06</td>
-          <td>-7.371e-04</td>
-          <td>7.899e-06</td>
-          <td>-2.386e-04</td>
-        </tr>
-        <tr>
-          <th>e22</th>
-          <td>5.738e-07</td>
-          <td>-5.295e-07</td>
-          <td>2.867e-06</td>
-          <td>6.351e-06</td>
-          <td>4.307e-07</td>
-          <td>5.339e-06</td>
-          <td>-7.467e-09</td>
-          <td>-1.923e-06</td>
-          <td>-1.801e-06</td>
-          <td>-2.167e-05</td>
-          <td>...</td>
-          <td>1.102e-04</td>
-          <td>5.034e-04</td>
-          <td>-1.343e-05</td>
-          <td>-1.349e-05</td>
-          <td>6.644e-05</td>
-          <td>-1.148e-04</td>
-          <td>1.738e-06</td>
-          <td>6.259e-04</td>
-          <td>-3.127e-06</td>
-          <td>2.074e-04</td>
-        </tr>
-        <tr>
-          <th>e12</th>
-          <td>-4.461e-07</td>
-          <td>5.454e-07</td>
-          <td>-8.248e-07</td>
-          <td>-8.820e-06</td>
-          <td>-3.462e-07</td>
-          <td>-7.836e-06</td>
-          <td>1.973e-08</td>
-          <td>4.245e-07</td>
-          <td>-9.262e-07</td>
-          <td>4.505e-05</td>
-          <td>...</td>
-          <td>-5.714e-04</td>
-          <td>-1.360e-03</td>
-          <td>-3.267e-04</td>
-          <td>4.225e-05</td>
-          <td>-1.622e-04</td>
-          <td>9.869e-05</td>
-          <td>-4.066e-07</td>
-          <td>-8.100e-04</td>
-          <td>-5.597e-06</td>
-          <td>-3.780e-04</td>
-        </tr>
-        <tr>
-          <th>e1z</th>
-          <td>-3.646e-08</td>
-          <td>2.642e-08</td>
-          <td>-2.641e-08</td>
-          <td>-2.883e-07</td>
-          <td>-1.513e-08</td>
-          <td>-2.392e-07</td>
-          <td>-3.513e-12</td>
-          <td>1.179e-07</td>
-          <td>1.638e-07</td>
-          <td>6.282e-07</td>
-          <td>...</td>
-          <td>2.683e-07</td>
-          <td>1.548e-05</td>
-          <td>2.704e-06</td>
-          <td>-2.613e-07</td>
-          <td>4.292e-06</td>
-          <td>1.898e-06</td>
-          <td>-1.952e-07</td>
-          <td>-9.415e-06</td>
-          <td>1.631e-07</td>
-          <td>-2.658e-06</td>
-        </tr>
-        <tr>
-          <th>e2z</th>
-          <td>-1.283e-08</td>
-          <td>1.111e-08</td>
-          <td>-6.353e-08</td>
-          <td>-1.107e-07</td>
-          <td>-7.972e-09</td>
-          <td>-9.313e-08</td>
-          <td>-6.980e-11</td>
-          <td>4.792e-08</td>
-          <td>7.260e-08</td>
-          <td>3.214e-07</td>
-          <td>...</td>
-          <td>2.467e-07</td>
-          <td>3.156e-08</td>
-          <td>1.659e-06</td>
-          <td>-5.088e-09</td>
-          <td>-1.603e-07</td>
-          <td>1.606e-06</td>
-          <td>-6.530e-08</td>
-          <td>-7.809e-06</td>
-          <td>1.322e-07</td>
-          <td>-2.134e-06</td>
-        </tr>
-        <tr>
-          <th>angle</th>
-          <td>-8.257e+01</td>
-          <td>7.253e+00</td>
-          <td>-8.783e+01</td>
-          <td>-7.428e+01</td>
-          <td>-8.582e+01</td>
-          <td>-7.484e+01</td>
-          <td>1.519e+01</td>
-          <td>1.404e+00</td>
-          <td>-2.660e+00</td>
-          <td>2.276e+01</td>
-          <td>...</td>
-          <td>-5.451e+01</td>
-          <td>-5.722e+01</td>
-          <td>-3.758e+01</td>
-          <td>3.625e+01</td>
-          <td>-4.495e+01</td>
-          <td>1.054e+01</td>
-          <td>-8.591e+01</td>
-          <td>-7.464e+01</td>
-          <td>-1.346e+01</td>
-          <td>-6.986e+01</td>
-        </tr>
-        <tr>
-          <th>major</th>
-          <td>6.028e-07</td>
-          <td>1.613e-06</td>
-          <td>2.882e-06</td>
-          <td>7.592e-06</td>
-          <td>4.434e-07</td>
-          <td>6.400e-06</td>
-          <td>2.886e-08</td>
-          <td>6.740e-06</td>
-          <td>8.168e-06</td>
-          <td>3.204e-05</td>
-          <td>...</td>
-          <td>3.139e-04</td>
-          <td>9.413e-04</td>
-          <td>1.988e-04</td>
-          <td>1.532e-05</td>
-          <td>1.477e-04</td>
-          <td>1.505e-04</td>
-          <td>1.752e-06</td>
-          <td>7.372e-04</td>
-          <td>8.569e-06</td>
-          <td>2.768e-04</td>
-        </tr>
-        <tr>
-          <th>minor</th>
-          <td>-1.136e-06</td>
-          <td>-5.642e-07</td>
-          <td>-8.016e-06</td>
-          <td>-9.313e-06</td>
-          <td>-1.935e-06</td>
-          <td>-9.126e-06</td>
-          <td>-1.015e-08</td>
-          <td>-1.928e-06</td>
-          <td>-1.822e-06</td>
-          <td>-3.112e-05</td>
-          <td>...</td>
-          <td>-2.905e-04</td>
-          <td>-5.528e-04</td>
-          <td>-1.391e-04</td>
-          <td>-2.897e-05</td>
-          <td>-1.452e-05</td>
-          <td>-1.240e-04</td>
-          <td>-1.107e-06</td>
-          <td>-8.483e-04</td>
-          <td>-3.796e-06</td>
-          <td>-3.079e-04</td>
-        </tr>
-        <tr>
-          <th>max_shear</th>
-          <td>1.739e-06</td>
-          <td>2.177e-06</td>
-          <td>1.090e-05</td>
-          <td>1.691e-05</td>
-          <td>2.379e-06</td>
-          <td>1.553e-05</td>
-          <td>3.900e-08</td>
-          <td>8.668e-06</td>
-          <td>9.990e-06</td>
-          <td>6.316e-05</td>
-          <td>...</td>
-          <td>6.044e-04</td>
-          <td>1.494e-03</td>
-          <td>3.379e-04</td>
-          <td>4.430e-05</td>
-          <td>1.622e-04</td>
-          <td>2.744e-04</td>
-          <td>2.859e-06</td>
-          <td>1.586e-03</td>
-          <td>1.236e-05</td>
-          <td>5.846e-04</td>
-        </tr>
-        <tr>
-          <th rowspan="9" valign="top">2</th>
-          <th>e11</th>
-          <td>-3.703e-07</td>
-          <td>9.612e-07</td>
-          <td>-6.598e-06</td>
-          <td>-1.739e-06</td>
-          <td>-1.677e-06</td>
-          <td>-2.991e-06</td>
-          <td>2.625e-08</td>
-          <td>4.163e-06</td>
-          <td>4.428e-06</td>
-          <td>8.487e-06</td>
-          <td>...</td>
-          <td>-8.438e-05</td>
-          <td>-4.209e-04</td>
-          <td>1.091e-05</td>
-          <td>3.542e-06</td>
-          <td>-2.829e-05</td>
-          <td>8.890e-05</td>
-          <td>3.630e-06</td>
-          <td>-4.732e-04</td>
-          <td>5.339e-06</td>
-          <td>-1.600e-04</td>
-        </tr>
-        <tr>
-          <th>e22</th>
-          <td>6.794e-08</td>
-          <td>1.444e-08</td>
-          <td>-5.976e-07</td>
-          <td>1.168e-06</td>
-          <td>2.313e-07</td>
-          <td>1.350e-06</td>
-          <td>-9.873e-09</td>
-          <td>1.515e-07</td>
-          <td>1.453e-06</td>
-          <td>-7.739e-06</td>
-          <td>...</td>
-          <td>1.134e-04</td>
-          <td>5.129e-04</td>
-          <td>6.822e-05</td>
-          <td>-1.252e-05</td>
-          <td>8.224e-05</td>
-          <td>-2.835e-05</td>
-          <td>-1.673e-06</td>
-          <td>2.014e-04</td>
-          <td>5.947e-07</td>
-          <td>8.451e-05</td>
-        </tr>
-        <tr>
-          <th>e12</th>
-          <td>-4.517e-07</td>
-          <td>7.143e-07</td>
-          <td>-4.378e-06</td>
-          <td>-9.846e-06</td>
-          <td>-2.529e-07</td>
-          <td>-8.287e-06</td>
-          <td>1.682e-08</td>
-          <td>9.339e-07</td>
-          <td>1.763e-07</td>
-          <td>5.004e-05</td>
-          <td>...</td>
-          <td>-5.853e-04</td>
-          <td>-1.500e-03</td>
-          <td>-3.089e-04</td>
-          <td>4.357e-05</td>
-          <td>-1.933e-04</td>
-          <td>1.319e-04</td>
-          <td>-8.495e-07</td>
-          <td>-9.797e-04</td>
-          <td>-3.530e-06</td>
-          <td>-4.303e-04</td>
-        </tr>
-        <tr>
-          <th>e1z</th>
-          <td>-3.229e-06</td>
-          <td>2.340e-06</td>
-          <td>-2.339e-06</td>
-          <td>-2.553e-05</td>
-          <td>-1.340e-06</td>
-          <td>-2.118e-05</td>
-          <td>-3.110e-10</td>
-          <td>1.044e-05</td>
-          <td>1.451e-05</td>
-          <td>5.563e-05</td>
-          <td>...</td>
-          <td>2.376e-05</td>
-          <td>1.371e-03</td>
-          <td>2.394e-04</td>
-          <td>-2.314e-05</td>
-          <td>3.801e-04</td>
-          <td>1.680e-04</td>
-          <td>-1.729e-05</td>
-          <td>-8.337e-04</td>
-          <td>1.444e-05</td>
-          <td>-2.353e-04</td>
-        </tr>
-        <tr>
-          <th>e2z</th>
-          <td>-2.323e-06</td>
-          <td>2.012e-06</td>
-          <td>-1.151e-05</td>
-          <td>-2.006e-05</td>
-          <td>-1.444e-06</td>
-          <td>-1.687e-05</td>
-          <td>-1.264e-08</td>
-          <td>8.679e-06</td>
-          <td>1.315e-05</td>
-          <td>5.822e-05</td>
-          <td>...</td>
-          <td>4.468e-05</td>
-          <td>5.716e-06</td>
-          <td>3.005e-04</td>
-          <td>-9.216e-07</td>
-          <td>-2.903e-05</td>
-          <td>2.909e-04</td>
-          <td>-1.183e-05</td>
-          <td>-1.414e-03</td>
-          <td>2.395e-05</td>
-          <td>-3.866e-04</td>
-        </tr>
-        <tr>
-          <th>angle</th>
-          <td>-6.707e+01</td>
-          <td>1.852e+01</td>
-          <td>-7.194e+01</td>
-          <td>-5.322e+01</td>
-          <td>-8.623e+01</td>
-          <td>-5.882e+01</td>
-          <td>1.248e+01</td>
-          <td>6.553e+00</td>
-          <td>1.695e+00</td>
-          <td>3.602e+01</td>
-          <td>...</td>
-          <td>-5.433e+01</td>
-          <td>-6.095e+01</td>
-          <td>-5.026e+01</td>
-          <td>3.488e+01</td>
-          <td>-5.988e+01</td>
-          <td>2.418e+01</td>
-          <td>-4.551e+00</td>
-          <td>-6.227e+01</td>
-          <td>-1.833e+01</td>
-          <td>-5.980e+01</td>
-        </tr>
-        <tr>
-          <th>major</th>
-          <td>1.635e-07</td>
-          <td>1.081e-06</td>
-          <td>1.159e-07</td>
-          <td>4.847e-06</td>
-          <td>2.396e-07</td>
-          <td>3.857e-06</td>
-          <td>2.811e-08</td>
-          <td>4.216e-06</td>
-          <td>4.431e-06</td>
-          <td>2.668e-05</td>
-          <td>...</td>
-          <td>3.234e-04</td>
-          <td>9.294e-04</td>
-          <td>1.966e-04</td>
-          <td>1.873e-05</td>
-          <td>1.383e-04</td>
-          <td>1.185e-04</td>
-          <td>3.663e-06</td>
-          <td>4.588e-04</td>
-          <td>5.924e-06</td>
-          <td>2.097e-04</td>
-        </tr>
-        <tr>
-          <th>minor</th>
-          <td>-4.659e-07</td>
-          <td>-1.052e-07</td>
-          <td>-7.312e-06</td>
-          <td>-5.419e-06</td>
-          <td>-1.685e-06</td>
-          <td>-5.498e-06</td>
-          <td>-1.173e-08</td>
-          <td>9.781e-08</td>
-          <td>1.450e-06</td>
-          <td>-2.593e-05</td>
-          <td>...</td>
-          <td>-2.944e-04</td>
-          <td>-8.375e-04</td>
-          <td>-1.175e-04</td>
-          <td>-2.771e-05</td>
-          <td>-8.437e-05</td>
-          <td>-5.796e-05</td>
-          <td>-1.707e-06</td>
-          <td>-7.307e-04</td>
-          <td>9.996e-09</td>
-          <td>-2.852e-04</td>
-        </tr>
-        <tr>
-          <th>max_shear</th>
-          <td>6.294e-07</td>
-          <td>1.186e-06</td>
-          <td>7.428e-06</td>
-          <td>1.027e-05</td>
-          <td>1.925e-06</td>
-          <td>9.355e-06</td>
-          <td>3.984e-08</td>
-          <td>4.119e-06</td>
-          <td>2.981e-06</td>
-          <td>5.260e-05</td>
-          <td>...</td>
-          <td>6.178e-04</td>
-          <td>1.767e-03</td>
-          <td>3.142e-04</td>
-          <td>4.644e-05</td>
-          <td>2.227e-04</td>
-          <td>1.765e-04</td>
-          <td>5.370e-06</td>
-          <td>1.189e-03</td>
-          <td>5.914e-06</td>
-          <td>4.950e-04</td>
-        </tr>
-        <tr>
-          <th rowspan="9" valign="top">3</th>
-          <th>e11</th>
-          <td>3.667e-07</td>
-          <td>3.442e-07</td>
-          <td>-5.196e-06</td>
-          <td>4.594e-06</td>
-          <td>-1.431e-06</td>
-          <td>2.083e-06</td>
-          <td>2.632e-08</td>
-          <td>1.591e-06</td>
-          <td>7.102e-07</td>
-          <td>-5.615e-06</td>
-          <td>...</td>
-          <td>-8.194e-05</td>
-          <td>-7.271e-04</td>
-          <td>-5.137e-05</td>
-          <td>7.246e-06</td>
-          <td>-1.233e-04</td>
-          <td>3.653e-05</td>
-          <td>8.352e-06</td>
-          <td>-2.093e-04</td>
-          <td>2.780e-06</td>
-          <td>-8.151e-05</td>
-        </tr>
-        <tr>
-          <th>e22</th>
-          <td>-4.379e-07</td>
-          <td>5.584e-07</td>
-          <td>-4.062e-06</td>
-          <td>-4.016e-06</td>
-          <td>3.189e-08</td>
-          <td>-2.640e-06</td>
-          <td>-1.228e-08</td>
-          <td>2.226e-06</td>
-          <td>4.706e-06</td>
-          <td>6.190e-06</td>
-          <td>...</td>
-          <td>1.166e-04</td>
-          <td>5.225e-04</td>
-          <td>1.499e-04</td>
-          <td>-1.156e-05</td>
-          <td>9.803e-05</td>
-          <td>5.809e-05</td>
-          <td>-5.083e-06</td>
-          <td>-2.232e-04</td>
-          <td>4.316e-06</td>
-          <td>-3.843e-05</td>
-        </tr>
-        <tr>
-          <th>e12</th>
-          <td>-4.572e-07</td>
-          <td>8.832e-07</td>
-          <td>-7.930e-06</td>
-          <td>-1.087e-05</td>
-          <td>-1.595e-07</td>
-          <td>-8.739e-06</td>
-          <td>1.391e-08</td>
-          <td>1.443e-06</td>
-          <td>1.279e-06</td>
-          <td>5.502e-05</td>
-          <td>...</td>
-          <td>-5.992e-04</td>
-          <td>-1.640e-03</td>
-          <td>-2.911e-04</td>
-          <td>4.490e-05</td>
-          <td>-2.244e-04</td>
-          <td>1.651e-04</td>
-          <td>-1.292e-06</td>
-          <td>-1.149e-03</td>
-          <td>-1.464e-06</td>
-          <td>-4.827e-04</td>
-        </tr>
-        <tr>
-          <th>e1z</th>
-          <td>0.000e+00</td>
-          <td>-0.000e+00</td>
-          <td>0.000e+00</td>
-          <td>0.000e+00</td>
-          <td>0.000e+00</td>
-          <td>0.000e+00</td>
-          <td>0.000e+00</td>
-          <td>-0.000e+00</td>
-          <td>-0.000e+00</td>
-          <td>-0.000e+00</td>
-          <td>...</td>
-          <td>-0.000e+00</td>
-          <td>-0.000e+00</td>
-          <td>-0.000e+00</td>
-          <td>0.000e+00</td>
-          <td>-0.000e+00</td>
-          <td>-0.000e+00</td>
-          <td>0.000e+00</td>
-          <td>0.000e+00</td>
-          <td>-0.000e+00</td>
-          <td>0.000e+00</td>
-        </tr>
-        <tr>
-          <th>e2z</th>
-          <td>0.000e+00</td>
-          <td>-0.000e+00</td>
-          <td>0.000e+00</td>
-          <td>0.000e+00</td>
-          <td>0.000e+00</td>
-          <td>0.000e+00</td>
-          <td>0.000e+00</td>
-          <td>-0.000e+00</td>
-          <td>-0.000e+00</td>
-          <td>-0.000e+00</td>
-          <td>...</td>
-          <td>-0.000e+00</td>
-          <td>-0.000e+00</td>
-          <td>-0.000e+00</td>
-          <td>0.000e+00</td>
-          <td>0.000e+00</td>
-          <td>-0.000e+00</td>
-          <td>0.000e+00</td>
-          <td>0.000e+00</td>
-          <td>-0.000e+00</td>
-          <td>0.000e+00</td>
-        </tr>
-        <tr>
-          <th>angle</th>
-          <td>-1.480e+01</td>
-          <td>5.182e+01</td>
-          <td>-4.907e+01</td>
-          <td>-2.581e+01</td>
-          <td>-8.689e+01</td>
-          <td>-3.081e+01</td>
-          <td>9.908e+00</td>
-          <td>5.688e+01</td>
-          <td>8.113e+01</td>
-          <td>5.105e+01</td>
-          <td>...</td>
-          <td>-5.417e+01</td>
-          <td>-6.366e+01</td>
-          <td>-6.233e+01</td>
-          <td>3.364e+01</td>
-          <td>-6.730e+01</td>
-          <td>4.872e+01</td>
-          <td>-2.747e+00</td>
-          <td>-4.465e+01</td>
-          <td>-6.819e+01</td>
-          <td>-4.755e+01</td>
-        </tr>
-        <tr>
-          <th>major</th>
-          <td>4.271e-07</td>
-          <td>9.057e-07</td>
-          <td>-6.234e-07</td>
-          <td>7.224e-06</td>
-          <td>3.623e-08</td>
-          <td>4.688e-06</td>
-          <td>2.753e-08</td>
-          <td>2.697e-06</td>
-          <td>4.806e-06</td>
-          <td>2.843e-05</td>
-          <td>...</td>
-          <td>3.330e-04</td>
-          <td>9.285e-04</td>
-          <td>2.262e-04</td>
-          <td>2.218e-05</td>
-          <td>1.450e-04</td>
-          <td>1.306e-04</td>
-          <td>8.383e-06</td>
-          <td>3.584e-04</td>
-          <td>4.609e-06</td>
-          <td>1.823e-04</td>
-        </tr>
-        <tr>
-          <th>minor</th>
-          <td>-4.983e-07</td>
-          <td>-3.109e-09</td>
-          <td>-8.634e-06</td>
-          <td>-6.645e-06</td>
-          <td>-1.435e-06</td>
-          <td>-5.245e-06</td>
-          <td>-1.349e-08</td>
-          <td>1.120e-06</td>
-          <td>6.104e-07</td>
-          <td>-2.785e-05</td>
-          <td>...</td>
-          <td>-2.983e-04</td>
-          <td>-1.133e-03</td>
-          <td>-1.277e-04</td>
-          <td>-2.650e-05</td>
-          <td>-1.703e-04</td>
-          <td>-3.594e-05</td>
-          <td>-5.114e-06</td>
-          <td>-7.910e-04</td>
-          <td>2.487e-06</td>
-          <td>-3.023e-04</td>
-        </tr>
-        <tr>
-          <th>max_shear</th>
-          <td>9.253e-07</td>
-          <td>9.088e-07</td>
-          <td>8.011e-06</td>
-          <td>1.387e-05</td>
-          <td>1.471e-06</td>
-          <td>9.933e-06</td>
-          <td>4.103e-08</td>
-          <td>1.577e-06</td>
-          <td>4.195e-06</td>
-          <td>5.628e-05</td>
-          <td>...</td>
-          <td>6.313e-04</td>
-          <td>2.061e-03</td>
-          <td>3.539e-04</td>
-          <td>4.868e-05</td>
-          <td>3.152e-04</td>
-          <td>1.665e-04</td>
-          <td>1.350e-05</td>
-          <td>1.149e-03</td>
-          <td>2.122e-06</td>
-          <td>4.846e-04</td>
-        </tr>
-      </tbody>
-    </table>
-    <p>864 rows × 33 columns</p>
-    </div>
-
-
 

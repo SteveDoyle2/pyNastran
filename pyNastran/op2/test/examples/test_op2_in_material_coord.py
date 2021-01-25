@@ -38,10 +38,9 @@ class TestMaterialCoordReal(unittest.TestCase):
                 vector = getattr(op2_new, vecname).get(subcase)
                 if vector is None:
                     continue
-                name = os.path.join(basepath, '{0}_subcase_{1:02d}.txt'.format(vecname, subcase))
+                name = os.path.join(basepath, f'{vecname}_subcase_{subcase:02d}.txt')
                 if not os.path.isfile(name):
-                    raise AssertionError('Not found reference result {0}\n{1}'.format(
-                        name, print_bad_path(name)))
+                    raise AssertionError(f'Not found reference result {name}\n{print_bad_path(name)}')
                 ref_result = np.loadtxt(name)
                 data = vector.data
                 eids = get_eids_from_op2_vector(vector)
@@ -65,10 +64,9 @@ class TestMaterialCoordReal(unittest.TestCase):
                 vector = getattr(op2_new, vecname).get(subcase)
                 if vector is None:
                     continue
-                name = os.path.join(basepath, '{0}_subcase_{1:02d}.txt'.format(vecname, subcase))
+                name = os.path.join(basepath, f'{vecname}_subcase_{subcase:02d}.txt')
                 if not os.path.isfile(name):
-                    raise AssertionError('Not found reference result {0}\n{1}'.format(
-                        name, print_bad_path(name)))
+                    raise AssertionError(f'Not found reference result {name}\n{print_bad_path(name)}')
                 ref_result = np.loadtxt(name)
                 data = vector.data
                 eids = get_eids_from_op2_vector(vector)
@@ -93,10 +91,9 @@ class TestMaterialCoordReal(unittest.TestCase):
                 vector = getattr(op2_new, vecname).get(subcase)
                 if vector is None:
                     continue
-                name = os.path.join(basepath, '{0}_subcase_{1:02d}.txt'.format(vecname, subcase))
+                name = os.path.join(basepath, f'{vecname}_subcase_{subcase:02d}.txt')
                 if not os.path.isfile(name):
-                    raise AssertionError('Not found reference result {0}\n{1}'.format(
-                        name, print_bad_path(name)))
+                    raise AssertionError(f'Not found reference result {name}\n{print_bad_path(name)}')
                 ref_result = np.loadtxt(name)
                 data = vector.data
                 eids = get_eids_from_op2_vector(vector)
