@@ -105,7 +105,7 @@ def remove_unused(bdf_filename, remove_nids=True, remove_cids=True,
         'PACABS',
 
         # superelements
-        'SELOC',
+        'SELOC', 'SEEXCLD', 'SENQSET',
 
         # parametric
         'FEEDGE', 'FEFACE'

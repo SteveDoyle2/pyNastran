@@ -6,8 +6,8 @@ from cpylog import SimpleLogger
 import pyNastran
 from pyNastran.dev.bdf_vectorized.solver.solver import Solver
 
-pkg_path = pyNastran.__path__[0]
-test_path = os.path.join(pkg_path, 'bdf', 'dev_vectorized', 'solver', 'test')
+PKG_PATH = pyNastran.__path__[0]
+TEST_PATH = os.path.join(PKG_PATH, 'bdf', 'dev_vectorized', 'solver', 'test')
 log = SimpleLogger('warning', encoding='utf8')
 
 class TestSolver(unittest.TestCase):
@@ -18,7 +18,7 @@ class TestSolver(unittest.TestCase):
         fargs = {
             '--k' : 1.0, '--f' : 1.0, '--m' : 1.0,
             '--debug' : False,
-            'BDFNAME' : os.path.join(test_path, 'celas1.bdf'),
+            'BDFNAME' : os.path.join(TEST_PATH, 'celas1.bdf'),
             'BDFBASE' : 'celas1',
         }
         solver = Solver(fargs, log=log)
@@ -29,7 +29,7 @@ class TestSolver(unittest.TestCase):
         fargs = {
             '--k' : 1.0, '--f' : 1.0, '--m' : 1.0,
             '--debug' : False,
-            'BDFNAME' : os.path.join(test_path, 'celas2.bdf'),
+            'BDFNAME' : os.path.join(TEST_PATH, 'celas2.bdf'),
             'BDFBASE' : 'celas2',
         }
         log = SimpleLogger('warning', encoding='utf8')
@@ -53,7 +53,7 @@ class TestSolver(unittest.TestCase):
         fargs = {
             '--k' : 1.0, '--f' : 1.0, '--m' : 1.0,
             '--debug' : False,
-            'BDFNAME' : os.path.join(test_path, 'conrod.bdf'),
+            'BDFNAME' : os.path.join(TEST_PATH, 'conrod.bdf'),
             'BDFBASE' : 'conrod',
         }
         log = SimpleLogger('warning', encoding='utf8')
@@ -65,7 +65,7 @@ class TestSolver(unittest.TestCase):
         fargs = {
             '--k' : 1.0, '--f' : 1.0, '--m' : 1.0,
             '--debug' : False,
-            'BDFNAME' : os.path.join(test_path, 'cquad4.bdf'),
+            'BDFNAME' : os.path.join(TEST_PATH, 'cquad4.bdf'),
             'BDFBASE' : 'cquad4',
         }
         log = SimpleLogger('warning', encoding='utf8')

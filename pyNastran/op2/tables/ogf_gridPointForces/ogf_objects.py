@@ -15,7 +15,7 @@ from pyNastran.op2.vector_utils import (
 from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.op2.op2_interface.write_utils import set_table3_field
 
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.nptyping import (
         NDArrayN3float, NDArray3float, NDArrayN2int, NDArrayNint, NDArrayNfloat)
     from pyNastran.bdf.bdf import (BDF, CORD,
@@ -583,6 +583,7 @@ class RealGridPointForcesArray(GridPointForces):
                   1D output style:
                     - Make loads in the direction of the element
                   This process can't be done for 0D or 3D elements
+
         """
         fdtype = self.data.dtype
         nid_cd = _get_nid_cd_from_nid_cp_cd(nid_cd)
@@ -603,10 +604,8 @@ class RealGridPointForcesArray(GridPointForces):
             itime=itime, debug=debug)
         gpforce_nids, gpforce_eids, irange, force_out, moment_out = out
         if len(irange) == 0:
-            force_out = None
-            moment_out = None
-            force_out_sum = None
-            moment_out_sum = None
+            force_out_sum = np.full(3, np.nan, dtype=force_out.dtype)
+            moment_out_sum = np.full(3, np.nan, dtype=force_out.dtype)
             return force_out, moment_out, force_out_sum, moment_out_sum
 
         if debug:
@@ -846,7 +845,8 @@ class RealGridPointForcesArray(GridPointForces):
             # we want a single line of elements (and not include extra)
             # to reduce the size of the array sooner.
             #
-            # can this be >=? it technically shouldn't matter, but we could speed things up
+            # can this be >=?
+            # Technically shouldn't matter, but we could speed things up
             j = np.where(x_coord <= station)[0]
 
             # we'd break if we knew the user was traveling in the
@@ -880,7 +880,7 @@ class RealGridPointForcesArray(GridPointForces):
                     itime=itime, # debug=debug,
                     log=log)
                 log.info(f'neids={len(i):d} nnodes={len(j):d} force={force_sumi} moment={moment_sumi}')
-                if force_sumi is None:
+                if not np.isfinite(force_sumi[0]):
                     continue
                 force_sum[istation, :] = force_sumi
                 moment_sum[istation, :] = moment_sumi
@@ -1836,4 +1836,5 @@ def _get_nid_cd_from_nid_cp_cd(nid_cd: np.ndarray) -> np.ndarray:
         assert isinstance(nid_cd[0, :].tolist()[0], int), nid_cd
         nid_cp_cd = nid_cd
         nid_cd = nid_cp_cd[:, [0, 2]]
+    assert nid_cd.shape[1] == 2, nid_cd
     return nid_cd

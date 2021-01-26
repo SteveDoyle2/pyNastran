@@ -32,7 +32,9 @@ from typing import Optional, Dict, TYPE_CHECKING
 import numpy as np
 from numpy import arccos, sqrt, pi, in1d, cos, unique, cross, ndarray
 if TYPE_CHECKING:  # pragma: no cover
-    from pyNastran.bdf.bdf import CORDx # , CORD1R, CORD1C, CORD1S, CORD2R, CORD2C, CORD2S
+    from cpylog import SimpleLogger
+    from pyNastran.bdf.bdf import CORDx
+    from pyNastran.nptyping import NDArrayN3float, NDArrayN2int, NDArrayNint, NDArray3float
 
 
 def filter1d(a: ndarray, b: Optional[ndarray]=None, zero_tol: float=0.001):
@@ -388,7 +390,7 @@ def transform_force(force_in_local,
     cds = nid_cd[:, 1]
     ucds = unique(cds)
 
-    coord_out_cid = coord_out.cid
+    unused_coord_out_cid = coord_out.cid
     coord_out_T = coord_out.beta()
 
     for cd in ucds:
@@ -410,9 +412,9 @@ def transform_force_moment(force_in_local, moment_in_local,
                            coord_out: CORDx, coords: Dict[int, CORDx],
                            nid_cd: int, icd_transform: Dict[int, ndarray],
                            xyz_cid0: ndarray,
-                           summation_point_cid0: Optional[ndarray]=None,
+                           summation_point_cid0: Optional[NDArray3float]=None,
                            consider_rxf: bool=True,
-                           debug: bool=False, log=None):
+                           debug: bool=False, log: Optional[SimpleLogger]=None):
     """
     Transforms force/moment from global to local and returns all the forces.
 
@@ -585,10 +587,9 @@ def transform_force_moment(force_in_local, moment_in_local,
     #return force_out2, moment_out2
     return force_out, moment_out
 
-
-def transform_force_moment_sum(force_in_local, moment_in_local,
-                               coord_out, coords,
-                               nid_cd, icd_transform,
+def transform_force_moment_sum(force_in_local: NDArrayN3float, moment_in_local: NDArrayN3float,
+                               coord_out: CORDx, coords: Dict[int, CORDx],
+                               nid_cd: NDArrayN2int, icd_transform: Dict[int, NDArrayNint],
                                xyz_cid0, summation_point_cid0=None,
                                consider_rxf=True,
                                debug=False, log=None):
