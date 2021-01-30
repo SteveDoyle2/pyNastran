@@ -33,8 +33,6 @@ except ImportError:
 #warnings.filterwarnings('error')
 #warnings.filterwarnings('error', category=UnicodeWarning)
 
-
-
 def parse_table_names_from_f06(f06_filename: str) -> List[str]:
     """gets the op2 names from the f06"""
 
@@ -108,7 +106,8 @@ def run_lots_of_files(files, make_geom: bool=True, combine: bool=True,
                                      stop_on_failure=stop_on_failure,
                                      binary_debug=binary_debug,
                                      compare=compare, dev=dev,
-                                     xref_safe=xref_safe)[1]
+                                     xref_safe=xref_safe,
+                                     is_testing=True)[1]
                 if not is_passedi:
                     is_passed = False
                     break
@@ -139,6 +138,7 @@ def run_op2(op2_filename: str, make_geom: bool=False, combine: bool=True,
             stop_on_failure: bool=True,
             dev: bool=False, xref_safe: bool=False,
             post: Any=None, load_as_h5: bool=False,
+            is_testing: bool=False,
             name: str='') -> Tuple[OP2, bool]:
     """
     Runs an OP2
@@ -208,6 +208,9 @@ def run_op2(op2_filename: str, make_geom: bool=False, combine: bool=True,
         flag that is used by op2_test.py to ignore certain errors
         False : crash on errors
         True : don't crash
+    is_testing: bool; default=False
+        True: release mode
+        False : be picky with table parsing
 
     Returns
     -------
@@ -254,7 +257,7 @@ def run_op2(op2_filename: str, make_geom: bool=False, combine: bool=True,
         op2 = OP2Geom(debug=debug, log=log)
         op2_nv = OP2Geom(debug=debug, log=log, debug_file=debug_file)
         op2_bdf = OP2Geom(debug=debug, log=log)
-        set_versions([op2, op2_nv, op2_bdf], is_nx, is_autodesk, is_nasa95, post)
+        set_versions([op2, op2_nv, op2_bdf], is_nx, is_autodesk, is_nasa95, post, is_testing)
 
         if load_as_h5 and IS_HDF5:
             # you can't open the same h5 file twice
@@ -269,7 +272,7 @@ def run_op2(op2_filename: str, make_geom: bool=False, combine: bool=True,
         # have to double write this until ???
         op2_nv = OP2(debug=debug, log=log, debug_file=debug_file)
 
-        set_versions([op2, op2_nv], is_nx, is_autodesk, is_nasa95, post)
+        set_versions([op2, op2_nv], is_nx, is_autodesk, is_nasa95, post, is_testing)
         if load_as_h5 and IS_HDF5:
             # you can't open the same h5 file twice
             op2.load_as_h5 = load_as_h5
@@ -492,7 +495,7 @@ def get_test_op2_data(argv) -> Dict[str, str]:
     version = f'[--nx|--autodesk{nasa95}]'
     options = f'[-p] [-d] [-z] [-w] [-t] [-s <sub>] [-x <arg>]... {version} [--safe] [--post POST] [--load_hdf5]'
     if is_dev:
-        line1 = f"test_op2 [-q] [-b] [-c] [-g] [-n] [-f] [-o] [--profile] [--nocombine] {options} OP2_FILENAME\n"
+        line1 = f"test_op2 [-q] [-b] [-c] [-g] [-n] [-f] [-o] [--profile] [--test] [--nocombine] {options} OP2_FILENAME\n"
     else:
         line1 = f"test_op2 [-q] [-b] [-c] [-g] [-n] [-f] [-o] {options} OP2_FILENAME\n"
 
@@ -503,26 +506,28 @@ def get_test_op2_data(argv) -> Dict[str, str]:
     msg += "        test_op2 -v | --version\n"
     msg += "\n"
     msg += "Tests to see if an OP2 will work with pyNastran %s.\n" % ver
-    msg += "\n"
-    msg += "Positional Arguments:\n"
-    msg += "  OP2_FILENAME         Path to OP2 file\n"
-    msg += "\n"
-    msg += "Options:\n"
-    msg += "  -b, --binarydebug      Dumps the OP2 as a readable text file\n"
-    msg += "  -c, --disablecompare   Doesn't do a validation of the vectorized result\n"
-    msg += "  -q, --quiet            Suppresses debug messages [default: False]\n"
-    msg += "  -t, --short_stats      Short get_op2_stats printout\n"
-    #if not is_release:
-    msg += "  -g, --geometry         Reads the OP2 for geometry, which can be written out\n"
-    # n is for NAS
-    msg += "  -n, --write_bdf        Writes the bdf to fem.test_op2.bdf (default=False)\n"
-    msg += "  -f, --write_f06        Writes the f06 to fem.test_op2.f06\n"
-    msg += "  -d, --write_hdf5       Writes the h5 to fem.test_op2.h5\n"
-    msg += "  -o, --write_op2        Writes the op2 to fem.test_op2.op2\n"
-    msg += "  -z, --is_mag_phase     F06 Writer writes Magnitude/Phase instead of\n"
-    msg += "                         Real/Imaginary (still stores Real/Imag); [default: False]\n"
-    msg += "  --load_hdf5            Load as HDF5 (default=False)\n"
-    msg += "  -p, --pandas           Enables pandas dataframe building; [default: False]\n"
+    msg += (
+        "\n"
+        "Positional Arguments:\n"
+        "  OP2_FILENAME         Path to OP2 file\n"
+        "\n"
+        "Options:\n"
+        "  -b, --binarydebug      Dumps the OP2 as a readable text file\n"
+        "  -c, --disablecompare   Doesn't do a validation of the vectorized result\n"
+        "  -q, --quiet            Suppresses debug messages [default: False]\n"
+        "  -t, --short_stats      Short get_op2_stats printout\n"
+        #if not is_release:
+        "  -g, --geometry         Reads the OP2 for geometry, which can be written out\n"
+        # n is for NAS
+        "  -n, --write_bdf        Writes the bdf to fem.test_op2.bdf (default=False)\n"
+        "  -f, --write_f06        Writes the f06 to fem.test_op2.f06\n"
+        "  -d, --write_hdf5       Writes the h5 to fem.test_op2.h5\n"
+        "  -o, --write_op2        Writes the op2 to fem.test_op2.op2\n"
+        "  -z, --is_mag_phase     F06 Writer writes Magnitude/Phase instead of\n"
+        "                         Real/Imaginary (still stores Real/Imag); [default: False]\n"
+        "  --load_hdf5            Load as HDF5 (default=False)\n"
+        "  -p, --pandas           Enables pandas dataframe building; [default: False]\n"
+    )
     if is_dev:
         msg += "  --nocombine            Disables case combination\n"
     msg += "  -s <sub>, --subcase    Specify one or more subcases to parse; (e.g. 2_5)\n"
@@ -536,15 +541,19 @@ def get_test_op2_data(argv) -> Dict[str, str]:
     msg += "  --safe                 Safe cross-references BDF (default=False)\n"
 
     if is_dev:
-        msg += "\n"
-        msg += "Developer:\n"
-        msg += '  --profile         Profiles the code (default=False)\n'
+        msg += (
+            "\n"
+            "Developer:\n"
+            '  --profile         Profiles the code (default=False)\n'
+            '  --test            Adds additional table checks (default=False)\n'
+        )
 
-    msg += "\n"
-    msg += "Info:\n"
-    msg += "  -h, --help     Show this help message and exit\n"
-    msg += "  -v, --version  Show program's version number and exit\n"
-
+    msg += (
+        "\n"
+        "Info:\n"
+        "  -h, --help     Show this help message and exit\n"
+        "  -v, --version  Show program's version number and exit\n"
+    )
     if len(argv) == 1:
         sys.exit(msg)
 
@@ -573,9 +582,9 @@ def remove_file(filename):
 
 def set_versions(op2s: List[OP2],
                  is_nx: bool, is_autodesk: bool, is_nasa95: bool,
-                 post: int) -> None:
+                 post: int, is_testing: bool=False) -> None:
     for op2 in op2s:
-        op2.IS_TESTING = False
+        op2.IS_TESTING = is_testing
 
     if is_nx is None and is_autodesk is None and is_nasa95 is None:
         pass
@@ -639,6 +648,7 @@ def main(argv=None, show_args: bool=True) -> None:
             is_nasa95=data['--nasa95'],
             safe=data['--safe'],
             post=data['--post'],
+            is_testing=data['--test'],
         )
         prof.dump_stats('op2.profile')
 
@@ -672,6 +682,7 @@ def main(argv=None, show_args: bool=True) -> None:
             is_nasa95=data['--nasa95'],
             xref_safe=data['--safe'],
             post=data['--post'],
+            is_testing=data['--test'],
         )
     print("dt = %f" % (time.time() - time0))
 

@@ -9,8 +9,8 @@ If you have a bug/want a new feature or card, leave some feedback on the [Issue 
 Release Notes
 =============
 
-v1.4.0 (2021/1/?)
----------------
+v1.4.0 (2021/2/?)
+-----------------
 Programmatics:
  - Supports Python 3.7-3.9
  - much improved MSC 2020 and OptiStruct support
@@ -33,6 +33,10 @@ BDF:
    - DRESP1 checks (with validate=True flag)
 
 OP2:
+ - grid point forces
+   - fixed crash in GPFORCE shear_moment_diagram (shear/moment/torque plotter)
+   - extract_interface_loads now returns force and moment
+     - see _extract_interface_loads if you want the old behavior
  - improved NX 64-bit support
    - matrices should work much better in 64 bit
  - new results (NX):
@@ -61,9 +65,10 @@ F06 Flutter Plotter:
  - supports --mach, --q, --alt on the x-axis
 
 GUI:
- - faster 3d bar visualization
+ - transient/complex fringe only animations now supported
  - fixed bug in gif writing for profile='0 to scale to -scale to 0'
  - NX nonlinear solid element supported
+ - faster 3d bar visualization
  
 v1.3.3 (2020/6/28)
 ------------------

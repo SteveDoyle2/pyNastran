@@ -526,7 +526,7 @@ class RealGridPointForcesArray(GridPointForces):
                                 assume_sorted: bool=False,
                                 debug: bool=True,
                                 log: Optional[SimpleLogger]=None,
-                                idtype: str='int32') -> Tuple[NDArrayN3float, NDArrayN3float, NDArray3float, NDArray3float]:
+                                idtype: str='int32') -> Tuple[NDArray3float, NDArray3float]:
         """
         Extracts Patran-style interface loads.  Interface loads are the
         internal loads at a cut.
@@ -563,11 +563,6 @@ class RealGridPointForcesArray(GridPointForces):
 
         Returns
         -------
-        force_out : (Nnodes, 3) float ndarray
-            the ith float components in the coord_out coordinate frame
-        moment_out : (Nnodes, 3) float ndarray
-            the ith moment components about the summation point in the
-            coord_out coordinate frame
         force_out_sum : (3, ) float ndarray
             the sum of forces in the coord_out coordinate frame
         moment_out_sum : (3, ) float ndarray
@@ -585,6 +580,34 @@ class RealGridPointForcesArray(GridPointForces):
                   This process can't be done for 0D or 3D elements
 
         """
+        # force_out : (Nnodes, 3) float ndarray
+        #     the ith float components in the coord_out coordinate frame
+        # moment_out : (Nnodes, 3) float ndarray
+        #     the ith moment components about the summation point in the
+        #     coord_out coordinate frame
+        unused_force_out, unused_moment_out, force_out_sum, moment_out_sum = self._extract_interface_loads(
+            nids, eids, coord_out, coords, nid_cd, icd_transform, xyz_cid0,
+            summation_point=summation_point, consider_rxf=consider_rxf,
+            itime=itime, assume_sorted=assume_sorted,
+            debug=debug, log=log, idtype=idtype)
+        return force_out_sum, moment_out_sum
+
+    def _extract_interface_loads(self,
+                                nids: NDArrayNint,
+                                eids: NDArrayNint,
+                                coord_out: CORD,
+                                coords: Dict[int, CORD],
+                                nid_cd: NDArrayN2int,
+                                icd_transform: Dict[int, CORD],
+                                xyz_cid0: NDArrayN3float,
+                                summation_point: Optional[NDArray3float]=None,
+                                consider_rxf: bool=True,
+                                itime: int=0,
+                                assume_sorted: bool=False,
+                                debug: bool=True,
+                                log: Optional[SimpleLogger]=None,
+                                idtype: str='int32') -> Tuple[NDArrayN3float, NDArrayN3float, NDArray3float, NDArray3float]:
+        """see ``extract_interface_loads``"""
         fdtype = self.data.dtype
         nid_cd = _get_nid_cd_from_nid_cp_cd(nid_cd)
         if summation_point is not None:
@@ -873,7 +896,7 @@ class RealGridPointForcesArray(GridPointForces):
                 eidsi = eids[i]
                 nidsj = nids[j]
                 #print(f'eids={eidsi}; nids={nidsj}')
-                forcei, momenti, force_sumi, moment_sumi = self.extract_interface_loads(
+                force_sumi, moment_sumi = self.extract_interface_loads(
                     eidsi, nidsj,
                     coord_out, coords, nid_cd, icd_transform,
                     xyz_cid0, summation_point, assume_sorted=True,

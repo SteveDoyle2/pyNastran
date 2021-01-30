@@ -48,7 +48,16 @@ from typing import List, Tuple, Dict, Set, Union, Optional, Any
 
 from numpy import array
 import numpy as np
-from cpylog import get_logger2
+import cpylog
+if cpylog.__version__ >= '1.5.0':  # pragma: no cover
+    #import warnings
+    #warnings.warn('run "pip install cpylog>=1.5.0"')
+    from cpylog import get_logger2, log_exc
+else:  # pramga: no cover
+    from cpylog import get_logger2
+    def log_exc(*args, **kwargs):
+        pass
+
 
 from pyNastran import is_release, __version__
 from pyNastran.f06.errors import FatalError
@@ -1419,13 +1428,15 @@ class OP2_Scalar(LAMA, ONR, OGPF,
         iloc = self.f.tell()
         try:
             ndata2 = self._read_pvto_4_helper(data, ndata)
-        except NotImplementedError as error:
-            self.log.error(str(error))
+        except (NotImplementedError, AssertionError) as error:
             #raise  # only for testing
             if 'dev' in __version__ and self.IS_TESTING:
                 raise  # only for testing
+            self.log.error(str(error))
+            log_exc(self.log)
             self.f.seek(iloc)
             ndata2 = ndata
+
         if 'NXVER' in self.params and not self.is_nx:
             self.set_as_nx()
             self.log.debug('found PARAM,NXVER -> setting as NX')
@@ -1543,10 +1554,10 @@ class OP2_Scalar(LAMA, ONR, OGPF,
                 if isinstance(value, str):
                     assert word in STR_PARAMS_1, f'word={word}'
                 else:
-                    if self.size == 4:
-                        self.show_data(data[istart:istart+20], types='sifqd')
-                    elif self.size == 8:
-                        self.show_data(data[istart:istart+40], types='sifqd')
+                    #if self.size == 4:
+                        #self.show_data(data[istart:istart+20], types='sifqd')
+                    #elif self.size == 8:
+                        #self.show_data(data[istart:istart+40], types='sifqd')
 
                     assert word in FLOAT_PARAMS_1, f'word={word}'
                 i += 5

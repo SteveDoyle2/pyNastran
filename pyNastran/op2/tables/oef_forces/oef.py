@@ -22,11 +22,11 @@ import numpy as np
 from numpy import frombuffer, vstack, sin, cos, radians, array, hstack, zeros
 
 from pyNastran.op2.op2_interface.function_codes import func1, func7
-from pyNastran.op2.op2_interface.op2_reader import mapfmt, reshape_bytes_block_strip
+from pyNastran.op2.op2_interface.op2_reader import mapfmt
 from pyNastran.op2.tables.utils import get_eid_dt_from_eid_device
 from pyNastran.op2.op2_helper import polar_to_real_imag
 from pyNastran.op2.op2_interface.op2_common import OP2Common
-from pyNastran.op2.op2_interface.utils import apply_mag_phase
+from pyNastran.op2.op2_interface.utils import apply_mag_phase, reshape_bytes_block_strip
 from pyNastran.op2.op2_interface.msc_tables import MSC_OEF_REAL_MAPPER, MSC_OEF_IMAG_MAPPER
 from pyNastran.op2.op2_interface.nx_tables import NX_OEF_REAL_MAPPER, NX_OEF_IMAG_MAPPER
 from pyNastran.op2.op2_interface.op2_codes import SORT1_TABLES_BYTES, TABLES_BYTES

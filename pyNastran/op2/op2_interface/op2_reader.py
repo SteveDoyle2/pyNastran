@@ -63,7 +63,7 @@ from pyNastran.op2.result_objects.design_response import DSCMCOL
 from pyNastran.op2.op2_interface.nx_tables import NX_VERSIONS
 from pyNastran.op2.op2_interface.utils import (
     mapfmt, reshape_bytes_block,
-    reshape_bytes_block_size, reshape_bytes_block_strip)
+    reshape_bytes_block_size)
 from pyNastran.op2.op2_interface.utils_matpool import (
     read_matpool_dmig, read_matpool_dmig_4, read_matpool_dmig_8)
 
@@ -73,8 +73,6 @@ from pyNastran.op2.result_objects.design_response import (
     FlutterResponse, FractionalMassResponse, Convergence, Desvars, DSCMCOL)
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.op2.op2 import OP2
-
-IS_TESTING = True
 
 #class MinorTables:
     #def __init__(self, op2_reader):
@@ -97,7 +95,9 @@ OPTISTRUCT_VERSIONS = [
     b'OS2019.1', b'OS2019.2',
     b'OS2020',
 ]
-
+AUTODESK_VERSIONS = [
+    b'NE  0824',  # this means NEi Nastran...
+]
 class OP2Reader:
     """Stores methods that aren't useful to an end user"""
     def __init__(self, op2: OP2):
@@ -5621,6 +5621,7 @@ class OP2Reader:
 
         """
         op2 = self.op2
+        IS_TESTING = op2.IS_TESTING
         if self.binary_debug:
             self.binary_debug.write('-' * 60 + '\n')
         # this is the length of the current record inside table3/table4
@@ -6393,6 +6394,8 @@ def _parse_nastran_version_8(data: bytes, version: bytes, encoding: str, log) ->
     elif version in OPTISTRUCT_VERSIONS:
         # should this be called optistruct or radioss?
         mode = 'optistruct'
+    elif version in AUTODESK_VERSIONS:
+        mode = 'autodesk'
     #elif data[:20] == b'XXXXXXXX20141   0   ':
         #self.set_as_msc()
         #self.set_table_type()

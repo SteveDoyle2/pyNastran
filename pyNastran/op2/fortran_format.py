@@ -27,7 +27,7 @@ class FortranFormat:
         self.is_all_subcases = True
         self.valid_subcases = []
         #self.op2_reader = OP2Reader()
-        self.IS_TESTING = True
+        self.IS_TESTING = False
 
     def show(self, n: int, types: str='ifs', endian=None, force: bool=False):  # pragma: no cover
         """Shows binary data"""

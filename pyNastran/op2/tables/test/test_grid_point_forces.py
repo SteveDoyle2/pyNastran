@@ -120,7 +120,7 @@ class TestGridPointForces(unittest.TestCase):
         model = read_op2(op2_filename, load_geometry=True, combine=True,
                          exclude_results=None, log=log)
         log = model.log
-        gpforce = model.grid_point_forces[1]
+        gpforce = model.grid_point_forces[1]  # type: RealGridPointForcesArray
         force = model.cbar_force[1]
         #['station', 'bending_moment1', 'bending_moment2', 'shear1', 'shear2', 'axial', 'torque']
         headers = force.get_headers()
@@ -182,7 +182,7 @@ class TestGridPointForces(unittest.TestCase):
 
         #nids = [1]
         #eids = [1]
-        force_out, moment_out, force_out_sum, moment_out_sum = gpforce.extract_interface_loads(
+        force_out_sum, moment_out_sum = gpforce.extract_interface_loads(
             all_nids, all_eids,
             coord_out, model.coords,
             nid_cp_cd, icd_transform,
@@ -190,15 +190,13 @@ class TestGridPointForces(unittest.TestCase):
             #summation_point: Optional[NDArray3float]=None,
             consider_rxf=True, itime=0,
             debug=True, log=log)
-        #assert np.allclose(force_out, [0., 0., 0.]), force_out
-        #assert np.allclose(moment_out, [0., 0., 0.]), moment_out
         assert np.allclose(force_out_sum, [0., 0., 0.]), force_out_sum
         assert np.allclose(moment_out_sum, [0., 0., 0.]), moment_out_sum
 
         # this one is empty...
         nids = [1]
         eids = [2]
-        force_out, moment_out, force_out_sum, moment_out_sum = gpforce.extract_interface_loads(
+        force_out_sum, moment_out_sum = gpforce.extract_interface_loads(
             nids, eids,
             coord_out, model.coords,
             nid_cp_cd, icd_transform,
@@ -206,8 +204,8 @@ class TestGridPointForces(unittest.TestCase):
             #summation_point: Optional[NDArray3float]=None,
             consider_rxf=True, itime=0,
             debug=True, log=log)
-        assert force_out.size == 0, force_out
-        assert moment_out.size == 0, moment_out
+        #assert force_out.size == 0, force_out
+        #assert moment_out.size == 0, moment_out
         assert not np.any(np.isfinite(force_out_sum)), force_out_sum
         assert not np.any(np.isfinite(moment_out_sum)), moment_out_sum
         #coord0 = model.coords[0]
@@ -386,7 +384,7 @@ class TestGridPointForces(unittest.TestCase):
                 continue
             #op2.log.debug('*' * 30 + 'Next Test' + '*' * 30)
             coord_out = coords[cid]
-            out = gpforce.extract_interface_loads(
+            out = gpforce._extract_interface_loads(
                 nids, eids,
                 coord_out, coords,
                 nid_cd, icd_transform,
@@ -478,7 +476,7 @@ class TestGridPointForces(unittest.TestCase):
             eids, nids, cid, summation_point, total_force_local_expected, total_moment_local_expected = datai
             coord_out = coords[cid]
             op2_1.log.debug('*' * 30 + 'Next Test' + '*' * 30)
-            out = gpforce.extract_interface_loads(
+            out = gpforce._extract_interface_loads(
                 nids, eids,
                 coord_out, coords,
                 nid_cd, icd_transform_1,
@@ -593,7 +591,7 @@ class TestGridPointForces(unittest.TestCase):
             eids, nids, cid, summation_point, total_force_local_expected, total_moment_local_expected = datai
             coord_out = op2_1.coords[cid]
             op2_1.log.debug('*' * 30 + 'Next Test #%s' % i + '*' * 30)
-            out = gpforce.extract_interface_loads(
+            out = gpforce._extract_interface_loads(
                 nids, eids,
                 coord_out, op2_1.coords,
                 nid_cd, icd_transform_1,
@@ -703,7 +701,7 @@ class TestGridPointForces(unittest.TestCase):
             eids, nids, cid, summation_point, total_force_local_expected, total_moment_local_expected = datai
             coord_out = op2_1.coords[cid]
             op2_1.log.debug('*' * 30 + 'Next Test #%s' % i + '*' * 30)
-            out = gpforce.extract_interface_loads(
+            out = gpforce._extract_interface_loads(
                 nids, eids,
                 coord_out, op2_1.coords,
                 nid_cd, icd_transform_1,
