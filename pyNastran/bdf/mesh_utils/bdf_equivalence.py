@@ -99,6 +99,7 @@ def bdf_equivalence_nodes(bdf_filename: str, bdf_filename_out: str, tol: float,
     nodes_xyz, model, nids, inew = _eq_nodes_setup(
         bdf_filename, tol, renumber_nodes=renumber_nodes,
         xref=xref, node_set=node_set, log=log, debug=debug)
+    model.log.debug(f'bdf_equivalence_nodes; tol={tol}')
 
     nid_pairs = _nodes_xyz_nids_to_nid_pairs(
         nodes_xyz, nids, tol, log, inew,
@@ -107,6 +108,9 @@ def bdf_equivalence_nodes(bdf_filename: str, bdf_filename_out: str, tol: float,
 
     if bdf_filename_out is not None:
         model.write_bdf(bdf_filename_out, size=size, is_double=is_double)
+    else:
+        model.log.debug('skipping equivalence write')
+
     if crash_on_collapse:
         # lazy way to make sure there aren't any collapsed nodes
         model2 = BDF(log=log, debug=debug)

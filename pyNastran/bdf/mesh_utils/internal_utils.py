@@ -1,3 +1,4 @@
+from io import StringIO
 from typing import Union
 from pyNastran.bdf.bdf import BDF
 
@@ -14,7 +15,7 @@ from pyNastran.bdf.bdf import BDF
 
 def get_bdf_model(bdf_filename: Union[BDF, str], xref: bool=True,
                   log=None, debug: bool=False) -> BDF:
-    if isinstance(bdf_filename, str):
+    if isinstance(bdf_filename, (str, StringIO)):
         #model = read_bdf(bdf_filename=bdf_filename, validate=True, xref=True,
                         #punch=False, skip_cards=None,
                         #read_cards=None,

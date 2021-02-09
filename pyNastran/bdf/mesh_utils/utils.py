@@ -10,8 +10,10 @@ defines:
 """
 import os
 import sys
+from io import StringIO
 from typing import List
 from cpylog import SimpleLogger
+import pyNastran
 from pyNastran.bdf.mesh_utils.bdf_renumber import bdf_renumber, superelement_renumber
 from pyNastran.bdf.mesh_utils.bdf_merge import bdf_merge
 from pyNastran.bdf.mesh_utils.export_mcids import export_mcids
@@ -51,7 +53,6 @@ def cmd_line_create_vectorized_numbered(argv=None, quiet=False):  # pragma: no c
         sys.exit(msg)
 
     from docopt import docopt
-    import pyNastran
     ver = str(pyNastran.__version__)
     data = docopt(msg, version=ver, argv=argv[1:])
     if not quiet:  # pragma: no cover
@@ -71,7 +72,6 @@ def cmd_line_equivalence(argv=None, quiet=False):
         argv = sys.argv
 
     from docopt import docopt
-    import pyNastran
     msg = (
         'Usage:\n'
         '  bdf equivalence IN_BDF_FILENAME EQ_TOL [-o OUT_BDF_FILENAME]\n'
@@ -342,12 +342,16 @@ def cmd_line_mirror(argv=None, quiet=False):
     if data['--tol'] is None:
         data['TOL'] = 0.000001
 
+    if isinstance(data['TOL'], str):
+        data['TOL'] = float(data['TOL'])
     tol = data['TOL']
-    if data['--noeq'] is not None:
+
+    assert data['--noeq'] in [True, False]
+    if data['--noeq']:
         tol = -1.
 
     plane = 'xz'
-    if data['--plane'] is not None:
+    if data['--plane'] is not None:  # None or str
         plane = data['--plane']
 
     if not quiet:  # pragma: no cover
@@ -365,12 +369,13 @@ def cmd_line_mirror(argv=None, quiet=False):
     level = 'debug' if not quiet else 'warning'
     log = SimpleLogger(level=level, encoding='utf-8', log_func=None)
     model = read_bdf(bdf_filename, log=log)
-    size = 16
-    bdf_filename_temp = '__temp__.bdf'
+
+    bdf_filename_temp = StringIO()
     write_bdf_symmetric(model, bdf_filename_temp, encoding=None, size=size,
                         is_double=False,
-                        enddata=None, close=True,
+                        enddata=None, close=False,
                         plane=plane, log=log)
+    bdf_filename_temp.seek(0)
 
     bdf_equivalence_nodes(bdf_filename_temp, bdf_filename_out, tol,
                           renumber_nodes=False,
@@ -381,7 +386,6 @@ def cmd_line_mirror(argv=None, quiet=False):
                           avoid_collapsed_elements=False,
                           crash_on_collapse=False,
                           debug=True, log=log)
-    os.remove(bdf_filename_temp)
 
 
 def cmd_line_merge(argv=None, quiet=False):
@@ -597,7 +601,6 @@ def cmd_line_export_mcids(argv=None, quiet=False):
         argv = sys.argv
 
     from docopt import docopt
-    import pyNastran
     msg = (
         'Usage:\n'
         '  bdf export_mcids IN_BDF_FILENAME [-o OUT_CSV_FILENAME] [--iplies PLIES] [--no_x | --no_y]\n'
@@ -678,7 +681,6 @@ def cmd_line_free_faces(argv=None, quiet=False):
         argv = sys.argv
 
     encoding = sys.getdefaultencoding()
-    import pyNastran
     usage = (
         'Usage:\n'
         '  bdf free_faces BDF_FILENAME SKIN_FILENAME [-d] [-l] [-f] [--encoding ENCODE]\n'
@@ -695,14 +697,14 @@ def cmd_line_free_faces(argv=None, quiet=False):
         'Options:\n'
         '  -l, --large        writes the BDF in large field, single precision format (default=False)\n'
         '  -d, --double       writes the BDF in large field, double precision format (default=False)\n'
-        '  --encoding ENCODE  the encoding method (default=None -> %r)\n'
+        f'  --encoding ENCODE  the encoding method (default=None -> {encoding!r})\n'
         '\n'
         'Developer:\n'
         '  -f, --profile    Profiles the code (default=False)\n'
         '\n'
         "Info:\n"
         '  -h, --help     show this help message and exit\n'
-        "  -v, --version  show program's version number and exit\n" % encoding
+        "  -v, --version  show program's version number and exit\n"
     )
     _filter_no_args(arg_msg, argv, quiet=quiet)
 
@@ -775,7 +777,7 @@ def cmd_line_free_faces(argv=None, quiet=False):
         size=size, is_double=is_double, encoding=None, log=log,
     )
     if not quiet:  # pragma: no cover
-        print("total time:  %.2f sec" % (time.time() - time0))
+        print('total time:  %.2f sec' % (time.time() - time0))
 
 
 def cmd_line_split_cbars_by_pin_flag(argv=None, quiet=False):
@@ -784,7 +786,6 @@ def cmd_line_split_cbars_by_pin_flag(argv=None, quiet=False):
         argv = sys.argv
 
     from docopt import docopt
-    import pyNastran
     msg = (
         'Usage:\n'
         '  bdf split_cbars_by_pin_flags  IN_BDF_FILENAME [-o OUT_BDF_FILENAME] [-p PIN_FLAGS_CSV_FILENAME]\n'
@@ -831,7 +832,6 @@ def cmd_line_transform(argv=None, quiet=False):
         argv = sys.argv
 
     from docopt import docopt
-    import pyNastran
     msg = (
         'Usage:\n'
         '  bdf transform IN_BDF_FILENAME [-o OUT_CAERO_BDF_FILENAME] [--shift XYZ]\n'
@@ -898,7 +898,6 @@ def cmd_line_filter(argv=None, quiet=False):  # pragma: no cover
         argv = sys.argv
 
     from docopt import docopt
-    import pyNastran
     msg = (
         'Usage:\n'
         '  bdf filter IN_BDF_FILENAME [-o OUT_CAERO_BDF_FILENAME]\n'
@@ -1157,9 +1156,11 @@ def cmd_line(argv=None, quiet=False):
     )
 
     if dev:
-        msg += '  bdf create_vectorized_numbered  -h | --help\n'
-        msg += '  bdf filter                      -h | --help\n'
-        msg += '  bdf bin                         -h | --help\n'
+        msg += (
+            '  bdf create_vectorized_numbered  -h | --help\n'
+            '  bdf filter                      -h | --help\n'
+            '  bdf bin                         -h | --help\n'
+        )
     msg += '  bdf -v | --version\n'
     msg += '\n'
 
