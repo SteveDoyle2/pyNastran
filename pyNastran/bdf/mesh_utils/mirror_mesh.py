@@ -35,7 +35,7 @@ def bdf_mirror_plane(bdf_filename: Union[str, BDF],
     nid_offset, plane = _mirror_nodes_plane(model, mirror_model, plane,
                                             use_nid_offset=use_nid_offset)
     eid_offset = _mirror_elements(model, mirror_model, nid_offset, use_eid_offset=True)
-    _mirror_loads(model, mirror_model, nid_offset, eid_offset)
+    #_mirror_loads(model, mirror_model, nid_offset, eid_offset)
     #_mirror_aero(model, mirror_model, nid_offset, plane=plane)
     return model, mirror_model, nid_offset, eid_offset
 
@@ -464,9 +464,9 @@ def __mirror_elements(model: BDF, mirror_model: BDF,
                     n1, n2, n3, n4 = nodes2
                     nodes3 = [n3, n2, n1, n4]
                 else:  # TODO: not validated
-                    n1, n2, n3, n4,
-                    n5, n6, n7,
-                    n8, n9, n10 = nodes2
+                    (n1, n2, n3, n4,
+                     n5, n6, n7,
+                     n8, n9, n10) = nodes2
                     nodes3 = [
                         n3, n2, n1, n4,
                         n7, n6, n5,
