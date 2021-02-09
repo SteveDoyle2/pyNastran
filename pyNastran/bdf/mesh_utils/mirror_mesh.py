@@ -472,7 +472,7 @@ def __mirror_elements(model: BDF, mirror_model: BDF,
                         n7, n6, n5,
                         n10, n9, n8]
             elif etype == 'CPENTA':
-                 if len(nodes1) == 6:  # TODO: not validated
+                if len(nodes1) == 6:  # TODO: not validated
                     n1, n2, n3, n4, n5, n6 = nodes2
                     nodes3 = [n3, n2, n1,
                               n6, n5, n4]

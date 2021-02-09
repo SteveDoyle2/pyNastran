@@ -8,12 +8,13 @@ defines:
                                        tol=0.01, renumber=True)
 
 """
+from __future__ import annotations
 import os
 from struct import Struct
 from numpy import array, unique #, hstack
 from typing import List, Optional, TYPE_CHECKING
 
-from cpylog import get_logger2
+from cpylog import SimpleLogger, get_logger2
 from pyNastran.utils import check_path
 from pyNastran.bdf.bdf import read_bdf
 from pyNastran.bdf.mesh_utils.bdf_equivalence import bdf_equivalence_nodes

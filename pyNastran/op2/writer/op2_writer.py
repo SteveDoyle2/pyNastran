@@ -10,6 +10,7 @@ from cpylog import get_logger2
 from pyNastran.op2.op2_interface.op2_f06_common import OP2_F06_Common
 from pyNastran.op2.op2_interface.write_utils import _write_markers
 #from pyNastran.op2.errors import FatalError
+from .case_writer import write_casecc
 from .geom1_writer import write_geom1
 from .geom2_writer import write_geom2
 from .geom3_writer import write_geom3
@@ -42,7 +43,7 @@ class OP2Writer(OP2_F06_Common):
     def write_op2(self, op2_outname: str,
                   post: int=-1, endian: bytes=b'<',
                   skips: List[str]=None,
-                  nastran_format: str='nx') -> int:
+                  nastran_format: Optional[str]=None) -> int:
         """
         Writes an OP2 file based on the data we have stored in the object
 
@@ -56,6 +57,9 @@ class OP2Writer(OP2_F06_Common):
             #Real objects don't use this parameter.
 
         """
+        if nastran_format is None:
+            nastran_format = self._nastran_format
+        assert nastran_format in {'msc', 'nx', 'optistruct'}, nastran_format
         if skips is None:
             skips = set([])
         else:
@@ -100,6 +104,8 @@ def _write_op2(op2_file, fop2_ascii, obj: OP2,
     struct_3i = Struct(endian + b'3i')
     write_op2_header(obj, op2_file, fop2_ascii, struct_3i, post=post, endian=endian)
 
+    #if 'CASECC' not in skips:
+        #write_casecc(op2_file, fop2_ascii, obj, endian=endian, nastran_format=nastran_format)
     if 'GEOM1' not in skips:  # nodes
         write_geom1(op2_file, fop2_ascii, obj, endian=endian)
     if 'GEOM2' not in skips:  # elements
