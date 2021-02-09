@@ -405,7 +405,8 @@ class MPC(Constraint):
         coefficients = [1.]
         return MPC(conid, nodes, components, coefficients)
 
-    def __init__(self, conid, nodes, components, coefficients, comment=''):
+    def __init__(self, conid: int, nodes: List[int], components: List[str],
+                 coefficients: List[float], comment: str=''):
         """
         Creates an MPC card
 

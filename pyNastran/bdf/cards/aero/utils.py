@@ -4,8 +4,13 @@ defines:
  - points, elements = points_elements_from_quad_points(p1, p2, p3, p4, x, y, dtype='int32')
 
 """
+from __future__ import annotations
+from typing import TYPE_CHECKING
 import numpy as np
 from pyNastran.utils.numpy_utils import float_types
+if TYPE_CHECKING:
+    from pyNastran.bdf.bdf import BDF
+
 
 def elements_from_quad(nx, ny, dtype='int32'):
     """
@@ -236,7 +241,7 @@ def create_ellipse(aspect_ratio, radius, thetas=None):
     return xy
 
 
-def make_monpnt1s_from_cids(model, nids, cids, cid_to_inids,
+def make_monpnt1s_from_cids(model: BDF, nids, cids, cid_to_inids,
                             delete_unused_coords=True):
     """
     Creates MONPNT1s, AECOMPs, and SET1s by a series of coordinate systems

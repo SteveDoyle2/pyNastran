@@ -114,7 +114,7 @@ def bdf_merge(bdf_filenames, bdf_filename_out=None, renumber=True, encoding=None
         #for param, val in sorted(starting_id_dict.items()):
             #print('  %-3s %s' % (param, val))
 
-        model.log.info('secondary=%s' % bdf_filename)
+        model.log.debug('secondary=%s' % bdf_filename)
         if isinstance(bdf_filename, BDF):
             model2_renumber = bdf_filename
         else:
@@ -158,7 +158,7 @@ def bdf_merge(bdf_filenames, bdf_filename_out=None, renumber=True, encoding=None
 
     mapper_renumber = None
     if renumber:
-        model.log.info('final renumber...')
+        model.log.debug('final renumber...')
 
         starting_id_dict = {
             'cid' : 1,

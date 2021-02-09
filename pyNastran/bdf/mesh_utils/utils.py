@@ -10,6 +10,7 @@ defines:
 """
 import os
 import sys
+from typing import List
 from cpylog import SimpleLogger
 from pyNastran.bdf.mesh_utils.bdf_renumber import bdf_renumber, superelement_renumber
 from pyNastran.bdf.mesh_utils.bdf_merge import bdf_merge
@@ -622,8 +623,7 @@ def cmd_line_export_mcids(argv=None, quiet=False):
         '  -h, --help      show this help message and exit\n'
         "  -v, --version   show program's version number and exit\n"
     )
-    if len(argv) == 1:
-        sys.exit(msg)
+    _filter_no_args(msg, argv, quiet=quiet)
 
     ver = str(pyNastran.__version__)
     #type_defaults = {
@@ -666,6 +666,12 @@ def cmd_line_export_mcids(argv=None, quiet=False):
         model.log.info('wrote %s' % csv_filename)
 
 
+def _filter_no_args(msg: str, argv: List[str], quiet: bool=False):
+    if len(argv) == 1:
+        if quiet:
+            sys.exit()
+        sys.exit(msg)
+
 def cmd_line_free_faces(argv=None, quiet=False):
     """command line interface to bdf free_faces"""
     if argv is None:
@@ -698,8 +704,7 @@ def cmd_line_free_faces(argv=None, quiet=False):
         '  -h, --help     show this help message and exit\n'
         "  -v, --version  show program's version number and exit\n" % encoding
     )
-    if len(argv) == 1:
-        sys.exit(arg_msg)
+    _filter_no_args(arg_msg, argv, quiet=quiet)
 
     arg_msg += '\n'
 
@@ -725,7 +730,8 @@ def cmd_line_free_faces(argv=None, quiet=False):
     from pyNastran.utils.arg_handling import argparse_to_dict, update_message
 
     update_message(parent_parser, usage, arg_msg, examples)
-    print(argv)
+    if not quiet:
+        print(argv)
     args = parent_parser.parse_args(args=argv[2:])
     data = argparse_to_dict(args)
 
@@ -797,8 +803,7 @@ def cmd_line_split_cbars_by_pin_flag(argv=None, quiet=False):
         '  -h, --help      show this help message and exit\n'
         "  -v, --version   show program's version number and exit\n"
     )
-    if len(argv) == 1:
-        sys.exit(msg)
+    _filter_no_args(msg, argv, quiet=quiet)
 
     ver = str(pyNastran.__version__)
     #type_defaults = {
@@ -846,8 +851,7 @@ def cmd_line_transform(argv=None, quiet=False):
         '  -h, --help      show this help message and exit\n'
         "  -v, --version   show program's version number and exit\n"
     )
-    if len(argv) == 1:
-        sys.exit(msg)
+    _filter_no_args(msg, argv, quiet=quiet)
 
     ver = str(pyNastran.__version__)
     #type_defaults = {
@@ -924,8 +928,7 @@ def cmd_line_filter(argv=None, quiet=False):  # pragma: no cover
         '2. remove GRID points and associated cards with y value < 0:\n'
         "   >>> bdf filter fem.bdf --y '< 0.'"
     )
-    if len(argv) == 1:
-        sys.exit(msg)
+    _filter_no_args(msg, argv, quiet=quiet)
 
     ver = str(pyNastran.__version__)
     #type_defaults = {
@@ -1057,8 +1060,7 @@ def cmd_line_export_caero_mesh(argv=None, quiet=False):
         '  -h, --help      show this help message and exit\n'
         "  -v, --version   show program's version number and exit\n"
     )
-    if len(argv) == 1:
-        sys.exit(msg)
+    _filter_no_args(msg, argv, quiet=quiet)
 
     ver = str(pyNastran.__version__)
     #type_defaults = {
@@ -1161,8 +1163,7 @@ def cmd_line(argv=None, quiet=False):
     msg += '  bdf -v | --version\n'
     msg += '\n'
 
-    if len(argv) == 1:
-        sys.exit(msg + 'Not enough arguments.\n')
+    _filter_no_args(msg + 'Not enough arguments.\n', argv, quiet=quiet)
 
     #assert sys.argv[0] != 'bdf', msg
 

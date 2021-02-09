@@ -300,7 +300,7 @@ class AECOMPL(BaseCard):
         labels = []
         j = 1
         for i in range(2, len(card)):
-            label = string(card, i, 'label_%i' % j)
+            label = string(card, i, 'label_%d' % j)
             labels.append(label)
             j += 1
         return AECOMPL(name, labels, comment=comment)
@@ -4767,8 +4767,8 @@ class PAERO3(BaseCard):
 
         j = 5
         for i in range(5, nfields, 2):
-            xi = double_or_blank(card, i, 'x%i' % j)
-            yi = double_or_blank(card, i + 1, 'y%i' % j)
+            xi = double_or_blank(card, i, 'x%d' % j)
+            yi = double_or_blank(card, i + 1, 'y%d' % j)
             x.append(xi)
             y.append(yi)
             j += 1
@@ -4964,9 +4964,9 @@ class PAERO4(BaseCard):
         caocs = []
         gapocs = []
         for i in range(6, nfields, 3):
-            doc = double(card, i, 'doc_%i' % j)
-            caoc = double(card, i + 1, 'caoc_%i' % j)
-            gapoc = double(card, i + 2, 'gapoc_%i' % j)
+            doc = double(card, i, 'doc_%d' % j)
+            caoc = double(card, i + 1, 'caoc_%d' % j)
+            gapoc = double(card, i + 2, 'gapoc_%d' % j)
             docs.append(doc)
             caocs.append(caoc)
             gapocs.append(gapoc)

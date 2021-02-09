@@ -4629,7 +4629,8 @@ class AddCards(AddMethods):
         self._add_constraint_spc_object(spc)
         return spc
 
-    def add_mpc(self, conid, nodes, components, coefficients, comment='') -> MPC:
+    def add_mpc(self, conid: int, nodes: List[int], components: List[str], coefficients: List[float],
+                comment: str='') -> MPC:
         """
         Creates an MPC card
 

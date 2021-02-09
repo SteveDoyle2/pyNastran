@@ -82,11 +82,12 @@ class SubTableReadError(Exception):
     pass
 
 DENSE_MATRICES = [
-    b'KELM',
-    b'MELM',
-    b'BELM',
-    b'KELMP',
-    b'MELMP',
+    b'KELM', b'MELM', b'BELM',
+    b'KELMP', b'MELMP',
+
+    b'EFMASSS', b'EFMFACS', b'EFMFSMS',
+    b'MEFMASS', b'MEFWTS', b'MPFACS', b'RBMASSS',
+
 ]
 OPTISTRUCT_VERSIONS = [
     b'OS11XXXX', b'OS12.210', b'OS14.210',
@@ -2712,14 +2713,17 @@ class OP2Reader:
         op2.table_name = self._read_table_name(rewind=False)
         if self.is_debug_file:
             self.binary_debug.write('read_geom_table - %s\n' % op2.table_name)
+
+        #print('reading -1')
         self.read_markers([-1])
         if self.is_debug_file:
             self.binary_debug.write('---markers = [-1]---\n')
 
         # (101, 1, 0, 1237, 0, 0, 0)
         data = self._read_record()
-        #self.show_data(data, types='q', endian=None, force=False)
+        #self.show_data(data, types='iq', endian=None, force=False)
 
+        #print('reading -2, 1, 0')
         self.read_3_markers([-2, 1, 0])
         data = self._read_record()
         #self.show_data(data, types='dqs', endian=None, force=False)
@@ -2728,6 +2732,7 @@ class OP2Reader:
         #data = self._read_record()
 
         itable = -3
+        #print(f'reading {itable}, 1, 0')
         self.read_3_markers([itable, 1, 0])
         marker = self.get_marker1(rewind=True, macro_rewind=False)
 
@@ -2742,7 +2747,7 @@ class OP2Reader:
                 self.op2.case_control_deck.subcases[subcase.id] = subcase
                 #print(subcase)
             except:
-                pass
+                pass #raise
             self.read_3_markers([itable, 1, 0])
             marker = self.get_marker1(rewind=True, macro_rewind=False)
 

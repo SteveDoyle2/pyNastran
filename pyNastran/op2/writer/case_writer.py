@@ -1,10 +1,163 @@
-import numpy as np
-from pyNastran.bdf.subcase import Subcase
-from pyNastran.op2.op2_interface.op2_reader import reshape_bytes_block # , reshape_bytes_block_size
+from __future__ import annotations
+from copy import deepcopy
+from struct import pack, Struct
+from collections import defaultdict
+from typing import TYPE_CHECKING
 
+from pyNastran.op2.errors import SixtyFourBitError
+from .geom1_writer import write_geom_header, close_geom_table, init_table
+if TYPE_CHECKING:
+    from pyNastran.bdf.bdf import BDF
+    from pyNastran.bdf.subcase import Subcase
 
-def set_casecc(self, data: bytes, idtype: str, fdtype: str, size: int=4,
-               nastran_format: str='nx'):
+def write_casecc_header(table_name: bytes, op2_file, op2_ascii, endian: bytes=b'<'):
+    op2_ascii.write('----------\n')
+    data = init_table(table_name)
+    op2_file.write(pack('4i 8s i 3i', *data))
+    op2_ascii.write(str(data) + '\n')
+
+    data = [
+        4, 7, 4,
+        #28, 1, 2, 3, 4, 5, 6, 7, 28,
+
+        28,
+        101, 1, 0, 1030, 0, 0, 0,
+        28,
+    ]
+    #struct_3i = Struct(endian + b'3i')
+    op2_file.write(pack('3i 9i', *data))
+    op2_ascii.write(str(data) + '\n')
+
+    #-------------------------------------
+    data = [
+        4, -2, 4,
+        4, 1, 4,
+        4, 0, 4]
+    op2_file.write(pack('9i', *data))
+    op2_ascii.write(str(data) + '\n')
+
+    data = [
+        #4, 0, 4,
+        4, 2, 4,
+        8, b'XCASECC ', 8,
+    ]
+    op2_file.write(pack('3i i8si', *data))
+    op2_ascii.write(str(data) + '\n')
+    #data = [8, 1, 2, 8]
+    #op2_file.write(pack('4i', *data))
+    #-------------------------------------
+
+    data = [
+        4, -3, 4,
+        4, 1, 4,
+        4, 0, 4]
+    op2_file.write(pack('9i', *data))
+    op2_ascii.write(str(data) + '\n')
+
+def write_casecc(op2_file, op2_ascii, obj, endian: bytes=b'<',
+                 nastran_format: str='nx'):
+    """writes the CASECC table"""
+    write_casecc_header(b'CASECC', op2_file, op2_ascii, endian=endian)
+
+    itable = -3
+    subcases = obj.subcases
+    if nastran_format == 'msc':
+        for subcase_id, subcase in sorted(subcases.items()):
+            print(subcase)
+            write_msc_casecc(subcase_id, subcase, obj)
+    else:
+        asdf
+    close_geom_table(op2_file, op2_ascii, itable)
+
+def _get_int(key: str, subcase: Subcase) -> int:
+    value = 0
+    if key in subcase:
+        value = subcase[key][0]
+        assert isinstance(value, int), type(value)
+    return value
+
+def _get_str(key: str, subcase: Subcase, nbytes: int) -> bytes:
+    assert nbytes > 0, nbytes
+    if key in subcase:
+        value_str = subcase[key][0]
+        assert isinstance(value_str, str), value_str
+        fmt = '%-%%ss' % nbytes
+        value_str2 =  fmt % value_str
+        value_bytes = value_str2.encode('ascii')
+        assert len(v)
+    else:
+        value_bytes = b' ' * nbytes
+    return value_bytes
+
+def _get_stress(key: str, subcase: Subcase) -> int:
+    value = 0
+    media = 0
+    fmt = 0
+    von_mises = 1
+    is_fmt = False
+    if key in subcase:
+        value, options_ = subcase[key]
+        options = deepcopy(options_)
+        if 'SORT1' in options:
+            options.remove('SORT1')
+            assert is_fmt is False
+            fmt = 1
+            is_fmt = True
+        if 'SORT2' in options:
+            options.remove('SORT2')
+            assert is_fmt is False
+            fmt = 2
+
+        if 'PLOT' in options:
+            options.remove('PLOT')
+            media += 1
+        if 'PRINT' in options:
+            options.remove('PRINT')
+            media += 2
+        if 'PUNCH' in options:
+            options.remove('PUNCH')
+            media += 4
+        assert len(options) == 0, options
+    return value, media, fmt, von_mises
+
+def _get_set_media_load(key: str, subcase: Subcase) -> int:
+    #if media in (1,    3,    5,    7):
+        #options.append('PLOT')
+    #if media in (   2, 3,       6, 7):
+        #options.append('PRINT')
+    #if media in (         4, 5, 6, 7):
+        #options.append('PUNCH')
+    value = 0
+    media = 0
+    fmt = 0
+    is_fmt = False
+    if key in subcase:
+        value, options_ = subcase[key]
+        options = deepcopy(options_)
+        if 'SORT1' in options:
+            options.remove('SORT1')
+            assert is_fmt is False
+            fmt = 1
+            is_fmt = True
+        if 'SORT2' in options:
+            options.remove('SORT2')
+            assert is_fmt is False
+            fmt = 2
+
+        if 'PLOT' in options:
+            options.remove('PLOT')
+            media += 1
+        if 'PRINT' in options:
+            options.remove('PRINT')
+            media += 2
+        if 'PUNCH' in options:
+            options.remove('PUNCH')
+            media += 4
+        assert len(options) == 0, options
+    return value, media, fmt
+
+def write_msc_casecc(subcase_id: int, subcase: Subcase, model: BDF):
+    nsub = 0
     """
     Word Name Type Description
     subcase, mpc, spc, load, method_structure, deform, temp_load, temp_mat_init, tic, nlload_set, nlload_media, nlload_format, dload, freq, tfl = ints[:15]
@@ -23,7 +176,21 @@ def set_casecc(self, data: bytes, idtype: str, fdtype: str, size: int=4,
     13 DYMLDSET          I Dynamic load set (DLOAD)
     14 FEQRESET          I Frequency response set (FREQUENCY)
     15 TFSET             I Transfer function set (TFL)
-    symflag, oload_set, oload_media, oload_format, disp_set, disp_media, disp_format, stress_set, stress_media, stress_set, force_set, force_media, force_set = ints[15:30]
+    """
+    mpc_id = _get_int('MPC', subcase)
+    spc_id = _get_int('SPC', subcase)
+    load_id = _get_int('LOAD', subcase)
+    deform_id = _get_int('DEFORM', subcase)
+    temp_load_id = _get_int('TEMP(LOAD)', subcase)
+    temp_mat_id = _get_int('TEMP(MAT)', subcase)
+    ic_id = _get_int('IC', subcase)
+    ree_set = _get_int('METHOD', subcase)
+
+    nlload_set, nlload_media, nlload_fmt = _get_set_media_load('NLLOAD', subcase)
+
+    data = [subcase_id, mpc_id, spc_id, load_id, ree_set, deform_id, temp_load_id, temp_mat_id, ic_id,
+            nlload_set, nlload_media, nlload_fmt]
+    """
     16 SYMFLG            I Symmetry flag (SYMSEQ and SUBSEQ)
     17 LDSPTSET          I Load output set (OLOAD)
     18 LDSMEDIA          I Load output media (OLOAD)
@@ -37,7 +204,20 @@ def set_casecc(self, data: bytes, idtype: str, fdtype: str, size: int=4,
     26 FCEPTSET          I Force (or flux) output set (FORCE or FLUX)
     27 FCEMEDIA          I Force (or flux) output media (FORCE or FLUX)
     28 FCEFMT            I Force (or flux) output format (FORCE or FLUX)
+    """
+    symflag = 0
+    oload_set, oload_media, oload_format = _get_set_media_load('OLOAD', subcase)
+    disp_set, disp_media, disp_format = _get_set_media_load('DISPLACEMENT', subcase)
+    stress_set, stress_media, stress_set = _get_set_media_load('STRESS', subcase)
+    force_set, force_media, force_set = _get_set_media_load('FORCE', subcase)
 
+    data += [symflag,
+             oload_set, oload_media, oload_format,
+             disp_set, disp_media, disp_format,
+             stress_set, stress_media, stress_set,
+             force_set, force_media, force_set]
+
+    """
     29 ACCPTSET          I Acceleration (or enthalpy delta) output set (ACCEL or HDOT)
     30 ACCMEDIA          I Acceleration (or enthalpy delta) output media (ACCE, HDOT)
     31 ACCFMT            I Acceleration (or enthalpy delta) output format (ACCE, HDOT)
@@ -72,6 +252,45 @@ def set_casecc(self, data: bytes, idtype: str, fdtype: str, size: int=4,
     157 SSASET           I Solution set accelerations output set (SACCE)
     158 SSAMEDIA         I Solution set accelerations output media (SACCE)
     159 SSAFMT           I Solution set accelerations output format (SACCE)
+    """
+    n32 = 7
+    nsub -= (3 + n32 * 3)
+    accel_set, accel_media, accel_fmt = _get_set_media_load('ACCELERATION', subcase)
+    velo_set, velo_media, velo_fmt = _get_set_media_load('VELOCITY', subcase)
+    spc_force_set, spc_force_media, spc_force_fmt = _get_set_media_load('SPCFORCE', subcase)
+    #oload_set, oload_media, oload_format = _get_set_media_load('MPCFORCE', subcase)
+    sdisp_set, sdisp_media, sdisp_format = _get_set_media_load('SDISPLACEMENT', subcase)
+    svelo_set, svelo_media, svelo_fmt = _get_set_media_load('SVELOCITY', subcase)
+    saccel_set, saccel_media, saccel_fmt = _get_set_media_load('SACCELERATION', subcase)
+
+    tstep_id = _get_int('TSTEP', subcase)
+    title = _get_str('TITLE', subcase, nbytes=128)
+    subtitle = _get_str('SUBTITLE', subcase, nbytes=128)
+    label = _get_str('LABEL', subcase, nbytes=128)
+    model_plot_flag = 0
+    axisymmetric_flag = 0
+    nharmonics = 0
+    needs_definition = 0
+    k2pp_name = _get_str('K2PP', subcase, nbytes=8)
+    m2pp_name = _get_str('M2PP', subcase, nbytes=8)
+    b2pp_name = _get_str('B2PP', subcase, nbytes=8)
+    ofreq_otime_id = 0
+    sedr = _get_int('SEDR', subcase)
+    mfluid_id = _get_int('SEDR', subcase)
+    cmethod_id = _get_int('SEDR', subcase)
+    sdamp_id = _get_int('SDAMP', subcase)
+
+    data += [accel_set, accel_media, accel_fmt,
+             velo_set, velo_media, velo_fmt,
+             spc_force_set, spc_force_media, spc_force_fmt,
+             tstep_id, title, subtitle, label, model_plot_flag, axisymmetric_flag, nharmonics, needs_definition,
+             k2pp_name, m2pp_name, b2pp_name, ofreq_otime_id, sedr, mfluid_id, cmethod_id, sdamp_id,
+             sdisp_set, sdisp_media, sdisp_format,
+             svelo_set, svelo_media, svelo_fmt,
+             saccel_set, saccel_media, saccel_fmt,
+             ]
+    #assert len(data) == 159 - nsub, len(data)
+    """
     160 NONLINLD         I Nonlinear load set in transient problems (NONLINEAR)
     161 PARTIT           I Partitioning set (PARTN)
     162 CYCLIC           I Symmetry option in cyclic symmetry (DSYM)
@@ -88,6 +307,24 @@ def set_casecc(self, data: bytes, idtype: str, fdtype: str, size: int=4,
     173 ARFPTSET         I Aerodynamic force output set (AEROF)
     174 ARFMEDIA         I Aerodynamic force output media (AEROF)
     175 ARFFMT           I Aerodynamic force output format (AEROF)
+    """
+    nonlinear_id = _get_int('NONLINEAR', subcase)
+    partn = 0
+    dsym_id = 0
+    random_id = _get_int('RANDOM', subcase)
+    nlparm_id = _get_int('NLPARM', subcase)
+    fmethod_id = _get_int('FMETHOD', subcase)
+    nwords_to_lsem = -999999
+    gpforce_set, gpforce_media, gpforce_format = _get_set_media_load('GPFORCE', subcase)
+    ese_set, ese_media, ese_format = _get_set_media_load('ESE', subcase)
+    aerof_set, aerof_media, aerof_format = _get_set_media_load('AEROF', subcase)
+    data += [nonlinear_id, partn, dsym_id, random_id, nlparm_id, fmethod_id,
+             nwords_to_lsem,
+             gpforce_set, gpforce_media, gpforce_format,
+             ese_set, ese_media, ese_format,
+             aerof_set, aerof_media, aerof_format]
+    #assert len(data) == 175 - nsub, len(data)
+    """
     176 SEID             I Superelement ID (SUPER)
     177 LCN              I Load column number (SUPER)
     178 GUST             I Gust load selection (GUST)
@@ -100,6 +337,25 @@ def set_casecc(self, data: bytes, idtype: str, fdtype: str, size: int=4,
     185 K2GG(2)      CHAR4 Name of direct input (g-set) stiffness matrix (K2GG)
     187 M2GG(2)      CHAR4 Name of direct input (g-set) stiffness matrix (M2GG)
     189 B2GG(2)      CHAR4 Name of direct input (g-set) stiffness matrix (B2GG)
+    """
+    nsub -= 3
+    seid = _get_int('SUPER', subcase)
+    super_id = _get_int('SUPER', subcase)
+    gust_id = _get_int('GUST', subcase)
+    sefinal_id = _get_int('SEFINAL', subcase)
+    semg = _get_int('SEMG', subcase)
+    sekr = _get_int('SEKR', subcase)
+    selg = _get_int('SELG', subcase)
+    selr = _get_int('SELR', subcase)
+    seexclude = _get_int('SEEXCLUDE', subcase)
+    k2gg = _get_str('K2GG', subcase, nbytes=8)
+    m2gg = _get_str('M2GG', subcase, nbytes=8)
+    b2gg = _get_str('B2GG', subcase, nbytes=8)
+    data += [seid, super_id, gust_id, sefinal_id, semg, sekr, selg, selr, seexclude,
+             k2gg, m2gg, b2gg]
+    #assert len(data) == 189 - nsub, len(data)
+
+    """
     191 SVSET            I Solution eigenvector output set (SVECTOR)
     192 SVMEDIA          I Solution eigenvector output media (SVECTOR)
     193 SVFMT            I Solution eigenvectors output format (SVECTOR)
@@ -113,6 +369,27 @@ def set_casecc(self, data: bytes, idtype: str, fdtype: str, size: int=4,
     206 SEMR             I Generate matrices (M,B,K4) for superelement set or ID (SEMG)
     207 VONMISES         I von Mises fiber (STRESS)
     208 SECMDFLG         I Superelement command existence flag
+    """
+    svector_set, svector_media, svector_fmt = _get_set_media_load('SVECTOR', subcase)
+    mpress_set, mpress_media, mpress_fmt = _get_set_media_load('MPRES', subcase)
+    p2g = _get_str('P2GG', subcase, nbytes=8)
+    loadset_id = _get_int('LOADSET', subcase)
+    #semg = _get_int('SEMG', subcase)
+    semr = _get_int('SEMR', subcase)
+    stress_set, stress_media, stress_fmt, von_mises = _get_stress('STRESS', subcase)
+    houtput = 0
+    noutput = 0
+    se_cmd_flag = 0
+    data += [
+        svector_set, svector_media, svector_fmt,
+        mpress_set, mpress_media, mpress_fmt,
+        houtput, houtput, houtput,
+        noutput, noutput, noutput,
+        p2g, loadset_id, semr, von_mises, se_cmd_flag
+        #svector_set, svector_media, svector_fmt,
+    ]
+    #assert len(data) == 208, len(data)
+    """
     209 GPSPTSET         I Grid point stress output set (GPSTRESS)
     210 GPSMEDIA         I Grid point stress output media (GPSTRESS)
     211 GPSFMT           I Grid point stress output format (GPSTRESS)
@@ -127,6 +404,25 @@ def set_casecc(self, data: bytes, idtype: str, fdtype: str, size: int=4,
     220 STNSET           I Strain output set (STRAIN)
     221 STNMEDIA         I Strain output media (STRAIN)
     222 STNFMT           I Strain output format (STRAIN)
+    """
+    gpstress_set, gpstress_media, gpstress_fmt = _get_set_media_load('GPSTRESS', subcase)
+    strfield_set, strfield_media, strfield_fmt = _get_set_media_load('STRFIELD', subcase)
+    #sensity_set, sensity_media, sensity_fmt = _get_set_media_load('SENSITY', subcase)
+    strain_set, strain_media, strain_fmt = _get_set_media_load('STRAIN', subcase)
+    cload_id = _get_int('CLOAD', subcase)
+    set2_id = 0
+    dsa_print_id = 0
+    dsa_store_id = 0
+    dsa_output_id = 0
+    data += [
+        gpstress_set, gpstress_media, gpstress_fmt,
+        strfield_set, strfield_media, strfield_fmt,
+        cload_id, set2_id,
+        dsa_print_id, dsa_store_id, dsa_output_id,
+        strain_set, strain_media, strain_fmt,
+    ]
+    #assert len(data) == 222, len(data)
+    """
     223 APRESS           I Aerodynamic pressure output set (APRESSURE)
     224 TRIM             I Aerostatic trim variable constrain set (TRIM)
     225 MODLIST          I Output modes list set (OMODES)
@@ -137,6 +433,19 @@ def set_casecc(self, data: bytes, idtype: str, fdtype: str, size: int=4,
     230 GSDPTSET         I Grid point stress discontinuity output set (GPSDCON)
     231 GSDMEDIA         I Grid point stress discontinuity output media (GPSDCON)
     232 GSDFMT           I Grid point stress discontinuity output format (GPSDCON)
+    """
+    apress = _get_int('APRESSURE', subcase)
+    trim_id = _get_int('TRIM', subcase)
+    omodes = _get_int('OMODES', subcase)
+    method_fluid = _get_int('METHOD(FLUID)', subcase)
+    elsdcon_set, elsdcon_media, elsdcon_fmt = _get_set_media_load('ELSDCON', subcase)
+    gpsdcon_set, gpsdcon_media, gpsdcon_fmt = _get_set_media_load('GPSDCON', subcase)
+    data += [
+        apress, trim_id, omodes, method_fluid,
+        elsdcon_set, elsdcon_media, elsdcon_fmt,
+        gpsdcon_set, gpsdcon_media, gpsdcon_fmt,
+    ]
+    """
     233 SEDV             I Generate pseudo-loads for superelement set or identification number (SEDV)
     234 SERE             I Generate responses for superelement set or ID (SERESP)
     235 SERS             I Restart processing for superelement set or ID (SERS)
@@ -150,6 +459,33 @@ def set_casecc(self, data: bytes, idtype: str, fdtype: str, size: int=4,
     243 MODESELF         I Mode selection set identification number for the fluid (MODESELECT)
     244 SOLNUM           I Solution sequence number
     245 ANLOPT           I SOL 601 analysis option: 106, 129, 153 or 159
+    """
+    sedv = _get_int('SEDV', subcase)
+    sere = _get_int('SERE', subcase)
+    sers = _get_int('SERS', subcase)
+    boutput_set, boutput_media, boutput_fmt = _get_set_media_load('BOUTPUT', subcase)
+    diverg_id = _get_int('DIVERG', subcase)
+    outrcv = 0
+    statsub_preload = _get_int('STATSUB(PRELOAD)', subcase)
+    modes_select_structure = 0
+    mode_select_fluid = 0
+
+    sol = 0
+    if model.sol is not None:
+        sol = model.sol
+
+    sol_method = 0
+    if model.sol_method is not None:
+        sol_method = model.sol_method
+
+    data += [
+        sedv, sere, sers,
+        boutput_set, boutput_media, boutput_fmt,
+        diverg_id, outrcv,
+        statsub_preload, modes_select_structure, mode_select_fluid,
+        sol, sol_method,
+    ]
+    """
     246 ADAPT            I P-element adaptivity control parameter set (ADAPT)
     247 DESOBJ           I Design objective set (DESOBJ)
     248 DESSUB           I Design constraint set for current subcase (DESSUB)
@@ -162,6 +498,24 @@ def set_casecc(self, data: bytes, idtype: str, fdtype: str, size: int=4,
     255 SUPORT1          I Supported degree-of-freedom set (SUPORT1)
     256 STATSUBB         I Static subcase ID for buckling (STATSUB(BUCKLE))
     257 BCID             I Boundary condition ID (BC)
+    """
+    adapt = _get_int('ADAPT', subcase)
+    desobj = _get_int('DESOBJ', subcase)
+    dessub = _get_int('DESSUB', subcase)
+    subspan = _get_int('DRSPAN', subcase)
+    desglb = _get_int('DESGLB', subcase)
+    analysis = _get_str('ANALYSIS', subcase, nbytes=4)
+    stress_corner, force_corner, strain_corner = 0, 0, 0
+    suport1 = _get_int('SUPORT1', subcase)
+    statsub_buckle = _get_int('STATSUB(BUCKLE)', subcase)
+    bc = _get_int('BC', subcase)
+
+    data += [
+        adapt, desobj, dessub, subspan, desglb, analysis,
+        stress_corner, force_corner, strain_corner,
+        suport1, statsub_buckle, bc,
+    ]
+    """
     258 AUXMODEL         I Auxiliary model ID (AUXMODEL)
     259 ADACT            I P-element adaptivity active subcase flag (ADACT)
     260 DATSET           I P-element output set (DATAREC)
@@ -179,6 +533,25 @@ def set_casecc(self, data: bytes, idtype: str, fdtype: str, size: int=4,
     272 NLSSET           I Nonlinear stress output set (NLSTRESS)
     273 NLSMEDIA         I Nonlinear stress output media (NLSTRESS)
     274 NLSFMT           I Nonlinear stress output format (NLSTRESS)
+    """
+    auxmodel = _get_int('AUXMODEL', subcase)
+    adact = _get_int('ADACT', subcase)
+    data_set, data_media, data_fmt = _get_set_media_load('DATAREC', subcase)
+    vu_set, vu_media, vu_fmt = _get_set_media_load('VUGRID', subcase)
+    mpc_set, mpc_media, mpc_fmt = _get_set_media_load('MPCFORCE', subcase)
+    nlstress_set, nlstress_media, nlstress_fmt = _get_set_media_load('NLSTRESS', subcase)
+    umethod = 0
+    sdamp_fluid = _get_int('SDAMP(FLUID)', subcase)
+    smethod = _get_int('SMETHOD', subcase)
+    data += [
+        auxmodel, adact,
+        data_set, data_media, data_fmt,
+        vu_set, vu_media, vu_fmt,
+        mpc_set, mpc_media, mpc_fmt,
+        umethod, sdamp_fluid, smethod,
+        nlstress_set, nlstress_media, nlstress_fmt,
+    ]
+    """
     275 MODTRKID         I Mode tracking control parameter set (MODTRAK)
     276 DSAFORM          I Design sensitivity output format: 1=yes,2=no (DSAPRT)
     277 DSAEXPO          I Design sensitivity output export: 1=no,2=yes (DSAPRT)
@@ -188,6 +561,16 @@ def set_casecc(self, data: bytes, idtype: str, fdtype: str, size: int=4,
     281 DSASETID         I Design sensitivity output set (DSAPRT)
     282 SORTFLG          I Overall SORT1/SORT2 flag: 1 means SORT1 and 2 means SORT2.
     283 RANDBIT          I Random analysis request bit pattern (DISP,VELO, and so on)
+    """
+    modtrack_id = _get_int('MODTRAK', subcase)
+    dsa_form, dsa_expo, dsa_begain, dsa_interval, dsa_final, dsa_set = 0, 0, 0, 0, 0, 0
+    sort_flag = 1
+    randbit = 0
+    data += [
+        modtrack_id, dsa_form, dsa_expo, dsa_begain, dsa_interval, dsa_final, dsa_set,
+        sort_flag, randbit,
+    ]
+    """
     284 AECONFIG(2)  CHAR4 Aerodynamic configuration name
     286 AESYMXY          I Symmetry flag for aerodynamic xy plane
     287 AESYMXZ          I Symmetry flag for aerodynamic xz plane
@@ -207,6 +590,26 @@ def set_casecc(self, data: bytes, idtype: str, fdtype: str, size: int=4,
     301 EDEMEDIA         I Element damping energy media (EDE)
     302 EDEFMT           I Element damping energy format (EDE)
     303 EDETHRSH        RS Element damping energy threshold (EDE)
+    """
+    aeconfig = b'AECONFIG'
+    ae_sym_xy = _get_int('AESYMXY', subcase)
+    ae_sym_xz = _get_int('AESYMXZ', subcase)
+    disp_rel, velo_rel, accel_rel = 0, 0, 0
+    temp_mat_id2 = _get_int('TEMP(MAT)', subcase)
+    csschd_id = _get_int('CSSCHD', subcase)
+    gpstrain_set, gpstrain_media, gpstrain_fmt = _get_set_media_load('GPSTRAIN', subcase)
+    eke_set, eke_media, eke_fmt = _get_set_media_load('EKE', subcase)
+    ede_set, ede_media, ede_fmt = _get_set_media_load('EDE', subcase)
+    eke_threshold = ede_threshold = 0.0
+    data += [
+        aeconfig, ae_sym_xy, ae_sym_xz,
+        disp_rel, velo_rel, accel_rel,
+        gpstrain_set, gpstrain_media, gpstrain_fmt,
+        temp_mat_id2, csschd_id,
+        eke_set, eke_media, eke_fmt, eke_threshold,
+        ede_set, ede_media, ede_fmt, ede_threshold,
+    ]
+    """
     304 PANCON           I Panel contributions set (PANCON)
     305 PCMEDIA          I Panel contributions media (PANCON)
     306 PCFMT            I Panel contributions format (PANCON)
@@ -217,6 +620,13 @@ def set_casecc(self, data: bytes, idtype: str, fdtype: str, size: int=4,
     311 PCPAN            I Panel contributions PANEL (PANCON)
     312 GCGRID           I Grid contributions GRID (GRDCON)
     313 MODSLF           I Mode selection set (fluid)
+    """
+    pancon_set, pancon_media, pancon_fmt = _get_set_media_load('PANCON', subcase)
+    gridcon, mode_select = 0, 0
+    data += [
+        pancon_set, pancon_media, pancon_fmt, pancon_form, pancon_topp, pancon_topg, pancon_solution, pancon_panel,
+        gridcon, mode_select]
+    """
     314 EFFMASET         I Modal effective mass output set (MEFFMASS)
     315 EFFMAGID         I Modal effective mass GID (MEFFMASS)
     316 EFFMATHR        RS Modal effective mass fraction threshold (MEFFMASS)
@@ -224,6 +634,17 @@ def set_casecc(self, data: bytes, idtype: str, fdtype: str, size: int=4,
     319 RCRSET           I RCROSS output set
     320 RCRFMT           I RCROSS format
     321 AEUXREF          I AEUXREF
+    """
+    meffmass_set, meffmass_node, meffmasss_threshold = _get_set_media_load('MEFFMASS', subcase)
+    a2gg_name = _get_str('A2GG', subcase, nbytes=8)
+    rcross_set, rcross_media, rcross_fmt = _get_set_media_load('RCROSS', subcase)
+    aeuxref = 0
+    data += [
+        meffmass_set, meffmass_node, meffmasss_threshold,
+        a2gg_name,
+        rcross_set, rcross_fmt,
+        aeuxref]
+    """
     322 GCHK             I Ground Check Flag (GROUNDCHECK)
     323 GCHKOUT          I Ground Check Output (GROUNDCHECK)
     324 GCHKSET          I Ground Check Set (GROUNDCHECK)
@@ -235,6 +656,9 @@ def set_casecc(self, data: bytes, idtype: str, fdtype: str, size: int=4,
     330 ASPCEPS         RS EPS value for fixup (AUTOSPC)
     331 ASPCPRT          I EPS value for printing (AUTOSPC)
     332 ASPCPCH          I Punch Set Id (AUTOSPC)
+    """
+    data = []
+    """
     333 EXSEGEOM         I External superelement geometry flag (EXTSEOUT)
     334 NA2GG            I Internal set id for A2GG
     335 NK2PP            I Internal set id for K2PP
@@ -244,6 +668,8 @@ def set_casecc(self, data: bytes, idtype: str, fdtype: str, size: int=4,
     339 NM2GG            I Internal set id for M2GG
     340 NB2GG            I Internal set id for B2GG
     341 NP2G             I Internal set id for P2G
+    """
+    """
     342 GEODSET          I Geometry Check DISP Set identification number (GEOMCHECK)
     343 GEODMXMN         I Geometry Check DISP Max/Min (GEOMCHECK)
     344 GEODOCID         I Geometry Check DISP Max/Min Output Cor. Sys. (GEOMCHECK)
@@ -268,23 +694,31 @@ def set_casecc(self, data: bytes, idtype: str, fdtype: str, size: int=4,
     363 GEOVMXMN         I Geometry Check VELO Max/Min (GEOMCHECK)
     364 GEOVOCID         I Geometry Check VELO Max/Min Output Cor. Sys. (GEOMCHECK)
     365 GEOVNUMB         I Geometry Check No. of VELO Max/Min Output (GEOMCHECK)
+    """
+    """
     366 NTFL             I Internal set id for TFL
     367 BCONTACT         I BCONTACT Set identification number
     368 GPKESET          I Grid point kinetic energy output set (GPKE)
     369 GPKEMEDI         I Grid point kinetic energy media (GPKE)
     370 GPKEFMT          I Grid point kinetic energy format (GPKE)
     371 ELMSUM           I Element Summary Output (ELSUM)
+    """
+    """
     372 WCHK             I Weight Check Flag (WEIGHTCHECK)
     373 WCHKOUT          I Weight Check Output (WEIGHTCHECK)
     374 WCHKSET          I Weight Check Set identification number (WEIGHTCHECK)
     375 WCHKGID          I Weight Check GID (WEIGHTCHECK)
     376 WCHKCGI          I Weight Check CGI (WEIGHTCHECK)
     377 WCHKWM           I Weight Check Weight/Mass units (WEIGHTCHECK)
+    """
+    """
     378 EXSEOUT          I External Superelement Output Flag
     379 EXSEMED          I External Superelement Output Media
     380 EXSEUNIT         I External Superelement Output Unit
     381 EXSEASMB         I External Superelement Output ASMBULK Flag
     382 EXSEEXTB         I External Superelement Output EXTBULK Flag
+    """
+    """
     383 K42GG(2)     CHAR4 Name of direct input (g-set) structural damping matrix K42GG
     385 NK42GG           I Internal set id for K42GG
     386 EXSESTIF         I External Superelement Output STIFFNESS Flag
@@ -297,6 +731,8 @@ def set_casecc(self, data: bytes, idtype: str, fdtype: str, size: int=4,
     394 NSMID            I Non-Structural Mass Set ID
     395 NSELD            I Internal SID for SELOAD
     396 FSELD            I Internal SID for SELOAD scale factor
+    """
+    """
     397 OP4UNIT          I MBDEXPORT OP4 logical unit number
     398 RPOSTS1          I Random RPOSTS1 parameter
     399 CHECK            I ADAMSMNF/MBDEXPORT CHECK flag
@@ -311,6 +747,8 @@ def set_casecc(self, data: bytes, idtype: str, fdtype: str, size: int=4,
     408 MODESCC          I MODES case control existence flag
     409 RMSSF           RS Random RMSSF parameter
     410 UNDEF(3)      None
+    """
+    """
     413 BCSET            I Contact Set ID
     414 BCRESU           I Contact results output
     415 BCMEDIA          I Contact results media code
@@ -597,6 +1035,9 @@ def set_casecc(self, data: bytes, idtype: str, fdtype: str, size: int=4,
       0=none
     657 ACORDCHK      CHAR4 Acoustic max frequency and element order check mode = STOP
     658 UNDEF(542)    None
+    """
+    data += []
+    """
     LCC LSEM(C)           I Number of symmetry subcase coefficients from item SYMFLG
     The value for LCC is set by word 166
       LCC+1 COEF         RS Symmetry subcase coefficients (SUBSEQ or SYMSEQ)
@@ -630,395 +1071,5 @@ def set_casecc(self, data: bytes, idtype: str, fdtype: str, size: int=4,
     Words LCC+5 through max repeat until NANQ occurs
     Words LCC+5 through LCC+15 repeat until End of Record
     """
-    if nastran_format == 'optistruct':
-        raise NotImplementedError(nastran_format)
-        #self.show_data(data, types='ifs')
-    ints = np.frombuffer(data, dtype=idtype).copy()
-    floats = np.frombuffer(data, dtype=fdtype).copy()
-    #print(len(ints[15:31]))
-
-    (subcase_id, mpc, spc, load, method_structure, deform,
-     temp_load, temp_mat_init, tic,
-     nlload_set, nlload_media, nlload_format,
-     dload, freq, tfl) = ints[:15]
-    (symflag,
-     oload_set, oload_media, oload_format,
-     disp_set, disp_media, disp_format,
-     stress_set, stress_media, stress_format,
-     force_set, force_media, force_format,
-     accel_set, accel_media, accel_format,
-     velocity_set, velocity_media, velocity_format,
-     spc_force_set, spc_force_media, spc_force_format,
-     tstep) = ints[15:38]
-
-    subcase = Subcase(id=subcase_id)
-
-    title_subtitle_label = data[38*size:134*size]
-    title_bytes = title_subtitle_label[:32*size]
-    subtitle_bytes = title_subtitle_label[32*size:64*size]
-    label_bytes = title_subtitle_label[64*size:]
-    #print(f'title    = {title_bytes.strip()!r}')
-    #print(f'subtitle = {subtitle_bytes.strip()!r}')
-    #print(f'label    = {label_bytes.strip()!r}')
-    #--------
-    (stpltflag, ax_sym_set, nharmonics, tstrv) = ints[134:138]
-    #self.show_data(data[133*size:158*size], types='sdq')
-    #print(data[200*size:300*size])
-    k2pp_bytes = data[138*size:140*size]
-    m2pp_bytes = data[140*size:142*size]
-    b2pp_bytes = data[142*size:144*size]
-    if size == 8:
-        k2pp_bytes = reshape_bytes_block(k2pp_bytes)
-        m2pp_bytes = reshape_bytes_block(m2pp_bytes)
-        b2pp_bytes = reshape_bytes_block(b2pp_bytes)
-    #print(k2pp, m2pp, b2pp)
-
-    (ofreq, sedr, mfluid, cmethod, sdamp) = ints[144:149]
-    (sdisp_set, sdisp_media, sdisp_format,
-     svelocity_set, svelocity_media, svelocity_format,
-     saccel_set, saccel_media, saccel_format,
-     nonlinear, partn, cyclic, random, nlparm, fmethod,
-     nwords_to_lsem) = ints[150:166]
-    if nwords_to_lsem // 4 not in {150, 300}:
-        self.log.warning(f'nwords_to_lsem={nwords_to_lsem} nwords_to_lsem//4={nwords_to_lsem//4}')
-
-    #assert nwords_to_lsem == 4 * 150, f'nwords_to_lsem={nwords_to_lsem} size={size} nwords_to_lsem//size={nwords_to_lsem//size}'
-    # LCC=1200 @ word 166
-    # LSM @ 658?
-
-    #print(ints[144:166].tolist())
-    (gpforce_set, gpforce_media, gpforce_format,
-     ese_set, ese_media, ese_format,
-     aerof_set, aerof_media, aerof_format,
-     super_seid, super_load, gust, sefinal) = ints[166:179]
-
-    (svector_set, svector_media, svector_format,
-     mpress_set, mpress_media, mpress_format,
-     houtput_media1, houtput_media2, houtput_media3,
-     houtput_format1, houtput_format2, houtput_format3) = ints[190:202]
-    (von_mises_stress, secmd_flag,
-     gpstress_set, gpstress_media, gpstress_format,
-     strfield_set, strfield_media, strfield_format,
-     cload, set2,
-     dsa_part, dsa_store, dsa_output,
-     strain_set, strain_media, strain_format,
-     apressure, trim, modlist, method_fluid,
-     elsdcon_set, elsdcon_media, elsdcon_format,
-     gpsdcon_set, gpsdcon_media, gpsdcon_format,
-     sedv, sere, sers, ) = ints[206:235]
-
-    # 240
-    (boutput_set, boutput_media, boutput_format,
-     diverg, outrcv, statsub_preload) = ints[235:241]
-    adapt, desobj, dessub, subspan, desglb = ints[245:250]
-    analysis_bytes = data[250*size:251*size]
-    (gpq_stress, gpq_force, gpq_strain,
-     suport1, statsub_buckle, bc,
-     auxmodel, adact) = ints[251:259]
-    (pelement_set, pelement_media, pelement_format,
-     vugrid_set, vugrid_media, vugrid_format,
-     mpc_force_set, mpc_force_media, mpc_force_format,
-     umethod, sdamp_fluid, smethod,
-     nlstress_set, nlstress_media, nlstress_format,
-     modtrak,
-     dsa_form, dsa_expo, dsa_begin, dsa_interval,
-     dsa_final, dsa_set) = ints[259:281]
-    sort_flag, rand_bit = ints[281:283]
-    aeconfig_bytes = data[283*size:285*size]
-    aesym_xy, aesym_xz = ints[285:287]
-
-    # ------------
-    # 300
-    (gpstrain_set, gpstrain_media, gpstrain_format,
-     temp_mat, csschd,
-     eke_set, eke_media, eke_format,) = ints[290:298]
-    eke_thresh = floats[298]
-    (ede_set, ede_media, ede_format,) = ints[299:302]
-    ede_thresh = floats[302]
-    ese_thresh = floats[426]
-
-    meffmass_set, meffmas_grid = ints[313:315]
-    meffmass_thresh = floats[315]
-
-    if meffmass_set:
-        options = []
-        if meffmas_grid:
-            options.append(f'GRID={meffmas_grid}')
-        if meffmass_thresh:
-            options.append(f'THRESH={meffmass_thresh}')
-        subcase.add('MEFFMASS', meffmass_set, options, 'STRESS-type')
-
-    autospc_media = ints[328]
-    autospc_fixup = floats[329]
-    autospc_printing, autospc_punch = ints[330:332]
-    nk2pp, nm2pp, nb2pp, nk2gg, nm2gg, nb2gg, np2gg = ints[334:341]
-    gpke_set, gpke_media, gpke_format = ints[367:370]
-
-    # we should be able to find PARA and reverse engineer the rest
-    # of the table (e.g., MSC 2005/NX 2019)
-    #print(data[300*size:10000*size])
-    #ddd
-
-    # 3: C:\MSC.Software\simcenter_nastran_2019.2\tpl_post1\cqromidq4.op2
-    assert sort_flag in [0, 1, 2, 3], sort_flag  # 3
-    #assert rand_bit in [0], rand_bit
-
-    #title = reshape_bytes_block_size(title_bytes, size=size)
-    #subtitle = reshape_bytes_block_size(subtitle_bytes, size=size)
-    #label = reshape_bytes_block_size(label_bytes, size=size)
-    #aeconfig = reshape_bytes_block_size(aeconfig_bytes, size=size)
-    #analysis = reshape_bytes_block_size(analysis_bytes, size=size)
-    if size == 8:
-        title = reshape_bytes_block(title_bytes).decode('latin1').strip()
-        subtitle = reshape_bytes_block(subtitle_bytes).decode('latin1').strip()
-        label = reshape_bytes_block(label_bytes).decode('latin1').strip()
-        aeconfig = reshape_bytes_block(aeconfig_bytes).decode('latin1').strip()
-        analysis = reshape_bytes_block(analysis_bytes)# .decode('latin1').strip()
-    else:
-        title = title_bytes.decode('latin1').strip()
-        subtitle = subtitle_bytes.decode('latin1').strip()
-        label = label_bytes.decode('latin1').strip()
-        aeconfig = aeconfig_bytes.decode('latin1').strip()
-        analysis = analysis_bytes # .decode('latin1').strip()
-    assert r'\x00' not in str(title), f'{title}'
-    assert r'\x00' not in str(subtitle), f'{subtitle}'
-    assert r'\x00' not in str(label), f'{label}'
-    title = title[:58].rstrip()
-    subtitle = subtitle[:55].rstrip()
-    label = label[:58].rstrip()
-    #print(f'title    = {title!r}')
-    #print(f'subtitle = {subtitle!r}')
-    #print(f'label    = {label!r}')
-
-    if analysis == b'\x00\x00\x00\x00':
-        analysis_str = ''
-    elif analysis == b'STAT':
-        analysis_str = 'STATICS'
-    elif analysis == b'MODE':
-        analysis_str = 'MODES'
-    elif analysis == b'RAND':
-        analysis_str = 'RANDOM'
-    elif analysis == b'BUCK':
-        analysis_str = 'Buckling'
-    elif analysis == b'DYNA':
-        analysis_str = 'DYNAMICS'
-    elif analysis == b'CYCM':
-        analysis_str = 'CYCMODES'
-    elif analysis == b'PREL':
-        analysis_str = 'PRELOAD'
-    elif analysis == b'FOUR':
-        analysis_str = 'FOURIER'
-    elif analysis == b'TRAN':
-        analysis_str = 'TRANSIENT'
-    elif analysis == b'SAER':
-        analysis_str = 'SAERO'
-    elif analysis == b'HEAT':
-        analysis_str = 'HEAT'
-    elif analysis == b'MTRA':
-        analysis_str = 'MTRAN'
-    elif analysis == b'MFRE':
-        analysis_str = 'MFREQ'
-    elif analysis == b'DCEI':
-        analysis_str = 'DCEIG'
-    elif analysis == b'DFRE':
-        analysis_str = 'DFREQ'
-    #elif analysis == b'TRAN':
-        #analysis_str = 'TRANSIENT'
-    #elif analysis == b'TRAN':
-        #analysis_str = 'TRANSIENT'
-    #elif analysis == b'TRAN':
-        #analysis_str = 'TRANSIENT'
-    #elif analysis == b'TRAN':
-        #analysis_str = 'TRANSIENT'
-    else:
-        raise NotImplementedError(analysis)
-
-    #sol = 0
-    #if analysis_str:
-        #sol = 200
-
-    if title:
-        subcase.add('TITLE', title, [], 'STRESS-type')
-    if subtitle:
-        subcase.add('SUBTITLE', subtitle, [], 'STRESS-type')
-    if label:
-        subcase.add('LABEL', label, [], 'STRESS-type')
-    if analysis_str:
-        subcase.add('ANALYSIS', analysis_str, [], 'STRESS-type')
-
-    #print('%r' % title)
-    #print('%r' % subtitle)
-    #print('%r' % label)
-    #print('%r' % aeconfig)
-
-    # same up to ~383
-    #qqq
-    if apressure == -1:
-        apressure = 'ALL'
-    if sedr == -1:
-        sedr = 'ALL'
-
-    if desobj < 0:
-        desobj = 0
-
-    basic = {
-        #'SOL' : sol,
-        'MPC' : mpc,
-        'SPC' : spc,
-        'LOAD' : load,
-        'DEFORM' : deform,
-        'TEMP(LOAD)' : temp_load,
-        'TEMP(INIT)' : temp_mat_init,
-        'TEMP(MAT)' : temp_mat,
-        'CSSCHD' : csschd,
-        'IC' : tic,
-        'DLOAD': dload,
-        'FREQ' : freq,
-        'TFL' : tfl,
-        'TSTEP' : tstep,
-        'SEDR' : sedr,
-        'MFLUID' : mfluid,
-        'METHOD' : method_structure,
-        'CMETHOD' : cmethod,
-        'TRIM' : trim,
-        'RANDOM' : random,
-        'STATSUB(PRELOAD)' : statsub_preload,
-        'STATSUB(BUCKLE)' : statsub_buckle,
-        'DESOBJ' : desobj,
-        'DESSUB' : dessub,
-        'DRSPAN' : subspan,
-        'DESGLB' : desglb,
-        'SUPORT1' : suport1,
-        'BC' : bc,
-        'SDAMP(FLUID)' : sdamp_fluid,
-        'SMETHOD' : smethod,
-        'AESYMXY' : aesym_xy,
-        'AESYMXZ' : aesym_xz,
-        'AXISYMMETRIC' : ax_sym_set,
-        'HARMONICS' : nharmonics,
-        'APRESSURE' : apressure,
-        'DIVERG' : diverg,
-        'OUTRCV' : outrcv,
-        'ADAPT' : adapt,
-    }
-    stress_options = {
-        'NLLOAD': (nlload_set, nlload_media, nlload_format),
-        'OLOAD' : (oload_set, oload_media, oload_format),
-
-        'DISP' : (disp_set, disp_media, disp_format),
-        'VELOCITY' : (velocity_set, velocity_media, velocity_format),
-        'ACCEL' : (accel_set, accel_media, accel_format),
-
-        'FORCE' : (force_set, force_media, force_format),
-        'STRESS' : (stress_set, stress_media, stress_format),
-        'STRAIN' : (strain_set, strain_media, strain_format),
-        'SPCFORCE' : (spc_force_set, spc_force_media, spc_force_format),
-        'GPFORCE' : (gpforce_set, gpforce_media, gpforce_format),
-        'ESE' : (ese_set, ese_media, ese_format),
-        'EKE' : (eke_set, eke_media, eke_format),
-        'EDE' : (ede_set, ede_media, ede_format),
-        'GPKE' : (gpke_set, gpke_media, gpke_format),
-
-        'ELSDCON' : (elsdcon_set, elsdcon_media, elsdcon_format),
-        'GPSDCON' : (gpsdcon_set, gpsdcon_media, gpsdcon_format),
-        'GPSTRESS' :(gpstress_set, gpstress_media, gpstress_format),
-        'STRFIELD' :(strfield_set, strfield_media, strfield_format),
-        'GPSTRAIN' : (gpstrain_set, gpstrain_media, gpstrain_format),
-
-        'SDISP' : (sdisp_set, sdisp_media, sdisp_format),
-        'SVELO' : (svelocity_set, svelocity_media, svelocity_format),
-        'SACCEL' : (saccel_set, saccel_media, saccel_format),
-        'SVECTOR' : (svector_set, svector_media, svector_format),
-        'DATAREC' : (pelement_set, pelement_media, pelement_format),
-        'VUGRID' : (vugrid_set, vugrid_media, vugrid_format),
-        'MPCFORCE' : (mpc_force_set, mpc_force_media, mpc_force_format),
-        'NLSTRESS' : (nlstress_set, nlstress_media, nlstress_format),
-        'BOUTPUT' : (boutput_set, boutput_media, boutput_format),
-    }
-    names_namesi = [
-        ('K2PP', k2pp_bytes),
-        ('M2PP', m2pp_bytes),
-        ('B2PP', b2pp_bytes),
-     ]
-    for key, name_bytes in names_namesi:
-        if name_bytes == b'\x00\x00\x00\x00\x00\x00\x00\x00':
-            continue
-        name = name_bytes.decode('latin1').strip()
-        subcase.add(key, name, [], 'STRESS-type')
-
-    for key, value in basic.items():
-        if value == 0:
-            continue
-        #print(key, value)
-        subcase.add(key, value, [], 'STRESS-type')
-
-    for key, value in stress_options.items():
-        (value_set, value_media, value_format) = value
-        if value_set == 0:
-            continue
-        if value_set == -1:
-            value_set = 'ALL'
-
-        #print('***', key, value_set, value_media, value_format)
-
-        if value_media == 0:
-            media = []
-        elif value_media == 1:
-            media = ['PRINT']
-        elif value_media == 2:
-            media = ['PLOT']
-        elif value_media == 3:
-            media = ['PLOT', 'PRINT']
-        elif value_media == 4:
-            media = ['PUNCH']
-        elif value_media == 5:
-            media = ['PRINT', 'PUNCH']
-        elif value_media == 6:
-            media = ['PLOT', 'PUNCH']
-        elif value_media == 7:
-            media = ['PLOT', 'PRINT', 'PUNCH']
-        elif value_media == 17:
-            media = ['PRINT', 'AVERAGE']
-        else:
-            print(subcase)
-            raise NotImplementedError((key, value_media))
-
-        default_sort = []
-        if sort_flag == 0:
-            default_sort = []
-        elif sort_flag == 1:
-            default_sort = ['SORT1']
-        elif sort_flag == 2:
-            default_sort = ['SORT2']
-        #else:
-            #raise NotImplementedError(default_sort)
-
-        if value_format == 0:
-            sort_method = default_sort
-        elif value_format in [1]:
-            sort_method = ['SORT1']
-        elif value_format in [-1]:
-            sort_method = ['SORT2']
-        elif value_format in [2]:
-            sort_method = ['IMAG'] + default_sort
-        elif value_format in [-2]:
-            sort_method = ['SORT2', 'IMAG']
-        elif value_format == 3:
-            sort_method = ['PHASE'] + default_sort
-        elif value_format == -3:
-            sort_method = ['SORT2', 'PHASE']
-        #elif value_format == -1:
-            #sort_method = ['SORT2']
-        else:
-            print(subcase)
-            raise NotImplementedError((key, value_format))
-        options = media + sort_method
-        if key == 'ESE' and ese_thresh:
-            options.append(f'THRESH={ese_thresh}')
-        elif key == 'EKE' and eke_thresh:
-            options.append(f'THRESH={eke_thresh}')
-        elif key == 'EDE' and ede_thresh:
-            options.append(f'THRESH={ede_thresh}')
-
-        subcase.add(key, value_set, options, 'STRESS-type')
-    return subcase
+    asdf
+    assert -999999 not in data

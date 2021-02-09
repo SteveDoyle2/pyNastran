@@ -11,6 +11,7 @@ defines:
 import os
 from struct import Struct
 from numpy import array, unique #, hstack
+from typing import List, Optional, TYPE_CHECKING
 
 from cpylog import get_logger2
 from pyNastran.utils import check_path
@@ -20,11 +21,18 @@ from pyNastran.bdf.mesh_utils.bdf_renumber import bdf_renumber
 
 from pyNastran.converters.aflr.ugrid.ugrid_reader import (
     UGRID, determine_dytpe_nfloat_endian_from_ugrid_filename)
+if TYPE_CHECKING:
+    from cpylog import SimpleLogger
+    from pyNastran.bdf.bdf import BDF
 
 
-def merge_ugrid3d_and_bdf_to_ugrid3d_filename(ugrid_filename, bdf_filename, ugrid_filename_out,
-                                              pshell_pids_to_remove,
-                                              update_equivalence=True, tol=0.01, log=None):
+def merge_ugrid3d_and_bdf_to_ugrid3d_filename(ugrid_filename: str,
+                                              bdf_filename: str,
+                                              ugrid_filename_out: str,
+                                              pshell_pids_to_remove: List[int],
+                                              update_equivalence: bool=True,
+                                              tol: float=0.01,
+                                              log: Optional[SimpleLogger]=None):
     """
     assumes cid=0
 
@@ -42,6 +50,7 @@ def merge_ugrid3d_and_bdf_to_ugrid3d_filename(ugrid_filename, bdf_filename, ugri
         the equivalence tolerance
     update_equivalence : bool; default=True
         calls ``equivalence_ugrid3d_and_bdf_to_bdf`` to equivalence nodes
+
     """
     #base, ext = os.path.splitext(ugrid_filename_out)
     #bdf_filename = base + '.bdf'
@@ -196,9 +205,10 @@ def merge_ugrid3d_and_bdf_to_ugrid3d_filename(ugrid_filename, bdf_filename, ugri
 
 
 
-def equivalence_ugrid3d_and_bdf_to_bdf(ugrid_filename, bdf_filename,
-                                       pshell_pids_to_remove,
-                                       tol=0.01, renumber=True, log=None):
+def equivalence_ugrid3d_and_bdf_to_bdf(ugrid_filename: str, bdf_filename: str,
+                                       pshell_pids_to_remove: List[int],
+                                       tol: float=0.01, renumber: bool=True,
+                                       log: Optional[SimpleLogger]=None):
     """
     Merges a UGRID3D (*.ugrid) with a BDF and exports a BDF that is
     equivalenced and renumbered.
@@ -232,68 +242,9 @@ def equivalence_ugrid3d_and_bdf_to_bdf(ugrid_filename, bdf_filename,
 
     update_merge = True
     if update_merge:
-        ugrid_model = UGRID(log=log, debug=False)
-        ugrid_model.read_ugrid(ugrid_filename)
-
-        bdf_model = read_bdf(bdf_filename, xref=False, log=log)
-        #bdf_model.write_bdf(bdf_merged_filename, interspersed=False, enddata=False)
-
-        tol = 0.01
-        nid0 = max(bdf_model.nodes) + 1  # new node ids start at max+1
-        nid_offset = nid0 - 1            # node_ids are 1-based, so we must offset them
-        eid = max(bdf_model.elements) + 1
-
-        cp = None
-        for nid, node in enumerate(ugrid_model.nodes):
-            #assert len(node) == 3, node
-            card = ['GRID', nid + nid0, cp] + list(node)
-            bdf_model.add_card(card, 'GRID', is_list=True)
-            #f.write(print_card_double(card))
-
-        pid_solid = 100
-        mid = 1
-
-        pids = unique(ugrid_model.pids)
-        for pidi in pids:
-            if pidi not in pshell_pids_to_remove:
-                card = ['PSHELL', pidi, mid, 0.1]
-                bdf_model.add_card(card, 'PSHELL', is_list=True)
-
-        card = ['PSOLID', pid_solid, mid]
-        bdf_model.add_card(card, 'PSOLID', is_list=True)
-
-        card = ['MAT1', mid, 3.0e7, None, 0.3]
-        bdf_model.add_card(card, 'MAT1', is_list=True)
-
-        shells = [
-            ('CQUAD4', ugrid_model.quads),
-            ('CTRIA3', ugrid_model.tris),
-        ]
-        for card_type, card_nodes in shells:
-            if card_nodes.shape[0]:
-                for pid, nodes in zip(ugrid_model.pids, card_nodes + nid_offset):
-                    if pid not in pshell_pids_to_remove:
-                        card = [card_type, eid, pid, ] + list(nodes)
-                        bdf_model.add_card(card, card_type, is_list=True)
-                        eid += 1
-
-        solids = [
-            ('CTETRA', ugrid_model.tets),
-            ('CPYRAM', ugrid_model.penta5s),
-            ('CPENTA', ugrid_model.penta6s),
-            ('CHEXA', ugrid_model.hexas),
-        ]
-        for card_type, card_nodes in solids:
-            if card_nodes.shape[0]:
-                for nodes in card_nodes + nid_offset:
-                    card = [card_type, eid, pid_solid, ] + list(nodes)
-                    bdf_model.add_card(card, card_type, is_list=True)
-                    eid += 1
-
-        # tol = min_edge_length / 2.0
-        # TODO:  remove this...
-        bdf_model.write_bdf('model_join.bdf', interspersed=False)
-        bdf_model.cross_reference()
+        bdf_model = _update_merge(ugrid_filename, bdf_filename,
+                                  pshell_pids_to_remove,
+                                  tol=tol, log=log)
         bdf_equivalence_nodes(bdf_model, bdf_equivalence_filename, tol,
                               renumber_nodes=False, neq_max=10, xref=False, log=log)
 
@@ -319,6 +270,73 @@ def equivalence_ugrid3d_and_bdf_to_bdf(ugrid_filename, bdf_filename,
 
     #bdf_model.write_bdf(bdf_renumber_filename, interspersed=False)
 
+def _update_merge(ugrid_filename: str,
+                  bdf_filename: str,
+                  pshell_pids_to_remove: List[int],
+                  tol: float,
+                  log: Optional[SimpleLogger]=None) -> BDF:
+    ugrid_model = UGRID(log=log, debug=False)
+    ugrid_model.read_ugrid(ugrid_filename)
+
+    bdf_model = read_bdf(bdf_filename, xref=False, log=log)
+    #bdf_model.write_bdf(bdf_merged_filename, interspersed=False, enddata=False)
+
+    nid0 = max(bdf_model.nodes) + 1  # new node ids start at max+1
+    nid_offset = nid0 - 1            # node_ids are 1-based, so we must offset them
+    eid = max(bdf_model.elements) + 1
+
+    cp = None
+    for nid, node in enumerate(ugrid_model.nodes):
+        #assert len(node) == 3, node
+        card = ['GRID', nid + nid0, cp] + list(node)
+        bdf_model.add_card(card, 'GRID', is_list=True)
+        #f.write(print_card_double(card))
+
+    pid_solid = 100
+    mid = 1
+
+    pids = unique(ugrid_model.pids)
+    for pidi in pids:
+        if pidi not in pshell_pids_to_remove:
+            card = ['PSHELL', pidi, mid, 0.1]
+            bdf_model.add_card(card, 'PSHELL', is_list=True)
+
+    card = ['PSOLID', pid_solid, mid]
+    bdf_model.add_card(card, 'PSOLID', is_list=True)
+
+    card = ['MAT1', mid, 3.0e7, None, 0.3]
+    bdf_model.add_card(card, 'MAT1', is_list=True)
+
+    shells = [
+        ('CQUAD4', ugrid_model.quads),
+        ('CTRIA3', ugrid_model.tris),
+    ]
+    for card_type, card_nodes in shells:
+        if card_nodes.shape[0]:
+            for pid, nodes in zip(ugrid_model.pids, card_nodes + nid_offset):
+                if pid not in pshell_pids_to_remove:
+                    card = [card_type, eid, pid, ] + list(nodes)
+                    bdf_model.add_card(card, card_type, is_list=True)
+                    eid += 1
+
+    solids = [
+        ('CTETRA', ugrid_model.tets),
+        ('CPYRAM', ugrid_model.penta5s),
+        ('CPENTA', ugrid_model.penta6s),
+        ('CHEXA', ugrid_model.hexas),
+    ]
+    for card_type, card_nodes in solids:
+        if card_nodes.shape[0]:
+            for nodes in card_nodes + nid_offset:
+                card = [card_type, eid, pid_solid, ] + list(nodes)
+                bdf_model.add_card(card, card_type, is_list=True)
+                eid += 1
+
+    # tol = min_edge_length / 2.0
+    # TODO:  remove this...
+    bdf_model.write_bdf('model_join.bdf', interspersed=False)
+    bdf_model.cross_reference()
+    return bdf_model
 
 def main():  # pragma: no cover
     """demo problem"""

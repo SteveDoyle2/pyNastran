@@ -1,8 +1,12 @@
+from __future__ import annotations
 from collections import defaultdict
 from struct import pack, Struct
+from typing import List, TYPE_CHECKING
 from pyNastran.op2.errors import SixtyFourBitError
+if TYPE_CHECKING:
+    from pyNastran.op2.op2 import OP2
 
-def write_geom1(op2_file, op2_ascii, obj, endian=b'<'):
+def write_geom1(op2_file, op2_ascii, obj: OP2, endian: bytes=b'<'):
     #if not hasattr(obj, 'nodes'):
         #return
     if not hasattr(obj, 'nodes'):
@@ -150,7 +154,7 @@ def write_block(op2_file, op2_ascii, nvalues, key):
     op2_ascii.write(str(key) + '\n')
     return nbytes
 
-def init_table(table_name):
+def init_table(table_name: bytes) -> List[int]:
     data = [
         4, 2, 4,
         #4, 2,4,
@@ -161,7 +165,7 @@ def init_table(table_name):
     ]
     return data
 
-def write_geom_header(table_name, op2_file, op2_ascii, endian=b'<'):
+def write_geom_header(table_name: bytes, op2_file, op2_ascii, endian: bytes=b'<'):
     op2_ascii.write('----------\n')
     data = init_table(table_name)
     op2_file.write(pack('4i 8s i 3i', *data))

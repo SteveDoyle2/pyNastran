@@ -102,6 +102,7 @@ class AltGeometry:
         if representation not in self.representations:
             msg = 'representation=%r is invalid\nrepresentations=%r' % (
                 representation, self.representations)
+            raise RuntimeError(msg)
         self.representation = representation
 
     def __deepcopy__(self, memo):
@@ -201,4 +202,5 @@ class AltGeometry:
         if representation not in self.representations:
             msg = 'representation=%r is invalid\nrepresentations=%r' % (
                 representation, self.representations)
+            raise RuntimeError(msg)
         self._representation = representation

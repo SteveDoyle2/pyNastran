@@ -4,9 +4,7 @@ defines:
 
 """
 from copy import deepcopy
-
 import numpy as np
-
 from cpylog import get_logger2
 
 

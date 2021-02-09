@@ -1927,6 +1927,7 @@ class OES(OP2Common):
 
         if self._results.is_not_saved(result_name):
             return ndata, None, None
+        log = self.log
         self._results._found_result(result_name)
         slot = self.get_result(result_name)
 
@@ -1955,25 +1956,9 @@ class OES(OP2Common):
                 obj.ielement = ielement2
             else:
                 if is_vectorized and self.use_vector:  # pragma: no cover
-                    self.log.debug('vectorize CELASx real SORT%s' % self.sort_method)
-                fmt1 = mapfmt(self._endian + self._analysis_code_fmt + b'f', self.size)
-                struct1 = Struct(fmt1)
-                for i in range(nelements):
-                    edata = data[n:n+ntotal]
-                    out = struct1.unpack(edata)
-                    (eid_device, ox) = out
-                    eid, dt = get_eid_dt_from_eid_device(
-                        eid_device, self.nonlinear_factor, self.sort_method)
-                    if eid <= 0: # pragma: no cover
-                        msg = 'table_name=%s sort_method=%s eid_device=%s nonlinear_factor=%s'  % (
-                            self.table_name_str, self.sort_method,
-                            eid_device, self.nonlinear_factor)
-                        raise RuntimeError(msg)
-                    if self.is_debug_file:
-                        self.binary_debug.write('  eid=%i result%i=[%i, %f]\n' % (
-                            eid, i, eid_device, ox))
-                    obj.add_sort1(dt, eid, ox)
-                    n += ntotal
+                    log.debug('vectorize CELASx real SORT%s' % self.sort_method)
+                n = oes_celas_real_2(self, data, obj, nelements, ntotal, dt)
+
         elif self.format_code in [2, 3] and self.num_wide == 3:  # imag
             ntotal = 12 * self.factor
             nelements = ndata // ntotal
@@ -2011,25 +1996,11 @@ class OES(OP2Common):
                 obj.ielement = ielement2
             else:
                 if is_vectorized and self.use_vector:  # pragma: no cover
-                    self.log.debug('vectorize CELASx imag SORT%s' % self.sort_method)
-                struct1 = Struct(self._endian + mapfmt(self._analysis_code_fmt + b'2f', self.size))
-                for i in range(nelements):
-                    edata = data[n:n + ntotal]
-                    out = struct1.unpack(edata)
-                    (eid_device, axial_real, axial_imag) = out
-                    eid, dt = get_eid_dt_from_eid_device(
-                        eid_device, self.nonlinear_factor, self.sort_method)
+                    log.debug('vectorize CELASx imag SORT%s' % self.sort_method)
 
-                    if is_magnitude_phase:
-                        axial = polar_to_real_imag(axial_real, axial_imag)
-                    else:
-                        axial = complex(axial_real, axial_imag)
-
-                    if self.is_debug_file:
-                        self.binary_debug.write('  eid=%i result%i=[%i, %f, %f]\n' % (
-                            eid, i, eid_device, axial_real, axial_imag))
-                    obj.add_sort1(dt, eid, axial)
-                    n += ntotal
+                n = oes_celas_complex_3(self, data, obj,
+                                        nelements, ntotal,
+                                        dt, is_magnitude_phase)
         elif self.format_code == 1 and self.num_wide == 3: # random
             raise RuntimeError(self.code_information())
             #msg = self.code_information()
@@ -2113,20 +2084,8 @@ class OES(OP2Common):
                     self.binary_debug.write('  cap = %i  # assume 1 cap when there could have been multiple\n' % ndata)
                     self.binary_debug.write('  #elementi = [eid_device, axial, axial_margin, torsion, torsion_margin]\n')
                     self.binary_debug.write('  nelements=%i; nnodes=1 # centroid\n' % nelements)
+                n = oes_crod_real_5(self, data, obj, nelements, ntotal, dt)
 
-                struct1 = Struct(self._endian + mapfmt(self._analysis_code_fmt + b'4f', self.size))
-                for unused_i in range(nelements):
-                    edata = data[n:n+ntotal]
-                    out = struct1.unpack(edata)
-                    (eid_device, axial, axial_margin, torsion, torsion_margin) = out
-                    eid, dt = get_eid_dt_from_eid_device(
-                        eid_device, self.nonlinear_factor, self.sort_method)
-
-                    if self.is_debug_file:
-                        self.binary_debug.write('  eid=%i; C=[%s]\n' % (
-                            eid, ', '.join(['%r' % di for di in out])))
-                    obj.add_sort1(dt, eid, axial, axial_margin, torsion, torsion_margin)
-                    n += ntotal
         elif result_type == 1 and self.num_wide == 5: # imag
             ntotal = 20 * self.factor
             nelements = ndata // ntotal
@@ -2154,24 +2113,8 @@ class OES(OP2Common):
             else:
                 if is_vectorized and self.use_vector:  # pragma: no cover
                     self.log.debug('vectorize CROD imag SORT%s' % self.sort_method)
-                fmt = mapfmt(self._endian + self._analysis_code_fmt + b'4f', self.size)
-                struct1 = Struct(fmt)
-                for unused_i in range(nelements):
-                    edata = data[n:n + ntotal]
-                    out = struct1.unpack(edata)
-                    (eid_device, axial_real, axial_imag, torsion_real, torsion_imag) = out
-                    eid, dt = get_eid_dt_from_eid_device(
-                        eid_device, self.nonlinear_factor, self.sort_method)
+                n = oes_crod_complex_5(self, data, obj, nelements, ntotal, dt, is_magnitude_phase)
 
-                    if is_magnitude_phase:
-                        axial = polar_to_real_imag(axial_real, axial_imag)
-                        torsion = polar_to_real_imag(torsion_real, torsion_imag)
-                    else:
-                        axial = complex(axial_real, axial_imag)
-                        torsion = complex(torsion_real, torsion_imag)
-
-                    obj.add_sort1(dt, eid, axial, torsion)
-                    n += ntotal
         #elif self.format_code in [2, 3] and self.num_wide == 8:  # is this imag ???
             #ntotal = 32
             #s = self.self.struct_i
@@ -2741,6 +2684,7 @@ class OES(OP2Common):
 
         #print('numwide real=%s imag=%s random=%s' % (numwide_real, numwide_imag, numwide_random2))
         self._data_factor = nnodes_expected
+        log = self.log
         if self.format_code == 1 and self.num_wide == numwide_real:  # real
             ntotal = (16 + 84 * nnodes_expected) * self.factor
             nelements = ndata // ntotal
@@ -2784,7 +2728,7 @@ class OES(OP2Common):
                         msg += 'grid_device.shape=%s; size=%s\n' % (str(grid_device.shape), grid_device.size)
                         #msg += 'nids=%s' % nids
                         raise ValueError(msg)
-                    #self.log.debug(f'cids = {np.unique(cids)}')
+                    #log.debug(f'cids = {np.unique(cids)}')
                     obj.element_cid[itotal:itotali, 0] = eids
                     obj.element_cid[itotal:itotali, 1] = cids
 
@@ -2815,7 +2759,7 @@ class OES(OP2Common):
                 obj.ielement = itotali
             else:
                 if is_vectorized and self.use_vector:  # pragma: no cover
-                    self.log.debug(f'vectorize CSolid real SORT{self.sort_method}')
+                    log.debug(f'vectorize CSolid real SORT{self.sort_method}')
                 n = oes_csolid_real(self, data, obj,
                                     nelements, dt,
                                     element_name, nnodes_expected,
@@ -2870,7 +2814,7 @@ class OES(OP2Common):
                 obj.ielement = ielement2
             else:
                 if is_vectorized and self.use_vector:  # pragma: no cover
-                    self.log.debug(f'vectorize CSolid imag SORT{self.sort_method}')
+                    log.debug(f'vectorize CSolid imag SORT{self.sort_method}')
                 n = oes_csolid_complex(self, data, obj,
                                        nelements, # nnodes,
                                        element_name, nnodes_expected,
@@ -2878,7 +2822,7 @@ class OES(OP2Common):
 
         elif self.format_code == 1 and self.num_wide == numwide_random: # random
             if not self.is_sort1:
-                self.log.debug(f'support CSolid random SORT{self.sort_method}')
+                log.debug(f'support CSolid random SORT{self.sort_method}')
                 return ndata, None, None
 
             ntotal = numwide_random * 4
@@ -2954,7 +2898,7 @@ class OES(OP2Common):
                 obj.ielement = itotali
             else:
                 if is_vectorized and self.use_vector and obj.itime == 0:  # pragma: no cover
-                    self.log.debug(f'vectorize CSolid random SORT{self.sort_method}')
+                    log.debug(f'vectorize CSolid random SORT{self.sort_method}')
                 n = oes_csolid_random(self, data, obj, nelements,
                                       element_name, nnodes_expected,
                                       preline1, preline2)
@@ -3108,7 +3052,8 @@ class OES(OP2Common):
             stress_strain = 'strain'
 
         if prefix == '' and postfix == '':
-             prefix = stress_strain + '.'
+            prefix = stress_strain + '.'
+
         etype_map = {
             300 : ('chexa', 8, 'CHEXA8'),
             301 : ('cpenta', 6, 'CPENTA6'),
@@ -3417,6 +3362,7 @@ class OES(OP2Common):
 
         """
         n = 0
+        log = self.log
         if self.is_stress:
             #obj_vector_real = RealSolidStressArray
             #obj_vector_complex = ComplexSolidStressArray
@@ -3574,84 +3520,11 @@ class OES(OP2Common):
             else:
                 #if is_vectorized and self.use_vector:  # pragma: no cover
                     #self.log.debug('vectorize CSolid real SORT%s' % self.sort_method)
-
-                # ELTYPE =140 Hyperelastic 8-noded hexahedron element linear format
-                # (HEXAFD)
-                # 2 TYPE CHAR4 Gaus
-                #
-                # 3 ID I
-                # 4 SX RS
-                # 5 SXY RS
-                # 6 PA RS
-                # 7 AX RS
-                # 8 AY RS
-                # 9 AZ RS
-                # 10 PRESSURE RS
-                # 11 SY RS
-                # 12 SYZ RS
-                # 13 PB RS
-                # 14 BX RS
-                # 15 BY RS
-                # 16 BZ RS
-                # 17 SZ RS
-                # 18 SZX RS
-                # 19 PC RS
-                # 20 CX RS
-                # 21 CY RS
-                # 22 CZ RS
-                # Words 3 through 22 repeat 008 times
-                struct1 = Struct(self._endian + self._analysis_code_fmt + b'4s')
-                struct2 = Struct(self._endian + b'i19f')
-                if self.is_debug_file:
-                    msg = (
-                        f'{self.element_name}-{self.element_type} nelements={nelements} '
-                        f'nnodes={nnodes_expected}; '
-                        'C=[oxx, oxy, pa, ax, ay, az, pressure, '
-                        'oyy, oyz, pb, bx, by, bz, '
-                        'ozz, oxz, pc, cx, cy, cz]\n')
-                    self.binary_debug.write(msg)
-
-                for unused_i in range(nelements):
-                    edata = data[n:n+8]
-                    out = struct1.unpack(edata)
-                    (eid_device, grid_gauss, ) = out
-                    #print(out)
-                    eid, dt = get_eid_dt_from_eid_device(
-                        eid_device, self.nonlinear_factor, self.sort_method)
-
-                    if self.is_debug_file:
-                        self.binary_debug.write('%s - eid=%i; %s\n' % (preline1, eid, str(out)))
-                    #assert nnodes < 21, 'print_block(data[n:n+16])'  #self.print_block(data[n:n+16])
-
-                    n += 8
-                    for inode in range(nnodes_expected):  # nodes pts, no centroid
-                        out = struct2.unpack(data[n:n + 80]) # 4*20 = 80
-                        if self.is_debug_file:
-                            self.binary_debug.write('%s - %s\n' % (preline2, str(out)))
-                        # nid, oxx, oxy, pa, ax, ay, az, pressure,
-                        #      oyy, oyz, pb, bx, by, bz,
-                        #      ozz, oxz, pc, cx, cy, cz
-                        (grid_device,
-                         oxx, oxy, pa, ax, ay, az, pressure,
-                         oyy, oyz, pb, bx, by, bz,
-                         ozz, oxz, pc, cx, cy, cz) = out
-                        #print(out)
-
-                        if self.is_debug_file:
-                            self.binary_debug.write('  eid=%s inode=%i; C=[%s]\n' % (
-                                eid, grid_device, ', '.join(['%r' % di for di in out])))
-
-                        #if 0:
-                            #if inode == 0:
-                                #  this is correct, but fails
-                                #element_name = self.element_name + str(nnodes)
-                                #obj.add_eid_sort1(element_name, cid, dt, eid, grid,
-                                                  #sxx, syy, szz, txy, tyz, txz, ovm)
-                            #else:
-                                #obj.add_node_sort1(dt, eid, inode, grid,
-                                                   #sxx, syy, szz, txy, tyz, txz, ovm)
-                        n += 80
-            self.log.warning(f'skipping {self.table_name_str}: {self.element_name}-{self.element_type} linear hyperelastic cosine {word}')
+                n = oes_csolid_linear_hyperelastic_cosine_real(
+                    self, data,
+                    nelements, nnodes_expected,
+                    preline1, preline2)
+            log.warning(f'skipping {self.table_name_str}: {self.element_name}-{self.element_type} linear hyperelastic cosine {word}')
             return n, None, None
         else:  # pragma: no cover
             raise RuntimeError(self.code_information())
@@ -3829,76 +3702,10 @@ class OES(OP2Common):
             else:
                 #if is_vectorized and self.use_vector:  # pragma: no cover
                     #self.log.debug('vectorize CSolid real SORT%s' % self.sort_method)
+                n = oes_csolid_linear_hyperelastic_real(self, data, obj, nelements,
+                                                        nnodes_expected,
+                                                        preline1, preline2)
 
-                #ELTYPE =163 Linear form for hyperelastic 20 node HEXAFD
-                #2 TYPE CHAR4 Gaus
-                #
-                #3 ID I
-                #4 SX RS
-                #5 SXY RS
-                #6 PA RS
-                #7 AX RS
-                #8 AY RS
-                #9 AZ RS
-                #10 PRESSURE RS
-                #11 SY RS
-                #12 SYZ RS
-                #13 PB RS
-                #14 BX RS
-                #15 BY RS
-                #16 BZ RS
-                #17 SZ RS
-                #18 SZX RS
-                #19 PC RS
-                #20 CX RS
-                #21 CY RS
-                #22 CZ RS
-                #Words 3 through 22 repeat 027 times
-                struct1 = Struct(self._endian + self._analysis_code_fmt + b'4s')
-                struct2 = Struct(self._endian + b'i19f')
-                if self.is_debug_file:
-                    #msg = (
-                        #f'{self.element_name}-{self.element_type} nelements={nelements} '
-                        #f'nnodes={nnodes_expected}; '
-                        #'C=[sxx, syy, szz, txy, tyz, txz, pressure, '
-                        #'evol, exx, eyy, ezz, exy, eyz, exz]\n')
-                    self.binary_debug.write(msg)
-
-                for unused_i in range(nelements):
-                    edata = data[n:n+8]
-                    out = struct1.unpack(edata)
-                    (eid_device, unused_abcd, ) = out
-                    eid, dt = get_eid_dt_from_eid_device(
-                        eid_device, self.nonlinear_factor, self.sort_method)
-
-                    if self.is_debug_file:
-                        self.binary_debug.write('%s - eid=%i; %s\n' % (preline1, eid, str(out)))
-                    #assert nnodes < 21, 'print_block(data[n:n+16])'  #self.print_block(data[n:n+16])
-
-                    n += 8
-                    for unused_inode in range(nnodes_expected):  # nodes pts, no centroid
-                        out = struct2.unpack(data[n:n + 80]) # 4*20 = 80
-                        if self.is_debug_file:
-                            self.binary_debug.write('%s - %s\n' % (preline2, str(out)))
-                        #(grid_device, sxx, syy, szz, txy, tyz, txz, pressure,
-                         #evol, exx, eyy, ezz, exy, eyz, exz) = out
-                        #print(out)
-
-                        if self.is_debug_file:
-                            self.binary_debug.write('  eid=%s inode=%i; C=[%s]\n' % (
-                                eid, grid_device, ', '.join(['%r' % di for di in out])))
-
-                        #grid = grid_device
-                        #if 0:
-                            #if inode == 0:
-                                ##  this is correct, but fails
-                                ##element_name = self.element_name + str(nnodes)
-                                #obj.add_eid_sort1(element_name, cid, dt, eid, grid,
-                                                  #sxx, syy, szz, txy, tyz, txz, ovm)
-                            #else:
-                                #obj.add_node_sort1(dt, eid, inode, grid,
-                                                   #sxx, syy, szz, txy, tyz, txz, ovm)
-                        n += 80
             self.log.warning(f'skipping {self.table_name_str}: {self.element_name}-{self.element_type} linear hyperelastic {word}')
         else:  # pragma: no cover
             raise RuntimeError(self.code_information() +
@@ -4144,7 +3951,7 @@ class OES(OP2Common):
                                 eid, grid_device, ', '.join(['%r' % di for di in out])))
 
                         grid = grid_device
-                        if 0:
+                        if 0:  # pragma: no cover
                             if inode == 0:
                                 #  this is correct, but fails
                                 #element_name = self.element_name + str(nnodes)
@@ -5109,6 +4916,7 @@ class OES(OP2Common):
         if self._results.is_not_saved(result_name):
             return ndata, None, None
         self._results._found_result(result_name)
+        log = self.log
 
         nnodes_all = nnodes + 1 # adding the centroid
 
@@ -5190,7 +4998,7 @@ class OES(OP2Common):
                 assert obj.element_node[:, 0].min() > 0, obj.element_node[:, 0]
             else:
                 if is_vectorized and self.use_vector:  # pragma: no cover
-                    self.log.debug(f'vectorize nodal shell: {element_name_type}... real SORT{sort_method}')
+                    log.debug(f'vectorize nodal shell: {element_name_type}... real SORT{sort_method}')
 
                 n = oes_cquad4_144_real(self, data, ndata, obj,
                                         nelements, nnodes, dt)
@@ -5252,7 +5060,7 @@ class OES(OP2Common):
                 obj.ielement = ielement2
             else:
                 if is_vectorized and self.use_vector:  # pragma: no cover
-                    self.log.debug(f'vectorize CQUAD4-144/{element_name_type}... imag SORT{sort_method}')
+                    log.debug(f'vectorize CQUAD4-144/{element_name_type}... imag SORT{sort_method}')
                 # nnodes_cquad4 = 5
                 # nelements = 3
                 # nlayers = nelements * nodes_cquad4 * 2 = 3*5*2 = 30
@@ -5326,7 +5134,7 @@ class OES(OP2Common):
                 obj.data[obj.itime, istart:iend, :] = results
             else:
                 if is_vectorized and self.use_vector:  # pragma: no cover
-                    self.log.debug(f'vectorize CQUAD4-144/{element_name_type}... random SORT{sort_method}')
+                    log.debug(f'vectorize CQUAD4-144/{element_name_type}... random SORT{sort_method}')
                 #numwide_random = 2 + 9 * nnodes_all
                 n = oes_cquad4_144_random(self, data, obj, nelements, nnodes, ndata)
 
@@ -5549,6 +5357,7 @@ class OES(OP2Common):
         self._results._found_result(result_name)
         #print(self.code_information())
 
+        log = self.log
         if self.format_code == 1 and self.num_wide == 13 and self.element_type in [88, 90]:  # real
             # single layered hyperelastic (???) ctria3, cquad4
             ntotal = 52 * self.factor  # 4*13
@@ -5579,7 +5388,7 @@ class OES(OP2Common):
                 obj.itotal = ielement2
             else:
                 if is_vectorized and self.use_vector:  # pragma: no cover
-                    self.log.debug('vectorize CTRIA3/CQUAD4_NL real SORT%s' % self.sort_method)
+                    log.debug('vectorize CTRIA3/CQUAD4_NL real SORT%s' % self.sort_method)
                 struct1 = Struct(self._endian + self._analysis_code_fmt + b'12f')  # 1+12=13
                 for unused_i in range(nelements):
                     edata = data[n:n + ntotal]
@@ -5656,7 +5465,7 @@ class OES(OP2Common):
                 obj.itotal = itotal2
             else:
                 if is_vectorized and self.use_vector:  # pragma: no cover
-                    self.log.debug('vectorize CTRIA3/CQUAD4_NL imag SORT%s' % self.sort_method)
+                    log.debug('vectorize CTRIA3/CQUAD4_NL imag SORT%s' % self.sort_method)
                 etype = self.element_type
                 struct1 = Struct(self._endian + mapfmt(self._analysis_code_fmt + b'24f', self.size)) # 1+24=25
                 for unused_i in range(nelements):
@@ -7291,6 +7100,53 @@ class OES(OP2Common):
             assert eids.min() > 0, eids.min()
             obj.element[ielement:ielement2] = eids
 
+def oes_celas_real_2(self, data: bytes,
+                     obj: Union[RealSpringStressArray, RealSpringStrainArray],
+                     nelements: int, ntotal: int, dt: Any) -> int:
+    n = 0
+    fmt1 = mapfmt(self._endian + self._analysis_code_fmt + b'f', self.size)
+    struct1 = Struct(fmt1)
+    for i in range(nelements):
+        edata = data[n:n+ntotal]
+        out = struct1.unpack(edata)
+        (eid_device, ox) = out
+        eid, dt = get_eid_dt_from_eid_device(
+            eid_device, self.nonlinear_factor, self.sort_method)
+        if eid <= 0: # pragma: no cover
+            msg = 'table_name=%s sort_method=%s eid_device=%s nonlinear_factor=%s'  % (
+                self.table_name_str, self.sort_method,
+                eid_device, self.nonlinear_factor)
+            raise RuntimeError(msg)
+        if self.is_debug_file:
+            self.binary_debug.write('  eid=%i result%i=[%i, %f]\n' % (
+                eid, i, eid_device, ox))
+        obj.add_sort1(dt, eid, ox)
+        n += ntotal
+    return n
+
+def oes_celas_complex_3(self, data, obj,
+                        nelements, ntotal,
+                        dt, is_magnitude_phase):
+    n = 0
+    struct1 = Struct(self._endian + mapfmt(self._analysis_code_fmt + b'2f', self.size))
+    for i in range(nelements):
+        edata = data[n:n + ntotal]
+        out = struct1.unpack(edata)
+        (eid_device, axial_real, axial_imag) = out
+        eid, dt = get_eid_dt_from_eid_device(
+            eid_device, self.nonlinear_factor, self.sort_method)
+
+        if is_magnitude_phase:
+            axial = polar_to_real_imag(axial_real, axial_imag)
+        else:
+            axial = complex(axial_real, axial_imag)
+
+        if self.is_debug_file:
+            self.binary_debug.write('  eid=%i result%i=[%i, %f, %f]\n' % (
+                eid, i, eid_device, axial_real, axial_imag))
+        obj.add_sort1(dt, eid, axial)
+        n += ntotal
+    return n
 
 def oes_cquad4_33_complex_vm_17(self, data: bytes,
                                 obj: Union[ComplexPlateVMStressArray, ComplexPlateVMStrainArray],
@@ -7374,6 +7230,45 @@ def oes_cbeam_real_111(self, data: bytes,
             out = s2.unpack(edata)
             # (grid, sd, sxc, sxd, sxe, sxf, smax, smin, mst, msc) = out
             obj.add_sort1(dt, eid, *out)
+    return n
+
+def oes_crod_real_5(self, data, obj, nelements, ntotal, dt) -> int:
+    n = 0
+    struct1 = Struct(self._endian + mapfmt(self._analysis_code_fmt + b'4f', self.size))
+    for unused_i in range(nelements):
+        edata = data[n:n+ntotal]
+        out = struct1.unpack(edata)
+        (eid_device, axial, axial_margin, torsion, torsion_margin) = out
+        eid, dt = get_eid_dt_from_eid_device(
+            eid_device, self.nonlinear_factor, self.sort_method)
+
+        if self.is_debug_file:
+            self.binary_debug.write('  eid=%i; C=[%s]\n' % (
+                eid, ', '.join(['%r' % di for di in out])))
+        obj.add_sort1(dt, eid, axial, axial_margin, torsion, torsion_margin)
+        n += ntotal
+    return n
+
+def oes_crod_complex_5(self, data, obj, nelements, ntotal, dt, is_magnitude_phase) -> int:
+    n = 0
+    fmt = mapfmt(self._endian + self._analysis_code_fmt + b'4f', self.size)
+    struct1 = Struct(fmt)
+    for unused_i in range(nelements):
+        edata = data[n:n + ntotal]
+        out = struct1.unpack(edata)
+        (eid_device, axial_real, axial_imag, torsion_real, torsion_imag) = out
+        eid, dt = get_eid_dt_from_eid_device(
+            eid_device, self.nonlinear_factor, self.sort_method)
+
+        if is_magnitude_phase:
+            axial = polar_to_real_imag(axial_real, axial_imag)
+            torsion = polar_to_real_imag(torsion_real, torsion_imag)
+        else:
+            axial = complex(axial_real, axial_imag)
+            torsion = complex(torsion_real, torsion_imag)
+
+        obj.add_sort1(dt, eid, axial, torsion)
+        n += ntotal
     return n
 
 def oes_crod_random_3(self, data: bytes, ndata: int,
@@ -8864,6 +8759,7 @@ def oesrt_cquad4_95(self, data: bytes, ndata: int) -> int:
         # 3,TSAIWU,1,8.5640,0.0,None
 
         (eid, failure, ply, strength_ratio_ply, failure_index_bonding, strength_ratio_bonding, flag, flag2) = out
+        str((eid, failure, ply, strength_ratio_ply, failure_index_bonding, strength_ratio_bonding, flag, flag2))
         #strength_ratio_ply
         #print("eid=%s failure=%r ply=%s failureIndexPly=%s  failure_index_bonding=%s strength_ratio_bonding=%s flag=%s flag2=%s" % (
         #    eid, failure.strip(), ply, failureIndexPly, failure_index_bonding, strength_ratio_bonding, flag, flag2))
@@ -9070,4 +8966,161 @@ def _oes_csolid2_real(self, data: bytes,
             obj.add_node_sort1(dt, eid, inode, grid,
                                sxx, syy, szz, txy, tyz, txz, ovm)
             n += ntotal2
+    return n
+
+def oes_csolid_linear_hyperelastic_cosine_real(self, data: bytes,
+                                               nelements: int, nnodes_expected: int,
+                                               preline1: str, preline2: str) -> int:
+    n = 0
+    # ELTYPE =140 Hyperelastic 8-noded hexahedron element linear format
+    # (HEXAFD)
+    # 2 TYPE CHAR4 Gaus
+    #
+    # 3 ID I
+    # 4 SX RS
+    # 5 SXY RS
+    # 6 PA RS
+    # 7 AX RS
+    # 8 AY RS
+    # 9 AZ RS
+    # 10 PRESSURE RS
+    # 11 SY RS
+    # 12 SYZ RS
+    # 13 PB RS
+    # 14 BX RS
+    # 15 BY RS
+    # 16 BZ RS
+    # 17 SZ RS
+    # 18 SZX RS
+    # 19 PC RS
+    # 20 CX RS
+    # 21 CY RS
+    # 22 CZ RS
+    # Words 3 through 22 repeat 008 times
+    struct1 = Struct(self._endian + self._analysis_code_fmt + b'4s')
+    struct2 = Struct(self._endian + b'i19f')
+    if self.is_debug_file:
+        msg = (
+            f'{self.element_name}-{self.element_type} nelements={nelements} '
+            f'nnodes={nnodes_expected}; '
+            'C=[oxx, oxy, pa, ax, ay, az, pressure, '
+            'oyy, oyz, pb, bx, by, bz, '
+            'ozz, oxz, pc, cx, cy, cz]\n')
+        self.binary_debug.write(msg)
+
+    for unused_i in range(nelements):
+        edata = data[n:n+8]
+        out = struct1.unpack(edata)
+        (eid_device, grid_gauss, ) = out
+        #print(out)
+        eid, dt = get_eid_dt_from_eid_device(
+            eid_device, self.nonlinear_factor, self.sort_method)
+
+        if self.is_debug_file:
+            self.binary_debug.write('%s - eid=%i; %s\n' % (preline1, eid, str(out)))
+        #assert nnodes < 21, 'print_block(data[n:n+16])'  #self.print_block(data[n:n+16])
+
+        n += 8
+        for unused_inode in range(nnodes_expected):  # nodes pts, no centroid
+            out = struct2.unpack(data[n:n + 80]) # 4*20 = 80
+            if self.is_debug_file:
+                self.binary_debug.write('%s - %s\n' % (preline2, str(out)))
+            # nid, oxx, oxy, pa, ax, ay, az, pressure,
+            #      oyy, oyz, pb, bx, by, bz,
+            #      ozz, oxz, pc, cx, cy, cz
+            (grid_device,
+             oxx, oxy, pa, ax, ay, az, pressure,
+             oyy, oyz, pb, bx, by, bz,
+             ozz, oxz, pc, cx, cy, cz) = out
+            #print(out)
+
+            if self.is_debug_file:
+                self.binary_debug.write('  eid=%s inode=%i; C=[%s]\n' % (
+                    eid, grid_device, ', '.join(['%r' % di for di in out])))
+
+            #if 0:
+                #if inode == 0:
+                    #  this is correct, but fails
+                    #element_name = self.element_name + str(nnodes)
+                    #obj.add_eid_sort1(element_name, cid, dt, eid, grid,
+                                      #sxx, syy, szz, txy, tyz, txz, ovm)
+                #else:
+                    #obj.add_node_sort1(dt, eid, inode, grid,
+                                       #sxx, syy, szz, txy, tyz, txz, ovm)
+            n += 80
+    return n
+
+def oes_csolid_linear_hyperelastic_real(self, data: bytes, obj,
+                                        nelements: int, nnodes_expected: int,
+                                        preline1: str, preline2: str):
+    n = 0
+    #ELTYPE =163 Linear form for hyperelastic 20 node HEXAFD
+    #2 TYPE CHAR4 Gaus
+    #
+    #3 ID I
+    #4 SX RS
+    #5 SXY RS
+    #6 PA RS
+    #7 AX RS
+    #8 AY RS
+    #9 AZ RS
+    #10 PRESSURE RS
+    #11 SY RS
+    #12 SYZ RS
+    #13 PB RS
+    #14 BX RS
+    #15 BY RS
+    #16 BZ RS
+    #17 SZ RS
+    #18 SZX RS
+    #19 PC RS
+    #20 CX RS
+    #21 CY RS
+    #22 CZ RS
+    #Words 3 through 22 repeat 027 times
+    struct1 = Struct(self._endian + self._analysis_code_fmt + b'4s')
+    struct2 = Struct(self._endian + b'i19f')
+    if self.is_debug_file:
+        #msg = (
+            #f'{self.element_name}-{self.element_type} nelements={nelements} '
+            #f'nnodes={nnodes_expected}; '
+            #'C=[sxx, syy, szz, txy, tyz, txz, pressure, '
+            #'evol, exx, eyy, ezz, exy, eyz, exz]\n')
+        self.binary_debug.write(msg)
+
+    for unused_i in range(nelements):
+        edata = data[n:n+8]
+        out = struct1.unpack(edata)
+        (eid_device, unused_abcd, ) = out
+        eid, dt = get_eid_dt_from_eid_device(
+            eid_device, self.nonlinear_factor, self.sort_method)
+
+        if self.is_debug_file:
+            self.binary_debug.write('%s - eid=%i; %s\n' % (preline1, eid, str(out)))
+        #assert nnodes < 21, 'print_block(data[n:n+16])'  #self.print_block(data[n:n+16])
+
+        n += 8
+        for unused_inode in range(nnodes_expected):  # nodes pts, no centroid
+            out = struct2.unpack(data[n:n + 80]) # 4*20 = 80
+            if self.is_debug_file:
+                self.binary_debug.write('%s - %s\n' % (preline2, str(out)))
+            #(grid_device, sxx, syy, szz, txy, tyz, txz, pressure,
+             #evol, exx, eyy, ezz, exy, eyz, exz) = out
+            #print(out)
+
+            if self.is_debug_file:
+                self.binary_debug.write('  eid=%s inode=%i; C=[%s]\n' % (
+                    eid, grid_device, ', '.join(['%r' % di for di in out])))
+
+            #grid = grid_device
+            #if 0:
+                #if inode == 0:
+                    ##  this is correct, but fails
+                    ##element_name = self.element_name + str(nnodes)
+                    #obj.add_eid_sort1(element_name, cid, dt, eid, grid,
+                                      #sxx, syy, szz, txy, tyz, txz, ovm)
+                #else:
+                    #obj.add_node_sort1(dt, eid, inode, grid,
+                                       #sxx, syy, szz, txy, tyz, txz, ovm)
+            n += 80
     return n

@@ -4427,6 +4427,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
         elif isinstance(subcase_ids, int):
             subcase_ids = [subcase_ids]
 
+        self.punch = False
         if self.case_control_deck is None:
             self.case_control_deck = CaseControlDeck([], log=self.log)
 

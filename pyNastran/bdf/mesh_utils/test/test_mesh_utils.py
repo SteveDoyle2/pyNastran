@@ -140,22 +140,22 @@ class TestMeshUtils(unittest.TestCase):
         #1U CubeSat is 10 cm, 10 cm, 11.35 cm.
         #2U CubeSat is 10 cm, 10 cm, 22.70 cm.
         #6U CubeSat is 20 cm, 10 cm, 34.05 cm.
-        model = BDF()
+        model = BDF(debug=False)
         pid1 = 1
         pid2 = 2
 
         xmax = 10.
         ymax = 10.
         zmax = 10.
-        p1 = [0., 0., 0.]
-        p2 = [xmax, 0., 0.]
-        p3 = [xmax, ymax, 0.]
-        p4 = [0., ymax, 0.]
+        unused_p1 = [0., 0., 0.]
+        unused_p2 = [xmax, 0., 0.]
+        unused_p3 = [xmax, ymax, 0.]
+        unused_p4 = [0., ymax, 0.]
 
-        p5 = [0., 0., zmax]
-        p6 = [xmax, 0., zmax]
-        p7 = [xmax, ymax, zmax]
-        p8 = [0., ymax, zmax]
+        unused_p5 = [0., 0., zmax]
+        unused_p6 = [xmax, 0., zmax]
+        unused_p7 = [xmax, ymax, zmax]
+        unused_p8 = [0., ymax, zmax]
 
         # nnodes
         nx = 20
@@ -169,7 +169,7 @@ class TestMeshUtils(unittest.TestCase):
         E = 69.e9  # Pa
         G = None
         nu = 0.30
-        rho = 2_710  #kg/m^3
+        #rho = 2_710  #kg/m^3
         uallow = 240.e6  # MPa
         model.add_mat1(mid, E, G, nu, rho=0.0, a=0.0, tref=0.0, ge=0.0,
                        St=0.0, Sc=0.0, Ss=0.0, mcsid=0,
@@ -286,7 +286,7 @@ class TestMeshUtils(unittest.TestCase):
     def test_exit(self):
         """tests totally failing to run"""
         with self.assertRaises(SystemExit):
-            cmd_line(argv=['bdf'])
+            cmd_line(argv=['bdf'], quiet=True)
 
         with self.assertRaises(SystemExit):
             cmd_line(argv=['bdf', 'export_caero_mesh'])
@@ -295,7 +295,7 @@ class TestMeshUtils(unittest.TestCase):
             cmd_line(argv=['bdf', 'convert'])
 
         with self.assertRaises(SystemExit):
-            cmd_line(argv=['bdf', 'scale'])
+            cmd_line(argv=['bdf', 'scale'], quiet=True)
 
         #with self.assertRaises(SystemExit):
             #cmd_line(argv=['bdf', 'bin'])
@@ -313,7 +313,7 @@ class TestMeshUtils(unittest.TestCase):
             cmd_line(argv=['bdf', 'equivalence'])
 
         with self.assertRaises(SystemExit):
-            cmd_line(argv=['bdf', 'free_faces'])
+            cmd_line(argv=['bdf', 'free_faces'], quiet=True)
 
         with self.assertRaises(SystemExit):
             cmd_line(argv=['bdf', 'merge'])
@@ -676,6 +676,11 @@ class TestMeshUtils(unittest.TestCase):
         model.add_grid(7, [11., 11., 11.])
         model.add_grid(8, [10., 11., 11.])
 
+        nodes = [1, 4]
+        components = ['123', '123']
+        coefficients = [1.0, 1.0]
+        mpc = model.add_mpc(42, nodes, components, coefficients, comment='')
+        mpc.validate()
 
         model.add_cquad4(1, pid_pshell, [1, 2, 3, 4]) # mass=1
         model.add_ctria3(2, pid_pshell, [1, 2, 3]) # mass=0.5
@@ -705,27 +710,101 @@ class TestMeshUtils(unittest.TestCase):
             [0., 0., 1.],
             [1., 0., 0.],
         ])
-        model, unsed_mirror_model, unused_nid_offset, unused_eid_offset = bdf_mirror_plane(
+        assert len(model.mpcs) == 1, model.mpcs
+        assert len(model.mpcs[42]) == 1, model.mpcs[42]
+        model, unused_mirror_model, unused_nid_offset, unused_eid_offset = bdf_mirror_plane(
             model, plane, mirror_model=None, log=None, debug=True,
             use_nid_offset=False)
         #for nid, node in sorted(mirror_model.nodes.items()):
             #print(nid, node.xyz)
 
+        assert len(model.mpcs) == 1, model.mpcs
+        assert len(model.mpcs[42]) == 2, model.mpcs[42]
 
         out_filename = os.path.join(DIRNAME, 'sym.bdf')
         write_bdf_symmetric(model, out_filename=out_filename, encoding=None, size=8,
                             is_double=False,
                             enddata=None,
                             close=True, plane='xz') # +y/-y
+        # ----------------------------------------------
+        # validate
         model2 = read_bdf(out_filename, log=log)
         assert len(model2.nodes) == 16, model2.nodes
         mass2, cg2, unused_inertia2 = mass_properties(model2)
         #print('cg1=%s cg2=%s' % (cg1, cg2))
         assert np.allclose(mass1*2, mass2), 'mass1=%s mass2=%s' % (mass1, mass2)
         assert np.allclose(cg2[1], 0.), 'cg2=%s stats=%s' % (cg2, model2.get_bdf_stats())
+
+        assert len(model2.mpcs) == 1, model2.mpcs
+        assert len(model2.mpcs[42]) == 4, model2.mpcs[42]
         os.remove(out_filename)
 
-    def test_mirror2(self):
+    def test_mirror_tetra(self):
+        """tests mirroring a chexa"""
+        model = BDF(debug=False, log=None, mode='msc')
+
+        model.add_grid(11, [0., 0., 0.])
+        model.add_grid(12, [1., 0., 0.])
+        model.add_grid(13, [0., 1, 0.])
+        model.add_grid(14, [0., 0., 6.])
+
+        pid = 20
+        mid = 100
+        E = 3.0e7
+        G = None
+        nu = 0.3
+
+        eid_tetra = 10
+        nids = [11, 12, 13, 14]
+        model.add_ctetra(eid_tetra, pid, nids, comment='')
+        model.add_psolid(pid, mid)
+        model.add_mat1(mid, E, G, nu, rho=1.0)
+        model.validate()
+        model.cross_reference()
+
+        bdf_mirror(model, plane='xz', log=None, debug=True)
+        model.cross_reference()
+        #for eid, elem in model.elements.items():
+            #print(eid, elem.Volume())
+        x = 1
+
+    def test_mirror_hexa(self):
+        """tests mirroring a chexa"""
+        model = BDF(debug=False, log=None, mode='msc')
+
+        xmax = 5.
+        ymax = 10.
+        zmax = 20.
+        model.add_grid(1, [0., 0., 0.])
+        model.add_grid(2, [xmax, 0., 0.])
+        model.add_grid(3, [xmax, ymax, 0.])
+        model.add_grid(4, [0., ymax, 0.])
+        model.add_grid(5, [0., 0., zmax])
+        model.add_grid(6, [xmax, 0., zmax])
+        model.add_grid(7, [xmax, ymax, zmax])
+        model.add_grid(8, [0., ymax, zmax])
+
+        pid = 20
+        mid = 100
+        E = 3.0e7
+        G = None
+        nu = 0.3
+
+        eid_hexa = 11
+        nids = [1, 2, 3, 4, 5, 6, 7, 8]
+        model.add_chexa(eid_hexa, pid, nids, comment='')
+        model.add_psolid(pid, mid)
+        model.add_mat1(mid, E, G, nu, rho=1.0)
+        model.validate()
+        model.cross_reference()
+
+        bdf_mirror(model, plane='xz', log=None, debug=True)
+        model.cross_reference()
+        #for eid, elem in model.elements.items():
+            #print(eid, elem.Volume())
+        x = 1
+
+    def test_mirror_bwb(self):
         """mirrors the BDF (we care about the aero cards)"""
         log = SimpleLogger(level='warning')
         bdf_filename = os.path.join(MODEL_PATH, 'bwb', 'bwb_saero.bdf')
@@ -805,7 +884,7 @@ class TestEquiv(unittest.TestCase):
 
     def test_closest(self):
         """Finds the closest nodes to specified points"""
-        log = SimpleLogger(level='error')
+        log = SimpleLogger(level='warning')
         msg = (
             'CEND\n'
             'BEGIN BULK\n'
@@ -826,7 +905,7 @@ class TestEquiv(unittest.TestCase):
         with open(bdf_filename, 'w') as bdf_file:
             bdf_file.write(msg)
 
-        model = read_bdf(bdf_filename)
+        model = read_bdf(bdf_filename, log=log)
         out = model.get_displacement_index_xyz_cp_cd()
         icd_transform, icp_transform, xyz_cp, nid_cp_cd = out
 

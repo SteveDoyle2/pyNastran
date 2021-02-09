@@ -210,9 +210,7 @@ class WriteMesh(BDFAttributes):
             self._write_case_control_deck(bdf_file)
 
     def _write_executive_control_deck(self, bdf_file: Any) -> None:
-        """
-        Writes the executive control deck.
-        """
+        """Writes the executive control deck."""
         msg = ''
         for line in self.system_command_lines:
             msg += line + '\n'
@@ -280,7 +278,7 @@ class WriteMesh(BDFAttributes):
                     try:
                         bdf_file.write(nsm.write_card(size, is_double))
                     except:
-                        print('failed printing nsm...type={nsm.type} key={key!r}')
+                        print(f'failed printing nsm...type={nsm.type} key={key!r}')
                         raise
 
     def _write_elements_interspersed(self, bdf_file: Any, size: int=8, is_double: bool=False,
@@ -692,8 +690,7 @@ class WriteMesh(BDFAttributes):
                     try:
                         bdf_file.write(load.write_card(size, is_double))
                     except:
-                        print('failed printing load...type=%s key=%r'
-                              % (load.type, key))
+                        print(f'failed printing load...type={load.type} key={key!r}')
                         raise
 
 
