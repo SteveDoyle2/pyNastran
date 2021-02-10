@@ -1320,9 +1320,8 @@ class CAERO1(BaseCard):
     ----------
     eid : int
         element id
-    pid : int, PAERO1
+    pid : int
         int : PAERO1 ID
-        PAERO1 : PAERO1 object (xref)
     igroup : int
         Group number
     p1 : (1, 3) ndarray float
@@ -1333,23 +1332,20 @@ class CAERO1(BaseCard):
         distance along the flow direction from node 1 to node 2; (typically x, root chord)
     x43 : float
         distance along the flow direction from node 4 to node 3; (typically x, tip chord)
-    cp : int, CORDx
+    cp : int
         int : coordinate system
-        CORDx : Coordinate object (xref)
     nspan : int
         int > 0 : N spanwise boxes distributed evenly
         int = 0 : use lchord
     nchord : int
         int > 0 : N chordwise boxes distributed evenly
         int = 0 : use lchord
-    lspan : int, AEFACT
+    lspan : int
         int > 0 : AEFACT reference for non-uniform nspan
         int = 0 : use nspan
-        AEFACT : AEFACT object  (xref)
-    lchord : int, AEFACT
+    lchord : int
         int > 0 : AEFACT reference for non-uniform nchord
         int = 0 : use nchord
-        AEFACT : AEFACT object  (xref)
     comment : str; default=''
          a comment for the card
 
@@ -1434,8 +1430,12 @@ class CAERO1(BaseCard):
         self.p1 = np.asarray(self.p1)
         self.p4 = np.asarray(self.p4)
 
-    def __init__(self, eid, pid, igroup, p1, x12, p4, x43,
-                 cp=0, nspan=0, lspan=0, nchord=0, lchord=0, comment=''):
+    def __init__(self, eid: int, pid: int, igroup: int,
+                   p1: NDArray3float, x12: float,
+                   p4: NDArray3float, x43: float,
+                   cp: int=0,
+                   nspan: int=0, lspan: int=0,
+                   nchord: int=0, lchord: int=0, comment: str=''):
         """
         Defines a CAERO1 card, which defines a simplified lifting surface
         (e.g., wing/tail).
@@ -2187,18 +2187,16 @@ class CAERO2(BaseCard):
         ----------
         eid : int
             element id
-        pid : int, PAERO2
+        pid : int
             int : PAERO2 ID
-            PAERO2 : PAERO2 object (xref)
         igroup : int
             Group number
         p1 : (1, 3) ndarray float
             xyz location of point 1 (forward position)
         x12 : float
             length of the CAERO2
-        cp : int, CORDx; default=0
+        cp : int; default=0
             int : coordinate system
-            CORDx : Coordinate object (xref)
         nsb : int; default=0
             Number of slender body elements
         lsb : int; default=0
@@ -2914,9 +2912,8 @@ class CAERO4(BaseCard):
         ----------
         eid : int
             element id
-        pid : int, PAERO4
+        pid : int
             int : PAERO4 ID
-            PAERO4 : PAERO4 object (xref)
         p1 : (1, 3) ndarray float
             xyz location of point 1 (leading edge; inboard)
         p4 : (1, 3) ndarray float
@@ -2927,13 +2924,12 @@ class CAERO4(BaseCard):
         x43 : float
             distance along the flow direction from node 4 to node 3
             (typically x, tip chord)
-        cp : int, CORDx; default=0
+        cp : int; default=0
             int : coordinate system
-            CORDx : Coordinate object (xref)
         nspan : int; default=0
             int > 0 : N spanwise boxes distributed evenly
             int = 0 : use lchord
-        lspan : int, AEFACT; default=0
+        lspan : int; default=0
             int > 0 : AEFACT reference for non-uniform nspan
             int = 0 : use nspan
         comment : str; default=''
@@ -3271,12 +3267,12 @@ class CAERO5(BaseCard):
             distance along the flow direction from node 1 to node 2; (typically x, root chord)
         x43 : float
             distance along the flow direction from node 4 to node 3; (typically x, tip chord)
-        cp : int, CORDx; default=0
+        cp : int; default=0
             int : coordinate system
         nspan : int; default=0
             int > 0 : N spanwise boxes distributed evenly
             int = 0 : use lchord
-        lspan : int, AEFACT; default=0
+        lspan : int; default=0
             int > 0 : AEFACT reference for non-uniform nspan
             int = 0 : use nspan
         ntheory : int; default=0

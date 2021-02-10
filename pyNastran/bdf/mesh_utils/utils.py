@@ -368,22 +368,27 @@ def cmd_line_mirror(argv=None, quiet=False):
     log = SimpleLogger(level=level, encoding='utf-8', log_func=None)
     model = read_bdf(bdf_filename, log=log)
 
-    bdf_filename_temp = StringIO()
-    write_bdf_symmetric(model, bdf_filename_temp, encoding=None, size=size,
+    bdf_filename_stringio = StringIO()
+    write_bdf_symmetric(model, bdf_filename_stringio, encoding=None, size=size,
                         is_double=False,
                         enddata=None, close=False,
                         plane=plane, log=log)
-    bdf_filename_temp.seek(0)
+    bdf_filename_stringio.seek(0)
 
-    bdf_equivalence_nodes(bdf_filename_temp, bdf_filename_out, tol,
-                          renumber_nodes=False,
-                          neq_max=10, xref=True,
-                          node_set=None, size=size,
-                          is_double=False,
-                          remove_collapsed_elements=False,
-                          avoid_collapsed_elements=False,
-                          crash_on_collapse=False,
-                          debug=True, log=log)
+    if tol >= 0.0:
+        bdf_equivalence_nodes(bdf_filename_stringio, bdf_filename_out, tol,
+                              renumber_nodes=False,
+                              neq_max=10, xref=True,
+                              node_set=None, size=size,
+                              is_double=False,
+                              remove_collapsed_elements=False,
+                              avoid_collapsed_elements=False,
+                              crash_on_collapse=False,
+                              debug=True, log=log)
+    else:
+        model.log.info('writing mirrored model %s without equivalencing' % bdf_filename_out)
+        with open(bdf_filename_out, 'w') as bdf_file:
+            bdf_file.write(bdf_filename_stringio.getvalue())
 
 
 def cmd_line_merge(argv=None, quiet=False):

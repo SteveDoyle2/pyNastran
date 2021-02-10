@@ -30,7 +30,7 @@ from pyNastran.bdf.mesh_utils.find_closest_nodes import (
     find_closest_nodes, find_closest_nodes_index)
 
 
-def create_rbe3s_between_close_nodes(bdf_filename, bdf_filename_out, tol,
+def create_rbe3s_between_close_nodes(bdf_filename, bdf_filename_out, tol: float,
                                      renumber_nodes=False, neq_max=4, xref=True,
                                      node_set=None, size=8, is_double=False,
                                      debug=True):
@@ -72,7 +72,7 @@ def create_rbe3s_between_close_nodes(bdf_filename, bdf_filename_out, tol,
                kdtree loop, which is very inefficient
     """
     nodes_xyz, model, nids, inew = _eq_nodes_setup(
-        bdf_filename, tol, renumber_nodes=renumber_nodes,
+        bdf_filename, renumber_nodes=renumber_nodes,
         xref=xref, node_set=node_set, debug=debug)
 
     eid = 1

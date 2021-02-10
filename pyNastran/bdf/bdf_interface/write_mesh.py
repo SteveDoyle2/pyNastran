@@ -7,6 +7,7 @@ This file defines:
 from __future__ import annotations
 import sys
 from io import IOBase
+from pathlib import PurePath
 from typing import List, Dict, Union, Optional, Tuple, Any, cast, TYPE_CHECKING
 
 from pyNastran.bdf.field_writer_8 import print_card_8
@@ -62,7 +63,7 @@ class WriteMesh(BDFAttributes):
         has_read_write = hasattr(out_filename, 'read') and hasattr(out_filename, 'write')
         if has_read_write or isinstance(out_filename, IOBase):
             return out_filename
-        if not isinstance(out_filename, str):
+        if not isinstance(out_filename, (str, PurePath)):
             msg = 'out_filename=%r must be a string; type=%s' % (
                 out_filename, type(out_filename))
             raise TypeError(msg)
@@ -254,8 +255,7 @@ class WriteMesh(BDFAttributes):
                     try:
                         bdf_file.write(element.write_card(size, is_double))
                     except:
-                        print('failed printing element...'
-                              f'type={element.type} eid={eid}')
+                        print(f'failed printing element...type={element.type} eid={eid}')
                         raise
         if self.ao_element_flags:
             for (eid, element) in sorted(self.ao_element_flags.items()):
@@ -318,8 +318,7 @@ class WriteMesh(BDFAttributes):
                 try:
                     bdf_file.write(element.write_card(size, is_double))
                 except:
-                    print('failed printing element...'
-                          f'type={element.type} eid={eid}')
+                    print(f'failed printing element...type={element.type} eid={eid}')
                     raise
 
         if missing_properties or self.pdampt or self.pbusht or self.pelast:
@@ -661,8 +660,7 @@ class WriteMesh(BDFAttributes):
                         try:
                             bdf_file.write(load.write_card(size, is_double))
                         except:
-                            print('failed printing load...type=%s key=%r'
-                                  % (load.type, key))
+                            print(f'failed printing load...type={load.type} key={key!r}')
                             raise
 
             for unused_key, tempd in sorted(self.tempds.items()):
@@ -704,8 +702,7 @@ class WriteMesh(BDFAttributes):
                 try:
                     bdf_file.write(mass.write_card(size, is_double))
                 except:
-                    print('failed printing mass property...'
-                          'type=%s eid=%s' % (mass.type, pid))
+                    print(f'failed printing mass property...type={mass.type} pid={pid}')
                     raise
 
         if self.masses:
@@ -714,8 +711,7 @@ class WriteMesh(BDFAttributes):
                 try:
                     bdf_file.write(mass.write_card(size, is_double))
                 except:
-                    print('failed printing masses...'
-                          'type=%s eid=%s' % (mass.type, eid))
+                    print(f'failed printing masses...type={mass.type} eid={eid}')
                     raise
 
     def _write_materials(self, bdf_file: Any, size: int=8, is_double: bool=False,
@@ -1036,16 +1032,14 @@ class WriteMesh(BDFAttributes):
                     try:
                         bdf_file.write(element.write_card_16(is_double))
                     except:
-                        print('failed printing element...'
-                              'type=%s eid=%s' % (element.type, eid))
+                        print(f'failed printing element...type={element.type} eid={eid}')
                         raise
             else:
                 for (eid, element) in sorted(self.rigid_elements.items()):
                     try:
                         bdf_file.write(element.write_card(size, is_double))
                     except:
-                        print('failed printing element...'
-                              'type=%s eid=%s' % (element.type, eid))
+                        print(f'failed printing element...type={element.type} eid={eid}')
                         raise
         if self.plotels:
             bdf_file.write('$PLOT ELEMENTS\n')

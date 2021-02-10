@@ -98,7 +98,7 @@ def find_closest_nodes_index(nodes_xyz, xyz_compare, neq_max, tol, msg=''):
 
     """
     #nodes_xyz, model, nids, inew = _eq_nodes_setup(
-        #bdf_filename, tol, renumber_nodes=renumber_nodes,
+        #bdf_filename, renumber_nodes=renumber_nodes,
         #xref=xref, node_set=node_set, debug=debug)
     ieq, slots = _not_equal_nodes_build_tree(nodes_xyz, xyz_compare, tol,
                                              neq_max=neq_max, msg=msg)[1:3]

@@ -1397,7 +1397,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             bdf_filename = load_file_dialog(title, wildcard_wx, wildcard_qt)[0]
             assert bdf_filename is not None, bdf_filename
 
-        elif isinstance(bdf_filename, str):
+        elif isinstance(bdf_filename, (str, PurePath)):
             pass
         elif isinstance(bdf_filename, (StringIO, IOBase)):
             self.bdf_filename = bdf_filename
@@ -1407,7 +1407,8 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             raise NotImplementedError(bdf_filename)
 
         check_path(bdf_filename, 'bdf_filename')
-        if bdf_filename.lower().endswith('.pch'):  # .. todo:: should this be removed???
+        ext = os.path.splitext(bdf_filename)[1]
+        if ext == '.pch':  # .. todo:: should this be removed???
             punch = True
 
         #: the active filename (string)
@@ -1415,7 +1416,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
 
         #: is this a punch file (no executive control deck)
         self.punch = punch
-        assert not bdf_filename.lower().endswith('.op2'), bdf_filename
+        assert ext != '.op2', bdf_filename
 
     def pop_parse_errors(self) -> None:
         """raises an error if there are parsing errors"""

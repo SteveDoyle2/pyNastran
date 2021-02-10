@@ -5,6 +5,7 @@ This file defines:
 """
 import sys
 from io import StringIO, IOBase
+from pathlib import PurePath
 
 from numpy import array, unique, concatenate, intersect1d, where
 
@@ -50,7 +51,7 @@ class WriteMesh(BDFAttributes):
 
         if not(hasattr(out_filename, 'read') and hasattr(out_filename, 'write')) or isinstance(out_filename, IOBase):
             return out_filename
-        elif not isinstance(out_filename, str):
+        elif not isinstance(out_filename, (str, PurePath)):
             msg = 'out_filename=%r must be a string; type=%s' % (
                 out_filename, type(out_filename))
             raise TypeError(msg)
