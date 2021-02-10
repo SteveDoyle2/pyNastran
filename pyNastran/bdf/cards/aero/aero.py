@@ -463,12 +463,12 @@ class AELINK(BaseCard):
         aelink_id = 1
         label = 'ELEV'
         independent_labels = ['ELEV1', 'ELEV2']
-        linking_coefficents = [1., 2.]
-        return AELINK(aelink_id, label, independent_labels, linking_coefficents, comment='')
+        linking_coefficients = [1., 2.]
+        return AELINK(aelink_id, label, independent_labels, linking_coefficients, comment='')
 
     def __init__(self, aelink_id: Union[int, str],
                  label: str, independent_labels: List[str],
-                 linking_coefficents: List[float],
+                 linking_coefficients: List[float],
                  comment: str='') -> None:
         """
         Creates an AELINK card, which defines an equation linking
@@ -482,7 +482,7 @@ class AELINK(BaseCard):
             name of the dependent AESURF card
         independent_labels : List[str, ..., str]
             name for the independent variables (AESTATs)
-        linking_coefficents : List[float]
+        linking_coefficients : List[float]
             linking coefficients
         comment : str; default=''
             a comment for the card
@@ -498,7 +498,7 @@ class AELINK(BaseCard):
         self.independent_labels = independent_labels
 
         #: linking coefficients (real)
-        self.linking_coefficents = linking_coefficents
+        self.linking_coefficients = linking_coefficients
 
         if isinstance(aelink_id, str):
             if aelink_id != 'ALWAYS':
@@ -508,15 +508,15 @@ class AELINK(BaseCard):
         self.aelink_id = aelink_id
 
     def validate(self):
-        if len(self.independent_labels) != len(self.linking_coefficents):
-            msg = 'nlabels=%s nci=%s\nindependent_labels=%s linking_coefficents=%s\n%s' % (
-                len(self.independent_labels), len(self.linking_coefficents),
-                self.independent_labels, self.linking_coefficents, str(self))
+        if len(self.independent_labels) != len(self.linking_coefficients):
+            msg = 'nlabels=%s nci=%s\nindependent_labels=%s linking_coefficients=%s\n%s' % (
+                len(self.independent_labels), len(self.linking_coefficients),
+                self.independent_labels, self.linking_coefficients, str(self))
             raise RuntimeError(msg)
         if len(self.independent_labels) == 0:
-            msg = 'nlabels=%s nci=%s\nindependent_labels=%s linking_coefficents=%s\n%s' % (
-                len(self.independent_labels), len(self.linking_coefficents),
-                self.independent_labels, self.linking_coefficents, str(self))
+            msg = 'nlabels=%s nci=%s\nindependent_labels=%s linking_coefficients=%s\n%s' % (
+                len(self.independent_labels), len(self.linking_coefficients),
+                self.independent_labels, self.linking_coefficients, str(self))
             raise RuntimeError(msg)
 
     @classmethod
@@ -535,7 +535,7 @@ class AELINK(BaseCard):
         aelink_id = integer_or_string(card, 1, 'ID')
         label = string(card, 2, 'label')
         independent_labels = []
-        linking_coefficents = []
+        linking_coefficients = []
 
         list_fields = [interpret_value(field, card) for field in card[3:]]
         assert len(list_fields) % 2 == 0, 'list_fields=%s' % list_fields
@@ -543,9 +543,14 @@ class AELINK(BaseCard):
             independent_label = list_fields[i]
             linking_coefficent = list_fields[i + 1]
             independent_labels.append(independent_label)
-            linking_coefficents.append(linking_coefficent)
-        return AELINK(aelink_id, label, independent_labels, linking_coefficents,
+            linking_coefficients.append(linking_coefficent)
+        return AELINK(aelink_id, label, independent_labels, linking_coefficients,
                       comment=comment)
+
+    def cross_reference(self, model: BDF) -> None:
+        """We're simply going to validate the labels"""
+        sid_ref = model.trims[self.aelink_id]
+        independent_label_ref = model.AESurf(self.label, msg=f'which is required by {str(self)}')
 
     #def uncross_reference(self) -> None:
         #"""Removes cross-reference links"""
@@ -562,7 +567,7 @@ class AELINK(BaseCard):
 
         """
         list_fields = ['AELINK', self.aelink_id, self.label]
-        for (ivar, ival) in zip(self.independent_labels, self.linking_coefficents):
+        for (ivar, ival) in zip(self.independent_labels, self.linking_coefficients):
             list_fields += [ivar, ival]
         return list_fields
 

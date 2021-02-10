@@ -106,7 +106,7 @@ def cmd_line_equivalence(argv=None, quiet=False):
     bdf_filename_out = data['--output']
     if bdf_filename_out is None:
         bdf_filename_out = 'merged.bdf'
-    tol = data['EQ_TOL']
+    tol = float(data['EQ_TOL'])
     size = 16
     from pyNastran.bdf.mesh_utils.bdf_equivalence import bdf_equivalence_nodes
 
@@ -129,7 +129,6 @@ def cmd_line_bin(argv=None, quiet=False):  # pragma: no cover
         argv = sys.argv
 
     from docopt import docopt
-    import pyNastran
     msg = (
         "Usage:\n"
         #"  bdf bin IN_BDF_FILENAME AXIS1 AXIS2 [--cid CID] [--step SIZE]\n"
@@ -241,7 +240,6 @@ def cmd_line_renumber(argv=None, quiet=False):
         argv = sys.argv
 
     from docopt import docopt
-    import pyNastran
     msg = (
         "Usage:\n"
         '  bdf renumber IN_BDF_FILENAME OUT_BDF_FILENAME [--superelement] [--size SIZE]\n'
@@ -443,7 +441,6 @@ def cmd_line_convert(argv=None, quiet=False):
         argv = sys.argv
 
     from docopt import docopt
-    import pyNastran
     msg = (
         "Usage:\n"
         '  bdf convert IN_BDF_FILENAME [-o OUT_BDF_FILENAME] [--in_units IN_UNITS] [--out_units OUT_UNITS]\n'
@@ -513,7 +510,6 @@ def cmd_line_scale(argv=None, quiet=False):
 
     import argparse
     #import textwrap
-    import pyNastran
     parent_parser = argparse.ArgumentParser(
         #prog = 'pyNastranGUI',
         #usage = usage,
@@ -1197,7 +1193,6 @@ def cmd_line(argv=None, quiet=False):
     elif argv[1] == 'create_vectorized_numbered' and dev:
         cmd_line_create_vectorized_numbered(argv, quiet=quiet)
     elif argv[1] in ['-v', '--version']:
-        import pyNastran
         print(pyNastran.__version__)
     else:
         print(argv)

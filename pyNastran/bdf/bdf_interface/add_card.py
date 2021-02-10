@@ -5929,7 +5929,7 @@ class AddCards(AddMethods):
         return aestat
 
     def add_aelink(self, aelink_id: int, label: str,
-                   independent_labels: List[str], linking_coefficents: List[float],
+                   independent_labels: List[str], linking_coefficients: List[float],
                    comment: str='') -> AELINK:
         """
         Creates an AELINK card, which defines an equation linking
@@ -5943,17 +5943,17 @@ class AddCards(AddMethods):
             name of the dependent AESURF card
         independent_labels : List[str, ..., str]
             name for the independent variables (AESTATs)
-        linking_coefficents : List[float]
+        linking_coefficients : List[float]
             linking coefficients
         comment : str; default=''
             a comment for the card
 
         """
-        aelink = AELINK(aelink_id, label, independent_labels, linking_coefficents, comment=comment)
+        aelink = AELINK(aelink_id, label, independent_labels, linking_coefficients, comment=comment)
         self._add_aelink_object(aelink)
         return aelink
 
-    def add_aelist(self, sid, elements, comment='') -> AELIST:
+    def add_aelist(self, sid: int, elements: List[int], comment: str='') -> AELIST:
         """
         Creates an AELIST card, which defines the aero boxes for
         an AESURF/SPLINEx.
@@ -5992,7 +5992,7 @@ class AddCards(AddMethods):
         self._add_aefact_object(aefact)
         return aefact
 
-    def add_diverg(self, sid, nroots, machs, comment='') -> DIVERG:
+    def add_diverg(self, sid: int, nroots: int, machs: List[float], comment: str='') -> DIVERG:
         """
         Creates an DIVERG card, which is used in divergence
         analysis (SOL 144).

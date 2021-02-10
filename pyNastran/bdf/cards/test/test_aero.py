@@ -212,21 +212,21 @@ class TestAero(unittest.TestCase):
         idi = 10
         label = 'CS'
         independent_labels = ['A', 'B', 'C']
-        linking_coefficents = [1.0, 2.0]
-        aelink = AELINK(idi, label, independent_labels, linking_coefficents, comment='')
+        linking_coefficients = [1.0, 2.0]
+        aelink = AELINK(idi, label, independent_labels, linking_coefficients, comment='')
         assert aelink.aelink_id == idi
         with self.assertRaises(RuntimeError):
             aelink.validate()
         str(aelink)
         aelink.write_card()
 
-        card = ['AELINK', idi, label, independent_labels[0], linking_coefficents[0],
-                independent_labels[1], linking_coefficents[1], independent_labels[2]]
+        card = ['AELINK', idi, label, independent_labels[0], linking_coefficients[0],
+                independent_labels[1], linking_coefficients[1], independent_labels[2]]
         with self.assertRaises(AssertionError):
             model.add_card(card, 'AELINK')
 
-        card = ['AELINK', idi, label, independent_labels[0], linking_coefficents[0],
-                independent_labels[1], linking_coefficents[1]]
+        card = ['AELINK', idi, label, independent_labels[0], linking_coefficients[0],
+                independent_labels[1], linking_coefficients[1]]
         model.add_card(card, 'AELINK', comment='cat')
         #print(model.aelinks[idi])
         assert model.aelinks[idi][0].comment == '$cat\n', 'comment=%r' % str(model.aelinks[idi][0].comment)
@@ -235,19 +235,19 @@ class TestAero(unittest.TestCase):
         idi = 11
         label = 'LABEL'
         independent_labels = ['pig', 'frog', 'dog']
-        linking_coefficents = []
-        aelink2 = model.add_aelink(idi, label, independent_labels, linking_coefficents)
+        linking_coefficients = []
+        aelink2 = model.add_aelink(idi, label, independent_labels, linking_coefficients)
         with self.assertRaises(RuntimeError):
             model.validate()
-        aelink2.linking_coefficents = [1.0, 2.0, 3.0]
-        assert aelink2.linking_coefficents == [1., 2., 3.]
+        aelink2.linking_coefficients = [1.0, 2.0, 3.0]
+        assert aelink2.linking_coefficients == [1., 2., 3.]
 
         #-------------------------------
         idi = 'ALWAYS'
         label = 'LABEL'
         independent_labels = ['pig', 'frog', 'dog']
-        linking_coefficents = [1.0, 2.0, 3.0]
-        model.add_aelink(idi, label, independent_labels, linking_coefficents)
+        linking_coefficients = [1.0, 2.0, 3.0]
+        model.add_aelink(idi, label, independent_labels, linking_coefficients)
 
         model.validate()
         model.cross_reference()

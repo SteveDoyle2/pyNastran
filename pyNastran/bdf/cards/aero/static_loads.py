@@ -570,7 +570,7 @@ class DIVERG(BaseCard):
         machs = [0.5, 0.75]
         return DIVERG(sid, nroots, machs, comment='')
 
-    def __init__(self, sid, nroots, machs, comment=''):
+    def __init__(self, sid: int, nroots: int, machs: List[float], comment: str=''):
         """
         Creates an DIVERG card, which is used in divergence
         analysis (SOL 144).
@@ -958,32 +958,21 @@ class TRIM(BaseCard):
                 #)
                 msg = (
                     'Invalid trim state (ndelta != 0):\n'
-                    '   (naestat + naesurf + naeparm + 0*2*ntrim_aesurf?) = (%s + %s + %s + 0*2*%s) = %s\n'
-                    ' - (ntrim + naelink + nsuport_dofs + nsuport1_dofs) = (%s + %s + %s + %s) = %s\n'
+                    f'   (naestat + naesurf + naeparm + 0*2*ntrim_aesurf?) = ({naestat} + {naesurf} + {naeparm} + 0*2*{ntrim_aesurf}) = {nplus}\n'
+                    f' - (ntrim + naelink + nsuport_dofs + nsuport1_dofs) = ({ntrim} + {naelink} + {nsuport_dofs} + {nsuport1_dofs}) = {nminus}\n'
                     '===================================================================\n'
-                    '  ndelta = %s\n\n'
+                    f'  ndelta = {ndelta}\n\n'
                     'Summary\n'
                     '-------\n'
-                    '  +naestat = %s; %s\n'
-                    '  +naesurf = %s; %s\n'
-                    '  +naeparm = %s; %s\n'
-                    '  +0*2*ntrim_aesurf? = %s -> 0; %s\n'
-                    '  -ntrim = %s; %s\n'
-                    '  -naelink = %s; %s\n'
-                    '  -nsuport_dofs = %s\n'
-                    '  -nsuport1_dofs = %s\n'
-                    '%s\n\n' % (
-                        naestat, naesurf, naeparm, ntrim_aesurf, nplus,
-                        ntrim, naelink, nsuport_dofs, nsuport1_dofs, nminus,
-
-                        ndelta,
-                        naestat, aestat_labels,
-                        naesurf, aesurf_names,
-                        naeparm, aeparm_labels,
-                        2*ntrim_aesurf, trim_aesurf_common,
-                        ntrim, self.labels,
-                        naelink, aelinksi,
-                        nsuport_dofs, nsuport1_dofs, suport_dof_msg2)
+                    f'  +naestat = {naestat}; {aestat_labels}\n'
+                    f'  +naesurf = {naesurf}; {aesurf_names}\n'
+                    f'  +naeparm = {naeparm}; {aeparm_labels}\n'
+                    f'  +0*2*ntrim_aesurf? = {2*ntrim_aesurf} -> 0; {trim_aesurf_common}\n'
+                    f'  -ntrim = {ntrim}; {self.labels}\n'
+                    f'  -naelink = {naelink}; {aelinksi}\n'
+                    f'  -nsuport_dofs = {nsuport_dofs}\n'
+                    f'  -nsuport1_dofs = {nsuport1_dofs}\n'
+                    f'{suport_dof_msg2}\n\n'
                 )
                 msg += str(self)
                 raise RuntimeError(msg)

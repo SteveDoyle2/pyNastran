@@ -22,7 +22,7 @@ def run_nastran(bdf_filename: str, nastran_cmd: str='nastran',
         True : output (e.g., *.f06) will go to the current working directory (default)
         False : outputs (e.g., *.f06) will go to the input BDF directory
     cleanup : bool; default=False
-        remove the *.log, *.f04 files
+        remove the *.log, *.f04, and *.plt files
 
     Returns
     -------
@@ -30,6 +30,19 @@ def run_nastran(bdf_filename: str, nastran_cmd: str='nastran',
         the nastran flag
     cmd_args : List[str]
         the nastran commands that go into subprocess
+
+    Example
+    -------
+    keywords_str = 'scr=yes old=no mem=1024mb'
+    keywords_list = ['scr=yes', 'old=no', 'mem=1024mb']
+    keywords_dict = {
+        'scr' : 'yes',
+        'old' : 'no',
+        'mem' : '1024mb',
+    }
+    run_nastran(bdf_filename, keywords_str)
+    run_nastran(bdf_filename, keywords_list)
+    run_nastran(bdf_filename, keywords_dict)
 
     """
     keywords_list = _get_keywords_list(keywords=keywords)
@@ -47,18 +60,20 @@ def run_nastran(bdf_filename: str, nastran_cmd: str='nastran',
     if run:
         return_code = subprocess.call(call_args)
 
-    if switch_dir:
-        os.chdir(pwd)
-
     if run and cleanup:
         base = os.path.basename(bdf_filename)[0]
         fnames = [
             base + '.f04',
             base + '.log',
+            base + '.plt',
         ]
         for fname in fnames:
             if os.path.exists(fname):
+                print(f'removing {fname}')
                 os.remove(fname)
+
+    if switch_dir:
+        os.chdir(pwd)
 
     return return_code, call_args
 
@@ -66,7 +81,7 @@ def _get_keywords_list(keywords: Optional[Union[str,
                                                 List[str],
                                                 Dict[str, str]]]=None) -> List[str]:
     if keywords is None:
-        keywords_list = ['scr=yes', 'bat=no', 'old=no', 'news=no'] # 'mem=1024mb',
+        keywords_list = ['scr=yes', 'bat=no', 'old=no', 'news=no', 'notify=no'] # 'mem=1024mb',
     elif isinstance(keywords, str):
         keywords_list = keywords.split()
     else:
