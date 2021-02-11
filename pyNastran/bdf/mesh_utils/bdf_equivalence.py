@@ -264,7 +264,7 @@ def _eq_nodes_setup_node_set(model: BDF,
                              all_node_set: NDArrayNint,
                              renumber_nodes: bool=False,
                              idtype:str='int32') -> Tuple[NDArrayNint, NDArrayNint]:
-    """helper function for ``_eq_nodes_setup``"""
+    """helper function for ``_eq_nodes_setup`` that handles node_sets"""
     if len(node_set) > 1:
         model.log.warning(f'multi node_sets; n={len(node_set)}')
 
@@ -296,7 +296,7 @@ def _eq_nodes_setup_node_set(model: BDF,
 
 def _eq_nodes_setup_node(model: BDF, renumber_nodes: bool=False,
                          idtype: str='int32') -> Tuple[NDArrayNint, NDArrayNint]:
-    """helper function for ``_eq_nodes_setup``"""
+    """helper function for ``_eq_nodes_setup`` that doesn't handle node sets"""
     inode = 0
     if renumber_nodes:
         model.log.info('renumbering nodes')
