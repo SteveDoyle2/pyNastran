@@ -902,7 +902,7 @@ class RealGridPointForcesArray(GridPointForces):
                     xyz_cid0, summation_point, assume_sorted=True,
                     itime=itime, # debug=debug,
                     log=log)
-                log.info(f'neids={len(i):d} nnodes={len(j):d} force={force_sumi} moment={moment_sumi}')
+                log.info(f'neids={len(i):d} nnodes={len(j):d} station={station:g}; force={force_sumi} moment={moment_sumi}')
                 if not np.isfinite(force_sumi[0]):
                     continue
                 force_sum[istation, :] = force_sumi

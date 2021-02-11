@@ -29,6 +29,7 @@ from pyNastran.bdf.mesh_utils.split_cbars_by_pin_flag import split_cbars_by_pin_
 from pyNastran.bdf.mesh_utils.dev.create_vectorized_numbered import create_vectorized_numbered
 from pyNastran.bdf.mesh_utils.remove_unused import remove_unused
 from pyNastran.bdf.mesh_utils.free_faces import write_skin_solid_faces
+from pyNastran.bdf.mesh_utils.get_oml import get_oml_eids
 
 
 def cmd_line_create_vectorized_numbered(argv=None, quiet=False):  # pragma: no cover

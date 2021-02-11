@@ -5,14 +5,17 @@ defines:
 
 """
 from copy import deepcopy
+from typing import Set
 import numpy as np
 
 from pyNastran.bdf.bdf import read_bdf
 #from pyNastran.bdf.bdf_interface.dev_utils import get_free_edges
 
 
-def get_oml_eids(bdf_filename, eid_start, theta_tol=30.,
-                 is_symmetric=True, consider_flippped_normals=True):
+def get_oml_eids(bdf_filename: str, eid_start: int,
+                 theta_tol: float=30.,
+                 is_symmetric: bool=True,
+                 consider_flippped_normals: bool=True) -> Set[int]:
     """
     extracts the OML faces (outer mold line)
 
@@ -50,7 +53,7 @@ def get_oml_eids(bdf_filename, eid_start, theta_tol=30.,
         consider_1d=False, consider_2d=True, consider_3d=False)
     edge_to_eid_map = maps['edge_to_eid_map']
     eid_to_edge_map = maps['eid_to_edge_map']
-    nid_to_edge_map = maps['nid_to_edge_map']
+    unused_nid_to_edge_map = maps['nid_to_edge_map']
 
     #free_edges = get_free_edges(model, maps=maps)
     #---------------------------------
@@ -70,7 +73,7 @@ def get_oml_eids(bdf_filename, eid_start, theta_tol=30.,
     while eids_next:
         eid_starts = deepcopy(eids_next)
         eids_oml_start = deepcopy(eids_oml)
-        model.log.warning(len(eid_starts))
+        model.log.debug(f'nactive_elements = {len(eid_starts)}')
         while eid_starts:
             eid_start = eid_starts.pop()
             normal_start = normals[eid_start]
@@ -129,11 +132,12 @@ def get_oml_eids(bdf_filename, eid_start, theta_tol=30.,
         eids_file.write('eids_oml = %s\n' % list(eids_oml))
     return eids_oml
 
-def main():
+def main():  # pragma: no cover
     """runs the test problem"""
     bdf_filename = 'bwb_saero.bdf'
     eid_start = 2810
     eids_oml = get_oml_eids(bdf_filename, eid_start)
+    del eids_oml
 
 if __name__ == '__main__':  # pragma: no cover
     main()
