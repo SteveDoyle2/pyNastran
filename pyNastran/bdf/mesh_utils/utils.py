@@ -835,7 +835,7 @@ def cmd_line_transform(argv=None, quiet=False):
     from docopt import docopt
     msg = (
         'Usage:\n'
-        '  bdf transform IN_BDF_FILENAME [-o OUT_CAERO_BDF_FILENAME] [--shift XYZ]\n'
+        '  bdf transform IN_BDF_FILENAME [-o OUT_BDF_FILENAME] [--shift XYZ]\n'
         '  bdf transform -h | --help\n'
         '  bdf transform -v | --version\n'
         '\n'
@@ -901,8 +901,8 @@ def cmd_line_filter(argv=None, quiet=False):  # pragma: no cover
     from docopt import docopt
     msg = (
         'Usage:\n'
-        '  bdf filter IN_BDF_FILENAME [-o OUT_CAERO_BDF_FILENAME]\n'
-        '  bdf filter IN_BDF_FILENAME [-o OUT_CAERO_BDF_FILENAME] [--x YSIGN_X] [--y YSIGN_Y] [--z YSIGN_Z]\n'
+        '  bdf filter IN_BDF_FILENAME [-o OUT_BDF_FILENAME]\n'
+        '  bdf filter IN_BDF_FILENAME [-o OUT_BDF_FILENAME] [--x YSIGN_X] [--y YSIGN_Y] [--z YSIGN_Z]\n'
         '  bdf filter -h | --help\n'
         '  bdf filter -v | --version\n'
         '\n'
@@ -912,10 +912,10 @@ def cmd_line_filter(argv=None, quiet=False):  # pragma: no cover
         '\n'
 
         'Options:\n'
-        ' -o OUT, --output  OUT_BDF_FILENAME         path to output BDF file (default=filter.bdf)\n'
-        " --x YSIGN_X                                a string (e.g., '< 0.')\n"
-        " --y YSIGN_Y                                a string (e.g., '< 0.')\n"
-        " --z YSIGN_Z                                a string (e.g., '< 0.')\n"
+        ' -o OUT, --output  OUT_BDF_FILENAME    path to output BDF file (default=filter.bdf)\n'
+        " --x YSIGN_X                           a string (e.g., '< 0.')\n"
+        " --y YSIGN_Y                           a string (e.g., '< 0.')\n"
+        " --z YSIGN_Z                           a string (e.g., '< 0.')\n"
         '\n'
 
         'Info:\n'
@@ -1125,6 +1125,7 @@ def cmd_line(argv=None, quiet=False):
         '  bdf merge                       (IN_BDF_FILENAMES)... [-o OUT_BDF_FILENAME]\n'
         '  bdf equivalence                 IN_BDF_FILENAME EQ_TOL\n'
         '  bdf renumber                    IN_BDF_FILENAME [OUT_BDF_FILENAME] [--superelement] [--size SIZE]\n'
+        '  bdf filter                      IN_BDF_FILENAME [-o OUT_BDF_FILENAME] [--x YSIGN X] [--y YSIGN Y] [--z YSIGN Z]\n'
         '  bdf mirror                      IN_BDF_FILENAME [-o OUT_BDF_FILENAME] [--plane PLANE] [--tol TOL]\n'
         '  bdf convert                     IN_BDF_FILENAME [-o OUT_BDF_FILENAME] [--in_units IN_UNITS] [--out_units OUT_UNITS]\n'
         '  bdf scale                       IN_BDF_FILENAME [-o OUT_BDF_FILENAME] [--lsf LENGTH_SF] [--msf MASS_SF] [--fsf FORCE_SF] [--psf PRESSURE_SF] [--tsf TIME_SF] [--vsf VEL_SF]\n'
@@ -1137,7 +1138,6 @@ def cmd_line(argv=None, quiet=False):
 
     if dev:
         msg += '  bdf create_vectorized_numbered  IN_BDF_FILENAME [OUT_BDF_FILENAME]\n'
-        msg += '  bdf filter                      IN_BDF_FILENAME [-o OUT_CAERO_BDF_FILENAME] [--x YSIGN X] [--y YSIGN Y] [--z YSIGN Z]\n'
         msg += '  bdf bin                         IN_BDF_FILENAME AXIS1 AXIS2 [--cid CID] [--step SIZE]\n'
 
     msg += (
@@ -1145,6 +1145,7 @@ def cmd_line(argv=None, quiet=False):
         '  bdf merge              -h | --help\n'
         '  bdf equivalence        -h | --help\n'
         '  bdf renumber           -h | --help\n'
+        '  bdf filter             -h | --help\n'
         '  bdf mirror             -h | --help\n'
         '  bdf convert            -h | --help\n'
         '  bdf scale              -h | --help\n'
@@ -1159,7 +1160,6 @@ def cmd_line(argv=None, quiet=False):
     if dev:
         msg += (
             '  bdf create_vectorized_numbered  -h | --help\n'
-            '  bdf filter                      -h | --help\n'
             '  bdf bin                         -h | --help\n'
         )
     msg += '  bdf -v | --version\n'
@@ -1189,7 +1189,7 @@ def cmd_line(argv=None, quiet=False):
         cmd_line_export_caero_mesh(argv, quiet=quiet)
     elif argv[1] == 'transform':
         cmd_line_transform(argv, quiet=quiet)
-    elif argv[1] == 'filter' and dev:  # TODO: make better name
+    elif argv[1] == 'filter':
         cmd_line_filter(argv, quiet=quiet)
     elif argv[1] == 'free_faces':
         cmd_line_free_faces(argv, quiet=quiet)

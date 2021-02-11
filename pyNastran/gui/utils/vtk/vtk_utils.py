@@ -12,6 +12,100 @@ from pyNastran.gui.utils.vtk.base_utils import (
     vtkConstants, numpy_to_vtk, numpy_to_vtkIdTypeArray,
     get_numpy_idtype_for_vtk)
 
+# // Linear cells
+# VTK_EMPTY_CELL = 0
+# VTK_VERTEX = 1
+# VTK_POLY_VERTEX = 2
+# VTK_LINE = 3
+# VTK_POLY_LINE = 4
+# VTK_TRIANGLE = 5
+# VTK_TRIANGLE_STRIP = 6
+# VTK_POLYGON = 7
+# VTK_PIXEL = 8
+# VTK_QUAD = 9
+# VTK_TETRA = 10
+# VTK_VOXEL = 11
+# VTK_HEXAHEDRON = 12
+# VTK_WEDGE = 13
+# VTK_PYRAMID = 14
+# VTK_PENTAGONAL_PRISM = 15
+# VTK_HEXAGONAL_PRISM = 16
+#
+# // Quadratic, isoparametric cells
+# VTK_QUADRATIC_EDGE = 21
+# VTK_QUADRATIC_TRIANGLE = 22
+# VTK_QUADRATIC_QUAD = 23
+# VTK_QUADRATIC_POLYGON = 36
+# VTK_QUADRATIC_TETRA = 24
+# VTK_QUADRATIC_HEXAHEDRON = 25
+# VTK_QUADRATIC_WEDGE = 26
+# VTK_QUADRATIC_PYRAMID = 27
+# VTK_BIQUADRATIC_QUAD = 28
+# VTK_TRIQUADRATIC_HEXAHEDRON = 29
+# VTK_QUADRATIC_LINEAR_QUAD = 30
+# VTK_QUADRATIC_LINEAR_WEDGE = 31
+# VTK_BIQUADRATIC_QUADRATIC_WEDGE = 32
+# VTK_BIQUADRATIC_QUADRATIC_HEXAHEDRON = 33
+# VTK_BIQUADRATIC_TRIANGLE = 34
+#
+# // Cubic, isoparametric cell
+# VTK_CUBIC_LINE = 35
+#
+# // Special class of cells formed by convex group of points
+# VTK_CONVEX_POINT_SET = 41
+#
+# // Polyhedron cell (consisting of polygonal faces)
+# VTK_POLYHEDRON = 42
+#
+# // Higher order cells in parametric form
+# VTK_PARAMETRIC_CURVE = 51
+# VTK_PARAMETRIC_SURFACE = 52
+# VTK_PARAMETRIC_TRI_SURFACE = 53
+# VTK_PARAMETRIC_QUAD_SURFACE = 54
+# VTK_PARAMETRIC_TETRA_REGION = 55
+# VTK_PARAMETRIC_HEX_REGION = 56
+#
+# // Higher order cells
+# VTK_HIGHER_ORDER_EDGE = 60
+# VTK_HIGHER_ORDER_TRIANGLE = 61
+# VTK_HIGHER_ORDER_QUAD = 62
+# VTK_HIGHER_ORDER_POLYGON = 63
+# VTK_HIGHER_ORDER_TETRAHEDRON = 64
+# VTK_HIGHER_ORDER_WEDGE = 65
+# VTK_HIGHER_ORDER_PYRAMID = 66
+# VTK_HIGHER_ORDER_HEXAHEDRON = 67
+#
+# // Arbitrary order Lagrange elements (formulated separated from generic higher order cells)
+# VTK_LAGRANGE_CURVE = 68
+# VTK_LAGRANGE_TRIANGLE = 69
+# VTK_LAGRANGE_QUADRILATERAL = 70
+# VTK_LAGRANGE_TETRAHEDRON = 71
+# VTK_LAGRANGE_HEXAHEDRON = 72
+# VTK_LAGRANGE_WEDGE = 73
+# VTK_LAGRANGE_PYRAMID = 74
+#
+# // Arbitrary order Bezier elements (formulated separated from generic higher order cells)
+# VTK_BEZIER_CURVE = 75
+# VTK_BEZIER_TRIANGLE = 76
+# VTK_BEZIER_QUADRILATERAL = 77
+# VTK_BEZIER_TETRAHEDRON = 78
+# VTK_BEZIER_HEXAHEDRON = 79
+# VTK_BEZIER_WEDGE = 80
+# VTK_BEZIER_PYRAMID = 81
+
+ETYPES_EXPECTED_DICT = {
+    # etype: nnodes
+    1: 1, # vertex
+    3: 2, # line
+    5: 3, # ctri3
+    9: 4, # cquad4
+    10: 4, # ctetra4
+    14: 5, # cpyram5
+    12: 8, # chexa8
+    13: 6, # cpenta6
+    22: 6, # ctria6
+    27: 13, # cpyram13
+}
 
 def numpy_to_vtk_points(nodes, points=None, dtype='<f', deep=1):
     """common method to account for vtk endian quirks and efficiently adding points"""
@@ -54,26 +148,15 @@ def _check_shape(etype: int, elements: np.ndarray, nnodes_per_element: int) -> N
     27  vtkQuadraticPyramid
 
     """
-    if etype == 1: # vertex
-        assert nnodes_per_element == 1, elements.shape
-    if etype == 3: # line
-        assert nnodes_per_element == 2, elements.shape
-    elif etype == 5:  # tri3
-        assert nnodes_per_element == 3, elements.shape
-    elif etype in [9, 10]:  # quad4, tet4
-        assert nnodes_per_element == 4, elements.shape
-    elif etype == 14: # CPYRAM5
-        assert nnodes_per_element == 5, elements.shape
-    elif etype == 12:  # hexa8
-        assert nnodes_per_element == 8, elements.shape
-    elif etype in [13, 22]:  # penta6,tri6
-        assert nnodes_per_element == 6, elements.shape
-    elif etype == 27: # CPYRAM13
-        assert nnodes_per_element == 13, elements.shape
-    elif isinstance(etype, str):
-        raise RuntimeError(etype)
+    if isinstance(etype, int):
+        try:
+            nnodes = ETYPES_EXPECTED_DICT[etype]
+            assert nnodes_per_element == nnodes, elements.shape
+        except KeyError:
+            warnings.warn(f'no recommendation for etype={etype}; nnodes_per_element={nnodes_per_element}')
     else:
-        warnings.warn(f'no recommendation for etype={etype}; nnodes_per_element={nnodes_per_element}')
+        raise RuntimeError(etype)
+
 
 def create_vtk_cells_of_constant_element_type(grid: vtk.vtkUnstructuredGrid,
                                               elements: np.ndarray,

@@ -24,6 +24,8 @@ PKG_PATH = pyNastran.__path__[0]
 MODEL_PATH = os.path.join(PKG_PATH, '..', 'models')
 from pyNastran.gui.gui_objects.gui_result import GuiResult
 from pyNastran.gui.utils.utils import find_next_value_in_sorted_list
+from pyNastran.gui.utils.qt.checks.utils import (check_locale_float, is_ranged_value,
+                                                 check_format_str)
 
 
 class GuiUtils(unittest.TestCase):
@@ -32,7 +34,7 @@ class GuiUtils(unittest.TestCase):
         This method is used by the gui to get the next result.
         We may have missing values because they were deleted.
 
-        """ 
+        """
         # ascending
         lst = [1, 2, 3, 4, 5]
         old = 1
@@ -733,6 +735,19 @@ class GuiUtils(unittest.TestCase):
                                 delete_images=True, make_gif=True)
             self.assertTrue(success)
             shutil.rmtree('mydir')
+
+    def test_check_format_str(self):
+        assert check_format_str('%g')[1] is True
+        assert check_format_str('%i')[1] is True
+        assert check_format_str('%d')[1] is True
+        assert check_format_str('%.3E')[1] is True
+        assert check_format_str('%.3g')[1] is True
+        assert check_format_str('%.4f')[1] is True
+        assert check_format_str('%08,.1f')[1] is True
+        assert check_format_str('%08,.p1f')[1] is False
+        assert check_locale_float('3.14')[0] == 3.14
+        assert check_locale_float('2,557')[0] == 2.557
+
 
 
 def assert_array(actual_array, expected_array, name):
