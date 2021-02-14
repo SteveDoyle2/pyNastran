@@ -637,7 +637,10 @@ class SPC(Constraint):
         enforced = [0., 0.]
         return SPC(conid, nodes, components, enforced, comment='')
 
-    def __init__(self, conid, nodes, components, enforced, comment=''):
+    def __init__(self, conid: int,
+                 nodes: List[int],
+                 components: List[str],
+                 enforced: List[float], comment: str=''):
         """
         Creates an SPC card, which defines the degree of freedoms to be
         constrained
@@ -1021,7 +1024,7 @@ class SPC1(Constraint):
         nodes = [1]
         return SPC1(conid, components, nodes, comment='')
 
-    def __init__(self, conid, components, nodes, comment=''):
+    def __init__(self, conid: int, components: str, nodes: List[int], comment: str=''):
         """
         Creates an SPC1 card, which defines the degree of freedoms to be
         constrained to a value of 0.0

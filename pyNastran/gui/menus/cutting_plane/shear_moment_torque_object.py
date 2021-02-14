@@ -105,9 +105,9 @@ class ShearMomentTorqueObject:
         nplanes = data['nplanes']
         #model = self.models[model_name]
 
-        cid_p1, p1 = data['p1']
-        cid_p2, p2 = data['p2']
-        cid_p3, p3 = data['p3']
+        cid_p1, p1 = data['p1'] # start
+        cid_p2, p2 = data['p2'] # xzplane
+        cid_p3, p3 = data['p3'] # end
         cid_zaxis, zaxis = data['zaxis']
         plane_color = data['plane_color']
         plane_opacity = data['plane_opacity']
@@ -182,6 +182,11 @@ class ShearMomentTorqueObject:
             #if stop_on_failure:
                 #raise
             #return None, None
+
+        # the plane actor defines the plane of the output results,
+        # not the plane of the march direction
+        # xyz1: origin
+        # xyz2: xzplane
         unused_plane_actor, unused_prop = self.create_plane_actor(
             xyz1, xyz2,
             coord, i, k, dim_max,

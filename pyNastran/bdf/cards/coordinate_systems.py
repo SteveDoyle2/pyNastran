@@ -1740,15 +1740,15 @@ class Cord2x(Coord):
         ----------
         cid : int
             the new coordinate system id
-        origin : (3,) ndarray
-             defines the location of the origin in the global coordinate frame
+        origin : (3,) float ndarray
+            defines the location of the origin in the global coordinate frame
         rid : int; default=0
             the new reference coordinate system id
-        i : (3,) ndarray
+        i : (3,) float ndarray
             defines the i unit vector
-        j : (3,) ndarray
+        j : (3,) float ndarray
             defines the j unit vector
-        k : (3,) ndarray
+        k : (3,) float ndarray
             defines the k unit vector
 
         """
@@ -1775,7 +1775,7 @@ class Cord2x(Coord):
             elif k is None:
                 k = np.cross(i, j)
             else:
-                raise RuntimeError('j or k are None; j=%s k=%s' % (j, k))
+                raise RuntimeError(f'j or k are None; j={j} k={k}')
 
         if np.abs(k).max() == 0.0 or np.abs(i).max() == 0.0:
             msg = (
@@ -2518,7 +2518,8 @@ class CORD2R(Cord2x, RectangularCoord):
     type = 'CORD2R'
     Type = 'R'
 
-    def __init__(self, cid, origin, zaxis, xzplane, rid=0, setup=True, comment=''):
+    def __init__(self, cid: int, origin, zaxis, xzplane,
+                 rid: int=0, setup: bool=True, comment: str=''):
         """
         Creates the CORD2R card, which defines a rectangular coordinate
         system using 3 vectors.

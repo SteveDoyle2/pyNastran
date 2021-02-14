@@ -489,7 +489,7 @@ def transform_force_moment(force_in_local, moment_in_local,
 
     if debug:
         log.debug('beta_out =\n%s' % beta_out)
-        log.debug(coord_out)
+        log.debug(str(coord_out))
         if consider_rxf:
             for ii in range(xyz_cid0.shape[0]):
                 log.debug('***i=%s xyz=%s nid=%s cd=%s' % (

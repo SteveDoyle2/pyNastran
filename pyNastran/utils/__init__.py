@@ -13,8 +13,9 @@ import sys
 import getpass
 import inspect
 import warnings
+from pathlib import PurePath
 from abc import abstractmethod
-from typing import List, Optional, Any
+from typing import List, Optional, Union, Any
 import pyNastran
 
 
@@ -59,7 +60,7 @@ def remove_files(filenames):
         except OSError:
             pass
 
-def is_binary_file(filename: str) -> bool:
+def is_binary_file(filename: Union[str, PurePath]) -> bool:
     """
     Return true if the given filename is binary.
 
@@ -80,7 +81,7 @@ def is_binary_file(filename: str) -> bool:
     that file is binary if it contains null.
 
     .. warning:: this may not work for unicode."""
-    assert isinstance(filename, str), '%r is not a valid filename' % filename
+    assert isinstance(filename, (str, PurePath)), f'{filename!r} is not a valid filename'
     check_path(filename)
     with io.open(filename, mode='rb') as fil:
         for chunk in iter(lambda: fil.read(1024), bytes()):

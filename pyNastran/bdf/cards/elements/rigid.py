@@ -1175,6 +1175,7 @@ class RBE3(RigidElement):
     type = 'RBE3'
     _properties = ['wt_cg_groups', 'ref_grid_id', 'Gijs_node_ids',
                    'dependent_nodes', 'independent_nodes']
+    _field_map = {4: 'refgrid', 5: 'refc',}
 
     @classmethod
     def _init_from_empty(cls):
@@ -1379,6 +1380,37 @@ class RBE3(RigidElement):
         for weight, comp, gijs in zip(self.weights, self.comps, self.Gijs):
             wt_cg_groups.append((weight, comp, gijs))
         return wt_cg_groups
+
+    #def _update_field_helper(self, n: int, value) -> None:
+        #"""
+        #+------+---------+---------+---------+------+--------+--------+------+--------+
+        #|   1  |    2    |    3    |    4    |  5   |    6   |    7   |   8  |    9   |
+        #+======+=========+=========+=========+======+========+========+======+========+
+        #| RBE3 |   EID   |         | REFGRID | REFC |  WT1   |   C1   | G1,1 |  G1,2  |
+        #+------+---------+---------+---------+------+--------+--------+------+--------+
+        #|      |   G1,3  |   WT2   |   C2    | G2,1 |  G2,2  |  etc.  | WT3  |   C3   |
+        #+------+---------+---------+---------+------+--------+--------+------+--------+
+        #|      |   G3,1  |   G3,2  |  etc.   | WT4  |  C4    |  G4,1  | G4,2 |  etc.  |
+        #+------+---------+---------+---------+------+--------+--------+------+--------+
+        #|      |   'UM'  |   GM1   |   CM1   | GM2  |  CM2   |  GM3   | CM3  |        |
+        #+------+---------+---------+---------+------+--------+--------+------+--------+
+        #|      |   GM4   |   CM4   |   GM5   | CM5  |  etc.  |        |      |        |
+        #+------+---------+---------+---------+------+--------+--------+------+--------+
+        #|      | 'ALPHA' |   ALPHA |         |      |        |        |      |        |
+        #+------+---------+---------+---------+------+--------+--------+------+--------+
+        #"""
+        #if n < 4:
+            #raise RuntimeError(f'refgrid (n=4) or higher; n={n}')
+        # start in 6
+        #nweights = len(self.weights)
+        #ngmis = [len(gmi) in self.Gmi]
+        #end_gmi = nweights * 2
+        ##ngmi = []
+        #istart = []
+        #for gmi in self.Gmi:
+
+        #istarts = []
+        #asd
 
     # def convert_to_mpc(self, mpc_id):
     #     """

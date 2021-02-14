@@ -353,6 +353,24 @@ class TestRigid(unittest.TestCase):
         rrod.raw_fields()
         save_load_deck(model)
 
+    def test_rbe3_update(self):
+        model = BDF()
+        eid = 1
+        refgrid = 2
+        refc = '123'
+        weights = [1.0, 2.0]
+        comps = ['123', '456']
+        Gijs = [3, 4]
+        rbe3 = model.add_rbe3(eid, refgrid, refc, weights, comps, Gijs,
+                              Gmi=None, Cmi=None, alpha=0.0, comment='')
+        #print(rbe3)
+        rbe3.refgrid = 42
+        #print(rbe3)
+        rbe3.get_field(4)
+        #rbe3.update_field(2, 3)
+        #self.assertRaises(IndexError):
+        rbe3.update_field(4, 6)
+
 def check_rbe(rbe):
     """simple RBE checks"""
     model = BDF(debug=None)

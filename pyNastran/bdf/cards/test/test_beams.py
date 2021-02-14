@@ -1699,6 +1699,25 @@ class TestBeams(unittest.TestCase):
         pbmsect = PBMSECT.add_card(card, comment='')
         pbmsect.write_card()
 
+    def test_get_update_cbeam(self):
+        #CBEAM       3001    3001    3007    3034     -1.      0.      0.
+        model = BDF(debug=True, log=None, mode='msc')
+        eid = 3001
+        pid = 3001
+        nids = [3007, 3034]
+        g0 = None
+        x = [1., 2., 3.]
+        cbeam = model.add_cbeam(
+            eid, pid, nids, x, g0, offt='GGG', bit=None,
+            pa=0, pb=0, wa=None, wb=None, sa=0, sb=0, comment='')
+        #print(cbeam)
+        assert cbeam.get_field(5) == 1.
+        assert cbeam.get_field(6) == 2.
+        assert cbeam.get_field(7) == 3.
+        cbeam.update_field(5, -1.)
+        cbeam.update_field(6, -2.)
+        cbeam.update_field(7, -3.)
+        #print(cbeam)
 
 if __name__ == '__main__':  # pragma: no cover
     unittest.main()

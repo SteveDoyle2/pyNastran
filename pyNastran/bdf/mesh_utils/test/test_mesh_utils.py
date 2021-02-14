@@ -33,6 +33,7 @@ from pyNastran.bdf.mesh_utils.mesh import create_structured_cquad4s, create_stru
 
 PKG_PATH = Path(pyNastran.__path__[0])
 MODEL_PATH = (PKG_PATH / '..' / 'models').resolve()
+BWB_PATH = MODEL_PATH / 'bwb'
 
 np.set_printoptions(edgeitems=3, infstr='inf',
                     linewidth=75, nanstr='nan', precision=3,
@@ -256,7 +257,7 @@ class TestMeshUtils(unittest.TestCase):
     def test_merge_01(self):
         """merges multiple bdfs into a single deck"""
         log = SimpleLogger(level='error')
-        bdf_filename1 = os.path.join(MODEL_PATH, 'bwb', 'bwb_saero.bdf')
+        bdf_filename1 = BWB_PATH / 'bwb_saero.bdf'
         bdf_filename2 = os.path.join(MODEL_PATH, 'sol_101_elements', 'static_solid_shell_bar.bdf')
         bdf_filename3 = os.path.join(MODEL_PATH, 'solid_bending', 'solid_bending.bdf')
         bdf_filename4 = os.path.join(MODEL_PATH, 'iSat', 'ISat_Dploy_Sm.dat')
@@ -808,7 +809,7 @@ class TestMeshUtils(unittest.TestCase):
     def test_mirror_bwb(self):
         """mirrors the BDF (we care about the aero cards)"""
         log = SimpleLogger(level='warning')
-        bdf_filename = MODEL_PATH / 'bwb' / 'bwb_saero.bdf'
+        bdf_filename = BWB_PATH / 'bwb_saero.bdf'
         model = bdf_mirror(bdf_filename, plane='xz', log=log)[0]
         model.uncross_reference()
         model.cross_reference()
@@ -880,6 +881,31 @@ class TestMeshUtils(unittest.TestCase):
                       #triangle_intersection(p, v, p0, p1, p2),
                       #quad_intersection(p, v, p0, p1, p3, p2))
 
+    def test_get_oml_eids(self):
+        bdf_filename = BWB_PATH / 'bwb_saero.bdf'
+        eid_start = 10144
+        model, eids_oml = get_oml_eids(
+            bdf_filename, eid_start, theta_tol=30.,
+            is_symmetric=True, consider_flippped_normals=True)
+        assert len(eids_oml) == 169, len(eids_oml)
+        eids_expected = {
+            10250, 10251, 10252, 10253, 10254, 10255, 10256, 10257, 10258, 10259, 10260,
+            10261, 10262, 10263, 10264, 10265, 10266, 10267, 10268, 10269, 10270, 10271,
+            10272, 10273, 10274, 10275, 10276, 10277, 10278, 10279, 10280, 10281, 10282,
+            10283, 10284, 10285, 10286, 10287, 10288, 10289, 10290, 10291, 10292, 10293,
+            10294, 10295, 10296, 10297, 10298, 10299, 10300, 10301, 10302, 10303, 10304,
+            10305, 10306, 10307, 10308, 10309, 10310, 10311, 10312, 10313, 10314, 10315,
+            10316, 10317, 10318, 10319, 10320, 10321, 10322, 10323, 10324, 10325, 10326,
+            10327, 10328, 10329, 10330, 10331, 10332, 10333, 10334, 10335, 10336, 10337,
+            10338, 10339, 10340, 10341, 10342, 10343, 10344, 10345, 10346, 10347, 10348,
+            10349, 10350, 10351, 10352, 10353, 10354, 10355, 10356, 10357, 10358, 10359,
+            10360, 10361, 10362, 10363, 10364, 10365, 10144, 10145, 10146, 10147, 10148,
+            10149, 10150, 10151, 10152, 10153, 10154, 10155, 10156, 10157, 10158, 10159,
+            10160, 10161, 10162, 10163, 10164, 10165, 10166, 10167, 10168, 10169, 10196,
+            10197, 10198, 10199, 10200, 10201, 10202, 10203, 10204, 10205, 10206, 10207,
+            10208, 10209, 10210, 10211, 10212, 10213, 10214, 10215, 10216, 10217, 10218,
+            10219, 10220, 10221, 10222}
+        assert eids_oml == eids_expected
 
 class TestEquiv(unittest.TestCase):
 
