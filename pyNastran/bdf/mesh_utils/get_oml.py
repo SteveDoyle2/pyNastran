@@ -116,14 +116,14 @@ def get_oml_eids(bdf_filename: Union[str, BDF, PurePath, StringIO],
                 normal = normals[eid]
                 # a o b = a * b * cos(theta)
                 # cos(theta) = (a o b)/ (a b); where |a| = 1; |b| = 1
-                cos_theta = normal @ normal_start
+                cos_theta = np.clip(normal @ normal_start, -1.0, 1.0)
                 theta = np.arccos(cos_theta)
                 if theta < theta_tol:
                     eids_next.add(eid)
                     eids_oml.add(eid)
                 elif consider_flippped_normals:
                     # handles flipped normals
-                    cos_theta = normal @ -normal_start
+                    cos_theta = np.clip(normal @ -normal_start, -1.0, 1.0)
                     theta = np.arccos(cos_theta)
                     if theta < theta_tol:
                         eids_next.add(eid)

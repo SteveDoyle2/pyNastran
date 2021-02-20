@@ -64,7 +64,7 @@ class BaseCard:
         #raw_fields = self.repr_fields()
         raw_fields = self.raw_fields()
         card = BDFCard(raw_fields)
-        return self.add_card(card)
+        return self.add_card(card, comment=self.comment)
 
     def get_stats(self) -> str:
         """Prints out an easy to read summary of the card"""

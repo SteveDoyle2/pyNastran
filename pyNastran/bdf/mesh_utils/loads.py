@@ -1170,7 +1170,7 @@ def _add_force(Fg: np.ndarray, dof_map: Dict[Tuple[int, int], int], model: BDF,
                 # rectangular
                 pass
             Tgb = Tbg.T
-            fglobal = np.dot(Tgb, fbasic)
+            fglobal = Tgb @ fbasic
     else:
         raise NotImplementedError(f'node_ref.cd={node_ref.cd} cid={cid} load:\n{str(load)}')
 

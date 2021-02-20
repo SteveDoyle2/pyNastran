@@ -41,9 +41,10 @@ class TestNsm(unittest.TestCase):
 
         x = [0., 0., 1.]
         g0 = None
-        model.add_cbar(eid_pbarl, pid_pbarl, [1, 2], x, g0, offt='GGG', pa=0, pb=0,
+        nids_beam = [1, 2]
+        model.add_cbar(eid_pbarl, pid_pbarl, nids_beam, x, g0, offt='GGG', pa=0, pb=0,
                        wa=None, wb=None, comment='')
-        model.add_cbeam(eid_pbeaml, pid_pbeaml, nids, x, g0, offt='GGG', bit=None,
+        model.add_cbeam(eid_pbeaml, pid_pbeaml, nids_beam, x, g0, offt='GGG', bit=None,
                         pa=0, pb=0, wa=None, wb=None, sa=0, sb=0, comment='')
         model.add_crod(eid_crod, pid_prod, [1, 2])
         model.add_prod(pid_prod, mid, A=0.1)

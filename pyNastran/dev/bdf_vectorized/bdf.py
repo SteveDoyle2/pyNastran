@@ -2804,11 +2804,14 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
         is_beta = np.abs(np.diagonal(beta2)).min() == 1.
         is_origin = np.abs(coord2.origin).max() == 0.
         if is_beta and is_origin:
-            xyz_cid = coord2.xyz_to_coord_array(np.dot(xyz_cid0 - coord2.origin, beta2.T))
+            xyzi = (xyz_cid0 - coord2.origin) @ beta2.T
+            xyz_cid = coord2.xyz_to_coord_array(xyzi)
         elif is_beta:
-            xyz_cid = coord2.xyz_to_coord_array(xyz_cid0 @ beta2.T)
+            xyzi = xyz_cid0 @ beta2.T
+            xyz_cid = coord2.xyz_to_coord_array(xyzi)
         else:
-            xyz_cid = coord2.xyz_to_coord_array(xyz_cid0 - coord2.origin)
+            xyzi = xyz_cid0 - coord2.origin
+            xyz_cid = coord2.xyz_to_coord_array(xyzi)
 
         return xyz_cid
 

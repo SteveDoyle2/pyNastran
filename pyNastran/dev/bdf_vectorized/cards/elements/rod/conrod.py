@@ -451,7 +451,7 @@ class CONROD(RodElement):
                 (n2, 4), (n2, 5), (n2, 6),
             ]
 
-        #Fg = dot(dot(transpose(Lambda), grav), Lambda)
+        #Fg = (Lambda.T @ grav) @ Lambda
         #print("K=\n", K / knorm)
         #print("K2=\n", K2 / knorm)
 

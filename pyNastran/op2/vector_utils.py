@@ -471,7 +471,6 @@ def transform_force_moment(force_in_local, moment_in_local,
     """
     #print('consider_rxf =', consider_rxf)
     #debug = True
-    assert log is not None
     assert nid_cd.shape[0] == force_in_local.shape[0]
     dtype = force_in_local.dtype
     #dtype = 'float64'
@@ -488,6 +487,7 @@ def transform_force_moment(force_in_local, moment_in_local,
     beta_out = coord_out.beta().T
 
     if debug:
+        assert log is not None
         log.debug('beta_out =\n%s' % beta_out)
         log.debug(str(coord_out))
         if consider_rxf:
@@ -538,8 +538,8 @@ def transform_force_moment(force_in_local, moment_in_local,
         # rotate the forces/moments into a coordinate system coincident
         # with the local frame and with the same primary directions
         # as the global frame
-        force_in_globali = force_in_locali.dot(beta_cd)
-        moment_in_globali = moment_in_locali.dot(beta_cd)
+        force_in_globali = force_in_locali @ beta_cd
+        moment_in_globali = moment_in_locali @ beta_cd
 
         # rotate the forces and moments into a coordinate system coincident
         # with the output frame and with the same primary directions
@@ -548,8 +548,8 @@ def transform_force_moment(force_in_local, moment_in_local,
         #if 0 and np.array_equal(beta_out, eye):
             #force_outi = force_in_globali
             #moment_outi = moment_in_globali
-        force_outi = force_in_globali.dot(beta_out)
-        moment_outi = moment_in_globali.dot(beta_out)
+        force_outi = force_in_globali @ beta_out
+        moment_outi = moment_in_globali @ beta_out
 
         if debug:
             #if show_local:
@@ -572,7 +572,7 @@ def transform_force_moment(force_in_local, moment_in_local,
             delta = xyz_cid0[i, :] - summation_point_cid0[np.newaxis, :]
             rxf = cross(delta, force_in_globali)
 
-            rxf_in_cid = rxf.dot(beta_out)
+            rxf_in_cid = rxf @ beta_out
             if debug:
                 log.debug('delta_moment = %s' % delta)
                 #log.debug('rxf = %s' % rxf.T)
@@ -637,7 +637,6 @@ def transform_force_moment_sum(force_in_local: NDArrayN3float, moment_in_local: 
     .. todo:: doesn't seem to handle cylindrical/spherical systems
 
     """
-    assert log is not None
     out = transform_force_moment(
         force_in_local, moment_in_local,
         coord_out, coords, nid_cd,
@@ -646,6 +645,7 @@ def transform_force_moment_sum(force_in_local: NDArrayN3float, moment_in_local: 
         debug=debug, log=log)
     force_out, moment_out = out
     if debug:
+        assert log is not None
         log.debug('force_sum = %s' % force_out.sum(axis=0))
         if consider_rxf:
             log.debug('moment_sum = %s' % moment_out.sum(axis=0))

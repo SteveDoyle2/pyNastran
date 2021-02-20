@@ -282,7 +282,7 @@ class GRID(VectorizedCard):
                 #j = n2[i]
                 #print(j)
                 xyzi = xyz[j, :]
-                #xyzi = dot(transpose(T), dot(xyzi, T))
+                #xyzi = T.T @ (xyzi @ T)
                 xyz[j, :] = self.model.coords.get_global_position_by_xyz(xyzi, cp)
 
         #assert len(node_ids) == len(cpn), 'n1=%s n2=%s'  %(len(node_ids), len(cpn))

@@ -51,7 +51,7 @@ def quad_area_centroid(n1, n2, n3, n4):
         msg += 'area2 = %s\n' % str(area2.shape)
         msg += 'area  = %s' % str(area.shape)
         print(msg)
-        #dot(c1.T, area1)
+        #c1.T @ area1
         raise
     n = len(n1)
     assert area.shape == (n, ), area.shape

@@ -9,8 +9,11 @@ Defines:
    - OP2
 
 """
+from __future__ import annotations
 from pickle import dump
-from typing import List, Optional, Any
+from pathlib import PurePath
+from typing import List, Optional, Union, Any, TYPE_CHECKING
+
 from pyNastran.op2.tables.geom.geom1 import GEOM1
 from pyNastran.op2.tables.geom.geom2 import GEOM2
 from pyNastran.op2.tables.geom.geom3 import GEOM3
@@ -29,16 +32,18 @@ from pyNastran.op2.tables.geom.axic import AXIC
 from pyNastran.bdf.bdf import BDF
 from pyNastran.bdf.errors import DuplicateIDsError
 from pyNastran.op2.op2 import OP2, FatalError, SortCodeError, DeviceCodeError, FortranMarkerError
+if TYPE_CHECKING:
+    from cpylog import SimpleLogger
 
 
-def read_op2_geom(op2_filename: Optional[str]=None,
+def read_op2_geom(op2_filename: Optional[Union[str, PurePath]]=None,
                   combine: bool=True,
                   subcases: Optional[List[int]]=None,
                   exclude_results: Optional[List[str]]=None,
                   include_results: Optional[List[str]]=None,
                   validate: bool=True, xref: bool=True,
                   build_dataframe: bool=False, skip_undefined_matrices: bool=True,
-                  mode: str='msc', log: Any=None, debug: bool=True,
+                  mode: str='msc', log: SimpleLogger=None, debug: bool=True,
                   debug_file: Optional[str]=None,
                   encoding: Optional[str]=None):
     """
@@ -300,8 +305,10 @@ class OP2Geom(BDF, OP2GeomCommon):
     def is_geometry(self) -> bool:
         return True
 
-    def read_op2(self, op2_filename=None, combine: bool=True,
-                 build_dataframe=None, skip_undefined_matrices=False, encoding=None):
+    def read_op2(self, op2_filename: Optional[Union[str, PurePath]]=None, combine: bool=True,
+                 build_dataframe: Optional[bool]=None,
+                 skip_undefined_matrices: bool=False,
+                 encoding: Optional[str]=None):
         """see ``OP2.read_op2``"""
         OP2.read_op2(self, op2_filename=op2_filename, combine=combine,
                      build_dataframe=build_dataframe,

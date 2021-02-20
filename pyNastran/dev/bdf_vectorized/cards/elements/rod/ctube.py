@@ -309,7 +309,7 @@ class CTUBE(RodElement):
                    [1., 2.]])  # 1D rod
 
         Lambda = _Lambda(v1, debug=False)
-        M = dot(dot(transpose(Lambda), m), Lambda)
+        M = (Lambda.T @ m) @ Lambda
 
         Mi, Mj = M.shape
         dofs = array([
@@ -386,7 +386,7 @@ class CTUBE(RodElement):
                    [-1., 1.]])  # 1D rod
 
         Lambda = _Lambda(v1, debug=True)
-        K = dot(dot(transpose(Lambda), k), Lambda)
+        K = Lambda.T @ k @ Lambda
         Ki, Kj = K.shape
 
         # for testing
@@ -444,7 +444,7 @@ class CTUBE(RodElement):
                 (n2, 4), (n2, 5), (n2, 6),
             ]
 
-        #Fg = dot(dot(transpose(Lambda), grav), Lambda)
+        #Fg = (Lambda.T @ grav) @ Lambda
         #print("K=\n", K / knorm)
         #print("K2=\n", K2 / knorm)
 
@@ -548,9 +548,9 @@ class CTUBE(RodElement):
 
             #print("Lsize = ", Lambda.shape)
             #print("qsize = ", q.shape)
-            u_axial = dot(array(Lambda), q_axial)
+            u_axial = array(Lambda) @ q_axial
             du_axial = -u_axial[0] + u_axial[1]
-            u_torsion = dot(array(Lambda), q_torsion)
+            u_torsion = array(Lambda) @ q_torsion
             du_torsion = -u_torsion[0] + u_torsion[1]
 
             #L = self.Length()

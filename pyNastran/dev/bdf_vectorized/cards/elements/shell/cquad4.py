@@ -356,7 +356,7 @@ class CQUAD4(ShellElement):
                 xyz2,
                 xyz3,
                 xyz4,
-            ]).dot(T)
+            ]) @ T
 
         dofs = array([
             i1, i1+1,
@@ -388,7 +388,7 @@ class CQUAD4(ShellElement):
                 [v - 1.0, -v + 1.0, v + 1.0, -v - 1.0],
                 [u - 1.0, -u - 1.0, u + 1.0, -u + 1.0],
             ]) / 4.
-            J = Ji.dot(xy)
+            J = Ji @ xy
             Jinv = np.linalg.inv(J)
             detJ = np.linalg.det(J)
             darea = detJ
@@ -401,13 +401,13 @@ class CQUAD4(ShellElement):
                 #[-1.0 - wtj, -1.0 + wtj, 1.0 - wtj, 1.0 + wtj],
             #])
             #print('B2 =\n', B2)
-            #B = B2.dot(xy)
-            B = Jinv.dot(Ji)
+            #B = B2 @ xy
+            B = Jinv @ Ji
             #print('B =\n', B)
             k = 1. * darea
             #print('dA =', darea)
 
-            K = k * B.T.dot(B)
+            K = k * B.T @ B
             #print('K =\n', K)
         else:
             K = np.zeros((8, 8), dtype='float64')
@@ -420,13 +420,13 @@ class CQUAD4(ShellElement):
                         [v - 1.0, -v + 1.0, v + 1.0, -v - 1.0],
                         [u - 1.0, -u - 1.0, u + 1.0, -u + 1.0],
                     ]) / 4.
-                    J = Ji.dot(xy)
+                    J = Ji @ xy
                     Jinv = np.linalg.inv(J)
                     det_j = np.linalg.det(J)
                     darea = det_j
 
 
-                    B1 = Jinv.dot(Ji)
+                    B1 = Jinv @ Ji
                     #print('B1 =\n', B1)
                     N1x, N2x, N3x, N4x = B1[0, :]
                     N1y, N2y, N3y, N4y = B1[1, :]

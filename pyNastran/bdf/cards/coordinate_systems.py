@@ -755,7 +755,7 @@ class Coord(BaseCard):
         """
         if self.origin is None:
             raise RuntimeError('Origin=%s; Cid=%s Rid=%s' % (self.origin, self.cid, self.Rid()))
-        xyz_coord = np.dot(xyz - self.origin, beta.T)
+        xyz_coord = (xyz - self.origin) @ beta.T
         xyz_local = self.xyz_to_coord(xyz_coord)
         return xyz_local
 
@@ -774,7 +774,7 @@ class Coord(BaseCard):
         """
         if self.origin is None:
             raise RuntimeError('Origin=%s; Cid=%s Rid=%s' % (self.origin, self.cid, self.Rid()))
-        xyz_coord = np.dot(xyz - self.origin, beta.T)
+        xyz_coord = (xyz - self.origin) @ beta.T
         xyz_local = self.xyz_to_coord_array(xyz_coord)
         return xyz_local
 
@@ -1571,6 +1571,22 @@ class Cord2x(Coord):
         # if setup:
         self._finish_setup()
 
+    def __deepcopy__(self, memo_dict):
+        if self.type == 'CORD2R':
+            cls = CORD2R
+        elif self.type == 'CORD2C':
+            cls = CORD2C
+        elif self.type == 'CORD2S':
+            cls = CORD2S
+
+        cid = self.cid
+        origin = copy.deepcopy(self.e1)
+        zaxis = copy.deepcopy(self.e2)
+        xzplane = copy.deepcopy(self.e3)
+        new_coood = cls(cid, origin, zaxis, xzplane, rid=self.rid,
+                        setup=True, comment=self.comment)
+        return new_coood
+
     @classmethod
     def export_to_hdf5(cls, h5_file, model, cids):
         """exports the coords in a vectorized way"""
@@ -1870,7 +1886,7 @@ class Cord2x(Coord):
         self.cid = cid_map[self.cid]
         self.rid = cid_map[self.rid]
 
-    def update_e123(self, maintain_rid=False):
+    def update_e123(self, maintain_rid: bool=False) -> None:
         """
         If you move the coordinate frame, e1, e2, e3 does not update.
         This updates the coordinate system.
@@ -1902,6 +1918,11 @@ class Cord2x(Coord):
         self.e1 = copy.deepcopy(self.origin)
         self.e2 = self.origin + self.k
         self.e3 = self.origin + self.i
+
+    def translate(self, dxyz: NDArray3float) -> None:
+        self.e1 += dxyz
+        self.e2 += dxyz
+        self.e3 += dxyz
 
     def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.repr_fields()

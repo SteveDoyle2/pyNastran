@@ -279,13 +279,13 @@ class CTETRA4(SolidElement):
             [v - 1.0, -v + 1.0, v + 1.0, -v - 1.0],
             [u - 1.0, -u - 1.0, u + 1.0, -u + 1.0],
         ]) / 4.
-        #J = Ji.dot(xy)
+        #J = Ji @ xy
         #Jinv = np.linalg.inv(J)
         #det_j = np.linalg.det(J)
         #darea = det_j
 
 
-        #B1 = Jinv.dot(Ji)
+        #B1 = Jinv @ Ji
         #print('B1 =\n', B1)
         #N1x, N2x, N3x, N4x = B1[0, :]
         #N1y, N2y, N3y, N4y = B1[1, :]
@@ -362,7 +362,7 @@ class CTETRA4(SolidElement):
 
         #print('C =\n', C)
         #print('thickness =', thickness)
-        Ki = B.T @ C.dot(B)
+        Ki = B.T @ C @ B
         #print('Ki(%s,%s) =%s\n' % (u, v, Ki))
         #print('Ki(%s,%s) =\n%s\n' % (u, v, list_print(Ki, '%.4e')))
         K += Ki

@@ -14,9 +14,10 @@ defines some half-implemented functions with significant restrictions
 """
 from collections import defaultdict
 from functools import reduce
+from typing import Optional
 
 import numpy as np
-from numpy import (array, where, hstack, searchsorted, float32, arccos, dot, degrees)
+from numpy import array, where, hstack, searchsorted, float32, arccos, degrees
 
 from numpy.linalg import norm  # type: ignore
 
@@ -352,12 +353,13 @@ def extract_surface_patches(bdf_filename, starting_eids, theta_tols=40.):
 
             # we flip the dimensions because matrix shapes are stupid
             #theta = degrees(arccos(dot(local_normal, normal)))
-            theta = degrees(arccos(dot(local_normal, normal.T).T))
+            theta = arccos((local_normal @ normal.T).T)
+            theta_deg = degrees(theta)
 
             #print('    theta[eid=%s] = %s; n=%s' % (eid, theta, nneighbors))
             assert len(theta) == nneighbors, len(theta)
 
-            itol = where(theta <= theta_tol)[0]
+            itol = where(theta_deg <= theta_tol)[0]
             eids_within_tol = neigboring_eids_to_check[itol]
             group.update(eids_within_tol)
             check.update(eids_within_tol)
@@ -366,8 +368,9 @@ def extract_surface_patches(bdf_filename, starting_eids, theta_tols=40.):
     return model, groups
 
 
-def split_model_by_material_id(bdf_filename, bdf_filename_base,
-                               encoding=None, size=8, is_double=False):
+def split_model_by_material_id(bdf_filename: str, bdf_filename_base: str,
+                               encoding: Optional[str]=None,
+                               size: int=8, is_double: bool=False):
     """
     Splits a model based on the material ID
 

@@ -51,7 +51,7 @@ class Coord(VectorizedCard):
         #self.model.log.info('T=\n%s' % T)
         #self.model.log.info('xyz=%s' % xyz)
         #self.model.log.info('xyz.shape=%s' % str(xyz.shape))
-        xyz2 = (dot(T.T, xyz.T)  + origin).T  # TODO: should this have T.T?
+        xyz2 = ((T.T @ xyz.T)  + origin).T  # TODO: should this have T.T?
         #print('xyz = %s' % xyz.T)
         #print('xyz2 = %s' % xyz2)
         assert xyz.shape == xyz2.shape, "xyz.shape=%s xyz2.shape=%s" % (xyz.shape, xyz2.shape)
@@ -331,12 +331,12 @@ class Coord(VectorizedCard):
             #print("  ri = %s" % ri)
             #print("  refi = %s" % ref_coordi)
             if ref_coord_typei == 'R':  # Rectangular
-                ei = dot(Ti, xyzi)
+                ei = Ti @ xyzi
             elif ref_coord_typei == 'C':  # Cylindrical
-                ei = dot(T, self.cylindrical_to_rectangular(xyzi))
+                ei = T @ self.cylindrical_to_rectangular(xyzi)
                  #+ self.origin[ri]
             elif ref_coord_typei == 'S':  # Spherical
-                ei = dot(Ti, self.spherical_to_rectangular(xyzi))
+                ei = Ti @ self.spherical_to_rectangular(xyzi)
             else:
                 raise NotImplementedError(ref_coord_typei)
             e.append(ei)
@@ -387,20 +387,20 @@ class Coord(VectorizedCard):
         #print("  T[%i] = %s" % (i, T))
         # transform coord.e2/e3 to the global
         if ref_coord_type == 'R':  # Rectangular
-            e1 = dot(T, coord.e1)
+            e1 = T @ coord.e1
             # proving math is right...
             pts = vstack([coord.e2, coord.e3])
-            e123 = dot(T, pts.T).T
+            e123 = (T @ pts.T).T
             e2 = e123[0, :]
             e3 = e123[1, :]
         elif ref_coord_type == 'C':  # Cylindrical
-            _e1 = dot(T, self.cylindrical_to_rectangular(coord.e1)).T
-            _e2 = dot(T, self.cylindrical_to_rectangular(coord.e2)).T
-            _e3 = dot(T, self.cylindrical_to_rectangular(coord.e3)).T
+            _e1 = (T @ self.cylindrical_to_rectangular(coord.e1)).T
+            _e2 = (T @ self.cylindrical_to_rectangular(coord.e2)).T
+            _e3 = (T @ self.cylindrical_to_rectangular(coord.e3)).T
             _e123 = vstack([_e1, _e2, _e3])
 
             pts = vstack([coord.e1, coord.e2, coord.e3])
-            e123 = dot(T, self.cylindrical_to_rectangular(pts).T)
+            e123 = (T @ self.cylindrical_to_rectangular(pts).T)
             assert array_equal(e123, _e123), "e123=\n%s\n\n_e123=\n%s" % (e123, _e123)
             e1 = e123[0, :]
             e2 = e123[1, :]
@@ -409,9 +409,9 @@ class Coord(VectorizedCard):
         elif ref_coord_type == 'S':  # Spherical
             #print([coord.e1, coord.e2, coord.e3])
             # column
-            #_e1 = dot(T, self.spherical_to_rectangular(coord.e1))
-            #_e2 = dot(T, self.spherical_to_rectangular(coord.e2))
-            #_e3 = dot(T, self.spherical_to_rectangular(coord.e3))
+            #_e1 = (T @ self.spherical_to_rectangular(coord.e1))
+            #_e2 = (T @ self.spherical_to_rectangular(coord.e2))
+            #_e3 = (T @ self.spherical_to_rectangular(coord.e3))
             #print("_e1", _e1
             #_e123 = vstack([_e1, _e2, _e3])
 
@@ -426,27 +426,27 @@ class Coord(VectorizedCard):
                 #t123 = self.spherical_to_rectangular(pts)
                 #assert array_equal(t123, _t123), "t123=\n%s\n\n_t123=\n%s" % (t123, _t123)
 
-                #e123 = dot(T, t123).T
-                #e123 = dot(T, self.spherical_to_rectangular(pts).T).T
+                #e123 = (T @ t123).T
+                #e123 = (T @ self.spherical_to_rectangular(pts).T).T
                 #assert array_equal(e123, _e123), "e123=\n%s\n\n_e123=\n%s" % (e123, _e123)
             else:
-                e123 = dot(T, self.spherical_to_rectangular(pts).T).T
+                e123 = (T @ self.spherical_to_rectangular(pts).T).T
             e1 = e123[0, :]
             e2 = e123[1, :]
             e3 = e123[2, :]
 
             #pts = vstack([coord.e2, coord.e3])
             #print("pts2", pts, pts.shape)
-            #e123 = dot(T, self.spherical_to_rectangular(coord, pts).T).T
+            #e123 = (T @ self.spherical_to_rectangular(coord, pts).T).T
             #e2 = e123[0, :]
             #e3 = e123[1, :]
             #assert array_equal(e1, _e1), "e1=%s\n_e1=%s" % (e1, _e1)
             #assert allclose(e2, _e2), "\n e2=%s\n_e2=%s\ndiff=%s" % (e2, _e2, e2 - _e2)
             #assert allclose(e3, _e3), "\n e3=%s\n_e3=%s\ndiff=%s" % (e3, _e3, e3 - _e3)
 
-            #e1 = dot(T, self.spherical_to_rectangular(coord, coord.e1))
-            #e2 = dot(T, self.spherical_to_rectangular(coord, coord.e2))
-            #e3 = dot(T, self.spherical_to_rectangular(coord, coord.e3))
+            #e1 = (T @ self.spherical_to_rectangular(coord, coord.e1))
+            #e2 = (T @ self.spherical_to_rectangular(coord, coord.e2))
+            #e3 = (T @ self.spherical_to_rectangular(coord, coord.e3))
             #raise NotImplementedError(ref_coord)
         else:
             raise RuntimeError(ref_coord_type)
@@ -609,7 +609,7 @@ class Coord(VectorizedCard):
         icp = self.get_coord_index_by_coord_id(cp)
         T = self.T[icp, :, :].reshape(3, 3)
         origin = self.origin[icp, :]
-        xyz_global = dot(xyz - origin, transpose(T))
+        xyz_global = (xyz - origin) @ T.T
         return xyz_global
 
     def transform_node_id_to_local_by_coord_id(self, node_id, cp_local):
@@ -617,7 +617,7 @@ class Coord(VectorizedCard):
         icp = self.get_coord_index_by_coord_id(cp_local)
         T = self.T[icp, :, :].reshape(3, 3)
         origin = self.origin[icp, :]
-        xyz_local = dot(xyz_global - origin, transpose(T))
+        xyz_local = (xyz_global - origin) @ T.T
         return xyz_local
 
     def transform_node_id_to_global_xyz(self, node_id):
@@ -648,8 +648,8 @@ class Coord(VectorizedCard):
                 #print('icp = %s' % icp)
                 T = self.T[icp, :, :].reshape(3, 3)
                 origin = self.origin[icp, :]
-                # dot(p - self.origin, transpose(beta))
-                xyz[inodei, :] = dot(xyzi - origin, transpose(T))
+                # (p - self.origin) @ beta.T
+                xyz[inodei, :] = (xyzi - origin) @ T.T
         return xyz
         #return self.transform_vector_to_global(p) + self.origin
 

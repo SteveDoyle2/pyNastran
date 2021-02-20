@@ -1707,16 +1707,45 @@ class TestBeams(unittest.TestCase):
         nids = [3007, 3034]
         g0 = None
         x = [1., 2., 3.]
+        wa = [4., 5., 6.]
+        wb = [7., 8., 9.]
         cbeam = model.add_cbeam(
             eid, pid, nids, x, g0, offt='GGG', bit=None,
-            pa=0, pb=0, wa=None, wb=None, sa=0, sb=0, comment='')
+            pa=0, pb=0, wa=wa, wb=wb, sa=0, sb=0, comment='')
         #print(cbeam)
+        # x
         assert cbeam.get_field(5) == 1.
         assert cbeam.get_field(6) == 2.
         assert cbeam.get_field(7) == 3.
         cbeam.update_field(5, -1.)
         cbeam.update_field(6, -2.)
         cbeam.update_field(7, -3.)
+        assert cbeam.get_field(5) == -1.
+        assert cbeam.get_field(6) == -2.
+        assert cbeam.get_field(7) == -3.
+
+        # wa - 11-13
+        assert cbeam.get_field(11) == 4.
+        assert cbeam.get_field(12) == 5.
+        assert cbeam.get_field(13) == 6.
+        cbeam.update_field(11, -4.)
+        cbeam.update_field(12, -5.)
+        cbeam.update_field(13, -6.)
+        assert cbeam.get_field(11) == -4.
+        assert cbeam.get_field(12) == -5.
+        assert cbeam.get_field(13) == -6.
+
+        # wb - 14-16
+        assert cbeam.get_field(14) == 7.
+        assert cbeam.get_field(15) == 8.
+        assert cbeam.get_field(16) == 9.
+        cbeam.update_field(14, -7.)
+        cbeam.update_field(15, -8.)
+        cbeam.update_field(16, -9.)
+        assert cbeam.get_field(14) == -7.
+        assert cbeam.get_field(15) == -8.
+        assert cbeam.get_field(16) == -9.
+
         #print(cbeam)
 
 if __name__ == '__main__':  # pragma: no cover
