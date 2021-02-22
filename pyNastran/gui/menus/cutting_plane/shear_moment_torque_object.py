@@ -164,7 +164,7 @@ class ShearMomentTorqueObject:
         nids, nid_cd, icd_transform, xyz_cid0 = get_nid_cd_xyz_cid0(model)
         #xyz1, xyz2, xyz3, i, k, origin, xzplane, dim_max, stations
         try:
-            xyz1, xyz2, xyz3, i, k, coord_out, dim_max, stations = setup_coord_from_plane(
+            xyz1, xyz2, xyz3, i, k, coord_out, coord_march, dim_max, stations = setup_coord_from_plane(
                 model, xyz_cid0,
                 p1, p2, p3, zaxis,
                 method=method,
@@ -210,7 +210,8 @@ class ShearMomentTorqueObject:
         force_sum, moment_sum, new_coords, nelems, nnodes = gpforce.shear_moment_diagram(
             xyz_cid0, eids, nids, icd_transform,
             element_centroids_cid0,
-            model.coords, nid_cd, stations, coord,
+            model.coords, nid_cd, stations,
+            coord, coord_march=coord_march,
             idir=0, itime=0, debug=False, log=log)
         plot_smt(stations, force_sum, moment_sum, nelems, nnodes, show=show)
         return force_sum, moment_sum

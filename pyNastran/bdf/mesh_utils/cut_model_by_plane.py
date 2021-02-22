@@ -36,7 +36,9 @@ def get_nid_cd_xyz_cid0(model: BDF) -> Tuple[NDArrayNint, NDArrayNint,
         cid=0)
     return nids, nid_cd, icd_transform, xyz_cid0
 
-def get_element_centroids(model: BDF, idtype='int32', fdtype='float32') -> Tuple[NDArrayNint, NDArray3float]:
+def get_element_centroids(model: BDF,
+                          idtype: str='int32',
+                          fdtype: str='float32') -> Tuple[NDArrayNint, NDArray3float]:
     """gets the element ids and their centroids"""
     eids = []
     element_centroids_cid0 = []
@@ -169,7 +171,7 @@ def get_stations(model: BDF,
     i_abs = np.abs(coord_march.i)
     i_abs_max = i_abs.max()
     idir = np.where(i_abs == i_abs_max)[0][0]
-    isign = np.sign(coord_march.i[idir])
+    #isign = np.sign(coord_march.i[idir])
     dx = xaxis[0] # * isign
 
     if abs(dx) == 0.:
@@ -319,7 +321,7 @@ def _project_z_axis(p1: NDArray3float,
     x = p2 - p1
     norm_x = np.linalg.norm(x)
     if norm_x == 0.:
-       raise RuntimeError(f'p1={p1} and p2={p2} are coincident; distance={norm_x}')
+        raise RuntimeError(f'p1={p1} and p2={p2} are coincident; distance={norm_x}')
     iprime = x / norm_x
     k = z_global / np.linalg.norm(z_global)
     j = np.cross(k, iprime)

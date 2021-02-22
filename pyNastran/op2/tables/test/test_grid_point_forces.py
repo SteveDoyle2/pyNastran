@@ -91,7 +91,6 @@ class TestGridPointForcesSMT(unittest.TestCase):
         assert np.array_equal(origin, p1), origin
         assert np.array_equal(zaxis2, p1+zaxis), zaxis2
         assert np.array_equal(xzplane, p2), xzplane
-        x = 1
 
     def test_get_stations_bwb(self):
         model = BDF(debug=False)
@@ -100,7 +99,6 @@ class TestGridPointForcesSMT(unittest.TestCase):
         p2 = p1 + np.array([1., 0., 0.]) # xz-plane
         p3 = np.array([940.93, 1.7976e-07, 0.0])
         zaxis = np.array([0., 0., 1.])
-        idir = 0
         #xyz1, xyz2, z_global, i, k, origin, zaxis2, xzplane = _p1_p2_zaxis_to_cord2r(
             #model, p1, p2, zaxis, method='Z-Axis Projection',
             #cid_p1=0, cid_p2=0, cid_zaxis=0)
@@ -122,7 +120,6 @@ class TestGridPointForcesSMT(unittest.TestCase):
         print(coord_out.e1, coord_out.e2, coord_out.e3)
         print(coord_march.e1, coord_march.e2, coord_march.e3)
         assert np.allclose(coord_march.e1, xyz1)
-        x = 1
 
 
     def test_op2_bwb_smt_setup(self):  # pragma: no cover
@@ -153,9 +150,9 @@ class TestGridPointForcesSMT(unittest.TestCase):
     @unittest.skipIf(getpass.getuser() != 'sdoyle', 'local test')
     def test_op2_bwb_axial(self):  # pragma: no cover
         """how to plot an shear-moment-torque"""
-        axial
         log = SimpleLogger(level='warning')
-        op2_filename = MODEL_PATH / 'bwb' / 'bwb_saero.op2'
+        BWB_PATH = MODEL_PATH / 'bwb'
+        op2_filename = BWB_PATH / 'bwb_saero.op2'
         model = OP2Geom(debug=False, log=log, debug_file=None, mode=None)
         #model.load_as_h5 = True
         model.read_op2(op2_filename=op2_filename, combine=True,
@@ -199,7 +196,6 @@ class TestGridPointForcesSMT(unittest.TestCase):
         p3 = np.array([1600., 0., 0.]) # xzplane/end
         zaxis = np.array([0., 0., 1.])
         method = 'Z-Axis Projection'
-        idir = 0
 
         xyz1, xyz2, xyz3, i, k, coord_out, coord_march, stations = get_stations(
             model, p1, p2, p3, zaxis,
@@ -213,20 +209,21 @@ class TestGridPointForcesSMT(unittest.TestCase):
         print(f'xzplane: {coord_out.e3}')
 
         force_sum, moment_sum, new_coords, nelems, nnodes = gpforce.shear_moment_diagram(
-            xyz_cid0, eids, nids, icd_transform,
-            element_centroids_cid0,
-            model.coords, nid_cd, stations, coord_out,
+            nids, xyz_cid0, nid_cp_cd, icd_transform,
+            all_eids, element_centroids_cid0,
+            stations, model.coords, coord_out,
             coord_march=coord_march,
-            idir=idir, itime=0, debug=True, log=model.log)
-        #dd
+            #idir=idir,
+            itime=0, debug=True, log=model.log)
         plot_smt(stations, force_sum, moment_sum, show=False)
 
     @unittest.skipIf(getpass.getuser() != 'sdoyle', 'local test')
     def test_op2_bwb_spanwise(self):  # pragma: no cover
         """how to plot an shear-moment-torque"""
         log_ = SimpleLogger(level='critical')
-        bdf_filename = MODEL_PATH / 'bwb' / 'bwb_saero_smt.bdf'
-        op2_filename = MODEL_PATH / 'bwb' / 'bwb_saero.op2'
+        BWB_PATH = MODEL_PATH / 'bwb'
+        bdf_filename = BWB_PATH / 'bwb_saero_smt.bdf'
+        op2_filename = BWB_PATH / 'bwb_saero.op2'
         with WarningRedirector(log_) as log:
             model = OP2Geom(debug=False, log=log, mode=None)
             model.include_exclude_results(include_results='grid_point_forces')
@@ -260,10 +257,6 @@ class TestGridPointForcesSMT(unittest.TestCase):
         # xz plane
         p2 = p1 + np.array([0., -1., 0.])
 
-        # we're marching along y from p1 to p3
-        # we just need a dominant direction in the coord_march frame
-        idir = 1
-
         xyz1, xyz2, xyz3, i, k, coord_out, coord_march, stations = get_stations(
             model, p1, p2, p3, zaxis,
             method=method, cid_p1=0, cid_p2=0, cid_p3=0,
@@ -285,37 +278,43 @@ class TestGridPointForcesSMT(unittest.TestCase):
         assert np.array_equal(k, [0., 0., 1.])
 
         # i/j/k vector is nan
-        print('coord_out:')
-        print(f'origin: {coord_out.origin}')
-        print(f'zaxis: {coord_out.e2}')
-        print(f'xzplane: {coord_out.e3}')
-        print(f'i: {coord_out.i}')
-        print(f'j: {coord_out.j}')
-        print(f'k: {coord_out.k}')
+        #print('coord_out:')
+        #print(f'origin: {coord_out.origin}')
+        #print(f'zaxis: {coord_out.e2}')
+        #print(f'xzplane: {coord_out.e3}')
+        #print(f'i: {coord_out.i}')
+        #print(f'j: {coord_out.j}')
+        #print(f'k: {coord_out.k}')
 
-        print('coord_march:')
-        print(f'origin: {coord_march.origin}')
-        print(f'zaxis: {coord_march.e2}')
-        print(f'xzplane: {coord_march.e3}')
-        print(f'i: {coord_march.i}')
-        print(f'j: {coord_march.j}')
-        print(f'k: {coord_march.k}')
+        #print('coord_march:')
+        #print(f'origin: {coord_march.origin}')
+        #print(f'zaxis: {coord_march.e2}')
+        #print(f'xzplane: {coord_march.e3}')
+        #print(f'i: {coord_march.i}')
+        #print(f'j: {coord_march.j}')
+        #print(f'k: {coord_march.k}')
 
-        x = 1
+        #x = 1
         force_sum, moment_sum, new_coords, nelems, nnodes = gpforce.shear_moment_diagram(
-            model, xyz_cid0, eids, nids, icd_transform,
-            element_centroids_cid0,
-            model.coords, nid_cd, stations, coord_out,
+            #model,
+            nids, xyz_cid0, nid_cd, icd_transform,
+            eids, element_centroids_cid0,
+            stations, model.coords, coord_out,
             coord_march=coord_march,
-            idir=idir, itime=0, debug=True, log=model.log)
+            itime=0, debug=True,
+            nodes_tol=25., log=model.log)
 
         for cid, coord in new_coords.items():
             print(cid)
             model.coords[cid] = coord
         model.sol = 144
         model.write_bdf(bdf_filename)
-        plot_smt(ylocations, force_sum, moment_sum, nelems, nnodes, show=True)
-        y = 1
+        plot_smt(ylocations, force_sum, moment_sum, nelems, nnodes,
+                 plot_force_components=False,
+                 plot_moment_components=False,
+                 root_filename=os.path.join(BWB_PATH, 'bwb'),
+                 show=False)
+        #y = 1
 
 
 class TestGridPointForces(unittest.TestCase):
@@ -408,48 +407,12 @@ class TestGridPointForces(unittest.TestCase):
 
     def test_gpforce_02(self):
         IS_MATPLOTLIB = False
-        op2_filename = os.path.join(MODEL_PATH, 'grid_point_forces', 'bar_grid_point_forces.op2')
-        #from pyNastran.bdf.bdf import read_bdf
-        #bdf_model = read_bdf()
         log = SimpleLogger(level='warning')
-        model = read_op2(op2_filename, load_geometry=True, combine=True,
-                         exclude_results=None, log=log)
-        log = model.log
-        gpforce = model.grid_point_forces[1]  # type: RealGridPointForcesArray
-        force = model.cbar_force[1]
-        #['station', 'bending_moment1', 'bending_moment2', 'shear1', 'shear2', 'axial', 'torque']
-        headers = force.get_headers()
-        #istation = headers.index('station')
-        itime = 0
-        #ibending_moment1 = headers.index('bending_moment1')
-        ibending_moment2 = headers.index('bending_moment2')
-        #station = force.data[itime, :, istation]
-        #bending_moment1 = force.data[itime, :, ibending_moment1]
-        bending_moment2 = force.data[itime, :, ibending_moment2]
-
-        coord_out = model.coords[0]
-        nid_cp_cd, xyz_cid0, xyz_cp, icd_transform, icp_transform = model.get_xyz_in_coord_array(
-            cid=0, fdtype='float64', idtype='int32')
-        all_nids = nid_cp_cd[:, 0]
-
-        all_eids, element_centroids_cid0 = get_element_centroids(model, idtype='int32', fdtype='float64')
-        #stations = element_centroids_cid0[:-1, 0]
-        stations = np.linspace(0., 10., num=51)
-        #model.log.level = 'warning'
-        #print(stations)
-
-        nids_bar = []
-        nids_beam = []
-        for eid, elem in sorted(model.elements.items()):
-            if elem.type == 'CBAR':
-                nids_bar.append(elem.nodes)
-            elif elem.type == 'BEAM':
-                nids_beam.append(elem.nodes)
-        nids_bar = np.array(nids_bar, dtype='int32')
-        nids_beam = np.array(nids_beam, dtype='int32')
-        inid_bar = np.searchsorted(all_nids, nids_bar)
-        x1 = xyz_cid0[inid_bar[:, 0], 0]
-        x2 = xyz_cid0[inid_bar[:, 1], 0]
+        (model, coord_out, nid_cp_cd, icd_transform,
+         all_nids, xyz_cid0,
+         all_eids, element_centroids_cid0,
+         gpforce, x1, x2, bending_moment2,
+         stations) = _setup_bar_grid_point_forces(log)
 
         with self.assertRaises(AssertionError):
             log.error('problem with extract_freebody_loads...')
@@ -475,6 +438,7 @@ class TestGridPointForces(unittest.TestCase):
             ax.plot(L-x, M, 'o-', label='exact', linewidth=1)
             ax.grid(True)
 
+        # trivial case
         #nids = [1]
         #eids = [1]
         force_out_sum, moment_out_sum = gpforce.extract_interface_loads(
@@ -484,9 +448,25 @@ class TestGridPointForces(unittest.TestCase):
             xyz_cid0,
             #summation_point: Optional[NDArray3float]=None,
             consider_rxf=True, itime=0,
+            stop_on_nan=True,
             debug=True, log=log)
         assert np.allclose(force_out_sum, [0., 0., 0.]), force_out_sum
         assert np.allclose(moment_out_sum, [0., 0., 0.]), moment_out_sum
+
+        # some problematic case...
+        eids = [1]
+        nids = [2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
+        force_out_sum, moment_out_sum = gpforce.extract_interface_loads(
+            nids, eids,
+            coord_out, model.coords,
+            nid_cp_cd, icd_transform,
+            xyz_cid0,
+            #summation_point: Optional[NDArray3float]=None,
+            consider_rxf=True, itime=0,
+            stop_on_nan=True,
+            debug=True, log=log)
+        assert np.allclose(force_out_sum, [0., 0., 9.5]), force_out_sum
+        assert np.allclose(moment_out_sum, [0., -49.916668, 0.]), moment_out_sum
 
         # this one is empty...
         nids = [1]
@@ -497,10 +477,11 @@ class TestGridPointForces(unittest.TestCase):
             nid_cp_cd, icd_transform,
             xyz_cid0,
             #summation_point: Optional[NDArray3float]=None,
-            consider_rxf=True, itime=0,
-            debug=True, log=log)
-        #assert force_out.size == 0, force_out
-        #assert moment_out.size == 0, moment_out
+            consider_rxf=False, itime=0,
+            stop_on_nan=False,
+            debug=False, log=log)
+
+        # array([nan, nan, nan], dtype=float32)
         assert not np.any(np.isfinite(force_out_sum)), force_out_sum
         assert not np.any(np.isfinite(moment_out_sum)), moment_out_sum
         #coord0 = model.coords[0]
@@ -524,117 +505,124 @@ class TestGridPointForces(unittest.TestCase):
         #eids = np.ndarray(list(model.elements.keys()), dtype='int32')
         #eids.sort()
         # bar is [0,10] in x
-        coord_march = None
+        #coord_march = None
+        istations = np.where(stations > 0.5)[0]
+        stations = stations[istations]
         force_sum, moment_sum, new_coords, nelems, nnodes = gpforce.shear_moment_diagram(
-            xyz_cid0, all_eids, nids,
-            icd_transform,
-            element_centroids_cid0,
-            model.coords, nid_cp_cd, stations, coord_out,
-            coord_march=coord_march,
-            idir=0, itime=0, debug=True, log=model.log)
+            nids, xyz_cid0, nid_cp_cd, icd_transform,
+            all_eids, element_centroids_cid0,
+            stations, model.coords, coord_out,
+            #coord_march=coord_march,
+            #idir=0,
+            itime=0, debug=True,
+            nodes_tol=0.5,
+            stop_on_nan=True, log=model.log)
         force_sum_expected = np.array([
-            [0.,  0., -9.5],
-            [0.,  0., -9.5],
-            [0.,  0., -9.5],
-            [0.,  0., -9.5],
-            [0.,  0., -9.5],
-            [0.,  0., -8.5],
-            [0.,  0., -8.5],
-            [0.,  0., -8.5],
-            [0.,  0., -8.5],
-            [0.,  0., -8.5],
-            [0.,  0., -7.5],
-            [0.,  0., -7.5],
-            [0.,  0., -7.5],
-            [0.,  0., -7.5],
-            [0.,  0., -7.5],
-            [0.,  0., -6.5],
-            [0.,  0., -6.5],
-            [0.,  0., -6.5],
-            [0.,  0., -6.5],
-            [0.,  0., -6.5],
-            [0.,  0., -5.5],
-            [0.,  0., -5.5],
-            [0.,  0., -5.5],
-            [0.,  0., -5.5],
-            [0.,  0., -5.5],
-            [0.,  0., -4.5],
-            [0.,  0., -4.5],
-            [0.,  0., -4.5],
-            [0.,  0., -4.5],
-            [0.,  0., -4.5],
-            [0.,  0., -3.5],
-            [0.,  0., -3.5],
-            [0.,  0., -3.5],
-            [0.,  0., -3.5],
-            [0.,  0., -3.5],
-            [0.,  0., -2.5],
-            [0.,  0., -2.5],
-            [0.,  0., -2.5],
-            [0.,  0., -2.5],
-            [0.,  0., -2.5],
-            [0.,  0., -1.5],
-            [0.,  0., -1.5],
-            [0.,  0., -1.5],
-            [0.,  0., -1.5],
-            [0.,  0., -1.5],
-            [0.,  0., -0.5],
-            [0.,  0., -0.5],
-            [0.,  0., -0.5]])
+            [0., 0., 9.5],
+            [0., 0., 9.5],
+            [0., 0., 9.5],
+            [0., 0., 9.5],
+            [0., 0., 9.5],
+            [0., 0., 8.5],
+            [0., 0., 8.5],
+            [0., 0., 8.5],
+            [0., 0., 8.5],
+            [0., 0., 8.5],
+            [0., 0., 7.5],
+            [0., 0., 7.5],
+            [0., 0., 7.5],
+            [0., 0., 7.5],
+            [0., 0., 7.5],
+            [0., 0., 6.5],
+            [0., 0., 6.5],
+            [0., 0., 6.5],
+            [0., 0., 6.5],
+            [0., 0., 6.5],
+            [0., 0., 5.5],
+            [0., 0., 5.5],
+            [0., 0., 5.5],
+            [0., 0., 5.5],
+            [0., 0., 5.5],
+            [0., 0., 4.5],
+            [0., 0., 4.5],
+            [0., 0., 4.5],
+            [0., 0., 4.5],
+            [0., 0., 4.5],
+            [0., 0., 3.5],
+            [0., 0., 3.5],
+            [0., 0., 3.5],
+            [0., 0., 3.5],
+            [0., 0., 3.5],
+            [0., 0., 2.5],
+            [0., 0., 2.5],
+            [0., 0., 2.5],
+            [0., 0., 2.5],
+            [0., 0., 2.5],
+            [0., 0., 1.5],
+            [0., 0., 1.5],
+            [0., 0., 1.5],
+            [0., 0., 1.5],
+            [0., 0., 1.5],
+            [0., 0., 0.5],
+            [0., 0., 0.5],
+            [0., 0., 0.5],
+        ])
         moment_sum_expected = np.array([
-            [0.0,  4.42166672e+01,  0.0],
-            [0.0,  4.23166695e+01,  0.0],
-            [0.0,  4.04166679e+01,  0.0],
-            [0.0,  3.85166664e+01,  0.0],
-            [0.0,  3.66166687e+01,  0.0],
-            [0.0,  3.53166695e+01,  0.0],
-            [0.0,  3.36166687e+01,  0.0],
-            [0.0,  3.19166679e+01,  0.0],
-            [0.0,  3.02166672e+01,  0.0],
-            [0.0,  2.85166683e+01,  0.0],
-            [0.0,  2.74166679e+01,  0.0],
-            [0.0,  2.59166679e+01,  0.0],
-            [0.0,  2.44166679e+01,  0.0],
-            [0.0,  2.29166679e+01,  0.0],
-            [0.0,  2.14166679e+01,  0.0],
-            [0.0,  2.05166683e+01,  0.0],
-            [0.0,  1.92166672e+01,  0.0],
-            [0.0,  1.79166679e+01,  0.0],
-            [0.0,  1.66166687e+01,  0.0],
-            [0.0,  1.53166676e+01,  0.0],
-            [0.0,  1.46166677e+01,  0.0],
-            [0.0,  1.35166683e+01,  0.0],
-            [0.0,  1.24166679e+01,  0.0],
-            [0.0,  1.13166676e+01,  0.0],
-            [0.0,  1.02166681e+01,  0.0],
-            [0.0,  9.71666813e+00,  0.0],
-            [0.0,  8.81666756e+00,  0.0],
-            [0.0,  7.91666794e+00,  0.0],
-            [0.0,  7.01666784e+00,  0.0],
-            [0.0,  6.11666775e+00,  0.0],
-            [0.0,  5.81666803e+00,  0.0],
-            [0.0,  5.11666775e+00,  0.0],
-            [0.0,  4.41666794e+00,  0.0],
-            [0.0,  3.71666789e+00,  0.0],
-            [0.0,  3.01666784e+00,  0.0],
-            [0.0,  2.91666794e+00,  0.0],
-            [0.0,  2.41666794e+00,  0.0],
-            [0.0,  1.91666794e+00,  0.0],
-            [0.0,  1.41666794e+00,  0.0],
-            [0.0,  9.16667938e-01,  0.0],
-            [0.0,  1.01666796e+00,  0.0],
-            [0.0,  7.16667950e-01,  0.0],
-            [0.0,  4.16667938e-01,  0.0],
-            [0.0,  1.16667941e-01,  0.0],
-            [0.0, -1.83332056e-01,  0.0],
-            [0.0,  1.16670445e-01,  0.0],
-            [0.0,  1.66695174e-02,  0.0],
-            [0.0, -8.33295286e-02,  0.0]])
-        assert np.allclose(force_sum[3:, :], force_sum_expected), force_out_sum
-        assert np.allclose(moment_sum[3:, :], moment_sum_expected), moment_out_sum
+            [0., -4.42166672e+01, 0.],
+            [0., -4.23166695e+01, 0.],
+            [0., -4.04166679e+01, 0.],
+            [0., -3.85166664e+01, 0.],
+            [0., -3.66166687e+01, 0.],
+            [0., -3.53166656e+01, 0.],
+            [0., -3.36166649e+01, 0.],
+            [0., -3.19166660e+01, 0.],
+            [0., -3.02166653e+01, 0.],
+            [0., -2.85166664e+01, 0.],
+            [0., -2.74166660e+01, 0.],
+            [0., -2.59166660e+01, 0.],
+            [0., -2.44166660e+01, 0.],
+            [0., -2.29166660e+01, 0.],
+            [0., -2.14166660e+01, 0.],
+            [0., -2.05166664e+01, 0.],
+            [0., -1.92166653e+01, 0.],
+            [0., -1.79166660e+01, 0.],
+            [0., -1.66166668e+01, 0.],
+            [0., -1.53166656e+01, 0.],
+            [0., -1.46166668e+01, 0.],
+            [0., -1.35166674e+01, 0.],
+            [0., -1.24166670e+01, 0.],
+            [0., -1.13166666e+01, 0.],
+            [0., -1.02166672e+01, 0.],
+            [0., -9.71666622e+00, 0.],
+            [0., -8.81666660e+00, 0.],
+            [0., -7.91666651e+00, 0.],
+            [0., -7.01666641e+00, 0.],
+            [0., -6.11666632e+00, 0.],
+            [0., -5.81666660e+00, 0.],
+            [0., -5.11666632e+00, 0.],
+            [0., -4.41666651e+00, 0.],
+            [0., -3.71666646e+00, 0.],
+            [0., -3.01666641e+00, 0.],
+            [0., -2.91666651e+00, 0.],
+            [0., -2.41666651e+00, 0.],
+            [0., -1.91666663e+00, 0.],
+            [0., -1.41666663e+00, 0.],
+            [0., -9.16666627e-01, 0.],
+            [0., -1.01666665e+00, 0.],
+            [0., -7.16666639e-01, 0.],
+            [0., -4.16666657e-01, 0.],
+            [0., -1.16666660e-01, 0.],
+            [0.,  1.83333337e-01, 0.],
+            [0., -1.16666667e-01, 0.],
+            [0., -1.66666638e-02, 0.],
+            [0.,  8.33333358e-02, 0.]])
+        assert force_sum.shape == force_sum_expected.shape, force_out_sum
+        assert moment_sum.shape == moment_sum_expected.shape, moment_sum.shape
+        assert np.allclose(force_sum, force_sum_expected), force_out_sum
+        assert np.allclose(moment_sum, moment_sum_expected), moment_sum
         if IS_MATPLOTLIB:  # pragma: no cover
             M2 = moment_sum[:, 1]
-            ax.plot(stations, M2, '*-', label='SMT')
+            ax.plot(stations, -M2, '*-', label='SMT')
             ax.legend()
             fig.show()
             x = 1
@@ -1063,9 +1051,61 @@ def _get_gpforce_data():
     ]
     return data
 
+def _setup_bar_grid_point_forces(log):
+    op2_filename = os.path.join(MODEL_PATH, 'grid_point_forces', 'bar_grid_point_forces.op2')
+    #from pyNastran.bdf.bdf import read_bdf
+    #bdf_model = read_bdf()
+    model = read_op2(op2_filename, load_geometry=True, combine=True,
+                     exclude_results=None, log=log)
+    log = model.log
+    gpforce = model.grid_point_forces[1]  # type: RealGridPointForcesArray
+    force = model.cbar_force[1]
+    #['station', 'bending_moment1', 'bending_moment2', 'shear1', 'shear2', 'axial', 'torque']
+    headers = force.get_headers()
+    #istation = headers.index('station')
+    itime = 0
+    #ibending_moment1 = headers.index('bending_moment1')
+    ibending_moment2 = headers.index('bending_moment2')
+    #station = force.data[itime, :, istation]
+    #bending_moment1 = force.data[itime, :, ibending_moment1]
+    bending_moment2 = force.data[itime, :, ibending_moment2]
 
+    coord_out = model.coords[0]
+    nid_cp_cd, xyz_cid0, xyz_cp, icd_transform, icp_transform = model.get_xyz_in_coord_array(
+        cid=0, fdtype='float64', idtype='int32')
+    all_nids = nid_cp_cd[:, 0]
 
-def plot_smt(x, force_sum_, moment_sum_, nelems, nnodes, show=True):
+    all_eids, element_centroids_cid0 = get_element_centroids(model, idtype='int32', fdtype='float64')
+    #stations = element_centroids_cid0[:-1, 0]
+    stations = np.linspace(0., 10., num=51)
+    #model.log.level = 'warning'
+    #print(stations)
+
+    nids_bar = []
+    nids_beam = []
+    for eid, elem in sorted(model.elements.items()):
+        if elem.type == 'CBAR':
+            nids_bar.append(elem.nodes)
+        elif elem.type == 'BEAM':
+            nids_beam.append(elem.nodes)
+    nids_bar = np.array(nids_bar, dtype='int32')
+    nids_beam = np.array(nids_beam, dtype='int32')
+    inid_bar = np.searchsorted(all_nids, nids_bar)
+    x1 = xyz_cid0[inid_bar[:, 0], 0]
+    x2 = xyz_cid0[inid_bar[:, 1], 0]
+    out = (
+        model, coord_out, nid_cp_cd, icd_transform,
+        all_nids, xyz_cid0,
+        all_eids, element_centroids_cid0,
+        gpforce, x1, x2, bending_moment2,
+        stations)
+    return out
+
+def plot_smt(x, force_sum_, moment_sum_, nelems, nnodes,
+             plot_force_components=True,
+             plot_moment_components=True,
+             root_filename='',
+             show=True):
     """plots the shear, moment, torque plots"""
     import matplotlib.pyplot as plt
     plt.close()
@@ -1073,67 +1113,66 @@ def plot_smt(x, force_sum_, moment_sum_, nelems, nnodes, show=True):
     force_sum = force_sum_ / 1000
     moment_sum = moment_sum_ / 1000
     xtitle = 'Y'
-    xlabel = 'Y (in)'
+    xlabel = 'Spanwise Location, Y (in)'
     moment_unit = 'in-kip'
     force_unit = 'kip'
     #f, ax = plt.subplots()
     # ax = fig.subplots()
-    fig = plt.figure(1)
-    ax = fig.gca()
-    ax.plot(x, force_sum[:, 0], '-*')
-    ax.set_title(f'{xtitle} vs. Axial')
-    ax.set_xlabel(xlabel)
-    ax.set_ylabel(f'Axial ({force_unit})')
-    ax.grid(True)
+    if plot_force_components:
+        fig = plt.figure(1)
+        ax = fig.gca()
+        ax.plot(x, force_sum[:, 0], '-*')
+        ax.set_title(f'{xtitle} vs. Axial')
+        ax.set_xlabel(xlabel)
+        ax.set_ylabel(f'Axial ({force_unit})')
+        ax.grid(True)
+        fig.tight_layout()
 
-    fig = plt.figure(2)
-    ax = fig.gca()
-    ax.plot(x, force_sum[:, 1], '-*')
-    ax.set_title(f'{xtitle} vs. Shear Y')
-    ax.set_xlabel(xlabel)
-    ax.set_ylabel(f'Shear Y ({force_unit})')
-    ax.grid(True)
+        fig = plt.figure(2)
+        ax = fig.gca()
+        ax.plot(x, force_sum[:, 1], '-*')
+        ax.set_title(f'{xtitle} vs. Shear Y')
+        ax.set_xlabel(xlabel)
+        ax.set_ylabel(f'Shear Y ({force_unit})')
+        ax.grid(True)
+        fig.tight_layout()
 
-    fig = plt.figure(3)
-    ax = fig.gca()
-    ax.plot(x, force_sum[:, 2], '-*')
-    ax.set_title(f'{xtitle} vs. Shear Z')
-    ax.set_xlabel(xlabel)
-    ax.set_ylabel(f'Shear Z ({force_unit})')
-    ax.grid(True)
+        fig = plt.figure(3)
+        ax = fig.gca()
+        ax.plot(x, force_sum[:, 2], '-*')
+        ax.set_title(f'{xtitle} vs. Shear Z')
+        ax.set_xlabel(xlabel)
+        ax.set_ylabel(f'Shear Z ({force_unit})')
+        ax.grid(True)
+        fig.tight_layout()
 
-    fig = plt.figure(4)
-    ax = fig.gca()
-    ax.plot(x, moment_sum[:, 0], '-*')
-    ax.set_title(f'{xtitle} vs. Torque')
-    ax.set_xlabel(xlabel)
-    ax.set_ylabel(f'Torque ({moment_unit})')
-    ax.grid(True)
+    if plot_moment_components:
+        fig = plt.figure(4)
+        ax = fig.gca()
+        ax.plot(x, moment_sum[:, 0], '-*')
+        ax.set_title(f'{xtitle} vs. Torque')
+        ax.set_xlabel(xlabel)
+        ax.set_ylabel(f'Torque ({moment_unit})')
+        ax.grid(True)
+        fig.tight_layout()
 
-    fig = plt.figure(5)
-    ax = fig.gca()
-    ax.plot(x, moment_sum[:, 1], '-*')
-    ax.set_title(f'{xtitle} vs. Moment Y')
-    ax.set_xlabel(xlabel)
-    ax.set_ylabel(f'Moment Y ({moment_unit})')
-    ax.grid(True)
+        fig = plt.figure(5)
+        ax = fig.gca()
+        ax.plot(x, moment_sum[:, 1], '-*')
+        ax.set_title(f'{xtitle} vs. Moment Y')
+        ax.set_xlabel(xlabel)
+        ax.set_ylabel(f'Moment Y ({moment_unit})')
+        ax.grid(True)
+        fig.tight_layout()
 
-    fig = plt.figure(6)
-    ax = fig.gca()
-    ax.plot(x, moment_sum[:, 2], '-*')
-    ax.set_title(f'{xtitle} vs. Moment Z')
-    ax.set_xlabel(xlabel)
-    ax.set_ylabel(f'Moment Z ({moment_unit})')
-    ax.grid(True)
-
-    fig = plt.figure(6)
-    ax = fig.gca()
-    ax.plot(x, moment_sum[:, 2], '-*')
-    ax.set_title(f'{xtitle} vs. Moment Z')
-    ax.set_xlabel(xlabel)
-    ax.set_ylabel(f'Moment Z ({moment_unit})')
-    ax.grid(True)
-
+        fig = plt.figure(6)
+        ax = fig.gca()
+        ax.plot(x, moment_sum[:, 2], '-*')
+        ax.set_title(f'{xtitle} vs. Moment Z')
+        ax.set_xlabel(xlabel)
+        ax.set_ylabel(f'Moment Z ({moment_unit})')
+        ax.grid(True)
+        fig.tight_layout()
 
     #-----------------------------------------------
     fig = plt.figure(7)
@@ -1141,22 +1180,28 @@ def plot_smt(x, force_sum_, moment_sum_, nelems, nnodes, show=True):
     ax.plot(x, force_sum[:, 0], '-*', label=f'Force X ({force_unit})')
     ax.plot(x, force_sum[:, 1], '-*', label=f'Force Y ({force_unit})')
     ax.plot(x, force_sum[:, 2], '-*', label=f'Force Z ({force_unit})')
-    ax.set_title(f'{xtitle} vs. Force')
+    #ax.set_title(f'{xtitle} vs. Force')
     ax.set_xlabel(xlabel)
     ax.set_ylabel(f'Force ({force_unit})')
     ax.legend()
     ax.grid(True)
+    fig.tight_layout()
+    if root_filename:
+        fig.savefig(f'{root_filename}_forces.png')
 
     fig = plt.figure(8)
     ax = fig.gca()
     ax.plot(x, moment_sum[:, 0], '-*', label=f'Torque ({moment_unit})')
     ax.plot(x, moment_sum[:, 1], '-*', label=f'Moment Y ({moment_unit})')
     ax.plot(x, moment_sum[:, 2], '-*', label=f'Moment Z ({moment_unit})')
-    ax.set_title(f'{xtitle} vs. Moment')
+    #ax.set_title(f'{xtitle} vs. Moment')
     ax.set_xlabel(xlabel)
     ax.set_ylabel(f'Moment ({moment_unit})')
     ax.legend()
     ax.grid(True)
+    fig.tight_layout()
+    if root_filename:
+        fig.savefig(f'{root_filename}_moments.png')
     #-----------------------------------------------
     fig = plt.figure(9)
     ax = fig.gca()
@@ -1167,6 +1212,9 @@ def plot_smt(x, force_sum_, moment_sum_, nelems, nnodes, show=True):
     ax.set_ylabel('Fraction of Nodes, Elements')
     ax.legend()
     ax.grid(True)
+    fig.tight_layout()
+    if root_filename:
+        fig.savefig(f'{root_filename}_nodes_elements.png')
 
     if show:
         plt.show()
