@@ -378,6 +378,7 @@ class Settings:
 
         settings.setValue('highlight_color', self.highlight_color)
         settings.setValue('highlight_opacity', self.highlight_opacity)
+        settings.setValue('highlight_point_size', self.highlight_point_size)
 
         settings.setValue('show_info', self.show_info)
         settings.setValue('show_debug', self.show_debug)
@@ -637,7 +638,7 @@ class Settings:
         self.highlight_color = color
         self.parent.log_command('settings.set_highlight_color(%s, %s, %s)' % color)
 
-    def set_highlight_opacity(self, opacity):
+    def set_highlight_opacity(self, opacity: float) -> None:
         """
         Set the highlight opacity
 
@@ -649,6 +650,18 @@ class Settings:
         """
         self.highlight_opacity = opacity
         self.parent.log_command('settings.set_highlight_opacity(%s)' % opacity)
+
+    def set_highlight_point_size(self, point_size: int) -> None:
+        """
+        Set the highlight point size
+
+        Parameters
+        ----------
+        opacity : float
+            10.0 : default
+        """
+        self.highlight_point_size = point_size
+        self.parent.log_command('settings.set_highlight_point_size(%s)' % point_size)
 
     #---------------------------------------------------------------------------
     # TEXT ACTORS - used for lower left notes

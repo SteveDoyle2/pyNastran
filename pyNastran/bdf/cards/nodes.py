@@ -45,6 +45,7 @@ from pyNastran.bdf.field_writer_double import print_scientific_double, print_car
 #u = str
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.bdf import BDF
+    from pyNastran.bdf.cards.coordinate_systems import CORDx
     from pyNastran.bdf.bdf_interface.bdf_card import BDFCard
     from pyNastran.nptyping import NDArray3float
     #from pyNastran.bdf.bdf_interface.typing import Coord, Element
@@ -1405,14 +1406,31 @@ class GRID(BaseCard):
         """
         if cid == self.Cp(): # same coordinate system
             return self.xyz
+        # a matrix global->local matrix is found
+        msg = ', which is required by GRID nid=%s' % (self.nid)
+        coord_b = model.Coord(cid, msg=msg) # type: CORDx
+        return self.get_position_wrt_coord_ref(coord_b)
 
+    def get_position_wrt_coord_ref(self, coord_out: CORDx) -> np.ndarray:
+        """
+        Gets the location of the GRID which started in some arbitrary
+        system and returns it in the desired coordinate system
+
+        Parameters
+        ----------
+        coord_out : CORDx
+            the desired coordinate system
+
+        Returns
+        -------
+        xyz : (3, ) float ndarray
+            the position of the GRID in an arbitrary coordinate system
+
+        """
         # converting the xyz point arbitrary->global
         p = self.cp_ref.transform_node_to_global(self.xyz)
 
-        # a matrix global->local matrix is found
-        msg = ', which is required by GRID nid=%s' % (self.nid)
-        coord_b = model.Coord(cid, msg=msg)
-        xyz = coord_b.transform_node_to_local(p)
+        xyz = coord_out.transform_node_to_local(p)
         return xyz
 
     def cross_reference(self, model: BDF, grdset: Optional[Any]=None) -> None:

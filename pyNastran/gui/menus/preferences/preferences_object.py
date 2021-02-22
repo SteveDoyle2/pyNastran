@@ -42,6 +42,7 @@ class PreferencesObject:
 
             'highlight_color' : settings.highlight_color,
             'highlight_opacity' : settings.highlight_opacity,
+            'highlight_point_size' : settings.highlight_point_size,
 
             'picker_size' : self.gui.element_picker_size,
             'dim_max' : settings.dim_max,

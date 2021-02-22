@@ -1,27 +1,322 @@
 import os
-import unittest
+import getpass
+from pathlib import Path
 from io import StringIO
+import unittest
 
 import numpy as np
-from cpylog import SimpleLogger
+from cpylog import SimpleLogger, WarningRedirector
 
 import pyNastran
-
-from pyNastran.bdf.bdf import CORD2R
+from pyNastran.bdf.bdf import BDF, CORD2R
 from pyNastran.op2.op2 import OP2, read_op2
-from pyNastran.op2.op2_geom import read_op2_geom
+from pyNastran.op2.op2_geom import OP2Geom, read_op2_geom
 
+from pyNastran.op2.tables.ogf_gridPointForces.smt import smt_setup
 from pyNastran.op2.tables.ogf_gridPointForces.ogf_objects import RealGridPointForcesArray
-from pyNastran.bdf.mesh_utils.cut_model_by_plane import get_element_centroids
 
-PKG_PATH = pyNastran.__path__[0]
-MODEL_PATH = os.path.abspath(os.path.join(PKG_PATH, '..', 'models'))
+from pyNastran.bdf.mesh_utils.cut_model_by_plane import (
+    get_element_centroids, _p1_p2_zaxis_to_cord2r,
+    get_stations,
+    #cut_edge_model_by_coord, cut_face_model_by_coord,
+)
+
+PKG_PATH = Path(pyNastran.__path__[0])
+MODEL_PATH = (PKG_PATH / '..' / 'models').resolve()
 
 try:
     import matplotlib.pyplot as plt
     IS_MATPLOTLIB = True
 except ImportError:
     IS_MATPLOTLIB = False
+
+class TestGridPointForcesSMT(unittest.TestCase):
+    def test_p1_p2_zaxis_to_cord2r_zaxis(self):
+        p1 = np.array([0., 0., 0.])
+        p2 = np.array([1., 0., 0.])
+        zaxis = np.array([0., 0., 1.])
+        model = BDF(debug=False)
+        model.cross_reference()
+        xyz1, xyz2, z_global, i, k, origin, zaxis2, xzplane = _p1_p2_zaxis_to_cord2r(
+            model, p1, p2, zaxis, method='Z-Axis Projection',
+            cid_p1=0, cid_p2=0, cid_zaxis=0)
+        assert np.array_equal(xyz1, p1), xyz1
+        assert np.array_equal(xyz2, p2), xyz2
+        assert np.array_equal(z_global, zaxis), z_global
+
+        assert np.array_equal(i, [1., 0., 0.]), i
+        assert np.array_equal(k, [0., 0., 1.]), k
+
+        assert np.array_equal(origin, [0., 0., 0.]), origin
+        assert np.array_equal(zaxis2, p1+zaxis), zaxis2
+        assert np.array_equal(xzplane, [1., 0., 0.]), xzplane
+
+    def test_p1_p2_zaxis_to_cord2r_cord2r(self):
+        p1 = np.array([1., 1., 1.])
+        p2 = np.array([2., 1., 1.5])  # xzplane
+        zaxis = np.array([1., 1., 2.])
+        model = BDF(debug=False)
+        model.cross_reference()
+        xyz1, xyz2, z_global, i, k, origin, zaxis2, xzplane = _p1_p2_zaxis_to_cord2r(
+            model, p1, p2, zaxis, method='CORD2R',
+            cid_p1=0, cid_p2=0, cid_zaxis=0)
+        assert np.array_equal(xyz1, p1), xyz1
+        assert np.array_equal(xyz2, p2), xyz2
+        assert np.array_equal(z_global, zaxis), z_global
+
+        assert np.array_equal(i, [1., 0., 0.]), i
+        assert np.array_equal(k, [0., 0., 1.]), k
+
+        assert np.array_equal(origin, [1., 1., 1.]), origin
+        assert np.array_equal(zaxis2, [1., 1., 2.]), zaxis2
+        assert np.array_equal(xzplane, [2., 1., 1.5]), xzplane
+
+    def test_cutting_plane_bwb(self):
+        model = BDF(debug=False)
+        model.cross_reference()
+        p1 = np.array([1388.9, 1262.0, 86.3471])
+        p2 = p1 + np.array([1., 0., 0.]) # xz-plane
+        zaxis = np.array([0., 0., 1.])
+
+        xyz1, xyz2, z_global, i, k, origin, zaxis2, xzplane = _p1_p2_zaxis_to_cord2r(
+            model, p1, p2, zaxis, method='Z-Axis Projection',
+            cid_p1=0, cid_p2=0, cid_zaxis=0)
+        assert np.array_equal(xyz1, p1), xyz1
+        assert np.array_equal(xyz2, p2), xyz2
+        assert np.array_equal(z_global, zaxis), z_global
+
+        assert np.array_equal(i, [1., 0., 0.]), i
+        assert np.array_equal(k, [0., 0., 1.]), k
+
+        assert np.array_equal(origin, p1), origin
+        assert np.array_equal(zaxis2, p1+zaxis), zaxis2
+        assert np.array_equal(xzplane, p2), xzplane
+        x = 1
+
+    def test_get_stations_bwb(self):
+        model = BDF(debug=False)
+        model.cross_reference()
+        p1 = np.array([1388.9, 1262.0, 86.3471])
+        p2 = p1 + np.array([1., 0., 0.]) # xz-plane
+        p3 = np.array([940.93, 1.7976e-07, 0.0])
+        zaxis = np.array([0., 0., 1.])
+        idir = 0
+        #xyz1, xyz2, z_global, i, k, origin, zaxis2, xzplane = _p1_p2_zaxis_to_cord2r(
+            #model, p1, p2, zaxis, method='Z-Axis Projection',
+            #cid_p1=0, cid_p2=0, cid_zaxis=0)
+        xyz1, xyz2, xyz3, i, k, coord_out, coord_march, stations = get_stations(
+            model, p1, p2, p3, zaxis,
+            method='Z-Axis Projection', cid_p1=0, cid_p2=0, cid_p3=0,
+            cid_zaxis=0, nplanes=10)
+
+        assert np.array_equal(xyz1, p1), xyz1
+        assert np.array_equal(xyz2, p2), xyz2
+        #assert np.array_equal(z_global, zaxis), z_global
+
+        assert np.array_equal(i, [1., 0., 0.]), i
+        assert np.array_equal(k, [0., 0., 1.]), k
+
+        #assert np.array_equal(origin, p1), origin
+        #assert np.array_equal(zaxis2, p1+zaxis), zaxis2
+        #assert np.array_equal(xzplane, p2), xzplane
+        print(coord_out.e1, coord_out.e2, coord_out.e3)
+        print(coord_march.e1, coord_march.e2, coord_march.e3)
+        assert np.allclose(coord_march.e1, xyz1)
+        x = 1
+
+
+    def test_op2_bwb_smt_setup(self):  # pragma: no cover
+        """how to plot an shear-moment-torque"""
+        log = SimpleLogger(level='warning')
+        bdf_filename = MODEL_PATH / 'bwb' / 'bwb_saero.bdf'
+        model = BDF(debug=False, log=log)
+        #model.load_as_h5 = True
+        model.read_bdf(bdf_filename=bdf_filename)
+
+        model.cross_reference()
+        #gpforce = model.grid_point_forces[1]  # type: RealGridPointForcesArray
+
+        #out = model.get_xyz_in_coord_array(cid=0)
+        #nid_cp_cd, xyz_cid0, xyz_cp, icd_transform, icp_transform = out
+        #nids = nid_cp_cd[:, 0]
+        #nid_cd = nid_cp_cd[:, [0, 2]]
+        #eids, element_centroids_cid0 = get_element_centroids(model)
+        nids, nid_cd, xyz_cid0, icd_transform, eids, element_centroids_cid0 = smt_setup(model)
+        nnodes = 10135
+        nelements = 9424
+        assert len(nids) == nnodes, len(nids)
+        assert nid_cd.shape == (nnodes, 2), nid_cd.shape
+        assert xyz_cid0.shape == (nnodes, 3), xyz_cid0.shape
+        assert len(eids) == nelements, len(eids)
+        assert element_centroids_cid0.shape == (nelements, 3), element_centroids_cid0.shape
+
+    @unittest.skipIf(getpass.getuser() != 'sdoyle', 'local test')
+    def test_op2_bwb_axial(self):  # pragma: no cover
+        """how to plot an shear-moment-torque"""
+        axial
+        log = SimpleLogger(level='warning')
+        op2_filename = MODEL_PATH / 'bwb' / 'bwb_saero.op2'
+        model = OP2Geom(debug=False, log=log, debug_file=None, mode=None)
+        #model.load_as_h5 = True
+        model.read_op2(op2_filename=op2_filename, combine=True,
+                     build_dataframe=None, skip_undefined_matrices=False,
+                     encoding=None)
+
+        model.cross_reference()
+        gpforce = model.grid_point_forces[1]  # type: RealGridPointForcesArray
+
+        #out = model.get_xyz_in_coord_array(cid=0)
+        #nid_cp_cd, xyz_cid0, xyz_cp, icd_transform, icp_transform = out
+        #nids = nid_cp_cd[:, 0]
+        #nid_cd = nid_cp_cd[:, [0, 2]]
+        #eids, element_centroids_cid0 = get_element_centroids(model)
+        nids, nid_cd, xyz_cid0, icd_transform, eids, element_centroids_cid0 = smt_setup(model)
+
+        coord_out = model.coords[0]
+
+        #cid_p1 = 0 # start
+        #cid_p3 = 0 # end
+        #cid_p2 = 0 # coord
+        #p1-p2 defines the x-axis
+        #k is defined by the z-axis
+        #p1 = np.array([1354., 0., 0.]) # origin
+        #p2 = np.array([1354., 1245., 0.]) # xaxis
+        #p3 = np.array([1354., 1245., 0.]) # end
+        #zaxis = np.array([0., 0., 1.])
+        #method = 'Z-Axis Projection'
+        #idir = 0
+
+        #p1 = np.array([1354., 0., 0.]) # origin
+        #p2 = np.array([1354., 0., 1.]) # xzplane
+        #p3 = np.array([1354., 1245., 0.]) # end
+        #zaxis = np.array([0., 0., 1.])
+        #method = 'CORD2R'
+        #idir = 1 # x-direction in this rotated system
+
+        # axial
+        p1 = np.array([0., 0., 0.]) # origin/start
+        p2 = np.array([1600., 0., 0.]) # xaxis/end
+        p3 = np.array([1600., 0., 0.]) # xzplane/end
+        zaxis = np.array([0., 0., 1.])
+        method = 'Z-Axis Projection'
+        idir = 0
+
+        xyz1, xyz2, xyz3, i, k, coord_out, coord_march, stations = get_stations(
+            model, p1, p2, p3, zaxis,
+            method=method, cid_p1=0, cid_p2=0, cid_p3=0,
+            cid_zaxis=0, nplanes=100)
+        print(f'stations = {stations}')
+
+        # i/j/k vector is nan
+        print(f'origin: {coord_out.origin}')
+        print(f'zaxis: {coord_out.e2}')
+        print(f'xzplane: {coord_out.e3}')
+
+        force_sum, moment_sum, new_coords, nelems, nnodes = gpforce.shear_moment_diagram(
+            xyz_cid0, eids, nids, icd_transform,
+            element_centroids_cid0,
+            model.coords, nid_cd, stations, coord_out,
+            coord_march=coord_march,
+            idir=idir, itime=0, debug=True, log=model.log)
+        #dd
+        plot_smt(stations, force_sum, moment_sum, show=False)
+
+    @unittest.skipIf(getpass.getuser() != 'sdoyle', 'local test')
+    def test_op2_bwb_spanwise(self):  # pragma: no cover
+        """how to plot an shear-moment-torque"""
+        log_ = SimpleLogger(level='critical')
+        bdf_filename = MODEL_PATH / 'bwb' / 'bwb_saero_smt.bdf'
+        op2_filename = MODEL_PATH / 'bwb' / 'bwb_saero.op2'
+        with WarningRedirector(log_) as log:
+            model = OP2Geom(debug=False, log=log, mode=None)
+            model.include_exclude_results(include_results='grid_point_forces')
+            model.read_op2(op2_filename=op2_filename)
+            model.cross_reference()
+
+        gpforce = model.grid_point_forces[1]  # type: RealGridPointForcesArray
+        nids, nid_cd, xyz_cid0, icd_transform, eids, element_centroids_cid0 = smt_setup(model)
+
+        #coord_out = model.coords[0]
+
+        # spanwise
+        # defines the starting point for the shear, moment, torque plot
+        p1 = np.array([1388.9, 1262.0, 86.3471])  # 1/4c wing_tip
+
+        # defines the end point for the shear, moment, torque plot
+        p3 = np.array([910.93, 0.1, 0.0])  # 1/4c wing_root
+
+        # y = 1262 (p3)
+        # 0-0.1
+
+        # defines the XZ plane for the shears/moments
+        zaxis = p1 + np.array([0., 0., 1.])
+
+        method = 'CORD2R'
+
+        # coord_march:
+        # - x: aft
+        # - z: up
+
+        # xz plane
+        p2 = p1 + np.array([0., -1., 0.])
+
+        # we're marching along y from p1 to p3
+        # we just need a dominant direction in the coord_march frame
+        idir = 1
+
+        xyz1, xyz2, xyz3, i, k, coord_out, coord_march, stations = get_stations(
+            model, p1, p2, p3, zaxis,
+            method=method, cid_p1=0, cid_p2=0, cid_p3=0,
+            cid_zaxis=0, nplanes=50)
+
+        nstations = len(stations)
+        coord_origins = np.zeros((nstations, 3))
+        for istation, station in enumerate(stations):
+            coord_origin = coord_march.origin + coord_march.i * station
+            coord_origins[istation, :] = coord_origin
+        #coord_origins2 = coord_march.origin[:, np.newaxis] + coord_march.i[:, np.newaxis] * stations
+        #assert np.array_equal(coord_origins, coord_origins2)
+
+        ylocations = coord_origins[:, 1]
+
+        print(f'stations = {stations}')
+        assert np.abs(stations).max() > 1350.
+        assert np.array_equal(i, [0., -1., 0.])
+        assert np.array_equal(k, [0., 0., 1.])
+
+        # i/j/k vector is nan
+        print('coord_out:')
+        print(f'origin: {coord_out.origin}')
+        print(f'zaxis: {coord_out.e2}')
+        print(f'xzplane: {coord_out.e3}')
+        print(f'i: {coord_out.i}')
+        print(f'j: {coord_out.j}')
+        print(f'k: {coord_out.k}')
+
+        print('coord_march:')
+        print(f'origin: {coord_march.origin}')
+        print(f'zaxis: {coord_march.e2}')
+        print(f'xzplane: {coord_march.e3}')
+        print(f'i: {coord_march.i}')
+        print(f'j: {coord_march.j}')
+        print(f'k: {coord_march.k}')
+
+        x = 1
+        force_sum, moment_sum, new_coords, nelems, nnodes = gpforce.shear_moment_diagram(
+            model, xyz_cid0, eids, nids, icd_transform,
+            element_centroids_cid0,
+            model.coords, nid_cd, stations, coord_out,
+            coord_march=coord_march,
+            idir=idir, itime=0, debug=True, log=model.log)
+
+        for cid, coord in new_coords.items():
+            print(cid)
+            model.coords[cid] = coord
+        model.sol = 144
+        model.write_bdf(bdf_filename)
+        plot_smt(ylocations, force_sum, moment_sum, nelems, nnodes, show=True)
+        y = 1
+
 
 class TestGridPointForces(unittest.TestCase):
     """various grid point force tests"""
@@ -229,18 +524,14 @@ class TestGridPointForces(unittest.TestCase):
         #eids = np.ndarray(list(model.elements.keys()), dtype='int32')
         #eids.sort()
         # bar is [0,10] in x
-        force_sum, moment_sum = gpforce.shear_moment_diagram(
-                                        xyz_cid0,
-                                        all_eids,
-                                        nids,
-                                        icd_transform,
-                                        element_centroids_cid0,
-                                        model.coords,
-                                        nid_cp_cd,
-                                        stations,
-                                        coord_out,
-                                        idir=0, itime=0,
-                                        debug=True, log=model.log)
+        coord_march = None
+        force_sum, moment_sum, new_coords, nelems, nnodes = gpforce.shear_moment_diagram(
+            xyz_cid0, all_eids, nids,
+            icd_transform,
+            element_centroids_cid0,
+            model.coords, nid_cp_cd, stations, coord_out,
+            coord_march=coord_march,
+            idir=0, itime=0, debug=True, log=model.log)
         force_sum_expected = np.array([
             [0.,  0., -9.5],
             [0.,  0., -9.5],
@@ -772,6 +1063,113 @@ def _get_gpforce_data():
     ]
     return data
 
+
+
+def plot_smt(x, force_sum_, moment_sum_, nelems, nnodes, show=True):
+    """plots the shear, moment, torque plots"""
+    import matplotlib.pyplot as plt
+    plt.close()
+
+    force_sum = force_sum_ / 1000
+    moment_sum = moment_sum_ / 1000
+    xtitle = 'Y'
+    xlabel = 'Y (in)'
+    moment_unit = 'in-kip'
+    force_unit = 'kip'
+    #f, ax = plt.subplots()
+    # ax = fig.subplots()
+    fig = plt.figure(1)
+    ax = fig.gca()
+    ax.plot(x, force_sum[:, 0], '-*')
+    ax.set_title(f'{xtitle} vs. Axial')
+    ax.set_xlabel(xlabel)
+    ax.set_ylabel(f'Axial ({force_unit})')
+    ax.grid(True)
+
+    fig = plt.figure(2)
+    ax = fig.gca()
+    ax.plot(x, force_sum[:, 1], '-*')
+    ax.set_title(f'{xtitle} vs. Shear Y')
+    ax.set_xlabel(xlabel)
+    ax.set_ylabel(f'Shear Y ({force_unit})')
+    ax.grid(True)
+
+    fig = plt.figure(3)
+    ax = fig.gca()
+    ax.plot(x, force_sum[:, 2], '-*')
+    ax.set_title(f'{xtitle} vs. Shear Z')
+    ax.set_xlabel(xlabel)
+    ax.set_ylabel(f'Shear Z ({force_unit})')
+    ax.grid(True)
+
+    fig = plt.figure(4)
+    ax = fig.gca()
+    ax.plot(x, moment_sum[:, 0], '-*')
+    ax.set_title(f'{xtitle} vs. Torque')
+    ax.set_xlabel(xlabel)
+    ax.set_ylabel(f'Torque ({moment_unit})')
+    ax.grid(True)
+
+    fig = plt.figure(5)
+    ax = fig.gca()
+    ax.plot(x, moment_sum[:, 1], '-*')
+    ax.set_title(f'{xtitle} vs. Moment Y')
+    ax.set_xlabel(xlabel)
+    ax.set_ylabel(f'Moment Y ({moment_unit})')
+    ax.grid(True)
+
+    fig = plt.figure(6)
+    ax = fig.gca()
+    ax.plot(x, moment_sum[:, 2], '-*')
+    ax.set_title(f'{xtitle} vs. Moment Z')
+    ax.set_xlabel(xlabel)
+    ax.set_ylabel(f'Moment Z ({moment_unit})')
+    ax.grid(True)
+
+    fig = plt.figure(6)
+    ax = fig.gca()
+    ax.plot(x, moment_sum[:, 2], '-*')
+    ax.set_title(f'{xtitle} vs. Moment Z')
+    ax.set_xlabel(xlabel)
+    ax.set_ylabel(f'Moment Z ({moment_unit})')
+    ax.grid(True)
+
+
+    #-----------------------------------------------
+    fig = plt.figure(7)
+    ax = fig.gca()
+    ax.plot(x, force_sum[:, 0], '-*', label=f'Force X ({force_unit})')
+    ax.plot(x, force_sum[:, 1], '-*', label=f'Force Y ({force_unit})')
+    ax.plot(x, force_sum[:, 2], '-*', label=f'Force Z ({force_unit})')
+    ax.set_title(f'{xtitle} vs. Force')
+    ax.set_xlabel(xlabel)
+    ax.set_ylabel(f'Force ({force_unit})')
+    ax.legend()
+    ax.grid(True)
+
+    fig = plt.figure(8)
+    ax = fig.gca()
+    ax.plot(x, moment_sum[:, 0], '-*', label=f'Torque ({moment_unit})')
+    ax.plot(x, moment_sum[:, 1], '-*', label=f'Moment Y ({moment_unit})')
+    ax.plot(x, moment_sum[:, 2], '-*', label=f'Moment Z ({moment_unit})')
+    ax.set_title(f'{xtitle} vs. Moment')
+    ax.set_xlabel(xlabel)
+    ax.set_ylabel(f'Moment ({moment_unit})')
+    ax.legend()
+    ax.grid(True)
+    #-----------------------------------------------
+    fig = plt.figure(9)
+    ax = fig.gca()
+    ax.plot(x, nnodes / nnodes.max(), '-*', label=f'n_nodes (N={nnodes.max()})')
+    ax.plot(x, nelems / nelems.max(), '-*', label=f'n_elems (N={nelems.max()})')
+    ax.set_title('Monotonic Nodes/Elements')
+    #ax.set_xlabel()
+    ax.set_ylabel('Fraction of Nodes, Elements')
+    ax.legend()
+    ax.grid(True)
+
+    if show:
+        plt.show()
 
 if __name__ == "__main__":  # pragma: no cover
     unittest.main()

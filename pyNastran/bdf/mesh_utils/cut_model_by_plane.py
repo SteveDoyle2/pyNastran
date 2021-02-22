@@ -23,7 +23,7 @@ from pyNastran.bdf.cards.coordinate_systems import CORD2R
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.bdf.bdf import BDF
     from pyNastran.bdf.cards.coordinate_systems import Coord
-    from pyNastran.nptyping import NDArrayNint, NDArray3float
+    from pyNastran.nptyping import NDArrayNint, NDArray3float, NDArrayNfloat
 
 def get_nid_cd_xyz_cid0(model: BDF) -> Tuple[NDArrayNint, NDArrayNint,
                                              Dict[int, NDArrayNint], NDArray3float]:
@@ -40,19 +40,34 @@ def get_element_centroids(model: BDF, idtype='int32', fdtype='float32') -> Tuple
     """gets the element ids and their centroids"""
     eids = []
     element_centroids_cid0 = []
+    springs = {
+        'CELAS1', 'CELAS2', 'CELAS3', 'CELAS4',
+        'CDAMP1', 'CDAMP2', 'CDAMP3', 'CDAMP4',
+    }
     for eid, elem in sorted(model.elements.items()):
         eids.append(eid)
-        element_centroids_cid0.append(elem.Centroid())
+        if elem.type in springs:
+            centroid = np.zeros(3)
+            for node_ref in elem.nodes_ref:
+                centroid += node_ref.get_position()
+            centroid /= len(elem.nodes_ref)
+        else:
+            centroid = elem.Centroid()
+        element_centroids_cid0.append(centroid)
 
     eids = np.array(eids, dtype=idtype)
     element_centroids_cid0 = np.array(element_centroids_cid0, dtype=fdtype)
     return eids, element_centroids_cid0
 
-
-def get_stations(model: BDF, p1, p2, p3, zaxis,
+def get_stations(model: BDF,
+                 p1: NDArray3float, p2: NDArray3float, p3: NDArray3float,
+                 zaxis: NDArray3float,
                  method: str='Z-Axis Projection',
                  cid_p1: int=0, cid_p2: int=0, cid_p3: int=0, cid_zaxis: int=0,
-                 idir: int=0, nplanes: int=20) -> Tuple[NDArray3float, NDArray3float, ]:
+                 nplanes: int=20) -> Tuple[NDArray3float, NDArray3float, NDArray3float,
+                                                        NDArray3float, NDArray3float,
+                                                        CORD2R,
+                                                        CORD2R, NDArrayNfloat]:
     """
     Gets the axial stations
 
@@ -73,8 +88,6 @@ def get_stations(model: BDF, p1, p2, p3, zaxis,
            p1-p2 defines the x-axis
            k is defined by the z-axis
        'CORD2R' : typical
-    idir : int; default=0
-        the direction of the step direction (0, 1, 2)
 
     Returns
     -------
@@ -84,6 +97,8 @@ def get_stations(model: BDF, p1, p2, p3, zaxis,
     i / k : (3,) float ndarray
         the i and k vectors of the coordinate system
     coord_out : Coord
+        the output coordinate system
+    coord_march : Coord
         the generated coordinate system where the x-axis defines
         the direction to be marched
     stations : (n,) float ndarray
@@ -107,36 +122,65 @@ def get_stations(model: BDF, p1, p2, p3, zaxis,
     p3 = np.array([1600., 0., 0.]) # end
     zaxis = np.array([0., 0., 1.])
     method = 'Z-Axis Projection'
-    idir = 0
 
     xyz1, xyz2, xyz3, i, k, coord_out, stations = get_stations(
         model, p1, p2, p3, zaxis,
         method=method, cid_p1=0, cid_p2=0, cid_p3=0,
-        cid_zaxis=0, idir=idir, nplanes=100)
+        cid_zaxis=0, nplanes=100)
     print(stations)
 
     """
+    p1 = np.asarray(p1) # start
+    p2 = np.asarray(p2) # xz-plane
+    p3 = np.asarray(p3) # end point
+    zaxis = np.asarray(zaxis)
+
     # define a local coordinate system
-    xyz1, xyz2, unused_z_global, i, k, origin, zaxis, xzplane = _p1_p2_zaxis_to_cord2r(
+    xyz1, xyz2, unused_z_global, i, k, origin, zaxis2, xzplane = _p1_p2_zaxis_to_cord2r(
         model, p1, p2, zaxis,
         cid_p1=cid_p1, cid_p2=cid_p2, cid_zaxis=cid_zaxis,
         method=method)
     xyz3 = model.coords[cid_p3].transform_node_to_global(p3)
 
-    coord_out = CORD2R(None, rid=0, origin=origin, zaxis=zaxis, xzplane=xzplane,
-                       comment='')
+    coord_out = CORD2R(None, origin=origin, zaxis=zaxis2, xzplane=xzplane)
+    #coord_march = coord_out
+    xaxis_march = xyz3 - xyz1
+    xaxis_march_norm = np.linalg.norm(xaxis_march)
+    if xaxis_march_norm == 0.:
+        msg = f'Coincident starting and end points.  dx={xaxis_march_norm} xyz1={xyz1} xyz3={xyz3}\n'
+        #msg += coord_out.get_stats()
+        raise ValueError(msg)
+
+    iaxis_march = xaxis_march / xaxis_march_norm
+    # k has been rotated into the output coordinte frame, so we'll maintain that
+    # k is length=1
+    assert np.allclose(np.linalg.norm(k), 1.0)
+    jaxis_march = np.cross(k, iaxis_march)
+    kaxis_march = np.cross(iaxis_march, jaxis_march)
+    coord_march = CORD2R(None, origin=origin, zaxis=origin+kaxis_march, xzplane=origin+iaxis_march)
+    #coord_march = CORD2R(None, origin=origin, zaxis=axis_march, xzplane=xzplane)
     #print(coord_out.get_stats())
 
-    xyz1p = coord_out.transform_node_to_local(xyz1)
-    xyz3p = coord_out.transform_node_to_local(xyz3)
-    dx = xyz3p[idir] - xyz1p[idir]
+    xyz1p = coord_march.transform_node_to_local(xyz1)
+    xyz3p = coord_march.transform_node_to_local(xyz3)
+    xaxis = xyz3p - xyz1p
+
+    # we want to give the dx the right sign in the coord_out frame
+    i_abs = np.abs(coord_march.i)
+    i_abs_max = i_abs.max()
+    idir = np.where(i_abs == i_abs_max)[0][0]
+    isign = np.sign(coord_march.i[idir])
+    dx = xaxis[0] # * isign
+
     if abs(dx) == 0.:
         msg = f'Coincident starting and end points.  dx={dx} xyz1={xyz1} xyz3={xyz3}\n'
         msg += coord_out.get_stats()
         raise ValueError(msg)
-    stations = np.linspace(0., dx, num=nplanes, endpoint=True)
+    x_stations_march = np.linspace(0., dx, num=nplanes, endpoint=True)
+    assert x_stations_march.shape == (nplanes, ), x_stations_march.shape
+    #stations.sort()
 
-    return xyz1, xyz2, xyz3, i, k, coord_out, stations
+    return xyz1, xyz2, xyz3, i, k, coord_out, coord_march, x_stations_march
 
 def _setup_faces(bdf_filename: Union[str, BDF]) -> Tuple[Any, Any, Any, Any]:
     """helper method"""
@@ -199,6 +243,7 @@ def cut_face_model_by_coord(bdf_filename: Union[str, BDF], coord, tol,
         str : write a csv
     plane_bdf_filename : str; default='plane_face.bdf'
         the path to the simplified conrod model
+
     """
     assert isinstance(tol, float), tol
     nids, xyz_cid0, faces, face_eids = _setup_faces(bdf_filename)
@@ -255,15 +300,27 @@ def _determine_cord2r(origin, zaxis, xzplane):
     j = np.cross(k, iprime)
     j /= np.linalg.norm(j)
     i = np.cross(j, k)
-    return i, k, origin, zaxis, xzplane
+    return i, k
 
-def _project_z_axis(p1, p2, z_global):
+def _project_z_axis(p1: NDArray3float,
+                    p2: NDArray3float,
+                    z_global: NDArray3float) -> Tuple[NDArray3float, NDArray3float, NDArray3float,
+                                                      NDArray3float, NDArray3float]:
     """
     p1-p2 defines the x-axis
     k is defined by the z-axis
+    k = z / |z|
+    xz = p2 - p1
+    xz /= |xz|
+    j = z × xz
+    j /= |j|
+    i = k × j
     """
     x = p2 - p1
-    iprime = x / np.linalg.norm(x)
+    norm_x = np.linalg.norm(x)
+    if norm_x == 0.:
+       raise RuntimeError(f'p1={p1} and p2={p2} are coincident; distance={norm_x}')
+    iprime = x / norm_x
     k = z_global / np.linalg.norm(z_global)
     j = np.cross(k, iprime)
     jhat = j / np.linalg.norm(j)
@@ -275,27 +332,60 @@ def _project_z_axis(p1, p2, z_global):
     return i, k, origin, zaxis, xzplane
 
 
-def _p1_p2_zaxis_to_cord2r(model: BDF, p1, p2, zaxis, method: str='Z-Axis Projection',
-                           cid_p1: int=0, cid_p2: int=0, cid_zaxis: int=0) -> Any:
-    """Creates the coordinate system that will define the cutting plane"""
-    p1 = np.asarray(p1)
-    p2 = np.asarray(p2)
+def _p1_p2_zaxis_to_cord2r(model: BDF,
+                           p1: NDArray3float, p2: NDArray3float, zaxis: NDArray3float,
+                           method: str='Z-Axis Projection',
+                           cid_p1: int=0, cid_p2: int=0,
+                           cid_zaxis: int=0) -> Tuple[NDArray3float, NDArray3float, NDArray3float,
+                                                      NDArray3float, NDArray3float,
+                                                      NDArray3float, NDArray3float, NDArray3float]:
+    """
+    Creates the coordinate system that will define the cutting plane
+    Parameters
+    ----------
+    model : BDF
+        the bdf object
+    method: str; default='Z-Axis Projection'
+        method = 'CORD2R'
+           p1:    origin
+           zaxis: origin + zaxis (zaxis)
+           p3:    origin + xzplane
+        method = 'Z-Axis Projection'
+           p1:    origin
+           zaxis: zaxis
+           p2:    origin + xzplane
+    cid_p1/p2/zaxis: int; default=0
+        the coordinate system for the points
+
+    Returns
+    p1 / p2 / p3 : (3,) float ndarray
+        A, B, C in the CORD2R in the rid=0 frame
+    i, k : the i/k vectors for the coord_out frame
+    origin, zaxis, xzplane :
+    """
+    p1 = np.asarray(p1) # origin
+    p2 = np.asarray(p2) # xz-plane
     zaxis = np.asarray(zaxis)
-    #print("coord:")
-    #print('  p1 =', p1)
-    #print('  p2 =', p2)
-    #print('  zaxis =', zaxis)
+    print("coord:")
+    print('  p1 =', p1)
+    print('  p2 =', p2)
+    print('  zaxis =', zaxis)
 
     xyz1 = model.coords[cid_p1].transform_node_to_global(p1)
     xyz2 = model.coords[cid_p2].transform_node_to_global(p2)
     z_global = model.coords[cid_zaxis].transform_node_to_global(zaxis)
     if method == 'CORD2R':
-        i, k, origin, zaxis, xzplane = _determine_cord2r(xyz1, xyz2, z_global)
+        origin = xyz1
+        xzplane_ = xyz2 - xyz1
+        zaxis_ = z_global - xyz1
+        i, k = _determine_cord2r(origin, zaxis_, xzplane_)
+        origin_zaxis = z_global # origin + i
+        origin_xzplane = xyz2 # origin + k
     elif method == 'Z-Axis Projection':
-        i, k, origin, zaxis, xzplane = _project_z_axis(xyz1, xyz2, z_global)
+        i, k, origin, origin_zaxis, origin_xzplane = _project_z_axis(xyz1, xyz2, z_global)
     else:
         raise NotImplementedError("method=%r; valid_methods=['CORD2R', 'Z-Axis Projection']")
-    return xyz1, xyz2, z_global, i, k, origin, zaxis, xzplane
+    return xyz1, xyz2, z_global, i, k, origin, origin_zaxis, origin_xzplane
 
 #def _merge_bodies(local_points_array, global_points_array, result_array):
     #local_points_dict = {}
@@ -1185,7 +1275,7 @@ def get_element_inertias(model: BDF, normal_plane,
                 thetad -= 180.
 
             #normal = element.Normal()
-            if abs(np.dot(normal_plane, normal)) > 0.9:
+            if abs(normal_plane @ normal) > 0.9:
                 thicknessi = 0.
                 areai = 0.
                 Ex = 0.

@@ -80,6 +80,7 @@ class PreferencesWindow(PyDialog):
         self._magnify = data['magnify']
         self._text_size = data['text_size']
         self._highlight_opacity = data['highlight_opacity']
+        self._highlight_point_size = data['highlight_point_size']
 
         self.annotation_color_float, self.annotation_color_int = check_color(
             data['annotation_color'])
@@ -158,6 +159,14 @@ class PreferencesWindow(PyDialog):
         self.highlight_opacity_edit.setDecimals(1)
         self.highlight_opacity_edit.setSingleStep(0.1)
         self.highlight_opacity_button = QPushButton("Default")
+
+        self.highlight_point_size_label = QLabel("Highlight Point Size:")
+        self.highlight_point_size_edit = QDoubleSpinBox(self)
+        self.highlight_point_size_edit.setValue(self._highlight_point_size)
+        self.highlight_point_size_edit.setRange(5.0, 30.0)
+        self.highlight_point_size_edit.setDecimals(2)
+        self.highlight_point_size_edit.setSingleStep(0.25)
+        self.highlight_point_size_button = QPushButton("Default")
 
         # Text Color
         self.highlight_color_label = QLabel("Highlight Color:")
@@ -386,6 +395,12 @@ class PreferencesWindow(PyDialog):
 
         grid.addWidget(self.highlight_opacity_label, irow, 0)
         grid.addWidget(self.highlight_opacity_edit, irow, 1)
+        grid.addWidget(self.highlight_opacity_button, irow, 2)
+        irow += 1
+
+        grid.addWidget(self.highlight_point_size_label, irow, 0)
+        grid.addWidget(self.highlight_point_size_edit, irow, 1)
+        grid.addWidget(self.highlight_point_size_button, irow, 2)
         irow += 1
 
         grid.addWidget(self.text_color_label, irow, 0)
@@ -671,6 +686,13 @@ class PreferencesWindow(PyDialog):
         if self.win_parent is not None:
             self.win_parent.settings.set_highlight_opacity(value)
 
+    def on_highlight_point_size(self, value=None):
+        if value is None:
+            value = self.highlight_point_size_edit.value()
+        self._highlight_point_size = value
+        if self.win_parent is not None:
+            self.win_parent.settings.set_highlight_point_size(value)
+
     def _background_color(self, title, color_edit, rgb_color_ints, func_name):
         """helper method for ``on_background_color`` and ``on_background_color2``"""
         passed, rgb_color_ints, rgb_color_floats = self.on_color(
@@ -864,6 +886,7 @@ def main():  # pragma: no cover
 
         'highlight_color' : (1., 1., 0.), # yellow
         'highlight_opacity' : 0.8,
+        'highlight_point_size' : 10.0,
 
         'annotation_color' : (1., 0., 0.), # red
         'annotation_size' : 11,
