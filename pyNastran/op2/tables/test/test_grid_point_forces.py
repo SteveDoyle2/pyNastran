@@ -197,23 +197,22 @@ class TestGridPointForcesSMT(unittest.TestCase):
         zaxis = np.array([0., 0., 1.])
         method = 'Z-Axis Projection'
 
-        xyz1, xyz2, xyz3, i, k, coord_out, coord_march, stations = get_stations(
+        xyz1, xyz2, xyz3, i, k, coord_out, iaxis_march, stations = get_stations(
             model, p1, p2, p3, zaxis,
             method=method, cid_p1=0, cid_p2=0, cid_p3=0,
             cid_zaxis=0, nplanes=100)
-        print(f'stations = {stations}')
+        #print(f'stations = {stations}')
 
         # i/j/k vector is nan
-        print(f'origin: {coord_out.origin}')
-        print(f'zaxis: {coord_out.e2}')
-        print(f'xzplane: {coord_out.e3}')
+        #print(f'origin: {coord_out.origin}')
+        #print(f'zaxis: {coord_out.e2}')
+        #print(f'xzplane: {coord_out.e3}')
 
         force_sum, moment_sum, new_coords, nelems, nnodes = gpforce.shear_moment_diagram(
-            nids, xyz_cid0, nid_cp_cd, icd_transform,
-            all_eids, element_centroids_cid0,
+            nids, xyz_cid0, nid_cd, icd_transform,
+            eids, element_centroids_cid0,
             stations, model.coords, coord_out,
-            coord_march=coord_march,
-            #idir=idir,
+            iaxis_march=iaxis_march,
             itime=0, debug=True, log=model.log)
         plot_smt(stations, force_sum, moment_sum, show=False)
 
@@ -257,7 +256,7 @@ class TestGridPointForcesSMT(unittest.TestCase):
         # xz plane
         p2 = p1 + np.array([0., -1., 0.])
 
-        xyz1, xyz2, xyz3, i, k, coord_out, coord_march, stations = get_stations(
+        xyz1, xyz2, xyz3, i, k, coord_out, iaxis_march, stations = get_stations(
             model, p1, p2, p3, zaxis,
             method=method, cid_p1=0, cid_p2=0, cid_p3=0,
             cid_zaxis=0, nplanes=50)
@@ -265,14 +264,14 @@ class TestGridPointForcesSMT(unittest.TestCase):
         nstations = len(stations)
         coord_origins = np.zeros((nstations, 3))
         for istation, station in enumerate(stations):
-            coord_origin = coord_march.origin + coord_march.i * station
+            coord_origin = coord_out.origin + iaxis_march * station
             coord_origins[istation, :] = coord_origin
         #coord_origins2 = coord_march.origin[:, np.newaxis] + coord_march.i[:, np.newaxis] * stations
         #assert np.array_equal(coord_origins, coord_origins2)
 
         ylocations = coord_origins[:, 1]
 
-        print(f'stations = {stations}')
+        #print(f'stations = {stations}')
         assert np.abs(stations).max() > 1350.
         assert np.array_equal(i, [0., -1., 0.])
         assert np.array_equal(k, [0., 0., 1.])
@@ -300,7 +299,7 @@ class TestGridPointForcesSMT(unittest.TestCase):
             nids, xyz_cid0, nid_cd, icd_transform,
             eids, element_centroids_cid0,
             stations, model.coords, coord_out,
-            coord_march=coord_march,
+            iaxis_march=iaxis_march,
             itime=0, debug=True,
             nodes_tol=25., log=model.log)
 
@@ -314,7 +313,7 @@ class TestGridPointForcesSMT(unittest.TestCase):
                  plot_moment_components=False,
                  root_filename=os.path.join(BWB_PATH, 'bwb'),
                  show=False)
-        #y = 1
+        y = 1
 
 
 class TestGridPointForces(unittest.TestCase):
@@ -505,14 +504,12 @@ class TestGridPointForces(unittest.TestCase):
         #eids = np.ndarray(list(model.elements.keys()), dtype='int32')
         #eids.sort()
         # bar is [0,10] in x
-        #coord_march = None
         istations = np.where(stations > 0.5)[0]
         stations = stations[istations]
         force_sum, moment_sum, new_coords, nelems, nnodes = gpforce.shear_moment_diagram(
             nids, xyz_cid0, nid_cp_cd, icd_transform,
             all_eids, element_centroids_cid0,
             stations, model.coords, coord_out,
-            #coord_march=coord_march,
             #idir=0,
             itime=0, debug=True,
             nodes_tol=0.5,

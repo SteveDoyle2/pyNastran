@@ -69,7 +69,7 @@ def get_stations(model: BDF,
                  nplanes: int=20) -> Tuple[NDArray3float, NDArray3float, NDArray3float,
                                                         NDArray3float, NDArray3float,
                                                         CORD2R,
-                                                        CORD2R, NDArrayNfloat]:
+                                                        NDArray3float, NDArrayNfloat]:
     """
     Gets the axial stations
 
@@ -100,9 +100,8 @@ def get_stations(model: BDF,
         the i and k vectors of the coordinate system
     coord_out : Coord
         the output coordinate system
-    coord_march : Coord
-        the generated coordinate system where the x-axis defines
-        the direction to be marched
+    iaxis_march : (3,) float ndarray
+        the normalized x-axis that defines the direction to march
     stations : (n,) float ndarray
         the coordinates in the x-axis that will be marched down
 
@@ -168,9 +167,9 @@ def get_stations(model: BDF,
     xaxis = xyz3p - xyz1p
 
     # we want to give the dx the right sign in the coord_out frame
-    i_abs = np.abs(coord_march.i)
-    i_abs_max = i_abs.max()
-    idir = np.where(i_abs == i_abs_max)[0][0]
+    #i_abs = np.abs(coord_march.i)
+    #i_abs_max = i_abs.max()
+    #idir = np.where(i_abs == i_abs_max)[0][0]
     #isign = np.sign(coord_march.i[idir])
     dx = xaxis[0] # * isign
 
@@ -182,7 +181,7 @@ def get_stations(model: BDF,
     assert x_stations_march.shape == (nplanes, ), x_stations_march.shape
     #stations.sort()
 
-    return xyz1, xyz2, xyz3, i, k, coord_out, coord_march, x_stations_march
+    return xyz1, xyz2, xyz3, i, k, coord_out, iaxis_march, x_stations_march
 
 def _setup_faces(bdf_filename: Union[str, BDF]) -> Tuple[Any, Any, Any, Any]:
     """helper method"""

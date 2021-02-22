@@ -22,7 +22,6 @@ from pyNastran.bdf.mesh_utils.cut_model_by_plane import (
     get_nid_cd_xyz_cid0, get_element_centroids, get_stations)
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.bdf.bdf import BDF, CORD2R
-    from pyNastran.op2.op2 import OP2
     from pyNastran.op2.op2_geom import OP2Geom
     from pyNastran.op2.tables.ogf_gridPointForces.ogf_objects import RealGridPointForcesArray
 
@@ -94,24 +93,26 @@ def setup_coord_from_plane(model: Tuple[BDF, OP2Geom], xyz_cid0: NDArrayN3float,
         cid_zaxis=cid_zaxis, nplanes=nplanes)
     return xyz1, xyz2, xyz3, i, k, coord_out, coord_march, dim_max, stations
 
-def plot_shear_moment_torque(model: OP2,
+def plot_shear_moment_torque(model: OP2Geom,
                              gpforce: RealGridPointForcesArray,
                              coord: CORD2R,
-                             idir: int=0, itime: int=0,
+                             itime: int=0,
                              nplanes: int=11, show: bool=True):
     nids, nid_cd, xyz_cid0, icd_transform, eids, element_centroids_cid0 = smt_setup(model)
-    element_centroids_cid = coord.transform_node_to_local_array(element_centroids_cid0)
-    x = element_centroids_cid[idir]
+    element_centroids_coord = coord.transform_node_to_local_array(element_centroids_cid0)
+    idir = 0
+    x = element_centroids_coord[idir]
     xmin = x.min()
     xmax = x.max()
     dx = xmax - xmin
     assert abs(dx) > 0., f'dx={dx} xmin={xmin} xmax={xmax}'
     stations = np.linspace(0., dx, num=nplanes, endpoint=True)
     force_sum, moment_sum, new_coords, nelems, nnodes = gpforce.shear_moment_diagram(
-        xyz_cid0, eids, nids, icd_transform,
-        element_centroids_cid0,
-        model.coords, nid_cd, stations, coord,
-        idir=idir, itime=itime, debug=False, log=model.log)
+        nids, xyz_cid0, nid_cd, icd_transform,
+        eids, element_centroids_cid0, stations,
+        model.coords, coord,
+        iaxis_march=None,
+        itime=itime, debug=False, log=model.log)
     plot_smt(stations, force_sum, moment_sum, nelems, nnodes, show=show)
 
 def plot_smt(x, force_sum, moment_sum, nelems, nnodes, show=True):

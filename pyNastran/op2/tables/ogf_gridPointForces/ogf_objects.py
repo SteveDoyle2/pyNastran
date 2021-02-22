@@ -797,7 +797,7 @@ class RealGridPointForcesArray(GridPointForces):
                              stations: NDArrayNfloat,
                              coords: Dict[int, CORD],
                              coord_out: CORD,
-                             coord_march: Optional[CORD]=None,
+                             iaxis_march: Optional[NDArray3float]=None,
                              itime: int=0,
                              icoord: int=None,
                              nodes_tol: Optional[float]=None,
@@ -841,9 +841,9 @@ class RealGridPointForcesArray(GridPointForces):
             of elements or nodes.
         coord_out : CORD2R()
             the output coordinate system
-        coord_march : CORD2R(); default=None -> coord_out+1
-            the coordinate system that the stations reference
-        icoord : int
+        iaxis_march : (3,) float narray; default=None -> coord_out.i
+            the normalized x-axis that defines the direction to march
+        icoord : int; default=None -> coord_out+1
             the starting index for the coordinate systems that will be created
             and placed in new_coords; useful for debugging
         nodes_tol : float; default=None -> dstation
@@ -896,8 +896,8 @@ class RealGridPointForcesArray(GridPointForces):
         idtype = nid_cd.dtype
         fdtype = xyz_cid0.dtype
 
-        if coord_march is None:
-            coord_march = coord_out
+        if iaxis_march is None:
+            iaxis_march = deepcopy(coord_out.i)
 
         eids = np.asarray(eids, dtype=idtype)
         nids = np.asarray(nids, dtype=idtype)
@@ -906,9 +906,9 @@ class RealGridPointForcesArray(GridPointForces):
         assert len(stations.shape) == 1, stations.shape
         nstations = len(stations)
         assert coord_out.type in ['CORD2R', 'CORD1R'], coord_out.type
-        assert coord_march.type in ['CORD2R', 'CORD1R'], coord_march.type
-        i_axis_march = deepcopy(coord_march.i)
-        del coord_march
+        #assert coord_march.type in ['CORD2R', 'CORD1R'], coord_march.type
+        #i_axis_march = deepcopy(coord_march.i)
+        #del iaxis_march
         assert np.array_equal(nids, np.unique(nids))
         assert np.array_equal(eids, np.unique(eids))
         # ----------------------------------------------------------------------
@@ -934,7 +934,7 @@ class RealGridPointForcesArray(GridPointForces):
         nnodes = []
 
         # calculate the value of dstation_x for the 1st station
-        doffset = (stations[1] - stations[0]) * i_axis_march
+        doffset = (stations[1] - stations[0]) * iaxis_march
         dsummation_point = coord_out.origin + doffset
         dsummation_point_coord = coord_out.transform_node_to_local(dsummation_point)
         dstation = dsummation_point_coord[idir]
@@ -945,7 +945,7 @@ class RealGridPointForcesArray(GridPointForces):
         for istation, station in enumerate(stations):
             # summation point creation
             # in the global coordinate system
-            offset = station * i_axis_march
+            offset = station * iaxis_march
 
             summation_point = coord_out.origin + offset  # in basic frame
             summation_point_coord = coord_out.transform_node_to_local(summation_point)
@@ -1016,8 +1016,8 @@ class RealGridPointForcesArray(GridPointForces):
                     xyz_cid0, summation_point, assume_sorted=True,
                     itime=itime, stop_on_nan=stop_on_nan,
                     debug=debug, log=log)
-                log.info(f'neids={len(ielem):d} nnodes={len(jnode):d} station={station:g}; '
-                         f'force={force_sumi} moment={moment_sumi}')
+                #log.info(f'neids={len(ielem):d} nnodes={len(jnode):d} station={station:g}; '
+                         #f'force={force_sumi} moment={moment_sumi}')
                 if not np.isfinite(force_sumi[0]):
                     if stop_on_nan:
                         raise RuntimeError(f'station={station} is nan; force_sum={force_sumi}')

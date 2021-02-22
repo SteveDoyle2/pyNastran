@@ -118,8 +118,8 @@ class TestNastranGUI(unittest.TestCase):
             cid_p1=0, cid_p2=0, cid_p3=0, cid_zaxis=0,
             nplanes=5, plane_color=None, plane_opacity=0.5,
             csv_filename=None, show=False, stop_on_failure=True)
-        assert np.allclose(np.abs(force_sum).max(), 0.0003566741943359375), np.abs(force_sum).max()
-        assert np.allclose(np.abs(moment_sum).max(), 0.0004558563232421875), np.abs(moment_sum).max()
+        assert np.allclose(np.abs(force_sum).max(), 0.000732421875), np.abs(force_sum).max()
+        assert np.allclose(np.abs(moment_sum).max(), 0.000244140625), np.abs(moment_sum).max()
 
         p1 = np.array([0., 0., 0.]) # origin
         p2 = np.array([1., 0., 0.]) # xaxis
