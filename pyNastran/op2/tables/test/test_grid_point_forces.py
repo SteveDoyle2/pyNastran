@@ -102,7 +102,7 @@ class TestGridPointForcesSMT(unittest.TestCase):
         #xyz1, xyz2, z_global, i, k, origin, zaxis2, xzplane = _p1_p2_zaxis_to_cord2r(
             #model, p1, p2, zaxis, method='Z-Axis Projection',
             #cid_p1=0, cid_p2=0, cid_zaxis=0)
-        xyz1, xyz2, xyz3, i, k, coord_out, coord_march, stations = get_stations(
+        xyz1, xyz2, xyz3, i, k, coord_out, iaxis_march, stations = get_stations(
             model, p1, p2, p3, zaxis,
             method='Z-Axis Projection', cid_p1=0, cid_p2=0, cid_p3=0,
             cid_zaxis=0, nplanes=10)
@@ -117,10 +117,9 @@ class TestGridPointForcesSMT(unittest.TestCase):
         #assert np.array_equal(origin, p1), origin
         #assert np.array_equal(zaxis2, p1+zaxis), zaxis2
         #assert np.array_equal(xzplane, p2), xzplane
-        print(coord_out.e1, coord_out.e2, coord_out.e3)
-        print(coord_march.e1, coord_march.e2, coord_march.e3)
-        assert np.allclose(coord_march.e1, xyz1)
-
+        #print(coord_out.e1, coord_out.e2, coord_out.e3)
+        iaxis_march_expected = [-0.33382509, -0.94043632, -0.06434544]
+        assert np.allclose(iaxis_march, iaxis_march_expected), f'iaxis_march={iaxis_march} expected={iaxis_march_expected}'
 
     def test_op2_bwb_smt_setup(self):  # pragma: no cover
         """how to plot an shear-moment-torque"""
@@ -214,7 +213,7 @@ class TestGridPointForcesSMT(unittest.TestCase):
             stations, model.coords, coord_out,
             iaxis_march=iaxis_march,
             itime=0, debug=True, log=model.log)
-        plot_smt(stations, force_sum, moment_sum, show=False)
+        plot_smt(stations, force_sum, moment_sum, nelems, nnodes, show=False)
 
     @unittest.skipIf(getpass.getuser() != 'sdoyle', 'local test')
     def test_op2_bwb_spanwise(self):  # pragma: no cover
@@ -286,12 +285,7 @@ class TestGridPointForcesSMT(unittest.TestCase):
         #print(f'k: {coord_out.k}')
 
         #print('coord_march:')
-        #print(f'origin: {coord_march.origin}')
-        #print(f'zaxis: {coord_march.e2}')
-        #print(f'xzplane: {coord_march.e3}')
-        #print(f'i: {coord_march.i}')
-        #print(f'j: {coord_march.j}')
-        #print(f'k: {coord_march.k}')
+        #print(f'i: {iaxis_march}')
 
         #x = 1
         force_sum, moment_sum, new_coords, nelems, nnodes = gpforce.shear_moment_diagram(
@@ -304,7 +298,7 @@ class TestGridPointForcesSMT(unittest.TestCase):
             nodes_tol=25., log=model.log)
 
         for cid, coord in new_coords.items():
-            print(cid)
+            #print(cid)
             model.coords[cid] = coord
         model.sol = 144
         model.write_bdf(bdf_filename)
