@@ -58,7 +58,7 @@ class SafeXrefMesh(XrefMesh):
         if xref_elements:
             self._safe_cross_reference_elements()
         if xref_properties:
-            self._cross_reference_properties()
+            self._safe_cross_reference_properties()
         if xref_masses:
             self._cross_reference_masses()
         if xref_materials:
@@ -254,6 +254,20 @@ class SafeXrefMesh(XrefMesh):
         if missing_safe_xref:
             self.log.warning('These cards dont support safe_xref; %s' %
                              str(list(missing_safe_xref)))
+
+    def _safe_cross_reference_properties(self) -> None:
+        """Links the properties to materials"""
+        for prop in self.properties.values():
+            if hasattr(prop, 'safe_cross_reference'):
+                try:
+                    prop.safe_cross_reference(self)
+                except (SyntaxError, RuntimeError, AssertionError, KeyError, ValueError) as error:
+                    self._store_xref_error(error, prop)
+            else:
+                try:
+                    prop.cross_reference(self)
+                except (SyntaxError, RuntimeError, AssertionError, KeyError, ValueError) as error:
+                    self._store_xref_error(error, prop)
 
     def _show_safe_xref_errors(self, elements_word: str, xref_errors: bool) -> None:
         """helper method to show errors"""
@@ -500,14 +514,16 @@ class SafeXrefMesh(XrefMesh):
             xref_errors['pid'].append((ref_id, pid))
         return pid_ref
 
-    def safe_material(self, mid, ref_id, xref_errors, msg=''):
+    def safe_material(self, mid: int, ref_id: int, xref_errors, msg=''):
         """
         Gets a material card
 
         Parameters
         ----------
+        mid : int
+            the material_id
         ref_id : int
-            the referencing value (e.g., an property references a material)
+            the referencing value (e.g., an property references a material, so use self.pid)
         """
         try:
             mid_ref = self.Material(mid, msg=msg)

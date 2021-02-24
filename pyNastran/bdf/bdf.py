@@ -1342,6 +1342,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
 
     def _parse_all_cards(self, bulk_data_lines: List[str], bulk_data_ilines: Any) -> None:
         """creates and loads all the cards the bulk data section"""
+        strict = True
         cards_list = []
         cards_dict = {}
         if self._is_cards_dict:
@@ -1363,7 +1364,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
                 #card_name = card[0]
                 #if card_name == 'CBAR':
                     #print(card)
-        self._parse_cards(cards_list, cards_dict, card_count)
+        self._parse_cards(cards_list, cards_dict, card_count, strict=strict)
 
         if self.values_to_skip:
             for key, values in self.values_to_skip.items():
@@ -3072,7 +3073,21 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
         card_obj, unused_card = self.create_card_object(
             card_lines, card_name,
             is_list=is_list, has_none=has_none)
-        self._add_card_helper(card_obj, card_name, card_name, ifile, comment)
+        self._add_card_helper(card_obj, card_name, card_name, ifile,
+                              comment=comment)
+        return card_obj
+
+    def add_card_lax(self, card_lines: List[str], card_name: str,
+                     comment: str='', ifile=None, is_list: bool=True, has_none: bool=True) -> Any:
+        """see ``add_card``"""
+        card_name = card_name.upper()
+        #if card_name not in self.card_count:
+            #print(card_name)
+        card_obj, unused_card = self.create_card_object(
+            card_lines, card_name,
+            is_list=is_list, has_none=has_none)
+        self._add_card_helper_lax(card_obj, card_name, card_name, ifile,
+                                  comment=comment)
         return card_obj
 
     def add_card_fields(self, card_lines, card_name, comment='', has_none=True):
@@ -3271,6 +3286,39 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
                 obj.ifile = ifile
 
         else:
+            self.reject_cards.append(card_obj)
+
+    def _add_card_helper_lax(self, card_obj: BDFCard, card: List[str],
+                             card_name: str, ifile: int,
+                             comment: str='') -> None:
+        #if card_name not in ['GRID', 'CQUAD4', 'CTRIA3']:
+            #print(card_obj)
+
+        if card_name == 'ECHOON':
+            self.echo = True
+            return
+        elif card_name == 'ECHOOFF':
+            self.echo = False
+            return
+
+        if self.echo and not self.force_echo_off:
+            _echo_card(card, card_obj)
+
+        if card_name in self._card_parser:
+
+            card_class, add_card_function = self._card_parser[card_name]
+            if hasattr(card_class, 'add_card_lax'):
+                class_instance = card_class.add_card_lax(card_obj, comment=comment)
+            else:
+
+                class_instance = card_class.add_card(card_obj, comment=comment)
+            add_card_function(class_instance)
+
+        elif card_name in self._card_parser_prepare:
+            add_card_function = self._card_parser_prepare[card_name]
+            add_card_function(card, card_obj, comment=comment)
+        else:
+            #raise RuntimeError(card_obj)
             self.reject_cards.append(card_obj)
 
     def _add_card_helper(self, card_obj: BDFCard, card: List[str],
@@ -4100,7 +4148,8 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
 
     def _parse_cards(self, cards_list: List[List[str]],
                      cards_dict: Dict[str, List[str]],
-                     card_count: Dict[str, int]) -> None:
+                     card_count: Dict[str, int],
+                     strict: bool=True) -> None:
         """creates card objects and adds the parsed cards to the deck"""
         # we don't want replication markers in the card_count
         card_names_to_remove = (card_name for card_name in list(card_count.keys())
@@ -4114,7 +4163,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
 
         if cards_list:
             # this is the block that actually runs
-            self._parse_cards_list(cards_list)
+            self._parse_cards_list(cards_list, strict=strict)
 
     def _parse_cards_dict(self, cards_dict: Dict[str, List[str]]) -> None:
         """parses the cards that are in dictionary format"""
@@ -4133,8 +4182,11 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
                     self.add_card(card_lines, card_name, comment=comment, ifile=ifile,
                                   is_list=False, has_none=False)
 
-    def _parse_cards_list(self, cards_list):
+    def _parse_cards_list(self, cards_list: List[str], strict: bool=True):
         """parses the cards that are in list format"""
+        add_card = self.add_card if strict else self.add_card_lax
+        del strict
+
         save_file_structure = self.save_file_structure
         if save_file_structure:
             for icard, card in enumerate(cards_list):
@@ -4187,15 +4239,15 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
 
                     _check_replicated_cards(replicated_cards)
                     for replicated_card in replicated_cards:
-                        self.add_card(replicated_card, replicated_card[0], comment=comment,
-                                      is_list=True, has_none=True)
+                        add_card(replicated_card, replicated_card[0], comment=comment,
+                                 is_list=True, has_none=True)
                     continue
 
                 if self.is_reject(card_name):
                     self.reject_card_lines(card_name, card_lines, comment=comment)
                 else:
-                    self.add_card(card_lines, card_name, comment=comment, ifile=ifile,
-                                  is_list=False, has_none=False)
+                    add_card(card_lines, card_name, comment=comment, ifile=ifile,
+                             is_list=False, has_none=False)
 
     #def _is_case_control_deck(self, line):
         #line_upper = line.upper().strip()

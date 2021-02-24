@@ -33,7 +33,10 @@ from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.bdf.field_writer_8 import set_blank_if_default, print_float_8
 from pyNastran.bdf.cards.base_card import Element, BaseCard
 from pyNastran.bdf.bdf_interface.assign_type import (
-    integer, integer_or_blank, double_or_blank, integer_double_or_blank, blank)
+    integer, integer_or_blank, double_or_blank, integer_double_or_blank, blank,
+    force_integer, force_double,
+    force_integer_or_blank, force_double_or_blank
+)
 from pyNastran.bdf.field_writer_8 import print_card_8, print_field_8
 from pyNastran.bdf.field_writer_16 import print_card_16, print_field_16
 from pyNastran.bdf.cards.utils import wipe_empty_fields
@@ -625,6 +628,50 @@ class CTRIA3(TriShell):
             T1 = double_or_blank(card, 11, 'T1')
             T2 = double_or_blank(card, 12, 'T2')
             T3 = double_or_blank(card, 13, 'T3')
+            assert len(card) <= 14, f'len(CTRIA3 card) = {len(card):d}\ncard={card}\n tflag={tflag} T123=[{T1}, {T2}, {T3}]'
+        else:
+            theta_mcid = 0.0
+            zoffset = 0.0
+            tflag = 0
+            T1 = None
+            T2 = None
+            T3 = None
+        return CTRIA3(eid, pid, nids, zoffset=zoffset, theta_mcid=theta_mcid,
+                      tflag=tflag, T1=T1, T2=T2, T3=T3, comment=comment)
+
+    @classmethod
+    def add_card_lax(cls: Any, card: str, comment: str=''):
+        """
+        Adds a CTRIA3 card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+
+        """
+        #: Element ID
+        eid = force_integer(card, 1, 'eid')
+        #: Property ID
+        pid = force_integer_or_blank(card, 2, 'pid', eid)
+
+        nids = [
+            force_integer(card, 3, 'n1'),
+            force_integer(card, 4, 'n2'),
+            force_integer(card, 5, 'n3'),
+        ]
+        if len(card) > 6:
+            theta_mcid = integer_double_or_blank(card, 6, 'theta_mcid', 0.0)
+            zoffset = force_double_or_blank(card, 7, 'zoffset', 0.0)
+            blank(card, 8, 'blank')
+            blank(card, 9, 'blank')
+
+            tflag = force_integer_or_blank(card, 10, 'tflag', 0)
+            T1 = force_double_or_blank(card, 11, 'T1')
+            T2 = force_double_or_blank(card, 12, 'T2')
+            T3 = force_double_or_blank(card, 13, 'T3')
             assert len(card) <= 14, f'len(CTRIA3 card) = {len(card):d}\ncard={card}\n tflag={tflag} T123=[{T1}, {T2}, {T3}]'
         else:
             theta_mcid = 0.0
@@ -3152,7 +3199,6 @@ class CPLSTS4(CPLSTx4):
         row2_data = [theta, '', tflag, T1, T2, T3, T4]
         row2 = [print_field_8(field) for field in row2_data]
         data = [self.eid, self.Pid()] + nodes + row2
-        aaa
         msg = ('CPLSTS4 %8i%8i%8i%8i%8i%8s%8s\n'
                '                %8s%8s%8s%8s\n' % tuple(data))
         return self.comment + msg.rstrip() + '\n'
@@ -3300,7 +3346,7 @@ class CPLSTx6(TriShell):
         eid = self.eid
         pid = self.Pid()
         nids = self.node_ids
-        edges = self.get_edge_ids()
+        unused_edges = self.get_edge_ids()
 
         assert isinstance(eid, integer_types)
         assert isinstance(pid, integer_types)

@@ -1,10 +1,9 @@
-import os
 import numpy as np
 import matplotlib.pyplot as plt
 
 def plot_equivalent_lamina_vs_theta(pcomp, mid_ref, thetad,
                                     plot=False, show=False,
-                                    close=True, png_filename=None):
+                                    close=True, png_filename_base=None):
     """plots a PCOMP mid vs. theta"""
     e22 = mid_ref.e22
     g12 = mid_ref.g12
@@ -73,10 +72,9 @@ def plot_equivalent_lamina_vs_theta(pcomp, mid_ref, thetad,
         ax.grid()
         ax.set_ylabel(r'$\nu_{xy}$')
         ax.set_xlabel(r'$\theta$')
-        if png_filename:
-            base, ext = os.path.splitext(png_filename)
-            png_filename1 = base + '_stiffness' + ext
-            png_filename2 = base + '_nu' + ext
+        if png_filename_base:
+            png_filename1 = png_filename_base + '_stiffness.png'
+            png_filename2 = png_filename_base + '_nu.png'
             fig1.savefig(png_filename1)
             fig2.savefig(png_filename2)
         if show:
