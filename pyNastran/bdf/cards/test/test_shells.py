@@ -6,7 +6,8 @@ import numpy as np
 from numpy import array
 
 from cpylog import get_logger
-from pyNastran.bdf.bdf import PCOMP, MAT1, BDF
+from pyNastran.bdf.bdf import PCOMP, MAT1, BDF, CTRIA3
+from pyNastran.bdf.bdf_interface.bdf_card import BDFCard
 from pyNastran.bdf.cards.materials import get_mat_props_S
 from pyNastran.bdf.cards.test.utils import save_load_deck
 from pyNastran.bdf.mesh_utils.mass_properties import (
@@ -1329,7 +1330,7 @@ class TestShells(unittest.TestCase):
         if IS_MATPLOTLIB:
             plot_equivalent_lamina_vs_theta(
                 pcomp8, mat8, thetad, plot=True, show=False, close=True,
-                png_filename='lamina.png')
+                png_filename_base='lamina')
             os.remove('lamina_stiffness.png')
             os.remove('lamina_nu.png')
 
@@ -1411,6 +1412,14 @@ class TestShells(unittest.TestCase):
         B = ABD2[:3, -3:]
         assert np.allclose(0., B.sum()), B
         assert np.allclose(ABD2, ABD3), ABD2
+
+    def test_lax(self):
+        """tests adding cards in a lax way"""
+        card = ['CTRIA3', '301471', '301003', '301466', '301468', '30071', '0', '0']
+        bdf_card = BDFCard(card)
+        str(bdf_card)
+        card = CTRIA3.add_card_lax(bdf_card)
+        str(card)
 
 def make_dvcrel_optimization(model, params, element_type, eid, i=1):
     """makes a series of DVCREL1 and a DESVAR"""

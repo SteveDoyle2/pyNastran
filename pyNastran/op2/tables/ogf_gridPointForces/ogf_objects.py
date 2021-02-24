@@ -1,6 +1,7 @@
 from __future__ import annotations
 import sys
 import inspect
+import warnings
 from copy import deepcopy
 from struct import Struct, pack
 from typing import List, Dict, TYPE_CHECKING
@@ -429,7 +430,7 @@ class RealGridPointForcesArray(GridPointForces):
                                coords: Dict[int, CORD],
                                nid_cd: NDArrayN2int,
                                icd_transform: Dict[int, NDArrayNint],
-                               itime: int=0, debug: bool=True,
+                               itime: int=0, debug: bool=False,
                                log: Optional[SimpleLogger]=None):
         """
         Extracts Patran-style freebody loads.  Freebody loads are the
@@ -531,7 +532,7 @@ class RealGridPointForcesArray(GridPointForces):
                                 itime: int=0,
                                 assume_sorted: bool=False,
                                 stop_on_nan: bool=False,
-                                debug: bool=True,
+                                debug: bool=False,
                                 log: Optional[SimpleLogger]=None,
                                 idtype: str='int32') -> Tuple[NDArray3float, NDArray3float]:
         """
@@ -620,7 +621,7 @@ class RealGridPointForcesArray(GridPointForces):
                                 consider_rxf: bool=True,
                                 itime: int=0,
                                 assume_sorted: bool=False,
-                                debug: bool=True,
+                                debug: bool=False,
                                 stop_on_nan: bool=False,
                                 log: Optional[SimpleLogger]=None,
                                 idtype: str='int32') -> Tuple[NDArrayN3float, NDArrayN3float, NDArray3float, NDArray3float]:
@@ -700,7 +701,7 @@ class RealGridPointForcesArray(GridPointForces):
                                         idtype: str,
                                         fdtype: str,
                                         itime:int=0,
-                                        debug: bool=True) -> Tuple[NDArrayNint, NDArrayN3float, NDArrayN3float]:
+                                        debug: bool=False) -> Tuple[NDArrayNint, NDArrayN3float, NDArrayN3float]:
         force_out = np.full((0, 3), np.nan, dtype=fdtype)
         moment_out = np.full((0, 3), np.nan, dtype=fdtype)
         #force_out_sum = np.full(3, np.nan, dtype=fdtype)
@@ -719,7 +720,10 @@ class RealGridPointForcesArray(GridPointForces):
         is_in = np.in1d(gpforce_nids, nids, assume_unique=False)
         if not np.any(is_in):
             msg = 'no nodes found\n'
-            log.warning(msg)
+            if log:
+                log.warning(msg)
+            else:
+                warnings.warn(msg)
             irange = np.array([], dtype='int32')
             return gpforce_nids, gpforce_eids, irange, force_out, moment_out
 

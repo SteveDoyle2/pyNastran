@@ -24,7 +24,9 @@ from pyNastran.bdf.cards.base_card import Property, Material
 from pyNastran.bdf.cards.optimization import break_word_by_trailing_integer
 from pyNastran.bdf.cards.materials import get_mat_props_S
 from pyNastran.bdf.bdf_interface.assign_type import (
-    integer, integer_or_blank, double, double_or_blank, string_or_blank)
+    integer, integer_or_blank, double, double_or_blank, string_or_blank,
+    force_double_or_blank,
+)
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
 if TYPE_CHECKING:  # pragma: no cover
@@ -2204,6 +2206,42 @@ class PSHELL(Property):
                       z1, z2, mid4, comment=comment)
 
     @classmethod
+    def add_card_lax(cls, card, comment=''):
+        """see ``add_card``"""
+        pid = integer(card, 1, 'pid')
+        mid1 = integer_or_blank(card, 2, 'mid1')
+        t = force_double_or_blank(card, 3, 't')
+
+        mid2 = integer_or_blank(card, 4, 'mid2')
+        twelveIt3 = force_double_or_blank(card, 5, '12*I/t^3', 1.0)  # poor name
+        mid3 = integer_or_blank(card, 6, 'mid3')
+        tst = force_double_or_blank(card, 7, 'ts/t', 0.833333)
+        nsm = force_double_or_blank(card, 8, 'nsm', 0.0)
+
+        if t is not None:
+            t_over_2 = t / 2.
+            z1 = force_double_or_blank(card, 9, 'z1', -t_over_2)
+            z2 = force_double_or_blank(card, 10, 'z2', t_over_2)
+        else:
+            z1 = force_double_or_blank(card, 9, 'z1')
+            z2 = force_double_or_blank(card, 10, 'z2')
+        mid4 = integer_or_blank(card, 11, 'mid4')
+
+        #if self.mid2 is None:
+        #    assert self.mid3 is None
+        #else: # mid2 is defined
+        #    #print (self.mid2 = ", self.mid2)
+        #    assert self.mid2 >= -1
+        #    #assert self.mid3 >  0
+
+        #if self.mid1 is not None and self.mid2 is not None:
+        #    assert self.mid4 == None
+        assert len(card) <= 12, f'len(PSHELL card) = {len(card):d}\ncard={card}'
+        return PSHELL(pid, mid1, t, mid2, twelveIt3,
+                      mid3, tst, nsm,
+                      z1, z2, mid4, comment=comment)
+
+    @classmethod
     def add_op2_data(cls, data, comment=''):
         """
         Adds a PSHELL card from the OP2
@@ -2295,7 +2333,7 @@ class PSHELL(Property):
             assert isinstance(nsm, float), 'nsm=%r' % nsm
             assert isinstance(mpa, float), 'mass_per_area=%r' % mpa
 
-    def get_z_locations(self):
+    def get_z_locations(self) -> List[float]:
         """returns the locations of the bottom and top surface of the shell"""
         z = np.array([self.z1, self.z2])
         return z
@@ -2306,17 +2344,9 @@ class PSHELL(Property):
         return materials
 
     @property
-    def material_ids(self):
+    def material_ids(self) -> List[Optional[int]]:
         """returns the material ids"""
         return [self.Mid1(), self.Mid2(), self.Mid3(), self.Mid4()]
-
-    #@property
-    #def mid(self):
-        #raise RuntimeError('use self.mid1, self.mid2, self.mid3, or self.mid4')
-
-    #@mid.setter
-    #def mid(self, value):
-        #raise RuntimeError('use self.mid1, self.mid2, self.mid3, or self.mid4')
 
     @property
     def mid_ref(self):
@@ -2325,36 +2355,36 @@ class PSHELL(Property):
             return self.mid1_ref
         return self.mid2_ref
 
-    def Mid(self):
+    def Mid(self) -> Optional[int]:
         """returns the material id used for mass"""
         mid1 = self.Mid1()
         if mid1 is not None:
             return mid1
         return self.Mid2()
 
-    def Mid1(self):
+    def Mid1(self) -> Optional[int]:
         """returns the extension material id"""
         if self.mid1_ref is not None:
             return self.mid1_ref.mid
         return self.mid1
 
-    def Mid2(self):
+    def Mid2(self) -> Optional[int]:
         """returns the bending material id"""
         if self.mid2_ref is not None:
             return self.mid2_ref.mid
         return self.mid2
 
-    def Mid3(self):
+    def Mid3(self) -> Optional[int]:
         if self.mid3_ref is not None:
             return self.mid3_ref.mid
         return self.mid3
 
-    def Mid4(self):
+    def Mid4(self) -> Optional[int]:
         if self.mid4_ref is not None:
             return self.mid4_ref.mid
         return self.mid4
 
-    def Thickness(self, tflag=1, tscales=None):
+    def Thickness(self, tflag: int=1, tscales=None):
         """returns the thickness of the element"""
         t0 = self.t
         if tscales is not None:
@@ -2374,11 +2404,11 @@ class PSHELL(Property):
             thickness = t0
         return thickness
 
-    def Rho(self):
+    def Rho(self) -> float:
         """returns the material density"""
         return self.mid_ref.rho
 
-    def Nsm(self):
+    def Nsm(self) -> float:
         """returns the non-structural mass"""
         return self.nsm
 
@@ -2542,6 +2572,34 @@ class PSHELL(Property):
             self.mid3_ref = model.Material(self.mid3, msg)
         if self.mid4:
             self.mid4_ref = model.Material(self.mid4, msg)
+        if self.t is not None:
+            z1 = abs(self.z1)
+            z2 = abs(self.z2)
+            t = self.t
+            if not ((-1.5*t <= z1 <= 1.5*t) or (-1.5*t <= z2 <= 1.5*t)):
+                msg = (f'PSHELL pid={self.pid} midsurface: z1={self.z1:g} z2={self.z2:g} t={t:g} '
+                       f'not in range of -1.5t < zi < 1.5t')
+                model.log.warning(msg)
+
+    def safe_cross_reference(self, model: BDF, xref_errors) -> None:
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+
+        """
+        msg = ', which is required by PSHELL pid=%s' % self.pid
+        if self.mid1:
+            self.mid1_ref = model.safe_material(self.mid1, self.pid, xref_errors, msg=msg)
+        if self.mid2 and self.mid2 != -1:
+            self.mid2_ref = model.safe_material(self.mid2, self.pid, xref_errors, msg=msg)
+        if self.mid3:
+            self.mid3_ref = model.safe_material(self.mid3, self.pid, xref_errors, msg=msg)
+        if self.mid4:
+            self.mid4_ref = model.safe_material(self.mid4, self.pid, xref_errors, msg=msg)
         if self.t is not None:
             z1 = abs(self.z1)
             z2 = abs(self.z2)

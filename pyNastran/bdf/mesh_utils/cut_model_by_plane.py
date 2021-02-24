@@ -359,18 +359,20 @@ def _p1_p2_zaxis_to_cord2r(model: BDF,
         the coordinate system for the points
 
     Returns
+    -------
     p1 / p2 / p3 : (3,) float ndarray
         A, B, C in the CORD2R in the rid=0 frame
     i, k : the i/k vectors for the coord_out frame
-    origin, zaxis, xzplane :
+    origin, zaxis, xzplane : (3,) float ndarray
+        the CORD2R-ready coordinate system
     """
     p1 = np.asarray(p1) # origin
     p2 = np.asarray(p2) # xz-plane
     zaxis = np.asarray(zaxis)
-    print("coord:")
-    print('  p1 =', p1)
-    print('  p2 =', p2)
-    print('  zaxis =', zaxis)
+    #print("coord:")
+    #print('  p1 =', p1)
+    #print('  p2 =', p2)
+    #print('  zaxis =', zaxis)
 
     xyz1 = model.coords[cid_p1].transform_node_to_global(p1)
     xyz2 = model.coords[cid_p2].transform_node_to_global(p2)

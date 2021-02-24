@@ -257,10 +257,11 @@ class SafeXrefMesh(XrefMesh):
 
     def _safe_cross_reference_properties(self) -> None:
         """Links the properties to materials"""
+        xref_errors = {}
         for prop in self.properties.values():
             if hasattr(prop, 'safe_cross_reference'):
                 try:
-                    prop.safe_cross_reference(self)
+                    prop.safe_cross_reference(self, xref_errors)
                 except (SyntaxError, RuntimeError, AssertionError, KeyError, ValueError) as error:
                     self._store_xref_error(error, prop)
             else:

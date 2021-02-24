@@ -27,7 +27,9 @@ from pyNastran.bdf.field_writer_8 import set_blank_if_default
 from pyNastran.bdf.cards.base_card import Material, BaseCard
 from pyNastran.bdf.bdf_interface.assign_type import (
     integer, integer_or_blank, double, double_or_blank,
-    string, string_or_blank, integer_or_double, blank)
+    string, string_or_blank, integer_or_double, blank,
+    force_double_or_blank,
+)
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
 if TYPE_CHECKING:  # pragma: no cover
@@ -529,6 +531,26 @@ class MAT1(IsotropicMaterial):
         St = double_or_blank(card, 9, 'St', 0.0)
         Sc = double_or_blank(card, 10, 'Sc', 0.0)
         Ss = double_or_blank(card, 11, 'Ss', 0.0)
+        mcsid = integer_or_blank(card, 12, 'mcsid', 0)
+        assert len(card) <= 13, f'len(MAT1 card) = {len(card):d}\ncard={card}'
+        return MAT1(mid, E, G, nu, rho, a, tref, ge,
+                    St, Sc, Ss, mcsid, comment=comment)
+
+    @classmethod
+    def add_card_lax(cls, card, comment=''):
+        """see ``add_card``"""
+        mid = integer(card, 1, 'mid')
+        E = force_double_or_blank(card, 2, 'E')
+        G = force_double_or_blank(card, 3, 'G')
+        nu = force_double_or_blank(card, 4, 'nu')
+
+        rho = force_double_or_blank(card, 5, 'rho', 0.)
+        a = force_double_or_blank(card, 6, 'a', 0.0)
+        tref = force_double_or_blank(card, 7, 'tref', 0.0)
+        ge = force_double_or_blank(card, 8, 'ge', 0.0)
+        St = force_double_or_blank(card, 9, 'St', 0.0)
+        Sc = force_double_or_blank(card, 10, 'Sc', 0.0)
+        Ss = force_double_or_blank(card, 11, 'Ss', 0.0)
         mcsid = integer_or_blank(card, 12, 'mcsid', 0)
         assert len(card) <= 13, f'len(MAT1 card) = {len(card):d}\ncard={card}'
         return MAT1(mid, E, G, nu, rho, a, tref, ge,

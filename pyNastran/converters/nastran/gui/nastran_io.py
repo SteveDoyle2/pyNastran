@@ -634,7 +634,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
             xref_nodes = True
             return model, xref_nodes
 
-        punch = False
+        punch = None
         if ext == '.pch':
             punch = True
 
@@ -655,6 +655,10 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
             model.load(obj_filename=bdf_filename)
         else:  # read the bdf/punch
             model = BDF(log=log, debug=True)
+            #model.set_error_storage(nparse_errors=0,
+            #                        stop_on_parsing_error=True,
+            #                        nxref_errors=0,
+            #                        stop_on_xref_error=True)
             model.read_bdf(bdf_filename,
                            punch=punch, xref=False,
                            validate=True)

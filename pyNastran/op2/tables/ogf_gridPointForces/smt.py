@@ -115,61 +115,127 @@ def plot_shear_moment_torque(model: OP2Geom,
         itime=itime, debug=False, log=model.log)
     plot_smt(stations, force_sum, moment_sum, nelems, nnodes, show=show)
 
-def plot_smt(x, force_sum, moment_sum, nelems, nnodes, show=True):
+def plot_smt(x, force_sum, moment_sum, nelems, nnodes,
+             plot_force_components=True,
+             plot_moment_components=True,
+             root_filename='',
+             show=True,
+             xtitle='x', xlabel='xlabel',
+             force_unit='', moment_unit=''):
     """plots the shear, moment, torque plots"""
     import matplotlib.pyplot as plt
     plt.close()
+
+    xtitle = 'Y'
+    xlabel = 'Spanwise Location, Y (in)'
+    moment_unit = 'in-kip'
+    force_unit = 'kip'
+    moment_unit2 = ''
+    force_unit2 = ''
+    if force_unit:
+        force_unit2 = f' ({force_unit})'
+    if moment_unit:
+        moment_unit2 = f' ({moment_unit})'
+
     #f, ax = plt.subplots()
     # ax = fig.subplots()
-    fig = plt.figure(1)
-    ax = fig.gca()
-    ax.plot(x, force_sum[:, 0], '-*')
-    ax.set_xlabel('X')
-    ax.set_ylabel('Axial')
-    ax.grid(True)
+    if plot_force_components:
+        fig = plt.figure(1)
+        ax = fig.gca()
+        ax.plot(x, force_sum[:, 0], '-*')
+        ax.set_title(f'{xtitle} vs. Axial')
+        ax.set_xlabel(xlabel)
+        ax.set_ylabel(f'Axial{force_unit2}')
+        ax.grid(True)
+        fig.tight_layout()
 
-    fig = plt.figure(2)
-    ax = fig.gca()
-    ax.plot(x, force_sum[:, 1], '-*')
-    ax.set_xlabel('X')
-    ax.set_ylabel('Shear Y')
-    ax.grid(True)
+        fig = plt.figure(2)
+        ax = fig.gca()
+        ax.plot(x, force_sum[:, 1], '-*')
+        ax.set_title(f'{xtitle} vs. Shear Y')
+        ax.set_xlabel(xlabel)
+        ax.set_ylabel(f'Shear Y{force_unit2}')
+        ax.grid(True)
+        fig.tight_layout()
 
-    fig = plt.figure(3)
-    ax = fig.gca()
-    ax.plot(x, force_sum[:, 2], '-*')
-    ax.set_xlabel('X')
-    ax.set_ylabel('Shear Z')
-    ax.grid(True)
+        fig = plt.figure(3)
+        ax = fig.gca()
+        ax.plot(x, force_sum[:, 2], '-*')
+        ax.set_title(f'{xtitle} vs. Shear Z')
+        ax.set_xlabel(xlabel)
+        ax.set_ylabel(f'Shear Z{force_unit2}')
+        ax.grid(True)
+        fig.tight_layout()
 
-    fig = plt.figure(4)
-    ax = fig.gca()
-    ax.plot(x, moment_sum[:, 0], '-*')
-    ax.set_xlabel('X')
-    ax.set_ylabel('Torque')
-    ax.grid(True)
+    if plot_moment_components:
+        fig = plt.figure(4)
+        ax = fig.gca()
+        ax.plot(x, moment_sum[:, 0], '-*')
+        ax.set_title(f'{xtitle} vs. Torque')
+        ax.set_xlabel(xlabel)
+        ax.set_ylabel(f'Torque{moment_unit2}')
+        ax.grid(True)
+        fig.tight_layout()
 
-    fig = plt.figure(5)
-    ax = fig.gca()
-    ax.plot(x, moment_sum[:, 1], '-*')
-    ax.set_xlabel('X')
-    ax.set_ylabel('Moment Y')
-    ax.grid(True)
+        fig = plt.figure(5)
+        ax = fig.gca()
+        ax.plot(x, moment_sum[:, 1], '-*')
+        ax.set_title(f'{xtitle} vs. Moment Y')
+        ax.set_xlabel(xlabel)
+        ax.set_ylabel(f'Moment Y{moment_unit2}')
+        ax.grid(True)
+        fig.tight_layout()
 
-    fig = plt.figure(6)
-    ax = fig.gca()
-    ax.plot(x, moment_sum[:, 2], '-*')
-    ax.set_xlabel('X')
-    ax.set_ylabel('Moment Z')
-    ax.grid(True)
+        fig = plt.figure(6)
+        ax = fig.gca()
+        ax.plot(x, moment_sum[:, 2], '-*')
+        ax.set_title(f'{xtitle} vs. Moment Z')
+        ax.set_xlabel(xlabel)
+        ax.set_ylabel(f'Moment Z{moment_unit2}')
+        ax.grid(True)
+        fig.tight_layout()
 
-
+    #-----------------------------------------------
     fig = plt.figure(7)
     ax = fig.gca()
-    ax.plot(x, moment_sum[:, 2], '-*')
-    ax.set_xlabel('X')
-    ax.set_ylabel('Moment Z')
+    ax.plot(x, force_sum[:, 0], '-*', label=f'Force X{force_unit2}')
+    ax.plot(x, force_sum[:, 1], '-*', label=f'Force Y{force_unit2}')
+    ax.plot(x, force_sum[:, 2], '-*', label=f'Force Z{force_unit2}')
+    #ax.set_title(f'{xtitle} vs. Force')
+    ax.set_xlabel(xlabel)
+    ax.set_ylabel(f'Force{force_unit2}')
+    ax.legend()
     ax.grid(True)
+    fig.tight_layout()
+    if root_filename:
+        fig.savefig(f'{root_filename}_forces.png')
+
+    fig = plt.figure(8)
+    ax = fig.gca()
+    ax.plot(x, moment_sum[:, 0], '-*', label=f'Torque{moment_unit2}')
+    ax.plot(x, moment_sum[:, 1], '-*', label=f'Moment Y{moment_unit2}')
+    ax.plot(x, moment_sum[:, 2], '-*', label=f'Moment Z{moment_unit2}')
+    #ax.set_title(f'{xtitle} vs. Moment')
+    ax.set_xlabel(xlabel)
+    ax.set_ylabel(f'Moment{moment_unit2}')
+    ax.legend()
+    ax.grid(True)
+    fig.tight_layout()
+    if root_filename:
+        fig.savefig(f'{root_filename}_moments.png')
+    #-----------------------------------------------
+    fig = plt.figure(9)
+    ax = fig.gca()
+    ax.plot(x, nnodes / nnodes.max(), '-*', label=f'n_nodes (N={nnodes.max()})')
+    ax.plot(x, nelems / nelems.max(), '-*', label=f'n_elems (N={nelems.max()})')
+    ax.set_title('Monotonic Nodes/Elements')
+    #ax.set_xlabel()
+    ax.set_ylabel('Fraction of Nodes, Elements')
+    ax.legend()
+    ax.grid(True)
+    fig.tight_layout()
+    if root_filename:
+        fig.savefig(f'{root_filename}_nodes_elements.png')
 
     if show:
         plt.show()

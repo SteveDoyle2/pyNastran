@@ -12,7 +12,7 @@ from pyNastran.bdf.bdf import BDF, CORD2R
 from pyNastran.op2.op2 import OP2, read_op2
 from pyNastran.op2.op2_geom import OP2Geom, read_op2_geom
 
-from pyNastran.op2.tables.ogf_gridPointForces.smt import smt_setup
+from pyNastran.op2.tables.ogf_gridPointForces.smt import smt_setup, plot_smt
 from pyNastran.op2.tables.ogf_gridPointForces.ogf_objects import RealGridPointForcesArray
 
 from pyNastran.bdf.mesh_utils.cut_model_by_plane import (
@@ -265,10 +265,9 @@ class TestGridPointForcesSMT(unittest.TestCase):
         for istation, station in enumerate(stations):
             coord_origin = coord_out.origin + iaxis_march * station
             coord_origins[istation, :] = coord_origin
+        ylocations = coord_origins[:, 1]
         #coord_origins2 = coord_march.origin[:, np.newaxis] + coord_march.i[:, np.newaxis] * stations
         #assert np.array_equal(coord_origins, coord_origins2)
-
-        ylocations = coord_origins[:, 1]
 
         #print(f'stations = {stations}')
         assert np.abs(stations).max() > 1350.
@@ -287,9 +286,7 @@ class TestGridPointForcesSMT(unittest.TestCase):
         #print('coord_march:')
         #print(f'i: {iaxis_march}')
 
-        #x = 1
         force_sum, moment_sum, new_coords, nelems, nnodes = gpforce.shear_moment_diagram(
-            #model,
             nids, xyz_cid0, nid_cd, icd_transform,
             eids, element_centroids_cid0,
             stations, model.coords, coord_out,
@@ -298,15 +295,16 @@ class TestGridPointForcesSMT(unittest.TestCase):
             nodes_tol=25., log=model.log)
 
         for cid, coord in new_coords.items():
-            #print(cid)
             model.coords[cid] = coord
         model.sol = 144
         model.write_bdf(bdf_filename)
-        plot_smt(ylocations, force_sum, moment_sum, nelems, nnodes,
+        plot_smt(ylocations, force_sum/1000, moment_sum/1000, nelems, nnodes,
                  plot_force_components=False,
                  plot_moment_components=False,
                  root_filename=os.path.join(BWB_PATH, 'bwb'),
-                 show=False)
+                 show=False,
+                 xtitle='Y', xlabel='Spanwise Location, Y (in)',
+                 force_unit='kip', moment_unit='in-kip')
         y = 1
 
 
@@ -1091,124 +1089,6 @@ def _setup_bar_grid_point_forces(log):
         gpforce, x1, x2, bending_moment2,
         stations)
     return out
-
-def plot_smt(x, force_sum_, moment_sum_, nelems, nnodes,
-             plot_force_components=True,
-             plot_moment_components=True,
-             root_filename='',
-             show=True):
-    """plots the shear, moment, torque plots"""
-    import matplotlib.pyplot as plt
-    plt.close()
-
-    force_sum = force_sum_ / 1000
-    moment_sum = moment_sum_ / 1000
-    xtitle = 'Y'
-    xlabel = 'Spanwise Location, Y (in)'
-    moment_unit = 'in-kip'
-    force_unit = 'kip'
-    #f, ax = plt.subplots()
-    # ax = fig.subplots()
-    if plot_force_components:
-        fig = plt.figure(1)
-        ax = fig.gca()
-        ax.plot(x, force_sum[:, 0], '-*')
-        ax.set_title(f'{xtitle} vs. Axial')
-        ax.set_xlabel(xlabel)
-        ax.set_ylabel(f'Axial ({force_unit})')
-        ax.grid(True)
-        fig.tight_layout()
-
-        fig = plt.figure(2)
-        ax = fig.gca()
-        ax.plot(x, force_sum[:, 1], '-*')
-        ax.set_title(f'{xtitle} vs. Shear Y')
-        ax.set_xlabel(xlabel)
-        ax.set_ylabel(f'Shear Y ({force_unit})')
-        ax.grid(True)
-        fig.tight_layout()
-
-        fig = plt.figure(3)
-        ax = fig.gca()
-        ax.plot(x, force_sum[:, 2], '-*')
-        ax.set_title(f'{xtitle} vs. Shear Z')
-        ax.set_xlabel(xlabel)
-        ax.set_ylabel(f'Shear Z ({force_unit})')
-        ax.grid(True)
-        fig.tight_layout()
-
-    if plot_moment_components:
-        fig = plt.figure(4)
-        ax = fig.gca()
-        ax.plot(x, moment_sum[:, 0], '-*')
-        ax.set_title(f'{xtitle} vs. Torque')
-        ax.set_xlabel(xlabel)
-        ax.set_ylabel(f'Torque ({moment_unit})')
-        ax.grid(True)
-        fig.tight_layout()
-
-        fig = plt.figure(5)
-        ax = fig.gca()
-        ax.plot(x, moment_sum[:, 1], '-*')
-        ax.set_title(f'{xtitle} vs. Moment Y')
-        ax.set_xlabel(xlabel)
-        ax.set_ylabel(f'Moment Y ({moment_unit})')
-        ax.grid(True)
-        fig.tight_layout()
-
-        fig = plt.figure(6)
-        ax = fig.gca()
-        ax.plot(x, moment_sum[:, 2], '-*')
-        ax.set_title(f'{xtitle} vs. Moment Z')
-        ax.set_xlabel(xlabel)
-        ax.set_ylabel(f'Moment Z ({moment_unit})')
-        ax.grid(True)
-        fig.tight_layout()
-
-    #-----------------------------------------------
-    fig = plt.figure(7)
-    ax = fig.gca()
-    ax.plot(x, force_sum[:, 0], '-*', label=f'Force X ({force_unit})')
-    ax.plot(x, force_sum[:, 1], '-*', label=f'Force Y ({force_unit})')
-    ax.plot(x, force_sum[:, 2], '-*', label=f'Force Z ({force_unit})')
-    #ax.set_title(f'{xtitle} vs. Force')
-    ax.set_xlabel(xlabel)
-    ax.set_ylabel(f'Force ({force_unit})')
-    ax.legend()
-    ax.grid(True)
-    fig.tight_layout()
-    if root_filename:
-        fig.savefig(f'{root_filename}_forces.png')
-
-    fig = plt.figure(8)
-    ax = fig.gca()
-    ax.plot(x, moment_sum[:, 0], '-*', label=f'Torque ({moment_unit})')
-    ax.plot(x, moment_sum[:, 1], '-*', label=f'Moment Y ({moment_unit})')
-    ax.plot(x, moment_sum[:, 2], '-*', label=f'Moment Z ({moment_unit})')
-    #ax.set_title(f'{xtitle} vs. Moment')
-    ax.set_xlabel(xlabel)
-    ax.set_ylabel(f'Moment ({moment_unit})')
-    ax.legend()
-    ax.grid(True)
-    fig.tight_layout()
-    if root_filename:
-        fig.savefig(f'{root_filename}_moments.png')
-    #-----------------------------------------------
-    fig = plt.figure(9)
-    ax = fig.gca()
-    ax.plot(x, nnodes / nnodes.max(), '-*', label=f'n_nodes (N={nnodes.max()})')
-    ax.plot(x, nelems / nelems.max(), '-*', label=f'n_elems (N={nelems.max()})')
-    ax.set_title('Monotonic Nodes/Elements')
-    #ax.set_xlabel()
-    ax.set_ylabel('Fraction of Nodes, Elements')
-    ax.legend()
-    ax.grid(True)
-    fig.tight_layout()
-    if root_filename:
-        fig.savefig(f'{root_filename}_nodes_elements.png')
-
-    if show:
-        plt.show()
 
 if __name__ == "__main__":  # pragma: no cover
     unittest.main()
