@@ -229,7 +229,7 @@ def plot_smt(x, force_sum, moment_sum, nelems, nnodes,
     ax.plot(x, nnodes / nnodes.max(), '-*', label=f'n_nodes (N={nnodes.max()})')
     ax.plot(x, nelems / nelems.max(), '-*', label=f'n_elems (N={nelems.max()})')
     ax.set_title('Monotonic Nodes/Elements')
-    #ax.set_xlabel()
+    ax.set_xlabel(xlabel)
     ax.set_ylabel('Fraction of Nodes, Elements')
     ax.legend()
     ax.grid(True)
