@@ -600,6 +600,8 @@ class PSOLID(Property):
             fctn = 'SMECH'
         elif fctn == 'PFLU':
             fctn = 'PFLUID'
+        elif fctn == 'FFLU':
+            fctn = 'FFLUID'
         else:  # pragma: no cover
             raise NotImplementedError('PSOLID; fctn=%r' % fctn)
         return PSOLID(pid, mid, cordm, integ, stress, isop,

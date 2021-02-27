@@ -3151,7 +3151,7 @@ def oef_shells_composite_real_9(self, data: bytes,
         # 'HFAIL' for the Hashin failure criterion
         # 'HTAPE' for the Hashin tape criterion
         # 'HFABR' for the Hashin fabric criterion
-        assert failure_theory in ['TSAI-WU', 'STRAIN', 'HILL', 'HOFFMAN', 'HFAIL', 'HFABRIC', ''], f'failure_theory={failure_theory!r}'
+        assert failure_theory in ['TSAI-WU', 'STRAIN', 'HILL', 'HOFFMAN', 'HFAIL', 'HFABRIC', 'HTAPE', ''], f'failure_theory={failure_theory!r}'
         assert failure_flag in ['', '***'], 'failure_flag=%r' % failure_flag
         obj.add_sort1(dt, eid, failure_theory, ply_id, failure_stress_for_ply, flag,
                       interlaminar_stress, max_value, failure_flag)

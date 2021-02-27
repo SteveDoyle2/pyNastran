@@ -155,7 +155,7 @@ class MPT(GeomCommon):
                 (mid, g1, g2, g3, g4, g5, g6, rho, aj1, aj2, aj3,
                  tref, ge, St, Sc, Ss, mcsid, *blanks) = out
                 mat = MAT2.add_op2_data(out)
-                self.log.debug(str(mat))
+                self.log.debug(f'\n{mat}')
             #print("MAT2 = ",out)
 
             if 0 < mid <= 1e8:  # just a checker for out of range materials
@@ -311,10 +311,32 @@ class MPT(GeomCommon):
         5 GE   RS Structural damping coefficient
 
         """
+        card_name = 'MAT10'
+        card_obj = MAT10
+        methods = {
+            20 : self._read_mat10_20,
+            24 : self._read_mat10_24,
+            #56 : self._read_ctria6_current_56,
+        }
+        try:
+            n = self._read_double_card(card_name, card_obj, self.add_op2_material,
+                                       methods, data, n)
+        except DoubleCardError:
+            raise
+
+        #n = self._read_split_card(data, n,
+                                  #self._read_ctria6_current, self._read_ctria6_v2001,
+                                  #'CTRIA6', CTRIA6, self.add_op2_element)
+        return n
+
+    def _read_mat10_20(self, material: MAT10, data: bytes, n: int) -> Tuple[int, MAT10]:
         ntotal = 20 * self.factor # 5*4
         s = Struct(mapfmt(self._endian + b'i4f', self.size))
-        nmaterials = (len(data) - n) // ntotal
+        ndatai = (len(data) - n)
+        nmaterials = ndatai // ntotal
+        assert ndatai % ntotal == 0
         assert nmaterials > 0, nmaterials
+        materials = []
         for unused_i in range(nmaterials):
             edata = data[n:n+ntotal]
             out = s.unpack(edata)
@@ -328,9 +350,42 @@ class MPT(GeomCommon):
                 continue
             mat = MAT10.add_op2_data(out)
             assert mat.mid > 0, mat
-            self.add_op2_material(mat)
-        self.card_count['MAT10'] = nmaterials
-        return n
+            materials.append(mat)
+        return n, materials
+
+    def _read_mat10_24(self, material: MAT10, data: bytes, n: int) -> Tuple[int, MAT10]:
+        """
+        1 MID   I  Material identification number
+        2 BULK  RS Bulk modulus
+        3 RHO   RS Mass density
+        4 C     RS Speed of sound
+        5 GE    RS Structural damping coefficient
+        6 ALPHA RS
+        data = (25, 1.0, 0.1, 3.16, 0.02, 0)
+             = (25, 1.0, 0.1, 3.16, 0.02, 0.0)
+        """
+        ntotal = 24 * self.factor # 6*4
+        s = Struct(mapfmt(self._endian + b'i5f', self.size))
+        ndatai = (len(data) - n)
+        nmaterials = ndatai // ntotal
+        assert ndatai % ntotal == 0
+        assert nmaterials > 0, nmaterials
+        materials = []
+        for unused_i in range(nmaterials):
+            edata = data[n:n+ntotal]
+            out = s.unpack(edata)
+            n += ntotal
+
+            (mid, bulk, rho, c, ge, alpha) = out
+            if self.is_debug_file:
+                self.binary_debug.write('  MAT10=%s\n' % str(out))
+            if mid == 0 and bulk == 0. and rho == 0. and c == 0. and ge == 0. and alpha == 0.0:
+                self.log.debug('  skipping empty MAT10...')
+                continue
+            mat = MAT10.add_op2_data(out)
+            assert mat.mid > 0, mat
+            materials.append(mat)
+        return n, materials
 
     def _read_mat11(self, data: bytes, n: int) -> int:
         """

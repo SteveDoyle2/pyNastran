@@ -865,7 +865,9 @@ TABLE_OBJ_MAP = {
     'strain_energy.conm2_strain_energy' : (RealStrainEnergyArray, ComplexStrainEnergyArray),
     'strain_energy.rbe1_strain_energy' : (RealStrainEnergyArray, ComplexStrainEnergyArray),
     'strain_energy.rbe3_strain_energy' : (RealStrainEnergyArray, ComplexStrainEnergyArray),
-    'strain_energy.weldc_strain_energy' : (RealStrainEnergyArray, ComplexStrainEnergyArray),
+    'strain_energy.cweld_strain_energy' : (RealStrainEnergyArray, ComplexStrainEnergyArray),
+    'strain_energy.cfast_strain_energy' : (RealStrainEnergyArray, ComplexStrainEnergyArray),
+    'strain_energy.cseam_strain_energy': (RealStrainEnergyArray, ComplexStrainEnergyArray),
 
     'RANCONS.cbush_strain_energy' : (RealStrainEnergyArray, ),
     'RANCONS.cbar_strain_energy' : (RealStrainEnergyArray, ),

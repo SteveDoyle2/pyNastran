@@ -2764,6 +2764,7 @@ class EPT(GeomCommon):
             struct_6i4s = Struct(self._endian + b'6q8s')
 
         nproperties = (len(data) - n) // ntotal
+        nproperties_found = 0
         for unused_i in range(nproperties):
             edata = data[n:n+ntotal]
             out = struct_6i4s.unpack(edata)
@@ -2771,10 +2772,16 @@ class EPT(GeomCommon):
             #data_in = [pid, mid, cid, inp, stress, isop, fctn]
             if self.is_debug_file:
                 self.binary_debug.write('  PSOLID=%s\n' % str(out))
+
+            n += ntotal
+            fctn = out[-1]
+            if fctn == b'FAKE':
+                self.log.warning('    PSOLID=%s; is this a PCOMPLS?' % str(out))
+                continue
             prop = PSOLID.add_op2_data(out)
             self._add_op2_property(prop)
-            n += ntotal
-        self.card_count['PSOLID'] = nproperties
+            nproperties_found += 1
+        self.card_count['PSOLID'] = nproperties_found
         return n
 
 # PSOLIDL

@@ -98,11 +98,26 @@ class Real1DHeatFluxArray(BaseElement):
                 column_values, column_names,
                 headers, self.element, self.data)
         else:
-            data_frame = pd.Panel(self.data,
-                                  major_axis=self.element,
-                                  minor_axis=headers).to_frame()
-            data_frame.columns.names = ['Static']
-            data_frame.index.names = ['ElementID', 'Item']
+            #    ElementID     xgrad         ygrad  ...     xflux         yflux         zflux
+            # 0          1  3.670189  1.401298e-45  ... -2.202113  1.401298e-45  1.401298e-45
+            # 1          2  2.427845  1.401298e-45  ... -1.456707  1.401298e-45  1.401298e-45
+            # 2          3  0.282165  1.401298e-45  ... -0.169299  1.401298e-45  1.401298e-45
+            # 3          4  0.276702  1.401298e-45  ... -0.166021  1.401298e-45  1.401298e-45
+            # 4          5 -0.059711  1.401298e-45  ...  0.035827  1.401298e-45  1.401298e-45
+            # 5          6 -0.156313  1.401298e-45  ...  0.093788  1.401298e-45  1.401298e-45
+            # 6          7 -0.042596  1.401298e-45  ...  0.025558  1.401298e-45  1.401298e-45
+            # 7          8 -2.334058  1.401298e-45  ...  1.400435  1.401298e-45  1.401298e-45
+            # 8          9 -3.946891  1.401298e-45  ...  2.368135  1.401298e-45  1.401298e-45
+            df1 = pd.DataFrame(self.element)
+            df1.columns = ['ElementID']
+            df2 = pd.DataFrame(self.data[0])
+            df2.columns = headers
+            data_frame = df1.join(df2)
+            #data_frame = pd.Panel(self.data,
+                                  #major_axis=self.element,
+                                  #minor_axis=headers).to_frame()
+            #data_frame.columns.names = ['Static']
+            #data_frame.index.names = ['ElementID', 'Item']
         self.data_frame = data_frame
 
     def __eq__(self, table):  # pragma: no cover

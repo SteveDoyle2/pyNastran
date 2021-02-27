@@ -67,6 +67,7 @@ NLPARM_CONV_MAP = {
     7 : 'UPW',
     10: '', # NLSTEP
     14: '', # NLSTEP
+    42: 'PVA',
     -1 : 'PW',  # Nastran-CoFE : blank -> assuming default
 }
 #nlparm_conv_map = {
@@ -2258,7 +2259,7 @@ class TSTEPNL(BaseCard):
 
         assert self.min_iter is None or self.min_iter >= 0, self.get_stats()
         assert self.max_iter > 0, self.get_stats()
-        assert self.max_div > 0, self.get_stats()
+        assert self.max_div != 0, self.get_stats()
         assert self.max_qn > 0, self.get_stats()
         assert self.max_ls >= 0, self.get_stats()
         assert self.max_bisect > 0, self.get_stats()

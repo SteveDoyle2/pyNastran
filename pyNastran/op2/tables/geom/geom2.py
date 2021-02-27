@@ -423,7 +423,7 @@ class GEOM2(GeomCommon):
             (15418, 154, 610): ['CBEAM3', self._read_cbeam3],
             (15901, 159, 9956): ['CQUAD8N', self._read_cquad8],
             (14600, 146, 9910): ['CQUAD4F', self._read_cquad4],
-            (7908, 79, 9702): ['???', self._read_fake],
+            (7908, 79, 9702): ['CSEAM?', self._read_cseam_maybe],
 
             (14100, 141, 9905): ['???', self._read_fake],
             (14700, 147, 9911): ['CTRIAF', self._read_ctria3],
@@ -2516,15 +2516,15 @@ class GEOM2(GeomCommon):
         card_name = 'CQUAD4'
         card_obj = CQUAD4
         methods = {
-            56 : self._run_cquad4_nx,
-            60 : self._run_cquad4_msc,
+            56 : self._run_cquad4_nx_56,
+            60 : self._run_cquad4_msc_60,
         }
         try:
             n = self._read_double_card(card_name, card_obj, self.add_op2_element,
                                        methods, data, n)
         except DoubleCardError:
-            nx_method = partial(self._run_cquad4_nx, card_obj)
-            msc_method = partial(self._run_cquad4_msc, card_obj)
+            nx_method = partial(self._run_cquad4_nx_56, card_obj)
+            msc_method = partial(self._run_cquad4_msc_60, card_obj)
             n = self._read_dual_card(
                 data, n,
                 nx_method, msc_method,
@@ -2565,7 +2565,7 @@ class GEOM2(GeomCommon):
                     #print('error')
                     pass
                 else:
-                    raise DoubleCardError()
+                    raise DoubleCardError(f'No {card_name} cards found')
         #else:
         if elements is None:
             self.show_data(data, types='ifs')
@@ -2687,7 +2687,7 @@ class GEOM2(GeomCommon):
         self.card_count[element.type] = nelements
         return n
 
-    def _run_cquad4_msc(self, element: CQUAD4, data: bytes, n: int) -> Tuple[int, Any]:
+    def _run_cquad4_msc_60(self, element: CQUAD4, data: bytes, n: int) -> Tuple[int, Any]:
         r"""
         buggy MSC 2018.2 version
 
@@ -2723,7 +2723,7 @@ class GEOM2(GeomCommon):
         #   3f-i zeros as float/int???
         #   4f correct
         #   i correct
-        s = Struct(mapfmt(self._endian + b'6i 4f 3fi i', self.size))
+        structi = Struct(mapfmt(self._endian + b'6i 3fi 4f i', self.size))
         #if self.is_debug_file:
             #self.binary_debug.write('ndata=%s\n' % (nelements * 44))
 
@@ -2733,13 +2733,16 @@ class GEOM2(GeomCommon):
 
         for unused_i in range(nelements):
             edata = data[n:n + ntotal]
-            out = s.unpack(edata)
+            #self.show_data(edata)
+            out = structi.unpack(edata)
             # theta, zoffs, blank, tflag, t1, t2, t3, t4
             (eid, pid, n1, n2, n3, n4,
              theta, zoffs, blank, tflag,
              t1, t2, t3, t4,
              minus1) = out
-            minus1 = out[-1]
+            assert blank == 0.0
+            assert isinstance(tflag, int), tflag
+            #minus1 = out[-1]
             #eid, pid, n1, n2, n3, n4, theta, a, b, c, t1, t2, t3, t4, minus1 = out
             #print(eid, pid)
 
@@ -2751,7 +2754,7 @@ class GEOM2(GeomCommon):
                        theta, zoffs,
                        blank, tflag,
                        (t1, t2, t3, t4), minus1))
-
+            #print(msg)
             #assert theta == 0, msg
             assert zoffs == 0, msg
             assert blank == 0, msg
@@ -2775,8 +2778,8 @@ class GEOM2(GeomCommon):
         #self.card_count[element.type] = nelements
         return n, elements
 
-    def _run_cquad4_nx(self, element: Union[CQUAD4, CQUADR],
-                       data: bytes, n: int) -> Tuple[int, Any]:
+    def _run_cquad4_nx_56(self, element: Union[CQUAD4, CQUADR],
+                          data: bytes, n: int) -> Tuple[int, Any]:
         """
         common method for CQUAD4, CQUADR
 
@@ -3020,8 +3023,8 @@ class GEOM2(GeomCommon):
 
     def _read_cquadr(self, data: bytes, n: int) -> int:
         """CQUADR(8009,80,367)  - the marker for Record 75"""
-        nx_method = partial(self._run_cquad4_nx, CQUADR)
-        msc_method = partial(self._run_cquad4_msc, CQUADR)
+        nx_method = partial(self._run_cquad4_nx_56, CQUADR)
+        msc_method = partial(self._run_cquad4_msc_60, CQUADR)
         n = self._read_dual_card(
             data, n,
             nx_method, msc_method,
@@ -3261,7 +3264,6 @@ class GEOM2(GeomCommon):
             eid  pid n1     n2     n3     theta?      ?  ?  ?  ?
             201, 35, 50000, 50001, 50101, 19.2, 0, 0, 0, 0, 0.2, 0.2, 0.2, -1,
 
-
         C:\MSC.Software\msc_nastran_runs\cc179h.op2
         ints = (
             5959, 59, 282,
@@ -3333,8 +3335,9 @@ class GEOM2(GeomCommon):
         card_name = 'CTRIA6'
         card_obj = CTRIA6
         methods = {
-            52 : self._read_ctria6_v2001,
-            56 : self._read_ctria6_current,
+            52 : self._read_ctria6_v2001_52,
+            56 : self._read_ctria6_current_56,
+            60 : self._read_ctria6_60,
         }
         try:
             n = self._read_double_card(card_name, card_obj, self.add_op2_element,
@@ -3561,7 +3564,7 @@ class GEOM2(GeomCommon):
             n += ntotal
         return n, elements
 
-    def _read_ctria6fd_32(self, card_obj, data: bytes, n: int) -> int:
+    def _read_ctria6fd_32(self, card_obj, data: bytes, n: int) -> Tuple[int, List[CTRIA6]]:
         """
         Word Name Type Description
         1 EID  I Element identification number
@@ -3588,7 +3591,48 @@ class GEOM2(GeomCommon):
             n += ntotal
         return n, elements
 
-    def _read_ctria6_current(self, card_obj, data: bytes, n: int) -> int:
+    def _read_ctria6_60(self, card_obj, data: bytes, n: int) -> Tuple[int, List[CTRIA6]]:
+        """
+        CTRIA6(4801,48,327) - the marker for Record 96
+
+        Record 90 -- CTRIA6(4801,48,327) # MSC 2005 - GEOM2
+        Word Name Type Description
+        1 EID     I Element identification number
+        2 PID     I Property identification number
+        3 G(6)    I Grid point identification numbers of connection points
+        9 THETA  RS Material property orientation angle or coordinate system identification number
+        10 ZOFFS RS Offset from the surface of grid points reference plane
+        11 T(3)  RS Membrane thickness of element at grid points
+        14 TFLAG  I Relative thickness flag
+        -1
+        """
+        ntotal = 60 * self.factor # 15*4
+        s = Struct(mapfmt(self._endian + b'8i 5f i i', self.size))
+        nelements = (len(data) - n) // ntotal
+        assert (len(data) - n) % ntotal == 0
+        elements = []
+        for unused_i in range(nelements):
+            edata = data[n:n + ntotal]
+            out = s.unpack(edata)
+            if self.is_debug_file:
+                self.binary_debug.write('  CTRIA6=%s\n' % str(out))
+            #(eid, pid, n1, n2, n3, n4, n5, n6, theta, zoffs, t1, t2, t3, tflag, minus1) = out
+            #print('eid=%s pid=%s nids[%s, %s %s] theta=%s zoffs=%s '
+                  #'tflag=%s t1=%s t2=%s t3=%s' % (
+                      #eid, pid, n1, n2, n3, theta, zoffs,
+                      #tflag, t1, t2, t3))
+            tflag, minus1 = out[-2:]
+            assert minus1 == -1
+            #self.log.info('ctria6 tflag = %s' % tflag)
+            #print(minus1)
+            elem = CTRIA6.add_op2_data(out)
+            self.add_op2_element(elem)
+            assert tflag in [-1, 0, 1], tflag
+            elements.append(elem)
+            n += ntotal
+        return n, elements
+
+    def _read_ctria6_current_56(self, card_obj, data: bytes, n: int) -> Tuple[int, List[CTRIA6]]:
         """
         CTRIA6(4801,48,327) - the marker for Record 96
 
@@ -3626,7 +3670,7 @@ class GEOM2(GeomCommon):
             n += ntotal
         return n, elements
 
-    def _read_ctria6_v2001(self, card_obj, data: bytes, n: int) -> int:
+    def _read_ctria6_v2001_52(self, card_obj, data: bytes, n: int) -> int:
         """
         CTRIA6(4801,48,327) - the marker for Record 96
 
@@ -3665,26 +3709,77 @@ class GEOM2(GeomCommon):
         """
         CTRIAR(9200,92,385) - the marker for Record 99
         """
+        card_name = 'CTRIAR'
+        card_obj = CTRIAR
+        methods = {
+            # nbytes
+            52 : self._read_ctriar_13,
+            56 : self._read_ctriar_14,
+        }
+        try:
+            n = self._read_double_card(card_name, card_obj, self.add_op2_element,
+                                       methods, data, n)
+        except DoubleCardError:
+            raise
+            self.log.warning(f'try-except {card_name}')
+            #n = self._read_split_card(data, n,
+                                      #self._read_cquad8_current, self._read_cquad8_v2001,
+                                      #card_name, self.add_op2_element)
+        #nelements = self.card_count['CQUAD8']
+        #self.log.debug(f'nCQUAD8 = {nelements}')
+
+        #n = self._read_dual_card(data, n, self._read_ctriax_8, self._read_ctriax_9,
+                                 #'CTRIAX', self.add_op2_element)
+        return n
+
+    def _read_ctriar_13(self, element: CTRIAR, data: bytes, n: int) -> Tuple[int, List[CTRIAR]]:
         ntotal = 52 * self.factor  # 13*4
         s = Struct(mapfmt(self._endian + b'5iff3i3f', self.size))
-        nelements = (len(data) - n)// ntotal
+        nelements = (len(data) - n) // ntotal
+        assert (len(data) - n) % ntotal == 0
+        elements = []
         for unused_i in range(nelements):
             edata = data[n:n+ntotal]
+            #self.show_data(data[n:n+ntotal+40])
             out = s.unpack(edata)
-            #print('eid=%s pid=%s n1=%s n2=%s n3=%s theta=%s zoffs=%s '
-                  #'blank1=%s blank2=%s tflag=%s t1=%s t2=%s t3=%s' % (
-                      #eid, pid, n1, n2, n3, theta, zoffs,
-                      #blank1, blank2, tflag, t1, t2, t3))
             (eid, pid, n1, n2, n3, theta, zoffs, unused_blank1,
              unused_blank2, tflag, t1, t2, t3) = out
+            #print('eid=%s pid=%s nodes=(%s,%s,%s) theta=%s zoffs=%s '
+                  #'blank1=%s blank2=%s tflag=%s t1-t3=(%s,%s,%s)' % (
+                      #eid, pid, n1, n2, n3, theta, zoffs,
+                      #unused_blank1, unused_blank2, tflag, t1, t2, t3))
             if self.is_debug_file:
                 self.binary_debug.write('  CTRIAR=%s\n' % str(out))
             data_in = [eid, pid, n1, n2, n3, theta, zoffs, tflag, t1, t2, t3]
             elem = CTRIAR.add_op2_data(data_in)
-            self.add_op2_element(elem)
+            elements.append(elem)
             n += ntotal
-        self.card_count['CTRIAR'] = nelements
-        return n
+        return n, elements
+
+    def _read_ctriar_14(self, element: CTRIAR, data: bytes, n: int) -> Tuple[int, List[CTRIAR]]:
+        """same as ``read_ctriar_13`` but with a -1 to change the format"""
+        ntotal = 56 * self.factor  # 14*4
+        s = Struct(mapfmt(self._endian + b'5iff3i3f i', self.size))
+        nelements = (len(data) - n)// ntotal
+        assert (len(data) - n) % ntotal == 0
+        elements = []
+        for unused_i in range(nelements):
+            edata = data[n:n+ntotal]
+            out = s.unpack(edata)
+            (eid, pid, n1, n2, n3, theta, zoffs, unused_blank1,
+             unused_blank2, tflag, t1, t2, t3, minus1) = out
+            #print('eid=%s pid=%s nodes=(%s,%s,%s) theta=%s zoffs=%s '
+                  #'blank1=%s blank2=%s tflag=%s t1-t3=(%s,%s,%s)' % (
+                      #eid, pid, n1, n2, n3, theta, zoffs,
+                      #unused_blank1, unused_blank2, tflag, t1, t2, t3))
+            assert minus1 == -1, minus1
+            if self.is_debug_file:
+                self.binary_debug.write('  CTRIAR=%s\n' % str(out))
+            data_in = [eid, pid, n1, n2, n3, theta, zoffs, tflag, t1, t2, t3]
+            elem = CTRIAR.add_op2_data(data_in)
+            elements.append(elem)
+            n += ntotal
+        return n, elements
 
     #def _read_ctriax_b(self, data: bytes, n: int) -> int:  # pragma: no cover
         #"""
@@ -4435,6 +4530,54 @@ class GEOM2(GeomCommon):
 
     def _read_adapt(self, data: bytes, n: int) -> int:
         self.log.info('skipping adapt card in GEOM2')
+        return len(data)
+
+    def _read_cseam_maybe(self, data: bytes, n: int) -> int:
+        """
+        564 / 4 = 141
+        141
+        3, 47
+
+          ints    = (
+          77, 2011808,
+          77, 2007308,
+          8, 100001002, 4007101, 100001003, 4007101, 100001004, 4007101, 100001005, 4007101, 100001006, 4007101, 100001007, 4007101, 100001008, 4007101, 100001009, 4007101,
+          78, 2011808,
+          78, 2007308,
+          4, 100001010, 4007101, 100001011, 4007101, 100001012, 4007101, 100001013, 4007101,
+          79, 2011808,
+          79, 2007308,
+          4, 100001014, 4007101, 100001015, 4007101, 100001016, 4007101, 100001017, 4007101,
+          87, 2011808,
+          87, 2007308,
+          8, 100001018, 4007101, 100001019, 4007101, 100001020, 4007101, 100001021, 4007101, 100001022, 4007101, 100001023, 4007101, 100001024, 4007101, 100001025, 4007101,
+          88, 2011808,
+          88, 2007308,
+          4, 100001026, 4007101, 100001027, 4007101, 100001028, 4007101, 100001029, 4007101,
+          89, 2011808,
+          89, 2007308,
+          4, 100001030, 4007101, 100001031, 4007101, 100001032, 4007101, 100001033, 4007101,
+          97, 2011808,
+          97, 2007308,
+          8, 100001034, 4007101, 100001035, 4007101, 100001036, 4007101, 100001037, 4007101, 100001038, 4007101, 100001039, 4007101, 100001040, 4007101, 100001041, 4007101, # 2*8
+          98, 2011808,
+          98, 2007308,
+          4, 100001042, 4007101, 100001043, 4007101, 100001044, 4007101, 100001045, 4007101,  # 2*4
+          99, 2011808,
+          99, 2007308,
+          4, 100001046, 4007101, 100001047, 4007101, 100001048, 4007101, 100001049, 4007101)  # 2*4
+        """
+        self.log.info('skipping CSEAM? card in GEOM2')
+        #self.show_data(data[n:], types='ifqds')
+        #self.show_data(data[n+4:], types='qd')
+        #ntotal = 44 * self.factor  # 11*4
+        ##s = Struct(mapfmt(self._endian + b'10if', self.size))
+        #nelements = (len(data) - n)// ntotal
+        #for unused_i in range(nelements):
+            #edata = data[n:n+ntotal]
+            ##out = s.unpack(edata)
+            #n += ntotal
+        #aaa
         return len(data)
 
 def convert_theta_to_mcid(theta):

@@ -1375,7 +1375,7 @@ class TestOP2(Tester):
                 stop_on_failure=True, dev=False,
                 build_pandas=False, log=log)
 
-    def test_bdf_op2_other_29(self):
+    def test_bdf_op2_other_30(self):
         """checks rot063akd2s_107.bdf, which tests CampbellDiagram"""
         log = get_logger(level='info')
         #bdf_filename = os.path.join(MODEL_PATH, 'other', 'rot063akd2s_107.bdf')
@@ -1394,7 +1394,36 @@ class TestOP2(Tester):
         #save_load_deck(model, run_save_load=False)
 
         log = get_logger(level='warning')
-        run_op2(op2_filename, make_geom=False, write_bdf=False, read_bdf=False,
+        run_op2(op2_filename, make_geom=True, write_bdf=False, read_bdf=False,
+                write_f06=True, write_op2=True,
+                is_mag_phase=False,
+                is_sort2=False, is_nx=None, delete_f06=True,
+                subcases=None, exclude=None, short_stats=False,
+                compare=False, debug=False, binary_debug=True,
+                quiet=True,
+                stop_on_failure=True, dev=False,
+                build_pandas=True, log=log)
+
+    def test_bdf_op2_other_31(self):
+        """checks htrussx.bdf, which tests getting rid of the Panel"""
+        log = get_logger(level='info')
+        bdf_filename = os.path.join(MODEL_PATH, 'other', 'htrussx.bdf')
+        op2_filename = os.path.join(MODEL_PATH, 'other', 'htrussx.op2')
+
+        #  can't parse replication
+        #unused_fem1, unused_fem2, diff_cards = self.run_bdf(
+            #'', bdf_filename, log=log)
+        #diff_cards2 = list(set(diff_cards))
+        #diff_cards2.sort()
+        #assert len(diff_cards2) == 0, diff_cards2
+
+        model = read_bdf(bdf_filename, debug=False, log=log, xref=False)
+        #model.safe_cross_reference()
+
+        #save_load_deck(model, run_save_load=False)
+
+        log = get_logger(level='warning')
+        run_op2(op2_filename, make_geom=True, write_bdf=False, read_bdf=False,
                 write_f06=True, write_op2=False,
                 is_mag_phase=False,
                 is_sort2=False, is_nx=None, delete_f06=True,
@@ -1402,7 +1431,7 @@ class TestOP2(Tester):
                 compare=False, debug=False, binary_debug=True,
                 quiet=True,
                 stop_on_failure=True, dev=False,
-                build_pandas=False, log=log)
+                build_pandas=True, log=log)
 
     def test_op2_nasa_nastran_01(self):
         """checks sdr11se_s2dc.bdf, which tests ComplexCBushStressArray"""

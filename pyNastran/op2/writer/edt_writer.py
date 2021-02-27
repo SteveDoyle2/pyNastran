@@ -1,5 +1,6 @@
 """writes the MPT/MPTS table"""
 from __future__ import annotations
+from copy import deepcopy
 from collections import defaultdict
 from struct import pack, Struct
 from typing import List, Union, TYPE_CHECKING
@@ -8,9 +9,12 @@ import numpy as np
 
 from .geom1_writer import write_geom_header, close_geom_table
 from .geom4_writer import write_header, write_header_nvalues
+
+integer_types = (int, np.int32, np.int64)
 if TYPE_CHECKING:  # pragma: no cover
     from cpylog import SimpleLogger
-    from pyNastran.bdf.cards.aero.static_loads import AEROS # , AESTAT, CSSCHD, DIVERG, TRIM, TRIM2
+    from pyNastran.bdf.cards.aero.aero import CAERO1, CAERO2, PAERO1, PAERO2, AESURF, AESURFS
+    from pyNastran.bdf.cards.aero.static_loads import AEROS, AESTAT # , CSSCHD, DIVERG, TRIM, TRIM2
     from pyNastran.bdf.cards.aero.dynamic_loads import AERO, MKAERO1, FLUTTER # , FLFACT, MKAERO2
     from pyNastran.op2.op2_geom import OP2Geom, BDF
 
@@ -21,8 +25,10 @@ def write_edt(op2_file, op2_ascii, model: Union[BDF, OP2Geom], endian: bytes=b'<
     card_types = [
         'MKAERO1', # 'MKAERO2',
         'AERO', 'AEROS',
-        'CAERO1', 'PAERO1',
+        'CAERO1', 'PAERO1', 'SPLINE1',
+        'CAERO2', 'PAERO2', 'SPLINE2',
         #'AELIST', 'AEFACT', 'AESURF', 'AESURFS'
+        'AESURF', 'AESTAT',
         'TRIM', 'FLUTTER',
         'DEFORM',
         'FLFACT',
@@ -210,7 +216,7 @@ def _write_caero1(model: Union[BDF, OP2Geom], name: str,
     nbytes = write_header(name, nfields, ncards, key, op2_file, op2_ascii)
 
     for caero_id in caero_ids:
-        caero = model.caeros[caero_id]
+        caero = model.caeros[caero_id] # type: CAERO1
         x1, y1, z1 = caero.p1
         x4, y4, z4 = caero.p4
         #print(caero.get_stats())
@@ -222,6 +228,48 @@ def _write_caero1(model: Union[BDF, OP2Geom], name: str,
 
         assert None not in data, data
         op2_ascii.write(f'  CAERO1 data={data}\n')
+        op2_file.write(structi.pack(*data))
+    return nbytes
+
+def _write_caero2(model: Union[BDF, OP2Geom], name: str,
+                  caero_ids: List[int], ncards: int,
+                  op2_file, op2_ascii, endian: bytes) -> int:
+    """
+    MSC 2018.2
+
+    Word Name Type Description
+    1 EID          I
+    2 PID          I
+    3 CP           I
+    4 NSB          I
+    5 NINT         I
+    6 LSB          I
+    7 LINT         I
+    8 IGID         I
+    9 X1          RS
+    10 Y1         RS
+    11 Z1         RS
+    12 X12        RS
+    13 UNDEF(4) none
+
+    data = (54000, 4020, 0, 8, 8, 0, 0, 1, -5.0, 0, 0, 40.0, 0, 0, 0, 0),
+    """
+    key = (4301, 43, 167)
+    nfields = 16
+    structi = Struct(endian + b'8i 8f')
+    nbytes = write_header(name, nfields, ncards, key, op2_file, op2_ascii)
+
+    for caero_id in caero_ids:
+        caero = model.caeros[caero_id] # type: CAERO2
+        x1, y1, z1 = caero.p1
+        #print(caero.get_stats())
+        data = [caero.eid, caero.pid, caero.cp,
+                caero.nsb, caero.nint, caero.lsb, caero.lint,
+                caero.igroup, x1, y1, z1, caero.x12,
+                0.0, 0.0, 0.0, 0.0]
+
+        assert None not in data, data
+        op2_ascii.write(f'  CAERO2 data={data}\n')
         op2_file.write(structi.pack(*data))
     return nbytes
 
@@ -251,13 +299,285 @@ def _write_paero1(model: Union[BDF, OP2Geom], name: str,
     nbytes = write_header(name, nfields, ncards, key, op2_file, op2_ascii)
 
     for paero_id in paero_ids:
-        paero = model.paeros[paero_id]
+        paero = model.paeros[paero_id] # type: PAERO1
         n0s = 7 - len(paero.caero_body_ids)
         data = [paero.pid, ] + paero.caero_body_ids
         if n0s:
             data += [0] * n0s
         assert None not in data, data
         op2_ascii.write(f'  PAERO1 data={data}\n')
+        op2_file.write(structi.pack(*data))
+    return nbytes
+
+def _write_paero2(model: Union[BDF, OP2Geom], name: str,
+                  paero_ids: List[int], ncards: int,
+                  op2_file, op2_ascii, endian: bytes) -> int:
+    """
+    MSC 2018.2
+
+    Word Name Type Description
+    1 PID        I
+    2 ORIENT CHAR4
+    3 UNDEF   none (orient carryover)
+    4 WIDTH     RS
+    5 AR        RS
+    6 LRSB       I
+    7 LRIB       I
+    8 LTH1       I
+    9 LTH2       I
+    10 THI1      I
+    11 THN1      I
+    12 THI2      I
+    13 THN2      I
+    14 THI3      I
+    15 THN3      I
+    PAERO2  100001
+
+    data = (100001, 100001, 0, 10, 0, 0, 24, 1,
+            99.3, 21.45, -11.65, 42.86, 101.8387, 122.62, -2.69, 32.71)
+
+    """
+    key = (4601, 46, 170)
+    nfields = 15
+    structi = Struct(endian + b'i 4s 3f 10i')
+    nbytes = write_header(name, nfields, ncards, key, op2_file, op2_ascii)
+
+    for paero_id in paero_ids:
+        paero = model.paeros[paero_id] # type: PAERO2
+        orient = b'%-4s' % paero.orient.encode('ascii')
+        lrsb = 0 if paero.lrsb is None else paero.lrsb
+        lrib = 0 if paero.lrib is None else paero.lrib
+        lth1 = 0 if paero.lth[0] is None else paero.lth[0]
+        lth2 = 0 if paero.lth[1] is None else paero.lth[1]
+
+        data = [
+            paero.pid, orient, 0, paero.width, paero.AR,
+            lrsb, lrib, lth1, lth2,
+        ]
+        # we need to copy this so we don't modify the original
+        thi = deepcopy(paero.thi)
+        nthi = len(thi)
+        if nthi < 3:
+            thi.extend([0]*(3-nthi))
+
+        thn = deepcopy(paero.thn)
+        nthn = len(paero.thn)
+        if nthn < 3:
+            thn.extend([0]*(3-nthn))
+
+        #assert len(paero.thi) == 3, paero.thi
+        #assert len(paero.ltn) == 3, paero.ltn
+        for thii, thni in zip(thi, thn):
+            assert isinstance(thii, integer_types), f'i={i} thi={thii}'
+            assert isinstance(thni, integer_types), f'i={i} thn={thni}'
+            data.extend([thii, thni])
+        assert None not in data, data
+        op2_ascii.write(f'  PAERO2 data={data}\n')
+        #print('npaero2', len(data), data)
+        op2_file.write(structi.pack(*data))
+    return nbytes
+
+def _write_spline1(model: Union[BDF, OP2Geom], name: str,
+                   spline_ids: List[int], ncards: int,
+                   op2_file, op2_ascii, endian: bytes) -> int:
+    """
+    Word Name Type Description
+    1 EID   I
+    2 CAERO I
+    3 BOX1  I
+    4 BOX2  I
+    5 SETG  I
+    6 DZ    RS
+    7 METHOD(2) CHAR4 Method: IPS|TPS|FPS
+    9 USAGE(2) CHAR4 Usage flag: FORCE|DISP|BOTH
+    11 NELEM I Number of elements for FPS on x-axis
+    12 MELEM I Number of elements for FPS on y-axis
+
+    """
+    key = (3302, 33, 266)
+    nfields = 12
+    structi = Struct(endian + b'5if 8s 8s 2i')
+    nbytes = write_header(name, nfields, ncards, key, op2_file, op2_ascii)
+
+    for spline_id in spline_ids:
+        spline = model.splines[spline_id] # type: SPLINE1
+
+        method = b'%-8s' % spline.method.encode('ascii')
+        usage = b'%-8s' % spline.usage.encode('ascii')
+        data = [spline.eid, spline.CAero(), spline.box1, spline.box2,
+                spline.Set(), spline.dz, method, usage, spline.nelements, spline.melements]
+        #print(spline.get_stats())
+        assert None not in data, data
+        op2_ascii.write(f'  SPLINE1 data={data}\n')
+        op2_file.write(structi.pack(*data))
+    return nbytes
+
+def _write_spline2(model: Union[BDF, OP2Geom], name: str,
+                   spline_ids: List[int], ncards: int,
+                   op2_file, op2_ascii, endian: bytes) -> int:
+    """
+    Writes the SPLINE2 card
+
+    Word Name Type Description
+    1 EID   I
+    2 CAERO I
+    3 ID1   I
+    4 ID2   I
+    5 SETG  I
+    6 DZ    RS
+    7 DTOR  RS
+    8 CID   I
+    9 DTHX  RS
+    10 DTHY RS
+    11 USAGE(2) CHAR4 Usage flag: FORCE|DISP|BOTH
+
+    """
+    key = (3402, 34, 267)
+    nfields = 12
+    structi = Struct(endian + b'5i 2f i 2f 8s')
+    nbytes = write_header(name, nfields, ncards, key, op2_file, op2_ascii)
+
+    for spline_id in spline_ids:
+        spline = model.splines[spline_id] # type: SPLINE1
+
+        usage_bytes = b'%-8s' % spline.usage.encode('ascii')
+        dthx = 0.0 if spline.dthx is None else spline.dthx
+        dthy = 0.0 if spline.dthx is None else spline.dthx
+        #print(spline.get_stats())
+        data = [spline.eid, spline.caero, spline.box1, spline.box2,
+                spline.setg, spline.dz, spline.dtor, spline.cid,
+                dthx, dthy, usage_bytes]
+        assert None not in data, data
+        op2_ascii.write(f'  SPLINE2 data={data}\n')
+        op2_file.write(structi.pack(*data))
+    return nbytes
+
+def _write_aesurf(model: Union[BDF, OP2Geom], name: str,
+                  aesurf_ids: List[int], ncards: int,
+                  op2_file, op2_ascii, endian: bytes) -> int:
+    """
+    MSC 2018.2
+
+    Word Name Type Description
+    1 ID           I Identification of an aerodynamic trim variable degree of freedom >0, no default
+    2 LABEL(2) CHAR4 Control Surface (CS) name, no default
+    4 CID1         I IDentification of a rectangular Coordinate system with y-axis that defines the hinge line of the CS component
+    5 ALID1        I IDentification of an AELIST bulk data entry that identifies all aerodynamic elements that make up the CS comp
+    6 CID2         I IDentification of a rectangular Coordinate system with y-axis that defines the hinge line of the CS component
+    7 ALID2        I IDentification of an AELIST bulk data entry that identifies all aerodynamic elements that make up the CS comp
+    8 EFF         RS Control surface EFFectiveness, default=1.0
+    9 LDW          I =0 create a linear down wash, >0 no linear downwash
+    10 CREFC      RS REFerence Chord Length for the CS > 0.0, default = 1.0
+    11 CREFS      RS REFerence area for the CS > 0.0, default = 1.0
+    12 PLLIM      RS Lower deflection   Limit for the control surface in radians, default=no limit
+    13 PULIM      RS Upper deflection   Limit for the control surface in radians, default=no limit
+    14 HMLLIM     RS Lower Hinge Moment Limit for the control surface in force-length units, default=no limit
+    15 HMULIM     RS Upper Hinge Moment Limit for the control surface in force-length units, default=no limit
+    16 TQLLIM     RS Lower deflection   Limit for the control surface as fct(q), >0, default=no limit
+    17 TQULIM     RS Upper deflection   Limit for the control surface as fct(q), >0, default=no limit
+
+    """
+    key = (2002, 20, 338)
+    nfields = 17
+    structi = Struct(endian + b'i 8s 4i fi 2f')
+
+    structf = Struct(endian + b'f')
+    structs = Struct(endian + b'4s')
+    nbytes = write_header(name, nfields, ncards, key, op2_file, op2_ascii)
+
+    for aesurf_id in aesurf_ids:
+        aesurf = model.aesurf[aesurf_id] # type: AESURF
+
+        label_bytes = b'%-8s' % aesurf.label.encode('ascii')
+
+        if aesurf.ldw == 'LDW':
+            ldw_int = 0
+        elif aesurf.ldw == 'NOLDW':
+            ldw_int = 1
+        else:
+            raise NotImplementedError(aesurf.ldw)
+        cid2 = 0 if aesurf.cid2 is None else aesurf.cid2
+        alid2 = 0 if aesurf.alid2 is None else aesurf.alid2
+
+        #print(aesurf.get_stats())
+        data = [
+            aesurf.aesid, label_bytes,
+            aesurf.cid1, aesurf.alid1,
+            cid2, alid2,
+            aesurf.eff, ldw_int,
+            aesurf.crefc, aesurf.crefs,
+        ]
+        assert None not in data, data
+        op2_file.write(structi.pack(*data))
+
+        float_strs = [
+            aesurf.pllim, aesurf.pulim,
+            aesurf.hmllim, aesurf.hmulim,
+            aesurf.tqllim, aesurf.tqulim]
+        for val in float_strs:
+            if val is None:
+                op2_file.write(structs.pack(b'    '))
+            else:
+                op2_file.write(structf.pack(val))
+        op2_ascii.write(f'  AESURF data={data}; float_strs={float_strs}\n')
+    return nbytes
+
+def _write_aesurfs(model: Union[BDF, OP2Geom], name: str,
+                   aesurfs_ids: List[int], ncards: int,
+                   op2_file, op2_ascii, endian: bytes) -> int:
+    """
+    Word Name Type Description
+    1 ID       I     Identification of an aerodynamic trim variable degree
+                     of freedom >0, no default
+    2 LABEL(2) CHAR4 Control Surface (CS) name, no default
+    4 LIST1    I     Identification of a SET1 that contains the grids ids
+                     associated with this control surface
+    5 LIST2    I     Identification of a SET1 that contains the grids ids
+                     associated with this control surface
+    """
+    key = (7701, 77, 581)
+    nfields = 5
+    structi = Struct(endian + b'i 8s 2i')
+    nbytes = write_header(name, nfields, ncards, key, op2_file, op2_ascii)
+
+    for aesurfs_id in aesurfs_ids:
+        aesurfs = model.aesurfs[aesurfs_id] # type: AESURFS
+        label_bytes = b'%-8s' % aesurfs.label.encode('ascii')
+
+        #print(aesurfs.get_stats())
+        data = [
+            aesurfs.aesid, label_bytes,
+            aesurfs.list1, aesurfs.list2]
+        assert None not in data, data
+        op2_ascii.write(f'  AESURFS data={data}\n')
+        op2_file.write(structi.pack(*data))
+    return nbytes
+
+def _write_aestat(model: Union[BDF, OP2Geom], name: str,
+                  aestat_ids: List[int], ncards: int,
+                  op2_file, op2_ascii, endian: bytes) -> int:
+    """
+    MSC 2018.2
+
+    Word Name Type Description
+    1 ID I
+    2 LABEL(2) CHAR4
+
+    """
+    key = (2102, 21, 339)
+    nfields = 3
+    structi = Struct(endian + b'i 8s')
+    nbytes = write_header(name, nfields, ncards, key, op2_file, op2_ascii)
+
+    for aestat_id in aestat_ids:
+        aestat = model.aestats[aestat_id] # type: AESTAT
+
+        label_bytes = b'%-8s' % aestat.label.encode('ascii')
+
+        #print(aestat.get_stats())
+        data = [aestat.aestat_id, label_bytes]
+        assert None not in data, data
+        op2_ascii.write(f'  AESTAT data={data}\n')
         op2_file.write(structi.pack(*data))
     return nbytes
 
@@ -549,7 +869,9 @@ def _write_flfact(model: Union[BDF, OP2Geom], name: str,
 
 EDT_MAP = {
     'CAERO1': _write_caero1,
+    'CAERO2': _write_caero2,
     'PAERO1': _write_paero1,
+    'PAERO2': _write_paero2,
     'MKAERO1': _write_mkaero1,
     'AERO': _write_aero,
     'AEROS': _write_aeros,
@@ -557,4 +879,9 @@ EDT_MAP = {
     'FLUTTER': _write_flutter,
     'DEFORM': _write_deform,
     'FLFACT': _write_flfact,
+    'SPLINE1': _write_spline1,
+    'SPLINE2': _write_spline2,
+    'AESURF': _write_aesurf,
+    #'AESURFS': _write_aesurfs,
+    'AESTAT': _write_aestat,
 }

@@ -5,6 +5,13 @@ from struct import Struct
 from typing import Tuple, List, Any
 
 import numpy as np
+from pyNastran.bdf.cards.aero.aero import (
+    #AECOMP, AECOMPL, AEFACT, AELINK, AELIST, AEPARM, AESURF, AESURFS,
+    #CAERO1, CAERO2, CAERO3, CAERO4, CAERO5,
+    #PAERO1, PAERO2, PAERO3, PAERO4, PAERO5,
+    MONPNT1) # , MONPNT2, MONPNT3, MONDSP1,
+    #SPLINE1, SPLINE2, SPLINE3, SPLINE4, SPLINE5)
+
 from pyNastran.op2.tables.geom.geom_common import GeomCommon
 from pyNastran.op2.op2_interface.op2_reader import mapfmt, reshape_bytes_block, reshape_bytes_block_size
 from pyNastran.bdf.cards.elements.acoustic import ACMODL
@@ -46,7 +53,7 @@ class EDT(GeomCommon):
             (2202, 22, 340) : ['AEROS', self._read_aeros],
             (2102, 21, 339) : ['AESTAT', self._read_aestat],
             (2002, 20, 338) : ['AESURF', self._read_aesurf],
-            (7701, 77, 581) : ['AESURFS', self._read_fake],
+            (7701, 77, 581) : ['AESURFS', self._read_aesurfs],
             (3002, 30, 263) : ['CAERO1', self._read_caero1],
             (4301, 43, 167) : ['CAERO2', self._read_caero2],
             (4401, 44, 168) : ['CAERO3', self._read_caero3],
@@ -55,7 +62,7 @@ class EDT(GeomCommon):
             (6201, 62, 143) : ['CLOAD', self._read_fake],
             (6401, 64, 307) : ['CSSCHD', self._read_fake],
             (104, 1, 81) : ['DEFORM', self._read_deform],
-            (2702, 27, 387) : ['DIVERG', self._read_fake],
+            (2702, 27, 387) : ['DIVERG', self._read_diverg],
             (4102, 41, 274) : ['FLFACT', self._read_flfact],
             (3902, 39, 272) : ['FLUTTER', self._read_flutter],
             (17400, 174, 616) : ['GROUP', self._read_group],
@@ -120,6 +127,8 @@ class EDT(GeomCommon):
         aepressx
     def _read_mkaero2(self, data: bytes, n: int) -> int:
         mkaero2x
+    def _read_diverg(self, data: bytes, n: int) -> int:
+        divergx
 
 
     def _read_flfact(self, data: bytes, n: int) -> int:
@@ -685,7 +694,7 @@ class EDT(GeomCommon):
         14 THI3      I
         15 THN3      I
 
-        PAERO1  100001
+        PAERO2  100001
 
         data = (100001, 100001, 0, 10, 0, 0, 24, 1,
                 99.3, 21.45, -11.65, 42.86, 101.8387, 122.62, -2.69, 32.71)
@@ -1408,10 +1417,23 @@ class EDT(GeomCommon):
 
     def _read_monpnt1(self, data: bytes, n: int) -> int:
         """Reads the MONPNT1 card"""
-        n = self._read_monpnt1_nx(data, n)
+        card_name = 'MONPNT1'
+        card_obj = MONPNT1
+        methods = {
+            92 : self._read_monpnt1_nx_92,
+            96 : self._read_monpnt1_96,
+        }
+        try:
+            n = self._read_double_card(card_name, card_obj, self._add_monpnt_object,
+                                       methods, data, n)
+        except DoubleCardError:
+            raise
         return n
 
-    def _read_monpnt1_nx(self, data: bytes, n: int) -> int:
+        #n = self._read_monpnt1_nx(data, n)
+        return n
+
+    def _read_monpnt1_nx_92(self, monpnt1: MONPNT1, data: bytes, n: int) -> Tuple[int, List[MONPNT1]]:
         """
         MSC 2018.2
 
@@ -1424,17 +1446,16 @@ class EDT(GeomCommon):
         21 X           RS
         22 Y           RS
         23 Z           RS
-        24 CD           I  (not in NX)
 
         """
         #ntotal = 4 * 24 # 4 * 24
-        ntotal = 4 * 23 # 4 * 23
+        ntotal = 92 # 4 * 23
         ndatai = len(data) - n
         ncards = ndatai // ntotal
         assert ndatai % ntotal == 0
         #structi = Struct(self._endian + b'8s 56s i 8s i 3f i')  # msc
         structi = Struct(self._endian + b'8s 56s i 8s i 3f')  # nx
-        #monpnt1s = []
+        monpnt1s = []
         for unused_i in range(ncards):
             edata = data[n:n + ntotal]
             out = structi.unpack(edata)
@@ -1444,13 +1465,54 @@ class EDT(GeomCommon):
             label = reshape_bytes_block_size(label_bytes, self.size)
             aecomp_name = reshape_bytes_block_size(aecomp_name_bytes, self.size)
             xyz = [x, y, z]
-            monpnt1 = self.add_monpnt1(name, label, axes, aecomp_name,
-                                       xyz, cp=cp)
+            monpnt1 = MONPNT1(name, label, axes, aecomp_name,
+                              xyz, cp=cp)
             str(monpnt1)
             n += ntotal
-            #monpnt1s.append(monpnt1)
+            monpnt1s.append(monpnt1)
         self.to_nx(' because MONPNT1-NX was found')
-        return n
+        return n, monpnt1s
+
+    def _read_monpnt1_96(self, monpnt1: MONPNT1, data: bytes, n: int) -> Tuple[int, List[MONPNT1]]:
+        """
+        MSC 2018.2
+
+        Word Name Type Description
+        1 NAME(2)   CHAR4
+        3 LABEL(14) CHAR4
+        17 AXES         I
+        18 COMP(2)  CHAR4
+        20 CP           I
+        21 X           RS
+        22 Y           RS
+        23 Z           RS
+        24 CD           I
+
+        """
+        #ntotal = 4 * 24 # 4 * 24
+        ntotal = 96 # 4 * 23
+        ndatai = len(data) - n
+        ncards = ndatai // ntotal
+        assert ndatai % ntotal == 0
+        structi = Struct(self._endian + b'8s 56s i 8s i 3f i')  # msc
+        #structi = Struct(self._endian + b'8s 56s i 8s i 3f')  # nx
+        monpnt1s = []
+        for unused_i in range(ncards):
+            edata = data[n:n + ntotal]
+            out = structi.unpack(edata)
+            name_bytes, label_bytes, axes, aecomp_name_bytes, cp, x, y, z, cd = out
+            #name_bytes, label_bytes, axes, aecomp_name_bytes, cp, x, y, z = out
+            name = reshape_bytes_block_size(name_bytes, self.size)
+            label = reshape_bytes_block_size(label_bytes, self.size)
+            aecomp_name = reshape_bytes_block_size(aecomp_name_bytes, self.size)
+            xyz = [x, y, z]
+            monpnt1 = MONPNT1(name, label, axes, aecomp_name,
+                              xyz, cp=cp, cd=cd)
+            str(monpnt1)
+            n += ntotal
+            monpnt1s.append(monpnt1)
+        #self.to_nx(' because MONPNT1-NX was found')
+        return n, monpnt1s
 
     def _read_aestat(self, data: bytes, n: int) -> int:
         """
@@ -1607,8 +1669,8 @@ class EDT(GeomCommon):
         7 ALID2        I IDentification of an AELIST bulk data entry that identifies all aerodynamic elements that make up the CS comp
         8 EFF         RS Control surface EFFectiveness, default=1.0
         9 LDW          I =0 create a linear down wash, >0 no linear downwash
-        10 CREFC      RS REFerence Chord Length for the CS > 0.0, default = 1.0
-        11 CREFS      RS REFerence area for the CS > 0.0, default = 1.0
+        10 CREFC      RS Reference Chord Length for the CS > 0.0, default = 1.0
+        11 CREFS      RS Reference area for the CS > 0.0, default = 1.0
         12 PLLIM      RS Lower deflection   Limit for the control surface in radians, default=no limit
         13 PULIM      RS Upper deflection   Limit for the control surface in radians, default=no limit
         14 HMLLIM     RS Lower Hinge Moment Limit for the control surface in force-length units, default=no limit
@@ -1621,18 +1683,23 @@ class EDT(GeomCommon):
         ndatai = len(data) - n
         ncards = ndatai // ntotal
         assert ndatai % ntotal == 0
+
+        ntotali = -24 * self.factor
         if self.size == 4:
-            struct1 = Struct(self._endian + b'i 8s 4i fi 8f')
-            #struct2 = Struct(self._endian + b'i 8s 4i fi 4f4i')
+            struct2 = Struct(self._endian + b'6f')
+            struct1 = Struct(self._endian + b'i 8s 4i fi 2f 4s4s 4s4s 4s4s')
+            nan = b'    '
         else:
-            struct1 = Struct(self._endian + b'q 16s 4q dq 8d')
+            struct2 = Struct(self._endian + b'6d')
+            struct1 = Struct(self._endian + b'q 16s 4q dq 2d 8s8s 8s8s 8s8s')
+            nan = b'        '
+
         for unused_i in range(ncards):
             edata = data[n:n + ntotal]
             out1 = struct1.unpack(edata)
-            #out2 = struct2.unpack(edata)
             (aesurf_id, label_bytes, cid1, alid1, cid2, alid2, eff, ldw_int, crefc, crefs,
              pllim, pulim, hmllim, hmulim, tqllim, tqulim) = out1
-
+            #print(out1)
             label = reshape_bytes_block_size(label_bytes, self.size)
 
             if ldw_int == 0:
@@ -1641,21 +1708,27 @@ class EDT(GeomCommon):
                 ldw = 'NOLDW'
             else:
                 raise NotImplementedError(ldw_int)
-
             assert isinstance(ldw, str), ldw
-            # TODO: incorrect...too strict
-            # hmllim, hmulim, tqllim, tqulim
 
-            # this is super janky
-            if hmllim == 1.3563156426940112e-19:
+            if (pllim, pulim, hmllim, hmulim, tqllim, tqulim) == (nan, nan, nan, nan, nan, nan):
+                pllim = None
+                pulim = None
                 hmllim = None
-            if hmulim == 1.3563156426940112e-19:
                 hmulim = None
-            if tqllim == 1.3563156426940112e-19:
                 tqllim = None
-            if tqulim == 1.3563156426940112e-19:
                 tqulim = None
-            #print(pllim, pulim, hmllim, hmulim, tqllim, tqulim)
+            else:
+                pllim2, pulim2, hmllim2, hmulim2, tqllim2, tqulim2 = struct2.unpack(edata[ntotali:])
+                pllim = pllim2 if pllim != nan else None
+                pulim = pulim2 if pulim != nan else None
+
+                hmllim = hmllim2 if hmllim != nan else None
+                hmulim = hmulim if hmulim != nan else None
+
+                tqllim = tqllim2 if tqllim != nan else None
+                tqulim = tqulim2 if tqulim != nan else None
+                #print('pllim, pulim, hmllim, hmulim, tqllim, tqulim', pllim, pulim, hmllim, hmulim, tqllim, tqulim)
+
             self.add_aesurf(aesurf_id, label, cid1, alid1, cid2=None, alid2=None,
                             eff=eff, ldw=ldw, crefc=crefc, crefs=crefs,
                             #pllim=-np.pi/2., pulim=np.pi/2.,
@@ -1663,6 +1736,39 @@ class EDT(GeomCommon):
                             hmllim=hmllim, hmulim=hmulim, # hinge moment lower/upper limits
                             tqllim=tqllim, tqulim=tqulim)
             n += ntotal
+        return n
+
+    def _read_aesurfs(self, data: bytes, n: int) -> int:
+        """
+        Word Name Type Description
+        1 ID       I     Identification of an aerodynamic trim variable degree
+                         of freedom >0, no default
+        2 LABEL(2) CHAR4 Control Surface (CS) name, no default
+        4 LIST1    I     Identification of a SET1 that contains the grids ids
+                         associated with this control surface
+        5 LIST2    I     Identification of a SET1 that contains the grids ids
+                         associated with this control surface
+        """
+        ntotal = 20 *  self.factor # 4 * 5
+        ndatai = len(data) - n
+        ncards = ndatai // ntotal
+        assert ndatai % ntotal == 0
+        if self.size == 4:
+            struct1 = Struct(self._endian + b'i 8s 2i')
+        else:
+            struct1 = Struct(self._endian + b'i 16s 2i')
+
+        for unused_i in range(ncards):
+            edata = data[n:n + ntotal]
+            out1 = struct1.unpack(edata)
+
+            aesid, label_bytes, list1, list2 = out1
+            label = reshape_bytes_block_size(label_bytes, self.size)
+
+            aesurfs = self.add_aesurfs(aesid, label, list1, list2)
+            #print(aesurfs)
+            n += ntotal
+        read_aesurfs
         return n
 
     def _read_aefact(self, data: bytes, n: int) -> int:

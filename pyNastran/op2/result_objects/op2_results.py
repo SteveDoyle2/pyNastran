@@ -583,7 +583,9 @@ class StrainEnergy:
         self.conm2_strain_energy = {}
         self.rbe1_strain_energy = {}
         self.rbe3_strain_energy = {}
-        self.weldc_strain_energy = {}
+        self.cweld_strain_energy = {}
+        self.cfast_strain_energy = {}
+        self.cseam_strain_energy = {}
 
     def get_table_types(self):
         tables = [
@@ -618,6 +620,6 @@ class StrainEnergy:
             'genel_strain_energy',
             'conm2_strain_energy',
             'rbe1_strain_energy', 'rbe3_strain_energy',
-            'weldc_strain_energy',
+            'cweld_strain_energy', 'cfast_strain_energy', 'cseam_strain_energy',
         ]
         return ['strain_energy.' + table for table in tables]

@@ -261,9 +261,14 @@ class OP2_F06_Common:
     def rbe3_strain_energy(self):
         return self.op2_results.strain_energy.rbe3_strain_energy
     @property
-    def weldc_strain_energy(self):
-        return self.op2_results.strain_energy.weldc_strain_energy
-
+    def cweld_strain_energy(self):
+        return self.op2_results.strain_energy.cweld_strain_energy
+    @property
+    def cfast_strain_energy(self):
+        return self.op2_results.strain_energy.cfast_strain_energy
+    @property
+    def cseam_strain_energy(self):
+        return self.op2_results.strain_energy.cseam_strain_energy
     # ------------------------------------------------------------------
     # Strain Energy - Setter
 
@@ -352,7 +357,12 @@ class OP2_F06_Common:
     @cpyram_strain_energy.setter
     def cpyram_strain_energy(self, cpyram_strain_energy):
         self.op2_results.strain_energy.cpyram_strain_energy = cpyram_strain_energy
-
+    @cfast_strain_energy.setter
+    def cfast_strain_energy(self, cfast_strain_energy):
+        self.op2_results.strain_energy.cfast_strain_energy = cfast_strain_energy
+    @cseam_strain_energy.setter
+    def cseam_strain_energy(self, cseam_strain_energy):
+        self.op2_results.strain_energy.cseam_strain_energy = cseam_strain_energy
     # ------------------------------------------------------------------
     # Force - Getter
     @property

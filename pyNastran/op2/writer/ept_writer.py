@@ -286,6 +286,8 @@ def write_card(op2_file, op2_ascii, obj, name, pids, spack, endian):
                 fctn = b'SMEC'
             elif prop.fctn == 'PFLUID':
                 fctn = b'PFLU'
+            elif prop.fctn == 'FFLUID':
+                fctn = b'FFLU'
             else:
                 raise NotImplementedError('PSOLID; fctn=%r' % prop.fctn)
 
@@ -573,6 +575,12 @@ def write_pcomp(name, pids, itable, op2_file, op2_ascii, obj, endian=b'<'):
             ft = 3
         elif prop.ft == 'STRN':
             ft = 4
+        elif prop.ft == 'HFAI':  # secret MSC
+            ft = 5
+        elif prop.ft == 'HTAP':  # secret MSC
+            ft = 6
+        elif prop.ft == 'HFAB':  # secret MSC
+            ft = 7
         else:
             raise RuntimeError(f'unsupported ft.  pid={pid} ft={prop.ft!r}.'
                                f'\nPCOMP = {prop}')

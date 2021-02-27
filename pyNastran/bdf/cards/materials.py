@@ -2530,7 +2530,15 @@ class MAT10(Material):
         rho = data[2]
         c = data[3]
         ge = data[4]
-        return MAT10(mid, bulk, rho, c, ge, comment=comment)
+        gamma = None
+        if len(data) == 5:
+            pass
+        else:
+            assert len(data) == 6, data
+            gamma = data[-1]
+        mat10 = MAT10(mid, bulk=bulk, rho=rho, c=c, ge=ge, gamma=gamma,
+                      comment=comment)
+        return mat10
 
     def cross_reference(self, model: BDF) -> None:
         msg = ', which is required by MAT10 mid=%s' % self.mid

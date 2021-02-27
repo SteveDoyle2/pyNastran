@@ -47,6 +47,7 @@ RESULT_NAME_MAP = {
     'HEXAFD' : 'chexa_strain_energy',
     'HEXA8FD' : 'chexa_strain_energy',
     'PYRAM' : 'cpyram_strain_energy',
+    'PYRA' : 'cpyram_strain_energy',
 
     'GAP' : 'cgap_strain_energy',
     'BUSH' : 'cbush_strain_energy',
@@ -61,7 +62,11 @@ RESULT_NAME_MAP = {
     'CONM2' : 'conm2_strain_energy',
     'RBE1' : 'rbe1_strain_energy',
     'RBE3' : 'rbe3_strain_energy',
-    'WELDC' : 'weldc_strain_energy',
+    'WELDP' : 'cweld_strain_energy',
+    'WELDC' : 'cweld_strain_energy',
+    'WELD' : 'cweld_strain_energy',
+    'FASTP' : 'cfast_strain_energy',
+    'SEAMP' : 'cseam_strain_energy',
 }
 
 class ONR(OP2Common):
@@ -445,7 +450,7 @@ class ONR(OP2Common):
         try:
             result_name = RESULT_NAME_MAP[element_name]
         except KeyError:
-            raise NotImplementedError('element_name=%r' % (self.data_code['element_name']))
+            raise NotImplementedError('element_name1=%r element_name=%r' % (element_name, self.data_code['element_name']))
         prefix, postfix = self.get_onr_prefix_postfix()
         result_name = prefix + result_name + postfix
         #result_name = 'strain_energy'

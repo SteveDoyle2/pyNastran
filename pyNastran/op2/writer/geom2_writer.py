@@ -522,12 +522,14 @@ def write_card(name, eids, spack, obj, op2_file, op2_ascii, endian):
             t2 = elem.T2 if elem.T2 is not None else -1.
             t3 = elem.T3 if elem.T3 is not None else -1.
             t4 = elem.T4 if elem.T4 is not None else -1.
+            #assert t4 == -1.0, elem.T4
             data = [eid, pid] + nids + [theta, elem.zoffset, 0,
                                         tflag, t1, t2, t3, t4]
             assert tflag in [0, 1], elem.get_stats()
             #print('  CQUAD4 eid=%s pid=%s nids=%s data=%s\n' % (eid, pid, str(nids), data[6:]))
             op2_ascii.write('  eid=%s pid=%s nids=%s\n' % (eid, pid, str(nids)))
             assert None not in data, '  %s eid=%s pid=%s nids=%s\n%s' % (name, eid, pid, str(nids), data)
+            #6i ff ii 4f
             op2_file.write(spack.pack(*data))
     elif name == 'CQUAD8':  # current; not 2001
         for eid in sorted(eids):

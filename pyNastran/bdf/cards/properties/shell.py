@@ -1213,6 +1213,12 @@ def map_failure_theory_int(ft: int) -> str:
         ft_str = 'TSAI'
     elif ft == 4:
         ft_str = 'STRN'
+    elif ft == 5:
+        ft_str = 'HFAI' # secret MSC
+    elif ft == 6:
+        ft_str = 'HTAP' # secret MSC
+    elif ft == 7:
+        ft_str = 'HFAB' # secret MSC
     else:
         raise NotImplementedError(ft)
     return ft_str

@@ -387,6 +387,8 @@ MSC_RESULT_TABLES = [b'ASSIG', b'ASEPS'] + [
     # Qualifier Information Table - which is what???
     b'QUALINFO',
 
+    b'OGPSR',
+
 
     # new
     b'TOLD',
