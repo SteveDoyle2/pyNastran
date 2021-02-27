@@ -122,9 +122,75 @@ class EDT(GeomCommon):
 
         }
     def _read_aeforce(self, data: bytes, n: int) -> int:
-        aeforcex
+        """Word Name Type Description
+        1 MACH     RS
+        2 SYMXZ(2) CHAR4
+        4 SYMXY(2) CHAR4
+        6 UXID     I
+        7 MESH(2)  CHAR4
+        9 FORCE    I
+        10 DMIK(2) CHAR4
+        12 PERQ(2) CHAR4
+        """
+        ntotal = 52 * self.factor # 4*13
+        ndatai = len(data) - n
+        ncards = ndatai // ntotal
+        assert ndatai % ntotal == 0
+        assert self.factor == 1, self.factor
+        structi = Struct(self._endian + b'f 8s 8s i 8s i 8s 8s')
+        for unused_i in range(ncards):
+            edata = data[n:n + ntotal]
+            out = structi.unpack(edata)
+
+            mach, sym_xz_bytes, sym_xy_bytes, ux_id, mesh_bytes, force, dmik_bytes, perq_bytes = out
+            sym_xz = reshape_bytes_block_size(sym_xz_bytes, size=self.size)
+            sym_xy = reshape_bytes_block_size(sym_xy_bytes, size=self.size)
+            mesh = reshape_bytes_block_size(mesh_bytes, size=self.size)
+            dmik = reshape_bytes_block_size(dmik_bytes, size=self.size)
+            perq = reshape_bytes_block_size(perq_bytes, size=self.size)
+
+            aeforce = self.add_aeforce(mach, sym_xz, sym_xy, ux_id, mesh, force, dmik, perq)
+            str(aeforce)
+            n += ntotal
+        return n
+
     def _read_aepress(self, data: bytes, n: int) -> int:
-        aepressx
+        """
+        Parametric pressure loading for aerodynamics.
+        Word Name Type Description
+        1 MACH     RS    Mach number
+        2 SYMXZ(2) CHAR4 Character string for identifying symmetry of the
+                         force vector. Allowable values are SYMM, ASYMM, and ANTI
+        4 SYMXY(2) CHAR4 Character string for identifying symmetry of the
+                         force vector. Allowable values are SYMM, ASYMM, and ANTI
+        6 UXID     I     The identification number of a UXVEC entry
+        7 DMIJ(2)  CHAR4 The name of a DMI or DMIJ entry that defines the pressure
+                         per unit dynamic pressure
+        9 DMIJI(2) CHAR4 The name of a DMIJI entry that defines the CAERO2
+                         interference element downwashes
+        """
+        ntotal = 40 * self.factor # 4*10
+        ndatai = len(data) - n
+        ncards = ndatai // ntotal
+        assert ndatai % ntotal == 0
+        assert self.factor == 1, self.factor
+        structi = Struct(self._endian + b'f 8s 8s i 8s 8s')
+        for unused_i in range(ncards):
+            edata = data[n:n + ntotal]
+            out = structi.unpack(edata)
+
+            mach, sym_xz_bytes, sym_xy_bytes, ux_id, dmij_bytes, dmiji_bytes= out
+            sym_xz = reshape_bytes_block_size(sym_xz_bytes, size=self.size)
+            sym_xy = reshape_bytes_block_size(sym_xy_bytes, size=self.size)
+            dmij = reshape_bytes_block_size(dmij_bytes, size=self.size)
+            dmiji = reshape_bytes_block_size(dmiji_bytes, size=self.size)
+
+            aepress = self.add_aepress(mach, sym_xz, sym_xy, ux_id, dmij, dmiji)
+            str(aepress)
+            #print(mach, sym_xz, sym_xy, ux_id, dmij, dmiji)
+            n += ntotal
+        return n
+
     def _read_mkaero2(self, data: bytes, n: int) -> int:
         mkaero2x
     def _read_diverg(self, data: bytes, n: int) -> int:
@@ -581,9 +647,87 @@ class EDT(GeomCommon):
         return n
 
     def _read_caero3(self, data: bytes, n: int) -> int:
-        caero3x
+        """
+        Aerodynamic panel element configuration.
+
+        Word Name Type Description
+        1 EID    I Element identification number
+        2 PID    I Property identification number of a PAERO3 entry
+        3 CP     I Coordinate system for locating points 1 and 4
+        4 LISTW  I Identification number of an AEFACT entry that lists
+                   coordinate pairs for structural interpolation of the wing
+        5 LISTC1 I Identification number of an AEFACT entry that lists
+                   coordinate pairs for control surfaces
+        6 LISTC2 I Identification number of an AEFACT entry that lists
+                   coordinate pairs for control surfaces
+        7 UNDEF(2) None
+        9  X1   RS X-coordinate of point 1 in coordinate system CP
+        10 Y1   RS Y-coordinate of point 1 in coordinate system CP
+        11 Z1   RS Z-coordinate of point 1 in coordinate system CP
+        12 X12  RS Edge chord length in aerodynamic coordinate system
+        13 X4   RS X-coordinate of point 4 in coordinate system CP
+        14 Y4   RS Y-coordinate of point 4 in coordinate system CP
+        15 Z4   RS Z-coordinate of point 4 in coordinate system CP
+        16 X43  RS Edge chord length in aerodynamic coordinate system
+        """
+        ntotal = 64 * self.factor # 4*16
+        ndatai = len(data) - n
+        ncards = ndatai // ntotal
+        assert ndatai % ntotal == 0
+        structi = Struct(mapfmt(self._endian + b'6i 2i 8f', self.size))
+        for unused_i in range(ncards):
+            edata = data[n:n + ntotal]
+            out = structi.unpack(edata)
+            eid, pid, cp, list_w, list_c1, list_c2, zero1, zero2, x1, y1, z1, x12, x4, y4, z4, x43 = out
+            #eid, pid, cp, nspan, lspan, zero1, zero2, zero3, x1, y1, z1, x12, x4, y4, z4, x43 = out
+            assert min(zero1, zero2) == max(zero1, zero2)
+            p1 = [x1, y1, z1]
+            p4 = [x4, y4, z4]
+            caero3 = self.add_caero3(
+                eid, pid, list_w, p1, x12, p4, x43,
+                cp=cp, list_c1=list_c1, list_c2=list_c2, comment='')
+            str(caero3)
+            #print(caero3)
+            n += ntotal
+        return n
+
     def _read_caero4(self, data: bytes, n: int) -> int:
-        caero4x
+        """
+        Word Name Type Description
+        1 EID   I Element identification number
+        2 PID   I Property identification number of a PAERO4 entry
+        3 CP    I Coordinate system for locating points 1 and 4
+        4 NSPAN I Number of strips
+        5 LSPAN I Identification number of an AEFACT entry
+                  containing a list of division points for strips
+        6 UNDEF(3) None
+        9  X1  RS X-coordinate of point 1 in coordinate system CP
+        10 Y1  RS Y-coordinate of point 1 in coordinate system CP
+        11 Z1  RS Z-coordinate of point 1 in coordinate system CP
+        12 X12 RS Edge chord length in aerodynamic coordinate system
+        13 X4  RS X-coordinate of point 4 in coordinate system CP
+        14 Y4  RS Y-coordinate of point 4 in coordinate system CP
+        15 Z4  RS Z-coordinate of point 4 in coordinate system CP
+        16 X43 RS Edge chord length in aerodynamic coordinate system
+        """
+        ntotal = 64 * self.factor # 4*16
+        ndatai = len(data) - n
+        ncards = ndatai // ntotal
+        assert ndatai % ntotal == 0
+        structi = Struct(mapfmt(self._endian + b'5i 3i 8f', self.size))
+        for unused_i in range(ncards):
+            edata = data[n:n + ntotal]
+            out = structi.unpack(edata)
+            eid, pid, cp, nspan, lspan, zero1, zero2, zero3, x1, y1, z1, x12, x4, y4, z4, x43 = out
+            assert min(zero1, zero2, zero3) == max(zero1, zero2, zero3)
+            p1 = [x1, y1, z1]
+            p4 = [x4, y4, z4]
+            caero4 = self.add_caero4(eid, pid, p1, x12, p4, x43,
+                                     cp=cp, nspan=nspan, lspan=lspan, comment='')
+            str(caero4)
+            #print(caero4)
+            n += ntotal
+        return n
 
     def _read_caero5(self, data: bytes, n: int) -> int:
         """
@@ -1556,17 +1700,17 @@ class EDT(GeomCommon):
         7 IMETH(2)  CHAR4
         SFLG=0 (std)
           9 NEIGN  I  nvalue
-          10 EPR  RS
-          11 SFLG  I SWEEP FLAG
         SFLG=1 (sweep)
           9 FMAX  RS maximum frequency
-          10 EPR  RS
-          11 SFLG  I SWEEP FLAG
         End SFLG
+        10 EPR  RS
+        11 SFLG  I SWEEP FLAG
         Words 1 through max repeat until End of Record
 
         NX:
-          data = (30, PK, 1, 2, 3, L, 3, 0.001, -1)
+                  sid method,     d, m, k, imethod,  neign, epr, sflag
+          data = (30, PK,         1, 2, 3, L,         3, 0.001, -1)       # ???
+          data = (30, KE, '    ', 1, 2, 3, L, '    ', 3, 0.001, 0.0, -1)  # MSC
         """
         ints = np.frombuffer(data[n:], self.idtype).copy()
         floats = np.frombuffer(data[n:], self.fdtype).copy()
@@ -1581,10 +1725,16 @@ class EDT(GeomCommon):
             mach = ints[i0+4]
             reduced_freq_velocity = ints[i0+5]
             imethod_bytes = data[n+i0*4+24:n+i0*4+32]
-            nvalue = ints[i0+8]
+            nvalue = ints[i0+8]  # nvalue
             epsilon = floats[i0+9]
-            assert ints[i0+10] == -1, ints[i0:i1]
 
+            if ints[i0+10] == -1:
+                assert ints[i0+10] == -1, ints[i0:i1]
+            else:
+                # msc
+                sweep_flag = ints[i0+10]
+                assert ints[i0+11] == -1, ints[i0:i1+1]
+                assert sweep_flag == 0, sweep_flag
             method = method_bytes.rstrip().decode('ascii')
             imethod = imethod_bytes.rstrip().decode('ascii')
             self.add_flutter(sid, method,
@@ -1766,9 +1916,8 @@ class EDT(GeomCommon):
             label = reshape_bytes_block_size(label_bytes, self.size)
 
             aesurfs = self.add_aesurfs(aesid, label, list1, list2)
-            #print(aesurfs)
+            str(aesurfs)
             n += ntotal
-        read_aesurfs
         return n
 
     def _read_aefact(self, data: bytes, n: int) -> int:

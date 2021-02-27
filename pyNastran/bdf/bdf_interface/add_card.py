@@ -7535,6 +7535,26 @@ class AddCards(AddMethods):
         fields = ['DSCONS', dscid, label, nid_eid, comp, limit, opt, layer_id]
         self.reject_card_lines('DSCONS', print_card_(fields).split('\n'), show_log=False)
 
+    def add_aepress(self, mach, sym_xz: str, sym_xy: str, ux_id: int, dmij: str, dmiji: str):
+        #AEPRESS MACH SYMXZ SYMXY UXID DMIJ DMIJI
+        """adds an AEPRESS card"""
+        assert isinstance(sym_xz, str), sym_xz
+        assert isinstance(sym_xy, str), sym_xy
+        assert isinstance(dmij, str), dmij
+        assert isinstance(dmiji, str), dmiji
+        fields = ['AEPRESS', mach, sym_xz, sym_xy, ux_id, dmij, dmiji]
+        self.reject_card_lines('AEPRESS', print_card_(fields).split('\n'), show_log=False)
+
+    def add_aeforce(self, mach: float, sym_xz: str, sym_xy: str, ux_id: int, mesh: str, force: int, dmik: str, perq: str):
+        """adds an AEPRESS card"""
+        assert isinstance(mesh, str), mesh
+        assert isinstance(sym_xz, str), sym_xz
+        assert isinstance(sym_xy, str), sym_xy
+        assert isinstance(dmik, str), dmik
+        assert isinstance(perq, str), perq
+        fields = ['AEPRESS', mach, sym_xz, sym_xy, ux_id, mesh, force, dmik, perq]
+        self.reject_card_lines('AEPRESS', print_card_(fields).split('\n'), show_log=False)
+
     def add_dvset(self, vid: int, dv_type: str, field: int, pref: float, pids: List[float],
                   alpha: float=1.0):
         """
