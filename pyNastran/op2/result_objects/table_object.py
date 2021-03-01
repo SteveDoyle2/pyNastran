@@ -1570,7 +1570,7 @@ class ComplexTableArray(TableArray):
             'OUG1F',
             'OUG1',
             'OUGF1', 'BOUGF1',
-            'OAG1',
+            'OAG1', 'OVG1',
         ]
         assert self.table_name in allowed_tables, self.table_name
 

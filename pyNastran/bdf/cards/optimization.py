@@ -459,7 +459,7 @@ class DVXREL1(BaseCard):
 
             if coeff in ['PVAL']:
                 pass
-            elif not isinstance(coeff, float):
+            elif not isinstance(coeff, float_types):
                 msg += '  coeff[%i]=%s is not a float; type=%s\n' % (i, coeff, type(coeff))
         if msg:
             raise RuntimeError('Invalid %s\n' % self.type + msg + str(self))

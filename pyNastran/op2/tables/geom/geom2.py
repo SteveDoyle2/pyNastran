@@ -34,6 +34,7 @@ from pyNastran.bdf.cards.elements.acoustic import CHACAB, CHACBR, CAABSF
 from pyNastran.op2.errors import MixedVersionCard
 from pyNastran.op2.tables.geom.geom_common import GeomCommon
 from pyNastran.op2.op2_interface.op2_reader import mapfmt # , reshape_bytes_block
+from pyNastran.op2.tables.geom.geom4 import RBE3, fill_rbe3_wt_comp_gijs, get_minus_2_index
 
 from pyNastran.op2.errors import DoubleCardError, EmptyCardError
 
@@ -3043,8 +3044,125 @@ class GEOM2(GeomCommon):
         return len(data)
 
     def _read_crbe3(self, data: bytes, n: int) -> int:
+        """
+        This card is an internal RBE3 that's used for Langrage elements.
+        It's not what the user entered.
+
+        Word Name Type Description
+        1 EID  I  Element identification number
+        2 NWE  I  Number of words for the element
+        3 REFG I  Reference grid point identification number
+        4 REFC I  Component numbers at the reference grid point
+        5 WT1  RS Weighting factor for components of motion at G
+        6 C    I  Component numbers
+        7 G    I  Grid point identification number
+        Word 7 repeats until End of Record (-1)
+        Words 5 through 7 repeat until End of Record (-2)
+
+        8 GM I Grid point identification number for dependent DOFs
+        9 CM I Component numbers of dependent DOFs
+        Words 8 through 9 repeat until End of Record (-4?)
+
+        10 ALPHA RS Thermal expansion coefficient
+        Word 10 repeats until End of Record (-5?)
+
+        11 LMID1 I Lagrange multiplier identification number
+        12 NDOFS I Number of DOF for Lagrange multiplier
+        Words 11 through 12 repeat until End of Record (-3?)
+
+        data = (3, 14, 41, 123456, 1.0, 123456, 3, -1,
+                -2,
+                -4,
+                0.002, -5,
+                101000041, 6, -3,
+                4, 14, 4,  123456, 1.0, 123456, 3, -1, -2, -4, 2.0e-6, -5, 101000004, 6, -3)
+          """
         # C:\NASA\m4\formats\git\examples\move_tpl\ngd720a.op2
-        self.log.info('skipping RBE3 in GEOM2')
+        idata = np.frombuffer(data[n:], self.idtype8).copy()
+        fdata = np.frombuffer(data[n:], self.fdtype8).copy()
+
+        iminus3 = np.where(idata == -3)[0]
+        if idata[-1] == -3:
+            is_alpha = False
+            i = np.hstack([[0], iminus3[:-1]+1])
+        else:
+            is_alpha = True
+            i = np.hstack([[0], iminus3[:-1]+2])
+        j = np.hstack([iminus3[:-1], len(idata)])
+        #print('i = ', i)
+        #print('j = ', j)
+        #print('is_alpha =', is_alpha)
+
+        assert len(i) == len(j)
+        for ii, jj in zip(i, j):
+
+            idatai = idata[ii:jj]
+            #print(idatai)
+            #print(fdata[ii:ii+5])
+            #1 EID  I  Element identification number
+            #2 NWE  I  Number of words for the element
+            #3 REFG I  Reference grid point identification number
+            #4 REFC I  Component numbers at the reference grid point
+            #5 WT1  RS Weighting factor for components of motion at G
+            #6 C    I  Component numbers
+            #7 G    I  Grid point identification number
+            eid, nwords, refg, refc, unused_weight, comp, grid = idatai[:7]
+            #nwords += 1
+            #print(f'nwords={nwords}; len(datai)={len(idatai)}', len(idatai))
+            weight = fdata[ii+4]
+            weights = [weight]
+            comps = [comp]
+            gijs = [grid]
+
+            iji = ii
+            values = []
+            values_dict = {}
+            value = idata[iji]
+            while value != -3:
+                if value < 0:
+                    if len(values):
+                        values_dict[value] = values
+                    values = []
+                else:
+                    values.append(iji)
+                iji += 1
+                value = idata[iji]
+            if len(values):
+                values_dict[value] = values
+
+            #print('values_dict =', values_dict)
+            del values_dict[-1]
+            #{-1: [3, 14, 41, 123456, 1065353216, 123456, 3], -5: [990057071], -3: [101000041, 6]}
+            if -5 in values_dict:
+                ialpha_list = values_dict[-5]
+                assert len(ialpha_list) == 1, ialpha_list
+                alpha = fdata[ialpha_list[0]]
+                #print("alpha =", alpha)
+                del values_dict[-5]
+            if -3 in values_dict:
+                ilagrange_ndof = values_dict[-3]
+                assert len(ilagrange_ndof) >= 2, ilagrange_ndof
+                assert len(ilagrange_ndof) % 2 == 0, ilagrange_ndof
+                lagrange_ndof = idata[ilagrange_ndof]
+                #print("lagrange_ndof =", lagrange_ndof)
+                del values_dict[-3]
+            if values_dict:
+                print('values_dict =', values_dict)
+                assert len(values_dict) == 0, values_dict
+
+            nrows = len(lagrange_ndof) // 2
+            lagrange_ndof = lagrange_ndof.reshape(nrows, 2)
+            gmi = lagrange_ndof[:, 0]
+            cmi = lagrange_ndof[:, 1]
+            in_data = [eid, refg, refc, weights, comps, gijs,
+                       gmi, cmi, alpha]
+            if self.is_debug_file:
+                self.binary_debug.write('  RBE3=%s\n' % str(in_data))
+            #print('rbe3 =', in_data)
+            rbe3 = RBE3.add_op2_data(in_data)
+            str(rbe3)
+            continue
+            #self._add_op2_rigid_element(rbe3)
         return len(data)
 
     def _read_crjoint(self, data: bytes, n: int) -> int:
@@ -4062,20 +4180,20 @@ class GEOM2(GeomCommon):
         4, 1, # N(c), f, KZij...floats...)
 
         (6.05360936588321e-43,
-        1, 4.203895392974451e-45,
-        2.802596928649634e-45, 4.203895392974451e-45,
-        4.203895392974451e-45, 4.203895392974451e-45,
-        5.605193857299268e-45, 4.203895392974451e-45,
-        7.006492321624085e-45, 4.203895392974451e-45,
-        8.407790785948902e-45, 4.203895392974451e-45,
-        9.80908925027372e-45, 4.203895392974451e-45,
-        1.1210387714598537e-44, 4.203895392974451e-45,
-        1.2611686178923354e-44, 4.203895392974451e-45,
-        1.401298464324817e-44, 4.203895392974451e-45,
+        1, 3,
+        2.802596928649634e-45, 3,
+        3, 3,
+        4, 3,
+        7.006492321624085e-45, 3,
+        8.407790785948902e-45, 3,
+        9.80908925027372e-45, 3,
+        1.1210387714598537e-44, 3,
+        1.2611686178923354e-44, 3,
+        1.401298464324817e-44, 3,
         nan,
-        1.401298464324817e-44, 1.5414283107572988e-44, 4.203895392974451e-45, 1.5414283107572988e-44, 5.605193857299268e-45, 1.5414283107572988e-44, 7.006492321624085e-45, 1.5414283107572988e-44, 8.407790785948902e-45,
+        1.401298464324817e-44, 1.5414283107572988e-44, 3, 1.5414283107572988e-44, 4, 1.5414283107572988e-44, 7.006492321624085e-45, 1.5414283107572988e-44, 8.407790785948902e-45,
         nan,
-        5.605193857299268e-45, 1,
+        4, 1,
         8.71720021677902e-06, 1.3361000128497835e-06, 1.2778000382240862e-05, 6.272000064200256e-06, 1.6251000488409773e-05, 1.0492000001249835e-05, 2.0478000806178898e-05, 1.562999932502862e-05, 2.428500010864809e-05, 2.0403000235091895e-05,
         3.086099968641065e-05, 6.272000064200256e-06, 3.229700087103993e-05, 1.0492000001249835e-05, 3.352899875608273e-05, 1.562999932502862e-05, 3.502099934848957e-05,
         2.025700086960569e-05, 3.578500036383048e-05, 2.7731999580282718e-05, 1.572600012877956e-05, 4.825499854632653e-05, 3.762800042750314e-05, 7.328399806283414e-05,
@@ -4083,7 +4201,7 @@ class GEOM2(GeomCommon):
         0.00010011999984271824, 8.837800123728812e-05, 0.00011811000149464235, 0.00012758000229950994, 0.00011344000085955486, 0.00019350000366102904, 0.0001816000003600493,
         0.0002528300101403147, 0.00024294000468216836, 0.0001699900021776557, 0.0001816000003600493, 0.000229199999012053, 0.00024294000468216836, 0.0002824899856932461,
         0.00036862000706605613, 0.00035051998565904796, 0.0005267499946057796, 0.0005117100081406534, 0.00042292001307941973, 0.0005117100081406534, 0.0005718700122088194,
-        0.0008483999990858138, 0.0008233999833464622, 0.0009233999880962074, 5.605193857299268e-45, 1.0, 90.0, -20.25, 45.0, 1.0, 90.0, 81.0, 45.0, 1.0, 186.0, -17.850000381469727,
+        0.0008483999990858138, 0.0008233999833464622, 0.0009233999880962074, 4, 1.0, 90.0, -20.25, 45.0, 1.0, 90.0, 81.0, 45.0, 1.0, 186.0, -17.850000381469727,
         141.0, 1.0, 186.0, 71.4000015258789, 141.0, 1.0, 268.0, -15.800000190734863, 223.0, 1.0, 268.0, 63.20000076293945, 223.0, 1.0, 368.0, -13.300000190734863, 323.0, 1.0,
         368.0, 53.20000076293945, 323.0, 1.0, 458.0, -11.050000190734863, 413.0, 1.0, 458.0, 44.20000076293945, 413.0)
         """
@@ -4591,3 +4709,11 @@ def convert_theta_to_mcid(theta):
         assert np.allclose(cid, cid_float), 'theta=%s cid=%s cid_float=%s' % (theta, cid, cid_float)
         theta = cid
     return theta
+
+def get_minus_4_index(idata):
+    """helper for ``get_minus_4_index``"""
+    #print('idata =', idata)
+    i = np.where((idata == -4) | (idata == -3))[0]
+    if len(i) == 0:
+        return len(idata)
+    return i[0]

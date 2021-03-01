@@ -483,19 +483,20 @@ class EDOM(GeomCommon):
         iend = iminus1
         size = self.size
         for (i0, i1) in zip(istart, iend):
+            #print(self.show_data(data[n+i0*4:n+i1*4]))
             assert ints[i1] == -1, ints[i1]
             dvprel_id = ints[i0]
             type_bytes = data[n+size:n+3*size]
-            property_name_bytes = data[n+8*size:n+10*size]
             prop_type = reshape_bytes_block_size(type_bytes, size=size)
 
             pid, fid = ints[i0+3:i0+5]
             pmin, pmax, c0 = floats[i0+5:i0+8]
+            property_name_bytes = data[n+8*size:n+10*size]
             if fid == 0:
                 fid = reshape_bytes_block_size(property_name_bytes, size=size)
 
             # fid = fidi
-            #print(dvprel_id, prop_type, pid, fid, (pmin, pmax, c0))
+            #print(f'dvprel_id={dvprel_id} prop_type={prop_type} pid={pid} fid={fid} (pmin, pmax, c0)=({pmin,pmax,c0})')
             desvar_ids = ints[i0+10:i1:2]
             coeffs = floats[i0+11:i1:2]
             # 2 TYPE(2) CHAR4 Name of a property entry

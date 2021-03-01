@@ -255,6 +255,8 @@ MSC_ELEMENTS = {
     239 : 'CEAM',
     240 : 'CBAR',
     241 : 'AXISYM',
+    242 : 'CHEXA?',
+    243 : 'CPYRAM?',
 }
 
 MSC_GEOM_TABLES = [

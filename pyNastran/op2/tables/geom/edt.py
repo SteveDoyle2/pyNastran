@@ -956,14 +956,27 @@ class EDT(GeomCommon):
         return len(data)
 
     def _read_acmodl(self, data: bytes, n: int) -> int:
-        """common method for reading SPCs"""
-        n = self._read_dual_card(data, n, self._read_acmodl_nx, self._read_acmodl_msc,
-                                 'ACMODL', self._add_acmodl_object)
-        #return self._read_acmodl_msc(data, n)
+        """Reads the ACMODL card"""
+        card_name = 'ACMODL'
+        card_obj = ACMODL
+        methods = {
+            72 : self._read_acmodl_nx_72,
+            64 : self._read_acmodl_msc_64,
+        }
+        try:
+            n = self._read_double_card(card_name, card_obj, self._add_acmodl_object,
+                                       methods, data, n)
+        except DoubleCardError:
+            raise
         return n
 
+        #n = self._read_dual_card(data, n, self._read_acmodl_nx, self._read_acmodl_msc,
+                                 #'ACMODL', self._add_acmodl_object)
+        ##return self._read_acmodl_msc(data, n)
+        #return n
 
-    def _read_acmodl_nx(self, data: bytes, n: int) -> Tuple[int, List[ACMODL]]:
+
+    def _read_acmodl_nx_72(self, card, data: bytes, n: int) -> Tuple[int, List[ACMODL]]:
         """
         NX 2019.2 - 72 bytes
         Word Name Type Description
@@ -1056,7 +1069,7 @@ class EDT(GeomCommon):
             n += ntotal
         return n, acmodls
 
-    def _read_acmodl_msc(self, data: bytes, n: int) ->  Tuple[int, List[ACMODL]]:
+    def _read_acmodl_msc_64(self, card, data: bytes, n: int) ->  Tuple[int, List[ACMODL]]:
         """
         MSC 2018.2 - 64 bytes
         Word Name Type Description
@@ -1120,7 +1133,7 @@ class EDT(GeomCommon):
 
             assert inter in ['IDENT', 'DIFF'], inter
             #assert ctype in ['STRONG', 'WEAK', 'WEAKINT', 'WEAKEXT'], ctype
-            assert method in [''], method
+            assert method in ['CP', ''], method
             #assert area_op in [0, 1], area_op
             #If CTYPE = STRONG
             #If CTYPE = WEAK
@@ -1266,6 +1279,8 @@ class EDT(GeomCommon):
             elif desc_int == 2:
                 desc = 'GRID'
             elif desc_int == 3:
+                desc = 'POINT'
+            elif desc_int == 4:
                 desc = 'PROP'
             elif desc_int == 5:
                 desc = 'RBEin'

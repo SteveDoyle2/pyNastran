@@ -1496,7 +1496,10 @@ def read_rbe3s_from_idata_fdata(self, idata, fdata):
         #print('rbe3 =', in_data)
         rbe3 = RBE3.add_op2_data(in_data)
         #print(rbe3.rstrip())
-
+        #if eid in self.rigid_elements:
+            #old_rigid = self.rigid_elements[eid]
+            #self.log.warning(f'skipping RBE3 eid={eid} because its duplicated\n{rbe3} by:\n{old_rigid}')
+            #continue
         self._add_op2_rigid_element(rbe3)
         rbe3s.append(rbe3)
         #print('--------------------------------------')

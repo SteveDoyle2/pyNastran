@@ -5870,7 +5870,9 @@ class SPLINE4(Spline):
         usage = string_or_blank(card, 8, 'usage', 'BOTH')
         nelements = integer_or_blank(card, 9, 'nelements', 10)
         melements = integer_or_blank(card, 10, 'melements', 10)
-        assert len(card) <= 11, f'len(SPLINE4 card = {len(card):d}\ncard={card}'
+        ftype = string_or_blank(card, 11, 'ftype', 'WF2')
+        rcore = double_or_blank(card, 12, 'rcore')
+        assert len(card) <= 13, f'len(SPLINE4 card = {len(card):d}\ncard={card}'
         return SPLINE4(eid, caero, aelist, setg, dz, method, usage,
                        nelements, melements, ftype=ftype, rcore=rcore,
                        comment=comment)

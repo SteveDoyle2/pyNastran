@@ -19,14 +19,18 @@ def write_edom(op2_file, op2_ascii, model: Union[BDF, OP2Geom], endian: bytes=b'
     """writes the EDOM table"""
     if not hasattr(model, 'loads'):  # OP2
         return
-    card_types = [
-        'DESVAR', 'DCONSTR',
-        'DVMREL2', 'DVPREL2',
-        'DTABLE', 'DSCREEN',
-    ]
+    #card_types = [
+        #'DESVAR', 'DCONSTR',
+        #'DVMREL2', 'DVPREL2',
+        #'DTABLE', 'DSCREEN',
+    #]
+    card_types = list(EDOM_MAP.keys())
+    #print(card_types)
 
     cards_to_skip = [
-        'DVCREL1', 'DVMREL1', 'DVPREL1',
+        #'DVCREL1',
+        #'DVMREL1',
+        #'DVPREL1',
         'DVCREL2',
         'DOPTPRM',
         'DCONADD',
@@ -300,17 +304,7 @@ def _write_dvprel2(model: Union[BDF, OP2Geom], name: str,
             fid = dvprel.pname_fid
             pname = ''
 
-        p_min = dvprel.p_min
-        if p_min is None:
-            # NX
-            # Minimum value allowed for this property. If FID references a stress
-            # recovery location field, then the default value for PMIN is -1.0+35.
-            # PMIN must be explicitly set to a negative number for properties that
-            # may be less than zero (for example, field ZO on the PCOMP entry).
-            # See Remark 10. (Real; Default = 1.E-20)
-            #
-            # MSC; default=1e-15
-            p_min = 1e-20
+        p_min, p_max = _get_dvprel_coeffs(dvprel)
 
         prop_type_bytes = ('%-8s' % dvprel.prop_type).encode('ascii')
         pname_bytes = ('%-8s' % pname).encode('ascii')
@@ -326,6 +320,239 @@ def _write_dvprel2(model: Union[BDF, OP2Geom], name: str,
     #assert len(data_all) == nvalues, f'ndata={len(data_all)} nvalues={nvalues}'
     assert len(data_all) == ndata, f'ndata={len(data_all)} nvalues={ndata}'
     return nbytes
+
+def _write_dvprel1(model: Union[BDF, OP2Geom], name: str,
+                   dvprel_ids: List[int], ncards: int,
+                   op2_file, op2_ascii, endian: bytes):
+    """
+    Word Name Type Description
+    1 ID          I Unique identification number
+    2 TYPE(2) CHAR4 Name of a property entry
+    4 PID         I Property entry identification number
+    5 FID         I FID number input. Otherwise, either 0 if property
+                    name is input, or frequency (RS) if entry is for
+                    frequency dependent property. (See Words 9 and 10)
+    6 PMIN       RS Minimum value allowed for this property
+    7 PMAX       RS Maximum value allowed for this property
+    8 C0         RS Constant term of relation
+    9 PNAME1  CHAR4 First word of property name, if any, or blanks if
+                    FID number is nonzero in Word 5
+    10 PNAME2 CHAR4 Second word of property name, if any. Otherwise,
+                    either blanks if FID number is nonzero in Word 5,
+                    or frequency (RS) if entry is for frequency
+                    dependent property. (See Word 5)
+    11 DVIDi I DESVAR entry identification number
+    12 COEFi RS Coefficient of linear relation
+    Words 11 and 12 repeat until -1 occurs
+    """
+    key = (3306, 33, 354)
+    #structi = Struct(endian + b'ii 4f ii')
+
+    ncoeffs = 0
+    for dvprel_id in dvprel_ids:
+        dvprel = model.dvprels[dvprel_id]
+        ncoeffs += len(dvprel.coeffs)
+        #print(dvprel.get_stats())
+
+    nvalues = 11 * ncards + ncoeffs * 2 # nbytes(data)
+    ndata = 9 * ncards + ncoeffs * 2  # len(data)
+
+    nbytes = write_header_nvalues(name, nvalues, key, op2_file, op2_ascii)
+    #dvprel_id = ints[i0]
+    #type_bytes = data[n+size:n+3*size]
+    #property_name_bytes = data[n+8*size:n+10*size]
+    #prop_type = reshape_bytes_block_size(type_bytes, size=size)
+
+    #pid, fid = ints[i0+3:i0+5]
+    #pmin, pmax, c0 = floats[i0+5:i0+8]
+    #if fid == 0:
+        #fid = reshape_bytes_block_size(property_name_bytes, size=size)
+
+    ## fid = fidi
+    ##print(dvprel_id, prop_type, pid, fid, (pmin, pmax, c0))
+    #desvar_ids = ints[i0+10:i1:2]
+    #coeffs = floats[i0+11:i1:2]
+
+    data_all = []
+    for dvprel_id in dvprel_ids:
+        dvprel = model.dvprels[dvprel_id]
+        #print(dvmrel.get_stats())
+        # TODO: doesn't handle fid = float
+        #fid = 0
+        #if isinstance(dvprel.pname_fid, str):
+        fmt = b'i 8s 2i 2fi 8s'
+        fid = 0
+        if isinstance(dvprel.pname_fid, str):
+            property_name_bytes = b'%-8s' % dvprel.pname_fid.encode('latin1')
+        else:
+            assert isinstance(dvprel.pname_fid, integer_types), dvprel.dvprel.pname_fid
+            fid = dvprel.pname_fid
+            property_name_bytes = b'        '
+            #print(dvprel.get_stats())
+
+        type_bytes = b'%-8s' % dvprel.prop_type.encode('latin1')
+        #property_name_bytes = b'%-8s' % dvprel.property_name.encode('latin1')
+
+        c0 = dvprel.c0
+        p_min, p_max = _get_dvprel_coeffs(dvprel)
+        if c0 is None:
+            c0 = 0.
+
+        #[1, b'PSHELL  ', 2, 0, b'T       ', 1e-20, 1e+20, 0.0]
+        data = [dvprel_id, type_bytes, dvprel.pid, fid, p_min, p_max, c0, property_name_bytes]
+        ncoeffs = len(dvprel.coeffs)
+        fmt = b'i 8s ii 3f 8s' + b'if' * ncoeffs + b'i'
+        #print(data)
+        for desvar, coeff in zip(dvprel.desvar_ids, dvprel.coeffs):
+            data.extend([desvar, coeff])
+        data.append(-1)
+
+        assert None not in data, data
+        structi = Struct(endian + fmt)
+        op2_ascii.write(f'  DVPREL1 data={data}\n')
+        op2_file.write(structi.pack(*data))
+        data_all += data
+        #break
+    #print(data_all)
+    #assert len(data_all) == nvalues, f'ndata={len(data_all)} nvalues={nvalues}'
+    assert len(data_all) == ndata, f'ndata={len(data_all)} nvalues={ndata}'
+    return nbytes
+
+def _write_dvmrel1(model: Union[BDF, OP2Geom], name: str,
+                   dvmrel_ids: List[int], ncards: int,
+                   op2_file, op2_ascii, endian: bytes):
+    """
+    Word Name Type Description
+    1 ID          I Unique identification number
+    2 TYPE(2) CHAR4 Name of a property entry
+    4 PID         I Property entry identification number
+    5 FID         I FID number input. Otherwise, either 0 if property
+                    name is input, or frequency (RS) if entry is for
+                    frequency dependent property. (See Words 9 and 10)
+    6 PMIN       RS Minimum value allowed for this property
+    7 PMAX       RS Maximum value allowed for this property
+    8 C0         RS Constant term of relation
+    9 PNAME1  CHAR4 First word of property name, if any, or blanks if
+                    FID number is nonzero in Word 5
+    10 PNAME2 CHAR4 Second word of property name, if any. Otherwise,
+                    either blanks if FID number is nonzero in Word 5,
+                    or frequency (RS) if entry is for frequency
+                    dependent property. (See Word 5)
+    11 DVIDi I DESVAR entry identification number
+    12 COEFi RS Coefficient of linear relation
+    Words 11 and 12 repeat until -1 occurs
+    """
+    key = (6300, 63, 431)
+    #structi = Struct(endian + b'ii 4f ii')
+
+    ncoeffs = 0
+    for dvmrel_id in dvmrel_ids:
+        dvmrel = model.dvmrels[dvmrel_id]
+        ncoeffs += len(dvmrel.coeffs)
+        #print(dvprel.get_stats())
+
+    nvalues = 11 * ncards + ncoeffs * 2 # nbytes(data)
+    ndata = 9 * ncards + ncoeffs * 2  # len(data)
+
+    nbytes = write_header_nvalues(name, nvalues, key, op2_file, op2_ascii)
+    #dvprel_id = ints[i0]
+    #type_bytes = data[n+size:n+3*size]
+    #property_name_bytes = data[n+8*size:n+10*size]
+    #prop_type = reshape_bytes_block_size(type_bytes, size=size)
+
+    #pid, fid = ints[i0+3:i0+5]
+    #pmin, pmax, c0 = floats[i0+5:i0+8]
+    #if fid == 0:
+        #fid = reshape_bytes_block_size(property_name_bytes, size=size)
+
+    ## fid = fidi
+    ##print(dvprel_id, prop_type, pid, fid, (pmin, pmax, c0))
+    #desvar_ids = ints[i0+10:i1:2]
+    #coeffs = floats[i0+11:i1:2]
+
+    data_all = []
+    for dvmrel_id in dvmrel_ids:
+        dvmrel = model.dvmrels[dvmrel_id]
+        #print(dvmrel.get_stats())
+        # TODO: doesn't handle fid = float
+        #fid = 0
+        #if isinstance(dvprel.pname_fid, str):
+        fmt = b'i 8s 2i 2fi 8s'
+        material_name_bytes = b'%-8s' % dvmrel.mp_name.encode('latin1')
+
+        mat_type_bytes = b'%-8s' % dvmrel.mat_type.encode('latin1')
+        #property_name_bytes = b'%-8s' % dvprel.property_name.encode('latin1')
+
+        c0 = dvmrel.c0
+        mp_min, mp_max = _get_dvmrel_coeffs(dvmrel)
+        if c0 is None:
+            c0 = 0.
+
+        fid = 0
+        data = [dvmrel_id, mat_type_bytes, dvmrel.mid, fid, mp_min, mp_max, c0, material_name_bytes]
+        ncoeffs = len(dvmrel.coeffs)
+        fmt = b'i 8s ii 3f 8s' + b'if' * ncoeffs + b'i'
+        #print(data)
+        for desvar, coeff in zip(dvmrel.desvar_ids, dvmrel.coeffs):
+            data.extend([desvar, coeff])
+        data.append(-1)
+
+        assert None not in data, data
+        structi = Struct(endian + fmt)
+        op2_ascii.write(f'  DVMREL2 data={data}\n')
+        op2_file.write(structi.pack(*data))
+        data_all += data
+        #break
+    #print(data_all)
+    #assert len(data_all) == nvalues, f'ndata={len(data_all)} nvalues={nvalues}'
+    assert len(data_all) == ndata, f'ndata={len(data_all)} nvalues={ndata}'
+    return nbytes
+
+def _get_dvprel_coeffs(dvprel):
+    p_min, p_max = dvprel.p_min, dvprel.p_max
+    if p_min is None:
+        # NX
+        # Minimum value allowed for this property. If FID references a stress
+        # recovery location field, then the default value for PMIN is -1.0+35.
+        # PMIN must be explicitly set to a negative number for properties that
+        # may be less than zero (for example, field ZO on the PCOMP entry).
+        # See Remark 10. (Real; Default = 1.E-20)
+        #
+        # MSC; default=1e-15
+        p_min = 1e-20
+    if p_max is None:
+        # NX
+        # Minimum value allowed for this property. If FID references a stress
+        # recovery location field, then the default value for PMIN is -1.0+35.
+        # PMIN must be explicitly set to a negative number for properties that
+        # may be less than zero (for example, field ZO on the PCOMP entry).
+        # See Remark 10. (Real; Default = 1.E-20)
+        #
+        # MSC; default=1e-15
+        p_max = 1e+20
+    return p_min, p_max
+
+def _get_dvmrel_coeffs(dvmrel):
+    """probably wrong"""
+    mp_min, mp_max = dvmrel.mp_min, dvmrel.mp_max
+    if mp_min is None:
+        # TODO: not supported
+        #
+        # Minimum value allowed for this property. If MPNAME references a
+        # material property that can only be positive, then the default value for
+        # MPMIN is 1.0E-15. Otherwise, it is -1.0E35. (Real)
+        mp_min = 1e-20
+    if mp_max is None:
+        # NX
+        # Minimum value allowed for this property. If FID references a stress
+        # recovery location field, then the default value for PMIN is -1.0+35.
+        # PMIN must be explicitly set to a negative number for properties that
+        # may be less than zero (for example, field ZO on the PCOMP entry).
+        # See Remark 10. (Real; Default = 1.E-20)
+        #
+        # MSC; default=1e-15
+        mp_max = 1e+20
+    return mp_min, mp_max
 
 def _write_dvmrel2(model: Union[BDF, OP2Geom], name: str,
                    dvmrel_ids: List[int], ncards: int,
@@ -382,19 +609,12 @@ def _write_dvmrel2(model: Union[BDF, OP2Geom], name: str,
             #fid = dvprel.pname_fid
             #pname = ''
 
-        mp_min = dvmrel.mp_min
-        if mp_min is None:
-            # TODO: not supported
-            #
-            # Minimum value allowed for this property. If MPNAME references a
-            # material property that can only be positive, then the default value for
-            # MPMIN is 1.0E-15. Otherwise, it is -1.0E35. (Real)
-            mp_min = 1e-20
+        mp_min, mp_max = _get_dvmrel_coeffs(dvmrel)
 
         mat_type_bytes = ('%-8s' % dvmrel.mat_type).encode('ascii')
         mp_name_bytes = ('%-8s' % dvmrel.mp_name).encode('ascii')
         data = [dvmrel_id, mat_type_bytes, dvmrel.mid, fid,
-                mp_min, dvmrel.mp_max, dvmrel.dequation, mp_name_bytes]
+                mp_min, mp_max, dvmrel.dequation, mp_name_bytes]
         fmt += _write_dvxrel2_flag(dvmrel, data)
 
         assert None not in data, data
@@ -521,7 +741,9 @@ def _write_dtable(model: Union[BDF, OP2Geom], name: str,
 
 
 EDOM_MAP = {
-    #'DVPREL1': _write_dvprel1, 'DVMREL1': _write_dvmrel1, 'DVCREL1': _write_dvcrel1,
+    'DVPREL1': _write_dvprel1,
+    'DVMREL1': _write_dvmrel1,
+    # 'DVCREL1': _write_dvcrel1,
     'DVPREL2': _write_dvprel2, 'DVMREL2': _write_dvmrel2, '#DVCREL2': _write_dvcrel2,
 
     'DESVAR': _write_desvar,

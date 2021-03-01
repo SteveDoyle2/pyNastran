@@ -938,13 +938,27 @@ class DYNAMICS(GeomCommon):
         #self.increase_card_count('FREQ5', nentries)
 
     def _read_nrlgap(self, data: bytes, n: int) -> int:
-        #C:\NASA\m4\formats\git\examples\move_tpl\nlrgap2.op2
-        #NLRGAP  SID     GA      GB      PLANE   TABK     TABG    TABU RADIUS
-        #nlrgap  200     9       10      XY      -961     965     967     5.0
-        #(200, 9, 10, 101, 961, 965, 967, 5.0)
-        #ntotal = 32
-        #self.show_data(data[n:])
-        assert len(data) == 12 + 32, len(data)
+        r"""
+        C:\NASA\m4\formats\git\examples\move_tpl\nlrgap2.op2
+        NLRGAP  SID     GA      GB      PLANE   TABK     TABG    TABU RADIUS
+        nlrgap  200     9       10      XY      -961     965     967     5.0
+        (200, 9, 10, 101, 961, 965, 967, 5.0)
+
+        (400, 1, 2, 200, 401, 420, 0, 0,
+         500, 1, 2, 200, 501, 520, 0, 0)
+
+        """
+        ntotal = 32 # 4*8
+        ndatai = len(data) - n
+        nentries = ndatai // ntotal
+        assert nentries > 0
+        assert ndatai % ntotal == 0
+        struc = Struct(self._endian + b'7i f')
+        for unused_i in range(nentries):
+            edata = data[n:n+ntotal]
+            out = struc.unpack(edata)
+            #sid, ga, gb, plane, table_k, table_g, table_u, radius = out
+            n += ntotal
         return len(data)
 
     def _read_nlrsfd(self, data: bytes, n: int) -> int:
