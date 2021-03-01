@@ -9,9 +9,11 @@ from pyNastran.bdf.cards.aero.aero import (
     #AECOMP, AECOMPL, AEFACT, AELINK, AELIST, AEPARM, AESURF, AESURFS,
     #CAERO1, CAERO2, CAERO3, CAERO4, CAERO5,
     #PAERO1, PAERO2, PAERO3, PAERO4, PAERO5,
-    MONPNT1) # , MONPNT2, MONPNT3, MONDSP1,
-    #SPLINE1, SPLINE2, SPLINE3, SPLINE4, SPLINE5)
+    MONPNT1, # , MONPNT2, MONPNT3, MONDSP1,
+    #SPLINE1, SPLINE2, SPLINE3,
+    SPLINE4, SPLINE5)
 
+from pyNastran.op2.errors import DoubleCardError
 from pyNastran.op2.tables.geom.geom_common import GeomCommon
 from pyNastran.op2.op2_interface.op2_reader import mapfmt, reshape_bytes_block, reshape_bytes_block_size
 from pyNastran.bdf.cards.elements.acoustic import ACMODL
@@ -106,7 +108,7 @@ class EDT(GeomCommon):
             # MSC
             (1247, 12, 667): ['MONPNT2', self._read_fake],
             (11204, 112, 821): ['ERPPNL', self._read_fake],
-            (8001, 80, 511): ['SET3', self._read_fake],
+            (8001, 80, 511): ['SET3', self._read_set3],
             (9400, 94, 641): ['MDLPRM', self._read_fake],
             (11004, 110, 1820_720): ['HADACRI', self._read_fake],
             (8804, 88, 628): ['MONDSP1', self._read_fake],
@@ -194,8 +196,27 @@ class EDT(GeomCommon):
     def _read_mkaero2(self, data: bytes, n: int) -> int:
         mkaero2x
     def _read_diverg(self, data: bytes, n: int) -> int:
-        divergx
+        """
+        Record – DIVERG(2702,27,387)
+        Divergence analysis data.
+        Word Name Type Description
+        1 SID     I    Unique set identification number
+        2 NROOT   I    Number of divergence roots to output
+        3 M       RS   Mach number
+        Word 3 repeats until -1 occurs
+        """
+        ints = np.frombuffer(data[n:], self.idtype).copy()
+        floats = np.frombuffer(data[n:], self.fdtype).copy()
+        istart, iend = get_minus1_start_end(ints)
 
+        for (i0, i1) in zip(istart, iend):
+            sid, nroots = ints[i0:i0+2]
+            machs = floats[i0+2:i1]
+            #print(sid, nroots, machs)
+            assert ints[i1] == -1, ints[i1]
+            diverg = self.add_diverg(sid, nroots, machs)
+            str(diverg)
+        return len(data)
 
     def _read_flfact(self, data: bytes, n: int) -> int:
         """
@@ -1097,7 +1118,7 @@ class EDT(GeomCommon):
             search_unit = reshape_bytes_block_size(search_unit_bytes, self.size)
             #ctype = reshape_bytes_block_size(ctype_bytes, self.size)
 
-            assert inter in ['IDENT'], inter
+            assert inter in ['IDENT', 'DIFF'], inter
             #assert ctype in ['STRONG', 'WEAK', 'WEAKINT', 'WEAKEXT'], ctype
             assert method in [''], method
             #assert area_op in [0, 1], area_op
@@ -1213,7 +1234,6 @@ class EDT(GeomCommon):
         return n
 
     def _read_set3(self, data: bytes, n: int) -> int:
-
         """
         MSC 2018.2
         Word Name Type Description
@@ -1247,6 +1267,10 @@ class EDT(GeomCommon):
                 desc = 'GRID'
             elif desc_int == 3:
                 desc = 'PROP'
+            elif desc_int == 5:
+                desc = 'RBEin'
+            elif desc_int == 6:
+                desc = 'RBEex'
             else:
                 raise NotImplementedError(desc_int)
 
@@ -1452,12 +1476,26 @@ class EDT(GeomCommon):
         spline3
         #n = self._read_spline2_nx(data, n)
         return n
+
     def _read_spline4(self, data: bytes, n: int) -> int:
         """reads the SPLINE4 card"""
-        n = self._read_spline4_nx(data, n)
+        card_name = 'SPLINE4'
+        card_obj = SPLINE4
+        #self.show_data(data[n:])
+        methods = {
+            44 : self._read_spline4_nx_44,
+            52 : self._read_spline4_msc_52,
+        }
+        try:
+            n = self._read_double_card(card_name, card_obj, self._add_spline_object,
+                                       methods, data, n)
+        except DoubleCardError:
+            raise
         return n
+        #n = self._read_spline4_nx(data, n)
+        #return n
 
-    def _read_spline4_nx(self, data: bytes, n: int) -> int:
+    def _read_spline4_nx_44(self, spline: SPLINE4, data: bytes, n: int) -> Tuple[int, SPLINE4]:
         """
         MSC 2018.2
 
@@ -1477,12 +1515,13 @@ class EDT(GeomCommon):
         """
         # 792/4 = 198
         # 198 = 2 * 99 = 2 * 11 * 9
-        ntotal = 4 * 11 # 4 * 13
+        ntotal = 44 # 4 * 11
         ndatai = len(data) - n
         ncards = ndatai // ntotal
         assert ndatai % ntotal == 0
         #structi = Struct(self._endian + b'4i f 8s 8s 3i f') # msc
         structi = Struct(self._endian + b'4i f 8s 8s 2i')
+        splines = []
         for unused_i in range(ncards):
             edata = data[n:n + ntotal]
             out = structi.unpack(edata)
@@ -1490,19 +1529,135 @@ class EDT(GeomCommon):
             eid, caero, aelist, setg, dz, method_bytes, usage_bytes, nelements, melements = out
             method = method_bytes.rstrip().decode('ascii')
             usage = usage_bytes.rstrip().decode('ascii')
-            self.add_spline4(eid, caero, aelist, setg,
+            spline = SPLINE4(eid, caero, aelist, setg,
                              dz, method, usage,
                              nelements, melements)
+            str(spline)
+            splines.append(spline)
             n += ntotal
         self.to_nx(' because SPLINE4-NX was found')
-        return n
+        return n, splines
+
+    def _read_spline4_msc_52(self, spline: SPLINE4, data: bytes, n: int) -> Tuple[int, SPLINE4]:
+        """
+        MSC 2018.2
+
+        Word Name Type Description
+        1 EID           I Spline element Identification
+        2 CAERO         I Component Identifification
+        3 AELIST        I AELIST Id for boxes
+        4 SETG          I SETi Id for grids
+        5 DZ           RS Smoothing Parameter
+        6 METHOD(2) CHAR4 Method: IPS|TPS|FPS
+        8 USAGE(2)  CHAR4 Usage flag: FORCE|DISP|BOTH
+        10 NELEM        I Number of elements for FPS on x-axis
+        11 MELEM        I Number of elements for FPS on y-axis
+        12 FTYPE        I Radial interpolation funtion fir METHOD=RIS  (not in NX)
+        13 RCORE       RS Radius of radial interpolation function      (not in NX)
+
+        """
+        # 792/4 = 198
+        # 198 = 2 * 99 = 2 * 11 * 9
+        ntotal = 52 # 4 * 13
+        ndatai = len(data) - n
+        ncards = ndatai // ntotal
+        assert ndatai % ntotal == 0
+        #structi = Struct(self._endian + b'4i f 8s 8s 3i f') # msc
+        structi = Struct(self._endian + b'4i f 8s 8s 2i if')
+        splines = []
+        for unused_i in range(ncards):
+            edata = data[n:n + ntotal]
+            out = structi.unpack(edata)
+            eid, caero, aelist, setg, dz, method_bytes, usage_bytes, nelements, melements, ftype, rcore = out  # msc
+            #print(eid, caero, aelist, setg, dz, method_bytes, usage_bytes, nelements, melements, ftype, rcore)
+            method = method_bytes.rstrip().decode('ascii')
+            usage = usage_bytes.rstrip().decode('ascii')
+            spline = SPLINE4(eid, caero, aelist, setg,
+                             dz, method, usage,
+                             nelements, melements,
+                             ftype=ftype, rcore=rcore)
+            str(spline)
+            splines.append(spline)
+            n += ntotal
+        self.to_msc(' because SPLINE4-MSC was found')
+        return n, splines
 
     def _read_spline5(self, data: bytes, n: int) -> int:
-        """reads the SPLINE6 card"""
-        n = self._read_spline5_nx(data, n)
+        """reads the SPLINE5 card"""
+        card_name = 'SPLINE5'
+        card_obj = SPLINE5
+        methods = {
+            60 : self._read_spline5_nx_60,
+            68 : self._read_spline5_msc_68,
+        }
+        try:
+            n = self._read_double_card(card_name, card_obj, self._add_spline_object,
+                                       methods, data, n)
+        except DoubleCardError:
+            raise
         return n
 
-    def _read_spline5_nx(self, data: bytes, n: int) -> int:
+    def _read_spline5_msc_68(self, spline: SPLINE5, data: bytes, n: int) -> Tuple[int, List[SPLINE5]]:
+        """
+        reads the SPLINE5 card
+
+        Word Name Type Description
+        1 EID            I Spline element Identification
+        2 CAERO          I Component Identifification
+        3 AELIST         I AELIST Id for boxes
+        4 SETG           I SETi Id for grids
+        5 DZ            RS Smoothing Parameter
+        6 DTORXY        RS Flexibility ratio in XY Plane
+        7 CID            I Coordinate Sys. Id. for Beam CS
+        8 DTHX          RS Smoothing/Attachment Flags for X rotations
+        9 DTHY          RS Smoothing/Attachment Flags for Y rotations
+        10 DTHZ         RS Smoothing/Attachment Flags for Z rotations
+        11 USAGE(2)  CHAR4 Usage flag: FORCE|DISP|BOTH
+        13 METHOD(2) CHAR4 Method: IPS|TPS|FPS|RIS
+        15 DTORZY       RS Flexibility ratio in ZY Plane
+        16 FTYPE         I Radial interpolation funtion fir METHOD=RIS (not in NX)
+        17 RCORE        RS Radius of radial interpolation function     (not in NX)
+
+        """
+        ntotal = 68 * self.factor # 4 * 17
+        ndatai = len(data) - n
+        ncards = ndatai // ntotal
+        assert ndatai % ntotal == 0, ndatai % ntotal
+        if self.size == 4:
+            structi = Struct(self._endian + b'4i 2f i 3f 8s8s fif')
+        else:
+            asdf
+            #structi = Struct(self._endian + b'5q 2d q 2d 16s')
+
+        splines = []
+        for unused_i in range(ncards):
+            edata = data[n:n + ntotal]
+            out = structi.unpack(edata)
+            #ftype, rcore
+            eid, caero, aelist, setg, dz, dtorxy, cid, dthx, dthy, dthz, usage_bytes, method_bytes, dtorzy, ftype, rcore = out
+            method = reshape_bytes_block_size(method_bytes, self.size)
+            usage = reshape_bytes_block_size(usage_bytes, self.size)
+            #print(f'eid={eid} caero={caero} aelist={aelist} setg={setg} dz={dz} '
+                  #f'dtorxy={dtorxy} cid={cid} dthx={dthx} dthy={dthy} dthz={dthz} '
+                  #f'usage={usage!r} method={method!r} dtorzy={dtorzy} ftype={ftype} rcore={rcore}')
+            assert method in ['IPS','TPS','FPS','RIS', 'BEAM'], method
+            assert usage in ['FORCE','DISP','BOTH'], usage
+            thx = dthx
+            thy = dthy
+            dtor = dtorzy
+            spline = SPLINE5(
+                eid, caero, aelist, setg, thx, thy,
+                dz=dz, dtor=dtor, cid=cid,
+                usage=usage, method=method,
+                ftype=ftype, rcore=rcore,  # not in NX
+            )
+            str(spline)
+            splines.append(spline)
+            n += ntotal
+        self.to_msc(' because SPLINE5-MSC was found')
+        return n, splines
+
+    def _read_spline5_nx_60(self, spline: SPLINE5, data: bytes, n: int) -> Tuple[int, List[SPLINE5]]:
         """
         reads the SPLINE5 card
 
@@ -1524,7 +1679,6 @@ class EDT(GeomCommon):
         17 RCORE        RS Radius of radial interpolation function     (not in NX?)
 
         """
-
         ntotal = 60 * self.factor # 4 * 12
         ndatai = len(data) - n
         ncards = ndatai // ntotal
@@ -1535,6 +1689,7 @@ class EDT(GeomCommon):
             asdf
             #structi = Struct(self._endian + b'5q 2d q 2d 16s')
 
+        splines = []
         for unused_i in range(ncards):
             edata = data[n:n + ntotal]
             out = structi.unpack(edata)
@@ -1548,16 +1703,17 @@ class EDT(GeomCommon):
             thx = dthx
             thy = dthy
             dtor = dtorzy
-            spline5 = self.add_spline5(
+            spline = SPLINE5(
                 eid, caero, aelist, setg, thx, thy,
                 dz=dz, dtor=dtor, cid=cid,
                 usage=usage, method=method,
                 #ftype=ftype, rcore=rcore,  # not in NX
             )
-            str(spline5)
+            str(spline)
+            splines.append(spline)
             n += ntotal
         self.to_nx(' because SPLINE5-NX was found')
-        return n
+        return n, splines
 
     def _read_monpnt1(self, data: bytes, n: int) -> int:
         """Reads the MONPNT1 card"""
@@ -1572,9 +1728,6 @@ class EDT(GeomCommon):
                                        methods, data, n)
         except DoubleCardError:
             raise
-        return n
-
-        #n = self._read_monpnt1_nx(data, n)
         return n
 
     def _read_monpnt1_nx_92(self, monpnt1: MONPNT1, data: bytes, n: int) -> Tuple[int, List[MONPNT1]]:

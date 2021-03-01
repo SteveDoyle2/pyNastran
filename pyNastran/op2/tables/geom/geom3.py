@@ -794,7 +794,7 @@ class GEOM3(GeomCommon):
                 load = TEMP.add_op2_data(out)
                 self._add_thermal_load_object(load)
             else:
-                self.log.debug('TEMP = %s' % (out))
+                self.log.debug('TEMP = %s' % str(out))
             n += ntotal
         self.card_count['TEMP'] = nentries
         return n

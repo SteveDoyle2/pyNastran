@@ -5782,7 +5782,9 @@ class SPLINE4(Spline):
 
     def __init__(self, eid: int, caero: int, aelist: int, setg: int,
                  dz: float, method: str, usage: str,
-                 nelements: int, melements: int, comment: str=''):
+                 nelements: int, melements: int,
+                 ftype: Optional[int]=None, rcore: Optional[float]=None,
+                 comment: str=''):
         """
         Creates a SPLINE4 card, which defines a curved Infinite Plate,
         Thin Plate, or Finite Plate Spline.
@@ -5815,6 +5817,10 @@ class SPLINE4(Spline):
         nelements / melements : int; default=10
             The number of FE elements along the local spline x/y-axis if
             using the FPS option
+        ftype: int; default=None
+            MSC only
+        rcore : float; default=None
+            MSC only
         comment : str; default=''
             a comment for the card
 
@@ -5831,6 +5837,8 @@ class SPLINE4(Spline):
         self.usage = usage
         self.nelements = nelements
         self.melements = melements
+        self.ftype = ftype
+        self.rcore = rcore
         self.caero_ref = None
         self.setg_ref = None
         self.aelist_ref = None
@@ -5864,7 +5872,8 @@ class SPLINE4(Spline):
         melements = integer_or_blank(card, 10, 'melements', 10)
         assert len(card) <= 11, f'len(SPLINE4 card = {len(card):d}\ncard={card}'
         return SPLINE4(eid, caero, aelist, setg, dz, method, usage,
-                       nelements, melements, comment=comment)
+                       nelements, melements, ftype=ftype, rcore=rcore,
+                       comment=comment)
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
@@ -5975,7 +5984,7 @@ class SPLINE4(Spline):
         """
         list_fields = ['SPLINE4', self.eid, self.CAero(), self.AEList(), None,
                        self.Set(), self.dz, self.method, self.usage, self.nelements,
-                       self.melements]
+                       self.melements, self.ftype, self.rcore]
         return list_fields
 
     def repr_fields(self):
@@ -5986,7 +5995,8 @@ class SPLINE4(Spline):
         melements = set_blank_if_default(self.melements, 10)
 
         list_fields = ['SPLINE4', self.eid, self.CAero(), self.AEList(), None,
-                       self.Set(), dz, method, usage, nelements, melements]
+                       self.Set(), dz, method, usage, nelements, melements,
+                       self.ftype, self.rcore]
         list_fields = wipe_empty_fields(list_fields)
         return list_fields
 

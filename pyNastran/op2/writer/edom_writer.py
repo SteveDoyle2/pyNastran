@@ -406,6 +406,63 @@ def _write_dvmrel2(model: Union[BDF, OP2Geom], name: str,
     assert len(data_all) == ndata, f'ndata={len(data_all)} nvalues={ndata}'
     return nbytes
 
+def _write_dvcrel2(model: Union[BDF, OP2Geom], name: str,
+                   dvcrel_ids: List[int], ncards: int,
+                   op2_file, op2_ascii, endian: bytes):
+    key = (6200, 62, 430)
+    structi = Struct(endian + b'ii 4f ii')
+
+    ndata = 9 * ncards
+    nvalues = 11 * ncards
+    for dvcrel_id in dvcrel_ids:
+        dvcrel = model.dvcrels[dvmrel_id]
+        if len(dvcrel.dvids):
+            nvalues += len(dvcrel.dvids) + 2
+            ndata += len(dvcrel.dvids) + 2
+        if len(dvcrel.labels):
+            nvalues += 2 * len(dvcrel.labels) + 2
+            ndata += len(dvcrel.labels) + 2
+
+    nbytes = write_header_nvalues(name, nvalues, key, op2_file, op2_ascii)
+
+    data_all = []
+    for dvcrel_id in dvcrel_ids:
+        dvcrel = model.dvcrels[dvcrel_id]
+        print(dvcrel.get_stats())
+        # TODO: doesn't handle fid = float
+        #fid = 0
+        #if isinstance(dvprel.pname_fid, str):
+        fmt = b'i 8s 2i 2fi 8s'
+        fid = 0
+        #else:
+            #fmt = 'i 8s 2i 2fi ii'
+            #fid = dvcrel.pname_fid
+            #pname = ''
+
+        cp_min = dvcrel.cp_min
+        if cp_min is None:
+            # TODO: not supported
+            #
+            # Minimum value allowed for this property. If MPNAME references a
+            # material property that can only be positive, then the default value for
+            # MPMIN is 1.0E-15. Otherwise, it is -1.0E35. (Real)
+            cp_min = 1e-20
+
+        mat_type_bytes = ('%-8s' % dvcrel.mat_type).encode('ascii')
+        cp_name_bytes = ('%-8s' % dvcrel.mp_name).encode('ascii')
+        data = [dvcrel_id, mat_type_bytes, dvcrel.eid, fid,
+                cp_min, dvccel.cp_max, dvcrel.dequation, cp_name_bytes]
+        fmt += _write_dvxrel2_flag(dvcrel, data)
+
+        assert None not in data, data
+        structi = Struct(endian + fmt)
+        op2_ascii.write(f'  DVCREL2 data={data}\n')
+        op2_file.write(structi.pack(*data))
+        data_all += data
+    #assert len(data_all) == nvalues, f'ndata={len(data_all)} nvalues={nvalues}'
+    assert len(data_all) == ndata, f'ndata={len(data_all)} nvalues={ndata}'
+    return nbytes
+
 def _write_dvxrel2_flag(dvxrel2: Union[DVPREL2, DVMREL2], data: List[Any]) -> bytes:
     """writes the DVxREL2 flag table"""
     fmt = b''
@@ -465,7 +522,7 @@ def _write_dtable(model: Union[BDF, OP2Geom], name: str,
 
 EDOM_MAP = {
     #'DVPREL1': _write_dvprel1, 'DVMREL1': _write_dvmrel1, 'DVCREL1': _write_dvcrel1,
-    'DVPREL2': _write_dvprel2, 'DVMREL2': _write_dvmrel2, # 'DVCREL2': _write_dvcrel2,
+    'DVPREL2': _write_dvprel2, 'DVMREL2': _write_dvmrel2, '#DVCREL2': _write_dvcrel2,
 
     'DESVAR': _write_desvar,
     #'DOPTPRM': _write_doptprm,
@@ -474,7 +531,7 @@ EDOM_MAP = {
     #'DCONADD': _write_dconadd,
 
     #'DLINK': _write_dlink,
-    #'DESVAR': _write_desvar,
+    'DESVAR': _write_desvar,
     #'DVGRID': _write_dvgrid,
     'DSCREEN': _write_dscreen,
 

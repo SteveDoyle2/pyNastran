@@ -64,7 +64,13 @@ def validate_dvcrel(validate, element_type, cp_name):
     if not validate:
         return
     msg = 'DVCRELx: element_type=%r cp_name=%r is invalid' % (element_type, cp_name)
-    if element_type in ['CQUAD4']:
+    if element_type == 'CMASS4':
+        options = ['M']
+        _check_dvcrel_options(cp_name, element_type, options)
+    elif element_type == 'CELAS4':
+        options = ['K']
+        _check_dvcrel_options(cp_name, element_type, options)
+    elif element_type in ['CQUAD4']:
         options = ['T1', 'T2', 'T3', 'T4'] # 'ZOFFS',
         _check_dvcrel_options(cp_name, element_type, options)
     elif element_type == 'CTRIA3':

@@ -23,3 +23,9 @@ class SixtyFourBitError(NotImplementedError):
 
 class OverwriteTableError(RuntimeError):
     pass
+
+class DoubleCardError(RuntimeError):
+    pass
+
+class EmptyCardError(RuntimeError):
+    pass

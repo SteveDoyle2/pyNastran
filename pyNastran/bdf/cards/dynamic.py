@@ -2258,7 +2258,7 @@ class TSTEPNL(BaseCard):
         assert self.kstep is None or self.kstep >= 2, self.get_stats()
 
         assert self.min_iter is None or self.min_iter >= 0, self.get_stats()
-        assert self.max_iter > 0, self.get_stats()
+        assert self.max_iter != 0, self.get_stats()
         assert self.max_div != 0, self.get_stats()
         assert self.max_qn > 0, self.get_stats()
         assert self.max_ls >= 0, self.get_stats()

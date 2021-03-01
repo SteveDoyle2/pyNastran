@@ -35,10 +35,7 @@ from pyNastran.op2.errors import MixedVersionCard
 from pyNastran.op2.tables.geom.geom_common import GeomCommon
 from pyNastran.op2.op2_interface.op2_reader import mapfmt # , reshape_bytes_block
 
-class DoubleCardError(RuntimeError):
-    pass
-class EmptyCardError(RuntimeError):
-    pass
+from pyNastran.op2.errors import DoubleCardError, EmptyCardError
 
 
 class GEOM2(GeomCommon):
@@ -3958,7 +3955,7 @@ class GEOM2(GeomCommon):
             s1 = s0 + 8
             entity = data[s0:s1].decode('latin1').rstrip()
             eids = ints[i0+5:ispliti]
-            assert entity in ['FEEDGE', 'GRID', 'GMCURV'], f'entity={entity!r}'
+            assert entity in ['FEEDGE', 'GRID', 'GMCURV', 'GMCURVE'], f'entity={entity!r}'
             #print(eids)
             i0 = ispliti + 1
         self.card_count['GMBNDC'] = nelements

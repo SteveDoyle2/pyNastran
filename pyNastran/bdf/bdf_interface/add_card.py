@@ -7552,7 +7552,7 @@ class AddCards(AddMethods):
         assert isinstance(sym_xy, str), sym_xy
         assert isinstance(dmik, str), dmik
         assert isinstance(perq, str), perq
-        fields = ['AEPRESS', mach, sym_xz, sym_xy, ux_id, mesh, force, dmik, perq]
+        fields = ['AEFORCE', mach, sym_xz, sym_xy, ux_id, mesh, force, dmik, perq]
         self.reject_card_lines('AEPRESS', print_card_(fields).split('\n'), show_log=False)
 
     def add_dvset(self, vid: int, dv_type: str, field: int, pref: float, pids: List[float],

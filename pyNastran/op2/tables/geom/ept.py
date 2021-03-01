@@ -94,8 +94,6 @@ class EPT(GeomCommon):
             (3002, 30, 415): ['VIEW3D', self._read_fake],  # record 63
 
             (13501, 135, 510) : ['PFAST', self._read_pfast_msc],  # MSC-specific
-
-            # NX-specific
             (3601, 36, 55) : ['PFAST', self._read_pfast_nx],  # NX-specific
             (3801, 38, 979) : ['PPLANE', self._read_pplane],
             (11801, 118, 560) : ['PWELD', self._read_fake],
@@ -2285,7 +2283,7 @@ class EPT(GeomCommon):
                        kr1, kr2, kr3, mass, ge)
             prop = PFAST.add_op2_data(data_in)
             str(prop)
-            print(prop)
+            #print(prop)
             self._add_op2_property(prop)
             n += ntotal
         self.card_count['PFAST'] = nproperties

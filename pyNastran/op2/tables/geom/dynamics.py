@@ -1886,7 +1886,7 @@ class DYNAMICS(GeomCommon):
         6 DELAYR RS If DELAYI = 0, constant value for delay
         6 U0     RS Initial displacement factor for enforced motion (MSC; NX undocumented)
         7 V0     RS Initial velocity factor for enforced motion (MSC; NX undocumented)
-        8 T      RS Time delay (MSC; undocumented)
+        8 F      RS Value of F(t) for all times
 
         # C:\MSC.Software\msc_nastran_runs\pbxsfsd.op2
         # why are there 9 fields?
@@ -1895,26 +1895,36 @@ class DYNAMICS(GeomCommon):
                    sid excite ?    ?    tid ?    ?    ?    ?
         ints    = (5,  2,     0,   0,   2,  0,   0,   0,   0)
         floats  = (5,  2,     0.0, 0.0, 2,  0.0, 0.0, 0.0, 0.0)
+
+        C:\MSC.Software\msc_nastran_runs\mmc_112_rbe2.op2
+        $	sid	excite	delay	type	tid/f	us0	vs0
+        TLOAD1         2       2             45.       2
+        data = (2, 2, 0, 0, 0, 2.0, 0.0, 0.0, f=45.0)
         """
         ntotal = 36 * self.factor # 8*4
-        nentries = (len(data) - n) // ntotal
-        assert (len(data) - n) % ntotal == 0
+        ndatai = len(data) - n
+        nentries = ndatai // ntotal
+        assert ndatai % ntotal == 0
         assert nentries > 0, nentries
 
         dloads = []
-        struc = Struct(mapfmt(self._endian + b'5i 3fi', self.size))
+        struc = Struct(mapfmt(self._endian + b'5i 3ff', self.size))
         for unused_i in range(nentries):
             edata = data[n:n+ntotal]
             out = struc.unpack(edata)
-            sid, darea, delayi, load_type, tid, delayr, us0, vs0, last_zero = out
-            assert last_zero == 0, out
+            sid, darea, delayi, load_type, tid, delayr, us0, vs0, value = out
+            #print(f'sid={sid} darea={darea} delayi={delayi} load_type={load_type} tid={tid} delayr={delayr} us0={us0} vs0={vs0} value={value}')
             if self.is_debug_file:
                 self.binary_debug.write('TLOAD1=%s\n' % str(out))
             delay = delayi
             if delayi == 0:
                 delay = delayr
-            dload = TLOAD1(sid, darea, tid, delay=delay, Type=load_type,
+            tid_f = tid
+            if tid == 0:
+                tid_f = value
+            dload = TLOAD1(sid, darea, tid_f, delay=delay, Type=load_type,
                            us0=us0, vs0=vs0)
+            #str(dload)
             dloads.append(dload)
             n += ntotal
         return n, dloads

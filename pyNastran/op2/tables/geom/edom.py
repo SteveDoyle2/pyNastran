@@ -82,8 +82,8 @@ class EDOM(GeomCommon):
             #DVGEOM(5906,59,356)
             (6006, 60, 477) : ['MODTRAK', self._read_fake],
             #DRESP3(6700,67,433)
-            (6100, 61, 429) : ['DVCREL1', self._read_fake],
-            (6200, 62, 430) : ['DVCREL2', self._read_fake],
+            (6100, 61, 429) : ['DVCREL1', self._read_dvcrel1],
+            (6200, 62, 430) : ['DVCREL2', self._read_dvcrel2],
             (6300, 63, 431) : ['DVMREL1', self._read_dvmrel1],
             (6400, 64, 432) : ['DVMREL2', self._read_dvmrel2],
             (6006, 60, 477) : ['???', self._read_fake],
@@ -521,6 +521,53 @@ class EDOM(GeomCommon):
             n += (i1 - i0 + 1) * size
         self.card_count['DVPREL1'] = ncards
         return n
+
+    def _read_dvcrel1(self, data: bytes, n: int) -> int:
+        """
+        Record – DVCREL1(6100,61,429)
+        Design variable to connectivity property relation.
+        Word Name   Type Description
+        1 ID        I     Unique identification number
+        2 TYPE(2)   CHAR4 Name of an element connectivity entry
+        4 EID       I     Element identification number
+        5 FID       I     Entry is 0
+        6 CPMIN     RS    Minimum value allowed for this property
+        7 CPMAX     RS    Maximum value allowed for this property
+        8 C0        RS    Constant term of relation
+        9 CPNAME(2) CHAR4 Name of connectivity property
+        11 DVIDi    I     DESVAR entry identification number
+        12 COEFi    RS    Coefficient of linear relation
+        Words 11 and 12 repeat until -1 occurs
+        """
+        ints = np.frombuffer(data[n:], self.idtype8).copy()
+        floats = np.frombuffer(data[n:], self.fdtype8).copy()
+        istart, iend = get_minus1_start_end(ints)
+        size = self.size
+        for (i0, i1) in zip(istart, iend):
+            #self.show_data(data[n+i0*size:n+i1*size], types='ifs')
+            assert ints[i1] == -1, ints[i1]
+            dvcrel_id = ints[i0]
+            elem_type_bytes = data[n+size:n+3*size]
+            eid, fid = ints[i0+3:i0+5]
+            cp_min, cp_max, c0 = floats[i0+5:i0+8]
+
+            cp_name_bytes = data[n+8*size:n+10*size]
+            elem_type = reshape_bytes_block_size(elem_type_bytes, size=size)
+            cp_name = reshape_bytes_block_size(cp_name_bytes, size=size)
+            assert fid == 0, (dvcrel_id, mid, mat_type_bytes, mp_name, pid, fid)
+            #print(dvmrel_id, mid, mat_type_bytes, mp_name, pid, fid)
+
+            desvar_ids = ints[i0+10:i1:2]
+            coeffs = floats[i0+11:i1:2]
+            dvcrel = self.add_dvcrel1(
+                dvcrel_id, elem_type, dvcrel_id, cp_name, desvar_ids, coeffs,
+                cp_min=cp_min, cp_max=cp_max, c0=c0, validate=True)
+            dvcrel.write_card_16()
+            n += (i1 - i0 + 1) * size
+        return n
+
+    def _read_dvcrel2(self, data: bytes, n: int) -> int:
+        read_dvcrel2
 
     def _read_dvmrel1(self, data: bytes, n: int) -> int:
         """
