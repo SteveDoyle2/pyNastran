@@ -260,7 +260,8 @@ class Tecplot(Base):
                 self.log.debug(f'read_table; A.shape={A.shape}...')
                 return
             else:
-                msg = 'headers=%s\n' % str(headers_dict)
+                msg = 'Expected ZONETYPE, F, or "ZONE T"\n'
+                msg += 'headers=%s\n' % str(headers_dict)
                 msg += 'line = %r' % line.strip()
                 raise NotImplementedError(msg)
 
@@ -1058,6 +1059,7 @@ class Tecplot(Base):
 
 
 def split_headers(header_in):
+    print('headers_in ', header_in)
     #allowed_keys = ['TITLE', 'VARIABLES', 'T', 'ZONETYPE', 'DATAPACKING',
                     #'N', 'E', 'F', 'DT', 'SOLUTIONTIME', 'STRANDID',
                     #'I', 'J', 'K'
@@ -1159,8 +1161,9 @@ def _header_lines_to_header_dict(title_line: str, header_lines: List[str], varia
             raise NotImplementedError('header=%r headers=%r' % (header, headers))
 
         if parse:
+            # ZONE T="FUSELAGE" I=21 J=49 K=1 F=BLOCK
             #print('  parsing')
-            #print('sline =', sline)
+            print('sline =', sline)
             key = sline[0].strip().upper()
             if key.startswith('ZONE '):
                 # the key is not "ZONE T" or "ZONE E"

@@ -1763,7 +1763,39 @@ class OES(OP2Common):
                                    191]: # VUBEAM
             msg = f'{self.element_name}-{self.element_type} has been removed'
             return self._not_implemented_or_skip(data, ndata, msg)
+        elif self.element_type == 118:  # WELDP
+            # ELEMENT-ID =     100
+            #     S T R A I N S   I N   W E L D   E L E M E N T S   ( C W E L D P )
+            #
+            #     AXIAL         MAX  STRAIN      MIN  STRAIN      MAX  STRAIN      MIN  STRAIN        MAXIMUM
+            #     TIME          STRAIN           END-A            END-A            END-B            END-B        SHEAR  STRAIN
+            # 0.0           0.0              0.0              0.0              0.0              0.0              0.0              0.0
+            # 1.000000E-01  0.0              0.0              0.0              0.0              0.0              0.0              0.0
+            # 2.000000E-01  1.652614E-02     2.381662E+02    -2.381332E+02     2.381623E+02    -2.381293E+02     5.678050E+01     0.0
+            # 3.000000E-01  6.468190E-03     4.706443E+01    -4.705150E+01     4.703462E+01    -4.702168E+01     1.121626E+01     0.0
 
+            #ints    = (1001, -0.0007072892040014267, 0.6948937773704529, -0.6963083744049072, 0.6948915123939514, -0.6963061094284058, 6.161498617984762e-07, 0)
+            #floats  = (1001, -0.0007072892040014267, 0.6948937773704529, -0.6963083744049072, 0.6948915123939514, -0.6963061094284058, 6.161498617984762e-07, 0.0)
+            #if data:
+                #self.show_data(data)
+            self.log.warning('skipping WELDP')
+            return ndata
+        elif self.element_type == 126:  # FASTP
+            #C:\MSC.Software\msc_nastran_runs\cf103e.op2
+            # S T R E S S E S   I N   F A S T E N E R   E L E M E N T S   ( C F A S T )
+            #
+            # ELEMENT-ID         FORCE-X          FORCE-Y          FORCE-Z         MOMENT-X         MOMENT-Y         MOMENT-Z
+            # data  = (301, -4.547473508864641e-09, 1.8571810755929619e-09, -7.94031507211912e-10, -0.0, -0.0, 0.0,
+            #         401, -4.547473508864641e-09, -2.0263790645458357e-09, 1.1617373729677638e-09, -0.0, 0.0, 0.0)
+            ntotal = self.num_wide * 4 * self.factor
+            nelements = ndata // ntotal
+            assert ndata % ntotal == 0, 'is this a FASTP result?'
+            #self.log.warning('skipping FASTP')
+            #else:
+            #msg = self.code_information()
+            self.log.warning('skipping FASTP')
+            return ndata
+            #return self._not_implemented_or_skip(data, ndata, msg)
         else:
             #msg = 'sort1 Type=%s num=%s' % (self.element_name, self.element_type)
             msg = self.code_information()
