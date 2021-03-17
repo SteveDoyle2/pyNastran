@@ -12,7 +12,7 @@ class RealAccelerationArray(RealTableArray):
         words = ['                                             A C C E L E R A T I O N   V E C T O R\n', ]
         #' \n',
         #'      POINT ID.   TYPE          T1             T2             T3             R1             R2             R3\n']
-        if self.table_name in ['OUGV1', 'OUGV2', 'OUPV1', 'BOUGV1']:
+        if self.table_name in ['OUGV1', 'OUGV2', 'OUPV1', 'BOUGV1', 'OAG1']:
             pass
         elif self.table_name in ['OUXY1', 'OUXY2']:
             words = ['                                       A C C E L E R A T I O N   V E C T O R   (SOLUTION SET)']

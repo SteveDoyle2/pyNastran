@@ -39,6 +39,9 @@ from pyNastran.op2.tables.oes_stressStrain.real.oes_beams import (RealBeamStress
 from pyNastran.op2.tables.oes_stressStrain.real.oes_bush import RealBushStressArray, RealBushStrainArray
 from pyNastran.op2.tables.oes_stressStrain.real.oes_bush1d import RealBush1DStressArray
 from pyNastran.op2.tables.oes_stressStrain.real.oes_composite_plates import RealCompositePlateStressArray, RealCompositePlateStrainArray
+#RealCompositePlateStressStrengthRatioArray, RealCompositePlateStrainStrengthRatioArray = None, None
+#RealCompositePlateStrainStrengthRatioArray = None
+from pyNastran.op2.tables.oes_stressStrain.real.oes_composite_plates_strength_ratio import RealCompositePlateStressStrengthRatioArray # , RealCompositePlateStrainStrengthRatioArray
 from pyNastran.op2.tables.oes_stressStrain.real.oes_gap import NonlinearGapStressArray
 from pyNastran.op2.tables.oes_stressStrain.real.oes_plates import RealPlateStressArray, RealPlateStrainArray
 from pyNastran.op2.tables.oes_stressStrain.real.oes_plate_strain import RealCPLSTRNPlateStressArray, RealCPLSTRNPlateStrainArray
@@ -1168,6 +1171,7 @@ class OES(OP2Common):
         elif table_name_bytes == b'OESNLBR':
             prefix = 'sideline_'
         elif table_name_bytes == b'OESRT':
+            #OESRT: Table of composite element strength ratios
             prefix = 'strength_ratio.'
         elif table_name_bytes in [b'OESCP', b'OESTRCP']:
             # guessing
@@ -5558,11 +5562,13 @@ class OES(OP2Common):
         if self.is_stress:
             stress_strain = 'stress'
             obj_vector_real = RealCompositePlateStressArray
+            obj_vector_strength = RealCompositePlateStressStrengthRatioArray
             #obj_vector_complex = ComplexCompositePlateStressArray
             obj_vector_random = RandomCompositePlateStressArray
         else:
             stress_strain = 'strain'
             obj_vector_real = RealCompositePlateStrainArray
+            obj_vector_strength = None # RealCompositePlateStrainStrengthRatioArray
             #obj_vector_complex = ComplexCompositePlateStrainArray
             obj_vector_random = RandomCompositePlateStrainArray
 
@@ -5677,30 +5683,28 @@ class OES(OP2Common):
             # strength_ratio.cquad4_composite_stress
             ntotal = 36 * self.factor
             nelements = ndata // ntotal
-            if self.read_mode == 1:
+
+            auto_return, is_vectorized = self._create_oes_object4(
+                nelements, result_name, slot, obj_vector_strength)
+            if auto_return:
                 return nelements * ntotal, None, None
 
-            # not 100%
-            self.log.warning(f'skipping oes_shell_composite; {self.element_name}-{self.element_type} '
-                             f'(numwide={self.num_wide}) {self.table_name_str}')
-            struct1 = Struct(self._endian + self._analysis_code_fmt + b' 8s i 3f if')
-            for unused_i in range(nelements):
-                edata = data[n:n+ntotal]
-                #self.show_data(edata)
-                out = struct1.unpack(edata)
-                #print(out)
+            obj = self.obj
+            if self.is_debug_file:
+                self.binary_debug.write('  [cap, element1, element2, ..., cap]\n')
+                self.binary_debug.write('  cap = %i  # assume 1 cap when there could have been multiple\n' % ndata)
+                self.binary_debug.write('  element1 = [eid_device, failure_theory, ply_id, strength_ratio_ply, failure_index_bonding, strength_ratio_bonding, flag, flag2)]\n')
+                self.binary_debug.write('  nelements=%i; nnodes=1 # centroid\n' % nelements)
 
-                #(eid_device, failure_theory, ply_id, strength_ratio_ply, failure_index_bonding, strength_ratio_bonding, flag, flag2) = out
-                #(eid_device, failure_theory, ply_id, ratio_ply,          ratio_bonding,         ratio_element,          seven, eight, nine) = out
-                #eid, dt = get_eid_dt_from_eid_device(
-                    #eid_device, self.nonlinear_factor, sort_method)
-                #print(eid, out)
+            if self.use_vector and is_vectorized and sort_method == 1 and 0:
+                n = nelements * self.num_wide * 4
+                asdf
+            else:
+                self.log.warning(f'need to vectorize oes_shell_composite; {self.element_name}-{self.element_type} '
+                                 f'(numwide={self.num_wide}) {self.table_name_str}')
+                n = oesrt_comp_shell_real_9(self, data, ndata, obj,
+                                            ntotal, nelements, etype, dt)
 
-                #if self.is_debug_file:
-                    #self.binary_debug.write('%s-%s - (%s) + %s\n' % (self.element_name, self.element_type, eid_device, str(out)))
-                #obj.add_new_eid_sort1(dt, eid, theory, lamid, fp, fm, fb, fmax, fflag)
-                n += ntotal
-            return nelements * ntotal, None, None
         elif result_type == 1 and self.num_wide == 13 and table_name in [b'OESVM1C', b'OSTRVM1C']: # complex
             self.log.warning(f'skipping complex {self.table_name_str}-PCOMP (numwide=13)')
             ntotal = 52 * self.factor
@@ -8720,6 +8724,82 @@ def oes_comp_shell_real_11(self, data: bytes, ndata: int,
         eid_old = eid
         n += ntotal
     return n
+
+def oesrt_comp_shell_real_9(self, data: bytes, ndata: int,
+                           obj: Union[RealCompositePlateStrainStrengthRatioArray, RealCompositePlateStressStrengthRatioArray],
+                           ntotal: int, nelements: int, etype: str, dt: Any) -> int:
+    """
+    # (1, b'TSAI-WU ', 1, 9.118781089782715, 1.3563156426940112e-19, 310.244140625, nan, 1.3563156426940112e-19)
+    # (-1, b'        ', 2, 11.119629859924316, 1.3563156426940112e-19, 202.90777587890625, nan, 1.3563156426940112e-19)
+    # (-1, b'        ', 3, 9.412755012512207, 1.3563156426940112e-19, 124.20950317382812, nan, 1.3563156426940112e-19)
+    # (-1, b'        ', 4, 9.56696605682373, 1.3563156426940112e-19, 89.90276336669922, nan, 1.3563156426940112e-19)
+    # (-1, b'        ', 5, 11.674513816833496, 1.3563156426940112e-19, 78.44961547851562, nan, 1.3563156426940112e-19)
+    # (-1, b'        ', 6, 9.891059875488281, 1.3563156426940112e-19, 63.61910629272461, nan, 1.3563156426940112e-19)
+    # (-1, b'        ', 7, 8.669649959069946e+22, 1.3563156426940112e-19, 63.619102478027344, nan, 1.3563156426940112e-19)
+    # (-1, b'        ', 8, 1.0372562759530309e+23, 1.3563156426940112e-19, 63.61910629272461, nan, 1.3563156426940112e-19)
+    # (-1, b'        ', 9, 26.741111755371094, 1.3563156426940112e-19, 78.44961547851562, nan, 1.3563156426940112e-19)
+    # (-1, b'        ', 10, 48.35708236694336, 1.3563156426940112e-19, 89.90276336669922, nan, 1.3563156426940112e-19)
+    # (-1, b'        ', 11, 25.865455627441406, 1.3563156426940112e-19, 124.20950317382812, nan, 1.3563156426940112e-19)
+    # (-1, b'        ', 12, 25.44878578186035, 1.3563156426940112e-19, 202.90777587890625, nan, 1.3563156426940112e-19)
+    # (-1, b'        ', 13, 46.05017852783203, 1.3563156426940112e-19, 310.244140625, nan, 1.3563156426940112e-19)
+    # (-1, b'        ', 14, 24.654462814331055, 1.3563156426940112e-19, nan, 9.118781089782715, 1.3563156426940112e-19)
+    # (2, b'TSAI-WU ', 1, 12.055706024169922, 1.3563156426940112e-19, 310.244140625, nan, 1.3563156426940112e-19)
+    """
+    n = 0
+    eid_old = 0
+                                                                # ft ply  sr,fi,sr
+    structs = Struct(self._endian + self._analysis_code_fmt + b' 8s  i    f  4s  f  f 4s')
+    structf = Struct(self._endian + self._analysis_code_fmt + b' 8s  i    f  f   f  f 4s')
+    sort_method = self.sort_method
+    assert sort_method == 1, 'oesrt_comp_shell_real_9'
+    add_eid_sort_x = getattr(obj, 'add_eid_sort' + str(self.sort_method))
+    add_sort_x = getattr(obj, 'add_sort' + str(self.sort_method))
+
+    for unused_i in range(nelements):
+        edata = data[n:n+ntotal]  # 4*9
+        outs = structs.unpack(edata)
+
+        # strings = (b'\x01\x00\x00\x00HFAIL   \x01\x00\x00\x00\x00\x00\xc8B\x00\x00\x00\x00\xff\xff\xff\xff\xff\xff\xff\xff    ',)
+        #sr = 100.0; fi = 0.; sr = nan;
+        #           eid ft         ply sr    fi     sr min  flag
+        #ints    = (1, 'HFAIL   ', 1, 100.0, 0.0,   -1, -1, '    ')
+        #floats  = (1, 'HFAIL   ', 1, 100.0, 0.0, nan, nan, '    ')
+        (eid, failure_theory_bytes, ply_id, strength_ratio_ply, failure_index_bonding_bytes, strength_ratio_bonding,
+         min_sr_bonding_fi_bonding, flag_bytes) = outs
+        out = outs
+        if failure_index_bonding_bytes != b'    ':
+            outf = structf.unpack(edata)
+            (eid, failure_theory_bytes, ply_id, strength_ratio_ply, failure_index_bonding, strength_ratio_bonding,
+             min_sr_bonding_fi_bonding, flag_bytes) = outf
+            out = outf
+
+        failure_theory = failure_theory_bytes.rstrip().decode('latin1')
+        flag = flag_bytes.rstrip().decode('latin1')
+        assert len(flag) <= 3, 'flag=%r' % flag
+
+        #print(f'eid={eid}; ft={failure_theory!r}; sr_ply={strength_ratio_ply:g}; fi_bonding={failure_index_bonding!r} '
+              #f'sr_bonding={strength_ratio_bonding}; min(sr_bonding, fi_bonding)={min_sr_bonding_fi_bonding:g} flag={flag!r}')
+        #self.show_data(edata, types='ifs')
+
+        #if self.is_debug_file:
+            #self.binary_debug.write('  eid=%i; layer=%i; C=[%s]\n' % (eid, layer, ', '.join(['%r' % di for di in out])))
+        if self.is_debug_file:
+            self.binary_debug.write('%s-%s - (%s) + %s\n' % (self.element_name, self.element_type, eid, str(out)))
+
+        if ply_id == 1:
+        #if eid != -1:
+            # originally initialized to None, the buffer doesnt reset it, so it is the old value
+            #add_eid_sort_x(etype, dt, eid, layer, o1, o2,
+                           #t12, t1z, t2z, angle, major, minor, ovm)
+            add_eid_sort_x(etype, dt, eid, failure_theory, ply_id, strength_ratio_ply,
+                           failure_index_bonding, strength_ratio_bonding, min_sr_bonding_fi_bonding, flag)
+            eid_old = eid
+        else:
+            add_sort_x(dt, eid_old, failure_theory, ply_id, strength_ratio_ply,
+                       failure_index_bonding, strength_ratio_bonding, min_sr_bonding_fi_bonding, flag)
+        n += ntotal
+    return n
+
 
 def oes_cshear_random_3(self, data: bytes,
                         obj: Union[RandomShearStressArray, RandomShearStrainArray],

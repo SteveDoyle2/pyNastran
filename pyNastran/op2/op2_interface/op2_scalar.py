@@ -1038,10 +1038,10 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             b'OQGCF1' : [self._read_oqg1_3, self._read_oqg_4], # Contact force at grid point.
             b'OQGCF2' : [self._read_oqg2_3, self._read_oqg_4], # Contact force at grid point.
 
-            b'OSPDS1' : [self._nx_table_passer, self._table_passer],  # Final separation distance.
+            b'OSPDS1' : [self._read_opsds1_3, self._read_opsds1_4],  # Final separation distance.
             b'OSPDS2' : [self._nx_table_passer, self._table_passer],
 
-            b'OSPDSI1' : [self._nx_table_passer, self._table_passer], # Initial separation distance.
+            b'OSPDSI1' : [self._read_opsdi1_3, self._read_opsdi1_4], # Initial separation distance.
             b'OSPDSI2' : [self._nx_table_passer, self._table_passer], # Output contact separation distance results.
 
             #b'OBC1' : [self._read_obc1_3, self._read_obc1_4],

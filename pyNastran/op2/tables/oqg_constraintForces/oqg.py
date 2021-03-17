@@ -25,6 +25,39 @@ class OQG(OP2Common):
     def __init__(self):
         OP2Common.__init__(self)
 
+    def _read_opsdi1_3(self, data: bytes, ndata: int):
+        """Initial separation distance"""
+        self._read_oqg1_3(data, ndata)
+
+    def _read_opsdi1_4(self, data: bytes, ndata: int):
+        """Initial separation distance"""
+        return self._read_opsds1_intial_final_4(data, ndata, self.op2_results.separation_initial)
+
+    def _read_opsds1_3(self, data: bytes, ndata: int):
+        """Final separation distance"""
+        self._read_oqg1_3(data, ndata)
+
+    def _read_opsds1_4(self, data: bytes, ndata: int):
+        """Final separation distance"""
+        return self._read_opsds1_intial_final_4(data, ndata, self.op2_results.separation_final)
+
+    def _read_opsds1_intial_final_4(self, data: bytes, ndata: int, out_dict):
+        """
+        $                    D E F O R M E D  C O N T A C T  S E P A R A T I O N  D I S T A N C E
+        $
+        $      POINT ID.   TYPE       DISTANCE
+        $             1      G      1.010815E-01
+        $             6      G      9.858034E-02
+        """
+        if data:
+            ints = np.frombuffer(data, self.idtype8)[::2]
+            floats = np.frombuffer(data, self.fdtype8)[1::2]
+            out_dict[self.isubcase] = {
+                'node_ids' : ints // 10,
+                'distance': floats,
+            }
+        return ndata
+
     def _read_oqg1_3(self, data: bytes, ndata: int):
         self.nonlinear_factor = np.nan #None
         self.is_table_1 = True

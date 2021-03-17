@@ -92,6 +92,8 @@ SORT1_TABLES.extend([
     'BOUGV1',
     'OUG1F',
     'BOUGF1',
+    'OUG1',
+    'OAG1',
 ])
 SORT2_TABLES = list(SORT2_TABLE_NAME_MAP.keys())
 

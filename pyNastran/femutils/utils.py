@@ -17,7 +17,7 @@ def pivot_table(data, rows, cols):
     """PCOMP: rows=element_ids, cols=layer"""
     ncount = len(rows)
     icount = np.arange(ncount)
-    assert len(data.shape) in [2, 3], data.shape
+    assert len(data.shape) in [1, 2, 3], data.shape
     nresults = data.shape[-1]
 
     rows_new, row_pos_new = np.unique(rows, return_inverse=True)
@@ -31,6 +31,8 @@ def pivot_table(data, rows, cols):
         shape2 = (ntimes, nrows, ncols, nresults)
     elif nshape == 2:
         shape2 = (nrows, ncols, nresults)
+    elif nshape == 1:
+        shape2 = (nrows, ncols)
     else:  # pragma: no cover
         raise RuntimeError(nshape)
 
@@ -45,6 +47,8 @@ def pivot_table(data, rows, cols):
         data2[:, ipivot_row, ipivot_col, :] = data[:, icount, :]
     elif  nshape == 2:
         data2[ipivot_row, ipivot_col, :] = data[icount, :]
+    elif  nshape == 1:
+        data2[ipivot_row, ipivot_col] = data[icount]
     else:  # pragma: no cover
         raise NotImplementedError(nshape)
     return data2, rows_new

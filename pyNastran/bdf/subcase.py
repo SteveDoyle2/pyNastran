@@ -1,4 +1,5 @@
 """Subcase creation/extraction class"""
+import getpass
 from typing import Tuple, List, Dict, Union, Any
 from numpy import ndarray
 
@@ -8,6 +9,7 @@ from pyNastran.utils import object_attributes, deprecated
 from pyNastran.bdf.bdf_interface.case_control_cards import CLASS_MAP
 from pyNastran.bdf.bdf_interface.subcase_utils import (
     write_stress_type, write_set, expand_thru_case_control)
+USER_NAME = getpass.getuser()
 
 
 INT_CARDS = (
@@ -302,11 +304,12 @@ class Subcase:
                 self._write_op2_error_msg(log, self.log, msg, data_code)
 
         elif table_name == 'OVG1':
-            if table_code == 11:
+            if table_code in [11, 10]:
                 thermal = data_code['thermal']
                 assert thermal == 0, data_code
                 self.add('VELOCITY', 'ALL', options, 'STRESS-type')
             else:
+                print("table_code = %r" % table_code)
                 self._write_op2_error_msg(log, self.log, msg, data_code)
 
         elif table_name == 'OAG1':
@@ -493,7 +496,7 @@ class Subcase:
 
         elif table_name in ['OESRT']:
             #assert data_code['is_stress_flag'] == True, data_code
-            if table_code in [25, 89]:
+            if table_code in [25, 56, 89]:
                 self.add('STRESS', 'ALL', options, 'STRESS-type')
             else:  # pragma: no cover
                 self._write_op2_error_msg(log, self.log, msg, data_code)
@@ -547,7 +550,8 @@ class Subcase:
             print(data_code)
             raise RuntimeError(data_code)
         log.error(str(data_code))
-        #raise RuntimeError(data_code)
+        if USER_NAME == 'sdoyle': # or 'id' in msg:
+            raise RuntimeError(data_code)
 
     def __contains__(self, param_name: str) -> bool:
         """

@@ -22,6 +22,9 @@ class Results:
         self.monitor3 = None
         self.responses = Responses()
 
+        self.separation_initial = {}
+        self.separation_final = {}
+
         self.psds = PSDObjects()
         self.ato = AutoCorrelationObjects()
         self.psd = PowerSpectralDensityObjects()
@@ -102,7 +105,10 @@ class Results:
 
     def _get_base_objects_map(self) -> Dict[str, Any]:
         """gets only the objects that are do not contain sub-objects"""
-        base_names = ['eqexin', 'gpdt', 'bgpdt', 'psds', 'monitor1', 'monitor3']
+        base_names = [
+            'eqexin', 'gpdt', 'bgpdt', 'psds', 'monitor1', 'monitor3',
+            #'separation_initial', 'separation_final',
+        ]
         base_objs_map = {}
         for base_name in base_names:
             obj = getattr(self, base_name)
@@ -112,7 +118,10 @@ class Results:
 
     def get_table_types(self):
         """combines all the table_types from all objects and sub-objects"""
-        base = ['eqexin', 'gpdt', 'bgpdt', 'psds', 'monitor1', 'monitor3']
+        base = [
+            'eqexin', 'gpdt', 'bgpdt', 'psds', 'monitor1', 'monitor3',
+            #'separation_initial', 'separation_final',
+        ]
         sum_objs = self._get_sum_objects()
         for objs in sum_objs:
             base.extend(objs.get_table_types())
