@@ -296,6 +296,10 @@ class FailureIndicesArray(RealForceObject):
         RealForceObject.__init__(self, data_code, isubcase)
         self.nelements = 0  # result specific
 
+    @property
+    def nnodes_per_element(self):
+        return 1
+
     def build(self):
         """sizes the vectorized attributes of the FailureIndices"""
         if self.is_built:
@@ -373,7 +377,7 @@ class FailureIndicesArray(RealForceObject):
                    'failure_index_for_bonding (interlaminar stresss)', 'max_value']
         return headers
 
-    def __eq__(self, table):  # pragma: no cover
+    def __eq__(self, table):
         return True
 
     def add_sort1(self, dt, eid, failure_theory, ply_id, failure_stress_for_ply, flag,
@@ -4800,6 +4804,13 @@ class RealCFastForceArrayMSC(RealForceMomentArray):
     def __init__(self, data_code, is_sort1, isubcase, dt):
         RealForceMomentArray.__init__(self, data_code, is_sort1, isubcase, dt)
 
+    def get_f06_header(self):
+        msg = [
+            '                               F O R C E S   I N   F A S T E N E R   E L E M E N T S   ( C F A S T )\n'
+            ' \n'
+            '                  ELEMENT-ID        FORCE-X       FORCE-Y       FORCE-Z      MOMENT-X      MOMENT-Y      MOMENT-Z  \n']
+           #'0                        599      0.0           2.000000E+00  3.421458E-14  1.367133E-13 -3.752247E-15  1.000000E+00\n']
+        return msg
 
 def oef_data_code(table_name, analysis_code,
                   is_sort1=True, is_random=False,

@@ -6,7 +6,7 @@ from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.op2.result_objects.op2_objects import get_times_dtype
 from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import (
     StressObject, OES_Object) # StrainObject,
-from pyNastran.f06.f06_formatting import write_float_12e, _eigenvalue_header
+from pyNastran.f06.f06_formatting import write_float_13e, _eigenvalue_header
 from pyNastran.femutils.utils import pivot_table
 
 
@@ -90,10 +90,10 @@ class RealCompositePlateStrengthRatioArray(OES_Object):
         _times = zeros(ntimes, dtype=dtype)
         element_layer = zeros((ntotal, 2), dtype=idtype)
 
-        #[strength_ratio_ply, strength_ratio_bonding]
-        data = zeros((ntimes, ntotal, 2), dtype=fdtype)
-        # [failure_theory, failure_index_bonding, flag]
-        failure_theory_flag = np.empty((ntotal, 3), dtype='U8')
+        #[strength_ratio_ply, failure_index_bonding, strength_ratio_bonding]
+        data = zeros((ntimes, ntotal, 3), dtype=fdtype)
+        # [failure_theory, flag]
+        failure_theory_flag = np.empty((ntotal, 2), dtype='U8')
 
         #if self.load_as_h5:
         #    #for key, value in sorted(self.data_code.items()):
@@ -218,15 +218,19 @@ class RealCompositePlateStrengthRatioArray(OES_Object):
         return True
 
     def add_eid_sort1(self, etype, dt, eid: int,
-                      failure_theory: str, ply_id: int, strength_ratio_ply: float, failure_index_bonding: str,
+                      failure_theory: str, ply_id: int,
+                      strength_ratio_ply: float, failure_index_bonding: float,
                       strength_ratio_bonding: float, min_sr_bonding_fi_bonding: float,
                       flag: str):
         self._times[self.itime] = dt
         #layer = 0
         self.element_layer[self.itotal, :] = [eid, ply_id]
-        self.failure_theory_flag[self.itotal, :] = [failure_theory, failure_index_bonding, flag]
-        #(eid_device, failure_theory, ply_id, strength_ratio_ply, failure_index_bonding, strength_ratio_bonding, flag, flag2) = out
-        self.data[self.itime, self.itotal, :] = [strength_ratio_ply, strength_ratio_bonding]
+        self.failure_theory_flag[self.itotal, :] = [failure_theory, flag]
+        #(eid_device, failure_theory, ply_id, strength_ratio_ply, failure_index_bonding,
+        # strength_ratio_bonding, min_sr_bonding_fi_bonding, flag) = out
+        #print(strength_ratio_ply, failure_index_bonding, strength_ratio_bonding)
+        #asf
+        self.data[self.itime, self.itotal, :] = [strength_ratio_ply, failure_index_bonding, strength_ratio_bonding]
         self.itotal += 1
         self.ielement += 1
 
@@ -238,8 +242,10 @@ class RealCompositePlateStrengthRatioArray(OES_Object):
         assert eid is not None
         assert isinstance(eid, integer_types) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
         self.element_layer[self.itotal, :] = [eid, ply_id]
-        self.failure_theory_flag[self.itotal, :] = [failure_theory, failure_index_bonding, flag]
-        self.data[self.itime, self.itotal, :] = [strength_ratio_ply, strength_ratio_bonding]
+        self.failure_theory_flag[self.itotal, :] = [failure_theory, flag]
+        #(eid_device, failure_theory, ply_id, strength_ratio_ply, failure_index_bonding,
+        # strength_ratio_bonding, min_sr_bonding_fi_bonding, flag) = out
+        self.data[self.itime, self.itotal, :] = [strength_ratio_ply, failure_index_bonding, strength_ratio_bonding]
         self.itotal += 1
 
     #def add_eid_sort2(self, etype, dt, eid, layer, o11, o22, t12, t1z, t2z,
@@ -382,52 +388,6 @@ class RealCompositePlateStrengthRatioArray(OES_Object):
             '     ID      THEORY     ID  (DIRECT STRESSES/STRAINS)     (INTER-LAMINAR STRESSES)      MIN OF SRP,SRB FOR ALL PLIES\n'
         ]
 
-
-        #if self.is_strain:
-            #words = ['   ELEMENT  PLY   STRAINS IN FIBER AND MATRIX DIRECTIONS    INTER-LAMINAR   STRAINS  PRINCIPAL  STRAINS (ZERO SHEAR)      %s\n' % von,
-                     #'     ID      ID    NORMAL-1     NORMAL-2     SHEAR-12     SHEAR XZ-MAT  SHEAR YZ-MAT  ANGLE    MAJOR        MINOR        %s\n' % mises]
-        #else:
-            #words = ['   ELEMENT  PLY  STRESSES IN FIBER AND MATRIX DIRECTIONS    INTER-LAMINAR  STRESSES  PRINCIPAL STRESSES (ZERO SHEAR)      %s\n' % von,
-                     #'     ID      ID    NORMAL-1     NORMAL-2     SHEAR-12     SHEAR XZ-MAT  SHEAR YZ-MAT  ANGLE    MAJOR        MINOR        %s\n' % mises]
-
-        #if self.element_type == 95:  # CQUAD4
-            #if self.is_strain:
-                #msg = ['                     S T R A I N S   I N   L A Y E R E D   C O M P O S I T E   E L E M E N T S   ( Q U A D 4 )\n'] + words
-            #else:
-                #msg = ['                   S T R E S S E S   I N   L A Y E R E D   C O M P O S I T E   E L E M E N T S   ( Q U A D 4 )\n'] + words
-        ##elif self.element_type == 96:  # CQUAD8
-            ##nnodes_per_element = 1
-        #elif self.element_type == 97:  # CTRIA3
-            #if self.is_strain:
-                #msg = ['                     S T R A I N S   I N   L A Y E R E D   C O M P O S I T E   E L E M E N T S   ( T R I A 3 )\n'] + words
-            #else:
-                #msg = ['                   S T R E S S E S   I N   L A Y E R E D   C O M P O S I T E   E L E M E N T S   ( T R I A 3 )\n'] + words
-        #elif self.element_type == 96:  # QUAD8
-            ## good
-            #if self.is_strain:
-                #msg = ['                     S T R A I N S   I N   L A Y E R E D   C O M P O S I T E   E L E M E N T S   ( Q U A D 8 )\n'] + words
-            #else:
-                #msg = ['                   S T R E S S E S   I N   L A Y E R E D   C O M P O S I T E   E L E M E N T S   ( Q U A D 8 )\n'] + words
-
-        #elif self.element_type == 98:  # CTRIA6
-            ## good
-            #if self.is_strain:
-                #msg = ['                     S T R A I N S   I N   L A Y E R E D   C O M P O S I T E   E L E M E N T S   ( T R I A 6 )\n'] + words
-            #else:
-                #msg = ['                   S T R E S S E S   I N   L A Y E R E D   C O M P O S I T E   E L E M E N T S   ( T R I A 6 )\n'] + words
-        #elif self.element_type == 233:  # CTRIAR linear
-            ## good
-            #if self.is_strain:
-                #msg = ['                     S T R A I N S   I N   L A Y E R E D   C O M P O S I T E   E L E M E N T S   ( T R I A R )\n'] + words
-            #else:
-                #msg = ['                   S T R E S S E S   I N   L A Y E R E D   C O M P O S I T E   E L E M E N T S   ( T R I A R )\n'] + words
-        #elif self.element_type == 232:  # CQUADR linear
-            #if self.is_strain:
-                #msg = ['                     S T R A I N S   I N   L A Y E R E D   C O M P O S I T E   E L E M E N T S   ( Q U A D R )\n'] + words
-            #else:
-                #msg = ['                   S T R E S S E S   I N   L A Y E R E D   C O M P O S I T E   E L E M E N T S   ( Q U A D R )\n'] + words
-        #else:  # pragma: no cover
-
         # write the f06
         ntimes = self.data.shape[0]
 
@@ -443,42 +403,96 @@ class RealCompositePlateStrengthRatioArray(OES_Object):
             f06_file.write(''.join(header + msg))
 
             #print("self.data.shape=%s itime=%s ieids=%s" % (str(self.data.shape), itime, str(ieids)))
-
-            failure_theory = self.failure_theory_flag[:, 0]
-            failure_index_bonding = self.failure_theory_flag[:, 1]
-            flags = self.failure_theory_flag[:, 2]
-            #failure_index_bonding = self.data[itime, :, 1]
-
+            # min_sr_bonding_fi_bonding
             #[strength_ratio_ply, failure_index_bonding, strength_ratio_bonding]
-            #[strength_ratio_ply, strength_ratio_bonding]
             strength_ratio_ply = self.data[itime, :, 0]
-            strength_ratio_bonding = self.data[itime, :, 1]
+            failure_index_bonding = self.data[itime, :, 1]
+            strength_ratio_bonding = self.data[itime, :, 2]
 
-            # loop over nlayers max and ueids
-            for eid, layer, ft, sr_ply, fi_bonding, sr_bonding, flag in zip(
-                    eids, layers, failure_theory, strength_ratio_ply, failure_index_bonding, strength_ratio_bonding, flags):
-                # TODO: super slow way to get the max layer id
-                irows = np.where(eids == eid)[0]
-                nlayers = len(irows)
-                #ft = 'TSAI-WU'
+            i = 0
+            is_nans_sr_bonding = np.isnan(strength_ratio_bonding)
+            #is_nans_fi_bonding = np.isnan(failure_index_bonding)
+            #print(is_nans.tolist())
+            #print("nlayers =", nlayers.tolist())
+            if 1:
+                for eid, nlayer in zip(ueids, nlayers):
+                    i0 = i
+                    i1 = i + nlayer
+                    #ft = failure_theory[i]
+                    sr_ply = strength_ratio_ply[i]
+                    sr_plys = write_float_13e(sr_ply)
+                    #sr_bonding = strength_ratio_bonding[i]
+                    #sr_bondings = write_float_13e(sr_bonding)
 
-                sr_plys = write_float_12e(sr_ply)
-                sr_bondings = write_float_12e(sr_bonding)
-                if layer == 1:
-                    #eid=3;
-                    #sr_ply=1.34007; fi_bonding='' sr_bonding=34482.3; min(sr_bonding, fi_bonding)=nan flag=''
-                    #print(eid, layer, sr_plys, fi_bonding, sr_bondings)
-                    f06_file.write('  %8d  %8s %5d      %s      \n'
-                                   '                                                                 %s                                               \n' % (
-                                       eid, ft, layer, sr_plys, sr_bondings))
-                elif layer == nlayers:
-                    f06_file.write('                     %5d      %s      \n'
-                                   '                                                                                               ?.??????E+00                 \n' % (
-                                       layer, sr_plys))
-                else:
-                    f06_file.write('                     %5d      %s      \n'
-                                   '                                                                 %s                                               \n' % (
-                                       layer, sr_plys, sr_bondings))
+                    #fi_bondings = '             ' if is_nans_fi_bonding[i] else write_float_13e(failure_index_bonding[i])
+                    sr_bondings = '             ' if is_nans_sr_bonding[i] else write_float_13e(strength_ratio_bonding[i])
+
+                    ft = self.failure_theory_flag[i, 0]
+                    flag = self.failure_theory_flag[i, 1]
+
+                    # layer1
+                    f06_file.write('  %8d  %8s %5d     %s      \n'
+                                   '                                                                %s                                               \n' % (
+                                       eid, ft, 1, sr_plys, sr_bondings))
+                    i += 1
+
+                    for jlayer in range(1, nlayer-1):
+                        ilayer = layers[i]
+                        sr_ply = strength_ratio_ply[i]
+                        sr_plys = write_float_13e(sr_ply)
+                        #sr_bonding = strength_ratio_bonding[i]
+                        #sr_bondings = write_float_13e(sr_bonding)
+                        #fi_bondings = '             ' if is_nans_fi_bonding[i] else write_float_13e(failure_index_bonding[i])
+                        sr_bondings = '             ' if is_nans_sr_bonding[i] else write_float_13e(strength_ratio_bonding[i])
+
+                        f06_file.write('                     %5d     %s      \n'
+                                       '                                                                %s                                               \n' % (
+                                           ilayer, sr_plys, sr_bondings))
+                        i += 1
+
+                    # final
+                    sr_ply = strength_ratio_ply[i]
+                    sr_plys = write_float_13e(sr_ply)
+
+                    sr_ply = strength_ratio_ply[i]
+                    sr_plys = write_float_13e(sr_ply)
+                    all_data = strength_ratio_ply[i0:i1]
+                    min_sr_plys = nanmin13s()
+                    #min_sr_ply = np.nanmin(strength_ratio_ply[i0:i1])
+                    #min_sr_plys = write_float_13e(min_sr_ply)
+                    #min_sr_plys = ' ?.??????E+00'
+                    f06_file.write('                     %5d     %s      \n'
+                                   '                                                                                              %13s                 \n' % (
+                                       nlayer, sr_plys, min_sr_plys))
+                    i += 1
+            else:
+                # loop over nlayers max and ueids
+                failure_theory = self.failure_theory_flag[:, 0]
+                flags = self.failure_theory_flag[:, 1]
+                for eid, layer, ft, sr_ply, fi_bonding, sr_bonding, flag in zip(
+                        eids, layers, failure_theory, strength_ratio_ply, failure_index_bonding, strength_ratio_bonding, flags):
+                    # TODO: super slow way to get the max layer id
+                    irows = np.where(eids == eid)[0]
+                    nlayers = len(irows)
+                    #ft = 'TSAI-WU'
+
+                    sr_plys = write_float_12e(sr_ply)
+                    sr_bondings = write_float_12e(sr_bonding)
+                    if layer == 1:
+                        #eid=3;
+                        #sr_ply=1.34007; fi_bonding='' sr_bonding=34482.3; min(sr_bonding, fi_bonding)=nan flag=''
+                        #print(eid, layer, sr_plys, fi_bonding, sr_bondings)
+                        f06_file.write('  %8d  %8s %5d      %s      \n'
+                                       '                                                                 %s                                               \n' % (
+                                           eid, ft, layer, sr_plys, sr_bondings))
+                    elif layer == nlayers:
+                        f06_file.write('                     %5d      %s      \n'
+                                       '                                                                                               ?.??????E+00                 \n' % (
+                                           layer, sr_plys))
+                    else:
+                        f06_file.write('                     %5d      %s      \n'
+                                       '                                                                 %s                                               \n' % (
+                                           layer, sr_plys, sr_bondings))
             f06_file.write(page_stamp % page_num)
             page_num += 1
         return page_num - 1
@@ -585,6 +599,10 @@ class RealCompositePlateStressStrengthRatioArray(RealCompositePlateStrengthRatio
         StressObject.__init__(self, data_code, isubcase)
 
     @property
+    def nnodes_per_element(self):
+        return 1
+
+    @property
     def is_stress(self):
         return True
 
@@ -622,3 +640,8 @@ class RealCompositePlateStressStrengthRatioArray(RealCompositePlateStrengthRatio
             #ovm = 'max_shear'
         #headers = ['strength_ratio_ply_b', 'strength_ratio_bonding_b']
         #return headers
+
+def nanmin13s(nparray):
+    if np.any(np.isfinite(nparray)):
+        return write_float_13e(np.nanmin(nparray))
+    return '             '
