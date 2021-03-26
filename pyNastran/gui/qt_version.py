@@ -16,6 +16,8 @@ elif 'PySide2' in sys.modules:
     qt_version = 'pyside2'
 elif 'PyQt5' in sys.modules:
     qt_version = 'pyqt5'
+elif 'PyQt6' in sys.modules:
+    qt_version = 'pyqt6'
 else:
     found_gui = False
     try:
@@ -55,10 +57,14 @@ elif qt_version == 'pyside2':
     qt_int = 5
     qt_name = 'PySide2'
     from qtpy import PYSIDE_VERSION as PYQT_VERSION  # pylint: disable=unused-import
+#elif qt_version == 'pyqt6':
+    #qt_int = 6
+    #qt_name = 'PyQt6'
+    #from qtpy import PYQT_VERSION  # pylint: disable=unused-import
 else:
     raise ImportError('PyQt5 or PySide2 is required; API=%r' % qt_version)
 
-if qt_version not in ['pyqt5', 'pyside2']:
+if qt_version not in ['pyqt5', 'pyside2', 'pyqt6']:
     raise ImportError('PyQt5 or PySide2 is required; API=%r' % qt_version)
 
 # required to make a pretty console

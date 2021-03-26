@@ -50,6 +50,9 @@ if qt_version == "pyqt5":
 elif qt_version == "pyside2":
     from PySide2.QtWidgets import QWidget, QSizePolicy, QApplication
     from PySide2.QtCore import Qt, QTimer, QObject, QSize, QEvent
+#elif qt_version == "pyqt6":
+    #from PyQt6.QtWidgets import QWidget, QSizePolicy, QApplication
+    #from PyQt6.QtCore import Qt, QTimer, QObject, QSize, QEvent
 else:
     raise ImportError("Unknown PyQt implementation " + repr(PyQtImpl))
 
@@ -199,6 +202,9 @@ class QVTKRenderWindowInteractor(QWidget):
             pythonapi.PyCapsule_GetPointer.argtypes = [py_object, c_char_p]
 
             WId = pythonapi.PyCapsule_GetPointer(WId, name)
+        #else:
+            # sip.voidptr, int
+            #print(type(WId))
 
         self._RenderWindow.SetWindowInfo(str(int(WId)))
 

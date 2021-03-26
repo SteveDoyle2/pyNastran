@@ -192,7 +192,7 @@ class TestOP2(Tester):
         log = get_logger(level='warning')
         op2_filename = os.path.join(MODEL_PATH, 'elements', 'static_elements.op2')
         model = OP2Geom(log=log)
-        model.read_op2(op2_filename=op2_filename, combine=True, build_dataframe=None,
+        model.read_op2(op2_filename=op2_filename, combine=True, build_dataframe=False,
                        skip_undefined_matrices=False,
                        encoding=None)
 
@@ -206,7 +206,7 @@ class TestOP2(Tester):
         }
         model2.set_additional_generalized_tables_to_read(tables)
         with self.assertRaises(NotImplementedError):
-            model2.read_op2(op2_filename=op2_filename, combine=True, build_dataframe=None,
+            model2.read_op2(op2_filename=op2_filename, combine=True, build_dataframe=False,
                             skip_undefined_matrices=False,
                             encoding=None)
 
@@ -487,7 +487,7 @@ class TestOP2(Tester):
         #read_op2(op2_filename=op2_filename, combine=True, subcases=None,
                  #exclude_results=None, include_results=None,
                  #log=None, debug=True, debug_file=None,
-                 #build_dataframe=None,
+                 #build_dataframe=False,
                  #skip_undefined_matrices=True, mode='msc',
                  #encoding=None)
         run_op2(op2_filename, make_geom=True, write_bdf=False, read_bdf=False,
@@ -1536,7 +1536,7 @@ class TestOP2(Tester):
         op2 = OP2(debug=False, log=log, debug_file=None, mode=None)
         op2.load_as_h5 = True
         op2.read_op2(op2_filename=op2_filename, combine=True,
-                     build_dataframe=None, skip_undefined_matrices=False,
+                     build_dataframe=False, skip_undefined_matrices=False,
                      encoding=None)
         #op2 = read_op2(op2_filename, debug=False)
         del op2
@@ -2835,7 +2835,7 @@ class TestOP2(Tester):
         model.set_transient_times(times)
         op2_filename = os.path.abspath(os.path.join(MODEL_PATH, 'sol_101_elements',
                                                     'mode_solid_shell_bar.op2'))
-        model.read_op2(op2_filename, combine=True, build_dataframe=None,
+        model.read_op2(op2_filename, combine=True, build_dataframe=False,
                        skip_undefined_matrices=False,
                        encoding=None)
         isubcase = 1

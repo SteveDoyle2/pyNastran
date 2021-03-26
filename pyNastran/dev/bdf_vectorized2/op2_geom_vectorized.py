@@ -28,7 +28,7 @@ class OP2Geom(OP2GeomCommon, BDF):
         BDF.__init__(self, debug=debug, log=log, mode=mode)
         OP2GeomCommon.__init__(self, debug=debug, log=log, debug_file=debug_file, mode=mode)
 
-    def read_op2(self, op2_filename=None, combine=True, build_dataframe=None,
+    def read_op2(self, op2_filename=None, combine=True, build_dataframe=False,
                  skip_undefined_matrices=False, encoding=None):
         OP2GeomCommon.read_op2(
             self, op2_filename=op2_filename, combine=combine, build_dataframe=build_dataframe,

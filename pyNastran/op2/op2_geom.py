@@ -306,7 +306,7 @@ class OP2Geom(BDF, OP2GeomCommon):
         return True
 
     def read_op2(self, op2_filename: Optional[Union[str, PurePath]]=None, combine: bool=True,
-                 build_dataframe: Optional[bool]=None,
+                 build_dataframe: Optional[bool]=False,
                  skip_undefined_matrices: bool=False,
                  encoding: Optional[str]=None):
         """see ``OP2.read_op2``"""

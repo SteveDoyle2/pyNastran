@@ -4,7 +4,7 @@ Defines the main OP2 class.  Defines:
 
  - read_op2(op2_filename=None, combine=True, subcases=None,
             exclude_results=None, include_results=None,
-            log=None, debug=True, debug_file=None, build_dataframe=None,
+            log=None, debug=True, debug_file=None, build_dataframe=False,
             skip_undefined_matrices=True, mode='msc', encoding=None)
 
  - OP2(debug=True, log=None, debug_file=None, mode='msc')
@@ -14,7 +14,7 @@ Defines the main OP2 class.  Defines:
    - object_attributes(mode='public', keys_to_skip=None, filter_properties=False)
    - object_methods(mode='public', keys_to_skip=None)
    - print_subcase_key()
-   - read_op2(op2_filename=None, combine=True, build_dataframe=None,
+   - read_op2(op2_filename=None, combine=True, build_dataframe=False,
               skip_undefined_matrices=False, encoding=None)
    - set_mode(mode)
    - transform_displacements_to_global(i_transform, coords, xyz_cid0=None, debug=False)
@@ -519,7 +519,7 @@ class OP2(OP2_Scalar, OP2Writer):
 
     def read_op2(self, op2_filename: Optional[str]=None,
                  combine: bool=True,
-                 build_dataframe: Optional[bool]=None,
+                 build_dataframe: Optional[bool]=False,
                  skip_undefined_matrices: bool=False,
                  encoding: Optional[str]=None) -> None:
         """
@@ -536,8 +536,9 @@ class OP2(OP2_Scalar, OP2Writer):
         #load_as_h5 : default=False
             #loads the op2 as an h5 file to save memory
             #stores the result.element/data attributes in h5 format
-        build_dataframe : bool (default=None -> True if in iPython, False otherwise)
+        build_dataframe : bool; default=False
             builds a pandas DataFrame for op2 objects
+            None: True if in iPython, False otherwise
         skip_undefined_matrices : bool; default=False
              True : prevents matrix reading crashes
         encoding : str
@@ -1250,7 +1251,7 @@ def read_op2(op2_filename: Optional[str]=None,
              include_results: Optional[List[str]]=None,
              log: Any=None,
              debug: Optional[bool]=True,
-             build_dataframe: Optional[bool]=None,
+             build_dataframe: Optional[bool]=False,
              skip_undefined_matrices: bool=True,
              mode: Optional[str]=None,
              encoding: Optional[str]=None) -> OP2:
@@ -1273,8 +1274,9 @@ def read_op2(op2_filename: Optional[str]=None,
     exclude_results / include_results : List[str] / str; default=None
         a list of result types to exclude/include
         one of these must be None
-    build_dataframe : bool (default=None -> True if in iPython, False otherwise)
-        builds a pandas DataFrame for op2 objects
+        build_dataframe : bool; default=False
+            builds a pandas DataFrame for op2 objects
+            None: True if in iPython, False otherwise
     skip_undefined_matrices : bool; default=False
          True : prevents matrix reading crashes
         debug : bool/None; default=True

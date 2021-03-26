@@ -155,7 +155,7 @@ class TestGridPointForcesSMT(unittest.TestCase):
         model = OP2Geom(debug=False, log=log, debug_file=None, mode=None)
         #model.load_as_h5 = True
         model.read_op2(op2_filename=op2_filename, combine=True,
-                     build_dataframe=None, skip_undefined_matrices=False,
+                     build_dataframe=False, skip_undefined_matrices=False,
                      encoding=None)
 
         model.cross_reference()
