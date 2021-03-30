@@ -610,6 +610,8 @@ MSC_RESULT_TABLES = [b'ASSIG', b'ASEPS'] + [
     b'OUGSTRS0',
     b'OBCNURB0', b'OBCNURBD',
     b'OQMPSD1', b'OQMATO1', b'OQMRMS1', b'OQMNO1', b'OQMCRM1',
+    b'OETEMP',
+    #b'TEF1', b'MEF1',
 
     # nasa95
     b'OQPC1', b'OUPVC1', b'OESC1',

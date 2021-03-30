@@ -648,6 +648,13 @@ class OP2_F06_Common:
     @property
     def cpyram_stress(self):
         return self.op2_results.stress.cpyram_stress
+
+    @property
+    def chexa_composite_stress(self):
+        return self.op2_results.stress.chexa_composite_stress
+    @property
+    def cpenta_composite_stress(self):
+        return self.op2_results.stress.cpenta_composite_stress
     # ------------------------------------------------------------------
     # Stress - Setter
     @celas1_stress.setter

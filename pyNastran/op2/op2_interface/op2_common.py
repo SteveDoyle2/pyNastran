@@ -2140,6 +2140,101 @@ class OP2Common(Op2Codes, F06Writer):
             auto_return = True
         return auto_return
 
+    def _create_node_object4(self, nnodes, result_name, slot, obj_vector):
+        """
+        Creates the self.obj parameter based on if this is vectorized or not.
+
+        Parameters
+        ----------
+        nnodes :  int
+            the number of elements to preallocate for vectorization
+            of the main self.data attribute
+        result_name : str
+            the name of the dictionary to store the object in (e.g. 'displacements')
+        slot : dict[(int, int, str)=obj
+            the self dictionary that will be filled with a
+            non-vectorized result
+        obj_vector : OESArray
+            a pointer to the vectorized class
+
+        Returns
+        -------
+        auto_return : bool
+            a flag indicating a return n should be called
+        is_vectorized : bool
+            True/False
+
+        Since that's confusing, let's say we have real CTETRA stress data.
+        We're going to fill self.ctetra_stress with the class
+        RealSolidStressArray.  So we call:
+
+        if self._is_vectorized(RealSolidStressArray):
+            if self._results.is_not_saved(result_vector_name):
+                return ndata
+        else:
+            if self._results.is_not_saved(result_name):
+                return ndata
+
+        auto_return, is_vectorized = self._create_oes_object4(self, nelements,
+                            'ctetra_stress', self.ctetra_stress,
+                            RealSolidStressArray)
+        if auto_return:
+            return nelements * ntotal
+
+        """
+        auto_return = False
+        #is_vectorized = True
+        is_vectorized = self._is_vectorized(obj_vector)
+        assert obj_vector is not None
+        #print("vectorized...read_mode=%s...%s; %s" % (self.read_mode, result_name, is_vectorized))
+
+        if is_vectorized:
+            if self.read_mode == 1:
+                #print('oes-self.nonlinear_factor =', self.nonlinear_factor)
+                #print(self.data_code)
+                self.create_transient_object(result_name, slot, obj_vector)
+                #print("read_mode 1; ntimes=%s" % obj.ntimes)
+                self.result_names.add(result_name)
+                #print('self.obj =', self.obj)
+                self.obj.nnodes += nnodes
+                assert self.obj.table_name is not None, 'you probably need to apply the data_code...'
+                auto_return = True
+            elif self.read_mode == 2:
+                self.code = self._get_code()
+                #self.log.info("code = %s" % str(self.code))
+                #print("code = %s" % str(self.code))
+
+                try:
+                    self.obj = slot[self.code] # if this is failing, you probably set obj_vector to None...
+                except KeyError:
+                    msg = f'Could not find key={self.code} in result={result_name!r}\n'
+                    msg += f"There's probably an extra check for read_mode=1...{result_name}"
+                    self.log.error(msg)
+                    raise
+                if not self.obj.table_name == self.table_name.decode('utf-8'):
+                    print(self.obj)
+                    msg = 'obj.table_name=%s table_name=%s; this shouldnt happen for read_mode=2' %  (
+                        self.obj.table_name, self.table_name)
+                    raise OverwriteTableError(msg)
+
+                #obj.update_data_code(self.data_code)
+                try:
+                    build_obj(self.obj)
+                except AssertionError:
+                    print(self.code)
+                    print(self.code_information())
+                    raise
+
+            else:  # not vectorized
+                auto_return = True
+        else:
+            auto_return = True
+            raise RuntimeError('removal of non-vectorized option')
+
+        assert is_vectorized, f'{result_name!r} is not vectorized; obj={obj_vector}'
+        #print(self.code)
+        return auto_return, is_vectorized
+
     def _create_oes_object4(self, nelements, result_name, slot, obj_vector):
         """
         Creates the self.obj parameter based on if this is vectorized or not.

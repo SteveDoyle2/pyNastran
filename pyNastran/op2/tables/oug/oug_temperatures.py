@@ -1,6 +1,6 @@
 # pylint: disable=E1101
 import numpy as np
-from pyNastran.op2.result_objects.scalar_table_object import RealScalarTableArray
+from pyNastran.op2.result_objects.scalar6_table_object import RealScalarTableArray
 
 class RealTemperatureArray(RealScalarTableArray):
     def __init__(self, data_code, is_sort1, isubcase, dt):

@@ -107,7 +107,7 @@ class Results:
         """gets only the objects that are do not contain sub-objects"""
         base_names = [
             'eqexin', 'gpdt', 'bgpdt', 'psds', 'monitor1', 'monitor3',
-            #'separation_initial', 'separation_final',
+            'separation_initial', 'separation_final',
         ]
         base_objs_map = {}
         for base_name in base_names:
@@ -120,7 +120,7 @@ class Results:
         """combines all the table_types from all objects and sub-objects"""
         base = [
             'eqexin', 'gpdt', 'bgpdt', 'psds', 'monitor1', 'monitor3',
-            #'separation_initial', 'separation_final',
+            'separation_initial', 'separation_final',
         ]
         sum_objs = self._get_sum_objects()
         for objs in sum_objs:
@@ -509,6 +509,10 @@ class Stress:
         self.chexa_stress = {}
         self.cpyram_stress = {}
 
+        # 269, 270
+        self.chexa_composite_stress = {}
+        self.cpenta_composite_stress = {}
+
     def get_table_types(self):
         tables = [
             # OES - CELAS1/CELAS2/CELAS3/CELAS4 stress
@@ -516,6 +520,8 @@ class Stress:
 
             # OES - isotropic CTETRA/CHEXA/CPENTA stress
             'ctetra_stress', 'cpenta_stress', 'chexa_stress', 'cpyram_stress',
+
+            'chexa_composite_stress', 'cpenta_composite_stress',
         ]
         return ['stress.' + table for table in tables]
 

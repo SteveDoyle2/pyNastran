@@ -1,6 +1,6 @@
 import numpy as np
 from pyNastran.op2.result_objects.table_object import RealTableArray, ComplexTableArray
-from pyNastran.op2.result_objects.scalar_table_object import RealScalarTableArray
+from pyNastran.op2.result_objects.scalar6_table_object import RealScalarTableArray
 
 
 class RealLoadVectorArray(RealTableArray):  # table_code=2, sort_code=0, thermal=0

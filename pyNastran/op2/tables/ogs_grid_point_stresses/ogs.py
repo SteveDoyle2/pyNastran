@@ -129,7 +129,7 @@ class OGS(OP2Common):
             n = self._read_ogs1_table28(data, ndata, restype)
         elif self.table_code == 35:
             # OGS - Grid point stress discontinuities (plane strain)
-            assert self.table_name in [b'OGS1'], f'table_name={self.table_name} table_code={self.table_code}'
+            assert self.table_name in [b'OGS1', b'OGSTR1'], f'table_name={self.table_name} table_code={self.table_code}'
             n = self._read_ogs1_table35(data, ndata, restype)
         else:
             #msg = self.code_information()

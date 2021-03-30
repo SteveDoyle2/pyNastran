@@ -197,17 +197,21 @@ class RealCompositePlateStrengthRatioArray(OES_Object):
                     (eid, layer) = e
                     t1 = self.data[itime, ie, :]
                     t2 = table.data[itime, ie, :]
-                    (o11, o22) = t1
-                    (o112, o222) = t2
+                    nt1 = filter_nan(t1)
+                    nt2 = filter_nan(t2)
+                    assert len(nt1) == len(nt2), 't1=%s t2=%s' % (t1, t2)
+                    #print(nt1, nt2)
 
                     # vm stress can be NaN for some reason...
-                    if not np.array_equal(t1[:-1], t2[:-1]):
+                    if not np.array_equal(nt1, nt2):
+                        (strength_ratio_ply1, failure_index_bonding1, strength_ratio_bonding1) = t1
+                        (strength_ratio_ply2, failure_index_bonding2, strength_ratio_bonding2) = t2
                         msg += (
-                            '(%s, %s)    (%s, %s)'
-                            '  (%s, %s)\n' % (
+                            '(%s, %s)    (%s, %s, %s)'
+                            '  (%s, %s, %s)\n' % (
                                 eid, layer,
-                                o11, o22,
-                                o112, o222))
+                                strength_ratio_ply1, failure_index_bonding1, strength_ratio_bonding1,
+                                strength_ratio_ply2, failure_index_bonding2, strength_ratio_bonding2))
                         i += 1
                         if i > 10:
                             print(msg)
@@ -645,3 +649,7 @@ def nanmin13s(nparray):
     if np.any(np.isfinite(nparray)):
         return write_float_13e(np.nanmin(nparray))
     return '             '
+
+def filter_nan(my_1d_array):
+    is_not_nan = ~np.isnan(my_1d_array)
+    return my_1d_array[is_not_nan]

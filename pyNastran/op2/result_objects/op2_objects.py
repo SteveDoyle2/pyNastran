@@ -1,5 +1,6 @@
 #pylint: disable=C0301,C0111
 import copy
+import warnings
 from itertools import count
 from struct import pack
 from typing import Tuple, List, Union
@@ -454,7 +455,7 @@ class ScalarObject(BaseScalarObject):
             grid_type_str = GRID_TYPE_INT_TO_STR[grid_type]
         except KeyError:
             if grid_type in [538976288, 1065353216]: # 32/64 bit error...
-                self.log.error(''.join(self.get_stats()))
+                warnings.warn(''.join(self.get_stats()))
             raise RuntimeError(f'grid_type={grid_type!r}')
         return grid_type_str
 

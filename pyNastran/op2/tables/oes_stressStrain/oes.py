@@ -49,6 +49,7 @@ from pyNastran.op2.tables.oes_stressStrain.real.oes_rods import RealRodStressArr
 from pyNastran.op2.tables.oes_stressStrain.real.oes_shear import RealShearStrainArray, RealShearStressArray
 from pyNastran.op2.tables.oes_stressStrain.real.oes_solids import RealSolidStrainArray, RealSolidStressArray
 from pyNastran.op2.tables.oes_stressStrain.real.oes_solids_nx import RealSolidStressArrayNx, RealSolidStrainArrayNx
+from pyNastran.op2.tables.oes_stressStrain.real.oes_solids_composite_nx import RealSolidCompositeStressArray, RealSolidCompositeStrainArray
 from pyNastran.op2.tables.oes_stressStrain.real.oes_springs import (RealSpringStressArray, RealSpringStrainArray,
                                                                     RealNonlinearSpringStressArray)
 from pyNastran.op2.tables.oes_stressStrain.real.oes_triax import RealTriaxStressArray, RealTriaxStrainArray
@@ -1823,7 +1824,7 @@ class OES(OP2Common):
             self.log.warning('skipping FASTP')
             return ndata
             #return self._not_implemented_or_skip(data, ndata, msg)
-        elif self.is_nx and self.element_type == 269:
+        elif self.is_nx and self.element_type in [269, 270]:
             # 269-CHEXAL
             n, nelements, ntotal = self._oes_composite_solid_nx(data, ndata, dt, is_magnitude_phase,
                                                                 result_type, prefix, postfix)
@@ -3227,6 +3228,9 @@ class OES(OP2Common):
     def _oes_csolid_composite(self, data, ndata, dt, is_magnitude_phase: bool,
                               result_type: int, prefix: str, postfix: str) -> int:
         """
+        306: Nonlinear composite HEXA element (CHEXALN)
+        307: Nonlinear composite PENTA element (CPENTALN)
+
         reads stress/strain for element type:
          - 306 : CHEXALN
          - 307 : CPENTA
@@ -6461,6 +6465,9 @@ class OES(OP2Common):
     def _oes_composite_solid_nx(self, data, ndata: int, dt, is_magnitude_phase: bool,
                                 result_type: str, prefix: str, postfix: str):
         """
+        269: Composite HEXA element (CHEXAL)
+        270: Composite PENTA element (CPENTAL)
+
         NX PCOMPS (CHEXAL, CPENTAL)
         Linear
 
@@ -6531,76 +6538,94 @@ class OES(OP2Common):
           For each fiber location requested (PLSLOC), words 4 through 16 repeat 5 times.
         """
         n = 0
-        result_name = 'composite_chexa'
-        #if self._results.is_not_saved(result_name):
-            #return ndata, None, None
-        #self._results._found_result(result_name)
-        #slot = self.get_result(result_name)
+        assert self.is_stress is True, self.code_information()
+        if self.element_type == 269:
+            result_name = 'stress.chexa_composite_stress'
+        elif self.element_type == 270:
+            result_name = 'stress.cpenta_composite_stress'
+        else:
+            raise NotImplementedError(self.code_information())
+
+        if self._results.is_not_saved(result_name):
+            return ndata, None, None
+        self._results._found_result(result_name)
+        slot = self.get_result(result_name)
 
         #if result_type == 0 and self.num_wide == 43:  # real
             #self.log.warning(f'skipping corner option for composite solid-{self.element_name}-{self.element_type}')
             #struct9 = Struct(self._endian + mapfmt(self._analysis_code_fmt + b'i 4s i 5f', self.size)) # 9
 
-        obj_vector_real = RealSolidStressArray
-        slot = self.crod_stress
+        obj_vector_real = RealSolidCompositeStressArray
 
         if result_type == 0 and self.num_wide == 11:  # real; center
-            self.log.warning(f'skipping center option for composite solid-{self.element_name}-{self.element_type}')
+            #self.log.warning(f'skipping center option for composite solid-{self.element_name}-{self.element_type}')
             ntotal = 44 * self.factor # 11 * 4
             nelements = ndata // ntotal
-            return nelements * self.num_wide * 4, None, None
 
             auto_return, is_vectorized = self._create_oes_object4(
                 nelements, result_name, slot, obj_vector_real)
             if auto_return:
                 return nelements * self.num_wide * 4, None, None
 
-            obj = self.obj
-            #eid_old = 0
+            obj = self.obj  # type: RealCompositeSolidStressArray
             struct11 = Struct(self._endian + mapfmt(self._analysis_code_fmt + b'i 4s i 7f', self.size)) # 11
             #sort_method = self.sort_method
             #add_eid_sort_x = getattr(obj, 'add_eid_sort' + str(self.sort_method))
             #add_sort_x = getattr(obj, 'add_sort' + str(self.sort_method))
-            #self.show_data(data)
 
             for unused_i in range(nelements):
                 edata = data[n:n+ntotal]  # 4*11
-                #self.show_data(edata)
                 out = struct11.unpack(edata)
-                (eid_device, layer, o1, o2, t12, t1z, t2z, angle, major, minor, ovm) = out
-                #print(out)
+                print(out)
+                (eid_device, layer, location_bytes, grid, o11, o22, o33, t12, t23, t13, ovm) = out
+                eid, dt = get_eid_dt_from_eid_device(
+                    eid_device, self.nonlinear_factor, self.sort_method)
+
+                location = location_bytes.strip().decode('latin1')
+                assert location == 'MID', out
+                #print(f'eid,layer=({eid},{layer}) location={location!r} grid={grid} o11={o11:g} o22={o22:g} o33={o33:g} t12={t12:g} t1z={t13:g} t2z={t23:g} ovm={ovm:g}')
+                obj.add_sort1(dt, eid, layer, location, grid, o11, o22, o33, t12, t23, t13, ovm)
                 n += ntotal
         elif result_type == 0 and self.num_wide == 43:  # real; center
-            self.log.warning(f'skipping center option for composite solid-{self.element_name}-{self.element_type}')
+            #self.log.warning(f'skipping center option for composite solid-{self.element_name}-{self.element_type}')
             ntotal = 172 * self.factor  # 43*4
             nelements = ndata // ntotal
 
-            return nelements * self.num_wide * 4, None, None
             auto_return, is_vectorized = self._create_oes_object4(
                 nelements, result_name, slot, obj_vector_real)
             if auto_return:
                 return nelements * self.num_wide * 4, None, None
 
-            obj = self.obj
+            obj = self.obj  # type: RealCompositeSolidStressArray
 
-            #eid_old = 0
             structa = Struct(self._endian + mapfmt(self._analysis_code_fmt + b'i 4s', self.size)) # 3
             structb = Struct(self._endian + mapfmt(b'i 7f', self.size)) # 8
             #sort_method = self.sort_method
             #add_eid_sort_x = getattr(obj, 'add_eid_sort' + str(self.sort_method))
             #add_sort_x = getattr(obj, 'add_sort' + str(self.sort_method))
-            #self.show_data(data)
             ntotal1 = 12 * self.factor # 4*3
             ntotal2 = 32 * self.factor # 4*8
             for unused_i in range(nelements):
                 edata = data[n:n+ntotal1]  # 4*3, 4*40 = 4*43
                 #self.show_data(edata)
                 out = structa.unpack(edata)
+                #(13, 1, b' MID')
+                eid_device, layer, location_bytes = out
+                eid, dt = get_eid_dt_from_eid_device(
+                    eid_device, self.nonlinear_factor, self.sort_method)
+
+                location = location_bytes.strip().decode('latin1')
+                assert location == 'MID', out
                 #print(out)
                 n += ntotal1
                 for unused_j in range(5):
                     edata = data[n:n+ntotal2]
                     out = structb.unpack(edata)
+
+                    #print('  %s' % str(out))
+                    (grid, o11, o22, o33, t12, t23, t13, ovm) = out
+                    #print(f'eid,layer=({eid},{layer}) location={location!r} grid={grid} o11={o11:g} o22={o22:g} o33={o33:g} t12={t12:g} t1z={t13:g} t2z={t23:g} ovm={ovm:g}')
+                    obj.add_sort1(dt, eid, layer, location, grid, o11, o22, o33, t12, t23, t13, ovm)
                     n += ntotal2
                     #print(out)
                 #(eid_device, layer, o1, o2, t12, t1z, t2z, angle, major, minor, ovm) = out
@@ -6608,8 +6633,6 @@ class OES(OP2Common):
                 #n += ntotal
         else:
             raise NotImplementedError(self.code_information())
-        n = ndata
-        nelements, ntotal = None, None
         return n, nelements, ntotal
 
     def _oes_cbend(self, data, ndata, dt, is_magnitude_phase,

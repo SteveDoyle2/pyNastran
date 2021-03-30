@@ -8,10 +8,14 @@ This file defines the OUG Table, which contains:
    - FLUX = ALL
 
 """
+from struct import Struct
+from typing import Dict, Any
 import numpy as np
 from pyNastran.op2.op2_interface.op2_common import OP2Common
 from pyNastran.op2.op2_interface.op2_reader import mapfmt
 
+from pyNastran.op2.tables.oqg_constraintForces.separation_distance import (
+    SeparationDistanceArray)
 from pyNastran.op2.tables.oqg_constraintForces.oqg_spc_forces import (
     RealSPCForcesArray, ComplexSPCForcesArray,)
 from pyNastran.op2.tables.oqg_constraintForces.oqg_mpc_forces import (
@@ -27,21 +31,32 @@ class OQG(OP2Common):
 
     def _read_opsdi1_3(self, data: bytes, ndata: int):
         """Initial separation distance"""
+        self.to_nx(f' because table_name={self.table_name} was found')
         self._read_oqg1_3(data, ndata)
 
     def _read_opsdi1_4(self, data: bytes, ndata: int):
         """Initial separation distance"""
-        return self._read_opsds1_intial_final_4(data, ndata, self.op2_results.separation_initial)
+        return self._read_opsds1_intial_final_4(data, ndata,
+                                                'separation_initial',
+                                                self.op2_results.separation_initial,
+                                                SeparationDistanceArray)
 
     def _read_opsds1_3(self, data: bytes, ndata: int):
         """Final separation distance"""
+        self.to_nx(f' because table_name={self.table_name} was found')
         self._read_oqg1_3(data, ndata)
 
     def _read_opsds1_4(self, data: bytes, ndata: int):
         """Final separation distance"""
-        return self._read_opsds1_intial_final_4(data, ndata, self.op2_results.separation_final)
+        return self._read_opsds1_intial_final_4(data, ndata,
+                                                'separation_final',
+                                                self.op2_results.separation_final,
+                                                SeparationDistanceArray)
 
-    def _read_opsds1_intial_final_4(self, data: bytes, ndata: int, out_dict):
+    def _read_opsds1_intial_final_4(self, data: bytes, ndata: int,
+                                    result_name: str,
+                                    slot: Dict[Any, Any],
+                                    obj_vector_real: SeparationDistanceArray):
         """
         $                    D E F O R M E D  C O N T A C T  S E P A R A T I O N  D I S T A N C E
         $
@@ -49,13 +64,38 @@ class OQG(OP2Common):
         $             1      G      1.010815E-01
         $             6      G      9.858034E-02
         """
-        if data:
+        assert self.num_wide == 2, self.code_information()
+        #if self._results.is_not_saved(result_name):
+            #return ndata
+        #self._results._found_result(result_name)
+        #slot = self.get_result(result_name)
+        ntotal = 2 * 4 * self.factor
+        nnodes = ndata // ntotal
+
+        auto_return, is_vectorized = self._create_node_object4(
+            nnodes, result_name, slot, obj_vector_real)
+        if auto_return:
+            return nnodes * ntotal
+
+        obj = self.obj
+        if self.use_vector and is_vectorized and self.sort_method == 1:
+            n = nnodes * 4 * self.num_wide
+            itotal = obj.itotal
+            itotal2 = obj.itotal + nnodes
             ints = np.frombuffer(data, self.idtype8)[::2]
             floats = np.frombuffer(data, self.fdtype8)[1::2]
-            out_dict[self.isubcase] = {
-                'node_ids' : ints // 10,
-                'distance': floats,
-            }
+            obj.node = ints // 10
+            obj.data[obj.itime, itotal:itotal2, 0] = floats
+        else:
+            n = 0
+            dt = self.nonlinear_factor
+            structi = Struct(self._endian + mapfmt(b'if', self.size))
+            for unused_i in range(nnodes):
+                edata = data[n:n+ntotal]
+                nid_code, distance = structi.unpack(edata)
+                nid = nid_code // 10
+                obj.add_sort1(dt, nid, distance)
+                n += ntotal
         return ndata
 
     def _read_oqg1_3(self, data: bytes, ndata: int):
@@ -936,7 +976,7 @@ class OQG(OP2Common):
             obj.itotal = itotal2
         else:
             n = 0
-            for i in range(nnodes):
+            for unused_i in range(nnodes):
                 edata = data[n:n+ntotal]
                 nid_device, pressure, s1, s2, s3 = struct1.unpack(edata)
                 nid = nid_device // 10
