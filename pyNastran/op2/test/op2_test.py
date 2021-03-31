@@ -166,7 +166,8 @@ def run(regenerate=True, make_geom=False, combine=True,
     stop_on_failure = False
     get_skip_cards = False
 
-    max_size = 4000. # MB
+    #max_size = 4000. # MB
+    max_size = 500. # MB
     filter_simcenter = False
     failed_cases_filename = 'failed_cases%s%s.in' % (sys.version_info[:2])
     if get_skip_cards:

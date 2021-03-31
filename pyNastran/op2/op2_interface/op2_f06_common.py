@@ -655,6 +655,12 @@ class OP2_F06_Common:
     @property
     def cpenta_composite_stress(self):
         return self.op2_results.stress.cpenta_composite_stress
+    @property
+    def chexa_composite_strain(self):
+        return self.op2_results.strain.chexa_composite_strain
+    @property
+    def cpenta_composite_strain(self):
+        return self.op2_results.strain.cpenta_composite_strain
     # ------------------------------------------------------------------
     # Stress - Setter
     @celas1_stress.setter
@@ -682,6 +688,20 @@ class OP2_F06_Common:
     @cpyram_stress.setter
     def cpyram_stress(self, cpyram_stress):
         self.op2_results.stress.cpyram_stress = cpyram_stress
+
+    @chexa_stress.setter
+    def chexa_composite_stress(self):
+        self.op2_results.stress.chexa_composite_stress = chexa_composite_stress
+    @cpenta_composite_stress.setter
+    def cpenta_composite_stress(self, cpenta_composite_stress):
+        self.op2_results.stress.cpenta_composite_stress = cpenta_composite_stress
+    @chexa_composite_strain.setter
+    def chexa_composite_strain(self, chexa_composite_strain):
+        self.op2_results.strain.chexa_composite_strain = chexa_composite_strain
+    @cpenta_composite_strain.setter
+    def cpenta_composite_strain(self, cpenta_composite_strain):
+        self.op2_results.strain.cpenta_composite_strain = cpenta_composite_strain
+
     # ------------------------------------------------------------------
     # Strain - Getter
     @property

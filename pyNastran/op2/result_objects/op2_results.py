@@ -538,6 +538,10 @@ class Strain:
         self.celas3_strain = {}
         self.celas4_strain = {}
 
+        # 269, 270
+        self.chexa_composite_strain = {}
+        self.cpenta_composite_strain = {}
+
     def get_table_types(self):
         tables = [
             # OES - CELAS1/CELAS2/CELAS3/CELAS4 strain
@@ -545,6 +549,8 @@ class Strain:
 
             # OES - isotropic CTETRA/CHEXA/CPENTA strain
             'ctetra_strain', 'cpenta_strain', 'chexa_strain', 'cpyram_strain',
+
+            'chexa_composite_strain', 'cpenta_composite_strain',
         ]
         return ['strain.' + table for table in tables]
 

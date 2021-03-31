@@ -1748,10 +1748,6 @@ class OES(OP2Common):
         elif self.element_type == 101: # AABSF
             return ndata
 
-        #elif self.element_type in [140, 201]:
-            ## 140-HEXA8FD, 201-QUAD4FD
-            #return ndata
-
         elif self.element_type in [47, 48, 189, 190]:
             # 47-AXIF2
             # 48-AXIF3
@@ -1826,12 +1822,75 @@ class OES(OP2Common):
             #return self._not_implemented_or_skip(data, ndata, msg)
         elif self.is_nx and self.element_type in [269, 270]:
             # 269-CHEXAL
+            # 270-PENTAL
             n, nelements, ntotal = self._oes_composite_solid_nx(data, ndata, dt, is_magnitude_phase,
                                                                 result_type, prefix, postfix)
+        elif self.element_type in [159, 184,
+                                   200, 201, 236, 237, 242, 243, 244, 245,
+                                   272, 273, 274]:
+            # 159-SEAMP
+            # 184-CBEAM3
+            #
+            # 200-WELD
+            # 201 CQUAD4FD
+            # 236 CTRIAR-corner
+            # 237 CTRIAR-center
+            # 242-CHEXA?
+            # 243 CQUADX4
+            # 244 CTRAX6
+            # 245 CQUADX8
+            #
+            # 272 CPLSTN4
+            # 273 CPLSTN6
+            # 274 CPLSTN3
+            self.log.warning(f'skipping {self.element_name}-{self.element_type}')
+            return ndata
+        elif self.element_type in [312, 313, 314, 315, 316, 317, 318, 319, 320, 321, 322, 323,
+                                   343, 344, 345, 346, 347, 348, 349,
+                                   350, 351, 352, 355, 356, 357, 358, 363]:
+            #
+            # 312 TRAX3
+            # 313 QUADX4
+            # 314 TRAX6
+            # 315 QUADX8
+            # 316 PLSTN3
+            # 317 PLSTN4
+            # 318 PLSTN6
+            # 319 PLSTN8
+            # 320 PLSTS3
+            # 321 PLSTS4
+            # 322 PLSTS6
+            # 323 PLSTS8
+            #
+            # 343 CTRIA6 SOL 401
+            # 344 CQUAD8 SOL 401
+            # 345 CTRIAR SOL 401
+            # 346 CQUADR SOL 401
+            # 347 CBAR SOL 401
+            # 348 CBEAM SOL 401
+            # 349 CBUSH1D SOL 401
+            #
+            # 350 CELAS1 SOL 401
+            # 351 CELAS2 SOL 401
+            # 352 CBUSH SOL 401
+            # 355 Composite triangular shell element (CTRIA6); SOL 402?
+            # 356 Composite quadrilateral shell element (CQUAD8); SOL 402?
+            # 357 Composite triangular shell element (CTRIAR); SOL 402?
+            # 358 Composite quadrilateral shell element (CQUADR); SOL 402?
+            # 363 CROD SOL 402
+            self.log.warning(f'skipping {self.element_name}-{self.element_type}')
+            return ndata
         else:
             #msg = 'sort1 Type=%s num=%s' % (self.element_name, self.element_type)
             msg = self.code_information()
+            #raise NotImplementedError(msg)
             return self._not_implemented_or_skip(data, ndata, msg)
+
+        try:
+            nelements
+        except NameError:
+            raise RuntimeError(self.code_information())
+
         if nelements is None:
             return n
 
@@ -6538,11 +6597,13 @@ class OES(OP2Common):
           For each fiber location requested (PLSLOC), words 4 through 16 repeat 5 times.
         """
         n = 0
-        assert self.is_stress is True, self.code_information()
+        #assert self.is_stress is True, self.code_information()
+
+        stress_strain = 'stress' if self.is_stress else 'strain'
         if self.element_type == 269:
-            result_name = 'stress.chexa_composite_stress'
+            result_name = f'{stress_strain}.chexa_composite_{stress_strain}'
         elif self.element_type == 270:
-            result_name = 'stress.cpenta_composite_stress'
+            result_name = f'{stress_strain}.cpenta_composite_{stress_strain}'
         else:
             raise NotImplementedError(self.code_information())
 
@@ -6554,8 +6615,8 @@ class OES(OP2Common):
         #if result_type == 0 and self.num_wide == 43:  # real
             #self.log.warning(f'skipping corner option for composite solid-{self.element_name}-{self.element_type}')
             #struct9 = Struct(self._endian + mapfmt(self._analysis_code_fmt + b'i 4s i 5f', self.size)) # 9
-
-        obj_vector_real = RealSolidCompositeStressArray
+        obj_vector_real = RealSolidCompositeStressArray if self.is_stress else RealSolidCompositeStrainArray
+        #obj_vector_real = RealSolidCompositeStressArray
 
         if result_type == 0 and self.num_wide == 11:  # real; center
             #self.log.warning(f'skipping center option for composite solid-{self.element_name}-{self.element_type}')
@@ -6576,7 +6637,7 @@ class OES(OP2Common):
             for unused_i in range(nelements):
                 edata = data[n:n+ntotal]  # 4*11
                 out = struct11.unpack(edata)
-                print(out)
+                #print(out)
                 (eid_device, layer, location_bytes, grid, o11, o22, o33, t12, t23, t13, ovm) = out
                 eid, dt = get_eid_dt_from_eid_device(
                     eid_device, self.nonlinear_factor, self.sort_method)
