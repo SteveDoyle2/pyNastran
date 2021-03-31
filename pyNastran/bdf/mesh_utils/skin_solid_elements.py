@@ -266,6 +266,9 @@ def _write_skin_solid_faces(model, skin_filename, face_map,
                 prop = model.properties[pid]
                 if prop.type in ['PSOLID']: # 'PSHELL',
                     mid = prop.Mid()
+                elif prop.type in ['PCOMPS']: # 'PSHELL',
+                    #print(prop.get_stats())
+                    mid = prop.Mid()
                 #elif prop.type in ['PCOMP', 'PCOMPG']:
                     #mid = prop.mids[0]
                 else:

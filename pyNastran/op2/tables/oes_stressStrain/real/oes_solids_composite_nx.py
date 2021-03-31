@@ -155,7 +155,7 @@ class RealSolidCompositeArray(OES_Object):
             #self.element_cid = element_cid
             self.data = data
 
-    def build_dataframe(self):
+    def _build_dataframe(self):
         """creates a pandas dataframe"""
         import pandas as pd
 
@@ -701,7 +701,7 @@ def _get_solid_msgs(self):
             '  ELEMENT-ID    GRID-ID        NORMAL              SHEAR             PRINCIPAL       -A-  -B-  -C-     PRESSURE       %s \n' % von_mises]
         #tetra_msg = ['                     S T R A I N S   I N    T E T R A H E D R O N   S O L I D   E L E M E N T S   ( C T E T R A )\n', ]
         #penta_msg = ['                      S T R A I N S   I N   P E N T A H E D R O N   S O L I D   E L E M E N T S   ( P E N T A )\n', ]
-        #hexa_msg = ['                        S T R A I N S   I N   H E X A H E D R O N   S O L I D   E L E M E N T S   ( H E X A )\n', ]
+        hexa_msg = ['                        S T R A I N S   I N   L A Y E R E D   C O M P O S I T E   E L E M E N T S   ( H E X A )\n', ]
         #pyram_msg = ['                        S T R A I N S   I N   P Y R A M I D   S O L I D   E L E M E N T S   ( P Y R A M )\n', ]
 
     #tetra_msg += base_msg

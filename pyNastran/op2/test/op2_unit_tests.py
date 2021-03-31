@@ -1488,7 +1488,7 @@ class TestOP2(Tester):
 
         log = get_logger(level='warning')
         run_op2(op2_filename, make_geom=True, write_bdf=False, read_bdf=True,
-                write_f06=True, write_op2=True,
+                write_f06=True, write_op2=False,
                 is_mag_phase=False,
                 is_sort2=False, is_nx=None, delete_f06=True,
                 subcases=None, exclude=None, short_stats=False,
@@ -1520,7 +1520,7 @@ class TestOP2(Tester):
 
         log = get_logger(level='warning')
         run_op2(op2_filename, make_geom=True, write_bdf=False, read_bdf=True,
-                write_f06=True, write_op2=True,
+                write_f06=True, write_op2=False,
                 is_mag_phase=False,
                 is_sort2=False, is_nx=None, delete_f06=True,
                 subcases=None, exclude=None, short_stats=False,

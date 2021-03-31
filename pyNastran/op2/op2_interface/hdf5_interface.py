@@ -32,6 +32,7 @@ from pyNastran.op2.tables.opg_appliedLoads.opg_load_vector import (
     RealLoadVectorArray, ComplexLoadVectorArray,
     RealTemperatureVectorArray,
 )
+from pyNastran.op2.tables.oqg_constraintForces.separation_distance import SeparationDistanceArray
 from pyNastran.op2.tables.oqg_constraintForces.oqg_contact_forces import RealContactForcesArray
 from pyNastran.op2.tables.oqg_constraintForces.oqg_thermal_gradient_and_flux import (
     #RealTemperatureGradientAndFlux,
@@ -49,6 +50,9 @@ from pyNastran.op2.tables.oes_stressStrain.real.oes_bars100 import RealBar10Node
 from pyNastran.op2.tables.oes_stressStrain.real.oes_beams import RealBeamStressArray, RealBeamStrainArray, RealNonlinearBeamStressArray
 from pyNastran.op2.tables.oes_stressStrain.real.oes_shear import RealShearStressArray, RealShearStrainArray
 from pyNastran.op2.tables.oes_stressStrain.real.oes_solids import RealSolidStressArray, RealSolidStrainArray
+from pyNastran.op2.tables.oes_stressStrain.real.oes_solids_nx import RealSolidStrainArrayNx, RealSolidStressArrayNx
+from pyNastran.op2.tables.oes_stressStrain.real.oes_solids_composite_nx import RealSolidCompositeStressArray, RealSolidCompositeStrainArray
+
 from pyNastran.op2.tables.oes_stressStrain.real.oes_springs import RealSpringStressArray, RealSpringStrainArray, RealNonlinearSpringStressArray
 from pyNastran.op2.tables.oes_stressStrain.real.oes_composite_plates import RealCompositePlateStressArray, RealCompositePlateStrainArray
 from pyNastran.op2.tables.oes_stressStrain.real.oes_bush import RealBushStressArray, RealBushStrainArray
@@ -193,6 +197,9 @@ TABLE_OBJ_MAP = {
     'solution_set.velocities' : (RealVelocityArray, ComplexVelocityArray, ),
     'solution_set.accelerations' : (RealAccelerationArray, ComplexAccelerationArray, ),
     'solution_set.eigenvectors' : (RealEigenvectorArray, ),
+
+    'separation_initial' : (SeparationDistanceArray,),
+    'separation_final' : (SeparationDistanceArray,),
 
     'spc_forces' : (RealSPCForcesArray, ComplexSPCForcesArray),
     'spc_forces_v' : (RealSPCForcesArray, ComplexSPCForcesArray),
@@ -687,6 +694,7 @@ TABLE_OBJ_MAP = {
     'RASEATC.ctetra_stress' : (RealSolidStressArray, ),
 
     'stress.cpenta_stress' : (RealSolidStressArray, ComplexSolidStressArray),
+    'stress.cpenta_composite_strain': (RealSolidCompositeStrainArray, ),
     'ato.cpenta_stress' : (RandomSolidStressArray, ),
     'crm.cpenta_stress' : (RandomSolidStressArray, ),
     'psd.cpenta_stress' : (RandomSolidStressArray, ),
@@ -696,6 +704,7 @@ TABLE_OBJ_MAP = {
     'RASEATC.cpenta_stress' : (RealSolidStressArray, ),
 
     'stress.chexa_stress' : (RealSolidStressArray, ComplexSolidStressArray),
+    'stress.chexa_composite_stress': (RealSolidCompositeStressArray, ),
     'ato.chexa_stress' : (RandomSolidStressArray, ),
     'crm.chexa_stress' : (RandomSolidStressArray, ),
     'psd.chexa_stress' : (RandomSolidStressArray, ),
@@ -716,6 +725,7 @@ TABLE_OBJ_MAP = {
     'RAEEATC.ctetra_strain' : (RealSolidStrainArray, ),
 
     'strain.cpenta_strain' : (RealSolidStrainArray, ComplexSolidStrainArray),
+    'strain.cpenta_composite_strain': (RealSolidCompositeStrainArray, ),
     'ato.cpenta_strain' : (RandomSolidStrainArray, ),
     'crm.cpenta_strain' : (RandomSolidStrainArray, ),
     'psd.cpenta_strain' : (RandomSolidStrainArray, ),
@@ -732,6 +742,7 @@ TABLE_OBJ_MAP = {
     'no.chexa_strain' : (RandomSolidStrainArray, ),
     'RAECONS.chexa_strain' : (RealSolidStrainArray, ),
     'RAEEATC.chexa_strain' : (RealSolidStrainArray, ),
+    'strain.chexa_composite_strain': (RealSolidCompositeStrainArray, ),
 
     'grid_point_forces' : (RealGridPointForcesArray, ComplexGridPointForcesArray),
     #'RAGCONS.grid_point_forces' : (RealGridPointForcesArray, ),
