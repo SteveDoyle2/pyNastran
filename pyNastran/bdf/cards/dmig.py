@@ -107,6 +107,9 @@ class DTI(BaseCard):
             self.comment = comment
         self.name = name
         self.fields = fields
+        for key, fieldsi in fields.items():
+            for fieldi in fieldsi:
+                assert not isinstance(fieldi, bytes), fieldsi
         assert len(fields) > 0, fields
 
     @classmethod

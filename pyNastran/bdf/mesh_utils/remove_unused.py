@@ -236,7 +236,7 @@ def remove_unused(bdf_filename, remove_nids=True, remove_cids=True,
                 mids = prop.Mids()
                 mids_used.add(prop.Mid())
                 mids_used.update(mids)
-        elif card_type == 'PCOMPS':
+        elif card_type in ['PCOMPS', 'PCOMPLS']:
             for pid in ids:
                 prop = model.properties[pid]
                 mids = prop.Mids()
@@ -512,7 +512,7 @@ def remove_unused(bdf_filename, remove_nids=True, remove_cids=True,
 
         #elif prop.type in prop_mid:
             #mids_used.append(prop.Mid())
-        #elif prop.type in ['PCOMP', 'PCOMPG', 'PCOMPS']:
+        #elif prop.type in ['PCOMP', 'PCOMPG', 'PCOMPS', 'PCOMPLS']:
             #mids_used.extend(prop.Mids())
 
         #elif prop.type == 'PBCOMP':

@@ -5734,7 +5734,8 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         if 'PSHELL' in model.card_count:
             is_pshell = True
 
-        pids_pcomp = model.get_card_ids_by_card_types(['PCOMP', 'PCOMPG'], combine=True)
+        composite_properties = ['PCOMP', 'PCOMPG', 'PCOMPS', 'PCOMPLS']
+        pids_pcomp = model.get_card_ids_by_card_types(composite_properties, combine=True)
         properties = model.properties
         for superelement in model.superelement_models.values():
             properties.update(superelement.properties)
@@ -5793,7 +5794,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                 thickness[i, 1] = prop.twelveIt3
                 thickness[i, 2] = prop.tst
 
-            elif prop.type in ['PCOMP', 'PCOMPG']:
+            elif prop.type in ['PCOMP', 'PCOMPG', 'PCOMPS', 'PCOMPLS']:
                 i = np.where(pids == pid)[0]
                 npliesi = prop.nplies
                 nplies_pcomp[i] = npliesi

@@ -14,7 +14,7 @@ from pyNastran.bdf.bdf_interface.add_methods import AddMethods
 
 from pyNastran.bdf.cards.elements.elements import CFAST, CGAP, CRAC2D, CRAC3D, PLOTEL, GENEL
 from pyNastran.bdf.cards.properties.properties import PFAST, PGAP, PRAC2D, PRAC3D
-from pyNastran.bdf.cards.properties.solid import PLSOLID, PSOLID, PIHEX, PCOMPS
+from pyNastran.bdf.cards.properties.solid import PLSOLID, PSOLID, PIHEX, PCOMPS, PCOMPLS
 from pyNastran.bdf.cards.cyclic import CYAX, CYJOIN
 #from pyNastran.bdf.cards.msgmesh import CGEN, GMCORD, GMLOAD
 
@@ -323,6 +323,7 @@ CARD_MAP = {
     'PSOLID' : PSOLID,
     'PLSOLID' : PLSOLID,
     'PCOMPS' : PCOMPS,
+    'PCOMPLS': PCOMPLS,
 
     'CTETRA4' : CTETRA4,
     'CPENTA6' : CPENTA6,

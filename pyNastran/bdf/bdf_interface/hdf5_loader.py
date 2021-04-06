@@ -1136,7 +1136,8 @@ def hdf5_load_dti(model, group, encoding):
             else:
                 if isinstance(sub_groupi, h5py._hl.dataset.Dataset):
                     #print(sub_group, sub_groupi)
-                    lst2 = _cast(sub_groupi).tolist()
+                    lst = _cast(sub_groupi).tolist()
+                    lst2 = [val.decode(encoding) if isinstance(val, bytes) else val for val in lst]
                 else:
                     #print(sub_group, sub_groupi, len(sub_groupi.keys()))
                     keys = sub_groupi.keys()

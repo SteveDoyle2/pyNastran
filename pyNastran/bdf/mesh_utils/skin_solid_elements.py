@@ -67,7 +67,7 @@ def write_skin_solid_faces(model, skin_filename,
                 prop = model.properties[pid] # PSOLID
                 if prop.type in ['PSOLID', 'PLSOLID']:
                     mid = prop.Mid()
-                elif prop.type in ['PCOMPS', 'PCOMP', 'PCOMPG']:
+                elif prop.type in ['PCOMPS', 'PCOMPLS', 'PCOMP', 'PCOMPG']:
                     mid = prop.mids[0]
                 else:
                     raise NotImplementedError(prop)
@@ -266,7 +266,7 @@ def _write_skin_solid_faces(model, skin_filename, face_map,
                 prop = model.properties[pid]
                 if prop.type in ['PSOLID']: # 'PSHELL',
                     mid = prop.Mid()
-                elif prop.type in ['PCOMPS']: # 'PSHELL',
+                elif prop.type in ['PCOMPS', 'PCOMPLS']: # 'PSHELL',
                     #print(prop.get_stats())
                     mid = prop.Mid()
                 #elif prop.type in ['PCOMP', 'PCOMPG']:

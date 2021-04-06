@@ -45,7 +45,7 @@ def get_length_breakdown(model, property_ids=None, stop_if_no_length=True):
         'PDAMP', 'PBUSH', 'PBUSH1D', 'PBUSH2D',
         'PELAST', 'PDAMPT', 'PBUSHT', 'PDAMP5',
         'PFAST', 'PGAP', 'PRAC2D', 'PRAC3D', 'PCONEAX', 'PLSOLID',
-        'PCOMPS', 'PVISC',
+        'PCOMPS', 'PCOMPLS', 'PVISC',
         'PSHELL', 'PCOMP', 'PCOMPG', 'PSHEAR',
 
         # Nastran 95
@@ -126,7 +126,7 @@ def get_area_breakdown(model, property_ids=None, stop_if_no_area=True, sum_bar_a
     #'PBEAM3',
     #'PBEND',
     #'PIHEX',
-    #'PCOMPS',
+    #'PCOMPS', 'PCOMPLS'
 
     """
     skip_props = {
@@ -134,7 +134,7 @@ def get_area_breakdown(model, property_ids=None, stop_if_no_area=True, sum_bar_a
         'PDAMP', 'PBUSH', 'PBUSH1D', 'PBUSH2D',
         'PELAST', 'PDAMPT', 'PBUSHT', 'PDAMP5',
         'PFAST', 'PGAP', 'PRAC2D', 'PRAC3D', 'PCONEAX', 'PLSOLID',
-        'PCOMPS', 'PVISC', 'PBCOMP', 'PBEND',
+        'PCOMPS', 'PCOMPLS', 'PVISC', 'PBCOMP', 'PBEND',
 
         # Nastran 95
         'PIHEX',
@@ -274,7 +274,7 @@ def get_volume_breakdown(model, property_ids=None, stop_if_no_volume=True):
                 elem = model.elements[eid]
                 volumei = elem.Volume()
                 volumes.append(volumei)
-        elif prop.type in ['PSOLID', 'PCOMPS', 'PLSOLID', 'PIHEX']:
+        elif prop.type in ['PSOLID', 'PCOMPS', 'PCOMPLS', 'PLSOLID', 'PIHEX']:
             for eid in eids:
                 elem = model.elements[eid]
                 if elem.type in ['CTETRA', 'CPENTA', 'CHEXA']:
@@ -340,7 +340,7 @@ def get_mass_breakdown(model, property_ids=None, stop_if_no_mass=True, detailed=
     #'PBEAM3',
     #'PBEND',
     #'PIHEX',
-    #'PCOMPS',
+    #'PCOMPS', 'PCOMPLS',
 
     """
     pid_eids = model.get_element_ids_dict_with_pids(
@@ -424,7 +424,7 @@ def get_mass_breakdown(model, property_ids=None, stop_if_no_mass=True, detailed=
                 #massi = elem.Mass()
                 #volumes.append(massi)
 
-        elif prop.type in ['PSOLID', 'PCOMPS', 'PLSOLID', 'PIHEX']:
+        elif prop.type in ['PSOLID', 'PCOMPS', 'PCOMPLS', 'PLSOLID', 'PIHEX']:
             rho = prop.Rho()
             for eid in eids:
                 elem = model.elements[eid]

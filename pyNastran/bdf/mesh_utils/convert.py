@@ -641,6 +641,8 @@ def _convert_properties(model: BDF,
 
         #elif prop.type == 'PCOMPS':
             #pass
+        #elif prop.type == 'PCOMPLS':
+            #pass
         elif prop.type == 'PCONEAX':
             #T1 Membrane thickness. (Real > 0.0 if MID1 = 0)
             #T2 Transverse shear thickness. (Real > 0.0 if MID3 = 0)

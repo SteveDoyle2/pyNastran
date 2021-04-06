@@ -2,6 +2,7 @@
 """
 All solid properties are defined in this file.  This includes:
  * PCOMPS
+ * PCOMPLS
  * PLSOLID
  * PSOLID
 
@@ -276,8 +277,8 @@ class PCOMPS(Property):
         """
         pass
 
-    def Mid(self):
-        return self.mids[0]
+    def Mid(self, iply: int=0):
+        return self.mids[iply]
 
     def Rho(self):
         """
@@ -345,6 +346,258 @@ class PCOMPS(Property):
         # this card has integers & strings, so it uses...
         return self.comment + print_card_8(card)
 
+
+class PCOMPLS(Property):
+    """
+    | PCOMPLS | PID | DIRECT | CORDM |   SB   |  ANAL  |
+    |         | C8  |  BEH8  | INT8  | BEH8H  | INT8H  |
+    |         | C20 |  BEH20 | INT20 | BEH20H | INT20H |
+    |         | ID1 |  MID1  |   T1  | THETA1 |        |
+    |         | ID2 |  MID2  |   T2  | THETA2 |        |
+    PCOMPLS 782 1
+            1001 171 .3 12.3
+            100 175 .7 77.7
+    """
+    type = 'PCOMPLS'
+    _field_map = {
+        #1: 'pid', 2:'mid', 3:'cordm', 4:'integ', 5:'stress',
+        #6:'isop', 7:'fctn',
+    }  # type: Dict[int,str]
+
+    @classmethod
+    def _init_from_empty(cls):
+        pid = 1
+        global_ply_ids = [1, 2]
+        mids = [10, 20]
+        thicknesses = [0.1, 0.2]
+        thetas = [30., 60.]
+        return PCOMPLS(pid, global_ply_ids, mids, thicknesses, thetas,
+                      direct=1, cordm=0, sb=None, analysis='ISH',
+                      c8=None, c20=None, comment='')
+
+    def __init__(self, pid, global_ply_ids, mids, thicknesses, thetas,
+                 direct=1, cordm=0, sb=None, analysis='ISH',
+                 c8=None, c20=None, comment=''):
+        """
+        | PCOMPLS | PID | DIRECT | CORDM |   SB   |  ANAL  |
+        |         | C8  |  BEH8  | INT8  | BEH8H  | INT8H  |
+        |         | C20 |  BEH20 | INT20 | BEH20H | INT20H |
+        |         | ID1 |  MID1  |   T1  | THETA1 |        |
+        |         | ID2 |  MID2  |   T2  | THETA2 |        |
+        """
+        if comment:
+            self.comment = comment
+        nplies = len(mids)
+        if c8 is None:
+            c8 = []
+        if c20 is None:
+            c20 = []
+        Property.__init__(self)
+        self.pid = pid
+        self.direct = direct
+        self.analysis = analysis
+        self.cordm = cordm
+        self.sb = sb
+        self.global_ply_ids = global_ply_ids
+        self.mids = mids
+        self.thicknesses = np.array(thicknesses, dtype='float64')
+        self.thetas = np.array(thetas, dtype='float64')
+        self.c8 = c8
+        self.c20 = c20
+        self.mids_ref = None
+
+    @classmethod
+    def add_card(cls, card, comment=''):
+        """
+        Adds a PCOMPS card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
+        pid = integer(card, 1, 'pid')
+        direct = integer_or_blank(card, 2, 'direct', 1)
+        cordm = integer_or_blank(card, 3, 'cordm', 0)
+        sb = double_or_blank(card, 4, 'sb')
+        analysis = string_or_blank(card, 5, 'tref', 'ISH')
+        nfields = len(card) - 1
+        #nrows =
+        ifield = 9
+        global_ply_ids = []
+        mids = []
+        thicknesses = []
+        thetas = []
+        iply = 1
+        c8 = []
+        c20 = []
+        while ifield < nfields:
+            value = card[ifield]
+            """
+            | PCOMPLS | PID | DIRECT | CORDM |   SB   |  ANAL  |
+            |         | C8  |  BEH8  | INT8  | BEH8H  | INT8H  |
+            |         | C20 |  BEH20 | INT20 | BEH20H | INT20H |
+            |         | ID1 |  MID1  |   T1  | THETA1 |        |
+            |         | ID2 |  MID2  |   T2  | THETA2 |        |
+            """
+            if value == 'C8':
+                assert c8 == [], c8
+                #['C8', 'SLCOMP', 'L', None, None, None, None, None]
+
+                #Element structural behavior. See Remarks 4. and 7.
+                #(Character default: SLCOMP for BEH8 and BEH20)
+                behavior_structural8 = string_or_blank(card, ifield+1, 'behavior_structural8', default='SLCOMP')
+                # (Character default: L for INT8, Q for INT20)
+                integration_structural8 = string_or_blank(card, ifield+2, 'integration_structural8', default='L')
+
+                # BEHiH Element heat behavior. See Remarks 4. and 8.
+                # (Character Default: SLCOMP for BEH8H and BEH20H)
+                behavior_heat8 = string_or_blank(card, ifield+3, 'behavior_heat8', default='SLCOMP')
+
+                # INTiH Integration scheme. See Remark 9.
+                # (Character Default: L for INT8H, Q for INT20H)
+                integration_heat8 = string_or_blank(card, ifield+4, 'integration_heat8', default='L')
+                c8 = [
+                    behavior_structural8, integration_structural8,
+                    behavior_heat8, integration_heat8,
+                ]
+                ifield += 8
+                continue
+            elif value == 'C20':
+                assert c02 == [], c20
+                #['C8', 'SLCOMP', 'L', None, None, None, None, None]
+
+                #Element structural behavior. See Remarks 4. and 7.
+                #(Character default: SLCOMP for BEH8 and BEH20)
+                behavior_structural20 = string_or_blank(card, ifield+1, 'behavior_structural20', default='SLCOMP')
+                # (Character default: L for INT8, Q for INT20)
+                integration_structural20 = string_or_blank(card, ifield+2, 'integration_structural20', default='Q')
+
+                # BEHiH Element heat behavior. See Remarks 4. and 8.
+                # (Character Default: SLCOMP for BEH8H and BEH20H)
+                behavior_heat20 = string_or_blank(card, ifield+3, 'behavior_heat20', default='SLCOMP')
+
+                # INTiH Integration scheme. See Remark 9.
+                # (Character Default: L for INT8H, Q for INT20H)
+                integration_heat20 = string_or_blank(card, ifield+4, 'integration_heat20', default='Q')
+                c8 = [
+                    behavior_structural20, integration_structural20,
+                    behavior_heat20, integration_heat20,
+                ]
+                ifield += 8
+                continue
+            global_ply_id = integer(card, ifield, 'global_ply_id_%i' % iply)
+            mid = integer(card, ifield + 1, 'mid_%i' % iply)
+            t = double(card, ifield + 2, 'thickness_%i' % iply)
+            theta = double(card, ifield + 3, 'theta_%i' % iply)
+            global_ply_ids.append(global_ply_id)
+            mids.append(mid)
+            thicknesses.append(t)
+            thetas.append(theta)
+            iply += 1
+            ifield += 8
+        assert len(card) <= ifield, f'len(PCOMPS card) = {len(card):d}\ncard={card}'
+        return PCOMPLS(pid, global_ply_ids, mids, thicknesses, thetas,
+                       direct=direct, cordm=cordm, sb=sb, analysis=analysis,
+                       c8=c8, c20=c20,
+                       comment=comment)
+
+    def _verify(self, xref):
+        """
+        Verifies all methods for this object work
+
+        Parameters
+        ----------
+        xref : bool
+            has this model been cross referenced
+        """
+        pass
+
+    def Mid(self, iply: int=0):
+        return self.mids[iply]
+
+    def Thickness(self, iply: int=0):
+        return self.thicknesses[iply]
+
+    def Rho(self):
+        """
+        Returns the density
+        """
+        rho = np.zeros(self.thicknesses.size, dtype='float64')
+        for i, mid in enumerate(self.mids_ref):
+            rho[i] = mid.rho
+        rhot = rho * self.thicknesses / self.thicknesses.sum()
+        #print('rhot =', rhot)
+        return rhot.mean()
+
+    def Mids(self):
+        return self.mids
+
+    def cross_reference(self, model: BDF) -> None:
+        msg = ', which is required by PCOMPLS pid=%s' % self.pid
+        self.mids_ref = []
+        for mid in self.mids:
+            mid_ref = model.Material(mid, msg=msg)
+            self.mids_ref.append(mid_ref)
+
+    def uncross_reference(self) -> None:
+        """Removes cross-reference links"""
+        self.mids = self.material_ids
+        self.mids_ref = None
+
+    @property
+    def nplies(self) -> int:
+        return len(self.mids)
+
+    @property
+    def material_ids(self) -> List[int]:
+        if self.mids_ref is None:
+            return self.mids
+        mids = []
+        for mid_ref in self.mids_ref:
+            mids.append(mid_ref.mid)
+        return mids
+
+    def raw_fields(self):
+        """
+        | PCOMPLS | PID | DIRECT | CORDM |   SB   |  ANAL  |
+        |         | C8  |  BEH8  | INT8  | BEH8H  | INT8H  |
+        |         | C20 |  BEH20 | INT20 | BEH20H | INT20H |
+        |         | ID1 |  MID1  |   T1  | THETA1 |        |
+        |         | ID2 |  MID2  |   T2  | THETA2 |        |
+        """
+        fields = ['PCOMPLS', self.pid, self.direct, self.cordm, self.sb, self.analysis, None, None, None]
+        if self.c8:
+            fields += ['C8'] + self.c8 + [None, None, None]
+        if self.c20:
+            fields += ['C20'] + self.c20 + [None, None, None]
+
+        mids = self.material_ids
+        for glply, mid, t, theta in zip(self.global_ply_ids,
+                                        mids, self.thicknesses, self.thetas):
+            fields += [glply, mid, t, theta, None, None, None, None]
+        return fields
+
+    def repr_fields(self):
+        #cordm = set_blank_if_default(self.cordm, 0)
+        fields = ['PCOMPLS', self.pid, self.direct, self.cordm, self.sb, self.analysis, None, None, None]
+        if self.c8:
+            fields += ['C8'] + self.c8 + [None, None, None]
+        if self.c20:
+            fields += ['C20'] + self.c20 + [None, None, None]
+
+        mids = self.material_ids
+        for glply, mid, t, theta in zip(self.global_ply_ids,
+                                        mids, self.thicknesses, self.thetas):
+            fields += [glply, mid, t, theta, None, None, None, None]
+        return fields
+
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
+        card = self.repr_fields()
+        # this card has integers & strings, so it uses...
+        return self.comment + print_card_8(card)
 
 class PSOLID(Property):
     """

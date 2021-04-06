@@ -1,7 +1,7 @@
 import unittest
 from io import StringIO
 
-from pyNastran.bdf.bdf import read_bdf, BDF, CHBDYG, CaseControlDeck
+from pyNastran.bdf.bdf import read_bdf, BDF, CHBDYG, CaseControlDeck, Subcase
 from pyNastran.bdf.cards.test.utils import save_load_deck
 from pyNastran.bdf.mesh_utils.mirror_mesh import write_bdf_symmetric
 from cpylog import SimpleLogger
@@ -213,6 +213,16 @@ class TestThermal(unittest.TestCase):
     def test_thermal_2(self):
         """tests TABLEHT, TABLEH1"""
         model = BDF(debug=False, log=None, mode='msc')
+        model.sol = 159
+        model.case_control_deck = CaseControlDeck([], log=model.log)
+        subcase = model.case_control_deck.create_new_subcase(100)  # type: Subcase
+        subcase.add('DISP', 'ALL', ['PLOT'], 'STRESS-type')
+        subcase.add('TSTEP', 10, [], 'STRESS-type')
+        sid = 10
+        N = 40
+        DT = 0.1
+        NO = 40
+        model.add_tstep(sid, N, DT, NO)
         tid = 101
         x = [1., 2., 3.]
         y = [10., 20., 30.]

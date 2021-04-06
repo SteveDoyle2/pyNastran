@@ -103,7 +103,7 @@ structure = {
 
     'PSHELL', 'PCOMP', 'PCOMPG', 'PSHEAR', 'PTRSHL',
     'PSOLID', 'PLSOLID', 'PVISC', 'PRAC2D', 'PRAC3D',
-    'PIHEX', 'PCOMPS',
+    'PIHEX', 'PCOMPS', 'PCOMPLS',
     # PQUAD4
 
     ## pdampt

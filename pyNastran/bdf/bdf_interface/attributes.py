@@ -754,7 +754,7 @@ class BDFAttributes:
                 'PLPLANE', 'PPLANE',
                 'PSHELL', 'PCOMP', 'PCOMPG', 'PSHEAR',
                 'PSOLID', 'PLSOLID', 'PVISC', 'PRAC2D', 'PRAC3D',
-                'PIHEX', 'PCOMPS',
+                'PIHEX', 'PCOMPS', 'PCOMPLS',
                 'PCONEAX',
             ],
             'pdampt' : ['PDAMPT'],

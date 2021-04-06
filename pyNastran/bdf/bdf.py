@@ -50,7 +50,7 @@ from .bdf_interface.assign_type import (integer,
 
 from .cards.elements.elements import CFAST, CGAP, CRAC2D, CRAC3D, PLOTEL, GENEL
 from .cards.properties.properties import PFAST, PGAP, PRAC2D, PRAC3D
-from .cards.properties.solid import PLSOLID, PSOLID, PIHEX, PCOMPS
+from .cards.properties.solid import PLSOLID, PSOLID, PIHEX, PCOMPS, PCOMPLS
 from .cards.cyclic import CYAX, CYJOIN
 from .cards.msgmesh import CGEN
 
@@ -196,6 +196,16 @@ if TYPE_CHECKING:  # pragma: no cover
 
 CORD = Union[CORD1R, CORD1C, CORD1S,
              CORD2R, CORD2C, CORD2S]
+
+REMOVED_CARDS = {
+    'ADAPT',
+    'PVAL', 'GMCURV', 'GMSURF', 'FEEDGE', 'FEFACE', 'GMSPC', 'GMLOAD',
+    #'OUTPUT'
+    #'OUTRCV'
+    'GMBNDS', 'GMINTS', 'PINTS',
+    'GMBNDC', 'GMINTC', 'PINTC'
+    'CGEN', 'EGRID', 'GRIDG', 'SPCG',
+}
 
 SOL_700 = {
     ## Explicit Nonlinear (SOL 700)
@@ -633,7 +643,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
 
             'PSHELL', 'PCOMP', 'PCOMPG', 'PSHEAR', 'PTRSHL', 'PQUAD1',
             'PSOLID', 'PLSOLID', 'PVISC', 'PRAC2D', 'PRAC3D',
-            'PIHEX', 'PCOMPS',
+            'PIHEX', 'PCOMPS', 'PCOMPLS',
             # PQUAD4
 
             # axixsymmetric
@@ -673,7 +683,6 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
 
             ## spcs
             'SPC', 'SPCADD', 'SPC1', 'SPCAX', 'SPCOFF', 'SPCOFF1',
-            'GMSPC',
 
             ## mpcs
             'MPC', 'MPCADD',
@@ -804,7 +813,8 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
 
             #------------------------------------------------------------------
             ## parametric
-            'PSET', 'PVAL', 'GMCURV', 'GMSURF', 'FEEDGE', 'FEFACE',
+            #'PSET', 'PVAL', 'GMCURV', 'GMSURF', 'FEEDGE', 'FEFACE',
+            #'GMSPC',  # spcs
 
             #------------------------------------------------------------------
             ## tables
@@ -1331,6 +1341,10 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
         if validate:
             self.validate()
 
+        all_cards = set(self.card_count.keys())
+        union_cards = all_cards.intersection(REMOVED_CARDS)
+        if union_cards:
+            raise DisabledCardError(f'the following cards have been removed: {list(union_cards)}')
         self.cross_reference(xref=xref)
         self._xref = xref
 
@@ -2193,6 +2207,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             'PSOLID' : (PSOLID, self._add_property_object),
             'PLSOLID' : (PLSOLID, self._add_property_object),
             'PCOMPS' : (PCOMPS, self._add_property_object),
+            'PCOMPLS' : (PCOMPLS, self._add_property_object),
 
             'CELAS1' : (CELAS1, self._add_element_object),
             'CELAS2' : (CELAS2, self._add_element_object),
@@ -2302,6 +2317,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             'SPCOFF1' : (SPCOFF1, self._add_constraint_spcoff_object),
             'SPCAX' : (SPCAX, self._add_constraint_spc_object),
             'SPCADD' : (SPCADD, self._add_constraint_spcadd_object),
+            ## parametric
             'GMSPC' : (GMSPC, self._add_constraint_spc_object),
 
             'SESUP' : (SESUP, self._add_sesuport_object), # pseudo-constraint

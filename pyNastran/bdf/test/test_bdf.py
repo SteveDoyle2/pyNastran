@@ -953,7 +953,8 @@ def validate_case_control(fem2: BDF, p0: Any, sol_base: int, subcase_keys: List[
     for isubcase in subcase_keys:
         subcase = subcases[isubcase]
         str(subcase)
-        assert sol_base is not None, sol_base
+        if sol_base is None:
+            raise RuntimeError('subcase: %s\n' % subcase)
         #print('case\n%s' % subcase)
         #if sol_base == 200:
             #analysis = subcase.get_parameter('ANALYSIS')[0]
@@ -1002,7 +1003,8 @@ def stop_if_max_error(msg: str, error: Any, ierror: int, nerrors: int) -> int:
     return ierror
 
 def check_for_optional_param(keys: List[str], subcase: Any,
-                             msg: str, error: Any, log: Any, ierror: int, nerrors: int) -> int:
+                             msg: str, error: Any, log: Any,
+                             ierror: int, nerrors: int) -> int:
     """one or more must be True"""
     if not any(subcase.has_parameter(*keys)):
         msg = 'Must have one of %s\n%s' % (str(keys), msg)
@@ -1048,7 +1050,7 @@ def check_case(sol, subcase, fem2, p0, isubcase, subcases,
        GRID-PS (optional)
 
        MPC = 30 (optional)
-       AEROS = 5
+       AERO
 
        # one or both
        SUPORT1 = 5 # implicit point to SUPORT1
@@ -1058,7 +1060,6 @@ def check_case(sol, subcase, fem2, p0, isubcase, subcases,
     log = fem2.log
 
     msg = f'sol={sol}\n{subcase}'
-    print(msg)
     if sol == 24:
         _assert_has_spc(subcase, fem2)
         assert True in subcase.has_parameter('LOAD'), msg
@@ -1087,7 +1088,7 @@ def check_case(sol, subcase, fem2, p0, isubcase, subcases,
                                           RuntimeError, log, ierror, nerrors)
     elif sol in [5, 105]: # buckling
         _assert_has_spc(subcase, fem2)
-        ierror = check_for_optional_param(('LOAD', 'METHOD'), subcase, msg,
+        ierror = check_for_optional_param(('LOAD', 'TEMPERATURE(LOAD)', 'METHOD'), subcase, msg,
                                           RuntimeError, log, ierror, nerrors)
         #if 0:  # pragma: no cover
             #if 'METHOD' not in subcase:
