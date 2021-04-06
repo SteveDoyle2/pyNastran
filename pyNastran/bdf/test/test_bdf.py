@@ -947,7 +947,10 @@ def validate_case_control(fem2: BDF, p0: Any, sol_base: int, subcase_keys: List[
                           subcases: Any, unused_sol_200_map: Any,
                           stop_on_failure: bool=True,
                           ierror: int=0, nerrors: int=100) -> None:
-    for isubcase in subcase_keys[1:]:  # drop isubcase = 0
+    if len(subcase_keys) > 1:
+        subcase_keys = subcase_keys[1:]  # drop isubcase = 0
+
+    for isubcase in subcase_keys:
         subcase = subcases[isubcase]
         str(subcase)
         assert sol_base is not None, sol_base
@@ -1055,6 +1058,7 @@ def check_case(sol, subcase, fem2, p0, isubcase, subcases,
     log = fem2.log
 
     msg = f'sol={sol}\n{subcase}'
+    print(msg)
     if sol == 24:
         _assert_has_spc(subcase, fem2)
         assert True in subcase.has_parameter('LOAD'), msg
@@ -1235,6 +1239,8 @@ def _check_flutter_case(fem2: BDF, log: SimpleLogger, sol: int, subcase: Subcase
     # METHOD - EIGRL
     # CMETHOD - EIGC
     # FMETHOD - FLUTTER
+
+    print('check fmethod')
     ierror = require_cards(['FMETHOD'], log, soltype, sol, subcase,
                            RuntimeError, ierror, nerrors)
     flutter_id = subcase.get_parameter('FMETHOD')[0]

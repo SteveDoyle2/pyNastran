@@ -601,6 +601,10 @@ MSC_RESULT_TABLES = [b'ASSIG', b'ASEPS'] + [
     b'OVINT',
     #b'TUG1',
     #b'MUG1',
+    b'TEF1', # b'MEF1',
+    b'TQG1', # b'MKQG1',
+    #b'MUG1B',
+
 
     # for sure results
     b'OUTSFLOW',
@@ -612,9 +616,10 @@ MSC_RESULT_TABLES = [b'ASSIG', b'ASEPS'] + [
     b'OQMPSD1', b'OQMATO1', b'OQMRMS1', b'OQMNO1', b'OQMCRM1',
     b'OETEMP',
     b'OCNTCHKD',
-    b'TEF1', # b'MEF1',
-    b'TQG1', # b'MKQG1',
-    #b'MUG1B',
+
+    #C:\MSC.Software\msc_nastran_runs\pcomp1.op2
+    #C:\MSC.Software\msc_nastran_runs\pcdyn111s2.op2
+    b'OGPSTRN', b'OGPFIN', b'OESRTN', b'OGPSRN',
 
     # nasa95
     b'OQPC1', b'OUPVC1', b'OESC1',

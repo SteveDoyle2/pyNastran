@@ -2,7 +2,7 @@ import warnings
 import numpy as np
 
 class Responses:
-    """Defines SOL 200 responses"""
+    """Defines SOL 200 responses from the R1TABRG table"""
     def __init__(self):
         self.convergence_data = None
         self.desvars = None

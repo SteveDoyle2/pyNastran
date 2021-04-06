@@ -1290,7 +1290,14 @@ class AESURFS(BaseCard):
         card = self.raw_fields()
         return self.comment + print_card_8(card)
 
-
+CAERO1_MSG = """
++--------+-----+-----+----+-------+--------+--------+--------+------+
+|   1    |  2  |  3  | 4  |   5   |   6    |    7   |   8    |   9  |
++========+=====+=====+====+=======+========+========+========+======+
+| CAERO1 | EID | PID | CP | NSPAN | NCHORD |  LSPAN | LCHORD | IGID |
++--------+-----+-----+----+-------+--------+--------+--------+------+
+|        |  X1 | Y1  | Z1 |  X12  |   X4   |   Y4   |   Z4   | X43  |
++--------+-----+-----+----+-------+--------+--------+--------+------+""".strip()
 class CAERO1(BaseCard):
     """
     Defines an aerodynamic macro element (panel) in terms of two leading edge
@@ -1555,6 +1562,7 @@ class CAERO1(BaseCard):
             is_failed = True
         if is_failed:
             msg += str(self)
+            msg += CAERO1_MSG
             raise ValueError(msg)
         assert len(self.p1) == 3, 'p1=%s' % self.p1
         assert len(self.p4) == 3, 'p4=%s' % self.p4
@@ -5009,6 +5017,16 @@ class Spline(BaseCard):
     def __init__(self):
         BaseCard.__init__(self)
 
+SPLINE1_MSG = """
++---------+-------+-------+------+------+------+----+------+-------+
+|    1    |   2   |    3  |   4  |   5  |   6  |  7 |   8  |   9   |
++=========+=======+=======+======+======+======+====+======+=======+
+| SPLINE1 | EID   | CAERO | BOX1 | BOX2 | SETG | DZ | METH | USAGE |
++---------+-------+-------+------+------+------+----+------+-------+
+|         | NELEM | MELEM |      |      |      |    |      |       |
++---------+-------+-------+------+------+------+----+------+-------+
+| SPLINE1 |   3   |  111  | 115  | 122  |  14  | 0. |      |       |
++---------+-------+-------+------+------+------+----+------+-------+""".strip()
 
 class SPLINE1(Spline):
     """
@@ -6311,7 +6329,7 @@ def get_caero_subpanel_grid(model: BDF) -> Tuple[np.ndarray, np.ndarray]:
 
     if len(elements) == 1:
         points_array = np.vstack(points)
-        elements_array = elements[0].rehape(1, 4)
+        elements_array = elements[0] # .reshape(1, 4)
     else:
         points_array = np.vstack(points)
         elements_array = np.vstack(elements)
