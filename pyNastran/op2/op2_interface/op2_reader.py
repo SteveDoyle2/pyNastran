@@ -94,7 +94,7 @@ OPTISTRUCT_VERSIONS = [
     b'OS2017.1', b'OS2017.2',
     b'OS2018.1',
     b'OS2019.1', b'OS2019.2',
-    b'OS2020',
+    b'OS2020', b'OS2020.1',
 ]
 AUTODESK_VERSIONS = [
     b'NE  0824',  # this means NEi Nastran...
