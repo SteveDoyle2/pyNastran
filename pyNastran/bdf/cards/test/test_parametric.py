@@ -61,7 +61,8 @@ class TestParametric(unittest.TestCase):
                        run_save_load_hdf5=True,
                        run_mass_properties=False,
                        run_loads=False,
-                       run_test_bdf=False)
+                       run_test_bdf=False,
+                       remove_disabled_cards=False)
 
 if __name__ == '__main__':  # pragma: no cover
     unittest.main()

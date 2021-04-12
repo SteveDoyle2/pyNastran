@@ -943,7 +943,7 @@ def _assert_has_spc(subcase, fem):
                 break
         assert subcase.has_parameter('SPC', 'STATSUB') or has_ps, subcase
 
-def validate_case_control(fem2: BDF, p0: Any, sol_base: int, subcase_keys: List[int],
+def validate_case_control(fem: BDF, p0: Any, sol_base: int, subcase_keys: List[int],
                           subcases: Any, unused_sol_200_map: Any,
                           stop_on_failure: bool=True,
                           ierror: int=0, nerrors: int=100) -> None:
@@ -952,6 +952,9 @@ def validate_case_control(fem2: BDF, p0: Any, sol_base: int, subcase_keys: List[
 
     for isubcase in subcase_keys:
         subcase = subcases[isubcase]
+        if len(subcase.params) == 0:
+            fem.log.error(f'Subcase {isubcase:d} is empty')
+            continue
         str(subcase)
         if sol_base is None:
             raise RuntimeError('subcase: %s\n' % subcase)
@@ -965,7 +968,7 @@ def validate_case_control(fem2: BDF, p0: Any, sol_base: int, subcase_keys: List[
         #else:
             #sol = sol_base
         ierror = check_case(
-            sol_base, subcase, fem2, p0, isubcase, subcases,
+            sol_base, subcase, fem, p0, isubcase, subcases,
             ierror=ierror, nerrors=nerrors, stop_on_failure=stop_on_failure)
     return ierror
 
@@ -1131,6 +1134,8 @@ def check_case(sol, subcase, fem2, p0, isubcase, subcases,
         ierror = require_cards(['LOAD', 'HARMONICS'], log, soltype, sol, subcase,
                                RuntimeError, ierror, nerrors)
         _assert_has_spc(subcase, fem2)
+    elif sol == 115:  # cyclic modes
+        assert any(subcase.has_parameter('METHOD')), msg
     elif sol == 118:
         soltype = 'CYCFREQ'
         ierror = require_cards(['LOAD', 'HARMONICS', 'SDAMPING', 'FREQUENCY'],
@@ -1175,8 +1180,8 @@ def check_case(sol, subcase, fem2, p0, isubcase, subcases,
 
     elif sol == 200:
         _check_case_sol_200(sol, subcase, fem2, p0, isubcase, subcases, log)
-    elif sol in [114, 115, 116, 118]:
-        # cyclic statics, modes, buckling, frequency
+    elif sol in [114, 116, 118]:
+        # cyclic statics, buckling, frequency
         pass
     elif sol in [5, 21, 26, 38, 47, 61, 63, 68, 76, 78, 81, 88,
                  100, 128, 187, 190,
@@ -1373,13 +1378,13 @@ def _check_case_sol_200(sol: int,
         else:
             solution = 111
         check_case(solution, subcase, fem2, p0, isubcase, subcases)
-    elif analysis == 'MTRAN':
+    elif analysis in ['MTRAN', 'MTRANS']:
         solution = 112
         check_case(solution, subcase, fem2, p0, isubcase, subcases)
     elif analysis in ['SAERO', 'DIVERG', 'DIVERGE']:
         solution = 144
         check_case(solution, subcase, fem2, p0, isubcase, subcases)
-    elif analysis == 'FLUTTER':
+    elif analysis in ['FLUT', 'FLUTTER']:
         solution = 145
         check_case(solution, subcase, fem2, p0, isubcase, subcases)
     elif analysis == 'DCEIG': # direct complex eigenvalues
@@ -1507,7 +1512,7 @@ def _check_case_parameters(subcase, fem2: BDF, p0, isubcase: int, sol: int,
             method_ids = list(fem2.methods.keys())
             raise RuntimeError('METHOD = %s not in method_ids=%s' % (method_id, method_ids))
         allowed_sols = [3, 5, 76, 100, 101, 103, 105, 106, 107, 108, 110, 111,
-                        112, 144, 145, 146, 187, 200]
+                        112, 115, 144, 145, 146, 187, 200]
         ierror = check_sol(sol, subcase, allowed_sols, 'METHOD', log, ierror, nerrors)
 
     if 'CMETHOD' in subcase:
@@ -1690,7 +1695,8 @@ def _check_case_parameters(subcase, fem2: BDF, p0, isubcase: int, sol: int,
         elif  sol == 200:
             pass
         else:
-            fem2.log.debug('solution=%s; DLOAD is not supported' % sol)
+            # 112-
+            fem2.log.warning(f'solution={sol}; DLOAD is not supported')
 
         # print(loads)
     return ierror

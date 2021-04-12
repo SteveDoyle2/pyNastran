@@ -123,7 +123,7 @@ from pyNastran.bdf.cards.bdf_sets import (
     RADSET,
 )
 from pyNastran.bdf.cards.params import PARAM, PARAM_MYSTRAN, PARAM_NASA95
-from pyNastran.bdf.cards.dmig import DMIG, DMIAX, DMI, DMIJ, DMIK, DMIJI, DMIG_UACCEL, DTI
+from pyNastran.bdf.cards.dmig import DMIG, DMIAX, DMI, DMIJ, DMIK, DMIJI, DMIG_UACCEL, DTI, DTI_UNITS
 from pyNastran.bdf.cards.thermal.loads import (QBDY1, QBDY2, QBDY3, QHBDY, TEMP, TEMPD, TEMPB3,
                                                TEMPRB, QVOL, QVECT)
 from pyNastran.bdf.cards.thermal.thermal import (CHBDYE, CHBDYG, CHBDYP, PCONV, PCONVM,
@@ -639,7 +639,7 @@ CARD_MAP = {
     'DMIJI' : DMIJI,
     'DMIJ' : DMIJ,
     'DMIAX' : DMIAX,
-    'DTI' : DTI,
+    #'DTI' : DTI,
     'DMIG_UACCEL' : DMIG_UACCEL,
 
     'BCRPARA' : BCRPARA,
@@ -8097,9 +8097,12 @@ class AddCards(AddMethods):
         self._add_convection_property_object(prop)
         return prop
 
-    def add_dti(self, name, fields, comment='') -> DTI:
+    def add_dti(self, name, fields, comment='') -> Union[DTI, DTI_UNITS]:
         """Creates a DTI card"""
-        dti = DTI(name, fields, comment=comment)
+        if name == 'UNITS':
+            dti = DTI_UNITS(name, fields, comment=comment)
+        else:
+            dti = DTI(name, fields, comment=comment)
         self._add_dti_object(dti)
         return dti
 

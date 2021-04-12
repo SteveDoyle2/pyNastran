@@ -100,30 +100,21 @@ class CaseControlDeck:
             #601 - Implicit Non-Linear (ADINA for NX Nastran, will no longer be available in NX NASTRAN after 2020)
             #700 - Explicit Non-Linear (LS Dyna plus MSC.Dytran - part of MSC.NASTRAN)
             #701 - Explicit Non-Linear (ADINA for NX Nastran, will no longer be available in NX NASTRAN after 2020)
-            'STATICS' : 101,
-            'STATIC' : 101,
-
-            'MODES' : 103,
-            'MODE' : 103,
-
-            'BUCK' : 105,
-            'BUCKLING' : 105,
+            'STATIC' : 101, 'STATICS' : 101,
+            'MODE' : 103, 'MODES' : 103,
+            'BUCK' : 105, 'BUCKLING' : 105,
 
             'DFREQ' : 108,
             'MFREQ' : 111,
             'SAERO' : 144,
-
-            'FLUTTER' : 145,
-            'FLUT' : 145,
-
-            'DIVERGE' : 144,
-            'DIVERG' : 145,
+            'FLUT' : 145, 'FLUTTER' : 145,
+            'DIVERG' : 144, 'DIVERGE' : 144,
 
             # 'HEAT' : ,
             # 'STRUCTURE' : ,
             'NLSTATICS' : 400,
             'LNSTATICS' : 400,
-            'MTRAN' : 112,
+            'MTRAN' : 112, 'MTRANS': 112,
             'DCEIG' : 107,
         }
         # 'HEAT', 'ANALYSIS', 'MFREQ', 'STATICS', 'MODES', 'DFREQ',
@@ -158,7 +149,7 @@ class CaseControlDeck:
                 setattr(self, key, value)
             elif key in ['reject_lines', 'begin_bulk', 'lines', 'output_lines']: # lists of strings
                 unused_lines_str = decode_lines(
-                    _cast(hdf5_file[key]).tolist(),
+                    _cast(hdf5_file[key]),
                     encoding)
             elif key == 'subcases':
                 subcase_group = hdf5_file[key]

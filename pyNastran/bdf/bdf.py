@@ -158,7 +158,7 @@ from .cards.bdf_sets import (
     RADSET,
 )
 from .cards.params import PARAM, PARAM_MYSTRAN, PARAM_NASA95
-from .cards.dmig import DMIG, DMI, DMIJ, DMIK, DMIJI, DMIG_UACCEL, DTI, DMIAX
+from .cards.dmig import DMIG, DMI, DMIJ, DMIK, DMIJI, DMIG_UACCEL, DTI, DTI_UNITS, DMIAX
 from .cards.thermal.loads import (QBDY1, QBDY2, QBDY3, QHBDY, TEMP, TEMPD, TEMPB3,
                                   TEMPRB, QVOL, QVECT)
 from .cards.thermal.thermal import (CHBDYE, CHBDYG, CHBDYP, PCONV, PCONVM,
@@ -531,6 +531,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
         assert debug in [True, False, None], f'debug={debug!r}'
         self.echo = False
         self.read_includes = True
+        self._remove_disabled_cards = False
 
         # file management parameters
         self.active_filenames = []  # type: List[str]
@@ -1341,10 +1342,12 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
         if validate:
             self.validate()
 
-        all_cards = set(self.card_count.keys())
-        union_cards = all_cards.intersection(REMOVED_CARDS)
-        if union_cards:
-            raise DisabledCardError(f'the following cards have been removed: {list(union_cards)}')
+        if self._remove_disabled_cards:
+            all_cards = set(self.card_count.keys())
+            union_cards = all_cards.intersection(REMOVED_CARDS)
+            if union_cards:
+                raise DisabledCardError(f'the following cards have been removed: {list(union_cards)}')
+
         self.cross_reference(xref=xref)
         self._xref = xref
 
@@ -2826,8 +2829,11 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
 
     def _prepare_dti(self, unused_card_name, card_obj, comment=''):
         """adds a DTI"""
-        #name = string(card_obj, 1, 'name')
-        dti = DTI.add_card(card_obj, comment=comment)
+        name = string(card_obj, 1, 'name')
+        if name == 'UNITS':
+            dti = DTI_UNITS.add_card(card_obj, comment=comment)
+        else:
+            dti = DTI.add_card(card_obj, comment=comment)
         self._add_dti_object(dti)
         return dti
 
@@ -4744,6 +4750,10 @@ class BDF(BDF_):
             self.superelement_models[superelement_id] = model
             self.initial_superelement_models.append(superelement_id)
 
+    def _add_disabled_cards(self):
+        self._remove_disabled_cards = False
+        self.cards_to_read.update(REMOVED_CARDS)  # add
+
 
 def _echo_card(card, card_obj):
     """echos a card"""
@@ -4892,7 +4902,6 @@ def read_bdf(bdf_filename: Optional[str]=None, validate: bool=True, xref: bool=T
                 #pass
         #model.get_bdf_stats()
     return model
-
 
 def _prep_comment(comment):
     return comment.rstrip()

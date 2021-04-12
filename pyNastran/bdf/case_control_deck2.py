@@ -137,7 +137,7 @@ class CaseControlDeck:
                 setattr(self, key, value)
             elif key in ['reject_lines', 'begin_bulk', 'lines', 'output_lines']: # lists of strings
                 unused_lines_str = decode_lines(
-                    _cast(hdf5_file[key]).tolist(),
+                    _cast(hdf5_file[key]),
                     encoding)
             elif key == 'subcases':
                 subcase_group = hdf5_file[key]

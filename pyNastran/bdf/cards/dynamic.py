@@ -2307,7 +2307,7 @@ class TSTEPNL(BaseCard):
             kstep = integer_or_blank(card, 6, 'kStep', 2)
         elif method == 'ITER':
             kstep = integer_or_blank(card, 6, 'kStep', 10)
-        elif method in ['AUTO', 'TSTEP', 'SEMI']:
+        elif method in ['AUTO', 'TSTEP', 'SEMI', 'FNT']:
             kstep = None
             #kstep = blank(card, 6, 'kStep') #: .. todo:: not blank
         else:

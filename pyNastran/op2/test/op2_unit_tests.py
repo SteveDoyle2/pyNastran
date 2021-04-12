@@ -1019,7 +1019,12 @@ class TestOP2(Tester):
         diff_cards2.sort()
         assert len(diff_cards2) == 0, diff_cards2
 
-        model = read_bdf(bdf_filename, debug=False, log=log, xref=False)
+        #model = read_bdf(bdf_filename, debug=False, log=log, xref=False)
+        model = BDF(debug=True, log=log, mode='msc')
+        model._add_disabled_cards()
+        model.read_bdf(bdf_filename=bdf_filename, validate=True, xref=False,
+                       punch=False, read_includes=True, save_file_structure=False,
+                       encoding=None)
         nid = 1
         sid = 601
         mag = 1.0
@@ -1049,9 +1054,14 @@ class TestOP2(Tester):
         diff_cards2.sort()
         assert len(diff_cards2) == 0, diff_cards2
 
-        model = read_bdf(bdf_filename, debug=False, log=log, xref=False)
+        #model = read_bdf(bdf_filename, debug=False, log=log, xref=False)
+        model = BDF(debug=True, log=log, mode='msc')
+        model._add_disabled_cards()
+        model.read_bdf(bdf_filename=bdf_filename, validate=True, xref=False,
+                       punch=False, read_includes=True, save_file_structure=False,
+                       encoding=None)
         model.safe_cross_reference()
-        save_load_deck(model)
+        save_load_deck(model, remove_disabled_cards=False)
 
         run_op2(op2_filename, make_geom=True, write_bdf=True, read_bdf=False,
                 write_f06=True, write_op2=False,
@@ -1121,7 +1131,11 @@ class TestOP2(Tester):
         diff_cards2.sort()
         assert len(diff_cards2) == 0, diff_cards2
 
-        model = read_bdf(bdf_filename, debug=False, log=log, xref=False)
+        model = BDF(debug=True, log=log, mode='msc')
+        model._add_disabled_cards()
+        model.read_bdf(bdf_filename=bdf_filename, validate=True, xref=False,
+                       punch=False, read_includes=True, save_file_structure=False,
+                       encoding=None)
         model.safe_cross_reference()
 
         # run_op2_reader - super strange PLOAD4 bug
@@ -1300,7 +1314,12 @@ class TestOP2(Tester):
         #diff_cards2.sort()
         #assert len(diff_cards2) == 0, diff_cards2
 
-        unused_model = read_bdf(bdf_filename, debug=False, log=log, xref=False)
+        #unused_model = read_bdf(bdf_filename, debug=False, log=log, xref=False)
+        model = BDF(debug=True, log=log, mode='msc')
+        model._add_disabled_cards()
+        model.read_bdf(bdf_filename=bdf_filename, validate=True, xref=False,
+                       punch=False, read_includes=True, save_file_structure=False,
+                       encoding=None)
         #model.safe_cross_reference()
 
         #save_load_deck(model, run_renumber=False)
@@ -1330,7 +1349,12 @@ class TestOP2(Tester):
         #diff_cards2.sort()
         #assert len(diff_cards2) == 0, diff_cards2
 
-        unused_model = read_bdf(bdf_filename, debug=False, log=log, xref=False)
+        #unused_model = read_bdf(bdf_filename, debug=False, log=log, xref=False)
+        model = BDF(debug=True, log=log, mode='msc')
+        model._add_disabled_cards()
+        model.read_bdf(bdf_filename=bdf_filename, validate=True, xref=False,
+                       punch=False, read_includes=True, save_file_structure=False,
+                       encoding=None)
         #model.safe_cross_reference()
 
         #save_load_deck(model, run_renumber=False)
@@ -2761,6 +2785,7 @@ class TestOP2(Tester):
         #write_f06 = True
         log = get_logger(level='warning')
         bdf = BDF(log=log)
+        bdf._add_disabled_cards()
         bdf.read_bdf(bdf_filename, xref=False)
 
         debug = False

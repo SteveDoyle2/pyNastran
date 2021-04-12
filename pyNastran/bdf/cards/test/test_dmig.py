@@ -10,6 +10,38 @@ from pyNastran.bdf.cards.test.utils import save_load_deck
 PKG_PATH = pyNastran.__path__[0]
 TEST_PATH = os.path.join(PKG_PATH, 'bdf', 'cards', 'test')
 
+class TestDTI(unittest.TestCase):
+
+    def test_dti_units(self):
+        """tests DTI,UNITS"""
+        model = BDF(debug=False)
+        fields = {
+            'mass' : 'mass',
+            'length' : 'length',
+            'force' : 'force',
+            'time' : 'time',
+            'temp_stress' : 'temp_str',
+        }
+        dti = model.add_dti('UNITS', fields, comment='dti,units')
+        dti.raw_fields()
+        #print(dti.write_card())
+        save_load_deck(model)
+
+    def test_dti_units2(self):
+        """tests DTI,UNITS"""
+        model = BDF(debug=False)
+        fields = {
+            'mass' : 'mass',
+            'length' : 'length',
+            'force' : 'force',
+            'time' : 'time',
+            'temp_stress' : None,
+        }
+        dti = model.add_dti('UNITS', fields, comment='dti,units')
+        dti.raw_fields()
+        #print(dti.write_card())
+        save_load_deck(model)
+
 class TestDMIG(unittest.TestCase):
 
     def test_dmig_1(self):
@@ -556,36 +588,6 @@ DMI         W2GJ       1       1 1.54685.1353939.1312423.0986108.0621382
                               Real=reals, Complex=reals,
                               comment='dmik')
         dmik.get_matrix()
-        save_load_deck(model)
-
-    def test_dti_units(self):
-        """tests DTI,UNITS"""
-        model = BDF(debug=False)
-        fields = {
-            'mass' : 'mass',
-            'length' : 'length',
-            'force' : 'force',
-            'time' : 'time',
-            'temp_stress' : 'temp_str',
-        }
-        dti = model.add_dti('UNITS', fields, comment='dti,units')
-        dti.raw_fields()
-        #print(dti.write_card())
-        save_load_deck(model)
-
-    def test_dti_units2(self):
-        """tests DTI,UNITS"""
-        model = BDF(debug=False)
-        fields = {
-            'mass' : 'mass',
-            'length' : 'length',
-            'force' : 'force',
-            'time' : 'time',
-            'temp_stress' : None,
-        }
-        dti = model.add_dti('UNITS', fields, comment='dti,units')
-        dti.raw_fields()
-        #print(dti.write_card())
         save_load_deck(model)
 
     def test_dmig_uaccel(self):

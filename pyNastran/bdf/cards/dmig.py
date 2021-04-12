@@ -18,6 +18,133 @@ from pyNastran.bdf.bdf_interface.assign_type import (
     parse_components, interpret_value, integer_double_string_or_blank)
 
 
+class DTI_UNITS(BaseCard):
+    """
+    +-----+-------+-----+------+-------+--------+------+-------------+
+    |  1  |   2   |  3  |   4  |   5   |    6   |   7  |       8     |
+    +=====+=======+=====+======+=======+========+======+=============+
+    | DTI | UNITS | "1" | MASS | FORCE | LENGTH | TIME |   STRESS    |
+    +-----+-------+-----+------+-------+--------+------+-------------+
+
+    MSC
+
+    +-----+-------+-----+------+-------+--------+------+-------------+
+    |  1  |   2   |  3  |   4  |   5   |    6   |   7  |       8     |
+    +=====+=======+=====+======+=======+========+======+=============+
+    | DTI | UNITS | "1" | MASS | FORCE | LENGTH | TIME | TEMPERATURE |
+    +-----+-------+-----+------+-------+--------+------+-------------+
+
+    NX
+    """
+    type = 'DTI'
+    #_properties = ['shape', 'ifo', 'is_real', 'is_complex', 'is_polar', 'matrix_type', 'tin_dtype', 'tout_dtype']
+
+    @classmethod
+    def _init_from_empty(cls):
+        name = 'UNITS'
+        fields = []
+        return DTI_UNITS(name, fields, comment='')
+
+    def _finalize_hdf5(self, encoding):
+        """hdf5 helper function"""
+        keys, values = self.fields
+
+        # nan != nan
+        values = [value if value == value else None for value in values]
+        values_str = [value.decode(encoding) if isinstance(value, bytes) else value
+                      for value in values]
+        #values = [valuei.decode(encoding) if isinstance(valuei, bytes) else (
+        #    None if np.isnan(valuei) else valuei)
+        #          for valuei in values]
+        self.fields = {key : value for key, value in zip(keys, values_str)}
+
+    @classmethod
+    def export_to_hdf5(cls, h5_file, model, encoding):
+        """exports the elements in a vectorized way"""
+        from pyNastran.bdf.bdf_interface.hdf5_exporter import _export_list
+        for name, dti in sorted(model.dti.items()):
+            i = 0
+            for key, value in sorted(dti.fields.items()):
+                #print(key, value)
+                h5_group = h5_file.create_group(str(key))
+                if value is None:
+                    h5_group.create_dataset(str(i), data=np.nan)
+                else:
+                    h5_group.create_dataset(str(i), data=value)
+                i += 1
+            #fields = {
+                #'mass' : mass,
+                #'force' : force,
+                #'length' : length,
+                #'time' : time,
+                #'temp_stress' : temp_stress
+            #}
+
+    def __init__(self, name, fields, comment=''):
+        """
+        Creates a DTI,UNITS card
+
+        Parameters
+        ----------
+        name : str
+            UNITS
+        fields : List[varies]
+            the fields
+        comment : str; default=''
+            a comment for the card
+        """
+        if comment:
+            self.comment = comment
+        self.name = name
+        self.fields = fields
+        #print(fields)
+        assert len(fields) > 0, fields
+        for key, fieldsi in fields.items():
+            assert fieldsi is None or isinstance(fieldsi, str), fields
+
+    @classmethod
+    def add_card(cls, card, comment):
+        """
+        Adds a DTI card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+
+        """
+        name = string(card, 1, 'name')
+        integer(card, 2, '1')
+        mass = string_or_blank(card, 3, 'mass')
+        force = string_or_blank(card, 4, 'force')
+        length = string_or_blank(card, 5, 'length')
+        time = string_or_blank(card, 6, 'time')
+        temp_stress = string_or_blank(card, 7, 'stress/temperature')
+        fields = {
+            'mass' : mass,
+            'force' : force,
+            'length' : length,
+            'time' : time,
+            'temp_stress' : temp_stress
+        }
+        return DTI_UNITS(name, fields, comment=comment)
+
+    def raw_fields(self):
+        mass = self.fields['mass']
+        force = self.fields['force']
+        length = self.fields['length']
+        time = self.fields['time']
+        temp_stress = self.fields['temp_stress']
+        list_fields = ['DTI', 'UNITS', '1', mass, force, length, time, temp_stress]
+        return list_fields
+
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
+        card = self.repr_fields()
+        return self.comment + print_card_8(card)
+
+
 class DTI(BaseCard):
     """
     +-----+-------+-----+------+-------+--------+------+-------------+
@@ -108,9 +235,11 @@ class DTI(BaseCard):
         self.name = name
         self.fields = fields
         for key, fieldsi in fields.items():
+            assert fieldsi is not None, fields
             for fieldi in fieldsi:
                 assert not isinstance(fieldi, bytes), fieldsi
         assert len(fields) > 0, fields
+        assert name != 'UNITS', name
 
     @classmethod
     def add_card(cls, card, comment):
@@ -126,62 +255,37 @@ class DTI(BaseCard):
 
         """
         name = string(card, 1, 'name')
-        if name == 'UNITS':
-            integer(card, 2, '1')
-            mass = string_or_blank(card, 3, 'mass')
-            force = string_or_blank(card, 4, 'force')
-            length = string_or_blank(card, 5, 'length')
-            time = string_or_blank(card, 6, 'time')
-            temp_stress = string_or_blank(card, 7, 'stress/temperature')
-            fields = {
-                'mass' : mass,
-                'force' : force,
-                'length' : length,
-                'time' : time,
-                'temp_stress' : temp_stress
-            }
-        else:
-            fields = []
-            #field2 = card[2]
+        assert name != 'UNITS', name
 
-            list_fields = []
-            irecord = integer(card, 2, 'record')
-            if irecord == 0:
-                for i in range(3, len(card)):
-                    val = integer_double_string_or_blank(
-                        card, i, 'T%i' % (i-1), default=32767)
-                    list_fields.append(val)
-            else:
-                for i in range(3, len(card)):
-                    val = integer_double_string_or_blank(
-                        card, i, 'T%i' % (i-1), default=None)
-                    list_fields.append(val)
-            fields = {irecord: list_fields,}
+        fields = []
+        #field2 = card[2]
+
+        list_fields = []
+        irecord = integer(card, 2, 'record')
+        if irecord == 0:
+            for i in range(3, len(card)):
+                val = integer_double_string_or_blank(
+                    card, i, 'T%i' % (i-1), default=32767)
+                list_fields.append(val)
+        else:
+            for i in range(3, len(card)):
+                val = integer_double_string_or_blank(
+                    card, i, 'T%i' % (i-1), default=None)
+                list_fields.append(val)
+        fields = {irecord: list_fields,}
         return DTI(name, fields, comment=comment)
 
     def raw_fields(self):
-        if self.name == 'UNITS':
-            mass = self.fields['mass']
-            force = self.fields['force']
-            length = self.fields['length']
-            time = self.fields['time']
-            temp_stress = self.fields['temp_stress']
-            list_fields = ['DTI', self.name, '1', mass, force, length, time, temp_stress]
-        else:
-            list_fields = []
-            for irecord, fields in sorted(self.fields.items()):
-                nfields = len(fields)
-                list_fields += ['DTI', self.name] + fields
-                nleftover = nfields % 8
-                if nleftover:
-                    list_fields += [None] * nleftover
+        list_fields = []
+        for irecord, fields in sorted(self.fields.items()):
+            nfields = len(fields)
+            list_fields += ['DTI', self.name] + fields
+            nleftover = nfields % 8
+            if nleftover:
+                list_fields += [None] * nleftover
         return list_fields
 
     def write_card(self, size: int=8, is_double: bool=False) -> str:
-        if self.name == 'UNITS':
-            card = self.repr_fields()
-            return self.comment + print_card_8(card)
-
         msg = self.comment
         for irecord, fields in sorted(self.fields.items()):
             list_fields = ['DTI', self.name, irecord, ] + fields
