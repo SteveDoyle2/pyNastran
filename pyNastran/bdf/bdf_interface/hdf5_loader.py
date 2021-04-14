@@ -1149,8 +1149,15 @@ def hdf5_load_dti(model, group, encoding):
                     for key in keys:
                         sub_groupii = sub_groupi[key]
                         if len(sub_groupii.shape) == 0:
+
+                            # h5py between 2.8.0 and 3.1.0 (probably 3.0)
+                            # changed str to bytes
                             scalar_value = np.array(sub_groupii).tolist()
-                            if isinstance(scalar_value, bytes):
+
+                            # str/bytes/float
+                            if isinstance(scalar_value, str):
+                                pass
+                            elif isinstance(scalar_value, bytes):
                                 scalar_value = scalar_value.decode(encoding)
                             elif np.isnan(scalar_value):
                                 scalar_value = None
