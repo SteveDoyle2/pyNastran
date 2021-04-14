@@ -594,7 +594,7 @@ MSC_RESULT_TABLES = [b'ASSIG', b'ASEPS'] + [
     b'OSMPF1', b'MATRV', b'TUG1', # b'MUG1',
 
     #2020 - could these be matrices?
-    b'OFCON3DD', b'OFCON3D0',
+    b'OFCON3DD', b'OFCON3D0',  # glued contact
     b'OFGCOND',
     b'OCOMPQT',
     b'OGS1X',
