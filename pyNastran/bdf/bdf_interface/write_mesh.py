@@ -1000,6 +1000,13 @@ class WriteMesh(BDFAttributes):
                 try:
                     bdf_file.write(print_func(reject_card))
                 except RuntimeError:
+                    if len(reject_card) > 0:
+                        line0 = reject_card[0].upper()
+                        if line0.startswith('ADAPT'):
+                            for line in reject_card:
+                                assert isinstance(line, str), line
+                                bdf_file.write(line+'\n')
+                            continue
                     for field in reject_card:
                         if field is not None and '=' in field:
                             raise SyntaxError('cannot reject equal signed '

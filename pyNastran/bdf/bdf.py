@@ -814,8 +814,8 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
 
             #------------------------------------------------------------------
             ## parametric
-            #'PSET', 'PVAL', 'GMCURV', 'GMSURF', 'FEEDGE', 'FEFACE',
-            #'GMSPC',  # spcs
+            'PSET', 'PVAL', 'GMCURV', 'GMSURF', 'FEEDGE', 'FEFACE',
+            'GMSPC',  # spcs
 
             #------------------------------------------------------------------
             ## tables

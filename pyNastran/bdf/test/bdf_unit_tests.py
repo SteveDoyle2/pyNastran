@@ -21,7 +21,8 @@ class Tester(unittest.TestCase):
     def run_bdf(self, folder, bdf_filename, xref=False, size=8,
                 mesh_form='combined', dynamic_vars=None, debug=False, quiet=True,
                 run_extract_bodies=True,
-                run_skin_solids=True, save_file_structure=False, log=None):
+                run_skin_solids=True, save_file_structure=False,
+                validate_case_control=True, log=None):
         #xref = False
         if quiet:
             debug = None
@@ -31,7 +32,9 @@ class Tester(unittest.TestCase):
                        debug=debug, quiet=quiet,
                        sum_load=True, run_extract_bodies=run_extract_bodies,
                        run_skin_solids=run_skin_solids,
-                       save_file_structure=save_file_structure, log=log)
+                       save_file_structure=save_file_structure,
+                       validate_case_control=validate_case_control,
+                       log=log)
 
 
 class TestBDF(Tester):
@@ -615,7 +618,7 @@ class TestBDF(Tester):
         log = SimpleLogger(level='error', encoding='utf-8')
         (fem1, unused_fem2, diff_cards) = self.run_bdf(
             '', bdf_filename, xref=True, run_extract_bodies=False,
-            save_file_structure=True, log=log,
+            save_file_structure=True, log=log, validate_case_control=False,
         )
         diff_cards2 = list(set(diff_cards))
         diff_cards2.sort()

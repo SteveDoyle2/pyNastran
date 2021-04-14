@@ -1061,7 +1061,7 @@ class TestOP2(Tester):
                        punch=False, read_includes=True, save_file_structure=False,
                        encoding=None)
         model.safe_cross_reference()
-        save_load_deck(model, remove_disabled_cards=False)
+        save_load_deck(model, remove_disabled_cards=False, run_save_load_hdf5=False)
 
         run_op2(op2_filename, make_geom=True, write_bdf=True, read_bdf=False,
                 write_f06=True, write_op2=False,

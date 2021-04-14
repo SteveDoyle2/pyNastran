@@ -476,6 +476,7 @@ class GetCard(GetMethods):
         dvprel_dict = get_dvprel_ndarrays(
             self, nelements, pids, fdtype=fdtype, idtype=idtype)
         return dvprel_dict
+
     def get_reduced_loads(self, load_case_id, scale=1.,
                           consider_load_combinations=True,
                           skip_scale_factor0=False,

@@ -8,6 +8,7 @@ $
 SOL 112
 TIME 5
 CEND
+TSTEP = 5  $ not defined in the original deck...
 Title = EDS Test
 STRESS(SORT2)    = ALL
 STRAIN(SORT2)    = ALL

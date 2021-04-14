@@ -249,9 +249,11 @@ def run_bdf(folder, bdf_filename, debug=False, xref=True, check=True, punch=Fals
             quiet=False, dumplines=False, dictsort=False,
             run_extract_bodies=False, run_skin_solids=True,
             save_file_structure=False,
-            nerrors=0, dev=False, crash_cards=None, safe_xref=False, pickle_obj=False,
+            nerrors=0, dev=False, crash_cards=None,
+            safe_xref=False, pickle_obj=False,
             version: Optional[str]=None,
-            stop_on_failure=True, log=None, name: str=''):
+            validate_case_control: bool=True,
+            stop_on_failure: bool=True, log=None, name: str=''):
     """
     Runs a single BDF
 
@@ -342,6 +344,7 @@ def run_bdf(folder, bdf_filename, debug=False, xref=True, check=True, punch=Fals
         run_skin_solids=run_skin_solids,
         save_file_structure=save_file_structure,
         pickle_obj=pickle_obj,
+        validate_case_control=validate_case_control,
         stop_on_failure=stop_on_failure,
         log=log,
         name=name,
@@ -378,6 +381,7 @@ def run_and_compare_fems(
         run_extract_bodies: bool=False,
         run_skin_solids: bool=True,
         pickle_obj: bool=False,
+        validate_case_control: bool=True,
         stop_on_failure: bool=True,
         log: Optional[SimpleLogger]=None,
         name: str=''):
@@ -435,7 +439,8 @@ def run_and_compare_fems(
                         safe_xref=safe_xref,
                         encoding=encoding, debug=debug, quiet=quiet,
                         ierror=ierror, nerrors=nerrors,
-                        stop_on_failure=stop_on_failure, log=log)
+                        stop_on_failure=stop_on_failure,
+                        validate_case_control=validate_case_control, log=log)
 
         diff_cards = compare(fem1, fem2, xref=xref, check=check,
                              print_stats=print_stats, quiet=quiet)
@@ -845,7 +850,8 @@ def run_fem2(bdf_model: str, out_model: str, xref: bool, punch: bool,
              sum_load: bool, size: int, is_double: bool, mesh_form: str,
              safe_xref: bool=False,
              encoding: Optional[str]=None, debug: bool=False, quiet: bool=False,
-             stop_on_failure: bool=True, ierror: int=0, nerrors: int=100, log=None) -> BDF:
+             stop_on_failure: bool=True, validate_case_control: bool=True,
+             ierror: int=0, nerrors: int=100, log=None) -> BDF:
     """
     Reads/writes the BDF to verify nothing has been lost
 
@@ -910,12 +916,9 @@ def run_fem2(bdf_model: str, out_model: str, xref: bool, punch: bool,
 
         sol_200_map = fem2.case_control_deck.sol_200_map
         sol_base = fem2.sol
-        is_restart = False
-        for line in fem2.system_command_lines:
-            if line.strip().upper().startswith('RESTART'):
-                is_restart = True
-        if not is_restart:
-            ierror = validate_case_control(
+        is_restart = _has_restart(fem2)
+        if validate_case_control and not is_restart:
+            ierror = _validate_case_control(
                 fem2, p0, sol_base, subcase_keys, subcases, sol_200_map,
                 ierror=ierror, nerrors=nerrors,
                 stop_on_failure=stop_on_failure)
@@ -928,6 +931,13 @@ def run_fem2(bdf_model: str, out_model: str, xref: bool, punch: bool,
             fem2.log.warning(f'cannot remove {out_model_2} due to a permissions error')
     #fem2.write_as_ctria3(out_model_2)
     return fem2
+
+def _has_restart(fem: BDF):
+    is_restart = False
+    for line in fem.system_command_lines:
+        if line.strip().upper().startswith('RESTART'):
+            is_restart = True
+    return is_restart
 
 def _assert_has_spc(subcase, fem):
     """
@@ -943,10 +953,10 @@ def _assert_has_spc(subcase, fem):
                 break
         assert subcase.has_parameter('SPC', 'STATSUB') or has_ps, subcase
 
-def validate_case_control(fem: BDF, p0: Any, sol_base: int, subcase_keys: List[int],
-                          subcases: Any, unused_sol_200_map: Any,
-                          stop_on_failure: bool=True,
-                          ierror: int=0, nerrors: int=100) -> None:
+def _validate_case_control(fem: BDF, p0: Any, sol_base: int, subcase_keys: List[int],
+                           subcases: Any, unused_sol_200_map: Any,
+                           stop_on_failure: bool=True,
+                           ierror: int=0, nerrors: int=100) -> None:
     if len(subcase_keys) > 1:
         subcase_keys = subcase_keys[1:]  # drop isubcase = 0
 
@@ -1110,10 +1120,13 @@ def check_case(sol, subcase, fem2, p0, isubcase, subcases,
         assert 'NLPARM' in subcase, subcase
         ierror = check_for_optional_param(('LOAD', 'TEMPERATURE(LOAD)', 'CLOAD'), subcase, msg,
                                           RuntimeError, log, ierror, nerrors)
-    elif sol == 107: # ???
+    elif sol == 107:
+        # direct complex eigenvalue
         _assert_has_spc(subcase, fem2)
-        ierror = check_for_optional_param(('LOAD', 'TEMPERATURE(LOAD)'), subcase, msg,
+        ierror = check_for_optional_param(('CMETHOD', ), subcase, msg,
                                           RuntimeError, log, ierror, nerrors)
+        #ierror = check_for_optional_param(('LOAD', 'TEMPERATURE(LOAD)'), subcase, msg,
+                                          #RuntimeError, log, ierror, nerrors)
     elif sol in [8, 108]: # freq
         assert 'FREQUENCY' in subcase, subcase
     elif sol == 109:  # time
@@ -1584,9 +1597,10 @@ def _check_case_parameters(subcase, fem2: BDF, p0, isubcase: int, sol: int,
         pass
 
     if 'FREQUENCY' in subcase:
+        # not positive on 107 - complex eigenvalues
         freq_id = subcase.get_parameter('FREQUENCY')[0]
         freq = fem2.frequencies[freq_id]
-        allowed_sols = [26, 68, 76, 78, 88, 108, 101, 111, 112, 118, 146, 200]
+        allowed_sols = [26, 68, 76, 78, 88, 108, 101, 107, 111, 112, 118, 146, 200]
         ierror = check_sol(sol, subcase, allowed_sols, 'FREQUENCY', log, ierror, nerrors)
 
     #if 'LSEQ' in subcase:
