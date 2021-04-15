@@ -373,7 +373,7 @@ def run_and_compare_fems(
         quiet: bool=False,
         dumplines: bool=False,
         dictsort: bool=False,
-        nerrors=0,
+        nerrors: int=0,
         dev: bool=False,
         crash_cards=None,
         version: Optional[str]=None,

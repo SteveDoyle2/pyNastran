@@ -9,7 +9,7 @@ If you have a bug/want a new feature or card, leave some feedback on the [Issue 
 Release Notes
 =============
 
-v1.4.0 (2021/2/?)
+v1.4.0 (2021/4/15)
 -----------------
 Programmatics:
  - Supports Python 3.7-3.9
@@ -19,56 +19,94 @@ Programmatics:
 
 BDF:
  - new cards:
-   - BGSET, BGADD, BCTPARM, BCBODY, TOPVAR, MATEV
+   - BGSET, BGADD, BCTPARM, BCBODY, TOPVAR, MATEV, PCOMPLS, TABDMP1
  - convert:
    - now supports A/acceleration, V/velocity
+   - messages should be clearer (only the relevant conversions to your model are written)
+ - mirror:
+   - now supports solid elements (they have to be inverted); double check your loads
  - new arguments:
    - adding validate flag (default=False) option to add_flutter method
    - adding extrap=0 flag (for NX) to TABLED* and TABLEM*
+ - new features
+   - read_bdf now supports Path objects
+   - added node now has a get_position_wrt_coord_ref method
+   - aero panels now have a 'plot' method, which will plot aero subpanels and points
+   - FLUTTER card initialization now has a validate option (default=False)
  - fixing:
+   - fixed test_bdf bug that dropped the global subcase
+     - it's not used unless there are no local subcases
+   - deepcopying a card now supports commens
    - CAERO1, CAERO5, CAERO7 paneling bug (nodes and sub-elements should be defined chordwise)
    - adding more fields to add_* methods for CPLSTS*, CPLSTN*
    - better DEQATN python-builtin prevention (allows for executing Nastran equations)
    - better DTABLE handling
    - DRESP1 checks (with validate=True flag)
+   - CBEAM.get_field now works
+     - now uses nodes/nodes_ref instead of ga/ga_ref and gb/gb_ref
+   - RBE3.get_field now works
+   - better NLPARM checks
+   - get_oml now clips the normal to [-1., -1.] to avoid out of bounds normal values
+ - changes:
+   - more use of warnings.warn instead of print when log doesn't exist
+   - CONM2 positive semi-definite check is relaxed as it's the sum of masses on a node
+     (not just due to one element) that has to be positive semi-definite
 
 OP2:
+ - reworked OES/OEF table reading to more robustly handle sort/format codes
  - grid point forces
    - fixed crash in GPFORCE shear_moment_diagram (shear/moment/torque plotter)
    - extract_interface_loads now returns force and moment
      - see _extract_interface_loads if you want the old behavior
  - improved NX 64-bit support
    - matrices should work much better in 64 bit
- - new results (NX):
+ - new results:
    - random sort2
-     - CTRIA3
-     - CQUAD4 (5-nodes)
-     - CTRIA6
-   - glue_forces
-   - contact_tractions_and_pressures
-   - contact_forces
-   - grid_point_strain
-     - GridPointSurfaceStrainsArray
-     - GridPointStrainsVolumeDirectArray
-     - GridPointStrainsVolumePrincipalArray
-     - GridPointStrainsSurfaceDiscontinutiesArray
+     - CTRIA3/6
+     - CQUAD4/8
+   - model.op2_results.separation_initial
+   - model.op2_results.separation_final
+   - model.glue_forces
+   - model.contact_tractions_and_pressures
+   - model.contact_forces
+   - model.op2_results.stress.chexa_compostite_stress/strain
+   - model.op2_results.strain_energy.cbeam3_strain_energy
+   - model.op2_results.strain_energy.cfast_strain_energy
+   - model.op2_results.strain_energy.cseam_strain_energy
+   - model.grid_point_surface_strains
+   - model.grid_point_strains_volume_direct
+   - model.grid_point_strains_volume_principal
+   - model.grid_point_strain_discontinuities
  - removed:
    - VU elements (MSC/NX recently removed these)
+ - vectorized most op2 writing
  - bug fixes:
    - PARAM reading is much more robust
    - improved regex support for including/excluding results
 
 OP2 Geom:
  - added many aero (EDT) and optimization (EDOM) cards
-
+ - 32/64-bit modern MSC support
+   - MSC 2020 is very different than MSC 2005
+   - many cards changed (e.g., the CQUAD4) to simplify I/O
+ - 64-bit NX support
+ - more MSC PCOMP ft support
+ - more MSC PSOLID fctn support
+ 
 F06 Flutter Plotter:
  - supports --mach, --q, --alt on the x-axis
+ - supports cm/s for velocities
 
 GUI:
  - transient/complex fringe only animations now supported
  - fixed bug in gif writing for profile='0 to scale to -scale to 0'
  - NX nonlinear solid element supported
  - faster 3d bar visualization
+ - added contact_forces & glue_forces
+ - GUI now supports localization based on system configuration
+   (e.g., 1,0 is 1.0 in some countries)
+ - better validation of floats
+ - added highlight point size option in settings
  
 v1.3.3 (2020/6/28)
 ------------------
