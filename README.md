@@ -51,7 +51,11 @@ Everyone interacting in the setuptools project’s codebases, issue trackers, ch
 [![Requirements Status](https://img.shields.io/requires/github/SteveDoyle2/pyNastran/master.svg)](https://requires.io/github/SteveDoyle2/pyNastran/requirements/?branch=master)	|
 ### v1.4
 
-Not a huge release, but there it's only 6 months since the last version instead of a year.  Probably the biggest new features are:
+Last year MSC provided a copy of MSC Nastran free of charge to help support the project.  
+Since then, modern MSC Nastran support has been added.  
+In addition, NX 64-bit and Optisruct support has been improved.
+
+The biggest new features are:
  - MSC 2020 support (including contact)
  - much improved 64 bit support
  - improved op2 support
@@ -61,13 +65,22 @@ Programmatics:
  - GUI is compatible with PyQt5 and PySide2 and VTK 7-9
  - improved testing of old versions of packages
  - updated nptyping requirements
- - added support for MSC 2020
 
 BDF:
  - fixed CAERO1 paneling bug
+ - 8 new cards: BGSET, BGADD, BCTPARM, BCBODY, TOPVAR, MATEV, PCOMPLS, TABDMP1
+ - bdf_mirror supports solid elements
+
+OP2:
+ - 20 new results
+ - vectorized op2 writing
 
 GUI:
  - transient/complex fringe only animations now supported
+ - locale support (e.g., most of Europe and South America) to allow 3,14 instead of 3.14
+
+See pyNastran `v1.4.0 release notes <https://github.com/SteveDoyle2/pyNastran/releases/tag/v1.4.0>`_ for details on the other changes.
+
 
 --->
 
@@ -206,11 +219,11 @@ F06:
 
 Many bug fixes and a few more details on features, can be found in the ![Release Notes](https://github.com/SteveDoyle2/pyNastran/blob/1.3/releaseNotes.md)
 
-### pyNastran 1.3.1/1.3.0 has been released (2020/4/8)
+### v1.3.1/v1.3.0 (2020/4/8)
 
 This result has been superseeded by 1.3.2.  The PyPi page was fixed.
 
-### pyNastran v1.2.1 has been released (2019/5/24)
+### v1.2.1 (2019/5/24)
 
 I keep saying to myself there's not much to add, but Nastran is huge.  Beyond HDF5
 support in the BDF, I'm a huge fan of the new ability to keep track of which include file a
@@ -308,11 +321,11 @@ Known issues:
  - Transient Pandas Dataframes will fail for newer versions of numpy/pandas.
    If anyone knows how to use a MultiIndex, this is probably pretty easy to fix.
 
-### pyNastran v1.2.0 has been released (2019/5/21)
+### v1.2.0 (2019/5/21)
 
 This result has been superseeded by 1.2.1.  See release notes for details.
 
-### pyNastran v1.1.0 has been released (2018/6/26)
+### v1.1.0 (2018/6/26)
 
 |  Version  | Docs  | Status |
 | :--- 	  | :--- 	  | :--- 	  |
@@ -371,17 +384,16 @@ GUI:
 
 Known issues:
  - Transient Pandas Dataframes will fail for newer versions of numpy/pandas.
-   If anyone knows how to use a MultiIndex, this is probably pretty easy to fix.
 
-### pyNastran v1.0.0 has been released (2017/5/25)
+### v1.0.0 (2017/5/25)
 
 See [v1.0.0](https://github.com/SteveDoyle2/pyNastran/releases/tag/v1.0.0) for information regarding enhancements.
 
-### pyNastran v0.8.0 has been released (2016/8/21)
+### v0.8.0 (2016/8/21)
 
 See [v0.8.0](https://github.com/SteveDoyle2/pyNastran/releases/tag/v0.8.0) for information regarding enhancements.
 
-### pyNastran v0.7.2 has been Released (2015/4/25)
+### v0.7.2 (2015/4/25)
 
 See [v0.7.2](https://github.com/SteveDoyle2/pyNastran/releases) for information regarding enhancements.
 

@@ -45,7 +45,12 @@ REQS = {
     '3.8' : {  # TODO: not updated
         'numpy' : ('1.14', '>=1.14,!=1.19.4'),
         'scipy' : ('1.0', '>=1.0'),
-        'matplotlib' : ('2.2', '>=2.2'),  # 2.2.4 adds Python 3.7 support
+        'matplotlib' : ('2.2', '>=2.2'),
+    },
+    '3.9' : {  # TODO: not updated
+        'numpy' : ('1.14', '>=1.14,!=1.19.4'),
+        'scipy' : ('1.0', '>=1.0'),
+        'matplotlib' : ('2.2', '>=2.2'),
     },
 }
 

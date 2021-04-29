@@ -83,8 +83,10 @@ OP2:
  - bug fixes:
    - PARAM reading is much more robust
    - improved regex support for including/excluding results
+   - GPDT/S and BGPDT/S tables bugs fixed
 
 OP2 Geom:
+ - now works when no subcases are included :)
  - added many aero (EDT) and optimization (EDOM) cards
  - 32/64-bit modern MSC support
    - MSC 2020 is very different than MSC 2005

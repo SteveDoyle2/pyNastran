@@ -4,7 +4,6 @@ import unittest
 from cpylog import SimpleLogger
 from pyNastran.bdf.bdf import BDF, read_bdf
 from pyNastran.bdf.mesh_utils.bdf_renumber import bdf_renumber
-#from pyNastran.utils.dev import get_files_of_type
 
 import pyNastran
 PKG_PATH = pyNastran.__path__[0]

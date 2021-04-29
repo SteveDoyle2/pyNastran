@@ -17,7 +17,7 @@ import numpy as np
 
 # xyz to xxx transforms
 def xyz_to_rtz_array(xyz):
-    """
+    r"""
     xyz to R-theta-z transform::
 
       y       R

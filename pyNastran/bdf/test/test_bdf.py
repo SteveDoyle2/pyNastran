@@ -2216,7 +2216,7 @@ def get_test_bdf_usage_args_examples(encoding):
 
         '\n'
         'Developer:\n'
-        '  --crash C,    Crash on specific cards (e.g. CGEN,EGRID)\n'
+        '  --crash C     Crash on specific cards (e.g. CGEN,EGRID)\n'
         '  --stop        Stop after first read/write (default=False)\n'
         '  --dumplines   Writes the BDF exactly as read with the INCLUDEs processed\n'
         '                (pyNastran_dump.bdf)\n'

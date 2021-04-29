@@ -563,6 +563,11 @@ class GEOM2(GeomCommon):
             fe, = struct_i.unpack(edata[fe1:fe2])
             f = fe & 3
 
+            # CBAR    EID     PID     GA      GB      X1       X2     X3        OFFT
+            #          PA      PB     W1A     W2A     W3A      W1B    W2B       W3B
+            # CBAR    401     3       2217    81      .2769987-.931498-.235759  B
+            # 'fe = 65; fe&3=1'
+            # ints    = (401, 3, 2217, 81, 0.277, -0.931498, -0.235759, 65, 0, 0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0)
             if f == 0:
                 # nodes defined in cid=0
                 # XYZ option -- basic coordinate system
