@@ -537,7 +537,8 @@ def force_double(card: BDFCard, ifield: int, fieldname: str) -> float:
                               'card=%s' % (fieldname, svalue, ifield, dtype, card))
     return value
 
-def double_or_blank(card: BDFCard, ifield: int, fieldname: str, default: Optional[Union[float]]=None):
+def double_or_blank(card: BDFCard, ifield: int, fieldname: str,
+                    default: Optional[Union[float]]=None):
     # (card, ifield, fieldname, default) -> Optional[Union[float]]
     """
     Casts a value to an double/blank

@@ -621,6 +621,9 @@ MSC_RESULT_TABLES = [b'ASSIG', b'ASEPS'] + [
     #C:\MSC.Software\msc_nastran_runs\pcdyn111s2.op2
     b'OGPSTRN', b'OGPFIN', b'OESRTN', b'OGPSRN',
 
+    # msc/units_mass_spring_damper/units_mass_spring_damper/op2
+    b'UNITS', # b'CPHSF',
+
     # nasa95
     b'OQPC1', b'OUPVC1', b'OESC1',
 ]

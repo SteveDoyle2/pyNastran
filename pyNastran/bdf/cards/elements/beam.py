@@ -50,8 +50,8 @@ class CBEAM(LineElement):
     |       | SA  | SB  |     |     |     |     |     |          |
     +-------+-----+-----+-----+-----+-----+-----+-----+----------+
 
-    offt/bit are MSC specific fields
-
+    bit is an MSC specific field
+    NX 2020 added offt
     """
     type = 'CBEAM'
     _field_map = {

@@ -1186,10 +1186,12 @@ class RBE3(RigidElement):
         comps = ['1']
         Gijs = [2]
         return RBE3(eid, refgrid, refc, weights, comps, Gijs,
-                    Gmi=None, Cmi=None, alpha=0.0, comment='')
+                    Gmi=None, Cmi=None, alpha=0.0, tref=0.0, comment='')
 
-    def __init__(self, eid, refgrid, refc, weights, comps, Gijs,
-                 Gmi=None, Cmi=None, alpha=0.0, comment=''):
+    def __init__(self, eid: int, refgrid: int, refc: str,
+                 weights: List[float], comps: List[str], Gijs: List[int],
+                 Gmi=None, Cmi=None,
+                 alpha: float=0.0, tref: float=0.0, comment: str=''):
         """
         Creates an RBE3 element
 
@@ -1213,6 +1215,8 @@ class RBE3(RigidElement):
             dependent components / UM Set
         alpha : float; default=0.0
             thermal expansion coefficient
+        tref : float; default=0.0
+            reference temperature (new in MSC 2021)
         comment : str; default=''
             a comment for the card
 
@@ -1257,6 +1261,7 @@ class RBE3(RigidElement):
         self.Cmi = Cmi
 
         self.alpha = alpha
+        self.tref = tref
         self.nodes_ref = None
         self.pid_ref = None
 
@@ -1271,6 +1276,7 @@ class RBE3(RigidElement):
             a BDFCard object
         comment : str; default=''
             a comment for the card
+
         """
         eid = integer(card, 1, 'eid')
         blank(card, 2, 'blank')
@@ -1351,12 +1357,15 @@ class RBE3(RigidElement):
                     Cmi.append(cmi)
 
         if ialpha:
-            alpha = double_or_blank(card, ialpha + 1, 'alpha')
+            alpha = double_or_blank(card, ialpha + 1, 'alpha', default=0.0)
+            tref = double_or_blank(card, ialpha + 2, 'tref', default=0.0)
         else:
             #: thermal expansion coefficient
             alpha = 0.0
+            tref = 0.0
         return RBE3(eid, refgrid, refc, weights, comps, Gijs,
-                    Gmi=Gmi, Cmi=Cmi, alpha=alpha, comment=comment)
+                    Gmi=Gmi, Cmi=Cmi, alpha=alpha, tref=tref,
+                    comment=comment)
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
@@ -1370,12 +1379,16 @@ class RBE3(RigidElement):
         comment : str; default=''
             a comment for the card
         """
-        eid, refgrid, refc, weights, comps, gijs, gmi, cmi, alpha = data
+        if len(data) == 9:
+            eid, refgrid, refc, weights, comps, gijs, gmi, cmi, alpha = data
+            tref = 0.0
+        else:
+            eid, refgrid, refc, weights, comps, gijs, gmi, cmi, alpha, tref = data
         return RBE3(eid, refgrid, refc, weights, comps, gijs,
-                    Gmi=gmi, Cmi=cmi, alpha=alpha, comment=comment)
+                    Gmi=gmi, Cmi=cmi, alpha=alpha, tref=tref, comment=comment)
 
     @property
-    def wt_cg_groups(self):
+    def wt_cg_groups(self) -> List[Tuple[float, str, int]]:
         wt_cg_groups = []
         for weight, comp, gijs in zip(self.weights, self.comps, self.Gijs):
             wt_cg_groups.append((weight, comp, gijs))
@@ -1434,13 +1447,13 @@ class RBE3(RigidElement):
     #     return card
 
     @property
-    def ref_grid_id(self):
+    def ref_grid_id(self) -> int:
         if self.refgrid_ref is not None:
             return self.refgrid_ref.nid
         return self.refgrid
 
     @property
-    def Gmi_node_ids(self):
+    def Gmi_node_ids(self) -> List[int]:
         if self.Gmi_ref is None:
             return self.Gmi
         if len(self.Gmi_ref) == 0:
@@ -1448,7 +1461,7 @@ class RBE3(RigidElement):
         return self._node_ids(nodes=self.Gmi_ref, allow_empty_nodes=True)
 
     @property
-    def Gijs_node_ids(self):
+    def Gijs_node_ids(self) -> List[int]:
         if self.Gijs_ref is None:
             return self.Gijs
         Gijs = []
@@ -1477,7 +1490,7 @@ class RBE3(RigidElement):
         for Gij in self.Gijs:
             self.Gijs_ref.append(model.EmptyNodes(Gij, msg=msg))
 
-    def safe_cross_reference(self, model: BDF, debug=True):
+    def safe_cross_reference(self, model: BDF, debug: bool=True) -> int:
         msg = ', which is required by RBE3 eid=%s' % (self.eid)
         assert self.Gmi is not None
         self.Gmi_ref, unused_missing_nodes = model.safe_empty_nodes(self.Gmi, msg=msg)
@@ -1508,7 +1521,7 @@ class RBE3(RigidElement):
         self.Gijs = Gij
 
     @property
-    def independent_nodes(self):
+    def independent_nodes(self) -> List[int]:
         """
         gets the independent node ids
         TODO: not checked
@@ -1520,7 +1533,7 @@ class RBE3(RigidElement):
         return nodes
 
     @property
-    def dependent_nodes(self):
+    def dependent_nodes(self) -> List[int]:
         """
         gets the dependent node ids
         TODO: not checked
@@ -1547,8 +1560,12 @@ class RBE3(RigidElement):
         if nspaces < 8:
             list_fields += [None] * nspaces
 
-        if self.alpha > 0.:  # handles the default value
+        is_alpha = (self.alpha != 0.0)
+        is_tref = (self.tref != 0.0)
+        if is_alpha or is_tref:  # handles the default value
             list_fields += ['ALPHA', self.alpha]
+            if is_tref:
+                list_fields.append(self.tref)
         return list_fields
 
     def repr_fields(self):
@@ -1604,6 +1621,7 @@ class RSPLINE(RigidElement):
             lengths of all segments
         comment : str; default=''
             a comment for the card
+
         """
         RigidElement.__init__(self)
         if comment:
@@ -1632,6 +1650,7 @@ class RSPLINE(RigidElement):
             a BDFCard object
         comment : str; default=''
             a comment for the card
+
         """
         eid = integer(card, 1, 'eid')
         diameter_ratio = double_or_blank(card, 2, 'diameter_ratio', 0.1)
@@ -1664,6 +1683,7 @@ class RSPLINE(RigidElement):
         ----------
         model : BDF()
             the BDF object
+
         """
         return
         #msg = ', which is required by RSPLINE eid=%s' % (self.eid)
@@ -1680,6 +1700,7 @@ class RSPLINE(RigidElement):
         ----------
         model : BDF()
             the BDF object
+
         """
         self.cross_reference(model)
 

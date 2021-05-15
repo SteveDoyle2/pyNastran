@@ -885,6 +885,10 @@ class CSET1(Set):
         self.ids_ref = None
 
     @classmethod
+    def add_op2_data(cls, data, comment=''):
+        raise RuntimeError(str(data))
+
+    @classmethod
     def add_card(cls, card, comment=''):
         """
         Adds a CSET1 card from ``BDF.add_card(...)``

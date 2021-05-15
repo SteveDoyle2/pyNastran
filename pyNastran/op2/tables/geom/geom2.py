@@ -38,6 +38,97 @@ from pyNastran.op2.tables.geom.geom4 import RBE3, fill_rbe3_wt_comp_gijs, get_mi
 
 from pyNastran.op2.errors import DoubleCardError, EmptyCardError
 
+def _map_offt(num):
+    offt = ['G', 'G', 'G']
+    # 1G->1B: 4^3; 1+64=65
+    if num > 64:
+        num -= 64 # 4^3
+        offt[0] = 'B'
+
+    # 3G->3O: 4^2; 1+16=17
+    # 3G->3B: 2*4^2; 1+32=33
+    if num > 32:
+        num -= 32 # 4^2
+        offt[2] = 'O'
+    elif num > 16:
+        num -= 16 # 4^2
+        offt[2] = 'B'
+
+    # 2G->2O: 4*1; 1+4=5
+    # 2G->2B: 4*2; 1+8=9
+    if num > 8:
+        num -= 8 # 4*2
+        offt[1] = 'O'
+    elif num > 4:
+        num -= 4 # 4
+        offt[1] = 'B'
+
+    offt_str = ''.join(offt)
+    return offt_str
+
+BAR_FE_MAP = {
+    #B/G   2
+    #B/G/O 3
+    #GGG = 1
+    #1: 'GGG',
+    #5: 'GOG', # 2G->2O: 4*1; 1+4=5
+    #9: 'GBG', # 2G->2B: 4*2; 1+8=9
+    #17: 'GGO', # 3G->3O: 4^2; 1+16=17
+    #21: 'GOO', # 2G->2O: 4*1; 17+4=21
+    #33: 'GGB', # 3G->3B: 2*4^2; 1+32=33
+    #41: 'GBB', # 2G->2B: 4*2; 33+8=41
+
+    #65: 'BGG', # 1G->1B: 4^3; 1+64=65
+    #69: 'BOG', # 2G->2O: 4*1; 65+4=69
+    #73: 'BBG', # 2G->2B: 4*2; 65+8=73
+    #81: 'BGO', # 3G->3O: 4^2; 65+16=81
+    #85: 'BOO', # 2G->2O: 4*1; 81+4=85
+    #97: 'BGB', # 3G->3B: 2*4^2; 65+32=97
+    #105: 'BBB', # 2G->2B: 4*2; 97+8=105
+    #
+    # 1G->1B: 4^3; 1+64=65
+    #
+    # 2G->2O: 4*1; 1+4=5
+    # 2G->2B: 4*2; 1+8=9
+    #
+    # 3G->3O: 4^2; 1+16=17
+    # 3G->3B: 2*4^2; 1+32=33
+
+    #fprime = fe-f
+    # f=1    f=2
+    0: 'GGG', # NX?
+    1: 'GGG', 2: 'GGG',
+    5: 'GOG', 6: 'GOG',
+    9: 'GBG', 10: 'GBG',
+    17: 'GGO', 18: 'GGO',
+    21: 'GOO', 22: 'GOO',
+    33: 'GGB', 34: 'GGB',
+    41: 'GBB', 42: 'GBB',
+
+    65: 'BGG',
+    69: 'BOG',
+    73: 'BBG',
+    81: 'BGO',
+    85: 'BOO',
+    97: 'BGB',
+    105: 'BBB',
+
+
+    #https://docs.plm.automation.siemens.com/data_services/resources/scnastran/2020_1/help/tdoc/en_US/pdf/release_guide.pdf
+    #F = 1 XYZ option – global or basic coordinate system
+    #F = 2 Grid option
+    #F = 5 XYZ option – global or basic coordinate system
+    #F = 6 XYZ option – global or basic coordinate system
+    #F = 17 XYZ option – global or basic coordinate system
+    #F = 18 XYZ option – global or basic coordinate system
+    #F = 21 XYZ option – global or basic coordinate system
+    #F = 22 XYZ option – global or basic coordinate system
+    #F = 65 XYZ option – global or basic coordinate system
+    #F = 69 XYZ option – global or basic coordinate system
+    #F = 81 XYZ option – global or basic coordinate system
+    #F = 85 XYZ option – global or basic coordinate system
+
+}
 
 class GEOM2(GeomCommon):
     """defines methods for reading op2 elements"""
@@ -562,6 +653,7 @@ class GEOM2(GeomCommon):
             # per DMAP: F = FE bit-wise AND with 3
             fe, = struct_i.unpack(edata[fe1:fe2])
             f = fe & 3
+            #if f not in [0, 1, 2]: f = 0
 
             # CBAR    EID     PID     GA      GB      X1       X2     X3        OFFT
             #          PA      PB     W1A     W2A     W3A      W1B    W2B       W3B
@@ -597,7 +689,14 @@ class GEOM2(GeomCommon):
             else:
                 raise RuntimeError('invalid f value...f=%s' % (f))
             elem = CBAR.add_op2_data(data_in)
-            assert f == fe, 'f=%s type(f)=%s fe=%s\n%s' % (f, type(f), fe, elem)
+            try:
+                offt = BAR_FE_MAP[fe]
+            except:
+                print(elem)
+                raise
+            elem.offt = offt
+            #print(f'eid={eid} f={f} fe={fe} offt={offt}')
+            #assert f == fe, 'f=%s type(f)=%s fe=%s\n%s' % (f, type(f), fe, elem)
 
             self.add_op2_element(elem)
             n += ntotal
@@ -906,6 +1005,13 @@ class GEOM2(GeomCommon):
                     eid, f, fe, str(data_in)))
 
             elem = CBEAM.add_op2_data(data_in, f)
+            try:
+                offt = BAR_FE_MAP[fe]
+            except:
+                print(elem)
+                raise
+            elem.offt = offt
+
             self.add_op2_element(elem)
             n += ntotal
         self.card_count['CBEAM'] = nelements
@@ -1751,6 +1857,7 @@ class GEOM2(GeomCommon):
         The MSC version is 8 fields longer.
         """
         n0 = n
+        assert self.factor == 1, self.factor
         if self.is_nx:
             try:
                 n, elements = self._read_conv_nx(data, n)
@@ -1766,6 +1873,7 @@ class GEOM2(GeomCommon):
         for elem in elements:
             self._add_thermal_bc_object(elem, elem.eid)
         self.card_count['CONV'] = nelements
+        assert n == len(data), f'ndata={len(data)} n={n}'
         return n
 
     def _read_split_card(self, data, n, read1, read2, card_name, card_obj, add_method):
@@ -1786,10 +1894,20 @@ class GEOM2(GeomCommon):
         self.card_count[card_name] = nelements
         return n
 
-    def _read_dual_card(self, data, n, nx_read, msc_read, card_name, add_method):
+    def _read_dual_card(self, data, n, nx_read, msc_read, card_name, add_method) -> int:
         """
         generalization of multi read methods (MSC, NX)
         """
+        n, elements = self._read_dual_card_load(
+            data, n, nx_read, msc_read)
+        nelements = len(elements)
+        for elem in elements:
+            add_method(elem)
+        self.card_count[card_name] = nelements
+        return n
+
+    def _read_dual_card_load(self, data, n,
+                             nx_read, msc_read) -> Tuple[int, List[Any]]:
         n0 = n
         if self.is_nx:
             try:
@@ -1803,13 +1921,8 @@ class GEOM2(GeomCommon):
             except (AssertionError, MixedVersionCard):
                 #raise
                 n, elements = nx_read(data, n0)
-
-        nelements = len(elements)
         assert n is not None
-        for elem in elements:
-            add_method(elem)
-        self.card_count[card_name] = nelements
-        return n
+        return n, elements
 
     def _read_conv_nx(self, data: bytes, n: int) -> int:
         """
@@ -1818,6 +1931,7 @@ class GEOM2(GeomCommon):
         ntotal = 48  # 12*4
         s = Struct(self._endian + b'4i 8i')
         nelements = (len(data) - n) // ntotal
+        assert (len(data) - n) % ntotal == 0
         elements = []
         for unused_i in range(nelements):
             edata = data[n:n+ntotal]
@@ -1847,6 +1961,7 @@ class GEOM2(GeomCommon):
         ntotal = 80  # 20*4
         s = Struct(self._endian + b'12i 8f')
         nelements = (len(data) - n) // ntotal
+        assert (len(data) - n) % ntotal == 0
         elements = []
         for unused_i in range(nelements):
             edata = data[n:n+80]
@@ -1955,6 +2070,7 @@ class GEOM2(GeomCommon):
 
         is_six = (ndata - n) % ntotal6 == 0
         is_seven = (ndata - n) % ntotal7 == 0
+        assert self.factor == 1, self.factor
 
         if is_six and is_seven:
             try:
@@ -1988,7 +2104,7 @@ class GEOM2(GeomCommon):
             (eid, pcon_id, flmnd, cntrlnd, ta1, ta2) = out
             #if eid <= 0:
             if eid <= 0 or pcon_id <= 0 or flmnd < 0 or cntrlnd <= 0 or ta1 <= 0 or ta2 <= 0:
-                self.show_data(data, 'if')
+                #self.show_data(data, 'if')
                 # TODO: I'm not sure that this really has 6 fields...
                 raise RuntimeError(f'eid={eid} pconid={pcon_id} flmnd={flmnd} cntrlnd={cntrlnd} ta1={ta1} ta2={ta2} < 0')
             mdot = 0.
@@ -2021,7 +2137,7 @@ class GEOM2(GeomCommon):
 
     def _read_cplsts3(self, data: bytes, n: int) -> int:
         """
-        RECORD â€“ CPLSTS3(8801,88,984)
+        RECORD – CPLSTS3(8801,88,984)
         Word Name Type Description
         1 EID  I Element identification number
         2 PID  I Property identification number
@@ -2062,7 +2178,7 @@ class GEOM2(GeomCommon):
 
     def _read_cplsts4(self, data: bytes, n: int) -> int:
         """
-        RECORD â€“ CPLSTS4(8401,84,985)
+        RECORD – CPLSTS4(8401,84,985)
 
         Word Name Type Description
         1 EID  I Element identification number
@@ -2101,7 +2217,7 @@ class GEOM2(GeomCommon):
 
     def _read_cplsts6(self, data: bytes, n: int) -> int:
         """
-        RECORD â€“ CPLSTS6(1801,18,986)
+        RECORD – CPLSTS6(1801,18,986)
         Word Name Type Description
         1 EID  I Element identification number
         2 PID  I Property identification number
@@ -2151,7 +2267,7 @@ class GEOM2(GeomCommon):
 
     def _read_cplsts8(self, data: bytes, n: int) -> int:
         """
-        RECORD â€“ CPLSTS8(3601,36,987)
+        RECORD – CPLSTS8(3601,36,987)
 
         Word Name Type Description
         1 EID     I Element identification number
@@ -2199,7 +2315,7 @@ class GEOM2(GeomCommon):
 
     def _read_cplstn3(self, data: bytes, n: int) -> int:
         """
-        RECORD â€“ CPLSTN3(1701,17,980)
+        RECORD – CPLSTN3(1701,17,980)
 
         Word Name Type Description
         1 EID    I Element identification number
@@ -2235,7 +2351,7 @@ class GEOM2(GeomCommon):
 
     def _read_cplstn4(self, data: bytes, n: int) -> int:
         """
-        RECORD â€“ CPLSTN4(5701,57,981)
+        RECORD – CPLSTN4(5701,57,981)
         Word Name Type Description
         1 EID    I Element identification number
         2 PID    I Property identification number
@@ -2270,7 +2386,7 @@ class GEOM2(GeomCommon):
 
     def _read_cplstn6(self, data: bytes, n: int) -> int:
         """
-        RECORD â€“ CPLSTN6(5801,58,982)
+        RECORD – CPLSTN6(5801,58,982)
 
         Word Name Type Description
         1 EID  I Element identification number
@@ -2306,7 +2422,7 @@ class GEOM2(GeomCommon):
 
     def _read_cplstn8(self, data: bytes, n: int) -> int:
         """
-        RECORD â€“ CPLSTN8(7201,72,983)
+        RECORD – CPLSTN8(7201,72,983)
 
         Word Name Type Description
         1 EID     I Element identification number
@@ -2541,6 +2657,18 @@ class GEOM2(GeomCommon):
 
     def _read_double_card(self, card_name: str, card_obj, add_method,
                           methods, data: bytes, n: int) -> int:
+        n, elements = self._read_double_card_load(
+            card_name, card_obj,
+            methods, data, n)
+
+        nentries = len(elements)
+        for elem in elements:
+            add_method(elem)
+        self.card_count[card_name] = nentries
+        return n
+
+    def _read_double_card_load(self, card_name: str, card_obj,
+                               methods, data: bytes, n: int) -> int:
         assert isinstance(data, bytes), type(data)
         ndatai = (len(data) - n) // self.factor
         keys = np.array(list(methods.keys()))
@@ -2573,12 +2701,7 @@ class GEOM2(GeomCommon):
         if elements is None:
             self.show_data(data, types='ifs')
             raise EmptyCardError()
-
-        nentries = len(elements)
-        for elem in elements:
-            add_method(elem)
-        self.card_count[card_name] = nentries
-        return n
+        return n, elements
 
     def _read_vutria3(self, data: bytes, n: int) -> int:
         return self._run_3nodes(CTRIA3, data, n)

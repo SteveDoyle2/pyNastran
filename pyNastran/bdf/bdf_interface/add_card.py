@@ -6499,8 +6499,11 @@ class AddCards(AddMethods):
         self._add_rigid_element_object(elem)
         return elem
 
-    def add_rbe3(self, eid, refgrid, refc, weights, comps, Gijs,
-                 Gmi=None, Cmi=None, alpha=0.0, comment='') -> RBE3:
+    def add_rbe3(self, eid: int, refgrid: int, refc: str,
+                 weights: List[float], comps: List[str], Gijs: List[int],
+                 Gmi=None, Cmi=None,
+                 alpha: float=0.0, tref: float=0.0,
+                 comment: str='') -> RBE3:
         """
         Creates an RBE3 element
 

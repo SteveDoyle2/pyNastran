@@ -10,7 +10,9 @@ All bush properties are BushingProperty and Property objects.
 
 """
 from __future__ import annotations
+import warnings
 from typing import TYPE_CHECKING
+
 from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.bdf.cards.base_card import Property
 from pyNastran.bdf.bdf_interface.assign_type import (
@@ -42,19 +44,25 @@ class PBUSH(BushingProperty):
     Defines the nominal property values for a generalized spring-and-damper
     structural element.
 
-    +-------+-----+------+-----+-----+-----+-----+-----+----+
-    |   1   |  2  |   3  |  4  |  5  |  6  |  7  |  8  | 9  |
-    +=======+=====+======+=====+=====+=====+=====+=====+====+
-    | PBUSH | PID |   K  |  K1 |  K2 |  K3 |  K4 |  K5 | K6 |
-    +-------+-----+------+-----+-----+-----+-----+-----+----+
-    |       |  B  |  B1  |  B2 |  B3 |  B4 |  B5 |  B6 |    |
-    +-------+-----+------+-----+-----+-----+-----+-----+----+
-    |       | GE  |  GE1 | GE2 | GE3 | GE4 | GE5 | GE6 |    |
-    +-------+-----+------+-----+-----+-----+-----+-----+----+
-    |       | RCV |  SA  |  ST |  EA |  ET |     |     |    |
-    +-------+-----+------+-----+-----+-----+-----+-----+----+
-    |       |  M  | MASS |     |     |     |     |     |    |
-    +-------+-----+------+-----+-----+-----+-----+-----+----+
+    +-------+-----+-------+------+-------+-----+-----+-----+----+
+    |   1   |  2  |   3   |   4  |   5   |  6  |  7  |  8  | 9  |
+    +=======+=====+=======+======+=======+=====+=====+=====+====+
+    | PBUSH | PID |   K   |  K1  |   K2  |  K3 |  K4 |  K5 | K6 |
+    +-------+-----+-------+------+-------+-----+-----+-----+----+
+    |       |  B  |  B1   |  B2  |   B3  |  B4 |  B5 |  B6 |    |
+    +-------+-----+-------+------+-------+-----+-----+-----+----+
+    |       | GE  |  GE1  |  GE2 |  GE3  | GE4 | GE5 | GE6 |    |
+    +-------+-----+-------+------+-------+-----+-----+-----+----+
+    |       | RCV |  SA   |  ST  |   EA  |  ET |     |     |    |
+    +-------+-----+-------+------+-------+-----+-----+-----+----+
+    |       |  M  |  MASS |      |       |     |     |     |    |
+    +-------+-----+-------+------+-------+-----+-----+-----+----+
+    |       |  T  | ALPHA | TREF | COINL |     |     |     |    |
+    +-------+-----+-------+------+-------+-----+-----+-----+----+
+
+    RCV was added <= MSC 2016
+    MASS was added <= MSC 2016
+    T/ALPHA/TREF/COINL was added in MSC 2021
     """
     type = 'PBUSH'
     _field_map = {
@@ -121,7 +129,8 @@ class PBUSH(BushingProperty):
         #5 : 'j', 'J' : 'j',
     #}
 
-    def __init__(self, pid, k, b, ge, rcv=None, mass=None, comment=''):
+    def __init__(self, pid, k, b, ge, rcv=None, mass=None,
+                 t=None, comment=''):
         """
         Creates a PBUSH card, which defines a property for a CBUSH
 
@@ -140,11 +149,17 @@ class PBUSH(BushingProperty):
             Nominal structural damping constant in directions 1 through 6.
             len(ge) = 6
         rcv : List[float]; default=None -> (None, None, None, None)
-            [sa, st, ea, et] = rcv
-            length(mass_fields) = 4
+            [sa, st, ea, et] = rcv_fields
+            length(rcv_fields) = 4
         mass : float; default=None
             lumped mass of the CBUSH
             This is an MSC only parameter.
+        t : List[float]; default=None -> (None, None, None)
+            [alpha, tref, coinl] = t_fields
+            length(t_fields) = 3
+            alpha: thermal expansion coefficient; default=0.0
+            tref:  reference temperature; default=0.0
+            coincident_length: length of CBUSH with coincident grids; default=0.0
         comment : str; default=''
             a comment for the card
 
@@ -197,13 +212,24 @@ class PBUSH(BushingProperty):
         if mass:
             self.vars.append('M')
 
+        # T parameters
+        if t is None:
+            alpha, tref, coincident_length = None, None, None
+        else:
+            alpha, tref, coincident_length = t
+        if alpha is not None or tref is not None or coincident_length is not None:
+            self.vars.append('T')
+        self.alpha = alpha
+        self.tref = tref
+        self.coincident_length = coincident_length
+
     @classmethod
     def _init_from_empty(cls):
         pid = 1
         k = [1.]
         b = [1.]
         ge = [1.]
-        return PBUSH(pid, k, b, ge, rcv=None, mass=None, comment='')
+        return PBUSH(pid, k, b, ge, rcv=None, mass=None, t=None, comment='')
 
     def validate(self):
         assert isinstance(self.Ki, list), 'PBUSH: pid=%i type(Ki)=%s Ki=%s' % (self.pid, type(self.Ki), self.Ki)
@@ -268,6 +294,9 @@ class PBUSH(BushingProperty):
             elif pname == 'M':
                 # Lumped mass of the cbush; default=0.0
                 mass = double_or_blank(card, istart + 1, 'mass', 0.)
+            elif pname == 'T':
+                t_fields = cls._read_var(card, 'Ti', istart + 1, istart + 4)
+                assert len(t_fields) == 3, t_fields
             else:
                 raise RuntimeError('unsupported PBUSH type; pname=%r' % pname)
                 #break #  old version...
@@ -293,14 +322,33 @@ class PBUSH(BushingProperty):
             a comment for the card
 
         """
-        (pid, k1, k2, k3, k4, k5, k6, b1, b2, b3, b4, b5, b6,
-         g1, g2, g3, g4, g5, g6, sa, st, ea, et) = data
+        t_fields = None
+        ndata = len(data)
+        if ndata == 23:
+            (pid, k1, k2, k3, k4, k5, k6, b1, b2, b3, b4, b5, b6,
+             g1, g2, g3, g4, g5, g6, sa, st, ea, et) = data
+            mass = 0.
+        elif ndata == 24:
+            (pid, k1, k2, k3, k4, k5, k6, b1, b2, b3, b4, b5, b6,
+             g1, g2, g3, g4, g5, g6, sa, st, ea, et,
+             mass) = data
+        elif ndata == 27:
+            (pid, k1, k2, k3, k4, k5, k6, b1, b2, b3, b4, b5, b6,
+             g1, g2, g3, g4, g5, g6, sa, st, ea, et,
+             mass, alpha, tref, coinl) = data
+            if max(abs(mass), abs(alpha), abs(tref), abs(coinl)) != 0:
+                warnings.warn(f'verify PBUSH pid={pid} mass={mass} alpha={alpha} tref={tref} coinl={coinl}')
+            t_fields = [alpha, tref, coinl]
+        else:
+            raise NotImplementedError(f'ndata={ndata} and must be [23, 24, 27]; data={data}')
         k_fields = [k1, k2, k3, k4, k5, k6]
         b_fields = [b1, b2, b3, b4, b5, b6]
         ge_fields = [g1, g2, g3, g4, g5, g6]
         rcv_fields = [sa, st, ea, et]
-        mass = 0.
-        return PBUSH(pid, k_fields, b_fields, ge_fields, rcv_fields, mass,
+        return PBUSH(pid, k_fields, b_fields, ge_fields,
+                     rcv=rcv_fields,
+                     mass=mass,
+                     t=t_fields,
                      comment=comment)
 
     def _verify(self, xref):
@@ -331,6 +379,8 @@ class PBUSH(BushingProperty):
                 list_fields += ['RCV', self.sa, self.st, self.ea, self.et]
             elif var == 'M':
                 list_fields += ['M', self.mass]
+            elif var == 'T':
+                list_fields += ['T', self.alpha, self.tref, self.coincident_length]
             else:
                 raise RuntimeError('not supported PBUSH field...')
             nspaces = 8 - (len(list_fields) - 1) % 8

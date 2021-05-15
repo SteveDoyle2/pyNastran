@@ -349,6 +349,9 @@ FLOAT_PARAMS_1 = {
     b'XUPFAC',
     b'ZUZRR1', b'ZUZRR2', b'ZUZRR3', b'ZUZRR4', b'ZUZRR5', b'ZUZRR6', b'ZUZRR7', b'ZUZRR8', b'ZUZRR9', b'ZUZRR10',
     b'K6ROT',
+
+    # models/msc/units_mass_spring_damper.op2
+    b'RBTR',
 }
 FLOAT_PARAMS_2 = {
     b'BETA', b'CB1', b'CB2', b'CK1', b'CK2', b'CK3', b'CK41', b'CK42',
@@ -1442,7 +1445,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             self.log.debug('found PARAM,NXVER -> setting as NX')
         return ndata2
 
-    def _read_pvto_4_helper(self, data, ndata: int) -> int:
+    def _read_pvto_4_helper(self, data: bytes, ndata: int) -> int:
         """reads PARAM cards"""
         xword = (4 * self.factor)
         nvalues = ndata // xword
@@ -1558,8 +1561,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
                         #self.show_data(data[istart:istart+20], types='sifqd')
                     #elif self.size == 8:
                         #self.show_data(data[istart:istart+40], types='sifqd')
-
-                    assert word in FLOAT_PARAMS_1, f'word={word}'
+                    assert word in FLOAT_PARAMS_1, f'float/str; word={word} value={value}'
                 i += 5
             #elif flag == 3: # string
                 #assert self.size in [4, 8], (key, self.size, flag)
@@ -1986,7 +1988,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
                 msg = (
                     f'Invalid Table = {table_name!r}\n\n'
                     'If you have matrices that you want to read, see:\n'
-                    '  model.set_additional_matrices_to_read(matrices)'
+                    '  model.set_additional_matrices_to_read(matrices)\n'
                     '  matrices = {\n'
                     "      b'BHH' : True,\n"
                     "      b'KHH' : False,\n"

@@ -174,6 +174,11 @@ class OP2Reader:
             b'CDDATA' : self.read_cddata,
             b'CMODEXT' : self._read_cmodext,
 
+            #MSC
+            #msc / units_mass_spring_damper
+            b'UNITS' : self._read_units,
+            #b'CPHSF': self._read_cphsf,
+
             # element matrices
             #b'KELM' : self._read_element_matrix,
             #b'MELM' : self._read_element_matrix,
@@ -4564,6 +4569,58 @@ class OP2Reader:
             #print(f'n={n} i={i} -> n2={n2}')
         return
 
+
+    def _read_units(self):
+        r"""models/msc/units_mass_spring_damper"""
+        op2 = self.op2
+        assert self.factor == 1, '64-bit is not supported'
+
+        op2.table_name = self._read_table_name(rewind=False)
+        self.read_markers([-1])
+
+        #read_record_ndata = self.get_skip_read_record_ndata()
+
+        #(101, 32767, 32767, 32767, 32767, 32767, 32767)
+        data = self._read_record()
+        #self.show_data(data, types='ifs', endian=None, force=False)
+
+        self.read_3_markers([-2, 1, 0])
+        data = self._read_record()
+        assert data == b'UNITS   ', data
+
+        self.read_3_markers([-3, 1, 0])
+        data = self._read_record()
+
+        # per MSC DMAP 2020
+        #
+        # Word Name Type Description
+        # 1 MASS(2)   CHAR4 Units assumed for mass
+        # 3 FORCE(2)  CHAR4 Units assumed for force
+        # 5 LENGTH(2) CHAR4 Units assumed for length
+        # 7 TIME(2)   CHAR4 Units for assumed time
+        # 9 STRESS(2) CHAR4 Units for assumed stress
+
+        ndata = len(data)
+        if op2.is_geometry:
+            if ndata == 32:
+                #'MGG     N       MM      S       '
+                out = Struct(self._endian + b'8s 8s 8s 8s').unpack(data)
+                mass_bytes, force_bytes, length_bytes, time_bytes = out
+                mass = mass_bytes.decode(self._encoding)
+                force = force_bytes.decode(self._encoding)
+                length = length_bytes.decode(self._encoding)
+                time = time_bytes.decode(self._encoding)
+                print(mass, force, length, time)
+                fields = {
+                    'mass' : mass,
+                    'force' : force,
+                    'length' : length,
+                    'time' : time, }
+                op2.add_dti('UNITS', fields)
+            else:
+                raise RuntimeError(f'ndata={len(data)} (expected 40); data={data!r}')
+        self.read_3_markers([-4, 1, 0])
+        self.read_markers([0])
     #---------------------------------------------------------------------------
 
     def _get_marker_n(self, nmarkers: int) -> List[int]:

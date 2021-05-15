@@ -1441,7 +1441,7 @@ class TestOP2(Tester):
         #diff_cards2.sort()
         #assert len(diff_cards2) == 0, diff_cards2
 
-        model = read_bdf(bdf_filename, debug=False, log=log, xref=False)
+        unused_model = read_bdf(bdf_filename, debug=False, log=log, xref=False)
         #model.safe_cross_reference()
 
         #save_load_deck(model, run_save_load=False)
@@ -1457,7 +1457,7 @@ class TestOP2(Tester):
                 stop_on_failure=True, dev=False,
                 build_pandas=True, log=log)
 
-    def test_bdf_op2_other_32(self):
+    def test_nx_initial_final_separation(self):
         """
         checks nx/contact_model.bdf, which tests
         initial/final contact separation distance
@@ -1473,7 +1473,7 @@ class TestOP2(Tester):
         diff_cards2.sort()
         assert len(diff_cards2) == 0, diff_cards2
 
-        model = read_bdf(bdf_filename, debug=False, log=log, xref=False)
+        unused_model = read_bdf(bdf_filename, debug=False, log=log, xref=False)
         #model.safe_cross_reference()
 
         #save_load_deck(model, run_save_load=False)
@@ -1489,14 +1489,14 @@ class TestOP2(Tester):
                 stop_on_failure=True, dev=False,
                 build_pandas=True, log=log)
 
-    def test_bdf_op2_other_33(self):
+    def test_nx_composite_solids(self):
         """
-        checks nx_composite_solids/test.bdf, which tests
+        checks nx/composite_solids/test.bdf, which tests
         centroidal CHEXA composite stress
         """
         log = get_logger(level='info')
-        bdf_filename = os.path.join(MODEL_PATH, 'nx_composite_solids', 'test.bdf')
-        op2_filename = os.path.join(MODEL_PATH, 'nx_composite_solids', 'test.op2')
+        bdf_filename = os.path.join(MODEL_PATH, 'nx' 'composite_solids', 'test.bdf')
+        op2_filename = os.path.join(MODEL_PATH, 'nx' 'composite_solids', 'test.op2')
 
         #  can't parse replication
         unused_fem1, unused_fem2, diff_cards = self.run_bdf(
@@ -1505,7 +1505,7 @@ class TestOP2(Tester):
         diff_cards2.sort()
         assert len(diff_cards2) == 0, diff_cards2
 
-        model = read_bdf(bdf_filename, debug=False, log=log, xref=False)
+        unused_model = read_bdf(bdf_filename, debug=False, log=log, xref=False)
         #model.safe_cross_reference()
 
         #save_load_deck(model, run_save_load=False)
@@ -1521,14 +1521,14 @@ class TestOP2(Tester):
                 stop_on_failure=True, dev=False,
                 build_pandas=True, log=log)
 
-    def test_bdf_op2_other_34(self):
+    def test_nx_composite_solids_corner(self):
         """
-        checks nx_composite_solids/test_nx_corner.bdf, which tests
+        checks nx/composite_solids/test_nx_corner.bdf, which tests
         corner CHEXA composite stress
         """
         log = get_logger(level='info')
-        bdf_filename = os.path.join(MODEL_PATH, 'nx_composite_solids', 'test_nx_corner.bdf')
-        op2_filename = os.path.join(MODEL_PATH, 'nx_composite_solids', 'test_nx_corner.op2')
+        bdf_filename = os.path.join(MODEL_PATH, 'nx', 'composite_solids', 'test_nx_corner.bdf')
+        op2_filename = os.path.join(MODEL_PATH, 'nx', 'composite_solids', 'test_nx_corner.op2')
 
         #  can't parse replication
         unused_fem1, unused_fem2, diff_cards = self.run_bdf(
@@ -1537,10 +1537,74 @@ class TestOP2(Tester):
         diff_cards2.sort()
         assert len(diff_cards2) == 0, diff_cards2
 
-        model = read_bdf(bdf_filename, debug=False, log=log, xref=False)
+        unused_model = read_bdf(bdf_filename, debug=False, log=log, xref=False)
         #model.safe_cross_reference()
 
         #save_load_deck(model, run_save_load=False)
+
+        log = get_logger(level='warning')
+        run_op2(op2_filename, make_geom=True, write_bdf=False, read_bdf=True,
+                write_f06=True, write_op2=False,
+                is_mag_phase=False,
+                is_sort2=False, is_nx=None, delete_f06=True,
+                subcases=None, exclude=None, short_stats=False,
+                compare=False, debug=False, binary_debug=True,
+                quiet=True,
+                stop_on_failure=True, dev=False,
+                build_pandas=True, log=log)
+
+    def test_msc_2017_units(self):
+        """
+        checks msc/units_mass_spring_damper/units_mass_spring_damper.op2, which tests
+         - UNITS table for MSC 2014
+        """
+        log = get_logger(level='info')
+        #bdf_filename = os.path.join(MODEL_PATH, 'msc', 'units_mass_spring_damper', 'test_nx_corner.bdf')
+        op2_filename = os.path.join(MODEL_PATH, 'msc', 'units_mass_spring_damper', 'units_mass_spring_damper.op2')
+
+        #  can't parse replication
+        #unused_fem1, unused_fem2, diff_cards = self.run_bdf(
+            #'', bdf_filename, log=log)
+        #diff_cards2 = list(set(diff_cards))
+        #diff_cards2.sort()
+        #assert len(diff_cards2) == 0, diff_cards2
+
+        #model = read_bdf(bdf_filename, debug=False, log=log, xref=False)
+        #model.safe_cross_reference()
+
+        #save_load_deck(model, run_save_load=False)
+
+        log = get_logger(level='warning')
+        with self.assertRaises(NotImplementedError):
+            run_op2(op2_filename, make_geom=True, write_bdf=False, read_bdf=True,
+                    write_f06=True, write_op2=False,
+                    is_mag_phase=False,
+                    is_sort2=False, is_nx=None, delete_f06=True,
+                    subcases=None, exclude=None, short_stats=False,
+                    compare=False, debug=False, binary_debug=True,
+                    quiet=True,
+                    stop_on_failure=True, dev=False,
+                    build_pandas=True, log=log)
+
+    def test_msc_2021_cbush_rbe3(self):
+        """
+        checks msc/cbush_2021/cbush_test.op2, which tests
+         - UNITS table for MSC 2021
+        """
+        log = get_logger(level='info')
+        bdf_filename = os.path.join(MODEL_PATH, 'msc', 'cbush_2021', 'cbush_test.bdf')
+        op2_filename = os.path.join(MODEL_PATH, 'msc', 'cbush_2021', 'cbush_test.op2')
+
+        unused_fem1, unused_fem2, diff_cards = self.run_bdf(
+            '', bdf_filename, log=log)
+        diff_cards2 = list(set(diff_cards))
+        diff_cards2.sort()
+        assert len(diff_cards2) == 0, diff_cards2
+
+        model = read_bdf(bdf_filename, debug=False, log=log, xref=True)
+        #model.safe_cross_reference()
+
+        save_load_deck(model, run_save_load=True)
 
         log = get_logger(level='warning')
         run_op2(op2_filename, make_geom=True, write_bdf=False, read_bdf=True,

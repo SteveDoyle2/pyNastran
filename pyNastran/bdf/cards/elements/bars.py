@@ -2044,12 +2044,35 @@ def check_offt(element):
     """
     B,G,O
     Note: The character 'O' in the table replaces the obsolete character 'E'
-
+    allowed = 'GGG,BGG,GGO,BGO,GOG,BOG,GOO,BOO,GGE,BGE,GEG,BEG,GEE,BEE,GGB,BGB,GBG,BBG,GBB,BBB,B'
     """
     if isinstance(element.offt, integer_types):
         raise SyntaxError('invalid offt expected a string of length 3; '
                           'offt=%r; Type=%s\n%s' % (element.offt, type(element.offt), str(element)))
-    msg = 'invalid offt parameter of %s...offt=%s' % (element.type, element.offt)
-    assert element.offt[0] in ['G', 'B'], msg
-    assert element.offt[1] in ['G', 'O', 'E'], msg
-    assert element.offt[2] in ['G', 'O', 'E'], msg
+
+    allowed = 'GGG,BGG,GGO,BGO,GOG,BOG,GOO,BOO,GGE,BGE,GEG,BEG,GEE,BEE,GGB,BGB,GBG,BBG,GBB,BBB,B'
+    msg = f'invalid offt parameter of {element.type}...offt={element.offt}\nallowed={allowed}'
+    #assert element.offt[0] in ['G', 'B'], msg
+    #assert element.offt[1] in ['G', 'O', 'E'], msg
+    #assert element.offt[2] in ['G', 'O', 'E'], msg
+
+    # GGG Global Global Global
+    # BGG Basic Global Global
+    #
+    # GGO Global Global Offset
+    # BGO Basic Global Offset
+    #
+    # GOG Global Offset Global
+    # BOG Basic Offset Global
+    #
+    # GOO Global Offset Offset
+    # BOO Basic Offset Offset
+    #GGE, BGE,
+    #GEG, BEG,
+    #
+    #GEE, BEE,
+    #GGB, BGB,
+    #
+    #GBG, BBG,
+    #GBB, BBB,
+    #B

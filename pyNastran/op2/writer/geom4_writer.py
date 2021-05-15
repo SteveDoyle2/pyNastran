@@ -612,9 +612,9 @@ def _write_xset1(card_type: str, cards, unused_ncards: int, op2_file, op2_ascii,
     if card_type == 'ASET1':
         key = (5571, 77, 216)
     elif card_type == 'BSET1':
-        key = (410, 4, 314)
-    elif card_type == 'CSET1':
         key = (210, 2, 312)
+    elif card_type == 'CSET1':
+        key = (410, 4, 314)
     elif card_type == 'QSET1':
         key = (610, 6, 316)
     elif card_type == 'OMIT1':
