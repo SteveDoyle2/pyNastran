@@ -267,7 +267,7 @@ class Solver(OP2):
 
         # g-set before elimination of any degrees of freedom
         # n-set after elimination of multipoint constraints
-        # f-set after elimination of automatic constraints and SPC�s
+        # f-set after elimination of automatic constraints and SPC's
         self.Ub = []
         self.iUb = []
         self.Uc = []

@@ -115,18 +115,18 @@ BAR_FE_MAP = {
 
 
     #https://docs.plm.automation.siemens.com/data_services/resources/scnastran/2020_1/help/tdoc/en_US/pdf/release_guide.pdf
-    #F = 1 XYZ option – global or basic coordinate system
+    #F = 1 XYZ option - global or basic coordinate system
     #F = 2 Grid option
-    #F = 5 XYZ option – global or basic coordinate system
-    #F = 6 XYZ option – global or basic coordinate system
-    #F = 17 XYZ option – global or basic coordinate system
-    #F = 18 XYZ option – global or basic coordinate system
-    #F = 21 XYZ option – global or basic coordinate system
-    #F = 22 XYZ option – global or basic coordinate system
-    #F = 65 XYZ option – global or basic coordinate system
-    #F = 69 XYZ option – global or basic coordinate system
-    #F = 81 XYZ option – global or basic coordinate system
-    #F = 85 XYZ option – global or basic coordinate system
+    #F = 5 XYZ option - global or basic coordinate system
+    #F = 6 XYZ option - global or basic coordinate system
+    #F = 17 XYZ option - global or basic coordinate system
+    #F = 18 XYZ option - global or basic coordinate system
+    #F = 21 XYZ option - global or basic coordinate system
+    #F = 22 XYZ option - global or basic coordinate system
+    #F = 65 XYZ option - global or basic coordinate system
+    #F = 69 XYZ option - global or basic coordinate system
+    #F = 81 XYZ option - global or basic coordinate system
+    #F = 85 XYZ option - global or basic coordinate system
 
 }
 
@@ -2137,7 +2137,7 @@ class GEOM2(GeomCommon):
 
     def _read_cplsts3(self, data: bytes, n: int) -> int:
         """
-        RECORD – CPLSTS3(8801,88,984)
+        RECORD - CPLSTS3(8801,88,984)
         Word Name Type Description
         1 EID  I Element identification number
         2 PID  I Property identification number
@@ -2178,7 +2178,7 @@ class GEOM2(GeomCommon):
 
     def _read_cplsts4(self, data: bytes, n: int) -> int:
         """
-        RECORD – CPLSTS4(8401,84,985)
+        RECORD - CPLSTS4(8401,84,985)
 
         Word Name Type Description
         1 EID  I Element identification number
@@ -2217,7 +2217,7 @@ class GEOM2(GeomCommon):
 
     def _read_cplsts6(self, data: bytes, n: int) -> int:
         """
-        RECORD – CPLSTS6(1801,18,986)
+        RECORD - CPLSTS6(1801,18,986)
         Word Name Type Description
         1 EID  I Element identification number
         2 PID  I Property identification number
@@ -2267,7 +2267,7 @@ class GEOM2(GeomCommon):
 
     def _read_cplsts8(self, data: bytes, n: int) -> int:
         """
-        RECORD – CPLSTS8(3601,36,987)
+        RECORD - CPLSTS8(3601,36,987)
 
         Word Name Type Description
         1 EID     I Element identification number
@@ -2315,7 +2315,7 @@ class GEOM2(GeomCommon):
 
     def _read_cplstn3(self, data: bytes, n: int) -> int:
         """
-        RECORD – CPLSTN3(1701,17,980)
+        RECORD - CPLSTN3(1701,17,980)
 
         Word Name Type Description
         1 EID    I Element identification number
@@ -2351,7 +2351,7 @@ class GEOM2(GeomCommon):
 
     def _read_cplstn4(self, data: bytes, n: int) -> int:
         """
-        RECORD – CPLSTN4(5701,57,981)
+        RECORD - CPLSTN4(5701,57,981)
         Word Name Type Description
         1 EID    I Element identification number
         2 PID    I Property identification number
@@ -2386,7 +2386,7 @@ class GEOM2(GeomCommon):
 
     def _read_cplstn6(self, data: bytes, n: int) -> int:
         """
-        RECORD – CPLSTN6(5801,58,982)
+        RECORD - CPLSTN6(5801,58,982)
 
         Word Name Type Description
         1 EID  I Element identification number
@@ -2422,7 +2422,7 @@ class GEOM2(GeomCommon):
 
     def _read_cplstn8(self, data: bytes, n: int) -> int:
         """
-        RECORD – CPLSTN8(7201,72,983)
+        RECORD - CPLSTN8(7201,72,983)
 
         Word Name Type Description
         1 EID     I Element identification number

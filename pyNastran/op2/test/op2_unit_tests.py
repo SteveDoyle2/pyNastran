@@ -1495,8 +1495,8 @@ class TestOP2(Tester):
         centroidal CHEXA composite stress
         """
         log = get_logger(level='info')
-        bdf_filename = os.path.join(MODEL_PATH, 'nx' 'composite_solids', 'test.bdf')
-        op2_filename = os.path.join(MODEL_PATH, 'nx' 'composite_solids', 'test.op2')
+        bdf_filename = os.path.join(MODEL_PATH, 'nx', 'composite_solids', 'test.bdf')
+        op2_filename = os.path.join(MODEL_PATH, 'nx', 'composite_solids', 'test.op2')
 
         #  can't parse replication
         unused_fem1, unused_fem2, diff_cards = self.run_bdf(

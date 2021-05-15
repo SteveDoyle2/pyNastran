@@ -923,10 +923,16 @@ class AddMethods(BDFAttributes):
 
     def _add_convection_property_object(self, prop: Union[PCONV, PCONVM]) -> None:
         key = prop.pconid
-        assert key > 0, key
-        assert key not in self.convection_properties, key
-        self.convection_properties[key] = prop
-        self._type_to_id_map[prop.type].append(key)
+        if key in self.convection_properties:
+            if not prop == self.convection_properties[key]:
+                assert key not in self.convection_properties, 'PCONV/PCONVM.pconid=%s\nold=\n%snew=\n%s' % (
+                    key, self.convection_properties[key], prop)
+        else:
+            assert key > 0, 'pid=%s PCONV/PCONVM=\n%s' % (key, prop)
+            #assert key > 0, key
+            #assert key not in self.convection_properties, key
+            self.convection_properties[key] = prop
+            self._type_to_id_map[prop.type].append(key)
 
     def _add_thermal_bc_object(self, bc: Union[CONV, CONVM, RADM, TEMPBC], key) -> None:
         assert key > 0

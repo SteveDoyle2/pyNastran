@@ -27,7 +27,7 @@ NO_MASS = {
     'MAT1', 'MAT2', 'MAT4', 'MAT5', 'MAT8', 'MAT10', 'MAT11', 'MAT3D', 'CREEP',
     'MATT1', 'MATT3',
 
-    'PELAS', 'PVISC', 'PBUSH1D',
+    'PELAS', 'PVISC', 'PBUSH', 'PBUSH1D',
     'CELAS1', 'CELAS2', 'CELAS3', 'CELAS4', #'CLEAS5',
     'CDAMP1', 'CDAMP2', 'CDAMP3', 'CDAMP4', 'CDAMP5',
     'PDAMP', 'PGAP',
