@@ -1,0 +1,148 @@
+$ MSC.Nastran input file created on March     15, 2021 at 14:55:23 by
+$ Patran 2017.0.2
+$ Direct Text Input for Nastran System Cell Section
+$ Direct Text Input for File Management Section
+$ Direct Text Input for Executive Control
+
+$ Linear Static Analysis, Database
+SOL 101
+CEND
+$ Direct Text Input for Global Case Control Data
+TITLE = test
+ECHO = NONE
+TEMPERATURE(INITIAL) = 1
+SUBCASE 1
+$ Subcase name : Doar_mecanic
+   SUBTITLE=Doar_mecanic
+   SPC = 2
+   LOAD = 3
+   DISPLACEMENT(SORT1,REAL)=ALL
+   SPCFORCES(SORT1,REAL)=ALL
+   STRESS(SORT1,REAL,VONMISES,CENTER)=ALL
+$ Direct Text Input for this Subcase
+SUBCASE 2
+$ Subcase name : Doar_temp
+   SUBTITLE=Doar_temp
+   SPC = 2
+   TEMPERATURE(LOAD) = 4
+   DISPLACEMENT(SORT1,REAL)=ALL
+   SPCFORCES(SORT1,REAL)=ALL
+   STRESS(SORT1,REAL,VONMISES,CENTER)=ALL
+$ Direct Text Input for this Subcase
+SUBCASE 3
+$ Subcase name : Temp_mecanic
+   SUBTITLE=Temp_mecanic
+   SPC = 2
+   LOAD = 6
+   TEMPERATURE(LOAD) = 7
+   DISPLACEMENT(SORT1,REAL)=ALL
+   SPCFORCES(SORT1,REAL)=ALL
+   STRESS(SORT1,REAL,VONMISES,CENTER)=ALL
+$ Direct Text Input for this Subcase
+BEGIN BULK
+$ Direct Text Input for Bulk Data
+PARAM    PRGPST  NO
+PARAM    K6ROT   100.
+PARAM    NOCOMPS 1
+PARAM    OMID    YES
+PARAM    SRCOMPS YES
+PARAM    POST    -1
+PARAM    AUTOSPC NO
+PARAM    SNORM   0.
+$ Elements and Element Properties for region : pshell.2
+$ Composite Property Reference Material: pcomp.1
+$ Composite Material Description :
+PCOMP    2      -.02    5.95198 2.+7     TSAI   20.
+         130    3.1-4    0.      YES     130    3.1-4   45.      YES
+         130    3.1-4    0.      YES     130    3.1-4    0.      YES
+         130    3.1-4   45.      YES     130    3.1-4    0.      YES
+         121    .01814   0.      YES     121    .01814   0.      YES
+         130    3.1-4    0.      YES     130    3.1-4   45.      YES
+         130    3.1-4    0.      YES     130    3.1-4    0.      YES
+         130    3.1-4   45.      YES     130    3.1-4    0.      YES
+$ Pset: "pshell.2" will be imported as: "pcomp.2"
+CQUAD4   1       2       1       2       8       7
+CQUAD4   2       2       2       3       9       8
+CQUAD4   3       2       3       4       10      9
+CQUAD4   4       2       4       5       11      10
+CQUAD4   5       2       5       6       12      11
+CQUAD4   6       2       7       8       14      13
+CQUAD4   7       2       8       9       15      14
+CQUAD4   8       2       9       10      16      15
+CQUAD4   9       2       10      11      17      16
+CQUAD4   10      2       11      12      18      17
+$ Referenced Material Records
+$ Material Record : mat8.121
+$ Description of Material :
+MAT8     121    1000.   1000.   .25     1000.   4.826+8 1.931+8 72.
+        2.3-5   2.3-5   20.     1.+23   1.+23   1.+23   1.+23   1.+23
+$ Material Record : mat8.130
+$ Description of Material :
+MAT8     130    7.632+107.632+10.03     1.71+9  4.6+9   4.6+9   1608.
+        6.-7    6.-7    20.     5.+8    1.67+8  5.+8    1.67+8  3.34+7
+$ Nodes of the Entire Model
+GRID     1               0.      0.      0.
+GRID*    2                              .020000003278255 0.
+*        0.
+GRID*    3                              .040000006556511 0.
+*        0.
+GRID*    4                              .060000006109476 0.
+*        0.
+GRID*    5                              .080000013113022 0.
+*        0.
+GRID*    6                              .100000001490116 0.
+*        0.
+GRID*    7                               0.             .012500000186265
+*        0.
+GRID*    8                              .020000003278255.012500000186265
+*        0.
+GRID*    9                              .040000006556511.012500000186265
+*        0.
+GRID*    10                             .060000006109476.012500000186265
+*        0.
+GRID*    11                             .080000013113022.012500000186265
+*        0.
+GRID*    12                             .100000001490116.012500000186265
+*        0.
+GRID*    13                              0.             .025000000372529
+*        0.
+GRID*    14                             .020000003278255.025000000372529
+*        0.
+GRID*    15                             .040000006556511.025000000372529
+*        0.
+GRID*    16                             .060000006109476.025000000372529
+*        0.
+GRID*    17                             .080000013113022.025000000372529
+*        0.
+GRID*    18                             .100000001490116.025000000372529
+*        0.
+$ Loads for Load Case : Doar_mecanic
+SPCADD   2       5
+LOAD     3      1.      1.       5
+$ Displacement Constraints of Load Set : spc
+SPC1     5       123456  1       7       13
+$ Loads for Load Case : Doar_temp
+$ Nodal Temperatures of Load Set : temp
+TEMP     4       1      20.      2      70.      3      100.
+TEMP     4       4      120.     5      150.     6      200.
+TEMP     4       7      20.      8      70.      9      100.
+TEMP     4       10     120.     11     150.     12     200.
+TEMP     4       13     20.      14     70.      15     100.
+TEMP     4       16     120.     17     150.     18     200.
+$ Loads for Load Case : Temp_mecanic
+LOAD     6      1.      1.       5
+$ Nodal Temperatures of Load Set : temp
+TEMP     7       1      20.      2      70.      3      100.
+TEMP     7       4      120.     5      150.     6      200.
+TEMP     7       7      20.      8      70.      9      100.
+TEMP     7       10     120.     11     150.     12     200.
+TEMP     7       13     20.      14     70.      15     100.
+TEMP     7       16     120.     17     150.     18     200.
+$ Nodal Forces of Load Set : f
+FORCE    5       6       0      100.     0.      0.     -1.
+FORCE    5       12      0      100.     0.      0.     -1.
+FORCE    5       18      0      100.     0.      0.     -1.
+$ Default Initial Temperature
+TEMPD    1      20.
+$ Referenced Coordinate Frames
+ENDDATA de429ae4
