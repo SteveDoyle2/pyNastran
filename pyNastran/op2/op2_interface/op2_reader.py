@@ -2176,10 +2176,20 @@ class OP2Reader:
 
         self.read_3_markers([-2, 1, 0])
         data = self._read_record()
+        ndata = len(data)
+        method = 0
         if self.size == 4:
-            gpl_gpls, method = Struct(self._endian + b'8si').unpack(data)
+            if ndata == 8:
+                # 'GPL     ' in GPLS table
+                # osmpf1_results.op2
+                gpl_gpls, = Struct(self._endian + b'8s').unpack(data)
+            else:
+                gpl_gpls, method = Struct(self._endian + b'8si').unpack(data)
         else:
-            gpl_gpls, method = Struct(self._endian + b'16sq').unpack(data)
+            if ndata == 16:
+                gpl_gpls, = Struct(self._endian + b'16s').unpack(data)
+            else:
+                gpl_gpls, method = Struct(self._endian + b'16sq').unpack(data)
         assert gpl_gpls.strip() in [b'GPL', b'GPLS'], gpl_gpls.strip()
         assert method in [0, 1, 2, 3, 4, 5, 6, 7, 10, 12, 13, 15, 20, 30, 40, 99,
                           101, 201], f'GPLS method={method}'
