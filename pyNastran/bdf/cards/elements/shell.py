@@ -34,7 +34,7 @@ from pyNastran.bdf.field_writer_8 import set_blank_if_default, print_float_8
 from pyNastran.bdf.cards.base_card import Element, BaseCard
 from pyNastran.bdf.bdf_interface.assign_type import (
     integer, integer_or_blank, double_or_blank, integer_double_or_blank, blank,
-    force_integer, force_double,
+    force_integer, # force_double,
     force_integer_or_blank, force_double_or_blank
 )
 from pyNastran.bdf.field_writer_8 import print_card_8, print_field_8
@@ -2907,7 +2907,7 @@ class CPLSTx4(QuadShell):
                 integer(card, 6, 'n4'),]
 
         theta = double_or_blank(card, 7, 'theta', 0.0)
-        assert len(card) <= 8, 'len(%s card) = %i\ncard=%s' % (self.type, len(card), card)
+        assert len(card) <= 8, 'len(%s card) = %i\ncard=%s' % (cls.type, len(card), card)
         return cls(eid, pid, nids, theta, comment=comment)
 
     def cross_reference(self, model: BDF) -> None:
@@ -3279,7 +3279,7 @@ class CPLSTx6(TriShell):
         ]
         if len(card) > 9:
             theta = double_or_blank(card, 9, 'theta', 0.0)
-            assert len(card) <= 15, 'len(%s card) = %i\ncard=%s' % (self.type, len(card), card)
+            assert len(card) <= 15, 'len(%s card) = %i\ncard=%s' % (cls.type, len(card), card)
         else:
             theta = 0.0
         return cls(eid, pid, nids, theta=theta, comment=comment)
@@ -3522,7 +3522,7 @@ class CPLSTx8(QuadShell):
                 integer_or_blank(card, 10, 'n8', 0),]
         if len(card) > 11:
             theta = double_or_blank(card, 15, 'theta', 0.0)
-            assert len(card) <= 18, 'len(%s card) = %i\ncard=%s' % (self.type, len(card), card)
+            assert len(card) <= 18, 'len(%s card) = %i\ncard=%s' % (cls.type, len(card), card)
         else:
             theta = 0.0
         return cls(eid, pid, nids, theta=theta, comment=comment)

@@ -27,7 +27,7 @@ np.seterr(all='raise')
 #import matplotlib
 #matplotlib.use('Qt5Agg')
 
-from pyNastran.utils import check_path
+from pyNastran.utils import check_path, print_bad_path
 from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.bdf.errors import (
     #CrossReferenceError,
@@ -386,7 +386,7 @@ def run_and_compare_fems(
         log: Optional[SimpleLogger]=None,
         name: str=''):
     """runs two fem models and compares them"""
-    assert os.path.exists(bdf_model), f'{bdf_model!r} doesnt exist'
+    assert os.path.exists(bdf_model), f'{bdf_model!r} doesnt exist\n%s' % print_bad_path(bdf_model)
     fem1 = BDF(debug=debug, log=log)
     if version:
         map_version(fem1, version)

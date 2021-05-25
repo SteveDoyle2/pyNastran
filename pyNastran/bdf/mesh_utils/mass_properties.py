@@ -14,6 +14,7 @@ import numpy as np
 #from pyNastran.bdf.cards.materials import get_mat_props_S
 from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.utils.mathematics import integrate_positive_unit_line
+CHECK_MASS = False  # should additional checks be done
 
 NO_MASS = {
     # has mass
@@ -504,7 +505,8 @@ def mass_properties_nsm(model, element_ids=None, mass_ids=None, nsm_id=None,
     inertia = array([0., 0., 0., 0., 0., 0., ])
 
     idtype = model._upcast_int_dtype(dtype='int32')
-    all_eids = np.array(list(model.elements.keys()), dtype=idtype)
+    eids_list = list(model.elements.keys())
+    all_eids = np.array(eids_list, dtype=idtype)
     all_eids.sort()
 
     all_mass_ids = np.array(list(model.masses.keys()), dtype=idtype)
@@ -542,7 +544,7 @@ def mass_properties_nsm(model, element_ids=None, mass_ids=None, nsm_id=None,
             area_eids_pids, nsm_centroids_area, areas,
             mass, cg, inertia, reference_point)
 
-    model_eids = np.array(list(model.elements.keys()), dtype=idtype)
+    model_eids = np.array(eids_list, dtype=idtype)
     model_pids = np.array(list(model.properties.keys()), dtype=idtype)
     if debug:  # pragma: no cover
         model.log.debug('model_pids = %s' % model_pids)
@@ -693,7 +695,7 @@ def _get_mass_nsm(model, element_ids, mass_ids,
             else:
                 raise NotImplementedError(prop.type)
             m = area * mpa
-            if m != elem.Mass() or not np.array_equal(centroid, elem.Centroid()):  # pragma: no cover
+            if CHECK_MASS and (m != elem.Mass() or not np.array_equal(centroid, elem.Centroid())):  # pragma: no cover
                 msg = 'mass_new=%s mass_old=%s\n' % (m, elem.Mass())
                 msg += 'centroid_new=%s centroid_old=%s\n%s' % (
                     str(centroid), str(elem.Centroid()), str(elem))
@@ -769,7 +771,7 @@ def _get_mass_nsm(model, element_ids, mass_ids,
             #volume = area1 / 3. * norm(c1 - n5)
             volume = area1 / 3. * norm(centroid1 - centroid5)
             m = elem.Rho() * volume
-            if m != elem.Mass() or not np.array_equal(centroid, elem.Centroid()):  # pragma: no cover
+            if CHECK_MASS and (m != elem.Mass() or not np.array_equal(centroid, elem.Centroid())):  # pragma: no cover
                 msg = 'mass_new=%s mass_old=%s\n' % (m, elem.Mass())
                 msg += 'centroid_new=%s centroid_old=%s\n%s' % (
                     str(centroid), str(elem.Centroid()), str(elem))
@@ -968,7 +970,7 @@ def _get_cbeam_mass(model, xyz, element_ids, all_eids,
         nsm_centroids_length['PBEAM'].append(nsm_centroid)
         m = mass_per_length * length
         nsm = nsm_per_length * length
-        if (m + nsm) != elem.Mass() or not np.array_equal(centroid, elem.Centroid()):  # pragma: no cover
+        if CHECK_MASS and ((m + nsm) != elem.Mass() or not np.array_equal(centroid, elem.Centroid())):  # pragma: no cover
             msg = 'CBEAM; eid=%s; %s pid=%s; m/L=%s nsm/L=%s; length=%s\n' % (
                 eid, pid, prop.type, mass_per_length, nsm_per_length, length)
             msg += 'mass_new=%s mass_old=%s\n' % (m, elem.Mass())
@@ -1000,7 +1002,7 @@ def _get_cbeam_mass(model, xyz, element_ids, all_eids,
         cg += m * centroid + nsm * nsm_centroid
         #print('length=%s mass=%s mass_per_length=%s nsm_per_length=%s m=%s nsm=%s centroid=%s nsm_centroid=%s' % (
             #length, mass, mass_per_length, nsm_per_length, m, nsm, centroid, nsm_centroid))
-        if massi != elem.Mass():  # pragma: no cover
+        if CHECK_MASS and massi != elem.Mass():  # pragma: no cover
             msg = 'mass_new=%s mass_old=%s\n' % (massi, elem.Mass())
             msg += 'centroid_new=%s centroid_old=%s\n%s' % (
                 str(centroid), str(elem.Centroid()), str(elem))
@@ -1068,7 +1070,7 @@ def _get_cbeam_mass_no_nsm(model, elem, mass, cg, inertia, reference_point):
 
     m = mass_per_length * length
     nsm = nsm_per_length * length
-    if (m + nsm) != elem.Mass() or not np.array_equal(centroid, elem.Centroid()):  # pragma: no cover
+    if CHECK_MASS and ((m + nsm) != elem.Mass() or not np.array_equal(centroid, elem.Centroid())):  # pragma: no cover
         msg = 'CBEAM; eid=%s; %s pid=%s; m/L=%s nsm/L=%s; length=%s\n' % (
             elem.eid, elem.pid, prop.type, mass_per_length, nsm_per_length, length)
         msg += 'mass_new=%s mass_old=%s\n' % (m, elem.Mass())
@@ -1158,7 +1160,7 @@ def _get_tri_mass(model, xyz, element_ids, all_eids,
         #nsm = property_nsms[nsm_id]['PSHELL'][pid] + element_nsms[nsm_id][eid]
         #m = area * (mpa + nsm)
         massi = area * mpa
-        if not np.array_equal(centroid, elem.Centroid()):  # pragma: no cover
+        if CHECK_MASS and not np.array_equal(centroid, elem.Centroid()):  # pragma: no cover
             msg = 'centroid_new=%s centroid_old=%s\n%s' % (
                 str(centroid), str(elem.Centroid()), str(elem))
             raise RuntimeError(msg)
@@ -1224,7 +1226,7 @@ def _get_quad_mass(model, xyz, element_ids, all_eids,
         #nsm = property_nsms[nsm_id]['PSHELL'][pid] + element_nsms[nsm_id][eid]
         #m = area * (mpa + nsm)
         m = area * mpa
-        if not np.array_equal(centroid, elem.Centroid()):  # pragma: no cover
+        if CHECK_MASS and not np.array_equal(centroid, elem.Centroid()):  # pragma: no cover
             msg = 'centroid_new=%s centroid_old=%s\n%s' % (
                 str(centroid), str(elem.Centroid()), str(elem))
             raise RuntimeError(msg)
@@ -2215,7 +2217,7 @@ def mass_properties_breakdown(model, element_ids=None, mass_ids=None, nsm_id=Non
             all_pids = np.array(pids_per_length_dict['bar'], dtype='int32')
             #g0 = np.array(g0_dict['CBAR'], dtype='int32')
             #offt = np.array(offt_dict['CBAR'], dtype='|S3')
-            x = np.vstack(x_dict['CBAR'])
+            #x = np.vstack(x_dict['CBAR'])
 
             #jaxis = _bar_axes(all_nids, xyz_cid0, g0, offt, x, nelementsi)
 
@@ -2260,7 +2262,7 @@ def mass_properties_breakdown(model, element_ids=None, mass_ids=None, nsm_id=Non
             all_pids = np.array(pids_per_length_dict['beam'], dtype='int32')
             #g0 = np.array(g0_dict['CBEAM'], dtype='int32')
             #offt = np.array(offt_dict['CBEAM'], dtype='|S3')
-            x = np.vstack(x_dict['CBEAM'])
+            #x = np.vstack(x_dict['CBEAM'])
 
             #jaxis = _bar_axes(all_nids, xyz_cid0, g0, offt, x, nelementsi)
 
@@ -2304,7 +2306,7 @@ def mass_properties_breakdown(model, element_ids=None, mass_ids=None, nsm_id=Non
             mass = mpl * length
             nsm = npl * length
 
-        elif etype in ['CTRIA3', 'CTRIA6', 'CTRIAR', ]:
+        elif etype in {'CTRIA3', 'CTRIA6', 'CTRIAR', }:
             centroid, mass, nsm = _breakdown_tri(
                 xyz_cid0, nids, nelementsi, etype,
                 all_nids,
@@ -2316,7 +2318,7 @@ def mass_properties_breakdown(model, element_ids=None, mass_ids=None, nsm_id=Non
                 all_nids,
                 pids_dict, pids_per_area_dict,
                 mass_per_area_dict, nsm_per_area_dict, thickness_dict)
-        elif etype in ['CQUAD4', 'CQUAD8', 'CQUADR', 'CQUAD']:
+        elif etype in {'CQUAD4', 'CQUAD8', 'CQUADR', 'CQUAD', }:
             centroid, mass, nsm = _breakdown_quad(
                 xyz_cid0, nids, nelementsi, etype,
                 all_nids,

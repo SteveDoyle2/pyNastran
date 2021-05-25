@@ -461,7 +461,7 @@ class RealCompositePlateStrengthRatioArray(OES_Object):
                     sr_ply = strength_ratio_ply[i]
                     sr_plys = write_float_13e(sr_ply)
                     all_data = strength_ratio_ply[i0:i1]
-                    min_sr_plys = nanmin13s()
+                    min_sr_plys = nanmin13s(all_data)
                     #min_sr_ply = np.nanmin(strength_ratio_ply[i0:i1])
                     #min_sr_plys = write_float_13e(min_sr_ply)
                     #min_sr_plys = ' ?.??????E+00'
