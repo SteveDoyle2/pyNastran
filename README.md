@@ -34,7 +34,7 @@ for more detailed information.
 
 ### Code of Conduct
 
-Everyone interacting in the setuptools project’s codebases, issue trackers, chat room/Discord, and mailing lists is expected to follow the [Code of Conduct](https://github.com/SteveDoyle2/pyNastran/blob/master/code_of_conduct.md).
+Everyone interacting in the setuptools project’s codebase, issue trackers, chat room/Discord, and mailing lists is expected to follow the [Code of Conduct](https://github.com/SteveDoyle2/pyNastran/blob/master/code_of_conduct.md).
 
 
 <!---
@@ -53,7 +53,7 @@ Everyone interacting in the setuptools project’s codebases, issue trackers, ch
 
 Last year MSC provided a copy of MSC Nastran free of charge to help support the project.  
 Since then, modern MSC Nastran support has been added.  
-In addition, NX 64-bit and Optisruct support has been improved.
+In addition, NX 64-bit and OptiStruct support has been improved.
 
 The biggest new features are:
  - MSC 2020 support (including contact)
@@ -165,7 +165,7 @@ OP2:
    - various geometry cards added
    - supports more PARAM reading
  - new results:
-    - composite failure indicies (OEFIT)
+    - composite failure indices (OEFIT)
     - sensitivity support (DSCMCOL)
     - Cambpell diagrams (CDDATA)
     - eigenvectors (BOPHIGF)
@@ -217,11 +217,11 @@ GUI:
 F06:
  - KE support for plot_145
 
-Many bug fixes and a few more details on features, can be found in the ![Release Notes](https://github.com/SteveDoyle2/pyNastran/blob/1.3/releaseNotes.md)
+Many bug fixes, and a few more details on features, can be found in the ![Release Notes](https://github.com/SteveDoyle2/pyNastran/blob/1.3/releaseNotes.md)
 
 ### v1.3.1/v1.3.0 (2020/4/8)
 
-This result has been superseeded by 1.3.2.  The PyPi page was fixed.
+This result has been superseded by 1.3.2.  The PyPi page was fixed.
 
 ### v1.2.1 (2019/5/24)
 
@@ -237,7 +237,7 @@ With the new ability to dump the OP2 directly to HDF5, this should not be an as 
 an issue.  It's not 100% implemented, so let me know if you need it for another result.
 
 Regarding the GUI, there are also some new features.  Groups work a bit better, but aren't
-quite perfect.  Logging has been dramatically sped up so the GUI loads faster and you can
+quite perfect.  Logging has been dramatically sped up, so the GUI loads faster, and you can
 load Nastran models even faster if you disable additional results (e.g., element quality).
 
 Finally, Python 2.7 is end of life.  Numpy, scipy, and matplotlib have all dropped
@@ -282,9 +282,9 @@ BDF:
 
 
 OP2:
- - reorganization of random op2 results into op2.results.psd (or ato, no, crm, rms) to aide in finding data
+ - reorganization of random op2 results into op2.results.psd (or ato, no, crm, rms) to aid in finding data
  - reorganization of op2 class to reduce number of functions in the object.  This affects any custom table reading.
- - improved optimzation response reading
+ - improved optimization response reading
  - limited SORT2 support
  - fixed CD transformation bug for BOUGV1 and BOPHIG1 tables
  - Improved HDF5 export/import support (e.g., matrices, random results)
@@ -323,7 +323,7 @@ Known issues:
 
 ### v1.2.0 (2019/5/21)
 
-This result has been superseeded by 1.2.1.  See release notes for details.
+This result has been superseded by 1.2.1.  See release notes for details.
 
 ### v1.1.0 (2018/6/26)
 
@@ -333,7 +333,7 @@ This result has been superseeded by 1.2.1.  See release notes for details.
 
 It's been roughly a year and ~100 tickets closed since the last version, so it's probably
 time for another release!  I want to thank everybody who helped with this release, especially
-Michael Redmond.  He is working on h5Nastran, which which ties in with pyNastran.  It's not quite
+Michael Redmond.  He is working on h5Nastran, which ties in with pyNastran.  It's not quite
 ready yet, but it offers the possibility of major speedups for large models.
 
 Regarding features, the focus has again been on robustness and testing.  There has been
@@ -345,7 +345,7 @@ issues as PyQt is GPL.
 Programmatics:
  - Dropping Python 3.4 support
  - Supports Python 2.7, 3.5-3.6
- - dropping VTK 5/6 suppoprt for the GUI
+ - dropping VTK 5/6 support for the GUI
 
 BDF:
  - 343 cards supported (up from 312)
@@ -354,7 +354,7 @@ BDF:
       - ``element.nodes`` is not cross-referenced
       - ``element.nodes_ref`` is cross-referenced
  - pickling to reload your deck ~5x faster
- - decreased time required for Case Control Deck with large SETs and many load cases
+ - decreased time required for Case Control Deck with large SETs, and many load cases
  - improved optimization checks
 
 OP2:
@@ -367,7 +367,7 @@ OP2:
      ```
  - pandas support for matrices
  - couple more results vectorized (e.g., complex strain energy, DMIG strain energy, some forces)
- - grid_point_stressses supported (disabled since v0.7)
+ - grid_point_stresses supported (disabled since v0.7)
  - fixed sparse matrices being stored as dense matrices
 
 GUI:
@@ -376,7 +376,7 @@ GUI:
  - improved animation menu
     - in gui animation
     - more animation profiles
- - bar profile visualzation
+ - bar profile visualization
  - nominal geometry (useful for deflection plots)
  - improved optimization support
  - improved picking display
@@ -398,7 +398,7 @@ See [v0.8.0](https://github.com/SteveDoyle2/pyNastran/releases/tag/v0.8.0) for i
 See [v0.7.2](https://github.com/SteveDoyle2/pyNastran/releases) for information regarding enhancements.
 
 ### Version 0.6.1 has been released (2013/6)
-**Version 0.6** improves BDF reading.  The reader is more robust and also requires proper BDF field formatting (e.g. a integer field can't be a float).  Additionally, cards also have a comment() method.
+**Version 0.6** improves BDF reading.  The reader is more robust and also requires proper BDF field formatting (e.g. an integer field can't be a float).  Additionally, cards also have a comment() method.
 
 Marcin Gąsiorek participated in the latest pyNastran under the European Space Agency's (ESA) "Summer of Code In Space" [SOCIS](http://sophia.estec.esa.int/socis2012/?q=node/13) program.  The program provides a stipend to students to work on open-source projects.
 He did a great job of simplifying code and creating nicer documentation.
