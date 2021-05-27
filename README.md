@@ -5,7 +5,7 @@ Main/dev:
 [![Coverage Status](https://codecov.io/gh/SteveDoyle2/pyNastran/branch/master/graph/badge.svg)](https://codecov.io/gh/SteveDoyle2/pyNastran) 
 [![Discord](https://img.shields.io/badge/help_forum-discourse-blue.svg)](https://discord.gg/s8RfSkZDHA)
 
-See the  [Installation Instructions](https://pynastran-git.readthedocs.io/en/latest/installation/installation.html#installation-from-release) 
+See the  [Installation Instructions](https://pynastran-git.readthedocs.io/en/1.3/installation/installation.html#installation-from-release) 
 for instructions on installing pyNastran.
 
 
