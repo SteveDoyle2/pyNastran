@@ -1,0 +1,2 @@
+IS_TESTING = True
+IS_OFFICIAL_RELEASE = False
