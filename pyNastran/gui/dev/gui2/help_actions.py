@@ -50,7 +50,7 @@ class HelpActions:
     def about_dialog(self) -> None:
         """Display about dialog"""
         data = {
-            'font_size': self.gui.settings['font_size'],
+            'font_size': self.gui.settings.font_size,
             #'font_size': self.gui.settings.font_size,
         }
         win = AboutWindow(data, win_parent=self.gui, show_tol=True)

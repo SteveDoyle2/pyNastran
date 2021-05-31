@@ -76,8 +76,9 @@ class LoadActions:
             # reset alt grids
             names = self.gui.alt_grids.keys()
             for name in names:
-                alt_grids[name].Reset()
-                alt_grids[name].Modified()
+                alt_grid = alt_grids[name]
+                alt_grid.Reset()
+                alt_grid.Modified()
 
             if not os.path.exists(infile_name) and geometry_format:
                 msg = 'input file=%r does not exist' % infile_name

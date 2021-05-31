@@ -1,9 +1,9 @@
 from __future__ import annotations
 import os
-from typing import TYPE_CHECKING
+from typing import Tuple, List, Dict, Set, Callable, Any, TYPE_CHECKING
 
 from qtpy import QtGui
-from qtpy.QtWidgets import QAction
+from qtpy.QtWidgets import QAction, QToolBar, QMenu
 
 if TYPE_CHECKING:
     from cpylog import SimpleLogger
@@ -11,7 +11,7 @@ if TYPE_CHECKING:
 
 def build_actions(self: QMainWindow,
                   icon_path: str,
-                  tools_list: List[Tuple[str, str, str, str, str, Any]],
+                  tools_list: List[Tuple[str, str, str, str, str, Callable[Any]]],
                   checkables_set: Set[str],
                   log: SimpleLogger) -> Dict[str, Any]:
     checkables = {}
@@ -56,7 +56,14 @@ def fill_menus(self: QMainWindow,
     menus = {}
     for name, header, actions_to_add in menus_list:
         #file_menu = self.menubar.addMenu('&Help')
-        menu = self.menubar.addMenu(header)
+        if isinstance(header, str):
+            menu = self.menubar.addMenu(header)
+            assert isinstance(menu, QMenu), menu
+        elif isinstance(header, QToolBar):
+            menu = header
+        else:
+            raise TypeError(header)
+
         for action_name in actions_to_add:
             if action_name == '':
                 menu.addSeparator()

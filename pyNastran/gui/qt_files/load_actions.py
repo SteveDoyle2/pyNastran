@@ -2,6 +2,7 @@ import os
 import sys
 import traceback
 import time as time_module
+from typing import Tuple, Optional, Any
 
 import numpy as np
 from qtpy.compat import getopenfilename
@@ -150,7 +151,7 @@ class LoadActions:
         self.gui.log_command("on_load_geometry(infile_name=%r, geometry_format=%r%s)" % (
             infile_name, self.gui.format, main_str))
 
-    def _load_geometry_filename(self, geometry_format, infile_name):
+    def _load_geometry_filename(self, geometry_format: str, infile_name: str) -> Tuple[bool, Any]:
         """gets the filename and format"""
         wildcard = ''
         is_failed = False
@@ -591,7 +592,8 @@ class LoadActions:
         if update:
             self.gui.res_widget.update_results(form, 'main')
 
-    def create_load_file_dialog(self, qt_wildcard, title, default_filename=None):
+    def create_load_file_dialog(self, qt_wildcard: str, title: str,
+                                default_filename: Optional[str]=None) -> Tuple[str, str]:
         #options = QFileDialog.Options()
         #options |= QFileDialog.DontUseNativeDialog
         #fname, flt = QFileDialog.getOpenFileName(

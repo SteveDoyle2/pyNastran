@@ -29,6 +29,7 @@ from pyNastran.gui.gui_objects.utils import get_setting
 from pyNastran.utils import object_attributes
 if TYPE_CHECKING:  # pragma: no cover
     import vtk
+    from qtpy.QtCore import QSettings
 
 
 BLACK = (0.0, 0.0, 0.0)
@@ -77,8 +78,11 @@ class Settings:
         """
         self.parent = parent
 
-        # rgb tuple
+        # booleans
+        self.use_parallel_projection = True
         self.use_gradient_background = True
+
+        # rgb tuple
         self.background_color = GREY
         self.background_color2 = GREY
 
@@ -154,7 +158,7 @@ class Settings:
         self.nastran_plate_force = True
 
 
-    def reset_settings(self):
+    def reset_settings(self) -> None:
         """helper method for ``setup_gui``"""
         # rgb tuple
         self.use_gradient_background = True
@@ -172,6 +176,7 @@ class Settings:
         self.highlight_point_size = HIGHLIGHT_POINT_SIZE
         self.highlight_line_thickness = HIGHLIGHT_LINE_THICKNESS
 
+        self.use_parallel_projection = True
         self.show_info = True
         self.show_debug = True
         self.show_command = True
@@ -231,7 +236,7 @@ class Settings:
         self.nastran_beam_force = True
         self.nastran_plate_force = True
 
-    def load(self, settings):
+    def load(self, settings: QSettings) -> bool:
         """helper method for ``setup_gui``"""
         #red = (1.0, 0.0, 0.0)
         screen_shape_default = (1100, 700)
@@ -246,6 +251,10 @@ class Settings:
 
         # this is the gui font
         self._set_setting(settings, setting_keys, ['font_size'], self.font_size, auto_type=int)
+
+        # parallel/perspective
+        self._set_setting(settings, setting_keys, ['use_parallel_projection'], self.use_parallel_projection,
+                          True, auto_type=bool)
 
         # the info/debug/gui/command preferences
         self._set_setting(settings, setting_keys, ['show_info'], self.show_info,
@@ -369,8 +378,11 @@ class Settings:
             settings.setValue('main_window_geometry', self.parent.saveGeometry())
             settings.setValue('mainWindowState', self.parent.saveState())
 
-        # rgb tuple
+        # booleans
+        settings.setValue('use_parallel_projection', self.use_parallel_projection)
         settings.setValue('use_gradient_background', self.use_gradient_background)
+
+        # rgb tuple
         settings.setValue('background_color', self.background_color)
         settings.setValue('background_color2', self.background_color2)
         settings.setValue('annotation_color', self.annotation_color)
@@ -422,17 +434,17 @@ class Settings:
         """shrinks the overall GUI font size"""
         self.on_set_font_size(self.font_size + 1)
 
-    def on_decrease_font_size(self):
+    def on_decrease_font_size(self) -> None:
         """shrinks the overall GUI font size"""
         self.on_set_font_size(self.font_size - 1)
 
-    def on_set_font_size(self, font_size, show_command=True):
+    def on_set_font_size(self, font_size: int, show_command: bool=True) -> None:
         """updates the GUI font size"""
         return self.parent.on_set_font_size(font_size, show_command=show_command)
 
     #---------------------------------------------------------------------------
     # ANNOTATION SIZE/COLOR
-    def set_annotation_size_color(self, size=None, color=None):
+    def set_annotation_size_color(self, size=None, color=None) -> None:
         """
         Parameters
         ----------
@@ -449,7 +461,7 @@ class Settings:
             assert isinstance(color[0], float), 'color=%r' % color
             self.set_annotation_color(color)
 
-    def set_annotation_size(self, size, render=True):
+    def set_annotation_size(self, size: int, render: bool=True) -> None:
         """Updates the size of all the annotations"""
         assert size >= 0, size
         assert isinstance(size, int), size
@@ -486,18 +498,18 @@ class Settings:
             self.parent.vtk_interactor.GetRenderWindow().Render()
             self.parent.log_command('settings.set_annotation_size(%s)' % size)
 
-    def set_coord_scale(self, coord_scale, render=True):
+    def set_coord_scale(self, coord_scale: float, render: bool=True) -> None:
         """sets the coordinate system size"""
         self.coord_scale = coord_scale
         self.update_coord_scale(coord_scale, render=render)
 
-    def set_coord_text_scale(self, coord_text_scale, render=True):
+    def set_coord_text_scale(self, coord_text_scale: float, render: bool=True) -> None:
         """sets the coordinate system text size"""
         self.coord_text_scale = coord_text_scale
         self.update_coord_text_scale(coord_text_scale, render=render)
 
     def update_coord_scale(self, coord_scale=None, coord_text_scale=None,
-                           linewidth=None, render=True):
+                           linewidth=None, render: bool=True) -> None:
         """internal method for updating the coordinate system size"""
         if coord_scale is None:
             coord_scale = self.coord_scale
@@ -523,14 +535,14 @@ class Settings:
         if render:
             self.parent.vtk_interactor.GetRenderWindow().Render()
 
-    def scale_coord(self, magnify: float, render=True):
+    def scale_coord(self, magnify: float, render: bool=True) -> None:
         """internal method for scaling the coordinate system size"""
         for unused_coord_id, axes in self.parent.axes.items():
             axes.SetScale(magnify)
         if render:
             self.parent.vtk_interactor.GetRenderWindow().Render()
 
-    def update_coord_text_scale(self, coord_text_scale=None, render=True):
+    def update_coord_text_scale(self, coord_text_scale: Optional[float]=None, render: bool=True) -> None:
         """internal method for updating the coordinate system size"""
         if coord_text_scale is None:
             coord_text_scale = self.coord_text_scale
@@ -540,7 +552,7 @@ class Settings:
         if render:
             self.parent.vtk_interactor.GetRenderWindow().Render()
 
-    def set_annotation_color(self, color, render=True):
+    def set_annotation_color(self, color, render: bool=True) -> None:
         """
         Set the annotation color
 
@@ -584,12 +596,12 @@ class Settings:
             self.parent.log_command('settings.set_annotation_color(%s, %s, %s)' % color)
 
     #---------------------------------------------------------------------------
-    def set_background_color_to_white(self, render=True):
+    def set_background_color_to_white(self, render: bool=True) -> None:
         """sets the background color to white; used by gif writing?"""
         self.set_gradient_background(use_gradient_background=False, render=False)
         self.set_background_color(WHITE, render=render)
 
-    def set_gradient_background(self, use_gradient_background=False, render=True):
+    def set_gradient_background(self, use_gradient_background: bool=False, render: bool=True) -> None:
         """enables/diables the gradient background"""
         self.use_gradient_background = use_gradient_background
         self.parent.rend.SetGradientBackground(self.use_gradient_background)
@@ -626,7 +638,7 @@ class Settings:
             self.parent.vtk_interactor.Render()
         self.parent.log_command('settings.set_background_color2(%s, %s, %s)' % color)
 
-    def set_highlight_color(self, color):
+    def set_highlight_color(self, color: List[float]) -> None:
         """
         Set the highlight color
 
@@ -666,7 +678,7 @@ class Settings:
     #---------------------------------------------------------------------------
     # TEXT ACTORS - used for lower left notes
 
-    def set_text_color(self, color, render=True):
+    def set_text_color(self, color: List[float], render: str=True) -> None:
         """
         Set the text color
 
@@ -682,7 +694,7 @@ class Settings:
             self.parent.vtk_interactor.Render()
         self.parent.log_command('settings.set_text_color(%s, %s, %s)' % color)
 
-    def set_text_size(self, text_size, render=True):
+    def set_text_size(self, text_size: int,render: bool=True) -> None:
         """
         Set the text color
 
@@ -705,18 +717,18 @@ class Settings:
             self.parent.vtk_interactor.Render()
         self.parent.log_command('settings.set_text_size(%s)' % text_size)
 
-    def update_text_size(self, magnify=1.0):
+    def update_text_size(self, magnify: float=1.0) -> None:
         """Internal method for updating the bottom-left text when we go to take a picture"""
         text_size = int(14 * magnify)
         for text_actor in self.parent.text_actors.values():
             text_prop = text_actor.GetTextProperty()
             text_prop.SetFontSize(text_size)
 
-    def set_magnify(self, magnify=5):
+    def set_magnify(self, magnify: int=5) -> None:
         """sets the screenshot magnification factor (int)"""
         self.magnify = magnify
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         msg = '<Settings>\n'
         for key in object_attributes(self, mode='public', keys_to_skip=['parent']):
             value = getattr(self, key)
@@ -745,7 +757,7 @@ def update_axes_text_size(axes: Dict[int, vtk.vtkAxes],
             text.SetWidth(coord_text_scale * width)
             text.SetHeight(coord_text_scale * height)
 
-def isfloat(value):
+def isfloat(value) -> bool:
     """is the value floatable"""
     try:
         float(value)
@@ -753,7 +765,7 @@ def isfloat(value):
     except ValueError:
         return False
 
-def repr_settings(settings):
+def repr_settings(settings: QSettings) -> str:
     """works on a QSettings, not a Settings"""
     msg = 'QSettings:\n'
     for key in sorted(settings.allKeys()):
