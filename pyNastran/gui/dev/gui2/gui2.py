@@ -25,16 +25,17 @@ from pyNastran.gui.gui_objects.settings import Settings
 
 from pyNastran.gui.qt_files.QVTKRenderWindowInteractor import QVTKRenderWindowInteractor
 
+from pyNastran.gui.qt_files.view_actions import ViewActions
+
 from pyNastran.gui.dev.gui2.utils import build_actions, fill_menus
 from pyNastran.gui.dev.gui2.help_actions import HelpActions
 from pyNastran.gui.dev.gui2.load_actions import LoadActions
 #from pyNastran.gui.formats import CLASS_MAP
-from pyNastran.gui.qt_files.view_actions import ViewActions
-from pyNastran.gui.dev.gui2.vtk_interface import VtkInterface, ScalarBar
-
-
+from pyNastran.gui.dev.gui2.vtk_interface import VtkInterface, ScalarBar, fill_render_window
 from pyNastran.gui.dev.gui2.format_setup import build_fmts, CLASS_MAP
+
 PKG_PATH = pyNastran.__path__[0]
+
 
 class MainWindow2(QMainWindow):
     """
@@ -118,7 +119,8 @@ class MainWindow2(QMainWindow):
         self.set_style_as_trackball()
 
         self.rend = vtk.vtkRenderer()
-        self.vtk_interactor.GetRenderWindow().AddRenderer(self.rend)
+        #self.vtk_interactor.GetRenderWindow().AddRenderer(self.rend)
+        fill_render_window(self.vtk_interactor, self.rend, nframes=1)
         self.build_vtk_frame()
 
         camera = self.rend.GetActiveCamera()
@@ -289,7 +291,7 @@ class MainWindow2(QMainWindow):
         self.vtk_frame.setFrameStyle(QFrame.NoFrame | QFrame.Plain)
         # this is our main, 'central' widget
         self.setCentralWidget(self.vtk_frame)
-        print('build_vtk_frame')
+        #print('build_vtk_frame')
 
     @property
     def grid(self) -> vtk.vtkUnstructuredGrid:
