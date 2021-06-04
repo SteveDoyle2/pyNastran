@@ -6,6 +6,9 @@ if TYPE_CHECKING:
 
 from pyNastran.gui.qt_files.colors import BLACK_FLOAT
 import vtk
+from pyNastran.gui.qt_files.QVTKRenderWindowInteractor import QVTKRenderWindowInteractor
+from pyNastran.gui.styles.trackball_style_camera import TrackballStyleCamera
+
 
 class ScalarBar:
     def __init__(self):
@@ -19,13 +22,37 @@ class ScalarBar:
 
 
 class VtkInterface:
-    def __init__(self, gui: MainWindow2):
+    def __init__(self, gui: MainWindow2, parent):
         self.gui = gui
         self.scalar_bar_actor = ScalarBar()
+
+
+        self.vtk_interactor = QVTKRenderWindowInteractor(parent=parent)
+        self.set_style_as_trackball()
+
+        self.rend = vtk.vtkRenderer()
+        #self.vtk_interactor.GetRenderWindow().AddRenderer(self.rend)
+        fill_render_window(self.vtk_interactor, self.rend, nframes=1)
+
+        camera = self.rend.GetActiveCamera()
+        if self.settings.use_parallel_projection:
+            camera.ParallelProjectionOn()
+        #else:
+            #camera.ParallelProjectionOff()
+
+    @property
+    def settings(self) -> Settings:
+        return self.gui.settings
 
     @property
     def log(self):
         return self.gui.log
+
+    def set_style_as_trackball(self):
+        """sets the default rotation style"""
+        #self._simulate_key_press('t') # change mouse style to trackball
+        self.style = TrackballStyleCamera(self.vtk_interactor, self)
+        self.vtk_interactor.SetInteractorStyle(self.style)
 
     def set_quad_grid(self, box_name: str,
                       nodes: np.ndarray, elements: np.ndarray,

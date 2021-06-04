@@ -764,7 +764,7 @@ def _is_case_control_line(text: str) -> bool:
 
     """
     line_upper = text.split('$')[0].strip().upper()
-    if line_upper.startswith(CASE_CARDS):
+    if line_upper.startswith(CASE_CARDS_NO_BULK):
         return True
     return False
 

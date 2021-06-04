@@ -18,18 +18,18 @@ from qtpy import QtCore, QtGui #, API
 from qtpy.QtWidgets import (
     QMainWindow, QFrame, QHBoxLayout, QAction, QMenu, QToolButton)
 from qtpy.QtWidgets import QApplication
-from pyNastran.gui.styles.trackball_style_camera import TrackballStyleCamera
 from pyNastran.gui.menus.application_log import ApplicationLogWidget
 from pyNastran.gui.menus.python_console import PythonConsoleWidget
 from pyNastran.gui.gui_objects.settings import Settings
 
+from pyNastran.gui.qt_files.view_actions import ViewActions
 from pyNastran.gui.qt_files.QVTKRenderWindowInteractor import QVTKRenderWindowInteractor
 
-from pyNastran.gui.qt_files.view_actions import ViewActions
 
 from pyNastran.gui.dev.gui2.utils import build_actions, fill_menus
 from pyNastran.gui.dev.gui2.help_actions import HelpActions
 from pyNastran.gui.dev.gui2.load_actions import LoadActions
+
 #from pyNastran.gui.formats import CLASS_MAP
 from pyNastran.gui.dev.gui2.vtk_interface import VtkInterface, ScalarBar, fill_render_window
 from pyNastran.gui.dev.gui2.format_setup import build_fmts, CLASS_MAP
@@ -60,7 +60,8 @@ class MainWindow2(QMainWindow):
         self.debug = True
         self.html_logging = True
         self.execute_python = False
-        self.performance_mode = False
+        self._performance_mode = False
+        self._log_messages = []
 
         self.cases = {} # type: Dict[int, Any]
         self.form = []  # type: List[Any]
@@ -74,6 +75,8 @@ class MainWindow2(QMainWindow):
         self.main_grids = {} #  type: Dict[str, vtk.vtkUnstructuredGrid]
         self.alt_grids = {} # type: Dict[str, vtk.vtkUnstructuredGrid]
         self.geom_actors = {} # type: Dict[str, vtkLODActor]
+        self.actions = {}  # type: Dict[str, QAction]
+
         # -----------------------------------------
         self.settings = Settings(self)
         settings = QtCore.QSettings()
@@ -98,42 +101,28 @@ class MainWindow2(QMainWindow):
         self.toolbar = self.addToolBar('Show toolbar')
         self.toolbar.setObjectName('main_toolbar')
         self.toolbar.show()
-        #action = QAction()
-        #self.toolbar.addAction(QAction)
 
         self.menubar = self.menuBar()
         self._fill_menubar()
-        self.statusBar().showMessage('Ready')
-        self.show()
 
         self.format_class_map = CLASS_MAP
         fmt_order = ['cart3d', 'stl']
         self.fmts, self.supported_formats = build_fmts(
             self, self.format_class_map, fmt_order,
-            self.log,
-            stop_on_failure=False)
+            self.log, stop_on_failure=False)
         #self.create_vtk_actors(create_rend=True)
 
         self.vtk_frame = QFrame()
-        self.vtk_interactor = QVTKRenderWindowInteractor(parent=self.vtk_frame)
-        self.set_style_as_trackball()
-
-        self.rend = vtk.vtkRenderer()
-        #self.vtk_interactor.GetRenderWindow().AddRenderer(self.rend)
-        fill_render_window(self.vtk_interactor, self.rend, nframes=1)
-        self.build_vtk_frame()
-
-        camera = self.rend.GetActiveCamera()
-        if self.settings.use_parallel_projection:
-            camera.ParallelProjectionOn()
-        #else:
-            #camera.ParallelProjectionOff()
+        self.vtk_interface = VtkInterface(self, self.vtk_frame)
+        self.set_vtk_frame_style()
 
         if self.execute_python:
             self.python_dock_widget = PythonConsoleWidget(self)
             self.python_dock_widget.setObjectName('python_console')
             self.addDockWidget(QtCore.Qt.BottomDockWidgetArea, self.python_dock_widget)
         self._load_models()
+        self.statusBar().showMessage('Ready')
+        self.show()
 
     def _load_models(self) -> None:
         cart3d_filename = r'C:\NASA\m4\formats\git\pyNastran\pyNastran\converters\cart3d\models\threePlugs.a.tri'
@@ -148,7 +137,7 @@ class MainWindow2(QMainWindow):
             name='stl', plot=True, raise_error=False)
 
         # Render again to set the correct view
-        self.render_window.Render()
+        self.render()
 
     def _start_logging(self) -> None:
         if self.log is not None:
@@ -275,13 +264,7 @@ class MainWindow2(QMainWindow):
         if is_passed and clear:
             enter_data.clear()
 
-    def set_style_as_trackball(self):
-        """sets the default rotation style"""
-        #self._simulate_key_press('t') # change mouse style to trackball
-        self.style = TrackballStyleCamera(self.vtk_interactor, self)
-        self.vtk_interactor.SetInteractorStyle(self.style)
-
-    def build_vtk_frame(self):
+    def set_vtk_frame_style(self):
         """uses the vtk objects to set up the window (frame)"""
         vtk_hbox = QHBoxLayout()
         vtk_hbox.setContentsMargins(2, 2, 2, 2)
@@ -298,16 +281,22 @@ class MainWindow2(QMainWindow):
         return self.main_grids[self.name]
 
     @property
-    def iren(self) -> QVTKRenderWindowInteractor:
-        return self.vtk_interactor
+    def vtk_interactor(self) -> QVTKRenderWindowInteractor:
+        return self.vtk_interface.vtk_interactor
     @property
-    def render_window(self):
+    def rend(self) -> vtk.vtkRenderer:
+        return self.vtk_interface.rend
+    @property
+    def iren(self) -> QVTKRenderWindowInteractor:
+        return self.vtk_interface.vtk_interactor
+    @property
+    def render_window(self) -> vtk.vtkRenderWindow:
         return self.vtk_interactor.GetRenderWindow()
 
-    def render(self):
+    def render(self) -> None:
         self.vtk_interactor.GetRenderWindow().Render()
 
-    def get_camera(self):
+    def get_camera(self) -> vtk.vtkCamera:
         return self.rend.GetActiveCamera()
 
     def turn_text_off(self) -> None:
@@ -361,7 +350,6 @@ class MainWindow2(QMainWindow):
             'load_custom_result', '',
             'load_csv_user_points', 'load_csv_user_geom', 'script', '', 'exit', ]
 
-        self.vtk_interface = VtkInterface(self)
         help = HelpActions(self)
         toolbar_tools = [
             #'camera_reset', 'view',
@@ -370,37 +358,40 @@ class MainWindow2(QMainWindow):
             #'min', 'max', 'map_element_fringe',
             '', # 'exit'
         ]
+
+        toolbar_tools = [
+            'reload', 'load_geometry', 'load_results',
+            'front_view', 'back_view', 'top_view', 'bottom_view',
+            'left_view', 'right_view',
+            'magnify', 'shrink', # 'zoom',
+            'rotate_clockwise', 'rotate_cclockwise',
+            #'rotation_center', 'measure_distance', 'probe_result',
+            #'highlight_cell', 'highlight_node',
+            #'area_pick', 'highlight_nodes_elements', 'mark_nodes_elements',
+            #'wireframe', 'surface', 'edges',
+        ]
+        toolbar_tools += [
+            'camera_reset', # 'view',
+            #'screenshot', # 'min', 'max', 'map_element_fringe',
+            '', # 'exit'
+        ]
         menus_list = [
             ('file', '&File', file_actions_list),
             ('help', '&Help', help.actions_list),
             ('toolbar', self.toolbar, toolbar_tools),
         ]
 
-        self.actions = self._setup_actions(help)  # type: Dict[str, QAction]
+        self.actions = self._setup_actions(help, self.view_actions)  # type: Dict[str, QAction]
         #self.actions['pulldown'] =
 
         #self.combo = QtGui.QComboBox()
         #toolBar.addWidget(self.combo)
         #self.combo.insertItems(1,["One","Two","Three"])
 
-        self.menus = fill_menus(self, menus_list, self.actions)
+        self.menus = fill_menus(self, menus_list, self.actions, allow_missing_actions=False)
 
-        #toolbar_tools = [
-            #'reload', 'load_geometry', 'load_results',
-            #'front_view', 'back_view', 'top_view', 'bottom_view',
-            #'left_view', 'right_view',
-            #'magnify', 'shrink', 'zoom',
-            #'rotate_clockwise', 'rotate_cclockwise',
-            #'rotation_center', 'measure_distance', 'probe_result',
-            #'highlight_cell', 'highlight_node',
-            #'area_pick', 'highlight_nodes_elements', 'mark_nodes_elements',
-            #'wireframe', 'surface', 'edges']
-        #toolbar_tools += [
-            #'camera_reset', 'view', 'screenshot', 'min', 'max', 'map_element_fringe',
-            #'', # 'exit'
-        #]
-
-    def _setup_actions(self, help: HelpActions) -> Dict[str, QAction]:
+    def _setup_actions(self, help: HelpActions,
+                       view_actions: ViewActions) -> Dict[str, QAction]:
         icon_path = os.path.join(PKG_PATH, 'gui', 'icons')
         file_tools = [
             ('exit', '&Exit', 'texit.png', 'Ctrl+Q', 'Exit application', self.closeEvent),
@@ -414,10 +405,31 @@ class MainWindow2(QMainWindow):
 
             ('script', 'Run Python Script...', 'python48.png', None, 'Runs pyNastranGUI in batch mode', self.on_run_script),
         ]
+        view_tools = [
+            # view actions
+            ('back_view', 'Back View', 'back.png', 'x', 'Flips to +X Axis', lambda: self.view_actions.update_camera('+x')),
+            ('right_view', 'Right View', 'right.png', 'y', 'Flips to +Y Axis', lambda: self.view_actions.update_camera('+y')),
+            ('top_view', 'Top View', 'top.png', 'z', 'Flips to +Z Axis', lambda: self.view_actions.update_camera('+z')),
+            ('front_view', 'Front View', 'front.png', 'Shift+X', 'Flips to -X Axis', lambda: self.view_actions.update_camera('-x')),
+            ('left_view', 'Left View', 'left.png', 'Shift+Y', 'Flips to -Y Axis', lambda: self.view_actions.update_camera('-y')),
+            ('bottom_view', 'Bottom View', 'bottom.png', 'Shift+Z', 'Flips to -Z Axis', lambda: self.view_actions.update_camera('-z')),
+
+            # zoom
+            ('magnify', 'Magnify', 'plus_zoom.png', 'm', 'Increase Magnfication', self.view_actions.on_increase_magnification),
+            ('shrink', 'Shrink', 'minus_zoom.png', 'Shift+M', 'Decrease Magnfication', self.view_actions.on_decrease_magnification),
+
+            # rotation
+            ('rotate_clockwise', 'Rotate Clockwise', 'tclock.png', 'o', 'Rotate Clockwise', self.view_actions.on_rotate_clockwise),
+            ('rotate_cclockwise', 'Rotate Counter-Clockwise', 'tcclock.png', 'Shift+O', 'Rotate Counter-Clockwise', self.view_actions.on_rotate_cclockwise),
+
+            ('camera_reset', 'Reset Camera View', 'trefresh.png', 'r', 'Reset the camera view to default', self.view_actions.on_reset_camera),
+            #('view', 'Camera View', 'view.png', None, 'Load the camera menu', self.camera_obj.set_camera_menu),
+            #('screenshot', 'Take a Screenshot...', 'tcamera.png', 'CTRL+I', 'Take a Screenshot of current view', self.tool_actions.on_take_screenshot),
+        ]
         checkables_set = set([])
 
         # setup the actions
-        actions_list = file_tools + help.tools_list
+        actions_list = file_tools + view_tools + help.tools_list
         actions = build_actions(self, icon_path, actions_list, checkables_set, self.log)
         assert len(actions) > 0, actions
         return actions
@@ -521,8 +533,78 @@ class MainWindow2(QMainWindow):
         self.log.warning('on_load_csv_points')
     def on_load_custom_results(self):
         self.log.warning('on_load_custom_results')
-    def on_run_script(self):
-        self.log.warning('on_run_script')
+
+    @property
+    def performance_mode(self):
+        """get the performance mode"""
+        return self._performance_mode
+
+    @performance_mode.setter
+    def performance_mode(self, performance_mode):
+        """
+        Set the performance mode.  If performance mode flips
+        to False, we dump the log buffer.
+        """
+        if not performance_mode and self._log_messages:
+            msg = ''.join(self._log_messages)
+            #setUpdatesEnabled(False)
+            #TxtBrows.append(SomeBigHTMLString)
+            self._log_msg(msg)
+            #setUpdatesEnabled(True)
+            self._log_messages = []
+        self._performance_mode = performance_mode
+
+    def start_stop_performance_mode(func):
+        """
+        Supresses logging.  If we started with logging suppressed,
+        we won't unsupress logging at the end of the function.
+        """
+        def new_func(self, *args, **kwargs):
+            """The actual function exec'd by the decorated function."""
+            performance_mode_initial = self.performance_mode
+            if not performance_mode_initial:
+                self.performance_mode = True
+            try:
+                n = func(self, *args, **kwargs)
+            except:
+                if not performance_mode_initial:
+                    self.performance_mode = False
+                raise
+            if not performance_mode_initial:
+                self.performance_mode = False
+            return n
+        return new_func
+
+    @start_stop_performance_mode
+    def on_run_script(self, python_file: bool=False) -> bool:
+        """pulldown for running a python script"""
+        is_passed = False
+        if python_file in [None, False]:
+            title = 'Choose a Python Script to Run'
+            wildcard = "Python (*.py)"
+            infile_name = self._create_load_file_dialog(
+                wildcard, title, self._default_python_file)[1]
+            if not infile_name:
+                return is_passed # user clicked cancel
+
+            #python_file = os.path.join(script_path, infile_name)
+            python_file = os.path.join(infile_name)
+
+        if not os.path.exists(python_file):
+            msg = 'python_file = %r does not exist' % python_file
+            self.log_error(msg)
+            return is_passed
+
+        with open(python_file, 'r') as python_file_obj:
+            txt = python_file_obj.read()
+        is_passed = self._execute_python_code(txt, show_msg=False)
+        if not is_passed:
+            return is_passed
+        self._default_python_file = python_file
+        self.log_command('self.on_run_script(%r)' % python_file)
+        print('self.on_run_script(%r)' % python_file)
+        return is_passed
+
     # file
     # help
     # ------------------------------------------
@@ -542,7 +624,7 @@ class MainWindow2(QMainWindow):
         #msg2 += msg
         self.setWindowTitle(msg)
 
-    def closeEvent(self, *args):
+    def closeEvent(self, *args) -> None:
         """
         Handling saving state before application when application is
         being closed.

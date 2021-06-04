@@ -51,7 +51,7 @@ def build_actions(self: QMainWindow,
 def fill_menus(self: QMainWindow,
                menus_list: List[Tuple[str, str, List[str]]],
                actions: Dict[str, QAction],
-               ) -> None:
+               allow_missing_actions: bool=False) -> None:
     assert len(self.actions) > 0, self.actions
     menus = {}
     for name, header, actions_to_add in menus_list:
@@ -68,7 +68,12 @@ def fill_menus(self: QMainWindow,
             if action_name == '':
                 menu.addSeparator()
                 continue
-            action = self.actions[action_name]
+            try:
+                action = self.actions[action_name]
+            except KeyError:
+                if not allow_missing_actions:
+                    raise
+                self.log.warning(f'missing action {action_name}')
             menu.addAction(action)
         menus[name] = menu
     return menus
