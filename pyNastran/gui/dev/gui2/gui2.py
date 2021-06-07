@@ -23,6 +23,7 @@ from pyNastran.gui.menus.python_console import PythonConsoleWidget
 from pyNastran.gui.gui_objects.settings import Settings
 
 from pyNastran.gui.qt_files.view_actions import ViewActions
+from pyNastran.gui.qt_files.tool_actions import ToolActions
 from pyNastran.gui.qt_files.QVTKRenderWindowInteractor import QVTKRenderWindowInteractor
 
 
@@ -58,10 +59,26 @@ class MainWindow2(QMainWindow):
         self.is_gui = True
         self.dev = False
         self.debug = True
-        self.html_logging = True
+
+        # should vtk be enabled
+        # True: typical
+        # False: useful for testing a new version of qt
+        self.run_vtk = True
+
+        # should the python console be enabled
         self.execute_python = False
+
+        # True: add Application Log
+        # False: print to console (useful when there's a crash and you run from command line)
+        self.html_logging = True
+
+        # performance mode limits log messages to the application log as HTML is faster
+        # to render in one go
         self._performance_mode = False
         self._log_messages = []
+
+        # TODO: what is this for?
+        self.title = ''
 
         self.cases = {} # type: Dict[int, Any]
         self.form = []  # type: List[Any]
@@ -70,13 +87,20 @@ class MainWindow2(QMainWindow):
         self.model_type = None
         self.nid_maps = {}
         self.eid_maps = {}
+
+        # the info in the lower left part of the screen
+        self.text_actors = {} # type: Dict[int, vtk.vtkTextActor]
+
+        # the various coordinate systems (e.g., cid=0, 1)
+        self.axes = {} # type: Dict[int, vtk.vtkAxesActor]
+
         self.models = {}  # type: Dict[str, Any]
         self.grid_mappers = {} # type: Dict[str, Any]
         self.main_grids = {} #  type: Dict[str, vtk.vtkUnstructuredGrid]
         self.alt_grids = {} # type: Dict[str, vtk.vtkUnstructuredGrid]
-        self.geom_actors = {} # type: Dict[str, vtkLODActor]
+        self.geometry_actors = {} # type: Dict[str, vtkLODActor]
         self.actions = {}  # type: Dict[str, QAction]
-
+        #geometry_actors
         # -----------------------------------------
         self.settings = Settings(self)
         settings = QtCore.QSettings()
@@ -85,7 +109,7 @@ class MainWindow2(QMainWindow):
         self.actions = {}  # type: Dict[str, QAction]
         self.load_actions = LoadActions(self)
         self.view_actions = ViewActions(self)
-        #self.log = SimpleLogger(level='debug', encoding='utf-8', nlevels=1, log_func=None)
+        self.tool_actions = ToolActions(self)
 
         self.log = None
         self._start_logging()
@@ -113,8 +137,14 @@ class MainWindow2(QMainWindow):
         #self.create_vtk_actors(create_rend=True)
 
         self.vtk_frame = QFrame()
+
         self.vtk_interface = VtkInterface(self, self.vtk_frame)
+
+        # put the vtk_interactor inside the vtk_frame
         self.set_vtk_frame_style()
+
+        # put the corner axis into the renderer
+        self.tool_actions.create_corner_axis()
 
         if self.execute_python:
             self.python_dock_widget = PythonConsoleWidget(self)
@@ -353,7 +383,7 @@ class MainWindow2(QMainWindow):
         help = HelpActions(self)
         toolbar_tools = [
             #'camera_reset', 'view',
-            #'screenshot',
+            'screenshot',
             'exit',
             #'min', 'max', 'map_element_fringe',
             '', # 'exit'
@@ -372,7 +402,7 @@ class MainWindow2(QMainWindow):
         ]
         toolbar_tools += [
             'camera_reset', # 'view',
-            #'screenshot', # 'min', 'max', 'map_element_fringe',
+            'screenshot', # 'min', 'max', 'map_element_fringe',
             '', # 'exit'
         ]
         menus_list = [
@@ -424,7 +454,7 @@ class MainWindow2(QMainWindow):
 
             ('camera_reset', 'Reset Camera View', 'trefresh.png', 'r', 'Reset the camera view to default', self.view_actions.on_reset_camera),
             #('view', 'Camera View', 'view.png', None, 'Load the camera menu', self.camera_obj.set_camera_menu),
-            #('screenshot', 'Take a Screenshot...', 'tcamera.png', 'CTRL+I', 'Take a Screenshot of current view', self.tool_actions.on_take_screenshot),
+            ('screenshot', 'Take a Screenshot...', 'tcamera.png', 'CTRL+I', 'Take a Screenshot of current view', self.tool_actions.on_take_screenshot),
         ]
         checkables_set = set([])
 
@@ -458,7 +488,7 @@ class MainWindow2(QMainWindow):
 
     def _remove_old_geometry(self, filename: str):
         """
-        >>> self.geom_actors
+        >>> self.geometry_actors
         {'cart3d': (vtkRenderingLODPython.vtkLODActor)000002B26C562C48,
          'stl': (vtkRenderingLODPython.vtkLODActor)000002B25024C7C8
         }
@@ -469,14 +499,14 @@ class MainWindow2(QMainWindow):
             grid = self.main_grids[filename]
             grid.FastDelete()
             del self.main_grids[filename]
-            actor = self.geom_actors[filename]
+            actor = self.geometry_actors[filename]
             self.rend.RemoveActor(actor)
-            del self.geom_actors[filename]
+            del self.geometry_actors[filename]
         #self.models = {}  # type: Dict[str, Any]
         #self.grid_mappers = {} # type: Dict[str, Any]
         #self.main_grids = {} #  type: Dict[str, vtk.vtkUnstructuredGrid]
         #self.alt_grids = {} # type: Dict[str, vtk.vtkUnstructuredGrid]
-        #self.geom_actors = {} # type: Dict[str, vtkLODActor]
+        #self.geometry_actors = {} # type: Dict[str, vtkLODActor]
 
     def _reset_model(self, name: str) -> None:
         """resets the grids; sets up alt_grids"""
@@ -485,16 +515,16 @@ class MainWindow2(QMainWindow):
             grid_mapper = vtk.vtkDataSetMapper()
             grid_mapper.SetInputData(grid)
 
-            geom_actor = vtk.vtkLODActor()
-            geom_actor.DragableOff()
-            geom_actor.SetMapper(grid_mapper)
-            self.rend.AddActor(geom_actor)
+            geometry_actor = vtk.vtkLODActor()
+            geometry_actor.DragableOff()
+            geometry_actor.SetMapper(grid_mapper)
+            self.rend.AddActor(geometry_actor)
 
             self.name = name
             self.models = {}
             self.main_grids[name] = grid
             self.grid_mappers[name] = grid_mapper
-            self.geom_actors[name] = geom_actor
+            self.geometry_actors[name] = geometry_actor
             grid.Modified()
 
             if 0:

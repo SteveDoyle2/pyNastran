@@ -542,7 +542,8 @@ class Settings:
         if render:
             self.parent.vtk_interactor.GetRenderWindow().Render()
 
-    def update_coord_text_scale(self, coord_text_scale: Optional[float]=None, render: bool=True) -> None:
+    def update_coord_text_scale(self, coord_text_scale: Optional[float]=None,
+                                render: bool=True) -> None:
         """internal method for updating the coordinate system size"""
         if coord_text_scale is None:
             coord_text_scale = self.coord_text_scale
