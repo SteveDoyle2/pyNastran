@@ -2197,7 +2197,9 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
         """
         #self.groups = out_data
         data = {}
-        for unused_group_id, group in sorted(out_data.items()):
+        groups_dict = {group_id: group for group_id, group in out_data.items()
+                       if isinstance(group_id, integer_types)}
+        for unused_group_id, group in sorted(groups_dict.items()):
             if not isinstance(group, Group):
                 continue
             data[group.name] = group

@@ -172,9 +172,12 @@ def _simplify_node_set(node_set: Optional[Union[List[int], Set[int], List[NDArra
         for node_seti in node_set:
             if isinstance(node_seti, list):
                 node_set_array = np.array(node_seti, dtype=idtype)
+            elif isinstance(node_seti, set):
+                node_set_array = np.array(list(node_seti), dtype=idtype)
             else:
                 assert isinstance(node_seti, np.ndarray), type(node_seti)
                 node_set_array = node_seti
+            node_set_array.sort()
             node_set_list.append(node_set_array)
     # list of ndarrays
     return node_set_list

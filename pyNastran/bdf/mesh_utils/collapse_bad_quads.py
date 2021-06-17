@@ -4,14 +4,22 @@ defines:
                              min_edge_length=0.0)
 
 """
+from __future__ import annotations
+from typing import List, Optional, TYPE_CHECKING
 import numpy as np
 from pyNastran.bdf.cards.elements.shell import CTRIA3
+if TYPE_CHECKING:
+    from pyNastran.bdf.bdf import BDF
 
 
-def convert_bad_quads_to_tris(model, eids_to_check=None, xyz_cid0=None, min_edge_length=0.0):
+def convert_bad_quads_to_tris(model: BDF,
+                              eids_to_check: List[int]=None,
+                              xyz_cid0: Optional[np.ndarray]=None,
+                              min_edge_length: float=0.0) -> None:
     """
-    A standard quad is a nice rectangle.  If an edge is collapsed, it's a triangle.
-    Change the element type.
+    A standard quad is a nice rectangle.  If an edge is collapsed, it's
+    a triangle.  Change the element type with an inplace operation.
+    Deletes any line elements created.
 
     Parameters
     ----------
@@ -30,6 +38,7 @@ def convert_bad_quads_to_tris(model, eids_to_check=None, xyz_cid0=None, min_edge
     .. todo::  check for bad xref
 
     """
+    log = model.log
     out = model.get_card_ids_by_card_types('CQUAD4')
     cquad4s = out['CQUAD4']
     if eids_to_check is None:
@@ -46,7 +55,7 @@ def convert_bad_quads_to_tris(model, eids_to_check=None, xyz_cid0=None, min_edge
     all_nids = nid_cd[:, 0]
 
     if len(cquad4s_to_check) == 0:
-        model.log.warning('no quads in the model...')
+        log.warning('no quads in the model...')
         return
 
     for eid in sorted(cquad4s_to_check):
@@ -65,14 +74,20 @@ def convert_bad_quads_to_tris(model, eids_to_check=None, xyz_cid0=None, min_edge
             if edge_length <= min_edge_length:
                 nids_to_remove.append(nid1)
 
-        if len(nids_to_remove) == 0:
+        nnodes_to_remove = len(nids_to_remove)
+        if len(set(nids)) < 4 and nnodes_to_remove == 0:
+            log.warning(f"removing eid={eid} because its a degenerate element, but it's not a triangle...\n{elem}")
+            etype = elem.type
+            model.card_count[etype] -= 1
+            del model.elements[eid]
+        if nnodes_to_remove == 0:
             continue
 
         for nid in nids_to_remove:
             nids.remove(nid)
 
         if len(nids) < 3:
-            model.log.debug('found eid=%s is a line/point...removing' % eid)
+            log.debug('found eid=%s is a line/point...removing' % eid)
             etype = elem.type
             model.card_count[etype] -= 1
             del model.elements[eid]
@@ -94,13 +109,13 @@ def convert_bad_quads_to_tris(model, eids_to_check=None, xyz_cid0=None, min_edge
             nids.remove(nid)
 
         if len(nids) < 3:
-            model.log.debug('found eid=%s is a line/point...removing' % eid)
+            log.debug('found eid=%s is a line/point...removing' % eid)
             etype = elem.type
             model.card_count[etype] -= 1
             del model.elements[eid]
             continue
 
-        model.log.debug('found eid=%s is a triangle...replacing CQUAD4 with CTRIA3' % eid)
+        log.debug('found eid=%s is a triangle...replacing CQUAD4 with CTRIA3' % eid)
         #print('  nids2=%s' % (nids))
         assert elem.tflag == 0, elem
         assert elem.T1 is None, elem.T1
@@ -113,3 +128,75 @@ def convert_bad_quads_to_tris(model, eids_to_check=None, xyz_cid0=None, min_edge
         model.increase_card_count('CTRIA3')
         del model.elements[eid]
         model.elements[eid] = elem2
+
+def delete_bad_tris(model: BDF,
+                    eids_to_check: List[int]=None,
+                    xyz_cid0: Optional[np.ndarray]=None,
+                    min_edge_length: float=0.0) -> None:
+    """
+    If an triangular edge is collapsed, it's a line and should be deleted.
+
+    Parameters
+    ----------
+    model : BDF()
+        a BDF model that has not had it's properties/load xref'd, but is valid
+        such that it could
+    eids : list; (default=None -> all CTRIA3s)
+        the subset of element ids to check
+    xyz_cid0 : (n, 3) ndarray
+        nodes in cid=0
+    min_edge_length : float; default=0.0
+        what is classified as "short"
+
+    .. warning::  Don't cross reference properties/loads
+
+    .. todo::  check for bad xref
+
+    """
+    out = model.get_card_ids_by_card_types('CTRIA3')
+    ctria3s = out['CTRIA3']
+    if eids_to_check is None:
+        ctria3s_to_check = ctria3s
+    else:
+        ctria3s_to_check = list(set(eids_to_check).intersection(set(ctria3s)))
+
+    elements = model.elements
+    unused_eids_to_remove = []
+
+    if xyz_cid0 is None:
+        xyz_cid0 = model.get_xyz_in_coord(cid=0)
+    nid_cd = np.array([[nid, node.Cd()] for nid, node in sorted(model.nodes.items())])
+    all_nids = nid_cd[:, 0]
+
+    if len(ctria3s_to_check) == 0:
+        model.log.warning('no tris in the model...')
+        return
+
+    for eid in sorted(ctria3s_to_check):
+        elem = elements[eid]
+        nids = elem.node_ids
+        nids_long = nids + nids
+
+        nids_to_remove = []
+        for inode in range(3):
+            nid0 = nids_long[inode]
+            nid1 = nids_long[inode + 1]
+            edge = [nid0, nid1]
+            i = np.searchsorted(all_nids, edge)
+            xyz = xyz_cid0[i, :]
+            edge_length = np.linalg.norm(xyz[0, :] - xyz[1, :])
+            if edge_length <= min_edge_length:
+                nids_to_remove.append(nid1)
+
+        if len(nids_to_remove) == 0:
+            continue
+
+        for nid in nids_to_remove:
+            nids.remove(nid)
+
+        if len(nids) < 3:
+            model.log.debug('found eid=%s is a line/point...removing' % eid)
+            etype = elem.type
+            model.card_count[etype] -= 1
+            del model.elements[eid]
+            continue

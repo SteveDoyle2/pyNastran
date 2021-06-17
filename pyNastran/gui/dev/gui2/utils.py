@@ -10,13 +10,14 @@ if TYPE_CHECKING:
     from qtpy.QtWidgets import QMainWindow
 
 def build_actions(self: QMainWindow,
+                  base_actions: Dict[str, QAction],
                   icon_path: str,
                   tools_list: List[Tuple[str, str, str, str, str, Callable[Any]]],
                   checkables_set: Set[str],
                   log: SimpleLogger) -> Dict[str, Any]:
     checkables = {}
 
-    actions = {}
+    actions = base_actions
     for tool in tools_list:
         (name, txt, icon, shortcut, tip, func) = tool
         if name in actions:
@@ -24,11 +25,16 @@ def build_actions(self: QMainWindow,
             continue
 
         if icon is None:
-            print(f'missing_icon = {name!r}!!!')
+            msg = f'missing_icon = {name!r}!!!'
+            print(msg)
+            self.log.warning(msg)
             ico = None
         else:
             ico = QtGui.QIcon()
             pth = os.path.join(icon_path, icon)
+            if icon.endswith('.png') and not os.path.exists(pth):
+                self.log.warning(str((name, pth)))
+
             ico.addPixmap(QtGui.QPixmap(pth), QtGui.QIcon.Normal, QtGui.QIcon.Off)
 
         if name in checkables:
@@ -55,6 +61,13 @@ def fill_menus(self: QMainWindow,
     assert len(self.actions) > 0, self.actions
     menus = {}
     for name, header, actions_to_add in menus_list:
+        for i, item in enumerate(menus_list):
+            if item != '':
+                break
+        actions_to_add = actions_to_add[i:]
+        if len(actions_to_add) == 0:
+            continue
+
         #file_menu = self.menubar.addMenu('&Help')
         if isinstance(header, str):
             menu = self.menubar.addMenu(header)

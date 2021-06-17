@@ -271,15 +271,15 @@ def make_gpwg(Mgg, reference_point, xyz_cid0, grid_cps, coords, log):
     log.info('omega=%s' % omega)
     log.info('S (right, but not correct order) =\n%s\n' % S)
 
-    Mt = triple(S, Mt_bar)
+    Mt = triple(S, Mt_bar)  # translational
     Mtr = triple(S, Mtr_bar)
-    Mr = triple(S, Mr_bar)
+    Mr = triple(S, Mr_bar)  # rotational
 
     # 4. determine the principal axis & cg in the principal mass axis system
     # eq G-18
-    Mx = Mt[0, 0]
-    My = Mt[1, 1]
-    Mz = Mt[2, 2]
+    Mtx = Mt[0, 0]
+    Mty = Mt[1, 1]
+    Mtz = Mt[2, 2]
     mass = np.diag(Mt)
     log.info('mass = %s' % mass)
     #if min(mass) == 0.:
@@ -290,11 +290,11 @@ def make_gpwg(Mgg, reference_point, xyz_cid0, grid_cps, coords, log):
         [-Mtr[2, 1], Mtr[2, 0], Mtr[2, 2]],
     ], dtype='float32')
     if mass[0] != 0.:
-        cg[0, :] /= Mx
+        cg[0, :] /= Mtx
     if mass[1] != 0.:
-        cg[1, :] /= My
+        cg[1, :] /= Mty
     if mass[2] != 0.:
-        cg[2, :] /= Mz
+        cg[2, :] /= Mtz
     #cg = nan_to_num(cg)
 
     log.info('cg=\n%s\n' % cg)
@@ -309,13 +309,13 @@ def make_gpwg(Mgg, reference_point, xyz_cid0, grid_cps, coords, log):
     xz = cg[2, 0]
     yz = cg[2, 1]
     #zz = cg[2, 2]
-    I11 = Mr[0, 0] - My * zy ** 2 - Mz * yz ** 2
-    I21 = I12 = -Mr[0, 1] - Mz * xz * yz
-    I13 = I31 = -Mr[0, 2] - My * xy * zy
-    I22 = Mr[1, 1] - Mz * xz ** 2 - Mx * zx ** 2
-    I23 = -Mr[1, 2] - Mx * yx * zx
+    I11 = Mr[0, 0] - Mty * zy ** 2 - Mtz * yz ** 2
+    I21 = I12 = -Mr[0, 1] - Mtz * xz * yz
+    I13 = I31 = -Mr[0, 2] - Mty * xy * zy
+    I22 = Mr[1, 1] - Mtz * xz ** 2 - Mtx * zx ** 2
+    I23 = -Mr[1, 2] - Mtx * yx * zx
     I32 = I23
-    I33 = Mr[2, 2] - Mx * yx ** 2 - My * xy ** 2
+    I33 = Mr[2, 2] - Mtx * yx ** 2 - Mty * xy ** 2
     II = np.array([
         [I11, I12, I13],
         [I21, I22, I13],

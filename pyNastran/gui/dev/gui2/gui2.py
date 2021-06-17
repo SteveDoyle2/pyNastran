@@ -35,6 +35,20 @@ from pyNastran.gui.dev.gui2.load_actions import LoadActions
 from pyNastran.gui.dev.gui2.vtk_interface import VtkInterface, ScalarBar, fill_render_window
 from pyNastran.gui.dev.gui2.format_setup import build_fmts, CLASS_MAP
 
+from pyNastran.gui.menus.legend.legend_object import LegendObject
+from pyNastran.gui.menus.highlight.highlight_object import HighlightObject, MarkObject
+from pyNastran.gui.menus.preferences.preferences_object import PreferencesObject
+IS_CUTTING_PLANE = False
+IS_MATPLOTLIB = False
+if IS_MATPLOTLIB:
+    from pyNastran.gui.menus.cutting_plane.cutting_plane_object import CuttingPlaneObject
+    from pyNastran.gui.menus.cutting_plane.shear_moment_torque_object import ShearMomentTorqueObject
+    IS_CUTTING_PLANE = True
+from pyNastran.gui.menus.clipping.clipping_object import ClippingObject
+from pyNastran.gui.menus.camera.camera_object import CameraObject
+from pyNastran.gui.menus.edit_geometry_properties.edit_geometry_properties_object import (
+    EditGeometryPropertiesObject)
+
 PKG_PATH = pyNastran.__path__[0]
 
 
@@ -110,6 +124,12 @@ class MainWindow2(QMainWindow):
         self.load_actions = LoadActions(self)
         self.view_actions = ViewActions(self)
         self.tool_actions = ToolActions(self)
+
+        #-----------------------------------------------
+        # menus
+        self.preferences_obj = PreferencesObject(self)
+        self.edit_geometry_properties_obj = EditGeometryPropertiesObject(self)
+        #-----------------------------------------------
 
         self.log = None
         self._start_logging()
@@ -405,13 +425,38 @@ class MainWindow2(QMainWindow):
             'screenshot', # 'min', 'max', 'map_element_fringe',
             '', # 'exit'
         ]
+
+        menu_view = [
+            'screenshot', '', 'wireframe', 'surface', 'camera_reset', '',
+            'set_preferences', #'cutting_plane',
+            '',
+            'label_clear', 'label_reset', '',
+            'legend', 'animation', 'geo_properties',
+            #['Anti-Aliasing', 'anti_alias_0', 'anti_alias_1', 'anti_alias_2',
+            #'anti_alias_4', 'anti_alias_8',],
+        ]
+        menu_window = []
+
+        if self.html_logging:
+            self.actions['log_dock_widget'] = self.log_dock_widget.toggleViewAction()
+            self.actions['log_dock_widget'].setStatusTip("Show/Hide application log")
+            menu_view += ['', 'show_info', 'show_debug', 'show_command', 'show_warning', 'show_error']
+            menu_window += ['log_dock_widget']
+        if self.execute_python:
+            self.actions['python_dock_widget'] = self.python_dock_widget.toggleViewAction()
+            self.actions['python_dock_widget'].setStatusTip("Show/Hide Python Console")
+            menu_window += ['python_dock_widget']
+
         menus_list = [
             ('file', '&File', file_actions_list),
+            ('window', '&Window', menu_window),
             ('help', '&Help', help.actions_list),
             ('toolbar', self.toolbar, toolbar_tools),
         ]
 
-        self.actions = self._setup_actions(help, self.view_actions)  # type: Dict[str, QAction]
+        self.actions = self._setup_actions(
+            help, self.view_actions,
+            base_actions=self.actions)  # type: Dict[str, QAction]
         #self.actions['pulldown'] =
 
         #self.combo = QtGui.QComboBox()
@@ -420,8 +465,12 @@ class MainWindow2(QMainWindow):
 
         self.menus = fill_menus(self, menus_list, self.actions, allow_missing_actions=False)
 
-    def _setup_actions(self, help: HelpActions,
-                       view_actions: ViewActions) -> Dict[str, QAction]:
+    def _setup_actions(self,
+                       help: HelpActions,
+                       view_actions: ViewActions,
+                       base_actions: Optional[Dict[str, QAction]]) -> Dict[str, QAction]:
+        assert isinstance(base_actions, dict), base_actions
+
         icon_path = os.path.join(PKG_PATH, 'gui', 'icons')
         file_tools = [
             ('exit', '&Exit', 'texit.png', 'Ctrl+Q', 'Exit application', self.closeEvent),
@@ -455,12 +504,27 @@ class MainWindow2(QMainWindow):
             ('camera_reset', 'Reset Camera View', 'trefresh.png', 'r', 'Reset the camera view to default', self.view_actions.on_reset_camera),
             #('view', 'Camera View', 'view.png', None, 'Load the camera menu', self.camera_obj.set_camera_menu),
             ('screenshot', 'Take a Screenshot...', 'tcamera.png', 'CTRL+I', 'Take a Screenshot of current view', self.tool_actions.on_take_screenshot),
+
+            # logging
+            ('show_info', 'Show INFO', 'show_info.png', None, 'Show "INFO" messages', self.on_show_info),
+            ('show_debug', 'Show DEBUG', 'show_debug.png', None, 'Show "DEBUG" messages', self.on_show_debug),
+            ('show_command', 'Show COMMAND', 'show_command.png', None, 'Show "COMMAND" messages', self.on_show_command),
+            ('show_warning', 'Show WARNING', 'show_warning.png', None, 'Show "COMMAND" messages', self.on_show_warning),
+            ('show_error', 'Show ERROR', 'show_error.png', None, 'Show "COMMAND" messages', self.on_show_error),
+
+            # core menus
+            #('legend', 'Modify Legend...', 'legend.png', 'CTRL+L', 'Set Legend', self.legend_obj.set_legend_menu),
+            #('animation', 'Create Animation...', 'animation.png', 'CTRL+A', 'Create Animation', self.legend_obj.set_animation_menu),
+            #('clipping', 'Set Clipping...', '', None, 'Set Clipping', self.clipping_obj.set_clipping_menu),
+            ('set_preferences', 'Preferences...', 'preferences.png', 'CTRL+P', 'Set GUI Preferences', self.preferences_obj.set_preferences_menu),
+            ('geo_properties', 'Edit Geometry Properties...', '', 'CTRL+E', 'Change Model Color/Opacity/Line Width', self.edit_geometry_properties_obj.edit_geometry_properties),
+            #('map_element_fringe', 'Map Element Fringe', '', 'CTRL+F', 'Map Elemental Centroidal Fringe Result to Nodes', self.map_element_centroid_to_node_fringe_result),
         ]
         checkables_set = set([])
 
         # setup the actions
         actions_list = file_tools + view_tools + help.tools_list
-        actions = build_actions(self, icon_path, actions_list, checkables_set, self.log)
+        actions = build_actions(self, base_actions, icon_path, actions_list, checkables_set, self.log)
         assert len(actions) > 0, actions
         return actions
 
@@ -644,6 +708,28 @@ class MainWindow2(QMainWindow):
     # help
     # ------------------------------------------
     # basic functions
+    #---------------------------------------------------------------------------
+    # basic interaction
+    def on_show_debug(self) -> None:
+        """sets a flag for showing/hiding DEBUG messages"""
+        self.settings.show_debug = not self.settings.show_debug
+
+    def on_show_info(self) -> None:
+        """sets a flag for showing/hiding INFO messages"""
+        self.settings.show_info = not self.settings.show_info
+
+    def on_show_command(self) -> None:
+        """sets a flag for showing/hiding COMMAND messages"""
+        self.settings.show_command = not self.settings.show_command
+
+    def on_show_warning(self) -> None:
+        """sets a flag for showing/hiding WARNING messages"""
+        self.settings.show_warning = not self.settings.show_warning
+
+    def on_show_error(self) -> None:
+        """sets a flag for showing/hiding ERROR messages"""
+        self.settings.show_error = not self.settings.show_error
+
     @property
     def window_title(self) -> str:
         return self.getWindowTitle()

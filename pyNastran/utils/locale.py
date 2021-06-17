@@ -4,7 +4,7 @@ from typing import Optional
 
 
 USER_NAME = getpass.getuser()
-if USER_NAME == 'sdoyle': # or 'id' in msg:
+if USER_NAME == 'sdoyle' and 0: # or 'id' in msg:
     locale.setlocale(locale.LC_NUMERIC, "en_DK.UTF-8")
     from qtpy.QtCore import QLocale
     QLocale.setDefault(QLocale(QLocale.German))
