@@ -5,7 +5,7 @@ Safe cross-referencing skips failed xref's
 
 """
 from collections import defaultdict
-from typing import Tuple, List, Any
+from typing import Tuple, List, Dict, Any
 
 import numpy as np
 from numpy import zeros, argsort, arange, array_equal
@@ -453,12 +453,18 @@ class SafeXrefMesh(XrefMesh):
             xref_errors['eid'].append((ref_id, eid))
         return eid_ref
 
-    def safe_elements(self, eids, ref_id, xref_errors, msg=''):
+    def safe_elements(self, eids, ref_id: int,
+                      xref_errors: Dict[str, Tuple[int, int]], msg=''):
         """
         Gets an series of elements
 
         Doesn't get rigid (RROD, RBAR, RBE2, RBE3, RBAR, RBAR1, RSPLINE, RSSCON)
         or mass (CMASS1, CONM2)
+
+        Parameters
+        ----------
+        ref_id: int
+            typically a load_id
 
         """
         elements = []

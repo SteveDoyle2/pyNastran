@@ -14,7 +14,9 @@ from pyNastran.bdf.mesh_utils.bdf_equivalence import (
 from pyNastran.nptyping import NDArray3float, NDArrayNint
 
 def find_closest_nodes(nodes_xyz: NDArray3float, nids: NDArrayNint,
-                       xyz_compare: NDArray3float, neq_max: int=1, tol: Optional[float]=None,
+                       xyz_compare: NDArray3float,
+                       neq_max: int=1,
+                       tol: Optional[float]=None,
                        msg: str='') -> NDArrayNint:
     """
     Finds the closest nodes to an arbitrary set of xyz points
@@ -30,7 +32,7 @@ def find_closest_nodes(nodes_xyz: NDArray3float, nids: NDArrayNint,
     tol : float; default=None
         the max spherical tolerance
         None : the whole model
-    neq_max : int; default=1.0
+    neq_max : int; default=1
         the number of "close" points
     msg : str; default=''
         custom message used for errors
@@ -74,7 +76,9 @@ def find_closest_nodes(nodes_xyz: NDArray3float, nids: NDArrayNint,
     return nids_out
 
 
-def find_closest_nodes_index(nodes_xyz, xyz_compare, neq_max, tol, msg=''):
+def find_closest_nodes_index(nodes_xyz: NDArray3float,
+                             xyz_compare: NDArray3float,
+                             neq_max: int, tol: float, msg: str=''):
     """
     Finds the closest nodes to an arbitrary set of xyz points
 
@@ -105,8 +109,9 @@ def find_closest_nodes_index(nodes_xyz, xyz_compare, neq_max, tol, msg=''):
     return ieq
 
 
-def _not_equal_nodes_build_tree(nodes_xyz, xyz_compare, tol, neq_max=4, msg=''):
-    # type: (np.ndarray, np.ndarray, float, int, str) -> (Any, np.ndarray, np.ndarray)
+def _not_equal_nodes_build_tree(nodes_xyz: NDArray3float,
+                                xyz_compare: NDArray3float,
+                                tol: float, neq_max: int=4, msg: str='') -> (Any, np.ndarray, np.ndarray):
     """
     helper function for `bdf_equivalence_nodes`
 

@@ -12,7 +12,7 @@ defines:
 
 """
 from collections import Counter
-from typing import List, Union, Optional
+from typing import Tuple, List, Union, Optional
 import numpy as np
 
 
@@ -47,7 +47,7 @@ def collapse_thru_by_float(fields: List) -> List[Union[int, str]]:
     return fields2
 
 
-def collapse_thru(fields, nthru=None):
+def collapse_thru(fields, nthru: Optional[int]=None) -> List[Tuple[int, int, int]]:
     """
     Collapses fields into a set of packs
 
@@ -55,6 +55,8 @@ def collapse_thru(fields, nthru=None):
     ----------
     fields : list[int, int, ...]
         the list of integers to compress
+    nthru : int; default=1
+        currently unused
 
     Returns
     -------

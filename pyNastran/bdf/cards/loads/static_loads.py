@@ -2184,7 +2184,8 @@ class PLOAD2(Load):
         eids = [1, 2]
         return PLOAD2(sid, pressure, eids, comment='')
 
-    def __init__(self, sid, pressure, eids, comment=''):
+    def __init__(self, sid: int, pressure: float,
+                 eids: List[int], comment: str=''):
         """
         Creates a PLOAD2 card, which defines an applied load normal to the quad/tri face
 
@@ -2211,7 +2212,7 @@ class PLOAD2(Load):
         self.eids_ref = None
 
     @classmethod
-    def add_card(cls, card, comment=''):
+    def add_card(cls, card, comment: str=''):
         """
         Adds a PLOAD2 card from ``BDF.add_card(...)``
 
@@ -2266,8 +2267,9 @@ class PLOAD2(Load):
         msg = ', which is required by PLOAD2 sid=%s' % self.sid
         self.eids_ref = model.Elements(self.eids, msg=msg)
 
-    def safe_cross_reference(self, model: BDF, safe_coord):
-        return self.cross_reference(model)
+    def safe_cross_reference(self, model: BDF, xref_errors: Dict[Any, Any]) -> None:
+        msg = ', which is required by PLOAD2 sid=%s' % self.sid
+        self.eids_ref = model.safe_elements(self.eids, self.sid, xref_errors, msg=msg)
 
     def uncross_reference(self) -> None:
         """Removes cross-reference links"""
@@ -2285,7 +2287,16 @@ class PLOAD2(Load):
     def get_loads(self):
         return [self]
 
-    def raw_fields(self):
+    def raw_fields_separate(self, model: BDF) -> List[List[Any]]:
+        cards = []
+        for eid in self.element_ids:
+            if eid not in model.elements:
+                continue
+            list_fields = ['PLOAD2', self.sid, self.pressure, eid]
+            cards.append(list_fields)
+        return cards
+
+    def raw_fields(self) -> List[Any]:
         list_fields = ['PLOAD2', self.sid, self.pressure]
         eids = self.element_ids
         if len(eids) <= 5:
@@ -2301,8 +2312,21 @@ class PLOAD2(Load):
             list_fields += [eids[0], 'THRU', eids[-1]]
         return list_fields
 
-    def repr_fields(self):
+    def repr_fields(self) -> List[Any]:
         return self.raw_fields()
+
+    def write_card_separate(self, model: BDF, size: int=8, is_double: bool=False) -> str:
+        cards = self.raw_fields_separate(model)
+        msg = self.comment
+        for card in cards:
+            if size == 8:
+                msg += print_card_8(card)
+            else:
+                if is_double:
+                    msg += print_card_double(card)
+                else:
+                    msg += print_card_16(card)
+        return msg
 
     def write_card(self, size: int=8, is_double: bool=False) -> str:
         """

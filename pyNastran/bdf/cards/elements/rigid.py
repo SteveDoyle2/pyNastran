@@ -1524,7 +1524,6 @@ class RBE3(RigidElement):
     def independent_nodes(self) -> List[int]:
         """
         gets the independent node ids
-        TODO: not checked
         """
         nodes = []
         for gij in self.Gijs:
@@ -1536,7 +1535,6 @@ class RBE3(RigidElement):
     def dependent_nodes(self) -> List[int]:
         """
         gets the dependent node ids
-        TODO: not checked
         """
         nodes = [self.ref_grid_id]
         nodes += self.Gmi_node_ids

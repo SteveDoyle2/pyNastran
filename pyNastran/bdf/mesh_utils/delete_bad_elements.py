@@ -157,7 +157,6 @@ def get_bad_shells(model, xyz_cid0, nid_map,
             #     e1
             e13 = p34 - p12
             e42 = p23 - p14
-
             cos_skew1 = (e13 @ e42) / (np.linalg.norm(e13) * np.linalg.norm(e42))
             cos_skew2 = (e13 @ -e42) / (np.linalg.norm(e13) * np.linalg.norm(e42))
             skew = np.pi / 2. - np.abs(np.arccos(np.clip([cos_skew1, cos_skew2], -1., 1.))).min()
@@ -211,10 +210,14 @@ def get_bad_shells(model, xyz_cid0, nid_map,
 
             theta_additional = np.where(n < 0, 2*np.pi, 0.)
 
-            cos_theta1 = (v21 @ -v14) / (np.linalg.norm(v21) * np.linalg.norm(v14))
-            cos_theta2 = (v32 @ -v21) / (np.linalg.norm(v32) * np.linalg.norm(v21))
-            cos_theta3 = (v43 @ -v32) / (np.linalg.norm(v43) * np.linalg.norm(v32))
-            cos_theta4 = (v14 @ -v43) / (np.linalg.norm(v14) * np.linalg.norm(v43))
+            norm_v21 = np.linalg.norm(v21)
+            norm_v32 = np.linalg.norm(v32)
+            norm_v43 = np.linalg.norm(v43)
+            norm_v14 = np.linalg.norm(v14)
+            cos_theta1 = (v21 @ -v14) / (norm_v21 * norm_v14)
+            cos_theta2 = (v32 @ -v21) / (norm_v32 * norm_v21)
+            cos_theta3 = (v43 @ -v32) / (norm_v43 * norm_v32)
+            cos_theta4 = (v14 @ -v43) / (norm_v14 * norm_v43)
             interior_angle = np.arccos(np.clip(
                 [cos_theta1, cos_theta2, cos_theta3, cos_theta4], -1., 1.))
             theta = n * interior_angle + theta_additional
@@ -303,16 +306,22 @@ def get_bad_shells(model, xyz_cid0, nid_map,
             e21 = e2 - e1
             e31 = e3 - e1
             e32 = e3 - e2
+            norm_e21 = np.linalg.norm(e21)
+            norm_e31 = np.linalg.norm(e31)
+            norm_e32 = np.linalg.norm(e32)
 
             e3_p2 = e3 - p2
             e2_p1 = e2 - p1
             e1_p3 = e1 - p3
-            cos_skew1 = (e2_p1 @ e31) / (np.linalg.norm(e2_p1) * np.linalg.norm(e31))
-            cos_skew2 = (e2_p1 @ -e31) / (np.linalg.norm(e2_p1) * np.linalg.norm(e31))
-            cos_skew3 = (e3_p2 @ e21) / (np.linalg.norm(e3_p2) * np.linalg.norm(e21))
-            cos_skew4 = (e3_p2 @ -e21) / (np.linalg.norm(e3_p2) * np.linalg.norm(e21))
-            cos_skew5 = (e1_p3 @ e32) / (np.linalg.norm(e1_p3) * np.linalg.norm(e32))
-            cos_skew6 = (e1_p3 @ -e32) / (np.linalg.norm(e1_p3) * np.linalg.norm(e32))
+            norm_e3_p2 = np.linalg.norm(e3_p2)
+            norm_e2_p1 = np.linalg.norm(e2_p1)
+            norm_e1_p3 = np.linalg.norm(e1_p3)
+            cos_skew1 = (e2_p1 @  e31) / (norm_e2_p1 * norm_e31)
+            cos_skew2 = (e2_p1 @ -e31) / (norm_e2_p1 * norm_e31)
+            cos_skew3 = (e3_p2 @  e21) / (norm_e3_p2 * norm_e21)
+            cos_skew4 = (e3_p2 @ -e21) / (norm_e3_p2 * norm_e21)
+            cos_skew5 = (e1_p3 @  e32) / (norm_e1_p3 * norm_e32)
+            cos_skew6 = (e1_p3 @ -e32) / (norm_e1_p3 * norm_e32)
             skew = np.pi / 2. - np.abs(np.arccos(
                 np.clip([cos_skew1, cos_skew2, cos_skew3,
                          cos_skew4, cos_skew5, cos_skew6], -1., 1.)
