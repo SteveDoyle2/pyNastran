@@ -7,7 +7,10 @@ defines:
                                    max_aspect_ratio=100., max_taper_ratio=4.0)
 
 """
+from typing import List
 import numpy as np
+from cpylog import SimpleLogger
+from pyNastran.bdf.bdf import BDF
 
 SIDE_MAP = {}
 SIDE_MAP['CHEXA'] = {
@@ -22,10 +25,11 @@ PIOVER2 = np.pi / 2.
 PIOVER3 = np.pi / 3.
 
 
-def delete_bad_shells(model,
-                      min_theta=0.1, max_theta=175.,
-                      max_skew=70., max_aspect_ratio=100.,
-                      max_taper_ratio=4.0):
+def delete_bad_shells(model: BDF,
+                      min_theta: float=0.1, max_theta: float=175.,
+                      max_skew: float=70., max_aspect_ratio: float=100.,
+                      max_taper_ratio: float=4.0,
+                      max_warping: float=90.):
     """
     Removes bad CQUAD4/CTRIA3 elements
 
@@ -43,7 +47,8 @@ def delete_bad_shells(model,
         the max aspect ratio
     taper_ratio : float; default=4.0
         the taper ratio; applies to CQUAD4s only
-
+    max_warping: float: default=20.0
+        the maximum warp angle (degrees)
     """
     xyz_cid0 = model.get_xyz_in_coord(cid=0, fdtype='float32')
     nid_map = get_node_map(model)
@@ -51,7 +56,8 @@ def delete_bad_shells(model,
                                     min_theta=min_theta, max_theta=max_theta,
                                     max_skew=max_skew,
                                     max_aspect_ratio=max_aspect_ratio,
-                                    max_taper_ratio=max_taper_ratio)
+                                    max_taper_ratio=max_taper_ratio,
+                                    max_warping=max_warping)
 
     for eid in eids_to_delete:
         del model.elements[eid]
@@ -67,9 +73,10 @@ def get_node_map(model):
         nid_map[nid] = i
     return nid_map
 
-def get_bad_shells(model, xyz_cid0, nid_map,
-                   min_theta=0.1, max_theta=175., max_skew=70.,
-                   max_aspect_ratio=100., max_taper_ratio=4.0):
+def get_bad_shells(model: BDF, xyz_cid0, nid_map,
+                   min_theta: float=0.1, max_theta: float=175., max_skew: float=70.,
+                   max_aspect_ratio: float=100., max_taper_ratio: float=4.0,
+                   max_warping: float=60.0) -> List[int]:
     """
     Get the bad shell elements
 
@@ -94,6 +101,8 @@ def get_bad_shells(model, xyz_cid0, nid_map,
         the max aspect ratio
     taper_ratio : float; default=4.0
         the taper ratio; applies to CQUAD4s only
+    max_warping: float: default=60.0
+        the maximum warp angle (degrees)
 
     Returns
     -------
@@ -103,12 +112,15 @@ def get_bad_shells(model, xyz_cid0, nid_map,
     shells with a edge length=0.0 are automatically added
 
     """
+    log = model.log
     min_theta_quad = min_theta
     min_theta_tri = min_theta
     min_theta_quad = np.radians(min_theta_quad)
     min_theta_tri = np.radians(min_theta_tri)
     max_theta = np.radians(max_theta)
     max_skew = np.radians(max_skew)
+    max_warping = np.radians(max_warping)
+
     eids_failed = []
     for eid, element in sorted(model.elements.items()):
         if element.type == 'CQUAD4':
@@ -124,122 +136,10 @@ def get_bad_shells(model, xyz_cid0, nid_map,
             p2 = xyz_cid0[n2, :]
             p3 = xyz_cid0[n3, :]
             p4 = xyz_cid0[n4, :]
-            v21 = p2 - p1
-            v32 = p3 - p2
-            v43 = p4 - p3
-            v14 = p1 - p4
-
-            #aspect_ratio = max(p12, p23, p34, p14) / max(p12, p23, p34, p14)
-            lengths = np.linalg.norm([v21, v32, v43, v14], axis=1)
-            #assert len(lengths) == 3, lengths
-            length_min = lengths.min()
-            if length_min == 0.0:
+            if _is_bad_quad(eid, p1, p2, p3, p4, log,
+                           max_aspect_ratio, min_theta_quad, max_theta, max_skew,
+                           max_taper_ratio, max_warping):
                 eids_failed.append(eid)
-                model.log.debug('eid=%s failed length_min check; length_min=%s' % (eid, length_min))
-                continue
-
-            aspect_ratio = lengths.max() / length_min
-            if aspect_ratio > max_aspect_ratio:
-                eids_failed.append(eid)
-                model.log.debug('eid=%s failed aspect_ratio check; AR=%.2f' % (eid, aspect_ratio))
-                continue
-
-            p12 = (p1 + p2) / 2.
-            p23 = (p2 + p3) / 2.
-            p34 = (p3 + p4) / 2.
-            p14 = (p4 + p1) / 2.
-            normal = np.cross(p3 - p1, p4 - p2)  # v42 x v31
-            #    e3
-            # 4-------3
-            # |       |
-            # |e4     |  e2
-            # 1-------2
-            #     e1
-            e13 = p34 - p12
-            e42 = p23 - p14
-            cos_skew1 = (e13 @ e42) / (np.linalg.norm(e13) * np.linalg.norm(e42))
-            cos_skew2 = (e13 @ -e42) / (np.linalg.norm(e13) * np.linalg.norm(e42))
-            skew = np.pi / 2. - np.abs(np.arccos(np.clip([cos_skew1, cos_skew2], -1., 1.))).min()
-            if skew > max_skew:
-                eids_failed.append(eid)
-                model.log.debug('eid=%s failed max_skew check; skew=%.2f' % (eid, np.degrees(skew)))
-                continue
-
-            area1 = 0.5 * np.linalg.norm(np.cross(-v14, v21)) # v41 x v21
-            area2 = 0.5 * np.linalg.norm(np.cross(-v21, v32)) # v12 x v32
-            area3 = 0.5 * np.linalg.norm(np.cross(v43, v32)) # v43 x v32
-            area4 = 0.5 * np.linalg.norm(np.cross(v14, -v43)) # v14 x v34
-            aavg = (area1 + area2 + area3 + area4) / 4.
-            taper_ratioi = (abs(area1 - aavg) + abs(area2 - aavg) +
-                            abs(area3 - aavg) + abs(area4 - aavg)) / aavg
-            if taper_ratioi > max_taper_ratio:
-                eids_failed.append(eid)
-                model.log.debug('eid=%s failed taper_ratio check; taper=%.2f' % (eid, taper_ratioi))
-                continue
-
-            #if 0:
-                #areai = 0.5 * np.linalg.norm(normal)
-                ## still kind of in development
-                ##
-                ## the ratio of the ideal area to the actual area
-                ## this is an hourglass check
-                #areas = [
-                    #np.linalg.norm(np.cross(-v14, v21)), # v41 x v21
-                    #np.linalg.norm(np.cross(v32, -v21)), # v32 x v12
-                    #np.linalg.norm(np.cross(v43, -v32)), # v43 x v23
-                    #np.linalg.norm(np.cross(v14, v43)),  # v14 x v43
-                #]
-                #area_ratioi1 = areai / min(areas)
-                #area_ratioi2 = max(areas) / areai
-                #area_ratioi = max(area_ratioi1, area_ratioi2)
-
-            # ixj = k
-            # dot the local normal with the normal vector
-            # then take the norm of that to determine the angle relative to the normal
-            # then take the sign of that to see if we're pointing roughly towards the normal
-
-            # np.sign(np.linalg.norm(np.dot(
-            # a x b = ab sin(theta)
-            # a x b / ab = sin(theta)
-            # sin(theta) < 0. -> normal is flipped
-            n2 = np.sign(np.cross(v21, v32) @ normal)
-            n3 = np.sign(np.cross(v32, v43) @ normal)
-            n4 = np.sign(np.cross(v43, v14) @ normal)
-            n1 = np.sign(np.cross(v14, v21) @ normal)
-            n = np.array([n1, n2, n3, n4])
-
-            theta_additional = np.where(n < 0, 2*np.pi, 0.)
-
-            norm_v21 = np.linalg.norm(v21)
-            norm_v32 = np.linalg.norm(v32)
-            norm_v43 = np.linalg.norm(v43)
-            norm_v14 = np.linalg.norm(v14)
-            cos_theta1 = (v21 @ -v14) / (norm_v21 * norm_v14)
-            cos_theta2 = (v32 @ -v21) / (norm_v32 * norm_v21)
-            cos_theta3 = (v43 @ -v32) / (norm_v43 * norm_v32)
-            cos_theta4 = (v14 @ -v43) / (norm_v14 * norm_v43)
-            interior_angle = np.arccos(np.clip(
-                [cos_theta1, cos_theta2, cos_theta3, cos_theta4], -1., 1.))
-            theta = n * interior_angle + theta_additional
-
-            theta_mini = theta.min()
-            theta_maxi = theta.max()
-
-            if theta_mini < min_theta_quad:
-                eids_failed.append(eid)
-                model.log.debug('eid=%s failed min_theta check; theta=%.2f' % (
-                    eid, np.degrees(theta_mini)))
-                continue
-            if theta_maxi > max_theta:
-                eids_failed.append(eid)
-                model.log.debug('eid=%s failed max_theta check; theta=%.2f' % (
-                    eid, np.degrees(theta_maxi)))
-                continue
-            #print('eid=%s theta_min=%-5.2f theta_max=%-5.2f '
-                  #'skew=%-5.2f AR=%-5.2f taper_ratioi=%.2f' % (
-                      #eid,
-                      #np.degrees(theta_mini), np.degrees(theta_maxi),
-                      #np.degrees(skew), aspect_ratio, taper_ratioi))
 
         elif element.type == 'CTRIA3':
             node_ids = element.node_ids
@@ -253,89 +153,253 @@ def get_bad_shells(model, xyz_cid0, nid_map,
             p1 = xyz_cid0[n1, :]
             p2 = xyz_cid0[n2, :]
             p3 = xyz_cid0[n3, :]
-
-            v21 = p2 - p1
-            v32 = p3 - p2
-            v13 = p1 - p3
-            lengths = np.linalg.norm([v21, v32, v13], axis=1)
-            length_min = lengths.min()
-            if length_min == 0.0:
+            if _is_bad_tri(eid, p1, p2, p3, log,
+                           max_aspect_ratio, min_theta_tri, max_theta, max_skew):
                 eids_failed.append(eid)
-                model.log.debug('eid=%s failed length_min check; length_min=%s' % (
-                    eid, length_min))
-                continue
-
-            #assert len(lengths) == 3, lengths
-            aspect_ratio = lengths.max() / length_min
-            if aspect_ratio > max_aspect_ratio:
-                eids_failed.append(eid)
-                model.log.debug('eid=%s failed aspect_ratio check; AR=%s' % (eid, aspect_ratio))
-                continue
-
-            cos_theta1 = (v21 @ -v13) / (np.linalg.norm(v21) * np.linalg.norm(v13))
-            cos_theta2 = (v32 @ -v21) / (np.linalg.norm(v32) * np.linalg.norm(v21))
-            cos_theta3 = (v13 @ -v32) / (np.linalg.norm(v13) * np.linalg.norm(v32))
-
-            theta = np.arccos(np.clip(
-                [cos_theta1, cos_theta2, cos_theta3], -1., 1.))
-            theta_mini = theta.min()
-            theta_maxi = theta.max()
-
-            if theta_mini < min_theta_tri:
-                eids_failed.append(eid)
-                model.log.debug('eid=%s failed min_theta check; theta=%s' % (
-                    eid, np.degrees(theta_mini)))
-                continue
-            if theta_maxi > max_theta:
-                eids_failed.append(eid)
-                model.log.debug('eid=%s failed max_theta check; theta=%s' % (
-                    eid, np.degrees(theta_maxi)))
-                continue
-
-            #     3
-            #    / \
-            # e3/   \ e2
-            #  /    /\
-            # /    /  \
-            # 1---/----2
-            #    e1
-            e1 = (p1 + p2) / 2.
-            e2 = (p2 + p3) / 2.
-            e3 = (p3 + p1) / 2.
-
-            e21 = e2 - e1
-            e31 = e3 - e1
-            e32 = e3 - e2
-            norm_e21 = np.linalg.norm(e21)
-            norm_e31 = np.linalg.norm(e31)
-            norm_e32 = np.linalg.norm(e32)
-
-            e3_p2 = e3 - p2
-            e2_p1 = e2 - p1
-            e1_p3 = e1 - p3
-            norm_e3_p2 = np.linalg.norm(e3_p2)
-            norm_e2_p1 = np.linalg.norm(e2_p1)
-            norm_e1_p3 = np.linalg.norm(e1_p3)
-            cos_skew1 = (e2_p1 @  e31) / (norm_e2_p1 * norm_e31)
-            cos_skew2 = (e2_p1 @ -e31) / (norm_e2_p1 * norm_e31)
-            cos_skew3 = (e3_p2 @  e21) / (norm_e3_p2 * norm_e21)
-            cos_skew4 = (e3_p2 @ -e21) / (norm_e3_p2 * norm_e21)
-            cos_skew5 = (e1_p3 @  e32) / (norm_e1_p3 * norm_e32)
-            cos_skew6 = (e1_p3 @ -e32) / (norm_e1_p3 * norm_e32)
-            skew = np.pi / 2. - np.abs(np.arccos(
-                np.clip([cos_skew1, cos_skew2, cos_skew3,
-                         cos_skew4, cos_skew5, cos_skew6], -1., 1.)
-            )).min()
-            if skew > max_skew:
-                eids_failed.append(eid)
-                model.log.debug('eid=%s failed max_skew check; skew=%s' % (eid, np.degrees(skew)))
-                continue
-
-            #print('eid=%s theta_min=%-5.2f theta_max=%-5.2f skew=%-5.2f AR=%-5.2f' % (
-                #eid,
-                #np.degrees(theta_mini), np.degrees(theta_maxi),
-                #np.degrees(skew), aspect_ratio))
     return eids_failed
+
+def _is_bad_quad(eid: int, p1, p2, p3, p4,
+                 log: SimpleLogger,
+                 max_aspect_ratio: float,
+                 min_theta_quad: float,
+                 max_theta: float,
+                 max_skew: float,
+                 max_taper_ratio: float,
+                 max_warping: float) -> bool:
+    """identifies if a CQUAD4 has poor quality"""
+    is_bad_quad = True
+    v21 = p2 - p1
+    v32 = p3 - p2
+    v43 = p4 - p3
+    v14 = p1 - p4
+
+    #aspect_ratio = max(p12, p23, p34, p14) / max(p12, p23, p34, p14)
+    lengths = np.linalg.norm([v21, v32, v43, v14], axis=1)
+    #assert len(lengths) == 3, lengths
+    length_min = lengths.min()
+    if length_min == 0.0:
+        log.debug('eid=%s failed length_min check; length_min=%s' % (eid, length_min))
+        return is_bad_quad
+    # -------------------------------------------------------------------------------
+
+    aspect_ratio = lengths.max() / length_min
+    if aspect_ratio > max_aspect_ratio:
+        log.debug('eid=%s failed aspect_ratio check; AR=%.2f' % (eid, aspect_ratio))
+        return is_bad_quad
+    # -------------------------------------------------------------------------------
+
+    p12 = (p1 + p2) / 2.
+    p23 = (p2 + p3) / 2.
+    p34 = (p3 + p4) / 2.
+    p14 = (p4 + p1) / 2.
+    normal = np.cross(p3 - p1, p4 - p2)  # v42 x v31
+    #    e3
+    # 4-------3
+    # |       |
+    # |e4     |  e2
+    # 1-------2
+    #     e1
+    e13 = p34 - p12
+    e42 = p23 - p14
+    norm_e13 = np.linalg.norm(e13)
+    norm_e42 = np.linalg.norm(e42)
+    cos_skew1 = (e13 @ e42) / (norm_e13 * norm_e42)
+    cos_skew2 = (e13 @ -e42) / (norm_e13 * norm_e42)
+    skew = np.pi / 2. - np.abs(np.arccos(np.clip([cos_skew1, cos_skew2], -1., 1.))).min()
+    if skew > max_skew:
+        log.debug('eid=%s failed max_skew check; skew=%.2f' % (eid, np.degrees(skew)))
+        return is_bad_quad
+    # -------------------------------------------------------------------------------
+
+    area1 = 0.5 * np.linalg.norm(np.cross(-v14, v21)) # v41 x v21
+    area2 = 0.5 * np.linalg.norm(np.cross(-v21, v32)) # v12 x v32
+    area3 = 0.5 * np.linalg.norm(np.cross(v43, v32))  # v43 x v32
+    area4 = 0.5 * np.linalg.norm(np.cross(v14, -v43)) # v14 x v34
+    aavg = (area1 + area2 + area3 + area4) / 4.
+    taper_ratioi = (abs(area1 - aavg) + abs(area2 - aavg) +
+                    abs(area3 - aavg) + abs(area4 - aavg)) / aavg
+    if taper_ratioi > max_taper_ratio:
+        log.debug('eid=%s failed taper_ratio check; taper=%.2f' % (eid, taper_ratioi))
+        return is_bad_quad
+    # -------------------------------------------------------------------------------
+
+    #if 0:
+        #areai = 0.5 * np.linalg.norm(normal)
+        ## still kind of in development
+        ##
+        ## the ratio of the ideal area to the actual area
+        ## this is an hourglass check
+        #areas = [
+            #np.linalg.norm(np.cross(-v14, v21)), # v41 x v21
+            #np.linalg.norm(np.cross(v32, -v21)), # v32 x v12
+            #np.linalg.norm(np.cross(v43, -v32)), # v43 x v23
+            #np.linalg.norm(np.cross(v14, v43)),  # v14 x v43
+        #]
+        #area_ratioi1 = areai / min(areas)
+        #area_ratioi2 = max(areas) / areai
+        #area_ratioi = max(area_ratioi1, area_ratioi2)
+    # -------------------------------------------------------------------------------
+
+    # ixj = k
+    # dot the local normal with the normal vector
+    # then take the norm of that to determine the angle relative to the normal
+    # then take the sign of that to see if we're pointing roughly towards the normal
+
+    # np.sign(np.linalg.norm(np.dot(
+    # a x b = ab sin(theta)
+    # a x b / ab = sin(theta)
+    # sin(theta) < 0. -> normal is flipped
+    n2 = np.sign(np.cross(v21, v32) @ normal)
+    n3 = np.sign(np.cross(v32, v43) @ normal)
+    n4 = np.sign(np.cross(v43, v14) @ normal)
+    n1 = np.sign(np.cross(v14, v21) @ normal)
+    n = np.array([n1, n2, n3, n4])
+
+    theta_additional = np.where(n < 0, 2*np.pi, 0.)
+
+    norm_v21 = np.linalg.norm(v21)
+    norm_v32 = np.linalg.norm(v32)
+    norm_v43 = np.linalg.norm(v43)
+    norm_v14 = np.linalg.norm(v14)
+    cos_theta1 = (v21 @ -v14) / (norm_v21 * norm_v14)
+    cos_theta2 = (v32 @ -v21) / (norm_v32 * norm_v21)
+    cos_theta3 = (v43 @ -v32) / (norm_v43 * norm_v32)
+    cos_theta4 = (v14 @ -v43) / (norm_v14 * norm_v43)
+    interior_angle = np.arccos(np.clip(
+        [cos_theta1, cos_theta2, cos_theta3, cos_theta4], -1., 1.))
+    theta = n * interior_angle + theta_additional
+
+    theta_mini = theta.min()
+    theta_maxi = theta.max()
+
+    if theta_mini < min_theta_quad:
+        log.debug('eid=%s failed min_theta check; theta=%.2f' % (
+            eid, np.degrees(theta_mini)))
+        return is_bad_quad
+    if theta_maxi > max_theta:
+        log.debug('eid=%s failed max_theta check; theta=%.2f' % (
+            eid, np.degrees(theta_maxi)))
+        return is_bad_quad
+
+    # -------------------------------------------------------------------------------
+    # warping
+    v31 = p3 - p1
+    v42 = p4 - p2
+    v41 = -v14
+    n123 = np.cross(v21, v31)
+    n134 = np.cross(v31, v41)
+    #v1 o v2 = v1 * v2 cos(theta)
+    cos_warp1 = (n123 @ n134) / (np.linalg.norm(n123) * np.linalg.norm(n134))
+
+    # split the quad in the order direction and take the maximum of the two splits
+    # 4---3
+    # | \ |
+    # |  \|
+    # 1---2
+    n124 = np.cross(v21, v41)
+    n234 = np.cross(v32, v42)
+    cos_warp2 = (n124 @ n234) / (np.linalg.norm(n124) * np.linalg.norm(n234))
+
+    max_warpi = np.abs(np.arccos(
+        np.clip([cos_warp1, cos_warp2], -1., 1.))).max()
+    if max_warpi > max_warping:
+        log.debug('eid=%s failed max_warping check; theta=%.2f' % (
+            eid, np.degrees(max_warpi)))
+    #print('eid=%s theta_min=%-5.2f theta_max=%-5.2f '
+          #'skew=%-5.2f AR=%-5.2f taper_ratioi=%.2f' % (
+              #eid,
+              #np.degrees(theta_mini), np.degrees(theta_maxi),
+              #np.degrees(skew), aspect_ratio, taper_ratioi))
+    is_bad_quad = False
+    return is_bad_quad
+
+def _is_bad_tri(eid: int, p1, p2, p3, log: SimpleLogger,
+                max_aspect_ratio: float,
+                min_theta_tri: float,
+                max_theta: float,
+                max_skew: float) -> bool:
+    """identifies if a CTRIA3 has poor quality"""
+    is_bad_tri = True
+    v21 = p2 - p1
+    v32 = p3 - p2
+    v13 = p1 - p3
+    lengths = np.linalg.norm([v21, v32, v13], axis=1)
+    length_min = lengths.min()
+    if length_min == 0.0:
+        log.debug('eid=%s failed length_min check; length_min=%s' % (
+            eid, length_min))
+        return is_bad_tri
+
+    #assert len(lengths) == 3, lengths
+    aspect_ratio = lengths.max() / length_min
+    if aspect_ratio > max_aspect_ratio:
+        log.debug('eid=%s failed aspect_ratio check; AR=%s' % (eid, aspect_ratio))
+        return is_bad_tri
+
+    cos_theta1 = (v21 @ -v13) / (np.linalg.norm(v21) * np.linalg.norm(v13))
+    cos_theta2 = (v32 @ -v21) / (np.linalg.norm(v32) * np.linalg.norm(v21))
+    cos_theta3 = (v13 @ -v32) / (np.linalg.norm(v13) * np.linalg.norm(v32))
+
+    theta = np.arccos(np.clip(
+        [cos_theta1, cos_theta2, cos_theta3], -1., 1.))
+    theta_mini = theta.min()
+    theta_maxi = theta.max()
+
+    if theta_mini < min_theta_tri:
+        log.debug('eid=%s failed min_theta check; theta=%s' % (
+            eid, np.degrees(theta_mini)))
+        return is_bad_tri
+    if theta_maxi > max_theta:
+        log.debug('eid=%s failed max_theta check; theta=%s' % (
+            eid, np.degrees(theta_maxi)))
+        return is_bad_tri
+
+    #     3
+    #    / \
+    # e3/   \ e2
+    #  /    /\
+    # /    /  \
+    # 1---/----2
+    #    e1
+    e1 = (p1 + p2) / 2.
+    e2 = (p2 + p3) / 2.
+    e3 = (p3 + p1) / 2.
+
+    e21 = e2 - e1
+    e31 = e3 - e1
+    e32 = e3 - e2
+    norm_e21 = np.linalg.norm(e21)
+    norm_e31 = np.linalg.norm(e31)
+    norm_e32 = np.linalg.norm(e32)
+
+    e3_p2 = e3 - p2
+    e2_p1 = e2 - p1
+    e1_p3 = e1 - p3
+    norm_e3_p2 = np.linalg.norm(e3_p2)
+    norm_e2_p1 = np.linalg.norm(e2_p1)
+    norm_e1_p3 = np.linalg.norm(e1_p3)
+    cos_skew1 = (e2_p1 @  e31) / (norm_e2_p1 * norm_e31)
+    cos_skew2 = (e2_p1 @ -e31) / (norm_e2_p1 * norm_e31)
+    cos_skew3 = (e3_p2 @  e21) / (norm_e3_p2 * norm_e21)
+    cos_skew4 = (e3_p2 @ -e21) / (norm_e3_p2 * norm_e21)
+    cos_skew5 = (e1_p3 @  e32) / (norm_e1_p3 * norm_e32)
+    cos_skew6 = (e1_p3 @ -e32) / (norm_e1_p3 * norm_e32)
+    skew = np.pi / 2. - np.abs(np.arccos(
+        np.clip([cos_skew1, cos_skew2, cos_skew3,
+                 cos_skew4, cos_skew5, cos_skew6], -1., 1.)
+    )).min()
+    if skew > max_skew:
+        log.debug('eid=%s failed max_skew check; skew=%s' % (eid, np.degrees(skew)))
+        return is_bad_tri
+    is_bad_tri = False
+
+    # warping doesn't happen to CTRIA3s
+
+    #print('eid=%s theta_min=%-5.2f theta_max=%-5.2f skew=%-5.2f AR=%-5.2f' % (
+        #eid,
+        #np.degrees(theta_mini), np.degrees(theta_maxi),
+        #np.degrees(skew), aspect_ratio))
+    return is_bad_tri
 
 def element_quality(model, nids=None, xyz_cid0=None, nid_map=None):
     """
@@ -789,8 +853,6 @@ def quad_quality(element, p1, p2, p3, p4):
     length14 = np.linalg.norm(v14)
     min_edge_length = min(length21, length32, length43, length14)
 
-    v42 = p4 - p2
-    v31 = p3 - p1
     p12 = (p1 + p2) / 2.
     p23 = (p2 + p3) / 2.
     p34 = (p3 + p4) / 2.
