@@ -1150,8 +1150,10 @@ def string_choice_or_blank(card: BDFCard, ifield: int, fieldname: str, choices: 
         return svalue
     return default
 
-def loose_string_or_blank(card: BDFCard, ifield: int, fieldname: str, default=None):
+def filename_or_blank(card: BDFCard, ifield: int, fieldname: str, default=None):
     """
+    Used by the MKAEROZ to read a filename
+
     Parameters
     ----------
     card : BDFCard()
@@ -1193,6 +1195,55 @@ def loose_string_or_blank(card: BDFCard, ifield: int, fieldname: str, default=No
         dtype = _get_dtype(svalue)
         raise SyntaxError('%s = %r (field #%s) on card must be a string or blank (not %s).\n'
                           'card=%s' % (fieldname, svalue, ifield, dtype, card))
+
+    if svalue:  # string
+        return str(svalue.upper())
+    return default
+
+def loose_string(card: BDFCard, ifield: int, fieldname: str, default=None):
+    """
+    The most lenient of string checks:
+      Matches X, X1, 1X, 111, 1.0
+      No embedded blanks
+    Used for LABELs on DRESP1.  This will be tightened up as neccessary.
+
+    Parameters
+    ----------
+    card : BDFCard()
+        BDF card as a list
+    ifield : int
+        field number
+    fieldname : str
+        name of field
+
+    Returns
+    -------
+    value : varies
+        the value of the field
+
+    """
+    svalue = card.field(ifield)
+    #elif isinstance(svalue, str):
+        #svalue = svalue.strip().upper()
+        #if ' ' in svalue:
+            #raise SyntaxError('%s = %r (field #%s) on card must be a string without a space.\n'
+                              #'card=%s' % (fieldname, svalue, ifield, card))
+        #if svalue[0].isdigit() or '+' in svalue or '-' in svalue[0]:
+            #chars = ''.join(list(set('%s+-' % svalue[0] if svalue[0].isdigit() else '')))
+            #raise SyntaxError('%s = %r (field #%s) on card must not have the '
+                              #'following characters %s\n'
+                              #'card=%s' % (fieldname, svalue, ifield, chars, card))
+    #else:
+        #dtype = _get_dtype(svalue)
+        #raise SyntaxError('%s = %r (field #%s) on card must be a string (not %s).\n'
+                          #'card=%s' % (fieldname, svalue, ifield, dtype, card))
+
+    #svalue = svalue.strip()
+    #if svalue.isdigit() or '+' in svalue or '-' in svalue[0]:
+        ## integer or float
+        #dtype = _get_dtype(svalue)
+        #raise SyntaxError('%s = %r (field #%s) on card must be a string or blank (not %s).\n'
+                          #'card=%s' % (fieldname, svalue, ifield, dtype, card))
 
     if svalue:  # string
         return str(svalue.upper())

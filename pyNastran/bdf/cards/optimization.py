@@ -34,7 +34,7 @@ from pyNastran.bdf.bdf_interface.assign_type import (
     integer, integer_or_blank, integer_or_string, integer_string_or_blank,
     double, double_or_blank, string, string_or_blank,
     integer_double_or_blank, integer_double_string_or_blank,
-    double_string_or_blank, interpret_value, check_string)
+    double_string_or_blank, interpret_value, check_string, loose_string)
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
 from pyNastran.bdf.field_writer_double import print_card_double
@@ -1939,7 +1939,8 @@ class DRESP1(OptConstraint):
 
         """
         oid = integer(card, 1, 'oid')
-        label = string(card, 2, 'label')
+        #label = string(card, 2, 'label')
+        label = loose_string(card, 2, 'label')
         response_type = string(card, 3, 'rtype')
 
         # elem, pbar, pshell, etc. (ELEM flag or Prop Name)

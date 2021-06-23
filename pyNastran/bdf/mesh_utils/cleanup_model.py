@@ -22,10 +22,11 @@ def remove_missing_loads(model: BDF) -> None:
         pload2s_new = []
         for pload2 in pload2s:
             pressure = pload2.pressure
-            eids_to_add = [eid for eid in pload2.eids if eid in all_eids]
+            eids_to_add = [eid for eid in pload2.eids
+                           if eid in all_eids]
             for eid in eids_to_add:
                 pload2_new = PLOAD2(sid, pressure, [eid])
                 pload2s_new.append(pload2_new)
-        loads = loads2 + pload2s_new
+        loads2 = loads2 + pload2s_new
         loads2_dict[sid] = loads2
     model.loads = loads2_dict
