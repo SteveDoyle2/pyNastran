@@ -5,11 +5,10 @@ defines:
 
 """
 from itertools import count
-from typing import List, Optional
+from typing import Optional, Any
 import numpy as np
 
-from pyNastran.bdf.mesh_utils.bdf_equivalence import (
-    _get_tree)
+from pyNastran.bdf.mesh_utils.bdf_equivalence import _get_tree
 
 from pyNastran.nptyping import NDArray3float, NDArrayNint
 
