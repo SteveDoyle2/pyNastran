@@ -251,10 +251,17 @@ def _mass_properties(model, elements, masses, reference_point, is_cg):
     cg = array([0., 0., 0.])
     inertia = array([0., 0., 0., 0., 0., 0., ])
     no_mass = NO_MASS
+    mass_inertia = {'CONM2'}
     for pack in [elements, masses]:
         for element in pack:
             if element.type == 'CBEAM':
                 mass = _get_cbeam_mass_no_nsm(model, element, mass, cg, inertia, reference_point)
+                continue
+            if element.type in mass_inertia:
+                centroid, m, dI = element.centroid_mass_inertia()
+                di_list = [dI[0][0], dI[1][1], dI[2][2], dI[0][1], dI[0][2], dI[1][2]]
+                mass = _increment_inertia(centroid, reference_point, m, mass, cg, inertia)
+                inertia = [i1 + di for i1, di in zip(inertia, di_list)]
                 continue
 
             try:
@@ -280,18 +287,7 @@ def _mass_properties(model, elements, masses, reference_point, is_cg):
                 model.log.warning("could not get the inertia for element/property\n%s%s" % (
                     element, element.pid_ref))
                 continue
-            mass += m
-            cg += m * p
-            (x, y, z) = p - reference_point
-            x2 = x * x
-            y2 = y * y
-            z2 = z * z
-            inertia[0] += m * (y2 + z2)  # Ixx
-            inertia[1] += m * (x2 + z2)  # Iyy
-            inertia[2] += m * (x2 + y2)  # Izz
-            inertia[3] += m * x * y      # Ixy
-            inertia[4] += m * x * z      # Ixz
-            inertia[5] += m * y * z      # Iyz
+            mass = _increment_inertia(p, reference_point, m, mass, cg, inertia)
 
     if mass:
         cg /= mass
@@ -379,7 +375,10 @@ def _mass_properties_no_xref(model, elements, masses, reference_point, is_cg):  
         I = transform_inertia(mass, cg, xyz_ref, xyz_ref2, I)
     return mass, cg, I
 
-def _increment_inertia(centroid, reference_point, m, mass, cg, I):
+def _increment_inertia(centroid: np.ndarray, reference_point: np.ndarray,
+                       m: float, mass: float,
+                       cg: np.ndarray,
+                       inertia: List[float]) -> float:
     """helper method"""
     if m == 0.:
         return mass
@@ -387,12 +386,12 @@ def _increment_inertia(centroid, reference_point, m, mass, cg, I):
     x2 = x * x
     y2 = y * y
     z2 = z * z
-    I[0] += m * (y2 + z2)  # Ixx
-    I[1] += m * (x2 + z2)  # Iyy
-    I[2] += m * (x2 + y2)  # Izz
-    I[3] += m * x * y      # Ixy
-    I[4] += m * x * z      # Ixz
-    I[5] += m * y * z      # Iyz
+    inertia[0] += m * (y2 + z2)  # Ixx
+    inertia[1] += m * (x2 + z2)  # Iyy
+    inertia[2] += m * (x2 + y2)  # Izz
+    inertia[3] += m * x * y      # Ixy
+    inertia[4] += m * x * z      # Ixz
+    inertia[5] += m * y * z      # Iyz
     mass += m
     cg += m * centroid
     return mass
@@ -728,7 +727,17 @@ def _get_mass_nsm(model, element_ids, mass_ids,
                 #raise RuntimeError(msg)
             if eid in element_ids:
                 mass = _increment_inertia(centroid, reference_point, m, mass, cg, I)
-    elif etype in ['CONM1', 'CONM2', 'CMASS1', 'CMASS2', 'CMASS3', 'CMASS4']:
+    elif etype == 'CONM2':
+        eids2 = get_sub_eids(all_mass_ids, eids, etype)
+        for eid in eids2:
+            elem = model.masses[eid]
+            centroid, m, dI = elem.centroid_mass_inertia()
+            di_list = [dI[0][0], dI[1][1], dI[2][2], dI[0][1], dI[0][2], dI[1][2]]
+            if eid in mass_ids:
+                mass = _increment_inertia(centroid, reference_point, m, mass, cg, I)
+                I = [i1 + di for i1, di in zip(I, di_list)]
+
+    elif etype in ['CONM1', 'CMASS1', 'CMASS2', 'CMASS3', 'CMASS4']:
         eids2 = get_sub_eids(all_mass_ids, eids, etype)
         for eid in eids2:
             elem = model.masses[eid]

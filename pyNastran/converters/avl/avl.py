@@ -24,6 +24,42 @@ def read_avl(avl_filename, log=None, debug: Union[str, bool, None]=False):
     avl.read_avl(avl_filename)
     return avl
 
+class Control:
+    def __init__(self, name: str, gain: float, xhinge: float,
+                 hinge_vector: np.ndarray, sign_deflection_duplicated: float):
+        """
+        name : str
+            name of control variable
+        gain : float
+            control deflection gain, units:  degrees deflection / control variable
+        xhinge : float
+            x/c location of hinge.
+            If positive, control surface extent is Xhinge..1  (TE surface)
+            If negative, control surface extent is 0..-Xhinge (LE surface)
+        XYZhvec : (3,) float ndarray
+            vector giving hinge axis about which surface rotates
+            + deflection is + rotation about hinge vector by righthand rule
+            Specifying XYZhvec = 0. 0. 0. puts the hinge vector along the hinge
+        SgnDup : float
+            sign of deflection for duplicated surface
+            An elevator would have SgnDup = +1.0
+            An aileron  would have SgnDup = -1.0
+
+        """
+        self.name = name
+        self.gain = gain
+        self.xhinge = xhinge
+        self.hinge_vector = hinge_vector
+        self.sign_deflection_duplicated = sign_deflection_duplicated
+        assert isinstance(xhinge, float), xhinge
+        assert isinstance(gain, float), gain
+        assert isinstance(sign_deflection_duplicated, float), sign_deflection_duplicated
+
+    def __repr__(self) -> str:
+        msg = (f'Control(name={self.name!r}, gain={self.gain}, xhinge={self.xhinge}, '
+               f'hinge_vector={self.hinge_vector}, sign_deflection_duplicated={self.sign_deflection_duplicated})')
+        return msg
+
 class AVL:
     """Interface to the AVL (Athena Vortex Lattice) code"""
     def __init__(self, log=None, debug=False):
@@ -72,7 +108,7 @@ class AVL:
         sym_iy, sym_iz, symz = sline2[:3]
 
         sline3 = lines[3].split()
-        sref, cref, bcref = sline3[:3]
+        sref, cref, bref = sline3[:3]
 
         sline4 = lines[4].split()
         xref, yref, zref = sline4[:3]
@@ -85,7 +121,7 @@ class AVL:
 
         self.sref = float(sref)
         self.cref = float(cref)
-        self.bcref = float(bcref)
+        self.bref = float(bref)
 
         self.xref = float(xref)
         self.yref = float(yref)
@@ -270,8 +306,13 @@ class AVL:
             elif is_header(line, 'CONTROL'):
                 sline = lines[i+1].split()
                 #print(sline)
-                name, afloat, bfloat, cfloat, dfloat, efloat, fint = sline
-                section_data['control'].append([name, afloat, bfloat, cfloat, dfloat, efloat, fint])
+                name, gain_str, xhinge_str, xhinge_vector, yhinge_vector, zhinge_vector, sign_deflection_duplicated_str = sline
+                gain = float(gain_str)
+                xhinge = float(xhinge_str)
+                sign_deflection_duplicated = float(sign_deflection_duplicated_str)
+                hinge_vector = np.array([xhinge_vector, yhinge_vector, zhinge_vector])
+                control = Control(name, gain, xhinge, hinge_vector, sign_deflection_duplicated)
+                section_data['control'].append(control)
                 i += 1
             else:
                 print(line)
@@ -295,6 +336,83 @@ class AVL:
                     #print('  ', section)
                 #print('')
         self.surfaces = surfaces
+
+    def write_avl(self, avl_filename: str) -> None:
+        """very preliminary and full of del commands that corrupt the model"""
+        msg = (
+            f'{self.name}\n'
+            '\n'
+            '#Mach\n'
+            f' {self.mach}\n'
+            '\n'
+            '#IYsym   IZsym   Zsym\n'
+            f' {self.sym_iy}       {self.sym_iz}       {self.symz}\n'
+            '\n'
+            '#Sref    Cref    Bref\n'
+            f'{self.sref}   {self.cref}    {self.bref}\n'
+            '\n'
+            '#Xref    Yref    Zref\n'
+            f'{self.xref}     {self.yref}     {self.zref}\n'
+            )
+
+        for isurface, surface in enumerate(self.surfaces):
+            name = surface['name']
+            component = surface['component']
+            yduplicate = surface['yduplicate'] if 'yduplicate' in surface else 0.0
+            angle = surface['angle'] if 'angle' in surface else 0.0
+            xscale, yscale, zscale = surface['scale']
+            dx, dy, dz = surface['translate']
+            del surface['name'], surface['component'], surface['scale'], surface['translate']
+            if 'angle' in surface:
+                del surface['angle']
+            if 'yduplicate' in surface:
+                del surface['yduplicate']
+
+            surface_msg = (
+                '#--------------------------------------------------\n'
+                'SURFACE\n'
+                f'{name}\n'
+            )
+            if 'span' in surface and 'chord' in surface:
+                nchordwise, c_space = surface['chord']
+                nspanwise, s_space = surface['span']
+                surface_msg += ('!Nchordwise  Cspace  Nspanwise  Sspace\n'
+                                f'{nchordwise}           {c_space}     {nspanwise}         {s_space}\n')
+                del surface['span'], surface['chord']
+            elif 'chord' in surface:
+                surface_msg += ('!Nchordwise  Cspace  Nspanwise  Sspace\n'
+                                f'{nchordwise}    {c_space}\n')
+                del surface['chord']
+            else:
+                raise NotImplementedError(surface)
+
+            if 'nowake' in surface:
+                del surface['nowake']
+
+            surface_msg += (
+                '\n'
+                'COMPONENT\n'
+                f'{component}\n'
+                '\n'
+                'YDUPLICATE\n'
+                f'{yduplicate}\n'
+                '\n'
+                'ANGLE\n'
+                f'{angle}\n'
+                '\n'
+                'SCALE\n'
+                f'{xscale}   {yscale}   {zscale}\n'
+                '\n'
+                'TRANSLATE\n'
+                f'{dx}  {dy}  {dz}\n'
+                '\n'
+                '\n'
+                '!SECTION\n'
+            )
+            assert len(surface) == 0, surface
+
+        #with open(avl_filename, 'w') as avl_file:
+        asf
 
     def get_nodes_elements(self):
         self.log.debug('get_nodes_elements')
@@ -375,6 +493,9 @@ class AVL:
             #nspan = 1 #  breaks b737 independently of nchord if we use the real value
             #nchord = 2
             #nspan = 2
+            nsections = len(sections)
+            #nchord //= nsections
+            nspan //= nsections
             x = np.linspace(0., 1., num=nchord+1, endpoint=True, retstep=False, dtype=None)
             y = np.linspace(0., 1., num=nspan+1, endpoint=True, retstep=False, dtype=None)
             #print('x =', x)
@@ -387,9 +508,8 @@ class AVL:
             #print(surface.keys())
             #print('name =', surface['name'])
 
-            nsections = len(sections)
             for i in range(nsections-1):
-                end = i == nsections - 1
+                end = (i == nsections - 1)
 
                 section0 = sections[i]
                 #if 'afile' in section0:
@@ -866,7 +986,7 @@ def get_airfoils_from_sections(sections, log):
     is_airfoil_defined = False
     span_stations = np.arange(len(sections))
     for section in sections:
-        log.debug(section)
+        log.debug(str(section))
         if 'is_afile' in section:
             is_afile = section['is_afile']
             is_airfoil_defined = True
@@ -922,6 +1042,7 @@ def main():  # pragma: no cover
     avl_filename = sys.argv[1]
     model = read_avl(avl_filename)
     model.get_nodes_elements()
+    model.write_avl(avl_filename)
 
 if __name__ == '__main__':  # pragma: no cover
     main()

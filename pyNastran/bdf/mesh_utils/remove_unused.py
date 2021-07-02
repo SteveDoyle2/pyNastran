@@ -7,8 +7,11 @@ defines some methods for cleaning up a model
 from pyNastran.bdf.bdf import BDF, read_bdf
 #from pyNastran.bdf.mesh_utils.bdf_renumber import bdf_renumber
 
-def remove_unused(bdf_filename, remove_nids=True, remove_cids=True,
-                  remove_pids=True, remove_mids=True, remove_spcs=True, remove_mpcs=True):
+def remove_unused(bdf_filename: str,
+                  remove_nids: bool=True, remove_cids: bool=True,
+                  remove_pids: bool=True, remove_mids: bool=True,
+                  remove_spcs: bool=True, remove_mpcs: bool=True,
+                  reset_type_to_id_map: bool=False) -> BDF:
     """
     Takes an uncross-referenced bdf and removes unused data
 
@@ -20,6 +23,8 @@ def remove_unused(bdf_filename, remove_nids=True, remove_cids=True,
      - spcs
      - mpcs
 
+    cannot be removed:
+     - loads
     """
     if isinstance(bdf_filename, BDF):
         model = bdf_filename
@@ -536,6 +541,7 @@ def remove_unused(bdf_filename, remove_nids=True, remove_cids=True,
         remove_spcs=remove_spcs, remove_mpcs=remove_mpcs,
         unused_remove_desvars=remove_desvars,
     )
+    return model
 
 
 def _store_elements(card_type, model, ids, nids_used, pids_used, mids_used, cids_used):
@@ -815,7 +821,7 @@ def _remove(model: BDF,
             remove_nids=True, remove_cids=True,
             remove_pids=True, remove_mids=True,
             remove_spcs=True, remove_mpcs=True,
-            unused_remove_desvars=True):
+            unused_remove_desvars=True) -> None:
     """actually removes the cards"""
     nids = set(model.nodes.keys())
     pids = set(model.properties.keys())

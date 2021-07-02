@@ -308,8 +308,8 @@ def cmd_line_mirror(argv=None, quiet=False):
     import pyNastran
     msg = (
         "Usage:\n"
-        "  bdf mirror IN_BDF_FILENAME [-o OUT_BDF_FILENAME] [--plane PLANE] [--tol TOL]\n"
-        "  bdf mirror IN_BDF_FILENAME [-o OUT_BDF_FILENAME] [--plane PLANE] [--noeq]\n"
+        "  bdf mirror IN_BDF_FILENAME [-o OUT_BDF_FILENAME] [--punch] [--plane PLANE] [--tol TOL]\n"
+        "  bdf mirror IN_BDF_FILENAME [-o OUT_BDF_FILENAME] [--punch] [--plane PLANE] [--noeq]\n"
         '  bdf mirror -h | --help\n'
         '  bdf mirror -v | --version\n'
         '\n'
@@ -321,6 +321,7 @@ def cmd_line_mirror(argv=None, quiet=False):
 
         'Options:\n'
         "  -o OUT, --output  OUT_BDF_FILENAME  path to output BDF/DAT/NAS file\n"
+        '  --punch                             flag to identify a *.pch/*.inc file\n'
         "  --plane PLANE                       the symmetry plane (xz, yz, xy); default=xz\n"
         '  --tol   TOL                         the spherical equivalence tolerance; default=1e-6\n'
         '  --noeq                              disable equivalencing\n'
@@ -338,7 +339,7 @@ def cmd_line_mirror(argv=None, quiet=False):
     #    '--nerrors' : [int, 100],
     #}
     data = docopt(msg, version=ver, argv=argv[1:])
-    if data['--tol'] is None:
+    if data['--tol'] is False:
         data['TOL'] = 0.000001
 
     if isinstance(data['TOL'], str):
@@ -356,27 +357,44 @@ def cmd_line_mirror(argv=None, quiet=False):
     if not quiet:  # pragma: no cover
         print(data)
     size = 16
+    punch = data['--punch']
     bdf_filename = data['IN_BDF_FILENAME']
     bdf_filename_out = data['--output']
     if bdf_filename_out is None:
         bdf_filename_out = 'mirrored.bdf'
 
     #from io import StringIO
-    from pyNastran.bdf.bdf import read_bdf
+    from pyNastran.bdf.bdf import read_bdf, BDF
     from pyNastran.bdf.mesh_utils.bdf_equivalence import bdf_equivalence_nodes
 
     level = 'debug' if not quiet else 'warning'
     log = SimpleLogger(level=level, encoding='utf-8', log_func=None)
-    model = read_bdf(bdf_filename, log=log)
+    model = BDF(log=log)
+    model.set_error_storage(nparse_errors=100, stop_on_parsing_error=True,
+                            nxref_errors=100, stop_on_xref_error=False)
+    model = read_bdf(bdf_filename, punch=punch, log=log)
+    #model.read_bdf(bdf_filename, validate=True, xref=False, punch=punch, read_includes=True, save_file_structure=False, encoding=None)
 
+    #grids = {}
+    #for set_id, seti in model.sets.items():
+        #for i in seti.ids:
+            #if i not in grids:
+                ##x = set_id + float(i)
+                #y = float(i)
+                #grids[i] = f'GRID,{i:d},0,0.,{y},1.'
+    #for i, grid in sorted(grids.items()):
+        #print(grid)
+    #model.cross_reference(xref=True, xref_nodes=True, xref_elements=True, xref_nodes_with_elements=False, xref_properties=True,
+                          #xref_masses=True, xref_materials=True, xref_loads=True, xref_constraints=True, xref_aero=True, xref_sets=False, xref_optimization=True, word='')
     bdf_filename_stringio = StringIO()
-    write_bdf_symmetric(model, bdf_filename_stringio, encoding=None, size=size,
-                        is_double=False,
-                        enddata=None, close=False,
-                        plane=plane, log=log)
+    unused_model, unused_nid_offset, eid_offset = write_bdf_symmetric(
+        model, bdf_filename_stringio, encoding=None, size=size,
+        is_double=False,
+        enddata=None, close=False,
+        plane=plane, log=log)
     bdf_filename_stringio.seek(0)
 
-    if tol >= 0.0:
+    if eid_offset > 0 and tol >= 0.0:
         bdf_equivalence_nodes(bdf_filename_stringio, bdf_filename_out, tol,
                               renumber_nodes=False,
                               neq_max=10, xref=True,
@@ -387,7 +405,10 @@ def cmd_line_mirror(argv=None, quiet=False):
                               crash_on_collapse=False,
                               debug=True, log=log)
     else:
-        model.log.info('writing mirrored model %s without equivalencing' % bdf_filename_out)
+        if eid_offset == 0:
+            model.log.info('writing mirrored model %s without equivalencing because there are no elements' % bdf_filename_out)
+        else:
+            model.log.info('writing mirrored model %s without equivalencing' % bdf_filename_out)
         with open(bdf_filename_out, 'w') as bdf_file:
             bdf_file.write(bdf_filename_stringio.getvalue())
 

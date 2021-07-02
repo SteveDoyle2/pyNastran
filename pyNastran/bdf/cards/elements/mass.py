@@ -1461,7 +1461,7 @@ class CONM2(PointMassElement):
             X2 = self.nid_ref.get_position() + dx
         return X2
 
-    def Centroid_no_xref(self, model):
+    def Centroid_no_xref(self, model: BDF) -> np.ndarray:
         """
         This method seems way more complicated than it needs to be thanks
         to all these little caveats that don't seem to be supported.
@@ -1500,7 +1500,13 @@ class CONM2(PointMassElement):
             X2 = nid_ref.get_position() + dx
         return X2
 
-    def center_of_mass(self):
+    def centroid_mass_inertia(self) -> Tuple[np.ndarray, float, np.ndarray]:
+        centroid = self.Centroid()
+        mass = self.mass
+        inertia = self.Inertia()
+        return centroid, mass, inertia
+
+    def center_of_mass(self) -> np.ndarray:
         return self.Centroid()
 
     def cross_reference(self, model: BDF) -> None:

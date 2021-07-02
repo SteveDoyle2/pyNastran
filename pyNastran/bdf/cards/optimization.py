@@ -1939,8 +1939,8 @@ class DRESP1(OptConstraint):
 
         """
         oid = integer(card, 1, 'oid')
-        #label = string(card, 2, 'label')
-        label = loose_string(card, 2, 'label')
+        label = string(card, 2, 'label')
+        #label = loose_string(card, 2, 'label')
         response_type = string(card, 3, 'rtype')
 
         # elem, pbar, pshell, etc. (ELEM flag or Prop Name)

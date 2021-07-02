@@ -519,7 +519,43 @@ class MPC(Constraint):
         components = [str(component) for component in data[2]]
         enforced = data[3]
         return MPC(conid, nodes, components, enforced, comment=comment)
+    @property
+    def independent_dofs(self) -> Tuple[List[int], List[int]]:
+        """The first degree-of-freedom (G1, C1) in the sequence is defined to be the
+        dependent degree-of-freedom. A dependent degree-of-freedom assigned by
+        one MPC entry cannot be assigned dependent by another MPC entry or by a
+        rigid element."""
+        nodes = self.nodes[1:]
+        components = self.components[1:]
+        if isinstance(nodes, integer_types):
+            return [nodes], [components]
+        return nodes, components
+    @property
+    def dependent_dofs(self) -> Tuple[List[int], List[int]]:
+        """The first degree-of-freedom (G1, C1) in the sequence is defined to be the
+        dependent degree-of-freedom. A dependent degree-of-freedom assigned by
+        one MPC entry cannot be assigned dependent by another MPC entry or by a
+        rigid element."""
+        return [self.nodes[0]], [self.components[0]]
 
+    @property
+    def independent_nodes(self) -> List[int]:
+        """The first degree-of-freedom (G1, C1) in the sequence is defined to be the
+        dependent degree-of-freedom. A dependent degree-of-freedom assigned by
+        one MPC entry cannot be assigned dependent by another MPC entry or by a
+        rigid element."""
+        nodes = self.nodes[1:]
+        if isinstance(nodes, integer_types):
+            return [nodes]
+        return nodes
+
+    @property
+    def dependent_nodes(self) -> List[int]:
+        """The first degree-of-freedom (G1, C1) in the sequence is defined to be the
+        dependent degree-of-freedom. A dependent degree-of-freedom assigned by
+        one MPC entry cannot be assigned dependent by another MPC entry or by a
+        rigid element."""
+        return [self.nodes[0]]
     @property
     def node_ids(self):
         if self.nodes_ref is None:

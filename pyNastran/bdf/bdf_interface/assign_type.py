@@ -1204,7 +1204,9 @@ def loose_string(card: BDFCard, ifield: int, fieldname: str, default=None):
     """
     The most lenient of string checks:
       Matches X, X1, 1X, 111, 1.0
-      No embedded blanks
+      Doesn't matches X, X1, 1X, 111, 1.0
+    Things that might be incorrect:
+      No embedded blanks (not enforced now)
     Used for LABELs on DRESP1.  This will be tightened up as neccessary.
 
     Parameters
@@ -1245,8 +1247,10 @@ def loose_string(card: BDFCard, ifield: int, fieldname: str, default=None):
         #raise SyntaxError('%s = %r (field #%s) on card must be a string or blank (not %s).\n'
                           #'card=%s' % (fieldname, svalue, ifield, dtype, card))
 
-    if svalue:  # string
-        return str(svalue.upper())
+    svalue = str(svalue.upper())
+    if svalue[0].svalue.isdigit():
+        raise SyntaxError('%s = %r (field #%s) on card must not have an integer as the first character.\n'
+                          'card=%s' % (fieldname, svalue, ifield, card))
     return default
 
 def exact_string_or_blank(card: BDFCard, ifield: int, fieldname: str, default=None):
