@@ -6,15 +6,22 @@ Defines:
       get the mass & moment of inertia of the model
 
 """
+from __future__ import annotations
 from itertools import count
 from collections import defaultdict
+from typing import Tuple, List, TYPE_CHECKING
+
 from numpy import array, cross, dot
 from numpy.linalg import norm  # type: ignore
 import numpy as np
+
 #from pyNastran.bdf.cards.materials import get_mat_props_S
 from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.utils.mathematics import integrate_positive_unit_line
 CHECK_MASS = False  # should additional checks be done
+
+if TYPE_CHECKING:
+    from pyNastran.bdf.bdf import BDF
 
 NO_MASS = {
     # has mass
@@ -68,7 +75,9 @@ NO_MASS = {
     'CHACAB', 'CAABSF',
 }
 
-def transform_inertia(mass, xyz_cg, xyz_ref, xyz_ref2, I_ref):
+def transform_inertia(mass: float, xyz_cg: np.ndarray,
+                      xyz_ref: np.ndarray, xyz_ref2: np.ndarray,
+                      I_ref: np.ndarray) -> np.ndarray:
     """
     Transforms mass moment of inertia using parallel-axis theorem.
 
@@ -121,7 +130,9 @@ def transform_inertia(mass, xyz_cg, xyz_ref, xyz_ref2, I_ref):
     #print('  Inew = %s' % str(I_new))
     return I_new
 
-def _mass_properties_elements_init(model, element_ids, mass_ids):
+def _mass_properties_elements_init(model: BDF,
+                                   element_ids: Union[int, List[int]],
+                                   mass_ids: Union[int, List[int]]):
     """helper method"""
     # if neither element_id nor mass_ids are specified, use everything
     if isinstance(element_ids, integer_types):
@@ -158,12 +169,13 @@ def _mass_properties_elements_init(model, element_ids, mass_ids):
     assert mass_ids is not None, mass_ids
     return element_ids, elements, mass_ids, masses
 
-def mass_properties(model, element_ids=None, mass_ids=None,
+def mass_properties(model: BDF,
+                    element_ids=None, mass_ids=None,
                     reference_point=None,
-                    sym_axis=None, scale=None, inertia_reference='cg'):
+                    sym_axis=None, scale=None, inertia_reference: str='cg'):
     """
     Calculates mass properties in the global system about the
-    reference point.
+    reference point, while considering WTMASS.
 
     Parameters
     ----------
@@ -182,11 +194,11 @@ def mass_properties(model, element_ids=None, mass_ids=None,
     Returns
     -------
     mass : float
-        the mass of the model
-    cg : (3, ) float NDARRAY
+        the mass of the model; wtmass is considered
+    cg : (3, ) float ndarray
         the cg of the model as an array.
-    I : (6, ) float NDARRAY
-        moment of inertia array([Ixx, Iyy, Izz, Ixy, Ixz, Iyz])
+    I : (6, ) float ndarray
+        moment of inertia array([Ixx, Iyy, Izz, Ixy, Ixz, Iyz]); wtmass is considered
 
     .. seealso:: model.mass_properties
 
@@ -201,7 +213,8 @@ def mass_properties(model, element_ids=None, mass_ids=None,
     mass, cg, I = _apply_mass_symmetry(model, sym_axis, scale, mass, cg, I)
     return mass, cg, I
 
-def _update_reference_point(model, reference_point, inertia_reference='cg'):
+def _update_reference_point(model: BDF, reference_point: np.ndarray,
+                            inertia_reference: str='cg') -> Tuple[np.ndarray, bool]:
     """helper method for handling reference point"""
     inertia_reference = inertia_reference.lower()
     if inertia_reference == 'cg':
@@ -402,7 +415,7 @@ def mass_properties_nsm(model, element_ids=None, mass_ids=None, nsm_id=None,
                         xyz_cid0_dict=None, debug=False):
     """
     Calculates mass properties in the global system about the
-    reference point.  Considers NSM, NSM1, NSML, NSML1.
+    reference point.  Considers NSM, NSM1, NSML, NSML1, and WTMASS.
 
     Parameters
     ----------
@@ -439,11 +452,11 @@ def mass_properties_nsm(model, element_ids=None, mass_ids=None, nsm_id=None,
     Returns
     -------
     mass : float
-        The mass of the model.
-    cg : ndarray
-        The cg of the model as an array.
-    inertia : ndarray
-        Moment of inertia array([Ixx, Iyy, Izz, Ixy, Ixz, Iyz]).
+        The mass of the model; wtmass is considered
+    cg : (3,) float ndarray
+        The cg of the model
+    inertia : (6,) float ndarray
+        Moment of inertia array([Ixx, Iyy, Izz, Ixy, Ixz, Iyz]); wtmass is considered
 
     inertia = mass * centroid * centroid
 

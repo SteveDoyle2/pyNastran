@@ -1,12 +1,13 @@
 import os
 import sys
 import copy
-from typing import Union
+from typing import List, Union, Any
 
 import numpy as np
 from cpylog import get_logger2
 from pyNastran.bdf.cards.aero.utils import (
     points_elements_from_quad_points, create_axisymmetric_body)
+from pyNastran.converters.avl.avl_helper import Control
 
 AVL_KEYWORDS_LONG = [
     'SURFACE', 'COMPONENT', 'YDUPLICATE', 'BODY', 'ANGLE', 'BFILE',
@@ -24,41 +25,337 @@ def read_avl(avl_filename, log=None, debug: Union[str, bool, None]=False):
     avl.read_avl(avl_filename)
     return avl
 
-class Control:
-    def __init__(self, name: str, gain: float, xhinge: float,
-                 hinge_vector: np.ndarray, sign_deflection_duplicated: float):
-        """
-        name : str
-            name of control variable
-        gain : float
-            control deflection gain, units:  degrees deflection / control variable
-        xhinge : float
-            x/c location of hinge.
-            If positive, control surface extent is Xhinge..1  (TE surface)
-            If negative, control surface extent is 0..-Xhinge (LE surface)
-        XYZhvec : (3,) float ndarray
-            vector giving hinge axis about which surface rotates
-            + deflection is + rotation about hinge vector by righthand rule
-            Specifying XYZhvec = 0. 0. 0. puts the hinge vector along the hinge
-        SgnDup : float
-            sign of deflection for duplicated surface
-            An elevator would have SgnDup = +1.0
-            An aileron  would have SgnDup = -1.0
-
-        """
-        self.name = name
-        self.gain = gain
-        self.xhinge = xhinge
-        self.hinge_vector = hinge_vector
-        self.sign_deflection_duplicated = sign_deflection_duplicated
-        assert isinstance(xhinge, float), xhinge
-        assert isinstance(gain, float), gain
-        assert isinstance(sign_deflection_duplicated, float), sign_deflection_duplicated
-
+class Section:
+    def __init__(self):
+        pass
     def __repr__(self) -> str:
-        msg = (f'Control(name={self.name!r}, gain={self.gain}, xhinge={self.xhinge}, '
-               f'hinge_vector={self.hinge_vector}, sign_deflection_duplicated={self.sign_deflection_duplicated})')
+        msg = (
+            'Section()'
+        )
         return msg
+
+def _section_get_nodes_elements(isurface: int, i: int,
+                                section0, section1, airfoil_sections,
+                                x: np.ndarray,
+                                y: np.ndarray,
+                                nspan: int,
+                                end: bool,
+                                yduplicate: float,
+                                xyz_scale: np.ndarray,
+                                dxyz: np.ndarray,
+                                ipoint: int,
+                                nodes: List[Any],
+                                quad_elements: List[Any],
+                                surfaces: List[Any],
+                                is_cs_list: List[Any]):
+    #print(section0)
+    #print('*****************')
+    #print(section1)
+    p1 = np.array(section0['xyz_LE'])
+    p4 = np.array(section1['xyz_LE'])
+    #Xle,Yle,Zle =  airfoil's leading edge location
+    #Chord       =  the airfoil's chord  (trailing edge is at Xle+Chord,Yle,Zle)
+    #Ainc        =  incidence angle, taken as a rotation (+ by RH rule) about
+                   #the surface's spanwise axis projected onto the Y-Z plane.
+    #Nspan       =  number of spanwise vortices until the next section [ optional ]
+    #Sspace      =  controls the spanwise spacing of the vortices      [ optional ]
+
+    #section = [chord, ainc]
+    #section = [chord, ainc, nspan, span_spacing]
+    chord0 = section0['section'][0]
+    chord1 = section1['section'][0]
+
+    #print('chords =', chord0, chord1)
+    #print('xyz_scale =', xyz_scale)
+    #incidence = section[1]
+    p2 = p1 + np.array([chord0, 0., 0.])
+    p3 = p4 + np.array([chord1, 0., 0.])
+
+    alpha0 = section0['section'][1]
+    alpha1 = section1['section'][1]
+
+    if airfoil_sections[i] is not None:
+        if not airfoil_sections[i].shape == airfoil_sections[i+1].shape:
+            raise RuntimeError('airfoil_sections[%i]=%s airfoil_sections[%i]=%s' % (
+                i, airfoil_sections[i].shape,
+                i + 1, airfoil_sections[i+1].shape))
+        interpolated_stations = interp_stations(
+            y, nspan,
+            airfoil_sections[i], chord0, alpha0, p1,
+            airfoil_sections[i+1], chord1, alpha1, p4, end=end)
+
+    #loft_sections.append(chord0*airfoil_sections[i])
+    #loft_sections.append(chord1*airfoil_sections[i+1])
+
+    assert len(x) > 1, x
+    point, element = points_elements_from_quad_points(p1, p2, p3, p4,
+                                                      x, y, dtype='int32')
+    nelements = element.shape[0]
+    is_cs = _section_get_is_cs(section0, section1, x, y, nelements)
+    #dxyz[1] = 0.
+
+    ipoint = save_wing_elements(
+        isurface, point, element,
+        xyz_scale, dxyz,
+        nodes, quad_elements, surfaces,
+        is_cs_list, is_cs,
+        ipoint)
+
+    nodes_temp = np.vstack(nodes)
+    assert nodes_temp.shape[0] == ipoint, 'nodes_temp.shape=%s ipoint=%s' % (nodes_temp.shape, ipoint)
+
+    #point2 = None
+    #element2 = None
+    #print("p1[%i]  = %s" % (i, p1[:2]))
+    if yduplicate is not None:
+        assert np.allclose(yduplicate, 0.0), 'yduplicate=%s' % yduplicate
+        p1[1] *= -1
+        p2[1] *= -1
+        p3[1] *= -1
+        p4[1] *= -1
+
+        # dxyz2 has to be calculated like this because dxyz is global to the surface
+        # and we need a mirrored dxyz
+        dxyz2 = np.array([dxyz[0], -dxyz[1], dxyz[2]])
+
+        point2, element2 = points_elements_from_quad_points(p1, p2, p3, p4,
+                                                            x, y, dtype='int32')
+        ipoint = save_wing_elements(
+            isurface, point2, element2,
+            xyz_scale, dxyz2,
+            nodes, quad_elements, surfaces,
+            is_cs_list, is_cs,
+            ipoint)
+        nodes_temp = np.vstack(nodes)
+        assert nodes_temp.shape[0] == ipoint, 'nodes_temp.shape=%s ipoint=%s' % (nodes_temp.shape, ipoint)
+
+    #for e in elements:
+        #print("  ", e)
+    #print('npoint=%s nelement=%s' % (npoint, nelement2))
+    #break
+    #if not section['afile']:
+    #del section['afile']
+    #if not section['control']:
+    #del section['control']
+    #print('  ', section)
+    return ipoint
+
+def _section_get_is_cs(section0, section1,
+                       x, y,
+                       nelements: int) -> np.ndarray:
+    is_cs = np.zeros(nelements, dtype='int32')
+    if len(section0['control']) and len(section1['control']):
+        control0 = section0['control'][0]
+        control1 = section1['control'][0]
+        control0_xhinge = control0.xhinge
+        control1_xhinge = control1.xhinge
+
+        # wing in x/c coordinates
+        p1 = np.array([0., 0., 0.])
+        p2 = np.array([1., 0., 0.])
+        p3 = np.array([1., 1., 0.])
+        p4 = np.array([0., 1., 0.])
+        point_quad, element_quad = points_elements_from_quad_points(
+            p1, p2, p3, p4,
+            x, y, dtype='int32')
+        n1 = element_quad[:, 0]
+        n2 = element_quad[:, 1]
+        n3 = element_quad[:, 2]
+        n4 = element_quad[:, 3]
+        # del point_quad
+        xyz1 = point_quad[n1, :]
+        xyz2 = point_quad[n2, :]
+        xyz3 = point_quad[n3, :]
+        xyz4 = point_quad[n4, :]
+        centroid = (xyz1 + xyz2 + xyz3 + xyz4) / 4.
+        xcentroid = centroid[:, 0]
+        ycentroid = centroid[:, 1]
+        xhinge_required = ycentroid * (control1_xhinge - control0_xhinge) + control0_xhinge
+        i_cs = xcentroid > xhinge_required
+        is_cs[i_cs] = 1
+    return is_cs
+
+
+class Surface:
+    def __init__(self):
+        pass
+    def __repr__(self) -> str:
+        msg = (
+            'Surface()'
+        )
+        return msg
+
+
+def _surface_get_wing(isurface, surface, xyz_scale, dxyz, ipoint, nodes,
+                      quad_elements, surfaces, is_cs_list, yduplicate, log) -> int:
+    log.debug('get_wing')
+    nchord, unused_chord_spacing = surface['chord']
+    nspan, unused_span_spacing = surface['span']
+    sections = surface['sections']
+
+
+    unused_span_stations, airfoil_sections = get_airfoils_from_sections(sections, log)
+    log.debug('unused_span_stations %s' % unused_span_stations)
+
+
+    #for iairfoil, is_afile in enumerate(surface['is_afile']):
+        #pass
+
+    #surface['naca']
+    #print('naca =', naca)
+    #loft_sections = []
+    #for naca in airfoils:
+    #get_lofted_sections(None)
+
+    assert nchord > 0, nchord
+    assert nspan > 0, nspan
+    #nchord = 1 #  breaks b737 independently of nspan if we use the real value
+    #nspan = 1  # breaks b737 independently of nchord if we use the real value
+    #nchord = 2
+    #nspan = 2
+    nsections = len(sections)
+    #nchord //= nsections
+    nspan //= nsections
+    if nspan == 0:
+        nspan = 1
+    assert nspan >= 1
+    x = np.linspace(0., 1., num=nchord+1, endpoint=True, retstep=False, dtype=None)
+    y = np.linspace(0., 1., num=nspan+1, endpoint=True, retstep=False, dtype=None)
+    #print('x =', x)
+    #print('y =', y)
+
+    #del surface['sections']
+
+    simple_surface = simplify_surface(surface, log)
+    print('wing surface:', simple_surface)
+
+    #print(surface.keys())
+    #print('name =', surface['name'])
+
+    for i in range(nsections-1):
+        end = (i == nsections - 1)
+        section0 = sections[i]
+        #if 'afile' in section0:
+            #del section0['afile']
+        #if 'control' in section0:
+            #del section0['control']
+
+        section1 = sections[i+1]
+        #if 'afile' in section1:
+            #del section1['afile']
+        #if 'control' in section1:
+            #del section1['control']
+        ipoint = _section_get_nodes_elements(
+            isurface, i,
+            section0, section1, airfoil_sections,
+            x, y, nspan, end, yduplicate,
+            xyz_scale, dxyz,
+            ipoint, nodes, quad_elements, surfaces, is_cs_list)
+
+    #print('-----------')
+    nodes_temp = np.vstack(nodes)
+    assert nodes_temp.shape[0] == ipoint, 'nodes_temp.shape=%s ipoint=%s' % (nodes_temp.shape, ipoint)
+    #print('')
+    #break
+    return ipoint
+
+def _surface_write_chord_span(surface) -> str:
+    if 'span' in surface and 'chord' in surface:
+        nchordwise, c_space = surface['chord']
+        nspanwise, s_space = surface['span']
+        surface_msg = ('!Nchordwise  Cspace  Nspanwise  Sspace\n'
+                       f'{nchordwise}           {c_space}     {nspanwise}         {s_space}\n')
+        del surface['span'], surface['chord']
+
+    elif 'chord' in surface:
+        nchordwise, c_space = surface['chord']
+        surface_msg = ('!Nchordwise  Cspace  Nspanwise  Sspace\n'
+                       f'{nchordwise}    {c_space}\n')
+        del surface['chord']
+    else:
+        raise NotImplementedError(surface)
+    return surface_msg
+
+def _surface_write(surface) -> str:
+    name = surface['name']
+    component = surface['component']
+    angle = surface['angle'] if 'angle' in surface else 0.0
+    xscale, yscale, zscale = surface['scale']
+    dx, dy, dz = surface['translate']
+    del surface['name'], surface['component'], surface['scale'], surface['translate']
+    if 'angle' in surface:
+        del surface['angle']
+
+    surface_msg = (
+        '#--------------------------------------------------\n'
+        'SURFACE\n'
+        f'{name}\n'
+    )
+    surface_msg += _surface_write_chord_span(surface)
+
+    if 'nowake' in surface:
+        del surface['nowake']
+
+    if 'yduplicate' in surface:
+        yduplicate = surface['yduplicate']
+        surface_msg += ('!YDUPLICATE\n'
+                        f'{yduplicate}\n')
+        del surface['yduplicate']
+
+    surface_msg += (
+        '\n'
+        'COMPONENT\n'
+        f'{component}\n'
+        '\n'
+        'ANGLE\n'
+        f'{angle}\n'
+        '\n'
+        'SCALE\n'
+        f'{xscale}   {yscale}   {zscale}\n'
+        '\n'
+        'TRANSLATE\n'
+        f'{dx}  {dy}  {dz}\n'
+        '\n'
+        '\n'
+    )
+    _surface_write_sections(surface)
+    assert len(surface) == 0, surface
+    return surface_msg
+
+def _surface_write_sections(surface) -> str:
+    surface_msg = ''
+    if 'sections' not in surface:
+        return surface_msg
+
+    sections = surface['sections']
+    for isection, section in enumerate(sections):
+        section_msg = 'SECTION\n'
+
+        if 'control' in section:
+            for control in section['control']:
+                control.write()
+        xyz_LE = section['xyz_LE']
+        sectioni = section['section']
+        x = 1
+
+        if 'is_afile' in section:
+            afile = section['afile']
+            section_msg += (
+                'AFILE\n'
+                f'{afile}\n'
+            )
+        #!SECTION
+        #!#Xle    Yle    Zle     Chord   Ainc  Nspanwise  Sspace
+        #!-0.5    0.0    0.0     21.0    5.0
+        #!AFILE
+        #!a1.dat
+        #!CONTROL
+        #!flap     1.0  0.81  0. 0. 0.  +1
+        surface_msg += section_msg
+
+    del surface['sections']
+    return surface_msg
+
 
 class AVL:
     """Interface to the AVL (Athena Vortex Lattice) code"""
@@ -306,7 +603,11 @@ class AVL:
             elif is_header(line, 'CONTROL'):
                 sline = lines[i+1].split()
                 #print(sline)
-                name, gain_str, xhinge_str, xhinge_vector, yhinge_vector, zhinge_vector, sign_deflection_duplicated_str = sline
+                try:
+                    name, gain_str, xhinge_str, xhinge_vector, yhinge_vector, zhinge_vector, sign_deflection_duplicated_str = sline
+                except:
+                    self.log.error(sline)
+                    raise
                 gain = float(gain_str)
                 xhinge = float(xhinge_str)
                 sign_deflection_duplicated = float(sign_deflection_duplicated_str)
@@ -319,6 +620,7 @@ class AVL:
             i += 1
 
         for surface in surfaces:
+            name = surface['name']
             sections = surface['sections']
             #if 'sections' in surface:
                 #del surface['sections']
@@ -336,6 +638,7 @@ class AVL:
                     #print('  ', section)
                 #print('')
         self.surfaces = surfaces
+
 
     def write_avl(self, avl_filename: str) -> None:
         """very preliminary and full of del commands that corrupt the model"""
@@ -356,77 +659,26 @@ class AVL:
             )
 
         for isurface, surface in enumerate(self.surfaces):
-            name = surface['name']
-            component = surface['component']
-            yduplicate = surface['yduplicate'] if 'yduplicate' in surface else 0.0
-            angle = surface['angle'] if 'angle' in surface else 0.0
-            xscale, yscale, zscale = surface['scale']
-            dx, dy, dz = surface['translate']
-            del surface['name'], surface['component'], surface['scale'], surface['translate']
-            if 'angle' in surface:
-                del surface['angle']
-            if 'yduplicate' in surface:
-                del surface['yduplicate']
+            msg += _surface_write(surface)
 
-            surface_msg = (
-                '#--------------------------------------------------\n'
-                'SURFACE\n'
-                f'{name}\n'
-            )
-            if 'span' in surface and 'chord' in surface:
-                nchordwise, c_space = surface['chord']
-                nspanwise, s_space = surface['span']
-                surface_msg += ('!Nchordwise  Cspace  Nspanwise  Sspace\n'
-                                f'{nchordwise}           {c_space}     {nspanwise}         {s_space}\n')
-                del surface['span'], surface['chord']
-            elif 'chord' in surface:
-                surface_msg += ('!Nchordwise  Cspace  Nspanwise  Sspace\n'
-                                f'{nchordwise}    {c_space}\n')
-                del surface['chord']
-            else:
-                raise NotImplementedError(surface)
-
-            if 'nowake' in surface:
-                del surface['nowake']
-
-            surface_msg += (
-                '\n'
-                'COMPONENT\n'
-                f'{component}\n'
-                '\n'
-                'YDUPLICATE\n'
-                f'{yduplicate}\n'
-                '\n'
-                'ANGLE\n'
-                f'{angle}\n'
-                '\n'
-                'SCALE\n'
-                f'{xscale}   {yscale}   {zscale}\n'
-                '\n'
-                'TRANSLATE\n'
-                f'{dx}  {dy}  {dz}\n'
-                '\n'
-                '\n'
-                '!SECTION\n'
-            )
-            assert len(surface) == 0, surface
-
-        #with open(avl_filename, 'w') as avl_file:
-        asf
+        with open(avl_filename, 'w') as avl_file:
+            avl_file.write(msg)
 
     def get_nodes_elements(self):
-        self.log.debug('get_nodes_elements')
+        log = self.log
+        log.debug('get_nodes_elements')
         dirname = os.path.dirname(self.avl_filename)
         nodes = []
         quad_elements = []
         line_elements = []
         ipoint = 0
         surfaces = []
+        is_cs_list = []
 
 
         #print('----')
         for isurface, surface in enumerate(self.surfaces):
-            self.log.debug('isurface = %s' % isurface)
+            log.debug('isurface = %s' % isurface)
             xyz_scale = np.ones(3)
             if 'scale' in surface:
                 xyz_scale = np.array(surface['scale'])
@@ -440,22 +692,23 @@ class AVL:
                 yduplicate = surface['yduplicate']
 
             if 'name' not in surface:
-                self.log.debug('no name...%s'  % surface)
+                log.debug('no name...%s'  % surface)
 
             name = surface['name']
-            self.log.debug("name=%r ipoint=%s" % (name, ipoint))
+            log.debug("name=%r ipoint=%s" % (name, ipoint))
             if 'chord' not in surface:
-                self.log.debug('no chord for %s...' % name)
+                log.debug('no chord for %s...' % name)
                 continue
 
             if 'span' not in surface:
-                self.log.debug('fuselage surface: %s\n' % simplify_surface(surface))
+                simple_surface = simplify_surface(surface, log)
+                log.debug('fuselage surface: %s\n' % simple_surface)
                 if nodes:
                     nodes_temp = np.vstack(nodes)
                     assert nodes_temp.shape[0] == ipoint, 'nodes_temp.shape=%s ipoint=%s' % (nodes_temp.shape, ipoint)
 
                 ipoint = get_fuselage(dirname, isurface, surface, xyz_scale, dxyz, yduplicate,
-                                      nodes, line_elements, quad_elements, surfaces, ipoint)
+                                      nodes, line_elements, quad_elements, surfaces, is_cs_list, ipoint)
                 #if npoint == 0:
                     #self.log.info('skipping %s because there are no sections' % surface)
                 #ipoint += npoint
@@ -466,155 +719,9 @@ class AVL:
                 #break
                 continue
 
-        #def get_wing(isurface, surface, xyz_scale, dxyz, nodes,
-                     #quad_elements, surfaces, ipoint):
-            self.log.debug('get_wing')
-            nchord, unused_chord_spacing = surface['chord']
-            nspan, unused_span_spacing = surface['span']
-            sections = surface['sections']
-
-
-            unused_span_stations, airfoil_sections = get_airfoils_from_sections(sections, self.log)
-            self.log.debug('unused_span_stations %s' % unused_span_stations)
-
-
-            #for iairfoil, is_afile in enumerate(surface['is_afile']):
-                #pass
-
-            #surface['naca']
-            #print('naca =', naca)
-            #loft_sections = []
-            #for naca in airfoils:
-            #get_lofted_sections(None)
-
-            assert nchord > 0, nchord
-            assert nspan > 0, nspan
-            #nchord = 1 #  breaks b737 independently of nspan if we use the real value
-            #nspan = 1 #  breaks b737 independently of nchord if we use the real value
-            #nchord = 2
-            #nspan = 2
-            nsections = len(sections)
-            #nchord //= nsections
-            nspan //= nsections
-            x = np.linspace(0., 1., num=nchord+1, endpoint=True, retstep=False, dtype=None)
-            y = np.linspace(0., 1., num=nspan+1, endpoint=True, retstep=False, dtype=None)
-            #print('x =', x)
-            #print('y =', y)
-
-            del surface['sections']
-
-            print('wing surface:', simplify_surface(surface))
-
-            #print(surface.keys())
-            #print('name =', surface['name'])
-
-            for i in range(nsections-1):
-                end = (i == nsections - 1)
-
-                section0 = sections[i]
-                #if 'afile' in section0:
-                    #del section0['afile']
-                #if 'control' in section0:
-                    #del section0['control']
-
-                section1 = sections[i+1]
-                #if 'afile' in section1:
-                    #del section1['afile']
-                #if 'control' in section1:
-                    #del section1['control']
-
-                #print(section0)
-                #print('*****************')
-                #print(section1)
-                p1 = np.array(section0['xyz_LE'])
-                p4 = np.array(section1['xyz_LE'])
-                #Xle,Yle,Zle =  airfoil's leading edge location
-                #Chord       =  the airfoil's chord  (trailing edge is at Xle+Chord,Yle,Zle)
-                #Ainc        =  incidence angle, taken as a rotation (+ by RH rule) about
-                               #the surface's spanwise axis projected onto the Y-Z plane.
-                #Nspan       =  number of spanwise vortices until the next section [ optional ]
-                #Sspace      =  controls the spanwise spacing of the vortices      [ optional ]
-
-                #section = [chord, ainc]
-                #section = [chord, ainc, nspan, span_spacing]
-                chord0 = section0['section'][0]
-                chord1 = section1['section'][0]
-
-                #print('chords =', chord0, chord1)
-                #print('xyz_scale =', xyz_scale)
-                #incidence = section[1]
-                p2 = p1 + np.array([chord0, 0., 0.])
-                p3 = p4 + np.array([chord1, 0., 0.])
-
-                alpha0 = section0['section'][1]
-                alpha1 = section1['section'][1]
-
-                if airfoil_sections[i] is not None:
-                    if not airfoil_sections[i].shape == airfoil_sections[i+1].shape:
-                        raise RuntimeError('airfoil_sections[%i]=%s airfoil_sections[%i]=%s' % (
-                            i, airfoil_sections[i].shape,
-                            i + 1, airfoil_sections[i+1].shape))
-                    interpolated_stations = interp_stations(
-                        y, nspan,
-                        airfoil_sections[i], chord0, alpha0, p1,
-                        airfoil_sections[i+1], chord1, alpha1, p4, end=end)
-
-                #loft_sections.append(chord0*airfoil_sections[i])
-                #loft_sections.append(chord1*airfoil_sections[i+1])
-
-                assert len(x) > 1, x
-                point, element = points_elements_from_quad_points(p1, p2, p3, p4,
-                                                                  x, y, dtype='int32')
-
-                #dxyz[1] = 0.
-
-                ipoint = save_wing_elements(
-                    isurface, point, element,
-                    xyz_scale, dxyz,
-                    nodes, quad_elements, surfaces,
-                    ipoint)
-
-                nodes_temp = np.vstack(nodes)
-                assert nodes_temp.shape[0] == ipoint, 'nodes_temp.shape=%s ipoint=%s' % (nodes_temp.shape, ipoint)
-
-                #point2 = None
-                #element2 = None
-                #print("p1[%i]  = %s" % (i, p1[:2]))
-                if yduplicate is not None:
-                    assert np.allclose(yduplicate, 0.0), 'yduplicate=%s' % yduplicate
-                    p1[1] *= -1
-                    p2[1] *= -1
-                    p3[1] *= -1
-                    p4[1] *= -1
-
-                    # dxyz2 has to be calculated like this because dxyz is global to the surface
-                    # and we need a mirrored dxyz
-                    dxyz2 = np.array([dxyz[0], -dxyz[1], dxyz[2]])
-
-                    point2, element2 = points_elements_from_quad_points(p1, p2, p3, p4,
-                                                                        x, y, dtype='int32')
-                    ipoint = save_wing_elements(
-                        isurface, point2, element2,
-                        xyz_scale, dxyz2,
-                        nodes, quad_elements, surfaces,
-                        ipoint)
-                    nodes_temp = np.vstack(nodes)
-                    assert nodes_temp.shape[0] == ipoint, 'nodes_temp.shape=%s ipoint=%s' % (nodes_temp.shape, ipoint)
-
-                #for e in elements:
-                    #print("  ", e)
-                #print('npoint=%s nelement=%s' % (npoint, nelement2))
-                #break
-                #if not section['afile']:
-                #del section['afile']
-                #if not section['control']:
-                #del section['control']
-                #print('  ', section)
-            #print('-----------')
-            nodes_temp = np.vstack(nodes)
-            assert nodes_temp.shape[0] == ipoint, 'nodes_temp.shape=%s ipoint=%s' % (nodes_temp.shape, ipoint)
-            #print('')
-            #break
+            ipoint = _surface_get_wing(
+                isurface, surface, xyz_scale, dxyz, ipoint, nodes,
+                quad_elements, surfaces, is_cs_list, yduplicate, log)
         #print("end ipoint=%s" % (ipoint))
 
         nodes = np.vstack(nodes)
@@ -623,8 +730,11 @@ class AVL:
         if line_elements:
             line_elements = np.vstack(line_elements)
         surfaces = np.hstack(surfaces)
+        is_cs = np.hstack(is_cs_list)
+        assert surfaces.shape == is_cs.shape
         assert len(surfaces) == quad_elements.shape[0]
-        return nodes, quad_elements, line_elements, surfaces
+        return nodes, quad_elements, line_elements, surfaces, is_cs
+
 
 def interp_stations(y, unused_nspan,
                     airfoil_section0, chord0, alpha0, xyz_le0,
@@ -705,13 +815,13 @@ def interp_stations(y, unused_nspan,
     #print(xy_final.shape)
     return interpolated_stations
 
-def save_wing_elements(isurface, point, element,
+def save_wing_elements(isurface: int, point, element,
                        xyz_scale, dxyz,
                        nodes, quad_elements, surfaces,
-                       ipoint):
+                       is_cs_list, is_cs,
+                       ipoint: int) -> int:
     npoint = point.shape[0]
-    nelement2 = element.shape[0]
-    #print("  npoint = ", npoint)
+    nelement = element.shape[0]
 
     # scaling is applied before translation
     point[:, 0] *= xyz_scale[0]
@@ -720,7 +830,9 @@ def save_wing_elements(isurface, point, element,
     #print(point)
     point += dxyz
 
-    surfaces.append(np.ones(nelement2, dtype='int32') * isurface)
+    surfaces.append(np.ones(nelement, dtype='int32') * isurface)
+    assert len(is_cs) == nelement
+    is_cs_list.append(is_cs)
 
     nodes.append(point)
     quad_elements.append(ipoint + element)
@@ -837,7 +949,7 @@ def get_naca_4_series(log, naca='2412'):
     return xy
 
 def get_fuselage_from_file(dirname, isurface, surface, xyz_scale, dxyz,
-                           nodes, quad_elements, surfaces, ipoint, nchord):
+                           nodes, quad_elements, surfaces, is_cs_list, ipoint, nchord):
     #print(surface)
     body_file = os.path.join(dirname, surface['body_file'])
     # top view/side view
@@ -897,13 +1009,17 @@ def get_fuselage_from_file(dirname, isurface, surface, xyz_scale, dxyz,
     point += dxyz
 
     surfaces.append(np.ones(nelement2, dtype='int32') * isurface)
+    is_cs = np.zeros(nelement2, dtype='int32')
+    assert len(is_cs) == nelement2
+    is_cs_list.append(is_cs)
+
     nodes.append(point)
     quad_elements.append(ipoint + element)
     ipoint += npoint
     return ipoint, nelement2
 
 def get_fuselage(dirname, isurface, surface, xyz_scale, dxyz, yduplicate,
-                 nodes, unused_line_elements, quad_elements, surfaces, ipoint):
+                 nodes, unused_line_elements, quad_elements, surfaces, is_cs_list, ipoint: int):
     #print('----------------------------------------')
     #print(surface)
     nchord, unused_chord_spacing = surface['chord']
@@ -921,7 +1037,8 @@ def get_fuselage(dirname, isurface, surface, xyz_scale, dxyz, yduplicate,
     if nsections == 0:
         # from file
         ipoint, unused_nelement2 = get_fuselage_from_file(
-            dirname, isurface, surface, xyz_scale, dxyz, nodes, quad_elements, surfaces,
+            dirname, isurface, surface, xyz_scale, dxyz, nodes, quad_elements,
+            surfaces, is_cs_list,
             ipoint, nchord)
         return ipoint
 
@@ -950,10 +1067,13 @@ def get_fuselage(dirname, isurface, surface, xyz_scale, dxyz, yduplicate,
         p3 = p4 + np.array([chord1, 0., 0.])
 
         point, element = points_elements_from_quad_points(p1, p2, p3, p4, x, y, dtype='int32')
+        nelements = element.shape[0]
+        is_cs = np.zeros(nelements, dtype='int32')
         ipoint = save_wing_elements(
             isurface, point, element,
             xyz_scale, dxyz,
             nodes, quad_elements, surfaces,
+            is_cs_list, is_cs,
             ipoint)
 
         if yduplicate is not None:
@@ -973,6 +1093,7 @@ def get_fuselage(dirname, isurface, surface, xyz_scale, dxyz, yduplicate,
                 isurface, point2, element2,
                 xyz_scale, dxyz2,
                 nodes, quad_elements, surfaces,
+                is_cs_list, is_cs,
                 ipoint)
             nodes_temp = np.vstack(nodes)
             assert nodes_temp.shape[0] == ipoint, 'nodes_temp.shape=%s ipoint=%s' % (nodes_temp.shape, ipoint)
@@ -1007,9 +1128,10 @@ def is_header(line, name):
     """only the first 4 chancters are read, but we're going to ensure all the letters are correct"""
     return line.startswith(name[:4]) and line == name[:len(line)]
 
-def simplify_surface(surface):
+def simplify_surface(surface, log):
     """gets rid of extraneous data from the surface that makes it hard to read"""
     surface2 = copy.deepcopy(surface)
+    del surface2['sections']
 
     if 'translate' in surface and np.allclose(surface['translate'], [0., 0., 0.]):
         del surface2['translate']
@@ -1024,16 +1146,19 @@ def simplify_surface(surface):
         del surface2['angle']
 
     if 'sections' not in surface2:
+        log.debug("no sections 1")
         return surface2
 
     sections = surface2['sections']
     if len(sections) == 0:
+        log.debug("no sections 2")
         del surface2['sections']
         return surface2
 
     #sections2 = {}
     for section in sections:
         if not section['control']:
+            log.debug("no control")
             del section['control']
     surface2['sections'] = sections
     return surface2
@@ -1042,7 +1167,11 @@ def main():  # pragma: no cover
     avl_filename = sys.argv[1]
     model = read_avl(avl_filename)
     model.get_nodes_elements()
-    model.write_avl(avl_filename)
+
+    import os
+    base, ext = os.path.splitext(avl_filename)
+    avl_filename_out = base + '_out' + ext
+    model.write_avl(avl_filename_out)
 
 if __name__ == '__main__':  # pragma: no cover
     main()
