@@ -1,7 +1,7 @@
 import os
 import sys
 import copy
-from typing import List, Union, Any
+from typing import Tuple, List, Union, Optional, Any
 
 import numpy as np
 from cpylog import get_logger2
@@ -189,13 +189,13 @@ class Surface:
 def _surface_get_wing(isurface, surface, xyz_scale, dxyz, ipoint, nodes,
                       quad_elements, surfaces, is_cs_list, yduplicate, log) -> int:
     log.debug('get_wing')
+    name = surface['name']
     nchord, chord_spacing = surface['chord']
     nspan, span_spacing = surface['span']
     sections = surface['sections']
 
-
-    unused_span_stations, airfoil_sections = get_airfoils_from_sections(sections, log)
-    log.debug('unused_span_stations %s' % unused_span_stations)
+    span_stations, airfoil_sections, spanwise_distances = get_airfoils_from_sections(sections, log)
+    log.debug('span_stations %s' % span_stations)
 
 
     #for iairfoil, is_afile in enumerate(surface['is_afile']):
@@ -215,12 +215,23 @@ def _surface_get_wing(isurface, surface, xyz_scale, dxyz, ipoint, nodes,
     #nspan = 2
     nsections = len(sections)
     #nchord //= nsections
-    nspan //= nsections
-    if nspan == 0:
-        nspan = 1
-    assert nspan >= 1
+    if len(spanwise_distances) == 1:
+        #nspan2 = nspan
+        nspanwise_panels = [nspan]
+    else:
+        dy = spanwise_distances.sum()
+        nspanwise_panels = (spanwise_distances / dy * nspan).astype('int32')
+        izero = np.where(nspanwise_panels == 0)[0]
+        nspanwise_panels[izero] = 1
+        #nspan2 = nspan // (nsections - 1)
+        #if nspan2 == 0:
+            #nspan2 = 1
+        #assert nspan2 >= 1
+
+    assert isinstance(nchord, int), nchord
+    assert isinstance(nspan, int), nspan
     x = get_spacing(nchord, chord_spacing)
-    y = get_spacing(nspan, span_spacing)
+    #y0 = get_spacing(nspan2, span_spacing)
     # x = np.linspace(0., 1., num=nchord+1, endpoint=True, retstep=False, dtype=None)
     # y = np.linspace(0., 1., num=nspan+1, endpoint=True, retstep=False, dtype=None)
     #print('x =', x)
@@ -237,6 +248,11 @@ def _surface_get_wing(isurface, surface, xyz_scale, dxyz, ipoint, nodes,
     for i in range(nsections-1):
         end = (i == nsections - 1)
         section0 = sections[i]
+
+        nspan_global = nspanwise_panels[i]
+        section_data = section0['section']
+        nspani, span_spacingi = section_data[2:]
+
         #if 'afile' in section0:
             #del section0['afile']
         #if 'control' in section0:
@@ -247,6 +263,17 @@ def _surface_get_wing(isurface, surface, xyz_scale, dxyz, ipoint, nodes,
             #del section1['afile']
         #if 'control' in section1:
             #del section1['control']
+
+        if nspan is not None:
+            assert nspan_global >= 1, nspani
+            y = get_spacing(nspan_global, span_spacing)
+        else:
+            # nspan / Sspace for last section are ignored
+            assert isinstance(nspani, int), nspani
+            assert nspani >= 1, nspani
+            y = get_spacing(nspani, span_spacingi)
+
+
         ipoint = _section_get_nodes_elements(
             isurface, i,
             section0, section1, airfoil_sections,
@@ -574,7 +601,7 @@ class AVL:
                     zle = float(zle)
                     chord = float(chord)
                     ainc = float(ainc)
-                    section = [chord, ainc]
+                    section = [chord, ainc, None, None]
                 elif len(sline) == 7:
                     #Xle Yle  Zle  Chord  Ainc  Nspanwise  Sspace
                     xle, yle, zle, chord, ainc, nspan, span_spacing = sline
@@ -583,7 +610,7 @@ class AVL:
                     zle = float(zle)
                     ainc = float(ainc)
                     chord = float(chord)
-                    nspan = float(nspan)
+                    nspan = int(nspan)
                     span_spacing = float(span_spacing)
                     assert 'station' not in surface
                     section = [chord, ainc, nspan, span_spacing]
@@ -1144,11 +1171,22 @@ def get_fuselage(dirname, isurface, surface, xyz_scale, dxyz, yduplicate,
 
     return ipoint
 
-def get_airfoils_from_sections(sections, log):
+def get_airfoils_from_sections(sections, log) -> Tuple[np.ndarray,
+                                                       List[Optional[np.ndarray]],
+                                                       np.ndarray]:
     airfoil_sections = []
     is_airfoil_defined = False
     span_stations = np.arange(len(sections))
-    for section in sections:
+    leading_edges = []
+    trailing_edges = []
+    for isection, section in enumerate(sections):
+        leading_edge = section['xyz_LE']
+        section_data = section['section']
+        chord = section_data[0]
+        trailing_edge = leading_edge + np.array([chord, 0., 0.])
+        leading_edges.append(leading_edge)
+        trailing_edges.append(trailing_edge)
+
         log.debug(str(section))
         if 'is_afile' in section:
             is_afile = section['is_afile']
@@ -1164,7 +1202,26 @@ def get_airfoils_from_sections(sections, log):
             naca = section['naca']
             xy = get_naca_4_series(log, naca=naca)
         airfoil_sections.append(xy)
-    return span_stations, airfoil_sections
+
+    leading_edges = np.array(leading_edges)
+    trailing_edges = np.array(trailing_edges)
+    quarter_chord = 0.75 * leading_edges + 0.25 * trailing_edges
+    # array([[-3.41 ,  0.   ,  0.   ],
+    #        [-3.25 , 18.   ,  0.   ],
+    #        [-2.5  , 41.66 ,  4.25 ],
+    #        [-1.788, 55.75 ,  9.38 ],
+    #        [-0.95 , 57.64 , 10.064],
+    #        [ 0.   , 58.3  , 10.4  ]])
+    dedge = quarter_chord[1:, :] - quarter_chord[:-1, :]
+    # array([[ 0.16 , 18.   ,  0.   ],
+    #        [ 0.75 , 23.66 ,  4.25 ],
+    #        [ 0.712, 14.09 ,  5.13 ],
+    #        [ 0.838,  1.89 ,  0.684],
+    #        [ 0.95 ,  0.66 ,  0.336]])
+    distances = np.linalg.norm(dedge, axis=1)
+    # array([18.0007111 , 24.0503763 , 15.01172688,  2.17765929,  1.20457295])
+
+    return span_stations, airfoil_sections, distances
 
 def is_header(line, name):
     """only the first 4 chancters are read, but we're going to ensure all the letters are correct"""
