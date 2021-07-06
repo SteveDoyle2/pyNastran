@@ -189,8 +189,8 @@ class Surface:
 def _surface_get_wing(isurface, surface, xyz_scale, dxyz, ipoint, nodes,
                       quad_elements, surfaces, is_cs_list, yduplicate, log) -> int:
     log.debug('get_wing')
-    nchord, unused_chord_spacing = surface['chord']
-    nspan, unused_span_spacing = surface['span']
+    nchord, chord_spacing = surface['chord']
+    nspan, span_spacing = surface['span']
     sections = surface['sections']
 
 
@@ -219,8 +219,10 @@ def _surface_get_wing(isurface, surface, xyz_scale, dxyz, ipoint, nodes,
     if nspan == 0:
         nspan = 1
     assert nspan >= 1
-    x = np.linspace(0., 1., num=nchord+1, endpoint=True, retstep=False, dtype=None)
-    y = np.linspace(0., 1., num=nspan+1, endpoint=True, retstep=False, dtype=None)
+    x = get_spacing(nchord, chord_spacing)
+    y = get_spacing(nspan, span_spacing)
+    # x = np.linspace(0., 1., num=nchord+1, endpoint=True, retstep=False, dtype=None)
+    # y = np.linspace(0., 1., num=nspan+1, endpoint=True, retstep=False, dtype=None)
     #print('x =', x)
     #print('y =', y)
 
@@ -1017,6 +1019,46 @@ def get_fuselage_from_file(dirname, isurface, surface, xyz_scale, dxyz,
     quad_elements.append(ipoint + element)
     ipoint += npoint
     return ipoint, nelement2
+
+def get_spacing(nchord: int, k: float) -> np.ndarray:
+    """
+    Parameters
+    ----------
+    nchord : int
+        number of chordwise points
+    k : spacing
+        factor
+
+    Returns
+    -------
+    x' : (n,) ndarray
+        ranges from [0, 1]
+    """
+    xeq = np.linspace(0., 1., num=nchord+1,
+                      endpoint=True, retstep=False, dtype=None)
+    if k in {-3.0, 0.0, 3.0}:
+        return xeq
+
+    theta = xeq * np.pi
+    xcos = 1. / 2 * (1 - np.cos(theta))
+    xsine = 1. / 2 * np.sin(theta/2.)
+    keq = 0.
+    kcos = 0.
+    ksin = 0.
+    kabs = abs(k)
+    if 0.0 <= kabs <= 1.0:
+        keq = 1.0 - kabs
+        kcos = kabs
+    elif kabs <= 2.0:
+        kcos = kabs - 1.0
+        ksin = 2.0 - kabs
+    elif kabs <= 3.0:
+        ksin = kabs - 2.0
+        keq = 3.0 - kabs
+    else:
+        raise RuntimeError(f'kabs={kabs} and must be <= 3.0')
+    xprime = keq * xeq + ksin * xsine + kcos * xcos
+    return xprime
 
 def get_fuselage(dirname, isurface, surface, xyz_scale, dxyz, yduplicate,
                  nodes, unused_line_elements, quad_elements, surfaces, is_cs_list, ipoint: int):
