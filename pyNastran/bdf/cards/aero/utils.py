@@ -12,11 +12,17 @@ if TYPE_CHECKING:
     from pyNastran.bdf.bdf import BDF
 
 
-def elements_from_quad(nx, ny, dtype='int32'):
+def elements_from_quad(nx: int, ny: int, dtype='int32'):
     """
     Creates an array of rectilinear mesh of nodes and then
     grabs indexs it to get the elements
 
+    Parameters
+    ----------
+    nx / ny : int
+        number of nodes in the x/y directions
+    dtype: str; default='int32'
+        the type of the integer
     """
     assert nx > 1
     assert ny > 1
@@ -66,7 +72,8 @@ def tri_cap(nelements):
     #"""the function doesn't work correctly..."""
     #return points_elements_from_quad_points(p1, p4, p3, p2, y, x, dtype='int32')
 
-def points_elements_from_quad_points(p1, p2, p3, p4, x, y, dtype='int32'):
+def points_elements_from_quad_points(p1, p2, p3, p4, x, y,
+                                     dtype='int32'):
     """
     Creates nodes and elements in a structured grid given 4 points.
     Used to make an CAERO1 panel.
