@@ -25,18 +25,19 @@ from pyNastran.utils import print_bad_path, object_attributes, object_methods, o
 from pyNastran.bdf.bdf import BDF
 from pyNastran.op2.op2 import OP2
 from pyNastran.dev.h5.h5_utils import get_tree, h5py_to_dataframe
-from pyNastran.dev.h5.h5_case_control import load_case_control, load_parameters
-from pyNastran.dev.h5.h5_elements import element_map
-from pyNastran.dev.h5.h5_constraints import constraint_map
-from pyNastran.dev.h5.h5_loads import load_map
-from pyNastran.dev.h5.h5_tables import table_map
-from pyNastran.dev.h5.h5_geometry import (
+from pyNastran.dev.h5.h5_result_objects import RealVectorTable, RealVectorTableOptistruct, RealStrainEnergyOptistruct
+
+from pyNastran.dev.h5.geometry.h5_case_control import load_case_control, load_parameters
+from pyNastran.dev.h5.geometry.h5_elements import element_map
+from pyNastran.dev.h5.geometry.h5_constraints import constraint_map
+from pyNastran.dev.h5.geometry.h5_loads import load_map
+from pyNastran.dev.h5.geometry.h5_tables import table_map
+from pyNastran.dev.h5.geometry.h5_geometry import (
     coord_map, node_map,
     material_map,
     matrix_map, design_map, dynamic_map, partition_map,
     load_geometry_block)
-from pyNastran.dev.h5.h5_properties import property_map
-from pyNastran.dev.h5.h5_result_objects import RealVectorTable, RealVectorTableOptistruct, RealStrainEnergyOptistruct
+from pyNastran.dev.h5.geometry.h5_properties import property_map
 #from pyNastran.gui.utils.vtk.base_utils import numpy_to_vtk
 
 Function = Any
@@ -645,9 +646,10 @@ def load_stress_strain(basename_orig: str,
                     'CONROD', 'ROD', 'TUBE', # 1D-basic
                     'BAR', 'BARS', 'BEAM', 'SHEAR',
                     'HEXA', 'PENTA', 'TETRA',
-                    'QUAD4_COMP', 'QUAD_CN',
+                    'QUAD4', 'QUAD4_COMP',
                     'QUAD8',
                     'QUADR_COMP',
+                    'QUAD_CN',
                     'TRIA3', 'TRIA3_COMP',
                     'TRIA6',
                     'TRIAR_COMP',
@@ -960,8 +962,8 @@ def load_eigenvector_complex(basename: str,
 
         iresults = np.full(len(idomain), np.nan, dtype='int32')
         is_freq = np.abs(eigr).max() != 0 or np.abs(eigi).max() != 0
-        for itime, subcasei, analysis_codei, modei, eigri, eigii, idomaini, positioni, lengthi in zip(count(), subcase, analysis_code, mode, eigr, eigi, idomain, position, length):
-        #for itime, idomaini, positioni, lengthi in zip(count(), idomain, position, length):
+        for itime, subcasei, analysis_codei, modei, eigri, eigii, idomaini, positioni, lengthi in zip(
+                count(), subcase, analysis_code, mode, eigr, eigi, idomain, position, length):
             i0 = positioni
             i1 = positioni + lengthi
             name = _get_name(basename, is_freq, subcasei, analysis_codei, modei, eigri, eigii)

@@ -1,9 +1,10 @@
 from __future__ import annotations
+from typing import TYPE_CHECKING
 #import numpy as np
 import h5py
-from .h5_utils import get_tree, passer
-#if TYPE_CHECKING:
-from pyNastran.bdf.bdf import BDF
+from ..h5_utils import get_tree, passer
+if TYPE_CHECKING:
+    from pyNastran.bdf.bdf import BDF
 from pyNastran.bdf.cards.loads.static_loads import PLOAD1
 
 def read_dload(*args):

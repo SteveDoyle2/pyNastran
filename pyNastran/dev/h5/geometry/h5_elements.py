@@ -2,7 +2,7 @@ from __future__ import annotations
 from typing import List, Callable, Any # , TYPE_CHECKING
 import numpy as np
 import h5py
-from .h5_utils import get_tree, passer
+from ..h5_utils import get_tree, passer
 from .h5_elements_0d import (
     read_cbush, read_cbush1d, read_cbush2d,
     read_cdamp1, read_cdamp2, read_cdamp3, read_cdamp4,

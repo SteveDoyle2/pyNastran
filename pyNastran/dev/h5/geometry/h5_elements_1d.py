@@ -2,7 +2,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 import numpy as np
 import h5py
-from .h5_utils import read_basic_element
+from ..h5_utils import read_basic_element
 if TYPE_CHECKING:
     from pyNastran.bdf.bdf import BDF
 

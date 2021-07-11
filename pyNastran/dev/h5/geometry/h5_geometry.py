@@ -1,12 +1,13 @@
 from __future__ import annotations
-from typing import Union, Callable
+from typing import Union, Callable, TYPE_CHECKING
 import numpy as np
 import h5py
-from .h5_utils import get_tree, passer
-from pyNastran.bdf.bdf import BDF
+from ..h5_utils import get_tree, passer
 
-GeomCallable = Callable[[h5py._hl.dataset.Dataset, BDF],  # inputs
-                        None]  # output
+if TYPE_CHECKING:
+    from pyNastran.bdf.bdf import BDF
+    GeomCallable = Callable[[h5py._hl.dataset.Dataset, BDF],  # inputs
+                            None]  # output
 
 def read_grid(name: str, group: h5py._hl.dataset.Dataset, geom_model: BDF) -> None:
     """

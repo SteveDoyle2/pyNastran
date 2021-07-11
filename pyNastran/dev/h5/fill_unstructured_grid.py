@@ -4,7 +4,7 @@ from collections import OrderedDict
 import numpy as np
 import h5py
 import vtk
-#import vtkmodules
+import vtkmodules
 from vtk.numpy_interface import dataset_adapter as dsa
 from vtk.util.vtkAlgorithm import VTKPythonAlgorithmBase
 from pyNastran.dev.h5.read_h5 import pyNastranH5
