@@ -26,6 +26,7 @@ from pyNastran.op2.test.op2_test import get_failed_files
 
 FORMAT_TO_EXTENSION = {
     #'abaqus' : ['.inp'],
+    'h5nastran' : ['.h5'],
     'nastran' : ['.bdf', '.ecd', '.nas', '.op2', '.pch', '.dat'],
     'stl' : ['.stl'],
     'cart3d' : ['.tri', '.triq'],
@@ -80,6 +81,7 @@ class FakeGUI(FakeGUIMethods, NastranIO):
     def load_geometry(self, input_filename):
         """loads a model"""
         load_geometry_name = f'load_{self._formati}_geometry'
+        print(f'formati={self._formati!r} format_class_map={list(self.format_class_map.keys())}')
         if self._formati in self.format_class_map:
             cls = self.format_class_map[self._formati](self)
             getattr(cls, load_geometry_name)(input_filename)

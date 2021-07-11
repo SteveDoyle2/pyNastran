@@ -4,6 +4,7 @@ import sys
 from typing import List, Dict, Optional, Any
 
 import pyNastran
+from pyNastran import DEV
 from pyNastran.utils import check_path
 from pyNastran.utils.arg_handling import argparse_to_dict, swap_key, update_message
 
@@ -20,6 +21,7 @@ GROUPS_DEFAULT = True
 FORMAT_TO_EXTENSION = {
     # an extension should not be added to this list if it is shared with another type
     'nastran' : ['.bdf', '.ecd', '.nas', '.op2', '.pch'],
+    'h5nastran' : ['.h5'],
     'stl' : ['.stl'],
     'cart3d' : ['.tri', '.triq'],
     'tecplot' : ['.plt'],
@@ -57,11 +59,14 @@ def determine_format(input_filename: str,
         allowed_formats = [
             'nastran', 'stl', 'cart3d', 'tecplot', 'ugrid', 'ugrid3d', 'panair',
             #'plot3d',
-            'surf', 'lawgs', 'degen_geom', 'shabp', 'avus', 'fast', 'abaqus',
-            'usm3d', 'bedge', 'su2', 'tetgen', 'obj',
+            'surf', 'lawgs', 'shabp', 'avus', 'fast', 'abaqus',
+            'usm3d', 'bedge', 'su2', 'tetgen',
             'openfoam_hex', 'openfoam_shell', 'openfoam_faces',
-            'avl', 'vrml',
+            'avl',
         ]
+        if DEV:
+            allowed_formats.extend(['degen_geom', 'obj', 'vrml', 'h5nastran'])
+
 
     ext = os.path.splitext(input_filename)[1].lower()
     extension_to_format = {val : key for key, value in FORMAT_TO_EXTENSION.items()
@@ -455,8 +460,12 @@ def _validate_format(input_formats: List[str]) -> None:
         #'plot3d',
         'surf', 'lawgs', 'degen_geom', 'shabp', 'avus', 'fast', 'abaqus',
         'usm3d', 'bedge', 'su2', 'tetgen',
-        'openfoam_hex', 'openfoam_shell', 'openfoam_faces', 'obj', 'avl',
+        'openfoam_hex', 'openfoam_shell', 'openfoam_faces', 'avl',
         None,
     ]
+
+    if DEV:
+        allowed_formats += ['obj', 'h5nastran']
+
     for input_format in input_formats:
         assert input_format in allowed_formats, 'format=%r is not supported' % input_format

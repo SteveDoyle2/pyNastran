@@ -103,6 +103,7 @@ class pyNastranH5:
             'subcases': subcases,
         }
         self.subcases = subcases
+        self.results = {}
         self.log = SimpleLogger(level='debug', encoding='utf-8', log_func=None)
 
     def read_h5_nastran(self, h5_filename: str,
@@ -394,6 +395,7 @@ def load_strain_energy(basename_orig: str,
                        geom_model: BDF,
                        model: OP2,
                        subcases: Optional[List[int]]=None) -> int:
+    return iresult
     basename = 'Strain Energy'
     #assert ids is not None
     for ires, element_group_name in enumerate(element_group):
@@ -621,6 +623,7 @@ def load_strain_energy(basename_orig: str,
             #pass
         else:
             raise NotImplementedError(name)
+    return iresult
 
 def load_stress_strain(basename_orig: str,
                        iresult: int,
@@ -638,12 +641,36 @@ def load_stress_strain(basename_orig: str,
     for ires, name in enumerate(element_group):
         group = element_group.get(name)
         index = element_index.get(name)
-        if name in ['BAR', 'QUAD4_COMP', 'TRIA3_COMP']:
+        if name in ['ELAS1', 'ELAS2', 'ELAS3',
+                    'CONROD', 'ROD', 'TUBE', # 1D-basic
+                    'BAR', 'BARS', 'BEAM', 'SHEAR',
+                    'HEXA', 'PENTA', 'TETRA',
+                    'QUAD4_COMP', 'QUAD_CN',
+                    'QUAD8',
+                    'QUADR_COMP',
+                    'TRIA3', 'TRIA3_COMP',
+                    'TRIA6',
+                    'TRIAR_COMP',
+                    ]:
+            # real
+            pass
+        elif name in ['ELAS1_CPLX', 'ELAS2_CPLX', 'ELAS3_CPLX',
+                      'BAR_CPLX', 'BEAM_CPLX',
+                      'HEXA_CPLX', 'PENTA_CPLX', 'TETRA_CPLX',
+                      'ROD_CPLX', 'CONROD_CPLX', 'TUBE_CPLX',
+                      'SHEAR_CPLX',
+                      'QUAD4_COMP_CPLX', 'QUAD_CN_CPLX',
+                      'QUAD8_CPLX',
+                      'QUADR_CPLX', 'QUADR_COMP_CPLX',
+                      'TRIA3_CPLX', 'TRIA3_COMP_CPLX',
+                      'TRIA6_CPLX',
+                      'TRIAR_CPLX', 'TRIAR_COMP_CPLX',
+                      ]:
+            # complex
             pass
         else:
             raise NotImplementedError(name)
-
-    asdf
+    return
 
 
 def load_eigenvector(basename_orig: str,

@@ -23,7 +23,9 @@ from vtk.util.vtkAlgorithm import VTKPythonAlgorithmBase
 from pyNastran.dev.h5.read_h5 import pyNastranH5
 from pyNastran.utils import object_methods, object_stats, object_attributes
 from pyNastran.gui.utils.vtk.base_utils import numpy_to_vtk, numpy_to_vtkIdTypeArray
-from pyNastran.dev.h5.fill_unstructured_grid import fill_vtk_unstructured_grid, numpy_to_vtk_points
+from pyNastran.dev.h5.fill_unstructured_grid import (
+    fill_gui_vtk_unstructured_grid, fill_paraview_vtk_unstructured_grid,
+    numpy_to_vtk_points)
 
 vtkInformation = vtkmodules.vtkCommonCore.vtkInformation
 vtkPoints = vtkmodules.vtkCommonCore.vtkPoints
@@ -183,8 +185,26 @@ class HDF5Source(VTKPythonAlgorithmBase):
 
         return 1
 
-def fill_vtk_unstructured_grid_results(model: pyNastranH5, vtk_ugrid: vtk.vtkUnstructuredGrid,
-                                       eids: np.ndarray) -> None:
+def fill_gui_vtk_unstructured_grid_results(model: pyNastranH5,
+                                           vtk_ugrid: vtk.vtkUnstructuredGrid,
+                                           eids: np.ndarray) -> None:
+    for i, res in model.results.items():
+        if res.location == 'node':
+            names, resultsi = res.get_results()
+            for name, result in zip(names, resultsi):
+                print(name)
+
+                # remove
+                #point_data.SetActiveVectors(name)
+                #point_data.SetVectors(result)
+        elif res.location == 'element':
+            names, resultsi = res.get_results()
+            for name, result in zip(names, resultsi):
+                print(name)
+
+def fill_paraview_vtk_unstructured_grid_results(model: pyNastranH5,
+                                                vtk_ugrid: vtk.vtkUnstructuredGrid,
+                                                eids: np.ndarray) -> None:
     point_data = vtk_ugrid.GetPointData()
     cell_data = vtk_ugrid.GetCellData()
     for i, res in model.results.items():
@@ -224,6 +244,7 @@ def set_caero_grid(alt_grids, ncaeros_points: int, model: BDF):
         the bdf model
 
     """
+    log = model.log
     #gui = self.gui
     #vtk_points = vtk.vtkPoints()
     #vtk_points.SetNumberOfPoints(ncaeros_points)
@@ -315,11 +336,11 @@ def set_caero_grid(alt_grids, ncaeros_points: int, model: BDF):
                 caero_grid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
                 j += 4
         else:
-            model.log.info("skipping %s" % element.type)
+            log.info("skipping %s" % element.type)
 
     if ncaeros_points and len(max_cpoints):
-        model.log.info('CAERO.max = %s' % np.vstack(max_cpoints).max(axis=0))
-        model.log.info('CAERO.min = %s' % np.vstack(min_cpoints).min(axis=0))
+        log.info('CAERO.max = %s' % np.vstack(max_cpoints).max(axis=0))
+        log.info('CAERO.min = %s' % np.vstack(min_cpoints).min(axis=0))
 
 
     nodes = np.array(points, dtype='float32')
@@ -653,12 +674,74 @@ def fill_vtk_unstructured_grid_constraints(model: BDF,
                             nid_map,
                             idtype)
 
-def get_nastran_ugrid(hdf5_filename: str,
-                      add_property_info=True,
-                      add_material_info=True,
-                      subcases=None,  # default=None -> all
-                      modes=None, # default=None -> all
-                      results=None, # default=None -> all
+def get_gui_nastran_ugrid(hdf5_filename: str,
+                          ugrid_main: vtk.vtkUnstructuredGrid,
+                          add_property_info: bool=True,
+                          add_material_info: bool=True,
+                          subcases=None,  # default=None -> all
+                          modes=None, # default=None -> all
+                          results=None, # default=None -> all,
+                          ) -> Tuple[BDF, vtk.vtkUnstructuredGrid]:
+    add_aero = False
+    add_constraints = False
+    add_results = False
+
+    model = pyNastranH5(add_aero, add_constraints, add_results, subcases)
+    model.read_h5_nastran(hdf5_filename)
+    geom_model = model.geom_model
+    geom_model.log.info(geom_model.card_count)
+
+    #ugrid_main = vtk.vtkUnstructuredGrid()
+    alt_grids = {
+        'main' : ugrid_main,
+    }
+    node_ids, eids, form, cases = fill_gui_vtk_unstructured_grid(
+        geom_model, ugrid_main,
+        add_property=add_property_info,
+        add_material=add_material_info,
+    )
+    #fill_vtk_unstructured_grid_aero(geom_model, nodes, node_ids, alt_grids)
+    #fill_vtk_unstructured_grid_constraints(geom_model, alt_grids, nid_map)
+    fill_gui_vtk_unstructured_grid_results(model, ugrid_main, eids)
+
+
+    # PART 1 Make some Data.
+    # Make a tree.
+    root = vtk.vtkMultiBlockDataSet()
+
+    #branch = vtk.vtkMultiBlockDataSet()
+    #root.SetBlock(0, branch)
+
+    # Make some leaves.
+    #leaf1 = vtk.vtkSphereSource()
+    #leaf1.SetCenter(0, 0, 0)
+    #leaf1.Update()
+    #branch.SetBlock(0, leaf1.GetOutput())
+    #for key in ['mass']:
+        #if key in alt_grids:
+            #del alt_grids[key]
+
+    iblock = 0
+    basepath = os.path.basename(hdf5_filename)
+    for name, ugrid in alt_grids.items():
+        print(name)
+        root.SetBlock(iblock, ugrid)
+        meta_data = root.GetMetaData(iblock)
+        meta_data.Set(vtk.vtkCompositeDataSet.NAME(), f'{basepath}: {name}')
+        iblock += 1
+    #root.SetBlock(1, grid_aero)
+
+    #root.GetMetaData(0).Set(vtk.vtkCompositeDataSet.NAME(), basepath + ': main')
+    #root.GetMetaData(1).Set(vtk.vtkCompositeDataSet.NAME(), basepath + ': CAERO')
+    #print('root')
+    return model, ugrid_main, root, alt_grids, node_ids, eids, form, cases
+
+def get_paraview_nastran_ugrid(hdf5_filename: str,
+                               add_property_info=True,
+                               add_material_info=True,
+                               subcases=None,  # default=None -> all
+                               modes=None, # default=None -> all
+                               results=None, # default=None -> all,
                       ) -> Tuple[BDF, vtk.vtkUnstructuredGrid]:
     #subcases = [1, 2]
     #modes = range(1, 10)
@@ -676,14 +759,15 @@ def get_nastran_ugrid(hdf5_filename: str,
     alt_grids = {
         'main' : ugrid_main,
     }
-    eids = fill_vtk_unstructured_grid(
+    eids = fill_paraview_vtk_unstructured_grid(
         geom_model, ugrid_main,
         add_property=add_property_info,
         add_material=add_material_info,
     )
     #fill_vtk_unstructured_grid_aero(geom_model, nodes, node_ids, alt_grids)
     #fill_vtk_unstructured_grid_constraints(geom_model, alt_grids, nid_map)
-    fill_vtk_unstructured_grid_results(model, ugrid_main, eids)
+    fill_paraview_unstructured_grid_results(model, ugrid_main, eids)
+
 
     # PART 1 Make some Data.
     # Make a tree.

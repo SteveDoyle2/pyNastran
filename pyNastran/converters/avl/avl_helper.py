@@ -1,48 +1,103 @@
+from __future__ import annotations
 import numpy as np
+integer_types = (int, )
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from pyNastran.converters.avl.surface import Surface
+    from pyNastran.converters.avl.body import Body
 
-class Control:
-    def __init__(self, name: str, gain: float, xhinge: float,
-                 hinge_vector: np.ndarray, sign_deflection_duplicated: float):
-        """
-        Parameters
-        ----------
-        name : str
-            name of control variable
-        gain : float
-            control deflection gain, units:  degrees deflection / control variable
-        xhinge : float
-            x/c location of hinge.
-            If positive, control surface extent is Xhinge..1  (TE surface)
-            If negative, control surface extent is 0..-Xhinge (LE surface)
-        XYZhvec : (3,) float ndarray
-            vector giving hinge axis about which surface rotates
-            + deflection is + rotation about hinge vector by righthand rule
-            Specifying XYZhvec = 0. 0. 0. puts the hinge vector along the hinge
-        SgnDup : float
-            sign of deflection for duplicated surface
-            An elevator would have SgnDup = +1.0
-            An aileron  would have SgnDup = -1.0
+def save_wing_elements(isurface: int,
+                       point: np.ndarray, element: np.ndarray,
+                       xyz_scale: np.ndarray,
+                       dxyz: np.ndarray,
+                       nodes: List[np.ndarray], quad_elements: List[np.ndarray],
+                       surfaces: List[Union[Surface, Body]],
+                       is_cs_list, is_cs,
+                       ipoint: int) -> int:
+    npoint = point.shape[0]
+    nelement = element.shape[0]
 
-        """
-        self.name = name
-        self.gain = gain
-        self.xhinge = xhinge
-        self.hinge_vector = hinge_vector
-        self.sign_deflection_duplicated = sign_deflection_duplicated
-        assert isinstance(xhinge, float), xhinge
-        assert isinstance(gain, float), gain
-        assert isinstance(sign_deflection_duplicated, float), sign_deflection_duplicated
+    # scaling is applied before translation
+    point[:, 0] *= xyz_scale[0]
+    point[:, 1] *= xyz_scale[1]
+    point[:, 2] *= xyz_scale[2]
+    #print(point)
+    point += dxyz
 
-    def write(self) -> str:
-        x, y, z = self.hinge_vector
-        msg = (
-            'CONTROL\n'
-            '! name, gain, xhinge, [hinge_vector], sign_deflection_duplicated'
-            f'{self.name} {self.gain} {self.xhinge} {x} {y} {z} {self.sign_deflection_duplicated}'
-        )
-        return msg
+    surfaces.append(np.ones(nelement, dtype='int32') * isurface)
+    assert len(is_cs) == nelement
+    is_cs_list.append(is_cs)
 
-    def __repr__(self) -> str:
-        msg = (f'Control(name={self.name!r}, gain={self.gain}, xhinge={self.xhinge}, '
-               f'hinge_vector={self.hinge_vector}, sign_deflection_duplicated={self.sign_deflection_duplicated})')
-        return msg
+    nodes.append(point)
+    quad_elements.append(ipoint + element)
+
+    ipoint += npoint
+    return ipoint
+
+def get_spacing(nchord: int, k: float) -> np.ndarray:
+    """
+    Parameters
+    ----------
+    nchord : int
+        number of chordwise points
+    k : spacing
+        factor
+
+    Returns
+    -------
+    x' : (n,) ndarray
+        ranges from [0, 1]
+    """
+    xeq = np.linspace(0., 1., num=nchord+1,
+                      endpoint=True, retstep=False, dtype=None)
+    if k in {-3.0, 0.0, 3.0}:
+        return xeq
+
+    theta = xeq * np.pi
+    xcos = 1. / 2 * (1 - np.cos(theta))
+    xsine = 1. / 2 * np.sin(theta/2.)
+    keq = 0.
+    kcos = 0.
+    ksin = 0.
+    kabs = abs(k)
+    if 0.0 <= kabs <= 1.0:
+        keq = 1.0 - kabs
+        kcos = kabs
+    elif kabs <= 2.0:
+        kcos = kabs - 1.0
+        ksin = 2.0 - kabs
+    elif kabs <= 3.0:
+        ksin = kabs - 2.0
+        keq = 3.0 - kabs
+    else:
+        raise RuntimeError(f'kabs={kabs} and must be <= 3.0')
+    xprime = keq * xeq + ksin * xsine + kcos * xcos
+    return xprime
+
+def save_wing_elements(isurface: int,
+                       point: np.ndarray, element: np.ndarray,
+                       xyz_scale: np.ndarray,
+                       dxyz: np.ndarray,
+                       nodes: List[np.ndarray], quad_elements: List[np.ndarray],
+                       surfaces: List[Union[Surface, Body]],
+                       is_cs_list, is_cs,
+                       ipoint: int) -> int:
+    npoint = point.shape[0]
+    nelement = element.shape[0]
+
+    # scaling is applied before translation
+    point[:, 0] *= xyz_scale[0]
+    point[:, 1] *= xyz_scale[1]
+    point[:, 2] *= xyz_scale[2]
+    #print(point)
+    point += dxyz
+
+    surfaces.append(np.ones(nelement, dtype='int32') * isurface)
+    assert len(is_cs) == nelement
+    is_cs_list.append(is_cs)
+
+    nodes.append(point)
+    quad_elements.append(ipoint + element)
+
+    ipoint += npoint
+    return ipoint

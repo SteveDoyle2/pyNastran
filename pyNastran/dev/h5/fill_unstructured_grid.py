@@ -1,14 +1,18 @@
 from __future__ import annotations
-import os
+from itertools import count
+from collections import OrderedDict
 import numpy as np
 import h5py
 import vtk
-import vtkmodules
+#import vtkmodules
 from vtk.numpy_interface import dataset_adapter as dsa
 from vtk.util.vtkAlgorithm import VTKPythonAlgorithmBase
 from pyNastran.dev.h5.read_h5 import pyNastranH5
 from pyNastran.utils import object_methods, object_stats, object_attributes
 from pyNastran.gui.utils.vtk.base_utils import numpy_to_vtk, numpy_to_vtkIdTypeArray
+from pyNastran.gui.gui_objects.gui_result import GuiResult
+from typing import Set
+
 
 def numpy_to_vtk_points(nodes, points=None, dtype='<f', deep=1):
     """common method to account for vtk endian quirks and efficiently adding points"""
@@ -35,10 +39,40 @@ def fill_vtk_unstructured_grid_aero(geom_model) -> vtk.vtkUnstructuredGrid:
     grid_aero = vtk.vtkUnstructuredGrid()
     #grid_aero = vtk.vtk.vtkStructuredGrid()
 
-def fill_vtk_unstructured_grid(geom_model: BDF,
-                               vtk_ugrid: vtk.vtkUnstructuredGrid,
-                               add_property=True,
-                               add_material=True):
+def fill_gui_vtk_unstructured_grid(geom_model: BDF,
+                                   vtk_ugrid: vtk.vtkUnstructuredGrid,
+                                   add_property: bool=True,
+                                   add_material: bool=True) -> np.ndarray:
+    nodes = geom_model._nodes
+    node_ids = geom_model._node_ids
+    #nid_map = geom_model._nid_map
+    idtype = geom_model._idtype
+    vtk_points = numpy_to_vtk_points(nodes, points=None, dtype='<f', deep=1)
+
+    vtk_ugrid.SetPoints(vtk_points)
+
+    etype_nids, cell_offsets_array, cell_types_array, eids, pids = _load_elements(
+        geom_model, node_ids, idtype=idtype)
+
+    # build the grid
+    _elements_to_vtk(vtk_ugrid, etype_nids, cell_offsets_array, cell_types_array)
+
+    # fill the grid with results
+    #point_data = vtk_ugrid.GetPointData()
+
+    iresult = 0
+    cases = OrderedDict()
+    form, iresult = _fill_gui_geometry_arrays(
+        geom_model, vtk_ugrid,
+        node_ids, eids, pids, iresult, cases,
+        add_property=add_property,
+        add_material=add_material)
+    return node_ids, eids, form, cases
+
+def fill_paraview_vtk_unstructured_grid(geom_model: BDF,
+                                        vtk_ugrid: vtk.vtkUnstructuredGrid,
+                                        add_property: bool=True,
+                                        add_material: bool=True) -> np.ndarray:
     #cell_type_point = 1 # vtk.vtkVertex().GetCellType()
     #cell_type_line = 3 # vtk.vtkLine().GetCellType()
     #cell_type_tri3 = 5
@@ -64,7 +98,6 @@ def fill_vtk_unstructured_grid(geom_model: BDF,
 
     etype_nids, cell_offsets_array, cell_types_array, eids, pids = _load_elements(
         geom_model, node_ids, idtype=idtype)
-    nelements = len(eids)
 
     # build the grid
     _elements_to_vtk(vtk_ugrid, etype_nids, cell_offsets_array, cell_types_array)
@@ -72,6 +105,208 @@ def fill_vtk_unstructured_grid(geom_model: BDF,
     # fill the grid with results
     #point_data = vtk_ugrid.GetPointData()
 
+    _fill_paraview_geometry_arrays(geom_model,
+                                   vtk_ugrid,
+                                   eids, pids,
+                                   add_property=add_property,
+                                   add_material=add_material)
+    return eids
+
+def _fill_gui_geometry_arrays(geom_model: BDF,
+                              vtk_ugrid: vtk.vtkUnstructuredGrid,
+                              nids: np.ndarray,
+                              eids: np.ndarray,
+                              pids: np.ndarray,
+                              iresult: int,
+                              cases: Dict[int, GuiResult],
+                              add_property: bool=True,
+                              add_material: bool=True):
+    """
+    adds:
+     - ElementID
+     - PropertyID
+     - Solid Material ID
+     - Shell Material ID
+     - Shell Thickness
+    """
+    nelements = len(eids)
+    #cell_data = vtk_ugrid.GetCellData()
+    subcase_id = 0
+
+    geometry_form = []
+    form = [
+        ('Geometry', None, geometry_form),
+    ]
+    #geometry_form = [
+        #('NodeID', 0, []),
+        #('ElementID', 1, []),
+        #('SurfaceID', 2, []),
+        #('isControlSurface', 3, []),
+    #]
+
+    location = 'node'
+    name = header = title = 'NodeID'
+    nid_res = GuiResult(
+        subcase_id, header, title, location, nids, mask_value=None,
+        nlabels=None, labelsize=None, ncolors=None, colormap='jet',
+        data_map=None, data_format=None, uname='ElementID')
+    geometry_form.append((header, iresult, []))
+    cases[iresult] = (nid_res, (0, 'ElementID'))
+    iresult += 1
+
+    location = 'centroid'
+    name = header = title = 'ElementID'
+    eid_res = GuiResult(
+        subcase_id, header, title, location, eids, mask_value=None,
+        nlabels=None, labelsize=None, ncolors=None, colormap='jet',
+        data_map=None, data_format=None, uname=name)
+    geometry_form.append((header, iresult, []))
+    cases[iresult] = (eid_res, (0, name))
+    iresult += 1
+
+    if add_property:
+        header = title = 'PropertyID'
+        pid_res = GuiResult(
+            subcase_id, header, title, location, pids, mask_value=0,
+            nlabels=None, labelsize=None, ncolors=None, colormap='jet',
+            data_map=None, data_format=None, uname='PropertyID')
+        cases[iresult] = (pid_res, (0, 'PropertyID'))
+        geometry_form.append((header, iresult, []))
+        iresult += 1
+
+    #if add_property:
+        #pid_array = numpy_to_vtk(pids, deep=0, array_type=None)
+        #pid_array.SetName('PropertyID')
+        #cell_data.AddArray(pid_array)
+
+    if add_material:
+        (psolid_mids, pshell_mids, thickness_pshell, thickness_pcomp, pcomp_mids,
+         is_solid, is_pshell, is_pcomp) = _get_material_arrays(
+            geom_model, nelements, pids)
+        if is_solid:
+            name = header = title = 'Solid Material'
+            mid_res = GuiResult(
+                subcase_id, header, title, location, psolid_mids, mask_value=-1,
+                nlabels=None, labelsize=None, ncolors=None, colormap='jet',
+                data_map=None, data_format=None, uname=name)
+            cases[iresult] = (mid_res, (0, name))
+            geometry_form.append((header, iresult, []))
+            iresult += 1
+
+        if is_pshell:
+            pshell_form = []
+            geometry_form.append(('PSHELL', None, pshell_form))
+            name = header = title = 'Thickness'
+            t_res = GuiResult(
+                subcase_id, header, title, location, thickness_pshell, mask_value=None,
+                nlabels=None, labelsize=None, ncolors=None, colormap='jet',
+                data_map=None, data_format=None, uname=name)
+            cases[iresult] = (t_res, (0, name))
+            pshell_form.append((header, iresult, []))
+            iresult += 1
+            for imid in range(4):
+                mids = pshell_mids[:, imid]
+                ipos = np.where(mids > 0)[0]
+                if len(ipos) == 0:
+                    continue
+                name = header = title = f'Material {imid+1}'
+                midi_res = GuiResult(
+                    subcase_id, header, title, location, mids, mask_value=-1,
+                    nlabels=None, labelsize=None, ncolors=None, colormap='jet',
+                    data_map=None, data_format=None, uname=name)
+                cases[iresult] = (midi_res, (0, name))
+                pshell_form.append((header, iresult, []))
+                iresult += 1
+
+        if is_pcomp:
+            pcomp_form = []
+            geometry_form.append(('PCOMP', None, pcomp_form))
+            name = header = title = 'Total Thickness'
+            t_res = GuiResult(
+                subcase_id, header, title, location, thickness_pcomp[:, -1], mask_value=None,
+                nlabels=None, labelsize=None, ncolors=None, colormap='jet',
+                data_map=None, data_format=None, uname=name)
+            cases[iresult] = (t_res, (0, name))
+            pcomp_form.append((header, iresult, []))
+            iresult += 1
+
+            nlayers = pcomp_mids.shape[1]
+            for ilayer in range(nlayers):
+                name = header = title = f'Thickness Layer {ilayer+1}'
+                t_res = GuiResult(
+                    subcase_id, header, title, location, thickness_pcomp[:, ilayer], mask_value=None,
+                    nlabels=None, labelsize=None, ncolors=None, colormap='jet',
+                    data_map=None, data_format=None, uname=name)
+                cases[iresult] = (t_res, (0, name))
+                pcomp_form.append((header, iresult, []))
+                iresult += 1
+
+                mids = pcomp_mids[:, ilayer]
+                name = header = title = f'Material Layer {ilayer+1}'
+                midi_res = GuiResult(
+                    subcase_id, header, title, location, mids, mask_value=-1,
+                    nlabels=None, labelsize=None, ncolors=None, colormap='jet',
+                    data_map=None, data_format=None, uname=name)
+                cases[iresult] = (midi_res, (0, name))
+                pcomp_form.append((header, iresult, []))
+                iresult += 1
+    return form, iresult
+
+def _get_material_arrays(geom_model: BDF,
+                         nelements: int,
+                         pids: np.ndarray) -> Tuple[Any, Any, Any, bool, bool]:
+    psolid_mids = np.full(nelements, -1, dtype='int64')
+    pshell_mids = np.full((nelements, 4), -1, dtype='int64')
+    thickness_pshell = np.full(nelements, np.nan, dtype='float32')
+    upids = np.unique(pids)
+    is_solid = False
+    is_pshell = False
+    is_pcomp = False
+    pcomps = []
+    n_pcomp_layers = 0
+    for pid in upids:
+        if pid == -1:
+            continue
+        ipid = np.where(pid == pids)
+        prop = geom_model.properties[pid]
+        if prop.type == 'PSOLID':
+            is_solid = True
+            psolid_mids[ipid] = prop.mid
+        elif prop.type == 'PSHELL':
+            is_pshell = True
+            thickness_pshell[ipid] = prop.t
+            for imid, mid in enumerate([prop.mid1, prop.mid2, prop.mid3, prop.mid4]):
+                if mid is None:
+                    continue
+                pshell_mids[ipid, imid] = mid
+        elif prop.type == 'PCOMP':
+            is_pcomp = True
+            n_pcomp_layers = max(n_pcomp_layers, len(prop.thicknesses))
+            pcomps.append((ipid, prop.thicknesses, prop.mids))
+        else:
+            geom_model.log.warning(f'skipping:\n{prop}')
+
+    if is_pcomp:
+        thickness_pcomp = np.full((nelements, n_pcomp_layers+1), np.nan, dtype='float32')
+        material_ids_pcomp = np.full((nelements, n_pcomp_layers), -1, dtype='int64')
+        for ipid, thicknesses, mids in pcomps:
+            for ilayer, thickness, mid in zip(count(), thicknesses, mids):
+                thickness_pcomp[ipid, ilayer] = thickness
+                material_ids_pcomp[ipid, ilayer] = mid
+            thickness_pcomp[ipid, -1] = thicknesses.sum()
+    else:
+        thickness_pcomp = np.empty([])
+        material_ids_pcomp = np.empty([])
+
+    return psolid_mids, pshell_mids, thickness_pshell, thickness_pcomp, material_ids_pcomp, is_solid, is_pshell, is_pcomp
+
+def _fill_paraview_geometry_arrays(geom_model: BDF,
+                                   vtk_ugrid: vtk.vtkUnstructuredGrid,
+                                   eids: np.ndarray,
+                                   pids: np.ndarray,
+                                   add_property: bool=True,
+                                   add_material: bool=True):
+    nelements = len(eids)
     cell_data = vtk_ugrid.GetCellData()
     eid_array = numpy_to_vtk(eids, deep=0, array_type=None)
     eid_array.SetName('ElementID')
@@ -88,35 +323,16 @@ def fill_vtk_unstructured_grid(geom_model: BDF,
         #cell_data.AddArray(pid_array)
 
     if add_material:
-        psolid_mids = np.full(nelements, -1, dtype='int64')
-        pshell_mids = np.full((nelements, 4), -1, dtype='int64')
-        thickness = np.full(nelements, np.nan, dtype='float32')
-        upids = np.unique(pids)
-        is_solid = False
-        is_shell = False
-        for pid in upids:
-            ipid = np.where(pid == pids)
-            prop = geom_model.properties[pid]
-            if prop.type == 'PSOLID':
-                is_solid = True
-                psolid_mids[ipid] = prop.mid
-            elif prop.type == 'PSHELL':
-                is_shell = True
-                thickness[ipid] = prop.t
-                for imid, mid in enumerate([prop.mid1, prop.mid2, prop.mid3, prop.mid4]):
-                    if mid is None:
-                        continue
-                    pshell_mids[ipid, imid] = mid
-            else:
-                geom_model.log.warning(f'skipping:\n{prop}')
-
+        out = _get_material_arrays(geom_model, nelements, pids)
+        (psolid_mids, pshell_mids, thickness_pshell, thickness_pcomp, material_ids_pcomp,
+         is_solid, is_pshell, is_pcomp) = out
         if is_solid:
             mid_array = numpy_to_vtk(psolid_mids, deep=0, array_type=None)
             mid_array.SetName('Solid Material')
             cell_data.AddArray(mid_array)
 
-        if is_shell:
-            thickness_array = numpy_to_vtk(thickness, deep=0, array_type=None)
+        if is_pshell:
+            thickness_array = numpy_to_vtk(thickness_pshell, deep=0, array_type=None)
             thickness_array.SetName('Shell Thickness')
             cell_data.AddArray(thickness_array)
             for imid in range(4):
@@ -124,8 +340,7 @@ def fill_vtk_unstructured_grid(geom_model: BDF,
                 shell_mid_array = numpy_to_vtk(mids, deep=0, array_type=None)
                 thickness_array.SetName(f'Shell Material {imid+1}')
                 cell_data.AddArray(shell_mid_array)
-    #print(point_data)
-    return eids
+    return
 
 def _load_nodes(geom_model: BDF) -> Tuple[np.ndarray,
                                           Dict[int, int],
@@ -162,6 +377,9 @@ def _load_elements(geom_model: BDF, node_ids: np.ndarray, idtype: str='int32'):
     etypes = {
         'CTRIA3', 'CQUAD4', 'CTRIA6', 'CQUAD8',
         'CTETRA', 'CHEXA', 'CPENTA', 'CPYRAM',
+        # not tested
+        'CBAR', 'CBEAM', 'CROD', 'CONROD', 'CTUBE',
+        'CELAS1', 'CELAS2', 'CELAS3', 'CELAS4',
     }
     nelements = get_number_of_elements(etypes, geom_model)
 
@@ -224,7 +442,7 @@ def _load_elements(geom_model: BDF, node_ids: np.ndarray, idtype: str='int32'):
             elem = geom_model.CHEXA
             G = elem['G'][:, :nnodes]
         else:
-            missing_types.add(elem.type)
+            missing_types.add(card_type)
             print(card_type, nelementsi)
             continue
         #print(card_type)
@@ -284,7 +502,7 @@ def _elements_to_vtk(vtk_ugrid: vtk.vtkUnstructuredGrid,
     #grid = vtk.vtkUnstructuredGrid()
     vtk_ugrid.SetCells(vtk_cell_types, vtk_cell_offsets, vtk_cells)
 
-def get_number_of_elements(etypes, geom_model: BDF) -> int:
+def get_number_of_elements(etypes: Set[str], geom_model: BDF) -> int:
     nelements = 0
     for card_type, nelementsi in geom_model.card_count.items():
         if card_type in etypes:

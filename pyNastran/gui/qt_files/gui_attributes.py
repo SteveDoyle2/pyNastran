@@ -988,6 +988,7 @@ class GuiAttributes:
     def build_fmts(self, fmt_order: List[str], stop_on_failure: bool=False):
         """populates the formats that will be supported"""
         fmts = []
+        #assert 'h5nastran' in fmt_order
         for fmt in fmt_order:
             geom_results_funcs = 'get_%s_wildcard_geometry_results_functions' % fmt
 
@@ -1015,7 +1016,7 @@ class GuiAttributes:
         self.supported_formats = [fmt[0] for fmt in fmts]
         if not IS_TESTING:  # pragma: no cover
             print('supported_formats = %s' % self.supported_formats)
-        #assert 'cart3d' in self.supported_formats, self.supported_formats
+        #assert 'h5nastran' in self.supported_formats, self.supported_formats
         if len(fmts) == 0:
             print('supported_formats = %s' % self.supported_formats)
             raise RuntimeError('no modules were loaded...')

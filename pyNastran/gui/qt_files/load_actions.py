@@ -158,7 +158,7 @@ class LoadActions:
 
         if geometry_format and geometry_format.lower() not in self.gui.supported_formats:
             is_failed = True
-            msg = 'The import for the %r module failed.\n' % geometry_format
+            msg = f'The import for the {geometry_format!r} module failed.\n'
             self.gui.log_error(msg)
             if IS_TESTING:  # pragma: no cover
                 raise RuntimeError(msg)

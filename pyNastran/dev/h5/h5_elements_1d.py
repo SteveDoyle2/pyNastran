@@ -47,8 +47,11 @@ def read_conrod(name: str, group: h5py._hl.dataset.Dataset, geom_model: BDF) -> 
     for eid, mid, nids, a, j, c, nsm in zip(EID, MID, NIDS, A, J, C, NSM):
         obj = geom_model.add_conrod(eid, mid, nids, A=a, j=j, c=c, nsm=nsm)
         obj.validate()
+    geom_model.card_count[name] = len(EID)
 
 def read_cbar(name: str, group: h5py._hl.dataset.Dataset, geom_model: BDF) -> None:
+    #setattr(geom_model, name, group)
+    #return
     assert len(group.dtype.names) == 18, group.dtype.names
     EID = group['EID']
     PID = group['PID']
@@ -87,6 +90,7 @@ def read_cbar(name: str, group: h5py._hl.dataset.Dataset, geom_model: BDF) -> No
                                   pa=pa, pb=pb, wa=wa, wb=wb, comment='')
         obj.validate()
         str(obj)
+    geom_model.card_count[name] = len(EID)
 
 def read_cbeam(name: str, group: h5py._hl.dataset.Dataset, geom_model: BDF) -> None:
     #('EID', 'PID', 'GA', 'GB', 'SA', 'SB', 'X', 'G0', 'F', 'PA', 'PB', 'WA', 'WB', 'DOMAIN_ID')
@@ -135,3 +139,4 @@ def read_cbeam(name: str, group: h5py._hl.dataset.Dataset, geom_model: BDF) -> N
                                    pa=pa, pb=pb, wa=wa, wb=wb, sa=sa, sb=sb)
         obj.validate()
         str(obj)
+    geom_model.card_count[name] = len(EID)

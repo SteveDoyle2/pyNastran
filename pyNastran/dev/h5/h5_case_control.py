@@ -5,8 +5,10 @@ from pyNastran.bdf.case_control_deck import CaseControlDeck
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.bdf.bdf import BDF
     from pyNastran.bdf.subcase import Subcase
+    from cpylog import SimpleLogger
 
 def load_parameters(hdf5_file, geom_model: BDF) -> None:
+    """reads PARAMs"""
     pvt_str = 'NASTRAN/INPUT/PARAMETER/PVT'
     parameters = hdf5_file.get(pvt_str)
     for name in list(parameters):
@@ -34,8 +36,9 @@ def load_parameters(hdf5_file, geom_model: BDF) -> None:
 
 
 def load_case_control(geom_model: BDF, hdf5_case_control):
+    """reads the case control deck"""
     names = hdf5_case_control.dtype.names
-    names = list(names)
+    names = set(list(names))
     names.remove('SID')
     lines = []
     cc = CaseControlDeck(lines, log=None)
@@ -106,7 +109,6 @@ def load_case_control(geom_model: BDF, hdf5_case_control):
         'SEMR' : ('SEMR', -1),
         'SEDV' : ('SEDV', -1),
         'SERE' : ('SERE', -1),
-        'SEEXCLUDE' : ('SEEX', 0),
         'SEEXCLUDE' : ('SEEX', 0),
     }
 
@@ -250,7 +252,7 @@ def load_case_control(geom_model: BDF, hdf5_case_control):
                 raise RuntimeError((name_str, sid, value, media, fmt))
 
             if media in (1,    3,    5,    7):
-                options.append('PRINT')
+                options.append('PLOT')
             if media in (   2, 3,       6, 7):
                 options.append('PRINT')
             if media in (         4, 5, 6, 7):
@@ -307,7 +309,9 @@ def load_case_control(geom_model: BDF, hdf5_case_control):
     geom_model.case_control_deck = cc
 
 def _load_special_names(special_names, hdf5_case_control,
-                        subcases, sids, log):
+                        subcases: Dict[int, Subcase],
+                        sids: List[int],
+                        log: SimpleLogger):
     for name_str in special_names:
         values = hdf5_case_control[name_str]
         for sid, data in zip(sids, values):
