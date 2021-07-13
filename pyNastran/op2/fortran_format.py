@@ -37,8 +37,8 @@ class FortranFormat:
         """Shows binary data"""
         return self.op2_reader.show_data(data, types=types, endian=endian, force=force)
 
-    def show_ndata(self, n: int, types: str='ifs', force: bool=False):  # pragma: no cover
-        self.op2_reader.show_ndata(n, types=types, force=force)
+    def show_ndata(self, n: int, types: str='ifs', force: bool=False, endian=None):  # pragma: no cover
+        self.op2_reader.show_ndata(n, types=types, force=force, endian=endian)
 
     #def passer(self, data):
         #"""

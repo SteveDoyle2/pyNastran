@@ -101,6 +101,9 @@ if TYPE_CHECKING:  # pragma: no cover
         DVMREL1, DVMREL2,
         DVPREL1, DVPREL2,
         DVGRID, DSCREEN)
+    from pyNastran.bdf.cards.optimization_nx import (
+        GROUP, DMNCON, DMNCON,
+    )
     from pyNastran.bdf.cards.superelements import (
         RELEASE, SEBNDRY, SEBULK, SECONCT, SEELT, SEEXCLD,
         SELABEL, SELOAD, SELOC, SEMPLN, SENQSET, SETREE,
@@ -1391,6 +1394,33 @@ class AddMethods(BDFAttributes):
             self.dvgrids[key] = []
             self._type_to_id_map[dvgrid.type].append(key)
         self.dvgrids[key].append(dvgrid)
+
+    #-----------------------------------------------------------
+    # nx optimization
+    def _add_dvtrel_object(self, dvtrel: Union[DVTREL1]) -> None:
+        """adds a DVTREL1/DVTREL2 object"""
+        key = dvtrel.dvtrel_id
+        assert key not in self.dvtrels, 'DVTRELx=%s old\n%snew=\n%s' % (
+            key, self.dvtrels[key], dvtrel)
+        assert key > 0
+        self.dvtrels[key] = dvtrel
+        self._type_to_id_map[dvtrel.type].append(key)
+
+    def _add_group_object(self, group: GROUP) -> None:
+        """adds a GROUP object"""
+        key = group.group_id
+        assert key > 0
+        self.group[key] = group
+        self._type_to_id_map[group.type].append(key)
+
+    def _add_dmncon_object(self, dmncon: DMNCON) -> None:
+        """adds a DMNCON object"""
+        key = dmncon.constraint_id
+        assert key > 0
+        self.dmncon[key] = dmncon
+        self._type_to_id_map[dmncon.type].append(key)
+
+    #-----------------------------------------------------------
 
     def _add_nlparm_object(self, nlparm: NLPARM) -> None:
         """adds a NLPARM object"""

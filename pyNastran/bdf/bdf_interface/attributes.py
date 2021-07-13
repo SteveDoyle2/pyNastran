@@ -537,6 +537,11 @@ class BDFAttributes:
         self.doptprm = None  # type: Optional[DOPTPRM]
         self.dscreen = {}  # type: Dict[int, DSCREEN]
 
+        # nx optimization
+        self.group = {}    # type: Dict[int, GROUP]
+        self.dmncon = {}   # type: Dict[int, DMNCON]
+        self.dvtrels = {}  # type: Dict[int, Union[DVTREL1, DVTREL2]]
+
         # ------------------------- nonlinear defaults -----------------------
         #: stores NLPCI
         self.nlpcis = {}  # type: Dict[int, NLPCI]
@@ -916,6 +921,10 @@ class BDFAttributes:
             'doptprm' : ['DOPTPRM'],
             'dscreen' : ['DSCREEN'],
 
+            # optimization - nx
+            'dmncon' : ['DMNCON'],
+            'dvtrels' : ['DVTREL1'],
+            'group' : ['GROUP'],
 
             # sets
             'asets' : ['ASET', 'ASET1'],

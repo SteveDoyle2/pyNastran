@@ -4,11 +4,29 @@ from pyNastran.op2.op2_helper import polar_to_real_imag
 
 
 def reshape_bytes_block(block: bytes) -> bytes:
+    """
+    Converts the nonsense 64-bit string to 32-bit format.
+
+    Note
+    ----
+    Requires a multiple of 8 characters.
+    """
     nwords = len(block) // 2
     block2 = b''.join([block[8*i:8*i+4] for i in range(nwords)])
     return block2
 
 def reshape_bytes_block_size(name_bytes: bytes, size: int=4) -> bytes:
+    """
+    Converts the nonsense 64-bit string to 32-bit format.  Right strips
+    the output
+
+    Example
+    -------
+    >>> reshape_bytes_block_size('1234567 ', size=4)
+    '1234567'
+    >>> reshape_bytes_block_size('1234    567     ', size=8)
+    '1234567'
+    """
     if size == 4:
         name_str = name_bytes.decode('latin1').rstrip()
     else:
@@ -16,6 +34,17 @@ def reshape_bytes_block_size(name_bytes: bytes, size: int=4) -> bytes:
     return name_str
 
 def reshape_bytes_block_strip(name_bytes: bytes, size: int=4) -> str:
+    """
+    Converts the nonsense 64-bit string to 32-bit format.  Strips
+    the output.
+
+    Example
+    -------
+    >>> reshape_bytes_block_strip('1234567 ', size=4)
+    '1234567'
+    >>> reshape_bytes_block_strip('1234    567     ', size=8)
+    '1234567'
+    """
     if size == 4:
         name_str = name_bytes.decode('latin1').strip()
     else:
@@ -23,11 +52,22 @@ def reshape_bytes_block_strip(name_bytes: bytes, size: int=4) -> str:
     return name_str
 
 def mapfmt(fmt: bytes, size: int) -> bytes:
+    """
+    Changes the type of of a format string from 32-bit to 64-bit.
+
+    WARNING: doesn't handle strings.
+
+    Example
+    -------
+    >>> mapfmt(b'2i 6f')
+    b'2q 6d'
+    """
     if size == 4:
         return fmt
     return fmt.replace(b'i', b'q').replace(b'f', b'd')
 
 def mapfmt_str(fmt: str, size: int) -> str:
+    """Same as mapfmt, but works on strings instead of bytes."""
     if size == 4:
         return fmt
     return fmt.replace('i', 'q').replace('f', 'd')

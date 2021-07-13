@@ -220,7 +220,13 @@ class OP2Reader:
         }
 
     def read_nastran_version(self, mode: str):
-        """reads the version header"""
+        """
+        reads the version header
+          ints = (3, 4, 12, 1, 28, 12, 12, 4, 7, 4,
+          28, 1414742350, 541999442, 1414680390, 1346458656, 1145643077, 1146045216, 539828293, 28,
+          4, 2, 4, 8, 1482184792, 1482184792, 8, 4, -1, 4, 4, 0, 4, 4, 2, 4, 8, 1297040711, 538976305, 8, 4, -1
+          """
+        # self.show_ndata(120, types='ifs', force=False)
         #try:
         op2 = self.op2
         markers = self.get_nmarkers(1, rewind=True)
@@ -244,7 +250,11 @@ class OP2Reader:
                 op2.post = -1
             self.read_markers([3])
             data = self.read_block()   # TODO: is this the date...pretty sure at least for MSC
-            #assert len(data) == 12, len(data)
+            if len(data) == 12:
+                date = self.op2.struct_3i.unpack(data)
+                self.op2.log.debug(f'date = {date}')
+            else:
+                assert len(data) == 12, f'ndata={len(data)} data={data}'
 
             self.read_markers([7])
             data = self.read_string_block()  # 'NASTRAN FORT TAPE ID CODE - '
@@ -308,7 +318,7 @@ class OP2Reader:
             op2.post = -4
             #pass # mode = 'optistruct'
         elif isinstance(op2._nastran_format, str):
-            if op2._nastran_format not in ['msc', 'nx', 'optistruct']:
+            if op2._nastran_format not in {'msc', 'nx', 'optistruct'}:
                 raise RuntimeError(f'nastran_format={op2._nastran_format} mode={mode} and must be "msc", "nx", "optistruct", or "autodesk"')
             mode = op2._nastran_format
         elif mode is None:
@@ -5876,7 +5886,9 @@ class OP2Reader:
 
         # we need to check the marker, so we read it and rewind, so we don't
         # screw up our positioning in the file
+        #self.show_ndata(20, types='i')
         markers = self.get_nmarkers(1, rewind=True)
+        #print('markers =', markers)
         #if markers[0] == 0:
             #self.log.debug('    returning early')
             #return
@@ -5936,7 +5948,9 @@ class OP2Reader:
                     #self.show(200)
                     #break
                 raise
+            #self.show_ndata(21, types='ifs')
             markers = self.get_nmarkers(1, rewind=True)
+            #print("markers* =", markers)
 
         if self.is_debug_file:
             self.binary_debug.write(f'breaking on marker={markers}\n')
@@ -6195,17 +6209,17 @@ class OP2Reader:
         f.write('\n')
         return strings, ints, floats
 
-    def show_ndata(self, n: int, types: str='ifs', force: bool=False):  # pragma: no cover
-        return self._write_ndata(sys.stdout, n, types=types, force=force)
+    def show_ndata(self, n: int, types: str='ifs', force: bool=False, endian=None):  # pragma: no cover
+        return self._write_ndata(sys.stdout, n, types=types, force=force, endian=endian)
 
-    def _write_ndata(self, f, n: int, types: str='ifs', force: bool=False):  # pragma: no cover
+    def _write_ndata(self, f, n: int, types: str='ifs', force: bool=False, endian=None):  # pragma: no cover
         """Useful function for seeing what's going on locally when debugging."""
         op2 = self.op2
         nold = op2.n
         data = op2.f.read(n)
         op2.n = nold
         op2.f.seek(op2.n)
-        return self._write_data(f, data, types=types, force=force)
+        return self._write_data(f, data, types=types, force=force, endian=endian)
 
 def eqexin_to_nid_dof_doftype(eqexin1, eqexin2) -> Tuple[Any, Any, Any]:
     """assemble dof table"""

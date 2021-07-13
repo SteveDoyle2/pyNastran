@@ -268,7 +268,7 @@ class EDT(GeomCommon):
 
     def _read_group(self, data: bytes, n: int) -> int:
         """
-        GROUP(17400,174,616)
+        GROUP(17400,174,616) - NX specific
 
         1 GID          I Group identification number
         2 NDESC(C)     I Length of group description
@@ -378,7 +378,6 @@ class EDT(GeomCommon):
             group_id, ndesc = ints[i:i+2]
             i += 2
             n += 8
-
             group_desc = reshape_bytes_block_size(b''.join(strs[i:i+ndesc]), size=size)
             #if self.factor == 1:
                 #group_desc = ''.join(stri.decode('latin1') for stri in strs[i:i+ndesc]).strip()
@@ -506,7 +505,13 @@ class EDT(GeomCommon):
                 #i += 1
                 #n += 4
             #assert ints[i] == -1, ints[i:]
-            self.log.warning(f'skipping GROUP in {self.table_name}')
+
+            meta = data_dict['meta']
+            nodes = data_dict['grid']
+            elements = data_dict['element']
+            properties = data_dict['prop']
+            self.add_group(group_id, nodes, elements, properties)
+            # self.log.warning(f'skipping GROUP in {self.table_name}')
             nentries += 1
 
         assert n == len(data), f'n={n} ndata={len(data)}'

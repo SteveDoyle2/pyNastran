@@ -62,6 +62,9 @@ def get_bdf_stats(model: BDF, return_type: str='string',
         'dconadds', 'dconstrs', 'desvars', 'topvar', 'ddvals', 'dlinks', 'dresps',
         'dvcrels', 'dvmrels', 'dvprels', 'dvgrids',
 
+        # nx optimization - dict
+        'dmncon', 'dvtrels', 'group',
+
         # SESETx - dict
         'suport1',
 
