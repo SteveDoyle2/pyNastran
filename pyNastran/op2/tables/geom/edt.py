@@ -446,7 +446,7 @@ class EDT(GeomCommon):
                 elif gtype == -3:
                     assert ints[i] == -3, ints[i]
                     i, n, props = _read_group_elem_prop_nids(ints, i, n, size)
-                    data_dict['prop'].append(props)
+                    data_dict['property'].append(props)
                 elif gtype == -4:
                     assert ints[i] == -4, ints[i]
                     i, n, grids = _read_group_elem_prop_nids(ints, i, n, size)
@@ -509,7 +509,7 @@ class EDT(GeomCommon):
             meta = data_dict['meta']
             nodes = data_dict['grid']
             elements = data_dict['element']
-            properties = data_dict['prop']
+            properties = data_dict['property']
             self.add_group(group_id, nodes, elements, properties)
             # self.log.warning(f'skipping GROUP in {self.table_name}')
             nentries += 1

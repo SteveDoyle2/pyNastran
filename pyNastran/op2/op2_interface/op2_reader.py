@@ -257,9 +257,12 @@ class OP2Reader:
             elif ndata == 12:
                 date = self.op2.struct_3i.unpack(data)
                 op2.log.debug(f'date = {date}')
+            elif ndata == 24:
+                date = self.op2.struct_3q.unpack(data)
+                op2.log.debug(f'date = {date}')
             else:
-                self.show_data(data, types='ifs', endian=None, force=False)
-                assert ndata == 12, f'ndata={ndata} data={data}'
+                self.show_data(data, types='ifsqd', endian=None, force=False)
+                assert ndata in [4, 12, 24], f'ndata={ndata} data={data}'
 
             self.read_markers([7])
             data = self.read_string_block()  # 'NASTRAN FORT TAPE ID CODE - '
