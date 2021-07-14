@@ -657,6 +657,12 @@ class WriteMesh(BDFAttributes):
             else:
                 for (key, loadcase) in sorted(self.loads.items()):
                     for load in loadcase:
+#                        if load.type == 'PLOAD2':
+#                            try:
+#                                load.raw_fields()
+#                            except:
+#                                bdf_file.write(load.write_card_separate(self, size, is_double))
+#                                continue
                         try:
                             bdf_file.write(load.write_card(size, is_double))
                         except:
@@ -843,11 +849,14 @@ class WriteMesh(BDFAttributes):
     def _write_optimization(self, bdf_file: Any, size: int=8, is_double: bool=False,
                             is_long_ids: Optional[bool]=None) -> None:
         """Writes the optimization cards sorted by ID"""
-        is_optimization = (self.dconadds or self.dconstrs or self.desvars or self.ddvals or
-                           self.dresps or
-                           self.dvprels or self.dvmrels or self.dvcrels or self.doptprm or
-                           self.dlinks or self.dequations or self.dtable is not None or
-                           self.dvgrids or self.dscreen or self.topvar or self.modtrak)
+        is_optimization = (
+            self.dconadds or self.dconstrs or self.desvars or self.ddvals or
+            self.dresps or
+            self.dvprels or self.dvmrels or self.dvcrels or self.doptprm or
+            self.dlinks or self.dequations or self.dtable is not None or
+            self.dvgrids or self.dscreen or self.topvar or self.modtrak or
+            # nx optimization
+            self.dvtrels or self.group or self.dmncon)
         if is_optimization:
             bdf_file.write('$OPTIMIZATION\n')
             for (unused_id, dconadd) in sorted(self.dconadds.items()):
@@ -887,6 +896,14 @@ class WriteMesh(BDFAttributes):
                 bdf_file.write(self.doptprm.write_card(size, is_double))
             if self.modtrak is not None:
                 bdf_file.write(self.modtrak.write_card(size, is_double))
+
+            # nx optimization
+            for (unused_id, dvtrel) in sorted(self.dvtrels.items()):
+                bdf_file.write(dvtrel.write_card(size, is_double))
+            for (unused_id, group) in sorted(self.group.items()):
+                bdf_file.write(group.write_card(size, is_double))
+            for (unused_id, dmncon) in sorted(self.dmncon.items()):
+                bdf_file.write(dmncon.write_card(size, is_double))
 
     def _write_parametric(self, bdf_file: Any, size: int=8, is_double: bool=False,
                           is_long_ids: Optional[bool]=None) -> None:

@@ -129,7 +129,7 @@ class DMNCON(OptConstraint):
         #return DSCREEN(rtype, trs=-0.5, nstr=20, comment='')
 
     def __init__(self, constraint_id: int, constraint_type: str,
-                 xyz, normal, comment=''):
+                 xyz, normal, comment: str=''):
         """
         Creates a DMNCON object
 

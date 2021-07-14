@@ -90,9 +90,9 @@ class EDOM(GeomCommon):
             (7000, 70, 563) : ['DCONSTR/DDVAL?', self._read_fake],
 
             # C:\MSC.Software\simcenter_nastran_2019.2\tpl_post2\s200tpgchbc1.op2
-            (6903, 69, 637) : ['DMNCON', self._read_fake],
-            (7102, 71, 645) : ['DMRLAW', self._read_fake],
-            (6803, 68, 636) : ['DVTREL1', self._read_fake],
+            (6903, 69, 637) : ['DMNCON', self._read_dmncon], # nx
+            (7102, 71, 645) : ['DMRLAW', self._read_fake], # nx
+            (6803, 68, 636) : ['DVTREL1', self._read_dvtrel1], # nx
 
 
             (2801, 28, 9945) : ['MAT10DOM', self._read_fake],
@@ -102,6 +102,153 @@ class EDOM(GeomCommon):
             #(6903, 69, 637) : ['???', self._read_fake],
             #(6903, 69, 637) : ['???', self._read_fake],
         }
+
+    def _read_dmncon(self, data: bytes, n: int) -> int:
+        """
+        Record – DMNCON(6903,69,637)
+        NX
+
+        Word Name Type Description
+        1 ID      I Unique entry identifier
+        2 GID     I GROUP identification number
+        3 IOPTION I Number of element layers to consider or for CYCLIC_SYMMETRY
+          REPREF=1 indicates repeated sector
+          2 indicates reflected sector
+        4 FLAG I
+        FLAG = 1 Type of constraint = PLANE_SYMMETRY
+          5   X RS X axis of point on plane
+          6   Y RS Y axis of point on plane
+          7   Z RS Z axis of point on plane
+          8  N1 RS X component of vector normal to plane
+          9  N2 RS Y component of vector normal to plane
+          10 N3 RS Z component of vector normal to plane
+          11 UNDEF(5) None
+        FLAG = 2 Type of constraint = CYCLIC_SYMMETRY
+          5   X RS X component of point on axis
+          6   Y RS Y component of point on axis
+          7   Z RS Z component of point on axis
+          8  N1 RS X component of vector defining the rotational axis
+          9  N2 RS Y component of vector defining the rotational axis
+          10 N3 RS Z component of vector defining the rotational axis
+          11 M1 RS X component of vector defining symmetry plane
+          12 M2 RS Y component of vector defining symmetry plane
+          13 M3 RS Z component of vector defining symmetry plane
+          14 NSECT I Number of sectors
+          15 UNDEF(5) None
+        FLAG = 3 Type of constraint = EXTRUSION
+          5 N1 RS X component of vector to define extrusion
+          6 N2 RS Y component of vector to define extrusion
+          7 N3 RS Z component of vector to define extrusion
+          8 UNDEF(5) None
+        FLAG = 4 Type of constraint = CASTING
+          5 X RS X component of point on casting plane
+          6 Y RS Y component of point on casting plane
+          7 Z RS Z component of point on casting plane
+          8 N1 RS X component of a vector normal to the casting plane
+          9 N2 RS Y component of a vector normal to the casting plane
+          10 N3 RS Z component of a vector normal to the casting plane
+          11 D11 RS X component of a vector which defines the mold removal direction 1 of casting
+          12 D12 RS Y component of a vector which defines the mold removal direction 1 of casting
+          13 D13 RS Z component of a vector which defines the mold removal direction 1 of casting
+          14 D21 RS X component of a vector which defines the mold removal direction 2 of casting
+          15 D22 RS Y component of a vector which defines the mold removal direction 2 of casting
+          16 D23 RS Z component of a vector which defines the mold removal direction 2 of casting
+          17 UNDEF(5) None
+        FLAG = 5 Type of constraint = MAX_SIZE
+          5 MSIZE RS Maximum size
+          6 UNDEF(5) None
+        FLAG = 6 Type of constraint = MIN_SIZE
+          5 MSIZE RS Minimum size
+          6 UNDEF(5) None
+        FLAG = 7 Type of constraint = ADDITIVE
+          5 ANGLE RS Maximum angle measured from the vector N
+          6 MIND RS Minimum allowed dimension
+          7 X RS X coordinate of point on base plate
+          8 Y RS Y coordinate of point on base plate
+          9 Z RS Z coordinate of point on base plate
+          10 N1 RS X component of a vector normal to the casting plate in the direction of material addition
+          11 N2 RS Y component of a vector normal to the casting plate in the direction of material addition
+          12 N3 RS Z component of a vector normal to the casting plate in the direction of material addition
+          13 UNDEF(5) None
+        FLAG = 8 Type of constraint = CHECKER-BOARD CONTROL (CHBC)
+          5 OFF-FLAG RS Negative real number indicates CHBC is off. CHBC is on by default if no negative real OFF-FLAG or if CHBC record segment does not exist.
+          6 UNDEF(5) None
+        """
+        self.to_nx('; DMNCON found')
+        ntotal0 = 16 * self.factor # 4 * 4
+        ntotal1 = 44 * self.factor # 11 * 4
+        struct_4i = Struct(mapfmt(self._endian + b'4i', self.size))
+        struct_6f_5i = Struct(mapfmt(self._endian + b'6f 5i', self.size))
+        ncards = 0
+        while n < len(data):
+            edata1 = data[n:n+ntotal0]
+            constraint_id, group_id, ioption, flag = struct_4i.unpack(edata1)
+            self.log.debug(f'constraint_id={constraint_id} group_id={group_id} ioption={ioption} flag={flag}')
+            n += ntotal0
+            if flag == 1:
+                # plane symmetry
+                constraint_type = 'SYMP'
+                # 5   X RS X axis of point on plane
+                # 6   Y RS Y axis of point on plane
+                # 7   Z RS Z axis of point on plane
+                # 8  N1 RS X component of vector normal to plane
+                # 9  N2 RS Y component of vector normal to plane
+                # 10 N3 RS Z component of vector normal to plane
+                edata2 = data[n:n+ntotal1]
+                out = struct_6f_5i.unpack(edata2)
+                x, y, z, nx, ny, nz, *zeros = out
+                self.log.debug(f'xyz=[{x}, {y}, {z}]; nxyz=[{nx}, {ny}, {nz}]; zeros={zeros}')
+                n += ntotal1
+                xyz = np.array([x, y, z])
+                normal = np.array([nx, ny, nz])
+                dmncon = self.add_dmncon(constraint_id, constraint_type, xyz, normal)
+            else:
+                raise RuntimeError(flag)
+            ncards += 1
+        self.card_count['DMNCON'] = ncards
+        return n
+
+    def _read_dvtrel1(self, data: bytes, n: int) -> int:
+        """
+        Record – DVTREL1(6803,68,636)
+        NX
+
+        Word Name Type Description
+        1 ID       I     Identification number
+        2 LABEL(2) CHAR4 Label
+        4 GID      I     Referenced GROUP bulk entry identification number
+        5 STATE    I     0=ACTIVE, 1=FROZEN
+        6 DSVFLG   I     Flag normally to be added by way of the punch file bulk output
+        7 UNDEF(3) None
+        10 DVID   I Blank or identification number for the 1st auto-generated DESVAR entry
+        11 COEF  RS Coefficient in the expression P=COEF*DV (currently inactive)
+        12 UNDEF(6) None
+        """
+        self.to_nx('; DVTREL1 found')
+        ntotal = 68 * self.factor # 17 * 4
+        if self.size == 4:
+            struct1 = Struct(self._endian + b'i 8s 7i f 6i')
+        else:
+            struct1 = Struct(self._endian + b'q 16s 7q d 6q')
+        ndatai = len(data) - n
+        ncards = ndatai // ntotal
+
+        for unused_icard in range(ncards):
+            edata = data[n:n+ntotal]
+            #self.show_data(edata)
+            out = struct1.unpack(edata)
+            dvtrel_id, label_bytes, group_id, state_int, dsv_flag, undef1, undef2, undef3, dvid, coeff, *undef = out
+            state = 'ACTIVE' if state_int == 0 else 'FROZEN'
+            label_bytes = label_bytes.replace(b'\x00', b' ')
+            label = label_bytes.decode('latin1').strip()
+            #print("label = %r" % label)
+            self.add_dvtrel1(dvtrel_id, label, group_id,
+                             state=state, dsv_flag=dsv_flag, dvid1=dvid)
+            #self.log.warning(f'DVTREL1 dvtrel_id={dvtrel_id} label_bytes={label!r} group_id={group_id} state={state!r} dsv_flag={dsv_flag} undef123=[{undef1}, {undef2}, {undef3}], dvid={dvid} coeff={coeff} undef={undef}')
+            n += ntotal
+            ncards += 1
+        self.card_count['DVTREL1'] = ncards
+        return n
 
     def _read_dconstr(self, data: bytes, n: int) -> int:
         """
