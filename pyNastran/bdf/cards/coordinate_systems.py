@@ -1244,7 +1244,7 @@ def define_coord_ijk(model, cord2_type, cid, origin, rid=0, i=None, j=None, k=No
     else:
         raise NotImplementedError(card)
     if add:
-        model._add_coord_object(coord)
+        model._add_methods._add_coord_object(coord)
     return coord
 
 

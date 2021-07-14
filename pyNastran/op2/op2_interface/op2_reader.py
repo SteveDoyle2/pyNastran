@@ -250,11 +250,16 @@ class OP2Reader:
                 op2.post = -1
             self.read_markers([3])
             data = self.read_block()   # TODO: is this the date...pretty sure at least for MSC
-            if len(data) == 12:
+            ndata = len(data)
+            if ndata == 4:
+                one = Struct(self._endian + b'i').unpack(data)[0]
+                assert one == 1, one
+            elif ndata == 12:
                 date = self.op2.struct_3i.unpack(data)
-                self.op2.log.debug(f'date = {date}')
+                op2.log.debug(f'date = {date}')
             else:
-                assert len(data) == 12, f'ndata={len(data)} data={data}'
+                self.show_data(data, types='ifs', endian=None, force=False)
+                assert ndata == 12, f'ndata={ndata} data={data}'
 
             self.read_markers([7])
             data = self.read_string_block()  # 'NASTRAN FORT TAPE ID CODE - '

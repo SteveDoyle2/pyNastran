@@ -787,6 +787,7 @@ def hdf5_load_aelinks(model: BDF, group, encoding: str) -> None:
     """loads the aelinks"""
     keys = group.keys()
     naelinks = 0
+    add_methods = model._add_methods
     for aelink_id in keys:
         unused_iaelink_id = int(aelink_id)
         jlinks_group = group[aelink_id]
@@ -800,7 +801,7 @@ def hdf5_load_aelinks(model: BDF, group, encoding: str) -> None:
             aelink[j_int] = aelinki
             naelinks += 1
         for aelinki in aelink:
-            model._add_aelink_object(aelinki)
+            add_methods._add_aelink_object(aelinki)
     model.card_count['AELINK'] = naelinks
 
 def hdf5_load_dloads(model: BDF, group, encoding: str) -> None:
@@ -1077,7 +1078,7 @@ def hdf5_load_dconstrs(model, group, encoding):
         #model.log.warning('skipping loading %s' % group)
         raise RuntimeError('error loading %s' % group)
         #return
-
+    add_methods = model._add_methods
     for card_type in keys:
         sub_group = group[card_type]
         #print('group', group)
@@ -1106,7 +1107,7 @@ def hdf5_load_dconstrs(model, group, encoding):
             for key in keys:
                 value = sub_group[key]
                 dconadd = _load_class(key, value, card_type, encoding)
-                model._add_dconstr_object(dconadd)
+                add_methods._add_dconstr_object(dconadd)
                 #model.add_dconadd(oid, dconstrs, comment='')
         else:
             raise RuntimeError('error loading %s' % card_type)
@@ -1183,7 +1184,7 @@ def hdf5_load_usets(model, group, encoding):
     if len(keys) == 0:
         #model.log.warning('skipping loading %s' % group)
         raise RuntimeError('error loading %s' % group)
-
+    add_methods = model._add_methods
     for name in keys:
         sub_group = group[name]
         keys = sub_group.keys()
@@ -1196,7 +1197,7 @@ def hdf5_load_usets(model, group, encoding):
             value = sub_groupi
             card_type = _cast(sub_groupi['type'])
             class_obj = _load_class(key, value, card_type, encoding)
-            model._add_uset_object(class_obj)
+            add_methods._add_uset_object(class_obj)
             if card_type not in model.card_count:
                 model.card_count[card_type] = 1
             else:

@@ -126,7 +126,7 @@ class DYNAMICS(GeomCommon):
             assert variable_param == 1, 'variable_param=1 (speed?)'
 
             # darea = DAREA.add_op2_data(data=out)
-            # self._add_darea_object(darea)
+            # self._add_methods._add_darea_object(darea)
             n += ntotal
         self.log.warning('skipping CAMPBLL')
         return n
@@ -134,7 +134,7 @@ class DYNAMICS(GeomCommon):
     def _read_acsrce(self, data: bytes, n: int) -> int:
         """common method for reading NX/MSC ACSRCE"""
         n = self._read_dual_card(data, n, self._read_acsrce_nx, self._read_acsrce_msc,
-                                 'ACSRCE', self._add_dload_entry)
+                                 'ACSRCE', self._add_methods._add_dload_entry)
         return n
 
     def _read_acsrce_msc(self, data, n):
@@ -237,7 +237,7 @@ class DYNAMICS(GeomCommon):
             out = struc.unpack(edata)
             #(sid,p,c,a) = out
             darea = DAREA.add_op2_data(data=out)
-            self._add_darea_object(darea)
+            self._add_methods._add_darea_object(darea)
             n += ntotal
         return n
 
@@ -262,7 +262,7 @@ class DYNAMICS(GeomCommon):
             if self.is_debug_file:
                 self.binary_debug.write('  DELAY=%s\n' % str(out))
             delay = DELAY(sid, nodes, components, delays)
-            self._add_delay_object(delay)
+            self._add_methods._add_delay_object(delay)
             n += ntotal
         return n
 
@@ -333,7 +333,7 @@ class DYNAMICS(GeomCommon):
             if self.is_debug_file:
                 self.binary_debug.write('  DPHASE=%s\n' % str(out))
             delay = DPHASE(sid, nodes, components, delays)
-            self._add_dphase_object(delay)
+            self._add_methods._add_dphase_object(delay)
             n += ntotal
         return n
 
@@ -422,7 +422,7 @@ class DYNAMICS(GeomCommon):
             method = method.strip().decode('latin1')
             norm = norm.strip().decode('latin1')
             eigb = EIGB(sid, method, L1, L2, nep, ndp, ndn, norm, g, c)
-            self._add_method_object(eigb)
+            self._add_methods._add_method_object(eigb)
             n += ntotal
         return n
 
@@ -472,7 +472,7 @@ class DYNAMICS(GeomCommon):
                 method = method.strip().decode('latin1')
                 norm = norm.strip().decode('latin1')
                 eigb = EIGB(sid, method, L1, L2, nep, ndp, ndn, norm, g, c)
-                self._add_method_object(eigb)
+                self._add_methods._add_method_object(eigb)
                 n += ntotal
             #return n
 
@@ -769,7 +769,7 @@ class DYNAMICS(GeomCommon):
         if self.is_debug_file:
             self.binary_debug.write('EPOINT=%s\n' % str(nids))
         epoint = EPOINTs.add_op2_data(list(nids))
-        self._add_epoint_object(epoint)
+        self._add_methods._add_epoint_object(epoint)
         self.card_count['EPOINT'] = npoints
         self.increase_card_count('EPOINT', count_num=npoints)
         return len(data)
@@ -809,7 +809,7 @@ class DYNAMICS(GeomCommon):
                 self.binary_debug.write('FREQ1=%s\n' % str(out))
             #print('out = %s' % str(out))
             freq = FREQ1(sid, f1, df, ndf=ndf)
-            self._add_freq_object(freq)
+            self._add_methods._add_freq_object(freq)
             n += ntotal
         self.increase_card_count('FREQ1', nentries)
         return n
@@ -1152,7 +1152,7 @@ class DYNAMICS(GeomCommon):
     def _read_randps(self, data: bytes, n: int) -> int:
         """common method for reading NX/MSC RLOAD1"""
         n = self._read_dual_card(data, n, self._read_randps_nx, self._read_randps_msc,
-                                 'RLOAD1', self._add_dload_entry)
+                                 'RLOAD1', self._add_methods._add_dload_entry)
         return n
 
     def _read_randps_nx(self, data: bytes, n: int) -> int:
@@ -1257,7 +1257,7 @@ class DYNAMICS(GeomCommon):
     def _read_rload1(self, data: bytes, n: int) -> int:
         """common method for reading NX/MSC RLOAD1"""
         n = self._read_dual_card(data, n, self._read_rload1_nx, self._read_rload1_msc,
-                                 'RLOAD1', self._add_dload_entry)
+                                 'RLOAD1', self._add_methods._add_dload_entry)
         return n
 
     def _read_rload1_nx(self, data: bytes, n: int) -> int:
@@ -1351,7 +1351,7 @@ class DYNAMICS(GeomCommon):
     def _read_rload2(self, data: bytes, n: int) -> int:
         """common method for reading NX/MSC RLOAD2"""
         n = self._read_dual_card(data, n, self._read_rload2_nx, self._read_rload2_msc,
-                                 'RLOAD2', self._add_dload_entry)
+                                 'RLOAD2', self._add_methods._add_dload_entry)
         return n
 
     def _read_rload2_nx(self, data, n):
@@ -1583,7 +1583,7 @@ class DYNAMICS(GeomCommon):
 
     def _read_rspint(self, data: bytes, n: int) -> int:
         n = self._read_dual_card(data, n, self._read_rspint_32, self._read_rspint_56,
-                                 'RSPINT', self._add_rspint_obj)
+                                 'RSPINT', self._add_methods._add_rspint_obj)
         return n
 
     def _add_rspint_obj(self, rspints: List[int]):
@@ -1753,7 +1753,7 @@ class DYNAMICS(GeomCommon):
             tf = TF(sid, nid, component, b0, b1, b2, nids, components, a)
             #if self.is_debug_file:
                 #self.binary_debug.write('%s\n' % str(tf))
-            self._add_tf_object(tf)
+            self._add_methods._add_tf_object(tf)
             self.increase_card_count('TF')
             n = n3
         return n
@@ -1801,10 +1801,10 @@ class DYNAMICS(GeomCommon):
             n, dloads = self._read_tload1_36(data, n)
         else:
             n = self._read_dual_card(data, n, self._read_tload1_nx, self._read_tload1_msc,
-                                     'TLOAD1', self._add_dload_entry)
+                                     'TLOAD1', self._add_methods._add_dload_entry)
             return n
         for dload in dloads:
-            self._add_dload_entry(dload)
+            self._add_methods._add_dload_entry(dload)
         self.card_count['TLOAD1'] = len(dloads)
         return n
 
@@ -1839,7 +1839,7 @@ class DYNAMICS(GeomCommon):
                 delay = delayr
             dload = TLOAD1(sid, darea, tid, delay=delay, Type=load_type)
             dloads.append(dload)
-            #self._add_dload_entry(dload)
+            #self._add_methods._add_dload_entry(dload)
             n += ntotal
         #self.increase_card_count('TLOAD1', nentries)
         return n, dloads
@@ -1946,7 +1946,7 @@ class DYNAMICS(GeomCommon):
     def _read_tload2(self, data: bytes, n: int) -> int:
         """common method for reading NX/MSC TLOAD2"""
         n = self._read_dual_card(data, n, self._read_tload2_nx, self._read_tload2_msc,
-                                 'TLOAD2', self._add_dload_entry)
+                                 'TLOAD2', self._add_methods._add_dload_entry)
         return n
 
     def _read_tload2_nx(self, data: bytes, n: int) -> Tuple[int, List[TLOAD2]]:

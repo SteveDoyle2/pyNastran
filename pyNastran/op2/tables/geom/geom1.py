@@ -395,7 +395,7 @@ class GEOM1(GeomCommon):
                 self.binary_debug.write('  CORD1C=%s\n' % str(out))
             data_in = [cid, g1, g2, g3]
             coord = CORD1C.add_op2_data(data_in)
-            self._add_coord_object(coord)
+            self._add_methods._add_coord_object(coord)
             n += ntotal
         self.increase_card_count('CORD1C', nentries)
         return n
@@ -417,7 +417,7 @@ class GEOM1(GeomCommon):
             assert one2 == 1, one2
             data_in = [cid, g1, g2, g3]
             coord = CORD1R.add_op2_data(data_in)
-            self._add_coord_object(coord)
+            self._add_methods._add_coord_object(coord)
             n += ntotal
         self.increase_card_count('CORD1R', nentries)
         return n
@@ -439,7 +439,7 @@ class GEOM1(GeomCommon):
             assert one == 1, one
             data_in = [cid, g1, g2, g3]
             coord = CORD1S.add_op2_data(data_in)
-            self._add_coord_object(coord, allow_overwrites=False)
+            self._add_methods._add_coord_object(coord, allow_overwrites=False)
             n += ntotal
         self.increase_card_count('CORD1S', nentries)
         return n
@@ -478,7 +478,7 @@ class GEOM1(GeomCommon):
         ncoords = len(coords)
         assert n is not None
         for coord in coords:
-            self._add_coord_object(coord, allow_overwrites=False)
+            self._add_methods._add_coord_object(coord, allow_overwrites=False)
         self.card_count[card_name] = ncoords
         return n2
 
@@ -547,7 +547,7 @@ class GEOM1(GeomCommon):
             coord = CORD3G.add_op2_data(out)
             if self.is_debug_file:
                 self.binary_debug.write('  CORD3G=%s\n' % str(out))
-            self._add_coord_object(coord, allow_overwrites=False)
+            self._add_methods._add_coord_object(coord, allow_overwrites=False)
             n += ntotal
         self.increase_card_count('CORD3G', nentries)
         return n
@@ -733,7 +733,7 @@ class GEOM1(GeomCommon):
             if self.is_debug_file:
                 self.binary_debug.write('  SEQGP=%s\n' % str(out))
             seqgp = SEQGP.add_op2_data(out)
-            self._add_seqgp_object(seqgp)
+            self._add_methods._add_seqgp_object(seqgp)
             n += ntotal
         self.increase_card_count('SEQGP', nentries)
         return n
@@ -752,7 +752,7 @@ class GEOM1(GeomCommon):
             if self.is_debug_file:
                 self.binary_debug.write('  POINT=%s\n' % str(out))
             point = POINT.add_op2_data(out)
-            self._add_point_object(point)
+            self._add_methods._add_point_object(point)
             n += ntotal
         self.increase_card_count('POINT', nentries)
         return n

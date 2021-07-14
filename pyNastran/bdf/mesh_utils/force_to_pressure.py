@@ -68,6 +68,7 @@ def force_to_pressure(bdf_filename, bdf_filename_out=None):
     #pressures = {}
     model.cross_reference()
     model.loads = {}
+    add_methods = model._add_methods
     with open('pressures.out', 'w') as pressure_file:
         for eid, press in forces.items():
             eids = [eid]
@@ -79,7 +80,7 @@ def force_to_pressure(bdf_filename, bdf_filename_out=None):
                             g1=None, g34=None, cid=0, nvector=None,
                             surf_or_line='SURF', line_load_dir='NORM', comment='')
             #pressure_file.write(pload4.write_card(size=8, is_double=False))
-            model._add_load_object(pload4)
+            add_methods._add_load_object(pload4)
 
     if bdf_filename_out:
         model.write_bdf(bdf_filename_out)

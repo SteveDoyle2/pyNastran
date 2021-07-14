@@ -89,7 +89,7 @@ class DIT(GeomCommon):
             if tid in self.tables_sdamping:
                 assert table == self.tables_sdamping[tid]
             else:
-                self._add_table_sdamping_object(table)
+                self._add_methods._add_table_sdamping_object(table)
             istart = iend + 2
             nentries += 1
         self.increase_card_count('TABDMP1', nentries)
@@ -129,7 +129,7 @@ class DIT(GeomCommon):
 
     def _read_tables1(self, data: bytes, n: int) -> int:
         """TABLES1(3105, 31, 97)"""
-        n = self._read_table1(TABLES1, self.tables, self._add_table_object, data, n, 'TABLES1',
+        n = self._read_table1(TABLES1, self.tables, self._add_methods._add_table_object, data, n, 'TABLES1',
                               add_codes=False)
         return n
 
@@ -144,7 +144,7 @@ class DIT(GeomCommon):
             out = struct_2i3f.unpack(edata)
             # (sid, dload, wg, x0, V) = out
             gust = GUST.add_op2_data(out)
-            self._add_gust_object(gust)
+            self._add_methods._add_gust_object(gust)
             n += 20
         return n
 
@@ -155,7 +155,7 @@ class DIT(GeomCommon):
         """
         TABLED1(1105,11,133) - the marker for Record 4
         """
-        n = self._read_table1(TABLED1, self.tables_d, self._add_tabled_object, data, n, 'TABLED1')
+        n = self._read_table1(TABLED1, self.tables_d, self._add_methods._add_tabled_object, data, n, 'TABLED1')
         return n
 
     def _read_table1(self, cls, slot, add_method, data, n, table_name, add_codes=True):
@@ -211,7 +211,7 @@ class DIT(GeomCommon):
         """
         TABLED2(1205,12,134) - the marker for Record 5
         """
-        n = self._read_table2(TABLED2, self.tables_d, self._add_tabled_object, data, n, 'TABLED2')
+        n = self._read_table2(TABLED2, self.tables_d, self._add_methods._add_tabled_object, data, n, 'TABLED2')
         return n
 
     def _read_table2(self, cls, slot, add_method, data, n, table_name):
@@ -264,14 +264,14 @@ class DIT(GeomCommon):
         """
         TABLED3(1305,13,140) - the marker for Record 6
         """
-        n = self._read_table3(TABLED3, self.tables_d, self._add_tabled_object, data, n, 'TABLED3')
+        n = self._read_table3(TABLED3, self.tables_d, self._add_methods._add_tabled_object, data, n, 'TABLED3')
         return n
 
     def _read_tabled4(self, data: bytes, n: int) -> int:
         """
         TABLED4 - the marker for Record 7
         """
-        n = self._read_table4(TABLED4, self.tables_d, self._add_tabled_object, data, n, 'TABLED4')
+        n = self._read_table4(TABLED4, self.tables_d, self._add_methods._add_tabled_object, data, n, 'TABLED4')
         return n
 
 #TABLEDR
@@ -280,28 +280,28 @@ class DIT(GeomCommon):
         """
         TABLEM1(105,1,93) - the marker for Record 9
         """
-        n = self._read_table1(TABLEM1, self.tables_m, self._add_tablem_object, data, n, 'TABLEM1')
+        n = self._read_table1(TABLEM1, self.tables_m, self._add_methods._add_tablem_object, data, n, 'TABLEM1')
         return n
 
     def _read_tablem2(self, data: bytes, n: int) -> int:
         """
         TABLEM2(205,2,94) - the marker for Record 10
         """
-        n = self._read_table2(TABLEM2, self.tables_m, self._add_tablem_object, data, n, 'TABLEM2')
+        n = self._read_table2(TABLEM2, self.tables_m, self._add_methods._add_tablem_object, data, n, 'TABLEM2')
         return n
 
     def _read_tablem3(self, data: bytes, n: int) -> int:
         """
         TABLEM3(305,3,95) - the marker for Record 11
         """
-        n = self._read_table3(TABLEM3, self.tables_m, self._add_tablem_object, data, n, 'TABLEM3')
+        n = self._read_table3(TABLEM3, self.tables_m, self._add_methods._add_tablem_object, data, n, 'TABLEM3')
         return n
 
     def _read_tablem4(self, data: bytes, n: int) -> int:
         """
         TABLEM4(405,4,96) - the marker for Record 12
         """
-        n = self._read_table4(TABLEM4, self.tables_m, self._add_tablem_object, data, n, 'TABLEM4')
+        n = self._read_table4(TABLEM4, self.tables_m, self._add_methods._add_tablem_object, data, n, 'TABLEM4')
         return n
 
     def _read_table3(self, cls, slot, add_method, data, n, table_name):
@@ -440,7 +440,7 @@ class DIT(GeomCommon):
                 raise NotImplementedError(codey) # LOG
 
             table = TABRND1(tid, x, y, xaxis=xaxis, yaxis=yaxis)
-            self._add_random_table_object(table)
+            self._add_methods._add_random_table_object(table)
             istart = iend + 2
             nentries += 1
         self.increase_card_count('TABRND1', nentries)

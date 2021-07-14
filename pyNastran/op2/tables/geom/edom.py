@@ -663,7 +663,7 @@ class EDOM(GeomCommon):
                 if dvprel == dvprel_old:
                     pass
                 else:
-                    self._add_dvprel_object(dvprel)
+                    self._add_methods._add_dvprel_object(dvprel)
                     ncards += 1
             dvprel.write_card_16()
             n += (i1 - i0 + 1) * size

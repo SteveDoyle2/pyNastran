@@ -1284,13 +1284,14 @@ class TestAero(unittest.TestCase):
 
         log = SimpleLogger(level='warning')
         model = BDF(log=log)
-        model._add_coord_object(coord)
-        model._add_caero_object(caero2)
-        model._add_set_object(set_obj)
+        add_methods = model._add_methods
+        add_methods._add_coord_object(coord)
+        add_methods._add_caero_object(caero2)
+        add_methods._add_set_object(set_obj)
         model.add_grid(7, [7., 0., 0.], cp=0, cd=0, ps='', seid=0, comment='')
         model.add_grid(13, [13., 0., 0.], cp=0, cd=0, ps='', seid=0, comment='')
-        #model._add_node_object(grid7)
-        #model._add_node_object(grid13)
+        #add_methods._add_node_object(grid7)
+        #add_methods._add_node_object(grid13)
 
         eid = 5
         caero = 8
@@ -2029,8 +2030,9 @@ class TestAero(unittest.TestCase):
         aesurf2.validate()
         log = SimpleLogger(level='warning')
         model = BDF(log=log)
-        model._add_coord_object(coord)
-        model._add_aesurf_object(aesurf1)
+        add_methods = model._add_methods
+        add_methods._add_coord_object(coord)
+        add_methods._add_aesurf_object(aesurf1)
 
         elements = [10, 20, 30, 40, 50, 60, 70, 80, 90, 100]
         unused_aelist = model.add_aelist(aelist_id1, elements, comment='')

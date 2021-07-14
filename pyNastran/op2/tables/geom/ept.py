@@ -138,7 +138,7 @@ class EPT(GeomCommon):
             ntables > 1 and
             pid in self.properties and
             self.properties[pid].type == prop.type)
-        self._add_property_object(prop, allow_overwrites=allow_overwrites)
+        self._add_methods._add_property_object(prop, allow_overwrites=allow_overwrites)
 
     def _add_op2_property_mass(self, prop):
         """helper method for op2"""
@@ -151,12 +151,12 @@ class EPT(GeomCommon):
             ntables > 1 and
             pid in self.properties_mass and
             self.properties_mass[pid].type == prop.type)
-        self._add_property_mass_object(prop, allow_overwrites=allow_overwrites)
+        self._add_methods._add_property_mass_object(prop, allow_overwrites=allow_overwrites)
 
-    def _add_pconv(self, prop):
+    def _add_pconv(self, prop: PCONV):
         if prop.pconid > 100000000:
             raise RuntimeError('bad parsing pconid > 100000000...%s' % str(prop))
-        self._add_convection_property_object(prop)
+        self._add_methods._add_convection_property_object(prop)
 
 # HGSUPPR
 
@@ -539,7 +539,7 @@ class EPT(GeomCommon):
     def _read_nsm(self, data: bytes, n: int) -> int:
         """NSM"""
         n = self._read_dual_card(data, n, self._read_nsm_nx, self._read_nsm_msc,
-                                 'NSM', self._add_nsm_object)
+                                 'NSM', self._add_methods._add_nsm_object)
         return n
 
     def _read_nsm_2(self, data: bytes, n: int) -> int:
@@ -644,7 +644,7 @@ class EPT(GeomCommon):
             self.log.info("MSC: NSM-sid=%s prop_set=%s pid=%s values=%s" % (
                 sid, prop_set, pid, values))
             prop = NSM.add_op2_data([sid, prop_set, pid, value])
-            #self._add_nsm_object(prop)
+            #self._add_methods._add_nsm_object(prop)
             properties.append(prop)
 
             # handle the trailing -1
@@ -717,7 +717,7 @@ class EPT(GeomCommon):
                     prop = NSML.add_op2_data([sid, prop_set, pid, value])
 
                 #print(prop.rstrip(), pid, value)
-                #self._add_nsm_object(prop)
+                #self._add_methods._add_nsm_object(prop)
                 properties.append(prop)
             #print('----')
 
@@ -1165,7 +1165,7 @@ class EPT(GeomCommon):
     def _read_pbend(self, data: bytes, n: int) -> int:
         """PBEND"""
         n = self._read_dual_card(data, n, self._read_pbend_nx, self._read_pbend_msc,
-                                 'PBEND', self._add_property_object)
+                                 'PBEND', self._add_methods._add_property_object)
         return n
 
     def _read_pbend_msc(self, data: bytes, n: int) -> int:
@@ -1627,7 +1627,7 @@ class EPT(GeomCommon):
             136 : self._read_pbusht_136,
         }
         try:
-            n = self._read_double_card(card_name, card_obj, self._add_pbusht_object,
+            n = self._read_double_card(card_name, card_obj, self._add_methods._add_pbusht_object,
                                        methods, data, n)
         except DoubleCardError:
             raise
@@ -2299,7 +2299,7 @@ class EPT(GeomCommon):
                 #print(out)
                 prop = PCONVM(pconid, mid, coeff, form=form, flag=flag,
                               expr=expr, exppi=expri, exppo=exppo, comment='')
-                self._add_convection_property_object(prop)
+                self._add_methods._add_convection_property_object(prop)
             n += ntotal
         self.card_count['PCONVM'] = nentries
         return n
@@ -2459,7 +2459,7 @@ class EPT(GeomCommon):
                 self.binary_debug.write('  PELAST=%s\n' % str(out))
             #(pid, tkid, tgeid, tknid) = out
             prop = PELAST.add_op2_data(out)
-            self._add_pelast_object(prop)
+            self._add_methods._add_pelast_object(prop)
             n += ntotal
         self.card_count['PELAST'] = nproperties
         return n
@@ -2496,7 +2496,7 @@ class EPT(GeomCommon):
                 self.binary_debug.write('  PHBDY=%s\n' % str(out))
             #(pid, af, d1, d2) = out
             prop = PHBDY.add_op2_data(out)
-            self._add_phbdy_object(prop)
+            self._add_methods._add_phbdy_object(prop)
             n += 16
         self.card_count['PHBDY'] = nproperties
         return n

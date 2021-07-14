@@ -887,6 +887,7 @@ def _mirror_aero(model: BDF,
      - AESURFS
 
     """
+    add_methods = model._add_methods
     is_aero = False
     aero_cids_set = set([])
     if model.aeros is not None:
@@ -950,7 +951,7 @@ def _mirror_aero(model: BDF,
                 model.log.error('skipping (only supports CAERO1):\n%s' % caero.rstrip())
 
         for caero in caeros:
-            mirror_model._add_caero_object(caero)
+            add_methods._add_caero_object(caero)
 
     nsplines = len(model.splines)
     sets_max = max(model.sets) if len(model.sets) else 0
@@ -998,10 +999,11 @@ def _mirror_aero(model: BDF,
             else:  # pragma: no cover
                 model.log.error('skipping (only support SET1):\n%s' % set_card.rstrip())
 
+        add_methods = mirror_model._add_methods
         for spline in splines:
-            mirror_model._add_spline_object(spline)
+            add_methods._add_spline_object(spline)
         for set_card in sets_to_add:
-            mirror_model._add_set_object(set_card)
+            add_methods._add_set_object(set_card)
 
     aelist_id_offset = 0
     if len(model.aelists):

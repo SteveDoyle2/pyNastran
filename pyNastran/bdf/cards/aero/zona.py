@@ -166,21 +166,22 @@ class ZONA:
     def update_for_zona(self):
         """updates for zona"""
         card_parser = self.model._card_parser
-        card_parser['TRIM'] = (TRIM_ZONA, self.model._add_trim_object)
-        card_parser['CAERO7'] = (CAERO7, self.model._add_caero_object)
-        card_parser['AEROZ'] = (AEROZ, self.model._add_aeros_object)
+        add_methods = self.model._add_methods
+        card_parser['TRIM'] = (TRIM_ZONA, add_methods._add_trim_object)
+        card_parser['CAERO7'] = (CAERO7, add_methods._add_caero_object)
+        card_parser['AEROZ'] = (AEROZ, add_methods._add_aeros_object)
         card_parser['AESURFZ'] = (AESURFZ, self._add_aesurfz_object)
-        card_parser['FLUTTER'] = (FLUTTER_ZONA, self.model._add_flutter_object)
-        card_parser['SPLINE1'] = (SPLINE1_ZONA, self.model._add_spline_object)
-        card_parser['SPLINE2'] = (SPLINE2_ZONA, self.model._add_spline_object)
-        card_parser['SPLINE3'] = (SPLINE3_ZONA, self.model._add_spline_object)
+        card_parser['FLUTTER'] = (FLUTTER_ZONA, add_methods._add_flutter_object)
+        card_parser['SPLINE1'] = (SPLINE1_ZONA, add_methods._add_spline_object)
+        card_parser['SPLINE2'] = (SPLINE2_ZONA, add_methods._add_spline_object)
+        card_parser['SPLINE3'] = (SPLINE3_ZONA, add_methods._add_spline_object)
         card_parser['PANLST1'] = (PANLST1, self._add_panlst_object)
         card_parser['PANLST3'] = (PANLST3, self._add_panlst_object)
         card_parser['PAFOIL7'] = (PAFOIL7, self._add_pafoil_object)
         card_parser['MKAEROZ'] = (MKAEROZ, self._add_mkaeroz_object)
-        card_parser['SEGMESH'] = (SEGMESH, self.model._add_paero_object)
-        card_parser['BODY7'] = (BODY7, self.model._add_caero_object)
-        card_parser['ACOORD'] = (ACOORD, self.model._add_coord_object)
+        card_parser['SEGMESH'] = (SEGMESH, add_methods._add_paero_object)
+        card_parser['BODY7'] = (BODY7, add_methods._add_caero_object)
+        card_parser['ACOORD'] = (ACOORD, add_methods._add_coord_object)
         card_parser['TRIMVAR'] = (TRIMVAR, self._add_trimvar_object)
         card_parser['TRIMLNK'] = (TRIMLNK, self._add_trimlnk_object)
         cards = [
@@ -324,6 +325,7 @@ class ZONA:
     def _add_caero2s(self, caero2s, add=False):
         """Converts ZONA BODY7 to CAERO2/PAERO2/AEFACT"""
         model = self.model
+        add_methods = model._add_methods
         caero_body_ids = []
         for caero2 in caero2s:
             caero_id = caero2.eid
@@ -331,12 +333,12 @@ class ZONA:
             caero_new, paero2, aefact_xs, aefact_width, aefact_theta1, aefact_theta2 = out
             caero_body_ids.append(caero_id)
             if add:
-                model._add_aefact_object(aefact_xs)
-                model._add_aefact_object(aefact_width)
-                model._add_aefact_object(aefact_theta1)
-                model._add_aefact_object(aefact_theta2)
-                model._add_paero_object(paero2)
-                model._add_caero_object(caero_new)
+                add_methods._add_aefact_object(aefact_xs)
+                add_methods._add_aefact_object(aefact_width)
+                add_methods._add_aefact_object(aefact_theta1)
+                add_methods._add_aefact_object(aefact_theta2)
+                add_methods._add_paero_object(paero2)
+                add_methods._add_caero_object(caero_new)
         return
 
     def _convert_splines(self):

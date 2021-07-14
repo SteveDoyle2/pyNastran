@@ -969,14 +969,14 @@ class EDT(GeomCommon):
             64 : self._read_acmodl_msc_64,
         }
         try:
-            n = self._read_double_card(card_name, card_obj, self._add_acmodl_object,
+            n = self._read_double_card(card_name, card_obj, self._add_methods._add_acmodl_object,
                                        methods, data, n)
         except DoubleCardError:
             raise
         return n
 
         #n = self._read_dual_card(data, n, self._read_acmodl_nx, self._read_acmodl_msc,
-                                 #'ACMODL', self._add_acmodl_object)
+                                 #'ACMODL', self._add_methods._add_acmodl_object)
         ##return self._read_acmodl_msc(data, n)
         #return n
 
@@ -1507,7 +1507,7 @@ class EDT(GeomCommon):
             52 : self._read_spline4_msc_52,
         }
         try:
-            n = self._read_double_card(card_name, card_obj, self._add_spline_object,
+            n = self._read_double_card(card_name, card_obj, self._add_methods._add_spline_object,
                                        methods, data, n)
         except DoubleCardError:
             raise
@@ -1611,7 +1611,7 @@ class EDT(GeomCommon):
             68 : self._read_spline5_msc_68,
         }
         try:
-            n = self._read_double_card(card_name, card_obj, self._add_spline_object,
+            n = self._read_double_card(card_name, card_obj, self._add_methods._add_spline_object,
                                        methods, data, n)
         except DoubleCardError:
             raise
@@ -1744,7 +1744,7 @@ class EDT(GeomCommon):
             96 : self._read_monpnt1_96,
         }
         try:
-            n = self._read_double_card(card_name, card_obj, self._add_monpnt_object,
+            n = self._read_double_card(card_name, card_obj, self._add_methods._add_monpnt_object,
                                        methods, data, n)
         except DoubleCardError:
             raise

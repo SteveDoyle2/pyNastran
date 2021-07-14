@@ -1039,7 +1039,7 @@ class AddCards:
     #def add_gmcord(self, cid, entity, gm_ids, comment='') -> GMCORD:
         #"""Creates a GMCORD coordinate card"""
         #coord = GMCORD(cid, entity, gm_ids, comment=comment)
-        #self._add_coord_object(coord)
+        #self._add_methods._add_coord_object(coord)
         #return coord
 
 
@@ -1061,7 +1061,7 @@ class AddCards:
 
     def add_param(self, key: str, values: List[Union[int, float, str]],
                   comment: str='') -> PARAM:
-        return self._add_methods._add_param_nastran(key, values, comment=comment)
+        return self._add_param_nastran(key, values, comment=comment)
 
     def _add_param_nastran(self, key: str, values: List[Union[int, float, str]],
                            comment: str='') -> PARAM:

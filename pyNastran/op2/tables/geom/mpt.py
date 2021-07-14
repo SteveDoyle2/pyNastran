@@ -84,7 +84,7 @@ class MPT(GeomCommon):
     def add_op2_material(self, mat):
         #if mat.mid > 100000000:
             #raise RuntimeError('bad parsing...')
-        self._add_structural_material_object(mat, allow_overwrites=False)
+        self._add_methods._add_structural_material_object(mat, allow_overwrites=False)
         #print(str(mat)[:-1])
 
     def _read_creep(self, data: bytes, n: int) -> int:
@@ -102,7 +102,7 @@ class MPT(GeomCommon):
             if self.is_debug_file:
                 self.binary_debug.write('  CREEP=%s\n' % str(out))
             mat = CREEP.add_op2_data(out)
-            self._add_creep_material_object(mat, allow_overwrites=False)
+            self._add_methods._add_creep_material_object(mat, allow_overwrites=False)
             n += ntotal
         self.card_count['CREEP'] = nmaterials
         return n
@@ -201,7 +201,7 @@ class MPT(GeomCommon):
             out = s.unpack(data[n:n+ntotal])
             #(mid, k, cp, rho, h, mu, hgen, refenth, tch, tdelta, qlat) = out
             mat = MAT4.add_op2_data(out)
-            self._add_thermal_material_object(mat, allow_overwrites=False)
+            self._add_methods._add_thermal_material_object(mat, allow_overwrites=False)
             n += ntotal
         self.card_count['MAT4'] = nmaterials
         return n
@@ -218,7 +218,7 @@ class MPT(GeomCommon):
             if self.is_debug_file:
                 self.binary_debug.write('  MAT5=%s\n' % str(out))
             mat = MAT5.add_op2_data(out)
-            self._add_thermal_material_object(mat, allow_overwrites=False)
+            self._add_methods._add_thermal_material_object(mat, allow_overwrites=False)
             n += 40
         self.card_count['MAT5'] = nmaterials
         return n
@@ -521,7 +521,7 @@ class MPT(GeomCommon):
 
             if self.is_debug_file:
                 self.binary_debug.write('  MATHP=%s\n' % str(out1))
-            self._add_hyperelastic_material_object(mat)
+            self._add_methods._add_hyperelastic_material_object(mat)
             nmaterials += 1
         assert nmaterials > 0, 'MATP nmaterials=%s' % nmaterials
         self.card_count['MATHP'] = nmaterials
@@ -545,7 +545,7 @@ class MPT(GeomCommon):
             if self.is_debug_file:
                 self.binary_debug.write('  MATS1=%s\n' % str(out))
             mat = MATS1.add_op2_data(data_in)
-            self._add_material_dependence_object(mat, allow_overwrites=False)
+            self._add_methods._add_material_dependence_object(mat, allow_overwrites=False)
             n += ntotal
         self.card_count['MATS1'] = nmaterials
         return n
@@ -565,7 +565,7 @@ class MPT(GeomCommon):
                 self.binary_debug.write('  MATT1=%s\n' % str(out))
             #(mid, tableid, ...., None) = out
             mat = MATT1.add_op2_data(out)
-            self._add_material_dependence_object(mat)
+            self._add_methods._add_material_dependence_object(mat)
             n += ntotal
         self.increase_card_count('MATT1', ncards)
         return n
@@ -595,7 +595,7 @@ class MPT(GeomCommon):
                         g23_table, g33_table, rho_table,
                         a1_table, a2_table, a3_table, ge_table,
                         st_table, sc_table, ss_table, comment='')
-            self._add_material_dependence_object(mat, allow_overwrites=False)
+            self._add_methods._add_material_dependence_object(mat, allow_overwrites=False)
             n += ntotal
         self.card_count['MATT2'] = nmaterials
         return n
@@ -657,7 +657,7 @@ class MPT(GeomCommon):
                      #nuxz_table=None, rho_table=None, gzx_table=None,
                      #ax_table=None, ath_table=None, az_table=None, ge_table=None,)
             mat = MATT3(mid, *tables, comment='')
-            self._add_material_dependence_object(mat, allow_overwrites=False)
+            self._add_methods._add_material_dependence_object(mat, allow_overwrites=False)
             n += ntotal
         self.card_count['MATT3'] = nmaterials
         return n
@@ -678,7 +678,7 @@ class MPT(GeomCommon):
                 self.binary_debug.write('  MATT4=%s\n' % str(out))
             #(mid, tk, tcp, null, th, tmu, thgen) = out
             mat = MATT4.add_op2_data(out)
-            self._add_material_dependence_object(mat)
+            self._add_methods._add_material_dependence_object(mat)
             n += ntotal
         self.increase_card_count('MATT4', ncards)
         return n
@@ -700,7 +700,7 @@ class MPT(GeomCommon):
             #(mid, kxx_table, kxy_table, kxz_table, kyy_table, kyz_table, kzz_table,
             # cp_table, null, hgen_table) = out
             mat = MATT5.add_op2_data(out)
-            self._add_material_dependence_object(mat)
+            self._add_methods._add_material_dependence_object(mat)
             n += ntotal
         self.increase_card_count('MATT5', ncards)
         return n
@@ -708,7 +708,7 @@ class MPT(GeomCommon):
     def _read_matt8(self, data: bytes, n: int) -> int:
         """common method to read MSC/NX MATT8s"""
         n = self._read_dual_card(data, n, self._read_matt8_18, self._read_matt8_19,
-                                 'MATT8', self._add_material_dependence_object)
+                                 'MATT8', self._add_methods._add_material_dependence_object)
         return n
 
     def _read_matt8_19(self, data: bytes, n: int) -> int:
@@ -819,8 +819,8 @@ class MPT(GeomCommon):
             140 : self._read_matt9_140,
             224 : self._read_matt9_224,
         }
-        add_method = self._add_material_dependence_object
-        #self._add_material_dependence_object(mat, allow_overwrites=False)
+        add_method = self._add_methods._add_material_dependence_object
+        #self._add_methods._add_material_dependence_object(mat, allow_overwrites=False)
         try:
             n = self._read_double_card(card_name, card_obj, add_method,
                                        methods, data, n)
@@ -1013,7 +1013,7 @@ class MPT(GeomCommon):
                                  #a1_table=None, a2_table=None, a3_table=None,
                                  #a4_table=None, a5_table=None, a6_table=None, ge_table=None, comment='')
             #mat = MATT11(mid, *tc_tables, trho, ta1, ta2, ta3, ta4, ta5, ta6, tge, comment='')
-            #self._add_material_dependence_object(mat, allow_overwrites=False)
+            #self._add_methods._add_material_dependence_object(mat, allow_overwrites=False)
             n += ntotal
         self.card_count['MAT11'] = nmaterials
         self.log.warning('skipping MAT11 in MPT')
@@ -1074,7 +1074,7 @@ class MPT(GeomCommon):
                                  #a1_table=None, a2_table=None, a3_table=None,
                                  #a4_table=None, a5_table=None, a6_table=None, ge_table=None, comment='')
             #mat = MATT11(mid, *tc_tables, trho, ta1, ta2, ta3, ta4, ta5, ta6, tge, comment='')
-            #self._add_material_dependence_object(mat, allow_overwrites=False)
+            #self._add_methods._add_material_dependence_object(mat, allow_overwrites=False)
             n += ntotal
         self.card_count['MATT11'] = nmaterials
         self.log.warning('skipping MATT11 in MPT')
@@ -1119,7 +1119,7 @@ class MPT(GeomCommon):
                 n += nstr_per_pack
 
                 mat = RADM.add_op2_data(pack)
-                self._add_thermal_bc_object(mat, mat.radmid)
+                self._add_methods._add_thermal_bc_object(mat, mat.radmid)
                 nmaterials += 1
         self.card_count['RADM'] = nmaterials
         return n
@@ -1173,7 +1173,7 @@ class MPT(GeomCommon):
             n, nlparms = self._read_nlparm_76(data, n)
         elif ndata_76 == 0 and ndata_80 == 0:
             n = self._read_dual_card(data, n, self._read_nlparm_76, self._read_nlparm_80,
-                                     'NLPARM', self._add_nlparm_object)
+                                     'NLPARM', self._add_methods._add_nlparm_object)
             #n = self._read_nlparm_76(data, n)
             return n
         else:
@@ -1307,7 +1307,7 @@ class MPT(GeomCommon):
             raise RuntimeError(f'ndatai={ndatai} n108={n108} n88={n88}')
 
         #n = self._read_dual_card(data, n, self._read_tstepnl_nx, self._read_tstepnl_msc,
-                                 #'TSTEPNL', self._add_tstepnl_object)
+                                 #'TSTEPNL', self._add_methods._add_tstepnl_object)
         return n
 
     def _read_tstepnl_nx(self, data: bytes, n: int) -> Tuple[int, List[TSTEPNL]]:
