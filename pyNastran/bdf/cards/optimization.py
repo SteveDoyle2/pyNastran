@@ -4186,7 +4186,7 @@ class DVMREL2(DVXREL2):
     """
     type = 'DVMREL2'
 
-    allowed_materials = ['MAT1', 'MAT2']
+    allowed_materials = ['MAT1', 'MAT2', 'MAT8']
     _properties = ['desvar_ids']
 
     @classmethod
@@ -4324,7 +4324,7 @@ class DVMREL2(DVXREL2):
 
     def _get_material(self, model, mid, msg=''):
         assert isinstance(self.mid, int), type(self.mid)
-        if self.mat_type in ['MAT1']:
+        if self.mat_type in self.allowed_materials:
             mid_ref = model.Material(mid, msg=msg)
         else:
             raise NotImplementedError(self.mat_type)

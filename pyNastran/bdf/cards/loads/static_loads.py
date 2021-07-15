@@ -2234,6 +2234,7 @@ class PLOAD2(Load):
             assert len(card) == 6, f'len(PLOAD2 card) = {len(card):d}\ncard={card}'
         else:
             eids = fields(integer, card, 'eid', i=3, j=len(card))
+            assert len(eids) <= 6, f'A maximum of 6 eids may be on the PLOAD2; n={len(eids)}\ncard={card}'
         return PLOAD2(sid, pressure, eids, comment=comment)
 
     @classmethod
@@ -2299,7 +2300,7 @@ class PLOAD2(Load):
     def raw_fields(self) -> List[Any]:
         list_fields = ['PLOAD2', self.sid, self.pressure]
         eids = self.element_ids
-        if len(eids) <= 5:
+        if len(eids) <= 6:
             list_fields += eids
         else:
             eids.sort()
