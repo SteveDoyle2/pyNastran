@@ -77,7 +77,7 @@ class EDOM(GeomCommon):
             (4306, 43, 364) : ['DOPTPRM', self._read_doptprm],
             (4406, 44, 372) : ['DVGRID', self._read_dvgrid],
             #DVSHAP(5006,50,470)
-            (5106, 51, 471) : ['DCONADD', self._read_fake],
+            (5106, 51, 471) : ['DCONADD', self._read_dconadd],
             (5806, 58, 474) : ['DVBSHAP', self._read_fake],
             #DVGEOM(5906,59,356)
             (6006, 60, 477) : ['MODTRAK', self._read_fake],
@@ -102,6 +102,12 @@ class EDOM(GeomCommon):
             #(6903, 69, 637) : ['???', self._read_fake],
             #(6903, 69, 637) : ['???', self._read_fake],
         }
+
+    def _read_dconadd(self, data: bytes, n: int) -> int:
+        from pyNastran.op2.tables.geom.geom4 import _read_spcadd_mpcadd
+        datai = np.frombuffer(data[n:], self.idtype8).copy()
+        _read_spcadd_mpcadd(self, 'DCONADD', datai)
+        return len(data)
 
     def _read_dmncon(self, data: bytes, n: int) -> int:
         """
@@ -173,17 +179,31 @@ class EDOM(GeomCommon):
         FLAG = 8 Type of constraint = CHECKER-BOARD CONTROL (CHBC)
           5 OFF-FLAG RS Negative real number indicates CHBC is off. CHBC is on by default if no negative real OFF-FLAG or if CHBC record segment does not exist.
           6 UNDEF(5) None
+
+        ints    = (6903, 69, 637,
+        1, 0, 0, 1,
+          252.0, 0,   0,   0,   1.0, 0,   0,   0,   0,   0,   0,
+        2, 0, 0, 6,
+          0.40, 0, 0, 0, 0, 0)
+        floats  = (6903, 69, 637,
+        1, 0, 0, 1,
+          252.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+        2, 0, 0, 6,
+          0.40, 0.0, 0.0, 0.0, 0.0, 0.0)
         """
         self.to_nx('; DMNCON found')
         ntotal0 = 16 * self.factor # 4 * 4
         ntotal1 = 44 * self.factor # 11 * 4
+        ntotal6 = 24 * self.factor # 6 * 4
         struct_4i = Struct(mapfmt(self._endian + b'4i', self.size))
         struct_6f_5i = Struct(mapfmt(self._endian + b'6f 5i', self.size))
+        struct_f_5i = Struct(mapfmt(self._endian + b'f 5i', self.size))
         ncards = 0
+        #self.show_data(data, types='ifs')
         while n < len(data):
             edata1 = data[n:n+ntotal0]
             constraint_id, group_id, ioption, flag = struct_4i.unpack(edata1)
-            self.log.debug(f'constraint_id={constraint_id} group_id={group_id} ioption={ioption} flag={flag}')
+            self.log.debug(f'   constraint_id={constraint_id} group_id={group_id} ioption={ioption} flag={flag}')
             n += ntotal0
             if flag == 1:
                 # plane symmetry
@@ -194,18 +214,32 @@ class EDOM(GeomCommon):
                 # 8  N1 RS X component of vector normal to plane
                 # 9  N2 RS Y component of vector normal to plane
                 # 10 N3 RS Z component of vector normal to plane
-                edata2 = data[n:n+ntotal1]
-                out = struct_6f_5i.unpack(edata2)
+                edata = data[n:n+ntotal1]
+                out = struct_6f_5i.unpack(edata)
                 x, y, z, nx, ny, nz, *zeros = out
-                self.log.debug(f'xyz=[{x}, {y}, {z}]; nxyz=[{nx}, {ny}, {nz}]; zeros={zeros}')
-                n += ntotal1
+                self.log.debug(f'    xyz=[{x:g}, {y:g}, {z:g}]; nxyz=[{nx:g}, {ny:g}, {nz:g}]; zeros={zeros}')
+
                 xyz = np.array([x, y, z])
                 normal = np.array([nx, ny, nz])
-                dmncon = self.add_dmncon(constraint_id, constraint_type, xyz, normal)
+                dmncon = self.add_dmncon(constraint_id, constraint_type, xyz=xyz, normal=normal)
+                n += ntotal1
+            elif flag == 6:
+                constraint_type = 'MINS'
+                edata = data[n:n+ntotal6]
+                out = struct_f_5i.unpack(edata)
+                size, *zeros = out
+                self.log.debug(f'    size={size:g}; zeros={zeros}')
+                #FLAG = 6 Type of constraint = MIN_SIZE
+                #  5 MSIZE RS Minimum size
+                #  6 UNDEF(5) None
+                dmncon = self.add_dmncon(constraint_id, constraint_type, size=size)
+                n += ntotal6
             else:
                 raise RuntimeError(flag)
+            str(dmncon)
             ncards += 1
         self.card_count['DMNCON'] = ncards
+        assert n == len(data), f'n={n}; ndata={len(data)}'
         return n
 
     def _read_dvtrel1(self, data: bytes, n: int) -> int:

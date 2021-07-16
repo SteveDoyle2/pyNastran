@@ -3251,6 +3251,23 @@ class DCONADD(OptConstraint):
             dconstrs.append(dconstr)
         return DCONADD(oid, dconstrs, comment=comment)
 
+    @classmethod
+    def add_op2_data(cls, data, comment=''):
+        """
+        Adds an SPCADD card from the OP2
+
+        Parameters
+        ----------
+        data : List[varies]
+            a list of fields defined in OP2 format
+        comment : str; default=''
+            a comment for the card
+
+        """
+        conid = data[0]
+        sets = data[1:].tolist()
+        return DCONADD(conid, sets, comment=comment)
+
     def cross_reference(self, model: BDF) -> None:
         """
         Cross links the card so referenced cards can be extracted directly

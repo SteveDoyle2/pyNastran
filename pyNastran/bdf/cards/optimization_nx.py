@@ -113,13 +113,17 @@ def _check_dvcrel_options(cp_name, element_type, options):
 
 class DMNCON(OptConstraint):
     """
-    | DMNCON | ID | SYMC |    |       |    |    |
-    |        |  X |   Y  | Z  |   N1  | N2 | N3 |
-    |        | M1 |  M2  | M3 | NSECT |    |    |
-    | DMNCON | ID | SYMP |    |       |    |    |
-    |        |  X |   Y  | Z  |   N1  | N2 | N3 |
+    | DMNCON |  ID  | SYMC |    |       |    |    |
+    |        |   X  |   Y  | Z  |   N1  | N2 | N3 |
+    |        |  M1  |  M2  | M3 | NSECT |    |    |
+    | DMNCON |  ID  | SYMP |    |       |    |    |
+    |        |   X  |   Y  | Z  |   N1  | N2 | N3 |
+    | DMNCON |  ID  | MAXS |
+    |        | Size |      |
     DMNCON         1    SYMP
               0.      0.      0.      0.      1.      0.
+    DMNCON         2    MAXS
+              1.
     """
     type = 'DMNCON'
 
@@ -129,7 +133,9 @@ class DMNCON(OptConstraint):
         #return DSCREEN(rtype, trs=-0.5, nstr=20, comment='')
 
     def __init__(self, constraint_id: int, constraint_type: str,
-                 xyz, normal, comment: str=''):
+                 xyz=None, normal=None, size=None,
+                 m=None, d=None, nsections=None, angle=None, mind=None, off_flag=None,
+                 comment: str=''):
         """
         Creates a DMNCON object
 
@@ -151,6 +157,36 @@ class DMNCON(OptConstraint):
         self.constraint_type = constraint_type
         self.xyz = xyz
         self.normal = normal
+        self.size = size
+        self.d = d
+        self.m = m
+        self.nsections = nsections
+        self.angle = angle
+        self.mind = mind
+        self.off_flag = off_flag
+        if constraint_type == 'SYMP':
+            assert xyz is not None, xyz
+            assert normal is not None, normal
+        elif constraint_type == 'SYMC':
+            assert xyz is not None, xyz
+            assert normal is not None, normal
+            assert m is not None, m
+            assert nsections is not None, nsections
+        elif constraint_type == 'ADDM':
+            assert xyz is not None, xyz
+            assert normal is not None, normal
+            assert mind is not None, mind
+            assert angle is not None, angle
+        elif constraint_type == 'CHBC':
+            assert off_flag is not None, off_flag
+        elif constraint_type == 'CDID':
+            assert xyz is not None, xyz
+            assert normal is not None, normal
+            assert d is not None, d
+        elif constraint_type in {'MINS', 'MAXS'}:
+            assert size is not None, size
+        else:  # pragma: no cover
+            raise NotImplementedError(constraint_type)
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -166,8 +202,33 @@ class DMNCON(OptConstraint):
 
         """
         constraint_id = integer(card, 1, 'constraint_id')
-        constraint_type = string(card, 2, 'constraint_id')
-        if constraint_type == 'SYMP':
+        constraint_type = string(card, 2, 'constraint_type')
+        xyz = None
+        normal = None
+        size = None
+        d = None
+        m = None
+        angle = None
+        mind = None
+        off_flag = None
+        nsections = None
+        if constraint_type == 'ADDM':
+            #ANGLE MIND X Y Z N1 N2 N3
+            angle = double(card, 9, 'angle')
+            mind = double(card, 10, 'mind')
+            xyz = np.array([
+                double_or_blank(card, 11, 'x', default=0.),
+                double_or_blank(card, 12, 'y', default=0.),
+                double_or_blank(card, 13, 'z', default=0.),
+            ])
+            normal = np.array([
+                double_or_blank(card, 14, 'n1', default=0.),
+                double_or_blank(card, 15, 'n2', default=0.),
+                double_or_blank(card, 16, 'n3', default=0.),
+            ])
+            assert len(card) <= 17, f'len(DMNCON card) = {len(card):d}\ncard={card}'
+        elif constraint_type == 'SYMP':
+            #X Y Z N1 N2 N3
             xyz = np.array([
                 double_or_blank(card, 9, 'x', default=0.),
                 double_or_blank(card, 10, 'y', default=0.),
@@ -179,17 +240,95 @@ class DMNCON(OptConstraint):
                 double_or_blank(card, 14, 'n3', default=0.),
             ])
             assert len(card) <= 15, f'len(DMNCON card) = {len(card):d}\ncard={card}'
-        else:
+        elif constraint_type == 'SYMC':
+            #X Y Z N1 N2 N3
+            #M1 M2 M3 NSECT
+            xyz = np.array([
+                double_or_blank(card, 9, 'x', default=0.),
+                double_or_blank(card, 10, 'y', default=0.),
+                double_or_blank(card, 11, 'z', default=0.),
+            ])
+            normal = np.array([
+                double_or_blank(card, 12, 'n1', default=0.),
+                double_or_blank(card, 13, 'n2', default=0.),
+                double_or_blank(card, 14, 'n3', default=0.),
+            ])
+            m = np.array([
+                double_or_blank(card, 16, 'm1', default=0.),
+                double_or_blank(card, 17, 'm2', default=0.),
+                double_or_blank(card, 18, 'm3', default=0.),
+            ])
+            nsections = integer(card, 19, 'nsections')
+            assert len(card) <= 20, f'len(DMNCON card) = {len(card):d}\ncard={card}'
+        elif constraint_type == 'CDID':
+            #X Y Z N1 N2 N3
+            #D1 D2 D3 D21 D22 D23
+            xyz = np.array([
+                double_or_blank(card, 9, 'x', default=0.),
+                double_or_blank(card, 10, 'y', default=0.),
+                double_or_blank(card, 11, 'z', default=0.),
+            ])
+            normal = np.array([
+                double_or_blank(card, 12, 'n1', default=0.),
+                double_or_blank(card, 13, 'n2', default=0.),
+                double_or_blank(card, 14, 'n3', default=0.),
+            ])
+            d = np.array([
+                double_or_blank(card, 16, 'd1', default=0.),
+                double_or_blank(card, 17, 'd2', default=0.),
+                double_or_blank(card, 18, 'd3', default=0.),
+                double_or_blank(card, 19, 'd21', default=0.),
+                double_or_blank(card, 20, 'd22', default=0.),
+                double_or_blank(card, 21, 'd23', default=0.),
+            ])
+            assert len(card) <= 22, f'len(DMNCON card) = {len(card):d}\ncard={card}'
+        elif constraint_type == 'EXTC':
+            #N1 N2 N3
+            normal = np.array([
+                double_or_blank(card, 9, 'n1', default=0.),
+                double_or_blank(card, 10, 'n2', default=0.),
+                double_or_blank(card, 11, 'n3', default=0.),
+            ])
+            assert len(card) <= 12, f'len(DMNCON card) = {len(card):d}\ncard={card}'
+
+        elif constraint_type in {'MINS', 'MAXS'}:
+            size = double(card, 9, 'size')
+            assert len(card) <= 10, f'len(DMNCON card) = {len(card):d}\ncard={card}'
+        elif constraint_type == 'CHBC':
+            off_flag = double(card, 9, 'off_flag')
+            assert len(card) <= 10, f'len(DMNCON card) = {len(card):d}\ncard={card}'
+        else:  # pragma: no cover
             raise NotImplementedError(constraint_type)
-        return DMNCON(constraint_id, constraint_type, xyz, normal, comment=comment)
+        return DMNCON(constraint_id, constraint_type, xyz=xyz, normal=normal,
+                      size=size,
+                      d=d, m=m, nsections=nsections,
+                      angle=angle, mind=mind,
+                      off_flag=off_flag, comment=comment)
 
     def raw_fields(self):
-        list_fields = ['DMNCON', self.constraint_id, self.constraint_type, None, None, None, None, None, None]
+        list_fields = ['DMNCON', self.constraint_id, self.constraint_type,
+                       None, None, None, None, None, None]
 
         if self.constraint_type == 'SYMP':
             list_fields.extend([self.xyz[0], self.xyz[1], self.xyz[2],
                                 self.normal[0], self.normal[1], self.normal[2]])
-        else:
+        elif self.constraint_type == 'SYMC':
+            list_fields.extend([self.xyz[0], self.xyz[1], self.xyz[2],
+                                self.normal[0], self.normal[1], self.normal[2]],
+                               self.m[0], self.m[1], self.m[2], self.nsections)
+        elif self.constraint_type == 'ADDM':
+            list_fields.extend([self.angle, self.mind, self.xyz[0], self.xyz[1], self.xyz[2],
+                                self.normal[0], self.normal[1], self.normal[2]])
+        elif self.constraint_type == 'EXTC':
+            list_fields.extend([self.normal[0], self.normal[1], self.normal[2]])
+        elif self.constraint_type == 'CDID':
+            list_fields.extend([self.xyz[0], self.xyz[1], self.xyz[2],
+                                self.normal[0], self.normal[1], self.normal[2]] + self.d)
+        elif self.constraint_type in {'MINS', 'MAXS'}:
+            list_fields.append(self.size)
+        elif self.constraint_type == 'CHBC':
+            list_fields.append(self.off_flag)
+        else:  # pragma: no cover
             raise NotImplementedError(self.constraint_type)
         return list_fields
 

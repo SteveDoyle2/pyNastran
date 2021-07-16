@@ -175,7 +175,7 @@ class TestOP2GeomUnit(unittest.TestCase):
             68, 682001, 682019, -1)
         fmt1 = b'i' * len(data)
         data_bytes = struct.pack(fmt1, *data)
-        op2._read_seelt(data_bytes, 12)
+        op2.geom1._read_seelt(data_bytes, 12)
 
     def test_seset(self):
         op2 = OP2Geom(make_geom=True, debug=False, log=None, debug_file=None, mode='msc')
@@ -187,7 +187,7 @@ class TestOP2GeomUnit(unittest.TestCase):
             7, 1, -8, -1)
         fmt1 = b'i' * len(data)
         data_bytes = struct.pack(fmt1, *data)
-        op2._read_seset(data_bytes, 12)
+        op2.geom1._read_seset(data_bytes, 12)
 
     def test_snorm(self):
         op2 = OP2Geom(make_geom=True, debug=False, log=None, debug_file=None, mode='msc')
@@ -200,7 +200,7 @@ class TestOP2GeomUnit(unittest.TestCase):
                 )
         fmt1 = b'3i ' + b'2i3f ' * 2
         data_bytes = struct.pack(fmt1, *data)
-        op2._read_snorm(data_bytes, 12)
+        op2.geom1._read_snorm(data_bytes, 12)
 
     def test_read_grid_8(self):
         op2 = OP2Geom(make_geom=True, debug=False, log=None, debug_file=None, mode='msc')
@@ -218,11 +218,11 @@ class TestOP2GeomUnit(unittest.TestCase):
         assert len(data_bytes3) == 108, len(data_bytes3)
 
         op2.table_name = b'GEOM1'
-        op2._read_grid(data_bytes3, 12)
+        op2.geom1._read_grid(data_bytes3, 12)
 
         op2.table_name = b'GEOM1N'
         with self.assertRaises(AssertionError):
-            op2._read_grid_11(data_bytes3, 12)
+            op2.geom1._read_grid_11(data_bytes3, 12)
 
         #-----------------------------------
     def test_read_grid_11(self):
@@ -242,10 +242,10 @@ class TestOP2GeomUnit(unittest.TestCase):
 
         op2.table_name = b'GEOM1'
         with self.assertRaises(AssertionError):
-            op2._read_grid(data_bytes, 12)
+            op2.geom1._read_grid(data_bytes, 12)
 
         op2.table_name = b'GEOM1N'
-        op2._read_grid(data_bytes, 12)
+        op2.geom1._read_grid(data_bytes, 12)
 
     def test_extrn(self):
         """reads an EXTRN"""
@@ -260,7 +260,7 @@ class TestOP2GeomUnit(unittest.TestCase):
             -1, -1)
         fmt1 = b'i' * len(data)
         data_bytes = struct.pack(fmt1, *data)
-        op2._read_extrn(data_bytes, 12)
+        op2.geom1._read_extrn(data_bytes, 12)
 
 
 if __name__ == '__main__':  # pragma: no cover

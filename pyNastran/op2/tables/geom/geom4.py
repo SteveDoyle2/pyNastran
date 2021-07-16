@@ -19,6 +19,7 @@ from pyNastran.bdf.cards.constraints import (
     SPC, SPC1, SPCADD, SPCOFF, SPCOFF1,
     MPC, MPCADD, #SPCAX, SESUP, GMSPC
 )
+from pyNastran.bdf.cards.optimization import DCONADD
 
 class GEOM4(GeomCommon):
     """defines methods for reading op2 constraints"""
@@ -1628,7 +1629,7 @@ def fill_rbe3_wt_comp_gijs(i, j, idata, fdata):
     assert len(weights) > 0, weights
     return i, weights, comps, grids
 
-def _read_spcadd_mpcadd(model, card_name, datai):
+def _read_spcadd_mpcadd(model, card_name: str, datai: bytes):
     """
     reads a SPCADD/MPCADD card
 
@@ -1658,9 +1659,15 @@ def _read_spcadd_mpcadd(model, card_name, datai):
         if card_name == 'MPCADD':
             constraint = MPCADD.add_op2_data(dataii)
             add_methods._add_constraint_mpcadd_object(constraint)
-        else:
+        elif card_name == 'SPCADD':
             constraint = SPCADD.add_op2_data(dataii)
             add_methods._add_constraint_spcadd_object(constraint)
+        elif card_name == 'DCONADD':
+            constraint = DCONADD.add_op2_data(dataii)
+            add_methods._add_dconstr_object(constraint)
+        else:  # pragma: no cover
+            raise NotImplementedError(card_name)
+
         model.increase_card_count(card_name, count_num=1)
         return
 
@@ -1677,7 +1684,12 @@ def _read_spcadd_mpcadd(model, card_name, datai):
         if card_name == 'MPCADD':
             constraint = MPCADD.add_op2_data(dataii)
             add_methods._add_constraint_mpcadd_object(constraint)
-        else:
+        elif card_name == 'SPCADD':
             constraint = SPCADD.add_op2_data(dataii)
             add_methods._add_constraint_spcadd_object(constraint)
+        elif card_name == 'DCONADD':
+            constraint = DCONADD.add_op2_data(dataii)
+            add_methods._add_dconstr_object(constraint)
+        else:  # pragma: no cover
+            raise NotImplementedError(card_name)
     model.increase_card_count(card_name, count_num=count_num)

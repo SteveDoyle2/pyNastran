@@ -1737,7 +1737,7 @@ class OP2Reader:
                         #self.show_data(data)
 
                     elif name == 'GEOM1':
-                        _read_extdb_geomx(self, data, self._endian, op2._geom1_map)
+                        _read_extdb_geomx(self, data, self._endian, op2.geom1._geom1_map)
                     elif name in ['GEOM2', 'GEOM2X', 'IGEOM2X']:
                         _read_extdb_geomx(self, data, self._endian, op2._geom2_map)
 
@@ -1758,7 +1758,7 @@ class OP2Reader:
                         assert ints == (65535, 65535, 65535), ints
                     elif name == 'GEOM1':
                         # _read_extdb_geom1(self, data, self._endian)
-                        _read_extdb_geomx(self, data, self._endian, op2._geom1_map)
+                        _read_extdb_geomx(self, data, self._endian, op2.geom1._geom1_map)
                     elif name in ['GEOM2', 'IGEOM2X']:
                         _read_extdb_geomx(self, data, self._endian, op2._geom2_map)
                     elif name == 'GEOM4':

@@ -16,6 +16,7 @@ class Responses:
         self.composite_strain_response = None
         self.flutter_response = None
         self.fractional_mass_response = None
+        self.normalized_mass_density = None
 
     def get_stats(self, short: bool=False) -> str:
         objects = [
@@ -31,11 +32,16 @@ class Responses:
             self.composite_strain_response,
             self.flutter_response,
             self.fractional_mass_response,
+            self.normalized_mass_density,
         ]
         msg = []
         for obj in objects:
             if obj is not None:
-                msg += obj.get_stats(short=short) + '\n'
+                if isinstance(obj, dict):
+                    for key, obji in dict.items():
+                        msg += obji.get_stats(short=short) + '\n'
+                else:
+                    msg += obj.get_stats(short=short) + '\n'
         return msg
 
     def get_table_types(self):
@@ -44,7 +50,7 @@ class Responses:
             'displacement_response', 'weight_response',
             'stress_response', 'strain_response', 'force_response',
             'composite_stress_response', 'composite_strain_response', 'flutter_response',
-            'fractional_mass_response',
+            'fractional_mass_response', 'normalized_mass_density',
         ]
         return ['responses.' + table for table in tables
                 #if getattr(self, table) is not None

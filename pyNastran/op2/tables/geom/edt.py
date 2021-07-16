@@ -392,7 +392,7 @@ class EDT(GeomCommon):
             gtype = ints[i]
             #i += 1
             #n += 4
-            print(f'group_id={group_id} ndesc={ndesc} group_desc={group_desc!r}; gtype={gtype!r}')
+            self.log.debug(f'group_id={group_id} ndesc={ndesc} group_desc={group_desc!r}; gtype={gtype!r}')
 
             data_dict = {
                 'meta': '',
@@ -409,7 +409,7 @@ class EDT(GeomCommon):
                 #-3 = Property identification numbers
                 #-4 = Grid identification numbers
                 #-5 = Element identification numbers
-                print(f'-----gtype={gtype}----')
+                #print(f'-----gtype={gtype}----')
                 #print(ints[i:])
                 if gtype == -1:
                     # end of card
@@ -439,7 +439,7 @@ class EDT(GeomCommon):
                     data_dict['meta'] = meta_desc
                     i += nmeta + 1
                     n += size * (nmeta + 1)
-                    print(f'  gtype={gtype} nmeta={nmeta} meta_desc={meta_desc!r}')
+                    #print(f'  gtype={gtype} nmeta={nmeta} meta_desc={meta_desc!r}')
                     #iminus1 = minus1[minus1_count+2]
                     #print('ints: ', ints[i:iminus1].tolist())
                     #minus1_count += 1
@@ -475,7 +475,7 @@ class EDT(GeomCommon):
                     eids_array = ints[i:i+j].tolist()
                     eids2 = _expand_vals(eids_array)
                     # print(f'  eids1 = {eids_array}')
-                    print(f'  eids2 = {eids2}')
+                    #print(f'  eids2 = {eids2}')
                     assert 'THRU' != eids2[0], eids2
                     assert 'BY' != eids2[0], eids2
                     assert 'ALL' != eids2[0], eids2
@@ -500,7 +500,7 @@ class EDT(GeomCommon):
             # GROUP          1Group(1)_elar                                           +
             # $           TYPE     ID1  "THRU"     ID2
             # +           ELEM      21    THRU      36
-            print(data_dict)
+            #print(data_dict)
             #self.add_group(group_id, group_desc, data_dict)
                 #i += 1
                 #n += 4

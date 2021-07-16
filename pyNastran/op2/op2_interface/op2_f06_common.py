@@ -1402,6 +1402,9 @@ def _get_op2_stats_short(model: OP2, table_types: List[str], log) -> List[str]:
             obj = model.get_result(table_type)
             if obj is None:
                 continue
+            elif isinstance(obj, dict):
+                msg.extend(_get_op2_results_stats_dict(obj, table_type, short=True))
+                continue
             stats = obj.get_stats(short=True)
             msg.extend(f'op2_results.{table_type}: ' + stats)  # TODO: a hack...not quite right...
             continue
@@ -1438,6 +1441,18 @@ def _get_op2_stats_short(model: OP2, table_types: List[str], log) -> List[str]:
                 #raise RuntimeError(msgi)
     return msg
 
+def _get_op2_results_stats_dict(obj: Dict[Any, Any], table_type: str, short: bool) -> msg:
+    msg = []
+    for key, obji in obj.items():
+        if isinstance(obji, list):
+            for iobj, objii in enumerate(obji):
+                stats = objii.get_stats(short=short)
+                msg.extend(f'op2_results.{table_type}[{key}][{iobj}]: ' + stats)
+        else:
+            stats = obji.get_stats(short=short)
+            msg.extend(f'op2_results.{table_type}[{key}]: ' + stats)
+    return msg
+
 def _get_op2_stats_full(model: OP2, table_types: List[str], log):
     """helper for get_op2_stats(...)"""
     msg = []
@@ -1450,8 +1465,10 @@ def _get_op2_stats_full(model: OP2, table_types: List[str], log):
             obj = model.get_result(table_type)
             if obj is None:
                 continue
-            #elif isinstance(obj, dict):
-                #print(obj)
+            elif isinstance(obj, dict):
+                msg.extend(_get_op2_results_stats_dict(obj, table_type, short=False))
+                continue
+
             stats = obj.get_stats(short=False)
             msg.extend(f'op2_results.{table_type}: ' + stats)  # TODO: a hack...not quite right...
             continue

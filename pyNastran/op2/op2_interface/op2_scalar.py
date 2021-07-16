@@ -82,7 +82,6 @@ from pyNastran.op2.tables.ogs_grid_point_stresses.ogs import OGS
 from pyNastran.op2.tables.opg_appliedLoads.opg import OPG
 from pyNastran.op2.tables.oqg_constraintForces.oqg import OQG
 from pyNastran.op2.tables.oug.oug import OUG
-from pyNastran.op2.tables.ogpwg import OGPWG
 from pyNastran.op2.fortran_format import FortranFormat
 
 from pyNastran.utils import is_binary_file
@@ -440,7 +439,7 @@ _check_unique_sets(INT_PARAMS_1, FLOAT_PARAMS_1, FLOAT_PARAMS_2, STR_PARAMS_1)
 
 
 class OP2_Scalar(LAMA, ONR, OGPF,
-                 OEF, OES, OGS, OPG, OQG, OUG, OGPWG, FortranFormat):
+                 OEF, OES, OGS, OPG, OQG, OUG, FortranFormat):
     """Defines an interface for the Nastran OP2 file."""
     @property
     def total_effective_mass_matrix(self):
@@ -590,7 +589,6 @@ class OP2_Scalar(LAMA, ONR, OGPF,
         OPG.__init__(self)
         OQG.__init__(self)
         OUG.__init__(self)
-        OGPWG.__init__(self)
         FortranFormat.__init__(self)
 
         self.is_vectorized = False
@@ -1073,8 +1071,8 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             #=======================
             # OGPWG
             # grid point weight
-            b'OGPWG'  : [self._read_ogpwg_3, self._read_ogpwg_4],  # grid point weight
-            b'OGPWGM' : [self._read_ogpwg_3, self._read_ogpwg_4],  # modal? grid point weight
+            b'OGPWG'  : [self.ogpwg._read_ogpwg_3, self.ogpwg._read_ogpwg_4],  # grid point weight
+            b'OGPWGM' : [self.ogpwg._read_ogpwg_3, self.ogpwg._read_ogpwg_4],  # modal? grid point weight
 
             #=======================
             # OGS
@@ -1219,6 +1217,8 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             b'ODAMGCZR' : [self._nx_table_passer, self._table_passer],
             b'ODAMGCZD' : [self._nx_table_passer, self._table_passer],
 
+            # Normalized Mass Density
+            b'ONMD' : [self.onmd._read_onmd_3, self.onmd._read_onmd_4],
             #====================================================================
             # NASA95
             b'OESC1'  : [self._read_oes1_3, self._read_oes1_4],

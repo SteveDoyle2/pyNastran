@@ -1,13 +1,16 @@
+from __future__ import annotations
 from struct import unpack
+from typing import TYPE_CHECKING
 from numpy import array
 from pyNastran.op2.op2_interface.op2_reader import mapfmt
-from pyNastran.op2.op2_interface.op2_common import OP2Common
 from pyNastran.op2.result_objects.grid_point_weight import GridPointWeight
+if TYPE_CHECKING:
+    from pyNastran.op2.op2 import OP2
 
 
-class OGPWG(OP2Common):
-    def __init__(self):
-        OP2Common.__init__(self)
+class OGPWG:
+    def __init__(self, op2: OP2):
+        self.op2 = op2
 
     def _read_ogpwg_3(self, data: bytes, ndata: int):
         """
@@ -15,7 +18,8 @@ class OGPWG(OP2Common):
         .. todo:: find the reference_point...
         """
         #self.show_data(data)
-        self.words = [
+        op2 = self.op2
+        op2.words = [
             'aCode', 'tCode', '???', 'isubcase',
             '???', '???', '???', '???',
             '???', 'num_wide', '???', '???',
@@ -24,8 +28,8 @@ class OGPWG(OP2Common):
             '???', '???', '???', '???',
             '???', 'Title', 'subtitle', 'label']
 
-        self.parse_approach_code(data)
-        self.reference_point = self.add_data_parameter(data, 'reference_point', b'i', 3, add_to_dict=False)
+        op2.parse_approach_code(data)
+        op2.reference_point = op2.add_data_parameter(data, 'reference_point', b'i', 3, add_to_dict=False)
 
         #13 OGPWG Grid Point Weight Generator
         #approach_code   = 1
@@ -36,27 +40,28 @@ class OGPWG(OP2Common):
         #print('  tCode           = %r' % self.tCode)
         #print('  isubcase        = %r' % self.isubcase)
         #print('  reference_point = %r' % self.reference_point)
-        if self.is_debug_file:
-            self.binary_debug.write(
-                f'  approach_code  = {self.approach_code:d}\n'
-                f'  tCode          = {self.tCode:d}\n'
-                f'  isubcase       = {self.isubcase:d}\n'
+        if op2.is_debug_file:
+            op2.binary_debug.write(
+                f'  approach_code  = {op2.approach_code:d}\n'
+                f'  tCode          = {op2.tCode:d}\n'
+                f'  isubcase       = {op2.isubcase:d}\n'
             )
 
-        self._read_title(data)
+        op2._read_title(data)
         #print('title = %r' % self.title)
         #print('subtitle = %r' % self.subtitle)
         #print('label = %r' % self.label)
-        self._write_debug_bits()
+        op2._write_debug_bits()
 
     def _read_ogpwg_4(self, data: bytes, ndata: int):
         """
         Grid Point Weight Generator
         """
-        if self.read_mode == 1:
+        op2 = self.op2
+        if op2.read_mode == 1:
             return ndata
         #print('  num_wide = %r' % self.num_wide)
-        size = self.size
+        size = op2.size
         fmt_mo = mapfmt(b'36f', size)
         fmt_s = mapfmt(b'9f', size)
         fmt_mxyz = mapfmt(b'12f', size)
@@ -89,13 +94,13 @@ class OGPWG(OP2Common):
         #print(self.pval_step)
         #print(self.superelement_adaptivity_index)
         weight = GridPointWeight(
-            self.reference_point,
+            op2.reference_point,
             MO, S, mass, cg, IS, IQ, Q,
-            approach_code=self.approach_code, table_code=self.table_code,
-            title=self.title, subtitle=self.subtitle, label=self.label,
-            superelement_adaptivity_index=self.superelement_adaptivity_index,
+            approach_code=op2.approach_code, table_code=op2.table_code,
+            title=op2.title, subtitle=op2.subtitle, label=op2.label,
+            superelement_adaptivity_index=op2.superelement_adaptivity_index,
         )
         str(weight)
-        self.grid_point_weight[self.superelement_adaptivity_index] = weight
+        op2.grid_point_weight[op2.superelement_adaptivity_index] = weight
         #del self.reference_point
         return ndata

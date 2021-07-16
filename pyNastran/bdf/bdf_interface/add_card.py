@@ -7211,9 +7211,14 @@ class AddCards:
         return group
 
     def add_dmncon(self, constraint_id: int, constraint_type: str,
-                   xyz, normal,  # ???
+                   xyz=None, normal=None, size=None,
+                   m=None, d=None, nsections=None,
+                   angle=None, mind=None, off_flag=None,
                    comment: str='') -> DMNCON:
-        dmncon = DMNCON(constraint_id, constraint_type, xyz, normal, comment=comment)
+        dmncon = DMNCON(constraint_id, constraint_type, xyz=xyz, normal=normal,
+                        size=size, m=m, d=d, nsections=nsections,
+                        angle=angle, mind=mind,
+                        off_flag=off_flag, comment=comment)
         self._add_methods._add_dmncon_object(dmncon)
         return dmncon
     # ------------------------------------------

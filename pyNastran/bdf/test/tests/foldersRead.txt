@@ -65,6 +65,9 @@ C:\MSC.Software\msc_nastran_docs_2020\tpl6
 # NX 2019
 C:\MSC.Software\simcenter_nastran_2019.2\tpl_post2
 
+# NX 2020
+"C:\Program Files\Siemens\SimcenterNastran_2020.1/scnas/nast"
+
 # Nastran 95
 D:\NASA\m4\formats\git\NASTRAN-95
 #-------------------------------------------------
