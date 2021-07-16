@@ -31,13 +31,11 @@ class MPT:
     def _read_fake(self, data: bytes, n: int) -> int:
         return self.op2._read_fake(data, n)
 
-    def _read_mpt_4(self, data: bytes, ndata: int):
+    def read_mpt_4(self, data: bytes, ndata: int):
         return self.op2._read_geom_4(self.mpt_map, data, ndata)
 
     def __init__(self, op2: OP2Geom):
         self.op2 = op2
-        #self.geom2 = op2.geom2
-        #self.big_materials = {}
 
         #F:\work\pyNastran\examples\Dropbox\move_tpl\chkout01.op2
         self.mpt_map = {
@@ -340,7 +338,7 @@ class MPT:
             #56 : self._read_ctria6_current_56,
         }
         try:
-            n = op2.geom2._read_double_card(
+            n = op2.reader_geom2._read_double_card(
                 card_name, card_obj, self.add_op2_material,
                 methods, data, n)
         except DoubleCardError:
@@ -741,7 +739,7 @@ class MPT:
     def _read_matt8(self, data: bytes, n: int) -> int:
         """common method to read MSC/NX MATT8s"""
         op2 = self.op2
-        n = op2.geom2._read_dual_card(
+        n = op2.reader_geom2._read_dual_card(
             data, n, self._read_matt8_18, self._read_matt8_19,
             'MATT8', op2._add_methods._add_material_dependence_object)
         return n
@@ -860,7 +858,7 @@ class MPT:
         add_method = op2._add_methods._add_material_dependence_object
         #self._add_methods._add_material_dependence_object(mat, allow_overwrites=False)
         try:
-            n = op2.geom2._read_double_card(
+            n = op2.reader_geom2._read_double_card(
                 card_name, card_obj, add_method,
                 methods, data, n)
         except DoubleCardError:
@@ -872,7 +870,7 @@ class MPT:
         #nelements = op2.card_count['CQUAD8']
         #op2.log.debug(f'nCQUAD8 = {nelements}')
 
-        #n = self.geom2._read_dual_card(
+        #n = op2.reader_geom2._read_dual_card(
             #data, n,
             #self._read_ctriax_8, self._read_ctriax_9,
             #'CTRIAX', self.add_op2_element)
@@ -1219,7 +1217,7 @@ class MPT:
         elif ndata_76 == 0 and ndata_80:
             n, nlparms = self._read_nlparm_76(data, n)
         elif ndata_76 == 0 and ndata_80 == 0:
-            n = op2.geom2._read_dual_card(
+            n = op2.reader_geom2._read_dual_card(
                 data, n,
                 self._read_nlparm_76, self._read_nlparm_80,
                 'NLPARM', op2._add_methods._add_nlparm_object)

@@ -13,7 +13,9 @@ from __future__ import annotations
 from pickle import dump
 from pathlib import PurePath
 from typing import List, Optional, Union, Any, TYPE_CHECKING
+import numpy as np
 
+from pyNastran.op2.tables.geom.geom_common import GeomCommon
 from pyNastran.op2.tables.geom.geom1 import GEOM1
 from pyNastran.op2.tables.geom.geom2 import GEOM2
 from pyNastran.op2.tables.geom.geom3 import GEOM3
@@ -106,10 +108,12 @@ def read_op2_geom(op2_filename: Optional[Union[str, PurePath]]=None,
     return model
 
 
-class OP2GeomCommon(OP2, GEOM3, GEOM4, EPT, EDT, EDOM, CONTACT, DIT, DYNAMICS, AXIC):
+class OP2GeomCommon(OP2, GeomCommon):
     """interface for the OP2Geom class for to loading subclasses"""
     def __init__(self, make_geom: bool=True,
-                 debug: bool=False, log: Any=None, debug_file: Optional[str]=None, mode: Optional[str]=None):
+                 debug: bool=False, log: Any=None,
+                 debug_file: Optional[str]=None,
+                 mode: Optional[str]=None):
         """
         Initializes the OP2 object
 
@@ -128,19 +132,21 @@ class OP2GeomCommon(OP2, GEOM3, GEOM4, EPT, EDT, EDOM, CONTACT, DIT, DYNAMICS, A
             {msc, nx}
 
         """
-        self.geom2 = GEOM2(self)
-        self.geom1 = GEOM1(self)
-        GEOM3.__init__(self)
-        GEOM4.__init__(self)
+        #self.big_properties = {}
+        self.big_materials = {}
+        self.reader_geom2 = GEOM2(self)
+        self.reader_geom1 = GEOM1(self)
+        self.reader_geom3 = GEOM3(self)
+        self.reader_geom4 = GEOM4(self)
 
-        EPT.__init__(self)
-        self.mpt = MPT(self)
-        EDT.__init__(self)
-        EDOM.__init__(self)
-        CONTACT.__init__(self)
-        DIT.__init__(self)
-        DYNAMICS.__init__(self)
-        AXIC.__init__(self)
+        self.reader_ept = EPT(self)
+        self.reader_mpt = MPT(self)
+        self.reader_edt = EDT(self)
+        self.reader_edom = EDOM(self)
+        self.reader_contact = CONTACT(self)
+        self.reader_dit = DIT(self)
+        self.reader_dynamic = DYNAMICS(self)
+        self.reader_axic = AXIC(self)
 
         OP2.__init__(self, debug=debug, log=log, debug_file=debug_file, mode=mode)
         self.make_geom = True
@@ -178,7 +184,6 @@ class OP2GeomCommon(OP2, GEOM3, GEOM4, EPT, EDT, EDOM, CONTACT, DIT, DYNAMICS, A
 
         """
         # C:\NASA\m4\formats\git\examples\move_tpl\ifsv34b.op2
-        import numpy as np
         ints = np.frombuffer(data[n:], self.idtype) # .tolist()
         nelements = len(ints) // 18
         assert len(ints) % 18 == 0
@@ -205,55 +210,55 @@ class OP2GeomCommon(OP2, GEOM3, GEOM4, EPT, EDT, EDOM, CONTACT, DIT, DYNAMICS, A
     def _get_table_mapper(self):
         table_mapper = OP2._get_table_mapper(self)
 
-        table_mapper[b'CONTACT'] = [self._read_contact_4, self._read_contact_4]
-        table_mapper[b'CONTACTS'] = [self._read_contact_4, self._read_contact_4]
+        table_mapper[b'CONTACT'] = [self.reader_contact.read_contact_4, self.reader_contact.read_contact_4]
+        table_mapper[b'CONTACTS'] = [self.reader_contact.read_contact_4, self.reader_contact.read_contact_4]
         table_mapper[b'VIEWTB'] = [self._read_viewtb_4, self._read_viewtb_4]
-        table_mapper[b'EDT'] = [self._read_edt_4, self._read_edt_4]
-        table_mapper[b'EDTS'] = [self._read_edt_4, self._read_edt_4]
+        table_mapper[b'EDT'] = [self.reader_edt.read_edt_4, self.reader_edt.read_edt_4]
+        table_mapper[b'EDTS'] = [self.reader_edt.read_edt_4, self.reader_edt.read_edt_4]
 
         # geometry
-        table_mapper[b'GEOM1'] = [self.geom1._read_geom1_4, self.geom1._read_geom1_4]
-        table_mapper[b'GEOM2'] = [self.geom2._read_geom2_4, self.geom2._read_geom2_4]
-        table_mapper[b'GEOM3'] = [self._read_geom3_4, self._read_geom3_4]
-        table_mapper[b'GEOM4'] = [self._read_geom4_4, self._read_geom4_4]
+        table_mapper[b'GEOM1'] = [self.reader_geom1.read_geom1_4, self.reader_geom1.read_geom1_4]
+        table_mapper[b'GEOM2'] = [self.reader_geom2.read_geom2_4, self.reader_geom2.read_geom2_4]
+        table_mapper[b'GEOM3'] = [self.reader_geom3.read_geom3_4, self.reader_geom3.read_geom3_4]
+        table_mapper[b'GEOM4'] = [self.reader_geom4.read_geom4_4, self.reader_geom4.read_geom4_4]
 
         # superelements
-        table_mapper[b'GEOM1S'] = [self.geom1._read_geom1_4, self.geom1._read_geom1_4]
-        table_mapper[b'GEOM2S'] = [self.geom2._read_geom2_4, self.geom2._read_geom2_4]
-        table_mapper[b'GEOM3S'] = [self._read_geom3_4, self._read_geom3_4]
-        table_mapper[b'GEOM4S'] = [self._read_geom4_4, self._read_geom4_4]
+        table_mapper[b'GEOM1S'] = [self.reader_geom1.read_geom1_4, self.reader_geom1.read_geom1_4]
+        table_mapper[b'GEOM2S'] = [self.reader_geom2.read_geom2_4, self.reader_geom2.read_geom2_4]
+        table_mapper[b'GEOM3S'] = [self.reader_geom3.read_geom3_4, self.reader_geom3.read_geom3_4]
+        table_mapper[b'GEOM4S'] = [self.reader_geom4.read_geom4_4, self.reader_geom4.read_geom4_4]
 
-        table_mapper[b'GEOM1N'] = [self.geom1._read_geom1_4, self.geom1._read_geom1_4]
-        table_mapper[b'GEOM2N'] = [self.geom2._read_geom2_4, self.geom2._read_geom2_4]
-        table_mapper[b'GEOM3N'] = [self._read_geom3_4, self._read_geom3_4]
-        table_mapper[b'GEOM4N'] = [self._read_geom4_4, self._read_geom4_4]
+        table_mapper[b'GEOM1N'] = [self.reader_geom1.read_geom1_4, self.reader_geom1.read_geom1_4]
+        table_mapper[b'GEOM2N'] = [self.reader_geom2.read_geom2_4, self.reader_geom2.read_geom2_4]
+        table_mapper[b'GEOM3N'] = [self.reader_geom3.read_geom3_4, self.reader_geom3.read_geom3_4]
+        table_mapper[b'GEOM4N'] = [self.reader_geom4.read_geom4_4, self.reader_geom4.read_geom4_4]
 
-        table_mapper[b'GEOM1OLD'] = [self.geom1._read_geom1_4, self.geom1._read_geom1_4]
-        table_mapper[b'GEOM2OLD'] = [self.geom2._read_geom2_4, self.geom2._read_geom2_4]
-        table_mapper[b'GEOM3OLD'] = [self._read_geom3_4, self._read_geom3_4]
-        table_mapper[b'GEOM4OLD'] = [self._read_geom4_4, self._read_geom4_4]
+        table_mapper[b'GEOM1OLD'] = [self.reader_geom1.read_geom1_4, self.reader_geom1.read_geom1_4]
+        table_mapper[b'GEOM2OLD'] = [self.reader_geom2.read_geom2_4, self.reader_geom2.read_geom2_4]
+        table_mapper[b'GEOM3OLD'] = [self.reader_geom3.read_geom3_4, self.reader_geom3.read_geom3_4]
+        table_mapper[b'GEOM4OLD'] = [self.reader_geom4.read_geom4_4, self.reader_geom4.read_geom4_4]
 
-        table_mapper[b'GEOM1ATV'] = [self.geom1._read_geom1_4, self.geom1._read_geom1_4]
-        table_mapper[b'GEOM2ATV'] = [self.geom2._read_geom2_4, self.geom2._read_geom2_4]
+        table_mapper[b'GEOM1ATV'] = [self.reader_geom1.read_geom1_4, self.reader_geom1.read_geom1_4]
+        table_mapper[b'GEOM2ATV'] = [self.reader_geom2.read_geom2_4, self.reader_geom2.read_geom2_4]
 
-        table_mapper[b'EDOM'] = [self._read_edom4_4, self._read_edom4_4]  # optimization
+        table_mapper[b'EDOM'] = [self.reader_edom.read_edom4_4, self.reader_edom.read_edom4_4]  # optimization
 
-        table_mapper[b'EPT'] = [self._read_ept_4, self._read_ept_4]
-        table_mapper[b'EPTS'] = [self._read_ept_4, self._read_ept_4]
-        table_mapper[b'EPTOLD'] = [self._read_ept_4, self._read_ept_4]
-        table_mapper[b'EPTATV'] = [self._read_ept_4, self._read_ept_4]
+        table_mapper[b'EPT'] = [self.reader_ept.read_ept_4, self.reader_ept.read_ept_4]
+        table_mapper[b'EPTS'] = [self.reader_ept.read_ept_4, self.reader_ept.read_ept_4]
+        table_mapper[b'EPTOLD'] = [self.reader_ept.read_ept_4, self.reader_ept.read_ept_4]
+        table_mapper[b'EPTATV'] = [self.reader_ept.read_ept_4, self.reader_ept.read_ept_4]
 
-        table_mapper[b'MPT'] = [self.mpt._read_mpt_4, self.mpt._read_mpt_4]
-        table_mapper[b'MPTS'] = [self.mpt._read_mpt_4, self.mpt._read_mpt_4]
+        table_mapper[b'MPT'] = [self.reader_mpt.read_mpt_4, self.reader_mpt.read_mpt_4]
+        table_mapper[b'MPTS'] = [self.reader_mpt.read_mpt_4, self.reader_mpt.read_mpt_4]
 
-        table_mapper[b'DYNAMIC'] = [self._read_dynamics_4, self._read_dynamics_4]
-        table_mapper[b'DYNAMICS'] = [self._read_dynamics_4, self._read_dynamics_4]
+        table_mapper[b'DYNAMIC'] = [self.reader_dynamic.read_dynamics_4, self.reader_dynamic.read_dynamics_4]
+        table_mapper[b'DYNAMICS'] = [self.reader_dynamic.read_dynamics_4, self.reader_dynamic.read_dynamics_4]
 
-        table_mapper[b'AXIC'] = [self._read_axic_4, self._read_axic_4]
+        table_mapper[b'AXIC'] = [self.reader_axic.read_axic_4, self.reader_axic.read_axic_4]
 
         # table objects (e.g. TABLED1)
-        table_mapper[b'DIT'] = [self._read_dit_4, self._read_dit_4]
-        table_mapper[b'DITS'] = [self._read_dit_4, self._read_dit_4]
+        table_mapper[b'DIT'] = [self.reader_dit.read_dit_4, self.reader_dit.read_dit_4]
+        table_mapper[b'DITS'] = [self.reader_dit.read_dit_4, self.reader_dit.read_dit_4]
         return table_mapper
 
 

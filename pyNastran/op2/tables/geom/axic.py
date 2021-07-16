@@ -2,6 +2,8 @@
 defines readers for BDF objects in the OP2 AXIC table
 """
 #pylint: disable=C0103,R0914
+from __future__ import annotations
+from typing import TYPE_CHECKING
 #from struct import unpack, Struct
 
 #import numpy as np
@@ -23,19 +25,31 @@ defines readers for BDF objects in the OP2 AXIC table
 #from pyNastran.bdf.cards.axisymmetric.axisymmetric import (
     #AXIF, RINGFL,
     #AXIC, RINGAX, POINTAX, CCONEAX, PCONEAX, PRESAX, TEMPAX,)
-from pyNastran.op2.tables.geom.geom_common import GeomCommon
+
+if TYPE_CHECKING:
+    from pyNastran.op2.op2_geom import OP2Geom
 
 
-class AXIC(GeomCommon):
+class AXIC:
     """defines methods for reading op2 properties"""
 
-    def _read_axic_4(self, data: bytes, ndata: int):
+    def read_axic_4(self, data: bytes, ndata: int):
         """reads the AXIC table"""
-        return self._read_geom_4(self._axic_map, data, ndata)
+        return self.op2._read_geom_4(self.axic_map, data, ndata)
 
-    def __init__(self):
-        GeomCommon.__init__(self)
-        self._axic_map = { # per NX
+    @property
+    def size(self) -> int:
+        return self.op2.size
+    @property
+    def factor(self) -> int:
+        return self.op2.factor
+
+    def _read_fake(self, data: bytes, n: int) -> int:
+        return self.op2._read_fake(data, n)
+
+    def __init__(self, op2: OP2Geom):
+        self.op2 = op2
+        self.axic_map = { # per NX
             (515, 5, 144) : ['AXIC', self._read_fake], # per NX
             (2115, 21, 156) : ['FORCEAX', self._read_fake], # per NX
             (2315, 23, 146) : ['CCONEAX', self._read_fake], # per NX

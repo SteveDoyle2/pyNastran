@@ -177,7 +177,7 @@ class GEOM2:
     def _read_fake(self, data: bytes, n: int) -> int:
         return self.op2._read_fake(data, n)
 
-    def _read_geom2_4(self, data: bytes, ndata: int):
+    def read_geom2_4(self, data: bytes, ndata: int):
         return self.op2._read_geom_4(self.geom2_map, data, ndata)
 
     def __init__(self, op2: OP2Geom):

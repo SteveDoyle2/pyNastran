@@ -2,26 +2,39 @@
 """
 defines readers for BDF objects in the OP2 DIT/DITS table
 """
+from __future__ import annotations
 from struct import Struct, error as struct_error
+from typing import TYPE_CHECKING
 import numpy as np
 
 from pyNastran.bdf.cards.aero.dynamic_loads import GUST
 from pyNastran.bdf.cards.bdf_tables import (TABLED1, TABLED2, TABLED3, TABLED4,
                                             TABLEM1, TABLEM2, TABLEM3, TABLEM4,
                                             TABRND1, TABDMP1, TABLES1)
-from pyNastran.op2.tables.geom.geom_common import GeomCommon
 from pyNastran.op2.op2_interface.op2_reader import mapfmt, reshape_bytes_block
+if TYPE_CHECKING:
+    from pyNastran.op2.op2_geom import OP2Geom
 
 
-class DIT(GeomCommon):
+class DIT:
     """defines methods for reading op2 tables"""
 
-    def _read_dit_4(self, data: bytes, ndata: int):
-        return self._read_geom_4(self._dit_map, data, ndata)
+    def read_dit_4(self, data: bytes, ndata: int):
+        return self.op2._read_geom_4(self.dit_map, data, ndata)
 
-    def __init__(self):
-        GeomCommon.__init__(self)
-        self._dit_map = {
+    @property
+    def size(self) -> int:
+        return self.op2.size
+    @property
+    def factor(self) -> int:
+        return self.op2.factor
+
+    def _read_fake(self, data: bytes, n: int) -> int:
+        return self.op2._read_fake(data, n)
+
+    def __init__(self, op2: OP2Geom):
+        self.op2 = op2
+        self.dit_map = {
             (1005, 10, 174): ['GUST', self._read_gust],     # record 1
             (1105, 11, 133): ['TABLED1', self._read_tabled1],  # record 4
             (1205, 12, 134): ['TABLED2', self._read_tabled2],  # record 5
@@ -68,11 +81,12 @@ class DIT(GeomCommon):
         10 G    RS Damping
         Words 9 through 10 repeat until (-1,-1) occurs
         """
+        op2 = self.op2
         #nfields = (ndata - n) // 4
 
         datan = data[n:]
-        ints = np.frombuffer(datan, self.idtype8)
-        floats = np.frombuffer(datan, self.fdtype8)
+        ints = np.frombuffer(datan, op2.idtype8)
+        floats = np.frombuffer(datan, op2.fdtype8)
         iminus1_delta = get_iend_from_ints(ints)
         istart = 0
         nentries = 0
@@ -80,19 +94,19 @@ class DIT(GeomCommon):
             #datai = data[n+istart*4 : n+iend*4]
             tid = ints[istart].copy()
             deltai = iend - istart - 8 # subtract 2 for sid, global scale
-            assert deltai % 2 == 0, (self.show_data(data[n+istart*4 : n+iend*4], 'if'))
+            assert deltai % 2 == 0, (op2.show_data(data[n+istart*4 : n+iend*4], 'if'))
 
             xy = floats[istart+8:iend].reshape(deltai//2, 2).copy()
             x = xy[:, 0]
             y = xy[:, 1]
             table = TABDMP1(tid, x, y, Type='G')
-            if tid in self.tables_sdamping:
-                assert table == self.tables_sdamping[tid]
+            if tid in op2.tables_sdamping:
+                assert table == op2.tables_sdamping[tid]
             else:
-                self._add_methods._add_table_sdamping_object(table)
+                op2._add_methods._add_table_sdamping_object(table)
             istart = iend + 2
             nentries += 1
-        self.increase_card_count('TABDMP1', nentries)
+        op2.increase_card_count('TABDMP1', nentries)
         return len(data)
 
     def _read_tabrndg(self, data: bytes, n: int) -> int:
@@ -108,11 +122,12 @@ class DIT(GeomCommon):
         Words 1 through 8 repeat until (-1,-1) occurs
 
         """
+        op2 = self.op2
         ndata = len(data)# - n
         assert ndata == 52, ndata
         struct_2i2f4i = Struct('2i2f4i')
         #struct_ff = Struct('ff')
-        #struct_2i = self.struct_2i
+        #struct_2i = op2.struct_2i
         while ndata - n >= 32:
             edata = data[n:n + 32]
             out = struct_2i2f4i.unpack(edata)
@@ -121,15 +136,17 @@ class DIT(GeomCommon):
             if tid > 100000000:
                 tid = -(tid - 100000000)
             n += 32
-            self.add_tabrndg(tid, table_type, lu, wg, comment='')
+            op2.add_tabrndg(tid, table_type, lu, wg, comment='')
             #nentries += 1
-        #self.increase_card_count('TABRNDG', nentries)
+        #op2.increase_card_count('TABRNDG', nentries)
         n += 8  #  for the (-1,-1)
         return n
 
     def _read_tables1(self, data: bytes, n: int) -> int:
         """TABLES1(3105, 31, 97)"""
-        n = self._read_table1(TABLES1, self.tables, self._add_methods._add_table_object, data, n, 'TABLES1',
+        op2 = self.op2
+        n = self._read_table1(TABLES1, op2.tables,
+                              op2._add_methods._add_table_object, data, n, 'TABLES1',
                               add_codes=False)
         return n
 
@@ -137,6 +154,7 @@ class DIT(GeomCommon):
         """
         GUST(1005,10,174) - the marker for Record 1
         """
+        op2 = self.op2
         nentries = (len(data) - n) // 20  # 5*4
         struct_2i3f = Struct('ii3f')
         for unused_i in range(nentries):
@@ -144,7 +162,7 @@ class DIT(GeomCommon):
             out = struct_2i3f.unpack(edata)
             # (sid, dload, wg, x0, V) = out
             gust = GUST.add_op2_data(out)
-            self._add_methods._add_gust_object(gust)
+            op2._add_methods._add_gust_object(gust)
             n += 20
         return n
 
@@ -155,22 +173,25 @@ class DIT(GeomCommon):
         """
         TABLED1(1105,11,133) - the marker for Record 4
         """
-        n = self._read_table1(TABLED1, self.tables_d, self._add_methods._add_tabled_object, data, n, 'TABLED1')
+        op2 = self.op2
+        n = self._read_table1(TABLED1, op2.tables_d,
+                              op2._add_methods._add_tabled_object, data, n, 'TABLED1')
         return n
 
-    def _read_table1(self, cls, slot, add_method, data, n, table_name, add_codes=True):
+    def _read_table1(self, cls, slot, add_method, data: bytes, n: int, table_name: str, add_codes: bool=True) -> int:
+        op2 = self.op2
         nentries = 0
         ndata = len(data)
         if self.size == 4:
             struct_8i2f = Struct('8iff')
             struct_ff = Struct('ff')
-            struct_2i = self.struct_2i
+            struct_2i = op2.struct_2i
             ntotal1 = 40
             ntotal2 = 8
         else:
             struct_8i2f = Struct('8qdd')
             struct_ff = Struct('dd')
-            struct_2i = self.struct_2q
+            struct_2i = op2.struct_2q
             ntotal1 = 80
             ntotal2 = 16
 
@@ -204,17 +225,18 @@ class DIT(GeomCommon):
             else:
                 add_method(table)
             nentries += 1
-        self.increase_card_count(table_name, nentries)
+        op2.increase_card_count(table_name, nentries)
         return n
 
     def _read_tabled2(self, data: bytes, n: int) -> int:
         """
         TABLED2(1205,12,134) - the marker for Record 5
         """
-        n = self._read_table2(TABLED2, self.tables_d, self._add_methods._add_tabled_object, data, n, 'TABLED2')
+        op2 = self.op2
+        n = self._read_table2(TABLED2, op2.tables_d, op2._add_methods._add_tabled_object, data, n, 'TABLED2')
         return n
 
-    def _read_table2(self, cls, slot, add_method, data, n, table_name):
+    def _read_table2(self, cls, slot, add_method, data: bytes, n: int, table_name: str) -> int:
         """
         1 ID    I  Table identification number
         2 X1    RS X-axis shift
@@ -224,18 +246,19 @@ class DIT(GeomCommon):
         10 Y RS Y  value
         Words 9 through 10 repeat until (-1,-1) occurs
         """
+        op2 = self.op2
         ndata = len(data)
         nentries = 0
         if self.size == 4:
             struct1 = Struct('ifiiiiiiff')
             struct_ff = Struct('ff')
-            struct_2i = self.struct_2i
+            struct_2i = op2.struct_2i
             ntotal1 = 40
             ntotal2 = 8
         else:
             struct1 = Struct('qdqqqqqqdd')
             struct_ff = Struct('dd')
-            struct_2i = self.struct_2q
+            struct_2i = op2.struct_2q
             ntotal1 = 80
             ntotal2 = 16
         while n < ndata:
@@ -257,21 +280,23 @@ class DIT(GeomCommon):
             table = cls.add_op2_data(data_in)
             add_method(table)
             nentries += 1
-        self.increase_card_count(table_name, nentries)
+        op2.increase_card_count(table_name, nentries)
         return n
 
     def _read_tabled3(self, data: bytes, n: int) -> int:
         """
         TABLED3(1305,13,140) - the marker for Record 6
         """
-        n = self._read_table3(TABLED3, self.tables_d, self._add_methods._add_tabled_object, data, n, 'TABLED3')
+        op2 = self.op2
+        n = self._read_table3(TABLED3, op2.tables_d, op2._add_methods._add_tabled_object, data, n, 'TABLED3')
         return n
 
     def _read_tabled4(self, data: bytes, n: int) -> int:
         """
         TABLED4 - the marker for Record 7
         """
-        n = self._read_table4(TABLED4, self.tables_d, self._add_methods._add_tabled_object, data, n, 'TABLED4')
+        op2 = self.op2
+        n = self._read_table4(TABLED4, op2.tables_d, op2._add_methods._add_tabled_object, data, n, 'TABLED4')
         return n
 
 #TABLEDR
@@ -280,44 +305,49 @@ class DIT(GeomCommon):
         """
         TABLEM1(105,1,93) - the marker for Record 9
         """
-        n = self._read_table1(TABLEM1, self.tables_m, self._add_methods._add_tablem_object, data, n, 'TABLEM1')
+        op2 = self.op2
+        n = self._read_table1(TABLEM1, op2.tables_m, op2._add_methods._add_tablem_object, data, n, 'TABLEM1')
         return n
 
     def _read_tablem2(self, data: bytes, n: int) -> int:
         """
         TABLEM2(205,2,94) - the marker for Record 10
         """
-        n = self._read_table2(TABLEM2, self.tables_m, self._add_methods._add_tablem_object, data, n, 'TABLEM2')
+        op2 = self.op2
+        n = self._read_table2(TABLEM2, op2.tables_m, op2._add_methods._add_tablem_object, data, n, 'TABLEM2')
         return n
 
     def _read_tablem3(self, data: bytes, n: int) -> int:
         """
         TABLEM3(305,3,95) - the marker for Record 11
         """
-        n = self._read_table3(TABLEM3, self.tables_m, self._add_methods._add_tablem_object, data, n, 'TABLEM3')
+        op2 = self.op2
+        n = self._read_table3(TABLEM3, op2.tables_m, op2._add_methods._add_tablem_object, data, n, 'TABLEM3')
         return n
 
     def _read_tablem4(self, data: bytes, n: int) -> int:
         """
         TABLEM4(405,4,96) - the marker for Record 12
         """
-        n = self._read_table4(TABLEM4, self.tables_m, self._add_methods._add_tablem_object, data, n, 'TABLEM4')
+        op2 = self.op2
+        n = self._read_table4(TABLEM4, op2.tables_m, op2._add_methods._add_tablem_object, data, n, 'TABLEM4')
         return n
 
-    def _read_table3(self, cls, slot, add_method, data, n, table_name):
+    def _read_table3(self, cls, slot, add_method, data: bytes, n: int, table_name: str) -> int:
+        op2 = self.op2
         nentries = 0
         ndata = len(data)
         if self.size == 4:
             ntotal1 = 40
             ntotal2 = 8
             struct1 = Struct('iffiiiiiff')
-            struct_2i = self.struct_2i
+            struct_2i = op2.struct_2i
             struct_ff = Struct('ff')
         else:
             ntotal1 = 80
             ntotal2 = 16
             struct1 = Struct('qddqqqqqdd')
-            struct_2i = self.struct_2q
+            struct_2i = op2.struct_2q
             struct_ff = Struct('dd')
 
         while ndata - n >= ntotal1:
@@ -339,10 +369,10 @@ class DIT(GeomCommon):
             table = cls.add_op2_data(data_in)
             add_method(table)
             nentries += 1
-        self.increase_card_count(table_name, nentries)
+        op2.increase_card_count(table_name, nentries)
         return n
 
-    def _read_table4(self, cls, slot, add_method, data, n, table_name):
+    def _read_table4(self, cls, slot, add_method, data: bytes, n: int, table_name: str) -> int:
         """
         1 ID I Table identification number
         2 X1 RS X-axis shift
@@ -353,13 +383,14 @@ class DIT(GeomCommon):
         9 A RS
         Word 9 repeats until End of Record (-1)
         """
+        op2 = self.op2
         n0 = n
         nentries = 0
         ndata = len(data)
         size = self.size
-        struct1 = Struct(mapfmt(self._endian + b'i 4f 3i f i', size))
-        struct_i = self.struct_i if size == 4 else self.struct_q
-        struct_f = Struct(self._endian + b'f') if size == 4 else Struct(self._endian + b'd')
+        struct1 = Struct(mapfmt(op2._endian + b'i 4f 3i f i', size))
+        struct_i = op2.struct_i if size == 4 else op2.struct_q
+        struct_f = Struct(op2._endian + b'f') if size == 4 else Struct(op2._endian + b'd')
         ntotal1 = 40 * self.factor
         ntotal2 = 36 * self.factor
         try:
@@ -385,12 +416,12 @@ class DIT(GeomCommon):
                 add_method(table)
                 nentries += 1
         except struct_error:
-            self.log.error('failed parsing %s' % table_name)
-            self.show_data(data[n0:], 'if')
-            self.show_data(edata, 'if')
+            op2.log.error('failed parsing %s' % table_name)
+            op2.show_data(data[n0:], 'if')
+            op2.show_data(edata, 'if')
             #n = n0 + ndata
             raise
-        self.increase_card_count(table_name, nentries)
+        op2.increase_card_count(table_name, nentries)
         return n
 
 #TABLEST
@@ -406,11 +437,12 @@ class DIT(GeomCommon):
         10 G   RS Power spectral density
         Words 9 through 10 repeat until (-1,-1) occurs
         """
+        op2 = self.op2
         #nfields = (ndata - n) // 4
 
         datan = data[n:]
-        ints = np.frombuffer(datan, self.idtype).copy()
-        floats = np.frombuffer(datan, self.fdtype)
+        ints = np.frombuffer(datan, op2.idtype).copy()
+        floats = np.frombuffer(datan, op2.fdtype)
         iminus1_delta = get_iend_from_ints(ints)
         istart = 0
         nentries = 0
@@ -421,7 +453,7 @@ class DIT(GeomCommon):
             codey = ints[istart + 2]
             #print('  sid=%s global_scale=%s' % (sid, global_scale))
             deltai = iend - istart - 8 # subtract 2 for sid, global scale
-            assert deltai % 2 == 0, (self.show_data(data[n+istart*4 : n+iend*4], 'if'))
+            assert deltai % 2 == 0, (op2.show_data(data[n+istart*4 : n+iend*4], 'if'))
 
             xy = floats[istart+8:iend].reshape(deltai//2, 2).copy()
             x = xy[:, 0]
@@ -440,10 +472,10 @@ class DIT(GeomCommon):
                 raise NotImplementedError(codey) # LOG
 
             table = TABRND1(tid, x, y, xaxis=xaxis, yaxis=yaxis)
-            self._add_methods._add_random_table_object(table)
+            op2._add_methods._add_random_table_object(table)
             istart = iend + 2
             nentries += 1
-        self.increase_card_count('TABRND1', nentries)
+        op2.increase_card_count('TABRND1', nentries)
         return len(data)
 
 def get_iend_from_ints(ints):

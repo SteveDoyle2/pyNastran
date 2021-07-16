@@ -1,6 +1,7 @@
 """defines readers for BDF objects in the OP2 DYNAMIC/DYNAMICS table"""
+from __future__ import annotations
 from struct import unpack, Struct
-from typing import Tuple, List
+from typing import Tuple, List, TYPE_CHECKING
 import numpy as np
 
 from pyNastran.bdf.cards.nodes import EPOINTs
@@ -12,14 +13,27 @@ from pyNastran.op2.op2_interface.op2_reader import mapfmt # , reshape_bytes_bloc
 from pyNastran.op2.tables.geom.geom_common import GeomCommon
 from pyNastran.op2.tables.geom.dit import get_iend_from_ints
 
+if TYPE_CHECKING:
+    from pyNastran.op2.op2_geom import OP2Geom
+
 class DYNAMICS(GeomCommon):
     """defines methods for reading op2 dynamics loads/methods"""
-    def _read_dynamics_4(self, data: bytes, ndata: int):
-        return self._read_geom_4(self._dynamics_map, data, ndata)
+    def read_dynamics_4(self, data: bytes, ndata: int):
+        return self.op2._read_geom_4(self.dynamics_map, data, ndata)
 
-    def __init__(self):
-        GeomCommon.__init__(self)
-        self._dynamics_map = {
+    @property
+    def size(self) -> int:
+        return self.op2.size
+    @property
+    def factor(self) -> int:
+        return self.op2.factor
+
+    def _read_fake(self, data: bytes, n: int) -> int:
+        return self.op2._read_fake(data, n)
+
+    def __init__(self, op2: OP2Geom):
+        self.op2 = op2
+        self.dynamics_map = {
             (5307, 53, 379) : ['ACSRCE', self._read_acsrce], # 1
             (27, 17, 182): ['DAREA', self._read_darea],  # 2
 
@@ -110,11 +124,12 @@ class DYNAMICS(GeomCommon):
         ints    = (15, 1, 22, RPM, 0, 0, 0, 0, 0)
         floats  = (15, 1, 22, RPM, 0.0, 0.0, 0.0, 0.0, 0.0)
         """
+        op2 = self.op2
         assert self.size == 4, f'CAMPBLL size={self.size}'
         ntotal = 40 * self.factor
         nentries = (len(data) - n) // ntotal
-        self.increase_card_count('CAMPBLL', nentries)
-        struc = Struct(self._endian + b'3i 8s 5i')
+        op2.increase_card_count('CAMPBLL', nentries)
+        struc = Struct(op2._endian + b'3i 8s 5i')
         for unused_i in range(nentries):
             edata = data[n:n+ntotal]
             out = struc.unpack(edata)
@@ -126,15 +141,16 @@ class DYNAMICS(GeomCommon):
             assert variable_param == 1, 'variable_param=1 (speed?)'
 
             # darea = DAREA.add_op2_data(data=out)
-            # self._add_methods._add_darea_object(darea)
+            # op2._add_methods._add_darea_object(darea)
             n += ntotal
-        self.log.warning('skipping CAMPBLL')
+        op2.log.warning('skipping CAMPBLL')
         return n
 
     def _read_acsrce(self, data: bytes, n: int) -> int:
         """common method for reading NX/MSC ACSRCE"""
-        n = self.geom2._read_dual_card(data, n, self._read_acsrce_nx, self._read_acsrce_msc,
-                                       'ACSRCE', self._add_methods._add_dload_entry)
+        op2 = self.op2
+        n = op2.reader_geom2._read_dual_card(data, n, self._read_acsrce_nx, self._read_acsrce_msc,
+                                             'ACSRCE', op2._add_methods._add_dload_entry)
         return n
 
     def _read_acsrce_msc(self, data, n):
@@ -154,12 +170,13 @@ class DYNAMICS(GeomCommon):
         8 T     RS Time delay
         9 PH    RS Phase lead
         """
+        op2 = self.op2
         ntotal = 36 * self.factor
         nentries = (len(data) - n) // ntotal
         assert (len(data) - n) % ntotal == 0, 'ACSRCE'
 
         loads = []
-        struc = Struct(mapfmt(self._endian + b'5i4f', self.size))
+        struc = Struct(mapfmt(op2._endian + b'5i4f', self.size))
         for unused_i in range(nentries):
             edata = data[n:n+ntotal]
             out = struc.unpack(edata)
@@ -194,12 +211,13 @@ class DYNAMICS(GeomCommon):
         10 TCR    RS If TCI     = 0, constant value for C(f)
 
         """
+        op2 = self.op2
         ntotal = 40 * self.factor
         nentries = (len(data) - n) // ntotal
         assert (len(data) - n) % ntotal == 0, 'ACSRCE'
 
         loads = []
-        struc = Struct(mapfmt(self._endian + b'5i5f', self.size))
+        struc = Struct(mapfmt(op2._endian + b'5i5f', self.size))
         for unused_i in range(nentries):
             edata = data[n:n+ntotal]
             out = struc.unpack(edata)
@@ -228,16 +246,17 @@ class DYNAMICS(GeomCommon):
         4 A   RS Scale factor
 
         """
+        op2 = self.op2
         ntotal = 16 * self.factor
         nentries = (len(data) - n) // ntotal
-        self.increase_card_count('DAREA', nentries)
-        struc = Struct(mapfmt(self._endian + b'3if', self.size))
+        op2.increase_card_count('DAREA', nentries)
+        struc = Struct(mapfmt(op2._endian + b'3if', self.size))
         for unused_i in range(nentries):
             edata = data[n:n+ntotal]
             out = struc.unpack(edata)
             #(sid,p,c,a) = out
             darea = DAREA.add_op2_data(data=out)
-            self._add_methods._add_darea_object(darea)
+            op2._add_methods._add_darea_object(darea)
             n += ntotal
         return n
 
@@ -251,18 +270,19 @@ class DYNAMICS(GeomCommon):
         4 T   RS Time delay
 
         """
+        op2 = self.op2
         ntotal = 16
         nentries = (len(data) - n) // ntotal
-        self.increase_card_count('DELAY', nentries)
-        struc = Struct(self._endian + b'3if')
+        op2.increase_card_count('DELAY', nentries)
+        struc = Struct(op2._endian + b'3if')
         for unused_i in range(nentries):
             edata = data[n:n+ntotal]
             out = struc.unpack(edata)
             sid, nodes, components, delays = out
-            if self.is_debug_file:
-                self.binary_debug.write('  DELAY=%s\n' % str(out))
+            if op2.is_debug_file:
+                op2.binary_debug.write('  DELAY=%s\n' % str(out))
             delay = DELAY(sid, nodes, components, delays)
-            self._add_methods._add_delay_object(delay)
+            op2._add_methods._add_delay_object(delay)
             n += ntotal
         return n
 
@@ -277,12 +297,13 @@ class DYNAMICS(GeomCommon):
         Words 3 through 4 repeat until (-1,-1) occurs
 
         """
+        op2 = self.op2
         #ndata = len(data)
         #nfields = (ndata - n) // 4
 
         datan = data[n:]
-        ints = np.frombuffer(datan, self.idtype8).copy()
-        floats = np.frombuffer(datan, self.fdtype8).copy()
+        ints = np.frombuffer(datan, op2.idtype8).copy()
+        floats = np.frombuffer(datan, op2.fdtype8).copy()
         istart = 0
         iminus1_delta = get_iend_from_ints(ints)
         nentries = 0
@@ -292,7 +313,7 @@ class DYNAMICS(GeomCommon):
             global_scale = floats[istart + 1]
             #print('  sid=%s global_scale=%s' % (sid, global_scale))
             deltai = iend - istart - 2 # subtract 2 for sid, global scale
-            assert deltai % 2 == 0, (self.show_data(data[n+istart*4 : n+iend*4], 'if'))
+            assert deltai % 2 == 0, (op2.show_data(data[n+istart*4 : n+iend*4], 'if'))
             out = [sid, global_scale]
             scales = []
             load_ids = []
@@ -303,13 +324,13 @@ class DYNAMICS(GeomCommon):
                 load_ids.append(load_id)
                 out.append(scale)
                 out.append(load_id)
-            if self.is_debug_file:
-                self.binary_debug.write('  DLOAD=%s\n' % str(out))
+            if op2.is_debug_file:
+                op2.binary_debug.write('  DLOAD=%s\n' % str(out))
 
-            self.add_dload(sid, global_scale, scales, load_ids)
+            op2.add_dload(sid, global_scale, scales, load_ids)
             istart = iend + 2
             nentries += 1
-        self.increase_card_count('DLOAD', nentries)
+        op2.increase_card_count('DLOAD', nentries)
         return len(data)
 
     def _read_dphase(self, data: bytes, n: int) -> int:
@@ -322,18 +343,19 @@ class DYNAMICS(GeomCommon):
         4 TH  RS Phase lead
 
         """
+        op2 = self.op2
         ntotal = 16
         nentries = (len(data) - n) // ntotal
-        self.increase_card_count('DPHASE', nentries)
-        struc = Struct(self._endian + b'3if')
+        op2.increase_card_count('DPHASE', nentries)
+        struc = Struct(op2._endian + b'3if')
         for unused_i in range(nentries):
             edata = data[n:n+ntotal]
             out = struc.unpack(edata)
             sid, nodes, components, delays = out
-            if self.is_debug_file:
-                self.binary_debug.write('  DPHASE=%s\n' % str(out))
+            if op2.is_debug_file:
+                op2.binary_debug.write('  DPHASE=%s\n' % str(out))
             delay = DPHASE(sid, nodes, components, delays)
-            self._add_methods._add_dphase_object(delay)
+            op2._add_methods._add_dphase_object(delay)
             n += ntotal
         return n
 
@@ -350,6 +372,7 @@ class DYNAMICS(GeomCommon):
         6 NQDES I Number of generalized degrees-of-freedom
         7 UNDEF(2 ) none
         """
+        op2 = self.op2
         #C:\NASA\m4\formats\git\examples\move_tpl\n2h39.op2
         #DYNRED  202     1000.
 
@@ -359,11 +382,11 @@ class DYNAMICS(GeomCommon):
         #(23, 160.0, 6, 10, 0, 75, 75, 0)
         #(24, 160.0, 6, 10, 0,  0,  0, YES)
         ntotal = 32 # 4*8
-        #self.show_data(data[n:])
+        #op2.show_data(data[n:])
         nentries = (len(data) - n) // ntotal
         assert (len(data) - n) % ntotal == 0
-        #struc = Struct(self._endian + b'i f 5i 4s')
-        struc = Struct(self._endian + b'i f 5i i')
+        #struc = Struct(op2._endian + b'i f 5i 4s')
+        struc = Struct(op2._endian + b'i f 5i i')
         for unused_i in range(nentries):
             edata = data[n:n+ntotal]
             out = struc.unpack(edata)
@@ -374,11 +397,11 @@ class DYNAMICS(GeomCommon):
             #print(sid, fmax, nirv, nit, idir, nqdes, unused_zero1, zero_yes)
             #assert unused_zero1 == 0, out
             #assert unused_yes == b'YES ', out
-            if self.is_debug_file:
-                self.binary_debug.write('  DYNRED=%s\n' % str(out))
-            self.add_dynred(sid, fmax, nirv, nit, idir, nqdes)
+            if op2.is_debug_file:
+                op2.binary_debug.write('  DYNRED=%s\n' % str(out))
+            op2.add_dynred(sid, fmax, nirv, nit, idir, nqdes)
             n += ntotal
-        self.increase_card_count('DYNRED', nentries)
+        op2.increase_card_count('DYNRED', nentries)
         return n
 
 
@@ -400,29 +423,30 @@ class DYNAMICS(GeomCommon):
         13 C            I Component number
         14 UNDEF(5) None
         """
+        op2 = self.op2
         #ntotal = 60 * self.factor  # 4*15
         ntotal = 72 * self.factor  # 4*18
         nentries = (len(data) - n) // ntotal
         assert (len(data) - n) % ntotal == 0
         assert nentries > 0, nentries
-        self.increase_card_count('EIGB', nentries)
+        op2.increase_card_count('EIGB', nentries)
         if self.size == 4:
-            struc = Struct(self._endian + b'i 8s ff 3i i 8s 7i')  # 4i -> 7i
+            struc = Struct(op2._endian + b'i 8s ff 3i i 8s 7i')  # 4i -> 7i
         else:
-            struc = Struct(self._endian + b'q 16s dd 3q q 16s 7q')  # 4q -> 7q
+            struc = Struct(op2._endian + b'q 16s dd 3q q 16s 7q')  # 4q -> 7q
         for unused_i in range(nentries):
             edata = data[n:n+ntotal]
-            #self.show_data(edata[44:])
+            #op2.show_data(edata[44:])
             # int, 8s, 2f, 3i, i, 8s, 4i
             out = struc.unpack(edata)
             sid, method, L1, L2, nep, ndp, ndn, dunno, norm, g, c, dunno_a, dunno_b, dunno_c, dunno_d, dunno_e = out
-            if self.is_debug_file:
-                self.binary_debug.write('EIGB=%s\n' % str(out))
+            if op2.is_debug_file:
+                op2.binary_debug.write('EIGB=%s\n' % str(out))
             #print('out = %s' % str(out))
             method = method.strip().decode('latin1')
             norm = norm.strip().decode('latin1')
             eigb = EIGB(sid, method, L1, L2, nep, ndp, ndn, norm, g, c)
-            self._add_methods._add_method_object(eigb)
+            op2._add_methods._add_method_object(eigb)
             n += ntotal
         return n
 
@@ -454,25 +478,26 @@ class DYNAMICS(GeomCommon):
         data  = (2, CLAN, '', MAX, '', 0,     0, 1e-08, 32, -1,
                  3, HESS, '', MAX, '', 0,     0, 1e-08, 32, -1)
         """
+        op2 = self.op2
         if 0:
             ntotal = 60
             nentries = (len(data) - n) // ntotal
-            self.increase_card_count('EIGB', nentries)
-            struct1 = Struct(self._endian + b'i 4s 4s 2i f 2i')
-            #struct2 = Struct(self._endian + b'5f2i')
+            op2.increase_card_count('EIGB', nentries)
+            struct1 = Struct(op2._endian + b'i 4s 4s 2i f 2i')
+            #struct2 = Struct(op2._endian + b'5f2i')
             for i in range(nentries):
                 edata = data[n:n+ntotal]
-                #self.show_data(edata[44:])
+                #op2.show_data(edata[44:])
                 # int, 8s, 2f, 3i, i, 8s, 4i
                 out = struct1.unpack(edata)
                 sid, method, L1, L2, nep, ndp, ndn, dunno, norm, g, c, dunno_a, dunno_b = out
-                if self.is_debug_file:
-                    self.binary_debug.write('EIGC=%s\n' % str(out))
+                if op2.is_debug_file:
+                    op2.binary_debug.write('EIGC=%s\n' % str(out))
                 #print('out = %s' % str(out))
                 method = method.strip().decode('latin1')
                 norm = norm.strip().decode('latin1')
                 eigb = EIGB(sid, method, L1, L2, nep, ndp, ndn, norm, g, c)
-                self._add_methods._add_method_object(eigb)
+                op2._add_methods._add_method_object(eigb)
                 n += ntotal
             #return n
 
@@ -481,13 +506,13 @@ class DYNAMICS(GeomCommon):
         nfields = (ndata - n) // self.size
         datan = data[n:]
         if self.size == 4:
-            ints = unpack(self._endian + b'%ii' % nfields, datan)
-            floats = unpack(self._endian + b'%if' % nfields, datan)
-            strings = unpack(self._endian + b'4s'* nfields, datan)
+            ints = unpack(op2._endian + b'%ii' % nfields, datan)
+            floats = unpack(op2._endian + b'%if' % nfields, datan)
+            strings = unpack(op2._endian + b'4s'* nfields, datan)
         else:
-            ints = unpack(self._endian + b'%iq' % nfields, datan)
-            floats = unpack(self._endian + b'%id' % nfields, datan)
-            strings = unpack(self._endian + b'8s'* nfields, datan)
+            ints = unpack(op2._endian + b'%iq' % nfields, datan)
+            floats = unpack(op2._endian + b'%id' % nfields, datan)
+            strings = unpack(op2._endian + b'8s'* nfields, datan)
 
         i = 0
         nentries = 0
@@ -572,15 +597,15 @@ class DYNAMICS(GeomCommon):
                 raise NotImplementedError('EIGC control_flag=%s' % control_flag)
             datai.extend([-1, -1, -1, -1, -1, -1, -1])  # creates a +7
 
-            if self.is_debug_file:
-                self.binary_debug.write('  EIGC=%s\n' % str(datai))
+            if op2.is_debug_file:
+                op2.binary_debug.write('  EIGC=%s\n' % str(datai))
 
             if grid == 0:
                 grid = None
                 assert component == 0, component
                 component = None
 
-            eigc = self.add_eigc(sid, method, grid, component, epsilon, neigenvalues, norm=norm,
+            eigc = op2.add_eigc(sid, method, grid, component, epsilon, neigenvalues, norm=norm,
                                  mblkszs=mblkszs, iblkszs=iblkszs, ksteps=ksteps, NJIs=NJIs,
                                  alphaAjs=alphaAjs, omegaAjs=omegaAjs,
                                  alphaBjs=alphaBjs, omegaBjs=omegaBjs,
@@ -599,7 +624,7 @@ class DYNAMICS(GeomCommon):
 
             nentries += 1
             #print('--------------')
-        self.increase_card_count('EIGC', nentries)
+        op2.increase_card_count('EIGC', nentries)
         return len(data)
 
     def _read_eigp(self, data: bytes, n: int) -> int:
@@ -612,18 +637,19 @@ class DYNAMICS(GeomCommon):
         4 M      I Multiplicity of complex root at pole
 
         """
+        op2 = self.op2
         ntotal = 16
         nentries = (len(data) - n) // ntotal
-        self.increase_card_count('EIGP', nentries)
+        op2.increase_card_count('EIGP', nentries)
         struct1 = Struct('i2fi')
         for unused_i in range(nentries):
             edata = data[n:n+ntotal]
             out = struct1.unpack(edata)
             sid, alpha, omega, m = out
-            if self.is_debug_file:
-                self.binary_debug.write('EIGP=%s\n' % str(out))
+            if op2.is_debug_file:
+                op2.binary_debug.write('EIGP=%s\n' % str(out))
             #print('out = %s' % str(out))
-            self.add_eigp(sid, alpha, omega, m, alpha2=None, omega2=None, m2=None)
+            op2.add_eigp(sid, alpha, omega, m, alpha2=None, omega2=None, m2=None)
             n += ntotal
         return n
 
@@ -644,6 +670,7 @@ class DYNAMICS(GeomCommon):
         14 UNDEF(5 ) None
 
         """
+        op2 = self.op2
         ntotal = 72 * self.factor
         nentries = (len(data) - n) // ntotal
         if self.size == 4:
@@ -656,15 +683,15 @@ class DYNAMICS(GeomCommon):
             out = struct1.unpack(edata)
             (sid, method, f1, f2, ne, nd, null_a, null_b, norm, g, c,
              null_c, null_d, null_e, null_f, null_g) = out
-            if self.is_debug_file:
-                self.binary_debug.write('EIGR=%s\n' % str(out))
+            if op2.is_debug_file:
+                op2.binary_debug.write('EIGR=%s\n' % str(out))
             method = method.strip().decode('latin1')
             norm = norm.strip().decode('latin1')
-            eigr = self.add_eigr(sid, method=method, f1=f1, f2=f2, ne=ne, nd=nd,
+            eigr = op2.add_eigr(sid, method=method, f1=f1, f2=f2, ne=ne, nd=nd,
                                  norm=norm, G=g, C=c, comment='')
             eigr.validate()
             n += ntotal
-        self.increase_card_count('EIGR', nentries)
+        op2.increase_card_count('EIGR', nentries)
         return n
 
     def _read_eigrl(self, data: bytes, n: int) -> int:
@@ -697,7 +724,8 @@ class DYNAMICS(GeomCommon):
             floats  = (5, 0.0, 0.0, 10, 0.0, 0.0, 0.0, 0.0, 0.0, 907333664768.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0)
 
         """
-        #self.show_data(data[n:], types='ifs')
+        op2 = self.op2
+        #op2.show_data(data[n:], types='ifs')
         ndata = len(data)
         if self.size == 4:
             s = Struct('i 2f 3i f 2i 8s f i')
@@ -718,8 +746,8 @@ class DYNAMICS(GeomCommon):
             norm = norm.decode('latin1').rstrip('\x00 ')
             #print('self._nastran_format =', self._nastran_format)
             if nums == 0: # and self._nastran_format == 'nx':
-                self.log.warning(f'sid={sid} v1={v1} v2={v2} nd={nd} msglvl={msglvl} maxset={maxset} '
-                                 f'shfscl={shfscl} flag1={flag1} flag2={flag2} norm={norm} alpha={alpha} nums={nums}')
+                op2.log.warning(f'sid={sid} v1={v1} v2={v2} nd={nd} msglvl={msglvl} maxset={maxset} '
+                                f'shfscl={shfscl} flag1={flag1} flag2={flag2} norm={norm} alpha={alpha} nums={nums}')
                 nums = None
                 is_none = True
 
@@ -727,27 +755,27 @@ class DYNAMICS(GeomCommon):
                 nums = 14
                 nums_total = nums * 4
                 edata2 = data[n+nbytes:n+nbytes+nums_total]
-                self.show_data(edata2, types=types)
+                op2.show_data(edata2, types=types)
                 fi = unpack(mapfmt('%if' % nums, self.size), edata2)
                 print(out, fi)
                 #nbytes += nums_total
 
             elif nums != 538976288:
-                self.log.warning(f'sid={sid} v1={v1} v2={v2} nd={nd} msglvl={msglvl} maxset={maxset} '
+                op2.log.warning(f'sid={sid} v1={v1} v2={v2} nd={nd} msglvl={msglvl} maxset={maxset} '
                                  f'shfscl={shfscl} flag1={flag1} flag2={flag2} norm={norm} alpha={alpha} nums={nums}')
                 assert nums < 10000, nums
                 #edata2 = data[n+46:n+46+nums*4]
                 edata2 = data[n+nbytes:n+nbytes+nums*4]
-                self.show_data(edata2, types=types)
+                op2.show_data(edata2, types=types)
                 fi = unpack(mapfmt('%if' % nums, self.size), edata2)
                 print(out, fi)
                 raise NotImplementedError(nums)
 
-            if self.is_debug_file:
-                self.binary_debug.write('  EIGRL=%s\n' % str(out))
+            if op2.is_debug_file:
+                op2.binary_debug.write('  EIGRL=%s\n' % str(out))
             options = []
             values = []
-            self.add_eigrl(sid, v1=v1, v2=v2, nd=nd, msglvl=msglvl,
+            op2.add_eigrl(sid, v1=v1, v2=v2, nd=nd, msglvl=msglvl,
                            maxset=maxset, shfscl=shfscl,
                            norm=norm, options=options, values=values)
             #print(eigrl)
@@ -756,36 +784,37 @@ class DYNAMICS(GeomCommon):
             else:
                 n += nbytes + nums * 4
             nentries += 1
-        self.increase_card_count('EIGRL', nentries)
+        op2.increase_card_count('EIGRL', nentries)
         if is_none:
             assert n == len(data), f'n={n} ndata={len(data)}'
         return n
 
     def _read_epoint(self, data: bytes, n: int) -> int:
         """EPOINT(707,7,124) - Record 12"""
+        op2 = self.op2
         npoints = (len(data) - n) // 4
-        fmt = self._endian + b'%ii' % npoints
+        fmt = op2._endian + b'%ii' % npoints
         nids = unpack(fmt, data[n:])
-        if self.is_debug_file:
-            self.binary_debug.write('EPOINT=%s\n' % str(nids))
+        if op2.is_debug_file:
+            op2.binary_debug.write('EPOINT=%s\n' % str(nids))
         epoint = EPOINTs.add_op2_data(list(nids))
-        self._add_methods._add_epoint_object(epoint)
-        self.card_count['EPOINT'] = npoints
-        self.increase_card_count('EPOINT', count_num=npoints)
+        op2._add_methods._add_epoint_object(epoint)
+        op2.increase_card_count('EPOINT', count_num=npoints)
         return len(data)
 
     def _read_freq(self, data: bytes, n: int) -> int:
         """FREQ(1307,13,126) - Record 13"""
-        ints = np.frombuffer(data[n:], self.idtype8).copy()
-        floats = np.frombuffer(data[n:], self.fdtype8).copy()
+        op2 = self.op2
+        ints = np.frombuffer(data[n:], op2.idtype8).copy()
+        floats = np.frombuffer(data[n:], op2.fdtype8).copy()
         iminus1 = np.where(ints == -1)[0]
         istart = 0
         for iend in iminus1:
             sid = ints[istart]
             freqs = floats[istart + 1:iend]
             istart = iend + 1
-            self.add_freq(sid, freqs)
-        self.increase_card_count('FREQ', count_num=len(iminus1))
+            op2.add_freq(sid, freqs)
+        op2.increase_card_count('FREQ', count_num=len(iminus1))
         return len(data)
 
     def _read_freq1(self, data: bytes, n: int) -> int:
@@ -798,20 +827,21 @@ class DYNAMICS(GeomCommon):
         4 NDF I  Number of frequency increments
 
         """
+        op2 = self.op2
         ntotal = 16 * self.factor
         nentries = (len(data) - n) // ntotal
-        struc = Struct(mapfmt(self._endian + b'iffi', self.size))
+        struc = Struct(mapfmt(op2._endian + b'iffi', self.size))
         for unused_i in range(nentries):
             edata = data[n:n+ntotal]
             out = struc.unpack(edata)
             sid, f1, df, ndf = out
-            if self.is_debug_file:
-                self.binary_debug.write('FREQ1=%s\n' % str(out))
+            if op2.is_debug_file:
+                op2.binary_debug.write('FREQ1=%s\n' % str(out))
             #print('out = %s' % str(out))
             freq = FREQ1(sid, f1, df, ndf=ndf)
-            self._add_methods._add_freq_object(freq)
+            op2._add_methods._add_freq_object(freq)
             n += ntotal
-        self.increase_card_count('FREQ1', nentries)
+        op2.increase_card_count('FREQ1', nentries)
         return n
 
     def _read_freq2(self, data: bytes, n: int) -> int:
@@ -823,19 +853,20 @@ class DYNAMICS(GeomCommon):
         3 F2  RS Last frequency
         4 NF   I Number of logarithmic intervals
         """
+        op2 = self.op2
         ntotal = 16 * self.factor
         nentries = (len(data) - n) // ntotal
-        struc = Struct(mapfmt(self._endian + b'iffi', self.size))
+        struc = Struct(mapfmt(op2._endian + b'iffi', self.size))
         for unused_i in range(nentries):
             edata = data[n:n+ntotal]
             out = struc.unpack(edata)
             sid, f1, f2, nf = out
-            if self.is_debug_file:
-                self.binary_debug.write('  FREQ2=%s\n' % str(out))
+            if op2.is_debug_file:
+                op2.binary_debug.write('  FREQ2=%s\n' % str(out))
             #print('out = %s' % str(out))
-            self.add_freq2(sid, f1, f2, nf)
+            op2.add_freq2(sid, f1, f2, nf)
             n += ntotal
-        self.increase_card_count('FREQ2', nentries)
+        op2.increase_card_count('FREQ2', nentries)
         return n
 
     def _read_freq3(self, data: bytes, n: int) -> int:
@@ -850,9 +881,10 @@ class DYNAMICS(GeomCommon):
         6 BIAS    RS Clustering bias parameter
 
         """
+        op2 = self.op2
         ntotal = 24 # 4*6
         nentries = (len(data) - n) // ntotal
-        struc = Struct(self._endian + b'i 2f 4s if')
+        struc = Struct(op2._endian + b'i 2f 4s if')
         for unused_i in range(nentries):
             edata = data[n:n+ntotal]
             out = struc.unpack(edata)
@@ -861,12 +893,12 @@ class DYNAMICS(GeomCommon):
             if freq_type == 'LINE':
                 freq_type = 'LINEAR'
 
-            if self.is_debug_file:
-                self.binary_debug.write('  FREQ3=%s\n' % str(out))
+            if op2.is_debug_file:
+                op2.binary_debug.write('  FREQ3=%s\n' % str(out))
 
-            self.add_freq3(sid, f1, f2=f2, Type=freq_type, nef=nef, cluster=bias)
+            op2.add_freq3(sid, f1, f2=f2, Type=freq_type, nef=nef, cluster=bias)
             n += ntotal
-        self.increase_card_count('FREQ3', nentries)
+        op2.increase_card_count('FREQ3', nentries)
         return n
 
     def _read_freq4(self, data: bytes, n: int) -> int:
@@ -880,18 +912,19 @@ class DYNAMICS(GeomCommon):
         5 NFM   I Number of evenly spaced frequencies per spread
 
         """
+        op2 = self.op2
         ntotal = 20 # 4*5
         nentries = (len(data) - n) // ntotal
-        struc = Struct(self._endian + b'i 3f i')
+        struc = Struct(op2._endian + b'i 3f i')
         for unused_i in range(nentries):
             edata = data[n:n+ntotal]
             out = struc.unpack(edata)
             sid, f1, f2, fspread, nfm = out
-            if self.is_debug_file:
-                self.binary_debug.write('  FREQ4=%s\n' % str(out))
-            self.add_freq4(sid, f1, f2, fspread=fspread, nfm=nfm)
+            if op2.is_debug_file:
+                op2.binary_debug.write('  FREQ4=%s\n' % str(out))
+            op2.add_freq4(sid, f1, f2, fspread=fspread, nfm=nfm)
             n += ntotal
-        self.increase_card_count('FREQ4', nentries)
+        op2.increase_card_count('FREQ4', nentries)
         return n
 
     def _read_freq5(self, data: bytes, n: int) -> int:
@@ -904,6 +937,7 @@ class DYNAMICS(GeomCommon):
         4 FRI RS Fractions of natural frequencies
 
         """
+        op2 = self.op2
         ints = np.frombuffer(data, dtype='int32').copy()
         floats = np.frombuffer(data, dtype='float32').copy()
         i_minus_1s = np.where(ints == -1)[0]
@@ -913,29 +947,29 @@ class DYNAMICS(GeomCommon):
         for i_minus_1 in i_minus_1s:
             sid = ints[i0]
             floatsi = floats[i0 + 1:i_minus_1]
-            if self.is_debug_file:
-                self.binary_debug.write('  FREQ5=(%s, %s)\n' % (sid, floatsi.tolist()))
+            if op2.is_debug_file:
+                op2.binary_debug.write('  FREQ5=(%s, %s)\n' % (sid, floatsi.tolist()))
             f1 = floatsi[0]
             f2 = floatsi[1]
             fractions = floatsi[2:]
-            self.add_freq5(sid, fractions, f1=f1, f2=f2)
+            op2.add_freq5(sid, fractions, f1=f1, f2=f2)
             #print('freq =', freq)
             i0 = i_minus_1 + 1
-        self.increase_card_count('FREQ5', nentries)
+        op2.increase_card_count('FREQ5', nentries)
         return len(data)
 
         #ntotal = 20 # 4*5
         #nentries = (len(data) - n) // ntotal
-        #struc = Struct(self._endian + b'i 3f')
+        #struc = Struct(op2._endian + b'i 3f')
         #for i in range(nentries):
             #edata = data[n:n+ntotal]
             #out = struc.unpack(edata)
             #sid, f1, f2, fspread, nfm = out
-            #if self.is_debug_file:
-                #self.binary_debug.write('  FREQ5=%s\n' % str(out))
-            #freq = self.add_freq4(sid, f1, f2, fspread=fspread, nfm=nfm)
+            #if op2.is_debug_file:
+                #op2.binary_debug.write('  FREQ5=%s\n' % str(out))
+            #freq = op2.add_freq4(sid, f1, f2, fspread=fspread, nfm=nfm)
             #n += ntotal
-        #self.increase_card_count('FREQ5', nentries)
+        #op2.increase_card_count('FREQ5', nentries)
 
     def _read_nrlgap(self, data: bytes, n: int) -> int:
         r"""
@@ -948,12 +982,13 @@ class DYNAMICS(GeomCommon):
          500, 1, 2, 200, 501, 520, 0, 0)
 
         """
+        op2 = self.op2
         ntotal = 32 # 4*8
         ndatai = len(data) - n
         nentries = ndatai // ntotal
         assert nentries > 0
         assert ndatai % ntotal == 0
-        struc = Struct(self._endian + b'7i f')
+        struc = Struct(op2._endian + b'7i f')
         for unused_i in range(nentries):
             edata = data[n:n+ntotal]
             out = struc.unpack(edata)
@@ -986,9 +1021,10 @@ class DYNAMICS(GeomCommon):
         20 OFFSET2    RS Offset in the SFD direction 2
 
         """
+        op2 = self.op2
         ntotal = 80 # 4*20
         nentries = (len(data) - n) // ntotal
-        struc = Struct(self._endian + b'3i 8s 3f 8s 2f i 4f i 2f')
+        struc = Struct(op2._endian + b'3i 8s 3f 8s 2f i 4f i 2f')
         for unused_i in range(nentries):
             edata = data[n:n+ntotal]
             out = struc.unpack(edata)
@@ -1001,14 +1037,14 @@ class DYNAMICS(GeomCommon):
             #NLRSFD SID     GA     GB    PLANE BDIA   BLEN  BCLR   SOLN
             #       VISCO   PVAPCO NPORT PRES1 THETA1 PRES2 THETA2 NPNT
             #       OFFSET1 OFFSET2
-            if self.is_debug_file:
-                self.binary_debug.write('  NLRSFD=%s\n' % str(out))
-            self.add_nlrsfd(sid, ga, gb, plane, bdia, blen, bclr, soln,
+            if op2.is_debug_file:
+                op2.binary_debug.write('  NLRSFD=%s\n' % str(out))
+            op2.add_nlrsfd(sid, ga, gb, plane, bdia, blen, bclr, soln,
                             visco, pvapco, nport,
                             pres1, theta1, pres2, theat2, npnt,
                             offset1, offset2)
             n += ntotal
-        self.increase_card_count('NLRSFD', nentries)
+        op2.increase_card_count('NLRSFD', nentries)
         return n
 
 
@@ -1027,6 +1063,7 @@ class DYNAMICS(GeomCommon):
         8 UNDEF none
 
         """
+        op2 = self.op2
         #C:\NASA\m4\formats\git\examples\move_tpl\d10903.op2
         #NOLIN1 SID GI CI S GJ CJ TID
         #NOLIN1  115     2               -1.0    2               2
@@ -1034,17 +1071,17 @@ class DYNAMICS(GeomCommon):
 
         ntotal = 32 # 4*8
         nentries = (len(data) - n) // ntotal
-        struc = Struct(self._endian + b'3if4i')
+        struc = Struct(op2._endian + b'3if4i')
         for unused_i in range(nentries):
             edata = data[n:n+ntotal]
             out = struc.unpack(edata)
             (sid, gi, ci, s, gj, cj, t, unused_zero) = out
             assert unused_zero == 0, out
-            if self.is_debug_file:
-                self.binary_debug.write('  NOLIN1=%s\n' % str(out))
-            self.add_nolin1(sid, gi, ci, s, gj, cj, t)
+            if op2.is_debug_file:
+                op2.binary_debug.write('  NOLIN1=%s\n' % str(out))
+            op2.add_nolin1(sid, gi, ci, s, gj, cj, t)
             n += ntotal
-        self.increase_card_count('NOLIN1', nentries)
+        op2.increase_card_count('NOLIN1', nentries)
         return n
 
     def _read_nolin2(self, data: bytes, n: int) -> int:
@@ -1062,6 +1099,7 @@ class DYNAMICS(GeomCommon):
         8 CK  I Component number for GK
 
         """
+        op2 = self.op2
         #C:\NASA\m4\formats\git\examples\move_tpl\n12905b.op2
         #NOLIN2  SID     GI      CI         S    GJ      CJ      GK      CK
         #NOLIN2  400     2       1       -.01    3       0       2       1
@@ -1071,16 +1109,16 @@ class DYNAMICS(GeomCommon):
 
         ntotal = 32 # 4*8
         nentries = (len(data) - n) // ntotal
-        struc = Struct(self._endian + b'3if4i')
+        struc = Struct(op2._endian + b'3if4i')
         for unused_i in range(nentries):
             edata = data[n:n+ntotal]
             out = struc.unpack(edata)
             (sid, g, ci, s, gj, cj, gk, ck) = out
-            if self.is_debug_file:
-                self.binary_debug.write('  NOLIN2=%s\n' % str(out))
-            self.add_nolin2(sid, g, ci, s, gj, cj, gk, ck)
+            if op2.is_debug_file:
+                op2.binary_debug.write('  NOLIN2=%s\n' % str(out))
+            op2.add_nolin2(sid, g, ci, s, gj, cj, gk, ck)
             n += ntotal
-        self.increase_card_count('NOLIN2', nentries)
+        op2.increase_card_count('NOLIN2', nentries)
         return n
 
     def _read_nolin3(self, data: bytes, n: int) -> int:
@@ -1097,23 +1135,24 @@ class DYNAMICS(GeomCommon):
         7 A  RS Exponent of the forcing function
         8 UNDEF none
         """
+        op2 = self.op2
         #C:\NASA\m4\formats\git\examples\move_tpl\d10903.op2
         #NOLIN3  115     4               -3.5+3  4       10      2.
         #NOLIN3  115     11              -3.5+3  11      10      2.
 
         ntotal = 32 # 4*8
         nentries = (len(data) - n) // ntotal
-        struc = Struct(self._endian + b'3if2ifi')
+        struc = Struct(op2._endian + b'3if2ifi')
         for unused_i in range(nentries):
             edata = data[n:n+ntotal]
             out = struc.unpack(edata)
             (sid, gi, ci, s, gj, cj, a, zero) = out
             assert zero == 0, out
-            if self.is_debug_file:
-                self.binary_debug.write('  NOLIN3=%s\n' % str(out))
-            self.add_nolin3(sid, gi, ci, s, gj, cj, a)
+            if op2.is_debug_file:
+                op2.binary_debug.write('  NOLIN3=%s\n' % str(out))
+            op2.add_nolin3(sid, gi, ci, s, gj, cj, a)
             n += ntotal
-        self.increase_card_count('NOLIN3', nentries)
+        op2.increase_card_count('NOLIN3', nentries)
         return n
 
     def _read_nolin4(self, data: bytes, n: int) -> int:
@@ -1130,29 +1169,31 @@ class DYNAMICS(GeomCommon):
         7 A  RS Exponent of the forcing function
         8 UNDEF none
         """
+        op2 = self.op2
         #C:\NASA\m4\formats\git\examples\move_tpl\d10903.op2
         #NOLIN4  115     4               -3.5+3  4       10      2.
         #NOLIN4  115     11              -3.5+3  11      10      2.
 
         ntotal = 32 # 4*8
         nentries = (len(data) - n) // ntotal
-        struc = Struct(self._endian + b'3if2ifi')
+        struc = Struct(op2._endian + b'3if2ifi')
         for unused_i in range(nentries):
             edata = data[n:n+ntotal]
             out = struc.unpack(edata)
             (sid, gi, ci, s, gj, cj, a, zero) = out
             assert zero == 0, out
-            if self.is_debug_file:
-                self.binary_debug.write('  NOLIN4=%s\n' % str(out))
-            self.add_nolin4(sid, gi, ci, s, gj, cj, a)
+            if op2.is_debug_file:
+                op2.binary_debug.write('  NOLIN4=%s\n' % str(out))
+            op2.add_nolin4(sid, gi, ci, s, gj, cj, a)
             n += ntotal
-        self.increase_card_count('NOLIN4', nentries)
+        op2.increase_card_count('NOLIN4', nentries)
         return n
 
     def _read_randps(self, data: bytes, n: int) -> int:
         """common method for reading NX/MSC RLOAD1"""
-        n = self.geom2._read_dual_card(data, n, self._read_randps_nx, self._read_randps_msc,
-                                       'RLOAD1', self._add_methods._add_dload_entry)
+        op2 = self.op2
+        n = op2.reader_geom2._read_dual_card(data, n, self._read_randps_nx, self._read_randps_msc,
+                                             'RLOAD1', op2._add_methods._add_dload_entry)
         return n
 
     def _read_randps_nx(self, data: bytes, n: int) -> int:
@@ -1169,12 +1210,13 @@ class DYNAMICS(GeomCommon):
         7 TIDR RS If TIDI = 0, constant value for G(f)
 
         """
+        op2 = self.op2
         ntotal = 28
         ndatai = (len(data) - n)
         nentries = ndatai // ntotal
         assert ndatai % ntotal == 0
         assert nentries > 0
-        struc = Struct(self._endian + b'3i 2f if')
+        struc = Struct(op2._endian + b'3i 2f if')
         for unused_i in range(nentries):
             edata = data[n:n+ntotal]
             out = struc.unpack(edata)
@@ -1182,12 +1224,12 @@ class DYNAMICS(GeomCommon):
             tid = tidi
             if tidi == 0:
                 tid = tidf
-            if self.is_debug_file:
-                self.binary_debug.write('  RANDPS=%s\n' % str(out))
-            #self.log.debug('  RANDPS=%s\n' % str(out))
-            self.add_randps(sid, j, k, x=x, y=y, tid=tid)
+            if op2.is_debug_file:
+                op2.binary_debug.write('  RANDPS=%s\n' % str(out))
+            #op2.log.debug('  RANDPS=%s\n' % str(out))
+            op2.add_randps(sid, j, k, x=x, y=y, tid=tid)
             n += ntotal
-        self.increase_card_count('RANDPS', nentries)
+        op2.increase_card_count('RANDPS', nentries)
         return n, []
 
     def _read_randps_msc(self, data: bytes, n: int) -> int:
@@ -1212,22 +1254,23 @@ class DYNAMICS(GeomCommon):
         7 TIDR RS If TIDI = 0, constant value for G(f)
 
         """
+        op2 = self.op2
         ntotal = 24
         ndatai = (len(data) - n)
         nentries = ndatai // ntotal
         assert ndatai % ntotal == 0
         assert nentries > 0
-        struc = Struct(self._endian + b'3i2fi')
+        struc = Struct(op2._endian + b'3i2fi')
         for unused_i in range(nentries):
             edata = data[n:n+ntotal]
             out = struc.unpack(edata)
             sid, j, k, x, y, tid = out
-            if self.is_debug_file:
-                self.binary_debug.write('  RANDPS=%s\n' % str(out))
-            #self.log.debug('  RANDPS=%s\n' % str(out))
-            self.add_randps(sid, j, k, x=x, y=y, tid=tid)
+            if op2.is_debug_file:
+                op2.binary_debug.write('  RANDPS=%s\n' % str(out))
+            #op2.log.debug('  RANDPS=%s\n' % str(out))
+            op2.add_randps(sid, j, k, x=x, y=y, tid=tid)
             n += ntotal
-        self.increase_card_count('RANDPS', nentries)
+        op2.increase_card_count('RANDPS', nentries)
         return n, []
 
     def _read_randt1(self, data: bytes, n: int) -> int:
@@ -1241,23 +1284,25 @@ class DYNAMICS(GeomCommon):
         4 TMAX RS Maximum time lag
 
         """
+        op2 = self.op2
         ntotal = 16  # 4*4
-        struct1 = Struct(self._endian + b'2i 2f')
+        struct1 = Struct(op2._endian + b'2i 2f')
         nentries = (len(data) - n) // ntotal
         for unused_i in range(nentries):
             out = struct1.unpack(data[n:n+ntotal])
-            if self.is_debug_file:
-                self.binary_debug.write('  RANDT1=%s\n' % str(out))
+            if op2.is_debug_file:
+                op2.binary_debug.write('  RANDT1=%s\n' % str(out))
             sid, nlags, to, tmax = out
-            self.add_randt1(sid, nlags, to, tmax)
+            op2.add_randt1(sid, nlags, to, tmax)
             n += ntotal
-        self.card_count['RANDT1'] = nentries
+        op2.card_count['RANDT1'] = nentries
         return n
 
     def _read_rload1(self, data: bytes, n: int) -> int:
         """common method for reading NX/MSC RLOAD1"""
-        n = self.geom2._read_dual_card(data, n, self._read_rload1_nx, self._read_rload1_msc,
-                                       'RLOAD1', self._add_methods._add_dload_entry)
+        op2 = self.op2
+        n = op2.reader_geom2._read_dual_card(data, n, self._read_rload1_nx, self._read_rload1_msc,
+                                             'RLOAD1', op2._add_methods._add_dload_entry)
         return n
 
     def _read_rload1_nx(self, data: bytes, n: int) -> int:
@@ -1278,18 +1323,19 @@ class DYNAMICS(GeomCommon):
         11 TDR    RS If TDI = 0, constant value for D(f)
 
         """
+        op2 = self.op2
         dloads = []
         ntotal = 44 * self.factor
         nentries = (len(data) - n) // ntotal
         assert (len(data) - n) % ntotal == 0
-        struc = Struct(mapfmt(self._endian + b'7i 4f', self.size))
+        struc = Struct(mapfmt(op2._endian + b'7i 4f', self.size))
         for unused_i in range(nentries):
             edata = data[n:n+ntotal]
             out = struc.unpack(edata)
             sid, darea, delayi, dphasei, tci, tdi, load_type, delayr, dphaser, tcr, tdr = out # 44
 
-            if self.is_debug_file:
-                self.binary_debug.write('  RLOAD1=%s\n' % str(out))
+            if op2.is_debug_file:
+                op2.binary_debug.write('  RLOAD1=%s\n' % str(out))
 
             tc = tci
             td = tdi
@@ -1325,18 +1371,19 @@ class DYNAMICS(GeomCommon):
         9 PH     RS Phase lead
 
         """
+        op2 = self.op2
         dloads = []
         ntotal = 36 * self.factor
         nentries = (len(data) - n) // ntotal
         assert (len(data) - n) % ntotal == 0
-        struc = Struct(mapfmt(self._endian + b'2i 2f 3i 2f', self.size))
+        struc = Struct(mapfmt(op2._endian + b'2i 2f 3i 2f', self.size))
         for unused_i in range(nentries):
             edata = data[n:n+ntotal]
             out = struc.unpack(edata)
             sid, darea, dphaser, delayr, tci, tdi, load_type, tau, phi = out # 36
 
-            if self.is_debug_file:
-                self.binary_debug.write('  RLOAD1=%s\n' % str(out))
+            if op2.is_debug_file:
+                op2.binary_debug.write('  RLOAD1=%s\n' % str(out))
 
             tc = tci
             td = tdi
@@ -1350,8 +1397,11 @@ class DYNAMICS(GeomCommon):
 
     def _read_rload2(self, data: bytes, n: int) -> int:
         """common method for reading NX/MSC RLOAD2"""
-        n = self.geom2._read_dual_card(data, n, self._read_rload2_nx, self._read_rload2_msc,
-                                       'RLOAD2', self._add_methods._add_dload_entry)
+        op2 = self.op2
+        n = op2.reader_geom2._read_dual_card(
+            data, n,
+            self._read_rload2_nx, self._read_rload2_msc,
+            'RLOAD2', op2._add_methods._add_dload_entry)
         return n
 
     def _read_rload2_nx(self, data, n):
@@ -1371,19 +1421,20 @@ class DYNAMICS(GeomCommon):
         11 TPR    RS If TPI = 0, constant value for PHI(f)
 
         """
+        op2 = self.op2
         dloads = []
         ntotal = 44 * self.factor
         ndatai = len(data) - n
         nentries = ndatai // ntotal
         assert ndatai % ntotal == 0
         assert nentries > 0
-        struc = Struct(mapfmt(self._endian + b'7i 4f', self.size))
+        struc = Struct(mapfmt(op2._endian + b'7i 4f', self.size))
         for unused_i in range(nentries):
             edata = data[n:n+ntotal]
             out = struc.unpack(edata)
             sid, darea, delayi, dphasei, tbi, tpi, load_type, delayr, dphaser, tbr, tpr = out
-            if self.is_debug_file:
-                self.binary_debug.write('  RLOAD2=%s\n' % str(out))
+            if op2.is_debug_file:
+                op2.binary_debug.write('  RLOAD2=%s\n' % str(out))
                 assert sid > 0 and darea > 0, (f'RLOAD2; sid={sid} darea={darea} dphasei={dphasei} delayi={delayi} '
                                                f'tbi={tbi} tpi={tpi} load_type={load_type} tau={tau} phase={phase}')
 
@@ -1420,19 +1471,20 @@ class DYNAMICS(GeomCommon):
         9 PH     RS Phase lead
 
         """
+        op2 = self.op2
         dloads = []
         ntotal = 36
         ndatai = len(data) - n
         nentries = ndatai // ntotal
         assert ndatai % ntotal == 0
         assert nentries > 0
-        struc = Struct(self._endian + b'7i 2f')
+        struc = Struct(op2._endian + b'7i 2f')
         for unused_i in range(nentries):
             edata = data[n:n+ntotal]
             out = struc.unpack(edata)
             sid, darea, dphasei, delayi, tbi, tpi, load_type, tau, phase = out
-            if self.is_debug_file:
-                self.binary_debug.write('  RLOAD2=%s\n' % str(out))
+            if op2.is_debug_file:
+                op2.binary_debug.write('  RLOAD2=%s\n' % str(out))
             assert sid > 0 and darea > 0, (f'RLOAD2; sid={sid} darea={darea} dphasei={dphasei} delayi={delayi} '
                                            f'tbi={tbi} tpi={tpi} load_type={load_type} tau={tau} phase={phase}')
             dload = RLOAD2(sid, darea, delay=delayi, dphase=dphasei, tb=tbi, tp=tpi,
@@ -1454,20 +1506,21 @@ class DYNAMICS(GeomCommon):
         9 SPEED       RS Specific speed
 
         """
+        op2 = self.op2
         ntotal = 36 # 4*9
         nentries = (len(data) - n) // ntotal
-        struc = Struct(self._endian + b'i 8s i 8s 3f')
+        struc = Struct(op2._endian + b'i 8s i 8s 3f')
         for unused_i in range(nentries):
             edata = data[n:n+ntotal]
             out = struc.unpack(edata)
             sid, asynci, refrot, unit, speed_low, speed_high, speed = out
             asynci = asynci.decode('latin1')
             unit = unit.decode('latin1')
-            if self.is_debug_file:
-                self.binary_debug.write('  RGYRO=%s\n' % str(out))
-            self.add_rgyro(sid, asynci, refrot, unit, speed_low, speed_high, speed)
+            if op2.is_debug_file:
+                op2.binary_debug.write('  RGYRO=%s\n' % str(out))
+            op2.add_rgyro(sid, asynci, refrot, unit, speed_low, speed_high, speed)
             n += ntotal
-        self.increase_card_count('RGYRO', nentries)
+        op2.increase_card_count('RGYRO', nentries)
         return n
 
     def _read_rotord(self, data: bytes, n: int) -> int:
@@ -1501,17 +1554,18 @@ class DYNAMICS(GeomCommon):
 
         verified in NX 2019
         """
+        op2 = self.op2
         nentries = 0
 
         # up to EORDER
         ntotal = 84 # 19*4
-        struct1 = Struct(self._endian + b'2i 2f i 8s f 8s8s8s f 3i f 2i')
+        struct1 = Struct(op2._endian + b'2i 2f i 8s f 8s8s8s f 3i f 2i')
 
         ntotal2 = 32 # 8 * 4
-        struct2 = Struct(self._endian + b'2i f i 2f 2i')
+        struct2 = Struct(op2._endian + b'2i f i 2f 2i')
         while n < len(data):
-            #if self.is_debug_file:
-                #self.binary_debug.write('  ROTORD=%s\n' % str(out))
+            #if op2.is_debug_file:
+                #op2.binary_debug.write('  ROTORD=%s\n' % str(out))
             edata = data[n:n+ntotal]
             (sid, numrot, rstart, rstep, numstep, refsys, cmout, runit, funit,
              zstein, orbeps, rotprt, sync, etype, eorder, unused_a, unused_b) = struct1.unpack(edata)
@@ -1545,13 +1599,13 @@ class DYNAMICS(GeomCommon):
                 brgsets.append(brgset)
                 n += ntotal2
 
-            self.add_rotord(sid, rstart, rstep, numstep,
+            op2.add_rotord(sid, rstart, rstep, numstep,
                             rids, rsets, rspeeds, rcords, w3s, w4s, rforces, brgsets,
                             refsys=refsys, cmout=cmout, runit=runit, funit=funit,
                             zstein=zstein, orbeps=orbeps, roprt=rotprt, sync=sync, etype=etype,
                             eorder=eorder, threshold=0.02, maxiter=10, comment='')
             nentries += 1
-        self.increase_card_count('ROTORD', nentries)
+        op2.increase_card_count('ROTORD', nentries)
         return n
 
     def _read_rotorg(self, data: bytes, n: int) -> int:
@@ -1563,8 +1617,9 @@ class DYNAMICS(GeomCommon):
 
         verified in NX 2019
         """
+        op2 = self.op2
         nentries = 0
-        ints = np.frombuffer(data[12:], dtype=self.idtype)
+        ints = np.frombuffer(data[12:], dtype=op2.idtype)
         izero = np.where(ints==-1)[0]
         istart = 0
         for iend in izero:
@@ -1572,18 +1627,21 @@ class DYNAMICS(GeomCommon):
             grids = ints[istart+1:iend]
             assert -1 not in grids, grids.tolist()
             assert sid > 0, sid
-            rotorg = self.add_rotorg(sid, grids.tolist())
+            rotorg = op2.add_rotorg(sid, grids.tolist())
             str(rotorg)
             istart = iend + 1
             nentries += 1
-        self.increase_card_count('ROTORG', nentries)
+        op2.increase_card_count('ROTORG', nentries)
         return len(data)
 
 #RSPINR
 
     def _read_rspint(self, data: bytes, n: int) -> int:
-        n = self.geom2._read_dual_card(data, n, self._read_rspint_32, self._read_rspint_56,
-                                       'RSPINT', self._add_methods._add_rspint_obj)
+        op2 = self
+        n = op2.reader_geom2._read_dual_card(
+            data, n,
+            self._read_rspint_32, self._read_rspint_56,
+            'RSPINT', self._add_rspint_obj)
         return n
 
     def _add_rspint_obj(self, rspints: List[int]):
@@ -1610,22 +1668,23 @@ class DYNAMICS(GeomCommon):
                    may be floats
                    0, 0, 0, 0, 0, 0, 0, 0)
         """
+        op2 = self.op2
         #strings = (b'\xf9*\x00\x00n\x00\x00\x006\x01\x00\x00\x05\x00\x00\x00y\xe6\x00\x00~\xe6\x00\x00\x00\x00\x00\x00RPM     \xa0\x0f\x00\x00\x00\x00\x00\x00\x06\x00\x00\x00\x89\r\x01\x00\x97\r\x01\x00\x00\x00\x00\x00RPM     \xf8*\x00\x00\x00\x00\x00\x00',)
         #data = (11001, 110, 310,
                 #5, 59001, 59006, 0, 541937746, 538976288, 4000, 0,
                 #6, 69001, 69015, 0, 541937746, 538976288, 11000, 0)
-        #self.show_data(data)
+        #op2.show_data(data)
 
         # per DMAP ???
         #ntotal = 28 * self.factor # 4*7
-        #struc = Struct(self._endian + b'3i f 8s i')  # per QRG
+        #struc = Struct(op2._endian + b'3i f 8s i')  # per QRG
 
         # MSC
         # C:\NASA\m4\formats\git\examples\move_tpl\nltrot99.op2
         ntotal = 32 * self.factor # 4*7
-        struc = Struct(self._endian + b'3i f 8s 2i')  # per QRG
+        struc = Struct(op2._endian + b'3i f 8s 2i')  # per QRG
         assert self.size == 4, f'RSPINT size={self.size}'
-        #self.show_data(data[n:], types='ifs')
+        #op2.show_data(data[n:], types='ifs')
         ndatai = len(data) - n
         nentries = ndatai // ntotal
         assert ndatai % ntotal == 0
@@ -1638,11 +1697,11 @@ class DYNAMICS(GeomCommon):
             # rid, grida, gridb, gr, unit, table_id = out
             rid, grida, gridb, gr, unit, table_id, zero = out
             unit = unit.decode('latin1').rstrip()
-            self.log.debug(f'RSPINT: rid={rid} nids=[{grida}, {gridb}] gr={gr} unit={unit!r} table_id={table_id} zero={zero}')
+            op2.log.debug(f'RSPINT: rid={rid} nids=[{grida}, {gridb}] gr={gr} unit={unit!r} table_id={table_id} zero={zero}')
             assert zero == 0
-            if self.is_debug_file:
-                self.binary_debug.write('  RSPINT=%s\n' % str(out))
-            self.add_rspint(rid, grida, gridb, gr, unit, table_id)
+            if op2.is_debug_file:
+                op2.binary_debug.write('  RSPINT=%s\n' % str(out))
+            op2.add_rspint(rid, grida, gridb, gr, unit, table_id)
             rspint = None
             rspints.append(rspint)
         return n, rspints
@@ -1669,22 +1728,23 @@ class DYNAMICS(GeomCommon):
                    may be floats
                    0, 0, 0, 0, 0, 0, 0, 0)
         """
+        op2 = self.op2
         #strings = (b'\xf9*\x00\x00n\x00\x00\x006\x01\x00\x00\x05\x00\x00\x00y\xe6\x00\x00~\xe6\x00\x00\x00\x00\x00\x00RPM     \xa0\x0f\x00\x00\x00\x00\x00\x00\x06\x00\x00\x00\x89\r\x01\x00\x97\r\x01\x00\x00\x00\x00\x00RPM     \xf8*\x00\x00\x00\x00\x00\x00',)
         #data = (11001, 110, 310,
                 #5, 59001, 59006, 0, 541937746, 538976288, 4000, 0,
                 #6, 69001, 69015, 0, 541937746, 538976288, 11000, 0)
-        #self.show_data(data)
+        #op2.show_data(data)
 
         # per DMAP ???
         #ntotal = 28 * self.factor # 4*7
-        #struc = Struct(self._endian + b'3i f 8s i')  # per QRG
+        #struc = Struct(op2._endian + b'3i f 8s i')  # per QRG
 
         # MSC
         # C:\NASA\m4\formats\git\examples\move_tpl\nltrot99.op2
         ntotal = 56 * self.factor # 4*14
-        struc = Struct(self._endian + b'3i 8s i 8i')  # per QRG
+        struc = Struct(op2._endian + b'3i 8s i 8i')  # per QRG
         assert self.size == 4, f'RSPINT size={self.size}'
-        #self.show_data(data[n:], types='ifs')
+        #op2.show_data(data[n:], types='ifs')
         ndatai = len(data) - n
         nentries = ndatai // ntotal
         assert ndatai % ntotal == 0
@@ -1698,12 +1758,12 @@ class DYNAMICS(GeomCommon):
             rid, grida, gridb, speed_unit_bytes, table_id, *zero = out
             speed_unit = speed_unit_bytes.decode('latin1').rstrip()
             #print('RSPINT', rid, grida, gridb, speed_unit, table_id)
-            #self.log.debug(f'RSPINT: rid={rid} nids=[{grida}, {gridb}] gr={gr} unit={unit!r} table_id={table_id} zero={zero}')
+            #op2.log.debug(f'RSPINT: rid={rid} nids=[{grida}, {gridb}] gr={gr} unit={unit!r} table_id={table_id} zero={zero}')
             assert zero == [0, 0, 0, 0, 0, 0, 0, 0], zero
-            if self.is_debug_file:
-                self.binary_debug.write('  RSPINT=%s\n' % str(out))
+            if op2.is_debug_file:
+                op2.binary_debug.write('  RSPINT=%s\n' % str(out))
             gr = 0.0
-            self.add_rspint(rid, grida, gridb, gr, speed_unit, table_id)
+            op2.add_rspint(rid, grida, gridb, gr, speed_unit, table_id)
             rspint = None
             rspints.append(rspint)
         return n, rspints
@@ -1712,21 +1772,22 @@ class DYNAMICS(GeomCommon):
 
     def _read_tf(self, data: bytes, n: int) -> int:
         """TF"""
+        op2 = self.op2
         # subtract of the header (sid, nid, component, b0, b1, b2)
         # divide by 5 (nid1, component1, a0, a1, a2)
         #nrows = (nfields - 6) // 5
         #print('n=%s nrows=%s' % (n, nrows))
-        #print(self.show_data(data))
+        #print(op2.show_data(data))
         #nid1, component1, a0, a1, a2
 
         ndata = len(data)
-        struct1 = Struct(self._endian + b'3i3f')
-        struct2 = Struct(self._endian + b'2i3f')
+        struct1 = Struct(op2._endian + b'3i3f')
+        struct2 = Struct(op2._endian + b'2i3f')
         while n < ndata:
             n2 = n + 24 # 20=4*6
             sid, nid, component, b0, b1, b2 = struct1.unpack(data[n:n2])
-            if self.is_debug_file:
-                self.binary_debug.write('TF header -> %s\n' % ([sid, nid, component, b0, b1, b2]))
+            if op2.is_debug_file:
+                op2.binary_debug.write('TF header -> %s\n' % ([sid, nid, component, b0, b1, b2]))
 
             nids = []
             components = []
@@ -1736,8 +1797,8 @@ class DYNAMICS(GeomCommon):
                 n3 = n2 + 20 # 20=4*5
                 nid1, component1, a0, a1, a2 = struct2.unpack(data[n2:n3])
 
-                if self.is_debug_file:
-                    self.binary_debug.write('  i=%s     -> %s\n' % (
+                if op2.is_debug_file:
+                    op2.binary_debug.write('  i=%s     -> %s\n' % (
                         irow, [nid1, component1, a0, a1, a2]))
 
                 if nid1 == -1 and component1 == -1:
@@ -1751,10 +1812,10 @@ class DYNAMICS(GeomCommon):
                 irow += 1
 
             tf = TF(sid, nid, component, b0, b1, b2, nids, components, a)
-            #if self.is_debug_file:
-                #self.binary_debug.write('%s\n' % str(tf))
-            self._add_methods._add_tf_object(tf)
-            self.increase_card_count('TF')
+            #if op2.is_debug_file:
+                #op2.binary_debug.write('%s\n' % str(tf))
+            op2._add_methods._add_tf_object(tf)
+            op2.increase_card_count('TF')
             n = n3
         return n
 
@@ -1769,22 +1830,24 @@ class DYNAMICS(GeomCommon):
         5 V0 RS Initial velocity
 
         """
+        op2 = self.op2
         ntotal = 20 *self.factor  # 5*4
-        struct1 = Struct(mapfmt(self._endian + b'3i 2f', self.size))
+        struct1 = Struct(mapfmt(op2._endian + b'3i 2f', self.size))
         nentries = (len(data) - n) // ntotal
         for unused_i in range(nentries):
             out = struct1.unpack(data[n:n+ntotal])
-            if self.is_debug_file:
-                self.binary_debug.write('  TIC=%s\n' % str(out))
+            if op2.is_debug_file:
+                op2.binary_debug.write('  TIC=%s\n' % str(out))
             sid, nid, comp, u0, v0 = out
-            self.add_tic(sid, [nid], [comp], u0=u0, v0=v0)
+            op2.add_tic(sid, [nid], [comp], u0=u0, v0=v0)
             n += ntotal
-        self.card_count['TIC'] = nentries
+        op2.card_count['TIC'] = nentries
         return n
 
 #TIC3
     def _read_tload1(self, data: bytes, n: int) -> int:
         """common method for reading NX/MSC TLOAD1"""
+        op2 = self.op2
         # NX - 24
         # MSC - 32
         #$       sid excite  delay    type    tid/f us vs
@@ -1800,12 +1863,14 @@ class DYNAMICS(GeomCommon):
         elif ndatai % 36 == 0 and ndatai % 24 and ndatai % 32:
             n, dloads = self._read_tload1_36(data, n)
         else:
-            n = self.geom2._read_dual_card(data, n, self._read_tload1_nx, self._read_tload1_msc,
-                                           'TLOAD1', self._add_methods._add_dload_entry)
+            n = op2.reader_geom2._read_dual_card(
+                data, n,
+                self._read_tload1_nx, self._read_tload1_msc,
+                'TLOAD1', op2._add_methods._add_dload_entry)
             return n
         for dload in dloads:
-            self._add_methods._add_dload_entry(dload)
-        self.card_count['TLOAD1'] = len(dloads)
+            op2._add_methods._add_dload_entry(dload)
+        op2.card_count['TLOAD1'] = len(dloads)
         return n
 
     def _read_tload1_nx(self, data: bytes, n: int) -> Tuple[int, List[TLOAD1]]:
@@ -1821,27 +1886,28 @@ class DYNAMICS(GeomCommon):
         6 DELAYR RS If DELAYI = 0, constant value for delay
 
         """
+        op2 = self.op2
         ntotal = 24 * self.factor # 6*4
         nentries = (len(data) - n) // ntotal
         assert (len(data) - n) % ntotal == 0
         assert nentries > 0, nentries
 
         dloads = []
-        struc = Struct(mapfmt(self._endian + b'5i f', self.size))
+        struc = Struct(mapfmt(op2._endian + b'5i f', self.size))
         for unused_i in range(nentries):
             edata = data[n:n+ntotal]
             out = struc.unpack(edata)
             sid, darea, delayi, load_type, tid, delayr = out
-            if self.is_debug_file:
-                self.binary_debug.write('TLOAD1=%s\n' % str(out))
+            if op2.is_debug_file:
+                op2.binary_debug.write('TLOAD1=%s\n' % str(out))
             delay = delayi
             if delayi == 0:
                 delay = delayr
             dload = TLOAD1(sid, darea, tid, delay=delay, Type=load_type)
             dloads.append(dload)
-            #self._add_methods._add_dload_entry(dload)
+            #op2._add_methods._add_dload_entry(dload)
             n += ntotal
-        #self.increase_card_count('TLOAD1', nentries)
+        #op2.increase_card_count('TLOAD1', nentries)
         return n, dloads
 
     def _read_tload1_msc(self, data: bytes, n: int) -> Tuple[int, List[TLOAD1]]:
@@ -1866,19 +1932,20 @@ class DYNAMICS(GeomCommon):
         ints    = (5,  2,     0,   0,   2,  0,   0,   0,   0)
         floats  = (5,  2,     0.0, 0.0, 2,  0.0, 0.0, 0.0, 0.0)
         """
+        op2 = self.op2
         ntotal = 32 * self.factor # 8*4
         nentries = (len(data) - n) // ntotal
         assert (len(data) - n) % ntotal == 0
         assert nentries > 0, nentries
 
         dloads = []
-        struc = Struct(mapfmt(self._endian + b'5i 3f', self.size))
+        struc = Struct(mapfmt(op2._endian + b'5i 3f', self.size))
         for unused_i in range(nentries):
             edata = data[n:n+ntotal]
             out = struc.unpack(edata)
             sid, darea, delayi, load_type, tid, delayr, us0, vs0 = out
-            if self.is_debug_file:
-                self.binary_debug.write('TLOAD1=%s\n' % str(out))
+            if op2.is_debug_file:
+                op2.binary_debug.write('TLOAD1=%s\n' % str(out))
             delay = delayi
             if delayi == 0:
                 delay = delayr
@@ -1915,6 +1982,7 @@ class DYNAMICS(GeomCommon):
         TLOAD1         2       2             45.       2
         data = (2, 2, 0, 0, 0, 2.0, 0.0, 0.0, f=45.0)
         """
+        op2 = self.op2
         ntotal = 36 * self.factor # 8*4
         ndatai = len(data) - n
         nentries = ndatai // ntotal
@@ -1922,14 +1990,14 @@ class DYNAMICS(GeomCommon):
         assert nentries > 0, nentries
 
         dloads = []
-        struc = Struct(mapfmt(self._endian + b'5i 3ff', self.size))
+        struc = Struct(mapfmt(op2._endian + b'5i 3ff', self.size))
         for unused_i in range(nentries):
             edata = data[n:n+ntotal]
             out = struc.unpack(edata)
             sid, darea, delayi, load_type, tid, delayr, us0, vs0, value = out
             #print(f'sid={sid} darea={darea} delayi={delayi} load_type={load_type} tid={tid} delayr={delayr} us0={us0} vs0={vs0} value={value}')
-            if self.is_debug_file:
-                self.binary_debug.write('TLOAD1=%s\n' % str(out))
+            if op2.is_debug_file:
+                op2.binary_debug.write('TLOAD1=%s\n' % str(out))
             delay = delayi
             if delayi == 0:
                 delay = delayr
@@ -1945,8 +2013,11 @@ class DYNAMICS(GeomCommon):
 
     def _read_tload2(self, data: bytes, n: int) -> int:
         """common method for reading NX/MSC TLOAD2"""
-        n = self.geom2._read_dual_card(data, n, self._read_tload2_nx, self._read_tload2_msc,
-                                       'TLOAD2', self._add_methods._add_dload_entry)
+        op2 = self.op2
+        n = op2.reader_geom2._read_dual_card(
+            data, n,
+            self._read_tload2_nx, self._read_tload2_msc,
+            'TLOAD2', op2._add_methods._add_dload_entry)
         return n
 
     def _read_tload2_nx(self, data: bytes, n: int) -> Tuple[int, List[TLOAD2]]:
@@ -1981,19 +2052,20 @@ class DYNAMICS(GeomCommon):
         12 US0    RS not documented in NX
         13 VS0    RS not documented in NX
         """
+        op2 = self.op2
         ntotal = 44
         nentries = (len(data) - n) // ntotal
         assert (len(data) - n) % ntotal == 0
         assert nentries > 0, nentries
 
         dloads = []
-        struc = Struct(self._endian + b'4i 7f')
+        struc = Struct(op2._endian + b'4i 7f')
         for unused_i in range(nentries):
             edata = data[n:n+ntotal]
             out = struc.unpack(edata)
             sid, darea, delayi, load_type, t1, t2, freq, p, c, growth, delayr = out
-            if self.is_debug_file:
-                self.binary_debug.write('  TLOAD2=%s\n' % str(out))
+            if op2.is_debug_file:
+                op2.binary_debug.write('  TLOAD2=%s\n' % str(out))
             delay = delayi
             if delayi == 0:
                 delay = delayr
@@ -2023,19 +2095,20 @@ class DYNAMICS(GeomCommon):
         12 V0   RS Initial velocity factor for enforced motion
         13 T    RS Time delay
         """
+        op2 = self.op2
         ntotal = 52
         nentries = (len(data) - n) // ntotal
         assert (len(data) - n) % ntotal == 0
         assert nentries > 0, nentries
 
         dloads = []
-        struc = Struct(self._endian + b'4i 7f 2f')
+        struc = Struct(op2._endian + b'4i 7f 2f')
         for unused_i in range(nentries):
             edata = data[n:n+ntotal]
             out = struc.unpack(edata)
             sid, darea, delayi, load_type, t1, t2, freq, p, c, growth, delayr, us0, vs0 = out
-            if self.is_debug_file:
-                self.binary_debug.write('  TLOAD2=%s\n' % str(out))
+            if op2.is_debug_file:
+                op2.binary_debug.write('  TLOAD2=%s\n' % str(out))
             delay = delayi
             if delayi == 0:
                 delay = delayr
@@ -2057,15 +2130,16 @@ class DYNAMICS(GeomCommon):
         4 NO   I Skip factor for output
         Words 2 through 4 repeat until (-1,-1,-1) occurs
         """
-        #self.show_data(data)
+        op2 = self.op2
+        #op2.show_data(data)
         ndata = len(data)
         nfields = (ndata - n) // self.size
         datan = data[n:]
-        #ints = np.frombuffer(datan, self.idtype8).copy()
-        #floats = np.frombuffer(datan, self.fdtype8).copy()
-        ints = unpack(mapfmt(self._endian + b'%ii' % nfields, self.size), datan)
-        floats = unpack(mapfmt(self._endian + b'%if' % nfields, self.size), datan)
-        # strings = unpack(self._endian + b'4s'* nfields, datan)
+        #ints = np.frombuffer(datan, op2.idtype8).copy()
+        #floats = np.frombuffer(datan, op2.fdtype8).copy()
+        ints = unpack(mapfmt(op2._endian + b'%ii' % nfields, self.size), datan)
+        floats = unpack(mapfmt(op2._endian + b'%if' % nfields, self.size), datan)
+        # strings = unpack(op2._endian + b'4s'* nfields, datan)
 
         i = 0
         #nentries = 0
@@ -2092,7 +2166,7 @@ class DYNAMICS(GeomCommon):
                 i += 3
                 n += 12
             #print('sid=%s ntimes=%s dt=%s no=%s' % (sid, ntimes, dt, no))
-            self.add_tstep(sid, ntimes, dt, no)
+            op2.add_tstep(sid, ntimes, dt, no)
         return len(data)
 
     def _read_tstep1(self, data: bytes, n: int) -> int:
@@ -2107,9 +2181,10 @@ class DYNAMICS(GeomCommon):
         =-3, ALL
         Words 2 through 4 repeat until (-1,-1,-1) occurs
         """
-        self.log.info('skipping TSTEP1 in DYNAMICS')
-        if self.is_debug_file:
-            self.binary_debug.write('skipping TSTEP1 in DYNAMICS\n')
+        op2 = self.op2
+        op2.log.info('skipping TSTEP1 in DYNAMICS')
+        if op2.is_debug_file:
+            op2.binary_debug.write('skipping TSTEP1 in DYNAMICS\n')
         return len(data)
 
 #UNBALNC
@@ -2163,12 +2238,13 @@ class DYNAMICS(GeomCommon):
         #RCROSS  100     SPCF    3305    3       DISP    3306    3       4641306
         #RCROSS  100     DISP    3306    3       SPCF    3305    3       4641308
         #RCROSS  200     SPCF    4444    2       DISP    9999    1       9999999
+        op2 = self.op2
 
-        #self.show_data(data[n:])
+        #op2.show_data(data[n:])
         ntotal = 32 # 4*8
         nentries = (len(data) - n) // ntotal
         assert (len(data) - n) % ntotal == 0
-        struc = Struct(self._endian + b'i 4s 2i 4s 2i i')
+        struc = Struct(op2._endian + b'i 4s 2i 4s 2i i')
 
         allowed = {'DISP', 'VELO', 'ACCEL', 'OLOAD', 'SPCF', 'MPCF', 'STRESS', 'STRAIN', 'FORCE', 'PRESS'}
         #DISP Displacement Vector
@@ -2198,14 +2274,14 @@ class DYNAMICS(GeomCommon):
             edata = data[n:n+ntotal]
             out = struc.unpack(edata)
             (sid, rtype1, id1, comp1, rtype2, id2, comp2, curid) = out
-            if self.is_debug_file:
-                self.binary_debug.write('  RCROSS=%s\n' % str(out))
+            if op2.is_debug_file:
+                op2.binary_debug.write('  RCROSS=%s\n' % str(out))
 
             rtype1 = map_type[rtype1.decode('latin1').rstrip()]
             rtype2 = map_type[rtype2.decode('latin1').rstrip()]
             assert rtype1 in allowed, rtype1
             assert rtype2 in allowed, rtype2
-            self.add_rcross(sid, rtype1, id1, comp1, rtype2, id2, comp2, curid)
+            op2.add_rcross(sid, rtype1, id1, comp1, rtype2, id2, comp2, curid)
             n += ntotal
-        self.increase_card_count('RCROSS', nentries)
+        op2.increase_card_count('RCROSS', nentries)
         return n

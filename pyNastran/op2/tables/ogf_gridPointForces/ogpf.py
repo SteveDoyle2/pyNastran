@@ -56,7 +56,7 @@ class OGPF(OP2Common):
                 ntotal = 40 * self.factor # 4*10
                 nnodes = ndata // ntotal
                 obj_vector_real = RealGridPointForcesArray
-                auto_return, is_vectorized = self._create_ntotal_object(
+                auto_return, is_vectorized = self.oes._create_ntotal_object(
                     nnodes, result_name, slot, obj_vector_real)
                 if auto_return:
                     return nnodes * ntotal
@@ -141,7 +141,7 @@ class OGPF(OP2Common):
                 nnodes = ndata // ntotal
                 assert self.size == 4, self.size
                 obj_vector_real = ComplexGridPointForcesArray
-                auto_return, is_vectorized = self._create_ntotal_object(
+                auto_return, is_vectorized = self.oes._create_ntotal_object(
                     nnodes, result_name, slot, obj_vector_real)
                 if auto_return:
                     return nnodes * self.num_wide * 4

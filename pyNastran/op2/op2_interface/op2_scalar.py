@@ -70,12 +70,11 @@ from pyNastran.bdf.cards.params import PARAM
 from pyNastran.op2.op2_interface.msc_tables import MSC_RESULT_TABLES, MSC_MATRIX_TABLES, MSC_GEOM_TABLES
 from pyNastran.op2.op2_interface.nx_tables import NX_RESULT_TABLES, NX_MATRIX_TABLES, NX_GEOM_TABLES
 
-from pyNastran.op2.tables.lama_eigenvalues.lama import LAMA
 from pyNastran.op2.tables.oee_energy.onr import ONR
 from pyNastran.op2.tables.ogf_gridPointForces.ogpf import OGPF
 
 from pyNastran.op2.tables.oef_forces.oef import OEF
-from pyNastran.op2.tables.oes_stressStrain.oes import OES
+#from pyNastran.op2.tables.oes_stressStrain.oes import OES
 #from pyNastran.op2.tables.oes_stressStrain.oesm import OESM
 from pyNastran.op2.tables.ogs_grid_point_stresses.ogs import OGS
 
@@ -438,8 +437,8 @@ def _check_unique_sets(*sets: List[Set[str]]):
 _check_unique_sets(INT_PARAMS_1, FLOAT_PARAMS_1, FLOAT_PARAMS_2, STR_PARAMS_1)
 
 
-class OP2_Scalar(LAMA, ONR, OGPF,
-                 OEF, OES, OGS, OPG, OQG, OUG, FortranFormat):
+class OP2_Scalar(ONR, OGPF,
+                 OEF, OGS, OPG, OQG, OUG, FortranFormat):
     """Defines an interface for the Nastran OP2 file."""
     @property
     def total_effective_mass_matrix(self):
@@ -530,11 +529,11 @@ class OP2_Scalar(LAMA, ONR, OGPF,
         self.is_optistruct = False
         self.is_nasa95 = True
         self._nastran_format = 'nasa95'
-        self._read_oes1_loads = self._read_oes1_loads_nasa95
+        self.oes._read_oes1_loads = self.oes._read_oes1_loads_nasa95
         self._read_oef1_loads = self._read_oef1_loads_nasa95
 
-        if hasattr(self, '_read_cquad4_nasa95'):
-            self._geom2_map[(5408, 54, 261)] = ['CQUAD4', self._read_cquad4_nasa95]
+        if hasattr(self, 'reader_geom2') and hasattr(self.reader_geom2, '_read_cquad4_nasa95'):
+            self.reader_geom2.geom2_map[(5408, 54, 261)] = ['CQUAD4', self.reader_geom2._read_cquad4_nasa95]
 
     def set_as_optistruct(self):
         self.is_nx = False
@@ -577,12 +576,10 @@ class OP2_Scalar(LAMA, ONR, OGPF,
         #: it takes double the RAM, but is easier to use
         self.apply_symmetry = True
 
-        LAMA.__init__(self)
         ONR.__init__(self)
         OGPF.__init__(self)
 
         OEF.__init__(self)
-        OES.__init__(self)
         #OESM.__init__(self)
         OGS.__init__(self)
 
@@ -723,17 +720,17 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             # =========================end geom passers=========================
 
             # per NX
-            b'OESVM1' : [self._read_oes1_3, self._read_oes1_4],    # isat_random
-            b'OESVM1C' : [self._read_oes1_3, self._read_oes1_4],   # isat_random
-            b'OSTRVM1' : [self._read_oes1_3, self._read_ostr1_4],   # isat_random
-            b'OSTRVM1C' : [self._read_oes1_3, self._read_ostr1_4],  # isat_random
+            b'OESVM1' : [self.oes._read_oes1_3, self.oes._read_oes1_4],    # isat_random
+            b'OESVM1C' : [self.oes._read_oes1_3, self.oes._read_oes1_4],   # isat_random
+            b'OSTRVM1' : [self.oes._read_oes1_3, self.oes._read_ostr1_4],   # isat_random
+            b'OSTRVM1C' : [self.oes._read_oes1_3, self.oes._read_ostr1_4],  # isat_random
 
-            b'OSTRVM2' : [self._read_oes2_3, self._read_ostr2_4],
+            b'OSTRVM2' : [self.oes._read_oes2_3, self.oes._read_ostr2_4],
 
-            b'OESVM2' : [self._read_oes2_3, self._read_oes2_4],    # big random
-            b'OES2C' : [self._read_oes2_3, self._read_oes2_4],
-            b'OSTR2' : [self._read_oes2_3, self._read_ostr2_4], # TODO: disable
-            b'OSTR2C' : [self._read_oes2_3, self._read_ostr2_4],
+            b'OESVM2' : [self.oes._read_oes2_3, self.oes._read_oes2_4],    # big random
+            b'OES2C' : [self.oes._read_oes2_3, self.oes._read_oes2_4],
+            b'OSTR2' : [self.oes._read_oes2_3, self.oes._read_ostr2_4], # TODO: disable
+            b'OSTR2C' : [self.oes._read_oes2_3, self.oes._read_ostr2_4],
             #b'OES2C' : [self._table_passer, self._table_passer], # stress
             #b'OSTR2' : [self._table_passer, self._table_passer],  # TODO: enable
             #b'OSTR2C' : [self._table_passer, self._table_passer],
@@ -768,20 +765,20 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             #b'RAGEATC': [self._table_passer, self._table_passer], # Grid Point Forces Equivalent Inertia Attachment mode (OEF)
 
             # stress
-            b'RAPCONS': [self._read_oes1_3, self._read_oes1_4], # Constraint mode ply stress table (OES)
-            b'RAPEATC': [self._read_oes1_3, self._read_oes1_4], # Attachment mode ply stress table (OES)
+            b'RAPCONS': [self.oes._read_oes1_3, self.oes._read_oes1_4], # Constraint mode ply stress table (OES)
+            b'RAPEATC': [self.oes._read_oes1_3, self.oes._read_oes1_4], # Attachment mode ply stress table (OES)
             #b'RAPCONS': [self._table_passer, self._table_passer], # Constraint mode ply stress table (OES)
             #b'RAPEATC': [self._table_passer, self._table_passer], # Attachment mode ply stress table (OES)
 
             # stress
-            b'RASCONS': [self._read_oes1_3, self._read_oes1_4], # Stress Constraint Mode (OES)
-            b'RASEATC': [self._read_oes1_3, self._read_oes1_4], # Stress Equivalent Inertia Attachment mode (OES)
+            b'RASCONS': [self.oes._read_oes1_3, self.oes._read_oes1_4], # Stress Constraint Mode (OES)
+            b'RASEATC': [self.oes._read_oes1_3, self.oes._read_oes1_4], # Stress Equivalent Inertia Attachment mode (OES)
             #b'RASCONS': [self._table_passer, self._table_passer], # temporary
             #b'RASEATC': [self._table_passer, self._table_passer], # temporary
 
             # strain
-            b'RAEEATC': [self._read_oes1_3, self._read_ostr1_4], # Strain Equivalent Inertia Attachment mode (OES)
-            b'RAECONS': [self._read_oes1_3, self._read_ostr1_4], # Strain Constraint Mode (OSTR)
+            b'RAEEATC': [self.oes._read_oes1_3, self.oes._read_ostr1_4], # Strain Equivalent Inertia Attachment mode (OES)
+            b'RAECONS': [self.oes._read_oes1_3, self.oes._read_ostr1_4], # Strain Constraint Mode (OSTR)
             #b'RAEEATC': [self._table_passer, self._table_passer], # temporary
             #b'RAECONS': [self._table_passer, self._table_passer], # temporary
 
@@ -910,18 +907,18 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             # stress
             # OES1C - Table of composite element stresses or strains in SORT1 format
             # OESRT - Table of composite element ply strength ratio. Output by SDRCOMP
-            b'OES1X1' : [self._read_oes1_3, self._read_oes1_4], # stress - nonlinear elements
-            b'OES1'   : [self._read_oes1_3, self._read_oes1_4], # stress - linear only
-            b'OES1X'  : [self._read_oes1_3, self._read_oes1_4], # element stresses at intermediate stations & nonlinear stresses
-            b'OES1C'  : [self._read_oes1_3, self._read_oes1_4], # stress - composite
-            b'OESCP'  : [self._read_oes1_3, self._read_oes1_4], # stress - nonlinear???
-            b'OESRT'  : [self._read_oes1_3, self._read_oes1_4], # ply strength ratio
+            b'OES1X1' : [self.oes._read_oes1_3, self.oes._read_oes1_4], # stress - nonlinear elements
+            b'OES1'   : [self.oes._read_oes1_3, self.oes._read_oes1_4], # stress - linear only
+            b'OES1X'  : [self.oes._read_oes1_3, self.oes._read_oes1_4], # element stresses at intermediate stations & nonlinear stresses
+            b'OES1C'  : [self.oes._read_oes1_3, self.oes._read_oes1_4], # stress - composite
+            b'OESCP'  : [self.oes._read_oes1_3, self.oes._read_oes1_4], # stress - nonlinear???
+            b'OESRT'  : [self.oes._read_oes1_3, self.oes._read_oes1_4], # ply strength ratio
 
             # strain
-            b'OSTR1' : [self._read_oes1_3, self._read_ostr1_4],  # strain - autodesk/9zk6b5uuo.op2
-            b'OSTR1X'  : [self._read_oes1_3, self._read_ostr1_4],  # strain - isotropic
-            b'OSTR1C'  : [self._read_oes1_3, self._read_ostr1_4],  # strain - composite
-            b'OESTRCP' : [self._read_oes1_3, self._read_ostr1_4],
+            b'OSTR1' : [self.oes._read_oes1_3, self.oes._read_ostr1_4],  # strain - autodesk/9zk6b5uuo.op2
+            b'OSTR1X'  : [self.oes._read_oes1_3, self.oes._read_ostr1_4],  # strain - isotropic
+            b'OSTR1C'  : [self.oes._read_oes1_3, self.oes._read_ostr1_4],  # strain - composite
+            b'OESTRCP' : [self.oes._read_oes1_3, self.oes._read_ostr1_4],
 
             b'OSTR1PL' : [self._table_passer, self._table_passer], # ????
             b'OSTR1THC' : [self._table_passer, self._table_passer], # ????
@@ -934,42 +931,42 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             # OESNLXR - Nonlinear stress
             #           Table of nonlinear element stresses in SORT1 format and appended for all subcases
 
-            b'OESNLXR' : [self._read_oes1_3, self._read_oes1_4],  # nonlinear stresses
-            b'OESNLXD' : [self._read_oes1_3, self._read_oes1_4],  # nonlinear transient stresses
-            b'OESNLBR' : [self._read_oes1_3, self._read_oes1_4],
-            b'OESNL1X' : [self._read_oes1_3, self._read_oes1_4],
+            b'OESNLXR' : [self.oes._read_oes1_3, self.oes._read_oes1_4],  # nonlinear stresses
+            b'OESNLXD' : [self.oes._read_oes1_3, self.oes._read_oes1_4],  # nonlinear transient stresses
+            b'OESNLBR' : [self.oes._read_oes1_3, self.oes._read_oes1_4],
+            b'OESNL1X' : [self.oes._read_oes1_3, self.oes._read_oes1_4],
 
-            b'OESNL2' : [self._read_oes2_3, self._read_oes2_4],
-            b'OESNLXR2' : [self._read_oes2_3, self._read_oes2_4],
-            b'OESNLBR2' : [self._read_oes2_3, self._read_oes2_4],
+            b'OESNL2' : [self.oes._read_oes2_3, self.oes._read_oes2_4],
+            b'OESNLXR2' : [self.oes._read_oes2_3, self.oes._read_oes2_4],
+            b'OESNLBR2' : [self.oes._read_oes2_3, self.oes._read_oes2_4],
             #b'OESNLXR2' : [self._table_passer, self._table_passer],
             #b'OESNLBR2' : [self._table_passer, self._table_passer],
 
             # off stress
-            b'OES2'    : [self._read_oes2_3, self._read_oes2_4],  # stress - linear only - disabled; need better tests
+            b'OES2'    : [self.oes._read_oes2_3, self.oes._read_oes2_4],  # stress - linear only - disabled; need better tests
             #b'OES2'    : [self._table_passer, self._table_passer],  # stress - linear only - disabled; need better tests
 
-            b'OESPSD2C' : [self._read_oes2_3, self._read_oes2_4],  # isat_random (nx)
-            b'OSTPSD2C' : [self._read_oes2_3, self._read_ostr2_4], # isat_random (nx)
+            b'OESPSD2C' : [self.oes._read_oes2_3, self.oes._read_oes2_4],  # isat_random (nx)
+            b'OSTPSD2C' : [self.oes._read_oes2_3, self.oes._read_ostr2_4], # isat_random (nx)
             #=======================
 
             # off strain
-            b'OSTRATO1' : [self._read_oes1_3, self._read_ostr1_4],
-            b'OSTRCRM1' : [self._read_oes1_3, self._read_ostr1_4],
-            b'OSTRPSD1' : [self._read_oes1_3, self._read_ostr1_4],
-            b'OSTRRMS1' : [self._read_oes1_3, self._read_ostr1_4], # isat_random
-            b'OSTRNO1' : [self._read_oes1_3, self._read_ostr1_4],  # isat_random
+            b'OSTRATO1' : [self.oes._read_oes1_3, self.oes._read_ostr1_4],
+            b'OSTRCRM1' : [self.oes._read_oes1_3, self.oes._read_ostr1_4],
+            b'OSTRPSD1' : [self.oes._read_oes1_3, self.oes._read_ostr1_4],
+            b'OSTRRMS1' : [self.oes._read_oes1_3, self.oes._read_ostr1_4], # isat_random
+            b'OSTRNO1' : [self.oes._read_oes1_3, self.oes._read_ostr1_4],  # isat_random
 
-            b'OSTRATO2' : [self._read_oes2_3, self._read_ostr2_4],
-            b'OSTRCRM2' : [self._read_oes2_3, self._read_ostr2_4],
-            b'OSTRPSD2' : [self._read_oes2_3, self._read_ostr2_4],
+            b'OSTRATO2' : [self.oes._read_oes2_3, self.oes._read_ostr2_4],
+            b'OSTRCRM2' : [self.oes._read_oes2_3, self.oes._read_ostr2_4],
+            b'OSTRPSD2' : [self.oes._read_oes2_3, self.oes._read_ostr2_4],
             b'OSTRRMS2' : [self._table_passer, self._table_passer], # buggy on isat random
             b'OSTRNO2' : [self._table_passer, self._table_passer],  # buggy on isat random
-            #b'OSTRRMS2' : [self._read_oes2_3, self._read_ostr2_4], # buggy on isat random
-            #b'OSTRNO2' : [self._read_oes2_3, self._read_ostr2_4],  # buggy on isat random
+            #b'OSTRRMS2' : [self.oes._read_oes2_3, self.oes._read_ostr2_4], # buggy on isat random
+            #b'OSTRNO2' : [self.oes._read_oes2_3, self.oes._read_ostr2_4],  # buggy on isat random
 
-            b'OSTRMS1C' : [self._read_oes1_3, self._read_ostr1_4], # isat_random
-            b'OSTNO1C' : [self._read_oes1_3, self._read_ostr1_4],  # isat_random
+            b'OSTRMS1C' : [self.oes._read_oes1_3, self.oes._read_ostr1_4], # isat_random
+            b'OSTNO1C' : [self.oes._read_oes1_3, self.oes._read_ostr1_4],  # isat_random
 
             #=======================
             # OUG
@@ -1001,8 +998,8 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             # modal contribution
             b'OUGMC1'  : [self._read_oug1_3, self._read_ougmc_4],
             b'OQGMC1'  : [self._read_oqg1_3, self._read_ougmc_4],
-            b'OESMC1'  : [self._read_oes1_3, self._read_oesmc_4],
-            b'OSTRMC1'  : [self._read_oes1_3, self._read_oesmc_4],
+            b'OESMC1'  : [self.oes._read_oes1_3, self.oes._read_oesmc_4],
+            b'OSTRMC1'  : [self.oes._read_oes1_3, self.oes._read_oesmc_4],
 
             #F:\work\pyNastran\examples\Dropbox\move_tpl\sbuckl2a.op2
             b'OCRUG' : [self._read_oug1_3, self._read_oug_4],  # post-buckling displacement
@@ -1083,11 +1080,11 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             b'OGSTR1' : [self._read_ogstr1_3, self._read_ogstr1_4],  # grid point strains
             #=======================
             # eigenvalues
-            b'BLAMA' : [self._read_buckling_eigenvalue_3, self._read_buckling_eigenvalue_4], # buckling eigenvalues
-            b'CLAMA' : [self._read_complex_eigenvalue_3, self._read_complex_eigenvalue_4],   # complex eigenvalues
-            b'LAMA'  : [self._read_real_eigenvalue_3, self._read_real_eigenvalue_4],         # eigenvalues
-            b'LAMAS' : [self._read_real_eigenvalue_3, self._read_real_eigenvalue_4],         # eigenvalues-structure
-            b'LAMAF' : [self._read_real_eigenvalue_3, self._read_real_eigenvalue_4],         # eigenvalues-fluid
+            b'BLAMA' : [self.lama._read_buckling_eigenvalue_3, self.lama._read_buckling_eigenvalue_4], # buckling eigenvalues
+            b'CLAMA' : [self.lama._read_complex_eigenvalue_3, self.lama._read_complex_eigenvalue_4],   # complex eigenvalues
+            b'LAMA'  : [self.lama._read_real_eigenvalue_3, self.lama._read_real_eigenvalue_4],         # eigenvalues
+            b'LAMAS' : [self.lama._read_real_eigenvalue_3, self.lama._read_real_eigenvalue_4],         # eigenvalues-structure
+            b'LAMAF' : [self.lama._read_real_eigenvalue_3, self.lama._read_real_eigenvalue_4],         # eigenvalues-fluid
 
             # ===passers===
             #b'EQEXIN': [self._table_passer, self._table_passer],
@@ -1178,24 +1175,24 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             b'OAGNO2'  : [self._read_oug2_3, self._read_oug_no],
 
             # stress
-            b'OESATO1' : [self._read_oes1_3, self._read_oes1_4],
-            b'OESCRM1' : [self._read_oes1_3, self._read_oes1_4],
-            b'OESPSD1' : [self._read_oes1_3, self._read_oes1_4],
-            b'OESRMS1' : [self._read_oes1_3, self._read_oes1_4],
-            b'OESNO1'  : [self._read_oes1_3, self._read_oes1_4],
+            b'OESATO1' : [self.oes._read_oes1_3, self.oes._read_oes1_4],
+            b'OESCRM1' : [self.oes._read_oes1_3, self.oes._read_oes1_4],
+            b'OESPSD1' : [self.oes._read_oes1_3, self.oes._read_oes1_4],
+            b'OESRMS1' : [self.oes._read_oes1_3, self.oes._read_oes1_4],
+            b'OESNO1'  : [self.oes._read_oes1_3, self.oes._read_oes1_4],
 
             # OESXRM1C : Composite element RMS stresses in SORT1 format for random analysis that includes von Mises stress output.
-            b'OESXRMS1' : [self._read_oes1_3, self._read_oes1_4],
-            b'OESXRM1C' : [self._read_oes1_3, self._read_oes1_4],
-            b'OESXNO1' : [self._read_oes1_3, self._read_oes1_4],
-            b'OESXNO1C' : [self._read_oes1_3, self._read_oes1_4],
+            b'OESXRMS1' : [self.oes._read_oes1_3, self.oes._read_oes1_4],
+            b'OESXRM1C' : [self.oes._read_oes1_3, self.oes._read_oes1_4],
+            b'OESXNO1' : [self.oes._read_oes1_3, self.oes._read_oes1_4],
+            b'OESXNO1C' : [self.oes._read_oes1_3, self.oes._read_oes1_4],
 
 
-            b'OESATO2' : [self._read_oes2_3, self._read_oes2_4],
-            b'OESCRM2' : [self._read_oes2_3, self._read_oes2_4],
-            b'OESPSD2' : [self._read_oes2_3, self._read_oes2_4],
-            #b'OESRMS2' : [self._read_oes1_3, self._read_oes1_4],  # buggy on isat random
-            #b'OESNO2'  : [self._read_oes1_3, self._read_oes1_4],  # buggy on isat random
+            b'OESATO2' : [self.oes._read_oes2_3, self.oes._read_oes2_4],
+            b'OESCRM2' : [self.oes._read_oes2_3, self.oes._read_oes2_4],
+            b'OESPSD2' : [self.oes._read_oes2_3, self.oes._read_oes2_4],
+            #b'OESRMS2' : [self.oes._read_oes1_3, self.oes._read_oes1_4],  # buggy on isat random
+            #b'OESNO2'  : [self.oes._read_oes1_3, self.oes._read_oes1_4],  # buggy on isat random
             b'OESRMS2' : [self._table_passer, self._table_passer],  # buggy on isat random
             b'OESNO2'  : [self._table_passer, self._table_passer],  # buggy on isat random
 
@@ -1221,7 +1218,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             b'ONMD' : [self.onmd._read_onmd_3, self.onmd._read_onmd_4],
             #====================================================================
             # NASA95
-            b'OESC1'  : [self._read_oes1_3, self._read_oes1_4],
+            b'OESC1'  : [self.oes._read_oes1_3, self.oes._read_oes1_4],
 
         }
         if self.is_nx and 0:
@@ -1238,11 +1235,11 @@ class OP2_Scalar(LAMA, ONR, OGPF,
 
                 #b'OSTRRMS2' : [self._table_passer, self._table_passer],  # buggy on isat random
                 #b'OSTRNO2' : [self._table_passer, self._table_passer],  # buggy on isat random
-                b'OSTRRMS2' : [self._read_oes2_3, self._read_ostr2_4],  # buggy on isat random
-                b'OSTRNO2' : [self._read_oes2_3, self._read_ostr2_4],  # buggy on isat random
+                b'OSTRRMS2' : [self.oes._read_oes2_3, self.oes._read_ostr2_4],  # buggy on isat random
+                b'OSTRNO2' : [self.oes._read_oes2_3, self.oes._read_ostr2_4],  # buggy on isat random
 
-                b'OESRMS2' : [self._read_oes1_3, self._read_oes1_4],  # buggy on isat random
-                b'OESNO2'  : [self._read_oes1_3, self._read_oes1_4],  # buggy on isat random
+                b'OESRMS2' : [self.oes._read_oes1_3, self.oes._read_oes1_4],  # buggy on isat random
+                b'OESNO2'  : [self.oes._read_oes1_3, self.oes._read_oes1_4],  # buggy on isat random
                 #b'OESRMS2' : [self._table_passer, self._table_passer],  # buggy on isat random
                 #b'OESNO2'  : [self._table_passer, self._table_passer],  # buggy on isat random
 

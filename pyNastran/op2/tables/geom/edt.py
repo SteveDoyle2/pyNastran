@@ -1,8 +1,9 @@
 """
 defines readers for BDF objects in the OP2 EDT/EDTS table
 """
+from __future__ import annotations
 from struct import Struct
-from typing import Tuple, List, Any
+from typing import Tuple, List, Any, TYPE_CHECKING
 
 import numpy as np
 from pyNastran.bdf.cards.aero.aero import (
@@ -14,32 +15,42 @@ from pyNastran.bdf.cards.aero.aero import (
     SPLINE4, SPLINE5)
 
 from pyNastran.op2.errors import DoubleCardError
-from pyNastran.op2.tables.geom.geom_common import GeomCommon
 from pyNastran.op2.op2_interface.op2_reader import mapfmt, reshape_bytes_block, reshape_bytes_block_size
 from pyNastran.bdf.cards.elements.acoustic import ACMODL
-
 from .utils import get_minus1_start_end
+if TYPE_CHECKING:
+    from pyNastran.op2.op2_geom import OP2Geom
 
-class EDT(GeomCommon):
+class EDT:
     """defines methods for reading aero and element deformations"""
 
-    def _read_edt_4(self, data: bytes, ndata: int):
+    @property
+    def size(self) -> int:
+        return self.op2.size
+    @property
+    def factor(self) -> int:
+        return self.op2.factor
+
+    def _read_fake(self, data: bytes, n: int) -> int:
+        return self.op2._read_fake(data, n)
+
+    def read_edt_4(self, data: bytes, ndata: int):
         """
         3.21 EDT
         Aero and element deformations.
 
         """
-        return self._read_geom_4(self._edt_map, data, ndata)
+        return self.op2._read_geom_4(self.edt_map, data, ndata)
 
-    def __init__(self):
-        GeomCommon.__init__(self)
+    def __init__(self, op2: OP2Geom):
+        self.op2 = op2
 
         # F:\Program Files\Siemens\NXNastran\nxn10p1\nxn10p1\nast\tpl\fsw_eng.op2
         # F:\work\pyNastran\pyNastran\master2\pyNastran\bdf\test\nx_spike\out_boltld04i.op2
         # F:\work\pyNastran\pyNastran\master2\pyNastran\bdf\test\nx_spike\out_eliter17.op2
         # F:\work\pyNastran\pyNastran\master2\pyNastran\bdf\test\nx_spike\out_weld01i.op2
         # F:\work\pyNastran\examples\Dropbox\move_tpl\ac10901a_new.op2
-        self._edt_map = {
+        self.edt_map = {
             (5201, 52, 373) : ['ACMODL', self._read_acmodl],
             (6301, 63, 397) : ['ADAPT', self._read_fake],
             (7801, 78, 582) : ['AECOMP', self._read_aecomp],
@@ -134,12 +145,13 @@ class EDT(GeomCommon):
         10 DMIK(2) CHAR4
         12 PERQ(2) CHAR4
         """
+        op2 = self.op2
         ntotal = 52 * self.factor # 4*13
         ndatai = len(data) - n
         ncards = ndatai // ntotal
         assert ndatai % ntotal == 0
         assert self.factor == 1, self.factor
-        structi = Struct(self._endian + b'f 8s 8s i 8s i 8s 8s')
+        structi = Struct(op2._endian + b'f 8s 8s i 8s i 8s 8s')
         for unused_i in range(ncards):
             edata = data[n:n + ntotal]
             out = structi.unpack(edata)
@@ -151,7 +163,7 @@ class EDT(GeomCommon):
             dmik = reshape_bytes_block_size(dmik_bytes, size=self.size)
             perq = reshape_bytes_block_size(perq_bytes, size=self.size)
 
-            aeforce = self.add_aeforce(mach, sym_xz, sym_xy, ux_id, mesh, force, dmik, perq)
+            aeforce = op2.add_aeforce(mach, sym_xz, sym_xy, ux_id, mesh, force, dmik, perq)
             str(aeforce)
             n += ntotal
         return n
@@ -171,12 +183,13 @@ class EDT(GeomCommon):
         9 DMIJI(2) CHAR4 The name of a DMIJI entry that defines the CAERO2
                          interference element downwashes
         """
+        op2 = self.op2
         ntotal = 40 * self.factor # 4*10
         ndatai = len(data) - n
         ncards = ndatai // ntotal
         assert ndatai % ntotal == 0
         assert self.factor == 1, self.factor
-        structi = Struct(self._endian + b'f 8s 8s i 8s 8s')
+        structi = Struct(op2._endian + b'f 8s 8s i 8s 8s')
         for unused_i in range(ncards):
             edata = data[n:n + ntotal]
             out = structi.unpack(edata)
@@ -187,7 +200,7 @@ class EDT(GeomCommon):
             dmij = reshape_bytes_block_size(dmij_bytes, size=self.size)
             dmiji = reshape_bytes_block_size(dmiji_bytes, size=self.size)
 
-            aepress = self.add_aepress(mach, sym_xz, sym_xy, ux_id, dmij, dmiji)
+            aepress = op2.add_aepress(mach, sym_xz, sym_xy, ux_id, dmij, dmiji)
             str(aepress)
             #print(mach, sym_xz, sym_xy, ux_id, dmij, dmiji)
             n += ntotal
@@ -205,8 +218,9 @@ class EDT(GeomCommon):
         3 M       RS   Mach number
         Word 3 repeats until -1 occurs
         """
-        ints = np.frombuffer(data[n:], self.idtype).copy()
-        floats = np.frombuffer(data[n:], self.fdtype).copy()
+        op2 = self.op2
+        ints = np.frombuffer(data[n:], op2.idtype).copy()
+        floats = np.frombuffer(data[n:], op2.fdtype).copy()
         istart, iend = get_minus1_start_end(ints)
 
         for (i0, i1) in zip(istart, iend):
@@ -214,7 +228,7 @@ class EDT(GeomCommon):
             machs = floats[i0+2:i1]
             #print(sid, nroots, machs)
             assert ints[i1] == -1, ints[i1]
-            diverg = self.add_diverg(sid, nroots, machs)
+            diverg = op2.add_diverg(sid, nroots, machs)
             str(diverg)
         return len(data)
 
@@ -224,15 +238,16 @@ class EDT(GeomCommon):
                 2, 1.3, -1,
                 3, 14400.0, 15600.0, 16800.0, 18000.0, 19200.0, 20400.0, -1)
         """
-        ints = np.frombuffer(data[n:], self.idtype).copy()
-        floats = np.frombuffer(data[n:], self.fdtype).copy()
+        op2 = self.op2
+        ints = np.frombuffer(data[n:], op2.idtype).copy()
+        floats = np.frombuffer(data[n:], op2.fdtype).copy()
         istart, iend = get_minus1_start_end(ints)
 
         for (i0, i1) in zip(istart, iend):
             sid = ints[i0]
             factors = floats[i0+1:i1]
             assert ints[i1] == -1, ints[i1]
-            flfact = self.add_flfact(sid, factors)
+            flfact = op2.add_flfact(sid, factors)
             str(flfact)
         return len(data)
 
@@ -244,12 +259,13 @@ class EDT(GeomCommon):
         data = (1.3, -1, -1, -1, -1, -1, -1, -1,
                 0.03, 0.04, 0.05, -1, -1, -1, -1, -1)
         """
+        op2 = self.op2
         #assert len(data) == 76, len(data)
         nvalues = (len(data) - n) // 4
         nrows = nvalues // 16
         assert nrows > 0, nrows
-        ints = np.frombuffer(data[12:], dtype=self.idtype).reshape(nrows, 16)
-        floats = np.frombuffer(data[12:], dtype=self.fdtype).reshape(nrows, 16)
+        ints = np.frombuffer(data[12:], dtype=op2.idtype).reshape(nrows, 16)
+        floats = np.frombuffer(data[12:], dtype=op2.fdtype).reshape(nrows, 16)
         irows, icols = np.where(ints != -1)
         uirows = np.unique(irows)
         for irow in uirows:
@@ -262,7 +278,7 @@ class EDT(GeomCommon):
 
             machs = floats[irow, imachs]
             kfreqs = floats[irow, ikfreqs]
-            mkaero1 = self.add_mkaero1(machs, kfreqs)
+            mkaero1 = op2.add_mkaero1(machs, kfreqs)
             str(mkaero1)
         return len(data)
 
@@ -353,14 +369,15 @@ class EDT(GeomCommon):
           -4, 14, -1, -1, 2, 6, 2413766, 742102857, 231216032, 23997572, 23192817, 23453545,
           -5, 1, 0,   10, -1, -1)
         """
+        op2 = self.op2
         #print('reading group')
         #assert self.factor == 1, self.factor
         nentries = 0
-        ints = np.frombuffer(data[n:], dtype=self.idtype8)
+        ints = np.frombuffer(data[n:], dtype=op2.idtype8)
         if self.factor == 1:
             strs = np.frombuffer(data[n:], dtype='|S4')
         else:
-            self.show_data(data[n:], types='qds')
+            op2.show_data(data[n:], types='qds')
             strs = np.frombuffer(data[n:], dtype='|S8')
         size = self.size
         #print(ints)
@@ -392,7 +409,7 @@ class EDT(GeomCommon):
             gtype = ints[i]
             #i += 1
             #n += 4
-            self.log.debug(f'group_id={group_id} ndesc={ndesc} group_desc={group_desc!r}; gtype={gtype!r}')
+            op2.log.debug(f'group_id={group_id} ndesc={ndesc} group_desc={group_desc!r}; gtype={gtype!r}')
 
             data_dict = {
                 'meta': '',
@@ -501,7 +518,7 @@ class EDT(GeomCommon):
             # $           TYPE     ID1  "THRU"     ID2
             # +           ELEM      21    THRU      36
             #print(data_dict)
-            #self.add_group(group_id, group_desc, data_dict)
+            #op2.add_group(group_id, group_desc, data_dict)
                 #i += 1
                 #n += 4
             #assert ints[i] == -1, ints[i:]
@@ -510,12 +527,12 @@ class EDT(GeomCommon):
             nodes = data_dict['grid']
             elements = data_dict['element']
             properties = data_dict['property']
-            self.add_group(group_id, nodes, elements, properties)
+            op2.add_group(group_id, nodes, elements, properties)
             # self.log.warning(f'skipping GROUP in {self.table_name}')
             nentries += 1
 
         assert n == len(data), f'n={n} ndata={len(data)}'
-        self.increase_card_count('GROUP', nentries)
+        op2.increase_card_count('GROUP', nentries)
         assert nentries > 0, nentries
         return n
 
@@ -532,12 +549,13 @@ class EDT(GeomCommon):
         6 SYMXY     I
 
         """
+        op2 = self.op2
         assert len(data) == 36, len(data)
-        struct = Struct(self._endian + b'i 3f 2i')
+        struct = Struct(op2._endian + b'i 3f 2i')
         out = struct.unpack(data[n:])
         acsid, velocity, cref, rho_ref, sym_xz, sym_xy = out
-        self.add_aero(velocity, cref, rho_ref,
-                      acsid=acsid, sym_xz=sym_xz, sym_xy=sym_xy)
+        op2.add_aero(velocity, cref, rho_ref,
+                     acsid=acsid, sym_xz=sym_xz, sym_xy=sym_xy)
         n = 36
         return n
 
@@ -549,13 +567,14 @@ class EDT(GeomCommon):
         data = (0, 100, 36.0, 360.0, 12960.0, 0, 0)
 
         """
+        op2 = self.op2
         assert len(data) == 40 * self.factor, len(data)
-        struct = Struct(mapfmt(self._endian + b'2i 3f 2i', self.size))
+        struct = Struct(mapfmt(op2._endian + b'2i 3f 2i', self.size))
         out = struct.unpack(data[n:])
         acsid, rcsid, cref, bref, sref, sym_xz, sym_xy = out
-        self.add_aeros(cref, bref, sref,
-                       acsid=acsid, rcsid=rcsid,
-                       sym_xz=sym_xz, sym_xy=sym_xy)
+        op2.add_aeros(cref, bref, sref,
+                      acsid=acsid, rcsid=rcsid,
+                      sym_xz=sym_xz, sym_xy=sym_xy)
         n = 40 * self.factor
         return n
 
@@ -570,16 +589,17 @@ class EDT(GeomCommon):
         3 D RS Deformation
 
         """
+        op2 = self.op2
         ntotal = 12 * self.factor # 4*3
         ndatai = len(data) - n
         ncards = ndatai // ntotal
         assert ndatai % ntotal == 0
-        structi = Struct(mapfmt(self._endian + b'2i f', self.size))
+        structi = Struct(mapfmt(op2._endian + b'2i f', self.size))
         for unused_i in range(ncards):
             edata = data[n:n + ntotal]
             out = structi.unpack(edata)
             sid, eid, deformation = out
-            deform = self.add_deform(sid, eid, deformation)
+            deform = op2.add_deform(sid, eid, deformation)
             str(deform)
             n += ntotal
         return n
@@ -614,21 +634,22 @@ class EDT(GeomCommon):
                 99.3, 21.45, -11.65, 42.86, 101.8387, 122.62, -2.69, 32.71)
 
         """
+        op2 = self.op2
         ntotal = 64 * self.factor # 4*16
         ndatai = len(data) - n
         ncards = ndatai // ntotal
         assert ndatai % ntotal == 0
-        structi = Struct(mapfmt(self._endian + b'8i 8f', self.size))
+        structi = Struct(mapfmt(op2._endian + b'8i 8f', self.size))
         for unused_i in range(ncards):
             edata = data[n:n + ntotal]
             out = structi.unpack(edata)
             eid, pid, cp, nspan, nchord, lspan, lchord, igid, x1, y1, z1, x12, x4, y4, z4, x43 = out
-            self.add_caero1(eid, pid, igid,
-                            [x1, y1, z1], x12,
-                            [x4, y4, z4], x43,
-                            cp=cp,
-                            nspan=nspan, lspan=lspan,
-                            nchord=nchord, lchord=lchord)
+            op2.add_caero1(eid, pid, igid,
+                           [x1, y1, z1], x12,
+                           [x4, y4, z4], x43,
+                           cp=cp,
+                           nspan=nspan, lspan=lspan,
+                           nchord=nchord, lchord=lchord)
             n += ntotal
         return n
 
@@ -653,21 +674,22 @@ class EDT(GeomCommon):
 
         data = (54000, 4020, 0, 8, 8, 0, 0, 1, -5.0, 0, 0, 40.0, 0, 0, 0, 0),
         """
+        op2 = self.op2
         ntotal = 64 * self.factor # 4*16
         ndatai = len(data) - n
         ncards = ndatai // ntotal
         assert ndatai % ntotal == 0
-        structi = Struct(mapfmt(self._endian + b'8i 4f 4i', self.size))
+        structi = Struct(mapfmt(op2._endian + b'8i 4f 4i', self.size))
         for unused_i in range(ncards):
             edata = data[n:n + ntotal]
             out = structi.unpack(edata)
             eid, pid, cp, nsb, nint, lsb, lint, igroup, x1, y1, z1, x12, zero1, zero2, zero3, zero4 = out
             assert min(zero1, zero2, zero3, zero4) == max(zero1, zero2, zero3, zero4)
             p1 = [x1, y1, z1]
-            caero2 = self.add_caero2(eid, pid, igroup, p1, x12,
-                                     cp=cp,
-                                     nsb=nsb, nint=nint,
-                                     lsb=lsb, lint=lint)
+            caero2 = op2.add_caero2(eid, pid, igroup, p1, x12,
+                                    cp=cp,
+                                    nsb=nsb, nint=nint,
+                                    lsb=lsb, lint=lint)
             str(caero2)
             n += ntotal
         return n
@@ -696,11 +718,12 @@ class EDT(GeomCommon):
         15 Z4   RS Z-coordinate of point 4 in coordinate system CP
         16 X43  RS Edge chord length in aerodynamic coordinate system
         """
+        op2 = self.op2
         ntotal = 64 * self.factor # 4*16
         ndatai = len(data) - n
         ncards = ndatai // ntotal
         assert ndatai % ntotal == 0
-        structi = Struct(mapfmt(self._endian + b'6i 2i 8f', self.size))
+        structi = Struct(mapfmt(op2._endian + b'6i 2i 8f', self.size))
         for unused_i in range(ncards):
             edata = data[n:n + ntotal]
             out = structi.unpack(edata)
@@ -709,7 +732,7 @@ class EDT(GeomCommon):
             assert min(zero1, zero2) == max(zero1, zero2)
             p1 = [x1, y1, z1]
             p4 = [x4, y4, z4]
-            caero3 = self.add_caero3(
+            caero3 = op2.add_caero3(
                 eid, pid, list_w, p1, x12, p4, x43,
                 cp=cp, list_c1=list_c1, list_c2=list_c2, comment='')
             str(caero3)
@@ -736,11 +759,12 @@ class EDT(GeomCommon):
         15 Z4  RS Z-coordinate of point 4 in coordinate system CP
         16 X43 RS Edge chord length in aerodynamic coordinate system
         """
+        op2 = self.op2
         ntotal = 64 * self.factor # 4*16
         ndatai = len(data) - n
         ncards = ndatai // ntotal
         assert ndatai % ntotal == 0
-        structi = Struct(mapfmt(self._endian + b'5i 3i 8f', self.size))
+        structi = Struct(mapfmt(op2._endian + b'5i 3i 8f', self.size))
         for unused_i in range(ncards):
             edata = data[n:n + ntotal]
             out = structi.unpack(edata)
@@ -748,8 +772,8 @@ class EDT(GeomCommon):
             assert min(zero1, zero2, zero3) == max(zero1, zero2, zero3)
             p1 = [x1, y1, z1]
             p4 = [x4, y4, z4]
-            caero4 = self.add_caero4(eid, pid, p1, x12, p4, x43,
-                                     cp=cp, nspan=nspan, lspan=lspan, comment='')
+            caero4 = op2.add_caero4(eid, pid, p1, x12, p4, x43,
+                                    cp=cp, nspan=nspan, lspan=lspan, comment='')
             str(caero4)
             #print(caero4)
             n += ntotal
@@ -778,18 +802,19 @@ class EDT(GeomCommon):
         16 X43      RS
 
         """
+        op2 = self.op2
         ntotal = 64 # 4*16
         ndatai = len(data) - n
         ncards = ndatai // ntotal
         assert ndatai % ntotal == 0
-        structi = Struct(self._endian + b'8i 8f')
+        structi = Struct(op2._endian + b'8i 8f')
         for unused_i in range(ncards):
             edata = data[n:n + ntotal]
             out = structi.unpack(edata)
             eid, pid, cp, nspan, lspan, ntheory, nthick, undef, x1, y1, z1, x12, x4, y4, z4, x43 = out
             p1 = [x1, y1, z1]
             p4 = [x4, y4, z4]
-            caero5 = self.add_caero5(eid, pid,
+            caero5 = op2.add_caero5(eid, pid,
                    p1, x12,
                    p4, x43,
                    cp=cp,
@@ -823,11 +848,12 @@ class EDT(GeomCommon):
         C:\MSC.Software\simcenter_nastran_2019.2\tpl_post1\adb144_2.op2
         PAERO1      1000   74000   74510   84610
         """
+        op2 = self.op2
         ntotal = 32 * self.factor # 4 * 8
         ndatai = len(data) - n
         ncards = ndatai // ntotal
         assert ndatai % ntotal == 0
-        structi = Struct(mapfmt(self._endian + b'8i', self.size))
+        structi = Struct(mapfmt(op2._endian + b'8i', self.size))
         for unused_i in range(ncards):
             edata = data[n:n + ntotal]
             out = structi.unpack(edata)
@@ -836,7 +862,7 @@ class EDT(GeomCommon):
             for body in [b1, b2, b3, b4, b5, b6, empty]:
                 if body != 0:
                     caero_body_ids.append(body)
-            paero1 = self.add_paero1(pid, caero_body_ids=caero_body_ids)
+            paero1 = op2.add_paero1(pid, caero_body_ids=caero_body_ids)
             str(paero1)
             #if caero_body_ids:
                 #self.log.warning(str(paero1))
@@ -870,14 +896,15 @@ class EDT(GeomCommon):
                 99.3, 21.45, -11.65, 42.86, 101.8387, 122.62, -2.69, 32.71)
 
         """
+        op2 = self.op2
         ntotal = 60 * self.factor # 4 * 15
         ndatai = len(data) - n
         ncards = ndatai // ntotal
         assert ndatai % ntotal == 0
         if self.size == 4:
-            structi = Struct(self._endian + b'i4si 2f 10i')
+            structi = Struct(op2._endian + b'i4si 2f 10i')
         else:
-            structi = Struct(self._endian + b'q8sq 2d 10q')
+            structi = Struct(op2._endian + b'q8sq 2d 10q')
         for unused_i in range(ncards):
             edata = data[n:n + ntotal]
             out = structi.unpack(edata)
@@ -889,11 +916,11 @@ class EDT(GeomCommon):
             thi = [thi1, thi2, thi3]
             thn = [thn1, thn2, thn3]
             orient = reshape_bytes_block_size(orient_bytes, self.size)
-            paero2 = self.add_paero2(pid, orient, width, ar,
-                                     thi, thn,
-                                     lrsb=lrsb,
-                                     lrib=lrib,
-                                     lth=lth)
+            paero2 = op2.add_paero2(pid, orient, width, ar,
+                                    thi, thn,
+                                    lrsb=lrsb,
+                                    lrib=lrib,
+                                    lth=lth)
             n += ntotal
             str(paero2)
         return n
@@ -914,15 +941,16 @@ class EDT(GeomCommon):
         Word 8 repeats until End of Record
 
         """
-        ints = np.frombuffer(data[n:], self.idtype8).copy()
-        floats = np.frombuffer(data[n:], self.fdtype8).copy()
+        op2 = self.op2
+        ints = np.frombuffer(data[n:], op2.idtype8).copy()
+        floats = np.frombuffer(data[n:], op2.fdtype8).copy()
         istart, iend = get_minus1_start_end(ints)
 
         for (i0, i1) in zip(istart, iend):
             pid, nalpha, lalpha, nxis, lxis, ntaus, ltaus = ints[i0:i0+7]
             caoci = floats[i0+7:i1]
             assert ints[i1] == -1, ints[i1]
-            paero5 = self.add_paero5(
+            paero5 = op2.add_paero5(
                 pid, caoci,
                 nalpha=nalpha, lalpha=lalpha,
                 nxis=nxis, lxis=lxis,
@@ -941,7 +969,8 @@ class EDT(GeomCommon):
 
         ('PANEL1', 1, -1)
         """
-        ints = np.frombuffer(data[n:], self.idtype8).copy()
+        op2 = self.op2
+        ints = np.frombuffer(data[n:], op2.idtype8).copy()
         istart, iend = get_minus1_start_end(ints)
 
         for (i0, i1) in zip(istart, iend):
@@ -956,12 +985,13 @@ class EDT(GeomCommon):
                 set_ids.append(set_id)
                 n += 12
                 i0 += 3
-            panel = self.add_panel(names, set_ids)
+            panel = op2.add_panel(names, set_ids)
             str(panel)
         return len(data)
 
     def _read_acmodl(self, data: bytes, n: int) -> int:
         """Reads the ACMODL card"""
+        op2 = self.op2
         card_name = 'ACMODL'
         card_obj = ACMODL
         methods = {
@@ -969,15 +999,16 @@ class EDT(GeomCommon):
             64 : self._read_acmodl_msc_64,
         }
         try:
-            n = self.geom2._read_double_card(
-                card_name, card_obj, self._add_methods._add_acmodl_object,
+            n = op2.reader_geom2._read_double_card(
+                card_name, card_obj,
+                op2._add_methods._add_acmodl_object,
                 methods, data, n)
         except DoubleCardError:
             raise
         return n
 
         #n = self._read_dual_card(data, n, self._read_acmodl_nx, self._read_acmodl_msc,
-                                 #'ACMODL', self._add_methods._add_acmodl_object)
+                                 #'ACMODL', op2._add_methods._add_acmodl_object)
         ##return self._read_acmodl_msc(data, n)
         #return n
 
@@ -1016,15 +1047,16 @@ class EDT(GeomCommon):
         ACMODL,IDENT,,,,1.0-4
 
         """
+        op2 = self.op2
         ntotal = 72 *  self.factor # 4 * 8
         ndatai = len(data) - n
         ncards = ndatai // ntotal
         assert ndatai % ntotal == 0, ndatai % ntotal
-        #structi = Struct(self._endian + b'4i f 8s 8s 3i f') # msc
+        #structi = Struct(op2._endian + b'4i f 8s 8s 3i f') # msc
         if self.size == 4:
-            structi = Struct(self._endian + b'8s 8s 2i f 8s f 8s f ifi 8s')
+            structi = Struct(op2._endian + b'8s 8s 2i f 8s f 8s f ifi 8s')
         else:
-            structi = Struct(self._endian + b'16s 16s 2q d 16s d 16s d qdq 16s')
+            structi = Struct(op2._endian + b'16s 16s 2q d 16s d 16s d qdq 16s')
 
         acmodls = []
         for unused_i in range(ncards):
@@ -1057,7 +1089,7 @@ class EDT(GeomCommon):
             #If SRCHUNIT = REL, then the relative model units are based on element size.
             assert search_unit in ['ABS', 'REL'], search_unit
             #INTOL Inward normal sea
-            # set2 = self.add_set2(sid, macro, sp1, sp2, ch1, ch2, zmax, zmin)
+            # set2 = op2.add_set2(sid, macro, sp1, sp2, ch1, ch2, zmax, zmin)
             acmodl = ACMODL(infor, fset, sset,
                             normal=normal, olvpang=olvpang,
                             search_unit=search_unit, intol=intol,
@@ -1105,16 +1137,17 @@ class EDT(GeomCommon):
         |        | INTOL | ALLSSET | SRCHUNIT |      |        |        |         |          |
 
         """
+        op2 = self.op2
         ntotal = 64 *  self.factor # 4 * 8
         ndatai = len(data) - n
         ncards = ndatai // ntotal
         assert ndatai % ntotal == 0, ndatai % ntotal
-        #structi = Struct(self._endian + b'4i f 8s 8s 3i f') # msc
+        #structi = Struct(op2._endian + b'4i f 8s 8s 3i f') # msc
         if self.size == 4:
-            structi = Struct(self._endian + b'8s 8s 2if 8s 3f 8s 8s')
+            structi = Struct(op2._endian + b'8s 8s 2if 8s 3f 8s 8s')
         else:
             raise NotImplementedError(('ACMODL-MSC', self.size))
-            structi = Struct(self._endian + b'16s 16s 2q d 16s d 16s d qdq 16s')
+            structi = Struct(op2._endian + b'16s 16s 2q d 16s d 16s d qdq 16s')
 
         acmodls = []
         for unused_i in range(ncards):
@@ -1150,7 +1183,7 @@ class EDT(GeomCommon):
             #If SRCHUNIT = REL, then the relative model units are based on element size.
             assert search_unit in ['ABS', 'REL'], search_unit
             #INTOL Inward normal sea
-            # set2 = self.add_set2(sid, macro, sp1, sp2, ch1, ch2, zmax, zmin)
+            # set2 = op2.add_set2(sid, macro, sp1, sp2, ch1, ch2, zmax, zmin)
             acmodl = ACMODL(infor, fset, sset,
                             normal=normal, olvpang=olvpang,
                             search_unit=search_unit, intol=intol,
@@ -1178,16 +1211,17 @@ class EDT(GeomCommon):
         Word 2 repeats until End of Record
 
         """
+        op2 = self.op2
         #self.show_data(data[12:], types='if')
-        ints = np.frombuffer(data[n:], self.idtype8).copy()
-        floats = np.frombuffer(data[n:], self.fdtype8).copy()
+        ints = np.frombuffer(data[n:], op2.idtype8).copy()
+        floats = np.frombuffer(data[n:], op2.fdtype8).copy()
         istart, iend = get_minus1_start_end(ints)
 
         for (i0, i1) in zip(istart, iend):
             sid = ints[i0]
             elements = floats[i0+1:i1]
             assert ints[i1] == -1, ints[i1]
-            self.add_aelist(sid, elements)
+            op2.add_aelist(sid, elements)
             #n += ntotal
         return len(data)
 
@@ -1202,7 +1236,8 @@ class EDT(GeomCommon):
         Word 2 repeats until End of Record
 
         """
-        ints = np.frombuffer(data[n:], self.idtype8).copy()
+        op2 = self.op2
+        ints = np.frombuffer(data[n:], op2.idtype8).copy()
         istart, iend = get_minus1_start_end(ints)
 
         for (i0, i1) in zip(istart, iend):
@@ -1210,7 +1245,7 @@ class EDT(GeomCommon):
             elements = ints[i0+1:i1].tolist()
             assert -2 not in elements, elements
             assert ints[i1] == -1, ints[i1]
-            self.add_set1(sid, elements, is_skin=False)
+            op2.add_set1(sid, elements, is_skin=False)
         return len(data)
 
     def _read_set2(self, data: bytes, n: int) -> int:
@@ -1235,21 +1270,22 @@ class EDT(GeomCommon):
         8 ZMIN RS
 
         """
+        op2 = self.op2
         #self.show_data(data)
         ntotal = 32 # 4 * 8
         ndatai = len(data) - n
         ncards = ndatai // ntotal
         assert ndatai % ntotal == 0
-        #structi = Struct(self._endian + b'4i f 8s 8s 3i f') # msc
-        structi = Struct(self._endian + b'2i 6f')
+        #structi = Struct(op2._endian + b'4i f 8s 8s 3i f') # msc
+        structi = Struct(op2._endian + b'2i 6f')
         for unused_i in range(ncards):
             edata = data[n:n + ntotal]
             out = structi.unpack(edata)
             sid, macro, sp1, sp2, ch1, ch2, zmax, zmin = out
-            set2 = self.add_set2(sid, macro, sp1, sp2, ch1, ch2, zmax, zmin)
+            set2 = op2.add_set2(sid, macro, sp1, sp2, ch1, ch2, zmax, zmin)
             str(set2)
             n += ntotal
-        self.to_nx(' because SET2 was found')
+        op2.to_nx(' because SET2 was found')
         return n
 
     def _read_set3(self, data: bytes, n: int) -> int:
@@ -1272,8 +1308,9 @@ class EDT(GeomCommon):
                 2, 1, 71, ..., 189, -1,
                 4, 1, 309, ..., ..., 378, -1)
         """
+        op2 = self.op2
         # this is setup for NX
-        ints = np.frombuffer(data[n:], self.idtype8).copy()
+        ints = np.frombuffer(data[n:], op2.idtype8).copy()
         istart, iend = get_minus1_start_end(ints)
 
         for (i0, i1) in zip(istart, iend):
@@ -1297,7 +1334,7 @@ class EDT(GeomCommon):
 
             assert min(elements) > 0, elements
             assert ints[i1] == -1, ints[i1]
-            set3 = self.add_set3(sid, desc, elements)
+            set3 = op2.add_set3(sid, desc, elements)
             str(set3)
         return len(data)
 
@@ -1313,9 +1350,10 @@ class EDT(GeomCommon):
         Words 4 through 6 repeat until (-1,-1,-1) occurs
 
         """
-        struct1 = Struct(self._endian + b'i8s')
-        struct2 =Struct(self._endian + b'8sf')
-        struct_end = Struct(self._endian + b'3i')
+        op2 = self.op2
+        struct1 = Struct(op2._endian + b'i8s')
+        struct2 =Struct(op2._endian + b'8sf')
+        struct_end = Struct(op2._endian + b'3i')
         ntotal = 12
         while n < len(data):
             edata = data[n:n+ntotal]
@@ -1334,7 +1372,7 @@ class EDT(GeomCommon):
                 n += ntotal
                 edata = data[n:n+ntotal]
             n += ntotal
-            aelink = self.add_aelink(aelink_id, label,
+            aelink = op2.add_aelink(aelink_id, label,
                                      independent_labels, linking_coefficents)
             str(aelink)
         return len(data)
@@ -1350,8 +1388,9 @@ class EDT(GeomCommon):
         Word 5 repeats until End of Record
 
         """
-        ints = np.frombuffer(data[n:], self.idtype).copy()
-        #floats = np.frombuffer(data[n:], self.fdtype).copy()
+        op2 = self.op2
+        ints = np.frombuffer(data[n:], op2.idtype).copy()
+        #floats = np.frombuffer(data[n:], op2.fdtype).copy()
         istart, iend = get_minus1_start_end(ints)
 
         for (i0, i1) in zip(istart, iend):
@@ -1362,7 +1401,7 @@ class EDT(GeomCommon):
             name = name_bytes.rstrip().decode('ascii')
             list_type = list_type_bytes.rstrip().decode('ascii')
             #print(name, list_type, lists)
-            aecomp = self.add_aecomp(name, list_type, lists)
+            aecomp = op2.add_aecomp(name, list_type, lists)
             str(aecomp)
         """
         Word Name Type Description
@@ -1381,9 +1420,10 @@ class EDT(GeomCommon):
         3 LABEL(2) CHAR4
         Words 3 through 4 repeat until (-1,-1) occurs
         """
-        struct1 = Struct(self._endian + b'8s')
-        struct2 = Struct(self._endian + b'8s')
-        struct_end = Struct(self._endian + b'2i')
+        op2 = self.op2
+        struct1 = Struct(op2._endian + b'8s')
+        struct2 = Struct(op2._endian + b'8s')
+        struct_end = Struct(op2._endian + b'2i')
         ntotal = 8
         while n < len(data):
             edata = data[n:n+ntotal]
@@ -1400,7 +1440,7 @@ class EDT(GeomCommon):
                 n += ntotal
                 edata = data[n:n+ntotal]
             n += ntotal
-            aecompl = self.add_aecompl(name, labels)
+            aecompl = op2.add_aecompl(name, labels)
             str(aecompl)
         return len(data)
 
@@ -1424,12 +1464,13 @@ class EDT(GeomCommon):
         12 MELEM I Number of elements for FPS on y-axis
 
         """
+        op2 = self.op2
         ntotal = 48 # 4 * 12
         ndatai = len(data) - n
         ncards = ndatai // ntotal
         assert ndatai % ntotal == 0
-        #structi = Struct(self._endian + b'4i f 8s 8s 3i f') # msc
-        structi = Struct(self._endian + b'5if 8s 8s 2i')
+        #structi = Struct(op2._endian + b'4i f 8s 8s 3i f') # msc
+        structi = Struct(op2._endian + b'5if 8s 8s 2i')
         for unused_i in range(ncards):
             edata = data[n:n + ntotal]
             out = structi.unpack(edata)
@@ -1440,13 +1481,13 @@ class EDT(GeomCommon):
                 #nelements = None
             #if melements == 0:
                 #melements = None
-            spline1 = self.add_spline1(eid, caero, box1, box2, setg,
+            spline1 = op2.add_spline1(eid, caero, box1, box2, setg,
                                        dz=dz, method=method,
                                        usage=usage, nelements=nelements,
                                        melements=melements)
             str(spline1)
             n += ntotal
-        #self.to_nx()
+        #op2.to_nx()
         return n
 
     def _read_spline2(self, data: bytes, n: int) -> int:
@@ -1467,21 +1508,22 @@ class EDT(GeomCommon):
         11 USAGE(2) CHAR4 Usage flag: FORCE|DISP|BOTH
 
         """
+        op2 = self.op2
         ntotal = 48 * self.factor # 4 * 12
         ndatai = len(data) - n
         ncards = ndatai // ntotal
         #assert ndatai % ntotal == 0
         if self.size == 4:
-            structi = Struct(self._endian + b'5i 2f i 2f 8s')
+            structi = Struct(op2._endian + b'5i 2f i 2f 8s')
         else:
-            structi = Struct(self._endian + b'5q 2d q 2d 16s')
+            structi = Struct(op2._endian + b'5q 2d q 2d 16s')
 
         for unused_i in range(ncards):
             edata = data[n:n + ntotal]
             out = structi.unpack(edata)
             eid, caero, id1, id2, setg, dz, dtor, cid, dthx, dthy, usage_bytes = out
             usage = usage_bytes.rstrip().decode('latin1')
-            spline2 = self.add_spline2(
+            spline2 = op2.add_spline2(
                 eid, caero,
                 id1, id2, setg,
                 dz=dz, dtor=dtor, cid=cid,
@@ -1500,6 +1542,7 @@ class EDT(GeomCommon):
 
     def _read_spline4(self, data: bytes, n: int) -> int:
         """reads the SPLINE4 card"""
+        op2 = self.op2
         card_name = 'SPLINE4'
         card_obj = SPLINE4
         #self.show_data(data[n:])
@@ -1508,8 +1551,9 @@ class EDT(GeomCommon):
             52 : self._read_spline4_msc_52,
         }
         try:
-            n = self.geom2._read_double_card(
-                card_name, card_obj, self._add_methods._add_spline_object,
+            n = op2.reader_geom2._read_double_card(
+                card_name, card_obj,
+                op2._add_methods._add_spline_object,
                 methods, data, n)
         except DoubleCardError:
             raise
@@ -1535,14 +1579,15 @@ class EDT(GeomCommon):
         13 RCORE       RS Radius of radial interpolation function      (not in NX)
 
         """
+        op2 = self.op2
         # 792/4 = 198
         # 198 = 2 * 99 = 2 * 11 * 9
         ntotal = 44 # 4 * 11
         ndatai = len(data) - n
         ncards = ndatai // ntotal
         assert ndatai % ntotal == 0
-        #structi = Struct(self._endian + b'4i f 8s 8s 3i f') # msc
-        structi = Struct(self._endian + b'4i f 8s 8s 2i')
+        #structi = Struct(op2._endian + b'4i f 8s 8s 3i f') # msc
+        structi = Struct(op2._endian + b'4i f 8s 8s 2i')
         splines = []
         for unused_i in range(ncards):
             edata = data[n:n + ntotal]
@@ -1557,7 +1602,7 @@ class EDT(GeomCommon):
             str(spline)
             splines.append(spline)
             n += ntotal
-        self.to_nx(' because SPLINE4-NX was found')
+        op2.to_nx(' because SPLINE4-NX was found')
         return n, splines
 
     def _read_spline4_msc_52(self, spline: SPLINE4, data: bytes, n: int) -> Tuple[int, SPLINE4]:
@@ -1578,14 +1623,15 @@ class EDT(GeomCommon):
         13 RCORE       RS Radius of radial interpolation function      (not in NX)
 
         """
+        op2 = self.op2
         # 792/4 = 198
         # 198 = 2 * 99 = 2 * 11 * 9
         ntotal = 52 # 4 * 13
         ndatai = len(data) - n
         ncards = ndatai // ntotal
         assert ndatai % ntotal == 0
-        #structi = Struct(self._endian + b'4i f 8s 8s 3i f') # msc
-        structi = Struct(self._endian + b'4i f 8s 8s 2i if')
+        #structi = Struct(op2._endian + b'4i f 8s 8s 3i f') # msc
+        structi = Struct(op2._endian + b'4i f 8s 8s 2i if')
         splines = []
         for unused_i in range(ncards):
             edata = data[n:n + ntotal]
@@ -1601,11 +1647,12 @@ class EDT(GeomCommon):
             str(spline)
             splines.append(spline)
             n += ntotal
-        self.to_msc(' because SPLINE4-MSC was found')
+        op2.to_msc(' because SPLINE4-MSC was found')
         return n, splines
 
     def _read_spline5(self, data: bytes, n: int) -> int:
         """reads the SPLINE5 card"""
+        op2 = self.op2
         card_name = 'SPLINE5'
         card_obj = SPLINE5
         methods = {
@@ -1613,8 +1660,8 @@ class EDT(GeomCommon):
             68 : self._read_spline5_msc_68,
         }
         try:
-            n = self.geom2._read_double_card(
-                card_name, card_obj, self._add_methods._add_spline_object,
+            n = op2.reader_geom2._read_double_card(
+                card_name, card_obj, op2._add_methods._add_spline_object,
                 methods, data, n)
         except DoubleCardError:
             raise
@@ -1642,15 +1689,16 @@ class EDT(GeomCommon):
         17 RCORE        RS Radius of radial interpolation function     (not in NX)
 
         """
+        op2 = self.op2
         ntotal = 68 * self.factor # 4 * 17
         ndatai = len(data) - n
         ncards = ndatai // ntotal
         assert ndatai % ntotal == 0, ndatai % ntotal
         if self.size == 4:
-            structi = Struct(self._endian + b'4i 2f i 3f 8s8s fif')
+            structi = Struct(op2._endian + b'4i 2f i 3f 8s8s fif')
         else:
             asdf
-            #structi = Struct(self._endian + b'5q 2d q 2d 16s')
+            #structi = Struct(op2._endian + b'5q 2d q 2d 16s')
 
         splines = []
         for unused_i in range(ncards):
@@ -1677,7 +1725,7 @@ class EDT(GeomCommon):
             str(spline)
             splines.append(spline)
             n += ntotal
-        self.to_msc(' because SPLINE5-MSC was found')
+        op2.to_msc(' because SPLINE5-MSC was found')
         return n, splines
 
     def _read_spline5_nx_60(self, spline: SPLINE5, data: bytes, n: int) -> Tuple[int, List[SPLINE5]]:
@@ -1702,15 +1750,16 @@ class EDT(GeomCommon):
         17 RCORE        RS Radius of radial interpolation function     (not in NX?)
 
         """
+        op2 = self.op2
         ntotal = 60 * self.factor # 4 * 12
         ndatai = len(data) - n
         ncards = ndatai // ntotal
         assert ndatai % ntotal == 0, ndatai % ntotal
         if self.size == 4:
-            structi = Struct(self._endian + b'4i 2f i 3f 8s8s f')
+            structi = Struct(op2._endian + b'4i 2f i 3f 8s8s f')
         else:
             asdf
-            #structi = Struct(self._endian + b'5q 2d q 2d 16s')
+            #structi = Struct(op2._endian + b'5q 2d q 2d 16s')
 
         splines = []
         for unused_i in range(ncards):
@@ -1735,11 +1784,12 @@ class EDT(GeomCommon):
             str(spline)
             splines.append(spline)
             n += ntotal
-        self.to_nx(' because SPLINE5-NX was found')
+        op2.to_nx(' because SPLINE5-NX was found')
         return n, splines
 
     def _read_monpnt1(self, data: bytes, n: int) -> int:
         """Reads the MONPNT1 card"""
+        op2 = self.op2
         card_name = 'MONPNT1'
         card_obj = MONPNT1
         methods = {
@@ -1747,9 +1797,9 @@ class EDT(GeomCommon):
             96 : self._read_monpnt1_96,
         }
         try:
-            n = self.geom2._read_double_card(
+            n = op2.reader_geom2._read_double_card(
                 card_name, card_obj,
-                self._add_methods._add_monpnt_object,
+                op2._add_methods._add_monpnt_object,
                 methods, data, n)
         except DoubleCardError:
             raise
@@ -1770,13 +1820,14 @@ class EDT(GeomCommon):
         23 Z           RS
 
         """
+        op2 = self.op2
         #ntotal = 4 * 24 # 4 * 24
         ntotal = 92 # 4 * 23
         ndatai = len(data) - n
         ncards = ndatai // ntotal
         assert ndatai % ntotal == 0
-        #structi = Struct(self._endian + b'8s 56s i 8s i 3f i')  # msc
-        structi = Struct(self._endian + b'8s 56s i 8s i 3f')  # nx
+        #structi = Struct(op2._endian + b'8s 56s i 8s i 3f i')  # msc
+        structi = Struct(op2._endian + b'8s 56s i 8s i 3f')  # nx
         monpnt1s = []
         for unused_i in range(ncards):
             edata = data[n:n + ntotal]
@@ -1792,7 +1843,7 @@ class EDT(GeomCommon):
             str(monpnt1)
             n += ntotal
             monpnt1s.append(monpnt1)
-        self.to_nx(' because MONPNT1-NX was found')
+        op2.to_nx(' because MONPNT1-NX was found')
         return n, monpnt1s
 
     def _read_monpnt1_96(self, monpnt1: MONPNT1, data: bytes, n: int) -> Tuple[int, List[MONPNT1]]:
@@ -1811,13 +1862,14 @@ class EDT(GeomCommon):
         24 CD           I
 
         """
+        op2 = self.op2
         #ntotal = 4 * 24 # 4 * 24
         ntotal = 96 # 4 * 23
         ndatai = len(data) - n
         ncards = ndatai // ntotal
         assert ndatai % ntotal == 0
-        structi = Struct(self._endian + b'8s 56s i 8s i 3f i')  # msc
-        #structi = Struct(self._endian + b'8s 56s i 8s i 3f')  # nx
+        structi = Struct(op2._endian + b'8s 56s i 8s i 3f i')  # msc
+        #structi = Struct(op2._endian + b'8s 56s i 8s i 3f')  # nx
         monpnt1s = []
         for unused_i in range(ncards):
             edata = data[n:n + ntotal]
@@ -1833,7 +1885,7 @@ class EDT(GeomCommon):
             str(monpnt1)
             n += ntotal
             monpnt1s.append(monpnt1)
-        #self.to_nx(' because MONPNT1-NX was found')
+        #op2.to_nx(' because MONPNT1-NX was found')
         return n, monpnt1s
 
     def _read_aestat(self, data: bytes, n: int) -> int:
@@ -1845,11 +1897,12 @@ class EDT(GeomCommon):
         2 LABEL(2) CHAR4
 
         """
+        op2 = self.op2
         ntotal = 12 * self.factor # 4 * 8
         if self.size == 4:
-            structi = Struct(self._endian + b'i 8s')
+            structi = Struct(op2._endian + b'i 8s')
         else:
-            structi = Struct(self._endian + b'q 16s')
+            structi = Struct(op2._endian + b'q 16s')
         ndatai = len(data) - n
         ncards = ndatai // ntotal
         assert ndatai % ntotal == 0
@@ -1859,7 +1912,7 @@ class EDT(GeomCommon):
             out = structi.unpack(edata)
             aestat_id, label_bytes = out
             label = reshape_bytes_block_size(label_bytes, self.size)
-            aestat = self.add_aestat(aestat_id, label)
+            aestat = op2.add_aestat(aestat_id, label)
             str(aestat)
             n += ntotal
         return n
@@ -1890,8 +1943,9 @@ class EDT(GeomCommon):
           data = (30, PK,         1, 2, 3, L,         3, 0.001, -1)       # ???
           data = (30, KE, '    ', 1, 2, 3, L, '    ', 3, 0.001, 0.0, -1)  # MSC
         """
-        ints = np.frombuffer(data[n:], self.idtype).copy()
-        floats = np.frombuffer(data[n:], self.fdtype).copy()
+        op2 = self.op2
+        ints = np.frombuffer(data[n:], op2.idtype).copy()
+        floats = np.frombuffer(data[n:], op2.fdtype).copy()
         istart, iend = get_minus1_start_end(ints)
 
         for (i0, i1) in zip(istart, iend):
@@ -1915,24 +1969,24 @@ class EDT(GeomCommon):
                 assert sweep_flag == 0, sweep_flag
             method = method_bytes.rstrip().decode('ascii')
             imethod = imethod_bytes.rstrip().decode('ascii')
-            self.add_flutter(sid, method,
-                             density, mach, reduced_freq_velocity,
-                             imethod=imethod, # 'L'
-                             nvalue=nvalue,
-                             epsilon=epsilon, validate=True)
-        self.to_nx(' because FLUTTER was found')
+            op2.add_flutter(sid, method,
+                            density, mach, reduced_freq_velocity,
+                            imethod=imethod, # 'L'
+                            nvalue=nvalue,
+                            epsilon=epsilon, validate=True)
+        op2.to_nx(' because FLUTTER was found')
         return len(data)
         #ntotal = 12 # 4 * 8
         #ndatai = len(data) - n
         #ncards = ndatai // ntotal
         #assert ndatai % ntotal == 0
-        #structi = Struct(self._endian + b'i 8s')
+        #structi = Struct(op2._endian + b'i 8s')
         #for unused_i in range(ncards):
             #edata = data[n:n + ntotal]
             #out = structi.unpack(edata)
             #aestat_id, label = out
             #label = label.rstrip().decode('latin1')
-            #self.add_aestat(aestat_id, label)
+            #op2.add_aestat(aestat_id, label)
             #n += ntotal
         #return n
 
@@ -1952,18 +2006,19 @@ class EDT(GeomCommon):
         Words 5 through 7 repeat until (-1,-1,-1) occurs
 
         """
+        op2 = self.op2
         ntotal1 = 16 * self.factor # 4 * 4
         ntotal2 = 12 * self.factor # 4 * 3
         #ndatai = len(data) - n
         #ncards = ndatai // ntotal
         if self.size == 4:
-            struct1 = Struct(self._endian + b'i 3f')
-            struct2 = Struct(self._endian + b'8sf')
-            struct_end = Struct(self._endian + b'3i')
+            struct1 = Struct(op2._endian + b'i 3f')
+            struct2 = Struct(op2._endian + b'8sf')
+            struct_end = Struct(op2._endian + b'3i')
         else:
-            struct1 = Struct(self._endian + b'q 3d')
-            struct2 = Struct(self._endian + b'16sd')
-            struct_end = Struct(self._endian + b'3q')
+            struct1 = Struct(op2._endian + b'q 3d')
+            struct2 = Struct(op2._endian + b'16sd')
+            struct_end = Struct(op2._endian + b'3q')
         while n < len(data):
             edata = data[n:n+ntotal1]
             trim_id, mach, q, aeqr = struct1.unpack(edata)
@@ -1980,7 +2035,7 @@ class EDT(GeomCommon):
                 n += ntotal2
                 edata = data[n:n+ntotal2]
             n += ntotal2
-            trim = self.add_trim(trim_id, mach, q, labels, uxs, aeqr=aeqr, trim_type=1)
+            trim = op2.add_trim(trim_id, mach, q, labels, uxs, aeqr=aeqr, trim_type=1)
             str(trim)
         return n
 
@@ -2007,6 +2062,7 @@ class EDT(GeomCommon):
         17 TQULIM     RS Upper deflection   Limit for the control surface as fct(q), >0, default=no limit
 
         """
+        op2 = self.op2
         ntotal = 68 *  self.factor # 4 * 17
         ndatai = len(data) - n
         ncards = ndatai // ntotal
@@ -2014,12 +2070,12 @@ class EDT(GeomCommon):
 
         ntotali = -24 * self.factor
         if self.size == 4:
-            struct2 = Struct(self._endian + b'6f')
-            struct1 = Struct(self._endian + b'i 8s 4i fi 2f 4s4s 4s4s 4s4s')
+            struct2 = Struct(op2._endian + b'6f')
+            struct1 = Struct(op2._endian + b'i 8s 4i fi 2f 4s4s 4s4s 4s4s')
             nan = b'    '
         else:
-            struct2 = Struct(self._endian + b'6d')
-            struct1 = Struct(self._endian + b'q 16s 4q dq 2d 8s8s 8s8s 8s8s')
+            struct2 = Struct(op2._endian + b'6d')
+            struct1 = Struct(op2._endian + b'q 16s 4q dq 2d 8s8s 8s8s 8s8s')
             nan = b'        '
 
         for unused_i in range(ncards):
@@ -2057,12 +2113,12 @@ class EDT(GeomCommon):
                 tqulim = tqulim2 if tqulim != nan else None
                 #print('pllim, pulim, hmllim, hmulim, tqllim, tqulim', pllim, pulim, hmllim, hmulim, tqllim, tqulim)
 
-            self.add_aesurf(aesurf_id, label, cid1, alid1, cid2=None, alid2=None,
-                            eff=eff, ldw=ldw, crefc=crefc, crefs=crefs,
-                            #pllim=-np.pi/2., pulim=np.pi/2.,
-                            pllim=pllim, pulim=pulim,
-                            hmllim=hmllim, hmulim=hmulim, # hinge moment lower/upper limits
-                            tqllim=tqllim, tqulim=tqulim)
+            op2.add_aesurf(aesurf_id, label, cid1, alid1, cid2=None, alid2=None,
+                           eff=eff, ldw=ldw, crefc=crefc, crefs=crefs,
+                           #pllim=-np.pi/2., pulim=np.pi/2.,
+                           pllim=pllim, pulim=pulim,
+                           hmllim=hmllim, hmulim=hmulim, # hinge moment lower/upper limits
+                           tqllim=tqllim, tqulim=tqulim)
             n += ntotal
         return n
 
@@ -2082,9 +2138,9 @@ class EDT(GeomCommon):
         ncards = ndatai // ntotal
         assert ndatai % ntotal == 0
         if self.size == 4:
-            struct1 = Struct(self._endian + b'i 8s 2i')
+            struct1 = Struct(op2._endian + b'i 8s 2i')
         else:
-            struct1 = Struct(self._endian + b'i 16s 2i')
+            struct1 = Struct(op2._endian + b'i 16s 2i')
 
         for unused_i in range(ncards):
             edata = data[n:n + ntotal]
@@ -2093,7 +2149,7 @@ class EDT(GeomCommon):
             aesid, label_bytes, list1, list2 = out1
             label = reshape_bytes_block_size(label_bytes, self.size)
 
-            aesurfs = self.add_aesurfs(aesid, label, list1, list2)
+            aesurfs = op2.add_aesurfs(aesid, label, list1, list2)
             str(aesurfs)
             n += ntotal
         return n
@@ -2112,8 +2168,9 @@ class EDT(GeomCommon):
         )
 
         """
-        ints = np.frombuffer(data[n:], self.idtype8).copy()
-        floats = np.frombuffer(data[n:], self.fdtype8).copy()
+        op2 = self.op2
+        ints = np.frombuffer(data[n:], op2.idtype8).copy()
+        floats = np.frombuffer(data[n:], op2.fdtype8).copy()
         istart, iend = get_minus1_start_end(ints)
 
         for (i0, i1) in zip(istart, iend):
@@ -2122,7 +2179,7 @@ class EDT(GeomCommon):
             sid = ints[i0]
             fractions = floats[i0+1:i1]
             assert ints[i1] == -1, ints[i1]
-            aefact = self.add_aefact(sid, fractions)
+            aefact = op2.add_aefact(sid, fractions)
             #print(aefact)
             str(aefact)
             #n += ntotal

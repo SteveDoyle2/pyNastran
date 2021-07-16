@@ -3350,7 +3350,8 @@ class DSCREEN(OptConstraint):
         rtype = 'DISP'
         return DSCREEN(rtype, trs=-0.5, nstr=20, comment='')
 
-    def __init__(self, rtype, trs=-0.5, nstr=20, comment=''):
+    def __init__(self, rtype: str, trs: float=-0.5, nstr: int=20,
+                 comment: str=''):
         """
         Creates a DSCREEN object
 
@@ -3384,7 +3385,7 @@ class DSCREEN(OptConstraint):
                          #'CEIG', 'LAMA', 'EIGN', 'VOLUME', 'DRESP3', 'WEIGHT'], str(self)
 
     @classmethod
-    def add_card(cls, card, comment=''):
+    def add_card(cls, card, comment: str=''):
         """
         Adds a DSCREEN card from ``BDF.add_card(...)``
 

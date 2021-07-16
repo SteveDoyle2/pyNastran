@@ -66,55 +66,55 @@ from pyNastran.op2.tables.oes_stressStrain.random.oes_shear import RandomShearSt
 if TYPE_CHECKING:
     from pyNastran.op2.op2 import OP2
 
-def oes_celas_real_2(self: OP2, data: bytes,
+def oes_celas_real_2(op2: OP2, data: bytes,
                      obj: Union[RealSpringStressArray, RealSpringStrainArray],
                      nelements: int, ntotal: int, dt: Any) -> int:
     n = 0
-    fmt1 = mapfmt(self._endian + self._analysis_code_fmt + b'f', self.size)
+    fmt1 = mapfmt(op2._endian + op2._analysis_code_fmt + b'f', op2.size)
     struct1 = Struct(fmt1)
     for i in range(nelements):
         edata = data[n:n+ntotal]
         out = struct1.unpack(edata)
         (eid_device, ox) = out
         eid, dt = get_eid_dt_from_eid_device(
-            eid_device, self.nonlinear_factor, self.sort_method)
+            eid_device, op2.nonlinear_factor, op2.sort_method)
         if eid <= 0: # pragma: no cover
             msg = 'table_name=%s sort_method=%s eid_device=%s nonlinear_factor=%s'  % (
-                self.table_name_str, self.sort_method,
-                eid_device, self.nonlinear_factor)
+                op2.table_name_str, op2.sort_method,
+                eid_device, op2.nonlinear_factor)
             raise RuntimeError(msg)
-        if self.is_debug_file:
-            self.binary_debug.write('  eid=%i result%i=[%i, %f]\n' % (
+        if op2.is_debug_file:
+            op2.binary_debug.write('  eid=%i result%i=[%i, %f]\n' % (
                 eid, i, eid_device, ox))
         obj.add_sort1(dt, eid, ox)
         n += ntotal
     return n
 
-def oes_celas_complex_3(self, data: bytes, obj: Union[ComplexSpringStressArray, ComplexSpringStrainArray],
+def oes_celas_complex_3(op2: OP2, data: bytes, obj: Union[ComplexSpringStressArray, ComplexSpringStrainArray],
                         nelements: int, ntotal: int,
                         dt, is_magnitude_phase: bool):
     n = 0
-    struct1 = Struct(self._endian + mapfmt(self._analysis_code_fmt + b'2f', self.size))
+    struct1 = Struct(op2._endian + mapfmt(op2._analysis_code_fmt + b'2f', op2.size))
     for i in range(nelements):
         edata = data[n:n + ntotal]
         out = struct1.unpack(edata)
         (eid_device, axial_real, axial_imag) = out
         eid, dt = get_eid_dt_from_eid_device(
-            eid_device, self.nonlinear_factor, self.sort_method)
+            eid_device, op2.nonlinear_factor, op2.sort_method)
 
         if is_magnitude_phase:
             axial = polar_to_real_imag(axial_real, axial_imag)
         else:
             axial = complex(axial_real, axial_imag)
 
-        if self.is_debug_file:
-            self.binary_debug.write('  eid=%i result%i=[%i, %f, %f]\n' % (
+        if op2.is_debug_file:
+            op2.binary_debug.write('  eid=%i result%i=[%i, %f, %f]\n' % (
                 eid, i, eid_device, axial_real, axial_imag))
         obj.add_sort1(dt, eid, axial)
         n += ntotal
     return n
 
-def oes_cquad4_33_complex_vm_17(self, data: bytes,
+def oes_cquad4_33_complex_vm_17(op2: OP2, data: bytes,
                                 obj: Union[ComplexPlateVMStressArray, ComplexPlateVMStrainArray],
                                 nelements: int, ntotal: int,
                                 is_magnitude_phase: bool) -> int:
@@ -125,9 +125,9 @@ def oes_cquad4_33_complex_vm_17(self, data: bytes,
     """
     #self.log.info(f'nelements = {nelements}')
     n = 0
-    struct1 = Struct(mapfmt(self._endian + self._analysis_code_fmt + b'16f', self.size))
+    struct1 = Struct(mapfmt(op2._endian + op2._analysis_code_fmt + b'16f', op2.size))
     cen = 0 # CEN/4
-    add_sort_x = getattr(obj, 'add_sort' + str(self.sort_method))
+    add_sort_x = getattr(obj, 'add_sort' + str(op2.sort_method))
 
     for unused_i in range(nelements):
         edata = data[n:n+ntotal]
@@ -138,9 +138,9 @@ def oes_cquad4_33_complex_vm_17(self, data: bytes,
          fd2, sx2r, sx2i, sy2r, sy2i, txy2r, txy2i, von_mises2) = out
 
         eid, dt = get_eid_dt_from_eid_device(
-            eid_device, self.nonlinear_factor, self.sort_method)
-        if self.is_debug_file:
-            self.binary_debug.write('  eid=%i C=[%s]\n' % (
+            eid_device, op2.nonlinear_factor, op2.sort_method)
+        if op2.is_debug_file:
+            op2.binary_debug.write('  eid=%i C=[%s]\n' % (
                 eid, ', '.join(['%r' % di for di in out])))
 
         if is_magnitude_phase:
@@ -165,15 +165,15 @@ def oes_cquad4_33_complex_vm_17(self, data: bytes,
         n += ntotal
     return n
 
-def oes_cbeam_real_111(self, data: bytes,
+def oes_cbeam_real_111(op2: OP2, data: bytes,
                        obj: Union[RealBeamStressArray, RealBeamStrainArray],
                        nelements: int, dt: Any) -> int:
     n = 0
     nnodes = 10  # 11-1
-    n1 = 44 * self.factor
-    n2 = 40 * self.factor
-    fmt1 = mapfmt(self._endian + self._analysis_code_fmt + b'i9f', self.size)
-    fmt2 = mapfmt(self._endian + b'i9f', self.size)
+    n1 = 44 * op2.factor
+    n2 = 40 * op2.factor
+    fmt1 = mapfmt(op2._endian + op2._analysis_code_fmt + b'i9f', op2.size)
+    fmt2 = mapfmt(op2._endian + b'i9f', op2.size)
     s1 = Struct(fmt1)
     s2 = Struct(fmt2)
     for unused_i in range(nelements):
@@ -183,9 +183,9 @@ def oes_cbeam_real_111(self, data: bytes,
         out = s1.unpack(edata)
         eid_device = out[0]
         eid, dt = get_eid_dt_from_eid_device(
-            eid_device, self.nonlinear_factor, self.sort_method)
-        if self.is_debug_file:
-            self.binary_debug.write('CBEAM-2 - eid=%i out=%s\n' % (eid, str(out)))
+            eid_device, op2.nonlinear_factor, op2.sort_method)
+        if op2.is_debug_file:
+            op2.binary_debug.write('CBEAM-2 - eid=%i out=%s\n' % (eid, str(out)))
 
         #(grid, sd, sxc, sxd, sxe, sxf, smax, smin, mst, msc) = out
         obj.add_new_eid_sort1(dt, eid, *out[1:])
@@ -198,35 +198,35 @@ def oes_cbeam_real_111(self, data: bytes,
             obj.add_sort1(dt, eid, *out)
     return n
 
-def oes_crod_real_5(self, data: bytes, obj: Union[RealRodStressArray, RealRodStrainArray],
+def oes_crod_real_5(op2: OP2, data: bytes, obj: Union[RealRodStressArray, RealRodStrainArray],
                     nelements: int, ntotal: int, dt) -> int:
     n = 0
-    struct1 = Struct(self._endian + mapfmt(self._analysis_code_fmt + b'4f', self.size))
+    struct1 = Struct(op2._endian + mapfmt(op2._analysis_code_fmt + b'4f', op2.size))
     for unused_i in range(nelements):
         edata = data[n:n+ntotal]
         out = struct1.unpack(edata)
         (eid_device, axial, axial_margin, torsion, torsion_margin) = out
         eid, dt = get_eid_dt_from_eid_device(
-            eid_device, self.nonlinear_factor, self.sort_method)
+            eid_device, op2.nonlinear_factor, op2.sort_method)
 
-        if self.is_debug_file:
-            self.binary_debug.write('  eid=%i; C=[%s]\n' % (
+        if op2.is_debug_file:
+            op2.binary_debug.write('  eid=%i; C=[%s]\n' % (
                 eid, ', '.join(['%r' % di for di in out])))
         obj.add_sort1(dt, eid, axial, axial_margin, torsion, torsion_margin)
         n += ntotal
     return n
 
-def oes_crod_complex_5(self, data: bytes, obj: Union[ComplexRodStressArray, ComplexRodStrainArray],
+def oes_crod_complex_5(op2: OP2, data: bytes, obj: Union[ComplexRodStressArray, ComplexRodStrainArray],
                        nelements: int, ntotal: int, dt, is_magnitude_phase: bool) -> int:
     n = 0
-    fmt = mapfmt(self._endian + self._analysis_code_fmt + b'4f', self.size)
+    fmt = mapfmt(op2._endian + op2._analysis_code_fmt + b'4f', op2.size)
     struct1 = Struct(fmt)
     for unused_i in range(nelements):
         edata = data[n:n + ntotal]
         out = struct1.unpack(edata)
         (eid_device, axial_real, axial_imag, torsion_real, torsion_imag) = out
         eid, dt = get_eid_dt_from_eid_device(
-            eid_device, self.nonlinear_factor, self.sort_method)
+            eid_device, op2.nonlinear_factor, op2.sort_method)
 
         if is_magnitude_phase:
             axial = polar_to_real_imag(axial_real, axial_imag)
@@ -239,73 +239,73 @@ def oes_crod_complex_5(self, data: bytes, obj: Union[ComplexRodStressArray, Comp
         n += ntotal
     return n
 
-def oes_crod_random_3(self, data: bytes, ndata: int,
+def oes_crod_random_3(op2: OP2, data: bytes, ndata: int,
              obj: Union[RandomRodStressArray, RandomRodStrainArray],
              nelements: int, ntotal: int) -> int:
     n = 0
-    if self.is_debug_file:
-        self.binary_debug.write('  [cap, element1, element2, ..., cap]\n')
-        self.binary_debug.write('  cap = %i  # assume 1 cap when there could have been multiple\n' % ndata)
-        self.binary_debug.write('  #elementi = [eid_device, axial, torsion]\n')
-        self.binary_debug.write('  nelements=%i; nnodes=1 # centroid\n' % nelements)
+    if op2.is_debug_file:
+        op2.binary_debug.write('  [cap, element1, element2, ..., cap]\n')
+        op2.binary_debug.write('  cap = %i  # assume 1 cap when there could have been multiple\n' % ndata)
+        op2.binary_debug.write('  #elementi = [eid_device, axial, torsion]\n')
+        op2.binary_debug.write('  nelements=%i; nnodes=1 # centroid\n' % nelements)
 
-    struct1 = Struct(self._endian + self._analysis_code_fmt + b'2f')
-    add_sort_x = getattr(obj, 'add_sort' + str(self.sort_method))
+    struct1 = Struct(op2._endian + op2._analysis_code_fmt + b'2f')
+    add_sort_x = getattr(obj, 'add_sort' + str(op2.sort_method))
     for unused_i in range(nelements):
         edata = data[n:n+ntotal]
         out = struct1.unpack(edata)
         (eid_device, axial, torsion) = out
         eid, dt = get_eid_dt_from_eid_device(
-            eid_device, self.nonlinear_factor, self.sort_method)
-        if self.is_debug_file:
-            self.binary_debug.write('  eid=%i; C=[%s]\n' % (
+            eid_device, op2.nonlinear_factor, op2.sort_method)
+        if op2.is_debug_file:
+            op2.binary_debug.write('  eid=%i; C=[%s]\n' % (
                 eid, ', '.join(['%r' % di for di in out])))
         add_sort_x(dt, eid, axial, torsion)
         n += ntotal
     return n
 
-def oes_cbar100_real_10(self, data: bytes, obj, nelements: int, ntotal: int, dt: Any) -> int:
+def oes_cbar100_real_10(op2: OP2, data: bytes, obj, nelements: int, ntotal: int, dt: Any) -> int:
     n = 0
-    struct1 = Struct(self._endian + mapfmt(self._analysis_code_fmt + b'9f', self.size))
+    struct1 = Struct(op2._endian + mapfmt(op2._analysis_code_fmt + b'9f', op2.size))
     for i in range(nelements):
         edata = data[n:n+ntotal]
         out = struct1.unpack(edata)
         (eid_device, sd, sxc, sxd, sxe, sxf, axial, smax, smin, MS) = out
         eid, dt = get_eid_dt_from_eid_device(
-            eid_device, self.nonlinear_factor, self.sort_method)
-        if self.is_debug_file:
-            self.binary_debug.write('  eid=%i; C%i=[%s]\n' % (
+            eid_device, op2.nonlinear_factor, op2.sort_method)
+        if op2.is_debug_file:
+            op2.binary_debug.write('  eid=%i; C%i=[%s]\n' % (
                 eid, i, ', '.join(['%r' % di for di in out])))
         n += ntotal
-        obj.add_new_eid_sort1(self.element_name, dt, eid,
+        obj.add_new_eid_sort1(op2.element_name, dt, eid,
                               sd, sxc, sxd, sxe, sxf, axial, smax, smin, MS)
     return n
 
-def oes_cbeam_complex_111(self, data: bytes,
+def oes_cbeam_complex_111(op2: OP2, data: bytes,
                           obj: Union[ComplexBeamStressArray, ComplexBeamStrainArray],
                           nelements: int, nnodes: int,
                           is_magnitude_phase: bool) -> int:
     n = 0
     #itotal = obj.itotal
-    n1 = 44 * self.factor
-    n2 = 40 * self.factor
+    n1 = 44 * op2.factor
+    n2 = 40 * op2.factor
 
-    s1 = Struct(self._endian + mapfmt(self._analysis_code_fmt + b'i9f', self.size))
-    if self.size == 4:
-        s2 = Struct(self._endian + b'i9f')
+    s1 = Struct(op2._endian + mapfmt(op2._analysis_code_fmt + b'i9f', op2.size))
+    if op2.size == 4:
+        s2 = Struct(op2._endian + b'i9f')
     else:
-        s2 = Struct(self._endian + b'q9d')
+        s2 = Struct(op2._endian + b'q9d')
 
-    add_sort_x = getattr(obj, 'add_sort' + str(self.sort_method))
+    add_sort_x = getattr(obj, 'add_sort' + str(op2.sort_method))
     for unused_i in range(nelements):
         edata = data[n:n+n1]
         n += n1
         out1 = s1.unpack(edata)
         eid_device = out1[0]
         eid, dt = get_eid_dt_from_eid_device(
-            eid_device, self.nonlinear_factor, self.sort_method)
-        if self.is_debug_file:
-            self.binary_debug.write('CBEAM-2 - eid=%i out1=%s\n' % (eid, str(out1)))
+            eid_device, op2.nonlinear_factor, op2.sort_method)
+        if op2.is_debug_file:
+            op2.binary_debug.write('CBEAM-2 - eid=%i out1=%s\n' % (eid, str(out1)))
 
         (grid, sd,
          excr, exdr, exer, exfr,
@@ -346,20 +346,20 @@ def oes_cbeam_complex_111(self, data: bytes,
 
             add_sort_x(dt, eid, grid, sd,
                        exc, exd, exe, exf)
-            if self.is_debug_file:
-                self.binary_debug.write('CBEAM-2 - eid=%i out2=%s\n' % (eid, str(out2)))
+            if op2.is_debug_file:
+                op2.binary_debug.write('CBEAM-2 - eid=%i out2=%s\n' % (eid, str(out2)))
     return n
 
-def oes_cbeam_random_67(self, data: bytes,
+def oes_cbeam_random_67(op2: OP2, data: bytes,
                         obj: Union[RandomBeamStressArray, RandomBeamStrainArray],
                         nelements: int, nnodes: int, dt: Any) -> int:
     n = 0
-    n1 = 28 * self.factor
-    n2 = 24 * self.factor # 6*4
-    s1 = Struct(self._endian + self._analysis_code_fmt + b'i5f')
-    s2 = Struct(self._endian + b'i5f')
-    add_sort_x = getattr(obj, 'add_sort' + str(self.sort_method))
-    add_eid_sort_x = getattr(obj, 'add_eid_sort' + str(self.sort_method))
+    n1 = 28 * op2.factor
+    n2 = 24 * op2.factor # 6*4
+    s1 = Struct(op2._endian + op2._analysis_code_fmt + b'i5f')
+    s2 = Struct(op2._endian + b'i5f')
+    add_sort_x = getattr(obj, 'add_sort' + str(op2.sort_method))
+    add_eid_sort_x = getattr(obj, 'add_eid_sort' + str(op2.sort_method))
     for unused_i in range(nelements):
         edata = data[n:n+n1]
         n += n1
@@ -368,9 +368,9 @@ def oes_cbeam_random_67(self, data: bytes,
         eid_device = out[0]
 
         eid, dt = get_eid_dt_from_eid_device(
-            eid_device, self.nonlinear_factor, self.sort_method)
-        if self.is_debug_file:
-            self.binary_debug.write('CBEAM-2 - eid=%i out=%s\n' % (eid, str(out)))
+            eid_device, op2.nonlinear_factor, op2.sort_method)
+        if op2.is_debug_file:
+            op2.binary_debug.write('CBEAM-2 - eid=%i out=%s\n' % (eid, str(out)))
 
         #(grid, sd, sxc, sxd, sxe, sxf, smax, smin, mst, msc) = out
         add_eid_sort_x(dt, eid, *out[1:])
@@ -383,7 +383,7 @@ def oes_cbeam_random_67(self, data: bytes,
             add_sort_x(dt, eid, *out)
     return n
 
-def oes_cquad4_33_complex_15(self,
+def oes_cquad4_33_complex_15(op2: OP2,
                              data: bytes,
                              obj: Union[ComplexPlateStressArray, ComplexPlateStrainArray],
                              nelements: int, ntotal: int,
@@ -406,9 +406,9 @@ def oes_cquad4_33_complex_15(self,
     15 EXY2I RS Shear in xy at Z2
     """
     n = 0
-    s1 = Struct(self._endian + self._analysis_code_fmt + b'14f')
+    s1 = Struct(op2._endian + op2._analysis_code_fmt + b'14f')
     cen = 0 # 'CEN/4'
-    add_sort_x = getattr(obj, 'add_sort' + str(self.sort_method))
+    add_sort_x = getattr(obj, 'add_sort' + str(op2.sort_method))
 
     for unused_i in range(nelements):
         edata = data[n:n+ntotal]  # 4*15=60
@@ -419,9 +419,9 @@ def oes_cquad4_33_complex_15(self,
          fd2, sx2r, sx2i, sy2r, sy2i, txy2r, txy2i) = out
 
         eid, dt = get_eid_dt_from_eid_device(
-            eid_device, self.nonlinear_factor, self.sort_method)
-        if self.is_debug_file:
-            self.binary_debug.write('  eid=%i C=%s\n' % (eid, str(out)))
+            eid_device, op2.nonlinear_factor, op2.sort_method)
+        if op2.is_debug_file:
+            op2.binary_debug.write('  eid=%i C=%s\n' % (eid, str(out)))
 
         if is_magnitude_phase:
             sx1 = polar_to_real_imag(sx1r, sx1i)
@@ -443,7 +443,7 @@ def oes_cquad4_33_complex_15(self,
                    fd2, sx2, sy2, txy2)
     return n
 
-def oes_cquad4_random_vm_57(self,
+def oes_cquad4_random_vm_57(op2: OP2,
                             data: bytes,
                             obj: Union[ComplexPlateVMStressArray, ComplexPlateVMStrainArray],
                             nelements: int, ntotal: int, nnodes: int,
@@ -457,18 +457,18 @@ def oes_cquad4_random_vm_57(self,
     #ntotal = 228 # 57*4
     n = 0
     cen = 0
-    if self.size == 4:
-        struct1 = Struct(self._endian + b'i4si 10f')
-        struct2 = Struct(self._endian + b'i 10f')
+    if op2.size == 4:
+        struct1 = Struct(op2._endian + b'i4si 10f')
+        struct2 = Struct(op2._endian + b'i 10f')
     else:
         print('ntotal =', ntotal, 228*2)
-        struct1 = Struct(self._endian + b'i4si 10f')
-        struct2 = Struct(self._endian + b'i 10f')
+        struct1 = Struct(op2._endian + b'i4si 10f')
+        struct2 = Struct(op2._endian + b'i 10f')
         raise NotImplementedError('64-bit')
 
     nnodes_corners = nnodes - 1
     #print('random-57: nelements =', nelements)
-    factor = self.factor
+    factor = op2.factor
 
     ntotal1 = 52 * factor
     ntotal2 = 44 * factor
@@ -481,7 +481,7 @@ def oes_cquad4_random_vm_57(self,
          fd1, ox1, oy1, txy1, vm1,
          fd2, ox2, oy2, txy2, vm2) = struct1.unpack(edata[ni:ni+ntotal1])  # 13*4=52
         eid, dt = get_eid_dt_from_eid_device(
-            eid_device, self.nonlinear_factor, self.sort_method)
+            eid_device, op2.nonlinear_factor, op2.sort_method)
         #print(eid, cen)
         obj.add_sort1(dt, eid, cen,
                       fd1, ox2, oy2, txy2, vm1,
@@ -512,7 +512,7 @@ def oes_cquad4_random_vm_57(self,
     #ntotal = None
     return n
 
-def oes_cquad4_144_complex_77(self,
+def oes_cquad4_144_complex_77(op2: OP2,
                               data: bytes,
                               obj: Union[ComplexPlateStressArray, ComplexPlateStrainArray],
                               nelements: int, nnodes: int,
@@ -521,16 +521,16 @@ def oes_cquad4_144_complex_77(self,
     #print('nelements =', nelements)
     n = 0
     grid_center = 0
-    if self.size == 4:
-        s1 = self.struct_2i  # 2
+    if op2.size == 4:
+        s1 = op2.struct_2i  # 2
     else:
-        s1 = self.struct_2q  # 2
-    s2 = Struct(self._endian + mapfmt(b'i14f', self.size)) # 15
+        s1 = op2.struct_2q  # 2
+    s2 = Struct(op2._endian + mapfmt(b'i14f', op2.size)) # 15
 
-    ntotal1 = 8 * self.factor
-    ntotal2 = 60 * self.factor  # 4*15
+    ntotal1 = 8 * op2.factor
+    ntotal2 = 60 * op2.factor  # 4*15
 
-    add_sort_x = getattr(obj, 'add_sort' + str(self.sort_method))
+    add_sort_x = getattr(obj, 'add_sort' + str(op2.sort_method))
     for unused_i in range(nelements):
         (eid_device, _) = s1.unpack(data[n:n+ntotal1])
         n += ntotal1
@@ -539,9 +539,9 @@ def oes_cquad4_144_complex_77(self,
         n += ntotal2
         out = s2.unpack(edata)  # len=15*4
 
-        eid = self._check_id(eid_device, 'element', out)
-        if self.is_debug_file:
-            self.binary_debug.write('%s\n' % (str(out)))
+        eid = op2._check_id(eid_device, 'element', out)
+        if op2.is_debug_file:
+            op2.binary_debug.write('%s\n' % (str(out)))
         (grid,
          fd1, sx1r, sx1i, sy1r, sy1i, txy1r, txy1i,
          fd2, sx2r, sx2i, sy2r, sy2i, txy2r, txy2i) = out
@@ -570,8 +570,8 @@ def oes_cquad4_144_complex_77(self,
             edata = data[n:n + ntotal2]
             n += ntotal2
             out = s2.unpack(edata)
-            if self.is_debug_file:
-                self.binary_debug.write('%s\n' % (str(out)))
+            if op2.is_debug_file:
+                op2.binary_debug.write('%s\n' % (str(out)))
             (grid,
              fd1, sx1r, sx1i, sy1r, sy1i, txy1r, txy1i,
              fd2, sx2r, sx2i, sy2r, sy2i, txy2r, txy2i) = out
@@ -596,7 +596,7 @@ def oes_cquad4_144_complex_77(self,
                        fd2, sx2, sy2, txy2)
     return n
 
-def oes_cquad4_complex_vm_87(self, data: bytes,
+def oes_cquad4_complex_vm_87(op2: OP2, data: bytes,
                              obj: Union[ComplexPlateVMStressArray, ComplexPlateVMStrainArray],
                              nelements: int, nnodes: int,
                              is_magnitude_phase: bool) -> int:
@@ -714,9 +714,9 @@ def oes_cquad4_complex_vm_87(self, data: bytes,
     #           1.1293e-40, -0.025, 631.78564453125, -22.970836639404297, 13.954647064208984, -0.517249345779419, 107.45653533935547, -3.899477481842041,
     #           652.410938,  0.025, -525.3700561523438, 19.42228889465332, 65.48402404785156, -2.1316745281219482, -66.66590118408203, 2.539447546005249, 573.13232421875)
     n = 0
-    ntotal1 = 8 * self.factor  # 2*4
-    ntotal2 = 68 * self.factor # 17*4
-    add_sort_x = getattr(obj, 'add_sort' + str(self.sort_method))
+    ntotal1 = 8 * op2.factor  # 2*4
+    ntotal2 = 68 * op2.factor # 17*4
+    add_sort_x = getattr(obj, 'add_sort' + str(op2.sort_method))
     #print('ndata', len(data))
     #print('ntotal', ntotal1+nnodes*ntotal2)
     #print('nelements =', nelements)
@@ -726,9 +726,9 @@ def oes_cquad4_complex_vm_87(self, data: bytes,
         #self.show_data(edata1)
         n += ntotal1
 
-        fmt1 = mapfmt(self._endian + self._analysis_code_fmt + b'4s', self.size)
-        #fmt2 = mapfmt(self._endian + b'i 5f2if 5f2if', self.size)
-        fmt2 = mapfmt(self._endian + b'i 16f', self.size)
+        fmt1 = mapfmt(op2._endian + op2._analysis_code_fmt + b'4s', op2.size)
+        #fmt2 = mapfmt(op2._endian + b'i 5f2if 5f2if', op2.size)
+        fmt2 = mapfmt(op2._endian + b'i 16f', op2.size)
         s1 = Struct(fmt1)
         s2 = Struct(fmt2)
 
@@ -737,7 +737,7 @@ def oes_cquad4_complex_vm_87(self, data: bytes,
         assert cen == b'CEN/', (eid_device, cen)
 
         eid, dt = get_eid_dt_from_eid_device(
-            eid_device, self.nonlinear_factor, self.sort_method)
+            eid_device, op2.nonlinear_factor, op2.sort_method)
 
         for i in range(nnodes):
             edata2 = data[n:n+ntotal2]
@@ -778,13 +778,13 @@ def oes_cquad4_complex_vm_87(self, data: bytes,
         #print('-----------')
     return n
 
-def oes_cquad4_33_random_9(self, data: bytes,
+def oes_cquad4_33_random_9(op2: OP2, data: bytes,
                            obj: Union[RandomPlateStressArray, RandomPlateStrainArray],
                            nelements: int, ntotal: int) -> int:
     n = 0
-    add_sort_x = getattr(obj, 'add_sort' + str(self.sort_method))
+    add_sort_x = getattr(obj, 'add_sort' + str(op2.sort_method))
     #print('cquad33_9 - SORT1')
-    struct1 = Struct(self._endian + self._analysis_code_fmt + b'8f')
+    struct1 = Struct(op2._endian + op2._analysis_code_fmt + b'8f')
     #cen = 0 # CEN/4
     for unused_i in range(nelements):
         edata = data[n:n+ntotal]
@@ -794,11 +794,11 @@ def oes_cquad4_33_random_9(self, data: bytes,
          fd1, sx1, sy1, txy1,
          fd2, sx2, sy2, txy2,) = out
         eid, dt = get_eid_dt_from_eid_device(
-            eid_device, self.nonlinear_factor, self.sort_method)
+            eid_device, op2.nonlinear_factor, op2.sort_method)
         #self.log.info(f'SORT1 no VM: eid={eid} dt={dt}')
 
-        if self.is_debug_file:
-            self.binary_debug.write('  eid=%i C=[%s]\n' % (
+        if op2.is_debug_file:
+            op2.binary_debug.write('  eid=%i C=[%s]\n' % (
                 eid, ', '.join(['%r' % di for di in out])))
         add_sort_x(dt, eid, 0,
                    fd1, sx1, sy1, txy1,
@@ -806,16 +806,16 @@ def oes_cquad4_33_random_9(self, data: bytes,
         n += ntotal
     return n
 
-def oes_ctria3_real_17(self, data: bytes,
+def oes_ctria3_real_17(op2: OP2, data: bytes,
                        obj: Union[RealPlateStressArray, RealPlateStrainArray],
                        ntotal: int, nelements: int, dt: Any) -> int:
     n = 0
     cen = 0 # 'CEN/3'
-    #assert self.sort_method == 1, self.code_information()
+    #assert op2.sort_method == 1, op2.code_information()
 
-    add_new_eid_sort_x = getattr(obj, 'add_new_eid_sort' + str(self.sort_method))
+    add_new_eid_sort_x = getattr(obj, 'add_new_eid_sort' + str(op2.sort_method))
     #print(add_new_eid_sort_x)
-    struct1 = Struct(self._endian + mapfmt(self._analysis_code_fmt + b'16f', self.size))
+    struct1 = Struct(op2._endian + mapfmt(op2._analysis_code_fmt + b'16f', op2.size))
     #print('nelements =', nelements, nelements*2, obj.ntotal)
     for unused_i in range(nelements):
         edata = data[n:n + ntotal]
@@ -824,9 +824,9 @@ def oes_ctria3_real_17(self, data: bytes,
          fd1, sx1, sy1, txy1, angle1, major1, minor1, vm1,
          fd2, sx2, sy2, txy2, angle2, major2, minor2, vm2,) = out
         eid, dt = get_eid_dt_from_eid_device(
-            eid_device, self.nonlinear_factor, self.sort_method)
-        if self.is_debug_file:
-            self.binary_debug.write('  OES CTRIA3-74 - eid=%i; C=[%s]\n' % (
+            eid_device, op2.nonlinear_factor, op2.sort_method)
+        if op2.is_debug_file:
+            op2.binary_debug.write('  OES CTRIA3-74 - eid=%i; C=[%s]\n' % (
                 eid, ', '.join(['%r' % di for di in out])))
         #print('  OES CTRIA3-74 - eid=%i; C=[%s]\n' % (
             #eid, ', '.join(['%r' % di for di in out])))
@@ -837,16 +837,16 @@ def oes_ctria3_real_17(self, data: bytes,
         n += ntotal
     return n
 
-def oes_quad4_33_real_17(self, data: bytes,
+def oes_quad4_33_real_17(op2: OP2, data: bytes,
                          obj: Union[RealPlateStressArray, RealPlateStrainArray],
                          ntotal: int, nelements: int, dt: Any) -> int:
     n = 0
     cen = 0 # CEN/4
-    #assert self.sort_method == 1, self.code_information()
-    add_new_eid_sort_x = getattr(obj, 'add_new_eid_sort' + str(self.sort_method))
-    fmt = mapfmt(self._endian + self._analysis_code_fmt + b'16f', self.size)
+    #assert op2.sort_method == 1, op2.code_information()
+    add_new_eid_sort_x = getattr(obj, 'add_new_eid_sort' + str(op2.sort_method))
+    fmt = mapfmt(op2._endian + op2._analysis_code_fmt + b'16f', op2.size)
     struct1 = Struct(fmt)
-    #if self.sort_method == 1:
+    #if op2.sort_method == 1:
         #print('**nelements =', nelements, nelements*2, obj.ntotal)
     #else:
         #print('**ntimes =', nelements)
@@ -859,9 +859,9 @@ def oes_quad4_33_real_17(self, data: bytes,
          fd2, sx2, sy2, txy2, angle2, major2, minor2, max_shear2) = out
 
         eid, dt = get_eid_dt_from_eid_device(
-            eid_device, self.nonlinear_factor, self.sort_method)
-        if self.is_debug_file:
-            self.binary_debug.write('  eid=%i C=[%s]\n' % (
+            eid_device, op2.nonlinear_factor, op2.sort_method)
+        if op2.is_debug_file:
+            op2.binary_debug.write('  eid=%i C=[%s]\n' % (
                 eid, ', '.join(['%r' % di for di in out])))
 
         add_new_eid_sort_x(
@@ -871,7 +871,7 @@ def oes_quad4_33_real_17(self, data: bytes,
         n += ntotal
     return n
 
-def oes_ctria3_complex_vm_17(self,
+def oes_ctria3_complex_vm_17(op2: OP2,
                              data: bytes,
                              obj: Union[ComplexPlateVMStressArray, ComplexPlateVMStrainArray],
                              nelements: int, ntotal: int,
@@ -889,8 +889,8 @@ def oes_ctria3_complex_vm_17(self,
     """
     n = 0
     cen = 0
-    struct1 = Struct(mapfmt(self._endian + self._analysis_code_fmt + b'16f', self.size))
-    add_sort_x = getattr(obj, 'add_sort' + str(self.sort_method))
+    struct1 = Struct(mapfmt(op2._endian + op2._analysis_code_fmt + b'16f', op2.size))
+    add_sort_x = getattr(obj, 'add_sort' + str(op2.sort_method))
 
     for unused_i in range(nelements):
         edata = data[n:n + ntotal]
@@ -899,7 +899,7 @@ def oes_ctria3_complex_vm_17(self,
                      fd2, oxx2r, oxx2i, oyy2r, oyy2i, txy2r, txy2i, ovm2, ) = out
 
         eid, dt = get_eid_dt_from_eid_device(
-            eid_device, self.nonlinear_factor, self.sort_method)
+            eid_device, op2.nonlinear_factor, op2.sort_method)
 
         if is_magnitude_phase:
             oxx1 = polar_to_real_imag(oxx1r, oxx1i)
@@ -922,18 +922,18 @@ def oes_ctria3_complex_vm_17(self,
                    fd2, oxx2, oyy2, txy2, ovm2)
         n += ntotal
 
-    #msg = self.code_information()
-    #self.log.warning(f'  skipping {self.table_name_str} {self.element_name}')
-    #msg = '%s-%s' % (self.table_name_str, self.element_name)
+    #msg = op2.code_information()
+    #self.log.warning(f'  skipping {op2.table_name_str} {op2.element_name}')
+    #msg = '%s-%s' % (op2.table_name_str, op2.element_name)
     return n
 
-def oes_ctria3_random_9(self, data: bytes,
+def oes_ctria3_random_9(op2: OP2, data: bytes,
                         obj: Union[RandomPlateStressArray, RandomPlateStrainArray],
                         nelements: int, ntotal: int) -> int:
     n = 0
-    struct1 = Struct(self._endian + self._analysis_code_fmt + b'8f')
+    struct1 = Struct(op2._endian + op2._analysis_code_fmt + b'8f')
     cen = 0 # CEN/4
-    add_sort_x = getattr(obj, 'add_sort' + str(self.sort_method))
+    add_sort_x = getattr(obj, 'add_sort' + str(op2.sort_method))
     #print('ctria3_9 - SORT1')
     for unused_i in range(nelements):
         edata = data[n:n+ntotal]
@@ -944,10 +944,10 @@ def oes_ctria3_random_9(self, data: bytes,
          fd2, sx2, sy2, txy2,) = out
 
         eid, dt = get_eid_dt_from_eid_device(
-            eid_device, self.nonlinear_factor, self.sort_method)
+            eid_device, op2.nonlinear_factor, op2.sort_method)
 
-        if self.is_debug_file:
-            self.binary_debug.write('  eid=%i C=[%s]\n' % (
+        if op2.is_debug_file:
+            op2.binary_debug.write('  eid=%i C=[%s]\n' % (
                 eid, ', '.join(['%r' % di for di in out])))
 
         add_sort_x(dt, eid, cen,
@@ -956,13 +956,13 @@ def oes_ctria3_random_9(self, data: bytes,
         n += ntotal
     return n
 
-def oes_cquad4_33_random_vm_11(self, data: bytes,
+def oes_cquad4_33_random_vm_11(op2: OP2, data: bytes,
                                obj: Union[RandomPlateVMStressArray, RandomPlateVMStrainArray],
                                nelements: int, ntotal: int) -> int:
-    struct1 = Struct(self._endian + self._analysis_code_fmt + b'10f')
+    struct1 = Struct(op2._endian + op2._analysis_code_fmt + b'10f')
     cen = 0 # CEN/4
     n = 0
-    add_sort_x = getattr(obj, 'add_sort' + str(self.sort_method))
+    add_sort_x = getattr(obj, 'add_sort' + str(op2.sort_method))
     for unused_i in range(nelements):
         edata = data[n:n+ntotal]
         out = struct1.unpack(edata)
@@ -972,11 +972,11 @@ def oes_cquad4_33_random_vm_11(self, data: bytes,
          fd2, sx2, sy2, txy2, ovm2,) = out
 
         eid, dt = get_eid_dt_from_eid_device(
-            eid_device, self.nonlinear_factor, self.sort_method)
+            eid_device, op2.nonlinear_factor, op2.sort_method)
         #self.log.info(f'SORT1 VM: eid={eid} dt={dt}')
 
-        if self.is_debug_file:
-            self.binary_debug.write('  eid=%i C=[%s]\n' % (
+        if op2.is_debug_file:
+            op2.binary_debug.write('  eid=%i C=[%s]\n' % (
                 eid, ', '.join(['%r' % di for di in out])))
 
         add_sort_x(dt, eid, cen,
@@ -985,13 +985,13 @@ def oes_cquad4_33_random_vm_11(self, data: bytes,
         n += ntotal
     return n
 
-def oes_ctria3_random_vm_11(self, data: bytes,
+def oes_ctria3_random_vm_11(op2: OP2, data: bytes,
                             obj: Union[RandomPlateStressArray, RandomPlateStrainArray],
                             nelements: int, ntotal: int) -> int:
     n = 0
-    struct1 = Struct(self._endian + self._analysis_code_fmt + b'10f')
+    struct1 = Struct(op2._endian + op2._analysis_code_fmt + b'10f')
 
-    add_sort_x = getattr(obj, 'add_sort' + str(self.sort_method))
+    add_sort_x = getattr(obj, 'add_sort' + str(op2.sort_method))
     cen = 0 # CEN/4
     for unused_i in range(nelements):
         edata = data[n:n+ntotal]
@@ -1000,14 +1000,14 @@ def oes_ctria3_random_vm_11(self, data: bytes,
         (eid_device,
          fd1, sx1, sy1, txy1, ovm1,
          fd2, sx2, sy2, txy2, ovm2,) = out
-        #print('CTRIA3', self.nonlinear_factor, out)
+        #print('CTRIA3', op2.nonlinear_factor, out)
 
         eid, dt = get_eid_dt_from_eid_device(
-            eid_device, self.nonlinear_factor, self.sort_method)
+            eid_device, op2.nonlinear_factor, op2.sort_method)
         #self.log.info(f'SORT1 VM: eid={eid} dt={dt}')
 
-        if self.is_debug_file:
-            self.binary_debug.write('  eid=%i C=[%s]\n' % (
+        if op2.is_debug_file:
+            op2.binary_debug.write('  eid=%i C=[%s]\n' % (
                 eid, ', '.join(['%r' % di for di in out])))
 
         add_sort_x(dt, eid, cen,
@@ -1016,23 +1016,23 @@ def oes_ctria3_random_vm_11(self, data: bytes,
         n += ntotal
     return n
 
-def oes_cquad4_144_real(self, data: bytes, ndata: int,
+def oes_cquad4_144_real(op2: OP2, data: bytes, ndata: int,
                         obj: RealPlateStrainArray,
                         nelements: int, nnodes: int, dt: Any) -> int:
     n = 0
-    if self.size == 4:
-        center_format = self._endian + self._analysis_code_fmt + b'4si16f'
-        node_format = self._endian + b'i16f'
+    if op2.size == 4:
+        center_format = op2._endian + op2._analysis_code_fmt + b'4si16f'
+        node_format = op2._endian + b'i16f'
     else:
-        center_format = self._endian + mapfmt(self._analysis_code_fmt, self.size) + b'8sq16d'
-        node_format = self._endian + b'q16d'
+        center_format = op2._endian + mapfmt(op2._analysis_code_fmt, op2.size) + b'8sq16d'
+        node_format = op2._endian + b'q16d'
     cs = Struct(center_format)
     ns = Struct(node_format)
 
-    add_new_eid_sort_x = getattr(obj, 'add_new_eid_sort' + str(self.sort_method))
-    add_sort_x = getattr(obj, 'add_sort' + str(self.sort_method))
-    if self.is_debug_file:
-        self.binary_debug.write(
+    add_new_eid_sort_x = getattr(obj, 'add_new_eid_sort' + str(op2.sort_method))
+    add_sort_x = getattr(obj, 'add_sort' + str(op2.sort_method))
+    if op2.is_debug_file:
+        op2.binary_debug.write(
             '  [cap, element1, element2, ..., cap]\n'
             '  cap = %i  # assume 1 cap when there could have been multiple\n'
             '  #elementi = [centeri, node1i, node2i, node3i, node4i]\n'
@@ -1043,8 +1043,8 @@ def oes_cquad4_144_real(self, data: bytes, ndata: int,
             '  nelements=%i; nnodes=%i # +1 centroid\n' % (ndata, nelements, nnodes))
 
     grid_center = 0
-    n76 = 76 * self.factor
-    n68 = 68 * self.factor
+    n76 = 76 * op2.factor
+    n68 = 68 * op2.factor
     for unused_i in range(nelements):
         edata = data[n:n+n76]
 
@@ -1055,11 +1055,11 @@ def oes_cquad4_144_real(self, data: bytes, ndata: int,
          fd1, sx1, sy1, txy1, angle1, major1, minor1, vm1,
          fd2, sx2, sy2, txy2, angle2, major2, minor2, vm2,) = out
         eid, dt = get_eid_dt_from_eid_device(
-            eid_device, self.nonlinear_factor, self.sort_method)
+            eid_device, op2.nonlinear_factor, op2.sort_method)
         #print(f'tri eid={eid} dt={dt} nid={grid_center}')
         #print(out[:3])
-        if self.is_debug_file:
-            self.binary_debug.write('  eid=%i; C=[%s]\n' % (eid, ', '.join(['%r' % di for di in out])))
+        if op2.is_debug_file:
+            op2.binary_debug.write('  eid=%i; C=[%s]\n' % (eid, ', '.join(['%r' % di for di in out])))
         add_new_eid_sort_x(dt, eid, grid_center,
                            fd1, sx1, sy1, txy1, angle1, major1, minor1, vm1,
                            fd2, sx2, sy2, txy2, angle2, major2, minor2, vm2)
@@ -1070,11 +1070,11 @@ def oes_cquad4_144_real(self, data: bytes, ndata: int,
              fd1, sx1, sy1, txy1, angle1, major1, minor1, vm1,
              fd2, sx2, sy2, txy2, angle2, major2, minor2, vm2,) = out
 
-            if self.is_debug_file:
+            if op2.is_debug_file:
                 d = tuple([grid,
                            fd1, sx1, sy1, txy1, angle1, major1, minor1, vm1,
                            fd2, sx2, sy2, txy2, angle2, major2, minor2, vm2])
-                self.binary_debug.write('  node%i = [%s]\n' % (inode+1, ', '.join(['%r' % di for di in d])))
+                op2.binary_debug.write('  node%i = [%s]\n' % (inode+1, ', '.join(['%r' % di for di in d])))
             assert isinstance(grid, int), grid
             assert grid > 0, grid
 
@@ -1085,17 +1085,17 @@ def oes_cquad4_144_real(self, data: bytes, ndata: int,
             n += n68
     return n
 
-def oes_cquad4_144_random(self, data: bytes,
+def oes_cquad4_144_random(op2: OP2, data: bytes,
                           obj: Union[RandomPlateStressArray, RandomPlateStrainArray],
                           nelements: int, nnodes: int, ndata: int) -> int:
     n = 0
-    center_format = self._endian + self._analysis_code_fmt + b'4s i8f'
-    node_format = self._endian + b'i8f'
+    center_format = op2._endian + op2._analysis_code_fmt + b'4s i8f'
+    node_format = op2._endian + b'i8f'
     cs = Struct(center_format)
     ns = Struct(node_format)
 
-    if self.is_debug_file:
-        self.binary_debug.write(
+    if op2.is_debug_file:
+        op2.binary_debug.write(
             '  [cap, element1, element2, ..., cap]\n'
             '  cap = %i  # assume 1 cap when there could have been multiple\n'
             '  #elementi = [centeri, node1i, node2i, node3i, node4i]\n'
@@ -1106,10 +1106,10 @@ def oes_cquad4_144_random(self, data: bytes,
             '  nelements=%i; nnodes=%i # +1 centroid\n' % (ndata, nelements, nnodes))
 
     grid_center = 0
-    add_sort_x = getattr(obj, 'add_sort' + str(self.sort_method))
+    add_sort_x = getattr(obj, 'add_sort' + str(op2.sort_method))
 
-    ntotal1 = 44 * self.factor
-    ntotal2 = 36 * self.factor
+    ntotal1 = 44 * op2.factor
+    ntotal2 = 36 * op2.factor
     for unused_i in range(nelements):
         edata = data[n:n+ntotal1]
         #self.show_data(edata)
@@ -1124,10 +1124,10 @@ def oes_cquad4_144_random(self, data: bytes,
         #print(out)
 
         eid, dt = get_eid_dt_from_eid_device(
-            eid_device, self.nonlinear_factor, self.sort_method)
+            eid_device, op2.nonlinear_factor, op2.sort_method)
 
-        if self.is_debug_file:
-            self.binary_debug.write('  eid=%i; C=[%s]\n' % (eid, ', '.join(['%r' % di for di in out])))
+        if op2.is_debug_file:
+            op2.binary_debug.write('  eid=%i; C=[%s]\n' % (eid, ', '.join(['%r' % di for di in out])))
 
         add_sort_x(dt, eid, grid_center,
                    fd1, sx1, sy1, txy1, fd2, sx2, sy2, txy2)
@@ -1139,11 +1139,11 @@ def oes_cquad4_144_random(self, data: bytes,
              fd1, sx1, sy1, txy1,
              fd2, sx2, sy2, txy2,) = out
             #print(out)
-            if self.is_debug_file:
+            if op2.is_debug_file:
                 d = tuple([grid,
                            fd1, sx1, sy1, txy1,
                            fd2, sx2, sy2, txy2])
-                self.binary_debug.write('  node%i = [%s]\n' % (inode+1, ', '.join(['%r' % di for di in d])))
+                op2.binary_debug.write('  node%i = [%s]\n' % (inode+1, ', '.join(['%r' % di for di in d])))
             assert isinstance(grid, int), grid
             assert grid > 0, grid
 
@@ -1154,13 +1154,13 @@ def oes_cquad4_144_random(self, data: bytes,
             n += ntotal2
     return n
 
-def oes_cbar_real_16(self, data: bytes,
+def oes_cbar_real_16(op2: OP2, data: bytes,
                      obj: Union[RealBarStressArray, RealBarStrainArray],
                      nelements: int, ntotal: int, dt: Any) -> int:
     n = 0
-    fmt = mapfmt(self._endian + self._analysis_code_fmt + b'15f', self.size)
+    fmt = mapfmt(op2._endian + op2._analysis_code_fmt + b'15f', op2.size)
     struct1 = Struct(fmt)
-    add_sort_x = getattr(obj, 'add_new_eid_sort' + str(self.sort_method))
+    add_sort_x = getattr(obj, 'add_new_eid_sort' + str(op2.sort_method))
     for i in range(nelements):
         edata = data[n:n+ntotal]
         out = struct1.unpack(edata)
@@ -1168,9 +1168,9 @@ def oes_cbar_real_16(self, data: bytes,
          s1a, s2a, s3a, s4a, axial, smaxa, smina, margin_tension,
          s1b, s2b, s3b, s4b, smaxb, sminb, margin_compression) = out
         eid, dt = get_eid_dt_from_eid_device(
-            eid_device, self.nonlinear_factor, self.sort_method)
-        if self.is_debug_file:
-            self.binary_debug.write('  eid=%i; C%i=[%s]\n' % (
+            eid_device, op2.nonlinear_factor, op2.sort_method)
+        if op2.is_debug_file:
+            op2.binary_debug.write('  eid=%i; C%i=[%s]\n' % (
                 eid, i, ', '.join(['%r' % di for di in out])))
         n += ntotal
         add_sort_x(
@@ -1178,20 +1178,20 @@ def oes_cbar_real_16(self, data: bytes,
             s1a, s2a, s3a, s4a, axial, smaxa, smina, margin_tension,
             s1b, s2b, s3b, s4b, smaxb, sminb, margin_compression)
 
-    if self.is_sort2:
+    if op2.is_sort2:
         #print(add_sort_x)
         #print(''.join(obj.get_stats()))
-        #print(f'{self.table_name} sort_method={self.sort_method}', obj._times)
+        #print(f'{self.table_name} sort_method={op2.sort_method}', obj._times)
         assert len(np.unique(obj._times)) == len(obj._times), obj._times.tolist()
     return n
 
-def oes_cbar_complex_19(self,
+def oes_cbar_complex_19(op2: OP2,
                         data: bytes,
                         obj: Union[ComplexBarStressArray, ComplexBarStrainArray],
                         nelements: int, ntotal: int,
                         is_magnitude_phase: bool) -> int:
     n = 0
-    struct1 = Struct(mapfmt(self._endian + self._analysis_code_fmt + b'18f', self.size))
+    struct1 = Struct(mapfmt(op2._endian + op2._analysis_code_fmt + b'18f', op2.size))
     for i in range(nelements):
         edata = data[n:n+ntotal]
         n += ntotal
@@ -1203,9 +1203,9 @@ def oes_cbar_complex_19(self,
          s1bi, s2bi, s3bi, s4bi) = out
 
         eid, dt = get_eid_dt_from_eid_device(
-            eid_device, self.nonlinear_factor, self.sort_method)
-        if self.is_debug_file:
-            self.binary_debug.write('  eid=%i; C%i=[%s]\n' % (
+            eid_device, op2.nonlinear_factor, op2.sort_method)
+        if op2.is_debug_file:
+            op2.binary_debug.write('  eid=%i; C%i=[%s]\n' % (
                 eid, i, ', '.join(['%r' % di for di in out])))
         if is_magnitude_phase:
             s1a = polar_to_real_imag(s1ar, s1ai)
@@ -1233,20 +1233,20 @@ def oes_cbar_complex_19(self,
                               s1b, s2b, s3b, s4b)
     return n
 
-def oes_cbar_random_10(self, data: bytes,
+def oes_cbar_random_10(op2: OP2, data: bytes,
                        obj: Union[RandomBarStressArray, RandomBarStrainArray],
                        nelements: int, ntotal: int) -> int:
     n = 0
-    #print(self.code_information())
-    #print('self._analysis_code_fmt =', self._analysis_code_fmt)
-    struct1 = Struct(self._endian + self._analysis_code_fmt + b'9f')
-    add_sort_x = getattr(obj, 'add_sort' + str(self.sort_method))
+    #print(op2.code_information())
+    #print('op2._analysis_code_fmt =', op2._analysis_code_fmt)
+    struct1 = Struct(op2._endian + op2._analysis_code_fmt + b'9f')
+    add_sort_x = getattr(obj, 'add_sort' + str(op2.sort_method))
 
-    #self.log.info('self.nonlinear_factor = %s' % self.nonlinear_factor)
-    #assert self.sort_method == 2, self.code_information()
+    #self.log.info('op2.nonlinear_factor = %s' % op2.nonlinear_factor)
+    #assert op2.sort_method == 2, op2.code_information()
     #if sort_method == 2:
         #obj.node_id = 42
-    nonlinear_factor = self.nonlinear_factor
+    nonlinear_factor = op2.nonlinear_factor
     #print(f'CBAR: nelements={nelements}')
     for i in range(nelements):
         edata = data[n:n+ntotal]
@@ -1257,16 +1257,16 @@ def oes_cbar_random_10(self, data: bytes,
          s1a, s2a, s3a, s4a, axial,
          s1b, s2b, s3b, s4b) = out
         eid, dt = get_eid_dt_from_eid_device(
-            eid_device, nonlinear_factor, self.sort_method)
+            eid_device, nonlinear_factor, op2.sort_method)
         #print(f'  eid_device={eid_device} eid={eid} dt={nonlinear_factor} nf={nonlinear_factor} -> {obj.data.shape}')
         #continue
         #print('  eid=%i; C%i=[%s]\n' % (eid, i, ', '.join(['%r' % di for di in out])))
-        if self.table_name_str == 'OESXRMS1':
+        if op2.table_name_str == 'OESXRMS1':
             #assert sort_method == 2
-            assert self.sort_method == 1, self.code_information()
+            assert op2.sort_method == 1, op2.code_information()
 
-        if self.is_debug_file:
-            self.binary_debug.write('  eid=%i; C%i=[%s]\n' % (
+        if op2.is_debug_file:
+            op2.binary_debug.write('  eid=%i; C%i=[%s]\n' % (
                 eid, i, ', '.join(['%r' % di for di in out])))
 
         assert eid > 0, "dt=%s eid=%s" % (dt, eid)
@@ -1275,13 +1275,13 @@ def oes_cbar_random_10(self, data: bytes,
                    s1b, s2b, s3b, s4b)
     return n
 
-def oes_cbush_real_7(self, data: bytes,
+def oes_cbush_real_7(op2: OP2, data: bytes,
                      obj: Union[RealBushStressArray, RealBushStrainArray],
                      nelements: int, ntotal: int, dt) -> int:
     n = 0
-    struct1 = Struct(self._endian + mapfmt(self._analysis_code_fmt + b'6f', self.size))
-    add_sort_x = getattr(obj, 'add_sort' + str(self.sort_method))
-    nonlinear_factor = self.nonlinear_factor
+    struct1 = Struct(op2._endian + mapfmt(op2._analysis_code_fmt + b'6f', op2.size))
+    add_sort_x = getattr(obj, 'add_sort' + str(op2.sort_method))
+    nonlinear_factor = op2.nonlinear_factor
     #print(add_sort_x)
     #print('obj.is_sort1 =', obj.is_sort1, obj.table_name)
     for unused_i in range(nelements):
@@ -1289,35 +1289,35 @@ def oes_cbush_real_7(self, data: bytes,
         n += ntotal
 
         out = struct1.unpack(edata)  # num_wide=7
-        if self.is_debug_file:
-            self.binary_debug.write('CBUSH-102 - %s\n' % str(out))
+        if op2.is_debug_file:
+            op2.binary_debug.write('CBUSH-102 - %s\n' % str(out))
 
         (eid_device, tx, ty, tz, rx, ry, rz) = out
         eid, dt = get_eid_dt_from_eid_device(
-            eid_device, nonlinear_factor, self.sort_method)
+            eid_device, nonlinear_factor, op2.sort_method)
         #print(f'CBUSH: eid_device={eid_device} eid={eid} dt={nonlinear_factor} nf={nonlinear_factor} -> {obj.data.shape}')
 
         add_sort_x(dt, eid, tx, ty, tz, rx, ry, rz)
     return n
 
-def oes_cbush_complex_13(self,
+def oes_cbush_complex_13(op2: OP2,
                          data: bytes,
                          obj: Union[ComplexCBushStressArray, ComplexCBushStrainArray],
                          nelements: int, ntotal: int,
                          is_magnitude_phase: bool) -> int:
     n = 0
-    struct1 = Struct(self._endian + mapfmt(self._analysis_code_fmt + b'12f', self.size))
+    struct1 = Struct(op2._endian + mapfmt(op2._analysis_code_fmt + b'12f', op2.size))
     for unused_i in range(nelements):
         edata = data[n:n + ntotal]
         out = struct1.unpack(edata)  # num_wide=7
-        if self.is_debug_file:
-            self.binary_debug.write('CBUSH-102 - %s\n' % str(out))
+        if op2.is_debug_file:
+            op2.binary_debug.write('CBUSH-102 - %s\n' % str(out))
 
         (eid_device,
          txr, tyr, tzr, rxr, ryr, rzr,
          txi, tyi, tzi, rxi, ryi, rzi) = out
         eid, dt = get_eid_dt_from_eid_device(
-            eid_device, self.nonlinear_factor, self.sort_method)
+            eid_device, op2.nonlinear_factor, op2.sort_method)
 
         if is_magnitude_phase:
             tx = polar_to_real_imag(txr, txi)
@@ -1337,52 +1337,52 @@ def oes_cbush_complex_13(self,
         n += ntotal
     return ntotal
 
-def oes_ctriax6_real_33(self, data: bytes,
+def oes_ctriax6_real_33(op2: OP2, data: bytes,
                         obj: Union[RealTriaxStressArray, RealTriaxStrainArray],
                         nelements: int, ntotal: int, dt: Any) -> int:
     n = 0
-    ntotal1 = 36 * self.factor
-    ntotal2 = 32 * self.factor
-    s1 = Struct(self._endian + b'2i7f')  # 36
-    s2 = Struct(self._endian + b'i7f')
+    ntotal1 = 36 * op2.factor
+    ntotal2 = 32 * op2.factor
+    s1 = Struct(op2._endian + b'2i7f')  # 36
+    s2 = Struct(op2._endian + b'i7f')
     for unused_i in range(nelements):
         out = s1.unpack(data[n:n + ntotal1])
         (eid_device, loc, rs, azs, As, ss, maxp, tmax, octs) = out
-        if self.is_debug_file:
-            self.binary_debug.write('CTRIAX6-53A - %s\n' % (str(out)))
+        if op2.is_debug_file:
+            op2.binary_debug.write('CTRIAX6-53A - %s\n' % (str(out)))
         eid, dt = get_eid_dt_from_eid_device(
-            eid_device, self.nonlinear_factor, self.sort_method)
+            eid_device, op2.nonlinear_factor, op2.sort_method)
 
         obj.add_sort1(dt, eid, loc, rs, azs, As, ss, maxp, tmax, octs)
         n += ntotal1
         for unused_j in range(3):
             out = s2.unpack(data[n:n + ntotal2])
             (loc, rs, azs, As, ss, maxp, tmax, octs) = out
-            if self.is_debug_file:
-                self.binary_debug.write('CTRIAX6-53B - %s\n' % (str(out)))
+            if op2.is_debug_file:
+                op2.binary_debug.write('CTRIAX6-53B - %s\n' % (str(out)))
             obj.add_sort1(dt, eid, loc, rs, azs, As, ss, maxp, tmax, octs)
             n += ntotal2
     return n
 
-def oes_ctriax_complex_37(self,
+def oes_ctriax_complex_37(op2: OP2,
                           data: bytes,
                           obj: ComplexTriaxStressArray,
                           nelements: int,
                           is_magnitude_phase: bool) -> int:
     n = 0
-    ntotal1 = 40 * self.factor
-    ntotal2 = 36 * self.factor
-    s1 = Struct(self._endian + mapfmt(self._analysis_code_fmt + b'i8f', self.size)) # 10*4 = 40
-    s2 = Struct(self._endian + mapfmt(b'i8f', self.size))  #  9*4 = 36
+    ntotal1 = 40 * op2.factor
+    ntotal2 = 36 * op2.factor
+    s1 = Struct(op2._endian + mapfmt(op2._analysis_code_fmt + b'i8f', op2.size)) # 10*4 = 40
+    s2 = Struct(op2._endian + mapfmt(b'i8f', op2.size))  #  9*4 = 36
 
-    add_sort_x = getattr(obj, 'add_sort' + str(self.sort_method))
+    add_sort_x = getattr(obj, 'add_sort' + str(op2.sort_method))
     for unused_i in range(nelements):
         out = s1.unpack(data[n:n + ntotal1])
         (eid_device, loc, rsr, rsi, azsr, azsi, Asr, Asi, ssr, ssi) = out
         eid, dt = get_eid_dt_from_eid_device(
-            eid_device, self.nonlinear_factor, self.sort_method)
-        if self.is_debug_file:
-            self.binary_debug.write('CTRIAX6-53 eid=%i\n    %s\n' % (eid, str(out)))
+            eid_device, op2.nonlinear_factor, op2.sort_method)
+        if op2.is_debug_file:
+            op2.binary_debug.write('CTRIAX6-53 eid=%i\n    %s\n' % (eid, str(out)))
         #print('CTRIAX6-53 eid=%i\n    %s\n' % (eid, str(out)))
 
         if is_magnitude_phase:
@@ -1402,8 +1402,8 @@ def oes_ctriax_complex_37(self,
         for unused_j in range(3):
             out = s2.unpack(data[n:n + ntotal2])
             (loc, rsr, rsi, azsr, azsi, Asr, Asi, ssr, ssi) = out
-            if self.is_debug_file:
-                self.binary_debug.write('    %s\n' % (str(out)))
+            if op2.is_debug_file:
+                op2.binary_debug.write('    %s\n' % (str(out)))
             #print("eid=%s loc=%s rs=%s azs=%s as=%s ss=%s" % (
                 #eid, loc, rs, azs, As, ss))
 
@@ -1421,7 +1421,7 @@ def oes_ctriax_complex_37(self,
             n += ntotal2  # 4*8
     return n
 
-def oes_csolid_real(self, data: bytes,
+def oes_csolid_real(op2: OP2, data: bytes,
                     obj: Union[RealSolidStressArray, RealSolidStrainArray],
                     nelements: int, dt: Any,
                     element_name: str, nnodes_expected: int,
@@ -1433,27 +1433,27 @@ def oes_csolid_real(self, data: bytes,
      - 68 : CPENTA
 
     """
-    add_eid_sort_x = getattr(obj, 'add_eid_sort' + str(self.sort_method))
-    add_node_sort_x = getattr(obj, 'add_node_sort' + str(self.sort_method))
+    add_eid_sort_x = getattr(obj, 'add_eid_sort' + str(op2.sort_method))
+    add_node_sort_x = getattr(obj, 'add_node_sort' + str(op2.sort_method))
     n = 0
-    if self.size == 4:
-        fmt1 = self._endian + self._analysis_code_fmt + b'i4si'
-        fmt2 = self._endian + b'i20f'
+    if op2.size == 4:
+        fmt1 = op2._endian + op2._analysis_code_fmt + b'i4si'
+        fmt2 = op2._endian + b'i20f'
     else:
-        fmt1 = self._endian + mapfmt(self._analysis_code_fmt, self.size) + b'q8sq'
-        fmt2 = self._endian + b'q20d'
+        fmt1 = op2._endian + mapfmt(op2._analysis_code_fmt, op2.size) + b'q8sq'
+        fmt2 = op2._endian + b'q20d'
     struct1 = Struct(fmt1)
     struct2 = Struct(fmt2)
-    if self.is_debug_file:
+    if op2.is_debug_file:
         msg = '%s-%s nelements=%s nnodes=%s; C=[sxx, sxy, s1, a1, a2, a3, pressure, svm,\n' % (
-            self.element_name, self.element_type, nelements, nnodes_expected)
+            op2.element_name, op2.element_type, nelements, nnodes_expected)
         msg += '                                 syy, syz, s2, b1, b2, b3,\n'
         msg += '                                 szz, sxz, s3, c1, c2, c3]\n'
-        self.binary_debug.write(msg)
+        op2.binary_debug.write(msg)
 
-    n16 = 16 * self.factor
-    n84 = 84 * self.factor
-    #if self.is_sort1:
+    n16 = 16 * op2.factor
+    n84 = 84 * op2.factor
+    #if op2.is_sort1:
         #print('nelements =', nelements)
     #else:
         #print('ntimes =', nelements)
@@ -1462,25 +1462,25 @@ def oes_csolid_real(self, data: bytes,
         out = struct1.unpack(edata)
         (eid_device, cid, unused_abcd, nnodes) = out
         eid, dt = get_eid_dt_from_eid_device(
-            eid_device, self.nonlinear_factor, self.sort_method)
+            eid_device, op2.nonlinear_factor, op2.sort_method)
         #print(f'eid_device={eid_device} eid={eid} dt={dt}')
-        if self.is_debug_file:
-            self.binary_debug.write('%s - eid=%i; %s\n' % (preline1, eid, str(out)))
+        if op2.is_debug_file:
+            op2.binary_debug.write('%s - eid=%i; %s\n' % (preline1, eid, str(out)))
 
         assert nnodes < 21, 'print_block(data[n:n+16])'  #self.print_block(data[n:n+16])
 
         n += n16
         for inode in range(nnodes_expected):  # nodes pts, +1 for centroid (???)
             out = struct2.unpack(data[n:n + n84]) # 4*21 = 84
-            if self.is_debug_file:
-                self.binary_debug.write('%s - %s\n' % (preline2, str(out)))
+            if op2.is_debug_file:
+                op2.binary_debug.write('%s - %s\n' % (preline2, str(out)))
             (grid_device,
              sxx, sxy, s1, a1, a2, a3, pressure, svm,
              syy, syz, s2, b1, b2, b3,
              szz, sxz, s3, c1, c2, c3) = out
 
-            if self.is_debug_file:
-                self.binary_debug.write('  eid=%s inode=%i; C=[%s]\n' % (
+            if op2.is_debug_file:
+                op2.binary_debug.write('  eid=%s inode=%i; C=[%s]\n' % (
                     eid, grid_device, ', '.join(['%r' % di for di in out])))
 
             #if grid_device == 0:
@@ -1496,7 +1496,7 @@ def oes_csolid_real(self, data: bytes,
 
             if inode == 0:
                 #  this is correct, but fails
-                #element_name = self.element_name + str(nnodes)
+                #element_name = op2.element_name + str(nnodes)
                 add_eid_sort_x(element_name, cid, dt, eid, grid,
                                sxx, syy, szz, sxy, syz, sxz, s1, s2, s3,
                                a_cos, b_cos, c_cos, pressure, svm)
@@ -1507,32 +1507,32 @@ def oes_csolid_real(self, data: bytes,
             n += n84
     return n
 
-def oes_csolid_complex(self, data: bytes,
+def oes_csolid_complex(op2: OP2, data: bytes,
                        obj: Union[ComplexSolidStressArray, ComplexSolidStrainArray],
                        nelements: int, # nnodes: int,
                        element_name: str, nnodes_expected: int,
                        is_magnitude_phase: bool) -> int:
     n = 0
-    if self.size == 4:
-        s1 = Struct(self._endian + b'2i4si')
+    if op2.size == 4:
+        s1 = Struct(op2._endian + b'2i4si')
     else:
-        s1 = Struct(self._endian + b'2q8sq')
-    s2 = Struct(self._endian + mapfmt(b'i12f', self.size))
-    ntotal1 = 16 * self.factor
-    ntotal2 = 52 * self.factor
+        s1 = Struct(op2._endian + b'2q8sq')
+    s2 = Struct(op2._endian + mapfmt(b'i12f', op2.size))
+    ntotal1 = 16 * op2.factor
+    ntotal2 = 52 * op2.factor
     for unused_i in range(nelements):
         edata = data[n:n+ntotal1]
         n += ntotal1
         out = s1.unpack(edata)
         (eid_device, cid, ctype, nodef) = out
         eid, dt = get_eid_dt_from_eid_device(
-            eid_device, self.nonlinear_factor, self.sort_method)
-        if self.is_debug_file:
-            self.binary_debug.write('  eid=%i C=[%s]\n' % (
+            eid_device, op2.nonlinear_factor, op2.sort_method)
+        if op2.is_debug_file:
+            op2.binary_debug.write('  eid=%i C=[%s]\n' % (
                 eid, ', '.join(['%r' % di for di in out])))
 
-        #element_name = self.element_name + str(nodef)  # this is correct, but has problems...
-        obj.add_eid_sort1(self.element_type, element_name, dt, eid, cid, ctype, nodef)
+        #element_name = op2.element_name + str(nodef)  # this is correct, but has problems...
+        obj.add_eid_sort1(op2.element_type, element_name, dt, eid, cid, ctype, nodef)
         for inode in range(nnodes_expected):
             edata = data[n:n+ntotal2]
             n += ntotal2
@@ -1558,41 +1558,41 @@ def oes_csolid_complex(self, data: bytes,
                 etyz = complex(etyzr, etyzi)
                 etzx = complex(etzxr, etzxi)
 
-            if self.is_debug_file:
-                self.binary_debug.write('       node%s=[%s]\n' % (
+            if op2.is_debug_file:
+                op2.binary_debug.write('       node%s=[%s]\n' % (
                     grid, ', '.join(['%r' % di for di in out])))
             obj.add_node_sort1(dt, eid, grid, inode,
                                ex, ey, ez, etxy, etyz, etzx)
     return n
 
-def oes_csolid_random(self, data: bytes,
+def oes_csolid_random(op2: OP2, data: bytes,
                       obj: Union[RandomSolidStressArray, RandomSolidStrainArray],
                       nelements: int,
                       element_name: str, nnodes_expected: int,
                       preline1: str, preline2: str) -> int:
     n = 0
-    struct1 = Struct(self._endian + self._analysis_code_fmt + b'i4si')
-    struct2 = Struct(self._endian + b'i6f')
-    if self.is_debug_file and 0:
+    struct1 = Struct(op2._endian + op2._analysis_code_fmt + b'i4si')
+    struct2 = Struct(op2._endian + b'i6f')
+    if op2.is_debug_file and 0:
         msg = '%s-%s nelements=%s nnodes=%s; C=[sxx, sxy, s1, a1, a2, a3, pressure, svm,\n' % (
-            self.element_name, self.element_type, nelements, nnodes_expected)
+            op2.element_name, op2.element_type, nelements, nnodes_expected)
         msg += '                                 syy, syz, s2, b1, b2, b3,\n'
         msg += '                                 szz, sxz, s3, c1, c2, c3]\n'
-        self.binary_debug.write(msg)
+        op2.binary_debug.write(msg)
 
-    ntotal1 = 16 * self.factor
-    ntotal2 = 28 * self.factor
+    ntotal1 = 16 * op2.factor
+    ntotal2 = 28 * op2.factor
     for unused_i in range(nelements):
         edata = data[n:n+ntotal1]
         out = struct1.unpack(edata)
         (eid_device, cid, unused_abcd, grid) = out
 
         eid, dt = get_eid_dt_from_eid_device(
-            eid_device, self.nonlinear_factor, self.sort_method)
+            eid_device, op2.nonlinear_factor, op2.sort_method)
         assert eid > 0, eid
 
-        if self.is_debug_file and 0:
-            self.binary_debug.write('%s - eid=%i; %s\n' % (preline1, eid, str(out)))
+        if op2.is_debug_file and 0:
+            op2.binary_debug.write('%s - eid=%i; %s\n' % (preline1, eid, str(out)))
 
         #assert nnodes < 21, 'print_block(data[n:n+16])'  #self.print_block(data[n:n+16])
 
@@ -1600,12 +1600,12 @@ def oes_csolid_random(self, data: bytes,
         for inode in range(nnodes_expected):  # nodes pts, +1 for centroid (???)
             #self.show_data(data[n:n+48])
             out = struct2.unpack(data[n:n + ntotal2]) # 4*7 = 28
-            if self.is_debug_file:
-                self.binary_debug.write('%s - %s\n' % (preline2, str(out)))
+            if op2.is_debug_file:
+                op2.binary_debug.write('%s - %s\n' % (preline2, str(out)))
             (grid_device, sxx, syy, szz, txy, tyz, txz) = out
 
-            if self.is_debug_file:
-                self.binary_debug.write('  eid=%s inode=%i; C=[%s]\n' % (
+            if op2.is_debug_file:
+                op2.binary_debug.write('  eid=%s inode=%i; C=[%s]\n' % (
                     eid, grid_device, ', '.join(['%r' % di for di in out])))
 
             #if grid_device == 0:
@@ -1617,7 +1617,7 @@ def oes_csolid_random(self, data: bytes,
             grid = grid_device
             if inode == 0:
                 #  this is correct, but fails
-                #element_name = self.element_name + str(nnodes)
+                #element_name = op2.element_name + str(nnodes)
                 obj.add_eid_sort1(element_name, cid, dt, eid, grid,
                                   sxx, syy, szz, txy, tyz, txz)
             else:
@@ -1626,25 +1626,25 @@ def oes_csolid_random(self, data: bytes,
             n += ntotal2
     return n
 
-def oes_comp_shell_real_11(self, data: bytes, ndata: int,
+def oes_comp_shell_real_11(op2: OP2, data: bytes, ndata: int,
                            obj: Union[RealCompositePlateStressArray, RealCompositePlateStrainArray],
                            ntotal: int, nelements: int, etype: str, dt: Any) -> int:
     n = 0
     eid_old = 0
-    struct1 = Struct(self._endian + mapfmt(self._analysis_code_fmt + b'i9f', self.size)) # 11
-    sort_method = self.sort_method
-    add_eid_sort_x = getattr(obj, 'add_eid_sort' + str(self.sort_method))
-    add_sort_x = getattr(obj, 'add_sort' + str(self.sort_method))
+    struct1 = Struct(op2._endian + mapfmt(op2._analysis_code_fmt + b'i9f', op2.size)) # 11
+    sort_method = op2.sort_method
+    add_eid_sort_x = getattr(obj, 'add_eid_sort' + str(op2.sort_method))
+    add_sort_x = getattr(obj, 'add_sort' + str(op2.sort_method))
 
     for unused_i in range(nelements):
         edata = data[n:n+ntotal]  # 4*11
         out = struct1.unpack(edata)
         (eid_device, layer, o1, o2, t12, t1z, t2z, angle, major, minor, ovm) = out
         eid, dt = get_eid_dt_from_eid_device(
-            eid_device, self.nonlinear_factor, sort_method)
+            eid_device, op2.nonlinear_factor, sort_method)
 
-        if self.is_debug_file:
-            self.binary_debug.write('  eid=%i; layer=%i; C=[%s]\n' % (eid, layer, ', '.join(['%r' % di for di in out])))
+        if op2.is_debug_file:
+            op2.binary_debug.write('  eid=%i; layer=%i; C=[%s]\n' % (eid, layer, ', '.join(['%r' % di for di in out])))
 
         if eid != eid_old:
             # originally initialized to None, the buffer doesnt reset it, so it is the old value
@@ -1657,7 +1657,7 @@ def oes_comp_shell_real_11(self, data: bytes, ndata: int,
         n += ntotal
     return n
 
-def oesrt_comp_shell_real_9(self, data: bytes, ndata: int,
+def oesrt_comp_shell_real_9(op2: OP2, data: bytes, ndata: int,
                             obj: RealCompositePlateStressStrengthRatioArray,
                             ntotal: int, nelements: int, etype: str, dt: Any) -> int:
     """
@@ -1680,12 +1680,12 @@ def oesrt_comp_shell_real_9(self, data: bytes, ndata: int,
     n = 0
     eid_old = 0
                                                                 # ft ply  sr,fi,sr
-    structs = Struct(self._endian + self._analysis_code_fmt + b' 8s  i    f  4s  f  f 4s')
-    structf = Struct(self._endian + self._analysis_code_fmt + b' 8s  i    f  f   f  f 4s')
-    sort_method = self.sort_method
+    structs = Struct(op2._endian + op2._analysis_code_fmt + b' 8s  i    f  4s  f  f 4s')
+    structf = Struct(op2._endian + op2._analysis_code_fmt + b' 8s  i    f  f   f  f 4s')
+    sort_method = op2.sort_method
     assert sort_method == 1, 'oesrt_comp_shell_real_9'
-    add_eid_sort_x = getattr(obj, 'add_eid_sort' + str(self.sort_method))
-    add_sort_x = getattr(obj, 'add_sort' + str(self.sort_method))
+    add_eid_sort_x = getattr(obj, 'add_eid_sort' + str(op2.sort_method))
+    add_sort_x = getattr(obj, 'add_sort' + str(op2.sort_method))
 
     for unused_i in range(nelements):
         edata = data[n:n+ntotal]  # 4*9
@@ -1714,10 +1714,10 @@ def oesrt_comp_shell_real_9(self, data: bytes, ndata: int,
               #f'sr_bonding={strength_ratio_bonding}; min(sr_bonding, fi_bonding)={min_sr_bonding_fi_bonding:g} flag={flag!r}')
         #self.show_data(edata, types='ifs')
 
-        #if self.is_debug_file:
-            #self.binary_debug.write('  eid=%i; layer=%i; C=[%s]\n' % (eid, layer, ', '.join(['%r' % di for di in out])))
-        if self.is_debug_file:
-            self.binary_debug.write('%s-%s - (%s) + %s\n' % (self.element_name, self.element_type, eid, str(out)))
+        #if op2.is_debug_file:
+            #op2.binary_debug.write('  eid=%i; layer=%i; C=[%s]\n' % (eid, layer, ', '.join(['%r' % di for di in out])))
+        if op2.is_debug_file:
+            op2.binary_debug.write('%s-%s - (%s) + %s\n' % (op2.element_name, op2.element_type, eid, str(out)))
 
         if ply_id == 1:
         #if eid != -1:
@@ -1734,48 +1734,48 @@ def oesrt_comp_shell_real_9(self, data: bytes, ndata: int,
     return n
 
 
-def oes_cshear_random_3(self, data: bytes,
+def oes_cshear_random_3(op2: OP2, data: bytes,
                         obj: Union[RandomShearStressArray, RandomShearStrainArray],
                         nelements: int, ntotal: int) -> int:
     n = 0
-    add_sort_x = getattr(obj, 'add_sort' + str(self.sort_method))
-    struct1 = Struct(self._endian + self._analysis_code_fmt + b'2f')
+    add_sort_x = getattr(obj, 'add_sort' + str(op2.sort_method))
+    struct1 = Struct(op2._endian + op2._analysis_code_fmt + b'2f')
     for unused_i in range(nelements):
         edata = data[n:n + ntotal]
         out = struct1.unpack(edata)  # num_wide=5
-        if self.is_debug_file:
-            self.binary_debug.write('CSHEAR-4 - %s\n' % str(out))
+        if op2.is_debug_file:
+            op2.binary_debug.write('CSHEAR-4 - %s\n' % str(out))
 
         (eid_device, max_strain, avg_strain) = out
         eid, dt = get_eid_dt_from_eid_device(
-            eid_device, self.nonlinear_factor, self.sort_method)
+            eid_device, op2.nonlinear_factor, op2.sort_method)
         #print(eid, dt)
         add_sort_x(dt, eid, max_strain, avg_strain)
         n += ntotal
     return n
 
-def oes_cbend_real_21(self, data: bytes,
+def oes_cbend_real_21(op2: OP2, data: bytes,
                       obj: Union[RealBendStressArray, RealBendStrainArray],
                       nelements: int, ntotal: int, dt) -> int:
     n = 0
-    ntotali = 40 * self.factor
-    struct1 = Struct(self._endian + self._analysis_code_fmt)
-    struct2 = Struct(self._endian + b'i9f')
-    add_sort_x = getattr(obj, 'add_sort' + str(self.sort_method))
+    ntotali = 40 * op2.factor
+    struct1 = Struct(op2._endian + op2._analysis_code_fmt)
+    struct2 = Struct(op2._endian + b'i9f')
+    add_sort_x = getattr(obj, 'add_sort' + str(op2.sort_method))
 
     #print('ntimes =', nelements)
     for unused_i in range(nelements):
         edata = data[n:n + 4]
         eid_device, = struct1.unpack(edata)
         eid, dt = get_eid_dt_from_eid_device(
-            eid_device, self.nonlinear_factor, self.sort_method)
+            eid_device, op2.nonlinear_factor, op2.sort_method)
 
         n += 4
         for unused_i in range(2):
             edata = data[n:n + ntotali]
             out = struct2.unpack(edata)
-            if self.is_debug_file:
-                self.binary_debug.write('BEND-69 - eid=%s %s\n' % (eid, str(out)))
+            if op2.is_debug_file:
+                op2.binary_debug.write('BEND-69 - eid=%s %s\n' % (eid, str(out)))
             #print('BEND-69 - eid=%s %s\n' % (eid, str(out)))
 
             (grid, angle, sc, sd, se, sf, omax, omin, mst, msc) = out
@@ -1785,21 +1785,21 @@ def oes_cbend_real_21(self, data: bytes,
     return n
 
 
-def oesrt_cquad4_95(self, data: bytes, ndata: int) -> int:
+def oesrt_cquad4_95(op2: OP2, data: bytes, ndata: int) -> int:
     """unsupported element"""
-    assert self.num_wide == 9, f'num_wide={self.num_wide} not 9'
-    ntotal = 36 * self.factor # 4*9
+    assert op2.num_wide == 9, f'num_wide={op2.num_wide} not 9'
+    ntotal = 36 * op2.factor # 4*9
     #oesrt_cquad4_95
 
     n = 0
-    struct1 = Struct(self._endian + self._analysis_code_fmt + b'8si3fi4s')
+    struct1 = Struct(op2._endian + op2._analysis_code_fmt + b'8si3fi4s')
     nelements = ndata // ntotal
-    #obj = self.obj
+    #obj = op2.obj
     for unused_i in range(nelements):
         edata = data[n:n + ntotal]
         out = struct1.unpack(edata)  # num_wide=9
-        if self.is_debug_file:
-            self.binary_debug.write('CQUAD4-95 - %s\n' % str(out))
+        if op2.is_debug_file:
+            op2.binary_debug.write('CQUAD4-95 - %s\n' % str(out))
         #eid, failure, ply, failureIndexPly, failureIndexBonding, failureIndexMax, flag
         # 3,TSAIWU,1,8.5640,0.0,None
 
@@ -1814,7 +1814,7 @@ def oesrt_cquad4_95(self, data: bytes, ndata: int) -> int:
         n += ntotal
     return n
 
-def oes_csolid_composite_real(self, data: bytes,
+def oes_csolid_composite_real(op2: OP2, data: bytes,
                               obj,
                               nelements: int, nedges: int,
                               element_name: str, preline1: str, preline2: str,
@@ -1834,35 +1834,35 @@ def oes_csolid_composite_real(self, data: bytes,
     For each fiber location requested (PLSLOC), words 3 through 10 repeat 4 times.
     """
     n = 0
-    struct1 = Struct(self._endian + self._analysis_code_fmt + b'i4s')
-    struct2 = Struct(self._endian + b'i7f')
-    if self.is_debug_file:
+    struct1 = Struct(op2._endian + op2._analysis_code_fmt + b'i4s')
+    struct2 = Struct(op2._endian + b'i7f')
+    if op2.is_debug_file:
         msg = '%s-%s nelements=%s nnodes=%s; C=[sxx, syy, szz, txy, tyz, txz, ovm,\n' % (
-            self.element_name, self.element_type, nelements, nedges)
-        self.binary_debug.write(msg)
+            op2.element_name, op2.element_type, nelements, nedges)
+        op2.binary_debug.write(msg)
 
-    ntotal1 = 12 * self.factor
-    ntotal2 = 32 * self.factor
+    ntotal1 = 12 * op2.factor
+    ntotal2 = 32 * op2.factor
     for unused_i in range(nelements):
         edata = data[n:n+ntotal1]
         out = struct1.unpack(edata)
         (eid_device, ply, fiber_location) = out
         #print(out)
         eid, dt = get_eid_dt_from_eid_device(
-            eid_device, self.nonlinear_factor, self.sort_method)
+            eid_device, op2.nonlinear_factor, op2.sort_method)
 
-        if self.is_debug_file:
-            self.binary_debug.write('%s - eid=%i; %s\n' % (preline1, eid, str(out)))
+        if op2.is_debug_file:
+            op2.binary_debug.write('%s - eid=%i; %s\n' % (preline1, eid, str(out)))
 
         n += ntotal1
         for inode in range(nedges):  # nodes pts, no centroid
             out = struct2.unpack(data[n:n + ntotal2]) # 4*8 = 32
-            if self.is_debug_file:
-                self.binary_debug.write('%s - %s\n' % (preline2, str(out)))
+            if op2.is_debug_file:
+                op2.binary_debug.write('%s - %s\n' % (preline2, str(out)))
             (grid_device, sxx, syy, szz, txy, tyz, txz, ovm) = out
 
-            if self.is_debug_file:
-                self.binary_debug.write('  eid=%s inode=%i; C=[%s]\n' % (
+            if op2.is_debug_file:
+                op2.binary_debug.write('  eid=%s inode=%i; C=[%s]\n' % (
                     eid, grid_device, ', '.join(['%r' % di for di in out])))
 
             #if grid_device == 0:
@@ -1878,7 +1878,7 @@ def oes_csolid_composite_real(self, data: bytes,
             if 0:
                 if inode == 0:
                     #  this is correct, but fails
-                    #element_name = self.element_name + str(nnodes)
+                    #element_name = op2.element_name + str(nnodes)
                     obj.add_eid_sort1(element_name, cid, dt, eid, grid,
                                       sxx, syy, szz, txy, tyz, txz, ovm)
                 else:
@@ -1887,31 +1887,31 @@ def oes_csolid_composite_real(self, data: bytes,
             n += ntotal2
     return n
 
-def oes_shell_composite_complex_11(self,
+def oes_shell_composite_complex_11(op2: OP2,
                                    data: bytes,
                                    obj: ComplexLayeredCompositesArray,
                                    ntotal: int, nelements: int, sort_method: int,
                                    dt: Any, is_magnitude_phase: bool) -> int:
     """OESCP, OESTRCP"""
     n = 0
-    struct1 = Struct(self._endian + self._analysis_code_fmt + b'i9f')
+    struct1 = Struct(op2._endian + op2._analysis_code_fmt + b'i9f')
     for unused_i in range(nelements):
         edata = data[n:n+ntotal]
         out = struct1.unpack(edata)
 
         (eid_device, ply_id, oxx, oyy, txy, txz, tyz, angle, omax, omin, max_shear) = out
         eid, dt = get_eid_dt_from_eid_device(
-            eid_device, self.nonlinear_factor, sort_method)
+            eid_device, op2.nonlinear_factor, sort_method)
         #print(eid, out)
 
-        #if self.is_debug_file:
-            #self.binary_debug.write('%s-%s - (%s) + %s\n' % (self.element_name, self.element_type, eid_device, str(out)))
+        #if op2.is_debug_file:
+            #op2.binary_debug.write('%s-%s - (%s) + %s\n' % (op2.element_name, op2.element_type, eid_device, str(out)))
         #obj.add_sort1(dt, eid, theory, lamid, fp, fm, fb, fmax, fflag)
         obj.add_sort1(dt, eid, ply_id, oxx, oyy, txy, txz, tyz, angle, omax, omin, max_shear)
         n += ntotal
     return n
 
-def oes_shell_composite_complex_13(self,
+def oes_shell_composite_complex_13(op2: OP2,
                                    data: bytes,
                                    obj: ComplexLayeredCompositesArray,
                                    ntotal: int, nelements: int, sort_method: int,
@@ -1919,7 +1919,7 @@ def oes_shell_composite_complex_13(self,
     """OESVM1C, OSTRVM1C"""
     # OESCP - STRAINS IN LAYERED COMPOSITE ELEMENTS (QUAD4)
     n = 0
-    struct1 = Struct(self._endian + self._analysis_code_fmt + b'i9f ff')
+    struct1 = Struct(op2._endian + op2._analysis_code_fmt + b'i9f ff')
     for unused_i in range(nelements):
         edata = data[n:n+ntotal]
         out = struct1.unpack(edata)
@@ -1928,19 +1928,19 @@ def oes_shell_composite_complex_13(self,
          o1a, o2a, t12a, o1za, o2za,
          o1b, o2b, t12b, o1zb, e2zb, ovm,) = out
         eid, dt = get_eid_dt_from_eid_device(
-            eid_device, self.nonlinear_factor, sort_method)
+            eid_device, op2.nonlinear_factor, sort_method)
         #print(eid, out)
 
-        #print('%s-%s - (%s) + %s\n' % (self.element_name, self.element_type, eid_device, str(out)))
-        #if self.is_debug_file:
-            #self.binary_debug.write('%s-%s - (%s) + %s\n' % (self.element_name, self.element_type, eid_device, str(out)))
+        #print('%s-%s - (%s) + %s\n' % (op2.element_name, op2.element_type, eid_device, str(out)))
+        #if op2.is_debug_file:
+            #op2.binary_debug.write('%s-%s - (%s) + %s\n' % (op2.element_name, op2.element_type, eid_device, str(out)))
         obj.add_sort1(dt, eid, ply_id,
                       o1a, o2a, t12a, o1za, o2za,
                       o1b, o2b, t12b, o1zb, e2zb, ovm)
         n += ntotal
     return n
 
-def _oes_csolid2_real(self, data: bytes,
+def _oes_csolid2_real(op2: OP2, data: bytes,
                       n: int,
                       obj: Union[RealSolidStressArrayNx, RealSolidStrainArrayNx],
                       nnodes_expected: int,
@@ -1948,11 +1948,11 @@ def _oes_csolid2_real(self, data: bytes,
                       element_name: str,
                       stress_strain='stress') -> Tuple[int, int, int]:
 
-    obj = self.obj
-    preline1 = '%s-%s' % (self.element_name, self.element_type)
+    obj = op2.obj
+    preline1 = '%s-%s' % (op2.element_name, op2.element_type)
     preline2 = ' ' * len(preline1)
     #if is_vectorized and self.use_vector:  # pragma: no cover
-        #self.log.debug('vectorize CSolid real SORT%s' % self.sort_method)
+        #self.log.debug('vectorize CSolid real SORT%s' % op2.sort_method)
 
     # 2 CID I Coordinate System
     # 3 CTYPE CHAR4 Grid or Gauss
@@ -1966,42 +1966,42 @@ def _oes_csolid2_real(self, data: bytes,
     # 10 EZX RS Strain in ZX
     # 11 EVM RS Von Mises strain
     # Words 4 through 11 repeat nnodes times.
-    if self.size == 4:
-        struct1 = Struct(self._endian + self._analysis_code_fmt + b'i4s')
-        struct2 = Struct(self._endian + b'i7f')
+    if op2.size == 4:
+        struct1 = Struct(op2._endian + op2._analysis_code_fmt + b'i4s')
+        struct2 = Struct(op2._endian + b'i7f')
     else:
-        struct1 = Struct(self._endian + mapfmt(self._analysis_code_fmt, self.size) + b'q8s')
-        struct2 = Struct(self._endian + b'q7d')
-    ntotal1 = 12 * self.factor
-    ntotal2 = 32 * self.factor
+        struct1 = Struct(op2._endian + mapfmt(op2._analysis_code_fmt, op2.size) + b'q8s')
+        struct2 = Struct(op2._endian + b'q7d')
+    ntotal1 = 12 * op2.factor
+    ntotal2 = 32 * op2.factor
 
-    if self.is_debug_file:
+    if op2.is_debug_file:
         msg = '%s-%s nelements=%s nnodes=%s; C=[sxx, syy, szz, txy, tyz, txz, ovm,\n' % (
-            self.element_name, self.element_type, nelements, nnodes_expected)
-        self.binary_debug.write(msg)
+            op2.element_name, op2.element_type, nelements, nnodes_expected)
+        op2.binary_debug.write(msg)
 
-    assert self.is_sort1
-    obj._times[obj.itime] = self.nonlinear_factor
+    assert op2.is_sort1
+    obj._times[obj.itime] = op2.nonlinear_factor
     for unused_i in range(nelements):
         edata = data[n:n+ntotal1]
         out = struct1.unpack(edata)
         (eid_device, cid, unused_abcd) = out
         eid, dt = get_eid_dt_from_eid_device(
-            eid_device, self.nonlinear_factor, self.sort_method)
+            eid_device, op2.nonlinear_factor, op2.sort_method)
         #print(eid, dt, cid, unused_abcd)
-        if self.is_debug_file:
-            self.binary_debug.write('%s - eid=%i; %s\n' % (preline1, eid, str(out)))
+        if op2.is_debug_file:
+            op2.binary_debug.write('%s - eid=%i; %s\n' % (preline1, eid, str(out)))
 
         #assert nnodes < 21, 'print_block(data[n:n+16])'  #self.print_block(data[n:n+16])
         n += ntotal1
         for inode in range(nnodes_expected):  # nodes pts, no centroid
             out = struct2.unpack(data[n:n + ntotal2]) # 4*8 = 32
-            if self.is_debug_file:
-                self.binary_debug.write('%s - %s\n' % (preline2, str(out)))
+            if op2.is_debug_file:
+                op2.binary_debug.write('%s - %s\n' % (preline2, str(out)))
             (grid_device, sxx, syy, szz, txy, tyz, txz, ovm) = out
 
-            if self.is_debug_file:
-                self.binary_debug.write('  eid=%s inode=%i; C=[%s]\n' % (
+            if op2.is_debug_file:
+                op2.binary_debug.write('  eid=%s inode=%i; C=[%s]\n' % (
                     eid, grid_device, ', '.join(['%r' % di for di in out])))
 
             #grid = (grid_device - device_code) // 10
@@ -2013,7 +2013,7 @@ def _oes_csolid2_real(self, data: bytes,
             n += ntotal2
     return n
 
-def oes_csolid_linear_hyperelastic_cosine_real(self, data: bytes,
+def oes_csolid_linear_hyperelastic_cosine_real(op2: OP2, data: bytes,
                                                nelements: int, nnodes_expected: int,
                                                preline1: str, preline2: str) -> int:
     n = 0
@@ -2042,16 +2042,16 @@ def oes_csolid_linear_hyperelastic_cosine_real(self, data: bytes,
     # 21 CY RS
     # 22 CZ RS
     # Words 3 through 22 repeat 008 times
-    struct1 = Struct(self._endian + self._analysis_code_fmt + b'4s')
-    struct2 = Struct(self._endian + b'i19f')
-    if self.is_debug_file:
+    struct1 = Struct(op2._endian + op2._analysis_code_fmt + b'4s')
+    struct2 = Struct(op2._endian + b'i19f')
+    if op2.is_debug_file:
         msg = (
-            f'{self.element_name}-{self.element_type} nelements={nelements} '
+            f'{op2.element_name}-{op2.element_type} nelements={nelements} '
             f'nnodes={nnodes_expected}; '
             'C=[oxx, oxy, pa, ax, ay, az, pressure, '
             'oyy, oyz, pb, bx, by, bz, '
             'ozz, oxz, pc, cx, cy, cz]\n')
-        self.binary_debug.write(msg)
+        op2.binary_debug.write(msg)
 
     for unused_i in range(nelements):
         edata = data[n:n+8]
@@ -2059,17 +2059,17 @@ def oes_csolid_linear_hyperelastic_cosine_real(self, data: bytes,
         (eid_device, grid_gauss, ) = out
         #print(out)
         eid, dt = get_eid_dt_from_eid_device(
-            eid_device, self.nonlinear_factor, self.sort_method)
+            eid_device, op2.nonlinear_factor, op2.sort_method)
 
-        if self.is_debug_file:
-            self.binary_debug.write('%s - eid=%i; %s\n' % (preline1, eid, str(out)))
+        if op2.is_debug_file:
+            op2.binary_debug.write('%s - eid=%i; %s\n' % (preline1, eid, str(out)))
         #assert nnodes < 21, 'print_block(data[n:n+16])'  #self.print_block(data[n:n+16])
 
         n += 8
         for unused_inode in range(nnodes_expected):  # nodes pts, no centroid
             out = struct2.unpack(data[n:n + 80]) # 4*20 = 80
-            if self.is_debug_file:
-                self.binary_debug.write('%s - %s\n' % (preline2, str(out)))
+            if op2.is_debug_file:
+                op2.binary_debug.write('%s - %s\n' % (preline2, str(out)))
             # nid, oxx, oxy, pa, ax, ay, az, pressure,
             #      oyy, oyz, pb, bx, by, bz,
             #      ozz, oxz, pc, cx, cy, cz
@@ -2079,14 +2079,14 @@ def oes_csolid_linear_hyperelastic_cosine_real(self, data: bytes,
              ozz, oxz, pc, cx, cy, cz) = out
             #print(out)
 
-            if self.is_debug_file:
-                self.binary_debug.write('  eid=%s inode=%i; C=[%s]\n' % (
+            if op2.is_debug_file:
+                op2.binary_debug.write('  eid=%s inode=%i; C=[%s]\n' % (
                     eid, grid_device, ', '.join(['%r' % di for di in out])))
 
             #if 0:
                 #if inode == 0:
                     #  this is correct, but fails
-                    #element_name = self.element_name + str(nnodes)
+                    #element_name = op2.element_name + str(nnodes)
                     #obj.add_eid_sort1(element_name, cid, dt, eid, grid,
                                       #sxx, syy, szz, txy, tyz, txz, ovm)
                 #else:
@@ -2095,7 +2095,7 @@ def oes_csolid_linear_hyperelastic_cosine_real(self, data: bytes,
             n += 80
     return n
 
-def oes_csolid_linear_hyperelastic_real(self, data: bytes, obj,
+def oes_csolid_linear_hyperelastic_real(op2: OP2, data: bytes, obj,
                                         nelements: int, nnodes_expected: int,
                                         preline1: str, preline2: str):
     n = 0
@@ -2123,45 +2123,45 @@ def oes_csolid_linear_hyperelastic_real(self, data: bytes, obj,
     #21 CY RS
     #22 CZ RS
     #Words 3 through 22 repeat 027 times
-    struct1 = Struct(self._endian + self._analysis_code_fmt + b'4s')
-    struct2 = Struct(self._endian + b'i19f')
-    #if self.is_debug_file:
+    struct1 = Struct(op2._endian + op2._analysis_code_fmt + b'4s')
+    struct2 = Struct(op2._endian + b'i19f')
+    #if op2.is_debug_file:
         #msg = (
-            #f'{self.element_name}-{self.element_type} nelements={nelements} '
+            #f'{op2.element_name}-{op2.element_type} nelements={nelements} '
             #f'nnodes={nnodes_expected}; '
             #'C=[sxx, syy, szz, txy, tyz, txz, pressure, '
             #'evol, exx, eyy, ezz, exy, eyz, exz]\n')
-        #self.binary_debug.write(msg)
+        #op2.binary_debug.write(msg)
 
     for unused_i in range(nelements):
         edata = data[n:n+8]
         out = struct1.unpack(edata)
         (eid_device, unused_abcd, ) = out
         eid, dt = get_eid_dt_from_eid_device(
-            eid_device, self.nonlinear_factor, self.sort_method)
+            eid_device, op2.nonlinear_factor, op2.sort_method)
 
-        if self.is_debug_file:
-            self.binary_debug.write('%s - eid=%i; %s\n' % (preline1, eid, str(out)))
+        if op2.is_debug_file:
+            op2.binary_debug.write('%s - eid=%i; %s\n' % (preline1, eid, str(out)))
         #assert nnodes < 21, 'print_block(data[n:n+16])'  #self.print_block(data[n:n+16])
 
         n += 8
         for unused_inode in range(nnodes_expected):  # nodes pts, no centroid
             out = struct2.unpack(data[n:n + 80]) # 4*20 = 80
-            if self.is_debug_file:
-                self.binary_debug.write('%s - %s\n' % (preline2, str(out)))
+            if op2.is_debug_file:
+                op2.binary_debug.write('%s - %s\n' % (preline2, str(out)))
             (grid_device, sxx, syy, szz, txy, tyz, txz, pressure,
              evol, exx, eyy, ezz, exy, eyz, exz) = out
             #print(out)
 
-            if self.is_debug_file:
-                self.binary_debug.write('  eid=%s inode=%i; C=[%s]\n' % (
+            if op2.is_debug_file:
+                op2.binary_debug.write('  eid=%s inode=%i; C=[%s]\n' % (
                     eid, grid_device, ', '.join(['%r' % di for di in out])))
 
             #grid = grid_device
             #if 0:
                 #if inode == 0:
                     ##  this is correct, but fails
-                    ##element_name = self.element_name + str(nnodes)
+                    ##element_name = op2.element_name + str(nnodes)
                     #obj.add_eid_sort1(element_name, cid, dt, eid, grid,
                                       #sxx, syy, szz, txy, tyz, txz, ovm)
                 #else:

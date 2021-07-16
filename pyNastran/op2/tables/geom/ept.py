@@ -2,9 +2,10 @@
 defines readers for BDF objects in the OP2 EPT/EPTS table
 """
 #pylint: disable=C0103,R0914
+from __future__ import annotations
 from struct import unpack, Struct
-from typing import Tuple, List
 from functools import partial
+from typing import Tuple, List, TYPE_CHECKING
 
 import numpy as np
 
@@ -22,23 +23,33 @@ from pyNastran.bdf.cards.properties.springs import PELAS, PELAST
 
 from pyNastran.bdf.cards.thermal.thermal import PCONV, PHBDY, PCONVM
 # PCOMPG, PBUSH1D, PBEAML, PBEAM3
-from pyNastran.op2.tables.geom.geom_common import GeomCommon
 from pyNastran.op2.op2_interface.op2_reader import (
     mapfmt, reshape_bytes_block_size) # reshape_bytes_block,
 from .utils import get_minus1_start_end
 from .geom2 import DoubleCardError
+if TYPE_CHECKING:
+    from pyNastran.op2.op2_geom import OP2Geom
 
 
-class EPT(GeomCommon):
+class EPT:
     """defines methods for reading op2 properties"""
 
-    def _read_ept_4(self, data: bytes, ndata: int):
-        return self._read_geom_4(self._ept_map, data, ndata)
+    @property
+    def size(self) -> int:
+        return self.op2.size
+    @property
+    def factor(self) -> int:
+        return self.op2.factor
 
-    def __init__(self):
-        GeomCommon.__init__(self)
-        self.big_properties = {}
-        self._ept_map = {
+    def _read_fake(self, data: bytes, n: int) -> int:
+        return self.op2._read_fake(data, n)
+
+    def read_ept_4(self, data: bytes, ndata: int):
+        return self.op2._read_geom_4(self.ept_map, data, ndata)
+
+    def __init__(self, op2: OP2Geom):
+        self.op2 = op2
+        self.ept_map = {
             (3201, 32, 55): ['NSM', self._read_nsm],          # record 2
             (52, 20, 181): ['PBAR', self._read_pbar],         # record 11 - buggy
             (9102, 91, 52): ['PBARL', self._read_pbarl],      # record 12 - almost there...
@@ -129,37 +140,38 @@ class EPT(GeomCommon):
 
     def _add_op2_property(self, prop):
         """helper method for op2"""
+        op2 = self.op2
         #if prop.pid > 100000000:
             #raise RuntimeError('bad parsing; pid > 100000000...%s' % str(prop))
         #print(str(prop)[:-1])
-        ntables = self.table_names.count(b'EPT') + self.table_names.count(b'EPTS')
+        ntables = op2.table_names.count(b'EPT') + op2.table_names.count(b'EPTS')
         pid = prop.pid
         allow_overwrites = (
             ntables > 1 and
-            pid in self.properties and
-            self.properties[pid].type == prop.type)
-        self._add_methods._add_property_object(prop, allow_overwrites=allow_overwrites)
+            pid in op2.properties and
+            op2.properties[pid].type == prop.type)
+        op2._add_methods._add_property_object(prop, allow_overwrites=allow_overwrites)
 
     def _add_op2_property_mass(self, prop):
         """helper method for op2"""
+        op2 = self.op2
         #if prop.pid > 100000000:
             #raise RuntimeError('bad parsing; pid > 100000000...%s' % str(prop))
         #print(str(prop)[:-1])
-        ntables = self.table_names.count(b'EPT') + self.table_names.count(b'EPTS')
+        ntables = op2.table_names.count(b'EPT') + op2.table_names.count(b'EPTS')
         pid = prop.pid
         allow_overwrites = (
             ntables > 1 and
-            pid in self.properties_mass and
-            self.properties_mass[pid].type == prop.type)
-        self._add_methods._add_property_mass_object(prop, allow_overwrites=allow_overwrites)
+            pid in op2.properties_mass and
+            op2.properties_mass[pid].type == prop.type)
+        op2._add_methods._add_property_mass_object(prop, allow_overwrites=allow_overwrites)
 
     def _add_pconv(self, prop: PCONV):
         if prop.pconid > 100000000:
             raise RuntimeError('bad parsing pconid > 100000000...%s' % str(prop))
-        self._add_methods._add_convection_property_object(prop)
+        self.op2._add_methods._add_convection_property_object(prop)
 
 # HGSUPPR
-
 
     def _read_desc(self, data: bytes, n: int) -> int:
         """
@@ -173,9 +185,10 @@ class EPT(GeomCommon):
 
         data = (1, 14, 'FACE CONTACT(1)                                         ')
         """
+        op2 = self.op2
         assert self.size == 4, 'DESC size={self.size} is not supported'
-        #self.show_data(data[n:], types='ifs')
-        struct_2i = Struct(self._endian + b'2i')
+        #op2.show_data(data[n:], types='ifs')
+        struct_2i = Struct(op2._endian + b'2i')
         while n < len(data):
 
             datai = data[n:n+8]
@@ -186,7 +199,7 @@ class EPT(GeomCommon):
             word = word_bytes.decode('ascii').rstrip()
             assert len(word_bytes) == nwords * 4
             #print('word_bytes =', word_bytes)
-            self.log.warning(f'skipping DESC={desc_id}: {word!r}')
+            op2.log.warning(f'skipping DESC={desc_id}: {word!r}')
             n += ndatai
         assert n == len(data), n
         return n
@@ -208,10 +221,11 @@ class EPT(GeomCommon):
           floats  = (3, ELEMENT, 0.0, 200, 0.7, -1, 4, PSHELL, 0.0, 6401, 4.2, -1)
 
         """
+        op2 = self.op2
         n0 = n
-        #self.show_data(data[n:])
-        ints = np.frombuffer(data[n:], self.idtype8).copy()
-        floats = np.frombuffer(data[n:], self.fdtype8).copy()
+        #op2.show_data(data[n:])
+        ints = np.frombuffer(data[n:], op2.idtype8).copy()
+        floats = np.frombuffer(data[n:], op2.fdtype8).copy()
         istart, iend = get_minus1_start_end(ints)
 
         ncards = 0
@@ -227,12 +241,12 @@ class EPT(GeomCommon):
             #print(ids, values)
             assert len(ids) == len(values)
             nsm_type = prop_bytes.decode('latin1').rstrip()
-            nsml = self.add_nsml(sid, nsm_type, ids, values)
+            nsml = op2.add_nsml(sid, nsm_type, ids, values)
             #print(nsml)
             str(nsml)
             n += (i1 - i0 + 1) * size
             ncards += 1
-        self.card_count['NSML'] = ncards
+        op2.card_count['NSML'] = ncards
         return n
 
     def _read_nsmadd(self, data: bytes, n: int) -> int:
@@ -250,7 +264,8 @@ class EPT(GeomCommon):
 
         (1, 2, 3, 4, -1)
         """
-        ints = np.frombuffer(data[n:], self.idtype8).copy()
+        op2 = self.op2
+        ints = np.frombuffer(data[n:], op2.idtype8).copy()
         istart, iend = get_minus1_start_end(ints)
 
         ncards = 0
@@ -259,12 +274,12 @@ class EPT(GeomCommon):
         for (i0, i1) in zip(istart, iend):
             assert ints[i1] == -1, ints[i1]
             sid, *nsms = ints[i0:i1]
-            nsmadd = self.add_nsmadd(sid, nsms)
+            nsmadd = op2.add_nsmadd(sid, nsms)
             #print(nsmadd)
             str(nsmadd)
             n += (i1 - i0 + 1) * size
             ncards += 1
-        self.card_count['NSMADD'] = ncards
+        op2.card_count['NSMADD'] = ncards
         return n
 
     def _read_nsml1_nx(self, data: bytes, n: int) -> int:
@@ -330,17 +345,17 @@ class EPT(GeomCommon):
         #           3, 233922, THRU, 235132, -1,
         #           3, 235265, THRU, 236463, -1,
         #           3, 338071, THRU, 341134, -1, -2)
-
+        op2 = self.op2
         n0 = n
-        #self.show_data(data[n:])
-        ints = np.frombuffer(data[n:], self.idtype8).copy()
-        floats = np.frombuffer(data[n:], self.fdtype8).copy()
+        #op2.show_data(data[n:])
+        ints = np.frombuffer(data[n:], op2.idtype8).copy()
+        floats = np.frombuffer(data[n:], op2.fdtype8).copy()
         iminus2 = np.where(ints == -2)[0]
         istart = [0] + list(iminus2[:-1] + 1)
         iend = iminus2
         #print(istart, iend)
         assert len(data[n:]) > 12, data[n:]
-        #self.show_data(data[n:], types='ifs')
+        #op2.show_data(data[n:], types='ifs')
 
         ncards = 0
         istart = [0] + list(iend + 1)
@@ -375,7 +390,7 @@ class EPT(GeomCommon):
                     # datai = (3, 249311, 'THRU    ', 250189)
                     #print(f'i0={i0}')
                     #datai = data[n0+(i0+6)*size:n0+i1*size]
-                    #self.show_data(datai)
+                    #op2.show_data(datai)
                     ids = ints[istarti:iendi]
                     istart = ids[1]
                     iend = ids[-1]
@@ -386,14 +401,14 @@ class EPT(GeomCommon):
             if nsm_type == 'ELEM':
                 nsm_type = 'ELEMENT'
             #for pid_eid in pid_eids:
-            #nsml = self.add_nsml1(sid, nsm_type, pid_eids, [value])
+            #nsml = op2.add_nsml1(sid, nsm_type, pid_eids, [value])
             assert len(pid_eids) > 0, pid_eids
-            nsml1 = self.add_nsml1(sid, nsm_type, value, pid_eids)
+            nsml1 = op2.add_nsml1(sid, nsm_type, value, pid_eids)
             #print(nsml1)
             str(nsml1)
             n += (i1 - i0 + 1) * size
             ncards += 1
-        self.card_count['NSML'] = ncards
+        op2.card_count['NSML'] = ncards
         return n
 
     def _read_nsml1_msc(self, data: bytes, n: int) -> int:
@@ -432,8 +447,8 @@ class EPT(GeomCommon):
         data = (4, ELEMENT, 2.1, 1, 3301, -1, -2)
 
         """
-        self.log.info(f'skipping {self.card_name} in {self.table_name}; ndata={len(data)-12}')
-        #self.show_data(data[n:], types='ifs')
+        self.op2.log.info(f'skipping {self.card_name} in {op2.table_name}; ndata={len(data)-12}')
+        #op2.show_data(data[n:], types='ifs')
         #bbb
         return len(data)
 
@@ -472,11 +487,12 @@ class EPT(GeomCommon):
                 4, ELEMENT, 2, 2.1, 1, 3301, -1)
 
         """
-        #self.show_data(data[n:], types='ifs')
+        op2 = self.op2
+        #op2.show_data(data[n:], types='ifs')
         n0 = n
-        #self.show_data(data[n:])
-        ints = np.frombuffer(data[n:], self.idtype8).copy()
-        floats = np.frombuffer(data[n:], self.fdtype8).copy()
+        #op2.show_data(data[n:])
+        ints = np.frombuffer(data[n:], op2.idtype8).copy()
+        floats = np.frombuffer(data[n:], op2.fdtype8).copy()
         istart, iend = get_minus1_start_end(ints)
 
         ncards = 0
@@ -528,18 +544,21 @@ class EPT(GeomCommon):
                 #nsm_type = 'ELEMENT'
             #for pid_eid in pid_eids:
             #nsml = self.add_nsml1(sid, nsm_type, pid_eids, [value])
-            nsm1 = self.add_nsm1(sid, nsm_type, value, ids)
+            nsm1 = op2.add_nsm1(sid, nsm_type, value, ids)
             #print(nsm1)
             str(nsm1)
             n += (i1 - i0 + 1) * size
             ncards += 1
-        self.card_count['NSM1'] = ncards
+        op2.card_count['NSM1'] = ncards
         return n
 
     def _read_nsm(self, data: bytes, n: int) -> int:
         """NSM"""
-        n = self.geom2._read_dual_card(data, n, self._read_nsm_nx, self._read_nsm_msc,
-                                       'NSM', self._add_methods._add_nsm_object)
+        op2 = self.op2
+        n = op2.reader_geom2._read_dual_card(
+            data, n,
+            self._read_nsm_nx, self._read_nsm_msc,
+            'NSM', op2._add_methods._add_nsm_object)
         return n
 
     def _read_nsm_2(self, data: bytes, n: int) -> int:
@@ -566,10 +585,11 @@ class EPT(GeomCommon):
                    3, ELEMENT, 2,  200, 1.0, -1,
                    4, PSHELL,  2, 6401, 4.2, -1)
         """
+        op2 = self.op2
         n0 = n
-        #self.show_data(data[n:])
-        ints = np.frombuffer(data[n:], self.idtype8).copy()
-        floats = np.frombuffer(data[n:], self.fdtype8).copy()
+        #op2.show_data(data[n:])
+        ints = np.frombuffer(data[n:], op2.idtype8).copy()
+        floats = np.frombuffer(data[n:], op2.fdtype8).copy()
         istart, iend = get_minus1_start_end(ints)
 
         ncards = 0
@@ -589,12 +609,12 @@ class EPT(GeomCommon):
             assert len(ids) == len(values)
             assert dunno_int in [0, 2], (sid, prop_type, (ints[i0+3], floats[i0+4]), ids, values)
             #print(sid, prop_type, (ints[i0+3], floats[i0+4]), ids, values)
-            nsm = self.add_nsm(sid, nsm_type, ids, values)
+            nsm = op2.add_nsm(sid, nsm_type, ids, values)
             #print(nsm[0])
             str(nsm)
             n += (i1 - i0 + 1) * size
             ncards += 1
-        self.card_count['NSM'] = ncards
+        op2.card_count['NSM'] = ncards
         return n
 
     def _read_nsm_msc(self, data: bytes, n: int) -> int:
@@ -616,13 +636,14 @@ class EPT(GeomCommon):
           Words 5 through 6 repeat until End of Record
         Words 3 through 4 repeat until End of Record
         """
+        op2 = self.op2
         properties = []
-        struct1 = Struct(self._endian + b'i 4s if')
+        struct1 = Struct(op2._endian + b'i 4s if')
         ndelta = 16
 
         i = 0
-        ints = np.frombuffer(data[n:], self.idtype).copy()
-        floats = np.frombuffer(data[n:], self.fdtype).copy()
+        ints = np.frombuffer(data[n:], op2.idtype).copy()
+        floats = np.frombuffer(data[n:], op2.fdtype).copy()
 
         while n < len(data):
             edata = data[n:n+ndelta]
@@ -641,10 +662,10 @@ class EPT(GeomCommon):
                 values.append(value2)
                 n += 4
                 i += 1
-            self.log.info("MSC: NSM-sid=%s prop_set=%s pid=%s values=%s" % (
+            op2.log.info("MSC: NSM-sid=%s prop_set=%s pid=%s values=%s" % (
                 sid, prop_set, pid, values))
             prop = NSM.add_op2_data([sid, prop_set, pid, value])
-            #self._add_methods._add_nsm_object(prop)
+            #op2._add_methods._add_nsm_object(prop)
             properties.append(prop)
 
             # handle the trailing -1
@@ -663,16 +684,17 @@ class EPT(GeomCommon):
         6 VALUE      RS Nonstructural mass value
         Words 5 through 6 repeat until End of Record
         """
+        op2 = self.op2
         properties = []
 
         #NX: C:\Users\sdoyle\Dropbox\move_tpl\nsmlcr2s.op2
-        struct1 = Struct(self._endian + b'i 8s ii f')
+        struct1 = Struct(op2._endian + b'i 8s ii f')
         ndelta = 24
-        #self.show_data(data[12:], 'ifs')
+        #op2.show_data(data[12:], 'ifs')
 
         i = 0
-        ints = np.frombuffer(data[n:], self.idtype).copy()
-        floats = np.frombuffer(data[n:], self.fdtype).copy()
+        ints = np.frombuffer(data[n:], op2.idtype).copy()
+        floats = np.frombuffer(data[n:], op2.fdtype).copy()
 
         unused_packs = break_by_minus1(ints)
         #for pack in packs:
@@ -708,16 +730,16 @@ class EPT(GeomCommon):
 
             for pid, value in zip(pids, values):
                 if origin == 0:
-                    #self.log.info("NX: NSM-sid=%s prop_set=%s pid=%s values=%s" % (
+                    #op2.log.info("NX: NSM-sid=%s prop_set=%s pid=%s values=%s" % (
                         #sid, prop_set, pid, values))
                     prop = NSM.add_op2_data([sid, prop_set, pid, value])
                 elif origin == 2:
-                    #self.log.info("NX: NSML-sid=%s prop_set=%s pid=%s values=%s" % (
+                    #op2.log.info("NX: NSML-sid=%s prop_set=%s pid=%s values=%s" % (
                         #sid, prop_set, pid, values))
                     prop = NSML.add_op2_data([sid, prop_set, pid, value])
 
                 #print(prop.rstrip(), pid, value)
-                #self._add_methods._add_nsm_object(prop)
+                #op2._add_methods._add_nsm_object(prop)
                 properties.append(prop)
             #print('----')
 
@@ -764,8 +786,9 @@ class EPT(GeomCommon):
         18 K2  RS Area factor for shear in plane 2
         19 I12 RS Area product of inertia for plane 1 and 2
         """
+        op2 = self.op2
         ntotal = 76 * self.factor  # 19*4
-        struct1 = Struct(mapfmt(self._endian + b'2i17f', self.size))
+        struct1 = Struct(mapfmt(op2._endian + b'2i17f', self.size))
         nentries = (len(data) - n) // ntotal
         for unused_i in range(nentries):
             edata = data[n:n+ntotal]
@@ -775,7 +798,7 @@ class EPT(GeomCommon):
             prop = PBAR.add_op2_data(out)
             self._add_op2_property(prop)
             n += ntotal
-        self.card_count['PBAR'] = nentries
+        op2.card_count['PBAR'] = nentries
         return n
 
     def _read_pbarl(self, data: bytes, n: int) -> int:
@@ -785,6 +808,7 @@ class EPT(GeomCommon):
         It's possible to have a PBARL and a PBAR at the same time.
         NSM is at the end of the element.
         """
+        op2 = self.op2
         valid_types = {
             'ROD': 1,
             'TUBE': 2,
@@ -813,9 +837,9 @@ class EPT(GeomCommon):
         size = self.size
         ntotal = 28 * self.factor  # 7*4 - ROD - shortest entry...could be buggy... # TODO fix this
         if size == 4:
-            struct1 = Struct(self._endian + b'2i 8s 8s f')
+            struct1 = Struct(op2._endian + b'2i 8s 8s f')
         else:
-            struct1 = Struct(self._endian + b'2q 16s 16s d')
+            struct1 = Struct(op2._endian + b'2q 16s 16s d')
 
         #nentries = (len(data) - n) // ntotal
         #print(self.show_ndata(80))
@@ -828,7 +852,7 @@ class EPT(GeomCommon):
             out = struct1.unpack(edata)
             (pid, mid, group, beam_type, value) = out
             if pid > 100000000 or pid < 1:
-                self.log.debug("  pid=%s mid=%s group=%r beam_type=%r value=%s" % (
+                op2.log.debug("  pid=%s mid=%s group=%r beam_type=%r value=%s" % (
                     pid, mid, group, beam_type, value))
                 raise RuntimeError('bad parsing...')
 
@@ -837,7 +861,7 @@ class EPT(GeomCommon):
             data_in = [pid, mid, group, beam_type, value]
 
             expected_length = valid_types[beam_type]
-            iformat = self._endian + b'%if' % expected_length
+            iformat = op2._endian + b'%if' % expected_length
 
             ndelta = expected_length * 4
             dims_nsm = list(unpack(iformat, data[n:n+ndelta]))
@@ -856,22 +880,22 @@ class EPT(GeomCommon):
             #print("PBARL = %s" % data_in)
             prop = PBARL.add_op2_data(data_in)  # last value is nsm
             pid = prop.pid
-            if pid in self.properties:
-                #self.log.debug("removing:\n%s" % self.properties[pid])
-                self._type_to_id_map['PBAR'].remove(pid)
-                del self.properties[pid]
+            if pid in op2.properties:
+                #op2.log.debug("removing:\n%s" % op2.properties[pid])
+                op2._type_to_id_map['PBAR'].remove(pid)
+                del op2.properties[pid]
             self._add_op2_property(prop)
-            #self.properties[pid] = prop
+            #op2.properties[pid] = prop
             #print(prop.get_stats())
-            #print(self.show_data(data[n-8:-100]))
+            #print(op2.show_data(data[n-8:-100]))
 
             # the PBARL ends with a -1 flag
-            #value, = unpack(self._endian + b'i', data[n:n+4])
+            #value, = unpack(op2._endian + b'i', data[n:n+4])
             n += 4 * self.factor
-        if len(self._type_to_id_map['PBAR']) == 0 and 'PBAR' in self.card_count:
-            del self._type_to_id_map['PBAR']
-            del self.card_count['PBAR']
-        self.increase_card_count('PBARL')
+        if len(op2._type_to_id_map['PBAR']) == 0 and 'PBAR' in op2.card_count:
+            del op2._type_to_id_map['PBAR']
+            del op2.card_count['PBAR']
+        op2.increase_card_count('PBARL')
         #assert len(data) == n
         if self.size == 8:
             n += 16
@@ -891,8 +915,9 @@ class EPT(GeomCommon):
         0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
 
         """
-        struct1 = Struct(mapfmt(self._endian + b'2i 12f i', self.size))
-        struct2 = Struct(mapfmt(self._endian + b'3f 2i', self.size))
+        op2 = self.op2
+        struct1 = Struct(mapfmt(op2._endian + b'2i 12f i', self.size))
+        struct2 = Struct(mapfmt(op2._endian + b'3f 2i', self.size))
         nproperties = 0
         ntotal1 = 60 * self.factor  # 4*15
         ntotal2 = 20 * self.factor
@@ -900,22 +925,22 @@ class EPT(GeomCommon):
         ndata = len(data)
         #print(ntotal1, ntotal2)
         if self.factor == 2:
-            self.show_data(data[12*self.factor:], types='qd')
+            op2.show_data(data[12*self.factor:], types='qd')
         #print(len(data[12*self.factor:]))
         while n < ndata:
-            #self.log.debug(f"n={n} ndata={ndata}")
+            #op2.log.debug(f"n={n} ndata={ndata}")
             edata = data[n:n+ntotal1]
             #if len(edata) == ntotal1:
             data1 = struct1.unpack(edata)
             #else:
-                #self.show_data(edata, types='qdi')
+                #op2.show_data(edata, types='qdi')
                 #n += ntotal2
                 #continue
             nsections = data1[-1]
-            if self.is_debug_file:
+            if op2.is_debug_file:
                 (pid, mid, a, i1, i2, i12, j, nsm, k1, k2,
                  m1, m2, n1, n2, unused_nsections) = data1
-                self.log.info(f'PBCOMP pid={pid} mid={mid} nsections={nsections} '
+                op2.log.info(f'PBCOMP pid={pid} mid={mid} nsections={nsections} '
                               f'k1={k1} k2={k2} m=({m1},{m2}) n=({n1},{n2})\n')
             #if pid > 0 and nsections == 0:
                 #print('n1')
@@ -941,37 +966,37 @@ class EPT(GeomCommon):
                     data2.append((xi, yi, ci, mid))
                     n += ntotal2
             else:
-                self.log.error(f'PBCOMP={data1[0]} has no sections; check your bdf')
+                op2.log.error(f'PBCOMP={data1[0]} has no sections; check your bdf')
                 return n
                 #raise NotImplementedError('PBCOMP nsections=%r' % nsections)
 
-            if self.is_debug_file:
-                self.binary_debug.write('     PBCOMP: %s\n' % str([data1, data2]))
+            if op2.is_debug_file:
+                op2.binary_debug.write('     PBCOMP: %s\n' % str([data1, data2]))
                 msg = (
                     '    i=%-2s so=%s xxb=%.1f a=%g i1=%g i2=%g i12=%g j=%g nsm=%g '
                     'c=[%s,%s] d=[%s,%s] e=[%s,%s] f=[%s,%s]' % (
                         nsections, None, -9999., a, i1, i2, i12, j, nsm,
                         None, None, None, None, None, None, None, None,)
                 )
-                self.log.debug(msg)
-            #self.log.debug(data1)
-            #self.log.debug(data2)
+                op2.log.debug(msg)
+            #op2.log.debug(data1)
+            #op2.log.debug(data2)
 
             data_in = [data1, data2]
             prop = PBCOMP.add_op2_data(data_in)
             pid = data1[0]
-            if pid in self.properties:
-                self._type_to_id_map['PBEAM'].remove(pid)
-                del self.properties[pid]
+            if pid in op2.properties:
+                op2._type_to_id_map['PBEAM'].remove(pid)
+                del op2.properties[pid]
 
             self._add_op2_property(prop)
             nproperties += 1
         #print(f"n={n} ndata={ndata}")
         assert nproperties > 0, 'PBCOMP nproperties=%s' % (nproperties)
-        if len(self._type_to_id_map['PBEAM']) == 0 and 'PBEAM' in self.card_count:
-            del self._type_to_id_map['PBEAM']
-            del self.card_count['PBEAM']
-        self.card_count['PBCOMP'] = nproperties
+        if len(op2._type_to_id_map['PBEAM']) == 0 and 'PBEAM' in op2.card_count:
+            del op2._type_to_id_map['PBEAM']
+            del op2.card_count['PBEAM']
+        op2.card_count['PBCOMP'] = nproperties
         return n
 
     def _read_pbeam(self, data: bytes, n: int) -> int:
@@ -979,20 +1004,21 @@ class EPT(GeomCommon):
         PBEAM(5402,54,262) - the marker for Record 14
         .. todo:: add object
         """
+        op2 = self.op2
         cross_section_type_map = {
             0 : 'variable',
             1 : 'constant',
             2 : '???',
         }
 
-        struct1 = Struct(mapfmt(self._endian + b'4if', self.size))
-        struct2 = Struct(mapfmt(self._endian + b'16f', self.size))
-        struct3 = Struct(mapfmt(self._endian + b'16f', self.size))
+        struct1 = Struct(mapfmt(op2._endian + b'4if', self.size))
+        struct2 = Struct(mapfmt(op2._endian + b'16f', self.size))
+        struct3 = Struct(mapfmt(op2._endian + b'16f', self.size))
         unused_ntotal = 768 # 4*(5+16*12)
         #nproperties = (len(data) - n) // ntotal
-        #assert nproperties > 0, 'ndata-n=%s n=%s datai\n%s' % (len(data)-n, n, self.show_data(data[n:100+n]))
+        #assert nproperties > 0, 'ndata-n=%s n=%s datai\n%s' % (len(data)-n, n, op2.show_data(data[n:100+n]))
         ndata = len(data)
-        #self.show_data(data[12:], 'if')
+        #op2.show_data(data[12:], 'if')
         #assert ndata % ntotal == 0, 'ndata-n=%s n=%s ndata%%ntotal=%s' % (len(data)-n, n, ndata % ntotal)
         nproperties = 0
 
@@ -1003,10 +1029,10 @@ class EPT(GeomCommon):
             edata = data[n:n+ntotal1]
             n += ntotal1
             data_in = list(struct1.unpack(edata))
-            #if self.is_debug_file:
-                #self.log.info('PBEAM pid=%s mid=%s nsegments=%s ccf=%s x=%s\n' % tuple(data_in))
+            #if op2.is_debug_file:
+                #op2.log.info('PBEAM pid=%s mid=%s nsegments=%s ccf=%s x=%s\n' % tuple(data_in))
             (pid, unused_mid, unused_nsegments, ccf, unused_x) = data_in
-            #self.log.info('PBEAM pid=%s mid=%s nsegments=%s ccf=%s x=%s' % tuple(data_in))
+            #op2.log.info('PBEAM pid=%s mid=%s nsegments=%s ccf=%s x=%s' % tuple(data_in))
 
             # Constant cross-section flag: 1=yes and 0=no
             # what is 2?
@@ -1054,13 +1080,13 @@ class EPT(GeomCommon):
                 pack2 = (so_str, xxbi, a, i1, i2, i12, j, nsm, c1, c2,
                          d1, d2, e1, e2, f1, f2)
                 data_in.append(pack2)
-                if self.is_debug_file:
-                    self.binary_debug.write(f'     {pack}\n')
+                if op2.is_debug_file:
+                    op2.binary_debug.write(f'     {pack}\n')
                     msg = (
                         '    i=%-2s' % i + ' so=%s xxb=%.1f a=%g i1=%g i2=%g i12=%g j=%g nsm=%g '
                         'c=[%s,%s] d=[%s,%s] e=[%s,%s] f=[%s,%s]' % (tuple(pack2))
                     )
-                    self.binary_debug.write(msg)
+                    op2.binary_debug.write(msg)
                 #msg = (
                     #'    i=%-2s' % i + ' so=%s xxb=%.1f a=%g i1=%g i2=%g i12=%g j=%g nsm=%g '
                     #'c=[%s,%s] d=[%s,%s] e=[%s,%s] f=[%s,%s]' % (tuple(pack2))
@@ -1077,8 +1103,8 @@ class EPT(GeomCommon):
             assert len(endpack) == 16, endpack
             #(k1, k2, s1, s2, nsia, nsib, cwa, cwb, # 8
              #m1a, m2a, m1b, m2b, n1a, n2a, n1b, n2b) = endpack # 8 -> 16
-            if self.is_debug_file:
-                self.binary_debug.write('    k=[%s,%s] s=[%s,%s] nsi=[%s,%s] cw=[%s,%s] '
+            if op2.is_debug_file:
+                op2.binary_debug.write('    k=[%s,%s] s=[%s,%s] nsi=[%s,%s] cw=[%s,%s] '
                                         'ma=[%s,%s] mb=[%s,%s] na=[%s,%s] nb=[%s,%s]' % (
                                             tuple(endpack)))
             data_in.append(endpack)
@@ -1089,27 +1115,27 @@ class EPT(GeomCommon):
                 so_str = ', '.join(['%g' % soi for soi in so])
                 msg = (f'PBEAM pid={pid} i={i} soi=[{so_str}]; '
                        'soi not 0.0 or 1.0; assuming PBCOMP & dropping')
-                self.log.error(msg)
+                op2.log.error(msg)
                 is_pbcomp = True
 
             if min(xxb) < 0.0 or max(xxb) > 1.0:
                 xxb_str = ', '.join(['%g' % xxbi for xxbi in xxb])
                 msg = (f'PBEAM pid={pid} i={i} x/xb=[{xxb_str}]; '
                        'x/xb must be between 0.0 and 1.0; assuming PBCOMP & dropping')
-                self.log.error(msg)
+                op2.log.error(msg)
                 is_pbcomp = True
 
             if is_pbcomp:
                 continue
-            if pid in self.properties:
-                if self.properties[pid].type == 'PBCOMP':
+            if pid in op2.properties:
+                if op2.properties[pid].type == 'PBCOMP':
                     continue
 
             prop = PBEAM.add_op2_data(data_in)
             nproperties += 1
             self._add_op2_property(prop)
         if nproperties:
-            self.card_count['PBEAM'] = nproperties
+            op2.card_count['PBEAM'] = nproperties
         return n
 
     def _read_pbeaml(self, data: bytes, n: int) -> int:
@@ -1124,19 +1150,20 @@ class EPT(GeomCommon):
         7 VALUE      RS  Cross section values for XXB, SO, NSM, and dimensions
         Word 7 repeats until (-1) occurs
         """
+        op2 = self.op2
         #strs = numpy.core.defchararray.reshapesplit(data, sep=",")
         #ints = np.frombuffer(data[n:], self._uendian + 'i').copy()
         #floats = np.frombuffer(data[n:], self._uendian + 'f').copy()
-        ints = np.frombuffer(data[n:], self.idtype8).copy()
-        floats = np.frombuffer(data[n:], self.fdtype8).copy()
+        ints = np.frombuffer(data[n:], op2.idtype8).copy()
+        floats = np.frombuffer(data[n:], op2.fdtype8).copy()
         istart, iend = get_minus1_start_end(ints)
 
         size = self.size
         nproperties = len(istart)
         if size == 4:
-            struct1 = Struct(self._endian + b'2i 8s 8s')
+            struct1 = Struct(op2._endian + b'2i 8s 8s')
         else:
-            struct1 = Struct(self._endian + b'2q 16s 16s')
+            struct1 = Struct(op2._endian + b'2q 16s 16s')
 
         for unused_i, (istarti, iendi) in enumerate(zip(istart, iend)):
             idata = data[n+istarti*size : n+(istarti+6)*size]
@@ -1144,28 +1171,31 @@ class EPT(GeomCommon):
             group = group.decode('latin1').strip()
             beam_type = beam_type.decode('latin1').strip()
             fvalues = floats[istarti+6: iendi]
-            if self.is_debug_file:
-                self.binary_debug.write('     %s\n' % str(fvalues))
-                self.log.debug(f'pid={pid:d} mid={mid:d} group={group} beam_type={beam_type}')
-                self.log.debug(fvalues)
-            #self.log.debug(f'pid={pid:d} mid={mid:d} group={group} beam_type={beam_type}')
+            if op2.is_debug_file:
+                op2.binary_debug.write('     %s\n' % str(fvalues))
+                op2.log.debug(f'pid={pid:d} mid={mid:d} group={group} beam_type={beam_type}')
+                op2.log.debug(fvalues)
+            #op2.log.debug(f'pid={pid:d} mid={mid:d} group={group} beam_type={beam_type}')
             data_in = [pid, mid, group, beam_type, fvalues]
             prop = PBEAML.add_op2_data(data_in)
-            if pid in self.properties:
+            if pid in op2.properties:
                 # this is a fake PSHELL
-                propi = self.properties[pid]
+                propi = op2.properties[pid]
                 assert propi.type in ['PBEAM'], propi.get_stats()
                 nproperties -= 1
                 continue
             self._add_op2_property(prop)
         if nproperties:
-            self.card_count['PBEAML'] = nproperties
+            op2.card_count['PBEAML'] = nproperties
         return len(data)
 
     def _read_pbend(self, data: bytes, n: int) -> int:
         """PBEND"""
-        n = self.geom2._read_dual_card(data, n, self._read_pbend_nx, self._read_pbend_msc,
-                                       'PBEND', self._add_methods._add_property_object)
+        op2 = self.op2
+        n = op2.reader_geom2._read_dual_card(
+            data, n,
+            self._read_pbend_nx, self._read_pbend_msc,
+            'PBEND', op2._add_methods._add_property_object)
         return n
 
     def _read_pbend_msc(self, data: bytes, n: int) -> int:
@@ -1200,11 +1230,12 @@ class EPT(GeomCommon):
         26 DELTAN  I Radial offset of the neutral axis from the geometric
                      centroid
         """
+        op2 = self.op2
         ntotal = 104  # 26*4
-        struct1 = Struct(self._endian + b'2i 4f i 18f f')  # delta_n is a float, not an integer
+        struct1 = Struct(op2._endian + b'2i 4f i 18f f')  # delta_n is a float, not an integer
         nproperties = (len(data) - n) // ntotal
         assert (len(data) - n) % ntotal == 0
-        assert nproperties > 0, 'table=%r len=%s' % (self.table_name, len(data) - n)
+        assert nproperties > 0, 'table=%r len=%s' % (op2.table_name, len(data) - n)
         properties = []
         for unused_i in range(nproperties):
             edata = data[n:n+104]
@@ -1278,13 +1309,14 @@ class EPT(GeomCommon):
                   in-plane bending moment.
         33 Not used
         """
-        #self.log.info('skipping PBEND in EPT')
+        op2 = self.op2
+        #op2.log.info('skipping PBEND in EPT')
         #return len(data)
         ntotal = 132  # 33*4
-        struct1 = Struct(self._endian + b'2i 4f i 21f i 4f')
+        struct1 = Struct(op2._endian + b'2i 4f i 21f i 4f')
         nproperties = (len(data) - n) // ntotal
         assert (len(data) - n) % ntotal == 0
-        assert nproperties > 0, 'table=%r len=%s' % (self.table_name, len(data) - n)
+        assert nproperties > 0, 'table=%r len=%s' % (op2.table_name, len(data) - n)
         properties = []
         for unused_i in range(nproperties):
             edata = data[n:n+132]
@@ -1330,6 +1362,7 @@ class EPT(GeomCommon):
         MSC has 27 fields in 2021
 
         """
+        op2 = self.op2
         card_name = 'PBUSH'
         card_obj = PBUSH
         methods = {
@@ -1339,13 +1372,13 @@ class EPT(GeomCommon):
             108 : self._read_pbush_msc_108, # 108=4*27
         }
         try:
-            n = self.geom2._read_double_card(
+            n = op2.reader_geom2._read_double_card(
                 card_name, card_obj, self._add_op2_property,
                 methods, data, n)
         except DoubleCardError:
             nx_method = partial(self._read_pbush_nx_72, card_obj)
             msc_method = partial(self._read_pbush_msc_92, card_obj)
-            n = self.geom2._read_dual_card(
+            n = op2.reader_geom2._read_dual_card(
                 data, n,
                 nx_method, msc_method,
                 card_name, self._add_op2_property)
@@ -1358,12 +1391,13 @@ class EPT(GeomCommon):
 
     def _read_pbush_nx_72(self, card_obj: PBUSH, data: bytes, n: int) -> Tuple[int, List[PBUSH]]:
         """PBUSH(1402,14,37) - 18 fields"""
+        op2 = self.op2
         ntotal = 72 * self.factor
-        struct1 = Struct(mapfmt(self._endian + b'i17f', self.size))
+        struct1 = Struct(mapfmt(op2._endian + b'i17f', self.size))
         ndata = len(data) - n
         nentries = ndata // ntotal
-        assert nentries > 0, 'table={self.table_name} len={ndata}'
-        assert ndata % ntotal == 0, f'table={self.table_name} leftover = {ndata} % {ntotal} = {ndata % ntotal}'
+        assert nentries > 0, 'table={op2.table_name} len={ndata}'
+        assert ndata % ntotal == 0, f'table={op2.table_name} leftover = {ndata} % {ntotal} = {ndata % ntotal}'
         props = []
         for unused_i in range(nentries):
             edata = data[n:n+ntotal]
@@ -1372,7 +1406,7 @@ class EPT(GeomCommon):
              k1, k2, k3, k4, k5, k6,
              b1, b2, b3, b4, b5, b6,
              g1, sa, st, ea, et) = out
-            #self.log.debug(out)
+            #op2.log.debug(out)
             assert pid > 0, pid
             g2 = g3 = g4 = g5 = g6 = g1
             data_in = (pid, k1, k2, k3, k4, k5, k6, b1, b2, b3, b4, b5, b6,
@@ -1387,13 +1421,14 @@ class EPT(GeomCommon):
 
         MSC 2005r2 to <MSC 2016
         """
+        op2 = self.op2
         ntotal = 92 * self.factor # 23*4
-        struct1 = Struct(mapfmt(self._endian + b'i22f', self.size))
+        struct1 = Struct(mapfmt(op2._endian + b'i22f', self.size))
 
         ndata = len(data) - n
         nentries = ndata // ntotal
-        assert nentries > 0, 'table={self.table_name} len={ndata}'
-        assert ndata % ntotal == 0, f'table={self.table_name} leftover = {ndata} % {ntotal} = {ndata % ntotal}'
+        assert nentries > 0, 'table={op2.table_name} len={ndata}'
+        assert ndata % ntotal == 0, f'table={op2.table_name} leftover = {ndata} % {ntotal} = {ndata % ntotal}'
 
         props = []
         for unused_i in range(nentries):
@@ -1413,13 +1448,14 @@ class EPT(GeomCommon):
 
         MSC 2016.1? to 2020
         """
+        op2 = self.op2
         ntotal = 96 * self.factor # 24*4
-        struct1 = Struct(mapfmt(self._endian + b'i22f f', self.size))
+        struct1 = Struct(mapfmt(op2._endian + b'i22f f', self.size))
 
         ndata = len(data) - n
         nentries = ndata // ntotal
-        assert nentries > 0, 'table={self.table_name} len={ndata}'
-        assert ndata % ntotal == 0, f'table={self.table_name} leftover = {ndata} % {ntotal} = {ndata % ntotal}'
+        assert nentries > 0, 'table={op2.table_name} len={ndata}'
+        assert ndata % ntotal == 0, f'table={op2.table_name} leftover = {ndata} % {ntotal} = {ndata % ntotal}'
 
         props = []
         for unused_i in range(nentries):
@@ -1445,14 +1481,15 @@ class EPT(GeomCommon):
                    2, 100000.0, 200000.0, 300000.0, 0.15, 0.25, 0.35, 1000.0, 2000.0, 3000.0, 0.0015, 0.0025, 0.0035, 0.0,
                    -1.7367999061094683e-18, -1.7367999061094683e-18, -1.7367999061094683e-18, -1.7367999061094683e-18, -1.7367999061094683e-18, 1.0, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0, 0.0)
         """
+        op2 = self.op2
         ntotal = 108 * self.factor # 27*4
-        struct1 = Struct(mapfmt(self._endian + b'i22f 4f', self.size))
-        #self.show_data(data, types='ifs')
+        struct1 = Struct(mapfmt(op2._endian + b'i22f 4f', self.size))
+        #op2.show_data(data, types='ifs')
 
         ndata = len(data) - n
         nentries = ndata // ntotal
-        assert nentries > 0, 'table={self.table_name} len={ndata}'
-        assert ndata % ntotal == 0, f'table={self.table_name} leftover = {ndata} % {ntotal} = {ndata % ntotal}'
+        assert nentries > 0, 'table={op2.table_name} len={ndata}'
+        assert ndata % ntotal == 0, f'table={op2.table_name} leftover = {ndata} % {ntotal} = {ndata % ntotal}'
 
         props = []
         for unused_i in range(nentries):
@@ -1517,13 +1554,14 @@ class EPT(GeomCommon):
         37 UT     RS Ultimate tension
         38 UC     RS Ultimate compression
         """
+        op2 = self.op2
         type_map = {
             0 : None,  # NULL
             1 : 'EQUAT',
             2 : 'TABLE',
         }
         ntotal = 152 * self.factor  # 38*4
-        struct1 = Struct(mapfmt(self._endian + b'i 6f i 4f 24i 2f', self.size))
+        struct1 = Struct(mapfmt(op2._endian + b'i 6f i 4f 24i 2f', self.size))
         nentries = (len(data) - n) // ntotal
         for unused_i in range(nentries):
             edata = data[n:n+ntotal]
@@ -1585,13 +1623,13 @@ class EPT(GeomCommon):
             if typef in [1, 2]: # Fuse data type: 0=Null, 1=Table
                 raise NotImplementedError(f'typef={typef} idtf={idtf} idcf={idcf}')
 
-            if self.is_debug_file:
-                self.binary_debug.write(msg)
+            if op2.is_debug_file:
+                op2.binary_debug.write(msg)
 
-            self.add_pbush1d(pid, k=k, c=c, m=m, sa=sa, se=se,
-                             optional_vars=optional_vars,)
+            op2.add_pbush1d(pid, k=k, c=c, m=m, sa=sa, se=se,
+                            optional_vars=optional_vars,)
             n += ntotal
-        self.card_count['PBUSH1D'] = nentries
+        op2.card_count['PBUSH1D'] = nentries
         return n
 
     #def _read_pbusht(self, data: bytes, n: int) -> int:
@@ -1599,7 +1637,7 @@ class EPT(GeomCommon):
         #n, props = self._read_pbusht_nx(data, n)
         #for prop in props:
             ##print(prop)
-            #self._add_pbusht_object(prop)
+            #op2._add_pbusht_object(prop)
         #return n
 
     def _read_pbusht(self, data: bytes, n: int) -> int:
@@ -1620,6 +1658,7 @@ class EPT(GeomCommon):
         14 TGEID    I TABLEDi entry identification number for structural damping
         15 TKNID(6) I TABLEDi entry IDs for force versus deflection
         """
+        op2 = self.op2
         card_name = 'PBUSHT'
         card_obj = PBUSHT
         methods = {
@@ -1628,28 +1667,29 @@ class EPT(GeomCommon):
             136 : self._read_pbusht_136,
         }
         try:
-            n = self.geom2._read_double_card(
-                card_name, card_obj, self._add_methods._add_pbusht_object,
+            n = op2.reader_geom2._read_double_card(
+                card_name, card_obj, op2._add_methods._add_pbusht_object,
                 methods, data, n)
         except DoubleCardError:
             raise
-            self.log.warning(f'try-except {card_name}')
+            op2.log.warning(f'try-except {card_name}')
             #n = self._read_split_card(data, n,
                                       #self._read_cquad8_current, self._read_cquad8_v2001,
                                       #card_name, self.add_op2_element)
-        #nelements = self.card_count['CQUAD8']
-        #self.log.debug(f'nCQUAD8 = {nelements}')
+        #nelements = op2.card_count['CQUAD8']
+        #op2.log.debug(f'nCQUAD8 = {nelements}')
 
         #n = self._read_dual_card(data, n, self._read_ctriax_8, self._read_ctriax_9,
                                  #'CTRIAX', self.add_op2_element)
         return n
 
     def _read_pbusht_nx_old(self, data: bytes, n: int) -> int:
-        #self.show_data(data[12:])
+        op2 = self.op2
+        #op2.show_data(data[12:])
         ndata = (len(data) - n) // self.factor
 
         if ndata % 100 == 0 and ndata % 80 == 0:
-            self.log.warning(f"skipping PBUSHT in EPT because nfields={ndata//4}, which is "
+            op2.log.warning(f"skipping PBUSHT in EPT because nfields={ndata//4}, which is "
                              'nproperties*25 or nproperties*20')
             return len(data), []
         if ndata % 100 == 0:
@@ -1672,7 +1712,7 @@ class EPT(GeomCommon):
             # ints    = (1, 51, 51, 0,   0,   0,   0,   61, 61, 0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   '    ', '    ', 0,   0,   '    ', '    ', 0,   0,   1e-5, 0,   0,   0,   0  , 0,
             #
             # 7, 51, 51, 0,   0,   0,   0,   61, 61, 0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0, '    ', '    ', 0, 0, '    ', '    ', 0, 0, 1e-5, 0, 0, 0, 0, 0)
-            #self.show_data(data[n:], types='is')
+            #op2.show_data(data[n:], types='is')
             raise NotImplementedError('You have blank lines in your PBUSHT')
         return n, props
 
@@ -1687,10 +1727,11 @@ class EPT(GeomCommon):
         16,17,18,19,20
         ???
         """
+        op2 = self.op2
         ntotal = 80 * self.factor
-        struct1 = Struct(self._endian + b'20i')
+        struct1 = Struct(op2._endian + b'20i')
         nentries = (len(data) - n) // ntotal
-        assert nentries > 0, 'table=%r len=%s' % (self.table_name, len(data) - n)
+        assert nentries > 0, 'table=%r len=%s' % (op2.table_name, len(data) - n)
 
         props = []
         for unused_i in range(nentries):
@@ -1716,11 +1757,12 @@ class EPT(GeomCommon):
         return n, props
 
     def _read_pbusht_100(self, card_obj, data: bytes, n: int) -> int:
+        op2 = self.op2
         props = []
         ntotal = 100 * self.factor
-        struct1 = Struct(mapfmt(self._endian + b'25i', self.size))
+        struct1 = Struct(mapfmt(op2._endian + b'25i', self.size))
         nentries = (len(data) - n) // ntotal
-        assert nentries > 0, 'table=%r len=%s' % (self.table_name, len(data) - n)
+        assert nentries > 0, 'table=%r len=%s' % (op2.table_name, len(data) - n)
         for unused_i in range(nentries):
             edata = data[n:n+ntotal]
             out = struct1.unpack(edata)
@@ -1772,11 +1814,12 @@ class EPT(GeomCommon):
             1, 51, 51, 0.0, 0.0, 0.0, 0.0, 61, 61, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 538976288, 538976288, 0.0, 0.0, 538976288, 538976288, 0.0, 0.0, 1.e-7, 0.0, 0.0, 0.0, 0.0, 0.0,
             7, 51, 51, 0.0, 0.0, 0.0, 0.0, 61, 61, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 538976288, 538976288, 0.0, 0.0, 538976288, 538976288, 0.0, 0.0, 1.e-7, 0.0, 0.0, 0.0, 0.0, 0.0)
         """
+        op2 = self.op2
         props = []
         ntotal = 136 * self.factor              #  k  b  g  n  fdc
-        struct1 = Struct(mapfmt(self._endian + b'i 6i 6i 6i 6i 4s  2i i 5i', self.size))
+        struct1 = Struct(mapfmt(op2._endian + b'i 6i 6i 6i 6i 4s  2i i 5i', self.size))
         nentries = (len(data) - n) // ntotal
-        assert nentries > 0, 'table=%r len=%s' % (self.table_name, len(data) - n)
+        assert nentries > 0, 'table=%r len=%s' % (op2.table_name, len(data) - n)
         for unused_i in range(nentries):
             edata = data[n:n+ntotal]
             out = struct1.unpack(edata)
@@ -1797,7 +1840,7 @@ class EPT(GeomCommon):
                         for gei in [g1, g2, g3, g4, g5, g6]]
             kn_tables = [kni if kni != 538976288 else 0
                         for kni in [n1, n2, n3, n4, n5, n6]]
-            self.log.warning(
+            op2.log.warning(
                 f'PBUSHT: pid={pid} '
                 f'k={k_tables} '
                 f'b={b_tables} '
@@ -1834,14 +1877,15 @@ class EPT(GeomCommon):
           floats  = (2706, 27, 287,
                      5, 3, -2.75, 0.0, 0.0, 1, 0.0, 0.0, 2, 0.25, 0.0, 2, 3, 5.0, 0.0, 3, 2, 0.25, 0.0, 2, 6, 5, -3.0, 0.0, 0.0, 1, 0.0, 0.0, 2, 0.25, 0.0, 2, 2, 0.25, 0.0, 2, 3, 5.0, 0.0, 3, 2, 0.25, 0.0, 2, 2, 0.25, 0.0, 2, 9.80908925027372e-45, 9.80908925027372e-45, -3.25, 0.0, 0.0, 1, 0.0, 0.0, 2, 0.25, 0.0, 2, 2, 0.25, 0.0, 2, 2, 0.25, 0.0, 2, 3, 5.0, 0.0, 3, 2, 0.25, 0.0, 2, 2, 0.25, 0.0, 2, 2, 0.25, 0.0, 2)
         """
+        op2 = self.op2
         if self.size == 4:
             n2, props = self._read_pcomp_32_bit(data, n)
             nproperties = len(props)
             for prop in props:
                 self._add_op2_property(prop)
-            self.card_count['PCOMP'] = nproperties
+            op2.card_count['PCOMP'] = nproperties
         else:
-            n2 = self._read_dual_card(data, n, self._read_pcomp_32_bit,
+            n2 = op2._read_dual_card(data, n, self._read_pcomp_32_bit,
                                       self._read_pcomp_64_bit,
                                       'PCOMP', self._add_op2_property)
         return n2
@@ -1903,13 +1947,14 @@ class EPT(GeomCommon):
                                -1, -1, -1, -1)
 
         """
-        self.to_nx(' because PCOMP-64 was found')
+        op2 = self.op2
+        op2.to_nx(' because PCOMP-64 was found')
         nproperties = 0
-        s1 = Struct(mapfmt(self._endian + b'2i3fi2f', self.size))
+        s1 = Struct(mapfmt(op2._endian + b'2i3fi2f', self.size))
         ntotal1 = 32 * self.factor
-        s2 = Struct(mapfmt(self._endian + b'i2fi', self.size))
+        s2 = Struct(mapfmt(op2._endian + b'i2fi', self.size))
 
-        four_minus1 = Struct(mapfmt(self._endian + b'4i', self.size))
+        four_minus1 = Struct(mapfmt(op2._endian + b'4i', self.size))
         ndata = len(data)
         ntotal2 = 16 * self.factor
         props = []
@@ -1917,8 +1962,8 @@ class EPT(GeomCommon):
             out = s1.unpack(data[n:n+ntotal1])
             (pid, nlayers, z0, nsm, sb, ft, tref, ge) = out
             assert pid > 0
-            if self.binary_debug:
-                self.binary_debug.write(f'PCOMP pid={pid} nlayers={nlayers} z0={z0} nsm={nsm} '
+            if op2.binary_debug:
+                op2.binary_debug.write(f'PCOMP pid={pid} nlayers={nlayers} z0={z0} nsm={nsm} '
                                         f'sb={sb} ft={ft} Tref={tref} ge={ge}')
             assert isinstance(nlayers, int), out
             #print(f'PCOMP pid={pid} nlayers={nlayers} z0={z0} nsm={nsm} '
@@ -1943,8 +1988,8 @@ class EPT(GeomCommon):
                 T.append(t)
                 thetas.append(theta)
                 souts.append(sout)
-                if self.is_debug_file:
-                    self.binary_debug.write(f'      mid={mid} t={t} theta={theta} sout={sout}\n')
+                if op2.is_debug_file:
+                    op2.binary_debug.write(f'      mid={mid} t={t} theta={theta} sout={sout}\n')
                 n += ntotal2
                 #print(f'      mid={mid} t={t} theta={theta} sout={sout}')
                 edata2 = data[n:n+ntotal2]
@@ -1968,10 +2013,11 @@ class EPT(GeomCommon):
 
     def _read_pcomp_32_bit(self, data: bytes, n: int) -> Tuple[int, List[PCOMP]]:  # pragma: no cover
         """PCOMP(2706,27,287) - the marker for Record 22"""
+        op2 = self.op2
         nproperties = 0
-        s1 = Struct(mapfmt(self._endian + b'2i3fi2f', self.size))
+        s1 = Struct(mapfmt(op2._endian + b'2i3fi2f', self.size))
         ntotal1 = 32 * self.factor
-        s2 = Struct(mapfmt(self._endian + b'i2fi', self.size))
+        s2 = Struct(mapfmt(op2._endian + b'i2fi', self.size))
 
         ndata = len(data)
         ntotal2 = 16 * self.factor
@@ -1981,8 +2027,8 @@ class EPT(GeomCommon):
             (pid, nlayers, z0, nsm, sb, ft, tref, ge) = out
             assert pid > 0
 
-            if self.binary_debug:
-                self.binary_debug.write(f'PCOMP pid={pid} nlayers={nlayers} z0={z0} nsm={nsm} '
+            if op2.binary_debug:
+                op2.binary_debug.write(f'PCOMP pid={pid} nlayers={nlayers} z0={z0} nsm={nsm} '
                                         f'sb={sb} ft={ft} Tref={tref} ge={ge}')
             assert isinstance(nlayers, int), out
             #print(f'PCOMP pid={pid} nlayers={nlayers} z0={z0} nsm={nsm} '
@@ -2004,15 +2050,15 @@ class EPT(GeomCommon):
             assert 0 < nlayers < 400, 'pid=%s nlayers=%s z0=%s nsm=%s sb=%s ft=%s Tref=%s ge=%s' % (
                 pid, nlayers, z0, nsm, sb, ft, tref, ge)
 
-            if self.is_debug_file:
-                self.binary_debug.write('    pid=%s nlayers=%s z0=%s nsm=%s sb=%s ft=%s Tref=%s ge=%s\n' % (
+            if op2.is_debug_file:
+                op2.binary_debug.write('    pid=%s nlayers=%s z0=%s nsm=%s sb=%s ft=%s Tref=%s ge=%s\n' % (
                     pid, nlayers, z0, nsm, sb, ft, tref, ge))
-            #if self._nastran_format == 'optistruct':
+            #if op2._nastran_format == 'optistruct':
                 #print('    pid=%s nlayers=%s z0=%s nsm=%s sb=%s ft=%s Tref=%s ge=%s' % (
                     #pid, nlayers, z0, nsm, sb, ft, tref, ge))
             for unused_ilayer in range(nlayers):
                 (mid, t, theta, sout) = s2.unpack(data[n:n+ntotal2])
-                if self._nastran_format == 'optistruct':
+                if op2._nastran_format == 'optistruct':
                     #print(f'      mid={mid} t={t} theta={theta} sout={sout}')
                     if sout in [2, 3]: # TODO: Why is this 2/3?
                         sout = 1 # YES
@@ -2023,8 +2069,8 @@ class EPT(GeomCommon):
                 T.append(t)
                 thetas.append(theta)
                 souts.append(sout)
-                if self.is_debug_file:
-                    self.binary_debug.write(f'      mid={mid} t={t} theta={theta} sout={sout}\n')
+                if op2.is_debug_file:
+                    op2.binary_debug.write(f'      mid={mid} t={t} theta={theta} sout={sout}\n')
                 n += ntotal2
 
             data_in = [
@@ -2072,10 +2118,11 @@ class EPT(GeomCommon):
                      -1, -1, -1, -1, -1)
 
         """
+        op2 = self.op2
         nproperties = 0
-        s1 = Struct(mapfmt(self._endian + b'2i 3f i 2f', self.size))
-        s2 = Struct(mapfmt(self._endian + b'2i 2f i', self.size))
-        struct_i5 = Struct(mapfmt(self._endian + b'5i', self.size))
+        s1 = Struct(mapfmt(op2._endian + b'2i 3f i 2f', self.size))
+        s2 = Struct(mapfmt(op2._endian + b'2i 2f i', self.size))
+        struct_i5 = Struct(mapfmt(op2._endian + b'5i', self.size))
 
         # lam - SYM, MEM, BEND, SMEAR, SMCORE, None
         lam_map = {
@@ -2100,14 +2147,14 @@ class EPT(GeomCommon):
             1 : 'YES',
         }
         ndata = len(data)
-        #self.show_data(data, types='qd')
+        #op2.show_data(data, types='qd')
         ntotal1 = 32 * self.factor
         ntotal2 = 20 * self.factor
         while n < (ndata - ntotal1):
             out = s1.unpack(data[n:n+ntotal1])
             (pid, lam_int, z0, nsm, sb, ft_int, tref, ge) = out
-            if self.binary_debug:
-                self.binary_debug.write(f'PCOMPG pid={pid} lam_int={lam_int} z0={z0} nsm={nsm} '
+            if op2.binary_debug:
+                op2.binary_debug.write(f'PCOMPG pid={pid} lam_int={lam_int} z0={z0} nsm={nsm} '
                                         f'sb={sb} ft_int={ft_int} tref={tref} ge={ge}')
             #print(f'PCOMPG pid={pid} lam_int={lam_int} z0={z0} nsm={nsm} sb={sb} '
                   #f'ft_int={ft_int} tref={tref} ge={ge}')
@@ -2131,22 +2178,22 @@ class EPT(GeomCommon):
             #assert 0 < nlayers < 400, 'pid=%s nlayers=%s z0=%s nms=%s sb=%s ft=%s tref=%s ge=%s' % (
                 #pid, nlayers, z0, nsm, sb, ft, tref, ge)
 
-            #if self.is_debug_file:
-                #self.binary_debug.write('    pid=%s nlayers=%s z0=%s nms=%s sb=%s ft=%s tref=%s ge=%s\n' % (
+            #if op2.is_debug_file:
+                #op2.binary_debug.write('    pid=%s nlayers=%s z0=%s nms=%s sb=%s ft=%s tref=%s ge=%s\n' % (
                     #pid, nlayers, z0, nsm, sb, ft, tref, ge))
             ilayer = 0
             while ilayer < 1000:
                 ints5 = struct_i5.unpack(data[n:n+ntotal2])
                 if ints5 == (-1, -1, -1, -1, -1):
-                    if self.is_debug_file:
-                        self.binary_debug.write('      global_ply=%-1 mid=%-1 t=%-1 theta=%-1 sout=-1\n')
+                    if op2.is_debug_file:
+                        op2.binary_debug.write('      global_ply=%-1 mid=%-1 t=%-1 theta=%-1 sout=-1\n')
                     break
                 (global_ply, mid, t, theta, sout_int) = s2.unpack(data[n:n+ntotal2])
                 #print('  ', (global_ply, mid, t, theta, sout_int))
                 try:
                     sout = sout_map[sout_int]
                 except KeyError:
-                    self.log.error('cant parse global_ply=%s sout=%s; assuming 0=NO' % (
+                    op2.log.error('cant parse global_ply=%s sout=%s; assuming 0=NO' % (
                         global_ply, sout_int))
                     sout = 'NO'
 
@@ -2155,8 +2202,8 @@ class EPT(GeomCommon):
                 thicknesses.append(t)
                 thetas.append(theta)
                 souts.append(sout)
-                if self.is_debug_file:
-                    self.binary_debug.write('      global_ply=%s mid=%s t=%s theta=%s sout_int=%s sout=%r\n' % (
+                if op2.is_debug_file:
+                    op2.binary_debug.write('      global_ply=%s mid=%s t=%s theta=%s sout_int=%s sout=%r\n' % (
                         global_ply, mid, t, theta, sout_int, sout))
                 n += ntotal2
                 ilayer += 1
@@ -2165,25 +2212,25 @@ class EPT(GeomCommon):
             try:
                 ft = ft_map[ft_int]
             except KeyError:
-                self.log.error('pid=%s cant parse ft=%s; should be HILL, HOFF, TSAI, STRN'
+                op2.log.error('pid=%s cant parse ft=%s; should be HILL, HOFF, TSAI, STRN'
                                '...skipping' % (pid, ft_int))
                 continue
 
             try:
                 lam = lam_map[lam_int]
             except KeyError:
-                self.log.error('pid=%s cant parse lam=%s; should be HILL, HOFF, TSAI, STRN'
+                op2.log.error('pid=%s cant parse lam=%s; should be HILL, HOFF, TSAI, STRN'
                                '...skipping' % (pid, lam_int))
                 continue
 
             # apparently Nastran makes duplicate property ids...
-            if pid in self.properties and self.properties[pid].type == 'PCOMP':
-                del self.properties[pid]
+            if pid in op2.properties and op2.properties[pid].type == 'PCOMP':
+                del op2.properties[pid]
 
-            self.add_pcompg(pid, global_ply_ids, mids, thicknesses, thetas=thetas, souts=souts,
-                            nsm=nsm, sb=sb, ft=ft, tref=tref, ge=ge, lam=lam, z0=z0, comment='')
+            op2.add_pcompg(pid, global_ply_ids, mids, thicknesses, thetas=thetas, souts=souts,
+                           nsm=nsm, sb=sb, ft=ft, tref=tref, ge=ge, lam=lam, z0=z0, comment='')
             nproperties += 1
-        self.card_count['PCOMPG'] = nproperties
+        op2.card_count['PCOMPG'] = nproperties
         return n
 
 # PCOMPA
@@ -2192,11 +2239,12 @@ class EPT(GeomCommon):
         """
         (152,19,147) - Record 24
         """
-        self.log.info('skipping PCONEAX in EPT')
+        self.op2.log.info('skipping PCONEAX in EPT')
         return len(data)
 
     def _read_pconv(self, data: bytes, n: int) -> int:
         """common method for reading PCONVs"""
+        op2 = self.op2
         #n = self._read_dual_card(data, n, self._read_pconv_nx, self._read_pconv_msc,
                                  #'PCONV', self._add_pconv)
 
@@ -2207,13 +2255,13 @@ class EPT(GeomCommon):
             56 : self._read_pconv_msc_56, # 56=4*14
         }
         try:
-            n, elements = self.geom2._read_double_card_load(
+            n, elements = op2.reader_geom2._read_double_card_load(
                 card_name, card_obj,
                 methods, data, n)
         except DoubleCardError:
             nx_method = partial(self._read_pconv_nx_16, card_obj)
             msc_method = partial(self._read_pconv_msc_56, card_obj)
-            n, elements = self._read_dual_card_load(
+            n, elements = op2._read_dual_card_load(
                 data, n,
                 nx_method, msc_method,
                 card_name, self._add_op2_property)
@@ -2221,19 +2269,19 @@ class EPT(GeomCommon):
         nelements = len(elements)
         for prop in elements:
             key = prop.pconid
-            if key in self.convection_properties:
-                prop_old = self.convection_properties[key]
+            if key in op2.convection_properties:
+                prop_old = op2.convection_properties[key]
                 if prop != prop_old:
-                    self.log.warning(prop.raw_fields())
-                    self.log.warning(prop_old.raw_fields())
-                    self.log.warning(f'PCONV pconid={key}; old, new\n{prop_old}{prop}')
+                    op2.log.warning(prop.raw_fields())
+                    op2.log.warning(prop_old.raw_fields())
+                    op2.log.warning(f'PCONV pconid={key}; old, new\n{prop_old}{prop}')
                     # this will fail due to a duplicate id
                     self._add_pconv(prop)
                 #else:
                     # already exists
             else:
                 self._add_pconv(prop)
-        self.card_count['PCONV'] = nelements
+        op2.card_count['PCONV'] = nelements
 
         return n
 
@@ -2241,8 +2289,9 @@ class EPT(GeomCommon):
         """
         (11001,110,411)- NX version
         """
+        op2 = self.op2
         ntotal = 16  # 4*4
-        struct_3if = Struct(self._endian + b'3if')
+        struct_3if = Struct(op2._endian + b'3if')
         nentries = (len(data) - n) // ntotal
         assert (len(data) - n) % ntotal == 0
         props = []
@@ -2262,8 +2311,9 @@ class EPT(GeomCommon):
         """
         (11001,110,411)- MSC version - Record 25
         """
+        op2 = self.op2
         ntotal = 56  # 14*4
-        s = Struct(self._endian + b'3if 4i fii 3f')
+        s = Struct(op2._endian + b'3if 4i fii 3f')
         nentries = (len(data) - n) // ntotal
         assert (len(data) - n) % ntotal == 0
         props = []
@@ -2291,8 +2341,9 @@ class EPT(GeomCommon):
         7 EXPPI RS Prandtl number convection exponent into the working fluid
         8 EXPPO RS Prandtl number convection exponent out of the working fluid
         """
+        op2 = self.op2
         ntotal = 32  # 8*4
-        structi = Struct(self._endian + b'4i 4f')
+        structi = Struct(op2._endian + b'4i 4f')
         nentries = (len(data) - n) // ntotal
         for unused_i in range(nentries):
             out = structi.unpack(data[n:n+ntotal])
@@ -2301,17 +2352,18 @@ class EPT(GeomCommon):
                 #print(out)
                 prop = PCONVM(pconid, mid, coeff, form=form, flag=flag,
                               expr=expr, exppi=expri, exppo=exppo, comment='')
-                self._add_methods._add_convection_property_object(prop)
+                op2._add_methods._add_convection_property_object(prop)
             n += ntotal
-        self.card_count['PCONVM'] = nentries
+        op2.card_count['PCONVM'] = nentries
         return n
 
     def _read_pdamp(self, data: bytes, n: int) -> int:
         """
         PDAMP(202,2,45) - the marker for Record ???
         """
+        op2 = self.op2
         ntotal = 8 * self.factor # 2*4
-        struct_if = Struct(mapfmt(self._endian + b'if', self.size))
+        struct_if = Struct(mapfmt(op2._endian + b'if', self.size))
         nentries = (len(data) - n) // ntotal
         for unused_i in range(nentries):
             out = struct_if.unpack(data[n:n+ntotal])
@@ -2319,15 +2371,15 @@ class EPT(GeomCommon):
             prop = PDAMP.add_op2_data(out)
             self._add_op2_property(prop)
             n += ntotal
-        self.card_count['PDAMP'] = nentries
+        op2.card_count['PDAMP'] = nentries
         return n
 
     def _read_pdampt(self, data: bytes, n: int) -> int:  # 26
-        self.log.info('skipping PDAMPT in EPT')
+        self.op2.log.info('skipping PDAMPT in EPT')
         return len(data)
 
     def _read_pdamp5(self, data: bytes, n: int) -> int:  # 26
-        self.log.info('skipping PDAMP5 in EPT')
+        self.op2.log.info('skipping PDAMP5 in EPT')
         return len(data)
 
 # PDUM1
@@ -2342,19 +2394,20 @@ class EPT(GeomCommon):
 
     def _read_pelas(self, data: bytes, n: int) -> int:
         """PELAS(302,3,46) - the marker for Record 39"""
-        struct_i3f = Struct(mapfmt(self._endian + b'i3f', self.size))
+        op2 = self.op2
+        struct_i3f = Struct(mapfmt(op2._endian + b'i3f', self.size))
         ntotal = 16 * self.factor # 4*4
         nproperties = (len(data) - n) // ntotal
         for unused_i in range(nproperties):
             edata = data[n:n+ntotal]
             out = struct_i3f.unpack(edata)
             #(pid, k, ge, s) = out
-            if self.is_debug_file:
-                self.binary_debug.write('  PELAS=%s\n' % str(out))
+            if op2.is_debug_file:
+                op2.binary_debug.write('  PELAS=%s\n' % str(out))
             prop = PELAS.add_op2_data(out)
             self._add_op2_property(prop)
             n += ntotal
-        self.card_count['PELAS'] = nproperties
+        op2.card_count['PELAS'] = nproperties
         return n
 
     def _read_pfast_msc(self, data: bytes, n: int) -> int:
@@ -2387,18 +2440,19 @@ class EPT(GeomCommon):
         ints    = (99, 0,   0.1, 0,   0,   0,   0,   -1, 0.2, 5.0, 0,   0,   7.9, 0,   0,   0,   0,   -1, 0,   471200.0, 181200.0, 181200.0, 226.6, 45610.0, 45610.0)
         floats  = (99, 0.0, 0.1, 0.0, 0.0, 0.0, 0.0, -1, 0.2, 5.0, 0.0, 0.0, 7.9, 0.0, 0.0, 0.0, 0.0, -1, 0.0, 471200.0, 181200.0, 181200.0, 226.6, 45610.0, 45610.0)
         """
-        #self.show_data(data[n:], types='ifs')
+        op2 = self.op2
+        #op2.show_data(data[n:], types='ifs')
         #ntotal = 92 * self.factor # 26*4
-        #struct1 = Struct(self._endian + b'ifii 3f')
+        #struct1 = Struct(op2._endian + b'ifii 3f')
 
         ntotal = 100 * self.factor # 25*4
-        struct1 = Struct(self._endian + b'2if 5i 2f2i2f 3i 2i 6f')
+        struct1 = Struct(op2._endian + b'2if 5i 2f2i2f 3i 2i 6f')
         nproperties = (len(data) - n) // ntotal
         for unused_i in range(nproperties):
             edata = data[n:n+ntotal]
             out = struct1.unpack(edata)
-            if self.is_debug_file:
-                self.binary_debug.write('  PFAST=%s\n' % str(out))
+            if op2.is_debug_file:
+                op2.binary_debug.write('  PFAST=%s\n' % str(out))
             (pid, d, mcid, unused_connbeh, unused_conntype, unused_extcon,
              unused_condtype, unused_weldtype, unused_minlen, unused_maxlen,
              unused_gmcheck, unused_spcgs, mass, ge,
@@ -2412,7 +2466,7 @@ class EPT(GeomCommon):
             #print(prop)
             self._add_op2_property(prop)
             n += ntotal
-        self.card_count['PFAST'] = nproperties
+        op2.card_count['PFAST'] = nproperties
         return n
 
     def _read_pfast_nx(self, data: bytes, n: int) -> int:
@@ -2420,17 +2474,18 @@ class EPT(GeomCommon):
         PFAST(3601,36,55)
         NX only
         """
-        self.to_nx(' because PFAST-NX was found')
+        op2 = self.op2
+        op2.to_nx(' because PFAST-NX was found')
         ntotal = 48
-        struct1 = Struct(self._endian + b'ifii 8f')
+        struct1 = Struct(op2._endian + b'ifii 8f')
         nproperties = (len(data) - n) // ntotal
         delta = (len(data) - n) % ntotal
         assert delta == 0, 'len(data)-n=%s n=%s' % (len(data) - n, (len(data) - n) / 48.)
         for unused_i in range(nproperties):
             edata = data[n:n+ntotal]
             out = struct1.unpack(edata)
-            if self.is_debug_file:
-                self.binary_debug.write('  PFAST=%s\n' % str(out))
+            if op2.is_debug_file:
+                op2.binary_debug.write('  PFAST=%s\n' % str(out))
             (pid, d, mcid, mflag, kt1, kt2, kt3, kr1, kr2, kr3, mass, ge) = out
 
             data_in = (pid, d, mcid, mflag, kt1, kt2, kt3,
@@ -2438,7 +2493,7 @@ class EPT(GeomCommon):
             prop = PFAST.add_op2_data(data_in)
             self._add_op2_property(prop)
             n += ntotal
-        self.card_count['PFAST'] = nproperties
+        op2.card_count['PFAST'] = nproperties
         return n
 
     def _read_pelast(self, data: bytes, n: int) -> int:
@@ -2451,67 +2506,71 @@ class EPT(GeomCommon):
                   damping
         4 TKNID I TABLEDi entry
         """
+        op2 = self.op2
         ntotal = 16 * self.factor
-        struct_4i = Struct(mapfmt(self._endian + b'4i', self.size))
+        struct_4i = Struct(mapfmt(op2._endian + b'4i', self.size))
         nproperties = (len(data) - n) // ntotal
         for unused_i in range(nproperties):
             edata = data[n:n+ntotal]
             out = struct_4i.unpack(edata)
-            if self.is_debug_file:
-                self.binary_debug.write('  PELAST=%s\n' % str(out))
+            if op2.is_debug_file:
+                op2.binary_debug.write('  PELAST=%s\n' % str(out))
             #(pid, tkid, tgeid, tknid) = out
             prop = PELAST.add_op2_data(out)
-            self._add_methods._add_pelast_object(prop)
+            op2._add_methods._add_pelast_object(prop)
             n += ntotal
-        self.card_count['PELAST'] = nproperties
+        op2.card_count['PELAST'] = nproperties
         return n
 
     def _read_pgap(self, data: bytes, n: int) -> int:
         """
         PGAP(2102,21,121) - the marker for Record 42
         """
+        op2 = self.op2
         ntotal = 44 * self.factor
-        struct_i10f = Struct(mapfmt(self._endian + b'i10f', self.size))
+        struct_i10f = Struct(mapfmt(op2._endian + b'i10f', self.size))
         nproperties = (len(data) - n) // ntotal
         for unused_i in range(nproperties):
             edata = data[n:n+ntotal]
             out = struct_i10f.unpack(edata)
-            if self.is_debug_file:
-                self.binary_debug.write('  PGAP=%s\n' % str(out))
+            if op2.is_debug_file:
+                op2.binary_debug.write('  PGAP=%s\n' % str(out))
             #(pid,u0,f0,ka,kb,kt,mu1,mu2,tmax,mar,trmin) = out
             prop = PGAP.add_op2_data(out)
             self._add_op2_property(prop)
             n += ntotal
-        self.card_count['PGAP'] = nproperties
+        op2.card_count['PGAP'] = nproperties
         return n
 
     def _read_phbdy(self, data: bytes, n: int) -> int:
         """
         PHBDY(2802,28,236) - the marker for Record 43
         """
-        struct_i3f = Struct(self._endian + b'ifff')
+        op2 = self.op2
+        struct_i3f = Struct(op2._endian + b'ifff')
         nproperties = (len(data) - n) // 16
         for unused_i in range(nproperties):
             edata = data[n:n+16]
             out = struct_i3f.unpack(edata)
-            if self.is_debug_file:
-                self.binary_debug.write('  PHBDY=%s\n' % str(out))
+            if op2.is_debug_file:
+                op2.binary_debug.write('  PHBDY=%s\n' % str(out))
             #(pid, af, d1, d2) = out
             prop = PHBDY.add_op2_data(out)
-            self._add_methods._add_phbdy_object(prop)
+            op2._add_methods._add_phbdy_object(prop)
             n += 16
-        self.card_count['PHBDY'] = nproperties
+        op2.card_count['PHBDY'] = nproperties
         return n
 
     def _read_pintc(self, data: bytes, n: int) -> int:
-        self.log.info('skipping PINTC in EPT')
+        self.op2.log.info('skipping PINTC in EPT')
         return len(data)
 
     def _read_pints(self, data: bytes, n: int) -> int:
-        self.log.info('skipping PINTS in EPT')
+        self.op2.log.info('skipping PINTS in EPT')
         return len(data)
 
     def _read_pbeam3(self, data: bytes, n: int) -> int:
+        op2 = self.op2
         card_name = 'PBUSHT'
         card_obj = PBUSHT
         methods = {
@@ -2519,12 +2578,12 @@ class EPT(GeomCommon):
             456 : self._read_pbeam3_456,
         }
         try:
-            n = self.geom2._read_double_card(
+            n = op2.reader_geom2._read_double_card(
                 card_name, card_obj, self._add_op2_property,
                 methods, data, n)
         except DoubleCardError:
             raise
-            self.log.warning(f'try-except {card_name}')
+            op2.log.warning(f'try-except {card_name}')
         return n
 
     def _read_pbeam3_456(self, card_obj, data: bytes, n: int) -> int:
@@ -2548,10 +2607,11 @@ class EPT(GeomCommon):
                          2, 0.1, 0.1, 0.1, 0.0, 0.2, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
                          1.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0)
         """
-        #self.show_data(data[n:])
+        op2 = self.op2
+        #op2.show_data(data[n:])
         ntotal = 456 * self.factor # 114*4
         #
-        struct1 = Struct(mapfmt(self._endian +
+        struct1 = Struct(mapfmt(op2._endian +
                                 b'2i' # pid, mid
                                 b'3f' # A, Iy, Iz
                                 b'5f'  # # a, b, c, d, e
@@ -2579,7 +2639,7 @@ class EPT(GeomCommon):
         for unused_i in range(nentries):
             #print(n, ntotal)
             datai = data[n:n+ntotal]
-            #self.show_data(datai, types='ifqd')
+            #op2.show_data(datai, types='ifqd')
             n += ntotal
 
             (pid, mid, A, iz, iy,
@@ -2632,7 +2692,7 @@ class EPT(GeomCommon):
             str(prop)
             props.append(prop)
             #self._add_op2_property(prop)
-        #self.card_count['PBEAM3'] = nentries
+        #op2.card_count['PBEAM3'] = nentries
         return n, props
 
     def _read_pbeam3_264(self, card_obj, data: bytes, n: int) -> int:
@@ -2642,9 +2702,10 @@ class EPT(GeomCommon):
         ints    = (2901, 2, 0.1, 0.1, 0.1, 0,   0.02, 0,   0.5, 0,   0,   0.5, -0.5, 0,   0,   -0.5, 2, 0.1, 0.1, 0.1, 0,   0.02, 0,   0,   0,   0,   0,   0,   0,   0,   0,   2, 0.1, 0.1, 0.1, 0,   0.02, 0,   0,   0,   0,   0,   0,   0,   0,   0,   1.0, 1.0,   0,   0,   0,   0, 0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   -2,   0,   0)
         floats  = (2901, 2, 0.1, 0.1, 0.1, 0.0, 0.02, 0.0, 0.5, 0.0, 0.0, 0.5, -0.5, 0.0, 0.0, -0.5, 2, 0.1, 0.1, 0.1, 0.0, 0.02, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 2, 0.1, 0.1, 0.1, 0.0, 0.02, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, nan, 0.0, 0.0)
         """
+        op2 = self.op2
         ntotal = 264 * self.factor # 66*4
         #                                       p/m ayz ae fj ki  14f i
-        struct1 = Struct(mapfmt(self._endian + b'2i 3f  5f 5f fi  14f i 30f 4i', self.size))
+        struct1 = Struct(mapfmt(op2._endian + b'2i 3f  5f 5f fi  14f i 30f 4i', self.size))
 
         ndatai = len(data) - n
         nentries = ndatai // ntotal
@@ -2692,8 +2753,9 @@ class EPT(GeomCommon):
         ints    = (1, 1, 1.0, 0,   0,   0,   0,   0,   2, 2, 1.0, 0, 0, 0, 0, 0)
         floats  = (1, 1, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 2, 2, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0)
         """
+        op2 = self.op2
         ntotal = 32 * self.factor # 8*4
-        struct1 = Struct(mapfmt(self._endian + b'2i 2f 4i', self.size))
+        struct1 = Struct(mapfmt(op2._endian + b'2i 2f 4i', self.size))
 
         ndatai = len(data) - n
         nentries = ndatai // ntotal
@@ -2703,13 +2765,13 @@ class EPT(GeomCommon):
             pid, mid, t, nsm, foropt, csopt = out[:6]
             #print(out)
             assert csopt == 0, csopt
-            pplane = self.add_pplane(pid, mid, t=t, nsm=nsm,
+            pplane = op2.add_pplane(pid, mid, t=t, nsm=nsm,
                                      formulation_option=foropt)
             pplane.validate()
             #print(pplane)
             str(pplane)
             n += ntotal
-        self.card_count['PLPLANE'] = nentries
+        op2.card_count['PLPLANE'] = nentries
         return n
 
     def _read_plplane(self, data: bytes, n: int) -> int:
@@ -2734,20 +2796,21 @@ class EPT(GeomCommon):
 
         .. warning:: CSOPT ad T are not supported
         """
+        op2 = self.op2
         ntotal = 44 * self.factor  # 4*11
         if self.size == 4:
-            s = Struct(self._endian + b'3i 4s f 6i')
+            s = Struct(op2._endian + b'3i 4s f 6i')
         else:
-            s = Struct(self._endian + b'3q 8s d 6q')
+            s = Struct(op2._endian + b'3q 8s d 6q')
         nentries = (len(data) - n) // ntotal
         for unused_i in range(nentries):
             out = s.unpack(data[n:n+ntotal])
             pid, mid, cid, location, unused_t, unused_csopt = out[:6]
             location = location.decode('latin1')
-            #self.show_data(data[n:n+ntotal], 'ifs')
-            self.add_plplane(pid, mid, cid=cid, stress_strain_output_location=location)
+            #op2.show_data(data[n:n+ntotal], 'ifs')
+            op2.add_plplane(pid, mid, cid=cid, stress_strain_output_location=location)
             n += ntotal
-        self.card_count['PLPLANE'] = nentries
+        op2.card_count['PLPLANE'] = nentries
         return n
 
     def _read_plsolid(self, data: bytes, n: int) -> int:
@@ -2767,35 +2830,37 @@ class EPT(GeomCommon):
 
         .. warning:: CSOPT is not supported
         """
+        op2 = self.op2
         ntotal = 28 * self.factor  # 4*7
         if self.size == 4:
-            struct1 = Struct(self._endian + b'2i 4s 4i')
+            struct1 = Struct(op2._endian + b'2i 4s 4i')
         else:
-            struct1 = Struct(self._endian + b'2q 8s 4q')
+            struct1 = Struct(op2._endian + b'2q 8s 4q')
         nentries = (len(data) - n) // ntotal
         for unused_i in range(nentries):
             out = struct1.unpack(data[n:n+ntotal])
             pid, mid, location, unused_csopt, unused_null_a, unused_null_b, unused_null_c = out
             location = location.decode('latin1')
-            #self.show_data(data[n:n+ntotal], 'ifs')
-            self.add_plsolid(pid, mid, stress_strain=location, ge=0.)
+            #op2.show_data(data[n:n+ntotal], 'ifs')
+            op2.add_plsolid(pid, mid, stress_strain=location, ge=0.)
             n += ntotal
-        self.card_count['PLSOLID'] = nentries
+        op2.card_count['PLSOLID'] = nentries
         return n
 
     def _read_pmass(self, data: bytes, n: int) -> int:
         """
         PMASS(402,4,44) - the marker for Record 48
         """
+        op2 = self.op2
         ntotal = 8 * self.factor # 2*4
-        struct_if = Struct(mapfmt(self._endian + b'if', self.size))
+        struct_if = Struct(mapfmt(op2._endian + b'if', self.size))
         nentries = (len(data) - n) // ntotal
         for unused_i in range(nentries):
             edata = data[n:n + ntotal]
             out = struct_if.unpack(edata)
             #out = (pid, mass)
-            if self.is_debug_file:
-                self.binary_debug.write('  PMASS=%s\n' % str(out))
+            if op2.is_debug_file:
+                op2.binary_debug.write('  PMASS=%s\n' % str(out))
             prop = PMASS.add_op2_data(out)
             self._add_op2_property_mass(prop)
             n += ntotal
@@ -2805,66 +2870,69 @@ class EPT(GeomCommon):
         """
         PROD(902,9,29) - the marker for Record 49
         """
+        op2 = self.op2
         ntotal = 24 * self.factor  # 6*4
-        struct_2i4f = Struct(mapfmt(self._endian + b'2i4f', self.size))
+        struct_2i4f = Struct(mapfmt(op2._endian + b'2i4f', self.size))
         nproperties = (len(data) - n) // ntotal
         for unused_i in range(nproperties):
             edata = data[n:n+ntotal]
             out = struct_2i4f.unpack(edata)
             #(pid, mid, a, j, c, nsm) = out
             prop = PROD.add_op2_data(out)
-            if self.is_debug_file:
-                self.binary_debug.write('  PROD=%s\n' % str(out))
+            if op2.is_debug_file:
+                op2.binary_debug.write('  PROD=%s\n' % str(out))
             self._add_op2_property(prop)
             n += ntotal
-        self.card_count['PROD'] = nproperties
+        op2.card_count['PROD'] = nproperties
         return n
 
     def _read_pshear(self, data: bytes, n: int) -> int:
         """
         PSHEAR(1002,10,42) - the marker for Record 50
         """
+        op2 = self.op2
         ntotal = 24 * self.factor
-        struct_2i4f = Struct(mapfmt(self._endian + b'2i4f', self.size))
+        struct_2i4f = Struct(mapfmt(op2._endian + b'2i4f', self.size))
         nproperties = (len(data) - n) // ntotal
         for unused_i in range(nproperties):
             edata = data[n:n+ntotal]
             out = struct_2i4f.unpack(edata)
             #(pid, mid, t, nsm, f1, f2) = out
-            if self.is_debug_file:
-                self.binary_debug.write('  PSHEAR=%s\n' % str(out))
+            if op2.is_debug_file:
+                op2.binary_debug.write('  PSHEAR=%s\n' % str(out))
             prop = PSHEAR.add_op2_data(out)
             self._add_op2_property(prop)
             n += ntotal
-        self.card_count['PSHEAR'] = nproperties
+        op2.card_count['PSHEAR'] = nproperties
         return n
 
     def _read_pshell(self, data: bytes, n: int) -> int:
         """
         PSHELL(2302,23,283) - the marker for Record 51
         """
+        op2 = self.op2
         ntotal = 44 * self.factor  # 11*4
-        s = Struct(mapfmt(self._endian + b'iififi4fi', self.size))
+        s = Struct(mapfmt(op2._endian + b'iififi4fi', self.size))
         nproperties = (len(data) - n) // ntotal
         for unused_i in range(nproperties):
             edata = data[n:n+ntotal]
             out = s.unpack(edata)
             (pid, mid1, unused_t, mid2, unused_bk, mid3, unused_ts,
              unused_nsm, unused_z1, unused_z2, mid4) = out
-            if self.is_debug_file:
-                self.binary_debug.write('  PSHELL=%s\n' % str(out))
+            if op2.is_debug_file:
+                op2.binary_debug.write('  PSHELL=%s\n' % str(out))
             prop = PSHELL.add_op2_data(out)
             n += ntotal
 
-            if pid in self.properties:
+            if pid in op2.properties:
                 # this is a fake PSHELL
-                propi = self.properties[pid]
+                propi = op2.properties[pid]
                 if prop == propi:
-                    self.log.warning(f'Fake PSHELL {pid:d} (skipping):\n{propi}')
+                    op2.log.warning(f'Fake PSHELL {pid:d} (skipping):\n{propi}')
                     nproperties -= 1
                     continue
                 #assert propi.type in ['PCOMP', 'PCOMPG'], propi.get_stats()
-                self.log.error(f'PSHELL {pid:d} is also {propi.type} (skipping PSHELL):\n{propi}{prop}')
+                op2.log.error(f'PSHELL {pid:d} is also {propi.type} (skipping PSHELL):\n{propi}{prop}')
                 nproperties -= 1
                 continue
             #continue
@@ -2873,20 +2941,21 @@ class EPT(GeomCommon):
             else:
                 self._add_op2_property(prop)
         if nproperties:
-            self.card_count['PSHELL'] = nproperties
+            op2.card_count['PSHELL'] = nproperties
         return n
 
     def _read_psolid(self, data: bytes, n: int) -> int:
         """
         PSOLID(2402,24,281) - the marker for Record 52
         """
+        op2 = self.op2
         #print("reading PSOLID")
         if self.size == 4:
             ntotal = 28  # 7*4
-            struct_6i4s = Struct(self._endian + b'6i4s')
+            struct_6i4s = Struct(op2._endian + b'6i4s')
         else:
             ntotal = 28 * 2
-            struct_6i4s = Struct(self._endian + b'6q8s')
+            struct_6i4s = Struct(op2._endian + b'6q8s')
 
         nproperties = (len(data) - n) // ntotal
         nproperties_found = 0
@@ -2895,18 +2964,18 @@ class EPT(GeomCommon):
             out = struct_6i4s.unpack(edata)
             #(pid, mid, cid, inp, stress, isop, fctn) = out
             #data_in = [pid, mid, cid, inp, stress, isop, fctn]
-            if self.is_debug_file:
-                self.binary_debug.write('  PSOLID=%s\n' % str(out))
+            if op2.is_debug_file:
+                op2.binary_debug.write('  PSOLID=%s\n' % str(out))
 
             n += ntotal
             fctn = out[-1]
             if fctn == b'FAKE':
-                self.log.warning('    PSOLID=%s; is this a PCOMPLS?' % str(out))
+                op2.log.warning('    PSOLID=%s; is this a PCOMPLS?' % str(out))
                 continue
             prop = PSOLID.add_op2_data(out)
             self._add_op2_property(prop)
             nproperties_found += 1
-        self.card_count['PSOLID'] = nproperties_found
+        op2.card_count['PSOLID'] = nproperties_found
         return n
 
 # PSOLIDL
@@ -2924,23 +2993,25 @@ class EPT(GeomCommon):
 
         .. warning:: assuming OD2 is not written (only done for thermal)
         """
-        struct_2i3f = Struct(self._endian + b'2i3f')
+        op2 = self.op2
+        struct_2i3f = Struct(op2._endian + b'2i3f')
         nproperties = (len(data) - n) // 20
         for unused_i in range(nproperties):
             edata = data[n:n+20]  # or 24???
             out = struct_2i3f.unpack(edata)
             (pid, mid, OD, t, nsm) = out
             data_in = [pid, mid, OD, t, nsm]
-            if self.is_debug_file:
-                self.binary_debug.write('  PTUBE=%s\n' % str(out))
+            if op2.is_debug_file:
+                op2.binary_debug.write('  PTUBE=%s\n' % str(out))
             prop = PTUBE.add_op2_data(data_in)
             self._add_op2_property(prop)
             n += 20
-        self.card_count['PTUBE'] = nproperties
+        op2.card_count['PTUBE'] = nproperties
         return n
 
     def _read_pset(self, data: bytes, n: int) -> int:
-        struct_5i4si = Struct(self._endian + b'5i4si')
+        op2 = self.op2
+        struct_5i4si = Struct(op2._endian + b'5i4si')
         nentries = 0
         while  n < len(data):
             edata = data[n:n+28]
@@ -2949,20 +3020,20 @@ class EPT(GeomCommon):
             idi, poly1, poly2, poly3, cid, typei, typeid = out
             typei = typei.rstrip().decode('latin1')
             assert typei in ['SET', 'ELID'], (idi, poly1, poly2, poly3, cid, typei, typeid)
-            if self.is_debug_file:
-                self.binary_debug.write('  PVAL=%s\n' % str(out))
+            if op2.is_debug_file:
+                op2.binary_debug.write('  PVAL=%s\n' % str(out))
             #print(idi, poly1, poly2, poly3, cid, typei, typeid)
             typeids = []
             n += 28
             while typeid != -1:
                 typeids.append(typeid)
-                typeid, = self.struct_i.unpack(data[n:n+4])
+                typeid, = op2.struct_i.unpack(data[n:n+4])
                 n += 4
                 #print(val)
             #print(typeids)
             # PSET ID POLY1 POLY2 POLY3 CID SETTYP ID
-            self.add_pset(idi, poly1, poly2, poly3, cid, typei, typeids)
-        self.card_count['PSET'] = nentries
+            op2.add_pset(idi, poly1, poly2, poly3, cid, typei, typeids)
+        op2.card_count['PSET'] = nentries
         return n
 
     def _read_pval(self, data: bytes, n: int) -> int:
@@ -2980,13 +3051,14 @@ class EPT(GeomCommon):
                      number with this p-value specification.
         Words 1 through 7 repeat until End of Record
         """
-        #self.show_data(data[n:])
+        op2 = self.op2
+        #op2.show_data(data[n:])
         if self.size == 4:
-            struct_5i4si = Struct(self._endian + b'5i 4s i')
-            struct_i = self.struct_i
+            struct_5i4si = Struct(op2._endian + b'5i 4s i')
+            struct_i = op2.struct_i
         else:
-            struct_5i4si = Struct(self._endian + b'5q 8s q')
-            struct_i = self.struct_q
+            struct_5i4si = Struct(op2._endian + b'5q 8s q')
+            struct_i = op2.struct_q
 
         nentries = 0
         ntotal = 28 * self.factor
@@ -2998,8 +3070,8 @@ class EPT(GeomCommon):
             idi, poly1, poly2, poly3, cid, typei, typeid = out
             typei = typei.rstrip().decode('latin1')
             assert typei in ['SET', 'ELID'], f'idi={idi} poly1={poly1} poly2={poly2} poly3={poly3} cid={cid} typei={typei} typeid={typeid}'
-            if self.is_debug_file:
-                self.binary_debug.write('  PVAL=%s\n' % str(out))
+            if op2.is_debug_file:
+                op2.binary_debug.write('  PVAL=%s\n' % str(out))
             #print(idi, poly1, poly2, poly3, cid, typei, typeid)
             typeids = []
             n += ntotal
@@ -3010,34 +3082,35 @@ class EPT(GeomCommon):
                 #print(val)
             #print(typeids)
             # PVAL ID POLY1 POLY2 POLY3 CID SETTYP ID
-            self.add_pval(idi, poly1, poly2, poly3, cid, typei, typeids)
-        self.card_count['PVAL'] = nentries
+            op2.add_pval(idi, poly1, poly2, poly3, cid, typei, typeids)
+        op2.card_count['PVAL'] = nentries
         return n
 
     def _read_pvisc(self, data: bytes, n: int) -> int:
         """PVISC(1802,18,31) - the marker for Record 39"""
-        struct_i2f = Struct(self._endian + b'i2f')
+        op2 = self.op2
+        struct_i2f = Struct(op2._endian + b'i2f')
         nproperties = (len(data) - n) // 12
         for unused_i in range(nproperties):
             edata = data[n:n+12]
             out = struct_i2f.unpack(edata)
-            if self.is_debug_file:
-                self.binary_debug.write('  PVISC=%s\n' % str(out))
+            if op2.is_debug_file:
+                op2.binary_debug.write('  PVISC=%s\n' % str(out))
             #(pid, ce, cr) = out
             prop = PVISC.add_op2_data(out)
             self._add_op2_property(prop)
             n += 12
-        self.card_count['PVISC'] = nproperties
+        op2.card_count['PVISC'] = nproperties
         return n
 
 # PWELD
 # PWSEAM
     def _read_view(self, data: bytes, n: int) -> int:
-        self.log.info('skipping VIEW in EPT')
+        self.op2.log.info('skipping VIEW in EPT')
         return len(data)
 
     def _read_view3d(self, data: bytes, n: int) -> int:
-        self.log.info('skipping VIEW3D in EPT')
+        self.op2.log.info('skipping VIEW3D in EPT')
         return len(data)
 
 def break_by_minus1(idata):

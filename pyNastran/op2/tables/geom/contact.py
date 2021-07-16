@@ -1,27 +1,40 @@
 """
 defines readers for BDF objects in the OP2 CONTACT/CONTACTS table
 """
-from struct import Struct
-from typing import Tuple, Any
+from __future__ import annotations
+#from struct import Struct
+from typing import TYPE_CHECKING
 
 import numpy as np
-from pyNastran.op2.tables.geom.geom_common import GeomCommon
-from pyNastran.op2.op2_interface.op2_reader import mapfmt, reshape_bytes_block
+#from pyNastran.op2.op2_interface.op2_reader import mapfmt, reshape_bytes_block
+
+if TYPE_CHECKING:
+    from pyNastran.op2.op2_geom import OP2Geom
 
 
-class CONTACT(GeomCommon):
+class CONTACT:
     """defines methods for reading contact geometry"""
 
-    def _read_contact_4(self, data: bytes, ndata: int):
+    @property
+    def size(self) -> int:
+        return self.op2.size
+    @property
+    def factor(self) -> int:
+        return self.op2.factor
+
+    def _read_fake(self, data: bytes, n: int) -> int:
+        return self.op2._read_fake(data, n)
+
+    def read_contact_4(self, data: bytes, ndata: int):
         """
         reads the CONTACT/CONTACTS table
         Table of Bulk Data entry related to surface contact
 
         """
-        return self._read_geom_4(self._contact_map, data, ndata)
+        return self.op2._read_geom_4(self.contact_map, data, ndata)
 
-    def __init__(self):
-        GeomCommon.__init__(self)
+    def __init__(self, op2: OP2Geom):
+        self.op2 = op2
 
         # F:\Program Files\Siemens\NXNastran\nxn10p1\nxn10p1\nast\tpl\fsw_eng.op2
         # F:\work\pyNastran\pyNastran\master2\pyNastran\bdf\test\nx_spike\out_boltld04i.op2
@@ -35,7 +48,7 @@ class CONTACT(GeomCommon):
         # F:\work\pyNastran\pyNastran\master2\pyNastran\bdf\test\nx_spike\out_glueac103a.op2
         # F:\work\pyNastran\pyNastran\master2\pyNastran\bdf\test\nx_spike\out_conedg01s.op2
         # F:\work\pyNastran\pyNastran\master2\pyNastran\bdf\test\nx_spike\out_sline5.op2
-        self._contact_map = {
+        self.contact_map = {
             # C:\MSC.Software\simcenter_nastran_2019.2\tpl_post1\femao8rand.op2
             (7110, 71, 588) : ['BSURFS', self._read_bsurfs],
             (724, 7, 441) : ['BSURF', self._read_fake],
@@ -138,12 +151,13 @@ class CONTACT(GeomCommon):
         ints    = (101, 'INIPENE', 1, 0,   -1)
         floats  = (101, 'INIPENE', 1, 0.0, -1)
         """
+        op2 = self.op2
         size = self.size
         #assert size == 4, f'{name} size={size} is not supported'
 
         #self.show_data(data[n:], types='ifs')
-        ints = np.frombuffer(data[n:], self.idtype8)
-        floats = np.frombuffer(data[n:], self.fdtype8)
+        ints = np.frombuffer(data[n:], op2.idtype8)
+        floats = np.frombuffer(data[n:], op2.fdtype8)
         iminus1 = np.where(ints == -1)[0]
 
         istart = [0] + list(iminus1[:-1] + 1)
@@ -210,7 +224,7 @@ class CONTACT(GeomCommon):
             # 5 Value(i)    I/RS Parameter value (See Note 1 below)
             #self.add_bctparm(contact_id, params)
             print(contact_id, params)
-        self.log.warning(f'skipping {name}')
+        op2.log.warning(f'skipping {name}')
         return len(data)
 
     def _read_bsurfs(self, data: bytes, n: int) -> int:
@@ -242,8 +256,9 @@ class CONTACT(GeomCommon):
           1547, 156, 1689, 157)
 
         """
+        op2 = self.op2
         #self.show_data(data[n:], types='i')
-        ints = np.frombuffer(data[n:], self.idtype8)
+        ints = np.frombuffer(data[n:], op2.idtype8)
         iminus1 = np.where(ints == -1)[0]
 
         istart = [0] + list(iminus1[:-1] + 1)
@@ -263,6 +278,6 @@ class CONTACT(GeomCommon):
             g1s = eids_grids[:, 1]
             g2s = eids_grids[:, 2]
             g3s = eids_grids[:, 3]
-            bsurfs = self.add_bsurfs(bsurfs_id, eids, g1s, g2s, g3s)
+            bsurfs = op2.add_bsurfs(bsurfs_id, eids, g1s, g2s, g3s)
             str(bsurfs)
         return len(data)
