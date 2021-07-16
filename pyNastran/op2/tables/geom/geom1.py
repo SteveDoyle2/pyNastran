@@ -47,13 +47,13 @@ class GEOM1:
         return self.op2._read_fake(data, n)
 
     def _read_geom1_4(self, data: bytes, ndata: int):
-        return self.op2._read_geom_4(self._geom1_map, data, ndata)
+        return self.op2._read_geom_4(self.geom1_map, data, ndata)
 
     def __init__(self, op2: OP2Geom):
         #GeomCommon.__init__(self)
         self.op2 = op2
-        geom2 = self.op2
-        self._geom1_map = {
+        geom2 = self.op2.geom2
+        self.geom1_map = {
             (1701, 17, 6): ['CORD1C', self._read_cord1c],    # record 1
             (1801, 18, 5): ['CORD1R', self._read_cord1r],    # record 2
             (1901, 19, 7): ['CORD1S', self._read_cord1s],    # record 3

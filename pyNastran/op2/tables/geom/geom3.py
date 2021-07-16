@@ -568,14 +568,16 @@ class GEOM3(GeomCommon):
 
     def _read_rbar(self, data: bytes, n: int) -> int:
         """RBAR(6601,66,292) - Record 22"""
-        n = self._read_dual_card(data, n, self._read_rbar_nx, self._read_rbar_msc,
-                                 'RBAR', self._add_op2_rigid_element)
+        n = self.geom2._read_dual_card(
+            data, n, self._read_rbar_nx, self._read_rbar_msc,
+            'RBAR', self._add_op2_rigid_element)
         return n
 
     def _read_pload4(self, data: bytes, n: int) -> int:
         """PLOAD4(7209,72,299) - the marker for Record 20"""
-        n = self._read_dual_card(data, n, self._read_pload4_nx, self._read_pload4_msc,
-                                 'PLOAD4', self._add_methods._add_load_object)
+        n = self.geom2._read_dual_card(
+            data, n, self._read_pload4_nx, self._read_pload4_msc,
+            'PLOAD4', self._add_methods._add_load_object)
         return n
 
     def _read_pload4_msc(self, data, n):  ## inconsistent with DMAP

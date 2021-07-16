@@ -739,8 +739,8 @@ class GEOM4(GeomCommon):
 
     def _read_rrod(self, data: bytes, n: int) -> int:
         """common method for reading RROD"""
-        n = self._read_dual_card(data, n, self._read_rrod_nx, self._read_rrod_msc,
-                                 'RROD', self._add_op2_rigid_element)
+        n = self.geom2._read_dual_card(data, n, self._read_rrod_nx, self._read_rrod_msc,
+                                       'RROD', self._add_op2_rigid_element)
         return n
 
     def _read_rrod_nx(self, data, n):
@@ -876,8 +876,8 @@ class GEOM4(GeomCommon):
 
     def _read_spc(self, data: bytes, n: int) -> int:
         """common method for reading SPCs"""
-        n = self._read_dual_card(data, n, self._read_spc_nx, self._read_spc_msc,
-                                 'SPC', self._add_methods._add_constraint_spc_object)
+        n = self.geom2._read_dual_card(data, n, self._read_spc_nx, self._read_spc_msc,
+                                       'SPC', self._add_methods._add_constraint_spc_object)
         return n
 
     def _read_spc_msc(self, data, n):
@@ -1125,8 +1125,8 @@ class GEOM4(GeomCommon):
 
     def _read_spcd(self, data: bytes, n: int) -> int:
         """common method for reading SPCDs"""
-        n = self._read_dual_card(data, n, self._read_spcd_nx, self._read_spcd_msc,
-                                 'SPCD', self._add_methods._add_load_object)
+        n = self.geom2._read_dual_card(data, n, self._read_spcd_nx, self._read_spcd_msc,
+                                       'SPCD', self._add_methods._add_load_object)
         return n
 
     def _read_spcd_nx(self, data, n):

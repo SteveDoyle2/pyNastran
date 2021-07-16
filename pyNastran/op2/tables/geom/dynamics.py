@@ -133,8 +133,8 @@ class DYNAMICS(GeomCommon):
 
     def _read_acsrce(self, data: bytes, n: int) -> int:
         """common method for reading NX/MSC ACSRCE"""
-        n = self._read_dual_card(data, n, self._read_acsrce_nx, self._read_acsrce_msc,
-                                 'ACSRCE', self._add_methods._add_dload_entry)
+        n = self.geom2._read_dual_card(data, n, self._read_acsrce_nx, self._read_acsrce_msc,
+                                       'ACSRCE', self._add_methods._add_dload_entry)
         return n
 
     def _read_acsrce_msc(self, data, n):
@@ -1151,8 +1151,8 @@ class DYNAMICS(GeomCommon):
 
     def _read_randps(self, data: bytes, n: int) -> int:
         """common method for reading NX/MSC RLOAD1"""
-        n = self._read_dual_card(data, n, self._read_randps_nx, self._read_randps_msc,
-                                 'RLOAD1', self._add_methods._add_dload_entry)
+        n = self.geom2._read_dual_card(data, n, self._read_randps_nx, self._read_randps_msc,
+                                       'RLOAD1', self._add_methods._add_dload_entry)
         return n
 
     def _read_randps_nx(self, data: bytes, n: int) -> int:
@@ -1256,8 +1256,8 @@ class DYNAMICS(GeomCommon):
 
     def _read_rload1(self, data: bytes, n: int) -> int:
         """common method for reading NX/MSC RLOAD1"""
-        n = self._read_dual_card(data, n, self._read_rload1_nx, self._read_rload1_msc,
-                                 'RLOAD1', self._add_methods._add_dload_entry)
+        n = self.geom2._read_dual_card(data, n, self._read_rload1_nx, self._read_rload1_msc,
+                                       'RLOAD1', self._add_methods._add_dload_entry)
         return n
 
     def _read_rload1_nx(self, data: bytes, n: int) -> int:
@@ -1350,8 +1350,8 @@ class DYNAMICS(GeomCommon):
 
     def _read_rload2(self, data: bytes, n: int) -> int:
         """common method for reading NX/MSC RLOAD2"""
-        n = self._read_dual_card(data, n, self._read_rload2_nx, self._read_rload2_msc,
-                                 'RLOAD2', self._add_methods._add_dload_entry)
+        n = self.geom2._read_dual_card(data, n, self._read_rload2_nx, self._read_rload2_msc,
+                                       'RLOAD2', self._add_methods._add_dload_entry)
         return n
 
     def _read_rload2_nx(self, data, n):
@@ -1582,8 +1582,8 @@ class DYNAMICS(GeomCommon):
 #RSPINR
 
     def _read_rspint(self, data: bytes, n: int) -> int:
-        n = self._read_dual_card(data, n, self._read_rspint_32, self._read_rspint_56,
-                                 'RSPINT', self._add_methods._add_rspint_obj)
+        n = self.geom2._read_dual_card(data, n, self._read_rspint_32, self._read_rspint_56,
+                                       'RSPINT', self._add_methods._add_rspint_obj)
         return n
 
     def _add_rspint_obj(self, rspints: List[int]):
@@ -1800,8 +1800,8 @@ class DYNAMICS(GeomCommon):
         elif ndatai % 36 == 0 and ndatai % 24 and ndatai % 32:
             n, dloads = self._read_tload1_36(data, n)
         else:
-            n = self._read_dual_card(data, n, self._read_tload1_nx, self._read_tload1_msc,
-                                     'TLOAD1', self._add_methods._add_dload_entry)
+            n = self.geom2._read_dual_card(data, n, self._read_tload1_nx, self._read_tload1_msc,
+                                           'TLOAD1', self._add_methods._add_dload_entry)
             return n
         for dload in dloads:
             self._add_methods._add_dload_entry(dload)
@@ -1945,8 +1945,8 @@ class DYNAMICS(GeomCommon):
 
     def _read_tload2(self, data: bytes, n: int) -> int:
         """common method for reading NX/MSC TLOAD2"""
-        n = self._read_dual_card(data, n, self._read_tload2_nx, self._read_tload2_msc,
-                                 'TLOAD2', self._add_methods._add_dload_entry)
+        n = self.geom2._read_dual_card(data, n, self._read_tload2_nx, self._read_tload2_msc,
+                                       'TLOAD2', self._add_methods._add_dload_entry)
         return n
 
     def _read_tload2_nx(self, data: bytes, n: int) -> Tuple[int, List[TLOAD2]]:

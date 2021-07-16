@@ -1,7 +1,8 @@
 """defines readers for BDF objects in the OP2 MPT/MPTS table"""
 #pylint: disable=C0111,C0103,C0301,W0612,R0914,R0201
+from __future__ import annotations
 from struct import Struct
-from typing import Tuple, List
+from typing import Tuple, List, TYPE_CHECKING
 
 from pyNastran.bdf.cards.materials import (CREEP, MAT1, MAT2, MAT3, MAT4, MAT5,
                                            MAT8, MAT9, MAT10, MAT11, MATHP)
@@ -9,26 +10,37 @@ from pyNastran.bdf.cards.material_deps import (
     MATS1, MATT1, MATT2, MATT3, MATT4, MATT5, MATT8, MATT9)
 from pyNastran.bdf.cards.dynamic import (TSTEPNL,
                                          NLPARM, NLPARM_CONV_MAP, NLPARM_KMETHOD_MAP) # TSTEP
-from pyNastran.op2.tables.geom.geom_common import GeomCommon
 #from pyNastran.bdf.cards.thermal.thermal import (CHBDYE, CHBDYG, CHBDYP, PCONV, PCONVM,
                                                  #PHBDY, CONV, CONVM, RADBC)
 from pyNastran.bdf.cards.thermal.radiation import RADM
 from pyNastran.op2.op2_interface.op2_reader import mapfmt # , reshape_bytes_block
 from .geom2 import DoubleCardError
+if TYPE_CHECKING:
+    from pyNastran.op2.op2_geom import OP2Geom
 
 
-class MPT(GeomCommon):
+class MPT:
     """defines methods for reading op2 materials & time-stepping methods"""
+    @property
+    def size(self) -> int:
+        return self.op2.size
+    @property
+    def factor(self) -> int:
+        return self.op2.factor
+
+    def _read_fake(self, data: bytes, n: int) -> int:
+        return self.op2._read_fake(data, n)
 
     def _read_mpt_4(self, data: bytes, ndata: int):
-        return self._read_geom_4(self._mpt_map, data, ndata)
+        return self.op2._read_geom_4(self.mpt_map, data, ndata)
 
-    def __init__(self):
-        GeomCommon.__init__(self)
-        self.big_materials = {}
+    def __init__(self, op2: OP2Geom):
+        self.op2 = op2
+        #self.geom2 = op2.geom2
+        #self.big_materials = {}
 
         #F:\work\pyNastran\examples\Dropbox\move_tpl\chkout01.op2
-        self._mpt_map = {
+        self.mpt_map = {
             (1003, 10, 245) : ['CREEP', self._read_creep],  # record 1
             (103, 1, 77) : ['MAT1', self._read_mat1],       # record 3-msc-dmap2014
             (203, 2, 78) : ['MAT2', self._read_mat2],       # record 3
@@ -84,35 +96,37 @@ class MPT(GeomCommon):
     def add_op2_material(self, mat):
         #if mat.mid > 100000000:
             #raise RuntimeError('bad parsing...')
-        self._add_methods._add_structural_material_object(mat, allow_overwrites=False)
+        self.op2._add_methods._add_structural_material_object(mat, allow_overwrites=False)
         #print(str(mat)[:-1])
 
     def _read_creep(self, data: bytes, n: int) -> int:
         """
         CREEP(1003,10,245) - record 1
         """
+        op2 = self.op2
         ntotal = 64 * self.factor
         nmaterials = (len(data) - n) // ntotal
-        s = Struct(mapfmt(self._endian + b'i2f4ifi7f', self.size))
+        s = Struct(mapfmt(op2._endian + b'i2f4ifi7f', self.size))
         for unused_i in range(nmaterials):
             edata = data[n:n+ntotal]
             out = s.unpack(edata)
             #(mid, T0, exp, form, tidkp, tidcp, tidcs, thresh,
              #Type, ag1, ag2, ag3, ag4, ag5, ag6, ag7) = out
-            if self.is_debug_file:
-                self.binary_debug.write('  CREEP=%s\n' % str(out))
+            if op2.is_debug_file:
+                op2.binary_debug.write('  CREEP=%s\n' % str(out))
             mat = CREEP.add_op2_data(out)
-            self._add_methods._add_creep_material_object(mat, allow_overwrites=False)
+            op2._add_methods._add_creep_material_object(mat, allow_overwrites=False)
             n += ntotal
-        self.card_count['CREEP'] = nmaterials
+        op2.card_count['CREEP'] = nmaterials
         return n
 
     def _read_mat1(self, data: bytes, n: int) -> int:
         """
         MAT1(103,1,77) - record 2
         """
+        op2 = self.op2
         ntotal = 48 * self.factor  # 12*4
-        s = Struct(mapfmt(self._endian + b'i10fi', self.size))
+        s = Struct(mapfmt(op2._endian + b'i10fi', self.size))
         nmaterials = (len(data) - n) // ntotal
         for unused_i in range(nmaterials):
             edata = data[n:n+ntotal]
@@ -121,22 +135,23 @@ class MPT(GeomCommon):
             mat = MAT1.add_op2_data(out)
             self.add_op2_material(mat)
             n += ntotal
-        self.card_count['MAT1'] = nmaterials
+        op2.card_count['MAT1'] = nmaterials
         return n
 
     def _read_mat2(self, data: bytes, n: int) -> int:
         """
         MAT2(203,2,78) - record 3
         """
+        op2 = self.op2
         ndatai = len(data) - n
         if ndatai % 68 == 0:
             ntotal = 68  # 17*4
-            s = Struct(self._endian + b'i15fi')
+            s = Struct(op2._endian + b'i15fi')
         else:
             ntotal = (17 + 6) * 4
             nleftover = ndatai % ntotal
-            s = Struct(self._endian + b'i15fi 6i')
-            self.log.warning(f'unexpected MAT2 format; ndatai={ndatai} ntotal={ntotal} nmaterials={ndatai // ntotal} '
+            s = Struct(op2._endian + b'i15fi 6i')
+            op2.log.warning(f'unexpected MAT2 format; ndatai={ndatai} ntotal={ntotal} nmaterials={ndatai // ntotal} '
                              f'leftover={ndatai % ntotal}')
             assert nleftover == 0, nleftover
         nmaterials = ndatai // ntotal
@@ -145,8 +160,8 @@ class MPT(GeomCommon):
         for unused_i in range(nmaterials):
             edata = data[n:n+ntotal]
             out = s.unpack(edata)
-            if self.is_debug_file:
-                self.binary_debug.write('  MAT2=%s\n' % str(out))
+            if op2.is_debug_file:
+                op2.binary_debug.write('  MAT2=%s\n' % str(out))
             if ntotal == 68:
                 (mid, g1, g2, g3, g4, g5, g6, rho, aj1, aj2, aj3,
                  tref, ge, St, Sc, Ss, mcsid) = out
@@ -155,80 +170,84 @@ class MPT(GeomCommon):
                 (mid, g1, g2, g3, g4, g5, g6, rho, aj1, aj2, aj3,
                  tref, ge, St, Sc, Ss, mcsid, *blanks) = out
                 mat = MAT2.add_op2_data(out)
-                self.log.debug(f'\n{mat}')
+                op2.log.debug(f'\n{mat}')
             #print("MAT2 = ",out)
 
             if 0 < mid <= 1e8:  # just a checker for out of range materials
                 self.add_op2_material(mat)
             else:
                 nbig_materials += 1
-                self.big_materials[mid] = mat
+                op2.big_materials[mid] = mat
             n += ntotal
 
         ncards = nmaterials - nbig_materials
         if ncards:
-            self.card_count['MAT2'] = ncards
+            op2.card_count['MAT2'] = ncards
         return n
 
     def _read_mat3(self, data: bytes, n: int) -> int:
         """
         MAT3(1403,14,122) - record 4
         """
+        op2 = self.op2
         ntotal = 64 * self.factor
-        s = Struct(mapfmt(self._endian + b'i8fi5fi', self.size))
+        s = Struct(mapfmt(op2._endian + b'i8fi5fi', self.size))
         nmaterials = (len(data) - n) // ntotal
         for unused_i in range(nmaterials):
             out = s.unpack(data[n:n+ntotal])
             (mid, ex, eth, ez, nuxth, nuthz, nuzx, rho, gzx,
              blank, ax, ath, az, tref, ge, blank) = out
-            if self.is_debug_file:
-                self.binary_debug.write('  MAT3=%s\n' % str(out))
+            if op2.is_debug_file:
+                op2.binary_debug.write('  MAT3=%s\n' % str(out))
             mat = MAT3.add_op2_data([mid, ex, eth, ez, nuxth, nuthz,
                                      nuzx, rho, gzx, ax, ath, az, tref, ge])
             self.add_op2_material(mat)
             n += ntotal
-        self.card_count['MAT3'] = nmaterials
+        op2.card_count['MAT3'] = nmaterials
         return n
 
     def _read_mat4(self, data: bytes, n: int) -> int:
         """
         MAT4(2103,21,234) - record 5
         """
+        op2 = self.op2
         ntotal = 44 * self.factor
-        s = Struct(mapfmt(self._endian + b'i10f', self.size))
+        s = Struct(mapfmt(op2._endian + b'i10f', self.size))
         nmaterials = (len(data) - n) // ntotal
         for unused_i in range(nmaterials):
             out = s.unpack(data[n:n+ntotal])
             #(mid, k, cp, rho, h, mu, hgen, refenth, tch, tdelta, qlat) = out
             mat = MAT4.add_op2_data(out)
-            self._add_methods._add_thermal_material_object(mat, allow_overwrites=False)
+            self.op2._add_methods._add_thermal_material_object(mat, allow_overwrites=False)
             n += ntotal
-        self.card_count['MAT4'] = nmaterials
+        op2.card_count['MAT4'] = nmaterials
         return n
 
     def _read_mat5(self, data: bytes, n: int) -> int:
         """
         MAT5(2203,22,235) - record 6
         """
-        s = Struct(self._endian + b'i9f')
+        op2 = self.op2
+        s = Struct(op2._endian + b'i9f')
         nmaterials = (len(data) - n) // 40
         for unused_i in range(nmaterials):
             out = s.unpack(data[n:n+40])
             #(mid, k1, k2, k3, k4, k5, k6, cp, rho, hgen) = out
-            if self.is_debug_file:
-                self.binary_debug.write('  MAT5=%s\n' % str(out))
+            if op2.is_debug_file:
+                op2.binary_debug.write('  MAT5=%s\n' % str(out))
             mat = MAT5.add_op2_data(out)
-            self._add_methods._add_thermal_material_object(mat, allow_overwrites=False)
+            self.op2._add_methods._add_thermal_material_object(mat, allow_overwrites=False)
             n += 40
-        self.card_count['MAT5'] = nmaterials
+        op2.card_count['MAT5'] = nmaterials
         return n
 
     def _read_mat8(self, data: bytes, n: int) -> int:
         """
         MAT8(2503,25,288) - record 7
         """
+        op2 = self.op2
         ntotal = 76 * self.factor
-        s = Struct(mapfmt(self._endian + b'i18f', self.size))
+        s = Struct(mapfmt(op2._endian + b'i18f', self.size))
         nmaterials = (len(data) - n) // ntotal
         for unused_i in range(nmaterials):
             out = s.unpack(data[n:n+ntotal])
@@ -237,39 +256,40 @@ class MPT(GeomCommon):
             mat = MAT8.add_op2_data(out)
             self.add_op2_material(mat)
             n += ntotal
-        self.card_count['MAT8'] = nmaterials
+        op2.card_count['MAT8'] = nmaterials
         return n
 
     def _read_mat9(self, data: bytes, n: int) -> int:
         """
         MAT9(2603,26,300) - record 9
         """
-        #self.log.info('skipping MAT9')
+        op2 = self.op2
+        #op2.log.info('skipping MAT9')
         #return len(data)
         ndatai = len(data) - n
         if ndatai % 140 == 0:
-            s2 = Struct(self._endian + b'i 30f iiii')
+            s2 = Struct(op2._endian + b'i 30f iiii')
             ntotal = 140
         else:  # pragma: no cover
-            self.log.warning('unexpected MAT9 format...')
+            op2.log.warning('unexpected MAT9 format...')
             ntotal = (35 + 21) * 4 # 35
-            s2 = Struct(self._endian + b'i 30f iiii 21i')
+            s2 = Struct(op2._endian + b'i 30f iiii 21i')
             #ntotal = 56 * 4
-            #s1 = Struct(self._endian + b'i 21f 34i')
-            #s2 = Struct(self._endian + b'i 21f 34f')
+            #s1 = Struct(op2._endian + b'i 21f 34i')
+            #s2 = Struct(op2._endian + b'i 21f 34f')
         nmaterials = ndatai // ntotal
         assert ndatai % ntotal == 0, f'ndatai={ndatai} ntotal={ntotal} nmaterials={nmaterials} leftover={ndatai % ntotal}'
 
-        if self.is_debug_file:
-            self.binary_debug.write(
+        if op2.is_debug_file:
+            op2.binary_debug.write(
                 '  MAT9=(mid, g1, g2, g3, g4, g5, g6, g7, g8, g9, g10, '
                 'g11, g12, g13, g14, g15, g16, g17, g18, g19, g20, g21, '
                 'rho, a1, a2, a3, a4, a5, a6, tref, ge, '
                 'blank1, blank2, blank3, blank4)\n')
         for unused_i in range(nmaterials):
             out = s2.unpack(data[n:n+ntotal])
-            if self.is_debug_file:
-                self.binary_debug.write('    MAT9=%s\n' % str(out))
+            if op2.is_debug_file:
+                op2.binary_debug.write('    MAT9=%s\n' % str(out))
             if len(out) == 35:
                 #print(out)
                 (mid, g1, g2, g3, g4, g5, g6, g7, g8, g9, g10,
@@ -281,8 +301,8 @@ class MPT(GeomCommon):
                  g11, g12, g13, g14, g15, g16, g17, g18, g19, g20, g21,
                  rho, a1, a2, a3, a4, a5, a6, tref, ge,
                  blank1, blank2, blank3, blank4, *blanks) = out
-                self.show_data(data[n:n+ntotal], types='if')
-                self.log.debug(str(blanks))
+                op2.show_data(data[n:n+ntotal], types='if')
+                op2.log.debug(str(blanks))
             assert blank1 == 0, blank1
             data_in = [mid, [g1, g2, g3, g4, g5, g6, g7, g8, g9, g10,
                              g11, g12, g13, g14, g15, g16, g17, g18, g19, g20, g21],
@@ -293,10 +313,10 @@ class MPT(GeomCommon):
                 self.add_op2_material(mat)
             except AssertionError:
                 print(mat)
-                self.card_count['MAT9'] = nmaterials
+                op2.card_count['MAT9'] = nmaterials
                 return len(data)
             n += ntotal
-        self.card_count['MAT9'] = nmaterials
+        op2.card_count['MAT9'] = nmaterials
         return n
 
     def _read_mat10(self, data: bytes, n: int) -> int:
@@ -311,6 +331,7 @@ class MPT(GeomCommon):
         5 GE   RS Structural damping coefficient
 
         """
+        op2 = self.op2
         card_name = 'MAT10'
         card_obj = MAT10
         methods = {
@@ -319,8 +340,9 @@ class MPT(GeomCommon):
             #56 : self._read_ctria6_current_56,
         }
         try:
-            n = self._read_double_card(card_name, card_obj, self.add_op2_material,
-                                       methods, data, n)
+            n = op2.geom2._read_double_card(
+                card_name, card_obj, self.add_op2_material,
+                methods, data, n)
         except DoubleCardError:
             raise
 
@@ -330,8 +352,9 @@ class MPT(GeomCommon):
         return n
 
     def _read_mat10_20(self, material: MAT10, data: bytes, n: int) -> Tuple[int, MAT10]:
+        op2 = self.op2
         ntotal = 20 * self.factor # 5*4
-        s = Struct(mapfmt(self._endian + b'i4f', self.size))
+        s = Struct(mapfmt(op2._endian + b'i4f', self.size))
         ndatai = (len(data) - n)
         nmaterials = ndatai // ntotal
         assert ndatai % ntotal == 0
@@ -343,10 +366,10 @@ class MPT(GeomCommon):
             n += ntotal
 
             (mid, bulk, rho, c, ge) = out
-            if self.is_debug_file:
-                self.binary_debug.write('  MAT10=%s\n' % str(out))
+            if op2.is_debug_file:
+                op2.binary_debug.write('  MAT10=%s\n' % str(out))
             if mid == 0 and bulk == 0. and rho == 0. and c == 0. and ge == 0.:
-                self.log.debug('  skipping empty MAT10...')
+                op2.log.debug('  skipping empty MAT10...')
                 continue
             mat = MAT10.add_op2_data(out)
             assert mat.mid > 0, mat
@@ -364,8 +387,9 @@ class MPT(GeomCommon):
         data = (25, 1.0, 0.1, 3.16, 0.02, 0)
              = (25, 1.0, 0.1, 3.16, 0.02, 0.0)
         """
+        op2 = self.op2
         ntotal = 24 * self.factor # 6*4
-        s = Struct(mapfmt(self._endian + b'i5f', self.size))
+        s = Struct(mapfmt(op2._endian + b'i5f', self.size))
         ndatai = (len(data) - n)
         nmaterials = ndatai // ntotal
         assert ndatai % ntotal == 0
@@ -377,10 +401,10 @@ class MPT(GeomCommon):
             n += ntotal
 
             (mid, bulk, rho, c, ge, alpha) = out
-            if self.is_debug_file:
-                self.binary_debug.write('  MAT10=%s\n' % str(out))
+            if op2.is_debug_file:
+                op2.binary_debug.write('  MAT10=%s\n' % str(out))
             if mid == 0 and bulk == 0. and rho == 0. and c == 0. and ge == 0. and alpha == 0.0:
-                self.log.debug('  skipping empty MAT10...')
+                op2.log.debug('  skipping empty MAT10...')
                 continue
             mat = MAT10.add_op2_data(out)
             assert mat.mid > 0, mat
@@ -391,8 +415,9 @@ class MPT(GeomCommon):
         """
         MAT11(2903,29,371)
         """
+        op2 = self.op2
         ntotal = 128 * self.factor  # 23*4
-        struc = Struct(mapfmt(self._endian + b'i 15f 16i', self.size))
+        struc = Struct(mapfmt(op2._endian + b'i 15f 16i', self.size))
         nmaterials = (len(data) - n) // ntotal
         assert nmaterials > 0, nmaterials
         for unused_i in range(nmaterials):
@@ -401,20 +426,21 @@ class MPT(GeomCommon):
             out = struc.unpack(edata)
             #(mid, e1, e2, e3, nu12, nu13, nu23, g12, g13, g23,
              #rho, a1, a2, a3, tref, ge) = out[:16]
-            if self.is_debug_file:
-                self.binary_debug.write('  MA11=%s\n' % str(out))
+            if op2.is_debug_file:
+                op2.binary_debug.write('  MA11=%s\n' % str(out))
             mat = MAT11.add_op2_data(out)
             self.add_op2_material(mat)
             n += ntotal
-        self.card_count['MAT11'] = nmaterials
+        op2.card_count['MAT11'] = nmaterials
         return n
 
     def _read_mat11_old(self, data: bytes, n: int) -> int:
         """
         MAT11(2903,29,371)
         """
+        op2 = self.op2
         ntotal = 80  # 20*4
-        s = Struct(self._endian + b'i 15f 4s 4s 4s 4s')
+        s = Struct(op2._endian + b'i 15f 4s 4s 4s 4s')
         nmaterials = (len(data) - n) // ntotal
         assert nmaterials > 0, nmaterials
         for unused_i in range(nmaterials):
@@ -423,13 +449,13 @@ class MPT(GeomCommon):
             (mid, e1, e2, e3, nu12, nu13, nu23, g12, g13, g23,
              rho, a1, a2, a3, tref, ge,
              blank1, blank2, blank3, blank4) = out
-            if self.is_debug_file:
-                self.binary_debug.write('  MAT11-old=%s\n' % str(out))
+            if op2.is_debug_file:
+                op2.binary_debug.write('  MAT11-old=%s\n' % str(out))
             mat = MAT11.add_op2_data(out)
             assert mid > 0, mat
             self.add_op2_material(mat)
             n += 80
-        self.card_count['MAT11'] = nmaterials
+        op2.card_count['MAT11'] = nmaterials
         return n
 
     def _read_mathp(self, data: bytes, n: int) -> int:
@@ -482,9 +508,10 @@ class MPT(GeomCommon):
         CONTFLG =0 Without continuation
         End CONTFLG
         """
+        op2 = self.op2
         nmaterials = 0
-        s1 = Struct(mapfmt(self._endian + b'i7f3i23fi', self.size))
-        s2 = Struct(mapfmt(self._endian + b'8i', self.size))
+        s1 = Struct(mapfmt(op2._endian + b'i7f3i23fi', self.size))
+        s2 = Struct(mapfmt(op2._endian + b'8i', self.size))
         n2 = len(data)
         ntotal1 = 140 * self.factor
         ntotal2 = 32 * self.factor  # 7*4
@@ -519,20 +546,21 @@ class MPT(GeomCommon):
                 data_in.append(out2)
             mat = MATHP.add_op2_data(data_in)
 
-            if self.is_debug_file:
-                self.binary_debug.write('  MATHP=%s\n' % str(out1))
-            self._add_methods._add_hyperelastic_material_object(mat)
+            if op2.is_debug_file:
+                op2.binary_debug.write('  MATHP=%s\n' % str(out1))
+            op2._add_methods._add_hyperelastic_material_object(mat)
             nmaterials += 1
         assert nmaterials > 0, 'MATP nmaterials=%s' % nmaterials
-        self.card_count['MATHP'] = nmaterials
+        op2.card_count['MATHP'] = nmaterials
         return n
 
     def _read_mats1(self, data: bytes, n: int) -> int:
         """
         MATS1(503,5,90) - record 12
         """
+        op2 = self.op2
         ntotal = 44 * self.factor  # 11*4
-        s = Struct(mapfmt(self._endian + b'3ifiiff3i', self.size))
+        s = Struct(mapfmt(op2._endian + b'3ifiiff3i', self.size))
         nmaterials = (len(data) - n) // ntotal
         for unused_i in range(nmaterials):
             edata = data[n:n+ntotal]
@@ -542,12 +570,12 @@ class MPT(GeomCommon):
             assert bmat == 0, bmat
             assert c == 0, c
             data_in = [mid, tid, Type, h, yf, hr, limit1, limit2]
-            if self.is_debug_file:
-                self.binary_debug.write('  MATS1=%s\n' % str(out))
+            if op2.is_debug_file:
+                op2.binary_debug.write('  MATS1=%s\n' % str(out))
             mat = MATS1.add_op2_data(data_in)
-            self._add_methods._add_material_dependence_object(mat, allow_overwrites=False)
+            op2._add_methods._add_material_dependence_object(mat, allow_overwrites=False)
             n += ntotal
-        self.card_count['MATS1'] = nmaterials
+        op2.card_count['MATS1'] = nmaterials
         return n
 
     def _read_matt1(self, data: bytes, n: int) -> int:
@@ -555,19 +583,20 @@ class MPT(GeomCommon):
         MATT1(703,7,91)
         checked NX-10.1, MSC-2016
         """
-        s = Struct(mapfmt(self._endian + b'12i', self.size))
+        op2 = self.op2
+        s = Struct(mapfmt(op2._endian + b'12i', self.size))
         ntotal = 48 *  self.factor # 12*4
         ncards = (len(data) - n) // ntotal
         for unused_i in range(ncards):
             edata = data[n:n + ntotal]
             out = s.unpack(edata)
-            if self.is_debug_file:
-                self.binary_debug.write('  MATT1=%s\n' % str(out))
+            if op2.is_debug_file:
+                op2.binary_debug.write('  MATT1=%s\n' % str(out))
             #(mid, tableid, ...., None) = out
             mat = MATT1.add_op2_data(out)
-            self._add_methods._add_material_dependence_object(mat)
+            op2._add_methods._add_material_dependence_object(mat)
             n += ntotal
-        self.increase_card_count('MATT1', ncards)
+        op2.increase_card_count('MATT1', ncards)
         return n
 
     def _read_matt2(self, data: bytes, n: int) -> int:
@@ -576,8 +605,9 @@ class MPT(GeomCommon):
         2 TID(15)     I TABLEMi entry identification numbers
         17        UNDEF none Not used
         """
+        op2 = self.op2
         ntotal = 68 * self.factor # 17*4
-        s = Struct(mapfmt(self._endian + b'17i', self.size))
+        s = Struct(mapfmt(op2._endian + b'17i', self.size))
         nmaterials = (len(data) - n) // ntotal
         for unused_i in range(nmaterials):
             edata = data[n:n+ntotal]
@@ -588,16 +618,16 @@ class MPT(GeomCommon):
              st_table, sc_table, ss_table, unused_zerob) = out
             assert unused_zeroa == 0, f'unused_zeroa={unused_zeroa} out={out}'
             assert unused_zerob == 0, f'unused_zerob={unused_zerob} out={out}'
-            if self.is_debug_file:
-                self.binary_debug.write('  MATT2=%s\n' % str(out))
+            if op2.is_debug_file:
+                op2.binary_debug.write('  MATT2=%s\n' % str(out))
 
             mat = MATT2(mid, g11_table, g12_table, g13_table, g22_table,
                         g23_table, g33_table, rho_table,
                         a1_table, a2_table, a3_table, ge_table,
                         st_table, sc_table, ss_table, comment='')
-            self._add_methods._add_material_dependence_object(mat, allow_overwrites=False)
+            op2._add_methods._add_material_dependence_object(mat, allow_overwrites=False)
             n += ntotal
-        self.card_count['MATT2'] = nmaterials
+        op2.card_count['MATT2'] = nmaterials
         return n
 
     def _read_matt3(self, data: bytes, n: int) -> int:
@@ -609,8 +639,9 @@ class MPT(GeomCommon):
         test_op2 -g C:\MSC.Software\msc_nastran_runs\varmat4c.op2
         C:\MSC.Software\simcenter_nastran_2019.2\tpl_post2\m402mat3_matt3_ex_ey_nuxy_gxy.op2
         """
+        op2 = self.op2
         ntotal = 64 * self.factor # 16*4
-        s = Struct(mapfmt(self._endian + b'16i', self.size))
+        s = Struct(mapfmt(op2._endian + b'16i', self.size))
         ndatai = len(data) - n
         nmaterials = ndatai // ntotal
         assert ndatai % ntotal == 0
@@ -621,14 +652,14 @@ class MPT(GeomCommon):
 
             (mid, *tables, a, b, c, d) = out
             #mid, _ex, _eth, _ez, _nuxth, _nuthz, _nuzx, rho, _gxz, ax, _ath, az, _ge, *other = out
-            if self._nastran_format == 'msc':
+            if op2._nastran_format == 'msc':
                 mid, a, b, c, d, e, f, rho, g, h, i, ax, j, az, k, m = out
                 assert sum([a, b, c, d, e, f, g, h, i, j, k, m]) == 0, out
                 #assert rho == 92, rho
                 #assert ax == 93, out
                 #assert az == 93, az
                 #assert rho == 92, rho
-            elif self._nastran_format == 'nx':
+            elif op2._nastran_format == 'nx':
                 # $ NX
                 # $ MID	T(EX)	T(EY)	T(EZ)	T(NUXY)	T(NUYZ)	T(NUZX)	T(RHO)
                 # $ T(GXY)	T(GZX)	T(AX)	T(AY)	T(AZ)	T(GE)
@@ -650,16 +681,16 @@ class MPT(GeomCommon):
                 #assert ge == 0, ge
                 assert sum([nuyz, nuzx, rho, gzx, ax, ay, ax, gea, geb, gec]) == 0, [mid, nuyz, nuzx, rho, gzx, ax, ay, ax, gea, geb, gec]
             else:
-                raise NotImplementedError(self._nastran_format)
-            if self.is_debug_file:
-                self.binary_debug.write('  MATT3=%s\n' % str(out))
+                raise NotImplementedError(op2._nastran_format)
+            if op2.is_debug_file:
+                op2.binary_debug.write('  MATT3=%s\n' % str(out))
             #mat = MATT3(mid, ex_table=None, eth_table=None, ez_table=None, nuth_table=None,
                      #nuxz_table=None, rho_table=None, gzx_table=None,
                      #ax_table=None, ath_table=None, az_table=None, ge_table=None,)
             mat = MATT3(mid, *tables, comment='')
-            self._add_methods._add_material_dependence_object(mat, allow_overwrites=False)
+            op2._add_methods._add_material_dependence_object(mat, allow_overwrites=False)
             n += ntotal
-        self.card_count['MATT3'] = nmaterials
+        op2.card_count['MATT3'] = nmaterials
         return n
 
     def _read_matt4(self, data: bytes, n: int) -> int:
@@ -667,20 +698,21 @@ class MPT(GeomCommon):
         MATT4(2303,23,237)
         checked NX-10.1, MSC-2016
         """
-        struct_7i = Struct(mapfmt(self._endian + b'7i', self.size))
+        op2 = self.op2
+        struct_7i = Struct(mapfmt(op2._endian + b'7i', self.size))
         ntotal = 28 * self.factor # 7*4
         ncards = (len(data) - n) // ntotal
         for unused_i in range(ncards):
             edata = data[n:n + ntotal]
             out = struct_7i.unpack(edata)
 
-            if self.is_debug_file:
-                self.binary_debug.write('  MATT4=%s\n' % str(out))
+            if op2.is_debug_file:
+                op2.binary_debug.write('  MATT4=%s\n' % str(out))
             #(mid, tk, tcp, null, th, tmu, thgen) = out
             mat = MATT4.add_op2_data(out)
-            self._add_methods._add_material_dependence_object(mat)
+            op2._add_methods._add_material_dependence_object(mat)
             n += ntotal
-        self.increase_card_count('MATT4', ncards)
+        op2.increase_card_count('MATT4', ncards)
         return n
 
     def _read_matt5(self, data: bytes, n: int) -> int:
@@ -689,26 +721,29 @@ class MPT(GeomCommon):
         checked NX-10.1, MSC-2016
 
         """
-        s = Struct(self._endian + b'10i')
+        op2 = self.op2
+        s = Struct(op2._endian + b'10i')
         ntotal = 40 # 10*4
         ncards = (len(data) - n) // ntotal
         for unused_i in range(ncards):
             edata = data[n:n + ntotal]
             out = s.unpack(edata)
-            if self.is_debug_file:
-                self.binary_debug.write('  MATT4=%s\n' % str(out))
+            if op2.is_debug_file:
+                op2.binary_debug.write('  MATT4=%s\n' % str(out))
             #(mid, kxx_table, kxy_table, kxz_table, kyy_table, kyz_table, kzz_table,
             # cp_table, null, hgen_table) = out
             mat = MATT5.add_op2_data(out)
-            self._add_methods._add_material_dependence_object(mat)
+            op2._add_methods._add_material_dependence_object(mat)
             n += ntotal
-        self.increase_card_count('MATT5', ncards)
+        op2.increase_card_count('MATT5', ncards)
         return n
 
     def _read_matt8(self, data: bytes, n: int) -> int:
         """common method to read MSC/NX MATT8s"""
-        n = self._read_dual_card(data, n, self._read_matt8_18, self._read_matt8_19,
-                                 'MATT8', self._add_methods._add_material_dependence_object)
+        op2 = self.op2
+        n = op2.geom2._read_dual_card(
+            data, n, self._read_matt8_18, self._read_matt8_19,
+            'MATT8', op2._add_methods._add_material_dependence_object)
         return n
 
     def _read_matt8_19(self, data: bytes, n: int) -> int:
@@ -724,8 +759,9 @@ class MPT(GeomCommon):
         12 TID(7) I TABLEMi entry identification numbers
         19 UNDEF None
         """
+        op2 = self.op2
         ntotal = 76 * self.factor  # 35*4
-        s = Struct(mapfmt(self._endian + b'i18i', self.size))
+        s = Struct(mapfmt(op2._endian + b'i18i', self.size))
         ndatai = len(data) - n
         nmaterials = ndatai // ntotal
         assert ndatai % ntotal == 0
@@ -738,8 +774,8 @@ class MPT(GeomCommon):
              ta1, ta2, blank,
              xt_table, xc_table, yt_table, yc_table,
              s_table, ge_table, f12_table, final) = out
-            if self.is_debug_file:
-                self.binary_debug.write('  MATT8=%s\n' % str(out))
+            if op2.is_debug_file:
+                op2.binary_debug.write('  MATT8=%s\n' % str(out))
             mat = MATT8(mid,
                         e1_table=e1_table, e2_table=e2_table,
                         nu12_table=nu12_table, g12_table=g12_table,
@@ -775,8 +811,9 @@ class MPT(GeomCommon):
         12 TID(7) I TABLEMi entry identification numbers
         19 UNDEF None
         """
+        op2 = self.op2
         ntotal = 72 * self.factor  # 35*4
-        s = Struct(mapfmt(self._endian + b'18i', self.size))
+        s = Struct(mapfmt(op2._endian + b'18i', self.size))
         ndatai = len(data) - n
         nmaterials = ndatai // ntotal
         assert ndatai % ntotal == 0
@@ -788,8 +825,8 @@ class MPT(GeomCommon):
              ta1, ta2, blank,
              xt_table, xc_table, yt_table, yc_table,
              s_table, ge_table, f12_table) = out
-            if self.is_debug_file:
-                self.binary_debug.write('  MATT8=%s\n' % str(out))
+            if op2.is_debug_file:
+                op2.binary_debug.write('  MATT8=%s\n' % str(out))
             mat = MATT8(mid,
                         e1_table=e1_table, e2_table=e2_table,
                         nu12_table=nu12_table, g12_table=g12_table,
@@ -813,28 +850,32 @@ class MPT(GeomCommon):
 
     def _read_matt9(self, data: bytes, n: int) -> int:
         """common method for reading MATT9s"""
+        op2 = self.op2
         card_name = 'MATT9'
         card_obj = MATT9
         methods = {
             140 : self._read_matt9_140,
             224 : self._read_matt9_224,
         }
-        add_method = self._add_methods._add_material_dependence_object
+        add_method = op2._add_methods._add_material_dependence_object
         #self._add_methods._add_material_dependence_object(mat, allow_overwrites=False)
         try:
-            n = self._read_double_card(card_name, card_obj, add_method,
-                                       methods, data, n)
+            n = op2.geom2._read_double_card(
+                card_name, card_obj, add_method,
+                methods, data, n)
         except DoubleCardError:
             raise
-            self.log.warning(f'try-except {card_name}')
+            #op2.log.warning(f'try-except {card_name}')
             #n = self._read_split_card(data, n,
                                       #self._read_cquad8_current, self._read_cquad8_v2001,
                                       #card_name, self.add_op2_element)
-        #nelements = self.card_count['CQUAD8']
-        #self.log.debug(f'nCQUAD8 = {nelements}')
+        #nelements = op2.card_count['CQUAD8']
+        #op2.log.debug(f'nCQUAD8 = {nelements}')
 
-        #n = self._read_dual_card(data, n, self._read_ctriax_8, self._read_ctriax_9,
-                                 #'CTRIAX', self.add_op2_element)
+        #n = self.geom2._read_dual_card(
+            #data, n,
+            #self._read_ctriax_8, self._read_ctriax_9,
+            #'CTRIAX', self.add_op2_element)
         return n
 
     def _read_matt9_224(self, card_obj, data: bytes, n: int) -> int:
@@ -876,9 +917,10 @@ class MPT(GeomCommon):
            (1251, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 0, 20, 0, 22, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0),
 
         """
+        op2 = self.op2
         #self.show_data(data, types='if')
         ntotal = 224 * self.factor  # 56*4
-        s = Struct(mapfmt(self._endian + b'56i', self.size))
+        s = Struct(mapfmt(op2._endian + b'56i', self.size))
         nmaterials = (len(data) - n) // ntotal
         materials = []
         for unused_i in range(nmaterials):
@@ -895,9 +937,9 @@ class MPT(GeomCommon):
             #(mid, tc_tables, *other) = out
             #print(mid, tc_tables, *other)
             if sum(other) != 0:
-                self.log.warning(f'mATT9 mid={mid} other={other} flags are dropped...')
-            if self.is_debug_file:
-                self.binary_debug.write('  MATT9=%s\n' % str(out))
+                op2.log.warning(f'mATT9 mid={mid} other={other} flags are dropped...')
+            if op2.is_debug_file:
+                op2.binary_debug.write('  MATT9=%s\n' % str(out))
 
             #MATT9(mid, g11_table=None, g12_table=None, g13_table=None, g14_table=None,
                                  #g15_table=None, g16_table=None, g22_table=None, g23_table=None,
@@ -934,16 +976,17 @@ class MPT(GeomCommon):
         32 UNDEF(4) None
 
         """
+        op2 = self.op2
         ntotal = 140 * self.factor  # 35*4
-        s = Struct(mapfmt(self._endian + b'35i', self.size))
+        s = Struct(mapfmt(op2._endian + b'35i', self.size))
         nmaterials = (len(data) - n) // ntotal
         materials = []
         for unused_i in range(nmaterials):
             edata = data[n:n+ntotal]
             out = s.unpack(edata)
             (mid, *tc_tables, trho, ta1, ta2, ta3, ta4, ta5, ta6, a, tge, b, c, d, e) = out
-            if self.is_debug_file:
-                self.binary_debug.write('  MATT9=%s\n' % str(out))
+            if op2.is_debug_file:
+                op2.binary_debug.write('  MATT9=%s\n' % str(out))
             assert a == 0, out
             assert b == 0, out
             assert c == 0, out
@@ -989,15 +1032,16 @@ class MPT(GeomCommon):
         17 UNDEF(16) None
 
         """
+        op2 = self.op2
         ntotal = 128 # 32*4
-        struct1 = Struct(mapfmt(self._endian + b'i 15f 4f 12i', self.size))
+        struct1 = Struct(mapfmt(op2._endian + b'i 15f 4f 12i', self.size))
         nmaterials = (len(data) - n) // ntotal
         for unused_i in range(nmaterials):
             edata = data[n:n+ntotal]
             out = struct1.unpack(edata)
             mid, e1, e2, e3, nu12, nu13, nu23, g12, g13, g23, rho, a1, a2, a3, tref, ge, *other = out
-            if self.is_debug_file:
-                self.binary_debug.write('  MATT11=%s\n' % str(out))
+            if op2.is_debug_file:
+                op2.binary_debug.write('  MATT11=%s\n' % str(out))
             print(mid, e1, e2, e3, nu12, nu13, nu23, g12, g13, g23, rho, a1, a2, a3, tref, ge)
             #assert a == 0, out
             #assert b == 0, out
@@ -1015,8 +1059,8 @@ class MPT(GeomCommon):
             #mat = MATT11(mid, *tc_tables, trho, ta1, ta2, ta3, ta4, ta5, ta6, tge, comment='')
             #self._add_methods._add_material_dependence_object(mat, allow_overwrites=False)
             n += ntotal
-        self.card_count['MAT11'] = nmaterials
-        self.log.warning('skipping MAT11 in MPT')
+        op2.card_count['MAT11'] = nmaterials
+        op2.log.warning('skipping MAT11 in MPT')
         return n
 
     def _read_matt11(self, data: bytes, n: int) -> int:
@@ -1047,16 +1091,17 @@ class MPT(GeomCommon):
         17 UNDEF(16) None
         ints = (1, 10, 20, 20, 30, 30, 30, 40, 40, 50, 60, 70, 70, 70, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
         """
+        op2 = self.op2
         ntotal = 128 * self.factor # 32*4
         #self.show_data(data[n:], types='if')
-        struct1 = Struct(mapfmt(self._endian + b'32i', self.size))
+        struct1 = Struct(mapfmt(op2._endian + b'32i', self.size))
         nmaterials = (len(data) - n) // ntotal
         for unused_i in range(nmaterials):
             edata = data[n:n+ntotal]
             out = struct1.unpack(edata)
             mid, te1, te2, te3, tnu12, tnu13, tnu23, trho, tg12, tg13, tg23, ta1, ta2, ta3, blank, tge, *other = out
-            if self.is_debug_file:
-                self.binary_debug.write('  MATT11=%s\n' % str(out))
+            if op2.is_debug_file:
+                op2.binary_debug.write('  MATT11=%s\n' % str(out))
             #print(mid, te1, te2, te3, tnu12, tnu13, tnu23, trho, tg12, tg13, tg23, ta1, ta2, ta3, blank, tge)
             assert min(other) == 0, other
             assert max(other) == 0, other
@@ -1076,8 +1121,8 @@ class MPT(GeomCommon):
             #mat = MATT11(mid, *tc_tables, trho, ta1, ta2, ta3, ta4, ta5, ta6, tge, comment='')
             #self._add_methods._add_material_dependence_object(mat, allow_overwrites=False)
             n += ntotal
-        self.card_count['MATT11'] = nmaterials
-        self.log.warning('skipping MATT11 in MPT')
+        op2.card_count['MATT11'] = nmaterials
+        op2.log.warning('skipping MATT11 in MPT')
         return n
 
 # MBOLT
@@ -1086,7 +1131,7 @@ class MPT(GeomCommon):
 # NLAUTO
 
     def _read_radbnd(self, data: bytes, n: int) -> int:
-        self.log.info('skipping RADBND in MPT')
+        self.op2.log.info('skipping RADBND in MPT')
         return len(data)
 
 
@@ -1095,7 +1140,8 @@ class MPT(GeomCommon):
         RADM(8802,88,413) - record 25
         .. todo:: add object
         """
-        struct_i = self.struct_i
+        op2 = self.op2
+        struct_i = op2.struct_i
         nmaterials = 0
         ndata = len(data)
         while n < ndata:  # 1*4
@@ -1105,7 +1151,7 @@ class MPT(GeomCommon):
             n += 4
 
             iformat = b'i %if' % (number)
-            struct_i_nf = Struct(self._endian + iformat)
+            struct_i_nf = Struct(op2._endian + iformat)
             #mid, absorb, emiss1, emiss2, ...
             ndata_per_pack = 1 + number
             nstr_per_pack = ndata_per_pack * 4
@@ -1119,13 +1165,13 @@ class MPT(GeomCommon):
                 n += nstr_per_pack
 
                 mat = RADM.add_op2_data(pack)
-                self._add_methods._add_thermal_bc_object(mat, mat.radmid)
+                op2._add_methods._add_thermal_bc_object(mat, mat.radmid)
                 nmaterials += 1
-        self.card_count['RADM'] = nmaterials
+        op2.card_count['RADM'] = nmaterials
         return n
 
     def _read_radmt(self, data: bytes, n: int) -> int:
-        self.log.info('skipping RADMT in MPT')
+        self.op2.log.info('skipping RADMT in MPT')
         return len(data)
 
     def _read_nlparm(self, data: bytes, n: int) -> int:
@@ -1164,6 +1210,7 @@ class MPT(GeomCommon):
         floats  = (10000001, 1, 0.0, 1, 500, 25, 14, 0.0, 0.01, 0.01, 0.01, 5, 25, 0.0, 0.2, 0.5, 5, 20.0, 20.0, 0.0)
 
         """
+        op2 = self.op2
         ndatai = (len(data) - n) // self.factor
         ndata_80 = ndatai % 80
         ndata_76 = ndatai % 76
@@ -1172,8 +1219,10 @@ class MPT(GeomCommon):
         elif ndata_76 == 0 and ndata_80:
             n, nlparms = self._read_nlparm_76(data, n)
         elif ndata_76 == 0 and ndata_80 == 0:
-            n = self._read_dual_card(data, n, self._read_nlparm_76, self._read_nlparm_80,
-                                     'NLPARM', self._add_methods._add_nlparm_object)
+            n = op2.geom2._read_dual_card(
+                data, n,
+                self._read_nlparm_76, self._read_nlparm_80,
+                'NLPARM', op2._add_methods._add_nlparm_object)
             #n = self._read_nlparm_76(data, n)
             return n
         else:
@@ -1182,7 +1231,7 @@ class MPT(GeomCommon):
         assert isinstance(n, int), n
         nentries = len(nlparms)
         if nentries > 0:
-            self.card_count['NLPARM'] = nentries
+            op2.card_count['NLPARM'] = nentries
         return n
 
     def _read_nlparm_76(self, data: bytes, n: int) -> Tuple[int, List[NLPARM]]:
@@ -1209,8 +1258,9 @@ class MPT(GeomCommon):
         19 RTOLB   RS Maximum value of incremental rotation
 
         """
+        op2 = self.op2
         ntotal = 76 * self.factor  # 19*4
-        s = Struct(mapfmt(self._endian + b'iif5i3f3iffiff', self.size))
+        s = Struct(mapfmt(op2._endian + b'iif5i3f3iffiff', self.size))
         ndatai = len(data) - n
         nentries = ndatai // ntotal
         assert nentries > 0
@@ -1224,11 +1274,11 @@ class MPT(GeomCommon):
             #(sid,ninc,dt,kMethod,kStep,maxIter,conv,intOut,epsU,epsP,epsW,
             # maxDiv,maxQn,maxLs,fStress,lsTol,maxBisect,maxR,rTolB) = out
             conv = out[6]
-            if self.is_debug_file:
-                self.binary_debug.write('  NLPARM=%s\n' % str(out))
+            if op2.is_debug_file:
+                op2.binary_debug.write('  NLPARM=%s\n' % str(out))
             if conv in [10, 14]:
                 nentries -= 1
-                self.log.warning('  skipping NLPARM=%s\n' % str(out))
+                op2.log.warning('  skipping NLPARM=%s\n' % str(out))
                 continue
 
             nlparm = NLPARM.add_op2_data(out)
@@ -1259,8 +1309,9 @@ class MPT(GeomCommon):
         19 RTOLB   RS Maximum value of incremental rotation
         20 ZERO  RS/I Dummy field?
         """
+        op2 = self.op2
         ntotal = 80 * self.factor  # 20*4
-        s = Struct(mapfmt(self._endian + b'iif5i3f3iffiff i', self.size))
+        s = Struct(mapfmt(op2._endian + b'iif5i3f3iffiff i', self.size))
         ndatai = len(data) - n
         nentries = ndatai // ntotal
         assert nentries > 0
@@ -1274,11 +1325,11 @@ class MPT(GeomCommon):
             #(sid,ninc,dt,kMethod,kStep,maxIter,conv,intOut,epsU,epsP,epsW,
             # maxDiv,maxQn,maxLs,fStress,lsTol,maxBisect,maxR,rTolB) = out
             conv = out[6]
-            if self.is_debug_file:
-                self.binary_debug.write('  NLPARM=%s\n' % str(out))
+            if op2.is_debug_file:
+                op2.binary_debug.write('  NLPARM=%s\n' % str(out))
             #if conv in [10, 14]:
                 #nentries -= 1
-                #self.log.warning('  skipping NLPARM=%s\n' % str(out))
+                #op2.log.warning('  skipping NLPARM=%s\n' % str(out))
                 #continue
 
             nlparm = NLPARM.add_op2_data(out)
@@ -1286,7 +1337,7 @@ class MPT(GeomCommon):
         return n, nlparms
 
     def _read_nlpci(self, data: bytes, n: int) -> int:
-        self.log.info('skipping NLPCI in MPT')
+        self.op2.log.info('skipping NLPCI in MPT')
         return len(data)
 
     def _read_tstepnl(self, data: bytes, n: int) -> int:
@@ -1322,8 +1373,9 @@ class MPT(GeomCommon):
         27 GAMMA   RS Amplitude decay factor for 2nd order transient integration
 
         """
+        op2 = self.op2
         ntotal = 108 * self.factor  # 27*4
-        s = Struct(mapfmt(self._endian + b'iif5i3f3if3i4f 4if', self.size))
+        s = Struct(mapfmt(op2._endian + b'iif5i3f3if3i4f 4if', self.size))
         nentries = (len(data) - n) // ntotal
         assert (len(data) - n) % ntotal == 0
         assert nentries > 0, nentries
@@ -1335,7 +1387,7 @@ class MPT(GeomCommon):
             # maxDiv,maxQn,maxLs,fStress,lsTol,maxBisect,adjust,mStep,rb,maxR,uTol,rTolB) = out
             method = out[4]
             if method in [4]:
-                self.log.warning('method=4; skipping TSTEPNL=%r' % str(out))
+                op2.log.warning('method=4; skipping TSTEPNL=%r' % str(out))
             else:
                 tstepnl = TSTEPNL.add_op2_data(out)
                 tstepnls.append(tstepnl)
@@ -1371,8 +1423,9 @@ class MPT(GeomCommon):
         22 RTOLB   RS Maximum value of incremental rotation
 
         """
+        op2 = self.op2
         ntotal = 88 * self.factor  # 22*4
-        s = Struct(mapfmt(self._endian + b'iif5i3f3if3i4f', self.size))
+        s = Struct(mapfmt(op2._endian + b'iif5i3f3if3i4f', self.size))
         nentries = (len(data) - n) // ntotal
         assert (len(data) - n) % ntotal == 0
         assert nentries > 0, nentries
@@ -1384,7 +1437,7 @@ class MPT(GeomCommon):
             # maxDiv,maxQn,maxLs,fStress,lsTol,maxBisect,adjust,mStep,rb,maxR,uTol,rTolB) = out
             method = out[4]
             if method in [4]:
-                self.log.warning('method=4; skipping TSTEPNL=%r' % str(out))
+                op2.log.warning('method=4; skipping TSTEPNL=%r' % str(out))
             else:
                 tstepnl = TSTEPNL.add_op2_data(out)
                 tstepnls.append(tstepnl)
@@ -1448,9 +1501,10 @@ class MPT(GeomCommon):
         floats  = (100000000, 1, 1.0, 1, 1, 500, 25, 10, 0.001, 0.001, 1.0e-7, 3, 25, 0.0, 0.2, 5, 5, 20, 0.75, 20.0, 0.1, 20.0, 0.0)
 
         """
+        op2 = self.op2
         ntotal = 92 * self.factor  # 23*4
-        #s = Struct(mapfmt(self._endian + b'iif5i3f3if3i4f', self.size))
-        s = Struct(mapfmt(self._endian + b'2i f 5i 3f 3i f 3i 4f i', self.size))
+        #s = Struct(mapfmt(op2._endian + b'iif5i3f3if3i4f', self.size))
+        s = Struct(mapfmt(op2._endian + b'2i f 5i 3f 3i f 3i 4f i', self.size))
 
         #self.show_data(data, types='ifs')
         nentries = (len(data) - n) // ntotal
@@ -1486,7 +1540,7 @@ class MPT(GeomCommon):
             tstepnl.validate()
             #method = out[4]
             #if method in [4]:
-                #self.log.warning('method=4; skipping TSTEPNL=%r' % str(out))
+                #op2.log.warning('method=4; skipping TSTEPNL=%r' % str(out))
             #else:
                 #tstepnl = TSTEPNL.add_op2_data(out)
             tstepnls.append(tstepnl)

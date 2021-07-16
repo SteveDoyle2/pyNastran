@@ -538,8 +538,8 @@ class EPT(GeomCommon):
 
     def _read_nsm(self, data: bytes, n: int) -> int:
         """NSM"""
-        n = self._read_dual_card(data, n, self._read_nsm_nx, self._read_nsm_msc,
-                                 'NSM', self._add_methods._add_nsm_object)
+        n = self.geom2._read_dual_card(data, n, self._read_nsm_nx, self._read_nsm_msc,
+                                       'NSM', self._add_methods._add_nsm_object)
         return n
 
     def _read_nsm_2(self, data: bytes, n: int) -> int:
@@ -1164,8 +1164,8 @@ class EPT(GeomCommon):
 
     def _read_pbend(self, data: bytes, n: int) -> int:
         """PBEND"""
-        n = self._read_dual_card(data, n, self._read_pbend_nx, self._read_pbend_msc,
-                                 'PBEND', self._add_methods._add_property_object)
+        n = self.geom2._read_dual_card(data, n, self._read_pbend_nx, self._read_pbend_msc,
+                                       'PBEND', self._add_methods._add_property_object)
         return n
 
     def _read_pbend_msc(self, data: bytes, n: int) -> int:
@@ -1339,12 +1339,13 @@ class EPT(GeomCommon):
             108 : self._read_pbush_msc_108, # 108=4*27
         }
         try:
-            n = self._read_double_card(card_name, card_obj, self._add_op2_property,
-                                       methods, data, n)
+            n = self.geom2._read_double_card(
+                card_name, card_obj, self._add_op2_property,
+                methods, data, n)
         except DoubleCardError:
             nx_method = partial(self._read_pbush_nx_72, card_obj)
             msc_method = partial(self._read_pbush_msc_92, card_obj)
-            n = self._read_dual_card(
+            n = self.geom2._read_dual_card(
                 data, n,
                 nx_method, msc_method,
                 card_name, self._add_op2_property)
@@ -1627,8 +1628,9 @@ class EPT(GeomCommon):
             136 : self._read_pbusht_136,
         }
         try:
-            n = self._read_double_card(card_name, card_obj, self._add_methods._add_pbusht_object,
-                                       methods, data, n)
+            n = self.geom2._read_double_card(
+                card_name, card_obj, self._add_methods._add_pbusht_object,
+                methods, data, n)
         except DoubleCardError:
             raise
             self.log.warning(f'try-except {card_name}')
@@ -2205,7 +2207,7 @@ class EPT(GeomCommon):
             56 : self._read_pconv_msc_56, # 56=4*14
         }
         try:
-            n, elements = self._read_double_card_load(
+            n, elements = self.geom2._read_double_card_load(
                 card_name, card_obj,
                 methods, data, n)
         except DoubleCardError:
@@ -2517,8 +2519,9 @@ class EPT(GeomCommon):
             456 : self._read_pbeam3_456,
         }
         try:
-            n = self._read_double_card(card_name, card_obj, self._add_op2_property,
-                                       methods, data, n)
+            n = self.geom2._read_double_card(
+                card_name, card_obj, self._add_op2_property,
+                methods, data, n)
         except DoubleCardError:
             raise
             self.log.warning(f'try-except {card_name}')

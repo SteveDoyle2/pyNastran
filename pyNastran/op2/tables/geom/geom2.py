@@ -2,9 +2,10 @@
 defines readers for BDF objects in the OP2 GEOM2/GEOM2S table
 """
 # pylint: disable=C0103
+from __future__ import annotations
 from struct import Struct
 from functools import partial
-from typing import Tuple, List, Union, Any
+from typing import Tuple, List, Union, Any, TYPE_CHECKING
 import numpy as np
 
 from pyNastran.bdf.cards.elements.elements import CGAP, PLOTEL
@@ -32,13 +33,14 @@ from pyNastran.bdf.cards.elements.bush import CBUSH
 from pyNastran.bdf.cards.parametric.geometry import FEEDGE
 from pyNastran.bdf.cards.elements.acoustic import CHACAB, CHACBR, CAABSF
 from pyNastran.op2.errors import MixedVersionCard
-from pyNastran.op2.tables.geom.geom_common import GeomCommon
 from pyNastran.op2.op2_interface.op2_reader import mapfmt # , reshape_bytes_block
 from pyNastran.op2.tables.geom.geom4 import RBE3
 
 from pyNastran.op2.errors import DoubleCardError, EmptyCardError
+if TYPE_CHECKING:
+    from pyNastran.op2.op2_geom import OP2Geom
 
-def _map_offt(num):
+def _map_offt(num: int) -> str:
     offt = ['G', 'G', 'G']
     # 1G->1B: 4^3; 1+64=65
     if num > 64:
@@ -130,15 +132,57 @@ BAR_FE_MAP = {
 
 }
 
-class GEOM2(GeomCommon):
+class GEOM2:
     """defines methods for reading op2 elements"""
+    #@property
+    #def struct_i(self) -> Struct:
+        #return self.op2.struct_i
+    @property
+    def struct_q(self) -> Struct:
+        return self.op2.struct_q
+
+    #@property
+    #def idtype(self) -> str:
+        #return self.op2.idtype
+    #@property
+    #def idtype8(self) -> str:
+        #return self.op2.idtype8
+    #@property
+    #def fdtype8(self) -> str:
+        #return self.op2.fdtype8
+
+    #@property
+    #def log(self) -> Any:
+        #return self.op2.log
+    #@property
+    #def is_debug_file(self) -> bool:
+        #return self.op2.is_debug_file
+    #@property
+    #def card_count(self) -> Dict[str, int]:
+        #return self.op2.card_count
+    #@property
+    #def binary_debug(self) -> Any:
+        #return self.op2.binary_debug
+
+    #@property
+    #def _endian(self) -> bytes:
+        #return self.op2._endian
+    @property
+    def size(self) -> int:
+        return self.op2.size
+    @property
+    def factor(self) -> int:
+        return self.op2.factor
+
+    def _read_fake(self, data: bytes, n: int) -> int:
+        return self.op2._read_fake(data, n)
 
     def _read_geom2_4(self, data: bytes, ndata: int):
-        return self._read_geom_4(self._geom2_map, data, ndata)
+        return self.op2._read_geom_4(self.geom2_map, data, ndata)
 
-    def __init__(self):
-        GeomCommon.__init__(self)
-        self._geom2_map = {
+    def __init__(self, op2: OP2Geom):
+        self.op2 = op2
+        self.geom2_map = {
             # per dmap-nx-10.pdf or nx12.pdf
             (15200, 152, 9912): ['ACFACE3', self._read_fake],
             (15500, 155, 9913): ['ACFACE4', self._read_fake],
@@ -532,9 +576,10 @@ class GEOM2(GeomCommon):
                    5, 1, [5, 6, 12, 11], [0, 0, 0, 0, 0, 0, -1])
         C:\MSC.Software\msc_nastran_runs\axh101a2.op2
         """
+        op2 = self.op2
         ntotal = 52 * self.factor # 16*4
         nelements = (len(data) - n) // ntotal
-        s = Struct(mapfmt(self._endian + b'2i 4i 7i', self.size))
+        s = Struct(mapfmt(op2._endian + b'2i 4i 7i', self.size))
 
         for unused_i in range(nelements):
             edata = data[n:n + ntotal]
@@ -547,9 +592,9 @@ class GEOM2(GeomCommon):
             nids = [n1, n2, n3, n4,
                     n5, n6, n7, n8, n9]
             elem = CQUADX(eid, pid, nids)
-            self._add_methods._add_element_object(elem)
+            op2._add_methods._add_element_object(elem)
             n += ntotal
-        self.card_count['CQUADX'] = nelements
+        op2.card_count['CQUADX'] = nelements
         return n
 
     #def _show_geom2_fake(self, data: bytes, n: int):
@@ -561,8 +606,9 @@ class GEOM2(GeomCommon):
 
     def add_op2_element(self, elem):
         """checks that eids are positive and that -1 node ids become None"""
+        op2 = self.op2
         if elem.eid <= 0:
-            self.log.debug(str(elem))
+            op2.log.debug(str(elem))
             raise ValueError(elem)
             #return
 
@@ -577,7 +623,7 @@ class GEOM2(GeomCommon):
             for nid in elem.nodes:
                 if nid == -1:
                     assert nid > 0, elem
-        self._add_methods._add_element_object(elem, allow_overwrites=False)
+        op2._add_methods._add_element_object(elem, allow_overwrites=False)
         #print(str(elem)[:-1])
 
 # 1-AEROQ4 (???)
@@ -638,15 +684,16 @@ class GEOM2(GeomCommon):
         16 W3B RS T3 component of offset vector from GB
         F:\work\pyNastran\pyNastran\master2\pyNastran\bdf\test\nx_spike\out_sebload1.op2
         """
+        op2 = self.op2
         ntotal = 64 * self.factor # 16*4
         fe1 = 28 * self.factor
         fe2 = 32 * self.factor
         nelements = (len(data) - n) // ntotal
-        struct_i = self.struct_i if self.size == 4 else self.struct_q
-        s1 = Struct(mapfmt(self._endian + b'4i3f3i6f', self.size))
-        #s2 = Struct(self._endian + b'4i3f3i6f')
+        struct_i = op2.struct_i if self.size == 4 else self.struct_q
+        s1 = Struct(mapfmt(op2._endian + b'4i3f3i6f', self.size))
+        #s2 = Struct(op2._endian + b'4i3f3i6f')
         s2 = s1
-        s3 = Struct(mapfmt(self._endian + b'7ii2i6f', self.size))
+        s3 = Struct(mapfmt(op2._endian + b'7ii2i6f', self.size))
         for unused_i in range(nelements):
             edata = data[n:n + ntotal]
             # we need this flag before we can figure out how to read f
@@ -700,7 +747,7 @@ class GEOM2(GeomCommon):
 
             self.add_op2_element(elem)
             n += ntotal
-        self.card_count['CBAR'] = nelements
+        op2.card_count['CBAR'] = nelements
         return n
 
     def _read_cbarao(self, data: bytes, n: int) -> int:
@@ -717,22 +764,23 @@ class GEOM2(GeomCommon):
         8 X6 RS 6th intermediate station for data recovery
         9 UNDEF none Not used
         """
+        op2 = self.op2
         nelements = (len(data) - n) // 36
-        s = Struct(self._endian + b'2i7f')
+        s = Struct(op2._endian + b'2i7f')
         for unused_i in range(nelements):
             edata = data[n:n + 36]  # 9*4
             out = s.unpack(edata)
-            if self.is_debug_file:
-                self.binary_debug.write('  CBARAO=%s\n' % str(out))
+            if op2.is_debug_file:
+                op2.binary_debug.write('  CBARAO=%s\n' % str(out))
             (eid, scale, x1, x2, x3, x4, x5, x6, unused_null) = out
             if scale == 2:
                 scale = 'FR'
             else:
                 NotImplementedError('CBARAO scale=%r; 2=FR' % scale)
             x = [x1, x2, x3, x4, x5, x6]
-            self.add_cbarao(eid, scale, x, comment='')
+            op2.add_cbarao(eid, scale, x, comment='')
             n += 36
-        self.card_count['CBARAO'] = nelements
+        op2.card_count['CBARAO'] = nelements
         return n
 
     def _read_cbeam3(self, data: bytes, n: int) -> int:
@@ -744,8 +792,9 @@ class GEOM2(GeomCommon):
             108 : self._read_cbeam3_108,
         }
         try:
-            n = self._read_double_card(card_name, card_obj, self.add_op2_element,
-                                       methods, data, n)
+            n = self._read_double_card(
+                card_name, card_obj, self.add_op2_element,
+                methods, data, n)
         except DoubleCardError:
             raise
         return n
@@ -792,11 +841,12 @@ class GEOM2(GeomCommon):
           $       W3C
           +       1.0
         """
+        op2 = self.op2
         #self.show_data(data, types='if')
         ntotal = 104 * self.factor  # 26*4
         nelements = (len(data) - n) // ntotal
-        structi = Struct(mapfmt(self._endian + b'8i 3i i 9f 5i', self.size))
-        structf = Struct(mapfmt(self._endian + b'8i 3f i 9f 5i', self.size))
+        structi = Struct(mapfmt(op2._endian + b'8i 3i i 9f 5i', self.size))
+        structf = Struct(mapfmt(op2._endian + b'8i 3f i 9f 5i', self.size))
 
         elements = []
         for unused_i in range(nelements):
@@ -897,11 +947,12 @@ class GEOM2(GeomCommon):
         floats  = (2901, 2901, 2901, 2902, 2903, 0.0, 0.0, 0.0, 10.0, 0.0, 0.0,    1, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
                    3901, 2901, 3901, 3903, 3904, 0.0, 0.0, 0.0, 10.0, 0.0, 0.0,    1, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 5.467866607795436e-42, 2901, 3903, 5.467866607795436e-42, 5.4720705031884107e-42, 0.0, 0.0, 0.0, 10.0, 0.0, 0.0, 1, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 6.867763773655928e-42, 2901, 6.867763773655928e-42, 6.871967669048903e-42, 6.870566370584578e-42, 0.0, 0.0, 0.0, 10.0, 0.0, 0.0, 1, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 6.869165072120253e-42, 2901, 6.871967669048903e-42, 6.874770265977553e-42, 6.873368967513228e-42, 0.0, 0.0, 0.0, 10.0, 0.0, 0.0, 1, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 6.870566370584578e-42, 2901, 6.874770265977553e-42, 6.869165072120253e-42, 6.876171564441877e-42, 0.0, 0.0, 0.0, 10.0, 0.0, 0.0, 1, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.8078151488254465e-41, 2901, 1.8078151488254465e-41, 1.807955278671879e-41, 1.8080954085183115e-41, 0.0, 0.0, 0.0, 0.0, 10.0, 0.0, 1, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0)
         """
+        op2 = self.op2
         #self.show_data(data, types='if')
         ntotal = 108 * self.factor  # 26*4
         nelements = (len(data) - n) // ntotal
-        structi = Struct(mapfmt(self._endian + b'8i 3i i 9f 5i i', self.size))
-        structf = Struct(mapfmt(self._endian + b'8i 3f i 9f 5i i', self.size))
+        structi = Struct(mapfmt(op2._endian + b'8i 3i i 9f 5i i', self.size))
+        structf = Struct(mapfmt(op2._endian + b'8i 3f i 9f 5i i', self.size))
 
         elements = []
         for unused_i in range(nelements):
@@ -947,13 +998,14 @@ class GEOM2(GeomCommon):
 
     def _read_cbeam(self, data: bytes, n: int) -> int:
         """CBEAM(5408,54,261) - the marker for Record 10"""
+        op2 = self.op2
         ntotal = 72 * self.factor  # 18*4
         fe1 = 40 * self.factor
         fe2 = 44 * self.factor
         nelements = (len(data) - n) // ntotal
-        struct_i = self.struct_i if self.size == 4 else self.struct_q
-        s1 = Struct(mapfmt(self._endian + b'6i3f3i6f', self.size))
-        s3 = Struct(mapfmt(self._endian + b'12i6f', self.size))
+        struct_i = op2.struct_i if self.size == 4 else self.struct_q
+        s1 = Struct(mapfmt(op2._endian + b'6i3f3i6f', self.size))
+        s3 = Struct(mapfmt(op2._endian + b'12i6f', self.size))
         for unused_i in range(nelements):
             edata = data[n:n + ntotal]
             fe, = struct_i.unpack(edata[fe1:fe2])
@@ -963,7 +1015,7 @@ class GEOM2(GeomCommon):
                 out = s1.unpack(edata)
                 (eid, pid, ga, gb, sa, sb, x1, x2, x3, fe,
                  pa, pb, w1a, w2a, w3a, w1b, w2b, w3b) = out
-                #self.log.info('CBEAM: eid=%s fe=%s f=%s; basic cid' % (eid, fe, f))
+                #op2.log.info('CBEAM: eid=%s fe=%s f=%s; basic cid' % (eid, fe, f))
 
                 data_in = [[eid, pid, ga, gb, sa, sb, pa, pb, w1a, w2a, w3a, w1b, w2b, w3b],
                            [f, x1, x2, x3]]
@@ -972,14 +1024,14 @@ class GEOM2(GeomCommon):
                 out = s1.unpack(edata)
                 (eid, pid, ga, gb, sa, sb, x1, x2, x3, fe,
                  pa, pb, w1a, w2a, w3a, w1b, w2b, w3b) = out
-                #self.log.info('CBEAM: eid=%s fe=%s f=%s; global cid' % (eid, fe, f))
+                #op2.log.info('CBEAM: eid=%s fe=%s f=%s; global cid' % (eid, fe, f))
                 data_in = [[eid, pid, ga, gb, sa, sb, pa, pb, w1a, w2a, w3a, w1b, w2b, w3b],
                            [f, x1, x2, x3]]
             elif f == 2:  # grid option
                 out = s3.unpack(edata)
                 (eid, pid, ga, gb, sa, sb, g0, xxa, xxb, fe,
                  pa, pb, w1a, w2a, w3a, w1b, w2b, w3b) = out
-                #self.log.info('CBEAM: eid=%s fe=%s f=%s; grid option '
+                #op2.log.info('CBEAM: eid=%s fe=%s f=%s; grid option '
                               #'(g0=%s xxa=%s xxb=%s)' % (eid, fe, f, g0, xxa, xxb))
                 if g0 <= 0 or g0 >= 100000000 or xxa != 0 or xxb != 0:
                     # Nastran set this wrong...MasterModelTaxi
@@ -991,17 +1043,17 @@ class GEOM2(GeomCommon):
                     out = s1.unpack(edata)
                     (eid, pid, ga, gb, sa, sb, x1, x2, x3, fe, pa,
                      pb, w1a, w2a, w3a, w1b, w2b, w3b) = out
-                    #self.log.info('CBEAM: eid=%s fe=%s f=%s; global cid' % (eid, fe, f))
+                    #op2.log.info('CBEAM: eid=%s fe=%s f=%s; global cid' % (eid, fe, f))
                     data_in = [[eid, pid, ga, gb, sa, sb, pa, pb, w1a, w2a, w3a, w1b, w2b, w3b],
                                [f, x1, x2, x3]]
-                    #self.log.info('   (x1=%s x2=%s x3=%s)' % (x1, x2, x3))
+                    #op2.log.info('   (x1=%s x2=%s x3=%s)' % (x1, x2, x3))
                 else:
                     data_in = [[eid, pid, ga, gb, sa, sb, pa, pb, w1a, w2a, w3a, w1b, w2b, w3b],
                                [f, g0]]
             else:
                 raise RuntimeError(f'invalid f value...f={f!r}')
-            if self.is_debug_file:
-                self.binary_debug.write('  CBEAM eid=%s f=%s fe=%s %s\n' % (
+            if op2.is_debug_file:
+                op2.binary_debug.write('  CBEAM eid=%s f=%s fe=%s %s\n' % (
                     eid, f, fe, str(data_in)))
 
             elem = CBEAM.add_op2_data(data_in, f)
@@ -1014,14 +1066,14 @@ class GEOM2(GeomCommon):
 
             self.add_op2_element(elem)
             n += ntotal
-        self.card_count['CBEAM'] = nelements
+        op2.card_count['CBEAM'] = nelements
         return n
 
     def _read_cbeamp(self, data: bytes, n: int) -> int:
         """
         CBEAMP(11401,114,9016) - the marker for Record 11
         """
-        self.log.info('skipping CBEAMP in GEOM2')
+        self.op2.log.info('skipping CBEAMP in GEOM2')
         return len(data)
 
     def _read_cbend(self, data: bytes, n: int) -> int:
@@ -1051,14 +1103,15 @@ class GEOM2(GeomCommon):
         9 UNDEF(4) None
         13 GEOM I Element geometry option
         """
+        op2 = self.op2
         ntotal = 52 # 4*13
         nentries = (len(data) - n) // ntotal
-        fstruc = Struct(self._endian + b'4i 3f 6i')
-        istruc = Struct(self._endian + b'4i 3i 6i')
+        fstruc = Struct(op2._endian + b'4i 3f 6i')
+        istruc = Struct(op2._endian + b'4i 3i 6i')
 
         for unused_i in range(nentries):
             edata = data[n:n + 52]  # 13*4
-            fe, = self.struct_i.unpack(edata[28:32])
+            fe, = op2.struct_i.unpack(edata[28:32])
             # per DMAP: F = FE bit-wise AND with 3
             f = fe & 3
             if f == 0:
@@ -1087,17 +1140,18 @@ class GEOM2(GeomCommon):
 
             self.add_op2_element(elem)
             n += 52
-        self.increase_card_count('CBEND', nentries)
+        self.op2.increase_card_count('CBEND', nentries)
         return n
 
     def _read_cbush(self, data: bytes, n: int) -> int:
         """
         CBUSH(2608,26,60) - the marker for Record 13
         """
+        op2 = self.op2
         ntotal = 56 * self.factor
         nelements = (len(data) - n) // ntotal
-        struct_obj1 = Struct(mapfmt(self._endian + b'4i iii i ifi3f', self.size))
-        struct_obj2 = Struct(mapfmt(self._endian + b'4i fff i ifi3f', self.size))
+        struct_obj1 = Struct(mapfmt(op2._endian + b'4i iii i ifi3f', self.size))
+        struct_obj2 = Struct(mapfmt(op2._endian + b'4i fff i ifi3f', self.size))
         for unused_i in range(nelements):
             edata = data[n:n + ntotal]  # 14*4
             out = struct_obj1.unpack(edata)
@@ -1129,7 +1183,7 @@ class GEOM2(GeomCommon):
             elem = CBUSH.add_op2_data(data_in, f)
             self.add_op2_element(elem)
             n += ntotal
-        self.card_count['CBUSH'] = nelements
+        op2.card_count['CBUSH'] = nelements
         return n
 
     def _read_cbush1d(self, data: bytes, n: int) -> int:
@@ -1143,121 +1197,128 @@ class GEOM2(GeomCommon):
         6 UNDEF(3) none
 
         """
+        op2 = self.op2
         ntotal = 32 *  self.factor # 4*8
         nelements = (len(data) - n) // ntotal
-        struct_6i = Struct(mapfmt(self._endian + b'8i', self.size))
+        struct_6i = Struct(mapfmt(op2._endian + b'8i', self.size))
         for unused_i in range(nelements):
             edata = data[n:n + ntotal]
             out = struct_6i.unpack(edata)
-            if self.is_debug_file:
-                self.binary_debug.write('  CBUSH1D=%s\n' % str(out))
+            if op2.is_debug_file:
+                op2.binary_debug.write('  CBUSH1D=%s\n' % str(out))
             (eid, pid, g1, g2, cid, unused_a, unused_b, unused_c) = out
             if cid == -1:
                 cid = None
-            self.add_cbush1d(eid, pid, [g1, g2], cid=cid)
+            op2.add_cbush1d(eid, pid, [g1, g2], cid=cid)
             n += ntotal
-        self.card_count['CBUSH1D'] = nelements
+        op2.card_count['CBUSH1D'] = nelements
         return n
 
     def _read_ccone(self, data: bytes, n: int) -> int:
         """
         CCONE(2315,23,0) - the marker for Record 15
         """
-        self.log.info('skipping CCONE in GEOM2')
-        if self.is_debug_file:
-            self.binary_debug.write('skipping CCONE in GEOM2\n')
+        op2 = self.op2
+        op2.log.info('skipping CCONE in GEOM2')
+        if op2.is_debug_file:
+            op2.binary_debug.write('skipping CCONE in GEOM2\n')
         return len(data)
 
     def _read_cdamp1(self, data: bytes, n: int) -> int:
         """
         CDAMP1(201,2,69) - the marker for Record 16
         """
+        op2 = self.op2
         ntotal = 24 * self.factor # 6*4
         nelements = (len(data) - n) // ntotal
-        struct_6i = Struct(mapfmt(self._endian + b'6i', self.size))
+        struct_6i = Struct(mapfmt(op2._endian + b'6i', self.size))
         for unused_i in range(nelements):
             edata = data[n:n + ntotal]
             out = struct_6i.unpack(edata)
-            if self.is_debug_file:
-                self.binary_debug.write('  CDAMP1=%s\n' % str(out))
+            if op2.is_debug_file:
+                op2.binary_debug.write('  CDAMP1=%s\n' % str(out))
             #(eid, pid, g1, g2, c1, c2) = out
             elem = CDAMP1.add_op2_data(out)
             self.add_op2_element(elem)
             n += ntotal
-        self.card_count['CDAMP1'] = nelements
+        op2.card_count['CDAMP1'] = nelements
         return n
 
     def _read_cdamp2(self, data: bytes, n: int) -> int:
         """
         CDAMP2(301,3,70) - the marker for Record 17
         """
+        op2 = self.op2
         ntotal = 24 * self.factor # 6*4
         nelements = (len(data) - n) // ntotal
-        s = Struct(mapfmt(self._endian + b'if4i', self.size))
+        s = Struct(mapfmt(op2._endian + b'if4i', self.size))
         for unused_i in range(nelements):
             edata = data[n:n + ntotal]
             out = s.unpack(edata)
-            if self.is_debug_file:
-                self.binary_debug.write('  CDAMP2=%s\n' % str(out))
+            if op2.is_debug_file:
+                op2.binary_debug.write('  CDAMP2=%s\n' % str(out))
             #(eid, bdamp, g1, g2, c1, c2) = out
             elem = CDAMP2.add_op2_data(out)
             self.add_op2_element(elem)
             n += ntotal
-        self.card_count['CDAMP2'] = nelements
+        op2.card_count['CDAMP2'] = nelements
         return n
 
     def _read_cdamp3(self, data: bytes, n: int) -> int:
         """
         CDAMP3(401,4,71) - the marker for Record 18
         """
-        struct_4i = Struct(self._endian + b'4i')
+        op2 = self.op2
+        struct_4i = Struct(op2._endian + b'4i')
         nelements = (len(data) - n) // 16
         for unused_i in range(nelements):
             edata = data[n:n + 16]  # 4*4
             out = struct_4i.unpack(edata)
-            if self.is_debug_file:
-                self.binary_debug.write('  CDAMP3=%s\n' % str(out))
+            if op2.is_debug_file:
+                op2.binary_debug.write('  CDAMP3=%s\n' % str(out))
             #(eid, pid, s1, s2) = out
             elem = CDAMP3.add_op2_data(out)
             self.add_op2_element(elem)
             n += 16
-        self.card_count['CDAMP3'] = nelements
+        op2.card_count['CDAMP3'] = nelements
         return n
 
     def _read_cdamp4(self, data: bytes, n: int) -> int:
         """
         CDAMP4(501,5,72) - the marker for Record 19
         """
-        s = Struct(self._endian + b'ifii')
+        op2 = self.op2
+        s = Struct(op2._endian + b'ifii')
         nelements = (len(data) - n) // 16
         for unused_i in range(nelements):
             edata = data[n:n + 16]  # 4*4
             out = s.unpack(edata)
-            if self.is_debug_file:
-                self.binary_debug.write('  CDAMP4=%s\n' % str(out))
+            if op2.is_debug_file:
+                op2.binary_debug.write('  CDAMP4=%s\n' % str(out))
             #(eid, bdamp, s1, s2) = out
             elem = CDAMP4.add_op2_data(out)
             self.add_op2_element(elem)
             n += 16
-        self.card_count['CDAMP4'] = nelements
+        op2.card_count['CDAMP4'] = nelements
         return n
 
     def _read_cdamp5(self, data: bytes, n: int) -> int:
         """
         CDAMP5(10608,106,404) - the marker for Record 20
         """
-        s = Struct(self._endian + b'4i')
+        op2 = self.op2
+        s = Struct(op2._endian + b'4i')
         nelements = (len(data) - n) // 16
         for unused_i in range(nelements):
             edata = data[n:n + 16]  # 4*4
             out = s.unpack(edata)
-            if self.is_debug_file:
-                self.binary_debug.write('  CDAMP5=%s\n' % str(out))
+            if op2.is_debug_file:
+                op2.binary_debug.write('  CDAMP5=%s\n' % str(out))
             #(eid, pid, s1, s2) = out
             elem = CDAMP5.add_op2_data(out)
             self.add_op2_element(elem)
             n += 16
-        self.card_count['CDAMP5'] = nelements
+        op2.card_count['CDAMP5'] = nelements
         return n
 
 # CDUM2
@@ -1268,13 +1329,13 @@ class GEOM2(GeomCommon):
 # CDUM7
 
     def _read_cdum8(self, data: bytes, n: int) -> int:
-        self.log.info('skipping CDUM9 in GEOM2')
+        self.op2.log.info('skipping CDUM9 in GEOM2')
         #ints = np.frombuffer(data[n:], dtype='int32').copy()
         #print('CDUM8', ints)
         return n
 
     def _read_cdum9(self, data: bytes, n: int) -> int:
-        self.log.info('skipping CDUM9 in GEOM2')
+        self.op2.log.info('skipping CDUM9 in GEOM2')
         #ints = np.frombuffer(data[n:], dtype='int32').copy()
         #print('CDUM9', ints)
         return n
@@ -1283,83 +1344,87 @@ class GEOM2(GeomCommon):
         """
         CELAS1(601,6,73) - the marker for Record 29
         """
+        op2 = self.op2
         ntotal = 24 * self.factor  # 6*4
-        struct_4i = Struct(mapfmt(self._endian + b'6i', self.size))
+        struct_4i = Struct(mapfmt(op2._endian + b'6i', self.size))
         nelements = (len(data) - n) // ntotal
         for unused_i in range(nelements):
             edata = data[n:n+ntotal]
             out = struct_4i.unpack(edata)
-            if self.is_debug_file:
-                self.binary_debug.write('  CELAS1=%s\n' % str(out))
+            if op2.is_debug_file:
+                op2.binary_debug.write('  CELAS1=%s\n' % str(out))
             #(eid, pid, g1, g2, c1, c2) = out
             elem = CELAS1.add_op2_data(out)
             self.add_op2_element(elem)
             n += ntotal
-        self.card_count['CELAS1'] = nelements
+        op2.card_count['CELAS1'] = nelements
         return n
 
     def _read_celas2(self, data: bytes, n: int) -> int:
         """
         CELAS2(701,7,74) - the marker for Record 30
         """
-        s1 = Struct(mapfmt(self._endian + b'if4iff', self.size))
+        op2 = self.op2
+        s1 = Struct(mapfmt(op2._endian + b'if4iff', self.size))
         ntotal = 32 * self.factor
         nelements = (len(data) - n) // ntotal
         for unused_i in range(nelements):
             edata = data[n:n+ntotal]
             out = s1.unpack(edata)
-            if self.is_debug_file:
-                self.binary_debug.write('  CELAS2=%s\n' % str(out))
+            if op2.is_debug_file:
+                op2.binary_debug.write('  CELAS2=%s\n' % str(out))
             #(eid, k, g1, g2, c1, c2, ge, s) = out
             elem = CELAS2.add_op2_data(out)
             self.add_op2_element(elem)
             n += ntotal
-        self.card_count['CELAS2'] = nelements
+        op2.card_count['CELAS2'] = nelements
         return n
 
     def _read_celas3(self, data: bytes, n: int) -> int:
         """
         CELAS3(801,8,75) - the marker for Record 31
         """
+        op2 = self.op2
         ntotal = 16 * self.factor  # 4*4
-        struct_4i = Struct(mapfmt(self._endian + b'4i', self.size))
+        struct_4i = Struct(mapfmt(op2._endian + b'4i', self.size))
         nelements = (len(data) - n) // ntotal
         for unused_i in range(nelements):
             edata = data[n:n+ntotal]
             out = struct_4i.unpack(edata)
-            if self.is_debug_file:
-                self.binary_debug.write('  CELAS3=%s\n' % str(out))
+            if op2.is_debug_file:
+                op2.binary_debug.write('  CELAS3=%s\n' % str(out))
             #(eid, pid, s1, s2) = out
             elem = CELAS3.add_op2_data(out)
             self.add_op2_element(elem)
             n += ntotal
-        self.card_count['CELAS3'] = nelements
+        op2.card_count['CELAS3'] = nelements
         return n
 
     def _read_celas4(self, data: bytes, n: int) -> int:
         """
         CELAS4(901,9,76) - the marker for Record 32
         """
+        op2 = self.op2
         ntotal = 16 * self.factor  # 4*4
-        s = Struct(mapfmt(self._endian + b'ifii', self.size))
+        s = Struct(mapfmt(op2._endian + b'ifii', self.size))
         nelements = (len(data) - n) // ntotal
         for unused_i in range(nelements):
             edata = data[n:n + ntotal]
             out = s.unpack(edata)
-            if self.is_debug_file:
-                self.binary_debug.write('  CELAS4=%s\n' % str(out))
+            if op2.is_debug_file:
+                op2.binary_debug.write('  CELAS4=%s\n' % str(out))
             #(eid, k, s1, s2) = out
             elem = CELAS4.add_op2_data(out)
             self.add_op2_element(elem)
             n += ntotal
-        self.card_count['CELAS4'] = nelements
+        op2.card_count['CELAS4'] = nelements
         return n
 
     def _read_cfast(self, data: bytes, n: int) -> int:
         """
         CFAST(9801,98,506) - the marker for Record ???
         """
-        self.log.info('skipping CFAST in GEOM2')
+        self.op2.log.info('skipping CFAST in GEOM2')
         return len(data)
 
 # CFASTP
@@ -1375,17 +1440,18 @@ class GEOM2(GeomCommon):
         5 B        RS Bulk modulus
         6 HARMINDX  I Harmonic index
         """
-        s = Struct(self._endian + b'3i2fi')
+        op2 = self.op2
+        s = Struct(op2._endian + b'3i2fi')
         nelements = (len(data) - n) // 24
         for unused_i in range(nelements):
             edata = data[n:n + 24]  # 6*4
             out = s.unpack(edata)
-            if self.is_debug_file:
-                self.binary_debug.write('  CFLUID2=%s\n' % str(out))
+            if op2.is_debug_file:
+                op2.binary_debug.write('  CFLUID2=%s\n' % str(out))
             eid, idf1, idf2, rho, bi, harmonic = out
-            self.add_cfluid2(eid, [idf1, idf2], rho, bi, harmonic)
+            op2.add_cfluid2(eid, [idf1, idf2], rho, bi, harmonic)
             n += 24
-        self.card_count['CFLUID2'] = nelements
+        op2.card_count['CFLUID2'] = nelements
         return n
 
     def _read_cfluid3(self, data: bytes, n: int) -> int:
@@ -1400,17 +1466,18 @@ class GEOM2(GeomCommon):
         6 B        RS Bulk modulus
         7 HARMINDX  I Harmonic index
         """
-        s = Struct(self._endian + b'4i2fi')
+        op2 = self.op2
+        s = Struct(op2._endian + b'4i2fi')
         nelements = (len(data) - n) // 28
         for unused_i in range(nelements):
             edata = data[n:n + 28]  # 7*4
             out = s.unpack(edata)
-            if self.is_debug_file:
-                self.binary_debug.write('  CFLUID3=%s\n' % str(out))
+            if op2.is_debug_file:
+                op2.binary_debug.write('  CFLUID3=%s\n' % str(out))
             eid, idf1, idf2, idf3, rho, b, harmonic = out
-            self.add_cfluid3(eid, [idf1, idf2, idf3], rho, b, harmonic)
+            op2.add_cfluid3(eid, [idf1, idf2, idf3], rho, b, harmonic)
             n += 28
-        self.card_count['CFLUID3'] = nelements
+        op2.card_count['CFLUID3'] = nelements
         return n
 
     def _read_cfluid4(self, data: bytes, n: int) -> int:
@@ -1426,17 +1493,18 @@ class GEOM2(GeomCommon):
         7 B        RS Bulk modulus
         8 HARMINDX  I Harmonic index
         """
-        s = Struct(self._endian + b'5i2fi')
+        op2 = self.op2
+        s = Struct(op2._endian + b'5i2fi')
         nelements = (len(data) - n) // 32
         for unused_i in range(nelements):
             edata = data[n:n + 32]  # 8*4
             out = s.unpack(edata)
-            if self.is_debug_file:
-                self.binary_debug.write('  CFLUID4=%s\n' % str(out))
+            if op2.is_debug_file:
+                op2.binary_debug.write('  CFLUID4=%s\n' % str(out))
             eid, idf1, idf2, idf3, idf4, rho, bi, harmonic = out
-            self.add_cfluid4(eid, [idf1, idf2, idf3, idf4], rho, bi, harmonic)
+            op2.add_cfluid4(eid, [idf1, idf2, idf3, idf4], rho, bi, harmonic)
             n += 32
-        self.card_count['CFLUID4'] = nelements
+        op2.card_count['CFLUID4'] = nelements
         return n
 
     def _read_cint(self, data: bytes, n: int) -> int:
@@ -1458,19 +1526,20 @@ class GEOM2(GeomCommon):
         Words 7 through 13 repeat 6 times
         14 UNDEF(2 ) none
         """
-        self.log.info('skipping CINT in GEOM2')
+        self.op2.log.info('skipping CINT in GEOM2')
         # C:\NASA\m4\formats\git\examples\move_tpl\ifcq12p.op2
         # doesn't seem to be a card, more of a general info on the geometry...
-        #ints = np.frombuffer(data[n:], dtype=self.idtype).copy()
+        #ints = np.frombuffer(data[n:], dtype=op2.idtype).copy()
         return len(data)
 
     def _read_cgap(self, data: bytes, n: int) -> int:
         """
         CGAP(1908,19,104) - the marker for Record 39
         """
+        op2 = self.op2
         ntotal = 36 * self.factor  # 9*4
-        s1 = Struct(mapfmt(self._endian + b'4i3fii', self.size))
-        struct_i = self.struct_i if self.size == 4 else self.struct_q
+        s1 = Struct(mapfmt(op2._endian + b'4i3fii', self.size))
+        struct_i = op2.struct_i if self.size == 4 else self.struct_q
         f2a = 28 * self.factor
         f2b = 32 * self.factor
         g0a = 16 * self.factor
@@ -1492,8 +1561,8 @@ class GEOM2(GeomCommon):
             else:
                 assert f == 1, 'CGAP - f=%r f2=%r' % (f, f2)
                 assert f2 == 1, 'CGAP - f=%r f2=%r' % (f, f2)
-                if self.is_debug_file:
-                    self.binary_debug.write('  CGAP eid=%s pid=%s gab0=[%s,%s,%s] x123=[%s,%s,%s] '
+                if op2.is_debug_file:
+                    op2.binary_debug.write('  CGAP eid=%s pid=%s gab0=[%s,%s,%s] x123=[%s,%s,%s] '
                                             'cid=%s f=%s\n' % (eid, pid, ga, gb,
                                                                g0, x1, x2, x3, cid, f))
                 #raise NotImplementedError('CGAP - f=%r f2=%r' % (f, f2))
@@ -1505,7 +1574,7 @@ class GEOM2(GeomCommon):
             elem = CGAP.add_op2_data(data_in)
             self.add_op2_element(elem)
             n += ntotal
-        self.card_count['CGAP'] = nelements
+        op2.card_count['CGAP'] = nelements
         return n
 
     def _read_chacab(self, data: bytes, n: int) -> int:
@@ -1524,28 +1593,29 @@ class GEOM2(GeomCommon):
         2 PID I Property identification number
         3 G(20) I Grid point identification numbers of connection points
         """
+        op2 = self.op2
         nelements = (len(data) - n) // 88
-        s = Struct(self._endian + b'22i')
-        #if self.is_debug_file:
-            #self.binary_debug.write('ndata=%s\n' % (nelements * 44))
+        s = Struct(op2._endian + b'22i')
+        #if op2.is_debug_file:
+            #op2.binary_debug.write('ndata=%s\n' % (nelements * 44))
 
-        #if self.is_debug_file:
-            #self.binary_debug.write(f'  {element.type}=(eid, pid, [n1, n2]')
+        #if op2.is_debug_file:
+            #op2.binary_debug.write(f'  {element.type}=(eid, pid, [n1, n2]')
 
         for unused_i in range(nelements):
             edata = data[n:n + 88]  # 22*4
             out = s.unpack(edata)
             (eid, pid, *nodes) = out
             nodes = list(nodes)
-            if self.is_debug_file:
-                self.binary_debug.write(f'  {element.type}=({eid}, {pid}, {nodes}')
+            if op2.is_debug_file:
+                op2.binary_debug.write(f'  {element.type}=({eid}, {pid}, {nodes}')
 
             elem = element(eid, pid, nodes)
             self.add_op2_element(elem)
             n += 88
         #if stop:
             #raise RuntimeError('theta is too large...make the quad wrong')
-        self.card_count[elem.type] = nelements
+        op2.card_count[elem.type] = nelements
         return n
 
 # CHACBR
@@ -1554,88 +1624,93 @@ class GEOM2(GeomCommon):
         """
         CHBDYE(8308,83,405) - the marker for Record ???
         """
+        op2 = self.op2
         ntotal = 28  # 7*4
-        s = Struct(self._endian + b'7i')
+        s = Struct(op2._endian + b'7i')
         nelements = (len(data) - n) // ntotal
         for unused_i in range(nelements):
             edata = data[n:n+28]
             out = s.unpack(edata)
             (eid, eid2, side, iviewf, iviewb, radmidf, radmidb) = out
-            if self.is_debug_file:
-                self.binary_debug.write('  CHBDYE=%s\n' % str(out))
-            #self.log.debug('  CHBDYE=%s' % str(out))
+            if op2.is_debug_file:
+                op2.binary_debug.write('  CHBDYE=%s\n' % str(out))
+            #op2.log.debug('  CHBDYE=%s' % str(out))
             data_in = [eid, eid2, side, iviewf, iviewb, radmidf, radmidb]
             elem = CHBDYE.add_op2_data(data_in)
-            self._add_methods._add_thermal_element_object(elem)
+            op2._add_methods._add_thermal_element_object(elem)
             n += ntotal
-        self.card_count['CHBDYE'] = nelements
+        op2.card_count['CHBDYE'] = nelements
         return n
 
     def _read_chbdyg(self, data: bytes, n: int) -> int:
         """
         CHBDYG(10808,108,406) - the marker for Record 43
         """
+        op2 = self.op2
         ntotal = 64  # 16*4
-        s = Struct(self._endian + b'16i')
+        s = Struct(op2._endian + b'16i')
         nelements = (len(data) - n) // ntotal
         for unused_i in range(nelements):
             edata = data[n:n+64]
             out = s.unpack(edata)
             (eid, unused_blank, Type, iviewf, iviewb, radmidf, radmidb, unused_blank2,
              g1, g2, g3, g4, g5, g6, g7, g8) = out
-            if self.is_debug_file:
-                self.binary_debug.write('  CHBDYG=%s\n' % str(out))
-            #self.log.debug('  CHBDYG=%s' % str(out))
+            if op2.is_debug_file:
+                op2.binary_debug.write('  CHBDYG=%s\n' % str(out))
+            #op2.log.debug('  CHBDYG=%s' % str(out))
             data_in = [eid, Type, iviewf, iviewb, radmidf, radmidb,
                        g1, g2, g3, g4, g5, g6, g7, g8]
             elem = CHBDYG.add_op2_data(data_in)
-            self._add_methods._add_thermal_element_object(elem)
+            op2._add_methods._add_thermal_element_object(elem)
             n += ntotal
-        self.card_count['CHBDYG'] = nelements
+        op2.card_count['CHBDYG'] = nelements
         return n
 
     def _read_chbdyp(self, data: bytes, n: int) -> int:
         """
         CHBDYP(10908,109,407)
         """
+        op2 = self.op2
         ntotal = 60  # 16*4
-        s = Struct(self._endian + b'12i 3f')
+        s = Struct(op2._endian + b'12i 3f')
         nelements = (len(data) - n) // ntotal
         for unused_i in range(nelements):
             edata = data[n:n+60]
             out = s.unpack(edata)
             (eid, pid, Type, iviewf, iviewb, g1, g2, g0, radmidf, radmidb,
              dislin, ce, e1, e2, e3) = out
-            if self.is_debug_file:
-                self.binary_debug.write('  CHBDYP=%s\n' % str(out))
-            #self.log.debug('  CHBDYP=%s' % str(out))
+            if op2.is_debug_file:
+                op2.binary_debug.write('  CHBDYP=%s\n' % str(out))
+            #op2.log.debug('  CHBDYP=%s' % str(out))
             data_in = [eid, pid, Type, iviewf, iviewb, g1, g2, g0, radmidf, radmidb,
                        dislin, ce, e1, e2, e3]
             elem = CHBDYP.add_op2_data(data_in)
             self._add_thermal_element_object_safe(elem)
             n += ntotal
-        self.card_count['CHBDYP'] = nelements
+        op2.card_count['CHBDYP'] = nelements
         return n
 
     def _add_thermal_element_object_safe(self, obj):
-        if obj.eid in self.elements:
-            self.reject_lines.append(obj.write_card(size=16))
+        op2 = self.op2
+        if obj.eid in op2.elements:
+            op2.reject_lines.append(obj.write_card(size=16))
         else:
-            self._add_methods._add_element_object(obj)
+            op2._add_methods._add_element_object(obj)
         #raise RuntimeError('this should be overwritten by the BDF class')
 
     def _read_chexa(self, data: bytes, n: int) -> int:
         """
         CHEXA(7308,73,253) - the marker for Record 45
         """
-        s = Struct(mapfmt(self._endian + b'22i', self.size))
+        op2 = self.op2
+        s = Struct(mapfmt(op2._endian + b'22i', self.size))
         ntotal = 88 * self.factor  # 22*4
         nelements = (len(data) - n) // ntotal
         for unused_i in range(nelements):
             edata = data[n:n+ntotal]
             out = s.unpack(edata)
-            if self.is_debug_file:
-                self.binary_debug.write('  CHEXA=%s\n' % str(out))
+            if op2.is_debug_file:
+                op2.binary_debug.write('  CHEXA=%s\n' % str(out))
             (eid, pid, g1, g2, g3, g4, g5, g6, g7, g8, g9, g10,
              g11, g12, g13, g14, g15, g16, g17, g18, g19, g20) = out
 
@@ -1648,21 +1723,22 @@ class GEOM2(GeomCommon):
                 elem = CHEXA8.add_op2_data(data_in)
             self.add_op2_element(elem)
             n += ntotal
-        self.card_count['CHEXA'] = nelements
+        op2.card_count['CHEXA'] = nelements
         return n
 
     def _read_chexa_cz(self, data: bytes, n: int) -> int:
         """
         CHEXCZ(11801,118,907)
         """
-        s = Struct(mapfmt(self._endian + b'22i 2i', self.size))
+        op2 = self.op2
+        s = Struct(mapfmt(op2._endian + b'22i 2i', self.size))
         ntotal = 96 * self.factor  # 24*4
         nelements = (len(data) - n) // ntotal
         for unused_i in range(nelements):
             edata = data[n:n+ntotal]
             out = s.unpack(edata)
-            if self.is_debug_file:
-                self.binary_debug.write('  CHEXCZ=%s\n' % str(out))
+            if op2.is_debug_file:
+                op2.binary_debug.write('  CHEXCZ=%s\n' % str(out))
             (eid, pid, g1, g2, g3, g4, g5, g6, g7, g8, g9, g10,
              g11, g12, g13, g14, g15, g16, g17, g18, g19, g20,
              dummy1, dummy2) = out
@@ -1676,7 +1752,7 @@ class GEOM2(GeomCommon):
             elem = CHEXCZ.add_op2_data(data_in)
             self.add_op2_element(elem)
             n += ntotal
-        self.card_count['CHEXCZ'] = nelements
+        op2.card_count['CHEXCZ'] = nelements
         return n
 
 # CHEXA20F
@@ -1687,9 +1763,9 @@ class GEOM2(GeomCommon):
         #"""
         #CHEXP(12001,120,9011) - the marker for Record 50
         #"""
-        #self.log.info('skipping CHEXP in GEOM2')
-        #if self.is_debug_file:
-            #self.binary_debug.write('skipping CHEXP in GEOM2\n')
+        #op2.log.info('skipping CHEXP in GEOM2')
+        #if op2.is_debug_file:
+            #op2.binary_debug.write('skipping CHEXP in GEOM2\n')
         #return len(data)
 
     def _read_chexpr(self, data: bytes, n: int) -> int:
@@ -1702,72 +1778,76 @@ class GEOM2(GeomCommon):
         """
         CMASS1(1001,10,65) - the marker for Record 51
         """
+        op2 = self.op2
         ntotal =  24 * self.factor  # 6*4
-        struct_6i = Struct(mapfmt(self._endian + b'6i', self.size))
+        struct_6i = Struct(mapfmt(op2._endian + b'6i', self.size))
         nelements = (len(data) - n) // ntotal
         for unused_i in range(nelements):
             edata = data[n:n + ntotal]
             out = struct_6i.unpack(edata)
-            if self.is_debug_file:
-                self.binary_debug.write('  CMASS1=%s\n' % str(out))
+            if op2.is_debug_file:
+                op2.binary_debug.write('  CMASS1=%s\n' % str(out))
             #(eid, pid, g1, g2, c1, c2) = out
             elem = CMASS1.add_op2_data(out)
-            self._add_methods._add_mass_object(elem)
+            op2._add_methods._add_mass_object(elem)
             n += ntotal
-        self.card_count['CMASS1'] = nelements
+        op2.card_count['CMASS1'] = nelements
         return n
 
     def _read_cmass2(self, data: bytes, n: int) -> int:
         """
         CMASS2(1101,11,66) - the marker for Record 52
         """
+        op2 = self.op2
         ntotal = 24 * self.factor  # 6*4
-        s = Struct(mapfmt(self._endian + b'if4i', self.size))
+        s = Struct(mapfmt(op2._endian + b'if4i', self.size))
         nelements = (len(data) - n) // ntotal
         for unused_i in range(nelements):
             edata = data[n:n + ntotal]
             out = s.unpack(edata)
-            if self.is_debug_file:
-                self.binary_debug.write('  CMASS2=%s\n' % str(out))
+            if op2.is_debug_file:
+                op2.binary_debug.write('  CMASS2=%s\n' % str(out))
             #(eid, m, g1, g2, c1, c2) = out
             elem = CMASS2.add_op2_data(out)
-            self._add_methods._add_mass_object(elem)
+            op2._add_methods._add_mass_object(elem)
             n += ntotal
-        self.card_count['CMASS2'] = nelements
+        op2.card_count['CMASS2'] = nelements
         return n
 
     def _read_cmass3(self, data: bytes, n: int) -> int:
         """
         CMASS3(1201,12,67) - the marker for Record 53
         """
-        struct_4i = Struct(self._endian + b'4i')
+        op2 = self.op2
+        struct_4i = Struct(op2._endian + b'4i')
         nelements = (len(data) - n) // 16
         for unused_i in range(nelements):
             edata = data[n:n + 16]  # 4*4
             out = struct_4i.unpack(edata)
-            if self.is_debug_file:
-                self.binary_debug.write('  CMASS3=%s\n' % str(out))
+            if op2.is_debug_file:
+                op2.binary_debug.write('  CMASS3=%s\n' % str(out))
             #(eid, pid, s1, s2) = out
             elem = CMASS3.add_op2_data(out)
-            self._add_methods._add_mass_object(elem)
+            op2._add_methods._add_mass_object(elem)
             n += 16
-        self.card_count['CMASS3'] = nelements
+        op2.card_count['CMASS3'] = nelements
         return n
 
     def _read_cmass4(self, data: bytes, n: int) -> int:
         """
         CMASS4(1301,13,68) - the marker for Record 54
         """
+        op2 = self.op2
         nelements = (len(data) - n) // 16
-        struct_if2i = Struct(self._endian + b'ifii')
+        struct_if2i = Struct(op2._endian + b'ifii')
         for unused_i in range(nelements):
             edata = data[n:n + 16]  # 4*4
             out = struct_if2i.unpack(edata)
             #(eid, m,s 1, s2) = out
             elem = CMASS4.add_op2_data(out)
-            self._add_methods._add_mass_object(elem)
+            op2._add_methods._add_mass_object(elem)
             n += 16
-        self.card_count['CMASS4'] = nelements
+        op2.card_count['CMASS4'] = nelements
         return n
 
     def _read_cmfree(self, data: bytes, n: int) -> int:
@@ -1780,75 +1860,79 @@ class GEOM2(GeomCommon):
         4   Y RS
         5   N  I
         """
+        op2 = self.op2
         assert n == 12, n
         nelements = (len(data) - n) // 20
         assert (len(data) - n) % 20 == 0
-        struct_3ifi = Struct(self._endian + b'3ifi')
+        struct_3ifi = Struct(op2._endian + b'3ifi')
         for unused_i in range(nelements):
             edata = data[n:n + 20]  # 5*4
             out = struct_3ifi.unpack(edata)
             eid, s, s2, y, ncm = out
-            self.add_cmfree(eid, s, s2, y, ncm)
+            op2.add_cmfree(eid, s, s2, y, ncm)
             n += 20
-        self.card_count['CMFREE'] = nelements
+        op2.card_count['CMFREE'] = nelements
         return n
 
     def _read_conm1(self, data: bytes, n: int) -> int:
         """
         CONM1(1401,14,63) - the marker for Record 56
         """
+        op2 = self.op2
         ntotal = 96 * self.factor   # 24*4
-        s = Struct(mapfmt(self._endian + b'3i21f', self.size))
+        s = Struct(mapfmt(op2._endian + b'3i21f', self.size))
         nelements = (len(data) - n) // ntotal
         for unused_i in range(nelements):
             edata = data[n:n + ntotal]
             out = s.unpack(edata)
-            if self.is_debug_file:
-                self.binary_debug.write('  CONM1=%s\n' % str(out))
+            if op2.is_debug_file:
+                op2.binary_debug.write('  CONM1=%s\n' % str(out))
             #(eid, g, cid, m1, m2a, m2b, m3a, m3b, m3c, m4a, m4b, m4c, m4d,
              #m5a, m5b, m5c, m5d, m5e, m6a, m6b, m6c, m6d, m6e, m6f) = out
             elem = CONM1.add_op2_data(out)
-            self._add_methods._add_mass_object(elem)
+            op2._add_methods._add_mass_object(elem)
             n += ntotal
-        self.card_count['CONM1'] = nelements
+        op2.card_count['CONM1'] = nelements
         return n
 
     def _read_conm2(self, data: bytes, n: int) -> int:
         """
         CONM2(1501,15,64) - the marker for Record 57
         """
+        op2 = self.op2
         ntotal = 52 * self.factor  # 13*4
-        s = Struct(mapfmt(self._endian + b'3i10f', self.size))
+        s = Struct(mapfmt(op2._endian + b'3i10f', self.size))
         nelements = (len(data) - n) // ntotal
         for unused_i in range(nelements):
             edata = data[n:n+ntotal]
             out = s.unpack(edata)
-            if self.is_debug_file:
-                self.binary_debug.write('  CONM2=%s\n' % str(out))
+            if op2.is_debug_file:
+                op2.binary_debug.write('  CONM2=%s\n' % str(out))
             #(eid, g, cid, m, x1, x2, x3, i1, i2a, i2b, i3a, i3b, i3c) = out
             elem = CONM2.add_op2_data(out)
-            self._add_methods._add_mass_object(elem)
+            op2._add_methods._add_mass_object(elem)
             n += ntotal
-        self.card_count['CONM2'] = nelements
+        op2.card_count['CONM2'] = nelements
         return n
 
     def _read_conrod(self, data: bytes, n: int) -> int:
         """
         CONROD(1601,16,47) - the marker for Record 58
         """
+        op2 = self.op2
         ntotal = 32 *self.factor  # 8*4
-        s = Struct(mapfmt(self._endian + b'4i4f', self.size))
+        s = Struct(mapfmt(op2._endian + b'4i4f', self.size))
         nelements = (len(data) - n) // ntotal
         for unused_i in range(nelements):
             edata = data[n:n+ntotal]
             out = s.unpack(edata)
-            if self.is_debug_file:
-                self.binary_debug.write('  CONROD=%s\n' % str(out))
+            if op2.is_debug_file:
+                op2.binary_debug.write('  CONROD=%s\n' % str(out))
             #(eid, n1, n2, mid, a, j, c, nsm) = out
             elem = CONROD.add_op2_data(out)
             self.add_op2_element(elem)
             n += ntotal
-        self.card_count['CONROD'] = nelements
+        op2.card_count['CONROD'] = nelements
         return n
 
     def _read_conv(self, data: bytes, n: int) -> int:
@@ -1858,7 +1942,8 @@ class GEOM2(GeomCommon):
         """
         n0 = n
         assert self.factor == 1, self.factor
-        if self.is_nx:
+        op2 = self.op2
+        if op2.is_nx:
             try:
                 n, elements = self._read_conv_nx(data, n)
             except (AssertionError, MixedVersionCard):
@@ -1871,8 +1956,8 @@ class GEOM2(GeomCommon):
 
         nelements = len(elements)
         for elem in elements:
-            self._add_methods._add_thermal_bc_object(elem, elem.eid)
-        self.card_count['CONV'] = nelements
+            op2._add_methods._add_thermal_bc_object(elem, elem.eid)
+        op2.card_count['CONV'] = nelements
         assert n == len(data), f'ndata={len(data)} n={n}'
         return n
 
@@ -1881,17 +1966,18 @@ class GEOM2(GeomCommon):
         generalization of multi read methods for different
         versions of MSC Nastran
         """
+        op2 = self.op2
         n0 = n
         try:
             n, elements = read1(card_obj, data, n)
         except AssertionError:
-            self.log.info(f'AssertionError...try again reading {card_name!r}')
+            op2.log.info(f'AssertionError...try again reading {card_name!r}')
             n, elements = read2(card_obj, data, n0)
 
         nelements = len(elements)
         for elem in elements:
             add_method(elem)
-        self.card_count[card_name] = nelements
+        op2.card_count[card_name] = nelements
         return n
 
     def _read_dual_card(self, data, n, nx_read, msc_read, card_name, add_method) -> int:
@@ -1903,13 +1989,14 @@ class GEOM2(GeomCommon):
         nelements = len(elements)
         for elem in elements:
             add_method(elem)
-        self.card_count[card_name] = nelements
+        self.op2.card_count[card_name] = nelements
         return n
 
     def _read_dual_card_load(self, data, n,
                              nx_read, msc_read) -> Tuple[int, List[Any]]:
         n0 = n
-        if self.is_nx:
+        op2 = self.op2
+        if op2.is_nx:
             try:
                 n, elements = nx_read(data, n0)
             except (AssertionError, MixedVersionCard):
@@ -1928,16 +2015,17 @@ class GEOM2(GeomCommon):
         """
         CONV(12701,127,408) - the marker for Record 59
         """
+        op2 = self.op2
         ntotal = 48  # 12*4
-        s = Struct(self._endian + b'4i 8i')
+        s = Struct(op2._endian + b'4i 8i')
         nelements = (len(data) - n) // ntotal
         assert (len(data) - n) % ntotal == 0
         elements = []
         for unused_i in range(nelements):
             edata = data[n:n+ntotal]
             out = s.unpack(edata)
-            if self.is_debug_file:
-                self.binary_debug.write('  CONV=%s; len=%s\n' % (str(out), len(out)))
+            if op2.is_debug_file:
+                op2.binary_debug.write('  CONV=%s; len=%s\n' % (str(out), len(out)))
             (eid, pcon_id, flmnd, cntrlnd,
              ta1, ta2, ta3, ta4, ta5, ta6, ta7, ta8) = out
             assert eid > 0, out
@@ -1958,16 +2046,17 @@ class GEOM2(GeomCommon):
         """
         CONV(12701,127,408) - the marker for Record 60
         """
+        op2 = self.op2
         ntotal = 80  # 20*4
-        s = Struct(self._endian + b'12i 8f')
+        s = Struct(op2._endian + b'12i 8f')
         nelements = (len(data) - n) // ntotal
         assert (len(data) - n) % ntotal == 0
         elements = []
         for unused_i in range(nelements):
             edata = data[n:n+80]
             out = s.unpack(edata)
-            if self.is_debug_file:
-                self.binary_debug.write('  CONV=%s; len=%s\n' % (str(out), len(out)))
+            if op2.is_debug_file:
+                op2.binary_debug.write('  CONV=%s; len=%s\n' % (str(out), len(out)))
             (eid, pcon_id, flmnd, cntrlnd,
              # TODO: why is ta4 and wt4 unused?
              ta1, ta2, ta3, unused_ta4, ta5, ta6, ta7, ta8,
@@ -2061,6 +2150,7 @@ class GEOM2(GeomCommon):
         CONVM EID PCONID FLMND CNTMDOT TA1 TA2
         106, 105, 0,     50003, 99999, 99999, 1.0)
         """
+        op2 = self.op2
         #C:\Users\sdoyle\Dropbox\move_tpl\ht15330.op2
         ntotal6 = 24  # 6*4
         ntotal7 = 28  # 7*4
@@ -2074,13 +2164,13 @@ class GEOM2(GeomCommon):
 
         if is_six and is_seven:
             try:
-                self.log.warning('CONVM: assuming 6 fields')
+                op2.log.warning('CONVM: assuming 6 fields')
                 elements, n = self.read_convm6(data, nelements6, n)
-                self.log.debug('CONVM: 6 fields')
+                op2.log.debug('CONVM: 6 fields')
             except RuntimeError:  # eid < 0
-                self.log.warning('CONVM: assuming 7 fields')
+                op2.log.warning('CONVM: assuming 7 fields')
                 elements, n = self.read_convm7(data, nelements7, n)
-                self.log.debug('CONVM: 7 fields')
+                op2.log.debug('CONVM: 7 fields')
         elif is_six:
             elements, n = self.read_convm6(data, nelements6, n)
         elif is_seven:
@@ -2089,18 +2179,19 @@ class GEOM2(GeomCommon):
             raise RuntimeError('CONVM is_six=%s is_seven=%s' % (is_six, is_seven))
         nelements = len(elements)
         for element in elements:
-            self._add_methods._add_thermal_bc_object(element, element.eid)
-        self.card_count['CONVM'] = nelements
+            op2._add_methods._add_thermal_bc_object(element, element.eid)
+        op2.card_count['CONVM'] = nelements
         return n
 
     def read_convm6(self, data, nelements, n):
-        structi = Struct(self._endian + b'6i')
+        op2 = self.op2
+        structi = Struct(op2._endian + b'6i')
         elements = []
         for unused_i in range(nelements):
             edata = data[n:n+24]
             out = structi.unpack(edata)
-            if self.is_debug_file:
-                self.binary_debug.write('  CONVM=%s\n' % str(out))
+            if op2.is_debug_file:
+                op2.binary_debug.write('  CONVM=%s\n' % str(out))
             (eid, pcon_id, flmnd, cntrlnd, ta1, ta2) = out
             #if eid <= 0:
             if eid <= 0 or pcon_id <= 0 or flmnd < 0 or cntrlnd <= 0 or ta1 <= 0 or ta2 <= 0:
@@ -2115,17 +2206,18 @@ class GEOM2(GeomCommon):
         return elements, n
 
     def read_convm7(self, data, nelements, n):
-        structi = Struct(self._endian + b'6if')
+        op2 = self.op2
+        structi = Struct(op2._endian + b'6if')
         elements = []
         for unused_i in range(nelements):
             edata = data[n:n+28]
             out = structi.unpack(edata)
-            if self.is_debug_file:
-                self.binary_debug.write('  CONVM=%s\n' % str(out))
+            if op2.is_debug_file:
+                op2.binary_debug.write('  CONVM=%s\n' % str(out))
             (eid, pcon_id, flmnd, cntrlnd, ta1, ta2, mdot) = out
 
             if eid <= 0 or pcon_id <= 0 or flmnd < 0 or cntrlnd <= 0 or ta1 <= 0 or ta2 <= 0:
-                self.show_data(data, 'if')
+                op2.show_data(data, 'if')
                 # TODO: I'm not sure that this really has 7 fields...
                 raise RuntimeError(f'eid={eid} pconid={pcon_id} flmnd={flmnd} '
                                    f'cntrlnd={cntrlnd} ta1={ta1} ta2={ta2} < 0')
@@ -2149,10 +2241,11 @@ class GEOM2(GeomCommon):
         13 T(3) RS Membrane thickness of element at grid points
         16 UNDEF None
         """
+        op2 = self.op2
         #self.show_data(data[n:], types='if')
-        self.to_nx(' because CPLSTS3 was found')
+        op2.to_nx(' because CPLSTS3 was found')
         ntotal = 64 * self.factor  # 16*4
-        struct_16i = Struct(mapfmt(self._endian + b'6i f 4i i3f i', self.size))
+        struct_16i = Struct(mapfmt(op2._endian + b'6i f 4i i3f i', self.size))
         ndatai = len(data)
         nelements = (ndatai - n) // ntotal
         leftover = (ndatai - n) % ntotal
@@ -2160,8 +2253,8 @@ class GEOM2(GeomCommon):
         for unused_i in range(nelements):
             edata = data[n:n + ntotal]
             out = struct_16i.unpack(edata)
-            if self.is_debug_file:
-                self.binary_debug.write('  CPLSTS3=%s\n' % str(out))
+            if op2.is_debug_file:
+                op2.binary_debug.write('  CPLSTS3=%s\n' % str(out))
             (eid, pid, n1, n2, n3, undef6, theta, undef8, undef9, undef10, undef11,
              tflag, t1, t2, t3, undef16) = out
             #print(eid, pid, (n1, n2, n3), theta,
@@ -2170,7 +2263,7 @@ class GEOM2(GeomCommon):
             undefs = (undef6, undef8, undef9, undef10, undef11, undef16)
             assert min(undefs) == 0
             assert max(undefs) == 0
-            cplsts3 = self.add_cplsts3(eid, pid, nids, theta=theta,
+            cplsts3 = op2.add_cplsts3(eid, pid, nids, theta=theta,
                                        tflag=tflag, T1=t1, T2=t2, T3=t3)
             str(cplsts3)
             n += ntotal
@@ -2189,9 +2282,10 @@ class GEOM2(GeomCommon):
         12 TFLAG I Flag signifying meaning of T(4) values
         13 T(4) RS Membrane thickness of element at grid points
         """
-        self.to_nx(' because CPLSTS4-NX was found')
+        op2 = self.op2
+        op2.to_nx(' because CPLSTS4-NX was found')
         ntotal = 64 * self.factor  # 16*4
-        struct_16i = Struct(mapfmt(self._endian + b'6i f 4i i4f', self.size))
+        struct_16i = Struct(mapfmt(op2._endian + b'6i f 4i i4f', self.size))
         ndatai = len(data)
         nelements = (ndatai - n) // ntotal
         leftover = (ndatai - n) % ntotal
@@ -2199,8 +2293,8 @@ class GEOM2(GeomCommon):
         for unused_i in range(nelements):
             edata = data[n:n + ntotal]
             out = struct_16i.unpack(edata)
-            if self.is_debug_file:
-                self.binary_debug.write('  CPLSTS4=%s\n' % str(out))
+            if op2.is_debug_file:
+                op2.binary_debug.write('  CPLSTS4=%s\n' % str(out))
             (eid, pid, n1, n2, n3, n4, theta, undef8, undef9, undef10, undef11,
              tflag, t1, t2, t3, t4) = out
             #print(eid, pid, (n1, n2, n3), theta,
@@ -2209,7 +2303,7 @@ class GEOM2(GeomCommon):
             undefs = (undef8, undef9, undef10, undef11)
             assert min(undefs) == 0, undefs
             assert max(undefs) == 0, undefs
-            cplsts4 = self.add_cplsts4(eid, pid, nids, theta=theta,
+            cplsts4 = op2.add_cplsts4(eid, pid, nids, theta=theta,
                                        tflag=tflag, T1=t1, T2=t2, T3=t3, T4=t4)
             str(cplsts4)
             n += ntotal
@@ -2231,11 +2325,12 @@ class GEOM2(GeomCommon):
         """
         #1728 / 4 = 432
         #432 = 16 * 27
-        self.to_nx(' because CPLSTS6-NX was found')
-        struct_16i = Struct(mapfmt(self._endian + b'2i 8i fi 4f 4i 4f', self.size))
+        op2 = self.op2
+        op2.to_nx(' because CPLSTS6-NX was found')
+        struct_16i = Struct(mapfmt(op2._endian + b'2i 8i fi 4f 4i 4f', self.size))
         ntotal = 96 * self.factor  # 24*4
         #ntotal = 128 * self.factor  # 16*4
-        #struct_16i = Struct(mapfmt(self._endian + b'2i 8i f i4f 4i 4f', self.size))
+        #struct_16i = Struct(mapfmt(op2._endian + b'2i 8i f i4f 4i 4f', self.size))
         ndatai = len(data) - n
         nelements = ndatai // ntotal
         leftover = ndatai % ntotal
@@ -2245,8 +2340,8 @@ class GEOM2(GeomCommon):
             #self.show_data(edata, types='if')
             out = struct_16i.unpack(edata)
 
-            if self.is_debug_file:
-                self.binary_debug.write('  CPLSTS6=%s\n' % str(out))
+            if op2.is_debug_file:
+                op2.binary_debug.write('  CPLSTS6=%s\n' % str(out))
             (eid, pid, n1, n2, n3, n4, n5, n6, undef7, undef8, theta,
              tflag, t1, t2, t3, zero1, zero2, zero3, zero4, zero5, t4, t5, t6, undef8b) = out
             nids = [n1, n2, n3, n4, n5, n6]
@@ -2256,7 +2351,7 @@ class GEOM2(GeomCommon):
             assert min(nids) >= 0, nids
             assert min(t1, t2, t3, t4, t5, t6) == -1.0, (t1, t2, t3, t4, t5, t6)
             assert max(t1, t2, t3, t4, t5, t6) == -1.0, (t1, t2, t3, t4, t5, t6)
-            cplsts6 = self.add_cplsts6(eid, pid, nids, theta=theta,
+            cplsts6 = op2.add_cplsts6(eid, pid, nids, theta=theta,
                                        tflag=tflag,
                                        T1=t1, T2=t2, T3=t3, T4=t4,
                                        T5=t5, T6=t6)
@@ -2283,8 +2378,9 @@ class GEOM2(GeomCommon):
           ints    = (39, 4, 43, 41, 114, 115, 54, 55, 116, 56, 0, 0,     -1.0, -1.0, -1.0, -1.0)
           floats  = (39, 4, 43, 41, 114, 115, 54, 55, 116, 56, 0.0, 0.0, -1.0, -1.0, -1.0, -1.0)
         """
-        self.to_nx(' because CPLSTS8 was found')
-        struct_16i = Struct(mapfmt(self._endian + b'2i 8i fi 4f 4i 4f', self.size))
+        op2 = self.op2
+        op2.to_nx(' because CPLSTS8 was found')
+        struct_16i = Struct(mapfmt(op2._endian + b'2i 8i fi 4f 4i 4f', self.size))
         ntotal = 96 * self.factor  # 24*4
         ndatai = len(data) - n
         nelements = ndatai // ntotal
@@ -2294,8 +2390,8 @@ class GEOM2(GeomCommon):
             edata = data[n:n + ntotal]
             out = struct_16i.unpack(edata)
 
-            if self.is_debug_file:
-                self.binary_debug.write('  CPLSTS8=%s\n' % str(out))
+            if op2.is_debug_file:
+                op2.binary_debug.write('  CPLSTS8=%s\n' % str(out))
             (eid, pid, n1, n2, n3, n4, n5, n6, n7, n8, theta,
              tflag, t1, t2, t3, t4, zero1, zero2, zero3, zero4, t5, t6, t7, t8) = out
             nids = [n1, n2, n3, n4, n5, n6, n7, n8]
@@ -2304,7 +2400,7 @@ class GEOM2(GeomCommon):
             assert min(nids) >= 0, nids
             assert min(t5, t6, t7, t8) == -1.0, (t5, t6, t7, t8)
             assert max(t5, t6, t7, t8) == -1.0, (t5, t6, t7, t8)
-            cplsts8 = self.add_cplsts8(eid, pid, nids, theta=theta,
+            cplsts8 = op2.add_cplsts8(eid, pid, nids, theta=theta,
                                        tflag=tflag,
                                        T1=t1, T2=t2, T3=t3, T4=t4,
                                        T5=t5, T6=t6, T7=t7, T8=t8)
@@ -2325,8 +2421,9 @@ class GEOM2(GeomCommon):
         7 UNDEF(10) None
 
         """
-        self.to_nx(' because CPLSTN3 was found')
-        struct_16i = Struct(mapfmt(self._endian + b'2i 3i f 10i', self.size))
+        op2 = self.op2
+        op2.to_nx(' because CPLSTN3 was found')
+        struct_16i = Struct(mapfmt(op2._endian + b'2i 3i f 10i', self.size))
         ntotal = 64 * self.factor  # 16*4
         ndatai = len(data) - n
         nelements = ndatai // ntotal
@@ -2336,14 +2433,14 @@ class GEOM2(GeomCommon):
             edata = data[n:n + ntotal]
             out = struct_16i.unpack(edata)
 
-            if self.is_debug_file:
-                self.binary_debug.write('  CPLSTN3=%s\n' % str(out))
+            if op2.is_debug_file:
+                op2.binary_debug.write('  CPLSTN3=%s\n' % str(out))
             (eid, pid, n1, n2, n3, theta, *undef) = out
             nids = [n1, n2, n3]
             assert min(nids) > 0, nids
             assert min(undef) == 0, undef
             assert max(undef) == 0, undef
-            cplstn3 = self.add_cplstn3(eid, pid, nids, theta=theta)
+            cplstn3 = op2.add_cplstn3(eid, pid, nids, theta=theta)
             #print(cplstn3)
             str(cplstn3)
             n += ntotal
@@ -2360,8 +2457,9 @@ class GEOM2(GeomCommon):
         8 UNDEF(9) None
 
         """
-        self.to_nx(' because CPLSTN4 was found')
-        struct_16i = Struct(mapfmt(self._endian + b'2i 4i f 9i', self.size))
+        op2 = self.op2
+        op2.to_nx(' because CPLSTN4 was found')
+        struct_16i = Struct(mapfmt(op2._endian + b'2i 4i f 9i', self.size))
         ntotal = 64 * self.factor  # 16*4
         ndatai = len(data) - n
         nelements = ndatai // ntotal
@@ -2371,14 +2469,14 @@ class GEOM2(GeomCommon):
             edata = data[n:n + ntotal]
             out = struct_16i.unpack(edata)
 
-            if self.is_debug_file:
-                self.binary_debug.write('  CPLSTN4=%s\n' % str(out))
+            if op2.is_debug_file:
+                op2.binary_debug.write('  CPLSTN4=%s\n' % str(out))
             (eid, pid, n1, n2, n3, n4, theta, *undef) = out
             nids = [n1, n2, n3, n4]
             assert min(nids) > 0, nids
             assert min(undef) == 0, undef
             assert max(undef) == 0, undef
-            cplstn4 = self.add_cplstn4(eid, pid, nids, theta=theta)
+            cplstn4 = op2.add_cplstn4(eid, pid, nids, theta=theta)
             #print(cplstn4)
             str(cplstn4)
             n += ntotal
@@ -2396,8 +2494,9 @@ class GEOM2(GeomCommon):
         10 UNDEF(7) None
 
         """
-        self.to_nx(' because CPLSTN6 was found')
-        struct_16i = Struct(mapfmt(self._endian + b'2i 6i f 7i', self.size))
+        op2 = self.op2
+        op2.to_nx(' because CPLSTN6 was found')
+        struct_16i = Struct(mapfmt(op2._endian + b'2i 6i f 7i', self.size))
         ntotal = 64 * self.factor  # 16*4
         ndatai = len(data) - n
         nelements = ndatai // ntotal
@@ -2407,14 +2506,14 @@ class GEOM2(GeomCommon):
             edata = data[n:n + ntotal]
             out = struct_16i.unpack(edata)
 
-            if self.is_debug_file:
-                self.binary_debug.write('  CPLSTN6=%s\n' % str(out))
+            if op2.is_debug_file:
+                op2.binary_debug.write('  CPLSTN6=%s\n' % str(out))
             (eid, pid, n1, n2, n3, n4, n5, n6, theta, *undef) = out
             nids = [n1, n2, n3, n4, n5, n6]
             assert min(nids) > 0, nids
             assert min(undef) == 0, undef
             assert max(undef) == 0, undef
-            cplstn6 = self.add_cplstn6(eid, pid, nids, theta=theta)
+            cplstn6 = op2.add_cplstn6(eid, pid, nids, theta=theta)
             #print(cplstn6)
             str(cplstn6)
             n += ntotal
@@ -2432,8 +2531,9 @@ class GEOM2(GeomCommon):
         12 UNDEF(5) None
 
         """
-        self.to_nx(' because CPLSTN8 was found')
-        struct_16i = Struct(mapfmt(self._endian + b'2i 8i f 5i', self.size))
+        op2 = self.op2
+        op2.to_nx(' because CPLSTN8 was found')
+        struct_16i = Struct(mapfmt(op2._endian + b'2i 8i f 5i', self.size))
         ntotal = 64 * self.factor  # 16*4
         ndatai = len(data) - n
         nelements = ndatai // ntotal
@@ -2443,14 +2543,14 @@ class GEOM2(GeomCommon):
             edata = data[n:n + ntotal]
             out = struct_16i.unpack(edata)
 
-            if self.is_debug_file:
-                self.binary_debug.write('  CPLSTN8=%s\n' % str(out))
+            if op2.is_debug_file:
+                op2.binary_debug.write('  CPLSTN8=%s\n' % str(out))
             (eid, pid, n1, n2, n3, n4, n5, n6, n7, n8, theta, *undef) = out
             nids = [n1, n2, n3, n4, n5, n6, n7, n8]
             assert min(nids) > 0, nids
             assert min(undef) == 0, undef
             assert max(undef) == 0, undef
-            cplstn8 = self.add_cplstn8(eid, pid, nids, theta=theta)
+            cplstn8 = op2.add_cplstn8(eid, pid, nids, theta=theta)
             str(cplstn8)
             n += ntotal
         return n
@@ -2461,14 +2561,15 @@ class GEOM2(GeomCommon):
 
         Specific to NX Nastran
         """
+        op2 = self.op2
         ntotal = 64 * self.factor  # 16*4
-        struct_16i = Struct(mapfmt(self._endian + b'16i', self.size))
+        struct_16i = Struct(mapfmt(op2._endian + b'16i', self.size))
         nelements = (len(data) - n) // ntotal
         for unused_i in range(nelements):
             edata = data[n:n + ntotal]
             out = struct_16i.unpack(edata)
-            if self.is_debug_file:
-                self.binary_debug.write('  CPENTA=%s\n' % str(out))
+            if op2.is_debug_file:
+                op2.binary_debug.write('  CPENTA=%s\n' % str(out))
             (eid, pid, g1, g2, g3, g4, g5, g6, g7, g8, g9, g10,
              g11, g12, g13, _g14) = out
 
@@ -2480,8 +2581,8 @@ class GEOM2(GeomCommon):
                 elem = CPYRAM5.add_op2_data(data_in)
             self.add_op2_element(elem)
             n += ntotal
-        self.card_count['CPYRAM'] = nelements
-        self.to_nx(' because CPYRAM was found')
+        op2.card_count['CPYRAM'] = nelements
+        op2.to_nx(' because CPYRAM was found')
         return n
 
 # CPENP
@@ -2493,14 +2594,15 @@ class GEOM2(GeomCommon):
         CPENT15F(16500,165,9999) - the marker for Record 65
         CPENT6FD(16000,160,9999) - the marker for Record 66
         """
+        op2 = self.op2
         ntotal = 68 * self.factor  # 17*4
-        s = Struct(mapfmt(self._endian + b'17i', self.size))
+        s = Struct(mapfmt(op2._endian + b'17i', self.size))
         nelements = (len(data) - n) // ntotal
         for unused_i in range(nelements):
             edata = data[n:n + ntotal]
             out = s.unpack(edata)
-            if self.is_debug_file:
-                self.binary_debug.write('  CPENTA=%s\n' % str(out))
+            if op2.is_debug_file:
+                op2.binary_debug.write('  CPENTA=%s\n' % str(out))
             (eid, pid, g1, g2, g3, g4, g5, g6, g7, g8, g9, g10,
              g11, g12, g13, g14, g15) = out
 
@@ -2512,22 +2614,23 @@ class GEOM2(GeomCommon):
                 elem = CPENTA6.add_op2_data(data_in)
             self.add_op2_element(elem)
             n += ntotal
-        self.card_count['CPENTA'] = nelements
+        op2.card_count['CPENTA'] = nelements
         return n
 
     def _read_cpenta_cz(self, data: bytes, n: int) -> int:
         """
         CPENTCZ
         """
+        op2 = self.op2
         ntotal = 96 * self.factor  # 19*4
-        s = Struct(mapfmt(self._endian + b'17i 7i', self.size))
+        s = Struct(mapfmt(op2._endian + b'17i 7i', self.size))
         nelements = (len(data) - n) // ntotal
         for unused_i in range(nelements):
             edata = data[n:n + ntotal]
 
             out = s.unpack(edata)
-            if self.is_debug_file:
-                self.binary_debug.write('  CPENTCZ=%s\n' % str(out))
+            if op2.is_debug_file:
+                op2.binary_debug.write('  CPENTCZ=%s\n' % str(out))
             (eid, pid, g1, g2, g3, g4, g5, g6, g7, g8, g9, g10,
              g11, g12, g13, g14, g15,
              dummy1, dummy2, dummy3, dummy4, dummy5, dummy6, dummy7) = out
@@ -2543,7 +2646,7 @@ class GEOM2(GeomCommon):
                 #elem = CPENTA6.add_op2_data(data_in)
             self.add_op2_element(elem)
             n += ntotal
-        self.card_count['CPENTCZ'] = nelements
+        op2.card_count['CPENTCZ'] = nelements
         return n
 
 # CQDX4FD
@@ -2566,6 +2669,7 @@ class GEOM2(GeomCommon):
                    351, 5, 13, 329, 330, 14, 0, 0, 0, 0, 0, 0, 0,
                    352, 5, 14, 330, 331, 15, 0, 0, 0, 0, 0, 0, 0)
         """
+        op2 = self.op2
         elements = []
         ntotal = 52 * self.factor  # 13*4
         nelements = (len(data) - n) // ntotal
@@ -2577,12 +2681,12 @@ class GEOM2(GeomCommon):
         #   3f-i zeros as float/int???
         #   4f correct
         #   i correct
-        s = Struct(mapfmt(self._endian + b'6i 7i', self.size))
-        #if self.is_debug_file:
-            #self.binary_debug.write('ndata=%s\n' % (nelements * 44))
+        s = Struct(mapfmt(op2._endian + b'6i 7i', self.size))
+        #if op2.is_debug_file:
+            #op2.binary_debug.write('ndata=%s\n' % (nelements * 44))
 
-        if self.is_debug_file:
-            self.binary_debug.write(f'  {element.type}=(eid, pid, [n1, n2, n3, n4], theta, zoffs, '
+        if op2.is_debug_file:
+            op2.binary_debug.write(f'  {element.type}=(eid, pid, [n1, n2, n3, n4], theta, zoffs, '
                                     'unused_blank, [tflag, t1, t2, t3, t4]); theta_mcid\n')
 
         for unused_i in range(nelements):
@@ -2611,8 +2715,8 @@ class GEOM2(GeomCommon):
             assert t4 == 0, msg
 
             #theta_mcid = convert_theta_to_mcid(theta)
-            #if self.is_debug_file:
-                #self.binary_debug.write(
+            #if op2.is_debug_file:
+                #op2.binary_debug.write(
                     #f'  {element.type}=({eid}, {pid}, [{n1}, {n2}, {n3}, {n4}], '
                     #f'{theta}, {zoffs}, [{tflag}, {t1}, {t2}, {t3})]; {theta_mcid}\n')
 
@@ -2623,7 +2727,7 @@ class GEOM2(GeomCommon):
             #elements.append(elem)
             self.add_op2_element(elem)
             n += ntotal
-        self.card_count['CQUAD4'] = nelements
+        op2.card_count['CQUAD4'] = nelements
         assert n == len(data), f'n={n} ndata={len(data)}'
         return n
 
@@ -2650,13 +2754,14 @@ class GEOM2(GeomCommon):
                 card_name, self.add_op2_element)
         #nentries = len(elements)
         #for elem in elements:
-            #self.add_op2_element(elem)
-        #self.card_count[card_name] = nentries
+            #op2.add_op2_element(elem)
+        #op2.card_count[card_name] = nentries
 
         return n
 
     def _read_double_card(self, card_name: str, card_obj, add_method,
                           methods, data: bytes, n: int) -> int:
+        op2 = self.op2
         n, elements = self._read_double_card_load(
             card_name, card_obj,
             methods, data, n)
@@ -2664,11 +2769,12 @@ class GEOM2(GeomCommon):
         nentries = len(elements)
         for elem in elements:
             add_method(elem)
-        self.card_count[card_name] = nentries
+        op2.card_count[card_name] = nentries
         return n
 
     def _read_double_card_load(self, card_name: str, card_obj,
                                methods, data: bytes, n: int) -> int:
+        op2 = self.op2
         assert isinstance(data, bytes), type(data)
         ndatai = (len(data) - n) // self.factor
         keys = np.array(list(methods.keys()))
@@ -2699,7 +2805,7 @@ class GEOM2(GeomCommon):
                     raise DoubleCardError(f'No {card_name} cards found')
         #else:
         if elements is None:
-            self.show_data(data, types='ifs')
+            op2.show_data(data, types='ifs')
             raise EmptyCardError()
         return n, elements
 
@@ -2712,42 +2818,44 @@ class GEOM2(GeomCommon):
 
     def _run_cquad(self, element: Union[CQUAD, CQUADX], data: bytes, n: int) -> int:
         """common method for CQUAD, CQUADX"""
+        op2 = self.op2
         ntotal = 44 * self.factor  # 11*4
-        s = Struct(mapfmt(self._endian + b'11i', self.size))
+        s = Struct(mapfmt(op2._endian + b'11i', self.size))
         nelements = (len(data) - n) // ntotal
-        if self.is_debug_file:
-            self.binary_debug.write('ndata=%s\n' % (nelements * ntotal))
+        if op2.is_debug_file:
+            op2.binary_debug.write('ndata=%s\n' % (nelements * ntotal))
         for unused_i in range(nelements):
             edata = data[n:n + ntotal]
             out = s.unpack(edata)
             (eid, pid, n1, n2, n3, n4, n5, n6, n7, n8, n9) = out
-            if self.is_debug_file:
-                self.binary_debug.write('  %s=%s\n' % (element.type, str(out)))
+            if op2.is_debug_file:
+                op2.binary_debug.write('  %s=%s\n' % (element.type, str(out)))
             #print('CQUAD eid=%s pid=%s n1=%s n2=%s n3=%s n4=%s n5=%s n6=%s n7=%s n8=%s' % (
                 #eid, pid, n1, n2, n3, n4, n5, n6, n7, n8))
             datai = [eid, pid, n1, n2, n3, n4, n5, n6, n7, n8, n9]
             elem = element.add_op2_data(datai)
             self.add_op2_element(elem)
             n += ntotal
-        self.card_count[element.type] = nelements
+        op2.card_count[element.type] = nelements
         return n
 
     def _run_2nodes(self, element, data: bytes, n: int) -> int:
         """common method for VUBEAM"""
+        op2 = self.op2
         nelements = (len(data) - n) // 16
-        s = Struct(self._endian + b'4i')
-        #if self.is_debug_file:
-            #self.binary_debug.write('ndata=%s\n' % (nelements * 44))
+        s = Struct(op2._endian + b'4i')
+        #if op2.is_debug_file:
+            #op2.binary_debug.write('ndata=%s\n' % (nelements * 44))
 
-        if self.is_debug_file:
-            self.binary_debug.write(f'  {element.type}=(eid, pid, [n1, n2]')
+        if op2.is_debug_file:
+            op2.binary_debug.write(f'  {element.type}=(eid, pid, [n1, n2]')
 
         for unused_i in range(nelements):
             edata = data[n:n + 16]  # 4*4
             out = s.unpack(edata)
             (eid, pid, n1, n2) = out
-            if self.is_debug_file:
-                self.binary_debug.write(
+            if op2.is_debug_file:
+                op2.binary_debug.write(
                     f'  {element.type}=({eid}, {pid}, [{n1}, {n2}]')
 
             nids = [n1, n2]
@@ -2756,25 +2864,26 @@ class GEOM2(GeomCommon):
             n += 16
         #if stop:
             #raise RuntimeError('theta is too large...make the quad wrong')
-        self.card_count[elem.type] = nelements
+        op2.card_count[elem.type] = nelements
         return n
 
     def _run_3nodes(self, element: CTRIA3, data: bytes, n: int) -> int:
         """common method for CTRIA3, VUTRIA3"""
+        op2 = self.op2
         nelements = (len(data) - n) // 20
-        s = Struct(self._endian + b'5i')
-        #if self.is_debug_file:
-            #self.binary_debug.write('ndata=%s\n' % (nelements * 44))
+        s = Struct(op2._endian + b'5i')
+        #if op2.is_debug_file:
+            #op2.binary_debug.write('ndata=%s\n' % (nelements * 44))
 
-        if self.is_debug_file:
-            self.binary_debug.write(f'  {element.type}=(eid, pid, [n1, n2, n3]')
+        if op2.is_debug_file:
+            op2.binary_debug.write(f'  {element.type}=(eid, pid, [n1, n2, n3]')
 
         for unused_i in range(nelements):
             edata = data[n:n + 20]  # 5*4
             out = s.unpack(edata)
             (eid, pid, n1, n2, n3) = out
-            if self.is_debug_file:
-                self.binary_debug.write(
+            if op2.is_debug_file:
+                op2.binary_debug.write(
                     f'  {element.type}=({eid}, {pid}, [{n1}, {n2}, {n3}]')
 
             nids = [n1, n2, n3]
@@ -2783,25 +2892,26 @@ class GEOM2(GeomCommon):
             n += 20
         #if stop:
             #raise RuntimeError('theta is too large...make the quad wrong')
-        self.card_count[element.type] = nelements
+        op2.card_count[element.type] = nelements
         return n
 
     def _run_4nodes(self, element: Union[CQUAD4, CAABSF], data: bytes, n: int) -> int:
         """common method for CQUAD4, CQUADR"""
+        op2 = self.op2
         nelements = (len(data) - n) // 24
-        s = Struct(self._endian + b'6i')
-        #if self.is_debug_file:
-            #self.binary_debug.write('ndata=%s\n' % (nelements * 44))
+        s = Struct(op2._endian + b'6i')
+        #if op2.is_debug_file:
+            #op2.binary_debug.write('ndata=%s\n' % (nelements * 44))
 
-        if self.is_debug_file:
-            self.binary_debug.write(f'  {element.type}=(eid, pid, [n1, n2, n3, n4]')
+        if op2.is_debug_file:
+            op2.binary_debug.write(f'  {element.type}=(eid, pid, [n1, n2, n3, n4]')
 
         for unused_i in range(nelements):
             edata = data[n:n + 24]  # 6*4
             out = s.unpack(edata)
             (eid, pid, n1, n2, n3, n4) = out
-            if self.is_debug_file:
-                self.binary_debug.write(
+            if op2.is_debug_file:
+                op2.binary_debug.write(
                     f'  {element.type}=({eid}, {pid}, [{n1}, {n2}, {n3}, {n4}]')
 
             nids = [n1, n2, n3, n4]
@@ -2810,7 +2920,7 @@ class GEOM2(GeomCommon):
             n += 24
         #if stop:
             #raise RuntimeError('theta is too large...make the quad wrong')
-        self.card_count[element.type] = nelements
+        op2.card_count[element.type] = nelements
         return n
 
     def _run_cquad4_msc_60(self, element: CQUAD4, data: bytes, n: int) -> Tuple[int, Any]:
@@ -2838,6 +2948,7 @@ class GEOM2(GeomCommon):
             1003, 20, 20002, 20003, 20103, 20102, 0,    0, 0, 0, -1.0, -1.0, -1.0, -1.0, -1,
             1004, 20, 20100, 20101, 20201, 20200, 0,    0, 0, 0, -1.0, -1.0, -1.0, -1.0, -1)
         """
+        op2 = self.op2
         elements = []
         ntotal = 60 * self.factor  # 15*4
         nelements = (len(data) - n) // ntotal
@@ -2849,12 +2960,12 @@ class GEOM2(GeomCommon):
         #   3f-i zeros as float/int???
         #   4f correct
         #   i correct
-        structi = Struct(mapfmt(self._endian + b'6i 3fi 4f i', self.size))
-        #if self.is_debug_file:
-            #self.binary_debug.write('ndata=%s\n' % (nelements * 44))
+        structi = Struct(mapfmt(op2._endian + b'6i 3fi 4f i', self.size))
+        #if op2.is_debug_file:
+            #op2.binary_debug.write('ndata=%s\n' % (nelements * 44))
 
-        if self.is_debug_file:
-            self.binary_debug.write(f'  {element.type}=(eid, pid, [n1, n2, n3, n4], theta, zoffs, '
+        if op2.is_debug_file:
+            op2.binary_debug.write(f'  {element.type}=(eid, pid, [n1, n2, n3, n4], theta, zoffs, '
                                     'unused_blank, [tflag, t1, t2, t3, t4]); theta_mcid\n')
 
         for unused_i in range(nelements):
@@ -2887,8 +2998,8 @@ class GEOM2(GeomCommon):
             assert tflag == 0, msg
 
             theta_mcid = convert_theta_to_mcid(theta)
-            if self.is_debug_file:
-                self.binary_debug.write(
+            if op2.is_debug_file:
+                op2.binary_debug.write(
                     f'  {element.type}=({eid}, {pid}, [{n1}, {n2}, {n3}, {n4}], '
                     f'{theta}, {zoffs}, {blank}, [{tflag}, {t1}, {t2}, {t3}, {t4})]; {theta_mcid}\n')
             assert minus1 == -1, minus1
@@ -2901,7 +3012,7 @@ class GEOM2(GeomCommon):
             n += ntotal
         #if stop:
             #raise RuntimeError('theta is too large...make the quad wrong')
-        #self.card_count[element.type] = nelements
+        #op2.card_count[element.type] = nelements
         return n, elements
 
     def _run_cquad4_nx_56(self, element: Union[CQUAD4, CQUADR],
@@ -2916,17 +3027,18 @@ class GEOM2(GeomCommon):
             3, 1, 3, 4, 10, 9, 0, 0, 0, 0, -1.0, -1.0, -1.0, -1.0
         )
         """
+        op2 = self.op2
         elements = []
         ntotal = 56 * self.factor  # 14*4
         nelements = (len(data) - n) // ntotal
         leftover = (len(data) - n) % ntotal
         assert leftover == 0, leftover
-        s = Struct(mapfmt(self._endian + b'6i ff ii 4f', self.size))
-        if self.is_debug_file:
-            self.binary_debug.write('ndata=%s\n' % (nelements * 44))
+        s = Struct(mapfmt(op2._endian + b'6i ff ii 4f', self.size))
+        if op2.is_debug_file:
+            op2.binary_debug.write('ndata=%s\n' % (nelements * 44))
 
-        if self.is_debug_file:
-            self.binary_debug.write(f'  {element.type}=(eid, pid, [n1, n2, n3, n4], theta, zoffs, '
+        if op2.is_debug_file:
+            op2.binary_debug.write(f'  {element.type}=(eid, pid, [n1, n2, n3, n4], theta, zoffs, '
                                     'unused_blank, [tflag, t1, t2, t3, t4]); theta_mcid\n')
 
         for unused_i in range(nelements):
@@ -2935,8 +3047,8 @@ class GEOM2(GeomCommon):
             (eid, pid, n1, n2, n3, n4, theta, zoffs, unused_blank, tflag,
              t1, t2, t3, t4) = out
             theta_mcid = convert_theta_to_mcid(theta)
-            if self.is_debug_file:
-                self.binary_debug.write(
+            if op2.is_debug_file:
+                op2.binary_debug.write(
                     f'  {element.type}=({eid}, {pid}, [{n1}, {n2}, {n3}, {n4}], '
                     f'{theta}, {zoffs}, {unused_blank}, [{tflag}, {t1}, {t2}, {t3}, {t4})]; {theta_mcid}\n')
 
@@ -2949,12 +3061,12 @@ class GEOM2(GeomCommon):
                 eid, pid, n1, n2, n3, n4, theta_mcid, zoffs,
                 tflag, t1, t2, t3, t4]
             elem = element.add_op2_data(data_init)
-            #self.add_op2_element(elem)
+            #op2.add_op2_element(elem)
             elements.append(elem)
             n += ntotal
         #if stop:
             #raise RuntimeError('theta is too large...make the quad wrong')
-        #self.card_count[element.type] = nelements
+        #op2.card_count[element.type] = nelements
         #self.to_nx()  # not really an nx specific thing...
         return n, elements
 
@@ -2974,12 +3086,12 @@ class GEOM2(GeomCommon):
                                        methods, data, n)
         except DoubleCardError:
             raise
-            self.log.warning(f'try-except {card_name}')
+            #self.op2.log.warning(f'try-except {card_name}')
             #n = self._read_split_card(data, n,
                                       #self._read_cquad8_current, self._read_cquad8_v2001,
-                                      #card_name, self.add_op2_element)
-        #nelements = self.card_count['CQUAD8']
-        #self.log.debug(f'nCQUAD8 = {nelements}')
+                                      #card_name, op2.add_op2_element)
+        #nelements = op2.card_count['CQUAD8']
+        #op2.log.debug(f'nCQUAD8 = {nelements}')
         return n
 
     def _read_cquad8_current(self, card_obj, data: bytes, n: int) -> int:
@@ -2999,21 +3111,22 @@ class GEOM2(GeomCommon):
                     reference plane
         17 TFLAG  I Relative thickness flag
         """
+        op2 = self.op2
         ntotal = 68 * self.factor # 17*4
         ndatai = len(data) - n
         nelements = ndatai // ntotal
         assert ndatai % ntotal == 0
-        s = Struct(mapfmt(self._endian + b'10i 6f i', self.size))
+        s = Struct(mapfmt(op2._endian + b'10i 6f i', self.size))
         elements = []
         for unused_i in range(nelements):
             edata = data[n:n + ntotal]
             out = s.unpack(edata)
-            if self.is_debug_file:
-                self.binary_debug.write('  CQUAD8=%s\n' % str(out))
+            if op2.is_debug_file:
+                op2.binary_debug.write('  CQUAD8=%s\n' % str(out))
             #(eid, pid, n1, n2, n3, n4, n5, n6, n7, n8, t1, t2,
              #t3, t4, theta, zoffs, tflag) = out
             tflag = out[-1]
-            #self.log.info('cquad8 tflag = %s' % tflag)
+            #op2.log.info('cquad8 tflag = %s' % tflag)
             assert isinstance(tflag, int), tflag
             assert tflag in [-1, 0, 1], tflag
             #print('eid=%s pid=%s n1=%s n2=%s n3=%s n4=%s theta=%s zoffs=%s '
@@ -3041,19 +3154,20 @@ class GEOM2(GeomCommon):
         16 ZOFFS RS Offset from the surface of grid points
                     reference plane
         """
+        op2 = self.op2
         elements = []
         #self.show_data(data, types='if')
-        #ss
+
         ntotal = 64 * self.factor  # 16*4
         ndatai = (len(data) - n)
         nelements = ndatai // ntotal
         assert ndatai % ntotal == 0
-        sf = Struct(mapfmt(self._endian + b'10i 6f', self.size))
+        sf = Struct(mapfmt(op2._endian + b'10i 6f', self.size))
         for unused_i in range(nelements):
             edata = data[n:n + ntotal]
             out = sf.unpack(edata)
-            if self.is_debug_file:
-                self.binary_debug.write('  CQUAD8=%s\n' % str(out))
+            if op2.is_debug_file:
+                op2.binary_debug.write('  CQUAD8=%s\n' % str(out))
             (eid, pid, n1, n2, n3, n4, n5, n6, n7, n8, t1, t2,
              t3, t4, theta, zoffs) = out
             assert eid > 0
@@ -3085,6 +3199,7 @@ class GEOM2(GeomCommon):
             1303, 20, 10200, 10202, 10402, 10400, 10201, 10302, 10401, 10300, -1.0, -1.0, -1.0, -1.0, 0, 0, 0, -1,
             1304, 20, 10202, 10204, 10404, 10402, 10203, 10304, 10403, 10302, -1.0, -1.0, -1.0, -1.0, 0, 0, 0, -1)
         """
+        op2 = self.op2
         elements = []
         #self.show_data(data, types='if')
         #ss
@@ -3092,17 +3207,17 @@ class GEOM2(GeomCommon):
         ndatai = (len(data) - n)
         nelements = ndatai // ntotal
         assert ndatai % ntotal == 0
-        s = Struct(mapfmt(self._endian + b'10i 5f 3i', self.size))
+        s = Struct(mapfmt(op2._endian + b'10i 5f 3i', self.size))
 
-        #sf = Struct(mapfmt(self._endian + b'10i 6f', self.size))
+        #sf = Struct(mapfmt(op2._endian + b'10i 6f', self.size))
         edata0 = data[n:n + ntotal]
         flag = s.unpack(edata0)[-1]
         if flag == -1:
             for unused_i in range(nelements):
                 edata = data[n:n + ntotal]
                 out = s.unpack(edata)
-                if self.is_debug_file:
-                    self.binary_debug.write('  CQUAD8=%s\n' % str(out))
+                if op2.is_debug_file:
+                    op2.binary_debug.write('  CQUAD8=%s\n' % str(out))
                 (eid, pid, n1, n2, n3, n4, n5, n6, n7, n8, t1, t2,
                  t3, t4, theta, tflag, zoffs, flag) = out
                 assert eid > 0
@@ -3124,9 +3239,9 @@ class GEOM2(GeomCommon):
         else:
             for unused_i in range(nelements):
                 edata = data[n:n + ntotal]
-                out = sf.unpack(edata)
-                if self.is_debug_file:
-                    self.binary_debug.write('  CQUAD8=%s\n' % str(out))
+                out = s.unpack(edata)
+                if op2.is_debug_file:
+                    op2.binary_debug.write('  CQUAD8=%s\n' % str(out))
                 (eid, pid, n1, n2, n3, n4, n5, n6, n7, n8, t1, t2,
                  t3, t4, theta, zoffs) = out
                 assert eid > 0
@@ -3163,12 +3278,12 @@ class GEOM2(GeomCommon):
 
     def _read_crbar(self, data: bytes, n: int) -> int:
         # C:\NASA\m4\formats\git\examples\move_tpl\nrgd20c.op2
-        self.log.info('skipping RBAR in GEOM2')
+        self.op2.log.info('skipping RBAR in GEOM2')
         return len(data)
 
     def _read_crbe1(self, data: bytes, n: int) -> int:
         # C:\NASA\m4\formats\git\examples\move_tpl\nrgd406a.op2
-        self.log.info('skipping RBE1 in GEOM2')
+        self.op2.log.info('skipping RBE1 in GEOM2')
         return len(data)
 
     def _read_crbe3(self, data: bytes, n: int) -> int:
@@ -3205,9 +3320,10 @@ class GEOM2(GeomCommon):
                 101000041, 6, -3,
                 4, 14, 4,  123456, 1.0, 123456, 3, -1, -2, -4, 2.0e-6, -5, 101000004, 6, -3)
           """
+        op2 = self.op2
         # C:\NASA\m4\formats\git\examples\move_tpl\ngd720a.op2
-        idata = np.frombuffer(data[n:], self.idtype8).copy()
-        fdata = np.frombuffer(data[n:], self.fdtype8).copy()
+        idata = np.frombuffer(data[n:], op2.idtype8).copy()
+        fdata = np.frombuffer(data[n:], op2.fdtype8).copy()
 
         iminus3 = np.where(idata == -3)[0]
         if idata[-1] == -3:
@@ -3284,8 +3400,8 @@ class GEOM2(GeomCommon):
             cmi = lagrange_ndof[:, 1]
             in_data = [eid, refg, refc, weights, comps, gijs,
                        gmi, cmi, alpha]
-            if self.is_debug_file:
-                self.binary_debug.write('  RBE3=%s\n' % str(in_data))
+            if op2.is_debug_file:
+                op2.binary_debug.write('  RBE3=%s\n' % str(in_data))
             #print('rbe3 =', in_data)
             rbe3 = RBE3.add_op2_data(in_data)
             str(rbe3)
@@ -3305,22 +3421,23 @@ class GEOM2(GeomCommon):
         """
         # no rjoint...
         # C:\NASA\m4\formats\git\examples\move_tpl\ngd720a.op2
-        self.log.info('skipping RJOINT in GEOM2')
+        self.op2.log.info('skipping RJOINT in GEOM2')
         return len(data)
 
     def _read_crod(self, data: bytes, n: int) -> int:
         """
         CROD(3001,30,48)    - the marker for Record 81
         """
+        op2 = self.op2
         ntotal = 16 * self.factor # 4*4
-        struct_4i = Struct(mapfmt(self._endian + b'4i', self.size))
+        struct_4i = Struct(mapfmt(op2._endian + b'4i', self.size))
         nelements = (len(data) - n) // ntotal
         #is_long_ids = False
         for unused_i in range(nelements):
             edata = data[n:n + ntotal]
             out = struct_4i.unpack(edata)
-            if self.is_debug_file:
-                self.binary_debug.write('  CROD=%s\n' % str(out))
+            if op2.is_debug_file:
+                op2.binary_debug.write('  CROD=%s\n' % str(out))
             #(eid, pid, n1, n2) = out
             #if n1 > 100000000 or n2 > 100000000:
                 #is_long_ids = True
@@ -3328,7 +3445,7 @@ class GEOM2(GeomCommon):
             self.add_op2_element(elem)
             n += ntotal
         #self._is_long_ids = is_long_ids
-        self.card_count['CROD'] = nelements
+        op2.card_count['CROD'] = nelements
         return n
 
     def _read_crrod(self, data: bytes, n: int) -> int:
@@ -3342,14 +3459,15 @@ class GEOM2(GeomCommon):
         6 CMB    I Component numbers of dependent DOFs at end B
         7 ALPHA RS Thermal expansion cofficient
         """
-        structi = Struct(self._endian + b'6if')
+        op2 = self.op2
+        structi = Struct(op2._endian + b'6if')
         nelements = (len(data) - n) // 28  # 7*4
         #is_long_ids = False
         for unused_i in range(nelements):
             edata = data[n:n + 28]
             out = structi.unpack(edata)
-            if self.is_debug_file:
-                self.binary_debug.write('  RROD=%s\n' % str(out))
+            if op2.is_debug_file:
+                op2.binary_debug.write('  RROD=%s\n' % str(out))
 
             #print(out)
             (eid, n1, n2, unused_lagrange_multiplier_id, cma, cmb, alpha) = out
@@ -3359,11 +3477,11 @@ class GEOM2(GeomCommon):
                 #is_long_ids = True
 
             #eid, nids, cma='', cmb='', alpha=0.0
-            elem = self.add_rrod(eid, [n1, n2], cma=cma, cmb=cmb, alpha=alpha)
+            elem = op2.add_rrod(eid, [n1, n2], cma=cma, cmb=cmb, alpha=alpha)
             self.add_op2_element(elem)
             n += 28
         #self._is_long_ids = is_long_ids
-        self.card_count['RROD'] = nelements
+        op2.card_count['RROD'] = nelements
         return n
 
 # CSEAM
@@ -3372,19 +3490,20 @@ class GEOM2(GeomCommon):
         """
         CSHEAR(3101,31,61)    - the marker for Record 84
         """
+        op2 = self.op2
         ntotal = 24 * self.factor  # 6*4
-        struct_6i = Struct(mapfmt(self._endian + b'6i', self.size))
+        struct_6i = Struct(mapfmt(op2._endian + b'6i', self.size))
         nelements = (len(data) - n) // ntotal
         for unused_i in range(nelements):
             edata = data[n:n + ntotal]
             out = struct_6i.unpack(edata)
-            if self.is_debug_file:
-                self.binary_debug.write('  CSHEAR=%s\n' % str(out))
+            if op2.is_debug_file:
+                op2.binary_debug.write('  CSHEAR=%s\n' % str(out))
             #(eid, pid, n1, n2, n3, n4) = out
             elem = CSHEAR.add_op2_data(out)
             self.add_op2_element(elem)
             n += ntotal
-        self.card_count['CSHEAR'] = nelements
+        op2.card_count['CSHEAR'] = nelements
         return n
 
 # CSLOT3
@@ -3395,14 +3514,15 @@ class GEOM2(GeomCommon):
         CTETP(12201,122,9013)    - the marker for Record 87
         .. todo:: needs work
         """
-        self.log.info('poor reading of CTETRAP in GEOM2')
+        op2 = self.op2
+        op2.log.info('poor reading of CTETRAP in GEOM2')
         nelements = (len(data) - n) // 108  # 27*4
-        struct_27i = Struct(self._endian + b'27i')
+        struct_27i = Struct(op2._endian + b'27i')
         for unused_i in range(nelements):
             edata = data[n:n+108]
             out = struct_27i.unpack(edata)
-            if self.is_debug_file:
-                self.binary_debug.write('  CTETP=%s\n' % str(out))
+            if op2.is_debug_file:
+                op2.binary_debug.write('  CTETP=%s\n' % str(out))
 
             print(out)
             eid, pid, n1, n2, n3, n4 = out[:6]
@@ -3431,14 +3551,15 @@ class GEOM2(GeomCommon):
         CTETR10F(16600,166,9999) - the marker for Record 90
         CTETR4FD(16100,161,9999) - the marker for Record 91
         """
+        op2 = self.op2
         ntotal = 48 * self.factor  # 12*4
-        s = Struct(mapfmt(self._endian + b'12i', self.size))
+        s = Struct(mapfmt(op2._endian + b'12i', self.size))
         nelements = (len(data) - n) // ntotal
         for unused_i in range(nelements):
             edata = data[n:n + ntotal]
             out = s.unpack(edata)
-            if self.is_debug_file:
-                self.binary_debug.write('  CTETRA=%s\n' % str(out))
+            if op2.is_debug_file:
+                op2.binary_debug.write('  CTETRA=%s\n' % str(out))
             (eid, pid, n1, n2, n3, n4, n5, n6, n7, n8, n9, n10) = out
             #print("out = ",out)
 
@@ -3450,7 +3571,7 @@ class GEOM2(GeomCommon):
                 elem = CTETRA4.add_op2_data(data_in)
             self.add_op2_element(elem)
             n += ntotal
-        self.card_count['CTETRA'] = nelements
+        op2.card_count['CTETRA'] = nelements
         return n
 
 # CTQUAD - 92
@@ -3476,8 +3597,9 @@ class GEOM2(GeomCommon):
         CTRIA3(5959,59,282) - the marker for Record 94
 
         """
+        op2 = self.op2
         ntotal = 52 * self.factor  # 13*4
-        s = Struct(mapfmt(self._endian + b'5iff3i3f', self.size))
+        s = Struct(mapfmt(op2._endian + b'5iff3i3f', self.size))
         nelements = (len(data) - n)// ntotal
         elements = []
         for unused_i in range(nelements):
@@ -3489,16 +3611,16 @@ class GEOM2(GeomCommon):
                       #blank1, blank2, tflag, t1, t2, t3))
             (eid, pid, n1, n2, n3, theta, zoffs, unused_blank1,
              unused_blank2, tflag, t1, t2, t3) = out
-            if self.is_debug_file:
-                self.binary_debug.write('  CTRIA3=%s\n' % str(out))
+            if op2.is_debug_file:
+                op2.binary_debug.write('  CTRIA3=%s\n' % str(out))
 
             theta_mcid = convert_theta_to_mcid(theta)
             data_in = [eid, pid, n1, n2, n3, theta_mcid, zoffs, tflag, t1, t2, t3]
             elem = CTRIA3.add_op2_data(data_in)
-            #self.add_op2_element(elem)
+            #op2.add_op2_element(elem)
             elements.append(elem)
             n += ntotal
-        #self.card_count['CTRIA3'] = nelements
+        #op2.card_count['CTRIA3'] = nelements
         return n, elements
 
     def _read_ctria3_56(self, card_obj, data: bytes, n: int) -> int:
@@ -3519,8 +3641,9 @@ class GEOM2(GeomCommon):
             205, 35, 50002, 50003, 50103, 19.2, 0, 0, 0, 0, 0.2, 0.2, 0.2, -1, ...)
 
         """
+        op2 = self.op2
         ntotal = 56 * self.factor  # 13*4
-        s = Struct(mapfmt(self._endian + b'5i f 4i 3f i', self.size))
+        s = Struct(mapfmt(op2._endian + b'5i f 4i 3f i', self.size))
         nelements = (len(data) - n)// ntotal
         elements = []
         for unused_i in range(nelements):
@@ -3534,18 +3657,18 @@ class GEOM2(GeomCommon):
              t1, t2, t3, minus1) = out
             abcd = (a, b, c, d)
             assert abcd == (0, 0, 0, 0), abcd
-            if self.is_debug_file:
-                self.binary_debug.write('  CTRIA3=%s\n' % str(out))
+            if op2.is_debug_file:
+                op2.binary_debug.write('  CTRIA3=%s\n' % str(out))
 
             zoffs = 0.0
             tflag = 0
             theta_mcid = convert_theta_to_mcid(theta)
             data_in = [eid, pid, n1, n2, n3, theta_mcid, zoffs, tflag, t1, t2, t3]
             elem = CTRIA3.add_op2_data(data_in)
-            #self.add_op2_element(elem)
+            #op2.add_op2_element(elem)
             elements.append(elem)
             n += ntotal
-        #self.card_count['CTRIA3'] = nelements
+        #op2.card_count['CTRIA3'] = nelements
         return n, elements
 
 
@@ -3618,7 +3741,8 @@ class GEOM2(GeomCommon):
         return n
 
     def _read_ctria3fd_40(self, card_obj, data: bytes, n: int) -> int:
-        s = Struct(self._endian + b'10i')
+        op2 = self.op2
+        s = Struct(op2._endian + b'10i')
         ntotal = 40
         nelements = (len(data) - n) // ntotal  # 8*4
         assert (len(data) - n) % ntotal == 0
@@ -3626,8 +3750,8 @@ class GEOM2(GeomCommon):
         for unused_i in range(nelements):
             edata = data[n:n + ntotal]
             out = s.unpack(edata)
-            if self.is_debug_file:
-                self.binary_debug.write('  CTRIA3=%s\n' % str(out))
+            if op2.is_debug_file:
+                op2.binary_debug.write('  CTRIA3=%s\n' % str(out))
             (eid, pid, n1, n2, n3, n4, n5, n6, a, minus1) = out
             assert (a, minus1) == (0, -1), (a, minus1)
             assert minus1 == -1
@@ -3649,7 +3773,8 @@ class GEOM2(GeomCommon):
         2 PID  I Property identification number
         3 G(6) I Grid point identification numbers of connection points
         """
-        s = Struct(self._endian + b'8i')
+        op2 = self.op2
+        s = Struct(op2._endian + b'8i')
         ntotal = 32
         nelements = (len(data) - n) // ntotal  # 8*4
         assert (len(data) - n) % ntotal == 0
@@ -3657,8 +3782,8 @@ class GEOM2(GeomCommon):
         for unused_i in range(nelements):
             edata = data[n:n + ntotal]
             out = s.unpack(edata)
-            if self.is_debug_file:
-                self.binary_debug.write('  CTRIA3=%s\n' % str(out))
+            if op2.is_debug_file:
+                op2.binary_debug.write('  CTRIA3=%s\n' % str(out))
             (eid, pid, n1, n2, n3, n4, n5, n6) = out
             assert n4 == 0, out
             assert n5 == 0, out
@@ -3698,7 +3823,8 @@ class GEOM2(GeomCommon):
         (331, 111, 331, 332, 333, 0, 0, 0,
          332, 11, 331, 333, 334, 0, 0, 0)
         """
-        s = Struct(self._endian + b'8i')
+        op2 = self.op2
+        s = Struct(op2._endian + b'8i')
         ntotal = 32 * self.factor
         nelements = (len(data) - n) // ntotal  # 8*4
         assert (len(data) - n) % ntotal == 0
@@ -3706,8 +3832,8 @@ class GEOM2(GeomCommon):
         for unused_i in range(nelements):
             edata = data[n:n + ntotal]
             out = s.unpack(edata)
-            if self.is_debug_file:
-                self.binary_debug.write('  CTRIAX=%s\n' % str(out))
+            if op2.is_debug_file:
+                op2.binary_debug.write('  CTRIAX=%s\n' % str(out))
             (eid, pid, n1, n2, n3, n4, n5, n6) = out
             nids = [n1, n2, n3, n4, n5, n6]
             assert n4 == 0, out
@@ -3732,7 +3858,8 @@ class GEOM2(GeomCommon):
                    16800, 16801, 16801, 16802, 16803, 0, 0, 0, 0, -1,
                    16801, 16801, 16801, 16803, 16804, 0, 0, 0, 0, -1)
         """
-        s = Struct(self._endian + b'10i')
+        op2 = self.op2
+        s = Struct(op2._endian + b'10i')
         ntotal = 40 * self.factor
         nelements = (len(data) - n) // ntotal  # 8*4
         assert (len(data) - n) % ntotal == 0
@@ -3740,8 +3867,8 @@ class GEOM2(GeomCommon):
         for unused_i in range(nelements):
             edata = data[n:n + ntotal]
             out = s.unpack(edata)
-            if self.is_debug_file:
-                self.binary_debug.write('  CTRIAX=%s\n' % str(out))
+            if op2.is_debug_file:
+                op2.binary_debug.write('  CTRIAX=%s\n' % str(out))
             (eid, pid, n1, n2, n3, n4, n5, n6, dunno, minus1) = out
             nids = [n1, n2, n3, n4, n5, n6]
             assert n4 == 0, out
@@ -3785,16 +3912,17 @@ class GEOM2(GeomCommon):
                    16700, 16701, 16701, 16702, 16703, 16705, 16706, 16709, 0, -1,
                    16701, 16701, 16701, 16703, 16704, 16709, 16707, 16708, 0, -1)
         """
+        op2 = self.op2
         ntotal = 40 * self.factor
-        s = Struct(self._endian + b'10i')
+        s = Struct(op2._endian + b'10i')
         nelements = (len(data) - n) // ntotal  # 8*4
         assert (len(data) - n) % ntotal == 0
         elements = []
         for unused_i in range(nelements):
             edata = data[n:n + ntotal]
             out = s.unpack(edata)
-            if self.is_debug_file:
-                self.binary_debug.write('  CTRIA6=%s\n' % str(out))
+            if op2.is_debug_file:
+                op2.binary_debug.write('  CTRIA6=%s\n' % str(out))
             (eid, pid, n1, n2, n3, n4, n5, n6, dunno, minus1) = out
             assert dunno == 0, dunno
             assert minus1 == -1, minus1
@@ -3814,16 +3942,17 @@ class GEOM2(GeomCommon):
         2 PID  I Property identification number
         3 G(6) I Grid point identification numbers of connection points
         """
+        op2 = self.op2
         ntotal = 32 * self.factor
-        s = Struct(self._endian + b'8i')
+        s = Struct(op2._endian + b'8i')
         nelements = (len(data) - n) // ntotal  # 8*4
         assert (len(data) - n) % ntotal == 0
         elements = []
         for unused_i in range(nelements):
             edata = data[n:n + ntotal]
             out = s.unpack(edata)
-            if self.is_debug_file:
-                self.binary_debug.write('  CTRIA6=%s\n' % str(out))
+            if op2.is_debug_file:
+                op2.binary_debug.write('  CTRIA6=%s\n' % str(out))
             (eid, pid, n1, n2, n3, n4, n5, n6) = out
             nids = [n1, n2, n3, n4, n5, n6]
             #out = (eid, pid, n1, n2, n3, n4, n5, n6, theta, zoffs, t1, t2, t3, 0)
@@ -3849,16 +3978,17 @@ class GEOM2(GeomCommon):
         14 TFLAG  I Relative thickness flag
         -1
         """
+        op2 = self.op2
         ntotal = 60 * self.factor # 15*4
-        s = Struct(mapfmt(self._endian + b'8i 5f i i', self.size))
+        s = Struct(mapfmt(op2._endian + b'8i 5f i i', self.size))
         nelements = (len(data) - n) // ntotal
         assert (len(data) - n) % ntotal == 0
         elements = []
         for unused_i in range(nelements):
             edata = data[n:n + ntotal]
             out = s.unpack(edata)
-            if self.is_debug_file:
-                self.binary_debug.write('  CTRIA6=%s\n' % str(out))
+            if op2.is_debug_file:
+                op2.binary_debug.write('  CTRIA6=%s\n' % str(out))
             #(eid, pid, n1, n2, n3, n4, n5, n6, theta, zoffs, t1, t2, t3, tflag, minus1) = out
             #print('eid=%s pid=%s nids[%s, %s %s] theta=%s zoffs=%s '
                   #'tflag=%s t1=%s t2=%s t3=%s' % (
@@ -3866,7 +3996,7 @@ class GEOM2(GeomCommon):
                       #tflag, t1, t2, t3))
             tflag, minus1 = out[-2:]
             assert minus1 == -1
-            #self.log.info('ctria6 tflag = %s' % tflag)
+            #op2.log.info('ctria6 tflag = %s' % tflag)
             #print(minus1)
             elem = CTRIA6.add_op2_data(out)
             self.add_op2_element(elem)
@@ -3889,23 +4019,24 @@ class GEOM2(GeomCommon):
         11 T(3)  RS Membrane thickness of element at grid points
         14 TFLAG  I Relative thickness flag
         """
+        op2 = self.op2
         ntotal = 56 * self.factor # 14*4
-        s = Struct(mapfmt(self._endian + b'8i 5f i', self.size))
+        s = Struct(mapfmt(op2._endian + b'8i 5f i', self.size))
         nelements = (len(data) - n) // ntotal
         assert (len(data) - n) % ntotal == 0
         elements = []
         for unused_i in range(nelements):
             edata = data[n:n + ntotal]
             out = s.unpack(edata)
-            if self.is_debug_file:
-                self.binary_debug.write('  CTRIA6=%s\n' % str(out))
+            if op2.is_debug_file:
+                op2.binary_debug.write('  CTRIA6=%s\n' % str(out))
             #print('eid=%s pid=%s n1=%s n2=%s n3=%s theta=%s zoffs=%s '
                   #'blank1=%s blank2=%s tflag=%s t1=%s t2=%s t3=%s' % (
                       #eid, pid, n1, n2, n3, theta, zoffs,
                       #blank1, blank2, tflag, t1, t2, t3))
             #(eid, pid, n1, n2, n3, n4, n5, n6, theta, zoffs, t1, t2, t3, tflag) = out
             tflag = out[-1]
-            #self.log.info('ctria6 tflag = %s' % tflag)
+            #op2.log.info('ctria6 tflag = %s' % tflag)
             elem = CTRIA6.add_op2_data(out)
             self.add_op2_element(elem)
             assert tflag in [-1, 0, 1], tflag
@@ -3925,15 +4056,16 @@ class GEOM2(GeomCommon):
         11 T(3)  RS Membrane thickness of element at grid points
         14 TFLAG  I Relative thickness flag
         """
-        s = Struct(self._endian + b'8i 5f')
+        op2 = self.op2
+        s = Struct(op2._endian + b'8i 5f')
         nelements = (len(data) - n) // 52  # 13*4
         assert (len(data) - n) % 52 == 0
         elements = []
         for unused_i in range(nelements):
             edata = data[n:n + 52]
             out = s.unpack(edata)
-            if self.is_debug_file:
-                self.binary_debug.write('  CTRIA6=%s\n' % str(out))
+            if op2.is_debug_file:
+                op2.binary_debug.write('  CTRIA6=%s\n' % str(out))
             #print('eid=%s pid=%s n1=%s n2=%s n3=%s theta=%s zoffs=%s '
                   #'blank1=%s blank2=%s tflag=%s t1=%s t2=%s t3=%s' % (
                       #eid, pid, n1, n2, n3, theta, zoffs,
@@ -3964,20 +4096,21 @@ class GEOM2(GeomCommon):
                                        methods, data, n)
         except DoubleCardError:
             raise
-            self.log.warning(f'try-except {card_name}')
+            #self.op2.log.warning(f'try-except {card_name}')
             #n = self._read_split_card(data, n,
                                       #self._read_cquad8_current, self._read_cquad8_v2001,
-                                      #card_name, self.add_op2_element)
-        #nelements = self.card_count['CQUAD8']
-        #self.log.debug(f'nCQUAD8 = {nelements}')
+                                      #card_name, op2.add_op2_element)
+        #nelements = op2.card_count['CQUAD8']
+        #op2.log.debug(f'nCQUAD8 = {nelements}')
 
         #n = self._read_dual_card(data, n, self._read_ctriax_8, self._read_ctriax_9,
-                                 #'CTRIAX', self.add_op2_element)
+                                 #'CTRIAX', op2.add_op2_element)
         return n
 
     def _read_ctriar_13(self, element: CTRIAR, data: bytes, n: int) -> Tuple[int, List[CTRIAR]]:
+        op2 = self.op2
         ntotal = 52 * self.factor  # 13*4
-        s = Struct(mapfmt(self._endian + b'5iff3i3f', self.size))
+        s = Struct(mapfmt(op2._endian + b'5iff3i3f', self.size))
         nelements = (len(data) - n) // ntotal
         assert (len(data) - n) % ntotal == 0
         elements = []
@@ -3991,8 +4124,8 @@ class GEOM2(GeomCommon):
                   #'blank1=%s blank2=%s tflag=%s t1-t3=(%s,%s,%s)' % (
                       #eid, pid, n1, n2, n3, theta, zoffs,
                       #unused_blank1, unused_blank2, tflag, t1, t2, t3))
-            if self.is_debug_file:
-                self.binary_debug.write('  CTRIAR=%s\n' % str(out))
+            if op2.is_debug_file:
+                op2.binary_debug.write('  CTRIAR=%s\n' % str(out))
             data_in = [eid, pid, n1, n2, n3, theta, zoffs, tflag, t1, t2, t3]
             elem = CTRIAR.add_op2_data(data_in)
             elements.append(elem)
@@ -4001,8 +4134,9 @@ class GEOM2(GeomCommon):
 
     def _read_ctriar_14(self, element: CTRIAR, data: bytes, n: int) -> Tuple[int, List[CTRIAR]]:
         """same as ``read_ctriar_13`` but with a -1 to change the format"""
+        op2 = self.op2
         ntotal = 56 * self.factor  # 14*4
-        s = Struct(mapfmt(self._endian + b'5iff3i3f i', self.size))
+        s = Struct(mapfmt(op2._endian + b'5iff3i3f i', self.size))
         nelements = (len(data) - n)// ntotal
         assert (len(data) - n) % ntotal == 0
         elements = []
@@ -4016,8 +4150,8 @@ class GEOM2(GeomCommon):
                       #eid, pid, n1, n2, n3, theta, zoffs,
                       #unused_blank1, unused_blank2, tflag, t1, t2, t3))
             assert minus1 == -1, minus1
-            if self.is_debug_file:
-                self.binary_debug.write('  CTRIAR=%s\n' % str(out))
+            if op2.is_debug_file:
+                op2.binary_debug.write('  CTRIAR=%s\n' % str(out))
             data_in = [eid, pid, n1, n2, n3, theta, zoffs, tflag, t1, t2, t3]
             elem = CTRIAR.add_op2_data(data_in)
             elements.append(elem)
@@ -4034,18 +4168,18 @@ class GEOM2(GeomCommon):
         #"""
         #ntotal = 32  # 8*4
         #nentries = (len(data) - n) // ntotal
-        #struc = Struct(self._endian + b'8i')
+        #struc = Struct(op2._endian + b'8i')
         #for unused_i in range(nentries):
             #edata = data[n:n + 32]
             #out = struc.unpack(edata)
-            #if self.is_debug_file:
-                #self.binary_debug.write('  CTRIAX=%s\n' % str(out))
+            #if op2.is_debug_file:
+                #op2.binary_debug.write('  CTRIAX=%s\n' % str(out))
             #eid, pid, n1, n2, n3, n4, n5, n6 = out
             #nids = [n1, n2, n3, n4, n5, n6]
             #elem = CTRIAX(eid, pid, nids, theta_mcid=0., comment='')
-            #self.add_op2_element(elem)
+            #op2.add_op2_element(elem)
             #n += 32
-        #self.card_count['CTRIAX'] = nentries
+        #op2.card_count['CTRIAX'] = nentries
         #return n
 
     def _read_ctriax(self, data: bytes, n: int) -> int:
@@ -4062,21 +4196,22 @@ class GEOM2(GeomCommon):
                                        methods, data, n)
         except DoubleCardError:
             raise
-            self.log.warning(f'try-except {card_name}')
+            #self.op2.log.warning(f'try-except {card_name}')
             #n = self._read_split_card(data, n,
                                       #self._read_cquad8_current, self._read_cquad8_v2001,
-                                      #card_name, self.add_op2_element)
-        #nelements = self.card_count['CQUAD8']
-        #self.log.debug(f'nCQUAD8 = {nelements}')
+                                      #card_name, op2.add_op2_element)
+        #nelements = op2.card_count['CQUAD8']
+        #op2.log.debug(f'nCQUAD8 = {nelements}')
 
         #n = self._read_dual_card(data, n, self._read_ctriax_8, self._read_ctriax_9,
-                                 #'CTRIAX', self.add_op2_element)
+                                 #'CTRIAX', op2.add_op2_element)
         return n
 
     def _read_ctriax_8(self, card_obj, data: bytes, n: int) -> Tuple[int, List[CTRIAX]]:
         """(10108, 101, 512)"""
+        op2 = self.op2
         ntotal = 32  # 9*4
-        struc = Struct(self._endian + b'8i')
+        struc = Struct(op2._endian + b'8i')
 
         nentries = (len(data) - n) // ntotal
         assert (len(data) - n) % ntotal == 0
@@ -4086,8 +4221,8 @@ class GEOM2(GeomCommon):
         for unused_i in range(nentries):
             edata = data[n:n + ntotal]
             out = struc.unpack(edata)
-            if self.is_debug_file:
-                self.binary_debug.write('  CTRIAX=%s\n' % str(out))
+            if op2.is_debug_file:
+                op2.binary_debug.write('  CTRIAX=%s\n' % str(out))
             eid, pid, n1, n2, n3, n4, n5, n6 = out
             nids = [n1, n2, n3, n4, n5, n6]
             elem = CTRIAX(eid, pid, nids, theta_mcid=0., comment='no theta set')
@@ -4097,8 +4232,9 @@ class GEOM2(GeomCommon):
 
     def _read_ctriax_9(self, card_obj, data: bytes, n: int) -> Tuple[int, List[CTRIAX]]:
         """(10108, 101, 512)"""
+        op2 = self.op2
         ntotal = 36  # 9*4
-        struc = Struct(self._endian + b'9i')
+        struc = Struct(op2._endian + b'9i')
 
         nentries = (len(data) - n) // ntotal
         assert (len(data) - n) % ntotal == 0
@@ -4108,8 +4244,8 @@ class GEOM2(GeomCommon):
         for unused_i in range(nentries):
             edata = data[n:n + ntotal]
             out = struc.unpack(edata)
-            if self.is_debug_file:
-                self.binary_debug.write('  CTRIAX=%s\n' % str(out))
+            if op2.is_debug_file:
+                op2.binary_debug.write('  CTRIAX=%s\n' % str(out))
             eid, pid, n1, n2, n3, n4, n5, n6, unused_undef1 = out
             nids = [n1, n2, n3, n4, n5, n6]
             elem = CTRIAX(eid, pid, nids, theta_mcid=0., comment='no theta set')
@@ -4126,8 +4262,9 @@ class GEOM2(GeomCommon):
         16900, 16901, 16901, 16902, 16903, 16905, 16906, 16909, 0, -1,
         16901, 16901, 16901, 16903, 16904, 16909, 16907, 16908, 0, -1
         """
+        op2 = self.op2
         ntotal = 40  # 10*4
-        struc = Struct(self._endian + b'10i')
+        struc = Struct(op2._endian + b'10i')
 
         nentries = (len(data) - n) // ntotal
         assert (len(data) - n) % ntotal == 0
@@ -4137,8 +4274,8 @@ class GEOM2(GeomCommon):
         for unused_i in range(nentries):
             edata = data[n:n + ntotal]
             out = struc.unpack(edata)
-            if self.is_debug_file:
-                self.binary_debug.write('  CTRIAX=%s\n' % str(out))
+            if op2.is_debug_file:
+                op2.binary_debug.write('  CTRIAX=%s\n' % str(out))
             eid, pid, n1, n2, n3, n4, n5, n6, dunno, minus1 = out
             assert dunno == 0, dunno
             assert minus1 == -1, minus1
@@ -4150,20 +4287,21 @@ class GEOM2(GeomCommon):
 
     def _read_ctriax6(self, data: bytes, n: int) -> int:  # 101
         """(6108, 61, 107)"""
+        op2 = self.op2
         ntotal = 44 * self.factor  # 11*4
         nentries = (len(data) - n) // ntotal
         assert (len(data) - n) % ntotal == 0
         assert nentries > 0
-        struc = Struct(mapfmt(self._endian + b'8i f ii', self.size))
+        struc = Struct(mapfmt(op2._endian + b'8i f ii', self.size))
         for unused_i in range(nentries):
             edata = data[n:n + ntotal]
             out = struc.unpack(edata)
-            if self.is_debug_file:
-                self.binary_debug.write('  CTRIAX6=%s\n' % str(out))
+            if op2.is_debug_file:
+                op2.binary_debug.write('  CTRIAX6=%s\n' % str(out))
             elem = CTRIAX6.add_op2_data(out)
             self.add_op2_element(elem)
             n += ntotal
-        self.card_count['CTRIAX6'] = nentries
+        op2.card_count['CTRIAX6'] = nentries
         return n
 
 # CTRIX3FD - 102
@@ -4181,7 +4319,8 @@ class GEOM2(GeomCommon):
         6    EID       I     Entity identification numbers for boundary of subdomain
         Word 6 repeats until End of Record
         """
-        self.log.info('skipping GMBNDC in GEOM2')
+        op2 = self.op2
+        op2.log.info('skipping GMBNDC in GEOM2')
         #self.show_data(data)
         #(1, 31, 32, GRID____, -1,
          #2, 41, 42, GRID____, -1)
@@ -4189,7 +4328,7 @@ class GEOM2(GeomCommon):
         #ints= (3201, 32, 478,
         # 2, 41, 42, 1145390406, 538985799, 41, -1,
         # 990003, 101000045, 101000046, 1145655879, 538976288, 101000045, 101000046, -1)
-        ints = np.frombuffer(data[n:], self.idtype) # .tolist()
+        ints = np.frombuffer(data[n:], op2.idtype) # .tolist()
         isplit = np.where(ints == -1)[0]
         nelements = len(isplit)
 
@@ -4204,47 +4343,49 @@ class GEOM2(GeomCommon):
             assert entity in ['FEEDGE', 'GRID', 'GMCURV', 'GMCURVE'], f'entity={entity!r}'
             #print(eids)
             i0 = ispliti + 1
-        self.card_count['GMBNDC'] = nelements
+        op2.card_count['GMBNDC'] = nelements
         return len(data)
 
     def _read_ctube(self, data: bytes, n: int) -> int:
         """
         CTUBE(3701,37,49) - the marker for Record 104
         """
+        op2 = self.op2
         ntotal = 16 * self.factor  # 4*4
-        struct_4i = Struct(mapfmt(self._endian + b'4i', self.size))
+        struct_4i = Struct(mapfmt(op2._endian + b'4i', self.size))
         nelements = (len(data) - n) // ntotal
         assert (len(data) - n) % ntotal == 0
         assert nelements > 0
         for unused_i in range(nelements):
             edata = data[n:n + ntotal]
             out = struct_4i.unpack(edata)
-            if self.is_debug_file:
-                self.binary_debug.write('  CTUBE=%s\n' % str(out))
+            if op2.is_debug_file:
+                op2.binary_debug.write('  CTUBE=%s\n' % str(out))
             #(eid, pid, n1, n2) = out
             elem = CTUBE.add_op2_data(out)
             self.add_op2_element(elem)
             n += ntotal
-        self.card_count['CTUBE'] = nelements
+        op2.card_count['CTUBE'] = nelements
         return n
 
     def _read_cvisc(self, data: bytes, n: int) -> int:
         """CVISC(3901,39,50) - the marker for Record 105"""
+        op2 = self.op2
         ntotal = 16 * self.factor  # 4*4
-        struct_4i = Struct(mapfmt(self._endian + b'4i', self.size))
+        struct_4i = Struct(mapfmt(op2._endian + b'4i', self.size))
         nelements = (len(data) - n) // ntotal
         assert (len(data) - n) % ntotal == 0
         assert nelements > 0
         for unused_i in range(nelements):
             edata = data[n:n + ntotal]
             out = struct_4i.unpack(edata)
-            if self.is_debug_file:
-                self.binary_debug.write('  CVISC=%s\n' % str(out))
+            if op2.is_debug_file:
+                op2.binary_debug.write('  CVISC=%s\n' % str(out))
             #(eid, pid, n1, n2) = out
             element = CVISC.add_op2_data(out)
             self.add_op2_element(element)
             n += ntotal
-        self.card_count['CVISC'] = nelements
+        op2.card_count['CVISC'] = nelements
         return n
 
     def _read_cweld(self, data: bytes, n: int) -> int:
@@ -4252,21 +4393,24 @@ class GEOM2(GeomCommon):
         CWELD(11701,117,559) - Record 106
         same as CFAST
         """
-        self.log.info('skipping CWELD in GEOM2')
-        if self.is_debug_file:
-            self.binary_debug.write('skipping CWELD in GEOM2\n')
+        op2 = self.op2
+        op2.log.info('skipping CWELD in GEOM2')
+        if op2.is_debug_file:
+            op2.binary_debug.write('skipping CWELD in GEOM2\n')
         return len(data)
 
     def _read_cweldc(self, data: bytes, n: int) -> int:  # 107
-        self.log.info('skipping CWELDC in GEOM2')
-        if self.is_debug_file:
-            self.binary_debug.write('skipping CWELDC in GEOM2\n')
+        op2 = self.op2
+        op2.log.info('skipping CWELDC in GEOM2')
+        if op2.is_debug_file:
+            op2.binary_debug.write('skipping CWELDC in GEOM2\n')
         return len(data)
 
     def _read_cweldg(self, data: bytes, n: int) -> int:  # 108
-        self.log.info('skipping CWELDG in GEOM2')
-        if self.is_debug_file:
-            self.binary_debug.write('skipping CWELDG in GEOM2\n')
+        op2 = self.op2
+        op2.log.info('skipping CWELDG in GEOM2')
+        if op2.is_debug_file:
+            op2.binary_debug.write('skipping CWELDG in GEOM2\n')
         return len(data)
 
 # TDOO: above are checked by DMAP...
@@ -4333,8 +4477,8 @@ class GEOM2(GeomCommon):
         141.0, 1.0, 186.0, 71.4000015258789, 141.0, 1.0, 268.0, -15.800000190734863, 223.0, 1.0, 268.0, 63.20000076293945, 223.0, 1.0, 368.0, -13.300000190734863, 323.0, 1.0,
         368.0, 53.20000076293945, 323.0, 1.0, 458.0, -11.050000190734863, 413.0, 1.0, 458.0, 44.20000076293945, 413.0)
         """
-        self.log.info('skipping GENEL in GEOM2')
-        #self.log.info(f'skipping GENEL in GEOM2; len(data)={len(data)-12}')
+        self.op2.log.info('skipping GENEL in GEOM2')
+        #op2.log.info(f'skipping GENEL in GEOM2; len(data)={len(data)-12}')
         #print(n)
         ints = np.frombuffer(data[n:], dtype='int32').copy()
         #floats = np.frombuffer(data[n:], dtype='float32').copy()
@@ -4408,7 +4552,8 @@ class GEOM2(GeomCommon):
 
     def _read_plotel(self, data: bytes, n: int) -> int:  # 114
         """(5201, 52, 11)"""
-        struct_3i = Struct(self._endian + b'3i')
+        op2 = self.op2
+        struct_3i = Struct(op2._endian + b'3i')
         ntotal = 12
         nelements = (len(data) - n) // ntotal
         assert (len(data) - n) % ntotal == 0
@@ -4416,13 +4561,13 @@ class GEOM2(GeomCommon):
         for unused_i in range(nelements):
             edata = data[n:n + ntotal]  # 4*4
             out = struct_3i.unpack(edata)
-            if self.is_debug_file:
-                self.binary_debug.write('  PLOTEL=%s\n' % str(out))
+            if op2.is_debug_file:
+                op2.binary_debug.write('  PLOTEL=%s\n' % str(out))
             #(eid,n1,n2) = out
             elem = PLOTEL.add_op2_data(out)
-            self._add_methods._add_plotel_object(elem)
+            op2._add_methods._add_plotel_object(elem)
             n += ntotal
-        self.card_count['PLOTEL'] = nelements
+        op2.card_count['PLOTEL'] = nelements
         return n
 
     def _read_radbc(self, data: bytes, n: int) -> int:
@@ -4435,11 +4580,12 @@ class GEOM2(GeomCommon):
         3 CNTRLND  I Control point for radiation boundary condition
         4 NODAMB   I
         """
+        op2 = self.op2
         #C:\NASA\m4\formats\git\examples\move_tpl\ht15339.op2
         #(-99, 1.0, 0, 101)
         #radbc   101     1.0             -99
         #RADBC NODAMB   FAMB CNTRLND     EID1 EID2 EID3
-        structi = Struct(self._endian + b'ifii')
+        structi = Struct(op2._endian + b'ifii')
         ntotal = 16
         nelements = (len(data) - n) // ntotal
         assert (len(data) - n) % ntotal == 0
@@ -4447,14 +4593,14 @@ class GEOM2(GeomCommon):
         for unused_i in range(nelements):
             edata = data[n:n + ntotal]  # 4*4
             out = structi.unpack(edata)
-            if self.is_debug_file:
-                self.binary_debug.write('  RADBC=%s\n' % str(out))
+            if op2.is_debug_file:
+                op2.binary_debug.write('  RADBC=%s\n' % str(out))
             eid, famb, cntrlnd, nodamb = out
             eids = eid
             boundary_condition = RADBC(nodamb, famb, cntrlnd, eids)
-            self._add_methods._add_thermal_bc_object(boundary_condition, boundary_condition.nodamb)
+            op2._add_methods._add_thermal_bc_object(boundary_condition, boundary_condition.nodamb)
             n += ntotal
-        self.card_count['RADBC'] = nelements
+        op2.card_count['RADBC'] = nelements
         return n
 
 # RADINT
@@ -4480,10 +4626,10 @@ class GEOM2(GeomCommon):
         Words 8 through 15 repeat 5 times
         16 UNDEF(3 ) none
         """
-        self.log.info('skipping SINT in GEOM2')
+        self.op2.log.info('skipping SINT in GEOM2')
         # C:\NASA\m4\formats\git\examples\move_tpl\ifscp88.op2
         # doesn't seem to be a card, more of a general info on the geometry...
-        #ints = np.frombuffer(data[n:], dtype=self.idtype).copy()
+        #ints = np.frombuffer(data[n:], dtype=op2.idtype).copy()
         #print(ints.tolist())
         return len(data)
 
@@ -4491,14 +4637,15 @@ class GEOM2(GeomCommon):
         """
         (5551,49,105)    - the marker for Record 118
         """
+        op2 = self.op2
         ntotal = 4 * self.factor
         npoints = (len(data) - n) // ntotal
-        nids = np.frombuffer(data[n:], self.idtype8).tolist()
-        if self.is_debug_file:
-            self.binary_debug.write('SPOINT=%s\n' % nids)
+        nids = np.frombuffer(data[n:], op2.idtype8).tolist()
+        if op2.is_debug_file:
+            op2.binary_debug.write('SPOINT=%s\n' % nids)
         spoint = SPOINTs.add_op2_data(nids)
-        self._add_methods._add_spoint_object(spoint)
-        self.card_count['SPOINT'] = npoints
+        op2._add_methods._add_spoint_object(spoint)
+        op2.card_count['SPOINT'] = npoints
         return len(data)
 
     def _read_vubeam(self, data: bytes, n: int) -> int:  # 119
@@ -4535,24 +4682,25 @@ class GEOM2(GeomCommon):
         3 G(3)   I Grid point identification numbers of connection points
         4 THETA RS Material property orientation angle
         """
+        op2 = self.op2
         ntotal = 24 * self.factor  # 6*4
-        s = Struct(mapfmt(self._endian + b'5if', self.size))
+        s = Struct(mapfmt(op2._endian + b'5if', self.size))
         nelements = (len(data) - n)// ntotal
         for unused_i in range(nelements):
             edata = data[n:n+ntotal]
             out = s.unpack(edata)
             (eid, pid, n1, n2, n3, theta) = out
-            if self.is_debug_file:
-                self.binary_debug.write('  CTRAX3=%s\n' % str(out))
+            if op2.is_debug_file:
+                op2.binary_debug.write('  CTRAX3=%s\n' % str(out))
             #data_in = [eid, pid, n1, n2, n3, theta]
             elem = CTRAX3(eid, pid, [n1, n2, n3], theta)
             self.add_op2_element(elem)
             n += ntotal
-        self.card_count['CTRAX3'] = nelements
+        op2.card_count['CTRAX3'] = nelements
         return n
 
     #def _read_cquadx4(self, data: bytes, n: int) -> int:
-        #self.log.info('skipping CQUADX4 in GEOM2')
+        #op2.log.info('skipping CQUADX4 in GEOM2')
         #return len(data)
 
     def _read_ctrax6(self, data: bytes, n: int) -> int:
@@ -4565,20 +4713,21 @@ class GEOM2(GeomCommon):
         3 G(6)   I Grid point identification numbers of connection points
         4 THETA RS Material property orientation angle
         """
+        op2 = self.op2
         ntotal = 36 * self.factor  # 9*4
-        s = Struct(mapfmt(self._endian + b'8if', self.size))
+        s = Struct(mapfmt(op2._endian + b'8if', self.size))
         nelements = (len(data) - n)// ntotal
         for unused_i in range(nelements):
             edata = data[n:n+ntotal]
             out = s.unpack(edata)
             (eid, pid, n1, n2, n3, n4, n5, n6, theta) = out
-            if self.is_debug_file:
-                self.binary_debug.write('  CTRAX6=%s\n' % str(out))
+            if op2.is_debug_file:
+                op2.binary_debug.write('  CTRAX6=%s\n' % str(out))
             #data_in = [eid, pid, n1, n2, n3, n4, n5, n6, theta]
             elem = CTRAX6(eid, pid, [n1, n2, n3, n4, n5, n6], theta)
             self.add_op2_element(elem)
             n += ntotal
-        self.card_count['CTRAX6'] = nelements
+        op2.card_count['CTRAX6'] = nelements
         return n
 
     def _read_cquadx8(self, data: bytes, n: int) -> int:
@@ -4591,20 +4740,21 @@ class GEOM2(GeomCommon):
         3 G(8)   I Grid point identification numbers of connection points
         4 THETA RS Material property orientation angle
         """
+        op2 = self.op2
         ntotal = 44 * self.factor  # 11*4
-        s = Struct(mapfmt(self._endian + b'10if', self.size))
+        s = Struct(mapfmt(op2._endian + b'10if', self.size))
         nelements = (len(data) - n)// ntotal
         for unused_i in range(nelements):
             edata = data[n:n+ntotal]
             out = s.unpack(edata)
             (eid, pid, n1, n2, n3, n4, n5, n6, n7, n8, theta) = out
-            if self.is_debug_file:
-                self.binary_debug.write('  CQUADX8=%s\n' % str(out))
+            if op2.is_debug_file:
+                op2.binary_debug.write('  CQUADX8=%s\n' % str(out))
             #data_in = [eid, pid, n1, n2, n3, n4, n5, n6, n7, n8, theta]
             elem = CQUADX8(eid, pid, [n1, n2, n3, n4, n5, n6, n7, n8], theta)
             self.add_op2_element(elem)
             n += ntotal
-        self.card_count['CQUADX8'] = nelements
+        op2.card_count['CQUADX8'] = nelements
         return n
 
     def _read_feface_pval(self, data: bytes, n: int) -> int:
@@ -4655,6 +4805,7 @@ class GEOM2(GeomCommon):
         6 GEOMID1    I Identification number of a POINT or GMCURV entry
         7 GEOMID2    I Identification number of a POINT or GMCURV entry
         """
+        op2 = self.op2
         # C:\NASA\m4\formats\git\examples\move_tpl\phsflux4.op2
         #(200000002, 3, 1002, 6, 12, 0, 0)
         # FEEDGE EDGEID GRID1 GRID2 CIDBC GEOMIN ID1 ID2
@@ -4690,8 +4841,8 @@ class GEOM2(GeomCommon):
 
         #self.show_data(data[12:])
         ntotal = 28 * self.factor  # 7*4
-        # s = Struct(self._endian + b'4i 4s 2i') #expected
-        s = Struct(self._endian + b'7i')
+        # s = Struct(op2._endian + b'4i 4s 2i') #expected
+        s = Struct(op2._endian + b'7i')
         ndatai = len(data) - n
         nelements = ndatai // ntotal  # 7*4
         assert ndatai % ntotal == 0
@@ -4705,8 +4856,8 @@ class GEOM2(GeomCommon):
             assert nfields in [1, 2, 3, 4, 5], out
             #assert zero1 == 0, f'zero1={zero1} out={out}'
             #assert zero2 == 0, f'zero2={zero2} out={out}'
-            if self.is_debug_file:
-                self.binary_debug.write('  FEEDGE=%s\n' % str(out))
+            if op2.is_debug_file:
+                op2.binary_debug.write('  FEEDGE=%s\n' % str(out))
 
             geomin_str = 'POINT' # ???
             cid = 0
@@ -4714,13 +4865,13 @@ class GEOM2(GeomCommon):
             geom2 = 0
             if nfields == 2:
                 edge = FEEDGE(edge_id, [n1, n2], cid, [geom1, geom2], geomin=geomin_str)
-                if edge_id in self.feedge:
-                    edge_old = self.feedge[edge_id]
+                if edge_id in op2.feedge:
+                    edge_old = op2.feedge[edge_id]
                     if edge != edge_old:
                         msg = f'Duplicate FEEDGE\nold:\n{edge_old}\nnew:\n{edge}'
                         raise RuntimeError(msg)
                     continue
-            feedge = self.add_feedge(edge_id, [n1, n2], cid, [geom1, geom2], geomin=geomin_str)
+            feedge = op2.add_feedge(edge_id, [n1, n2], cid, [geom1, geom2], geomin=geomin_str)
             str(feedge)
             #elif nfields in [3, 4, 5]:
                 #if nfields == 3:
@@ -4734,7 +4885,7 @@ class GEOM2(GeomCommon):
             #data_in = [eid, pid, n1, n2, n3, n4, n5, n6, n7, n8, theta]
             # elem = CQUADX8(eid, pid, [n1, n2, n3, n4, n5, n6, n7, n8], theta)
             # self.add_op2_element(elem)
-        self.card_count['FEEDGE'] = nelements
+        op2.card_count['FEEDGE'] = nelements
         return n
 
     def _read_gmbnds(self, data: bytes, n: int) -> int:
@@ -4746,9 +4897,10 @@ class GEOM2(GeomCommon):
         8 EID           I Entity identification numbers for boundary of subdomain
         Word 8 repeats until End of Record
         """
-        self.log.info('skipping GMBNDS in GEOM2')
+        op2 = self.op2
+        op2.log.info('skipping GMBNDS in GEOM2')
         #(1, 0, 0, 0, 0, 'FEFACE  ', 31, -1)
-        ints = np.frombuffer(data[n:], dtype=self.idtype).copy()
+        ints = np.frombuffer(data[n:], dtype=op2.idtype).copy()
         iminus1 = np.where(ints == -1)[0]
         i0 = 0
         for iminus1i in iminus1:
@@ -4772,7 +4924,7 @@ class GEOM2(GeomCommon):
         return len(data)
 
     def _read_adapt(self, data: bytes, n: int) -> int:
-        self.log.info('skipping adapt card in GEOM2')
+        self.op2.log.info('skipping adapt card in GEOM2')
         return len(data)
 
     def _read_cseam_maybe(self, data: bytes, n: int) -> int:
@@ -4810,11 +4962,11 @@ class GEOM2(GeomCommon):
           99, 2007308,
           4, 100001046, 4007101, 100001047, 4007101, 100001048, 4007101, 100001049, 4007101)  # 2*4
         """
-        self.log.info('skipping CSEAM? card in GEOM2')
+        self.op2.log.info('skipping CSEAM? card in GEOM2')
         #self.show_data(data[n:], types='ifqds')
         #self.show_data(data[n+4:], types='qd')
         #ntotal = 44 * self.factor  # 11*4
-        ##s = Struct(mapfmt(self._endian + b'10if', self.size))
+        ##s = Struct(mapfmt(op2._endian + b'10if', self.size))
         #nelements = (len(data) - n)// ntotal
         #for unused_i in range(nelements):
             #edata = data[n:n+ntotal]
