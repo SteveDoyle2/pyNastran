@@ -438,7 +438,7 @@ _check_unique_sets(INT_PARAMS_1, FLOAT_PARAMS_1, FLOAT_PARAMS_2, STR_PARAMS_1)
 
 
 class OP2_Scalar(ONR, OGPF,
-                 OEF, OGS, OPG, OQG, OUG, FortranFormat):
+                 OGS, OPG, OQG, OUG, FortranFormat):
     """Defines an interface for the Nastran OP2 file."""
     @property
     def total_effective_mass_matrix(self):
@@ -530,7 +530,7 @@ class OP2_Scalar(ONR, OGPF,
         self.is_nasa95 = True
         self._nastran_format = 'nasa95'
         self.oes._read_oes1_loads = self.oes._read_oes1_loads_nasa95
-        self._read_oef1_loads = self._read_oef1_loads_nasa95
+        self.reader_oef._read_oef1_loads = self.reader_oef._read_oef1_loads_nasa95
 
         if hasattr(self, 'reader_geom2') and hasattr(self.reader_geom2, '_read_cquad4_nasa95'):
             self.reader_geom2.geom2_map[(5408, 54, 261)] = ['CQUAD4', self.reader_geom2._read_cquad4_nasa95]
@@ -579,7 +579,6 @@ class OP2_Scalar(ONR, OGPF,
         ONR.__init__(self)
         OGPF.__init__(self)
 
-        OEF.__init__(self)
         #OESM.__init__(self)
         OGS.__init__(self)
 
@@ -753,8 +752,8 @@ class OP2_Scalar(ONR, OGPF,
             #b'RAQEATC': [self._table_passer, self._table_passer], # temporary
 
             # element forces
-            b'RAFCONS': [self._read_oef1_3, self._read_oef1_4], # Element Force Constraint Mode (OEF)
-            b'RAFEATC': [self._read_oef1_3, self._read_oef1_4], # Element Force Equivalent Inertia Attachment mode (OEF)
+            b'RAFCONS': [self.reader_oef._read_oef1_3, self.reader_oef._read_oef1_4], # Element Force Constraint Mode (OEF)
+            b'RAFEATC': [self.reader_oef._read_oef1_3, self.reader_oef._read_oef1_4], # Element Force Equivalent Inertia Attachment mode (OEF)
             #b'RAFCONS': [self._table_passer, self._table_passer], # temporary
             #b'RAFEATC': [self._table_passer, self._table_passer], # temporary
 
@@ -802,15 +801,15 @@ class OP2_Scalar(ONR, OGPF,
             # OEF
             # element forces
             #b'OEFITSTN' : [self._table_passer, self._table_passer], # works
-            b'OEFITSTN' : [self._read_oef1_3, self._read_oef1_4],
-            b'OEFIT' : [self._read_oef1_3, self._read_oef1_4],  # failure indices
-            b'OEF1X' : [self._read_oef1_3, self._read_oef1_4],  # element forces at intermediate stations
-            b'OEF1'  : [self._read_oef1_3, self._read_oef1_4],  # element forces or heat flux
-            b'HOEF1' : [self._read_oef1_3, self._read_oef1_4],  # element heat flux
-            b'DOEF1' : [self._read_oef1_3, self._read_oef1_4],  # scaled response spectra - forces
+            b'OEFITSTN' : [self.reader_oef._read_oef1_3, self.reader_oef._read_oef1_4],
+            b'OEFIT' : [self.reader_oef._read_oef1_3, self.reader_oef._read_oef1_4],  # failure indices
+            b'OEF1X' : [self.reader_oef._read_oef1_3, self.reader_oef._read_oef1_4],  # element forces at intermediate stations
+            b'OEF1'  : [self.reader_oef._read_oef1_3, self.reader_oef._read_oef1_4],  # element forces or heat flux
+            b'HOEF1' : [self.reader_oef._read_oef1_3, self.reader_oef._read_oef1_4],  # element heat flux
+            b'DOEF1' : [self.reader_oef._read_oef1_3, self.reader_oef._read_oef1_4],  # scaled response spectra - forces
 
             # off force
-            b'OEF2' : [self._read_oef2_3, self._read_oef2_4],  # element forces or heat flux
+            b'OEF2' : [self.reader_oef._read_oef2_3, self.reader_oef._read_oef2_4],  # element forces or heat flux
             #=======================
             # OQG
             # spc forces
@@ -1197,16 +1196,16 @@ class OP2_Scalar(ONR, OGPF,
             b'OESNO2'  : [self._table_passer, self._table_passer],  # buggy on isat random
 
             # force
-            b'OEFATO1' : [self._read_oef1_3, self._read_oef1_4],
-            b'OEFCRM1' : [self._read_oef1_3, self._read_oef1_4],
-            b'OEFPSD1' : [self._read_oef1_3, self._read_oef1_4],
-            b'OEFRMS1' : [self._read_oef1_3, self._read_oef1_4],
-            b'OEFNO1'  : [self._read_oef1_3, self._read_oef1_4],
+            b'OEFATO1' : [self.reader_oef._read_oef1_3, self.reader_oef._read_oef1_4],
+            b'OEFCRM1' : [self.reader_oef._read_oef1_3, self.reader_oef._read_oef1_4],
+            b'OEFPSD1' : [self.reader_oef._read_oef1_3, self.reader_oef._read_oef1_4],
+            b'OEFRMS1' : [self.reader_oef._read_oef1_3, self.reader_oef._read_oef1_4],
+            b'OEFNO1'  : [self.reader_oef._read_oef1_3, self.reader_oef._read_oef1_4],
 
-            b'OEFATO2' : [self._read_oef2_3, self._read_oef2_4],
-            b'OEFCRM2' : [self._read_oef2_3, self._read_oef2_4],
-            b'OEFPSD2' : [self._read_oef2_3, self._read_oef2_4],
-            #b'OEFRMS2' : [self._read_oef2_3, self._read_oef2_4], # buggy on isat random
+            b'OEFATO2' : [self.reader_oef._read_oef2_3, self.reader_oef._read_oef2_4],
+            b'OEFCRM2' : [self.reader_oef._read_oef2_3, self.reader_oef._read_oef2_4],
+            b'OEFPSD2' : [self.reader_oef._read_oef2_3, self.reader_oef._read_oef2_4],
+            #b'OEFRMS2' : [self.reader_oef._read_oef2_3, self.reader_oef._read_oef2_4], # buggy on isat random
 
 
             # nx cohesive zone

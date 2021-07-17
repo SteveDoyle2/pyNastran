@@ -9,6 +9,7 @@ from pyNastran.utils.numpy_utils import integer_types
 #from pyNastran.op2.errors import FortranMarkerError, SortCodeError
 from pyNastran.op2.errors import EmptyRecordError
 
+from pyNastran.op2.tables.oef_forces.oef import OEF
 from pyNastran.op2.tables.oes_stressStrain.oes import OES
 from pyNastran.op2.tables.lama_eigenvalues.lama import LAMA
 from pyNastran.op2.tables.onmd import ONMD
@@ -37,6 +38,7 @@ class FortranFormat:
         self.ogpwg = OGPWG(self)
         self.lama = LAMA(self)
         self.oes = OES(self)
+        self.reader_oef = OEF(self)
 
     def show(self, n: int, types: str='ifs', endian=None, force: bool=False):  # pragma: no cover
         """Shows binary data"""

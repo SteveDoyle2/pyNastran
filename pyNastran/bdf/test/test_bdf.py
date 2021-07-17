@@ -1259,7 +1259,7 @@ def _check_flutter_case(fem2: BDF, log: SimpleLogger, sol: int, subcase: Subcase
     # CMETHOD - EIGC
     # FMETHOD - FLUTTER
 
-    print('check fmethod')
+    #print('check fmethod')
     ierror = require_cards(['FMETHOD'], log, soltype, sol, subcase,
                            RuntimeError, ierror, nerrors)
     flutter_id = subcase.get_parameter('FMETHOD')[0]
