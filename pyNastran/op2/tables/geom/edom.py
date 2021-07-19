@@ -373,7 +373,7 @@ class EDOM(GeomCommon):
             n += ntotal
             dconstrs.append(dconstr)
         assert n == len(data), f'n={n} ndata={len(data)}'
-        op2.to_msc('DCONSTR-28 found')
+        op2.to_msc('; DCONSTR-28 found')
         return n, dconstrs
 
     def _read_dconstr_32(self, card_obj: DCONSTR, data: bytes, n: int) -> Tuple[int, List[DCONSTR]]:
@@ -423,7 +423,7 @@ class EDOM(GeomCommon):
             n += ntotal
             dconstrs.append(dconstr)
         assert n == len(data), f'n={n} ndata={len(data)}'
-        op2.to_msc('DCONSTR-32 found')
+        op2.to_msc('; DCONSTR-32 found')
         return n, dconstrs
 
     def _read_dscreen(self, data: bytes, n: int) -> int:

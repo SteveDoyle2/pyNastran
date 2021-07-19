@@ -11,6 +11,7 @@ from pyNastran.op2.errors import EmptyRecordError
 
 from pyNastran.op2.tables.oef_forces.oef import OEF
 from pyNastran.op2.tables.oes_stressStrain.oes import OES
+from pyNastran.op2.tables.ogs_grid_point_stresses.ogs import OGS
 from pyNastran.op2.tables.lama_eigenvalues.lama import LAMA
 from pyNastran.op2.tables.onmd import ONMD
 from pyNastran.op2.tables.ogpwg import OGPWG
@@ -34,11 +35,12 @@ class FortranFormat:
         self.valid_subcases = []
         #self.op2_reader = OP2Reader()
         self.IS_TESTING = False
-        self.onmd = ONMD(self)
-        self.ogpwg = OGPWG(self)
-        self.lama = LAMA(self)
+        self.reader_onmd = ONMD(self)
+        self.reader_ogpwg = OGPWG(self)
+        self.reader_lama = LAMA(self)
         self.oes = OES(self)
         self.reader_oef = OEF(self)
+        self.reader_ogs = OGS(self)
 
     def show(self, n: int, types: str='ifs', endian=None, force: bool=False):  # pragma: no cover
         """Shows binary data"""

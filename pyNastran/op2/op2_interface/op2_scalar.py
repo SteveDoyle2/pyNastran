@@ -72,11 +72,7 @@ from pyNastran.op2.op2_interface.nx_tables import NX_RESULT_TABLES, NX_MATRIX_TA
 
 from pyNastran.op2.tables.oee_energy.onr import ONR
 from pyNastran.op2.tables.ogf_gridPointForces.ogpf import OGPF
-
-from pyNastran.op2.tables.oef_forces.oef import OEF
-#from pyNastran.op2.tables.oes_stressStrain.oes import OES
 #from pyNastran.op2.tables.oes_stressStrain.oesm import OESM
-from pyNastran.op2.tables.ogs_grid_point_stresses.ogs import OGS
 
 from pyNastran.op2.tables.opg_appliedLoads.opg import OPG
 from pyNastran.op2.tables.oqg_constraintForces.oqg import OQG
@@ -437,8 +433,7 @@ def _check_unique_sets(*sets: List[Set[str]]):
 _check_unique_sets(INT_PARAMS_1, FLOAT_PARAMS_1, FLOAT_PARAMS_2, STR_PARAMS_1)
 
 
-class OP2_Scalar(ONR, OGPF,
-                 OGS, OPG, OQG, OUG, FortranFormat):
+class OP2_Scalar(ONR, OGPF, OPG, OQG, OUG, FortranFormat):
     """Defines an interface for the Nastran OP2 file."""
     @property
     def total_effective_mass_matrix(self):
@@ -580,7 +575,6 @@ class OP2_Scalar(ONR, OGPF,
         OGPF.__init__(self)
 
         #OESM.__init__(self)
-        OGS.__init__(self)
 
         OPG.__init__(self)
         OQG.__init__(self)
@@ -1067,23 +1061,23 @@ class OP2_Scalar(ONR, OGPF,
             #=======================
             # OGPWG
             # grid point weight
-            b'OGPWG'  : [self.ogpwg._read_ogpwg_3, self.ogpwg._read_ogpwg_4],  # grid point weight
-            b'OGPWGM' : [self.ogpwg._read_ogpwg_3, self.ogpwg._read_ogpwg_4],  # modal? grid point weight
+            b'OGPWG'  : [self.reader_ogpwg._read_ogpwg_3, self.reader_ogpwg._read_ogpwg_4],  # grid point weight
+            b'OGPWGM' : [self.reader_ogpwg._read_ogpwg_3, self.reader_ogpwg._read_ogpwg_4],  # modal? grid point weight
 
             #=======================
             # OGS
             # grid point stresses
-            b'OGS1' : [self._read_ogs1_3, self._read_ogs1_4],  # grid point stresses
+            b'OGS1' : [self.reader_ogs._read_ogs1_3, self.reader_ogs._read_ogs1_4],  # grid point stresses
             #b'OGS2' : [self._read_ogs1_3, self._read_ogs1_4],  # grid point stresses
 
-            b'OGSTR1' : [self._read_ogstr1_3, self._read_ogstr1_4],  # grid point strains
+            b'OGSTR1' : [self.reader_ogs._read_ogstr1_3, self.reader_ogs._read_ogstr1_4],  # grid point strains
             #=======================
             # eigenvalues
-            b'BLAMA' : [self.lama._read_buckling_eigenvalue_3, self.lama._read_buckling_eigenvalue_4], # buckling eigenvalues
-            b'CLAMA' : [self.lama._read_complex_eigenvalue_3, self.lama._read_complex_eigenvalue_4],   # complex eigenvalues
-            b'LAMA'  : [self.lama._read_real_eigenvalue_3, self.lama._read_real_eigenvalue_4],         # eigenvalues
-            b'LAMAS' : [self.lama._read_real_eigenvalue_3, self.lama._read_real_eigenvalue_4],         # eigenvalues-structure
-            b'LAMAF' : [self.lama._read_real_eigenvalue_3, self.lama._read_real_eigenvalue_4],         # eigenvalues-fluid
+            b'BLAMA' : [self.reader_lama._read_buckling_eigenvalue_3, self.reader_lama._read_buckling_eigenvalue_4], # buckling eigenvalues
+            b'CLAMA' : [self.reader_lama._read_complex_eigenvalue_3, self.reader_lama._read_complex_eigenvalue_4],   # complex eigenvalues
+            b'LAMA'  : [self.reader_lama._read_real_eigenvalue_3, self.reader_lama._read_real_eigenvalue_4],         # eigenvalues
+            b'LAMAS' : [self.reader_lama._read_real_eigenvalue_3, self.reader_lama._read_real_eigenvalue_4],         # eigenvalues-structure
+            b'LAMAF' : [self.reader_lama._read_real_eigenvalue_3, self.reader_lama._read_real_eigenvalue_4],         # eigenvalues-fluid
 
             # ===passers===
             #b'EQEXIN': [self._table_passer, self._table_passer],
@@ -1214,7 +1208,7 @@ class OP2_Scalar(ONR, OGPF,
             b'ODAMGCZD' : [self._nx_table_passer, self._table_passer],
 
             # Normalized Mass Density
-            b'ONMD' : [self.onmd._read_onmd_3, self.onmd._read_onmd_4],
+            b'ONMD' : [self.reader_onmd._read_onmd_3, self.reader_onmd._read_onmd_4],
             #====================================================================
             # NASA95
             b'OESC1'  : [self.oes._read_oes1_3, self.oes._read_oes1_4],

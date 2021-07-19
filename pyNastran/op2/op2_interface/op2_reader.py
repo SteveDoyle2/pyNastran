@@ -4256,8 +4256,8 @@ class OP2Reader:
                 self._read_matrix_matpool()
             except(RuntimeError, AssertionError, ValueError):
                 raise
-                self._goto(i)
-                self._skip_table(op2.table_name)
+                #self._goto(i)
+                #self._skip_table(op2.table_name)
 
     def _read_matrix_matpool(self):
         """
@@ -4883,7 +4883,7 @@ class OP2Reader:
         return date
 
     #----------------------------------------------------------------------------------------
-    def _read_record(self, debug=True, macro_rewind=False) -> Tuple[bytes, int]:
+    def _read_record(self, debug=True, macro_rewind=False) -> bytes:
         """
         Reads a record.
 
@@ -4925,8 +4925,8 @@ class OP2Reader:
             op2.f.seek(na)
             op2.n = na
             if nrecord == 4:
-               self.log.error(f'EmptyRecordError: marker0={marker0} nrecord={nrecord}')
-               raise EmptyRecordError('nrecord=4')
+                self.log.error(f'EmptyRecordError: marker0={marker0} nrecord={nrecord}')
+                raise EmptyRecordError('nrecord=4')
             self.log.error(f'marker0={marker0} nrecord={nrecord}')
             raise FortranMarkerError('marker0=%s*4 len(record)=%s; table_name=%r' % (
                 marker0*4, len(record), op2.table_name))
