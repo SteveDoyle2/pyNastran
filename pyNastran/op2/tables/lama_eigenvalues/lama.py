@@ -42,8 +42,6 @@ class LAMA:
     def _read_buckling_eigenvalue_3(self, data: bytes, ndata: int):
         """parses the Buckling Eigenvalues Table 3 Data"""
         op2 = self.op2
-        #print(self.show_data(data))
-        #self._read_title_helper(data)
 
         op2.words = [
             'aCode', 'tCode', '???', 'isubcase',
@@ -53,7 +51,6 @@ class LAMA:
             '???', '???', '???', '???',
             '???', '???', '???', '???',
             '???', '???', '???', '???']
-        #self.show_data(data)
 
         unused_three = op2.parse_approach_code(data)
 

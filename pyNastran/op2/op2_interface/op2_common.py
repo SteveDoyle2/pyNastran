@@ -19,6 +19,11 @@ from pyNastran.op2.op2_interface.op2_codes import (
 
 from pyNastran.op2.errors import SortCodeError, MultipleSolutionNotImplementedError
 from pyNastran.op2.op2_interface.sort_bits import SortBits
+from pyNastran.op2.op2_interface.oug_reader import (
+    read_real_table_static,
+    read_real_table_sort1, read_real_table_sort2,
+    read_complex_table_sort1_imag, read_complex_table_sort1_mag,
+    read_complex_table_sort2_imag, read_complex_table_sort2_mag)
 
 NX_TABLES = [
     501, 510, 511,
@@ -108,19 +113,23 @@ class OP2Common(Op2Codes, F06Writer):
 
         self._endian = None
 
-        #self.show_table3_map = [
-            ##'OUGV1',
-            ##'OEF1X',
-            ##'OES1X1',
-        #]
-        #self.show_table4_map = [
-            ##'OUGV1',
-            ##'OEF1X',
-            ##'OES1X1',
-        #]
-
         # sets the element mapper
         #self.get_element_type(33)
+
+    def _setup_op2_subcase(self, word: str) -> None:
+        """
+        Parameters
+        ----------
+        word : str
+            displacement
+            FLUX
+        """
+        if self.read_mode == 1:
+            if self.isubcase not in self.case_control_deck.subcases:
+                self.subcase = self.case_control_deck.create_new_subcase(self.isubcase)
+            else:
+                self.subcase = self.case_control_deck.subcases[self.isubcase]
+            self.subcase.add_op2_data(self.data_code, word, self.log)
 
     def _device_code_(self) -> None:
         """
@@ -284,30 +293,30 @@ class OP2Common(Op2Codes, F06Writer):
 
     def _set_times_dtype(self) -> None:
         self.data_code['_times_dtype'] = 'float32'
-        if self.analysis_code == 1:   # statics / displacement / heat flux
-            pass # static doesn't have a type
-        elif self.analysis_code == 2:  # real eigenvalues
-            pass
-        #elif self.analysis_code==3: # differential stiffness
-        #elif self.analysis_code==4: # differential stiffness
-        elif self.analysis_code == 5:  # frequency
-            pass
-        elif self.analysis_code == 6:  # transient
-            pass
-        elif self.analysis_code == 7:  # pre-buckling
-            pass
-        elif self.analysis_code == 8:  # post-buckling
-            pass
-        elif self.analysis_code == 9:  # complex eigenvalues
-            pass
-        elif self.analysis_code == 10:  # nonlinear statics
-            pass
-        elif self.analysis_code == 11:  # old geometric nonlinear statics
-            pass
-        elif self.analysis_code == 12:
-            # contran ? (may appear as aCode=6)  --> straight from DMAP...grrr...
-            pass
-        else:
+        ## if self.analysis_code == 1:   # statics / displacement / heat flux
+        ##     pass # static doesn't have a type
+        ## elif self.analysis_code == 2:  # real eigenvalues
+        ##     pass
+        ## #elif self.analysis_code==3: # differential stiffness
+        ## #elif self.analysis_code==4: # differential stiffness
+        ## elif self.analysis_code == 5:  # frequency
+        ##     pass
+        ## elif self.analysis_code == 6:  # transient
+        ##     pass
+        ## elif self.analysis_code == 7:  # pre-buckling
+        ##     pass
+        ## elif self.analysis_code == 8:  # post-buckling
+        ##     pass
+        ## elif self.analysis_code == 9:  # complex eigenvalues
+        ##     pass
+        ## elif self.analysis_code == 10:  # nonlinear statics
+        ##     pass
+        ## elif self.analysis_code == 11:  # old geometric nonlinear statics
+        ##     pass
+        ## elif self.analysis_code == 12:
+        ##     # contran ? (may appear as aCode=6)  --> straight from DMAP...grrr...
+        ##     pass
+        if self.analysis_code not in [1, 2, 5, 6, 7, 8, 9, 10, 11, 12]:
             msg = 'invalid analysis_code...analysis_code=%s' % self.analysis_code
             raise RuntimeError(msg)
 
@@ -317,22 +326,22 @@ class OP2Common(Op2Codes, F06Writer):
                            fix_device_code: bool=False,
                            add_to_dict: bool=True):
         if self.size == 4:
-            return self.add_data_parameter4(
+            return self._add_data_parameter4(
                 data, var_name, Type, field_num,
                 apply_nonlinear_factor=apply_nonlinear_factor,
                 fix_device_code=fix_device_code,
                 add_to_dict=add_to_dict)
-        return self.add_data_parameter8(
+        return self._add_data_parameter8(
             data, var_name, Type, field_num,
             apply_nonlinear_factor=apply_nonlinear_factor,
             fix_device_code=fix_device_code,
             add_to_dict=add_to_dict)
 
-    def add_data_parameter8(self, data: bytes,
-                            var_name: str, var_type: bytes, field_num: int,
-                            apply_nonlinear_factor: bool=True,
-                            fix_device_code: bool=False,
-                            add_to_dict: bool=True):
+    def _add_data_parameter8(self, data: bytes,
+                             var_name: str, var_type: bytes, field_num: int,
+                             apply_nonlinear_factor: bool=True,
+                             fix_device_code: bool=False,
+                             add_to_dict: bool=True):
         assert len(data) == 1168, len(data)
         datai = data[8 * (field_num - 1) : 8 * (field_num)]
         assert len(datai) == 8, len(datai)
@@ -349,11 +358,11 @@ class OP2Common(Op2Codes, F06Writer):
             add_to_dict=add_to_dict)
         return value
 
-    def add_data_parameter4(self, data: bytes, var_name: str,
-                            Type: bytes, field_num: int,
-                            apply_nonlinear_factor: bool=True,
-                            fix_device_code: bool=False,
-                            add_to_dict: bool=True):
+    def _add_data_parameter4(self, data: bytes, var_name: str,
+                             Type: bytes, field_num: int,
+                             apply_nonlinear_factor: bool=True,
+                             fix_device_code: bool=False,
+                             add_to_dict: bool=True):
         assert len(data) == 584, len(data)
         datai = data[4 * (field_num - 1) : 4 * (field_num)]
         assert len(datai) == 4, len(datai)
@@ -408,7 +417,7 @@ class OP2Common(Op2Codes, F06Writer):
         self.nonlinear_factor = np.nan #np.float32(None)
         self.data_code['nonlinear_factor'] = np.nan
 
-    def _read_title_helper(self, data):
+    def _read_title_helper(self, data: bytes) -> None:
         if self.size == 4:
             assert len(data) == 584, len(data)
             # title_subtitle_label
@@ -421,11 +430,19 @@ class OP2Common(Op2Codes, F06Writer):
             subtitle = reshape_bytes_block(subtitle)
             label = reshape_bytes_block(label)
 
-        self.title = title.decode(self.encoding).strip()
+        try:
+            self.title = title.decode(self.encoding).strip()
+        except UnicodeDecodeError:
+            self.log.error(f'title = {title}')
+            raise
         subtitle = subtitle.decode(self.encoding)
         subtitle_original = subtitle.strip()
 
-        label = label.decode(self.encoding).strip()
+        try:
+            label = label.decode(self.encoding).strip()
+        except UnicodeDecodeError:
+            self.log.error(f'label = {label}')
+            raise
         nlabel = 65
         label2 = label[nlabel:]
         try:
@@ -483,7 +500,7 @@ class OP2Common(Op2Codes, F06Writer):
                     'pval_step', self.pval_step,
                     'superelement_adaptivity_index', self.superelement_adaptivity_index))
 
-    def _read_title(self, data):
+    def _read_title(self, data: bytes) -> None:
         self._read_title_helper(data)
 
         if hasattr(self, 'isubcase'):
@@ -516,74 +533,79 @@ class OP2Common(Op2Codes, F06Writer):
         stress_bits[4] = 0 -> material coordinate system flag
 
         """
-        if self.is_debug_file:
-            msg = ''
-            assert len(self.words) in [0, 28], f'table_name={self.table_name!r} len(self.words)={len(self.words)} words={self.words}'
-            for i, param in enumerate(self.words):
-                if param == 's_code':
-                    try:
-                        s_word = get_scode_word(self.s_code, self.stress_bits)
-                    except AttributeError:
-                        raise
-                    self.binary_debug.write('  s_code         = %s -> %s\n' % (self.s_code, s_word))
-                    self.binary_debug.write('    stress_bits[0] = %i -> is_von_mises    =%-5s vs is_max_shear\n' % (self.stress_bits[0], self.is_von_mises))
-                    self.binary_debug.write('    stress_bits[1] = %i -> is_strain       =%-5s vs is_stress\n' % (self.stress_bits[1], self.is_strain))
-                    self.binary_debug.write('    stress_bits[2] = %i -> strain_curvature=%-5s vs fiber_dist\n' % (self.stress_bits[2], self.is_curvature))
-                    self.binary_debug.write('    stress_bits[3] = %i -> is_strain       =%-5s vs is_stress\n' % (self.stress_bits[3], self.is_strain))
-                    self.binary_debug.write('    stress_bits[4] = %i -> material coordinate system flag=%s vs ???\n' % (self.stress_bits[4], self.stress_bits[4]))
-                elif param == '???':
-                    param = 0
-                msg += '%s, ' % param
-                if i % 5 == 4:
-                    msg += '\n             '
-
-            if hasattr(self, 'format_code'):
+        if not self.is_debug_file:
+            return
+        msg = ''
+        binary_debug = self.binary_debug
+        assert len(self.words) in [0, 28], f'table_name={self.table_name!r} len(self.words)={len(self.words)} words={self.words}'
+        for i, param in enumerate(self.words):
+            if param == 's_code':
                 try:
-                    is_complex = self.is_complex
-                except AssertionError:
-                    self.binary_debug.write('\n  ERROR: cannot determine is_complex properly; '
-                                            'check_sort_bits!!!\n')
-                    is_complex = '???'
+                    s_word = get_scode_word(self.s_code, self.stress_bits)
+                except AttributeError:
+                    raise
+                stress_bits = self.stress_bits
+                binary_debug.write(
+                    f'  s_code         = {self.s_code} -> {s_word}\n'
+                    f'    stress_bits[0] = {stress_bits[0]:d} -> is_von_mises    ={str(self.is_von_mises):<5s} vs is_max_shear\n'
+                    f'    stress_bits[1] = {stress_bits[1]:d} -> is_strain       ={str(self.is_strain):<5s} vs is_stress\n'
+                    f'    stress_bits[2] = {stress_bits[2]:d} -> strain_curvature={str(self.is_curvature):<5s} vs fiber_dist\n'
+                    f'    stress_bits[3] = {stress_bits[3]:d} -> is_strain       ={str(self.is_strain):<5s} vs is_stress\n'
+                    f'    stress_bits[4] = {stress_bits[4]:d} -> material coordinate system flag={str(self.is_strain):<5s} vs ???\n')
+            elif param == '???':
+                param = 0
+            msg += '%s, ' % param
+            if i % 5 == 4:
+                msg += '\n             '
 
-                try:
-                    is_random = self.is_random
-                except AssertionError:
-                    is_random = '???'
+        if hasattr(self, 'format_code'):
+            try:
+                is_complex = self.is_complex
+            except AssertionError:
+                binary_debug.write('\n  ERROR: cannot determine is_complex properly; '
+                                   'check_sort_bits!!!\n')
+                is_complex = '???'
 
-                try:
-                    is_sort1 = self.is_sort1
-                except AssertionError:
-                    is_sort1 = '???'
+            try:
+                is_random = self.is_random
+            except AssertionError:
+                is_random = '???'
 
-                try:
-                    is_real = self.is_real
-                except AssertionError:
-                    is_real = '???'
+            try:
+                is_sort1 = self.is_sort1
+            except AssertionError:
+                is_sort1 = '???'
 
-                if is_complex:
-                    msg = '\n  %-14s = %i -> is_mag_phase vs is_real_imag vs. is_random\n' % (
-                        'format_code', self.format_code)
-                    self.binary_debug.write(msg)
-                else:
-                    self.binary_debug.write('  %-14s = %i\n' % ('format_code', self.format_code))
-                self.binary_debug.write('    sort_bits[0] = %i -> is_random=%s vs mag/phase\n' % (self.sort_bits[0], is_random))
-                self.binary_debug.write('    sort_bits[1] = %i -> is_sort1 =%s vs sort2\n' % (self.sort_bits[1], is_sort1))
-                self.binary_debug.write('    sort_bits[2] = %i -> is_real  =%s vs real/imag\n' % (self.sort_bits[2], is_real))
+            try:
+                is_real = self.is_real
+            except AssertionError:
+                is_real = '???'
 
-                try:
-                    sort_method, is_real, is_random = self._table_specs()
-                    self.binary_debug.write('    sort_method = %s\n' % sort_method)
-                except AssertionError:
-                    self.binary_debug.write('    sort_method = ???\n')
+            if is_complex:
+                msg = '\n  %-14s = %i -> is_mag_phase vs is_real_imag vs. is_random\n' % (
+                    'format_code', self.format_code)
+                binary_debug.write(msg)
+            else:
+                binary_debug.write('  %-14s = %i\n' % ('format_code', self.format_code))
+            sort_bits = self.sort_bits
+            binary_debug.write(
+                f'    sort_bits[0] = {sort_bits[0]:d} -> is_random={is_random} vs mag/phase\n'
+                f'    sort_bits[1] = {sort_bits[1]:d} -> is_sort1 ={is_sort1} vs sort2\n'
+                f'    sort_bits[2] = {sort_bits[2]:d} -> is_real  ={is_real} vs real/imag\n')
 
-                if is_complex:
-                    msg = '\n  %-14s = %i -> is_mag_phase vs is_real_imag vs. is_random\n' % (
-                        'format_code', self.format_code)
-                    self.binary_debug.write(msg)
-                else:
-                    self.binary_debug.write('  %-14s = %i\n' % ('format_code', self.format_code))
+            try:
+                sort_method, is_real, is_random = self._table_specs()
+                binary_debug.write('    sort_method = %s\n' % sort_method)
+            except AssertionError:
+                binary_debug.write('    sort_method = ???\n')
 
-            self.binary_debug.write('  recordi = [%s]\n\n' % msg)
+            if is_complex:
+                msg = f'\n  {"format_code":<14s} = {self.format_code:d} -> is_mag_phase vs is_real_imag vs. is_random\n'
+                binary_debug.write(msg)
+            else:
+                binary_debug.write(f'  {"format_code":<14s} = {self.format_code:d}\n')
+
+        binary_debug.write('  recordi = [%s]\n\n' % msg)
 
     def get_table_count(self) -> int:
         """identifiers superelements"""
@@ -928,16 +950,22 @@ class OP2Common(Op2Codes, F06Writer):
                 result_name, nnodes, storage_obj, complex_vector)
             if auto_return:
                 return ndata
+
+            is_magnitude_phase = self.is_magnitude_phase()
             if self.is_sort1:
-                if self.is_magnitude_phase():
-                    n = self._read_complex_table_sort1_mag(data, is_vectorized, nnodes, result_name, node_elem)
+                if is_magnitude_phase:
+                    n = self._read_complex_table_sort1_mag(
+                        data, is_vectorized, nnodes, result_name, node_elem)
                 else:
-                    n = self._read_complex_table_sort1_imag(data, is_vectorized, nnodes, result_name, node_elem)
+                    n = self._read_complex_table_sort1_imag(
+                        data, is_vectorized, nnodes, result_name, node_elem)
             else:
-                if self.is_magnitude_phase():
-                    n = self._read_complex_table_sort2_mag(data, is_vectorized, nnodes, result_name, node_elem)
+                if is_magnitude_phase:
+                    n = self._read_complex_table_sort2_mag(
+                        data, is_vectorized, nnodes, result_name, node_elem)
                 else:
-                    n = self._read_complex_table_sort2_imag(data, is_vectorized, nnodes, result_name, node_elem)
+                    n = self._read_complex_table_sort2_imag(
+                        data, is_vectorized, nnodes, result_name, node_elem)
                 #msg = self.code_information()
                 #n = self._not_implemented_or_skip(data, ndata, msg)
         else:
@@ -978,8 +1006,8 @@ class OP2Common(Op2Codes, F06Writer):
             raise NotImplementedError(self.function_code)
         return out
 
-    def _read_real_scalar_table_static(self, data, is_vectorized, nnodes,
-                                       unused_result_name, flag, is_cid=False):
+    def _read_real_scalar_table_static(self, data, is_vectorized: bool, nnodes: int,
+                                       unused_result_name: str, flag: str, is_cid: bool=False):
         """
         With a static (e.g. SOL 101) result, reads a complex OUG-style
         table created by:
@@ -1037,7 +1065,7 @@ class OP2Common(Op2Codes, F06Writer):
         return n
 
     def _read_real_scalar_table_sort1(self, data, is_vectorized, nnodes,
-                                      unused_result_name, flag, is_cid=False):
+                                      unused_result_name, flag: str, is_cid=False):
         """
         With a real transient result (e.g. SOL 109/159), reads a
         real OUG-style table created by:
@@ -1169,18 +1197,8 @@ class OP2Common(Op2Codes, F06Writer):
             obj.data[obj.itime, obj.itotal:itotal2, :] = floats[:, 2:].copy()
             obj.itotal = itotal2
         else:
-            n = 0
-            dt = np.nan
-            fmt = mapfmt(self._endian + b'2i6f', self.size)
-            s = Struct(fmt)
-            for unused_inode in range(nnodes):
-                out = s.unpack(data[n:n+ntotal])
-                (eid_device, grid_type, tx, ty, tz, rx, ry, rz) = out
-                eid = eid_device // 10
-                if self.is_debug_file:
-                    self.binary_debug.write('  %s=%i; %s\n' % (flag, eid, str(out)))
-                obj.add_sort1(dt, eid, grid_type, tx, ty, tz, rx, ry, rz)
-                n += ntotal
+            n = read_real_table_static(self, obj, flag,
+                                       data, nnodes, ntotal)
         return n
 
     def _read_real_table_sort1(self, data, is_vectorized, nnodes,
@@ -1220,21 +1238,12 @@ class OP2Common(Op2Codes, F06Writer):
             obj._times[itime] = dt
             obj.itotal = itotal2
         else:
-            n = 0
-            assert nnodes > 0, nnodes
-            fmt = mapfmt(self._endian + b'2i6f', self.size)
-            s = Struct(fmt)
-            for unused_inode in range(nnodes):
-                out = s.unpack(data[n:n+ntotal])
-                (eid_device, grid_type, tx, ty, tz, rx, ry, rz) = out
-                eid = eid_device // 10
-                if self.is_debug_file:
-                    self.binary_debug.write('  %s=%i; %s\n' % (flag, eid, str(out)))
-                obj.add_sort1(dt, eid, grid_type, tx, ty, tz, rx, ry, rz)
-                n += ntotal
+            n = read_real_table_sort1(self, obj, dt, flag,
+                                      data, nnodes, ntotal)
         return n
 
-    def _read_real_table_sort2(self, data, is_vectorized, nnodes, result_name, flag, is_cid=False):
+    def _read_real_table_sort2(self, data, is_vectorized, nnodes, result_name, flag,
+                               is_cid=False):
         """
         With a real transient result (e.g. SOL 109/159), reads a
         real OUG-style table created by:
@@ -1272,24 +1281,9 @@ class OP2Common(Op2Codes, F06Writer):
             obj.data[itotal:itotal2, obj.itime, :] = floats[:, 2:]
             obj.itotal = itotal2
         else:
-            n = 0
-            assert nnodes > 0
             flag = self.data_code['analysis_method']
-            fmt = mapfmt(self._endian + self._analysis_code_fmt + b'i6f', self.size)
-            structi = Struct(fmt)
-
-            #psds = ('CRM2', 'NO2', 'PSD2', 'RMS2')
-            #print('sort_method=%s' % self.sort_method)
-            #if self.table_name_str.endswith(psds):
-            for unused_inode in range(nnodes):
-                edata = data[n:n+ntotal]
-                out = structi.unpack(edata)
-                (dt, grid_type, tx, ty, tz, rx, ry, rz) = out
-                if self.is_debug_file:
-                    self.binary_debug.write(
-                        f'  nid={nid} {flag}={dt} ({type(dt)}); {str(out)}\n')
-                obj.add_sort2(dt, nid, grid_type, tx, ty, tz, rx, ry, rz)
-                n += ntotal
+            n = read_real_table_sort2(self, obj, flag, nid,
+                                      data, nnodes, ntotal)
         #if self.table_name_str == 'OQMRMS1':
             #print(obj.node_gridtype)
             #print('------------')
@@ -1341,23 +1335,8 @@ class OP2Common(Op2Codes, F06Writer):
             obj.data[obj.itime, obj.itotal:itotal2, :] = real_imag
             obj.itotal = itotal2
         else:
-            fmt = mapfmt(self._endian + b'2i12f', self.size)
-            s = Struct(fmt)
-            for unused_inode in range(nnodes):
-                out = s.unpack(data[n:n+ntotal])
-                (eid_device, grid_type, txr, tyr, tzr, rxr, ryr, rzr,
-                 txi, tyi, tzi, rxi, ryi, rzi) = out
-                eid = eid_device // 10
-                if self.is_debug_file:
-                    self.binary_debug.write('  %s=%i %s\n' % (flag, eid, str(out)))
-                tx = polar_to_real_imag(txr, txi)
-                ty = polar_to_real_imag(tyr, tyi)
-                tz = polar_to_real_imag(tzr, tzi)
-                rx = polar_to_real_imag(rxr, rxi)
-                ry = polar_to_real_imag(ryr, ryi)
-                rz = polar_to_real_imag(rzr, rzi)
-                obj.add_sort1(dt, eid, grid_type, tx, ty, tz, rx, ry, rz)
-                n += ntotal
+            n = read_complex_table_sort1_mag(self, obj, dt, flag,
+                                             data, nnodes, ntotal)
         return n
 
     def _read_complex_table_sort1_imag(self, data, is_vectorized, nnodes,
@@ -1396,27 +1375,8 @@ class OP2Common(Op2Codes, F06Writer):
             obj.data[obj.itime, itotal:itotal2, :] = real + 1.j * imag
             obj.itotal = itotal2
         else:
-            n = 0
-            fmt = mapfmt(self._endian + b'2i12f', self.size)
-            s = Struct(fmt)
-
-            assert self.obj is not None
-            assert nnodes > 0
-            for unused_inode in range(nnodes):
-                out = s.unpack(data[n:n+ntotal])
-                (eid_device, grid_type, txr, tyr, tzr, rxr, ryr, rzr,
-                 txi, tyi, tzi, rxi, ryi, rzi) = out
-                eid = eid_device // 10
-                if self.is_debug_file:
-                    self.binary_debug.write('  %s=%i %s\n' % (flag, eid, str(out)))
-                tx = complex(txr, txi)
-                ty = complex(tyr, tyi)
-                tz = complex(tzr, tzi)
-                rx = complex(rxr, rxi)
-                ry = complex(ryr, ryi)
-                rz = complex(rzr, rzi)
-                obj.add_sort1(dt, eid, grid_type, tx, ty, tz, rx, ry, rz)
-                n += ntotal
+            n = read_complex_table_sort1_imag(self, obj, dt, flag,
+                                              data, nnodes, ntotal)
         return n
 
     def _check_id(self, eid_device, unused_flag, unused_out):
@@ -1440,7 +1400,7 @@ class OP2Common(Op2Codes, F06Writer):
             # raise DeviceCodeError(msg)
         # return eid2
 
-    def get_oug2_flag(self):
+    def get_oug2_flag(self) -> Tuple[str, str]:
         if self.analysis_code == 5:
             flag = 'freq'
             flag_type = '%.2f'
@@ -1483,25 +1443,9 @@ class OP2Common(Op2Codes, F06Writer):
             obj.data[itotal:itotal2, obj.itime, :] = real_imag
             obj.itotal = itotal2
         else:
-            n = 0
-            s = Struct(mapfmt(self._endian + self._analysis_code_fmt + b'i12f', self.size))
-            binary_debug_fmt = '  %s=%s %%s\n' % (flag, flag_type)
-            for unused_inode in range(nnodes):
-                edata = data[n:n+ntotal]
-                out = s.unpack(edata)
-                (freq, grid_type, txr, tyr, tzr, rxr, ryr, rzr,
-                 txi, tyi, tzi, rxi, ryi, rzi) = out
-
-                if self.is_debug_file:
-                    self.binary_debug.write(binary_debug_fmt % (freq, str(out)))
-                tx = polar_to_real_imag(txr, txi)
-                ty = polar_to_real_imag(tyr, tyi)
-                tz = polar_to_real_imag(tzr, tzi)
-                rx = polar_to_real_imag(rxr, rxi)
-                ry = polar_to_real_imag(ryr, ryi)
-                rz = polar_to_real_imag(rzr, rzi)
-                obj.add_sort2(freq, node_id, grid_type, tx, ty, tz, rx, ry, rz)
-                n += ntotal
+            n = read_complex_table_sort2_mag(self, obj, node_id,
+                                             flag, flag_type,
+                                             data, nnodes, ntotal)
         return n
 
     def _read_complex_table_sort2_imag(self, data, is_vectorized, nnodes, result_name, flag):
@@ -1540,33 +1484,9 @@ class OP2Common(Op2Codes, F06Writer):
             obj.data[itotal:itotal2, obj.itime, :] = real + 1.j * imag
             obj.itotal = itotal2
         else:
-            n = 0
-            #ntotal = 56  # 14 * 4
-            fmt = mapfmt(self._endian + self._analysis_code_fmt + b'i12f', self.size)
-            s = Struct(fmt)
-            assert self.obj is not None
-            assert nnodes > 0
-            #assert ndata % ntotal == 0
-
-            binary_debug_fmt = '  %s=%s %%s\n' % (flag, flag_type)
-
-            for unused_inode in range(nnodes):
-                edata = data[n:n+ntotal]
-                out = s.unpack(edata)
-
-                (freq, grid_type, txr, tyr, tzr, rxr, ryr, rzr,
-                 txi, tyi, tzi, rxi, ryi, rzi) = out
-
-                if self.is_debug_file:
-                    self.binary_debug.write(binary_debug_fmt % (freq, str(out)))
-                tx = complex(txr, txi)
-                ty = complex(tyr, tyi)
-                tz = complex(tzr, tzi)
-                rx = complex(rxr, rxi)
-                ry = complex(ryr, ryi)
-                rz = complex(rzr, rzi)
-                obj.add_sort2(freq, node_id, grid_type, tx, ty, tz, rx, ry, rz)
-                n += ntotal
+            n = read_complex_table_sort2_imag(self, obj, node_id,
+                                              flag, flag_type,
+                                              data, nnodes, ntotal)
         return n
 
     def create_transient_object(self, result_name, storage_obj, class_obj,
@@ -1952,7 +1872,7 @@ class OP2Common(Op2Codes, F06Writer):
         self.thermal_bits = bits
         self.data_code['thermal_bits'] = self.thermal_bits
 
-    def _parse_sort_code(self):
+    def _parse_sort_code(self) -> None:
         """
         +------------+------------+
         | sort_code  | sort_bits  |
@@ -2000,7 +1920,7 @@ class OP2Common(Op2Codes, F06Writer):
         self.data_code['sort_bits'] = self.sort_bits
 
     @property
-    def _sort_method(self):
+    def _sort_method(self) -> int:
         try:
             sort_method, unused_is_real, unused_is_random = self._table_specs()
         except:
@@ -2020,7 +1940,7 @@ class OP2Common(Op2Codes, F06Writer):
         return not self.is_real
 
     @property
-    def is_random(self):
+    def is_random(self) -> bool:
         unused_sort_method, unused_is_real, is_random = self._table_specs()
         return is_random
 
@@ -2028,25 +1948,13 @@ class OP2Common(Op2Codes, F06Writer):
         #assert self.format_code in [0, 1], self.format_code
         #return bool(self.format_code)
 
-    def is_mag_phase(self):
+    def is_mag_phase(self) -> bool:
         return self.is_magnitude_phase()
 
-    def is_magnitude_phase(self):
+    def is_magnitude_phase(self) -> bool:
         if self.format_code == 3:
             return True
         return False
-
-    def debug3(self):
-        return self.is_debug_file
-        #if self.debug and self.table_name in self.show_table3_map:
-            #return True
-        #return False
-
-    def debug4(self):
-        return self.is_debug_file
-        #if self.debug and self.table_name in self.show_table4_map:
-            #return True
-        #return False
 
     #@property
     #def is_stress(self):
@@ -2235,7 +2143,8 @@ class OP2Common(Op2Codes, F06Writer):
         #print(self.code)
         return auto_return, is_vectorized
 
-    def _create_oes_object4(self, nelements, result_name, slot, obj_vector):
+    def _create_oes_object4(self, nelements: int, result_name: str,
+                            slot: Dict[Any, Any], obj_vector) -> Tuple[bool, bool]:
         """
         Creates the self.obj parameter based on if this is vectorized or not.
 
@@ -2330,7 +2239,7 @@ class OP2Common(Op2Codes, F06Writer):
         #print(self.code)
         return auto_return, is_vectorized
 
-    def _is_vectorized(self, obj_vector):
+    def _is_vectorized(self, obj_vector) -> bool:
         """
         Checks to see if the data array has been vectorized
 

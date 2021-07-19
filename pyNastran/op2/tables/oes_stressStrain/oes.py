@@ -26,7 +26,6 @@ import numpy as np
 
 from pyNastran.op2.op2_interface.op2_codes import SORT1_TABLES_BYTES, TABLES_BYTES
 from pyNastran.op2.op2_interface.op2_reader import mapfmt
-from pyNastran.op2.op2_interface.op2_common import OP2Common
 from pyNastran.op2.op2_interface.utils import apply_mag_phase, build_obj
 from pyNastran.op2.op2_helper import polar_to_real_imag
 from pyNastran.op2.op2_interface.function_codes import func1, func7
@@ -116,12 +115,8 @@ if TYPE_CHECKING:
 NX_TABLES_BYTES = [b'OESVM1', b'OESVM2']
 NASA_TABLES_BYTES = [b'OESC1']
 
-class OES:
-    """
-    Defines  the OES class that is used to read stress/strain data
-    """
+class OP2Common2:
     def __init__(self, op2: OP2):
-        self.ntotal = 0
         self.op2 = op2
 
     @property
@@ -130,6 +125,14 @@ class OES:
     @property
     def factor(self) -> int:
         return self.op2.factor
+
+class OES(OP2Common2):
+    """
+    Defines  the OES class that is used to read stress/strain data
+    """
+    def __init__(self, op2: OP2):
+        super().__init__(op2)
+        self.ntotal = 0
 
     def _read_oes1_3(self, data, unused_ndata):
         """
@@ -183,7 +186,7 @@ class OES:
             #: mode or cycle TODO confused on the type - F1 means float/int???
             op2.mode2 = op2.add_data_parameter(data, 'mode2', b'i', 7, False)
             op2.cycle = op2.add_data_parameter(data, 'cycle', b'f', 7, False)
-            op2.update_mode_cycle('cycle')
+            op2.reader_oug.update_mode_cycle('cycle')
             op2.data_names = op2.apply_data_code_value('data_names', ['mode', 'eign', 'mode2', 'cycle'])
         #elif analysis_code == 3: # differential stiffness
             #self.lsdvmn = self.get_values(data,'i',5) ## load set number
@@ -7424,7 +7427,7 @@ class OES:
             #else:
                 #obj_vector_real = RealCPLSTRNPlateStressArray
                 ##result_name = 'cplstn3_strain'
-            #slot = getattr(self, result_name)
+            #slot = getattr(op2, result_name)
 
             #nlayers = nelements * nnodes
             #auto_return, is_vectorized = op2._create_oes_object4(

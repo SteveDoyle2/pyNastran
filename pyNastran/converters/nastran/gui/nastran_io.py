@@ -6669,7 +6669,7 @@ def _build_normals_quality(settings: Settings,
             #if isfinite(max_warp_angle):
 
             # offsets
-            if make_offset_normals_dim:
+            if make_offset_normals_dim and np.any(np.isfinite(xoffset)):
                 offset_res = GuiResult(
                     0, header='Offset', title='Offset',
                     location='centroid', scalar=offset, data_format='%g')

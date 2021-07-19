@@ -12,6 +12,15 @@ from pyNastran.op2.errors import EmptyRecordError
 from pyNastran.op2.tables.oef_forces.oef import OEF
 from pyNastran.op2.tables.oes_stressStrain.oes import OES
 from pyNastran.op2.tables.ogs_grid_point_stresses.ogs import OGS
+
+from pyNastran.op2.tables.oee_energy.onr import ONR
+from pyNastran.op2.tables.ogf_gridPointForces.ogpf import OGPF
+#from pyNastran.op2.tables.oes_stressStrain.oesm import OESM
+
+from pyNastran.op2.tables.opg_appliedLoads.opg import OPG
+from pyNastran.op2.tables.oqg_constraintForces.oqg import OQG
+from pyNastran.op2.tables.oug.oug import OUG
+
 from pyNastran.op2.tables.lama_eigenvalues.lama import LAMA
 from pyNastran.op2.tables.onmd import ONMD
 from pyNastran.op2.tables.ogpwg import OGPWG
@@ -29,6 +38,7 @@ class FortranFormat:
         self._endian = None
         self._table_mapper = {}
         self._nastran_format = None
+        self._data_factor = 1
 
         #: stores if the user entered [] for isubcases
         self.is_all_subcases = True
@@ -38,9 +48,15 @@ class FortranFormat:
         self.reader_onmd = ONMD(self)
         self.reader_ogpwg = OGPWG(self)
         self.reader_lama = LAMA(self)
-        self.oes = OES(self)
+
+        self.reader_oes = OES(self)
+        self.reader_opg = OPG(self)
         self.reader_oef = OEF(self)
+        self.reader_oqg = OQG(self)
+        self.reader_oug = OUG(self)
         self.reader_ogs = OGS(self)
+        self.reader_onr = ONR(self)
+        self.reader_ogpf = OGPF(self)
 
     def show(self, n: int, types: str='ifs', endian=None, force: bool=False):  # pragma: no cover
         """Shows binary data"""

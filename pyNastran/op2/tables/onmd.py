@@ -153,7 +153,7 @@ class ONMD:
             ## float - C:\MSC.Software\simcenter_nastran_2019.2\tpl_post1\mftank.op2
             ##self.mode_cycle = self.add_data_parameter(data, 'mode_cycle', b'i', 7, False)  # nope...
             #op2.mode_cycle = op2.add_data_parameter(data, 'mode_cycle', b'f', 7, False) # radians
-            #op2.update_mode_cycle('mode_cycle')
+            #op2.reader_oug.update_mode_cycle('mode_cycle')
             #op2.data_names = op2.apply_data_code_value('data_names', ['mode', 'eign', 'mode_cycle'])
         ##elif analysis_code == 3: # differential stiffness
             ##self.lsdvmn = self.get_values(data, b'i', 5) ## load set number

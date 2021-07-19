@@ -1293,17 +1293,17 @@ class OP2Reader:
                 assert len(zaxis) == 3, zaxis
                 assert len(xzplane) == 3, xzplane
                 if coord_type_int == 1:
-                    coord = self.op2.add_cord2r(cid, rid=0,
-                                                origin=origin, zaxis=zaxis, xzplane=xzplane,
-                                                comment='')
+                    coord = op2.add_cord2r(cid, rid=0,
+                                           origin=origin, zaxis=zaxis, xzplane=xzplane,
+                                           comment='')
                 elif coord_type_int == 2:
-                    coord = self.op2.add_cord2c(cid, rid=0,
-                                                origin=origin, zaxis=zaxis, xzplane=xzplane,
-                                                comment='')
+                    coord = op2.add_cord2c(cid, rid=0,
+                                           origin=origin, zaxis=zaxis, xzplane=xzplane,
+                                           comment='')
                 elif coord_type_int == 3:
-                    coord = self.op2.add_cord2s(cid, rid=0,
-                                                origin=origin, zaxis=zaxis, xzplane=xzplane,
-                                                comment='')
+                    coord = op2.add_cord2s(cid, rid=0,
+                                           origin=origin, zaxis=zaxis, xzplane=xzplane,
+                                           comment='')
                 elif coord_type_int == 5:
                     #- 7 = convective coordinate system defined on a FEFACE
                     print('COORD_GMSURF', cid, origin, zaxis, xzplane)
@@ -1350,17 +1350,17 @@ class OP2Reader:
                 assert len(zaxis) == 3, zaxis
                 assert len(xzplane) == 3, xzplane
                 if cid_type == 1:
-                    coord = self.op2.add_cord2r(cid, rid=0,
-                                                origin=origin, zaxis=zaxis, xzplane=xzplane,
-                                                comment='')
+                    coord = op2.add_cord2r(cid, rid=0,
+                                           origin=origin, zaxis=zaxis, xzplane=xzplane,
+                                           comment='')
                 elif cid_type == 2:
-                    coord = self.op2.add_cord2c(cid, rid=0,
-                                                origin=origin, zaxis=zaxis, xzplane=xzplane,
-                                                comment='')
+                    coord = op2.add_cord2c(cid, rid=0,
+                                           origin=origin, zaxis=zaxis, xzplane=xzplane,
+                                           comment='')
                 elif cid_type == 3:
-                    coord = self.op2.add_cord2s(cid, rid=0,
-                                                origin=origin, zaxis=zaxis, xzplane=xzplane,
-                                                comment='')
+                    coord = op2.add_cord2s(cid, rid=0,
+                                           origin=origin, zaxis=zaxis, xzplane=xzplane,
+                                           comment='')
                 else:  # pragma: no cover
                     raise NotImplementedError(f'cid_type={cid_type}')
                 str(coord)
@@ -1456,7 +1456,7 @@ class OP2Reader:
                 data = self._read_record() # 584
                 ndata = len(data)
                 #print('ndata A =', ndata)
-                op2._read_obc1_3(data, ndata)
+                op2.reader_oqg._read_obc1_3(data, ndata)
                 #print('---------------')
 
                 self.read_3_markers([itable, 1, 0])  # -4

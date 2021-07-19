@@ -216,7 +216,7 @@ class MPT:
             out = s.unpack(data[n:n+ntotal])
             #(mid, k, cp, rho, h, mu, hgen, refenth, tch, tdelta, qlat) = out
             mat = MAT4.add_op2_data(out)
-            self.op2._add_methods._add_thermal_material_object(mat, allow_overwrites=False)
+            op2._add_methods._add_thermal_material_object(mat, allow_overwrites=False)
             n += ntotal
         op2.card_count['MAT4'] = nmaterials
         return n
@@ -234,7 +234,7 @@ class MPT:
             if op2.is_debug_file:
                 op2.binary_debug.write('  MAT5=%s\n' % str(out))
             mat = MAT5.add_op2_data(out)
-            self.op2._add_methods._add_thermal_material_object(mat, allow_overwrites=False)
+            op2._add_methods._add_thermal_material_object(mat, allow_overwrites=False)
             n += 40
         op2.card_count['MAT5'] = nmaterials
         return n

@@ -3,73 +3,84 @@ Defines the Real/Complex Forces created by:
     GPFORCE = ALL
 
 """
+from __future__ import annotations
 from struct import Struct
+from typing import TYPE_CHECKING
 import numpy as np
 
 from pyNastran.op2.op2_helper import polar_to_real_imag
-from pyNastran.op2.op2_interface.op2_common import OP2Common
 from pyNastran.op2.tables.ogf_gridPointForces.ogf_objects import (
     RealGridPointForcesArray, ComplexGridPointForcesArray)
+if TYPE_CHECKING:
+    from pyNastran.op2.op2 import OP2
 
+class OGPF:
+    def __init__(self, op2: OP2):
+        self.op2 = op2
 
-class OGPF(OP2Common):
-    def __init__(self):
-        OP2Common.__init__(self)
+    @property
+    def size(self) -> int:
+        return self.op2.size
+    @property
+    def factor(self) -> int:
+        return self.op2.factor
 
     def _read_ogpf1_3(self, data: bytes, ndata: int):
-        self._read_opg1_3(data, ndata)  # TODO: this is wrong...
+        self.op2.reader_opg._read_opg1_3(data, ndata)  # TODO: this is wrong...
 
-    def _read_ogpf1_4(self, data: bytes, ndata: int):
+    def _read_ogpf1_4(self, data: bytes, ndata: int) -> int:
+        op2 = self.op2
         prefix = ''
-        if self.table_code == 19:  # grid point force balance
-            if self.table_name == b'OGPFB1':
+        if op2.table_code == 19:  # grid point force balance
+            if op2.table_name == b'OGPFB1':
                 pass
-            elif self.table_name == b'RAGEATC':
+            elif op2.table_name == b'RAGEATC':
                 prefix = 'RAGEATC.'
-            elif self.table_name == b'RAGCONS':
+            elif op2.table_name == b'RAGCONS':
                 prefix = 'RAGCONS.'
             else:
-                msg = f'table_name={self.table_name} table_code={self.table_code}'
+                msg = f'table_name={op2.table_name} table_code={op2.table_code}'
                 raise RuntimeError(msg)
             n = self._read_grid_point_forces(data, ndata, prefix=prefix)
         else:
-            raise NotImplementedError(self.table_code)
+            raise NotImplementedError(op2.table_code)
         return n
 
     def _read_grid_point_forces(self, data, ndata, prefix=''):
         """
         table_code = 19
         """
-        self._setup_op2_subcase('GPFORCE')
-        dt = self.nonlinear_factor
+        op2 = self.op2
+        op2._setup_op2_subcase('GPFORCE')
+        dt = op2.nonlinear_factor
         n = 0
-        is_magnitude_phase = self.is_magnitude_phase()
+        is_magnitude_phase = op2.is_magnitude_phase()
 
-        if self.thermal == 0:
+        if op2.thermal == 0:
             result_name = prefix + 'grid_point_forces'
-            if self._results.is_not_saved(result_name):
+            if op2._results.is_not_saved(result_name):
                 return ndata
-            self._results._found_result(result_name)
-            slot = self.get_result(result_name)
+            op2._results._found_result(result_name)
+            slot = op2.get_result(result_name)
 
-            if self.num_wide == 10:
+            if op2.num_wide == 10:
                 ntotal = 40 * self.factor # 4*10
                 nnodes = ndata // ntotal
                 obj_vector_real = RealGridPointForcesArray
-                auto_return, is_vectorized = self.oes._create_ntotal_object(
+                auto_return, is_vectorized = op2.reader_oes._create_ntotal_object(
                     nnodes, result_name, slot, obj_vector_real)
                 if auto_return:
                     return nnodes * ntotal
 
-                obj = self.obj
-                if self.is_debug_file:
-                    self.binary_debug.write('  GPFORCE\n')
-                    self.binary_debug.write('  [cap, gpforce1, gpforce2, ..., cap]\n')
-                    self.binary_debug.write('  cap = %i  # assume 1 cap when there could have been multiple\n' % len(data))
-                    self.binary_debug.write('  gpforce1 = [nid_device, eid, elem_name, f1, f2, f3, m1, m2, m3]\n')
-                    self.binary_debug.write('  nnodes=%i\n' % nnodes)
+                obj = op2.obj
+                if op2.is_debug_file:
+                    op2.binary_debug.write('  GPFORCE\n')
+                    op2.binary_debug.write('  [cap, gpforce1, gpforce2, ..., cap]\n')
+                    op2.binary_debug.write('  cap = %i  # assume 1 cap when there could have been multiple\n' % len(data))
+                    op2.binary_debug.write('  gpforce1 = [nid_device, eid, elem_name, f1, f2, f3, m1, m2, m3]\n')
+                    op2.binary_debug.write('  nnodes=%i\n' % nnodes)
 
-                if self.use_vector and is_vectorized:
+                if op2.use_vector and is_vectorized:
                     # self.itime = 0
                     # self.ielement = 0
                     # self.itotal = 0
@@ -83,15 +94,15 @@ class OGPF(OP2Common):
 
                     itime = obj.itime
                     if itime == 0 or obj.is_unique:
-                        ints = np.frombuffer(data, dtype=self.idtype8).reshape(nnodes, 10).copy()
+                        ints = np.frombuffer(data, dtype=op2.idtype8).reshape(nnodes, 10).copy()
 
                         nids = ints[:, 0] // 10
                         eids = ints[:, 1]
                         if self.size == 4:
-                            strings = np.frombuffer(data, dtype=self._uendian + 'S8').reshape(nnodes, 5).copy()
+                            strings = np.frombuffer(data, dtype=op2._uendian + 'S8').reshape(nnodes, 5).copy()
                             strings_save = strings[:, 1]
                         else:
-                            strings = np.frombuffer(data, dtype=self._uendian + 'S4').reshape(nnodes, 20).copy()
+                            strings = np.frombuffer(data, dtype=op2._uendian + 'S4').reshape(nnodes, 20).copy()
                             strings_save = np.core.defchararray.add(strings[:, 4], strings[:, 6])
 
                         if obj.is_unique:
@@ -104,26 +115,26 @@ class OGPF(OP2Common):
                             obj.element_names[istart:iend] = strings_save
 
 
-                    floats = np.frombuffer(data, dtype=self.fdtype8).reshape(nnodes, 10)
+                    floats = np.frombuffer(data, dtype=op2.fdtype8).reshape(nnodes, 10)
                     #[f1, f2, f3, m1, m2, m3]
                     obj.data[itime, istart:iend, :] = floats[:, 4:].copy()
                     #obj._times[obj.itime] = dt
                     #obj.itotal = itotal2
-                    if self.is_debug_file:
+                    if op2.is_debug_file:
                         if itime != 0:
-                            ints = np.frombuffer(data, dtype=self.idtype).reshape(nnodes, 10)
-                            strings = np.frombuffer(data, dtype=self._uendian + 'S8').reshape(nnodes, 5)
+                            ints = np.frombuffer(data, dtype=op2.idtype).reshape(nnodes, 10)
+                            strings = np.frombuffer(data, dtype=op2._uendian + 'S8').reshape(nnodes, 5)
                         for i in range(iend - istart):
-                            self.binary_debug.write('  nid=%s - (%s, %s, %s, %s, %s, %s, %s, %s, %s)\n' % (
+                            op2.binary_debug.write('  nid=%s - (%s, %s, %s, %s, %s, %s, %s, %s, %s)\n' % (
                                 ints[i, 0] // 10,
                                 ints[i, 0], ints[i, 1], strings[i, 1],
                                 floats[i, 4], floats[i, 5], floats[i, 6],
                                 floats[i, 7], floats[i, 8], floats[i, 9], ))
                 else:
                     if self.size == 4:
-                        fmt = self._endian + b'ii8s6f'
+                        fmt = op2._endian + b'ii8s6f'
                     else:
-                        fmt = self._endian + b'qq16s6d'
+                        fmt = op2._endian + b'qq16s6d'
                     s = Struct(fmt)
                     for i in range(nnodes):
                         edata = data[n:n+ntotal]
@@ -131,56 +142,56 @@ class OGPF(OP2Common):
                         (nid_device, eid, elem_name, f1, f2, f3, m1, m2, m3) = out
                         nid = nid_device // 10
                         elem_name = elem_name.strip()
-                        if self.is_debug_file:
-                            self.binary_debug.write('  nid=%s - %s\n' % (nid, str(out)))
-                        self.obj.add_sort1(dt, nid, eid, elem_name, f1, f2, f3, m1, m2, m3)
+                        if op2.is_debug_file:
+                            op2.binary_debug.write('  nid=%s - %s\n' % (nid, str(out)))
+                        op2.obj.add_sort1(dt, nid, eid, elem_name, f1, f2, f3, m1, m2, m3)
                         n += ntotal
-            elif self.num_wide == 16:
+            elif op2.num_wide == 16:
                 # complex
                 ntotal = 64
                 nnodes = ndata // ntotal
                 assert self.size == 4, self.size
                 obj_vector_real = ComplexGridPointForcesArray
-                auto_return, is_vectorized = self.oes._create_ntotal_object(
+                auto_return, is_vectorized = op2.reader_oes._create_ntotal_object(
                     nnodes, result_name, slot, obj_vector_real)
                 if auto_return:
-                    return nnodes * self.num_wide * 4
+                    return nnodes * op2.num_wide * 4
 
-                obj = self.obj
+                obj = op2.obj
                 is_vectorized = False
-                if self.use_vector and is_vectorized:
+                if op2.use_vector and is_vectorized:
                     # self.itime = 0
                     # self.ielement = 0
                     # self.itotal = 0
                     #self.ntimes = 0
                     #self.nelements = 0
-                    n = nnodes * self.num_wide * 4
+                    n = nnodes * op2.num_wide * 4
 
                     istart = obj.itotal
                     iend = istart + nnodes
                     obj._times[obj.itime] = dt
 
                     if obj.itime == 0:
-                        ints = np.frombuffer(data, dtype=self.idtype).reshape(nnodes, 16)
+                        ints = np.frombuffer(data, dtype=op2.idtype).reshape(nnodes, 16)
                         nids = ints[:, 0] // 10
                         eids = ints[:, 1]
                         obj.node_element[istart:iend, 0] = nids
                         obj.node_element[istart:iend, 1] = eids
-                        strings = np.frombuffer(data, dtype=self._uendian + 'S8').reshape(nnodes, 8)
+                        strings = np.frombuffer(data, dtype=op2._uendian + 'S8').reshape(nnodes, 8)
                         obj.element_names[istart:iend] = strings[:, 1].copy()
 
-                    floats = np.frombuffer(data, dtype=self.fdtype).reshape(nnodes, 16)
+                    floats = np.frombuffer(data, dtype=op2.fdtype).reshape(nnodes, 16)
                     #[f1, f2, f3, m1, m2, m3]
                     obj.data[obj.itime, istart:iend, :] = floats[:, 4:].copy()
                 else:
-                    s = Struct(self._endian + b'ii8s12f')
+                    s = Struct(op2._endian + b'ii8s12f')
 
-                    #if self.is_debug_file:
-                        #self.binary_debug.write('  GPFORCE\n')
-                        #self.binary_debug.write('  [cap, gpforce1, gpforce2, ..., cap]\n')
-                        #self.binary_debug.write('  cap = %i  # assume 1 cap when there could have been multiple\n' % len(data))
-                        #self.binary_debug.write('  gpforce1 = [nid_device, eid, elem_name, f1, f2, f3, m1, m2, m3]\n')
-                        #self.binary_debug.write('  nnodes=%i\n' % nnodes)
+                    #if op2.is_debug_file:
+                        #op2.binary_debug.write('  GPFORCE\n')
+                        #op2.binary_debug.write('  [cap, gpforce1, gpforce2, ..., cap]\n')
+                        #op2.binary_debug.write('  cap = %i  # assume 1 cap when there could have been multiple\n' % len(data))
+                        #op2.binary_debug.write('  gpforce1 = [nid_device, eid, elem_name, f1, f2, f3, m1, m2, m3]\n')
+                        #op2.binary_debug.write('  nnodes=%i\n' % nnodes)
 
                     for i in range(nnodes):
                         edata = data[n:n+ntotal]
@@ -190,8 +201,8 @@ class OGPF(OP2Common):
                          f1i, f2i, f3i, m1i, m2i, m3i) = out
                         nid = nid_device // 10
                         elem_name = elem_name.strip()
-                        if self.is_debug_file:
-                            self.binary_debug.write('  nid=%s - %s\n' % (nid, str(out)))
+                        if op2.is_debug_file:
+                            op2.binary_debug.write('  nid=%s - %s\n' % (nid, str(out)))
 
                         if is_magnitude_phase:
                             f1 = polar_to_real_imag(f1r, f1i)
@@ -208,12 +219,12 @@ class OGPF(OP2Common):
                             m2 = complex(m2r, m2i)
                             m3 = complex(m3r, m3i)
 
-                        self.obj.add_sort1(dt, nid, eid, elem_name, f1, f2, f3, m1, m2, m3)
+                        op2.obj.add_sort1(dt, nid, eid, elem_name, f1, f2, f3, m1, m2, m3)
                         n += ntotal
             else:
-                raise NotImplementedError(self.code_information())
+                raise NotImplementedError(op2.code_information())
         else:
-            raise NotImplementedError(self.code_information())
-            #msg = self.code_information()
+            raise NotImplementedError(op2.code_information())
+            #msg = op2.code_information()
             #return self._not_implemented_or_skip(data, ndata, msg)
         return n

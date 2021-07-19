@@ -166,7 +166,7 @@ class EPT:
             op2.properties_mass[pid].type == prop.type)
         op2._add_methods._add_property_mass_object(prop, allow_overwrites=allow_overwrites)
 
-    def _add_pconv(self, prop: PCONV):
+    def _add_pconv(self, prop: PCONV) -> None:
         if prop.pconid > 100000000:
             raise RuntimeError('bad parsing pconid > 100000000...%s' % str(prop))
         self.op2._add_methods._add_convection_property_object(prop)

@@ -465,6 +465,7 @@ class OP2(OP2_Scalar, OP2Writer):
             'ask',
             'binary_debug',
             '_close_op2',
+            '_data_factor',
             '_count',
             '_results',
             '_table_mapper',
@@ -498,6 +499,9 @@ class OP2(OP2_Scalar, OP2Writer):
 
             try:
                 val = getattr(obj, key)
+            except AttributeError:
+                raise AttributeError(f'obj={obj} key={key!r}')
+
             except NameError:
                 self.log.warning(f'key={key!r} val={val}')
                 continue

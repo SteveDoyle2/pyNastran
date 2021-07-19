@@ -3,6 +3,8 @@
 Defines the Real/Complex Forces created by:
     OLOAD = ALL
 """
+from __future__ import annotations
+from typing import TYPE_CHECKING
 import numpy as np
 #from pyNastran.op2.tables.opg_appliedLoads.opg_objects import (#RealAppliedLoads,  #ComplexAppliedLoads,
                                                                #RealAppliedLoadsVectorArray, ComplexAppliedLoadsVectorArray)
@@ -15,15 +17,24 @@ from pyNastran.op2.tables.opg_appliedLoads.opg_load_vector import (
 )
 from pyNastran.op2.tables.opg_appliedLoads.opnl_force_vector import RealForceVectorArray#, ComplexForceVectorArray
 
-from pyNastran.op2.op2_interface.op2_common import OP2Common
+if TYPE_CHECKING:
+    from pyNastran.op2.op2 import OP2
 
 
-class OPG(OP2Common):
-    def __init__(self):
-        pass
+class OPG:
+    def __init__(self, OP2: OP2):
+        self.op2 = OP2
+
+    @property
+    def size(self) -> int:
+        return self.op2.size
+    @property
+    def factor(self) -> int:
+        return self.op2.factor
 
     def _read_opg1_3(self, data: bytes, ndata: int) -> None:
-        self.words = [
+        op2 = self.op2
+        op2.words = [
             'aCode', 'tCode', '???', 'isubcase',
             '???', '???', '???', 'dLoadID',
             'format_code', 'num_wide', 'o_code', '???',
@@ -32,118 +43,119 @@ class OPG(OP2Common):
             '???', '???', 'thermal', '???',
             '???', 'Title', 'subtitle', 'label']
 
-        self.parse_approach_code(data)
+        op2.parse_approach_code(data)
         #isubcase = self.get_values(data,'i',4)
 
         ## dynamic load set ID/random code
-        self.random_code = self.add_data_parameter(data, 'random_code', b'i', 8, False)
+        op2.random_code = op2.add_data_parameter(data, 'random_code', b'i', 8, False)
 
         ## format code
-        self.format_code = self.add_data_parameter(data, 'format_code', b'i', 9, False)
+        op2.format_code = op2.add_data_parameter(data, 'format_code', b'i', 9, False)
 
         ## number of words per entry in record
         ## .. note:: is this needed for this table ???
-        self.num_wide = self.add_data_parameter(data, 'num_wide', b'i', 10, False)
+        op2.num_wide = op2.add_data_parameter(data, 'num_wide', b'i', 10, False)
 
         ## undefined in DMAP...
-        self.oCode = self.add_data_parameter(data, 'oCode', b'i', 11, False)
+        op2.oCode = op2.add_data_parameter(data, 'oCode', b'i', 11, False)
 
         ## thermal flag; 1 for heat transfer, 0 otherwise
-        self.thermal = self.add_data_parameter(data, 'thermal', b'i', 23, False)
+        op2.thermal = op2.add_data_parameter(data, 'thermal', b'i', 23, False)
 
-        #print "dLoadID(8)=%s format_code(9)=%s num_wide(10)=%s oCode(11)=%s thermal(23)=%s" %(self.dLoadID,self.format_code,self.num_wide,self.oCode,self.thermal)
-        if not self.is_sort1:
+        #print "dLoadID(8)=%s format_code(9)=%s num_wide(10)=%s oCode(11)=%s thermal(23)=%s" %(self.dLoadID,op2.format_code,op2.num_wide,op2.oCode,op2.thermal)
+        if not op2.is_sort1:
             raise NotImplementedError('sort2...')
-        #assert self.isThermal()==False,self.thermal
+        #assert self.isThermal()==False,op2.thermal
 
         ## assuming tCode=1
-        if self.analysis_code == 1:   # statics
+        if op2.analysis_code == 1:   # statics
             ## load set number
-            self.lsdvmn = self.add_data_parameter(data, 'lsdvmn', b'i', 5, False)
-            self.data_names = self.apply_data_code_value('data_names', ['lsdvmn'])
-            self.setNullNonlinearFactor()
-        elif self.analysis_code == 2:  # normal modes/buckling (real eigenvalues)
+            op2.lsdvmn = op2.add_data_parameter(data, 'lsdvmn', b'i', 5, False)
+            op2.data_names = op2.apply_data_code_value('data_names', ['lsdvmn'])
+            op2.setNullNonlinearFactor()
+        elif op2.analysis_code == 2:  # normal modes/buckling (real eigenvalues)
             ## mode number
-            self.mode = self.add_data_parameter(data, 'mode', b'i', 5)
+            op2.mode = op2.add_data_parameter(data, 'mode', b'i', 5)
             ## eigenvalue
-            self.eign = self.add_data_parameter(data, 'eign', b'f', 6, False)
+            op2.eign = op2.add_data_parameter(data, 'eign', b'f', 6, False)
             ## mode or cycle .. todo:: confused on the type - F1???
-            self.mode2 = self.add_data_parameter(data, 'mode2', b'i', 7, False)
-            self.cycle = self.add_data_parameter(data, 'cycle', b'f', 7, False)
-            self.update_mode_cycle('cycle')
-            self.data_names = self.apply_data_code_value('data_names', ['mode', 'eign', 'mode2', 'cycle', ])
-        #elif self.analysis_code == 3: # differential stiffness
+            op2.mode2 = op2.add_data_parameter(data, 'mode2', b'i', 7, False)
+            op2.cycle = op2.add_data_parameter(data, 'cycle', b'f', 7, False)
+            op2.reader_oug.update_mode_cycle('cycle')
+            op2.data_names = op2.apply_data_code_value('data_names', ['mode', 'eign', 'mode2', 'cycle', ])
+        #elif op2.analysis_code == 3: # differential stiffness
         #    ## load set number
-        #    self.lsdvmn = self.get_values(data,'i',5)
-        #elif self.analysis_code == 4: # differential stiffness
+        #    op2.lsdvmn = self.get_values(data,'i',5)
+        #elif op2.analysis_code == 4: # differential stiffness
         #    ## load set number
-        #    self.lsdvmn = self.get_values(data,'i',5)
-        elif self.analysis_code == 5:   # frequency
+        #    op2.lsdvmn = self.get_values(data,'i',5)
+        elif op2.analysis_code == 5:   # frequency
             ## frequency
-            self.freq = self.add_data_parameter(data, 'freq', b'f', 5)
-            self.data_names = self.apply_data_code_value('data_names', ['freq'])
-        elif self.analysis_code == 6:  # transient
+            op2.freq = op2.add_data_parameter(data, 'freq', b'f', 5)
+            op2.data_names = op2.apply_data_code_value('data_names', ['freq'])
+        elif op2.analysis_code == 6:  # transient
             ## time step
-            self.time = self.add_data_parameter(data, 'time', b'f', 5)
-            self.data_names = self.apply_data_code_value('data_names', ['time'])
-        elif self.analysis_code == 7:  # pre-buckling
+            self.time = op2.add_data_parameter(data, 'time', b'f', 5)
+            op2.data_names = op2.apply_data_code_value('data_names', ['time'])
+        elif op2.analysis_code == 7:  # pre-buckling
             ## load set number
-            self.lsdvmn = self.add_data_parameter(data, 'lsdvmn', b'i', 5)
-            self.data_names = self.apply_data_code_value('data_names', ['lsdvmn'])
-        elif self.analysis_code == 8:  # post-buckling
+            op2.lsdvmn = op2.add_data_parameter(data, 'lsdvmn', b'i', 5)
+            op2.data_names = op2.apply_data_code_value('data_names', ['lsdvmn'])
+        elif op2.analysis_code == 8:  # post-buckling
             ## load set number
-            self.lsdvmn = self.add_data_parameter(data, 'lsdvmn', b'i', 5)
+            op2.lsdvmn = op2.add_data_parameter(data, 'lsdvmn', b'i', 5)
             ## real eigenvalue
-            self.eigr = self.add_data_parameter(data, 'eigr', b'f', 6, False)
-            self.data_names = self.apply_data_code_value('data_names', ['lsdvmn', 'eigr'])
-        elif self.analysis_code == 9:  # complex eigenvalues
+            op2.eigr = op2.add_data_parameter(data, 'eigr', b'f', 6, False)
+            op2.data_names = op2.apply_data_code_value('data_names', ['lsdvmn', 'eigr'])
+        elif op2.analysis_code == 9:  # complex eigenvalues
             ## mode number
-            self.mode = self.add_data_parameter(data, 'mode', b'i', 5)
+            op2.mode = op2.add_data_parameter(data, 'mode', b'i', 5)
             ## real eigenvalue
-            self.eigr = self.add_data_parameter(data, 'eigr', b'f', 6, False)
+            op2.eigr = op2.add_data_parameter(data, 'eigr', b'f', 6, False)
             ## imaginary eigenvalue
-            self.eigi = self.add_data_parameter(data, 'eigi', b'f', 7, False)
-            self.data_names = self.apply_data_code_value('data_names', ['mode', 'eigr', 'eigi'])
-        elif self.analysis_code == 10:  # nonlinear statics
+            op2.eigi = op2.add_data_parameter(data, 'eigi', b'f', 7, False)
+            op2.data_names = op2.apply_data_code_value('data_names', ['mode', 'eigr', 'eigi'])
+        elif op2.analysis_code == 10:  # nonlinear statics
             ## load step
-            self.lftsfq = self.add_data_parameter(data, 'lftsfq', b'f', 5)
-            self.data_names = self.apply_data_code_value('data_names', ['lftsfq'])
-        elif self.analysis_code == 11:  # old geometric nonlinear statics
+            op2.lftsfq = op2.add_data_parameter(data, 'lftsfq', b'f', 5)
+            op2.data_names = op2.apply_data_code_value('data_names', ['lftsfq'])
+        elif op2.analysis_code == 11:  # old geometric nonlinear statics
             ## load set number
-            self.lsdvmn = self.add_data_parameter(data, 'lsdvmn', b'i', 5)
-            self.data_names = self.apply_data_code_value('data_names', ['lsdvmn'])
-        elif self.analysis_code == 12:  # contran ? (may appear as aCode=6)  --> straight from DMAP...grrr...
+            op2.lsdvmn = op2.add_data_parameter(data, 'lsdvmn', b'i', 5)
+            op2.data_names = op2.apply_data_code_value('data_names', ['lsdvmn'])
+        elif op2.analysis_code == 12:  # contran ? (may appear as aCode=6)  --> straight from DMAP...grrr...
             ## load set number
-            self.lsdvmn = self.add_data_parameter(data, 'lsdvmn', b'i', 5)
-            self.data_names = self.apply_data_code_value('data_names', ['lsdvmn'])
+            op2.lsdvmn = op2.add_data_parameter(data, 'lsdvmn', b'i', 5)
+            op2.data_names = op2.apply_data_code_value('data_names', ['lsdvmn'])
         else:
             raise RuntimeError('invalid analysis_code...analysis_code=%s' %
-                               self.analysis_code)
+                               op2.analysis_code)
 
         # tCode=2
-        #if self.analysis_code==2: # sort2
-        #    self.lsdvmn = self.get_values(data, b'i', 5) ## load set, Mode number
+        #if op2.analysis_code==2: # sort2
+        #    op2.lsdvmn = self.get_values(data, b'i', 5) ## load set, Mode number
 
-        #print "*isubcase=%s"%(self.isubcase)
+        #print "*isubcase=%s"%(op2.isubcase)
         #print "analysis_code=%s table_code=%s thermal=%s" % (
-            #self.analysis_code, self.table_code, self.thermal)
+            #op2.analysis_code, op2.table_code, op2.thermal)
 
-        self._fix_oug_format_code()
-        self._parse_thermal_code()
-        if self.is_debug_file:
-            self.binary_debug.write('  approach_code  = %r\n' % self.approach_code)
-            self.binary_debug.write('  tCode          = %r\n' % self.tCode)
-            self.binary_debug.write('  isubcase       = %r\n' % self.isubcase)
-        self._read_title(data)
-        self._write_debug_bits()
+        op2._fix_oug_format_code()
+        op2._parse_thermal_code()
+        if op2.is_debug_file:
+            op2.binary_debug.write('  approach_code  = %r\n' % op2.approach_code)
+            op2.binary_debug.write('  tCode          = %r\n' % op2.tCode)
+            op2.binary_debug.write('  isubcase       = %r\n' % op2.isubcase)
+        op2._read_title(data)
+        op2._write_debug_bits()
 
     def _read_opg2_3(self, data: bytes, ndata: int):
         """reads the SORT2 version of table 4 (the data table)"""
-        self.nonlinear_factor = np.nan
-        self.is_table_1 = False
-        self.is_table_2 = True
-        unused_three = self.parse_approach_code(data)
-        self.words = [
+        op2 = self.op2
+        op2.nonlinear_factor = np.nan
+        op2.is_table_1 = False
+        op2.is_table_2 = True
+        unused_three = op2.parse_approach_code(data)
+        op2.words = [
             'analysis_code', 'table_code', '???', 'isubcase',
             '???', '???', '???', 'random_code',
             'format_code', 'num_wide', '11', '???',
@@ -153,118 +165,119 @@ class OPG(OP2Common):
             '???', 'Title', 'subtitle', 'label']
 
         ## random code
-        self.random_code = self.add_data_parameter(data, 'random_code', b'i', 8, False)
+        op2.random_code = op2.add_data_parameter(data, 'random_code', b'i', 8, False)
 
         ## format code
-        self.format_code = self.add_data_parameter(data, 'format_code', b'i', 9, False)
+        op2.format_code = op2.add_data_parameter(data, 'format_code', b'i', 9, False)
 
         ## number of words per entry in record
-        self.num_wide = self.add_data_parameter(data, 'num_wide', b'i', 10, False)
+        op2.num_wide = op2.add_data_parameter(data, 'num_wide', b'i', 10, False)
 
         ## acoustic pressure flag
-        self.acoustic_flag = self.add_data_parameter(data, 'acoustic_flag', b'f', 13, False)
+        op2.acoustic_flag = op2.add_data_parameter(data, 'acoustic_flag', b'f', 13, False)
 
         ## thermal flag; 1 for heat transfer, 0 otherwise
-        self.thermal = self.add_data_parameter(data, 'thermal', b'i', 23, False)
+        op2.thermal = op2.add_data_parameter(data, 'thermal', b'i', 23, False)
 
-        #assert self.isThermal() == False, self.thermal
+        #assert self.isThermal() == False, op2.thermal
 
-        self.node_id = self.add_data_parameter(data, 'node_id', b'i', 5, fix_device_code=True)
-        #if self.analysis_code == 1:  # statics / displacement / heat flux
+        op2.node_id = op2.add_data_parameter(data, 'node_id', b'i', 5, fix_device_code=True)
+        #if op2.analysis_code == 1:  # statics / displacement / heat flux
             ## load set number
-            #self.lsdvmn = self.add_data_parameter(data, 'lsdvmn', b'i', 5, False)
-            #self.data_names = self.apply_data_code_value('data_names', ['node_id'])
-            #self.setNullNonlinearFactor()
+            #op2.lsdvmn = op2.add_data_parameter(data, 'lsdvmn', b'i', 5, False)
+            #op2.data_names = op2.apply_data_code_value('data_names', ['node_id'])
+            #op2.setNullNonlinearFactor()
 
-        if self.analysis_code == 1:  # static...because reasons.
-            self._analysis_code_fmt = b'i'
-            self.data_names = self.apply_data_code_value('data_names', ['node_id'])
-            self.apply_data_code_value('analysis_method', 'N/A')
-        elif self.analysis_code == 2:  # real eigenvalues
+        if op2.analysis_code == 1:  # static...because reasons.
+            op2._analysis_code_fmt = b'i'
+            op2.data_names = op2.apply_data_code_value('data_names', ['node_id'])
+            op2.apply_data_code_value('analysis_method', 'N/A')
+        elif op2.analysis_code == 2:  # real eigenvalues
             ## mode number
-            self.mode = self.add_data_parameter(data, 'mode', b'i', 5)
-            self._analysis_code_fmt = b'i'
+            op2.mode = op2.add_data_parameter(data, 'mode', b'i', 5)
+            op2._analysis_code_fmt = b'i'
             ## real eigenvalue
-            self.eigr = self.add_data_parameter(data, 'eigr', b'f', 6, False)
+            op2.eigr = op2.add_data_parameter(data, 'eigr', b'f', 6, False)
             ## mode or cycle .. todo:: confused on the type - F1???
-            self.mode_cycle = self.add_data_parameter(data, 'mode_cycle', b'f', 7, False)
-            self.data_names = self.apply_data_code_value('data_names',
+            op2.mode_cycle = op2.add_data_parameter(data, 'mode_cycle', b'f', 7, False)
+            op2.data_names = op2.apply_data_code_value('data_names',
                                                          ['node_id', 'eigr', 'mode_cycle'])
-            self.apply_data_code_value('analysis_method', 'mode')
-        #elif self.analysis_code == 3: # differential stiffness
-            #self.lsdvmn = self.get_values(data, b'i', 5) ## load set number
-            #self.data_names = self.data_code['lsdvmn'] = self.lsdvmn
-        #elif self.analysis_code == 4: # differential stiffness
-            #self.lsdvmn = self.get_values(data, b'i', 5) ## load set number
-        elif self.analysis_code == 5:   # frequency
+            op2.apply_data_code_value('analysis_method', 'mode')
+        #elif op2.analysis_code == 3: # differential stiffness
+            #op2.lsdvmn = self.get_values(data, b'i', 5) ## load set number
+            #op2.data_names = self.data_code['lsdvmn'] = op2.lsdvmn
+        #elif op2.analysis_code == 4: # differential stiffness
+            #op2.lsdvmn = self.get_values(data, b'i', 5) ## load set number
+        elif op2.analysis_code == 5:   # frequency
             ## frequency
-            #self.freq = self.add_data_parameter(data, 'freq', b'f', 5)
-            self._analysis_code_fmt = b'f'
-            self.data_names = self.apply_data_code_value('data_names', ['node_id'])
-            self.apply_data_code_value('analysis_method', 'freq')
-        elif self.analysis_code == 6:  # transient
+            #op2.freq = op2.add_data_parameter(data, 'freq', b'f', 5)
+            op2._analysis_code_fmt = b'f'
+            op2.data_names = op2.apply_data_code_value('data_names', ['node_id'])
+            op2.apply_data_code_value('analysis_method', 'freq')
+        elif op2.analysis_code == 6:  # transient
             ## time step
-            #self.dt = self.add_data_parameter(data, 'dt', b'f', 5)
-            self._analysis_code_fmt = b'f'
-            self.data_names = self.apply_data_code_value('data_names', ['node_id'])
-            self.apply_data_code_value('analysis_method', 'dt')
-        elif self.analysis_code == 7:  # pre-buckling
+            #op2.dt = op2.add_data_parameter(data, 'dt', b'f', 5)
+            op2._analysis_code_fmt = b'f'
+            op2.data_names = op2.apply_data_code_value('data_names', ['node_id'])
+            op2.apply_data_code_value('analysis_method', 'dt')
+        elif op2.analysis_code == 7:  # pre-buckling
             ## load set number
-            #self.lsdvmn = self.add_data_parameter(data, 'lsdvmn', b'i', 5)
-            self._analysis_code_fmt = b'i'
-            self.data_names = self.apply_data_code_value('data_names', ['node_id'])
-            self.apply_data_code_value('analysis_method', 'lsdvmn')
-        elif self.analysis_code == 8:  # post-buckling
+            #op2.lsdvmn = op2.add_data_parameter(data, 'lsdvmn', b'i', 5)
+            op2._analysis_code_fmt = b'i'
+            op2.data_names = op2.apply_data_code_value('data_names', ['node_id'])
+            op2.apply_data_code_value('analysis_method', 'lsdvmn')
+        elif op2.analysis_code == 8:  # post-buckling
             ## load set number
-            #self.lsdvmn = self.add_data_parameter(data, 'lsdvmn', b'i', 5)
-            self._analysis_code_fmt = b'i'
+            #op2.lsdvmn = op2.add_data_parameter(data, 'lsdvmn', b'i', 5)
+            op2._analysis_code_fmt = b'i'
             ## real eigenvalue
-            self.eigr = self.add_data_parameter(data, 'eigr', b'f', 6, False)
-            self.data_names = self.apply_data_code_value('data_names', ['node_id', 'eigr'])
-            self.apply_data_code_value('analysis_method', 'eigr')
-        elif self.analysis_code == 9:  # complex eigenvalues
+            op2.eigr = op2.add_data_parameter(data, 'eigr', b'f', 6, False)
+            op2.data_names = op2.apply_data_code_value('data_names', ['node_id', 'eigr'])
+            op2.apply_data_code_value('analysis_method', 'eigr')
+        elif op2.analysis_code == 9:  # complex eigenvalues
             ## mode number
-            self.mode = self.add_data_parameter(data, 'mode', b'i', 5)
-            self._analysis_code_fmt = b'i'
+            op2.mode = op2.add_data_parameter(data, 'mode', b'i', 5)
+            op2._analysis_code_fmt = b'i'
             ## real eigenvalue
-            #self.eigr = self.add_data_parameter(data, 'eigr', b'f', 6, False)
+            #op2.eigr = op2.add_data_parameter(data, 'eigr', b'f', 6, False)
             ## imaginary eigenvalue
-            self.eigi = self.add_data_parameter(data, 'eigi', b'f', 7, False)
-            self.data_names = self.apply_data_code_value('data_names', ['node_id', 'eigr', 'eigi'])
-            self.apply_data_code_value('analysis_method', 'mode')
-        elif self.analysis_code == 10:  # nonlinear statics
+            op2.eigi = op2.add_data_parameter(data, 'eigi', b'f', 7, False)
+            op2.data_names = op2.apply_data_code_value('data_names', ['node_id', 'eigr', 'eigi'])
+            op2.apply_data_code_value('analysis_method', 'mode')
+        elif op2.analysis_code == 10:  # nonlinear statics
             ## load step
-            #self.lftsfq = self.add_data_parameter(data, 'lftsfq', b'f', 5)
-            self._analysis_code_fmt = b'f'
-            self.data_names = self.apply_data_code_value('data_names', ['node_id'])
-            self.apply_data_code_value('analysis_method', 'lftsfq')
-        elif self.analysis_code == 11:  # old geometric nonlinear statics
+            #op2.lftsfq = op2.add_data_parameter(data, 'lftsfq', b'f', 5)
+            op2._analysis_code_fmt = b'f'
+            op2.data_names = op2.apply_data_code_value('data_names', ['node_id'])
+            op2.apply_data_code_value('analysis_method', 'lftsfq')
+        elif op2.analysis_code == 11:  # old geometric nonlinear statics
             ## load set number
-            #self.lsdvmn = self.add_data_parameter(data, 'lsdvmn', b'i', 5)
-            self._analysis_code_fmt = b'f'
-            self.data_names = self.apply_data_code_value('data_names', ['node_id'])
-        elif self.analysis_code == 12:
+            #op2.lsdvmn = op2.add_data_parameter(data, 'lsdvmn', b'i', 5)
+            op2._analysis_code_fmt = b'f'
+            op2.data_names = op2.apply_data_code_value('data_names', ['node_id'])
+        elif op2.analysis_code == 12:
             # contran ? (may appear as aCode=6)  --> straight from DMAP...grrr...
             ## load set number
-            #self.lsdvmn = self.add_data_parameter(data, 'lsdvmn', b'i', 5)
-            self._analysis_code_fmt = b'i'
-            self.data_names = self.apply_data_code_value('data_names', ['node_id'])
-            self.apply_data_code_value('analysis_method', 'lsdvmn')
+            #op2.lsdvmn = op2.add_data_parameter(data, 'lsdvmn', b'i', 5)
+            op2._analysis_code_fmt = b'i'
+            op2.data_names = op2.apply_data_code_value('data_names', ['node_id'])
+            op2.apply_data_code_value('analysis_method', 'lsdvmn')
         else:
-            msg = 'invalid analysis_code...analysis_code=%s' % self.analysis_code
+            msg = 'invalid analysis_code...analysis_code=%s' % op2.analysis_code
             raise RuntimeError(msg)
 
-        self._fix_oug_format_code()
-        self._parse_thermal_code()
-        if self.is_debug_file:
-            self.binary_debug.write('  approach_code  = %r\n' % self.approach_code)
-            self.binary_debug.write('  tCode          = %r\n' % self.tCode)
-            self.binary_debug.write('  isubcase       = %r\n' % self.isubcase)
-        self._read_title(data)
-        self._write_debug_bits()
+        op2._fix_oug_format_code()
+        op2._parse_thermal_code()
+        if op2.is_debug_file:
+            op2.binary_debug.write('  approach_code  = %r\n' % op2.approach_code)
+            op2.binary_debug.write('  tCode          = %r\n' % op2.tCode)
+            op2.binary_debug.write('  isubcase       = %r\n' % op2.isubcase)
+        op2._read_title(data)
+        op2._write_debug_bits()
 
-    def _read_opg1_4(self, data: bytes, ndata: int):
-        if self.table_code == 2:  # load vector
+    def _read_opg1_4(self, data: bytes, ndata: int) -> int:
+        op2 = self.op2
+        if op2.table_code == 2:  # load vector
             prefixs = {
                 b'BOPG1' : '',
                 b'OPG1' : '',
@@ -301,80 +314,82 @@ class OPG(OP2Common):
                 b'OPGNO2' : '',
             }
             keys = list(prefixs.keys())
-            prefix = prefixs[self.table_name]
-            postfix = postfixs[self.table_name]
-            assert self.table_name in keys, 'tables=%s table_name=%s table_code=%s' % (keys, self.table_name, self.table_code)
+            prefix = prefixs[op2.table_name]
+            postfix = postfixs[op2.table_name]
+            assert op2.table_name in keys, 'tables=%s table_name=%s table_code=%s' % (keys, op2.table_name, op2.table_code)
             n = self._read_load_vector(data, ndata, prefix=prefix, postfix=postfix)
-        elif self.table_code == 12:  # ???
+        elif op2.table_code == 12:  # ???
             n = self._read_force_vector(data, ndata)
-        elif self.table_code == 502:  # load vector
-            assert self.table_name in [b'OPGCRM2'], f'table_name={self.table_name} table_code={self.table_code}'
+        elif op2.table_code == 502:  # load vector
+            assert op2.table_name in [b'OPGCRM2'], f'table_name={op2.table_name} table_code={op2.table_code}'
             n = self._read_load_vector(data, ndata, prefix='crm.')
-        elif self.table_code == 602:  # load vector
-            assert self.table_name in [b'OPGPSD2'], f'table_name={self.table_name} table_code={self.table_code}'
+        elif op2.table_code == 602:  # load vector
+            assert op2.table_name in [b'OPGPSD2'], f'table_name={op2.table_name} table_code={op2.table_code}'
             n = self._read_load_vector(data, ndata, prefix='psd.')
-        elif self.table_code == 802:  # load vector
-            assert self.table_name in [b'OPGRMS1'], f'table_name={self.table_name} table_code={self.table_code}'
+        elif op2.table_code == 802:  # load vector
+            assert op2.table_name in [b'OPGRMS1'], f'table_name={op2.table_name} table_code={op2.table_code}'
             n = self._read_load_vector(data, ndata, prefix='rms.')
-        elif self.table_code == 902:  # load vector
-            assert self.table_name in [b'OPGNO1'], f'table_name={self.table_name} table_code={self.table_code}'
+        elif op2.table_code == 902:  # load vector
+            assert op2.table_name in [b'OPGNO1'], f'table_name={op2.table_name} table_code={op2.table_code}'
             n = self._read_load_vector(data, ndata, prefix='no.')
         #else:
             #n = self._not_implemented_or_skip('bad OPG table')
         else:
-            raise NotImplementedError('table_name=%r table_code=%r' % (self.table_name, self.table_code))
+            raise NotImplementedError('table_name=%r table_code=%r' % (op2.table_name, op2.table_code))
         return n
 
-    def _read_load_vector(self, data, ndata, prefix='', postfix=''):
+    def _read_load_vector(self, data, ndata, prefix='', postfix='') -> int:
         """
         table_code = 2
         """
-        if self.thermal == 0:
+        op2 = self.op2
+        if op2.thermal == 0:
             result_name = prefix + 'load_vectors' + postfix
-            storage_obj = self.get_result(result_name)
-            if self._results.is_not_saved(result_name):
+            storage_obj = op2.get_result(result_name)
+            if op2._results.is_not_saved(result_name):
                 return ndata
-            self._results._found_result(result_name)
-            n = self._read_table_vectorized(data, ndata, result_name, storage_obj,
-                                            RealLoadVectorArray, ComplexLoadVectorArray,
-                                            'node', random_code=self.random_code)
-        elif self.thermal == 1:
+            op2._results._found_result(result_name)
+            n = op2._read_table_vectorized(data, ndata, result_name, storage_obj,
+                                           RealLoadVectorArray, ComplexLoadVectorArray,
+                                           'node', random_code=op2.random_code)
+        elif op2.thermal == 1:
             result_name = prefix + 'thermal_load_vectors' + postfix
-            storage_obj = self.get_result(result_name)
+            storage_obj = op2.get_result(result_name)
 
             #RealThermalLoadVectorVector = None
             #ComplexThermalLoadVectorVector = None
             ComplexThermalLoadVectorArray = None
-            if self._results.is_not_saved(result_name):
+            if op2._results.is_not_saved(result_name):
                 return ndata
-            self._results._found_result(result_name)
-            n = self._read_scalar_table_vectorized(data, ndata, result_name, storage_obj,
-                                                   RealTemperatureVectorArray, ComplexThermalLoadVectorArray,
-                                                   'node', random_code=self.random_code)
+            op2._results._found_result(result_name)
+            n = op2._read_scalar_table_vectorized(data, ndata, result_name, storage_obj,
+                                                  RealTemperatureVectorArray, ComplexThermalLoadVectorArray,
+                                                  'node', random_code=op2.random_code)
 
         else:
-            raise NotImplementedError(self.thermal)
+            raise NotImplementedError(op2.thermal)
         return n
 
-    def _read_force_vector(self, data: bytes, ndata: int):
+    def _read_force_vector(self, data: bytes, ndata: int) -> int:
         """
         table_code = 12
         """
-        if self.thermal == 0:
+        op2 = self.op2
+        if op2.thermal == 0:
             result_name = 'force_vectors'
-            storage_obj = self.get_result(result_name)
+            storage_obj = op2.get_result(result_name)
             #ForceVectorVector = None
             ComplexForceVectorArray = None
-            if self._results.is_not_saved(result_name):
+            if op2._results.is_not_saved(result_name):
                 return ndata
-            self._results._found_result(result_name)
-            n = self._read_table_vectorized(data, ndata, result_name, storage_obj,
-                                            RealForceVectorArray, ComplexForceVectorArray,
-                                            'node', random_code=self.random_code)
+            op2._results._found_result(result_name)
+            n = op2._read_table_vectorized(data, ndata, result_name, storage_obj,
+                                           RealForceVectorArray, ComplexForceVectorArray,
+                                           'node', random_code=op2.random_code)
 
-        #elif self.thermal == 1:
+        #elif op2.thermal == 1:
             #result_name = 'thermal_force_vectors'
-            #storage_obj = self.thermal_force_vectors
+            #storage_obj = op2.thermal_force_vectors
             #RealThermalForceVector = None
             #ComplexThermalForceVector = None
             #RealThermalForceVectorVector = None
@@ -382,7 +397,7 @@ class OPG(OP2Common):
             #n = self._read_table(data, result_name, storage_obj,
                                  #RealThermalForceVector, ComplexThermalForceVector,
                                  #RealThermalForceVectorArray, ComplexThermalForceVectorArray,
-                                 #'node', random_code=self.random_code)
+                                 #'node', random_code=op2.random_code)
         else:
-            raise NotImplementedError(self.thermal)
+            raise NotImplementedError(op2.thermal)
         return n
