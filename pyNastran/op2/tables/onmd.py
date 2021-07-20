@@ -27,6 +27,7 @@ class NormalizedMassDensity:
 
         ## number of words per entry in record
         self.num_wide = num_wide
+
         self.eids = np.array([])
         self.data = np.array([])
 
@@ -80,6 +81,7 @@ class NormalizedMassDensity:
 
     #def __repr__(self) -> str:
         #return ''
+
 
 class ONMD:
     def __init__(self, op2: OP2):

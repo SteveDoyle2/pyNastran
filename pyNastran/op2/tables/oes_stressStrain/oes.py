@@ -2098,7 +2098,8 @@ class OES(OP2Common2):
             auto_return, is_vectorized = op2._create_oes_object4(
                 nelements, result_name, slot, obj_real)
             if auto_return:
-                return nelements * op2.num_wide * 4, None, None
+                assert ntotal == op2.num_wide * 4
+                return nelements * ntotal, None, None
 
             obj = op2.obj
             if op2.use_vector and is_vectorized and op2.sort_method == 1:
@@ -2221,7 +2222,8 @@ class OES(OP2Common2):
             auto_return, is_vectorized = op2._create_oes_object4(
                 nelements, result_name, slot, obj_vector_real)
             if auto_return:
-                return nelements * op2.num_wide * 4, None, None
+                assert ntotal == op2.num_wide * 4
+                return nelements * ntotal, None, None
 
             obj = op2.obj
             if op2.use_vector and is_vectorized and op2.sort_method == 1:
@@ -2359,7 +2361,8 @@ class OES(OP2Common2):
                 nlayers, result_name, slot, obj_vector_real)
             if auto_return:
                 op2._data_factor = 11
-                return nelements * op2.num_wide * 4, None, None
+                assert ntotal == op2.num_wide * 4
+                return nelements * ntotal, None, None
             obj = op2.obj
 
             ntotal = op2.num_wide * 4 * self.factor
@@ -2448,7 +2451,8 @@ class OES(OP2Common2):
                 nlayers, result_name, slot, obj_vector_random)
             if auto_return:
                 op2._data_factor = 11
-                return nelements * op2.num_wide * 4, None, None
+                assert ntotal == op2.num_wide * 4
+                return nelements * ntotal, None, None
             obj = op2.obj
 
             nnodes = 10  # 11-1
@@ -2509,7 +2513,8 @@ class OES(OP2Common2):
             auto_return, is_vectorized = op2._create_oes_object4(
                 nelements, result_name, slot, obj_vector_real)
             if auto_return:
-                return nelements * op2.num_wide * 4, None, None
+                assert ntotal == op2.num_wide * 4
+                return nelements * ntotal, None, None
 
             obj = op2.obj
             assert obj is not None
@@ -2595,7 +2600,8 @@ class OES(OP2Common2):
             auto_return, is_vectorized = op2._create_oes_object4(
                 nelements, result_name, slot, obj_vector_random)
             if auto_return:
-                return nelements * op2.num_wide * 4, None, None
+                assert ntotal == op2.num_wide * 4
+                return nelements * ntotal, None, None
 
             obj = op2.obj
             assert obj is not None
@@ -3255,11 +3261,11 @@ class OES(OP2Common2):
                 nelements, result_name, slot, obj_real)
 
             if auto_return:
-                return nelements * op2.num_wide * 4, None, None
+                return nelements * ntotal, None, None
 
             obj = op2.obj
             if op2.use_vector and is_vectorized and op2.sort_method == 1:  # pragma: no cover
-                n = nelements * 4 * op2.num_wide
+                n = nelements * ntotal
                 itotal = obj.ielement
                 itotali = obj.itotal + nelements
                 itotal2 = obj.itotal + nelements * nnodes_expected
@@ -3304,7 +3310,6 @@ class OES(OP2Common2):
                     #sxx, sxy, s1, a1, a2, a3, pressure, svm,
                     #syy, syz, s2, b1, b2, b3,
                     #szz, sxz, s3, c1, c2, c3)
-
                 floats1 = floats.reshape(nelements * nnodes_expected, 8)[:, 1:] # drop grid_device
 
                 # o1/o2/o3 is not max/mid/min.  They are not consistently ordered, so we force it.
@@ -3313,7 +3318,7 @@ class OES(OP2Common2):
                 obj.itotal = itotal2
                 obj.ielement = itotali
             else:
-                n = _oes_csolid2_real(self, data, n,
+                n = _oes_csolid2_real(op2, data, n,
                                       obj,
                                       nnodes_expected,
                                       nelements,
@@ -3425,7 +3430,8 @@ class OES(OP2Common2):
             auto_return = op2.read_mode == 1
             is_vectorized = False
             if auto_return:
-                return nelements * op2.num_wide * 4, None, None
+                assert ntotal == op2.num_wide * 4
+                return nelements * ntotal, None, None
 
             obj = op2.obj
             if op2.use_vector and is_vectorized and op2.sort_method == 1 and 0:  # pragma: no cover
@@ -3624,7 +3630,8 @@ class OES(OP2Common2):
             auto_return = op2.read_mode == 1
             is_vectorized = False
             if auto_return:
-                return nelements * op2.num_wide * 4, None, None
+                assert ntotal == op2.num_wide * 4
+                return nelements * ntotal, None, None
 
             obj = op2.obj
             if op2.use_vector and is_vectorized and op2.sort_method == 1 and 0:  # pragma: no cover
@@ -3807,7 +3814,8 @@ class OES(OP2Common2):
             auto_return = op2.read_mode == 1
             is_vectorized = False
             if auto_return:
-                return nelements * op2.num_wide * 4, None, None
+                assert ntotal == op2.num_wide * 4
+                return nelements * ntotal, None, None
 
             obj = op2.obj
             if op2.use_vector and is_vectorized and op2.sort_method == 1 and 0:  # pragma: no cover
@@ -4003,7 +4011,8 @@ class OES(OP2Common2):
             auto_return = op2.read_mode == 1
             is_vectorized = False
             if auto_return:
-                return nelements * op2.num_wide * 4, None, None
+                assert ntotal == op2.num_wide * 4
+                return nelements * ntotal, None, None
 
             obj = op2.obj
             if op2.use_vector and is_vectorized and op2.sort_method == 1 and 0:  # pragma: no cover
@@ -4797,7 +4806,8 @@ class OES(OP2Common2):
                 nelements, result_name, slot, obj_vector_complex)
             if auto_return:
                 op2._data_factor = 2
-                return nelements * op2.num_wide * 4, None, None
+                assert ntotal == op2.num_wide * 4
+                return nelements * ntotal, None, None
             obj = op2.obj
 
             if op2.use_vector and is_vectorized and sort_method == 1:
@@ -5777,7 +5787,8 @@ class OES(OP2Common2):
             #auto_return, is_vectorized = op2._create_oes_object4(
                 #nelements, result_name, slot, obj_vector_complex)
             #if auto_return:
-                #return nelements * op2.num_wide * 4, None, None
+                #assert ntotal == op2.num_wide * 4
+                #return nelements * ntotal, None, None
 
             ## TODO: this is an OEF result???
             ##    furthermore the actual table is calle dout as
@@ -5907,7 +5918,8 @@ class OES(OP2Common2):
             auto_return, is_vectorized = op2._create_oes_object4(
                 nelements, result_name, slot, obj_vector_random)
             if auto_return:
-                return nelements * op2.num_wide * 4, None, None
+                assert ntotal == op2.num_wide * 4
+                return nelements * ntotal, None, None
 
             obj = op2.obj
             struct1 = Struct(op2._endian + op2._analysis_code_fmt + b'i5f')
@@ -6004,7 +6016,8 @@ class OES(OP2Common2):
                 nelements, result_name, slot, obj_vector_real)
             if auto_return:
                 op2._data_factor = 4
-                return nelements * op2.num_wide * 4, None, None
+                assert ntotal == op2.num_wide * 4
+                return nelements * ntotal, None, None
 
             obj = op2.obj
             nnodes_all = 4
@@ -6284,7 +6297,8 @@ class OES(OP2Common2):
                 raise NotImplementedError('self.cbush1d_stress_strain; complex strain')
 
             if auto_return:
-                return nelements * op2.num_wide * 4, None, None
+                assert ntotal == op2.num_wide * 4
+                return nelements * ntotal, None, None
 
             obj = op2.obj
             if op2.use_vector and is_vectorized and op2.sort_method == 1:
@@ -6463,7 +6477,8 @@ class OES(OP2Common2):
                 raise NotImplementedError('NonlinearSpringStrainArray') # undefined
 
             if auto_return:
-                return nelements * op2.num_wide * 4, None, None
+                assert ntotal == op2.num_wide * 4
+                return nelements * ntotal, None, None
             obj = op2.obj
 
             if op2.use_vector and is_vectorized and op2.sort_method == 1:
@@ -6532,7 +6547,8 @@ class OES(OP2Common2):
             auto_return, is_vectorized = op2._create_oes_object4(
                 nelements, result_name, slot, RealNonlinearBushArray)
             if auto_return:
-                return nelements * op2.num_wide * 4, None, None
+                assert ntotal == op2.num_wide * 4
+                return nelements * ntotal, None, None
 
             obj = op2.obj
             #if op2.is_debug_file:
@@ -6687,7 +6703,8 @@ class OES(OP2Common2):
             auto_return, is_vectorized = op2._create_oes_object4(
                 nelements, result_name, slot, obj_vector_real)
             if auto_return:
-                return nelements * op2.num_wide * 4, None, None
+                assert ntotal == op2.num_wide * 4
+                return nelements * ntotal, None, None
 
             obj = op2.obj  # type: RealCompositeSolidStressArray
             struct11 = Struct(op2._endian + mapfmt(op2._analysis_code_fmt + b'i 4s i 7f', self.size)) # 11
@@ -6716,7 +6733,8 @@ class OES(OP2Common2):
             auto_return, is_vectorized = op2._create_oes_object4(
                 nelements, result_name, slot, obj_vector_real)
             if auto_return:
-                return nelements * op2.num_wide * 4, None, None
+                assert ntotal == op2.num_wide * 4
+                return nelements * ntotal, None, None
 
             obj = op2.obj  # type: RealCompositeSolidStressArray
 
@@ -6857,7 +6875,8 @@ class OES(OP2Common2):
             auto_return, is_vectorized = op2._create_oes_object4(
                 nelements, result_name, slot, obj_vector_complex)
             if auto_return:
-                return nelements * op2.num_wide * 4, None, None
+                assert ntotal == op2.num_wide * 4
+                return nelements * ntotal, None, None
 
             obj = op2.obj
             assert obj is not None
@@ -6938,7 +6957,8 @@ class OES(OP2Common2):
             auto_return, is_vectorized = op2._create_oes_object4(
                 nelements, result_name, slot, obj_vector_random)
             if auto_return:
-                return nelements * op2.num_wide * 4, None, None
+                assert ntotal == op2.num_wide * 4
+                return nelements * ntotal, None, None
 
             obj = op2.obj
             if op2.use_vector and is_vectorized and op2.sort_method == 1 and 0:
@@ -7361,7 +7381,8 @@ class OES(OP2Common2):
             #auto_return, is_vectorized = op2._create_oes_object4(
                 #nelements, result_name, slot, obj_vector_real)
             #if auto_return:
-                #return nelements * op2.num_wide * 4, None, None
+                #assert ntotal == op2.num_wide * 4
+                #return nelements * ntotal, None, None
 
             #obj = op2.obj
             ##if op2.use_vector and is_vectorized and op2.sort_method == 1:
@@ -7434,7 +7455,8 @@ class OES(OP2Common2):
                 #nlayers, result_name, slot, obj_vector_real)
             #if auto_return:
                 #op2._data_factor = nnodes
-                #return nelements * op2.num_wide * 4
+                #assert ntotal == op2.num_wide * 4
+                #return nelements * ntotal, None, None
 
             #obj = op2.obj
             ##if op2.use_vector and is_vectorized and op2.sort_method == 1:

@@ -15,6 +15,7 @@ from typing import Optional, List, Dict, Union
 import pyNastran
 from pyNastran.op2.tables.oee_energy.oee_objects import RealStrainEnergyArray
 from pyNastran.op2.tables.ogf_gridPointForces.ogf_objects import RealGridPointForcesArray
+from pyNastran.op2.tables.onmd import NormalizedMassDensity
 from pyNastran.op2.op2_interface.op2_f06_common import OP2_F06_Common
 from pyNastran.op2.op2_interface.result_set import ResultSet
 
@@ -367,7 +368,7 @@ class F06Writer(OP2_F06_Common):
 
     def write_f06(self, f06_outname: str, matrix_filename: Optional[str]=None,
                   is_mag_phase: bool=False, is_sort1: bool=True,
-                  delete_objects: bool=True, end_flag: bool=False,
+                  delete_objects: bool=False, end_flag: bool=False,
                   quiet: bool=True, repr_check: bool=False,
                   close: bool=True) -> None:
         """
@@ -444,6 +445,7 @@ class F06Writer(OP2_F06_Common):
                                       quiet=quiet, repr_check=repr_check)
 
         self.op2_results.psds.write_f06(f06)
+        self._write_normalized_mass_density(f06)
 
         #self._write_f06_time_based(f06, page_stamp)
         self.write_matrices(f06, matrix_filename, page_stamp, self.page_num, quiet=quiet)
@@ -648,6 +650,23 @@ class F06Writer(OP2_F06_Common):
                     if delete_objects:
                         del result
                     self.page_num += 1
+
+    def _write_normalized_mass_density(self, f06):
+        normalized_mass_density = self.op2_results.responses.normalized_mass_density
+        if normalized_mass_density is None:
+            return
+        normalized_mass_density0 = normalized_mass_density[0]  # type: NormalizedMassDensity
+
+        f06.write('NORMALIZED MASS DENSITY HISTORY\n')
+        for mass in normalized_mass_density0:
+            f06.write(f'0    DESIGN_CYCLE={mass.dcycle:d} OBJ={mass.robj:g} RCON={mass.rcon:g}\n')
+
+        for mass in normalized_mass_density0:
+            f06.write('\nNORMALIZED MASS DENSITY\n')
+            f06.write(f'0    DESIGN_CYCLE={mass.dcycle:d} OBJ={mass.robj:g} RCON={mass.rcon:g}\n')
+            f06.write(' EID DENSITY\n')
+            for eid, density in zip(mass.eids, mass.data):
+                f06.write(f' {eid:-8d} {density:.8f}\n')
 
 def check_element_node(obj):
     if obj is None:

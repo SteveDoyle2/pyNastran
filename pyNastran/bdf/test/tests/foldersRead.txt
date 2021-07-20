@@ -27,10 +27,10 @@ F:\Program Files\Siemens\NXNastran\nxn10p1\nxn10p1\nast\tpl
 C:\NASA\m4\formats\git\examples\pyNastran_examples
 C:\NASA\m4\formats\git\examples\pyNastran_examples\demo
 C:\NASA\m4\formats\git\examples\pyNastran_examples\demo_sort2_post_m2
-C:\NASA\m4\formats\git\examples
-C:\NASA\m4\formats\git\examples\move
-C:\NASA\m4\formats\git\examples\move_tpl
-C:\NASA\m4\formats\git\examples\move_tpl\works
+D:\NASA\git\examples
+C:\NASA\git\examples\move
+C:\NASA\git\examples\move_tpl
+C:\NASA\git\examples\move_tpl\works
 
 C:\MSC.Software\MSC.Nastran\msc20051\nast\nast
 C:\MSC.Software\MSC.Nastran\msc20051\nast\demo
@@ -66,7 +66,7 @@ C:\MSC.Software\msc_nastran_docs_2020\tpl6
 C:\MSC.Software\simcenter_nastran_2019.2\tpl_post2
 
 # NX 2020
-"C:\Program Files\Siemens\SimcenterNastran_2020.1/scnas/nast"
+#"C:\Program Files\Siemens\SimcenterNastran_2020.1/scnas/nast"
 
 # Nastran 95
 D:\NASA\m4\formats\git\NASTRAN-95
