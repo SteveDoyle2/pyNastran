@@ -860,7 +860,14 @@ def _check_element(table1: BaseElement, table2: BaseElement, log: SimpleLogger) 
         raise ValueError(msg)
 
     element = table1.element
-    eid_min = element.min()
+    try:
+        eid_min = element.min()
+    except TypeError:
+        # strain energy element names can be U8 strings
+        if element.dtype.type != np.str_:
+            print(element, element.dtype)
+            raise
+        return
     nshape = len(element.shape)
     if eid_min <= 0:
         if nshape == 1:

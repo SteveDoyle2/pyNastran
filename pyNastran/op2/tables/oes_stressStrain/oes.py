@@ -252,7 +252,6 @@ class OES(OP2Common2):
 
         op2._read_title(data)
 
-
         try:
             op2.element_name = op2.element_mapper[op2.element_type]
         except KeyError:

@@ -1412,7 +1412,7 @@ class EDOM(GeomCommon):
                 attb = 'ALL'
             else:
                 attb = attbf
-                assert attb > -1.0e+8, attb
+                #assert attb > -1.0e+8, '%g' % attb
                 #print(attbf)
                 #ddd
             return attb

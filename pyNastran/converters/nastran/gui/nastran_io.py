@@ -185,6 +185,8 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         super(NastranIO, self).__init__()
         self.nid_release_map = {}
         self.make_spc_mpc_supports = True
+        #self.export_vtk = False
+        self.create_secondary_actors = not self.export_vtk
 
     #def __init__(self, gui):
         #super(NastranIO, self).__init__()
@@ -1368,7 +1370,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         self.nnodes = ngui_nodes
         self.nelements = nelements  # approximate...
 
-        out = self.make_caeros(model)
+        out = self.make_caeros(model, create_secondary_actors=self.create_secondary_actors)
         (has_caero, caero_points, ncaeros, ncaeros_sub, ncaeros_cs,
          ncaeros_points, ncaero_sub_points,
          has_control_surface, box_id_to_caero_element_map, cs_box_ids) = out
@@ -1384,7 +1386,8 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         #for msgi in msg:
             #model.log.debug(msgi)
 
-        nconm2 = self._create_masses(model)
+        nconm2 = _create_masses(self.gui, model,
+                                create_secondary_actors=self.create_secondary_actors)
 
         # Allocate grids
         self.gui.grid.Allocate(self.nelements, 1000)
@@ -1423,11 +1426,11 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
 
 
         geometry_names = []
-        if self.make_spc_mpc_supports and xref_nodes:
+        if self.create_secondary_actors and self.make_spc_mpc_supports and xref_nodes:
             geometry_names = self.set_spc_mpc_suport_grid(model, nid_to_pid_map,
                                                           idtype)
 
-        if xref_nodes and self.gui.settings.nastran_is_bar_axes:
+        if self.create_secondary_actors and xref_nodes and self.gui.settings.nastran_is_bar_axes:
             icase = self._fill_bar_yz(dim_max, model, icase, cases, form)
         assert icase is not None
 
@@ -1470,64 +1473,6 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         else:
             self.gui._set_results([form], cases)
 
-    def _create_masses(self, model: BDF):
-        nconm2 = 0
-        if 'CONM2' in model.card_count:
-            nconm2 += model.card_count['CONM2']
-        if 'CMASS1' in model.card_count:
-            nconm2 += model.card_count['CMASS1']
-        if 'CMASS2' in model.card_count:
-            nconm2 += model.card_count['CMASS2']
-        # CMASS3, CMASS4 are applied to SPOINTs
-
-        if nconm2 == 0:
-            return nconm2
-
-        gui = self.gui
-
-        def update_conm2s_function(unused_nid_map, unused_ugrid, points, nodes):
-            if not gui.settings.nastran_is_update_conm2:
-                return
-            j2 = 0
-            mass_grid = gui.alt_grids['conm2']
-            for unused_eid, element in sorted(model.masses.items()):
-                if isinstance(element, CONM2):
-                    nid = element.nid
-                    inid = np.searchsorted(self.node_ids, nid)
-                    xyz_nid = nodes[inid, :]
-                    centroid = element.offset(xyz_nid)
-                    points.SetPoint(j2, *centroid)
-
-                elif element.type in ('CMASS1', 'CMASS2'):
-                    n1, n2 = element.nodes
-                    factor = 0.
-                    if element.nodes[0] is not None:
-                        inid = np.searchsorted(self.node_ids, n1)
-                        p1 = nodes[inid, :]
-                        factor += 1.
-                    if element.nodes[1] is not None:
-                        inid = np.searchsorted(self.node_ids, n2)
-                        p2 = nodes[inid, :]
-                        factor += 1.
-                    centroid = (p1 + p2) / factor
-                    points.SetPoint(j2, *centroid)
-
-                    elem = vtk.vtkVertex()
-                    point_ids = elem.GetPointIds()
-                    point_ids.SetId(0, j2)
-                    mass_grid.InsertNextCell(elem.GetCellType(), point_ids)
-                else:
-                    continue
-                    #self.gui.log_info("skipping %s" % element.type)
-                j2 += 1
-            return
-
-        gui.create_alternate_vtk_grid(
-            'conm2', color=ORANGE_FLOAT, line_width=5, opacity=1., point_size=4,
-            follower_function=update_conm2s_function,
-            representation='point')
-        return nconm2
-
     def update_caeros(self, obj):
         """the update call for the ModifyMenu"""
         model = self.model # type: BDF
@@ -1550,7 +1495,11 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
     def _create_aero(self, model: BDF,
                      box_id_to_caero_element_map: Dict[int, Any],
                      cs_box_ids,
-                     caero_points, ncaeros_points, ncaero_sub_points, has_control_surface):
+                     caero_points,
+                     ncaeros_points: int,
+                     ncaero_sub_points: int,
+                     has_control_surface: bool):
+
         # fill grids
         zfighting_offset0 = 0.001
         zfighting_offset = zfighting_offset0
@@ -1759,8 +1708,9 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         if stored_msg:
             model.log.warning('\n' + '\n'.join(stored_msg))
 
-    def make_caeros(self, model: BDF) -> Tuple[np.ndarray, int, int, int, int, bool,
-                                               Dict[int, int], List[int]]:
+    def make_caeros(self, model: BDF,
+                    create_secondary_actors=True) -> Tuple[np.ndarray, int, int, int, int, bool,
+                                                           Dict[int, int], List[int]]:
         """
         Creates the CAERO panel inputs including:
          - caero
@@ -1798,7 +1748,9 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
             list of panels used by each aero panel
 
         """
-        all_control_surface_name, caero_control_surfaces, out = build_caero_paneling(model)
+        all_control_surface_name, caero_control_surfaces, out = build_caero_paneling(
+            model, create_secondary_actors)
+
         if all_control_surface_name:
             self.gui.create_alternate_vtk_grid(
                 'caero_control_surfaces', color=PINK_FLOAT, line_width=5, opacity=1.0,
@@ -2047,6 +1999,8 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
 
         because it's really a "mass" actor
         """
+        if not self.create_secondary_actors:
+            return
         j = 0
         points = vtk.vtkPoints()
         points.SetNumberOfPoints(nconm2)
@@ -7080,3 +7034,60 @@ def _set_nid_to_pid_map_or_blank(nid_to_pid_map: Dict[int, List[int]],
     for nid in node_ids:
         if nid is not None:
             nid_to_pid_map[nid].append(pid)
+
+def _create_masses(gui: NastranIO, model: BDF, create_secondary_actors=True) -> int:
+    nconm2 = 0
+    if 'CONM2' in model.card_count:
+        nconm2 += model.card_count['CONM2']
+    if 'CMASS1' in model.card_count:
+        nconm2 += model.card_count['CMASS1']
+    if 'CMASS2' in model.card_count:
+        nconm2 += model.card_count['CMASS2']
+    # CMASS3, CMASS4 are applied to SPOINTs
+
+    if not create_secondary_actors or nconm2 == 0:
+        nconm2 = 0
+        return nconm2
+
+    def update_conm2s_function(unused_nid_map, unused_ugrid, points, nodes) -> None:
+        if not gui.settings.nastran_is_update_conm2:
+            return
+        j2 = 0
+        mass_grid = gui.alt_grids['conm2']
+        for unused_eid, element in sorted(model.masses.items()):
+            if isinstance(element, CONM2):
+                nid = element.nid
+                inid = np.searchsorted(self.node_ids, nid)
+                xyz_nid = nodes[inid, :]
+                centroid = element.offset(xyz_nid)
+                points.SetPoint(j2, *centroid)
+
+            elif element.type in ('CMASS1', 'CMASS2'):
+                n1, n2 = element.nodes
+                factor = 0.
+                if element.nodes[0] is not None:
+                    inid = np.searchsorted(self.node_ids, n1)
+                    p1 = nodes[inid, :]
+                    factor += 1.
+                if element.nodes[1] is not None:
+                    inid = np.searchsorted(self.node_ids, n2)
+                    p2 = nodes[inid, :]
+                    factor += 1.
+                centroid = (p1 + p2) / factor
+                points.SetPoint(j2, *centroid)
+
+                elem = vtk.vtkVertex()
+                point_ids = elem.GetPointIds()
+                point_ids.SetId(0, j2)
+                mass_grid.InsertNextCell(elem.GetCellType(), point_ids)
+            else:
+                continue
+                #self.gui.log_info("skipping %s" % element.type)
+            j2 += 1
+        return
+
+    gui.create_alternate_vtk_grid(
+        'conm2', color=ORANGE_FLOAT, line_width=5, opacity=1., point_size=4,
+        follower_function=update_conm2s_function,
+        representation='point')
+    return nconm2

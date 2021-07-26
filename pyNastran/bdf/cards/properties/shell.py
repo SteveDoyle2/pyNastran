@@ -888,8 +888,13 @@ class PCOMP(CompositeShellProperty):
         #    self.plies = plies_lower + plies
         #    #print str(self)
         z0 = double_or_blank(card, 2, 'z0')
-        return PCOMP(pid, mids, thicknesses, thetas, souts, nsm, sb, ft, tref, ge,
+        card = PCOMP(pid, mids, thicknesses, thetas, souts, nsm, sb, ft, tref, ge,
                      lam, z0, comment=comment)
+        if len(mids) == 0 or len(thicknesses) == 0 or len(thetas) == 0 or len(souts) == 0:
+            msg = 'No PCOMP layers defined\n%s' % str(card)
+            msg += PCOMP.__doc__
+            raise RuntimeError(msg)
+        return card
 
     @classmethod
     def add_op2_data(cls, data, comment=''):

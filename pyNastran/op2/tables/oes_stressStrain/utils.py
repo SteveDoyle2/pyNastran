@@ -1056,7 +1056,7 @@ def oes_cquad4_144_real(op2: OP2, data: bytes, ndata: int,
          fd2, sx2, sy2, txy2, angle2, major2, minor2, vm2,) = out
         eid, dt = get_eid_dt_from_eid_device(
             eid_device, op2.nonlinear_factor, op2.sort_method)
-        #print(f'tri eid={eid} dt={dt} nid={grid_center}')
+        #print(f'tri eid={eid} dt={dt} nid={grid_center} unused_j={unused_j} grid={grid}')
         #print(out[:3])
         if op2.is_debug_file:
             op2.binary_debug.write('  eid=%i; C=[%s]\n' % (eid, ', '.join(['%r' % di for di in out])))
