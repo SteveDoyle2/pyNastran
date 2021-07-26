@@ -186,7 +186,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         self.nid_release_map = {}
         self.make_spc_mpc_supports = True
         #self.export_vtk = False
-        self.create_secondary_actors = not self.export_vtk
+        self.create_secondary_actors = True
 
     #def __init__(self, gui):
         #super(NastranIO, self).__init__()
@@ -1376,7 +1376,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
          has_control_surface, box_id_to_caero_element_map, cs_box_ids) = out
         self.has_caero = has_caero
 
-        self.gui.log_info("nnodes=%i nelements=%i" % (self.nnodes, self.nelements))
+        self.gui.log_info("nnodes=%d nelements=%d" % (self.nnodes, self.nelements))
         msg = model.get_bdf_stats(return_type='string')
         self.gui.log_debug(msg)
         msg = model.get_bdf_stats(return_type='list')
@@ -1458,7 +1458,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         stop_on_failure = IS_TESTING
         build_map_centroidal_result(model, nid_map, stop_on_failure=stop_on_failure)
 
-        if not IS_TESTING and 'dev' in __version__:
+        if self.create_secondary_actors and not IS_TESTING and 'dev' in __version__:
             self.sidebar_nastran = ModelSidebar(self.gui, nastran_io=self)
             self.sidebar_nastran.set_model(model)
 
