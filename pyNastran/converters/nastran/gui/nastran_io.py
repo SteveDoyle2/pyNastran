@@ -1386,7 +1386,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         #for msgi in msg:
             #model.log.debug(msgi)
 
-        nconm2 = _create_masses(self.gui, model,
+        nconm2 = _create_masses(self.gui, model, self.node_ids,
                                 create_secondary_actors=self.create_secondary_actors)
 
         # Allocate grids
@@ -7035,7 +7035,8 @@ def _set_nid_to_pid_map_or_blank(nid_to_pid_map: Dict[int, List[int]],
         if nid is not None:
             nid_to_pid_map[nid].append(pid)
 
-def _create_masses(gui: NastranIO, model: BDF, create_secondary_actors=True) -> int:
+def _create_masses(gui: NastranIO, model: BDF, node_ids: np.ndarray,
+                   create_secondary_actors=True) -> int:
     nconm2 = 0
     if 'CONM2' in model.card_count:
         nconm2 += model.card_count['CONM2']
@@ -7057,7 +7058,7 @@ def _create_masses(gui: NastranIO, model: BDF, create_secondary_actors=True) -> 
         for unused_eid, element in sorted(model.masses.items()):
             if isinstance(element, CONM2):
                 nid = element.nid
-                inid = np.searchsorted(self.node_ids, nid)
+                inid = np.searchsorted(node_ids, nid)
                 xyz_nid = nodes[inid, :]
                 centroid = element.offset(xyz_nid)
                 points.SetPoint(j2, *centroid)
@@ -7066,11 +7067,11 @@ def _create_masses(gui: NastranIO, model: BDF, create_secondary_actors=True) -> 
                 n1, n2 = element.nodes
                 factor = 0.
                 if element.nodes[0] is not None:
-                    inid = np.searchsorted(self.node_ids, n1)
+                    inid = np.searchsorted(node_ids, n1)
                     p1 = nodes[inid, :]
                     factor += 1.
                 if element.nodes[1] is not None:
-                    inid = np.searchsorted(self.node_ids, n2)
+                    inid = np.searchsorted(node_ids, n2)
                     p2 = nodes[inid, :]
                     factor += 1.
                 centroid = (p1 + p2) / factor

@@ -31,6 +31,7 @@ class LayeredTableResults(Table):
         self.methods = methods
         self.eids = eids
         self.eid_max = eid_max
+        self.form_names = []
 
     def finalize(self):
         self.titles_default = deepcopy(self.titles)

@@ -632,6 +632,7 @@ def get_plate_stress_strains(eids, cases, model: OP2, times, key, icase: int,
     if len(scalars_array) == 0:
         return icase
 
+    element_name = case.element_name
     scalars_array = concatenate_scalars(scalars_array)
 
     #titles = []  # legend title
@@ -653,9 +654,12 @@ def get_plate_stress_strains(eids, cases, model: OP2, times, key, icase: int,
         }
 
     times = case._times
+
+    form_names = []
     for itime, dt in enumerate(times):
         #dt = case._times[itime]
         header = _get_nastran_header(case, dt, itime)
+        header2 = header.replace(' = ', '=')
         header_dict[(key, itime)] = header
 
         formi = []
@@ -664,15 +668,23 @@ def get_plate_stress_strains(eids, cases, model: OP2, times, key, icase: int,
         # formi = form[0][2]
         form_dict[(key, itime)] = form
 
+        form_namesi = []
         for ilayer in range(2):
             layer = layer_names[ilayer]
             form_layeri = []
             formi.append((layer, None, form_layeri))
+
+            form_namesii = []
             for imethod, method in enumerate(methods):
                 #cases[icase] = (res, (subcase_id, header))
                 cases[icase] = (res, (subcase_id, (itime, ilayer, imethod, header)))
                 form_layeri.append((f'{method} ({layer})', icase, []))
+                form_name2 = f'{element_name} Plate {word}: {method} ({layer}) {header2}'.rstrip()
+                form_namesii.append(form_name2)
                 icase += 1
+            form_namesi.append(form_namesii)
+        form_names.append(form_namesi)
+    res.form_names = np.array(form_names)
     return icase
 
 def get_composite_plate_stress_strains(eids, cases, model: OP2, times, key, icase,
@@ -782,6 +794,7 @@ def get_composite_plate_stress_strains(eids, cases, model: OP2, times, key, icas
     if len(scalars_array) == 0:
         return icase
 
+    element_name = element_type
     try:
         scalars_array = concatenate_scalars(scalars_array)
     except ValueError:
@@ -797,6 +810,7 @@ def get_composite_plate_stress_strains(eids, cases, model: OP2, times, key, icas
         subcase_id, headers, plates_ieids, ieid_max, scalars_array, methods,
         data_formats=None,
         colormap='jet', uname='Composite Plate ' + word)
+    form_names = res.form_names
 
     #times = case._times
     for itime, dt in enumerate(times):
@@ -824,6 +838,9 @@ def get_composite_plate_stress_strains(eids, cases, model: OP2, times, key, icas
                 #cases[icase] = (res, (subcase_id, header))
                 cases[icase] = (res, (subcase_id, (itime, ilayer, imethod, header)))
                 form_layeri.append((f'{method} ({layer_name})', icase, []))
+
+                form_name2 = f'{element_name} Composite Plate {word}: {method} ({layer})'
+                form_names.append(form_name2)
                 icase += 1
     return icase
 
