@@ -839,7 +839,7 @@ def get_composite_plate_stress_strains(eids, cases, model: OP2, times, key, icas
                 cases[icase] = (res, (subcase_id, (itime, ilayer, imethod, header)))
                 form_layeri.append((f'{method} ({layer_name})', icase, []))
 
-                form_name2 = f'{element_name} Composite Plate {word}: {method} ({layer})'
+                form_name2 = f'{element_name} Composite Plate {word}: {method} ({layer_name})'
                 form_names.append(form_name2)
                 icase += 1
     return icase
