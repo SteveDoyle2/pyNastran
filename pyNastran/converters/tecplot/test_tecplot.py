@@ -19,11 +19,12 @@ NASTRAN_MODEL_PATH = os.path.join(PKG_PATH, '..', 'models')
 class TestTecplot(unittest.TestCase):
 
     def test_split_headers(self):
+        log = SimpleLogger(level='debug', encoding='utf-8')
         headers = [
             ('Zone I=    17, J=    17, K=     1, F=POINT', 4)
         ]
         for header, nheaders in headers:
-            headers = split_headers(header)
+            headers = split_headers(header, log)
             assert len(headers) == nheaders, headers
 
     def test_tecplot_ascii_models(self):

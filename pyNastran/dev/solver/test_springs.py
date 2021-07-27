@@ -1,15 +1,21 @@
 import os
+import pathlib
 import unittest
 import numpy as np
+import pyNastran
 from pyNastran.dev.solver.solver import Solver, BDF
 from pyNastran.bdf.case_control_deck import CaseControlDeck
+from cpylog import SimpleLogger
 
+PKG_PATH = pathlib.Path(pyNastran.__path__[0])
+TEST_DIR = PKG_PATH / 'dev' / 'solver'
 
-class TestSpring(unittest.TestCase):
+class TestSolverSpring(unittest.TestCase):
     def test_conm2(self):
         """Tests a CMASS1/PMASS"""
-        model = BDF(debug=True, log=None, mode='msc')
-        model.bdf_filename = 'celas1.bdf'
+        log = SimpleLogger(level='warning', encoding='utf-8')
+        model = BDF(log=log, mode='msc')
+        model.bdf_filename = TEST_DIR / 'celas1.bdf'
         model.add_grid(1, [0., 0., 0.], cd=1)
         model.add_grid(2, [1., 0., 0.])
         model.add_grid(3, [0.5, 1., 0.], cd=3)
@@ -53,8 +59,9 @@ class TestSpring(unittest.TestCase):
 
     def test_celas1(self):
         """Tests a CELAS1/PELAS"""
-        model = BDF(debug=True, log=None, mode='msc')
-        model.bdf_filename = 'celas1.bdf'
+        log = SimpleLogger(level='warning', encoding='utf-8')
+        model = BDF(log=log, mode='msc')
+        model.bdf_filename = TEST_DIR / 'celas1.bdf'
         model.add_grid(1, [0., 0., 0.])
         model.add_grid(2, [0., 0., 0.])
         nids = [1, 2]
@@ -77,10 +84,14 @@ class TestSpring(unittest.TestCase):
         setup_case_control(model)
 
         solver = Solver(model)
-        model.sol = 103
+        model.sol = 101
         solver.run()
 
-        model.sol = 101
+        eid = 2
+        nid = 2
+        mass = 1.
+        model.add_conm2(eid, nid, mass, cid=0, X=None, I=None, comment='')
+        model.sol = 103
         solver.run()
 
         # F = k * d
@@ -93,8 +104,9 @@ class TestSpring(unittest.TestCase):
 
     def test_celas2_cd(self):
         """Tests a CELAS2"""
-        model = BDF(debug=True, log=None, mode='msc')
-        model.bdf_filename = 'celas2.bdf'
+        log = SimpleLogger(level='warning', encoding='utf-8')
+        model = BDF(log=log, mode='msc')
+        model.bdf_filename = TEST_DIR / 'celas2.bdf'
         model.add_grid(1, [0., 0., 0.])
         cd = 100
         model.add_grid(2, [0., 0., 0.], cd=cd)
@@ -128,8 +140,9 @@ class TestSpring(unittest.TestCase):
 
     def test_celas3(self):
         """Tests a CELAS3/PELAS"""
-        model = BDF(debug=True, log=None, mode='msc')
-        model.bdf_filename = 'celas3.bdf'
+        log = SimpleLogger(level='warning', encoding='utf-8')
+        model = BDF(log=log, mode='msc')
+        model.bdf_filename = TEST_DIR / 'celas3.bdf'
         #model.add_grid(1, [0., 0., 0.])
         #model.add_grid(2, [0., 0., 0.])
         model.add_spoint([1, 2])
@@ -172,8 +185,9 @@ class TestSpring(unittest.TestCase):
 
     def test_celas4_cd(self):
         """Tests a CELAS4"""
-        model = BDF(debug=True, log=None, mode='msc')
-        model.bdf_filename = 'celas4.bdf'
+        log = SimpleLogger(level='warning', encoding='utf-8')
+        model = BDF(log=log, mode='msc')
+        model.bdf_filename = TEST_DIR / 'celas4.bdf'
         model.add_spoint([1, 2])
         #origin = [0., 0., 0.]
         #zaxis = [0., 0., 1.]
@@ -204,12 +218,13 @@ class TestSpring(unittest.TestCase):
         assert np.allclose(solver.xa_[0], d)
 
 
-class TestRod(unittest.TestCase):
+class TestSolverRod(unittest.TestCase):
     """tests the rods"""
     def test_crod_axial(self):
         """Tests a CROD/PROD"""
-        model = BDF(debug=True, log=None, mode='msc')
-        model.bdf_filename = 'crod_axial.bdf'
+        log = SimpleLogger(level='warning', encoding='utf-8')
+        model = BDF(log=log, mode='msc')
+        model.bdf_filename = TEST_DIR / 'crod_axial.bdf'
         model.add_grid(1, [0., 0., 0.])
         model.add_grid(2, [1., 0., 0.])
         nids = [1, 2]
@@ -241,8 +256,9 @@ class TestRod(unittest.TestCase):
 
     def test_crod_torsion(self):
         """Tests a CROD/PROD"""
-        model = BDF(debug=True, log=None, mode='msc')
-        model.bdf_filename = 'crod_torsion.bdf'
+        log = SimpleLogger(level='warning', encoding='utf-8')
+        model = BDF(log=log, mode='msc')
+        model.bdf_filename = TEST_DIR / 'crod_torsion.bdf'
         model.add_grid(1, [0., 0., 0.])
         model.add_grid(2, [1., 0., 0.])
         nids = [1, 2]
@@ -273,8 +289,9 @@ class TestRod(unittest.TestCase):
 
     def test_crod_spcd(self):
         """Tests a CROD/PROD with an SPCD and no free DOFs"""
-        model = BDF(debug=True, log=None, mode='msc')
-        model.bdf_filename = 'crod_spcd.bdf'
+        log = SimpleLogger(level='warning', encoding='utf-8')
+        model = BDF(log=log, mode='msc')
+        model.bdf_filename = TEST_DIR / 'crod_spcd.bdf'
         model.add_grid(1, [0., 0., 0.])
         model.add_grid(2, [1., 0., 0.])
         nids = [1, 2]
@@ -332,8 +349,9 @@ class TestRod(unittest.TestCase):
 
     def test_crod(self):
         """Tests a CROD/PROD"""
-        model = BDF(debug=True, log=None, mode='msc')
-        model.bdf_filename = 'crod.bdf'
+        log = SimpleLogger(level='warning', encoding='utf-8')
+        model = BDF(log=log, mode='msc')
+        model.bdf_filename = TEST_DIR / 'crod.bdf'
         model.add_grid(1, [0., 0., 0.])
         model.add_grid(2, [1., 0., 0.])
         nids = [1, 2]
@@ -368,8 +386,9 @@ class TestRod(unittest.TestCase):
 
         same answer as ``test_crod``
         """
-        model = BDF(debug=True, log=None, mode='msc')
-        model.bdf_filename = 'crod_aset.bdf'
+        log = SimpleLogger(level='warning', encoding='utf-8')
+        model = BDF(log=log, mode='msc')
+        model.bdf_filename = TEST_DIR / 'crod_aset.bdf'
         model.add_grid(1, [0., 0., 0.])
         model.add_grid(2, [1., 0., 0.])
         nids = [1, 2]
@@ -409,8 +428,9 @@ class TestRod(unittest.TestCase):
 
     def test_crod_mpc(self):
         """Tests a CROD/PROD"""
-        model = BDF(debug=True, log=None, mode='msc')
-        model.bdf_filename = 'crod_mpc.bdf'
+        log = SimpleLogger(level='warning', encoding='utf-8')
+        model = BDF(log=log, mode='msc')
+        model.bdf_filename = TEST_DIR / 'crod_mpc.bdf'
         model.add_grid(1, [0., 0., 0.])
         model.add_grid(2, [1., 0., 0.])
         model.add_grid(3, [1., 0., 0.])
@@ -447,8 +467,9 @@ class TestRod(unittest.TestCase):
 
     def test_ctube(self):
         """Tests a CTUBE/PTUBE"""
-        model = BDF(debug=True, log=None, mode='msc')
-        model.bdf_filename = 'ctube.bdf'
+        log = SimpleLogger(level='warning', encoding='utf-8')
+        model = BDF(log=log, mode='msc')
+        model.bdf_filename = TEST_DIR / 'ctube.bdf'
         model.add_grid(1, [0., 0., 0.])
         model.add_grid(2, [1., 0., 0.])
         nids = [1, 2]
@@ -492,8 +513,9 @@ class TestRod(unittest.TestCase):
 
     def test_conrod(self):
         """Tests a CONROD"""
-        model = BDF(debug=True, log=None, mode='msc')
-        model.bdf_filename = 'conrod.bdf'
+        log = SimpleLogger(level='warning', encoding='utf-8')
+        model = BDF(log=log, mode='msc')
+        model.bdf_filename = TEST_DIR / 'conrod.bdf'
         L = 1.
         model.add_grid(1, [0., 0., 0.])
         model.add_grid(2, [L, 0., 0.])
@@ -552,12 +574,14 @@ class TestRod(unittest.TestCase):
         assert np.allclose(solver.Fg[6], mag_axial), f'F={mag_axial} Fg[6]={solver.Fg[6]}'
         assert np.allclose(solver.Fg[9], mag_torsion), f'F={mag_torsion} Fg[9]={solver.Fg[9]}'
 
-class TestBar(unittest.TestCase):
+
+class TestSolverBar(unittest.TestCase):
     """tests the CBARs"""
     def test_cbar(self):
         """Tests a CBAR/PBAR"""
-        model = BDF(debug=True, log=None, mode='msc')
-        model.bdf_filename = 'cbar.bdf'
+        log = SimpleLogger(level='debug', encoding='utf-8')
+        model = BDF(log=log, mode='msc')
+        model.bdf_filename = TEST_DIR / 'cbar.bdf'
         model.add_grid(1, [0., 0., 0.])
         model.add_grid(2, [1., 0., 0.])
         L = 1.0
@@ -606,8 +630,9 @@ class TestBar(unittest.TestCase):
 
     def test_cbar2(self):
         """Tests a CBAR/PBAR"""
-        model = BDF(debug=True, log=None, mode='msc')
-        model.bdf_filename = 'cbar.bdf'
+        log = SimpleLogger(level='debug', encoding='utf-8')
+        model = BDF(log=log, mode='msc')
+        model.bdf_filename = TEST_DIR / 'cbar.bdf'
         model.add_grid(1, [0., 0., 0.])
         model.add_grid(2, [0.5, 0., 0.])
         model.add_grid(3, [1., 0., 0.])
@@ -661,8 +686,9 @@ class TestBar(unittest.TestCase):
 
     def test_cbeam(self):
         """Tests a CBEAM/PBEAM"""
-        model = BDF(debug=True, log=None, mode='msc')
-        model.bdf_filename = 'cbeam.bdf'
+        log = SimpleLogger(level='debug', encoding='utf-8')
+        model = BDF(log=log, mode='msc')
+        model.bdf_filename = TEST_DIR / 'cbeam.bdf'
         model.add_grid(1, [0., 0., 0.])
         model.add_grid(2, [1., 0., 0.])
         L = 1.0
@@ -721,7 +747,7 @@ class TestBar(unittest.TestCase):
     def test_cbeam2(self):
         """Tests a CBEAM/PBEAM"""
         model = BDF(debug=True, log=None, mode='msc')
-        model.bdf_filename = 'cbeam.bdf'
+        model.bdf_filename = TEST_DIR / 'cbeam.bdf'
         model.add_grid(1, [0., 0., 0.])
         model.add_grid(2, [.5, 0., 0.])
         model.add_grid(3, [1., 0., 0.])
@@ -809,12 +835,12 @@ def setup_case_control(model, extra_case_lines=None):
     model.sol = 101
     model.case_control_deck = cc
 
-class TestShell(unittest.TestCase):
+class TestSolverShell(unittest.TestCase):
     """tests the shells"""
     def test_cquad4_bad_normal(self):
         """test that the code crashes with a bad normal"""
         model = BDF(debug=None, log=None, mode='msc')
-        model.bdf_filename = 'cquad4_bad_normal.bdf'
+        model.bdf_filename = TEST_DIR / 'cquad4_bad_normal.bdf'
         mid = 3
         model.add_grid(1, [0., 0., 0.])
         model.add_grid(3, [1., 0., 0.])
@@ -854,7 +880,7 @@ class TestShell(unittest.TestCase):
         The Jacobian is defined between [-1, 1]
         """
         model = BDF(debug=None, log=None, mode='msc')
-        model.bdf_filename = 'cquad4_bad_jacobian.bdf'
+        model.bdf_filename = TEST_DIR / 'cquad4_bad_jacobian.bdf'
         mid = 3
         model.add_grid(1, [0., 0., 0.])
         model.add_grid(2, [0.5, 100., 0.])
@@ -888,7 +914,7 @@ class TestShell(unittest.TestCase):
     def test_cquad4_pshell_mat1(self):
         """Tests a CQUAD4/PSHELL/MAT1"""
         model = BDF(debug=None, log=None, mode='msc')
-        model.bdf_filename = 'cquad4_pshell_mat1.bdf'
+        model.bdf_filename = TEST_DIR / 'cquad4_pshell_mat1.bdf'
         model.add_grid(1, [0., 0., 0., ])
         model.add_grid(2, [1., 0., 0., ])
         model.add_grid(3, [1., 0., 2., ])
@@ -956,7 +982,7 @@ class TestShell(unittest.TestCase):
         # |     |
         # 1--5--2
         model = BDF(debug=None, log=None, mode='msc')
-        model.bdf_filename = 'cquad8_pshell_mat1.bdf'
+        model.bdf_filename = TEST_DIR / 'cquad8_pshell_mat1.bdf'
         model.add_grid(1, [0., 0., 0.])
         model.add_grid(2, [1., 0., 0.])
         model.add_grid(3, [1., 0., 2.])

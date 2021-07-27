@@ -9,10 +9,12 @@ import itertools
 from typing import List, Optional, Any
 
 import numpy as np
-from cpylog import get_logger2
+from cpylog import SimpleLogger, get_logger2
 
 from pyNastran.utils import is_binary_file, object_attributes, object_methods, object_stats
 from pyNastran.converters.tecplot.zone import Zone, CaseInsensitiveDict, is_3d
+
+
 class Base:
     def object_attributes(obj: Any, mode: str='public',
                           keys_to_skip: Optional[List[str]]=None,
@@ -220,7 +222,8 @@ class Tecplot(Base):
             iline, title_line, header_lines, line = _read_header_lines(
                 lines, iline, line, self.log)
             #print('header_lines', header_lines)
-            headers_dict = _header_lines_to_header_dict(title_line, header_lines, self.variables)
+            headers_dict = _header_lines_to_header_dict(title_line, header_lines,
+                                                        self.variables, self.log)
             if headers_dict is None:
                 break
 
@@ -1058,14 +1061,14 @@ class Tecplot(Base):
         return model
 
 
-def split_headers(header_in):
-    print('headers_in ', header_in)
+def split_headers(headers_in: str, log: SimpleLogger) -> List[str]:
+    log.debug(f'headers_in = {headers_in}')
     #allowed_keys = ['TITLE', 'VARIABLES', 'T', 'ZONETYPE', 'DATAPACKING',
                     #'N', 'E', 'F', 'DT', 'SOLUTIONTIME', 'STRANDID',
                     #'I', 'J', 'K'
                     #]
-    #print(f'header1 = {header_in}')
-    header = header_in.replace('""', '","')
+    #print(f'header1 = {headers_in}')
+    header = headers_in.replace('""', '","')
     #print(f'header2 = {header}')
     cheaders = header.split(',')
 
@@ -1100,7 +1103,8 @@ def _join_headers(header_lines: List[str]) -> str:
     header = ','.join([headeri.strip(', ') for headeri in header_lines])
     return header
 
-def _header_lines_to_header_dict(title_line: str, header_lines: List[str], variables: List[str]):
+def _header_lines_to_header_dict(title_line: str, header_lines: List[str],
+                                 variables: List[str], log: SimpleLogger):
     """parses the parsed header lines"""
     #print('header_lines', header_lines)
     #headers_dict = {}
@@ -1120,7 +1124,7 @@ def _header_lines_to_header_dict(title_line: str, header_lines: List[str], varia
 
     # this is so overly complicataed and probably not even enough...
     # what about the following 'quote' style?
-    headers = split_headers(header)
+    headers = split_headers(header, log)
     #headers = header.replace('""', '","').split(',')
 
     #TITLE = "Weights=1/6,6,1"
@@ -1163,7 +1167,7 @@ def _header_lines_to_header_dict(title_line: str, header_lines: List[str], varia
         if parse:
             # ZONE T="FUSELAGE" I=21 J=49 K=1 F=BLOCK
             #print('  parsing')
-            print('sline =', sline)
+            log.debug(f'sline = {sline}')
             key = sline[0].strip().upper()
             if key.startswith('ZONE '):
                 # the key is not "ZONE T" or "ZONE E"

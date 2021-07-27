@@ -1675,11 +1675,14 @@ def build_Mbb(model: BDF,
             print(elem.get_stats())
             raise NotImplementedError(elem)
 
+    # has possibility of mass
+    has_mass = False
     for eid, elem in model.elements.items():
         etype = elem.type
         if etype in no_mass:
             continue
 
+        has_mass = True
         if etype in ['CROD', 'CONROD', 'CTUBE']:
             # verified
             mass = elem.Mass()
@@ -1838,14 +1841,24 @@ def build_Mbb(model: BDF,
     if wtmass != 1.0:
         Mbb *= wtmass
 
-    if Mbb.sum() == 0.0:
-        Mbb = np.eye(ndof, dtype=fdtype)
-        log.error(f'finished build_Mbb; faking mass; M={Mbb.sum()}')
-    else:
+    # TODO: working on a hack to NOTt fake the mass when there are no SPOINTs
+    #       as mass can be easily added to a spring model
+    #
+    # TODO: non-zero mass case doesn't handle SPOINTs
+    #
+    has_special_points = 'SPOINT' in model.card_count or 'EPOINT' in model.card_count
+    is_all_grids = not(has_special_points)
+    unused_can_dof_slice = is_all_grids and not has_mass
+    if Mbb.sum() != 0.0:
+    #if Mbb.sum() != 0.0 or can_dof_slice:
+        #print(f'is_all_grids={is_all_grids} has_mass={has_mass}; can_dof_slice={can_dof_slice} Mbb.shape={Mbb.shape}')
         i = np.arange(0, ndof).reshape(ndof//6, 6)[:, :3].ravel()
         #print(Mbb[i, i])
         massi = Mbb[i, i].sum()
         log.info(f'finished build_Mbb; M={massi:.6g}; mass_total={mass_total:.6g}')
+    else:
+        Mbb = np.eye(ndof, dtype=fdtype)
+        log.error(f'finished build_Mbb; faking mass; M={Mbb.sum()} ndof={ndof}')
     return Mbb
 
 def grid_point_weight(model: BDF, Mbb, dof_map: DOF_MAP, ndof: int):
