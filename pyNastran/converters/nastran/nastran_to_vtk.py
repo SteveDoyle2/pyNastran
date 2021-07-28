@@ -1,25 +1,11 @@
 """tests the NastranIO class"""
 import os
-from copy import deepcopy
 from typing import Set
-import unittest
 
-import numpy as np
-#try:
-    #import matplotlib
-    #matplotlib.use('Agg')
-    #IS_MATPLOTLIB = True
-#except ModuleNotFoundError:  # pyparsing is missing
-    #IS_MATPLOTLIB = False
-#except ImportError:
-    #pass
 import vtk
 from cpylog import SimpleLogger
 
 import pyNastran
-from pyNastran.bdf.bdf import BDF
-#from pyNastran.bdf.cards.test.test_aero import get_zona_model
-#from pyNastran.bdf.errors import DuplicateIDsError
 from pyNastran.gui.utils.vtk.base_utils import numpy_to_vtk
 from pyNastran.gui.testing_methods import FakeGUIMethods
 from pyNastran.converters.nastran.gui.nastran_io import NastranIO
