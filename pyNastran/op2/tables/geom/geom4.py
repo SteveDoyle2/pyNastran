@@ -4,7 +4,7 @@ defines readers for BDF objects in the OP2 GEOM4/GEOM4S table
 #pylint: disable=C0111,C0103,C1801
 from __future__ import annotations
 from struct import unpack, Struct
-from typing import TYPE_CHECKING
+from typing import Tuple, List, TYPE_CHECKING
 import numpy as np
 
 from pyNastran.bdf.cards.elements.rigid import RBAR, RBE2, RBE3, RROD
@@ -13,7 +13,7 @@ from pyNastran.bdf.cards.bdf_sets import (
     OMIT1, # SEQSET
 )
 from pyNastran.op2.errors import MixedVersionCard
-from pyNastran.op2.op2_interface.op2_reader import mapfmt, reshape_bytes_block
+from pyNastran.op2.op2_interface.op2_reader import mapfmt
 from pyNastran.op2.tables.geom.geom_common import GeomCommon
 from pyNastran.bdf.cards.loads.loads import SPCD
 from pyNastran.bdf.cards.constraints import (
@@ -179,6 +179,7 @@ class GEOM4(GeomCommon):
         """
         self.op2.show_data(data[n:], types='qds')
         dd
+
     def _read_aset(self, data: bytes, n: int) -> int:
         """ASET(5561,76,215) - Record 1"""
         return self._read_xset(data, n, 'ASET', ASET, self.op2._add_methods._add_aset_object)
@@ -599,115 +600,12 @@ class GEOM4(GeomCommon):
     def _read_rbe2(self, data: bytes, n: int) -> int:
         """
         RBE2(6901,69,295) - Record 24
-
-        Word Name Type Description
-        1 EID I Element identification number
-        2  GN I Grid point identification number for independent degrees-of-freedom
-        3  CM I Component numbers of dependent degrees of-freedom
-        4  GM I Grid point identification number for dependent degrees-of-freedom
-        Word 4 repeats until End of Record
-        5 ALPHA RS Thermal expansion coefficient
-
-        ::
-
-          data = (1, 1, 123456, 10000, -1, 0.0,
-                  2, 2, 123456, 20000, -1, 0.0,
-                  3, 3, 12345,  30000, 30001, 30002, 30003, 30004, 30005, -1, 0.0,
-                  4, 4, 123,    40000, 40001, 40010, 40011, 40020, 40021, -1, 0.0,
-                  5, 5, 123,    50000, 50001, 50010, 50011, 50020, 50021, -1, 0.0)
-        (1,  35,  2, 33, 34, 36, 37, 133, 134, 135, 136, 137, -1, 0.0,
-         3,  3,   2,  1,  2,  4,  5, 101, 102, 103, 104, 105, -1, 0.0,
-         5,  8,   2,  6,  7,  9, 10, 106, 107, 108, 109, 110, -1, 0.0,
-         6,  13,  2, 11, 12, 14, 15, 111, 112, 113, 114, 115, -1, 0.0
-         0,  9,  30,  2, 28, 29, 31, 32,  128, 129, 130, 131, 132, -1, 0.0,
-         10, 25,  2, 23, 24, 26, 27, 123, 124, 125, 126, 127, -1, 0.0)
-
-        idata = [
-            10101, 10101, 123456, 1, 2, -1,
-            10102, 10102, 123456, 3, 4, -1,
-            10103, 10103, 123456, 5, -1,
-        ]
         """
         op2 = self.op2
-        geom3 = op2.reader_geom3
         idata = np.frombuffer(data[n:], op2.idtype8).copy()
-        iminus1 = np.where(idata == -1)[0]
-        if idata[-1] == -1:
-            is_alpha = False
-            i = np.hstack([[0], iminus1[:-1]+1])
-            j = np.hstack([iminus1[:-1], len(idata)])
-        else:
-            is_alpha = True
-            i = np.hstack([[0], iminus1[:-1]+2])
-            fdata = np.frombuffer(data[n:], op2.fdtype8).copy()
-            j = np.hstack([iminus1[:-1]+1, len(idata)-1])
-        #print('is_alpha=%s' % is_alpha)
-        #print('i=%s' % i)
-        #print('j=%s' % j)
-        #print('idata=%s' % idata.tolist())
-        #print(fdata, len(fdata))
-        nelements = len(j)
-        if is_alpha:
-            for ii, jj in zip(i, j):
-                eid, gn, cm = idata[ii:ii + 3]
-                gm = idata[ii+3:jj-1].tolist()
-                #print('eid=%s gn=%s cm=%s gm=%s' % (eid, gn, cm, gm))
-                #alpha = fdata[jj]
-                alpha = fdata[jj]
-                #print('eid=%s gn=%s cm=%s gm=%s alpha=%s' % (eid, gn, cm, gm, alpha))
-
-                out = (eid, gn, cm, gm, alpha)
-                if op2.is_debug_file:
-                    op2.binary_debug.write('  RBE2=%s\n' % str(out))
-                #print('  RBE2=%s\n' % str(out))
-                elem = RBE2.add_op2_data(out)
-                geom3._add_op2_rigid_element(elem)
-        else:
-            alpha = 0.0
-            for ii, jj in zip(i, j):
-                #eid, gn, cm, gm1, gm2 = idata[ii:ii + 5]
-                eid, gn, cm = idata[ii:ii + 3]
-                gm = idata[ii+3:jj].tolist()
-                if -1 in gm:
-                    gm = gm[:-1]
-                assert -1 not in gm, 'eid=%s gn=%s cm=%s gm=%s' % (eid, gn, cm, gm)
-                #print('eid=%s gn=%s cm=%s gm=%s' % (eid, gn, cm, gm))
-
-                out = (eid, gn, cm, gm, alpha)
-                if op2.is_debug_file:
-                    op2.binary_debug.write('  RBE2=%s\n' % str(out))
-                #print('  RBE2=%s\n' % str(out))
-                elem = RBE2.add_op2_data(out)
-                op2.reader_geom3._add_op2_rigid_element(elem)
-        op2.card_count['RBE2'] = nelements
+        fdata = np.frombuffer(data[n:], op2.fdtype8).copy()
+        read_rbe2s_from_idata_fdata(op2, idata, fdata)
         return len(data)
-
-        #while n < len(data):
-            ## (eid, gn, cm, gm, ..., alpha)
-            #out = s_msc.unpack(data[n:n+20])
-            #eid, gn, cm, gm1, gm2 = out
-            #n += 20
-
-            #Gmi = [gm1, gm2]
-            #while gm2 != -1:
-                #gm2, = struct_i.unpack(data[n:n+4])
-                #Gmi.append(gm2)
-                #n += 4
-            #Gmi = [gmi for gmi in Gmi if gmi != -1]
-
-            ### TODO: according to the MSC/NX manual, alpha should be here,
-            ###       but it's not...
-            #alpha = 0.
-
-            #if op2.is_debug_file:
-                #op2.binary_debug.write('  RBE2=%s\n' % str(out))
-            #print('  RBE2=%s\n' % str(out))
-            #out = (eid, gn, cm, Gmi, alpha)
-            #elem = RBE2.add_op2_data(out)
-            #self._add_op2_rigid_element(elem)
-            #nelements += 1
-        #op2.card_count['RBE2'] = nelements
-        #return n
 
     def _read_rbe3(self, data: bytes, n: int) -> int:
         """RBE3(7101,71,187) - Record 25"""
@@ -1446,7 +1344,113 @@ class GEOM4(GeomCommon):
         self.op2.log.info('skipping BLTMPC in GEOM4')
         return len(data)
 
-def read_rbe3s_from_idata_fdata(op2: OP2Geom, idata, fdata):
+def read_rbe2s_from_idata_fdata(op2: OP2Geom, idata, fdata) -> List[RBE2]:
+    """
+    Word Name Type Description
+    1 EID I Element identification number
+    2  GN I Grid point identification number for independent degrees-of-freedom
+    3  CM I Component numbers of dependent degrees of-freedom
+    4  GM I Grid point identification number for dependent degrees-of-freedom
+    Word 4 repeats until End of Record
+    5 ALPHA RS Thermal expansion coefficient
+
+    ::
+
+      data = (1, 1, 123456, 10000, -1, 0.0,
+              2, 2, 123456, 20000, -1, 0.0,
+              3, 3, 12345,  30000, 30001, 30002, 30003, 30004, 30005, -1, 0.0,
+              4, 4, 123,    40000, 40001, 40010, 40011, 40020, 40021, -1, 0.0,
+              5, 5, 123,    50000, 50001, 50010, 50011, 50020, 50021, -1, 0.0)
+    (1,  35,  2, 33, 34, 36, 37, 133, 134, 135, 136, 137, -1, 0.0,
+     3,  3,   2,  1,  2,  4,  5, 101, 102, 103, 104, 105, -1, 0.0,
+     5,  8,   2,  6,  7,  9, 10, 106, 107, 108, 109, 110, -1, 0.0,
+     6,  13,  2, 11, 12, 14, 15, 111, 112, 113, 114, 115, -1, 0.0
+     0,  9,  30,  2, 28, 29, 31, 32,  128, 129, 130, 131, 132, -1, 0.0,
+     10, 25,  2, 23, 24, 26, 27, 123, 124, 125, 126, 127, -1, 0.0)
+
+    idata = [
+        10101, 10101, 123456, 1, 2, -1,
+        10102, 10102, 123456, 3, 4, -1,
+        10103, 10103, 123456, 5, -1,
+    ]
+
+    idata = [
+        132, 253, 123456,
+            4, 5, 6, 7, 8, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 57, 58, 59, 60,
+            -1, 0,
+        133, 254, 123456,
+            126, 127, 128, 129, 138, 195, 196, 197, 198, 199, 200, 201, 202, 203, 204, 205, 206, 207, 208, 209, 210, 211, 212, 213, 214,
+            -1, 0]
+    i=[ 0, 30]
+    j=[29, 59]
+
+    idata = [
+        132, 253, 123456,
+            4, 5, 6, 7, 8, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 57, 58, 59, 60,
+            -1, 0, 0,
+        133, 254, 123456,
+            126, 127, 128, 129, 138, 195, 196, 197, 198, 199, 200, 201, 202, 203, 204, 205, 206, 207, 208, 209, 210, 211, 212, 213, 214,
+            -1, 0, 0,
+    ]
+    i=[ 0, 31]
+    j=[29, 61]
+    """
+    rbe2s = []
+    geom3 = op2.reader_geom3
+    iminus1 = np.where(idata == -1)[0]
+    is_alpha = False
+    is_alpha_tref = False
+    if idata[-1] == -1:
+        is_alpha = False
+        i = np.hstack([[0], iminus1[:-1]+1])
+        j = np.hstack([iminus1[:-1], len(idata)])  # the index for the last integer
+    else:
+        if idata[-2] == -1:
+            is_alpha = True
+            i = np.hstack([[0], iminus1[:-1]+2])
+            j = np.hstack([iminus1[:-1]+1, len(idata)-1])
+        else:
+            is_alpha_tref = True
+            i = np.hstack([[0], iminus1[:-1]+3])
+            j = np.hstack([iminus1[:-1]+1, len(idata)-2])
+            assert is_alpha_tref is True, is_alpha_tref
+    assert -1 not in idata[i], idata[i]
+    assert -1 not in idata[j], idata[j]
+
+
+    #print('is_alpha=%s' % is_alpha)
+    #print('i=%s' % i)
+    #print('j=%s' % j)
+    #print('idata=%s' % idata.tolist())
+    #print(fdata, len(fdata))
+    nelements = len(j)
+    alpha = 0.0
+    for ii, jj in zip(i, j):
+        eid, gn, cm = idata[ii:ii + 3]
+        if is_alpha or is_alpha_tref:
+            gm = idata[ii+3:jj-1].tolist()
+            #print('eid=%s gn=%s cm=%s gm=%s' % (eid, gn, cm, gm))
+            alpha = fdata[jj]
+            if is_alpha_tref:
+                tref = fdata[jj+1]
+        else:
+            gm = idata[ii+3:jj].tolist()
+            if -1 in gm:
+                gm = gm[:-1]
+        assert -1 not in gm, f'eid={eid} gn={gn} cm={cm} gm={gm}'
+
+        out = [eid, gn, cm, gm, alpha]
+        if is_alpha_tref:
+            out.append(tref)
+        if op2.is_debug_file:
+            op2.binary_debug.write('  RBE2=%s\n' % str(out))
+        elem = RBE2.add_op2_data(out)
+        geom3._add_op2_rigid_element(elem)
+        rbe2s.append(elem)
+    op2.card_count['RBE2'] = nelements
+    return rbe2s
+
+def read_rbe3s_from_idata_fdata(op2: OP2Geom, idata, fdata) -> List[RBE3]:
     """
     1 EID   I Element identification number
     2 REFG  I Reference grid point identification number
@@ -1475,10 +1479,10 @@ def read_rbe3s_from_idata_fdata(op2: OP2Geom, idata, fdata):
             307, 3, 123456, 1.0, 1234, 30600, 30601, -1, -2, -3, 0/0.0]]
 
     data = [
-    407, 4, 123, 1.0, 123, 41201, 41210, 41212, 41221, -1,
-    -0.25, 123, 41200, 41202, 41220, 41222, -1, -2, -3, 0,
-    408, 4, 456, 1.0, 123, 41201, 41210, 41212, 41221, -1,
-    1.0, 123, 41200, 41202, 41220, 41222, -1, -2, -3, 0)
+        407, 4, 123, 1.0, 123, 41201, 41210, 41212, 41221, -1,
+        -0.25, 123, 41200, 41202, 41220, 41222, -1, -2, -3, 0,
+        408, 4, 456, 1.0, 123, 41201, 41210, 41212, 41221, -1,
+        1.0, 123, 41200, 41202, 41220, 41222, -1, -2, -3, 0)
     ]
     RBE3    407             4       123     1.0     123     41201   41210
             41212   41221   -.25    123     41200   41202   41220   41222
@@ -1513,7 +1517,7 @@ def read_rbe3s_from_idata_fdata(op2: OP2Geom, idata, fdata):
             is_alpha = True
             i = np.hstack([[0], iminus3[:-1]+2])
         else:
-            is_alpha_beta = True
+            is_alpha_tref = True
             assert idata[-3] == -3, idata
             i = np.hstack([[0], iminus3[:-1]+3])
     j = np.hstack([iminus3[:-1], len(idata)])
@@ -1541,7 +1545,7 @@ def read_rbe3s_from_idata_fdata(op2: OP2Geom, idata, fdata):
         if is_alpha_tref:
             alpha = fdata[ii]
             tref = fdata[ii+1]
-            op2.log.warning(f'new RBE3 field={beta} (assume float)')
+            op2.log.warning(f'new RBE3 field={tref} (assume float)')
             ii += 2
         elif is_alpha:
             alpha = fdata[ii]
@@ -1567,7 +1571,7 @@ def read_rbe3s_from_idata_fdata(op2: OP2Geom, idata, fdata):
         #print('--------------------------------------')
     return rbe3s
 
-def _get_rbe3_um(i, unused_j, idata, unused_fdata):
+def _get_rbe3_um(i: int, unused_j, idata, unused_fdata):
     """helper for ``read_rbe3s_from_idata_fdata``"""
     gmi = []
     cmi = []
@@ -1591,7 +1595,7 @@ def _get_rbe3_um(i, unused_j, idata, unused_fdata):
         i += 1
     return i, gmi, cmi
 
-def get_minus_2_index(idata):
+def get_minus_2_index(idata) -> int:
     """helper for ``get_minus_2_index``"""
     #print('idata =', idata)
     i = np.where((idata == -2) | (idata == -3))[0]
@@ -1599,7 +1603,8 @@ def get_minus_2_index(idata):
         return len(idata)
     return i[0]
 
-def fill_rbe3_wt_comp_gijs(i, j, idata, fdata):
+def fill_rbe3_wt_comp_gijs(i: int, j: int,
+                           idata, fdata) -> Tuple[int, List[float], List[int], List[int]]:
     """helper for ``read_rbe3s_from_idata_fdata``"""
     weights = []
     comps = []

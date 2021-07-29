@@ -208,7 +208,6 @@ class ShellElement(Element):
         .. math:: m = \frac{m}{A} A  \f]
 
         """
-        A = self.Area()
         tscales = self.get_thickness_scale()
         try:
             mpa = self.pid_ref.MassPerArea(tflag=self.tflag, tscales=tscales)
@@ -216,6 +215,10 @@ class ShellElement(Element):
             print(self.pid_ref)
             raise
 
+        if mpa == 0.0:
+            return 0.0
+
+        A = self.Area()
         try:
             return mpa * A
         except TypeError:

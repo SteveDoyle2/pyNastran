@@ -13,7 +13,7 @@ Multi-segment beams are IntegratedLineProperty objects.
 """
 from __future__ import annotations
 from itertools import count
-from typing import TYPE_CHECKING
+from typing import Tuple, TYPE_CHECKING
 import numpy as np
 from numpy import array, unique, argsort, allclose, ndarray
 
@@ -880,7 +880,7 @@ class PBEAM(IntegratedLineProperty):
                      n1a=n1a, n2a=n2a, n1b=n1b, n2b=n2b,
                      comment=comment)
 
-    def set_optimization_value(self, name_str, value):
+    def set_optimization_value(self, name_str: str, value: float) -> None:
         if name_str == 'I1(A)':
             self.i1[0] = value
         elif name_str == 'I1(B)':
@@ -893,7 +893,7 @@ class PBEAM(IntegratedLineProperty):
         else:
             raise NotImplementedError(name_str)
 
-    def get_optimization_value(self, name_str):
+    def get_optimization_value(self, name_str: str) -> float:
         if name_str == 'I1(A)':
             out = self.i1[0]
         elif name_str == 'I1(B)':
@@ -917,18 +917,21 @@ class PBEAM(IntegratedLineProperty):
        ##raise RuntimeError(self.nsm[0])
        #return self.nsm[0]
 
-    def I1_I2_I12(self):
+    def I1_I2_I12(self) -> Tuple[float, float, float]:
         #assert self.i1  is not None, 'I1=%r' % self.i1
         #assert self.i2  is not None, 'I2=%r' % self.i2
         #assert self.i12 is not None, 'I12=%r' % self.i12
         return self.i1[0], self.i2[0], self.i12[0]
 
-    def MassPerLength(self):
+    def MassPerLength(self) -> float:
         """
         mass = L*(Area*rho+nsm)
         mass/L = Area*rho+nsm
         """
         rho = self.Rho()
+        max_nsm = np.abs(self.nsm).max()
+        if rho == 0.0 and max_nsm == 0.0:
+            return 0.0
         mass_per_lengths = []
         for (area, nsm) in zip(self.A, self.nsm):
             #print('area=%s rho=%s nsm=%s' % (area, rho, nsm))

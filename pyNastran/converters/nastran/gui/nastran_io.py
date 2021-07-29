@@ -81,6 +81,7 @@ from pyNastran.bdf.mesh_utils.delete_bad_elements import (
 from pyNastran.bdf.mesh_utils.export_mcids import export_mcids_all
 from pyNastran.bdf.mesh_utils.forces_moments import get_load_arrays, get_pressure_array
 from pyNastran.bdf.mesh_utils.mpc_dependency import get_mpc_node_ids
+from pyNastran.bdf.mesh_utils.bdf_renumber import superelement_renumber
 
 from pyNastran.op2.op2 import OP2
 #from pyNastran.f06.f06_formatting import get_key0
@@ -113,6 +114,7 @@ from .menus.setup_model_sidebar import ModelSidebar
 
 
 if TYPE_CHECKING:  # pragma: no cover
+    from cpylog import SimpleLogger
     from pyNastran.gui.gui_objects.settings import Settings
 
 SIDE_MAP = {}
@@ -179,21 +181,15 @@ DESIRED_RESULTS = [
 ]
 
 IS_TESTING = 'test' in sys.argv[0]
-class NastranIO(NastranGuiResults, NastranGeometryHelper):
-    """Defines the GUI class for Nastran."""
+
+class NastranIO_(NastranGuiResults, NastranGeometryHelper):
+    """helper class that doesn't have any pyqt requirements"""
     def __init__(self):
-        super(NastranIO, self).__init__()
+        super().__init__()
         self.nid_release_map = {}
         self.make_spc_mpc_supports = True
         #self.export_vtk = False
         self.create_secondary_actors = True
-
-    #def __init__(self, gui):
-        #super(NastranIO, self).__init__()
-        #self.gui = gui  # make sure to comment out the property on line 124
-        #self.nid_release_map = {}
-        #self.stress = {}
-        #self.strain = {}
 
 
     def get_nastran_wildcard_geometry_results_functions(self):
@@ -231,117 +227,8 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         self.load_nastran_geometry(op2_filename, name='main', plot=False)
         self.load_nastran_results(self.model) # name='main', plot=True
 
-    def _cleanup_nastran_tools_and_menu_items(self):
-        """
-        hides the Nastran toolbar when loading another format
-        """
-        self.nastran_tools_menu.setVisible(False)
-
-        #self.menu_help.menuAction().setVisible(True)
-        #self.menu_help2.menuAction().setVisible(False)
-        self.nastran_toolbar.setVisible(False)
-        self.actions['nastran'].setVisible(False)
-
-    def _create_nastran_tools_and_menu_items(self):
-        """
-        creates the Nastran toolbar when loading a Nastran file
-        """
-        tools = [
-            #('about_nastran', 'About Nastran GUI', 'tabout.png', 'CTRL+H',
-            #'About Nastran GUI and help on shortcuts', self.about_dialog),
-            #('about', 'About Orig GUI', 'tabout.png', 'CTRL+H',
-            #'About Nastran GUI and help on shortcuts', self.about_dialog),
-        ]
-        #self.gui.menu_help2 = self.gui.menubar.addMenu('&HelpMenuNew')
-        #self.gui.menu_help.menuAction().setVisible(False)
-        if hasattr(self, 'nastran_toolbar'):
-            self.nastran_tools_menu.setVisible(True)
-            self.gui.nastran_toolbar.setVisible(True)
-            self.gui.actions['nastran'].setVisible(True)
-        else:
-            #self.menubar.addMenu('&File')
-            self.create_nastran_tools_menu(self.gui)
-
-            self.gui.nastran_toolbar = self.addToolBar('Nastran Toolbar')
-            self.gui.nastran_toolbar.setObjectName('nastran_toolbar')
-            #self.gui.nastran_toolbar.setStatusTip("Show/Hide nastran toolbar")
-            self.gui.actions['nastran'] = self.nastran_toolbar.toggleViewAction()
-            self.gui.actions['nastran'].setStatusTip("Show/Hide application toolbar")
-        #self.gui.file.menuAction().setVisible(False)
-        #self.gui.menu_help.
-
-        #self.gui.actions['about'].Disable()
-        menu_items = {}
-        menu_items['nastran_toolbar'] = (self.gui.nastran_toolbar,
-                                         ('caero', 'caero_subpanels', 'conm2'))
-        #menu_items = [
-            #(self.menu_help2, ('about_nastran',)),
-            #(self.gui.nastran_toolbar, ('caero', 'caero_subpanels', 'conm2'))
-            #(self.menu_window, tuple(menu_window)),
-            #(self.menu_help, ('load_geometry', 'load_results', 'script', '', 'exit')),
-            #(self.menu_help2, ('load_geometry', 'load_results', 'script', '', 'exit')),
-
-        return tools, menu_items
-
     def on_create_coord(self):
         pass
-
-    def create_nastran_tools_menu(self, gui):
-        #if 'dev' not in __version__:
-            #return
-        if not hasattr(self, 'shear_moment_torque_obj'):
-            return
-
-        tools = [
-            #('script', 'Run Python Script...', 'python48.png', None, 'Runs pyNastranGUI in batch mode', self.on_run_script),
-            ('shear_moment_torque', 'Shear, Moment, Torque...', 'python48.png', None,
-             'Creates a Shear, Moment, Torque Plot', self.shear_moment_torque_obj.set_shear_moment_torque_menu),
-            ('create_coord', 'Create Coordinate System...', 'coord.png', None, 'Creates a Coordinate System', self.on_create_coord),
-        ]
-        items = (
-            'shear_moment_torque',
-            'create_coord',
-        )
-
-        nastran_tools_menu = gui.menubar.addMenu('Tools')
-        gui.nastran_tools_menu = nastran_tools_menu
-        menu_items = {
-            'nastran_tools' : (nastran_tools_menu, items),
-        }
-        icon_path = ''
-        gui._prepare_actions_helper(icon_path, tools, self.actions, checkables=None)
-        gui._populate_menu(menu_items, actions=self.actions)
-
-    def toggle_caero_panels(self):
-        """
-        Toggle the visibility of the CAERO panels. The visibility of the
-        sub panels or panels will be set according to the current
-        show_caero_sub_panels state.
-        """
-        if not self.has_caero:
-            return
-        self.show_caero_actor = not self.show_caero_actor
-
-        names = ['caero', 'caero_subpanels', 'caero_control_surfaces']
-        geometry_properties = self.gui._get_geometry_properties_by_name(names)
-
-        if self.show_caero_actor:
-            try:
-                geometry_properties['caero_control_surfaces'].is_visible = True
-            except KeyError:
-                pass
-            if self.show_caero_sub_panels:
-                geometry_properties['caero_subpanels'].is_visible = True
-            else:
-                geometry_properties['caero'].is_visible = True
-        else:
-            try:
-                geometry_properties['caero_control_surfaces'].is_visible = False
-            except KeyError:
-                pass
-            geometry_properties['caero'].is_visible = False
-            geometry_properties['caero_subpanels'].is_visible = False
-        self.gui.on_update_geometry_properties_override_dialog(geometry_properties)
 
     def _get_geometry_properties_by_name(self, names):
         """
@@ -423,7 +310,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         """
         origin = coord.origin
         beta = coord.beta().T
-        ## TODO: support FEMAP syntax
+        ## TODO: support FEMAP syntax which is????
         self.gui.create_coordinate_system(
             cid, dim_max, label='%s' % cid, origin=origin,
             matrix_3x3=beta, coord_type=coord_type)
@@ -481,7 +368,8 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                 del name
         return skip_reading
 
-    def get_xyz_in_coord(self, model, cid=0, fdtype: str='float32', check_mirror: bool=True):
+    def get_xyz_in_coord(self, model: BDF, cid: int=0,
+                         fdtype: str='float32', check_mirror: bool=True):
         """
         Creates the grid points efficiently
 
@@ -515,70 +403,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         log = self.log
         if not len(all_nids) == len(unids):
             if model.sebulk and check_mirror:
-                from pyNastran.bdf.mesh_utils.bdf_renumber import superelement_renumber
-                bdf_filename_out = 'spike.bdf'
-                unused_model = superelement_renumber(
-                    model, bdf_filename_out=bdf_filename_out,
-                    size=8, is_double=False, starting_id_dict=None,
-                    cards_to_skip=None, log=None, debug=False)
-
-                _model2 = BDF(debug=None, log=log, mode='msc')
-                _model2.read_bdf(bdf_filename=bdf_filename_out,
-                                 validate=False, xref=False, punch=False, read_includes=True,
-                                 save_file_structure=False, encoding=model._encoding)
-                model.uncross_reference()
-                model.nodes = _model2.nodes
-                model.elements = _model2.elements
-                model.properties = _model2.properties
-                model.materials = _model2.materials
-                model.loads = _model2.loads
-                model.seloc = _model2.seloc
-                model.superelement_models = _model2.superelement_models
-                #model.write_bdf('spike2.bdf')
-                #os.remove('spike2.bdf')
-                xref_nodes = True
-                xref_loads = True
-                model.safe_cross_reference(
-                    xref=True,
-                    xref_nodes=xref_nodes,
-                    xref_elements=True,
-                    xref_nodes_with_elements=False,
-                    xref_properties=True,
-                    xref_masses=True,
-                    xref_materials=False,
-                    xref_loads=xref_loads,
-                    xref_constraints=False,
-                    xref_optimization=False,
-                    xref_aero=True,
-                    xref_sets=False,
-                    create_superelement_geometry=False,
-                )
-                #from pyNastran.bdf.mesh_utils.bdf_renumber import (
-                    #bdf_renumber, get_starting_ids_dict_from_mapper)
-                #starting_id_dict = { # todo: hardcoded
-                    #'nid' : unids.max(),
-                    #'eid' : 100000,
-                    #'cid' : 100000,
-                    #'pid' : 100000,
-                #}
-                #for seid, sebulk in sorted(model.sebulk.items()):
-                    #if sebulk.Type == 'MIRROR':
-                        #print('renumbering mirror seid=%s -> %s' % (sebulk.rseid, seid))
-                        #superelement = model.superelement_models[seid]
-                        #bdf_filename_out = 'super_%i.bdf' % seid
-                        #_model, mapper = bdf_renumber(
-                            #superelement, bdf_filename_out, size=8, is_double=False,
-                            #starting_id_dict=starting_id_dict, round_ids=False,
-                            #cards_to_skip=None, log=log, debug=False)
-                        #starting_id_dict = get_starting_ids_dict_from_mapper(
-                            #_model, mapper)
-                        #superelement2 = BDF(debug=True, log=log, mode='msc')
-                        #superelement2.read_bdf(bdf_filename_out)
-                        #model.superelement_models[seid] = superelement2
-                        ##os.remove(bdf_filename_out)
-                    #else:  # pragma: no cover
-                        #raise NotImplementedError(sebulk)
-                #model.write_bdf('spike.bdf')
+                _prepare_superelement_model(model, log)
                 return self.get_xyz_in_coord(model, cid=0, fdtype=fdtype, check_mirror=False)
 
             msg = ('superelement nodes are not unique; use superelement_renumber\n'
@@ -6284,6 +6109,129 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         self.element_ids = None
         self.node_ids = None
 
+
+class NastranIO(NastranIO_):
+    """Defines the GUI class for Nastran."""
+    def __init__(self):
+        super().__init__()
+
+    #def __init__(self, gui):
+        #super(NastranIO, self).__init__()
+        #self.gui = gui  # make sure to comment out the property on line 124
+        #self.nid_release_map = {}
+        #self.stress = {}
+        #self.strain = {}
+
+    def _cleanup_nastran_tools_and_menu_items(self):
+        """
+        hides the Nastran toolbar when loading another format
+        """
+        self.nastran_tools_menu.setVisible(False)
+
+        #self.menu_help.menuAction().setVisible(True)
+        #self.menu_help2.menuAction().setVisible(False)
+        self.nastran_toolbar.setVisible(False)
+        self.actions['nastran'].setVisible(False)
+
+    def _create_nastran_tools_and_menu_items(self):
+        """
+        creates the Nastran toolbar when loading a Nastran file
+        """
+        tools = [
+            #('about_nastran', 'About Nastran GUI', 'tabout.png', 'CTRL+H',
+            #'About Nastran GUI and help on shortcuts', self.about_dialog),
+            #('about', 'About Orig GUI', 'tabout.png', 'CTRL+H',
+            #'About Nastran GUI and help on shortcuts', self.about_dialog),
+        ]
+        #self.gui.menu_help2 = self.gui.menubar.addMenu('&HelpMenuNew')
+        #self.gui.menu_help.menuAction().setVisible(False)
+        if hasattr(self, 'nastran_toolbar'):
+            self.nastran_tools_menu.setVisible(True)
+            self.gui.nastran_toolbar.setVisible(True)
+            self.gui.actions['nastran'].setVisible(True)
+        else:
+            #self.menubar.addMenu('&File')
+            self.create_nastran_tools_menu(self.gui)
+
+            self.gui.nastran_toolbar = self.addToolBar('Nastran Toolbar')
+            self.gui.nastran_toolbar.setObjectName('nastran_toolbar')
+            #self.gui.nastran_toolbar.setStatusTip("Show/Hide nastran toolbar")
+            self.gui.actions['nastran'] = self.nastran_toolbar.toggleViewAction()
+            self.gui.actions['nastran'].setStatusTip("Show/Hide application toolbar")
+        #self.gui.file.menuAction().setVisible(False)
+        #self.gui.menu_help.
+
+        #self.gui.actions['about'].Disable()
+        menu_items = {}
+        menu_items['nastran_toolbar'] = (self.gui.nastran_toolbar,
+                                         ('caero', 'caero_subpanels', 'conm2'))
+        #menu_items = [
+            #(self.menu_help2, ('about_nastran',)),
+            #(self.gui.nastran_toolbar, ('caero', 'caero_subpanels', 'conm2'))
+            #(self.menu_window, tuple(menu_window)),
+            #(self.menu_help, ('load_geometry', 'load_results', 'script', '', 'exit')),
+            #(self.menu_help2, ('load_geometry', 'load_results', 'script', '', 'exit')),
+
+        return tools, menu_items
+
+    def create_nastran_tools_menu(self, gui):
+        #if 'dev' not in __version__:
+            #return
+        if not hasattr(self, 'shear_moment_torque_obj'):
+            return
+
+        tools = [
+            #('script', 'Run Python Script...', 'python48.png', None, 'Runs pyNastranGUI in batch mode', self.on_run_script),
+            ('shear_moment_torque', 'Shear, Moment, Torque...', 'python48.png', None,
+             'Creates a Shear, Moment, Torque Plot', self.shear_moment_torque_obj.set_shear_moment_torque_menu),
+            ('create_coord', 'Create Coordinate System...', 'coord.png', None, 'Creates a Coordinate System', self.on_create_coord),
+        ]
+        items = (
+            'shear_moment_torque',
+            'create_coord',
+        )
+
+        nastran_tools_menu = gui.menubar.addMenu('Tools')
+        gui.nastran_tools_menu = nastran_tools_menu
+        menu_items = {
+            'nastran_tools' : (nastran_tools_menu, items),
+        }
+        icon_path = ''
+        gui._prepare_actions_helper(icon_path, tools, self.actions, checkables=None)
+        gui._populate_menu(menu_items, actions=self.actions)
+
+    def toggle_caero_panels(self):
+        """
+        Toggle the visibility of the CAERO panels. The visibility of the
+        sub panels or panels will be set according to the current
+        show_caero_sub_panels state.
+        """
+        if not self.has_caero:
+            return
+        self.show_caero_actor = not self.show_caero_actor
+
+        names = ['caero', 'caero_subpanels', 'caero_control_surfaces']
+        geometry_properties = self.gui._get_geometry_properties_by_name(names)
+
+        if self.show_caero_actor:
+            try:
+                geometry_properties['caero_control_surfaces'].is_visible = True
+            except KeyError:
+                pass
+            if self.show_caero_sub_panels:
+                geometry_properties['caero_subpanels'].is_visible = True
+            else:
+                geometry_properties['caero'].is_visible = True
+        else:
+            try:
+                geometry_properties['caero_control_surfaces'].is_visible = False
+            except KeyError:
+                pass
+            geometry_properties['caero'].is_visible = False
+            geometry_properties['caero_subpanels'].is_visible = False
+        self.gui.on_update_geometry_properties_override_dialog(geometry_properties)
+
+
 def jsonify(comment_lower: str) -> str:
     """pyNastran: SPOINT={'id':10, 'xyz':[10.,10.,10.]}"""
     sline = comment_lower.split('=')
@@ -6980,6 +6928,71 @@ def build_superelement_model(model: BDF, cid: int=0, fdtype: str='float32'):
         nid_cp_cd[super_id] = nid_cp_cdi
         xyz_cid0[super_id] = xyz_cid0i
     return xyz_cid0, nid_cp_cd, icd_transform
+
+def _prepare_superelement_model(model: BDF, log: SimpleLogger) -> None:
+    bdf_filename_out = 'spike.bdf'
+    unused_model = superelement_renumber(
+        model, bdf_filename_out=bdf_filename_out,
+        size=8, is_double=False, starting_id_dict=None,
+        cards_to_skip=None, log=None, debug=False)
+
+    _model2 = BDF(debug=None, log=log, mode='msc')
+    _model2.read_bdf(bdf_filename=bdf_filename_out,
+                     validate=False, xref=False, punch=False, read_includes=True,
+                     save_file_structure=False, encoding=model._encoding)
+    model.uncross_reference()
+    model.nodes = _model2.nodes
+    model.elements = _model2.elements
+    model.properties = _model2.properties
+    model.materials = _model2.materials
+    model.loads = _model2.loads
+    model.seloc = _model2.seloc
+    model.superelement_models = _model2.superelement_models
+    #model.write_bdf('spike2.bdf')
+    #os.remove('spike2.bdf')
+    xref_nodes = True
+    xref_loads = True
+    model.safe_cross_reference(
+        xref=True,
+        xref_nodes=xref_nodes,
+        xref_elements=True,
+        xref_nodes_with_elements=False,
+        xref_properties=True,
+        xref_masses=True,
+        xref_materials=False,
+        xref_loads=xref_loads,
+        xref_constraints=False,
+        xref_optimization=False,
+        xref_aero=True,
+        xref_sets=False,
+        create_superelement_geometry=False,
+    )
+    #from pyNastran.bdf.mesh_utils.bdf_renumber import (
+        #bdf_renumber, get_starting_ids_dict_from_mapper)
+    #starting_id_dict = { # todo: hardcoded
+        #'nid' : unids.max(),
+        #'eid' : 100000,
+        #'cid' : 100000,
+        #'pid' : 100000,
+    #}
+    #for seid, sebulk in sorted(model.sebulk.items()):
+        #if sebulk.Type == 'MIRROR':
+            #print('renumbering mirror seid=%s -> %s' % (sebulk.rseid, seid))
+            #superelement = model.superelement_models[seid]
+            #bdf_filename_out = 'super_%i.bdf' % seid
+            #_model, mapper = bdf_renumber(
+                #superelement, bdf_filename_out, size=8, is_double=False,
+                #starting_id_dict=starting_id_dict, round_ids=False,
+                #cards_to_skip=None, log=log, debug=False)
+            #starting_id_dict = get_starting_ids_dict_from_mapper(
+                #_model, mapper)
+            #superelement2 = BDF(debug=True, log=log, mode='msc')
+            #superelement2.read_bdf(bdf_filename_out)
+            #model.superelement_models[seid] = superelement2
+            ##os.remove(bdf_filename_out)
+        #else:  # pragma: no cover
+            #raise NotImplementedError(sebulk)
+    #model.write_bdf('spike.bdf')
 
 
 def get_caero_control_surface_grid(grid,

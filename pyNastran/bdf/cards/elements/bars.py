@@ -122,8 +122,12 @@ class LineElement(Element):  # CBAR, CBEAM, CBEAM3, CBEND
         .. math:: m = \left( \rho A + nsm \right) L
 
         """
+        mpa = self.MassPerLength()
+        if mpa == 0.0:
+            return 0.
         L = self.Length()
-        mass = L * self.MassPerLength()
+        mass = L * mpa
+
         #try:
             #mass = (self.Rho() * self.Area() + self.Nsm()) * L
         #except TypeError:
@@ -1313,7 +1317,7 @@ class CBEAM3(LineElement):  # was CBAR
             )
         else:
             volume = np.linalg.norm(xyzb*Ab - xyza*Aa)
-        assert isinstance(volume, float), volume
+            assert isinstance(volume, float) and volume > 0, f'Volume={volume} must be >0;\n{str(self)}'
         return volume
 
     def Nsm(self):

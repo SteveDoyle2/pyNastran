@@ -1324,9 +1324,11 @@ class PBAR(LineProperty):
         .. math:: \frac{m}{L} = \rho A + nsm
 
         """
-        A = self.Area()
         rho = self.Rho()
         nsm = self.Nsm()
+        if rho == 0.0 and nsm == 0.:
+            return 0.
+        A = self.Area()
         return rho * A + nsm
 
     def get_cdef(self):
@@ -1730,8 +1732,10 @@ class PBARL(LineProperty):
         .. math:: \frac{m}{L} = A \rho + nsm
         """
         rho = self.Rho()
-        area = self.Area()
         nsm = self.Nsm()
+        if rho == 0.0 and nsm == 0.:
+            return 0.
+        area = self.Area()
         return area * rho + nsm
 
     def I1(self) -> float:

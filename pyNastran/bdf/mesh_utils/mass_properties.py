@@ -287,7 +287,11 @@ def _mass_properties(model, elements, masses, reference_point, is_cg):
 
             try:
                 m = element.Mass()
-                #print('eid=%s type=%s mass=%s'  %(element.eid, element.type, m))
+                #print(f'eid={element.eid:d} type={element.type} mass={m}')
+            #except AttributeError:
+                #raise
+            #except SystemExit:
+                #raise
             except:
                 #raise
                 if element.type in no_mass:

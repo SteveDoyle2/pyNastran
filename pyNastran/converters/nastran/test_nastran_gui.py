@@ -22,6 +22,7 @@ from pyNastran.bdf.cards.test.test_aero import get_zona_model
 from pyNastran.bdf.errors import DuplicateIDsError
 from pyNastran.gui.testing_methods import FakeGUIMethods
 from pyNastran.converters.nastran.gui.nastran_io import NastranIO
+from pyNastran.converters.nastran.nastran_to_vtk import nastran_to_vtk
 RED = (1., 0., 0.)
 
 
@@ -530,6 +531,11 @@ class TestNastranGUI(unittest.TestCase):
         test.on_vector(icase=iforce_xyz, stop_on_failure=True) # force_xyz
         test.on_disp(icase=idisp, stop_on_failure=True) # disp
         test.on_fringe(icase=37, update_legend_window=True, show_msg=True)  # normal
+
+        #op2_filename = os.path.join(MODEL_PATH, 'elements', 'static_elements.op2')
+        vtk_filename = os.path.join(MODEL_PATH, 'elements', 'static_elements.vtu')
+        nastran_to_vtk(op2_filename, vtk_filename)
+        assert os.path.exists(vtk_filename), vtk_filename
 
     def test_gui_elements_01b(self):
         bdf_filename = os.path.join(MODEL_PATH, 'elements', 'static_elements.bdf')

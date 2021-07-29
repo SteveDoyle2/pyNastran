@@ -1266,7 +1266,7 @@ class PCOMPG(CompositeShellProperty):
         ilayer = nnew // 10
         #print('ilayer=%s n=%s nnew=%s' % (ilayer, n, nnew))
         try:
-            ply = self.plies[ilayer]
+            unused_ply = self.plies[ilayer]
         except IndexError:
             msg = ('On PCOMPG pid=%r, ply %i is not defined.  '
                    'iply_min=0; iply_max=%i' % (self.pid, ilayer, len(self.plies)))
@@ -2530,7 +2530,7 @@ class PSHELL(Property):
             Qbar4 = self.get_Qbar_matrix(self.mid4_ref, theta=0.)
             B += Qbar4 * (z1 ** 2 - z0 ** 2)
 
-        ts = self.tst * thickness
+        unused_ts = self.tst * thickness
 
         # [N, M, Q].T =   [TG1, T^2 * G4, 0]              * [epsilon0]
                         # [T^2 * G4, T^3/12 * G2, 0]        [xi]

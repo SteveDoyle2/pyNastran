@@ -719,7 +719,7 @@ class RealSolidStrainArray(RealSolidArray, StrainObject):
         headers = ['exx', 'eyy', 'ezz', 'exy', 'eyz', 'exz', 'emax', 'emid', 'emin', von_mises]
         return headers
 
-def _get_solid_msgs(self):
+def _get_solid_msgs(self: RealSolidArray):
     if self.is_von_mises:
         von_mises = 'VON MISES'
     else:
@@ -747,7 +747,7 @@ def _get_solid_msgs(self):
     hexa_msg += base_msg
     return tetra_msg, penta_msg, hexa_msg, pyram_msg
 
-def _get_f06_header_nnodes(self, is_mag_phase=True):
+def _get_f06_header_nnodes(self: RealSolidArray, is_mag_phase=True):
     tetra_msg, penta_msg, hexa_msg, pyram_msg = _get_solid_msgs(self)
     if self.element_type == 39: # CTETRA
         msg = tetra_msg

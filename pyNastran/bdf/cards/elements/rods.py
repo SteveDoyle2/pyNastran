@@ -32,8 +32,12 @@ class RodElement(Element):  # CROD, CONROD, CTUBE
 
         .. math:: m = \left( \rho A + nsm \right) L
         """
+        rho = self.Rho()
+        nsm = self.Nsm()
+        if rho == 0.0 and nsm == 0.0:
+            return 0.0
         L = self.Length()
-        mass = (self.Rho() * self.Area() + self.Nsm()) * L
+        mass = (rho * self.Area() + nsm) * L
         return mass
 
 
@@ -450,31 +454,34 @@ class CTUBE(RodElement):
             raise RuntimeError(msg)
         return self.pid_ref.Mid()
 
-    def Mass(self):
+    def Mass(self) -> float:
         if self.pid_ref is None:
             msg = 'Element eid=%i has not been cross referenced.\n%s' % (self.eid, str(self))
             raise RuntimeError(msg)
-        return self.pid_ref.MassPerLength() * self.Length()
+        mpa = self.pid_ref.MassPerLength()
+        if mpa == 0.0:
+            return 0.0
+        return mpa * self.Length()
 
-    def Nsm(self):
+    def Nsm(self) -> float:
         if self.pid_ref is None:
             msg = 'Element eid=%i has not been cross referenced.\n%s' % (self.eid, str(self))
             raise RuntimeError(msg)
         return self.pid_ref.Nsm()
 
-    def Area(self):
+    def Area(self) -> float:
         if self.pid_ref is None:
             msg = 'Element eid=%i has not been cross referenced.\n%s' % (self.eid, str(self))
             raise RuntimeError(msg)
         return self.pid_ref.Area()
 
-    def E(self):
+    def E(self) -> float:
         if self.pid_ref is None:
             msg = 'Element eid=%i has not been cross referenced.\n%s' % (self.eid, str(self))
             raise RuntimeError(msg)
         return self.pid_ref.mid_ref.E()
 
-    def G(self):
+    def G(self) -> float:
         if self.pid_ref is None:
             msg = 'Element eid=%i has not been cross referenced.\n%s' % (self.eid, str(self))
             raise RuntimeError(msg)
