@@ -728,23 +728,21 @@ class PBUSH1D(BushingProperty):
         return istart, out
 
     @staticmethod
-    def _read_spring(card, istart):
+    def _read_spring(card, istart: int) -> Tuple[str, int, int, int, int]:
         """
         F(u) = Ft(u)
         """
-        spring_type = string_or_blank(card, istart + 1, 'springType')
+        spring_type = string_or_blank(card, istart + 1, 'springType', default='TABLE')
         spring_idt = integer(card, istart + 2, 'springIDT')
 
         if spring_type == 'TABLE':
-            spring_idc = blank(card, istart + 3, 'springIDC')
-            spring_idtdu = blank(card, istart + 4, 'springIDTDU')
-            spring_idcdu = blank(card, istart + 5, 'springIDCDU')
+            spring_idc = integer_or_blank(card, istart + 3, 'springIDC', default=spring_idt)
+            spring_idtdu = integer_or_blank(card, istart + 4, 'springIDTDU')
+            spring_idcdu = integer_or_blank(card, istart + 5, 'springIDCDU', default=spring_idtdu)
         elif spring_type == 'EQUAT':
-            spring_idc = integer_or_blank(card, istart + 3,
-                                          'springIDC', spring_idt)
+            spring_idc = integer_or_blank(card, istart + 3, 'springIDC', default=spring_idt)
             spring_idtdu = integer(card, istart + 4, 'springIDTDU')
-            spring_idcdu = integer_or_blank(card, istart + 5,
-                                            'springIDCDU', spring_idtdu)
+            spring_idcdu = integer_or_blank(card, istart + 5, 'springIDCDU', default=spring_idtdu)
         else:
             msg = 'Invalid springType=%r on card\n%s' % (spring_type, card)
             raise RuntimeError(msg)
@@ -752,20 +750,20 @@ class PBUSH1D(BushingProperty):
         return spring_type, spring_idt, spring_idc, spring_idtdu, spring_idcdu
 
     @staticmethod
-    def _read_damper(card, istart):
+    def _read_damper(card, istart: int) -> Tuple[str, int, int, int, int]:
         """
         F(v) = Ft(u)
         """
-        damper_type = string_or_blank(card, istart + 1, 'damperType')
+        damper_type = string_or_blank(card, istart + 1, 'damperType', default='TABLE')
         damper_idt = integer(card, istart + 2, 'damperIDT')
         if damper_type == 'TABLE':
-            damper_idc = blank(card, istart + 3, 'damperIDC')
-            damper_idtdv = blank(card, istart + 4, 'damperIDTDV')
-            damper_idcdv = blank(card, istart + 5, 'damperIDCDV')
+            damper_idc = integer_or_blank(card, istart + 3, 'damperIDC', default=damper_idt)
+            damper_idtdv = integer_or_blank(card, istart + 4, 'damperIDTDV')
+            damper_idcdv = integer_or_blank(card, istart + 5, 'damperIDCDV', default=damper_idtdv)
         elif damper_type == 'EQUAT':
-            damper_idc = integer_or_blank(card, istart + 3, 'damperIDC')
+            damper_idc = integer_or_blank(card, istart + 3, 'damperIDC', default=damper_idt)
             damper_idtdv = integer(card, istart + 4, 'damperIDTDV')
-            damper_idcdv = integer_or_blank(card, istart + 5, 'damperIDCDV', damper_idtdv)
+            damper_idcdv = integer_or_blank(card, istart + 5, 'damperIDCDV', default=damper_idtdv)
         else:
             msg = 'Invalid damper_type=%r on card\n%s' % (damper_type, card)
             raise RuntimeError(msg)

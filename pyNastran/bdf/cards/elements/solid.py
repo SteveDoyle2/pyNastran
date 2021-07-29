@@ -1460,8 +1460,8 @@ class CPENTA6(SolidElement):
     def write_card_16(self, is_double=False):
         nodes = self.node_ids
         data = [self.eid, self.Pid()] + nodes
-        msg = ('CPENTA  %16d%16d%16d%16d\n'
-               '        %16d%16d%16d%16d\n' % tuple(data))
+        msg = ('CPENTA* %16d%16d%16d%16d\n'
+               '*       %16d%16d%16d%16d\n' % tuple(data))
         return self.comment + msg
 
     def __init__(self, eid, pid, nids, comment=''):
@@ -2293,8 +2293,8 @@ class CPYRAM5(SolidElement):
     def write_card_16(self, is_double=False):
         nodes = self.node_ids
         data = [self.eid, self.Pid()] + nodes
-        msg = ('CPYRAM  %16d%16d%16d%16d\n'
-               '        %16d%16d%16d' % tuple(data))
+        msg = ('CPYRAM* %16d%16d%16d%16d\n'
+               '*       %16d%16d%16d' % tuple(data))
         return self.comment + msg.rstrip() + '\n'
 
 
@@ -2573,8 +2573,8 @@ class CTETRA4(SolidElement):
     def write_card_16(self, is_double=False):
         nodes = self.node_ids
         data = [self.eid, self.Pid()] + nodes
-        msg = ('CTETRA  %16d%16d%16d%16d\n'
-               '        %16d%16d\n' % tuple(data))
+        msg = ('CTETRA* %16d%16d%16d%16d\n'
+               '*       %16d%16d\n' % tuple(data))
         return self.comment + msg
 
     def __init__(self, eid, pid, nids, comment=''):
@@ -2806,9 +2806,9 @@ class CTETRA10(SolidElement):
         nodes = self.node_ids
         nodes2 = ['' if node is None else '%16d' % node for node in nodes[4:]]
         data = [self.eid, self.Pid()] + nodes[:4] + nodes2
-        msg = ('CTETRA  %16d%16d%16d%16d\n'
-               '        %16d%16d%16s%16s\n'
-               '        %16s%16s%16s%16s' % tuple(data))
+        msg = ('CTETRA* %16d%16d%16d%16d\n'
+               '*       %16d%16d%16s%16s\n'
+               '*       %16s%16s%16s%16s' % tuple(data))
         return self.comment + msg.rstrip() + '\n'
 
     def get_face_area_centroid_normal(self, nid_opposite, nid=None):

@@ -141,47 +141,138 @@ class MPT:
         MAT2(203,2,78) - record 3
         """
         op2 = self.op2
+        card_name = 'MAT2'
+        card_obj = MAT2
+        methods = {
+            68 : self._read_mat2_68,
+            92 : self._read_mat2_92,
+        }
+        try:
+            n = op2.reader_geom2._read_double_card(
+                card_name, card_obj, self.add_op2_material,
+                methods, data, n)
+        except DoubleCardError:
+            raise
+        return n
+
+        #op2 = self.op2
+        #ndatai = len(data) - n
+        #if ndatai % 68 == 0:
+        #    ntotal = 68  # 17*4
+        #    s = Struct(op2._endian + b'i15fi')
+        #else:
+        #    ntotal = (17 + 6) * 4
+        #    nleftover = ndatai % ntotal
+        #    s = Struct(op2._endian + b'i15fi 6i')
+        #    op2.log.warning(f'unexpected MAT2 format; ndatai={ndatai} ntotal={ntotal} nmaterials={ndatai // ntotal} '
+        #                     f'leftover={ndatai % ntotal}')
+        #    assert nleftover == 0, nleftover
+        #nmaterials = ndatai // ntotal
+        #
+        #nbig_materials = 0
+        #for unused_i in range(nmaterials):
+        #    edata = data[n:n+ntotal]
+        #    out = s.unpack(edata)
+        #    if op2.is_debug_file:
+        #        op2.binary_debug.write('  MAT2=%s\n' % str(out))
+        #    if ntotal == 68:
+        #        (mid, g1, g2, g3, g4, g5, g6, rho, aj1, aj2, aj3,
+        #         tref, ge, St, Sc, Ss, mcsid) = out
+        #        mat = MAT2.add_op2_data(out)
+        #    else:
+        #        (mid, g1, g2, g3, g4, g5, g6, rho, aj1, aj2, aj3,
+        #         tref, ge, St, Sc, Ss, mcsid, *blanks) = out
+        #        mat = MAT2.add_op2_data(out)
+        #        op2.log.debug(f'\n{mat}')
+        #    #print("MAT2 = ",out)
+        #    if mid < 0:
+        #        ndata = 4692
+        #          #ints    = (100000001, 1260995102, 1246259552, 866102869, 1260995102, 904798606, 1248743307, 1030590824, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        #          #           100000002, 1260995102, 1246259552, 866102869, 1260995102, 904798606, 1248743307, 1030590824, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        #          #           100000003, 1260995102, 1246259552, 866102869, 1260995102, 904798606, 1248743307, 1030590824, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        #          #           100000004, 1260995102, 1246259552, 866102869, 1260995102, 904798606, 1248743307, 1030590824, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        #          #           100000005, 1260995102, 1246259552, 866102869, 1260995102, 904798606, 1248743307, 1030590824, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        #          #           100000006, 1260995102, 1246259552, 866102869, 1260995102, 904798606, 1248743307, 1030590824, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        #          #           100000007, 1260995102, 1246259552, 866102869, 1260995102, 904798606, 1248743307, 1030590824, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        #          #           100000008, 1260995102, 1246259552, 866102869, 1260995102, 904798606, 1248743307, 1030590824, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        #          #           100000009, 1260995102, 1246259552, 866102869, 1260995102, 904798606, 1248743307, 1030590824, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        #          #           100000010, 1260995102, 1246259552, 866102869, 1260995102, 904798606, 1248743307, 1030590824, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        #          #           100000011, 1260995102, 1246259552, 866102869, 1260995102, 904798606, 1248743307, 1030590824, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        #          #           100000012, 1260995102, 1246259552, 866102869, 1260995102, 904798606, 1248743307, 1030590824, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        #          #           100000013, 1260995102, 1246259552, 866102869, 1260995102, 904798606, 1248743307, 1030590824, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        #          #           100000014, 1260995102, 1246259552, 866102869, 1260995102, 904798606, 1248743307, 1030590824, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        #          #           100000015, 1260995102, 1246259552, 866102869, 1260995102, 904798606, 1248743307, 1030590824, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        #          #           100000016, 1260995102, 1246259552, 866102869, 1260995102, 904798606, 1248743307, 1030590824, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        #          #           100000017, 1258615469, 1244073420, 858401944, 1258615469, 900961598, 1245077109, 1030590824, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        #          #           200000001, 1267294939, 1241962828, 1238754656, 1254165792, 1238754656, 1244446583, 1030590824, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        #          #           200000002, 1267294939, 1241962828, 1238754656, 1254165792, 1238754656, 1244446583, 1030590824, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        #          #           200000003, 1267294939, 1241962828, 1238754656, 1254165792, 1238754656, 1244446583, 1030590824, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        #          #           200000004, 1267294939, 1241962828, 1238754656, 1254165792, 1238754656, 1244446583, 1030590824, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        #          #           200000005, 1267294939, 1241962828, 1238754656, 1254165792, 1238754656, 1244446583, 1030590824, 0, 0, 0, 0, 0, 0)
+        #        op2.show_data(data[12:], types='i', force=True)
+        #        #op2.show_data(data[n:n+176], types='i')
+        #        raise RuntimeError(mat)
+        #        #, f'\n{mat}'
+        #    if 0 < mid <= 1e8:  # just a checker for out of range materials
+        #        self.add_op2_material(mat)
+        #    else:
+        #        nbig_materials += 1
+        #        op2.big_materials[mid] = mat
+        #    n += ntotal
+        #
+        #ncards = nmaterials - nbig_materials
+        #if ncards:
+        #    op2.card_count['MAT2'] = ncards
+        #return n
+
+    def _read_mat2_68(self, material: MAT2, data: bytes, n: int) -> Tuple[int, MAT2]:
+        op2 = self.op2
+        ntotal = 68  # 17*4
+        s = Struct(op2._endian + b'i15fi')
         ndatai = len(data) - n
-        if ndatai % 68 == 0:
-            ntotal = 68  # 17*4
-            s = Struct(op2._endian + b'i15fi')
-        else:
-            ntotal = (17 + 6) * 4
-            nleftover = ndatai % ntotal
-            s = Struct(op2._endian + b'i15fi 6i')
-            op2.log.warning(f'unexpected MAT2 format; ndatai={ndatai} ntotal={ntotal} nmaterials={ndatai // ntotal} '
-                             f'leftover={ndatai % ntotal}')
-            assert nleftover == 0, nleftover
+        assert ndatai % ntotal == 0
         nmaterials = ndatai // ntotal
 
-        nbig_materials = 0
+        mats = []
         for unused_i in range(nmaterials):
             edata = data[n:n+ntotal]
             out = s.unpack(edata)
             if op2.is_debug_file:
                 op2.binary_debug.write('  MAT2=%s\n' % str(out))
-            if ntotal == 68:
-                (mid, g1, g2, g3, g4, g5, g6, rho, aj1, aj2, aj3,
-                 tref, ge, St, Sc, Ss, mcsid) = out
-                mat = MAT2.add_op2_data(out)
-            else:
-                (mid, g1, g2, g3, g4, g5, g6, rho, aj1, aj2, aj3,
-                 tref, ge, St, Sc, Ss, mcsid, *blanks) = out
-                mat = MAT2.add_op2_data(out)
-                op2.log.debug(f'\n{mat}')
-            #print("MAT2 = ",out)
 
-            if 0 < mid <= 1e8:  # just a checker for out of range materials
-                self.add_op2_material(mat)
-            else:
-                nbig_materials += 1
-                op2.big_materials[mid] = mat
+            #(mid, g1, g2, g3, g4, g5, g6, rho, aj1, aj2, aj3,
+             #tref, ge, St, Sc, Ss, mcsid) = out
+            mid = out[0]
+            assert mid > 0, mid
+            mat = MAT2.add_op2_data(out)
+            mats.append(mat)
             n += ntotal
+        return n, mats
 
-        ncards = nmaterials - nbig_materials
-        if ncards:
-            op2.card_count['MAT2'] = ncards
-        return n
+
+    def _read_mat2_92(self, material: MAT2, data: bytes, n: int) -> Tuple[int, MAT2]:
+        op2 = self.op2
+        ntotal = 92  # 23*4
+        s = Struct(op2._endian + b'i15fi 6i')
+        ndatai = len(data) - n
+        assert ndatai % ntotal == 0
+        nmaterials = ndatai // ntotal
+
+        mats = []
+        for unused_i in range(nmaterials):
+            edata = data[n:n+ntotal]
+            out = s.unpack(edata)
+            if op2.is_debug_file:
+                op2.binary_debug.write('  MAT2=%s\n' % str(out))
+
+            (mid, g1, g2, g3, g4, g5, g6, rho, aj1, aj2, aj3,
+             tref, ge, St, Sc, Ss, mcsid, *blanks) = out
+            assert max(blanks) == min(blanks) == 0, (mid, blanks)
+            assert mid > 0, mid
+            mat = MAT2.add_op2_data(out)
+            mats.append(mat)
+            n += ntotal
+        return n, mats
 
     def _read_mat3(self, data: bytes, n: int) -> int:
         """

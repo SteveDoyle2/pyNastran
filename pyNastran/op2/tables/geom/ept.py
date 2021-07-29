@@ -1557,8 +1557,8 @@ class EPT:
         op2 = self.op2
         type_map = {
             0 : None,  # NULL
-            1 : 'EQUAT',
-            2 : 'TABLE',
+            1 : 'TABLE',
+            2 : 'EQUAT',
         }
         ntotal = 152 * self.factor  # 38*4
         struct1 = Struct(mapfmt(op2._endian + b'i 6f i 4f 24i 2f', self.size))
@@ -1595,8 +1595,8 @@ class EPT:
                 #+pb4, shocka, table, 1000., , 1., , 214, , +pb41
                 #+pb41, spring, table, 205
 
-                idts = idtsu if typea_str == 'TABLE' else 0
-                idets = idtsu if typea_str == 'EQUAT' else 0
+                idts = idtsu # if typea_str == 'TABLE' else 0
+                idets = idtsu # if typea_str == 'EQUAT' else 0
                 optional_vars['SHOCKA'] = [typea_str, cvt, cvc, expvt, expvc,
                                            idts, idets, idtcu, idtsud, idcsud]
                 #(shock_type, shock_cvt, shock_cvc, shock_exp_vt, shock_exp_vc,
@@ -1626,8 +1626,9 @@ class EPT:
             if op2.is_debug_file:
                 op2.binary_debug.write(msg)
 
-            op2.add_pbush1d(pid, k=k, c=c, m=m, sa=sa, se=se,
-                            optional_vars=optional_vars,)
+            pbush1d = op2.add_pbush1d(pid, k=k, c=c, m=m, sa=sa, se=se,
+                                      optional_vars=optional_vars,)
+            str(pbush1d)
             n += ntotal
         op2.card_count['PBUSH1D'] = nentries
         return n

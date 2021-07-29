@@ -4533,7 +4533,8 @@ class AddCards:
         self._add_methods._add_load_object(load)
         return load
 
-    def add_spc(self, conid, nodes, components, enforced, comment='') -> SPC:
+    def add_spc(self, conid :int, nodes: List[int], components: List[str],
+                enforced: List[float], comment: str='') -> SPC:
         """
         Creates an SPC card, which defines the degree of freedoms to be
         constrained

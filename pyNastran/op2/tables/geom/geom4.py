@@ -110,7 +110,7 @@ class GEOM4(GeomCommon):
             #(5561, 76, 0): ['PLOTEL/SESET/SEQSET1?', self._read_seqset1b],         # record
             (610, 6, 0): ['SESET/SEQSET1?', self._read_fake],           # record
             (5110, 51, 620256): ['SPCD?', self._read_fake],    # record
-            (5501, 55, 620016): ['SPC/SPC1?', self._read_fake],    # record
+            (5501, 55, 620016): ['SPC', self._read_spcb],    # record
             (410, 4, 0): ['', self._read_fake],    # record
             (6701, 67, 293): ['RTRPLT', self._read_rtrplt],    # record 34
             (9801, 98, 79): ['', self._read_fake],  # record
@@ -824,7 +824,7 @@ class GEOM4(GeomCommon):
             'SPC', op2._add_methods._add_constraint_spc_object)
         return n
 
-    def _read_spc_msc(self, data, n):
+    def _read_spc_msc(self, data, n: int):
         """SPC(5501,55,16) - Record 44
 
         1 SID   I    Set identification number
@@ -1012,6 +1012,41 @@ class GEOM4(GeomCommon):
         for ii, jj in zip(i, j):
             outi = idata[ii:jj]
             self._add_spc1_card(outi)
+        return len(data)
+
+    def _read_spcb(self, data: bytes, n: int) -> int:
+        r"""
+        SPC(5501, 55, 620016) - Record 45 - MSC
+
+        1     SID   I    Set identification number
+        2     ID    I    Grid or scalar point identification number
+        3     C     I    Component numbers
+        4/5/6 UNDEF none Not used
+        4/5/6 D     RX   Enforced displacement
+
+        odd case = (
+            # sid, id, comp, [undef, undef, undef]...one of the undef is dx...
+            1, 12, 123456, 0, 0, 0,
+            1, 13, 123456, 0, 0, 0,
+            1, 14, 123456, 0, 0, 0,
+            1, 15, 123456, 0, 0, 0,
+            1, 16, 123456, 0, 0, 0,
+            ....
+        )
+        SPC     203     10000   3               10002   3       .01
+
+        """
+        assert self.size == 4, self.size
+        op2 = self.op2
+        idata = np.frombuffer(data[n:], 'int32').copy()
+        nints = len(idata)
+        nrows = nints // 6
+        idata = idata.reshape(nrows, 6)[:, :3]
+        enforceds = np.frombuffer(data[n:], 'float64').copy()[2::3]
+
+        for idatai, enforced in zip(idata, enforceds):
+            sid, idi, comp = idatai
+            op2.add_spc(sid, [idi], [str(comp)], [enforced])
         return len(data)
 
     def _add_spc1_card(self, out):
@@ -1352,7 +1387,8 @@ def read_rbe2s_from_idata_fdata(op2: OP2Geom, idata, fdata) -> List[RBE2]:
     3  CM I Component numbers of dependent degrees of-freedom
     4  GM I Grid point identification number for dependent degrees-of-freedom
     Word 4 repeats until End of Record
-    5 ALPHA RS Thermal expansion coefficient
+    5 ALPHA RS Thermal expansion coefficient  (optional)
+    6 TREF  RS Reference temperature          (optional if alpha exists)
 
     ::
 
@@ -1394,6 +1430,13 @@ def read_rbe2s_from_idata_fdata(op2: OP2Geom, idata, fdata) -> List[RBE2]:
     ]
     i=[ 0, 31]
     j=[29, 61]
+
+    idata = [
+        201, 5001, 123456, 201, -1,
+        221, 5002, 123456, 221, -1,
+        5001, 5001, 123, 1001, 1010, 1011, 1012, 1013, 1014, 1015, 1016, 1017, 1018, 1019, 1020, 1021, 1118, 1119, 1120, 1121, 1122, 1123, 1124, 1125, 1126, 1127, 1128, 1129, 1226, 1227, 1228, 1229, 1230, 1231, 1232, 1233, 1234, 1235, 1236, 1237, -1, 5002, 5002, 123, 2097, 2106, 2107, 2108, 2109, 2110, 2111, 2112, 2113, 2114, 2115, 2116, 2117, 2214, 2215, 2216, 2217, 2218, 2219, 2220, 2221, 2222, 2223, 2224, 2225, 2322, 2323, 2324, 2325, 2326, 2327, 2328, 2329, 2330, 2331, 2332, 2333, -1,
+        22222, 4455, 123456, 4467, 4443, -1
+    ]
     """
     rbe2s = []
     geom3 = op2.reader_geom3
@@ -1414,9 +1457,8 @@ def read_rbe2s_from_idata_fdata(op2: OP2Geom, idata, fdata) -> List[RBE2]:
             i = np.hstack([[0], iminus1[:-1]+3])
             j = np.hstack([iminus1[:-1]+1, len(idata)-2])
             assert is_alpha_tref is True, is_alpha_tref
+        assert -1 not in idata[j], idata[j]
     assert -1 not in idata[i], idata[i]
-    assert -1 not in idata[j], idata[j]
-
 
     #print('is_alpha=%s' % is_alpha)
     #print('i=%s' % i)

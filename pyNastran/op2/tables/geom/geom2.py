@@ -2779,10 +2779,15 @@ class GEOM2:
         ndatai = (len(data) - n) // self.factor
         keys = np.array(list(methods.keys()))
 
-        #print(ndatai, keys)
         errors = ndatai % keys
         izero = np.where(errors == 0)[0]
-        if len(izero) == 1:
+        if len(izero) == 0:
+            op2.show_data(data, types='ifs')
+            print(f'ndatai={ndatai} keys={keys} -> errors={errors}')
+            print('izero = ', izero)
+            raise EmptyCardError()
+
+        elif len(izero) == 1:
             key0 = keys[izero[0]]
             method = methods[key0]
             #print(method)
@@ -3561,7 +3566,7 @@ class GEOM2:
             if op2.is_debug_file:
                 op2.binary_debug.write('  CTETRA=%s\n' % str(out))
             (eid, pid, n1, n2, n3, n4, n5, n6, n7, n8, n9, n10) = out
-            #print("out = ",out)
+            print("out = ",out)
 
             data_in = [eid, pid, n1, n2, n3, n4]
             big_nodes = [n5, n6, n7, n8, n9, n10]
@@ -3569,6 +3574,13 @@ class GEOM2:
                 elem = CTETRA10.add_op2_data(data_in + big_nodes)
             else:
                 elem = CTETRA4.add_op2_data(data_in)
+            try:
+                elem.validate()
+                str(elem)
+            except:
+                print(data_in, big_nodes)
+                raise
+            print(elem)
             self.add_op2_element(elem)
             n += ntotal
         op2.card_count['CTETRA'] = nelements
