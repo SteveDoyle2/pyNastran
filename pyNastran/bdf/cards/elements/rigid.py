@@ -20,7 +20,7 @@ import numpy as np
 
 from pyNastran.utils.numpy_utils import integer_types, float_types
 from pyNastran.bdf.field_writer_8 import set_blank_if_default, print_card_8
-from pyNastran.bdf.cards.base_card import Element
+from pyNastran.bdf.cards.base_card import Element, write_card
 from pyNastran.bdf.bdf_interface.assign_type import (
     integer, integer_or_double, integer_double_or_blank, integer_or_blank,
     double_or_blank, integer_double_or_string, parse_components, components_or_blank,
@@ -29,7 +29,6 @@ from pyNastran.bdf.field_writer_16 import print_card_16
 # from pyNastran.bdf.cards.utils import build_table_lines
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.bdf.bdf import BDF
-
 
 class RigidElement(Element):
     def cross_reference(self, model: BDF) -> None:
@@ -983,7 +982,7 @@ class RBE2(RigidElement):
         gm_alpha_tref = integer_or_double(card, len(card) - 1, 'gm/alpha/tref')
         if isinstance(gm_alpha_tref, float):
             gm_alpha = integer_double_or_blank(card, len(card) - 2, 'gm/alpha', default=0.0)
-            if isinstance(gm_alpha_tref, float):
+            if isinstance(gm_alpha, float):
                 # alpha/tref is correct
                 # the last field is tref
                 n = 2
@@ -1004,7 +1003,7 @@ class RBE2(RigidElement):
         for i in range(len(card) - 4 - n):
             gmi = integer(card, j + i, 'Gm%i' % (i + 1))
             Gmi.append(gmi)
-        return RBE2(eid, gn, cm, Gmi, alpha, tref, comment=comment)
+        return RBE2(eid, gn, cm, Gmi, alpha=alpha, tref=tref, comment=comment)
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
@@ -1593,7 +1592,7 @@ class RBE3(RigidElement):
 
     def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.repr_fields()
-        return self.comment + print_card_8(card)
+        return write_card(self.comment, card, size, is_double)
 
 
 class RSPLINE(RigidElement):

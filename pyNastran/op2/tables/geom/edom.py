@@ -210,6 +210,7 @@ class EDOM(GeomCommon):
         ntotal0 = 16 * self.factor # 4 * 4
         ntotal1 = 44 * self.factor # 11 * 4
         ntotal6 = 24 * self.factor # 6 * 4
+        ntotal8 = 24 * self.factor # 6 * 4
         struct_4i = Struct(mapfmt(op2._endian + b'4i', self.size))
         struct_6f_5i = Struct(mapfmt(op2._endian + b'6f 5i', self.size))
         struct_f_5i = Struct(mapfmt(op2._endian + b'f 5i', self.size))
@@ -238,21 +239,40 @@ class EDOM(GeomCommon):
                 normal = np.array([nx, ny, nz])
                 dmncon = op2.add_dmncon(constraint_id, constraint_type, xyz=xyz, normal=normal)
                 n += ntotal1
-            elif flag == 6:
-                constraint_type = 'MINS'
+
+            elif flag in [5, 6]:
+                # FLAG = 5 Type of constraint = MAX_SIZE
+                #FLAG = 6 Type of constraint = MIN_SIZE
+                #  5 MSIZE RS Minimum size
+                #  6 UNDEF(5) None
+                if flag == 5:
+                    constraint_type = 'MAXS'
+                elif flag == 6:
+                    constraint_type = 'MINS'
+                else:  # pragma: no cover
+                    raise RuntimeError(flag)
+
                 edata = data[n:n+ntotal6]
                 out = struct_f_5i.unpack(edata)
                 size, *zeros = out
                 op2.log.debug(f'    size={size:g}; zeros={zeros}')
-                #FLAG = 6 Type of constraint = MIN_SIZE
-                #  5 MSIZE RS Minimum size
-                #  6 UNDEF(5) None
                 dmncon = op2.add_dmncon(constraint_id, constraint_type, size=size)
                 n += ntotal6
+            elif flag == 8:
+                # FLAG = 8 Type of constraint = CHECKER-BOARD CONTROL (CHBC)
+                #   5 OFF-FLAG RS Negative real number indicates CHBC is off. CHBC is on by default if no negative real OFF-FLAG or if CHBC record segment does not exist.
+                #   6 UNDEF(5) None
+                constraint_type = 'CHBC'
+                edata = data[n:n+ntotal8]
+                off_flag, *zeros = struct_f_5i.unpack(edata)
+                op2.log.debug(f'    off_flag={off_flag:g}; zeros={zeros}')
+                dmncon = op2.add_dmncon(constraint_id, constraint_type, off_flag=off_flag)
+                n += ntotal8
             else:
                 raise RuntimeError(flag)
             str(dmncon)
             ncards += 1
+            del flag
         op2.card_count['DMNCON'] = ncards
         assert n == len(data), f'n={n}; ndata={len(data)}'
         return n
@@ -1460,7 +1480,7 @@ class EDOM(GeomCommon):
                 #   8 ATTA   I Response attribute
                 #   9 ATTB   I Response attribute
                 #   10 MONE  I Entry is -1
-                print(response_type, ints[i0+6:i1], floats[i0+6:i1])
+                #print(response_type, ints[i0+6:i1], floats[i0+6:i1])
                 region, atta, attb = ints[i0+6:i0+9]
                 property_type = None
                 #response_type = 'EIGN'
@@ -1552,6 +1572,17 @@ class EDOM(GeomCommon):
                 property_type = None
                 region, atta, attb = ints[i0+6:i0+9]
                 atti = None
+            elif flag == 17:
+                ## TODO: is this right?
+                # FLAG = 17 Compliance
+                #   5 UNDEF(2) None
+                #   7 UNDEF I Reserved for SEID for compliance DRESP1
+                #   8 UNDEF(2) None
+                #   10 MONE I Entry is -1
+                property_type = None
+                region, atta, attb = ints[i0+6:i0+9]
+                atti = None
+                #print(17, region, atta, attb)
             elif flag == 19:
                 # FLAG = 19 ERP
                 #   5 UNDEF(2) None

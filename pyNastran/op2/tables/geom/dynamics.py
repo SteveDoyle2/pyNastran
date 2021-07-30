@@ -1846,7 +1846,19 @@ class DYNAMICS(GeomCommon):
 
 #TIC3
     def _read_tload1(self, data: bytes, n: int) -> int:
-        """common method for reading NX/MSC TLOAD1"""
+        """
+        common method for reading NX/MSC TLOAD1
+
+        (7107, 71, 138,
+        100000001, 2, 0, 0, 100000000, 0, 0, 0, 0,  # 9
+        100000002, 4, 0, 0, 100000000, 0, 0, 0, 0,
+        100000004, 6, 0, 0, 100000001, 0, 0, 0, 0,
+        100000005, 8, 0, 0, 100000001, 0, 0, 0, 0,
+        100000007, 10, 0, 0, 100000002, 0, 0, 0, 0,
+        100000008, 12, 0, 0, 100000002, 0, 0, 0, 0,
+        100000010, 14, 0, 0, 100000003, 0, 0, 0, 0,
+        100000011, 16, 0, 0, 100000003, 0, 0, 0, 0)
+        """
         op2 = self.op2
         # NX - 24
         # MSC - 32
@@ -1855,25 +1867,42 @@ class DYNAMICS(GeomCommon):
                    #sid excite ?    ?    tid ?    ?    ?    ?
         #ints    = (5,  2,     0,   0,   2,  0,   0,   0,   0)
         #floats  = (5,  2,     0.0, 0.0, 2,  0.0, 0.0, 0.0, 0.0)
-        ndatai = (len(data) - n) // self.factor
-        if ndatai % 24 == 0 and ndatai % 32 and ndatai % 36:
-            n, dloads = self._read_tload1_nx(data, n)
-        elif ndatai % 32 == 0 and ndatai % 24 and ndatai % 36:
-            n, dloads = self._read_tload1_msc(data, n)
-        elif ndatai % 36 == 0 and ndatai % 24 and ndatai % 32:
-            n, dloads = self._read_tload1_36(data, n)
-        else:
-            n = op2.reader_geom2._read_dual_card(
-                data, n,
-                self._read_tload1_nx, self._read_tload1_msc,
-                'TLOAD1', op2._add_methods._add_dload_entry)
-            return n
-        for dload in dloads:
-            op2._add_methods._add_dload_entry(dload)
-        op2.card_count['TLOAD1'] = len(dloads)
+
+        op2 = self.op2
+        card_name = 'TLOAD1'
+        card_obj = TLOAD1
+        methods = {
+            24 : self._read_tload1_nx_24,
+            32 : self._read_tload1_msc_32,
+            36 : self._read_tload1_36,
+        }
+        #try:
+        n = op2.reader_geom2._read_double_card(
+            card_name, card_obj, op2._add_methods._add_dload_entry,
+            methods, data, n)
+        #except DoubleCardError:
+            #raise
         return n
 
-    def _read_tload1_nx(self, data: bytes, n: int) -> Tuple[int, List[TLOAD1]]:
+        # ndatai = (len(data) - n) // self.factor
+        # if ndatai % 24 == 0 and ndatai % 32 and ndatai % 36:
+        #     n, dloads = self._read_tload1_nx_24(data, n)
+        # elif ndatai % 32 == 0 and ndatai % 24 and ndatai % 36:
+        #     n, dloads = self._read_tload1_msc_32(data, n)
+        # elif ndatai % 36 == 0 and ndatai % 24 and ndatai % 32:
+        #     n, dloads = self._read_tload1_36(data, n)
+        # else:
+        #     n = op2.reader_geom2._read_dual_card(
+        #         data, n,
+        #         self._read_tload1_nx_24, self._read_tload1_msc_32,
+        #         'TLOAD1', op2._add_methods._add_dload_entry)
+        #     return n
+        # for dload in dloads:
+        #     op2._add_methods._add_dload_entry(dload)
+        # op2.card_count['TLOAD1'] = len(dloads)
+        return n
+
+    def _read_tload1_nx_24(self, card_obj, data: bytes, n: int) -> Tuple[int, List[TLOAD1]]:
         """
         Record – TLOAD1(7107,71,138)
 
@@ -1898,19 +1927,19 @@ class DYNAMICS(GeomCommon):
             edata = data[n:n+ntotal]
             out = struc.unpack(edata)
             sid, darea, delayi, load_type, tid, delayr = out
+            assert sid > 0, sid
             if op2.is_debug_file:
                 op2.binary_debug.write('TLOAD1=%s\n' % str(out))
             delay = delayi
             if delayi == 0:
                 delay = delayr
             dload = TLOAD1(sid, darea, tid, delay=delay, Type=load_type)
+            #dload.validate()
             dloads.append(dload)
-            #op2._add_methods._add_dload_entry(dload)
             n += ntotal
-        #op2.increase_card_count('TLOAD1', nentries)
         return n, dloads
 
-    def _read_tload1_msc(self, data: bytes, n: int) -> Tuple[int, List[TLOAD1]]:
+    def _read_tload1_msc_32(self, card_obj, data: bytes, n: int) -> Tuple[int, List[TLOAD1]]:
         r"""
         TLOAD1(7107,71,138) - Record 37
 
@@ -1944,6 +1973,7 @@ class DYNAMICS(GeomCommon):
             edata = data[n:n+ntotal]
             out = struc.unpack(edata)
             sid, darea, delayi, load_type, tid, delayr, us0, vs0 = out
+            assert sid > 0, sid
             if op2.is_debug_file:
                 op2.binary_debug.write('TLOAD1=%s\n' % str(out))
             delay = delayi
@@ -1951,11 +1981,12 @@ class DYNAMICS(GeomCommon):
                 delay = delayr
             dload = TLOAD1(sid, darea, tid, delay=delay, Type=load_type,
                            us0=us0, vs0=vs0)
+            #dload.validate()
             dloads.append(dload)
             n += ntotal
         return n, dloads
 
-    def _read_tload1_36(self, data: bytes, n: int) -> Tuple[int, List[TLOAD1]]:
+    def _read_tload1_36(self, card_obj, data: bytes, n: int) -> Tuple[int, List[TLOAD1]]:
         r"""
         TLOAD1(7107,71,138) - Record 37
 
@@ -1995,6 +2026,7 @@ class DYNAMICS(GeomCommon):
             edata = data[n:n+ntotal]
             out = struc.unpack(edata)
             sid, darea, delayi, load_type, tid, delayr, us0, vs0, value = out
+            assert sid > 0, sid
             #print(f'sid={sid} darea={darea} delayi={delayi} load_type={load_type} tid={tid} delayr={delayr} us0={us0} vs0={vs0} value={value}')
             if op2.is_debug_file:
                 op2.binary_debug.write('TLOAD1=%s\n' % str(out))

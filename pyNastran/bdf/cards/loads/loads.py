@@ -15,7 +15,7 @@ import numpy as np
 
 #from pyNastran.bdf.errors import CrossReferenceError
 from pyNastran.bdf.field_writer_8 import set_blank_if_default
-from pyNastran.bdf.cards.base_card import BaseCard, _node_ids
+from pyNastran.bdf.cards.base_card import BaseCard, _node_ids, write_card, MAX_INT
 from pyNastran.bdf.bdf_interface.assign_type import (
     integer, integer_or_blank, double, double_or_blank, components_or_blank,
     string, string_or_blank)
@@ -409,7 +409,7 @@ class LSEQ(BaseCard):  # Requires LOADSET in case control deck
 
     def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.raw_fields()
-        return self.comment + print_card_8(card)
+        return write_card(self.comment, card, size, is_double)
 
 
 class LOADCYN(Load):
@@ -491,7 +491,7 @@ class LOADCYN(Load):
 
     def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.raw_fields()
-        return self.comment + print_card_8(card)
+        return write_card(self.comment, card, size, is_double)
 
 
 class LOADCYH(BaseCard):
@@ -624,7 +624,7 @@ class LOADCYH(BaseCard):
 
     def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.raw_fields()
-        return self.comment + print_card_8(card)
+        return write_card(self.comment, card, size, is_double)
 
 class DAREA(BaseCard):
     """
@@ -776,8 +776,14 @@ class DAREA(BaseCard):
 
     def write_card(self, size: int=8, is_double: bool=False) -> str:
         msg = self.comment
-        for nid, comp, scale in zip(self.node_ids, self.components, self.scales):
-            msg += print_card_8(['DAREA', self.sid, nid, comp, scale])
+        node_ids = self.node_ids
+
+        _print_card = print_card_8
+        if max(node_ids) > MAX_INT:
+            _print_card = print_card_16
+
+        for nid, comp, scale in zip(node_ids, self.components, self.scales):
+            msg += _print_card(['DAREA', self.sid, nid, comp, scale])
         return msg
 
 
@@ -945,11 +951,8 @@ class SPCD(Load):
 
     def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.raw_fields()
-        if size == 8:
-            return self.comment + print_card_8(card)
-        elif is_double:
-            return self.comment + print_card_double(card)
-        return self.comment + print_card_16(card)
+        return write_card(self.comment, card, size, is_double)
+
 
 class DEFORM(Load):
     """
@@ -1070,7 +1073,7 @@ class DEFORM(Load):
 
     def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.raw_fields()
-        return self.comment + print_card_8(card)
+        return write_card(self.comment, card, size, is_double)
 
 
 class SLOAD(Load):
@@ -1232,7 +1235,7 @@ class SLOAD(Load):
 
     def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.raw_fields()
-        return self.comment + print_card_8(card)
+        return write_card(self.comment, card, size, is_double)
 
     def write_card_16(self, is_double: bool=False) -> str:
         card = self.raw_fields()
@@ -1426,11 +1429,7 @@ class RFORCE(Load):
 
     def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.repr_fields()
-        if size == 8:
-            return self.comment + print_card_8(card)
-        elif is_double:
-            return self.comment + print_card_double(card)
-        return self.comment + print_card_16(card)
+        return write_card(self.comment, card, size, is_double)
 
 
 class RFORCE1(Load):
@@ -1599,8 +1598,4 @@ class RFORCE1(Load):
 
     def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.repr_fields()
-        if size == 8:
-            return self.comment + print_card_8(card)
-        if is_double:
-            return self.comment + print_card_double(card)
-        return self.comment + print_card_16(card)
+        return write_card(self.comment, card, size, is_double)

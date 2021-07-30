@@ -138,14 +138,12 @@ class ShellElement(Element):
     def __init__(self):
         Element.__init__(self)
 
-    def Theta_mcid(self):
-        # () -> int
+    def Theta_mcid(self) -> int:
         if self.theta_mcid_ref is None:
             return self.theta_mcid
         return self.theta_mcid_ref.cid
 
-    def _get_theta_mcid_repr(self):
-        # : () -> str
+    def _get_theta_mcid_repr(self) -> str:
         """
         set_blank_if_default doesn't distinguish between 0 and 0.0,
         so we fix it
@@ -814,22 +812,27 @@ class CTRIA3(TriShell):
         return list_fields
 
     def write_card(self, size: int=8, is_double: bool=False) -> str:
-        zoffset = set_blank_if_default(self.zoffset, 0.0)
-        tflag = set_blank_if_default(self.tflag, 0)
-        theta_mcid = self._get_theta_mcid_repr()
-
-        T1 = set_blank_if_default(self.T1, 1.0)
-        T2 = set_blank_if_default(self.T2, 1.0)
-        T3 = set_blank_if_default(self.T3, 1.0)
-
         #return self.write_card(size, double)
         nodes = self.node_ids
-        row2_data = [theta_mcid, zoffset,
-                     tflag, T1, T2, T3]
-        row2 = [print_field_8(field) for field in row2_data]
-        data = [self.eid, self.Pid()] + nodes + row2
-        msg = ('CTRIA3  %8i%8i%8i%8i%8i%8s%8s\n'
-               '                %8s%8s%8s%8s\n' % tuple(data))
+        row1 = [self.eid, self.Pid()] + nodes
+
+        row2_data0 = [self.theta_mcid, self.zoffset,  # actually part of line 1
+                     self.tflag, self.T1, self.T2, self.T3]
+        if row2_data0 == [0.0, 0.0, 0, 1.0, 1.0, 1.0]:
+            msg = 'CTRIA3  %8d%8d%8d%8d%8d\n' % tuple(row1)
+        else:
+            zoffset = set_blank_if_default(self.zoffset, 0.0)
+            tflag = set_blank_if_default(self.tflag, 0)
+            theta_mcid = self._get_theta_mcid_repr()
+
+            T1 = set_blank_if_default(self.T1, 1.0)
+            T2 = set_blank_if_default(self.T2, 1.0)
+            T3 = set_blank_if_default(self.T3, 1.0)
+
+            row2_data = [theta_mcid, zoffset, tflag, T1, T2, T3]
+            row2 = [print_field_8(field) for field in row2_data]
+            msg = ('CTRIA3  %8d%8d%8d%8d%8d%8s%8s\n'
+                   '                %8s%8s%8s%8s\n' % tuple(row1 + row2))
         return self.comment + msg.rstrip() + '\n'
 
 class CPLSTx3(TriShell):
@@ -2790,7 +2793,7 @@ class CQUAD4(QuadShell):
     def write_card(self, size: int=8, is_double: bool=False) -> str:
         nodes = self.node_ids
 
-        row2_data = [self.theta_mcid, self.zoffset,
+        row2_data = [self.theta_mcid, self.zoffset,  # actually part of line 1
                      self.tflag, self.T1, self.T2, self.T3, self.T4]
         if row2_data == [0.0, 0.0, 0, 1.0, 1.0, 1.0, 1.0]:
             data = [self.eid, self.Pid()] + nodes

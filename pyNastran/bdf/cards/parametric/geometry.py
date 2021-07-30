@@ -27,6 +27,7 @@ class PSET(BaseCard):
         self.Type = typei
         #self.typeids = typeids
         self.idi = idi
+        assert idi is None or isinstance(idi, int), idi
 
     @classmethod
     def _init_from_empty(cls):
@@ -51,6 +52,7 @@ class PSET(BaseCard):
         return PSET(sid, poly1, poly2, poly3, cid, typei, idi, comment=comment)
 
     def raw_fields(self):
+        assert self.idi is None or isinstance(self.idi, int), self.idi
         return ['PSET', self.sid, self.poly1, self.poly2, self.poly3, self.cid, self.Type, self.idi]
 
     def write_card(self, size=8, is_double=False):

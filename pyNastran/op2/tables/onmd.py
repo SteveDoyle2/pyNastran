@@ -107,7 +107,7 @@ class ONMD:
         115 LABEL(32)  CHAR4 LABEL character string (LABEL)
         """
         op2 = self.op2
-        op2.to_nx('found ONMD (normalized mass density) table')
+        op2.to_nx('; found ONMD (normalized mass density) table')
         #self.log.info('OUG table 3')
         #self.show_data(data, types='ifs')
         #self.log.info('----------------------------')

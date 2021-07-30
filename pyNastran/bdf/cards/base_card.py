@@ -17,14 +17,27 @@ import numpy as np
 from pyNastran.bdf.bdf_interface.bdf_card import BDFCard
 from pyNastran.utils import object_attributes, object_methods
 from pyNastran.utils.numpy_utils import integer_types
-from pyNastran.bdf.field_writer import print_card
+from pyNastran.bdf.field_writer import print_card, print_card_8, print_card_16, print_card_double
 from pyNastran.bdf.field_writer_8 import is_same
 from pyNastran.utils import deprecated
 from pyNastran.bdf.cards.expand_card import  expand_thru, expand_thru_by
+MAX_INT = 99_999_999
 
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.bdf.bdf import BDF
 #from abc import ABC, abstractmethod
+
+
+def write_card(comment: str, card: List[Optional[int, float, str]],
+               size: int, is_double: bool) -> str:
+    if size == 8:
+        try:
+            return comment + print_card_8(card)
+        except RuntimeError:
+            return comment + print_card_16(card)
+    elif is_double:
+        return comment + print_card_double(card)
+    return comment + print_card_16(card)
 
 class BaseCard:
     """

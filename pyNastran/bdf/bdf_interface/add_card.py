@@ -6479,7 +6479,7 @@ class AddCards:
         self._add_methods._add_rigid_element_object(elem)
         return elem
 
-    def add_rbe2(self, eid, gn, cm, Gmi, alpha=0.0, comment='') -> RBE2:
+    def add_rbe2(self, eid, gn, cm, Gmi, alpha: float=0.0, tref: float=0.0, comment='') -> RBE2:
         """
         Creates an RBE2 element
 
@@ -6496,10 +6496,12 @@ class AddCards:
         Gmi : List[int]
             dependent nodes
         alpha : float; default=0.0
-            ???
+            thermal expansion coefficient
+        tref : float; default=0.0
+            reference temeprature
 
         """
-        elem = RBE2(eid, gn, cm, Gmi, alpha=alpha, comment=comment)
+        elem = RBE2(eid, gn, cm, Gmi, alpha=alpha, tref=tref, comment=comment)
         self._add_methods._add_rigid_element_object(elem)
         return elem
 
@@ -6531,12 +6533,14 @@ class AddCards:
             dependent components / UM Set
         alpha : float; default=0.0
             thermal expansion coefficient
+        tref : float; default=0.0
+            reference temeprature
         comment : str; default=''
             a comment for the card
 
         """
         elem = RBE3(eid, refgrid, refc, weights, comps, Gijs,
-                    Gmi=Gmi, Cmi=Cmi, alpha=alpha, comment=comment)
+                    Gmi=Gmi, Cmi=Cmi, alpha=alpha, tref=tref, comment=comment)
         self._add_methods._add_rigid_element_object(elem)
         return elem
 

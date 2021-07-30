@@ -3033,6 +3033,8 @@ class EPT:
                 #print(val)
             #print(typeids)
             # PSET ID POLY1 POLY2 POLY3 CID SETTYP ID
+            if len(typeids) == 1:
+                typeids = typeids[0]
             op2.add_pset(idi, poly1, poly2, poly3, cid, typei, typeids)
         op2.card_count['PSET'] = nentries
         return n

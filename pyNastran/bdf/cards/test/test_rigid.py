@@ -59,7 +59,7 @@ class TestRigid(unittest.TestCase):
         lines_expected = [
             'RBE2      100045  166007  123456  117752  101899  117766  101898  117748',
             '          117765  117764  117763  109821  117743  117744  117750  117751',
-            '          117745  117746  101902 .000001'
+            '          117745  117746  101902 .000001      0.'
         ]
         lines_actual = msg.rstrip().split('\n')
         msg = '\n%s\n\n%s\n' % ('\n'.join(lines_expected), msg)
@@ -89,7 +89,7 @@ class TestRigid(unittest.TestCase):
         lines_expected = [
             'RBE2      100045  166007  123456  117752  101899  117766  101898  117748',
             '          117765  117764  117763  109821  117743  117744  117750  117751',
-            '          117745  117746  101902      0.'
+            '          117745  117746  101902      0.      0.'
         ]
         lines_actual = msg.rstrip().split('\n')
         msg = '\n%s\n\n%s\n' % ('\n'.join(lines_expected), msg)

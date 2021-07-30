@@ -1191,16 +1191,17 @@ class GEOM4(GeomCommon):
     def _read_suport(self, data: bytes, n: int) -> int:
         """SUPORT(5601,56, 14) - Record 59"""
         op2 = self.op2
-        nentries = (len(data) - n) // 8 # 2*4
-        struct_2i = Struct(op2._endian + b'2i')
+        ntotal = 8 * self.factor  # 2*4
+        nentries = (len(data) - n) // ntotal
+        struct_2i = Struct(op2._endian + mapfmt(b'2i', self.size))
         for unused_i in range(nentries):
-            out = list(struct_2i.unpack(data[n:n + 8]))
+            out = list(struct_2i.unpack(data[n:n + ntotal]))
             if op2.is_debug_file:
                 op2.binary_debug.write('  SUPORT=%s\n' % str(out))
                 #op2.log.info(out)
             suport = SUPORT.add_op2_data(out)
             op2._add_methods._add_suport_object(suport) # extracts [sid, c]
-            n += 8
+            n += ntotal
         return n
 
     def _read_suport1(self, data: bytes, n: int) -> int:
@@ -1459,7 +1460,7 @@ def read_rbe2s_from_idata_fdata(op2: OP2Geom, idata, fdata) -> List[RBE2]:
             assert is_alpha_tref is True, is_alpha_tref
         assert -1 not in idata[j], idata[j]
     assert -1 not in idata[i], idata[i]
-
+    #print(is_alpha, is_alpha_tref)
     #print('is_alpha=%s' % is_alpha)
     #print('i=%s' % i)
     #print('j=%s' % j)
@@ -1480,12 +1481,14 @@ def read_rbe2s_from_idata_fdata(op2: OP2Geom, idata, fdata) -> List[RBE2]:
             if -1 in gm:
                 gm = gm[:-1]
         assert -1 not in gm, f'eid={eid} gn={gn} cm={cm} gm={gm}'
+        #assert len(gm) > 0, gm
 
         out = [eid, gn, cm, gm, alpha]
         if is_alpha_tref:
             out.append(tref)
         if op2.is_debug_file:
             op2.binary_debug.write('  RBE2=%s\n' % str(out))
+        #print('rbe2 =', out)
         elem = RBE2.add_op2_data(out)
         geom3._add_op2_rigid_element(elem)
         rbe2s.append(elem)

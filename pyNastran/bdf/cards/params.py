@@ -3,7 +3,7 @@ defines the following card:
  - PARAM
 """
 # pylint: disable=C0103,R0902,R0904,R0914
-from pyNastran.bdf.cards.base_card import BaseCard
+from pyNastran.bdf.cards.base_card import BaseCard, MAX_INT
 from pyNastran.bdf.bdf_interface.bdf_card import BDFCard
 from pyNastran.bdf.bdf_interface.assign_type import (
     integer, double, integer_or_blank, double_or_blank, string, string_or_blank,
@@ -330,6 +330,9 @@ class PARAM(BaseCard):
         elif isinstance(values, (integer_types, float_types, str)):
             values = [values]
         self.values = values
+        #assert not isinstance(values, tuple), values
+        #if isinstance(values, list):
+            #assert not isinstance(values[0], tuple), values
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -554,6 +557,9 @@ class PARAM(BaseCard):
 
     def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.raw_fields()
+        if isinstance(self.values[0], int) and self.values[0] > MAX_INT:
+            return self.comment + print_card_16(['PARAM', self.key, self.values[0]])
+
         if self.key in INT_STR_WORDS_1:
             return '%sPARAM   %8s%8s\n' % (
                 self.comment, self.key, self.values[0])

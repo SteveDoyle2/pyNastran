@@ -41,10 +41,11 @@ import numpy as np
 
 from pyNastran.utils.numpy_utils import integer_types, integer_string_types
 from pyNastran.bdf.cards.base_card import (
-    BaseCard, _node_ids, expand_thru
+    BaseCard, _node_ids, expand_thru, write_card
 )
 from pyNastran.bdf.cards.collpase_card import collapse_thru, condense, build_thru_packs
 from pyNastran.bdf.field_writer_8 import print_card_8
+#from pyNastran.bdf.field_writer_16 import print_card_16
 from pyNastran.bdf.bdf_interface.assign_type import (
     integer, double, double_or_blank,
     integer_or_blank, integer_or_string,
@@ -76,7 +77,7 @@ class Set(BaseCard):
 
     def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.repr_fields()
-        return self.comment + print_card_8(card)
+        return write_card(self.comment, card, size, is_double)
 
 
 class SetSuper(Set):

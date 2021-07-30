@@ -12,7 +12,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.bdf.field_writer_8 import set_blank_if_default
-from pyNastran.bdf.cards.base_card import Property
+from pyNastran.bdf.cards.base_card import Property, MAX_INT
 from pyNastran.bdf.bdf_interface.assign_type import (
     integer, integer_or_blank, double, double_or_blank)
 from pyNastran.bdf.field_writer_8 import print_card_8
@@ -220,6 +220,8 @@ class PFAST(Property):
     def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.repr_fields()
         if size == 8:
+            if max([self.pid, self.mcid]) > MAX_INT:
+                return self.comment + print_card_16(card)
             return self.comment + print_card_8(card)
         return self.comment + print_card_16(card)
 

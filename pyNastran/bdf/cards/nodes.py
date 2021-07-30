@@ -33,7 +33,7 @@ from pyNastran.bdf.field_writer_8 import set_string8_blank_if_default
 from pyNastran.bdf.field_writer_16 import set_string16_blank_if_default
 
 from pyNastran.bdf.field_writer_8 import set_blank_if_default
-from pyNastran.bdf.cards.base_card import BaseCard, expand_thru
+from pyNastran.bdf.cards.base_card import BaseCard, expand_thru, MAX_INT, write_card
 from pyNastran.bdf.cards.collpase_card import collapse_thru_packs
 from pyNastran.bdf.bdf_interface.assign_type import (
     integer, integer_or_blank, double, double_or_blank, blank, integer_or_string,
@@ -161,16 +161,21 @@ class SEQGP(BaseCard):
             unused
 
         """
+        _print_card = print_card_8
+        if max(self.nids) > MAX_INT:
+            _print_card = print_card_16
+
         msg = self.comment
         list_fields = ['SEQGP']
         for i, nid, seqid in zip(count(), self.nids, self.seqids):
             if i % 4 == 0 and i > 0:
-                msg += print_card_8(list_fields)
+                msg += _print_card(list_fields)
                 list_fields = ['SEQGP']
             list_fields.append(nid)
             list_fields.append(seqid)
+
         if len(list_fields) > 1:
-            msg += print_card_8(list_fields)
+            msg += _print_card(list_fields)
         return msg
 
 
@@ -317,7 +322,10 @@ def write_xpoints(cardtype: str, points, comment: str='') -> str:
         if 'THRU' not in list_fields:
             msg += print_int_card(list_fields)
         else:
-            msg += print_card_8(list_fields)
+            if max(point_ids) > MAX_INT:
+                msg += print_card_16(list_fields)
+            else:
+                msg += print_card_8(list_fields)
     return msg
 
 

@@ -22,6 +22,7 @@ from pyNastran.bdf.bdf_interface.assign_type import (
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
 from pyNastran.bdf.field_writer_double import print_card_double
+from pyNastran.bdf.cards.base_card import MAX_INT
 from pyNastran.bdf.cards.loads.loads import DynamicLoad, LoadCombination, BaseCard
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.bdf.bdf import BDF
@@ -382,7 +383,7 @@ class DLOAD(LoadCombination):
 
     def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.raw_fields()
-        if size == 16:
+        if size == 16 or max(self.get_load_ids()) > MAX_INT:
             return self.comment + print_card_16(card)
         return self.comment + print_card_8(card)
 
@@ -490,6 +491,7 @@ class RLOAD1(DynamicLoad):
         if is_failed:
             msg += str(self)
             raise RuntimeError(msg)
+        assert self.sid > 0, self.sid
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -921,6 +923,7 @@ class RLOAD2(DynamicLoad):
         if is_failed:
             msg += str(self)
             raise RuntimeError(msg)
+        assert self.sid > 0, self.sid
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -1212,7 +1215,8 @@ class TLOAD1(DynamicLoad):
             pass
         else:
             msg = 'invalid TLOAD1 type  Type=%r' % self.Type
-            raise RuntimeError(msg)
+            raise AssertionError(msg)
+        assert self.sid > 0, self.sid
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -1328,6 +1332,8 @@ class TLOAD1(DynamicLoad):
     def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.repr_fields()
         if size == 8:
+            if max(self.sid, self.excite_id, self.delay_id, self.Tid()) > MAX_INT:
+                return self.comment + print_card_16(card)
             return self.comment + print_card_8(card)
         if is_double:
             return self.comment + print_card_double(card)
@@ -1482,6 +1488,7 @@ class TLOAD2(DynamicLoad):
         else:
             msg = 'invalid TLOAD2 type  Type=%r' % self.Type
             raise RuntimeError(msg)
+        assert self.sid > 0, self.sid
 
     @classmethod
     def add_card(cls, card, comment=''):

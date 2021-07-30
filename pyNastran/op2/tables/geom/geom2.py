@@ -2803,7 +2803,8 @@ class GEOM2:
                     #print('breaking')
                     #print(methods2)
                     break
-                except:
+                except Exception as e:
+                    #print(str(e))
                     #print('error')
                     pass
                 else:
@@ -2811,6 +2812,8 @@ class GEOM2:
         #else:
         if elements is None:
             op2.show_data(data, types='ifs')
+            print(f'ndatai={ndatai} keys={keys} -> errors={errors}')
+            print('izero = ', izero)
             raise EmptyCardError()
         return n, elements
 
@@ -3566,7 +3569,6 @@ class GEOM2:
             if op2.is_debug_file:
                 op2.binary_debug.write('  CTETRA=%s\n' % str(out))
             (eid, pid, n1, n2, n3, n4, n5, n6, n7, n8, n9, n10) = out
-            print("out = ",out)
 
             data_in = [eid, pid, n1, n2, n3, n4]
             big_nodes = [n5, n6, n7, n8, n9, n10]
@@ -3580,7 +3582,6 @@ class GEOM2:
             except:
                 print(data_in, big_nodes)
                 raise
-            print(elem)
             self.add_op2_element(elem)
             n += ntotal
         op2.card_count['CTETRA'] = nelements

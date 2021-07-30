@@ -802,13 +802,13 @@ class DESVAR(OptConstraint):
         assert xlb <= xub, 'desvar_id=%s xlb=%s xub=%s' % (desvar_id, xlb, xub)
         assert xinit >= xlb, 'desvar_id=%s xlb=%s xub=%s' % (desvar_id, xlb, xub)
         assert xinit <= xub, 'desvar_id=%s xlb=%s xub=%s' % (desvar_id, xlb, xub)
-
         # controls change for a single optimization cycle
         # taken from DOPTPRM if None; else default=1.
         self.delx = delx
         # DDVAL id if you want discrete values
         self.ddval = ddval
         self.ddval_ref = None
+        assert ' ' not in label.rstrip(), self.get_stats()
 
     def _verify(self, xref):
         pass

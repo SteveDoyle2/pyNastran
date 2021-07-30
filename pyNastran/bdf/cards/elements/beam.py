@@ -12,8 +12,9 @@ import numpy as np
 from numpy.linalg import norm  # type: ignore
 
 from pyNastran.utils.numpy_utils import integer_types
+from pyNastran.bdf.cards.base_card import BaseCard, MAX_INT
 from pyNastran.bdf.cards.elements.bars import (
-    LineElement, init_x_g0, BaseCard, rotate_v_wa_wb, check_offt)
+    LineElement, init_x_g0, rotate_v_wa_wb, check_offt)
 from pyNastran.bdf.bdf_interface.assign_type import (
     integer, integer_or_blank, double_or_blank, integer_double_string_or_blank,
     integer_double_or_blank, integer_string_or_blank,
@@ -904,6 +905,8 @@ class CBEAM(LineElement):
     def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.repr_fields()
         if size == 8:
+            if max(self.eid, max(self.node_ids)) > MAX_INT:
+                return self.comment + print_card_16(card)
             return self.comment + print_card_8(card)
         return self.comment + print_card_16(card)
 

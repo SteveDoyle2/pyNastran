@@ -389,24 +389,32 @@ def _write_rbe2(card_type: str, cards, unused_ncards: int, op2_file, op2_ascii,
 
     """
     is_alpha = False
+    is_tref = False
     for rbe2 in cards:
+        if rbe2.tref != 0.:
+            is_tref = True
+            break
         if rbe2.alpha != 0.:
             is_alpha = True
-            break
 
     key = (6901, 69, 295)
     fields = []  # type: List[Union[int, float]]
     fmt = endian
-    if is_alpha:
+    if is_tref:
         for rbe2 in cards:
             ngm = len(rbe2.Gmi)
-            fmt += b'3i %ii' % ngm
-            fields += [rbe2.eid, rbe2.gn, int(rbe2.cm)] + rbe2.Gmi
+            fmt += b'3i %ii ffi' % ngm
+            fields += [rbe2.eid, rbe2.gn, int(rbe2.cm)] + rbe2.Gmi + [rbe2.alpha, rbe2.tref, -1]
+    elif is_alpha:
+        for rbe2 in cards:
+            ngm = len(rbe2.Gmi)
+            fmt += b'3i %ii fi' % ngm
+            fields += [rbe2.eid, rbe2.gn, int(rbe2.cm)] + rbe2.Gmi + [rbe2.alpha, -1]
     else:
         for rbe2 in cards:
             ngm = len(rbe2.Gmi)
-            fmt += b'3i %ii f' % ngm
-            fields += [rbe2.eid, rbe2.gn, int(rbe2.cm)] + rbe2.Gmi + [rbe2.alpha]
+            fmt += b'3i %ii i' % ngm
+            fields += [rbe2.eid, rbe2.gn, int(rbe2.cm)] + rbe2.Gmi + [-1]
 
     nfields = len(fields)
     nbytes = write_header_nvalues(card_type, nfields, key, op2_file, op2_ascii)
@@ -433,6 +441,7 @@ def _write_rbe3(card_type: str, cards, unused_ncards: int, op2_file, op2_ascii,
 
     """
     # TODO: alpha is not supported in the writer
+    # TODO: tref is not supported in the writer
     key = (7101, 71, 187)
     fields = []  # type: List[Union[int, float]]
     fmt = endian
