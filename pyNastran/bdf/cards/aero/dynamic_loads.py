@@ -563,8 +563,8 @@ class FLUTTER(BaseCard):
         else:
             raise KeyError('Field %r=%r is an invalid FLUTTER entry.' % (n, value))
 
-    def __init__(self, sid, method, density, mach, reduced_freq_velocity,
-                 imethod='L', nvalue=None, omax=None, epsilon=1.0e-3, comment='',
+    def __init__(self, sid: int, method, density, mach, reduced_freq_velocity,
+                 imethod: str='L', nvalue=None, omax=None, epsilon: float=1.0e-3, comment='',
                  validate: bool=False):
         """
         Creates a FLUTTER card, which is required for a flutter (SOL 145)
@@ -639,10 +639,10 @@ class FLUTTER(BaseCard):
 
     def validate(self):
         msg = ''
-        if self.method not in ['K', 'KE', 'PK', 'PKNL', 'PKS', 'PKNLS']:
-            msg += 'method = %r; allowed=[K, KE, PKS, PKNLS, PKNL, PK]\n' % self.method
-        if self.imethod not in ['L', 'S', 'TCUB']:
-            msg += 'imethod = %r; allowed=[L, S, TCUB]\n' % self.imethod
+        if self.method not in {'K', 'KE', 'PK', 'PKNL', 'PKS', 'PKNLS'}:
+            msg += f'method = {self.method!r}; allowed=[K, KE, PKS, PKNLS, PKNL, PK]\n'
+        if self.imethod not in {'L', 'S', 'TCUB'}:
+            msg += f'imethod = {self.imethod!r}; allowed=[L, S, TCUB]\n'
         if msg:
             raise ValueError(msg + str(self))
 
@@ -660,28 +660,23 @@ class FLUTTER(BaseCard):
 
         """
         sid = integer(card, 1, 'sid')
-        method = string(card, 2, 'method (K, KE, PKS, PKNLS, PKNL, PK)')
+        method = string_or_blank(card, 2, 'method (K, KE, PKS, PKNLS, PKNL, PK)', default='L')
         density_id = integer(card, 3, 'density')
         mach_id = integer(card, 4, 'mach')
         reduced_freq_velocity_id = integer(card, 5, 'reduced_freq_velocity')
 
+        omax = None
+        imethod = string_or_blank(card, 6, 'imethod', 'L')
         if method in ['K', 'KE']:
-            imethod = string_or_blank(card, 6, 'imethod', 'L')
             nvalue = integer_or_blank(card, 7, 'nvalue')
-            omax = None
             assert imethod in ['L', 'S', 'TCUB'], 'imethod = %s' % imethod  # linear-surface
         elif method in ['PKS', 'PKNLS']:
-            imethod = None
             nvalue = None
             omax = double_or_blank(card, 7, 'omax')
         elif method == 'PKNL':
             nvalue = integer_or_blank(card, 7, 'nvalue')
-            omax = None
-            imethod = None
         elif method == 'PK':
             nvalue = integer_or_blank(card, 7, 'nvalue')
-            omax = None
-            imethod = None
         else:
             raise NotImplementedError('FLUTTER method=%r' % method)
 

@@ -27,9 +27,10 @@ defines various methods to access high level BDF data:
 
 """
 # pylint: disable=C0103
+from __future__ import annotations
 from copy import deepcopy
 from collections import defaultdict
-from typing import List, Dict, Set, Tuple, Optional, Union, Any
+from typing import List, Dict, Set, Tuple, Optional, Union, Any, TYPE_CHECKING
 
 import numpy as np
 
@@ -42,6 +43,9 @@ from pyNastran.bdf.mesh_utils.mpc_dependency import (
     get_rigid_elements_with_node_ids, get_dependent_nid_to_components,
     get_lines_rigid, get_mpcs)
 
+if TYPE_CHECKING:
+    from cpylog import SimpleLogger
+    from pyNastran.bdf.bdf import BDF
 
 class GetCard(GetMethods):
     """defines various methods to access high level BDF data"""
@@ -1139,94 +1143,17 @@ class GetCard(GetMethods):
             pids = [int]
 
         assert isinstance(pids, (list, tuple, np.ndarray)), 'pids=%s type=%s' % (pids, type(pids))
-        pid_to_eids_map = {}
-        for pid in pids:
-            pid_to_eids_map[pid] = []
 
-        skip_elements = ['CONROD']
-        etypes_ = self._slot_to_type_map['elements']
-        etype_to_nids_map = {}
-        pid_to_eids_ieids_map = defaultdict(list)
-
-        etypes_no_pids = [
-            'CELAS4', 'CDAMP4', 'CHBDYG', 'GENEL',
-        ]
-        etypes_none_nodes = [
-            'CELAS1', 'CELAS2', 'CELAS4',
-            'CDAMP1', 'CDAMP2', 'CDAMP4', 'CDAMP5',
-            'CBUSH', 'CBUSH1D', 'CFAST',
-            'CTRIAX', 'CQUADX', 'CTRIAX6',
-            'CTRIA6', 'CQUAD8', 'CQUAD',
-            'CTETRA', 'CPENTA', 'CHEXA', 'CPYRAM',
-            'CRAC2D', 'CRAC3D', 'CHBDYP', #'CHBDYG',
-            'CHACAB', 'CAABSF',
-        ]
-
-        if etypes is None:
-            etypes = etypes_
-
+        model = self
         try:
-            for etype in etypes_:
-                if etype not in etypes_:
-                    continue
-                eids = self._type_to_id_map[etype]
-                if len(eids) == 0:
-                    continue
-                if etype in skip_elements:
-                    self.log.warning('skipping etype=%s because there are no properties%s' % (
-                        etype, msg))
-                    continue
-
-                # get the number of nodes of the first element
-                eid = eids[0]
-                element0 = self.elements[eid]
-                nnodes = len(element0.node_ids)
-
-                neids = len(eids)
-                node_ids = np.zeros((neids, nnodes), dtype=idtype)
-                if etype in etypes_none_nodes:
-                    for ieid, eid in enumerate(eids):
-                        element = self.elements[eid]
-                        try:
-                            node_ids[ieid, :] = [nid  if nid is not None else 0
-                                                 for nid in element.node_ids]
-                        except:
-                            self.log.error('This error can occur when you have '
-                                           'linear and quadratic solid elements '
-                                           'within the same model\n%s' % element)
-                            raise
-                        if etype in etypes_no_pids:
-                            pid = 0
-                        else:
-                            pid = element.Pid()
-                        #nids_to_pids_map[]
-                        pid_to_eids_ieids_map[(pid, etype)].append((eid, ieid))
-                else:
-                    try:
-                        for ieid, eid in enumerate(eids):
-                            element = self.elements[eid]
-                            try:
-                                node_ids[ieid, :] = element.node_ids
-                            except TypeError:
-                                print(element)
-                                raise
-                            if etype in etypes_no_pids:
-                                pid = 0
-                            else:
-                                pid = element.Pid()
-                            #nids_to_pids_map[]
-                            pid_to_eids_ieids_map[(pid, etype)].append((eid, ieid))
-                    except TypeError:
-                        print(etype)
-                        print(element)
-                        raise
-                etype_to_nids_map[etype] = node_ids
-            for key, value in pid_to_eids_ieids_map.items():
-                pid_to_eids_ieids_map[key] = np.array(value, dtype=idtype)
+            etype_to_nids_map, pid_to_eids_ieids_map = _get_pid_to_node_ids_and_elements_array(
+                model, pids, etypes, idtype)
         except OverflowError:
             assert idtype == 'int32', 'idtype=%r while overflowing...' % idtype
-            pid_to_eids_ieids_map = self.get_pid_to_node_ids_and_elements_array(
-                pids=pids, etypes=etypes, idtype='int64')
+            etype_to_nids_map, pid_to_eids_ieids_map = _get_pid_to_node_ids_and_elements_array(
+                model, pids, etypes, idtype='int64')
+            #etype_to_nids_map, pid_to_eids_ieids_map = self.get_pid_to_node_ids_and_elements_array(
+                #pids=pids, etypes=etypes, idtype='int64')
         return pid_to_eids_ieids_map
 
     def get_element_ids_dict_with_pids(self,
@@ -1761,3 +1688,134 @@ class GetCard(GetMethods):
             #new_array = [tuple(row) for row in mkarray]
             #unique_pairs = np.lib.arraysetops.unique(new_array, axis=0).tolist()
         return mkarray
+
+def _get_pid_to_node_ids_and_elements_array(model: BDF,
+                                            pids: List[int],
+                                            etypes: List[str],
+                                            idtype: str):
+    """
+    a work in progress
+
+    Parameters
+    ----------
+    pids : List[int]
+        list of property ID
+    etypes : List[str]
+        element types to consider
+
+    Returns
+    -------
+    pid_to_eids_ieids_map : dict[(pid, etype)] = eid_ieid
+        eid_ieid : (Nelements, 2) int ndarray
+            eid is the element id
+            ieid is the index in the node_ids array
+    node_ids : (nelements, nnodes) int ndarray
+        nelements : int
+            the number of elements in the property type
+        nnodes : int
+            varies based on the element type
+
+    """
+    log = model.log
+    nnodes_map = {
+        'CTETRA': (4, 10),
+        'CPYRAM': (5, 13),
+        'CPENTA': (6, 15),
+        'CHEXA': (8, 20),
+    }
+
+    skip_elements = ['CONROD']
+    etypes_no_pids = [
+        'CELAS4', 'CDAMP4', 'CHBDYG', 'GENEL',
+    ]
+    etypes_none_nodes = [
+        'CELAS1', 'CELAS2', 'CELAS4',
+        'CDAMP1', 'CDAMP2', 'CDAMP4', 'CDAMP5',
+        'CBUSH', 'CBUSH1D', 'CFAST',
+        'CTRIAX', 'CQUADX', 'CTRIAX6',
+        'CTRIA6', 'CQUAD8', 'CQUAD',
+        'CTETRA', 'CPENTA', 'CHEXA', 'CPYRAM',
+        'CRAC2D', 'CRAC3D', 'CHBDYP', #'CHBDYG',
+        'CHACAB', 'CAABSF',
+    ]
+    # ------------------------------------------------------------
+    etypes_ = model._slot_to_type_map['elements']
+    if etypes is None:
+        etypes = etypes_
+
+    etype_to_nids_map = {}
+    pid_to_eids_ieids_map = defaultdict(list)
+
+    pid_to_eids_map = {}
+    for pid in pids:
+        pid_to_eids_map[pid] = []
+
+    for etype in etypes_:
+        if etype not in etypes_:
+            continue
+        eids = model._type_to_id_map[etype]
+        if len(eids) == 0:
+            continue
+        if etype in skip_elements:
+            log.warning('skipping etype=%s because there are no properties%s' % (
+                etype, msg))
+            continue
+
+        # get the number of nodes of the first element
+        eid = eids[0]
+        element0 = model.elements[eid]
+        try:
+            node_check, nnodes = nnodes_map[element0.type]
+        except KeyError:
+            node_check = 0
+            nnodes = len(element0.node_ids)
+
+        neids = len(eids)
+        node_ids = np.zeros((neids, nnodes), dtype=idtype)
+        if etype in etypes_none_nodes:
+            for ieid, eid in enumerate(eids):
+                element = model.elements[eid]
+                node_idsi = element.node_ids
+                try:
+                    node_ids[ieid, :len(node_idsi)] = [
+                        nid if nid is not None else 0
+                        for nid in node_idsi]
+                except:
+                    log.error('This error can occur when you have '
+                              'linear and quadratic solid elements '
+                              'within the same model\n%s' % element)
+                    raise
+                if etype in etypes_no_pids:
+                    pid = 0
+                else:
+                    pid = element.Pid()
+                #nids_to_pids_map[]
+                pid_to_eids_ieids_map[(pid, etype)].append((eid, ieid))
+            if node_check:
+                # try to reduce the dimension of the array
+                max_nid = node_ids[:, node_check:].max()
+                if max_nid == 0:
+                    node_ids = node_ids[:, :node_check]
+        else:
+            try:
+                for ieid, eid in enumerate(eids):
+                    element = model.elements[eid]
+                    try:
+                        node_ids[ieid, :] = element.node_ids
+                    except TypeError:
+                        print(element)
+                        raise
+                    if etype in etypes_no_pids:
+                        pid = 0
+                    else:
+                        pid = element.Pid()
+                    #nids_to_pids_map[]
+                    pid_to_eids_ieids_map[(pid, etype)].append((eid, ieid))
+            except TypeError:
+                print(etype)
+                print(element)
+                raise
+        etype_to_nids_map[etype] = node_ids
+    for key, value in pid_to_eids_ieids_map.items():
+        pid_to_eids_ieids_map[key] = np.array(value, dtype=idtype)
+    return etype_to_nids_map, pid_to_eids_ieids_map

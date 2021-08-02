@@ -2369,11 +2369,54 @@ class OES(OP2Common2):
             if op2.use_vector and is_vectorized and 0:
                 raise NotImplementedError('CBEAM-2-real not vectorized')
             else:
-                if is_vectorized and op2.use_vector:  # pragma: no cover
-                    op2.log.debug('vectorize CBEAM real SORT%s' % op2.sort_method)
-                n = oes_cbeam_real_111(op2, data,
-                                       obj,
-                                       nelements, dt)
+                if op2.use_vector and is_vectorized and op2.sort_method == 1:
+                    obj._times[obj.itime] = dt
+
+                    n = nelements * ntotal
+                    itotal = obj.itotal
+                    itotal2 = itotal + nelements * 11
+
+                    ints = frombuffer(data, dtype=op2.idtype8).reshape(nelements, 111)
+                    floats = frombuffer(data, dtype=op2.fdtype8).reshape(nelements, 111)
+                    #print(ints[:2, :].tolist())
+                    #CBEAM    6       2       6       8       0.      1.      0.
+                    #CBEAM    7       2       8       9       0.      1.      0.
+                    #CBEAM    8       2       9       10      0.      1.      0.
+                    #CBEAM    9       2       10      11      0.      1.      0.
+                    #CBEAM    10      2       11      12      0.      1.      0.
+                    #[[61,
+                    #      6, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                    #      8, 1065353216, 0, 0, 0, 0, 0, 0, 1, 1],
+                    # [71,
+                    #      8, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                    #      9, 1065353216, 0, 0, 0, 0, 0, 0, 1, 1]]
+                    eids = ints[:, 0] // 10
+                    ints2 = ints[:, 1:].reshape(nelements * 11, 10)
+                    #print('floats[:, 1:].shape', floats[:, 1:].shape)  # (5,110)
+                    floats2 = floats[:, 1:].reshape(nelements * 11, 10)
+
+                    xxb = floats2[:, 1]
+                    # ints2 = ints[:, :2]
+                    #print(ints2[0, :])
+                    nids = ints2[:, 0]
+                    #print("eids =", eids)
+                    #print("nids =", nids.tolist())
+                    #print("xxb =", xxb)
+
+                    eids2 = array([eids] * 11, dtype=op2.idtype8).T.ravel()
+                    assert len(eids2) == len(nids)
+                    obj.element_node[itotal:itotal2, 0] = eids2
+                    obj.element_node[itotal:itotal2, 1] = nids
+                    obj.xxb[itotal:itotal2] = xxb
+                    obj.data[obj.itime, itotal:itotal2, :] = floats2[:, 2:]
+                    #self.data[self.itime, self.itotal, :] = [sxc, sxd, sxe, sxf,
+                                                             #smax, smin, mst, msc]
+                else:
+                    if op2.use_vector:
+                        op2.log.debug('vectorize CBEAM real SORT%s' % op2.sort_method)
+                    n = oes_cbeam_real_111(op2, data,
+                                           obj,
+                                           nelements, dt)
 
         elif result_type == 1 and op2.num_wide == 111:  # imag and random?
             # definitely complex results for MSC Nastran 2016.1

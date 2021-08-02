@@ -1483,31 +1483,32 @@ def _check_case_parameters(subcase, fem2: BDF, p0, isubcase: int, sol: int,
         trim_id = subcase.get_parameter('TRIM')[0]
         if trim_id not in fem2.trims:
             msg = (
-                'TRIM = %s\n'
-                'trims=%s\n'
-                'subcase:\n%s' % (trim_id, str(fem2.trims), str(subcase)))
-            raise RuntimeError(msg)
-        trim = fem2.trims[trim_id]
-
-        suport1 = None
-        if 'SUPORT1' in subcase:
-            suport_id = subcase.get_parameter('SUPORT1')[0]
-            suport1 = fem2.suport1[suport_id]
-        try:
-            trim.verify_trim(
-                fem2.suport, suport1, fem2.aestats, fem2.aeparams,
-                fem2.aelinks, fem2.aesurf, xref=True)
-        except RuntimeError:
-            if stop_on_failure or ierror == nerrors:
-                raise
-            ierror += 1
-            exc_info = sys.exc_info()
-            traceback.print_exception(*exc_info)
-            #traceback.print_stack()
-            #fem2.log.error(e.msg)
-            #raise
-        assert 'DIVERG' not in subcase, subcase
-        #allowed_sols = [144, 200]
+                f'SOL={sol}\n'
+                f'TRIM = {trim_id}\n'
+                f'trims={fem2.trims}\n'
+                f'subcase:\n{subcase}')
+            log_error(sol, [144, 200], msg, log)
+        else:
+            trim = fem2.trims[trim_id]
+            suport1 = None
+            if 'SUPORT1' in subcase:
+                suport_id = subcase.get_parameter('SUPORT1')[0]
+                suport1 = fem2.suport1[suport_id]
+            try:
+                trim.verify_trim(
+                    fem2.suport, suport1, fem2.aestats, fem2.aeparams,
+                    fem2.aelinks, fem2.aesurf, xref=True)
+            except RuntimeError:
+                if stop_on_failure or ierror == nerrors:
+                    raise
+                ierror += 1
+                exc_info = sys.exc_info()
+                traceback.print_exception(*exc_info)
+                #traceback.print_stack()
+                #fem2.log.error(e.msg)
+                #raise
+            assert 'DIVERG' not in subcase, subcase
+            #allowed_sols = [144, 200]
 
     if 'DIVERG' in subcase:
         value = subcase.get_parameter('DIVERG')[0]
@@ -2134,6 +2135,13 @@ def test_bdf_argparse(argv=None):
     #for arg in optional_args:
         #swap_key(args2, arg, '--' + arg)
     return args2
+
+
+def log_error(sol: int, error_solutions, msg: str, log: SimpleLogger) -> None:
+    if sol in error_solutions:
+        raise RuntimeError(msg)
+    else:
+        log.warning(msg)
 
 def _set_version(args: Any):
     """sets the version flag"""
