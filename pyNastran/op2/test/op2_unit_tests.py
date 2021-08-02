@@ -38,7 +38,6 @@ from pyNastran.bdf.bdf_interface.compare_card_content import compare_elements
 #from pyNastran.op2.tables.oef_forces.oef_force_objects import (
     #RealPlateBilinearForceArray, RealPlateForceArray)
 #from pyNastran.op2.tables.ogf_gridPointForces.ogf_objects import RealGridPointForcesArray
-from pyNastran.op2.export_to_vtk import export_to_vtk_filename
 from pyNastran.op2.vector_utils import filter1d, abs_max_min_global, abs_max_min_vector
 from pyNastran.op2.tables.oug.oug_displacements import RealDisplacementArray
 from pyNastran.femutils.test.utils import is_array_close
@@ -2157,15 +2156,6 @@ class TestOP2(Tester):
         assert os.path.exists(debug_file), os.listdir(folder)
         os.remove(debug_file)
 
-    def test_op2_solid_shell_bar_01_export(self):
-        log = get_logger(level='warning')
-        folder = os.path.join(MODEL_PATH, 'sol_101_elements')
-        bdf_filename = os.path.join(folder, 'static_solid_shell_bar.bdf')
-        op2_filename = os.path.join(folder, 'static_solid_shell_bar.op2')
-        vtk_filename = os.path.join(folder, 'static_solid_shell_bar.vtk')
-        export_to_vtk_filename(bdf_filename, op2_filename, vtk_filename, log=log)
-        os.remove(vtk_filename)
-
     def test_op2_solid_shell_bar_01_straincurvature(self):
         """tests sol_101_elements/static_solid_shell_bar_straincurve.op2"""
         log = get_logger(level='warning')
@@ -2425,16 +2415,6 @@ class TestOP2(Tester):
         assert os.path.exists(debug_file), os.listdir(folder)
         os.remove(debug_file)
 
-    def test_op2_solid_shell_bar_mode_export(self):
-        """tests sol_101_elements/mode_solid_shell_bar.op2"""
-        log = get_logger(level='warning')
-        folder = os.path.join(MODEL_PATH, 'sol_101_elements')
-        bdf_filename = os.path.join(folder, 'mode_solid_shell_bar.bdf')
-        op2_filename = os.path.join(folder, 'mode_solid_shell_bar.op2')
-        vtk_filename = os.path.join(folder, 'mode_solid_shell_bar.vtk')
-        export_to_vtk_filename(bdf_filename, op2_filename, vtk_filename, log=log)
-        os.remove(vtk_filename)
-
     def test_op2_solid_shell_bar_buckling(self):
         """tests sol_101_elements/buckling_solid_shell_bar.op2"""
         log = get_logger(level='warning')
@@ -2602,16 +2582,6 @@ class TestOP2(Tester):
 
         assert os.path.exists(debug_file), os.listdir(folder)
         os.remove(debug_file)
-
-    def test_op2_solid_shell_bar_freq_export(self):
-        """tests sol_101_elements/freq_solid_shell_bar.op2"""
-        log = get_logger(level='warning')
-        folder = os.path.join(MODEL_PATH, 'sol_101_elements')
-        bdf_filename = os.path.join(folder, 'freq_solid_shell_bar.bdf')
-        op2_filename = os.path.join(folder, 'freq_solid_shell_bar.op2')
-        vtk_filename = os.path.join(folder, 'freq_solid_shell_bar.vtk')
-        export_to_vtk_filename(bdf_filename, op2_filename, vtk_filename, log=log)
-        os.remove(vtk_filename)
 
     def test_op2_solid_shell_bar_transient(self):
         """
