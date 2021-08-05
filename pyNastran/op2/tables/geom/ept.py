@@ -2937,10 +2937,10 @@ class EPT:
                 nproperties -= 1
                 continue
             #continue
-            if max(pid, mid1, mid2, mid3, mid4) > 1e8:
-                self.big_properties[pid] = prop
-            else:
-                self._add_op2_property(prop)
+            #if max(pid, mid1, mid2, mid3, mid4) > 1e8:
+                #self.big_properties[pid] = prop
+            #else:
+            self._add_op2_property(prop)
         if nproperties:
             op2.card_count['PSHELL'] = nproperties
         return n

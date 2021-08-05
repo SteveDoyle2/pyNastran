@@ -2230,7 +2230,8 @@ class AddCards:
         self._add_methods._add_property_object(prop)
         return prop
 
-    def add_pbarl(self, pid, mid, Type, dim, group='MSCBML0', nsm=0., comment='') -> PBARL:
+    def add_pbarl(self, pid: int, mid: int, Type: str, dim: List[float],
+                  group: str='MSCBML0', nsm: float=0., comment: str='') -> PBARL:
         """
         Creates a PBARL card, which defines A, I1, I2, I12, and J using
         dimensions rather than explicit values.

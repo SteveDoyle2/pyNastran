@@ -1147,11 +1147,11 @@ class GetCard(GetMethods):
         model = self
         try:
             etype_to_nids_map, pid_to_eids_ieids_map = _get_pid_to_node_ids_and_elements_array(
-                model, pids, etypes, idtype)
+                model, pids, etypes, msg, idtype)
         except OverflowError:
             assert idtype == 'int32', 'idtype=%r while overflowing...' % idtype
             etype_to_nids_map, pid_to_eids_ieids_map = _get_pid_to_node_ids_and_elements_array(
-                model, pids, etypes, idtype='int64')
+                model, pids, etypes, msg, idtype='int64')
             #etype_to_nids_map, pid_to_eids_ieids_map = self.get_pid_to_node_ids_and_elements_array(
                 #pids=pids, etypes=etypes, idtype='int64')
         return pid_to_eids_ieids_map
@@ -1231,6 +1231,8 @@ class GetCard(GetMethods):
         elements_without_properties = {
             'CONROD', 'CELAS2', 'CELAS4', 'CDAMP2', 'CDAMP4',
             'CHBDYG', 'GENEL'}
+
+        log = self.log
         for eid, element in self.elements.items():
             try:
                 pid = element.Pid()
@@ -1247,7 +1249,7 @@ class GetCard(GetMethods):
             raise RuntimeError('no elements with properties found%s\ncard_count=%s' % (
                 msg, str(self.card_count)))
         elif elem_count == 0:
-            self.log.warning('no elements with properties found%s' % msg)
+            log.warning('no elements with properties found%s' % msg)
         return pid_to_eids_map
 
     def get_node_id_to_element_ids_map(self) -> Dict[int, List[int]]:
@@ -1692,6 +1694,7 @@ class GetCard(GetMethods):
 def _get_pid_to_node_ids_and_elements_array(model: BDF,
                                             pids: List[int],
                                             etypes: List[str],
+                                            msg: str,
                                             idtype: str):
     """
     a work in progress
@@ -1702,6 +1705,10 @@ def _get_pid_to_node_ids_and_elements_array(model: BDF,
         list of property ID
     etypes : List[str]
         element types to consider
+    msg : str
+        ???
+    idetype : str
+       'int32', 'int64'
 
     Returns
     -------

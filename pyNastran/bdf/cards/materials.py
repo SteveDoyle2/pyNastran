@@ -853,11 +853,14 @@ class MAT2(AnisotropicMaterial):
 
     def __init__(self, mid, G11, G12, G13, G22, G23, G33,
                  rho=0., a1=None, a2=None, a3=None, tref=0., ge=0.,
-                 St=None, Sc=None, Ss=None, mcsid=None, comment=''):
+                 St=None, Sc=None, Ss=None, mcsid=None,
+                 ge_matrix=None, comment=''):
         AnisotropicMaterial.__init__(self)
         self.matt2_ref = None
         if comment:
             self.comment = comment
+        if ge_matrix is None:
+            ge_matrix = [0., 0., 0., 0., 0., 0.]
         self.mid = mid
         self.G11 = G11
         self.G12 = G12
@@ -875,6 +878,7 @@ class MAT2(AnisotropicMaterial):
         self.Sc = Sc
         self.Ss = Ss
         self.mcsid = mcsid
+        self.ge_matrix = ge_matrix
 
     @classmethod
     def export_to_hdf5(cls, h5_file, model, mids):
@@ -961,10 +965,23 @@ class MAT2(AnisotropicMaterial):
         Sc = double_or_blank(card, 15, 'Sc') # or blank?
         Ss = double_or_blank(card, 16, 'Ss') # or blank?
         mcsid = integer_or_blank(card, 17, 'mcsid')
-        assert len(card) <= 18, f'len(MAT2 card) = {len(card):d}\ncard={card}'
+        #assert len(card) <= 18, f'len(MAT2 card) = {len(card):d}\ncard={card}'
+
+        ge_matrix = [0.0] * 6
+        if len(card) > 18:
+            ge_matrix = [
+                double_or_blank(card, 18, 'ge11', default=0.0),
+                double_or_blank(card, 19, 'ge12', default=0.0),
+                double_or_blank(card, 20, 'ge13', default=0.0),
+                double_or_blank(card, 21, 'ge22', default=0.0),
+                double_or_blank(card, 22, 'ge23', default=0.0),
+                double_or_blank(card, 23, 'ge33', default=0.0),
+            ]
+            assert len(card) <= 24, f'len(MAT2 card) = {len(card):d}\ncard={card}'
+
         return MAT2(mid, G11, G12, G13, G22, G23, G33,
                     rho, a1, a2, a3, tref, ge, St, Sc, Ss, mcsid,
-                    comment=comment)
+                    ge_matrix=ge_matrix, comment=comment)
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
@@ -979,6 +996,7 @@ class MAT2(AnisotropicMaterial):
             a comment for the card
 
         """
+        ge_matrix = None
         mid = data[0]
         G11 = data[1]
         G12 = data[2]
@@ -997,8 +1015,15 @@ class MAT2(AnisotropicMaterial):
         Sc = data[14]
         Ss = data[15]
         mcsid = data[16]
+        if len(data) > 17:
+            assert len(data) == 23, f'data={data} ndata={len(data)}'
+            ge_matrix = data[17:]
+            assert len(ge_matrix) == 6, ge_matrix
+            #ge_list = (ge1, ge2, ge3, ge4, ge5, ge6)
+        #if len(data) =
         return MAT2(mid, G11, G12, G13, G22, G23, G33,
                     rho, a1, a2, a3, tref, ge, St, Sc, Ss, mcsid,
+                    ge_matrix=ge_matrix,
                     comment=comment)
 
     def get_density(self):
@@ -1085,6 +1110,7 @@ class MAT2(AnisotropicMaterial):
                        self.G23, self.G33, self.rho, self.a1, self.a2, self.a3,
                        self.tref, self.ge, self.St, self.Sc, self.Ss,
                        self.mcsid]
+        list_fields += list(self.ge_matrix)
         return list_fields
 
     def repr_fields(self):
@@ -1109,6 +1135,15 @@ class MAT2(AnisotropicMaterial):
         list_fields = ['MAT2', self.mid, G11, G12, G13, G22, G23, G33, rho,
                        self.a1, self.a2, self.a3, tref, ge,
                        self.St, self.Sc, self.Ss, self.mcsid]
+        if self.ge_matrix != [0., 0., 0., 0., 0., 0.]:
+            print('self.ge_matrix =', self.ge_matrix)
+            ge11 = set_blank_if_default(self.ge_matrix[0], 0.0)
+            ge12 = set_blank_if_default(self.ge_matrix[1], 0.0)
+            ge13 = set_blank_if_default(self.ge_matrix[2], 0.0)
+            ge22 = set_blank_if_default(self.ge_matrix[3], 0.0)
+            ge23 = set_blank_if_default(self.ge_matrix[4], 0.0)
+            ge33 = set_blank_if_default(self.ge_matrix[5], 0.0)
+            list_fields += [ge11, ge12, ge13, ge22, ge23, ge33]
         return list_fields
 
     def write_card(self, size: int=8, is_double: bool=False) -> str:

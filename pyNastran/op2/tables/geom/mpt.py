@@ -139,6 +139,9 @@ class MPT:
     def _read_mat2(self, data: bytes, n: int) -> int:
         """
         MAT2(203,2,78) - record 3
+
+        ints    = (100000001, 10101010.0, 1010101.0, 0,   10101010.0, 0,   4545454.5, 0.05, 0.001, 0.001, 0, 0, 0, 0, 0, 0, 0,               -200000001, 0,   0,   0,   0,   0,   0,   0.05, 0, 0, 0, 0, 0, 0, 0, 0, 0)
+        floats  = (100000001, 10101010.0, 1010101.0, 0.0, 10101010.0, 0.0, 4545454.5, 0.05, 0.001, 0.001, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, -200000001, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.05, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0)
         """
         op2 = self.op2
         card_name = 'MAT2'
@@ -227,7 +230,7 @@ class MPT:
 
     def _read_mat2_68(self, material: MAT2, data: bytes, n: int) -> Tuple[int, MAT2]:
         op2 = self.op2
-        ntotal = 68  # 17*4
+        ntotal = 68 * self.factor  # 17*4
         s = Struct(op2._endian + b'i15fi')
         ndatai = len(data) - n
         assert ndatai % ntotal == 0
@@ -251,9 +254,48 @@ class MPT:
 
 
     def _read_mat2_92(self, material: MAT2, data: bytes, n: int) -> Tuple[int, MAT2]:
+        """
+        MAT2 MID   G11  G12  G13  G22  G23  G33  RHO
+             A1    A2   A3   TREF GE   ST   SC   SS
+             MCSID GE11 GE12 GE13 GE22 GE23 GE33
+
+        MAT2    1       2.7866+38.3447+21.0139+23.3020+31.0139+21.1069+31.-9
+                                                0.
+                        .15     .15     .15     .15     .15     .15
+        PDISTB   1      PCOMP   1        T       2      .2
+                 1      1.
+        PDISTB   2      PCOMP   1        T       5      .2
+                 1      1.
+        PCOMP    1                                              1.+5
+                 1      .1      90.      YES     1      .8      45.      YES
+                 1      .2      -45.     YES     1      .2      -45.     YES
+                 1      .9      45.      YES     1      .1      90.      YES
+
+        #ints    = (1, 2786.6, 834.47, 101.39, 3302.0, 101.39, 1106.9, 1e-9, 0, 0, 0, 0, 0, 0, 0, 0, 0,                   0.15, 0.15, 0.15, 0.15, 0.15, 0.15,
+        #           100000001, 2953.90625, 832.65, -81.64, 3138.31, -81.64, 1105.08, 1e-9, 0, 0, 0, 0,         100000.0, 0, 0, 0, 0,         1041865114, 0.15, 0.15, 0.15, 0.15, 0.15, 200000001, 1161345214, 1146109282, -1024369403, 1162084660, -1024369403, 1149906036, 814313567, 0, 0, 0, 0, 1203982336, 0, 0, 0, 0, 0.15, 0.15, 0.15, 0.15, 0.15, 0.15,
+        #           400000001, 1069826929, -1472888832, 1064921892, -1077656719, 1064921892, -1491992576, 814313567, 0, 0, 0, 0, 1203982336, 0, 0, 0, 0, 0.15, 0.15, 0.15, 0.15, 0.15, 0.15)
+        #floats  = (1, 2786.6, 834.47, 101.39, 3302.0, 101.39, 1106.9, 1e-9, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.15, 0.15, 0.15, 0.15, 0.15, 0.15,
+        #           100000001, 2953.90625, 832.65, -81.64, 3138.31, -81.64, 1105.08, 1e-9, 0.0, 0.0, 0.0, 0.0, 100000.0, 0.0, 0.0, 0.0, 0.0, 0.15, 0.15, 0.15, 0.15, 0.15, 0.15, 9.081061202086803e-32, 2955.54638671875, 832.9591064453125, -120.68167877197266, 3136.0751953125, -120.68167877197266, 1105.38916015625, 1e-9, 0.0, 0.0, 0.0, 0.0, 100000.0, 0.0, 0.0, 0.0, 0.0, 0.15, 0.15, 0.15, 0.15, 0.15, 0.15,
+        #           400000001, 1.5333081483840942, -1.0075273948473296e-14, 0.974, -1.5333081483840942, 0.974, -2.0261570199409107e-15, 1e-9, 0.0, 0.0, 0.0, 0.0, 100000.0, 0.0, 0.0, 0.0, 0.0, 0.15, 0.15, 0.15, 0.15, 0.15, 0.15)
+        #
+        #ints    = (1, 1160653210, 1146134036, 1120585646, 1162764288, 1120585646, 1149918413, 814313567,
+        #             0, 0, 0, 0, 0, 0, 0, 0, 0, 0.15, 0.15, 0.15, 0.15, 0.15, 0.15,
+        #           100000001, 1161338496, 1146104342, -1029486047, 1162093848, -1029486047, 1149903566, 814313567, 0, 0, 0, 0, 1203982336, 0, 0, 0, 0, 0.15, 0.15, 0.15, 0.15, 0.15, 0.15, 200000001, 1161345214, 1146109282, -1024369403, 1162084660, -1024369403, 1149906036, 814313567, 0, 0, 0, 0, 1203982336, 0, 0, 0, 0, 0.15, 0.15, 0.15, 0.15, 0.15, 0.15,
+        #           400000001, 1069826929, -1472888832, 1064921892, -1077656719, 1064921892, -1491992576, 814313567,
+        #             0, 0, 0, 0, 1203982336, 0, 0, 0, 0, 0.15, 0.15, 0.15, 0.15, 0.15, 0.15)
+        #floats  = (1, 2786.60009765625, 834.469970703125, 101.38999938964844, 3302.0, 101.38999938964844, 1106.9000244140625, 1e-9,
+        #           0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.15, 0.15, 0.15, 0.15, 0.15, 0.15,
+        #           100000001, 2953.90625, 832.6575927734375, -81.64478302001953, 3138.318359375, -81.64478302001953, 1105.087646484375, 1e-9, 0.0, 0.0, 0.0, 0.0, 100000.0, 0.0, 0.0, 0.0, 0.0, 0.15, 0.15, 0.15, 0.15, 0.15, 0.15, 9.081061202086803e-32, 2955.54638671875, 832.9591064453125, -120.68167877197266, 3136.0751953125, -120.68167877197266, 1105.38916015625, 1e-9,
+        #           0.0, 0.0, 0.0, 0.0, 100000.0, 0.0, 0.0, 0.0, 0.0, 0.15, 0.15, 0.15, 0.15, 0.15, 0.15,
+        #           400000001, 1.5333081483840942, -1.0075273948473296e-14, 0.974, -1.5333081483840942, 0.974, -2.0261570199409107e-15, 1e-9, 0.0, 0.0, 0.0, 0.0, 100000.0,
+        #           0.0, 0.0, 0.0, 0.0, 0.15, 0.15, 0.15, 0.15, 0.15, 0.15)
+
+        ints    = (1, 1160653210, 1146134036, 1120585646, 1162764288, 1120585646, 1149918413, 814313567, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1041865114, 1041865114, 1041865114, 1041865114, 1041865114, 1041865114, 100000001, 1161338496, 1146104342, -1029486047, 1162093848, -1029486047, 1149903566, 814313567, 0, 0, 0, 0, 1203982336, 0, 0, 0, 0, 1041865114, 1041865114, 1041865114, 1041865114, 1041865114, 1041865114, 200000001, 1161345214, 1146109282, -1024369403, 1162084660, -1024369403, 1149906036, 814313567, 0, 0, 0, 0, 1203982336, 0, 0, 0, 0, 1041865114, 1041865114, 1041865114, 1041865114, 1041865114, 1041865114, 400000001, 1069826929, -1472888832, 1064921892, -1077656719, 1064921892, -1491992576, 814313567, 0, 0, 0, 0, 1203982336, 0, 0, 0, 0, 1041865114, 1041865114, 1041865114, 1041865114, 1041865114, 1041865114)
+        floats  = (1.401298464324817e-45, 2786.60009765625, 834.469970703125, 101.38999938964844, 3302.0, 101.38999938964844, 1106.9000244140625, 9.999999717180685e-10, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.15000000596046448, 0.15000000596046448, 0.15000000596046448, 0.15000000596046448, 0.15000000596046448, 0.15000000596046448, 2.3122342657588655e-35, 2953.90625, 832.6575927734375, -81.64478302001953, 3138.318359375, -81.64478302001953, 1105.087646484375, 9.999999717180685e-10, 0.0, 0.0, 0.0, 0.0, 100000.0, 0.0, 0.0, 0.0, 0.0, 0.15000000596046448, 0.15000000596046448, 0.15000000596046448, 0.15000000596046448, 0.15000000596046448, 0.15000000596046448, 9.081061202086803e-32, 2955.54638671875, 832.9591064453125, -120.68167877197266, 3136.0751953125, -120.68167877197266, 1105.38916015625, 9.999999717180685e-10, 0.0, 0.0, 0.0, 0.0, 100000.0, 0.0, 0.0, 0.0, 0.0, 0.15000000596046448, 0.15000000596046448, 0.15000000596046448, 0.15000000596046448, 0.15000000596046448, 0.15000000596046448, 1.3927371822189304e-24, 1.5333081483840942, -1.0075273948473296e-14, 0.9742910861968994, -1.5333081483840942, 0.9742910861968994, -2.0261570199409107e-15, 9.999999717180685e-10, 0.0, 0.0, 0.0, 0.0, 100000.0, 0.0, 0.0, 0.0, 0.0, 0.15000000596046448, 0.15000000596046448, 0.15000000596046448, 0.15000000596046448, 0.15000000596046448, 0.15000000596046448)
+        """
         op2 = self.op2
-        ntotal = 92  # 23*4
-        s = Struct(op2._endian + b'i15fi 6i')
+        ntotal = 92 * self.factor  # 23*4
+        s = Struct(op2._endian + b'i15fi 6f')
         ndatai = len(data) - n
         assert ndatai % ntotal == 0
         nmaterials = ndatai // ntotal
@@ -265,10 +307,24 @@ class MPT:
             if op2.is_debug_file:
                 op2.binary_debug.write('  MAT2=%s\n' % str(out))
 
+            #print(out)
+            #(100000001, 2953.90625, 832.6575927734375, -81.64478302001953, 3138.318359375, -81.64478302001953, 1105.087646484375, 1e-9,
+            #   0.0, 0.0, 0.0, 0.0, 100000.0, 0.0, 0.0, 0.0,
+            #   0, 0.15, 0.15, 0.15, 0.15, 0.15, 0.15)
+            #MAT2 MID   G11  G12  G13  G22  G23  G33  RHO
+            #     A1    A2   A3   TREF GE   ST   SC   SS
+            #     MCSID GE11 GE12 GE13 GE22 GE23 GE33
+            #MAT2        10000001  2.9539E+03  8.3266E+02 -8.1645E+01  3.1383E+03 -8.1645E+01  1.1051E+03  1.0000E-09
+            #+         0.0000E+00  0.0000E+00  0.0000E+00  0.0000E+00  1.0000E+05  0.0000E+00  0.0000E+00  0.0000E+00
+            #+                  0  1.5000E-01  1.5000E-01  1.5000E-01  1.5000E-01  1.5000E-01  1.5000E-01
+
             (mid, g1, g2, g3, g4, g5, g6, rho, aj1, aj2, aj3,
-             tref, ge, St, Sc, Ss, mcsid, *blanks) = out
-            assert max(blanks) == min(blanks) == 0, (mid, blanks)
+             tref, ge, St, Sc, Ss, mcsid,
+             ge1, ge2, ge3, ge4, ge5, ge6) = out
+            #ge_list = (ge1, ge2, ge3, ge4, ge5, ge6)
             assert mid > 0, mid
+            #assert ge == 0.0, f'mid={mid} ge={ge} ge_list={ge_list}'
+            #assert max(blanks) == min(blanks) == 0, (mid, ge, blanks)
             mat = MAT2.add_op2_data(out)
             mats.append(mat)
             n += ntotal
@@ -352,20 +408,35 @@ class MPT:
         """
         MAT9(2603,26,300) - record 9
         """
+        card_name = 'MATT9'
+        card_obj = MATT9
+        methods = {
+            #140 : self._read_mat9_140,
+            140 : self._read_mat9_140,
+            224 : self._read_mat9_224,
+        }
+        #try:
+        #n = self._read_matt2_92(None, data, n)
+        op2 = self.op2
+        n = op2.reader_geom2._read_double_card(
+            card_name, card_obj,
+            self.add_op2_material,
+            methods, data, n)
+        #except DoubleCardError:
+            #raise
+        #n = self.op2.reader_geom2._read_dual_card(
+            #data, n, self._read_rbar_nx, self._read_rbar_msc,
+            #'RBAR', self.op2.reader_geom3._add_op2_rigid_element)
+        return n
+
+    def _read_mat9_140(self, card_obj, data: bytes, n: int) -> Tuple[int, List[MAT9]]:
         op2 = self.op2
         #op2.log.info('skipping MAT9')
         #return len(data)
+        materials = []
         ndatai = len(data) - n
-        if ndatai % 140 == 0:
-            s2 = Struct(op2._endian + b'i 30f iiii')
-            ntotal = 140
-        else:  # pragma: no cover
-            op2.log.warning('unexpected MAT9 format...')
-            ntotal = (35 + 21) * 4 # 35
-            s2 = Struct(op2._endian + b'i 30f iiii 21i')
-            #ntotal = 56 * 4
-            #s1 = Struct(op2._endian + b'i 21f 34i')
-            #s2 = Struct(op2._endian + b'i 21f 34f')
+        s2 = Struct(op2._endian + b'i 30f iiii')
+        ntotal = 140
         nmaterials = ndatai // ntotal
         assert ndatai % ntotal == 0, f'ndatai={ndatai} ntotal={ntotal} nmaterials={nmaterials} leftover={ndatai % ntotal}'
 
@@ -379,34 +450,67 @@ class MPT:
             out = s2.unpack(data[n:n+ntotal])
             if op2.is_debug_file:
                 op2.binary_debug.write('    MAT9=%s\n' % str(out))
-            if len(out) == 35:
-                #print(out)
-                (mid, g1, g2, g3, g4, g5, g6, g7, g8, g9, g10,
-                 g11, g12, g13, g14, g15, g16, g17, g18, g19, g20, g21,
-                 rho, a1, a2, a3, a4, a5, a6, tref, ge,
-                 blank1, blank2, blank3, blank4) = out
-            else:
-                (mid, g1, g2, g3, g4, g5, g6, g7, g8, g9, g10,
-                 g11, g12, g13, g14, g15, g16, g17, g18, g19, g20, g21,
-                 rho, a1, a2, a3, a4, a5, a6, tref, ge,
-                 blank1, blank2, blank3, blank4, *blanks) = out
-                op2.show_data(data[n:n+ntotal], types='if')
-                op2.log.debug(str(blanks))
+            #print(out)
+            (mid, g1, g2, g3, g4, g5, g6, g7, g8, g9, g10,
+             g11, g12, g13, g14, g15, g16, g17, g18, g19, g20, g21,
+             rho, a1, a2, a3, a4, a5, a6, tref, ge,
+             blank1, blank2, blank3, blank4) = out
+            assert mid > 0, mid
             assert blank1 == 0, blank1
+            assert blank2 == 0, blank2
+            assert blank3 == 0, blank3
+            assert blank4 == 0, blank4
             data_in = [mid, [g1, g2, g3, g4, g5, g6, g7, g8, g9, g10,
                              g11, g12, g13, g14, g15, g16, g17, g18, g19, g20, g21],
                        rho, [a1, a2, a3, a4, a5, a6],
                        tref, ge]
             mat = MAT9.add_op2_data(data_in)
-            try:
-                self.add_op2_material(mat)
-            except AssertionError:
-                print(mat)
-                op2.card_count['MAT9'] = nmaterials
-                return len(data)
+            materials.append(mat)
             n += ntotal
-        op2.card_count['MAT9'] = nmaterials
-        return n
+        return n, materials
+
+    def _read_mat9_224(self, card_obj, data: bytes, n: int) -> Tuple[int, List[MAT9]]:
+        op2 = self.op2
+        #op2.log.info('skipping MAT9')
+        #return len(data)
+        materials = []
+        ndatai = len(data) - n
+        ntotal = (35 + 21) * 4 # 56*4
+        s2 = Struct(op2._endian + b'i 30f iiii 21i')
+        nmaterials = ndatai // ntotal
+        assert ndatai % ntotal == 0, f'ndatai={ndatai} ntotal={ntotal} nmaterials={nmaterials} leftover={ndatai % ntotal}'
+
+        if op2.is_debug_file:
+            op2.binary_debug.write(
+                '  MAT9=(mid, g1, g2, g3, g4, g5, g6, g7, g8, g9, g10, '
+                'g11, g12, g13, g14, g15, g16, g17, g18, g19, g20, g21, '
+                'rho, a1, a2, a3, a4, a5, a6, tref, ge, '
+                'blank1, blank2, blank3, blank4)\n')
+        for unused_i in range(nmaterials):
+            out = s2.unpack(data[n:n+ntotal])
+            if op2.is_debug_file:
+                op2.binary_debug.write('    MAT9=%s\n' % str(out))
+            (mid, g1, g2, g3, g4, g5, g6, g7, g8, g9, g10,
+             g11, g12, g13, g14, g15, g16, g17, g18, g19, g20, g21,
+             rho, a1, a2, a3, a4, a5, a6, tref, ge,
+             blank1, blank2, blank3, blank4, *blanks) = out
+            #op2.show_data(data[n:n+ntotal], types='if')
+            op2.log.debug(str(blanks))
+            assert mid > 0, mid
+            assert blank1 == 0, blank1
+            assert blank2 == 0, blank2
+            assert blank3 == 0, blank3
+            assert blank4 == 0, blank4
+            assert max(blanks) == 0, blanks
+            assert min(blanks) == 0, blanks
+            data_in = [mid, [g1, g2, g3, g4, g5, g6, g7, g8, g9, g10,
+                             g11, g12, g13, g14, g15, g16, g17, g18, g19, g20, g21],
+                       rho, [a1, a2, a3, a4, a5, a6],
+                       tref, ge]
+            mat = MAT9.add_op2_data(data_in)
+            materials.append(mat)
+            n += ntotal
+        return n, materials
 
     def _read_mat10(self, data: bytes, n: int) -> int:
         """
@@ -689,6 +793,27 @@ class MPT:
         return n
 
     def _read_matt2(self, data: bytes, n: int) -> int:
+        card_name = 'MATT2'
+        card_obj = MATT2
+        methods = {
+            68 : self._read_matt2_68,
+            92 : self._read_matt2_92,
+        }
+        #try:
+        #n = self._read_matt2_92(None, data, n)
+        op2 = self.op2
+        n = op2.reader_geom2._read_double_card(
+            card_name, card_obj,
+            op2._add_methods._add_material_dependence_object,
+            methods, data, n)
+        #except DoubleCardError:
+            #raise
+        #n = self.op2.reader_geom2._read_dual_card(
+            #data, n, self._read_rbar_nx, self._read_rbar_msc,
+            #'RBAR', self.op2.reader_geom3._add_op2_rigid_element)
+        return n
+
+    def _read_matt2_68(self, card_obj, data: bytes, n: int) -> Tuple[int, List[MATT2]]:
         """
         1 MID         I Material identification number
         2 TID(15)     I TABLEMi entry identification numbers
@@ -698,6 +823,7 @@ class MPT:
         ntotal = 68 * self.factor # 17*4
         s = Struct(mapfmt(op2._endian + b'17i', self.size))
         nmaterials = (len(data) - n) // ntotal
+        cards = []
         for unused_i in range(nmaterials):
             edata = data[n:n+ntotal]
             out = s.unpack(edata)
@@ -705,6 +831,7 @@ class MPT:
              g23_table, g33_table, rho_table,
              a1_table, a2_table, a3_table, unused_zeroa, ge_table,
              st_table, sc_table, ss_table, unused_zerob) = out
+            assert mid > 0, mid
             assert unused_zeroa == 0, f'unused_zeroa={unused_zeroa} out={out}'
             assert unused_zerob == 0, f'unused_zerob={unused_zerob} out={out}'
             if op2.is_debug_file:
@@ -714,10 +841,44 @@ class MPT:
                         g23_table, g33_table, rho_table,
                         a1_table, a2_table, a3_table, ge_table,
                         st_table, sc_table, ss_table, comment='')
-            op2._add_methods._add_material_dependence_object(mat, allow_overwrites=False)
+            cards.append(mat)
+            #op2._add_methods._add_material_dependence_object(mat, allow_overwrites=False)
             n += ntotal
-        op2.card_count['MATT2'] = nmaterials
-        return n
+        return n, cards
+
+    def _read_matt2_92(self, card_obj, data: bytes, n: int) -> Tuple[int, List[MATT2]]:
+        """
+        1 MID         I Material identification number
+        2 TID(15)     I TABLEMi entry identification numbers
+        17        UNDEF none Not used
+        """
+        op2 = self.op2
+        ntotal = 92 * self.factor # 23*4
+        s = Struct(mapfmt(op2._endian + b'17i 6i', self.size))
+        nmaterials = (len(data) - n) // ntotal
+        cards = []
+        for unused_i in range(nmaterials):
+            edata = data[n:n+ntotal]
+            out = s.unpack(edata)
+            (mid, g11_table, g12_table, g13_table, g22_table,
+             g23_table, g33_table, rho_table,
+             a1_table, a2_table, a3_table, unused_zeroa, ge_table,
+             st_table, sc_table, ss_table, unused_zerob, *unused_zeroc) = out
+            assert mid > 0, mid
+            assert unused_zeroa == 0, f'unused_zeroa={unused_zeroa} out={out}'
+            assert unused_zerob == 0, f'unused_zerob={unused_zerob} out={out}'
+            assert max(unused_zeroc) == 0
+            if op2.is_debug_file:
+                op2.binary_debug.write('  MATT2=%s\n' % str(out))
+
+            mat = MATT2(mid, g11_table, g12_table, g13_table, g22_table,
+                        g23_table, g33_table, rho_table,
+                        a1_table, a2_table, a3_table, ge_table,
+                        st_table, sc_table, ss_table, comment='')
+            cards.append(mat)
+            #op2._add_methods._add_material_dependence_object(mat, allow_overwrites=False)
+            n += ntotal
+        return n, cards
 
     def _read_matt3(self, data: bytes, n: int) -> int:
         """
@@ -1413,7 +1574,7 @@ class MPT:
             out = s.unpack(edata)
             #(sid,ninc,dt,kMethod,kStep,maxIter,conv,intOut,epsU,epsP,epsW,
             # maxDiv,maxQn,maxLs,fStress,lsTol,maxBisect,maxR,rTolB) = out
-            conv = out[6]
+            #conv = out[6]
             if op2.is_debug_file:
                 op2.binary_debug.write('  NLPARM=%s\n' % str(out))
             #if conv in [10, 14]:

@@ -1740,12 +1740,14 @@ class PBARL(LineProperty):
 
     def I1(self) -> float:
         """gets the section I1 moment of inertia"""
-        I1 = A_I1_I2_I12(self, self.beam_type, self.dim)
+        I1 = A_I1_I2_I12(self, self.beam_type, self.dim)[1]
+        assert isinstance(I1, float), I1
         return I1
 
     def I2(self) -> float:
         """gets the section I2 moment of inertia"""
         I2 = A_I1_I2_I12(self, self.beam_type, self.dim)[2]
+        assert isinstance(I2, float), I2
         return I2
 
     def I12(self) -> float:
@@ -1755,7 +1757,7 @@ class PBARL(LineProperty):
         except:
             print(str(self))
             raise
-        return I12
+        return I12[3]
 
     #def I1_I2_I12(self):
         #"""gets the section I1, I2, I12 moment of inertia"""

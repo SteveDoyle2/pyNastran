@@ -1494,6 +1494,25 @@ class DYNAMICS(GeomCommon):
         return n, dloads
 
     def _read_rgyro(self, data: bytes, n: int) -> int:
+        """this card is faked..."""
+        card_name = 'RGYRO'
+        card_obj = None
+        methods = {
+            36 : self._read_rgyro_36,
+            52 : self._read_rgyro_52,
+        }
+        #try:
+        #n = self._read_rgyro_52(RGYRO, data, n)
+        op2 = self.op2
+        n = op2.reader_geom2._read_double_card(
+            card_name, card_obj,
+            self.op2.reader_geom3._add_op2_rigid_element,
+            methods, data, n)
+        #except DoubleCardError:
+            #raise
+        return n
+
+    def _read_rgyro_36(self, card_obj, data: bytes, n: int) -> int:
         """
         RGYRO(1507,15,40) - Record 17
 
@@ -1505,11 +1524,15 @@ class DYNAMICS(GeomCommon):
         8 SPDHGH      RS Upper limit of speed range
         9 SPEED       RS Specific speed
 
+        RGYRO RID SYNCFLG REFROTR SPDUNIT SPDLOW SPDHIGH SPEED ROTRSEID
+              WR3WRL WR4WRL WRHWRL
+        RGYRO    1       SYNC      4      RPM                   1000.0
         """
         op2 = self.op2
         ntotal = 36 # 4*9
         nentries = (len(data) - n) // ntotal
         struc = Struct(op2._endian + b'i 8s i 8s 3f')
+        cards = []
         for unused_i in range(nentries):
             edata = data[n:n+ntotal]
             out = struc.unpack(edata)
@@ -1519,9 +1542,52 @@ class DYNAMICS(GeomCommon):
             if op2.is_debug_file:
                 op2.binary_debug.write('  RGYRO=%s\n' % str(out))
             op2.add_rgyro(sid, asynci, refrot, unit, speed_low, speed_high, speed)
+            #RGYRO(sid, asynci, refrot, unit, speed_low, speed_high, speed)
             n += ntotal
         op2.increase_card_count('RGYRO', nentries)
-        return n
+        return n, cards
+
+    def _read_rgyro_52(self, card_obj, data: bytes, n: int) -> int:
+        """
+        RGYRO(10701, 107, 117) - Record 17
+
+        1 SID            I RGYRO identification number
+        2 ATYPE(2)   CHAR4 ASYNC/SYNC flag
+        4 REFROT         I Reference rotor identification number
+        5 UNIT(2)    CHAR4 RPM/FREQ flag for speed input
+        7 SPDLOW        RS Lower limit of speed range
+        8 SPDHGH        RS Upper limit of speed range
+        9 SPEED         RS Specific speed
+        10 rotor_seid    I ?
+        11 whirl3       RS ?
+        12 whirl4       RS ?
+        13 whirl_hybrid RS ?
+
+        RGYRO RID SYNCFLG REFROTR SPDUNIT SPDLOW SPDHIGH SPEED ROTRSEID
+              WR3WRL WR4WRL WRHWRL
+        RGYRO    1       SYNC      4      RPM                   1000.0
+
+        ints    = (1, 206.349, 1.3563e-19  4, 541937746,  1.3563e-19, 0,   0,   1000.0, 0, 0, 0, 0)
+        floats  = (1, 206.349, 1.3563e-19, 4, 1.7390e-19, 1.3563e-19, 0.0, 0.0, 1000.0, 0.0, 0.0, 0.0, 0.0)
+        """
+        cards = []
+        op2 = self.op2
+        ntotal = 52 # 4*13
+        nentries = (len(data) - n) // ntotal
+        struc = Struct(op2._endian + b'i 8s i 8s 3f i3f')
+        for unused_i in range(nentries):
+            edata = data[n:n+ntotal]
+            out = struc.unpack(edata)
+            (sid, asynci, refrot, unit, speed_low, speed_high, speed,
+             rotor_seid, whirl3, whirl4, whirl_hybrid) = out
+            asynci = asynci.decode('latin1')
+            unit = unit.decode('latin1')
+            if op2.is_debug_file:
+                op2.binary_debug.write('  RGYRO=%s\n' % str(out))
+            op2.add_rgyro(sid, asynci, refrot, unit, speed_low, speed_high, speed)
+            n += ntotal
+        op2.increase_card_count('RGYRO', nentries)
+        return n, cards
 
     def _read_rotord(self, data: bytes, n: int) -> int:
         """
@@ -1637,7 +1703,7 @@ class DYNAMICS(GeomCommon):
 #RSPINR
 
     def _read_rspint(self, data: bytes, n: int) -> int:
-        op2 = self
+        op2 = self.op2
         n = op2.reader_geom2._read_dual_card(
             data, n,
             self._read_rspint_32, self._read_rspint_56,

@@ -473,12 +473,28 @@ class GEOM4(GeomCommon):
 
     def _read_rbar(self, data: bytes, n: int) -> int:
         """RBAR(6601,66,292) - Record 22"""
-        n = self.op2.reader_geom2._read_dual_card(
-            data, n, self._read_rbar_nx, self._read_rbar_msc,
-            'RBAR', self.op2.reader_geom3._add_op2_rigid_element)
+        card_name = 'RBAR'
+        card_obj = RBAR
+        methods = {
+            28 : self._read_rbar_nx_28,
+            32 : self._read_rbar_msc_32,
+            36 : self._read_rbar_msc_36,
+        }
+        #try:
+        #n = self._read_rbar_msc_36(data, n)
+        n = self.op2.reader_geom2._read_double_card(
+            card_name, card_obj,
+            self.op2.reader_geom3._add_op2_rigid_element,
+            methods, data, n)
+        #except DoubleCardError:
+            #raise
+        return n
+        #n = self.op2.reader_geom2._read_dual_card(
+            #data, n, self._read_rbar_nx, self._read_rbar_msc,
+            #'RBAR', self.op2.reader_geom3._add_op2_rigid_element)
         return n
 
-    def _read_rbar_nx(self, data, n):
+    def _read_rbar_nx_28(self, card_obj, data: bytes, n: int) -> int:
         """
         RBAR(6601,66,292) - Record 22 - NX version
 
@@ -518,7 +534,7 @@ class GEOM4(GeomCommon):
         op2.to_nx(' because RBAR-NX was found')
         return n, elems
 
-    def _read_rbar_msc(self, data, n):
+    def _read_rbar_msc_32(self, card_obj, data: bytes, n: int) -> int:
         """RBAR(6601,66,292) - Record 22 - MSC version"""
         op2 = self.op2
         s = Struct(mapfmt(op2._endian + b'7if', self.size))
@@ -537,6 +553,37 @@ class GEOM4(GeomCommon):
             elem = RBAR.add_op2_data(out)
             elems.append(elem)
             n += ntotal
+        return n, elems
+
+
+    def _read_rbar_msc_36(self, card_obj, data: bytes, n: int) -> int:
+        """RBAR(6601,66,292) - Record 22 - MSC version
+
+        datai  = (392, 757, 758, 123456, 0,   0,   123456, 0,   0)
+        dataf  = (392, 757, 758, 123456, 0.0, 0.0, 123456, 0.0, 0.0)
+        """
+        op2 = self.op2
+        log = op2.log
+        s = Struct(mapfmt(op2._endian + b'7i 2f', self.size))
+        ntotal = 36 * self.factor  # 9*4
+        nelements = (len(data) - n) // ntotal
+        if not (len(data) - n) % ntotal == 0:
+            raise MixedVersionCard('failed reading as MSC')
+        elems = []
+        for unused_i in range(nelements):
+            edata = data[n:n + ntotal]
+            out = s.unpack(edata)
+            if op2.is_debug_file:
+                op2.binary_debug.write('  RBAR MSC=%s\n' % str(out))
+            #(eid, ga, gb, cna, cnb, cma, cmb, alpha, tref) = out
+            assert out[0] > 0, out
+            if out[-1] != 0.0:
+                log.warning(f'new RBE3 tref? field={out[-1]} (assuming float)')
+            #print(out)
+            elem = RBAR.add_op2_data(out)
+            elems.append(elem)
+            n += ntotal
+        assert n == len(data)
         return n, elems
 
     def _read_rbe1(self, data: bytes, n: int) -> int:
@@ -1311,7 +1358,7 @@ class GEOM4(GeomCommon):
         #print('ints = %s' % ints)
         nidata = len(ints)
         while i < nidata:
-            sname = data[n+i*size : n+(i+1)*size]
+            unused_sname = data[n+i*size : n+(i+1)*size]
             sname_str = 'U%i' % int(floats[i])
             #print('sname_str = %r' % sname_str)
             #print('sname_str2 = %r' % sname_str2)
@@ -1590,7 +1637,8 @@ def read_rbe3s_from_idata_fdata(op2: OP2Geom, idata, fdata) -> List[RBE3]:
         if is_alpha_tref:
             alpha = fdata[ii]
             tref = fdata[ii+1]
-            op2.log.warning(f'new RBE3 field={tref} (assume float)')
+            if tref != 0.0:
+                op2.log.warning(f'new RBE3 field={tref} (assuming float)')
             ii += 2
         elif is_alpha:
             alpha = fdata[ii]

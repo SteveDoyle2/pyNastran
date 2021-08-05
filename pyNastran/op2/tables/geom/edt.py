@@ -2133,6 +2133,7 @@ class EDT:
         5 LIST2    I     Identification of a SET1 that contains the grids ids
                          associated with this control surface
         """
+        op2 = self.op2
         ntotal = 20 *  self.factor # 4 * 5
         ndatai = len(data) - n
         ncards = ndatai // ntotal

@@ -552,6 +552,8 @@ class MATT2(MaterialDependenceThermal):
         if comment:
             self.comment = comment
 
+        if g11_table == 0:
+            g11_table = None
         if g12_table == 0:
             g12_table = None
         if g13_table == 0:
@@ -611,6 +613,22 @@ class MATT2(MaterialDependenceThermal):
         self.st_table_ref = None
         self.sc_table_ref = None
         self.ss_table_ref = None
+
+    def validate(self):
+        assert self.g11_table is None or self.g11_table > 0
+        assert self.g12_table is None or self.g12_table > 0
+        assert self.g13_table is None or self.g13_table > 0
+        assert self.g22_table is None or self.g22_table > 0
+        assert self.g23_table is None or self.g23_table > 0
+        assert self.g33_table is None or self.g33_table > 0
+        assert self.rho_table is None or self.rho_table > 0
+        assert self.a1_table is None or self.a1_table > 0
+        assert self.a2_table is None or self.a2_table > 0
+        assert self.a3_table is None or self.a3_table > 0
+        assert self.ge_table is None or self.ge_table > 0
+        assert self.st_table is None or self.st_table > 0
+        assert self.sc_table is None or self.sc_table > 0
+        assert self.ss_table is None or self.ss_table > 0
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -791,6 +809,18 @@ class MATT3(MaterialDependenceThermal):
         if comment:
             self.comment = comment
 
+        ex_table = None if ex_table == 0 else ex_table
+        eth_table = None if eth_table == 0 else eth_table
+        ez_table = None if ez_table == 0 else ez_table
+        nuth_table = None if nuth_table == 0 else nuth_table
+        nuxz_table = None if nuxz_table == 0 else nuxz_table
+        rho_table = None if rho_table == 0 else rho_table
+        gzx_table = None if gzx_table == 0 else gzx_table
+        ax_table = None if ax_table == 0 else ax_table
+        ath_table = None if ath_table == 0 else ath_table
+        az_table = None if az_table == 0 else az_table
+        ge_table = None if ge_table == 0 else ge_table
+
         self.mid = mid
         self.ex_table = ex_table
         self.eth_table = eth_table
@@ -816,6 +846,19 @@ class MATT3(MaterialDependenceThermal):
         self.az_table_ref = None
         self.ge_table_ref = None
         self.mid_ref = None
+
+    def validate(self):
+        assert self.ex_table is None or self.ex_table > 0
+        assert self.eth_table is None or self.eth_table > 0
+        assert self.ez_table is None or self.ez_table > 0
+        assert self.nuth_table is None or self.nuth_table > 0
+        assert self.nuxz_table is None or self.nuxz_table > 0
+        assert self.rho_table is None or self.rho_table > 0
+        assert self.gzx_table is None or self.gzx_table > 0
+        assert self.ax_table is None or self.ax_table > 0
+        assert self.ath_table is None or self.ath_table > 0
+        assert self.az_table is None or self.az_table > 0
+        assert self.ge_table is None or self.ge_table > 0
 
     def cross_reference(self, model: BDF) -> None:
         msg = ', which is required by MATT3 mid=%s' % self.mid

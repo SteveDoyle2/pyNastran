@@ -230,6 +230,8 @@ class RBAR(RigidElement):
     +------+-----+----+----+--------+-----+-----+-----+-------+
     | RBAR |  5  | 1  |  2 | 123456 |     |     |     | 6.5-6 |
     +------+-----+----+----+--------+-----+-----+-----+-------+
+
+    TREF was added in MSC 2021
     """
     type = 'RBAR'
     _properties = ['dependent_nodes', 'independent_nodes', 'nodes']
@@ -242,9 +244,12 @@ class RBAR(RigidElement):
         cnb = '456'
         cma = None
         cmb = None
-        return RBAR(eid, nids, cna, cnb, cma, cmb, alpha=0., comment='')
+        return RBAR(eid, nids, cna, cnb, cma, cmb, alpha=0., tref=0., comment='')
 
-    def __init__(self, eid, nids, cna, cnb, cma, cmb, alpha=0., comment=''):
+    def __init__(self, eid: int, nids: List[int],
+                 cna: str, cnb: str,
+                 cma: str, cmb: str,
+                 alpha: float=0., tref: float=0., comment=''):
         """
         Creates a RBAR element
 
@@ -293,6 +298,7 @@ class RBAR(RigidElement):
         self.cma = cma
         self.cmb = cmb
         self.alpha = alpha
+        self.tref = tref
         self.ga_ref = None
         self.gb_ref = None
 
@@ -378,8 +384,10 @@ class RBAR(RigidElement):
         cma = components_or_blank(card, 6, 'cma', '')
         cmb = components_or_blank(card, 7, 'cmb', '')
         alpha = double_or_blank(card, 8, 'alpha', 0.0)
-        assert len(card) <= 9, f'len(RBAR card) = {len(card):d}\ncard={card}'
-        return RBAR(eid, [ga, gb], cna, cnb, cma, cmb, alpha, comment=comment)
+        tref = double_or_blank(card, 9, 'tref', 0.0)
+        assert len(card) <= 10, f'len(RBAR card) = {len(card):d}\ncard={card}'
+        return RBAR(eid, [ga, gb], cna, cnb, cma, cmb,
+                    alpha=alpha, tref=tref, comment=comment)
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
@@ -393,6 +401,7 @@ class RBAR(RigidElement):
         comment : str; default=''
             a comment for the card
         """
+        tref = 0.0
         eid = data[0]
         ga = data[1]
         gb = data[2]
@@ -401,7 +410,11 @@ class RBAR(RigidElement):
         cma = str(data[5])
         cmb = str(data[6])
         alpha = data[7]
-        return RBAR(eid, [ga, gb], cna, cnb, cma, cmb, alpha, comment=comment)
+        if len(data) > 8:
+            assert len(data) == 9, f'data={data} ndata={len(data)}'
+            tref = data[8]
+        return RBAR(eid, [ga, gb], cna, cnb, cma, cmb,
+                    alpha=alpha, tref=tref, comment=comment)
 
     # def convert_to_MPC(self, mpcID):
     #     """
@@ -481,13 +494,14 @@ class RBAR(RigidElement):
 
     def raw_fields(self):
         list_fields = ['RBAR', self.eid, self.Ga(), self.Gb(), self.cna,
-                       self.cnb, self.cma, self.cmb, self.alpha]
+                       self.cnb, self.cma, self.cmb, self.alpha, self.tref]
         return list_fields
 
     def repr_fields(self):
         alpha = set_blank_if_default(self.alpha, 0.0)
+        tref = set_blank_if_default(self.tref, 0.0)
         list_fields = ['RBAR', self.eid, self.Ga(), self.Gb(), self.cna, self.cnb,
-                       self.cma, self.cmb, alpha]
+                       self.cma, self.cmb, alpha, tref]
         return list_fields
 
     def write_card(self, size: int=8, is_double: bool=False) -> str:
