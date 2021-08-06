@@ -226,7 +226,6 @@ class OP2Reader:
           28, 1414742350, 541999442, 1414680390, 1346458656, 1145643077, 1146045216, 539828293, 28,
           4, 2, 4, 8, 1482184792, 1482184792, 8, 4, -1, 4, 4, 0, 4, 4, 2, 4, 8, 1297040711, 538976305, 8, 4, -1
           """
-        # self.show_ndata(120, types='ifs', force=False)
         #try:
         op2 = self.op2
         markers = self.get_nmarkers(1, rewind=True)
@@ -261,7 +260,7 @@ class OP2Reader:
                 date = self.op2.struct_3q.unpack(data)
                 op2.log.debug(f'date = {date}')
             else:
-                self.show_data(data, types='ifsqd', endian=None, force=False)
+                #self.show_data(data, types='ifsqd', endian=None, force=False)
                 assert ndata in [4, 12, 24], f'ndata={ndata} data={data}'
 
             self.read_markers([7])
@@ -5894,9 +5893,7 @@ class OP2Reader:
 
         # we need to check the marker, so we read it and rewind, so we don't
         # screw up our positioning in the file
-        #self.show_ndata(20, types='i')
         markers = self.get_nmarkers(1, rewind=True)
-        #print('markers =', markers)
         #if markers[0] == 0:
             #self.log.debug('    returning early')
             #return
@@ -5956,9 +5953,7 @@ class OP2Reader:
                     #self.show(200)
                     #break
                 raise
-            #self.show_ndata(21, types='ifs')
             markers = self.get_nmarkers(1, rewind=True)
-            #print("markers* =", markers)
 
         if self.is_debug_file:
             self.binary_debug.write(f'breaking on marker={markers}\n')

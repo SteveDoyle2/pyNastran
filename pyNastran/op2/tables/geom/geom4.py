@@ -23,7 +23,7 @@ from pyNastran.bdf.cards.constraints import (
 )
 from pyNastran.bdf.cards.optimization import DCONADD
 from pyNastran.bdf.field_writer_16 import print_card_16
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.op2.op2_geom import OP2Geom
 
 class GEOM4(GeomCommon):

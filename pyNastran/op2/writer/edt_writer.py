@@ -27,11 +27,15 @@ def write_edt(op2_file, op2_ascii, model: Union[BDF, OP2Geom], endian: bytes=b'<
         'AERO', 'AEROS',
         'CAERO1', 'PAERO1', 'SPLINE1',
         'CAERO2', 'PAERO2', 'SPLINE2',
+        'CAERO3', 'CAERO4',
+        'PAERO5',
         #'AELIST', 'AEFACT', 'AESURF', 'AESURFS'
         'AESURF', 'AESTAT',
-        'TRIM', 'FLUTTER',
+        'TRIM', 'DIVERG', 'FLUTTER',
         'DEFORM',
         'FLFACT',
+        'SET1',
+        'AELINK',
     ]
 
     cards_to_skip = [
@@ -48,6 +52,8 @@ def write_edt(op2_file, op2_ascii, model: Union[BDF, OP2Geom], endian: bytes=b'<
             if load.type in ['DEFORM', 'CLOAD']:
                 out[load.type].append(load)
 
+    for set_id, seti in sorted(model.sets.items()):
+        out[seti.type].append(set_id)
     for eid, caero in sorted(model.caeros.items()):
         out[caero.type].append(eid)
     for pid, paero in sorted(model.paeros.items()):
@@ -58,14 +64,17 @@ def write_edt(op2_file, op2_ascii, model: Union[BDF, OP2Geom], endian: bytes=b'<
         out[aesurf.type].append(aesurf_id)
     for aesurfs_id, aesurfs in sorted(model.aesurfs.items()):
         out[aesurfs.type].append(aesurfs_id)
-    for aelink_id, aelink in sorted(model.aelinks.items()):
-        out[aelink.type].append(aelink_id)
+    for aelink_id, aelinks in sorted(model.aelinks.items()):
+        for aelink in aelinks:
+            out[aelink.type].append(aelink_id)
     for name, aecomp in sorted(model.aecomps.items()):
         out[aecomp.type].append(name)
     #for name, aecompl in sorted(model.aecompl.items()):
         #out[aecompl.type].append(name)
 
     # loads
+    for diverg_id, diverg in sorted(model.divergs.items()):
+        out[diverg.type].append(diverg_id)
     for trim_id, trim in sorted(model.trims.items()):
         out[trim.type].append(trim_id)
     for aestat_id, aestat in sorted(model.aestats.items()):
@@ -185,6 +194,52 @@ def _write_trim(model: Union[BDF, OP2Geom], name: str,
         all_data += data
     return nbytes
 
+def _write_diverg(model: Union[BDF, OP2Geom], name: str,
+                  diverg_ids: List[int], ncards: int,
+                  op2_file, op2_ascii, endian: bytes) -> int:
+    """
+    Record – DIVERG(2702,27,387)
+    Divergence analysis data.
+    Word Name Type Description
+    1 SID     I    Unique set identification number
+    2 NROOT   I    Number of divergence roots to output
+    3 M       RS   Mach number
+    Word 3 repeats until -1 occurs
+    """
+    key = (2702, 27, 387)
+
+    nvalues = 0
+    all_data = []
+    fmt = b''
+    for diverg_id in diverg_ids:
+        diverg = model.divergs[diverg_id]
+        #assert 1 == 0, trim.get_stats()
+
+        # machs  : [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8]
+        # nroots : 21
+        # sid    : 100
+        nmachs = len(diverg.machs)
+        nvalues += 3 + nmachs
+
+
+    #nvalues = 7 * ncards + nlabels_total * 3
+    assert nvalues > 0, nvalues
+    nbytes = write_header_nvalues(name, nvalues, key, op2_file, op2_ascii)
+
+    all_data = []
+    for diverg_id in diverg_ids:
+        diverg = model.divergs[diverg_id]
+        data = [diverg.sid, diverg.nroots] + list(diverg.machs) + [-1]
+        fmt = endian + f'2i {nmachs}f i'.encode('ascii')
+
+        structi = Struct(fmt)
+        #print(f'  DIVERG data={data}\n')
+        op2_ascii.write(f'  DIVERG data={data}\n')
+        op2_file.write(structi.pack(*data))
+        all_data += data
+    assert len(data) == nvalues, f'ndata={len(data)}; nvalues={nvalues}'
+    return nbytes
+
 def _write_caero1(model: Union[BDF, OP2Geom], name: str,
                   caero_ids: List[int], ncards: int,
                   op2_file, op2_ascii, endian: bytes) -> int:
@@ -270,6 +325,110 @@ def _write_caero2(model: Union[BDF, OP2Geom], name: str,
 
         assert None not in data, data
         op2_ascii.write(f'  CAERO2 data={data}\n')
+        op2_file.write(structi.pack(*data))
+    return nbytes
+
+def _write_caero3(model: Union[BDF, OP2Geom], name: str,
+                  caero_ids: List[int], ncards: int,
+                  op2_file, op2_ascii, endian: bytes) -> int:
+    """
+    Aerodynamic panel element configuration.
+
+    Word Name Type Description
+
+    1 EID    I Element identification number
+    2 PID    I Property identification number of a PAERO3 entry
+    3 CP     I Coordinate system for locating points 1 and 4
+    4 LISTW  I Identification number of an AEFACT entry that lists
+               coordinate pairs for structural interpolation of the wing
+    5 LISTC1 I Identification number of an AEFACT entry that lists
+               coordinate pairs for control surfaces
+    6 LISTC2 I Identification number of an AEFACT entry that lists
+               coordinate pairs for control surfaces
+    7 UNDEF(2) None
+    9  X1   RS X-coordinate of point 1 in coordinate system CP
+    10 Y1   RS Y-coordinate of point 1 in coordinate system CP
+    11 Z1   RS Z-coordinate of point 1 in coordinate system CP
+    12 X12  RS Edge chord length in aerodynamic coordinate system
+    13 X4   RS X-coordinate of point 4 in coordinate system CP
+    14 Y4   RS Y-coordinate of point 4 in coordinate system CP
+    15 Z4   RS Z-coordinate of point 4 in coordinate system CP
+    16 X43  RS Edge chord length in aerodynamic coordinate system
+    """
+    #ntotal = 64 * self.factor # 4*16
+    #ndatai = len(data) - n
+    #ncards = ndatai // ntotal
+    #assert ndatai % ntotal == 0
+    structi = Struct(endian + b'6i 2i 8f')
+
+    key = (4401, 44, 168)
+    nfields = 16
+    nbytes = write_header(name, nfields, ncards, key, op2_file, op2_ascii)
+
+    for caero_id in caero_ids:
+        caero = model.caeros[caero_id] # type: CAERO3
+        x1, y1, z1 = caero.p1
+        x4, y4, z4 = caero.p4
+        #print(caero.get_stats())
+        data = [
+            caero.eid, caero.pid, caero.cp,
+            caero.list_w, caero.list_c1, caero.list_c2,
+            0, 0,
+            x1, y1, z1, caero.x12,
+            x4, y4, z4, caero.x43,]
+
+        assert None not in data, data
+        op2_ascii.write(f'  CAERO3 data={data}\n')
+        op2_file.write(structi.pack(*data))
+    return nbytes
+
+def _write_caero4(model: Union[BDF, OP2Geom], name: str,
+                  caero_ids: List[int], ncards: int,
+                  op2_file, op2_ascii, endian: bytes) -> int:
+    """
+    Word Name Type Description
+    1 EID   I Element identification number
+    2 PID   I Property identification number of a PAERO4 entry
+    3 CP    I Coordinate system for locating points 1 and 4
+    4 NSPAN I Number of strips
+    5 LSPAN I Identification number of an AEFACT entry
+              containing a list of division points for strips
+    6 UNDEF(3) None
+    9  X1  RS X-coordinate of point 1 in coordinate system CP
+    10 Y1  RS Y-coordinate of point 1 in coordinate system CP
+    11 Z1  RS Z-coordinate of point 1 in coordinate system CP
+    12 X12 RS Edge chord length in aerodynamic coordinate system
+    13 X4  RS X-coordinate of point 4 in coordinate system CP
+    14 Y4  RS Y-coordinate of point 4 in coordinate system CP
+    15 Z4  RS Z-coordinate of point 4 in coordinate system CP
+    16 X43 RS Edge chord length in aerodynamic coordinate system
+    """
+    structi = Struct(endian + b'5i 3i 8f')
+
+    key = (4501, 45, 169)
+    nfields = 16
+    nbytes = write_header(name, nfields, ncards, key, op2_file, op2_ascii)
+
+    for caero_id in caero_ids:
+        caero = model.caeros[caero_id] # type: CAERO3
+        x1, y1, z1 = caero.p1
+        x4, y4, z4 = caero.p4
+        #print(caero.get_stats())
+        # 4 NSPAN I Number of strips
+        # 5 LSPAN I Identification number of an AEFACT entry
+        #           containing a list of division points for strips
+        # 6 UNDEF(3) None
+
+        data = [
+            caero.eid, caero.pid, caero.cp,
+            caero.nspan, caero.lspan, 0,
+            0, 0,
+            x1, y1, z1, caero.x12,
+            x4, y4, z4, caero.x43,]
+        assert None not in data, data
+
+        assert None not in data, data
+        op2_ascii.write(f'  CAERO4 data={data}\n')
         op2_file.write(structi.pack(*data))
     return nbytes
 
@@ -375,6 +534,65 @@ def _write_paero2(model: Union[BDF, OP2Geom], name: str,
         op2_ascii.write(f'  PAERO2 data={data}\n')
         #print('npaero2', len(data), data)
         op2_file.write(structi.pack(*data))
+    return nbytes
+
+def _write_paero5(model: Union[BDF, OP2Geom], name: str,
+                  paero_ids: List[int], ncards: int,
+                  op2_file, op2_ascii, endian: bytes) -> int:
+    """
+    MSC 2018.2
+    Word Name Type Description
+    1 PID    I
+    2 NALPHA I
+    3 LALPHA I
+    4 NXIS   I
+    5 LXIS   I
+    6 NTAUS  I
+    7 LTAUS  I
+    8 CAOCI RS
+    Word 8 repeats until End of Record
+    """
+    key = (5101, 51, 176)
+
+    ncaoci = 0
+    for paero_id in paero_ids:
+        paero = model.paeros[paero_id] # type: PAERO5
+        ncaoci += len(paero.caoci)
+
+    nvalues = 8 * ncards + ncaoci
+    nbytes = write_header_nvalues(name, nvalues, key, op2_file, op2_ascii)
+
+    all_data = []
+    for paero_id in paero_ids:
+        paero = model.paeros[paero_id] # type: PAERO5
+        ncaocii = len(paero.caoci)
+
+        fmt = endian + b'7i' + b'f' * ncaocii + b'i'
+        structi = Struct(fmt)
+        #lrsb = 0 if paero.lrsb is None else paero.lrsb
+        #lrib = 0 if paero.lrib is None else paero.lrib
+        #lth1 = 0 if paero.lth[0] is None else paero.lth[0]
+        #lth2 = 0 if paero.lth[1] is None else paero.lth[1]
+
+        data = [
+            # 2 NALPHA I
+            # 3 LALPHA I
+            # 4 NXIS   I
+            # 5 LXIS   I
+            # 6 NTAUS  I
+            # 7 LTAUS  I
+            paero.pid,
+            paero.nalpha, paero.lalpha,
+            paero.nxis, paero.lxis,
+            paero.ntaus, paero.ltaus] + list(paero.caoci) + [-1]
+        #print(data)
+
+        assert None not in data, data
+        op2_ascii.write(f'  PAERO5 data={data}\n')
+        #print('npaero2', len(data), data)
+        op2_file.write(structi.pack(*data))
+        all_data.extend(data)
+    assert len(all_data) == nvalues, f'ndata={len(all_data)}; nvalues={nvalues}'
     return nbytes
 
 def _write_spline1(model: Union[BDF, OP2Geom], name: str,
@@ -867,11 +1085,203 @@ def _write_flfact(model: Union[BDF, OP2Geom], name: str,
     op2_file.write(structi.pack(*data))
     return nbytes
 
+def _write_set1(model: Union[BDF, OP2Geom], name: str,
+                set_ids: List[int], ncards: int,
+                op2_file, op2_ascii, endian: bytes) -> int:
+    """
+    SET1: (3502, 35, 268)
+    MSC 2018.2
+    Word Name Type Description
+    1 SID I
+    2 G1  I Grid ID or -2 when SKIN is specified
+    Word 2 repeats until End of Record
+    """
+    key = (3502, 35, 268)
+
+    ngrids = 0
+    for set_id in set_ids:
+        seti = model.sets[set_id] # type: PAERO5
+        ngrids += len(seti.ids)
+        if seti.is_skin:
+            ngrids += 1
+
+    # 2* = sid and the -1 flag
+    nvalues = 2 * ncards + ngrids
+    nbytes = write_header_nvalues(name, nvalues, key, op2_file, op2_ascii)
+
+    all_data = []
+    for set_id in set_ids:
+        seti = model.sets[set_id] # type: PAERO5
+        ngridsi = len(seti.ids)
+
+        # +2 = sid and the -1 flag
+        dn = 2
+        if seti.is_skin:
+            dn += 1
+        fmt = endian + b'%di' % (ngridsi + dn)
+        #print(fmt)
+        structi = Struct(fmt)
+
+        data = [
+            # 2 NALPHA I
+            # 3 LALPHA I
+            # 4 NXIS   I
+            # 5 LXIS   I
+            # 6 NTAUS  I
+            # 7 LTAUS  I
+            seti.sid,
+        ]
+        if seti.is_skin:
+            data.append(-2)
+        data += seti.ids
+        data.append(-1)
+
+        assert None not in data, data
+        op2_ascii.write(f'  SET1 data={data}\n')
+        #print('npaero2', len(data), data)
+        op2_file.write(structi.pack(*data))
+        all_data.extend(data)
+    assert len(all_data) == nvalues, f'ndata={len(all_data)}; nvalues={nvalues}'
+    return nbytes
+
+def _write_set3(model: Union[BDF, OP2Geom], name: str,
+                set_ids: List[int], ncards: int,
+                op2_file, op2_ascii, endian: bytes) -> int:
+    """
+    MSC 2018.2
+    Word Name Type Description
+    1 SID I
+    2 DES I Set description:
+        1=ELEM
+        2=GRID
+        3=POINT
+        4=PROP
+        5=RBEin
+        6=RBEex
+    3 ID1 I IDs of Grids, Elements, Points or Properties.
+    4 "ID1 THRU ID2" format will be EXPANDED into explicit IDs.
+    Words 3 through 4 repeat until End of Record
+
+    data = (1, 1, 190, ..., 238, -1,
+            2, 1, 71, ..., 189, -1,
+            4, 1, 309, ..., ..., 378, -1)
+    """
+    key = (8001, 80, 511)
+    raise NotImplementedError('SET3')
+
+    ngrids = 0
+    for set_id in set_ids:
+        seti = model.sets[set_id] # type: PAERO5
+        ngrids += len(seti.ids)
+        if seti.is_skin:
+            ngrids += 1
+
+    # 2* = sid and the -1 flag
+    nvalues = 2 * ncards + ngrids
+    nbytes = write_header_nvalues(name, nvalues, key, op2_file, op2_ascii)
+
+    all_data = []
+    for set_id in set_ids:
+        seti = model.sets[set_id] # type: PAERO5
+        ngridsi = len(seti.ids)
+
+        # +2 = sid and the -1 flag
+        fmt = endian + b'%di' % (ngridsi + 2)
+        #print(fmt)
+        structi = Struct(fmt)
+
+        data = [
+            # 2 NALPHA I
+            # 3 LALPHA I
+            # 4 NXIS   I
+            # 5 LXIS   I
+            # 6 NTAUS  I
+            # 7 LTAUS  I
+            seti.sid,
+        ]
+        if seti.is_skin:
+            data.append(-2)
+        data += seti.ids
+        data.append(-1)
+        #print(data)
+
+        assert None not in data, data
+        op2_ascii.write(f'  SET3 data={data}\n')
+        #print('npaero2', len(data), data)
+        op2_file.write(structi.pack(*data))
+        all_data.extend(data)
+    assert len(all_data) == nvalues, f'ndata={len(all_data)}; nvalues={nvalues}'
+    return nbytes
+
+def _write_aelink(model: Union[BDF, OP2Geom], name: str,
+                  aelink_ids: List[int], ncards: int,
+                  op2_file, op2_ascii, endian: bytes) -> int:
+    """
+    MSC 2018.2
+
+    Word Name Type Description
+    1 ID I
+    2 LABLD(2) CHAR4
+    4 LABLI(2) CHAR4
+    6 C1 RS
+    Words 4 through 6 repeat until (-1,-1,-1) occurs
+
+    """
+    #op2 = self.op2
+    #struct1 = Struct(op2._endian + b'i8s')
+    #struct2 =Struct(op2._endian + b'8sf')
+    #struct_end = Struct(op2._endian + b'3i')
+    key = (2602, 26, 386)
+
+    ncoeffs = 0
+    for aelink_id in aelink_ids:
+        aelinks = model.aelinks[aelink_id] # type: PAERO5
+        for aelink in aelinks:
+            #print(aelink.get_stats())
+            ncoeffs += len(aelink.linking_coefficients)
+
+    nvalues = 6 * ncards + ncoeffs * 3
+    nbytes = write_header_nvalues(name, nvalues, key, op2_file, op2_ascii)
+
+    all_data = []
+    for aelink_id in aelink_ids:
+        for aelink in aelinks:
+            aelinks = model.aelinks[aelink_id] # type: AELINK
+            ncoeffsi = len(aelink.linking_coefficients)
+
+            fmti = b'8sf' * ncoeffsi
+            fmt = endian + b'i8s ' + fmti + b'3i'
+            #print(fmt)
+            structi = Struct(fmt)
+            assert aelink_id > 0, aelink_id
+            label = b'%-8s' % aelink.label.encode('latin1')
+            data = [
+                aelink_id, label,
+            ]
+            for ind_label, coeff in zip(aelink.independent_labels, aelink.linking_coefficients):
+                ind_label_bytes = b'%-8s' % ind_label.encode('latin1')
+                data.extend([ind_label_bytes, coeff])
+            data.extend([-1, -1, -1])
+            #print(data)
+
+        assert None not in data, data
+        op2_ascii.write(f'  AELINK data={data}\n')
+        #print('npaero2', len(data), data)
+        op2_file.write(structi.pack(*data))
+        all_data.extend(data)
+    #assert len(all_data) == nvalues, f'ndata={len(all_data)}; nvalues={nvalues}'
+    return nbytes
+
 EDT_MAP = {
+    'SET1': _write_set1,
+    'DIVERG': _write_diverg,
     'CAERO1': _write_caero1,
     'CAERO2': _write_caero2,
+    'CAERO3': _write_caero3,
+    'CAERO4': _write_caero4,
     'PAERO1': _write_paero1,
     'PAERO2': _write_paero2,
+    'PAERO5': _write_paero5,
     'MKAERO1': _write_mkaero1,
     'AERO': _write_aero,
     'AEROS': _write_aeros,
@@ -884,4 +1294,5 @@ EDT_MAP = {
     'AESURF': _write_aesurf,
     #'AESURFS': _write_aesurfs,
     'AESTAT': _write_aestat,
+    'AELINK': _write_aelink,
 }

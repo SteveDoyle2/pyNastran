@@ -8,7 +8,7 @@ from typing import TYPE_CHECKING
 import pyNastran
 from pyNastran.gui.menus.about.about import AboutWindow
 
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     from qtpy.QtWidgets import QMainWindow
 
 

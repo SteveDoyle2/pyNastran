@@ -6,7 +6,7 @@ import traceback
 
 from qtpy.compat import getopenfilename
 from pyNastran.utils import print_bad_path
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.gui.gui2 import MainWindow2
 IS_TESTING = False
 

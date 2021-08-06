@@ -4,9 +4,10 @@ import os
 import sys
 import glob
 from typing import Dict, Optional, Any, TYPE_CHECKING
-if TYPE_CHECKING:
+import pyNastran
+IS_DEV = 'dev' in pyNastran.__version__
+if TYPE_CHECKING:  # pragma: no cover
     from cpylog import SimpleLogger
-
 # stl_to_plot3d ???
 
 
@@ -278,10 +279,13 @@ def run_format_converter(fmt1: str, fname1: str,
         process_tecplot(fname1, fmt2, fname2, log, data=data, quiet=quiet)
     elif fmt1 == 'ugrid':
         process_ugrid(fname1, fmt2, fname2, log, data=data, quiet=quiet)
-    elif fmt1 == 'vrml':
+    elif fmt1 == 'vrml' and IS_DEV:
         process_vrml(fname1, fmt2, fname2, log, data=data, quiet=quiet)
     else:
-        format1s = ['nastran', 'cart3d', 'stl', 'tecplot', 'ugrid', 'vrml']
+        format1s = ['nastran', 'cart3d', 'stl', 'tecplot', 'ugrid']
+        if IS_DEV:
+            format1s.append('vrml')
+
         #format2s = ['nastran', 'cart3d', 'stl', 'ugrid', 'tecplot']
         raise NotImplementedError(f'fmt1={fmt1} is not supported by run; '
                                   f'use {", ".join(format1s)}')

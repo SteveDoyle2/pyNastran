@@ -11,7 +11,7 @@ import numpy as np
 from pyNastran.op2.op2_helper import polar_to_real_imag
 from pyNastran.op2.tables.ogf_gridPointForces.ogf_objects import (
     RealGridPointForcesArray, ComplexGridPointForcesArray)
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.op2.op2 import OP2
 
 class OGPF:

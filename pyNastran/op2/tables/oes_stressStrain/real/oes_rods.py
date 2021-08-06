@@ -5,7 +5,7 @@ from numpy import zeros, searchsorted, allclose
 from pyNastran.op2.result_objects.op2_objects import get_times_dtype
 from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import (
     StressObject, StrainObject, OES_Object, oes_data_code)
-from pyNastran.op2.op2_interface.write_utils import view_dtype
+from pyNastran.op2.op2_interface.write_utils import view_dtype, view_idtype_as_fdtype
 from pyNastran.f06.f06_formatting import write_floats_13e, _eigenvalue_header #, get_key0
 
 ELEMENT_NAME_TO_ELEMENT_TYPE = {
@@ -359,7 +359,7 @@ class RealRodArray(OES_Object):
 
         # [eid, axial, SMa, torsion, SMt]
         data_out = np.empty((nelements, 5), dtype=fdtype)
-        data_out[:, 0] = view_dtype(eids_device, fdtype)
+        data_out[:, 0] = view_idtype_as_fdtype(eids_device, fdtype)
 
         op2_ascii.write(f'nelements={nelements:d}\n')
 

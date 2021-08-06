@@ -110,7 +110,7 @@ from pyNastran.op2.tables.oes_stressStrain.utils import (
     oes_quad4_33_real_17,
     oes_shell_composite_complex_11, oes_shell_composite_complex_13,
 )
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.op2.op2 import OP2
 NX_TABLES_BYTES = [b'OESVM1', b'OESVM2']
 NASA_TABLES_BYTES = [b'OESC1']

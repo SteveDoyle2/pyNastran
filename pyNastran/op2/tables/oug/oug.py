@@ -37,7 +37,7 @@ from pyNastran.op2.tables.oug.oug_eigenvectors import (
 )
 
 from pyNastran.op2.tables.opg_appliedLoads.opg_load_vector import RealThermalVelocityVectorArray
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.op2.op2 import OP2
 
 

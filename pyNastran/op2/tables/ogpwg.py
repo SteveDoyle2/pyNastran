@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING
 from numpy import array
 from pyNastran.op2.op2_interface.op2_reader import mapfmt
 from pyNastran.op2.result_objects.grid_point_weight import GridPointWeight
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.op2.op2 import OP2
 
 

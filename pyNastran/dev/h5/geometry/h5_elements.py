@@ -15,7 +15,7 @@ from .h5_elements_1d import (read_crod, read_conrod, read_ctube,
 from .h5_elements_2d import (read_cshear, read_ctria3, read_cquad4,
                              read_cquad8, read_ctria6,
                              read_cquadr, read_ctriar)
-#if TYPE_CHECKING:
+#if TYPE_CHECKING:  # pragma: no cover
 from pyNastran.bdf.bdf import BDF
 
 GeomCallable = Callable[[h5py._hl.dataset.Dataset, BDF],  # inputs

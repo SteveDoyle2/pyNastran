@@ -22,7 +22,7 @@ from pyNastran.bdf.mesh_utils.bdf_renumber import bdf_renumber
 
 from pyNastran.converters.aflr.ugrid.ugrid_reader import (
     UGRID, determine_dytpe_nfloat_endian_from_ugrid_filename)
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     from cpylog import SimpleLogger
     from pyNastran.bdf.bdf import BDF
 

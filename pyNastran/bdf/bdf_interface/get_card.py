@@ -43,7 +43,7 @@ from pyNastran.bdf.mesh_utils.mpc_dependency import (
     get_rigid_elements_with_node_ids, get_dependent_nid_to_components,
     get_lines_rigid, get_mpcs)
 
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     from cpylog import SimpleLogger
     from pyNastran.bdf.bdf import BDF
 

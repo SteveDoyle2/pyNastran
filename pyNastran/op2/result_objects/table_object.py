@@ -33,7 +33,7 @@ import numpy as np
 from pyNastran.op2.result_objects.op2_objects import ScalarObject
 from pyNastran.f06.f06_formatting import write_floats_13e, write_imag_floats_13e, write_float_12e
 from pyNastran.op2.errors import SixtyFourBitError
-from pyNastran.op2.op2_interface.write_utils import set_table3_field, view_dtype
+from pyNastran.op2.op2_interface.write_utils import set_table3_field, view_dtype, view_idtype_as_fdtype
 
 float_types = (float, np.float32)
 integer_types = (int, np.int32)
@@ -1078,7 +1078,8 @@ class RealTableArray(TableArray):
             fdtype = np.float32(1.0)
 
         nodedevice_gridtype = np.column_stack([nnodes_device, gridtype])
-        node_gridtype_floats = view_dtype(nodedevice_gridtype, fdtype)
+        node_gridtype_floats = view_idtype_as_fdtype(nodedevice_gridtype, fdtype)
+
         #print(node_gridtype_floats)
         #node_gridtype_floats = nodedevice_gridtype.view(fdtype) # .reshape(nnodes, 2)
 

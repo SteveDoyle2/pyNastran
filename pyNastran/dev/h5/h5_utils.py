@@ -2,7 +2,7 @@ from __future__ import annotations
 from typing import List, Dict, Callable, Union, Optional, Any, TYPE_CHECKING
 import h5py
 import pandas as pd
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.bdf.bdf import BDF
 
 def passer(*args):

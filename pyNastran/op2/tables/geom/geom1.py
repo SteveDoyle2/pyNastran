@@ -20,7 +20,7 @@ from pyNastran.bdf.cards.elements.damper import CVISC
 #from pyNastran.bdf.cards.elements.mass import CMASS2
 from pyNastran.op2.op2_interface.op2_reader import mapfmt, reshape_bytes_block
 from .utils import get_minus1_start_end
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.op2.op2_geom import OP2Geom
 
 class GEOM1:

@@ -965,7 +965,6 @@ class MAT2(AnisotropicMaterial):
         Sc = double_or_blank(card, 15, 'Sc') # or blank?
         Ss = double_or_blank(card, 16, 'Ss') # or blank?
         mcsid = integer_or_blank(card, 17, 'mcsid')
-        #assert len(card) <= 18, f'len(MAT2 card) = {len(card):d}\ncard={card}'
 
         ge_matrix = [0.0] * 6
         if len(card) > 18:
@@ -978,6 +977,8 @@ class MAT2(AnisotropicMaterial):
                 double_or_blank(card, 23, 'ge33', default=0.0),
             ]
             assert len(card) <= 24, f'len(MAT2 card) = {len(card):d}\ncard={card}'
+        else:
+            assert len(card) <= 18, f'len(MAT2 card) = {len(card):d}\ncard={card}'
 
         return MAT2(mid, G11, G12, G13, G22, G23, G33,
                     rho, a1, a2, a3, tref, ge, St, Sc, Ss, mcsid,
@@ -1020,7 +1021,6 @@ class MAT2(AnisotropicMaterial):
             ge_matrix = data[17:]
             assert len(ge_matrix) == 6, ge_matrix
             #ge_list = (ge1, ge2, ge3, ge4, ge5, ge6)
-        #if len(data) =
         return MAT2(mid, G11, G12, G13, G22, G23, G33,
                     rho, a1, a2, a3, tref, ge, St, Sc, Ss, mcsid,
                     ge_matrix=ge_matrix,
@@ -1136,7 +1136,6 @@ class MAT2(AnisotropicMaterial):
                        self.a1, self.a2, self.a3, tref, ge,
                        self.St, self.Sc, self.Ss, self.mcsid]
         if self.ge_matrix != [0., 0., 0., 0., 0., 0.]:
-            print('self.ge_matrix =', self.ge_matrix)
             ge11 = set_blank_if_default(self.ge_matrix[0], 0.0)
             ge12 = set_blank_if_default(self.ge_matrix[1], 0.0)
             ge13 = set_blank_if_default(self.ge_matrix[2], 0.0)

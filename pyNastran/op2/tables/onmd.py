@@ -4,7 +4,7 @@ import numpy as np
 from typing import TYPE_CHECKING
 #from pyNastran.op2.op2_interface.op2_reader import mapfmt
 #from pyNastran.op2.op2_interface.op2_common import OP2Common
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.op2.op2 import OP2
 
 class NormalizedMassDensity:

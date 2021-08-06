@@ -2,7 +2,7 @@ from __future__ import annotations
 import numpy as np
 integer_types = (int, )
 from typing import TYPE_CHECKING
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.converters.avl.surface import Surface
     from pyNastran.converters.avl.body import Body
 

@@ -1,6 +1,6 @@
 from __future__ import annotations
 from typing import Optional, List, TYPE_CHECKING
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     import numpy as np
     from pyNastran.gui.dev.gui2.gui2 import MainWindow2
 

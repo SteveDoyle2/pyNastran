@@ -4,7 +4,7 @@ import numpy as np
 import h5py
 from pyNastran.bdf.cards.properties.shell import map_failure_theory_int
 from .h5_geometry import passer
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.bdf.bdf import BDF
 
 def read_pbush(name: str, group: h5py._hl.dataset.Dataset, geom_model: BDF):

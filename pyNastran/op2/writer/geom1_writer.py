@@ -3,7 +3,7 @@ from collections import defaultdict
 from struct import pack, Struct
 from typing import List, TYPE_CHECKING
 from pyNastran.op2.errors import SixtyFourBitError
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.op2.op2 import OP2
 
 def write_geom1(op2_file, op2_ascii, obj: OP2, endian: bytes=b'<'):

@@ -43,7 +43,7 @@ from pyNastran.dev.h5.geometry.h5_properties import property_map
 Function = Any
 from cpylog import SimpleLogger
 
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.op2.op2 import OP2
 
 class BDF2:

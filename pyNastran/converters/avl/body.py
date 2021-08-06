@@ -6,7 +6,7 @@ import numpy as np
 from pyNastran.bdf.cards.aero.utils import (
     points_elements_from_quad_points, create_axisymmetric_body)
 from pyNastran.converters.avl.avl_helper import get_spacing, save_wing_elements
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     from cpylog import SimpleLogger
     from pyNastran.converters.avl.surface import Surface
 

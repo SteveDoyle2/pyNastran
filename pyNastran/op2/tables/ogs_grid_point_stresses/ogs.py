@@ -13,7 +13,7 @@ from pyNastran.op2.tables.ogs_grid_point_stresses.ogs_surface_stresses import (
     GridPointStrainsVolumePrincipalArray,
     GridPointStrainsSurfaceDiscontinutiesArray
 )
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.op2.op2 import OP2
 
 class OGS:

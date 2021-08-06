@@ -5,7 +5,7 @@ from typing import Tuple, List, Dict, Set, Callable, Any, TYPE_CHECKING
 from qtpy import QtGui
 from qtpy.QtWidgets import QAction, QToolBar, QMenu
 
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     from cpylog import SimpleLogger
     from qtpy.QtWidgets import QMainWindow
 

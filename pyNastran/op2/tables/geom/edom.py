@@ -25,7 +25,7 @@ DSCREEN_INT_TO_RTYPE = {
 }
 DSCREEN_RTYPE_TO_INT = {value: key for key, value in DSCREEN_INT_TO_RTYPE.items()}
 
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.op2.op2_geom import OP2Geom
 
 class EDOM(GeomCommon):

@@ -6,7 +6,7 @@ from pyNastran.bdf.cards.aero.utils import (
     points_elements_from_quad_points)
 
 from pyNastran.converters.avl.avl_helper import integer_types, get_spacing, save_wing_elements
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     from cpylog import SimpleLogger
     from pyNastran.converters.avl.body import Body
 

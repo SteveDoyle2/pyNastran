@@ -2,7 +2,7 @@ from __future__ import annotations
 from typing import List, TYPE_CHECKING
 
 from pyNastran.gui.dev.gui2 import IS_TESTING, IS_OFFICIAL_RELEASE
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     from cpylog import SimpleLogger
     from pyNastran.gui.dev.gui2.gui2 import MainWindow2
 

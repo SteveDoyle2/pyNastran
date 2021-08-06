@@ -18,7 +18,7 @@ from pyNastran.op2.errors import DoubleCardError
 from pyNastran.op2.op2_interface.op2_reader import mapfmt, reshape_bytes_block, reshape_bytes_block_size
 from pyNastran.bdf.cards.elements.acoustic import ACMODL
 from .utils import get_minus1_start_end
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.op2.op2_geom import OP2Geom
 
 class EDT:
@@ -73,7 +73,7 @@ class EDT:
             (4501, 45, 169) : ['CAERO4', self._read_caero4],
             (5001, 50, 175) : ['CAERO5', self._read_caero5],
             (6201, 62, 143) : ['CLOAD', self._read_fake],
-            (6401, 64, 307) : ['CSSCHD', self._read_fake],
+            (6401, 64, 307) : ['CSSCHD', self._read_csschd],
             (104, 1, 81) : ['DEFORM', self._read_deform],
             (2702, 27, 387) : ['DIVERG', self._read_diverg],
             (4102, 41, 274) : ['FLFACT', self._read_flfact],
@@ -208,6 +208,8 @@ class EDT:
 
     def _read_mkaero2(self, data: bytes, n: int) -> int:
         mkaero2x
+    def _read_csschd(self, data: bytes, n: int) -> int:
+        csschd
     def _read_diverg(self, data: bytes, n: int) -> int:
         """
         Record – DIVERG(2702,27,387)

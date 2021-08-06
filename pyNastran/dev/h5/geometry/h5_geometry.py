@@ -4,7 +4,7 @@ import numpy as np
 import h5py
 from ..h5_utils import get_tree, passer
 
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.bdf.bdf import BDF
     GeomCallable = Callable[[h5py._hl.dataset.Dataset, BDF],  # inputs
                             None]  # output

@@ -24,7 +24,7 @@ from pyNastran.op2.tables.oqg_constraintForces.oqg_contact_forces import RealCon
 from pyNastran.op2.tables.oqg_constraintForces.oqg_thermal_gradient_and_flux import (
     RealTemperatureGradientAndFluxArray)
 from pyNastran.op2.result_objects.contact_traction_and_pressure import RealContactTractionAndPressureArray
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.op2.op2 import OP2
 
 class OQG:

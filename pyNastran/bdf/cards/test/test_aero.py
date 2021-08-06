@@ -252,6 +252,17 @@ class TestAero(unittest.TestCase):
         model.validate()
         model.cross_reference()
 
+    def test_aelink_2(self):
+        log = SimpleLogger(level='warning')
+        model = BDF(log=log)
+
+        idi = 31
+        label = 'LABEL'
+        independent_labels = ['pig', 'frog', 'dog']
+        linking_coefficients = [1.0, 2.0, 3.0]
+        model.add_aelink(idi, label, independent_labels, linking_coefficients)
+        save_load_deck(model, run_renumber=False)
+
     def test_aelist_1(self):
         """checks the AELIST card"""
         log = SimpleLogger(level='warning')
@@ -1272,10 +1283,11 @@ class TestAero(unittest.TestCase):
         lint = None
         p1 = [0., 0., 0.]
         x12 = 42.
-        igid = None
+        igid = 1 # None
         caero2 = CAERO2(eid, pid, igid, p1, x12,
                         cp=cp, nsb=nsb, nint=nint, lsb=lsb, lint=lint,
                         comment='this is a caero')
+        caero2.validate()
         #caero = CAERO2(eid, pid, cp, nsb, nint, lsb, lint, igid, p1, x12)
 
         sid = 60
@@ -1322,6 +1334,8 @@ class TestAero(unittest.TestCase):
         #model.cross_reference()
         #model.uncross_reference()
         #model.safe_cross_reference()
+        #model.add_set1(sid+1, ids, is_skin=True)
+        save_load_deck(model, run_test_bdf=False, run_save_load=False, xref=False, run_renumber=False)
 
     def test_caero2_1(self):
         """checks the CAERO2/PAERO2/AERO/AEFACT card"""
@@ -1335,43 +1349,45 @@ class TestAero(unittest.TestCase):
 
         lsb = 3
         lint = 6
-        igid = 0
+        igroup = 1
         p1 = [0., 1., 2.]
         x12 = 10.
         CAERO2.add_card(BDFCard(['CAERO2', eid, pid, cp, nsb, nint,
-                                 lsb, lint, igid, ] + p1 + [x12]))
+                                 lsb, lint, igroup, ] + p1 + [x12]))
 
         #---------------
         # nsb=lsb=None=0
-        caero2b = CAERO2(eid, pid, igid, p1, x12,
+        caero2b = CAERO2(eid, pid, igroup, p1, x12,
                          cp=cp, nsb=None, nint=None, lsb=None, lint=6,
                          comment='this is a caero')
         with self.assertRaises(ValueError):
             caero2b.validate()
 
         # nint=lint=None=0
-        caero2c = CAERO2(eid, pid, igid, p1, x12,
+        caero2c = CAERO2(eid, pid, igroup, p1, x12,
                          cp=cp, nsb=3, nint=None, lsb=3, lint=None,
                          comment='this is a caero')
         with self.assertRaises(ValueError):
             caero2c.validate()
 
         # they're all bad?
-        caero2e = CAERO2(eid, pid, igid, p1, x12,
+        caero2e = CAERO2(eid, pid, igroup, p1, x12,
                          cp=cp, nsb=0, nint=0, lsb=0, lint=0,
                          comment='this is a caero')
         with self.assertRaises(ValueError):
             caero2e.validate()
 
         #---------------
-        caero2f = model.add_caero2(eid, pid, igid, p1, x12, cp=4, nsb=0, nint=0,
+        caero2f = model.add_caero2(eid, pid, igroup, p1, x12, cp=4, nsb=0, nint=0,
                                    lsb=3, lint=6, comment='this is a caero')
 
         eid = 200
-        caero2g = model.add_caero2(eid, pid, igid, p1, x12, cp=4, nsb=10, nint=7,
+        caero2g = model.add_caero2(eid, pid, igroup, p1, x12, cp=4, nsb=10, nint=7,
                                    lsb=0, lint=0, comment='this is a caero')
         caero2f.validate()
         caero2g.validate()
+        str(caero2f)
+        str(caero2g)
         #str(caero2f.write_card())
 
         aefact = AEFACT.add_card(BDFCard(['AEFACT', lint, 0., 1., 2., 3., 4., 5.]))
@@ -1468,7 +1484,7 @@ class TestAero(unittest.TestCase):
         nint = 2
         lsb = None
         lint = None
-        caero2 = CAERO2(eid, pid, igid, p1, x12,
+        caero2 = CAERO2(eid, pid, igroup, p1, x12,
                         cp=cp, nsb=nsb, nint=nint, lsb=lsb, lint=lint,
                         comment='this is a caero')
         caero2.validate()
@@ -1479,7 +1495,7 @@ class TestAero(unittest.TestCase):
         model.uncross_reference()
         model.safe_cross_reference()
 
-        caero2_set_points = CAERO2(eid, pid, igid, p1, x12,
+        caero2_set_points = CAERO2(eid, pid, igroup, p1, x12,
                                    cp=cp, nsb=nsb, nint=nint, lsb=lsb, lint=lint)
         p1 = [0., 0., 0.]
         p2 = [1., 2., 3.]
@@ -1578,7 +1594,7 @@ class TestAero(unittest.TestCase):
             fig.show()
 
         model.get_bdf_stats()
-        save_load_deck(model, run_convert=True, run_mirror=False)
+        save_load_deck(model, run_mirror=False)
 
 
     def test_paero3(self):
@@ -1714,6 +1730,7 @@ class TestAero(unittest.TestCase):
         model2 = read_bdf(bdf_filename, xref=False, punch=True, debug=False)
         model.safe_cross_reference()
         model2.safe_cross_reference()
+        save_load_deck(model)
 
     def test_caero5_1(self):
         """checks the CAERO5/PAERO5"""
@@ -1871,13 +1888,32 @@ class TestAero(unittest.TestCase):
         spline3b.displacement_components.append(4)
         spline3b.coeffs.append(0.5)
         spline3b.validate()
+
+        model.add_grid(5, [0., 0., 0.])
+        model.add_grid(6, [1., 0., 0.])
+        model.add_grid(7, [1., 1., 0.])
+        model.add_grid(42, [0., 1., 0.])
+
+        eid = 100
+        pid = 100
+        mid = 100
+        t = 0.1
+        G11 = G12 = G13 = G22 = G23 = G33 = 1.0
+        model.add_cquad4(eid, pid, [5, 6, 7, 42])
+        model.add_pshell(pid, mid1=mid, t=t)
+        model.add_mat2(mid, G11, G12, G13, G22, G23, G33,
+                       rho=0., a1=None, a2=None, a3=None, tref=0., ge=0.,
+                       St=None, Sc=None, Ss=None, mcsid=None, comment='')
+
         spline3b.comment = ''
         lines = spline3b.rstrip().split('\n')
         model.add_card(lines, 'SPLINE3', is_list=False)
         spline = model.splines[1000]
         assert spline.node_ids == [5, 6, 7, 42], spline.node_ids
-
+        model.cross_reference()
+        model.validate()
         #spline3.raw_fields()
+        save_load_deck(model, run_renumber=False)
 
     def test_spline4(self):
         """checks the SPLINE4 card"""
@@ -2674,6 +2710,7 @@ class TestAero(unittest.TestCase):
         csshcd3.write_card()
         with self.assertRaises(RuntimeError):
             csshcd3.validate()
+        save_load_deck(model)
 
     def test_monpnt(self):
         log = SimpleLogger(level='warning')

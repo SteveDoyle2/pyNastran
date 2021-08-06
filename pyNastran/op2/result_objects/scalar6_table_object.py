@@ -494,7 +494,7 @@ class RealScalarTableArray(ScalarTableArray):  # temperature style table
                   date, is_mag_phase=False, endian='>'):
         """writes an OP2"""
         import inspect
-        assert self.table_name in {'OPG1', 'OUGV1', 'TOUGV1', 'OUG1'}, self.table_name  # 'OUGV1', 'OQMG1', 'OQG1'
+        assert self.table_name in {'OPG1', 'OUGV1', 'TOUGV1', 'OUG1', 'OTEMP1'}, self.table_name  # 'OUGV1', 'OQMG1', 'OQG1'
 
         frame = inspect.currentframe()
         call_frame = inspect.getouterframes(frame, 2)

@@ -18,7 +18,7 @@ from pyNastran.bdf.cards.loads.loads import LSEQ, SLOAD, RFORCE #, DAREA, RANDPS
 from pyNastran.bdf.cards.thermal.loads import (
     QBDY1, QBDY2, QBDY3, TEMP, TEMPD, TEMPP1, QVOL, QHBDY)
 from pyNastran.op2.op2_interface.op2_reader import mapfmt, reshape_bytes_block
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.op2.op2_geom import OP2Geom
 
 

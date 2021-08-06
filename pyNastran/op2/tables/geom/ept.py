@@ -27,7 +27,7 @@ from pyNastran.op2.op2_interface.op2_reader import (
     mapfmt, reshape_bytes_block_size) # reshape_bytes_block,
 from .utils import get_minus1_start_end
 from .geom2 import DoubleCardError
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.op2.op2_geom import OP2Geom
 
 
@@ -587,7 +587,6 @@ class EPT:
         """
         op2 = self.op2
         n0 = n
-        #op2.show_data(data[n:])
         ints = np.frombuffer(data[n:], op2.idtype8).copy()
         floats = np.frombuffer(data[n:], op2.fdtype8).copy()
         istart, iend = get_minus1_start_end(ints)

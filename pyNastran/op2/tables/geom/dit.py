@@ -12,7 +12,7 @@ from pyNastran.bdf.cards.bdf_tables import (TABLED1, TABLED2, TABLED3, TABLED4,
                                             TABLEM1, TABLEM2, TABLEM3, TABLEM4,
                                             TABRND1, TABDMP1, TABLES1)
 from pyNastran.op2.op2_interface.op2_reader import mapfmt, reshape_bytes_block
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.op2.op2_geom import OP2Geom
 
 

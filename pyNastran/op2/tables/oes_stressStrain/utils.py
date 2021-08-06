@@ -63,7 +63,7 @@ from pyNastran.op2.tables.oes_stressStrain.random.oes_shear import RandomShearSt
 #from pyNastran.op2.tables.oes_stressStrain.oes_hyperelastic import (
     #HyperelasticQuadArray)
 #from pyNastran.op2.tables.oes_stressStrain.oes_nonlinear import RealNonlinearPlateArray, RealNonlinearSolidArray
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.op2.op2 import OP2
 
 def oes_celas_real_2(op2: OP2, data: bytes,
@@ -187,7 +187,6 @@ def oes_cbeam_real_111(op2: OP2, data: bytes,
         if op2.is_debug_file:
             op2.binary_debug.write('CBEAM-2 - eid=%i out=%s\n' % (eid, str(out)))
 
-        #print('CBEAM-2 - eid=%i out=%s\n' % (eid, str(out)))
         #(grid, sd, sxc, sxd, sxe, sxf, smax, smin, mst, msc) = out
         obj.add_new_eid_sort1(dt, eid, *out[1:])
 
@@ -196,7 +195,6 @@ def oes_cbeam_real_111(op2: OP2, data: bytes,
             n += n2
             out = s2.unpack(edata)
             # (grid, sd, sxc, sxd, sxe, sxf, smax, smin, mst, msc) = out
-            #print(out)
             obj.add_sort1(dt, eid, *out)
     return n
 

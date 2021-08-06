@@ -91,6 +91,18 @@ def get_complex_fdtype(dtype):
         return np.float32(1).dtype
     return np.float64(1).dtype # 8
 
+def view_idtype_as_fdtype(int_array, fdtype):
+    """
+    If we're downcasting from int64 to float32, we can't directly go to float32.
+    We need to first go to int32, then to float32.
+    """
+    if int_array.dtype == np.int64:
+        int_array = view_dtype(int_array.astype('int32'), fdtype)
+    else:
+        #print(f'array_obj.dtype.itemsize={nodedevice_gridtype.dtype.itemsize} dtype.itemsize={fdtype.itemsize}')
+        int_array = view_dtype(int_array, fdtype)
+    return int_array
+
 def view_dtype(array_obj, dtype):
     """handles downcasting data"""
     if array_obj.dtype.itemsize == dtype.itemsize:

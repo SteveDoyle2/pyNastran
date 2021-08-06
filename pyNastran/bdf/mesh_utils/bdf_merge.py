@@ -13,7 +13,7 @@ from pyNastran.bdf.bdf import BDF, read_bdf
 from pyNastran.bdf.case_control_deck import CaseControlDeck
 from pyNastran.bdf.mesh_utils.bdf_renumber import bdf_renumber, get_renumber_starting_ids_from_model
 from pyNastran.bdf.mesh_utils.internal_utils import get_bdf_model
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     from cpylog import SimpleLogger
     MAPPER = Dict[str, Dict[int, int]]
 

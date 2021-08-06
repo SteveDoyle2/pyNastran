@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING
 import vtk
 
 #from pyNastran.gui.gui_objects.coord_properties import CoordProperties
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     import numpy as np
 
 

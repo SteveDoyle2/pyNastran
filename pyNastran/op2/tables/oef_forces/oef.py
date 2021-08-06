@@ -68,7 +68,7 @@ from pyNastran.op2.tables.oef_forces.oef_complex_force_objects import (
     ComplexSolidPressureForceArray,
     ComplexCBendForceArray,
 )
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.op2.op2 import OP2
 
 class OEF:

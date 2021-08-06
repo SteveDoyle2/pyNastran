@@ -10,7 +10,7 @@ from pyNastran.dev.h5.fill_unstructured_grid import fill_paraview_vtk_unstructur
 from pyNastran.dev.h5.h5_nastran2 import add_actor_to_renderer, pyNastranH5
 from pyNastran.dev.h5.vtk_request_subset import vtkRequestSubset
 from pyNastran.dev.h5.vtk_h5_nastran import vtkH5NastranReader
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.bdf.bdf import BDF
 
 def fill_paraview_vtk_unstructured_grid_results(model: pyNastranH5,

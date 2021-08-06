@@ -323,8 +323,13 @@ class MouseActions:
         return style
 
 
-    def on_highlight(self, is_eids=True, is_nids=True, representation='wire',
-                     name=None, callback=None, cleanup=True, force=False) -> HighlightStyle:
+    def on_highlight(self, is_eids: bool=True,
+                     is_nids: bool=True,
+                     representation: str='wire',
+                     name: Optional[str]=None,
+                     callback=None,
+                     cleanup: bool=True,
+                     force: bool=False) -> HighlightStyle:
         """
         Selects a single point/cell
 
@@ -400,7 +405,7 @@ class MouseActions:
         self.setup_mouse_buttons(mode='style', revert=True, style=style)
         #self.vtk_interactor.SetInteractorStyle(style)
 
-    def on_rotation_center(self):
+    def on_rotation_center(self) -> None:
         """
         http://osdir.com/ml/lib.vtk.user/2002-09/msg00079.html
         """
@@ -417,12 +422,14 @@ class MouseActions:
     def _get_closest_node_xyz(self, cell_id, world_position):
         unused_duplicate_key = None
         out = self.gui.get_result_by_xyz_cell_id(world_position, cell_id)
+        if out is None:
+            print('MouseActions._get_closest_node_xyz bug')
         (result_name, unused_result_value, unused_node_id, xyz) = out
         assert self.gui.icase in self.gui.label_actors, result_name
         assert not isinstance(xyz, int), xyz
         return xyz
 
-    def on_measure_distance(self):
+    def on_measure_distance(self) -> None:
         self.revert_pressed('measure_distance')
         measure_distance_button = self.actions['measure_distance']
         is_checked = measure_distance_button.isChecked()
@@ -491,8 +498,10 @@ class MouseActions:
             grid, selection_node, representation='surface')
         return actor
 
-    def _highlight_picker_by_selection_node(self, grid, selection_node,
-                                            representation='surface', add_actor=True):
+    def _highlight_picker_by_selection_node(self, grid: vtk.vtkUnstructuredGrid,
+                                            selection_node: vtk.vtkSelectionNode,
+                                            representation: str='surface',
+                                            add_actor: bool=True) -> vtk.vtkLODActor:
         selection = vtk.vtkSelection()
         selection.AddNode(selection_node)
 
@@ -586,6 +595,8 @@ class MouseActions:
                 camera = self.rend.GetActiveCamera()
                 #focal_point = world_position
                 out = self.gui.get_result_by_xyz_cell_id(world_position, cell_id)
+                #if out is None:
+                    #return
                 _result_name, result_value, unused_node_id, node_xyz = out
                 focal_point = node_xyz
                 self.gui.log_info('focal_point = %s' % str(focal_point))
@@ -644,13 +655,15 @@ class MouseActions:
         if self.revert:
             self.setup_mouse_buttons(mode='default')
 
-    def _cell_node_pick(self, cell_id, world_position):
+    def _cell_node_pick(self, cell_id: int, world_position: np.ndarray):
         duplicate_key = None
         icase = self.gui.icase
         if self.pick_state == 'node/centroid':
             return_flag = False
-            (result_name, result_value, node_id, xyz) = self.gui.get_result_by_xyz_cell_id(
-                world_position, cell_id)
+            out = self.gui.get_result_by_xyz_cell_id(world_position, cell_id)
+            #if out is None:
+                #return return_flag, None, None, None, None
+            result_name, result_value, node_id, xyz = out
             assert icase in self.gui.label_actors, result_name
             assert not isinstance(xyz, int), xyz
             duplicate_key = node_id
@@ -676,7 +689,7 @@ class MouseActions:
         self.gui.log_info(msg)
         return return_flag, duplicate_key, result_value, result_name, xyz
 
-    def _cell_centroid_pick(self, cell_id, world_position):
+    def _cell_centroid_pick(self, cell_id: int, world_position: np.ndarray):
         duplicate_key = None
         icase = self.gui.icase
         if self.pick_state == 'node/centroid':
@@ -761,21 +774,24 @@ class MouseActions:
     def zoom(self, zoom_factor):
         return self.gui.zoom(zoom_factor)
 
+    @property
+    def view_actions(self):
+        return self.gui.view_actions
     def on_pan_left(self, event):
         """helper method for trackball camera"""
-        self.gui.view_actions.on_pan_left(event)
+        self.view_actions.on_pan_left(event)
 
     def on_pan_right(self, event):
         """helper method for trackball camera"""
-        self.gui.view_actions.on_pan_right(event)
+        self.view_actions.on_pan_right(event)
 
     def on_pan_up(self, event):
         """helper method for trackball camera"""
-        self.gui.view_actions.on_pan_up(event)
+        self.view_actions.on_pan_up(event)
 
     def on_pan_down(self, event):
         """helper method for trackball camera"""
-        self.gui.view_actions.on_pan_down(event)
+        self.view_actions.on_pan_down(event)
 
     def get_node_ids(self, model_name, ids=None):
         """wrapper around node_ids"""

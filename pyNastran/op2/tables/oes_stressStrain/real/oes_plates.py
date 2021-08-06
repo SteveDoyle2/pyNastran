@@ -6,7 +6,7 @@ from typing import Tuple, List
 import numpy as np
 
 from pyNastran.utils.numpy_utils import integer_types
-from pyNastran.op2.op2_interface.write_utils import to_column_bytes, view_dtype
+from pyNastran.op2.op2_interface.write_utils import to_column_bytes, view_dtype, view_idtype_as_fdtype
 from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import (
     StressObject, StrainObject, OES_Object)
 from pyNastran.op2.result_objects.op2_objects import get_times_dtype
@@ -647,9 +647,9 @@ class RealPlateArray(OES_Object):
         elif is_nodes:
             cen_word_array_temp = np.full((nelements, 1), cen_word_bytes)
             cen_word_array = cen_word_array_temp.view(fdtype)
-            eids_device2 = view_dtype(eids_device[::2*nnodes_per_element].reshape(nelements, 1),
-                                      fdtype)
-            nids2 = view_dtype(nids[::2].reshape(nelements_nnodes, 1),
+            eids_device2 = view_idtype_as_fdtype(eids_device[::2*nnodes_per_element].reshape(nelements, 1),
+                                                 fdtype)
+            nids2 = view_idtype_as_fdtype(nids[::2].reshape(nelements_nnodes, 1),
                                fdtype)
 
         #nheader = 15

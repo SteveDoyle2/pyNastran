@@ -37,7 +37,7 @@ from pyNastran.op2.op2_interface.op2_reader import mapfmt # , reshape_bytes_bloc
 from pyNastran.op2.tables.geom.geom4 import RBE3
 
 from pyNastran.op2.errors import DoubleCardError, EmptyCardError
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.op2.op2_geom import OP2Geom
 
 def _map_offt(num: int) -> str:
@@ -2582,7 +2582,6 @@ class GEOM2:
             self.add_op2_element(elem)
             n += ntotal
         op2.card_count['CPYRAM'] = nelements
-        op2.to_nx(' because CPYRAM was found')
         return n
 
 # CPENP
@@ -3630,10 +3629,8 @@ class GEOM2:
             theta_mcid = convert_theta_to_mcid(theta)
             data_in = [eid, pid, n1, n2, n3, theta_mcid, zoffs, tflag, t1, t2, t3]
             elem = CTRIA3.add_op2_data(data_in)
-            #op2.add_op2_element(elem)
             elements.append(elem)
             n += ntotal
-        #op2.card_count['CTRIA3'] = nelements
         return n, elements
 
     def _read_ctria3_56(self, card_obj, data: bytes, n: int) -> int:
@@ -3678,10 +3675,8 @@ class GEOM2:
             theta_mcid = convert_theta_to_mcid(theta)
             data_in = [eid, pid, n1, n2, n3, theta_mcid, zoffs, tflag, t1, t2, t3]
             elem = CTRIA3.add_op2_data(data_in)
-            #op2.add_op2_element(elem)
             elements.append(elem)
             n += ntotal
-        #op2.card_count['CTRIA3'] = nelements
         return n, elements
 
 

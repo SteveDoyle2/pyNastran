@@ -15,7 +15,7 @@ from pyNastran.bdf.cards.dynamic import (TSTEPNL,
 from pyNastran.bdf.cards.thermal.radiation import RADM
 from pyNastran.op2.op2_interface.op2_reader import mapfmt # , reshape_bytes_block
 from .geom2 import DoubleCardError
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.op2.op2_geom import OP2Geom
 
 
@@ -416,7 +416,6 @@ class MPT:
             224 : self._read_mat9_224,
         }
         #try:
-        #n = self._read_matt2_92(None, data, n)
         op2 = self.op2
         n = op2.reader_geom2._read_double_card(
             card_name, card_obj,
@@ -424,9 +423,6 @@ class MPT:
             methods, data, n)
         #except DoubleCardError:
             #raise
-        #n = self.op2.reader_geom2._read_dual_card(
-            #data, n, self._read_rbar_nx, self._read_rbar_msc,
-            #'RBAR', self.op2.reader_geom3._add_op2_rigid_element)
         return n
 
     def _read_mat9_140(self, card_obj, data: bytes, n: int) -> Tuple[int, List[MAT9]]:
@@ -800,7 +796,6 @@ class MPT:
             92 : self._read_matt2_92,
         }
         #try:
-        #n = self._read_matt2_92(None, data, n)
         op2 = self.op2
         n = op2.reader_geom2._read_double_card(
             card_name, card_obj,
@@ -808,9 +803,6 @@ class MPT:
             methods, data, n)
         #except DoubleCardError:
             #raise
-        #n = self.op2.reader_geom2._read_dual_card(
-            #data, n, self._read_rbar_nx, self._read_rbar_msc,
-            #'RBAR', self.op2.reader_geom3._add_op2_rigid_element)
         return n
 
     def _read_matt2_68(self, card_obj, data: bytes, n: int) -> Tuple[int, List[MATT2]]:

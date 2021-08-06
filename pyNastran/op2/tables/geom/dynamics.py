@@ -13,7 +13,7 @@ from pyNastran.op2.op2_interface.op2_reader import mapfmt # , reshape_bytes_bloc
 from pyNastran.op2.tables.geom.geom_common import GeomCommon
 from pyNastran.op2.tables.geom.dit import get_iend_from_ints
 
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.op2.op2_geom import OP2Geom
 
 class DYNAMICS(GeomCommon):

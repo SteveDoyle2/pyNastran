@@ -8,7 +8,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 import numpy as np
 from pyNastran.utils.numpy_utils import float_types
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.bdf.bdf import BDF
 
 

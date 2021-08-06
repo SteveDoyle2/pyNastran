@@ -1514,6 +1514,11 @@ def _scale_caero(caero, xyz_scale: float, xyz_aefacts) -> None:
             caero.p4 *= xyz_scale
             caero.x12 *= xyz_scale
             caero.x43 *= xyz_scale
+        elif caero.type == 'CAERO4':
+            caero.p1 *= xyz_scale
+            caero.p4 *= xyz_scale
+            caero.x12 *= xyz_scale
+            caero.x43 *= xyz_scale
         elif caero.type == 'CAERO5':
             caero.p1 *= xyz_scale
             caero.p4 *= xyz_scale
