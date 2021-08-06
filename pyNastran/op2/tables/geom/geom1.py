@@ -18,7 +18,6 @@ from pyNastran.bdf.cards.coordinate_systems import (
     CORD3G)
 from pyNastran.bdf.cards.elements.damper import CVISC
 #from pyNastran.bdf.cards.elements.mass import CMASS2
-from pyNastran.op2.tables.geom.geom_common import GeomCommon
 from pyNastran.op2.op2_interface.op2_reader import mapfmt, reshape_bytes_block
 from .utils import get_minus1_start_end
 if TYPE_CHECKING:
@@ -107,6 +106,7 @@ class GEOM1:
             (4501, 45, 810001): ['GRID', self._read_grid],
 
             # F:\work\pyNastran\pyNastran\master2\pyNastran\bdf\test\nx_spike\out_boltsold01d.op2
+            #(2101, 21, 2220008) : ['CORDx?', self._read_cordx],
             (2101, 21, 2220008) : ['CORDx?', self._read_fake],
             (2001, 20, 1310009) : ['???', self._read_fake],
 
@@ -388,6 +388,46 @@ class GEOM1:
             n += (i1 - i0 + 2) * size
             ncards += 1
         op2.card_count['SECONCT'] = ncards
+        return n
+
+    def _read_cordx(self, data: bytes, n: int) -> int:
+        """
+        (2101, 21, 2220008)
+        CORD2R  4               0.      0.      0.      0.      -1.     0.      +
+        +       0.      0.      -1.
+        $  Integrated Coordinate System (spring)
+        CORD2R  5               0.      0.      0.      0.      -1.     0.      +
+        +       0.      0.      -1.
+        $  Integrated Coordinate System (dashpot)
+        CORD2R  6               0.      0.      0.      0.      -1.     0.      +
+        +       0.      0.      -1.
+
+                   ?  ?  ?
+                   i  i  i  [i/f]*10                         f      [i/f] * 7               f
+        ints    = (4, 1, 2, [0, 0, 0, 0, 0, 0, 0, 0, 0, 0], -1.875, [0, 0, 0, 0, 0, 0, 0], -1.875,
+                   5, 1, 2, [0, 0, 0, 0, 0, 0, 0, 0, 0, 0], -1.875, [0, 0, 0, 0, 0, 0, 0], -1.875,
+                   6, 1, 2, [0, 0, 0, 0, 0, 0, 0, 0, 0, 0], -1.875, [0, 0, 0, 0, 0, 0, 0], -1.875)
+        floats  = (4, 1, 2, [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0], -1.875, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, -1.875,
+                   5, 1, 2, [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0], -1.875, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, -1.875,
+                   6, 1, 2, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, -1.875, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, -1.875)
+
+        """
+        op2 = self.op2
+        ntotal = 88 * op2.factor  # 22*4
+        structi = Struct(mapfmt(op2._endian + b'3i iffif ifffi f 7i f', op2.size))
+        nentries = (len(data) - n) // ntotal
+        for unused_i in range(nentries):
+            edata = data[n:n + ntotal]
+            out = structi.unpack(edata)
+            (cid, one, two, i1a, f2a, f3a, i4a, f5a, i6a, f7a, f8a, f9a, i10a, fa,
+                            i1b, i2b, i3b, i4b, i5b, i6b, i7b, fb) = out
+            assert cid > 0, out
+            assert one == 1, out
+            assert two == 2, out
+            print((f2a, f3a), (f5a, f7a), (f8a, f9a))
+            assert max(i1a, i4a, i6a, i10a) == 0, (i1a, i4a, i6a, i10a)
+            assert min(i1a, i4a, i6a, i10a) == 0, (i1a, i4a, i6a, i10a)
+            n += ntotal
         return n
 
     def _read_cord1c(self, data: bytes, n: int) -> int:
