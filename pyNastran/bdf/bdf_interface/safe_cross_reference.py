@@ -540,7 +540,7 @@ class SafeXrefMesh(XrefMesh):
             xref_errors['mid'].append((ref_id, mid))
         return mid_ref
 
-    def safe_coord(self, cid, ref_id, xref_errors, msg=''):
+    def safe_coord(self, cid: int, ref_id: int, xref_errors: Dict[str, Tuple[int, int]], msg=''):
         """
         Gets a CORDx card
 
@@ -554,7 +554,8 @@ class SafeXrefMesh(XrefMesh):
             cid_ref = self.Coord(cid, msg=msg)
         except KeyError:
             cid_ref = None
-            #self.log.error('cant find cid=%s%s' % (cid, msg))
+            #msgi = 'cant find cid=%s%s' % (cid, msg)
+            #self.log.error(msgi)
             xref_errors['cid'].append((ref_id, cid))
         return cid_ref
 

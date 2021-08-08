@@ -1360,6 +1360,7 @@ class EDT:
         while n < len(data):
             edata = data[n:n+ntotal]
             aelink_id, label_bytes = struct1.unpack(edata)
+            assert aelink_id > 0, aelink_id
             label = reshape_bytes_block_size(label_bytes, self.size)
             n += ntotal
             linking_coefficents = []

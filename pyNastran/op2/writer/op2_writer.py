@@ -64,6 +64,7 @@ class OP2Writer(OP2_F06_Common):
             skips = set([])
         else:
             skips = set(skips)
+        skips.add('params')
 
         #print('writing %s' % op2_outname)
 
@@ -244,6 +245,8 @@ def _write_result_tables(obj: OP2, op2_file, fop2_ascii,
                 res_categories2[res.table_name_str].append(res)
             else:
                 # grid_point
+                #print(table_type, unused_key)
+                #print(res)
                 class_name = res.__class__.__name__
                 log.debug(class_name)
                 #assert class_name in ['GridPointWeight', 'PARAM',

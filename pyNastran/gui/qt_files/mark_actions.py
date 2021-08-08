@@ -16,6 +16,10 @@ class MarkActions:
         """creates MarkActions"""
         self.gui = gui
 
+    @property
+    def log(self):
+        return self.gui.log
+
     def create_annotation(self, text, x, y, z):
         """
         Creates the actual annotation and appends it to slot
@@ -43,6 +47,10 @@ class MarkActions:
 
         grid = self.gui.grid_selected
         cell = grid.GetCell(cell_id)
+        #if cell is None:
+            #print('cell_id = %s' % cell)
+            #self.log.error('cell_id = %s' % cell)
+            #return
         nnodes = cell.GetNumberOfPoints()
         points = cell.GetPoints()
 

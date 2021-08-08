@@ -70,7 +70,7 @@ def write_geom4(op2_file, op2_ascii, obj, endian: bytes=b'<', nastran_format: st
         if card_type in skip_cards or card_type in not_defined_cards:
             continue
 
-        print(card_type)
+        #print(card_type)
         try:
             nbytes = write_card(op2_file, op2_ascii, card_type, cards, endian,
                                 nastran_format=nastran_format)
@@ -303,11 +303,14 @@ def _write_rbe1(card_type: str, cards, unused_ncards: int, op2_file, op2_ascii,
     # TODO: neither reader or writer considers alpha; no current examples
     key = (6801, 68, 294)
     fields = []  # type: List[int]
+    max_eid = max([rbe1.eid for rbe1 in cards])
+    if max_eid > MAX_INT:
+        raise SixtyFourBitError(f'64-bit OP2 writing is not supported; max RBE1 eid={max_eid}')
     fmt = endian
     for rbe1 in cards:
         fieldsi = [rbe1.eid]
-        max_nid = (max(rbe1.Gni), max(rbe1.Gmi))
-        if max_nid > 99999999:
+        max_nid = max(max(rbe1.Gni), max(rbe1.Gmi))
+        if max_nid > MAX_INT:
             raise SixtyFourBitError(f'64-bit OP2 writing is not supported; max RBE1 nid={max_nid}')
 
         ngn = len(rbe1.Gni)
