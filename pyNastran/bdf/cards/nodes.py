@@ -29,11 +29,12 @@ from typing import List, Union, Optional, Any, TYPE_CHECKING
 import numpy as np
 
 from pyNastran.utils.numpy_utils import integer_types
+from pyNastran.bdf import MAX_INT
 from pyNastran.bdf.field_writer_8 import set_string8_blank_if_default
 from pyNastran.bdf.field_writer_16 import set_string16_blank_if_default
 
 from pyNastran.bdf.field_writer_8 import set_blank_if_default
-from pyNastran.bdf.cards.base_card import BaseCard, expand_thru, MAX_INT, write_card
+from pyNastran.bdf.cards.base_card import BaseCard, expand_thru, write_card
 from pyNastran.bdf.cards.collpase_card import collapse_thru_packs
 from pyNastran.bdf.bdf_interface.assign_type import (
     integer, integer_or_blank, double, double_or_blank, blank, integer_or_string,

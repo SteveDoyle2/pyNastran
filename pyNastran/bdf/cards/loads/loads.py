@@ -13,9 +13,10 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 import numpy as np
 
+from pyNastran.bdf import MAX_INT
 #from pyNastran.bdf.errors import CrossReferenceError
 from pyNastran.bdf.field_writer_8 import set_blank_if_default
-from pyNastran.bdf.cards.base_card import BaseCard, _node_ids, write_card, MAX_INT
+from pyNastran.bdf.cards.base_card import BaseCard, _node_ids, write_card
 from pyNastran.bdf.bdf_interface.assign_type import (
     integer, integer_or_blank, double, double_or_blank, components_or_blank,
     string, string_or_blank)

@@ -1020,18 +1020,46 @@ class DYNAMICS(GeomCommon):
         19 OFFSET1    RS Offset in the SFD direction 1
         20 OFFSET2    RS Offset in the SFD direction 2
 
+        ndata = 256:
+          strings = (1, 901, 1600, 'XY      ', 7.6, 0.4, 0.003, 'SHORT   '\xa2\xe7;5\x00\x00\x00\x00\x01\x00\x00\x00\x00\x00\x00\x00\x00\x00\x87C\x00\x00\x00\x00\x00\x00\x00\x00\x1f\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00                \x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x01\x00\x00\x00\xe9\x03\x00\x00\xdc\x05\x00\x00XY      \xcd\xcc\xcc@\xac\x1c:?\xa6\x9bD;SHORT   \xa2\xe7;5\x00\x00\x00\x00\x01\x00\x00\x00\x00\x00\x00\x00\x00\x00\x87C\x00\x00\x00\x00\x00\x00\x00\x00\x1f\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00                \x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00',)
+          ints    = (1, 901, 1600, 'XY      ', 7.6, 0.4, 0.003, 'SHORT   ', 7.e-7, 0,   1, 0,   270.0, 0,   0,   31, 0,   0,   538976288, 538976288, 538976288, 538976288, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1001, 1500, 538990936, 538976288, 1087163597, 1060773036, 994352038, 1380927571, 538976340, 893118370, 0, 1, 0, 1132920832, 0, 0, 31, 0, 0, 538976288, 538976288, 538976288, 538976288, 0, 0, 0, 0, 0, 0, 0, 0)
+          floats  = (1, 901, 1600, 'XY      ', 7.6, 0.4, 0.003, 'SHORT   ', 7.e-7, 0.0, 1, 0.0, 270.0, 0.0, 0.0, 31, 0.0, 0.0, 1.3563156426940112e-19, 1.3563156426940112e-19, 1.3563156426940112e-19, 1.3563156426940112e-19, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.401298464324817e-45, 1.4026997627891419e-42, 2.1019476964872256e-42, 1.358208852320992e-19, 1.3563156426940112e-19, 6.400000095367432, 0.7269999980926514, 0.003000000026077032, 222567907328.0, 1.3563223635364882e-19, 6.999999868639861e-07, 0.0, 1.401298464324817e-45, 0.0, 270.0, 0.0, 0.0, 4.344025239406933e-44, 0.0, 0.0, 1.3563156426940112e-19, 1.3563156426940112e-19, 1.3563156426940112e-19, 1.3563156426940112e-19, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0)
         """
+        assert self.factor == 1, self.factor
         op2 = self.op2
-        ntotal = 80 # 4*20
-        nentries = (len(data) - n) // ntotal
-        struc = Struct(op2._endian + b'3i 8s 3f 8s 2f i 4f i 2f')
+
+        if 0:
+            ntotal = 80 # 4*20
+            struc = Struct(op2._endian + b'3i 8s 3f 8s 2f i 4f i 2f')
+        else:
+            ntotal = 128 # 4*32
+            struc = Struct(op2._endian + b'3i 8s 3f 8s 2f i 4f i 2f 8s8s 8i')
+
+        ndatai = len(data) - n
+        nentries = ndatai // ntotal
+        assert nentries > 0
+        assert ndatai % ntotal == 0
         for unused_i in range(nentries):
-            edata = data[n:n+ntotal]
-            out = struc.unpack(edata)
-            (sid, ga, gb, plane, bdia, blen, bclr, soln,
-             visco, pvapco, nport,
-             pres1, theta1, pres2, theat2, npnt,
-             offset1, offset2) = out
+            if ntotal == 80:
+                edata = data[n:n+ntotal]
+                out = struc.unpack(edata)
+                (sid, ga, gb, plane, bdia, blen, bclr, soln,
+                 visco, pvapco, nport,
+                 pres1, theta1, pres2, theat2, npnt,
+                 offset1, offset2) = out
+            else:
+                edata1 = data[n:n+ntotal]
+                out1 = struc.unpack(edata1)
+                (sid, ga, gb, plane, bdia, blen, bclr, soln,
+                 visco, pvapco, nport,
+                 pres1, theta1, pres2, theat2, npnt,
+                 offset1, offset2, word1, word2, *blank) = out1
+                assert word1 == b'        ', word1
+                assert word2 == b'        ', word2
+                assert max(blank) == 0, blank
+                assert min(blank) == 0, blank
+                #print('blank', blank)
+                #print('*other =', other)
             plane = plane.rstrip().decode('latin1')
             soln = soln.rstrip().decode('latin1')
             #NLRSFD SID     GA     GB    PLANE BDIA   BLEN  BCLR   SOLN

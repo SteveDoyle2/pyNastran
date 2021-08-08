@@ -21,7 +21,6 @@ from pyNastran.bdf.field_writer import print_card, print_card_8, print_card_16, 
 from pyNastran.bdf.field_writer_8 import is_same
 from pyNastran.utils import deprecated
 from pyNastran.bdf.cards.expand_card import  expand_thru, expand_thru_by
-MAX_INT = 99_999_999
 
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.bdf.bdf import BDF

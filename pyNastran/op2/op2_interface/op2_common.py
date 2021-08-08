@@ -443,15 +443,54 @@ class OP2Common(Op2Codes, F06Writer):
         except UnicodeDecodeError:
             self.log.error(f'label = {label}')
             raise
-        nlabel = 65
-        label2 = label[nlabel:]
-        try:
-            label2 = update_label2(label2, self.isubcase)
-        except AssertionError:
-            pass
 
-        assert len(label[:nlabel]) <= nlabel, f'len={len(label)} \nlabel     ={label!r} \nlabel[:{nlabel}]={label[:nlabel]!r}'
-        assert len(label2) <= 55, f'len={len(label2)} label = {label!r}\nlabel[:{nlabel}]={label[:nlabel]!r}\nlabel2    ={label2!r}'
+        if 'FBA SUBCASE ' in label:
+            subtitle = subtitle[:28]
+            # title    = b' FRF PAPER DOF 8 PROBLEM USING GRID POINTS                                                                                      '
+            # subtitle = b' SINGLE SHOT RUN VIA GENASM - FRFP1GPS                                     FBA OUTPUT FOR FRF COMPONENT        1 (FRF8    )     '
+            # label     = b'UNIT LOAD ON GRID        2/1 (FRF COMP.        1 / FRF8    )                                           FBA SUBCASE        1     '
+            #print(title)
+            #print(subtitle)
+            #print(label)
+
+            label2 = label[:100].rstrip()[:-1].rstrip()
+            #label2 = b'UNIT LOAD ON GRID        2/1 (FRF COMP.        1 / FRF8'
+            assert '(FRF COMP. ' in label2, label2
+            unit, num_name = label2.split('(FRF COMP. ')
+            #[b'UNIT LOAD ON GRID        2/1 ', b'       1 / FRF8']
+            #print('unit', unit)
+
+            unit_labeli = unit[:17].rstrip()
+            label_num = unit[17:].rstrip()
+            assert len(label_num) >= 3, unit
+
+            unit_label = unit_labeli.strip()
+            comp_grid_1, comp_num_1 = label_num.split('/')
+            comp_grid_1 = int(comp_grid_1)
+            comp_num_1 = int(comp_num_1)
+            assert comp_grid_1 == 2, comp_grid_1
+            assert comp_num_1 == 1, comp_num_1
+
+            comp_num_2, comp_name = num_name.split('/')
+            comp_num_2 = int(comp_num_2)
+            comp_name = comp_name.strip()
+            #print('label2 = ', label2)
+            #print('unit = ', unit_label, comp_num_1, comp_num_2)
+            #print('num_name = ', comp_num_2, comp_name)
+            assert comp_num_1 == 1, comp_num_1
+            assert comp_num_2 == 1, comp_num_2
+            label = f'{unit_label}; grid={comp_grid_1} comp={comp_num_1}'
+            label2 = ''
+        else:
+            nlabel = 65
+            label2 = label[nlabel:]
+            try:
+                label2 = update_label2(label2, self.isubcase)
+            except AssertionError:
+                pass
+
+            assert len(label[:nlabel]) <= nlabel, f'len={len(label)} \nlabel     ={label!r} \nlabel[:{nlabel}]={label[:nlabel]!r}'
+            assert len(label2) <= 55, f'len={len(label2)} label = {label!r}\nlabel[:{nlabel}]={label[:nlabel]!r}\nlabel2    ={label2!r}'
         # not done...
         # 65 + 55 = 120 < 128
 

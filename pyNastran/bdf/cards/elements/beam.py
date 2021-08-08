@@ -12,7 +12,9 @@ import numpy as np
 from numpy.linalg import norm  # type: ignore
 
 from pyNastran.utils.numpy_utils import integer_types
-from pyNastran.bdf.cards.base_card import BaseCard, MAX_INT
+
+from pyNastran.bdf import MAX_INT
+from pyNastran.bdf.cards.base_card import BaseCard
 from pyNastran.bdf.cards.elements.bars import (
     LineElement, init_x_g0, rotate_v_wa_wb, check_offt)
 from pyNastran.bdf.bdf_interface.assign_type import (

@@ -6002,7 +6002,7 @@ class OES(OP2Common2):
                    f'numwide_real=11 numwide_imag=9 result_type={result_type}')
             return op2._not_implemented_or_skip(data, ndata, msg), None, None
 
-        else:
+        elif result_type == 1 and op2.num_wide in [11, 12]:
             # analysis_code = 9   Complex eigenvalues
             # table_code    = 5   OESCP-OES - Element Stress
             # format_code   = 2   Real/Imaginary
@@ -6020,6 +6020,12 @@ class OES(OP2Common2):
             # eigr          = 0.0
             # eigi          = 0.0
             # NX Nastran
+            msg = op2.code_information()
+            msg = (f'etype={op2.element_name} ({op2.element_type}) '
+                   f'{op2.table_name_str}-COMP-random-numwide={op2.num_wide} '
+                   f'numwide_real=11 numwide_imag=9 result_type={result_type}')
+            return op2._not_implemented_or_skip(data, ndata, msg), None, None
+        else:
             raise RuntimeError(op2.code_information())
             #msg = op2.code_information()
             #msg = (f'etype={op2.element_name} ({op2.element_type}) '

@@ -508,6 +508,9 @@ class AELINK(BaseCard):
         self.aelink_id = aelink_id
 
     def validate(self):
+        if isinstance(self.aelink_id, integer_types):
+            assert aelink_id > 0, f"aelink_id={aelink_id} and must be greater than 0 (or 'ALWAYS')"
+
         if len(self.independent_labels) != len(self.linking_coefficients):
             msg = 'nlabels=%s nci=%s\nindependent_labels=%s linking_coefficients=%s\n%s' % (
                 len(self.independent_labels), len(self.linking_coefficients),

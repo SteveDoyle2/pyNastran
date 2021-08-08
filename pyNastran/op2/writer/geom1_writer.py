@@ -2,6 +2,7 @@ from __future__ import annotations
 from collections import defaultdict
 from struct import pack, Struct
 from typing import List, TYPE_CHECKING
+from pyNastran.bdf import MAX_INT
 from pyNastran.op2.errors import SixtyFourBitError
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.op2.op2 import OP2
@@ -21,7 +22,7 @@ def write_geom1(op2_file, op2_ascii, obj: OP2, endian: bytes=b'<'):
 
     if nnodes:
         max_nid = max(obj.nodes)
-        if max_nid > 99999999:  #  is the max 2147483647?  2^31-1
+        if max_nid > MAX_INT:  #  is the max 2147483647?  2^31-1
             raise SixtyFourBitError(f'64-bit OP2 writing is not supported; max GRID nid={max_nid}')
 
         #nvalues = nnodes * 8

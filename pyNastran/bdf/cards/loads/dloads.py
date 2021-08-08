@@ -15,6 +15,7 @@ from typing import TYPE_CHECKING
 import numpy as np
 
 from pyNastran.utils.numpy_utils import integer_types
+from pyNastran.bdf import MAX_INT
 from pyNastran.bdf.field_writer_8 import set_blank_if_default
 from pyNastran.bdf.bdf_interface.assign_type import (
     integer, double_or_blank, integer_string_or_blank,
@@ -22,7 +23,6 @@ from pyNastran.bdf.bdf_interface.assign_type import (
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
 from pyNastran.bdf.field_writer_double import print_card_double
-from pyNastran.bdf.cards.base_card import MAX_INT
 from pyNastran.bdf.cards.loads.loads import DynamicLoad, LoadCombination, BaseCard
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.bdf.bdf import BDF

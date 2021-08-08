@@ -2189,7 +2189,6 @@ class OEF:
             obj = op2.obj
             nelements = ndata // ntotal
 
-
             ## TODO: add
             #if op2.is_debug_file:
                 #op2.binary_debug.write('  [cap, element1, element2, ..., cap]\n')
@@ -2199,6 +2198,31 @@ class OEF:
                 ##op2.binary_debug.write('  #nodeji = [eid, ilayer, o1, o2, t12, t1z, t2z, angle, major, minor, ovm)]\n')
                 #op2.binary_debug.write('  nelements=%i; nnodes=1 # centroid\n' % nelements)
             n = oef_shells_composite_real_9(op2, data, obj, nelements, ntotal, dt)
+        elif op2.format_code == 2 and op2.num_wide == 9:  # complex
+            #  device_code   = 1   Print
+            #  analysis_code = 5   Frequency
+            #  table_code    = 25  OEFIT-OEF - Composite failure indices
+            #  format_code   = 2   Real/Imaginary
+            #  result_type   = 1   Complex
+            #  sort_method   = 1
+            #  sort_code     = 1
+            #      sort_bits   = (1, 0, 1)
+            #      data_format = 1   Real/Imaginary
+            #      sort_type   = 0   Sort1
+            #      is_random   = 1   Random Responses
+            #  random_code   = 0
+            #  element_type  = 95  QUAD4LC-composite
+            #  s_code        = None ???
+            #  thermal       = 0   isHeatTransfer = False
+            #  thermal_bits  = [0, 0, 0, 0, 0]
+            #  num_wide      = 9
+            #  isubcase      = 1
+            #  MSC Nastran
+            msg = op2.code_information()
+            msg = (f'etype={op2.element_name} ({op2.element_type}) '
+                   f'{op2.table_name_str}-COMP-random-numwide={op2.num_wide} '
+                   f'numwide_real=11 numwide_imag=9 result_type={result_type}')
+            return op2._not_implemented_or_skip(data, ndata, msg), None, None
         else:  # pragma: no cover
             raise RuntimeError(op2.code_information())
             #msg = op2.code_information()

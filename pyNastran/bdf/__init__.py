@@ -1,4 +1,5 @@
 """defines a list of cards used by the bdf reader"""
+MAX_INT = 99_999_999
 
 #CASE_CONTROL_CARDS = CASE_CONTROL_INT_CARDS.union(CASE_CONTROL_PLOTTABLE_TYPES)
 

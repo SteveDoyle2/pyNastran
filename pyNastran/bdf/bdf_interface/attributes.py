@@ -331,27 +331,27 @@ class BDFAttributes:
         self.case_control_deck = None  # type: Optional[Any]
 
         #: store the PARAM cards
-        self.params = {}  # type: Dict[str, Any]
+        self.params = {}  # type: Dict[str, PARAM]
         # ------------------------------- nodes -------------------------------
         # main structural block
         #: stores POINT cards
-        self.points = {}  # type: Dict[int, Any]
+        self.points = {}  # type: Dict[int, POINT]
         #self.grids = {}
 
-        self.spoints = {}  # type: Dict[int, Any]
-        self.epoints = {}  # type: Dict[int, Any]
+        self.spoints = {}  # type: Dict[int, SPOINT]
+        self.epoints = {}  # type: Dict[int, EPOINT]
 
         #: stores GRIDSET card
-        self.grdset = None  # type: Optional[Any]
+        self.grdset = None  # type: Optional[GRDSET]
 
         #: stores SEQGP cards
-        self.seqgp = None  # type: Optional[Any]
+        self.seqgp = None  # type: Optional[SEQGP]
 
         ## stores RINGAX
-        self.ringaxs = {}  # type: Dict[int, Any]
+        self.ringaxs = {}  # type: Dict[int, RINGAX]
 
         ## stores GRIDB
-        self.gridb = {}  # type: Dict[int, Any]
+        self.gridb = {}  # type: Dict[int, GRIDB]
 
         #: stores elements (CQUAD4, CTRIA3, CHEXA8, CTETRA4, CROD, CONROD,
         #: etc.)
@@ -360,16 +360,16 @@ class BDFAttributes:
         #: stores CBARAO, CBEAMAO
         self.ao_element_flags = {}  # type: Dict[int, Any]
         #: stores BAROR
-        self.baror = None  # type: Optional[Any]
+        self.baror = None  # type: Optional[BAROR]
         #: stores BEAMOR
-        self.beamor = None  # type: Optional[Any]
+        self.beamor = None  # type: Optional[BEAMOR]
         #: stores SNORM
-        self.normals = {}  # type: Dict[int, Any]
+        self.normals = {}  # type: Dict[int, SNORM]
 
         #: stores rigid elements (RBE2, RBE3, RJOINT, etc.)
         self.rigid_elements = {}  # type: Dict[int, Any]
         #: stores PLOTELs
-        self.plotels = {}  # type: Optional[Any]
+        self.plotels = {}  # type: Optional[PLOTEL]
 
         #: stores CONM1, CONM2, CMASS1,CMASS2, CMASS3, CMASS4, CMASS5
         self.masses = {}  # type: Dict[int, Any]
