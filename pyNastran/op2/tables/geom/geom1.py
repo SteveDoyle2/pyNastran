@@ -58,9 +58,6 @@ class GEOM1:
             (1901, 19, 7): ['CORD1S', self._read_cord1s],    # record 3
             (2001, 20, 9): ['CORD2C', self._read_cord2c],    # record 4
 
-            #F:\work\pyNastran\pyNastran\master2\pyNastran\bdf\test\nx_spike\out_consolid31.op2
-            (2001, 20, 2220009): ['GRIDx?', self._read_gridx],
-
             (2101, 21, 8): ['CORD2R', self._read_cord2r],    # record 5
             (2201, 22, 10): ['CORD2S', self._read_cord2s],   # record 6
             (14301,143,651): ['CORD3G', self._read_cord3g],  # record 7
@@ -105,10 +102,13 @@ class GEOM1:
             (4501, 45, 1120001): ['GRID', self._read_grid_maybe],  # record ???; test_ibulk
             (4501, 45, 810001): ['GRID', self._read_grid],
 
+
+            #F:\work\pyNastran\pyNastran\master2\pyNastran\bdf\test\nx_spike\out_consolid31.op2
+            (2001, 20, 2220009): ['CORD2C?', self._read_cord2cx],
+
             # F:\work\pyNastran\pyNastran\master2\pyNastran\bdf\test\nx_spike\out_boltsold01d.op2
-            #(2101, 21, 2220008) : ['CORDx?', self._read_cordx],
-            (2101, 21, 2220008) : ['CORDx?', self._read_fake],
-            (2001, 20, 1310009) : ['???', self._read_fake],
+            (2101, 21, 2220008) : ['CORD2R?', self._read_cord2rx],
+            (2001, 20, 1310009) : ['CORD2S?', self._read_crash],
 
             (2101, 21, 1310008) : ['CORD2R?', self._read_fake],
             (501, 5, 43) : ['CORDx?', self._read_cord3g],
@@ -155,38 +155,6 @@ class GEOM1:
             #long long (int64) = (64, 1, 2, 0,   0,   0,   0,   1.0, -4837991899705164975, 0, -4837991899705164975, -4616189618054758400, 4392276274081478275)
         #"""
         #self.show_data(data[n:], 'qsdfi')
-
-    def _read_gridx(self, data: bytes, n: int) -> int:
-        """
-        I think this is a ROTOR coordinate system...
-
-        data = (2001, 20, 2220009,
-               100002, 2, 2, 100001,
-                   0.0, 0.0, 0.0,
-                   0.0, 0.0, 0.0,
-                   0.0, 1.875, 0.0,
-                   0.0, 0.0, 0.0,
-                   0.0, 0.0, 0.0,
-                   0.0, 0.0, 1.875)
-        """
-        op2 = self.op2
-        #self.show_data(data, types='ifs')
-        ndatai = len(data) - n
-        s = Struct(op2._endian + b'4i 18f')
-        assert ndatai == 88, ndatai
-        out = s.unpack(data[n:])
-        (aint, bint, cint, dint,
-         a1f, b1f, c1f,
-         a2f, b2f, c2f,
-         a3f, b3f, c3f,
-         a4f, b4f, c4f,
-         a5f, b5f, c5f,
-         a6f, b6f, c6f) = out
-        assert a1f + a2f + a3f + a4f + a5f + a6f == 0.0, (a1f, a2f, a3f, a4f, a5f, a6f)
-        assert b1f + b2f +       b4f +       b6f == 0.0, (b1f, b2f, b4f, b6f)
-        assert c1f +       c3f +     + c5f       == 0.0, (c1f, c3f, c5f)
-        print(out)
-        return len(data)
 
     def _read_seelt(self, data: bytes, n: int) -> int:
         """
@@ -390,7 +358,54 @@ class GEOM1:
         op2.card_count['SECONCT'] = ncards
         return n
 
-    def _read_cordx(self, data: bytes, n: int) -> int:
+    def _read_crash(self, data: bytes, n: int) -> int:
+        raise RuntimeError('is this a cord2s?')
+
+    def _read_cord2cx(self, data: bytes, n: int) -> int:
+        """
+        I think this is a ROTOR coordinate system...
+
+        data = (2001, 20, 2220009,
+               100002, 2, 2, 100001,
+                   0.0, 0.0, 0.0,
+                   0.0, 0.0, 0.0,
+                   0.0, 1.875, 0.0,
+                   0.0, 0.0, 0.0,
+                   0.0, 0.0, 0.0,
+                   0.0, 0.0, 1.875)
+        """
+        op2 = self.op2
+        n = self._read_cordx(data, n, cord_type=2, cord_n=2)
+        return n
+
+        #self.show_data(data, types='ifs')
+        ndatai = len(data) - n
+        s = Struct(op2._endian + b'4i 9d')
+        # CORD2C    100002  100001     0.0     0.0     0.0     1.0     0.0     0.0+
+        # +            0.0     0.0     1.0
+        # 100002 2 2 100001
+        # [0.0, 0.0, 0.0] [1.0, 0.0, 0.0] [0.0, 0.0, 1.0]
+        assert ndatai == 88, ndatai
+        #print(len(data[n:]))
+        out = s.unpack(data[n:])
+        (cid, two_a, two_b, rid,
+         a1, a2, a3, b1, b2, b3, c1, c2, c3) = out
+        origin = [a1, a2, a3]
+        zaxis = [b1, b2, b3]
+        xzplane = [c1, c2, c3]
+        assert (two_a, two_b) == (2, 2), (two_a, two_b)
+        #print(cid, rid)
+        #print(a, b, c)
+        coord = op2.add_cord2c(cid, origin, zaxis, xzplane, rid=rid,
+                               setup=True, comment='')
+        print(coord)
+        return len(data)
+
+    def _read_cord2rx(self, data: bytes, n: int) -> int:
+        n = self._read_cordx(data, n, cord_type=1, cord_n=2)
+        return n
+
+    def _read_cordx(self, data: bytes, n: int, cord_type: int, cord_n: int) -> int:
         """
         (2101, 21, 2220008)
         CORD2R  4               0.      0.      0.      0.      -1.     0.      +
@@ -414,19 +429,33 @@ class GEOM1:
         """
         op2 = self.op2
         ntotal = 88 * op2.factor  # 22*4
-        structi = Struct(mapfmt(op2._endian + b'3i iffif ifffi f 7i f', op2.size))
-        nentries = (len(data) - n) // ntotal
+        #structi = Struct(mapfmt(op2._endian + b'iiq 9d', op2.size))
+        structi = Struct(mapfmt(op2._endian + b'iiii 9d', op2.size))
+        ndatai = len(data) - n
+        nentries = ndatai // ntotal
+        assert nentries > 0
+        assert ndatai % ntotal == 0, ndatai
         for unused_i in range(nentries):
             edata = data[n:n + ntotal]
             out = structi.unpack(edata)
-            (cid, one, two, i1a, f2a, f3a, i4a, f5a, i6a, f7a, f8a, f9a, i10a, fa,
-                            i1b, i2b, i3b, i4b, i5b, i6b, i7b, fb) = out
+            (cid, one, two, rid, a1, a2, a3, b1, b2, b3, c1, c2, c3) = out
             assert cid > 0, out
-            assert one == 1, out
-            assert two == 2, out
-            print((f2a, f3a), (f5a, f7a), (f8a, f9a))
-            assert max(i1a, i4a, i6a, i10a) == 0, (i1a, i4a, i6a, i10a)
-            assert min(i1a, i4a, i6a, i10a) == 0, (i1a, i4a, i6a, i10a)
+            assert one == cord_type, (one, out)
+            assert two == cord_n, (two, out)
+            origin = [a1, a2, a3]
+            zaxis = [b1, b2, b3]
+            xzplane = [c1, c2, c3]
+            if (two, one) == (2, 1):
+                coord = op2.add_cord2r(
+                    cid, origin, zaxis, xzplane, rid=rid,
+                    setup=True, comment='')
+            elif (two, one) == (2, 2):
+                coord = op2.add_cord2c(
+                    cid, origin, zaxis, xzplane, rid=rid,
+                    setup=True, comment='')
+            else:
+                raise RuntimeError((two, one))
+            print(coord)
             n += ntotal
         return n
 

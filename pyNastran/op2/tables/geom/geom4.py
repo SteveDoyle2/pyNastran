@@ -531,7 +531,7 @@ class GEOM4(GeomCommon):
                 #op2.binary_debug.write('	eid	ga	gb	cna	cnb	cma	cmb	alpha\n')
                 #op2.binary_debug.write(str(elem))
             n += ntotal
-        op2.to_nx(' because RBAR-NX was found')
+        #op2.to_nx(' because RBAR-NX was found')
         return n, elems
 
     def _read_rbar_msc_32(self, card_obj, data: bytes, n: int) -> int:

@@ -10,7 +10,7 @@ from pyNastran.bdf.cards.aero.aero import (
     #AECOMP, AECOMPL, AEFACT, AELINK, AELIST, AEPARM, AESURF, AESURFS,
     #CAERO1, CAERO2, CAERO3, CAERO4, CAERO5,
     #PAERO1, PAERO2, PAERO3, PAERO4, PAERO5,
-    MONPNT1, # , MONPNT2, MONPNT3, MONDSP1,
+    MONPNT1, MONPNT2, MONPNT3, MONDSP1,
     #SPLINE1, SPLINE2, SPLINE3,
     SPLINE4, SPLINE5)
 
@@ -117,16 +117,16 @@ class EDT:
             (7108, 82, 251): ['BOLT', self._read_fake],
 
             # MSC
-            (1247, 12, 667): ['MONPNT2', self._read_fake],
+            #(1247, 12, 667): ['MONPNT2', self._read_monpnt2],
             (11204, 112, 821): ['ERPPNL', self._read_fake],
             (8001, 80, 511): ['SET3', self._read_set3],
-            (9400, 94, 641): ['MDLPRM', self._read_fake],
+            (9400, 94, 641): ['MDLPRM', self._read_mdlprm],
             (11004, 110, 1820_720): ['HADACRI', self._read_fake],
-            (8804, 88, 628): ['MONDSP1', self._read_fake],
+            (8804, 88, 628): ['MONDSP1', self._read_mondsp1],
 
             (10904, 109, 719): ['HADAPTL', self._read_fake],
-            (8204, 82, 621): ['MONPNT2', self._read_fake],
-            (8304, 83, 622): ['MONPNT3', self._read_fake],
+            (8204, 82, 621): ['MONPNT2', self._read_monpnt2],
+            (8304, 83, 622): ['MONPNT3', self._read_monpnt3],
             #(8001, 80, 511): ['???', self._read_fake],
             #(8001, 80, 511): ['???', self._read_fake],
             #(8001, 80, 511): ['???', self._read_fake],
@@ -1890,6 +1890,191 @@ class EDT:
             monpnt1s.append(monpnt1)
         #op2.to_nx(' because MONPNT1-NX was found')
         return n, monpnt1s
+
+    def _read_monpnt2(self, data: bytes, n: int) -> int:
+        """
+        Record 59 - MONPNT2(8204,82,621)
+        Word Name Type Description
+        1 NAME(2)   CHAR4
+        3 LABEL(14) CHAR4
+        17 TABLE(2) CHAR4
+        19 ELTYP(2) CHAR4
+        21 ITEM(2)  CHAR4
+        23 EID      I
+
+        """
+        op2 = self.op2
+        ntotal = 92 * self.factor # 4 * 23
+        ndatai = len(data) - n
+        ncards = ndatai // ntotal
+        assert ndatai % ntotal == 0
+        structi = Struct(op2._endian + b'8s 56s 8s8s8s i')  # msc
+        monpnts = []
+        for unused_i in range(ncards):
+            edata = data[n:n + ntotal]
+            out = structi.unpack(edata)
+            name_bytes, label_bytes, table_bytes, eltype_bytes, item_bytes, eid = out
+            name = reshape_bytes_block_size(name_bytes, self.size)
+            label = reshape_bytes_block_size(label_bytes, self.size)
+            table = reshape_bytes_block_size(table_bytes, self.size)
+            Type = reshape_bytes_block_size(eltype_bytes, self.size)
+            nddl_item = reshape_bytes_block_size(item_bytes, self.size)
+            monpnt = MONPNT2(name, label, table, Type, nddl_item, eid, comment='')
+            op2._add_methods._add_monpnt_object(monpnt)
+            str(monpnt)
+            #print(monpnt)
+            n += ntotal
+            monpnts.append(monpnt)
+        #op2.to_nx(' because MONPNT3-NX was found')
+        return n # , monpnt1s
+
+    def _read_monpnt3(self, data: bytes, n: int) -> int:
+        """
+        Record 60 - MONPNT3(8304,83,622)
+        Word Name    Type   Description
+        1  NAME(2)   CHAR4
+        3  LABEL(14) CHAR4
+        17 AXES      I      Axes to compute
+        18 GRIDSET   I      GPF Grid Set
+        19 ELEMSET   I      GPF Elem Set
+        20 CID       I      Coord system x,y,z input in
+        21 X         RS
+        22 Y         RS
+        23 Z         RS
+        24 XFLAG     I      Exclude forces from class
+        25 CD        I
+
+        """
+        op2 = self.op2
+        ntotal = 100 * self.factor # 4 * 25
+        ndatai = len(data) - n
+        ncards = ndatai // ntotal
+        assert ndatai % ntotal == 0
+        structi = Struct(op2._endian + b'8s 56s 4i 3f 2i')  # msc
+        monpnts = []
+
+        #XFLAG Exclusion flag. Exclude the indicated Grid Point Force types from summation at the
+        #monitor point. Default = blank (no type excluded). See Remark 4.
+        #S SPCforces
+        #M MPC forces
+        #A, L, or P applied loads
+        #D dmig’s (and any other type not described above) at the monitored point.
+
+        # A = L = P
+        # 2 ^ 4 = 16
+
+        # official: 0, 2, 4, 8, 16, 28, 30
+        # guess:    6, 24, 26
+        xflag_map = {
+            0: None,
+            #1: 'A',?
+            2: 'S',
+            #3: 'SA',?
+            4: 'M',
+            #5: 'MA',
+            6: 'MS',
+            #7: 'MSA',?
+            8: 'A', # A = L = P
+            16: 'D',
+            24: 'DP',
+            26: 'SDP',
+            28: 'MAD',
+            30: 'SMAD',
+        }
+        for unused_i in range(ncards):
+            edata = data[n:n + ntotal]
+            out = structi.unpack(edata)
+            name_bytes, label_bytes, axes, grid_set, elem_set, cp, x, y, z, xflag, cd = out
+            name = reshape_bytes_block_size(name_bytes, self.size)
+            label = reshape_bytes_block_size(label_bytes, self.size)
+            xyz = [x, y, z]
+            try:
+                xflag_str = xflag_map[xflag]
+            except:
+                raise RuntimeError((name, label, xflag))
+            monpnt = MONPNT3(name, label, axes, grid_set, elem_set, xyz,
+                              cp=cp, cd=cd, xflag=xflag_str, comment='')
+            op2._add_methods._add_monpnt_object(monpnt)
+            str(monpnt)
+            #print(monpnt)
+            n += ntotal
+            monpnts.append(monpnt)
+        #op2.to_nx(' because MONPNT3-NX was found')
+        return n # , monpnt1s
+
+    def _read_mondsp1(self, data: bytes, n: int) -> int:
+        """
+        Record 56 - MONDSP1(8804,88,628)
+        Word Name Type Description
+        1  NAME(2)   CHAR4
+        3  LABEL(14) CHAR4
+        17 AXES    I
+        18 COMP(2) CHAR4
+        20 CP      I
+        21 X       RS
+        22 Y       RS
+        23 Z       RS
+        24 CD      I
+        25 INDDOF  I
+        """
+        op2 = self.op2
+        ntotal = 100 * self.factor # 4 * 25
+        ndatai = len(data) - n
+        ncards = ndatai // ntotal
+        assert ndatai % ntotal == 0
+        structi = Struct(op2._endian + b'8s 56s i8s i 3f 2i')  # msc
+        monpnts = []
+        for unused_i in range(ncards):
+            edata = data[n:n + ntotal]
+            out = structi.unpack(edata)
+            name_bytes, label_bytes, axes, aecomp_name_bytes, cp, x, y, z, cd, ind_dof = out
+            name = reshape_bytes_block_size(name_bytes, self.size)
+            label = reshape_bytes_block_size(label_bytes, self.size)
+            aecomp_name = reshape_bytes_block_size(aecomp_name_bytes, self.size)
+            xyz = [x, y, z]
+            monpnt = MONDSP1(name, label, axes, aecomp_name, xyz, cp=cp, cd=cd,
+                             ind_dof='123', comment='')
+            op2._add_methods._add_monpnt_object(monpnt)
+            str(monpnt)
+            n += ntotal
+            monpnts.append(monpnt)
+        #op2.to_nx(' because MONPNT3-NX was found')
+        return n # , monpnt1s
+
+    def _read_mdlprm(self, data: bytes, n: int) -> int:
+        """
+        Word Name Type Description
+        1 NAME(2) CHAR4 User defined parameter
+        3 VALUE I parameter value
+
+          strings = (b'NSGRDS4 \x14\x00\x00\x00PEXTS4  \x00\x00\x00\x00SPBLNDX \xcd\xcc\xcc\xcc',)
+          ints    = (b'NSGRDS4 ', 20, b'PEXTS4  ', 0,   b'SPBLNDX ', -858993459)
+          floats  = (b'NSGRDS4 ', 20, b'PEXTS4  ', 0.0, b'SPBLNDX ', -107374184.0)
+          MDLPRM, nsgrds4, 20, pexts4, 50., spblndx, 3.1
+        """
+        op2 = self.op2
+        ntotal = 12 * self.factor # 4 * 3
+        ndatai = len(data) - n
+        ncards = ndatai // ntotal
+        assert ndatai % ntotal == 0
+        structi = Struct(op2._endian + b'8s i')  # msc
+        structf = Struct(op2._endian + b'8s f')  # msc
+        data_dict = {}
+        for unused_i in range(ncards):
+            edata = data[n:n + ntotal]
+            out = structi.unpack(edata)
+            name_bytes, value = out
+            if name_bytes in {b'SPBLNDX '}:
+                name_bytes, value = structf.unpack(edata)
+            name = reshape_bytes_block_size(name_bytes, self.size)
+            data_dict[name] = value
+            n += ntotal
+        op2.log.warning(f'skipping MDLPRM {data_dict}')
+        op2.to_msc(' because MDLPRM-MSC was found')
+        #monpnt = MONDSP1(name, label, axes, aecomp_name, xyz, cp=cp, cd=cd,
+                         #ind_dof='123', comment='')
+        #op2._add_methods._add_monpnt_object(monpnt)
+        return n # , monpnt1s
 
     def _read_aestat(self, data: bytes, n: int) -> int:
         """

@@ -16,7 +16,7 @@ from pyNastran.bdf.cards.loads.static_loads import (
 from pyNastran.bdf.cards.axisymmetric.loads import PLOADX1 # , PRESAX, TEMPAX, FORCEAX
 from pyNastran.bdf.cards.loads.loads import LSEQ, SLOAD, RFORCE #, DAREA, RANDPS, RFORCE1, LOADCYN
 from pyNastran.bdf.cards.thermal.loads import (
-    QBDY1, QBDY2, QBDY3, TEMP, TEMPD, TEMPP1, QVOL, QHBDY)
+    QBDY1, QBDY2, QBDY3, TEMP, TEMPD, TEMPP1, QVOL, QHBDY, QVECT)
 from pyNastran.op2.op2_interface.op2_reader import mapfmt, reshape_bytes_block
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.op2.op2_geom import OP2Geom
@@ -885,6 +885,52 @@ class GEOM3:
         return n
 
     def _read_qvect(self, data: bytes, n: int) -> int:
+        """
+        MSC
+        Record 29 -- QVECT(2209,22,241)
+
+        Word Name Type Description
+        1 SID   I  Load set identification number
+        2 Q0    RS Magnitude of thermal flux vector into face
+        3 TSOUR RS Temperature of the radiant source
+        4 CE    I  Coordinate system identification number for thermal vector flux
+        5 FLAG  I
+        6 E     RS Vector component of flux in coordinate system CE
+        Words 5 through 6 repeat 3 times
+        5b, 6b
+        5c, 6c
+        7 CNTRLND I Control point
+        8 EID     I Element identification number
+        ints    = (200, 442.0, 10400.0, 0,   0,   0,   0,   0,   0,   -1.0, 0,   10)
+        floats  = (200, 442.0, 10400.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, -1.0, 0.0, 10)
+        """
+        op2 = self.op2
+        #op2.show_data(data[n:], types='ifs', endian=None, force=False)
+        ntotal = 48 * self.factor  # 12*4
+        ndatai = len(data) - n
+        nentries = ndatai // ntotal
+        struct_if = Struct(op2._endian + b'i 2f i if if if 2i')
+        assert nentries > 0, nentries
+        assert ndatai % ntotal == 0, ndatai
+
+        #fdata = np.frombuffer(data[n:], op2.fdtype8).copy()
+        #idata = np.frombuffer(data[n:], op2.idtype8).copy()
+
+        #while (len(data) - n) >= ntotal:
+        for unused_i in range(nentries):
+            edata = data[n:n + ntotal]
+            out = struct_if.unpack(edata)
+            if op2.is_debug_file:
+                op2.binary_debug.write('  QHBDY=%s\n' % str(out))
+            (sid, q0, tsour, ce, flag1, e1, flag2, e2, flag3, e3, cntrlnd, eid) = out
+
+            load = QVECT.add_op2_data(out)
+            str(load)
+            #self.add_thermal_load(load)
+            op2._add_methods._add_load_object(load)
+            n += ntotal
+        op2.card_count['QHBDY'] = nentries
+        return n
         self.op2.log.info('skipping QVECT in GEOM3')
         return len(data)
 
