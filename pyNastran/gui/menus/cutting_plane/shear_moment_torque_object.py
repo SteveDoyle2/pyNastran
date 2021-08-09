@@ -181,7 +181,7 @@ class ShearMomentTorqueObject:
             ## i/j/k vector is nan
             #coord = CORD2R(1, rid=0, origin=origin, zaxis=zaxis, xzplane=xzplane,
                            #comment='')
-        #except:
+        #except Exception:
             #log.error('The coordinate system is invalid; check your cutting plane.')
             #if stop_on_failure:
                 #raise

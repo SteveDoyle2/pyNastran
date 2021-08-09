@@ -834,7 +834,7 @@ def get_table_from_table_code(table_code: int, table_name: str, is_msc: bool=Tru
             table = MSC_TABLE_CONTENT[table_code]
         else:
             table = NX_TABLE_CONTENT[table_code]
-    except:
+    except Exception:
         print(f'count not determine the table description for {table_name}')
         raise
 

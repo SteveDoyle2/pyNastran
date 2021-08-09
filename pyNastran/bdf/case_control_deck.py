@@ -134,7 +134,7 @@ class CaseControlDeck:
         self.subcases = {0: Subcase(id=0)}  # type: Dict[int, Subcase]
         try:
             self._read(self.lines)
-        except:
+        except Exception:
             self.log.error('Invalid Case Control Deck:\n' + '\n'.join(self.lines))
             raise
 

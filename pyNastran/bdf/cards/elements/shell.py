@@ -335,7 +335,7 @@ class TriShell(ShellElement):
         n1, n2, n3 = self.get_node_positions(nodes=self.nodes_ref[:3])
         try:
             n = _normal(n1 - n2, n1 - n3)
-        except:
+        except Exception:
             msg = 'ERROR computing normal vector for eid=%i.\n' % self.eid
             msg += '  nid1=%i n1=%s\n' % (self.nodes_ref[0].nid, n1)
             msg += '  nid2=%i n2=%s\n' % (self.nodes_ref[1].nid, n2)
@@ -1758,7 +1758,7 @@ class QuadShell(ShellElement):
             raise
         try:
             n = _normal(n1 - n3, n2 - n4)
-        except:
+        except Exception:
             msg = 'ERROR computing normal vector for eid=%i.\n' % self.eid
             msg += '  nid1=%i n1=%s\n' % (self.nodes_ref[0].nid, n1)
             msg += '  nid2=%i n2=%s\n' % (self.nodes_ref[1].nid, n2)

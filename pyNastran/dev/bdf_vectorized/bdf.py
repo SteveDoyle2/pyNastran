@@ -2393,7 +2393,7 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
         if self.echo:
             try:
                 print(print_card_8(card_obj).rstrip())
-            except:
+            except Exception:
                 print(print_card_16(card_obj).rstrip())
 
         if card_name in self._card_parser:
@@ -3406,7 +3406,7 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
             while check_header:
                 try:
                     line = bdf_file.readline()
-                except:
+                except Exception:
                     break
 
                 if line.startswith('$'):
@@ -3462,19 +3462,19 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
         for key, card in sorted(self.nodes.items()):
             try:
                 card._verify(xref)
-            except:
+            except Exception:
                 print(str(card))
                 raise
         for key, card in sorted(self.coords.items()):
             try:
                 card._verify(xref)
-            except:
+            except Exception:
                 print(str(card))
                 raise
         for key, card in sorted(self.elements.items()):
             try:
                 card._verify(xref)
-            except:
+            except Exception:
                 exc_type, exc_value, exc_traceback = sys.exc_info()
                 print(repr(traceback.format_exception(exc_type, exc_value,
                                                       exc_traceback)))
@@ -3484,46 +3484,46 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
         for key, card in sorted(self.properties.items()):
             try:
                 card._verify(xref)
-            except:
+            except Exception:
                 print(str(card))
                 raise
         for key, card in sorted(self.materials.items()):
             try:
                 card._verify(xref)
-            except:
+            except Exception:
                 print(str(card))
                 raise
 
         for key, card in sorted(self.dresps.items()):
             try:
                 card._verify(xref)
-            except:
+            except Exception:
                 print(str(card))
                 raise
 
         for key, card in sorted(self.dvcrels.items()):
             try:
                 card._verify(xref)
-            except:
+            except Exception:
                 print(str(card))
                 raise
         for key, card in sorted(self.dvmrels.items()):
             try:
                 card._verify(xref)
-            except:
+            except Exception:
                 print(str(card))
                 raise
         for key, card in sorted(self.dvprels.items()):
             try:
                 card._verify(xref)
-            except:
+            except Exception:
                 print(str(card))
                 raise
         for key, cards in sorted(self.dvgrids.items()):
             for card in cards:
                 try:
                     card._verify(xref)
-                except:
+                except Exception:
                     print(str(card))
                     raise
 

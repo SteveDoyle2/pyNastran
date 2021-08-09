@@ -24,6 +24,7 @@ from pyNastran.bdf.bdf_interface.assign_type import (
     blank, integer_or_double, #integer_or_blank,
 )
 from pyNastran.utils.mathematics import integrate_unit_line, integrate_positive_unit_line
+from pyNastran.bdf import MAX_INT
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
 from pyNastran.bdf.bdf_interface.bdf_card import BDFCard
@@ -1416,6 +1417,8 @@ class PBAR(LineProperty):
 
     def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.repr_fields()
+        if max(self.pid, self.mid) > MAX_INT:
+            size = 16
         if size == 8:
             return self.comment + print_card_8(card)
         return self.comment + print_card_16(card)
@@ -1754,7 +1757,7 @@ class PBARL(LineProperty):
         """gets the section I12 moment of inertia"""
         try:
             I12 = A_I1_I2_I12(self, self.beam_type, self.dim)
-        except:
+        except Exception:
             print(str(self))
             raise
         return I12[3]

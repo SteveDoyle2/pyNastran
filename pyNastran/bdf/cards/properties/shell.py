@@ -19,8 +19,9 @@ from typing import List, Optional, Union, TYPE_CHECKING
 import numpy as np
 
 from pyNastran.utils.numpy_utils import integer_types
+from pyNastran.bdf import MAX_INT
 from pyNastran.bdf.field_writer_8 import set_blank_if_default
-from pyNastran.bdf.cards.base_card import Property, Material
+from pyNastran.bdf.cards.base_card import Property, Material, write_card
 from pyNastran.bdf.cards.optimization import break_word_by_trailing_integer
 from pyNastran.bdf.cards.materials import get_mat_props_S
 from pyNastran.bdf.bdf_interface.assign_type import (
@@ -788,7 +789,9 @@ class PCOMP(CompositeShellProperty):
         self.z0 = z0
 
     def validate(self):
-        assert self.ft in ['HILL', 'HOFF', 'TSAI', 'STRN', 0.0, None], f'ft={self.ft!r}'
+        assert self.ft in ['HILL', 'HOFF', 'TSAI', 'STRN',
+                           'HFAI', 'HFAB', 'HTAP',
+                           0.0, None], f'ft={self.ft!r}'
 
         # 'NO' is not an option!
         allowed_lam = [None, 'SYM', 'MEM', 'BEND', 'SMEAR', 'SMCORE']
@@ -1818,7 +1821,7 @@ class PPLANE(Property):
         thickness = self.Thickness()  # Thickness(tflag=tflag, tscales=tscales)
         try:
             mass_per_area = self.nsm + rho * thickness
-        except:
+        except Exception:
             print("nsm=%s rho=%s t=%s" % (self.nsm, rho, self.t))
             raise
         return mass_per_area
@@ -2434,7 +2437,7 @@ class PSHELL(Property):
         thickness = self.Thickness(tflag=tflag, tscales=tscales)
         try:
             mass_per_area = self.nsm + rho * thickness
-        except:
+        except Exception:
             print("nsm=%s rho=%s t=%s" % (self.nsm, rho, self.t))
             raise
         return mass_per_area
@@ -2449,7 +2452,7 @@ class PSHELL(Property):
         thickness = self.Thickness(tflag=tflag, tscales=tscales)
         try:
             mass_per_area = self.nsm + rho * thickness
-        except:
+        except Exception:
             print("nsm=%s rho=%s t=%s" % (self.nsm, rho, self.t))
             raise
         return mass_per_area
@@ -2463,7 +2466,7 @@ class PSHELL(Property):
         rho = mid_ref.Rho()
         try:
             mass_per_area = rho * self.t
-        except:
+        except Exception:
             print("nsm=%s rho=%s t=%s" % (self.nsm, rho, self.t))
             raise
         return mass_per_area
@@ -2666,6 +2669,9 @@ class PSHELL(Property):
 
     def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.repr_fields()
+        mid_max = max(self.material_ids)
+        if max(self.pid, mid_max) > MAX_INT:
+            size = 16
         if size == 8:
             return self.comment + print_card_8(card)
         return self.comment + print_card_16(card)
@@ -2950,7 +2956,7 @@ class PTRSHL(Property):
         thickness = self.Thickness()
         try:
             mass_per_area = self.nsm + rho * thickness
-        except:
+        except Exception:
             print("nsm=%s rho=%s t=%s" % (self.nsm, rho, self.t))
             raise
         return mass_per_area

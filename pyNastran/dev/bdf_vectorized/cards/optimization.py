@@ -1618,7 +1618,7 @@ class DRESP2(OptConstraint):
             #assert key is not None, str(self)
             try:
                 j, name = key
-            except:
+            except Exception:
                 raise RuntimeError(str(self))
 
             if name in ['DRESP1', 'DRESP2']:
@@ -2393,7 +2393,7 @@ class DVCREL2(OptConstraint):
         try:
             get = pid_ref.get_optimization_value(self.pname_fid)
             out = pid_ref.set_optimization_value(self.pname_fid, get)
-        except:
+        except Exception:
             print('DVCREL2 calculate : %s[%r] = ???' % (self.Type, self.cp_name))
             raise
 
@@ -2768,7 +2768,7 @@ class DVMREL2(OptConstraint):
         try:
             get = mid_ref.get_optimization_value(self.mp_name)
             out = mid_ref.set_optimization_value(self.mp_name, get)
-        except:
+        except Exception:
             print('DVMREL2 calculate : %s[%r] = ???' % (self.mat_type, self.mp_name))
             raise
 
@@ -3334,7 +3334,7 @@ class DVPREL2(OptConstraint):
         try:
             get = pid_ref.get_optimization_value(self.pname_fid)
             out = pid_ref.set_optimization_value(self.pname_fid, get)
-        except:
+        except Exception:
             print('DVPREL2 calculate : %s[%r] = ???' % (self.Type, self.pname_fid))
             raise
 

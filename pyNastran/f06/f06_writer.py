@@ -644,7 +644,7 @@ class F06Writer(OP2_F06_Common):
 
                         #assert 'table_name=' in ''.join(result.get_stats())
                         assert isinstance(self.page_num, int), 'result=%s pageNum=%r' % (result, str(self.page_num))
-                    except:
+                    except Exception:
                         #print("result name = %r" % result.name())
                         raise
                     if delete_objects:

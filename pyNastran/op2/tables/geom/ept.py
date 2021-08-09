@@ -199,7 +199,7 @@ class EPT:
             word = word_bytes.decode('ascii').rstrip()
             assert len(word_bytes) == nwords * 4
             #print('word_bytes =', word_bytes)
-            op2.log.warning(f'skipping DESC={desc_id}: {word!r}')
+            op2.log.warning(f'geom skipping DESC={desc_id}: {word!r}')
             n += ndatai
         assert n == len(data), n
         return n
@@ -447,7 +447,8 @@ class EPT:
         data = (4, ELEMENT, 2.1, 1, 3301, -1, -2)
 
         """
-        self.op2.log.info(f'skipping {self.card_name} in {op2.table_name}; ndata={len(data)-12}')
+        op2 = self.op2
+        op2.log.info(f'geom skipping NSML1 in {op2.table_name}; ndata={len(data)-12}')
         #op2.show_data(data[n:], types='ifs')
         #bbb
         return len(data)
@@ -1309,7 +1310,7 @@ class EPT:
         33 Not used
         """
         op2 = self.op2
-        #op2.log.info('skipping PBEND in EPT')
+        #op2.log.info('geom skipping PBEND in EPT')
         #return len(data)
         ntotal = 132  # 33*4
         struct1 = Struct(op2._endian + b'2i 4f i 21f i 4f')
@@ -2239,7 +2240,7 @@ class EPT:
         """
         (152,19,147) - Record 24
         """
-        self.op2.log.info('skipping PCONEAX in EPT')
+        self.op2.log.info('geom skipping PCONEAX in EPT')
         return len(data)
 
     def _read_pconv(self, data: bytes, n: int) -> int:
@@ -2375,11 +2376,11 @@ class EPT:
         return n
 
     def _read_pdampt(self, data: bytes, n: int) -> int:  # 26
-        self.op2.log.info('skipping PDAMPT in EPT')
+        self.op2.log.info('geom skipping PDAMPT in EPT')
         return len(data)
 
     def _read_pdamp5(self, data: bytes, n: int) -> int:  # 26
-        self.op2.log.info('skipping PDAMP5 in EPT')
+        self.op2.log.info('geom skipping PDAMP5 in EPT')
         return len(data)
 
 # PDUM1
@@ -2562,11 +2563,11 @@ class EPT:
         return n
 
     def _read_pintc(self, data: bytes, n: int) -> int:
-        self.op2.log.info('skipping PINTC in EPT')
+        self.op2.log.info('geom skipping PINTC in EPT')
         return len(data)
 
     def _read_pints(self, data: bytes, n: int) -> int:
-        self.op2.log.info('skipping PINTS in EPT')
+        self.op2.log.info('geom skipping PINTS in EPT')
         return len(data)
 
     def _read_pbeam3(self, data: bytes, n: int) -> int:
@@ -3108,11 +3109,11 @@ class EPT:
 # PWELD
 # PWSEAM
     def _read_view(self, data: bytes, n: int) -> int:
-        self.op2.log.info('skipping VIEW in EPT')
+        self.op2.log.info('geom skipping VIEW in EPT')
         return len(data)
 
     def _read_view3d(self, data: bytes, n: int) -> int:
-        self.op2.log.info('skipping VIEW3D in EPT')
+        self.op2.log.info('geom skipping VIEW3D in EPT')
         return len(data)
 
 def break_by_minus1(idata):

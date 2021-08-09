@@ -331,7 +331,8 @@ class BDFAttributes:
         self.case_control_deck = None  # type: Optional[Any]
 
         #: store the PARAM cards
-        self.params = {}  # type: Dict[str, PARAM]
+        self.params = {}    # type: Dict[str, PARAM]
+        self.mdlprm = None  # type: MDLPRM
         # ------------------------------- nodes -------------------------------
         # main structural block
         #: stores POINT cards
@@ -690,6 +691,7 @@ class BDFAttributes:
         self._type_to_id_map = defaultdict(list)  # type: Dict[int, List[Any]]
         self._slot_to_type_map = {
             'params' : ['PARAM'],
+            'mdlprm': ['MDLPRM'],
             'nodes' : ['GRID', 'SPOINT', 'EPOINT'], # 'RINGAX',
             'points' : ['POINT'],
             'ringaxs' : ['RINGAX', 'POINTAX'],

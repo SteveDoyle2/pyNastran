@@ -101,7 +101,7 @@ def numpy_to_vtk(num_array, deep=0, array_type=None):  # pragma: no cover
     # Fixup shape in case its empty or scalar.
     try:
         test_var = shape[0]
-    except:
+    except Exception:
         shape = (0,)
 
     # Find the shape and set number of components.

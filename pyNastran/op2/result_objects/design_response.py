@@ -736,7 +736,7 @@ class Desvars:
             try:
                 label_str = label.decode(encoding)
                 #print((internal_id, desvar_id, label_str, lower, upper, delxv, dunno))
-            except:
+            except Exception:
                 label_str = 'fake_%d' % i
                 #warnings.warn(str([internal_id, desvar_id, label, label_str, lower, upper, delxv, dunno]))
                 #raise

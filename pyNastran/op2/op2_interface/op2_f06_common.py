@@ -1480,7 +1480,7 @@ def _get_op2_stats_full(model: OP2, table_types: List[str], log):
                 if hasattr(subcase, 'get_stats'):
                     try:
                         stats = subcase.get_stats() # short=short
-                    except:
+                    except Exception:
                         msgi = 'errored reading %s %s[%s]\n\n' % (
                             class_name, table_type_print, isubcase)
                         msg.append(msgi)
@@ -1493,7 +1493,7 @@ def _get_op2_stats_full(model: OP2, table_types: List[str], log):
                     msgi = 'skipping %s %s[%s]\n\n' % (class_name, table_type_print, isubcase)
                     msg.append(msgi)
                     raise RuntimeError(msgi)
-        except:
+        except Exception:
             log.warning(f'table_type={table_type}; type(table)={type(table)}')
             log.warning(str(table))
             raise

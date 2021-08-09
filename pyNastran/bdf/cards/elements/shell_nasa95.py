@@ -780,7 +780,7 @@ class PQUAD1(Property):
         thickness = self.Thickness()
         try:
             mass_per_area = self.nsm + rho * thickness
-        except:
+        except Exception:
             print(f'nsm={self.nsm} rho={rho} t_membrane={self.t_membrane}')
             raise
         return mass_per_area
@@ -795,7 +795,7 @@ class PQUAD1(Property):
         thickness = self.Thickness(tflag=tflag, tscales=tscales)
         try:
             mass_per_area = self.nsm + rho * thickness
-        except:
+        except Exception:
             print(f'nsm={self.nsm} rho={rho} t_membrane={self.t_membrane}')
             raise
         return mass_per_area
@@ -809,7 +809,7 @@ class PQUAD1(Property):
         rho = mid_ref.Rho()
         try:
             mass_per_area = rho * self.t
-        except:
+        except Exception:
             print(f'nsm={self.nsm} rho={rho} t_membrane={self.t_membrane}')
             raise
         return mass_per_area

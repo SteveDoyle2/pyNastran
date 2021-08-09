@@ -43,7 +43,7 @@ class BaseCard:
         """
         try:
             return self.print_card()
-        except:
+        except Exception:
             print('problem printing %s card' % self.type)
             fields = self.repr_fields()
             print("fields = ", fields)

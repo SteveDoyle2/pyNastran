@@ -119,7 +119,7 @@ if TYPE_CHECKING:  # pragma: no cover
         SESET,  # SEQSEP,
         RADSET
     )
-    from pyNastran.bdf.cards.params import PARAM
+    from pyNastran.bdf.cards.params import PARAM, MDLPRM
     from pyNastran.bdf.cards.dmig import DMIG, DMIAX, DMI, DMIJ, DMIK, DMIJI, DMIG_UACCEL, DTI
     from pyNastran.bdf.cards.thermal.loads import (QBDY1, QBDY2, QBDY3, QHBDY, TEMP, TEMPD, TEMPB3,
                                                    QVOL, QVECT)
@@ -209,11 +209,17 @@ class AddMethods:
                     #msg = 'key=%s param=%s old_param=%s' % (key, param, self.params[key])
                     #raise KeyError(msg)
                 model.log.warning('key=%s param=%s old_param=%s' %
-                                  (key, param, model.model.params[key]))
+                                  (key, param, model.params[key]))
                 model.params[key] = param
         else:
             model.params[key] = param
             model._type_to_id_map[param.type].append(key)
+
+    def _add_mdlprm_object(self, mdlprm: MDLPRM, allow_overwrites: bool=False) -> None:
+        """adds a MDLPRM object"""
+        assert self.model.mdlprm is None, self.model.mdlprm
+        self.model.mdlprm = mdlprm
+        #model._type_to_id_map[param.type].append(key)
 
     def _add_node_object(self, node: Union[GRID], allow_overwrites: bool=False) -> None:
         """adds a GRID card"""

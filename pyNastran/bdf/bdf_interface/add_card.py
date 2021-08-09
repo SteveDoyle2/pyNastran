@@ -125,7 +125,7 @@ from pyNastran.bdf.cards.bdf_sets import (
     SESET, #SEQSEP,
     RADSET,
 )
-from pyNastran.bdf.cards.params import PARAM, PARAM_MYSTRAN, PARAM_NASA95
+from pyNastran.bdf.cards.params import PARAM, PARAM_MYSTRAN, PARAM_NASA95, MDLPRM
 from pyNastran.bdf.cards.dmig import DMIG, DMIAX, DMI, DMIJ, DMIK, DMIJI, DMIG_UACCEL, DTI, DTI_UNITS
 from pyNastran.bdf.cards.thermal.loads import (QBDY1, QBDY2, QBDY3, QHBDY, TEMP, TEMPD, TEMPB3,
                                                TEMPRB, QVOL, QVECT)
@@ -1081,6 +1081,27 @@ class AddCards:
         param = PARAM(key, values, comment=comment)
         self._add_methods._add_param_object(param)
         return param
+
+    def add_mdlprm(self, mdlprm_dict: Dict[str, Union[int, float]],
+                   comment: str='') -> MDLPRM:
+        """
+        Creates a MDLPRM card
+
+        Parameters
+        ----------
+        mdlprm_dict : Dict[name, value]
+            name : str
+                the name of the MDLPRM
+            value: int/float
+                varies depending on the type of MDLPRM
+        comment : str; default=''
+            a comment for the card
+
+        """
+        mdlprm = MDLPRM(mdlprm_dict, comment=comment)
+        self._add_methods._add_mdlprm_object(mdlprm)
+        return mdlprm
+
 
     def _add_param_mystran(self, key: str, values: List[Union[int, float, str]],
                            comment: str='') -> PARAM_MYSTRAN:

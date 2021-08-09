@@ -18,7 +18,7 @@ if IS_MATPLOTLIB:
     #try:  # pragma: no cover
         #plt.figure()
         #plt.close()
-    #except:  # pragma: no cover
+    #except Exception:  # pragma: no cover
     plt.switch_backend('Agg')
 
 import pyNastran

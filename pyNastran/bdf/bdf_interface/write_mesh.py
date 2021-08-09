@@ -44,7 +44,12 @@ class WriteMesh(BDFAttributes):
             encoding = self._encoding
             if encoding is None:
                 encoding = sys.getdefaultencoding()
-        encoding = cast(str, encoding)
+            elif isinstance(encoding, bytes):
+                # needed for hdf5 loader for some reason...
+                encoding = self._encoding.decode('latin1')
+                self._encoding = encoding
+        encoding = cast(str, encoding)  # just for typing
+        assert isinstance(encoding, str), encoding
         return encoding
 
     def _output_helper(self, out_filename: Optional[str], interspersed: bool,
@@ -157,6 +162,7 @@ class WriteMesh(BDFAttributes):
             bdf_file = out_filename
         else:
             self.log.debug(f'---starting BDF.write_bdf of {out_filename}---')
+            assert isinstance(encoding, str), encoding
             bdf_file = open(out_filename, 'w', encoding=encoding)
         self._write_header(bdf_file, encoding, write_header=write_header)
 
@@ -254,7 +260,7 @@ class WriteMesh(BDFAttributes):
                 for (eid, element) in sorted(self.elements.items()):
                     try:
                         bdf_file.write(element.write_card(size, is_double))
-                    except:
+                    except Exception:
                         print(f'failed printing element...type={element.type} eid={eid}')
                         raise
         if self.ao_element_flags:
@@ -277,7 +283,7 @@ class WriteMesh(BDFAttributes):
                 for nsm in nsms:
                     try:
                         bdf_file.write(nsm.write_card(size, is_double))
-                    except:
+                    except Exception:
                         print(f'failed printing nsm...type={nsm.type} key={key!r}')
                         raise
 
@@ -302,7 +308,7 @@ class WriteMesh(BDFAttributes):
                     element = self.elements[eid]
                     try:
                         bdf_file.write(element.write_card(size, is_double))
-                    except:
+                    except Exception:
                         print(f'failed printing element...type={element.type!r} eid={eid}')
                         raise
                 eids_written += eids
@@ -317,7 +323,7 @@ class WriteMesh(BDFAttributes):
                 element = self.elements[eid]
                 try:
                     bdf_file.write(element.write_card(size, is_double))
-                except:
+                except Exception:
                     print(f'failed printing element...type={element.type} eid={eid}')
                     raise
 
@@ -642,7 +648,7 @@ class WriteMesh(BDFAttributes):
                 for load_combination in load_combinations:
                     try:
                         bdf_file.write(load_combination.write_card(size, is_double))
-                    except:
+                    except Exception:
                         print(f'failed printing load...type={load_combination.type} key={key!r}')
                         raise
 
@@ -651,7 +657,7 @@ class WriteMesh(BDFAttributes):
                     for load in loadcase:
                         try:
                             bdf_file.write(load.write_card_16(is_double))
-                        except:
+                        except Exception:
                             print(f'failed printing load...type={load.type} key={key!r}')
                             raise
             else:
@@ -660,12 +666,12 @@ class WriteMesh(BDFAttributes):
 #                        if load.type == 'PLOAD2':
 #                            try:
 #                                load.raw_fields()
-#                            except:
+#                            except Exception:
 #                                bdf_file.write(load.write_card_separate(self, size, is_double))
 #                                continue
                         try:
                             bdf_file.write(load.write_card(size, is_double))
-                        except:
+                        except Exception:
                             print(f'failed printing load...type={load.type} key={key!r}')
                             raise
 
@@ -685,7 +691,7 @@ class WriteMesh(BDFAttributes):
                 for load in loadcase:
                     try:
                         bdf_file.write(load.write_card(size, is_double))
-                    except:
+                    except Exception:
                         print(f'failed printing load...type={load.type} key={key!r}')
                         raise
 
@@ -693,7 +699,7 @@ class WriteMesh(BDFAttributes):
                 for load in loadcase:
                     try:
                         bdf_file.write(load.write_card(size, is_double))
-                    except:
+                    except Exception:
                         print(f'failed printing load...type={load.type} key={key!r}')
                         raise
 
@@ -707,7 +713,7 @@ class WriteMesh(BDFAttributes):
             for (pid, mass) in sorted(self.properties_mass.items()):
                 try:
                     bdf_file.write(mass.write_card(size, is_double))
-                except:
+                except Exception:
                     print(f'failed printing mass property...type={mass.type} pid={pid}')
                     raise
 
@@ -716,7 +722,7 @@ class WriteMesh(BDFAttributes):
             for (eid, mass) in sorted(self.masses.items()):
                 try:
                     bdf_file.write(mass.write_card(size, is_double))
-                except:
+                except Exception:
                     print(f'failed printing masses...type={mass.type} eid={eid}')
                     raise
 
@@ -933,13 +939,15 @@ class WriteMesh(BDFAttributes):
                       is_long_ids: Optional[bool]=None) -> None:
         """Writes the PARAM cards"""
         size, is_long_ids = self._write_mesh_long_ids_size(size, is_long_ids)
-        if self.params or self.dti:
+        if self.params or self.dti or self.mdlprm:
             bdf_file.write('$PARAMS\n')  # type: List[str]
             for unused_name, dti in sorted(self.dti.items()):
                 bdf_file.write(dti.write_card(size=size, is_double=is_double))
 
             for (unused_key, param) in sorted(self.params.items()):
                 bdf_file.write(param.write_card(size, is_double))
+            if self.mdlprm:
+                bdf_file.write(self.mdlprm.write_card(size, is_double))
 
     def _write_properties(self, bdf_file: Any, size: int=8, is_double: bool=False,
                           is_long_ids: Optional[bool]=None) -> None:
@@ -955,7 +963,7 @@ class WriteMesh(BDFAttributes):
                 for prop_group in prop_groups:
                     for unused_pid, prop in sorted(prop_group.items()):
                         bdf_file.write(prop.write_card_16(is_double))
-                #except:
+                #except Exception:
                     #print('failed printing property type=%s' % prop.type)
                     #raise
             else:
@@ -1055,14 +1063,14 @@ class WriteMesh(BDFAttributes):
                 for (eid, element) in sorted(self.rigid_elements.items()):
                     try:
                         bdf_file.write(element.write_card_16(is_double))
-                    except:
+                    except Exception:
                         print(f'failed printing element...type={element.type} eid={eid}')
                         raise
             else:
                 for (eid, element) in sorted(self.rigid_elements.items()):
                     try:
                         bdf_file.write(element.write_card(size, is_double))
-                    except:
+                    except Exception:
                         print(f'failed printing element...type={element.type} eid={eid}')
                         raise
         if self.plotels:

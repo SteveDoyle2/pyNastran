@@ -232,7 +232,7 @@ def _pload1_bar_beam(model, unused_loadcase_id, load, elem, scale, xyz, F, M, p)
     L = norm(bar_vector)
     try:
         Ldir = bar_vector / L
-    except:
+    except Exception:
         msg = 'Length=0.0; nid1=%s nid2=%s\n' % (nodes[0], nodes[1])
         msg += '%s%s' % (str(elem.nodes[0]), str(elem.nodes[1]))
         raise FloatingPointError(msg)

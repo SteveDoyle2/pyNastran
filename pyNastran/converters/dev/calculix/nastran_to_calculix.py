@@ -80,7 +80,7 @@ class CalculixConverter(BDF):
             try:
                 mid = element.Mid()
                 mats[mid].append(eid)
-            except:
+            except Exception:
                 mats[0].append(eid)
         return mats
 
@@ -112,7 +112,7 @@ class CalculixConverter(BDF):
             try:
                 mid = property.Mid()
                 mats[mid].append(pid)
-            except:
+            except Exception:
                 mats[0].append(pid)
         return mats
 

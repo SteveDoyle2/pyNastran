@@ -234,7 +234,7 @@ class Usm3d:
             npoints = nodes.shape[0]
             try:
                 unused_node_ids_volume, loads = self.read_flo(flo_filename, n=npoints)
-            except:
+            except Exception:
                 self.log.error('Had trouble reading %r...' % flo_filename)
                 raise
         else:
@@ -541,7 +541,7 @@ def read_flo(flo_filename, n=None, node_ids=None):
         try:
             #file is messsed up
             mach = float(line)
-        except:
+        except Exception:
             raise
             #loads['Cp'] = e  # it's 0 anyways...
             #return node_id, loads

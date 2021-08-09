@@ -393,7 +393,7 @@ def fortran_to_python(lines, default_values, comment=''):
                 x = float(x)
             if isinstance(y, (int, float, str)):
                 y = float(y)
-        except:
+        except Exception:
             print(locals())
             raise
         f = x + y
@@ -410,7 +410,7 @@ def fortran_to_python(lines, default_values, comment=''):
             # f(x, y) = abs(x) + y
             # f = 42.
             f, eq = line.split('=')
-        except:
+        except Exception:
             if '=' not in line:
                 raise SyntaxError('= not found in %r' % (line))
             else:
@@ -450,7 +450,7 @@ def write_function_header(f, eq, default_values, comment=''):
                 x = float(x)
             if isinstance(y, (int, float, str)):
                 y = float(y)
-        except:
+        except Exception:
             print(locals())
             raise
 
@@ -556,7 +556,7 @@ def _write_variables(variables):
         #msg += '        %s = float(%s)\n' % (var, var)
         msg += '        if isinstance(%s, (int, float, str)):\n' % var
         msg += '            %s = float(%s)\n' % (var, var)
-    msg += '    except:\n'
+    msg += '    except Exception:\n'
     msg += '        print(locals())\n'
     msg += '        raise\n'
     return msg

@@ -757,7 +757,7 @@ class Cart3D(Cart3dIO):
                     self.elements = self._read_elements_binary(nelements)
                     self.regions = self._read_regions_binary(nelements)
                     # TODO: loads
-                except:
+                except Exception:
                     msg = 'failed reading %r' % infilename
                     self.log.error(msg)
                     raise
@@ -770,7 +770,7 @@ class Cart3D(Cart3dIO):
                     self.elements = self._read_elements_ascii(nelements)
                     self.regions = self._read_regions_ascii(nelements)
                     self._read_results_ascii(0, self.infile, nresults, result_names=result_names)
-                except:
+                except Exception:
                     msg = 'failed reading %r' % infilename
                     self.log.error(msg)
                     raise

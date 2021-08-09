@@ -282,7 +282,7 @@ def print_card_8(fields: List[Union[int, float, str, None]]) -> str:
     """
     try:
         out = '%-8s' % fields[0]
-    except:
+    except Exception:
         warnings.warn("ERROR!  fields=%s" % fields)
         sys.stdout.flush()
         raise
@@ -291,7 +291,7 @@ def print_card_8(fields: List[Union[int, float, str, None]]) -> str:
         field = fields[i]
         try:
             out += print_field_8(field)
-        except:
+        except Exception:
             warnings.warn("bad fields = %s" % fields)
             raise
         if i % 8 == 0:  # allow 1+8 fields per line
@@ -328,7 +328,7 @@ def print_int_card(fields: List[Union[int]]) -> str:
     """
     try:
         out = '%-8s' % fields[0]
-    except:
+    except Exception:
         warnings.warn("ERROR!  fields=%s" % fields)
         sys.stdout.flush()
         raise
@@ -344,7 +344,7 @@ def print_int_card(fields: List[Union[int]]) -> str:
                 # balks if you have None or string fields
                 out += '%8d%8d%8d%8d%8d%8d%8d%8d\n        ' % (
                     field1, field2, field3, field4, field5, field6, field7, field8)
-            except:
+            except Exception:
                 warnings.warn('bad fields = %s' % fields)
                 raise
 
@@ -353,7 +353,7 @@ def print_int_card(fields: List[Union[int]]) -> str:
         try:
             # balks if you have None or string fields
             out += '%8d' % field
-        except:
+        except Exception:
             warnings.warn('bad fields = %s' % fields)
             raise
         if i % 8 == 0:  # allow 1+8 fields per line
@@ -396,7 +396,7 @@ def print_int_card_blocks(fields_blocks: List[Any]) -> str:
     card_name = fields_blocks[0]
     try:
         out = '%-8s' % card_name
-    except:
+    except Exception:
         print("ERROR!  fields_blocks=%s" % fields_blocks)
         sys.stdout.flush()
         raise

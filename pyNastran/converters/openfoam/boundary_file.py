@@ -270,7 +270,7 @@ class Boundary:
                 unused_type = boundary[0]
                 nfacesi = int(boundary[1])
                 startface = int(boundary[2])
-            except:
+            except Exception:
                 print(boundary.keys())
                 raise
             #faces2[iface:iface+nfacesi] = faces[startface:startface + nfacesi]

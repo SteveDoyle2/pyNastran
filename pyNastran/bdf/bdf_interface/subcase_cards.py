@@ -307,7 +307,7 @@ class SET(CaseControlCard):
         key, value = sline
         try:
             (key, set_id) = key.split()
-        except:
+        except Exception:
             raise RuntimeError(key)
 
         assert key.upper() == key, key

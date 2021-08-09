@@ -56,7 +56,7 @@ def _read_line_block(i, lines, stop_marker='',
             lines2.append(line)
     try:
         lines2.pop()
-    except:
+    except Exception:
         print('***', line)
         print(lines2)
         raise
@@ -305,7 +305,7 @@ def _read_design_optimization(i, line, lines, nlines, design_vars, log):
         elif _is_page_skip(line):
             try:
                 i = _goto_page(i, lines)
-            except:
+            except Exception:
                 log.debug(f'{i} {line}')
                 raise
             line = lines[i].strip()
@@ -433,7 +433,7 @@ def _read_design_optimization(i, line, lines, nlines, design_vars, log):
             break
         try:
             line = lines[i].strip()
-        except:
+        except Exception:
             print(i, nlines, line)
             raise
     print('*'*80)

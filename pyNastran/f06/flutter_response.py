@@ -1024,7 +1024,7 @@ def _asarray(results):
     """casts the results array"""
     try:
         results = np.asarray(results, dtype='float64')
-    except:
+    except Exception:
         results2 = []
         fix_kfreq = False
         for mode_result in results:
@@ -1043,7 +1043,7 @@ def _asarray(results):
                     else:
                         try:
                             row_entry2 = float(row_entry)
-                        except:
+                        except Exception:
                             raise ValueError(f'i={i} row_entry={row_entry!r}')
                     row2.append(row_entry2)
                 mode_result2.append(row2)

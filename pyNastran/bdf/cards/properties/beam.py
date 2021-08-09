@@ -93,7 +93,7 @@ class PBEAM(IntegratedLineProperty):
             #try:
                 #dim_station = self.dim[istation]
                 #dim_station[idim] = value
-            #except:
+            #except Exception:
                 #print('pname_fid=%r num=%r ndim=%r' % (pname_fid, num, ndim))
                 #print('istation=%r idim=%r' % (istation, idim))
                 #print(self)
@@ -1252,7 +1252,7 @@ class PBEAML(IntegratedLineProperty):
             try:
                 dim_station = self.dim[istation]
                 dim_station[idim] = value
-            except:
+            except Exception:
                 print('pname_fid=%r num=%r ndim=%r' % (pname_fid, num, ndim))
                 print('istation=%r idim=%r' % (istation, idim))
                 print(self)
@@ -1576,7 +1576,7 @@ class PBEAML(IntegratedLineProperty):
             a = _bar_areaL('PBEAML', self.beam_type, dim, self)
             try:
                 mass_per_lengths.append(a * rho + nsm)
-            except:
+            except Exception:
                 msg = "PBEAML a*rho+nsm a=%s rho=%s nsm=%s" % (a, rho, nsm)
                 raise RuntimeError(msg)
         return mass_per_lengths

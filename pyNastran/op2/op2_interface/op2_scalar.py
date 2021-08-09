@@ -1610,7 +1610,7 @@ class OP2_Scalar(OP2Common, FortranFormat):
             #slot = data[(i+1)*xword:(i+8)*xword]
             #try:
                 #value = struct2d.unpack(slot)[1]
-            #except:
+            #except Exception:
                 #print(word)
                 #raise
             #i += 8

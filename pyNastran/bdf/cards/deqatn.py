@@ -574,7 +574,7 @@ def fortran_to_python(deqatn_id: int,
                 x = float(x)
             if isinstance(y, (int, float, str)):
                 y = float(y)
-        except:
+        except Exception:
             print(locals())
             raise
         f = x + y
@@ -651,7 +651,7 @@ def write_function_header(func_header: str, eq: str,
                 x = float(x)
             if isinstance(y, (int, float, str)):
                 y = float(y)
-        except:
+        except Exception:
             print(locals())
             raise
 
@@ -784,7 +784,7 @@ def _write_variables(variables: List[str]) -> str:
         #msg += '        %s = float(%s)\n' % (var, var)
         msg += '        if isinstance(%s, (int, str)):\n' % var
         msg += '            %s = float(%s)\n' % (var, var)
-    msg += '    except:\n'
+    msg += '    except Exception:\n'
     msg += '        print(locals())\n'
     msg += '        raise\n'
     return msg

@@ -23,7 +23,7 @@ def get_data_from_website(target_url: str) -> Tuple[Optional[List[str]], bool]:
         #print(os.environ.keys())
         #raise
         pass
-    #except: #  urllib2.URLError  # e.g., timeout
+    #except Exception: #  urllib2.URLError  # e.g., timeout
         #print(help(urllib))
         #raise
 

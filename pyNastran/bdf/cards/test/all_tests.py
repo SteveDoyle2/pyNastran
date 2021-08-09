@@ -20,7 +20,7 @@ from pyNastran.bdf.cards.test.test_methods import TestMethods
 from pyNastran.bdf.cards.test.test_nsm import TestNsm
 from pyNastran.bdf.cards.test.test_loads import TestLoads
 from pyNastran.bdf.cards.test.test_materials import TestMaterials
-from pyNastran.bdf.cards.test.test_other import TestOther
+from pyNastran.bdf.cards.test.test_params import TestParams
 from pyNastran.bdf.cards.test.test_optimization import TestOpt
 from pyNastran.bdf.cards.test.test_parametric import TestParametric
 from pyNastran.bdf.cards.test.test_rigid import TestRigid

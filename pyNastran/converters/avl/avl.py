@@ -268,7 +268,7 @@ class AVL:
                 #print(sline)
                 try:
                     name, gain_str, xhinge_str, xhinge_vector, yhinge_vector, zhinge_vector, sign_deflection_duplicated_str = sline
-                except:
+                except Exception:
                     self.log.error(sline)
                     raise
                 gain = float(gain_str)

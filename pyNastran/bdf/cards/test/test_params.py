@@ -1,12 +1,19 @@
 import unittest
 
 #import pyNastran
-from pyNastran.bdf.bdf import BDF, PARAM, BDFCard
+from pyNastran.bdf.bdf import BDF, PARAM, BDFCard, MDLPRM
+from pyNastran.bdf.cards.test.utils import save_load_deck
 
 #ROOT_PATH = pyNastran.__path__[0]
 #test_path = os.path.join(ROOT_PATH, 'bdf', 'cards', 'test')
 
-class TestOther(unittest.TestCase):
+class TestParams(unittest.TestCase):
+    def test_mdlprm_1(self):
+        model = BDF(debug=True, log=None, mode='msc')
+        mdlprm_dict = {'HDF5': 1}
+        model.add_mdlprm(mdlprm_dict, comment='mdlprm')
+        save_load_deck(model, xref='standard', op2_log_level='warning')
+
     def test_param_01(self):
         card = PARAM('NOCOMP', [-1])
         #print('%r' % card)

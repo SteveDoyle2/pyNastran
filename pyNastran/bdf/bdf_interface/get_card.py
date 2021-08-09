@@ -300,7 +300,7 @@ class GetCard(GetMethods):
             #print('card_type=%r' % card_type)
             try:
                 key = rslot_map[card_type]  # update attributes.py ~line 740
-            except:
+            except Exception:
                 print(rslot_map.keys())
                 self.log.error("card_type=%r' hasn't been added to "
                                "self._slot_to_type_map...check for typos")
@@ -1005,7 +1005,7 @@ class GetCard(GetMethods):
                                   for nid in nidsi]
                         try:
                             nids[i, :] = nidsi2
-                        except:
+                        except Exception:
                             print(elem)
                             print(nidsi)
                             print(nidsi2)
@@ -1040,7 +1040,7 @@ class GetCard(GetMethods):
                                   for nid in nidsi]
                         try:
                             nids[i, :] = nidsi2
-                        except:
+                        except Exception:
                             raise
                 if len(ieids_max):
                     etype_max = elem.type + str(nnodes_max)
@@ -1787,7 +1787,7 @@ def _get_pid_to_node_ids_and_elements_array(model: BDF,
                     node_ids[ieid, :len(node_idsi)] = [
                         nid if nid is not None else 0
                         for nid in node_idsi]
-                except:
+                except Exception:
                     log.error('This error can occur when you have '
                               'linear and quadratic solid elements '
                               'within the same model\n%s' % element)

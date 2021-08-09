@@ -3,6 +3,7 @@ defines the following card:
  - PARAM
 """
 # pylint: disable=C0103,R0902,R0904,R0914
+import numpy as np
 from pyNastran.bdf import MAX_INT
 from pyNastran.bdf.cards.base_card import BaseCard
 from pyNastran.bdf.bdf_interface.bdf_card import BDFCard
@@ -12,6 +13,7 @@ from pyNastran.bdf.bdf_interface.assign_type import (
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
 from pyNastran.utils.numpy_utils import integer_types, float_types
+from typing import Dict, Union
 
 #float_words_1 = [
     #b'K6ROT', b'WTMASS', b'SNORM', b'PATVER', b'MAXRATIO', b'EPSHT',
@@ -1448,3 +1450,172 @@ class PARAM_MYSTRAN(BaseCard):
         if size == 8:
             return self.comment + print_card_8(card)
         return self.comment + print_card_16(card)
+
+
+MDLPRM_INT_KEYS_1 = {
+    'BRTOBM', 'BUSHRT', 'DCFLTEXP', 'GEV1417', 'GNLSTN',
+    'HDF5', 'H5GM34', 'H5INFO', 'H5MDL', 'H5MTX', 'H5NORDOF', 'H5XHH',
+    'IGNSHBDN', 'INTOUT', 'LMT2MPC', 'MLTSPLIN', 'MPCF129', 'NLDIFF',
+    'NONUPIV', 'NSGRDS4', 'PRDIDPVT', 'PRDITRFN', # 'PIVTHRSH',
+    'PRDMTYPE', 'PRDOOC', 'PRDWMTCH', 'QR6ROT', 'QRSHEAR',
+    'RDBOTH', 'RELAXF', 'REUPSE', 'RMRBE3RT', 'RSTIGNDP', 'SHRTOQ4',
+    'STREQCNT', 'TWBRBML',
+
+    # undefined in MSC
+    'RBEDOF', 'NLDIAG',
+}
+MDLPRM_STR_KEYS_1 = {'COMPN1', 'SHEARP', 'OFFDEF',
+                     'PRTELAS', 'PRTFAST', 'PRTMASS', 'PRTSEAM', 'PRTWELD'}
+MDLPRM_FLOAT_KEYS_1 = {
+    'DBCTOLE', 'DELELAS', 'DELFAST', 'DELMASS', 'DELSEAM', 'DELWELD',
+    'PEXTS4', 'PIVTHRSH', 'SPBLNDX'}
+MDLPRM_KEYS = MDLPRM_INT_KEYS_1 | MDLPRM_STR_KEYS_1
+
+class MDLPRM(BaseCard):
+    type = 'MDLPRM'
+    _field_map = {1: 'key'}
+
+    @classmethod
+    def _init_from_empty(cls):
+        key = 'POST'
+        values = -1
+        return MDLPRM(key, values, comment='')
+
+    def __init__(self, mdlprm_dict: Dict[str, Union[int, float]], comment=''):
+        """
+        Creates a MDLPRM card
+
+        Parameters
+        ----------
+        mdlprm_dict : Dict[name, value]
+            name : str
+                the name of the MDLPRM
+            value: int/float
+                varies depending on the type of MDLPRM
+        comment : str; default=''
+            a comment for the card
+
+        """
+        if comment:
+            self.comment = comment
+        self.mdlprm_dict = mdlprm_dict
+
+        assert isinstance(mdlprm_dict, dict), mdlprm_dict
+        for key, value in sorted(mdlprm_dict.items()):
+            if key in MDLPRM_INT_KEYS_1:
+                assert isinstance(value, integer_types), f'MDLPRM key={key!r} value={value!r} must be an integer'
+            elif key in MDLPRM_STR_KEYS_1:
+                assert isinstance(value, str), f'MDLPRM key={key!r} value={value!r} must be an integer'
+            else:
+                raise RuntimeError(f'MDLPRM key={key!r} value={value!r} is not supported')
+        assert len(mdlprm_dict) > 0, mdlprm_dict
+
+    @classmethod
+    def add_card(cls, card, comment=''):
+        """
+        Adds a MDLPRM card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+
+        """
+        mdlprm_dict = {}
+        ifield = 1
+        while ifield < len(card):
+            key = string(card, ifield, 'key')
+
+            if key in MDLPRM_INT_KEYS_1:
+                value = integer_or_blank(card, ifield+1, 'value')
+            elif key in MDLPRM_STR_KEYS_1:
+                value = string(card, ifield+1, key)
+            elif key in MDLPRM_FLOAT_KEYS_1:
+                value = double(card, ifield+1, key)
+            else:
+                raise RuntimeError(f'MDLPRM key={key!r} is not supported')
+            mdlprm_dict[key] = value
+            ifield += 2
+        obj = MDLPRM(mdlprm_dict, comment=comment)
+        return obj
+
+    #@classmethod
+    def export_to_hdf5(self, h5_file, model, desvar_ids):
+        """exports the elements in a vectorized way"""
+        #comments = []
+        encoding = model.get_encoding()
+        keys = []
+        flags = []
+        value_ints = []
+        value_floats = []
+        value_strs = []
+        for key, value in sorted(self.mdlprm_dict.items()):
+            value_int = 0
+            value_float = np.nan
+            value_str = b''
+            if isinstance(value, integer_types):
+                value_int = value
+                flag = 1
+            elif isinstance(value, float_types):
+                value_float = value
+                flag = 2
+            elif isinstance(value, str):
+                value_str = value.encode(encoding)
+                flag = 3
+            else:
+                raise NotImplementedError((key, value))
+            keys.append(key.encode(encoding))
+            flags.append(flag)
+            value_ints.append(value_int)
+            value_floats.append(value_float)
+            value_strs.append(value_str)
+        h5_file.create_dataset('keys', data=keys)
+        h5_file.create_dataset('ifs_flag', data=flags)
+        h5_file.create_dataset('value_ints', data=value_ints)
+        h5_file.create_dataset('value_floats', data=value_floats)
+        h5_file.create_dataset('value_strs', data=value_strs)
+
+    def load_hdf5_file(self, hdf5_file, encoding) -> None:
+        from pyNastran.utils.dict_to_h5py import _cast
+
+        keys = list(hdf5_file.keys())
+        assert len(keys) == 5, keys
+        ifs_flag = _cast(hdf5_file['ifs_flag'])
+        keys = _cast(hdf5_file['keys'])
+        value_ints = _cast(hdf5_file['value_ints'])
+        value_floats = _cast(hdf5_file['value_floats'])
+        value_strs = _cast(hdf5_file['value_strs'])
+        for key, flag, xint, xfloat, xstr in zip(keys, ifs_flag, value_ints, value_floats, value_strs):
+            key_str = key.decode(encoding)
+            if flag == 1:
+                value = xint
+            elif flag == 2:
+                value = xfloat
+            elif flag == 3:
+                value = xstr
+                assert isinstance(value, str), value
+            else:  # pragma: no cover
+                raise RuntimeError((key_str, flag, xint, xfloat, xstr))
+            #print(key_str, value)
+            self.mdlprm_dict[key_str] = value
+        #print(str(self))
+        return
+
+    def raw_fields(self):
+        list_fields = ['MDLPRM']
+        for key, value in self.mdlprm_dict.items():
+            list_fields += [key, value]
+        assert len(list_fields) > 1, self.mdlprm_dict
+        return list_fields
+
+    def repr_fields(self):
+        return self.raw_fields()
+
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
+        card = self.raw_fields()
+        if size == 8:
+            return self.comment + print_card_8(card)
+        return self.comment + print_card_16(card)
+

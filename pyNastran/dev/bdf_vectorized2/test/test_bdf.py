@@ -167,7 +167,7 @@ def run_lots_of_files(filenames, folder='', debug=False, xref=True, check=True,
             #pass
         except SystemExit:
             sys.exit('sys.exit...')
-        except:
+        except Exception:
             traceback.print_exc(file=sys.stdout)
             #raise
         print('-' * 80)
@@ -339,7 +339,7 @@ def run_and_compare_fems(
         test_get_cards_by_card_types(fem2)
 
         #fem2.update_model_by_desvars(xref)
-        #except:
+        #except Exception:
             #return 1, 2, 3
 
         run_nastran(bdf_model, nastran_cmd, post, size, is_double)
@@ -401,7 +401,7 @@ def run_and_compare_fems(
         #pass
     except SystemExit:
         sys.exit('sys.exit...')
-    except:
+    except Exception:
         #exc_type, exc_value, exc_traceback = sys.exc_info()
         #print "\n"
         traceback.print_exc(file=sys.stdout)
@@ -564,7 +564,7 @@ def run_fem1(fem1, bdf_model, out_model, mesh_form, xref, punch, sum_load, size,
 
                 fem1 = remake_model(bdf_model, fem1, pickle_obj)
                 #fem1.geom_check(geom_check=True, xref=True)
-    except:
+    except Exception:
         print("failed reading %r" % bdf_model)
         raise
 
@@ -595,7 +595,7 @@ def run_fem1(fem1, bdf_model, out_model, mesh_form, xref, punch, sum_load, size,
         #try:
             #fem1.get_area_breakdown()
             #fem1.get_volume_breakdown()
-        #except:
+        #except Exception:
             #if len(fem1.masses) > 0:
                 #fem1.log.warning('no elements with area/volume found, but elements with mass were')
             #else:
@@ -695,7 +695,7 @@ def run_fem2(bdf_model, out_model, xref, punch,
     sys.stdout.flush()
     try:
         fem2.read_bdf(out_model, xref=False, punch=punch, encoding=encoding)
-    except:
+    except Exception:
         print("failed reading %r" % out_model)
         raise
 

@@ -3924,7 +3924,7 @@ class SPLINE2_ZONA(Spline):
             msg = ', which is required by SPLINE1 eid=%s' % self.eid
             self.setg_ref = model.Set(self.setg, msg=msg)
             self.setg_ref.cross_reference_set(model, 'Node', msg=msg)
-        except:
+        except Exception:
             pass
         #self.nodes_ref = model.Nodes(self.nodes, msg=msg)
         #self.caero_ref = model.CAero(self.caero, msg=msg)
@@ -4030,7 +4030,7 @@ class SPLINE3_ZONA(Spline):
         try:
             self.setg_ref = model.Set(self.setg, msg=msg)
             self.setg_ref.cross_reference_set(model, 'Node', msg=msg)
-        except:
+        except Exception:
             pass
         self.panlst_ref = model.zona.panlsts[self.panlst]
         self.panlst_ref.safe_cross_reference(model, xref_errors)

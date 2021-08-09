@@ -160,7 +160,7 @@ from .cards.bdf_sets import (
     SESET, #SEQSEP
     RADSET,
 )
-from .cards.params import PARAM, PARAM_MYSTRAN, PARAM_NASA95
+from .cards.params import PARAM, PARAM_MYSTRAN, PARAM_NASA95, MDLPRM
 from .cards.dmig import DMIG, DMI, DMIJ, DMIK, DMIJI, DMIG_UACCEL, DTI, DTI_UNITS, DMIAX
 from .cards.thermal.loads import (QBDY1, QBDY2, QBDY3, QHBDY, TEMP, TEMPD, TEMPB3,
                                   TEMPRB, QVOL, QVECT)
@@ -259,7 +259,7 @@ MISSING_CARDS = {
     'CFLUID2', 'CFLUID3', 'CFLUID4', 'FSLIST', 'BNDGRID', 'BDYLIST', 'PRESPT',
     'FREEPT', 'FLSYM',
     # ----------------------------
-    'RJOINT', 'RTRPLT', 'RTRPLT1', 'MDLPRM', 'DYNRED',
+    'RJOINT', 'RTRPLT', 'RTRPLT1', 'DYNRED',
 
     ## fatigue
     'FTGDEF', 'FTGPARM', 'FTGEVNT', 'FTGLOAD', 'FTGSEQ',
@@ -576,7 +576,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
         cards_to_read = [
             '/',
             'ECHOON', 'ECHOOFF',
-            'PARAM',
+            'PARAM', 'MDLPRM',
 
             ## nodes
             'GRID', 'GRDSET', 'SPOINT', 'EPOINT', 'SEQGP', 'GRIDB',
@@ -1987,7 +1987,8 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
         """
         card_name = card_name.upper()
         self.increase_card_count(card_name)
-        if card_name in ['DEQATN', 'PBRSECT', 'PBMSECT', 'GMCURV', 'GMSURF', 'OUTPUT', 'ADAPT']:
+        if card_name in ['DEQATN', 'PBRSECT', 'PBMSECT', 'GMCURV', 'GMSURF', 'OUTPUT', 'ADAPT',
+                         'MONDSP1']:
             card_obj = card_lines
             card = card_lines
         else:
@@ -2131,6 +2132,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             'GRIDB' : (GRIDB, add_methods._add_gridb_object),
 
             'PARAM' : (PARAM, add_methods._add_param_object),
+            'MDLPRM' : (MDLPRM, add_methods._add_mdlprm_object),
 
             'CORD2R' : (CORD2R, add_methods._add_coord_object),
             'CORD2C' : (CORD2C, add_methods._add_coord_object),
@@ -4166,7 +4168,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
                         field2 = float_replication(field, old_field)
                     else:
                         field2 = int_replication(field, old_field)
-                except:
+                except Exception:
                     self.log.error(f'old_card:{old_card}\nnew_card:\n{new_card}')
                     raise
             else:
@@ -4659,7 +4661,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
         if self.echo and not self.force_echo_off:
             try:
                 print(print_card_8(card_obj).rstrip())
-            except:
+            except Exception:
                 if card in ['DEQATN']:
                     print(str(card_obj).rstrip())
                 else:
@@ -4774,7 +4776,7 @@ def _echo_card(card, card_obj):
     """echos a card"""
     try:
         print(print_card_8(card_obj).rstrip())
-    except:
+    except Exception:
         if card in ['DEQATN']:
             print(str(card_obj).rstrip())
         else:

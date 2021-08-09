@@ -1362,7 +1362,7 @@ def _get_coordinfo_byid(refid, uset):
         if np.size(pos) > 0:
             i = pv[pos]
             return uset[i:i+5, 3:]
-    except:
+    except Exception:
         raise ValueError('reference coordinate id {} not '
                          'found in `uset`.'.format(refid))
 

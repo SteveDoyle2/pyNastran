@@ -36,7 +36,7 @@ class ADB_IO:  # pragma: no cover
                 del self.gui.case_keys
                 del self.gui.icase
                 del self.gui.isubcase_name_map
-            except:
+            except Exception:
                 # print('cant delete geo')
                 pass
 

@@ -292,7 +292,7 @@ class PanairOut:
             #print(iline, sline)
             try:
                 jc, ip, x, y, z, wx, wy, wz, cp2ndu, cpisnu, lmachu, source, doublet = sline
-            except:
+            except Exception:
                 #print(iline, line)
                 raise
             network.add(jc, ip, x, y, z, wx, wy, wz, cp2ndu, cpisnu, lmachu, source, doublet)

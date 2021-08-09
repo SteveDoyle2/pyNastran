@@ -1119,7 +1119,7 @@ class Subcase:
                     sline = key.split(' ')
                     try:
                         key = int(sline[1])
-                    except:
+                    except Exception:
                         msg = f'error caclulating key; sline={sline}'
                         raise RuntimeError(msg)
 

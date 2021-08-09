@@ -730,7 +730,7 @@ class WriteMesh(BDFAttributes):
                 for (eid, element) in sorted(self.rigid_elements.items()):
                     try:
                         bdf_file.write(element.write_card_16(is_double))
-                    except:
+                    except Exception:
                         print('failed printing element...'
                               'type=%s eid=%s' % (element.type, eid))
                         raise
@@ -738,7 +738,7 @@ class WriteMesh(BDFAttributes):
                 for (eid, element) in sorted(self.rigid_elements.items()):
                     try:
                         bdf_file.write(element.write_card(size, is_double))
-                    except:
+                    except Exception:
                         print('failed printing element...'
                               'type=%s eid=%s' % (element.type, eid))
                         raise

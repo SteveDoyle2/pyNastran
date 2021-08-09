@@ -83,7 +83,7 @@ class Lsdyna:
             nid = int(nid)
             try:
                 x, y, z = double(x, 1, 'x'), double(y, 2, 'y'), double(z, 3, 'z')
-            except:
+            except Exception:
                 print(iline)
                 print(line)
                 raise

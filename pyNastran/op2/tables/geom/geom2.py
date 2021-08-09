@@ -738,7 +738,7 @@ class GEOM2:
             elem = CBAR.add_op2_data(data_in)
             try:
                 offt = BAR_FE_MAP[fe]
-            except:
+            except Exception:
                 print(elem)
                 raise
             elem.offt = offt
@@ -1059,7 +1059,7 @@ class GEOM2:
             elem = CBEAM.add_op2_data(data_in, f)
             try:
                 offt = BAR_FE_MAP[fe]
-            except:
+            except Exception:
                 print(elem)
                 raise
             elem.offt = offt
@@ -1073,7 +1073,7 @@ class GEOM2:
         """
         CBEAMP(11401,114,9016) - the marker for Record 11
         """
-        self.op2.log.info('skipping CBEAMP in GEOM2')
+        self.op2.log.info('geom skipping CBEAMP in GEOM2')
         return len(data)
 
     def _read_cbend(self, data: bytes, n: int) -> int:
@@ -1219,9 +1219,9 @@ class GEOM2:
         CCONE(2315,23,0) - the marker for Record 15
         """
         op2 = self.op2
-        op2.log.info('skipping CCONE in GEOM2')
+        op2.log.info('geom skipping CCONE in GEOM2')
         if op2.is_debug_file:
-            op2.binary_debug.write('skipping CCONE in GEOM2\n')
+            op2.binary_debug.write('geom skipping CCONE in GEOM2\n')
         return len(data)
 
     def _read_cdamp1(self, data: bytes, n: int) -> int:
@@ -1329,13 +1329,13 @@ class GEOM2:
 # CDUM7
 
     def _read_cdum8(self, data: bytes, n: int) -> int:
-        self.op2.log.info('skipping CDUM9 in GEOM2')
+        self.op2.log.info('geom skipping CDUM9 in GEOM2')
         #ints = np.frombuffer(data[n:], dtype='int32').copy()
         #print('CDUM8', ints)
         return n
 
     def _read_cdum9(self, data: bytes, n: int) -> int:
-        self.op2.log.info('skipping CDUM9 in GEOM2')
+        self.op2.log.info('geom skipping CDUM9 in GEOM2')
         #ints = np.frombuffer(data[n:], dtype='int32').copy()
         #print('CDUM9', ints)
         return n
@@ -1424,7 +1424,7 @@ class GEOM2:
         """
         CFAST(9801,98,506) - the marker for Record ???
         """
-        self.op2.log.info('skipping CFAST in GEOM2')
+        self.op2.log.info('geom skipping CFAST in GEOM2')
         return len(data)
 
 # CFASTP
@@ -1526,7 +1526,7 @@ class GEOM2:
         Words 7 through 13 repeat 6 times
         14 UNDEF(2 ) none
         """
-        self.op2.log.info('skipping CINT in GEOM2')
+        self.op2.log.info('geom skipping CINT in GEOM2')
         # C:\NASA\m4\formats\git\examples\move_tpl\ifcq12p.op2
         # doesn't seem to be a card, more of a general info on the geometry...
         #ints = np.frombuffer(data[n:], dtype=op2.idtype).copy()
@@ -1763,9 +1763,9 @@ class GEOM2:
         #"""
         #CHEXP(12001,120,9011) - the marker for Record 50
         #"""
-        #op2.log.info('skipping CHEXP in GEOM2')
+        #op2.log.info('geom skipping CHEXP in GEOM2')
         #if op2.is_debug_file:
-            #op2.binary_debug.write('skipping CHEXP in GEOM2\n')
+            #op2.binary_debug.write('geom skipping CHEXP in GEOM2\n')
         #return len(data)
 
     def _read_chexpr(self, data: bytes, n: int) -> int:
@@ -3285,12 +3285,12 @@ class GEOM2:
 
     def _read_crbar(self, data: bytes, n: int) -> int:
         # C:\NASA\m4\formats\git\examples\move_tpl\nrgd20c.op2
-        self.op2.log.info('skipping RBAR in GEOM2')
+        self.op2.log.info('geom skipping RBAR in GEOM2')
         return len(data)
 
     def _read_crbe1(self, data: bytes, n: int) -> int:
         # C:\NASA\m4\formats\git\examples\move_tpl\nrgd406a.op2
-        self.op2.log.info('skipping RBE1 in GEOM2')
+        self.op2.log.info('geom skipping RBE1 in GEOM2')
         return len(data)
 
     def _read_crbe3(self, data: bytes, n: int) -> int:
@@ -3428,7 +3428,7 @@ class GEOM2:
         """
         # no rjoint...
         # C:\NASA\m4\formats\git\examples\move_tpl\ngd720a.op2
-        self.op2.log.info('skipping RJOINT in GEOM2')
+        self.op2.log.info('geom skipping RJOINT in GEOM2')
         return len(data)
 
     def _read_crod(self, data: bytes, n: int) -> int:
@@ -3578,7 +3578,7 @@ class GEOM2:
             try:
                 elem.validate()
                 str(elem)
-            except:
+            except Exception:
                 print(data_in, big_nodes)
                 raise
             self.add_op2_element(elem)
@@ -4328,7 +4328,7 @@ class GEOM2:
         Word 6 repeats until End of Record
         """
         op2 = self.op2
-        op2.log.info('skipping GMBNDC in GEOM2')
+        op2.log.info('geom skipping GMBNDC in GEOM2')
         #self.show_data(data)
         #(1, 31, 32, GRID____, -1,
          #2, 41, 42, GRID____, -1)
@@ -4402,23 +4402,23 @@ class GEOM2:
         same as CFAST
         """
         op2 = self.op2
-        op2.log.info('skipping CWELD in GEOM2')
+        op2.log.info('geom skipping CWELD in GEOM2')
         if op2.is_debug_file:
-            op2.binary_debug.write('skipping CWELD in GEOM2\n')
+            op2.binary_debug.write('geom skipping CWELD in GEOM2\n')
         return len(data)
 
     def _read_cweldc(self, data: bytes, n: int) -> int:  # 107
         op2 = self.op2
-        op2.log.info('skipping CWELDC in GEOM2')
+        op2.log.info('geom skipping CWELDC in GEOM2')
         if op2.is_debug_file:
-            op2.binary_debug.write('skipping CWELDC in GEOM2\n')
+            op2.binary_debug.write('geom skipping CWELDC in GEOM2\n')
         return len(data)
 
     def _read_cweldg(self, data: bytes, n: int) -> int:  # 108
         op2 = self.op2
-        op2.log.info('skipping CWELDG in GEOM2')
+        op2.log.info('geom skipping CWELDG in GEOM2')
         if op2.is_debug_file:
-            op2.binary_debug.write('skipping CWELDG in GEOM2\n')
+            op2.binary_debug.write('geom skipping CWELDG in GEOM2\n')
         return len(data)
 
 # TDOO: above are checked by DMAP...
@@ -4485,8 +4485,8 @@ class GEOM2:
         141.0, 1.0, 186.0, 71.4000015258789, 141.0, 1.0, 268.0, -15.800000190734863, 223.0, 1.0, 268.0, 63.20000076293945, 223.0, 1.0, 368.0, -13.300000190734863, 323.0, 1.0,
         368.0, 53.20000076293945, 323.0, 1.0, 458.0, -11.050000190734863, 413.0, 1.0, 458.0, 44.20000076293945, 413.0)
         """
-        self.op2.log.info('skipping GENEL in GEOM2')
-        #op2.log.info(f'skipping GENEL in GEOM2; len(data)={len(data)-12}')
+        self.op2.log.info('geom skipping GENEL in GEOM2')
+        #op2.log.info(f'geom skipping GENEL in GEOM2; len(data)={len(data)-12}')
         #print(n)
         ints = np.frombuffer(data[n:], dtype='int32').copy()
         #floats = np.frombuffer(data[n:], dtype='float32').copy()
@@ -4634,7 +4634,7 @@ class GEOM2:
         Words 8 through 15 repeat 5 times
         16 UNDEF(3 ) none
         """
-        self.op2.log.info('skipping SINT in GEOM2')
+        self.op2.log.info('geom skipping SINT in GEOM2')
         # C:\NASA\m4\formats\git\examples\move_tpl\ifscp88.op2
         # doesn't seem to be a card, more of a general info on the geometry...
         #ints = np.frombuffer(data[n:], dtype=op2.idtype).copy()
@@ -4708,7 +4708,7 @@ class GEOM2:
         return n
 
     #def _read_cquadx4(self, data: bytes, n: int) -> int:
-        #op2.log.info('skipping CQUADX4 in GEOM2')
+        #op2.log.info('geom skipping CQUADX4 in GEOM2')
         #return len(data)
 
     def _read_ctrax6(self, data: bytes, n: int) -> int:
@@ -4906,7 +4906,7 @@ class GEOM2:
         Word 8 repeats until End of Record
         """
         op2 = self.op2
-        op2.log.info('skipping GMBNDS in GEOM2')
+        op2.log.info('geom skipping GMBNDS in GEOM2')
         #(1, 0, 0, 0, 0, 'FEFACE  ', 31, -1)
         ints = np.frombuffer(data[n:], dtype=op2.idtype).copy()
         iminus1 = np.where(ints == -1)[0]
@@ -4932,7 +4932,7 @@ class GEOM2:
         return len(data)
 
     def _read_adapt(self, data: bytes, n: int) -> int:
-        self.op2.log.info('skipping adapt card in GEOM2')
+        self.op2.log.info('geom skipping adapt card in GEOM2')
         return len(data)
 
     def _read_cseam_maybe(self, data: bytes, n: int) -> int:
@@ -4970,7 +4970,7 @@ class GEOM2:
           99, 2007308,
           4, 100001046, 4007101, 100001047, 4007101, 100001048, 4007101, 100001049, 4007101)  # 2*4
         """
-        self.op2.log.info('skipping CSEAM? card in GEOM2')
+        self.op2.log.info('geom skipping CSEAM? card in GEOM2')
         #self.show_data(data[n:], types='ifqds')
         #self.show_data(data[n+4:], types='qd')
         #ntotal = 44 * self.factor  # 11*4

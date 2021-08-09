@@ -226,7 +226,7 @@ def get_version() -> Dict[str, str]:
     localei, unused_encoding = locale.getdefaultlocale()
     #try:
         #os_version = str(sys.getwindowsversion())
-    #except:
+    #except Exception:
         #os_version = '???'
 
     pmsg = [

@@ -1497,7 +1497,7 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
 
                 try:
                     aero_box_ids = spline.aero_element_ids
-                except:
+                except Exception:
                     print(spline.object_attributes())
                     print(spline.object_methods())
                     raise
@@ -2154,7 +2154,7 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
                 is_type[ibars] = 0
                 try:
                     is_type[i] = 1
-                except:
+                except Exception:
                     #print('self.element_ids =', self.element_ids)
                     #print('eids =', eids)
                     ii = np.where(i == len(self.element_ids))[0]
@@ -3054,7 +3054,7 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
             try:
                 icase = _build_optimization(model, pids_array, upids,
                                             nelements, cases, form0, icase)
-            except:
+            except Exception:
                 #raise
                 s = StringIO()
                 traceback.print_exc(file=s)
@@ -3435,7 +3435,7 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
             try:
                 icase = _build_optimization(model, pids, upids, nelements,
                                             cases, form0, icase)
-            except:
+            except Exception:
                 if IS_TESTING or self.is_testing_flag:
                     raise
                 s = StringIO()
@@ -4176,7 +4176,7 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
                     pid = element.Pid()
                     #try:
                         #areai = element.pid_ref.Area()
-                    #except:
+                    #except Exception:
                         #print(element)
                         #raise
 
@@ -5191,7 +5191,7 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
                     pid = element.Pid()
                     try:
                         areai = element.pid_ref.Area()
-                    except:
+                    except Exception:
                         print(element)
                         raise
 
@@ -5203,7 +5203,7 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
                                         #element.nodes_ref[1].get_position())
                 try:
                     n1, n2 = np.searchsorted(nids, element.nodes)
-                except:
+                except Exception:
                     print(element.get_stats())
                     n1i, n2i = element.nodes
                     print('nids =', nids)
@@ -6276,7 +6276,7 @@ def _build_sort1_table(key_itime, keys_map, header_dict,
         #subtitle = key[4]
         try:
             subtitle, unused_label, superelement_adaptivity_index, unused_pval_step = keys_map[key]
-        except:
+        except Exception:
             subcase_id = subcase_id_old
             subtitle = subtitle_old + '?'
             superelement_adaptivity_index = '?'
@@ -6331,7 +6331,7 @@ def _build_sort1_table(key_itime, keys_map, header_dict,
             #raise KeyError(msg)
         try:
             header = header.strip()
-        except:
+        except Exception:
             print('header = %r' % header)
             raise
 

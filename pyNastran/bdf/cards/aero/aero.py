@@ -27,6 +27,7 @@ import numpy as np
 
 from pyNastran.utils.numpy_utils import integer_types
 #from pyNastran.utils import object_attributes
+from pyNastran.bdf.bdf_interface.bdf_card import BDFCard
 from pyNastran.bdf.field_writer_8 import set_blank_if_default, print_card_8, print_float_8
 from pyNastran.bdf.cards.base_card import BaseCard, expand_thru
 from pyNastran.bdf.bdf_interface.assign_type import (
@@ -4153,22 +4154,44 @@ class MONDSP1(BaseCard):
 
     @classmethod
     def add_card(cls, card, comment=''):
-        name = string(card, 1, 'name')
+        row0 = card[0]
+        row1 = card[1]
+        assert len(card) == 2, card
+        assert len(row0) > 8, row0
+        assert ',' not in row1, row1
+        card_fields = ['', row1[8:16], row1[16:24], row1[24:32], row1[32:40], row1[40:48], row1[48:56], row1[56:64], row1[64:72]]
+        card = BDFCard(card_fields, has_none=True)
 
-        label_fields = [labeli for labeli in card[2:8] if labeli is not None]
-        label = ''.join(label_fields).strip()
-        assert len(label) <= 56, label
+        #name = string(card, 1, 'name')
+        name = row0[8:16]
+        label = row0[16:72]
 
-        axes = parse_components(card, 9, 'axes')
-        comp = string(card, 10, 'comp')
-        cp = integer_or_blank(card, 11, 'cp', 0)
-        xyz = [
-            double_or_blank(card, 12, 'x', default=0.0),
-            double_or_blank(card, 13, 'y', default=0.0),
-            double_or_blank(card, 14, 'z', default=0.0),
-        ]
-        cd = integer_or_blank(card, 15, 'cd', cp)
-        ind_dof = components_or_blank(card, 16, 'ind_dof', '123')
+        #label_fields = [labeli for labeli in card[2:8] if labeli is not None]
+        #label = ''.join(label_fields).strip()
+        # assert len(label) <= 56, label
+
+        if 1:
+            axes = parse_components(card, 2, 'axes')
+            comp = string(card, 3, 'comp')
+            cp = integer_or_blank(card, 4, 'cp', 0)
+            xyz = [
+                double_or_blank(card, 5, 'x', default=0.0),
+                double_or_blank(card, 6, 'y', default=0.0),
+                double_or_blank(card, 7, 'z', default=0.0),
+            ]
+            cd = integer_or_blank(card, 8, 'cd', cp)
+            ind_dof = components_or_blank(card, 9, 'ind_dof', '123')
+        else:
+            axes = parse_components(card, 9, 'axes')
+            comp = string(card, 10, 'comp')
+            cp = integer_or_blank(card, 11, 'cp', 0)
+            xyz = [
+                double_or_blank(card, 12, 'x', default=0.0),
+                double_or_blank(card, 13, 'y', default=0.0),
+                double_or_blank(card, 14, 'z', default=0.0),
+            ]
+            cd = integer_or_blank(card, 15, 'cd', cp)
+            ind_dof = components_or_blank(card, 16, 'ind_dof', '123')
         return MONDSP1(name, label, axes, comp, xyz, cp=cp, cd=cd, ind_dof=ind_dof, comment=comment)
 
     def cross_reference(self, model: BDF) -> None:
@@ -5225,7 +5248,7 @@ class SPLINE1(Spline):
             self.setg_ref = model.Set(self.setg, msg=msg)
             try:
                 self.setg_ref.safe_cross_reference(model, 'Node', msg=msg)
-            except:
+            except Exception:
                 print(self.setg_ref)
                 raise
 

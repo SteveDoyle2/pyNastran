@@ -41,7 +41,7 @@ class Load(BaseCard):
         """get the node ids"""
         try:
             return self._node_ids()
-        except:
+        except Exception:
             #raise
             raise RuntimeError('error processing nodes for \n%s' % str(self))
 

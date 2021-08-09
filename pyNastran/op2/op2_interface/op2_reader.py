@@ -229,11 +229,11 @@ class OP2Reader:
         #try:
         op2 = self.op2
         markers = self.get_nmarkers(1, rewind=True)
-        #except:
+        #except Exception:
             #self._goto(0)
             #try:
                 #self.f.read(4)
-            #except:
+            #except Exception:
                 #raise FatalError("The OP2 is empty.")
             #raise
         if self.is_debug_file:
@@ -419,7 +419,7 @@ class OP2Reader:
             try:
                 marker_test = self.get_nmarkers(1, rewind=True)
                 #print('marker_testA =', marker_test)
-            except:
+            except Exception:
                 print('ni =', ni, op2.n)
                 raise
             if marker_test == [0]:
@@ -3050,7 +3050,7 @@ class OP2Reader:
                                      nastran_format=self.op2._nastran_format)
                 self.op2.case_control_deck.subcases[subcase.id] = subcase
                 #print(subcase)
-            except:
+            except Exception:
                 pass #raise
             self.read_3_markers([itable, 1, 0])
             marker = self.get_marker1(rewind=True, macro_rewind=False)
@@ -5147,7 +5147,7 @@ class OP2Reader:
                 table_name = self.unpack_table_name(data)
             except (NameError, MemoryError):
                 raise
-            except: # struct_error:
+            except Exception: # struct_error:
                 # we're done reading
                 op2.n = ni
                 op2.f.seek(op2.n)
@@ -5155,7 +5155,7 @@ class OP2Reader:
                 try:
                     # we have a trailing 0 marker
                     self.read_markers([0], macro_rewind=rewind)
-                except: #struct_error:
+                except Exception: #struct_error:
                     # if we hit this block, we have a FATAL error
                     is_special_nastran = op2._nastran_format.lower().startswith(('imat', 'autodesk'))
                     if not is_special_nastran and op2.post != -4:
@@ -5925,7 +5925,7 @@ class OP2Reader:
                 if marker146 == 146:
                     continue
                 break
-            except:  # pragma: no cover
+            except Exception:  # pragma: no cover
                 print(f'failed reading {table_name} isubtable={op2.isubtable:d}')
                 raise
             #force_table4 = self._read_subtable_3_4(table3_parser, table4_parser, passer)
@@ -7214,7 +7214,7 @@ def _get_gpdt_nnodes_numwide(size: int, ndata: int,
         #else:  # pragma: no cover
         try:
             is_nodes, numwide, nnodes = _get_gpdt_numwide_from_nodes_null_nwords(size, nnodes_nbytes, ndata)
-        except:
+        except Exception:
             is_nodes = True
             numwide = 0
             raise

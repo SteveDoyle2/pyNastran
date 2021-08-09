@@ -409,7 +409,7 @@ class Solver(OP2):
         try:
             U = scipy.sparse.linalg.spsolve(K, F)
             #U = solve(K, F) # numpy
-        except:
+        except Exception:
             failed = []
             faileds = []
             for i, iu in enumerate(dofs):

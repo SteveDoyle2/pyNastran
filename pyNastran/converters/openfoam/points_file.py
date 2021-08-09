@@ -75,7 +75,7 @@ class PointFile:
                     #print('sline =', sline)
                     try:
                         points[ni, :] = sline
-                    except:
+                    except Exception:
                         print('point = %r' % point)
                         print(sline, i, j, ni)
                         raise
@@ -89,7 +89,7 @@ class PointFile:
                     #print(j, sline)
                     try:
                         points[j, :] = sline
-                    except:
+                    except Exception:
                         print('point = %r' % point)
                         print(sline, i)
                         raise

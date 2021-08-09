@@ -185,7 +185,7 @@ def create_axisymmetric_body(xstation, ystation, zstation, radii, aspect_ratio,
             np.hstack(ys),
             np.hstack(zs),
         ]).T + p1
-    except:
+    except Exception:
         print('xs =', xs.shape)
         print('ys =', ys.shape)
         print('zs =', zs.shape)

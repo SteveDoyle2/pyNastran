@@ -2300,7 +2300,7 @@ class CAERO2(BaseCard):
                 np.hstack(ys),
                 np.hstack(zs),
             ]).T + p1
-        except:
+        except Exception:
             print('xs =', xs.shape)
             print('ys =', ys.shape)
             print('zs =', zs.shape)

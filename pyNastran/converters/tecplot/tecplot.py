@@ -1716,7 +1716,7 @@ def main():  # pragma: no cover
         #try:
             #plt.read_tecplot_binary(tecplot_filename, nnodes=nnodes, nelements=nelements)
             #plt.write_tecplot('processor%i.plt' % ip)
-        #except:
+        #except Exception:
             #raise
         ##break
 

@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING
 import numpy as np
 import h5py
 
-from pyNastran.bdf.bdf import DMIAX
+from pyNastran.bdf.bdf import DMIAX, MDLPRM
 from pyNastran.utils.dict_to_h5py import _cast, _cast_array, cast_string, cast_strings
 from pyNastran.bdf.bdf_interface.encoding import decode_lines
 from pyNastran.bdf.case_control_deck import CaseControlDeck
@@ -42,7 +42,9 @@ def load_bdf_from_hdf5_file(h5_file, model):
 
     """
     encoding = cast_string(h5_file['minor_attributes']['encoding'], 'latin1')
+    model._encoding = encoding
     assert isinstance(encoding, str), f'encoding={encoding!r}; type={type(encoding)}'
+    model.get_encoding()
     keys = h5_file.keys()
 
     mapper = {
@@ -222,6 +224,11 @@ def load_bdf_from_hdf5_file(h5_file, model):
             #except AttributeError:
                 #model.log.warning('cant set %r as %s' % (key, value))
                 #raise
+        elif key in 'mdlprm':
+            lines = []
+            model.mdlprm = MDLPRM({'HDF5': 1})
+            model.mdlprm.load_hdf5_file(group, encoding)
+            str(model.mdlprm)
         else:
             model.log.warning('skipping hdf5 load for %s' % key)
             raise RuntimeError('skipping hdf5 load for %s' % key)
@@ -2194,6 +2201,6 @@ def write_card(elem):  # pragma: no cover
         elem.write_card(size=8, is_double=False)
     except RuntimeError:
         elem.write_card(size=16, is_double=False)
-    except:  # pragma: no cover
+    except Exception:  # pragma: no cover
         print(elem.get_stats())
         raise

@@ -299,10 +299,10 @@ class BaseCard:
         list_fields = self.repr_fields()
         try:
             return comment + print_card(list_fields, size=8)
-        except:
+        except Exception:
             try:
                 return comment + print_card(list_fields, size=16)
-            except:
+            except Exception:
                 print('problem printing %s card' % self.type)
                 print("list_fields = ", list_fields)
                 raise
@@ -606,14 +606,14 @@ def _node_ids(card, nodes=None, allow_empty_nodes: bool=False, msg: str='') -> A
                 #node_ids = [node for node in nodes]
             #else:
                 #node_ids = [node.nid for node in nodes]
-        except:
+        except Exception:
             print('type=%s nodes=%s allow_empty_nodes=%s\nmsg=%s' % (
                 card.type, nodes, allow_empty_nodes, msg))
             raise
         assert 0 not in node_ids, 'node_ids = %s' % node_ids
         assert node_ids is not None, str(card)
         return node_ids
-    except:
+    except Exception:
         print('type=%s nodes=%s allow_empty_nodes=%s\nmsg=%s' % (
             card.type, nodes, allow_empty_nodes, msg))
         raise

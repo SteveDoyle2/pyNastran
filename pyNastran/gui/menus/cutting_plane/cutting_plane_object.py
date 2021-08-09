@@ -168,7 +168,7 @@ class CuttingPlaneObject:
             # i/j/k vector is nan
             coord = CORD2R(1, rid=0, origin=origin, zaxis=zaxis, xzplane=xzplane,
                            comment='')
-        except:
+        except Exception:
             msg = 'The coordinate system is invalid; check your cutting plane.'
             log.error(msg)
             if stop_on_failure:
@@ -209,7 +209,7 @@ class CuttingPlaneObject:
                 title = obj.title
             else:
                 raise NotImplementedError(obj)
-        except: # pragma: no cover
+        except Exception: # pragma: no cover
             print(f'icase={self.gui.icase_fringe}\n{obj}')
             raise
 

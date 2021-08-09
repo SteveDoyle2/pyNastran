@@ -308,7 +308,7 @@ class ScalarObject(BaseScalarObject):
     def _sort_method(self) -> int:
         try:
             sort_method, unused_is_real, unused_is_random = self._table_specs()
-        except:
+        except Exception:
             sort_method = get_sort_method_from_table_name(self.table_name)
         #is_sort1 = self.table_name.endswith('1')
         #is_sort1 = self.is_sort1  # uses the sort_bits
@@ -384,7 +384,7 @@ class ScalarObject(BaseScalarObject):
                 value = self._get_var(value_name)
                 try:
                     n = len(listA)
-                except:
+                except Exception:
                     print("listA = ", listA)
                     raise
                 listA.append(value)

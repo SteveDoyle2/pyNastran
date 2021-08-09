@@ -2779,7 +2779,7 @@ class PLOAD4(Load):
                 try:
                     list_fields.append('THRU')
                     eidi = eids[-1]
-                except:
+                except Exception:
                     print("g1  = %s" % self.g1)
                     print("g34 = %s" % self.g34)
                     print("self.eids = %s" % self.eids)
@@ -2830,7 +2830,7 @@ class PLOAD4(Load):
                 try:
                     list_fields.append('THRU')
                     eidi = eids[-1]
-                except:
+                except Exception:
                     print("g1  = %s" % self.g1)
                     print("g34 = %s" % self.g34)
                     print("self.eids = %s" % self.eids)

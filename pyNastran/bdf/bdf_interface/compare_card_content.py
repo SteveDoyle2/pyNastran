@@ -22,7 +22,7 @@ def assert_fields(card1: BaseCard, card2: BaseCard) -> None:
     try:
         fields1 = wipe_empty_fields(card1.repr_fields())
         fields2 = wipe_empty_fields(card2.repr_fields())
-    except:
+    except Exception:
         print("card1 = \n%s" % (card1))
         print("card2 = \n%s" % (card2))
         raise

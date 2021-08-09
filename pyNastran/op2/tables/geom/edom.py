@@ -1846,7 +1846,7 @@ class EDOM(GeomCommon):
             #print(dvset_id, (ptype, field), flag, (pref, alpha), pids)
             op2.add_dvset(dvset_id, ptype, field, pref, pids, alpha=alpha)
             n += (i1 - i0 + 1) * size
-        #op2.log.info(f'skipping {self.card_name} in {self.table_name}; ndata={len(data)-12}')
+        #op2.log.info(f'geom skipping {self.card_name} in {self.table_name}; ndata={len(data)-12}')
         return n
 
     def _read_dvar(self, data: bytes, n: int) -> int:

@@ -30,7 +30,7 @@ else:
                                             cwd=os.path.dirname(__file__))
 
             ghash = ghash.decode('utf-8').rstrip()
-        except:
+        except Exception:
             # git isn't installed
             ghash = 'no.checksum.error'
         return 'dev.%s' % ghash

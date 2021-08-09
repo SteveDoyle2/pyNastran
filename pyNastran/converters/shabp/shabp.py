@@ -273,7 +273,7 @@ class SHABP(ShabpOut):
 
             try:
                 patchi = array(patch, dtype='float32')
-            except:
+            except Exception:
                 print('patch =', patch)
                 for i, patchi in enumerate(patch):
                     print('i=%s n=%s patch=%s' % (i, len(patchi), patchi))
@@ -526,7 +526,7 @@ def _parse_flight_condition(mach_line):
     try:
         ideriv = int(mach_line[43].strip()) # 0-9
         dangle = float(mach_line[45:55].strip())  # used for ideriv=1,2,4,5
-    except:  # old SHABP
+    except Exception:  # old SHABP
         raise # old SHABP
         #iDeriv = 0
         #dAngle = 0.0

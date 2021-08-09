@@ -269,7 +269,7 @@ def print_card_16(fields: List[Optional[Union[int, float, str]]],
 
     try:
         out = '%-8s' % (fields[0] + '*')
-    except:
+    except Exception:
         warnings.warn("ERROR!  fields=%s" % fields)
         sys.stdout.flush()
         raise
@@ -278,7 +278,7 @@ def print_card_16(fields: List[Optional[Union[int, float, str]]],
         field = fields[i]
         try:
             out += print_field_16(field)
-        except:
+        except Exception:
             warnings.warn("bad fields = %s" % fields)
             raise
         if i % 4 == 0:  # allow 1+4 fields per line

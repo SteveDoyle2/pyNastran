@@ -589,7 +589,7 @@ class OP2(OP2_Scalar, OP2Writer):
             OP2_Scalar.read_op2(self, op2_filename=self.op2_filename, mode=mode)
         except FileNotFoundError:
             raise
-        except:
+        except Exception:
             OP2_Scalar.close_op2(self, force=True)
             raise
         self._finalize()
@@ -698,7 +698,7 @@ class OP2(OP2_Scalar, OP2Writer):
                         assert obj.data_frame is not None
                     except MemoryError:
                         raise
-                    except:
+                    except Exception:
                         self.log.error(obj)
                         self.log.error(f'build_dataframe is broken for {class_name}')
                         raise
@@ -720,7 +720,7 @@ class OP2(OP2_Scalar, OP2Writer):
                     self.log.warning(obj)
                     self.log.warning(f'build_dataframe is broken for {class_name}')
                     raise
-                except:
+                except Exception:
                     self.log.error(obj)
                     self.log.error(f'build_dataframe is broken for {class_name}')
                     raise

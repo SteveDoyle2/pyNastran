@@ -129,7 +129,7 @@ def run_lots_of_files(filenames, folder='', debug=False, xref=True, check=True,
             #pass
         except SystemExit:
             sys.exit('sys.exit...')
-        except:
+        except Exception:
             traceback.print_exc(file=sys.stdout)
             #raise
         print('-' * 80)
@@ -263,7 +263,7 @@ def run_bdf(folder, bdf_filename, debug=False, xref=True, check=True, punch=Fals
         #pass
     except SystemExit:
         sys.exit('sys.exit...')
-    except:
+    except Exception:
         #exc_type, exc_value, exc_traceback = sys.exc_info()
         #print("\n")
         traceback.print_exc(file=sys.stdout)
@@ -282,7 +282,7 @@ def run_fem1(fem1, bdf_model, mesh_form, xref, punch, sum_load, size, precision,
             fem1.read_bdf(bdf_model, xref=False, punch=True)
         else:
             fem1.read_bdf(bdf_model, xref=xref, punch=punch)
-    except:
+    except Exception:
         print("failed reading %r" % bdf_model)
         raise
     #fem1.sumForces()
@@ -311,7 +311,7 @@ def run_fem2(bdf_model, out_model, xref, punch,
     sys.stdout.flush()
     try:
         fem2.read_bdf(out_model, xref=xref, punch=punch)
-    except:
+    except Exception:
         print("failed reading %r" % out_model)
         raise
 
@@ -435,7 +435,7 @@ def get_element_stats(fem1, fem2):
                     #if not isinstance(all_loads, list):
                         #raise TypeError('allLoads should return a list...%s'
                                         #% (type(all_loads)))
-                #except:
+                #except Exception:
                     #print("load statistics not available - load.type=%s "
                           #"load.sid=%s" % (load.type, load.sid))
                     #raise
@@ -476,7 +476,7 @@ def get_matrix_stats(fem1, fem2):
             else:
                 print("statistics not available - "
                       "matrix.type=%s matrix.name=%s" % (dmig.type, dmig.name))
-        except:
+        except Exception:
             print("*stats - matrix.type=%s name=%s  matrix=\n%s"
                   % (dmig.type, dmig.name, str(dmig)))
             raise

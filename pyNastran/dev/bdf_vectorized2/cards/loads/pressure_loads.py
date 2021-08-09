@@ -565,7 +565,7 @@ class PLOAD4v(BaseLoad):
                     #try:
                         #list_fields.append('THRU')
                         #eidi = eids[-1]
-                    #except:
+                    #except Exception:
                         #print("g1  = %s" % g1)
                         #print("g34 = %s" % g34)
                         #print("eid = %s" % eid)

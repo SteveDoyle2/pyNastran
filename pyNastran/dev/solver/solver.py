@@ -141,7 +141,7 @@ class Solver:
                     for nid in spc.nodes:
                         try:
                             idof = dof_map[(nid, dofi)]
-                        except:
+                        except Exception:
                             dofs_missed.append((nid, dofi))
                             #print('dof_map =', dof_map)
                             #print((nid, dofi))

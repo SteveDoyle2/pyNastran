@@ -1597,7 +1597,7 @@ class OP2Common(Op2Codes, F06Writer):
                         raise MultipleSolutionNotImplementedError(msg)
                 try:
                     data_codei = copy.deepcopy(self.data_code)
-                except:
+                except Exception:
                     print("self.data_code =", self.data_code)
                     raise
                 assert 'table_name' in data_codei
@@ -1963,7 +1963,7 @@ class OP2Common(Op2Codes, F06Writer):
     def _sort_method(self) -> int:
         try:
             sort_method, unused_is_real, unused_is_random = self._table_specs()
-        except:
+        except Exception:
             sort_method = get_sort_method_from_table_name(self.table_name)
         #is_sort1 = self.table_name.endswith('1')
         #is_sort1 = self.is_sort1  # uses the sort_bits

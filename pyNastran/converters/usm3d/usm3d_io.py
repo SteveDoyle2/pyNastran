@@ -99,7 +99,7 @@ class Usm3dIO:
                     #n = int(n)
                     #if n > nold:
                         #return n
-                #except:
+                #except Exception:
                     #raise NotImplementedError()
         #return None
 

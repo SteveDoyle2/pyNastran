@@ -297,13 +297,20 @@ class QVECT(ThermalLoad):
 
         flags = [flag1, flag2, flag3]
         es = [e1, e2, e3]
-        assert flag1 == 0, (flags, es)
-        assert flag2 == 0, (flags, es)
-        assert flag3 == 0, (flags, es)
+        # flags = [2, 2, 2]
+        # e = [-1.0, 0., 0.]
+        # QVECT   90      1260.0          0       -1.0    0.      0.      88
+        #    201     THRU    218
+
+        assert flag1 in [0, 2], (sid, flags, es)
+        assert flag2 in [0, 2], (sid, flags, es)
+        assert flag3 in [0, 2], (sid, flags, es)
         elements = [eid]
-        return QVECT(sid, q0, elements, t_source=t_source,
-                     ce=ce, vector_tableds=vector_tableds, control_id=cntrlnd,
-                     comment='')
+        obj = QVECT(sid, q0, elements, t_source=t_source,
+                    ce=ce, vector_tableds=vector_tableds, control_id=cntrlnd,
+                    comment='')
+        return obj
+
 
     def get_loads(self):
         return [self]

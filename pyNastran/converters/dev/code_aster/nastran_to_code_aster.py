@@ -75,7 +75,7 @@ class CodeAsterConverter(BDF):
             try:
                 mid = element.Mid()
                 mats[mid].append(eid)
-            except:
+            except Exception:
                 mats[0].append(eid)
         return mats
 
@@ -129,7 +129,7 @@ class CodeAsterConverter(BDF):
             try:
                 mid = prop.Mid()
                 mats[mid].append(pid)
-            except:
+            except Exception:
                 mats[0].append(pid)
         return mats
 

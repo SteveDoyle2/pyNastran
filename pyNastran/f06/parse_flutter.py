@@ -17,7 +17,7 @@ except ImportError:  # pragma: no cover
 #try:  # pragma: no cover
     #plt.figure()
     #plt.close()
-#except:  # pragma: no cover
+#except Exception:  # pragma: no cover
     #plt.switch_backend('Agg')
 
 

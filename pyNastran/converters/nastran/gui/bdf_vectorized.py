@@ -411,7 +411,7 @@ def map_elements_vectorized_fill(log,
 
         try:
             inids = nodes.get_node_index(nids, allow0=allow0)
-        except:
+        except Exception:
             bdf_file = StringIO()
             model_obj.write_card(bdf_file=bdf_file)
             print(bdf_file.getvalue())
