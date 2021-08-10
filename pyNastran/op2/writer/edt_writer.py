@@ -1253,7 +1253,7 @@ def _write_aelink(model: Union[BDF, OP2Geom], name: str,
             fmt = endian + b'i8s ' + fmti + b'3i'
             #print(fmt)
             structi = Struct(fmt)
-            assert aelink_id > 0, aelink_id
+            assert isinstance(aelink_id, integer_types) and aelink_id >= 0, aelink_id
             label = b'%-8s' % aelink.label.encode('latin1')
             data = [
                 aelink_id, label,

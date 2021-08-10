@@ -136,7 +136,7 @@ def write_geom2(op2_file, op2_ascii, obj, endian=b'<'):
 
         try:
             write_card(name, eids, spack, obj, op2_file, op2_ascii, endian)
-        except:
+        except Exception:
             obj.log.error('failed GEOM2-%s' % name)
             raise
         itable = _write_end_block(nbytes, itable, op2_file, op2_ascii)

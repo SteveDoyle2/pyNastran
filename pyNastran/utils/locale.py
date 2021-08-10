@@ -35,7 +35,7 @@ def func_str(value: float) -> str:
 
     try:
         text = locale.format_string('%g', value)
-    except:
+    except Exception:
         print('value = %r' % value)
         raise
     return text

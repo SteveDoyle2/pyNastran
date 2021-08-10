@@ -246,7 +246,7 @@ def main():
             traceback.print_exc(file=sys.stdout)
             print('failed test because OverflowError...ignoring')
 
-        except:
+        except Exception:
             is_passed = False
             traceback.print_exc(file=sys.stdout)
             if stop_on_failure:

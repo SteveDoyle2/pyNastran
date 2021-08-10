@@ -74,7 +74,7 @@ def write_geom4(op2_file, op2_ascii, obj, endian: bytes=b'<', nastran_format: st
         try:
             nbytes = write_card(op2_file, op2_ascii, card_type, cards, endian,
                                 nastran_format=nastran_format)
-        except:  # pragma: no cover
+        except Exception:  # pragma: no cover
             obj.log.error('failed GEOM4-%s' % card_type)
             raise
         op2_file.write(pack('i', nbytes))

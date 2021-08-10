@@ -188,7 +188,7 @@ def __object_attr(obj, mode, keys_to_skip, attr_type, filter_properties: bool=Fa
                     out.append(key)
             else:
                 out.append(key)
-        except:
+        except Exception:
             pass
     out.sort()
     return out
@@ -355,7 +355,7 @@ def deprecated(old_name: str, new_name: str, deprecated_version: str,
         try:
             #filename = os.path.basename(frame.f_globals['__file__'])
             filename = os.path.basename(inspect.getfile(code))
-        except:
+        except Exception:
             print(code)
             raise
 

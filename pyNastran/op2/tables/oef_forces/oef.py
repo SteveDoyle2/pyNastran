@@ -913,12 +913,12 @@ class OEF:
             """
             try:
                 n = func(self, data)
-            except:
+            except Exception:
                 raise
                 #print("----------")
                 #try:
                     #print(op2.obj)
-                #except:
+                #except Exception:
                     #print("error printing %r" % op2.obj.__class__.__name__)
                 #print(op2.data_code)
                 #if op2.obj is not None:

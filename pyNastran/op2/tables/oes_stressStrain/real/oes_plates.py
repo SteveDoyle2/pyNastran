@@ -378,7 +378,7 @@ class RealPlateArray(OES_Object):
             #if itime == 0:
             self.element_node[ie_upper, :] = [eid, node_id]  # 0 is center
             self.element_node[ie_lower, :] = [eid, node_id]  # 0 is center
-        except:
+        except Exception:
             itime, ie_upper, ie_lower = self._get_sort2_itime_ilower_iupper_from_itotal(
                 dt, eid, node_id, debug=True)
             print(f'SORT2: itime={itime} -> dt={dt};   ie_upper={ie_upper} -> eid={eid} ({self.element_name})')

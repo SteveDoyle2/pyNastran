@@ -120,7 +120,7 @@ class HDF5Exporter:
         if isinstance(value, dict):
             try:
                 sub_group = hdf5_file.create_group(key)
-            except:
+            except Exception:
                 print('key = %s; type=%s' % (key, type(key)))
                 raise
             sub_group.attrs['type'] = 'dict'
@@ -329,7 +329,7 @@ class HDF5Importer:
             try:
                 obj = self._load_custom_type(h5_file, Type, key, value, custom_types_dict,
                                              self_obj, nlevels)
-            except:
+            except Exception:
                 msg = ('Cannot load custom type: %s.  Try setting:\n'
                        ' - load_hdf5_file\n'
                        ' - function\n' % (Type))
@@ -403,7 +403,7 @@ class HDF5Importer:
         else:
             try:
                 obj = class_instance()
-            except:
+            except Exception:
                 self.log.error('%s cannot load with 0 arguments' % Type)
                 raise
 

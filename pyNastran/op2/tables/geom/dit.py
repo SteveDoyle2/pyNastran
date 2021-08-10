@@ -10,7 +10,8 @@ import numpy as np
 from pyNastran.bdf.cards.aero.dynamic_loads import GUST
 from pyNastran.bdf.cards.bdf_tables import (TABLED1, TABLED2, TABLED3, TABLED4,
                                             TABLEM1, TABLEM2, TABLEM3, TABLEM4,
-                                            TABRND1, TABDMP1, TABLES1)
+                                            TABRND1, TABDMP1, TABLES1,
+                                            TABLEH1, TABLEHT)
 from pyNastran.op2.op2_interface.op2_reader import mapfmt, reshape_bytes_block
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.op2.op2_geom import OP2Geom
@@ -54,8 +55,8 @@ class DIT:
             (4000, 40, 460) : ['TABLE3D', self._read_fake],
 
             # F:\work\pyNastran\examples\Dropbox\move_tpl\htab11.op2
-            (14705, 147, 618) : ['TABLEHT', self._read_fake],
-            (14605, 146, 617) : ['TABLEH1', self._read_fake],
+            (14705, 147, 618) : ['TABLEHT', self._read_tableht],
+            (14605, 146, 617) : ['TABLEH1', self._read_tableh1],
 
             # F:\work\pyNastran\examples\Dropbox\move_tpl\n10640b.op2
             (1905, 19, 178) : ['TABLEST', self._read_fake],
@@ -178,7 +179,8 @@ class DIT:
                               op2._add_methods._add_tabled_object, data, n, 'TABLED1')
         return n
 
-    def _read_table1(self, cls, slot, add_method, data: bytes, n: int, table_name: str, add_codes: bool=True) -> int:
+    def _read_table1(self, cls, slot, add_method, data: bytes, n: int, table_name: str,
+                     add_codes: bool=True) -> int:
         op2 = self.op2
         nentries = 0
         ndata = len(data)
@@ -300,6 +302,26 @@ class DIT:
         return n
 
 #TABLEDR
+
+    def _read_tableh1(self, data: bytes, n: int) -> int:
+        """
+        TABLEH1(14605, 146, 617)
+        """
+        op2 = self.op2
+        n = self._read_table1(
+            TABLEH1, op2.tables, op2._add_methods._add_table_object,
+            data, n, 'TABLEH1')
+        return n
+
+    def _read_tableht(self, data: bytes, n: int) -> int:
+        """
+        TABLEHT(14705, 147, 618)
+        """
+        op2 = self.op2
+        n = self._read_table1(
+            TABLEHT, op2.tables, op2._add_methods._add_table_object,
+            data, n, 'TABLEHT')
+        return n
 
     def _read_tablem1(self, data: bytes, n: int) -> int:
         """

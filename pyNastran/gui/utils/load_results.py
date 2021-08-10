@@ -135,7 +135,7 @@ def load_deflection_csv(out_filename: str, encoding: str='latin1'):
         try:
             #A = np.loadtxt(file_obj, dtype=dtype, delimiter=delimiter)
             A = loadtxt_nice(file_obj, comments='#', delimiter=delimiter)
-        except:
+        except Exception:
             traceback.print_exc(file=sys.stdout)
             msg = 'extension=%r nheaders=%s delimiter=%r dtype=%s' % (
                 ext, len(names), delimiter, dtype)
@@ -186,7 +186,7 @@ def load_csv(out_filename, encoding='latin1'):
         try:
             #A = loadtxt(file_obj, dtype=dtype, delimiter=delimiter)
             A = loadtxt_nice(file_obj, dtype=dtype, comments='#', delimiter=delimiter)
-        except:
+        except Exception:
             traceback.print_exc(file=sys.stdout)
             msg = 'extension=%r nheaders=%s delimiter=%r dtype=%s' % (
                 ext, len(names), delimiter, dtype)

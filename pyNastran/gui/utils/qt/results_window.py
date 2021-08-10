@@ -86,7 +86,7 @@ class ResultsWindow(QWidget):
         self.data = data
         try:
             self.addItems(self.model, data)
-        except:
+        except Exception:
             raise
             raise RuntimeError('cannot add data=\n%s' % data)
             #if isinstance(data, str):

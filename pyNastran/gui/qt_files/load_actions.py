@@ -88,7 +88,7 @@ class LoadActions:
                 try:
                     dy_method = getattr(self, clear_name)  # 'self.clear_nastran()'
                     dy_method()
-                except:
+                except Exception:
                     self.gui.log_error("method %r does not exist" % clear_name)
             self.gui.log_info("reading %s file %r" % (geometry_format, infile_name))
 
@@ -295,7 +295,7 @@ class LoadActions:
 
             try:
                 load_function(out_filenamei)
-            except: #  as e
+            except Exception: #  as e
                 msg = traceback.format_exc()
                 self.gui.log_error(msg)
                 print(msg)
@@ -348,7 +348,7 @@ class LoadActions:
                 restype = 'Patran_nod'
             else:
                 raise NotImplementedError('iwildcard = %s' % iwildcard)
-        except:
+        except Exception:
             msg = traceback.format_exc()
             self.gui.log_error(msg)
             if stop_on_failure:  # pragma: no cover
@@ -434,7 +434,7 @@ class LoadActions:
         """
         try:
             self._load_csv(result_type, out_filename, stop_on_failure=stop_on_failure)
-        except:
+        except Exception:
             msg = traceback.format_exc()
             self.gui.log_error(msg)
             if stop_on_failure:  # pragma: no cover

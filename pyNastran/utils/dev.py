@@ -105,5 +105,5 @@ def list_print(lst: List[Any], float_fmt: str='%-4.2f') -> str:
                     [float_fmt % lst[i, j]
                      for j in range(col)]) + "]" for i in range(row)])+"]")
         return "[" + ", ".join([_print(a) for a in lst]) + "]"
-    except: # not a list
+    except Exception: # not a list
         return _print(lst)

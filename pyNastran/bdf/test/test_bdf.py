@@ -219,7 +219,7 @@ def run_lots_of_files(filenames: List[str], folder: str='',
                     raise
             except SystemExit:
                 sys.exit('sys.exit...')
-            except:
+            except Exception:
                 traceback.print_exc(file=sys.stdout)
                 #raise
             print('-' * 80)
@@ -447,7 +447,7 @@ def run_and_compare_fems(
         test_get_cards_by_card_types(fem2)
 
         fem2.update_model_by_desvars(xref)
-        #except:
+        #except Exception:
             #return 1, 2, 3
 
         run_nastran(bdf_model, nastran_cmd, post, size, is_double)
@@ -516,7 +516,7 @@ def run_and_compare_fems(
         #pass
     except SystemExit:
         sys.exit('sys.exit...')
-    except:
+    except Exception:
         #exc_type, exc_value, exc_traceback = sys.exc_info()
         #print "\n"
         traceback.print_exc(file=sys.stdout)
@@ -688,7 +688,7 @@ def run_fem1(fem1: BDF, bdf_model: str, out_model: str, mesh_form: str,
                 #fem1.geom_check(geom_check=True, xref=True)
                 #fem1.uncross_reference()
                 #fem1.cross_reference()
-    except:
+    except Exception:
         print(f'failed reading {bdf_model!r}')
         raise
 
@@ -740,6 +740,11 @@ def run_fem1(fem1: BDF, bdf_model: str, out_model: str, mesh_form: str,
     #convert(fem1, units_to, units=units_from)
     if xref:
         check_for_cd_frame(fem1)
+        #for pid, prop in sorted(fem1.properties.items()):
+        #    if prop.type == 'PBARL':
+        #        #A, I1, I2, I12 = prop.A_I1_I2_I12()
+        #        log.debug(f'  pid={pid:d} type={prop.type!r} A={prop.Area():g} '
+        #                  f'I1={prop.I1():g} I2={prop.I2():g} I12={prop.I12():g}')
 
         if len(fem1.elements) == 0 and len(fem1.masses) == 0:
             fem1.log.warning('no elements found')
@@ -893,7 +898,7 @@ def run_fem2(bdf_model: str, out_model: str, xref: bool, punch: bool,
             fem2.safe_cross_reference()
         elif xref:
             fem2.cross_reference()
-    except:
+    except Exception:
         print(f'failed reading {out_model!r}')
         raise
 
@@ -1259,7 +1264,6 @@ def _check_flutter_case(fem2: BDF, log: SimpleLogger, sol: int, subcase: Subcase
     # CMETHOD - EIGC
     # FMETHOD - FLUTTER
 
-    #print('check fmethod')
     ierror = require_cards(['FMETHOD'], log, soltype, sol, subcase,
                            RuntimeError, ierror, nerrors)
     flutter_id = subcase.get_parameter('FMETHOD')[0]
@@ -1890,7 +1894,7 @@ def get_element_stats(fem1: BDF, unused_fem2: BDF, quiet: bool=False) -> None:
                 if not isinstance(all_loads, list):
                     raise TypeError('allLoads should return a list...%s'
                                     % (type(all_loads)))
-            except:
+            except Exception:
                 raise
                 #print("load statistics not available - load.type=%s "
                       #"load.sid=%s" % (load.type, load.sid))
@@ -1940,7 +1944,7 @@ def get_matrix_stats(fem1: BDF, unused_fem2: BDF) -> None:
             else:
                 print("statistics not available - "
                       "dmig.type=%s matrix.name=%s" % (dmig.type, dmig.name))
-        except:
+        except Exception:
             print("*stats - dmig.type=%s name=%s  matrix=\n%s"
                   % (dmig.type, dmig.name, str(dmig)))
             raise
@@ -1952,7 +1956,7 @@ def get_matrix_stats(fem1: BDF, unused_fem2: BDF) -> None:
             else:
                 print("statistics not available - "
                       "dmi.type=%s matrix.name=%s" % (dmi.type, dmi.name))
-        except:
+        except Exception:
             print("*stats - dmi.type=%s name=%s  matrix=\n%s"
                   % (dmi.type, dmi.name, str(dmi)))
             raise
@@ -1964,7 +1968,7 @@ def get_matrix_stats(fem1: BDF, unused_fem2: BDF) -> None:
             else:
                 print("statistics not available - "
                       "dmij.type=%s matrix.name=%s" % (dmij.type, dmij.name))
-        except:
+        except Exception:
             print("*stats - dmij.type=%s name=%s  matrix=\n%s"
                   % (dmij.type, dmij.name, str(dmij)))
             raise
@@ -1976,7 +1980,7 @@ def get_matrix_stats(fem1: BDF, unused_fem2: BDF) -> None:
             else:
                 print("statistics not available - "
                       "dmiji.type=%s matrix.name=%s" % (dmiji.type, dmiji.name))
-        except:
+        except Exception:
             print("*stats - dmiji.type=%s name=%s  matrix=\n%s"
                   % (dmiji.type, dmiji.name, str(dmiji)))
             raise
@@ -1988,7 +1992,7 @@ def get_matrix_stats(fem1: BDF, unused_fem2: BDF) -> None:
             else:
                 print("statistics not available - "
                       "dmik.type=%s matrix.name=%s" % (dmik.type, dmik.name))
-        except:
+        except Exception:
             print("*stats - dmik.type=%s name=%s  matrix=\n%s"
                   % (dmik.type, dmik.name, str(dmik)))
             raise

@@ -660,7 +660,7 @@ class MainWindow2(QMainWindow):
                 self.performance_mode = True
             try:
                 n = func(self, *args, **kwargs)
-            except:
+            except Exception:
                 if not performance_mode_initial:
                     self.performance_mode = False
                 raise

@@ -61,7 +61,7 @@ def integrate_positive_unit_line(x, y, min_value=0.):
         # now integrate the area
         eval_posit_spline = lambda x, spl, min_val: max(splev([x], spl), min_val)
         out = quad(eval_posit_spline, 0., 1., args=(build_spline(x, y), min_value))
-    except:
+    except Exception:
         raise RuntimeError('spline Error x=%s y=%s' % (x, y))
     return out[0]
 
@@ -88,7 +88,7 @@ def integrate_unit_line(x, y):
         # integrate the area; y=f(x); A=integral(y*dx,x)
 
         out = quad(splev, 0., 1., args=(build_spline(x, y)))
-    except:
+    except Exception:
         # print('spline Error x=%s y=%s' % (x, y))
         raise
     return out[0]

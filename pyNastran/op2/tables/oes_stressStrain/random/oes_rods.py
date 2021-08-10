@@ -93,9 +93,6 @@ class RandomRodArray(OES_Object):
             #          axial    2.928574e-07  1.193838e-11
             #          torsion  6.618416e-13  0.000000e+00
             column_names, column_values = self._build_dataframe_transient_header()
-            #if is_v25:
-                #print(f'skipping pandas {self.class_name}')
-                #return
             data_frame = self._build_pandas_transient_elements(
                 column_values, column_names,
                 headers, self.element, self.data)

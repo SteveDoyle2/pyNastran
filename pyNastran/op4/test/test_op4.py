@@ -92,7 +92,7 @@ def run_op4(op4_filename, write_op4=True, debug=True,
                 try:
                     os.remove(model+'.test_op4_ascii.op4')
                     os.remove(model+'.test_op4_binary.op4')
-                except:
+                except Exception:
                     pass
 
         is_passed = True
@@ -130,7 +130,7 @@ def run_op4(op4_filename, write_op4=True, debug=True,
         if stop_on_failure:
             raise
         is_passed = True
-    except:
+    except Exception:
         #print(e)
         if stop_on_failure:
             raise

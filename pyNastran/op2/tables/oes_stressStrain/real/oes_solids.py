@@ -854,7 +854,7 @@ def calculate_principal_eigenvectors4(ntimes: int, nnodes: int,
         a_matrix[:, :, 1, 0] = txy
         a_matrix[:, :, 2, 0] = txz
         a_matrix[:, :, 2, 1] = tyz
-    except:
+    except Exception:
         raise RuntimeError(f'a_matrix.shape={a_matrix.shape} oxx.shape={oxx.shape}')
 
     # _lambda: ntimes, nnodes, (3)

@@ -86,7 +86,7 @@ if is_memory:
             is_linux = True
         else:
             raise NotImplementedError('os.name=%r and must be nt, posix, mac' % os.name)
-    except:
+    except Exception:
         raise
         is_memory = False
 

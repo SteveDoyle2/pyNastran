@@ -158,7 +158,7 @@ def write_ept(op2_file, op2_ascii, obj, endian=b'<'):
 
         try:
             write_card(op2_file, op2_ascii, obj, name, pids, spack, endian)
-        except:
+        except Exception:
             obj.log.error('failed EPT-%s' % name)
             raise
         op2_file.write(pack('i', nbytes))

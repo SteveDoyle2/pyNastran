@@ -359,7 +359,7 @@ class GEOM4(GeomCommon):
 
     def _read_bndgrid(self, data: bytes, n: int) -> int:
         """BNDGRID(10200,102,473) - Record 3 """
-        self.op2.log.info('skipping BNDGRID in GEOM4')
+        self.op2.log.info('geom skipping BNDGRID in GEOM4')
         return len(data)
 
     def _read_bset(self, data: bytes, n: int) -> int:
@@ -376,42 +376,42 @@ class GEOM4(GeomCommon):
 
     def _read_cyax(self, data: bytes, n: int) -> int:
         """CYAX(1510,15,328) - Record 8 """
-        self.op2.log.info('skipping CYAX in GEOM4')
+        self.op2.log.info('geom skipping CYAX in GEOM4')
         return len(data)
 
     def _read_cyjoin(self, data: bytes, n: int) -> int:
         """CYJOIN(5210,52,257) - Record 9 """
-        self.op2.log.info('skipping CYJOIN in GEOM4')
+        self.op2.log.info('geom skipping CYJOIN in GEOM4')
         return len(data)
 
     def _read_cysup(self, data: bytes, n: int) -> int:
-        self.op2.log.info('skipping CYSUP in GEOM4')
+        self.op2.log.info('geom skipping CYSUP in GEOM4')
         return len(data)
 
     def _read_cysym(self, data: bytes, n: int) -> int:
         """CYSYM(1710,17,330) - Record 11"""
-        self.op2.log.info('skipping CYSYM in GEOM4')
+        self.op2.log.info('geom skipping CYSYM in GEOM4')
         return len(data)
 
     def _read_egendt(self, data: bytes, n: int) -> int:
-        self.op2.log.info('skipping EGENDT in GEOM4')
+        self.op2.log.info('geom skipping EGENDT in GEOM4')
         return len(data)
 
     def _read_fcendt(self, data: bytes, n: int) -> int:
-        self.op2.log.info('skipping FCENDT in GEOM4')
+        self.op2.log.info('geom skipping FCENDT in GEOM4')
         return len(data)
 
     def _read_gmbc(self, data: bytes, n: int) -> int:
-        self.op2.log.info('skipping GMBC in GEOM4')
+        self.op2.log.info('geom skipping GMBC in GEOM4')
         return len(data)
 
     def _read_gmspc(self, data: bytes, n: int) -> int:
-        self.op2.log.info('skipping GMSPC in GEOM4')
+        self.op2.log.info('geom skipping GMSPC in GEOM4')
         return len(data)
 
     def _read_mpc2(self, data: bytes, n: int) -> int:
         """MPC(4901,49,420017) - Record 16"""
-        self.op2.log.info('skipping MPC? in GEOM4')
+        self.op2.log.info('geom skipping MPC? in GEOM4')
         return len(data)
 
     def _read_mpc(self, data: bytes, n: int) -> int:
@@ -664,11 +664,11 @@ class GEOM4(GeomCommon):
         return len(data)
 
     def _read_rbjoint(self, data: bytes, n: int) -> int:
-        self.op2.log.info('skipping RBJOINT in GEOM4')
+        self.op2.log.info('geom skipping RBJOINT in GEOM4')
         return len(data)
 
     def _read_rbjstif(self, data: bytes, n: int) -> int:
-        self.op2.log.info('skipping RBJSTIF in GEOM4')
+        self.op2.log.info('geom skipping RBJSTIF in GEOM4')
         return len(data)
 
     def _read_release(self, data: bytes, n: int) -> int:
@@ -714,7 +714,7 @@ class GEOM4(GeomCommon):
         return len(data)
 
     def _read_rpnom(self, data: bytes, n: int) -> int:
-        self.op2.log.info('skipping RPNOM in GEOM4')
+        self.op2.log.info('geom skipping RPNOM in GEOM4')
         return len(data)
 
     def _read_rrod(self, data: bytes, n: int) -> int:
@@ -770,37 +770,37 @@ class GEOM4(GeomCommon):
 
     def _read_rspline(self, data: bytes, n: int) -> int:
         """RSPLINE(7001,70,186) - Record 31"""
-        self.op2.log.info('skipping RSPLINE in GEOM4')
+        self.op2.log.info('geom skipping RSPLINE in GEOM4')
         return len(data)
 
     def _read_rsscon(self, data: bytes, n: int) -> int:
         """RSSCON(7201,72,398) - Record 32"""
-        self.op2.log.info('skipping RSSCON in GEOM4')
+        self.op2.log.info('geom skipping RSSCON in GEOM4')
         return len(data)
 
     def _read_rweld(self, data: bytes, n: int) -> int:
-        self.op2.log.info('skipping RWELD in GEOM4')
+        self.op2.log.info('geom skipping RWELD in GEOM4')
         return len(data)
 
     def _read_sebset(self, data: bytes, n: int) -> int:
-        self.op2.log.info('skipping SEBSET in GEOM4')
+        self.op2.log.info('geom skipping SEBSET in GEOM4')
         return len(data)
 
     def _read_sebset1(self, data: bytes, n: int) -> int:
-        self.op2.log.info('skipping SEBSET1 in GEOM4')
+        self.op2.log.info('geom skipping SEBSET1 in GEOM4')
         return len(data)
 
     def _read_secset(self, data: bytes, n: int) -> int:
-        self.op2.log.info('skipping SECSET in GEOM4')
+        self.op2.log.info('geom skipping SECSET in GEOM4')
         return len(data)
 
     def _read_secset1(self, data: bytes, n: int) -> int:
-        self.op2.log.info('skipping SECSET1 in GEOM4')
+        self.op2.log.info('geom skipping SECSET1 in GEOM4')
         return len(data)
 
     def _read_seqset(self, data: bytes, n: int) -> int:
         """SEQSET(1110,11,321) - Record 40"""
-        self.op2.log.info('skipping SEQSET in GEOM4')
+        self.op2.log.info('geom skipping SEQSET in GEOM4')
         return len(data)
         #return self._read_xset(data, n, 'SEQSET', SEQSET, self.add_SEQSET)
 
@@ -835,15 +835,15 @@ class GEOM4(GeomCommon):
         return nbytes
 
     def _read_sesup(self, data: bytes, n: int) -> int:
-        self.op2.log.info('skipping SESUP in GEOM4')
+        self.op2.log.info('geom skipping SESUP in GEOM4')
         return len(data)
 
     def _read_seuset(self, data: bytes, n: int) -> int:
-        self.op2.log.info('skipping SEUSET in GEOM4')
+        self.op2.log.info('geom skipping SEUSET in GEOM4')
         return len(data)
 
     def _read_seuset1(self, data: bytes, n: int) -> int:
-        self.op2.log.info('skipping SEUSET1 in GEOM4')
+        self.op2.log.info('geom skipping SEUSET1 in GEOM4')
         return len(data)
 
     def _read_spcoff(self, data: bytes, n: int) -> int:
@@ -1012,7 +1012,7 @@ class GEOM4(GeomCommon):
                 components, thru_flag))
             op2.binary_debug.write('   nids=%s\n' % str(nids))
         if len(nids) == 0:
-            #op2.log.warning('skipping SPC1 because its empty...%s' % out)
+            #op2.log.warning('geom skipping SPC1 because its empty...%s' % out)
             return
         if max(nids) > 100000000:
             self._is_long_ids = True
@@ -1118,7 +1118,7 @@ class GEOM4(GeomCommon):
                 sid, components, thru_flag))
             op2.binary_debug.write('   nids=%s\n' % str(nids))
         if len(nids) == 0:
-            #op2.log.warning('skipping SPC1 because its empty...%s' % out)
+            #op2.log.warning('geom skipping SPC1 because its empty...%s' % out)
             return
         in_data = [sid, components, nids]
         constraint = SPC1.add_op2_data(in_data)
@@ -1204,35 +1204,35 @@ class GEOM4(GeomCommon):
         return n, constraints
 
     def _read_spcde(self, data: bytes, n: int) -> int:
-        self.op2.log.info('skipping SPCDE in GEOM4')
+        self.op2.log.info('geom skipping SPCDE in GEOM4')
         return len(data)
 
     def _read_spcf(self, data: bytes, n: int) -> int:
-        self.op2.log.info('skipping SPCDF in GEOM4')
+        self.op2.log.info('geom skipping SPCDF in GEOM4')
         return len(data)
 
     def _read_spcdg(self, data: bytes, n: int) -> int:
-        self.op2.log.info('skipping SPCDG in GEOM4')
+        self.op2.log.info('geom skipping SPCDG in GEOM4')
         return len(data)
 
     def _read_spce(self, data: bytes, n: int) -> int:
-        self.op2.log.info('skipping SPCE in GEOM4')
+        self.op2.log.info('geom skipping SPCE in GEOM4')
         return len(data)
 
     def _read_spceb(self, data: bytes, n: int) -> int:
-        self.op2.log.info('skipping SPCEB in GEOM4')
+        self.op2.log.info('geom skipping SPCEB in GEOM4')
         return len(data)
 
     def _read_spcfb(self, data: bytes, n: int) -> int:
-        self.op2.log.info('skipping SPCFB in GEOM4')
+        self.op2.log.info('geom skipping SPCFB in GEOM4')
         return len(data)
 
     def _read_spcgb(self, data: bytes, n: int) -> int:
-        self.op2.log.info('skipping SPCGB in GEOM4')
+        self.op2.log.info('geom skipping SPCGB in GEOM4')
         return len(data)
 
     def _read_spcgrid(self, data: bytes, n: int) -> int:
-        self.op2.log.info('skipping SPCGRID in GEOM4')
+        self.op2.log.info('geom skipping SPCGRID in GEOM4')
         return len(data)
 
     def _read_suport(self, data: bytes, n: int) -> int:
@@ -1287,7 +1287,7 @@ class GEOM4(GeomCommon):
         return len(data)
 
     def _read_tempbc(self, data: bytes, n: int) -> int:
-        self.op2.log.info('skipping TEMPBC in GEOM4')
+        self.op2.log.info('geom skipping TEMPBC in GEOM4')
         return len(data)
 
     def _read_uset(self, data: bytes, n: int) -> int:
@@ -1404,27 +1404,27 @@ class GEOM4(GeomCommon):
 
 
     def _read_omit(self, data: bytes, n: int) -> int:
-        self.op2.log.info('skipping OMIT in GEOM4')
+        self.op2.log.info('geom skipping OMIT in GEOM4')
         return len(data)
 
     def _read_rtrplt(self, data: bytes, n: int) -> int:
-        self.op2.log.info('skipping RTRPLT in GEOM4')
+        self.op2.log.info('geom skipping RTRPLT in GEOM4')
         return len(data)
 
     def _read_bndfix(self, data: bytes, n: int) -> int:
-        self.op2.log.info('skipping BNDFIX in GEOM4')
+        self.op2.log.info('geom skipping BNDFIX in GEOM4')
         return len(data)
 
     def _read_bndfix1(self, data: bytes, n: int) -> int:
-        self.op2.log.info('skipping BNDFIX1 in GEOM4')
+        self.op2.log.info('geom skipping BNDFIX1 in GEOM4')
         return len(data)
 
     def _read_bndfree(self, data: bytes, n: int) -> int:
-        self.op2.log.info('skipping BNDFREE in GEOM4')
+        self.op2.log.info('geom skipping BNDFREE in GEOM4')
         return len(data)
 
     def _read_bltmpc(self, data: bytes, n: int) -> int:
-        self.op2.log.info('skipping BLTMPC in GEOM4')
+        self.op2.log.info('geom skipping BLTMPC in GEOM4')
         return len(data)
 
 def read_rbe2s_from_idata_fdata(op2: OP2Geom, idata, fdata) -> List[RBE2]:
@@ -1657,7 +1657,7 @@ def read_rbe3s_from_idata_fdata(op2: OP2Geom, idata, fdata) -> List[RBE3]:
         #print(rbe3.rstrip())
         #if eid in self.rigid_elements:
             #old_rigid = self.rigid_elements[eid]
-            #op2.log.warning(f'skipping RBE3 eid={eid} because its duplicated\n{rbe3} by:\n{old_rigid}')
+            #op2.log.warning(f'geom skipping RBE3 eid={eid} because its duplicated\n{rbe3} by:\n{old_rigid}')
             #continue
         op2.reader_geom3._add_op2_rigid_element(rbe3)
         rbe3s.append(rbe3)

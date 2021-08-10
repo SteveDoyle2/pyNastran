@@ -74,7 +74,7 @@ def write_geom3(op2_file, op2_ascii, obj, endian=b'<', nastran_format='nx'):
         try:
             nbytes = write_card(op2_file, op2_ascii, load_type, loads, endian, obj.log,
                                 nastran_format=nastran_format)
-        except:  # pragma: no cover
+        except Exception:  # pragma: no cover
             obj.log.error('failed GEOM3-%s' % load_type)
             raise
         op2_file.write(pack('i', nbytes))

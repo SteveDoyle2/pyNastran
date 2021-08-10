@@ -810,7 +810,7 @@ class OP4:
 
         #try:
             #print_matrix(A.toarray())
-        #except:
+        #except Exception:
             #pass
 
         if data_format in ['d', 'dd']:

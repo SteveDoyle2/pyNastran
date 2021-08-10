@@ -30,7 +30,7 @@ def check_locale_float(text: str) -> Tuple[Optional[str], bool]:
             text2 = text.replace(',', '.')
             value = float(text2)
             is_valid = True
-    except:
+    except Exception:
         pass
     return value, is_valid
 
@@ -102,7 +102,7 @@ def nocrash_str_bool(func):
     def wrapper(_str):
         try:
             out = func(_str)
-        except:
+        except Exception:
             #print('dont crash...')
             out = (_str, False)
         return out

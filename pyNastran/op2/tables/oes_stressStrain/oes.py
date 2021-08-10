@@ -621,7 +621,7 @@ class OES(OP2Common2):
                 raise
             except AttributeError:
                 raise
-            #except:
+            #except Exception:
                 #raise
                 #print("----------")
                 #print(op2.obj)

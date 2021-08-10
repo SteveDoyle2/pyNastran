@@ -452,7 +452,7 @@ def run_op2(op2_filename: str, make_geom: bool=False, combine: bool=True,
         #if stop_on_failure:
             #raise
         #is_passed = True
-    except:
+    except Exception:
         #print(e)
         if stop_on_failure:
             raise
@@ -477,7 +477,7 @@ def write_op2_as_bdf(op2, op2_bdf, bdf_filename, write_bdf, make_geom, read_bdf,
                 op2_bdf.read_bdf(bdf_filename, xref=xref)
                 if xref_safe:
                     op2_bdf.safe_cross_reference()
-            except:
+            except Exception:
                 if dev and len(op2_bdf.card_count) == 0:
                     pass
                 else:
@@ -576,7 +576,7 @@ def get_test_op2_data(argv) -> Dict[str, str]:
 def remove_file(filename):
     try:
         os.remove(filename)
-    except:
+    except Exception:
         pass
 
 

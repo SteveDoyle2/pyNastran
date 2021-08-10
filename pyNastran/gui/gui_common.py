@@ -557,7 +557,7 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
 
                     try:
                         action = self.actions[item] #if isinstance(item, str) else item()
-                    except:
+                    except Exception:
                         keysi = list(self.actions.keys())
                         self.log.error(str(keysi))
                         raise

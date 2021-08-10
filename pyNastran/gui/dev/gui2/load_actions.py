@@ -92,7 +92,7 @@ class LoadActions:
                 try:
                     dy_method = getattr(self, clear_name)  # 'self.clear_nastran()'
                     dy_method()
-                except:
+                except Exception:
                     self.gui.log.error("method %r does not exist" % clear_name)
             log.info("reading %s file %r" % (geometry_format, infile_name))
 

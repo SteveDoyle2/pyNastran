@@ -108,7 +108,7 @@ class GEOM1:
 
             # F:\work\pyNastran\pyNastran\master2\pyNastran\bdf\test\nx_spike\out_boltsold01d.op2
             (2101, 21, 2220008) : ['CORD2R?', self._read_cord2rx],
-            (2001, 20, 1310009) : ['CORD2S?', self._read_crash],
+            (2001, 20, 1310009) : ['CORD2C-NX', self._read_cord2c_nx],
 
             (2101, 21, 1310008) : ['CORD2R?', self._read_fake],
             (501, 5, 43) : ['CORDx?', self._read_cord3g],
@@ -297,7 +297,7 @@ class GEOM1:
             normal = [n1, n2, n3]
             n += ntotal
             if nid < 0:
-                op2.log.warning(f'skipping SNORM nid={nid} cid={cid} normal={normal}')
+                op2.log.warning(f'geom skipping SNORM nid={nid} cid={cid} normal={normal}')
                 continue
             snorm = op2.add_snorm(nid, normal, cid=cid)
             snorm.write_card_16()
@@ -358,8 +358,33 @@ class GEOM1:
         op2.card_count['SECONCT'] = ncards
         return n
 
-    def _read_crash(self, data: bytes, n: int) -> int:
-        raise RuntimeError('is this a cord2s?')
+    def _read_cord2c_nx(self, data: bytes, n: int) -> int:
+        """
+        doubles (float64) = (6, 2, 2, 0.0, [0.0, 0.0, 0.0], [0.0, 0.0, 1.0], [1.0, 0.0, 1.0])
+        long long (int64) = (6, 2, 2, 0, 0, 0, 0, 0, 0, 4607182418800017408, 4607182418800017408, 0, 4607182418800017408)
+        """
+        #assert len(d)
+        #self.op2.show_data(data[n:], types='ifsqd', endian=None, force=False)
+        #raise RuntimeError('is this a cord2s?')
+        op2 = self.op2
+        structi = Struct(op2._endian + b'qqqq 9d')
+        ntotal = 52 * op2.factor
+        ndatai = len(data) - n
+        nentries = ndatai // ntotal
+        assert nentries > 0, nentries
+        for unused_i in range(nentries):
+            edata = data[n:n + ntotal]
+            out = structi.unpack(edata)
+            (cid, one, two, rid, a1, a2, a3, b1, b2, b3, c1, c2, c3) = out
+            assert (one, two) == (2, 2) # CORD-2-C
+            origin = [a1, a2, a3]
+            zaxis = [b1, b2, b3]
+            xzplane = [c1, c2, c3]
+            coord = op2.add_cord2c(cid, origin, zaxis, xzplane)
+            str(coord)
+            n += ntotal
+        op2.to_nx('; because CORD2C-NX was found')
+        return n
 
     def _read_cord2cx(self, data: bytes, n: int) -> int:
         """
@@ -555,7 +580,7 @@ class GEOM1:
         if op2.table_name == b'GEOM1N' and op2.factor == 1:
             try:
                 n2, coords = self._read_cord2x_22(data, n, card_name, card_obj, coord_flag)
-            except:
+            except Exception:
                 n2, coords = self._read_cord2x_13(data, n, card_name, card_obj, coord_flag)
         else:
             n2, coords = self._read_cord2x_13(data, n, card_name, card_obj, coord_flag)
@@ -715,7 +740,7 @@ class GEOM1:
         if op2.table_name == b'GEOM1N' and op2.factor == 1:
             try:
                 n, grids = self._read_grid_11(data, n)
-            except:
+            except Exception:
                 n, grids = self._read_grid_8(data, n)
         else:
             n, grids = self._read_grid_8(data, n)
@@ -1085,12 +1110,12 @@ class GEOM1:
 
     def _read_gmsurf(self, data: bytes, n: int) -> int:
         op2 = self.op2
-        op2.log.info('skipping GMSURF in GEOM1')
+        op2.log.info('geom skipping GMSURF in GEOM1')
         return len(data)
 
     def _read_gmcord(self, data: bytes, n: int) -> int:
         op2 = self.op2
-        op2.log.info('skipping GMCORD in GEOM1')
+        op2.log.info('geom skipping GMCORD in GEOM1')
         return len(data)
 
     def _read_sebulk(self, data: bytes, n: int) -> int:

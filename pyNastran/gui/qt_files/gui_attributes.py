@@ -355,7 +355,7 @@ class GuiAttributes:
                 self.performance_mode = True
             try:
                 n = func(self, *args, **kwargs)
-            except:
+            except Exception:
                 if not performance_mode_initial:
                     self.performance_mode = False
                 raise
@@ -467,7 +467,7 @@ class GuiAttributes:
         """gets the element_id map"""
         try:
             return self.eid_maps[self.name]
-        except:
+        except Exception:
             msg = 'KeyError: key=%r; keys=%s' % (self.name, list(self.eid_maps.keys()))
             raise KeyError(msg)
 
@@ -888,7 +888,7 @@ class GuiAttributes:
 
         try:
             data_format % 1
-        except:
+        except Exception:
             msg = ("failed applying the data formatter format=%r and "
                    "should be of the form: '%i', '%8f', '%.2f', '%e', etc.")
             self.log_error(msg)

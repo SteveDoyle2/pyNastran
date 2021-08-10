@@ -669,7 +669,7 @@ class RealStrainEnergyArray(BaseElement):
             ##elif hasattr(self, 'dts'):
                 ##field5 = self.times[itime]
             #else:  # pragma: no cover
-            except:
+            except Exception:
                 print(self.get_stats())
                 raise NotImplementedError('cant find times or dts on analysis_code=8')
             ftable3 = set_table3_field(ftable3, 5, b'f') # field 5

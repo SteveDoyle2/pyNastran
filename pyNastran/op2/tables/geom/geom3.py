@@ -204,7 +204,7 @@ class GEOM3:
             #self.add_cbeam3(eid, pid, nids, x, g0, wa, wb, wc, tw, s)
             n += ntotal
         #self.show_data(data[n:])
-        op2.log.warning('skipping PLOADB3')
+        op2.log.warning('geom skipping PLOADB3')
         op2.card_count['PLOADB3'] = nelements
         return n
 
@@ -251,7 +251,7 @@ class GEOM3:
         """
         op2 = self.op2
         op2.show_data(data)
-        op2.log.info('skipping ACCEL in GEOM3')
+        op2.log.info('geom skipping ACCEL in GEOM3')
         return len(data)
 
     def _read_accel1(self, data: bytes, n: int) -> int:
@@ -353,7 +353,7 @@ class GEOM3:
 
     def _read_gmload(self, data: bytes, n: int) -> int:
         """GMLOAD"""
-        self.op2.log.info('skipping GMLOAD in GEOM3')
+        self.op2.log.info('geom skipping GMLOAD in GEOM3')
         return len(data)
 
     def _read_grav(self, data: bytes, n: int) -> int:
@@ -430,17 +430,17 @@ class GEOM3:
 
     def _read_loadcyh(self, data: bytes, n: int) -> int:
         """LOADCYH"""
-        self.op2.log.info('skipping LOADCYH in GEOM3')
+        self.op2.log.info('geom skipping LOADCYH in GEOM3')
         return len(data)
 
     def _read_loadcyn(self, data: bytes, n: int) -> int:
         """LOADCYN"""
-        self.op2.log.info('skipping LOADCYN in GEOM3')
+        self.op2.log.info('geom skipping LOADCYN in GEOM3')
         return len(data)
 
     def _read_loadcyt(self, data: bytes, n: int) -> int:
         """LOADCYT"""
-        self.op2.log.info('skipping LOADCYT in GEOM3')
+        self.op2.log.info('geom skipping LOADCYT in GEOM3')
         return len(data)
 
     def _read_lseq(self, data: bytes, n: int) -> int:
@@ -922,7 +922,7 @@ class GEOM3:
             out = struct_if.unpack(edata)
             if op2.is_debug_file:
                 op2.binary_debug.write('  QHBDY=%s\n' % str(out))
-            (sid, q0, tsour, ce, flag1, e1, flag2, e2, flag3, e3, cntrlnd, eid) = out
+            (sid, q0, t_source, ce, flag1, e1, flag2, e2, flag3, e3, cntrlnd, eid) = out
 
             load = QVECT.add_op2_data(out)
             str(load)
@@ -931,7 +931,7 @@ class GEOM3:
             n += ntotal
         op2.card_count['QHBDY'] = nentries
         return n
-        self.op2.log.info('skipping QVECT in GEOM3')
+        self.op2.log.info('geom skipping QVECT in GEOM3')
         return len(data)
 
     def _read_qvol(self, data: bytes, n: int) -> int:
@@ -1000,7 +1000,7 @@ class GEOM3:
 # TEMPD(5641,65,98) # 33
 # TEMPEST
     def _read_tempf(self, data: bytes, n: int) -> int:
-        self.op2.log.info('skipping TEMPF in GEOM3')
+        self.op2.log.info('geom skipping TEMPF in GEOM3')
         return len(data)
 # TEMP1C
 
@@ -1023,44 +1023,44 @@ class GEOM3:
 
     def _read_tempp2(self, data: bytes, n: int) -> int:
         op2 = self.op2
-        op2.log.info('skipping TEMPP2 in GEOM3')
+        op2.log.info('geom skipping TEMPP2 in GEOM3')
         if op2.is_debug_file:
-            op2.binary_debug.write('skipping TEMPP2 in GEOM3\n')
+            op2.binary_debug.write('geom skipping TEMPP2 in GEOM3\n')
         return len(data)
 
     def _read_tempp3(self, data: bytes, n: int) -> int:
         op2 = self.op2
-        op2.log.info('skipping TEMPP3 in GEOM3')
+        op2.log.info('geom skipping TEMPP3 in GEOM3')
         if op2.is_debug_file:
-            op2.binary_debug.write('skipping TEMPP3 in GEOM3\n')
+            op2.binary_debug.write('geom skipping TEMPP3 in GEOM3\n')
         return len(data)
 
     def _read_tempp4(self, data: bytes, n: int) -> int:
         """
         TEMPP4(4201,42,18) - the marker for Record 40
         """
-        self.op2.log.info('skipping TEMPP4 in GEOM3')
+        self.op2.log.info('geom skipping TEMPP4 in GEOM3')
         return len(data)
 
     def _read_temprb(self, data: bytes, n: int) -> int:
         op2 = self.op2
-        op2.log.info('skipping TEMPRB in GEOM3')
+        op2.log.info('geom skipping TEMPRB in GEOM3')
         if op2.is_debug_file:
-            op2.binary_debug.write('skipping TEMPRB in GEOM3\n')
+            op2.binary_debug.write('geom skipping TEMPRB in GEOM3\n')
         return len(data)
 
     def _read_pface(self, data: bytes, n: int) -> int:
-        self.op2.log.info('skipping PFACE in GEOM3')
+        self.op2.log.info('geom skipping PFACE in GEOM3')
         return len(data)
 
     def _read_pedge(self, data: bytes, n: int) -> int:
-        self.op2.log.info('skipping PEDGE in GEOM3')
+        self.op2.log.info('geom skipping PEDGE in GEOM3')
         return len(data)
 
     def _read_boltfor(self, data: bytes, n: int) -> int:
-        self.op2.log.info('skipping BOLTFOR in GEOM3')
+        self.op2.log.info('geom skipping BOLTFOR in GEOM3')
         return len(data)
 
     def _read_boltld(self, data: bytes, n: int) -> int:
-        self.op2.log.info('skipping BOLTLD in GEOM3')
+        self.op2.log.info('geom skipping BOLTLD in GEOM3')
         return len(data)

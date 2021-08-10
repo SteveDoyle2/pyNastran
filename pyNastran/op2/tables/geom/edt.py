@@ -530,7 +530,7 @@ class EDT:
             elements = data_dict['element']
             properties = data_dict['property']
             op2.add_group(group_id, nodes, elements, properties)
-            # self.log.warning(f'skipping GROUP in {self.table_name}')
+            # self.log.warning(f'geom skipping GROUP in {self.table_name}')
             nentries += 1
 
         assert n == len(data), f'n={n} ndata={len(data)}'
@@ -1360,7 +1360,9 @@ class EDT:
         while n < len(data):
             edata = data[n:n+ntotal]
             aelink_id, label_bytes = struct1.unpack(edata)
-            assert aelink_id > 0, aelink_id
+            if aelink_id == 0:
+                aelink_id = 'ALWAYS'
+            #assert aelink_id > 0, aelink_id
             label = reshape_bytes_block_size(label_bytes, self.size)
             n += ntotal
             linking_coefficents = []
@@ -1990,7 +1992,7 @@ class EDT:
             xyz = [x, y, z]
             try:
                 xflag_str = xflag_map[xflag]
-            except:
+            except Exception:
                 raise RuntimeError((name, label, xflag))
             monpnt = MONPNT3(name, label, axes, grid_set, elem_set, xyz,
                               cp=cp, cd=cd, xflag=xflag_str, comment='')
@@ -2060,16 +2062,44 @@ class EDT:
         structi = Struct(op2._endian + b'8s i')  # msc
         structf = Struct(op2._endian + b'8s f')  # msc
         data_dict = {}
+
+        MDLPRM_FLOAT_KEYS_1 = {
+            'DBCTOLE', 'DELELAS', 'DELFAST', 'DELMASS', 'DELSEAM', 'DELWELD',
+            'PEXTS4', 'PIVTHRSH', 'SPBLNDX'}
+        float_names = {('-%8s' % name).encode('ascii') for name in MDLPRM_FLOAT_KEYS_1}
         for unused_i in range(ncards):
             edata = data[n:n + ntotal]
             out = structi.unpack(edata)
             name_bytes, value = out
-            if name_bytes in {b'SPBLNDX '}:
+            if name_bytes in float_names:
                 name_bytes, value = structf.unpack(edata)
             name = reshape_bytes_block_size(name_bytes, self.size)
+
+            if name == 'SHEARP':
+                if value == 2:
+                    value = 'HARDER'
+                else:
+                    raise NotImplementedError((name, value))
+            elif name == 'OFFDEF':
+                if value == 8:
+                    value = 'ELMOFF'
+                elif value == 65:
+                    value = 'NODIFF'
+                elif value in [128, 192]:
+                    value = 'LROFF'
+                else:
+                    raise NotImplementedError((name, value))
+
             data_dict[name] = value
             n += ntotal
-        op2.log.warning(f'skipping MDLPRM {data_dict}')
+
+
+        if 'SPBLNDX' in data_dict:
+            raise RuntimeError(f'SPBLNDX exists and has the wrong value...{data_dict}')
+
+        if op2.mdlprm is not None:
+            return n
+        op2.add_mdlprm(data_dict)
         op2.to_msc(' because MDLPRM-MSC was found')
         #monpnt = MONDSP1(name, label, axes, aecomp_name, xyz, cp=cp, cd=cd,
                          #ind_dof='123', comment='')

@@ -427,7 +427,7 @@ class MPT:
 
     def _read_mat9_140(self, card_obj, data: bytes, n: int) -> Tuple[int, List[MAT9]]:
         op2 = self.op2
-        #op2.log.info('skipping MAT9')
+        #op2.log.info('geom skipping MAT9')
         #return len(data)
         materials = []
         ndatai = len(data) - n
@@ -467,7 +467,7 @@ class MPT:
 
     def _read_mat9_224(self, card_obj, data: bytes, n: int) -> Tuple[int, List[MAT9]]:
         op2 = self.op2
-        #op2.log.info('skipping MAT9')
+        #op2.log.info('geom skipping MAT9')
         #return len(data)
         materials = []
         ndatai = len(data) - n
@@ -1302,7 +1302,7 @@ class MPT:
             #self._add_methods._add_material_dependence_object(mat, allow_overwrites=False)
             n += ntotal
         op2.card_count['MAT11'] = nmaterials
-        op2.log.warning('skipping MAT11 in MPT')
+        op2.log.warning('geom skipping MAT11 in MPT')
         return n
 
     def _read_matt11(self, data: bytes, n: int) -> int:
@@ -1364,7 +1364,7 @@ class MPT:
             #self._add_methods._add_material_dependence_object(mat, allow_overwrites=False)
             n += ntotal
         op2.card_count['MATT11'] = nmaterials
-        op2.log.warning('skipping MATT11 in MPT')
+        op2.log.warning('geom skipping MATT11 in MPT')
         return n
 
 # MBOLT
@@ -1373,7 +1373,7 @@ class MPT:
 # NLAUTO
 
     def _read_radbnd(self, data: bytes, n: int) -> int:
-        self.op2.log.info('skipping RADBND in MPT')
+        self.op2.log.info('geom skipping RADBND in MPT')
         return len(data)
 
 
@@ -1413,7 +1413,7 @@ class MPT:
         return n
 
     def _read_radmt(self, data: bytes, n: int) -> int:
-        self.op2.log.info('skipping RADMT in MPT')
+        self.op2.log.info('geom skipping RADMT in MPT')
         return len(data)
 
     def _read_nlparm(self, data: bytes, n: int) -> int:
@@ -1579,7 +1579,7 @@ class MPT:
         return n, nlparms
 
     def _read_nlpci(self, data: bytes, n: int) -> int:
-        self.op2.log.info('skipping NLPCI in MPT')
+        self.op2.log.info('geom skipping NLPCI in MPT')
         return len(data)
 
     def _read_tstepnl(self, data: bytes, n: int) -> int:

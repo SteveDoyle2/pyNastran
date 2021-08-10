@@ -320,7 +320,7 @@ class RealGridPointForcesArray(GridPointForces):
         try:
             self.assert_equal(table)
             is_valid = True
-        except:
+        except Exception:
             pass
         return is_valid
 

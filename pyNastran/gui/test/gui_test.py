@@ -110,7 +110,7 @@ def run_lots_of_files(files, debug=False, encoding='latin1', dev=True):
     for filename in files:
         try:
             is_passed = run_()
-        except:
+        except Exception:
             failed_files.append(filename)
         if not is_passed:
             sys.stderr.write('**file=%s vector_failed=%s\n' % (

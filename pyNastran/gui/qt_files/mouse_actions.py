@@ -750,7 +750,7 @@ class MouseActions:
     def get_grid_selected(self, name):
         try:
             return self.grid_selected
-        except:
+        except Exception:
             return self.grid
 
     @property
