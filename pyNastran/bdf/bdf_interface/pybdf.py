@@ -3,8 +3,25 @@
 Main BDF class.  Defines:
   - BDFInputPy
 
+BEGIN [BULK] = [
+    AFPM = afpmid
+    ARBMODEL = arbmid
+    AUXMODEL = auxmind
+    MASSID = massid[LABEL = masslabel]
+    MODULE= moduleid[APPEND][LABEL = modlabel]
+    FLXBDY = flexbody
+    SUPER = seid
+    TRMC = trimid
+    UDS
+]
+
+BEGIN BULK
+BEGIN AUXMODEL=22
+BEGIN BULK TRMC=101
+BEGIN TRMC=102
 """
 import os
+import shlex
 from collections import defaultdict
 from itertools import count
 from typing import List, Tuple, Optional, Union, Any, cast
@@ -73,7 +90,7 @@ CASE_CARDS_NO_BULK = (
     #LOAD - in bulk
     'LOADSET', 'M2GG', 'M2PP', 'MASTER', 'MAXLINES', 'MAXMIN', 'MBDEXPORT', 'MBDRECVR',
     'MEFFMASS', 'METHOD', 'MFLUID', 'MODALE', 'MODCON', 'MODES', 'MODSEL',
-    'MODTRAK', 'MONITOR', 'MONVAR'
+    'MODTRAK', 'MONITOR', 'MONVAR',
     #MPC - in bulk
     'MPCF', # MPCFORCES
     'MPRES', 'NLARCL', 'NLCNTL', 'NLLOAD', 'NLPARM', 'NLSTRESS', 'NONLINEAR',
@@ -107,14 +124,14 @@ CASE_CARDS_NO_BULK = (
     #SUPORT1 - in bulk
     'SVECTOR',
     'SVELO', # SVELOCITY
-    'SYM', 'SYMCOM', 'SYMSEQ', 'TEMPERATURE', 'TFL', 'THERMAL', 'TITLE'
+    'SYM', 'SYMCOM', 'SYMSEQ', 'TEMPERATURE', 'TFL', 'THERMAL', 'TITLE',
     #TRIM - in bulk
     'TRLOSS', 'TRPOWER',
     # TSTEP - in bulk
     # TSTEPNL - in bulk
     'TSTRU', 'VATVOUT',
     'VELO', # VELOCITY
-    'VOLUME', 'WEIGHTCHECK'
+    'VOLUME', 'WEIGHTCHECK',
 )
 
 EXECUTIVE_CASE_SPACES = tuple(
@@ -1027,6 +1044,7 @@ def _lines_to_decks_main(lines: List[str],
     is_auxmodel = False
     is_afpm = False
     is_superelement = False
+    is_module = False
     is_auxmodel_active = False
     is_afpm_active = False
     auxmodel_id = None
@@ -1229,10 +1247,14 @@ def _lines_to_decks_main(lines: List[str],
             #print('%s: %s' % (flag_word, line.rstrip()))
             current_lines.append(line.rstrip())
         elif flag == 3:
-            if not(is_auxmodel is True or is_superelement is True or consider_superelements):
+            is_special_flag = (is_module is True or
+                               is_auxmodel is True or
+                               is_superelement is True or
+                               consider_superelements)
+            if not is_special_flag:
                 raise RuntimeError(f'one must be True: is_auxmodel={is_auxmodel}; '
-                                   'is_superelement={is_superelement}; '
-                                   'consider_superelements={consider_superelements}')
+                                   f'is_superelement={is_superelement}; '
+                                   f'consider_superelements={consider_superelements}')
             #assert is_auxmodel is True or is_superelement is True or consider_superelements
 
             # we have to handle the comment because we could incorrectly
@@ -1247,7 +1269,7 @@ def _lines_to_decks_main(lines: List[str],
                 current_ilines.append(ifile_iline)
                 #bulk_data_ilines.append(ifile_iline)
 
-            out = _read_bulk_for_auxmodel(
+            out = _read_bulk_for_model(
                 ifile_iline, line, flag, bulk_data_lines,
                 current_lines, current_ilines,
                 old_flags,
@@ -1334,15 +1356,15 @@ def _is_begin_bulk(line_upper: str) -> bool:
         'SUPER' not in line_upper)
     return is_begin_bulk
 
-def _read_bulk_for_auxmodel(ifile_iline, line, flag: int, bulk_data_lines: List[str],
-                            current_lines, current_ilines,
-                            old_flags,
-                            unused_is_auxmodel, auxmodel_lines, auxmodels_to_find, auxmodels_found,
-                            unused_is_afpm, afpm_lines, afpm_to_find, afpm_found,
-                            superelement_lines, superelement_ilines,
-                            is_auxmodel_active: bool, auxmodel_id: int,
-                            is_afpm_active: bool, afpm_id: int,
-                            bulk_data_ilines):
+def _read_bulk_for_model(ifile_iline, line: str, flag: int, bulk_data_lines: List[str],
+                         current_lines, current_ilines,
+                         old_flags,
+                         unused_is_auxmodel, auxmodel_lines, auxmodels_to_find, auxmodels_found,
+                         unused_is_afpm, afpm_lines, afpm_to_find, afpm_found,
+                         superelement_lines, superelement_ilines,
+                         is_auxmodel_active: bool, auxmodel_id: int,
+                         is_afpm_active: bool, afpm_id: int,
+                         bulk_data_ilines):
     """
     Reads a BEGIN BULK section searching for 'BEGIN AUXMODEL=1' and BEGIN SUPER=1'
     """
@@ -1360,9 +1382,31 @@ def _read_bulk_for_auxmodel(ifile_iline, line, flag: int, bulk_data_lines: List[
         #is_broken = True
         #return is_broken, auxmodel_id, is_auxmodel_active, flag, current_lines
 
+    is_module_active = False
+    module_lines = {}
+    modules_found = set()
+
     line_upper = line.upper().strip()
     if line_upper.startswith('BEGIN'):
-        if 'AUXMODEL' in line_upper:
+        parse_begin(line_upper)
+        if 'MODULE' in line_upper:
+            is_module_active = True
+            module_id, label = _get_module_id(line, line_upper)
+            old_flags.append(flag)
+            flag = module_id
+            #current_lines = module_lines[(module_id, label)]
+            #current_ilines = []
+            #modules_found.add(module_id)
+            raise NotImplementedError(line_upper)
+            #if len(modules_found) == len(modules_to_find) and len(modules_found):
+            #    #print('broken...final', len(bulk_data_lines), len(bulk_data_ilines))
+            #    is_broken = True
+            #    out = (is_broken,
+            #           auxmodel_id, is_auxmodel_active,
+            #           afpm_id, is_afpm_active,
+            #           flag, current_lines)
+            #    return out
+        elif 'AUXMODEL' in line_upper:
             is_auxmodel_active = True
             auxmodel_id = _get_auxmodel_id(line, line_upper)
             old_flags.append(flag)
@@ -1568,6 +1612,79 @@ def _show_bad_file(self: Any, bdf_filename: Union[str, StringIO],
                 raise RuntimeError('20 blank lines')
             iline += 1
             lines.append(line)
+
+def _get_module_id(line: str, line_upper: str) -> Tuple[int, str]:
+    """
+    parses the module header::
+
+        BEGIN MODULE=2  LABEL='MODULE2'
+
+    """
+    #if '=' in line_upper:
+    sline = split_quoted_string(line_upper)
+    assert len(sline) == 3, sline
+    begin, module_num, label_name = sline
+    assert begin == 'BEGIN', begin
+    assert module_num.startswith('MODULE='), f'module_num={module_num!r}; line_upper={line_upper!r}'
+    assert label_name.startswith("LABEL="), f'label_name={label_name!r}; line_upper={line_upper!r}'
+    module_id_str = module_num.split('=')[1]
+    module_id = int(module_id_str)
+
+    label = label_name.split('=')[1].strip("'")
+    print(f'module_id={module_id} label={label!r}')
+
+    if module_id < 0:
+        raise SyntaxError(f'module_id={module_id:d} must be greater than 0; line={line!r}')
+    return module_id, label
+
+def split_quoted_string(line: str) -> List[str]:
+    """
+    this is "a test"
+    ['this','is','a test']
+    """
+    sline = shlex.split(line)
+    return sline
+
+def parse_begin(line_upper: str):
+    """
+    BEGIN MODULE=2  LABEL='MODULE2'
+
+    BEGIN AUXMODEL=2
+    BEGIN BULK AUXMODEL=2
+    BEGIN BULK AUXMODEL = 2
+
+    BEGIN AFPM=2
+    BEGIN BULK AFPM=2
+    BEGIN BULK AFPM = 2
+
+    BEGIN SUPER=2
+    BEGIN BULK SUPER=2
+    BEGIN BULK SUPER = 2
+    BEGIN BULK SUPER 2
+
+    BEGIN BULK TRMC=101
+    BEGIN TRMC=102
+
+    """
+    sline = split_quoted_string(line_upper.replace('=', ' '))
+
+    #['BEGIN', 'MODULE=1', 'LABEL=MODULE1']
+    #['BEGIN', 'MODULE', '1', 'LABEL', 'MODULE1']
+
+    #['BEGIN', 'SUPER', '1']
+    if sline[1] == 'BULK':
+        sline.pop(1)
+
+    word = sline[1]
+    if word == 'MODULE':
+        assert len(sline) == 5, sline
+    elif word in ['SUPER', 'AFPM', 'AUXMODEL', 'TRMC']:
+        assert len(sline) == 3, sline
+    else:
+        raise RuntimeError(sline)
+
+    #line_upper = replace_multiple_spaces_with_single(line_upper)
+    return
 
 def _get_auxmodel_id(line: str, line_upper: str) -> int:
     """

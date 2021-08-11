@@ -1744,6 +1744,7 @@ def _get_pid_to_node_ids_and_elements_array(model: BDF,
         'CTETRA', 'CPENTA', 'CHEXA', 'CPYRAM',
         'CRAC2D', 'CRAC3D', 'CHBDYP', #'CHBDYG',
         'CHACAB', 'CAABSF',
+        'CBEAM3',
     ]
     # ------------------------------------------------------------
     etypes_ = model._slot_to_type_map['elements']
@@ -1807,10 +1808,12 @@ def _get_pid_to_node_ids_and_elements_array(model: BDF,
             try:
                 for ieid, eid in enumerate(eids):
                     element = model.elements[eid]
+                    node_idsi = element.node_ids
                     try:
-                        node_ids[ieid, :] = element.node_ids
+                        node_ids[ieid, :] = node_idsi
                     except TypeError:
                         print(element)
+                        print(node_idsi)
                         raise
                     if etype in etypes_no_pids:
                         pid = 0

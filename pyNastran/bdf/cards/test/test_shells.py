@@ -136,7 +136,7 @@ class TestShells(unittest.TestCase):
         self.assertEqual(ctria3.Mass(), mass)
         self.assertAlmostEqual(ctria3.MassPerArea(), mass / A)
         self.assertEqual(ctria3.Area(), A)
-        self.assertEqual(ctria3.Thickness(), t)
+        self.assertAlmostEqual(ctria3.Thickness(), t)
         self.assertEqual(ctria3.MassPerArea(), mass / A)
         self.assertEqual(ctria3.zoffset, z0_elem)
         ctria3.raw_fields()
@@ -1420,6 +1420,142 @@ class TestShells(unittest.TestCase):
         str(bdf_card)
         card = CTRIA3.add_card_lax(bdf_card)
         str(card)
+
+    def test_tri_theta(self):
+        model = BDF(debug=False, log=None, mode='msc')
+        rho = 0.
+        G = None
+        E = 3.0e7
+        t = 0.1
+        nu = 0.3
+        nsm = 0.
+        self._make_ctria3(model, rho, nu, G, E, t, nsm)
+
+        eid = 10
+        elem = model.elements[eid]
+
+        #['grid', n1, 0, 0., 0., 0.],
+        #['grid', n2, 0, 4., 0., 0.],
+        #['grid', n3, 0, 4., 1., 0.],
+
+        # element coordinate system and material coordinate system are coincident
+        centroid, imat, jmat, normal = elem.material_coordinate_system()
+        centroid_expected = [2.66666667, 0.33333333, 0.]
+        imat_expected = [1., 0., 0.]
+        jmat_expected = [0., 1., 0.]
+        normal_expected = [0., 0., 1.]
+
+        centroid, imat, jmat, normal = elem.element_coordinate_system()
+        assert np.allclose(centroid, centroid_expected), centroid
+        assert np.allclose(imat, imat_expected), imat
+        assert np.allclose(jmat, jmat_expected), jmat
+        assert np.allclose(normal, normal_expected), normal
+
+        assert np.allclose(centroid, centroid_expected), centroid
+        assert np.allclose(imat, imat_expected), imat
+        assert np.allclose(jmat, jmat_expected), jmat
+        assert np.allclose(normal, normal_expected), normal
+
+        # ----------------------------------------------------------------
+        elem.theta_mcid = 45.
+        # theta doesn't change the element coordinate system
+        centroid, imat, jmat, normal = elem.element_coordinate_system()
+        assert np.allclose(centroid, centroid_expected), centroid
+        assert np.allclose(imat, imat_expected), imat
+        assert np.allclose(jmat, jmat_expected), jmat
+        assert np.allclose(normal, normal_expected), normal
+
+        centroid, imat, jmat, normal = elem.material_coordinate_system()
+
+        sqrt2_2 = 2 ** 0.5 / 2
+        imat_expected = [sqrt2_2, sqrt2_2, 0.]
+        jmat_expected = [-sqrt2_2, sqrt2_2, 0.]
+        normal_expected = [0., 0., 1.]
+        assert np.allclose(centroid, centroid_expected), centroid
+        assert np.allclose(imat, imat_expected), imat
+        assert np.allclose(jmat, jmat_expected), jmat
+        assert np.allclose(normal, normal_expected), normal
+
+        # ----------------------------------------------------------------
+        elem.theta_mcid = 90.
+        centroid, imat, jmat, normal = elem.material_coordinate_system()
+
+        imat_expected = [0., 1., 0.]
+        jmat_expected = [-1., 0., 0.]
+        normal_expected = [0., 0., 1.]
+        assert np.allclose(centroid, centroid_expected), centroid
+        assert np.allclose(imat, imat_expected), imat
+        assert np.allclose(jmat, jmat_expected), jmat
+        assert np.allclose(normal, normal_expected), normal
+
+    def test_quad_theta(self):
+        model = BDF(debug=False, log=None, mode='msc')
+        rho = 0.
+        G = None
+        E = 3.0e7
+        t = 0.1
+        nu = 0.3
+        nsm = 0.
+        self._make_cquad4(model, rho, nu, G, E, t, nsm)
+
+        eid = 10
+        elem = model.elements[eid]
+
+        #['grid', n1, 0, 0., 0., 0.],
+        #['grid', n2, 0, 2., 0., 0.],
+        #['grid', n3, 0, 2., 1., 0.],
+        #['grid', n4, 0, 0., 1., 0.],
+
+        # element coordinate system and material coordinate system are coincident
+        centroid, imat, jmat, normal = elem.material_coordinate_system()
+        centroid_expected = [1., 0.5, 0.]
+        imat_expected = [1., 0., 0.]
+        jmat_expected = [0., 1., 0.]
+        normal_expected = [0., 0., 1.]
+
+        centroid, imat, jmat, normal = elem.element_coordinate_system()
+        assert np.allclose(centroid, centroid_expected), centroid
+        assert np.allclose(imat, imat_expected), imat
+        assert np.allclose(jmat, jmat_expected), jmat
+        assert np.allclose(normal, normal_expected), normal
+
+        assert np.allclose(centroid, centroid_expected), centroid
+        assert np.allclose(imat, imat_expected), imat
+        assert np.allclose(jmat, jmat_expected), jmat
+        assert np.allclose(normal, normal_expected), normal
+
+        # ----------------------------------------------------------------
+        elem.theta_mcid = 45.
+        # theta doesn't change the element coordinate system
+        centroid, imat, jmat, normal = elem.element_coordinate_system()
+        assert np.allclose(centroid, centroid_expected), centroid
+        assert np.allclose(imat, imat_expected), imat
+        assert np.allclose(jmat, jmat_expected), jmat
+        assert np.allclose(normal, normal_expected), normal
+
+        centroid, imat, jmat, normal = elem.material_coordinate_system()
+
+        sqrt2_2 = 2 ** 0.5 / 2
+        centroid_expected = [1., 0.5, 0.]
+        imat_expected = [sqrt2_2, sqrt2_2, 0.]
+        jmat_expected = [-sqrt2_2, sqrt2_2, 0.]
+        normal_expected = [0., 0., 1.]
+        assert np.allclose(centroid, centroid_expected), centroid
+        assert np.allclose(imat, imat_expected), imat
+        assert np.allclose(jmat, jmat_expected), jmat
+        assert np.allclose(normal, normal_expected), normal
+        # ----------------------------------------------------------------
+        elem.theta_mcid = 90.
+        centroid, imat, jmat, normal = elem.material_coordinate_system()
+
+        imat_expected = [0., 1., 0.]
+        jmat_expected = [-1., 0., 0.]
+        normal_expected = [0., 0., 1.]
+        assert np.allclose(centroid, centroid_expected), centroid
+        assert np.allclose(imat, imat_expected), imat
+        assert np.allclose(jmat, jmat_expected), jmat
+        assert np.allclose(normal, normal_expected), normal
+
 
 def make_dvcrel_optimization(model, params, element_type, eid, i=1):
     """makes a series of DVCREL1 and a DESVAR"""

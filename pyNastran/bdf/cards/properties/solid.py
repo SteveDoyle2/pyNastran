@@ -466,7 +466,7 @@ class PCOMPLS(Property):
                 ifield += 8
                 continue
             elif value == 'C20':
-                assert c02 == [], c20
+                assert c20 == [], c20
                 #['C8', 'SLCOMP', 'L', None, None, None, None, None]
 
                 #Element structural behavior. See Remarks 4. and 7.

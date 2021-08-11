@@ -1,7 +1,6 @@
 from __future__ import annotations
 from struct import pack, Struct
 from collections import defaultdict
-from itertools import zip_longest
 from typing import List, Dict, Tuple, Union, Any, TYPE_CHECKING
 
 from pyNastran.bdf import MAX_INT
@@ -245,11 +244,10 @@ def _write_spc(card_type: str, cards, ncards: int, op2_file, op2_ascii,
         nbytes = write_header(card_type, nfields, ncards, key, op2_file, op2_ascii)
         for spc in cards:
             node_ids = spc.node_ids
-            for nid, comp, enforcedi in zip_longest(node_ids, spc.components, spc.enforced):
+            for nid, comp, enforcedi in zip(node_ids, spc.components, spc.enforced):
                 datai = [spc.conid, nid, int(comp), 0, enforcedi]
             op2_ascii.write('  SPC data=%s\n' % str(datai))
             data += datai
-        #print(data)
         nfields = len(data)
         nbytes = write_header_nvalues(card_type, nfields, key, op2_file, op2_ascii)
         fmt = endian + b'4if' * (nfields // 5)

@@ -648,12 +648,19 @@ class CaseControlDeck:
             assert key.upper() == key, key
 
         elif line_upper.startswith(('LABEL', 'SUBT', 'TITL')):  # SUBTITLE/TITLE
-            try:
+            if '=' in line_upper:
                 eindex = line.index('=')
-            except ValueError:
-                msg = "cannot find an = sign in LABEL/SUBTITLE/TITLE line\n"
-                msg += "line = %r" % line_upper.strip()
-                raise RuntimeError(msg)
+                base = line[:eindex].strip()
+                assert ' ' not in base, f'base={base!r} line={line_upper}'
+            #except ValueError:
+                #msg = "cannot find an = sign in LABEL/SUBTITLE/TITLE line\n"
+                #msg += "line = %r" % line_upper.strip()
+                #raise RuntimeError(msg)
+            else:
+                #print(f'line = {line!r}')
+                assert ' ' in line, line
+                eindex = line.index(' ')
+                #base = line[:eindex]
 
             key = line_upper[0:eindex].strip()
             value = line[eindex + 1:].strip()

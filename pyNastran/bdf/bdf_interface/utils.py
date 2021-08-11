@@ -41,22 +41,28 @@ def _to_fields_mntpnt1(card_lines: List[str]) -> List[str]:
     assert len(card_lines) == 2, card_lines
     line1, line2 = card_lines
 
-    base = line1[:24]
+    label = line1[:24]
     unused_comment = line1[24:]  # len=56 max
-    assert ',' not in base, base
-    assert '\t' not in base, base
+    #assert ',' not in label, f'base={label!r}'
+    assert '\t' not in label, f'base={label!r}'
 
-    assert ',' not in line2, card_lines
-    assert '\t' not in line2, card_lines
-    assert '*' not in line2, card_lines
     fields = [
         line1[0:8],
         line1[8:16], line1[16:24], line1[24:32], line1[32:40], line1[40:48],
         line1[48:56], line1[56:64], line1[64:72],
-
-        line2[8:16], line2[16:24], line2[24:32], line2[32:40], line2[40:48],
-        line2[48:56], line2[56:64], line2[64:72],
     ]
+
+    #assert ',' not in line2, card_lines
+    assert '\t' not in line2, card_lines
+    assert '*' not in line2, card_lines
+    if ',' in line2:
+        # drop off the first field of row2
+        fields += line2.split(',')[1:]
+    else:
+        fields += [
+            line2[8:16], line2[16:24], line2[24:32], line2[32:40], line2[40:48],
+            line2[48:56], line2[56:64], line2[64:72],
+        ]
     return fields
 
 
@@ -91,11 +97,11 @@ def to_fields(card_lines: List[str], card_name: str) -> List[str]:
     """
     fields = []  # type: List[str]
 
-    if card_name == 'MONPNT1':
+    if card_name in ['MONPNT1']:
         return _to_fields_mntpnt1(card_lines)
 
     # first line
-    line = card_lines[0]
+    line = card_lines[0].rstrip()
     if '=' in line:
         msg = 'card_name=%r\nequal signs are not supported...line=%r' % (card_name, line)
         raise CardParseSyntaxError(msg)
@@ -162,7 +168,7 @@ def expand_tabs(line: str) -> str:
     line = line.expandtabs()
     if ',' in line:
         line = line.replace('\t', '')
-        msg = 'tabs and commas in the same line are not supported...\nline=%r' % line
+        msg = f'tabs and commas in the same line are not supported...\nline={line!r}'
         raise CardParseSyntaxError(msg)
     return line
 

@@ -217,8 +217,15 @@ class AddMethods:
 
     def _add_mdlprm_object(self, mdlprm: MDLPRM, allow_overwrites: bool=False) -> None:
         """adds a MDLPRM object"""
-        assert self.model.mdlprm is None, self.model.mdlprm
-        self.model.mdlprm = mdlprm
+        if self.model.mdlprm is None:
+            self.model.mdlprm = mdlprm
+        else:
+            model_mdlprm_dict = self.model.mdlprm.mdlprm_dict
+            for key, value in mdlprm.mdlprm_dict.items():
+                if key in model_mdlprm_dict:
+                    assert self.model.mdlprm is None, self.model.mdlprm
+                else:
+                    model_mdlprm_dict[key] = value
         #model._type_to_id_map[param.type].append(key)
 
     def _add_node_object(self, node: Union[GRID], allow_overwrites: bool=False) -> None:

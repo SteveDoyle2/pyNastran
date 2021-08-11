@@ -9,7 +9,7 @@ from pyNastran.bdf.cards.base_card import BaseCard
 from pyNastran.bdf.bdf_interface.bdf_card import BDFCard
 from pyNastran.bdf.bdf_interface.assign_type import (
     integer, double, integer_or_blank, double_or_blank, string, string_or_blank,
-    integer_double_string_or_blank)
+    integer_double_string_or_blank, blank)
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
 from pyNastran.utils.numpy_utils import integer_types, float_types
@@ -1526,9 +1526,12 @@ class MDLPRM(BaseCard):
         mdlprm_dict = {}
         ifield = 1
         while ifield < len(card):
-            key = string(card, ifield, 'key')
-
-            if key in MDLPRM_INT_KEYS_1:
+            key = string_or_blank(card, ifield, 'key')
+            if key is None:
+                value = blank(card, ifield+1, 'blank_value')
+                ifield += 2
+                continue
+            elif key in MDLPRM_INT_KEYS_1:
                 value = integer_or_blank(card, ifield+1, 'value')
             elif key in MDLPRM_STR_KEYS_1:
                 value = string(card, ifield+1, key)
@@ -1594,7 +1597,7 @@ class MDLPRM(BaseCard):
             elif flag == 2:
                 value = xfloat
             elif flag == 3:
-                value = xstr
+                value = xstr.decode(encoding)
                 assert isinstance(value, str), value
             else:  # pragma: no cover
                 raise RuntimeError((key_str, flag, xint, xfloat, xstr))

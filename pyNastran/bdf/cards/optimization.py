@@ -808,7 +808,7 @@ class DESVAR(OptConstraint):
         # DDVAL id if you want discrete values
         self.ddval = ddval
         self.ddval_ref = None
-        assert ' ' not in label.rstrip(), self.get_stats()
+        #assert ' ' not in label.rstrip(), self.get_stats()
 
     def _verify(self, xref):
         pass
@@ -4805,6 +4805,8 @@ class DVPREL1(DVXREL1):
         desvars = self.dvids
         ndesvars = len(desvars)
         for desvar, coeff in zip(desvars, self.coeffs):
+            assert isinstance(coeff, float_types), f'invalid coefficient={coeff!r}\n{self}'
+
             if isinstance(desvar, integer_types):
                 desvar_ref = model.desvars[desvar]
             else:

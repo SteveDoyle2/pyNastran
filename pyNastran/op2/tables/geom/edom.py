@@ -467,7 +467,6 @@ class EDOM(GeomCommon):
         msg = ''
         for unused_icard in range(ncards):
             edata = data[n:n+ntotal]
-            #op2.show_data(edata)
             out = struct1.unpack(edata)
             rtype_int, trs, nstr = out
             n += ntotal

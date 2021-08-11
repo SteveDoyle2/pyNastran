@@ -597,6 +597,25 @@ class CBEAM(LineElement):
         #x = self.get_orientation_vector()
         return (ga + gb) / 2.
 
+    def get_orientation_vector(self, xyz):
+        """
+        Element offsets are defined in a Cartesian system located at the
+        connecting grid point. The components of the offsets are always
+        defined in units of translation, even if the displacement
+        coordinate system is cylindrical or spherical.
+
+        For example, in Figure 11-11, the grid point displacement
+        coordinate system is cylindrical, and the offset vector is
+        defined using Cartesian coordinates u1, u2, and u3 in units of
+        translation.
+        """
+        if self.g0:
+            v = xyz[self.g0] - xyz[self.Ga()]
+        else:
+            v = self.x
+        assert self.offt == 'GGG', self.offt
+        return v
+
     def get_axes(self, model: BDF) -> Tuple[Any, Any, Any, Any, Any]:
         """
         Gets the axes of a CBAR/CBEAM, while respecting the OFFT flag.

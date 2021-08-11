@@ -2669,7 +2669,8 @@ class PSHELL(Property):
 
     def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.repr_fields()
-        mid_max = max(self.material_ids)
+        mid_max = max([0 if mid is None else mid
+                       for mid in self.material_ids])
         if max(self.pid, mid_max) > MAX_INT:
             size = 16
         if size == 8:

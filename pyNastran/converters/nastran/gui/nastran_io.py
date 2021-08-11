@@ -3475,7 +3475,7 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
         for iply, nodesi in nodes.items():
             barsi = bars[iply]
             if iply == -1:
-                name = 'element coord'
+                name = 'element material coord'
             else:
                 name = f'mcid ply={iply+1}'
 
@@ -3499,7 +3499,6 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
             grid.SetPoints(points)
             create_vtk_cells_of_constant_element_type(grid, elements, etype)
         return
-
 
     def _build_plotels(self, model):
         """creates the plotel actor"""

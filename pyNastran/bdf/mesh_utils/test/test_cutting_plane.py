@@ -576,9 +576,9 @@ def plot_inertia(y, A, I, J, EI, GJ, avg_centroid, ifig: int=1, show: bool=True,
     ax.plot(y, I[:, 1] / aI[:, 1].max(), 'bo-', label='Izz')
     ax.plot(y, I[:, 2] / aI[:, 2].max(), 'go-', label='Ixz')
 
-    ax.plot(y, EI[:, 0] / aEI[:, 0].max(), 'ro-', label='EIxx', linestyle='--')
-    ax.plot(y, EI[:, 1] / aEI[:, 1].max(), 'bo-', label='EIzz', linestyle='--')
-    ax.plot(y, EI[:, 2] / aEI[:, 2].max(), 'go-', label='EIxz', linestyle='--')
+    ax.plot(y, EI[:, 0] / aEI[:, 0].max(), 'ro', label='EIxx', linestyle='--')
+    ax.plot(y, EI[:, 1] / aEI[:, 1].max(), 'bo', label='EIzz', linestyle='--')
+    ax.plot(y, EI[:, 2] / aEI[:, 2].max(), 'go', label='EIxz', linestyle='--')
     #ax.plot(y, GJ / aGJ.max(), 'go-', label='GJ', linestyle='--')
 
     ax.grid(True)
@@ -590,7 +590,7 @@ def plot_inertia(y, A, I, J, EI, GJ, avg_centroid, ifig: int=1, show: bool=True,
 
     fig = plt.figure(ifig + 1)
     ax = fig.gca()
-    ax.plot(y, A, 'ro-', label='Area', linestyle='-')
+    ax.plot(y, A, 'ro', label='Area', linestyle='-')
 
     ax.grid(True)
     ax.set_xlabel('Span, y')

@@ -4076,17 +4076,17 @@ class MONPNT3(BaseCard):
 
 class MONDSP1(BaseCard):
     """
-    +---------+---------+------+-----+-----+-------+------+----+----+
-    |    1    |    2    |  3   |  4  |  5  |   6   |   7  | 8  | 9  |
-    +=========+=========+======+=====+=====+=======+======+====+====+
-    | MONPNT1 |  NAME   |                   LABEL                   |
-    +---------+---------+------+-----+-----+-------+------+----+----+
-    |         |  AXES   | COMP | CP  |  X  |   Y   |   Z  | CD |    |
-    +---------+---------+------+-----+-----+-------+------+----+----+
-    | MONPNT1 | WING155 |    Wing Integrated Load to Butline 155    |
-    +---------+---------+------+-----+-----+-------+------+----+----+
-    |         |    34   | WING |     | 0.0 | 155.0 | 15.0 |    |    |
-    +---------+---------+------+-----+-----+-------+------+----+----+
+    +---------+---------+------+-----+-----+-------+------+----+--------+
+    |    1    |    2    |  3   |  4  |  5  |   6   |   7  | 8  |   9    |
+    +=========+=========+======+=====+=====+=======+======+====+========+
+    | MONPNT1 |  NAME   |                   LABEL                       |
+    +---------+---------+------+-----+-----+-------+------+----+--------+
+    |         |  AXES   | COMP | CP  |  X  |   Y   |   Z  | CD | INDDOF |
+    +---------+---------+------+-----+-----+-------+------+----+--------+
+    | MONPNT1 | WING155 |    Wing Integrated Load to Butline 155        |
+    +---------+---------+------+-----+-----+-------+------+----+--------+
+    |         |    34   | WING |     | 0.0 | 155.0 | 15.0 |    |        |
+    +---------+---------+------+-----+-----+-------+------+----+--------+
     """
     type = 'MONDSP1'
 
@@ -4159,39 +4159,34 @@ class MONDSP1(BaseCard):
         assert len(card) == 2, card
         assert len(row0) > 8, row0
         assert ',' not in row1, row1
-        card_fields = ['', row1[8:16], row1[16:24], row1[24:32], row1[32:40], row1[40:48], row1[48:56], row1[56:64], row1[64:72]]
-        card = BDFCard(card_fields, has_none=True)
+        if '\t' in row1:
+            card_fields = row1.split('\t')
+            row1 = row1.expandtabs(tabsize=8)
 
-        #name = string(card, 1, 'name')
         name = row0[8:16]
         label = row0[16:72]
+        card_fields = [
+            'MONDSP1', name,
+            label[:8], label[8:16], label[16:24], label[24:32], label[32:40], label[40:48], label[48:56],
+            row1[8:16], row1[16:24], row1[24:32], row1[32:40], row1[40:48], row1[48:56], row1[56:64], row1[64:72]]
 
+        card = BDFCard(card_fields, has_none=True)
+
+        name = string(card, 1, 'name')
         #label_fields = [labeli for labeli in card[2:8] if labeli is not None]
         #label = ''.join(label_fields).strip()
         # assert len(label) <= 56, label
 
-        if 1:
-            axes = parse_components(card, 2, 'axes')
-            comp = string(card, 3, 'comp')
-            cp = integer_or_blank(card, 4, 'cp', 0)
-            xyz = [
-                double_or_blank(card, 5, 'x', default=0.0),
-                double_or_blank(card, 6, 'y', default=0.0),
-                double_or_blank(card, 7, 'z', default=0.0),
-            ]
-            cd = integer_or_blank(card, 8, 'cd', cp)
-            ind_dof = components_or_blank(card, 9, 'ind_dof', '123')
-        else:
-            axes = parse_components(card, 9, 'axes')
-            comp = string(card, 10, 'comp')
-            cp = integer_or_blank(card, 11, 'cp', 0)
-            xyz = [
-                double_or_blank(card, 12, 'x', default=0.0),
-                double_or_blank(card, 13, 'y', default=0.0),
-                double_or_blank(card, 14, 'z', default=0.0),
-            ]
-            cd = integer_or_blank(card, 15, 'cd', cp)
-            ind_dof = components_or_blank(card, 16, 'ind_dof', '123')
+        axes = parse_components(card, 9, 'axes')
+        comp = string(card, 10, 'comp')
+        cp = integer_or_blank(card, 11, 'cp', 0)
+        xyz = [
+            double_or_blank(card, 12, 'x', default=0.0),
+            double_or_blank(card, 13, 'y', default=0.0),
+            double_or_blank(card, 14, 'z', default=0.0),
+        ]
+        cd = integer_or_blank(card, 15, 'cd', cp)
+        ind_dof = components_or_blank(card, 16, 'ind_dof', '123')
         return MONDSP1(name, label, axes, comp, xyz, cp=cp, cd=cd, ind_dof=ind_dof, comment=comment)
 
     def cross_reference(self, model: BDF) -> None:
