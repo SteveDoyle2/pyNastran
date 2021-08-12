@@ -167,7 +167,7 @@ jobs:
         run: |
          python setup.py develop
 
-- name: Install dependencies (bdist_wheel & develop)
+      - name: Install dependencies (bdist_wheel & develop)
         if: ${{ matrix.python-version == '3.8' }}
          !pip install dist/pyNastran*.whl
         run: |
