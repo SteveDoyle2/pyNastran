@@ -5,7 +5,7 @@ from setuptools import setup, find_packages
 import pyNastran
 from packages import (check_python_version, get_package_requirements,
                       update_version_file, PYTHON_REQUIRES,
-                      LONG_DESCRIPTION, CLASSIFIERS)
+                      LONG_DESCRIPTION, CLASSIFIERS, EXCLUDE_WORDS)
 
 
 check_python_version()
@@ -22,13 +22,8 @@ for icon_file in icon_files:
     if icon_file.endswith('.png'):
         icon_files2.append(os.path.join(icon_path, icon_file))
 
-exclude_words = [
-    'pyNastran.dev.bdf_vectorized', 'pyNastran.dev.bdf_vectorized.cards',
-    'pyNastran.f06.dev',
-    'pyNastran.op2.dev', 'pyNastran.op2.dev.original',
-    'pyNastran.converters.dev', 'pyNastran.xdb',]
-packages = find_packages(exclude=['ez_setup', 'examples', 'tests'] + exclude_words)
-for exclude_word in exclude_words:
+packages = find_packages(exclude=['ez_setup', 'examples', 'tests'] + EXCLUDE_WORDS)
+for exclude_word in EXCLUDE_WORDS:
     packages = [package for package in packages if exclude_word not in package]
 #print(packages, len(packages)) # 83
 update_version_file()

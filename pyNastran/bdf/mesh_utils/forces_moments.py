@@ -10,7 +10,7 @@ defines methods to access force/moment/pressure/temperature data:
 
 """
 from __future__ import annotations
-from typing import TYPE_CHECKING
+from typing import Tuple, TYPE_CHECKING
 import numpy as np
 
 from pyNastran.utils.numpy_utils import integer_types
@@ -21,9 +21,10 @@ if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.bdf.bdf import BDF
 
 
-def get_forces_moments_array(model: BDF, p0, load_case_id : int,
-                             eid_map, nnodes, normals, dependents_nodes,
-                             nid_map=None, include_grav=False, fdtype='float32'):
+def get_forces_moments_array(model: BDF, p0, load_case_id: int,
+                             eid_map, nnodes: int, normals, dependents_nodes,
+                             nid_map=None, include_grav: bool=False,
+                             fdtype: str='float32') -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
     """
     Gets the forces/moments on the nodes.
 
@@ -61,8 +62,8 @@ def get_forces_moments_array(model: BDF, p0, load_case_id : int,
     load_data : tuple(centroidal_pressures, forces, spcd)
         centroidal_pressures : (nelements, 1) float ndarray
             the pressure
-        forces : (nnodes, 3) float ndarray
-            the pressure
+        forces/moments : (nnodes, 3) float ndarray
+            the forces/moments
         spcd : (nnodes, 3) float ndarray
             the SPCD load application
 
@@ -77,7 +78,7 @@ def get_forces_moments_array(model: BDF, p0, load_case_id : int,
     """
     if nid_map is None:
         nid_map = model.nid_map
-    if not any(['FORCE' in model.card_count,
+    if not any(['FORCE' in model.card_count, 'MOMENT' in model.card_count,
                 'PLOAD' in model.card_count, 'PLOAD2' in model.card_count,
                 'PLOAD4' in model.card_count, 'SPCD' in model.card_count,
                 'SLOAD' in model.card_count]):
@@ -92,6 +93,7 @@ def get_forces_moments_array(model: BDF, p0, load_case_id : int,
     nodal_pressures = np.zeros(len(model.node_ids), dtype=fdtype)
 
     forces = np.zeros((nnodes, 3), dtype=fdtype)
+    moments = np.zeros((nnodes, 3), dtype=fdtype)
     spcd = np.zeros((nnodes, 3), dtype=fdtype)
     # loop thru scaled loads and plot the pressure
     cards_ignored = set()
@@ -100,23 +102,26 @@ def get_forces_moments_array(model: BDF, p0, load_case_id : int,
     fail_nids = set()
     fail_count = 0
     fail_count_max = 3
-    loads_to_skip = ['MOMENT', 'MOMENT1', 'MOMENT2', 'FORCE1', 'TEMP']
+    loads_to_skip = ['MOMENT1', 'MOMENT2', 'FORCE1', 'TEMP']
     log = model.log
     nodes = model.nodes
     for load, scale in zip(loads, scale_factors):
         load_type = load.type
         if load_type in loads_to_skip:
             pass
-        elif load_type == 'FORCE':
+        elif load_type in ['FORCE', 'MOMENT']:
             scale2 = load.mag * scale  # does this need a magnitude?
             nid = load.node
             if nid in dependents_nodes:
                 fail_nids.add(nid)
                 fail_count += 1
                 if fail_count < fail_count_max:
-                    log.warning('    nid=%s is a dependent node and has a FORCE applied\n%s' % (
-                        nid, str(load)))
-            forces[nid_map[nid]] += load.xyz * scale2
+                    log.warning(f'    nid={nid} is a dependent node and has a {load_type} applied\n{load}')
+            inid = nid_map[nid]
+            if load_type == 'FORCE':
+                forces[inid] += load.xyz * scale2
+            else:
+                moments[inid] += load.xyz * scale2
 
         elif load_type == 'PLOAD':
             pressure = load.pressure * scale
@@ -357,10 +362,10 @@ def get_forces_moments_array(model: BDF, p0, load_case_id : int,
         fail_nids_array = np.array(list(fail_nids))
         fail_nids_array.sort()
         model.log.warning('fail_nids = %s' % fail_nids_array)
-    return centroidal_pressures, forces, spcd
+    return centroidal_pressures, forces, moments, spcd
 
-def get_pressure_array(model: BDF, load_case_id, eids, stop_on_failure=True,
-                       fdtype='float32'):
+def get_pressure_array(model: BDF, load_case_id: int, eids, stop_on_failure: bool=True,
+                       fdtype: str='float32') -> Tuple[bool, np.ndarray]:
     """
     Gets the shell pressures for a load case.
 
@@ -565,11 +570,11 @@ def get_load_arrays(model: BDF, subcase_id, eid_map, node_ids, normals,
               TEMPERATURE(BOTH)
         temperatures : (nnodes, 1) float ndarray
             the temperatures
-    load_data : tuple(centroidal_pressures, forces, spcd)
+    load_data : tuple(centroidal_pressures, forces, moments, spcd)
         centroidal_pressures : (nelements, 1) float ndarray
             the pressure
-        forces : (nnodes, 3) float ndarray
-            the pressure
+        forces/moments : (nnodes, 3) float ndarray
+            the forces/moments
         spcd : (nnodes, 3) float ndarray
             the SPCD load application
 
@@ -618,7 +623,7 @@ def get_load_arrays(model: BDF, subcase_id, eid_map, node_ids, normals,
 
         if key == 'LOAD':
             p0 = np.array([0., 0., 0.], dtype=fdtype)
-            centroidal_pressures, forces, spcd = get_forces_moments_array(
+            centroidal_pressures, forces, moments, spcd = get_forces_moments_array(
                 model, p0, load_case_id,
                 eid_map=eid_map,
                 nnodes=nnodes,
@@ -626,7 +631,7 @@ def get_load_arrays(model: BDF, subcase_id, eid_map, node_ids, normals,
                 dependents_nodes=model.node_ids,
                 nid_map=nid_map,
                 include_grav=False)
-            if centroidal_pressures is not None: # or any of the others
+            if (centroidal_pressures is not None) or np.abs(forces).max() > 0. or np.abs(moments).max() > 0.: # or any of the others
                 is_loads = True
         elif key in temperature_keys:
             is_temperatures, temperatures = get_temperatures_array(
@@ -635,5 +640,5 @@ def get_load_arrays(model: BDF, subcase_id, eid_map, node_ids, normals,
         else:  # pragma: no cover
             raise NotImplementedError(key)
     temperature_data = (temperature_key, temperatures)
-    load_data = (centroidal_pressures, forces, spcd)
+    load_data = (centroidal_pressures, forces, moments, spcd)
     return is_loads, is_temperatures, temperature_data, load_data

@@ -5739,7 +5739,7 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
             #self.log.info('subcase_id=%s is_loads=%s is_temperatures=%s' % (
                 #subcase_id, is_loads, is_temperatures))
             if is_loads:
-                centroidal_pressures, forces, spcd = load_data
+                centroidal_pressures, forces, moments, spcd = load_data
                 if np.abs(centroidal_pressures).max():
                     pressure_res = GuiResult(subcase_id, header='Pressure', title='Pressure',
                                              location='centroid', scalar=centroidal_pressures)
@@ -5749,9 +5749,7 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
 
                 if np.abs(forces.max() - forces.min()) > 0.0:
                     fxyz = forces[:, :3]
-                    mxyz = forces[:, 3:]
                     fscalar = np.linalg.norm(fxyz, axis=1)
-                    mscalar = np.linalg.norm(mxyz, axis=1)
                     if fscalar.max() > 0:
                         titles = ['Force XYZ']
                         headers = titles
@@ -5770,6 +5768,9 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
                         form0.append(('Force XYZ', icase, []))
                         icase += 1
 
+                if np.abs(moments.max() - moments.min()) > 0.0:
+                    mxyz = moments[:, :3]
+                    mscalar = np.linalg.norm(mxyz, axis=1)
                     if mscalar.max() > 0:
                         titles = ['Moment XYZ']
                         headers = titles

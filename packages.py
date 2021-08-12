@@ -14,6 +14,16 @@ CLASSIFIERS = [
 
 PYTHON_REQUIRES = '>=3.7'
 
+EXCLUDE_WORDS = [
+    'pyNastran.f06.dev',
+    'pyNastran.op2.dev', 'pyNastran.op2.dev.original',
+    'pyNastran.converters.dev',
+
+    'pyNastran.dev',
+    'pyNastran.dev.xdb',
+    'pyNastran.dev.bdf_vectorized', 'pyNastran.dev.bdf_vectorized.cards',
+]
+
 
 # features in packages used by pyNastran
 # numpy
