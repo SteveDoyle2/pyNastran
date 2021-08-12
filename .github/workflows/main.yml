@@ -162,9 +162,15 @@ jobs:
           pip install numpy==1.19.4 scipy==1.5.4 matplotlib==3.3.3 h5py==3.0.0 pandas==1.1.3
 #-----------------------------------------------------------------------------------
 
-      - name: Install dependencies
+      - name: Install dependencies (old python)
+        if: ${{ matrix.python-version == '3.7' || matrix.python-version == '3.8' }}
         run: |
          python setup.py develop
+
+      - name: Install dependencies (latest python)
+        if: ${{ matrix.python-version == '3.9' }}
+        run: |
+         python setup.py install --user
 
       - name: List dependencies
         run: |
