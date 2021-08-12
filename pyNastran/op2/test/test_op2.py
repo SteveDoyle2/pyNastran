@@ -242,8 +242,9 @@ def run_op2(op2_filename: str, make_geom: bool=False, combine: bool=True,
     bdf_filename =  f'{fname_base}.test_op2{name}.bdf'
 
     if isinstance(subcases, str):
-        if '_' in subcases:
-            subcases = [int(i) for i in subcases.split('_')]
+        subcases = subcases.replace('_', ' ').replace(',', ' ').strip()
+        if ' ' in subcases:
+            subcases = [int(i) for i in subcases.split(' ')]
         else:
             subcases = [int(subcases)]
 

@@ -404,8 +404,8 @@ def run_and_compare_fems(
     diff_cards = []
 
     mesh_opt_cards = [
-        #'GRIDG', 'CGEN', 'SPCG', 'EQUIV', 'FEEDGE', 'FEFACE', 'ADAPT',
-        #'PVAL', 'GMCURV', 'GMSURF',
+        'GRIDG', 'CGEN', 'SPCG', 'FEEDGE', 'FEFACE', 'ADAPT', # 'EQUIV',
+        'PVAL', 'GMCURV', 'GMSURF',
     ]
     #nastran_cmd = 'nastran scr=yes bat=no old=no news=no '
     nastran_cmd = ''
@@ -484,34 +484,34 @@ def run_and_compare_fems(
     except EnvironmentVariableError:
         if not dev:
             raise
-    except RuntimeError as e:
+    #except RuntimeError as e:
         # only temporarily uncomment this when running lots of tests
-        if not dev:
-            raise
-        elif is_mesh_opt:
-            print('failed test because mesh adaption (GRIDG,CGEN,SPCG)...ignoring')
-            print(e)
-        else:
-            raise
+        #if not dev:
+            #raise
+        #elif is_mesh_opt:
+            #print('failed test because mesh adaption (GRIDG,CGEN,SPCG)...ignoring')
+            #print(e)
+        #else:
+            #raise
     #except AttributeError:  # only temporarily uncomment this when running lots of tests
         #pass
-    except SyntaxError as e:
+    #except SyntaxError as e:
         # only temporarily uncomment this when running lots of tests
-        if not dev:
-            raise
-        elif is_mesh_opt:
-            print('failed test because mesh adaption (GRIDG,CGEN,SPCG)...ignoring')
-            print(e)
-        else:
-            raise
-    except KeyError as e:  # only temporarily uncomment this when running lots of tests
-        if not dev:
-            raise
-        elif is_mesh_opt:
-            print('failed test because mesh adaption (GRIDG,CGEN,SPCG)...ignoring')
-            print(e)
-        else:
-            raise
+        #if not dev:
+            #raise
+        #elif is_mesh_opt:
+            #print('failed test because mesh adaption (GRIDG,CGEN,SPCG)...ignoring')
+            #print(e)
+        #else:
+            #raise
+    #except KeyError as e:  # only temporarily uncomment this when running lots of tests
+        #if not dev:
+            #raise
+        #elif is_mesh_opt:
+            #print('failed test because mesh adaption (GRIDG,CGEN,SPCG)...ignoring')
+            #print(e)
+        #else:
+            #raise
     #except AssertionError:  # only temporarily uncomment this when running lots of tests
         #pass
     except SystemExit:

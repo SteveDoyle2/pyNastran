@@ -1970,8 +1970,10 @@ def rotate_v_wa_wb(model: BDF, elem, xyz1, xyz2, node1, node2, ihat_offset, i_of
     i = i_offset
     Li = norm(i)
     ihat = i / Li
-    yhat, zhat = get_bar_yz_transform(v, ihat, eid, xyz1, xyz2, node1.nid, node2.nid, i, Li)
+    #msg = f'eid={eid} xyz1={xyz1} xyz2={xyz2}\nv={v} ihat={ihat} L={Li}\n{elem}'
+    #model.log.error(msg)
 
+    yhat, zhat = get_bar_yz_transform(v, ihat, eid, xyz1, xyz2, node1.nid, node2.nid, i, Li)
     #print('  n1=%s n2=%s' % (n1, n2))
     #print('  ib=%s ia=%s' % (ib, ia))
     #print('  wa=%s wb=%s' % (wa, wb))
@@ -2018,27 +2020,41 @@ def get_bar_yz_transform(v, ihat, eid, xyz1, xyz2, nid1, nid2, i, Li):
     try:
         z = np.cross(ihat, vhat) # k
     except ValueError:
-        msg = 'Invalid vector length\n'
-        msg += 'xyz1=%s\n' % str(xyz1)
-        msg += 'xyz2=%s\n' % str(xyz2)
-        msg += 'nid1=%s\n' % str(nid1)
-        msg += 'nid2=%s\n' % str(nid2)
-        msg += 'i   =%s\n' % str(i)
-        msg += 'Li  =%s\n' % str(Li)
-        msg += 'ihat=%s\n' % str(ihat)
-        msg += 'v   =%s\n' % str(v)
-        msg += 'vhat=%s\n' % str(vhat)
-        msg += 'z=cross(ihat, vhat)'
+        msg = (
+            'Invalid vector length\n'
+            f'xyz1={xyz1}\n'
+            f'xyz2={xyz2}\n'
+            f'nid1={nid1}\n'
+            f'nid2={nid2}\n'
+            f'i   ={i}\n'
+            f'Li  ={Li}\n'
+            f'ihat={ihat}\n'
+            f'v   ={v}\n'
+            f'vhat={vhat}\n'
+            f'z=cross(ihat, vhat)')
         print(msg)
         raise ValueError(msg)
 
-    zhat = z / norm(z)
+    #print(f'z={z} norm(z)=')
+    norm_z = norm(z)
+    #if norm_i == 0.0 or norm_z == 0.0:
+        #print('  invalid_orientation - eid=%s v=%s i=%s n%s=%s n%s=%s' % (
+            #eid, v, i, nid1, xyz1, nid2, xyz2))
+
+    try:
+        zhat = z / norm_z
+    except FloatingPointError:
+        msg = (f'  invalid_orientation.  The norm(z)={norm_z} and mus be greater than 0.0\n'
+               f'eid={eid} v={v} i={i} -> z={z}; norm(z)={norm_z}\nn{nid1}={xyz1} n{nid2}={xyz2}')
+        raise FloatingPointError(msg)
+
     yhat = np.cross(zhat, ihat) # j
 
-    if norm(ihat) == 0.0 or norm(yhat) == 0.0 or norm(z) == 0.0:
+    norm_i = norm(ihat)
+    if norm_i == 0.0 or norm(yhat) == 0.0 or norm_z == 0.0:
         print('  invalid_orientation - eid=%s yhat=%s zhat=%s v=%s i=%s n%s=%s n%s=%s' % (
             eid, yhat, zhat, v, i, nid1, xyz1, nid2, xyz2))
-    elif not np.allclose(norm(yhat), 1.0) or not np.allclose(norm(zhat), 1.0) or Li == 0.0:
+    if not np.allclose(norm(yhat), 1.0) or not np.allclose(norm(zhat), 1.0) or Li == 0.0:
         print('  length_error        - eid=%s Li=%s Lyhat=%s Lzhat=%s'
               ' v=%s i=%s n%s=%s n%s=%s' % (
                   eid, Li, norm(yhat), norm(zhat), v, i, nid1, xyz1, nid2, xyz2))

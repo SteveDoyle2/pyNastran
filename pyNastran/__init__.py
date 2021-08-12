@@ -38,8 +38,8 @@ else:
     revision = get_git_revision_short_hash()
     __version_release__ = '1.4.0'
     __version__ = f'{__version_release__}+{revision}'
-    __releaseDate__ = '2020/4/xx'
-    __releaseDate2__ = 'APRIL xx, 2021'
+    __releaseDate__ = '2020/8/xx'
+    __releaseDate2__ = 'AUGUST xx, 2021'
 
 __author__ = 'Steven Doyle'
 __email__ = 'mesheb82@gmail.com'
