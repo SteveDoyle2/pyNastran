@@ -177,7 +177,7 @@ jobs:
       - name: Install dependencies (setup.py install --user)
         if: ${{ matrix.python-version == '3.9' }}
         run: |
-         python setup.py install --user
+         python setup.py install --user test
 
       - name: List dependencies
         run: |
