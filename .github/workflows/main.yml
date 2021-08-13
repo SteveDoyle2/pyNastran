@@ -176,7 +176,7 @@ jobs:
       - name: Install dependencies (bdist_wheel & develop)
          #pip install dist/pyNastran*.whl
          #python setup.py bdist_wheel
-        if: ${{ matrix.python-version == '3.9' }}
+        if: ${{ (matrix.python-version == '3.9') || (matrix.python-version == '3.8' && (matrix.mode == 'latest' || matrix.mode == 'latest_basic' || matrix.mode == 'old')) }}
         run: |
          python setup.py develop
       
@@ -185,7 +185,7 @@ jobs:
          pip list
 
       - name: Run No GUI
-        if: ${{ matrix.python-version == '3.9' || matrix.mode == 'latest' || matrix.mode == 'latest_basic' || matrix.mode == 'old' }}
+        if: ${{ matrix.python-version == '3.9' || (matrix.mode == 'latest' || matrix.mode == 'latest_basic' || matrix.mode == 'old') }}
         run: |
          #if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
          python pyNastran/all_tests_no_gui.py
