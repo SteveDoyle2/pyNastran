@@ -295,6 +295,7 @@ def cmd_line_format_converter(argv=None, quiet: str=False) -> None:
     """Interface for format_converter"""
     if argv is None:
         argv = sys.argv
+    format1_dev = ', vrml' if IS_DEV else ''
     msg = (
         "Usage:\n"
         #format1s = ['nastran', 'cart3d', 'stl', 'ugrid', 'tecplot', 'vrml']
@@ -310,7 +311,7 @@ def cmd_line_format_converter(argv=None, quiet: str=False) -> None:
         '  format_converter -v | --version\n'
         "\n"
         "Required Arguments:\n"
-        "  format1        format type (nastran, cart3d, stl, ugrid, tecplot, vrml)\n"
+        f"  format1        format type (nastran, cart3d, stl, ugrid, tecplot{format1_dev})\n"
         "  format2        format type (nastran, cart3d, stl, ugrid, tecplot, abaqus)\n"
         "  INPUT          path to input file\n"
         "  OUTPUT         path to output file\n"

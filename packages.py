@@ -10,6 +10,7 @@ CLASSIFIERS = [
     'Programming Language :: Python :: 3.7',
     'Programming Language :: Python :: 3.8',
     'Programming Language :: Python :: 3.9',
+    'Programming Language :: Python :: 3.10',  # RC1 works
 ]
 
 PYTHON_REQUIRES = '>=3.7'
@@ -392,9 +393,6 @@ def update_version_file():
         # args =  ['setup.py', 'install', '--prefix=<path>']
         #
         #pass
-    #elif 'dev' in pyNastran.__version__:
-        #bbb
-        #return
     pkg_path = pyNastran.__path__[0]
     init_filename = os.path.join(pkg_path, '__init__.py')
     version_filename = os.path.join(pkg_path, 'version.py')

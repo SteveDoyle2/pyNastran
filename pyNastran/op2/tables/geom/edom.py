@@ -328,7 +328,6 @@ class EDOM(GeomCommon):
             28 : self._read_dconstr_28,  # msc
             32 : self._read_dconstr_32,  # nx
         }
-        #op2._add_methods._add_dconstr_object(dconstr)3
         try:
             n = op2.reader_geom2._read_double_card(
                 card_name, card_obj,
@@ -340,11 +339,6 @@ class EDOM(GeomCommon):
             #n = self._read_split_card(data, n,
                                       #self._read_cquad8_current, self._read_cquad8_v2001,
                                       #card_name, op2.add_op2_element)
-        #nelements = op2.card_count['CQUAD8']
-        #op2.log.debug(f'nCQUAD8 = {nelements}')
-
-        #n = self._read_dual_card(data, n, self._read_ctriax_8, self._read_ctriax_9,
-                                 #'CTRIAX', op2.add_op2_element)
         return n
 
     def _read_dconstr_28(self, card_obj: DCONSTR, data: bytes, n: int) ->  Tuple[int, List[DCONSTR]]:

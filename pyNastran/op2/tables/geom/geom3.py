@@ -905,7 +905,6 @@ class GEOM3:
         floats  = (200, 442.0, 10400.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, -1.0, 0.0, 10)
         """
         op2 = self.op2
-        #op2.show_data(data[n:], types='ifs', endian=None, force=False)
         ntotal = 48 * self.factor  # 12*4
         ndatai = len(data) - n
         nentries = ndatai // ntotal
@@ -913,10 +912,7 @@ class GEOM3:
         assert nentries > 0, nentries
         assert ndatai % ntotal == 0, ndatai
 
-        #fdata = np.frombuffer(data[n:], op2.fdtype8).copy()
-        #idata = np.frombuffer(data[n:], op2.idtype8).copy()
 
-        #while (len(data) - n) >= ntotal:
         for unused_i in range(nentries):
             edata = data[n:n + ntotal]
             out = struct_if.unpack(edata)
@@ -931,8 +927,6 @@ class GEOM3:
             n += ntotal
         op2.card_count['QHBDY'] = nentries
         return n
-        self.op2.log.info('geom skipping QVECT in GEOM3')
-        return len(data)
 
     def _read_qvol(self, data: bytes, n: int) -> int:
         """

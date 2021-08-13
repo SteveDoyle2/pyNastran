@@ -2035,7 +2035,6 @@ def get_bar_yz_transform(v, ihat, eid, xyz1, xyz2, nid1, nid2, i, Li):
         print(msg)
         raise ValueError(msg)
 
-    #print(f'z={z} norm(z)=')
     norm_z = norm(z)
     #if norm_i == 0.0 or norm_z == 0.0:
         #print('  invalid_orientation - eid=%s v=%s i=%s n%s=%s n%s=%s' % (
