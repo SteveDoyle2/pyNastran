@@ -411,7 +411,8 @@ class EDOM(GeomCommon):
                     bound on the response quantity as a function of
                     frequency or 0 if not specified
 
-        data    = (50,    2, 0.0016,   0.0018, 0.0,  1.0e+20, 0, 0)
+        data  = (50, 2, 0.0016, 0.0018, 0.0, 1.0e+20, 0, 0)
+
         """
         op2 = self.op2
         ntotal = 32 * self.factor # 8 * 4

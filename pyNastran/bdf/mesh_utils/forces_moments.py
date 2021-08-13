@@ -79,13 +79,14 @@ def get_forces_moments_array(model: BDF, p0, load_case_id: int,
     SPCD
 
     """
+    is_loads = False
     if nid_map is None:
         nid_map = model.nid_map
     if not any(['FORCE' in model.card_count, 'MOMENT' in model.card_count,
                 'PLOAD' in model.card_count, 'PLOAD2' in model.card_count,
                 'PLOAD4' in model.card_count, 'SPCD' in model.card_count,
                 'SLOAD' in model.card_count]):
-        return False, (None, None, None, None)
+        return is_loads, (None, None, None, None)
     assert len(nid_map) == nnodes, f'len(nid_map)={len(nid_map)} nnodes={nnodes}'
 
     loads, scale_factors = model.get_reduced_loads(
@@ -660,7 +661,7 @@ def get_load_arrays(model: BDF, subcase_id, eid_map, node_ids, normals,
                 dependents_nodes=model.node_ids,
                 nid_map=nid_map,
                 include_grav=False)
-            #centroidal_pressures, forces, moments, spcd = load_results
+            centroidal_pressures, forces, moments, spcd = load_results
             #if (centroidal_pressures is not None) or np.abs(forces).max() > 0. or np.abs(moments).max() > 0.: # or any of the others
                 #is_loads = True
             if is_loadsi:

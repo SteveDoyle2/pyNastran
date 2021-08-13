@@ -8,12 +8,26 @@ If you have a bug/want a new feature or card, leave some feedback on the [Issue 
 
 Release Notes
 =============
+v1.5.0 (2022/?/?)
+-----------------
+bdf:
+ - faster mass checks
+OP2:
 
-v1.4.0 (2021/4/15)
+op2_geom:
+ - adding DVTREL1, DMNCON, GROUP
+ - params: MDLPRM  (unreleased)
+
+OP2 writer:
+ - SET1
+gui:
+ - adding nastran_to_vtk
+
+v1.4.0 (2021/8/??)
 -----------------
 Programmatics:
- - Supports Python 3.7-3.9
- - much improved MSC 2020 and OptiStruct support
+ - Supports Python 3.7-3.10
+ - much improved MSC 2020/2021 and OptiStruct support
  - GUI is compatible with PyQt5 and PySide2
  - support for latest numpy/h5py
 
@@ -25,14 +39,28 @@ BDF:
    - messages should be clearer (only the relevant conversions to your model are written)
  - mirror:
    - now supports solid elements (they have to be inverted); double check your loads
+   - fixed bug where tolerance was ignored
+   - adding punch flag
+ - mass_properties:
+   - CONM2 considers inertia
+ - equivalence
+   - now supports node sets as a list[list[int]], list[numpy array], list[set[int]]
+ - quality:
+   - added warping
+ - renumber:
+   - AUTOSPC support
  - new arguments:
    - adding validate flag (default=False) option to add_flutter method
    - adding extrap=0 flag (for NX) to TABLED* and TABLEM*
+   - tref support in RBE2, RBE3, RBAR
+   - ge_matrix support for MSC MAT2
+   - added support for MSC 2021 PBUSH alpha, tref, coinl parameters
  - new features
    - read_bdf now supports Path objects
    - added node now has a get_position_wrt_coord_ref method
    - aero panels now have a 'plot' method, which will plot aero subpanels and points
    - FLUTTER card initialization now has a validate option (default=False)
+   - MPC now has dependent_dofs, independent_dofs, independent_nodes, dependent_nodes properties
  - fixing:
    - fixed test_bdf bug that dropped the global subcase
      - it's not used unless there are no local subcases
@@ -47,10 +75,17 @@ BDF:
    - RBE3.get_field now works
    - better NLPARM checks
    - get_oml now clips the normal to [-1., -1.] to avoid out of bounds normal values
+   - CBAR/CBEAM: A(), I1(), I2(), I12() methods all return floats
+   - large field solid writing (forgot the *)
+   - DVMREL2 support for MAT8
+   - PLOAD2 can have 6 eids (not 5)
+   - PBUSH1D parsing is more lax
+   - test_bdf bug when subcase=0 was the only subcase
  - changes:
    - more use of warnings.warn instead of print when log doesn't exist
    - CONM2 positive semi-definite check is relaxed as it's the sum of masses on a node
      (not just due to one element) that has to be positive semi-definite
+   - test_bdf now has volume > 0 requirement for solids
 
 OP2:
  - reworked OES/OEF table reading to more robustly handle sort/format codes
@@ -58,6 +93,7 @@ OP2:
    - fixed crash in GPFORCE shear_moment_diagram (shear/moment/torque plotter)
    - extract_interface_loads now returns force and moment
      - see _extract_interface_loads if you want the old behavior
+ - vectorized real cbeam_stress/strain
  - improved NX 64-bit support
    - matrices should work much better in 64 bit
  - new results:
@@ -77,13 +113,16 @@ OP2:
    - model.grid_point_strains_volume_direct
    - model.grid_point_strains_volume_principal
    - model.grid_point_strain_discontinuities
+   - model.op2_results.responses.normalized_mass_density
  - removed:
    - VU elements (MSC/NX recently removed these)
  - vectorized most op2 writing
  - bug fixes:
+   - GPL bug
    - PARAM reading is much more robust
    - improved regex support for including/excluding results
    - GPDT/S and BGPDT/S tables bugs fixed
+   - fixes for composite strength ratios and failure indices
 
 OP2 Geom:
  - now works when no subcases are included :)
@@ -92,24 +131,63 @@ OP2 Geom:
    - MSC 2020 is very different than MSC 2005
    - many cards changed (e.g., the CQUAD4) to simplify I/O
  - 64-bit NX support
- - more MSC PCOMP ft support
- - more MSC PSOLID fctn support
+ - improved:
+   - MSC PCOMP ft support
+   - MSC PSOLID fctn support
+   - PSOLID isop=2
+   - DSCREEN support
+   - much better CBAR/CBEAM offt flag 
+ - dual cards:
+     - dual cards are cards that are different:
+       - across different versions of Nastran (MSC vs NX) or (MSC 2020 vs. MSC 2021)
+       - across different solutions (e.g., static vs. nonlinear)
+     - new:
+       - MAT2; (known issue: crashes if you have negative matrial ids)
+       - DCONSTR, PBUSH
+     - changed:
+       - N/A
+ - adding:
+     - tables: TABLEH1, TABLEHT
+     - loads: QVECT
+     - aero: CAERO3, CAERO4, PAERO5, DIVERG, SET1, AELINK, MONPNT1, MONPNT2, MONPNT3, MONDSP1
+     - mixed single/double precision for defining CORD2R/CORD2C
+     - DTI,UNITS
+ - bug fixes:
+   - NLRSFD bug
+   - SPLINE3 bug
+   - PBUSH1D parsing bug (swapped equations for tables)
+   - BSET1 and CSET1 were flipped
+
+OP2 writer:
+ - adding AELINK, MONPNT1, MONPNT2, MONPNT3, MONDSP1, SET1, CAEROx
+ - fixed: 64-bit ints before writing ids (to avoid improperly sized arrays)
  
 F06 Flutter Plotter:
  - supports --mach, --q, --alt on the x-axis
  - supports cm/s for velocities
 
 GUI:
- - transient/complex fringe only animations now supported
- - fixed bug in gif writing for profile='0 to scale to -scale to 0'
- - NX nonlinear solid element supported
- - faster 3d bar visualization
- - added contact_forces & glue_forces
- - GUI now supports localization based on system configuration
-   (e.g., 1,0 is 1.0 in some countries)
- - better validation of floats
- - added highlight point size option in settings
- 
+ - nastran:
+   - transient/complex fringe only animations now supported
+   - MOMENT card supported in gui
+   - NX nonlinear solid element supported
+   - added contact_forces & glue_forces
+   - faster 3d bar visualization
+   - added warping
+   - minor speedups for loading geometry
+   - CPYRAM13 fixed
+   - xoffset finite bug
+ - AVL support:
+   - sine/cosine/equal spacing
+   - proper classes
+ - general gui support:
+   - GUI now supports localization based on system configuration
+     (e.g., 1,0 is 1.0 in some countries)
+   - highlight point size option in settings
+ - fixing:
+   - fixed bug in gif writing for profile='0 to scale to -scale to 0'
+   - better validation of floats
+
 v1.3.3 (2020/6/28)
 ------------------
 This is a bug fix only release outside of:

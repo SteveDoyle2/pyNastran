@@ -120,7 +120,7 @@ class TestBDFInterface(unittest.TestCase):
         assert is_loads is False, is_loads
         assert is_temperatures is False, is_temperatures
         assert temperature_data == (None, None), temperature_data
-        assert load_data == (None, None, None), load_data
+        assert load_data == (None, None, None, None), load_data
 
         key = 'LOAD'
         value = 10

@@ -1282,7 +1282,7 @@ class GEOM4(GeomCommon):
         suporti = SUPORT1.add_op2_data(suport)
         op2._add_methods._add_suport_object(suporti) # extracts [sid, nid, c]
         nsuports += 1
-        op2.card_count['SUPOT1'] = nsuports
+        op2.card_count['SUPORT1'] = nsuports
         assert n+nfields*4+8 == len(data), 'a=%s b=%s' % (n+nfields*4+8, len(data))
         return len(data)
 

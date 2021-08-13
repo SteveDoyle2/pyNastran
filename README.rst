@@ -112,8 +112,8 @@ Programmatics:
 See pyNastran `v1.3.3 release notes <https://github.com/SteveDoyle2/pyNastran/releases/tag/v1.3.3>`_ for details on the 54 bug fixes.  Not too bad for 2.5 months!
 
 
-pyNastran v1.3.2 has been released (2020/4/8)
----------------------------------------------
+v1.3.2 (2020/4/8)
+-----------------
 
 With Python 2 now officially dead, it's time for a new killer feature to get the last few people to switch.
 
@@ -272,12 +272,13 @@ F06:
 Many bug fixes and a few more details on features, can be found in the `Release Notes <https://github.com/SteveDoyle2/pyNastran/blob/1.3/releaseNotes.md>`_.
 
 
-pyNastran 1.3.1/1.3.0 has been released (2020/4/8)
---------------------------------------------------
+v1.3.1/v1.3.0 (2020/4/8)
+------------------------
+
 This result has been superseeded by 1.3.2.  The PyPi page was fixed.
 
-pyNastran v1.2.1 has been released (2019/5/24)
-----------------------------------------------
+v1.2.1 (2019/5/24)
+------------------
 
 I keep saying to myself there's not much to add, but Nastran is huge.  Beyond HDF5
 support in the BDF, I'm a huge fan of the new ability to keep track of which include file a
@@ -377,7 +378,6 @@ GUI:
 
 Known issues:
  - Transient Pandas Dataframes will fail for newer versions of numpy/pandas.
-   If anyone knows how to use a MultiIndex, this is probably pretty easy to fix.
 
 Older Releases
 --------------

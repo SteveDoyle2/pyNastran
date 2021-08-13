@@ -1111,13 +1111,7 @@ class MPT:
             #n = self._read_split_card(data, n,
                                       #self._read_cquad8_current, self._read_cquad8_v2001,
                                       #card_name, self.add_op2_element)
-        #nelements = op2.card_count['CQUAD8']
-        #op2.log.debug(f'nCQUAD8 = {nelements}')
 
-        #n = op2.reader_geom2._read_dual_card(
-            #data, n,
-            #self._read_ctriax_8, self._read_ctriax_9,
-            #'CTRIAX', self.add_op2_element)
         return n
 
     def _read_matt9_224(self, card_obj, data: bytes, n: int) -> int:
