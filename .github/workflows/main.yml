@@ -161,22 +161,32 @@ jobs:
         run: |
           pip install numpy==1.19.4 scipy==1.5.4 matplotlib==3.3.3 h5py==3.0.0 pandas==1.1.3
 #-----------------------------------------------------------------------------------
-
+        # for python 3.7, we'll just use the stock method
       - name: Install dependencies (setup.py develop)
         if: ${{ matrix.python-version == '3.7' }}
         run: |
          python setup.py develop
-
+         
+        # we'll make python 3.8 test "setup.py install"
+        # "test" runs all_tests.py, so all the tests (including the gui) are run
+        # we drop the "latest_pyqt_gui" because it core dumps
       - name: Install dependencies (setup.py install --user)
         # gui
-        if: ${{ matrix.python-version == '3.8' && (matrix.mode == 'latest_pyside_gui' || matrix.mode == 'latest_pyqt_gui' || matrix.mode == 'old_pyside_gui' || matrix.mode == 'old_pyqt_gui') }}
+        if: ${{ matrix.python-version == '3.8' && (matrix.mode == 'latest_pyside_gui' || matrix.mode == 'old_pyside_gui' || matrix.mode == 'old_pyqt_gui') }}
         run: |
          python setup.py install --user test
 
+        # I'd like to make this step build a wheel and install it, but you need the wheel name
+        # or know how to use bash to pipe an ls into a pip command, so I can do:
+        # >>> python setup.py bdist_wheel
+        # >>> pip install dist/pyNastran*.whl   <--- the * is a problem
+        #
+        # python 3.9 gets everything
+        # any python 3.8 test that can't be run in the previous block
       - name: Install dependencies (bdist_wheel & develop)
          #pip install dist/pyNastran*.whl
          #python setup.py bdist_wheel
-        if: ${{ (matrix.python-version == '3.9') || (matrix.python-version == '3.8' && (matrix.mode == 'latest' || matrix.mode == 'latest_basic' || matrix.mode == 'old')) }}
+        if: ${{ (matrix.python-version == '3.9') || (matrix.python-version == '3.8' && (matrix.mode == 'latest_pyqt_gui' || matrix.mode == 'latest' || matrix.mode == 'latest_basic' || matrix.mode == 'old')) }}
         run: |
          python setup.py develop
       
