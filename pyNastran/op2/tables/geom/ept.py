@@ -1887,8 +1887,8 @@ class EPT:
             op2.card_count['PCOMP'] = nproperties
         else:
             n2 = op2._read_dual_card(data, n, self._read_pcomp_32_bit,
-                                      self._read_pcomp_64_bit,
-                                      'PCOMP', self._add_op2_property)
+                                     self._read_pcomp_64_bit,
+                                     'PCOMP', self._add_op2_property)
         return n2
 
     def _read_pcomp_64_bit(self, data: bytes, n: int) -> Tuple[int, List[PCOMP]]:

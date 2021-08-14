@@ -188,7 +188,6 @@ class RealBeamArray(OES_Object):
         assert isinstance(eid, integer_types), eid
         assert eid >= 0, eid
         self._times[self.itime] = dt
-        #print(f'eid={eid} grid={grid} sd={sd}')
         self.element_node[self.itotal] = [eid, grid]
         self.xxb[self.itotal] = sd
         self.data[self.itime, self.itotal, :] = [sxc, sxd, sxe, sxf,
