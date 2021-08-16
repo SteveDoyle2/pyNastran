@@ -189,7 +189,7 @@ source_suffix = '.rst'
 
 # The master toctree document.
 master_doc = 'index'
-
+#html_compact_lists
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
