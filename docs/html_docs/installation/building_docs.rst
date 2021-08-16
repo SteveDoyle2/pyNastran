@@ -17,7 +17,8 @@ Install additional python packages
   pip install Sphinx
   pip install alabaster
   pip install numpydoc
-
+  pip install sphinx_rtd_theme
+  pip install ipython
 
 Installation From Source
 ========================
@@ -64,14 +65,15 @@ If you don't want the gui, use ``setup_no_gui.py`` instead of ``setup.py``.
 
 .. code-block:: console
 
-  >>> python setup.py install
+  >>> python setup.py develop
 
 or:
 
 .. code-block:: console
 
-  >>> python setup_no_gui.py install
+  >>> python setup_no_gui.py develop
 
+If you don't intend to do any changes on the code you can use the option `install` instead of `develop`.
 
 Cloning pyNastran using TortoiseGit
 ===================================
@@ -100,7 +102,7 @@ To checkout a branch
 
 Build Docs
 ----------
-Navigate to ``pyNastran/docs_sphinx`` directory on the command line.
+Navigate to ``pyNastran/docs/html_docs`` directory on the command line.
 
 .. code-block:: console
 
