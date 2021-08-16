@@ -6,3 +6,7 @@ cpylog>=1.4.0
 #vtk==7.0.0
 #pillow>=2.7.0
 #numpydoc
+#alabaster
+#sphinx
+#sphinx_rtd_theme
+#ipython
