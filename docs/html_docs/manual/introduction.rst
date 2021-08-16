@@ -15,12 +15,7 @@ as the 1995 Natran `source code <https://github.com/nasa/NASTRAN-95>`_.
 the legacy formats used by Nastran.  These files include the BDF, F06, OP2, OP4,
 and PCH files.  Other code has been added to :mod:`pyNastran` in order to drive
 development of the software in order to be able to solve other engineering
-problems.  For example, `Code\_Aster <http://www.code-aster.org>`_, an
-open-source finite element code developed by the EDF (Electricity of France),
-has a Nastran to `Code\_Aster <http://www.code-aster.org>`_ converter that is in
-development.  The development has helped to define the API for the loads in
-order to be able to extract them in a way that makes sense.  However, this is
-not the focus of the software.
+problems.
 
 
 

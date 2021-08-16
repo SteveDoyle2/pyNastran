@@ -101,7 +101,6 @@ Example 2: Displacement (static)
 This example will demonstate:
 
  - calculating total deflection of the nodes for a static case for an OP2
-
  - calculate von mises stress and max shear
 
 

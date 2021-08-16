@@ -21,10 +21,12 @@ but chances are you already have those.  If you don't, they're very easy to inst
 
 Python
 ------
-The software is tested against:
+The software is tested against: .. rst-class:: closed
+
  * Python 3.7 **(Windows/Linux)**
  * Python 3.8 **(Windows/Linux)**
  * Python 3.9 **(Windows/Linux)**  (availible in pyNastran 1.4)
+ * Python 3.10 **(Windows/Linux)**  (availible in pyNastran 1.4, RC1)
 
 Packages
 --------
@@ -47,13 +49,13 @@ based on availbility), so it should work.  The recommended set of packages are:
 
  * **GUI**:
 
-   * vtk >= 7  (vtk==9 is somewhat buggy)
+   * vtk >= 7  (vtk=9 has some warnings)
    * qtpy >= 1.4.0
    * Qt **(pick one)**
 
      * PyQt5 >= 5.9.2
      * PySide2 >= 5.11.2
-   * QScintilla >= ??? **(optional for fancy scripting; PyQt5 only)**
+   * QScintilla >= 2.13.0 **(optional for fancy scripting; PyQt5 only)**
    * pygments >= 2.2.0 **(optional for fancy scripting; PyQt5 only)**
    * imageio >= 2.4.1  **(optional for animation support)**
 
@@ -61,6 +63,7 @@ based on availbility), so it should work.  The recommended set of packages are:
 Install Procedure - From Regular Python (recommended)
 *****************************************************
 Base functionality:
+
  * `64-bit Python <https://www.python.org/downloads/>`_
  * ``pip install numpy``
  * ``pip install scipy``
@@ -75,27 +78,34 @@ Base functionality:
 For **optional** GUI support:
 
  * On the command line:
+ 
     * ``pip install imageio`` **(optional for animation support)**
     * ``pip install pyside2``
-    * ``pip install VTK*.whl``
+    * ``pip install vtk``
     * ``pip install qtpy``
 
  * Additional source for `Windows binaries <http://www.lfd.uci.edu/~gohlke/pythonlibs/>`_
+
+    * ``pip install VTK*.whl``
 
 ****************************************************************
 Install Procedure - From Anaconda (not recommended and untested)
 ****************************************************************
 
-You've been warned, but in general Anaconda doesn't work well with pip.  You need to be very careful with using ``pip`` instead of ``conda``.  In general, it's best to always use conda first and pip only if conda fails.
+You've been warned, but in general Anaconda doesn't work well with pip.
+You need to be very careful with using ``pip`` instead of ``conda``.
+In general, it's best to always use conda first and pip only if 
+conda fails.
 
   - `64-bit Python <https://www.anaconda.com/products/individual>`_
  * ``conda install numpy``
  * ``conda install scipy``
- * ``conda install pandas``   **(optional)**
- * ``conda install h5py``       **(optional for HDF5 support)**
- * ``conda install matplotlib`` **(optional for plotting)**
- * ``conda install colorama``   **(optional for colored logging)**
- * ``pip install docopt-ng``   **(required for command line tools)**
+ * ``conda install pandas``
+ * ``conda install h5py``
+ * ``conda install matplotlib``
+ * ``conda install colorama``
+ * ``conda install vtk``
+ * ``conda install PySide2``
  * ``pip install cpylog``
  * ``pip install pyNastran``
 
