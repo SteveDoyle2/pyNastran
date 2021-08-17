@@ -21,7 +21,7 @@ but chances are you already have those.  If you don't, they're very easy to inst
 
 Python
 ------
-The software is tested against: .. rst-class:: closed
+The software is tested against:
 
  * Python 3.7 **(Windows/Linux)**
  * Python 3.8 **(Windows/Linux)**

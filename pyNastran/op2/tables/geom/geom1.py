@@ -26,22 +26,6 @@ if TYPE_CHECKING:  # pragma: no cover
 class GEOM1:
     """defines methods for reading op2 nodes/coords"""
 
-    #def _add_node_object(self, node, allow_overwrites=False):
-        #"""GRDSET creates duplicate nodes...what about duplicate nodes?"""
-        #key = node.nid
-        #assert key > 0, 'nid=%s node=%s' % (key, node)
-        #if key in self.nodes:
-            #fields1 = self.nodes[key].raw_fields()
-            #fields2 = node.raw_fields()
-            ##grid, nid, cp, x1, x2, x3, cd, ps, seid
-            #for i, (v1, v2) in enumerate(zip(fields1, fields2)):
-                #if v1 != v2:
-                    #op2.log.info('i=%s v1=%r v2=%r fields1=%s\nfields2=%s' % (
-                        #i, v1, v2, fields1, fields2))
-        #else:
-            #op2._type_to_id_map[node.type].append(key)
-        #self.nodes[key] = node
-
     def _read_fake(self, data: bytes, n: int) -> int:
         return self.op2._read_fake(data, n)
 
@@ -49,7 +33,6 @@ class GEOM1:
         return self.op2._read_geom_4(self.geom1_map, data, ndata)
 
     def __init__(self, op2: OP2Geom):
-        #GeomCommon.__init__(self)
         self.op2 = op2
         geom2 = self.op2.reader_geom2
         self.geom1_map = {

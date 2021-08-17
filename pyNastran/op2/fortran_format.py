@@ -262,7 +262,7 @@ class FortranFormat:
             self.log.warning('obj=%s doesnt have ntimes' % self.obj.__class__.__name__)
         return
 
-    def _cleanup_data_members(self):
+    def _cleanup_data_members(self) -> None:
         """deletes variables from previous tables"""
         del_words = [
             'words',
