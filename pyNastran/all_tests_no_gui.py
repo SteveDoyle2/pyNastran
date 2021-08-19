@@ -17,14 +17,6 @@ from notebook_to_markdown import create_rst_from_ipython_notebooks
 #bdf
 from pyNastran.bdf.test.all_tests import *
 from pyNastran.dev.bdf_vectorized2.bdfv_unit_tests import *
-try:
-    import h5py
-    IS_H5PY = True
-except ModuleNotFoundError:
-    IS_H5PY = False
-
-if IS_H5PY:
-    from pyNastran.dev.h5.test.test_h5 import *
 
 #op2
 from pyNastran.op2.test.all_tests import *
