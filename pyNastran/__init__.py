@@ -11,8 +11,6 @@ else:
     # this is still a requirement, but disabling it so readthedocs works
     if sys.version_info < (3, 7):  # pragma: no cover
         IMAJOR, MINOR1, MINOR2 = sys.version_info[:3]
-        # makes sure we don't get the following bug:
-        #   Issue #19099: The struct module now supports Unicode format strings.
         raise ImportError('Upgrade your Python to >= 3.7.0; version=(%s.%s.%s)' % (
             IMAJOR, MINOR1, MINOR2))
 
