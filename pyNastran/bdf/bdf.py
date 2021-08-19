@@ -4005,7 +4005,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             self.card_count[card_name] = count_num
 
     def _old_card_fields(self, card_lines: List[str], card_name: str,
-                         log: Any,
+                         log: SimpleLogger,
                          is_list: bool=False, has_none: bool=True,
                          is_dynamic_syntax: bool=False) -> BDFCard:
         """replication helper"""
@@ -4028,7 +4028,8 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
         card_obj = BDFCard(card, has_none=False)
         return card_obj
 
-    def _expand_replication(self, card_name, icard, cards_list, card_lines_new, dig=True):
+    def _expand_replication(self, card_name: str, icard: int,
+                            cards_list, card_lines_new, dig: bool=True):
         """replication helper"""
         #dig_str = '  ' if dig is False else ''
         #print(dig_str, '-----------************---------')

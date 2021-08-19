@@ -111,10 +111,10 @@ def get_superelement_adaptivity_index(subtitle: str, superelement: str) -> str:
 
         # F:\work\pyNastran\examples\Dropbox\move_tpl\opt7.op2
         # 'SUPERELEMENT 0       ,   1'
-        split_superelement = superelement.split()
-        if len(split_superelement) == 2:
+        if ',' not in superelement:
+            split_superelement = superelement.split()
             word, value1 = split_superelement
-            assert word == 'SUPERELEMENT', f'split_superelement={split_superelement}'
+            assert word == 'SUPERELEMENT', f"split_superelement={split_superelement}; expected something of the form 'SUPERELEMENT 0'"
             subtitle = f'{subtitle}; SUPERELEMENT {value1}'
             value1 = int(value1)
 
@@ -123,9 +123,12 @@ def get_superelement_adaptivity_index(subtitle: str, superelement: str) -> str:
                     superelement_adaptivity_index, value1)
             else:
                 superelement_adaptivity_index = f'SUPERELEMENT {value1}'
-        elif len(split_superelement) == 4:
-            word, value1, unused_comma, value2 = split_superelement
-            assert word == 'SUPERELEMENT', f'split_superelement={split_superelement}'
+        else:
+            split_superelement = superelement.split(',')
+            assert len(split_superelement) == 2, f"split_superelement={split_superelement}; expected something of the form 'SUPERELEMENT 0 , 1'"
+            word_value1, value2 = split_superelement
+            word, value1 = word_value1.split()
+            assert word == 'SUPERELEMENT', f"word_value1={word_value1}; expected something of the form 'SUPERELEMENT 0 , 1'"
             value1 = int(value1)
             value2 = int(value2)
 
@@ -134,8 +137,6 @@ def get_superelement_adaptivity_index(subtitle: str, superelement: str) -> str:
                     superelement_adaptivity_index, value1, value2)
             else:
                 superelement_adaptivity_index = f'SUPERELEMENT {value1},{value2}'
-        else:
-            raise RuntimeError(split_superelement)
     return superelement_adaptivity_index
 
 def update_subtitle_with_adaptivity_index(subtitle, superelement_adaptivity_index,

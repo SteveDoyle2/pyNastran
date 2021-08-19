@@ -21,12 +21,12 @@ but chances are you already have those.  If you don't, they're very easy to inst
 
 Python
 ------
-The software is tested against:
+The software is tested on Windows and Linux against:
 
- * Python 3.7 **(Windows/Linux)**
- * Python 3.8 **(Windows/Linux)**
- * Python 3.9 **(Windows/Linux)**  (availible in pyNastran 1.4)
- * Python 3.10 **(Windows/Linux)**  (availible in pyNastran 1.4, RC1)
+ * Python 3.7
+ * Python 3.8
+ * Python 3.9  (availible in pyNastran 1.4)
+ * Python 3.10  (availible in pyNastran 1.4, RC1)
 
 Packages
 --------

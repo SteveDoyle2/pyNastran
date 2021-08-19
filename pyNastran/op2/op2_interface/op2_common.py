@@ -421,92 +421,41 @@ class OP2Common(Op2Codes, F06Writer):
         if self.size == 4:
             assert len(data) == 584, len(data)
             # title_subtitle_label
-            title, subtitle, label = unpack(self._endian + b'128s128s128s', data[200:])
+            title_bytes, subtitle_bytes, label_bytes = unpack(self._endian + b'128s128s128s', data[200:])
         else:
             assert len(data) == 1168, len(data)
             # title_subtitle_label
-            title, subtitle, label = unpack(self._endian + b'256s256s256s', data[400:])
-            title = reshape_bytes_block(title)
-            subtitle = reshape_bytes_block(subtitle)
-            label = reshape_bytes_block(label)
+            title_bytes, subtitle_bytes, label_bytes = unpack(self._endian + b'256s256s256s', data[400:])
+            title_bytes = reshape_bytes_block(title_bytes)
+            subtitle_bytes = reshape_bytes_block(subtitle_bytes)
+            label_bytes = reshape_bytes_block(label_bytes)
 
-        try:
-            self.title = title.decode(self.encoding).strip()
-        except UnicodeDecodeError:
-            self.log.error(f'title = {title}')
-            raise
-        subtitle = subtitle.decode(self.encoding)
-        subtitle_original = subtitle.strip()
+        title, subtitle, subtitle_original, label, label2 = read_title_helper(
+            title_bytes, subtitle_bytes, label_bytes,
+            self.isubcase, self.encoding, self.log)
+        #print(f'title  = {title!r}')
+        #print(f'label  = {label!r}')
+        #print(f'label2 = {label2!r}')
 
-        try:
-            label = label.decode(self.encoding).strip()
-        except UnicodeDecodeError:
-            self.log.error(f'label = {label}')
-            raise
-
-        if 'FBA SUBCASE ' in label:
-            subtitle = subtitle[:28]
-            # title    = b' FRF PAPER DOF 8 PROBLEM USING GRID POINTS                                                                                      '
-            # subtitle = b' SINGLE SHOT RUN VIA GENASM - FRFP1GPS                                     FBA OUTPUT FOR FRF COMPONENT        1 (FRF8    )     '
-            # label     = b'UNIT LOAD ON GRID        2/1 (FRF COMP.        1 / FRF8    )                                           FBA SUBCASE        1     '
-            #print(title)
-            #print(subtitle)
-            #print(label)
-
-            label2 = label[:100].rstrip()[:-1].rstrip()
-            #label2 = b'UNIT LOAD ON GRID        2/1 (FRF COMP.        1 / FRF8'
-            assert '(FRF COMP. ' in label2, label2
-            unit, num_name = label2.split('(FRF COMP. ')
-            #[b'UNIT LOAD ON GRID        2/1 ', b'       1 / FRF8']
-            #print('unit', unit)
-
-            unit_labeli = unit[:17].rstrip()
-            label_num = unit[17:].rstrip()
-            assert len(label_num) >= 3, unit
-
-            unit_label = unit_labeli.strip()
-            comp_grid_1, comp_num_1 = label_num.split('/')
-            comp_grid_1 = int(comp_grid_1)
-            comp_num_1 = int(comp_num_1)
-            assert comp_grid_1 == 2, comp_grid_1
-            assert comp_num_1 == 1, comp_num_1
-
-            comp_num_2, comp_name = num_name.split('/')
-            comp_num_2 = int(comp_num_2)
-            comp_name = comp_name.strip()
-            #print('label2 = ', label2)
-            #print('unit = ', unit_label, comp_num_1, comp_num_2)
-            #print('num_name = ', comp_num_2, comp_name)
-            assert comp_num_1 == 1, comp_num_1
-            assert comp_num_2 == 1, comp_num_2
-            label = f'{unit_label}; grid={comp_grid_1} comp={comp_num_1}'
-            label2 = ''
-        else:
-            nlabel = 65
-            label2 = label[nlabel:]
-            try:
-                label2 = update_label2(label2, self.isubcase)
-            except AssertionError:
-                pass
-
-            assert len(label[:nlabel]) <= nlabel, f'len={len(label)} \nlabel     ={label!r} \nlabel[:{nlabel}]={label[:nlabel]!r}'
-            assert len(label2) <= 55, f'len={len(label2)} label = {label!r}\nlabel[:{nlabel}]={label[:nlabel]!r}\nlabel2    ={label2!r}'
-        # not done...
-        # 65 + 55 = 120 < 128
-
+        self.title = title
         self.label = label
         self.pval_step = label2
 
         nsubtitle_break = 67
         adpativity_index = subtitle[nsubtitle_break:99]
         superelement = subtitle[99:].strip()
+        #print(f'superelement={superelement!r}; n={len(superelement)}')
 
         #print('subtitle = %r' % subtitle)
         #print('aindex   = %r' % adpativity_index)
         #print('superele = %r' % superelement)
 
+        #'SUPERELEMENT 0       ,   1'; n=26
+        #'SUPERELEMENT 0       ,   10'; n=27
+        # 'SUPERELEMENT 0       ,   1   '
+        # SUPERELEMENT 0       ,   10
         subtitle = subtitle[:nsubtitle_break].strip()
-        assert len(superelement) <= 26, f'len={len(superelement)} superelement={superelement!r}'
+        assert len(superelement) <= 29, f'len={len(superelement)} superelement={superelement!r}'
         superelement = superelement.strip()
 
         assert len(subtitle) <= 67, f'len={len(subtitle)} subtitle={subtitle!r}'
@@ -2416,3 +2365,89 @@ def _function7(value: int) -> int:
     else:
         raise RuntimeError(value)
     return out
+
+def read_title_helper(title_bytes: bytes, subtitle_bytes: bytes, label_bytes: bytes,
+                      isubcase: int,
+                      encoding: str, log) -> Tuple[str, str, str, str, str]:
+    """
+    title_bytes    = b''  # 128 bytes
+    subtitle_bytes = '                                                                                                   SUPERELEMENT 0       ,   10  '
+    label_bytes    = 'LC01                                                                                                   SUBCASE 101'
+    title, subtitle, subtitle_original, label, label2 = read_title_helper(
+        title_bytes, subtitle_bytes, label_bytes)
+    title             = ''
+    subtitle          = '                                                                                                   SUPERELEMENT 0       ,   10  '
+    subtitle_original = 'SUPERELEMENT 0       ,   10'
+    label             = 'LC10                                                                                                   SUBCASE 110'
+    label2            = ''
+
+    """
+    try:
+        title = title_bytes.decode(encoding).strip()
+    except UnicodeDecodeError:
+        log.error(f'title = {title_bytes}')
+        raise
+    subtitle = subtitle_bytes.decode(encoding)
+    subtitle_original = subtitle.strip()
+
+    try:
+        label = label_bytes.decode(encoding).strip()
+    except UnicodeDecodeError:
+        log.error(f'label = {label_bytes}')
+        raise
+    #print(f'title    = {title_bytes!r}')
+    #print(f'subtitle = {subtitle_bytes!r}')
+    #print(f'label    = {label_bytes!r}')
+
+    if 'FBA SUBCASE ' in label:
+        subtitle = subtitle[:28]
+        # title    = b' FRF PAPER DOF 8 PROBLEM USING GRID POINTS                                                                                      '
+        # subtitle = b' SINGLE SHOT RUN VIA GENASM - FRFP1GPS                                     FBA OUTPUT FOR FRF COMPONENT        1 (FRF8    )     '
+        # label     = b'UNIT LOAD ON GRID        2/1 (FRF COMP.        1 / FRF8    )                                           FBA SUBCASE        1     '
+
+        label2 = label[:100].rstrip()[:-1].rstrip()
+        #label2 = b'UNIT LOAD ON GRID        2/1 (FRF COMP.        1 / FRF8'
+        assert '(FRF COMP. ' in label2, label2
+        unit, num_name = label2.split('(FRF COMP. ')
+        #[b'UNIT LOAD ON GRID        2/1 ', b'       1 / FRF8']
+        #print('unit', unit)
+
+        unit_labeli = unit[:17].rstrip()
+        label_num = unit[17:].rstrip()
+        assert len(label_num) >= 3, unit
+
+        unit_label = unit_labeli.strip()
+        comp_grid_1, comp_num_1 = label_num.split('/')
+        comp_grid_1 = int(comp_grid_1)
+        comp_num_1 = int(comp_num_1)
+        assert comp_grid_1 == 2, comp_grid_1
+        assert comp_num_1 == 1, comp_num_1
+
+        comp_num_2, comp_name = num_name.split('/')
+        comp_num_2 = int(comp_num_2)
+        comp_name = comp_name.strip()
+        #print('label2 = ', label2)
+        #print('unit = ', unit_label, comp_num_1, comp_num_2)
+        #print('num_name = ', comp_num_2, comp_name)
+        assert comp_num_1 == 1, comp_num_1
+        assert comp_num_2 == 1, comp_num_2
+        label = f'{unit_label}; grid={comp_grid_1} comp={comp_num_1}'
+        label2 = ''
+    else:
+        nlabel = 65
+        label2 = label[nlabel:]
+        try:
+            label2 = update_label2(label2, isubcase)
+        except AssertionError:
+            pass
+
+        assert len(label[:nlabel]) <= nlabel, f'len={len(label)} \nlabel     ={label!r} \nlabel[:{nlabel}]={label[:nlabel]!r}'
+        assert len(label2) <= 55, f'len={len(label2)} label = {label!r}\nlabel[:{nlabel}]={label[:nlabel]!r}\nlabel2    ={label2!r}'
+    # not done...
+    # 65 + 55 = 120 < 128
+    #print(f'title             = {title!r}')
+    #print(f'subtitle          = {subtitle!r}')
+    #print(f'subtitle_original = {subtitle_original!r}')
+    #print(f'label             = {label!r}')
+    #print(f'label2            = {label2!r}\n')
+    return title, subtitle, subtitle_original, label, label2

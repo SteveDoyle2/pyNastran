@@ -7,9 +7,13 @@ from packages import (check_python_version, get_package_requirements,
                       update_version_file, PYTHON_REQUIRES,
                       LONG_DESCRIPTION, CLASSIFIERS, EXCLUDE_WORDS)
 
+bdist = False
+if 'bdist_wheel' in sys.argv:
+    bdist = True
+    assert '\r' not in LONG_DESCRIPTION, LONG_DESCRIPTION
 
 check_python_version()
-unused_all_reqs, install_requires = get_package_requirements(is_gui=False)
+unused_all_reqs, install_requires = get_package_requirements(is_gui=False, bdist=bdist)
 
 packages = find_packages() + ['gui/icons/*.*']
 #print("packages = %s" % packages)

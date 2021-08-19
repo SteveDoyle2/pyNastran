@@ -1227,7 +1227,7 @@ class SECONCT(BaseCard):
 
         assert len(fields) % 2 == 0, 'card=%s\nfields=%s' % (card, fields)
         if 'THRU' in fields:
-            raise NotImplementedError(fields)
+            raise NotImplementedError(f'THRU not supported in SECONCT card; fields={fields}')
             #start_a = integer(card, 9, 'start_a')
             #thru_a = string(card, 10, 'thru_a')
             #end_a = integer(card, 11, 'end_a')
