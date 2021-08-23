@@ -96,7 +96,7 @@ class LoadActions:
                 time0 = time_module.time()
 
                 if geometry_format2 in self.gui.format_class_map:
-                    # intialize the class
+                    # initialize the class
                     #print('geometry_format=%r geometry_format2=%s' % (geometry_format, geometry_format2))
 
                     # TODO: was geometry_format going into this...

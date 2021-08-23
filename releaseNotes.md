@@ -64,7 +64,7 @@ BDF:
  - fixing:
    - fixed test_bdf bug that dropped the global subcase
      - it's not used unless there are no local subcases
-   - deepcopying a card now supports commens
+   - deepcopying a card now supports comments
    - CAERO1, CAERO5, CAERO7 paneling bug (nodes and sub-elements should be defined chordwise)
    - adding more fields to add_* methods for CPLSTS*, CPLSTN*
    - better DEQATN python-builtin prevention (allows for executing Nastran equations)
@@ -437,7 +437,7 @@ Bug fixes:
 OP2:
  - geom bug fixes:
     - fixed reading bugs for QHBDY and SPCOFF
-    - better identifing duplicate property id (PBCOMP -> PBEAM)
+    - better identifying duplicate property id (PBCOMP -> PBEAM)
     - fixed CONVM error (it can be 6 or 7 fields, not only 6)
     - fixed ACCEL key
  - bug fixes:
@@ -449,7 +449,7 @@ GUI:
  - bug fixes:
    - better argument handling
    - fixed coordinate system scaling bug
-   - added check on highlight menu for model existance
+   - added check on highlight menu for model existence
    - fixed import for new version download menu
    - improved command line error message
    - fixed support for CAEROx models without elements
@@ -457,7 +457,7 @@ GUI:
 
 v1.3.1 / v1.3.0 (2020/4/8)
 --------------------------
- - This result has been superseeded by 1.3.2.  No code changes, but the PyPi page was redone.
+ - This result has been superseded by 1.3.2.  No code changes, but the PyPi page was redone.
 
 v1.2.1 (2019/5/24)
 ------------------
@@ -685,5 +685,5 @@ GUI (detailed):
 OP4 bug fixes:
  - fixed Python 3 bytes bug
 
-Applictions:
+Applications:
  - removed due to excessively amount of unmaintained code

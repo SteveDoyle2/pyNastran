@@ -55,7 +55,7 @@ def set_default_if_blank(value: Any, default: Any) -> Union[int, float, str]:
 def print_scientific_8(value: float) -> str:
     """
     Prints a value in 8-character scientific notation.
-    This is a sub-method and shouldnt typically be called
+    This is a sub-method and shouldn't typically be called
 
     Notes
     -----
@@ -270,7 +270,7 @@ def print_card_8(fields: List[Union[int, float, str, None]]) -> str:
               format where the first 8 is the card name or
               blank (continuation).  The last 8-character field indicates
               an optional continuation, but because it's a left-justified
-              unneccessary field, print_card doesnt use it.
+              unnecessary field, print_card doesn't use it.
 
     .. code-block:: python
 

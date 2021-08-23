@@ -1563,7 +1563,7 @@ def get_coords(uset, gid, csys, coordref=None):
         A 6-column matrix as output by :func:`op2.rdn2cop2`.
     gid : integer or 3 element vector
         If integer, it is a grid id in `uset`.  Otherwise, it is a 3
-        element vector:  [x, y, z] specifiy location in basic.
+        element vector:  [x, y, z] specify location in basic.
     csys : integer or 4x3 matrix
         Specifies coordinate system to get coordinates of `gid` in.
         If integer, it is the id of the coordinate system which must
@@ -1796,7 +1796,7 @@ def get_loc_a_basic(coordinfo, a):
 
     `coordinfo` is 5x3 and `a` is [x, y, z]
     """
-    # tranformation from global to basic:
+    # transformation from global to basic:
     Tg = coordinfo[2:]
     coordloc = coordinfo[1]
     if coordinfo[0, 1] == 1:
@@ -2206,7 +2206,7 @@ def form_rbe3(uset, GRID_dep, DOF_dep, Ind_List, UM_List=None):
     # need to scale rotation weights by characteristic length:
     rot = idof[:, 1] > 3
     if np.any(rot):
-        # get characterstic length of rbe3:
+        # get characteristic length of rbe3:
         deploc = uset[pv[0], 3:]
         n = np.size(uset, 0) // 6
         delta = uset[::6, 3:] - np.dot(np.ones((n, 1)),

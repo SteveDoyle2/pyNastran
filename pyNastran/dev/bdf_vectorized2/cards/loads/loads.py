@@ -17,7 +17,7 @@ from pyNastran.bdf.cards.base_card import expand_thru
 
 
 class Loads:
-    """intializes the Loads"""
+    """initializes the Loads"""
     def __init__(self, model):
         """
         This is mostly me thinking about the problem, not what the code does...

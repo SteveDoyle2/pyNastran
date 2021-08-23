@@ -261,7 +261,7 @@ def abs_max_min_vector(values):
     Parameters
     ----------
     values: ndarray/listtuple
-        an array of values, where the rows are interated over
+        an array of values, where the rows are iterated over
         and the columns are going to be compressed
 
         common NDARRAY/list/tuple shapes:

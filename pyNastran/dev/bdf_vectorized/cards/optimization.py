@@ -1094,7 +1094,7 @@ class DRESP1(OptConstraint):
         ----------
         dresp_id : int
             response id
-        lable : str
+        label : str
             Name of the response
         response_type : str
             Response type
@@ -1449,7 +1449,7 @@ class DRESP2(OptConstraint):
         ----------
         dresp_id : int
             response id
-        lable : str
+        label : str
             Name of the response
         dequation : int
             DEQATN id

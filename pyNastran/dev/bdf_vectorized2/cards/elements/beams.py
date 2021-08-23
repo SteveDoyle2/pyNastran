@@ -16,7 +16,7 @@ class BeamElement:
     """base class for CBEAM"""
     card_name = ''
     def __init__(self, model):
-        """intializes the BeamElement"""
+        """initializes the BeamElement"""
         self.model = model
         self.is_current = True
         self.eid = np.array([], dtype='int32')

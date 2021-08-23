@@ -747,7 +747,7 @@ def _cross_reference_excite_id(self, model, msg):
             valid_lseqs.sort()
             #assert len(valid_lseqs) == 1, 'valid_lseqs=%s' % valid_lseqs
     #print('valid_lseqs =', valid_lseqs)
-    #  can Case Control LOADSET be substituded for Case Control DLOAD id?
+    #  can Case Control LOADSET be substituted for Case Control DLOAD id?
 
     excite_id_ref = []
     if self.excite_id in model.loads:

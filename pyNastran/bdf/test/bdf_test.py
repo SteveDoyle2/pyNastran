@@ -52,7 +52,7 @@ def run(regenerate=True, run_nastran=False, debug=False, sum_load=True, xref=Tru
             nastran = r'C:\MSC.Software\MSC.Nastran\bin\nastran.exe scr=yes bat=no old=no '
         else:
             raise RuntimeError('cant find Nastran')
-        # elif os.path.exsits():
+        # elif os.path.exists():
     else:
         nastran = ''
 

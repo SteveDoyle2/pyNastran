@@ -334,13 +334,13 @@ def compress_xpoints(point_type, xpoints):
     """
     Gets the SPOINTs/EPOINTs in sorted, short form.
 
-      uncompresed:  SPOINT,1,3,5
+      uncompressed: SPOINT,1,3,5
       compressed:   SPOINT,1,3,5
 
-      uncompresed:  SPOINT,1,2,3,4,5
+      uncompressed: SPOINT,1,2,3,4,5
       compressed:   SPOINT,1,THRU,5
 
-      uncompresed:  SPOINT,1,2,3,4,5,7
+      uncompressed: SPOINT,1,2,3,4,5,7
       compressed:   SPOINT,7
                     SPOINT,1,THRU,5
 

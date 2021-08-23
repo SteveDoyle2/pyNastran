@@ -48,7 +48,7 @@ PyQt5/PySide2 unique
 
 Menus
 =====
- - maybe add explcit pulldown for formats
+ - maybe add explicit pulldown for formats
  - auto-reload button.  Useful for:
     - creating Nastran aero panels
     - modifying Panair file

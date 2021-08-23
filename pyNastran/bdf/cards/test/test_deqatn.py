@@ -80,7 +80,7 @@ class TestDEQATN(unittest.TestCase):
 
     def test_deqatn_3(self):
         """
-        Much simplier method of using add_card
+        Much simpler method of using add_card
 
         Creates the following equation:
 

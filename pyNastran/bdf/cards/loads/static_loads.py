@@ -164,7 +164,7 @@ class LOAD(LoadCombination):
                     scale_factors += [scale * j_scale
                                       for j_scale in reduced_scale_factors]
                 else:
-                    msg = ('%s isnt supported in get_reduced_loads method'
+                    msg = ('%s is not supported in get_reduced_loads method'
                            % load.__class__.__name__)
                     raise NotImplementedError(msg)
         return (scale_factors, loads)

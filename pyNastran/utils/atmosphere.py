@@ -809,7 +809,7 @@ def atm_unit_reynolds_number2(alt: float, mach: float,
     \f[ \large Re_L = \frac{ \rho V}{\mu} = \frac{p M a}{\mu R T} \f]
 
     .. note ::
-        this version of Reynolds number directly caculates the base quantities, so multiple
+        this version of Reynolds number directly calculates the base quantities, so multiple
         calls to atm_press and atm_temp are not made
 
     """

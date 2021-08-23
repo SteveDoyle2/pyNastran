@@ -980,7 +980,7 @@ class AEROZ(Aero):
 
     def cross_reference(self, model: BDF) -> None:
         """
-        Cross refernece aerodynamic coordinate system.
+        Cross reference aerodynamic coordinate system.
 
         Parameters
         ----------
@@ -994,7 +994,7 @@ class AEROZ(Aero):
 
     def safe_cross_reference(self, model: BDF, xref_errors):
         """
-        Safe cross refernece aerodynamic coordinate system.
+        Safe cross reference aerodynamic coordinate system.
 
         Parameters
         ----------
@@ -2777,17 +2777,17 @@ class CAERO7(BaseCard):
 
     def get_box_index(self, box_id):
         """
-        Get the index of ``self.box_ids`` that coresponds to the given box id.
+        Get the index of ``self.box_ids`` that corresponds to the given box id.
 
         Parameters
         -----------
         box_id : int
-            Box id to ge tthe index of.
+            Box id to get the index of.
 
         Returns
         --------
         index : tuple
-            Index of ``self.box_ids`` that coresponds to the given box id.
+            Index of ``self.box_ids`` that corresponds to the given box id.
 
         """
         if box_id not in self.box_ids:
@@ -2808,7 +2808,7 @@ class CAERO7(BaseCard):
         Returns
         --------
         xyz_quarter_chord : ndarray
-            Location of box quater chord in global.
+            Location of box quarter chord in global.
 
         """
         return self._get_box_x_chord_center(box_id, 0.25)

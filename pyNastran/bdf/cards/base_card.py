@@ -675,7 +675,7 @@ def break_word_by_trailing_parentheses_integer_ab(pname_fid: str) -> Tuple[str, 
     word : str
         the value not in parentheses
     value : int/str
-        the value in parenthese
+        the value in parentheses
 
     Examples
     --------

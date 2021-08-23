@@ -12,7 +12,7 @@ if TYPE_CHECKING:  # pragma: no cover
 
 
 class Masses:
-    """intializes the Masses"""
+    """initializes the Masses"""
     def __init__(self, model):
         self.model = model
         #self.conm1 = model.conm1

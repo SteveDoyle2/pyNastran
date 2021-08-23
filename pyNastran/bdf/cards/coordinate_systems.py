@@ -44,7 +44,7 @@ def global_to_basic_rectangular(coord, unused_xyz_global, dtype='float64'):
     coord_transform = coord.local_to_global
     return coord_transform
     #transform = array([ex, ey, ez], dtype=dtype)
-    #return tranform
+    #return transform
 
 def _primary_axes(coord):
     """gets the i,j,k axes from the ???"""
@@ -700,7 +700,7 @@ class Coord(BaseCard):
             the point in the global frame
 
         .. warning:: make sure you cross-reference before calling this
-        .. warning:: you probably shouldnt call this, call the Node methods
+        .. warning:: you probably shouldn't call this, call the Node methods
                      get_position and get_position_wrt
 
         """
@@ -793,7 +793,7 @@ class Coord(BaseCard):
         coordinate system to the local.
 
         The matrix that comes in is the local to global, so we need
-        to invert the matrix. The inverse of the tranformation
+        to invert the matrix. The inverse of the transformation
         matrix :math:`[\beta]` is the transpose of the matrix.
 
         .. math:: p_{global} = (p_{coord})[\beta] + p_{origin}
@@ -1034,7 +1034,7 @@ def define_spherical_cutting_plane(model: BDF,
         msg = 'len(cids)=%s len(phis)=%s; must be equal' % (len(cids, len(phis)))
         raise RuntimeError(msg)
 
-    # check for dupliate coords
+    # check for duplicate coords
     assert rid not in model.coords
     for cid in cids:
         assert cid not in model.coords

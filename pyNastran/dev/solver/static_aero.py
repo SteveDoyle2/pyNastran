@@ -7,7 +7,7 @@ def partition_matrix(Maa):
     return MLL, MLR, MRR, MRL
 
 def pfaero(model: BDF):
-    """performs aero calcs that are independnt of the structural model"""
+    """performs aero calcs that are independent of the structural model"""
     str(model)
     # ???
     AJJ = np.zeros((3, 3))

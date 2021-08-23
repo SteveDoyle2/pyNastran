@@ -884,7 +884,7 @@ class Cart3D(Cart3dIO):
         result_names : List[str]
             the variables to calculate
         results : (n,6) ndarray
-            the non-dimensional prmitive flow variables
+            the non-dimensional primitive flow variables
         loads : dict; default=None -> {}
             key : ???
             value : ???

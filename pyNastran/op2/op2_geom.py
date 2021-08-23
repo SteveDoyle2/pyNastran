@@ -176,7 +176,7 @@ class OP2GeomCommon(OP2, GeomCommon):
         4 NY          I View mesh subdivision -- from VIEW field
         5 NZ          I View mesh subdivision -- from VIEW field
         6 MTH     CHAR4 Method -- 'DIRE' means direct
-        7 MINEID      I Mininum VUHEXA identification number for this element
+        7 MINEID      I Minimum VUHEXA identification number for this element
         8 MAXEID      I Maximum VUHEXA identification number for this element
         9 MINGID      I Minimum grid identification number for this element
         10 MAXGID     I Maximum grid identification number for this element
@@ -435,7 +435,7 @@ def bdf_to_op2_geom(model: BDF, validate: bool=True) -> OP2Geom:
 
 def attach_op2_results_to_bdf(bdf_model: BDF, op2_model: Optional[OP2]=None,
                               validate: bool=True) -> OP2Geom:
-    """We're up-coverting a BDF and an OP2 result into an OP2Geom object."""
+    """We're up-converting a BDF and an OP2 result into an OP2Geom object."""
     op2_geom_model = bdf_to_op2_geom(bdf_model, validate=validate)
     if op2_model is None:
         return op2_geom_model

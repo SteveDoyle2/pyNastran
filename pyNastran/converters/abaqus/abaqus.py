@@ -321,7 +321,7 @@ class Abaqus:
                 self.log.info(f'end of main {wordi!r}; line={line0!r} iline={iline}')
             else:
                 # pass
-                raise NotImplementedError(f'this shouldnt happen; last_word={word!r} line={line0!r}')
+                raise NotImplementedError(f'this should not happen; last_word={word!r} line={line0!r}')
             iline += 1
 
             #if self.debug:

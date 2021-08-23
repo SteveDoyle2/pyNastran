@@ -94,7 +94,7 @@ class EditGeometryPropertiesObject:
 
     def on_update_geometry_properties_override_dialog(self, geometry_properties):
         """
-        Update the goemetry properties and overwite the options in the
+        Update the goemetry properties and overwrite the options in the
         edit geometry properties dialog if it is open.
 
         Parameters

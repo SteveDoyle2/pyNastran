@@ -421,7 +421,7 @@ class GetCard(GetMethods):
             elif card.type in ['GMSPC', 'SPCAX']:
                 warnings += str(card)
             else:
-                msg = 'get_SPCx_node_ids_c1 doesnt supprt %r' % card.type
+                msg = 'get_SPCx_node_ids_c1 does not support %r' % card.type
                 if stop_on_failure:
                     raise RuntimeError(msg)
                 self.log.warning(msg)
@@ -1262,7 +1262,7 @@ class GetCard(GetMethods):
 
         """
         nid_to_eids_map = {}
-        for nid in self.nodes:  # initalize the mapper
+        for nid in self.nodes:  # initialize the mapper
             nid_to_eids_map[nid] = []
 
         if self.spoints:  # SPOINTs
@@ -1302,7 +1302,7 @@ class GetCard(GetMethods):
 
         """
         nid_to_elements_map = {}
-        for nid in self.nodes:  # initalize the mapper
+        for nid in self.nodes:  # initialize the mapper
             nid_to_elements_map[nid] = []
 
         for nid in self.spoints:

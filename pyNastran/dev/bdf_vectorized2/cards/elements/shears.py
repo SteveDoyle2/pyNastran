@@ -14,7 +14,7 @@ class ShearElement:
     """base class for CSHEAR"""
     card_name = ''
     def __init__(self, model):
-        """intializes the ShearElement"""
+        """initializes the ShearElement"""
         self.model = model
         self.is_current = True
         self.eid = np.array([], dtype='int32')

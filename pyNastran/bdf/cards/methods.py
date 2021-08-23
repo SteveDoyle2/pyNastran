@@ -84,7 +84,7 @@ class EIGB(Method):
         self.G = G
         self.C = C
         if not self.L1 < self.L2:
-            msg = 'L1=%s L2=%s; L1<L2 is requried' % (self.L1, self.L2)
+            msg = 'L1=%s L2=%s; L1<L2 is required' % (self.L1, self.L2)
             raise RuntimeError(msg)
         if self.method not in ['INV', 'SINV', None]:
             msg = 'method must be INV or SINV.  method=%r' % self.method
@@ -992,7 +992,7 @@ class EIGRL(Method):
         #if self.norm is None:
             #if model.is_modal_solution():
                 #self.norm = 'MASS'
-            #elif mdoel.is_buckling_solution():
+            #elif model.is_buckling_solution():
                 #self.norm = 'MAX'
 
     def raw_fields(self):
