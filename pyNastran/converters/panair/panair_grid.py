@@ -573,14 +573,14 @@ class PanairGrid:
         self.icontp = double(section[1][30:40], 1.0)
         self.icontp = 1.0
         # 1.0 outputs control pt location, upper surface unit normals, control point
-        #     diagnositc data, control pt maps and singularity parameter maps
+        #     diagnostic data, control pt maps and singularity parameter maps
         # 2.0 add additional control point map for each network
 
         self.ibconp = double(section[1][40:50], 'ibconp')
         #self.ibconp = 0.0
-        # 1.0 outputs boundary condition coeffs, diagnositc data,
+        # 1.0 outputs boundary condition coeffs, diagnostic data,
         #     boundary condition maps, control point maps,
-        #     and singularity paramter maps
+        #     and singularity parameter maps
 
         self.iedgep = double(section[1][50:60], 'iedgep')
         self.iedgep = 0.0
@@ -676,7 +676,7 @@ class PanairGrid:
             try:
                 patch = self.find_patch_by_name(trailed_panel)
             except KeyError:
-                self.log.debug('trailed_panel isnt defined...trailed_panel=%r' % (trailed_panel))
+                self.log.debug('trailed_panel is not defined...trailed_panel=%r' % (trailed_panel))
                 raise
 
             (unused_p1, xyz1) = patch.get_edge(edge_number)
@@ -691,7 +691,7 @@ class PanairGrid:
                 xyz[1, :, 2] = xyz1[:, 2]
             else:
                 #alphaC, betaC
-                raise NotImplementedError('twake isnt supported')
+                raise NotImplementedError('twake is not supported')
             #self.log.debug("--xyz---")
             #self.log.debug(xyz)
             #nm = integer(section[n-1][0 :10], 'nm')

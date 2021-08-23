@@ -382,7 +382,7 @@ class BDFAttributes:
         #: stores NSMADD
         self.nsmadds = {}  # type: Dict[int, List[Any]]
 
-        #: stores LOTS of propeties (PBAR, PBEAM, PSHELL, PCOMP, etc.)
+        #: stores LOTS of properties (PBAR, PBEAM, PSHELL, PCOMP, etc.)
         self.properties = {}  # type: Dict[int, Any]
 
         #: stores MAT1, MAT2, MAT3, MAT8, MAT10, MAT11

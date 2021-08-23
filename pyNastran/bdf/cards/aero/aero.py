@@ -1852,17 +1852,17 @@ class CAERO1(BaseCard):
 
     def get_box_index(self, box_id: int) -> Tuple[int, int]:
         """
-        Get the index of ``self.box_ids`` that coresponds to the given box id.
+        Get the index of ``self.box_ids`` that corresponds to the given box id.
 
         Parameters
         -----------
         box_id : int
-            Box id to ge tthe index of.
+            Box id to get the index of.
 
         Returns
         --------
         index : tuple
-            Index of ``self.box_ids`` that coresponds to the given box id.
+            Index of ``self.box_ids`` that corresponds to the given box id.
 
         """
         if box_id not in self.box_ids:
@@ -1883,7 +1883,7 @@ class CAERO1(BaseCard):
         Returns
         --------
         xyz_quarter_chord : ndarray
-            Location of box quater chord in global.
+            Location of box quarter chord in global.
 
         """
         return self._get_box_x_chord_center(box_id, 0.25)
@@ -2439,7 +2439,7 @@ class CAERO2(BaseCard):
         else:
             radii_slender = paero2.lrsb_ref.fractions
 
-        # TODO: not suppported
+        # TODO: not supported
         if paero2.lrib in [0, None]:
             unused_radii_interference = np.ones(nx + 1) * paero2.width
         else:
@@ -2447,7 +2447,7 @@ class CAERO2(BaseCard):
             unused_radii_interference = paero2.lrib_ref.fractions
         radii = radii_slender
 
-        # TODO: not suppported
+        # TODO: not supported
         #theta_interference1 = paero2.theta1
         #theta_interference2 = paero2.theta2
 

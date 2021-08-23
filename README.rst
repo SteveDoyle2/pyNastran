@@ -275,7 +275,7 @@ Many bug fixes and a few more details on features, can be found in the `Release 
 v1.3.1/v1.3.0 (2020/4/8)
 ------------------------
 
-This result has been superseeded by 1.3.2.  The PyPi page was fixed.
+This result has been superseded by 1.3.2.  The PyPi page was fixed.
 
 v1.2.1 (2019/5/24)
 ------------------

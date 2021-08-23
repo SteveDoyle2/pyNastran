@@ -580,7 +580,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
         # flag that allows for OpenMDAO-style optimization syntax to be used
         self._is_dynamic_syntax = False
 
-        # lines that were rejected b/c they were for a card that isnt supported
+        # lines that were rejected b/c they were for a card that isn't supported
         self.reject_lines = []  # type: List[List[str]]
 
         # cards that were created, but not processed
@@ -2305,7 +2305,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             'MATT9' : (MATT9, add_methods._add_material_dependence_object),
             'NXSTRAT' : (NXSTRAT, add_methods._add_nxstrat_object),
 
-            ## hasnt been verified, links up to MAT1, MAT2, MAT9 w/ same MID
+            ## hasn't been verified, links up to MAT1, MAT2, MAT9 w/ same MID
             'CREEP' : (CREEP, add_methods._add_creep_material_object),
 
             #'NSMADD' : (NSMADD, self._add_nsmadd_object),

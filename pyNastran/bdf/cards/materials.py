@@ -789,7 +789,7 @@ class MAT1(IsotropicMaterial):
     #def returnComplMat(self, th, **kwargs):
         #"""Returns the material 6x6 compliance matrix.
 
-        #Mainly inteded as a private method although kept public, and
+        #Mainly intended as a private method although kept public, and
         #fascilitated the transformation of the compliance matrix to another
         #coordinate system.
 
@@ -2673,10 +2673,10 @@ def _mat10_get_bulk_rho_c(bulk, rho, c):
                 msg = 'bulk=%s rho=%s c=sqrt(bulk/rho)=NA' % (bulk, rho)
                 raise ValueError(msg)
         else:
-            msg = 'c, bulk, and rho are all undefined on tbe MAT10'
+            msg = 'c, bulk, and rho are all undefined on the MAT10'
             raise RuntimeError(msg)
     else:
-        msg = 'c, bulk, and rho are all undefined on tbe MAT10'
+        msg = 'c, bulk, and rho are all undefined on the MAT10'
         raise RuntimeError(msg)
 
     return bulk, rho, c

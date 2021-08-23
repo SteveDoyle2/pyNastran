@@ -370,7 +370,7 @@ def sum_forces_moments_elements(model: BDF, p0: int, loadcase_id: int,
     Element Types: PLOAD1, PLOAD2, PLOAD4, GRAV
 
     If you have a CQUAD4 (eid=3) with a PLOAD4 (sid=3) and a FORCE
-    card (nid=5) acting on it, you can incldue the PLOAD4, but
+    card (nid=5) acting on it, you can include the PLOAD4, but
     not the FORCE card by using:
 
     For just pressure:

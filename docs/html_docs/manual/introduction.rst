@@ -25,7 +25,7 @@ Target Audience
 :mod:`pyNastran` target audience are users of Nastran and therefore are expected
 to be familiar with the software.  This has greatly reduced the necessity of
 documenting every variable exhaustively as users can easily reference existing
-Nastran documentation. The BDF file has roughly 700 cards availble to a user
+Nastran documentation. The BDF file has roughly 700 cards available to a user
 with 373 being currently supported by pyNastran.  The majority of the cards,
 defined as separate Python classes, are not documented.  However, the Quick
 Reference Guide (QRG) defines each input to the card.  A user with the QRG

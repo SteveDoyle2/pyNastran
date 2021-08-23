@@ -630,7 +630,7 @@ class GEOM1:
     def _read_cord3g(self, data: bytes, n: int) -> int:
         """
         (14301,143,651) - the marker for Record 7
-        .. todo:: isnt this a CORD3G, not a CORD3R ???
+        .. todo:: isn't this a CORD3G, not a CORD3R ???
         """
         op2 = self.op2
         ntotal = 16 * op2.factor

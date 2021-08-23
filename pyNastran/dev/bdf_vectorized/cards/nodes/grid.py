@@ -227,7 +227,7 @@ class GRID(VectorizedCard):
     def _get_index_by_param(self, name, param_data, param, i):
         """
         You probably shouldn't be calling this method.
-        It does the work associcated with get_index_by_cp / get_index_by_cd
+        It does the work associated with get_index_by_cp / get_index_by_cd
         """
         if param is None:
             return i

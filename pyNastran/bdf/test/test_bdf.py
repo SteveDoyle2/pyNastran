@@ -882,7 +882,7 @@ def run_fem2(bdf_model: str, out_model: str, xref: bool, punch: bool,
     debug : bool
         debugs
     quiet : bool
-        supress prints
+        suppress prints
 
     """
     assert os.path.exists(bdf_model), bdf_model

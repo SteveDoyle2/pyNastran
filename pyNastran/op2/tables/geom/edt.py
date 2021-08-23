@@ -1580,7 +1580,7 @@ class EDT:
         8 USAGE(2)  CHAR4 Usage flag: FORCE|DISP|BOTH
         10 NELEM        I Number of elements for FPS on x-axis
         11 MELEM        I Number of elements for FPS on y-axis
-        12 FTYPE        I Radial interpolation funtion fir METHOD=RIS  (not in NX)
+        12 FTYPE        I Radial interpolation function for METHOD=RIS  (not in NX)
         13 RCORE       RS Radius of radial interpolation function      (not in NX)
 
         """
@@ -1624,7 +1624,7 @@ class EDT:
         8 USAGE(2)  CHAR4 Usage flag: FORCE|DISP|BOTH
         10 NELEM        I Number of elements for FPS on x-axis
         11 MELEM        I Number of elements for FPS on y-axis
-        12 FTYPE        I Radial interpolation funtion fir METHOD=RIS  (not in NX)
+        12 FTYPE        I Radial interpolation function for METHOD=RIS  (not in NX)
         13 RCORE       RS Radius of radial interpolation function      (not in NX)
 
         """
@@ -1690,7 +1690,7 @@ class EDT:
         11 USAGE(2)  CHAR4 Usage flag: FORCE|DISP|BOTH
         13 METHOD(2) CHAR4 Method: IPS|TPS|FPS|RIS
         15 DTORZY       RS Flexibility ratio in ZY Plane
-        16 FTYPE         I Radial interpolation funtion fir METHOD=RIS (not in NX)
+        16 FTYPE         I Radial interpolation function for METHOD=RIS (not in NX)
         17 RCORE        RS Radius of radial interpolation function     (not in NX)
 
         """
@@ -1751,7 +1751,7 @@ class EDT:
         11 USAGE(2)  CHAR4 Usage flag: FORCE|DISP|BOTH
         13 METHOD(2) CHAR4 Method: IPS|TPS|FPS|RIS
         15 DTORZY       RS Flexibility ratio in ZY Plane
-        16 FTYPE         I Radial interpolation funtion fir METHOD=RIS (not in NX?)
+        16 FTYPE         I Radial interpolation function for METHOD=RIS (not in NX?)
         17 RCORE        RS Radius of radial interpolation function     (not in NX?)
 
         """

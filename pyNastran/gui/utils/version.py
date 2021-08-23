@@ -132,7 +132,7 @@ def _check_if_version_is_newer(version_latest: str, version_current: str,
     if is_self_newer:
         pass
     elif is_newer_release_version or is_newer_dev_version:
-        msg = 'pyNastran %s is now availible; current=%s' % (version_latest, version_current)
+        msg = 'pyNastran %s is now available; current=%s' % (version_latest, version_current)
 
         if not quiet:  # pragma: no cover
             print(msg)

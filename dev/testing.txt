@@ -53,7 +53,7 @@ Ideally the entire code would follow PEP-8.  It doesn't.  API changes WILL follo
 Some complexity exists for certain methods.  Some problematic methods are as follows:
    - Area()   method vs. self.area variable
    - Length() consistency with Area method
-   - Ixx()    ixx() would be a less desireable way to get the moment of inertia
+   - Ixx()    ixx() would be a less desirable way to get the moment of inertia
 
 Some approaches for Area() include:
    1. change self.area to self._area; change Area() to area()

@@ -52,10 +52,10 @@ Cart3d
    - centroidal -> Rho, XVelocity, YVelocity, ZVelocity, Pressure
  - results
    - nodal -> Mach, Cp, rho, rhoU, rhoV, rhoW, rhoE, U, V, W, E
-   - NOTE: centroidal main results removed becase nodal & centroidal
+   - NOTE: centroidal main results removed because nodal & centroidal
            are now supported, so there's no need to see the results 
  - secondary actors
-   - box with inflow/outflow/symmetry/farfield boundary condtions as colors
+   - box with inflow/outflow/symmetry/farfield boundary conditions as colors
 
  - show/hide elements based on picking
 
@@ -141,14 +141,14 @@ UGrid
  - load geometry -> model.b8.ugrid
   - b8, l8, etc. required
   - nodes/elements of surface mesh
- - auto-loads a tags file to plot boundary conditons
+ - auto-loads a tags file to plot boundary conditions
 
 Surf
 ====
  - AFLR format
  - load geometry -> model.surf
   - nodes/elements of surface mesh
- - auto-loads a tags file to plot boundary conditons
+ - auto-loads a tags file to plot boundary conditions
 
 #--------------
 # BUGS

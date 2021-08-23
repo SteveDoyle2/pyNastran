@@ -153,7 +153,7 @@ def get_stations(model: BDF,
         raise ValueError(msg)
 
     iaxis_march = xaxis_march / xaxis_march_norm
-    # k has been rotated into the output coordinte frame, so we'll maintain that
+    # k has been rotated into the output coordinate frame, so we'll maintain that
     # k is length=1
     assert np.allclose(np.linalg.norm(k), 1.0)
     jaxis_march = np.cross(k, iaxis_march)
@@ -927,7 +927,7 @@ def _interpolate_face_to_bar(nodes, eid, eid_new, nid_new, mid, area, J, fbdf,
         e1 = e13 = p3 - p1
         e2 = e23 = p3 - p2
 
-    As metioned previously, only two vectors are used (e.g., e12 and e13).
+    As mentioned previously, only two vectors are used (e.g., e12 and e13).
     When combined with the percentage, we find that for a dot, using e12
     and e13, node 1 must be a source (both vectors originate from node 1).
     Thus the percentages for e12=0. and e13=0.  Similarly, node 3 is a

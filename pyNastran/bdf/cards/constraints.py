@@ -87,7 +87,7 @@ class SUPORT1(Constraint):
         nodes : List[int]
             the nodes to release
         Cs : List[str]
-            compoents to support at each node
+            components to support at each node
         comment : str; default=''
             a comment for the card
 
@@ -244,7 +244,7 @@ class SUPORT(Constraint):
         nodes : List[int]
             the nodes to release
         Cs : List[str]
-            compoents to support at each node
+            components to support at each node
         comment : str; default=''
             a comment for the card
 

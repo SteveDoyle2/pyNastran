@@ -2047,7 +2047,7 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
                     if prop.type not in ['PSOLID', 'PLSOLID']:
                         plot_node = True
                 if not plot_node:
-                    # don't include 456 constraints if they're ONLY on solid elemetns
+                    # don't include 456 constraints if they're ONLY on solid elements
                     # if we had any bar/plate/etc. elements that use this node, we'll plot the node
                     if not('1' in c1 or '2' in c1 or '3' in c1):
                         continue

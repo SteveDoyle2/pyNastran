@@ -442,7 +442,7 @@ def run_op2(op2_filename: str, make_geom: bool=False, combine: bool=True,
         #print_exc(file=sys.stdout)
         #sys.exit('stopping on sys.exit')
         raise
-    #except NameError:  # variable isnt defined
+    #except NameError:  # variable isn't defined
     #    if stop_on_failure:
     #        raise
     #    else:

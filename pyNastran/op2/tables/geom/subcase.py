@@ -120,7 +120,7 @@ def set_casecc(self, data: bytes, idtype: str, fdtype: str, size: int=4,
     213 STFMEDIA         I Grid point stress field output media (STRFIELD
     214 STFFMT           I Grid point stress field output format (STRFIELD)
     215 CLOAD            I Superelement static load combination set (CLOAD)
-    216 SET2ID           I Legacy design sensitivity contraint and variable set (SET2)
+    216 SET2ID           I Legacy design sensitivity constraint and variable set (SET2)
     217 DSAPRT           I Legacy design sensitivity analysis print option (SENSITY)
     218 DSASTORE         I Legacy design sensitivity analysis store option (SENSITY)
     219 DSAOUTPT         I Legacy design sensitivity analysis OUTPUT4 option (SENSITY)

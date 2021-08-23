@@ -115,7 +115,7 @@ def print_bad_path(path: str) -> str:
     Returns
     -------
     msg : str
-        string with informations whether access to parts of the path
+        string with information whether access to parts of the path
         is possible
 
     """

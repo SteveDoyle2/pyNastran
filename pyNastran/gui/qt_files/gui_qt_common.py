@@ -1601,7 +1601,7 @@ class GuiQtCommon(GuiAttributes):
             surface - always surface
             bar - can use bar scale
         is_visible : bool; default=True
-            is this actor currently visable
+            is this actor currently visible
         is_pickable : bool; default=False
             can you pick a node/cell on this actor
         follower_nodes : List[int]
@@ -1649,7 +1649,7 @@ class GuiQtCommon(GuiAttributes):
         bar_scale : float
             the scale for the CBAR / CBEAM elements
         is_visible : bool; default=True
-            is this actor currently visable
+            is this actor currently visible
         is_pickable : bool; default=False
             can you pick a node/cell on this actor
         follower_nodes : List[int]

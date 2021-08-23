@@ -460,7 +460,7 @@ class Usm3d:
         nodes = np.frombuffer(data, '>d').reshape(3, nnodes).T
 
         # the ravel creates a copy that we can then use to put in
-        # a contigous order
+        # a contiguous order
         nodes = np.asarray(nodes.ravel(), dtype='<d').reshape(nnodes, 3)
 
         dummy4 = cogsg_file.read(4) # nnodes * 3 * 8

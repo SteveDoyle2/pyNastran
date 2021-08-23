@@ -16,8 +16,8 @@ RE_INT = re.compile('^[-+]?[0-9]+$', flags=0)
 
 #[-+]?      - an optional (this is what ? means) minus or plus sign
 # \.        - period
-# [-|+?]    - required negtive sign or optional plus sign
-# [-|+]     - required negtive sign or plus sign
+# [-|+?]    - required negative sign or optional plus sign
+# [-|+]     - required negative sign or plus sign
 # [[0-9]+]? - optional N integers
 #
 #  1.032
@@ -1207,7 +1207,7 @@ def loose_string(card: BDFCard, ifield: int, fieldname: str, default=None):
       Doesn't matches X, X1, 1X, 111, 1.0
     Things that might be incorrect:
       No embedded blanks (not enforced now)
-    Used for LABELs on DRESP1.  This will be tightened up as neccessary.
+    Used for LABELs on DRESP1.  This will be tightened up as necessary.
 
     Parameters
     ----------
