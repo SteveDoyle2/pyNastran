@@ -454,9 +454,9 @@ MSC_RESULT_TABLES = [b'ASSIG', b'ASEPS'] + [
     # applied loads
     # OPG1 - Applied static loads
     b'OPNL1', # nonlinear applied loads - sort 1
-    b'OPG1', # applied loads - gset? - sort 1
+    b'OPG1',  # applied loads - gset? - sort 1
     b'OPGV1',
-    b'OPG2', # applied loads - sort 2 - v0.8
+    b'OPG2',  # applied loads - sort 2 - v0.8
 
     # grid point stresses
     b'OGS1', # grid point stresses/strains - sort 1
@@ -495,6 +495,7 @@ MSC_RESULT_TABLES = [b'ASSIG', b'ASEPS'] + [
     b'OQGATO2', b'OQGCRM2', b'OQGPSD2', b'OQGRMS2', b'OQGNO2',
 
     # nx mpc forces
+    b'OQMATO1', b'OQMCRM1', b'OQMPSD1', b'OQMRMS1', b'OQMNO1',
     b'OQMATO2', b'OQMCRM2', b'OQMPSD2', b'OQMRMS2', b'OQMNO2',
 
     # stress
@@ -515,10 +516,30 @@ MSC_RESULT_TABLES = [b'ASSIG', b'ASEPS'] + [
     b'OEFATO2', b'OEFCRM2', b'OEFPSD2', b'OEFRMS2', b'OEFNO2',
     #b'OEFPSD2', b'OEFCRM2', b'OEFRMS2', b'OEFATO2', b'OEFNO2',
 
+    # 2020
+    # Output Frequency Response Result to ADF Format File
+    # This module support the output table block of:
+    # - OUGx, OSMPF1, OAFMPF1, OASMPF1, OAPMPF1, OAPPF1, OAGPF1 and OSPPF1
+    #   (TCODE=1, 10, 11 and 61 to 67).
+
+    # SORT1
+    b'OSMPF1',  # structural          modal participation factors
+    b'OAFMPF1', # acoustic fluid      modal participation factors
+    b'OASMPF1', # acoustic structural modal participation
+    b'OAPMPF1', # acoustic panel      modal participation factor
+    b'OAPPF1',  # acoustic panel participation
+    b'OAGPF1',  # normalized acoustic grid participation factors
+    b'OSPPF1',  # structure panel participation
+
     #-----------------------------------------------------
     # other
-    b'OFMPF2M',
-    b'OSMPF2M', b'OPMPF2M', b'OLMPF2M', b'OGPMPF2M',
+
+    # SORT2
+    b'OFMPF2M',  # fluid      modal participation factors by natural modes
+    b'OSMPF2M',  # structural modal participation factors by natural modes
+    b'OLMPF2M',  # load       modal participation factors by natural modes
+    b'OPMPF2M',  # panel      modal participation factors by natural modes
+    b'OGPMPF2M', # panel grid modal participation factors by natural modes
 
     b'OCRUG',
     b'OCRPG',
@@ -561,9 +582,9 @@ MSC_RESULT_TABLES = [b'ASSIG', b'ASEPS'] + [
 
     b'OQG2', # single point forces - sort 2 - v0.8
     b'OBC1', b'OBC2', # contact pressures and tractions at grid points
-    b'OBG1', # glue normal and tangential tractions at grid points in basic coordinate system
-    b'OES2', # element stresses - sort 2 - v0.8
-    b'OEF2', # element forces - sort 2 - v0.8
+    b'OBG1',  # glue normal and tangential tractions at grid points in basic coordinate system
+    b'OES2',  # element stresses - sort 2 - v0.8
+    b'OEF2',  # element forces - sort 2 - v0.8
     b'OUGV2', # absolute displacements/velocity/acceleration - sort 2
 
     # contact
@@ -581,24 +602,30 @@ MSC_RESULT_TABLES = [b'ASSIG', b'ASEPS'] + [
     b'ROUGV2',  # relative displacement
     b'CDDATA',  # cambpell diagram table
     b'OEKE1',
-    b'OES1MX', # extreme stresses?
+    b'OES1MX',  # extreme stresses?
     b'OESNLBR2',
     b'BGPDTVU', # basic grid point defintion table for a superelement and related to geometry with view-grids added
 
     b'OUG2T',
-    b'AEMONPT',
+    b'AEMONPT', # Aerodynamic monitor points.
     #b'KDICT',
     #---------------------
     # 2020
-    b'OCNTCHK0', b'OCOMP', b'META', b'OFCRFMD', b'OEXTFIB', b'OELAFG', b'OQS2SGN1',
-    b'OSMPF1', b'MATRV', b'TUG1', # b'MUG1',
+    b'OCNTCHK0', # OUG-type table of contact check of active nodes status and distance
+    b'OCOMP',
+    b'META',     #  User to store additional info by SE
+    b'OFCRFMD',
+    b'OEXTFIB',  # EXTREME PLY composite element output in SORT1 format
+    b'OELAFG',   # OFP table of Elastic Forces
+    b'OQS2SGN1',
+    b'MATRV', b'TUG1', # b'MUG1',
 
     #2020 - could these be matrices?
     b'OFCON3DD', b'OFCON3D0',  # glued contact
     b'OFGCOND',
     b'OCOMPQT',
     b'OGS1X',
-    b'OVINT',
+    b'OVINT',  # element vibration intensities
     #b'TUG1',
     #b'MUG1',
     b'TEF1', # b'MEF1',
@@ -611,9 +638,9 @@ MSC_RESULT_TABLES = [b'ASSIG', b'ASEPS'] + [
     b'OERPDSN',
     b'OUG1S',
     b'OVG1',
-    b'OUGSTRS0',
-    b'OBCNURB0', b'OBCNURBD',
-    b'OQMPSD1', b'OQMATO1', b'OQMRMS1', b'OQMNO1', b'OQMCRM1',
+    b'OUGSTRS0', # OUG-type table of geometry adjustment by initial stress-free contact
+    b'OBCNURB0', # Table of analytical contact surface spline
+    b'OBCNURBD',
     b'OETEMP',
     b'OCNTCHKD',
 
