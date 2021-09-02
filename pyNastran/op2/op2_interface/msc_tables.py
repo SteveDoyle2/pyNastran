@@ -255,7 +255,7 @@ MSC_ELEMENTS = {
     239 : 'CBEAM with ABCS',
     240 : 'CBAR nonlinear',
     241 : 'AXISYM',
-    242 : 'CHEXA?',
+    242 : 'CHEXA/CPYRAM?',
     243 : 'CPYRAM?',
 }
 

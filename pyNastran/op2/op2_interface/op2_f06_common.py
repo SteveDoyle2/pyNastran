@@ -789,10 +789,6 @@ class OP2_F06_Common:
         #======================================================================
 
         # bars/beams
-        self.cbar_force_abs = {} # thermal=2
-        self.cbar_force_srss = {} # thermal=4
-        self.cbar_force_nrl = {} # thermal=8
-
         self.cbar_stress = {}
         self.cbar_strain = {}
 
@@ -858,6 +854,11 @@ class OP2_F06_Common:
         self.cshear_stress = {}
         self.cshear_strain = {}
 
+        self.cweld_stress = {}
+        self.cweld_strain = {}
+        self.cfast_stress = {}
+        self.cfast_strain = {}
+
         #: OES - CBEAM 94
         self.nonlinear_cbeam_stress = {}
 
@@ -910,42 +911,12 @@ class OP2_F06_Common:
 
         #: OUG - displacement
         self.displacements = {}           # tCode=1 thermal=0
-        self.displacements_scaled = {}    # tCode=1 thermal=8
-
-        #: OUP
-
-        self.displacement_scaled_response_spectra_nrl = {}  # thermal=8
-        self.displacement_scaled_response_spectra_abs = {}  # thermal=2
-        self.displacement_scaled_response_spectra_srss = {} # thermal=4
-        #self.displacement_scaled_response_spectra_psd = {}
-        #self.displacement_scaled_response_spectra_ato = {}
-        #self.displacement_scaled_response_spectra_rms = {}
-        #self.displacement_scaled_response_spectra_crm = {}
-        #self.displacement_scaled_response_spectra_no = {}
-
 
         #: OUG - velocity
         self.velocities = {}              # tCode=10 thermal=0
 
-        #self.velocity_scaled_response_spectra_nrl = {}
-        self.velocity_scaled_response_spectra_abs = {}
-        #self.velocity_scaled_response_spectra_psd = {}
-        #self.velocity_scaled_response_spectra_ato = {}
-        #self.velocity_scaled_response_spectra_rms = {}
-        #self.velocity_scaled_response_spectra_crm = {}
-        #self.velocity_scaled_response_spectra_no = {}
-
         #: OUG - acceleration
         self.accelerations = {}            # tCode=11 thermal=0
-
-        self.acceleration_scaled_response_spectra_nrl = {}
-        self.acceleration_scaled_response_spectra_abs = {}
-        #self.acceleration_scaled_response_spectra_psd = {}
-        #self.acceleration_scaled_response_spectra_ato = {}
-        #self.acceleration_scaled_response_spectra_rms = {}
-        #self.acceleration_scaled_response_spectra_crm = {}
-        #self.acceleration_scaled_response_spectra_no = {}
-
 
         #: OUG - temperatures
         self.temperatures = {}           # tCode=1 thermal=1
@@ -991,7 +962,6 @@ class OP2_F06_Common:
         # OQG - spc/mpc forces
         self.spc_forces = {}  # OQG1, tCode=3?
         self.spc_forces_v = {} # OQGV1
-        self.spc_forces_scaled_response_spectra_nrl = {}
 
         self.mpc_forces = {}  # tCode=39
         self.mpc_forces_RAQCONS = {}
@@ -1112,7 +1082,7 @@ class OP2_F06_Common:
             'accelerations',
 
             # OQG - spc/mpc forces
-            'spc_forces', 'spc_forces_v', 'spc_forces_scaled_response_spectra_nrl',
+            'spc_forces', 'spc_forces_v',
             'mpc_forces', 'mpc_forces_RAQCONS', 'mpc_forces_RAQEATC',
             'contact_forces', 'contact_tractions_and_pressure',
             'glue_forces',
@@ -1134,7 +1104,7 @@ class OP2_F06_Common:
             # OES - isotropic CBAR stress/strain
             'cbar_stress', 'cbar_strain',
             #'cbar_force',
-            'cbar_force_abs', 'cbar_force_nrl', 'cbar_force_srss',
+            #'abs.cbar_force', 'nrl.cbar_force', 'srss.cbar_force',
 
             'cbar_stress_10nodes', 'cbar_strain_10nodes', # 'cbar_force_10nodes',
 
@@ -1167,6 +1137,8 @@ class OP2_F06_Common:
 
             'cplstn3_strain', 'cplstn4_strain', 'cplstn6_strain', 'cplstn8_strain',
             'cplsts3_strain', 'cplsts4_strain', 'cplsts6_strain', 'cplsts8_strain',
+            'cweld_stress', 'cweld_strain',
+            'cfast_stress', 'cfast_strain',
         ]
         utables = unique(table_types)
         if len(table_types) != len(utables):
@@ -1230,15 +1202,6 @@ class OP2_F06_Common:
             'grid_point_strains_volume_direct',
             'grid_point_strains_volume_principal',
             'grid_point_strain_discontinuities',
-
-
-            # unused?
-            'displacement_scaled_response_spectra_nrl',
-            'displacement_scaled_response_spectra_abs',
-            'displacement_scaled_response_spectra_srss',
-            'velocity_scaled_response_spectra_abs',
-            'acceleration_scaled_response_spectra_nrl',
-            'acceleration_scaled_response_spectra_abs',
         ]
         utables = unique(table_types)
         if len(table_types) != len(utables):

@@ -14,6 +14,7 @@ from typing import Dict, Any, TYPE_CHECKING
 import numpy as np
 from pyNastran.op2.op2_interface.op2_reader import mapfmt
 
+from pyNastran.op2.tables.oug.oug import _oug_get_prefix_postfix
 from pyNastran.op2.tables.oqg_constraintForces.separation_distance import (
     SeparationDistanceArray)
 from pyNastran.op2.tables.oqg_constraintForces.oqg_spc_forces import (
@@ -456,11 +457,13 @@ class OQG:
                                             RealTemperatureGradientAndFluxArray, None,
                                             'node', random_code=op2.random_code)
         elif op2.thermal == 8:  # 4 ?
-            result_name = 'spc_forces_scaled_response_spectra_nrl'
-            storage_obj = op2.spc_forces_scaled_response_spectra_nrl
+            result_name0 = 'spc_forces'
+            prefix, postfix = _oug_get_prefix_postfix(op2.thermal)
+            result_name = prefix + result_name0 + postfix
             if op2._results.is_not_saved(result_name):
                 return ndata
             op2._results._found_result(result_name)
+            storage_obj = op2.get_result(result_name)
             n = op2._read_table_vectorized(data, ndata, result_name, storage_obj,
                                            RealSPCForcesArray, ComplexSPCForcesArray,
                                            'node', random_code=op2.random_code)

@@ -424,12 +424,12 @@ class RealSolidArrayNx(OES_Object):
     def nnodes_per_element_no_centroid(self) -> int:
         if self.element_type == 302: # CTETRA
             nnodes = 4
-        #elif self.element_type == 300: # CHEXA
-            #nnodes = 8
-        #elif self.element_type == 301: # CPENTA
-            #nnodes = 6
-        #elif self.element_type == 303: # CPYRAM
-            #nnodes = 5
+        elif self.element_type == 300: # CHEXA
+            nnodes = 8
+        elif self.element_type == 301: # CPENTA
+            nnodes = 6
+        elif self.element_type == 303: # CPYRAM
+            nnodes = 5
         else:
             raise NotImplementedError(f'element_name={self.element_name} self.element_type={self.element_type}')
         return nnodes

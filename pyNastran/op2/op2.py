@@ -1169,17 +1169,16 @@ class OP2(OP2_Scalar, OP2Writer):
             self.displacements,
             ato.displacements, crm.displacements, psd.displacements, rms.displacements,
             self.displacements_scaled,
-            self.displacement_scaled_response_spectra_abs,
-            self.displacement_scaled_response_spectra_nrl,
+            abs.displacements,
+            nrl.displacements,
 
             self.velocities,
             ato.velocities, crm.velocities, psd.velocities, rms.velocities,
-            self.velocity_scaled_response_spectra_abs,
+            abs.velocities,
 
             self.accelerations,
             ato.accelerations, crm.accelerations, psd.accelerations, rms.accelerations,
-            self.acceleration_scaled_response_spectra_abs,
-            self.acceleration_scaled_response_spectra_nrl,
+            abs.accelerations, nrl.accelerations,
 
             self.eigenvectors,
             self.op2_results.RADCONS.eigenvectors, self.op2_results.RADEFFM.eigenvectors,

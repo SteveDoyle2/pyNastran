@@ -43,6 +43,7 @@ from pyNastran.op2.tables.oef_forces.oef_force_objects import (
     RealCBarForceArray, RealCBar100ForceArray,
     RealCFastForceArrayNX, RealCWeldForceArray,
     RealCFastForceArrayMSC, RealCBushForceArray, RealCBearForceArray,
+    RealCWeldForceArrayMSC,
     RealPlateForceArray,
     RealPlateBilinearForceArray,
     RealSpringForceArray, RealDamperForceArray,
@@ -160,17 +161,7 @@ class OEF:
             prefix = 'RAFEATC.'
         elif table_name_bytes in [b'DOEF1']:
             assert op2.table_code in [4], op2.code_information()
-            if op2.thermal == 0:
-                postfix = '_abs'
-            elif op2.thermal == 2:
-                postfix = '_abs'  # Scaled response spectra ABS
-            elif op2.thermal == 4:
-                #C:\NASA\m4\formats\git\examples\move_tpl\ms103.op2
-                postfix = '_srss' #   # Scaled response spectra SRSS
-            elif op2.thermal == 8:
-                postfix = '_nrl'  # Scaled response spectra NRL
-            else:
-                assert op2.thermal in [2, 4, 8], op2.code_information() # abs
+            prefix = shock_response_prefix(op2.thermal)
         elif table_name_bytes in [b'OEFIT']:
             assert op2.table_code in [25], op2.code_information()
             prefix = 'failure_indices.'
@@ -1032,17 +1023,18 @@ class OEF:
         is_magnitude_phase = op2.is_magnitude_phase()
         dt = op2.nonlinear_factor
 
-        if op2.element_type in [1, 3, 10]:  # rods
+        element_type = op2.element_type
+        if element_type in [1, 3, 10]:  # rods
             n, nelements, ntotal = self._oef_crod(data, ndata, dt, is_magnitude_phase,
                                                   result_type, prefix, postfix)
 
-        elif op2.element_type == 2:  # cbeam
+        elif element_type == 2:  # cbeam
             #2-CBEAM
             n, nelements, ntotal = self._oef_cbeam(data, ndata, dt, is_magnitude_phase,
                                                    result_type, prefix, postfix)
 
-        elif op2.element_type in [11, 12, 13, 14,   # springs
-                                   20, 21, 22, 23]:  # dampers
+        elif element_type in [11, 12, 13, 14,   # springs
+                                  20, 21, 22, 23]:  # dampers
             # 11-CELAS1
             # 12-CELAS2
             # 13-CELAS3
@@ -1055,32 +1047,32 @@ class OEF:
             n, nelements, ntotal = self._oef_celas_cdamp(data, ndata, dt, is_magnitude_phase,
                                                          result_type, prefix, postfix)
 
-        elif op2.element_type == 24:  # CVISC
+        elif element_type == 24:  # CVISC
             n, nelements, ntotal = self._oef_cvisc(data, ndata, dt, is_magnitude_phase,
                                                    result_type, prefix, postfix)
 
-        elif op2.element_type == 34:  # cbar
+        elif element_type == 34:  # cbar
             # 34-CBAR
             n, nelements, ntotal = self._oef_cbar_34(data, ndata, dt, is_magnitude_phase,
                                                      result_type, prefix, postfix)
 
-        elif op2.element_type == 100:  # cbar
+        elif element_type == 100:  # cbar
             #100-BARS
             n, nelements, ntotal = self._oef_cbar_100(data, ndata, dt, is_magnitude_phase,
                                                       result_type, prefix, postfix)
 
-        elif op2.element_type in [33, 74]:  # centroidal shells
+        elif element_type in [33, 74]:  # centroidal shells
             # 33-CQUAD4
             # 74-CTRIA3
             n, nelements, ntotal = self._oef_shells_centroidal(data, ndata, dt, is_magnitude_phase,
                                                                result_type, prefix, postfix)
-        elif op2.is_nx and op2.element_type in [227, 228]:  # centroidal shells
+        elif op2.is_nx and element_type in [227, 228]:  # centroidal shells
             # 227-CTRIAR? (C:\MSC.Software\simcenter_nastran_2019.2\tpl_post1\cqrdbx102.op2)
             # 228-CQUADR
             n, nelements, ntotal = self._oef_shells_centroidal(data, ndata, dt, is_magnitude_phase,
                                                                result_type, prefix, postfix)
 
-        elif op2.element_type in [64, 70, 75, 82, 144]: # bilinear shells
+        elif element_type in [64, 70, 75, 82, 144]: # bilinear shells
             # 64-CQUAD8
             # 70-CTRIAR
             # 75-CTRIA6
@@ -1089,20 +1081,20 @@ class OEF:
             n, nelements, ntotal = self._oef_shells_nodal(data, ndata, dt, is_magnitude_phase,
                                                           result_type, prefix, postfix)
 
-        elif op2.element_type in [95, 96, 97, 98]: # composites
+        elif element_type in [95, 96, 97, 98]: # composites
             # 95 - CQUAD4
             # 96 - CQUAD8
             # 97 - CTRIA3
             # 98 - CTRIA6 (composite)
             n, nelements, ntotal = self._oef_shells_composite(data, ndata, dt, is_magnitude_phase,
                                                               result_type, prefix, postfix)
-        elif op2.is_nx and op2.element_type in [232, 233]: # composites
+        elif op2.is_nx and element_type in [232, 233]: # composites
             # 232 - CQUADR
             # 233 - CTRIAR
             n, nelements, ntotal = self._oef_shells_composite(data, ndata, dt, is_magnitude_phase,
                                                               result_type, prefix, postfix)
 
-        elif op2.element_type in [39, 67, 68]: # solids
+        elif element_type in [39, 67, 68]: # solids
             # 39-CTETRA
             # 67-CHEXA
             # 68-CPENTA
@@ -1117,7 +1109,7 @@ class OEF:
                 #msg = op2.code_information()
                 #return op2._not_implemented_or_skip(data, ndata, msg)
 
-        elif op2.element_type == 53:  # ctriax6
+        elif element_type == 53:  # ctriax6
             # 53-CTRIAX6
             op2._results._found_result('ctriax_force')
             #if op2.format_code == 1 and op2.num_wide == 0:  # real
@@ -1129,23 +1121,23 @@ class OEF:
                 #return op2._not_implemented_or_skip(data, ndata, msg)
             #return ndata
 
-        elif op2.element_type == 4:  # cshear
+        elif element_type == 4:  # cshear
             n, nelements, ntotal = self._oef_cshear(data, ndata, dt, is_magnitude_phase,
                                                     result_type, prefix, postfix)
 
-        elif op2.element_type == 35:  # coneax
+        elif element_type == 35:  # coneax
             n, nelements, ntotal = self._oef_cconeax(data, ndata, dt, is_magnitude_phase,
                                                      result_type, prefix, postfix)
 
-        elif op2.element_type == 38:  # cgap
+        elif element_type == 38:  # cgap
             n, nelements, ntotal = self._oef_cgap(data, ndata, dt, is_magnitude_phase,
                                                   result_type, prefix, postfix)
 
-        elif op2.element_type == 69:  # cbend
+        elif element_type == 69:  # cbend
             n, nelements, ntotal = self._oef_cbend(data, ndata, dt, is_magnitude_phase,
                                                    result_type, prefix, postfix)
 
-        elif op2.element_type in [76, 77, 78, 79]:
+        elif element_type in [76, 77, 78, 79]:
             # 76-HEXPR
             # 77-PENPR
             # 78-TETPR
@@ -1153,13 +1145,13 @@ class OEF:
             n, nelements, ntotal = self._oef_csolid_pressure(data, ndata, dt, is_magnitude_phase,
                                                              result_type, prefix, postfix)
 
-        elif op2.element_type in [102, 280]:
+        elif element_type in [102, 280]:
             # 102: cbush
             # 280: cbear
             n, nelements, ntotal = self._oef_cbush(data, ndata, dt, is_magnitude_phase,
                                                    result_type, prefix, postfix)
 
-        elif op2.element_type in [145, 146, 147]:
+        elif element_type in [145, 146, 147]:
             # 145-VUHEXA
             # 146-VUPENTA
             # 147-VUTETRA
@@ -1167,35 +1159,35 @@ class OEF:
                 #return ndata
             return ndata
 
-        elif op2.element_type == 126 and op2.is_msc:
+        elif element_type == 126 and op2.is_msc:
             # 119-CFAST-MSC
             n, nelements, ntotal = self._oef_cbush(data, ndata, dt, is_magnitude_phase,
                                                    result_type, prefix, postfix)
-        elif op2.element_type == 119 and op2.is_nx:
+        elif element_type == 119 and op2.is_nx:
             # 119-CFAST-NX
             n, nelements, ntotal = self._oef_cbar_34(data, ndata, dt, is_magnitude_phase,
                                                      result_type, prefix, postfix)
-        elif op2.element_type in [117, 200]:
+        elif element_type in [117, 200]:
             # 117-CWELDC
             # 200-CWELD
             n, nelements, ntotal = self._oef_cbar_34(data, ndata, dt, is_magnitude_phase,
                                                      result_type, prefix, postfix)
-        #elif op2.element_type == 119 and op2.is_msc:
+        #elif element_type == 119 and op2.is_msc:
             #raise NotImplementedError(op2.code_information())
-        elif op2.element_type == 235:
+        elif element_type == 235:
             # 235-CQUADR
             return op2._not_implemented_or_skip(data, ndata, op2.code_information())
-        elif op2.element_type in [189, 190,  # VUQUAD, VTRIA - order?
+        elif element_type in [189, 190,  # VUQUAD, VTRIA - order?
                                    191]: # VUBEAM
             # removed from msc/nx
             #n, nelements, ntotal = self._oef_vu_shell(data, ndata, dt, is_magnitude_phase,
                                                       #result_type, prefix, postfix)
             #n, nelements, ntotal = self._oef_vu_beam(data, ndata, dt, is_magnitude_phase,
                                                      #result_type, prefix, postfix)
-            msg = f'{op2.element_name}-{op2.element_type} has been removed'
+            msg = f'{op2.element_name}-{element_type} has been removed'
             return op2._not_implemented_or_skip(data, ndata, msg)
         elif op2.is_nx:
-            if op2.element_type in [118, 343, 344, 345, 346, 347, 348, 349, 350, 351, 352,
+            if element_type in [118, 343, 344, 345, 346, 347, 348, 349, 350, 351, 352,
                                      356, 357, 363]:
                 # 118 CWELDP
                 # 343 CTRIA6 SOL 401
@@ -1211,19 +1203,23 @@ class OEF:
                 #356 Composite quadrilateral shell element (CQUAD8); SOL 402?
                 #357 Composite triangular shell element (CTRIAR); SOL 402?
                 # 363 CROD SOL 402
-                #print(op2.code_information())
                 return op2._not_implemented_or_skip(data, ndata, op2.code_information())
             #print(op2.code_information())
             #nx_missing
             return op2._not_implemented_or_skip(data, ndata, op2.code_information())
         else:
-            #print(op2.code_information())
-            #msc_missing
-            return op2._not_implemented_or_skip(data, ndata, op2.code_information())
+            if element_type == 118:
+                # 118-WELDP
+                n, nelements, ntotal = self._oef_cbar_34(data, ndata, dt, is_magnitude_phase,
+                                                         result_type, prefix, postfix)
+            else:
+                #print(op2.code_information())
+                #msc_missing
+                return op2._not_implemented_or_skip(data, ndata, op2.code_information())
 
         if nelements is None:
             return n
-        if op2.element_type != 2:
+        if element_type != 2:
             # CBEAM-2: has a finalize step
             op2.reader_oes.check_element_ids()
 
@@ -1756,6 +1752,7 @@ class OEF:
         34-CBAR
         117-CWELDC
         119-CFAST-NX  (126-CFAST-MSC is like the CBUSH)
+        118-WELDP-MSC
 
         """
         op2 = self.op2
@@ -1769,6 +1766,10 @@ class OEF:
             obj_real = RealCWeldForceArray
             obj_complex = ComplexCWeldForceArray
             assert op2.num_wide in [9, 17], op2.code_information()
+        elif op2.element_type == 118:  # WELDP
+            result_name = prefix + 'cweld_force' + postfix
+            obj_real = RealCWeldForceArrayMSC
+            assert op2.num_wide == 9, op2.code_information()
         elif op2.element_type == 119:
             result_name = prefix + 'cfast_force' + postfix
             obj_real = RealCFastForceArrayNX
@@ -3735,3 +3736,18 @@ def oef_csolid_imag_16(self, data: bytes,
         cpressure = complex(pressure, 0.)
         obj.add_sort1(dt, eid, ename, ax, ay, az, vx, vy, vz, cpressure)
     return n
+
+def shock_response_prefix(thermal: int) -> str:
+    #if thermal == 0:
+        #prefix = 'abs.'
+    if thermal == 2:
+        prefix = 'abs.'  # Scaled response spectra ABS
+    elif thermal == 4:
+        #D:\NASA\git\examples\move_tpl\ms103.op2
+        #C:\NASA\m4\formats\git\examples\move_tpl\ms103.op2
+        prefix = 'srss.' #   # Scaled response spectra SRSS
+    elif thermal == 8:
+        prefix = 'nrl.'  # Scaled response spectra NRL
+    else:
+        assert thermal in [2, 4, 8], thermal # , op2.code_information() # abs
+    return prefix

@@ -16,7 +16,8 @@ if TYPE_CHECKING:  # pragma: no cover
                                    PBAR, PBEAM, PBEAM3, PBUSH, PBUSH1D)
 
 
-def convert(model: BDF, units_to: List[str], units: Optional[List[str]]=None) -> None:
+def convert(model: BDF, units_to: List[str],
+            units: Optional[List[str]]=None) -> None:
     """
     Converts a model from a set of defined units
 
@@ -35,6 +36,8 @@ def convert(model: BDF, units_to: List[str], units: Optional[List[str]]=None) ->
     Note
     ----
     mass refers to the elemental mass, which could be a weight
+
+    .. warning:: PBUSH1D tables should only be used by PBUSH1D
 
     """
     # units_start = 'in'
@@ -511,6 +514,7 @@ def _convert_properties(model: BDF,
 
     Skips are unscaled (intentionally)
 
+    .. warning:: PBUSH1D tables should only be used by PBUSH1D
     """
     if len(model.properties) == 0:
         return
@@ -565,6 +569,8 @@ def _convert_properties(model: BDF,
         # acoustic
         'PACABS',
     }
+    damper_tables = set()
+    spring_tables = set()
 
     # we don't need to convert PBUSHT, PELAST, PDAMPT
     for prop in model.properties.values():
@@ -637,7 +643,8 @@ def _convert_properties(model: BDF,
             _convert_pbush(scales, prop, velocity_scale, mass_scale, stiffness_scale, log)
         elif prop.type == 'PBUSH1D':
             _convert_pbush1d(model, scales, prop, xyz_scale, area_scale,
-                             mass_scale, damping_scale, stiffness_scale)
+                             mass_scale, damping_scale, stiffness_scale,
+                             spring_tables, damper_tables)
 
         #elif prop.type == 'PCOMPS':
             #pass
@@ -705,6 +712,8 @@ def _convert_properties(model: BDF,
         else:
             raise NotImplementedError(f'{prop.get_stats()}\n{prop}')
 
+    _set_pbush1d_tables(model, scales, spring_tables, damper_tables,
+                        xyz_scale, velocity_scale, force_scale)
     _log_scales(model.log, scale_map, scales, {'length', 'area', 'mass', 'temperature'})
 
 def _convert_pbar(scales: Set[str],
@@ -844,7 +853,9 @@ def _convert_pbush1d(model: BDF,
                      area_scale: float,
                      mass_scale: float,
                      damping_scale: float,
-                     stiffness_scale: float) -> None:
+                     stiffness_scale: float,
+                     spring_tables: Set[int], damper_tables: Set[int]) -> None:
+    """converts the PBUSH1D"""
     scales.update(['stiffness', 'mass', 'area', 'length'])
     prop.c *= damping_scale # Viscous damping (force/velocity)
     prop.k *= stiffness_scale
@@ -853,6 +864,8 @@ def _convert_pbush1d(model: BDF,
     prop.se /= xyz_scale   # Strain recovery coefficient [1/length]
     spring_tables = set([])
     damper_tables = set([])
+    damper_table_names = ('damper_idt', 'damper_idc', 'damper_idtdv', 'damper_idcdv')
+    spring_table_names = ('spring_idc', 'spring_idcdu', 'spring_idt', 'spring_idtdu')
     for var in prop.vars:
         if var == 'SHOCKA':
             scales.add('damping')
@@ -870,42 +883,55 @@ def _convert_pbush1d(model: BDF,
             #shock_type : 'TABLE'
         elif var == 'DAMPER':
             if prop.damper_type == 'TABLE':
-                for key in ('damper_idc', 'damper_idcdv', 'damper_idt', 'damper_idtdv'):
-                    value = getattr(prop, key)
-                    if value is None:
-                        continue
-                    elif isinstance(value, int):
-                        damper_tables.add(value)
-                    else:
-                        raise TypeError('key=%r value=%r' % (key, value))
+                _get_pbush1d_tables(prop, damper_table_names, damper_tables)
             else:
                 print(prop.get_stats())
                 raise NotImplementedError(prop.damper_type)
         elif var == 'SPRING':
             if prop.spring_type == 'TABLE':
-                for key in ('spring_idc', 'spring_idcdu', 'spring_idt', 'spring_idtdu'):
-                    value = getattr(prop, key)
-                    if value is None:
-                        continue
-                    elif isinstance(value, int):
-                        spring_tables.add(value)
-                    else:
-                        raise TypeError('key=%r value=%r' % (key, value))
+                _get_pbush1d_tables(prop, spring_table_names, spring_tables)
             else:
                 raise NotImplementedError(prop.damper_type)
         else:
             print(prop.get_stats())
             raise RuntimeError('var=%r\n%s' % (var, str(prop)))
-        if damper_tables:
-            model.log.warning(f'scale PBUSH1D damper_tables={damper_tables}')
-        if spring_tables:
-            model.log.warning(f'scale PBUSH1D spring_tables={spring_tables}')
-    #damper_idc : None
-    #damper_idcdv : None
-    #damper_idt : None
-    #damper_idtdv : None
-    #damper_type : None
-    #type   : 'PBUSH1D'
+    return spring_tables, damper_tables
+
+
+def _get_pbush1d_tables(prop: PBUSH1D, table_names: Tuple[str], tables_set: Set[int]):
+    for key in table_names:
+        value = getattr(prop, key)
+        if value is None:
+            continue
+        elif isinstance(value, int):
+            tables_set.add(value)
+        else:
+            raise TypeError('key=%r value=%r' % (key, value))
+
+def _set_pbush1d_tables(model: BDF, scales: Set[str],
+                        spring_tables: Set[int], damper_tables: Set[int],
+                        xyz_scale: float, velocity_scale: float, force_scale: float) -> None:
+    """
+    Sets all the TABLEDx required by the PBUSH1D.
+
+    .. note:: Assumes TABLEs are not reused for other cards.
+    """
+    #damper_table_names = ('damper_idt', 'damper_idc', 'damper_idtdv', 'damper_idcdv')
+    #spring_table_names = ('spring_idc', 'spring_idcdu', 'spring_idt', 'spring_idtdu')
+    if damper_tables:
+        scales.update(['velocity_scale', 'force_scale'])
+        for table_id in damper_tables:
+            table = model.TableD(table_id, msg=' required PBUSH1D damper table')
+            table.x *= velocity_scale
+            table.y *= force_scale
+
+        model.log.warning(f'scale PBUSH1D damper_tables={damper_tables}')
+    if spring_tables:
+        scales.update(['xyz_scale', 'force_scale'])
+        for table_id in spring_tables:
+            table = model.TableD(table_id, msg=' required PBUSH1D spring table')
+            table.x *= xyz_scale
+            table.y *= force_scale
 
 def _convert_materials(model: BDF,
                        xyz_scale: float,

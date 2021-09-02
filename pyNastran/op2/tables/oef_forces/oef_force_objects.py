@@ -2994,6 +2994,7 @@ class RealPlateBilinearForceArray(RealForceObject):  # 144-CQUAD4
 class RealCBarFastForceArray(RealForceObject):
     """
     34-CBAR
+    118-WELDP (MSC)
     119-CFAST
 
     """
@@ -3350,6 +3351,23 @@ class RealCWeldForceArray(RealCBarFastForceArray):  # 34-CBAR
     """117-CWELD"""
     def __init__(self, data_code, is_sort1, isubcase, dt):
         RealCBarFastForceArray.__init__(self, data_code, is_sort1, isubcase, dt)
+
+class RealCWeldForceArrayMSC(RealCBarFastForceArray):  # 118-WELDP
+    """118-WELDP"""
+    def __init__(self, data_code, is_sort1, isubcase, dt):
+        RealCBarFastForceArray.__init__(self, data_code, is_sort1, isubcase, dt)
+
+    def _words(self) -> List[str]:
+        words = ['                                  F O R C E S   I N   W E L D   E L E M E N T S   ( C W E L D P )\n',
+        ' \n',
+        '    ELEMENT           BEND-MOMENT END-A            BEND-MOMENT END-B                - SHEAR -               AXIAL\n',
+        '      ID          PLANE 1 (MZ)  PLANE 2 (MY)   PLANE 1 (MZ)  PLANE 2 (MY)   PLANE 1 (FY)  PLANE 2 (FZ)     FORCE FX      TORQUE MX\n',
+        #'        179      -2.607303E-02 -5.365749E-02   2.622905E-02  5.209560E-02  -5.230208E-02 -1.057531E-01  -2.476445E-02  -1.661023E-03\n',
+        ]
+        #words = ['                                 F O R C E S   I N   B A R   E L E M E N T S         ( C B A R )\n',
+                 #'0    ELEMENT         BEND-MOMENT END-A            BEND-MOMENT END-B                - SHEAR -               AXIAL\n',
+                 #'       ID.         PLANE 1       PLANE 2        PLANE 1       PLANE 2        PLANE 1       PLANE 2         FORCE         TORQUE\n']
+        return words
 
 class RealCFastForceArrayNX(RealCBarFastForceArray):  # 34-CBAR
     """119-CFAST"""

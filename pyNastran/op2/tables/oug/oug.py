@@ -16,7 +16,7 @@ from __future__ import annotations
 from struct import Struct
 from typing import TYPE_CHECKING
 import numpy as np
-#from pyNastran import is_release
+from pyNastran import DEV
 from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.op2.op2_interface.op2_reader import mapfmt
 
@@ -873,18 +873,9 @@ class OUG:
             result_name = 'solution_set.displacements'
         elif op2.table_name == b'OUPV1':
             #result_name = 'temperatures'
-            assert op2.thermal in [0, 2, 4, 8], op2.code_information()
-            if op2.thermal == 0:
-                result_name = 'displacement' # is this right?
-            elif op2.thermal == 2:
-                result_name = 'displacement_scaled_response_spectra_abs'
-            elif op2.thermal == 4:
-                result_name = 'displacement_scaled_response_spectra_srss'
-            elif op2.thermal == 8:
-                result_name = 'displacement_scaled_response_spectra_nrl'
-            else:  # pragma: no cover
-                msg = 'displacements; table_name=%s' % op2.table_name
-                raise NotImplementedError(msg)
+            result_name0 = 'displacements' # is this right?
+            prefix, postfix = _oug_get_prefix_postfix(op2.thermal)
+            result_name = prefix + result_name0 + postfix
 
         elif op2.table_name in [b'TOUGV1', b'TOUGV2']:
             result_name = 'temperatures'
@@ -916,36 +907,27 @@ class OUG:
                                             'node', random_code=op2.random_code,
                                             is_cid=is_cid)
         elif op2.thermal == 1:
-            #result_name = 'temperatures'
-            #storage_obj = op2.temperatures
             assert op2.table_name in [b'OUGV1', b'OUGV2', b'TOUGV1', b'TOUGV2', b'OUG1'], op2.table_name
             n = op2._read_scalar_table_vectorized(data, ndata, result_name, storage_obj,
                                                   RealTemperatureArray, None,
                                                   'node', random_code=op2.random_code,
                                                   is_cid=is_cid)
         elif op2.thermal == 2:
-            #result_name = 'displacement_scaled_response_spectra_abs'
-            #storage_obj = self.displacement_scaled_response_spectra_abs
             assert op2.table_name in [b'OUPV1'], op2.table_name
             n = op2._read_table_vectorized(data, ndata, result_name, storage_obj,
                                            RealDisplacementArray, ComplexDisplacementArray,
                                            'node', random_code=op2.random_code)
         elif op2.thermal == 4:
             # F:\work\pyNastran\examples\Dropbox\move_tpl\ms103.op2
-            #result_name = 'displacement_scaled_response_spectra_srss'
-            #storage_obj = self.displacement_scaled_response_spectra_srss
             assert op2.table_name in [b'OUPV1'], op2.table_name
             n = op2._read_table_vectorized(data, ndata, result_name, storage_obj,
                                            RealDisplacementArray, ComplexDisplacementArray,
                                            'node', random_code=op2.random_code)
         elif op2.thermal == 8:  # 4 ?
-            #result_name = 'displacement_scaled_response_spectra_nrl'
-            #storage_obj = self.displacement_scaled_response_spectra_nrl
             assert op2.table_name in [b'OUPV1'], op2.table_name
             n = op2._read_table_vectorized(data, ndata, result_name, storage_obj,
                                            RealDisplacementArray, ComplexDisplacementArray,
                                            'node', random_code=op2.random_code)
-            #return op2._not_implemented_or_skip(data, ndata, msg='thermal=4')
         else:
             raise RuntimeError(op2.code_information())
             #n = op2._not_implemented_or_skip(data, ndata, 'bad thermal=%r table' % op2.thermal)
@@ -971,14 +953,10 @@ class OUG:
             result_name = 'velocities_ROUGV1'
             assert op2.thermal == 0, op2.code_information()
         elif op2.table_name == b'OUPV1':
+            result_name0 = 'velocities'
+            prefix, postfix = _oug_get_prefix_postfix(op2.thermal)
+            result_name = prefix + result_name0 + postfix
             assert op2.thermal in [2, 4], op2.thermal
-            if op2.thermal == 2:
-                result_name = 'velocity_scaled_response_spectra_abs'
-            elif op2.thermal == 4:
-                result_name = 'velocity_scaled_response_spectra_nrl'
-            else:
-                msg = 'velocities; table_name=%s' % op2.table_name
-                raise NotImplementedError(msg)
         else:  # pragma: no cover
             msg = 'velocities; table_name=%s' % op2.table_name
             raise NotImplementedError(msg)
@@ -990,8 +968,6 @@ class OUG:
         op2._results._found_result(result_name)
         storage_obj = op2.get_result(result_name)
         if op2.thermal == 0:
-            #result_name = 'velocities'
-            #storage_obj = self.velocities
             n = op2._read_table_vectorized(data, ndata, result_name, storage_obj,
                                             RealVelocityArray, ComplexVelocityArray,
                                             'node', random_code=op2.random_code)
@@ -1001,12 +977,9 @@ class OUG:
                                                    'node', random_code=op2.random_code)
 
         elif op2.thermal == 2:
-            #result_name = 'velocity_scaled_response_spectra_abs'
-            #storage_obj = self.velocity_scaled_response_spectra_abs
             n = op2._read_table_vectorized(data, ndata, result_name, storage_obj,
                                            RealVelocityArray, ComplexVelocityArray,
                                            'node', random_code=op2.random_code)
-            #n = op2._not_implemented_or_skip(data, ndata, msg='thermal=2')
         else:
             raise NotImplementedError(op2.thermal)
         return n
@@ -1038,15 +1011,9 @@ class OUG:
             pass
         elif op2.table_name == b'OUPV1':
             assert op2.thermal in [0, 2, 4], op2.thermal
-            if op2.thermal == 0:
-                result_name = 'acceleration_scaled'
-            elif op2.thermal == 2:
-                result_name = 'acceleration_scaled_response_spectra_abs'
-            elif op2.thermal == 4:
-                result_name = 'acceleration_scaled_response_spectra_nrl'
-            else:  # pragma: no cover
-                msg = 'accelerations; table_name=%s' % op2.table_name
-                raise NotImplementedError(msg)
+            result_name0 = 'accelerations'
+            prefix, postfix = _oug_get_prefix_postfix(op2.thermal)
+            result_name = prefix + result_name0 + postfix
         else:  # pragma: no cover
             msg = 'accelerations; table_name=%s' % op2.table_name
             raise NotImplementedError(msg)
@@ -1079,25 +1046,23 @@ class OUG:
             op2._results._found_result(result_name)
             raise NotImplementedError(op2.code_information())
         elif op2.thermal == 2:
-            result_name = 'acceleration_scaled_response_spectra_abs'
-            storage_obj = op2.acceleration_scaled_response_spectra_abs
+            result_name = 'abs.accelerations'
+            storage_obj = op2.get_result(result_name)
             if op2._results.is_not_saved(result_name):
                 return ndata
             op2._results._found_result(result_name)
             n = op2._read_table_vectorized(data, ndata, result_name, storage_obj,
                                             RealAccelerationArray, ComplexAccelerationArray,
                                             'node', random_code=op2.random_code)
-            #n = op2._not_implemented_or_skip(data, ndata, msg='thermal=2')
         elif op2.thermal == 4:
-            result_name = 'acceleration_scaled_response_spectra_nrl'
-            storage_obj = op2.acceleration_scaled_response_spectra_nrl
+            result_name = 'srss.accelerations'
+            storage_obj = op2.get_result(result_name)
             if op2._results.is_not_saved(result_name):
                 return ndata
             op2._results._found_result(result_name)
             n = op2._read_table_vectorized(data, ndata, result_name, storage_obj,
                                             RealAccelerationArray, ComplexAccelerationArray,
                                             'node', random_code=op2.random_code)
-            #n = op2._not_implemented_or_skip(data, ndata, msg='thermal=4')
         else:
             raise NotImplementedError(op2.thermal)
         return n
@@ -1321,8 +1286,9 @@ class OUG:
                 result_name = 'rms.accelerations'
                 obj = RealAccelerationArray
             else:
+                if DEV:  # pragma: no cover
+                    raise RuntimeError(op2.code_information())
                 n = op2._not_implemented_or_skip(data, ndata, op2.code_information())
-                #raise RuntimeError(op2.code_information())
                 return n
 
             if op2._results.is_not_saved(result_name):
@@ -1549,3 +1515,34 @@ class OUG:
         else:
             raise NotImplementedError(op2.thermal)
         return n
+
+
+def _oug_get_prefix_postfix(thermal: int) -> Tuple[str, str]:
+    prefix = ''
+    postfix = ''
+    if thermal == 0:
+        pass
+    if thermal == 2:
+        prefix = 'abs.'
+    elif thermal == 4:
+        prefix = 'srss.'
+    elif thermal == 8:
+        prefix = 'nrl.'
+    else:  # pragma: no cover
+        msg = 'thermal=%s' % thermal
+        raise NotImplementedError(msg)
+
+    #assert op2.thermal in [0, 2, 4, 8], op2.code_information()
+    #if op2.thermal == 0:
+        #result_name = 'displacement' # is this right?
+    #elif op2.thermal == 2:
+        #result_name = 'abs.displacement' # displacement_scaled_response_spectra_abs
+    #elif op2.thermal == 4:
+        #result_name = 'srss.displacement' # displacement_scaled_response_spectra_srss
+    #elif op2.thermal == 8:
+        #result_name = 'nrl.displacement'  # displacement_scaled_response_spectra_nrl
+    #else:  # pragma: no cover
+        #msg = 'displacements; table_name=%s' % op2.table_name
+        #raise NotImplementedError(msg)
+
+    return prefix, postfix

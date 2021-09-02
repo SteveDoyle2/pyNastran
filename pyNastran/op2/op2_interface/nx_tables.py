@@ -473,7 +473,8 @@ NX_EXTRA_TABLES = [
     b'RADCONS', b'RADEFFM', b'RADEATC',
 
     # shock (103) stress
-    b'DOES1',
+    b'DOES1',  # scaled response spectra
+
     # stress
     b'OES1', b'OES1X', b'OES1X1', b'OES1C',
     b'OES2',
@@ -700,8 +701,8 @@ NX_RESULT_TABLES = [
     b'OPRPSD2',  # SORT2 - PSD
     b'OPRATO2',  # SORT2 - AUTO
     b'OPRCRM2',  # SORT2 - CRMS
-    b'OESCRM2C',
-    b'OSTCRM2C',
+    b'OESCRM2C', # SORT2 - CRMS composite?
+    b'OSTCRM2C', # SORT2 - CRMS composite?
 
     # modal contribution
     b'OUGMC1',  # Modal contributions for displacements, velocities, accelerations.

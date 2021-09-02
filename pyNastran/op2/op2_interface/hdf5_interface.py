@@ -10,7 +10,7 @@ defines:
  export_op2_to_hdf5_file(hdf5_file, op2_model)
 
 """
-from typing import List, Union, Optional, Any
+from typing import Tuple, List, Union, Optional, Any
 import numpy as np
 import h5py
 
@@ -69,7 +69,8 @@ from pyNastran.op2.tables.oes_stressStrain.complex.oes_bars import ComplexBarStr
 from pyNastran.op2.tables.oes_stressStrain.complex.oes_beams import ComplexBeamStressArray, ComplexBeamStrainArray
 from pyNastran.op2.tables.oes_stressStrain.complex.oes_bush import ComplexCBushStressArray, ComplexCBushStrainArray
 from pyNastran.op2.tables.oes_stressStrain.complex.oes_bush1d import ComplexCBush1DStressArray
-from pyNastran.op2.tables.oes_stressStrain.complex.oes_plates import ComplexPlateStressArray, ComplexPlateStrainArray, ComplexLayeredCompositesArray
+from pyNastran.op2.tables.oes_stressStrain.complex.oes_plates import ComplexPlateStressArray, ComplexPlateStrainArray
+from pyNastran.op2.tables.oes_stressStrain.complex.oes_composite_plates import ComplexLayeredCompositeStressArray, ComplexLayeredCompositeStrainArray # ComplexLayeredCompositesArray
 from pyNastran.op2.tables.oes_stressStrain.complex.oes_plates_vm import ComplexPlateVMStressArray, ComplexPlateVMStrainArray
 from pyNastran.op2.tables.oes_stressStrain.complex.oes_triax import ComplexTriaxStressArray
 from pyNastran.op2.tables.oes_stressStrain.complex.oes_rods import ComplexRodStressArray, ComplexRodStrainArray
@@ -170,9 +171,9 @@ TABLE_OBJ_MAP = {
     'crm.displacements' : (RealDisplacementArray, ComplexDisplacementArray),
     'psd.displacements' : (RealDisplacementArray, ComplexDisplacementArray),
     'rms.displacements' : (RealDisplacementArray, ComplexDisplacementArray),
-    'displacement_scaled_response_spectra_abs' : (RealDisplacementArray, ComplexDisplacementArray),
-    'displacement_scaled_response_spectra_nrl' : (RealDisplacementArray, ComplexDisplacementArray),
-    'displacement_scaled_response_spectra_srss' : (RealDisplacementArray, ComplexDisplacementArray),
+    'abs.displacements' : (RealDisplacementArray, ComplexDisplacementArray),
+    'nrl.displacements' : (RealDisplacementArray, ComplexDisplacementArray),
+    'srss.displacements' : (RealDisplacementArray, ComplexDisplacementArray),
     'acoustic.displacements' : (ComplexDisplacementArray, ),
 
     'velocities' : (RealVelocityArray, ComplexVelocityArray, RealThermalVelocityVectorArray),
@@ -181,7 +182,7 @@ TABLE_OBJ_MAP = {
     'crm.velocities' : (RealVelocityArray, ComplexVelocityArray),
     'psd.velocities' : (RealVelocityArray, ComplexVelocityArray),
     'rms.velocities' : (RealVelocityArray, ComplexVelocityArray),
-    'velocity_scaled_response_spectra_abs' : (RealVelocityArray, ComplexVelocityArray),
+    'abs.velocities' : (RealVelocityArray, ComplexVelocityArray),
 
     'accelerations' : (RealAccelerationArray, ComplexAccelerationArray),
     'no.accelerations' : (RealAccelerationArray, ComplexAccelerationArray),
@@ -189,9 +190,9 @@ TABLE_OBJ_MAP = {
     'crm.accelerations' : (RealAccelerationArray, ComplexAccelerationArray),
     'psd.accelerations' : (RealAccelerationArray, ComplexAccelerationArray),
     'rms.accelerations' : (RealAccelerationArray, ComplexAccelerationArray),
-    'acceleration_scaled_response_spectra_abs' : (RealAccelerationArray, ComplexAccelerationArray),
-    'acceleration_scaled_response_spectra_nrl' : (RealAccelerationArray, ComplexAccelerationArray),
-    'acceleration_scaled_response_spectra_srss' : (RealAccelerationArray, ComplexAccelerationArray),
+    'abs.accelerations' : (RealAccelerationArray, ComplexAccelerationArray),
+    'nrl.accelerations' : (RealAccelerationArray, ComplexAccelerationArray),
+    'srss.accelerations' : (RealAccelerationArray, ComplexAccelerationArray),
 
     'solution_set.displacements' : (RealDisplacementArray, ComplexDisplacementArray, ),
     'solution_set.velocities' : (RealVelocityArray, ComplexVelocityArray, ),
@@ -208,8 +209,8 @@ TABLE_OBJ_MAP = {
     'crm.spc_forces' : (RealSPCForcesArray, ComplexSPCForcesArray),
     'psd.spc_forces' : (RealSPCForcesArray, ComplexSPCForcesArray),
     'rms.spc_forces' : (RealSPCForcesArray, ComplexSPCForcesArray),
-    'spc_forces_scaled_response_spectra_abs' : (RealSPCForcesArray, ComplexSPCForcesArray),
-    'spc_forces_scaled_response_spectra_nrl' : (RealSPCForcesArray, ComplexSPCForcesArray),
+    'abs.spc_forces' : (RealSPCForcesArray, ComplexSPCForcesArray),
+    'nrl.spc_forces' : (RealSPCForcesArray, ComplexSPCForcesArray),
 
     'mpc_forces' : (RealMPCForcesArray, ComplexMPCForcesArray),
     'no.mpc_forces' : (RealMPCForcesArray, ComplexMPCForcesArray),
@@ -455,9 +456,9 @@ TABLE_OBJ_MAP = {
     'modal_contribution.cbar_strain' : (RealBarStrainArray, ComplexBarStrainArray, ),
 
     'force.cbar_force' : (RealCBarForceArray, RealCBar100ForceArray, ComplexCBarForceArray),
-    'cbar_force_abs' : (RealCBarForceArray, ),
-    'cbar_force_nrl' : (RealCBarForceArray, ),
-    'cbar_force_srss' : (RealCBarForceArray, ),
+    'abs.cbar_force' : (RealCBarForceArray, ),
+    'nrl.cbar_force' : (RealCBarForceArray, ),
+    'srss.cbar_force' : (RealCBarForceArray, ),
     'ato.cbar_force' : (RealCBarForceArray, ),
     'crm.cbar_force' : (RealCBarForceArray, ),
     'psd.cbar_force' : (RealCBarForceArray, ),
@@ -633,17 +634,17 @@ TABLE_OBJ_MAP = {
     'cquadr_composite_strain' : (RealCompositePlateStrainArray, ),
 
     #'modal_contribution.cquad4_composite_strain' : (RealCompositePlateStrainArray, ),
-    'modal_contribution.cquad4_composite_strain' : (ComplexLayeredCompositesArray, ),
-    'modal_contribution.cquad4_composite_stress' : (ComplexLayeredCompositesArray, ),
+    'modal_contribution.cquad4_composite_strain' : (ComplexLayeredCompositeStrainArray, ),
+    'modal_contribution.cquad4_composite_stress' : (ComplexLayeredCompositeStressArray, ),
 
-    'modal_contribution.cquadr_composite_strain' : (ComplexLayeredCompositesArray, ),
-    'modal_contribution.cquadr_composite_stress' : (ComplexLayeredCompositesArray, ),
+    'modal_contribution.cquadr_composite_strain' : (ComplexLayeredCompositeStrainArray, ),
+    'modal_contribution.cquadr_composite_stress' : (ComplexLayeredCompositeStressArray, ),
 
-    'modal_contribution.ctria3_composite_strain' : (ComplexLayeredCompositesArray, ),
-    'modal_contribution.ctria3_composite_stress' : (ComplexLayeredCompositesArray, ),
+    'modal_contribution.ctria3_composite_strain' : (ComplexLayeredCompositeStrainArray, ),
+    'modal_contribution.ctria3_composite_stress' : (ComplexLayeredCompositeStressArray, ),
 
-    'modal_contribution.ctriar_composite_strain' : (ComplexLayeredCompositesArray, ),
-    'modal_contribution.ctriar_composite_stress' : (ComplexLayeredCompositesArray, ),
+    'modal_contribution.ctriar_composite_strain' : (ComplexLayeredCompositeStrainArray, ),
+    'modal_contribution.ctriar_composite_stress' : (ComplexLayeredCompositeStressArray, ),
 
     'RAPCONS.cquad4_composite_stress' : (RealCompositePlateStressArray, ),
     'RAPCONS.ctria3_composite_stress' : (RealCompositePlateStressArray, ),
@@ -1086,7 +1087,7 @@ def _load_eigenvalue(h5_result, encoding: str,
             setattr(obj, key, datai)
     return obj
 
-def _load_table(result_name, h5_result, objs, encoding: str,
+def _load_table(result_name, h5_result, objs: Tuple[Any], encoding: str,
                 log: SimpleLogger, debug: bool=False):# real_obj, complex_obj
     """loads a RealEigenvectorArray/ComplexEigenvectorArray"""
     is_real = _cast(h5_result.get('is_real'))
@@ -1136,7 +1137,7 @@ def _load_table(result_name, h5_result, objs, encoding: str,
 
     class_name = _cast_str(h5_result.get('class_name'), encoding)
 
-    obj_class = _get_obj_class(objs, class_name, result_name, is_real, log)
+    obj_class = _get_obj_class(objs, class_name, result_name, log)
     if obj_class is None:
         log.warning('  unhandled result_name=%r class_name=%r...' % (
             result_name, class_name))
@@ -1197,13 +1198,43 @@ def _apply_hdf5_attributes_to_object(obj, h5_result, result_name, data_code, str
             assert not isinstance(datai, bytes), f'key={key!r} data={datai}'
     return obj
 
-def _get_obj_class(objs, class_name, result_name, unused_is_real,
+def _get_obj_class(objs: Tuple[Any],
+                   class_name: str,
+                   result_name: str,
                    log: SimpleLogger) -> Any:
+    """
+    Parameters
+    ----------
+    objs: Tuple[Any]
+        the tuple of allowable classes -> (RealDisplacementArray, ComplexDisplacementArray)
+    class_name: str
+        the name of the class (e.g., 'RealDisplacementArray')
+    result_name : str
+        the type of result
+    log : SimpleLogger
+        a python logging object
+
+    """
     #if 1:
     #obj_map = {obj.__class_name : obj for obj in objs if obj is not None}
     #obj_map = {obj.__class__.__name__ : obj for obj in objs if obj is not None}
 
-    # does what the two previous lines should do...
+    # a class is a type until it is instantiated...so we have to do some nonsense
+    # there's probably a better way to do this
+    #
+    #  objs = (<class 'pyNastran.op2.tables.oug.oug_displacements.RealDisplacementArray'>,
+    #          <class 'pyNastran.op2.tables.oug.oug_displacements.ComplexDisplacementArray'>,)
+    #  type(objs[0]) -> 'type'
+    #  str(objs[0]) -> 'pyNastran.op2.tables.oug.oug_displacements.RealDisplacementArray'
+    #  split the values
+    #  'pyNastran', 'op2', 'tables', 'oug', 'oug_displacements', 'RealDisplacementArray'
+    #  take the last field
+    #  'RealDisplacementArray'
+    #  finally map that to a dictionary
+    #  obj_map = {
+    #      'RealDisplacementArray' : RealDisplacementArray,
+    #      'ComplexDisplacementArray' : ComplexDisplacementArray,
+    #
     obj_map = {str(obj).split("'")[1].split('.')[-1] : obj
                for obj in objs if obj is not None}
     try:
@@ -1371,6 +1402,7 @@ def load_op2_from_hdf5_file(model: OP2, h5_file,
                     if objs is None:
                         log.warning(f'  skipping {result_name}...')
                         continue
+                    assert isinstance(objs, tuple), f'check that {result_name!r} is tuple in the above dictionary'
                     obj = _load_table(result_name, h5_result, objs,
                                       encoding, log=log, debug=debug)
                     if obj is None:

@@ -1,4 +1,4 @@
-from struct import Struct, pack
+from struct import pack
 import inspect
 from typing import List
 
@@ -7,10 +7,10 @@ from numpy import zeros, allclose
 
 from pyNastran.op2.result_objects.op2_objects import get_times_dtype
 from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import StressObject, StrainObject, OES_Object
-from pyNastran.f06.f06_formatting import _eigenvalue_header #, get_key0
+from pyNastran.f06.f06_formatting import _eigenvalue_header, write_floats_13e #, get_key0
 
 
-class RealShearArray(OES_Object):
+class RealFastArray(OES_Object):
     def __init__(self, data_code, is_sort1, isubcase, dt):
         OES_Object.__init__(self, data_code, isubcase, apply_data_code=False)
         #self.code = [self.format_code, self.sort_code, self.s_code]
@@ -62,8 +62,8 @@ class RealShearArray(OES_Object):
         _times = zeros(self.ntimes, dtype=dtype)
         element = zeros(self.nelements, dtype='int32')
 
-        # [max_shear, avg_shear, margin]
-        data = zeros((self.ntimes, self.ntotal, 3), dtype='float32')
+        # [force_x, force_y, force_z, moment_x, moment_y, moment_z]
+        data = zeros((self.ntimes, self.ntotal, 6), dtype='float32')
 
         if self.load_as_h5:
             #for key, value in sorted(self.data_code.items()):
@@ -138,15 +138,16 @@ class RealShearArray(OES_Object):
                 raise ValueError(msg)
         return True
 
-    def add_sort1(self, dt, eid, max_shear, avg_shear, margin):
+    def add_sort1(self, dt, eid, force_x, force_y, force_z, moment_x, moment_y, moment_z):
         """
-        ELEMENT            MAX            AVG        SAFETY         ELEMENT            MAX            AVG        SAFETY
-          ID.             SHEAR          SHEAR       MARGIN           ID.             SHEAR          SHEAR       MARGIN
-            328        1.721350E+03   1.570314E+03   7.2E+01
+                                  S T R E S S E S   I N   F A S T E N E R   E L E M E N T S   ( C F A S T )
+        ELEMENT-ID         FORCE-X          FORCE-Y          FORCE-Z         MOMENT-X         MOMENT-Y         MOMENT-Z
+               279      -1.485744E-01    -3.137333E-01    -6.343584E-01    -9.968021E-03     7.256226E-01     7.248363E-02
+
         """
         self._times[self.itime] = dt
         self.element[self.ielement] = eid
-        self.data[self.itime, self.ielement, :] = [max_shear, avg_shear, margin]
+        self.data[self.itime, self.ielement, :] = [force_x, force_y, force_z, moment_x, moment_y, moment_z]
         self.ielement += 1
 
     def get_stats(self, short: bool=False) -> List[str]:
@@ -180,8 +181,8 @@ class RealShearArray(OES_Object):
         msg += self.get_data_code()
         return msg
 
-    def get_f06_header(self):
-        raise NotImplementedError('CSHEAR...')
+    def get_f06_header(self) -> List[str]:
+        raise NotImplementedError('CWELD...')
 
     def write_f06(self, f06_file, header=None, page_stamp='PAGE %s',
                   page_num: int=1, is_mag_phase: bool=False, is_sort1: bool=True):
@@ -193,32 +194,24 @@ class RealShearArray(OES_Object):
         ntimes = self.data.shape[0]
 
         eids = self.element
-        is_odd = False
-        nwrite = len(eids)
-        if len(eids) % 2 == 1:
-            nwrite -= 1
-            is_odd = True
-
         for itime in range(ntimes):
             dt = self._times[itime]  # TODO: rename this...
             header = _eigenvalue_header(self, header, itime, ntimes, dt)
             f06_file.write(''.join(header + msg_temp))
 
             #print("self.data.shape=%s itime=%s ieids=%s" % (str(self.data.shape), itime, str(ieids)))
-            max_shear = self.data[itime, :, 0]
-            avg_shear = self.data[itime, :, 1]
-            margin = self.data[itime, :, 2]
+            force_x = self.data[itime, :, 0]
+            force_y = self.data[itime, :, 1]
+            force_z = self.data[itime, :, 2]
+            moment_x = self.data[itime, :, 3]
+            moment_y = self.data[itime, :, 4]
+            moment_z = self.data[itime, :, 5]
 
-            out = []
-            for eid, max_sheari, avg_sheari, margini in zip(eids, max_shear, avg_shear, margin):
-                #[max_sheari, avg_sheari, margini] = write_floats_13e([max_sheari, avg_sheari, margini])
-                out.append([eid, max_sheari, avg_sheari, margini])
-
-            for i in range(0, nwrite, 2):
-                f06_file.write('      %8i   %13s  %10.4E %13s  %8i   %13s  %10.4E %s\n' % (
-                    tuple(out[i] + out[i + 1])))
-            if is_odd:
-                f06_file.write('      %8i   %13s  %10.4E %s\n' % tuple(out[-1]))
+            for eid, force_xi, force_yi, force_zi, moment_xi, moment_yi, moment_zi in zip(eids, force_x, force_y, force_z, moment_x, moment_y, moment_z):
+                [force_xi, force_yi, force_zi, moment_xi, moment_yi, moment_zi] = write_floats_13e(
+                    [force_xi, force_yi, force_zi, moment_xi, moment_yi, moment_zi])
+                f06_file.write('      %8i   %13s  %13s  %13s  %13s  %13s  %s\n' % (
+                    eid, force_xi, force_yi, force_zi, moment_xi, moment_yi, moment_zi))
             f06_file.write(page_stamp % page_num)
             page_num += 1
         return page_num - 1
@@ -259,7 +252,7 @@ class RealShearArray(OES_Object):
 
         op2_ascii.write(f'  ntimes = {self.ntimes}\n')
 
-        eids = self.element
+        #eids = self.element
         eids_device = self.element * 10 + self.device_code
 
         #fmt = '%2i %6f'
@@ -268,7 +261,7 @@ class RealShearArray(OES_Object):
 
         if not self.is_sort1:
             raise NotImplementedError('SORT2')
-        struct1 = Struct(endian + b'i 3f')
+        #struct1 = Struct(endian + b'i 6f')
 
         fdtype = self.data.dtype
         if self.size == 4:
@@ -278,8 +271,8 @@ class RealShearArray(OES_Object):
             #idtype = np.int32(1)
             fdtype = np.float32(1.0)
 
-        # [eid, max_shear, avg_shear, margin]
-        data_out = np.empty((nelements, 4), dtype=fdtype)
+        # [eid, force_x, force_y, force_z, moment_x, moment_y, moment_z]
+        data_out = np.empty((nelements, 6), dtype=fdtype)
         data_out[:, 0] = eids_device.view(fdtype)
 
         op2_ascii.write(f'nelements={nelements:d}\n')
@@ -314,39 +307,39 @@ class RealShearArray(OES_Object):
         return itable
 
 
-class RealShearStressArray(RealShearArray, StressObject):
+class RealFastStressArray(RealFastArray, StressObject):
     def __init__(self, data_code, is_sort1, isubcase, dt):
-        RealShearArray.__init__(self, data_code, is_sort1, isubcase, dt)
+        RealFastArray.__init__(self, data_code, is_sort1, isubcase, dt)
         StressObject.__init__(self, data_code, isubcase)
 
     def get_headers(self) -> List[str]:
-        headers = ['max_shear', 'avg_shear', 'margin']
-        return headers
-
-    def get_f06_header(self):
-        msg = [
-            '                                     S T R E S S E S   I N   S H E A R   P A N E L S      ( C S H E A R )\n'
-            '      ELEMENT            MAX            AVG        SAFETY         ELEMENT            MAX            AVG        SAFETY\n'
-            '        ID.             SHEAR          SHEAR       MARGIN           ID.             SHEAR          SHEAR       MARGIN\n'
-            #'          328        1.721350E+03   1.570314E+03   7.2E+01'
-        ]
-        return msg
-
-
-class RealShearStrainArray(RealShearArray, StrainObject):
-    def __init__(self, data_code, is_sort1, isubcase, dt):
-        RealShearArray.__init__(self, data_code, is_sort1, isubcase, dt)
-        StrainObject.__init__(self, data_code, isubcase)
-
-    def get_headers(self) -> List[str]:
-        headers = ['max_shear', 'avg_shear', 'margin']
+        headers = ['force_x', 'force_y', 'force_z', 'moment_x', 'moment_y', 'moment_z']
         return headers
 
     def get_f06_header(self) -> List[str]:
         msg = [
-            '                                     S T R A I N S   I N   S H E A R   P A N E L S      ( C S H E A R )\n'
-            '      ELEMENT            MAX            AVG        SAFETY         ELEMENT            MAX            AVG        SAFETY\n'
-            '        ID.             SHEAR          SHEAR       MARGIN           ID.             SHEAR          SHEAR       MARGIN\n'
-            #'          328        1.721350E+03   1.570314E+03   7.2E+01'
+            '                           S T R E S S E S   I N   F A S T E N E R   E L E M E N T S   ( C F A S T )\n'
+            ' \n'
+            ' ELEMENT-ID         FORCE-X          FORCE-Y          FORCE-Z         MOMENT-X         MOMENT-Y         MOMENT-Z\n'
+            #'        279      -1.485744E-01    -3.137333E-01    -6.343584E-01    -9.968021E-03     7.256226E-01     7.248363E-02\n'
         ]
         return msg
+
+class RealFastStrainArray(RealFastArray, StrainObject):
+    def __init__(self, data_code, is_sort1, isubcase, dt):
+        RealFastArray.__init__(self, data_code, is_sort1, isubcase, dt)
+        StrainObject.__init__(self, data_code, isubcase)
+
+    def get_headers(self) -> List[str]:
+        headers = ['disp_x', 'disp_y', 'disp_z', 'rotation_x', 'rotation_y', 'rotation_z']
+        return headers
+
+    def get_f06_header(self) -> List[str]:
+        msg = [
+            '                     S T R A I N (D I S P)   I N   F A S T E N E R   E L E M E N T S   ( C F A S T )\n'
+            ' \n'
+            ' ELEMENT-ID         DISP-X           DISP-Y           DISP-Z         ROTATION-X       ROTATION-Y       ROTATION-Z\n'
+            #'        100      -1.554312E-14     1.059252E+00    -7.944389E-01    -4.062902E-08     9.630819E+01     1.284109E+02\n'
+        ]
+        return msg
+

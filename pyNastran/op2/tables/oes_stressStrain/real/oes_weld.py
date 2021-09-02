@@ -10,7 +10,7 @@ from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import StressObject,
 from pyNastran.f06.f06_formatting import _eigenvalue_header #, get_key0
 
 
-class RealShearArray(OES_Object):
+class RealWeldArray(OES_Object):
     def __init__(self, data_code, is_sort1, isubcase, dt):
         OES_Object.__init__(self, data_code, isubcase, apply_data_code=False)
         #self.code = [self.format_code, self.sort_code, self.s_code]
@@ -62,8 +62,8 @@ class RealShearArray(OES_Object):
         _times = zeros(self.ntimes, dtype=dtype)
         element = zeros(self.nelements, dtype='int32')
 
-        # [max_shear, avg_shear, margin]
-        data = zeros((self.ntimes, self.ntotal, 3), dtype='float32')
+        # [axial, maxa, mina, maxb, minb, max_shear, bearing]
+        data = zeros((self.ntimes, self.ntotal, 7), dtype='float32')
 
         if self.load_as_h5:
             #for key, value in sorted(self.data_code.items()):
@@ -138,7 +138,7 @@ class RealShearArray(OES_Object):
                 raise ValueError(msg)
         return True
 
-    def add_sort1(self, dt, eid, max_shear, avg_shear, margin):
+    def add_sort1(self, dt, eid, axial, maxa, mina, maxb, minb, max_shear, bearing):
         """
         ELEMENT            MAX            AVG        SAFETY         ELEMENT            MAX            AVG        SAFETY
           ID.             SHEAR          SHEAR       MARGIN           ID.             SHEAR          SHEAR       MARGIN
@@ -146,7 +146,7 @@ class RealShearArray(OES_Object):
         """
         self._times[self.itime] = dt
         self.element[self.ielement] = eid
-        self.data[self.itime, self.ielement, :] = [max_shear, avg_shear, margin]
+        self.data[self.itime, self.ielement, :] = [axial, maxa, mina, maxb, minb, max_shear, bearing]
         self.ielement += 1
 
     def get_stats(self, short: bool=False) -> List[str]:
@@ -180,8 +180,8 @@ class RealShearArray(OES_Object):
         msg += self.get_data_code()
         return msg
 
-    def get_f06_header(self):
-        raise NotImplementedError('CSHEAR...')
+    def get_f06_header(self) -> List[str]:
+        raise NotImplementedError('CWELD...')
 
     def write_f06(self, f06_file, header=None, page_stamp='PAGE %s',
                   page_num: int=1, is_mag_phase: bool=False, is_sort1: bool=True):
@@ -268,7 +268,7 @@ class RealShearArray(OES_Object):
 
         if not self.is_sort1:
             raise NotImplementedError('SORT2')
-        struct1 = Struct(endian + b'i 3f')
+        struct1 = Struct(endian + b'i 7f')
 
         fdtype = self.data.dtype
         if self.size == 4:
@@ -278,8 +278,8 @@ class RealShearArray(OES_Object):
             #idtype = np.int32(1)
             fdtype = np.float32(1.0)
 
-        # [eid, max_shear, avg_shear, margin]
-        data_out = np.empty((nelements, 4), dtype=fdtype)
+        # [eid, axial, maxa, mina, maxb, minb, max_shear, bearing]
+        data_out = np.empty((nelements, 7), dtype=fdtype)
         data_out[:, 0] = eids_device.view(fdtype)
 
         op2_ascii.write(f'nelements={nelements:d}\n')
@@ -314,39 +314,40 @@ class RealShearArray(OES_Object):
         return itable
 
 
-class RealShearStressArray(RealShearArray, StressObject):
+class RealWeldStressArray(RealWeldArray, StressObject):
     def __init__(self, data_code, is_sort1, isubcase, dt):
-        RealShearArray.__init__(self, data_code, is_sort1, isubcase, dt)
+        RealWeldArray.__init__(self, data_code, is_sort1, isubcase, dt)
         StressObject.__init__(self, data_code, isubcase)
 
     def get_headers(self) -> List[str]:
-        headers = ['max_shear', 'avg_shear', 'margin']
+        headers = ['axial', 'maxa', 'mina', 'maxb', 'minb', 'max_shear', 'bearing']
         return headers
 
     def get_f06_header(self):
         msg = [
-            '                                     S T R E S S E S   I N   S H E A R   P A N E L S      ( C S H E A R )\n'
-            '      ELEMENT            MAX            AVG        SAFETY         ELEMENT            MAX            AVG        SAFETY\n'
-            '        ID.             SHEAR          SHEAR       MARGIN           ID.             SHEAR          SHEAR       MARGIN\n'
-            #'          328        1.721350E+03   1.570314E+03   7.2E+01'
+            '                                S T R E S S E S   I N   W E L D   E L E M E N T S   ( C W E L D P ) \n'
+            ' \n'
+            '    ELEMENT          AXIAL         MAX  STRESS      MIN  STRESS      MAX  STRESS      MIN  STRESS        MAXIMUM          BEARING \n'
+            '      ID             STRESS           END-A            END-A            END-B            END-B        SHEAR  STRESS       STRESS\n'
+            #'        179      -3.153108E+00     8.089753E+02    -8.152815E+02     7.946552E+02    -8.009614E+02     2.852777E+01     1.179798E+01\n'
         ]
         return msg
 
-
-class RealShearStrainArray(RealShearArray, StrainObject):
+class RealWeldStrainArray(RealWeldArray, StrainObject):
     def __init__(self, data_code, is_sort1, isubcase, dt):
-        RealShearArray.__init__(self, data_code, is_sort1, isubcase, dt)
+        RealWeldArray.__init__(self, data_code, is_sort1, isubcase, dt)
         StrainObject.__init__(self, data_code, isubcase)
 
     def get_headers(self) -> List[str]:
-        headers = ['max_shear', 'avg_shear', 'margin']
+        headers = ['axial', 'maxa', 'mina', 'maxb', 'minb', 'max_shear', 'bearing']
         return headers
 
-    def get_f06_header(self) -> List[str]:
-        msg = [
-            '                                     S T R A I N S   I N   S H E A R   P A N E L S      ( C S H E A R )\n'
-            '      ELEMENT            MAX            AVG        SAFETY         ELEMENT            MAX            AVG        SAFETY\n'
-            '        ID.             SHEAR          SHEAR       MARGIN           ID.             SHEAR          SHEAR       MARGIN\n'
-            #'          328        1.721350E+03   1.570314E+03   7.2E+01'
-        ]
-        return msg
+    #def get_f06_header(self):
+        #msg = [
+            #'                                     S T R A I N S   I N   S H E A R   P A N E L S      ( C S H E A R )\n'
+            #'      ELEMENT            MAX            AVG        SAFETY         ELEMENT            MAX            AVG        SAFETY\n'
+            #'        ID.             SHEAR          SHEAR       MARGIN           ID.             SHEAR          SHEAR       MARGIN\n'
+            ##'          328        1.721350E+03   1.570314E+03   7.2E+01'
+        #]
+        #return msg
+

@@ -1,6 +1,7 @@
 """Subcase creation/extraction class"""
+from __future__ import annotations
 import getpass
-from typing import Tuple, List, Dict, Union, Any
+from typing import Tuple, List, Dict, Union, Any, TYPE_CHECKING
 import numpy as np
 from numpy import ndarray
 
@@ -11,6 +12,9 @@ from pyNastran.bdf.bdf_interface.case_control_cards import CLASS_MAP
 from pyNastran.bdf.bdf_interface.subcase_utils import (
     write_stress_type, write_set, expand_thru_case_control)
 USER_NAME = getpass.getuser()
+
+if TYPE_CHECKING:
+    from cpylog import SimpleLogger
 
 
 INT_CARDS = (
@@ -75,7 +79,7 @@ class Subcase:
         self.log = None
         #print("\n***adding subcase %s***" % self.id)
 
-    def load_hdf5_file(self, hdf5_file, encoding):
+    def load_hdf5_file(self, hdf5_file, encoding: str):
         from pyNastran.utils.dict_to_h5py import _cast
 
         keys = list(hdf5_file.keys())
@@ -103,7 +107,7 @@ class Subcase:
             else:  # pragma: no cover
                 raise RuntimeError(f'failed exporting Subcase/{key}')
 
-    def export_to_hdf5(self, hdf5_file, encoding):
+    def export_to_hdf5(self, hdf5_file, encoding: str) -> None:
         keys_to_skip = ['log', 'solCodeMap', 'allowed_param_types']
         h5attrs = object_attributes(self, mode='both', keys_to_skip=keys_to_skip)
         #print('Subcase %i' % self.id)
@@ -243,7 +247,7 @@ class Subcase:
         """
         return deprecated(old_name, new_name, deprecated_version, levels=[0, 1, 2])
 
-    def add_op2_data(self, data_code, msg, log):
+    def add_op2_data(self, data_code: Dict[str, Any], msg: str, log: SimpleLogger) -> None:
         """
         >>> self.subcase.add_op2_data(self.data_code, 'VECTOR')
         """
@@ -532,7 +536,9 @@ class Subcase:
                             'OQMPSD2']:
             pass
         elif table_name in ['OESC1']:
-            pass
+            self.add('STRESS', 'ALL', options, 'STRESS-type')
+        elif table_name in ['DOES1']:
+            self.add('STRESS', 'ALL', options, 'STRESS-type')
         else:  # pragma: no cover
             self._write_op2_error_msg(log, self.log, msg, data_code)
         #print(self)

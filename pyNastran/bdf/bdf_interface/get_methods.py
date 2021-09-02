@@ -841,35 +841,35 @@ class GetMethods(BDFAttributes):
             raise KeyError('tid=%s not found%s.  Allowed TABLEDs=%s; TABLEs=%s; TABLEMs=%s'
                            % (tid, msg, tabled_keys, table_keys, tablem_keys))
 
-    def TableM(self, tid: int, msg: str='') -> Union[TABLEM1, TABLEM2, TABLEM3, TABLEM4]:
+    def TableM(self, table_id: int, msg: str='') -> Union[TABLEM1, TABLEM2, TABLEM3, TABLEM4]:
         """gets a TABLEx (TABLEM1, TABLEM2, TABLEM3, TABLEM4)"""
         try:
-            return self.tables_m[tid]
+            return self.tables_m[table_id]
         except KeyError:
             table_keys = np.unique(list(self.tables.keys()))
             tabled_keys = np.unique(list(self.tables_d.keys()))
             tablem_keys = np.unique(list(self.tables_m.keys()))
-            raise KeyError('tid=%s not found%s.  Allowed TABLEMs=%s; TABLEs=%s; TABLEDs=%s'
-                           % (tid, msg, tablem_keys, table_keys, tabled_keys))
+            raise KeyError('table_id=%s not found%s.  Allowed TABLEMs=%s; TABLEs=%s; TABLEDs=%s'
+                           % (table_id, msg, tablem_keys, table_keys, tabled_keys))
 
-    def RandomTable(self, tid: int, msg: str='') -> Union[TABRND1, TABRNDG]:
+    def RandomTable(self, table_id: int, msg: str='') -> Union[TABRND1, TABRNDG]:
         """gets a TABRND1 / TABRNDG"""
         try:
-            return self.random_tables[tid]
+            return self.random_tables[table_id]
         except KeyError:
-            raise KeyError('tid=%s not found%s.  Allowed TABLEs=%s'
-                           % (tid, msg, np.unique(list(self.random_tables.keys()))))
+            raise KeyError('table_id=%s not found%s.  Allowed TABLEs=%s'
+                           % (table_id, msg, np.unique(list(self.random_tables.keys()))))
 
     #--------------------
     # NONLINEAR CARDS
 
-    def NLParm(self, nid: int, msg: str='') -> NLPARM:
+    def NLParm(self, nlparm_id: int, msg: str='') -> NLPARM:
         """gets an NLPARM"""
         try:
-            return self.nlparms[nid]
+            return self.nlparms[nlparm_id]
         except KeyError:
-            raise KeyError('nid=%s not found%s.  Allowed NLPARMs=%s'
-                           % (nid, msg, np.unique(list(self.nlparms.keys()))))
+            raise KeyError('nlparm_id=%s not found%s.  Allowed NLPARMs=%s'
+                           % (nlparm_id, msg, np.unique(list(self.nlparms.keys()))))
 
     #--------------------
     # MATRIX ENTRY CARDS

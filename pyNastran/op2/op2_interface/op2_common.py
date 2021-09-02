@@ -1,7 +1,8 @@
 # pylint: disable=C0301,W0201
+from __future__ import annotations
 import copy
 from struct import Struct, unpack
-from typing import Tuple, Dict, Union, Any
+from typing import Tuple, Dict, Union, Any, TYPE_CHECKING
 
 import numpy as np
 
@@ -24,6 +25,9 @@ from pyNastran.op2.op2_interface.oug_reader import (
     read_real_table_sort1, read_real_table_sort2,
     read_complex_table_sort1_imag, read_complex_table_sort1_mag,
     read_complex_table_sort2_imag, read_complex_table_sort2_mag)
+
+if TYPE_CHECKING:
+    from cpylog import SimpleLogger
 
 NX_TABLES = [
     501, 510, 511,
@@ -1622,7 +1626,6 @@ class OP2Common(Op2Codes, F06Writer):
                                      #69, # CBEND
                                      #]:
                 #return ndata
-
         if is_release:
             if msg != self._last_comment:
                 #print(self.code_information())
@@ -2368,7 +2371,7 @@ def _function7(value: int) -> int:
 
 def read_title_helper(title_bytes: bytes, subtitle_bytes: bytes, label_bytes: bytes,
                       isubcase: int,
-                      encoding: str, log) -> Tuple[str, str, str, str, str]:
+                      encoding: str, log: SimpleLogger) -> Tuple[str, str, str, str, str]:
     """
     title_bytes    = b''  # 128 bytes
     subtitle_bytes = '                                                                                                   SUPERELEMENT 0       ,   10  '
@@ -2399,40 +2402,12 @@ def read_title_helper(title_bytes: bytes, subtitle_bytes: bytes, label_bytes: by
     #print(f'subtitle = {subtitle_bytes!r}')
     #print(f'label    = {label_bytes!r}')
 
-    if 'FBA SUBCASE ' in label:
-        subtitle = subtitle[:28]
-        # title    = b' FRF PAPER DOF 8 PROBLEM USING GRID POINTS                                                                                      '
-        # subtitle = b' SINGLE SHOT RUN VIA GENASM - FRFP1GPS                                     FBA OUTPUT FOR FRF COMPONENT        1 (FRF8    )     '
-        # label     = b'UNIT LOAD ON GRID        2/1 (FRF COMP.        1 / FRF8    )                                           FBA SUBCASE        1     '
-
-        label2 = label[:100].rstrip()[:-1].rstrip()
-        #label2 = b'UNIT LOAD ON GRID        2/1 (FRF COMP.        1 / FRF8'
-        assert '(FRF COMP. ' in label2, label2
-        unit, num_name = label2.split('(FRF COMP. ')
-        #[b'UNIT LOAD ON GRID        2/1 ', b'       1 / FRF8']
-        #print('unit', unit)
-
-        unit_labeli = unit[:17].rstrip()
-        label_num = unit[17:].rstrip()
-        assert len(label_num) >= 3, unit
-
-        unit_label = unit_labeli.strip()
-        comp_grid_1, comp_num_1 = label_num.split('/')
-        comp_grid_1 = int(comp_grid_1)
-        comp_num_1 = int(comp_num_1)
-        assert comp_grid_1 == 2, comp_grid_1
-        assert comp_num_1 == 1, comp_num_1
-
-        comp_num_2, comp_name = num_name.split('/')
-        comp_num_2 = int(comp_num_2)
-        comp_name = comp_name.strip()
-        #print('label2 = ', label2)
-        #print('unit = ', unit_label, comp_num_1, comp_num_2)
-        #print('num_name = ', comp_num_2, comp_name)
-        assert comp_num_1 == 1, comp_num_1
-        assert comp_num_2 == 1, comp_num_2
-        label = f'{unit_label}; grid={comp_grid_1} comp={comp_num_1}'
-        label2 = ''
+    label_100 = label[100:]
+    if 'FBA SUBCASE ' in label_100:
+        subtitle, label, label2 = parse_fba_subcase(title, subtitle, label, log)
+    elif 'FRF SUBCASE ' in label_100:
+        subtitle, label, label2 = parse_frf_subcase(
+            title_bytes, subtitle_bytes, label_bytes, title, subtitle, label, log)
     else:
         nlabel = 65
         label2 = label[nlabel:]
@@ -2451,3 +2426,165 @@ def read_title_helper(title_bytes: bytes, subtitle_bytes: bytes, label_bytes: by
     #print(f'label             = {label!r}')
     #print(f'label2            = {label2!r}\n')
     return title, subtitle, subtitle_original, label, label2
+
+def parse_fba_subcase(title: str, subtitle: str, label: str,
+                      log: SimpleLogger) -> Tuple[str, str]:
+
+    #log.error(f'title={title!r}')
+    #log.error(f'subtitle={subtitle!r}')
+    #log.error(f'label={label!r}')
+    subtitle = subtitle[:28]
+    # title    = b' FRF PAPER DOF 8 PROBLEM USING GRID POINTS                                                                                      '
+    # subtitle = b' SINGLE SHOT RUN VIA GENASM - FRFP1GPS                                     FBA OUTPUT FOR FRF COMPONENT        1 (FRF8    )     '
+    # label    = b'UNIT LOAD ON GRID        2/1 (FRF COMP.        1 / FRF8    )                                           FBA SUBCASE        1     '
+
+    # title    = 'FRF PAPER DOF 11 PROBLEM USING SCALAR POINTS'
+    # subtitle = ' FBA PROCESS USING THE ASM OPTION - FRFP2SPA                               FBA OUTPUT FOR FRF COMPONENT        1 (FRF111  )     '
+    # label    = b'UNIT LOAD ON SPNT        6   (FRF COMP.        1 / FRF111  )                                             FBA SUBCASE        1'
+    label_base = label[:100].rstrip(' )')
+    #label_base = b'UNIT LOAD ON GRID        2/1 (FRF COMP.        1 / FRF8'
+    #label_base = b'UNIT LOAD ON SPNT        6   (FRF COMP.        1 / FRF111'
+
+    if '(FRF COMP. ' in label_base:
+        if label_base.startswith('UNIT LOAD ON GRID'):
+            unit, num_name = label_base.split('(FRF COMP. ')
+            #[b'UNIT LOAD ON GRID        2/1 ', b'       1 / FRF8']
+            #print('unit', unit)
+
+            unit_labeli = unit[:17].rstrip()
+            label_num = unit[17:].rstrip()
+            assert len(label_num) >= 3, unit
+
+            unit_label = unit_labeli.strip()
+            try:
+                comp_grid_1, comp_num_1 = label_num.split('/')
+            except ValueError:
+                log.error(f'label={label!r}')
+                log.error(f'label2={label2!r}')
+                log.error(f'label_num={label_num!r}')
+                log.error(f'unit={unit!r}')
+                log.error(f'label_num={label_num!r}')
+                raise
+        elif label_base.startswith('UNIT LOAD ON SPNT'):
+            unit, num_name = label_base.split('(FRF COMP. ')
+            #print(f'unit={unit!r} num_name={num_name!r}')
+            # unit = 'UNIT LOAD ON SPNT        6   '
+            # num_name = '       1 / FRF111'
+            comp_num_1 = 0
+            comp_grid_1 = unit.split('SPNT')[-1]
+
+            unit_labeli = unit[:17].rstrip()
+            label_num = unit[17:].rstrip()
+            #print(f'label_num={label_num!r} unit_labeli={unit_labeli!r}')
+            unit_label = unit_labeli.strip()
+            #label_num='        6' unit_labeli='UNIT LOAD ON SPNT'
+        else:
+            raise NotImplementedError(label_base)
+
+    elif label_base.startswith('LOAD ON INTERNAL GRID PT. '):
+        grid_comp_str = label_base.split('LOAD ON INTERNAL GRID PT. ')[1].strip()
+
+        #'812 IN FRF COMPONENT'
+        grid_str, comp_str = grid_comp_str.split('IN FRF COMPONENT')
+        grid_id = int(grid_str)
+        comp_id = int(comp_str)
+
+        #print(f'sline = {sline}')
+        #print(title)
+        #print(subtitle)
+        #print(label)
+        #print(f'label_base = {label_base!r}')
+        #comp_grid_1 = g
+        #raise RuntimeError(label_base)
+        label = f'Load on internal grid point; grid={grid_id} comp={comp_id}'
+        label2 = ''
+        return subtitle, label, label_base
+    elif label_base.startswith('LOAD ON CONNECTION GRID PT. '):
+        #'LOAD ON CONNECTION GRID PT. 814 IN FRF COMP. 2'
+        grid_comp_str = label_base.split('LOAD ON CONNECTION GRID PT. ')[1].strip()
+
+        grid_str, comp_str = grid_comp_str.split('IN FRF COMP.')
+        grid_id = int(grid_str)
+        comp_id = int(comp_str)
+        label = f'Load on connection grid point; grid={grid_id} comp={comp_id}'
+        label2 = ''
+        return subtitle, label, label_base
+    else:
+        raise NotImplementedError(label_base)
+
+    comp_grid_1 = int(comp_grid_1)
+    comp_num_1 = int(comp_num_1)
+    assert comp_grid_1 > 0, f'comp_grid_1={comp_grid_1} label_base={label_base!r}'
+    assert comp_num_1 in [0, 1, 3], f'comp_num_1={comp_num_1} label_base={label_base!r}'
+
+    comp_num_2, comp_name = num_name.split('/')
+    comp_num_2 = int(comp_num_2)
+    comp_name = comp_name.strip()
+    #print('label2 = ', label2)
+    #print('unit = ', unit_label, comp_num_1, comp_num_2)
+    #print('num_name = ', comp_num_2, comp_name)
+    assert comp_num_2 in [1, 2, 7, 8], f'comp_num_2={comp_num_2} label_base={label_base!r}'
+    label = f'{unit_label}; grid={comp_grid_1} comp={comp_num_1}'
+    label2 = ''
+    return subtitle, label, label_base
+
+def parse_frf_subcase(title_bytes: bytes, subtitle_bytes: bytes, label_bytes: bytes,
+                      title: str, subtitle: str, label: str, log: SimpleLogger) -> Tuple[str, str, str]:
+    subtitle_mod = subtitle[:28]
+    label_base = label[:100]
+    #title    = b' FRFRET4- FREQUENCY RESPONSE WITH POINT LOAD                                                                                    '
+    #subtitle = b' GENERATE FRFS FOR COMPONENT NO. 4                                         FRF OUTPUT FOR FRF COMPONENT        4 (TOP     )     '
+    #label    = b'UNIT LOAD ON GRID POINT     5010 - COMPONENT 3                                                         FRF SUBCASE        1     '
+    #label = f'{unit_label}; grid={comp_grid_1} comp={comp_num_1}'
+    #print(f'label_bytes = {label_bytes}')
+    if label_base.startswith('UNIT LOAD ON GRID POINT'):
+        grid_comp_sline = label_base.split('UNIT LOAD ON GRID POINT')[1].strip()
+
+        #'5010 - COMPONENT 3'
+        grid_str, comp_str = grid_comp_sline.split(' - COMPONENT')
+        grid_id = int(grid_str)
+        comp_id = int(comp_str)
+    elif label_base.startswith('UNIT LOAD ON SCALAR PNT'):
+        #label = b'UNIT LOAD ON SCALAR PNT        2                                                                       FRF SUBCASE        1     '
+        spoint_str = label_base.split('UNIT LOAD ON SCALAR PNT')[1]
+        grid_id = int(spoint_str)
+        comp_id = 0
+    elif label_base.startswith('LOAD ON INTERNAL GRID PT.'):
+        # title    = b' FRFPLT11 - FRF TEST FOR RECTANGULAR PLATE MODEL USING DB OPTION                                                                '
+        # subtitle = b' FRF GENERATION FOR COMPONENT NO. 1                                        FRF OUTPUT FOR FRF COMPONENT        1 (LEFTBOT )     '
+        # label    = b'LOAD ON INTERNAL GRID PT. 812 IN FRF COMPONENT 1                                                       FRF SUBCASE        1     '
+        grid_str = label_base.split('LOAD ON INTERNAL GRID PT.')[1].strip()
+        #print(f'label_base = {label_base!r}')
+        #'812 IN FRF COMPONENT 1'
+        #print(grid_str)
+        if 'IN FRF COMPONENT' in grid_str:
+            # LOAD ON INTERNAL GRID PT. 812 IN FRF COMPONENT 1
+            grid_str, comp_str = grid_str.split('IN FRF COMPONENT')
+            comp_id = int(comp_str)
+        elif 'IN FRF COMPONE' in grid_str:
+            # LOAD ON INTERNAL GRID PT. 16383 IN FRF COMPONE
+            grid_str = grid_str.split('IN FRF COMPONE')[0]
+            comp_id = 0
+        else:
+            raise RuntimeError(grid_str)
+        grid_id = int(grid_str)
+    elif label_base.startswith('LOAD ON CONNECTION GRID PT. '):
+        #'LOAD ON CONNECTION GRID PT. 814 IN FRF COMP. 2'
+        grid_comp_str = label_base.split('LOAD ON CONNECTION GRID PT. ')[1].strip()
+
+        grid_str, comp_str = grid_comp_str.split('IN FRF COMP.')
+        grid_id = int(grid_str)
+        comp_id = int(comp_str)
+        label = f'Load on connection grid point; grid={grid_id} comp={comp_id}'
+        label2 = ''
+        return subtitle_mod, label, label2
+    else:
+        print(f'title    = {title_bytes!r}')
+        print(f'subtitle = {subtitle_bytes!r}')
+        print(f'label    = {label_bytes!r}')
+        raise RuntimeError(label_base)
+
+    label2 = label[65:]  # 65
+    label = f'Unit Load on grid={grid_id}; comp={comp_id}'
+    #print(f'label2 = {label2!r}')
+    return subtitle_mod, label, label2

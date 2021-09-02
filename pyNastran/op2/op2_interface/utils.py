@@ -139,8 +139,8 @@ def get_superelement_adaptivity_index(subtitle: str, superelement: str) -> str:
                 superelement_adaptivity_index = f'SUPERELEMENT {value1},{value2}'
     return superelement_adaptivity_index
 
-def update_subtitle_with_adaptivity_index(subtitle, superelement_adaptivity_index,
-                                          adpativity_index):
+def update_subtitle_with_adaptivity_index(subtitle: str, superelement_adaptivity_index: str,
+                                          adpativity_index: str) -> str:
     """
     Parameters
     ----------

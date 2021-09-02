@@ -54,14 +54,16 @@ from pyNastran.op2.tables.oes_stressStrain.real.oes_springs import (RealSpringSt
                                                                     RealNonlinearSpringStressArray)
 from pyNastran.op2.tables.oes_stressStrain.real.oes_triax import RealTriaxStressArray, RealTriaxStrainArray
 from pyNastran.op2.tables.oes_stressStrain.real.oes_bend import RealBendStressArray, RealBendStrainArray
+from pyNastran.op2.tables.oes_stressStrain.real.oes_weld import RealWeldStressArray, RealWeldStrainArray
+from pyNastran.op2.tables.oes_stressStrain.real.oes_fast import RealFastStressArray, RealFastStrainArray
 
 
 from pyNastran.op2.tables.oes_stressStrain.complex.oes_bars import ComplexBarStressArray, ComplexBarStrainArray
 from pyNastran.op2.tables.oes_stressStrain.complex.oes_beams import ComplexBeamStressArray, ComplexBeamStrainArray
 from pyNastran.op2.tables.oes_stressStrain.complex.oes_bush import (ComplexCBushStressArray, ComplexCBushStrainArray)
 from pyNastran.op2.tables.oes_stressStrain.complex.oes_bush1d import ComplexCBush1DStressArray
-from pyNastran.op2.tables.oes_stressStrain.complex.oes_plates import (
-    ComplexPlateStressArray, ComplexPlateStrainArray, ComplexLayeredCompositesArray)
+from pyNastran.op2.tables.oes_stressStrain.complex.oes_plates import ComplexPlateStressArray, ComplexPlateStrainArray
+from pyNastran.op2.tables.oes_stressStrain.complex.oes_composite_plates import ComplexLayeredCompositeStressArray, ComplexLayeredCompositeStrainArray
 from pyNastran.op2.tables.oes_stressStrain.complex.oes_plates_vm import (
     ComplexPlateVMStressArray, ComplexPlateVMStrainArray)
 from pyNastran.op2.tables.oes_stressStrain.complex.oes_triax import ComplexTriaxStressArray
@@ -97,6 +99,7 @@ from pyNastran.op2.tables.oes_stressStrain.utils import (
     oes_celas_complex_3, oes_celas_real_2,
     oes_cshear_random_3,
     oes_comp_shell_real_11,
+    oes_weldp_msc_real_8, oes_fastp_msc_real_7,
     oes_cquad4_33_complex_15, oes_cquad4_33_random_9,
     oes_cquad4_33_complex_vm_17, oes_cquad4_33_random_vm_11, oes_cquad4_random_vm_57,
     oes_cquad4_144_complex_77, oes_cquad4_144_random, oes_cquad4_144_real,
@@ -267,7 +270,6 @@ class OES(OP2Common2):
         #print('op2.nonlinear_factor =', op2.nonlinear_factor)
         #assert op2.num_wide != 146, op2.code_information()
         #self._check_result_type()
-        #print(op2.code_information())
 
     def _check_result_type(self):
         op2 = self.op2
@@ -647,6 +649,8 @@ class OES(OP2Common2):
             n = self._read_oes1_loads(data, ndata)
         elif op2.thermal == 1:
             n = self._read_oes1_thermal(data, ndata)
+        elif op2.thermal == 4:  # abs/nrl/srss - shock response spectra
+            n = self._read_oes1_loads(data, ndata)
         else:
             msg = 'thermal=%s' % op2.thermal
             n = op2._not_implemented_or_skip(data, ndata, msg)
@@ -1170,7 +1174,7 @@ class OES(OP2Common2):
             raise
             #return None, None
 
-    def get_oes_prefix_postfix(self):
+    def get_oes_prefix_postfix(self) -> Tuple[str, str]:
         """
         Creates the prefix/postfix that splits off ATO, CRM, PSD, nonlinear,
         etc. results.  We also fix some of the sort bits as typing:
@@ -1212,6 +1216,10 @@ class OES(OP2Common2):
             self._set_as_sort2()
         #elif table_name_bytes in ['OESNLXR']:
             #prefix = 'sideline_'
+        elif table_name_bytes in [b'DOES1', b'DOSTR1']:
+            self._set_as_sort1()
+            assert op2.thermal == 4, self.code_information()
+            prefix = 'srss.'
         elif table_name_bytes in [b'OESNLXD', b'OESNL1X', b'OESNLXR', b'OESNL2']:
             prefix = 'nonlinear_'
         elif table_name_bytes in [b'OESNLXR2']:
@@ -1820,7 +1828,13 @@ class OES(OP2Common2):
                                    191]: # VUBEAM
             msg = f'{op2.element_name}-{op2.element_type} has been removed'
             return op2._not_implemented_or_skip(data, ndata, msg)
-        elif op2.element_type == 118:  # WELDP
+        elif op2.element_type == 118:  # WELDP-MSC
+            #'                                S T R E S S E S   I N   W E L D   E L E M E N T S   ( C W E L D P ) '
+            #' '
+            #'    ELEMENT          AXIAL         MAX  STRESS      MIN  STRESS      MAX  STRESS      MIN  STRESS        MAXIMUM          BEARING '
+            #'      ID             STRESS           END-A            END-A            END-B            END-B        SHEAR  STRESS       STRESS'
+            #'        179      -3.153108E+00     8.089753E+02    -8.152815E+02     7.946552E+02    -8.009614E+02     2.852777E+01     1.179798E+01'
+
             # ELEMENT-ID =     100
             #     S T R A I N S   I N   W E L D   E L E M E N T S   ( C W E L D P )
             #
@@ -1835,24 +1849,12 @@ class OES(OP2Common2):
             #floats  = (1001, -0.0007072892040014267, 0.6948937773704529, -0.6963083744049072, 0.6948915123939514, -0.6963061094284058, 6.161498617984762e-07, 0.0)
             #if data:
                 #self.show_data(data)
-            log.warning('skipping WELDP')
-            return ndata
+            n, nelements, ntotal = self._oes_weld_118(data, ndata, dt, is_magnitude_phase,
+                                                     result_type, prefix, postfix)
         elif op2.element_type == 126:  # FASTP
-            #C:\MSC.Software\msc_nastran_runs\cf103e.op2
-            # S T R E S S E S   I N   F A S T E N E R   E L E M E N T S   ( C F A S T )
-            #
-            # ELEMENT-ID         FORCE-X          FORCE-Y          FORCE-Z         MOMENT-X         MOMENT-Y         MOMENT-Z
-            # data  = (301, -4.547473508864641e-09, 1.8571810755929619e-09, -7.94031507211912e-10, -0.0, -0.0, 0.0,
-            #         401, -4.547473508864641e-09, -2.0263790645458357e-09, 1.1617373729677638e-09, -0.0, 0.0, 0.0)
-            ntotal = op2.num_wide * 4 * self.factor
-            nelements = ndata // ntotal
-            assert ndata % ntotal == 0, 'is this a FASTP result?'
-            #op2.log.warning('skipping FASTP')
-            #else:
-            #msg = op2.code_information()
-            log.warning('skipping FASTP')
-            return ndata
-            #return op2._not_implemented_or_skip(data, ndata, msg)
+            n, nelements, ntotal = self._oes_fast_126(
+                data, ndata, dt, is_magnitude_phase,
+                result_type, prefix, postfix)
         elif op2.is_nx and op2.element_type in [269, 270]:
             # 269-CHEXAL
             # 270-PENTAL
@@ -1932,7 +1934,7 @@ class OES(OP2Common2):
         assert nelements > 0, f'nelements={nelements} element_type={op2.element_type} element_name={op2.element_name!r}'
         #assert ndata % ntotal == 0, '%s n=%s nwide=%s len=%s ntotal=%s' % (op2.element_name, ndata % ntotal, ndata % op2.num_wide, ndata, ntotal)
         assert op2.num_wide * 4 * self.factor == ntotal, f'numwide*4={op2.num_wide*4} ntotal={ntotal} element_name={op2.element_name!r}\n{op2.code_information()}'
-        assert op2.thermal == 0, "thermal = %%s" % op2.thermal
+        #assert op2.thermal == 0, "thermal = %%s" % op2.thermal
         assert n is not None and n > 0, f'n={n} result_name={result_name}\n{op2.code_information()}'
 
         #if self.is_sort2:
@@ -2097,7 +2099,7 @@ class OES(OP2Common2):
             auto_return, is_vectorized = op2._create_oes_object4(
                 nelements, result_name, slot, obj_real)
             if auto_return:
-                assert ntotal == op2.num_wide * 4
+                #assert ntotal == op2.num_wide * 4
                 return nelements * ntotal, None, None
 
             obj = op2.obj
@@ -2221,7 +2223,7 @@ class OES(OP2Common2):
             auto_return, is_vectorized = op2._create_oes_object4(
                 nelements, result_name, slot, obj_vector_real)
             if auto_return:
-                assert ntotal == op2.num_wide * 4
+                #assert ntotal == op2.num_wide * 4
                 return nelements * ntotal, None, None
 
             obj = op2.obj
@@ -2360,7 +2362,7 @@ class OES(OP2Common2):
                 nlayers, result_name, slot, obj_vector_real)
             if auto_return:
                 op2._data_factor = 11
-                assert ntotal == op2.num_wide * 4
+                #assert ntotal == op2.num_wide * 4
                 return nelements * ntotal, None, None
             obj = op2.obj
 
@@ -4341,6 +4343,162 @@ class OES(OP2Common2):
             raise RuntimeError(msg + op2.code_information())
         return n, nelements, ntotal
 
+
+    def _oes_weld_118(self, data, ndata, dt, is_magnitude_phase,
+                      result_type, prefix, postfix):
+        """
+        reads stress/strain for element type:
+         - 118 : WELDP
+
+        """
+        op2 = self.op2
+        #if isinstance(op2.nonlinear_factor, float):
+            #op2.sort_bits[0] = 1 # sort2
+            #op2.sort_method = 2
+
+        n = 0
+        if op2.is_stress:
+            result_name = prefix + 'cweld_stress' + postfix
+        else:
+            result_name = prefix + 'cweld_strain' + postfix
+
+        if op2._results.is_not_saved(result_name):
+            return ndata, None, None
+        op2._results._found_result(result_name)
+        slot = op2.get_result(result_name)
+        if result_type == 0 and op2.num_wide == 8:  # real
+            if op2.is_stress:
+                obj_vector_real = RealWeldStressArray
+            else:
+                obj_vector_real = RealWeldStrainArray
+
+            ntotal = 32 * self.factor  # 8*4
+            nelements = ndata // ntotal
+            #print('WELDP nelements =', nelements)
+
+            auto_return, is_vectorized = op2._create_oes_object4(
+                nelements, result_name, slot, obj_vector_real)
+            if auto_return:
+                return ndata, None, None
+
+            if op2.is_debug_file:
+                op2.binary_debug.write('  [cap, element1, element2, ..., cap]\n')
+                #op2.binary_debug.write('  cap = %i  # assume 1 cap when there could have been multiple\n' % ndata)
+                op2.binary_debug.write('  #elementi = [eid_device, s1a, s2a, s3a, s4a, axial, smaxa, smina, MSt,\n')
+                op2.binary_debug.write('                           s1b, s2b, s3b, s4b, smaxb, sminb,        MSc]\n')
+                op2.binary_debug.write('  nelements=%i; nnodes=1 # centroid\n' % nelements)
+
+            obj = op2.obj
+            if op2.use_vector and is_vectorized and op2.sort_method == 1:
+                # self.itime = 0
+                # self.ielement = 0
+                # self.itotal = 0
+                #self.ntimes = 0
+                #self.nelements = 0
+                n = nelements * op2.num_wide * 4
+
+                ielement = obj.ielement
+                ielement2 = ielement + nelements
+                obj._times[obj.itime] = dt
+                self.obj_set_element(obj, ielement, ielement2, data, nelements)
+
+                floats = frombuffer(data, dtype=op2.fdtype8).reshape(nelements, 8)
+
+                #[axial, maxa, mina, maxb, minb, max_shear, bearing]
+                obj.data[obj.itime, ielement:ielement2, :] = floats[:, 1:].copy()
+                obj.itotal = ielement2
+                obj.ielement = ielement2
+            else:
+                if is_vectorized and op2.use_vector:  # pragma: no cover
+                    op2.log.debug('vectorize WELDP real SORT%s' % op2.sort_method)
+                n = oes_weldp_msc_real_8(op2, data, obj, nelements, ntotal, dt)
+        else:  # pragma: no cover
+            raise RuntimeError(op2.code_information())
+        assert op2.obj.element_name == op2.element_name, op2.obj
+        assert n > 0
+        return n, nelements, ntotal
+
+    def _oes_fast_126(self, data, ndata, dt, is_magnitude_phase,
+                      result_type, prefix, postfix):
+        """
+        reads stress/strain for element type:
+         - 126 : FASTP
+
+        C:\MSC.Software\msc_nastran_runs\cf103e.op2
+         S T R E S S E S   I N   F A S T E N E R   E L E M E N T S   ( C F A S T )
+
+         ELEMENT-ID         FORCE-X          FORCE-Y          FORCE-Z         MOMENT-X         MOMENT-Y         MOMENT-Z
+         data  = (301, -4.547473508864641e-09, 1.8571810755929619e-09, -7.94031507211912e-10, -0.0, -0.0, 0.0,
+                  401, -4.547473508864641e-09, -2.0263790645458357e-09, 1.1617373729677638e-09, -0.0, 0.0, 0.0)
+
+        """
+        op2 = self.op2
+        #if isinstance(op2.nonlinear_factor, float):
+            #op2.sort_bits[0] = 1 # sort2
+            #op2.sort_method = 2
+
+        n = 0
+        if op2.is_stress:
+            result_name = prefix + 'cfast_stress' + postfix
+        else:
+            result_name = prefix + 'cfast_strain' + postfix
+
+        if op2._results.is_not_saved(result_name):
+            return ndata, None, None
+        op2._results._found_result(result_name)
+        slot = op2.get_result(result_name)
+        if result_type == 0 and op2.num_wide == 7:  # real
+            if op2.is_stress:
+                obj_vector_real = RealFastStressArray
+            else:
+                obj_vector_real = RealFastStrainArray
+
+            ntotal = 28 * self.factor  # 7*4
+            nelements = ndata // ntotal
+            assert ndata % ntotal == 0
+            #print('WELDP nelements =', nelements)
+
+            auto_return, is_vectorized = op2._create_oes_object4(
+                nelements, result_name, slot, obj_vector_real)
+            if auto_return:
+                return ndata, None, None
+
+            if op2.is_debug_file:
+                op2.binary_debug.write('  [cap, element1, element2, ..., cap]\n')
+                #op2.binary_debug.write('  cap = %i  # assume 1 cap when there could have been multiple\n' % ndata)
+                op2.binary_debug.write('  #elementi = [eid_device, force_x, force_y, force_z, moment_x, moment_y, moment_z]\n')
+                op2.binary_debug.write('  nelements=%i; nnodes=1 # centroid\n' % nelements)
+
+            obj = op2.obj
+            if op2.use_vector and is_vectorized and op2.sort_method == 1:
+                # self.itime = 0
+                # self.ielement = 0
+                # self.itotal = 0
+                #self.ntimes = 0
+                #self.nelements = 0
+                n = nelements * op2.num_wide * 4
+
+                ielement = obj.ielement
+                ielement2 = ielement + nelements
+                obj._times[obj.itime] = dt
+                self.obj_set_element(obj, ielement, ielement2, data, nelements)
+
+                floats = frombuffer(data, dtype=op2.fdtype8).reshape(nelements, 7)
+
+                #[force_x, force_y, force_z, moment_x, moment_y, moment_z]
+                obj.data[obj.itime, ielement:ielement2, :] = floats[:, 1:].copy()
+                obj.itotal = ielement2
+                obj.ielement = ielement2
+            else:
+                if is_vectorized and op2.use_vector:  # pragma: no cover
+                    op2.log.debug('vectorize FASTP real SORT%s' % op2.sort_method)
+                n = oes_fastp_msc_real_7(op2, data, obj, nelements, ntotal, dt)
+        else:  # pragma: no cover
+            raise RuntimeError(op2.code_information())
+        assert op2.obj.element_name == op2.element_name, op2.obj
+        assert n > 0
+        return n, nelements, ntotal
+
     def _oes_cquad4_33(self, data, ndata: int, dt, is_magnitude_phase: bool,
                        result_type: int, prefix: str, postfix: str) -> Tuple[int, Any, Any]:
         """
@@ -4848,7 +5006,7 @@ class OES(OP2Common2):
                 nelements, result_name, slot, obj_vector_complex)
             if auto_return:
                 op2._data_factor = 2
-                assert ntotal == op2.num_wide * 4
+                #assert ntotal == op2.num_wide * 4
                 return nelements * ntotal, None, None
             obj = op2.obj
 
@@ -5761,12 +5919,14 @@ class OES(OP2Common2):
             obj_vector_strength = RealCompositePlateStressStrengthRatioArray
             #obj_vector_complex = ComplexCompositePlateStressArray
             obj_vector_random = RandomCompositePlateStressArray
+            layered_cls = ComplexLayeredCompositeStressArray
         else:
             stress_strain = 'strain'
             obj_vector_real = RealCompositePlateStrainArray
             obj_vector_strength = None # RealCompositePlateStrainStrengthRatioArray
             #obj_vector_complex = ComplexCompositePlateStrainArray
             obj_vector_random = RandomCompositePlateStrainArray
+            layered_cls = ComplexLayeredCompositeStrainArray
 
         result_name = prefix + f'{element_name}_composite_{stress_strain}' + postfix
         if op2._results.is_not_saved(result_name):
@@ -5903,18 +6063,18 @@ class OES(OP2Common2):
                                             ntotal, nelements, etype, dt)
 
         elif result_type == 1 and op2.num_wide == 13 and table_name in [b'OESVM1C', b'OSTRVM1C']: # complex
-            op2.log.warning(f'skipping complex {op2.table_name_str}-PCOMP (numwide=13)')
+            #op2.log.warning(f'skipping complex {op2.table_name_str}-PCOMP (numwide=13)')
             ntotal = 52 * self.factor
             nelements = ndata // ntotal
-            return nelements * ntotal, None, None
+            #return nelements * ntotal, None, None
             op2.table_name = table_name
             auto_return, is_vectorized = op2._create_oes_object4(
-                nelements, result_name, slot, ComplexLayeredCompositesArray)
+                nelements, result_name, slot, layered_cls)
             if auto_return:
                 return nelements * ntotal, None, None
 
             if is_vectorized and op2.use_vector:  # pragma: no cover
-                op2.log.debug(f'vectorize COMP_SHELL random SORT{sort_method} (numwide=13)')
+                op2.log.warning(f'vectorize COMP_SHELL complex SORT{sort_method} (numwide=13)')
 
             obj = op2.obj
             n = oes_shell_composite_complex_13(op2, data, obj,

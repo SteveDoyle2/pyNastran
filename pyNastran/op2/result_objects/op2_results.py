@@ -3,7 +3,7 @@ from typing import Dict, Any
 from pyNastran.op2.op2_interface.random_results import (
     RADCONS, RAECONS, RASCONS, RAPCONS, RAFCONS, RAGCONS, RANCONS,
     RADEATC, RAEEATC, RASEATC, RAPEATC, RAFEATC, RAGEATC, RANEATC,
-    ROUGV1, RADEFFM,
+    ROUGV1, RADEFFM, SRSS, ABS, NRL,
     AutoCorrelationObjects, PowerSpectralDensityObjects, RootMeansSquareObjects,
     CumulativeRootMeansSquareObjects, NumberOfCrossingsObjects,
     PSDObjects,
@@ -61,6 +61,9 @@ class Results:
         self.RAGEATC = RAGEATC() # grid point forces
         self.RAPEATC = RAPEATC() # composite stress
         self.RANEATC = RANEATC() # strain energy
+        self.srss = SRSS()
+        self.abs = ABS()
+        self.nrl = NRL()
 
     def _get_sum_objects_map(self):
         sum_objs = {
@@ -100,6 +103,7 @@ class Results:
             self.RADEFFM,
             self.RADCONS, self.RAFCONS, self.RASCONS, self.RAECONS, self.RAGCONS, self.RAPCONS, self.RANCONS,
             self.RADEATC, self.RAFEATC, self.RASEATC, self.RAEEATC, self.RAGEATC, self.RAPEATC, self.RANEATC,
+            self.srss, self.abs, self.nrl,
         ]
         return sum_objs
 
