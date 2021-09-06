@@ -124,7 +124,7 @@ def main():
     mesh_actor.GetProperty().SetRepresentationToWireframe()
     mesh_actor.GetProperty().SetColor(0, 0, 0)
 
-    # Do the intitial weight generation
+    # Do the initial weight generation
     deform = vtk.vtkDeformPointSet()
     deform.SetInputData(input_data)
     deform.SetControlMeshData(polydata)

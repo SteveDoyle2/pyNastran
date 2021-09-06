@@ -215,7 +215,7 @@ Approach
      o if total mass is desired:
        o should it fail for None values?
        o should it set those values to 0.0?
-         - sounds like Option B (errors pass silenty)
+         - sounds like Option B (errors pass silently)
        o or just not sum the mass?
    o Why the differing fail criteria?
      o it requires extra checks; speed
@@ -267,7 +267,7 @@ Approach
     o Note:
        o methods on the original cards (if used) will be updated to work
          without cross referencing
-       o APIs will be updated to be as similiar as possible when a separate
+       o APIs will be updated to be as similar as possible when a separate
          card is used
 
   o No cross referencing is allowed.  This may be OK for obscure cards.

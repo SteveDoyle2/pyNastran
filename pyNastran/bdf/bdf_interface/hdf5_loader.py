@@ -1530,7 +1530,7 @@ def _put_keys_values_into_list(model, name, keys, values):
 def _put_keys_values_into_dict_list(model: Any, name: str, idi: int,
                                     keys: np.ndarray,
                                     values: List[Any]):
-    """add someting like an SPC into a dictionary that has a list"""
+    """add something like an SPC into a dictionary that has a list"""
     for value in values:
         #print(value)
         write_card(value)

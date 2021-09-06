@@ -2825,7 +2825,7 @@ class RealPlateBilinearForceArray(RealForceObject):  # 144-CQUAD4
         else:
             raise NotImplementedError(self.element_type)
 
-        # TODO: this shouldn't be neccessary
+        # TODO: this shouldn't be necessary
         cyc = cyci * (len(eids) // nnodes_per_eid)
         assert len(eids) % nnodes_per_eid == 0
 
@@ -2893,7 +2893,7 @@ class RealPlateBilinearForceArray(RealForceObject):  # 144-CQUAD4
         else:
             raise NotImplementedError(self.element_type)
 
-        # TODO: this shouldn't be neccessary
+        # TODO: this shouldn't be necessary
         cyc = cyci * (len(eids) // nnodes_per_eid)
         assert len(eids) % nnodes_per_eid == 0
 
@@ -3616,7 +3616,7 @@ class RealCBar100ForceArray(RealForceObject):  # 100-CBAR
         #sd = self.data[0, :, 0]
         #i_sd_zero = np.where(sd != 0.0)[0]
         #i_node_zero = np.where(self.element_node[:, 1] != 0)[0]
-        #assert i_node_zero.max() > 0, 'CBAR element_node hasnt been filled'
+        #assert i_node_zero.max() > 0, 'CBAR element_node has not been filled'
         #i = np.union1d(i_sd_zero, i_node_zero)
         #self.element = self.element[i]
         #self.element_node = self.element_node[i, :]

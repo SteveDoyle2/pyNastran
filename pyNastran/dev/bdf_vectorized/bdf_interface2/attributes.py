@@ -703,7 +703,7 @@ class BDFAttributes:
     @property
     def rejects(self):
         """access the rejected lines"""
-        #: lines that were rejected b/c they were for a card that isnt supported
+        #: lines that were rejected b/c they were for a card that isn't supported
         return self.reject_lines
 
     @rejects.setter

@@ -81,7 +81,7 @@ def read_dmap(lines):
             #   TYPE PARAM,,CS,Y,ALPHA=(1.,1.)
             #
             # works for
-            #    TYPE PARAM,,CS,Y,ALPAH=1.
+            #    TYPE PARAM,,CS,Y,ALPHA=1.
             unused_base, unused_NDDL, unused_Type, unused_y, word_val = sline
             param_name, default_value = word_val.split('=')
             code += 'model.params[%r].set_value(%s)\n' % (param_name, default_value)

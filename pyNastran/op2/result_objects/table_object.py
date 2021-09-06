@@ -459,7 +459,7 @@ class TableArray(ScalarObject):  # displacement style table
         ugridtype_str = np.unique(self.gridtype_str)
         if self.nonlinear_factor not in (None, np.nan):
             #if not self.is_sort1:
-                #print("skipping %s becuase it's not SORT1" % self.class_name)
+                #print("skipping %s because it's not SORT1" % self.class_name)
                 #return
             column_names, column_values = self._build_dataframe_transient_header()
             #if is_v25:

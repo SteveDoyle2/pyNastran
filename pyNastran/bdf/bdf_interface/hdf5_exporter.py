@@ -31,7 +31,7 @@ dict_int_list_obj_attrs = [
 
 # dict[key] : value
 dict_int_obj_attrs = [
-    # are handled explictly----
+    # are handled explicitly----
     #'elements',
     #'nodes',
     #'coords',
@@ -377,7 +377,7 @@ def _export_scalar_group(hdf5_file, model: BDF, encoding):
 
 def _export_minor_attributes(hdf5_file, model: BDF, encoding):
     """
-    Minor atributes include:
+    Minor attributes include:
      - encoding
      - include_dir
      - is_enddata

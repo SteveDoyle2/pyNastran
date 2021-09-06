@@ -69,7 +69,7 @@ def create_rbe3s_between_close_nodes(bdf_filename, bdf_filename_out, tol: float,
     .. warning:: I doubt SPOINTs/EPOINTs work correctly
     .. warning:: xref not fully implemented (assumes cid=0)
 
-    .. todo:: node_set stil does work on the all the nodes in the big
+    .. todo:: node_set still does work on the all the nodes in the big
                kdtree loop, which is very inefficient
     """
     nodes_xyz, model, nids, inew = _eq_nodes_setup(
@@ -277,7 +277,7 @@ def extract_surface_patches(bdf_filename, starting_eids, theta_tols=40.):
     model = BDF(debug=False)
     model.read_bdf(bdf_filename)
 
-    # get data for all shell elemenst
+    # get data for all shell elements
     card_types = ['CTRIA3', 'CQUAD4']
     out = model.get_card_ids_by_card_types(card_types,
                                            reset_type_to_slot_map=False,

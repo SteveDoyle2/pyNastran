@@ -145,7 +145,7 @@ BUILTINS = ['del', 'eval', 'yield', 'async', 'await', 'property',
 
 class DEQATN(BaseCard):  # needs work...
     """
-    Design Equation Defintion
+    Design Equation Definition
     Defines one or more equations for use in design sensitivity analysis.
 
     +--------+------+-----+-----+-----+-----+-------+-----+

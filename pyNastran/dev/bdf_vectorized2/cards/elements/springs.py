@@ -12,7 +12,7 @@ if TYPE_CHECKING:  # pragma: no cover
 
 
 class Springs:
-    """intializes the Springs"""
+    """initializes the Springs"""
     def __init__(self, model):
         self.model = model
         self.celas1 = model.celas1

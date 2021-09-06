@@ -562,7 +562,7 @@ def cut_and_plot_moi(bdf_filename: str, normal_plane: np.ndarray, log: SimpleLog
     return y, A, I, J, EI, GJ, avg_centroid, plane_bdf_filenames
 
 def plot_inertia(y, A, I, J, EI, GJ, avg_centroid, ifig: int=1, show: bool=True, dirname: str=''):
-    """hepler method for test"""
+    """helper method for test"""
     #plt.plot(y, I[:, 0] / I[:, 0].max(), 'ro-', label='Qxx')
     #plt.plot(y, I[:, 1] / I[:, 1].max(), 'bo-', label='Qyy')
     #plt.plot(y, I[:, 2] / I[:, 2].max(), 'go-', label='Qxy')

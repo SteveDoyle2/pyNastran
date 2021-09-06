@@ -261,35 +261,35 @@ class MainWindow2(QMainWindow):
         self.log_mutex.unlock()
 
     def log_info(self, msg: str) -> None:
-        """ Helper funtion: log a message msg with a 'INFO:' prefix """
+        """ Helper function: log a message msg with a 'INFO:' prefix """
         if msg is None:
             msg = 'msg is None; must be a string'
             return self.log.simple_msg(msg, 'GUI ERROR')
         return self.log.simple_msg(msg, 'GUI INFO')
 
     def log_debug(self, msg: str) -> None:
-        """ Helper funtion: log a message msg with a 'DEBUG:' prefix """
+        """ Helper function: log a message msg with a 'DEBUG:' prefix """
         if msg is None:
             msg = 'msg is None; must be a string'
             return self.log.simple_msg(msg, 'GUI ERROR')
         return self.log.simple_msg(msg, 'GUI DEBUG')
 
     def log_command(self, msg: str) -> None:
-        """ Helper funtion: log a message msg with a 'COMMAND:' prefix """
+        """ Helper function: log a message msg with a 'COMMAND:' prefix """
         if msg is None:
             msg = 'msg is None; must be a string'
             return self.log.simple_msg(msg, 'GUI ERROR')
         return self.log.simple_msg(msg, 'GUI COMMAND')
 
     def log_error(self, msg: str) -> None:
-        """ Helper funtion: log a message msg with a 'GUI ERROR:' prefix """
+        """ Helper function: log a message msg with a 'GUI ERROR:' prefix """
         if msg is None:
             msg = 'msg is None; must be a string'
             return self.log.simple_msg(msg, 'GUI ERROR')
         return self.log.simple_msg(msg, 'GUI ERROR')
 
     def log_warning(self, msg: str) -> None:
-        """ Helper funtion: log a message msg with a 'WARNING:' prefix """
+        """ Helper function: log a message msg with a 'WARNING:' prefix """
         if msg is None:
             msg = 'msg is None; must be a string'
             return self.log.simple_msg(msg, 'GUI ERROR')
@@ -650,8 +650,8 @@ class MainWindow2(QMainWindow):
 
     def start_stop_performance_mode(func):
         """
-        Supresses logging.  If we started with logging suppressed,
-        we won't unsupress logging at the end of the function.
+        Suppresses logging.  If we started with logging suppressed,
+        we won't unsuppress logging at the end of the function.
         """
         def new_func(self, *args, **kwargs):
             """The actual function exec'd by the decorated function."""

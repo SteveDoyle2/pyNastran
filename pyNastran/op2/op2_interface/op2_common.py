@@ -1546,7 +1546,7 @@ class OP2Common(Op2Codes, F06Writer):
                         msg += ('code = (subcase=%s, analysis_code=%s, sort=%s, count=%s, '
                                 'ogs=%s, superelement_adaptivity_index=%r pval_step=%r)\n' % tuple(code))
                         msg += '%s\n' % str(self.obj)
-                        msg += '\nIf this isnt correct, check if the data code was applied on the object'
+                        msg += '\nIf this is not correct, check if the data code was applied on the object'
                         raise MultipleSolutionNotImplementedError(msg)
                 try:
                     data_codei = copy.deepcopy(self.data_code)
@@ -2113,7 +2113,7 @@ class OP2Common(Op2Codes, F06Writer):
                     raise
                 if not self.obj.table_name == self.table_name.decode('utf-8'):
                     print(self.obj)
-                    msg = 'obj.table_name=%s table_name=%s; this shouldnt happen for read_mode=2' %  (
+                    msg = 'obj.table_name=%s table_name=%s; this should not happen for read_mode=2' %  (
                         self.obj.table_name, self.table_name)
                     raise OverwriteTableError(msg)
 
@@ -2209,7 +2209,7 @@ class OP2Common(Op2Codes, F06Writer):
                     raise
                 if not self.obj.table_name == self.table_name.decode('utf-8'):
                     print(self.obj)
-                    msg = 'obj.table_name=%s table_name=%s; this shouldnt happen for read_mode=2' %  (
+                    msg = 'obj.table_name=%s table_name=%s; this should not happen for read_mode=2' %  (
                         self.obj.table_name, self.table_name)
                     raise OverwriteTableError(msg)
 
@@ -2283,8 +2283,8 @@ class OP2Common(Op2Codes, F06Writer):
             #self.fdtype8 = np.dtype(self._uendian + 'f4')
             #self.idtype8 = np.dtype(self._uendian + 'i4')
 
-            self.log.warning('64-bit precison is poorly supported')
-            #raise NotImplementedError('64-bit precison is not supported')
+            self.log.warning('64-bit precision is poorly supported')
+            #raise NotImplementedError('64-bit precision is not supported')
             self.struct_q = Struct(self._endian + b'q')
             self.struct_16s = Struct(self._endian + b'16s')
             #self.struct_8s = Struct(self._endian + b'8s')

@@ -161,7 +161,7 @@ def _cast_str(h5_result_attr, encoding: str) -> List[str]:
             for outi in out]
     return out2
 
-# the data fro these keys must be strings
+# the data for these keys must be strings
 STRING_KEYS = [
     'result_name', 'superelement_adaptivity_index', 'element_name',
     'label', 'pval_step', 'title']

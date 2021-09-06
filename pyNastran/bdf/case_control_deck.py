@@ -1246,7 +1246,7 @@ def _clean_lines(lines: List[str]) -> List[str]:
 
 def split_equal_space(line: str, word: str, example: str) -> str:
     """
-    Splits a case insensative line by an
+    Splits a case insensitive line by an
 
     reads:
      - 'SUBCASE = 5'

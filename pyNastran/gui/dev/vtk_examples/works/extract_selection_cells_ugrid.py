@@ -35,7 +35,7 @@ def main():
         [3., 2., 0.],
     ]
     # we make the lower triangle first, then the upper one to finish off the quad
-    # go accross each row, left to right
+    # go across each row, left to right
     tris = [
         [0, 1, 5],
         [0, 5, 4],

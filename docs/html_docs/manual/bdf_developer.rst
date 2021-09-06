@@ -163,7 +163,7 @@ as many nodes as there are elements, which make up roughly 95% of the cards in
 large models.  The difference in a large model and a small model, is the
 discretization and will change nodes, elements, loads, and constraints.  Loads
 and constraints are applied to only small portions of the model and (generally)
-only the boundary of a model.  The number of propertie and materials is very
+only the boundary of a model.  The number of properties and materials is very
 likely the same.
 
 Most cards are stored in a dictionary based on their integer ID.  IDs may be

@@ -1066,7 +1066,7 @@ class SEBULK(BaseCard):
         tol : float; default=1e-5
             Location tolerance to be used when searching for boundary grid points.
         loc : str; default='YES'
-            Coincident location check option for manual conection option.
+            Coincident location check option for manual connection option.
             {YES, NO}
         unitno : int / None
             FORTRAN unit number for the OUTPUT2 file (applicable and

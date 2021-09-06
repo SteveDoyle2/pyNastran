@@ -82,7 +82,7 @@ class RealSolidArrayNx(OES_Object):
         tyzi = self.data[:, :, 4].reshape(ntimes, nelements, nnodes_nx)
         txzi = self.data[:, :, 5].reshape(ntimes, nelements, nnodes_nx)
 
-        # caculate centroid and reshape to be the same as oxxi
+        # calculate centroid and reshape to be the same as oxxi
         oxx_avg = oxxi.mean(axis=2).reshape(ntimes, nelements, 1)
         oyy_avg = oyyi.mean(axis=2).reshape(ntimes, nelements, 1)
         ozz_avg = ozzi.mean(axis=2).reshape(ntimes, nelements, 1)

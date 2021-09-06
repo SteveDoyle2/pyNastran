@@ -1292,7 +1292,7 @@ class SET2(Set):
         self.ch1 = ch1
         self.ch2 = ch2
 
-        #: Heigth limits for the selection prism. (Real)
+        #: Height limits for the selection prism. (Real)
         self.zmax = zmax
         self.zmin = zmin
 

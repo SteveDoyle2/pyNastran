@@ -296,7 +296,7 @@ If that’s too long…
     
     
 
-Acccessing the Eigenvectors object
+Accessing the Eigenvectors object
 ----------------------------------
 
 Eigenvectors are the simplest object. They use the same class as for
@@ -1311,7 +1311,7 @@ Limitations
    component/property/material.
 
 2. Everything is always summmed up (e.g. you can have different geometry
-   in Subcase 2 and MPCs connecting physical geomtry, with other parts
+   in Subcase 2 and MPCs connecting physical geometry, with other parts
    flying off into space).
 
 These are things that pyNastran ``can`` do.

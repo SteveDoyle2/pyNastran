@@ -41,7 +41,7 @@ def cmd_line_plot_flutter(argv=None, plot=True, show=True, log=None):
         '\n'
         'Plot Types for V-g/V-f:\n'
         '  --tas            plot true airspeed (default)\n'
-        '  --eas            plot eqivalent airspeed\n'
+        '  --eas            plot equivalent airspeed\n'
         '  --density        plot density\n'
         '  --mach           plot Mach number\n'
         '  --alt            plot altitude\n'
@@ -53,7 +53,7 @@ def cmd_line_plot_flutter(argv=None, plot=True, show=True, log=None):
         '                   english_ft (slug/ft^3, ft, s) -> ft/s\n'
         '                   english_in (slinch/in^3, in, s) -> in/s (default)\n'
 
-        '  --out_units OUT  Selects the ouptut unit system\n'
+        '  --out_units OUT  Selects the output unit system\n'
         '                   si (kg, m, s) -> m/s\n'
         '                   english_ft (slug/ft^3, ft, s) -> ft/s\n'
         '                   english_in (slinch/in^3, in, s) -> in/s (default)\n'

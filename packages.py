@@ -95,7 +95,7 @@ def int_version(name, version):
 
 
 def str_version(version):
-    """converts a tuple of intergers to a version number"""
+    """converts a tuple of integers to a version number"""
     return '.'.join(str(versioni) for versioni in version)
 
 
@@ -252,7 +252,7 @@ def get_package_requirements(is_gui: bool=True, add_vtk_qt: bool=True,
     if not is_rtd:
         # nptyping, typish
         # -----------------------------------------------------------
-        # actual rquirement somewhere between 1.6.0 and 1.9.1
+        # actual requirement somewhere between 1.6.0 and 1.9.1
         # 1.5.3 fails
         # 1.6.0 installs (does it work?)
         # 1.7.0 according to nptyping

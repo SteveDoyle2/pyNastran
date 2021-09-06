@@ -5933,7 +5933,7 @@ class OP2Reader:
             msg += 'floats   = %r' % str(floats)
             raise NotImplementedError(msg)
         if hasattr(self, 'subtable_name'):
-            raise RuntimeError('the file hasnt been cleaned up; subtable_name_old=%s new=%s' % (
+            raise RuntimeError('the file has not been cleaned up; subtable_name_old=%s new=%s' % (
                 op2.subtable_name, subtable_name))
         return subtable_name
 

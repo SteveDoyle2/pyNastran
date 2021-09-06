@@ -18,7 +18,7 @@ def check_path(cell):
     return path, True
 
 def check_save_path(cell):
-    """verifies that the path is savable..."""
+    """verifies that the path is saveable..."""
     text, passed = check_name_str(cell)
     if not passed:
         return None, False

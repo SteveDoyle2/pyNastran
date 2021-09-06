@@ -17,7 +17,7 @@ class BarElement:
     """base class for CBAR"""
     card_name = ''
     def __init__(self, model):
-        """intializes the BarElement"""
+        """initializes the BarElement"""
         self.model = model
         self.is_current = True
         self.eid = np.array([], dtype='int32')

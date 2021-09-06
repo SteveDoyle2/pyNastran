@@ -457,7 +457,7 @@ BDF Reader/Writer
 
 OP4 Reader/Writer
 =================
- - For matrices, the OP2 is preffered.  It's simply faster.
+ - For matrices, the OP2 is preferred.  It's simply faster.
  - Types:
 
    - ASCII/binary

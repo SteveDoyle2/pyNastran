@@ -73,7 +73,7 @@ class GeometryObject:
         #pass
     #def create_point(self):
         #pass
-    #def crate_surface(self):
+    #def create_surface(self):
         #pass
     #def create_coord(self):
         #pass
@@ -345,8 +345,8 @@ class GuiAttributes:
 
     def start_stop_performance_mode(func):
         """
-        Supresses logging.  If we started with logging suppressed,
-        we won't unsupress logging at the end of the function.
+        Suppresses logging.  If we started with logging suppressed,
+        we won't unsuppress logging at the end of the function.
         """
         def new_func(self, *args, **kwargs):
             """The actual function exec'd by the decorated function."""
@@ -731,7 +731,7 @@ class GuiAttributes:
     def _remove_labels(self):
         """
         Remove all labels from the current result case.
-        This happens when the user explictly selects the clear label button.
+        This happens when the user explicitly selects the clear label button.
         """
         if len(self.label_actors) == 0:
             self.log.warning('No actors to remove')
@@ -1403,7 +1403,7 @@ class GuiAttributes:
     @start_stop_performance_mode
     def on_update_geometry_properties_override_dialog(self, geometry_properties):
         """
-        Update the goemetry properties and overwite the options in the
+        Update the goemetry properties and overwrite the options in the
         edit geometry properties dialog if it is open.
 
         Parameters
@@ -1689,7 +1689,7 @@ class GuiAttributes:
         """wrapper around node_ids"""
         if ids is None:
             return np.array([])
-        # include all but the indicies sepecified
+        # include all but the indicies specified
         include_ids = np.ones(self.node_ids.shape, dtype=self.node_ids.dtype)
         include_ids[ids] = 0
         return self.node_ids[include_ids]

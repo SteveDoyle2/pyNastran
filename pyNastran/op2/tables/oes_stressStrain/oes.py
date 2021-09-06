@@ -5367,7 +5367,7 @@ class OES(OP2Common2):
             obj_vector_complex = ComplexPlateStrainArray
             obj_vector_random = RandomPlateStrainArray
 
-        # centroid not incldued in nnodes
+        # centroid not included in nnodes
         element_base, nnodes, element_name = etype_map[op2.element_type]
         #if prefix == '' and postfix == '':
             #prefix = stress_strain + '.'

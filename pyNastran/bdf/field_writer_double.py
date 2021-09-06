@@ -73,7 +73,7 @@ def print_card_double(fields: List[Union[int, float, str, None]], wipe_fields: b
               format where the first 8 is the card name or
               blank (continuation).  The last 8-character field indicates
               an optional continuation, but because it's a left-justified
-              unneccessary field, print_card doesnt use it.
+              unnecessary field, print_card doesnt use it.
 
     .. code-block:: python
 

@@ -1197,7 +1197,7 @@ def _header_lines_to_header_dict(title_line: str, header_lines: List[str],
     return headers_dict
 
 def _simplify_header(headers_dict, variables: List[str]) -> None:
-    """cast the integer headers adn sets the variables"""
+    """cast the integer headers and sets the variables"""
     # unstructured
     if 'N' in headers_dict: # nnodes
         headers_dict['N'] = int(headers_dict['N'])

@@ -12,7 +12,7 @@ if TYPE_CHECKING:  # pragma: no cover
 
 
 class Dampers:
-    """intializes the Dampers"""
+    """initializes the Dampers"""
     def __init__(self, model):
         self.model = model
         self.cdamp1 = model.cdamp1

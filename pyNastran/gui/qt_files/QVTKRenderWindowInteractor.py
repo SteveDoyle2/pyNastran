@@ -257,7 +257,7 @@ class QVTKRenderWindowInteractor(QWidget):
         self._RenderWindow.Finalize()
 
     def CreateTimer(self, obj, evt):
-        self._Timer.start(self._TimerDuration) # self._Timer.start(10) in orginal
+        self._Timer.start(self._TimerDuration) # self._Timer.start(10) in original
 
     #def CreateRepeatingTimer(self, duration):
         #print('duration = %s' % duration)

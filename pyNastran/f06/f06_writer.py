@@ -23,7 +23,7 @@ def make_stamp(title, today=None, build=None):
     if title is None:
         title = ''
 
-    #lenghts = [7, 8, 5, 5, 3, 4, 4, 6, 9, 7, 8, 8]
+    #lengths = [7, 8, 5, 5, 3, 4, 4, 6, 9, 7, 8, 8]
     months = [' January', 'February', 'March', 'April', 'May', 'June',
               'July', 'August', 'September', 'October', 'November', 'December']
     if today is None:
@@ -394,7 +394,7 @@ class F06Writer(OP2_F06_Common):
             should a dummy Nastran "END" table be made
         quiet : bool; default=False
             suppress print messages
-        repr_check: bool; defualt=False
+        repr_check: bool; default=False
             calls the object repr as a validation test (prints nothing)
         close : bool; default=True
             close the f06 file
@@ -497,7 +497,7 @@ class F06Writer(OP2_F06_Common):
             should objects be deleted after they're written to reduce memory
         quiet : bool; default=False
             suppress print messages
-        repr_check: bool; defualt=False
+        repr_check: bool; default=False
             calls the object repr as a validation test (prints nothing)
 
         """

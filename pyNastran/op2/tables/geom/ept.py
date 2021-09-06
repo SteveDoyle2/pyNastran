@@ -1794,9 +1794,9 @@ class EPT:
         29 DIR           I Fuse direction
         30 OPTION(2) CHAR4 Failure mode
         32 LOWER        RS Lower failure bound
-        33 UPPER        RS Uppler failure bound
+        33 UPPER        RS Upper failure bound
         34 FRATE        RS FACTOR of scales the stiffness
-        35 LRGR          I Controls larg rotation
+        35 LRGR          I Controls large rotation
         36 UNDEF(4)        none
 
         # C:\MSC.Software\msc_nastran_runs\mbsh14.op2

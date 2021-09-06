@@ -588,7 +588,7 @@ MSC_RESULT_TABLES = [b'ASSIG', b'ASEPS'] + [
     b'OUGV2', # absolute displacements/velocity/acceleration - sort 2
 
     # contact
-    b'OSPDSI1', # intial separation distance
+    b'OSPDSI1', # initial separation distance
     b'OSPDS1',  # final separation distance
     b'OQGCF1', b'OQGCF2', # contact force at grid point
     b'OQGGF1', b'OQGGF2', # glue forces in grid point basic coordinate system
@@ -604,7 +604,7 @@ MSC_RESULT_TABLES = [b'ASSIG', b'ASEPS'] + [
     b'OEKE1',
     b'OES1MX',  # extreme stresses?
     b'OESNLBR2',
-    b'BGPDTVU', # basic grid point defintion table for a superelement and related to geometry with view-grids added
+    b'BGPDTVU', # basic grid point definition table for a superelement and related to geometry with view-grids added
 
     b'OUG2T',
     b'AEMONPT', # Aerodynamic monitor points.

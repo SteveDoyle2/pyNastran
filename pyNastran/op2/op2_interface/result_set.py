@@ -82,7 +82,7 @@ class ResultSet:
         self.saved.clear()
 
     def add(self, results: Union[str, List[str]])  -> List[str]:
-        """addds a list/str of results"""
+        """adds a list/str of results"""
         all_matched_results = self._get_matched_results(results)
         added = []
         for result in all_matched_results:

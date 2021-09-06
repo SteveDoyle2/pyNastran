@@ -2263,7 +2263,7 @@ class ComplexCBeamForceArray(ComplexForceObject):
         sd = self.data[0, :, 0].real
         i_sd_zero = np.where(sd != 0.0)[0]
         i_node_zero = np.where(self.element_node[:, 1] != 0)[0]
-        assert i_node_zero.max() > 0, 'CBEAM element_node hasnt been filled'
+        assert i_node_zero.max() > 0, 'CBEAM element_node has not been filled'
         i = np.union1d(i_sd_zero, i_node_zero)
         self.element = self.element[i]
         self.element_node = self.element_node[i, :]

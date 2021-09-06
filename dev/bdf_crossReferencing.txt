@@ -19,7 +19,7 @@ Notations
  - NA   - card doesn't have any cross-referencing (e.g. an SPOINT card) and is done
  - ??? no check has been done on this card
  - any other note means a card isn't done
- - no label means the card isnt done and probably isnt even added in readWrite
+ - no label means the card isn't done and probably isn't even added in readWrite
 
 ----Control---:
 ECHOON  (done)

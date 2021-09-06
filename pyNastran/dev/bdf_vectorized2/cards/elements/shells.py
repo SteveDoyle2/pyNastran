@@ -17,7 +17,7 @@ class ShellElement:
     """base class for CTRIA3, CQUAD4"""
     card_name = ''
     def __init__(self, model):
-        """intializes the ShellElement"""
+        """initializes the ShellElement"""
         self.model = model
         self.is_current = True
         self.eid = np.array([], dtype='int32')
@@ -1009,7 +1009,7 @@ class CQUADv(ShellElement):
     nrequired = 4
 
     def __init__(self, model):
-        """intializes the ShellElement"""
+        """initializes the ShellElement"""
         self.model = model
         self.is_current = True
         self.eid = np.array([], dtype='int32')

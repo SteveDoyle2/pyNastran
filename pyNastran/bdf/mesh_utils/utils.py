@@ -1127,7 +1127,7 @@ def cmd_line_export_caero_mesh(argv=None, quiet=False):
         #  optimization
         'DVPREL1', 'DVPREL2', 'DVMREL1', 'DVMREL2', 'DVCREL1', 'DVCREL2', 'DCONADD',
         'DRESP1', 'DRESP2', 'DRESP3', 'DESVAR',
-        #  aero: mabye enable later
+        #  aero: maybe enable later
         'TRIM', 'AESTAT', 'FLUTTER', 'FLFACT',
     ]
     level = 'debug' if not quiet else 'warning'

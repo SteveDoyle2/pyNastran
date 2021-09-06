@@ -124,7 +124,7 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
 
     def init_ui(self):
         """
-        Initialize user iterface
+        Initialize user interface
 
         +--------------+
         | Window Title |
@@ -148,7 +148,7 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
         #self.resize(1100, 700)
         self.statusBar().showMessage('Ready')
 
-        # windows title and aplication icon
+        # windows title and application icon
         self.setWindowTitle('Statusbar')
         if self._logo is not None:
             self.setWindowIcon(QtGui.QIcon(self._logo))
@@ -723,35 +723,35 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
         self.log_mutex.unlock()
 
     def log_info(self, msg: str) -> None:
-        """ Helper funtion: log a message msg with a 'INFO:' prefix """
+        """ Helper function: log a message msg with a 'INFO:' prefix """
         if msg is None:
             msg = 'msg is None; must be a string'
             return self.log.simple_msg(msg, 'GUI ERROR')
         return self.log.simple_msg(msg, 'GUI INFO')
 
     def log_debug(self, msg: str) -> None:
-        """ Helper funtion: log a message msg with a 'DEBUG:' prefix """
+        """ Helper function: log a message msg with a 'DEBUG:' prefix """
         if msg is None:
             msg = 'msg is None; must be a string'
             return self.log.simple_msg(msg, 'GUI ERROR')
         return self.log.simple_msg(msg, 'GUI DEBUG')
 
     def log_command(self, msg: str) -> None:
-        """ Helper funtion: log a message msg with a 'COMMAND:' prefix """
+        """ Helper function: log a message msg with a 'COMMAND:' prefix """
         if msg is None:
             msg = 'msg is None; must be a string'
             return self.log.simple_msg(msg, 'GUI ERROR')
         return self.log.simple_msg(msg, 'GUI COMMAND')
 
     def log_error(self, msg: str) -> None:
-        """ Helper funtion: log a message msg with a 'GUI ERROR:' prefix """
+        """ Helper function: log a message msg with a 'GUI ERROR:' prefix """
         if msg is None:
             msg = 'msg is None; must be a string'
             return self.log.simple_msg(msg, 'GUI ERROR')
         return self.log.simple_msg(msg, 'GUI ERROR')
 
     def log_warning(self, msg: str) -> None:
-        """ Helper funtion: log a message msg with a 'WARNING:' prefix """
+        """ Helper function: log a message msg with a 'WARNING:' prefix """
         if msg is None:
             msg = 'msg is None; must be a string'
             return self.log.simple_msg(msg, 'GUI ERROR')

@@ -67,7 +67,7 @@ General GUI Behavior
 
 ----------------------------------------------------
 ---DONE---
- - add explcit pulldown for formats
+ - add explicit pulldown for formats
  - Improved Picking
    - area picking (disappears on rotation though)
 

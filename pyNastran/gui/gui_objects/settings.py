@@ -603,7 +603,7 @@ class Settings:
         self.set_background_color(WHITE, render=render)
 
     def set_gradient_background(self, use_gradient_background: bool=False, render: bool=True) -> None:
-        """enables/diables the gradient background"""
+        """enables/disables the gradient background"""
         self.use_gradient_background = use_gradient_background
         self.parent.rend.SetGradientBackground(self.use_gradient_background)
         if render:

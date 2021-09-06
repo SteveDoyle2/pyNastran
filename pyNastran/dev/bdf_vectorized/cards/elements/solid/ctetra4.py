@@ -182,14 +182,14 @@ class CTETRA4(SolidElement):
 
         where n_i,n_j,n_k and n_m are the four nodes of the e'th tetrahedron.
 
-        The advantage of lumping is less storage and higher performace. On the downside
+        The advantage of lumping is less storage and higher performance. On the downside
         lumping introduces a discontinouty in the displacement field.
 
         Obrien.shen state that the errors in lumping is negligeble for small-size course
         meshes used in computer graphics. However, for finer meshes the errors becomes
         noticeable.
 
-        There do exist other approaches for computing mass matrices, even mehtods which
+        There do exist other approaches for computing mass matrices, even methods which
         combine other methods. We refer the interested reader to Cook for more details. Here
         we have limited our selfes to the two most common methods.
 

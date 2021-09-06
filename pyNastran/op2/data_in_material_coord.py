@@ -359,7 +359,7 @@ def transf_Mohr(Sxx, Syy, Sxy, thetarad):
     Sxx, Syy, Sxy : array-like
         Sigma_xx, Sigma_yy, Sigma_xy stresses.
     thetarad : array-like
-        Array with angles for wich the stresses should be transformed.
+        Array with angles for which the stresses should be transformed.
 
     Returns
     -------
@@ -488,7 +488,7 @@ def data_in_material_coord(bdf: BDF, op2: OP2, in_place: bool=False) -> OP2:
 
     Nastran allows the use of 'PARAM,OMID,YES' to print 2D element forces,
     stresses and strains based on the material direction. However, the
-    convertion only takes place in the F06 output file, whereas the OP2 output
+    conversion only takes place in the F06 output file, whereas the OP2 output
     file remains in the element coordinate system.
 
     This function converts the 2D element vectors to the material OP2

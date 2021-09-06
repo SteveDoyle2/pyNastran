@@ -2218,7 +2218,7 @@ class CAERO2(BaseCard):
             lrsb_ref = model.AEFact(paero2.lrsb)
             radii_slender = lrsb_ref.factors
 
-        # TODO: not suppported
+        # TODO: not supported
         if paero2.lrib in [0, None]:
             radii_interference = np.ones(nx + 1) * paero2.width
         else:
@@ -2226,7 +2226,7 @@ class CAERO2(BaseCard):
             radii_interference = lrib_ref.factors
         radii = radii_slender
 
-        # TODO: not suppported
+        # TODO: not supported
         #theta_interference1 = paero2.theta1
         #theta_interference2 = paero2.theta2
 

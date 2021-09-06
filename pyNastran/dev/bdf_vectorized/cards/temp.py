@@ -144,7 +144,7 @@ class TEMP:
             seid0 = self.model.grdset.seid
             ps0 = self.model.grdset.ps
             cd0 = self.model.grdset.cd
-            cp0 = self.mdoel.grdset.cp
+            cp0 = self.model.grdset.cp
             Cp = [cpi if cpi != cp0 else '' for cpi in self.cp]
             Cd = [cdi if cdi != cd0 else '' for cdi in self.cd]
             Ps = [psi if psi != ps0 else '' for psi in self.ps]

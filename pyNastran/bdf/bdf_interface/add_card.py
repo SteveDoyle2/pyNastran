@@ -4693,7 +4693,7 @@ class AddCards:
         nodes : List[int]
             the nodes to release
         Cs : List[str]
-            compoents to support at each node
+            components to support at each node
         comment : str; default=''
             a comment for the card
 
@@ -4713,7 +4713,7 @@ class AddCards:
         nodes : List[int]
             the nodes to release
         Cs : List[str]
-            compoents to support at each node
+            components to support at each node
         comment : str; default=''
             a comment for the card
 
@@ -6520,7 +6520,7 @@ class AddCards:
         alpha : float; default=0.0
             thermal expansion coefficient
         tref : float; default=0.0
-            reference temeprature
+            reference temperature
 
         """
         elem = RBE2(eid, gn, cm, Gmi, alpha=alpha, tref=tref, comment=comment)
@@ -6556,7 +6556,7 @@ class AddCards:
         alpha : float; default=0.0
             thermal expansion coefficient
         tref : float; default=0.0
-            reference temeprature
+            reference temperature
         comment : str; default=''
             a comment for the card
 
@@ -6753,7 +6753,7 @@ class AddCards:
         ----------
         dresp_id : int
             response id
-        lable : str
+        label : str
             Name of the response
         response_type : str
             Response type

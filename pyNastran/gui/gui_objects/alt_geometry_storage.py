@@ -45,7 +45,7 @@ class AltGeometry:
             only relevant to wire+surf
             the active state of the mesh
         is_visible : bool; default=True
-            is this actor currently visable
+            is this actor currently visible
         is_pickable : bool; default=False
             can you pick a node/cell on this actor
         label_actors : List[annotation]; None -> []

@@ -130,7 +130,7 @@ def _setup_scale_by_terms(scales: List[float],
     if detA == 0.0:
         raise RuntimeError('the equations are not independent '
                            '(e.g., length, time, and velocity) '
-                           'and cannot determine mass, legnth, and time')
+                           'and cannot determine mass, length, and time')
     M = np.linalg.solve(A, [1., 0., 0.])
     L = np.linalg.solve(A, [0., 1., 0.])
     T = np.linalg.solve(A, [0., 0., 1.])
@@ -1137,7 +1137,7 @@ def _get_dload_scale(dload,
                      accel_scale: float,
                      force_scale: float) -> None:
     """
-    LOAD asssumes force
+    LOAD assumes force
     """
     if dload.Type == 'LOAD':
         scale = force_scale
@@ -1864,7 +1864,7 @@ def convert_length(length_from, length_to):
     """
     Determines the length scale factor
 
-    We crate a gravity_scale_length for any non-standard unit (ft, m)
+    We create a gravity_scale_length for any non-standard unit (ft, m)
 
     """
     xyz_scale = 1.0

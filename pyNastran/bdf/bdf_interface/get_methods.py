@@ -409,7 +409,7 @@ class GetMethods(BDFAttributes):
 
     def DLoad(self, sid: int, consider_dload_combinations: bool=True, msg: str='') -> DLOAD:
         """
-        Gets a DLOAD, TLOAD1, TLOAD2, etc. associcated with the
+        Gets a DLOAD, TLOAD1, TLOAD2, etc. associated with the
         Case Control DLOAD entry
 
         """

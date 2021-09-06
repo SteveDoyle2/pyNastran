@@ -40,7 +40,7 @@ try:
     ghash = subprocess.check_output(['git', 'describe', '--always'], cwd=os.path.dirname(init_filename))
     ghash = ghash.decode('utf-8').rstrip()
 except:
-    # git isnt installed
+    # git isn't installed
     ghash = 'no.checksum.error'
 
 # hacking on the __init___.py file to set:

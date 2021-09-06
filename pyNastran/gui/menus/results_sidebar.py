@@ -267,7 +267,7 @@ class Sidebar(QWidget):
             self._on_case()
 
     def set_case_keys(self, case_keys: List[int]):
-        """set the availiable keys for the case spinner"""
+        """set the available keys for the case spinner"""
         if not self.include_case_spinner:
             return
         self.case_keys = case_keys

@@ -262,7 +262,7 @@ normal Normal {
 """)
 
 
-# this shoud be (1, 2, 3, -1), (1, 2, 3, -1), etc.
+# this should be (1, 2, 3, -1), (1, 2, 3, -1), etc.
 def cast_to_ints(args):
     ints = np.array(list(args), dtype='int32')
     return ints
@@ -270,18 +270,18 @@ def cast_to_ints(args):
 if 1:
     # 54.56 sec, 52.45 sec, 49, 35 by moving numpy import
     coord_indicies = pp.OneOrMore(comma.suppress() | pint.setParseAction(cvt_int) | pminus1.setParseAction(cvt_int)) # works and parses
-    coord_index = (pp.Literal('coordIndex') + list_open + pp.Group(coord_indicies) + list_close).setName('coord_index')  # works wiht A
+    coord_index = (pp.Literal('coordIndex') + list_open + pp.Group(coord_indicies) + list_close).setName('coord_index')  # works with A
 elif 0:  # pragma: no cover
     # back to 51.2 sec
     coord_indicies = pp.OneOrMore(comma.suppress() | pp.Word(pp.nums + '-').setParseAction(cvt_int)) # works and parses
-    coord_index = (pp.Literal('coordIndex') + list_open + pp.Group(coord_indicies) + list_close).setName('coord_index')  # works wiht A
+    coord_index = (pp.Literal('coordIndex') + list_open + pp.Group(coord_indicies) + list_close).setName('coord_index')  # works with A
 elif 0:  # pragma: no cover
     # has issues with the big problem
     coord_indicies = pp.delimitedList(pint.setParseAction(cvt_int) | pminus1.setParseAction(cvt_int)) # good
     coord_index = (pp.Literal('coordIndex') + list_open + coord_indicies + list_close).setName('coord_index')
 else:  # pragma: no cover
     # has issues with the big problem
-    # probably will be benefical in other cases
+    # probably will be beneficial in other cases
     import numpy as np
     coord_indicies = pp.delimitedList(pp.Word(pp.nums + '-')).setParseAction(cast_to_ints)  # single numpy array cast
     #coord_indicies = pp.pyparsing_common.comma_separated_list # bad...

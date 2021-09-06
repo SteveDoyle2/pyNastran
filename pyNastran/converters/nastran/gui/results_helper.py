@@ -72,7 +72,7 @@ class NastranGuiResults(NastranGuiAttributes):
     def _fill_op2_oug_oqg(self, cases, model: OP2, key, icase: int,
                           form_dict, header_dict, keys_map, log) -> int:
         """
-        loads nodal results bector results (e.g., dispalcements/temperatures)
+        loads nodal results vector results (e.g., displacements/temperatures)
         """
         nnodes = self.nnodes
         node_ids = self.node_ids
@@ -1085,7 +1085,7 @@ def _fill_nastran_displacements(cases, model: OP2, key, icase: int,
                                 nnodes: int, node_ids, log, dim_max: float=1.0,
                                 prefix: str='') -> int:
     """
-    loads the nodal dispalcements/velocity/acceleration/eigenvector/spc/mpc forces
+    loads the nodal displacements/velocity/acceleration/eigenvector/spc/mpc forces
     """
     if prefix == 'acoustic':
         results = model.op2_results.acoustic

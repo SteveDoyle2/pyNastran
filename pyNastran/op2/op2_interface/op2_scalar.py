@@ -1,6 +1,6 @@
 #pylint: disable=R0913
 """
-Defines the sub-OP2 class.  This should never be called outisde of the OP2 class.
+Defines the sub-OP2 class.  This should never be called outside of the OP2 class.
 
  - OP2_Scalar(debug=False, log=None, debug_file=None)
 
@@ -990,7 +990,7 @@ class OP2_Scalar(OP2Common, FortranFormat):
             #b'EQEXINS': [self._table_passer, self._table_passer],
 
             b'GPDT' : [self._table_passer, self._table_passer],     # grid points?
-            b'BGPDT' : [self._table_passer, self._table_passer],    # basic grid point defintion table
+            b'BGPDT' : [self._table_passer, self._table_passer],    # basic grid point definition table
             b'BGPDTS' : [self._table_passer, self._table_passer],
             b'BGPDTOLD' : [self._table_passer, self._table_passer],
 

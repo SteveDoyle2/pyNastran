@@ -117,7 +117,7 @@ class Elements(BaseMethods):
 
             # prevents really long arrays
             eids = np.array(eids)
-            msg = "Couldn't find Node ID: %s, which is requried by %s %s" % (
+            msg = "Couldn't find Node ID: %s, which is required by %s %s" % (
                 diff, elements.type, eids)
             raise RuntimeError(msg)
 

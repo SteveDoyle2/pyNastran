@@ -53,7 +53,7 @@ class Tri:
                     [0, x32, 0, x13, 0, x21],
                     [x32, y23, x13, y31, x21, y21]))
 
-#def applyBoundaryConditons():
+#def applyBoundaryConditions():
 #    pass
 
 

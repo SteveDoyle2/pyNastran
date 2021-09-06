@@ -276,7 +276,7 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
         #: flag that allows for OpenMDAO-style optimization syntax to be used
         self._is_dynamic_syntax = False
 
-        #: lines that were rejected b/c they were for a card that isnt supported
+        #: lines that were rejected b/c they were for a card that isn't supported
         self.reject_lines = []
 
         #: cards that were created, but not processed
@@ -1105,7 +1105,7 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
                     is_error = True
 
             if is_error:
-                msg = 'There are dupliate cards.\n\n' + msg
+                msg = 'There are duplicate cards.\n\n' + msg
 
             if self._stop_on_xref_error:
                 msg += 'There are parsing errors.\n\n'
@@ -1725,7 +1725,7 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
             ##'MATT8' : (MATT8, self.add_material_dependence),
             ##'MATT9' : (MATT9, self.add_material_dependence),
 
-            ## hasnt been verified, links up to MAT1, MAT2, MAT9 w/ same MID
+            ## hasn't been verified, links up to MAT1, MAT2, MAT9 w/ same MID
             #'CREEP' : (CREEP, self.add_creep_material),
 
             #'CONM1' : (CONM1, self.add_mass),
@@ -3282,7 +3282,7 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
                         self.rejects.append([_format_comment(comment)] + card_lines)
                     self.increase_card_count(card_name, count_num=ncards)
                 elif card_name in cards_to_get_lengths_of:
-                    #raise RuntimeError('this shouldnt happen because we deleted the cards above')
+                    #raise RuntimeError('this should not happen because we deleted the cards above')
                     continue
                 else:
                     ncards = len(card)

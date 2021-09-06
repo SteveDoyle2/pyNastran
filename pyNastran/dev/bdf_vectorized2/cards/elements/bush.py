@@ -13,7 +13,7 @@ if TYPE_CHECKING:  # pragma: no cover
 
 
 class Bushes:
-    """intializes the Bushes"""
+    """initializes the Bushes"""
     def __init__(self, model):
         self.model = model
         self.cbush = model.cbush

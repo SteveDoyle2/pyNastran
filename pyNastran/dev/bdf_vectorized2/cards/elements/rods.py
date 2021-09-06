@@ -12,7 +12,7 @@ if TYPE_CHECKING:  # pragma: no cover
 
 
 class Rods:
-    """intializes the Rods"""
+    """initializes the Rods"""
     def __init__(self, model):
         self.model = model
         self.conrod = model.conrod

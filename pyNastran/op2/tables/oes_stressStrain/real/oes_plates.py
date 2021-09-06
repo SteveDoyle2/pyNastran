@@ -116,14 +116,14 @@ class RealPlateArray(OES_Object):
         else:
             # NUMBER OF CQUAD4   ELEMENTS =      956
             # NUMBER OF CTRIA3   ELEMENTS =       27
-            #***nelments=956 nlayers_per_element=2 ntimes=201 nlayers=1912
-            #***nelments=27  nlayers_per_element=2 ntimes=201
+            #***nelements=956 nlayers_per_element=2 ntimes=201 nlayers=1912
+            #***nelements=27  nlayers_per_element=2 ntimes=201
 
             #print(self.ntimes, self.nelements, self.ntotal, self._ntotals)
             nelements = self.ntimes # good
             ntimes = self._ntotals[0] // nlayers_per_element
             nlayers = nelements * nlayers_per_element
-            #print(f'***nelments={nelements} nlayers_per_element={nlayers_per_element} ntimes={ntimes} -> nlayers={nlayers}')
+            #print(f'***nelements={nelements} nlayers_per_element={nlayers_per_element} ntimes={ntimes} -> nlayers={nlayers}')
             #nelements = self._ntotals[0]  # good
             #nlayers += 1
             #ntimes = nlayers // nelements

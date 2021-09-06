@@ -410,7 +410,7 @@ NX_GEOM_TABLES = [
     b'VIEWTB',
     b'R1TABRG',
     b'ERRORN',
-    b'BGPDTVU', # basic grid point defintion table for a superelement and related to geometry with view-grids added
+    b'BGPDTVU', # basic grid point definition table for a superelement and related to geometry with view-grids added
 
     # ???
     b'GEOM1ATV', b'GEOM2ATV', b'EPTATV', b'PTMIC', b'ATVMAP',
@@ -490,7 +490,7 @@ NX_EXTRA_TABLES = [
     b'OESTRCP', # ???
 
     # contact
-    b'OSPDSI1', b'OSPDSI2', # intial separation distance
+    b'OSPDSI1', b'OSPDSI2', # initial separation distance
     b'OSPDS1', b'OSPDS2',   # final separation distance
     b'OBC1', b'OBC2',       # contact pressures and tractions at grid points
 
@@ -869,7 +869,7 @@ NX_TABLE_CONTENT = {
     90 : 'TRMBD - Transformation matrices from deformed to basic',
     91 : 'TRMBU - Transfomration matrices from undeformed to basic',
     92 : 'ONMD - Normalized material density for topology optimization output',
-    93 : 'OBCKL - SORT2 output for Load Factor versus Cummulative Arc-length from a SOL 401 arc-length solution',
+    93 : 'OBCKL - SORT2 output for Load Factor versus Cumulative Arc-length from a SOL 401 arc-length solution',
     #
     # nx 2019.2
     #

@@ -94,7 +94,7 @@ def bdf_equivalence_nodes(bdf_filename: str, bdf_filename_out: str, tol: float,
     .. warning:: I doubt SPOINTs/EPOINTs work correctly
     .. warning:: xref not fully implemented (assumes cid=0)
 
-    .. todo:: node_set stil does work on the all the nodes in the big
+    .. todo:: node_set still does work on the all the nodes in the big
                kdtree loop, which is very inefficient
     .. todo:: remove_collapsed_elements is not supported
     .. todo:: avoid_collapsed_elements is not supported

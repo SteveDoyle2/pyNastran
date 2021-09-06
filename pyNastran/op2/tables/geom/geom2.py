@@ -1090,7 +1090,7 @@ class GEOM2:
           6 X2 RS T2 component of orientation vector from GA
           7 X3 RS T3 component of orientation vector from GA
         8 F    I     Orientation vector flag = 0
-        F = 1 XYZ option - global cooridnate system
+        F = 1 XYZ option - global coordinate system
           5 X1 RS T1 component of orientation vector from GA
           6 X2 RS T2 component of orientation vector from GA
           7 X3 RS T3 component of orientation vector from GA
