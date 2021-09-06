@@ -6,7 +6,7 @@ from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.op2.result_objects.op2_objects import get_times_dtype
 from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import (
     StressObject, OES_Object) # StrainObject,
-from pyNastran.f06.f06_formatting import write_float_13e, _eigenvalue_header
+from pyNastran.f06.f06_formatting import write_float_12e, write_float_13e, _eigenvalue_header
 from pyNastran.femutils.utils import pivot_table
 
 
@@ -440,7 +440,7 @@ class RealCompositePlateStrengthRatioArray(OES_Object):
                                        eid, ft, 1, sr_plys, sr_bondings))
                     i += 1
 
-                    for jlayer in range(1, nlayer-1):
+                    for unused_jlayer in range(1, nlayer-1):
                         ilayer = layers[i]
                         sr_ply = strength_ratio_ply[i]
                         sr_plys = write_float_13e(sr_ply)

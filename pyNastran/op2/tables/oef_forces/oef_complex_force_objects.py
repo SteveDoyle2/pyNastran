@@ -2201,6 +2201,9 @@ class ComplexCWeldForceArray(ComplexCBarWeldForceArray):
     def __init__(self, data_code, is_sort1, isubcase, dt):
         ComplexCBarWeldForceArray.__init__(self, data_code, is_sort1, isubcase, dt)
 
+class ComplexCWeldForceArrayMSC(ComplexCBarWeldForceArray):
+    def __init__(self, data_code, is_sort1, isubcase, dt):
+        ComplexCBarWeldForceArray.__init__(self, data_code, is_sort1, isubcase, dt)
 
 
 class ComplexCBeamForceArray(ComplexForceObject):

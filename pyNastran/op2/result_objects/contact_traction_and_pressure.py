@@ -40,36 +40,42 @@ integer_types = (int, np.int32)
 
 SORT2_TABLE_NAME_MAP = {
     # sort2_name : sort1_name
+    # displacement
     'OUGATO2' : 'OUGATO1',
     'OUGCRM2' : 'OUGCRM1',
     'OUGNO2' : 'OUGNO1',
     'OUGPSD2' : 'OUGPSD1',
     'OUGRMS2' : 'OUGRMS1',
 
+    # velocity
     'OVGATO2' : 'OVGATO1',
     'OVGCRM2' : 'OVGCRM1',
     'OVGNO2' : 'OVGNO1',
     'OVGPSD2' : 'OVGPSD1',
     'OVGRMS2' : 'OVGRMS1',
 
+    # acceleration
     'OAGATO2' : 'OAGATO1',
     'OAGCRM2' : 'OAGCRM1',
     'OAGNO2' : 'OAGNO1',
     'OAGPSD2' : 'OAGPSD1',
     'OAGRMS2' : 'OAGRMS1',
 
+    # spc forces
     'OQGATO2' : 'OQGATO1',
     'OQGCRM2' : 'OQGCRM1',
     'OQGNO2' : 'OQGNO1',
     'OQGPSD2' : 'OQGPSD1',
     'OQGRMS2' : 'OQGRMS1',
 
+    # mpc forces
     'OQMATO2' : 'OQMATO1',
     'OQMCRM2' : 'OQMCRM1',
     'OQMNO2' : 'OQMNO1',
     'OQMPSD2' : 'OQMPSD1',
     'OQMRMS2' : 'OQMRMS1',
 
+    # load vector
     'OPGATO2' : 'OPGATO1',
     'OPGCRM2' : 'OPGCRM1',
     'OPGNO2' : 'OPGNO1',

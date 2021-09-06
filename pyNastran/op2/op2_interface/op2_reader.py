@@ -68,6 +68,7 @@ from pyNastran.op2.op2_interface.utils import (
     reshape_bytes_block_size)
 from pyNastran.op2.op2_interface.utils_matpool import (
     read_matpool_dmig, read_matpool_dmig_4, read_matpool_dmig_8)
+from pyNastran.op2.result_objects.monpnt import MONPNT1, MONPNT3
 
 
 from pyNastran.op2.result_objects.design_response import (
@@ -586,7 +587,10 @@ class OP2Reader:
         #print('doftype = %s' % doftype.tolist())
 
     def read_aemonpt(self):
-        """reads the AEMONPT table"""
+        r"""
+        reads the AEMONPT table
+        D:\NASA\git\examples\backup\aeroelasticity\loadf.op2
+        """
         #self.log.debug("table_name = %r" % op2.table_name)
         unused_table_name = self._read_table_name(rewind=False)
 
@@ -598,10 +602,10 @@ class OP2Reader:
         if self.read_mode == 2:
             a, bi, c, d, e, f, g = unpack(self._endian + b'7i', data)
             assert a == 101, a
-            assert bi == 1, bi
+            assert bi in [0, 1, 3], bi
             assert c == 27, c
             assert d == 1, d
-            assert e == 6, e
+            assert e in [6, 11], e
             assert f == 0, f
             assert g == 0, g
         #print('-----------------------')
@@ -610,38 +614,74 @@ class OP2Reader:
         data = self._read_record()
 
         word, = unpack(self._endian + b'8s', data)
-        assert word == b'AECFMON ', word
+        assert word in [b'AECFMON ', b'AEMON   '], word
         #self.show_data(data)
         #print('-----------------------')
         #print('record 3')
         self.read_3_markers([-3, 1, 0])
-        data = self._read_record()
         #self.show_data(data)
 
-        if self.read_mode == 2:
-            ndata = len(data)
-            assert ndata == 108, ndata
-            n = 8 + 56 + 20 + 12 + 12
-            out = unpack(self._endian + b'8s 56s 5i 4s 8s 3i', data[:n])
-            (aero, name, comps, cp, bi, c, d, coeff, word, e, f, g) = out
-            print('aero=%r' % aero)
-            print('name=%r' % name)
-            print('comps=%r cp=%s b,c,d=(%s, %s, %s)' % (comps, cp, bi, c, d))
-            print('coeff=%r' % coeff)
-            print('word=%r (e, f, g)=(%s, %s, %s)' % (word, e, f, g)) # (1, 2, 0)
-            assert cp == 2, cp
-            assert bi == 0, bi
-            assert c == 0, c
-            assert d == 0, d
-            assert e == 1, e
-            assert f == 2, f
-            assert g == 0, g
+        structi = Struct(self._endian + b'8s 56s 5i 4s 8s 3i')
+        if 0:
+            data = self._read_record()
+            if self.read_mode == 2:
+                ndata = len(data)
+                assert ndata == 108, ndata
+                n = 8 + 56 + 20 + 12 + 12
+                out = structi.unpack(data[:n])
+                (aero_bytes, name_bytes, comps, cp, bi, c, d, coeff, word, e, f, g) = out
+                aero = aero_bytes.decode('latin1').rstrip()
+                name = name_bytes.decode('latin1').rstrip()
+                print('aero=%r' % aero)
+                print('name=%r' % name)
+                print('comps=%r cp=%s b,c,d=(%s, %s, %s)' % (comps, cp, bi, c, d))
+                print('coeff=%r' % coeff)
+                print('word=%r (e, f, g)=(%s, %s, %s)' % (word, e, f, g)) # (1, 2, 0)
+                assert cp == 2, cp
+                assert bi == 0, bi
+                assert c == 0, c
+                assert d == 0, d
+                assert e == 1, e
+                assert f == 2, f
+                assert g == 0, g
 
-        #print('-----------------------')
-        #print('record 4')
-        self.read_3_markers([-4, 1, 0])
-        #data = self._read_record()
-        #self.show_data(data)
+            #print('-----------------------')
+            #print('record 4')
+        else:
+            itable = -4
+            markers = self.get_nmarkers(1, rewind=True)
+            while markers[0] != 0:
+                data = self._read_record()
+                ndata = len(data)
+                if ndata != 108:
+                    self.show_data(data, types='ifs', endian=None, force=False)
+                    assert ndata == 108, ndata
+                else:
+                    n = 8 + 56 + 20 + 12 + 12
+                    out = structi.unpack(data[:n])
+                    (aero_bytes, name_bytes, comps, cp, bi, c, d, coeff, word_bytes, e, f, g) = out
+                    aero = aero_bytes.decode('latin1').rstrip()
+                    name = name_bytes.decode('latin1').rstrip()
+                    word = word_bytes.decode('latin1').rstrip()
+                    print('aero=%r' % aero)
+                    print('  name=%r' % name)
+                    print('  comps=%r cp=%s b,c,d=(%s, %s, %s)' % (comps, cp, bi, c, d))
+                    print('  coeff=%r' % coeff)
+                    print('  word=%r (e, f, g)=(%s, %s, %s)' % (word, e, f, g)) # (1, 2, 0)
+                    assert cp in [0, 2], cp
+                    assert bi == 0, bi
+                    assert c == 0, c
+                    assert d == 0, d
+                    assert e in [1, 7, 9], e
+                    assert f in [0, 2], f
+                    assert g == 0, g
+
+                self.read_3_markers([itable, 1, 0])
+
+                markers = self.get_nmarkers(1, rewind=True)
+                itable -= 1
+            #self.show(100, types='ifs', endian=None, force=False)
+            #markers = self.get_nmarkers(1, rewind=False)
         self.read_markers([0])
 
         #print('-----------------------')
@@ -649,7 +689,98 @@ class OP2Reader:
         #self.show(200)
 
     def read_monitor(self):
-        """reads the MONITOR table"""
+        r"""
+        reads the MONITOR table; new version
+        D:\NASA\git\examples\backup\aeroelasticity\loadf.op2"""
+        op2 = self.op2
+        self.log.debug("table_name = %r" % op2.table_name)
+        unused_table_name = self._read_table_name(rewind=False)
+
+        self.read_markers([-1])
+        #(101, 2, 27, 0, 9, 0, 0)
+        data = self._read_record()
+        #self.show_data(data, types='ifs', endian=None, force=False)
+        self.read_3_markers([-2, 1, 0])
+
+        #b'STMON   '
+        data = self._read_record()
+        #self.show_data(data, types='ifs', endian=None, force=False)
+
+        markers = self.get_nmarkers(1, rewind=True)
+        self.read_3_markers([-3, 1, 0])
+
+        itable = -4
+        markers = self.get_nmarkers(1, rewind=True)
+        if self.read_mode == 2:
+            op2.monitor_data = []
+        while markers[0] != 0:
+            if self.read_mode == 1:
+                self._skip_record()
+            else:
+                assert self.read_mode == 2, self.read_mode
+                data = self._read_record()
+                #self.show_data(data, types='ifs', endian=None, force=False)
+                structi = Struct(self._endian + b'8s 56s 2i 3f 4s 8s 3i')
+                ndata = len(data)
+                assert ndata == 108, ndata
+                (aero_bytes, name_bytes, comps, cp, x, y, z, coeff, word_bytes, column, cd,
+                 ind_dof) = structi.unpack(data)
+                aero = aero_bytes.decode('latin1').rstrip()
+                name = name_bytes.decode('latin1').rstrip()
+                word = word_bytes.decode('latin1').rstrip()
+                print('aero=%r' % aero)
+                print('  name=%r' % name)
+                print('  comps=%s cp=%s (x, y, z)=(%s, %s, %s)' % (comps, cp, x, y, z))
+                print('  coeff=%r' % coeff)
+                print('  word=%r (column, cd, ind_dof)=(%s, %s, %s)' % (word, column, cd, ind_dof))
+                assert cp in [0, 2], cp
+                assert x == 0.0, x
+                assert y == 0.0, y
+                assert z == 0.0, z
+                assert column in [1, 7], column
+                assert cd in [0, 2], cd
+                assert ind_dof == 0, ind_dof
+                monitor = {
+                    'name' : name,
+                    'cp' : cp,
+                    'cd' : cd,
+                    'xyz' : [x, y, z],
+                    'comps' : comps,
+                }
+                op2.monitor_data.append(monitor)
+            self.read_3_markers([itable, 1, 0])
+
+            markers = self.get_nmarkers(1, rewind=True)
+            itable -= 1
+        markers = self.get_nmarkers(1, rewind=False)
+
+    def _create_objects_from_matrices(self) -> None:
+        """
+        creates the following objects:
+          - monitor3 : MONPNT3 object from the MP3F matrix
+          - monitor1 : MONPNT1 object from the PMRF, PERF, PFRF, AGRF, PGRF, AFRF matrices
+
+        """
+        op2 = self.op2
+        op2_results = self.op2.op2_results
+        #assert len(self._frequencies) > 0, self._frequencies
+        if 'MP3F' in op2.matrices:
+            op2_results.monitor3 = MONPNT3(op2._frequencies, op2.matrices['MP3F'])
+        # these are totally wrong...it doesn't go by component;
+        # it goes by inertial, external, flexibility, etc.
+        if 'PERF' in op2.matrices and 'PGRF' in op2.matrices:
+            #op2.monitor1 = MONPNT1(
+                #op2._frequencies, op2.matrices, [
+                # :)       ?       :)      :)      ?       ?
+                #'PMRF', 'AFRF', 'PFRF', 'PGRF', 'AGRF', 'PERF', ])
+
+            op2_results.monitor1 = MONPNT1(
+                op2._frequencies, op2.matrices,
+                #  :)       ?       :)      :)2     ?       ?
+                ['PMRF', 'PERF', 'PFRF', 'AGRF', 'PGRF', 'AFRF', ])
+
+    def read_monitor2(self):  # pragma: no cover
+        """reads the MONITOR table; old version"""
         op2 = self.op2
         self.log.debug("table_name = %r" % op2.table_name)
         unused_table_name = self._read_table_name(rewind=False)
@@ -683,10 +814,11 @@ class OP2Reader:
         #self.show_data(data[96:108])
 
         if self.read_mode == 2:
+            structi = Struct(self._endian + b'8s 56s 2i 3f 4s 8s 3i')
             ndata = len(data)
             assert ndata == 108, ndata
             (unused_aero, name, comps, cp, x, y, z, unused_coeff, word, column, cd,
-             ind_dof) = unpack(self._endian + b'8s 56s 2i 3f 4s 8s 3i', data[:108])
+             ind_dof) = structi.unpack(data[:108])
             #print('aero=%r' % aero)
             #print('name=%r' % name)
             #print('comps=%s cp=%s (x, y, z)=(%s, %s, %s)' % (comps, cp, x, y, z))
@@ -695,7 +827,7 @@ class OP2Reader:
             assert cp == 2, cp
             assert x == 0.0, x
             assert y == 0.0, y
-            assert d == 0.0, z
+            assert z == 0.0, z
             assert column == 1, column
             assert cd == 2, cd
             assert ind_dof == 0, ind_dof

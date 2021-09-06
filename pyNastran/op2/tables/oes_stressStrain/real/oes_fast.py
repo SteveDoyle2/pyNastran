@@ -272,7 +272,7 @@ class RealFastArray(OES_Object):
             fdtype = np.float32(1.0)
 
         # [eid, force_x, force_y, force_z, moment_x, moment_y, moment_z]
-        data_out = np.empty((nelements, 6), dtype=fdtype)
+        data_out = np.empty((nelements, 7), dtype=fdtype)
         data_out[:, 0] = eids_device.view(fdtype)
 
         op2_ascii.write(f'nelements={nelements:d}\n')

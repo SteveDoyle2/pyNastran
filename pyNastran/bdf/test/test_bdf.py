@@ -1683,7 +1683,7 @@ def _check_case_parameters(subcase: Subcase, fem: BDF,
         # print(loads)
     if 'NLPARM' in subcase:
         allowed_sols = [
-            153,
+            106, 153,
         ]
         ierror = check_sol(sol, subcase, allowed_sols, 'NLPARM', log, ierror, nerrors)
         nlparm_id = subcase.get_parameter('NLPARM')[0]

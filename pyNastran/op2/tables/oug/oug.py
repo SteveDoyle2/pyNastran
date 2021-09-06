@@ -829,7 +829,7 @@ class OUG:
         #"""
         #raise NotImplementedError()
 
-    def _read_oug_displacement(self, data, ndata, is_cid):
+    def _read_oug_displacement(self, data: bytes, ndata: int, is_cid: bool) -> int:
         """
         Table     Description
         -----     -----------

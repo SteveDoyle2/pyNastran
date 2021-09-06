@@ -56,7 +56,7 @@ from pyNastran.op2.tables.oef_forces.oef_force_objects import (
 )
 from pyNastran.op2.tables.oef_forces.oef_complex_force_objects import (
     ComplexRodForceArray,
-    ComplexCBarForceArray, ComplexCWeldForceArray,
+    ComplexCBarForceArray, ComplexCWeldForceArray, ComplexCWeldForceArrayMSC,
     ComplexCBeamForceArray,
     ComplexCBushForceArray, ComplexCFastForceArrayMSC,
     ComplexCBearForceArray,
@@ -1210,8 +1210,9 @@ class OEF:
         else:
             if element_type == 118:
                 # 118-WELDP
-                n, nelements, ntotal = self._oef_cbar_34(data, ndata, dt, is_magnitude_phase,
-                                                         result_type, prefix, postfix)
+                n, nelements, ntotal = self._oef_cbar_34(
+                    data, ndata, dt, is_magnitude_phase,
+                    result_type, prefix, postfix)
             else:
                 #print(op2.code_information())
                 #msc_missing
@@ -1746,8 +1747,9 @@ class OEF:
             #return op2._not_implemented_or_skip(data, ndata, msg), None, None
         return n, nelements, ntotal
 
-    def _oef_cbar_34(self, data, ndata, dt, is_magnitude_phase,
-                     result_type, prefix, postfix):
+    def _oef_cbar_34(self, data: bytes, ndata: int, dt: Any,
+                     is_magnitude_phase: bool,
+                     result_type: str, prefix: str, postfix: str) -> Tuple[int, int, int]:
         """
         34-CBAR
         117-CWELDC
@@ -1769,7 +1771,7 @@ class OEF:
         elif op2.element_type == 118:  # WELDP
             result_name = prefix + 'cweld_force' + postfix
             obj_real = RealCWeldForceArrayMSC
-            assert op2.num_wide == 9, op2.code_information()
+            obj_complex = ComplexCWeldForceArrayMSC
         elif op2.element_type == 119:
             result_name = prefix + 'cfast_force' + postfix
             obj_real = RealCFastForceArrayNX

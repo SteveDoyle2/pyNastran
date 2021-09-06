@@ -60,6 +60,8 @@ from pyNastran.op2.tables.oes_stressStrain.real.oes_bush1d import RealBush1DStre
 from pyNastran.op2.tables.oes_stressStrain.real.oes_gap import NonlinearGapStressArray
 from pyNastran.op2.tables.oes_stressStrain.real.oes_triax import RealTriaxStressArray #, RealTriaxStrainArray
 from pyNastran.op2.tables.oes_stressStrain.real.oes_bend import RealBendStressArray, RealBendStrainArray
+from pyNastran.op2.tables.oes_stressStrain.real.oes_weld import RealWeldStressArray, RealWeldStrainArray
+from pyNastran.op2.tables.oes_stressStrain.real.oes_fast import RealFastStressArray, RealFastStrainArray
 
 from pyNastran.op2.tables.oes_stressStrain.oes_nonlinear_rod import RealNonlinearRodArray
 from pyNastran.op2.tables.oes_stressStrain.oes_nonlinear import RealNonlinearPlateArray, RealNonlinearSolidArray
@@ -468,6 +470,8 @@ TABLE_OBJ_MAP = {
     'force.cweld_force': (RealCWeldForceArray, ComplexCWeldForceArray),
     'force.cfast_force': (RealCFastForceArrayNX, RealCFastForceArrayMSC),
     'force.cbear_force': (RealCBearForceArray, ComplexCBearForceArray, ),
+    'cfast_stress' : (RealFastStressArray, ),
+    'cfast_strain' : (RealFastStrainArray, ),
 
     'nrl.cbar_force' : (RealCBarForceArray, ),
     'RAFCONS.cbar_force' : (RealCBarForceArray, ),

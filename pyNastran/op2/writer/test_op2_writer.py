@@ -6,8 +6,8 @@ import pyNastran
 #from pyNastran.bdf.bdf import BDF
 #from pyNastran.op2.op2 import FatalError
 #from pyNastran.op2.op2_interface.op2_common import get_scode_word
-from pyNastran.op2.op2_geom import OP2Geom, read_op2_geom
-from pyNastran.op2.op2 import OP2, read_op2
+from pyNastran.op2.op2_geom import read_op2_geom
+from pyNastran.op2.op2 import OP2
 #from pyNastran.op2.test.test_op2 import run_op2
 #from pyNastran.op2.writer.op2_writer import OP2Writer
 
@@ -198,6 +198,44 @@ class TestOP2Writer(unittest.TestCase):
         ]
         op2 = read_op2_geom(op2_filename, debug_file=op2_filename_debug,
                             exclude_results=exclude_results, log=log)
+        #print(op2.get_op2_stats())
+        #from pyNastran.utils import object_stats
+        #op2.op2_results.modal_contribution.celas1_stress = {}
+        #op2.op2_results.modal_contribution.celas2_stress = {}
+        #op2.op2_results.modal_contribution.celas3_stress = {}
+
+        #op2.op2_results.modal_contribution.ctube_stress = {}
+        #op2.op2_results.modal_contribution.crod_stress = {}
+        #op2.op2_results.modal_contribution.conrod_stress = {}
+
+        #op2.op2_results.modal_contribution.ctria3_stress = {}
+        #op2.op2_results.modal_contribution.cquad4_stress = {}
+        #op2.op2_results.modal_contribution.ctria6_stress = {}
+        #op2.op2_results.modal_contribution.cquad8_stress = {}
+        op2.op2_results.modal_contribution.ctriar_composite_stress = {}
+        op2.op2_results.modal_contribution.cquadr_composite_stress = {}
+        op2.op2_results.modal_contribution.cquad4_composite_stress = {}
+        op2.op2_results.modal_contribution.ctria3_composite_stress = {}
+
+        # ------------------------------------------------
+        #op2.op2_results.modal_contribution.celas1_strain = {}
+        #op2.op2_results.modal_contribution.celas2_strain = {}
+        #op2.op2_results.modal_contribution.celas3_strain = {}
+
+        #op2.op2_results.modal_contribution.ctube_strain = {}
+        #op2.op2_results.modal_contribution.crod_strain = {}
+        #op2.op2_results.modal_contribution.conrod_strain = {}
+
+        #op2.op2_results.modal_contribution.ctria3_strain = {}
+        #op2.op2_results.modal_contribution.cquad4_strain = {}
+        #op2.op2_results.modal_contribution.ctria6_strain = {}
+        #op2.op2_results.modal_contribution.cquad8_strain = {}
+        op2.op2_results.modal_contribution.ctriar_composite_strain = {}
+        op2.op2_results.modal_contribution.cquadr_composite_strain = {}
+        op2.op2_results.modal_contribution.cquad4_composite_strain = {}
+        op2.op2_results.modal_contribution.ctria3_composite_strain = {}
+        #print(object_stats(op2.op2_results.modal_contribution))
+        #aa
 
         op2.write_op2(op2_filename_out) #, is_mag_phase=False)
         unused_op2b = read_op2_geom(op2_filename_out, debug_file=op2_filename_debug_out, log=log)

@@ -15,6 +15,8 @@ from pyNastran.op2.tables.oes_stressStrain.real.oes_beams import (RealBeamStress
                                                                   )
 from pyNastran.op2.tables.oes_stressStrain.real.oes_bush import RealBushStressArray, RealBushStrainArray
 #from pyNastran.op2.tables.oes_stressStrain.real.oes_bush1d import RealBush1DStressArray
+from pyNastran.op2.tables.oes_stressStrain.complex.oes_fast import ComplexFastStressArray, ComplexFastStrainArray
+from pyNastran.op2.tables.oes_stressStrain.complex.oes_weld import ComplexWeldStressArray, ComplexWeldStrainArray
 from pyNastran.op2.tables.oes_stressStrain.real.oes_composite_plates import RealCompositePlateStressArray, RealCompositePlateStrainArray
 #RealCompositePlateStressStrengthRatioArray, RealCompositePlateStrainStrengthRatioArray = None, None
 #RealCompositePlateStrainStrengthRatioArray = None
@@ -23,7 +25,7 @@ from pyNastran.op2.tables.oes_stressStrain.real.oes_composite_plates_strength_ra
 from pyNastran.op2.tables.oes_stressStrain.real.oes_plates import RealPlateStressArray, RealPlateStrainArray
 #from pyNastran.op2.tables.oes_stressStrain.real.oes_plate_strain import RealCPLSTRNPlateStressArray, RealCPLSTRNPlateStrainArray
 from pyNastran.op2.tables.oes_stressStrain.real.oes_rods import RealRodStressArray, RealRodStrainArray
-#from pyNastran.op2.tables.oes_stressStrain.real.oes_shear import RealShearStrainArray, RealShearStressArray
+from pyNastran.op2.tables.oes_stressStrain.real.oes_shear import RealShearStrainArray, RealShearStressArray
 from pyNastran.op2.tables.oes_stressStrain.real.oes_solids import RealSolidStrainArray, RealSolidStressArray
 from pyNastran.op2.tables.oes_stressStrain.real.oes_solids_nx import RealSolidStressArrayNx, RealSolidStrainArrayNx
 from pyNastran.op2.tables.oes_stressStrain.real.oes_springs import (RealSpringStressArray, RealSpringStrainArray,
@@ -47,7 +49,7 @@ from pyNastran.op2.tables.oes_stressStrain.complex.oes_plates_vm import (
     ComplexPlateVMStressArray, ComplexPlateVMStrainArray)
 from pyNastran.op2.tables.oes_stressStrain.complex.oes_triax import ComplexTriaxStressArray
 from pyNastran.op2.tables.oes_stressStrain.complex.oes_rods import ComplexRodStressArray, ComplexRodStrainArray
-#from pyNastran.op2.tables.oes_stressStrain.complex.oes_shear import ComplexShearStressArray, ComplexShearStrainArray
+from pyNastran.op2.tables.oes_stressStrain.complex.oes_shear import ComplexShearStressArray, ComplexShearStrainArray
 from pyNastran.op2.tables.oes_stressStrain.complex.oes_solids import ComplexSolidStressArray, ComplexSolidStrainArray
 from pyNastran.op2.tables.oes_stressStrain.complex.oes_springs import ComplexSpringStressArray, ComplexSpringStrainArray
 #from pyNastran.op2.tables.oes_stressStrain.complex.oes_bend import ComplexBendStressArray, ComplexBendStrainArray
@@ -1223,6 +1225,48 @@ def oes_weldp_msc_real_8(op2: OP2, data: bytes,
         assert len(np.unique(obj._times)) == len(obj._times), obj._times.tolist()
     return n
 
+def oes_weldp_msc_complex_15(op2: OP2,
+                             data: bytes,
+                             obj : Union[ComplexWeldStressArray, ComplexWeldStrainArray],
+                             nelements: int, ntotal: int,
+                             is_magnitude_phase: bool, dt: Any) -> int:
+    n = 0
+    struct1 = Struct(op2._endian + mapfmt(op2._analysis_code_fmt + b'14f', op2.size))
+    for unused_i in range(nelements):
+        edata = data[n:n + ntotal]
+        out = struct1.unpack(edata)  # num_wide=13
+        if op2.is_debug_file:
+            op2.binary_debug.write('WELD-118 - %s\n' % str(out))
+        (eid_device,
+         raxial, rmax_a, rmin_a, rmax_b, rmin_b, rmax_shear, rbearing,
+         iaxial, imax_a, imin_a, imax_b, imin_b, imax_shear, ibearing) = out
+        eid, dt = get_eid_dt_from_eid_device(
+            eid_device, op2.nonlinear_factor, op2.sort_method)
+        assert eid > 0
+
+        if is_magnitude_phase:
+            axial = polar_to_real_imag(raxial, iaxial)
+            max_a = polar_to_real_imag(rmax_a, imax_a)
+            min_a = polar_to_real_imag(rmin_a, imin_a)
+
+            max_b = polar_to_real_imag(rmax_b, imax_b)
+            min_b = polar_to_real_imag(rmin_b, imin_b)
+            max_shear = polar_to_real_imag(rmax_shear, imax_shear)
+            bearing = polar_to_real_imag(rbearing, ibearing)
+        else:
+            axial = complex(raxial, iaxial)
+            max_a = complex(rmax_a, imax_a)
+            min_a = complex(rmin_a, imin_a)
+
+            max_b = complex(rmax_b, imax_b)
+            min_b = complex(rmin_b, imin_b)
+            max_shear = complex(rmax_shear, imax_shear)
+            bearing = complex(rbearing, ibearing)
+        #print(out)
+        obj.add_sort1(dt, eid, axial, max_a, min_a, max_b, min_b, max_shear, bearing)
+        n += ntotal
+    return n
+
 def oes_fastp_msc_real_7(op2: OP2, data: bytes,
                          obj: Union[int, float],
                          nelements: int, ntotal: int, dt: Any) -> int:
@@ -1250,6 +1294,89 @@ def oes_fastp_msc_real_7(op2: OP2, data: bytes,
         #print(''.join(obj.get_stats()))
         #print(f'{self.table_name} sort_method={op2.sort_method}', obj._times)
         assert len(np.unique(obj._times)) == len(obj._times), obj._times.tolist()
+    return n
+
+def oes_fastp_msc_complex_13(op2: OP2,
+                             data: bytes,
+                             obj: Union[ComplexFastStressArray, ComplexFastStrainArray],
+                             nelements: int, ntotal: int,
+                             is_magnitude_phase: bool, dt: Any) -> int:
+    n = 0
+    struct1 = Struct(op2._endian + mapfmt(op2._analysis_code_fmt + b'12f', op2.size))
+    for unused_i in range(nelements):
+        edata = data[n:n + ntotal]
+        out = struct1.unpack(edata)  # num_wide=13
+        if op2.is_debug_file:
+            op2.binary_debug.write('FASTP-118 - %s\n' % str(out))
+        (eid_device,
+         rforce_x, rforce_y, rforce_z, rmoment_x, rmoment_y, rmoment_z,
+         iforce_x, iforce_y, iforce_z, imoment_x, imoment_y, imoment_z) = out
+        eid, dt = get_eid_dt_from_eid_device(
+            eid_device, op2.nonlinear_factor, op2.sort_method)
+        assert eid > 0
+
+        if is_magnitude_phase:
+            force_x = polar_to_real_imag(rforce_x, iforce_x)
+            force_y = polar_to_real_imag(rforce_y, iforce_y)
+            force_z = polar_to_real_imag(rforce_z, iforce_z)
+
+            moment_x = polar_to_real_imag(rmoment_x, imoment_x)
+            moment_y = polar_to_real_imag(rmoment_y, imoment_y)
+            moment_z = polar_to_real_imag(rmoment_z, imoment_z)
+        else:
+            force_x = complex(rforce_x, iforce_x)
+            force_y = complex(rforce_y, iforce_y)
+            force_z = complex(rforce_z, iforce_z)
+
+            moment_x = complex(rmoment_x, imoment_x)
+            moment_y = complex(rmoment_y, imoment_y)
+            moment_z = complex(rmoment_z, imoment_z)
+        obj.add_sort1(dt, eid, force_x, force_y, force_z, moment_x, moment_y, moment_z)
+        n += ntotal
+    return n
+
+def oes_cshear_real_4(op2: OP2, data: bytes,
+                      obj: Union[RealShearStressArray, RealShearStrainArray],
+                      ntotal: int, nelements: int, dt: Any) -> int:
+    n = 0
+    struct1 = Struct(op2._endian + op2._analysis_code_fmt + b'3f')
+    for unused_i in range(nelements):
+        edata = data[n:n + ntotal]
+        out = struct1.unpack(edata)  # num_wide=5
+        if op2.is_debug_file:
+            op2.binary_debug.write('CSHEAR-4 - %s\n' % str(out))
+
+        (eid_device, max_strain, avg_strain, margin) = out
+        eid, dt = get_eid_dt_from_eid_device(
+            eid_device, op2.nonlinear_factor, op2.sort_method)
+        obj.add_sort1(dt, eid, max_strain, avg_strain, margin)
+        n += ntotal
+    return n
+
+def oes_cshear_complex_5(op2: OP2,
+                         data: bytes,
+                         obj: Union[ComplexShearStressArray, ComplexShearStrainArray],
+                         nelements: int, ntotal: int,
+                         is_magnitude_phase: bool) -> int:
+    n = 0
+    struct1 = Struct(op2._endian + mapfmt(op2._analysis_code_fmt + b'4f', op2.size))
+    for unused_i in range(nelements):
+        edata = data[n:n + ntotal]
+        out = struct1.unpack(edata)  # num_wide=5
+        if op2.is_debug_file:
+            op2.binary_debug.write('CSHEAR-4 - %s\n' % str(out))
+        (eid_device, etmaxr, etmaxi, etavgr, etavgi) = out
+        eid, dt = get_eid_dt_from_eid_device(
+            eid_device, op2.nonlinear_factor, op2.sort_method)
+
+        if is_magnitude_phase:
+            etmax = polar_to_real_imag(etmaxr, etmaxi)
+            etavg = polar_to_real_imag(etavgr, etavgi)
+        else:
+            etmax = complex(etmaxr, etmaxi)
+            etavg = complex(etavgr, etavgi)
+        obj.add_sort1(dt, eid, etmax, etavg)
+        n += ntotal
     return n
 
 def oes_cbar_complex_19(op2: OP2,

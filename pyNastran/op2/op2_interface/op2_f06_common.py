@@ -1075,7 +1075,7 @@ class OP2_F06_Common:
         table_types = base + [
             'grid_point_weight',
             # OUG - displacement, temperatures, eigenvectors, velocity, acceleration
-            'displacements', 'displacements_scaled',
+            'displacements', # 'displacements_scaled',
             'temperatures',
             'eigenvectors',
             'velocities',

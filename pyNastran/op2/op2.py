@@ -585,6 +585,7 @@ class OP2(OP2_Scalar, OP2Writer):
             self.read_mode = 2
             self._close_op2 = True
             self.log.debug('-------- reading op2 with read_mode=2 (array filling) --------')
+            op2_reader = self.op2_reader
             _create_hdf5_info(self.op2_reader.h5_file, self)
             OP2_Scalar.read_op2(self, op2_filename=self.op2_filename, mode=mode)
         except FileNotFoundError:
@@ -593,35 +594,12 @@ class OP2(OP2_Scalar, OP2Writer):
             OP2_Scalar.close_op2(self, force=True)
             raise
         self._finalize()
+        op2_reader._create_objects_from_matrices()
         if build_dataframe:
             self.build_dataframe()
-        self.create_objects_from_matrices()
         self.combine_results(combine=combine)
         self.log.debug('finished reading op2')
         str(self.op2_results)
-
-    def create_objects_from_matrices(self) -> None:
-        """
-        creates the following objects:
-          - monitor3 : MONPNT3 object from the MP3F matrix
-          - monitor1 : MONPNT1 object from the PMRF, PERF, PFRF, AGRF, PGRF, AFRF matrices
-
-        """
-        #assert len(self._frequencies) > 0, self._frequencies
-        if 'MP3F' in self.matrices:
-            self.op2_results.monitor3 = MONPNT3(self._frequencies, self.matrices['MP3F'])
-        # these are totally wrong...it doesn't go by component;
-        # it goes by inertial, external, flexibility, etc.
-        if 'PERF' in self.matrices:
-            #self.monitor1 = MONPNT1(
-                #self._frequencies, self.matrices, [
-                # :)       ?       :)      :)      ?       ?
-                #'PMRF', 'AFRF', 'PFRF', 'PGRF', 'AGRF', 'PERF', ])
-
-            self.op2_results.monitor1 = MONPNT1(
-                self._frequencies, self.matrices,
-                #  :)       ?       :)      :)2     ?       ?
-                ['PMRF', 'PERF', 'PFRF', 'AGRF', 'PGRF', 'AFRF', ])
 
     def _finalize(self) -> None:
         """internal method"""
@@ -1161,6 +1139,9 @@ class OP2(OP2_Scalar, OP2Writer):
         psd = self.op2_results.psd
         rms = self.op2_results.rms
         #no = self.op2_results.no
+        abs = self.op2_results.abs
+        nrl = self.op2_results.nrl
+        srss = self.op2_results.srss
         disp_like_dicts = [
             # should NO results be transformed?
             #no.displacements, no.velocities, no.accelerations,
@@ -1168,24 +1149,26 @@ class OP2(OP2_Scalar, OP2Writer):
 
             self.displacements,
             ato.displacements, crm.displacements, psd.displacements, rms.displacements,
-            self.displacements_scaled,
-            abs.displacements,
-            nrl.displacements,
+            #self.displacements_scaled,
+            abs.displacements, nrl.displacements, srss.displacements,
 
             self.velocities,
             ato.velocities, crm.velocities, psd.velocities, rms.velocities,
-            abs.velocities,
+            abs.velocities, nrl.velocities, srss.velocities,
 
             self.accelerations,
             ato.accelerations, crm.accelerations, psd.accelerations, rms.accelerations,
-            abs.accelerations, nrl.accelerations,
+            abs.accelerations, nrl.accelerations, srss.accelerations,
 
             self.eigenvectors,
             self.op2_results.RADCONS.eigenvectors, self.op2_results.RADEFFM.eigenvectors,
             self.op2_results.RADEATC.eigenvectors, self.op2_results.ROUGV1.eigenvectors,
 
             self.spc_forces, ato.spc_forces, crm.spc_forces, psd.spc_forces, rms.spc_forces,
+            abs.spc_forces, nrl.spc_forces, srss.spc_forces,
+
             self.mpc_forces, ato.mpc_forces, crm.mpc_forces, psd.mpc_forces, rms.mpc_forces,
+            abs.mpc_forces, nrl.mpc_forces, srss.mpc_forces,
 
             self.applied_loads,
             self.load_vectors,

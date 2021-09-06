@@ -645,6 +645,7 @@ class OP2_Scalar(OP2Common, FortranFormat):
         reader_oef = self.reader_oef
         reader_oug = self.reader_oug
         reader_oqg = self.reader_oqg
+        reader_opr = self.reader_opr
         reader_ogpf = self.reader_ogpf
         table_mapper_geometry = {
             # -----------------------------------------------------------
@@ -1148,11 +1149,18 @@ class OP2_Scalar(OP2Common, FortranFormat):
             #b'OQMRMS2' : [reader_oqg._read_oqg2_3, reader_oqg._read_oqg_mpc_rms],  # buggy on isat random
             #b'OQMNO2'  : [reader_oqg._read_oqg2_3, reader_oqg._read_oqg_mpc_no],  # buggy on isat random
 
-            # ???
-            b'OPRPSD2' : [self._nx_table_passer, self._table_crasher],
-            b'OPRATO2' : [self._nx_table_passer, self._table_crasher],
-            b'OPRNO1' : [self._nx_table_passer, self._table_crasher],
-            b'OPRCRM2' : [self._nx_table_passer, self._table_crasher],
+            # acoustic pressure/power???
+            b'OPRATO1' : [reader_opr._read_opr1_3, reader_opr._read_opr_ato],
+            b'OPRCRM1' : [reader_opr._read_opr1_3, reader_opr._read_opr_crm],
+            b'OPRPSD1' : [reader_opr._read_opr1_3, reader_opr._read_opr_psd],
+            b'OPRRMS1' : [self._nx_table_passer, self._table_passer],
+            b'OPRNO1' : [reader_opr._read_opr1_3, reader_opr._read_opr_no],
+
+            b'OPRATO2' : [reader_opr._read_opr2_3, reader_opr._read_opr_ato],
+            b'OPRCRM2' : [reader_opr._read_opr2_3, reader_opr._read_opr_crm],
+            b'OPRPSD2' : [reader_opr._read_opr2_3, reader_opr._read_opr_psd],
+            b'OPRRMS2' : [self._nx_table_passer, self._table_passer],
+            b'OPRNO2' : [reader_opr._read_opr2_3, reader_opr._read_opr_no],
 
             # stress
             b'OESATO1' : [reader_oes._read_oes1_3, reader_oes._read_oes1_4],

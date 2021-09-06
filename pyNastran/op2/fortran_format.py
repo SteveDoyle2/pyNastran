@@ -23,6 +23,7 @@ from pyNastran.op2.tables.oug.oug import OUG
 
 from pyNastran.op2.tables.lama_eigenvalues.lama import LAMA
 from pyNastran.op2.tables.onmd import ONMD
+from pyNastran.op2.tables.opr import OPR
 from pyNastran.op2.tables.ogpwg import OGPWG
 
 class FortranFormat:
@@ -53,6 +54,7 @@ class FortranFormat:
         self.reader_opg = OPG(self)
         self.reader_oef = OEF(self)
         self.reader_oqg = OQG(self)
+        self.reader_opr = OPR(self)
         self.reader_oug = OUG(self)
         self.reader_ogs = OGS(self)
         self.reader_onr = ONR(self)

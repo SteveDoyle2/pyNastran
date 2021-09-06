@@ -866,7 +866,7 @@ class OP2Common(Op2Codes, F06Writer):
 
     def _read_scalar_table_vectorized(self, data, ndata, result_name, storage_obj,
                                       real_vector, complex_vector,
-                                      node_elem, random_code=None, is_cid=False):
+                                      node_elem, random_code=None, is_cid: bool=False):
         """
         Reads a table
 
@@ -2578,6 +2578,31 @@ def parse_frf_subcase(title_bytes: bytes, subtitle_bytes: bytes, label_bytes: by
         label = f'Load on connection grid point; grid={grid_id} comp={comp_id}'
         label2 = ''
         return subtitle_mod, label, label2
+    elif label_base.startswith('LOAD ON GRID POINT '):
+        # LOAD ON GRID POINT 812 - COMPONENT 3
+        grid_comp_str = label_base.split('LOAD ON GRID POINT ')[1].strip()
+        grid_str, comp_str = grid_comp_str.split(' - COMPONENT ')
+        grid_id = int(grid_str)
+        comp_id = int(comp_str)
+        label = f'Load on grid point; grid={grid_id} comp={comp_id}'
+        label2 = ''
+        return subtitle_mod, label, label2
+    elif label_base.startswith('USER LOAD ON GRID POINT'):
+        # USER LOAD ON GRID POINT      812 - COMPONENT 3                (USER SUBCASE/DLOAD=       1/    2000)
+        grid_comp_str = label_base.split('USER LOAD ON GRID POINT ')[1].strip()
+        grid_str, comp_data_str = grid_comp_str.split(' - COMPONENT ')
+        comp_str, dload_data = comp_data_str.strip().split('(USER SUBCASE/DLOAD=')
+        grid_id = int(grid_str)
+        comp_id = int(comp_str)
+        label = f'User load on grid point; grid={grid_id} comp={comp_id}'
+        label2 = ''
+        return subtitle_mod, label, label2
+    elif label_base.startswith('TOTAL USER LOAD'):
+        # TOTAL USER LOAD                                               (USER SUBCASE/DLOAD=       1/    2000)
+        label = f'Total user load'
+        label2 = ''
+        return subtitle_mod, label, label2
+
     else:
         print(f'title    = {title_bytes!r}')
         print(f'subtitle = {subtitle_bytes!r}')

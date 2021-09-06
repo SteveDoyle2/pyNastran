@@ -61,6 +61,8 @@ from pyNastran.op2.tables.oes_stressStrain.real.oes_fast import RealFastStressAr
 from pyNastran.op2.tables.oes_stressStrain.complex.oes_bars import ComplexBarStressArray, ComplexBarStrainArray
 from pyNastran.op2.tables.oes_stressStrain.complex.oes_beams import ComplexBeamStressArray, ComplexBeamStrainArray
 from pyNastran.op2.tables.oes_stressStrain.complex.oes_bush import (ComplexCBushStressArray, ComplexCBushStrainArray)
+from pyNastran.op2.tables.oes_stressStrain.complex.oes_fast import ComplexFastStressArray, ComplexFastStrainArray
+from pyNastran.op2.tables.oes_stressStrain.complex.oes_weld import ComplexWeldStressArray, ComplexWeldStrainArray
 from pyNastran.op2.tables.oes_stressStrain.complex.oes_bush1d import ComplexCBush1DStressArray
 from pyNastran.op2.tables.oes_stressStrain.complex.oes_plates import ComplexPlateStressArray, ComplexPlateStrainArray
 from pyNastran.op2.tables.oes_stressStrain.complex.oes_composite_plates import ComplexLayeredCompositeStressArray, ComplexLayeredCompositeStrainArray
@@ -97,9 +99,10 @@ from pyNastran.op2.tables.oes_stressStrain.utils import (
     oes_cbend_real_21,
     oes_cbush_complex_13, oes_cbush_real_7,
     oes_celas_complex_3, oes_celas_real_2,
-    oes_cshear_random_3,
+    oes_cshear_real_4, oes_cshear_complex_5, oes_cshear_random_3,
     oes_comp_shell_real_11,
-    oes_weldp_msc_real_8, oes_fastp_msc_real_7,
+    oes_weldp_msc_real_8, oes_weldp_msc_complex_15,
+    oes_fastp_msc_real_7, oes_fastp_msc_complex_13,
     oes_cquad4_33_complex_15, oes_cquad4_33_random_9,
     oes_cquad4_33_complex_vm_17, oes_cquad4_33_random_vm_11, oes_cquad4_random_vm_57,
     oes_cquad4_144_complex_77, oes_cquad4_144_random, oes_cquad4_144_real,
@@ -2580,18 +2583,8 @@ class OES(OP2Common2):
             else:
                 if is_vectorized and op2.use_vector:  # pragma: no cover
                     op2.log.debug('vectorize CSHEAR real SORT%s' % op2.sort_method)
-                struct1 = Struct(op2._endian + op2._analysis_code_fmt + b'3f')
-                for unused_i in range(nelements):
-                    edata = data[n:n + ntotal]
-                    out = struct1.unpack(edata)  # num_wide=5
-                    if op2.is_debug_file:
-                        op2.binary_debug.write('CSHEAR-4 - %s\n' % str(out))
-
-                    (eid_device, max_strain, avg_strain, margin) = out
-                    eid, dt = get_eid_dt_from_eid_device(
-                        eid_device, op2.nonlinear_factor, op2.sort_method)
-                    obj.add_sort1(dt, eid, max_strain, avg_strain, margin)
-                    n += ntotal
+                n = oes_cshear_real_4(op2, data, obj,
+                                      ntotal, nelements, dt)
 
         elif result_type == 1 and op2.num_wide == 5:  # imag
             ntotal = 20 * self.factor # 4*5
@@ -2620,24 +2613,8 @@ class OES(OP2Common2):
             else:
                 if is_vectorized and op2.use_vector:  # pragma: no cover
                     op2.log.debug('vectorize CSHEAR imag SORT%s' % op2.sort_method)
-                struct1 = Struct(op2._endian + mapfmt(op2._analysis_code_fmt + b'4f', self.size))
-                for unused_i in range(nelements):
-                    edata = data[n:n + ntotal]
-                    out = struct1.unpack(edata)  # num_wide=5
-                    if op2.is_debug_file:
-                        op2.binary_debug.write('CSHEAR-4 - %s\n' % str(out))
-                    (eid_device, etmaxr, etmaxi, etavgr, etavgi) = out
-                    eid, dt = get_eid_dt_from_eid_device(
-                        eid_device, op2.nonlinear_factor, op2.sort_method)
-
-                    if is_magnitude_phase:
-                        etmax = polar_to_real_imag(etmaxr, etmaxi)
-                        etavg = polar_to_real_imag(etavgr, etavgi)
-                    else:
-                        etmax = complex(etmaxr, etmaxi)
-                        etavg = complex(etavgr, etavgi)
-                    obj.add_sort1(dt, eid, etmax, etavg)
-                    n += ntotal
+                n = oes_cshear_complex_5(op2, data, obj,
+                                         nelements, ntotal, is_magnitude_phase)
         elif result_type == 2 and op2.num_wide == 3: # random
             ntotal = 12  # 3*4
             nelements = ndata // ntotal
@@ -2674,8 +2651,9 @@ class OES(OP2Common2):
             raise RuntimeError(op2.code_information())
         return n, nelements, ntotal
 
-    def _oes_cbar_34(self, data, ndata, dt, is_magnitude_phase,
-                     result_type, prefix, postfix):
+    def _oes_cbar_34(self, data: bytes, ndata: int, dt: Any,
+                     is_magnitude_phase: bool,
+                     result_type: str, prefix: str, postfix: str) -> Tuple[int, int, int]:
         """
         reads stress/strain for element type:
          - 34 : CBAR
@@ -4412,6 +4390,53 @@ class OES(OP2Common2):
                 if is_vectorized and op2.use_vector:  # pragma: no cover
                     op2.log.debug('vectorize WELDP real SORT%s' % op2.sort_method)
                 n = oes_weldp_msc_real_8(op2, data, obj, nelements, ntotal, dt)
+        elif result_type == 1 and op2.num_wide == 15:  # complex
+            if op2.is_stress:
+                obj_vector_complex = ComplexWeldStressArray
+            else:
+                obj_vector_complex = ComplexWeldStrainArray
+
+            ntotal = 60 * self.factor  # 15*4
+            nelements = ndata // ntotal
+            #print('WELDP nelements =', nelements)
+
+            auto_return, is_vectorized = op2._create_oes_object4(
+                nelements, result_name, slot, obj_vector_complex)
+            if auto_return:
+                return ndata, None, None
+
+            if op2.is_debug_file:
+                op2.binary_debug.write('  [cap, element1, element2, ..., cap]\n')
+                #op2.binary_debug.write('  cap = %i  # assume 1 cap when there could have been multiple\n' % ndata)
+                op2.binary_debug.write('  #elementi = [eid_device, s1a, s2a, s3a, s4a, axial, smaxa, smina, MSt,\n')
+                op2.binary_debug.write('                           s1b, s2b, s3b, s4b, smaxb, sminb,        MSc]\n')
+                op2.binary_debug.write('  nelements=%i; nnodes=1 # centroid\n' % nelements)
+
+            obj = op2.obj
+            if op2.use_vector and is_vectorized and op2.sort_method == 1 and 0:
+                # self.itime = 0
+                # self.ielement = 0
+                # self.itotal = 0
+                #self.ntimes = 0
+                #self.nelements = 0
+                n = nelements * op2.num_wide * 4
+
+                ielement = obj.ielement
+                ielement2 = ielement + nelements
+                obj._times[obj.itime] = dt
+                self.obj_set_element(obj, ielement, ielement2, data, nelements)
+
+                floats = frombuffer(data, dtype=op2.fdtype8).reshape(nelements, 8)
+
+                #[axial, maxa, mina, maxb, minb, max_shear, bearing]
+                obj.data[obj.itime, ielement:ielement2, :] = floats[:, 1:].copy()
+                obj.itotal = ielement2
+                obj.ielement = ielement2
+            else:
+                if is_vectorized and op2.use_vector:  # pragma: no cover
+                    op2.log.debug('vectorize WELDP real SORT%s' % op2.sort_method)
+                n = oes_weldp_msc_complex_15(op2, data, obj, nelements, ntotal, is_magnitude_phase, dt)
+            return n, None, None
         else:  # pragma: no cover
             raise RuntimeError(op2.code_information())
         assert op2.obj.element_name == op2.element_name, op2.obj
@@ -4491,8 +4516,57 @@ class OES(OP2Common2):
                 obj.ielement = ielement2
             else:
                 if is_vectorized and op2.use_vector:  # pragma: no cover
-                    op2.log.debug('vectorize FASTP real SORT%s' % op2.sort_method)
+                    op2.log.debug('vectorize real-FASTP real SORT%s' % op2.sort_method)
                 n = oes_fastp_msc_real_7(op2, data, obj, nelements, ntotal, dt)
+        elif result_type == 1 and op2.num_wide == 13:  # complex
+            if op2.is_stress:
+                obj_vector_complex = ComplexFastStressArray
+            else:
+                obj_vector_complex = ComplexFastStrainArray
+            ntotal = 52 * self.factor  # 13*4
+            nelements = ndata // ntotal
+            assert ndata % ntotal == 0
+            #print('FASTP nelements =', nelements)
+
+            auto_return, is_vectorized = op2._create_oes_object4(
+                nelements, result_name, slot, obj_vector_complex)
+            if auto_return:
+                return ndata, None, None
+
+            if op2.is_debug_file:
+                op2.binary_debug.write('  [cap, element1, element2, ..., cap]\n')
+                #op2.binary_debug.write('  cap = %i  # assume 1 cap when there could have been multiple\n' % ndata)
+                op2.binary_debug.write('  #elementi = [eid_device, disp_x, disp_y, disp_z, rotation_x, rotation_y, rotation_z]\n')
+                op2.binary_debug.write('  nelements=%i; nnodes=1 # centroid\n' % nelements)
+
+            obj = op2.obj
+            if op2.use_vector and is_vectorized and op2.sort_method == 1:
+                # self.itime = 0
+                # self.ielement = 0
+                # self.itotal = 0
+                #self.ntimes = 0
+                #self.nelements = 0
+                n = nelements * op2.num_wide * 4
+
+                ielement = obj.ielement
+                ielement2 = ielement + nelements
+                obj._times[obj.itime] = dt
+                self.obj_set_element(obj, ielement, ielement2, data, nelements)
+
+                floats = frombuffer(data, dtype=op2.fdtype8).reshape(nelements, 13)# [:, 1:]
+                isave_real = [1, 2, 3, 4, 5, 6]
+                isave_imag = [7, 8, 9, 10, 11, 12]
+                real_imag = apply_mag_phase(floats, is_magnitude_phase, isave_real, isave_imag)
+
+
+                #[force_x, force_y, force_z, moment_x, moment_y, moment_z]
+                obj.data[obj.itime, ielement:ielement2, :] = real_imag # .copy()
+                obj.itotal = ielement2
+                obj.ielement = ielement2
+            else:
+                if is_vectorized and op2.use_vector:  # pragma: no cover
+                    op2.log.debug('vectorize complex-FASTP real SORT%s' % op2.sort_method)
+                n = oes_fastp_msc_complex_13(op2, data, obj, nelements, ntotal, is_magnitude_phase, dt)
         else:  # pragma: no cover
             raise RuntimeError(op2.code_information())
         assert op2.obj.element_name == op2.element_name, op2.obj
@@ -6036,31 +6110,11 @@ class OES(OP2Common2):
                                                dt, is_magnitude_phase)
             return nelements * ntotal, None, None
 
-        elif result_type == 0 and op2.num_wide == 9 and table_name == b'OESRT': # real
-            # strength_ratio.cquad4_composite_stress
-            ntotal = 36 * self.factor
-            nelements = ndata // ntotal
-
-            auto_return, is_vectorized = op2._create_oes_object4(
-                nelements, result_name, slot, obj_vector_strength)
-            if auto_return:
-                return nelements * ntotal, None, None
-
-            obj = op2.obj
-            if op2.is_debug_file:
-                op2.binary_debug.write('  [cap, element1, element2, ..., cap]\n')
-                op2.binary_debug.write('  cap = %i  # assume 1 cap when there could have been multiple\n' % ndata)
-                op2.binary_debug.write('  element1 = [eid_device, failure_theory, ply_id, strength_ratio_ply, failure_index_bonding, strength_ratio_bonding, flag, flag2)]\n')
-                op2.binary_debug.write('  nelements=%i; nnodes=1 # centroid\n' % nelements)
-
-            if op2.use_vector and is_vectorized and sort_method == 1 and 0:
-                n = nelements * op2.num_wide * 4
-                asdf
-            else:
-                op2.log.warning(f'need to vectorize oes_shell_composite; {op2.element_name}-{op2.element_type} '
-                                 f'(numwide={op2.num_wide}) {op2.table_name_str}')
-                n = oesrt_comp_shell_real_9(op2, data, ndata, obj,
-                                            ntotal, nelements, etype, dt)
+        elif table_name == b'OESRT':
+            n, nelements, ntotal = self._oes_shells_composite_oesrt(
+                result_name, slot,
+                result_type, sort_method, obj_vector_strength,
+                data, ndata, dt)
 
         elif result_type == 1 and op2.num_wide == 13 and table_name in [b'OESVM1C', b'OSTRVM1C']: # complex
             #op2.log.warning(f'skipping complex {op2.table_name_str}-PCOMP (numwide=13)')
@@ -6192,6 +6246,93 @@ class OES(OP2Common2):
                    #f'{op2.table_name_str}-COMP-random-numwide={op2.num_wide} '
                    #f'numwide_real=11 numwide_imag=9 result_type={result_type}')
             #return op2._not_implemented_or_skip(data, ndata, msg), None, None
+        return n, nelements, ntotal
+
+
+    def _oes_shells_composite_oesrt(self, result_name: str, slot: Dict[Any],
+                                    result_type: int, sort_method: int,
+                                    obj_vector_strength,
+                                    data: bytes, ndata: int, dt: Any):
+        """Table of composite element ply strength ratio. Output by SDRCOMP"""
+        op2 = self.op2
+        n = 0
+        if result_type == 0 and op2.num_wide == 9: # real
+            # strength_ratio.cquad4_composite_stress
+            ntotal = 36 * self.factor
+            nelements = ndata // ntotal
+
+            auto_return, is_vectorized = op2._create_oes_object4(
+                nelements, result_name, slot, obj_vector_strength)
+            if auto_return:
+                return nelements * ntotal, None, None
+
+            obj = op2.obj
+            if op2.is_debug_file:
+                op2.binary_debug.write('  [cap, element1, element2, ..., cap]\n')
+                op2.binary_debug.write('  cap = %i  # assume 1 cap when there could have been multiple\n' % ndata)
+                op2.binary_debug.write('  element1 = [eid_device, failure_theory, ply_id, strength_ratio_ply, failure_index_bonding, strength_ratio_bonding, flag, flag2)]\n')
+                op2.binary_debug.write('  nelements=%i; nnodes=1 # centroid\n' % nelements)
+
+            element_type = op2.element_type
+            if op2.use_vector and is_vectorized and sort_method == 1 and 0:
+                n = nelements * op2.num_wide * 4
+                asdf
+            else:
+                op2.log.warning(f'need to vectorize oes_shell_composite; {op2.element_name}-{op2.element_type} '
+                                 f'(numwide={op2.num_wide}) {op2.table_name_str}')
+                n = oesrt_comp_shell_real_9(op2, data, ndata, obj,
+                                            ntotal, nelements, element_type, dt)
+        elif result_type == 1 and op2.num_wide == 9: # complex
+            # '          S T R E N G T H   R A T I O S   F O R   L A Y E R E D   C O M P O S I T E   E L E M E N T S   ( Q U A D 4 )'
+            # '   ELEMENT  FAILURE        PLY  SRP-STRENGTH RATIO FOR PLY  SRB-STRENGTH RATIO FOR BONDING  STRENGTH RATIO FOR ELEMENT     FLAG'
+            # '     ID      THEORY         ID  (DIRECT STRESSES/STRAINS)     (INTER-LAMINAR STRESSES)      MIN OF SRP,SRB FOR ALL PLIES'
+            # '         3   HILL            1      4.510528E-02      '
+            # '                                                                     4.160837E+01                                               '
+            # '                             2      1.414114E-01      '
+            # '                                                                     4.807957E+01                                               '
+            # '                             3      2.013647E-01      '
+            # '                                                                                                   4.510528E-02             *** '
+            ntotal = 36 * self.factor
+            nelements = ndata // ntotal
+            if data is None:
+                return ndata, None, None #   eid hill ply_id ? i f i blank
+
+                auto_return, is_vectorized = op2._create_oes_object4(
+                    nelements, result_name, slot, obj_vector_strength)
+                if auto_return:
+                    return nelements * ntotal, None, None
+
+            is_vectorized = False
+            op2.log.warning(f'OESRT: faking result; {op2.element_name}-{op2.element_type}')
+            if op2.use_vector and is_vectorized and sort_method == 1 and 0:
+                n = nelements * op2.num_wide * 4
+                asdf
+            else:
+                op2.log.warning(f'need to vectorize oes_shell_composite; {op2.element_name}-{op2.element_type} '
+                                 f'(numwide={op2.num_wide}) {op2.table_name_str}')
+
+                structi = Struct(op2._endian + b'i   8s   i      f i f i 4s')
+                structf = Struct(op2._endian + b'i   8s   i      f i f f 4s')
+                for unused_i in range(nelements):
+                    edata = data[n:n+ntotal]  # 4*9
+                    outs = structi.unpack(edata)
+                    eid, hill_bytes, ply_id, f1, i1, f2, minus_1, blank_bytes = outs
+                    hill = hill_bytes.decode('latin1').strip()
+                    blank = blank_bytes.decode('latin1').strip()
+                    if minus_1 != -1:
+                        outs = structf.unpack(edata)
+                        eid, hill_bytes, ply_id, f1, i1, f2, minus_1, blank_bytes = outs
+                        #op2.log.error(f'minus1={minus_1}')
+                    assert hill in ['HILL', ''], hill
+                    assert blank in ['', '***'], blank
+                    #op2.show_data(edata)
+                    if eid != -1:
+                        print(f'eid={eid} hill={hill!r} ply={ply_id} i1={i1} f2={f2:.4e} minus1={minus_1} blank={blank!r}')
+                    else:
+                        print(f'    hill={hill!r} ply={ply_id} i1={i1} f2={f2:.4e} minus1={minus_1:.4e} blank={blank!r}')
+                    n += ntotal
+        else:  # pragma: no cover
+            raise RuntimeError(op2.code_information())
         return n, nelements, ntotal
 
     def _oes_ctriax6(self, data, ndata, dt, is_magnitude_phase,

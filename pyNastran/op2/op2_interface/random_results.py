@@ -11,6 +11,7 @@ class RandomObjects:
         self.load_vectors = {}
         self.spc_forces = {}
         self.mpc_forces = {}
+        self.pressures = {}
 
         self.crod_force = {}
         self.conrod_force = {}
@@ -109,7 +110,7 @@ class RandomObjects:
 
     def get_table_types(self):
         tables = [
-            'displacements', 'velocities', 'accelerations',
+            'displacements', 'velocities', 'accelerations', 'pressures',
             'load_vectors', 'spc_forces', 'mpc_forces',
 
             'celas1_force', 'celas2_force', 'celas3_force', 'celas4_force',
@@ -333,6 +334,7 @@ class ScaledResponseSpectra:
         self.velocities = {}
         self.accelerations = {}
         self.spc_forces = {}
+        self.mpc_forces = {}
 
         self.cbar_force = {}
         self.cquad4_stress = {}
@@ -340,7 +342,7 @@ class ScaledResponseSpectra:
 
     def get_table_types(self) -> List[str]:
         tables = [
-            'displacements', 'velocities', 'accelerations', 'spc_forces',
+            'displacements', 'velocities', 'accelerations', 'spc_forces', 'mpc_forces',
             'cbar_force',
             'cquad4_stress',
             'cquad4_force',
