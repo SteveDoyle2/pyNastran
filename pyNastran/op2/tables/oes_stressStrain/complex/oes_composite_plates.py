@@ -190,7 +190,6 @@ class ComplexLayeredCompositesArray(OES_Object):
 
     def write_f06(self, f06_file, header=None, page_stamp='PAGE %s',
                   page_num=1, is_mag_phase=False, is_sort1=True) -> int:
-        asdf
         if header is None:
             header = []
         msg_temp, nnodes = _get_composite_plate_msg(self, is_mag_phase, is_sort1)
@@ -259,12 +258,12 @@ class ComplexLayeredCompositesArray(OES_Object):
 
             ilayer0 = True
             for eid, layer, fd, do1a, do2a, dt12a in zip(eids, layer, fds, o1a, o2a, t12a):
-                fdr = write_float_13e(fd)
+                fdr = write_float_13e(fd.real)
                 [do1ar, do2ar, dt12ar,
                  do1ai, do2ai, dt12ai,] = write_imag_floats_13e(
                      [do1a, do2a, dt12a], is_mag_phase)
 
-                print(do1ar, do2ar, dt12ar, do1ai, do2ai, dt12ai)
+                #print(do1ar, do2ar, dt12ar, do1ai, do2ai, dt12ai)
                 ilayer0 = not ilayer0
                 continue
                 #if node == 0 and ilayer0:
