@@ -291,7 +291,7 @@ def object_attributes(obj: Any, mode: str='public',
 
 def int_version(name: str, version: str) -> List[int]:
     """splits the version into a tuple of integers"""
-    sversion = version.split('-')[0].split('+')[0]
+    sversion = version.split('-')[0].split('+')[0].split('a')[0].split('b')[0].split('rc')[0]
     #numpy
     #scipy
     #matplotlib
@@ -301,10 +301,8 @@ def int_version(name: str, version: str) -> List[int]:
     #pyNastran
     # '1.20.0rc1'
     # '1.4.0+dev.8913610a0'
-    if 'rc' not in name:
-        # it's gotta be something...
-        # matplotlib3.1rc1
-        sversion = sversion.split('rc')[0]
+    # matplotlib 3.1rc1
+    # matplotlib 3.5.5b1
 
     try:
         return [int(val) for val in sversion.split('.')]

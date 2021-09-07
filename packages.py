@@ -65,7 +65,7 @@ REQS = {
     },
 }
 
-def check_python_version():
+def check_python_version() -> None:
     """verifies the python version"""
     imajor, minor1, minor2 = sys.version_info[:3]
     if sys.version_info < (3, 7, 0):  # 3.7.4 used
@@ -73,7 +73,7 @@ def check_python_version():
             imajor, minor1, minor2))
 
 
-def int_version(name, version):
+def int_version(name: str, version: str) -> List[int]:
     """splits the version into a tuple of integers"""
     sversion = version.split('-')[0]
     #numpy
@@ -94,7 +94,7 @@ def int_version(name, version):
         raise SyntaxError('cannot determine version for %s %s' % (name, sversion))
 
 
-def str_version(version):
+def str_version(version: str) -> str:
     """converts a tuple of integers to a version number"""
     return '.'.join(str(versioni) for versioni in version)
 

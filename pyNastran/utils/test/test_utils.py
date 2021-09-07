@@ -50,6 +50,7 @@ class TestUtils(unittest.TestCase):
         assert int_version('numpy', '1.20.0rc1') == [1, 20, 0], int_version('numpy', '1.20.0rc1')
         assert int_version('scipy', '1.6.0rc2') == [1, 6, 0], int_version('scipy', '1.6.0rc2')
         assert int_version('matplotlib', '3.3.3') == [3, 3, 3], int_version('matplotlib', '3.3.3')
+        assert int_version('matplotlib', '3.5.0b1'), int_version('matplotlib', '3.5.0')
         assert int_version('pyNastran', '1.4.0+dev.8913610a0') == [1, 4, 0], int_version('pyNastran', '1.4.0+dev.8913610a0')
 
     def test_object_stats(self):
