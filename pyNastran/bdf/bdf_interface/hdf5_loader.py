@@ -102,6 +102,7 @@ def load_bdf_from_hdf5_file(h5_file, model):
         'gusts' : hdf5_load_generic,
         'caeros' : hdf5_load_generic,
         'splines' : hdf5_load_generic,
+        'mdlparm' : hdf5_load_generic,
         #'MATS1' : hdf5_load_generic,
         #'MATT1' : hdf5_load_generic,
         #'MATT2' : hdf5_load_generic,
@@ -150,6 +151,11 @@ def load_bdf_from_hdf5_file(h5_file, model):
             values = _load_cards_from_keys_values('params', group, keys, encoding, model.log)
             _put_keys_values_into_dict(model, 'params', keys, values, cast_int_keys=False)
             model.card_count['PARAM'] = len(keys)
+        elif key == 'bcparas':
+            keys = list(group.keys())
+            values = _load_cards_from_keys_values('bcparas', group, keys, encoding, model.log)
+            _put_keys_values_into_dict(model, 'bcparas', keys, values, cast_int_keys=False)
+            model.card_count['BCPARA'] = len(keys)
 
         elif key == 'minor_attributes':
             _load_minor_attributes(key, group, model, encoding)
@@ -228,7 +234,7 @@ def load_bdf_from_hdf5_file(h5_file, model):
             lines = []
             model.mdlprm = MDLPRM({'HDF5': 1})
             model.mdlprm.load_hdf5_file(group, encoding)
-            str(model.mdlprm)
+            model.card_count['MDLPRM'] = 1
         else:
             model.log.warning('skipping hdf5 load for %s' % key)
             raise RuntimeError('skipping hdf5 load for %s' % key)
@@ -344,7 +350,7 @@ def _load_indexed_list_str(key, group, encoding):
         #print('group.keys() =', list(group.keys()))
         #raise
 
-    if isinstance(value, str):
+    if isinstance(lst, str):
         pass
     else:
         lst = decode_lines(lst, encoding)
@@ -1328,9 +1334,11 @@ def hdf5_load_dresps(model, group, encoding):
 
 def hdf5_load_generic(model, group, name, encoding):
     for card_type in group.keys():
+        #print(card_type)
         sub_group = group[card_type]
         #if card_type == 'TABLES1':
             #pass
+        #print(sub_group)
         lkeys, values = load_cards_from_keys_values(
             '%s/%s' % (name, card_type),
             sub_group, encoding, model.log)
@@ -1613,6 +1621,7 @@ def _load_class(key: str, value, card_type: str, encoding: str):
             print(key, key_to_cast)
             raise
 
+        #print(key_to_cast, valuei, type(valuei))
         if isinstance(valuei, np.ndarray):
             valuei = valuei.tolist()
             if isinstance(valuei, list) and isinstance(valuei[0], bytes):

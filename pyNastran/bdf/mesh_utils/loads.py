@@ -14,7 +14,7 @@ from numpy import array, cross, allclose, mean
 from numpy.linalg import norm  # type: ignore
 from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.bdf.utils import get_xyz_cid0_dict, transform_load
-from pyNastran.bdf.cards.loads.static_loads import update_pload4_vector, PLOAD4
+from pyNastran.bdf.cards.loads.static_loads import update_pload4_vector, PLOAD, PLOAD2, PLOAD4
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.nptyping import NDArray3float
     from pyNastran.bdf.bdf import BDF, Subcase
@@ -1057,7 +1057,6 @@ def _get_dof_map(model: BDF) -> Dict[Tuple[int, int], int]:
             #i += 1
         else:
             raise NotImplementedError(node_ref)
-
     # we want the GRID points to be first
     assert len(spoints) == 0, spoints
 
@@ -1071,12 +1070,16 @@ def _get_dof_map(model: BDF) -> Dict[Tuple[int, int], int]:
 
 def _Fg_vector_from_loads(model: BDF, loads, ndof_per_grid: int, ndof: int,
                           fdtype: str='float64'):
-    """helper method for ``get_static_force_vector_from_subcase_id``"""
+    """
+    helper method for ``get_static_force_vector_from_subcase_id``
+    requires cross-referencing
+    """
     dof_map, unused_ps = _get_dof_map(model)
     Fg = np.zeros([ndof], dtype=fdtype)
     skipped_load_types = set([])
     not_static_loads = []
     show_force_warning = True
+    log = model.log
     for load in loads:
         loadtype = load.type
         if load.type in ['FORCE', 'MOMENT']:
@@ -1098,6 +1101,10 @@ def _Fg_vector_from_loads(model: BDF, loads, ndof_per_grid: int, ndof: int,
                 Fg[irow] += mag
         elif loadtype in not_static_loads:
             continue
+        elif loadtype == 'PLOAD':
+            _add_pload(Fg, dof_map, model, load)
+        elif loadtype == 'PLOAD2':
+            _add_pload2(Fg, dof_map, model, load)
         else:
             skipped_load_types.add(load.type)
     if skipped_load_types:
@@ -1174,7 +1181,77 @@ def _add_force(Fg: np.ndarray, dof_map: Dict[Tuple[int, int], int], model: BDF,
     else:
         raise NotImplementedError(f'node_ref.cd={node_ref.cd} cid={cid} load:\n{str(load)}')
 
+    # TODO: how does this handle GRIDs vs. SPOINTs?
+    #       GRIDs have a DOF 1-3
+    #       SPOINTs have a DOF of 0
     for dof in range(3):
         irow = dof_map[(nid, dof+offset)]
         Fg[irow] += fglobal[dof]
     return show_warning
+
+def _add_pload2(Fg: np.ndarray, dof_map: Dict[int, int],
+                model: BDF, load: PLOAD2) -> None:
+    """adds the PLOAD2 loads to Fg"""
+    #PLOAD2       150     1.5       1    THRU       7
+    #print(load.get_stats())
+    pressure = load.pressure
+    for element in load.eids_ref:
+        area = element.Area()
+        normal = element.Normal()
+        force_per_node = pressure * area / len(element.nodes)
+        for nid, node_ref in zip(element.nodes, element.nodes_ref):
+            if node_ref.cd == 0:
+                force = force_per_node
+            else:
+                model.log.warning(f'PLOAD2 doesnt support CD frame\n{load}{node_ref}')
+                continue
+            fglobal = force * normal
+            for dof in range(3):
+                irow = dof_map[(nid, dof+1)]
+                Fg[irow] += fglobal[dof]
+            #model.log.warning('PLOAD2 havent been verified')
+
+def _add_pload(Fg: np.ndarray, dof_map: Dict[int, int],
+               model: BDF, load: PLOAD) -> None:
+    """adds the PLOAD loads to Fg"""
+    scale = 1.0
+    #print(load)
+    #PLOAD        300     10.     302     303     403     402
+    #PLOAD        300     10.     401     402     500
+    #print(load.get_stats())
+    nodes = load.node_ids
+    nnodes = len(nodes)
+    n1 = load.nodes_ref[0].get_position()
+    n2 = load.nodes_ref[1].get_position()
+    n3 = load.nodes_ref[2].get_position()
+    if nnodes == 3:
+        #n1, n2, n3 = xyz[nodes[0]], xyz[nodes[1]], xyz[nodes[2]]
+        axb = cross(n1 - n2, n1 - n3)
+        #centroid = (n1 + n2 + n3) / 3.
+    elif nnodes == 4:
+        n4 = load.nodes_ref[3].get_position()
+        #n1, n2, n3, n4 = xyz[nodes[0]], xyz[nodes[1]], xyz[nodes[2]], xyz[nodes[3]]
+        axb = cross(n1 - n3, n2 - n4)
+        #centroid = (n1 + n2 + n3 + n4) / 4.
+    else:
+        msg = 'invalid number of nodes on PLOAD card; nodes=%s' % str(nodes)
+        raise RuntimeError(msg)
+
+    #area, normal = _get_area_normal(axb, nodes, xyz)
+    nunit = norm(axb)
+    area = 0.5 * nunit
+    normal = axb / nunit
+
+    #r = centroid - p
+    fglobal = load.pressure * area * normal * scale / nnodes
+
+    for nid, node_ref in zip(load.nodes, load.nodes_ref):
+        if node_ref.cd == 0:
+            pass
+        else:
+            model.log.warning(f'PLOAD doesnt support CD frame\n{load}{node_ref}')
+            continue
+        for dof in range(3):
+            irow = dof_map[(nid, dof+1)]
+            Fg[irow] += fglobal[dof]
+            #model.log.warning('PLOAD havent been verified')

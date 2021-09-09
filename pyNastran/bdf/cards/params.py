@@ -1462,16 +1462,17 @@ MDLPRM_INT_KEYS_1 = {
     'STREQCNT', 'TWBRBML',
 
     # undefined in MSC
-    'RBEDOF', 'NLDIAG',
+    'RBEDOF', 'NLDIAG', 'ITRFMT', 'NLSPCD', 'MRCONV', 'LA3FLG', 'TIMADJ',
 }
 MDLPRM_STR_KEYS_1 = {'COMPN1', 'SHEARP', 'OFFDEF',
                      'PRTELAS', 'PRTFAST', 'PRTMASS', 'PRTSEAM', 'PRTWELD'}
 MDLPRM_FLOAT_KEYS_1 = {
     'DBCTOLE', 'DELELAS', 'DELFAST', 'DELMASS', 'DELSEAM', 'DELWELD',
-    'PEXTS4', 'PIVTHRSH', 'SPBLNDX'}
+    'PEXTS4', 'PIVTHRSH', 'SPBLNDX', 'PEXTS4', }
 MDLPRM_KEYS = MDLPRM_INT_KEYS_1 | MDLPRM_STR_KEYS_1
 
 class MDLPRM(BaseCard):
+    """MSC Nastran card"""
     type = 'MDLPRM'
     _field_map = {1: 'key'}
 
@@ -1506,12 +1507,14 @@ class MDLPRM(BaseCard):
                 assert isinstance(value, integer_types), f'MDLPRM key={key!r} value={value!r} must be an integer'
             elif key in MDLPRM_STR_KEYS_1:
                 assert isinstance(value, str), f'MDLPRM key={key!r} value={value!r} must be an integer'
+            elif key in MDLPRM_FLOAT_KEYS_1:
+                assert isinstance(value, float_types), f'MDLPRM key={key!r} value={value!r} must be an float'
             else:
                 raise RuntimeError(f'MDLPRM key={key!r} value={value!r} is not supported')
         assert len(mdlprm_dict) > 0, mdlprm_dict
 
     @classmethod
-    def add_card(cls, card, comment=''):
+    def add_card(cls, card: BDFCard, comment=''):
         """
         Adds a MDLPRM card from ``BDF.add_card(...)``
 
@@ -1538,7 +1541,7 @@ class MDLPRM(BaseCard):
             elif key in MDLPRM_FLOAT_KEYS_1:
                 value = double(card, ifield+1, key)
             else:
-                raise RuntimeError(f'MDLPRM key={key!r} is not supported')
+                raise RuntimeError(f'MDLPRM key={key!r} is not supported; value={card.field(ifield+1)}')
             mdlprm_dict[key] = value
             ifield += 2
         obj = MDLPRM(mdlprm_dict, comment=comment)

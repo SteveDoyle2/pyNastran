@@ -80,7 +80,35 @@ class BDFCard:
         """len(card)"""
         return self.nfields
 
-    def fields(self, i: int=0, j: Optional[int]=None, defaults: Any=None) -> List[Any]:
+    def fields(self, i: int=0, j: Optional[int]=None) -> List[Any]:
+        """
+        Gets multiple fields on the card
+
+        Parameters
+        ----------
+        i : int > 0
+            the ith field on the card (following list notation)
+        j : int / None
+            int : the jth field on the card
+            None : last field on the card
+
+        Returns
+        -------
+        values : List[varies]
+            int/float/str
+            the values on the ith-jth fields
+
+        """
+        if j is None:
+            j = self.nfields
+        out = []
+
+        for n in range(i, j):
+            value = self.field(n)
+            out.append(value)
+        return out
+
+    def fields_defaults(self, i: int=0, j: Optional[int]=None, defaults: Any=None) -> List[Any]:  # pragma: no cover
         """
         Gets multiple fields on the card
 
@@ -105,8 +133,6 @@ class BDFCard:
         if defaults is None:
             defaults = []
         if j is None:
-            #if self.nfields is None:
-                #return [None]
             j = self.nfields
 
         if defaults == []:
@@ -138,6 +164,15 @@ class BDFCard:
             the value on the ith field
 
         """
-        if i < self.nfields and self.card[i] is not None and self.card[i] != '':
-            return self.card[i]
+        # old
+        #if i < self.nfields and self.card[i] is not None and self.card[i] != '':
+        #    return self.card[i]
+        #return default
+        try:
+            cardi = self.card[i]
+            if cardi is not None and cardi != '':
+                return cardi
+        except IndexError:
+            pass
         return default
+

@@ -1315,7 +1315,7 @@ class SPCDv(BaseLoad):
         sid = [integer(card, 1, 'sid')]
         if card.field(5) in [None, '']:
             nodes = [integer(card, 2, 'G1'),]
-            constraints = [components_or_blank(card, 3, 'C1', 0)]
+            constraints = [components_or_blank(card, 3, 'C1', '0')]
             enforced = [double_or_blank(card, 4, 'D1', 0.0)]
         else:
             sid.append(sid[0])
@@ -1324,8 +1324,8 @@ class SPCDv(BaseLoad):
                 integer(card, 5, 'G2'),
             ]
             # :0 if scalar point 1-6 if grid
-            constraints = [components_or_blank(card, 3, 'C1', 0),
-                           components_or_blank(card, 6, 'C2', 0)]
+            constraints = [components_or_blank(card, 3, 'C1', '0'),
+                           components_or_blank(card, 6, 'C2', '0')]
             enforced = [double_or_blank(card, 4, 'D1', 0.0),
                         double_or_blank(card, 7, 'D2', 0.0)]
         self.add(sid, nodes, constraints, enforced, comment=comment)

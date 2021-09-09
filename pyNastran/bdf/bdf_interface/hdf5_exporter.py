@@ -104,6 +104,9 @@ dict_int_obj_attrs = [
 
     # cyclic
     'cyjoin',
+
+    # contact
+    #'bcbodys',
 ]
 
 scalar_obj_keys = [
@@ -251,10 +254,18 @@ def export_bdf_to_hdf5_file(hdf5_file, model: BDF, exporter=None):
         group = hdf5_file.create_group('params')
         for key, param in model.params.items():
             _h5_export_class(group, model, key, param, skip_attrs, encoding, debug=False)
+    if model.bcparas:
+        model.log.debug('exporting bcparas')
+        skip_attrs = ['comment', '_field_map']
+        group = hdf5_file.create_group('bcparas')
+        for key, param in model.bcparas.items():
+            _h5_export_class(group, model, key, param, skip_attrs, encoding, debug=False)
+
     if model.mdlprm:
-        model.log.debug('exporting params')
+        model.log.debug('exporting mdlprm')
         skip_attrs = ['comment', '_field_map']
         group = hdf5_file.create_group('mdlprm')
+        str(model.mdlprm)
         model.mdlprm.export_to_hdf5(group, model, encoding)
 
     if model.aelinks:

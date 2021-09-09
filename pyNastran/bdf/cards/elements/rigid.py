@@ -123,8 +123,8 @@ class RROD(RigidElement):
         eid = integer(card, 1, 'eid')
         ga = integer(card, 2, 'ga')
         gb = integer(card, 3, 'gb')
-        cma = components_or_blank(card, 4, 'cma')
-        cmb = components_or_blank(card, 5, 'cmb')
+        cma = components_or_blank(card, 4, 'cma', None)
+        cmb = components_or_blank(card, 5, 'cmb', None)
         alpha = double_or_blank(card, 6, 'alpha', 0.0)
         assert len(card) <= 7, f'len(RROD card) = {len(card):d}\ncard={card}'
         return RROD(eid, [ga, gb], cma, cmb, alpha, comment=comment)

@@ -140,7 +140,7 @@ from pyNastran.bdf.cards.bdf_tables import (TABLED1, TABLED2, TABLED3, TABLED4,
                                             DTABLE)
 from pyNastran.bdf.cards.contact import (
     BCRPARA, BCTADD, BCTSET, BSURF, BSURFS, BCTPARA, BCONP, BLSEG, BFRIC,
-    BGADD, BGSET, BCTPARM,
+    BGADD, BGSET, BCTPARM, BCPARA, BCBODY,
 )
 from pyNastran.bdf.cards.parametric.geometry import PSET, PVAL, FEEDGE, FEFACE, GMCURV, GMSURF
 
@@ -653,6 +653,8 @@ CARD_MAP = {
     'BCTADD' : BCTADD,
     'BCTPARA' : BCTPARA,
     'BCTPARM' : BCTPARM,
+    'BCPARA' : BCPARA,
+    'BCBODY': BCBODY,
 
     # nx glue
     'BGADD' : BGADD,

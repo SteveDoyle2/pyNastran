@@ -1389,7 +1389,8 @@ class CONM2(PointMassElement):
             # transform to global
             #dx = self.cid_ref.transform_node_to_global(self.X)
             #matrix = self.cid_ref.beta()
-            raise NotImplementedError('CONM2 inertia method for CID != 0 is not implemented.')
+            warnings.warn(f'CONM2 (eid={self.eid}) inertia method for CID != 0 is not implemented')
+            return np.zeros((3, 3))
             #A2 = A * matrix
             #return A2  # correct for offset using dx???
 

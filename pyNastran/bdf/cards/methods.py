@@ -116,10 +116,10 @@ class EIGB(Method):
         norm = string_or_blank(card, 9, 'norm', 'MAX')
         if norm == 'POINT':
             G = integer(card, 10, 'G')
-            C = parse_components(card, 11, 'C')
+            C = parse_components(card, 11, 'C', None)
         else:
             G = integer_or_blank(card, 10, 'G')
-            C = components_or_blank(card, 11, 'C')
+            C = components_or_blank(card, 11, 'C', None)
         assert len(card) <= 12, f'len(EIGB card) = {len(card):d}\ncard={card}'
         return EIGB(sid, method, L1, L2, nep, ndp, ndn, norm, G, C,
                     comment=comment)
@@ -982,7 +982,7 @@ class EIGRL(Method):
 
         #msg = 'norm=%s sol=%s' % (self.norm, sol)
         #assert self.norm in ['MASS', 'MAX'],msg
-        #assert card.nFields()<9,'card = %s' %(card.fields(0))
+        #assert len(card) < 9,'card = %s' % (card.fields(0))
         return EIGRL(sid, v1, v2, nd, msglvl, maxset, shfscl, norm,
                      options, values, comment=comment)
 

@@ -31,6 +31,7 @@ from pyNastran.bdf.field_writer_16 import print_float_16, print_card_16
 from pyNastran.bdf.field_writer_double import print_scientific_double
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.bdf.bdf import BDF
+    from pyNastran.bdf.bdf_interface.bdf_card import BDFCard
 
 
 class Constraint(BaseCard):
@@ -457,7 +458,7 @@ class MPC(Constraint):
             assert isinstance(coefficient, float), self.coefficients
 
     @classmethod
-    def add_card(cls, card, comment=''):
+    def add_card(cls, card: BDFCard, comment=''):
         """
         Adds an MPC card from ``BDF.add_card(...)``
 
@@ -474,8 +475,7 @@ class MPC(Constraint):
         components = []
         coefficients = []
 
-        fields = card.fields(0)
-        nfields = len(fields)
+        nfields = len(card)
 
         i = 1
         for ifield in range(2, nfields, 8):
@@ -1114,7 +1114,7 @@ class SPC1(Constraint):
 
         """
         conid = integer(card, 1, 'conid')
-        components = components_or_blank(card, 2, 'components', 0)  # 246 = y; dx, dz dir
+        components = components_or_blank(card, 2, 'components', '0')  # 246 = y; dx, dz dir
         #nodes = [node for node in card.fields(3) if node is not None]
         nodes = card.fields(3)
         return SPC1(conid, components, nodes, comment=comment)

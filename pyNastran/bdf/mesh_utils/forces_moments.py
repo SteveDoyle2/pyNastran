@@ -198,7 +198,7 @@ def get_forces_moments_array(model: BDF, p0, load_case_id: int,
         elif load_type == 'SPCD':
             is_loads = True
             #self.nodes = [integer(card, 2, 'G1'),]
-            #self.constraints = [components_or_blank(card, 3, 'C1', 0)]
+            #self.constraints = [components_or_blank(card, 3, 'C1', '0')]
             #self.enforced = [double_or_blank(card, 4, 'D1', 0.0)]
             for nid, c1, d1 in zip(load.node_ids, load.components, load.enforced):
                 if nid in dependents_nodes:
@@ -504,8 +504,10 @@ def get_pressure_array(model: BDF, load_case_id: int, eids, stop_on_failure: boo
         model.log.warning(f'skipping pressure on {list(etypes_skipped)}')
     return True, pressures
 
-def get_temperatures_array(model: BDF, load_case_id, nid_map=None,
-                           fdtype='float32'):
+def get_temperatures_array(model: BDF,
+                           load_case_id: int,
+                           nid_map: Optional[Dict[int, int]]=None,
+                           fdtype: str='float32') -> Tuple[bool, np.ndarray]:
     """
     Builds the temperature array based on thermal cards.
 
@@ -513,8 +515,11 @@ def get_temperatures_array(model: BDF, load_case_id, nid_map=None,
     ----------
     load_case_id : int
         the load id
-    nid_map : ???; default=None -> auto
-        ???
+    nid_map : Dict[node_id, value] default=None -> auto
+        node_id : int
+            node id
+        value : int
+            index
     dtype : str; default='float32'
         the type of the temperature array
 
@@ -526,7 +531,7 @@ def get_temperatures_array(model: BDF, load_case_id, nid_map=None,
         the temperatures
 
     """
-    if 'TEMP' not in model.card_count:
+    if 'TEMP' not in model.card_count and 'TEMPD' not in model.card_count:
         return False, None
     is_temperatures = True
 
@@ -543,6 +548,7 @@ def get_temperatures_array(model: BDF, load_case_id, nid_map=None,
         'GRAV', 'ACCEL', 'ACCEL1',
         'ACSRCE', 'TLOAD1', 'TLOAD2', 'RLOAD1', 'RLOAD2',
         'RFORCE', 'RFORCE1', 'SPCD', 'DEFORM',
+        'TEMPD',
         # 'GMLOAD',
     ]
     for load, scale in zip(loads, scale_factors):
@@ -556,7 +562,7 @@ def get_temperatures_array(model: BDF, load_case_id, nid_map=None,
                 nidi = nid_map[nid]
                 temperatures[nidi] = val
         else:
-            model.log.debug(load.rstrip())
+            model.log.debug(f'skipping card in get_temperatures_array\n{load.rstrip()}')
     return is_temperatures, temperatures
 
 def get_load_arrays(model: BDF, subcase_id, eid_map, node_ids, normals,

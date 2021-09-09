@@ -61,6 +61,12 @@ import pyNastran.bdf.test
 TEST_PATH = pyNastran.bdf.test.__path__[0]
 #warnings.filterwarnings("ignore", category=DeprecationWarning)
 
+MESH_OPT_CARDS = [
+    'GRIDG', 'CGEN', 'SPCG', 'FEEDGE', 'FEFACE', 'ADAPT', # 'EQUIV',
+    'PVAL', 'GMCURV', 'GMSURF',
+]
+class MeshOptimizationError(RuntimeError):
+    pass
 
 def run_lots_of_files(filenames: List[str], folder: str='',
                       debug: bool=False,
@@ -185,6 +191,7 @@ def run_lots_of_files(filenames: List[str], folder: str='',
                         nerrors=0,
                         post=posti, sum_load=sum_load, dev=dev,
                         crash_cards=crash_cards,
+                        limit_mesh_opt=True,
                         run_extract_bodies=False, pickle_obj=pickle_obj,
                         hdf5=write_hdf5, quiet=quiet, log=log)
                     del fem1
@@ -214,7 +221,7 @@ def run_lots_of_files(filenames: List[str], folder: str='',
                 #pass
             #except ValueError:  # only temporarily uncomment this when running lots of tests
                 #pass
-            except ReplicationError:
+            except (ReplicationError, MeshOptimizationError) as e:
                 if not dev:
                     raise
             except SystemExit:
@@ -247,6 +254,7 @@ def run_bdf(folder, bdf_filename, debug=False, xref=True, check=True, punch=Fals
             hdf5=False,
             stop=False, nastran='', post=-1, dynamic_vars=None,
             quiet=False, dumplines=False, dictsort=False,
+            limit_mesh_opt: bool=False,
             run_extract_bodies=False, run_skin_solids=True,
             save_file_structure=False,
             nerrors=0, dev=False, crash_cards=None,
@@ -340,6 +348,7 @@ def run_bdf(folder, bdf_filename, debug=False, xref=True, check=True, punch=Fals
         nerrors=nerrors, dev=dev, crash_cards=crash_cards,
         safe_xref=safe_xref,
         version=version,
+        limit_mesh_opt=limit_mesh_opt,
         run_extract_bodies=run_extract_bodies,
         run_skin_solids=run_skin_solids,
         save_file_structure=save_file_structure,
@@ -377,6 +386,7 @@ def run_and_compare_fems(
         dev: bool=False,
         crash_cards=None,
         version: Optional[str]=None,
+        limit_mesh_opt: bool=False,
         safe_xref: bool=True,
         run_extract_bodies: bool=False,
         run_skin_solids: bool=True,
@@ -403,13 +413,8 @@ def run_and_compare_fems(
     fem2 = None
     diff_cards = []
 
-    mesh_opt_cards = [
-        'GRIDG', 'CGEN', 'SPCG', 'FEEDGE', 'FEFACE', 'ADAPT', # 'EQUIV',
-        'PVAL', 'GMCURV', 'GMSURF',
-    ]
     #nastran_cmd = 'nastran scr=yes bat=no old=no news=no '
     nastran_cmd = ''
-    is_mesh_opt = False
     try:
         #try:
         fem1.log.info('running fem1 (read/write)')
@@ -420,10 +425,8 @@ def run_and_compare_fems(
                         save_file_structure=save_file_structure,
                         hdf5=hdf5,
                         encoding=encoding, crash_cards=crash_cards, safe_xref=safe_xref,
+                        limit_mesh_opt=limit_mesh_opt,
                         pickle_obj=pickle_obj, stop=stop, name=name)
-        is_mesh_opt = any([card_name in fem1.card_count for card_name in mesh_opt_cards])
-        if dev and is_mesh_opt:
-            return None, None, None
 
         if stop:
             if not quiet:
@@ -590,6 +593,7 @@ def run_fem1(fem1: BDF, bdf_model: str, out_model: str, mesh_form: str,
              run_extract_bodies: bool=False, run_skin_solids: bool=True,
              save_file_structure: bool=False, hdf5: bool=False,
              encoding: Optional[str]=None, crash_cards: Optional[List[str]]=None,
+             limit_mesh_opt: bool=False,
              safe_xref: bool=True, pickle_obj: bool=False, stop: bool=False,
              name: str='') -> BDF:
     """
@@ -650,6 +654,9 @@ def run_fem1(fem1: BDF, bdf_model: str, out_model: str, mesh_form: str,
                 if os.path.exists(skin_filename):
                     read_bdf(skin_filename, log=fem1.log)
                     os.remove(skin_filename)
+
+            if limit_mesh_opt:
+                limit_mesh_optimization(fem1)
             if xref:
                 if run_extract_bodies:
                     log.info('fem1-run_extract_bodies')
@@ -758,6 +765,14 @@ def run_fem1(fem1: BDF, bdf_model: str, out_model: str, mesh_form: str,
             fem1.get_volume_breakdown(stop_if_no_volume=False)
             fem1.get_mass_breakdown(stop_if_no_mass=False)
     return fem1
+
+def limit_mesh_optimization(model: BDF):
+    is_mesh_opt = [card_name in model.card_count for card_name in MESH_OPT_CARDS]
+    mesh_opt_cards = [card_name for is_mesh_opti, card_name in zip(is_mesh_opt, MESH_OPT_CARDS)
+                      if is_mesh_opti]
+    _cards = ', '.join(mesh_opt_cards)
+    if any(is_mesh_opt):
+        raise MeshOptimizationError(f'model contains [{_cards}]; mesh optimization is not supported')
 
 def _fem_xref_methods_check(fem1: BDF):
     """
@@ -1156,7 +1171,11 @@ def check_case(sol, subcase, fem2, p0, isubcase, subcases,
         assert any(subcase.has_parameter('METHOD')), msg
     elif sol == 118:
         soltype = 'CYCFREQ'
-        ierror = require_cards(['LOAD', 'HARMONICS', 'SDAMPING', 'FREQUENCY'],
+
+        ierror = require_either_cards(['LOAD', 'DLOAD'],
+                                      log, soltype, sol, subcase,
+                                      RuntimeError, ierror, nerrors)
+        ierror = require_cards(['HARMONICS', 'SDAMPING', 'FREQUENCY'],
                                log, soltype, sol, subcase,
                                RuntimeError, ierror, nerrors)
         _assert_has_spc(subcase, fem2)
@@ -1201,9 +1220,13 @@ def check_case(sol, subcase, fem2, p0, isubcase, subcases,
     elif sol in [114, 116, 118]:
         # cyclic statics, buckling, frequency
         pass
-    elif sol in [5, 21, 26, 38, 47, 61, 63, 68, 76, 78, 81, 88,
+    elif sol in [5, 21, 26, 27, 28, 38, 39, 47, 61, 63, 68, 76, 78, 81, 83, 88, 91,
                  100, 128, 187, 190,
-                 400, 401, 402, 600, 601, 700, 701, 'AEDB2XDB', 'UPWARD']:
+                 400, 401, 402, 600, 601, 700, 701,
+                 'AEDB2XDB', 'BUILDIT', 'CATALOG', 'CHKCPY', 'DBDIR',
+                 'FTGRSTRT', 'FUNCTEST', 'INPUTT2',
+                 'MAIN', 'MXDMAP50', 'MYDMAP', 'MYSOL',
+                 'PARAMS', 'PRINT68', 'TABTSTB', 'TSTGINO', 'UPWARD', 'USERDMAP', ]:
         pass
     else:
         msg = 'SOL = %s\n' % (sol)
@@ -1418,20 +1441,40 @@ def _check_case_sol_200(sol: int,
         msg = 'analysis = %s\nsubcase =\n%s' % (analysis, subcase)
         raise NotImplementedError(msg)
 
-def require_cards(card_names, log, soltype, sol, subcase,
+def require_cards(card_names: List[str], log: SimpleLogger,
+                  soltype: str, sol: int, subcase: Subcase,
                   error, ierror, nerrors):
     """all must be True"""
     for card_name in card_names:
         if card_name not in subcase:
-            msg = 'A %s card is required for %s - SOL %i\n%s' % (
-                card_name, soltype, sol, subcase)
+            msg = f'A {card_name} card is required for {soltype} - SOL {sol:d}\n{subcase}'
             log.error(msg)
             if ierror == nerrors:
                 raise error(msg)
             ierror += 1
     return ierror
 
-def _tstep_msg(fem, subcase, tstep_id, tstep_type=''):
+def require_either_cards(card_names: List[str], log: SimpleLogger,
+                         soltype: str, sol: int, subcase: Subcase,
+                         error, ierror: int, nerrors):
+    """one or more must be True"""
+    msg = ''
+    nlocal_errors = 0
+    for card_name in card_names:
+        if card_name not in subcase:
+            msg += f'A {card_name} card is required for {soltype} - SOL {sol:d}\n{subcase}'
+            nlocal_errors += 1
+    if nlocal_errors == len(card_names):
+        ierror += 1
+        log.error(msg)
+        if ierror == nerrors:
+            raise error(msg)
+    return ierror
+
+def _tstep_msg(fem: BDF,
+               subcase: Subcase,
+               tstep_id: int,
+               tstep_type: str='') -> str:
     """writes the TSTEP/TSTEPNL info"""
     msg = (
         'tstep%s_id=%s\n'
@@ -1556,7 +1599,7 @@ def _check_case_parameters(subcase: Subcase, fem: BDF,
         assert np.allclose(moment, moment2), 'moment=%s moment2=%s' % (moment, moment2)
         print('  isubcase=%i F=%s M=%s%s' % (isubcase, force, moment, cid_msg))
         allowed_sols = [
-            1, 5, 24, 61, 64, 66, 100, 101, 103, 105, 106, 107,
+            1, 5, 24, 38, 61, 64, 66, 100, 101, 103, 105, 106, 107,
             108, 109, 110, 111, 112, 114, 144, 145, 153, 200, 400, 401, 600, 601,
         ]
         ierror = check_sol(sol, subcase, allowed_sols, 'LOAD', log, ierror, nerrors)
@@ -1682,12 +1725,11 @@ def _check_case_parameters(subcase: Subcase, fem: BDF,
 
         # print(loads)
     if 'NLPARM' in subcase:
-        allowed_sols = [66, 106, 153,]
+        allowed_sols = [66, 101, 106, 153, 400, 600]
         ierror = check_sol(sol, subcase, allowed_sols, 'NLPARM', log, ierror, nerrors)
         nlparm_id = subcase.get_parameter('NLPARM')[0]
         unused_nlparm = fem.NLParm(nlparm_id, f'which is required for {subcase}')
     return ierror
-
 
 def _check_case_parameters_aero(subcase: Subcase, fem: BDF, sol: int,
                                 ierror: int=0, nerrors: int=100,

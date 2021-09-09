@@ -1814,7 +1814,7 @@ class TF(BaseCard):
         sid = integer(card, 1, 'sid')
         nid0 = integer(card, 2, 'nid0')
         # component 0 means an SPOINT/EPOINT
-        c = components_or_blank(card, 3, 'components_0', 0)
+        c = components_or_blank(card, 3, 'components_0', '0')
         b0 = double_or_blank(card, 4, 'b0', 0.)
         b1 = double_or_blank(card, 5, 'b1', 0.)
         b2 = double_or_blank(card, 6, 'b2', 0.)
@@ -1831,7 +1831,7 @@ class TF(BaseCard):
             j = irow * 8 + 9
             #ifield = irow + 1
             nid = integer(card, j, 'grid_%i' % (irow + 1))
-            component = components_or_blank(card, j + 1, 'components_%i' % (irow + 1), 0)
+            component = components_or_blank(card, j + 1, 'components_%i' % (irow + 1), '0')
             a0 = double_or_blank(card, j + 2, 'a0_%i' % (irow + 1), 0.)
             a1 = double_or_blank(card, j + 3, 'a1_%i' % (irow + 1), 0.)
             a2 = double_or_blank(card, j + 4, 'a2_%i' % (irow + 1), 0.)
@@ -2556,7 +2556,7 @@ class TIC(BaseCard):
         """
         sid = integer(card, 1, 'sid')
         nid = integer(card, 2, 'G')
-        comp = modal_components_or_blank(card, 3, 'C', 0)
+        comp = modal_components_or_blank(card, 3, 'C', '0')
         u0 = double_or_blank(card, 4, 'U0', 0.)
         v0 = double_or_blank(card, 5, 'V0', 0.)
         return TIC(sid, nid, comp, u0=u0, v0=v0, comment=comment)

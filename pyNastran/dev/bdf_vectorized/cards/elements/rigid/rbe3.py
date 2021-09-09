@@ -109,7 +109,7 @@ class RBE3:
         self.element_id[i] = integer(card, 1, 'eid')
         blank(card, 2, 'blank')
         self.refgrid[i] = integer(card, 3, 'refgrid')
-        self.refc[i] = components_or_blank(card, 4, 'refc', 0)
+        self.refc[i] = components_or_blank(card, 4, 'refc', '0')
         #iUM = fields.index('UM')
 
         fields = [field.upper() if isinstance(field, str) else field for field in card[5:]]

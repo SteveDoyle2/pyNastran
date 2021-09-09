@@ -1310,6 +1310,15 @@ class BCTPARM(BaseCard):
         self.csid = csid
         self.params = params
 
+    def _finalize_hdf5(self, encoding: str) -> None:
+        keys = self.params[0]
+        values = self.params[1]
+        self.params = {}
+        for key, value in zip(keys, values):
+            if isinstance(value, bytes):
+                value = value.decode(encoding)
+            self.params[key] = value
+
     @classmethod
     def add_card(cls, card, comment=''):
         """
@@ -1401,6 +1410,8 @@ class BCTPARM(BaseCard):
         fields = ['BCTPARM', self.csid]
         i = 0
         for key, value in sorted(self.params.items()):
+            assert isinstance(key, str), key
+            assert not isinstance(value, bytes), f'key={key!r} value={value!r}'
             if i == 3:
                 fields.append(None)
                 i = 0

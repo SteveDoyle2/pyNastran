@@ -60,7 +60,7 @@ class DAREA(VectorizedCard):
         noffset = 3 * icard
         sid = integer(card, 1, 'sid')
         node = integer(card, 2 + noffset, 'node_p')
-        component = int(components_or_blank(card, 3 + noffset, 'c', 0))
+        component = int(components_or_blank(card, 3 + noffset, 'c', '0'))
         scale = double(card, 4 + noffset, 'scale')
         data = (sid, node, component, scale)
         return data, comment

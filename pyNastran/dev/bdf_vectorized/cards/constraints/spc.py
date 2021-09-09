@@ -15,12 +15,12 @@ def get_spc_constraint(card, i):
     if i == 0:
         constraint_id = integer(card, 1, 'sid')
         node_id = integer(card, 2, 'G1')
-        dofs = components_or_blank(card, 3, 'C1', 0)
+        dofs = components_or_blank(card, 3, 'C1', '0')
         enforced_motion = double_or_blank(card, 4, 'D1', 0.0)
     elif i == 1:
         constraint_id = integer(card, 1, 'sid')
         node_id = integer_or_blank(card, 5, 'G2')
-        dofs = components_or_blank(card, 6, 'C2', 0)
+        dofs = components_or_blank(card, 6, 'C2', '0')
         enforced_motion = double_or_blank(card, 7, 'D2', 0.0)
     else:
         raise RuntimeError('i =', i)

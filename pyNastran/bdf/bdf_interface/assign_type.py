@@ -121,6 +121,8 @@ def components_or_blank(card: BDFCard,
     #assert isinstance(card, BDFCard), type(card)
     assert isinstance(ifield, int), type(ifield)
     assert isinstance(fieldname, str), type(fieldname)
+    #if default is not None:
+        #assert isinstance(default, str), f'component default={default!r} and must be a string'
     svalue = card.field(ifield)
     if svalue is None:
         return default

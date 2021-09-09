@@ -351,7 +351,7 @@ class ABQSet1(Set):
 
     @classmethod
     def add_card(cls, card, comment=''):
-        components = fcomponents_or_blank(card, 1, 'components', 0)
+        components = fcomponents_or_blank(card, 1, 'components', '0')
 
         nfields = len(card)
         ids = []
@@ -443,7 +443,7 @@ class SuperABQSet1(Set):
     @classmethod
     def add_card(cls, card, comment=''):
         seid = integer(card, 1, 'seid')
-        components = fcomponents_or_blank(card, 2, 'components', 0)
+        components = fcomponents_or_blank(card, 2, 'components', '0')
 
         nfields = len(card)
         ids = []
@@ -1195,7 +1195,7 @@ class USET1(ABQSet1):
             a comment for the card
         """
         name = string(card, 1, 'name')
-        components = fcomponents_or_blank(card, 2, 'components', 0)
+        components = fcomponents_or_blank(card, 2, 'components', '0')
 
         nfields = len(card)
         ids = []

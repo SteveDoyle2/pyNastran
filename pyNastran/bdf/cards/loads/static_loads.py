@@ -1916,15 +1916,16 @@ class PLOAD(Load):
             the BDF object
 
         """
-        pass
+        msg = ', which is required by PLOAD sid=%s' % self.sid
+        self.nodes_ref = model.Nodes(self.nodes, msg=msg)
 
     def safe_cross_reference(self, model: BDF, safe_coord):
         return self.cross_reference(model)
 
-    @staticmethod
-    def uncross_reference() -> None:
+    def uncross_reference(self) -> None:
         """Removes cross-reference links"""
-        pass
+        self.nodes = self.node_ids
+        assert isinstance(self.nodes[0], integer_types), self.nodes
 
     def get_loads(self):
         return [self]
