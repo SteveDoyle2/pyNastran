@@ -1256,6 +1256,8 @@ def _load_hdf5_object(key, keys, sub_group, encoding):
             option.decode(encoding) if isinstance(option, bytes) else option
             for option in options2]
         use_data = False
+    if isinstance(value, bytes):
+        value = value.decode(encoding)
 
     data_group = sub_groupi['data']
     keys2 = _cast(data_group['keys'])

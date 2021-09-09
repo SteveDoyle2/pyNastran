@@ -1601,6 +1601,7 @@ def _check_case_parameters(subcase: Subcase, fem: BDF,
         allowed_sols = [
             1, 5, 24, 38, 61, 64, 66, 100, 101, 103, 105, 106, 107,
             108, 109, 110, 111, 112, 114, 144, 145, 153, 200, 400, 401, 600, 601,
+            700,
         ]
         ierror = check_sol(sol, subcase, allowed_sols, 'LOAD', log, ierror, nerrors)
     else:
@@ -1725,7 +1726,7 @@ def _check_case_parameters(subcase: Subcase, fem: BDF,
 
         # print(loads)
     if 'NLPARM' in subcase:
-        allowed_sols = [66, 101, 106, 153, 400, 600]
+        allowed_sols = [66, 101, 106, 153, 400, 600, 700]
         ierror = check_sol(sol, subcase, allowed_sols, 'NLPARM', log, ierror, nerrors)
         nlparm_id = subcase.get_parameter('NLPARM')[0]
         unused_nlparm = fem.NLParm(nlparm_id, f'which is required for {subcase}')

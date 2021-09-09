@@ -185,7 +185,7 @@ class BLSEG(BaseCard):
         self.nodes_ref = model.Nodes(self.nodes, msg=msg)
 
     def uncross_reference(self) -> None:
-        msg = f', which is required by BLSEG line_id={self.line_id}'
+        #msg = f', which is required by BLSEG line_id={self.line_id}'
         self.nodes = self.node_ids
         self.nodes_ref = None
 
@@ -218,18 +218,21 @@ class BCBODY(BaseCard):
         |        | BNC     | EMISS  |  HBL   |          |         |         |         |        |
     """
     type = 'BCBODY'
-    #@classmethod
-    #def _init_from_empty(cls):
-        #contact_id = 1
-        #slave = 2
-        #master = 3
-        #sfac = 4
-        #friction_id = 5
-        #ptype = 'cat'
-        #cid = 0
-        #return BCBODY(contact_id, dim, behav, bsid, istype, fric, idispl, comment='')
+    @classmethod
+    def _init_from_empty(cls):
+        contact_id = 1
+        bsid = 1
+        dim = '3D'
+        behav = 'DEFORM'
+        istype = 4
+        fric = 5
+        idispl = 0
+        return BCBODY(contact_id, bsid,
+                      dim=dim, behav=behav, istype=istype, fric=fric, idispl=idispl, comment='')
 
-    def __init__(self, contact_id, dim, behav, bsid, istype, fric, idispl, comment=''):
+    def __init__(self, contact_id: int, bsid: int,
+                 dim: str='3D', behav: str='DEFORM',
+                 istype: int=0, fric: Union[int, float]=0, idispl: int=0, comment=''):
         if comment:
             self.comment = comment
         self.contact_id = contact_id
@@ -455,7 +458,9 @@ class BCBODY(BaseCard):
                 raise NotImplementedError(word)
             old_word = word
 
-        return BCBODY(contact_id, dim, behav, bsid, istype, fric, idispl,
+        return BCBODY(contact_id, bsid,
+                      dim=dim, behav=behav, istype=istype,
+                      fric=fric, idispl=idispl,
                       comment=comment)
 
     def raw_fields(self):
@@ -1165,6 +1170,10 @@ class BCPARA(BaseCard):
                 # subsequent releases.
                 value = integer_or_blank(card, i, f'value{j}', 0)
                 assert value in [-1, 1], f'LINQUAD must be [-1, 1]; LINQUAD={value}'
+            elif param == 'LINCNT':
+                value = integer_or_blank(card, i, f'value{j}', 0)
+                assert value in [-1, 0, 1], f'LINCNT must be [-1, 0, 1]; LINQUAD={value}'
+
             elif param == 'METHOD':
                 #METHOD Flag to select Contact methods. (Character)
                 #NODESURF Node to segment contact. (Default)
@@ -1211,7 +1220,7 @@ class BCPARA(BaseCard):
                 value = integer_or_blank(card, i, f'value{j}', 1)
                 assert value in [0, 1], f'THKOFF must be [0, 1]; THKOFF={value}'
             else:
-                raise NotImplementedError(param)
+                raise NotImplementedError(f'param={param} card={card}')
 
             params[param] = value
             i += 1

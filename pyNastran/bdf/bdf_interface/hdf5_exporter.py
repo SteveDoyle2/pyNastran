@@ -64,7 +64,7 @@ dict_int_obj_attrs = [
     'bconp', 'bcrparas', 'bctadds',
     'bctparas', 'bctsets', 'blseg', 'bsurf', 'bsurfs',
     'bgadds', 'bgsets', 'bctparms',
-    'bfric',
+    'bfric', 'bcbodys',
 
     # other
     'ao_element_flags', 'cMethods',
