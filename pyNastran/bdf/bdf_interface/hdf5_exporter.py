@@ -104,9 +104,6 @@ dict_int_obj_attrs = [
 
     # cyclic
     'cyjoin',
-
-    # contact
-    #'bcbodys',
 ]
 
 scalar_obj_keys = [

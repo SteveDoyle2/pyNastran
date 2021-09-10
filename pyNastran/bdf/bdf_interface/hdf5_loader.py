@@ -1334,11 +1334,9 @@ def hdf5_load_dresps(model, group, encoding):
 
 def hdf5_load_generic(model, group, name, encoding):
     for card_type in group.keys():
-        #print(card_type)
         sub_group = group[card_type]
         #if card_type == 'TABLES1':
             #pass
-        #print(sub_group)
         lkeys, values = load_cards_from_keys_values(
             '%s/%s' % (name, card_type),
             sub_group, encoding, model.log)
@@ -1621,7 +1619,6 @@ def _load_class(key: str, value, card_type: str, encoding: str):
             print(key, key_to_cast)
             raise
 
-        #print(key_to_cast, valuei, type(valuei))
         if isinstance(valuei, np.ndarray):
             valuei = valuei.tolist()
             if isinstance(valuei, list) and isinstance(valuei[0], bytes):

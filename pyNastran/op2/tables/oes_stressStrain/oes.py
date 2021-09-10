@@ -20,7 +20,7 @@ MODCON           OSTRMC        Modal contributions
 """
 from __future__ import annotations
 from struct import Struct
-from typing import Tuple, Any, TYPE_CHECKING
+from typing import Tuple, Dict, Any, TYPE_CHECKING
 from numpy import fromstring, frombuffer, radians, sin, cos, vstack, repeat, array
 import numpy as np
 
@@ -1855,6 +1855,12 @@ class OES(OP2Common2):
             n, nelements, ntotal = self._oes_weld_118(data, ndata, dt, is_magnitude_phase,
                                                      result_type, prefix, postfix)
         elif op2.element_type == 126:  # FASTP
+            #C:\MSC.Software\msc_nastran_runs\cf103e.op2
+            # S T R E S S E S   I N   F A S T E N E R   E L E M E N T S   ( C F A S T )
+            #
+            # ELEMENT-ID         FORCE-X          FORCE-Y          FORCE-Z         MOMENT-X         MOMENT-Y         MOMENT-Z
+            # data  = (301, -4.547473508864641e-09, 1.8571810755929619e-09, -7.94031507211912e-10, -0.0, -0.0, 0.0,
+            #         401, -4.547473508864641e-09, -2.0263790645458357e-09, 1.1617373729677638e-09, -0.0, 0.0, 0.0)
             n, nelements, ntotal = self._oes_fast_126(
                 data, ndata, dt, is_magnitude_phase,
                 result_type, prefix, postfix)
@@ -6249,7 +6255,7 @@ class OES(OP2Common2):
         return n, nelements, ntotal
 
 
-    def _oes_shells_composite_oesrt(self, result_name: str, slot: Dict[Any],
+    def _oes_shells_composite_oesrt(self, result_name: str, slot: Dict[Any, Any],
                                     result_type: int, sort_method: int,
                                     obj_vector_strength,
                                     data: bytes, ndata: int, dt: Any):

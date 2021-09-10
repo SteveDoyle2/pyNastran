@@ -622,66 +622,40 @@ class OP2Reader:
         #self.show_data(data)
 
         structi = Struct(self._endian + b'8s 56s 5i 4s 8s 3i')
-        if 0:
+        itable = -4
+        markers = self.get_nmarkers(1, rewind=True)
+        while markers[0] != 0:
             data = self._read_record()
-            if self.read_mode == 2:
-                ndata = len(data)
+            ndata = len(data)
+            if ndata != 108:
+                self.show_data(data, types='ifs', endian=None, force=False)
                 assert ndata == 108, ndata
+            else:
                 n = 8 + 56 + 20 + 12 + 12
                 out = structi.unpack(data[:n])
-                (aero_bytes, name_bytes, comps, cp, bi, c, d, coeff, word, e, f, g) = out
+                (aero_bytes, name_bytes, comps, cp, bi, c, d, coeff, word_bytes, e, f, g) = out
                 aero = aero_bytes.decode('latin1').rstrip()
                 name = name_bytes.decode('latin1').rstrip()
+                word = word_bytes.decode('latin1').rstrip()
                 print('aero=%r' % aero)
-                print('name=%r' % name)
-                print('comps=%r cp=%s b,c,d=(%s, %s, %s)' % (comps, cp, bi, c, d))
-                print('coeff=%r' % coeff)
-                print('word=%r (e, f, g)=(%s, %s, %s)' % (word, e, f, g)) # (1, 2, 0)
-                assert cp == 2, cp
+                print('  name=%r' % name)
+                print('  comps=%r cp=%s b,c,d=(%s, %s, %s)' % (comps, cp, bi, c, d))
+                print('  coeff=%r' % coeff)
+                print('  word=%r (e, f, g)=(%s, %s, %s)' % (word, e, f, g)) # (1, 2, 0)
+                assert cp in [0, 2], cp
                 assert bi == 0, bi
                 assert c == 0, c
                 assert d == 0, d
-                assert e == 1, e
-                assert f == 2, f
+                assert e in [1, 7, 9], e
+                assert f in [0, 2], f
                 assert g == 0, g
 
-            #print('-----------------------')
-            #print('record 4')
-        else:
-            itable = -4
+            self.read_3_markers([itable, 1, 0])
+
             markers = self.get_nmarkers(1, rewind=True)
-            while markers[0] != 0:
-                data = self._read_record()
-                ndata = len(data)
-                if ndata != 108:
-                    self.show_data(data, types='ifs', endian=None, force=False)
-                    assert ndata == 108, ndata
-                else:
-                    n = 8 + 56 + 20 + 12 + 12
-                    out = structi.unpack(data[:n])
-                    (aero_bytes, name_bytes, comps, cp, bi, c, d, coeff, word_bytes, e, f, g) = out
-                    aero = aero_bytes.decode('latin1').rstrip()
-                    name = name_bytes.decode('latin1').rstrip()
-                    word = word_bytes.decode('latin1').rstrip()
-                    print('aero=%r' % aero)
-                    print('  name=%r' % name)
-                    print('  comps=%r cp=%s b,c,d=(%s, %s, %s)' % (comps, cp, bi, c, d))
-                    print('  coeff=%r' % coeff)
-                    print('  word=%r (e, f, g)=(%s, %s, %s)' % (word, e, f, g)) # (1, 2, 0)
-                    assert cp in [0, 2], cp
-                    assert bi == 0, bi
-                    assert c == 0, c
-                    assert d == 0, d
-                    assert e in [1, 7, 9], e
-                    assert f in [0, 2], f
-                    assert g == 0, g
-
-                self.read_3_markers([itable, 1, 0])
-
-                markers = self.get_nmarkers(1, rewind=True)
-                itable -= 1
-            #self.show(100, types='ifs', endian=None, force=False)
-            #markers = self.get_nmarkers(1, rewind=False)
+            itable -= 1
+        #self.show(100, types='ifs', endian=None, force=False)
+        #markers = self.get_nmarkers(1, rewind=False)
         self.read_markers([0])
 
         #print('-----------------------')
@@ -779,76 +753,6 @@ class OP2Reader:
                 #  :)       ?       :)      :)2     ?       ?
                 ['PMRF', 'PERF', 'PFRF', 'AGRF', 'PGRF', 'AFRF', ])
 
-    def read_monitor2(self):  # pragma: no cover
-        """reads the MONITOR table; old version"""
-        op2 = self.op2
-        self.log.debug("table_name = %r" % op2.table_name)
-        unused_table_name = self._read_table_name(rewind=False)
-
-        #print('-----------------------')
-        #print('record 1')
-        self.read_markers([-1])
-        data = self._read_record()
-        #self.show_data(data)
-        if self.read_mode == 2:
-            a, bi, c, d, e, f, g = unpack(self._endian + b'7i', data)
-            assert a == 101, a
-            assert bi == 1, bi
-            assert c == 27, c
-            assert d == 0, d
-            assert e == 6, e
-            assert f == 0, f
-            assert g == 0, g
-        #print('-----------------------')
-        #print('record 2')
-        self.read_3_markers([-2, 1, 0])
-        data = self._read_record()
-        if self.read_mode == 2:
-            word, = op2.struct_8s.unpack(data)
-            assert word == b'STCFMON ', word
-        #self.show_data(data)
-        #print('-----------------------')
-        #print('record 3')
-        self.read_3_markers([-3, 1, 0])
-        data = self._read_record()
-        #self.show_data(data[96:108])
-
-        if self.read_mode == 2:
-            structi = Struct(self._endian + b'8s 56s 2i 3f 4s 8s 3i')
-            ndata = len(data)
-            assert ndata == 108, ndata
-            (unused_aero, name, comps, cp, x, y, z, unused_coeff, word, column, cd,
-             ind_dof) = structi.unpack(data[:108])
-            #print('aero=%r' % aero)
-            #print('name=%r' % name)
-            #print('comps=%s cp=%s (x, y, z)=(%s, %s, %s)' % (comps, cp, x, y, z))
-            #print('coeff=%r' % coeff)
-            #print('word=%r (column, cd, ind_dof)=(%s, %s, %s)' % (word, column, cd, ind_dof))
-            assert cp == 2, cp
-            assert x == 0.0, x
-            assert y == 0.0, y
-            assert z == 0.0, z
-            assert column == 1, column
-            assert cd == 2, cd
-            assert ind_dof == 0, ind_dof
-            op2.monitor_data = [{
-                'name' : name,
-                'cp' : cp,
-                'cd' : cd,
-                'xyz' : [x, y, z],
-                'comps' : comps,
-            }]
-
-        #print('-----------------------')
-        #print('record 4')
-        self.read_3_markers([-4, 1, 0])
-        #data = self._read_record()
-        #self.show_data(data)
-        self.read_markers([0])
-
-        #print('-----------------------')
-        #print('end')
-        #self.show(200)
 
     def _read_dict(self):
         """testing the KDICT"""

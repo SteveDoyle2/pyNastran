@@ -65,6 +65,7 @@ REQS = {
         'matplotlib' : ('2.2', '>=2.2'),
     },
 }
+MAX_VERSION = '3.9'
 
 def check_python_version() -> None:
     """verifies the python version"""
@@ -109,28 +110,37 @@ def get_package_requirements(is_gui: bool=True, add_vtk_qt: bool=True,
     ----------
     is_gui: bool; default=True
         add matplotlib, qtpy, pillow, imageio
-        not vtk or pyqt/pyside because it's harder to install
+        not vtk or pyqt/pyside because they're harder to install
+    add_vtk_qt : bool; default=True
+        does nothing?
     python_version: str; default=None -> sys.version_info
         allows us to get dynamic requirements
     bdist: bool; default=False
         loosen the requirements on numpy, scipy, etc.
+
+    Returns
+    -------
+    all_reqs : Dict[name, version]
+        name : str
+            the name of the requirement (e.g., 'numpy')
+        version: List[int]
+            the required version number -> {'numpy': [1, 2, 3],}
+    install_requires : List[str]
+        the requirements -> ['numpy>=1.2.3',]
 
     """
     if python_version is None:
         python_version = '%s.%s' % sys.version_info[:2]
 
     if python_version not in REQS:
-        python_version = '3.7'
+        python_version = MAX_VERSION
     vreqs = REQS[python_version]
 
     all_reqs = {}
 
-    #is_dev = (
-        #'TRAVIS' in os.environ or
+    is_continuous_integration = (
         #'APPVEYOR' in os.environ or
         #'READTHEDOCS' in os.environ
-    #)
-    is_continuous_integration = (
         'TRAVIS' in os.environ or
         'TRAVIS_PYTHON_VERSION' in os.environ or
         'GITHUB_ACTOR' in os.environ

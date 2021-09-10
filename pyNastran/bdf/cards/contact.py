@@ -1173,7 +1173,6 @@ class BCPARA(BaseCard):
             elif param == 'LINCNT':
                 value = integer_or_blank(card, i, f'value{j}', 0)
                 assert value in [-1, 0, 1], f'LINCNT must be [-1, 0, 1]; LINQUAD={value}'
-
             elif param == 'METHOD':
                 #METHOD Flag to select Contact methods. (Character)
                 #NODESURF Node to segment contact. (Default)
@@ -1419,8 +1418,6 @@ class BCTPARM(BaseCard):
         fields = ['BCTPARM', self.csid]
         i = 0
         for key, value in sorted(self.params.items()):
-            assert isinstance(key, str), key
-            assert not isinstance(value, bytes), f'key={key!r} value={value!r}'
             if i == 3:
                 fields.append(None)
                 i = 0

@@ -874,7 +874,6 @@ class OP2_Scalar(OP2Common, FortranFormat):
 
             # off stress
             b'OES2'    : [reader_oes._read_oes2_3, reader_oes._read_oes2_4],  # stress - linear only - disabled; need better tests
-            #b'OES2'    : [self._table_passer, self._table_passer],  # stress - linear only - disabled; need better tests
 
             #=======================
             # OUG
@@ -997,7 +996,7 @@ class OP2_Scalar(OP2Common, FortranFormat):
             b'PVT' : [self._read_pvto_3, self._read_pvto_4], # PVT - Parameter Variable Table
             b'PVTS' : [self._read_pvto_3, self._read_pvto_4], # ???
             b'PVT0' : [self._read_pvto_3, self._read_pvto_4],  # user parameter value table
-            b'TOLD' : [self._table_crasher, self._table_crasher],
+            b'TOLD' : [self._table_passer, self._table_passer],
             #b'CASECC' : [self._table_passer, self._table_passer],  # case control deck
             #b'XCASECC' : [self._table_passer, self._table_passer], # ???
 
