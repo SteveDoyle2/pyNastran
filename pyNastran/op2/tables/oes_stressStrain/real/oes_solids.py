@@ -567,7 +567,10 @@ class RealSolidArray(OES_Object):
         # table 4 info
         #ntimes = self.data.shape[0]
         nnodes = self.data.shape[1]
-        nelements = len(np.unique(eids2))
+        ueids2 = np.unique(eids2)
+        nelements = len(ueids2)
+        if len(ueids2) == 1 and len(eids3) != 1:
+            raise RuntimeError(f'SORT2: ueids2={ueids2}')
 
         # 21 = 1 node, 3 principal, 6 components, 9 vectors, 2 p/ovm
         #ntotal = ((nnodes * 21) + 1) + (nelements * 4)
@@ -603,6 +606,8 @@ class RealSolidArray(OES_Object):
         cen_array = np.full(nelements, grid_bytes, dtype='|S4')
         nnodes_no_centroid_array = np.full(nelements, nnodes_no_centroid, dtype=idtype)
 
+        assert len(element_device) == nelements, f'element_device.shape={element_device.shape} nelements={nelements}'
+        assert len(cen_array) == nelements, f'cen_array.shape={cen_array.shape} cen_array={nelements}'
         element_wise_data = to_column_bytes([
             element_device, # ints
             cids3, # ints

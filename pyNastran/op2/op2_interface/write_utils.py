@@ -68,6 +68,7 @@ def to_column_bytes(data_list: List[np.ndarray], dtype_out: str,
     An array is stackable if it's the same shape (e.g., ints/floats).  This
     requirement is a bit looser for strings (4 characters per 32-bit float)
     """
+    #shape = data_list[0].shape
     for i, datai in enumerate(data_list):
         #if isinstance(datai, bytes):
             ##print('bytes')
@@ -82,7 +83,12 @@ def to_column_bytes(data_list: List[np.ndarray], dtype_out: str,
             print(datai.shape)
         if debug:
             print(data_list[i].shape)
-    out = np.column_stack(data_list)
+    try:
+        out = np.column_stack(data_list)
+    except ValueError:
+        for i, datai in enumerate(data_list):
+            print(i, datai.shape)
+        raise
     return out
 
 def get_complex_fdtype(dtype):

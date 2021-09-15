@@ -69,7 +69,6 @@ def write_geom4(op2_file, op2_ascii, obj, endian: bytes=b'<', nastran_format: st
         if card_type in skip_cards or card_type in not_defined_cards:
             continue
 
-        #print(card_type)
         try:
             nbytes = write_card(op2_file, op2_ascii, card_type, cards, endian,
                                 nastran_format=nastran_format)

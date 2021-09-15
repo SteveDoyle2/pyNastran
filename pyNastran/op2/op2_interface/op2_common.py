@@ -2,6 +2,7 @@
 from __future__ import annotations
 import copy
 from struct import Struct, unpack
+from collections import namedtuple
 from typing import Tuple, Dict, Union, Any, TYPE_CHECKING
 
 import numpy as np
@@ -36,6 +37,11 @@ NX_TABLES = [
     801, 810, 811,
     901, 910, 911,
 ]
+
+# analysis: analysis_code
+# opt: optimization_counter
+RESULT_CODE_NAMES = ['subcase', 'analysis', 'sort', 'opt', 'ogs', 'superelement_adaptivity_index', 'pval_step']
+ResultCodeTuple = namedtuple('ResultCode', RESULT_CODE_NAMES)
 
 class OP2Common(Op2Codes, F06Writer):
     def __init__(self):
@@ -1586,7 +1592,7 @@ class OP2Common(Op2Codes, F06Writer):
                 storage_obj[code] = self.obj
         assert self.obj.table_name is not None, f'apply the data_code...{self.data_code}'
 
-    def _get_code(self):
+    def _get_code(self) -> ResultCodeTuple:
         """
         The code is a the way you access something like self.displacements.
         Ideally, it's just the subcase id, but for things like optimization, it
@@ -1599,9 +1605,8 @@ class OP2Common(Op2Codes, F06Writer):
             ogs = self.ogs
         #if self.binary_debug:
             #self.binary_debug.write(self.code_information(include_time=True))
-
-        code = (self.isubcase, self.analysis_code, self._sort_method, self._count, ogs,
-                self.superelement_adaptivity_index, self.pval_step)
+        code = ResultCodeTuple(self.isubcase, self.analysis_code, self._sort_method, self._count, ogs,
+                               self.superelement_adaptivity_index, self.pval_step)
         #code = (self.isubcase, self.analysis_code, self._sort_method, self._count,
                 #self.superelement_adaptivity_index, self.table_name_str)
         #print('%r' % self.subtitle)

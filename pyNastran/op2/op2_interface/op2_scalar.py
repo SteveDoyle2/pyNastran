@@ -639,14 +639,17 @@ class OP2_Scalar(OP2Common, FortranFormat):
         """gets the dictionary of function3 / function4"""
 
         # MSC table mapper
-        reader_onr = self.reader_onr
-        reader_opg = self.reader_opg
-        reader_oes = self.reader_oes
-        reader_oef = self.reader_oef
-        reader_oug = self.reader_oug
-        reader_oqg = self.reader_oqg
-        reader_opr = self.reader_opr
+        reader_lama = self.reader_lama
+        reader_ogpwg = self.reader_ogpwg
         reader_ogpf = self.reader_ogpf
+        reader_onr = self.reader_onr
+        reader_oef = self.reader_oef
+        reader_oes = self.reader_oes
+        reader_opg = self.reader_opg
+        reader_opr = self.reader_opr
+        reader_oqg = self.reader_oqg
+        reader_oug = self.reader_oug
+        reader_ogs = self.reader_ogs
         table_mapper_geometry = {
             # -----------------------------------------------------------
             # geometry
@@ -812,9 +815,9 @@ class OP2_Scalar(OP2Common, FortranFormat):
             #=======================
             # OPG
             # applied loads
-            b'OPG1'  : [reader_opg._read_opg1_3, self.reader_opg._read_opg1_4],  # applied loads in the nodal frame
-            b'OPGV1' : [reader_opg._read_opg1_3, self.reader_opg._read_opg1_4],  # solution set applied loads?
-            b'OPNL1' : [reader_opg._read_opg1_3, self.reader_opg._read_opg1_4],  # nonlinear loads
+            b'OPG1'  : [reader_opg._read_opg1_3, reader_opg._read_opg1_4],  # applied loads in the nodal frame
+            b'OPGV1' : [reader_opg._read_opg1_3, reader_opg._read_opg1_4],  # solution set applied loads?
+            b'OPNL1' : [reader_opg._read_opg1_3, reader_opg._read_opg1_4],  # nonlinear loads
 
             b'OPG2' : [reader_opg._read_opg2_3, reader_opg._read_opg1_4],   # applied loads in the nodal frame
             b'OPNL2' : [reader_opg._read_opg2_3, reader_opg._read_opg1_4],  # nonlinear loads
@@ -966,23 +969,23 @@ class OP2_Scalar(OP2Common, FortranFormat):
             #=======================
             # OGPWG
             # grid point weight
-            b'OGPWG'  : [self.reader_ogpwg._read_ogpwg_3, self.reader_ogpwg._read_ogpwg_4],  # grid point weight
-            b'OGPWGM' : [self.reader_ogpwg._read_ogpwg_3, self.reader_ogpwg._read_ogpwg_4],  # modal? grid point weight
+            b'OGPWG'  : [reader_ogpwg._read_ogpwg_3, reader_ogpwg._read_ogpwg_4],  # grid point weight
+            b'OGPWGM' : [reader_ogpwg._read_ogpwg_3, reader_ogpwg._read_ogpwg_4],  # modal? grid point weight
 
             #=======================
             # OGS
             # grid point stresses
-            b'OGS1' : [self.reader_ogs._read_ogs1_3, self.reader_ogs._read_ogs1_4],  # grid point stresses
+            b'OGS1' : [reader_ogs._read_ogs1_3, reader_ogs._read_ogs1_4],  # grid point stresses
             #b'OGS2' : [self._read_ogs1_3, self._read_ogs1_4],  # grid point stresses
 
-            b'OGSTR1' : [self.reader_ogs._read_ogstr1_3, self.reader_ogs._read_ogstr1_4],  # grid point strains
+            b'OGSTR1' : [reader_ogs._read_ogstr1_3, reader_ogs._read_ogstr1_4],  # grid point strains
             #=======================
             # eigenvalues
-            b'BLAMA' : [self.reader_lama._read_buckling_eigenvalue_3, self.reader_lama._read_buckling_eigenvalue_4], # buckling eigenvalues
-            b'CLAMA' : [self.reader_lama._read_complex_eigenvalue_3, self.reader_lama._read_complex_eigenvalue_4],   # complex eigenvalues
-            b'LAMA'  : [self.reader_lama._read_real_eigenvalue_3, self.reader_lama._read_real_eigenvalue_4],         # eigenvalues
-            b'LAMAS' : [self.reader_lama._read_real_eigenvalue_3, self.reader_lama._read_real_eigenvalue_4],         # eigenvalues-structure
-            b'LAMAF' : [self.reader_lama._read_real_eigenvalue_3, self.reader_lama._read_real_eigenvalue_4],         # eigenvalues-fluid
+            b'BLAMA' : [reader_lama._read_buckling_eigenvalue_3, reader_lama._read_buckling_eigenvalue_4], # buckling eigenvalues
+            b'CLAMA' : [reader_lama._read_complex_eigenvalue_3, reader_lama._read_complex_eigenvalue_4],   # complex eigenvalues
+            b'LAMA'  : [reader_lama._read_real_eigenvalue_3, reader_lama._read_real_eigenvalue_4],         # eigenvalues
+            b'LAMAS' : [reader_lama._read_real_eigenvalue_3, reader_lama._read_real_eigenvalue_4],         # eigenvalues-structure
+            b'LAMAF' : [reader_lama._read_real_eigenvalue_3, reader_lama._read_real_eigenvalue_4],         # eigenvalues-fluid
 
             # ===passers===
             #b'EQEXIN': [self._table_passer, self._table_passer],
@@ -1148,7 +1151,7 @@ class OP2_Scalar(OP2Common, FortranFormat):
             #b'OQMRMS2' : [reader_oqg._read_oqg2_3, reader_oqg._read_oqg_mpc_rms],  # buggy on isat random
             #b'OQMNO2'  : [reader_oqg._read_oqg2_3, reader_oqg._read_oqg_mpc_no],  # buggy on isat random
 
-            # acoustic pressure/power???
+            # acoustic pressure
             b'OPRATO1' : [reader_opr._read_opr1_3, reader_opr._read_opr_ato],
             b'OPRCRM1' : [reader_opr._read_opr1_3, reader_opr._read_opr_crm],
             b'OPRPSD1' : [reader_opr._read_opr1_3, reader_opr._read_opr_psd],
@@ -2199,8 +2202,6 @@ class OP2_Scalar(OP2Common, FortranFormat):
         #del self.data_code['sort_method']
         #print(self.data_code)
 
-        #aaa
-        #self.reader_oug._read_oug1_3(data, ndata)
         if self.read_mode == 1:
             return ndata
         # just stripping off title

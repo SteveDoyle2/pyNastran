@@ -14,7 +14,7 @@ This file defines the OUG Table, which contains:
 """
 from __future__ import annotations
 from struct import Struct
-from typing import TYPE_CHECKING
+from typing import Tuple, TYPE_CHECKING
 import numpy as np
 from pyNastran import DEV
 from pyNastran.utils.numpy_utils import integer_types
@@ -912,18 +912,18 @@ class OUG:
                                                   RealTemperatureArray, None,
                                                   'node', random_code=op2.random_code,
                                                   is_cid=is_cid)
-        elif op2.thermal == 2:
+        elif op2.thermal == 2:  # ABS
             assert op2.table_name in [b'OUPV1'], op2.table_name
             n = op2._read_table_vectorized(data, ndata, result_name, storage_obj,
                                            RealDisplacementArray, ComplexDisplacementArray,
                                            'node', random_code=op2.random_code)
-        elif op2.thermal == 4:
+        elif op2.thermal == 4:  # SRSS
             # F:\work\pyNastran\examples\Dropbox\move_tpl\ms103.op2
             assert op2.table_name in [b'OUPV1'], op2.table_name
             n = op2._read_table_vectorized(data, ndata, result_name, storage_obj,
                                            RealDisplacementArray, ComplexDisplacementArray,
                                            'node', random_code=op2.random_code)
-        elif op2.thermal == 8:  # 4 ?
+        elif op2.thermal == 8:  # NRL
             assert op2.table_name in [b'OUPV1'], op2.table_name
             n = op2._read_table_vectorized(data, ndata, result_name, storage_obj,
                                            RealDisplacementArray, ComplexDisplacementArray,

@@ -1046,6 +1046,7 @@ class RealTableArray(TableArray):
             'OVGATO1', 'OVGCRM1', 'OVGNO1',
             'OAGATO1', 'OAGCRM1', 'OAGNO1', 'OAGPSD1', 'OAGRMS1', # acceleration
                                   'OPGNO1',            'OPGRMS1', # load vector
+            'OPRATO1', 'OPRCRM1', 'OPRNO1', 'OPRPSD1',            # pressure
             'OQGPSD1',
             'OCRPG', 'OCRUG', 'OUG1', 'OAG1',
             'OUGV1PAT',

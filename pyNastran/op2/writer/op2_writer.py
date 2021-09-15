@@ -190,6 +190,8 @@ def _write_result_tables(obj: OP2, op2_file, fop2_ascii,
         'OPGATO1', 'OPGCRM1', 'OPGNO1', 'OPGPSD1', 'OPGRMS1', # load vector
         'OPGATO2', 'OPGCRM2', 'OPGNO2', 'OPGPSD2', 'OPGRMS2',
 
+        'OPRATO1', 'OPRCRM1', 'OPRNO1', 'OPRPSD1', # pressure
+
         'RADCONS', 'RADEATC', 'RADEFFM',
 
         # ---------------

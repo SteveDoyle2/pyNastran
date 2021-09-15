@@ -1768,9 +1768,18 @@ class ComplexPlate2ForceArray(ComplexForceObject):
 
         ntotali = self.num_wide
 
-        nnodes_all = 5
+        if self.element_type in [70, 75]:  # CTRIAR,CTRIA6
+            nnodes = 3
+        elif self.element_type in [64, 82, 144]:  # CQUAD8,CQUADR,CQUAD4-bilinear
+            nnodes = 4
+        else:
+            raise NotImplementedError(self.code_information())
+        nnodes_all = nnodes + 1
+
         numwide_imag = 2 + nnodes_all * 17
-        assert ntotali == numwide_imag
+
+        # CTRIA6-75: ntotal=
+        assert ntotali == numwide_imag, f'nnodes={nnodes_all}\n{self.code_information()}'
 
         ntotal = ntotali * nelements
 
@@ -3631,7 +3640,7 @@ class ComplexForceMomentArray(ComplexForceObject):
 class ComplexCBushForceArray(ComplexForceMomentArray):
     def __init__(self, data_code, is_sort1, isubcase, dt):
         ComplexForceMomentArray.__init__(self, data_code, is_sort1, isubcase, dt)
-        self.element_type = 'CBUSH'
+        #self.element_type = 'CBUSH'
 
     def _words(self) -> str:
         words = '                         C O M P L E X   F O R C E S   I N   B U S H   E L E M E N T S   ( C B U S H ) \n'
@@ -3640,7 +3649,7 @@ class ComplexCBushForceArray(ComplexForceMomentArray):
 class ComplexCFastForceArrayMSC(ComplexForceMomentArray):
     def __init__(self, data_code, is_sort1, isubcase, dt):
         ComplexForceMomentArray.__init__(self, data_code, is_sort1, isubcase, dt)
-        self.element_type = 'CFAST'
+        #self.element_type = 'CFAST'
 
     #def _words(self) -> str:
         #words = '                         C O M P L E X   F O R C E S   I N   B U S H   E L E M E N T S   ( C B U S H ) \n'
@@ -3649,7 +3658,7 @@ class ComplexCFastForceArrayMSC(ComplexForceMomentArray):
 class ComplexCBearForceArray(ComplexForceMomentArray):
     def __init__(self, data_code, is_sort1, isubcase, dt):
         ComplexForceMomentArray.__init__(self, data_code, is_sort1, isubcase, dt)
-        self.element_type = 'CBEAR'
+        #self.element_type = 'CBEAR'
 
     #def _words(self) -> str:
         #words = '                        C O M P L E X   F O R C E S   I N   B U S H   E L E M E N T S   ( C B E A R ) \n'
