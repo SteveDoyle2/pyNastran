@@ -175,7 +175,7 @@ class OES_Object(BaseElement):
         s_code = self.s_code
         num_wide = self.num_wide
         acoustic_flag = 0
-        thermal = 0
+        thermal = self.thermal
         title = b'%-128s' % self.title.encode('ascii')
         subtitle = b'%-128s' % self.subtitle.encode('ascii')
         label = b'%-128s' % self.label.encode('ascii')

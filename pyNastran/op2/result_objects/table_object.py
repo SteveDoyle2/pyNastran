@@ -22,6 +22,7 @@ these are used by:
  - ComplexAppliedLoadsArray
 
 """
+from __future__ import annotations
 import copy
 from struct import Struct, pack
 import warnings
@@ -34,9 +35,7 @@ from pyNastran.op2.result_objects.op2_objects import ScalarObject
 from pyNastran.f06.f06_formatting import write_floats_13e, write_imag_floats_13e, write_float_12e
 from pyNastran.op2.errors import SixtyFourBitError
 from pyNastran.op2.op2_interface.write_utils import set_table3_field, view_dtype, view_idtype_as_fdtype
-
-float_types = (float, np.float32)
-integer_types = (int, np.int32)
+from pyNastran.utils.numpy_utils import integer_types, float_types
 
 SORT2_TABLE_NAME_MAP = {
     # sort2_name : sort1_name
@@ -1018,6 +1017,93 @@ class RealTableArray(TableArray):
         obj.ntotal = nnodes
         obj._times = modes
         return obj
+
+
+    def __pos__(self) -> RealTableArray:
+        """positive; +a"""
+        return self
+    def __neg__(self) -> RealTableArray:
+        """negative; -a"""
+        new_table = copy.deepcopy(self)
+        new_table.data *= -1.0
+        return new_table
+
+    def __add__(self, table: RealTableArray) -> RealTableArray:
+        """a + b"""
+        if isinstance(table, RealTableArray):
+            self._check_math(table)
+            new_data = self.data + table.data
+        elif isinstance(table, (integer_types, float_types)):
+            new_data = self.data + table
+        else:
+            raise TypeError(table)
+        new_table = copy.deepcopy(self)
+        new_table.data = new_data
+        return new_table
+
+    # __radd__: reverse order adding (b+a)
+    def __iadd__(self, table: RealTableArray) -> RealTableArray:
+        """inplace adding; a += b"""
+        self._check_math(table)
+        self.data += table.data
+        return self
+
+    def __sub__(self, table: RealTableArray) -> RealTableArray:
+        """a - b"""
+        if isinstance(table, RealTableArray):
+            self._check_math(table)
+            new_data = self.data - table.data
+        elif isinstance(table, (integer_types, float_types)):
+            new_data = self.data - table
+        else:
+            raise TypeError(table)
+        new_table = copy.deepcopy(self)
+        new_table.data = new_data
+        return new_table
+
+    def __mul__(self, table: RealTableArray) -> RealTableArray:
+        """a * b"""
+        if isinstance(table, RealTableArray):
+            self._check_math(table)
+            new_data = self.data * table.data
+        elif isinstance(table, (integer_types, float_types)):
+            new_data = self.data * table
+        else:
+            raise TypeError(table)
+        new_table = copy.deepcopy(self)
+        new_table.data = new_data
+        return new_table
+
+    def __imul__(self, table: RealTableArray) -> RealTableArray:
+        """a *= b"""
+        if isinstance(table, RealTableArray):
+            self._check_math(table)
+            self.data *= table.data
+        elif isinstance(table, (integer_types, float_types)):
+            self.data *= table
+        else:
+            raise TypeError(table)
+        return self
+
+    def __truediv__(self, table: RealTableArray) -> RealTableArray:
+        """a / b"""
+        if isinstance(table, RealTableArray):
+            self._check_math(table)
+            new_data = self.data / table.data
+        elif isinstance(table, (integer_types, float_types)):
+            new_data = self.data / table
+        else:
+            raise TypeError(table)
+        new_table = copy.deepcopy(self)
+        new_table.data = new_data
+        return new_table
+
+    def _check_math(self, table: RealTableArray) -> None:
+        """verifies that the shapes are the same"""
+        assert self.ntimes == table.ntimes, f'ntimes={self.ntimes} table.times={table.ntimes}'
+        assert self.ntotal == table.ntotal, f'ntotal={self.ntotal} table.ntotal={table.ntotal}'
+        assert self.node_gridtype.shape == table.node_gridtype.shape, f'node_gridtype.shape={self.node_gridtype.shape} table.node_gridtype.shape={table.node_gridtype.shape}'
+        assert self.data.shape == table.data.shape, f'data.shape={self.data.shape} table.data.shape={table.data.shape}'
 
     @property
     def is_real(self) -> bool:

@@ -1592,7 +1592,7 @@ class OP2Common(Op2Codes, F06Writer):
                 storage_obj[code] = self.obj
         assert self.obj.table_name is not None, f'apply the data_code...{self.data_code}'
 
-    def _get_code(self) -> ResultCodeTuple:
+    def _get_code(self):
         """
         The code is a the way you access something like self.displacements.
         Ideally, it's just the subcase id, but for things like optimization, it
@@ -1605,8 +1605,8 @@ class OP2Common(Op2Codes, F06Writer):
             ogs = self.ogs
         #if self.binary_debug:
             #self.binary_debug.write(self.code_information(include_time=True))
-        code = ResultCodeTuple(self.isubcase, self.analysis_code, self._sort_method, self._count, ogs,
-                               self.superelement_adaptivity_index, self.pval_step)
+        code = (self.isubcase, self.analysis_code, self._sort_method, self._count, ogs,
+                self.superelement_adaptivity_index, self.pval_step)
         #code = (self.isubcase, self.analysis_code, self._sort_method, self._count,
                 #self.superelement_adaptivity_index, self.table_name_str)
         #print('%r' % self.subtitle)

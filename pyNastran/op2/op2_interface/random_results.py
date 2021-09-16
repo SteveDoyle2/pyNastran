@@ -336,9 +336,49 @@ class ScaledResponseSpectra:
         self.spc_forces = {}
         self.mpc_forces = {}
 
+        self.celas1_force = {}
+        self.celas1_stress = {}
+        self.celas1_strain = {}
+
+        self.celas2_force = {}
+        self.celas2_stress = {}
+        self.celas2_strain = {}
+
+        self.celas3_force = {}
+        self.celas3_stress = {}
+        self.celas3_strain = {}
+
+        self.celas4_force = {}
+        self.celas4_stress = {}
+        self.celas4_strain = {}
+
+        self.cbush_force = {}
+        self.cbush_stress = {}
+        self.cbush_strain = {}
+
         self.cbar_force = {}
+        self.cbar_stress = {}
+        self.cbar_strain = {}
+
+        self.cbeam_force = {}
+        self.cbeam_stress = {}
+        self.cbeam_strain = {}
+
+        self.ctria3_stress = {}
+        self.ctria3_strain = {}
+        self.ctria3_force = {}
+
         self.cquad4_stress = {}
+        self.cquad4_strain = {}
         self.cquad4_force = {}
+
+        self.ctria6_stress = {}
+        self.ctria6_strain = {}
+        self.ctria6_force = {}
+
+        self.cquad8_stress = {}
+        self.cquad8_strain = {}
+        self.cquad8_force = {}
 
     def get_table_types(self) -> List[str]:
         tables = [
@@ -349,17 +389,17 @@ class ScaledResponseSpectra:
         ]
         return [self.prefix + table + self.postfix for table in tables]
 
-class SRSS(ScaledResponseSpectra):
+class SRSS(RandomObjects):
     """storage class for the Scaled Response Spectra, SRSS objects"""
     prefix = 'srss.'
     postfix = ''
 
-class ABS(ScaledResponseSpectra):
+class ABS(RandomObjects):
     """storage class for the Scaled Response Spectra, ABS objects"""
     prefix = 'abs.'
     postfix = ''
 
-class NRL(ScaledResponseSpectra):
+class NRL(RandomObjects):
     """storage class for the Scaled Response Spectra, NRL objects"""
     prefix = 'nrl.'
     postfix = ''

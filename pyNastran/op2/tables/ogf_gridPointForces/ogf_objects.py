@@ -14,14 +14,13 @@ from pyNastran.f06.f06_formatting import (
     write_floats_13e, _eigenvalue_header, write_imag_floats_13e)
 from pyNastran.op2.vector_utils import (
     transform_force_moment, transform_force_moment_sum, sortedsum1d)
-from pyNastran.utils.numpy_utils import integer_types
+from pyNastran.utils.numpy_utils import integer_types, float_types
 from pyNastran.op2.op2_interface.write_utils import set_table3_field
 
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.nptyping import (
         NDArrayN3float, NDArray3float, NDArrayN2int, NDArrayNint, NDArrayNfloat)
-    from pyNastran.bdf.bdf import (BDF, CORD,
-                                   SimpleLogger)
+    from pyNastran.bdf.bdf import (BDF, CORD, SimpleLogger)
 
 
 class GridPointForces(BaseElement):
@@ -166,6 +165,89 @@ class RealGridPointForcesArray(GridPointForces):
     def finalize(self) -> bool:
         """required so the OP2 writer works..."""
         self.format_code = 1
+
+    def __pos__(self) -> RealGridPointForcesArray:
+        """positive; +a"""
+        return self
+
+    def __neg__(self) -> RealGridPointForcesArray:
+        """negative; -a"""
+        new_table = deepcopy(self)
+        new_table.data *= -1.0
+        return new_table
+
+    def __add__(self, table: RealGridPointForcesArray) -> RealGridPointForcesArray:
+        """a + b"""
+        if isinstance(table, RealGridPointForcesArray):
+            self._check_math(table)
+            new_data = self.data + table.data
+            #_fix_min_max(new_data)
+        elif isinstance(table, (integer_types, RealGridPointForcesArray)):
+            new_data = self.data + table
+        else:
+            raise TypeError(table)
+        new_table = deepcopy(self)
+        new_table.data = new_data
+        return new_table
+    # __radd__: reverse order adding (b+a)
+    def __iadd__(self, table: RealGridPointForcesArray) -> RealGridPointForcesArray:
+        """inplace adding; a += b"""
+        if isinstance(table, RealGridPointForcesArray):
+            self._check_math(table)
+            self.data += table.data
+            #_fix_min_max(self.data)
+        elif isinstance(table, (integer_types, float_types)):
+            self.data -= table
+        else:
+            raise TypeError(table)
+        return self
+
+    def __sub__(self, table: RealGridPointForcesArray):
+        """a - b"""
+        if isinstance(table, RealGridPointForcesArray):
+            self._check_math(table)
+            new_data = self.data - table.data
+        elif isinstance(table, (integer_types, float_types)):
+            new_data = self.data - table
+        else:
+            raise TypeError(table)
+        new_table = deepcopy(self)
+        new_table.data = new_data
+        return new_table
+
+    def __mul__(self, table: RealGridPointForcesArray):
+        """a * b"""
+        if isinstance(table, RealGridPointForcesArray):
+            self._check_math(table)
+            new_data = self.data * table.data
+        elif isinstance(table, (integer_types, float_types)):
+            new_data = self.data * table
+        else:
+            raise TypeError(table)
+        new_table = deepcopy(self)
+        new_table.data = new_data
+        return new_table
+
+    def __truediv__(self, table: RealGridPointForcesArray):
+        """a / b"""
+        if isinstance(table, RealGridPointForcesArray):
+            self._check_math(table)
+            new_data = self.data / table.data
+        elif isinstance(table, (integer_types, float_types)):
+            new_data = self.data / table
+        else:
+            raise TypeError(table)
+        new_table = deepcopy(self)
+        new_table.data = new_data
+        return new_table
+
+    def _check_math(self, table: RealGridPointForcesArray) -> None:
+        """verifies that the shapes are the same"""
+        assert self.ntimes == table.ntimes, f'ntimes={self.ntimes} table.times={table.ntimes}'
+        assert self.ntotal == table.ntotal, f'ntotal={self.ntotal} table.ntotal={table.ntotal}'
+        assert self.node_element.shape == table.node_element.shape, f'node_element.shape={self.node_element.shape} table.element_node.shape={table.node_element.shape}'
+        assert self.element_names.shape == table.element_names.shape, f'element_names.shape={self.element_names.shape} table.element_names.shape={table.element_names.shape}'
+        assert self.data.shape == table.data.shape, f'data.shape={self.data.shape} table.data.shape={table.data.shape}'
 
     @property
     def is_real(self) -> bool:

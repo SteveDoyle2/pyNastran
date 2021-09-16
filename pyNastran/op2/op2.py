@@ -430,13 +430,14 @@ class OP2(OP2_Scalar, OP2Writer):
                 if isinstance(value, dict) and len(value) == 0:
                     continue
                 #if not isinstance(value, (str, int, float)):
-                if i > 100:
-                    #print('deleting', key)
+                if i > 90:
+                    print(f'deleting  {key}')
                     del state[key]
                 else:
                     #print('***', key, value)
                     i += 1
                 #else:
+                    print(f'keeping {key}')
                     #print(key, type(value), value)
                     #break
                 #i += 1

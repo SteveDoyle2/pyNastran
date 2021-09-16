@@ -40,7 +40,7 @@ class OP2Writer(OP2_F06_Common):
         OP2_F06_Common.__init__(self)
         self.card_count = {}
 
-    def write_op2(self, op2_outname: str,
+    def write_op2(self, op2_out_filename: str,
                   post: int=-1, endian: bytes=b'<',
                   skips: List[str]=None,
                   nastran_format: Optional[str]=None) -> int:
@@ -49,7 +49,7 @@ class OP2Writer(OP2_F06_Common):
 
         Parameters
         ----------
-        op2_outname : str
+        op2_out_filename : str
             the name of the F06 file to write
         #is_mag_phase : bool; default=False
             #should complex data be written using Magnitude/Phase
@@ -68,16 +68,16 @@ class OP2Writer(OP2_F06_Common):
 
         #print('writing %s' % op2_outname)
 
-        if isinstance(op2_outname, str):
-            op2_file = open(op2_outname, 'wb')
+        if isinstance(op2_out_filename, str):
+            op2_file = open(op2_out_filename, 'wb')
             #fop2_ascii = open(op2_outname + '.txt', 'w')
             fop2_ascii = TrashWriter()
             #print('op2 out = %r' % op2_outname)
             close = True
         else:
-            assert isinstance(op2_outname, file), f'type(op2_outname) = {op2_outname}'
-            op2_file = op2_outname
-            op2_outname = op2_outname.name
+            assert isinstance(op2_out_filename, file), f'type(op2_out_filename) = {op2_out_filename}'
+            op2_file = op2_out_filename
+            op2_outname = op2_out_filename.name
             close = False
             #print('op2_outname =', op2_outname)
 
@@ -241,7 +241,9 @@ def _write_result_tables(obj: OP2, op2_file, fop2_ascii,
         if not isinstance(res_dict, dict):
             raise TypeError(table_type)
 
-        for unused_key, res in res_dict.items():
+        for key, res in res_dict.items():
+            _fix_subcase_id(key, res)
+
             if hasattr(res, 'table_name_str'): # params
                 #print(table_type)
                 res_categories2[res.table_name_str].append(res)
@@ -251,8 +253,9 @@ def _write_result_tables(obj: OP2, op2_file, fop2_ascii,
                 #print(res)
                 class_name = res.__class__.__name__
                 log.debug(class_name)
-                #assert class_name in ['GridPointWeight', 'PARAM',
-                                      #'RealEigenvalues', 'ComplexEigenvalues'], class_name
+                if class_name not in ['GridPointWeight', 'PARAM',
+                                     'RealEigenvalues', 'ComplexEigenvalues']:
+                    log.warning(class_name)
 
     for table_name, results in sorted(res_categories2.items()):
         assert table_name in table_order, table_name
@@ -265,6 +268,10 @@ def _write_result_tables(obj: OP2, op2_file, fop2_ascii,
     if 'eigenvalues_fluid' not in skips:
         for unused_title, eigenvalue in obj.eigenvalues_fluid.items():
             res_categories2[eigenvalue.table_name].append(eigenvalue)
+    # res_categories2 is a dictionary:
+    #  - key: table_name
+    #  - value:  displacment/stress/etc.
+    #assert len(res_categories2['OUGV1']) == 13, (len(res_categories2['OUGV1']), res_categories2['OUGV1'])
 
     skip_tables = [
         'LAMA', 'BLAMA',
@@ -283,6 +290,7 @@ def _write_result_tables(obj: OP2, op2_file, fop2_ascii,
     struct_9i = Struct(endian + b'9i')
     for table_name in pretables + table_order:
         if table_name not in res_categories2:
+            # no LAMA table in a static run
             continue
         if table_name in skip_tables:
             log.warning(f'skipping table={table_name}')
@@ -321,6 +329,7 @@ def _write_result_tables(obj: OP2, op2_file, fop2_ascii,
                 if result.element_name in ['CBAR', 'CBEND']:
                     log.warning('skipping:\n%s' % result)
                     continue
+                #log.warning('????:\n%s' % result)
             else:
                 raise NotImplementedError(f'  *op2 - {result.__class__.__name__} not written')
                 log.warning(f'  *op2 - {result.__class__.__name__} not written')
@@ -358,6 +367,17 @@ def _write_result_tables(obj: OP2, op2_file, fop2_ascii,
     op2_file.close()
     fop2_ascii.close()
     return total_case_count
+
+def _fix_subcase_id(key: Union[int, Tuple[Any]], res: Any) -> None:
+    """
+    The subcase id may be inconsistent between the op2 result object
+    and the key. The key takes priority to make doing a load case
+    combination easier.
+    """
+    subcase_id = key
+    if isinstance(key, tuple):
+        subcase_id = key[0]
+    res.isubcase = subcase_id
 
 def write_op2_header(model: OP2, op2_file, fop2_ascii,
                      struct_3i: Struct,
