@@ -874,7 +874,7 @@ class OUG:
         elif op2.table_name == b'OUPV1':
             #result_name = 'temperatures'
             result_name0 = 'displacements' # is this right?
-            prefix, postfix = _oug_get_prefix_postfix(op2.thermal)
+            prefix, postfix = get_shock_prefix_postfix(op2.thermal)
             result_name = prefix + result_name0 + postfix
 
         elif op2.table_name in [b'TOUGV1', b'TOUGV2']:
@@ -954,9 +954,9 @@ class OUG:
             assert op2.thermal == 0, op2.code_information()
         elif op2.table_name == b'OUPV1':
             result_name0 = 'velocities'
-            prefix, postfix = _oug_get_prefix_postfix(op2.thermal)
+            assert op2.thermal in {2, 4, 8}, op2.code_information()
+            prefix, postfix = get_shock_prefix_postfix(op2.thermal)
             result_name = prefix + result_name0 + postfix
-            assert op2.thermal in [2, 4], op2.thermal
         else:  # pragma: no cover
             msg = 'velocities; table_name=%s' % op2.table_name
             raise NotImplementedError(msg)
@@ -1010,9 +1010,9 @@ class OUG:
             assert op2.thermal == 0, op2.code_information()
             pass
         elif op2.table_name == b'OUPV1':
-            assert op2.thermal in [0, 2, 4], op2.thermal
+            assert op2.thermal in {2, 4, 8}, op2.code_information() # should 0 be here?
             result_name0 = 'accelerations'
-            prefix, postfix = _oug_get_prefix_postfix(op2.thermal)
+            prefix, postfix = get_shock_prefix_postfix(op2.thermal)
             result_name = prefix + result_name0 + postfix
         else:  # pragma: no cover
             msg = 'accelerations; table_name=%s' % op2.table_name
@@ -1517,11 +1517,9 @@ class OUG:
         return n
 
 
-def _oug_get_prefix_postfix(thermal: int) -> Tuple[str, str]:
+def get_shock_prefix_postfix(thermal: int) -> Tuple[str, str]:
     prefix = ''
     postfix = ''
-    if thermal == 0:
-        pass
     if thermal == 2:
         prefix = 'abs.'
     elif thermal == 4:

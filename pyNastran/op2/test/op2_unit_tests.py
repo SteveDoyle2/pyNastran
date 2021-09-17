@@ -472,6 +472,29 @@ class TestOP2(Tester):
         #op2.write_f06(f06_filename)
         #os.remove(f06_filename)
 
+    def test_op2_shock_01(self):
+        """tests a large number of elements and results in SOL 103-shock analysis"""
+        log = get_logger(level='warning')
+        #bdf_filename = os.path.join(MODEL_PATH, 'shock', 'shock_analysis.bdf')
+        #f06_filename = os.path.join(MODEL_PATH, 'shock', 'shock_analysis.test_op2.f06')
+        op2_filename = os.path.join(MODEL_PATH, 'shock', 'shock_analysis.op2')
+        #unused_fem1, unused_fem2, diff_cards = self.run_bdf('', bdf_filename, log=log)
+        #diff_cards2 = list(set(diff_cards))
+        #diff_cards2.sort()
+        #assert len(diff_cards2) == 0, diff_cards2
+
+        run_op2(op2_filename, make_geom=True, write_bdf=False, read_bdf=False,
+                write_f06=True, write_op2=True,
+                is_mag_phase=False,
+                is_sort2=False, is_nx=None, delete_f06=True,
+                subcases=None, exclude=None, short_stats=False,
+                compare=True, debug=False, binary_debug=True,
+                quiet=True,
+                stop_on_failure=True, dev=False, log=log)
+        #op2 = read_op2_geom(op2_filename, debug=False)
+        #op2.write_f06(f06_filename)
+        #os.remove(f06_filename)
+
     def test_bdf_op2_post_minus4(self):
         """tests a large number of elements and results in SOL 107-complex modes"""
         log = get_logger(level='warning')

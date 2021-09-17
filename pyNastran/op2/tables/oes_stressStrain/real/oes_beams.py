@@ -1,10 +1,11 @@
-from itertools import count
+from __future__ import annotations
+import copy
 from typing import List
 
 import numpy as np
 from numpy import zeros
 
-from pyNastran.utils.numpy_utils import integer_types
+from pyNastran.utils.numpy_utils import integer_types, float_types
 from pyNastran.op2.result_objects.op2_objects import get_times_dtype
 from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import (
     StressObject, StrainObject, OES_Object)
@@ -720,6 +721,102 @@ class RealBeamStressArray(RealBeamArray, StressObject):
             '   ELEMENT-ID  GRID   LENGTH    SXC           SXD           SXE           SXF           S-MAX         S-MIN         M.S.-T   M.S.-C\n']
         return msg
 
+    def __pos__(self) -> RealBeamArray:
+        """positive; +a"""
+        return self
+
+    def __neg__(self) -> RealBeamArray:
+        """negative; -a"""
+        new_table = copy.deepcopy(self)
+        new_table.data *= -1.0
+        return new_table
+
+    def __add__(self, table: RealBeamArray) -> RealBeamArray:
+        """a + b"""
+        if isinstance(table, RealBeamArray):
+            self._check_math(table)
+            new_data = self.data + table.data
+            _fix_min_max(new_data)
+        elif isinstance(table, (integer_types, RealBeamArray)):
+            new_data = self.data + table
+        else:
+            raise TypeError(table)
+        new_table = copy.deepcopy(self)
+        new_table.data = new_data
+        return new_table
+    # __radd__: reverse order adding (b+a)
+    def __iadd__(self, table: RealBeamArray) -> RealBeamArray:
+        """inplace adding; a += b"""
+        if isinstance(table, RealBeamArray):
+            self._check_math(table)
+            self.data += table.data
+            _fix_min_max(self.data)
+        elif isinstance(table, (integer_types, float_types)):
+            self.data -= table
+        else:
+            raise TypeError(table)
+        return self
+
+    def __sub__(self, table: RealBeamArray):
+        """a - b"""
+        if isinstance(table, RealBeamArray):
+            self._check_math(table)
+            new_data = self.data - table.data
+        elif isinstance(table, (integer_types, float_types)):
+            new_data = self.data - table
+        else:
+            raise TypeError(table)
+        new_table = copy.deepcopy(self)
+        new_table.data = new_data
+        return new_table
+
+    def __mul__(self, table: RealBeamArray):
+        """a * b"""
+        if isinstance(table, RealBeamArray):
+            self._check_math(table)
+            new_data = self.data * table.data
+        elif isinstance(table, (integer_types, float_types)):
+            new_data = self.data * table
+        else:
+            raise TypeError(table)
+        new_table = copy.deepcopy(self)
+        new_table.data = new_data
+        return new_table
+
+    def __truediv__(self, table: RealBeamArray):
+        """a / b"""
+        if isinstance(table, RealBeamArray):
+            self._check_math(table)
+            new_data = self.data / table.data
+        elif isinstance(table, (integer_types, float_types)):
+            new_data = self.data / table
+        else:
+            raise TypeError(table)
+        new_table = copy.deepcopy(self)
+        new_table.data = new_data
+        return new_table
+
+    def _check_math(self, table: RealBeamArray) -> None:
+        """verifies that the shapes are the same"""
+        assert self.ntimes == table.ntimes, f'ntimes={self.ntimes} table.times={table.ntimes}'
+        assert self.ntotal == table.ntotal, f'ntotal={self.ntotal} table.ntotal={table.ntotal}'
+        assert self.element_node.shape == table.element_node.shape, f'element_node.shape={self.element_node.shape} table.element_node.shape={table.element_node.shape}'
+        assert self.data.shape == table.data.shape, f'data.shape={self.data.shape} table.data.shape={table.data.shape}'
+
+def _fix_min_max(data: np.ndarray) -> None:
+    sxc = data[:, :, 0]
+    #sxd = data[:, :, 1]
+    #sxe = data[:, :, 2]
+    #sxf = data[:, :, 3]
+    #max = data[:, :, 4]
+    #smin = data[:, :, 5]
+    #shape = sxc.shape
+    maxi = np.max(data[:, :, [0, 1, 2, 3]], axis=2)
+    mini = np.min(data[:, :, [0, 1, 2, 3]], axis=2)
+    assert maxi.shape == sxc.shape
+    data[:, :, 4] = maxi
+    data[:, :, 5] = mini
+    # can you fix MS_tension/compression?
 
 class RealBeamStrainArray(RealBeamArray, StrainObject):
     """Real CBEAM Strain"""

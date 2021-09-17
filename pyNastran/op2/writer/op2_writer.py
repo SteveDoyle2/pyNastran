@@ -149,7 +149,6 @@ def _write_result_tables(obj: OP2, op2_file, fop2_ascii,
     res_categories2 = defaultdict(list)
     table_order = [
         'OUGV1', 'BOUGV1',
-        'OUPV1',
         'OUGF1', 'OUG1F', 'BOUGF1',
         'TOUGV1', 'OTEMP1',
         'OUG1', 'OUGV1PAT',
@@ -196,7 +195,7 @@ def _write_result_tables(obj: OP2, op2_file, fop2_ascii,
 
         # ---------------
         # force/heat flux
-        'DOEF1', 'HOEF1',
+        'HOEF1',
         'OEF1', 'OEF1X', 'OEF2',
         'OEFATO1', 'OEFCRM1', 'OEFNO1', 'OEFPSD1', 'OEFRMS1',
         'OEFATO2', 'OEFCRM2', 'OEFNO2', 'OEFPSD2', 'OEFRMS2',
@@ -224,6 +223,11 @@ def _write_result_tables(obj: OP2, op2_file, fop2_ascii,
         'OSTRATO1', 'OSTRCRM1', 'OSTRNO1', 'OSTRPSD1', 'OSTRRMS1',
         'OSTRATO2', 'OSTRCRM2', 'OSTRNO2', 'OSTRPSD2', 'OSTRRMS2',
         'OSTRVM2',
+        # -------------
+        # shock response spectra
+        'OUPV1', # displacment
+        'DOEF1', # force
+        'DOES1', # stress
 
         # ---------------
         'OGPFB1',

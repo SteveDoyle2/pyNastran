@@ -14,7 +14,7 @@ from typing import Dict, Any, TYPE_CHECKING
 import numpy as np
 from pyNastran.op2.op2_interface.op2_reader import mapfmt
 
-from pyNastran.op2.tables.oug.oug import _oug_get_prefix_postfix
+from pyNastran.op2.tables.oug.oug import get_shock_prefix_postfix
 from pyNastran.op2.tables.oqg_constraintForces.separation_distance import (
     SeparationDistanceArray)
 from pyNastran.op2.tables.oqg_constraintForces.oqg_spc_forces import (
@@ -458,7 +458,7 @@ class OQG:
                                             'node', random_code=op2.random_code)
         elif op2.thermal == 8:  # 4 ?
             result_name0 = 'spc_forces'
-            prefix, postfix = _oug_get_prefix_postfix(op2.thermal)
+            prefix, postfix = get_shock_prefix_postfix(op2.thermal)
             result_name = prefix + result_name0 + postfix
             if op2._results.is_not_saved(result_name):
                 return ndata

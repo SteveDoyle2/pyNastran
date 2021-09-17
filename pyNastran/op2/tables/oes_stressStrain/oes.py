@@ -31,6 +31,7 @@ from pyNastran.op2.op2_helper import polar_to_real_imag
 from pyNastran.op2.op2_interface.function_codes import func1, func7
 
 from pyNastran.op2.tables.utils import get_eid_dt_from_eid_device
+from pyNastran.op2.tables.oug.oug import get_shock_prefix_postfix
 from pyNastran.op2.tables.oes_stressStrain.real.oes_bars import RealBarStressArray, RealBarStrainArray
 from pyNastran.op2.tables.oes_stressStrain.real.oes_bars100 import RealBar10NodesStressArray, RealBar10NodesStrainArray
 
@@ -1221,8 +1222,8 @@ class OES(OP2Common2):
             #prefix = 'sideline_'
         elif table_name_bytes in [b'DOES1', b'DOSTR1']:
             self._set_as_sort1()
-            assert op2.thermal == 4, self.code_information()
-            prefix = 'srss.'
+            assert op2.thermal in {2, 4, 8}, op2.code_information()
+            prefix, postfix = get_shock_prefix_postfix(op2.thermal)
         elif table_name_bytes in [b'OESNLXD', b'OESNL1X', b'OESNLXR', b'OESNL2']:
             prefix = 'nonlinear_'
         elif table_name_bytes in [b'OESNLXR2']:
