@@ -176,14 +176,15 @@ class RandomPlateArray(OES_Object):
 
         #print(self.element_node)
         # C:\MSC.Software\simcenter_nastran_2019.2\tpl_post2\psdo7026.op2
-        self.data_frame = pd.Panel(self.data, items=column_values,
-                                   major_axis=self.element_node, minor_axis=headers).to_frame()
-        self.data_frame.columns.names = column_names
-        self.data_frame.index.names = ['ElementID', 'Item']
-        return
+        #self.data_frame = pd.Panel(self.data, items=column_values,
+                                   #major_axis=self.element_node, minor_axis=headers).to_frame()
+        #self.data_frame.columns.names = column_names
+        #self.data_frame.index.names = ['ElementID', 'Item']
+        #return
 
         names = ['ElementID', 'NodeID']
-        ipos = np.where(self.element_node[:, 0] > 0)
+        #ipos = np.where(self.element_node[:, 0] > 0)
+        ipos = None
         element_node = [
             self.element_node[ipos, 0],
             self.element_node[ipos, 1],
@@ -385,7 +386,7 @@ class RandomPlateArray(OES_Object):
 
     #---------------------------------------------------------------------------
 
-    def get_stats(self, short=False) -> List[str]:
+    def get_stats(self, short: bool=False) -> List[str]:
         if not self.is_built:
             return [
                 '<%s>\n' % self.__class__.__name__,
@@ -412,7 +413,7 @@ class RandomPlateArray(OES_Object):
         return msg
 
     def write_f06(self, f06_file, header=None, page_stamp='PAGE %s',
-                  page_num=1, is_mag_phase=False, is_sort1=True):
+                  page_num: int=1, is_mag_phase: bool=False, is_sort1: bool=True):
         if header is None:
             header = []
         #print(self.table_name, type(self.table_name))

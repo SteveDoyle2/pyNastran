@@ -6,6 +6,7 @@ import numpy as np
 from pyNastran.utils import object_attributes, object_methods
 from pyNastran.op2.result_objects.op2_objects import _write_table_header
 from pyNastran.op2.op2_interface.write_utils import export_to_hdf5
+from pyNastran.op2.writer.utils import fix_table3_types
 
 float_types = (float, np.float32)
 integer_types = (int, np.int32)
@@ -259,6 +260,7 @@ class GridPointWeight:
             title, subtitle, label,
         ]
 
+        #table3 = fix_table3_types(table3, size=4)
         n = 0
         from itertools import count
         for i, val, ftable3i in zip(count(), table3, ftable3.decode('ascii')):

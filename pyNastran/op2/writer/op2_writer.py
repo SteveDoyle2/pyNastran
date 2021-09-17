@@ -215,7 +215,6 @@ def _write_result_tables(obj: OP2, op2_file, fop2_ascii,
 
         # ---------------
         #strain
-
         'OSTR1', 'OSTR1X', 'OSTR1C', 'OSTRVM1', 'OSTRVM1C',
         'OSTR2',
         'OESTRCP',

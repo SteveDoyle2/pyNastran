@@ -36,6 +36,7 @@ from pyNastran.f06.f06_formatting import write_floats_13e, write_imag_floats_13e
 from pyNastran.op2.errors import SixtyFourBitError
 from pyNastran.op2.op2_interface.write_utils import set_table3_field, view_dtype, view_idtype_as_fdtype
 from pyNastran.utils.numpy_utils import integer_types, float_types
+from pyNastran.op2.writer.utils import fix_table3_types
 
 SORT2_TABLE_NAME_MAP = {
     # sort2_name : sort1_name

@@ -6,6 +6,7 @@ from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.op2.result_objects.op2_objects import BaseElement, get_times_dtype
 from pyNastran.f06.f06_formatting import _eigenvalue_header, write_float_13e
 from pyNastran.op2.op2_interface.write_utils import set_table3_field
+from pyNastran.op2.writer.utils import fix_table3_types
 
 SORT2_TABLE_NAME_MAP = {
     'ONRGY2' : 'ONRGY1',
@@ -725,17 +726,7 @@ class RealStrainEnergyArray(BaseElement):
         ]
         assert table3[22] == thermal
 
-        n = 0
-        for v in table3:
-            if isinstance(v, (int, float, np.int32, np.float32)):
-                n += 4
-            elif isinstance(v, str):
-                #print('%i %r' % (len(v), v))
-                n += len(v)
-            else:
-                #print('write_table_3', v)
-                n += len(v)
-        assert n == 584, n
+        table3 = fix_table3_types(table3, size=4)
         data = [584] + table3 + [584]
         fmt = b'i' + ftable3 + b'i'
         #f.write(pack(fascii, '%s header 3c' % self.table_name, fmt, data))

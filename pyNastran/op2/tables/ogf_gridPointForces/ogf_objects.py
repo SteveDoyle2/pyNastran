@@ -16,6 +16,7 @@ from pyNastran.op2.vector_utils import (
     transform_force_moment, transform_force_moment_sum, sortedsum1d)
 from pyNastran.utils.numpy_utils import integer_types, float_types
 from pyNastran.op2.op2_interface.write_utils import set_table3_field
+from pyNastran.op2.writer.utils import fix_table3_types
 
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.nptyping import (
@@ -118,16 +119,7 @@ class GridPointForces(BaseElement):
         ]
         assert table3[22] == thermal
 
-        n = 0
-        for v in table3:
-            if isinstance(v, (int, float, np.int32, np.float32)):
-                n += 4
-            elif isinstance(v, str):
-                n += len(v)
-            else:
-                #print('write_table_3', v)
-                n += len(v)
-        assert n == 584, n
+        table3 = fix_table3_types(table3, size=4)
         data = [584] + table3 + [584]
         fmt = b'i' + ftable3 + b'i'
         #print(fmt)

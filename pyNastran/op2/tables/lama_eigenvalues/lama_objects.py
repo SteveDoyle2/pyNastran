@@ -7,6 +7,7 @@ import numpy as np
 from pyNastran.op2.result_objects.op2_objects import BaseScalarObject
 from pyNastran.op2.op2_interface.write_utils import write_table_header # set_table3_field,
 from pyNastran.f06.f06_formatting import write_floats_13e
+from pyNastran.op2.writer.utils import fix_table3_types
 
 
 class RealEigenvalues(BaseScalarObject):
@@ -275,17 +276,7 @@ class RealEigenvalues(BaseScalarObject):
         assert table3[12-1] == fluid_flag, fluid_flag
         assert table3[11-1] == residual_flag, residual_flag
 
-        n = 0
-        for v in table3:
-            if isinstance(v, (int, float, np.int32, np.float32)):
-                n += 4
-            elif isinstance(v, str):
-                #print(len(v), v)
-                n += len(v)
-            else:
-                #print('write_table_3', v)
-                n += len(v)
-        assert n == 584, n
+        table3 = fix_table3_types(table3, size=4)
         data = [584] + table3 + [584]
         fmt = b'i' + ftable3 + b'i'
         #print(fmt)
@@ -633,17 +624,7 @@ class ComplexEigenvalues(BaseScalarObject):
         assert table3[12-1] == fluid_flag, fluid_flag
         assert table3[11-1] == residual_flag, residual_flag
 
-        n = 0
-        for i, v in enumerate(table3):
-            if isinstance(v, (int, float, np.int32, np.float32)):
-                n += 4
-            elif isinstance(v, str):
-                #print(len(v), v)
-                n += len(v)
-            else:
-                print('write_table_3', i, v)
-                n += len(v)
-        assert n == 584, n
+        table3 = fix_table3_types(table3, size=4)
         data = [584] + table3 + [584]
         fmt = b'i' + ftable3 + b'i'
         #print(fmt)

@@ -17,6 +17,7 @@ from pyNastran.f06.f06_formatting import (
 )
 from pyNastran.op2.op2_interface.write_utils import set_table3_field
 from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import update_stress_force_time_word
+from pyNastran.op2.writer.utils import fix_table3_types
 
 
 SORT2_TABLE_NAME_MAP = {
@@ -206,17 +207,7 @@ class ForceObject(BaseElement):
         ]
         assert table3[22] == thermal
 
-        n = 0
-        for v in table3:
-            if isinstance(v, (int, float, np.int32, np.float32)):
-                n += 4
-            elif isinstance(v, str):
-                #print(len(v), v)
-                n += len(v)
-            else:
-                #print('write_table_3', v)
-                n += len(v)
-        assert n == 584, n
+        table3 = fix_table3_types(table3, size=4)
         data = [584] + table3 + [584]
         fmt = b'i' + ftable3 + b'i'
         #print(fmt)

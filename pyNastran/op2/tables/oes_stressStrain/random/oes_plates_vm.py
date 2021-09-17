@@ -93,10 +93,10 @@ class RandomPlateVMArray(OES_Object):
 
             # we also have nelements_nnodes, which is used in:
             #  - elmement_node
-            nelements_nnodes = nelements * nnodes
+            #nelements_nnodes = nelements * nnodes
             #ntotal = nelements * 2
             #if self.element_name in ['CTRIA3', 'CQUAD8']:
-            #print(f"***SORT1 ntimes={ntimes} nelements={nelements} nnodes={nnodes} ntotal={ntotal} nlayers={nlayers}")
+            print(f"***SORT1 ntimes={ntimes} nelements={nelements} nnodes={nnodes} ntotal={ntotal} nlayers={nlayers}")
             assert nlayers == ntotal, f'SORT1 nlayers={nlayers} ntotal={ntotal}'
             #ddd
         elif self.is_sort2:
@@ -110,8 +110,8 @@ class RandomPlateVMArray(OES_Object):
             nlayers = nelements * 2 * nnodes
             #if self.element_name in ['CTRIA3', 'CQUAD8']:
             #if self.element_name in ['CQUAD4']:
-            #print(f'SORT2 element_type={self.element_name}-{self.element_type} '
-                  #'ntimes={ntimes} nelements={nelements} ntotal={ntotal} nnodes={nnodes} nlayers={nlayers}')
+            print(f'SORT2 element_type={self.element_name}-{self.element_type} '
+                  f'ntimes={ntimes} nelements={nelements} ntotal={ntotal} nnodes={nnodes} nlayers={nlayers}')
         else:  # pragma: no cover
             raise RuntimeError('expected sort1/sort2\n%s' % self.code_information())
 
@@ -161,32 +161,36 @@ class RandomPlateVMArray(OES_Object):
 
     def build_dataframe(self) -> None:
         """creates a pandas dataframe"""
-        import pandas as pd
+        #import pandas as pd
         headers = self.get_headers()
         column_names, column_values = self._build_dataframe_transient_header()
         #print(f'column_names = {column_names} column_values={column_values}')
 
         #print(self.element_node)
         # C:\MSC.Software\simcenter_nastran_2019.2\tpl_post2\psdo7026.op2
-        self.data_frame = pd.Panel(self.data, items=column_values,
-                                   major_axis=self.element_node, minor_axis=headers).to_frame()
-        self.data_frame.columns.names = column_names
-        self.data_frame.index.names = ['ElementID', 'Item']
-        return
+        #self.data_frame = pd.Panel(self.data, items=column_values,
+                                   #major_axis=self.element_node, minor_axis=headers).to_frame()
+        #self.data_frame.columns.names = column_names
+        #self.data_frame.index.names = ['ElementID', 'Item']
+        #return
 
         names = ['ElementID', 'NodeID']
-        ipos = np.where(self.element_node[:, 0] > 0)
+        #ipos = np.where(self.element_node[:, 0] > 0)
+        ipos = None
         element_node = [
             self.element_node[ipos, 0],
             self.element_node[ipos, 1],
         ]
+        print(self.data.shape)
+        print(self.data)
+        print(element_node)
 
         data_frame = self._build_pandas_transient_element_node(
             column_values, column_names,
             headers, element_node, self.data[:, ipos, :], from_tuples=False, from_array=True,
             names=names,
         )
-        #print(data_frame)
+        print(data_frame)
         self.data_frame = data_frame
 
     def __eq__(self, table):  # pragma: no cover
@@ -321,7 +325,7 @@ class RandomPlateVMArray(OES_Object):
 
     #---------------------------------------------------------------------------
 
-    def get_stats(self, short=False) -> List[str]:
+    def get_stats(self, short: bool=False) -> List[str]:
         if not self.is_built:
             return [
                 '<%s>\n' % self.__class__.__name__,
@@ -348,7 +352,7 @@ class RandomPlateVMArray(OES_Object):
         return msg
 
     def write_f06(self, f06_file, header=None, page_stamp='PAGE %s',
-                  page_num=1, is_mag_phase=False, is_sort1=True):
+                  page_num: int=1, is_mag_phase: bool=False, is_sort1: bool=True):
         if header is None:
             header = []
         #print(self.table_name, type(self.table_name))

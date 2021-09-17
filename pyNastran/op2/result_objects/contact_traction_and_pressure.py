@@ -34,6 +34,7 @@ from pyNastran.op2.result_objects.op2_objects import ScalarObject
 from pyNastran.f06.f06_formatting import write_floats_13e, write_imag_floats_13e, write_float_12e
 from pyNastran.op2.errors import SixtyFourBitError
 from pyNastran.op2.op2_interface.write_utils import set_table3_field
+from pyNastran.op2.writer.utils import fix_table3_types
 
 float_types = (float, np.float32)
 integer_types = (int, np.int32)

@@ -15,6 +15,7 @@ from pyNastran.op2.result_objects.op2_objects import ScalarObject
 #from pyNastran.op2.result_objects.table_object import append_sort1_sort2
 from pyNastran.f06.f06_formatting import write_float_13e
 from pyNastran.op2.op2_interface.write_utils import set_table3_field
+from pyNastran.op2.writer.utils import fix_table3_types
 
 float_types = (float, np.float32)
 integer_types = (int, np.int32)
@@ -434,13 +435,7 @@ class RealScalarTableArray(ScalarTableArray):  # temperature style table
         #self.thermal = self.add_data_parameter(data, 'thermal', b'i', 23, False)
         assert table3[22] == thermal
 
-        n = 0
-        for v in table3:
-            if isinstance(v, (integer_types, float_types)):
-                n += 4
-            else:
-                n += len(v)
-        assert n == 584, n
+        table3 = fix_table3_types(table3, size=4)
         data = [584] + table3 + [584]
         fmt = b'i' + ftable3 + b'i'
         #print(fmt)
