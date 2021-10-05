@@ -1,9 +1,11 @@
 #pylint disable=C0301
+from __future__ import annotations
 from struct import Struct, pack
+import copy
 import warnings
 from abc import abstractmethod
 import inspect
-from typing import List
+from typing import List, Union
 
 import numpy as np
 from numpy import zeros, searchsorted, allclose
@@ -967,7 +969,7 @@ class RealRodForceArray(RealForceObject):
             data_frame.columns.names = ['Static']
         self.data_frame = data_frame
 
-    def add_sort1(self, dt, eid, axial, torque):
+    def add_sort1(self, dt: Union[int, float], eid: int, axial: float, torque: float) -> None:
         """unvectorized method for adding SORT1 transient data"""
         assert isinstance(eid, integer_types) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
         self._times[self.itime] = dt
@@ -1311,14 +1313,23 @@ class RealCBeamForceArray(RealForceObject):
                     for ieid, eid, in enumerate(self.element):
                         t1 = self.data[itime, ieid, :]
                         t2 = table.data[itime, ieid, :]
-                        (axial_stress1, equiv_stress1, total_strain1, effective_plastic_creep_strain1, effective_creep_strain1, linear_torsional_stress1) = t1
-                        (axial_stress2, equiv_stress2, total_strain2, effective_plastic_creep_strain2, effective_creep_strain2, linear_torsional_stress2) = t2
+                        #sd = self.data[itime, :, 0]
+                        #bm1 = self.data[itime, :, 1]
+                        #bm2 = self.data[itime, :, 2]
+                        #ts1 = self.data[itime, :, 3]
+                        #ts2 = self.data[itime, :, 4]
+                        #af = self.data[itime, :, 5]
+                        #ttrq = self.data[itime, :, 6]
+                        #wtrq = self.data[itime, :, 7]
+
+                        (sd1, bm11, bm21, ts11, ts21, af1, ttrq1, wtrq1) = t1
+                        (sd2, bm12, bm22, ts12, ts22, af2, ttrq2, wtrq2) = t2
                         if not np.allclose(t1, t2):
                         #if not np.array_equal(t1, t2):
-                            msg += '%s\n  (%s, %s, %s, %s, %s, %s)\n  (%s, %s, %s, %s, %s, %s)\n' % (
+                            msg += '%s\n  (%s, %s, %s, %s, %s, %s, %s, %s)\n  (%s, %s, %s, %s, %s, %s, %s, %s)\n' % (
                                 eid,
-                                axial_stress1, equiv_stress1, total_strain1, effective_plastic_creep_strain1, effective_creep_strain1, linear_torsional_stress1,
-                                axial_stress2, equiv_stress2, total_strain2, effective_plastic_creep_strain2, effective_creep_strain2, linear_torsional_stress2)
+                                sd1, bm11, bm21, ts11, ts21, af1, ttrq1, wtrq1,
+                                sd2, bm12, bm22, ts12, ts22, af2, ttrq2, wtrq2)
                             i += 1
                         if i > 10:
                             print(msg)
@@ -1329,6 +1340,126 @@ class RealCBeamForceArray(RealForceObject):
                 print(msg)
                 raise ValueError(msg)
         return True
+
+    def __pos__(self) -> RealCBeamForceArray:
+        """positive; +a"""
+        return self
+
+    def __neg__(self) -> RealCBeamForceArray:
+        """
+        negative; -a
+
+        We stick this [:, :, 1:] all over the place because we don't
+        want to modify the sd field (aka x/xb).
+        """
+        new_table = copy.deepcopy(self)
+        new_table.data[:, :, 1:] *= -1.0
+        return new_table
+
+    def __add__(self, table: RealCBeamForceArray) -> RealCBeamForceArray:
+        """a + b"""
+        if isinstance(table, RealCBeamForceArray):
+            self._check_math(table)
+            new_data = self.data[:, :, 1:] + table.data[:, :, 1:]
+            #self._fix_min_max(new_data)
+        elif isinstance(table, (integer_types, float_types)):
+            new_data = self.data[:, :, 1:] + table
+        else:
+            raise TypeError(table)
+        new_table = copy.deepcopy(self)
+        new_table.data[:, :, 1:] = new_data
+        return new_table
+    # __radd__: reverse order adding (b+a)
+    def __iadd__(self, table: RealCBeamForceArray) -> RealCBeamForceArray:
+        """inplace adding; a += b"""
+        if isinstance(table, RealCBeamForceArray):
+            self._check_math(table)
+            self.data[:, :, 1:] += table.data[:, :, 1:]
+            #self._fix_min_max(self.data)
+        elif isinstance(table, (integer_types, float_types)):
+            self.data[:, :, 1:] -= table
+        else:
+            raise TypeError(table)
+        return self
+
+    def __sub__(self, table: RealCBeamForceArray):
+        """a - b"""
+        if isinstance(table, RealCBeamForceArray):
+            self._check_math(table)
+            new_data = self.data[:, :, 1:] - table.data[:, :, 1:]
+        elif isinstance(table, (integer_types, float_types)):
+            new_data = self.data[:, :, 1:] - table
+        else:
+            raise TypeError(table)
+        new_table = copy.deepcopy(self)
+        new_table.data[:, :, 1:] = new_data
+        return new_table
+
+    def __mul__(self, table: RealCBeamForceArray):
+        """a * b"""
+        if isinstance(table, RealCBeamForceArray):
+            self._check_math(table)
+            new_data = self.data[:, :, 1:] * table.data[:, :, 1:]
+        elif isinstance(table, (integer_types, float_types)):
+            new_data = self.data[:, :, 1:] * table
+        else:
+            raise TypeError(table)
+        new_table = copy.deepcopy(self)
+        new_table.data[:, :, 1:] = new_data
+        return new_table
+
+    def __truediv__(self, table: RealCBeamForceArray):
+        """a / b"""
+        if isinstance(table, RealCBeamForceArray):
+            self._check_math(table)
+            new_data = self.data[:, :, 1:] / table.data[:, :, 1:]
+        elif isinstance(table, (integer_types, float_types)):
+            new_data = self.data[:, :, 1:] / table
+        else:
+            raise TypeError(table)
+        new_table = copy.deepcopy(self)
+        new_table.data[:, :, 1:] = new_data
+        return new_table
+
+    def _check_math(self, table: RealCBeamForceArray) -> None:
+        """verifies that the shapes are the same"""
+        assert self.ntimes == table.ntimes, f'ntimes={self.ntimes} table.times={table.ntimes}'
+        assert self.ntotal == table.ntotal, f'ntotal={self.ntotal} table.ntotal={table.ntotal}'
+        assert self.element_node.shape == table.element_node.shape, f'element_node.shape={self.element_node.shape} table.element_node.shape={table.element_node.shape}'
+        assert self.data.shape == table.data.shape, f'data.shape={self.data.shape} table.data.shape={table.data.shape}'
+
+    #def _fix_min_max(self, data: np.ndarray) -> None:
+        # I don't think I need this function...
+        # NOTE: "sd" is the source of the [:, :, 1:] part above
+        #sd = self.data[itime, :, 0]
+        #bm1 = self.data[itime, :, 1]
+        #bm2 = self.data[itime, :, 2]
+        #ts1 = self.data[itime, :, 3]
+        #ts2 = self.data[itime, :, 4]
+        #af = self.data[itime, :, 5]
+        #ttrq = self.data[itime, :, 6]
+        #wtrq = self.data[itime, :, 7]
+        #return
+
+
+        #sxc = data[:, :, 0]
+        #sxd = data[:, :, 1]
+        #sxe = data[:, :, 2]
+        #sxf = data[:, :, 3]
+        #max = data[:, :, 4]
+        #smin = data[:, :, 5]
+        #shape = sxc.shape
+        #maxi = np.max(data[:, :, [0, 1, 2, 3]], axis=2)
+        #mini = np.min(data[:, :, [0, 1, 2, 3]], axis=2)
+        #assert maxi.shape == sxc.shape
+        #data[:, :, 4] = maxi
+        #data[:, :, 5] = mini
+        # can you fix MS_tension/compression?
+
+    def filter_by_index(self, icable_element: np.ndarray) -> None:
+        self.element = self.element[icable_element]
+        self.element_node = self.element_node[icable_element, :]
+        self.data = self.data[:, icable_element, :]
 
     def add_sort1(self, dt, eid, nid, sd, bm1, bm2, ts1, ts2, af, ttrq, wtrq):
         """unvectorized method for adding SORT1 transient data"""

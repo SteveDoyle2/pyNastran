@@ -41,8 +41,10 @@ class OP2Writer(OP2_F06_Common):
         self.card_count = {}
 
     def write_op2(self, op2_out_filename: str,
-                  post: int=-1, endian: bytes=b'<',
-                  skips: List[str]=None,
+                  post: int=-1,
+                  endian: bytes=b'<',
+                  includes: Optional[List[str]]=None,
+                  skips: Optional[List[str]]=None,
                   nastran_format: Optional[str]=None) -> int:
         """
         Writes an OP2 file based on the data we have stored in the object
@@ -51,6 +53,16 @@ class OP2Writer(OP2_F06_Common):
         ----------
         op2_out_filename : str
             the name of the F06 file to write
+        post : int; default=-1
+            the PARAM,POST flag
+        endian : bytes; default='<'
+            little endian is strongly recommended
+        includes : List[str]; default=None
+            list of results to include; exclusive with skips; default for both includes/skips=None -> all included
+        skips : List[str]; default=None
+            list of results to skip; exclusive with includes
+        nastran_format : str; default=None -> 'msc'
+            supported formats: ['msc', 'nx', 'optistruct']
         #is_mag_phase : bool; default=False
             #should complex data be written using Magnitude/Phase
             #instead of Real/Imaginary (default=False; Real/Imag)
@@ -60,11 +72,7 @@ class OP2Writer(OP2_F06_Common):
         if nastran_format is None:
             nastran_format = self._nastran_format
         assert nastran_format in {'msc', 'nx', 'optistruct'}, nastran_format
-        if skips is None:
-            skips = set([])
-        else:
-            skips = set(skips)
-        skips.add('params')
+        skips = _set_skips(self, includes, skips)
 
         #print('writing %s' % op2_outname)
 
@@ -94,6 +102,53 @@ class OP2Writer(OP2_F06_Common):
             raise
         return total_case_count
 
+def _set_skips(model: OP2Writer, includes: Optional[List[str]], skips: Optional[List[str]]):
+    """
+    Helper method for ``write_op2``
+
+    Parameters
+    ----------
+    includes : List[str]; default=None
+        list of results to include; exclusive with skips; default for both includes/skips=None -> all included
+    skips : List[str]; default=None
+        list of results to skip; exclusive with includes
+
+    """
+    if skips is not None and includes is not None:
+        raise RuntimeError('Neither skips nor includes is None')
+    elif skips is not None:
+        skips = set(skips)
+    elif includes is not None:
+        includes = set(includes)
+
+        all_tables = {
+            'GEOM1', 'GEOM2', 'GEOM3', 'GEOM4', 'EPT', 'MPT', 'EDT', 'EDOM', 'DIT', 'DYNAMIC',
+            'params', 'grid_point_weight',
+            'eigenvalues', 'eigenvalues_fluid',
+
+            'displacements', 'mpc_forces', 'spc_forces', 'load_vectors',
+            'cbeam_force', 'cbeam_stress',
+            'grid_point_forces',
+        }
+        bad_tables = includes - all_tables
+        if bad_tables:
+            model.log.error(f'The following tables are not part of "all_tables"\n{bad_tables}')
+        skips = all_tables - includes
+        #model.log.warning("includes is poorly supported!")
+    else:
+        raise RuntimeError('Can this happen?')
+
+    #if skips is None and includes is None:
+        #skips = set([])
+    #if skips is None:
+        #skips = set([])
+    #else:
+        #skips = set(skips)
+    skips.add('params')
+    return skips
+
+
+
 def _write_op2(op2_file, fop2_ascii, obj: OP2,
                skips: Set[str],
                post: int=-1, endian: bytes=b'<',
@@ -104,7 +159,6 @@ def _write_op2(op2_file, fop2_ascii, obj: OP2,
 
     struct_3i = Struct(endian + b'3i')
     write_op2_header(obj, op2_file, fop2_ascii, struct_3i, post=post, endian=endian)
-
     #if 'CASECC' not in skips:
         #write_casecc(op2_file, fop2_ascii, obj, endian=endian, nastran_format=nastran_format)
     if 'GEOM1' not in skips:  # nodes
@@ -235,7 +289,7 @@ def _write_result_tables(obj: OP2, op2_file, fop2_ascii,
         'OEFIT', 'OESRT',
         'OSPDS1', 'OSPDSI1',
     ]
-    skip_results = ['gpdt', 'bgpdt', 'eqexin', 'psds', 'monitor1', 'monitor3']
+    skip_results = {'gpdt', 'bgpdt', 'eqexin', 'psds', 'monitor1', 'monitor3'}
     for table_type in obj.get_table_types():
         if table_type in skip_results or table_type in skips or table_type.startswith('responses.'):
             continue

@@ -445,6 +445,7 @@ class DSCMCOL:
     def get_responses_by_group(self):
         response_groups_order = [
             'weight_volume', 'static', 'eigenvalue',
+            'buckling',
             '???', 'psd',
             '2',
         ]
@@ -460,6 +461,8 @@ class DSCMCOL:
             'static strain': 'static',
             'composite failure': 'static',
             'composite strain': 'static',
+
+            'buckling': 'buckling',
 
             'psd displacement': 'psd',
             'psd acceleration': 'psd',
@@ -483,6 +486,9 @@ class DSCMCOL:
             'static displacement': 'DISP',
             'composite failure': 'CFAILURE',
             'composite strain': 'CSTRAIN',
+
+            # buckling
+            'buckling': 'BUCK',
 
             # psd
             'psd displacement': 'DISP',
@@ -533,9 +539,15 @@ class DSCMCOL:
                     msg += f'         {i+1:8d}        {external_id:8d}        {response_type:8s}\n'
             elif group_name == 'static':
                 msg += self._write_static(ids, response_name_to_f06_response_type)
-            elif group_name == 'eigenvalue':
+            elif group_name in ['eigenvalue', 'buckling']:
+                if group_name == 'eigenvalue':
+                    msg += '             -----  EIGENVALUE RESPONSES  -----\n'
+                elif group_name == 'buckling':
+                    msg += '             ------  BUCKLING RESPONSES  ------\n'
+                else:  # pragma: no cover
+                    raise RuntimeError(group_name)
+
                 msg += (
-                    '             -----  EIGENVALUE RESPONSES  -----\n'
                     '          --------------------------------------------------------------------------\n'
                     '            COLUMN         DRESP1         RESPONSE          MODE            SUB  \n'
                     '              NO.         ENTRY ID          TYPE             NO.            CASE \n'
@@ -714,6 +726,7 @@ class DSCMCOL:
         return msg
 
     def get_stats(self, short: bool=False):
+        self.get_responses_by_group()
         if short:
             return f'responses.dscmcol ({len(self.responses)})\n'
         return self.__repr__() + '\n'

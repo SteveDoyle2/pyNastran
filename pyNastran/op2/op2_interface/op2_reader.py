@@ -6294,98 +6294,92 @@ def dscmcol_dresp1(responses: Dict[int, Dict[str, Any]],
         #   1 IRID  I Internal response identification number
         #   2 RID   I External response identification number
         #   3 RTYPE I Response Type
-        # RTYPE=3 Buckling
-        #   4 MODE    I Mode number
-        #   5 UNDEF None
+        # RTYPE=8 Static force
+        #   4 EID I Element identification number
+        #   5 COMP I Force component number
+        #   6 SUBCASE I Subcase identification number
+        #   7 UNDEF None
+        #   8 VIEWID I View element identification number
+        #   9 SEID I Superelement identification number
+        # RTYPE=10 Composite stress
+        #   4 EID I Element identification number
+        #   5 COMP I Stress component number
+        #   6 SUBCASE I Subcase identification number
+        #   7 UNDEF None
+        #   8 PLY I Ply number
+        #   9 SEID I Superelement identification number
+        # RTYPE=13 Static SPC force
+        #   4 GRID I Grid identification number
+        #   5 COMP I SPC force component number
         #   6 SUBCASE I Subcase identification number
         #   7 UNDEF(2) None
-        #   9 SEID    I Superelement identification number
-        # RTYPE=8 Static force
-        # 4 EID I Element identification number
-        # 5 COMP I Force component number
-        # 6 SUBCASE I Subcase identification number
-        # 7 UNDEF None
-        # 8 VIEWID I View element identification number
-        # 9 SEID I Superelement identification number
-        # RTYPE=10 Composite stress
-        # 4 EID I Element identification number
-        # 5 COMP I Stress component number
-        # 6 SUBCASE I Subcase identification number
-        # 7 UNDEF None
-        # 8 PLY I Ply number
-        # 9 SEID I Superelement identification number
-        # RTYPE=13 Static SPC force
-        # 4 GRID I Grid identification number
-        # 5 COMP I SPC force component number
-        # 6 SUBCASE I Subcase identification number
-        # 7 UNDEF(2) None
-        # 9 SEID I Superelement identification number
+        #   9 SEID I Superelement identification number
         # RTYPE=14 Element static strain energy
-        # 4 EID I Element identification number
-        # 5 COMP I Strain energy component number
-        # 6 SUBCASE I Subcase identification number
-        # 7 UNDEF(2) None
-        # 9 SEID I Superelement identification number
+        #   4 EID I Element identification number
+        #   5 COMP I Strain energy component number
+        #   6 SUBCASE I Subcase identification number
+        #   7 UNDEF(2) None
+        #   9 SEID I Superelement identification number
         # RTYPE=17 Compliance
-        # 4 UNDEF(2) None
-        # 6 SUBCASE I Subcase identification number
-        # 7 UNDEF(3) None
+        #   4 UNDEF(2) None
+        #   6 SUBCASE I Subcase identification number
+        #   7 UNDEF(3) None
         # RTYPE=21 Frequency response velocity
-        # 4 GRID I Grid identification number
-        # 5 COMP I Velocity component number
-        # 6 SUBCASE I Subcase identification number
-        # 7 FREQ RS Frequency
-        # 8 UNDEF None
-        # 9 SEID I Superelement identification number
+        #   4 GRID I Grid identification number
+        #   5 COMP I Velocity component number
+        #   6 SUBCASE I Subcase identification number
+        #   7 FREQ RS Frequency
+        #   8 UNDEF None
+        #   9 SEID I Superelement identification number
         # RTYPE=22 Frequency response acceleration
-        # 4 GRID I Grid identification number
-        # 5 COMP I Acceleration component number
-        # 6 SUBCASE I Subcase identification number
-        # 7 FREQ RS Frequency
-        # 8 UNDEF None
-        # 9 SEID I Superelement identification number
+        #   4 GRID I Grid identification number
+        #   5 COMP I Acceleration component number
+        #   6 SUBCASE I Subcase identification number
+        #   7 FREQ RS Frequency
+        #   8 UNDEF None
+        #   9 SEID I Superelement identification number
         # RTYPE=23 Frequency response SPC Force
-        # 4 GRID I Grid identification number
-        # 5 COMP I SPC Force component number
-        # 6 SUBCASE I Subcase identification number
-        # 7 FREQ RS Frequency
-        # 8 UNDEF None
-        # 9 SEID I Superelement identification number
+        #   4 GRID I Grid identification number
+        #   5 COMP I SPC Force component number
+        #   6 SUBCASE I Subcase identification number
+        #   7 FREQ RS Frequency
+        #   8 UNDEF None
+        #   9 SEID I Superelement identification number
         # RTYPE=24 Frequency response stress
-        # 4 EID I Element identification number
-        # 5 COMP I Stress component number
-        # 6 SUBCASE I Subcase identification number
-        # 7 FREQ RS Frequency
-        # 8 UNDEF None
-        # 9 SEID I Superelement identification number
+        #   4 EID I Element identification number
+        #   5 COMP I Stress component number
+        #   6 SUBCASE I Subcase identification number
+        #   7 FREQ RS Frequency
+        #   8 UNDEF None
+        #   9 SEID I Superelement identification number
         # RTYPE=25 Frequency response force
-        # 4 EID I Element identification number
-        # 5 COMP I Force component number
-        # 6 SUBCASE I Subcase identification number
-        # 7 FREQ RS Frequency
-        # 8 UNDEF None
-        # 9 SEID I Superelement identification number
+        #   4 EID I Element identification number
+        #   5 COMP I Force component number
+        #   6 SUBCASE I Subcase identification number
+        #   7 FREQ RS Frequency
+        #   8 UNDEF None
+        #   9 SEID I Superelement identification number
         # RTYPE=26 RMS displacement
-        # 4 GRID I Grid identification number
-        # 5 COMP I RMS displacement component number
-        # 6 SUBCASE I Subcase identification number
-        # 7 UNDEF None
-        # 8 RANDPS I RANDPS ID
-        # 9 SEID I Superelement identification number
+        #   4 GRID I Grid identification number
+        #   5 COMP I RMS displacement component number
+        #   6 SUBCASE I Subcase identification number
+        #   7 UNDEF None
+        #   8 RANDPS I RANDPS ID
+        #   9 SEID I Superelement identification number
         # RTYPE=27 RMS velocity
-        # 4 GRID I Grid identification number
-        # 5 COMP I RMS velocity component number
-        # 6 SUBCASE I Subcase identification number
-        # 7 UNDEF None
-        # 8 RANDPS I RANDPS ID
-        # 9 SEID I Superelement identification number
+        #   4 GRID I Grid identification number
+        #   5 COMP I RMS velocity component number
+        #   6 SUBCASE I Subcase identification number
+        #   7 UNDEF None
+        #   8 RANDPS I RANDPS ID
+        #   9 SEID I Superelement identification number
         # RTYPE=28 RMS acceleration
-        # 4 GRID I Grid identification number
-        # 5 COMP I RMS acceleration component number
-        # 6 SUBCASE I Subcase identification number
-        # 7 UNDEF None
-        # 8 RANDPS I RANDPS ID
-        # 9 SEID I Superelement identification number
+        #   4 GRID I Grid identification number
+        #   5 COMP I RMS acceleration component number
+        #   6 SUBCASE I Subcase identification number
+        #   7 UNDEF None
+        #   8 RANDPS I RANDPS ID
+        #   9 SEID I Superelement identification number
         # RTYPE=30 PSD velocity
         # 4 GRID I Grid identification number
         # 5 COMP I PSD velocity component number
@@ -6429,39 +6423,39 @@ def dscmcol_dresp1(responses: Dict[int, Dict[str, Any]],
         # 8 UNDEF None
         # 9 SEID I Superelement identification number
         # RTYPE=65 Transient response force
-        # 4 EID I Element identification number
-        # 5 COMP I Force component number
-        # 6 SUBCASE I Subcase identification number
-        # 7 TIME RS Time
-        # 8 UNDEF None
-        # 9 SEID I Superelement identification number
+        #   4 EID I Element identification number
+        #   5 COMP I Force component number
+        #   6 SUBCASE I Subcase identification number
+        #   7 TIME RS Time
+        #   8 UNDEF None
+        #   9 SEID I Superelement identification number
         # RTYPE=81 Aeroelastic divergence
-        # 4 SUBCASE I Subcase identification number
-        # 5 UNDEF None
-        # 6 ROOT I Root
-        # 7 MACH RS Mach number
-        # 8 UNDEF None
-        # 9 SEID I Superelement identification number
+        #   4 SUBCASE I Subcase identification number
+        #   5 UNDEF None
+        #   6 ROOT I Root
+        #   7 MACH RS Mach number
+        #   8 UNDEF None
+        #   9 SEID I Superelement identification number
         # RTYPE=82 Aeroelastic trim
-        # 4 SUBCASE I Subcase identification number
-        # 5 UNDEF None
-        # 6 XID I XID
-        # 7 UNDEF(2) None
-        # 9 SEID I Superelement identification number
+        #   4 SUBCASE I Subcase identification number
+        #   5 UNDEF None
+        #   6 XID I XID
+        #   7 UNDEF(2) None
+        #   9 SEID I Superelement identification number
         # RTYPE=83 Aeroelastic stability derivative
-        # 4 SUBCASE I Subcase identification number
-        # 5 RU I R/U
-        # 6 COMP I Component number
-        # 7 UNDEF None
-        # 8 XID I XID
-        # 9 SEID I Superelement identification number
+        #   4 SUBCASE I Subcase identification number
+        #   5 RU I R/U
+        #   6 COMP I Component number
+        #   7 UNDEF None
+        #   8 XID I XID
+        #   9 SEID I Superelement identification number
         # RTYPE=84 Aeroelastic flutter damping
-        # 4 SUBCASE I Subcase identification number
-        # 5 MODE I Mode number
-        # 6 DENSITY RS Density
-        # 7 MACH RS Mach number
-        # 8 VEL RS Velocity
-        # 9 SEID I Superelement identification number
+        #   4 SUBCASE I Subcase identification number
+        #   5 MODE I Mode number
+        #   6 DENSITY RS Density
+        #   7 MACH RS Mach number
+        #   8 VEL RS Velocity
+        #   9 SEID I Superelement identification number
         # End RTYPE
 
         internal_response_id = ints[idata]
@@ -6484,6 +6478,18 @@ def dscmcol_dresp1(responses: Dict[int, Dict[str, Any]],
             seid = ints[idata+8]
             response = {'name': 'volume', 'seid': seid}
             #print(f'  seid={seid} (volume)')
+        elif response_type == 3:
+            # RTYPE=3 Buckling
+            #   4 MODE    I Mode number
+            #   5 UNDEF None
+            #   6 SUBCASE I Subcase identification number
+            #   7 UNDEF(2) None
+            #   9 SEID    I Superelement identification number
+            mode = ints[idata+3]
+            subcase = ints[idata+5]
+            seid = ints[idata+8]
+            response = {'name': 'buckling', 'mode_num': mode, 'subcase': subcase, 'seid': seid}
+            #print(f'  mode={mode} subcase={subcase} seid={seid} (buckling)')
 
         elif response_type == 4:
             # RTYPE=4 Normal modes

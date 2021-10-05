@@ -737,7 +737,7 @@ class RealBeamStressArray(RealBeamArray, StressObject):
             self._check_math(table)
             new_data = self.data + table.data
             _fix_min_max(new_data)
-        elif isinstance(table, (integer_types, RealBeamArray)):
+        elif isinstance(table, (integer_types, float_types)):
             new_data = self.data + table
         else:
             raise TypeError(table)

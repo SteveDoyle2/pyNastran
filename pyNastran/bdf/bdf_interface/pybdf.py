@@ -1645,7 +1645,7 @@ def split_quoted_string(line: str) -> List[str]:
     sline = shlex.split(line)
     return sline
 
-def parse_begin(line_upper: str):
+def parse_begin(line_upper: str) -> None:
     """
     BEGIN MODULE=2  LABEL='MODULE2'
 
@@ -1674,6 +1674,9 @@ def parse_begin(line_upper: str):
     #['BEGIN', 'SUPER', '1']
     if sline[1] == 'BULK':
         sline.pop(1)
+    if len(sline) == 1:
+        # BEGIN BULK -> popped to BEGIN
+        return
 
     word = sline[1]
     if word == 'MODULE':
