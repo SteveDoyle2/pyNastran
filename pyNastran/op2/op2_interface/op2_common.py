@@ -1321,8 +1321,9 @@ class OP2Common(Op2Codes, F06Writer):
                 ints = np.frombuffer(data, dtype=self.idtype8).reshape(nnodes, 14)
                 nids = ints[:, 0] // 10
                 assert nids.min() > 0, nids.min()
+                gridtype = ints[:, 1].copy()
                 obj.node_gridtype[obj.itotal:itotal2, 0] = nids
-                obj.node_gridtype[obj.itotal:itotal2, 1] = ints[:, 1].copy()
+                obj.node_gridtype[obj.itotal:itotal2, 1] = gridtype
 
             floats = np.frombuffer(data, dtype=self.fdtype8).reshape(nnodes, 14).copy()
             mag = floats[:, 2:8]
@@ -1355,6 +1356,7 @@ class OP2Common(Op2Codes, F06Writer):
             if obj.itime == 0:
                 ints = np.frombuffer(data, dtype=self.idtype8).reshape(nnodes, 14)
                 nids = ints[:, 0] // 10
+
                 assert nids.min() > 0, nids.min()
                 try:
                     obj.node_gridtype[itotal:itotal2, 0] = nids
@@ -1364,14 +1366,19 @@ class OP2Common(Op2Codes, F06Writer):
                     print(obj.node_gridtype[itotal:itotal2, 0].shape)
                     print(nids.shape)
                     raise ValueError(msg)
-                obj.node_gridtype[itotal:itotal2, 1] = ints[:, 1].copy()
+                gridtype = ints[:, 1].copy()
+                #print(f'gridtype={gridtype}')
+                _fix_harmonic_gridtype(gridtype, size=self.size)
+
+                obj.node_gridtype[itotal:itotal2, 1] = gridtype
 
             floats = np.frombuffer(data, dtype=self.fdtype8).reshape(nnodes, 14).copy()
             real = floats[:, 2:8]
             imag = floats[:, 8:]
 
             obj._times[obj.itime] = dt
-            obj.data[obj.itime, itotal:itotal2, :] = real + 1.j * imag
+            real_imag = real + 1.j * imag
+            obj.data[obj.itime, itotal:itotal2, :] = real_imag
             obj.itotal = itotal2
         else:
             n = read_complex_table_sort1_imag(self, obj, dt, flag,
@@ -2618,3 +2625,16 @@ def parse_frf_subcase(title_bytes: bytes, subtitle_bytes: bytes, label_bytes: by
     label = f'Unit Load on grid={grid_id}; comp={comp_id}'
     #print(f'label2 = {label2!r}')
     return subtitle_mod, label, label2
+
+
+def _fix_harmonic_gridtype(gridtype: np.ndarray, size: int=4) -> None:
+    if size == 4:
+        #C:\MSC.Software\msc_nastran_runs\nsmadpco.op2
+        # 538976288 = 4 blank spaces mapped to an integer
+        ibad = np.where(gridtype == 538976288)[0]
+    else:
+        ibad = np.array([])
+        #raise NotImplementedError('size check...')
+    if len(ibad):
+        gridtype[ibad] = -1
+    return

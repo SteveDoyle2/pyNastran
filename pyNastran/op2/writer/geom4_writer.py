@@ -15,6 +15,7 @@ def write_geom4(op2_file, op2_ascii, obj, endian: bytes=b'<', nastran_format: st
     if not hasattr(obj, 'rigid_elements'):
         return
     loads_by_type = _build_loads_by_type(obj)
+    log = obj.log
 
     # return if no supported cards are found
     skip_cards = {
@@ -71,7 +72,7 @@ def write_geom4(op2_file, op2_ascii, obj, endian: bytes=b'<', nastran_format: st
 
         try:
             nbytes = write_card(op2_file, op2_ascii, card_type, cards, endian,
-                                nastran_format=nastran_format)
+                                log=log, nastran_format=nastran_format)
         except Exception:  # pragma: no cover
             obj.log.error('failed GEOM4-%s' % card_type)
             raise
@@ -139,8 +140,9 @@ def _build_loads_by_type(model: Union[BDF, OP2Geom]) -> Dict[str, Any]:
     return loads_by_type
 
 def write_card(op2_file, op2_ascii, card_type: str, cards, endian: bytes,
-               nastran_format: str='nx') -> int:
+               log, nastran_format: str='nx') -> int:
     ncards = len(cards)
+    #log.debug(f'GEOM4: writing {card_type}')
     if card_type in ['ASET1', 'BSET1', 'CSET1', 'QSET1', 'OMIT1']:
         nbytes = _write_xset1(card_type, cards, ncards, op2_file, op2_ascii,
                               endian)
@@ -182,7 +184,7 @@ def write_card(op2_file, op2_ascii, card_type: str, cards, endian: bytes,
                                endian)
     elif card_type == 'SPC':
         nbytes = _write_spc(card_type, cards, ncards, op2_file, op2_ascii, endian,
-                            nastran_format=nastran_format)
+                            log, nastran_format=nastran_format)
     #elif card_type == 'TEMPD':
         #key = (5641, 65, 98)
         #nfields = 6
@@ -218,7 +220,7 @@ def write_header(name: str, nfields: int, ncards: int, key: Tuple[int, int, int]
     return nbytes
 
 def _write_spc(card_type: str, cards, ncards: int, op2_file, op2_ascii,
-               endian: bytes, nastran_format: str='nx') -> int:
+               endian: bytes, log, nastran_format: str='nx') -> int:
     """writes an SPC"""
     key = (5501, 55, 16)
     #nastran_format = 'msc'
@@ -239,8 +241,6 @@ def _write_spc(card_type: str, cards, ncards: int, op2_file, op2_ascii,
         # 3 C     I    Component numbers
         # 4 UNDEF none Not used
         # 5 D     RX   Enforced displacement
-        nfields = 5
-        nbytes = write_header(card_type, nfields, ncards, key, op2_file, op2_ascii)
         for spc in cards:
             node_ids = spc.node_ids
             for nid, comp, enforcedi in zip(node_ids, spc.components, spc.enforced):

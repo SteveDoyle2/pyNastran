@@ -4930,7 +4930,7 @@ def _prep_comment(comment):
              #for comment in comment.rstrip().split('\n')]
     #print('sline = ', sline)
 
-def _check_for_spaces(card_name: str, card_lines: List[str], comment: str, log: Any) -> None:
+def _check_for_spaces(card_name: str, card_lines: List[str], comment: str, log: SimpleLogger) -> None:
     if ' ' in card_name:
         if card_name.startswith(EXECUTIVE_CASE_SPACES):  # TODO verify upper
             msg = (

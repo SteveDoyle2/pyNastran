@@ -23,6 +23,7 @@ GRID_TYPE_INT_TO_STR = {
     4 : 'M', # MODAL POINT
     7 : 'L', # RIGID POINT (e.g. RBE3)
     0 : 'H', # SECTOR/HARMONIC/RING POINT
+    -1 : '',
 }
 GRID_TYPE_TO_STR_MAP = {
     'G' : 1, # GRID
@@ -444,6 +445,7 @@ class ScalarObject(BaseScalarObject):
         converts a grid_type integer to a string
 
         Point type (per NX 10; OUG table; p.5-663):
+        -1, Harmonic Point (my choice) -> '    ' = 538976288 (as an integer)
         =1, GRID Point
         =2, Scalar Point
         =3, Extra Point

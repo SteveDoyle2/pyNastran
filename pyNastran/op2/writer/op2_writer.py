@@ -116,6 +116,8 @@ def _set_skips(model: OP2Writer, includes: Optional[List[str]], skips: Optional[
     """
     if skips is not None and includes is not None:
         raise RuntimeError('Neither skips nor includes is None')
+    elif skips is None and includes is None:
+        skips = set()
     elif skips is not None:
         skips = set(skips)
     elif includes is not None:
@@ -136,6 +138,8 @@ def _set_skips(model: OP2Writer, includes: Optional[List[str]], skips: Optional[
         skips = all_tables - includes
         #model.log.warning("includes is poorly supported!")
     else:
+        print(f'skips={skips}')
+        print(f'includes={includes}')
         raise RuntimeError('Can this happen?')
 
     #if skips is None and includes is None:
@@ -161,6 +165,7 @@ def _write_op2(op2_file, fop2_ascii, obj: OP2,
     write_op2_header(obj, op2_file, fop2_ascii, struct_3i, post=post, endian=endian)
     #if 'CASECC' not in skips:
         #write_casecc(op2_file, fop2_ascii, obj, endian=endian, nastran_format=nastran_format)
+    obj.log.debug(f'nastran_format={nastran_format}')
     if 'GEOM1' not in skips:  # nodes
         write_geom1(op2_file, fop2_ascii, obj, endian=endian)
     if 'GEOM2' not in skips:  # elements

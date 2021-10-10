@@ -146,11 +146,10 @@ def main():
     ver = str(pyNastran.__version__)
 
     msg = "Usage:\n"
-
     # all
     # release
     # current
-    msg += "test_op4 [-o] [-d] OP4_FILENAME\n"
+    msg += "  test_op4 [-o] [-d] OP4_FILENAME\n"
     msg += "  test_op4 -h | --help\n"
     msg += "  test_op4 -v | --version\n"
     msg += "\n"

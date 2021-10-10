@@ -201,13 +201,13 @@ def read_matpool_dmig_4(op2: OP2, data: bytes,
         #self.show_data(data[kstart*4:kstop*4])
         #kfirst = ioffset
         #klast = kstop[-1]
-        log.info(f'kstart = {kstart}')
-        log.info(f'kstop  = {kstop}')
+        log.info(f'{matrix_name_str}: kstart = {kstart}; n={len(kstart)}')
+        log.info(f'{matrix_name_str}: kstop  = {kstop}')
         #----------------------------------------
-        log.info('casting floats')
+        log.info(f'{matrix_name_str}: casting floats')
         #nheader = ioffset * 4
         #nend = istop * self.size
-        #floats = get_floats(datai[nheader:nend], fdtype, op2, tout, self.size)
+        #floats = get_floats_4(datai[nheader:nend], fdtype, op2, tout)
 
         assert tout in [1, 2, 3, 4]
         #print(floats.tolist())
@@ -269,11 +269,11 @@ def read_matpool_dmig_4(op2: OP2, data: bytes,
             #nend_int2 = istopi * 4
 
             assert nend_float2 > nstart2
-            log.debug(f'  nstart2={nstart2} nend_float2={nend_float2}')
+            #log.debug(f'  nstart2={nstart2} nend_float2={nend_float2}')
 
             #ints2 = np.frombuffer(datai[istarti*4:(istopi-2)*4], dtype=op2.idtype8).copy()
             #print(f'ints test = {ints2}')
-            log.debug(f'  nid={col_nidi} dof={col_dofi} istarti={istarti} istopi={istopi}')
+            #log.debug(f'  nid={col_nidi} dof={col_dofi} istarti={istarti} istopi={istopi}')
             ## TODO: preallocate arrays
             imag = None
             # The float32/complex64 blocks are really simple
@@ -305,9 +305,7 @@ def read_matpool_dmig_4(op2: OP2, data: bytes,
             #print(nstart2, nend_int2, nend_float2)
             dataii = datai[nstart2:nend_float2]
             ints2 = np.frombuffer(dataii, dtype='int32').copy()
-            size = 4
-            floats = get_floats(dataii, fdtype, op2, tout, size)
-            del size
+            floats = get_floats_4(dataii, fdtype, op2, tout)
             #op2.show_data(datai, types='ifs', endian=None, force=False)
 
             nints = len(ints2)
@@ -333,9 +331,9 @@ def read_matpool_dmig_4(op2: OP2, data: bytes,
             else:
                 raise RuntimeError((size, dtype))
 
-            log.debug(f'ints2 = {ints2}')
-            log.debug(f'real = {real}')
-            log.debug(f'irow = {irow}')
+            #log.debug(f'ints2 = {ints2}')
+            #log.debug(f'real = {real}')
+            #log.debug(f'irow = {irow}')
             if len(irow) == 0:
                 print(ints2)
                 msg = f'irow={irow} nints={nints}'
@@ -349,18 +347,18 @@ def read_matpool_dmig_4(op2: OP2, data: bytes,
 
             # the dof; [0, 0, ..., 0.]
             row_dof = ints2[irow + 1]
-            log.debug(f'row nid,dof = =({row_nid}, {row_dof})')
-            log.debug(f'row_nid = {row_nid}')
-            log.debug(f'row_dof = {row_dof}')
+            #log.debug(f'row nid,dof = =({row_nid}, {row_dof})')
+            #log.debug(f'row_nid = {row_nid}')
+            #log.debug(f'row_dof = {row_dof}')
             urow_dof = np.unique(row_dof)
-            log.debug(f'urow_dof = {urow_dof}')
+            #log.debug(f'urow_dof = {urow_dof}')
             for udofi in urow_dof:
                 if udofi not in [0, 1, 2, 3, 4, 5, 6]:
                     msg = 'udofi=%s is invalid; must be in [0, 1, 2, 3, 4, 5, 6]; dofs=%s' % (
                         udofi, np.asarray(urow_dof, dtype='int32').tolist())
                     raise ValueError(msg)
             ni = len(irow)
-            log.debug(f'real = {real}')
+            #log.debug(f'real = {real}')
             col_nid = np.ones(ni, dtype='int32') * col_nidi
             col_dof = np.ones(ni, dtype='int32') * col_dofi
 
@@ -377,7 +375,7 @@ def read_matpool_dmig_4(op2: OP2, data: bytes,
             col_nids_array = np.hstack(col_nids)
             col_dofs_array = np.hstack(col_dofs)
             real_array = np.hstack(reals)
-            print(real_array)
+            #print(real_array)
         ioffset = kstop[-1] + 4
 
         if is_complex:
@@ -697,7 +695,7 @@ def read_matpool_dmig(op2: OP2, data: bytes,
                 #print(nstart2, nend_int2, nend_float2)
                 dataii = datai[nstart2:nend_float2]
                 ints2 = np.frombuffer(dataii, dtype='int32').copy()
-                floats = get_floats(dataii, fdtype, op2, tout, size)
+                floats = get_floats_4(dataii, fdtype, op2, tout)
                 #op2.show_data(datai, types='ifs', endian=None, force=False)
 
                 nints = len(ints2)
@@ -1467,11 +1465,13 @@ def find_all_dmigs_start_stop(data: bytes, header_fmt: bytes, size: int,
         kstart, kstop = _get_dmig_kstop(ig, nvalues, istopi, iminus1, debug=debug)
         kstarts.append(kstart)
         kstops.append(kstop)
+    #kstarts = np.array(kstarts)
+    #kstops = np.array(kstops)
 
     return istart, istop, outs, kstarts, kstops
 
 def _get_dmig_kstop(ig: int, nvalues: int, istop: int, iminus1,
-                    debug: bool=True):
+                    debug: bool=True) -> Tuple[np.ndarray, np.ndarray]:
     assert isinstance(debug, bool), debug
     kstart = []
     kstop = []
@@ -1498,6 +1498,8 @@ def _get_dmig_kstop(ig: int, nvalues: int, istop: int, iminus1,
     kstart.pop()
     assert len(kstart) > 0, kstart
     assert len(kstop) > 0, kstop
+    kstart = np.array(kstart, dtype='int32')
+    kstop = np.array(kstop, dtype='int32')
     return kstart, kstop
 
 def get_dtype_fdtype_from_tout(op2: OP2, tout: int) -> Tuple[str, str]:
@@ -1524,25 +1526,27 @@ def get_dtype_fdtype_from_tout(op2: OP2, tout: int) -> Tuple[str, str]:
         raise RuntimeError(f'matrix tout={tout}; expected 1=float32, 2=float64, 3=complex64, 4=complex128')
     return dtype, fdtype
 
-def get_ints(data: bytes, idtype: str, op2: OP2, size: int):
-    if size == 4:
-        ints = np.frombuffer(data, dtype=idtype).copy()
-    else:
-        ints = np.frombuffer(data, dtype=op2.idtype8).copy()
+def get_ints_4(data: bytes, idtype: str, op2: OP2) -> np.ndarray:
+    ints = np.frombuffer(data, dtype=idtype).copy()
     return ints
 
-def get_floats(data: bytes, fdtype: str, op2: OP2, tout: int, size: int):
-    if size == 4:
-        if tout in [1, 3]:
-            # works for float32, complex64
-            floats = np.frombuffer(data, dtype=fdtype).copy()
-        else:
-            # works for float64, complex128
-            floats = np.frombuffer(data, dtype=fdtype).copy()
+def get_ints_8(data: bytes, idtype: str, op2: OP2) -> np.ndarray:
+    ints = np.frombuffer(data, dtype=op2.idtype8).copy()
+    return ints
+
+def get_floats_4(data: bytes, fdtype: str, op2: OP2, tout: int) -> np.ndarray:
+    if tout in {1, 3}:
+        # works for float32, complex64
+        floats = np.frombuffer(data, dtype=fdtype).copy()
     else:
-        if tout == 1:
-            # C:\MSC.Software\simcenter_nastran_2019.2\tpl_post2\mnfexam32_0.op2
-            floats = np.frombuffer(data, dtype=op2.fdtype8).copy()
+        # works for float64, complex128
+        floats = np.frombuffer(data, dtype=fdtype).copy()
+    return floats
+
+def get_floats_8(data: bytes, fdtype: str, op2: OP2, tout: int, size: int) -> np.ndarray:
+    if tout == 1:
+        # C:\MSC.Software\simcenter_nastran_2019.2\tpl_post2\mnfexam32_0.op2
+        floats = np.frombuffer(data, dtype=op2.fdtype8).copy()
     return floats
 
 def grids_comp_array_to_indexi(nid_comp_to_dof_index: Any,
