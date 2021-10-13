@@ -467,6 +467,17 @@ def _convert_elements(model: BDF,
                 scales.add('length')
                 elem.si = [sii*xyz_scale for sii in elem.si]
 
+        elif elem_type == 'CFAST':
+            #xs = double_or_blank(card, 9, 'xs')
+            #ys = double_or_blank(card, 10, 'ys')
+            #zs = double_or_blank(card, 11, 'zs')
+            #print(elem.get_stats())
+            if elem.gs is None:
+                scales.add('length')
+                elem.xs *= xyz_scale
+                elem.ys *= xyz_scale
+                elem.zs *= xyz_scale
+
         elif elem_type == 'GENEL':
             # I'm pretty sure [S] this is unitless
             if elem.k is not None:
@@ -533,6 +544,7 @@ def _convert_properties(model: BDF,
     damping_scale = force_scale / velocity_scale
     stress_scale = force_scale / xyz_scale ** 2
     area_moi_length = area_moi_scale / xyz_scale
+    rotational_stiffness_scale = force_scale
 
     # I, to the bending moment of inertia of a homogeneous shell, T3/12.
     # t^3 has a factor of L^3, so for a factor of 1
@@ -542,16 +554,17 @@ def _convert_properties(model: BDF,
     log = model.log
     log.debug('--Property Scales--')
     scale_map = {
-        'nsm_bar': 'nsm_bar_scale (M/L) = %g' % nsm_bar_scale,
-        'nsm_plate': 'nsm_plate_scale (M/L^2) = %g' % nsm_plate_scale,
-        'area_moi' : 'area_moi_scale (L^4) = %g' % area_moi_scale,
-        'force': 'force_scale (F) = %g' % force_scale,
-        'moment': 'force_scale (F*L) = %g' % moment_scale,
-        'stiffness': 'stiffness_scale (F/L) = %g' % stiffness_scale,
-        'damping': 'damping_scale (F/V) = %g' % damping_scale,
-        'stress': 'stress_scale (F/L^2) = %g' % stress_scale,
-        'velocity' : 'velocity_scale (L/T) = %g' % velocity_scale,
-        'area_moi/length': 'area_moi/length (L^3) = %g' % area_moi_length,
+        'nsm_bar': f'nsm_bar_scale (M/L) = {nsm_bar_scale:g}',
+        'nsm_plate': f'nsm_plate_scale (M/L^2) = {nsm_plate_scale:g}',
+        'area_moi' : f'area_moi_scale (L^4) = {area_moi_scale:g}',
+        'force': f'force_scale (F) = {force_scale:g}',
+        'moment': f'force_scale (F*L) = {moment_scale:g}',
+        'stiffness': f'stiffness_scale (F/L) = {stiffness_scale:g}',
+        'damping': f'damping_scale (F/V) = {damping_scale:g}',
+        'stress': f'stress_scale (F/L^2) = {stress_scale:g}',
+        'velocity' : f'velocity_scale (L/T) = {velocity_scale:g}',
+        'area_moi/length': f'area_moi/length (L^3) = {area_moi_length:g}',
+        'rotational_stiffness': f'rotational_stiffness_scale (F*L/L) = {force_scale:g}',
     }
 
     #log.debug('nsm_bar_scale (M/L) = %g' % nsm_bar_scale)
@@ -641,16 +654,16 @@ def _convert_properties(model: BDF,
 
         elif prop_type == 'PBUSH':
             _convert_pbush(scales, prop, velocity_scale, mass_scale, stiffness_scale, log)
-        elif prop.type == 'PBUSH1D':
+        elif prop_type == 'PBUSH1D':
             _convert_pbush1d(model, scales, prop, xyz_scale, area_scale,
                              mass_scale, damping_scale, stiffness_scale,
                              spring_tables, damper_tables)
 
-        #elif prop.type == 'PCOMPS':
+        #elif prop_type == 'PCOMPS':
             #pass
-        #elif prop.type == 'PCOMPLS':
+        #elif prop_type == 'PCOMPLS':
             #pass
-        elif prop.type == 'PCONEAX':
+        elif prop_type == 'PCONEAX':
             #T1 Membrane thickness. (Real > 0.0 if MID1 = 0)
             #T2 Transverse shear thickness. (Real > 0.0 if MID3 = 0)
             #I Moment of inertia per unit width. (Real)
@@ -668,22 +681,52 @@ def _convert_properties(model: BDF,
             prop.nsm *= nsm_plate_scale
             prop.z1 *= xyz_scale
             prop.z2 *= xyz_scale
+        elif prop_type == 'PFAST':
+            #d : float
+            #    diameter of the fastener
+            #kt1, kt2, kt3 : float
+            #    stiffness values in directions 1-3
+            #mcid : int; default=01
+            #    specifies the element stiffness coordinate system
+            #mflag : int; default=0
+            #    0-absolute; 1-relative
+            #kr1, kr2, kr3 : float; default=0.0
+            #    rotational stiffness values in directions 1-3
+            #mass : float; default=0.0
+            #    lumped mass of the fastener
+            #ge : float; default=0.0
+            #    structural damping
+            scales.add('length')
+            scales.add('stiffness')
+            #'stiffness': 'stiffness_scale (F/L) = %g' % stiffness_scale,
 
-        #elif prop.type == 'PBCOMP':
+            # diameter
+            prop.d *= xyz_scale
+
+            # translational stiffness (F/L)
+            prop.kt1 *= stiffness_scale
+            prop.kt2 *= stiffness_scale
+            prop.kt3 *= stiffness_scale
+
+            # rotational stiffness (F*L/L)
+            prop.kr1 *= stiffness_scale
+            prop.kr2 *= stiffness_scale
+            prop.kr3 *= stiffness_scale
+            prop.mass *= mass_scale
+
+        #elif prop_type == 'PBCOMP':
             #pass
-        #elif prop.type == 'PPLANE':
+        #elif prop_type == 'PPLANE':
             #pass
-        #elif prop.type == 'PRAC2D':
+        #elif prop_type == 'PRAC2D':
             #pass
-        #elif prop.type == 'PRAC3D':
+        #elif prop_type == 'PRAC3D':
             #pass
-        #elif prop.type == 'PFAST':
+        #elif prop_type == 'PDAMP':
             #pass
-        #elif prop.type == 'PDAMP':
+        #elif prop_type == 'PELAST':
             #pass
-        #elif prop.type == 'PELAST':
-            #pass
-        #elif prop.type == 'PBUSHT':
+        #elif prop_type == 'PBUSHT':
             #pass
         #elif prop.type == 'PDAMPT':
             #pass

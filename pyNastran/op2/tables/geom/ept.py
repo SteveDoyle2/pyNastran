@@ -1344,7 +1344,7 @@ class EPT:
 
         DMAP NX 11
         ----------
-        NX has 23 fields in NX 11
+        NX has 23 fields in NX 11-NX 2019.2 (same as MSC 2005)
         NX has 18 fields in the pre-2001 format
 
         DMAP MSC 2005
@@ -1390,7 +1390,10 @@ class EPT:
         return n
 
     def _read_pbush_nx_72(self, card_obj: PBUSH, data: bytes, n: int) -> Tuple[int, List[PBUSH]]:
-        """PBUSH(1402,14,37) - 18 fields"""
+        """
+        PBUSH(1402,14,37) - 18 fields
+        legacy MSC/NX format
+        """
         op2 = self.op2
         ntotal = 72 * self.factor
         struct1 = Struct(mapfmt(op2._endian + b'i17f', self.size))
@@ -1856,7 +1859,8 @@ class EPT:
         return n, props
 
     def _read_pcomp(self, data: bytes, n: int) -> int:
-        r"""PCOMP(2706,27,287) - the marker for Record 22
+        r"""
+        PCOMP(2706,27,287) - the marker for Record 22
 
         standard:
           EPTS; 64-bit: C:\MSC.Software\simcenter_nastran_2019.2\tpl_post1\cqrdbxdra3lg.op2
@@ -1886,9 +1890,10 @@ class EPT:
                 self._add_op2_property(prop)
             op2.card_count['PCOMP'] = nproperties
         else:
-            n2 = op2._read_dual_card(data, n, self._read_pcomp_32_bit,
-                                     self._read_pcomp_64_bit,
-                                     'PCOMP', self._add_op2_property)
+            n2 = op2.reader_geom2._read_dual_card(
+                data, n, self._read_pcomp_32_bit,
+                self._read_pcomp_64_bit,
+                'PCOMP', self._add_op2_property)
         return n2
 
     def _read_pcomp_64_bit(self, data: bytes, n: int) -> Tuple[int, List[PCOMP]]:
@@ -1947,6 +1952,10 @@ class EPT:
                                   8, 4572414629676717179, 0, 1,
                                -1, -1, -1, -1)
 
+        C:\MSC.Software\simcenter_nastran_2019.2\tpl_post2\dbxdr12lg.op2
+        data = (3321, 2, -0.5, 0.0, 1.0, 4, 0.0, 0.0,
+                3, 0.5, 0, 1,
+                3, 0.5, 0, 1)
         """
         op2 = self.op2
         op2.to_nx(' because PCOMP-64 was found')
@@ -1994,6 +2003,9 @@ class EPT:
                 n += ntotal2
                 #print(f'      mid={mid} t={t} theta={theta} sout={sout}')
                 edata2 = data[n:n+ntotal2]
+                if n == ndata:
+                    op2.log.warning('  no (-1, -1, -1, -1) flag was found to close the PCOMPs')
+                    break
                 idata = four_minus1.unpack(edata2)
 
             if self.size == 4:
@@ -2448,7 +2460,10 @@ class EPT:
 
         ntotal = 100 * self.factor # 25*4
         struct1 = Struct(op2._endian + b'2if 5i 2f2i2f 3i 2i 6f')
-        nproperties = (len(data) - n) // ntotal
+        ndatai = len(data) - n
+        nproperties = ndatai // ntotal
+        delta = ndatai % ntotal
+        assert delta == 0, 'len(data)-n=%s n=%s' % (ndatai, ndatai / 100.)
         for unused_i in range(nproperties):
             edata = data[n:n+ntotal]
             out = struct1.unpack(edata)
@@ -2476,7 +2491,6 @@ class EPT:
         NX only
         """
         op2 = self.op2
-        op2.to_nx(' because PFAST-NX was found')
         ntotal = 48
         struct1 = Struct(op2._endian + b'ifii 8f')
         nproperties = (len(data) - n) // ntotal
@@ -2495,6 +2509,7 @@ class EPT:
             self._add_op2_property(prop)
             n += ntotal
         op2.card_count['PFAST'] = nproperties
+        op2.to_nx(' because PFAST-NX was found')
         return n
 
     def _read_pelast(self, data: bytes, n: int) -> int:

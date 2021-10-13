@@ -997,6 +997,86 @@ class DYNAMICS(GeomCommon):
         return len(data)
 
     def _read_nlrsfd(self, data: bytes, n: int) -> int:
+        """this card is faked..."""
+        card_name = 'NLRSFD'
+        card_obj = None
+        methods = {
+            80 : self._read_nlrsfd_80,
+            128 : self._read_nlrsfd_128,
+        }
+        #try:
+        #n = self._read_rgyro_52(RGYRO, data, n)
+        op2 = self.op2
+        n = op2.reader_geom2._read_double_card(
+            card_name, card_obj,
+            self.op2.reader_geom3._add_op2_rigid_element,
+            methods, data, n)
+        #except DoubleCardError:
+            #raise
+        return n
+
+    def _read_nlrsfd_80(self, card_obj, data: bytes, n: int) -> Tuple[int, List[Any]]:
+        """
+        NLRSFD(3807,38,505)
+
+        Word Name Type Description
+        1 SID          I Load set identification number
+        2 GA           I Inner grid id
+        3 GB           I Outer grid id
+        4 PLANE(2) CHAR4 Radial gap orientation plan
+        6 BDIA        RS Inner journal diameter
+        7 BLEN        RS Damper length
+        8 BCLR        RS Damper radial clearance
+        9 SOLN(2)  CHAR4 Solution option
+        11 VISCO      RS Lubricant viscosity
+        12 PVAPCO     RS Lubricant vapor pressure
+        13 NPORT       I Number of lubication ports
+        14 PRES1      RS Boundary pressure for port 1
+        15 THETA1     RS Angular position for port 1
+        16 PRES2      RS Boundary pressure for port 2
+        17 THETA2     RS Angular position for port 2
+        18 NPNT        I Number of finite diff points
+        19 OFFSET1    RS Offset in the SFD direction 1
+        20 OFFSET2    RS Offset in the SFD direction 2
+
+        data = (1, 101, 103, 'XY      ', 6.44, 0.727, 0.003, 'SHORT   ', 7.0e-7, 0.0, 1, 0.0, 270.0, 0.0, 0.0, 31, 0.0, 0.0)
+        """
+        assert self.factor == 1, self.factor
+        op2 = self.op2
+
+        ntotal = 80 * self.factor # 4*20
+        struc = Struct(op2._endian + b'3i 8s 3f 8s 2f i 4f i 2f')
+
+        op2.show_data(data[12:])
+        ndatai = len(data) - n
+        nentries = ndatai // ntotal
+        assert nentries > 0, f'ndatai={ndatai}; nenteries={nentries}; leftover={ndatai % ntotal}'
+        assert ndatai % ntotal == 0, f'ndatai={ndatai}; nenteries={nentries}; leftover={ndatai % ntotal}'
+        for unused_i in range(nentries):
+            edata = data[n:n+ntotal]
+            out = struc.unpack(edata)
+            (sid, ga, gb, plane, bdia, blen, bclr, soln,
+             visco, pvapco, nport,
+             pres1, theta1, pres2, theat2, npnt,
+             offset1, offset2) = out
+            #print(out)
+
+            plane = plane.rstrip().decode('latin1')
+            soln = soln.rstrip().decode('latin1')
+            #NLRSFD SID     GA     GB    PLANE BDIA   BLEN  BCLR   SOLN
+            #       VISCO   PVAPCO NPORT PRES1 THETA1 PRES2 THETA2 NPNT
+            #       OFFSET1 OFFSET2
+            if op2.is_debug_file:
+                op2.binary_debug.write('  NLRSFD=%s\n' % str(out))
+            op2.add_nlrsfd(sid, ga, gb, plane, bdia, blen, bclr, soln,
+                            visco, pvapco, nport,
+                            pres1, theta1, pres2, theat2, npnt,
+                            offset1, offset2)
+            n += ntotal
+        op2.increase_card_count('NLRSFD', nentries)
+        return n, []
+
+    def _read_nlrsfd_128(self, card_obj, data: bytes, n: int) -> Tuple[int, List[Any]]:
         """
         NLRSFD(3807,38,505)
 
@@ -1028,38 +1108,26 @@ class DYNAMICS(GeomCommon):
         assert self.factor == 1, self.factor
         op2 = self.op2
 
-        if 0:
-            ntotal = 80 # 4*20
-            struc = Struct(op2._endian + b'3i 8s 3f 8s 2f i 4f i 2f')
-        else:
-            ntotal = 128 # 4*32
-            struc = Struct(op2._endian + b'3i 8s 3f 8s 2f i 4f i 2f 8s8s 8i')
+        ntotal = 128 * self.factor # 4*32
+        struc = Struct(op2._endian + b'3i 8s 3f 8s 2f i 4f i 2f 8s8s 8i')
 
         ndatai = len(data) - n
         nentries = ndatai // ntotal
-        assert nentries > 0
-        assert ndatai % ntotal == 0
+        assert nentries > 0, f'ndatai={ndatai}; nenteries={nentries}; leftover={ndatai % ntotal}'
+        assert ndatai % ntotal == 0, f'ndatai={ndatai}; nenteries={nentries}; leftover={ndatai % ntotal}'
         for unused_i in range(nentries):
-            if ntotal == 80:
-                edata = data[n:n+ntotal]
-                out = struc.unpack(edata)
-                (sid, ga, gb, plane, bdia, blen, bclr, soln,
-                 visco, pvapco, nport,
-                 pres1, theta1, pres2, theat2, npnt,
-                 offset1, offset2) = out
-            else:
-                edata1 = data[n:n+ntotal]
-                out1 = struc.unpack(edata1)
-                (sid, ga, gb, plane, bdia, blen, bclr, soln,
-                 visco, pvapco, nport,
-                 pres1, theta1, pres2, theat2, npnt,
-                 offset1, offset2, word1, word2, *blank) = out1
-                assert word1 == b'        ', word1
-                assert word2 == b'        ', word2
-                assert max(blank) == 0, blank
-                assert min(blank) == 0, blank
-                #print('blank', blank)
-                #print('*other =', other)
+            edata1 = data[n:n+ntotal]
+            out = struc.unpack(edata1)
+            (sid, ga, gb, plane, bdia, blen, bclr, soln,
+             visco, pvapco, nport,
+             pres1, theta1, pres2, theat2, npnt,
+             offset1, offset2, word1, word2, *blank) = out
+            assert word1 == b'        ', word1
+            assert word2 == b'        ', word2
+            assert max(blank) == 0, blank
+            assert min(blank) == 0, blank
+            #print('blank', blank)
+            #print('*other =', other)
             plane = plane.rstrip().decode('latin1')
             soln = soln.rstrip().decode('latin1')
             #NLRSFD SID     GA     GB    PLANE BDIA   BLEN  BCLR   SOLN

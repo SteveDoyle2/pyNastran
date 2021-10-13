@@ -74,7 +74,7 @@ class CFAST(Element):
 
     def validate(self):
         if self.Type not in ['PROP', 'ELEM']:
-            msg = 'CFAST; eid=%s Type=%r must be in [PROP, ELEM]' % (self.eid, self.Type)
+            msg = f'CFAST; eid={self.eid} Type={self.Type!r} must be in [PROP, ELEM]'
             raise TypeError(msg)
 
         gab_is_none = self.ga is None or self.gb is None

@@ -2136,7 +2136,7 @@ class EDT:
         return n
 
     def _read_flutter(self, data: bytes, n: int) -> int:
-        """
+        r"""
         (3902, 39, 272)
         MSC 2018.2
 
@@ -2157,15 +2157,23 @@ class EDT:
         Words 1 through max repeat until End of Record
 
         NX:
-                  sid method,     d, m, k, imethod,  neign, epr, sflag
-          data = (30, PK,         1, 2, 3, L,         3, 0.001, -1)       # ???
+                  sid method,     d, m, k, imethod,  neign, epr, end
+          data = (30, PK,         1, 2, 3, L,         3, 0.001, -1)       # NX
           data = (30, KE, '    ', 1, 2, 3, L, '    ', 3, 0.001, 0.0, -1)  # MSC
+
+        C:\MSC.Software\msc_nastran_runs\pkswep.op2
+                 sid method,    d, m, k, imethod,   neign/fmax, epr,   sweep_flag
+        data  = (3, 'PKS     ', 1, 2, 3, 'L       ', 5.0,       0.01,  1, -1,
+                 4, 'K       ', 1, 2, 4, 'L       ', 3,         0.001, 0, -1)
+        data  = (3, 'PKS     ', 1, 2, 3, 'L       ', 5.0,       0.01,  1, -1,
+                 4, 'K       ', 1, 2, 4, 'L       ', 3,         0.001, 0, -1)
         """
         op2 = self.op2
         ints = np.frombuffer(data[n:], op2.idtype).copy()
         floats = np.frombuffer(data[n:], op2.fdtype).copy()
         istart, iend = get_minus1_start_end(ints)
 
+        #op2.show_data(data[12:], types='ifs')
         for (i0, i1) in zip(istart, iend):
             sid = ints[i0]
             assert ints[i1] == -1, ints[i1]
@@ -2176,23 +2184,38 @@ class EDT:
             reduced_freq_velocity = ints[i0+5]
             imethod_bytes = data[n+i0*4+24:n+i0*4+32]
             nvalue = ints[i0+8]  # nvalue
-            epsilon = floats[i0+9]
-
+            fmax = None
             if ints[i0+10] == -1:
+                epsilon = floats[i0+9]
                 assert ints[i0+10] == -1, ints[i0:i1]
+                op2.to_nx(' because FLUTTER was found')
             else:
                 # msc
+                op2.to_msc(' because FLUTTER was found')
                 sweep_flag = ints[i0+10]
                 assert ints[i0+11] == -1, ints[i0:i1+1]
-                assert sweep_flag == 0, sweep_flag
+                if sweep_flag == 0:
+                    nvalue = ints[i0+8]
+                elif sweep_flag == 1:
+                    nvalue = None
+                    fmax = floats[i0+8]
+                else:
+                    raise RuntimeError(sweep_flag)
+                epsilon = floats[i0+9]
+
+                #if fmax is None:
+                    #op2.log.debug(f'FLUTTER: 9: nvalue={nvalue} 10: epsilon={epsilon:g}')
+                #else:
+                    #op2.log.debug(f'FLUTTER: 9: fmax={fmax}; 10: epsilon={epsilon:g}')
             method = method_bytes.rstrip().decode('ascii')
             imethod = imethod_bytes.rstrip().decode('ascii')
             op2.add_flutter(sid, method,
                             density, mach, reduced_freq_velocity,
                             imethod=imethod, # 'L'
                             nvalue=nvalue,
-                            epsilon=epsilon, validate=True)
-        op2.to_nx(' because FLUTTER was found')
+                            epsilon=epsilon,
+                            omax=fmax,
+                            validate=True)
         return len(data)
         #ntotal = 12 # 4 * 8
         #ndatai = len(data) - n

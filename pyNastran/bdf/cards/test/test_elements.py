@@ -5,7 +5,7 @@ import numpy as np
 from cpylog import get_logger
 from pyNastran.bdf.bdf import BDF, BDFCard
 from pyNastran.bdf.bdf import CGAP, PGAP, CBUSH, CFAST
-from pyNastran.bdf.cards.test.utils import save_load_deck
+from pyNastran.bdf.cards.test.utils import save_load_deck, read_write_op2_geom
 from pyNastran.bdf.mesh_utils.mass_properties import mass_properties
 
 
@@ -182,7 +182,11 @@ class TestElements(unittest.TestCase):
         model.uncross_reference()
         model.safe_cross_reference()
         mass_properties(model)
-        save_load_deck(model, run_convert=False)
+        #save_load_deck(model, run_convert=False)
+        read_write_op2_geom(
+            model, run_op2_writer=True, run_op2_reader=True,
+            nastran_format='msc')
+        save_load_deck(model)
 
     def test_cbush1d(self):
         model = BDF(debug=False)

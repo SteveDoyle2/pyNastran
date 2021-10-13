@@ -22,18 +22,19 @@ from typing import TYPE_CHECKING
 #from itertools import cycle, count
 import numpy as np
 
-from pyNastran.utils.numpy_utils import integer_types, float_types
-from pyNastran.bdf.field_writer_8 import set_blank_if_default
-from pyNastran.bdf.cards.base_card import (
-    BaseCard, expand_thru_by, break_word_by_trailing_integer,
-    break_word_by_trailing_parentheses_integer_ab)
+#from pyNastran.utils.numpy_utils import integer_types, float_types
+#from pyNastran.bdf.field_writer_8 import set_blank_if_default
+from pyNastran.bdf.cards.base_card import BaseCard
+    #BaseCard, expand_thru_by, break_word_by_trailing_integer,
+    #break_word_by_trailing_parentheses_integer_ab)
     #collapse_thru_by_float, condense, build_thru_float)
 from pyNastran.bdf.cards.optimization import OptConstraint, DVXREL1, get_dvxrel1_coeffs
 from pyNastran.bdf.bdf_interface.assign_type import (
     integer, integer_or_blank, integer_or_string, integer_string_or_blank,
     double, double_or_blank, string, string_or_blank,
-    integer_double_or_blank, integer_double_string_or_blank,
-    double_string_or_blank, interpret_value, check_string, loose_string)
+    #integer_double_or_blank, integer_double_string_or_blank,
+    #double_string_or_blank, interpret_value, check_string, loose_string,
+)
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
 from pyNastran.bdf.field_writer_double import print_card_double
@@ -69,7 +70,7 @@ def validate_dvcrel(validate, element_type, cp_name):
     elif element_type == 'CELAS4':
         options = ['K']
         _check_dvcrel_options(cp_name, element_type, options)
-    elif element_type in ['CQUAD4']:
+    elif element_type == 'CQUAD4':
         options = ['T1', 'T2', 'T3', 'T4'] # 'ZOFFS',
         _check_dvcrel_options(cp_name, element_type, options)
     elif element_type == 'CTRIA3':
@@ -87,7 +88,7 @@ def validate_dvcrel(validate, element_type, cp_name):
     elif element_type in ['CELAS1']:
         options = []
         _check_dvcrel_options(cp_name, element_type, options)
-    elif element_type in ['CBUSH']:
+    elif element_type == 'CBUSH':
         options = ['X1', 'X2', 'X3', 'S', 'S1', 'S2', 'S3']
         _check_dvcrel_options(cp_name, element_type, options)
     elif element_type == 'CVISC':
@@ -172,7 +173,7 @@ class DMNCON(OptConstraint):
             assert normal is not None, normal
             assert m is not None, m
             assert nsections is not None, nsections
-        elif constraint_type == 'ADDM':
+        elif constraint_type == 'ADDM':  # Additive
             assert xyz is not None, xyz
             assert normal is not None, normal
             assert mind is not None, mind
@@ -185,6 +186,8 @@ class DMNCON(OptConstraint):
             assert d is not None, d
         elif constraint_type in {'MINS', 'MAXS'}:
             assert size is not None, size
+        elif constraint_type == 'EXTC':
+            assert normal is not None, normal
         else:  # pragma: no cover
             raise NotImplementedError(constraint_type)
 
@@ -228,6 +231,7 @@ class DMNCON(OptConstraint):
             ])
             assert len(card) <= 17, f'len(DMNCON card) = {len(card):d}\ncard={card}'
         elif constraint_type == 'SYMP':
+            # PLANAR SYMMETRY
             #X Y Z N1 N2 N3
             xyz = np.array([
                 double_or_blank(card, 9, 'x', default=0.),
@@ -241,6 +245,7 @@ class DMNCON(OptConstraint):
             ])
             assert len(card) <= 15, f'len(DMNCON card) = {len(card):d}\ncard={card}'
         elif constraint_type == 'SYMC':
+            # CYCLIC SYMMETRY
             #X Y Z N1 N2 N3
             #M1 M2 M3 NSECT
             xyz = np.array([
@@ -261,6 +266,7 @@ class DMNCON(OptConstraint):
             nsections = integer(card, 19, 'nsections')
             assert len(card) <= 20, f'len(DMNCON card) = {len(card):d}\ncard={card}'
         elif constraint_type == 'CDID':
+            # CASTING DIE DIRECTION(S)
             #X Y Z N1 N2 N3
             #D1 D2 D3 D21 D22 D23
             xyz = np.array([
@@ -283,6 +289,7 @@ class DMNCON(OptConstraint):
             ])
             assert len(card) <= 22, f'len(DMNCON card) = {len(card):d}\ncard={card}'
         elif constraint_type == 'EXTC':
+            # EXTRUSION ALONG A STRAIGHT LINE
             #N1 N2 N3
             normal = np.array([
                 double_or_blank(card, 9, 'n1', default=0.),
@@ -292,9 +299,11 @@ class DMNCON(OptConstraint):
             assert len(card) <= 12, f'len(DMNCON card) = {len(card):d}\ncard={card}'
 
         elif constraint_type in {'MINS', 'MAXS'}:
+            # MINIMUM / MAXIMUM SIZE
             size = double(card, 9, 'size')
             assert len(card) <= 10, f'len(DMNCON card) = {len(card):d}\ncard={card}'
         elif constraint_type == 'CHBC':
+            # CHECKER-BOARDING CONTROL
             off_flag = double(card, 9, 'off_flag')
             assert len(card) <= 10, f'len(DMNCON card) = {len(card):d}\ncard={card}'
         else:  # pragma: no cover
@@ -306,30 +315,31 @@ class DMNCON(OptConstraint):
                       off_flag=off_flag, comment=comment)
 
     def raw_fields(self):
-        list_fields = ['DMNCON', self.constraint_id, self.constraint_type,
+        constraint_type = self.constraint_type
+        list_fields = ['DMNCON', self.constraint_id, constraint_type,
                        None, None, None, None, None, None]
 
-        if self.constraint_type == 'SYMP':
+        if constraint_type == 'SYMP':
             list_fields.extend([self.xyz[0], self.xyz[1], self.xyz[2],
                                 self.normal[0], self.normal[1], self.normal[2]])
-        elif self.constraint_type == 'SYMC':
+        elif constraint_type == 'SYMC':
             list_fields.extend([self.xyz[0], self.xyz[1], self.xyz[2],
-                                self.normal[0], self.normal[1], self.normal[2]],
-                               self.m[0], self.m[1], self.m[2], self.nsections)
-        elif self.constraint_type == 'ADDM':
+                                self.normal[0], self.normal[1], self.normal[2],
+                                self.m[0], self.m[1], self.m[2], self.nsections])
+        elif constraint_type == 'ADDM':
             list_fields.extend([self.angle, self.mind, self.xyz[0], self.xyz[1], self.xyz[2],
                                 self.normal[0], self.normal[1], self.normal[2]])
-        elif self.constraint_type == 'EXTC':
+        elif constraint_type == 'EXTC':
             list_fields.extend([self.normal[0], self.normal[1], self.normal[2]])
-        elif self.constraint_type == 'CDID':
+        elif constraint_type == 'CDID':
             list_fields.extend([self.xyz[0], self.xyz[1], self.xyz[2],
                                 self.normal[0], self.normal[1], self.normal[2]] + self.d)
-        elif self.constraint_type in {'MINS', 'MAXS'}:
+        elif constraint_type in {'MINS', 'MAXS'}:
             list_fields.append(self.size)
-        elif self.constraint_type == 'CHBC':
+        elif constraint_type == 'CHBC':
             list_fields.append(self.off_flag)
         else:  # pragma: no cover
-            raise NotImplementedError(self.constraint_type)
+            raise NotImplementedError(constraint_type)
         return list_fields
 
     def repr_fields(self):

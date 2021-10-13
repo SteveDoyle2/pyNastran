@@ -2,8 +2,10 @@ from collections import defaultdict
 from struct import pack, Struct
 
 from .geom1_writer import write_geom_header, close_geom_table
+from pyNastran.op2.op2_interface.op2_reader import mapfmt
 
-def write_ept(op2_file, op2_ascii, obj, endian=b'<'):
+def write_ept(op2_file, op2_ascii, obj, endian=b'<',
+              nastran_format: str='nx') -> None:
     if not hasattr(obj, 'properties'):
         return
 
@@ -46,7 +48,6 @@ def write_ept(op2_file, op2_ascii, obj, endian=b'<'):
         #'PCOMPG',
 
     ]
-    nastran_format = 'nx'
     for name, pids in out.items():
         nproperties = len(pids)
         if nproperties == 0:  # pragma: no cover
@@ -68,6 +69,10 @@ def write_ept(op2_file, op2_ascii, obj, endian=b'<'):
             continue
         elif name == 'PBUSH':
             itable = write_pbush(name, pids, itable, op2_file, op2_ascii, obj, endian=endian,
+                                 nastran_format=nastran_format)
+            continue
+        elif name == 'PFAST':
+            itable = write_pfast(name, pids, itable, op2_file, op2_ascii, obj, endian=endian,
                                  nastran_format=nastran_format)
             continue
 
@@ -412,15 +417,52 @@ def write_card(op2_file, op2_ascii, obj, name, pids, spack, endian):
 def write_pbush(name, pids, itable, op2_file, op2_ascii, obj, endian=b'<',
                 nastran_format='nx'):
     """writes the PBUSH"""
+    size = 4
+    key = (1402, 14, 37)
+    is_mass = False
+    is_alpha = False
+    if nastran_format == 'nx':
+        nfields = 23
+        fmt = mapfmt(endian + b'i22f', size)
+    elif nastran_format == 'msc':
+        # TODO: there are 3 different types of PBUSH cards...
+        # if ndata == 23:
+        #     (pid, k1, k2, k3, k4, k5, k6, b1, b2, b3, b4, b5, b6,
+        #      g1, g2, g3, g4, g5, g6, sa, st, ea, et) = data
+        #     mass = 0.
+        # elif ndata == 24:
+        #     (pid, k1, k2, k3, k4, k5, k6, b1, b2, b3, b4, b5, b6,
+        #      g1, g2, g3, g4, g5, g6, sa, st, ea, et,
+        #      mass) = data
+        # elif ndata == 27:
+        #     (pid, k1, k2, k3, k4, k5, k6, b1, b2, b3, b4, b5, b6,
+        #      g1, g2, g3, g4, g5, g6, sa, st, ea, et,
+        #      mass, alpha, tref, coinl) = data
+        for pid in sorted(pids):
+            prop = obj.properties[pid]
+            if prop.mass is not None:
+                is_mass = True
+            if prop.alpha is not None:
+                is_mass = True
+                is_alpha = True
+                break
+        if is_alpha:
+            nfields = 27
+            fmt = mapfmt(endian + b'i22f 4f', size)
+        elif is_mass:
+            nfields = 24
+            fmt = mapfmt(endian + b'i22f f', size)
+        else:
+            nfields = 23
+            fmt = mapfmt(endian + b'i22f', size)
+    else:
+        raise RuntimeError(f'EPT writer: PBUSH nastran_format={nastran_format}')
 
-    # TODO: there are 3 different types of PBUSH cards...
-    key = (1402, 14, 37) # 23 fields
-    fmt = endian + b'i22f'
+
     struct1 = Struct(fmt)
-
     nproperties = len(pids)
 
-    nvalues = 23 * nproperties + 3 # +3 comes from the keys
+    nvalues = nfields * nproperties + 3 # +3 comes from the keys
     nbytes = nvalues * 4
     op2_file.write(pack('3i', *[4, nvalues, 4]))
     op2_file.write(pack('i', nbytes)) #values, nbtyes))
@@ -442,7 +484,7 @@ def write_pbush(name, pids, itable, op2_file, op2_ascii, obj, endian=b'<',
         if prop.GEi:
             (g1, g2, g3, g4, g5, g6) = [
                 gi if gi is not None else 0.0 for gi in prop.GEi] # ???
-        # TODO: not 100%
+
         sa = prop.sa if prop.sa is not None else 0.
         st = prop.st if prop.st is not None else 0.
         ea = prop.ea if prop.ea is not None else 0.
@@ -452,8 +494,21 @@ def write_pbush(name, pids, itable, op2_file, op2_ascii, obj, endian=b'<',
                    b1, b2, b3, b4, b5, b6,
                    g1, g2, g3, g4, g5, g6,
                    sa, st, ea, et]
+        if is_alpha:
+            data_in.extend([prop.alpha, prop.tref, prop.coincident_length])
+            assert len(data_in) == 27, data_in
+        elif is_mass:
+            data_in.append(prop.mass)
+            assert len(data_in) == 24, data_in
+        else:
+            pass
+            #data_in = [pid,
+                       #k1, k2, k3, k4, k5, k6,
+                       #b1, b2, b3, b4, b5, b6,
+                       #g1, g2, g3, g4, g5, g6,
+                       #sa, st, ea, et]
+            assert len(data_in) == 23, data_in
 
-        assert len(data_in) == 23, data_in
         assert None not in data_in
         op2_file.write(struct1.pack(*data_in))
         op2_ascii.write(str(data_in) + '\n')
@@ -467,23 +522,89 @@ def write_pbush(name, pids, itable, op2_file, op2_ascii, obj, endian=b'<',
     op2_file.write(pack('9i', *data))
     op2_ascii.write(str(data) + '\n')
     return itable
-    #"""PBUSH"""
-    #ntotal = 92  # 23*4
-    #
 
-    #nentries = ndata // ntotal
-    #assert nentries > 0, 'table={self.table_name} len={ndata - n}'
-    #assert ndata % ntotal == 0, f'table={self.table_name} leftover=({ndata}%{ntotal}={ndata % ntotal}'
+def write_pfast(name, pids, itable, op2_file, op2_ascii, obj, endian=b'<',
+                nastran_format='nx'):
+    """writes the PFAST"""
+    # TODO: there are 2 different types of PFAST cards...
 
-    #props = []
-    #for unused_i in range(nentries):
-        #edata = data[n:n+92]
-        #out = struct1.unpack(edata)
-        ## = out
-        #prop = PBUSH.add_op2_data(out)
-        #props.append(prop)
-        #n += ntotal
-    #return n, props
+    nproperties = len(pids)
+    if nastran_format == 'nx':
+        key = (3601, 36, 55)
+        fmt = endian + b'ifii 8f'
+        nvalues_per_property = 12
+    elif nastran_format == 'msc':
+        key = (13501, 135, 510)
+        nvalues_per_property = 25
+        fmt = endian + b'2if 5i 2f2i2f 3i 2i 6f'
+    else:  # pragma: no cover
+        raise NotImplementedError(nastran_format)
+    nvalues = nvalues_per_property * nproperties + 3 # +3 comes from the keys
+    struct1 = Struct(fmt)
+    nbytes = nvalues * 4
+    op2_file.write(pack('3i', *[4, nvalues, 4]))
+    op2_file.write(pack('i', nbytes)) #values, nbtyes))
+
+    op2_file.write(pack('3i', *key))
+    op2_ascii.write('%s %s\n' % (name, str(key)))
+    for pid in sorted(pids):
+        prop = obj.properties[pid]
+        #print(prop.get_stats())
+        if nastran_format == 'nx':
+            data_in = [pid, prop.d, prop.mcid, prop.mflag,
+                       prop.kt1, prop.kt2, prop.kt3,
+                       prop.kr1, prop.kr2, prop.kr3,
+                       prop.mass, prop.ge]
+        elif nastran_format == 'msc':
+            #4 CONNBEH   I Connection behavior (0=FF/F, 1=FR, 10=RF/R, 11=RR)
+            #5 CONNTYPE  I Connection type (0=clamp, 1=hinge, 2=bolt)
+            #6 EXTCON    I External constraint flag (0=off, 1=on)
+            #7 CONDTYPE  I Condition type (0=rigid, 1=equivalent)
+            #8 WELDTYPE  I Weld type (0=spot weld, 1=but seam, 2=T-seam)
+            connbeh = 0
+            conntype = 0
+            weldtype = 0
+            extcon = 0
+            condtype = 0
+
+            #9 MINLEN   RS Minimum length of spot weld
+            #10 MAXLEN  RS Maximum length of spot weld
+            #11 GMCHK    I Perform geometry check
+            #12 SPCGS    I SPC the master grid GS
+            gmcheck = 0
+            spcgs = 0
+            minlen = 0.0
+            maxlen = 0.0
+
+            blank1 = 0
+            blank2 = 0
+            blank3 = 0
+            #pid mid  D    con  con  ext  cond weld min max  chk  spc  cmass ge  und  und  und  mcid mfag kt1      kt2       kt3       kr1    kr2      kr3
+            mcid0 = prop.mcid
+            data_in = [
+                # this 0 value is really weird...
+                pid, 0, prop.d, connbeh, conntype, extcon,
+                condtype, weldtype, minlen, maxlen,
+                gmcheck, spcgs, prop.mass, prop.ge,
+                blank1, blank2, blank3, prop.mcid, prop.mflag,
+                prop.kt1, prop.kt2, prop.kt3,
+                prop.kr1, prop.kr2, prop.kr3]
+        else:  # pragma: no cover
+            raise NotImplementedError(nastran_format)
+
+        assert None not in data_in, data_in
+        op2_file.write(struct1.pack(*data_in))
+        op2_ascii.write(str(data_in) + '\n')
+
+    op2_file.write(pack('i', nbytes))
+    itable -= 1
+    data = [
+        4, itable, 4,
+        4, 1, 4,
+        4, 0, 4]
+    op2_file.write(pack('9i', *data))
+    op2_ascii.write(str(data) + '\n')
+    return itable
 
 def write_pbarl(name, pids, itable, op2_file, op2_ascii, obj, endian=b'<'):
     """writes the PBARL"""

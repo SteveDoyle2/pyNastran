@@ -1,11 +1,17 @@
+from __future__ import annotations
 from collections import defaultdict
 from struct import pack, Struct
+from typing import TYPE_CHECKING
 
 from pyNastran.op2.errors import SixtyFourBitError
 from .geom1_writer import write_geom_header, close_geom_table
 integer_types = int
+if TYPE_CHECKING:
+    from pyNastran.op2.op2_geom import OP2Geom
+
 
 def write_geom2(op2_file, op2_ascii, obj, endian=b'<'):
+    nastran_format = 'msc'
     if not hasattr(obj, 'elements'):
         return
     #if not hasattr(obj, 'nodes'):
@@ -96,6 +102,9 @@ def write_geom2(op2_file, op2_ascii, obj, endian=b'<'):
         if name in ['CTETRA', 'CHEXA', 'CPENTA', 'CPYRAM']:
             itable = _write_solid(obj, name, eids, nelements, itable, op2_file, op2_ascii, endian)
             continue
+        #elif name == 'CFAST':
+            #_write_cfast(obj, name, eids, nelements, itable, op2_file, op2_ascii, endian,
+                         #nastran_format=nastran_format)
 
         if name in mapper:
             key, spacki, nfields = mapper[name]
@@ -285,7 +294,7 @@ def _write_cbar(obj, name, eids, nelements, itable, op2_file, op2_ascii, endian)
     itable = _write_end_block(nbytes, itable, op2_file, op2_ascii)
     return itable
 
-def _write_solid(model, name, eids, nelements, itable, op2_file, op2_ascii, endian):
+def _write_solid(model, name, eids, nelements, itable, op2_file, op2_ascii, endian) -> int:
     """writes the solid elements"""
     if name == 'CTETRA':
         key = (5508, 55, 217)
@@ -477,6 +486,69 @@ def _write_cgap(eids, spack, obj, op2_file, op2_ascii, endian):
             data = [eid, pid, ga, gb, g0, 0, 0, f, cid]
             print('CGAP g0; x=%s gab0=%s data=%s' % (g0, [ga, gb, g0], data))
             op2_file.write(structi.pack(*data))
+
+def _write_cfast(model: OP2Geom,
+                 name, eids, nelements, itable, op2_file, op2_ascii, endian,
+                 nastran_format='nx') -> int:
+    # MSC 2005r2 -> 2016
+    # CFAST(9801,98,506) - the marker for Record 34
+    # gs     : 1
+    # ida    : 10
+    # idb    : 12
+    # pid    : 15
+    # xs     : None
+    # ys     : None
+    # zs     : None
+    formati = 0
+    typei = 0
+    cid = 0
+    g_upper = [0] * 8
+    g_lower = g_upper
+    tavg = 0.0
+    blank1 = 0
+    blank2 = 0
+    tmin = 0.0
+    #                   up low thickness
+    fmt = endian + b'8i 8i 8i f 2i f'
+    spack = Struct(fmt)
+    # 1 EID       I Element identification number
+    # 2 PID       I Property identification number
+    # 3 GS        I Spot weld master node identification numberGS
+    # 4 FORMAT(C) I Connection format (0=gridid)
+    # 5 GA        I ID of GA
+    # 6 GB        I ID of GB
+    # 7 TYPE      I Types of upper and lower elements for FORM="GRIDID"
+    # 8 CID       I C
+    # 9 GUPPER(8) I Grid IDs of the upper shell
+    # FORMAT =0 GRIDID of GBI
+    #   17 GLOWER(8) I
+    # FORMAT =1 ALIGN (not used)
+    #   17 GLOWER(8) I
+    # FORMAT =2 ELEMID (not used)
+    #   17 GLOWER(8) I
+    # FORMAT =9 ELPAT for xyz
+    #   17 XYZ(3) RS
+    #   20 UNDEF(5) none Not used
+    # FORMAT =10 PARTPAT for xyz
+    #   17 XYZ(3) RS
+    #   20 UNDEF(5) none Not used
+    # End FORMAT
+    # 25 TAVG RS Average shell thickness
+    # 26 UNDEF(2) none Not used
+    # 28 TMIN RS Minimum shell thickness
+
+    nfields = 16
+    key = ()
+    nbytes = _write_intermediate_block(name, key, nfields, nelements, op2_file, op2_ascii)
+    for eid in sorted(eids):
+        elem = model.elements[eid]
+        print(elem.get_stats())
+        data_in = [eid, elem.pid, elem.gs, formati, elem.ida, elem.idb, typei, cid] + g_upper + [tavg, blank1, blank2, tmin]
+        #op2_ascii.write('  eid=%s nids=%s\n' % (eid, str(nids)))
+        op2_file.write(spack.pack(*data_in))
+    itable = _write_end_block(nbytes, itable, op2_file, op2_ascii)
+    asdf
+    return itable
 
 def write_card(name, eids, spack, obj, op2_file, op2_ascii, endian):
     """writes the GEOM2 elements"""

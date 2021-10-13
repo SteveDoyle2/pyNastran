@@ -231,7 +231,7 @@ class MPT:
     def _read_mat2_68(self, material: MAT2, data: bytes, n: int) -> Tuple[int, MAT2]:
         op2 = self.op2
         ntotal = 68 * self.factor  # 17*4
-        s = Struct(op2._endian + b'i15fi')
+        s = Struct(op2._endian + mapfmt(b'i15fi', self.size))
         ndatai = len(data) - n
         assert ndatai % ntotal == 0
         nmaterials = ndatai // ntotal
@@ -295,7 +295,7 @@ class MPT:
         """
         op2 = self.op2
         ntotal = 92 * self.factor  # 23*4
-        s = Struct(op2._endian + b'i15fi 6f')
+        s = Struct(op2._endian + mapfmt(b'i15fi 6f', self.size))
         ndatai = len(data) - n
         assert ndatai % ntotal == 0
         nmaterials = ndatai // ntotal

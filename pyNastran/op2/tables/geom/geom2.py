@@ -228,7 +228,7 @@ class GEOM2:
             (801, 8, 75): ['CELAS3', self._read_celas3],
             (901, 9, 76): ['CELAS4', self._read_celas4],
 
-            (9801, 98, 506): ['CFAST-nx10', self._read_cfast],  # nx10
+            (9801, 98, 506): ['CFAST-nx10', self._read_cfast_msc_nx10],  # nx10
             (13801, 138, 566): ['CFAST-nx12', self._read_cfast], # nx12
 
             (8515, 85, 209): ['CFLUID2-nx10', self._read_cfluid2],  # nx10
@@ -407,7 +407,7 @@ class GEOM2:
             #(801, 8, 75): ['CELAS3', self._read_fake], # record 32
             #(901, 9, 76): ['CELAS4', self._read_fake], # record 33
             #(9801, 98, 506): ['CFAST', self._read_fake], # record 34
-            (9301, 93, 607): ['CFASTP', self._read_fake],    # 35
+            (9301, 93, 607): ['CFASTP', self._read_cfastp],    # 35
             #(8515, 85, 0): ['CFLUID2', self._read_cfluid2],  # record 36 - not done
             #(8615, 86, 0): ['CFLUID3', self._read_cfluid3],  # record 37 - not done
             #(8715, 87, 0): ['CFLUID4', self._read_cfluid4],  # record 38 - not done
@@ -1387,7 +1387,8 @@ class GEOM2:
         op2 = self.op2
         ntotal = 16 * self.factor  # 4*4
         struct_4i = Struct(mapfmt(op2._endian + b'4i', self.size))
-        nelements = (len(data) - n) // ntotal
+        ndatai = len(data) - n
+        nelements = ndatai // ntotal
         for unused_i in range(nelements):
             edata = data[n:n+ntotal]
             out = struct_4i.unpack(edata)
@@ -1407,7 +1408,8 @@ class GEOM2:
         op2 = self.op2
         ntotal = 16 * self.factor  # 4*4
         s = Struct(mapfmt(op2._endian + b'ifii', self.size))
-        nelements = (len(data) - n) // ntotal
+        ndatai = len(data) - n
+        nelements = ndatai // ntotal
         for unused_i in range(nelements):
             edata = data[n:n + ntotal]
             out = s.unpack(edata)
@@ -1420,10 +1422,162 @@ class GEOM2:
         op2.card_count['CELAS4'] = nelements
         return n
 
+    def _read_cfastp(self, data: bytes, n: int) -> int:
+        """MSC 2020"""
+        op2 = self.op2
+        ntotal = 328 * self.factor  # 82*4
+        s = Struct(mapfmt(op2._endian + b'40i 8f 8i 26i', self.size))
+        ndatai = len(data) - n
+        nelements = ndatai // ntotal
+        for unused_i in range(nelements):
+            edata = data[n:n + ntotal]
+            #op2.show_data(edata, types='if')
+            out = s.unpack(edata)
+            if op2.is_debug_file:
+                op2.binary_debug.write('  CFASTP=%s\n' % str(out))
+            #(eid, k, s1, s2) = out
+            eid, pid, elem_prop_flag, *other = out
+            assert eid > 0, eid
+            #elem = CELAS4.add_op2_data(out)
+            #self.add_op2_element(elem)
+            #print(out)
+            n += ntotal
+        #op2.card_count['CFAST'] = nelements
+        #raise RuntimeError('CFASTP')
+        return n
+
     def _read_cfast(self, data: bytes, n: int) -> int:
+        r"""
+        RECORD – CFAST(13801,138,566) - NX
+        Word Name Type Description
+        1 EID       I Element identification number
+        2 PID       I Property identification number
+        3 GS        I Spot weld master node identification number GS
+        4 FORMAT(C) I Connection format (9=elpat, 10=partpat)
+        5 GA        I Identification number of GA
+        6 GB        I Identification number of GB
+        7–8 UNDEF(2)
+        9  GUPPER(8)  I Grid identification numbers of the upper shell
+        17 GLOWER(8)  I Grid identification numbers of the lower shell
+        25 GUACT(32)  I Unique set of grid IDs of the active shells in upper patch
+        57 GLACT(32)  I Unique set of grid IDs of the active shells in lower patch
+        89 NUG        I Number of active grids in upper patch
+        90 NLG        I Number of active grids in lower patch
+        91  GUELE(32) I Grid IDs of the active shells in upper patch
+        123 GLELE(32) I Grid IDs of the active shells in lower patch
+        155 GHA(12)   RS Coordinates of 4 GHA points
+        167 GHB(12)   RS Coordinates of 4 GHB points
+        179 TAVG      RS Average shell thickness
+        ints = (
+            101, 3, 100, 9, 0,   0,   44,  0,
+            9, 14, 13, 8,   0,   0,   0,   0,
+            29, 34, 33, 28, 0,   0,   0,   0,
+            9, 14, 13, 8,   0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            29, 34, 33, 28, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            4, 4, 9, 14, 13, 8, 0, 0, 0, 0, 9, 14, 13, 8, 0, 0, 0, 0, 9, 14, 13, 8, 0, 0, 0, 0, 9, 14, 13, 8, 0, 0, 0, 0, 29, 34, 33, 28, 0, 0, 0, 0, 29, 34, 33, 28, 0, 0, 0, 0, 29, 34, 33, 28, 0, 0, 0, 0, 29, 34, 33, 28, 0, 0, 0, 0,
+            1077697529, 1065830415, 0, 1077697529, 1073264625, 0,
+            1073980423, 1073264625, 0,
+            1073980423, 1065830415, 0, 1077697529,
+            1065830415, 1036831949, 1077697529, 1073264625, 1036831949, 1073980423, 1073264625, 1036831949, 1073980423, 1065830415, 1036831949, -1082130432,
+            7, 19,
+            0.001, 2.5, 1.5, 0.1, 2.5, 1.5, 0.0, 2.5, 1.5,
+            0.1)
+
+        CFAST EID PID TYPE IDA IDB GS GA GB
+              XS  YS  ZS
+                     eid     pid    type       ida    idb    gs    ga    gb
+        CFAST        101       3    ELEM       7      19     100
+        floats = (
+            101, 3, 100, 9, 0.0, 0.0, 44, 0.0,
+            9, 14, 13, 8,   0.0, 0.0, 0.0, 0.0,
+            29, 34, 33, 28, 0.0, 0.0, 0.0, 0.0,
+            9, 14, 13, 8,   0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+            29, 34, 33, 28, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+            5.605193857299268e-45, 5.605193857299268e-45, 1.2611686178923354e-44, 1.961817850054744e-44, 1.8216880036222622e-44, 1.1210387714598537e-44, 0.0, 0.0, 0.0, 0.0, 1.2611686178923354e-44, 1.961817850054744e-44, 1.8216880036222622e-44, 1.1210387714598537e-44, 0.0, 0.0, 0.0, 0.0, 1.2611686178923354e-44, 1.961817850054744e-44, 1.8216880036222622e-44, 1.1210387714598537e-44, 0.0, 0.0, 0.0, 0.0, 1.2611686178923354e-44, 1.961817850054744e-44, 1.8216880036222622e-44, 1.1210387714598537e-44, 0.0, 0.0, 0.0, 0.0, 4.0637655465419695e-44, 4.764414778704378e-44, 4.624284932271896e-44, 3.923635700109488e-44, 0.0, 0.0, 0.0, 0.0, 4.0637655465419695e-44, 4.764414778704378e-44, 4.624284932271896e-44, 3.923635700109488e-44, 0.0, 0.0, 0.0, 0.0, 4.0637655465419695e-44, 4.764414778704378e-44, 4.624284932271896e-44, 3.923635700109488e-44, 0.0, 0.0, 0.0, 0.0, 4.0637655465419695e-44, 4.764414778704378e-44, 4.624284932271896e-44, 3.923635700109488e-44, 0.0, 0.0, 0.0, 0.0,
+            2.9431135654449463, 1.056, 0.0, 2.9431135654449463, 1.943, 0.0,
+            2.056, 1.943, 0.0, 2.056, 1.056, 0.0, 2.9431135654449463,
+            1.056, 0.1, 2.9431135654449463, 1.943, 0.1, 2.056, 1.943, 0.1, 2.056, 1.056, 0.1, -1.0,
+            7, 19,
+            0.001, 2.5, 1.5, 0.1, 2.5, 1.5, 0.0, 2.5, 1.5,
+            0.1)
+
+        C:\MSC.Software\simcenter_nastran_2019.2\tpl_post2\cfast04.op2
+        $            eid      pid   type       ida     idb   gs      ga      gb
+        CFAST        101       3    PROP       1       2             100     101
+        CFAST        102       3    PROP       1       2     200
+
         """
-        CFAST(9801,98,506) - the marker for Record ???
+        op2 = self.op2
+        op2.show_data(data[12:], 'if')
+        ntotal = 764 * self.factor  # 191*4
+        s = Struct(mapfmt(op2._endian + b'8i 2i 144i 13f 12f 2i 10f', self.size))
+        ndatai = len(data) - n
+        nelements = ndatai // ntotal
+        assert ndatai % ntotal == 0, f'ndatai={ndatai}'
+        for unused_i in range(nelements):
+            edata = data[n:n + ntotal]
+            out = s.unpack(edata)
+            if op2.is_debug_file:
+                op2.binary_debug.write('  CFAST=%s\n' % str(out))
+            eid, pid, gs, elem_grid_flag, ga, gb, *other = out
+            if elem_grid_flag == 9:
+                elem_grid_flag = 'ELEM'
+            elif elem_grid_flag == 10:
+                elem_grid_flag = 'PROP'
+                #ida, idb
+            else:
+                raise NotImplementedError(elem_grid_flag)
+            #print(out)
+            ida = None
+            idb = None
+    #def add_cfast(self, eid: int, pid: int, Type: str, ida: int, idb: int,
+                  #gs=None, ga=None, gb=None,
+                  #xs=None, ys=None, zs=None, comment: str='') -> CFAST:
+            assert eid > 0, eid
+            op2.add_cfast(eid, pid, elem_grid_flag, ida, idb)
+            #elem = CFAST.add_op2_data(out)
+            #self.add_op2_element(elem)
+            n += ntotal
+        op2.card_count['CFAST'] = nelements
+        return n
+        #raise RuntimeError('CFAST')
+
+    def _read_cfast_msc_nx10(self, data: bytes, n: int) -> int:
         """
+        Record 34 -- CFAST(9801,98,506)
+
+        MSC 2005r2 -> MSC 2016
+
+        CFAST(9801,98,506) - the marker for Record 34
+        1 EID       I Element identification number
+        2 PID       I Property identification number
+        3 GS        I Spot weld master node identification numberGS
+        4 FORMAT(C) I Connection format (0=gridid)
+        5 GA        I ID of GA
+        6 GB        I ID of GB
+        7 TYPE      I Types of upper and lower elements for
+        FORM="GRIDID"
+        8 CID       I C
+        9 GUPPER(8) I Grid IDs of the upper shell
+        FORMAT =0 GRIDID of GBI
+          17 GLOWER(8) I
+        FORMAT =1 ALIGN (not used)
+          17 GLOWER(8) I
+        FORMAT =2 ELEMID (not used)
+          17 GLOWER(8) I
+        FORMAT =9 ELPAT for xyz
+          17 XYZ(3) RS
+          20 UNDEF(5) none Not used
+        FORMAT =10 PARTPAT for xyz
+          17 XYZ(3) RS
+          20 UNDEF(5) none Not used
+        End FORMAT
+        25 TAVG RS Average shell thickness
+        26 UNDEF(2) none Not used
+        28 TMIN RS Minimum shell thickness
+
+        """
+        raise RuntimeError('CFAST-28 fields')
         self.op2.log.info('geom skipping CFAST in GEOM2')
         return len(data)
 
@@ -1442,7 +1596,9 @@ class GEOM2:
         """
         op2 = self.op2
         s = Struct(op2._endian + b'3i2fi')
-        nelements = (len(data) - n) // 24
+        ntotal = 24
+        ndatai = len(data) - n
+        nelements = ndatai // ntotal
         for unused_i in range(nelements):
             edata = data[n:n + 24]  # 6*4
             out = s.unpack(edata)
@@ -1468,7 +1624,9 @@ class GEOM2:
         """
         op2 = self.op2
         s = Struct(op2._endian + b'4i2fi')
-        nelements = (len(data) - n) // 28
+        ntotal = 28
+        ndatai = len(data) - n
+        nelements = ndatai // ntotal
         for unused_i in range(nelements):
             edata = data[n:n + 28]  # 7*4
             out = s.unpack(edata)
@@ -1495,7 +1653,9 @@ class GEOM2:
         """
         op2 = self.op2
         s = Struct(op2._endian + b'5i2fi')
-        nelements = (len(data) - n) // 32
+        ntotal = 32
+        ndatai = len(data) - n
+        nelements = ndatai // ntotal
         for unused_i in range(nelements):
             edata = data[n:n + 32]  # 8*4
             out = s.unpack(edata)
@@ -1545,7 +1705,8 @@ class GEOM2:
         g0a = 16 * self.factor
         g0b = 20 * self.factor
 
-        nelements = (len(data) - n) // ntotal
+        ndatai = len(data) - n
+        nelements = ndatai // ntotal
         for unused_i in range(nelements):
             edata = data[n:n + ntotal]
             out = s1.unpack(edata)
@@ -1627,7 +1788,8 @@ class GEOM2:
         op2 = self.op2
         ntotal = 28  # 7*4
         s = Struct(op2._endian + b'7i')
-        nelements = (len(data) - n) // ntotal
+        ndatai = len(data) - n
+        nelements = ndatai // ntotal
         for unused_i in range(nelements):
             edata = data[n:n+28]
             out = s.unpack(edata)
@@ -1649,7 +1811,8 @@ class GEOM2:
         op2 = self.op2
         ntotal = 64  # 16*4
         s = Struct(op2._endian + b'16i')
-        nelements = (len(data) - n) // ntotal
+        ndatai = len(data) - n
+        nelements = ndatai // ntotal
         for unused_i in range(nelements):
             edata = data[n:n+64]
             out = s.unpack(edata)
@@ -1673,7 +1836,8 @@ class GEOM2:
         op2 = self.op2
         ntotal = 60  # 16*4
         s = Struct(op2._endian + b'12i 3f')
-        nelements = (len(data) - n) // ntotal
+        ndatai = len(data) - n
+        nelements = ndatai // ntotal
         for unused_i in range(nelements):
             edata = data[n:n+60]
             out = s.unpack(edata)

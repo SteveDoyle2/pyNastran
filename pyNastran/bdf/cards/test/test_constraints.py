@@ -1,7 +1,7 @@
 from itertools import count
 import unittest
 from pyNastran.bdf.bdf import BDF, BDFCard, SUPORT, SUPORT1, MPC
-from pyNastran.bdf.cards.test.utils import save_load_deck
+from pyNastran.bdf.cards.test.utils import save_load_deck, read_write_op2_geom
 
 class TestConstraints(unittest.TestCase):
     def test_support_01(self):
@@ -261,6 +261,9 @@ class TestConstraints(unittest.TestCase):
         model.add_grid(4, [0., 0., 0.])
         check_mpc_spc(model)
         save_load_deck(model)
+        read_write_op2_geom(
+            model, run_op2_writer=True, run_op2_reader=True,
+            nastran_format='msc')
 
     def test_spcoff(self):
         """tests SPCOFF/SPCOFF1"""

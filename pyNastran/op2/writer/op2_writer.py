@@ -175,7 +175,7 @@ def _write_op2(op2_file, fop2_ascii, obj: OP2,
     if 'GEOM4' not in skips:  # loads
         write_geom4(op2_file, fop2_ascii, obj, endian=endian, nastran_format=nastran_format)
     if 'EPT' not in skips:    # properties
-        write_ept(op2_file, fop2_ascii, obj, endian=endian)
+        write_ept(op2_file, fop2_ascii, obj, endian=endian, nastran_format=nastran_format)
     if 'MPT' not in skips:    # materials
         write_mpt(op2_file, fop2_ascii, obj, endian=endian)
 

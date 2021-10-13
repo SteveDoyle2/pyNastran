@@ -208,12 +208,20 @@ class EDOM(GeomCommon):
         op2 = self.op2
         op2.to_nx('; DMNCON found')
         ntotal0 = 16 * self.factor # 4 * 4
-        ntotal1 = 44 * self.factor # 11 * 4
         ntotal6 = 24 * self.factor # 6 * 4
-        ntotal8 = 24 * self.factor # 6 * 4
+        ntotal8 = 32 * self.factor # 8 * 4
+        ntotal11 = 44 * self.factor # 11 * 4
+        ntotal13 = 52 * self.factor # 13 * 4
+        ntotal15 = 60 * self.factor # 15 * 4
+        ntotal17 = 68 * self.factor # 17 * 4
+
+        struct_9f_6i = Struct(mapfmt(op2._endian + b'9f 6i', self.size))
         struct_4i = Struct(mapfmt(op2._endian + b'4i', self.size))
+        struct_3f_5i = Struct(mapfmt(op2._endian + b'3f 5i', self.size))
         struct_6f_5i = Struct(mapfmt(op2._endian + b'6f 5i', self.size))
         struct_f_5i = Struct(mapfmt(op2._endian + b'f 5i', self.size))
+        struct_8f_5i = Struct(mapfmt(op2._endian + b'8f 5i', self.size))
+        struct_12f_5i = Struct(mapfmt(op2._endian + b'12f 5i', self.size))
         ncards = 0
         #self.show_data(data, types='ifs')
         while n < len(data):
@@ -230,7 +238,7 @@ class EDOM(GeomCommon):
                 # 8  N1 RS X component of vector normal to plane
                 # 9  N2 RS Y component of vector normal to plane
                 # 10 N3 RS Z component of vector normal to plane
-                edata = data[n:n+ntotal1]
+                edata = data[n:n+ntotal11]
                 out = struct_6f_5i.unpack(edata)
                 x, y, z, nx, ny, nz, *zeros = out
                 op2.log.debug(f'    xyz=[{x:g}, {y:g}, {z:g}]; nxyz=[{nx:g}, {ny:g}, {nz:g}]; zeros={zeros}')
@@ -238,11 +246,73 @@ class EDOM(GeomCommon):
                 xyz = np.array([x, y, z])
                 normal = np.array([nx, ny, nz])
                 dmncon = op2.add_dmncon(constraint_id, constraint_type, xyz=xyz, normal=normal)
-                n += ntotal1
+                n += ntotal11
+            elif flag == 2: # CYCLIC_SYMMETRY
+                constraint_type = 'SYMC'
+                # 5   X RS X component of point on axis
+                # 6   Y RS Y component of point on axis
+                # 7   Z RS Z component of point on axis
+                # 8  N1 RS X component of vector defining the rotational axis
+                # 9  N2 RS Y component of vector defining the rotational axis
+                # 10 N3 RS Z component of vector defining the rotational axis
+                # 11 M1 RS X component of vector defining symmetry plane
+                # 12 M2 RS Y component of vector defining symmetry plane
+                # 13 M3 RS Z component of vector defining symmetry plane
+                # 14 NSECT I Number of sectors
+                # 15 UNDEF(5) None
+                edata = data[n:n+ntotal15]
+                out = struct_9f_6i.unpack(edata)
+                x, y, z, n1, n2, n3, m1, m2, m3, nsections, *zeros = out
+                xyz = np.array([x, y, z])
+                normal = np.array([n1, n2, n3])
+                m = np.array([m1, m2, m3])
+                op2.log.debug(f'    xyz=[{x:g}, {y:g}, {z:g}]; nxyz={normal}; m={m} zeros={zeros}')
+                dmncon = op2.add_dmncon(constraint_id, constraint_type, xyz=xyz,
+                                        normal=normal, m=m, nsections=nsections)
 
-            elif flag in [5, 6]:
+                n += ntotal15
+
+            elif flag == 3: # EXTRUSION
+                edata = data[n:n+ntotal8]
+                constraint_type = 'EXTC'
+                out = struct_3f_5i.unpack(edata)
+                n1, n2, n3, *null = out
+                normal = np.array([n1, n2, n3])
+                op2.log.debug(f'    normal=[{n1:g}, {n2:g}, {n3:g}]; null={null}')
+                dmncon = op2.add_dmncon(constraint_id, constraint_type, normal=normal)
+                n += ntotal8
+                # 5 N1 RS X component of vector to define extrusion
+                # 6 N2 RS Y component of vector to define extrusion
+                # 7 N3 RS Z component of vector to define extrusion
+                # 8 UNDEF(5) None
+
+            elif flag == 4: # CASTING
+                # 5 X RS X component of point on casting plane
+                # 6 Y RS Y component of point on casting plane
+                # 7 Z RS Z component of point on casting plane
+                # 8 N1 RS X component of a vector normal to the casting plane
+                # 9 N2 RS Y component of a vector normal to the casting plane
+                # 10 N3 RS Z component of a vector normal to the casting plane
+                # 11 D11 RS X component of a vector which defines the mold removal direction 1 of casting
+                # 12 D12 RS Y component of a vector which defines the mold removal direction 1 of casting
+                # 13 D13 RS Z component of a vector which defines the mold removal direction 1 of casting
+                # 14 D21 RS X component of a vector which defines the mold removal direction 2 of casting
+                # 15 D22 RS Y component of a vector which defines the mold removal direction 2 of casting
+                # 16 D23 RS Z component of a vector which defines the mold removal direction 2 of casting
+                # 17 UNDEF(5) None
+                edata = data[n:n+ntotal17]
+                n += ntotal17
+                constraint_type = 'CDID'
+                x, y, z, n1, n2, n3, d11, d12, d13, d21, d22, d23, *null = struct_12f_5i.unpack(edata)
+                xyz = np.array([x, y, z])
+                normal = np.array([n1, n2, n3])
+                d = [d11, d12, d13, d21, d22, d23]
+                op2.log.warning(f' DMNCON: CDID/CASTING: xyz=[{x}, {y}, {z}]; n=[{n1}, {n2}, {n3}]; d={d}; null={null}')
+                dmncon = op2.add_dmncon(constraint_id, constraint_type, xyz=xyz, normal=normal, d=d)
+
+            elif flag in {5, 6}:
                 # FLAG = 5 Type of constraint = MAX_SIZE
-                #FLAG = 6 Type of constraint = MIN_SIZE
+                # FLAG = 6 Type of constraint = MIN_SIZE
                 #  5 MSIZE RS Minimum size
                 #  6 UNDEF(5) None
                 if flag == 5:
@@ -258,16 +328,34 @@ class EDOM(GeomCommon):
                 op2.log.debug(f'    size={size:g}; zeros={zeros}')
                 dmncon = op2.add_dmncon(constraint_id, constraint_type, size=size)
                 n += ntotal6
+            elif flag == 7:  # additive / ADDM
+                # 5 ANGLE RS Maximum angle measured from the vector N
+                # 6 MIND RS Minimum allowed dimension
+                # 7 X RS X coordinate of point on base plate
+                # 8 Y RS Y coordinate of point on base plate
+                # 9 Z RS Z coordinate of point on base plate
+                # 10 N1 RS X component of a vector normal to the casting plate in the direction of material addition
+                # 11 N2 RS Y component of a vector normal to the casting plate in the direction of material addition
+                # 12 N3 RS Z component of a vector normal to the casting plate in the direction of material addition
+                # 13 UNDEF(5) None
+                edata13 = data[n:n+ntotal13]
+                constraint_type = 'ADDM'
+                angle, mind, x, y, z, n1, n2, n3, *null = struct_8f_5i.unpack(edata13)
+                op2.log.debug(f'    angle={angle:g}; mind={mind}; xyz=[{x}, {y}, {z}]; n=[{n1}, {n2}, {n3}]; null={null}')
+                xyz = np.array([x, y, z])
+                normal = np.array([n1, n2, n3])
+                dmncon = op2.add_dmncon(constraint_id, constraint_type, angle=angle, mind=mind, xyz=xyz, normal=normal)
+                n += ntotal13
             elif flag == 8:
                 # FLAG = 8 Type of constraint = CHECKER-BOARD CONTROL (CHBC)
                 #   5 OFF-FLAG RS Negative real number indicates CHBC is off. CHBC is on by default if no negative real OFF-FLAG or if CHBC record segment does not exist.
                 #   6 UNDEF(5) None
                 constraint_type = 'CHBC'
-                edata = data[n:n+ntotal8]
+                edata = data[n:n+ntotal6]
                 off_flag, *zeros = struct_f_5i.unpack(edata)
                 op2.log.debug(f'    off_flag={off_flag:g}; zeros={zeros}')
                 dmncon = op2.add_dmncon(constraint_id, constraint_type, off_flag=off_flag)
-                n += ntotal8
+                n += ntotal6
             else:
                 raise RuntimeError(flag)
             str(dmncon)

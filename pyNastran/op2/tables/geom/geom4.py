@@ -915,7 +915,7 @@ class GEOM4(GeomCommon):
 
         """
         op2 = self.op2
-        op2.log.debug('read_spc_mpc')
+        #op2.log.debug('read_spc_nx')
         msg = ''
         ntotal = 16 * self.factor
         ndatai = len(data) - n

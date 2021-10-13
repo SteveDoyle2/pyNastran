@@ -70,7 +70,7 @@ class PFAST(Property):
         ----------
         pid : int
             property id
-        d : int
+        d : float
             diameter of the fastener
         kt1, kt2, kt3 : float
             stiffness values in directions 1-3
