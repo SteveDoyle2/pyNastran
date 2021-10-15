@@ -31,6 +31,7 @@ from typing import List
 import numpy as np
 #from numpy import float32
 
+from pyNastran.bdf import MAX_32_BIT_INT
 from pyNastran.op2.result_objects.op2_objects import ScalarObject
 from pyNastran.f06.f06_formatting import write_floats_13e, write_imag_floats_13e, write_float_12e
 from pyNastran.op2.errors import SixtyFourBitError
@@ -1135,7 +1136,7 @@ class RealTableArray(TableArray):
                                   'OPGNO1',            'OPGRMS1', # load vector
             'OPRATO1', 'OPRCRM1', 'OPRNO1', 'OPRPSD1',            # pressure
             'OQGPSD1',
-            'OCRPG', 'OCRUG', 'OUG1', 'OAG1',
+            'OCRPG', 'OCRUG', 'OUG1', 'OVG1', 'OAG1',
             'OUGV1PAT',
             'OUGF1',
             'OQGCF1', 'OQGGF1',
@@ -1167,7 +1168,7 @@ class RealTableArray(TableArray):
 
         nnodes = len(node)
         max_id = node.max()
-        if max_id > 99999999:
+        if max_id > MAX_32_BIT_INT:
             raise SixtyFourBitError(f'64-bit OP2 writing is not supported; max id={max_id}')
 
         fdtype = self.data.dtype

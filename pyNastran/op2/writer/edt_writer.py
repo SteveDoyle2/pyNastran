@@ -115,9 +115,11 @@ def write_edt(op2_file, op2_ascii, model: Union[BDF, OP2Geom],
 
         #if nmaterials == 0:
             #continue
+        #model.log.info(f'EDT: {name}; n={len(ids)}')
         try:
             func = EDT_MAP[name]
         except KeyError:  # pragma: no cover
+            #continue
             raise NotImplementedError(name)
 
         nbytes = func(model, name, ids, ncards, op2_file, op2_ascii,
@@ -1260,6 +1262,30 @@ def _write_aelink(model: Union[BDF, OP2Geom], name: str,
     Words 4 through 6 repeat until (-1,-1,-1) occurs
 
     """
+    aelink_ids = np.unique(aelink_ids)
+    # 1, b'AILR_L  '
+    # b'AILR_R  ', -1.0
+    # (-1, -1, -1)
+    #
+    # 1, b'ELEV_L  '
+    # b'ELEV_R  ', 1.0
+    # (-1, -1, -1)
+    #
+    # 2, b'ELEV_L  '
+    # b'ELEV_R  ', 1.0
+    # (-1, -1, -1)
+    #
+    # 2, b'AILR_L  '
+    # b'AILR_R  ', -1.0
+    # (-1, -1, -1)
+    #
+    # 3, b'AILR_L  '
+    # b'AILR_R  ', -1.0
+    # (-1, -1, -1)
+    #
+    # 3, b'ELEV_L  '
+    # b'ELEV_R  ', 1.0
+    # (-1, -1, -1)
     #op2 = self.op2
     #struct1 = Struct(op2._endian + b'i8s')
     #struct2 =Struct(op2._endian + b'8sf')
@@ -1273,6 +1299,12 @@ def _write_aelink(model: Union[BDF, OP2Geom], name: str,
             #print(aelink.get_stats())
             ncoeffs += len(aelink.linking_coefficients)
 
+    # 3 (main value)
+    # 3 (-1)s
+    # -------
+    # 6
+    #
+    # 3 values per coeff
     nvalues = 6 * ncards + ncoeffs * 3
     nbytes = write_header_nvalues(name, nvalues, key, op2_file, op2_ascii)
 
@@ -1295,13 +1327,11 @@ def _write_aelink(model: Union[BDF, OP2Geom], name: str,
                 ind_label_bytes = b'%-8s' % ind_label.encode('latin1')
                 data.extend([ind_label_bytes, coeff])
             data.extend([-1, -1, -1])
-            #print(data)
+            op2_ascii.write(f'  AELINK data={data}\n')
+            assert None not in data, data
+            op2_file.write(structi.pack(*data))
+            all_data.extend(data)
 
-        assert None not in data, data
-        op2_ascii.write(f'  AELINK data={data}\n')
-        #print('npaero2', len(data), data)
-        op2_file.write(structi.pack(*data))
-        all_data.extend(data)
     #assert len(all_data) == nvalues, f'ndata={len(all_data)}; nvalues={nvalues}'
     return nbytes
 

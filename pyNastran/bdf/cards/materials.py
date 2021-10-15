@@ -2120,6 +2120,7 @@ class MAT9(AnisotropicMaterial):
     |      | A2  | A3  | A4  | A5  | A6  | TREF | GE  |     |
     +------+-----+-----+-----+-----+-----+------+-----+-----+
 
+    .. warning:: MSC 2020: gelist is not supported.
     """
     type = 'MAT9'
     _field_map = {

@@ -8438,6 +8438,11 @@ class AddCards:
         fields = ['RCROSS', sid, rtype1, id1, comp1, rtype2, id2, comp2, curid]
         self.reject_card_lines('RCROSS', print_card_8(fields).split('\n'), show_log=False)
 
+    def add_uxvec(self, idi: int, labels: List[str], uxs: List[float]):
+        fields = ['UXVEC', idi, None, None, None, None, None, None, None]
+        for label, ux in zip(labels, uxs):
+            fields.extend([label, ux])
+        self.reject_card_lines('UXVEC', print_card_8(fields).split('\n'), show_log=False)
     #----------------------------------------------------------------------------------
     # parametric
     def add_pset(self, idi, poly1, poly2, poly3, cid, typei, typeids, comment='') -> PSET:

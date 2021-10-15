@@ -60,7 +60,7 @@ class EDT:
             (7501, 75, 576) : ['AEFORCE', self._read_aeforce],
             (2602, 26, 386) : ['AELINK', self._read_aelink],
             (2302, 23, 341) : ['AELIST', self._read_aelist],
-            (7001, 70, 571) : ['AEPARM', self._read_fake],
+            (7001, 70, 571) : ['AEPARM', self._read_aeparm],
             (7401, 74, 575) : ['AEPRESS', self._read_aepress],
             (3202, 32, 265) : ['AERO', self._read_aero],
             (2202, 22, 340) : ['AEROS', self._read_aeros],
@@ -97,7 +97,7 @@ class EDT:
             (6501, 65, 308) : ['SPLINE4', self._read_spline4],
             (6601, 66, 309) : ['SPLINE5', self._read_spline5],
             (2402, 24, 342) : ['TRIM', self._read_trim],
-            (7201, 72, 573) : ['UXVEC', self._read_fake],
+            (7201, 72, 573) : ['UXVEC', self._read_uxvec],
             (7108, 822, 51) : ['BOLT', self._read_fake],
             (7108, 71, 251) : ['???', self._read_fake],
             (5808, 58, 220) : ['ITER', self._read_fake],
@@ -605,6 +605,81 @@ class EDT:
             str(deform)
             n += ntotal
         return n
+
+    def _read_aeparm(self, data: bytes, n: int) -> int:
+        """
+        MSC 2020
+
+        Word Name Type Description
+
+        data = (601, 'PLOAD   ', 'LBS.    ')
+
+        """
+        op2 = self.op2
+        ntotal = 20 * self.factor # 4*5
+        ndatai = len(data) - n
+        ncards = ndatai // ntotal
+        assert ndatai % ntotal == 0
+        structi = Struct(mapfmt(op2._endian + b'i 8s 8s', self.size))
+        for unused_i in range(ncards):
+            edata = data[n:n + ntotal]
+            aeparm_id, label_bytes, units_bytes = structi.unpack(edata)
+            label = label_bytes.decode(op2._encoding).rstrip()
+            units = units_bytes.decode(op2._encoding).rstrip()
+            op2.add_aeparm(aeparm_id, label, units, comment='')
+            n += ntotal
+        return n
+
+    def _read_uxvec(self, data: bytes, n: int) -> int:
+        """
+        MSC 2020
+
+        Word Name Type Description
+        1 ID           I Control vector identification number
+        2 LABEL(2) CHAR4 Controller name
+        4 UX          RS Magnitude of aerodynamic extra point dof
+        Words 2 thru 4 repeat until (-1,-1) occurs
+
+        data  = (5001, 'PLOAD   ', 1.0, 'INTERCPT', 0.0, -1, -1)
+        """
+        op2 = self.op2
+        ntotal1 = 4 * self.factor # 4*1
+        ntotal_end = 8 * self.factor # 4*2
+        ntotal2 = 12 * self.factor # 4*3
+        #ndatai = len(data) - n
+        #ncards = ndatai // ntotal
+        #assert ndatai % ntotal == 0
+        struct1 = Struct(mapfmt(op2._endian + b'i', self.size))
+        struct2 = Struct(mapfmt(op2._endian + b'8s f', self.size))
+        struct_end = Struct(mapfmt(op2._endian + b'2i', self.size))
+        #for unused_i in range(ncards):
+            #edata = data[n:n + ntotal]
+            #aeparm_id, label_bytes, units_bytes = structi.unpack(edata)
+            #label = label_bytes.decode(op2._encoding).rstrip()
+            #units = units_bytes.decode(op2._encoding).rstrip()
+            #op2.add_uxvec()
+            #n += ntotal
+
+        while n < len(data):
+            edata1 = data[n:n+ntotal1]
+            idi, = struct1.unpack(edata1)
+            n += ntotal1
+            labels = []
+            uxs = []
+
+            edata_end = data[n:n+ntotal_end]
+            while struct_end.unpack(edata_end) != (-1, -1):
+                edata2 = data[n:n+ntotal2]
+                label_bytes, ux = struct2.unpack(edata2)
+                label = reshape_bytes_block_size(label_bytes, self.size)
+                labels.append(label)
+                uxs.append(ux)
+                n += ntotal2
+                edata_end = data[n:n+ntotal_end]
+            n += ntotal_end
+            uxvec = op2.add_uxvec(idi, labels, uxs)
+            str(uxvec)
+        return n # len(data)
 
     def _read_caero1(self, data: bytes, n: int) -> int:
         """
@@ -1214,7 +1289,6 @@ class EDT:
 
         """
         op2 = self.op2
-        #self.show_data(data[12:], types='if')
         ints = np.frombuffer(data[n:], op2.idtype8).copy()
         floats = np.frombuffer(data[n:], op2.fdtype8).copy()
         istart, iend = get_minus1_start_end(ints)
@@ -1273,7 +1347,6 @@ class EDT:
 
         """
         op2 = self.op2
-        #self.show_data(data)
         ntotal = 32 # 4 * 8
         ndatai = len(data) - n
         ncards = ndatai // ntotal
@@ -1360,6 +1433,7 @@ class EDT:
         while n < len(data):
             edata = data[n:n+ntotal]
             aelink_id, label_bytes = struct1.unpack(edata)
+            #print(f'  {aelink_id}, {label_bytes}')
             if aelink_id == 0:
                 aelink_id = 'ALWAYS'
             #assert aelink_id > 0, aelink_id
@@ -1374,9 +1448,11 @@ class EDT:
                 ind_label = reshape_bytes_block_size(ind_label_bytes, self.size)
                 independent_labels.append(ind_label)
                 linking_coefficents.append(coeff)
+                #print(f'  {ind_label_bytes}, {coeff}')
                 n += ntotal
                 edata = data[n:n+ntotal]
             n += ntotal
+            #print('  (-1, -1, -1)\n')
             aelink = op2.add_aelink(aelink_id, label,
                                      independent_labels, linking_coefficents)
             str(aelink)
@@ -1550,7 +1626,6 @@ class EDT:
         op2 = self.op2
         card_name = 'SPLINE4'
         card_obj = SPLINE4
-        #self.show_data(data[n:])
         methods = {
             44 : self._read_spline4_nx_44,
             52 : self._read_spline4_msc_52,
@@ -2173,7 +2248,6 @@ class EDT:
         floats = np.frombuffer(data[n:], op2.fdtype).copy()
         istart, iend = get_minus1_start_end(ints)
 
-        #op2.show_data(data[12:], types='ifs')
         for (i0, i1) in zip(istart, iend):
             sid = ints[i0]
             assert ints[i1] == -1, ints[i1]

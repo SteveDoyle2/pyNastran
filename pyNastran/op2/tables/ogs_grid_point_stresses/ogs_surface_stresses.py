@@ -5,6 +5,8 @@ import numpy as np
 from pyNastran.op2.result_objects.op2_objects import ScalarObject, get_times_dtype
 from pyNastran.f06.f06_formatting import (
     write_floats_10e, _eigenvalue_header)
+from pyNastran.op2.writer.utils import fix_table3_types
+from pyNastran.op2.op2_interface.write_utils import set_table3_field
 
 
 class GridPointSurfaceArray(ScalarObject):

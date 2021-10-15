@@ -23,9 +23,45 @@ if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.bdf.bdf import BDF
     from pyNastran.bdf.cards.coordinate_systems import Coord
 
+def parse_femap_syntax(lines: List[str]) -> np.ndarray:
+    """Parses the following syntax from FEMAP:
+
+    Add            1646           0           1
+    Add            1422        1502           1
+    Add            1505        1645           1
+
+    .. note:: A list of lines is expected
+    """
+    assert isinstance(lines, list), lines
+    values = []
+    for line in lines:
+        line = line.strip()
+        if len(line) == 0:
+            continue
+
+        assert '\n' not in line, line
+        sline = line.split()
+        assert len(sline) == 4, sline
+        assert sline[0] == 'Add', sline
+        word, start, stop, step = sline
+        istart = int(start)
+        if stop == '0':
+            values.append(istart)
+        elif step == '1':
+            istop = int(stop)
+            valuesi = np.arange(istart, istop+1)
+            values.append(valuesi)
+        else:
+            istop = int(stop)
+            istep = int(step)
+            valuesi = np.arange(istart, istop+1, istep)
+            values.append(valuesi)
+
+    values2 = np.unique(np.hstack(values))
+    return values2
 
 
-def Position(xyz: NDArray3float, cid: int, model: BDF):
+def Position(xyz: NDArray3float, cid: int, model: BDF) -> np.ndarray:
     """
     Gets the point in the global XYZ coordinate system.
 
@@ -52,7 +88,7 @@ def Position(xyz: NDArray3float, cid: int, model: BDF):
 def TransformLoadWRT(F, M, cid, cid_new, model):
     deprecated('TransformLoadWRT', 'transform_load', '1.3', levels=[0, 1, 2])
 
-def transform_load(F, M, cid: int, cid_new: int, model: BDF):
+def transform_load(F, M, cid: int, cid_new: int, model: BDF) -> Tuple[np.ndarray, np.ndarray]:
     """
     Transforms a force/moment from an arbitrary coordinate system to another
     coordinate system.

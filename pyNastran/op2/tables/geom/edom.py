@@ -20,7 +20,8 @@ DSCREEN_INT_TO_RTYPE = {
     4 : 'EIGN',
     5 : 'DISP',
     6 : 'STRESS',
-    9: '???',
+    #8: '???a',  force?
+    #9: '???b',
     12: 'FREQ',  # goland_final_test.op2
 }
 DSCREEN_RTYPE_TO_INT = {value: key for key, value in DSCREEN_INT_TO_RTYPE.items()}

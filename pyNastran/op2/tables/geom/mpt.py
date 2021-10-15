@@ -246,6 +246,7 @@ class MPT:
             #(mid, g1, g2, g3, g4, g5, g6, rho, aj1, aj2, aj3,
              #tref, ge, St, Sc, Ss, mcsid) = out
             mid = out[0]
+            #print(mid)
             assert mid > 0, mid
             mat = MAT2.add_op2_data(out)
             mats.append(mat)
@@ -322,12 +323,15 @@ class MPT:
              tref, ge, St, Sc, Ss, mcsid,
              ge1, ge2, ge3, ge4, ge5, ge6) = out
             #ge_list = (ge1, ge2, ge3, ge4, ge5, ge6)
+            n += ntotal
+            #print(out)
+            if mid == -1:
+                continue
             assert mid > 0, mid
             #assert ge == 0.0, f'mid={mid} ge={ge} ge_list={ge_list}'
             #assert max(blanks) == min(blanks) == 0, (mid, ge, blanks)
             mat = MAT2.add_op2_data(out)
             mats.append(mat)
-            n += ntotal
         return n, mats
 
     def _read_mat3(self, data: bytes, n: int) -> int:
@@ -472,16 +476,33 @@ class MPT:
         materials = []
         ndatai = len(data) - n
         ntotal = (35 + 21) * 4 # 56*4
-        s2 = Struct(op2._endian + b'i 30f iiii 21i')
+        s2 = Struct(op2._endian + b'i 30f iiii 21f')
+        #s2 = Struct(op2._endian + b'i 30f iiii 3f 3i 2f 3i f 3i f 2i f if')
         nmaterials = ndatai // ntotal
         assert ndatai % ntotal == 0, f'ndatai={ndatai} ntotal={ntotal} nmaterials={nmaterials} leftover={ndatai % ntotal}'
+        # $       2       3       4       5       6       7       8       9       0
+        # $       ID      G11     G12     G13     G14     G15     G16     G22
+        # MAT9    2500003 1.0769+74.6154+64.6154+60.      0.      0.      1.0769+7
+        # $       G23     G24     G25     G26     G33     G34     G35     G36
+        #         4.6154+60.      0.      0.      1.0769+70.      0.      0.
+        # $       G44     G45     G46     G55     G56     G66     RHO     A1
+        #         3.0769+60.      0.      3.0769+60.      3.0769+63.7E-8
+        # $       A2      A3      A4      A5      A6      T       GE
+        #                                                         .013
+        # $       GE11    GE12    GE13    GE14    GE15    GE16    GE22    GE23
+        #         .017    .046    .046                            .017    .046
+        # $       GE24    GE25    GE26    GE33    GE34    GE35    GE36    GE44
+        #         .017                            .03
+        # $       GE45    GE46    GE55    GE56    GE66
+        #                         .03             .03
 
         if op2.is_debug_file:
             op2.binary_debug.write(
                 '  MAT9=(mid, g1, g2, g3, g4, g5, g6, g7, g8, g9, g10, '
                 'g11, g12, g13, g14, g15, g16, g17, g18, g19, g20, g21, '
                 'rho, a1, a2, a3, a4, a5, a6, tref, ge, '
-                'blank1, blank2, blank3, blank4)\n')
+                'ge1, e2 ge3, ge4, ge5, g6, ge7, ge8, ge9, ge10, ge11, ge12, '
+                'ge13, ge14, ge15, ge16, ge17, ge18, ge19, ge20, ge21)\n')
         for unused_i in range(nmaterials):
             out = s2.unpack(data[n:n+ntotal])
             if op2.is_debug_file:
@@ -489,16 +510,12 @@ class MPT:
             (mid, g1, g2, g3, g4, g5, g6, g7, g8, g9, g10,
              g11, g12, g13, g14, g15, g16, g17, g18, g19, g20, g21,
              rho, a1, a2, a3, a4, a5, a6, tref, ge,
-             blank1, blank2, blank3, blank4, *blanks) = out
-            #op2.show_data(data[n:n+ntotal], types='if')
-            op2.log.debug(str(blanks))
+             blank1, blank2, blank3, blank4, *ge_list) = out
             assert mid > 0, mid
             assert blank1 == 0, blank1
             assert blank2 == 0, blank2
             assert blank3 == 0, blank3
             assert blank4 == 0, blank4
-            assert max(blanks) == 0, blanks
-            assert min(blanks) == 0, blanks
             data_in = [mid, [g1, g2, g3, g4, g5, g6, g7, g8, g9, g10,
                              g11, g12, g13, g14, g15, g16, g17, g18, g19, g20, g21],
                        rho, [a1, a2, a3, a4, a5, a6],

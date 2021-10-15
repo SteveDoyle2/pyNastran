@@ -1141,7 +1141,7 @@ class DYNAMICS(GeomCommon):
                             offset1, offset2)
             n += ntotal
         op2.increase_card_count('NLRSFD', nentries)
-        return n
+        return n, []
 
 
     def _read_nolin1(self, data: bytes, n: int) -> int:

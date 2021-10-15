@@ -549,7 +549,7 @@ class Op2Codes:
         table_name_str : str
             the table name as a string
 
-        ..note :: Refers to bytes/str in the Python 3 sense.
+        .. note:: Refers to bytes/str in the Python 3 sense.
         """
         table_name = self.table_name
         if isinstance(table_name, bytes):

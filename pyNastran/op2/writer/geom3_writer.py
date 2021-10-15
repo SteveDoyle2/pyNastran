@@ -26,7 +26,7 @@ def write_geom3(op2_file, op2_ascii, obj, endian=b'<', nastran_format='nx'):
         'DEFORM', 'CLOAD', # these are be in the
     ]
     cards_to_skip = [
-        'TEMPRB',
+        'TEMPRB', 'QVECT',
     ]
     supported_cards = [
         'FORCE', 'FORCE1', 'FORCE2', 'MOMENT', 'MOMENT1', 'MOMENT2',
@@ -227,7 +227,6 @@ def write_card(op2_file, op2_ascii, load_type, loads, endian, log,
         nbytes = _write_accel(load_type, loads, nloads, op2_file, op2_ascii, endian)
     elif load_type == 'ACCEL1':
         nbytes = _write_accel1(load_type, loads, op2_file, op2_ascii, endian)
-
     else:  # pragma: no cover
         load0 = loads[0]
         raise NotImplementedError(load0)

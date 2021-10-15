@@ -3,7 +3,7 @@ from struct import pack, Struct
 from collections import defaultdict
 from typing import List, Dict, Tuple, Union, Any, TYPE_CHECKING
 
-from pyNastran.bdf import MAX_INT
+from pyNastran.bdf import MAX_INT, MAX_32_BIT_INT
 from pyNastran.bdf.cards.collpase_card import collapse_thru_packs
 from pyNastran.op2.errors import SixtyFourBitError
 from .geom1_writer import write_geom_header, close_geom_table
@@ -226,9 +226,9 @@ def _write_spc(card_type: str, cards, ncards: int, op2_file, op2_ascii,
     #nastran_format = 'msc'
     max_spc_id = max([spc.conid for spc in cards])
     max_nid = max([max(spc.node_ids) for spc in cards])
-    if max_spc_id > 99999999:
+    if max_spc_id > MAX_32_BIT_INT:
         raise SixtyFourBitError(f'64-bit OP2 writing is not supported; max spc_id={max_spc_id}')
-    if max_nid > 99999999:
+    if max_nid > MAX_32_BIT_INT:
         raise SixtyFourBitError(f'64-bit OP2 writing is not supported; max SPC nid={max_nid}')
 
     data = []  # type: List[Union[int, float]]
