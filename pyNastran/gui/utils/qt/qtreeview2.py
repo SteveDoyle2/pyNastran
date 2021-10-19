@@ -40,16 +40,22 @@ class QTreeView2(QTreeView):
         #if event.key() == QtCore.Qt.Key_Escape:
             #self.close()
         #return
-        key = event.key()
-        if key == Qt.Key_Delete:
-            self.on_delete()
-        elif key in [Qt.Key_Enter, Qt.Key_Return]:
-            return self.parent.parent.on_apply()
-        elif key in [Qt.Key_Up, Qt.Key_Down]:
-            QTreeView.keyPressEvent(self, event)
-            self.set_rows()
-        else:
-            QTreeView.keyPressEvent(self, event)
+        try:
+            key = event.key()
+            if key == Qt.Key_Delete:
+                self.on_delete()
+            elif key in [Qt.Key_Enter, Qt.Key_Return]:
+                return self.parent.parent.on_apply()
+            elif key in [Qt.Key_Up, Qt.Key_Down]:
+                QTreeView.keyPressEvent(self, event)
+                self.set_rows()
+            else:
+                QTreeView.keyPressEvent(self, event)
+        except TypeError:
+            print('Wrong selection')
+            pass
+        except Exception:
+            raise
         return None
 
     def remove_rows(self, rows):
