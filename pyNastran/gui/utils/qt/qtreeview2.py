@@ -53,7 +53,6 @@ class QTreeView2(QTreeView):
                 QTreeView.keyPressEvent(self, event)
         except TypeError:
             print('Wrong selection')
-            pass
         except Exception:
             raise
         return None
