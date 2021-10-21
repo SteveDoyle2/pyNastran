@@ -873,6 +873,9 @@ class GuiQtCommon(GuiAttributes):
             ???
 
         """
+        #if icase is None:
+            #self.log.warning("icase is None and you're trying to set a result...")
+            #return
         _update_icase = (
             self.icase != self.icase_fringe and self.icase_fringe is not None or
             self.icase != self.icase_disp  and self.icase_disp is not None or

@@ -565,21 +565,28 @@ class Sidebar(QWidget):
             #self.parent.cycle_results_explicit(result_name=result_name, explicit=True)
             #j = self.parent._get_icase(result_name)
             #j = i
-        i = keys_a
+        icase = keys_a
+        if icase is None:
+            #self.parent.log.error(f"icase={icase} and you're trying to set a result...")
+            return
 
-        #self.case_spinner.setValue(i)  # this might just work?
+        #self.case_spinner.setValue(icase)  # this might just work?
 
         # set the spinner, but don't take any actions
         if 0:
             if self._update_case:
                 self._update_case = False
-                self.case_spinner.setValue(i)
+                self.case_spinner.setValue(icase)
                 self._update_case = True
             else:
-                self.case_spinner.setValue(i)
+                self.case_spinner.setValue(icase)
         result_name = None
         #self._set_case(i)
-        self.parent._set_case(result_name, i, explicit=True)
+
+        #if self.icase is None:
+            #self.log.warning("icase is None and you're trying to set a result...")
+            #return
+        self.parent._set_case(result_name, icase, explicit=True)
 
     @property
     def has_cases(self):

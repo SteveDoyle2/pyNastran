@@ -33,6 +33,17 @@ from pyNastran.bdf.field_writer_16 import print_card_16
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.bdf.bdf import BDF, BDFCard, MAT1, MAT8, MAT9
 
+FT_INT_TO_NAME = {
+    0: None,
+    1: 'HILL',
+    2: 'HOFF',
+    3: 'TSAI',
+    4: 'STRN',
+    5: 'HFAI',  # secret MSC
+    6: 'HTAP',  # secret MSC
+    7: 'HFAB',  # secret MSC
+}
+
 
 class CompositeShellProperty(Property):
     """
@@ -1210,24 +1221,10 @@ class PCOMP(CompositeShellProperty):
             return self.comment + print_card_8(card)
         return self.comment + print_card_16(card)
 
-def map_failure_theory_int(ft: int) -> str:
-    if ft == 0:
-        ft_str = None
-    elif ft == 1:
-        ft_str = 'HILL'
-    elif ft == 2:
-        ft_str = 'HOFF'
-    elif ft == 3:
-        ft_str = 'TSAI'
-    elif ft == 4:
-        ft_str = 'STRN'
-    elif ft == 5:
-        ft_str = 'HFAI' # secret MSC
-    elif ft == 6:
-        ft_str = 'HTAP' # secret MSC
-    elif ft == 7:
-        ft_str = 'HFAB' # secret MSC
-    else:
+def map_failure_theory_int(ft: int) -> Optional[str]:
+    try:
+        ft_str = FT_INT_TO_NAME[ft]
+    except KeyError:
         raise NotImplementedError(ft)
     return ft_str
 

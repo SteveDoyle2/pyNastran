@@ -1297,7 +1297,10 @@ def get_element_inertias(model: BDF, normal_plane,
                 Ex = 1. / S[0, 0]
                 Ey = 1. / S[1, 1]
                 Gxy = 1. / S[2, 2]
-                thicknessi = prop.Thickness()
+                # S12 = -nu12 / E1 = -nu21/E2
+                # nu12 = -S12 / E1
+                nu_xy = -S[0, 1] / Ex
+                #thicknessi = prop.Thickness()
                 areai = thicknessi * lengthi
 
             thetas[eid] = (thetad, Ex, Ey, Gxy)

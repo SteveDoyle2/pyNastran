@@ -177,7 +177,46 @@ class WriteMesh(BDFAttributes):
                                        write_header=False, close=False)
                 bdf_file.write('$' + '*'*80+'\n')
             bdf_file.write('BEGIN BULK\n')
+        self.write_bulk_data(bdf_file, size=size, is_double=is_double,
+                             interspersed=interspersed,
+                             enddata=enddata, close=close,
+                             is_long_ids=is_long_ids)
 
+    def write_bulk_data(self, bdf_file,
+                        size: int=8, is_double: bool=False,
+                        interspersed: bool=False,
+                        enddata: Optional[bool]=None, close: bool=True,
+                        is_long_ids: bool=False) -> None:
+        """
+        Writes the BDF.
+
+        Parameters
+        ----------
+        bdf_file : varies
+            file       - a file object
+            StringIO() - a StringIO object
+        size : int; {8, 16}
+            the field size
+        is_double : bool; default=False
+            False : small field
+            True : large field
+        interspersed : bool; default=True
+            Writes a bdf with properties & elements
+            interspersed like how Patran writes the bdf.  This takes
+            slightly longer than if interspersed=False, but makes it
+            much easier to compare to a Patran-formatted bdf and is
+            more clear.
+        enddata : bool; default=None
+            bool - enable/disable writing ENDDATA
+            None - depends on input BDF
+        close : bool; default=True
+            should the output file be closed
+
+        .. note:: is_long_ids is only needed if you have ids longer
+                  than 8 characters. It's an internal parameter, but if
+                  you're calling the new sub-function, you might need
+                  it.  Chances are you won't.
+        """
         self._write_params(bdf_file, size, is_double, is_long_ids=is_long_ids)
         self._write_nodes(bdf_file, size, is_double, is_long_ids=is_long_ids)
 
