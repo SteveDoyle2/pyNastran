@@ -1,11 +1,12 @@
 import unittest
 
 import os
+import numpy as np
 from numpy import array, array_equal, sin, cos, radians
 
 import pyNastran
 from pyNastran.bdf.bdf import BDF, BDFCard, read_bdf, DMI, DMIG, fill_dmigs
-from pyNastran.bdf.cards.test.utils import save_load_deck
+from pyNastran.bdf.cards.test.utils import save_load_deck, get_matrices
 
 PKG_PATH = pyNastran.__path__[0]
 TEST_PATH = os.path.join(PKG_PATH, 'bdf', 'cards', 'test')
@@ -529,7 +530,7 @@ DMI         W2GJ       1       1 1.54685.1353939.1312423.0986108.0621382
         tout = None
         polar = None
         ncols = None
-        reals = [1.0, 2.0, 3.0]
+        reals = np.array([1.0, 2.0, 3.0])
         #complexs = reals
         GCj = [[1, 1],  # grid, component
                [2, 1],
@@ -538,7 +539,7 @@ DMI         W2GJ       1       1 1.54685.1353939.1312423.0986108.0621382
                [4, 1],
                [5, 1]]
         dmig = model.add_dmig(name, ifo, tin, tout, polar, ncols, GCj, GCi,
-                              Real=reals, Complex=reals,
+                              Real=reals, Complex=10*reals,
                               comment='dmig')
         model.pop_parse_errors()
         assert dmig.is_real is False, dmig.is_real
@@ -550,7 +551,7 @@ DMI         W2GJ       1       1 1.54685.1353939.1312423.0986108.0621382
         unused_nrows = None
         unused_form = None
         dmik = model.add_dmik(name, ifo, tin, tout, polar, ncols, GCj, GCi,
-                              Real=reals, Complex=reals,
+                              Real=reals, Complex=10*reals,
                               comment='dmik')
         dmik.get_matrix()
         save_load_deck(model)
@@ -589,6 +590,15 @@ DMI         W2GJ       1       1 1.54685.1353939.1312423.0986108.0621382
                               comment='dmik')
         dmik.get_matrix()
         save_load_deck(model)
+
+    def test_dmig_sparse(self):
+        """currently fails when extracting KAAX as a sparse matrix"""
+        bdf_filename = os.path.join(TEST_PATH, 'dmig_sparse.pch')
+        model = read_bdf(bdf_filename, validate=True, xref=True, punch=True,
+                         save_file_structure=False, skip_cards=None, read_cards=None,
+                         encoding=None, log=None, debug=False, mode='msc')
+        get_matrices(model)
+        #kaax = model.dmigs['KAAX'].get_matrix(is_sparse=True)
 
     def test_dmig_uaccel(self):
         """tests DMIG,UACCEL"""
@@ -699,6 +709,7 @@ DMI         W2GJ       1       1 1.54685.1353939.1312423.0986108.0621382
         str(dmiax_real)
         str(dmiax_imag)
         save_load_deck(model)
+
 
 if __name__ == '__main__':  # pragma: no cover
     unittest.main()

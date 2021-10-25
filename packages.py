@@ -273,7 +273,7 @@ def get_package_requirements(is_gui: bool=True, add_vtk_qt: bool=True,
             import typish
             iver = int_version('typish', typish.__version__)
             all_reqs['typish'] = str_version(iver)
-            if iver < [1, 4, 0]:
+            if iver < [1, 7, 0]:
                 print(f"typish.__version__ = {typish.__version__!r} != {required_version_str!r}")
                 all_reqs['typish'] = f'>= {required_version_str}'
                 install_requires.append(f'typish >= {required_version_str}')
@@ -341,7 +341,7 @@ def get_package_requirements(is_gui: bool=True, add_vtk_qt: bool=True,
                 #install_requires.append('pillow >= 5.2.0, !=7.1.0')
             elif iver == [7, 1, 0]:
                 print("pillow.__version__ = %r > '5.2.0', !='7.1.0" % PIL.__version__)
-                all_reqs['pillow'] = 'pillow >=5.2.0, !7.1.0'
+                all_reqs['pillow'] = 'pillow >=5.2.0, !=7.1.0'
                 install_requires.append('pillow >= 5.2.0, !=7.1.0')
             elif iver < [5, 2, 0]:
                 print("pillow.__version__ = %r > '5.2.0', !=7.1.0" % PIL.__version__)

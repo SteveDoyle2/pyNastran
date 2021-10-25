@@ -54,7 +54,7 @@ def pivot_table(data, rows, cols):
     return data2, rows_new
 
 
-def unique2d(a):
+def unique2d(a, return_index=False):
     """
     Gets the unique pairs in a 2D vector where the pairs are defined:
     (column 0, column 1).
@@ -77,6 +77,8 @@ def unique2d(a):
     x, y = a.T
     b = x + y*1.0j
     idx = np.unique(b, return_index=True)[1]
+    if return_index:
+        return a[idx], idx
     return a[idx]
 
 #def unique_rows(data):
