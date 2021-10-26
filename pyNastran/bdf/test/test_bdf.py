@@ -476,11 +476,13 @@ def run_and_compare_fems(
         # only temporarily uncomment this when running lots of tests
         if not dev:
             raise
-        elif is_mesh_opt:
-            print('failed test because mesh adaption (GRIDG,CGEN,SPCG)...ignoring')
-            print(e)
+        #elif is_mesh_opt:
+            #print('failed test because mesh adaption (GRIDG,CGEN,SPCG)...ignoring')
+            #print(e)
         else:
             print('failed test because DuplicateIDsError...ignoring')
+    except MeshOptimizationError:
+        print('failed test because mesh adaption (GRIDG,CGEN,SPCG)...ignoring')
     except DisabledCardError as e:
         if not dev:
             raise
@@ -1715,7 +1717,17 @@ def _check_case_parameters(subcase: Subcase, fem: BDF,
                     if freq.type in ['FREQ', 'FREQ1', 'FREQ2']:
                         fmax = freq.freqs[-1]
                         force = load2.get_load_at_freq(fmax) * scale_factor
-        elif sol in [109, 129, 401]:  # direct transient (time linear), time nonlinear, NX nonlinear???
+        elif sol in {109, 112, 118, 129, 146, 159, 400, 401, 601, 700}:
+            # 109: direct transient (time linear)
+            # 112: modal transient
+            # 118: Cyclic direct frequency response
+            # 129: time nonlinear
+            # 146: gust
+            # 159: thermal nonlinear
+            # 400:
+            # 401: NX nonlinear???
+            # 601:
+            # 700:
             for load2, scale_factor in zip(loads, scale_factors):
                 force = load2.get_load_at_time(0.) * scale_factor
         elif  sol == 200:

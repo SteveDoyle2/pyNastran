@@ -3081,6 +3081,7 @@ class CPLSTS4(CPLSTx4):
     |         |       |       |    | TFLAG | T1 |   T2  |   T3  |  T4  |
     +---------+-------+-------+----+-------+----+-------+-------+------+
 
+    ['CPLSTS4', '1', '5', '17', '18', '19', '20', '0.0']
     """
     type = 'CPLSTS4'
 
@@ -3130,18 +3131,19 @@ class CPLSTS4(CPLSTx4):
             integer(card, 3, 'n1'),
             integer(card, 4, 'n2'),
             integer(card, 5, 'n3'),
+            integer(card, 6, 'n4'),
         ]
-        if len(card) > 5:
-            theta = double_or_blank(card, 6, 'theta', 0.0)
+        if len(card) > 6:
+            theta = double_or_blank(card, 7, 'theta', 0.0)
             blank(card, 8, 'blank')
             blank(card, 9, 'blank')
 
-            tflag = integer_or_blank(card, 10, 'tflag', 0)
-            T1 = double_or_blank(card, 11, 'T1')
-            T2 = double_or_blank(card, 12, 'T2')
-            T3 = double_or_blank(card, 13, 'T3')
-            T4 = double_or_blank(card, 14, 'T3')
-            assert len(card) <= 14, f'len(CPLSTS4 card) = {len(card):d}\ncard={card}'
+            tflag = integer_or_blank(card, 12, 'tflag', 0)
+            T1 = double_or_blank(card, 13, 'T1')
+            T2 = double_or_blank(card, 14, 'T2')
+            T3 = double_or_blank(card, 15, 'T3')
+            T4 = double_or_blank(card, 16, 'T3')
+            assert len(card) <= 17, f'len(CPLSTS4 card) = {len(card):d}\ncard={card}'
         else:
             theta = 0.0
             tflag = 0

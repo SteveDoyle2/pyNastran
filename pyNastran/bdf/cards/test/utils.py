@@ -1,13 +1,14 @@
 """defines testing utils"""
 import os
 from io import StringIO
+from collections import ChainMap
 import inspect
 from typing import Tuple, List, Dict
 
 import numpy as np
 from cpylog import SimpleLogger
 
-from pyNastran.bdf.bdf import BDF, read_bdf
+from pyNastran.bdf.bdf import BDF, read_bdf, DMIAX
 from pyNastran.bdf.mesh_utils.delete_bad_elements import element_quality
 from pyNastran.bdf.mesh_utils.remove_unused import remove_unused
 from pyNastran.bdf.mesh_utils.convert import convert
@@ -55,6 +56,7 @@ def save_load_deck(model: BDF, xref='standard', punch=True, run_remove_unused=Tr
     bdf_file.seek(0)
     model.write_bdf(bdf_file, size=16, is_double=True, close=False)
     bdf_file.seek(0)
+    get_matrices(model)
 
     if write_saves and model.save_file_structure:
         bdf_filenames = {0 : 'junk.bdf',}
@@ -293,3 +295,15 @@ def renumber(bdf_filename, log):
     model4 = BDF(debug=False, log=log)
     model4.read_bdf(bdf_filename_out)
     os.remove('junk.bdf')
+
+def get_matrices(model: BDF):
+    """tests the ``get_matrix`` method for every type of matrix"""
+    dicts = ChainMap(model.dmig, model.dmij, model.dmiji, model.dmik,
+                     model.dmi, model.dmiax)
+    for key, matrix in dicts.items():
+        if key == 'UACCEL' or isinstance(matrix, DMIAX):
+            model.log.warning(f'skipping get_matrix() for name={key!r}; type={matrix.type}')
+            continue
+        kaax = matrix.get_matrix(is_sparse=True)
+        kaax = matrix.get_matrix(is_sparse=False)
+        str(kaax)

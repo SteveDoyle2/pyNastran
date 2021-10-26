@@ -425,7 +425,7 @@ class NastranMatrix(BaseCard):
             ncols = integer_or_blank(card, 8, 'matrix_form=%s; ncol' % matrix_form)
         elif matrix_form == 6: # symmetric
             ncols = integer_or_blank(card, 8, 'matrix_form=%s; ncol' % matrix_form)
-        elif matrix_form in [2, 9]: # rectangular
+        elif matrix_form in {2, 9}: # rectangular
             ncols = integer(card, 8, 'matrix_form=%s; ncol' % (matrix_form))
         else:
             # technically right, but nulling this will fix bad decks
@@ -463,7 +463,7 @@ class NastranMatrix(BaseCard):
             matrix_type = 'square'
         elif self.matrix_form == 6:
             matrix_type = 'symmetric'
-        elif self.matrix_form in [2, 9]:
+        elif self.matrix_form in {2, 9}:
             matrix_type = 'rectangular'
         else:
             # technically right, but nulling this will fix bad decks
@@ -483,14 +483,14 @@ class NastranMatrix(BaseCard):
     @property
     def shape(self):
         """gets the matrix shape"""
-        if self.matrix_form in [1, 6]: # square, symmetric
+        if self.matrix_form in {1, 6}: # square, symmetric
             if self.ncols is not None:
                 shape = (self.ncols, self.ncols)
             else:
                 nrows, ncols = get_row_col_map(
                     self, self.GCi, self.GCj, self.matrix_form)[:2]
                 shape = (nrows, ncols)
-        elif self.matrix_form in [2, 9]:
+        elif self.matrix_form in {2, 9}:
             raise NotImplementedError('need to pull the nrows after reading in everything')
             #shape = (self.ncols, self.ncols)
         else:
@@ -614,9 +614,9 @@ class NastranMatrix(BaseCard):
     @property
     def is_complex(self) -> bool:
         """real vs. complex attribute"""
-        if self.tin in [1, 2]: # real
+        if self.tin in {1, 2}: # real
             return False
-        elif self.tin in [3, 4]: # complex
+        elif self.tin in {3, 4}: # complex
             return True
         msg = ('Matrix %r must have a value of TIN = [1, 2, 3, 4].\n'
                'TIN defines the type (real, complex) '
@@ -626,7 +626,7 @@ class NastranMatrix(BaseCard):
         raise ValueError(msg)
 
     @property
-    def is_polar(self):
+    def is_polar(self) -> bool:
         """
         Used by:
           - DMIG
@@ -648,25 +648,25 @@ class NastranMatrix(BaseCard):
             return True
         elif self.polar is None:
             return False
-        msg = ('Matrix %r must have a value of POLAR = [0, 1].\n'
+        msg = (f'Matrix {self.name!r} must have a value of POLAR = [0, 1].\n'
                'POLAR defines the type (real/imag or mag/phase) complex) '
-               'of the matrix.  POLAR=%r.' % (self.name, self.polar))
+               f'of the matrix.  POLAR={self.polar!r}.')
         raise ValueError(msg)
 
     @property
-    def tin_dtype(self):
+    def tin_dtype(self) -> str:
         """gets the input dtype"""
         return _get_dtype(self.is_complex, self.tin)
 
     @property
-    def tout_dtype(self):
+    def tout_dtype(self) -> str:
         """gets the output dtype"""
         return _get_dtype(self.is_complex, self.tout)
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return self.write_card(size=8, is_double=False)
 
-    def fill_in_default_components(self, model):
+    def fill_in_default_components(self, model: BDF) -> None:
         for i, (Gi, Ci) in enumerate(self.GCi):
             if Ci is None:
                 node = model.nodes[Gi]
@@ -674,7 +674,7 @@ class NastranMatrix(BaseCard):
                     msg = ('Ci on DMIG card must be 1, 2, 3, 4, 5, or 6; '
                            'Node=%i (GRID); Ci=%s' % (Gi, Ci))
                     raise RuntimeError(msg)
-                elif node.type in ['SPOINT', 'EPOINT']:
+                elif node.type in {'SPOINT', 'EPOINT'}:
                     Ci = 0
                 else:
                     raise NotImplementedError(node)
@@ -687,7 +687,7 @@ class NastranMatrix(BaseCard):
                     msg = ('Cj on DMIG card must be 1, 2, 3, 4, 5, or 6; '
                            'Node=%i (GRID); Cj=%s' % (Gj, Cj))
                     raise RuntimeError(msg)
-                elif node.type in ['SPOINT', 'EPOINT']:
+                elif node.type in {'SPOINT', 'EPOINT'}:
                     Cj = 0
                 else:
                     raise NotImplementedError(node)
@@ -695,9 +695,11 @@ class NastranMatrix(BaseCard):
         return
 
     def write_card(self, size: int=8, is_double: bool=False) -> str:
-        if self.tin in [1, 3]:
+        # we ignore the requested is_double flag because otherwise Nastran
+        # can't read in the matrix
+        if self.tin in {1, 3}:
             is_double = False
-        elif self.tin in [2, 4]:
+        elif self.tin in {2, 4}:
             is_double = True
             size = 16
         else:
@@ -869,10 +871,10 @@ class DMIG_UACCEL(BaseCard):
         return list_fields
 
     def write_card(self, size: int=8, is_double: bool=False) -> str:
-        if self.tin in [1, 3]:
+        if self.tin in {1, 3}:
             is_double = False
             msg = self.write_card_8()
-        elif self.tin in [2, 4]:
+        elif self.tin in {2, 4}:
             is_double = True
             size = 16
             msg = self.write_card_16()
@@ -880,15 +882,15 @@ class DMIG_UACCEL(BaseCard):
             raise RuntimeError('tin=%r must be 1, 2, 3, or 4' % self.tin)
         return msg
 
-    def write_card_8(self):
+    def write_card_8(self) -> str:
         """writes the card in small field format"""
         return self._write_card(print_card_8)
 
-    def write_card_16(self):
+    def write_card_16(self) -> str:
         """writes the card in small large format"""
         return self._write_card(print_card_16)
 
-    def _write_card(self, func):
+    def _write_card(self, func) -> str:
         """writes the card"""
         msg = '\n$' + '-' * 80
         msg += '\n$ DMIG Matrix UACCEL\n'
@@ -963,6 +965,7 @@ class DMIG(NastranMatrix):
             the name of the matrix
         ifo : int
             matrix shape
+            2/9=Rectangular
             4=Lower Triangular
             5=Upper Triangular
             6=Symmetric
@@ -987,9 +990,9 @@ class DMIG(NastranMatrix):
         ncols : int
             ???
         GCj  : List[(node, dof)]
-            the [jnode, jDOFs]
+            the [jnode, jDOFs] columns
         GCi  : List[(node, dof)]
-            the inode, iDOFs
+            the [inode, iDOFs] rows
         Real : List[float]
             The real values
         Complex : List[float]; default=None
@@ -1148,22 +1151,22 @@ class DMIAX(BaseCard):
         return not self.is_real
 
     @property
-    def is_polar(self):
+    def is_polar(self) -> bool:
         """is the matrix polar (vs real/imag)?"""
         return False
 
     @property
-    def tin_dtype(self):
+    def tin_dtype(self) -> str:
         """gets the input dtype"""
         return _get_dtype(self.is_complex, self.tin)
 
     @property
-    def tout_dtype(self):
+    def tout_dtype(self) -> str:
         """gets the output dtype"""
         return _get_dtype(self.is_complex, self.tout)
 
     @property
-    def matrix_type(self):
+    def matrix_type(self) -> str:
         """gets the matrix type"""
         if not isinstance(self.matrix_form, integer_types):
             msg = 'ifo must be an integer; matrix_form=%r type=%s name=%s' % (
@@ -1178,7 +1181,7 @@ class DMIAX(BaseCard):
             matrix_type = 'square'
         #elif self.matrix_form == 6:
             #matrix_type = 'symmetric'
-        #elif self.matrix_form in [2, 9]:
+        #elif self.matrix_form in {2, 9}:
             #matrix_type = 'rectangular'
         else:
             # technically right, but nulling this will fix bad decks
@@ -1210,7 +1213,7 @@ class DMIAX(BaseCard):
             ncols = integer_or_blank(card, 8, 'matrix_form=%s; ncol' % matrix_form)
         elif matrix_form == 6: # symmetric
             ncols = integer_or_blank(card, 8, 'matrix_form=%s; ncol' % matrix_form)
-        elif matrix_form in [2, 9]: # rectangular
+        elif matrix_form in {2, 9}: # rectangular
             ncols = integer(card, 8, 'matrix_form=%s; ncol' % matrix_form)
         else:
             # technically right, but nulling this will fix bad decks
@@ -1499,8 +1502,11 @@ class DMIJI(NastranMatrix):
     def export_to_hdf5(cls, h5_file, model, encoding):
         _export_dmig_to_hdf5(h5_file, model, model.dmiji, encoding)
 
-    def __init__(self, name, ifo, tin, tout, polar, ncols,
-                 GCj, GCi, Real, Complex=None, comment='', finalize=True):
+    def __init__(self, name: str, ifo: int,
+                 tin: int, tout: int, polar: int,
+                 ncols: int,
+                 GCj, GCi, Real, Complex=None,
+                 comment: str='', finalize: bool=True):
         """
         Creates a DMIJI card
 
@@ -1820,21 +1826,21 @@ class DMI(NastranMatrix):
         return matrix_type
 
     @property
-    def is_polar(self):
-        if self.tin in [1, 2]:
+    def is_polar(self) -> bool:
+        if self.tin in {1, 2}:
             is_polar = False
-        elif self.tin in [3, 4]:
+        elif self.tin in {3, 4}:
             is_polar = False # TODO: could be wrong...
         else:
             raise NotImplementedError('nrows=%s ncols=%s' % (self.nrows, self.ncols))
         return is_polar
 
     @property
-    def shape(self):
+    def shape(self) -> Tuple[int, int]:
         return (self.nrows, self.ncols)
 
     @property
-    def ifo(self):
+    def ifo(self) -> int:
         """
         ifo
         #: 4-Lower Triangular; 5=Upper Triangular; 6=Symmetric; 8=Identity (m=nRows, n=m)
@@ -2045,7 +2051,7 @@ class DMI(NastranMatrix):
                 msg += func(list_fields)
         return msg
 
-    def get_matrix(self, is_sparse: bool=False, apply_symmetry: bool=True):
+    def get_matrix(self, is_sparse: bool=False, apply_symmetry: bool=True) -> Tuple[np.array, None, None]:
         """
         Builds the Matrix
 
@@ -2131,7 +2137,7 @@ def get_row_col_map(matrix: DMIG,
     assert ncols > 0, 'ncols=%s' % ncols
     return nrows, ncols, ndim, rows, cols, rows_reversed, cols_reversed
 
-def _get_row_col_map_1d(matrix, GCi, GCj, ifo):
+def _get_row_col_map_1d(matrix, GCi, GCj, ifo: int):
     """helper for ``get_row_col_map``"""
     rows = {}
     rows_reversed = {}
@@ -2149,7 +2155,6 @@ def _get_row_col_map_1d(matrix, GCi, GCj, ifo):
 
     if ifo == 6:
         # symmetric
-        #print(GCj)
         for gcj in GCj:
             if gcj not in rows:
                 #print('row.gcj = %s' % str(gcj))
@@ -2221,9 +2226,11 @@ def _get_row_col_map_2d(matrix, GCi, GCj, ifo):
                 j += 1
     return rows, cols, rows_reversed, cols_reversed
 
-def _fill_sparse_matrix(matrix: DMIG, nrows: int, ncols: int) -> coo_matrix:
-    """helper method for get_matrix"""
-    if matrix.GCi.shape == 1:
+def _fill_sparse_matrix(matrix: DMIG, nrows: int, ncols: int,
+                        apply_symmetry: bool) -> coo_matrix:
+    """helper method for ``get_matrix``"""
+    if matrix.GCi.ndim == 1:
+        assert matrix.GCj.ndim == 1, matrix.GCj.ndim
         rows = matrix.GCi
         cols = matrix.GCj
         GCj = array(matrix.GCj, dtype='int32') - 1
@@ -2232,10 +2239,10 @@ def _fill_sparse_matrix(matrix: DMIG, nrows: int, ncols: int) -> coo_matrix:
         nrows = max(GCi) + 1
         ncols = max(GCj) + 1
     else:
+        assert matrix.GCi.ndim == 2, matrix.GCi.ndim
+        assert matrix.GCj.ndim == 2, matrix.GCj.ndim
         GCi = matrix.GCi
         GCj = matrix.GCj
-        assert len(GCi.shape) == 2
-        assert len(GCj.shape) == 2
 
         # TODO: matrix size:  is this correct?
         #Gi = GCi[:, 0]
@@ -2253,8 +2260,7 @@ def _fill_sparse_matrix(matrix: DMIG, nrows: int, ncols: int) -> coo_matrix:
     reals = array(matrix.Real, dtype=float_dtype)
 
     dtype = _get_dtype(matrix.is_complex, matrix.tin)
-    # TODO: no check for symmetry
-    # TODO: no check for dtype
+
     if matrix.is_complex:
         complexs = array(matrix.Complex, dtype=float_dtype)
         data = reals + 1j * complexs
@@ -2265,15 +2271,22 @@ def _fill_sparse_matrix(matrix: DMIG, nrows: int, ncols: int) -> coo_matrix:
         nrows = max(nrows, ncols)
         ncols = nrows
 
-    #A = coo_matrix( (entries,(rows,cols)),shape=(nrows,ncols),dtype=dtype) # test
     assert len(rows) == len(cols)
     assert len(data) == len(rows)
-    sparse_matrix = coo_matrix((data, (rows, cols)),
-                               shape=(nrows, ncols), dtype=dtype)
-    #sparse_matrix = coo_matrix( (data,(matrix.GCi, matrix.GCj)),shape=(i,j)) # old
-    #sparse_matrix = coo_matrix( (data,(matrix.GCi, matrix.GCj)),shape=(nrows,ncols))
-    #print(sparse_matrix.toarray())
-    #print(sparse_matrix)
+    if matrix.matrix_form == 6 and apply_symmetry:
+        is_diagonal, not_diagonal = _get_diagonal_symmetric(matrix)
+        if np.any(not_diagonal):
+            rows2 = np.hstack([rows, cols[not_diagonal]])
+            cols2 = np.hstack([cols, rows[not_diagonal]])
+            data = np.hstack([data, data[not_diagonal]])
+            assert len(rows2) == len(cols2)
+            assert len(data) == len(rows2)
+            rows = rows2
+            cols = cols2
+
+    sparse_matrix = coo_matrix(
+        (data, (rows, cols)),
+        shape=(nrows, ncols), dtype=dtype)
     return sparse_matrix
 
 def _build_gc_map(GC: np.ndarray) -> Dict[Tuple[int, int], int]:
@@ -2301,11 +2314,10 @@ def gc_to_index(GC: np.ndarray) -> Tuple[np.ndarray, int]:
     return index, ngrid_map
 
 def _fill_dense_rectangular_matrix(matrix: DMIG,
-                                        nrows: int, ncols: int, ndim: int,
-                                        rows: np.ndarray, cols: np.ndarray,
-                                        apply_symmetry: bool) -> Any:
+                                   nrows: int, ncols: int, ndim: int,
+                                   rows: Dict[Any, int], cols: Dict[Any, int],
+                                   apply_symmetry: bool) -> Any:
     """helper method for ``get_matrix``"""
-    #is_sparse = False
     if matrix.is_complex:
         dense_mat = _fill_dense_rectangular_matrix_complex(
             matrix, nrows, ncols, ndim, rows, cols, apply_symmetry)
@@ -2317,38 +2329,59 @@ def _fill_dense_rectangular_matrix(matrix: DMIG,
 
 def _fill_dense_rectangular_matrix_complex(matrix: DMIG,
                                            nrows: int, ncols: int, ndim: int,
-                                           rows: np.ndarray, cols: np.ndarray,
+                                           rows: Dict[Any, int], cols: Dict[Any, int],
                                            apply_symmetry: bool) -> np.ndarray:
     """helper method for ``_fill_dense_rectangular_matrix``"""
     dense_mat = zeros((nrows, ncols), dtype='complex128')
     if matrix.matrix_form == 6 and apply_symmetry:  # symmetric
-        for (gcj, gci, reali, complexi) in zip(matrix.GCj, matrix.GCi,
-                                               matrix.Real, matrix.Complex):
+        is_diagonal, not_diagonal = _get_diagonal_symmetric(matrix)
+        for (gcj, reali, complexi) in zip(matrix.GCj[is_diagonal],
+                                          matrix.Real[is_diagonal], matrix.Complex[is_diagonal]):
+            j = cols[(gcj[0], gcj[1])]
+            dense_mat[j, j] += complex(reali, complexi)
+
+        for (gcj, gci, reali, complexi) in zip(matrix.GCj[not_diagonal], matrix.GCi[not_diagonal],
+                                               matrix.Real[not_diagonal], matrix.Complex[not_diagonal]):
             i = rows[(gci[0], gci[1])]
             j = cols[(gcj[0], gcj[1])]
-            dense_mat[i, j] = complex(reali, complexi)
-            dense_mat[j, i] = complex(reali, complexi)
+            dense_mat[i, j] += complex(reali, complexi)
+            dense_mat[j, i] += complex(reali, complexi)
     else:
         for (gcj, gci, reali, complexi) in zip(matrix.GCj, matrix.GCi,
                                                matrix.Real, matrix.Complex):
             i = rows[(gci[0], gci[1])]
             j = cols[(gcj[0], gcj[1])]
-            dense_mat[i, j] = complex(reali, complexi)
+            dense_mat[i, j] += complex(reali, complexi)
     return dense_mat
+
+def _get_diagonal_symmetric(matrix: DMIG) -> Tuple[np.ndarray, np.ndarray]:
+    """helper for ``apply_symmetry``"""
+    assert matrix.GCi.ndim == 2, matrix.GCi.ndim
+    assert matrix.GCj.ndim == 2, matrix.GCj.ndim
+    dij = matrix.GCi - matrix.GCj
+    dij[:, 0] == dij[:, 1]
+    is_diagonal = (dij[:, 0] == 0) & (dij[:, 1] == 0)
+    not_diagonal = ~is_diagonal
+    return is_diagonal, not_diagonal
 
 def _fill_dense_rectangular_matrix_real(matrix: DMIG,
                                         nrows: int, ncols: int, ndim: int,
-                                        rows: np.ndarray, cols: np.ndarray,
+                                        rows: Dict[Any, int], cols: Dict[Any, int],
                                         apply_symmetry: bool) -> np.ndarray:
     """helper method for ``_fill_dense_rectangular_matrix``"""
     dense_mat = zeros((nrows, ncols), dtype='float64')
     if matrix.matrix_form == 6 and apply_symmetry:  # symmetric
+        is_diagonal, not_diagonal = _get_diagonal_symmetric(matrix)
         try:
-            for (gcj, gci, reali) in zip(matrix.GCj, matrix.GCi, matrix.Real):
+            for (gcj, reali) in zip(matrix.GCj[is_diagonal], matrix.Real[is_diagonal]):
+                i = rows[(gcj[0], gcj[1])]
+                dense_mat[i, i] += reali
+
+            for (gcj, gci, reali) in zip(matrix.GCj[not_diagonal], matrix.GCi[not_diagonal], matrix.Real[not_diagonal]):
                 i = rows[(gci[0], gci[1])]
                 j = cols[(gcj[0], gcj[1])]
-                dense_mat[i, j] = reali
-                dense_mat[j, i] = reali
+                dense_mat[i, j] += reali
+                dense_mat[j, i] += reali
         except IndexError:
             msg = ('name=%s ndim=%s i=%s j=%s matrix_type=%s '
                    'is_polar=%s ncols=%s M.shape=%s\n' % (
@@ -2363,7 +2396,7 @@ def _fill_dense_rectangular_matrix_real(matrix: DMIG,
             for (gcj, gci, reali) in zip(matrix.GCj, matrix.GCi, matrix.Real):
                 i = rows[(gci[0], gci[1])]
                 j = cols[(gcj[0], gcj[1])]
-                dense_mat[i, j] = reali
+                dense_mat[i, j] += reali
         except KeyError:
             msg = ('name=%s ndim=%s gci=%s gcj=%s matrix_type=%s '
                    'is_polar=%s ncols=%s M.shape=%s\n\n' % (
@@ -2409,7 +2442,7 @@ def _fill_dense_rectangular_matrix_real(matrix: DMIG,
 
 def _fill_dense_column_matrix(matrix: DMIG,
                               nrows: int, ncols: int, ndim: int,
-                              rows: np.ndarray, cols: np.ndarray,
+                              rows: Dict[Any, int], cols: Dict[Any, int],
                               apply_symmetry: bool) -> np.ndarray:
     """helper method for ``get_matrix``"""
     if matrix.is_complex:
@@ -2422,24 +2455,28 @@ def _fill_dense_column_matrix(matrix: DMIG,
 
 def _fill_dense_column_matrix_real(matrix: DMIG,
                                    nrows: int, ncols: int, ndim: int,
-                                   rows: np.ndarray, cols: np.ndarray,
+                                   rows: Dict[Any, int], cols: Dict[Any, int],
                                    apply_symmetry: bool) -> np.ndarray:
-    """helper method for ``_fill_dense_column_matrix``"""
+    """helper method for ``_fill_dense_column_matrix``
+
+    What does symmetry mean for a column matrix?!!!
+    """
     #print('nrows=%s ncols=%s' % (nrows, ncols))
     dense_mat = zeros((nrows, ncols), dtype='float64')
     if matrix.matrix_form == 6 and apply_symmetry:  # symmetric
         assert nrows == ncols, 'nrows=%s ncols=%s' % (nrows, ncols)
-        for (gcj, gci, reali) in zip(matrix.GCj, matrix.GCi, matrix.Real):
-            i = rows[gci]
-            j = cols[gcj]
-            dense_mat[i, j] = reali
-            dense_mat[j, i] = reali
+        raise RuntimeError('What does symmetry mean for a column matrix?!!!')
+        #for (gcj, gci, reali) in zip(matrix.GCj, matrix.GCi, matrix.Real):
+            #i = rows[gci]
+            #j = cols[gcj]
+            #dense_mat[i, j] += reali
+            #dense_mat[j, i] += reali
     else:
         try:
             for (gcj, gci, reali) in zip(matrix.GCj, matrix.GCi, matrix.Real):
                 i = rows[gci]
                 j = cols[gcj]
-                dense_mat[i, j] = reali
+                dense_mat[i, j] += reali
         except IndexError:
             msg = ('name=%s ndim=%s i=%s j=%s matrix_type=%s '
                    'is_polar=%s ncols=%s M.shape=%s\n' % (
@@ -2453,33 +2490,41 @@ def _fill_dense_column_matrix_real(matrix: DMIG,
 
 def _fill_dense_column_matrix_complex(matrix: DMIG,
                                       nrows: int, ncols: int, ndim: int,
-                                      rows: np.ndarray, cols: np.ndarray,
+                                      rows: Dict[Any, int], cols: Dict[Any, int],
                                       apply_symmetry: bool) -> np.ndarray:
-    """helper method for ``_fill_dense_column_matrix``"""
+    """
+    helper method for ``_fill_dense_column_matrix``
+
+    What does symmetry mean for a column matrix?!!!
+    """
     dense_mat = zeros((nrows, ncols), dtype='complex128')
     if matrix.matrix_form == 6 and apply_symmetry:  # symmetric
         assert nrows == ncols, 'nrows=%s ncols=%s' % (nrows, ncols)
-        for (gcj, gci, reali, complexi) in zip(matrix.GCj, matrix.GCi,
-                                               matrix.Real, matrix.Complex):
-            i = rows[gci]
-            j = cols[gcj]
-            dense_mat[i, j] = complex(reali, complexi)
-            dense_mat[j, i] = complex(reali, complexi)
+        raise RuntimeError('What does symmetry mean for a column matrix?!!!')
+        #for (gcj, gci, reali, complexi) in zip(matrix.GCj, matrix.GCi,
+                                               #matrix.Real, matrix.Complex):
+            #i = rows[gci]
+            #j = cols[gcj]
+            #dense_mat[i, j] += complex(reali, complexi)
+            #dense_mat[j, i] += complex(reali, complexi)
     elif matrix.matrix_form == 2:  # rectangular
         assert nrows == ncols, 'nrows=%s ncols=%s' % (nrows, ncols)
         for (gcj, gci, reali, complexi) in zip(matrix.GCj, matrix.GCi,
                                                matrix.Real, matrix.Complex):
             i = rows[gci]
             j = cols[gcj]
-            dense_mat[i, j] = complex(reali, complexi)
+            dense_mat[i, j] += complex(reali, complexi)
     else:
         for (gcj, gci, reali, complexi) in zip(matrix.GCj, matrix.GCi,
                                                matrix.Real, matrix.Complex):
             i = rows[gci]
             j = cols[gcj]
+            dense_mat[i, j] += complex(reali, complexi)
     return dense_mat
 
-def get_dmi_matrix(matrix: DMI, is_sparse: bool=False,
+
+def get_dmi_matrix(matrix: DMI,
+                   is_sparse: bool=False,
                    apply_symmetry: bool=True) -> Tuple[np.array, None, None]:
     """
     Builds the Matrix
@@ -2507,6 +2552,8 @@ def get_dmi_matrix(matrix: DMI, is_sparse: bool=False,
 
     """
     ifo = matrix.ifo
+    assert matrix.GCi.ndim == 1, matrix.GCi.ndim
+    assert matrix.GCj.ndim == 1, matrix.GCj.ndim
     GCj = array(matrix.GCj, dtype='int32') - 1
     GCi = array(matrix.GCi, dtype='int32') - 1
 
@@ -2517,16 +2564,13 @@ def get_dmi_matrix(matrix: DMI, is_sparse: bool=False,
     else:
         data = matrix.Real
 
-    if ifo == 2:
+    if ifo in {2, 9}:
         # rectangular
         nrows = matrix.nrows
         ncols = matrix.ncols
 
         M = coo_matrix((data, (GCi, GCj)),
                        shape=(nrows, ncols), dtype=dtype)
-        if not is_sparse:
-            M = M.toarray()
-
     else:
         nrows = matrix.nrows
         ncols = matrix.ncols
@@ -2535,8 +2579,8 @@ def get_dmi_matrix(matrix: DMI, is_sparse: bool=False,
             ncols = nrows
         M = coo_matrix((data, (GCi, GCj)),
                        shape=(nrows, ncols), dtype=dtype)
-        if not is_sparse:
-            M = M.toarray()
+    if not is_sparse:
+        M = M.toarray()
     #else:
         #ifo : int
         #    matrix shape
@@ -2549,7 +2593,7 @@ def get_dmi_matrix(matrix: DMI, is_sparse: bool=False,
 
 def get_matrix(self: DMIG,
                is_sparse: bool=False,
-               apply_symmetry: bool=True) -> Tuple[Any,
+               apply_symmetry: bool=False) -> Tuple[Any,
                                                    Dict[int, Any],
                                                    Dict[int, Any]]:
     """
@@ -2557,13 +2601,12 @@ def get_matrix(self: DMIG,
 
     Parameters
     ----------
-    is_sparse : bool
-        should the matrix be returned as a sparse matrix (default=True).
+    is_sparse : bool; default=True
+        should the matrix be returned as a sparse matrix.
         Slower for dense matrices.
-    apply_symmetry: bool
+    apply_symmetry: bool; default=False
         If the matrix is symmetric (matrix_form=6), returns a symmetric matrix.
         Supported as there are symmetric matrix routines.
-        TODO: unused...
 
     Returns
     -------
@@ -2571,46 +2614,26 @@ def get_matrix(self: DMIG,
         the matrix
     rows : Dict[(nid, nid)] = float
         dictionary of keys=rowID,    values=(Grid,Component) for the matrix
-    cols : Dict[](int, int)] = float
+    cols : Dict[(int, int)] = float
         dictionary of keys=columnID, values=(Grid,Component) for the matrix
-
-    .. warning:: is_sparse=True WILL fail
 
     """
     nrows, ncols, ndim, rows, cols, rows_reversed, cols_reversed = get_row_col_map(
         self, self.GCi, self.GCj, self.matrix_form)
-    #print('rows = ', rows)
-    #print('cols = ', cols)
-    #print('i=%s j=%s' % (i, j))
-    #nrows = len(rows2)
-    #ncols = len(cols2)
-
-    #A = ss.lil_matrix((3,3), dtype='d') # double precision
-    #rows = []
-    #cols = []
-    #data = []
-    #for i in range(3):
-       #for j in range(3):
-           #k = float((i+1)*(j+1))
-           #rows.append(i)
-           #cols.append(j)
-           #data.append(k)
-           #A[i,j] = k
 
     #is_sparse = False
     if is_sparse:
-        assert isinstance(self, (DMIG, DMIK, DMIJI)), type(self)
-        M = _fill_sparse_matrix(self, nrows, ncols)
+        #assert isinstance(self, (DMIG, DMIK, DMIJI)), type(self)
+        M = _fill_sparse_matrix(self, nrows, ncols, apply_symmetry)
     else:
         if ndim == 1:
-            assert isinstance(self, int), type(self)
+            #assert isinstance(self, int), type(self)
             M = _fill_dense_column_matrix(self, nrows, ncols, ndim, rows, cols, apply_symmetry)
             assert isinstance(M, np.ndarray), type(M)
         else:
-            assert isinstance(self, (DMIG, DMIK, DMIJI)), type(self)
+            #assert isinstance(self, (DMIG, DMIK, DMIJ, DMIJI)), type(self)
             M = _fill_dense_rectangular_matrix(self, nrows, ncols, ndim, rows, cols, apply_symmetry)
             assert isinstance(M, np.ndarray), type(M)
-        #print(M)
     return (M, rows_reversed, cols_reversed)
 
 
@@ -2669,7 +2692,7 @@ def _export_dmig_to_hdf5(h5_file, model: BDF, dict_obj, encoding: str) -> None:
                 dmig_group.create_dataset('Complex', data=dmig.Complex)
 
 
-def _export_dmiax_to_hdf5(h5_file, model, dict_obj, encoding):
+def _export_dmiax_to_hdf5(h5_file, model, dict_obj, encoding: str) -> None:
     """export dmiax"""
     for name, dmiax in dict_obj.items():
         #print(f'exporting {dmiax.type} name={name!r}')
@@ -2726,13 +2749,13 @@ def _export_dmiax_to_hdf5(h5_file, model, dict_obj, encoding):
         if hasattr(dmiax, 'Complex') and dmiax.Complex is not None:
             dmiax_group.create_dataset('Complex', data=dmiax.Complex)
 
-def _set_polar(polar):
-    if polar in [None, 0, False]:
+def _set_polar(polar) -> int:
+    if polar in {None, 0, False}:
         polar = 0
-    elif polar in [1, True]:
+    elif polar in {1, True}:
         polar = 1
-    else:
-        raise ValueError('polar=%r and must be 0 or 1' % polar)
+    else:  # pragma: no cover
+        raise ValueError(f'polar={polar!r} and must be 0 or 1')
     return polar
 
 def _get_dtype(is_complex: bool, type_flag: int) -> str:
@@ -2749,17 +2772,16 @@ def _get_dtype(is_complex: bool, type_flag: int) -> str:
             dtype = 'complex128'
         else:
             dtype = 'float64'
-    else:
-        raise RuntimeError("invalid option for matrix format")
+    else:  # pragma: no cover
+        raise RuntimeError(f'invalid option for matrix format {type_flag}')
     return dtype
 
 def _get_real_dtype(type_flag: int) -> str:
+    """A complex64 array is made up of two float32 arrays."""
     if type_flag in {1, 3}:
         dtype = 'float32'
     elif type_flag in {0, 2, 4}:
         dtype = 'float64'
-    elif type_flag == 0:
-        dtype = 'float64'
-    else:
-        raise RuntimeError("invalid option for matrix format")
+    else:  # pragma: no cover
+        raise RuntimeError(f'invalid option for matrix format {type_flag}')
     return dtype
