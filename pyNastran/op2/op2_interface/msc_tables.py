@@ -630,7 +630,7 @@ MSC_RESULT_TABLES = [b'ASSIG', b'ASEPS'] + [
     #b'MUG1',
     b'TEF1', # b'MEF1',
     b'TQG1', # b'MKQG1',
-    #b'MUG1B',
+    b'MUG1B',
 
 
     # for sure results

@@ -7,7 +7,8 @@ from pyNastran.bdf.cards.elements.shell import ShellElement
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.bdf.bdf import BDF
 
-def get_shell_material_coord(element) -> Tuple[int, float]:
+def get_shell_material_coord(element: Union[CTRIA3, CTRIA6, CTRIAR,
+                                            CQUAD4, CQUAD8, CQUADR, CQUAD]) -> Tuple[int, float]:
     """
     used by:
      - CQUAD4, CQUADR, CQUAD8, CQUAD, CQUADX

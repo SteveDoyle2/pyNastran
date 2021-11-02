@@ -5,6 +5,8 @@ defines:
 """
 import warnings
 from collections import defaultdict
+from typing import Optional
+
 import numpy as np
 import vtk
 from vtk.util.numpy_support import numpy_to_vtk # vtk_to_numpy
@@ -355,12 +357,19 @@ def _convert_ids_to_vtk_idtypearray(ids):
         id_type_array.InsertNextValue(idi)
     return id_type_array
 
-def find_point_id_closest_to_xyz(grid, cell_id, node_xyz):
+def find_point_id_closest_to_xyz(grid: vtk.vtkUnstructuredGrid,
+                                 cell_id: int,
+                                 node_xyz: np.ndarray) -> Optional[int]:
     cell = grid.GetCell(cell_id)
     nnodes = cell.GetNumberOfPoints()
     points = cell.GetPoints()
 
-    point0 = points.GetPoint(0)
+    try:
+        point0 = points.GetPoint(0)
+    except ValueError:
+        #ValueError: expects 0 <= id && id < GetNumberOfPoints()
+        return None
+
     dist_min = vtk.vtkMath.Distance2BetweenPoints(point0, node_xyz)
 
     imin = 0

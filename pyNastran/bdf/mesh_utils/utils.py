@@ -11,7 +11,7 @@ defines:
 import os
 import sys
 from io import StringIO
-from typing import List
+from typing import List, Dict, Any
 from cpylog import SimpleLogger
 import pyNastran
 from pyNastran.bdf.mesh_utils.bdf_renumber import bdf_renumber, superelement_renumber
@@ -66,8 +66,139 @@ def cmd_line_create_vectorized_numbered(argv=None, quiet=False):  # pragma: no c
         bdf_filename_out = base + '_convert' + ext
     create_vectorized_numbered(bdf_filename_in, bdf_filename_out)
 
+def cmd_line_delete_bad_shells(argv=None, quiet: bool=False) -> None:
+    """command line interface to ``delete_bad_shells``"""
+    if argv is None:
+        argv = sys.argv
 
-def cmd_line_equivalence(argv=None, quiet=False):
+    from docopt import docopt
+    msg = (
+        'Usage:\n'
+        '  bdf delete_bad_shells IN_BDF_FILENAME [-o OUT_BDF_FILENAME] [--skew SKEW] [--max_theta MAX_THETA] [--min_theta MIN_THETA] [--max_ar MAX_AR] [--max_taper MAX_TAPER] [--max_warp MAX_WARP]\n'
+
+        '  bdf delete_bad_shells -h | --help\n'
+        '  bdf delete_bad_shells -v | --version\n'
+        '\n'
+
+        "Positional Arguments:\n"
+        "  IN_BDF_FILENAME        path to input BDF/DAT/NAS file\n"
+        #"  OUT_BDF_FILENAME  path to output BDF/DAT/NAS file\n"
+        '\n'
+
+        'Options:\n'
+        "  -o OUT, --output OUT_BDF_FILENAME  path to output BDF/DAT/NAS file\n"
+        "  --skew SKEW            The maximum skew angle (default=70.0)\n"
+        "  --max_theta MAX_THETA  The maximum interior angle (default=175.0)\n"
+        "  --min_theta MIN_THETA  The minimum interior angle (default=0.1)\n"
+        "  --max_ar MAX_AR        The maximum aspect ratio (default=100.0)\n"
+        "  --max_taper MAX_TAPER  The maximum taper ratio (default=4.0)\n"
+        "  --max_warp MAX_WARP    The maximum warp angle (default=90.0)\n\n"
+
+        'Info:\n'
+        '  -h, --help      show this help message and exit\n'
+        "  -v, --version   show program's version number and exit\n"
+    )
+    if len(argv) == 1:
+        sys.exit(msg)
+
+    ver = str(pyNastran.__version__)
+    #type_defaults = {
+    #    '--nerrors' : [int, 100],
+    #}
+    data = docopt(msg, version=ver, argv=argv[1:])
+    try:
+        bdf_filename = data['IN_BDF_FILENAME']
+    except:
+        if not quiet:  # pragma: no cover
+            print(data)
+        raise
+
+    bdf_out_filename = 'fixed_quality.bdf'
+
+    #TOLERANCE LIMITS ARE:
+    #   SA = 30.00
+    #   IA(MIN) = 30.00
+    #   IA(MAX) = 150.00
+    #   WF = 0.05
+    #   TR = 0.50
+    #   AR = 100.00
+    #
+    # Skew angle for the quadrilateral element is defined to be the angle between the lines that join
+    # midpoints of the opposite sides of the quadrilateral. Skew angle for the triangular element is
+    # defined to be the smallest angle at any of the three vertices.
+    #
+    # Taper ratio for the quadrilateral element is defined to be the absolute value of the ratio of the area
+    # of the triangle formed at each corner grid point to one half the area of the quadrilateral minus
+    # 1.0. The largest of the four ratios is compared against the tolerance value. Note that as the ratio
+    # approaches 0.0, the shape approaches a rectangle.
+    # taper = |atri / (0.5 * aquad) - 1 |
+    #
+    # Surface warping factor for a quadrilateral is defined to be the distance of the corner points of the
+    # element to the mean plane of the grid points divided by the average of the element diagonal
+    # lengths. For flat elements (such that all of the grid points lie in a plane), this factor is zero.
+
+    defaults = {
+        '--skew': 70.,
+        '--max_theta': 175.,
+        '--min_theta': 0.1,
+        '--max_ar': 100.,
+        '--max_taper': 4.,
+        '--max_warp': 90.,
+
+        #'SKEW': 70.,
+        #'MAX_THETA': 175.,
+        #'MIN_THETA': 0.1,
+        #'MAX_AR': 100.,
+        #'MAX_TAPER': 4.,
+        #'MAX_WARP': 90.,
+    }
+    _apply_float_values_to_dict(data, defaults)
+    try:
+        skew = float(data['--skew'])
+        max_theta = float(data['--max_theta'])
+        min_theta = float(data['--min_theta'])
+        max_aspect_ratio = float(data['--max_ar'])
+        max_taper_ratio = float(data['--max_taper'])
+        max_warping = float(data['--max_warp'])
+        #skew = float(data['SKEW'])
+        #max_theta = float(data['MAX_THETA'])
+        #min_theta = float(data['MIN_THETA'])
+        #max_aspect_ratio = float(data['MAX_AR'])
+        #max_taper_ratio = float(data['MAX_TAPER'])
+        #max_warping = float(data['MAX_WARP'])
+    except:
+        if not quiet:  # pragma: no cover
+            print(data)
+        raise
+
+    if not quiet:  # pragma: no cover
+        print(data)
+    #print('max_aspect_ratio =', max_aspect_ratio)
+    #sss
+    #if bdf_filename_out is None:
+        #bdf_filename_out = 'merged.bdf'
+    size = 8
+    #from pyNastran.bdf.mesh_utils.bdf_equivalence import bdf_equivalence_nodes
+    from pyNastran.bdf.bdf import read_bdf
+
+    level = 'debug' if not quiet else 'warning'
+    log = SimpleLogger(level=level, encoding='utf-8', log_func=None)
+    model = read_bdf(bdf_filename, validate=True, xref=True, punch=False,
+                     encoding=None, log=log, debug=True, mode='msc')
+    delete_bad_shells(model,
+                      min_theta=min_theta, max_theta=max_theta, max_skew=skew,
+                      max_aspect_ratio=max_aspect_ratio, max_taper_ratio=max_taper_ratio,
+                      max_warping=max_warping)
+    model.write_bdf(bdf_out_filename, size=size,
+                    nodes_size=16, elements_size=16, loads_size=8)
+
+def _apply_float_values_to_dict(data: Dict[str, Any], defaults: Dict[str, float]) -> None:
+    for name, default_value in defaults.items():
+        if data[name] is None:
+            #print(f'applying {name}')
+            data[name] = default_value
+
+def cmd_line_equivalence(argv=None, quiet: bool=False) -> None:
     """command line interface to bdf_equivalence_nodes"""
     if argv is None:
         argv = sys.argv
@@ -106,9 +237,14 @@ def cmd_line_equivalence(argv=None, quiet=False):
     bdf_filename = data['IN_BDF_FILENAME']
     bdf_filename_out = data['--output']
     if bdf_filename_out is None:
-        bdf_filename_out = 'merged.bdf'
+        dirname = os.path.dirname(bdf_filename)
+        bdf_filename_out = os.path.join(dirname, 'merged.bdf')
+    else:
+        dirname = os.path.dirname(bdf_filename_out)
+
     tol = float(data['EQ_TOL'])
     size = 16
+    from pyNastran.bdf.bdf import read_bdf
     from pyNastran.bdf.mesh_utils.bdf_equivalence import bdf_equivalence_nodes
 
     level = 'debug' if not quiet else 'warning'
@@ -122,6 +258,11 @@ def cmd_line_equivalence(argv=None, quiet=False):
                           avoid_collapsed_elements=False,
                           crash_on_collapse=False,
                           log=log, debug=True)
+
+    bdf_filename_out2 = os.path.join(dirname, 'merged_collapsed.bdf')
+    model = read_bdf(bdf_filename_out, xref=False, validate=False, log=log)
+    convert_bad_quads_to_tris(model, eids_to_check=None, xyz_cid0=None, min_edge_length=0.0)
+    model.write_bdf(bdf_filename_out2, size=size)
 
 
 def cmd_line_bin(argv=None, quiet=False):  # pragma: no cover
@@ -1148,6 +1289,7 @@ def cmd_line(argv=None, quiet=False):
         '  bdf equivalence                 IN_BDF_FILENAME EQ_TOL\n'
         '  bdf renumber                    IN_BDF_FILENAME [OUT_BDF_FILENAME] [--superelement] [--size SIZE]\n'
         '  bdf filter                      IN_BDF_FILENAME [-o OUT_BDF_FILENAME] [--x YSIGN X] [--y YSIGN Y] [--z YSIGN Z]\n'
+        '  bdf delete_bad_shells           IN_BDF_FILENAME [-o OUT_BDF_FILENAME] [--skew SKEW] [--max_theta MAX_THETA] [--min_theta MIN_THETA] [--max_ar MAX_AR] [--max_taper MAX_TAPER] [--max_warp MAX_WARP]\n'
         '  bdf mirror                      IN_BDF_FILENAME [-o OUT_BDF_FILENAME] [--plane PLANE] [--tol TOL]\n'
         '  bdf convert                     IN_BDF_FILENAME [-o OUT_BDF_FILENAME] [--in_units IN_UNITS] [--out_units OUT_UNITS]\n'
         '  bdf scale                       IN_BDF_FILENAME [-o OUT_BDF_FILENAME] [--lsf LENGTH_SF] [--msf MASS_SF] [--fsf FORCE_SF] [--psf PRESSURE_SF] [--tsf TIME_SF] [--vsf VEL_SF]\n'
@@ -1167,6 +1309,7 @@ def cmd_line(argv=None, quiet=False):
         '  bdf merge              -h | --help\n'
         '  bdf equivalence        -h | --help\n'
         '  bdf renumber           -h | --help\n'
+        '  bdf delete_bad_shells  -h | --help\n'
         '  bdf filter             -h | --help\n'
         '  bdf mirror             -h | --help\n'
         '  bdf convert            -h | --help\n'
@@ -1201,6 +1344,8 @@ def cmd_line(argv=None, quiet=False):
         cmd_line_mirror(argv, quiet=quiet)
     elif argv[1] == 'convert':
         cmd_line_convert(argv, quiet=quiet)
+    elif argv[1] == 'delete_bad_shells':
+        cmd_line_delete_bad_shells(argv, quiet=quiet)
     elif argv[1] == 'scale':
         cmd_line_scale(argv, quiet=quiet)
     elif argv[1] == 'export_mcids':

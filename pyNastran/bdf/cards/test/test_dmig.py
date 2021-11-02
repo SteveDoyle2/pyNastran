@@ -240,6 +240,7 @@ class TestDMIG(unittest.TestCase):
         for card_lines in cards:
             model.add_card(card_lines, 'DMIG', is_list=False)
         fill_dmigs(model)
+        get_matrices(model)
 
         a_matrix = model.dmigs['A']
         assert len(a_matrix.GCi) == 3, 'len(GCi)=%s GCi=%s matrix=\n%s' % (len(a_matrix.GCi), a_matrix.GCi, a_matrix)
@@ -592,7 +593,7 @@ DMI         W2GJ       1       1 1.54685.1353939.1312423.0986108.0621382
         save_load_deck(model)
 
     def test_dmig_sparse(self):
-        """currently fails when extracting KAAX as a sparse matrix"""
+        """tests dmig_sparse.pch"""
         bdf_filename = os.path.join(TEST_PATH, 'dmig_sparse.pch')
         model = read_bdf(bdf_filename, validate=True, xref=True, punch=True,
                          save_file_structure=False, skip_cards=None, read_cards=None,
@@ -600,6 +601,42 @@ DMI         W2GJ       1       1 1.54685.1353939.1312423.0986108.0621382
         get_matrices(model)
         kaax = model.dmig['KAAX']
         #print(kaax.get_stats())
+        get_matrices(model)
+
+        # make the matrix complex to test that
+        kaax.tin = 3   # complex
+        kaax.tout = 3  # complex
+        kaax.Complex = kaax.Real
+        get_matrices(model)
+        #kaax = model.dmigs['KAAX'].get_matrix(is_sparse=True)
+
+    def test_dmig_sparse2(self):
+        """tests dmig_sparse.pch"""
+        model = BDF(debug=True, log=None, mode='msc')
+        name = 'TEST'
+        ifo = 6  # symmetic
+        tin = 1  # float32
+        tout = 1 # float32
+        polar = 0
+        ncols = 2
+        GCi = [ [1, 1],]  # rows
+        GCj = [[1, 2], ]  # cols
+        Real = [1.]
+        model.add_dmig(name, ifo, tin, tout, polar, ncols, GCj, GCi, Real, Complex=None, comment='')
+        get_matrices(model)
+        kaax = model.dmig[name]
+        dense = kaax.get_matrix(is_sparse=False, apply_symmetry=True)[0]
+        dense1 = kaax.get_matrix(is_sparse=True, apply_symmetry=True)[0].toarray()
+        dense2 = kaax.get_matrix(is_sparse=True, apply_symmetry=True)[0].toarray()
+        dense_expected = [
+            [0., 1.],
+            [1., 0.],
+        ]
+        assert np.array_equal(dense, dense_expected)
+        assert np.array_equal(dense1, dense_expected)
+        assert np.array_equal(dense2, dense_expected)
+        #print(kaax.get_stats())
+        get_matrices(model)
 
         # make the matrix complex to test that
         kaax.tin = 3   # complex
@@ -709,6 +746,60 @@ DMI         W2GJ       1       1 1.54685.1353939.1312423.0986108.0621382
             [1., 2., 3., 0.],
             [0., 4., 5., 0.],
             [0., 0., 13., 8.],
+        ])
+        assert np.array_equal(A1, A_expected)
+        assert np.array_equal(A2.toarray(), A_expected)
+
+        test.tin = 3   # complex
+        test.tout = 3  # complex
+        test.Complex = 10 * test.Real
+        B1, _, _ = test.get_matrix(is_sparse=False, apply_symmetry=True)
+        B2, _, _ = test.get_matrix(is_sparse=True, apply_symmetry=True)
+        B_expected = A_expected + 10j * A_expected
+        assert np.array_equal(B1, B_expected)
+        assert np.array_equal(B2.toarray(), B_expected)
+
+        get_matrices(model)
+        #kaax = model.dmigs['KAAX'].get_matrix(is_sparse=True)
+
+    def test_dmig_column(self):
+        """testing symmetric DMIGs"""
+        model = BDF(debug=False, log=None, mode='msc')
+
+        tin = 1 # real, float32
+        tout = 1 # real, float32
+
+        # [
+        #   1., 2., 3., 0.
+        #       4., 5., 0.
+        #           13., 8.
+        # ]
+        GCj = [ # cols
+            [1, 1], [1, 1], [1, 1], [1, 1],
+        ]
+        GCi = [ # rows
+            [1, 1],
+            [1, 2],
+            [1, 3],
+            [1, 3],
+        ]
+        polar = 0
+        Real = np.array([1., 2., 3., 4.])
+        ncols = 1  # ????
+        ifo = 2 # rectangular (also 9...)
+
+        name = 'TEST'
+        model.add_dmig(name, ifo, tin, tout, polar, ncols,
+                       GCj, GCi, Real, Complex=None, comment='')
+        get_matrices(model)
+        test = model.dmig[name]
+        A1, _, _ = test.get_matrix(is_sparse=False, apply_symmetry=True)
+        A2, _, _ = test.get_matrix(is_sparse=True, apply_symmetry=True)
+
+        A_expected = np.array([
+            [1.],
+            [2.],
+            [7.],
         ])
         assert np.array_equal(A1, A_expected)
         assert np.array_equal(A2.toarray(), A_expected)

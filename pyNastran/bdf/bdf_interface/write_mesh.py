@@ -111,7 +111,11 @@ class WriteMesh(BDFAttributes):
 
     def write_bdf(self, out_filename: Optional[Union[str, StringIO]]=None,
                   encoding: Optional[str]=None,
-                  size: int=8, is_double: bool=False,
+                  size: int=8,
+                  nodes_size: Optional[int]=None,
+                  elements_size: Optional[int]=None,
+                  loads_size: Optional[int]=None,
+                  is_double: bool=False,
                   interspersed: bool=False, enddata: Optional[bool]=None,
                   write_header: bool=True, close: bool=True) -> None:
         """
@@ -180,12 +184,16 @@ class WriteMesh(BDFAttributes):
         self.write_bulk_data(bdf_file, size=size, is_double=is_double,
                              interspersed=interspersed,
                              enddata=enddata, close=close,
+                             nodes_size=nodes_size, elements_size=elements_size, loads_size=loads_size,
                              is_long_ids=is_long_ids)
 
     def write_bulk_data(self, bdf_file,
                         size: int=8, is_double: bool=False,
                         interspersed: bool=False,
                         enddata: Optional[bool]=None, close: bool=True,
+                        nodes_size: Optional[int]=None,
+                        elements_size: Optional[int]=None,
+                        loads_size: Optional[int]=None,
                         is_long_ids: bool=False) -> None:
         """
         Writes the BDF.
@@ -217,13 +225,16 @@ class WriteMesh(BDFAttributes):
                   you're calling the new sub-function, you might need
                   it.  Chances are you won't.
         """
+        size, nodes_size, elements_size, loads_size = _fix_sizes(
+            size, nodes_size, elements_size, loads_size)
+
         self._write_params(bdf_file, size, is_double, is_long_ids=is_long_ids)
-        self._write_nodes(bdf_file, size, is_double, is_long_ids=is_long_ids)
+        self._write_nodes(bdf_file, nodes_size, is_double, is_long_ids=is_long_ids)
 
         if interspersed:
-            self._write_elements_interspersed(bdf_file, size, is_double, is_long_ids=is_long_ids)
+            self._write_elements_interspersed(bdf_file, elements_size, is_double, is_long_ids=is_long_ids)
         else:
-            self._write_elements(bdf_file, size, is_double, is_long_ids=is_long_ids)
+            self._write_elements(bdf_file, elements_size, is_double, is_long_ids=is_long_ids)
             self._write_properties(bdf_file, size, is_double, is_long_ids=is_long_ids)
             #self._write_properties_by_element_type(bdf_file, size, is_double, is_long_ids)
         self._write_materials(bdf_file, size, is_double, is_long_ids=is_long_ids)
@@ -234,7 +245,7 @@ class WriteMesh(BDFAttributes):
         self._write_rigid_elements(bdf_file, size, is_double, is_long_ids=is_long_ids)
         self._write_aero(bdf_file, size, is_double, is_long_ids=is_long_ids)
 
-        self._write_common(bdf_file, size, is_double, is_long_ids=is_long_ids)
+        self._write_common(bdf_file, loads_size, is_double, is_long_ids=is_long_ids)
         if (enddata is None and 'ENDDATA' in self.card_count) or enddata:
             bdf_file.write('ENDDATA\n')
         if close:
@@ -1259,3 +1270,15 @@ class WriteMesh(BDFAttributes):
             bdf_file.write('$THERMAL MATERIALS\n')
             for (unused_mid, material) in sorted(self.thermal_materials.items()):
                 bdf_file.write(material.write_card(size, is_double))
+
+def _fix_sizes(size: int,
+               nodes_size: Optional[int],
+               elements_size: Optional[int],
+               loads_size: Optional[int]) -> Tuple[int, int]:
+    if nodes_size is None:
+        nodes_size = size
+    if elements_size is None:
+        elements_size = size
+    if loads_size is None:
+        loads_size = size
+    return size, nodes_size, elements_size, loads_size

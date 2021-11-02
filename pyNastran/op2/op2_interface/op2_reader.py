@@ -558,6 +558,7 @@ class OP2Reader:
         fmt1 = mapfmt(self._endian + b'7i', self.size)
 
         idata = unpack(fmt1, data)
+        #if idata[0] == 101 and op2._nastran_format == 'nasa95':
         assert idata[0] == 101, idata
         unused_nnodes = idata[1]
         assert idata[2] == 0, idata
@@ -565,16 +566,19 @@ class OP2Reader:
         assert idata[4] == 0, idata
         assert idata[5] == 0, idata
         assert idata[6] == 0, idata
+        #else:
+        op2.log.debug(f'eqexin idata={idata}')
         #print('----------------------')
 
         self.read_3_markers([-2, 1, 0])
         self.read_table_name(['EQEXIN', 'EQEXINS', 'EQEXNOUT'])
         #print('----------------------')
-        # ints
+        # ints - sort order
         self.read_3_markers([-3, 1, 0])
         data = self._read_record()
         eqexin1 = np.frombuffer(data, dtype=op2.idtype)
 
+        # ints - nid, dof_type
         self.read_3_markers([-4, 1, 0])
         data = self._read_record()
         eqexin2 = np.frombuffer(data, dtype=op2.idtype)

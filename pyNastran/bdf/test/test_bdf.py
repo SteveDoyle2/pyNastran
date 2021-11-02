@@ -1114,14 +1114,14 @@ def check_case(sol, subcase, fem2, p0, isubcase, subcases,
         #assert True in subcase.has_parameter('LOAD', 'TEMPERATURE'), 'sol=%s\n%s' % (sol, subcase)
         ierror = check_for_optional_param(('TSTEP', 'TSTEPNL'), subcase, msg,
                                           RuntimeError, log, ierror, nerrors)
-    elif sol in [1, 101]:
+    elif sol in {1, 101}:
         _assert_has_spc(subcase, fem2)
         ierror = check_for_optional_param(('LOAD', 'TEMPERATURE(LOAD)', 'P2G'), subcase, msg,
                                           RuntimeError, log, ierror, nerrors)
-    elif sol in [3, 103]:
+    elif sol in {3, 103}:
         ierror = check_for_optional_param(('METHOD', 'RSMETHOD', 'RIGID', 'BOLTID', 'BGSET'), subcase, msg,
                                           RuntimeError, log, ierror, nerrors)
-    elif sol in [5, 105]: # buckling
+    elif sol in {5, 105}: # buckling
         _assert_has_spc(subcase, fem2)
         ierror = check_for_optional_param(('LOAD', 'TEMPERATURE(LOAD)', 'METHOD'), subcase, msg,
                                           RuntimeError, log, ierror, nerrors)

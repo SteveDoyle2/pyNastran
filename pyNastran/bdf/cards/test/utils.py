@@ -304,6 +304,7 @@ def get_matrices(model: BDF):
         if key == 'UACCEL' or isinstance(matrix, DMIAX):
             model.log.warning(f'skipping get_matrix() for name={key!r}; type={matrix.type}')
             continue
-        kaax = matrix.get_matrix(is_sparse=True)
-        kaax = matrix.get_matrix(is_sparse=False)
-        str(kaax)
+        sparse, *junk = matrix.get_matrix(is_sparse=True, apply_symmetry=False)
+        dense, *junk = matrix.get_matrix(is_sparse=False, apply_symmetry=False)
+        dense2 = sparse.toarray()
+        assert np.array_equal(dense, dense2)

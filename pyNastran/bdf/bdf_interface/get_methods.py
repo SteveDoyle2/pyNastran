@@ -623,14 +623,13 @@ class GetMethods(BDFAttributes):
 
         if self.aero is not None:
             if self.aeros is not None:
-                assert acsid_aero == acsid_aeros, 'AERO acsid=%s, AEROS acsid=%s' % (acsid_aero,
-                                                                                     acsid_aeros)
+                assert acsid_aero == acsid_aeros, f'AERO acsid={acsid_aero}, AEROS acsid={acsid_aeros}'
             coord = self.Coord(acsid_aero, msg=msg)
         elif self.aeros is not None:
             coord = self.Coord(acsid_aeros, msg=msg)
         else:
             ## TODO: consider changing this...
-            self.log.error('neither AERO nor AEROS cards exist; assuming global (cid=0).')
+            self.log.error(f'neither AERO nor AEROS cards exist; assuming global (cid=0){msg}.')
             return self.Coord(0, msg=msg)
         return coord
 

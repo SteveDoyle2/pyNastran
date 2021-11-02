@@ -2801,8 +2801,8 @@ class PLOAD4(Load):
             n1, n2, n3 = self.nvector
             list_fields.append(cid)
             list_fields += [n1, n2, n3]
-            surf_or_line = self.surf_or_line
-            line_load_dir = self.line_load_dir
+            surf_or_line = set_blank_if_default(self.surf_or_line, 'SURF')
+            line_load_dir = set_blank_if_default(self.line_load_dir, 'NORM')
         else:
             list_fields += [None, None, None, None]
             surf_or_line = set_blank_if_default(self.surf_or_line, 'SURF')

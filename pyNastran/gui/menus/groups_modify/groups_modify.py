@@ -104,13 +104,13 @@ class GroupsModify(PyDialog):
 
         # add
         self.add_label = QLabel('Add Elements:')
-        self.add_edit = QElementEdit(self, self.model_name, pick_style='area')
+        self.add_edit = QElementEdit(self, self.model_name, pick_style='area', max_length=100_000)
         self.add_button = QPushButton('Add')
         self.add_highlight_button = QPushButton('Show')
 
         # remove
         self.remove_label = QLabel('Remove Elements:')
-        self.remove_edit = QElementEdit(self, self.model_name, pick_style='area')
+        self.remove_edit = QElementEdit(self, self.model_name, pick_style='area', max_length=100_000)
         self.remove_button = QPushButton('Remove')
         self.remove_highlight_button = QPushButton('Show')
 

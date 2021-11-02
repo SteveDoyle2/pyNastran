@@ -21,6 +21,34 @@ from pyNastran.utils import object_attributes, object_methods
 class FlutterResponse:
     """storage object for single subcase SOL 145 results"""
 
+    def __repr__(self) -> str:
+        msg = (
+            'FlutterResponse:\n'
+            f'subcase= {self.subcase:d}\n'
+            f'xysym  = {self.xysym!r}\n'
+            f'xzsym  = {self.xzsym!r}\n'
+            f'f06_units  = {self.f06_units}\n'
+            f'out_units  = {self.out_units}\n'
+            f'names  = {self.names}; n={len(self.names)}\n\n'
+            f'method  = {self.method!r}\n'
+            f'modes  = {self.modes}; n={len(self.modes)}\n'
+            f'results.shape = {self.results.shape}; (nmodes, npoint, nresults)\n'
+            #configuration : 'AEROSG2D'
+            #density_ratio : 1.0
+            #ikfreq : 0
+            #ikfreq_inv : 1
+            #ivelocity : 2
+            #idamping : 3
+            #ieigi  : 6
+            #ieigr  : 5
+            #ifreq  : 4
+            #mach   : 0.0
+            #make_alt : False
+        )
+        #from pyNastran.utils import object_stats
+        #print(object_stats(self))
+        return msg
+
     def __init__(self, subcase: int, configuration: str,
                  xysym: str, xzsym: str,
                  mach: float, density_ratio: float, method: str,

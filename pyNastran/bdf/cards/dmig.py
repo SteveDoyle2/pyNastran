@@ -9,7 +9,7 @@ from numpy import array, zeros
 from scipy.sparse import coo_matrix  # type: ignore
 
 from pyNastran.utils.numpy_utils import integer_types
-#from pyNastran.femutils.utils import unique2d
+from pyNastran.femutils.utils import unique2d
 from pyNastran.bdf.cards.base_card import BaseCard
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
@@ -2192,37 +2192,32 @@ def _get_row_col_map_2d(matrix, GCi, GCj, ifo):
 
     #for j, (nid, comp) in enumerate(GCj):
         #cols_array[j, :] = [nid, comp]
-    #print('cols_array = \n%s' % cols_array)
 
-    #print(GCi)
-    #print(GCj)
     i = 0
-    for (nid, comp) in GCi:
-        gci = (nid, comp)
-        if gci not in rows:
-            #print('row.gci = %s' % str(gci))
-            rows[gci] = i
-            rows_reversed[i] = gci
+    for gc in GCi:
+        tgc = tuple(gc)
+        if tgc not in rows:
+            rows[tgc] = i
+            rows_reversed[i] = tgc
             i += 1
+
     if ifo == 6:
         # symmetric
-        for (nid, comp) in GCj:
-            gcj = (nid, comp)
-            if gcj not in rows:
-                #print('row.gcj = %s' % str(gcj))
-                rows[gcj] = i
-                rows_reversed[i] = gcj
+        for gc in GCj:
+            tgc = tuple(gc)
+            if tgc not in rows:
+                rows[tgc] = i
+                rows_reversed[i] = tgc
                 i += 1
         cols = rows
         cols_reversed = rows_reversed
     else:
         j = 0
-        for (nid, comp) in GCj:
-            gcj = (nid, comp)
-            if gcj not in cols:
-                #print('col.gcj = %s' % str(gcj))
-                cols[gcj] = j
-                cols_reversed[j] = gcj
+        for gc in GCj:
+            tgc = tuple(gc)
+            if tgc not in cols:
+                cols[tgc] = j
+                cols_reversed[j] = tgc
                 j += 1
     return rows, cols, rows_reversed, cols_reversed
 
@@ -2249,8 +2244,19 @@ def _fill_sparse_matrix(matrix: DMIG, nrows: int, ncols: int,
         #Gj = GCj[:, 0]
         #GCij = np.vstack([GCi, GCj])
         #uGCij, idx = unique2d(GCi, return_index=True)
-        rows, nrows = gc_to_index(GCi)
-        cols, ncols = gc_to_index(GCj)
+        if matrix.matrix_form == 6:  # symmetric
+            ngc = GCi.shape[0]
+            GCij = np.vstack([GCi, GCj])
+            uGCij, idx = unique2d(GCij, return_index=True)
+            rows_cols, nrows = gc_to_index(GCij)
+            ncols = nrows
+
+            rows = rows_cols[:ngc]
+            cols = rows_cols[ngc:]
+        else:
+            # symmetric matrices will be wrong if the values are unordered...
+            rows, nrows = gc_to_index(GCi)
+            cols, ncols = gc_to_index(GCj)
         #rows = unique2d(GCi)
         #cols = unique2d(GCj)
         #nrows = unique2d(rows).shape[0]
@@ -2332,26 +2338,25 @@ def _fill_dense_rectangular_matrix_complex(matrix: DMIG,
                                            rows: Dict[Any, int], cols: Dict[Any, int],
                                            apply_symmetry: bool) -> np.ndarray:
     """helper method for ``_fill_dense_rectangular_matrix``"""
-    dense_mat = zeros((nrows, ncols), dtype='complex128')
+    dense_mat = zeros((nrows, ncols), dtype=matrix.tin_dtype)
+    real_imag = matrix.Real + 1j * matrix.Complex
     if matrix.matrix_form == 6 and apply_symmetry:  # symmetric
         is_diagonal, not_diagonal = _get_diagonal_symmetric(matrix)
-        for (gcj, reali, complexi) in zip(matrix.GCj[is_diagonal],
-                                          matrix.Real[is_diagonal], matrix.Complex[is_diagonal]):
+        for (gcj, real_imagi) in zip(matrix.GCj[is_diagonal], real_imag[is_diagonal]):
             j = cols[(gcj[0], gcj[1])]
-            dense_mat[j, j] += complex(reali, complexi)
+            dense_mat[j, j] += real_imagi
 
-        for (gcj, gci, reali, complexi) in zip(matrix.GCj[not_diagonal], matrix.GCi[not_diagonal],
-                                               matrix.Real[not_diagonal], matrix.Complex[not_diagonal]):
+        for (gcj, gci, real_imagi) in zip(matrix.GCj[not_diagonal], matrix.GCi[not_diagonal],
+                                          real_imag[not_diagonal]):
             i = rows[(gci[0], gci[1])]
             j = cols[(gcj[0], gcj[1])]
-            dense_mat[i, j] += complex(reali, complexi)
-            dense_mat[j, i] += complex(reali, complexi)
+            dense_mat[i, j] += real_imagi
+            dense_mat[j, i] += real_imagi
     else:
-        for (gcj, gci, reali, complexi) in zip(matrix.GCj, matrix.GCi,
-                                               matrix.Real, matrix.Complex):
+        for (gcj, gci, real_imagi) in zip(matrix.GCj, matrix.GCi, real_imag):
             i = rows[(gci[0], gci[1])]
             j = cols[(gcj[0], gcj[1])]
-            dense_mat[i, j] += complex(reali, complexi)
+            dense_mat[i, j] += real_imagi
     return dense_mat
 
 def _get_diagonal_symmetric(matrix: DMIG) -> Tuple[np.ndarray, np.ndarray]:
@@ -2369,17 +2374,17 @@ def _fill_dense_rectangular_matrix_real(matrix: DMIG,
                                         rows: Dict[Any, int], cols: Dict[Any, int],
                                         apply_symmetry: bool) -> np.ndarray:
     """helper method for ``_fill_dense_rectangular_matrix``"""
-    dense_mat = zeros((nrows, ncols), dtype='float64')
+    dense_mat = zeros((nrows, ncols), dtype=matrix.tin_dtype)
     if matrix.matrix_form == 6 and apply_symmetry:  # symmetric
         is_diagonal, not_diagonal = _get_diagonal_symmetric(matrix)
         try:
             for (gcj, reali) in zip(matrix.GCj[is_diagonal], matrix.Real[is_diagonal]):
-                i = rows[(gcj[0], gcj[1])]
+                i = rows[tuple(gcj)]
                 dense_mat[i, i] += reali
 
             for (gcj, gci, reali) in zip(matrix.GCj[not_diagonal], matrix.GCi[not_diagonal], matrix.Real[not_diagonal]):
-                i = rows[(gci[0], gci[1])]
-                j = cols[(gcj[0], gcj[1])]
+                i = rows[tuple(gci)]
+                j = cols[tuple(gcj)]
                 dense_mat[i, j] += reali
                 dense_mat[j, i] += reali
         except IndexError:
@@ -2394,8 +2399,10 @@ def _fill_dense_rectangular_matrix_real(matrix: DMIG,
     else:
         try:
             for (gcj, gci, reali) in zip(matrix.GCj, matrix.GCi, matrix.Real):
-                i = rows[(gci[0], gci[1])]
-                j = cols[(gcj[0], gcj[1])]
+                tgci = tuple(gci)
+                tgcj = tuple(gcj)
+                i = rows[tgci]
+                j = cols[tgcj]
                 dense_mat[i, j] += reali
         except KeyError:
             msg = ('name=%s ndim=%s gci=%s gcj=%s matrix_type=%s '
@@ -2462,7 +2469,7 @@ def _fill_dense_column_matrix_real(matrix: DMIG,
     What does symmetry mean for a column matrix?!!!
     """
     #print('nrows=%s ncols=%s' % (nrows, ncols))
-    dense_mat = zeros((nrows, ncols), dtype='float64')
+    dense_mat = zeros((nrows, ncols), dtype=matrix.tin_dtype)
     if matrix.matrix_form == 6 and apply_symmetry:  # symmetric
         assert nrows == ncols, 'nrows=%s ncols=%s' % (nrows, ncols)
         raise RuntimeError('What does symmetry mean for a column matrix?!!!')
@@ -2497,7 +2504,7 @@ def _fill_dense_column_matrix_complex(matrix: DMIG,
 
     What does symmetry mean for a column matrix?!!!
     """
-    dense_mat = zeros((nrows, ncols), dtype='complex128')
+    dense_mat = zeros((nrows, ncols), dtype=matrix.tin_dtype)
     if matrix.matrix_form == 6 and apply_symmetry:  # symmetric
         assert nrows == ncols, 'nrows=%s ncols=%s' % (nrows, ncols)
         raise RuntimeError('What does symmetry mean for a column matrix?!!!')

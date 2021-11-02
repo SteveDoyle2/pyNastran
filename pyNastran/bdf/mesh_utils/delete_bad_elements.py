@@ -29,7 +29,7 @@ def delete_bad_shells(model: BDF,
                       min_theta: float=0.1, max_theta: float=175.,
                       max_skew: float=70., max_aspect_ratio: float=100.,
                       max_taper_ratio: float=4.0,
-                      max_warping: float=90.):
+                      max_warping: float=90.) -> BDF:
     """
     Removes bad CQUAD4/CTRIA3 elements
 
@@ -178,13 +178,13 @@ def _is_bad_quad(eid: int, p1, p2, p3, p4,
     #assert len(lengths) == 3, lengths
     length_min = lengths.min()
     if length_min == 0.0:
-        log.debug('eid=%s failed length_min check; length_min=%s' % (eid, length_min))
+        log.debug(f'eid={eid} failed length_min check; length_min={length_min}')
         return is_bad_quad
     # -------------------------------------------------------------------------------
 
     aspect_ratio = lengths.max() / length_min
     if aspect_ratio > max_aspect_ratio:
-        log.debug('eid=%s failed aspect_ratio check; AR=%.2f' % (eid, aspect_ratio))
+        log.debug(f'eid={eid} failed aspect_ratio check; AR={aspect_ratio:.2f} > {max_aspect_ratio}')
         return is_bad_quad
     # -------------------------------------------------------------------------------
 
