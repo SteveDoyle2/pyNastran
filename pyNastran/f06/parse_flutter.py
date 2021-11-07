@@ -4,7 +4,8 @@ SOL 145 plotter
 
 kfreq = ωc/(2V)
 """
-from typing import  Optional, Dict, Union
+from typing import  List, Dict, Optional, Union
+import numpy as np
 #import PySide
 try:
     import matplotlib.pyplot as plt  # pylint: disable=unused-import
@@ -21,7 +22,7 @@ except ImportError:  # pragma: no cover
     #plt.switch_backend('Agg')
 
 
-from cpylog import get_logger2
+from cpylog import get_logger2, SimpleLogger
 from pyNastran.f06.flutter_response import FlutterResponse
 
 
@@ -98,6 +99,7 @@ def make_flutter_response(f06_filename, f06_units=None, out_units=None, make_alt
                                               modes, results,
                                               f06_units=f06_units, out_units=out_units,
                                               make_alt=make_alt)
+                    #_remove_neutrinos(flutter, log)
                     flutters[subcase] = flutter
                     modes = []
                     results = []
@@ -292,7 +294,8 @@ def plot_flutter_f06(f06_filename, f06_units=None, out_units=None, make_alt=Fals
                      vg_vf_filename=None,
                      root_locus_filename=None,
                      kfreq_damping_filename=None,
-                     plot=True, show=True, clear=False, close=False,
+                     subcases: Optional[List[int]]=None,
+                     plot: bool=True, show: bool=True, clear: bool=False, close: bool=False,
                      log=None):
     """
     Plots a flutter (SOL 145) deck
@@ -334,6 +337,8 @@ def plot_flutter_f06(f06_filename, f06_units=None, out_units=None, make_alt=Fals
         suppress the points
     noline : bool; default=False
         suppress the lines
+    subcases: list[int]; default=None
+        the list of subcases that should be considered
 
     Returns
     -------
@@ -377,10 +382,12 @@ def plot_flutter_f06(f06_filename, f06_units=None, out_units=None, make_alt=Fals
                            vg_vf_filename=vg_vf_filename,
                            root_locus_filename=root_locus_filename,
                            kfreq_damping_filename=kfreq_damping_filename,
+                           subcases=subcases,
                            show=show, clear=clear, close=close)
     return flutters
 
-def make_flutter_plots(modes, flutters, xlim, ylim_damping, ylim_freq, ylim_kfreq,
+def make_flutter_plots(modes, flutters: Dict[int, FlutterResponse],
+                       xlim, ylim_damping, ylim_freq, ylim_kfreq,
                        plot_type,
                        plot_vg: bool,
                        plot_vg_vf: bool,
@@ -396,9 +403,29 @@ def make_flutter_plots(modes, flutters, xlim, ylim_damping, ylim_freq, ylim_kfre
                        vg_vf_filename: Optional[str]=None,
                        root_locus_filename: Optional[str]=None,
                        kfreq_damping_filename: Optional[str]=None,
-                       show: bool=True, clear: bool=False, close: bool=False):
+                       subcases: Optional[List[int]]=None,
+                       show: bool=True, clear: bool=False, close: bool=False,
+                       log: SimpleLogger=None):
     """actually makes the flutter plots"""
+    assert len(flutters) > 0, flutters
+    subcases_flutter_set = set(list(flutters.keys()))
+    if subcases is None:
+        subcases_set = subcases_flutter_set
+    else:
+        subcases_set = set(subcases)
+    missing_cases_set = subcases_set - subcases_flutter_set
+
+    log = get_logger2(log=log, debug=True, encoding='utf-8', nlevels=1)
+    if missing_cases_set:
+        missing_cases_list = list(missing_cases_set)
+        missing_cases_list.sort()
+        log.warning(f'missing subcases={missing_cases_list}')
+
     for subcase, flutter in sorted(flutters.items()):
+        if subcase not in subcases_set:
+            continue
+
+        #_remove_neutrinos(flutter, log)
         if plot_vg:
             filenamei = None if vg_filename is None else vg_filename % subcase
             flutter.plot_vg(modes=modes,
@@ -442,6 +469,125 @@ def make_flutter_plots(modes, flutters, xlim, ylim_damping, ylim_freq, ylim_kfre
         plt.show()
     #if close:
         #plt.close()
+
+
+def _remove_neutrinos(flutter: FlutterResponse, log: SimpleLogger):
+    str(flutter)
+    isave, ifilter = _find_modes_to_keep(flutter, log, tol=1e-8)
+
+    # fix mode switching
+    results = flutter.results
+    real = results[isave, :, flutter.ieigr]
+    imag = results[isave, :, flutter.ieigi]
+
+    # find modes that cross (5 modes, 22 points)
+    #imag.shape = (5, 22)
+    velocity = results[:, :, flutter.ivelocity]
+    damping = results[:, :, flutter.idamping]
+    from scipy.interpolate import CubicSpline
+    for imode in isave:
+        V = velocity[imode]
+        g = damping[imode]
+        #isort = np.argsort(V)
+        V, isort = np.unique(V, return_index=True)
+        V = V[isort]
+        g = g[isort]
+        Vmin = V.min()
+        Vmax = V.max()
+        #CubicSpline(x,y,bc_type='natural')
+        func = CubicSpline(V, g, axis=0, bc_type='not-a-knot', extrapolate=None)
+        num = 200
+        vx = np.linspace(Vmin, Vmax, num=num)
+        gx = func(vx)
+        y = 1
+        #if gx.max() < -0.1:
+            #results[imode, :, :] = np.nan
+
+
+    radius = np.sqrt(real ** 2 + imag ** 2)
+
+    # R sin(t) = i
+    # R cos(t) = r
+    # tan(t) = i/r
+    #
+    # i
+    # ^     * (R, t) / (real, imag)
+    # |   /
+    # | /
+    # +------> r
+    theta = np.arctan2(imag, real)  # x / y
+    theta_deg = np.degrees(theta)
+    flutter.results[ifilter, :, :] = np.nan
+    #flutter.results = flutter.results[isave, :, :]
+    return
+
+
+def _find_modes_to_keep(flutter: FlutterResponse,
+                        log: SimpleLogger,
+                        tol: float=1e-8) -> np.ndarray:
+    """
+    FlutterResponse:
+        subcase= 1
+        xysym  = 'ASYMMETRIC'
+        xzsym  = 'SYMMETRIC'
+        f06_units  = {'velocity': 'in/s', 'density': 'slinch/in^3', 'altitude': 'ft', 'dynamic_pressure': 'psi', 'eas': 'in/s'}
+        out_units  = {'velocity': 'in/s', 'density': 'slinch/in^3', 'altitude': 'ft', 'dynamic_pressure': 'psi', 'eas': 'in/s'}
+        names  = ['kfreq', '1/kfreq', 'velocity', 'damping', 'freq', 'eigr', 'eigi']
+        method  = PK
+        modes  = [ 1  2  3  4  5  6  7  8  9 10]; n=10
+        results.shape = (10, 22, 7); (nmodes, npoint, nresults)
+    """
+    #flutter.results.shape = (10, 22, 7)
+
+    # find the delta for each mode for each result
+    results = flutter.results
+    mini = results.min(axis=1)
+    maxi = results.max(axis=1)
+    delta = maxi - mini
+
+    #floatmodestr='fixed',
+    np.set_printoptions(precision=4, suppress=True)
+
+    # lets reduce this downn to to 10 delta reals and delta imaginary eigenvalues
+    #delta.shape = (10, 7)
+    abs_dreal = np.abs(delta[:, flutter.ieigr])
+    abs_dimag = np.abs(delta[:, flutter.ieigi])
+
+    ddamp = delta[:, flutter.idamping]
+    damping = results[:, :, flutter.idamping]
+    abs_damp = np.abs(damping).max(axis=1)
+    abs_ddamp = np.abs(ddamp)
+
+    dfreq = delta[:, flutter.ifreq]
+    freq = results[:, :, flutter.ifreq]
+    abs_freq = np.abs(freq).max(axis=1)
+    abs_dfreq = np.abs(dfreq)
+
+    # filter the neutrino cases (dreal=0 and dimag=0)
+    # find the cases where the delta
+    damp_ztol = 1e-4
+    damp_atol = 0.2
+
+    freq_ztol = 1e-4
+    freq_atol = -0.1
+    ifilter = np.where(
+        ((abs_dreal < tol) & (abs_dimag < tol)) |  # remove root-locus dots
+        ((abs_ddamp < damp_ztol) & (abs_damp > damp_atol)) | # remove flat damping lines far from the damping axis
+        ((abs_dfreq < freq_ztol) & (abs_freq > freq_atol))   # remove flat freq lines far from the damping axis
+    )
+    nmodes = results.shape[0]
+    iall = np.arange(nmodes)
+    isave = np.setdiff1d(iall, ifilter)
+    #isave[ineutrino] = 0
+    #isave = np.where(
+        #((abs_dreal > tol) | (abs_dimag > tol)) |
+    #)
+
+
+    #return isave
+    #iimag = np.where(dimag != 0.)[0]
+    #log
+    return isave, ifilter
 
 if __name__ == '__main__':  # pragma: no cover
     plot_flutter_f06('bah_plane.f06')

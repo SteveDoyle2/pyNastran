@@ -240,9 +240,10 @@ class RealBarArray(OES_Object):
         #self.itotal += 1
 
     def get_stats(self, short: bool=False) -> List[str]:
+        class_name = self.__class__.__name__
         if not self.is_built:
             return [
-                '<%s>\n' % self.__class__.__name__,
+                f'<{class_name}>\n',
                 f'  ntimes: {self.ntimes:d}\n',
                 f'  ntotal: {self.ntotal:d}\n',
             ]
@@ -254,12 +255,10 @@ class RealBarArray(OES_Object):
 
         msg = []
         if self.nonlinear_factor not in (None, np.nan):  # transient
-            msg.append('  type=%s ntimes=%i nelements=%i\n'
-                       % (self.__class__.__name__, ntimes, nelements))
+            msg.append(f'  type={class_name} ntimes={ntimes:d} nelements={nelements}; table_name={self.table_name_str}\n')
             ntimes_word = 'ntimes'
         else:
-            msg.append('  type=%s nelements=%i\n'
-                       % (self.__class__.__name__, nelements))
+            msg.append(f'  type={class_name} nelements={nelements:d}\n')
             ntimes_word = '1'
         headers = self.get_headers()
 

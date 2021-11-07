@@ -22,11 +22,37 @@ class FlutterResponse:
     """storage object for single subcase SOL 145 results"""
 
     def __repr__(self) -> str:
+        #from pyNastran.utils import object_stats
+        #print(object_stats(self))
+        #configuration : 'AEROSG2D'
+        #f06_units : {'velocity': 'm/s', 'density': 'kg/m^3', 'altitude': 'm', 'dynamic_pressure': 'Pa', 'eas': 'm/s'}
+        #ialt   : 11
+        #idamping : 5
+        #idensity : 2
+        #ieas   : 9
+        #ieigi  : 8
+        #ieigr  : 7
+        #ifreq  : 6
+        #ikfreq : 0
+        #ikfreq_inv : 1
+        #imach  : 3
+        #iq     : 10
+        #ivelocity : 4
+        #make_alt : False
+        #method : 'PKNL'
+        #modes  : array([1, 2])
+        #names  : ['kfreq', '1/kfreq', 'density', 'velocity', 'damping', 'freq', 'eigr', 'eigi', 'eas', 'q', 'alt']
+        #noline : False
+        #out_units : {'velocity': 'in/s', 'density': 'slinch/in^3', 'altitude': 'ft', 'dynamic_pressure': 'psi', 'eas': 'in/s'}
+        xyz_sym = ''
+        if hasattr(self, 'xysym'):
+            xyz_sym += f'xysym  = {self.xysym!r}\n'
+            xyz_sym += f'xzsym  = {self.xzsym!r}\n'
+
         msg = (
             'FlutterResponse:\n'
             f'subcase= {self.subcase:d}\n'
-            f'xysym  = {self.xysym!r}\n'
-            f'xzsym  = {self.xzsym!r}\n'
+            f'{xyz_sym}'
             f'f06_units  = {self.f06_units}\n'
             f'out_units  = {self.out_units}\n'
             f'names  = {self.names}; n={len(self.names)}\n\n'
@@ -45,8 +71,6 @@ class FlutterResponse:
             #mach   : 0.0
             #make_alt : False
         )
-        #from pyNastran.utils import object_stats
-        #print(object_stats(self))
         return msg
 
     def __init__(self, subcase: int, configuration: str,

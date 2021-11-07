@@ -126,11 +126,11 @@ class HighlightWindow(PyDialog):
         model_name = self.model_name
         self.nodes_label = QLabel('Nodes:')
         self.nodes_edit = QNodeEdit(self, model_name, pick_style='area',
-                                    cleanup=True, tab_to_next=False)
+                                    cleanup=True, tab_to_next=False, max_length=100_000)
 
         self.elements_label = QLabel('Elements:')
         self.elements_edit = QElementEdit(self, model_name, pick_style='area',
-                                          cleanup=True, tab_to_next=False)
+                                          cleanup=True, tab_to_next=False, max_length=100_000)
 
         #-----------------------------------------------------------------------
         # Highlight Color

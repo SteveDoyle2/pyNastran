@@ -1233,7 +1233,7 @@ def get_element_inertias(model: BDF, normal_plane,
             element = model.elements[eid]
             pid_ref = element.pid_ref
             thicknessi = element.Thickness()
-            centroid, imat, unused_jmat, normal = element.material_coordinate_system()
+            dxyz, centroid, imat, unused_jmat, normal = element.material_coordinate_system()
             n1, n2, n3 = normal
             n12 = n1 * n2
             n13 = n1 * n3

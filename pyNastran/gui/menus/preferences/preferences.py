@@ -115,6 +115,19 @@ class PreferencesWindow(PyDialog):
         self._nastran_beam_strain = data['nastran_beam_strain']
 
 
+        self._nastran_displacement = data['nastran_displacement']
+        self._nastran_velocity = data['nastran_velocity']
+        self._nastran_acceleration = data['nastran_acceleration']
+        self._nastran_eigenvector = data['nastran_eigenvector']
+
+        self._nastran_spc_force = data['nastran_spc_force']
+        self._nastran_mpc_force = data['nastran_mpc_force']
+        self._nastran_applied_load = data['nastran_applied_load']
+
+        self._nastran_force = data['nastran_force']
+        self._nastran_grid_point_force = data['nastran_grid_point_force']
+        self._nastran_strain_energy = data['nastran_strain_energy']
+
         self.setWindowTitle('Preferences')
         self.create_widgets()
         self.create_layout()
@@ -278,34 +291,57 @@ class PreferencesWindow(PyDialog):
         self.nastran_is_bar_axes_checkbox.setChecked(self._nastran_is_bar_axes)
         #self.nastran_is_bar_axes_checkbox.setDisabled(True)
 
-        if 0:
+        if 1:
+            self.nastran_displacement_checkbox = QCheckBox('Displacement')
+            self.nastran_velocity_checkbox = QCheckBox('Velocity')
+            self.nastran_acceleration_checkbox = QCheckBox('Acceleration')
+            self.nastran_eigenvector_checkbox = QCheckBox('Eigenvector')
+            self.nastran_displacement_checkbox.setChecked(self._nastran_displacement)
+            self.nastran_velocity_checkbox.setChecked(self._nastran_velocity)
+            self.nastran_acceleration_checkbox.setChecked(self._nastran_acceleration)
+            self.nastran_eigenvector_checkbox.setChecked(self._nastran_eigenvector)
+
+            self.nastran_spc_forces_checkbox = QCheckBox('SPC Force')
+            self.nastran_mpc_forces_checkbox = QCheckBox('MPC Force')
+            self.nastran_applied_load_checkbox = QCheckBox('Applied Load')
+            self.nastran_spc_forces_checkbox.setChecked(self._nastran_spc_force)
+            self.nastran_mpc_forces_checkbox.setChecked(self._nastran_mpc_force)
+            self.nastran_applied_load_checkbox.setChecked(self._nastran_applied_load)
+
+            self.nastran_force_checkbox = QCheckBox('Force')
+            self.nastran_grid_point_force_checkbox = QCheckBox('Grid Point Force')
+            self.nastran_strain_energy_checkbox = QCheckBox('Strain Energy')
+            self.nastran_force_checkbox.setChecked(self._nastran_force)
+            self.nastran_grid_point_force_checkbox.setChecked(self._nastran_grid_point_force)
+            self.nastran_strain_energy_checkbox.setChecked(self._nastran_strain_energy)
+
             self.nastran_stress_checkbox = QCheckBox('Stress')
-            self.nastran_plate_stress_checkbox = QCheckBox('Plate Stress')
-            self.nastran_composite_plate_stress_checkbox = QCheckBox('Composite Plate Stress')
-            self.nastran_rod_stress_checkbox = QCheckBox('Rod Stress')
-            self.nastran_bar_stress_checkbox = QCheckBox('Bar Stress')
-            self.nastran_beam_stress_checkbox = QCheckBox('Beam Stress')
+            #self.nastran_plate_stress_checkbox = QCheckBox('Plate Stress')
+            #self.nastran_composite_plate_stress_checkbox = QCheckBox('Composite Plate Stress')
+            #self.nastran_rod_stress_checkbox = QCheckBox('Rod Stress')
+            #self.nastran_bar_stress_checkbox = QCheckBox('Bar Stress')
+            #self.nastran_beam_stress_checkbox = QCheckBox('Beam Stress')
 
             self.nastran_stress_checkbox.setChecked(self._nastran_stress)
-            self.nastran_plate_stress_checkbox.setChecked(self._nastran_plate_stress)
-            self.nastran_composite_plate_stress_checkbox.setChecked(self._nastran_composite_plate_stress)
-            self.nastran_rod_stress_checkbox.setChecked(self._nastran_rod_stress)
-            self.nastran_bar_stress_checkbox.setChecked(self._nastran_bar_stress)
-            self.nastran_beam_stress_checkbox.setChecked(self._nastran_beam_stress)
+            #self.nastran_plate_stress_checkbox.setChecked(self._nastran_plate_stress)
+            #self.nastran_composite_plate_stress_checkbox.setChecked(self._nastran_composite_plate_stress)
+            #self.nastran_rod_stress_checkbox.setChecked(self._nastran_rod_stress)
+            #self.nastran_bar_stress_checkbox.setChecked(self._nastran_bar_stress)
+            #self.nastran_beam_stress_checkbox.setChecked(self._nastran_beam_stress)
 
             self.nastran_strain_checkbox = QCheckBox('Strain')
-            self.nastran_plate_strain_checkbox = QCheckBox('Plate Strain')
-            self.nastran_composite_plate_strain_checkbox = QCheckBox('Composite Plate Strain')
-            self.nastran_rod_strain_checkbox = QCheckBox('Rod Strain')
-            self.nastran_bar_strain_checkbox = QCheckBox('Bar Strain')
-            self.nastran_beam_strain_checkbox = QCheckBox('Beam Strain')
+            #self.nastran_plate_strain_checkbox = QCheckBox('Plate Strain')
+            #self.nastran_composite_plate_strain_checkbox = QCheckBox('Composite Plate Strain')
+            #self.nastran_rod_strain_checkbox = QCheckBox('Rod Strain')
+            #self.nastran_bar_strain_checkbox = QCheckBox('Bar Strain')
+            #self.nastran_beam_strain_checkbox = QCheckBox('Beam Strain')
 
             self.nastran_strain_checkbox.setChecked(self._nastran_strain)
-            self.nastran_plate_strain_checkbox.setChecked(self._nastran_plate_strain)
-            self.nastran_composite_plate_strain_checkbox.setChecked(self._nastran_composite_plate_strain)
-            self.nastran_rod_strain_checkbox.setChecked(self._nastran_rod_strain)
-            self.nastran_bar_strain_checkbox.setChecked(self._nastran_bar_strain)
-            self.nastran_beam_strain_checkbox.setChecked(self._nastran_beam_strain)
+            #self.nastran_plate_strain_checkbox.setChecked(self._nastran_plate_strain)
+            #self.nastran_composite_plate_strain_checkbox.setChecked(self._nastran_composite_plate_strain)
+            #self.nastran_rod_strain_checkbox.setChecked(self._nastran_rod_strain)
+            #self.nastran_bar_strain_checkbox.setChecked(self._nastran_bar_strain)
+            #self.nastran_beam_strain_checkbox.setChecked(self._nastran_beam_strain)
 
         #-----------------------------------------------------------------------
         # closing
@@ -455,6 +491,41 @@ class PreferencesWindow(PyDialog):
         irow += 1
 
         #--------------------------------------------------
+
+        grid_nastran = self._get_grid_nastran_layout()
+        grid_nastran_results = self._get_grid_nastran_results_layout()
+
+        #bold_font = make_font(self._default_font_size, is_bold=True)
+        vbox_nastran = QVBoxLayout()
+        self.nastran_label = QLabel('Nastran:')
+        vbox_nastran.addWidget(self.nastran_label)
+        vbox_nastran.addLayout(grid_nastran)
+
+        vbox_nastran_results = QVBoxLayout()
+        self.nastran_results_label = QLabel('Nastran Results:')
+        vbox_nastran_results.addWidget(self.nastran_results_label)
+        vbox_nastran_results.addLayout(grid_nastran_results)
+
+
+        #self.create_legend_widgets()
+        #grid2 = self.create_legend_layout()
+        ok_cancel_box = QHBoxLayout()
+        ok_cancel_box.addWidget(self.apply_button)
+        ok_cancel_box.addWidget(self.ok_button)
+        ok_cancel_box.addWidget(self.cancel_button)
+
+        vbox = QVBoxLayout()
+        vbox.addLayout(grid)
+        vbox.addLayout(vbox_nastran)
+        vbox.addLayout(vbox_nastran_results)
+        #vbox.addStretch()
+        #vbox.addLayout(grid2)
+        vbox.addStretch()
+
+        vbox.addLayout(ok_cancel_box)
+        self.setLayout(vbox)
+
+    def _get_grid_nastran_layout(self) -> QGridLayout:
         grid_nastran = QGridLayout()
         irow = 0
 
@@ -474,29 +545,74 @@ class PreferencesWindow(PyDialog):
         grid_nastran.addWidget(self.nastran_is_3d_bars_checkbox, irow, 0)
         grid_nastran.addWidget(self.nastran_is_3d_bars_update_checkbox, irow, 1)
         irow += 1
+        return grid_nastran
 
-        #bold_font = make_font(self._default_font_size, is_bold=True)
-        vbox_nastran = QVBoxLayout()
-        self.nastran_label = QLabel('Nastran:')
-        vbox_nastran.addWidget(self.nastran_label)
-        vbox_nastran.addLayout(grid_nastran)
+    def _get_grid_nastran_results_layout(self) -> QGridLayout:
+        grid_nastran = QGridLayout()
+        irow = 0
+        # ------------------------
+        grid_nastran.addWidget(self.nastran_displacement_checkbox, irow, 0)
+        grid_nastran.addWidget(self.nastran_velocity_checkbox, irow, 1)
+        grid_nastran.addWidget(self.nastran_acceleration_checkbox, irow, 2)
+        irow += 1
 
-        #self.create_legend_widgets()
-        #grid2 = self.create_legend_layout()
-        ok_cancel_box = QHBoxLayout()
-        ok_cancel_box.addWidget(self.apply_button)
-        ok_cancel_box.addWidget(self.ok_button)
-        ok_cancel_box.addWidget(self.cancel_button)
+        grid_nastran.addWidget(self.nastran_eigenvector_checkbox, irow, 0)
+        irow += 1
 
-        vbox = QVBoxLayout()
-        vbox.addLayout(grid)
-        vbox.addLayout(vbox_nastran)
-        #vbox.addStretch()
-        #vbox.addLayout(grid2)
-        vbox.addStretch()
+        # ------------------------
+        grid_nastran.addWidget(self.nastran_spc_forces_checkbox, irow, 0)
+        grid_nastran.addWidget(self.nastran_mpc_forces_checkbox, irow, 1)
+        grid_nastran.addWidget(self.nastran_applied_load_checkbox, irow, 2)
+        irow += 1
 
-        vbox.addLayout(ok_cancel_box)
-        self.setLayout(vbox)
+        # ------------------------
+        grid_nastran.addWidget(self.nastran_stress_checkbox, irow, 0)
+        grid_nastran.addWidget(self.nastran_strain_checkbox, irow, 1)
+        grid_nastran.addWidget(self.nastran_force_checkbox, irow, 2)
+        irow += 1
+
+        grid_nastran.addWidget(self.nastran_strain_energy_checkbox, irow, 0)
+        irow += 1
+
+        #self.nastran_plate_stress_checkbox = QCheckBox('Plate Stress')
+        #self.nastran_composite_plate_stress_checkbox = QCheckBox('Composite Plate Stress')
+        #self.nastran_rod_stress_checkbox = QCheckBox('Rod Stress')
+        #self.nastran_bar_stress_checkbox = QCheckBox('Bar Stress')
+        #self.nastran_beam_stress_checkbox = QCheckBox('Beam Stress')
+        #
+        #self.nastran_plate_strain_checkbox = QCheckBox('Plate Strain')
+        #self.nastran_composite_plate_strain_checkbox = QCheckBox('Composite Plate Strain')
+        #self.nastran_rod_strain_checkbox = QCheckBox('Rod Strain')
+        #self.nastran_bar_strain_checkbox = QCheckBox('Bar Strain')
+        #self.nastran_beam_strain_checkbox = QCheckBox('Beam Strain')
+
+        return grid_nastran
+
+    def _set_nastran_connections(self):
+        # format-specific
+        self.nastran_is_element_quality_checkbox.clicked.connect(self.on_nastran_is_element_quality)
+        self.nastran_is_properties_checkbox.clicked.connect(self.on_nastran_is_properties)
+        self.nastran_is_3d_bars_checkbox.clicked.connect(self.on_nastran_is_3d_bars)
+        self.nastran_is_3d_bars_update_checkbox.clicked.connect(self.on_nastran_is_3d_bars_update)
+        self.nastran_is_bar_axes_checkbox.clicked.connect(self.on_nastran_is_bar_axes)
+        self.nastran_create_coords_checkbox.clicked.connect(self.on_nastran_create_coords)
+        self.nastran_is_shell_mcid_checkbox.clicked.connect(self.on_nastran_is_shell_mcids)
+
+        #self.nastran_is_shell_mcid_checkbox.clicked.connect(self.on_nastran_is_shell_mcids2)
+
+        self.nastran_displacement_checkbox.clicked.connect(self.on_nastran_displacement)
+        self.nastran_velocity_checkbox.clicked.connect(self.on_nastran_velocity)
+        self.nastran_acceleration_checkbox.clicked.connect(self.on_nastran_acceleration)
+        self.nastran_eigenvector_checkbox.clicked.connect(self.on_nastran_eigenvector)
+
+        self.nastran_spc_forces_checkbox.clicked.connect(self.on_nastran_spc_force)
+        self.nastran_mpc_forces_checkbox.clicked.connect(self.on_nastran_mpc_force)
+        self.nastran_applied_load_checkbox.clicked.connect(self.on_nastran_applied_load)
+        self.nastran_grid_point_force_checkbox.clicked.connect(self.on_nastran_grid_point_force)
+
+        self.nastran_force_checkbox.clicked.connect(self.on_nastran_force)
+        self.nastran_strain_checkbox.clicked.connect(self.on_nastran_strain)
+        self.nastran_stress_checkbox.clicked.connect(self.on_nastran_stress)
 
     def set_connections(self):
         """creates the actions for the menu"""
@@ -538,16 +654,7 @@ class PreferencesWindow(PyDialog):
         self.clipping_max_button.clicked.connect(self.on_default_clipping_max)
 
         #------------------------------------
-        # format-specific
-        self.nastran_is_element_quality_checkbox.clicked.connect(self.on_nastran_is_element_quality)
-        self.nastran_is_properties_checkbox.clicked.connect(self.on_nastran_is_properties)
-        self.nastran_is_3d_bars_checkbox.clicked.connect(self.on_nastran_is_3d_bars)
-        self.nastran_is_3d_bars_update_checkbox.clicked.connect(self.on_nastran_is_3d_bars_update)
-        self.nastran_is_bar_axes_checkbox.clicked.connect(self.on_nastran_is_bar_axes)
-        self.nastran_create_coords_checkbox.clicked.connect(self.on_nastran_create_coords)
-        self.nastran_is_shell_mcid_checkbox.clicked.connect(self.on_nastran_is_shell_mcids)
-
-        #self.nastran_is_shell_mcid_checkbox.clicked.connect(self.on_nastran_is_shell_mcids2)
+        self._set_nastran_connections()
         #------------------------------------
 
         self.apply_button.clicked.connect(self.on_apply)
@@ -559,43 +666,99 @@ class PreferencesWindow(PyDialog):
         """set the nastran element quality preferences"""
         is_checked = self.nastran_is_element_quality_checkbox.isChecked()
         if self.win_parent is not None:
-            self.win_parent.settings.nastran_is_element_quality = is_checked
+            self.nastran_settings.is_element_quality = is_checked
     def on_nastran_is_properties(self):
         """set the nastran properties preferences"""
         is_checked = self.nastran_is_properties_checkbox.isChecked()
         if self.win_parent is not None:
-            self.win_parent.settings.nastran_is_properties = is_checked
+            self.nastran_settings.is_properties = is_checked
     def on_nastran_is_3d_bars(self):
         """set the nastran properties preferences"""
         is_checked = self.nastran_is_3d_bars_checkbox.isChecked()
         if self.win_parent is not None:
-            self.win_parent.settings.nastran_is_3d_bars = is_checked
+            self.nastran_settings.is_3d_bars = is_checked
     def on_nastran_is_3d_bars_update(self):
         """set the nastran properties preferences"""
         is_checked = self.nastran_is_3d_bars_update_checkbox.isChecked()
         if self.win_parent is not None:
-            self.win_parent.settings.nastran_is_3d_bars_update = is_checked
+            self.nastran_settings.is_3d_bars_update = is_checked
     def on_nastran_is_bar_axes(self):
         """set the nastran properties preferences"""
         is_checked = self.nastran_is_bar_axes_checkbox.isChecked()
         if self.win_parent is not None:
-            self.win_parent.settings.nastran_is_bar_axes = is_checked
+            self.nastran_settings.is_bar_axes = is_checked
     def on_nastran_create_coords(self):
         """set the nastran properties preferences"""
         is_checked = self.nastran_create_coords_checkbox.isChecked()
         if self.win_parent is not None:
-            self.win_parent.settings.nastran_create_coords = is_checked
+            self.nastran_settings.nastran_create_coords = is_checked
     def on_nastran_is_shell_mcids(self):
         """set the nastran properties preferences"""
         is_checked = self.nastran_is_shell_mcid_checkbox.isChecked()
         if self.win_parent is not None:
-            self.win_parent.settings.nastran_is_shell_mcids = is_checked
+            self.nastran_settings.nastran_is_shell_mcids = is_checked
 
+    def on_nastran_displacement(self):
+        is_checked = self.nastran_displacement_checkbox.isChecked()
+        if self.win_parent is not None:
+            self.nastran_settings.nastran_displacement = is_checked
+    def on_nastran_velocity(self):
+        is_checked = self.nastran_velocity_checkbox.isChecked()
+        if self.win_parent is not None:
+            self.nastran_settings.nastran_velocity = is_checked
+    def on_nastran_acceleration(self):
+        is_checked = self.nastran_acceleration_checkbox.isChecked()
+        if self.win_parent is not None:
+            self.nastran_settings.nastran_acceleration = is_checked
+    def on_nastran_eigenvector(self):
+        is_checked = self.nastran_eigenvector_checkbox.isChecked()
+        if self.win_parent is not None:
+            self.nastran_settings.nastran_eigenvector = is_checked
+
+    def on_nastran_spc_force(self):
+        is_checked = self.nastran_spc_forces_checkbox.isChecked()
+        if self.win_parent is not None:
+            self.nastran_settings.nastran_spc_force = is_checked
+    def on_nastran_mpc_force(self):
+        is_checked = self.nastran_mpc_forces_checkbox.isChecked()
+        if self.win_parent is not None:
+            self.nastran_settings.nastran_mpc_force = is_checked
+
+    def on_nastran_applied_load(self):
+        is_checked = self.nastran_applied_load_checkbox.isChecked()
+        if self.win_parent is not None:
+            self.nastran_settings.nastran_applied_load = is_checked
+    def on_nastran_grid_point_force(self):
+        is_checked = self.nastran_grid_point_force_checkbox.isChecked()
+        if self.win_parent is not None:
+            self.nastran_settings.nastran_grid_point_force = is_checked
+
+    def on_nastran_force(self):
+        is_checked = self.nastran_force_checkbox.isChecked()
+        if self.win_parent is not None:
+            self.nastran_settings.nastran_force = is_checked
+    def on_nastran_strain(self):
+        is_checked = self.nastran_strain_checkbox.isChecked()
+        if self.win_parent is not None:
+            self.nastran_settings.nastran_strain = is_checked
+    def on_nastran_stress(self):
+        is_checked = self.nastran_stress_checkbox.isChecked()
+        if self.win_parent is not None:
+            self.nastran_settings.nastran_stress = is_checked
+    def on_nastran_strain_energy(self):
+        is_checked = self.nastran_strain_energy_checkbox.isChecked()
+        if self.win_parent is not None:
+            self.nastran_settings.nastran_strain_energy = is_checked
+
+
+    @property
+    def nastran_settings(self):
+        return self.win_parent.settings.nastran_settings
     #def on_nastran_is_shell_mcids2(self):
         #"""set the nastran properties preferences"""
         #is_checked = self.nastran_is_shell_mcid_checkbox.isChecked()
         #if self.win_parent is not None:
-            #self.win_parent.settings.nastran_is_shell_mcids = is_checked
+            #self.nastran_settings.is_shell_mcids = is_checked
 
     def on_font(self, value=None):
         """update the font for the current window"""

@@ -29,7 +29,7 @@ from .force import get_spring_force, get_bar_force, get_plate_force
 
 if TYPE_CHECKING: # pragma: no cover
     from pyNastran.op2.op2 import OP2
-    from pyNastran.gui.gui_objects.settings import Settings
+    from pyNastran.gui.gui_objects.settings import Settings, NastranSettings
     #from pyNastran.op2.result_objects.design_response import Desvars
 
 GuiResults = Union[GuiResult, GuiResultIDs, GridPointForceResult]
@@ -74,19 +74,21 @@ class NastranGuiResults(NastranGuiAttributes):
         """
         loads nodal results vector results (e.g., displacements/temperatures)
         """
+        settings = self.gui.settings  # type: Settings
         nnodes = self.nnodes
         node_ids = self.node_ids
-        icase = _fill_nastran_displacements(
-            cases, model, key, icase,
-            form_dict, header_dict, keys_map,
-            self.xyz_cid0,
-            nnodes, node_ids, log, dim_max=self.gui.settings.dim_max)
 
         icase = _fill_nastran_displacements(
             cases, model, key, icase,
             form_dict, header_dict, keys_map,
             self.xyz_cid0,
-            nnodes, node_ids, log, dim_max=self.gui.settings.dim_max,
+            nnodes, node_ids, log, dim_max=settings.dim_max)
+
+        icase = _fill_nastran_displacements(
+            cases, model, key, icase,
+            form_dict, header_dict, keys_map,
+            self.xyz_cid0,
+            nnodes, node_ids, log, dim_max=settings.dim_max,
             prefix='acoustic',
         )
 
@@ -657,8 +659,8 @@ class NastranGuiResults(NastranGuiAttributes):
                                     form_dict, header_dict, keys_map) -> int:
         """Creates the time accurate stress objects"""
         icase = icase_old
-        settings = self.settings  # type:  Settings
-        if settings.nastran_stress:
+        nastran_settings = self.settings.nastran_settings  # type:  NastranSettings
+        if nastran_settings.stress:
             for itime, unused_dt in enumerate(times):
                 # shell stress
                 try:
@@ -674,7 +676,7 @@ class NastranGuiResults(NastranGuiAttributes):
 
         #self.settings.nastran_plate_stress
         eids = self.element_ids
-        if settings.nastran_plate_stress:
+        if nastran_settings.plate_stress:
             icase = get_plate_stress_strains(
                 eids, cases, model, times, key, icase,
                 form_dict, header_dict, keys_map, is_stress=True)
@@ -684,21 +686,21 @@ class NastranGuiResults(NastranGuiAttributes):
                 prefix='modal_contribution',
             )
 
-        if settings.nastran_composite_plate_stress:
+        if nastran_settings.composite_plate_stress:
             icase = get_composite_plate_stress_strains(
                 eids, cases, model, times, key, icase,
                 form_dict, header_dict, keys_map,
                 self.stress[key].composite_data_dict, self.log, is_stress=True)
 
-        if settings.nastran_rod_stress:
+        if nastran_settings.rod_stress:
             icase = get_rod_stress_strains(
                 eids, cases, model, times, key, icase,
                 form_dict, header_dict, keys_map, is_stress=True)
-        if settings.nastran_bar_stress:
+        if nastran_settings.bar_stress:
             icase = get_bar_stress_strains(
                 eids, cases, model, times, key, icase,
                 form_dict, header_dict, keys_map, is_stress=True)
-        if settings.nastran_beam_stress:
+        if nastran_settings.beam_stress:
             icase = get_beam_stress_strains(
                 eids, cases, model, times, key, icase,
                 form_dict, header_dict, keys_map, is_stress=True)
@@ -713,12 +715,12 @@ class NastranGuiResults(NastranGuiAttributes):
         return icase
 
 
-    def _fill_op2_centroidal_force(self, cases, model, times, key, icase,
+    def _fill_op2_centroidal_force(self, cases, model: OP2,
+                                   times, key, icase: int,
                                    force_dict, header_dict, keys_map) -> int:
         """Creates the time accurate force objects"""
-
-        settings = self.settings  # type: Settings
-        if settings.nastran_force:
+        nastran_settings = self.settings.nastran_settings  # type: NastranSettings
+        if nastran_settings.force:
             for itime, unused_dt in enumerate(times):
                 try:
                     icase = self._fill_op2_time_centroidal_force(
@@ -729,26 +731,26 @@ class NastranGuiResults(NastranGuiAttributes):
                     break
 
         eids = self.element_ids
-        if settings.nastran_bar_force:
+        if nastran_settings.bar_force:
             icase = get_bar_force(
                 eids, cases, model, times, key, icase,
                 force_dict, header_dict, keys_map)
 
-        if settings.nastran_beam_force:
+        if nastran_settings.beam_force:
             #icase = get_beam_force(
                 #eids, cases, model, times, key, icase,
                 #force_dict, header_dict, keys_map)
             if key in model.cbeam_force:
                 model.log.warning('skipping nastran beam force')
 
-        if settings.nastran_plate_force:
+        if nastran_settings.plate_force:
             icase = get_plate_force(
                 eids, cases, model, times, key, icase,
                 force_dict, header_dict, keys_map)
             #if key in model.ctria3_force or key in model.cquad4_force:
                 #model.log.warning('skipping nastran plate force')
 
-        if settings.nastran_spring_force:
+        if nastran_settings.spring_force:
             icase = get_spring_force(
                 eids, cases, model, times, key, icase,
                 force_dict, header_dict, keys_map)
@@ -757,13 +759,13 @@ class NastranGuiResults(NastranGuiAttributes):
                      #model.celas3_force, model.celas4_force]]):
                 #model.log.warning('skipping nastran spring force')
 
-        if settings.nastran_cbush_force:
+        if nastran_settings.cbush_force:
             if key in model.cbush_force:
                 model.log.warning('skipping nastran bush force')
         #if key in model.bush1d_force:
             #model.log.warning('skipping nastran bush1d force')
 
-        if settings.nastran_gap_force:
+        if nastran_settings.gap_force:
             if key in model.cgap_force:
                 model.log.warning('skipping nastran gap force')
 
@@ -772,8 +774,8 @@ class NastranGuiResults(NastranGuiAttributes):
     def _fill_op2_centroidal_strain(self, cases, model: OP2, times, key, icase: int,
                                     form_dict, header_dict, keys_map) -> int:
         """Creates the time accurate strain objects"""
-        settings = self.settings  # type: Settings
-        if settings.nastran_strain:
+        nastran_settings = self.settings.nastran_settings  # type: NastranSettings
+        if nastran_settings.strain:
             for itime, unused_dt in enumerate(times):
                 try:
                     icase = self._fill_op2_time_centroidal_stress(
@@ -784,7 +786,7 @@ class NastranGuiResults(NastranGuiAttributes):
                     break
 
         eids = self.element_ids
-        if settings.nastran_composite_plate_strain:
+        if nastran_settings.composite_plate_strain:
             icase = get_plate_stress_strains(
                 eids, cases, model, times, key, icase,
                 form_dict, header_dict, keys_map, is_stress=False)
@@ -794,21 +796,21 @@ class NastranGuiResults(NastranGuiAttributes):
                 prefix='modal_contribution',
             )
 
-        if settings.nastran_composite_plate_strain:
+        if nastran_settings.composite_plate_strain:
             icase = get_composite_plate_stress_strains(
                 eids, cases, model, times, key, icase,
                 form_dict, header_dict, keys_map,
                 self.strain[key].composite_data_dict, self.log, is_stress=False)
 
-        if settings.nastran_rod_strain:
+        if nastran_settings.rod_strain:
             icase = get_rod_stress_strains(
                 eids, cases, model, times, key, icase,
                 form_dict, header_dict, keys_map, is_stress=False)
-        if settings.nastran_bar_strain:
+        if nastran_settings.bar_strain:
             icase = get_bar_stress_strains(
                 eids, cases, model, times, key, icase,
                 form_dict, header_dict, keys_map, is_stress=False)
-        if settings.nastran_beam_strain:
+        if nastran_settings.beam_strain:
             icase = get_beam_stress_strains(
                 eids, cases, model, times, key, icase,
                 form_dict, header_dict, keys_map, is_stress=False)

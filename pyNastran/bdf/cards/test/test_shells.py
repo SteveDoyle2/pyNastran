@@ -6,7 +6,7 @@ import numpy as np
 from numpy import array
 
 from cpylog import get_logger
-from pyNastran.bdf.bdf import PCOMP, MAT1, BDF, CTRIA3
+from pyNastran.bdf.bdf import PCOMP, MAT1, BDF, CTRIA3, CQUAD4
 from pyNastran.bdf.bdf_interface.bdf_card import BDFCard
 from pyNastran.bdf.cards.materials import get_mat_props_S
 from pyNastran.bdf.cards.test.utils import save_load_deck
@@ -1439,13 +1439,13 @@ class TestShells(unittest.TestCase):
         #['grid', n3, 0, 4., 1., 0.],
 
         # element coordinate system and material coordinate system are coincident
-        centroid, imat, jmat, normal = elem.material_coordinate_system()
+        dxyz, centroid, imat, jmat, normal = elem.material_coordinate_system()
         centroid_expected = [2.66666667, 0.33333333, 0.]
         imat_expected = [1., 0., 0.]
         jmat_expected = [0., 1., 0.]
         normal_expected = [0., 0., 1.]
 
-        centroid, imat, jmat, normal = elem.element_coordinate_system()
+        dxyz, centroid, imat, jmat, normal = elem.element_coordinate_system()
         assert np.allclose(centroid, centroid_expected), centroid
         assert np.allclose(imat, imat_expected), imat
         assert np.allclose(jmat, jmat_expected), jmat
@@ -1459,13 +1459,13 @@ class TestShells(unittest.TestCase):
         # ----------------------------------------------------------------
         elem.theta_mcid = 45.
         # theta doesn't change the element coordinate system
-        centroid, imat, jmat, normal = elem.element_coordinate_system()
+        dxyz, centroid, imat, jmat, normal = elem.element_coordinate_system()
         assert np.allclose(centroid, centroid_expected), centroid
         assert np.allclose(imat, imat_expected), imat
         assert np.allclose(jmat, jmat_expected), jmat
         assert np.allclose(normal, normal_expected), normal
 
-        centroid, imat, jmat, normal = elem.material_coordinate_system()
+        dxyz, centroid, imat, jmat, normal = elem.material_coordinate_system()
 
         sqrt2_2 = 2 ** 0.5 / 2
         imat_expected = [sqrt2_2, sqrt2_2, 0.]
@@ -1478,7 +1478,7 @@ class TestShells(unittest.TestCase):
 
         # ----------------------------------------------------------------
         elem.theta_mcid = 90.
-        centroid, imat, jmat, normal = elem.material_coordinate_system()
+        dxyz, centroid, imat, jmat, normal = elem.material_coordinate_system()
 
         imat_expected = [0., 1., 0.]
         jmat_expected = [-1., 0., 0.]
@@ -1499,7 +1499,7 @@ class TestShells(unittest.TestCase):
         self._make_cquad4(model, rho, nu, G, E, t, nsm)
 
         eid = 10
-        elem = model.elements[eid]
+        elem = model.elements[eid]  # type: CQUAD4
 
         #['grid', n1, 0, 0., 0., 0.],
         #['grid', n2, 0, 2., 0., 0.],
@@ -1507,13 +1507,13 @@ class TestShells(unittest.TestCase):
         #['grid', n4, 0, 0., 1., 0.],
 
         # element coordinate system and material coordinate system are coincident
-        centroid, imat, jmat, normal = elem.material_coordinate_system()
+        dxyz, centroid, imat, jmat, normal = elem.material_coordinate_system()
         centroid_expected = [1., 0.5, 0.]
         imat_expected = [1., 0., 0.]
         jmat_expected = [0., 1., 0.]
         normal_expected = [0., 0., 1.]
 
-        centroid, imat, jmat, normal = elem.element_coordinate_system()
+        dxyz, centroid, imat, jmat, normal = elem.element_coordinate_system()
         assert np.allclose(centroid, centroid_expected), centroid
         assert np.allclose(imat, imat_expected), imat
         assert np.allclose(jmat, jmat_expected), jmat
@@ -1527,13 +1527,13 @@ class TestShells(unittest.TestCase):
         # ----------------------------------------------------------------
         elem.theta_mcid = 45.
         # theta doesn't change the element coordinate system
-        centroid, imat, jmat, normal = elem.element_coordinate_system()
+        dxyz, centroid, imat, jmat, normal = elem.element_coordinate_system()
         assert np.allclose(centroid, centroid_expected), centroid
         assert np.allclose(imat, imat_expected), imat
         assert np.allclose(jmat, jmat_expected), jmat
         assert np.allclose(normal, normal_expected), normal
 
-        centroid, imat, jmat, normal = elem.material_coordinate_system()
+        dxyz, centroid, imat, jmat, normal = elem.material_coordinate_system()
 
         sqrt2_2 = 2 ** 0.5 / 2
         centroid_expected = [1., 0.5, 0.]
@@ -1546,7 +1546,7 @@ class TestShells(unittest.TestCase):
         assert np.allclose(normal, normal_expected), normal
         # ----------------------------------------------------------------
         elem.theta_mcid = 90.
-        centroid, imat, jmat, normal = elem.material_coordinate_system()
+        dxyz, centroid, imat, jmat, normal = elem.material_coordinate_system()
 
         imat_expected = [0., 1., 0.]
         jmat_expected = [-1., 0., 0.]

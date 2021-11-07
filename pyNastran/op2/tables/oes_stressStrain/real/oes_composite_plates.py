@@ -253,9 +253,10 @@ class RealCompositePlateArray(OES_Object):
         self.itotal += 1
 
     def get_stats(self, short: bool=False) -> List[str]:
+        class_name = self.__class__.__name__
         if not self.is_built:
             msg = [
-                '<%s>\n' % self.__class__.__name__,
+                f'<{class_name}>\n',
                 f'  ntimes: {self.ntimes:d}\n',
                 f'  ntotal: {self.ntotal:d}\n',
             ]
@@ -266,15 +267,12 @@ class RealCompositePlateArray(OES_Object):
         #nnodes = self.nnodes
         ntotal = self.ntotal
         nelements = len(unique(self.element_layer[:, 0]))
-
         msg = []
         if self.nonlinear_factor not in (None, np.nan):  # transient
-            msg.append('  type=%s ntimes=%i nelements=%i ntotal=%i\n'
-                       % (self.__class__.__name__, ntimes, nelements, ntotal))
+            msg.append(f'  type={class_name} ntimes={ntimes:d} nelements={nelements:d} ntotal={ntotal}; table_name={self.table_name_str}\n')
             ntimes_word = 'ntimes'
         else:
-            msg.append('  type=%s nelements=%i ntotal=%i\n'
-                       % (self.__class__.__name__, nelements, ntotal))
+            msg.append(f'  type={class_name} nelements={nelements:d} ntotal={ntotal:d}\n')
             ntimes_word = '1'
         headers = self.get_headers()
         n = len(headers)

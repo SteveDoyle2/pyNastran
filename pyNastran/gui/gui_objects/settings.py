@@ -53,6 +53,9 @@ NASTRAN_BOOL_KEYS = [
     'nastran_is_3d_bars', 'nastran_is_3d_bars_update',
     'nastran_is_shell_mcids', 'nastran_is_update_conm2',
 
+    'nastran_displacement', 'nastran_velocity', 'nastran_acceleration', 'nastran_eigenvector',
+    'nastran_spc_force', 'nastran_mpc_force', 'nastran_applied_load',
+
     'nastran_stress', 'nastran_plate_stress', 'nastran_composite_plate_stress',
     'nastran_strain', 'nastran_plate_strain', 'nastran_composite_plate_strain',
     'nastran_rod_stress', 'nastran_bar_stress', 'nastran_beam_stress',
@@ -63,7 +66,65 @@ NASTRAN_BOOL_KEYS = [
     'nastran_force',
     'nastran_bar_force', 'nastran_beam_force', 'nastran_plate_force',
     'nastran_spring_force', 'nastran_gap_force', 'nastran_cbush_force',
+
+    'nastran_grid_point_force', 'nastran_strain_energy',
 ]
+
+class NastranSettings:
+    def __init__(self):
+        """
+        Creates the Settings object
+        """
+        self.is_element_quality = True
+        self.is_properties = True
+        self.is_3d_bars = True
+        self.is_3d_bars_update = True
+        self.create_coords = True
+        self.is_bar_axes = True
+        self.is_shell_mcids = True
+        self.is_update_conm2 = True
+
+        self.stress = True
+        self.spring_stress = True
+        self.rod_stress = True
+        self.bar_stress = True
+        self.beam_stress = True
+        self.plate_stress = True
+        self.composite_plate_stress = True
+        self.solid_stress = True
+
+        self.strain = True
+        self.spring_strain = True
+        self.rod_strain = True
+        self.bar_strain = True
+        self.beam_strain = True
+        self.plate_strain = True
+        self.composite_plate_strain = True
+        self.solid_strain = True
+
+        self.force = True
+        self.spring_force = True
+        self.cbush_force = True
+        self.gap_force = True
+        self.bar_force = True
+        self.beam_force = True
+        self.plate_force = True
+
+        self.eigenvector = True
+        self.displacement = True
+        self.velocity = True
+        self.acceleration = True
+
+        self.spc_force = True
+        self.mpc_force = True
+        self.applied_load = True
+
+        #self.stress = True
+        #self.stress = True
+        #self.strain = True
+        self.strain_energy = True
+        self.grid_point_force = True
+
 
 class Settings:
     """storage class for various settings"""
@@ -122,41 +183,7 @@ class Settings:
         self.dim_max = 1.0
         #self.annotation_scale = 1.0
 
-        self.nastran_is_element_quality = True
-        self.nastran_is_properties = True
-        self.nastran_is_3d_bars = True
-        self.nastran_is_3d_bars_update = True
-        self.nastran_create_coords = True
-        self.nastran_is_bar_axes = True
-        self.nastran_is_shell_mcids = True
-        self.nastran_is_update_conm2 = True
-
-        self.nastran_stress = True
-        self.nastran_spring_stress = True
-        self.nastran_rod_stress = True
-        self.nastran_bar_stress = True
-        self.nastran_beam_stress = True
-        self.nastran_plate_stress = True
-        self.nastran_composite_plate_stress = True
-        self.nastran_solid_stress = True
-
-        self.nastran_strain = True
-        self.nastran_spring_strain = True
-        self.nastran_rod_strain = True
-        self.nastran_bar_strain = True
-        self.nastran_beam_strain = True
-        self.nastran_plate_strain = True
-        self.nastran_composite_plate_strain = True
-        self.nastran_solid_strain = True
-
-        self.nastran_force = True
-        self.nastran_spring_force = True
-        self.nastran_cbush_force = True
-        self.nastran_gap_force = True
-        self.nastran_bar_force = True
-        self.nastran_beam_force = True
-        self.nastran_plate_force = True
-
+        self.nastran_settings = NastranSettings()
 
     def reset_settings(self) -> None:
         """helper method for ``setup_gui``"""
@@ -201,40 +228,7 @@ class Settings:
         self.dim_max = 1.0
         #self.annotation_scale = 1.0
 
-        self.nastran_is_element_quality = True
-        self.nastran_is_properties = True
-        self.nastran_is_3d_bars = True
-        self.nastran_is_3d_bars_update = True
-        self.nastran_create_coords = True
-        self.nastran_is_bar_axes = True
-        self.nastran_is_shell_mcids = True
-        self.nastran_is_update_conm2 = True
-
-        self.nastran_stress = True
-        self.nastran_spring_stress = True
-        self.nastran_rod_stress = True
-        self.nastran_bar_stress = True
-        self.nastran_beam_stress = True
-        self.nastran_plate_stress = True
-        self.nastran_composite_plate_stress = True
-        self.nastran_solid_stress = True
-
-        self.nastran_strain = True
-        self.nastran_spring_strain = True
-        self.nastran_rod_strain = True
-        self.nastran_bar_strain = True
-        self.nastran_beam_strain = True
-        self.nastran_plate_strain = True
-        self.nastran_composite_plate_strain = True
-        self.nastran_solid_strain = True
-
-        self.nastran_force = True
-        self.nastran_spring_force = True
-        self.nastran_cbush_force = True
-        self.nastran_gap_force = True
-        self.nastran_bar_force = True
-        self.nastran_beam_force = True
-        self.nastran_plate_force = True
+        self.nastran_settings = NastranSettings()
 
     def load(self, settings: QSettings) -> bool:
         """helper method for ``setup_gui``"""
@@ -330,8 +324,15 @@ class Settings:
         except (TypeError, AttributeError):
             pass
 
+        nastran_settings = self.nastran_settings
         for key in NASTRAN_BOOL_KEYS:
-            default = getattr(self, key)
+            # nastran_is_properties -> nastran, is_properties
+            base, key2 = key.split('_', 1)
+
+            # we get default from the nastran_settings
+            default = getattr(nastran_settings, key2)
+
+            # pull it from the QSettings
             self._set_setting(settings, setting_keys, [key],
                               default, save=True, auto_type=bool)
 
@@ -412,8 +413,10 @@ class Settings:
         settings.setValue('colormap', self.colormap)
 
         # format-specific
+        nastran_settings = self.nastran_settings
         for key in NASTRAN_BOOL_KEYS:
-            value = getattr(self, key)
+            base, key2 = key.split('_', 1)
+            value = getattr(nastran_settings, key2)
             settings.setValue(key, value)
 
 

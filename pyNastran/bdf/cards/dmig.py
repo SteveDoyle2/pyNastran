@@ -2,6 +2,7 @@
 from __future__ import annotations
 from math import sin, cos, radians, atan2, sqrt, degrees
 from itertools import count
+import warnings
 from typing import Tuple, Dict, Any, TYPE_CHECKING
 
 import numpy as np
@@ -2559,8 +2560,15 @@ def get_dmi_matrix(matrix: DMI,
 
     """
     ifo = matrix.ifo
-    assert matrix.GCi.ndim == 1, matrix.GCi.ndim
-    assert matrix.GCj.ndim == 1, matrix.GCj.ndim
+    if isinstance(matrix.GCi, np.ndarray):
+        assert matrix.GCi.ndim == 1, matrix.GCi.ndim
+        assert matrix.GCj.ndim == 1, matrix.GCj.ndim
+    else:
+        # TestAero.test_zona_2
+        warnings.warn(f'matrix={matrix.name!r} GCi is not a numpy array...')
+        #print(matrix)
+        #print('GCi =', matrix.GCi)
+        #print('GCj =', matrix.GCj)
     GCj = array(matrix.GCj, dtype='int32') - 1
     GCi = array(matrix.GCi, dtype='int32') - 1
 
