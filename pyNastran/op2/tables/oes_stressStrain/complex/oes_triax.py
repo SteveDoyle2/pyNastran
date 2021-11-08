@@ -11,7 +11,7 @@ from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import OES_Object
 #from pyNastran.f06.f06_formatting import write_imag_floats_13e, write_float_13e
 
 
-class ComplexTriaxStressArray(OES_Object):
+class ComplexTriaxArray(OES_Object):
     def __init__(self, data_code, is_sort1, isubcase, dt):
         OES_Object.__init__(self, data_code, isubcase, apply_data_code=True)   ## why???
         self.element_node = None
@@ -82,11 +82,8 @@ class ComplexTriaxStressArray(OES_Object):
             raise RuntimeError(msg)
 
         self.fiber_curvature = zeros(self.ntotal, 'float32')
-        # [oxx, oyy, txy]
-        self.data = zeros((self.ntimes, self.ntotal, 3), 'complex64')
-
-    def _get_headers(self) -> List[str]:
-        return ['oxx', 'oyy', 'txy']
+        # [e_radial, e_azimuthal, e_axial, e_shear]
+        self.data = zeros((self.ntimes, self.ntotal, 4), 'complex64')
 
     def get_headers(self) -> List[str]:
         return self._get_headers()
@@ -187,14 +184,35 @@ class ComplexTriaxStressArray(OES_Object):
         """unvectorized method for adding SORT1 transient data"""
         assert isinstance(eid, integer_types) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
         #print(self.element_types2, element_type, self.element_types2.dtype)
-        #print('itotal=%s dt=%s eid=%s loc=%-5s rs=%s' % (self.itotal, dt, eid, loc, rs))
+        #print('itotal=%s dt=%s eid=%s loc=%s R=%s azimuth=%s axial=%s shear=%s' % (
+            #self.itotal, dt, eid, loc,
+            #rs, azs, As, ss))
 
         # dt, eid, loc, rs, azs, As, ss
         assert isinstance(eid, int), eid
-        #self.data[self.itime, self.itotal] = [oxx, oyy, txy]
+        self.data[self.itime, self.itotal] = [rs, azs, As, ss]
         self.element_node[self.itotal, :] = [eid, 0]  # 0 is center
         #self.fiber_curvature[self.itotal] = fdr
         #self.ielement += 1
         self.itotal += 1
 
+class ComplexTriaxStressArray(ComplexTriaxArray):
+    def _get_headers(self) -> List[str]:
+        return ['o_radial', 'o_azimuthal', 'o_axial', 'o_shear']
 
+class ComplexTriaxStrainArray(ComplexTriaxArray):
+    def _get_headers(self) -> List[str]:
+        return ['e_radial', 'e_azimuthal', 'e_axial', 'e_shear']
+
+
+'      COMPLEX EIGENVALUE = -8.256059E-03,  5.505277E-01'
+'                              C O M P L E X    S T R A I N S    I N   T R I A X 6   E L E M E N T S'
+'                                                            (REAL/IMAGINARY)'
+'   ELEMENT'
+'       ID   GRID ID         R A D I A L              A Z I M U T H A L               A X I A L                   S H E A R'
+'      5301        0  0.000000E+00/ 0.000000E+00  0.000000E+00/ 0.000000E+00  0.000000E+00/ 0.000000E+00  0.000000E+00/ 0.000000E+00'
+'               5301  0.000000E+00/ 0.000000E+00  0.000000E+00/ 0.000000E+00  0.000000E+00/ 0.000000E+00  0.000000E+00/ 0.000000E+00'
+'               5303  0.000000E+00/ 0.000000E+00  0.000000E+00/ 0.000000E+00  0.000000E+00/ 0.000000E+00  0.000000E+00/ 0.000000E+00'
+'               5305  0.000000E+00/ 0.000000E+00  0.000000E+00/ 0.000000E+00  0.000000E+00/ 0.000000E+00  0.000000E+00/ 0.000000E+00'
+''
+'      5311        0  0.000000E+00/ 0.000000E+00  0.000000E+00/ 0.000000E+00  0.000000E+00/ 0.000000E+00  0.000000E+00/ 0.000000E+00'

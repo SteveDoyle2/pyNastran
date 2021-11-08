@@ -69,7 +69,7 @@ from pyNastran.op2.tables.oes_stressStrain.complex.oes_plates import ComplexPlat
 from pyNastran.op2.tables.oes_stressStrain.complex.oes_composite_plates import ComplexLayeredCompositeStressArray, ComplexLayeredCompositeStrainArray
 from pyNastran.op2.tables.oes_stressStrain.complex.oes_plates_vm import (
     ComplexPlateVMStressArray, ComplexPlateVMStrainArray)
-from pyNastran.op2.tables.oes_stressStrain.complex.oes_triax import ComplexTriaxStressArray
+from pyNastran.op2.tables.oes_stressStrain.complex.oes_triax import ComplexTriaxStressArray, ComplexTriaxStrainArray
 from pyNastran.op2.tables.oes_stressStrain.complex.oes_rods import ComplexRodStressArray, ComplexRodStrainArray
 from pyNastran.op2.tables.oes_stressStrain.complex.oes_shear import ComplexShearStressArray, ComplexShearStrainArray
 from pyNastran.op2.tables.oes_stressStrain.complex.oes_solids import ComplexSolidStressArray, ComplexSolidStrainArray
@@ -6413,11 +6413,9 @@ class OES(OP2Common2):
             if op2.is_stress:
                 #print('op2.element_type', op2.element_type)
                 #print('op2.element_name', op2.element_name)
-                #raise NotImplementedError('ComplexTriaxStressArray')
                 obj_vector_complex = ComplexTriaxStressArray
             else:
-                raise NotImplementedError('ComplexTriaxStrainArray')
-                #obj_vector_complex = ComplexTriaxStrainArray
+                obj_vector_complex = ComplexTriaxStrainArray
 
             num_wide = 1 + 4 * 9
             ntotal = num_wide * 4 * self.factor
