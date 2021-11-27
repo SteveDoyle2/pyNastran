@@ -440,7 +440,7 @@ def cmd_line_renumber(argv=None, quiet=False):
                      cards_to_skip=cards_to_skip, log=log)
 
 
-def cmd_line_mirror(argv=None, quiet=False):
+def cmd_line_mirror(argv=None, quiet: bool=False):
     """command line interface to write_bdf_symmetric"""
     if argv is None:
         argv = sys.argv
@@ -553,6 +553,107 @@ def cmd_line_mirror(argv=None, quiet=False):
         with open(bdf_filename_out, 'w') as bdf_file:
             bdf_file.write(bdf_filename_stringio.getvalue())
 
+
+def cmd_line_flip_shell_normals(argv=None, quiet: bool=False):
+    """command line interface to flip_shell_normals"""
+    if argv is None:
+        argv = sys.argv
+
+    from docopt import docopt
+    import pyNastran
+    msg = (
+        "Usage:\n"
+        "  bdf flip_shell_normals IN_BDF_FILENAME [-o OUT_BDF_FILENAME] [--punch] [--zero_zoffset]\n"
+        "  bdf flip_shell_normals IN_BDF_FILENAME [-o OUT_BDF_FILENAME] [--punch] [--zero_zoffset]\n"
+        '  bdf flip_shell_normals -h | --help\n'
+        '  bdf flip_shell_normals -v | --version\n'
+        '\n'
+
+        "Positional Arguments:\n"
+        "  IN_BDF_FILENAME    path to input BDF/DAT/NAS file\n"
+        #"  OUT_BDF_FILENAME   path to output BDF/DAT/NAS file\n"
+        '\n'
+
+        'Options:\n'
+        "  -o OUT, --output  OUT_BDF_FILENAME  path to output BDF/DAT/NAS file\n"
+        '  --punch                             flag to identify a *.pch/*.inc file\n'
+        "\n" #  (default=0.000001)
+
+        'Info:\n'
+        '  -h, --help      show this help message and exit\n'
+        "  -v, --version   show program's version number and exit\n"
+    )
+    if len(argv) == 1:
+        sys.exit(msg)
+
+    ver = str(pyNastran.__version__)
+    #type_defaults = {
+    #    '--nerrors' : [int, 100],
+    #}
+    data = docopt(msg, version=ver, argv=argv[1:])
+
+    if not quiet:  # pragma: no cover
+        print(data)
+    size = 16
+    punch = data['--punch']
+    zero_zoffset = data['--zero_zoffset']
+    bdf_filename = data['IN_BDF_FILENAME']
+    bdf_filename_out = data['--output']
+    if bdf_filename_out is None:
+        bdf_filename_out = 'flipped_shell_normals.bdf'
+
+    #from io import StringIO
+    from pyNastran.bdf.bdf import read_bdf, BDF
+
+    level = 'debug' if not quiet else 'warning'
+    log = SimpleLogger(level=level, encoding='utf-8', log_func=None)
+    model = BDF(log=log)
+    model.set_error_storage(nparse_errors=100, stop_on_parsing_error=True,
+                            nxref_errors=100, stop_on_xref_error=False)
+    model = read_bdf(bdf_filename, punch=punch, log=log, xref=False)
+
+    skip_elements = {
+        # nothing to convert (verified)
+        'CCONEAX',
+        'CELAS1', 'CELAS2', 'CELAS3', 'CELAS4',
+        'CDAMP1', 'CDAMP2', 'CDAMP3', 'CDAMP4', 'CDAMP5',
+        'CMASS1', 'CMASS2', 'CMASS3', 'CMASS4',
+        'CVISC', 'CBUSH', 'CBUSH1D', 'CBUSH2D',
+        'CROD', 'CTUBE',
+        'CBAR', 'CBEAM',
+        'CSHEAR', 'CQUADX', 'CTRIAX', 'CTRIAX6',
+        'CTETRA', 'CPENTA', 'CHEXA', 'CPYRAM',
+        'CRAC2D', 'CRAC3D',
+        'CHBDYG', 'CHBDYE', 'CHBDYP',
+
+        # TODO: NX-verify
+        'CTRAX3', 'CTRAX6',
+        'CPLSTN3', 'CPLSTN6', 'CPLSTN4', 'CPLSTN8',
+        'CQUADX4', 'CQUADX8',
+
+        # acoustic
+        'CHACAB',
+
+    }
+
+    shells = {
+        'CTRIA3', 'CTRIA6', 'CTRIAR',
+        'CQUAD4', 'CQUAD8', 'CQUADR', 'CQUAD',
+    }
+    for eid, elem in model.elements.items():
+        elem_type = elem.type
+        if elem_type in shells:
+            elem.flip_normal()
+            if zero_zoffset:
+                elem.zoffset = 0.
+        elif elem_type in skip_elements:
+            pass
+        else:
+            log.warning(f'cannot flip {elem_type}')
+
+    model.write_bdf(bdf_filename_out, encoding=None,
+                    size=size, nodes_size=16, elements_size=8, loads_size=8,
+                    is_double=False, interspersed=False, enddata=None, write_header=True, close=True)
 
 def cmd_line_merge(argv=None, quiet=False):
     """command line interface to bdf_merge"""
@@ -1295,6 +1396,7 @@ def cmd_line(argv=None, quiet=False):
         '  bdf scale                       IN_BDF_FILENAME [-o OUT_BDF_FILENAME] [--lsf LENGTH_SF] [--msf MASS_SF] [--fsf FORCE_SF] [--psf PRESSURE_SF] [--tsf TIME_SF] [--vsf VEL_SF]\n'
         '  bdf export_mcids                IN_BDF_FILENAME [-o OUT_CSV_FILENAME] [--no_x | --no_y]\n'
         '  bdf free_faces                  BDF_FILENAME SKIN_FILENAME [-d | -l] [-f] [--encoding ENCODE]\n'
+        '  bdf flip_shell_normals          IN_BDF_FILENAME [-o OUT_BDF_FILENAME] [--punch] [--zero_zoffset]\n'
         '  bdf transform                   IN_BDF_FILENAME [-o OUT_BDF_FILENAME] [--shift XYZ]\n'
         '  bdf export_caero_mesh           IN_BDF_FILENAME [-o OUT_BDF_FILENAME] [--subpanels] [--pid PID]\n'
         '  bdf split_cbars_by_pin_flags    IN_BDF_FILENAME [-o OUT_BDF_FILENAME] [-p PIN_FLAGS_CSV_FILENAME]\n'
@@ -1316,6 +1418,7 @@ def cmd_line(argv=None, quiet=False):
         '  bdf scale              -h | --help\n'
         '  bdf export_mcids       -h | --help\n'
         '  bdf free_faces         -h | --help\n'
+        '  bdf flip_shell_normals -h | --help\n'
         '  bdf transform          -h | --help\n'
         '  bdf filter             -h | --help\n'
         '  bdf export_caero_mesh  -h | --help\n'
@@ -1360,6 +1463,8 @@ def cmd_line(argv=None, quiet=False):
         cmd_line_filter(argv, quiet=quiet)
     elif argv[1] == 'free_faces':
         cmd_line_free_faces(argv, quiet=quiet)
+    elif argv[1] == 'flip_shell_normals':
+        cmd_line_flip_shell_normals(argv=argv, quiet=quiet)
     elif argv[1] == 'bin' and dev:
         cmd_line_bin(argv, quiet=quiet)
     elif argv[1] == 'create_vectorized_numbered' and dev:

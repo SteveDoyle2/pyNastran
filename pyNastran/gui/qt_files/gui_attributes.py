@@ -1265,7 +1265,7 @@ class GuiAttributes:
         unused_zaxis_xyz = self.model.coords[cid_zaxis].transform_node_to_global(zaxis)
 
     #---------------------------------------------------------------------------
-    def get_result_by_xyz_cell_id(self, node_xyz, cell_id):
+    def get_result_by_xyz_cell_id(self, node_xyz, cell_id: int):
         """won't handle multiple cell_ids/node_xyz"""
         out = self.mark_actions.get_result_by_xyz_cell_id(node_xyz, cell_id)
         if out is None:
@@ -1273,14 +1273,15 @@ class GuiAttributes:
         result_name, result_values, node_id, xyz = out
         return result_name, result_values, node_id, xyz
 
-    def get_result_by_cell_id(self, cell_id, world_position, icase=None):
+    def get_result_by_cell_id(self, cell_id: int, world_position, icase=None):
         """should handle multiple cell_ids"""
         res_name, result_values, xyz = self.mark_actions.get_result_by_cell_id(
             cell_id, world_position, icase=icase)
         return res_name, result_values, xyz
 
-    def mark_elements(self, eids,
-                      stop_on_failure: bool=False, show_command: bool=True):
+    def mark_elements(self, eids: List[int],
+                      stop_on_failure: bool=False,
+                      show_command: bool=True):
         """mark the elements by the ElementID"""
         icase_result = 1 # ElementID
         icase_to_apply = self.icase
@@ -1289,8 +1290,9 @@ class GuiAttributes:
             stop_on_failure=stop_on_failure, show_command=False)
         self.log_command(f'mark_elements(eids={eids})')
 
-    def mark_elements_by_case(self, eids,
-                              stop_on_failure: bool=False, show_command: bool=True):
+    def mark_elements_by_case(self, eids: List[int],
+                              stop_on_failure: bool=False,
+                              show_command: bool=True):
         """mark the elements by the current case"""
         icase_result = self.icase
         icase_to_apply = self.icase
@@ -1299,8 +1301,11 @@ class GuiAttributes:
             stop_on_failure=stop_on_failure, show_command=False)
         self.log_command(f'mark_elements_by_case(eids={eids})')
 
-    def mark_elements_by_different_case(self, eids, icase_result: int, icase_to_apply: int,
-                                        stop_on_failure: bool=False, show_command: bool=False):
+    def mark_elements_by_different_case(self, eids: List[int],
+                                        icase_result: int,
+                                        icase_to_apply: int,
+                                        stop_on_failure: bool=False,
+                                        show_command: bool=False):
         """
         Marks a series of elements with custom text labels
 

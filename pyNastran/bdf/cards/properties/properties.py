@@ -64,7 +64,7 @@ class PFAST(Property):
     def __init__(self, pid, d, kt1, kt2, kt3, mcid=-1, mflag=0,
                  kr1=0., kr2=0., kr3=0., mass=0., ge=0., comment=''):
         """
-        Creates a PAST card
+        Creates a PFAST card
 
         Parameters
         ----------

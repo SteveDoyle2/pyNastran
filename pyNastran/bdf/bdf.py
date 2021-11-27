@@ -4284,7 +4284,14 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
                     continue
 
                 if self.is_reject(card_name):
-                    self.reject_card_lines(card_name, card_lines, comment=comment)
+                    try:
+                        self.reject_card_lines(card_name, card_lines, comment=comment)
+                    except:
+                        card_old = cards_list[icard-1]
+                        old_card_name, old_comment, old_card_lines, unused_ifile_iline = card_old
+                        self.log.error('Last card was:\n%s' % '\n'.join(old_card_lines))
+                        print('Last card was:\n%s' % '\n'.join(old_card_lines))
+                        raise
                 else:
                     add_card(card_lines, card_name, comment=comment, ifile=ifile,
                              is_list=False, has_none=False)

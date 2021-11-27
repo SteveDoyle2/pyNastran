@@ -449,6 +449,7 @@ class MAT1(IsotropicMaterial):
         self.Sc = Sc
         self.Ss = Ss
         self.mcsid = mcsid
+        assert rho is not None, rho
 
     @classmethod
     def export_to_hdf5(cls, h5_file, model, mids):
@@ -524,17 +525,18 @@ class MAT1(IsotropicMaterial):
         G = double_or_blank(card, 3, 'G')
         nu = double_or_blank(card, 4, 'nu')
 
-        rho = double_or_blank(card, 5, 'rho', 0.)
-        a = double_or_blank(card, 6, 'a', 0.0)
-        tref = double_or_blank(card, 7, 'tref', 0.0)
-        ge = double_or_blank(card, 8, 'ge', 0.0)
-        St = double_or_blank(card, 9, 'St', 0.0)
-        Sc = double_or_blank(card, 10, 'Sc', 0.0)
-        Ss = double_or_blank(card, 11, 'Ss', 0.0)
+        rho = double_or_blank(card, 5, 'rho', default=0.)
+        a = double_or_blank(card, 6, 'a', default=0.0)
+        tref = double_or_blank(card, 7, 'tref', default=0.0)
+        ge = double_or_blank(card, 8, 'ge', default=0.0)
+        St = double_or_blank(card, 9, 'St', default=0.0)
+        Sc = double_or_blank(card, 10, 'Sc', default=0.0)
+        Ss = double_or_blank(card, 11, 'Ss', default=0.0)
         mcsid = integer_or_blank(card, 12, 'mcsid', 0)
         assert len(card) <= 13, f'len(MAT1 card) = {len(card):d}\ncard={card}'
-        return MAT1(mid, E, G, nu, rho, a, tref, ge,
-                    St, Sc, Ss, mcsid, comment=comment)
+        return MAT1(mid, E, G, nu,
+                    rho=rho, a=a, tref=tref, ge=ge,
+                    St=St, Sc=Sc, Ss=Ss, mcsid=mcsid, comment=comment)
 
     @classmethod
     def add_card_lax(cls, card, comment=''):

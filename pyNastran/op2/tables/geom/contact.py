@@ -2,7 +2,6 @@
 defines readers for BDF objects in the OP2 CONTACT/CONTACTS table
 """
 from __future__ import annotations
-#from struct import Struct
 from typing import TYPE_CHECKING
 
 import numpy as np

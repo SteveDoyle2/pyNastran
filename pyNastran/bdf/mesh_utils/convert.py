@@ -1677,8 +1677,10 @@ def _convert_dconstr(model: BDF, dconstr: DCONSTR, pressure_scale: float) -> Non
             for atti in dresp.atti:
                 #label = dresp.label
                 #atti_type = atti.type
-                if response_type == 'STRESS':
+                if response_type in {'STRESS', 'CSTRESS'}:
                     scale = pressure_scale
+                elif response_type in {'STRAIN', 'CSTRAIN'}:
+                    scale = 1.
                 else:
                     raise RuntimeError(atti)
                 #if atti

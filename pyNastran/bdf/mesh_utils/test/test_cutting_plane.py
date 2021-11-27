@@ -376,7 +376,7 @@ class TestCuttingPlane(unittest.TestCase):
         assert np.array_equal(iedges, [[0, 1, 2, 3, 0], [4, 5, 6, 7, 4]]), 'iedges=%s' % iedges
 
 
-def get_coords_bwb(ncuts=2000):
+def get_coords_bwb(ncuts: int=2000) -> Tuple[List[float], List[CORD2R]]:  # pragma: no cover
     dys = []
     coords = []
     for i in range(ncuts):
@@ -386,7 +386,7 @@ def get_coords_bwb(ncuts=2000):
         coords.append(coord)
     return dys, coords
 
-def get_coords_crm(ncuts=2000):  # pragma: no cover
+def get_coords_crm(ncuts: int=2000) -> Tuple[List[float], List[CORD2R]]:  # pragma: no cover
     dys = []
     coords = []
     for i in range(ncuts):
@@ -396,7 +396,7 @@ def get_coords_crm(ncuts=2000):  # pragma: no cover
         coords.append(coord)
     return dys, coords
 
-def get_coords_box(ncuts):  # pragma: no cover
+def get_coords_box(ncuts: int) -> Tuple[List[float], List[CORD2R]]:  # pragma: no cover
     dys = []
     coords = []
     for i in range(ncuts):

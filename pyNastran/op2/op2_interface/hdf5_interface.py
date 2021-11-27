@@ -116,7 +116,6 @@ from pyNastran.op2.tables.oef_forces.oef_force_objects import (
     RealViscForceArray, RealCBearForceArray,
     RealCWeldForceArray, RealCWeldForceArrayMSC,
     RealCFastForceArrayNX, RealCFastForceArrayMSC,
-
 )
 from pyNastran.op2.tables.oef_forces.oef_complex_force_objects import (
     ComplexCBarForceArray, ComplexCBeamForceArray,

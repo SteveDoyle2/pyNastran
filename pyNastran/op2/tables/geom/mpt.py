@@ -324,7 +324,6 @@ class MPT:
              ge1, ge2, ge3, ge4, ge5, ge6) = out
             #ge_list = (ge1, ge2, ge3, ge4, ge5, ge6)
             n += ntotal
-            #print(out)
             if mid == -1:
                 continue
             assert mid > 0, mid
@@ -495,7 +494,6 @@ class MPT:
         #         .017                            .03
         # $       GE45    GE46    GE55    GE56    GE66
         #                         .03             .03
-
         if op2.is_debug_file:
             op2.binary_debug.write(
                 '  MAT9=(mid, g1, g2, g3, g4, g5, g6, g7, g8, g9, g10, '

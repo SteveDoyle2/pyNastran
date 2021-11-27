@@ -481,10 +481,13 @@ class GetCard(GetMethods):
             self, nelements, pids, fdtype=fdtype, idtype=idtype)
         return dvprel_dict
 
-    def get_reduced_loads(self, load_case_id, scale=1.,
-                          consider_load_combinations=True,
-                          skip_scale_factor0=False,
-                          stop_on_failure=True, msg=''):
+    def get_reduced_loads(self,
+                          load_case_id: int,
+                          scale: float=1.,
+                          consider_load_combinations: bool=True,
+                          skip_scale_factor0: bool=False,
+                          stop_on_failure: bool=True,
+                          msg: str=''):
         """
         Accounts for scale factors.
 

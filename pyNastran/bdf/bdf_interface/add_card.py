@@ -5837,7 +5837,7 @@ class AddCards:
             output and plots
         omax : float
             For the PKS and PKNLS methods, OMAX specifies the maximum
-            frequency, in Hz., to be used in he flutter sweep.
+            frequency (Hz), to be used in he flutter sweep.
             MSC only.
         epsilon : float; default=1.0e-3
             Convergence parameter for k. Used in the PK and PKNL methods only

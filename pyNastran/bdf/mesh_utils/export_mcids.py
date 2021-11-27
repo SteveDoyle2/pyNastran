@@ -261,10 +261,10 @@ def export_mcids_all(bdf_filename: Union[BDF, str],
 
     elements = _get_elements(model, eids)
 
-    # -1: MCID?
-    #  0: element coord?
-    #  1: ply 1
-    #  2: ply 2
+    # -2: elment coord
+    #  -1: MCID
+    #  0: ply 1
+    #  1: ply 2
     # ...
     iply_to_nids = {iply : 0 for iply in range(-2, nplies_max)}
     iply_to_nodes = {iply : [] for iply in range(-2, nplies_max)}

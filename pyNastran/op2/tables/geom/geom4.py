@@ -883,7 +883,7 @@ class GEOM4(GeomCommon):
         """
         op2 = self.op2
         log = op2.log
-        log.debug('read_spc_mpc')
+        #log.debug('read_spc_mpc')
         ntotal = 20
         nentries = (len(data) - n) // ntotal
         assert nentries > 0, nentries

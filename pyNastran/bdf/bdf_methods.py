@@ -8,7 +8,7 @@ reading/writing/accessing of BDF data.  Such methods include:
 
 """
 from collections import defaultdict
-from typing import List, Dict, Any, Optional, Union
+from typing import Tuple, List, Dict, Any, Optional, Union
 
 import numpy as np
 
@@ -28,7 +28,7 @@ class BDFMethods(BDFAttributes):
     def __init__(self):
         BDFAttributes.__init__(self)
 
-    def get_length_breakdown(self, property_ids=None, stop_if_no_length=True):
+    def get_length_breakdown(self, property_ids=None, stop_if_no_length: bool=True):
         """
         gets a breakdown of the length by property region
 
@@ -37,27 +37,36 @@ class BDFMethods(BDFAttributes):
         """
         return get_length_breakdown(self, property_ids=property_ids, stop_if_no_length=stop_if_no_length)
 
-    def get_area_breakdown(self, property_ids=None, stop_if_no_area=True, sum_bar_area=True):
+    def get_area_breakdown(self, property_ids=None,
+                           stop_if_no_area: bool=True,
+                           sum_bar_area: bool=True) -> Dict[int, float]:
         """
-        gets a breakdown of the area by property region
+        Gets a breakdown of the area by property region
 
-        TODO: What about CONRODs?
-        #'PBRSECT',
-        #'PBCOMP',
-        #'PBMSECT',
-        #'PBEAM3',
-        #'PBEND',
-        #'PIHEX',
-        #'PCOMPS',
-
+        Parameters
+        ----------
+        property_ids : List[int] / int
+            list of property ID
+        stop_if_no_area : bool; default=True
+            prevents crashing if there are no elements
         sum_bar_area : bool; default=True
             sum the areas for CBAR/CBEAM/CROD/CONROD/CTUBE elements
-            True : get the area of the model by property id
-            False : only get the cross sectional properties
+            True : get the area of the model by property id (e.g., A=A_pid*Nelements)
+            False : only get the cross sectional properties (e.g., A=A_pid)
+
+        Returns
+        -------
+        pids_to_area : Dict[int pid] : float area
+            the pid to area dictionary
+
+        TODO: What about CONRODs?
+        #'PBRSECT', 'PBCOMP', 'PBMSECT', 'PBEAM3', 'PBEND', 'PIHEX', 'PCOMPS',
 
         """
-        return get_area_breakdown(self, property_ids=property_ids,
-                                  stop_if_no_area=stop_if_no_area, sum_bar_area=sum_bar_area)
+        pids_to_area = get_area_breakdown(self, property_ids=property_ids,
+                                          stop_if_no_area=stop_if_no_area,
+                                          sum_bar_area=sum_bar_area)
+        return pids_to_area
 
     def get_volume_breakdown(self, property_ids: Optional[int]=None,
                              stop_if_no_volume: bool=True) -> Dict[int, float]:
@@ -78,8 +87,42 @@ class BDFMethods(BDFAttributes):
 
     def get_mass_breakdown(self,
                            property_ids: Optional[int]=None,
-                           stop_if_no_mass: bool=True,
-                           detailed: bool=False) -> Dict[int, float]:
+                           stop_if_no_mass: bool=True) -> Tuple[
+                               Dict[int, float],
+                               Dict[str, float]]:
+        """
+        Gets a breakdown of the mass by property region.
+
+        Parameters
+        ----------
+        property_ids : List[int] / int
+            list of property ID
+        stop_if_no_mass : bool; default=True
+            prevents crashing if there are no elements
+            setting this to False really doesn't make sense for non-DMIG models
+
+        Returns
+        -------
+        pids_to_mass : dict {int : float, ...}
+            Map from property id to mass.
+        mass_type_to_mass : dict {str : float, ...}
+            Map from mass id to mass for mass elements.
+
+        TODO: What about CONRODs, CONM2s?
+        #'PBCOMP', 'PBMSECT', 'PBEAM3', 'PBEND', 'PIHEX', 'PCOMPS',
+
+        """
+        pids_to_mass, mass_type_to_mass = get_mass_breakdown(
+            self, property_ids=property_ids,
+            stop_if_no_mass=stop_if_no_mass, detailed=False)
+        return pids_to_mass, mass_type_to_mass
+
+    def get_mass_breakdown_detailed(self,
+                                    property_ids: Optional[int]=None,
+                                    stop_if_no_mass: bool=True) -> Tuple[
+                                        Dict[int, float],
+                                        Dict[int, float],
+                                        Dict[str, float]]:
         """
         Gets a breakdown of the mass by property region.
 
@@ -94,25 +137,22 @@ class BDFMethods(BDFAttributes):
             Separates structural and nonstructural mass outputs.
 
         Returns
-        --------
+        -------
         pids_to_mass : dict {int : float, ...}
-            Map from property id to mass (structural mass only if detailed is True).
-        pids_to_mass_nonstructural : dict {int : float, ...}, optional
-            Map from property id to nonstructural mass (only if detailed is True).
+            Map from property id to structural mass.
+        pids_to_mass_nonstructural : dict {int : float, ...}
+            Map from property id to nonstructural mass.
         mass_type_to_mass : dict {str : float, ...}
             Map from mass id to mass for mass elements.
 
         TODO: What about CONRODs, CONM2s?
-        #'PBCOMP',
-        #'PBMSECT',
-        #'PBEAM3',
-        #'PBEND',
-        #'PIHEX',
-        #'PCOMPS',
+        #'PBCOMP', 'PBMSECT', 'PBEAM3', 'PBEND', 'PIHEX', 'PCOMPS',
 
         """
-        return get_mass_breakdown(self, property_ids=property_ids,
-                                  stop_if_no_mass=stop_if_no_mass, detailed=detailed)
+        pids_to_mass, pids_to_mass_nonstructural, mass_type_to_mass = get_mass_breakdown(
+            self, property_ids=property_ids,
+            stop_if_no_mass=stop_if_no_mass, detailed=True)
+        return pids_to_mass, pids_to_mass_nonstructural, mass_type_to_mass
 
     def mass_properties(self, element_ids=None, mass_ids=None,
                         reference_point=None,

@@ -10,6 +10,8 @@ All bar properties are defined in this file.  This includes:
 All bars are LineProperty objects.
 Multi-segment beams are IntegratedLineProperty objects.
 
+shoelace formula
+second moment of area on wikipedia
 """
 from __future__ import annotations
 from itertools import count
@@ -1424,6 +1426,17 @@ class PBAR(LineProperty):
         return self.comment + print_card_16(card)
 
 
+PBARL_MSG = '\n' + """
++-------+------+------+-------+------+------+------+------+------+
+|   1   |   2  |   3  |   4   |   5  |   6  |   7  |   8  |   9  |
++=======+======+======+=======+======+======+======+======+======+
+| PBARL | PID  | MID  | GROUP | TYPE |      |      |      |      |
++-------+------+------+-------+------+------+------+------+------+
+|       | DIM1 | DIM2 | DIM3  | DIM4 | DIM5 | DIM6 | DIM7 | DIM8 |
++-------+------+------+-------+------+------+------+------+------+
+|       | DIM9 | etc. |  NSM  |      |      |      |      |      |
++-------+------+------+-------+------+------+------+------+------+""".strip()
+
 class PBARL(LineProperty):
     """
     .. todo:: doesnt support user-defined types
@@ -1610,18 +1623,18 @@ class PBARL(LineProperty):
             for i in range(ndim):
                 if i in [4, 5, 6, 7]:
                     dim4 = dim[3]
-                    dimi = double_or_blank(card, 9 + i, 'ndim=%s; dim%i' % (ndim, i + 1),
-                                           default=dim4)
+                    dimi = double_or_blank(card, 9 + i, f'ndim={ndim}; dim{i+1}',
+                                           default=dim4, end=PBARL_MSG)
                 elif i in [8, 9]:
                     dim6 = dim[5]
-                    dimi = double_or_blank(card, 9 + i, 'ndim=%s; dim%i' % (ndim, i + 1),
-                                           default=dim6)
+                    dimi = double_or_blank(card, 9 + i, f'ndim={ndim}; dim{i+1}',
+                                           default=dim6, end=PBARL_MSG)
                 else:
-                    dimi = double(card, 9 + i, 'ndim=%s; dim%i' % (ndim, i + 1))
+                    dimi = double(card, 9 + i, f'ndim={ndim}; dim{i+1}', end=PBARL_MSG)
                 dim.append(dimi)
         else:
             for i in range(ndim):
-                dimi = double(card, 9 + i, 'ndim=%s; dim%i' % (ndim, i + 1))
+                dimi = double(card, 9 + i, f'ndim={ndim}; dim{i+1}', end=PBARL_MSG)
                 dim.append(dimi)
 
         #: dimension list
