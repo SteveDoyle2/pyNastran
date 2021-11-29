@@ -158,42 +158,33 @@ class GridPointWeight:
                    '[reference_point, M0, S, mass, cg, IS, IQ, Q]\n' % (
                        self.reference_point, self.mass.max()))
         else:
+            RB = self.MO
             msg = (
                 f'GridPointWeight{key2}:'
-                '  reference_point=%s\n'
-                '  mass=[%10g %10g %10g]\n'
-                '  cg  =[%10g %10g %10g]\n'
-                '       [%10g %10g %10g]\n'
-                '       [%10g %10g %10g]\n\n'
+                f'  reference_point={self.reference_point:d}\n'
+                f'  mass=[{self.mass[0]:10g} {self.mass[1]:10g} {self.mass[2]:10g}]\n'
+                f'  cg = [{self.cg[0, 0]:10g} {self.cg[0, 1]:10g} {self.cg[0, 2]:10g}]\n'
+                f'       [{self.cg[1, 0]:10g} {self.cg[1, 1]:10g} {self.cg[1, 2]:10g}]\n'
+                f'       [{self.cg[2, 0]:10g} {self.cg[2, 1]:10g} {self.cg[2, 2]:10g}]\n\n'
 
-                '  IS  =[%10g %10g %10g]\n'
-                '       [%10g %10g %10g]\n'
-                '       [%10g %10g %10g]\n\n'
+                f'  MO = [{RB[0, 0]:10g} {RB[0, 1]:10g} {RB[0, 2]:10g} {RB[0, 3]:10g} {RB[0, 4]:10g} {RB[0, 5]:10g}]\n'
+                f'       [{RB[1, 0]:10g} {RB[1, 1]:10g} {RB[1, 2]:10g} {RB[1, 3]:10g} {RB[1, 4]:10g} {RB[1, 5]:10g}]\n'
+                f'       [{RB[2, 0]:10g} {RB[2, 1]:10g} {RB[2, 2]:10g} {RB[2, 3]:10g} {RB[2, 4]:10g} {RB[2, 5]:10g}]\n'
+                f'       [{RB[3, 0]:10g} {RB[3, 1]:10g} {RB[3, 2]:10g} {RB[3, 3]:10g} {RB[3, 4]:10g} {RB[3, 5]:10g}]\n'
+                f'       [{RB[4, 0]:10g} {RB[4, 1]:10g} {RB[4, 2]:10g} {RB[4, 3]:10g} {RB[4, 4]:10g} {RB[4, 5]:10g}]\n'
+                f'       [{RB[5, 0]:10g} {RB[5, 1]:10g} {RB[5, 2]:10g} {RB[5, 3]:10g} {RB[5, 4]:10g} {RB[5, 5]:10g}]\n\n'
 
-                '  IQ  =[%10g %10s %10s]\n'
-                '       [%10s %10g %10s]\n'
-                '       [%10s %10s %10g]\n\n'
+                f'  IS = [{self.IS[0, 0]:10g} {self.IS[0, 1]:10g} {self.IS[0, 2]:10g}]\n'
+                f'       [{self.IS[1, 0]:10g} {self.IS[1, 1]:10g} {self.IS[1, 2]:10g}]\n'
+                f'       [{self.IS[2, 0]:10g} {self.IS[2, 1]:10g} {self.IS[2, 2]:10g}]\n\n'
 
-                '  Q  = [%10g %10g %10g]\n'
-                '       [%10g %10g %10g]\n'
-                '       [%10g %10g %10g]\n' % (
-                    self.reference_point, self.mass[0], self.mass[1], self.mass[2],
-                    self.cg[0, 0], self.cg[0, 1], self.cg[0, 2],
-                    self.cg[1, 0], self.cg[1, 1], self.cg[1, 2],
-                    self.cg[2, 0], self.cg[2, 1], self.cg[2, 2],
+                f"  IQ = [{self.IQ[0]:10g} {'':10s} {'':10s}]\n"
+                f"       [{'':10s} {self.IQ[1]:10g} {'':10s}]\n"
+                f"       [{'':10s} {'':10s} {self.IQ[2]:10g}]\n\n"
 
-                    self.IS[0, 0], self.IS[0, 1], self.IS[0, 2],
-                    self.IS[1, 0], self.IS[1, 1], self.IS[1, 2],
-                    self.IS[2, 0], self.IS[2, 1], self.IS[2, 2],
-
-                    self.IQ[0], '', '',
-                    '', self.IQ[1], '',
-                    '', '', self.IQ[2],
-
-                    self.Q[0, 0], self.Q[0, 1], self.Q[0, 2],
-                    self.Q[1, 0], self.Q[1, 1], self.Q[1, 2],
-                    self.Q[2, 0], self.Q[2, 1], self.Q[2, 2],
-                    )
+                f'  Q  = [{self.Q[0, 0]:10g} {self.Q[0, 1]:10g} {self.Q[0, 2]:10g}]\n'
+                f'       [{self.Q[1, 0]:10g} {self.Q[1, 1]:10g} {self.Q[1, 2]:10g}]\n'
+                f'       [{self.Q[2, 0]:10g} {self.Q[2, 1]:10g} {self.Q[2, 2]:10g}]\n'
             )
         return msg
 
@@ -239,7 +230,7 @@ class GridPointWeight:
         num_wide = 79 # self.num_wide
         #acoustic_flag = self.acoustic_flag if hasattr(self, 'acoustic_flag') else 0
         reference_point = self.reference_point
-        reference_point = 22
+        #reference_point = 22
         #thermal = self.thermal
         title = b'%-128s' % self.title.encode('ascii')
         subtitle = b'%-128s' % self.subtitle.encode('ascii')  # missing superelement_adaptivity_index
@@ -344,7 +335,7 @@ class GridPointWeight:
         self._write_table_3(op2_file, op2_ascii, new_result, table_name, itable)
 
         # record 4
-        itable -= 1
+        itable -= 1  # -4
         header = [4, itable, 4,
                   4, 1, 4,
                   4, 0, 4,

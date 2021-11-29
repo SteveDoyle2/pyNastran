@@ -147,6 +147,7 @@ class OUG:
     def _read_oug1_3(self, data: bytes, ndata: int):
         """reads table 3 (the header table)"""
         op2 = self.op2
+        assert ndata == 146 * op2.size
         #self._set_times_dtype()
         op2.nonlinear_factor = np.nan
         op2.is_table_1 = True

@@ -351,6 +351,9 @@ class OQG:
         """
         This function is called by:
 
+        spc_forces: MSC=OQGV1, table_code=3;  NX=OQGV1, table_code=3  # not 100%
+        mpc_forces: MSC=OQGV1, table_code=39; NX=OQGM1, table_code=3  # not 100%
+
         MSC : SPC/MPC forces
          - SPC forces table_code = 3  (OQGPSD1 ???)
          - MPC forces table_code = 39 (OQGPSD1 ???)

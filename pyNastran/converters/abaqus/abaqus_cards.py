@@ -26,7 +26,7 @@ allowed_element_types = [
     's8r',
 
     # solid
-    'c3d4',
+    'c3d4', 'c3d10',
 ]
 
 class ShellSection:

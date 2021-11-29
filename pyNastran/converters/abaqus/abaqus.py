@@ -1,5 +1,7 @@
 """Defines the Abaqus class"""
 from typing import Tuple, List, Dict, Union, Optional, Any
+from io import StringIO
+
 import numpy as np
 from cpylog import SimpleLogger, get_logger2
 from pyNastran.converters.abaqus.abaqus_cards import (
@@ -67,6 +69,8 @@ class Abaqus:
                 lines = abaqus_inp.readlines()
         elif isinstance(abaqus_inp_filename, list):
             lines = abaqus_inp_filename
+        elif isinstance(abaqus_inp_filename, StringIO):
+            lines = abaqus_inp_filename.readlines()
         else:
             msg = 'abaqus_inp_filename=%s type=%r' % (
                 abaqus_inp_filename, type(abaqus_inp_filename))
@@ -867,7 +871,8 @@ class Abaqus:
 
     def read_step(self, lines, iline, line0, istep):
         """reads a step object"""
-        self.log.debug('  start of step %i...' % istep)
+        log = self.log
+        log.debug('  start of step %i...' % istep)
 
         boundaries = []
         outputs = []
@@ -884,6 +889,14 @@ class Abaqus:
         # Increase from T=117.0C to T=122.0C over 300.0 seconds  (1C/min)
         # *Static
         # 0.01, 1., 1e-05, 0.01
+        #
+        # case 3
+        # ------
+        # *STEP
+        # *STATIC
+        # *CLOAD
+        # LOAD,2,-25
+
         iline += 1
         line0 = lines[iline].strip().lower()
         step_name = ''
@@ -907,8 +920,14 @@ class Abaqus:
             unused_data_lines = []
             if word == 'static':
                 sline = line0.split(',')
-                assert len(sline) == 4, sline
-                iline += 1
+                _line = lines[iline].strip().lower()
+                if _line.startswith('*'):
+                    pass
+                else:
+                    # 0.01, 1., 1e-05, 0.01
+                    #print('sline', sline, line0)
+                    assert len(sline) == 4, sline
+                    iline += 1
             elif word.startswith('restart'):
                 line0 = lines[iline].strip().lower()
                 word = line0.strip('*').lower()
@@ -985,7 +1004,7 @@ class Abaqus:
                     iline += 1
                     line0 = lines[iline].strip().lower()
             elif word.startswith('cload'):
-                iline, line0, cload = read_cload(line0, lines, iline)
+                iline, line0, cload = read_cload(line0, lines, iline, log)
                 cloads.append(cload)
             elif word.startswith('node print'):
                 node_output = []
@@ -1090,7 +1109,37 @@ def get_nodes_nnodes_nelements(model: Abaqus, stop_for_no_elements: bool=True):
         nodes = np.vstack(all_nodes)
     return nnodes, nids, nodes, nelements
 
-def read_cload(line0, lines, iline) -> Tuple[int, str, Any]:
+def read_cload(line0, lines, iline, log: SimpleLogger) -> Tuple[int, str, Any]:
+    """
+    First line
+    ----------
+     1. Node number or node set label.
+     2. Concentrated load type label, TSB.
+     3. Magnitude factor, M. The default value is 1.0. This factor will
+        be scaled by any *AMPLITUDE specification associated with this *CLOAD option.
+     4. Exposed area.
+
+    Give the following direction cosines in the local coordinate system
+    if the *TRANSFORM option was used at this node:
+     5. X-direction cosine of the outward normal to the exposed area,
+        pointing into the fluid, in the initial configuration.
+     6. Y-direction cosine of the outward normal to the exposed area,
+        pointing into the fluid, in the initial configuration.
+     7. Z-direction cosine of the outward normal to the exposed area,
+        pointing into the fluid, in the initial configuration.
+
+    The following data should be provided only if it is necessary to change
+    the fluid properties specified under the *AQUA option:
+     8. Density of the fluid outside the element. This value will override
+        the fluid density given on the data line of the *AQUA option.
+     9. Free surface elevation of the fluid outside the element. This value
+        will override the fluid surface elevation given on the data line
+        of the *AQUA option.
+     10. Constant pressure, added to the hydrostatic pressure outside the element.
+    Repeat this data line as often as necessary to define concentrated
+    buoyancy at various nodes or node sets.
+    """
+    log.debug(f'read_cload {line0!r}')
     cload = []
     while '*' not in line0:
         sline = line0.split(',')
@@ -1098,7 +1147,11 @@ def read_cload(line0, lines, iline) -> Tuple[int, str, Any]:
         #cload += sline
         iline += 1
         line0 = lines[iline].strip().lower()
-        nid = int(sline[0])
+        #print(line0)
+        try:
+            nid = int(sline[0])
+        except ValueError:
+            nid = sline[0]
         dof = int(sline[1])
         mag = float(sline[2])
         cloadi = (nid, dof, mag)

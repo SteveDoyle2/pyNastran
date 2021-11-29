@@ -66,6 +66,7 @@ class OGPWG:
         fmt_s = mapfmt(b'9f', size)
         fmt_mxyz = mapfmt(b'12f', size)
         fmt_iq = mapfmt(b'3f', size)
+        assert ndata == 78 * size, ndata
 
         MO = array(unpack(fmt_mo, data[:36*size]))
         MO = MO.reshape(6, 6)

@@ -70,6 +70,7 @@ class Elements:
                 cax3 : (nelements, 3) int ndarray
                 cax4r : (nelements, 4) int ndarray
             solids:
+                c3d10 : (nelements, 10) int ndarray
                 c3d10h : (nelements, 10) int ndarray
 
         """
@@ -101,6 +102,7 @@ class Elements:
         self.c3d4 = None
 
         # solids
+        self.c3d10 = None
         self.c3d10h = None
         self.c3d8r = None
         #-----------------------------------
@@ -125,6 +127,7 @@ class Elements:
 
         # solids
         self.c3d4_eids = None
+        self.c3d10_eids = None
 
         # rigid elements
         self.c3d10h_eids = None
@@ -300,6 +303,7 @@ class Elements:
         element_types['s8r'] = (self.s8r_eids, self.s8r)
 
         # solids
+        element_types['c3d10'] = (self.c3d10_eids, self.c3d10)
         element_types['c3d10h'] = (self.c3d10h_eids, self.c3d10h)
         element_types['c3d4'] = (self.c3d4_eids, self.c3d4)
         return element_types
