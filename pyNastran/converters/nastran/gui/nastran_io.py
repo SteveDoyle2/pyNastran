@@ -4743,9 +4743,9 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
                     pid = element.Pid()
                     try:
                         areai = element.pid_ref.Area()
-                    except Exception:
+                    except AttributeError:
                         print(element)
-                        raise
+                        areai = -1.
 
                 node_ids = element.node_ids
                 _set_nid_to_pid_map(nid_to_pid_map, pid, node_ids)

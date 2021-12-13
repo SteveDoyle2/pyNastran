@@ -29,7 +29,9 @@ if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.bdf.bdf import GRID
 
 
-def bdf_equivalence_nodes(bdf_filename: str, bdf_filename_out: str, tol: float,
+def bdf_equivalence_nodes(bdf_filename: str,
+                          bdf_filename_out: Optional[str],
+                          tol: float,
                           renumber_nodes: bool=False, neq_max: int=4, xref: bool=True,
                           node_set: Optional[Union[List[int], NDArrayNint]]=None,
                           size: int=8, is_double: bool=False,
@@ -47,7 +49,8 @@ def bdf_equivalence_nodes(bdf_filename: str, bdf_filename_out: str, tol: float,
         str : bdf file path
         BDF : a BDF model that is fully valid (see xref)
     bdf_filename_out : str
-        a bdf_filename to write
+        str: a bdf_filename to write
+        None: don't write the deck
     tol : float
         the spherical tolerance
     renumber_nodes : bool

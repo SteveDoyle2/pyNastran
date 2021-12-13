@@ -47,6 +47,8 @@ class MarkActions:
 
         grid = self.gui.grid_selected
         cell = grid.GetCell(cell_id)
+        if cell is None:
+            return
         #if cell is None:
             #print('cell_id = %s' % cell)
             #self.log.error('cell_id = %s' % cell)
@@ -175,7 +177,10 @@ class MarkActions:
                        len(case), res_name, cell_id, case_key))
             raise IndexError(msg)
 
-        cell = self.gui.grid_selected.GetCell(cell_id)
+        grid = self.gui.grid_selected
+        cell = grid.GetCell(cell_id)
+        if cell is None:
+            return
         nnodes = cell.GetNumberOfPoints()
         points = cell.GetPoints()
         cell_type = cell.GetCellType()

@@ -657,19 +657,21 @@ class MouseActions:
 
     def _cell_node_pick(self, cell_id: int, world_position: np.ndarray):
         duplicate_key = None
-        icase = self.gui.icase
-        if self.pick_state == 'node/centroid':
+        gui = self.gui
+        icase = gui.icase
+        pick_state = self.pick_state
+        if pick_state == 'node/centroid':
             return_flag = False
-            out = self.gui.get_result_by_xyz_cell_id(world_position, cell_id)
-            #if out is None:
+            out = gui.get_result_by_xyz_cell_id(world_position, cell_id)
+            if out is None:
+                print('MouseActions._cell_node_pick bug')
                 #return return_flag, None, None, None, None
             result_name, result_value, node_id, xyz = out
-            assert icase in self.gui.label_actors, result_name
+            assert icase in gui.label_actors, result_name
             assert not isinstance(xyz, int), xyz
             duplicate_key = node_id
         else:
-            method = 'get_nodal_%s_result_pick_state_%s_by_xyz_cell_id' % (
-                self.gui.format, self.pick_state)
+            method = f'get_nodal_{gui.format}_result_pick_state_{pick_state}_by_xyz_cell_id'
             if hasattr(self, method):
                 methodi = getattr(self, method)
                 return_flag, unused_value = methodi(world_position, cell_id)
@@ -677,31 +679,32 @@ class MouseActions:
                     return return_flag, None, None, None, None
             else:
                 msg = "pick_state is set to 'centroidal', but the result is 'nodal'\n"
-                msg += '  cannot find: self.%s(xyz, cell_id)' % method
-                self.gui.log_error(msg)
+                msg += f'  cannot find: self.{method}(xyz, cell_id)'
+                gui.log_error(msg)
             return return_flag, None, None, None
-        msg = "%s = %s" % (result_name, result_value)
-        if self.gui.result_name in ['Node_ID', 'Node ID', 'NodeID']:
+        msg = f'{result_name} = {result_value}'
+        if gui.result_name in {'Node_ID', 'Node ID', 'NodeID'}:
             x1, y1, z1 = xyz
             x2, y2, z2 = world_position
-            msg += '; xyz=(%s, %s, %s); pierce_xyz=(%s, %s, %s)' % (x1, y1, z1,
-                                                                    x2, y2, z2)
-        self.gui.log_info(msg)
+            msg += f'; xyz=({x1}, {y1}, {z1}); pierce_xyz=({x2}, {y2}, {z2})'
+        gui.log_info(msg)
         return return_flag, duplicate_key, result_value, result_name, xyz
 
     def _cell_centroid_pick(self, cell_id: int, world_position: np.ndarray):
         duplicate_key = None
-        icase = self.gui.icase
-        if self.pick_state == 'node/centroid':
+        gui = self.gui
+        icase = gui.icase
+        pick_state = self.pick_state
+        if pick_state == 'node/centroid':
             return_flag = False
             duplicate_key = cell_id
-            result_name, result_value, xyz = self.gui.get_result_by_cell_id(cell_id, world_position)
-            assert icase in self.gui.label_actors, icase
+            out = gui.get_result_by_cell_id(cell_id, world_position)
+            result_name, result_value, xyz = out
+            assert icase in gui.label_actors, icase
         else:
             #cell = self.grid.GetCell(cell_id)
             # get_nastran_centroidal_pick_state_nodal_by_xyz_cell_id()
-            method = 'get_centroidal_%s_result_pick_state_%s_by_xyz_cell_id' % (
-                self.gui.format, self.pick_state)
+            method = f'get_centroidal_{gui.format}_result_pick_state_{pick_state}_by_xyz_cell_id'
             if hasattr(self, method):
                 methodi = getattr(self, method)
                 return_flag, unused_value = methodi(world_position, cell_id)
@@ -709,10 +712,10 @@ class MouseActions:
                     return return_flag, None, None, None, None
             else:
                 msg = "pick_state is set to 'nodal', but the result is 'centroidal'\n"
-                msg += '  cannot find: self.%s(xyz, cell_id)' % method
-                self.gui.log_error(msg)
+                msg += f'  cannot find: self.{method}(xyz, cell_id)'
+                gui.log_error(msg)
             return return_flag, None, None, None
-        self.gui.log_info("%s = %s" % (result_name, result_value))
+        gui.log_info(f'{result_name} = {result_value}')
         return return_flag, duplicate_key, result_value, result_name, xyz
 
     #---------------------------------------------------------------------------

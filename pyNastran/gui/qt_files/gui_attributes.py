@@ -1270,6 +1270,7 @@ class GuiAttributes:
         out = self.mark_actions.get_result_by_xyz_cell_id(node_xyz, cell_id)
         if out is None:
             print('attrs.get_result_by_xyz_cell_id bug')
+            return None
         result_name, result_values, node_id, xyz = out
         return result_name, result_values, node_id, xyz
 

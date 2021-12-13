@@ -361,6 +361,8 @@ def find_point_id_closest_to_xyz(grid: vtk.vtkUnstructuredGrid,
                                  cell_id: int,
                                  node_xyz: np.ndarray) -> Optional[int]:
     cell = grid.GetCell(cell_id)
+    if cell is None:
+        return
     nnodes = cell.GetNumberOfPoints()
     points = cell.GetPoints()
 

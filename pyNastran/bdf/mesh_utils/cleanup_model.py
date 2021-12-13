@@ -1,6 +1,165 @@
+from copy import deepcopy
 from typing import Tuple, List, Set, Union
-import numpy as np
-from pyNastran.bdf.bdf import BDF, PLOAD2
+#import numpy as np
+from pyNastran.bdf.bdf import BDF, LOAD, PLOAD2, PLOAD4
+
+
+def cleanup_model(model: BDF) -> None:
+    """
+    The model is in in an invalid state (e.g., missing nodes/elements), so
+    trace all the following cards and clean them up (e.g., delete SPCs or PLOAD4s
+    that reference invalid nodes/elements).
+
+    Fixes:
+     - loads:
+       - LOAD, PLOAD4
+     - constraints
+       - SPC
+
+    Assumptions:
+     - subcase is correct (you can fix it by hand)
+     - elements are correct
+    """
+    all_nids = set(model.nodes.keys())
+    all_eids = set(model.elements.keys())
+    _cleanup_loads(model, all_eids, all_nids)
+    _cleanup_spcs(model, all_nids)
+    model.cross_reference()
+
+
+def _cleanup_rigid_elements(model: BDF, nids_to_delete: List[int]) -> None:
+    rigid_elements2 = {}
+    for eid, elem in model.rigid_elements.items():
+        if elem.type == 'RBE3':
+            Gijs2 = []
+            comps2 = []
+            weights2 = []
+            for weight, comp, Gij in zip(elem.weights, elem.comps, elem.Gijs):
+                Gij2 = []
+                for nid in Gij:
+                    if nid in nids_to_delete:
+                        continue
+                    Gij2.append(nid)
+                if Gij2:
+                    Gijs2.append(Gij2)
+                    comps2.append(comp)
+                    weights2.append(weight)
+            if len(weights2) == 0:
+                continue
+            elem.Gijs = Gijs2
+            elem.comps = comps2
+            elem.weights = weights2
+
+            # TODO: check the dependent node
+        else:
+            raise NotImplementedError(elem)
+        rigid_elements2[eid] = elem
+    model.rigid_elements = rigid_elements2
+
+def _cleanup_pload4(load: PLOAD4,
+                    all_eids: List[int],
+                    loads2: List[Any]):
+    _eids = []
+    for eid in load.eids:
+        if eid not in all_eids:
+            return None
+        _eids.append(eid)
+
+    neids = len(_eids)
+    if neids == 0:
+        return None
+
+    neids_compress = max(_eids) - min(_eids) + 1
+    if neids == 1 or neids == neids_compress:
+        load.eids = _eids
+        loads2.append(load)
+    else:
+        for eid in _eids:
+            load2 = deepcopy(load)
+            load2.eids = [eid]
+            loads2.append(load2)
+    return None
+
+def _cleanup_load(load_combo: LOAD,
+                  all_loads2: Dict[int, Any],
+                  load_combos2: List[LOAD]) -> None:
+    assert load_combo.type == 'LOAD', load_combo
+    load_ids = []
+    scale_factors = []
+    for load_id, scale_factor in zip(load_combo.load_ids, load_combo.scale_factors):
+        if load_id not in all_loads2:
+            continue
+        load_ids.append(load_id)
+        scale_factors.append(scale_factor)
+    if len(load_ids) == 0:
+        continue
+    load_combo.load_ids = load_ids
+    load_combo.scale_factors = scale_factors
+    load_combos2.append(load_combo)
+
+def _cleanup_loads(model: BDF,
+                   all_eids: List[int],
+                   all_nids: List[int]) -> None:
+    """remove loads that aren't referenced"""
+    all_loads2 = {}
+    for load_id, loads in model.loads.items():
+        loads2 = []
+        for load in loads:
+            load_type = load.type
+            if load_type == 'PLOAD4':
+                # adding loads handled within the function
+                load = _cleanup_pload4(load, all_eids, loads2)
+                continue
+            elif load_type in {'FORCE', 'MOMENT'}:
+                if load.node not in all_nids:
+                    continue
+            else:
+                raise NotImplementedError(load)
+            loads2.append(load)
+        if loads2:
+            all_loads2[load_id] = loads2
+
+    load_combinations2 = {}
+    for load_id, load_combos in model.load_combinations.items():
+        load_combos2 = []
+        for load_combo in load_combos:
+            if load_combo.type == 'LOAD':
+                _cleanup_load(load_combo, all_loads2, load_combos2)
+                continue
+            else:
+                raise NotImplementedError(load_combo)
+            load_combos2.append(load_combo)
+
+        if load_combos2:
+            load_combinations2[load_id] = load_combos2
+    model.loads = all_loads2
+    model.load_combinations = load_combinations2
+
+
+def _cleanup_spcs(model: BDF, all_nids) -> None:
+    """remove spcs that aren't referenced"""
+    all_spcs2 = {}
+    for spc_id, spcs in model.spcs.items():
+        spcs2 = []
+        for spc in spcs:
+            #if spc.type == 'SPC1':
+                #asdf
+            if spc.type == 'SPC':
+                nodes2 = []
+                for nid in spc.nodes:
+                    if nid in all_nids:
+                        nodes2.append(nid)
+                if len(nodes2) == 0:
+                    continue
+                else:
+                    spc.nodes = nodes2
+            else:
+                raise NotImplementedError(spc)
+        if spcs2:
+            all_spcs2[spc_id] = spcs2
+    model.spcs = all_spcs2
+
+    x = 1
 
 def remove_missing_loads(model: BDF) -> None:
     """

@@ -411,7 +411,7 @@ def get_mass_breakdown(model, property_ids=None,
                     masses.append(length * structural_mass_per_length)
                     masses_nonstructural.append(length * nsm)
                 else:
-                    print(prop.mid_ref.get_stats())
+                    #print(prop.mid_ref.get_stats())
                     mass_per_length = rho * area + nsm
                     masses.append(length * mass_per_length)
         #elif prop.type in ['PBEAM3']:

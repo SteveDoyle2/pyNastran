@@ -923,8 +923,10 @@ class RBE2(RigidElement):
             raise KeyError('Field %r is an invalid %s entry.' % (n, self.type))
         return value
 
-    def __init__(self, eid: int, gn: int, cm: str,
-                 Gmi: List[int], alpha: float=0.0, tref: float=0.0,
+    def __init__(self, eid: int,
+                 gn: int,  # independent
+                 cm: str, Gmi: List[int], # dependent
+                 alpha: float=0.0, tref: float=0.0,
                  comment: str=''):
         """
         Creates an RBE2 element
