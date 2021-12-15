@@ -1221,7 +1221,7 @@ class PBEAML(IntegratedLineProperty):
         "HAT1": 5,
         "DBOX": 10,  # TODO: was 12???
     }  # for GROUP="MSCBML0"
-    def update_by_pname_fid(self, pname_fid, value):
+    def update_by_pname_fid(self, pname_fid: str, value: float):
         if isinstance(pname_fid, int):
             raise NotImplementedError('property_type=%r has not implemented %r in pname_map' % (
                 self.type, pname_fid))
@@ -1285,8 +1285,9 @@ class PBEAML(IntegratedLineProperty):
         return PBEAML(pid, mid, beam_type, xxb, dims,
                       so=None, nsm=None, group='MSCBML0', comment='')
 
-    def __init__(self, pid, mid, beam_type, xxb, dims, so=None, nsm=None,
-                 group='MSCBML0', comment=''):
+    def __init__(self, pid: int, mid: int, beam_type: str,
+                 xxb, dims, so=None, nsm=None,
+                 group: str='MSCBML0', comment: str=''):
         """
         Creates a PBEAML card
 
@@ -1329,51 +1330,51 @@ class PBEAML(IntegratedLineProperty):
 
         nxxb = len(xxb)
         if nxxb == 0:
-            raise IndexError('pid=%s; len(xxb)=0; at least 1 station must be defined' % pid)
+            raise IndexError('pid={pid:d}; len(xxb)=0; at least 1 station must be defined')
         if nsm is None:
             nsm = [0.] * nxxb
         elif not isinstance(nsm, (list, tuple, ndarray)):
-            msg = 'pid=%s; nsm=%s and must be a list/tuple/ndarray; type=%s' % (
-                pid, nsm, type(nsm))
+            msg = f'pid={pid}; nsm={nsm} and must be a list/tuple/ndarray; type={type(nsm)}'
             raise TypeError(msg)
 
         if so is None:
             so = ['YES'] * nxxb
         elif not isinstance(so, (list, tuple, ndarray)):
-            msg = 'pid=%s; so=%s and must be a list/tuple/ndarray; type=%s' % (
-                pid, so, type(so))
+            msg = f'pid={pid:d}; so={so} and must be a list/tuple/ndarray; type={type(so)}'
             raise TypeError(msg)
 
         for istation, xxbi, nsmi, dim in zip(count(), xxb, nsm, dims):
             if not isinstance(dim, (list, ndarray)):
-                msg = 'dims = List[dim]; dim=List[floats]; type(dim)=%s' % (type(dim))
+                msg = f'dims = List[dim]; dim=List[floats]; type(dim)={type(dim)}'
                 raise TypeError(msg)
-            assert len(dim) == ndim, 'beam_type=%s ndim=%s len(dim)=%s xxb=%s dim=%s' % (
-                beam_type, ndim, len(dim), xxbi, dim)
+            assert len(dim) == ndim, f'beam_type={beam_type!r} ndim={ndim} len(dim)={len(dim)} xxb={xxbi} dim={dim}'
 
+            msg = ''
             if not isinstance(xxbi, float_types):
-                raise TypeError('istation=%i xxb=%s and must be a float' % (
-                    istation, xxbi))
+                msg += f'istation={istation:d} xxb={xxbi} and must be a float\n'
             if not isinstance(nsmi, float_types):
-                raise TypeError('istation=%i nsm=%s and must be a float' % (
-                    istation, nsmi))
+                msg += f'istation={istation:d} nsm={nsmi} and must be a float\n'
 
             for idim, dimi in enumerate(dim):
                 if not isinstance(dimi, float_types):
-                    raise TypeError('istation=%i dim%i=%s and must be a float' % (
-                        istation, idim+1, dimi))
+                    msg += f'istation={istation:d} dim{idim+1:d}={dimi} and must be a float\n'
+            if msg:
+                raise TypeError(msg.rstrip())
 
         self.dim = np.asarray(dims)
         self.xxb = np.asarray(xxb)
         self.so = so
         self.nsm = np.asarray(nsm)
+        #assert len(xxb) == len(dim), f'xxb={xxb}; nsm={dim}'
+        #assert len(xxb) == len(so), f'xxb={xxb}; nsm={so}'
+        #assert len(xxb) == len(nsm), f'xxb={xxb}; nsm={nsm}'
         self.mid_ref = None
         unused_A = self.Area()
 
     def validate(self):
         uxxb = np.unique(self.xxb)
         if len(self.xxb) != len(uxxb):
-            raise ValueError('xxb=%s unique(xxb)=%s' % (self.xxb, uxxb))
+            raise ValueError(f'xxb={self.xxb} unique(xxb)={uxxb}')
 
     def _finalize_hdf5(self, encoding):
         """hdf5 helper function"""
@@ -1396,7 +1397,7 @@ class PBEAML(IntegratedLineProperty):
         """
         pid = integer(card, 1, 'pid')
         mid = integer(card, 2, 'mid')
-        group = string_or_blank(card, 3, 'group', 'MSCBML0')
+        group = string_or_blank(card, 3, 'group', default='MSCBML0')
         beam_type = string(card, 4, 'Type')
 
         # determine the number of required dimensions on the PBEAM
@@ -1423,8 +1424,8 @@ class PBEAML(IntegratedLineProperty):
         xxbi = 0.0
         while i < len(card):
             if n > 0:
-                soi = string_or_blank(card, i, 'so_n=%i' % n, 'YES')
-                xxbi = double_or_blank(card, i + 1, 'xxb_n=%i' % n, 1.0)
+                soi = string_or_blank(card, i, 'so_n=%i' % n, default='YES')
+                xxbi = double_or_blank(card, i + 1, 'xxb_n=%i' % n, default=1.0)
                 so.append(soi)
                 xxb.append(xxbi)
                 i += 2
@@ -1682,10 +1683,10 @@ class PBEAML(IntegratedLineProperty):
         dim0 = self.dim[0, :]
         for dim in self.dim[1:]:
             if not np.array_equal(dim0, dim):
-                print(dim)
                 dims_equal = False
                 break
-        if dims_equal and len(self.xxb) == 2 and self.so[0] == self.so[1] and self.nsm[0] == self.nsm[1]:
+        #print(self.get_stats())
+        if dims_equal and len(self.xxb) == 2 and self.so[0] == self.so[1] and len(self.nsm) == 2 and self.nsm[0] == self.nsm[1]:
             list_fields += self.dim[0].tolist() + [self.nsm[0]]
         else:
             for (i, xxb, so, dim, nsm) in zip(count(), self.xxb, self.so,

@@ -28,8 +28,9 @@ from pyNastran.bdf.cards.base_card import Material, BaseCard
 from pyNastran.bdf.bdf_interface.assign_type import (
     integer, integer_or_blank, double, double_or_blank,
     string, string_or_blank, integer_or_double, blank,
-    force_double_or_blank,
 )
+from pyNastran.bdf.bdf_interface.assign_type_force import force_double_or_blank
+
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
 if TYPE_CHECKING:  # pragma: no cover

@@ -26,8 +26,8 @@ from pyNastran.bdf.cards.optimization import break_word_by_trailing_integer
 from pyNastran.bdf.cards.materials import get_mat_props_S
 from pyNastran.bdf.bdf_interface.assign_type import (
     integer, integer_or_blank, double, double_or_blank, string_or_blank,
-    force_double_or_blank,
 )
+from pyNastran.bdf.bdf_interface.assign_type_force import force_double_or_blank
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
 if TYPE_CHECKING:  # pragma: no cover

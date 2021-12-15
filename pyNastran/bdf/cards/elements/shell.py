@@ -34,9 +34,11 @@ from pyNastran.bdf.field_writer_8 import set_blank_if_default, print_float_8
 from pyNastran.bdf.cards.base_card import Element, BaseCard
 from pyNastran.bdf.bdf_interface.assign_type import (
     integer, integer_or_blank, double_or_blank, integer_double_or_blank, blank,
-    force_integer, # force_double,
-    force_integer_or_blank, force_double_or_blank
 )
+from pyNastran.bdf.bdf_interface.assign_type_force import (
+    force_integer, # force_double,
+    force_integer_or_blank, force_double_or_blank)
+
 from pyNastran.bdf.field_writer_8 import print_card_8, print_field_8
 from pyNastran.bdf.field_writer_16 import print_card_16, print_field_16
 from pyNastran.bdf.cards.utils import wipe_empty_fields
@@ -693,7 +695,7 @@ class CTRIA3(TriShell):
             blank(card, 8, 'blank')
             blank(card, 9, 'blank')
 
-            tflag = force_integer_or_blank(card, 10, 'tflag', 0)
+            tflag = force_integer_or_blank(card, 10, 'tflag', default=0)
             T1 = force_double_or_blank(card, 11, 'T1')
             T2 = force_double_or_blank(card, 12, 'T2')
             T3 = force_double_or_blank(card, 13, 'T3')
@@ -734,7 +736,7 @@ class CTRIA3(TriShell):
             the BDF object
 
         """
-        msg = ', which is required by CTRIA3 eid=%s' % self.eid
+        msg = f', which is required by CTRIA3 eid={self.eid:d}'
         self.nodes_ref = model.Nodes(self.nodes, msg=msg)
         self.pid_ref = model.safe_property(self.pid, self.eid, xref_errors, msg=msg)
         if isinstance(self.theta_mcid, integer_types):
@@ -758,10 +760,10 @@ class CTRIA3(TriShell):
         assert isinstance(eid, integer_types)
         assert isinstance(pid, integer_types)
         for i, nid in enumerate(nids):
-            assert isinstance(nid, integer_types), 'nid%i is not an integer; nid=%s' %(i, nid)
+            assert isinstance(nid, integer_types), f'nid{i} is not an integer; nid={nid}'
 
         if xref:
-            assert self.pid_ref.type in ['PSHELL', 'PCOMP', 'PCOMPG', 'PLPLANE'], 'pid=%i self.pid_ref.type=%s' % (pid, self.pid_ref.type)
+            assert self.pid_ref.type in ['PSHELL', 'PCOMP', 'PCOMPG', 'PLPLANE'], f'pid={pid:d} self.pid_ref.type={self.pid_ref.type}'
             if not self.pid_ref.type in ['PLPLANE']:
                 t = self.Thickness()
                 assert isinstance(t, float), 'thickness=%r' % t

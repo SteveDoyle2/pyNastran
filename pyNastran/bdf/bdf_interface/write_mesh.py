@@ -1268,16 +1268,15 @@ def _output_helper(out_filename: Optional[str], interspersed: bool,
     if has_read_write or isinstance(out_filename, IOBase):
         return out_filename
     if not isinstance(out_filename, (str, PurePath)):
-        msg = 'out_filename=%r must be a string; type=%s' % (
-            out_filename, type(out_filename))
+        msg = f'out_filename={out_filename!r} must be a string; type={type(out_filename)}'
         raise TypeError(msg)
 
     if size == 8:
         assert is_double is False, f'is_double={is_double!r}'
     elif size == 16:
-        assert is_double in [True, False], f'is_double={is_double!r}'
+        assert is_double in {True, False}, f'is_double={is_double!r}'
     else:
-        assert size in [8, 16], size
+        assert size in {8, 16}, size
 
     assert isinstance(interspersed, bool)
     #fname = print_filename(out_filename)

@@ -253,11 +253,17 @@ def validate_dvprel(prop_type, pname_fid, validate):
         _check_dvprel_options(word, prop_type, options)
 
     elif prop_type == 'PBEAML':
-        options = [
-            'DIM1', 'DIM2', 'DIM3', 'DIM4', 'DIM5', 'DIM6', 'DIM7', 'DIM8', 'DIM9', 'DIM10',
-            'DIM1(A)', 'DIM2(A)',
-            'DIM1(B)', 'DIM2(B)', 'I1(B)', 'I2(B)',
-            'NSM'] # 'DIM(B)'
+        _dims = ['DIM1', 'DIM2', 'DIM3', 'DIM4', 'DIM5', 'DIM6', 'DIM7', 'DIM8', 'DIM9', 'DIM10',]
+        _dimsa = [dim + '(A)' for dim in _dims]
+        _dimsb = [dim + '(B)' for dim in _dims]
+        options = _dims + _dimsa + _dimsb + [
+            'I1(B)', 'I2(B)',
+            'NSM']
+
+        #options = [
+            #'DIM1', 'DIM2', 'DIM3', 'DIM4', 'DIM5', 'DIM6', 'DIM7', 'DIM8', 'DIM9', 'DIM10',
+            #'DIM1(A)', 'DIM2(A)', 'DIM3(A)', 'DIM5(A)', 'DIM6(A)', 'DIM7(A)', 'DIM8(A)', 'DIM9(A)', 'DIM10(A)',
+            #'DIM1(B)', 'DIM2(B)', ] # 'DIM(B)'
         _check_dvprel_options(pname_fid, prop_type, options)
 
     #elif prop_type == 'CQUAD4':
