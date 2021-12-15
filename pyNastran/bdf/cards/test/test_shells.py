@@ -709,8 +709,8 @@ class TestShells(unittest.TestCase):
         model._verify_bdf(xref=True)
 
         model.get_area_breakdown(property_ids=None, stop_if_no_area=True)
-        model.get_mass_breakdown(property_ids=None, stop_if_no_mass=True, detailed=False)
-        model.get_mass_breakdown(property_ids=None, stop_if_no_mass=True, detailed=True)
+        model.get_mass_breakdown(property_ids=None, stop_if_no_mass=True)
+        model.get_mass_breakdown_detailed(property_ids=None, stop_if_no_mass=True)
         model.get_volume_breakdown(property_ids=None, stop_if_no_volume=True)
         model.update_model_by_desvars(xref=True)
 
@@ -846,8 +846,8 @@ class TestShells(unittest.TestCase):
         model.safe_cross_reference()
 
         model.get_area_breakdown(property_ids=None, stop_if_no_area=True)
-        model.get_mass_breakdown(property_ids=None, stop_if_no_mass=True, detailed=False)
-        model.get_mass_breakdown(property_ids=None, stop_if_no_mass=True, detailed=True)
+        model.get_mass_breakdown(property_ids=None, stop_if_no_mass=True)
+        model.get_mass_breakdown_detailed(property_ids=None, stop_if_no_mass=True)
         model.get_volume_breakdown(property_ids=None, stop_if_no_volume=True)
 
         save_load_deck(model)
@@ -1048,8 +1048,8 @@ class TestShells(unittest.TestCase):
         model.pop_xref_errors()
 
         model.get_area_breakdown(property_ids=None, stop_if_no_area=True)
-        model.get_mass_breakdown(property_ids=None, stop_if_no_mass=True, detailed=False)
-        model.get_mass_breakdown(property_ids=None, stop_if_no_mass=True, detailed=True)
+        model.get_mass_breakdown(property_ids=None, stop_if_no_mass=True)
+        model.get_mass_breakdown_detailed(property_ids=None, stop_if_no_mass=True)
         model.get_volume_breakdown(property_ids=None, stop_if_no_volume=True)
 
         assert np.allclose(cshear.Mass(), mass_expected), cshear.Mass()
@@ -1167,8 +1167,8 @@ class TestShells(unittest.TestCase):
         assert np.allclose(ctria6.Mass(), 0.05), ctria6.Mass()
 
         model.get_area_breakdown(property_ids=None, stop_if_no_area=True)
-        model.get_mass_breakdown(property_ids=None, stop_if_no_mass=True, detailed=False)
-        model.get_mass_breakdown(property_ids=None, stop_if_no_mass=True, detailed=True)
+        model.get_mass_breakdown(property_ids=None, stop_if_no_mass=True)
+        model.get_mass_breakdown_detailed(property_ids=None, stop_if_no_mass=True)
         model.get_volume_breakdown(property_ids=None, stop_if_no_volume=True)
 
         save_load_deck(model)

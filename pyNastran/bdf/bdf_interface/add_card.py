@@ -3,8 +3,8 @@
 """
 Defines a method to add a card that is faster than add_card.
 """
-
-from typing import Optional, List, Dict, Union, Any
+from itertools import count
+from typing import Tuple, List, Dict, Optional, Union, Any
 import numpy as np
 
 from pyNastran.nptyping import NDArray3float, NDArray66float
@@ -145,6 +145,7 @@ from pyNastran.bdf.cards.contact import (
 from pyNastran.bdf.cards.parametric.geometry import PSET, PVAL, FEEDGE, FEFACE, GMCURV, GMSURF
 
 from pyNastran.utils.numpy_utils import integer_string_types
+from pyNastran.bdf.write_path import write_include
 
 CARD_MAP = {
     #'=' : Crash, None),
@@ -2183,7 +2184,7 @@ class AddCards:
                  x: Optional[List[float]], g0: Optional[int],
                  offt: str='GGG', pa: int=0, pb: int=0,
                  wa: Optional[List[float]]=None, wb: Optional[List[float]]=None,
-                 comment: str='') -> CBAR:
+                 comment: str='', validate: bool=False) -> CBAR:
         """
         Adds a CBAR card
 
@@ -2213,10 +2214,60 @@ class AddCards:
             a comment for the card
 
         """
+        if validate:
+            for nid in nids:
+                assert nid in self.nodes, f'nid={nid!r} does not exist'
         elem = CBAR(eid, pid, nids, x, g0, offt=offt, pa=pa, pb=pb,
                     wa=wa, wb=wb, comment=comment)
         self._add_methods._add_element_object(elem)
         return elem
+
+    #def add_pbarl_dvprel1(self, pid: int, mid: int,
+                          #Type: str, dim: List[float], dim_constraints: List[Any],
+                          #group: str='MSCBML0', nsm: float=0.,
+                          #comment: str='') -> Tuple[PBARL, List[DESVAR], List[DVPREL1]]:
+        #"""
+        #dim = [0.1, 0.2, 0.3, 0.4]
+        #dim_constraints = [
+            #None,
+            #[0.01, 1.0],
+            #[None, 1.0],
+            #None,
+        #]"""
+        #assert len(dim) == len(dim_constraints), f'len(dim)={len(dim)} len(dim_constraints)={len(dim_constraints)}'
+        #pbarl = self.add_pbarl(
+            #pid, mid, Type, dim, group=group, nsm=nsm,
+            #comment='')
+        #prop_type = 'PBAR'
+        #desvar_id = max(self.desvars) + 1
+        #oid = max(self.dvprels) + 1
+        #desvars = []
+        #dvprels = []
+        #for i, dim, dim_min_max in zip(count(), dim, dim_constraints):
+            #if dim_min_max is None:
+                #continue
+            #xinit = dim
+            #dim_min, dim_max = dim_min_max
+            #pname_fid = f'DIM{i+1:d}'
+            #label = pname_fid
+            #dvids = [desvar_id]
+            #coeffs = [1.]
+            #xlb = -1e20 if dim_min is None else dim_min
+            #xub = 1e20 if dim_max is None else dim_max
+            #desvar = self.add_desvar(
+                #desvar_id, label, xinit,
+                #xlb=xlb, xub=xub,
+                #delx=None, ddval=None,
+                #comment='')
+            #dvprel1 = self.add_dvprel1(
+                #oid, prop_type, pid, pname_fid, dvids, coeffs,
+                #p_min=None, p_max=1e20, c0=0.0,
+                #validate=True, comment='')
+            #desvars.append(desvar)
+            #dvprels.append(dvprel1)
+            #desvar_id += 1
+            #oid += 1
+        #return pbarl, desvars, dvprels
 
     def add_pbar(self, pid, mid, A=0., i1=0., i2=0., i12=0., j=0., nsm=0.,
                  c1=0., c2=0., d1=0., d2=0., e1=0., e2=0.,
@@ -2485,8 +2536,9 @@ class AddCards:
         self._add_methods._add_property_object(prop)
         return prop
 
-    def add_pbeaml(self, pid, mid, beam_type, xxb, dims, so=None, nsm=None,
-                   group='MSCBML0', comment='') -> PBEAML:
+    def add_pbeaml(self, pid: int, mid: int, beam_type: str,
+                   xxb, dims, so=None, nsm=None,
+                   group: str='MSCBML0', comment: str='') -> PBEAML:
         """
         Creates a PBEAML card
 
@@ -2520,6 +2572,115 @@ class AddCards:
                       group=group, so=so, nsm=nsm, comment=comment)
         self._add_methods._add_property_object(prop)
         return prop
+
+    def add_pbeaml_dvprel1(self, pid: int, mid: int, beam_type: str,
+                           xxb, dims, dim_constraints,
+                           so=None, nsm=None,
+                           #static_stress_constraints=None,
+                           #static_strain_constraints=None,
+                           #static_force_constraints=None,
+                           group: str='MSCBML0', comment: str='') -> Tuple[PBARL, List[DESVAR], List[DVPREL1]]:
+        """
+        dim = [0.1, 0.2, 0.3, 0.4]
+        dim_constraints = [
+            None,
+            [0.01, 1.0],
+            [None, 1.0],
+            None,
+        ]"""
+        dim_station0 = dims[0]
+        assert len(dim_station0) == len(dim_constraints), f'len(dim_station0)={len(dim_station0)} len(dim_constraints)={len(dim_constraints)}'
+        pbeaml = self.add_pbeaml(pid, mid, beam_type, xxb, dims,
+                                group=group, so=so, nsm=nsm, comment=comment)
+
+        prop_type = 'PBEAML'
+        desvar_id = 1 if len(self.desvars) == 0 else max(self.desvars) + 1
+        oid = 1 if len(self.dvprels) == 0 else max(self.dvprels) + 1
+        dresp_id = 1 if len(self.dresps) == 0 else max(self.dresps) + 1
+        dconstr_id = 1 # if len(self.dconstrs) == 0 else max(self.dconstrs) + 1
+        desvars = []
+        dvprels = []
+        comment = f'PBEAML-pid={pid:d}'
+
+        desvar_id0 = desvar_id
+        for i, dim, dim_min_max in zip(count(), dim_station0, dim_constraints):
+            if dim_min_max is None:
+                continue
+            pname_fid = f'DIM{i+1:d}(A)'  # DIM1(A)
+            desvar_label = f'DIM{i+1:d}_{pid}'
+            label = pname_fid
+
+            if beam_type == 'TUBE':  # t
+                # desvar defines Ri, t
+                # dvprel defines Ro, Ri
+                desvar_Ri = desvar_id0
+                desvar_t = desvar_id0 + 1
+                Ro_init = dim_station0[0]
+                Ri_init = dim_station0[1]
+                Ro_min, Ro_max = dim_constraints[0]
+                Ri_min, Ri_max = dim_constraints[1]
+                t_init = Ro_init - Ri_init
+                t_min = Ro_min - Ri_min
+                t_max = Ro_max - Ri_max
+                if i == 0:
+                    Ri_min_max = [Ri_min, Ri_max]
+                    dim_min_max = Ri_min_max
+                    xinit = Ri_init
+                else:
+                    t_min_max = [t_min, t_max]
+                    dim_min_max = t_min_max
+                    xinit = t_init
+            else:
+                xinit = dim
+
+            dim_min, dim_max = dim_min_max
+            xlb = -1e20 if dim_min is None else dim_min
+            xub = 1e20 if dim_max is None else dim_max
+
+            desvar = self.add_desvar(
+                desvar_id, desvar_label, xinit,
+                xlb=xlb, xub=xub,
+                delx=None, ddval=None,
+                comment=comment)
+
+            if beam_type == 'TUBE':  # Ri
+                # desvar defines Ri, t
+                # dvprel defines Ro, Ri
+                dvids = [desvar_Ri, desvar_t]  # Ro
+                #Ri = 0*Ro + 1*Ri
+                if i == 0:
+                    coeffs = [1., 1.]  # Ro
+                else:
+                    coeffs = [1., 0.]
+            else:
+                dvids = [desvar_id]
+                coeffs = [1.]
+
+            dvprel1 = self.add_dvprel1(
+                oid, prop_type, pid, pname_fid, dvids, coeffs,
+                p_min=None, p_max=1e20, c0=0.0,
+                validate=True, comment=comment)
+            desvars.append(desvar)
+            dvprels.append(dvprel1)
+            desvar_id += 1
+            oid += 1
+            comment = ''
+        dconstrs = []
+        #if static_stress_constraints:
+            #label = f'o_resp{pid:d}'
+            #response_type = 'STRESS'
+            #dresp_id = add_beam_stress_strain_constraints(self, pid, label, response_type,
+                                                          #static_stress_constraints,
+                                                          #dresp_id, dconstr_id,
+                                                          #dconstrs)
+        #if static_strain_constraints:
+            #label = f'o_resp{pid:d}'
+            #response_type = 'STRAIN'
+            #dresp_id = add_beam_stress_strain_constraints(self, pid, label, response_type,
+                                                          #static_stress_constraints, dresp_id,
+                                                          #dconstrs)
+
+        return pbeaml, desvars, dvprels
 
     def add_cbend(self, eid, pid, nids, g0, x, geom, comment='') -> CBEND:
         """Creates a CBEND card"""
@@ -6503,7 +6664,11 @@ class AddCards:
         self._add_methods._add_rigid_element_object(elem)
         return elem
 
-    def add_rbe2(self, eid, gn, cm, Gmi, alpha: float=0.0, tref: float=0.0, comment='') -> RBE2:
+    def add_rbe2(self, eid: int,
+                 gn: int, # independent
+                 cm: str, Gmi: List[int],  # dependent
+                 alpha: float=0.0, tref: float=0.0, comment: str='',
+                 validate: bool=False) -> RBE2:
         """
         Creates an RBE2 element
 
@@ -6526,6 +6691,10 @@ class AddCards:
 
         """
         elem = RBE2(eid, gn, cm, Gmi, alpha=alpha, tref=tref, comment=comment)
+        if validate:
+            assert gn in self.nodes, f'gn={gn!r} does not exist'
+            for nid in elem.Gmi:
+                assert nid in self.nodes, f'Gm={nid!r} does not exist'
         self._add_methods._add_rigid_element_object(elem)
         return elem
 
@@ -6695,8 +6864,10 @@ class AddCards:
         self._add_methods._add_deqatn_object(deqatn)
         return deqatn
 
-    def add_desvar(self, desvar_id, label, xinit, xlb=-1e20, xub=1e20,
-                   delx=None, ddval=None, comment='') -> DESVAR:
+    def add_desvar(self, desvar_id: int, label: str, xinit: float,
+                   xlb: float=-1e20, xub: float=1e20,
+                   delx=None, ddval: Optional[int]=None,
+                   comment: str='') -> DESVAR:
         """
         Creates a DESVAR card
 
@@ -7579,6 +7750,18 @@ class AddCards:
                        threshold=threshold, maxiter=maxiter, comment=comment)
         self._add_methods._add_rotor_object(rotor)
         return rotor
+
+    def add_bulk_lines(self, lines: List[str]) -> None:
+        if isinstance(lines, str):
+            lines = [lines]
+        self.reject_lines.append(lines)
+        #self.reject_card_lines('dummy', lines, show_log=True)
+
+    def add_include_file(self, include_filename: str,
+                         is_windows: Optional[bool]=None) -> None:
+        lines = write_include(include_filename, is_windows=is_windows).rstrip().split('\n')
+        self.reject_lines.append(lines)
+        #self.reject_card_lines('INCLUDE', lines, show_log=True)
 
     def add_dscons(self, dscid: int, label: str, constraint_type: str,
                    nid_eid: int, comp: int,
@@ -8583,3 +8766,28 @@ class AddCards:
                         comment=comment)
         self._add_methods._add_acoustic_property_object(pacabs)
         return pacabs
+
+def add_beam_stress_strain_constraints(model, pid: int, label: str,
+                                       response_type: str, static_stress_constraints,
+                                       dresp_id: int, dconstr_id: int, dconstrs) -> int:
+    property_type = 'PBEAML'
+    #8 Maximum stress/strain
+    #9 Minimum stress/strain
+    attas = [8, 9] # von mises upper surface stress
+    region = None
+    attb = None
+    atti = [pid]
+    #DRESP1(dresp_id, label, response_type, property_type, region, atta, attb, atti)
+    min_stress, max_stress = static_stress_constraints
+    min_value = -1e20 if min_stress is None else min_stress
+    max_value = 1e20 if max_stress is None else max_stress
+    for atta in attas:
+        label2 = label + str(atta)
+        model.add_dresp1(dresp_id, label2, response_type, property_type, region,
+                         atta, attb, atti, validate=True, comment='')
+        dconstr = model.add_dconstr(dconstr_id, dresp_id, lid=min_value, uid=max_value,
+                                    lowfq=0.0, highfq=1.e20, comment='')
+        dresp_id += 1
+        dconstrs.append(dconstr)
+    #dconstr_id += 1
+    return dresp_id

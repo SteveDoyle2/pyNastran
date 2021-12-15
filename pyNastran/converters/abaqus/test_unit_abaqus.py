@@ -1,5 +1,6 @@
 import os
 import unittest
+from io import StringIO
 from cpylog import get_logger
 
 import pyNastran
@@ -73,6 +74,50 @@ class TestAbaqus(unittest.TestCase):
         model = read_abaqus(abaqus_filename, log=log, debug=False)
         model.write('spike.inp')
         os.remove('spike.inp')
+
+    def _test_abaqus_3(self):  # pragma: no cover
+        log = get_logger(level='debug', encoding='utf-8')
+        lines = [
+            '*part, name=test\n'
+            '*NODE, NSET=NALL\n'
+            '1,1.000000e+00,1.000000e+01,0.000000e+00\n'
+            '2,1.000000e+00,1.000000e+01,1.000000e+02\n'
+            '3,1.000000e+00,0.000000e+00,0.000000e+00\n'
+            '*ELEMENT,TYPE=C3D10,ELSET=C3D10\n'
+            '    82543,   13582,   49204,   12456,   13462,  182815,  182816,  100651,  100652,  182817,  100262,\n'
+            '    82544,   50978,   16525,   15771,   15591,  182819,  109464,  182818,  182820,  109463,  107203,\n'
+            '*NSET,NSET=FIX\n'
+            '    7,\n'
+            '    3,\n'
+            '    1,\n'
+            '    5,\n'
+            '*NSET,NSET=LOAD\n'
+            '    6,\n'
+            '    2,\n'
+            '    4,\n'
+            '    8,\n'
+            '*end part\n'
+            '*BOUNDARY\n'
+            'FIX,1,3\n'
+            '*MATERIAL,NAME=EL\n'
+            '*ELASTIC\n'
+            '210000.,.3\n'
+            '*SOLID SECTION,ELSET=C3D10,MATERIAL=EL\n'
+            '*STEP\n'
+            '*STATIC\n'
+            '*CLOAD\n'
+            'LOAD,2,-25\n'
+            '*EL FILE\n'
+            'U,S\n'
+            '*NODE PRINT, NSET=LOAD\n'
+            'U\n'
+            '*END STEP\n'
+        ]
+        abaqus_file = StringIO()
+        abaqus_file.writelines(lines)
+        abaqus_file.seek(0)
+        model = read_abaqus(abaqus_file, log=log, debug=True)
+        del model
 
 def make_model():
     """makes a test model"""

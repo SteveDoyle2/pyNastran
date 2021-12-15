@@ -79,6 +79,12 @@ class TestMassElements(unittest.TestCase):
         assert len(pids_to_mass) == 0, pids_to_mass
         assert mass_type_to_mass['CONM2'] == 42., mass_type_to_mass
 
+        pids_to_mass, pids_to_mass_nonstructural, mass_type_to_mass = model.get_mass_breakdown_detailed(
+            property_ids=None)
+        assert len(pids_to_mass) == 0, pids_to_mass
+        assert mass_type_to_mass['CONM2'] == 42., mass_type_to_mass
+        assert len(pids_to_mass_nonstructural) == 0, pids_to_mass_nonstructural
+
         mass, cg, I = mass_properties(
             model, element_ids=None, mass_ids=None, reference_point=None,
             sym_axis=None, scale=None)

@@ -12,7 +12,7 @@ from typing import Any, Union, Optional, TYPE_CHECKING
 import numpy as np
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
-from pyNastran.bdf.bdf_interface.write_mesh import WriteMesh
+from pyNastran.bdf.bdf_interface.write_mesh import WriteMesh, _output_helper
 from pyNastran.bdf.bdf_interface.write_mesh_utils import find_aero_location
 from pyNastran.bdf.write_path import write_include
 if TYPE_CHECKING:  # pragma: no cover
@@ -88,8 +88,8 @@ class WriteMeshs(WriteMesh):
         #print("out_filename0 =", out_filename0)
 
         interspersed = False
-        out_filename = self._output_helper(out_filename0,
-                                           interspersed, size, is_double)
+        out_filename = _output_helper(out_filename0,
+                                      interspersed, size, is_double)
         self.log.debug(f'---starting BDF.write_bdf of {out_filename}---')
         encoding = self.get_encoding(encoding)
 

@@ -1677,13 +1677,24 @@ class PBEAML(IntegratedLineProperty):
                        None, None, None, None]
         #print("xxb=%s so=%s dim=%s nsm=%s" % (
             #self.xxb,self.so, self.dim,self.nsm))
-        for (i, xxb, so, dim, nsm) in zip(count(), self.xxb, self.so,
-                                          self.dim, self.nsm):
-            if i == 0:
-                list_fields += dim.tolist() + [nsm]
-            else:
-                list_fields += [so, xxb] + dim.tolist() + [nsm]
-        #raise NotImplementedError('verify PBEAML...')
+
+        dims_equal = True
+        dim0 = self.dim[0, :]
+        for dim in self.dim[1:]:
+            if not np.array_equal(dim0, dim):
+                print(dim)
+                dims_equal = False
+                break
+        if dims_equal and len(self.xxb) == 2 and self.so[0] == self.so[1] and self.nsm[0] == self.nsm[1]:
+            list_fields += self.dim[0].tolist() + [self.nsm[0]]
+        else:
+            for (i, xxb, so, dim, nsm) in zip(count(), self.xxb, self.so,
+                                              self.dim, self.nsm):
+                if i == 0:
+                    list_fields += dim.tolist() + [nsm]
+                else:
+                    list_fields += [so, xxb] + dim.tolist() + [nsm]
+            #raise NotImplementedError('verify PBEAML...')
         return list_fields
 
     def repr_fields(self):

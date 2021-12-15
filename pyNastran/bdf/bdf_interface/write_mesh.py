@@ -18,6 +18,7 @@ from pyNastran.bdf.bdf_interface.write_mesh_utils import (
 from pyNastran.bdf.cards.nodes import write_xpoints
 if TYPE_CHECKING:  # pragma: no cover
     from io import StringIO
+    from pyNastran.bdf.bdf import BDF, DESVAR
 
 
 class WriteMesh(BDFAttributes):
@@ -51,39 +52,6 @@ class WriteMesh(BDFAttributes):
         encoding = cast(str, encoding)  # just for typing
         assert isinstance(encoding, str), encoding
         return encoding
-
-    def _output_helper(self, out_filename: Optional[str], interspersed: bool,
-                       size: int, is_double: bool) -> str:
-        """Performs type checking on the write_bdf inputs"""
-        if out_filename is None:
-            from pyNastran.utils.gui_io import save_file_dialog
-            wildcard_wx = "Nastran BDF (*.bdf; *.dat; *.nas; *.pch)|" \
-                "*.bdf;*.dat;*.nas;*.pch|" \
-                "All files (*.*)|*.*"
-            wildcard_qt = "Nastran BDF (*.bdf *.dat *.nas *.pch);;All files (*)"
-            title = 'Save BDF/DAT/PCH'
-            out_filename = save_file_dialog(title, wildcard_wx, wildcard_qt)
-            assert out_filename is not None, out_filename
-
-        has_read_write = hasattr(out_filename, 'read') and hasattr(out_filename, 'write')
-        if has_read_write or isinstance(out_filename, IOBase):
-            return out_filename
-        if not isinstance(out_filename, (str, PurePath)):
-            msg = 'out_filename=%r must be a string; type=%s' % (
-                out_filename, type(out_filename))
-            raise TypeError(msg)
-
-        if size == 8:
-            assert is_double is False, f'is_double={is_double!r}'
-        elif size == 16:
-            assert is_double in [True, False], f'is_double={is_double!r}'
-        else:
-            assert size in [8, 16], size
-
-        assert isinstance(interspersed, bool)
-        #fname = print_filename(out_filename)
-        #self.log.debug("***writing %s" % fname)
-        return out_filename
 
     def _get_long_ids(self, size) -> Tuple[bool, int]:
         """calculate is_long_ids"""
@@ -156,8 +124,8 @@ class WriteMesh(BDFAttributes):
         else:
             is_long_ids, size = self._get_long_ids(size)
 
-        out_filename = self._output_helper(out_filename,
-                                           interspersed, size, is_double)
+        out_filename = _output_helper(out_filename,
+                                      interspersed, size, is_double)
         encoding = self.get_encoding(encoding)
         #assert encoding.lower() in ['ascii', 'latin1', 'utf8'], encoding
 
@@ -1282,3 +1250,113 @@ def _fix_sizes(size: int,
     if loads_size is None:
         loads_size = size
     return size, nodes_size, elements_size, loads_size
+
+def _output_helper(out_filename: Optional[str], interspersed: bool,
+                   size: int, is_double: bool) -> str:
+    """Performs type checking on the write_bdf inputs"""
+    if out_filename is None:
+        from pyNastran.utils.gui_io import save_file_dialog
+        wildcard_wx = "Nastran BDF (*.bdf; *.dat; *.nas; *.pch)|" \
+            "*.bdf;*.dat;*.nas;*.pch|" \
+            "All files (*.*)|*.*"
+        wildcard_qt = "Nastran BDF (*.bdf *.dat *.nas *.pch);;All files (*)"
+        title = 'Save BDF/DAT/PCH'
+        out_filename = save_file_dialog(title, wildcard_wx, wildcard_qt)
+        assert out_filename is not None, out_filename
+
+    has_read_write = hasattr(out_filename, 'read') and hasattr(out_filename, 'write')
+    if has_read_write or isinstance(out_filename, IOBase):
+        return out_filename
+    if not isinstance(out_filename, (str, PurePath)):
+        msg = 'out_filename=%r must be a string; type=%s' % (
+            out_filename, type(out_filename))
+        raise TypeError(msg)
+
+    if size == 8:
+        assert is_double is False, f'is_double={is_double!r}'
+    elif size == 16:
+        assert is_double in [True, False], f'is_double={is_double!r}'
+    else:
+        assert size in [8, 16], size
+
+    assert isinstance(interspersed, bool)
+    #fname = print_filename(out_filename)
+    #self.log.debug("***writing %s" % fname)
+    return out_filename
+
+def get_optimization_include(model: BDF) -> Tuple[List[int], List[int]]:
+    """gets the properties and materials refereced by DVPRELx/DVMRELx"""
+    property_types = {'PELAS', 'PDAMP', 'PGAP', 'PBUSH', 'PBUSH1D', 'PVISC', 'PWELD',
+                  'PROD', 'PTUBE', 'PBAR', 'PBARL', 'PBEAM', 'PBEAML', 'PBMSECT',
+                  'PSHEAR', 'PSHELL', 'PCOMP', 'PCOMPG', }
+    material_types = {'MAT1', 'MAT8', 'MAT9'}
+
+    pids_to_remove = set([])
+    for dvprel_id, dvprel in model.dvprels.items():
+        if dvprel.prop_type in property_types:
+            pid = dvprel.pid
+            pids_to_remove.add(pid)
+
+    mids_to_remove = set([])
+    for dvmrel_id, dvmrel in model.dvmrels.items():
+        if dvmrel.mat_type in material_types:
+            mid = dvprel.mid
+            mids_to_remove.add(mid)
+    return list(pids_to_remove), list(mids_to_remove)
+
+
+def delete_optimization_data(model: BDF) -> Tuple[List[int], List[int]]:
+    """removes optimization referenced data (that will be in the PCH file)"""
+    pids_to_remove, mids_to_remove = get_optimization_include(model)
+    properties_to_write, materials_to_write, desvars = _delete_optimization_data(
+        model, pids_to_remove, mids_to_remove)
+    return properties_to_write, materials_to_write, desvars
+
+def _delete_optimization_data(model: BDF,
+                              pids_to_remove: List[int],
+                              mids_to_remove: List[int]) -> Tuple[List[Any], List[Any], List[DESVAR]]:
+    """heper method"""
+    properties_to_write = []
+    materials_to_write = []
+
+    #--------------------------------------------------------------
+    #pids_to_remove = list(pids_to_remove)
+    for pid in sorted(pids_to_remove):
+        try:
+            prop = model.properties[pid]
+        except KeyError:
+            continue
+        properties_to_write.append(prop)
+        del model.properties[pid]
+
+    #mids_to_remove = list(mids_to_remove)
+    for mid in sorted(mids_to_remove):
+        try:
+            mat = model.materials[mid]
+        except KeyError:
+            continue
+        materials_to_write.append(mat)
+        del model.materials[mid]
+
+    desvars = []
+    for desvar_id, desvar in sorted(model.desvars.items()):
+        desvars.append(desvar)
+    model.desvars = {}
+    return properties_to_write, materials_to_write, desvars
+
+
+def write_optimization_include(model: BDF, pch_include_filename: str, size: int=8) -> None:
+    """writes an optimization deck"""
+    properties_to_write, materials_to_write, desvars = delete_optimization_data(
+        model)
+    encoding = model.get_encoding()
+    with open(pch_include_filename, 'w', encoding=encoding) as pch_file:
+        for prop in properties_to_write:
+            pch_file.write(prop.write_card(size=size))
+        for mat in materials_to_write:
+            pch_file.write(mat.write_card(size=size))
+
+        for desvar in desvars:
+            pch_file.write(desvar.write_card(size=size))
+    return
+

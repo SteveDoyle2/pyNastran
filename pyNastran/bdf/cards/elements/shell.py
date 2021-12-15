@@ -2876,7 +2876,7 @@ class CQUAD4(QuadShell):
                      self.tflag, self.T1, self.T2, self.T3, self.T4]
         if row2_data == [0.0, 0.0, 0, 1.0, 1.0, 1.0, 1.0]:
             data = [self.eid, self.Pid()] + nodes
-            msg = ('CQUAD4  %8i%8i%8i%8i%8i%8i\n' % tuple(data))
+            msg = ('CQUAD4  %8d%8d%8d%8d%8d%8d\n' % tuple(data))
             return self.comment + msg
         else:
             theta_mcid = self._get_theta_mcid_repr()

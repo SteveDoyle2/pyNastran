@@ -258,8 +258,8 @@ class TestSolids(unittest.TestCase):
         mat = model.Material(mid)
         mat.E()
 
-        model.get_mass_breakdown(property_ids=None, stop_if_no_mass=True, detailed=False)
-        model.get_mass_breakdown(property_ids=None, stop_if_no_mass=True, detailed=True)
+        model.get_mass_breakdown(property_ids=None, stop_if_no_mass=True)
+        model.get_mass_breakdown_detailed(property_ids=None, stop_if_no_mass=True)
         model.get_volume_breakdown(property_ids=None, stop_if_no_volume=True)
 
         save_load_deck(model)
@@ -299,8 +299,8 @@ class TestSolids(unittest.TestCase):
         end_checks(model)
 
         model.cross_reference()
-        model.get_mass_breakdown(property_ids=None, stop_if_no_mass=True, detailed=False)
-        model.get_mass_breakdown(property_ids=None, stop_if_no_mass=True, detailed=True)
+        model.get_mass_breakdown(property_ids=None, stop_if_no_mass=True)
+        model.get_mass_breakdown_detailed(property_ids=None, stop_if_no_mass=True)
         model.get_volume_breakdown(property_ids=None, stop_if_no_volume=True)
 
         save_load_deck(model)
@@ -328,8 +328,8 @@ class TestSolids(unittest.TestCase):
         end_checks(model)
 
         model.cross_reference()
-        model.get_mass_breakdown(property_ids=None, stop_if_no_mass=True, detailed=False)
-        model.get_mass_breakdown(property_ids=None, stop_if_no_mass=True, detailed=True)
+        model.get_mass_breakdown(property_ids=None, stop_if_no_mass=True)
+        model.get_mass_breakdown_detailed(property_ids=None, stop_if_no_mass=True)
         model.get_volume_breakdown(property_ids=None, stop_if_no_volume=True)
 
     def test_solids_ctetra10(self):
@@ -369,8 +369,8 @@ class TestSolids(unittest.TestCase):
         with self.assertRaises(RuntimeError):
             model.get_area_breakdown(property_ids=None, stop_if_no_area=True)
 
-        model.get_mass_breakdown(property_ids=None, stop_if_no_mass=True, detailed=False)
-        model.get_mass_breakdown(property_ids=None, stop_if_no_mass=True, detailed=True)
+        model.get_mass_breakdown(property_ids=None, stop_if_no_mass=True)
+        model.get_mass_breakdown_detailed(property_ids=None, stop_if_no_mass=True)
         model.get_volume_breakdown(property_ids=None, stop_if_no_volume=True)
 
         save_load_deck(model)
