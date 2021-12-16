@@ -11,11 +11,16 @@ defines:
 #from pyNastran.gui.qt_version import qt_version
 
 PLOT_TYPES = '[--eas|--tas|--density|--mach|--alt|--q]'
-USAGE = (
+USAGE_145 = (
     'Usage:\n'
     '  f06 plot_145 F06_FILENAME [--noline] [--modes MODES] [--subcases SUB] [--xlim XLIM] [--ylimdamp DAMP] [--ylimfreq FREQ]'
     f'{PLOT_TYPES} [--kfreq] [--rootlocus] [--in_units IN] [--out_units OUT] [--nopoints] [--export] [--f06]\n'
 )
+USAGE_200 = (
+    'Usage:\n'
+    '  f06 plot_200 F06_FILENAME\n'
+)
+
 def cmd_line_plot_flutter(argv=None, plot=True, show=True, log=None):
     """the interface to ``f06 plot_145`` on the command line"""
     import sys
@@ -26,7 +31,7 @@ def cmd_line_plot_flutter(argv=None, plot=True, show=True, log=None):
     if argv is None:
         argv = sys.argv
     msg = (
-        USAGE +
+        USAGE_145 +
         '  f06 plot_145 -h | --help\n'
         '  f06 plot_145 -v | --version\n'
         '\n'
@@ -262,6 +267,76 @@ def split_int_colon(modes, nmax=1000, start_value=0):
         pass
     return modes
 
+def cmd_line_plot_optimization(argv=None, plot=True, show=True, log=None):
+    """the interface to ``f06 plot_145`` on the command line"""
+    import sys
+    #import os
+    from docopt import docopt
+    import pyNastran
+    from pyNastran.f06.dev.read_sol_200 import read_sol_200
+    if argv is None:
+        argv = sys.argv
+    msg = (
+        USAGE_200 +
+        '  f06 plot_200 -h | --help\n'
+        '  f06 plot_200 -v | --version\n'
+        '\n'
+
+        'Positional Arguments:\n'
+        '  F06_FILENAME    path to input F06 files\n'
+
+        #'Plot Types for V-g/V-f:\n'
+        #'  --vgvf           plots a V-g/V-f plot\n'
+        #'  --rootlocus      plots a root locus\n'
+        #'  --kfreq          plots a kfreq-g/kfreq-f plot\n'
+        #'\n'
+        #'Plot Types for V-g/V-f:\n'
+        #'  --tas            plot true airspeed (default)\n'
+        #'  --eas            plot equivalent airspeed\n'
+        #'  --density        plot density\n'
+        #'  --mach           plot Mach number\n'
+        #'  --alt            plot altitude\n'
+        #'  --q              plot dynamic pressure\n'
+        #'\n'
+        #'Units:\n'
+        #'  --in_units IN    Selects the input unit system\n'
+        #'                   si (kg, m, s) -> m/s\n'
+        #'                   english_ft (slug/ft^3, ft, s) -> ft/s\n'
+        #'                   english_in (slinch/in^3, in, s) -> in/s (default)\n'
+
+        #'  --out_units OUT  Selects the output unit system\n'
+        #'                   si (kg, m, s) -> m/s\n'
+        #'                   english_ft (slug/ft^3, ft, s) -> ft/s\n'
+        #'                   english_in (slinch/in^3, in, s) -> in/s (default)\n'
+        #'                   english_kt (slinch/in^3, nm, s) -> knots\n'
+        #'\n'
+        #'Options:\n'
+        #'  --modes MODES    the modes to plot (e.g. 1:10,20:22)\n'
+        #'  --subcases SUB   the subcases to plot (e.g. 1,3); unused\n'
+        #'  --xlim XLIM      the velocity limits (default=no limit)\n'
+        #'  --ylimfreq FREQ  the damping limits (default=no limit)\n'
+        #'  --ylimdamp DAMP  the damping limits (default=-0.3:0.3)\n'
+        #"  --nopoints       don't plot the points\n"
+        #"  --noline         don't plot the lines\n"
+        #"  --export         export a zona file\n"
+        #"  --f06            export an F06 file (temporary)\n"
+        '\n'
+        'Info:\n'
+        '  -h, --help      show this help message and exit\n'''
+        "  -v, --version   show program's version number and exit\n"
+    )
+    if len(argv) == 1:
+        sys.exit(msg)
+
+    ver = str(pyNastran.__version__)
+    #type_defaults = {
+    #    '--nerrors' : [int, 100],
+    #}
+    data = docopt(msg, version=ver, argv=argv[1:])
+    f06_filename = data['F06_FILENAME']
+
+    read_sol_200(f06_filename)
+
 def cmd_line(argv=None, plot=True, show=True, log=None):
     """the interface to ``f06`` on the command line"""
     import sys
@@ -269,9 +344,10 @@ def cmd_line(argv=None, plot=True, show=True, log=None):
         argv = sys.argv
 
     msg = (
-        USAGE +
+        USAGE_145 + USAGE_200 +
         '\n'
         '  f06 plot_145 -h | --help\n'
+        '  f06 plot_200 -h | --help\n'
         '  f06 -v | --version\n'
         '\n'
     )
@@ -282,6 +358,8 @@ def cmd_line(argv=None, plot=True, show=True, log=None):
 
     if argv[1] == 'plot_145':
         cmd_line_plot_flutter(argv=argv, plot=plot, show=show, log=log)
+    elif argv[1] == 'plot_200':
+        cmd_line_plot_optimization(argv=argv, plot=plot, show=show, log=log)
     else:
         sys.exit(msg)
         #raise NotImplementedError('arg1=%r' % argv[1])

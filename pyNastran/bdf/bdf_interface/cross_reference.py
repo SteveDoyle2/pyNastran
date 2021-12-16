@@ -155,6 +155,7 @@ class XrefMesh(BDFAttributes):
 
         if xref_elements:
             self._cross_reference_elements()
+            self._cross_reference_rigid_elements()
         if xref_properties:
             self._cross_reference_properties()
         if xref_masses:
@@ -355,6 +356,7 @@ class XrefMesh(BDFAttributes):
             except (SyntaxError, RuntimeError, AssertionError, KeyError, ValueError) as error:
                 self._store_xref_error(error, elem)
 
+    def _cross_reference_rigid_elements(self) -> None:
         for elem in self.rigid_elements.values():
             try:
                 elem.cross_reference(self)

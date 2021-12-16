@@ -472,7 +472,7 @@ class TestOP2(Tester):
         #op2.write_f06(f06_filename)
         #os.remove(f06_filename)
 
-    def test_op2_shock_01(self):
+    def _test_op2_shock_01(self):  # pragma: no cover
         """tests a large number of elements and results in SOL 103-shock analysis"""
         log = get_logger(level='warning')
         #bdf_filename = os.path.join(MODEL_PATH, 'shock', 'shock_analysis.bdf')

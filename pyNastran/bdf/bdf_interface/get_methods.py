@@ -888,14 +888,18 @@ class GetMethods(BDFAttributes):
             raise KeyError('equation_id=%s not found%s.  Allowed DEQATNs=%s'
                            % (equation_id, msg, np.unique(list(self.dequations.keys()))))
 
-def get_pid_to_nid_map(model, property_ids: Optional[List[int]]=None) -> Dict[int, List[int]]:
+def get_pid_to_eid_map(model: BDF) -> Dict[int, List[int]]:
+    from collections import defaultdict
+    pid_to_eid_map = defaultdict(set)
+    for eid, elem in model.elements.items():
+        pid = elem.pid
+        pid_to_eid_map[pid].add(eid)
+    return pid_to_eid_map
+
+def get_pid_to_nid_map(model: BDF) -> Dict[int, List[int]]:
     """TODO: doesn't support CONROD"""
     from collections import defaultdict
-    if property_ids is None:
-        property_ids = list(model.properties)
-    elif isinstance(property_ids, int):
-        property_ids = [property_ids]
-
+    get_pid_to_eid_map(model)
     property_to_nodes_map = defaultdict(set)
     for eid, elem in model.elements.items():
         pid = elem.pid

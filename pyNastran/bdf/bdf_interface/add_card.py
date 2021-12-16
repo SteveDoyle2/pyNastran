@@ -2596,8 +2596,8 @@ class AddCards:
         prop_type = 'PBEAML'
         desvar_id = 1 if len(self.desvars) == 0 else max(self.desvars) + 1
         oid = 1 if len(self.dvprels) == 0 else max(self.dvprels) + 1
-        dresp_id = 1 if len(self.dresps) == 0 else max(self.dresps) + 1
-        dconstr_id = 1 # if len(self.dconstrs) == 0 else max(self.dconstrs) + 1
+        #dresp_id = 1 if len(self.dresps) == 0 else max(self.dresps) + 1
+        #dconstr_id = 1 # if len(self.dconstrs) == 0 else max(self.dconstrs) + 1
         desvars = []
         dvprels = []
         comment = f'PBEAML-pid={pid:d}'
@@ -2608,7 +2608,12 @@ class AddCards:
                 continue
             pname_fid = f'DIM{i+1:d}(A)'  # DIM1(A)
             desvar_label = f'DIM{i+1:d}_{pid}'
-            label = pname_fid
+            if len(desvar_label) > 8:
+                desvar_label = f'D{i+1:d}_{pid}'
+            if len(desvar_label) > 8:
+                desvar_label = f'D{i+1:d}{pid}'
+            assert len(desvar_label) <= 8, desvar_label
+            #label = pname_fid
 
             if beam_type == 'TUBE':  # t
                 # desvar defines Ri, t
@@ -2622,6 +2627,7 @@ class AddCards:
                 t_init = Ro_init - Ri_init
                 t_min = Ro_min - Ri_min
                 t_max = Ro_max - Ri_max
+                assert t_max > t_min, f'pid={pid} t_min={t_min} t_max={t_max}'
                 if i == 0:
                     Ri_min_max = [Ri_min, Ri_max]
                     dim_min_max = Ri_min_max
@@ -2630,6 +2636,7 @@ class AddCards:
                     t_min_max = [t_min, t_max]
                     dim_min_max = t_min_max
                     xinit = t_init
+                x = 1
             else:
                 xinit = dim
 
@@ -2665,7 +2672,7 @@ class AddCards:
             desvar_id += 1
             oid += 1
             comment = ''
-        dconstrs = []
+        #dconstrs = []
         #if static_stress_constraints:
             #label = f'o_resp{pid:d}'
             #response_type = 'STRESS'
