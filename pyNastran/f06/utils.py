@@ -273,7 +273,7 @@ def cmd_line_plot_optimization(argv=None, plot=True, show=True, log=None):
     #import os
     from docopt import docopt
     import pyNastran
-    from pyNastran.f06.dev.read_sol_200 import read_sol_200
+    from pyNastran.f06.dev.read_sol_200 import plot_sol_200
     if argv is None:
         argv = sys.argv
     msg = (
@@ -335,7 +335,7 @@ def cmd_line_plot_optimization(argv=None, plot=True, show=True, log=None):
     data = docopt(msg, version=ver, argv=argv[1:])
     f06_filename = data['F06_FILENAME']
 
-    read_sol_200(f06_filename)
+    plot_sol_200(f06_filename, show=True)
 
 def cmd_line(argv=None, plot=True, show=True, log=None):
     """the interface to ``f06`` on the command line"""

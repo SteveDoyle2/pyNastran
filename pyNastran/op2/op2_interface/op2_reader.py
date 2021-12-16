@@ -4970,9 +4970,9 @@ class OP2Reader:
             raise FortranMarkerError('marker0=%s*4 len(record)=%s; table_name=%r' % (
                 marker0*4, len(record), op2.table_name))
 
+        #markers1 = self.get_marker1_4(rewind=True)
         markers1 = self.get_nmarkers4(1, rewind=True)
         if markers1[0] > 0:
-            #self.log.debug(markers1)
             #nloop = 0
             records = [record]
             while markers1[0] > 0:
@@ -5864,7 +5864,7 @@ class OP2Reader:
         if self.is_debug_file:
             self.binary_debug.write(f'read_geom_table - {op2.table_name}\n')
         self.read_markers([-1])
-        data = self._read_record() # length=28
+        data = self._read_record() # length=28=7*4
 
         self.read_3_markers([-2, 1, 0])
         data, ndata = self._read_record_ndata()
