@@ -900,6 +900,7 @@ class OP4:
     def _read_real_sparse_binary(self, op4, nrows, ncols, matrix_type, is_big_mat):
         if self.debug:
             self.log.info('_read_real_sparse_binary')
+        self._show(op4, 200, types='ifsdq', endian=None)
         out = self._get_matrix_info(matrix_type, debug=False)
         (nwords_per_value, nbytes_per_value, data_format, dtype) = out
         rows = []
@@ -1079,33 +1080,34 @@ class OP4:
             endian = self._endian
             assert endian is not None, endian
 
+        data4 = data[:nints * 4]
         if 's' in types:
-            strings = unpack(b'%s%is' % (endian, n), data)
+            strings = unpack('%s%is' % (endian, n), data[:n])
             f.write("strings(s) = %s\n" % str(strings))
         if 'i' in types:
-            ints = unpack(b'%s%ii' % (endian, nints), data)
+            ints = unpack('%s%ii' % (endian, nints), data4)
             f.write("ints(i)    = %s\n" % str(ints))
         if 'f' in types:
-            floats = unpack(b'%s%if' % (endian, nints), data)
+            floats = unpack('%s%if' % (endian, nints), data4)
             f.write("floats(f)  = %s\n" % str(floats))
         if 'd' in types:
-            doubles = unpack(b'%s%id' % (endian, ndoubles), data[:ndoubles*8])
+            doubles = unpack('%s%id' % (endian, ndoubles), data[:ndoubles*8])
             f.write("doubles(d)  = %s\n" % str(doubles))
 
         if 'l' in types:
-            longs = unpack(b'%s%il' % (endian, nints), data)
+            longs = unpack('%s%il' % (endian, nints), data4)
             f.write("long(l)  = %s\n" % str(longs))
         if 'I' in types:
-            ints2 = unpack(b'%s%iI' % (endian, nints), data)
+            ints2 = unpack('%s%iI' % (endian, nints), data4)
             f.write("unsigned int(I) = %s\n" % str(ints2))
         if 'L' in types:
-            longs2 = unpack(b'%s%iL' % (endian, nints), data)
+            longs2 = unpack('%s%iL' % (endian, nints), data4)
             f.write("unsigned long(L) = %s\n" % str(longs2))
         if 'q' in types:
-            longs = unpack(b'%s%iq' % (endian, ndoubles), data[:ndoubles*8])
+            longs = unpack('%s%iq' % (endian, ndoubles), data[:ndoubles*8])
             f.write("long long(q) = %s\n" % str(longs))
         if 'Q' in types:
-            longs = unpack(b'%s%iq' % (endian, ndoubles), data[:ndoubles*8])
+            longs = unpack('%s%iq' % (endian, ndoubles), data[:ndoubles*8])
             f.write("unsigned long long(Q) = %s\n" % str(longs))
         return strings, ints, floats
 

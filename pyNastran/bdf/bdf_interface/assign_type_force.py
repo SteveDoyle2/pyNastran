@@ -15,10 +15,32 @@ def force_integer(card: BDFCard, ifield: int, fieldname: str) -> int:
 
     try:
         return int(svalue)
-    except(ValueError, TypeError):
+    except ValueError:
+        # int('s')
+        # int('5.0')
+        if '.' in svalue:
+            try:
+                return _force_integer(svalue)
+            except ValueError:
+                pass
         dtype = _get_dtype(svalue)
         raise SyntaxError('%s = %r (field #%s) on card must be an integer (not %s).\n'
                           'card=%s' % (fieldname, svalue, ifield, dtype, card))
+
+    except TypeError:
+        dtype = _get_dtype(svalue)
+        raise SyntaxError('%s = %r (field #%s) on card must be an integer (not %s).\n'
+                          'card=%s' % (fieldname, svalue, ifield, dtype, card))
+
+def _force_integer(svalue: str) -> int:
+    sline = svalue.split('.')
+    if len(sline) == 2:
+        avalue = int(sline[0])
+        bvalue = int(sline[1])
+        if bvalue != 0:
+            raise ValueError()
+        else:
+            return avalue
 
 
 def force_double(card: BDFCard, ifield: int, fieldname: str) -> float:

@@ -18,6 +18,7 @@ from pyNastran.bdf.mesh_utils.bdf_renumber import bdf_renumber, superelement_ren
 from pyNastran.bdf.mesh_utils.bdf_merge import bdf_merge
 from pyNastran.bdf.mesh_utils.export_mcids import export_mcids
 from pyNastran.bdf.mesh_utils.pierce_shells import pierce_shell_model
+from pyNastran.bdf.mesh_utils.remove_unused import remove_unused
 
 # testing these imports are up to date
 # if something is imported and tested, it should be removed from here
@@ -933,6 +934,69 @@ def cmd_line_export_mcids(argv=None, quiet=False):
                      export_xaxis=export_xaxis, export_yaxis=export_yaxis, iply=iply)
         model.log.info('wrote %s' % csv_filename)
 
+def cmd_line_remove_unused(argv=None, quiet=False):
+    """command line interface to remove_unused"""
+    if argv is None:
+        argv = sys.argv
+
+    from docopt import docopt
+    msg = (
+        'Usage:\n'
+        '  bdf remove_unused IN_BDF_FILENAME [-o OUT_BDF_FILENAME]\n'
+        '  bdf remove_unused -h | --help\n'
+        '  bdf remove_unused -v | --version\n'
+        '\n'
+
+        'Positional Arguments:\n'
+        '  IN_BDF_FILENAME    path to input BDF/DAT/NAS file\n'
+        '\n'
+
+        'Options:\n'
+        '  -o OUT, --output  OUT_BDF_FILENAME  path to output BDF file\n'
+        '\n'
+
+        'Info:\n'
+        '  -h, --help      show this help message and exit\n'
+        "  -v, --version   show program's version number and exit\n"
+    )
+    _filter_no_args(msg, argv, quiet=quiet)
+
+    ver = str(pyNastran.__version__)
+    #type_defaults = {
+    #    '--nerrors' : [int, 100],
+    #}
+    data = docopt(msg, version=ver, argv=argv[1:])
+    if not quiet:  # pragma: no cover
+        print(data)
+    #size = 16
+    bdf_filename = data['IN_BDF_FILENAME']
+    out_bdf_filename = data['--output']
+    if out_bdf_filename is None:
+        abs_name = os.path.abspath(bdf_filename)
+        dirname = os.path.dirname(abs_name)
+        basename = os.path.basename(abs_name)
+        out_bdf_filename = os.path.join(dirname, 'clean_' + basename)
+
+    from pyNastran.bdf.bdf import read_bdf
+
+    level = 'debug' if not quiet else 'warning'
+    log = SimpleLogger(level=level, encoding='utf-8', log_func=None)
+    model = read_bdf(bdf_filename, log=log, xref=False)
+    #model.cross_reference()
+    remove_unused(model,
+                  remove_nids=True, remove_cids=True,
+                  remove_pids=True, remove_mids=True,
+                  remove_spcs=True, remove_mpcs=True,
+                  remove_optimization=True,
+                  reset_type_to_id_map=False)
+    model.write_bdf(out_bdf_filename,
+                    nodes_size=None,
+                    is_double=False, interspersed=False)
+    #for iply in iplies:
+        #csv_filename = csv_filename_base + '_ply=%i.csv' % iply
+        #export_mcids(model, csv_filename,
+                     #export_xaxis=export_xaxis, export_yaxis=export_yaxis, iply=iply)
+        #model.log.info('wrote %s' % csv_filename)
 
 def _filter_no_args(msg: str, argv: List[str], quiet: bool=False):
     if len(argv) == 1:
@@ -1453,6 +1517,9 @@ def cmd_line(argv=None, quiet=False):
         cmd_line_scale(argv, quiet=quiet)
     elif argv[1] == 'export_mcids':
         cmd_line_export_mcids(argv, quiet=quiet)
+    elif argv[1] == 'remove_unused':
+        cmd_line_remove_unused(argv, quiet=quiet)
+
     elif argv[1] == 'split_cbars_by_pin_flags':
         cmd_line_split_cbars_by_pin_flag(argv, quiet=quiet)
     elif argv[1] == 'export_caero_mesh':

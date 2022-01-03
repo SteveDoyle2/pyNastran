@@ -1120,7 +1120,7 @@ class RBE2(RigidElement):
         model : BDF()
             the BDF object
         """
-        msg = ', which is required by RBE2 eid=%s' % (self.eid)
+        msg = f', which is required by RBE2 eid={self.eid:d}'
         self.Gmi_ref = model.EmptyNodes(self.Gmi, msg=msg)
         self.gn_ref = model.Node(self.Gn(), msg=msg)
 
@@ -1133,7 +1133,7 @@ class RBE2(RigidElement):
         model : BDF()
             the BDF object
         """
-        msg = ', which is required by RBE2 eid=%s' % (self.eid)
+        msg = f', which is required by RBE2 eid={self.eid:d}'
         self.Gmi_ref, unused_missing_nodes = model.safe_empty_nodes(self.Gmi, msg=msg)
         self.gn_ref = model.Node(self.Gn(), msg=msg)
 

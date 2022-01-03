@@ -531,11 +531,11 @@ class PBEAM(IntegratedLineProperty):
         mid = integer(card, 2, 'material_id')
 
         area0 = double(card, 3, 'Area')
-        i1a = double_or_blank(card, 4, 'I1', 0.0)
-        i2a = double_or_blank(card, 5, 'I2', 0.0)
-        i12a = double_or_blank(card, 6, 'I12', 0.0)
-        ja = double_or_blank(card, 7, 'J', 0.0)
-        nsma = double_or_blank(card, 8, 'nsm', 0.0)
+        i1a = double_or_blank(card, 4, 'I1', default=0.0)
+        i2a = double_or_blank(card, 5, 'I2', default=0.0)
+        i12a = double_or_blank(card, 6, 'I12', default=0.0)
+        ja = double_or_blank(card, 7, 'J', default=0.0)
+        nsma = double_or_blank(card, 8, 'nsm', default=0.0)
         area = [area0]
         i1 = [i1a]
         i2 = [i2a]
@@ -563,17 +563,17 @@ class PBEAM(IntegratedLineProperty):
         # the final 2 lines will default
         # finally, there would be no output at End A, but there would be output at End A.
         ifield = 9
-        field9 = double_string_or_blank(card, 9, 'field9', 0.0)
+        field9 = double_string_or_blank(card, 9, 'field9', default=0.0)
         if isinstance(field9, float):
             # C/D/E/F
-            c1a = double_or_blank(card, 9, 'c1', 0.0)
-            c2a = double_or_blank(card, 10, 'c2', 0.0)
-            d1a = double_or_blank(card, 11, 'd1', 0.0)
-            d2a = double_or_blank(card, 12, 'd2', 0.0)
-            e1a = double_or_blank(card, 13, 'e1', 0.0)
-            e2a = double_or_blank(card, 14, 'e2', 0.0)
-            f1a = double_or_blank(card, 15, 'f1', 0.0)
-            f2a = double_or_blank(card, 16, 'f2', 0.0)
+            c1a = double_or_blank(card, 9, 'c1', default=0.0)
+            c2a = double_or_blank(card, 10, 'c2', default=0.0)
+            d1a = double_or_blank(card, 11, 'd1', default=0.0)
+            d2a = double_or_blank(card, 12, 'd2', default=0.0)
+            e1a = double_or_blank(card, 13, 'e1', default=0.0)
+            e2a = double_or_blank(card, 14, 'e2', default=0.0)
+            f1a = double_or_blank(card, 15, 'f1', default=0.0)
+            f2a = double_or_blank(card, 16, 'f2', default=0.0)
             c1 = [c1a]
             c2 = [c2a]
             d1 = [d1a]
@@ -615,10 +615,10 @@ class PBEAM(IntegratedLineProperty):
                 if xxbi == 1.0:
                     # these have already been checked such that they're greater than 0
                     # so when we interpolate, our values will be correct
-                    areai = double_or_blank(card, ifield + 2, 'Area%i' % nrepeated, area0)
-                    i1i = double_or_blank(card, ifield + 3, 'I1 %i' % nrepeated, i1a)
-                    i2i = double_or_blank(card, ifield + 4, 'I2 %i' % nrepeated, i2a)
-                    i12i = double_or_blank(card, ifield + 5, 'I12 %i' % nrepeated, i12a)
+                    areai = double_or_blank(card, ifield + 2, 'Area%i' % nrepeated, default=area0)
+                    i1i = double_or_blank(card, ifield + 3, 'I1 %i' % nrepeated, default=i1a)
+                    i2i = double_or_blank(card, ifield + 4, 'I2 %i' % nrepeated, default=i2a)
+                    i12i = double_or_blank(card, ifield + 5, 'I12 %i' % nrepeated, default=i12a)
 
                     assert area[-1] >= 0., area
                     assert i1[-1] >= 0., i1
@@ -635,12 +635,12 @@ class PBEAM(IntegratedLineProperty):
                     nsmi = double_or_blank(card, ifield + 7, 'nsm%i' % nrepeated, nsma)
                 else:
                     # we'll go through and do linear interpolation afterwards
-                    areai = double_or_blank(card, ifield + 2, 'Area%i' % nrepeated, 0.0)
-                    i1i = double_or_blank(card, ifield + 3, 'I1 %i' % nrepeated, 0.0)
-                    i2i = double_or_blank(card, ifield + 4, 'I2 %i' % nrepeated, 0.0)
-                    i12i = double_or_blank(card, ifield + 5, 'I12 %i' % nrepeated, 0.0)
-                    ji = double_or_blank(card, ifield + 6, 'J%i' % nrepeated, 0.0)
-                    nsmi = double_or_blank(card, ifield + 7, 'nsm%i' % nrepeated, 0.0)
+                    areai = double_or_blank(card, ifield + 2, 'Area%i' % nrepeated, default=0.0)
+                    i1i = double_or_blank(card, ifield + 3, 'I1 %i' % nrepeated, default=0.0)
+                    i2i = double_or_blank(card, ifield + 4, 'I2 %i' % nrepeated, default=0.0)
+                    i12i = double_or_blank(card, ifield + 5, 'I12 %i' % nrepeated, default=0.0)
+                    ji = double_or_blank(card, ifield + 6, 'J%i' % nrepeated, default=0.0)
+                    nsmi = double_or_blank(card, ifield + 7, 'nsm%i' % nrepeated, default=0.0)
 
                 so.append(soi)
                 xxb.append(xxbi)
@@ -652,14 +652,14 @@ class PBEAM(IntegratedLineProperty):
                 nsm.append(nsmi)
 
                 if soi == 'YES':
-                    c1i = double_or_blank(card, ifield + 8, 'c1 %i' % nrepeated, 0.0)
-                    c2i = double_or_blank(card, ifield + 9, 'c2 %i' % nrepeated, 0.0)
-                    d1i = double_or_blank(card, ifield + 10, 'd1 %i' % nrepeated, 0.0)
-                    d2i = double_or_blank(card, ifield + 11, 'd2 %i' % nrepeated, 0.0)
-                    e1i = double_or_blank(card, ifield + 12, 'e1 %i' % nrepeated, 0.0)
-                    e2i = double_or_blank(card, ifield + 13, 'e2 %i' % nrepeated, 0.0)
-                    f1i = double_or_blank(card, ifield + 14, 'f1 %i' % nrepeated, 0.0)
-                    f2i = double_or_blank(card, ifield + 15, 'f2 %i' % nrepeated, 0.0)
+                    c1i = double_or_blank(card, ifield + 8, 'c1 %i' % nrepeated, default=0.0)
+                    c2i = double_or_blank(card, ifield + 9, 'c2 %i' % nrepeated, default=0.0)
+                    d1i = double_or_blank(card, ifield + 10, 'd1 %i' % nrepeated, default=0.0)
+                    d2i = double_or_blank(card, ifield + 11, 'd2 %i' % nrepeated, default=0.0)
+                    e1i = double_or_blank(card, ifield + 12, 'e1 %i' % nrepeated, default=0.0)
+                    e2i = double_or_blank(card, ifield + 13, 'e2 %i' % nrepeated, default=0.0)
+                    f1i = double_or_blank(card, ifield + 14, 'f1 %i' % nrepeated, default=0.0)
+                    f2i = double_or_blank(card, ifield + 15, 'f2 %i' % nrepeated, default=0.0)
                     ifield += 16
                 elif soi == 'YESA':
                     c1i = c1a
@@ -702,50 +702,50 @@ class PBEAM(IntegratedLineProperty):
 
         # footer fields
         #: Shear stiffness factor K in K*A*G for plane 1.
-        k1 = double_or_blank(card, ifield, 'k1', 1.0)
+        k1 = double_or_blank(card, ifield, 'k1', default=1.0)
         #: Shear stiffness factor K in K*A*G for plane 2.
-        k2 = double_or_blank(card, ifield + 1, 'k2', 1.0)
+        k2 = double_or_blank(card, ifield + 1, 'k2', default=1.0)
 
         #: Shear relief coefficient due to taper for plane 1.
-        s1 = double_or_blank(card, ifield + 2, 's1', 0.0)
+        s1 = double_or_blank(card, ifield + 2, 's1', default=0.0)
         #: Shear relief coefficient due to taper for plane 2.
-        s2 = double_or_blank(card, ifield + 3, 's2', 0.0)
+        s2 = double_or_blank(card, ifield + 3, 's2', default=0.0)
 
         #: non structural mass moment of inertia per unit length
         #: about nsm center of gravity at Point A.
-        nsia = double_or_blank(card, ifield + 4, 'nsia', 0.0)
+        nsia = double_or_blank(card, ifield + 4, 'nsia', default=0.0)
         #: non structural mass moment of inertia per unit length
         #: about nsm center of gravity at Point B.
-        nsib = double_or_blank(card, ifield + 5, 'nsib', nsia)
+        nsib = double_or_blank(card, ifield + 5, 'nsib', default=nsia)
 
         #: warping coefficient for end A.
-        cwa = double_or_blank(card, ifield + 6, 'cwa', 0.0)
+        cwa = double_or_blank(card, ifield + 6, 'cwa', default=0.0)
         #: warping coefficient for end B.
-        cwb = double_or_blank(card, ifield + 7, 'cwb', cwa)
+        cwb = double_or_blank(card, ifield + 7, 'cwb', default=cwa)
 
         #: y coordinate of center of gravity of
         #: nonstructural mass for end A.
-        m1a = double_or_blank(card, ifield + 8, 'm1a', 0.0)
+        m1a = double_or_blank(card, ifield + 8, 'm1a', default=0.0)
         #: z coordinate of center of gravity of
         #: nonstructural mass for end A.
-        m2a = double_or_blank(card, ifield + 9, 'm2a', 0.0)
+        m2a = double_or_blank(card, ifield + 9, 'm2a', default=0.0)
 
         #: y coordinate of center of gravity of
         #: nonstructural mass for end B.
-        m1b = double_or_blank(card, ifield + 10, 'm1b', m1a)
+        m1b = double_or_blank(card, ifield + 10, 'm1b', default=m1a)
         #: z coordinate of center of gravity of
         #: nonstructural mass for end B.
-        m2b = double_or_blank(card, ifield + 11, 'm2b', m2a)
+        m2b = double_or_blank(card, ifield + 11, 'm2b', default=m2a)
 
         #: y coordinate of neutral axis for end A.
-        n1a = double_or_blank(card, ifield + 12, 'n1a', 0.0)
+        n1a = double_or_blank(card, ifield + 12, 'n1a', default=0.0)
         #: z coordinate of neutral axis for end A.
-        n2a = double_or_blank(card, ifield + 13, 'n2a', 0.0)
+        n2a = double_or_blank(card, ifield + 13, 'n2a', default=0.0)
 
         #: y coordinate of neutral axis for end B.
-        n1b = double_or_blank(card, ifield + 14, 'n1a', n1a)
+        n1b = double_or_blank(card, ifield + 14, 'n1a', default=n1a)
         #: z coordinate of neutral axis for end B.
-        n2b = double_or_blank(card, ifield + 15, 'n2b', n2a)
+        n2b = double_or_blank(card, ifield + 15, 'n2b', default=n2a)
 
 
         ifield += 16
@@ -1096,7 +1096,8 @@ class PBEAM(IntegratedLineProperty):
         footer = [k1, k2, s1, s2, nsia, nsib, cwa, cwb,
                   m1a, m2a, m1b, m2b, n1a, n2a, n1b, n2b]
 
-        list_fields += footer
+        if footer != [None] * len(footer):
+            list_fields += footer
         return list_fields
 
     def write_card(self, size: int=8, is_double: bool=False) -> str:

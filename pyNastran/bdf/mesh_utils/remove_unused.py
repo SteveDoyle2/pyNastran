@@ -11,6 +11,7 @@ def remove_unused(bdf_filename: str,
                   remove_nids: bool=True, remove_cids: bool=True,
                   remove_pids: bool=True, remove_mids: bool=True,
                   remove_spcs: bool=True, remove_mpcs: bool=True,
+                  remove_optimization: bool=True,
                   reset_type_to_id_map: bool=False) -> BDF:
     """
     Takes an uncross-referenced bdf and removes unused data
@@ -45,7 +46,10 @@ def remove_unused(bdf_filename: str,
     mids_used = set()
     mids_thermal_used = set()
     sets_used = set()
+
     desvars_used = set()
+    dresps_used = set([])
+
     mpcs_used = set()
     spcs_used = set()
     #nsms_used = set()
@@ -159,11 +163,43 @@ def remove_unused(bdf_filename: str,
         # acoustic
         'CHACAB',
     }
+    dvprel_properties = {
+        'PELAS', 'PELAST',
+        'PDAMP',
+        'PVISC',
+        'PGAP',
+        'PBUSH', 'PBUSH1D', 'PBUSHT',
+        'PROD', 'PTUBE',
+        'PBAR', 'PBARL',
+        'PBEAM', 'PBEAML',
+        'PSHEAR',
+        'PSHELL', 'PCOMP', 'PCOMPG',
+        'PMASS',
+    }
+
     tableht_used = set([])
     tableh1_used = set([])
     pconv_used = set([])
 
     friction_ids_used = set([])
+
+    log = model.log
+    for key, subcase in model.subcases.items():
+        #print(key)
+        #print(subcase)
+        if 'SPC' in subcase:
+            spc_id, options = subcase['SPC']
+            spcs_used.add(spc_id)
+        if 'MPC' in subcase:
+            mpc_id, options = subcase['MPC']
+            mpcs_used.add(mpc_id)
+        if 'DESSUB' in subcase:
+            dconstr_id, options = subcase['DESSUB']
+            #dconstrs_used.add(dconstr_id)
+        if 'DESOBJ' in subcase:
+            dresp_id, options = subcase['DESOBJ']
+            dresps_used.add(dresp_id)
+            #log.info(f'found DESOBJ={dresp_id}')
 
     # could remove some if we look at the rid_trace
     #for cid, coord in model.coords.items():
@@ -298,9 +334,9 @@ def remove_unused(bdf_filename: str,
                     else:
                         raise NotImplementedError(spc)
 
-        elif card_type in ['TABLED1', 'TABLED2', 'TABLED3', 'TABLED4',
+        elif card_type in {'TABLED1', 'TABLED2', 'TABLED3', 'TABLED4',
                            'TABLEM1', 'TABLEM2', 'TABLEM3', 'TABLEM4',
-                           'TABDMP1', 'TABRND1', 'TABLES1',]:
+                           'TABDMP1', 'TABRND1', 'TABLES1',}:
             pass
         elif card_type == 'SUPORT':
             for suport in model.suport:
@@ -365,14 +401,33 @@ def remove_unused(bdf_filename: str,
             for unused_id, set_card in sorted(sets.items()):
                 nids_used.update(set_card.ids)
 
-        elif card_type in ['DCONSTR']:
-            pass
+        elif card_type == 'DCONSTR':
+            for dconstr_id, dconstrs in model.dconstrs.items():
+                for dconstr in dconstrs:
+                    if dconstr.type == 'DCONADD':
+                        log.error(f'skipping DCONADD, which is referenced by a DCONSTR?\n{dconstr}')
+                        continue
+                    dresps_used.add(dconstr.dresp_id)
         elif card_type == 'DRESP1':
-            _store_dresp1(model, ids, nids_used, pids_used)
+            _store_dresp1(model, ids, nids_used, pids_used, dresps_used)
         elif card_type == 'DRESP2':
-            pass
-            #for dresp_id in ids:
-                #dresp = model.dresps[dresp_id]
+            for dresp_id in ids:
+                dresp = model.dresps[dresp_id]
+                for idi_type, values in dresp.params.items():
+                    idi, dresp_type = idi_type
+                    if dresp_type in {'DRESP1', 'DRESP2'}:
+                        #params : {(0, 'DRESP1'): [3000, 3001, 3002]}
+                        log.debug(f'DRESP2={dresp_id}: {dresp_type}={values}')
+                        dresps_used.update(values)
+                    elif dresp_type == 'DESVAR':
+                        desvars_used.update(values)
+                    elif dresp_type == 'DTABLE':
+                        pass
+                    elif dresp_type == 'DNODE':
+                        log.warning(f'DRESP2={dresp_id}: skipping DNODE')
+                    else:
+                        print(dresp.get_stats())
+                        raise NotImplementedError(dresp_type)
                 #dresp.deqatn
                 #if dresp.property_type in ['PSHELL', 'PCOMP', 'PBAR', 'PBARL', 'PBEAM', 'PROD']:
                     #pids_used.update(dresp.atti_values())
@@ -391,14 +446,11 @@ def remove_unused(bdf_filename: str,
         elif card_type == 'DRESP3':
             pass
 
-        elif card_type in ['DVPREL1', 'DVPREL2']:
+        elif card_type in {'DVPREL1', 'DVPREL2'}:
             for dvprel_id in ids:
                 dvprel = model.dvprels[dvprel_id]
                 desvars_used.update(dvprel.desvar_ids)
-                if dvprel.prop_type in ['PSHELL', 'PCOMP', 'PBAR', 'PBARL', 'PBEAM',
-                                        'PROD', 'PELAS', 'PBUSH', 'PDAMP', 'PTUBE',
-                                        'PSHEAR', 'PDAMP', 'PMASS', 'PBEAML', 'PCOMPG',
-                                        'PVISC', 'PBUSHT', 'PELAST', 'PBUSH1D', 'PGAP']:
+                if dvprel.prop_type in dvprel_properties:
                     pids_used.add(dvprel.Pid())
                 elif dvprel.prop_type in ['DISP']:
                     msg = str(dvprel) + 'dvprel.prop_type=%r' % dvprel.prop_type
@@ -533,13 +585,13 @@ def remove_unused(bdf_filename: str,
         mids_used,
         spcs_used, mpcs_used,
         pconv_used, tableht_used, tableh1_used,
-        desvars_used,
+        desvars_used, dresps_used,
         remove_nids=remove_nids,
         remove_cids=remove_cids,
         remove_pids=remove_pids,
         remove_mids=remove_mids,
         remove_spcs=remove_spcs, remove_mpcs=remove_mpcs,
-        unused_remove_desvars=remove_desvars,
+        remove_desvars=remove_desvars,
     )
     return model
 
@@ -742,14 +794,21 @@ def _store_loads(model, unused_card_type, unused_ids, nids_used, eids_used, cids
             else:
                 raise NotImplementedError(load)
 
-def _store_dresp1(model, ids, nids_used, pids_used):
+def _store_dresp1(model: BDF, ids, nids_used, pids_used, dresps_used):
     """helper for ``remove_unused``"""
+    log = model.log
     for dresp_id in ids:
         dresp = model.dresps[dresp_id]
-        if dresp.property_type in ['PSHELL', 'PCOMP', 'PCOMPG', 'PBAR', 'PBARL', 'PBEAM',
+        if dresp.property_type in {'PSHELL', 'PCOMP', 'PCOMPG', 'PBAR', 'PBARL', 'PBEAM',
                                    'PROD', 'PDAMP', 'PVISC', 'PTUBE', 'PSHEAR', 'PELAS',
-                                   'PSOLID', 'PBEAML']:
-            pids_used.update(dresp.atti_values())
+                                   'PSOLID', 'PBEAML'}:
+            values = dresp.atti_values()
+            pids_found = []
+            for pid in values:
+                if pid in model.properties:
+                    pids_used.add(pid)
+                    pids_found.append(pid)
+            log.info(f'found {dresp.type}={dresp_id}: pids={pids_found}')
         elif dresp.property_type == 'ELEM':
             if dresp.response_type in ['STRESS', 'FRSTRE',
                                        'CFAILURE',
@@ -767,8 +826,9 @@ def _store_dresp1(model, ids, nids_used, pids_used):
         #elif dresp.property_type == 'STRESS':
 
         elif dresp.property_type is None:
-            if dresp.response_type in ['WEIGHT', 'EIGN', 'VOLUME', 'LAMA', 'CEIG',
-                                       'FREQ', 'STABDER']:
+            if dresp.response_type in {'WEIGHT', 'EIGN', 'VOLUME', 'LAMA', 'CEIG',
+                                       'FREQ', 'STABDER'}:
+                #dresps_used.add(dresp_id)
                 pass
             elif dresp.response_type in ['DISP', 'FRDISP', 'TDISP', 'RMSDISP', 'PSDDISP',
                                          'TVELO', 'FRVELO', 'RMSVELO',
@@ -817,11 +877,12 @@ def _remove(model: BDF,
             nids_used, cids_used,
             pids_used, pids_mass_used, mids_used, spcs_used, mpcs_used,
             pconv_used, tableht_used, tableh1_used,
-            unused_desvars_used,
+            desvars_used, dresps_used,
             remove_nids=True, remove_cids=True,
             remove_pids=True, remove_mids=True,
             remove_spcs=True, remove_mpcs=True,
-            unused_remove_desvars=True) -> None:
+            remove_desvars=True,
+            remove_optimization=True) -> None:
     """actually removes the cards"""
     nids = set(model.nodes.keys())
     pids = set(model.properties.keys())
@@ -830,6 +891,8 @@ def _remove(model: BDF,
     mids = set(model.materials.keys())
     spcs = set(model.spcs.keys())  # spcadds?
     mpcs = set(model.mpcs.keys()) # mpcadds?
+    dresps = set(model.dresps.keys())
+    desvars = set(model.desvars.keys())
 
     nids_to_remove = list(nids - nids_used)
     pids_to_remove = list(pids - pids_used)
@@ -850,6 +913,8 @@ def _remove(model: BDF,
 
     spcs_to_remove = list(spcs - spcs_used)
     mpcs_to_remove = list(mpcs - mpcs_used)
+    desvars_to_remove = list(desvars - desvars_used)
+    dresps_to_remove = list(dresps - dresps_used)
 
     if 0 in cids_to_remove:
         cids_to_remove.remove(0)
@@ -894,6 +959,35 @@ def _remove(model: BDF,
     #    mpcs_to_remove.sort()
     #    model.log.debug('removed mpcs %s' % mpcs_to_remove)
     _remove_thermal(model, pconv_used, tableht_used, tableh1_used)
+    if remove_optimization:
+        _remove_optimization(model, pids_to_remove, desvars_to_remove, dresps_to_remove)
+
+def _remove_optimization(model: BDF, pids_to_remove, desvars_to_remove, dresps_to_remove) -> None:
+    for desvar_id in desvars_to_remove:
+        del model.desvars[desvar_id]
+    model.log.debug('removing DESVAR %s' % desvars_to_remove)
+    for dresp_id in dresps_to_remove:
+        del model.dresps[dresp_id]
+    model.log.debug('removing DRESPx %s' % dresps_to_remove)
+
+    dvprels_ids_to_remove = []
+    dvprels_to_remove = []
+    for dvprel_id, dvprel in model.dvprels.items():
+        pid = dvprel.Pid()
+        if pid in pids_to_remove:
+            dvprels_ids_to_remove.append(dvprel_id)
+            dvprels_to_remove.append((dvprel_id, f'removing DVPRELx={dvprel_id} because pid={pid} does not exist'))
+    model.log.debug('removing DVPRELx %s' % dvprels_ids_to_remove)
+    _remove_dict(model.dvprels, dvprels_to_remove, model.log)
+
+    #for dvprel_id, msg in dvprels_to_remove:
+        #del model.dvprels[dvprel_id]
+        #model.log.debug(msg)
+
+def _remove_dict(mydict, keys_msg, log):
+    for key, msg in keys_msg:
+        del mydict[key]
+        log.debug(msg)
 
 def _remove_thermal(model: BDF, pconv_used, tableht_used, tableh1_used) -> None:
     """removes some thermal cards"""

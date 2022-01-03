@@ -1703,7 +1703,9 @@ def _convert_dconstr(model: BDF, dconstr: DCONSTR, pressure_scale: float) -> Non
         # high end of frequency range (Hz)
         dconstr.highfq = scale
     else:
-        raise NotImplementedError(dconstr)
+        msg = f'otype={otype!r} is not supported\n{dconstr}'
+        print(msg)
+        raise NotImplementedError(msg)
 
 def _convert_dvcrel1(dvcrel: Union[DVCREL1, DVCREL2], xyz_scale: float) -> float:
     """helper for ``_convert_optimization``"""

@@ -339,9 +339,9 @@ class PTUBE(Property):
         pid = integer(card, 1, 'pid')
         mid = integer(card, 2, 'mid')
         OD1 = double(card, 3, 'OD1')
-        t = double_or_blank(card, 4, 't', OD1/2.)
-        nsm = double_or_blank(card, 5, 'nsm', 0.0)
-        OD2 = double_or_blank(card, 6, 'OD2', OD1)
+        t = double_or_blank(card, 4, 't', default=OD1/2)
+        nsm = double_or_blank(card, 5, 'nsm', default=0.0)
+        OD2 = double_or_blank(card, 6, 'OD2', default=OD1)
         assert len(card) <= 7, f'len(PTUBE card) = {len(card):d}\ncard={card}'
         return PTUBE(pid, mid, OD1, t, nsm, OD2, comment=comment)
 

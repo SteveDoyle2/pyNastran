@@ -479,7 +479,7 @@ class SafeXrefMesh(XrefMesh):
                 xref_errors['eid'].append((ref_id, eid))
         #if bad_eids:
             #msg = 'eids=%s not found%s.  Allowed elements=%s' % (
-                #bad_eids, msg, np.unique(list(self.elements.keys())))
+                #bad_eids, msg, _unique_keys(self.elements.keys())))
             #self.log.error(msg)
             #raise KeyError(msg)
         return elements

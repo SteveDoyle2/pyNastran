@@ -1188,7 +1188,7 @@ def _read_design_variables(i: int, lines: List[str],
     line = lines[i].rstrip()
     lines2 = []
     while line != '':
-        if line.startswith(' ^^^'):
+        if line.startswith((' ^^^', ' ***')):
             i += 1
             line = lines[i].rstrip()
             if 'PAGE' in line:
@@ -1213,7 +1213,8 @@ def _read_design_variables(i: int, lines: List[str],
                 internal_id, desvar_id, label, xl, x, xu = sline
             except ValueError:
                 print(line, sline)
-                raise
+                continue
+                #raise
 
             #  INTERNAL       DESVAR                         LOWER                               UPPER
             #     ID            ID          LABEL            BOUND             VALUE             BOUND

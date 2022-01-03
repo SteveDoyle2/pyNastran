@@ -1601,7 +1601,7 @@ class PBARL(LineProperty):
         """
         pid = integer(card, 1, 'pid')
         mid = integer(card, 2, 'mid')
-        group = string_or_blank(card, 3, 'group', 'MSCBML0')
+        group = string_or_blank(card, 3, 'group', default='MSCBML0')
         Type = string(card, 4, 'Type')
 
         try:
@@ -1641,7 +1641,7 @@ class PBARL(LineProperty):
         assert len(dim) == ndim, 'PBARL ndim=%s len(dims)=%s' % (ndim, len(dim))
         #assert len(dims) == len(self.dim), 'PBARL ndim=%s len(dims)=%s' % (ndim, len(self.dim))
 
-        nsm = double_or_blank(card, 9 + ndim, 'nsm', 0.0)
+        nsm = double_or_blank(card, 9 + ndim, 'nsm', default=0.0)
         return PBARL(pid, mid, Type, dim, group=group, nsm=nsm, comment=comment)
 
     @classmethod

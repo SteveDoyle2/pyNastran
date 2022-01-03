@@ -691,12 +691,12 @@ class PreferencesWindow(PyDialog):
         """set the nastran properties preferences"""
         is_checked = self.nastran_create_coords_checkbox.isChecked()
         if self.win_parent is not None:
-            self.nastran_settings.nastran_create_coords = is_checked
+            self.nastran_settings.create_coords = is_checked
     def on_nastran_is_shell_mcids(self):
         """set the nastran properties preferences"""
         is_checked = self.nastran_is_shell_mcid_checkbox.isChecked()
         if self.win_parent is not None:
-            self.nastran_settings.nastran_is_shell_mcids = is_checked
+            self.nastran_settings.is_shell_mcids = is_checked
 
     def on_nastran_displacement(self):
         is_checked = self.nastran_displacement_checkbox.isChecked()

@@ -694,19 +694,6 @@ class MAT1(IsotropicMaterial):
                        self.tref, self.ge, self.St, self.Sc, self.Ss, self.mcsid]
         return list_fields
 
-    def getG_default(self):
-        if self.g == 0.0 or self.nu == 0.0:
-            G = self.g
-        else:
-            #G_default = self.e/2./(1+self.nu)
-            if self.e is None:
-                G = None
-            else:
-                G = self.e / 2. / (1 + self.nu)
-        #print("MAT1 - self.e=%s self.nu=%s self.g=%s Gdef=%s G=%s"
-        #      % (self.e, self.nu,self.g, G_default, G))
-        return G
-
     def repr_fields(self):
         """
         Gets the fields in their simplified form
@@ -717,7 +704,7 @@ class MAT1(IsotropicMaterial):
             the fields that define the card
 
         """
-        Gdefault = self.getG_default()
+        Gdefault = get_G_default(self.e, self.g, self.nu)
         G = set_blank_if_default(self.g, Gdefault)
 
         rho = set_blank_if_default(self.rho, 0.)
@@ -811,6 +798,20 @@ class MAT1(IsotropicMaterial):
         #rh = RotationHelper()
         #Sp = rh.transformCompl(self.Smat,th)
         #return Sp
+
+
+def get_G_default(e: Optional[float], g: float, nu: float) -> float:
+    if g == 0.0 or nu == 0.0:
+        G = g
+    else:
+        #G_default = self.e/2./(1+self.nu)
+        if e is None:
+            G = None
+        else:
+            G = e / 2. / (1 + nu)
+    #print("MAT1 - self.e=%s self.nu=%s self.g=%s Gdef=%s G=%s"
+    #      % (self.e, self.nu,self.g, G_default, G))
+    return G
 
 class MAT2(AnisotropicMaterial):
     """
@@ -1458,11 +1459,11 @@ class MAT4(ThermalMaterial):
         """
         mid = integer(card, 1, 'mid')
         k = double_or_blank(card, 2, 'k')
-        cp = double_or_blank(card, 3, 'cp', 0.0)
-        rho = double_or_blank(card, 4, 'rho', 1.0)
+        cp = double_or_blank(card, 3, 'cp', default=0.0)
+        rho = double_or_blank(card, 4, 'rho', default=1.0)
         H = double_or_blank(card, 5, 'H')
         mu = double_or_blank(card, 6, 'mu')
-        hgen = double_or_blank(card, 7, 'hgen', 1.0)
+        hgen = double_or_blank(card, 7, 'hgen', default=1.0)
         ref_enthalpy = double_or_blank(card, 8, 'refEnthalpy')
         tch = double_or_blank(card, 9, 'tch')
         tdelta = double_or_blank(card, 10, 'tdelta')

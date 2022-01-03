@@ -533,13 +533,22 @@ class XrefMesh(BDFAttributes):
 
     def _cross_reference_optimization(self) -> None:
         """cross references the optimization objects"""
+        remove_missing_optimization = True
+        dconstrs_to_remove = []
+
         for unused_key, deqatn in self.dequations.items():
             deqatn.cross_reference(self)
         for unused_key, dresp in self.dresps.items():
             dresp.cross_reference(self)
-        for unused_key, dconstrs in self.dconstrs.items():
-            for dconstr in dconstrs:
-                dconstr.cross_reference(self)
+
+        for key, dconstrs in self.dconstrs.items():
+            for i, dconstr in enumerate(dconstrs):
+                try:
+                    dconstr.cross_reference(self)
+                except:
+                    if not remove_missing_optimization:
+                        raise
+                    dconstrs_to_remove.append((key, i))
 
         for unused_key, dvcrel in self.dvcrels.items():
             dvcrel.cross_reference(self)
@@ -549,6 +558,9 @@ class XrefMesh(BDFAttributes):
             dvprel.cross_reference(self)
         for unused_key, desvar in self.desvars.items():
             desvar.cross_reference(self)
+
+        for key, i in dconstrs_to_remove:
+            del self.dconstrs[key][i]
 
     def _safe_cross_reference_contact(self) -> None:
         """cross references the contact objects"""

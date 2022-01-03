@@ -475,17 +475,10 @@ class RLOAD1(DynamicLoad):
         is_failed = False
         if self.tc > 0 or self.td > 0:
             msg += 'either RLOAD1 TC or TD > 0; tc=%s td=%s\n' % (self.tc, self.td)
-
-        if self.Type in [0, 'L', 'LO', 'LOA', 'LOAD']:
-            self.Type = 'LOAD'
-        elif self.Type in [1, 'D', 'DI', 'DIS', 'DISP']:
-            self.Type = 'DISP'
-        elif self.Type in [2, 'V', 'VE', 'VEL', 'VELO']:
-            self.Type = 'VELO'
-        elif self.Type in [3, 'A', 'AC', 'ACC', 'ACCE']:
-            self.Type = 'ACCE'
-        else:
-            msg += 'invalid RLOAD1 type  Type=%r\n' % self.Type
+        try:
+            self.Type = fix_loadtype_rload1(self.Type)
+        except RuntimeError:
+            msg += f'invalid RLOAD1 type  Type={self.Type}\n'
             is_failed = True
 
         if is_failed:
@@ -507,11 +500,11 @@ class RLOAD1(DynamicLoad):
         """
         sid = integer(card, 1, 'sid')
         excite_id = integer(card, 2, 'excite_id')
-        delay = integer_double_or_blank(card, 3, 'delay', 0)
-        dphase = integer_double_or_blank(card, 4, 'dphase', 0)
-        tc = integer_double_or_blank(card, 5, 'tc', 0)
-        td = integer_double_or_blank(card, 6, 'td', 0)
-        Type = integer_string_or_blank(card, 7, 'Type', 'LOAD')
+        delay = integer_double_or_blank(card, 3, 'delay', default=0)
+        dphase = integer_double_or_blank(card, 4, 'dphase', default=0)
+        tc = integer_double_or_blank(card, 5, 'tc', default=0)
+        td = integer_double_or_blank(card, 6, 'td', default=0)
+        Type = integer_string_or_blank(card, 7, 'Type', default='LOAD')
 
         assert len(card) <= 8, f'len(RLOAD1 card) = {len(card):d}\ncard={card}'
         return RLOAD1(sid, excite_id, delay, dphase, tc, td, Type, comment=comment)
@@ -856,12 +849,6 @@ class RLOAD2(DynamicLoad):
         tb : int/float; default=0
             TABLEDi id that defines B(f) for all degrees of freedom in
             EXCITEID entry
-        tc : int/float; default=0
-            TABLEDi id that defines C(f) for all degrees of freedom in
-            EXCITEID entry
-        td : int/float; default=0
-            TABLEDi id that defines D(f) for all degrees of freedom in
-            EXCITEID entry
         tp : int/float; default=0
             TABLEDi id that defines phi(f) for all degrees of freedom in
             EXCITEID entry
@@ -908,16 +895,10 @@ class RLOAD2(DynamicLoad):
         if self.tb > 0 or self.tp > 0:
             msg += 'either RLOAD2 TB or TP > 0; tb=%s tp=%s\n' % (self.tb, self.tp)
 
-        if self.Type in [0, 'L', 'LO', 'LOA', 'LOAD']:
-            self.Type = 'LOAD'
-        elif self.Type in [1, 'D', 'DI', 'DIS', 'DISP']:
-            self.Type = 'DISP'
-        elif self.Type in [2, 'V', 'VE', 'VEL', 'VELO']:
-            self.Type = 'VELO'
-        elif self.Type in [3, 'A', 'AC', 'ACC', 'ACCE']:
-            self.Type = 'ACCE'
-        else:
-            msg += 'invalid RLOAD2 type  Type=%r\n' % self.Type
+        try:
+            self.Type = fix_loadtype_rload2(self.Type)
+        except RuntimeError:
+            msg += f'invalid RLOAD2 type  Type={self.Type}\n'
             is_failed = True
 
         if is_failed:
@@ -939,11 +920,11 @@ class RLOAD2(DynamicLoad):
         """
         sid = integer(card, 1, 'sid')
         excite_id = integer(card, 2, 'excite_id')
-        delay = integer_double_or_blank(card, 3, 'delay', 0)
-        dphase = integer_double_or_blank(card, 4, 'dphase', 0)
-        tb = integer_double_or_blank(card, 5, 'tb', 0)
-        tp = integer_double_or_blank(card, 6, 'tp', 0)
-        Type = integer_string_or_blank(card, 7, 'Type', 'LOAD')
+        delay = integer_double_or_blank(card, 3, 'delay', default=0)
+        dphase = integer_double_or_blank(card, 4, 'dphase', default=0)
+        tb = integer_double_or_blank(card, 5, 'tb', default=0)
+        tp = integer_double_or_blank(card, 6, 'tp', default=0)
+        Type = integer_string_or_blank(card, 7, 'Type', default='LOAD')
 
         assert len(card) <= 8, f'len(RLOAD2 card) = {len(card):d}\ncard={card}'
         return RLOAD2(sid, excite_id, delay, dphase, tb, tp, Type, comment=comment)
@@ -1203,19 +1184,8 @@ class TLOAD1(DynamicLoad):
         self.delay_ref = None
 
     def validate(self):
-        if self.Type in [0, 'L', 'LO', 'LOA', 'LOAD']:
-            self.Type = 'LOAD'
-        elif self.Type in [1, 'D', 'DI', 'DIS', 'DISP']:
-            self.Type = 'DISP'
-        elif self.Type in [2, 'V', 'VE', 'VEL', 'VELO']:
-            self.Type = 'VELO'
-        elif self.Type in [3, 'A', 'AC', 'ACC', 'ACCE']:
-            self.Type = 'ACCE'
-        elif self.Type in [4, 5, 6, 7, 12, 13]:  # MSC-only
-            pass
-        else:
-            msg = 'invalid TLOAD1 type  Type=%r' % self.Type
-            raise AssertionError(msg)
+        self.Type = fix_loadtype_tload1(self.Type)
+
         assert self.sid > 0, self.sid
 
     @classmethod
@@ -1338,6 +1308,66 @@ class TLOAD1(DynamicLoad):
         if is_double:
             return self.comment + print_card_double(card)
         return self.comment + print_card_16(card)
+
+def fix_loadtype_tload1(load_type: Union[int, str]) -> str:
+    if load_type in [0, 'L', 'LO', 'LOA', 'LOAD']:
+        load_type = 'LOAD'
+    elif load_type in [1, 'D', 'DI', 'DIS', 'DISP']:
+        load_type = 'DISP'
+    elif load_type in [2, 'V', 'VE', 'VEL', 'VELO']:
+        load_type = 'VELO'
+    elif load_type in [3, 'A', 'AC', 'ACC', 'ACCE']:
+        load_type = 'ACCE'
+    elif load_type in [4, 5, 6, 7, 12, 13]:  # MSC-only
+        pass
+    else:
+        msg = 'invalid TLOAD1 type  Type={load_type!r}'
+        raise AssertionError(msg)
+    return load_type
+
+def fix_loadtype_tload2(load_type: Union[int, str]) -> str:
+    if load_type in [0, 'L', 'LO', 'LOA', 'LOAD']:
+        load_type = 'LOAD'
+    elif load_type in [1, 'D', 'DI', 'DIS', 'DISP']:
+        load_type = 'DISP'
+    elif load_type in [2, 'V', 'VE', 'VEL', 'VELO']:
+        load_type = 'VELO'
+    elif load_type in [3, 'A', 'AC', 'ACC', 'ACCE']:
+        load_type = 'ACCE'
+    elif load_type in [5, 6, 7, 12, 13]: # MSC only
+        pass
+    else:
+        msg = f'invalid TLOAD2 type  Type={load_type!r}'
+        raise RuntimeError(msg)
+    return load_type
+
+def fix_loadtype_rload1(load_type: Union[int, str]) -> str:
+    if load_type in [0, 'L', 'LO', 'LOA', 'LOAD']:
+        load_type = 'LOAD'
+    elif load_type in [1, 'D', 'DI', 'DIS', 'DISP']:
+        load_type = 'DISP'
+    elif load_type in [2, 'V', 'VE', 'VEL', 'VELO']:
+        load_type = 'VELO'
+    elif load_type in [3, 'A', 'AC', 'ACC', 'ACCE']:
+        load_type = 'ACCE'
+    else:
+        msg = f'invalid RLOAD1 type  Type={load_type!r}\n'
+        raise RuntimeError(msg)
+    return load_type
+
+def fix_loadtype_rload2(load_type: Union[int, str]) -> str:
+    if load_type in [0, 'L', 'LO', 'LOA', 'LOAD']:
+        load_type = 'LOAD'
+    elif load_type in [1, 'D', 'DI', 'DIS', 'DISP']:
+        load_type = 'DISP'
+    elif load_type in [2, 'V', 'VE', 'VEL', 'VELO']:
+        load_type = 'VELO'
+    elif load_type in [3, 'A', 'AC', 'ACC', 'ACCE']:
+        load_type = 'ACCE'
+    else:
+        msg = f'invalid RLOAD2 type  Type={load_type!r}\n'
+        raise RuntimeError(msg)
+    return load_type
 
 
 class TLOAD2(DynamicLoad):
@@ -1475,19 +1505,7 @@ class TLOAD2(DynamicLoad):
         self.delay_ref = None
 
     def validate(self):
-        if self.Type in [0, 'L', 'LO', 'LOA', 'LOAD']:
-            self.Type = 'LOAD'
-        elif self.Type in [1, 'D', 'DI', 'DIS', 'DISP']:
-            self.Type = 'DISP'
-        elif self.Type in [2, 'V', 'VE', 'VEL', 'VELO']:
-            self.Type = 'VELO'
-        elif self.Type in [3, 'A', 'AC', 'ACC', 'ACCE']:
-            self.Type = 'ACCE'
-        elif self.Type in [5, 6, 7, 12, 13]: # MSC only
-            pass
-        else:
-            msg = 'invalid TLOAD2 type  Type=%r' % self.Type
-            raise RuntimeError(msg)
+        self.Type = fix_loadtype_tload2(self.Type)
         assert self.sid > 0, self.sid
 
     @classmethod
@@ -1504,17 +1522,17 @@ class TLOAD2(DynamicLoad):
         """
         sid = integer(card, 1, 'sid')
         excite_id = integer(card, 2, 'excite_id')
-        delay = integer_double_or_blank(card, 3, 'delay', 0)
-        Type = integer_string_or_blank(card, 4, 'Type', 'LOAD')
+        delay = integer_double_or_blank(card, 3, 'delay', default=0)
+        Type = integer_string_or_blank(card, 4, 'Type', default='LOAD')
 
-        T1 = double_or_blank(card, 5, 'T1', 0.0)
-        T2 = double_or_blank(card, 6, 'T2', T1)
-        frequency = double_or_blank(card, 7, 'frequency', 0.)
-        phase = double_or_blank(card, 8, 'phase', 0.)
-        c = double_or_blank(card, 9, 'c', 0.)
-        b = double_or_blank(card, 10, 'b', 0.)
-        us0 = double_or_blank(card, 11, 'us0', 0.)
-        vs0 = double_or_blank(card, 12, 'vs0', 0.)
+        T1 = double_or_blank(card, 5, 'T1', default=0.0)
+        T2 = double_or_blank(card, 6, 'T2', default=T1)
+        frequency = double_or_blank(card, 7, 'frequency', default=0.)
+        phase = double_or_blank(card, 8, 'phase', default=0.)
+        c = double_or_blank(card, 9, 'c', default=0.)
+        b = double_or_blank(card, 10, 'b', default=0.)
+        us0 = double_or_blank(card, 11, 'us0', default=0.)
+        vs0 = double_or_blank(card, 12, 'vs0', default=0.)
 
         assert len(card) <= 13, f'len(TLOAD2 card) = {len(card):d}\ncard={card}'
         return TLOAD2(sid, excite_id, delay, Type, T1, T2, frequency, phase,

@@ -1319,24 +1319,42 @@ def _delete_optimization_data(model: BDF,
     materials_to_write = []
 
     #--------------------------------------------------------------
-    #pids_to_remove = list(pids_to_remove)
+    prop_types = set([])
     for pid in sorted(pids_to_remove):
         try:
             prop = model.properties[pid]
         except KeyError:
             continue
-        properties_to_write.append(prop)
+        prop_types.add(prop.type)
+
+    pids_to_delete = []
+    for pid, prop in model.properties.items():
+        if prop.type in prop_types:
+            properties_to_write.append(prop)
+            pids_to_delete.append(pid)
+    for pid in pids_to_delete:
         del model.properties[pid]
 
+    # ----------------------------------------------------------------
     #mids_to_remove = list(mids_to_remove)
+    mat_types = set([])
     for mid in sorted(mids_to_remove):
         try:
             mat = model.materials[mid]
         except KeyError:
             continue
-        materials_to_write.append(mat)
-        del model.materials[mid]
+        mat_types.add(mat.type)
 
+    mids_to_delete = []
+    for mid, mat in model.materials.items():
+        if mat.type in mat_types:
+            materials_to_write.append(mat)
+            del model.materials[pid]
+            mids_to_delete.append(mid)
+    for mid in mids_to_delete:
+        del model.mids_to_delete[mid]
+
+    # ----------------------------------------------------------------
     desvars = []
     for desvar_id, desvar in sorted(model.desvars.items()):
         desvars.append(desvar)

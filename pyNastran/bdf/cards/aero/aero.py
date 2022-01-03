@@ -1725,7 +1725,7 @@ class CAERO1(BaseCard):
             the BDF object
 
         """
-        msg = ', which is required by CAERO1 eid=%s' % self.eid
+        msg = f', which is required by CAERO1 eid={self.eid}'
         self.pid_ref = model.PAero(self.pid, msg=msg)
         self.cp_ref = model.Coord(self.cp, msg=msg)
         if model.sol in [144, 145, 146, 200]:
@@ -2367,7 +2367,7 @@ class CAERO2(BaseCard):
             the BDF object
 
         """
-        msg = ', which is required by CAERO2 eid=%s' % self.eid
+        msg = f', which is required by CAERO2 eid={self.eid}'
         self.pid_ref = model.PAero(self.pid, msg=msg)  # links to PAERO2
         self.cp_ref = model.Coord(self.cp, msg=msg)
         if self.nsb == 0:
@@ -2678,7 +2678,7 @@ class CAERO3(BaseCard):
             the BDF object
 
         """
-        msg = ', which is required by CAERO3 eid=%s' % self.eid
+        msg = f', which is required by CAERO3 eid={self.eid}'
         self.pid_ref = model.PAero(self.pid, msg=msg)  # links to PAERO3
         self.cp_ref = model.Coord(self.cp, msg=msg)
         if self.list_w is not None:
@@ -2690,7 +2690,7 @@ class CAERO3(BaseCard):
         self.ascid_ref = model.Acsid(msg=msg)
 
     def safe_cross_reference(self, model: BDF, xref_errors):
-        msg = ', which is required by CAERO3 eid=%s' % self.eid
+        msg = f', which is required by CAERO3 eid={self.eid}'
         self.pid_ref = model.safe_paero(self.pid, self.eid, xref_errors, msg=msg)  # links to PAERO3
         self.cp_ref = model.safe_coord(self.cp, self.eid, xref_errors, msg=msg)
 

@@ -21,7 +21,7 @@ import traceback
 from collections import defaultdict
 
 from typing import (
-    List, Dict, Set, Tuple, Sequence, Optional, Union, Any, TYPE_CHECKING)
+    List, Dict, Set, Tuple, Sequence, Optional, Union, Any, cast, TYPE_CHECKING)
 from pickle import load, dump, dumps  # type: ignore
 
 import numpy as np  # type: ignore
@@ -570,7 +570,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
         # cards that were created, but not processed
         self.reject_cards = []  # type: List[str]
 
-        self.include_filenames = defaultdict(list)
+        self.include_filenames = defaultdict(list) # List[str]
         # self.__init_attributes()
 
         cards_to_read = [
@@ -1189,7 +1189,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
 
     def include_zip(self, bdf_filename: Optional[str]=None,
                     encoding: Optional[str]=None,
-                    make_ilines: bool=True) -> (List[str], Any):
+                    make_ilines: bool=True) -> Tuple[List[str], Any]:
         """
         Read a bdf without perform any other operation, except (optionally)
         insert the INCLUDE files in the bdf
@@ -1402,7 +1402,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
                     del dict_values[value]
             # TODO: redo get_card_ids_by_card_types & card_count
 
-    def _read_bdf_helper(self, bdf_filename: str, encoding: str,
+    def _read_bdf_helper(self, bdf_filename: Optional[str], encoding: str,
                          punch: bool, read_includes: bool):
         """creates the file loading if bdf_filename is None"""
         #self.set_error_storage(nparse_errors=None, stop_on_parsing_error=True,
@@ -1414,6 +1414,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
         self.read_includes = read_includes
         self.active_filenames = []
 
+        # turns bdf_filename -> bdf_filename2
         if bdf_filename is None:
             from pyNastran.utils.gui_io import load_file_dialog
             wildcard_wx = "Nastran BDF (*.bdf; *.dat; *.nas; *.pch, *.ecd)|" \
@@ -1421,11 +1422,11 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
                 "All files (*.*)|*.*"
             wildcard_qt = "Nastran BDF (*.bdf *.dat *.nas *.pch *.ecd);;All files (*)"
             title = 'Please select a BDF/DAT/PCH/ECD to load'
-            bdf_filename = load_file_dialog(title, wildcard_wx, wildcard_qt)[0]
-            assert bdf_filename is not None, bdf_filename
+            bdf_filename2 = load_file_dialog(title, wildcard_wx, wildcard_qt)[0]
+            assert bdf_filename2 is not None, bdf_filename2
 
         elif isinstance(bdf_filename, (str, PurePath)):
-            pass
+            bdf_filename2 = bdf_filename
         elif isinstance(bdf_filename, (StringIO, IOBase)):
             self.bdf_filename = bdf_filename
             self.punch = punch
@@ -1433,17 +1434,18 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
         else:
             raise NotImplementedError(bdf_filename)
 
-        check_path(bdf_filename, 'bdf_filename')
-        ext = os.path.splitext(bdf_filename)[1]
+        #-------------------------------
+        check_path(bdf_filename2, 'bdf_filename')
+        ext = os.path.splitext(bdf_filename2)[1]
         if ext == '.pch':  # .. todo:: should this be removed???
             punch = True
 
         #: the active filename (string)
-        self.bdf_filename = bdf_filename
+        self.bdf_filename = bdf_filename2
 
         #: is this a punch file (no executive control deck)
         self.punch = punch
-        assert ext != '.op2', bdf_filename
+        assert ext != '.op2', bdf_filename2
 
     def pop_parse_errors(self) -> None:
         """raises an error if there are parsing errors"""
@@ -1566,11 +1568,11 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
         if bulk_data_ilines is None:
             bulk_data_ilines = np.zeros((len(bulk_data_lines), 2), dtype='int32')
 
-        cards_list = []
-        cards_dict = defaultdict(list)
+        cards_list = []  # type: List[Any]
+        cards_dict = defaultdict(list)  # type: Dict[str, List[Any]]
         dict_cards = ['BAROR', 'BEAMOR']
         #cards = defaultdict(list)
-        card_count = defaultdict(int)
+        card_count = defaultdict(int)  # Dict[str, int]
         full_comment = ''
         card_lines = []
         old_ifile_iline = None
@@ -2697,7 +2699,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
                 #_check_for_spaces(card_name, card_lines, comment, self.log)
             self.log.info('    rejecting card_name = %s' % card_name)
 
-    def _prepare_plotel(self, unused_card: List[str], card_obj: BDFCard, comment='') -> None:
+    def _prepare_plotel(self, unused_card: List[str], card_obj: BDFCard, comment='') -> List[PLOTEL]:
         """adds a PLOTEL"""
         #['PLOTEL', '3101', '3101', '3102', None, '3102', '3102', '3103']
         plotels = [PLOTEL.add_card(card_obj, 0, comment=comment)]
@@ -2707,19 +2709,19 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             self._add_methods._add_plotel_object(plotel)
         return plotels
 
-    def _prepare_cbar(self, unused_card: List[str], card_obj: BDFCard, comment='') -> None:
+    def _prepare_cbar(self, unused_card: List[str], card_obj: BDFCard, comment='') -> CBAR:
         """adds a CBAR"""
         elem = CBAR.add_card(card_obj, baror=self.baror, comment=comment)
         self._add_methods._add_element_object(elem)
         return elem
 
-    def _prepare_cbeam(self, unused_card: List[str], card_obj: BDFCard, comment='') -> None:
+    def _prepare_cbeam(self, unused_card: List[str], card_obj: BDFCard, comment='') -> CBEAM:
         """adds a CBEAM"""
         elem = CBEAM.add_card(card_obj, beamor=self.beamor, comment=comment)
         self._add_methods._add_element_object(elem)
         return elem
 
-    def _prepare_ctetra(self, unused_card: List[str], card_obj: BDFCard, comment='') -> None:
+    def _prepare_ctetra(self, unused_card: List[str], card_obj: BDFCard, comment='') -> CTETRA4:
         """adds a CTETRA4/CTETRA10"""
         if len(card_obj) == 7:
             elem = CTETRA4.add_card(card_obj, comment=comment)
@@ -2728,7 +2730,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
         self._add_methods._add_element_object(elem)
         return elem
 
-    def _prepare_cpyram(self, unused_card: List[str], card_obj: BDFCard, comment='') -> None:
+    def _prepare_cpyram(self, unused_card: List[str], card_obj: BDFCard, comment='') -> CPYRAM5:
         """adds a CPYRAM5/CPYRAM13"""
         if len(card_obj) == 8:
             elem = CPYRAM5.add_card(card_obj, comment=comment)
@@ -2737,7 +2739,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
         self._add_methods._add_element_object(elem)
         return elem
 
-    def _prepare_cpenta(self, unused_card: List[str], card_obj: BDFCard, comment='') -> None:
+    def _prepare_cpenta(self, unused_card: List[str], card_obj: BDFCard, comment='') -> CPENTA6:
         """adds a CPENTA6/CPENTA15"""
         if len(card_obj) == 9:
             elem = CPENTA6.add_card(card_obj, comment=comment)
@@ -2746,7 +2748,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
         self._add_methods._add_element_object(elem)
         return elem
 
-    def _prepare_chexa(self, unused_card: List[str], card_obj: BDFCard, comment='') -> None:
+    def _prepare_chexa(self, unused_card: List[str], card_obj: BDFCard, comment='') -> CHEXA8:
         """adds a CHEXA8/CHEXA20"""
         if len(card_obj) == 11:
             elem = CHEXA8.add_card(card_obj, comment=comment)
@@ -2755,18 +2757,18 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
         self._add_methods._add_element_object(elem)
         return elem
 
-    def _prepare_bctset(self, unused_card: List[str], card_obj: BDFCard, comment='') -> None:
+    def _prepare_bctset(self, unused_card: List[str], card_obj: BDFCard, comment='') -> BCTSET:
         """adds a BCTSET"""
         bctset = BCTSET.add_card(card_obj, comment=comment, sol=self.sol)
         self._add_methods._add_bctset_object(bctset)
         return bctset
 
-    def _prepare_grdset(self, unused_card: List[str], card_obj: BDFCard, comment='') -> None:
+    def _prepare_grdset(self, unused_card: List[str], card_obj: BDFCard, comment='') -> GRDSET:
         """adds a GRDSET"""
         self.grdset = GRDSET.add_card(card_obj, comment=comment)
         return self.grdset
 
-    def _prepare_cdamp4(self, unused_card: List[str], card_obj: BDFCard, comment='') -> None:
+    def _prepare_cdamp4(self, unused_card: List[str], card_obj: BDFCard, comment='') -> CDAMP4:
         """adds a CDAMP4"""
         dampers = [CDAMP4.add_card(card_obj, comment=comment)]
         if card_obj.field(5):
@@ -2775,7 +2777,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             self._add_methods._add_damper_object(damper)
         return dampers
 
-    def _prepare_deform(self, unused_card: List[str], card_obj: BDFCard, comment='') -> None:
+    def _prepare_deform(self, unused_card: List[str], card_obj: BDFCard, comment='') -> DEFORM:
         """adds a DEFORM"""
         loads = [DEFORM.add_card(card_obj, comment=comment)]
         if card_obj.field(4):
@@ -2786,37 +2788,37 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             self._add_methods._add_load_object(loadi)
         return loads
 
-    def _prepare_tempbc(self, unused_card: List[str], card_obj: BDFCard, comment='') -> None:
+    def _prepare_tempbc(self, unused_card: List[str], card_obj: BDFCard, comment='') -> TEMPBC:
         """adds a TEMPBC"""
         boundary_condition = TEMPBC.add_card(card_obj, comment=comment)
         self._add_methods._add_thermal_bc_object(boundary_condition, boundary_condition.eid)
         return boundary_condition
 
-    def _prepare_convm(self, unused_card: List[str], card_obj: BDFCard, comment='') -> None:
+    def _prepare_convm(self, unused_card: List[str], card_obj: BDFCard, comment='') -> CONVM:
         """adds a CONVM"""
         boundary_condition = CONVM.add_card(card_obj, comment=comment)
         self._add_methods._add_thermal_bc_object(boundary_condition, boundary_condition.eid)
         return boundary_condition
 
-    def _prepare_conv(self, unused_card: List[str], card_obj: BDFCard, comment='') -> None:
+    def _prepare_conv(self, unused_card: List[str], card_obj: BDFCard, comment='') -> CONV:
         """adds a CONV"""
         boundary_condition = CONV.add_card(card_obj, comment=comment)
         self._add_methods._add_thermal_bc_object(boundary_condition, boundary_condition.eid)
         return boundary_condition
 
-    def _prepare_radm(self, unused_card: List[str], card_obj: BDFCard, comment='') -> None:
+    def _prepare_radm(self, unused_card: List[str], card_obj: BDFCard, comment='') -> RADM:
         """adds a RADM"""
         boundary_condition = RADM.add_card(card_obj, comment=comment)
         self._add_methods._add_thermal_bc_object(boundary_condition, boundary_condition.radmid)
         return boundary_condition
 
-    def _prepare_radbc(self, unused_card: List[str], card_obj: BDFCard, comment='') -> None:
+    def _prepare_radbc(self, unused_card: List[str], card_obj: BDFCard, comment='') -> RADBC:
         """adds a RADBC"""
         boundary_condition = RADBC.add_card(card_obj, comment=comment)
         self._add_methods._add_thermal_bc_object(boundary_condition, boundary_condition.nodamb)
         return boundary_condition
 
-    def _prepare_tempd(self, unused_card: List[str], card_obj: BDFCard, comment='') -> None:
+    def _prepare_tempd(self, unused_card: List[str], card_obj: BDFCard, comment='') -> List[TEMPD]:
         """adds a TEMPD"""
         tempds = [TEMPD.add_card(card_obj, 0, comment=comment)]
         if card_obj.field(3):
@@ -2829,7 +2831,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             self._add_methods._add_tempd_object(tempd)
         return tempds
 
-    def _prepare_tempax(self, unused_card: List[str], card_obj: BDFCard, comment='') -> None:
+    def _prepare_tempax(self, unused_card: List[str], card_obj: BDFCard, comment='') -> List[TEMPAX]:
         """adds a TEMPAX"""
         tempaxs = [TEMPAX.add_card(card_obj, 0, comment=comment)]
         if card_obj.field(5):
@@ -2838,13 +2840,13 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             self._add_methods._add_load_object(tempax)
         return tempaxs
 
-    def _prepare_dequatn(self, unused_card: List[str], card_obj: BDFCard, comment='') -> None:
+    def _prepare_dequatn(self, unused_card: List[str], card_obj: BDFCard, comment='') -> DEQATN:
         """adds a DEQATN"""
         deqatn = DEQATN.add_card(card_obj, comment=comment)
         self._add_methods._add_deqatn_object(deqatn)
         return deqatn
 
-    def _prepare_dti(self, unused_card_name, card_obj, comment=''):
+    def _prepare_dti(self, unused_card_name, card_obj, comment='') -> DTI:
         """adds a DTI"""
         name = string(card_obj, 1, 'name')
         if name == 'UNITS':
@@ -2854,7 +2856,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
         self._add_methods._add_dti_object(dti)
         return dti
 
-    def _prepare_dmig(self, unused_card: List[str], card_obj: BDFCard, comment='') -> None:
+    def _prepare_dmig(self, unused_card: List[str], card_obj: BDFCard, comment='') -> DMIG:
         """adds a DMIG"""
         name = string(card_obj, 1, 'name')
         field2 = integer_or_string(card_obj, 2, 'flag')
@@ -2876,7 +2878,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
                 self._dmig_temp[name].append((card_obj, comment))
         return dmig
 
-    def _prepare_dmix(self, class_obj, add_method, card_obj, comment=''):
+    def _prepare_dmix(self, class_obj, add_method, card_obj, comment='') -> Union[DMI, DMIJ, DMIJI, DMIK]:
         """adds a DMI, DMIJ, DMIJI, or DMIK"""
         field2 = integer(card_obj, 2, 'flag')
         if field2 == 0:
@@ -2888,27 +2890,27 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             self._dmig_temp[name].append((card_obj, comment))
         return dmix
 
-    def _prepare_dmiax(self, unused_card: List[str], card_obj: BDFCard, comment='') -> None:
+    def _prepare_dmiax(self, unused_card: List[str], card_obj: BDFCard, comment='') -> DMIAX:
         """adds a DMIAX"""
         return self._prepare_dmix(DMIAX, self._add_methods._add_dmiax_object, card_obj, comment=comment)
 
-    def _prepare_dmi(self, unused_card: List[str], card_obj: BDFCard, comment='') -> None:
+    def _prepare_dmi(self, unused_card: List[str], card_obj: BDFCard, comment='') -> DMI:
         """adds a DMI"""
         return self._prepare_dmix(DMI, self._add_methods._add_dmi_object, card_obj, comment=comment)
 
-    def _prepare_dmij(self, unused_card: List[str], card_obj: BDFCard, comment='') -> None:
+    def _prepare_dmij(self, unused_card: List[str], card_obj: BDFCard, comment='') -> DMIJ:
         """adds a DMIJ"""
         return self._prepare_dmix(DMIJ, self._add_methods._add_dmij_object, card_obj, comment=comment)
 
-    def _prepare_dmik(self, unused_card: List[str], card_obj: BDFCard, comment='') -> None:
+    def _prepare_dmik(self, unused_card: List[str], card_obj: BDFCard, comment='') -> DMIK:
         """adds a DMIK"""
         return self._prepare_dmix(DMIK, self._add_methods._add_dmik_object, card_obj, comment=comment)
 
-    def _prepare_dmiji(self, unused_card: List[str], card_obj: BDFCard, comment='') -> None:
+    def _prepare_dmiji(self, unused_card: List[str], card_obj: BDFCard, comment='') -> DMIJI:
         """adds a DMIJI"""
         return self._prepare_dmix(DMIJI, self._add_methods._add_dmiji_object, card_obj, comment=comment)
 
-    def _prepare_cmass4(self, unused_card: List[str], card_obj: BDFCard, comment='') -> None:
+    def _prepare_cmass4(self, unused_card: List[str], card_obj: BDFCard, comment='') -> CMASS4:
         """adds a CMASS4"""
         elements = [CMASS4.add_card(card_obj, icard=0, comment=comment)]
         if card_obj.field(5):
@@ -2917,7 +2919,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             self._add_methods._add_mass_object(elem)
         return elements
 
-    def _prepare_pelas(self, unused_card: List[str], card_obj: BDFCard, comment='') -> None:
+    def _prepare_pelas(self, unused_card: List[str], card_obj: BDFCard, comment='') -> PELAS:
         """adds a PELAS"""
         properties = [PELAS.add_card(card_obj, icard=0, comment=comment)]
         if card_obj.field(5):
@@ -2926,7 +2928,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             self._add_methods._add_property_object(prop)
         return properties
 
-    def _prepare_nsm(self, unused_card: List[str], card_obj: BDFCard, comment='') -> None:
+    def _prepare_nsm(self, unused_card: List[str], card_obj: BDFCard, comment='') -> NSM:
         """adds an NSM"""
         nfields = len(card_obj)
         ncards = (nfields - 3) // 2
@@ -2941,7 +2943,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             self._add_methods._add_nsm_object(nsm)
         return nsms
 
-    def _prepare_nsml(self, unused_card: List[str], card_obj: BDFCard, comment='') -> None:
+    def _prepare_nsml(self, unused_card: List[str], card_obj: BDFCard, comment='') -> List[NSML]:
         """adds an NSML"""
         nfields = len(card_obj)
         ncards = (nfields - 3) // 2
@@ -2955,7 +2957,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             self._add_methods._add_nsm_object(nsm)
         return nsms
 
-    def _prepare_pvisc(self, unused_card: List[str], card_obj: BDFCard, comment='') -> None:
+    def _prepare_pvisc(self, unused_card: List[str], card_obj: BDFCard, comment='') -> List[PVISC]:
         """adds a PVISC"""
         properties = [PVISC.add_card(card_obj, icard=0, comment=comment)]
         if card_obj.field(5):
@@ -2964,7 +2966,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             self._add_methods._add_property_object(prop)
         return properties
 
-    def _prepare_ringfl(self, unused_card: List[str], card_obj: BDFCard, comment='') -> None:
+    def _prepare_ringfl(self, unused_card: List[str], card_obj: BDFCard, comment='') -> List[RINGFL]:
         """adds a RINGFL"""
         rings = [RINGFL.add_card(card_obj, icard=0, comment=comment)]
         if card_obj.field(3):
@@ -2975,7 +2977,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             self._add_methods._add_ringfl_object(ring)
         return rings
 
-    def _prepare_pdamp(self, unused_card: List[str], card_obj: BDFCard, comment='') -> None:
+    def _prepare_pdamp(self, unused_card: List[str], card_obj: BDFCard, comment='') -> List[PDAMP]:
         """adds a PDAMP"""
         properties = [PDAMP.add_card(card_obj, icard=0, comment=comment)]
         if card_obj.field(3):
@@ -2988,7 +2990,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             self._add_methods._add_property_object(prop)
         return properties
 
-    def _prepare_pmass(self, unused_card: List[str], card_obj: BDFCard, comment='') -> None:
+    def _prepare_pmass(self, unused_card: List[str], card_obj: BDFCard, comment='') -> List[PMASS]:
         """adds a PMASS"""
         properties = [PMASS.add_card(card_obj, icard=0, comment=comment)]
         for (i, j) in enumerate([3, 5, 7]):
@@ -2998,7 +3000,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             self._add_methods._add_property_mass_object(prop)
         return properties
 
-    def _prepare_cord1r(self, unused_card: List[str], card_obj: BDFCard, comment='') -> None:
+    def _prepare_cord1r(self, unused_card: List[str], card_obj: BDFCard, comment='') -> List[CORD1R]:
         """adds a CORD1R"""
         coords = [CORD1R.add_card(card_obj, comment=comment)]
         if card_obj.field(5):
@@ -3007,7 +3009,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             self._add_methods._add_coord_object(coord)
         return coords
 
-    def _prepare_cord1c(self, unused_card: List[str], card_obj: BDFCard, comment='') -> None:
+    def _prepare_cord1c(self, unused_card: List[str], card_obj: BDFCard, comment='') -> List[CORD1C]:
         """adds a CORD1C"""
         coords = [CORD1C.add_card(card_obj, comment=comment)]
         if card_obj.field(5):
@@ -3016,7 +3018,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             self._add_methods._add_coord_object(coord)
         return coords
 
-    def _prepare_cord1s(self, unused_card: List[str], card_obj: BDFCard, comment='') -> None:
+    def _prepare_cord1s(self, unused_card: List[str], card_obj: BDFCard, comment='') -> List[CORD1S]:
         """adds a CORD1S"""
         coords = [CORD1S.add_card(card_obj, comment=comment)]
         if card_obj.field(5):
@@ -3025,7 +3027,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             self._add_methods._add_coord_object(coord)
         return coords
 
-    def _prepare_acmodl(self, unused_card: List[str], card_obj: BDFCard, comment='') -> None:
+    def _prepare_acmodl(self, unused_card: List[str], card_obj: BDFCard, comment='') -> ACMODL:
         acmodl = ACMODL.add_card(card_obj, self._nastran_format, comment=comment)
         self._add_methods._add_acmodl_object(acmodl)
 
@@ -3871,59 +3873,6 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             self.coords, do_checks)
         return nids_checked, cps_checked, cps_to_check
 
-    def _get_coords_to_update(self, cps_to_check, cps_checked, nids_checked):
-        """helper method for ``transform_xyzcp_to_xyz_cid``"""
-        cord1s_to_update_temp = []
-        cord2s_to_update = []
-        for cp in sorted(cps_to_check):
-            coord = self.coords[cp]
-            if coord.type in ['CORD2R', 'CORD2C', 'CORD2S']:
-                if coord.rid in cps_checked:
-                    cord2s_to_update.append(cp)
-            elif coord.type in ['CORD1R', 'CORD1C', 'CORD1S']:
-                cord1s_to_update_temp.append(cp)
-            else:
-                raise NotImplementedError(coord.rstrip())
-
-        cord1s_to_update = set()
-        if cord1s_to_update_temp:
-            if len(nids_checked) == 0:
-                raise RuntimeError('len(nids_checked)=0...this should not happen.')
-            elif len(nids_checked) == 1:
-                pass
-            else:
-                nids_checked = [np.hstack(nids_checked)]
-
-            nids_checkedi = nids_checked[0]
-            if len(nids_checkedi) == 0:
-                #print("no cord1s to check...")
-                cord1s_to_update = []
-            else:
-                #print('nids_checked = ', nids_checkedi)
-                for cp in cord1s_to_update_temp:
-                    coord = self.coords[cp]
-                    nids = coord.node_ids
-                    #print('cp=%s nids=%s' % (cp, nids))
-                    for nid in nids:
-                        if nid not in nids_checkedi:
-                            #print('  nid=%s break...' % nid)
-                            break
-                    else:
-                        #print('  passed')
-                        # all nids passed
-                        cord1s_to_update.add(cp)
-                cord1s_to_update = list(cord1s_to_update)
-                cord1s_to_update.sort()
-
-        ncoords = len(cord1s_to_update) + len(cord2s_to_update)
-        #if ncoords == 0:
-            #msg = 'CPs not handled=%s cord1s_to_update=%s cord2s_to_update=%s\n' % (
-                #cps_to_check, cord1s_to_update, cord2s_to_update)
-            #for cp in (cord1s_to_update + cord2s_to_update):
-                #msg += str(cp)
-            #raise RuntimeError(msg)
-        return ncoords, cord1s_to_update, cord2s_to_update, nids_checked
-
     @property
     def is_bdf_vectorized(self):
         """Returns False for the ``BDF`` class"""
@@ -4231,6 +4180,9 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
         if save_file_structure:
             for icard, card in enumerate(cards_list):
                 card_name, comment, card_lines, (ifile, unused_iline) = card
+                card_name = cast(str, card_name)
+                comment = cast(str, comment)
+                card_lines = cast(List[str],card_lines)
                 if card_name is None:
                     msg = f'card_name = {card_name!r}\n'
                     msg += f'card_lines = {card_lines}'
@@ -4454,7 +4406,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
     # HDF5
     def _read_bdf_cards(self, bdf_filename: Optional[str]=None,
                         punch: bool=False,
-                        read_includes: bool=True, encoding: Optional[str]=None) -> None:
+                        read_includes: bool=True, encoding: Optional[str]=None) -> Dict[str, List[Any]]:
         """
         Read method for the bdf files
 
@@ -4537,7 +4489,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             subcases[subcase_id] = subcase
         return subcases
 
-    def _parse_cards_hdf5(self, cards: Dict[str, Any], unused_card_count):
+    def _parse_cards_hdf5(self, cards: Dict[str, Any], unused_card_count) -> Dict[str, List[Any]]:
         """creates card objects and adds the parsed cards to the deck"""
         self.echo = False
         cards_out = {}
@@ -5035,26 +4987,85 @@ def _bool(value):
     """casts a lower string to a booean"""
     return True if value == 'true' else False
 
-def _get_coords_to_update(coords: List[CORD1R, CORD1S, CORD1C,
-                                       CORD2R, CORD2S, CORD2C],
+#def _get_coords_to_update(coords: Dict[int, Union[CORD1R, CORD1S, CORD1C,
+                                                  #CORD2R, CORD2S, CORD2C]],
+                          #cps_to_check: List[int],
+                          #cps_checked: List[int],
+                          #nids_checked: List[int]) -> List[int]:
+    #"""helper method for ``transform_xyzcp_to_xyz_cid``"""
+    #cord1s_to_update_temp = []
+    #cord2s_to_update = []
+    #for cp in sorted(cps_to_check):
+        #coord = coords[cp]
+        #if coord.type in ['CORD2R', 'CORD2C', 'CORD2S']:
+            #if coord.rid in cps_checked:
+                #cord2s_to_update.append(cp)
+        #elif coord.type in ['CORD1R', 'CORD1C', 'CORD1S']:
+            #cord1s_to_update_temp.append(cp)
+        #else:
+            #raise NotImplementedError(coord.rstrip())
+
+    #cord1s_to_update = set()
+    #if cord1s_to_update_temp:
+        #if len(nids_checked) == 0:
+            #raise RuntimeError('len(nids_checked)=0...this should not happen.')
+        #elif len(nids_checked) == 1:
+            #pass
+        #else:
+            #nids_checked = [np.hstack(nids_checked)]
+
+        #nids_checkedi = nids_checked[0]
+        #if len(nids_checkedi) == 0:
+            ##print("no cord1s to check...")
+            #cord1s_to_update = []
+        #else:
+            ##print('nids_checked = ', nids_checkedi)
+            #for cp in cord1s_to_update_temp:
+                #coord = coords[cp]
+                #nids = coord.node_ids
+                ##print('cp=%s nids=%s' % (cp, nids))
+                #for nid in nids:
+                    #if nid not in nids_checkedi:
+                        ##print('  nid=%s break...' % nid)
+                        #break
+                #else:
+                    ##print('  passed')
+                    ## all nids passed
+                    #cord1s_to_update.add(cp)
+            #cord1s_to_update = list(cord1s_to_update)
+            #cord1s_to_update.sort()
+
+    #ncoords = len(cord1s_to_update) + len(cord2s_to_update)
+    ##if ncoords == 0:
+        ##msg = 'CPs not handled=%s cord1s_to_update=%s cord2s_to_update=%s\n' % (
+            ##cps_to_check, cord1s_to_update, cord2s_to_update)
+        ##for cp in (cord1s_to_update + cord2s_to_update):
+            ##msg += str(cp)
+        ##raise RuntimeError(msg)
+    #return ncoords, cord1s_to_update, cord2s_to_update, nids_checked
+
+
+def _get_coords_to_update(coords: Dict[int, Union[CORD1R, CORD1C, CORD1S,
+                                                  CORD2R, CORD2C, CORD2S]],
                           cps_to_check: List[int],
                           cps_checked: List[int],
-                          nids_checked: List[int]) -> List[int]:
+                          nids_checked: List[int]) -> Tuple[int, List[int], List[int], List[int]]:
     """helper method for ``transform_xyzcp_to_xyz_cid``"""
     cord1s_to_update_temp = []
-    cord2s_to_update = []
+    cord2s_to_update_list = []
     for cp in sorted(cps_to_check):
         coord = coords[cp]
         if coord.type in ['CORD2R', 'CORD2C', 'CORD2S']:
             if coord.rid in cps_checked:
-                cord2s_to_update.append(cp)
+                cord2s_to_update_list.append(cp)
         elif coord.type in ['CORD1R', 'CORD1C', 'CORD1S']:
             cord1s_to_update_temp.append(cp)
         else:
             raise NotImplementedError(coord.rstrip())
 
-    cord1s_to_update = set()
+    cord1s_to_update_list = []
     if cord1s_to_update_temp:
+        cord1s_to_update = set()
         if len(nids_checked) == 0:
             raise RuntimeError('len(nids_checked)=0...this should not happen.')
         elif len(nids_checked) == 1:
@@ -5063,10 +5074,9 @@ def _get_coords_to_update(coords: List[CORD1R, CORD1S, CORD1C,
             nids_checked = [np.hstack(nids_checked)]
 
         nids_checkedi = nids_checked[0]
-        if len(nids_checkedi) == 0:
-            #print("no cord1s to check...")
-            cord1s_to_update = []
-        else:
+        if len(nids_checkedi) != 0:
+            # check the CORD1x cards
+            #
             #print('nids_checked = ', nids_checkedi)
             for cp in cord1s_to_update_temp:
                 coord = coords[cp]
@@ -5080,17 +5090,18 @@ def _get_coords_to_update(coords: List[CORD1R, CORD1S, CORD1C,
                     #print('  passed')
                     # all nids passed
                     cord1s_to_update.add(cp)
-            cord1s_to_update = list(cord1s_to_update)
-            cord1s_to_update.sort()
+            cord1s_to_update_list = list(cord1s_to_update)
+            cord1s_to_update_list.sort()
 
-    ncoords = len(cord1s_to_update) + len(cord2s_to_update)
+    ncoords = len(cord1s_to_update_list) + len(cord2s_to_update_list)
     #if ncoords == 0:
         #msg = 'CPs not handled=%s cord1s_to_update=%s cord2s_to_update=%s\n' % (
             #cps_to_check, cord1s_to_update, cord2s_to_update)
         #for cp in (cord1s_to_update + cord2s_to_update):
             #msg += str(cp)
         #raise RuntimeError(msg)
-    return ncoords, cord1s_to_update, cord2s_to_update, nids_checked
+    return ncoords, cord1s_to_update_list, cord2s_to_update_list, nids_checked
+
 
 def map_version(fem: BDF, version: str):
     version_map = {

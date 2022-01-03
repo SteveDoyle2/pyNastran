@@ -696,7 +696,7 @@ class QBDY3(ThermalLoad):
         """
         sid = integer(card, 1, 'sid')
         q0 = double(card, 2, 'q0')
-        cntrlnd = integer_or_blank(card, 3, 'cntrlnd', 0)
+        cntrlnd = integer_or_blank(card, 3, 'cntrlnd', default=0)
 
         nfields = card.nfields
         eids = fields(integer_or_string, card, 'eid', i=4, j=nfields)

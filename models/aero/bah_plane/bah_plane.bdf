@@ -1,6 +1,7 @@
-ID BAH WING
-SOL 145
-TIME 100
+$ID BAH WING
+$SOL 145
+$TIME 100
+include 'alter_flutter.inc'
 CEND
 $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 $ CASE CONTROL SECTION
@@ -13,8 +14,8 @@ SPC = 101
 METHOD = 401
 SUBCASE 1
   FMETHOD = 501
-SUBCASE 2
-  FMETHOD = 502
+$SUBCASE 2
+$  FMETHOD = 502
 $
 $OUTPUT
 DISP(plot) = ALL

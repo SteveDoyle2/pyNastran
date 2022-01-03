@@ -1741,7 +1741,7 @@ def _check_case_parameters(subcase: Subcase, fem: BDF,
         allowed_sols = [66, 101, 106, 153, 400, 600, 700]
         ierror = check_sol(sol, subcase, allowed_sols, 'NLPARM', log, ierror, nerrors)
         nlparm_id = subcase.get_parameter('NLPARM')[0]
-        unused_nlparm = fem.NLParm(nlparm_id, f'which is required for {subcase}')
+        unused_nlparm = fem.NLParm(nlparm_id, f', which is required for {subcase}')
     return ierror
 
 def _check_case_parameters_aero(subcase: Subcase, fem: BDF, sol: int,
@@ -2263,7 +2263,7 @@ def get_test_bdf_usage_args_examples(encoding):
     formats = '--msc|--nx|--optistruct|--nasa95|--mystran'
     options = (
         '\n  [options] = [-e E] [--encoding ENCODE] [-q] [--dumplines] [--dictsort]\n'
-        f'              [--crash C] [--pickle] [--profile] [--hdf5] [{formats}]\n')
+        f'              [--crash C] [--pickle] [--profile] [--hdf5] [{formats}] [--filter]\n')
     usage = (
         "Usage:\n"
         '  test_bdf [-x | --safe] [-p] [-c] [-L]      BDF_FILENAME [options]\n'
@@ -2295,8 +2295,10 @@ def get_test_bdf_usage_args_examples(encoding):
         '  -l, --large    writes the BDF in large field, single precision format (default=False)\n'
         '  -d, --double   writes the BDF in large field, double precision format (default=False)\n'
         '  -L, --loads    Disables forces/moments summation for the different subcases (default=True)\n'
+        #'  --filter       Filters unused cards\n'
+
         '  -e E, --nerrors E  Allow for cross-reference errors (default=100)\n'
-        '  --encoding ENCODE  the encoding method (default=None -> %r)\n' % encoding +
+        f'  --encoding ENCODE  the encoding method (default=None -> {encoding!r})\n'  +
         '  -q, --quiet        prints debug messages (default=False)\n'
 
         '\n'
@@ -2370,6 +2372,7 @@ def main(argv=None):
             data['BDF_FILENAME'],
             debug=debug,
             xref=data['xref'],
+            #filter_unused=data['filter'],
             check=not(data['check']),
             punch=data['punch'],
             size=size,
@@ -2414,6 +2417,7 @@ def main(argv=None):
             '.',
             data['BDF_FILENAME'],
             debug=debug,
+            #filter_unused=data['filter'],
             xref=data['xref'],
             # xref_safe=data['xref_safe'],
             check=not(data['check']),

@@ -12,6 +12,7 @@ $$                      Case Control Cards                                      
 $$------------------------------------------------------------------------------$
 SOL 103
 TIME 600
+CEND
 
 Subcase 10
    METHOD=10
@@ -34,7 +35,6 @@ $$--------------------------------------------------------------
 $$BEGIN TAGS
 $$END TAGS
 $
-BEGIN BULK
 $$
 $$  Stacking Information for Ply-Based Composite Definition
 $$
@@ -67,6 +67,7 @@ SPC1	2	23456	99999998
 SUPORT	99999998   1
 $
 CONM2,99999997,99999998,,1E+9
+INCLUDE 'geom.inc'
 $ 
 $ ************** Dynamic loads *******************************************
 $
@@ -95,9 +96,14 @@ $ ********************** Frequency output ********************************
 $
 $ FREQ4: saca datos en la frec. de modos propios existente en el intervalo definido
 $        y varias frec. adicionales entre las de modos propios.
+$        takes out data in freq. eigenmode existing in the defined interval
+$        and several freq. additional ones among the eigenmodes
 $ FREQ:	 saca datos en las frec. indicadas
+$        takes data in freq. indicated
 $ FREQ1: saca datos en desde la frecuencia indicada con el incremento indicado
 $        el numero de frecuencias indicadas
+$        takes data in from the indicated frequency with the indicated increment
+$        the number of indicated frequencies
 $
 $_______2_______3_______4_______5_______6_______7_______8_______9_______
 

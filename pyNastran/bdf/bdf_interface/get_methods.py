@@ -25,12 +25,13 @@ if TYPE_CHECKING:  # pragma: no cover
     # ----------------------------------------------------
 
     from .cards.elements.mass import CONM1, CONM2, CMASS1, CMASS2, CMASS3, CMASS4
-    from pyNastran.bdf.cards.properties.mass import PMASS, NSM, NSM1, NSML, NSML1, NSMADD
-    from pyNastran.bdf.cards.constraints import (SPC, SPCADD, SPC1,
-                                                 MPC, MPCADD) # SUPORT1, SUPORT
-    from pyNastran.bdf.cards.deqatn import DEQATN
+    from pyNastran.bdf.cards.properties.mass import PMASS, NSM1, NSML, NSML1 # NSM, NSMADD
+    from pyNastran.bdf.cards.constraints import (SPCADD, SPC1, # SPC,
+                                                 #MPC,
+                                                 MPCADD) # SUPORT1, SUPORT
+    #from pyNastran.bdf.cards.deqatn import DEQATN
     from pyNastran.bdf.cards.dynamic import (
-        DELAY, DPHASE,
+        #DELAY, DPHASE,
         NLPARM)
     from .cards.elements.rigid import RBAR, RBAR1, RBE1, RBE2, RBE3, RROD, RSPLINE, RSSCON
     from pyNastran.bdf.cards.loads.loads import SLOAD, DAREA
@@ -96,13 +97,13 @@ class GetMethods(BDFAttributes):
             return self.epoints[nid]
         else:
             assert isinstance(nid, integer_types), 'nid should be an integer; not %s' % type(nid)
-            nid_list = np.unique(list(self.nodes.keys()))
+            nid_list = _unique_keys(self.nodes)
             msg = 'nid=%s is not a GRID, SPOINT, or EPOINT%s\n' % (nid, msg)
             msg += 'nids=%s\n' % nid_list
             if self.spoints:
-                msg += 'spoints=%s\n' % np.unique(list(self.spoints.keys()))
+                msg += 'spoints=%s\n' % _unique_keys(self.spoints)
             if self.epoints:
-                msg += 'epoints=%s\n' % np.unique(list(self.epoints.keys()))
+                msg += 'epoints=%s\n' % _unique_keys(self.epoints)
             raise KeyError(msg)
 
     def Node(self, nid: int, msg: str='') -> Union[GRID, SPOINT, EPOINT]:
@@ -127,13 +128,13 @@ class GetMethods(BDFAttributes):
             return self.epoints[nid]
         else:
             assert isinstance(nid, integer_types), 'nid should be an integer; not %s' % type(nid)
-            nid_list = np.unique(list(self.nodes.keys()))
+            nid_list = _unique_keys(self.nodes)
             msg = 'nid=%s is not a GRID, SPOINT, or EPOINT%s\n' % (nid, msg)
             msg += 'nids=%s\n' % nid_list
             if self.spoints:
-                msg += 'spoints=%s\n' % np.unique(list(self.spoints.keys()))
+                msg += 'spoints=%s\n' % _unique_keys(self.spoints)
             if self.epoints:
-                msg += 'epoints=%s\n' % np.unique(list(self.epoints.keys()))
+                msg += 'epoints=%s\n' % _unique_keys(self.epoints)
             raise KeyError(msg)
 
     def EmptyNodes(self, nids: list[int], msg: str='') -> List[Optional[Union[GRID, SPOINT, EPOINT]]]:
@@ -150,13 +151,13 @@ class GetMethods(BDFAttributes):
                 bad_nids.append(nid)
 
         if bad_nids:
-            nid_list = np.unique(list(self.nodes.keys()))
+            nid_list = _unique_keys(self.nodes)
             msg = 'nids=%s are not a GRID, SPOINT, or EPOINT%s\n' % (bad_nids, msg)
             msg += 'nids=%s\n' % nid_list
             if self.spoints:
-                msg += 'spoints=%s\n' % np.unique(list(self.spoints.keys()))
+                msg += 'spoints=%s\n' % _unique_keys(self.spoints)
             if self.epoints:
-                msg += 'epoints=%s\n' % np.unique(list(self.epoints.keys()))
+                msg += 'epoints=%s\n' % _unique_keys(self.epoints)
             raise KeyError(msg)
         return nodes
 
@@ -174,7 +175,7 @@ class GetMethods(BDFAttributes):
                     gridb = self.gridb[nid]
                 except KeyError:
                     assert isinstance(nid, integer_types), 'nid should be an integer; not %s' % type(nid)
-                    nid_list = np.unique(list(self.gridb.keys()))
+                    nid_list = _unique_keys(self.gridb)
                     raise KeyError('nid=%s is not a GRIDB%s\n%s' % (nid, msg, nid_list))
                 nodes.append(gridb)
         else:
@@ -193,7 +194,7 @@ class GetMethods(BDFAttributes):
             return self.points[nid]
         else:
             assert isinstance(nid, integer_types), 'nid should be an integer; not %s' % type(nid)
-            nid_list = np.unique(list(self.points.keys()))
+            nid_list = _unique_keys(self.points)
             raise KeyError('nid=%s is not a POINT%s\n%s' % (nid, msg, nid_list))
 
     def Points(self, nids: List[int], msg: str='') -> List[POINT]:
@@ -216,7 +217,7 @@ class GetMethods(BDFAttributes):
             return self.elements[eid]
         except KeyError:
             raise KeyError('eid=%s not found%s.  Allowed elements=%s'
-                           % (eid, msg, np.unique(list(self.elements.keys()))))
+                           % (eid, msg, _unique_keys(self.elements)))
 
     def Elements(self, eids: List[int], msg: str='') -> List[Any]:
         """
@@ -235,7 +236,7 @@ class GetMethods(BDFAttributes):
                 bad_eids.append(eid)
         if bad_eids:
             msg = 'eids=%s not found%s.  Allowed elements=%s' % (
-                bad_eids, msg, np.unique(list(self.elements.keys())))
+                bad_eids, msg, _unique_keys(self.elements))
             raise KeyError(msg)
         return elements
 
@@ -245,7 +246,7 @@ class GetMethods(BDFAttributes):
             return self.masses[eid]
         except KeyError:
             raise KeyError('eid=%s not found%s.  Allowed masses=%s'
-                           % (eid, msg, np.unique(list(self.masses.keys()))))
+                           % (eid, msg, _unique_keys(self.masses)))
 
     def RigidElement(self, eid: int, msg: str='') -> Union[RBAR, RBE2, RBE3, RBAR, RBAR1, RROD, RSPLINE, RSSCON]:
         """gets a rigid element (RBAR, RBE2, RBE3, RBAR, RBAR1, RROD, RSPLINE, RSSCON)"""
@@ -253,7 +254,7 @@ class GetMethods(BDFAttributes):
             return self.rigid_elements[eid]
         except KeyError:
             raise KeyError('eid=%s not found%s.  Allowed rigid_elements=%s'
-                           % (eid, msg, np.unique(list(self.rigid_elements.keys()))))
+                           % (eid, msg, _unique_keys(self.rigid_elements)))
 
     #--------------------
     # PROPERTY CARDS
@@ -288,7 +289,7 @@ class GetMethods(BDFAttributes):
             return self.properties_mass[pid]
         except KeyError:
             raise KeyError('pid=%s not found%s.  Allowed Mass Pids=%s'
-                           % (pid, msg, np.unique(list(self.properties_mass.keys()))))
+                           % (pid, msg, _unique_keys(self.properties_mass)))
 
     def Phbdy(self, pid: int, msg: str='') -> PHBDY:
         """gets a PHBDY"""
@@ -296,7 +297,7 @@ class GetMethods(BDFAttributes):
             return self.phbdys[pid]
         except KeyError:
             raise KeyError('pid=%s not found%s.  Allowed PHBDY Pids=%s'
-                           % (pid, msg, np.unique(list(self.phbdys.keys()))))
+                           % (pid, msg, _unique_keys(self.phbdys)))
 
     #--------------------
     # MATERIAL CARDS
@@ -327,7 +328,7 @@ class GetMethods(BDFAttributes):
             msg = '\n' + msg
             msg2 = (
                 'Invalid Material ID:  mid=%s%s\nAllowed=%s' % (
-                    mid, msg, np.unique(list(self.materials.keys()))
+                    mid, msg, _unique_keys(self.materials)
                 )
             )
             raise KeyError(msg2)
@@ -556,7 +557,7 @@ class GetMethods(BDFAttributes):
         if set_id in self.sets:
             set1 = self.sets[set_id]
         else:
-            raise KeyError('cannot find SET1 ID=%r.\n%s' % (set_id, msg))
+            raise KeyError(f'cannot find SET1 ID={set_id}{msg}.\n{msg}')
         return set1
 
     #--------------------
@@ -576,16 +577,16 @@ class GetMethods(BDFAttributes):
         try:
             return self.aelists[aelist]
         except KeyError:
-            raise KeyError('aelist=%s not found%s.  Allowed AELIST=%s'
-                           % (aelist, msg, np.unique(list(self.aelists.keys()))))
+            aelists = _unique_keys(self.aelists)
+            raise KeyError(f'aelist={aelist} not found{msg}.  Allowed AELIST={aelists}')
 
     def AEFact(self, aefact: int, msg: str='') -> AEFACT:
         """gets an AEFACT"""
         try:
             return self.aefacts[aefact]
         except KeyError:
-            raise KeyError('aefact=%s not found%s.  Allowed AEFACT=%s'
-                           % (aefact, msg, np.unique(list(self.aefacts.keys()))))
+            aefacts = _unique_keys(self.aefacts)
+            raise KeyError(f'aefact={aefact} not found{msg}.  Allowed AEFACT={aefacts}')
 
     def AESurf(self, aesurf_id: int, msg: str='') -> AESURF:
         """gets an AESURF"""
@@ -593,7 +594,7 @@ class GetMethods(BDFAttributes):
             return self.aesurf[aesurf_id]
         except KeyError:
             raise KeyError('aesurf=%s not found%s.  Allowed AESURF=%s'
-                           % (aesurf_id, msg, np.unique(list(self.aesurf.keys()))))
+                           % (aesurf_id, msg, _unique_keys(self.aesurf)))
 
     def Acsid(self, msg: str='') -> Coord:
         """gets the aerodynamic coordinate system"""
@@ -604,13 +605,12 @@ class GetMethods(BDFAttributes):
 
         if self.aero is not None:
             if self.aeros is not None:
-                assert acsid_aero == acsid_aeros, 'AERO acsid=%s, AEROS acsid=%s' % (acsid_aero,
-                                                                                     acsid_aeros)
+                assert acsid_aero == acsid_aeros, f'AERO acsid={acsid_aero}, AEROS acsid={acsid_aeros}'
             coord = self.Coord(acsid_aero, msg=msg)
         elif self.aeros is not None:
             coord = self.Coord(acsid_aeros, msg=msg)
         else:
-            msg = 'neither AERO nor AEROS cards exist.'
+            msg = 'neither AERO nor AEROS cards exist%s.' % msg
             raise RuntimeError(msg)
         return coord
 
@@ -651,7 +651,7 @@ class GetMethods(BDFAttributes):
             return self.splines[eid]
         except KeyError:
             raise KeyError('eid=%s not found%s.  Allowed SPLINEx=%s'
-                           % (eid, msg, np.unique(list(self.splines.keys()))))
+                           % (eid, msg, _unique_keys(self.splines)))
 
     def CAero(self, eid: int, msg: str='') -> Union[CAERO1, CAERO2, CAERO3, CAERO4, CAERO5]:
         """gets an CAEROx"""
@@ -659,7 +659,7 @@ class GetMethods(BDFAttributes):
             return self.caeros[eid]
         except KeyError:
             raise KeyError('eid=%s not found%s.  Allowed CAEROx=%s'
-                           % (eid, msg, np.unique(list(self.caero_ids))))
+                           % (eid, msg, _unique_keys(self.caero_ids)))
 
     def PAero(self, pid: int, msg: str='') -> Union[PAERO1, PAERO2, PAERO3, PAERO4, PAERO5]:
         """gets a PAEROx"""
@@ -667,7 +667,7 @@ class GetMethods(BDFAttributes):
             return self.paeros[pid]
         except KeyError:
             raise KeyError('pid=%s not found%s.  Allowed PAEROx=%s'
-                           % (pid, msg, np.unique(list(self.paeros.keys()))))
+                           % (pid, msg, _unique_keys(self.paeros)))
 
     def Gust(self, sid: int, msg: str='') -> GUST:
         """gets a GUST"""
@@ -675,7 +675,7 @@ class GetMethods(BDFAttributes):
             return self.gusts[sid]
         except KeyError:
             raise KeyError('sid=%s not found%s.  Allowed GUSTs=%s'
-                           % (sid, msg, np.unique(list(self.gusts.keys()))))
+                           % (sid, msg, _unique_keys(self.gusts)))
 
     #--------------------
     # AERO CONTROL SURFACE CARDS
@@ -685,7 +685,7 @@ class GetMethods(BDFAttributes):
             return self.aestats[aid]
         except KeyError:
             raise KeyError('aid=%s not found%s.  Allowed AESTATs=%s'
-                           % (aid, msg, np.unique(list(self.aestats.keys()))))
+                           % (aid, msg, _unique_keys(self.aestats)))
 
     def AELIST(self, aid: int, msg: str='') -> AELIST:
         """gets an AELIST"""
@@ -693,7 +693,7 @@ class GetMethods(BDFAttributes):
             return self.aelists[aid]
         except KeyError:
             raise KeyError('id=%s not found%s.  Allowed AELISTs=%s'
-                           % (aid, msg, np.unique(list(self.aelists.keys()))))
+                           % (aid, msg, _unique_keys(self.aelists)))
 
     def AELink(self, link_id: int, msg: str='') -> AELINK:
         """gets an AELINK"""
@@ -701,7 +701,7 @@ class GetMethods(BDFAttributes):
             return self.aelinks[link_id]
         except KeyError:
             raise KeyError('link_id=%s not found%s.  Allowed AELINKs=%s'
-                           % (link_id, msg, np.unique(list(self.aelinks.keys()))))
+                           % (link_id, msg, _unique_keys(self.aelinks)))
 
     def AEParam(self, aid: int, msg: str='') -> AEPARM:
         """gets an AEPARM"""
@@ -709,7 +709,7 @@ class GetMethods(BDFAttributes):
             return self.aeparams[aid]
         except KeyError:
             raise KeyError('aid=%s not found%s.  Allowed AEPARMs=%s'
-                           % (aid, msg, np.unique(list(self.aeparams.keys()))))
+                           % (aid, msg, _unique_keys(self.aeparams)))
 
     #--------------------
     # FLUTTER CARDS
@@ -720,7 +720,7 @@ class GetMethods(BDFAttributes):
             return self.flfacts[sid]
         except KeyError:
             raise KeyError('sid=%s not found%s.  Allowed FLFACTs=%s'
-                           % (sid, msg, np.unique(list(self.flfacts.keys()))))
+                           % (sid, msg, _unique_keys(self.flfacts)))
 
     def Flutter(self, fid: int, msg: str='') -> FLUTTER:
         """gets a FLUTTER"""
@@ -728,7 +728,7 @@ class GetMethods(BDFAttributes):
             return self.flutters[fid]
         except KeyError:
             raise KeyError('fid=%s not found%s.  Allowed FLUTTERs=%s'
-                           % (fid, msg, np.unique(list(self.flutters.keys()))))
+                           % (fid, msg, _unique_keys(self.flutters)))
 
     #--------------------
     # OPTIMIZATION CARDS
@@ -739,7 +739,7 @@ class GetMethods(BDFAttributes):
             return self.dconstrs[oid]
         except KeyError:
             raise KeyError('oid=%s not found%s.  Allowed DCONSTRs=%s'
-                           % (oid, msg, np.unique(list(self.dconstrs.keys()))))
+                           % (oid, msg, _unique_keys(self.dconstrs)))
 
     def DResp(self, dresp_id: int, msg: str='') -> Union[DRESP1, DRESP2, DRESP3]:
         """gets a DRESPx"""
@@ -747,7 +747,7 @@ class GetMethods(BDFAttributes):
             return self.dresps[dresp_id]
         except KeyError:
             raise KeyError('dresp_id=%s not found%s.  Allowed DRESPx=%s'
-                           % (dresp_id, msg, np.unique(list(self.dresps.keys()))))
+                           % (dresp_id, msg, _unique_keys(self.dresps)))
 
     def Desvar(self, desvar_id: int, msg: int='') -> DESVAR:
         """gets a DESVAR"""
@@ -755,7 +755,7 @@ class GetMethods(BDFAttributes):
             return self.desvars[desvar_id]
         except KeyError:
             raise KeyError('desvar_id=%s not found%s.  Allowed DESVARs=%s'
-                           % (desvar_id, msg, np.unique(list(self.desvars.keys()))))
+                           % (desvar_id, msg, _unique_keys(self.desvars)))
 
     def DDVal(self, oid: int, msg: str='') -> DDVAL:
         """gets a DDVAL"""
@@ -763,7 +763,7 @@ class GetMethods(BDFAttributes):
             return self.ddvals[oid]
         except KeyError:
             raise KeyError('oid=%s not found%s.  Allowed DDVALs=%s'
-                           % (oid, msg, np.unique(list(self.ddvals.keys()))))
+                           % (oid, msg, _unique_keys(self.ddvals)))
 
     def DVcrel(self, dv_id: int, msg: str='') -> Union[DVCREL1, DVCREL2]:
         """gets a DVCREL1/DVCREL2"""
@@ -771,7 +771,7 @@ class GetMethods(BDFAttributes):
             return self.dvcrels[dv_id]
         except KeyError:
             raise KeyError('dv_id=%s not found%s.  Allowed DVCRELx=%s'
-                           % (dv_id, msg, np.unique(list(self.dvcrels.keys()))))
+                           % (dv_id, msg, _unique_keys(self.dvcrels)))
 
     def DVmrel(self, dv_id: int, msg: str='') -> Union[DVMREL1, DVMREL2]:
         """gets a DVMREL1/DVMREL2"""
@@ -779,7 +779,7 @@ class GetMethods(BDFAttributes):
             return self.dvmrels[dv_id]
         except KeyError:
             raise KeyError('dv_id=%s not found%s.  Allowed DVMRELx=%s'
-                           % (dv_id, msg, np.unique(list(self.dvmrels.keys()))))
+                           % (dv_id, msg, _unique_keys(self.dvmrels)))
 
     def DVprel(self, dv_id: int, msg: str='') -> Union[DVPREL1, DVPREL2]:
         """gets a DVPREL1/DVPREL2"""
@@ -787,7 +787,7 @@ class GetMethods(BDFAttributes):
             return self.dvprels[dv_id]
         except KeyError:
             raise KeyError('dv_id=%s not found%s.  Allowed DVPRELx=%s'
-                           % (dv_id, msg, np.unique(list(self.dvprels.keys()))))
+                           % (dv_id, msg, _unique_keys(self.dvprels)))
 
     #--------------------
     # SET CARDS
@@ -798,7 +798,7 @@ class GetMethods(BDFAttributes):
             return self.sets[sid]
         except KeyError:
             raise KeyError('sid=%s not found%s.  Allowed SETx=%s'
-                           % (sid, msg, np.unique(list(self.sets.keys()))))
+                           % (sid, msg, _unique_keys(self.sets)))
 
     #--------------------
     # METHOD CARDS
@@ -808,7 +808,7 @@ class GetMethods(BDFAttributes):
             return self.methods[sid]
         except KeyError:
             raise KeyError('sid=%s not found%s.  Allowed METHODs=%s'
-                           % (sid, msg, np.unique(list(self.methods.keys()))))
+                           % (sid, msg, _unique_keys(self.methods)))
 
     def CMethod(self, sid: int, msg: str='') -> EIGC:
         """gets a METHOD (EIGC)"""
@@ -816,7 +816,7 @@ class GetMethods(BDFAttributes):
             return self.cMethods[sid]
         except KeyError:
             raise KeyError('sid=%s not found%s.  Allowed CMETHODs=%s'
-                           % (sid, msg, np.unique(list(self.cMethods.keys()))))
+                           % (sid, msg, _unique_keys(self.cMethods)))
 
     #--------------------
     # TABLE CARDS
@@ -825,7 +825,7 @@ class GetMethods(BDFAttributes):
         try:
             return self.tables[tid]
         except KeyError:
-            table_keys = np.unique(list(self.tables.keys()))
+            table_keys = _unique_keys(self.tables)
             raise KeyError('tid=%s not found%s.  Allowed TABLEs=%s'
                            % (tid, msg, table_keys))
 
@@ -834,9 +834,9 @@ class GetMethods(BDFAttributes):
         try:
             return self.tables_d[tid]
         except KeyError:
-            table_keys = np.unique(list(self.tables.keys()))
-            tabled_keys = np.unique(list(self.tables_d.keys()))
-            tablem_keys = np.unique(list(self.tables_m.keys()))
+            table_keys = _unique_keys(self.tables)
+            tabled_keys = _unique_keys(self.tables_d)
+            tablem_keys = _unique_keys(self.tables_m)
             raise KeyError('tid=%s not found%s.  Allowed TABLEDs=%s; TABLEs=%s; TABLEMs=%s'
                            % (tid, msg, tabled_keys, table_keys, tablem_keys))
 
@@ -845,9 +845,9 @@ class GetMethods(BDFAttributes):
         try:
             return self.tables_m[table_id]
         except KeyError:
-            table_keys = np.unique(list(self.tables.keys()))
-            tabled_keys = np.unique(list(self.tables_d.keys()))
-            tablem_keys = np.unique(list(self.tables_m.keys()))
+            table_keys = _unique_keys(self.tables)
+            tabled_keys = _unique_keys(self.tables_d)
+            tablem_keys = _unique_keys(self.tables_m)
             raise KeyError('table_id=%s not found%s.  Allowed TABLEMs=%s; TABLEs=%s; TABLEDs=%s'
                            % (table_id, msg, tablem_keys, table_keys, tabled_keys))
 
@@ -857,7 +857,7 @@ class GetMethods(BDFAttributes):
             return self.random_tables[table_id]
         except KeyError:
             raise KeyError('table_id=%s not found%s.  Allowed TABLEs=%s'
-                           % (table_id, msg, np.unique(list(self.random_tables.keys()))))
+                           % (table_id, msg, _unique_keys(self.random_tables)))
 
     #--------------------
     # NONLINEAR CARDS
@@ -868,7 +868,7 @@ class GetMethods(BDFAttributes):
             return self.nlparms[nlparm_id]
         except KeyError:
             raise KeyError('nlparm_id=%s not found%s.  Allowed NLPARMs=%s'
-                           % (nlparm_id, msg, np.unique(list(self.nlparms.keys()))))
+                           % (nlparm_id, msg, _unique_keys(self.nlparms)))
 
     #--------------------
     # MATRIX ENTRY CARDS
@@ -878,7 +878,7 @@ class GetMethods(BDFAttributes):
             return self.dmigs[dname]
         except KeyError:
             raise KeyError('dname=%s not found%s.  Allowed DMIGs=%s'
-                           % (dname, msg, np.unique(list(self.dmigs.keys()))))
+                           % (dname, msg, _unique_keys(self.dmigs)))
 
     def DEQATN(self, equation_id: int, msg: str='') -> DEQATN:
         """gets a DEQATN"""
@@ -886,7 +886,7 @@ class GetMethods(BDFAttributes):
             return self.dequations[equation_id]
         except KeyError:
             raise KeyError('equation_id=%s not found%s.  Allowed DEQATNs=%s'
-                           % (equation_id, msg, np.unique(list(self.dequations.keys()))))
+                           % (equation_id, msg, _unique_keys(self.dequations)))
 
 def get_pid_to_eid_map(model: BDF) -> Dict[int, List[int]]:
     from collections import defaultdict
@@ -911,3 +911,7 @@ def get_pid_to_nid_map(model: BDF) -> Dict[int, List[int]]:
         nodes_list.sort()
         property_to_nodes_map2[pid] = nodes_list
     return property_to_nodes_map2
+
+def _unique_keys(mdyict: Dict[int, Any]) -> str:
+    """helper method"""
+    return np.unique(list(mdyict.keys()))

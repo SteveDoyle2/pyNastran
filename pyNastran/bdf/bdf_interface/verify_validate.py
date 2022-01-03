@@ -72,11 +72,13 @@ def _verify_dict(dict_obj: Dict[Any, Any], xref: bool) -> None:
 
 def _verify_model_dict(dict_obj: Dict[Any, Any], model: BDF, xref: bool) -> None:
     """helper for ``verify_bdf``"""
+    log = model.log
     for unused_key, card in sorted(dict_obj.items()):
         try:
             card._verify(model, xref)
-        except Exception:
-            print(str(card))
+        except Exception as e:
+            log.error(str(card))
+            log.error(e)
             raise
 
 def _verify_dict_list(dict_list: Dict[Any, List[Any]], xref: bool) -> None:

@@ -3644,7 +3644,7 @@ class FLUTTER_ZONA(Spline):
             #self.setg_ref.safe_cross_reference(model, 'Node', msg=msg)
         #except KeyError:
             #model.log.warning('failed to find SETx set_id=%s%s; allowed_sets=%s' % (
-                #self.setg, msg, np.unique(list(model.sets.keys()))))
+                #self.setg, msg, np.unique(list(model.sets)))
 
         #try:
             #self.panlst_ref = model.zona.panlsts[self.panlst]

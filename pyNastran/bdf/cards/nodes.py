@@ -330,7 +330,7 @@ def write_xpoints(cardtype: str, points, comment: str='') -> str:
     return msg
 
 
-def compress_xpoints(point_type, xpoints):
+def compress_xpoints(point_type: str, xpoints: List[int]) -> List[List[int]]:
     """
     Gets the SPOINTs/EPOINTs in sorted, short form.
 
@@ -1712,8 +1712,7 @@ class POINT(BaseCard):
         assert len(self.xyz) == 3
 
     @classmethod
-    def add_card(cls, card: BDFCard, comment: str=''):
-        # type: (Any, str) -> POINT
+    def add_card(cls, card: BDFCard, comment: str='') -> POINT:
         """
         Adds a POINT card from ``BDF.add_card(...)``
 
@@ -1831,7 +1830,6 @@ class POINT(BaseCard):
         return self.cp_ref.cid
 
     def cross_reference(self, model: BDF) -> None:
-        # type: (Any) -> None
         """
         Cross links the card so referenced cards can be extracted directly
 

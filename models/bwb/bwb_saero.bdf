@@ -19674,6 +19674,9 @@ $	dim1	dim2	nsm	SO1	XXB1 DIM1	DIM2	NSM
 	1.	2.		YES	0.5	1.	2.		
 $	SO2	XXB2	dim1	dim2	nsm
 	YES	1.0	1.	2.
+PBEAML	999	1		ROD
+$	dim1	nsm	SO1	XXB1 DIM1	NSM	SO2
+	1.	0.	YES	1.0	1.1	0.
 PSHELL	6	1	1.0
 PCOMP*             20601                  0.00000000E+00                *   
 *                         0.00000000E+00  0.00000000E+00                *   

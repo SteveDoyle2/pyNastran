@@ -88,12 +88,21 @@ class CompositeShellProperty(Property):
 
     def Rho(self, iply: int) -> float:
         return self.get_density(iply)
-
     def Theta(self, iply: int) -> float:
         return self.get_theta(iply)
-
     def sout(self, iply: int) -> str:
         return self.get_sout(iply)
+
+    def Thicknesses(self):
+        return [self.Thickness(iply) for iply in range(self.nplies)]
+    def Rhos(self) -> float:
+        return [self.Rho(iply) for iply in range(self.nplies)]
+    def Thetas(self) -> float:
+        return [self.Theta(iply) for iply in range(self.nplies)]
+    def Thetas(self) -> float:
+        return [self.Theta(iply) for iply in range(self.nplies)]
+    def souts(self) -> float:
+        return [self.sout(iply) for iply in range(self.nplies)]
 
     def cross_reference(self, model: BDF) -> None:
         """
@@ -110,6 +119,37 @@ class CompositeShellProperty(Property):
             mid = self.mids[iply]
             msg = f', which is required by {self.type} pid={self.pid:d} iply={iply:d}'
             mids_ref.append(model.Material(mid, msg))
+        self.mids_ref = mids_ref
+
+        z1 = self.z0
+        t = self.Thickness()
+        try:
+            z2 = z1 + t
+        except TypeError:
+            msg = f'Type={self.type} z1={z1} t={t}; z2=z1+t is undefined'
+            raise TypeError(msg)
+        if not ((-1.5*t <= z1 <= 1.5*t) or (-1.5*t <= z2 <= 1.5*t)):
+            msg = '%s pid=%s midsurface: z1=%s z2=%s t=%s not in range of -1.5t < zi < 1.5t' % (
+                self.type, self.pid, z1, z2, t)
+            model.log.warning(msg)
+
+    def safe_cross_reference(self, model: BDF, xref_errors: Dict[str, Any]) -> None:
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+
+        """
+        mids_ref = []
+        xref_errors['mid'] = []
+        #xref_errors = {}0
+        for iply in range(len(self.thicknesses)):
+            mid = self.mids[iply]
+            msg = f', which is required by {self.type} pid={self.pid:d} iply={iply:d}'
+            mids_ref.append(model.safe_material(mid, self.pid, xref_errors, msg))
         self.mids_ref = mids_ref
 
         z1 = self.z0
@@ -283,7 +323,7 @@ class CompositeShellProperty(Property):
             mids.append(self.Mid(iply))
         return mids
 
-    def get_density(self, iply) -> float:
+    def get_density(self, iply: int) -> float:
         """
         Gets the density of the :math:`i^{th}` ply
 
@@ -315,7 +355,11 @@ class CompositeShellProperty(Property):
         """
         iply = self._adjust_ply_id(iply)
         if self.mids_ref is not None:
-            mid = self.mids_ref[iply].mid
+            mid_ref = self.mids_ref[iply]
+            #if mid_ref is None:
+            #mid = self.mids[iply]
+            #else:
+            mid = mid_ref.mid
         else:
             mid = self.mids[iply]
         return mid
@@ -846,11 +890,11 @@ class PCOMP(CompositeShellProperty):
         # thickness first
         #self.z0 = double_or_blank(card, 1, 'pid')
 
-        nsm = double_or_blank(card, 3, 'nsm', 0.0)
-        sb = double_or_blank(card, 4, 'sb', 0.0)
+        nsm = double_or_blank(card, 3, 'nsm', default=0.0)
+        sb = double_or_blank(card, 4, 'sb', default=0.0)
         ft = string_or_blank(card, 5, 'ft')
-        tref = double_or_blank(card, 6, 'tref', 0.0)
-        ge = double_or_blank(card, 7, 'ge', 0.0)
+        tref = double_or_blank(card, 6, 'tref', default=0.0)
+        ge = double_or_blank(card, 7, 'ge', default=0.0)
         lam = string_or_blank(card, 8, 'lam') # default=blank -> nothing
 
         # -8 for the first 8 fields (1st line)
@@ -875,10 +919,10 @@ class PCOMP(CompositeShellProperty):
         souts = []
         for i in range(9, 9 + nplies * 4, 4):
             actual = card.fields(i, i + 4)
-            mid = integer_or_blank(card, i, 'mid', mid_last)
-            t = double_or_blank(card, i + 1, 't', thick_last)
-            theta = double_or_blank(card, i + 2, 'theta', 0.0)
-            sout = string_or_blank(card, i + 3, 'sout', 'NO')
+            mid = integer_or_blank(card, i, 'mid', default=mid_last)
+            t = double_or_blank(card, i + 1, 't', default=thick_last)
+            theta = double_or_blank(card, i + 2, 'theta', default=0.0)
+            sout = string_or_blank(card, i + 3, 'sout', default='NO')
 
             # if this card has 2 plies on the line
             if actual != [None, None, None, None]:

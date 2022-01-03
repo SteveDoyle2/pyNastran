@@ -6996,6 +6996,7 @@ class AddCards:
         >>> DRESP1(dresp_id, label, response_type, property_type, region, atta, attb, atti)
 
         """
+        assert len(label) <= 8, label
         dresp = DRESP1(dresp_id, label, response_type, property_type, region,
                        atta, attb, atti, validate=validate, comment=comment)
         self._add_methods._add_dresp_object(dresp)
@@ -7057,6 +7058,7 @@ class AddCards:
         }
 
         """
+        assert len(label) <= 8, label
         dresp = DRESP2(dresp_id, label, dequation, region, params,
                        method=method, c1=c1, c2=c2, c3=c3, comment=comment,
                        validate=validate)
@@ -8776,11 +8778,23 @@ class AddCards:
 
 def add_beam_stress_strain_constraints(model, pid: int, label: str,
                                        response_type: str, static_stress_constraints,
-                                       dresp_id: int, dconstr_id: int, dconstrs) -> int:
+                                       dresp_id: int, dconstr_id: int, dconstrs,
+                                       end_a: bool=True, end_b: bool=True) -> int:
     property_type = 'PBEAML'
-    #8 Maximum stress/strain
-    #9 Minimum stress/strain
-    attas = [8, 9] # von mises upper surface stress
+    #8 Maximum stress/strain (A)
+    #9 Minimum stress/strain (A)
+    #8+offset (B)
+    #9+offset (B)
+    attas = []
+    if end_a:
+        attas.extend([8, 9])
+    if end_b:
+        k = 11 # station b
+        offset = (k - 1) * 10
+        attas.extend([8 + offset, 9 + offset])
+    assert len(attas) > 0, f'no {property_type} constraints specified; pid={pid} ATTA={attas}'
+    attas = [8, 9,
+             8 + offset, 9 + offset]
     region = None
     attb = None
     atti = [pid]

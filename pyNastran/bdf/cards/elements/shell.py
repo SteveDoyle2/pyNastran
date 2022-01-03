@@ -1550,12 +1550,12 @@ class CTRIAR(TriShell):
             integer(card, 5, 'n3'),
         ]
 
-        theta_mcid = integer_double_or_blank(card, 6, 'theta_mcid', 0.0)
-        zoffset = double_or_blank(card, 7, 'zoffset', 0.0)
+        theta_mcid = integer_double_or_blank(card, 6, 'theta_mcid', default=0.0)
+        zoffset = double_or_blank(card, 7, 'zoffset', default=0.0)
         blank(card, 8, 'blank')
         blank(card, 9, 'blank')
 
-        tflag = integer_or_blank(card, 10, 'tflag', 0)
+        tflag = integer_or_blank(card, 10, 'tflag', default=0)
         T1 = double_or_blank(card, 11, 'T1')
         T2 = double_or_blank(card, 12, 'T2')
         T3 = double_or_blank(card, 13, 'T3')
@@ -3936,10 +3936,10 @@ class CQUADR(QuadShell):
                 integer_or_blank(card, 5, 'n3'),
                 integer_or_blank(card, 6, 'n4'),]
 
-        theta_mcid = integer_double_or_blank(card, 7, 'theta_mcid', 0.0)
-        zoffset = double_or_blank(card, 8, 'zoffset', 0.0)
+        theta_mcid = integer_double_or_blank(card, 7, 'theta_mcid', default=0.0)
+        zoffset = double_or_blank(card, 8, 'zoffset', default=0.0)
 
-        tflag = integer_or_blank(card, 10, 'tflag', 0)
+        tflag = integer_or_blank(card, 10, 'tflag', default=0)
         T1 = double_or_blank(card, 11, 'T1')
         T2 = double_or_blank(card, 12, 'T2')
         T3 = double_or_blank(card, 13, 'T3')
