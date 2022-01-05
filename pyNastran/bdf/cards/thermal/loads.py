@@ -79,12 +79,12 @@ class QVOL(ThermalLoad):
         """
         sid = integer(card, 1, 'sid')
         qvol = double(card, 2, 'qvol')
-        control_point = integer_or_blank(card, 3, 'control_id', 0)
+        control_point = integer_or_blank(card, 3, 'control_id', default=0)
 
         i = 1
         eids = []
         for ifield in range(4, len(card)):
-            eid = integer_or_string(card, ifield, 'eid_%i' % i)
+            eid = integer_or_string(card, ifield, 'eid_%d' % i)
             eids.append(eid)
             i += 1
         elements = expand_thru_by(eids)

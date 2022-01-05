@@ -22,7 +22,8 @@ from pyNastran.bdf.bdf_interface.bdf_card import BDFCard
 from pyNastran.bdf.cards.properties.bars import (
     IntegratedLineProperty, LineProperty, _bar_areaL,
     get_beam_sections, split_arbitrary_thickness_section, write_arbitrary_beam_section,
-    plot_arbitrary_section)
+    plot_arbitrary_section, A_I1_I2_I12)
+
 from pyNastran.bdf.field_writer_8 import set_blank_if_default
 from pyNastran.bdf.bdf_interface.assign_type import (
     integer, integer_or_blank, double, double_or_blank,
@@ -504,6 +505,9 @@ class PBEAM(IntegratedLineProperty):
                     msg += '  i=%s xxb=%s j=%s; j[%i]=%s\n' % (i, xxbi, self.j, i, ji)
                     raise ValueError(msg)
 
+        #print('PBEAM', pid, self.A, self.xxb)
+        #x = 1
+
     def validate(self):
         nstations = len(self.A)
         for ilayer in range(nstations):
@@ -615,24 +619,24 @@ class PBEAM(IntegratedLineProperty):
                 if xxbi == 1.0:
                     # these have already been checked such that they're greater than 0
                     # so when we interpolate, our values will be correct
-                    areai = double_or_blank(card, ifield + 2, 'Area%i' % nrepeated, default=area0)
-                    i1i = double_or_blank(card, ifield + 3, 'I1 %i' % nrepeated, default=i1a)
-                    i2i = double_or_blank(card, ifield + 4, 'I2 %i' % nrepeated, default=i2a)
-                    i12i = double_or_blank(card, ifield + 5, 'I12 %i' % nrepeated, default=i12a)
+                    areai = double_or_blank(card, ifield + 2, 'Area%d' % nrepeated, default=area0)
+                    i1i = double_or_blank(card, ifield + 3, 'I1 %d' % nrepeated, default=i1a)
+                    i2i = double_or_blank(card, ifield + 4, 'I2 %d' % nrepeated, default=i2a)
+                    i12i = double_or_blank(card, ifield + 5, 'I12 %d' % nrepeated, default=i12a)
+                    ji = double_or_blank(card, ifield + 6, 'J%d' % nrepeated, default=ja)
+                    nsmi = double_or_blank(card, ifield + 7, 'nsm%d' % nrepeated, default=nsma)
 
-                    assert area[-1] >= 0., area
-                    assert i1[-1] >= 0., i1
-                    assert i2[-1] >= 0., i2
+                    assert areai >= 0., areai
+                    assert i1i >= 0., i1i
+                    assert i2i >= 0., i2i
 
                     # we'll do a check for warping later; cwa/cwb -> j > 0.0
-                    assert j[-1] >= 0., j
+                    assert ji >= 0., ji
                     if i1i * i2i - i12i ** 2 <= 0.:
                         msg = 'I1 * I2 - I12^2=0 and must be greater than 0.0 at End B\n'
                         msg += 'xxb=1.0 i1=%s i2=%s i12=%s'  % (i1i, i2i, i12i)
                         raise ValueError(msg)
 
-                    ji = double_or_blank(card, ifield + 6, 'J%i' % nrepeated, ja)
-                    nsmi = double_or_blank(card, ifield + 7, 'nsm%i' % nrepeated, nsma)
                 else:
                     # we'll go through and do linear interpolation afterwards
                     areai = double_or_blank(card, ifield + 2, 'Area%i' % nrepeated, default=0.0)
@@ -1366,6 +1370,13 @@ class PBEAML(IntegratedLineProperty):
         self.xxb = np.asarray(xxb)
         self.so = so
         self.nsm = np.asarray(nsm)
+
+        #dim0 = dims[0]
+        #if beam_type == 'BOX':
+        #    w, h, *ts = dim0
+        #    print(f'I pid={pid}: type={beam_type}; h={h:.2f} w={w:.2f} ts={ts} I1={self.I11():.3f}  I2={self.I22():.3f}')
+        #if beam_type == 'I':
+        #    print(f'I pid={pid}: type={beam_type}; h={dim0[0]:.2f}')
         #assert len(xxb) == len(dim), f'xxb={xxb}; nsm={dim}'
         #assert len(xxb) == len(so), f'xxb={xxb}; nsm={so}'
         #assert len(xxb) == len(nsm), f'xxb={xxb}; nsm={nsm}'
@@ -1660,13 +1671,27 @@ class PBEAML(IntegratedLineProperty):
         return j
 
     def I11(self):
-        #i1 = integrate_positive_unit_line(self.xxb,self.i1)
-        i1 = None
+        i1_list = []
+        for dim in self.dim:
+            i1 = A_I1_I2_I12(self, self.beam_type, dim)[1]
+            i1_list.append(i1)
+        try:
+            i1 = integrate_positive_unit_line(self.xxb, i1_list)
+        except:
+            print(i1_list)
+            raise
         return i1
 
     def I22(self):
-        #i2 = integrate_positive_unit_line(self.xxb,self.i2)
-        i2 = None
+        i2_list = []
+        for dim in self.dim:
+            i2 = A_I1_I2_I12(self, self.beam_type, dim)[2]
+            i2_list.append(i2)
+        try:
+            i2 = integrate_positive_unit_line(self.xxb, i2_list)
+        except:
+            print(i2_list)
+            raise
         return i2
 
     def I12(self):
