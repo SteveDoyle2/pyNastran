@@ -226,12 +226,12 @@ class PCOMPS(Property):
             a comment for the card
         """
         pid = integer(card, 1, 'pid')
-        cordm = integer_or_blank(card, 2, 'cordm', 0)
-        psdir = integer_or_blank(card, 3, 'psdir', 13)
+        cordm = integer_or_blank(card, 2, 'cordm', default=0)
+        psdir = integer_or_blank(card, 3, 'psdir', default=13)
         sb = double_or_blank(card, 4, 'sb')
         nb = double_or_blank(card, 5, 'nb')
-        tref = double_or_blank(card, 6, 'tref', 0.0)
-        ge = double_or_blank(card, 7, 'ge', 0.0)
+        tref = double_or_blank(card, 6, 'tref', default=0.0)
+        ge = double_or_blank(card, 7, 'ge', default=0.0)
         nfields = len(card) - 1
         #nrows =
         ifield = 9
@@ -244,13 +244,13 @@ class PCOMPS(Property):
         souts = []
         iply = 1
         while ifield < nfields:
-            global_ply_id = integer(card, ifield, 'global_ply_id_%i' % iply)
-            mid = integer(card, ifield + 1, 'mid_%i' % iply)
-            t = double(card, ifield + 2, 'thickness_%i' % iply)
-            theta = double(card, ifield + 3, 'theta_%i' % iply)
-            ft = string_or_blank(card, ifield + 4, 'failure_theory_%i' % iply)
-            ift = string_or_blank(card, ifield + 5, 'interlaminar_failure_theory_%i' % iply)
-            sout = string_or_blank(card, ifield + 6, 'sout_%i' % iply, 'NO')
+            global_ply_id = integer(card, ifield, 'global_ply_id_%d' % iply)
+            mid = integer(card, ifield + 1, 'mid_%d' % iply)
+            t = double(card, ifield + 2, 'thickness_%d' % iply)
+            theta = double(card, ifield + 3, 'theta_%d' % iply)
+            ft = string_or_blank(card, ifield + 4, 'failure_theory_%d' % iply)
+            ift = string_or_blank(card, ifield + 5, 'interlaminar_failure_theory_%d' % iply)
+            sout = string_or_blank(card, ifield + 6, 'sout_%d' % iply, 'NO')
             global_ply_ids.append(global_ply_id)
             mids.append(mid)
             thicknesses.append(t)
@@ -330,16 +330,16 @@ class PCOMPS(Property):
     def repr_fields(self):
         #cordm = set_blank_if_default(self.cordm, 0)
         #fctn = set_blank_if_default(self.fctn, 'SMECH')
-        fields = ['PCOMPS', self.pid, self.cordm, self.psdir, self.sb,
-                  self.nb, self.tref, self.ge, None]
+        list_fields = ['PCOMPS', self.pid, self.cordm, self.psdir, self.sb,
+                       self.nb, self.tref, self.ge, None]
         mids = self.material_ids
         for glply, mid, t, theta, ft, ift, sout in zip(self.global_ply_ids,
                                                        mids, self.thicknesses, self.thetas,
                                                        self.failure_theories,
                                                        self.interlaminar_failure_theories,
                                                        self.souts):
-            fields += [glply, mid, t, theta, ft, ift, sout, None]
-        return fields
+            list_fields += [glply, mid, t, theta, ft, ift, sout, None]
+        return list_fields
 
     def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.repr_fields()

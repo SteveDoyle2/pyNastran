@@ -2539,7 +2539,7 @@ class MAT10(Material):
         bulk = double_or_blank(card, 2, 'bulk')
         rho = double_or_blank(card, 3, 'rho')
         c = double_or_blank(card, 4, 'c')
-        ge = double_or_blank(card, 5, 'ge', 0.0)
+        ge = double_or_blank(card, 5, 'ge', default=0.0)
 
         gamma = double_or_blank(card, 6, 'gamma', None)
         tid_bulk = integer_or_blank(card, 10, 'tid_bulk')

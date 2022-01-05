@@ -399,7 +399,7 @@ class CGAP(Element):
             a comment for the card
         """
         eid = integer(card, 1, 'eid')
-        pid = integer_or_blank(card, 2, 'pid', eid)
+        pid = integer_or_blank(card, 2, 'pid', default=eid)
         ga = integer_or_blank(card, 3, 'ga')
         gb = integer_or_blank(card, 4, 'gb')
         x1_g0 = integer_double_or_blank(card, 5, 'x1_g0')
@@ -410,8 +410,8 @@ class CGAP(Element):
         elif isinstance(x1_g0, float):
             g0 = None
             x1 = x1_g0
-            x2 = double_or_blank(card, 6, 'x2', 0.0)
-            x3 = double_or_blank(card, 7, 'x3', 0.0)
+            x2 = double_or_blank(card, 6, 'x2', default=0.0)
+            x3 = double_or_blank(card, 7, 'x3', default=0.0)
             x = [x1, x2, x3]
         else:
             #raise RuntimeError('invalid CGAP...x1/g0 = %r' %(x1_g0))

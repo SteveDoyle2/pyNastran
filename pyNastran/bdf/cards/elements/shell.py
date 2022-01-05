@@ -4437,7 +4437,7 @@ class CQUAD(QuadShell):
                 integer_or_blank(card, 9, 'n7'),
                 integer_or_blank(card, 10, 'n8'),
                 integer_or_blank(card, 11, 'n9'),]
-        theta_mcid = integer_double_or_blank(card, 12, 'theta_mcid', 0.)
+        theta_mcid = integer_double_or_blank(card, 12, 'theta_mcid', default=0.)
         assert len(card) <= 13, f'len(CQUAD card) = {len(card):d}\ncard={card}'
         return CQUAD(eid, pid, nids, theta_mcid=theta_mcid, comment=comment)
 

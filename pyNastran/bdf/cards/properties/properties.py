@@ -347,16 +347,16 @@ class PGAP(Property):
             a comment for the card
         """
         pid = integer(card, 1, 'pid')
-        u0 = double_or_blank(card, 2, 'u0', 0.)
-        f0 = double_or_blank(card, 3, 'f0', 0.)
-        ka = double_or_blank(card, 4, 'ka', 1.e8)
-        kb = double_or_blank(card, 5, 'kb', 1e-14 * ka)
-        mu1 = double_or_blank(card, 7, 'mu1', 0.)
-        kt = double_or_blank(card, 6, 'kt', mu1 * ka)
-        mu2 = double_or_blank(card, 8, 'mu2', mu1)
-        tmax = double_or_blank(card, 9, 'tmax', 0.)
-        mar = double_or_blank(card, 10, 'mar', 100.)
-        trmin = double_or_blank(card, 11, 'trmin', 0.001)
+        u0 = double_or_blank(card, 2, 'u0', default=0.)
+        f0 = double_or_blank(card, 3, 'f0', default=0.)
+        ka = double_or_blank(card, 4, 'ka', default=1.e8)
+        kb = double_or_blank(card, 5, 'kb', default=1e-14 * ka)
+        mu1 = double_or_blank(card, 7, 'mu1', default=0.)
+        kt = double_or_blank(card, 6, 'kt', default=mu1 * ka)
+        mu2 = double_or_blank(card, 8, 'mu2', default=mu1)
+        tmax = double_or_blank(card, 9, 'tmax', default=0.)
+        mar = double_or_blank(card, 10, 'mar', default=100.)
+        trmin = double_or_blank(card, 11, 'trmin', default=0.001)
         assert len(card) <= 12, f'len(PGAP card) = {len(card):d}\ncard={card}'
         return PGAP(pid, u0, f0, ka, kb, mu1, kt, mu2, tmax, mar, trmin,
                     comment=comment)

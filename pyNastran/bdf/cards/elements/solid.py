@@ -32,7 +32,7 @@ if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.bdf.bdf import BDF
 
 
-_chexa_mapper = {
+HEXA_FACE_MAPPER = {
     (7, 5) : (7, 6, 5, 4),
     (5, 7) : (7, 6, 5, 4),
     (6, 4) : (7, 6, 5, 4),
@@ -1817,7 +1817,7 @@ def chexa_face(nid_opposite, nid, nids):
     for face in _chexa_faces:
         if g1i in face and g3i in face:
             found_face = face
-    found_face = _chexa_mapper[tuple([g1i, g3i])]
+    found_face = HEXA_FACE_MAPPER[tuple([g1i, g3i])]
     return found_face
 
 def chexa_face_area_centroid_normal(nid, nid_opposite, nids, nodes_ref):

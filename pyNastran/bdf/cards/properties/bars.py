@@ -406,8 +406,9 @@ def box_section(class_name, beam_type, dim, prop):
     hi = h - 2 * t1
     A = b * h - bi * hi
 
+    assert A > 0, A
     I1 = (b * h ** 3 - bi * hi ** 3) / 12
-    I2 = (h * b ** 3 - bi * hi ** 3) / 12
+    I2 = (h * b ** 3 - hi * bi ** 3) / 12
     I12 = 0.
     #j = (2*t2*t1*(b-t2)**2*(h-t1)**2)/(b*t2+h*t1-t2**2-t1**2)
     return A, I1, I2, I12

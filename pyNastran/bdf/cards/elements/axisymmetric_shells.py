@@ -544,7 +544,7 @@ class CTRIAX(AxisymmetricTri):
             integer_or_blank(card, 7, 'n5'),
             integer_or_blank(card, 8, 'n6'),
             ]
-        theta_mcid = integer_double_or_blank(card, 9, 'theta_mcsid', 0.0)
+        theta_mcid = integer_double_or_blank(card, 9, 'theta_mcsid', default=0.0)
         assert len(card) <= 10, f'len(CTRIAX card) = {len(card):d}\ncard={card}'
         return CTRIAX(eid, pid, nids, theta_mcid=theta_mcid, comment=comment)
 
