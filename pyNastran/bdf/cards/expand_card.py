@@ -4,13 +4,15 @@ defines:
  - expand_thru_by
 
 """
-from typing import  List, Union
+from typing import  List, Optional
 
 from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.bdf.bdf_interface.assign_type import interpret_value
 
 
-def expand_thru(fields: List[str], set_fields: bool=True, sort_fields: bool=False) -> List[int]:
+def expand_thru(fields: List[str],
+                set_fields: bool=True,
+                sort_fields: bool=False) -> List[int]:
     """
     Expands a list of values of the form [1,5,THRU,9,13]
     to be [1,5,6,7,8,9,13]
@@ -34,8 +36,7 @@ def expand_thru(fields: List[str], set_fields: bool=True, sort_fields: bool=Fals
     elif len(fields) == 1:
         return [int(fields[0])]
 
-    fields = [field.upper()
-              if isinstance(field, str) else field for field in fields]
+    fields = _remove_blanks_capitalize(fields)
 
     out = []
     nfields = len(fields)
@@ -58,6 +59,21 @@ def expand_thru(fields: List[str], set_fields: bool=True, sort_fields: bool=Fals
     if sort_fields:
         out.sort()
     return out
+
+def _remove_blanks_capitalize(fields: List[Optional[str]]) -> List[Optional[str]]:
+    """remove any blanks and capitalize any strings"""
+    #fields2 = [field.upper()
+               #if isinstance(field, str) else field for field in fields]
+    fields2 = []
+    for field in fields:
+        if field is None:
+            continue
+        if isinstance(field, str):
+            field = field.upper()
+            if len(field) == 0:
+                continue
+        fields2.append(field)
+    return fields2
 
 
 def expand_thru_by(fields: List[str], set_fields: bool=True, sort_fields: bool=True,
@@ -96,8 +112,7 @@ def expand_thru_by(fields: List[str], set_fields: bool=True, sort_fields: bool=T
         func = interpret_value
 
     # ..todo:  should this be removed...is the field capitalized when read in?
-    fields = [field.upper()
-              if isinstance(field, str) else field for field in fields]
+    fields = _remove_blanks_capitalize(fields)
 
     if len(fields) == 1:
         return [func(fields[0])]

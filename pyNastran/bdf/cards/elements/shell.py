@@ -800,17 +800,20 @@ class CTRIA3(TriShell):
 
         ::
 
-               1           1
-              * *   -->   * *
-             *   *       *   *
-            2-----3     3-----2
+               1           1            2
+              * *   -->   * *    -->   * *
+             *   *       *   *        *   *
+            2-----3     3-----2      3-----1
+            nominal     fast flip   perserve material orientation
 
         """
         (n1, n2, n3) = self.nodes
-        self.nodes = [n1, n3, n2]
+        #self.nodes = [n1, n3, n2] # fast flip
+        self.nodes = [n2, n1, n3]  # preserve material orientation
         if self.nodes_ref is not None:
             (n1, n2, n3) = self.nodes_ref
-            self.nodes_ref = [n1, n3, n2]
+            #self.nodes_ref = [n1, n3, n2] # fast flip
+            self.nodes_ref = [n2, n1, n3]  # preserve material orientation
 
     def _get_repr_defaults(self):
         zoffset = set_blank_if_default(self.zoffset, 0.0)
@@ -2828,17 +2831,20 @@ class CQUAD4(QuadShell):
         r"""
         ::
 
-          1---2       1---4
-          |   |  -->  |   |
-          |   |       |   |
-          4---3       2---3
+          1---2       1---4         2---1
+          |   |  -->  |   |   -->   |   |
+          |   |       |   |         |   |
+          4---3       2---3         3---4
+          nominal     fast flip     preserves material orientation
 
         """
         (n1, n2, n3, n4) = self.nodes
-        self.nodes = [n1, n4, n3, n2]
+        #self.nodes = [n1, n4, n3, n2] # fast flip
+        self.nodes = [n2, n1, n4, n3]  # preserve material orientation
         if self.nodes_ref is not None:
             (n1, n2, n3, n4) = self.nodes_ref
-            self.nodes_ref = [n1, n4, n3, n2]
+            #self.nodes_ref = [n1, n4, n3, n2] # fast flip
+            self.nodes_ref = [n2, n1, n4, n3]  # preserve material orientation
 
     @property
     def node_ids(self):

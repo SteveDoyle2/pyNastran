@@ -1310,6 +1310,17 @@ class TLOAD1(DynamicLoad):
         return self.comment + print_card_16(card)
 
 def fix_loadtype_tload1(load_type: Union[int, str]) -> str:
+    """
+    4 FLOW boundary condition on the face of an Eulerian solid element (SOL 700 only).
+    5 Displacement of SPH elements before activation by a FLOWSPH
+      boundary condition (SOL 700 only).
+    6 Velocity of SPH elements before activation by a FLOWSPH
+      boundary condition (SOL 700 only).
+    7 Acceleration of SPH elements before activation by a FLOWSPH
+      boundary condition (SOL 700 only)
+    12 Velocity of the center of gravity of a rigid body (SOL 700 only)
+    13 Force or moment on the center of gravity of a rigid body (SOL 700 only).
+    """
     if load_type in [0, 'L', 'LO', 'LOA', 'LOAD']:
         load_type = 'LOAD'
     elif load_type in [1, 'D', 'DI', 'DIS', 'DISP']:

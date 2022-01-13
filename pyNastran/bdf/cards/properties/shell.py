@@ -18,7 +18,7 @@ import warnings
 from typing import List, Optional, Union, TYPE_CHECKING
 import numpy as np
 
-from pyNastran.utils.numpy_utils import integer_types
+from pyNastran.utils.numpy_utils import integer_types, float_types
 from pyNastran.bdf import MAX_INT
 from pyNastran.bdf.field_writer_8 import set_blank_if_default
 from pyNastran.bdf.cards.base_card import Property, Material, write_card
@@ -103,6 +103,12 @@ class CompositeShellProperty(Property):
         return [self.Theta(iply) for iply in range(self.nplies)]
     def souts(self) -> float:
         return [self.sout(iply) for iply in range(self.nplies)]
+
+    def reverse(self) -> None:
+        self.thicknesses = list(reversed(self.thicknesses))
+        self.mids = list(reversed(self.mids))
+        self.souts = list(reversed(self.souts))
+        self.thetas = list(reversed(self.thetas))
 
     def cross_reference(self, model: BDF) -> None:
         """
@@ -1114,10 +1120,11 @@ class PCOMP(CompositeShellProperty):
             rotates the ABD matrix; measured in degrees
 
         """
+        assert isinstance(theta_offset, float_types), theta_offset
         mids = self.get_material_ids()
         thicknesses = self.get_thicknesses()
         thetad = self.get_thetas()
-        theta = np.radians(thetad)
+        theta = np.radians(thetad + theta_offset)
         assert len(mids) == len(thicknesses)
         assert len(mids) == len(thetad)
         z0, z1, zmeans = self.get_z0_z1_zmean()
@@ -1131,9 +1138,10 @@ class PCOMP(CompositeShellProperty):
         D = np.zeros((3, 3), dtype='float64')
         #Q = np.zeros((3, 3), dtype='float64')
 
-        mids_ref = copy.deepcopy(self.mids_ref)
+        mids_ref = self.mids_ref
         assert mids_ref is not None, f'The following material has not been cross-referenced:\n{self}'
         if self.is_symmetrical:
+            mids_ref = copy.deepcopy(self.mids_ref)
             mids_ref += mids_ref[::-1]
 
         assert len(mids) == len(mids_ref), f'mids={mids} ({len(mids)}) mids_ref:\n{mids_ref}; {len(mids_ref)}'
@@ -1159,9 +1167,10 @@ class PCOMP(CompositeShellProperty):
         Parameters
         ----------
         theta_offset : float
-            rotates the ABD matrix; measured in degrees
+            rotates the ABD matrix; measured in radians
 
         """
+        assert isinstance(theta_offset, float_types), theta_offset
         A, B, D = self.get_individual_ABD_matrices(theta_offset)
         ABD = np.block([
             [A, B],
@@ -1171,8 +1180,33 @@ class PCOMP(CompositeShellProperty):
         #print(ABD)
         return ABD
 
-    def get_Qbar_matrix(self, mid_ref, theta: float) -> np.ndarray:
+    def get_Ainv_equivalent_pshell(self,
+                                   imat_rotation_angle_deg: float,
+                                   thickness: float) -> Tuple[float, float, float, float]:
+        """imat_rotation_angle is in degrees"""
+        assert isinstance(imat_rotation_angle_deg, float_types), imat_rotation_angle_deg
+        ABD = self.get_ABD_matrices(imat_rotation_angle_deg)
+        A = ABD[:3, :3]
+        Ainv = np.linalg.inv(A)
+
+        # equivalent compliance matrix
+        S = thickness * Ainv
+        #print(S[0, 0], S[1, 1], S[2, 2])
+
+        # these are on the main diagonal
+        Ex = 1. / S[0, 0]
+        Ey = 1. / S[1, 1]
+        Gxy = 1. / S[2, 2]
+        # S12 = -nu12 / E1 = -nu21/E2
+        # nu12 = -S12 / E1
+        nu_xy = -S[0, 1] / Ex
+        return Ex, Ey, Gxy, nu_xy
+
+    def get_Qbar_matrix(self,
+                        mid_ref: Union[MAT1, MAT8],
+                        theta: float) -> np.ndarray:
         """theta must be in radians"""
+        assert isinstance(theta, float_types), theta
         S2, unused_S3 = get_mat_props_S(mid_ref)
         T = get_2d_plate_transform(theta)
 
@@ -2608,6 +2642,32 @@ class PSHELL(Property):
         ])
         return ABD
 
+    def get_Ainv_equivalent_pshell(self,
+                                   imat_rotation_angle: float,
+                                   thickness: float) -> Tuple[float, float, float, float]:
+        """imat_rotation_angle is in degrees...but is specified in radians and unused"""
+        ABD = self.get_ABD_matrices(imat_rotation_angle)
+        A = ABD[:3, :3]
+        Ainv = np.linalg.inv(A)
+
+        # equivalent compliance matrix
+        S = thickness * Ainv
+        #print(S[0, 0], S[1, 1], S[2, 2])
+
+        # these are on the main diagonal
+        mid_ref = self.mid1_ref
+        Ex = mid_ref.e
+        Ey = Ex
+        Gxy = mid_ref.g
+
+        #Ex = 1. / S[0, 0]
+        #Ey = 1. / S[1, 1]
+        #Gxy = 1. / S[2, 2]
+        # S12 = -nu12 / E1 = -nu21/E2
+        # nu12 = -S12 / E1
+        nu_xy = -S[0, 1] / Ex
+        return Ex, Ey, Gxy, nu_xy
+
     def cross_reference(self, model: BDF) -> None:
         """
         Cross links the card so referenced cards can be extracted directly
@@ -2718,7 +2778,7 @@ class PSHELL(Property):
             return self.comment + print_card_8(card)
         return self.comment + print_card_16(card)
 
-def get_2d_plate_transform(theta):
+def get_2d_plate_transform(theta: float) -> np.ndarray:
     """theta must be in radians"""
     ct = np.cos(theta)
     st = np.sin(theta)
