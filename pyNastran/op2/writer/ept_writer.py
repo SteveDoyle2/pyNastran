@@ -869,6 +869,7 @@ def _write_pbeam(name, model, pids, op2_file, op2_ascii, endian):
         op2_file.write(struct1.pack(*data))
 
         nzero_segments = nsegments - 1
+        #print(f'nsegments={nsegments} nzero_segments={nzero_segments}')
         j = 0
         for i in range(11):
             if i > nzero_segments:

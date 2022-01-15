@@ -398,46 +398,33 @@ class PBEAM(IntegratedLineProperty):
         #: z coordinate of neutral axis for end B.
         self.n2b = n2b
 
-        nxxb = len(xxb)
-        # sort xxb
-        ixxb = argsort(xxb)
-        self.so = array(so, dtype='|U8')[ixxb]
-        self.xxb = array(xxb, dtype='float64')[ixxb]
-        #print('ixxb = %s' % ixxb)
-        #print('i12 = %s' % i12)
+        out = _sort_pbeam(pid, xxb, so, area, i1, i2, i12, j, nsm,
+                          c1, c2, d1, d2, e1, e2, f1, f2,
+                          ensure_xxb_1_section=False)
+        (
+            self_xxb, self_so, self_A, self_i1, self_i2, self_i12, self_j, self_nsm,
+            self_c1, self_c2, self_d1, self_d2, self_e1, self_e2, self_f1, self_f2,
+        ) = out
+        self.so = self_so
+        self.xxb = self_xxb
+        self.A = self_A
+        self.i1 = self_i1
+        self.i2 = self_i2
+        self.i12 = self_i12
+        self.j = self_j
+        self.nsm = self_nsm
 
-        assert len(area) == nxxb, 'pid=%s len(xxb)=%s len(A =)=%s' % (pid, nxxb, len(area))
-        assert len(i1) == nxxb, 'pid=%s len(xxb)=%s len(i1 )=%s' % (pid, nxxb, len(i1))
-        assert len(i2) == nxxb, 'pid=%s len(xxb)=%s len(i2 )=%s' % (pid, nxxb, len(i2))
-        assert len(i12) == nxxb, 'pid=%s len(xxb)=%s len(i12)=%s' % (pid, nxxb, len(i12))
-        assert len(j) == nxxb, 'pid=%s len(xxb)=%s len(j =)=%s' % (pid, nxxb, len(j))
-        assert len(nsm) == nxxb, 'pid=%s len(xxb)=%s len(nsm)=%s' % (pid, nxxb, len(nsm))
+        self.c1 = self_c1
+        self.c2 = self_c2
 
-        self.A = array(area, dtype='float64')[ixxb]
-        self.i1 = array(i1, dtype='float64')[ixxb]
-        self.i2 = array(i2, dtype='float64')[ixxb]
-        self.i12 = array(i12, dtype='float64')[ixxb]
-        self.j = array(j, dtype='float64')[ixxb]
-        self.nsm = array(nsm, dtype='float64')[ixxb]
+        self.d1 = self_d1
+        self.d2 = self_d2
 
-        #assert len(area) == nxxb, 'pid=%s len(xxb)=%s len(area)=%s' % (nxxb, len(area))
-        assert len(c1) == nxxb, 'pid=%s len(xxb)=%s len(c1)=%s' % (pid, nxxb, len(c1))
-        assert len(c2) == nxxb, 'pid=%s len(xxb)=%s len(c2)=%s' % (pid, nxxb, len(c2))
-        assert len(d1) == nxxb, 'pid=%s len(xxb)=%s len(d1)=%s' % (pid, nxxb, len(d1))
-        assert len(d2) == nxxb, 'pid=%s len(xxb)=%s len(d2)=%s' % (pid, nxxb, len(d2))
-        assert len(e1) == nxxb, 'pid=%s len(xxb)=%s len(e1)=%s' % (pid, nxxb, len(e1))
-        assert len(e2) == nxxb, 'pid=%s len(xxb)=%s len(e2)=%s' % (pid, nxxb, len(e2))
-        assert len(f1) == nxxb, 'pid=%s len(xxb)=%s len(f1)=%s' % (pid, nxxb, len(f1))
-        assert len(f2) == nxxb, 'pid=%s len(xxb)=%s len(f2)=%s' % (pid, nxxb, len(f2))
+        self.e1 = self_e1
+        self.e2 = self_e2
 
-        self.c1 = array(c1, dtype='float64')[ixxb]
-        self.c2 = array(c2, dtype='float64')[ixxb]
-        self.d1 = array(d1, dtype='float64')[ixxb]
-        self.d2 = array(d2, dtype='float64')[ixxb]
-        self.e1 = array(e1, dtype='float64')[ixxb]
-        self.e2 = array(e2, dtype='float64')[ixxb]
-        self.f1 = array(f1, dtype='float64')[ixxb]
-        self.f2 = array(f2, dtype='float64')[ixxb]
+        self.f1 = self_f1
+        self.f2 = self_f2
         self._interpolate_sections()
         self.mid_ref = None
 
@@ -686,7 +673,7 @@ class PBEAM(IntegratedLineProperty):
                     f2i = None
                     ifield += 8
                 else:
-                    raise RuntimeError('so=%r and not [YES, YESA, NO]' % soi)
+                    raise RuntimeError(f'so={so!r} and not [YES, YESA, NO]')
                 c1.append(c1i)
                 c2.append(c2i)
                 d1.append(d1i)
@@ -1029,11 +1016,12 @@ class PBEAM(IntegratedLineProperty):
         #print('i1  = %r' % self.i1)
         #print('i2  = %r' % self.i2)
         #print('i12 = %r' % self.i12)
-        i = 0
-        for (so, xxb, A, i1, i2, i12, j, nsm, c1, c2, d1, d2, e1, e2, f1,
-             f2) in zip(self.so, self.xxb, self.A, self.i1, self.i2, self.i12,
-                        self.j, self.nsm, self.c1, self.c2, self.d1, self.d2,
-                        self.e1, self.e2, self.f1, self.f2):
+        for (i, so, xxb, A, i1, i2, i12, j, nsm,
+             c1, c2, d1, d2, e1, e2, f1, f2) in zip(
+                 count(),
+                 self.so, self.xxb, self.A, self.i1, self.i2, self.i12,
+                 self.j, self.nsm, self.c1, self.c2, self.d1, self.d2,
+                 self.e1, self.e2, self.f1, self.f2):
             i1 = set_blank_if_default(i1, 0.0)
             i2 = set_blank_if_default(i2, 0.0)
             i12 = set_blank_if_default(i12, 0.0)
@@ -1179,7 +1167,7 @@ def update_pbeam_negative_integer(pname_fid):
         msg = ("property_type='PBEAM' has not implemented %r (istation=%r, iterm=%r)"
                " in pname_map" % (pname_fid, istation, iterm))
         raise NotImplementedError(msg)
-    word = '%s(%i)' % (word, istation + 1)
+    word = '%s(%D)' % (word, istation + 1)
     return word
 
 class PBEAML(IntegratedLineProperty):
@@ -1436,8 +1424,8 @@ class PBEAML(IntegratedLineProperty):
         xxbi = 0.0
         while i < len(card):
             if n > 0:
-                soi = string_or_blank(card, i, 'so_n=%i' % n, default='YES')
-                xxbi = double_or_blank(card, i + 1, 'xxb_n=%i' % n, default=1.0)
+                soi = string_or_blank(card, i, 'so_n=%d' % n, default='YES')
+                xxbi = double_or_blank(card, i + 1, 'xxb_n=%d' % n, default=1.0)
                 so.append(soi)
                 xxb.append(xxbi)
                 i += 2
@@ -1460,7 +1448,7 @@ class PBEAML(IntegratedLineProperty):
             dim = []
             if beam_type == 'DBOX':
                 for ii in range(ndim):
-                    field_name = 'istation=%s; ndim=%s; dim%i' % (n, ndim, ii+1)
+                    field_name = 'istation=%s; ndim=%d; dim%d' % (n, ndim, ii+1)
                     if ii in [4, 5, 6, 7]:
                         dim4 = dim[3]
                         dimi = double_or_blank(card, i, field_name, default=dim4)
@@ -1737,6 +1725,67 @@ class PBEAML(IntegratedLineProperty):
             return self.comment + print_card_8(card)
         return self.comment + print_card_16(card)  #is this allowed???
 
+
+def _sort_pbeam(pid: int,
+                xxb, so, area, i1, i2, i12, j, nsm,
+                c1, c2, d1, d2, e1, e2, f1, f2,
+                ensure_xxb_1_section: bool=True) -> Tuple[
+                    np.ndarray, np.ndarray, np.ndarray, np.ndarray,
+                    np.ndarray, np.ndarray, np.ndarray, np.ndarray,
+                    np.ndarray, np.ndarray, np.ndarray, np.ndarray,
+                    np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
+    nxxb = len(xxb)
+    # sort xxb
+    ixxb = np.argsort(xxb)
+    #duplicate_xxb = (len(xxb) == 1)
+    #if duplicate_xxb and ensure_xxb_1_section:
+        #ixxb = np.array([0, 0])
+    self_so = np.array(so, dtype='|U8')[ixxb]
+    self_xxb = np.array(xxb, dtype='float64')[ixxb]
+    #print('ixxb = %s' % ixxb)
+    #print('i12 = %s' % i12)
+
+    assert len(area) == nxxb, 'pid=%s len(xxb)=%s len(A =)=%s' % (pid, nxxb, len(area))
+    assert len(i1) == nxxb, 'pid=%s len(xxb)=%s len(i1 )=%s' % (pid, nxxb, len(i1))
+    assert len(i2) == nxxb, 'pid=%s len(xxb)=%s len(i2 )=%s' % (pid, nxxb, len(i2))
+    assert len(i12) == nxxb, 'pid=%s len(xxb)=%s len(i12)=%s' % (pid, nxxb, len(i12))
+    assert len(j) == nxxb, 'pid=%s len(xxb)=%s len(j =)=%s' % (pid, nxxb, len(j))
+    assert len(nsm) == nxxb, 'pid=%s len(xxb)=%s len(nsm)=%s' % (pid, nxxb, len(nsm))
+
+    self_A = np.array(area, dtype='float64')[ixxb]
+    self_i1 = np.array(i1, dtype='float64')[ixxb]
+    self_i2 = np.array(i2, dtype='float64')[ixxb]
+    self_i12 = np.array(i12, dtype='float64')[ixxb]
+    self_j = np.array(j, dtype='float64')[ixxb]
+    self_nsm = np.array(nsm, dtype='float64')[ixxb]
+
+    #assert len(area) == nxxb, 'pid=%s len(xxb)=%s len(area)=%s' % (nxxb, len(area))
+    assert len(c1) == nxxb, 'pid=%s len(xxb)=%s len(c1)=%s' % (pid, nxxb, len(c1))
+    assert len(c2) == nxxb, 'pid=%s len(xxb)=%s len(c2)=%s' % (pid, nxxb, len(c2))
+    assert len(d1) == nxxb, 'pid=%s len(xxb)=%s len(d1)=%s' % (pid, nxxb, len(d1))
+    assert len(d2) == nxxb, 'pid=%s len(xxb)=%s len(d2)=%s' % (pid, nxxb, len(d2))
+    assert len(e1) == nxxb, 'pid=%s len(xxb)=%s len(e1)=%s' % (pid, nxxb, len(e1))
+    assert len(e2) == nxxb, 'pid=%s len(xxb)=%s len(e2)=%s' % (pid, nxxb, len(e2))
+    assert len(f1) == nxxb, 'pid=%s len(xxb)=%s len(f1)=%s' % (pid, nxxb, len(f1))
+    assert len(f2) == nxxb, 'pid=%s len(xxb)=%s len(f2)=%s' % (pid, nxxb, len(f2))
+
+    self_c1 = np.array(c1, dtype='float64')[ixxb]
+    self_c2 = np.array(c2, dtype='float64')[ixxb]
+    self_d1 = np.array(d1, dtype='float64')[ixxb]
+    self_d2 = np.array(d2, dtype='float64')[ixxb]
+    self_e1 = np.array(e1, dtype='float64')[ixxb]
+    self_e2 = np.array(e2, dtype='float64')[ixxb]
+    self_f1 = np.array(f1, dtype='float64')[ixxb]
+    self_f2 = np.array(f2, dtype='float64')[ixxb]
+
+    #if duplicate_xxb:
+        #self_xxb = np.array([0., 1.], dtype='float64')
+
+    out = (
+        self_xxb, self_so, self_A, self_i1, self_i2, self_i12, self_j, self_nsm,
+        self_c1, self_c2, self_d1, self_d2, self_e1, self_e2, self_f1, self_f2,
+    )
+    return out
 
 class PBMSECT(LineProperty):
     """

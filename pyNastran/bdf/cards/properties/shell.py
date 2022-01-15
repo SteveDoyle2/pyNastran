@@ -13,7 +13,7 @@ All shell properties are Property objects.
 """
 from __future__ import annotations
 import copy
-from itertools import count
+from itertools import count, zip_longest
 import warnings
 from typing import List, Optional, Union, TYPE_CHECKING
 import numpy as np
@@ -854,6 +854,9 @@ class PCOMP(CompositeShellProperty):
                            'HFAI', 'HFAB', 'HTAP',
                            0.0, None], f'ft={self.ft!r}'
 
+        assert len(self.mids) == len(self.thicknesses)
+        assert len(self.mids) == len(self.thetas)
+        assert len(self.mids) == len(self.souts)
         # 'NO' is not an option!
         allowed_lam = [None, 'SYM', 'MEM', 'BEND', 'SMEAR', 'SMCORE']
         if self.lam not in allowed_lam:
@@ -996,7 +999,7 @@ class PCOMP(CompositeShellProperty):
         thicknesses = []
         thetas = []
         souts = []
-        for (mid, t, theta, sout) in zip(Mid, T, Theta, Sout):
+        for (mid, t, theta, sout) in zip_longest(Mid, T, Theta, Sout):
             if sout == 0:
                 sout = 'NO'
             elif sout == 1:
@@ -1023,8 +1026,8 @@ class PCOMP(CompositeShellProperty):
     @property
     def plies(self):
         plies = []
-        for mid, t, theta, sout in zip(self.material_ids, self.thicknesses,
-                                       self.thetas, self.souts):
+        for mid, t, theta, sout in zip_longest(self.material_ids, self.thicknesses,
+                                               self.thetas, self.souts):
             plies.append([mid, t, theta, sout])
         return plies
 
@@ -1145,8 +1148,8 @@ class PCOMP(CompositeShellProperty):
             mids_ref += mids_ref[::-1]
 
         assert len(mids) == len(mids_ref), f'mids={mids} ({len(mids)}) mids_ref:\n{mids_ref}; {len(mids_ref)}'
-        for mid, mid_ref, thetai, thickness, zmean, z0i, z1i in zip(mids, mids_ref, theta,
-                                                                    thicknesses, zmeans, z0, z1):
+        for mid, mid_ref, thetai, thickness, zmean, z0i, z1i in zip_longest(mids, mids_ref, theta,
+                                                                            thicknesses, zmeans, z0, z1):
             Qbar = self.get_Qbar_matrix(mid_ref, thetai)
             A += Qbar * thickness
             #B += Qbar * thickness * zmean
@@ -1273,8 +1276,8 @@ class PCOMP(CompositeShellProperty):
     def raw_fields(self):
         list_fields = ['PCOMP', self.pid, self.z0, self.nsm, self.sb, self.ft,
                        self.tref, self.ge, self.lam, ]
-        for (mid, t, theta, sout) in zip(self.material_ids, self.thicknesses,
-                                         self.thetas, self.souts):
+        for (mid, t, theta, sout) in zip_longest(self.material_ids, self.thicknesses,
+                                                 self.thetas, self.souts):
             list_fields += [mid, t, theta, sout]
         return list_fields
 
@@ -1286,8 +1289,8 @@ class PCOMP(CompositeShellProperty):
         z0 = set_blank_if_default(self.z0, -0.5 * self.get_thickness())
 
         list_fields = ['PCOMP', self.pid, z0, nsm, sb, self.ft, tref, ge, self.lam]
-        for (mid, t, theta, sout) in zip(self.material_ids, self.thicknesses,
-                                         self.thetas, self.souts):
+        for (mid, t, theta, sout) in zip_longest(self.material_ids, self.thicknesses,
+                                                 self.thetas, self.souts):
             #theta = set_blank_if_default(theta, 0.0)
             str_sout = set_blank_if_default(sout, 'NO')
             list_fields += [mid, t, theta, str_sout]
@@ -1373,9 +1376,9 @@ class PCOMPG(CompositeShellProperty):
     @property
     def plies(self) -> List[Tuple[int, float, float, str, int]]:
         plies = []
-        for mid, t, theta, sout, global_ply_id in zip(self.mids, self.thicknesses,
-                                                      self.thetas, self.souts,
-                                                      self.global_ply_ids):
+        for mid, t, theta, sout, global_ply_id in zip_longest(self.mids, self.thicknesses,
+                                                              self.thetas, self.souts,
+                                                              self.global_ply_ids):
             plies.append((mid, t, theta, sout, global_ply_id))
         return plies
 
@@ -1626,7 +1629,7 @@ class PCOMPG(CompositeShellProperty):
         list_fields = [
             'PCOMPG', self.pid, self.z0, self.nsm, self.sb, self.ft,
             self.tref, self.ge, self.lam, ]
-        for (mid, t, theta, sout, global_ply_id) in zip(
+        for (mid, t, theta, sout, global_ply_id) in zip_longest(
                 self.material_ids, self.thicknesses, self.thetas, self.souts,
                 self.global_ply_ids):
             list_fields += [global_ply_id, mid, t, theta, sout, None, None, None]
@@ -1642,8 +1645,8 @@ class PCOMPG(CompositeShellProperty):
         list_fields = [
             'PCOMPG', self.pid, z0, nsm, sb, self.ft, tref, ge,
             self.lam]
-        zipi = zip(self.material_ids, self.thicknesses, self.thetas, self.souts,
-                   self.global_ply_ids)
+        zipi = zip_longest(self.material_ids, self.thicknesses, self.thetas, self.souts,
+                           self.global_ply_ids)
         for (mid, t, theta, sout, global_ply_id) in zipi:
             sout = set_blank_if_default(sout, 'NO')
             list_fields += [global_ply_id, mid, t, theta, sout, None, None, None]
