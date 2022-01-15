@@ -436,53 +436,30 @@ class PBEAM(IntegratedLineProperty):
 
         we've also already checked xxb=0.0 and xxb=1.0 for I1, I2, I12, J
         """
-        loop_vars = (
-            count(), self.xxb, self.A, self.i1, self.i2, self.i12, self.j, self.nsm,
-            self.c1, self.c2, self.d1, self.d2, self.e1, self.e2, self.f1, self.f2
-        )
-        for interp_data in zip(*loop_vars):
-            i, xxb, a, i1, i2, i12, j, nsm, c1, c2, d1, d2, e1, e2, f1, f2 = interp_data
-            if xxb not in [0., 1.]:
-                if np.isnan(a):
-                    self.A[i] = self.A[-1] + self.A[0] * (1 - xxb)
-                if np.isnan(i1):
-                    self.i1[i] = self.i1[-1] + self.i1[0] * (1 - xxb)
-                if np.isnan(i2):
-                    self.i2[i] = self.i2[-1] + self.i2[0] * (1 - xxb)
-                if np.isnan(i12):
-                    self.i12[i] = self.i12[-1] + self.i12[0] * (1 - xxb)
-                if np.isnan(j):
-                    self.j[i] = self.j[-1] + self.j[0] * (1 - xxb)
-
-                assert self.A[i] >= 0., self.A
-                assert self.i1[i] >= 0., self.i1
-                assert self.i2[i] >= 0., self.i2
-                assert self.j[i] >= 0., self.j  # we check warping later
-
-                if np.isnan(nsm):
-                    #print('iterpolating nsm; i=%s xxb=%s' % (i, xxb))
-                    self.nsm[i] = self.nsm[-1] + self.nsm[0] * (1 - xxb)
-
-                if np.isnan(c1):
-                    self.c1[i] = self.c1[-1] + self.c1[0] * (1 - xxb)
-                if np.isnan(c2):
-                    self.c2[i] = self.c2[-1] + self.c2[0] * (1 - xxb)
-
-                if np.isnan(d1):
-                    self.d1[i] = self.d1[-1] + self.d1[0] * (1 - xxb)
-                if np.isnan(d2):
-                    self.d2[i] = self.d2[-1] + self.d2[0] * (1 - xxb)
-
-                if np.isnan(e1):
-                    self.e1[i] = self.e1[-1] + self.e1[0] * (1 - xxb)
-                if np.isnan(e2):
-                    self.e2[i] = self.e2[-1] + self.e2[0] * (1 - xxb)
-
-                if np.isnan(f1):
-                    self.f1[i] = self.f1[-1] + self.f1[0] * (1 - xxb)
-                if np.isnan(f2):
-                    self.f2[i] = self.f2[-1] + self.f2[0] * (1 - xxb)
-
+        xxb = self.xxb
+        if len(xxb) == 1:
+            return
+        assert len(xxb) > 0
+        def _linear_interpolate2(xxb, area):
+            isnan = np.isnan(area[1:-1])
+            inan = np.arange(1, len(area) - 1)[isnan]
+            m = (area[-1] - area[0]) / (xxb[-1] - xxb[0])
+            area[inan] = area[0] + m * xxb[inan]
+            return area
+        self.A = _linear_interpolate2(xxb, self.A)
+        self.i1 = _linear_interpolate2(xxb, self.i1)
+        self.i2 = _linear_interpolate2(xxb, self.i2)
+        self.i12 = _linear_interpolate2(xxb, self.i12)
+        self.j = _linear_interpolate2(xxb, self.j)
+        self.nsm = _linear_interpolate2(xxb, self.nsm)
+        self.c1 = _linear_interpolate2(xxb, self.c1)
+        self.c2 = _linear_interpolate2(xxb, self.c2)
+        self.d1 = _linear_interpolate2(xxb, self.d1)
+        self.d2 = _linear_interpolate2(xxb, self.d2)
+        self.e1 = _linear_interpolate2(xxb, self.e1)
+        self.e2 = _linear_interpolate2(xxb, self.e2)
+        self.f1 = _linear_interpolate2(xxb, self.f1)
+        self.f2 = _linear_interpolate2(xxb, self.f2)
 
         if self.cwa or self.cwb:  # if either is non-zero
             for i, xxbi, ji in zip(count(), self.xxb, self.j):
@@ -491,9 +468,6 @@ class PBEAM(IntegratedLineProperty):
                     msg += '  cwa=%s cwb=%s\n' % (self.cwa, self.cwb)
                     msg += '  i=%s xxb=%s j=%s; j[%i]=%s\n' % (i, xxbi, self.j, i, ji)
                     raise ValueError(msg)
-
-        #print('PBEAM', pid, self.A, self.xxb)
-        #x = 1
 
     def validate(self):
         nstations = len(self.A)
@@ -1785,6 +1759,31 @@ def _sort_pbeam(pid: int,
         self_c1, self_c2, self_d1, self_d2, self_e1, self_e2, self_f1, self_f2,
     )
     return out
+
+def _linearly_interpolate(i: int, x: np.ndarray, y: np.ndarray):
+    """
+    For the continuations that have intermediate values of X/XB between 0.0
+    and 1.0 and use the default option (any of the fields 4 through 9 are blank), a
+    linear interpolation between the values at ends A and B is performed to obtain
+    the missing section properties.
+    """
+    inonzero = np.where(y != 0.)[0]
+    if len(inonzero) == 0:
+        return 0.
+    idiff = (inonzero - i)
+    ineg = (idiff < 0)
+    ipos = (idiff > 0)
+    ilow = i + idiff[ineg]
+    ihigh = i + idiff[ipos]
+
+    xlow = x[ilow]
+    ylow = y[ilow]
+    xhigh = x[ihigh]
+    yhigh = y[ihigh]
+    yi = y[ilow] + (yhigh - ylow) / (xhigh - xlow) * x[i]
+    assert isinstance(yi[0], float), yi
+    return yi
+
 
 class PBMSECT(LineProperty):
     """
