@@ -136,7 +136,7 @@ class AECOMP(BaseCard):
         j = 1
         lists = []
         for i in range(3, len(card)):
-            list_i = integer(card, i, '%s_%i' % (list_type, j))
+            list_i = integer(card, i, '%s_%d' % (list_type, j))
             lists.append(list_i)
             j += 1
         return AECOMP(name, list_type, lists, comment=comment)
@@ -401,7 +401,7 @@ class AEFACT(BaseCard):
 
         fractions = []
         for i in range(2, len(card)):
-            fraction = double(card, i, 'factor_%i' % (i - 1))
+            fraction = double(card, i, 'factor_%d' % (i - 1))
             fractions.append(fraction)
         assert len(card) > 2, 'len(AEFACT card) = %i\n%s' % (len(card), card)
         return AEFACT(sid, fractions, comment=comment)

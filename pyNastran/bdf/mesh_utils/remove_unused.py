@@ -117,7 +117,9 @@ def remove_unused(bdf_filename: str,
         'SELOC', 'SEEXCLD', 'SENQSET',
 
         # parametric
-        'FEEDGE', 'FEFACE'
+        'FEEDGE', 'FEFACE',
+        # contact
+        'BGSET',
     }
     set_types_simple = [
         'SET1', 'SET3',

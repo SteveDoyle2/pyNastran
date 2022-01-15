@@ -120,6 +120,8 @@ def print_bad_path(path: str) -> str:
 
     """
     #raw_path = path
+    if isinstance(path, PurePath):
+        path = str(path)
     if len(path) > 255:
         path = os.path.abspath(_filename(path))
         npath = os.path.dirname(path)

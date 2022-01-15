@@ -1167,7 +1167,7 @@ def update_pbeam_negative_integer(pname_fid):
         msg = ("property_type='PBEAM' has not implemented %r (istation=%r, iterm=%r)"
                " in pname_map" % (pname_fid, istation, iterm))
         raise NotImplementedError(msg)
-    word = '%s(%D)' % (word, istation + 1)
+    word = '%s(%d)' % (word, istation + 1)
     return word
 
 class PBEAML(IntegratedLineProperty):
@@ -1448,7 +1448,7 @@ class PBEAML(IntegratedLineProperty):
             dim = []
             if beam_type == 'DBOX':
                 for ii in range(ndim):
-                    field_name = 'istation=%s; ndim=%d; dim%d' % (n, ndim, ii+1)
+                    field_name = 'istation=%d; ndim=%d; dim%d' % (n, ndim, ii+1)
                     if ii in [4, 5, 6, 7]:
                         dim4 = dim[3]
                         dimi = double_or_blank(card, i, field_name, default=dim4)
@@ -1461,7 +1461,7 @@ class PBEAML(IntegratedLineProperty):
                     i += 1
             else:
                 for ii in range(ndim):
-                    field_name = 'istation=%s; ndim=%s; dim%i' % (n, ndim, ii+1)
+                    field_name = 'istation=%s; ndim=%s; dim%d' % (n, ndim, ii+1)
                     if xxbi == 0.0:
                         dimi = double(card, i, field_name)
                     elif xxbi == 1.0:
