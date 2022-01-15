@@ -443,15 +443,15 @@ class PBEAM(IntegratedLineProperty):
         for interp_data in zip(*loop_vars):
             i, xxb, a, i1, i2, i12, j, nsm, c1, c2, d1, d2, e1, e2, f1, f2 = interp_data
             if xxb not in [0., 1.]:
-                if a == 0.0:
+                if np.isnan(a):
                     self.A[i] = self.A[-1] + self.A[0] * (1 - xxb)
-                if i1 == 0.0:
+                if np.isnan(i1):
                     self.i1[i] = self.i1[-1] + self.i1[0] * (1 - xxb)
-                if i2 == 0.0:
+                if np.isnan(i2):
                     self.i2[i] = self.i2[-1] + self.i2[0] * (1 - xxb)
-                if i12 == 0.0:
+                if np.isnan(i12):
                     self.i12[i] = self.i12[-1] + self.i12[0] * (1 - xxb)
-                if j == 0.0:
+                if np.isnan(j):
                     self.j[i] = self.j[-1] + self.j[0] * (1 - xxb)
 
                 assert self.A[i] >= 0., self.A
@@ -459,28 +459,28 @@ class PBEAM(IntegratedLineProperty):
                 assert self.i2[i] >= 0., self.i2
                 assert self.j[i] >= 0., self.j  # we check warping later
 
-                if nsm == 0.0:
+                if np.isnan(nsm):
                     #print('iterpolating nsm; i=%s xxb=%s' % (i, xxb))
                     self.nsm[i] = self.nsm[-1] + self.nsm[0] * (1 - xxb)
 
-                if c1 == 0.0:
+                if np.isnan(c1):
                     self.c1[i] = self.c1[-1] + self.c1[0] * (1 - xxb)
-                if c2 == 0.0:
+                if np.isnan(c2):
                     self.c2[i] = self.c2[-1] + self.c2[0] * (1 - xxb)
 
-                if d1 == 0.0:
+                if np.isnan(d1):
                     self.d1[i] = self.d1[-1] + self.d1[0] * (1 - xxb)
-                if d2 == 0.0:
+                if np.isnan(d2):
                     self.d2[i] = self.d2[-1] + self.d2[0] * (1 - xxb)
 
-                if e1 == 0.0:
+                if np.isnan(e1):
                     self.e1[i] = self.e1[-1] + self.e1[0] * (1 - xxb)
-                if e2 == 0.0:
+                if np.isnan(e2):
                     self.e2[i] = self.e2[-1] + self.e2[0] * (1 - xxb)
 
-                if f1 == 0.0:
+                if np.isnan(f1):
                     self.f1[i] = self.f1[-1] + self.f1[0] * (1 - xxb)
-                if f2 == 0.0:
+                if np.isnan(f2):
                     self.f2[i] = self.f2[-1] + self.f2[0] * (1 - xxb)
 
 
@@ -626,12 +626,12 @@ class PBEAM(IntegratedLineProperty):
 
                 else:
                     # we'll go through and do linear interpolation afterwards
-                    areai = double_or_blank(card, ifield + 2, 'Area%i' % nrepeated, default=0.0)
-                    i1i = double_or_blank(card, ifield + 3, 'I1 %i' % nrepeated, default=0.0)
-                    i2i = double_or_blank(card, ifield + 4, 'I2 %i' % nrepeated, default=0.0)
-                    i12i = double_or_blank(card, ifield + 5, 'I12 %i' % nrepeated, default=0.0)
-                    ji = double_or_blank(card, ifield + 6, 'J%i' % nrepeated, default=0.0)
-                    nsmi = double_or_blank(card, ifield + 7, 'nsm%i' % nrepeated, default=0.0)
+                    areai = double_or_blank(card, ifield + 2, 'Area%d' % nrepeated, default=None)
+                    i1i = double_or_blank(card, ifield + 3, 'I1 %d' % nrepeated, default=None)
+                    i2i = double_or_blank(card, ifield + 4, 'I2 %d' % nrepeated, default=None)
+                    i12i = double_or_blank(card, ifield + 5, 'I12 %d' % nrepeated, default=None)
+                    ji = double_or_blank(card, ifield + 6, 'J%d' % nrepeated, default=None)
+                    nsmi = double_or_blank(card, ifield + 7, 'nsm%d' % nrepeated, default=None)
 
                 so.append(soi)
                 xxb.append(xxbi)
@@ -1052,7 +1052,6 @@ class PBEAM(IntegratedLineProperty):
                 else:
                     raise RuntimeError('so=%r type(so)=%s' % (so, type(so)))
 
-            i += 1
         k1 = set_blank_if_default(self.k1, 1.0)
         k2 = set_blank_if_default(self.k2, 1.0)
 
