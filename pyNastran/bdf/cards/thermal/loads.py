@@ -261,16 +261,16 @@ class QVECT(ThermalLoad):
         t_source = double_or_blank(card, 3, 't_source')
         ce = integer_or_blank(card, 4, 'ce', 0)
         vector_tableds = [
-            integer_double_or_blank(card, 5, 'e1_tabled1', 0.0),
-            integer_double_or_blank(card, 6, 'e2_tabled2', 0.0),
-            integer_double_or_blank(card, 7, 'e3_tabled3', 0.0),
+            integer_double_or_blank(card, 5, 'e1_tabled1', default=0.0),
+            integer_double_or_blank(card, 6, 'e2_tabled2', default=0.0),
+            integer_double_or_blank(card, 7, 'e3_tabled3', default=0.0),
         ]
-        control_id = integer_or_blank(card, 8, 'control_id', 0)
+        control_id = integer_or_blank(card, 8, 'control_id', default=0)
 
         i = 1
         eids = []
         for ifield in range(9, len(card)):
-            eid = integer_or_string(card, ifield, 'eid_%i' % i)
+            eid = integer_or_string(card, ifield, 'eid_%d' % i)
             eids.append(eid)
             assert eid != 0, card
             i += 1

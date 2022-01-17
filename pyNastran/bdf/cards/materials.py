@@ -952,19 +952,19 @@ class MAT2(AnisotropicMaterial):
 
         """
         mid = integer(card, 1, 'mid')
-        G11 = double_or_blank(card, 2, 'G11', 0.0)
-        G12 = double_or_blank(card, 3, 'G12', 0.0)
-        G13 = double_or_blank(card, 4, 'G13', 0.0)
-        G22 = double_or_blank(card, 5, 'G22', 0.0)
-        G23 = double_or_blank(card, 6, 'G23', 0.0)
-        G33 = double_or_blank(card, 7, 'G33', 0.0)
+        G11 = double_or_blank(card, 2, 'G11', default=0.0)
+        G12 = double_or_blank(card, 3, 'G12', default=0.0)
+        G13 = double_or_blank(card, 4, 'G13', default=0.0)
+        G22 = double_or_blank(card, 5, 'G22', default=0.0)
+        G23 = double_or_blank(card, 6, 'G23', default=0.0)
+        G33 = double_or_blank(card, 7, 'G33', default=0.0)
 
-        rho = double_or_blank(card, 8, 'rho', 0.0)
+        rho = double_or_blank(card, 8, 'rho', default=0.0)
         a1 = double_or_blank(card, 9, 'a1') # blank?
         a2 = double_or_blank(card, 10, 'a2') # blank?
         a3 = double_or_blank(card, 11, 'a3') # blank?
-        tref = double_or_blank(card, 12, 'tref', 0.0)
-        ge = double_or_blank(card, 13, 'ge', 0.0)
+        tref = double_or_blank(card, 12, 'tref', default=0.0)
+        ge = double_or_blank(card, 13, 'ge', default=0.0)
         St = double_or_blank(card, 14, 'St') # or blank?
         Sc = double_or_blank(card, 15, 'Sc') # or blank?
         Ss = double_or_blank(card, 16, 'Ss') # or blank?
@@ -1279,14 +1279,14 @@ class MAT3(OrthotropicMaterial):
         nuxth = double(card, 5, 'nuxth')
         nuthz = double(card, 6, 'nuthz')
         nuzx = double(card, 7, 'nuzx')
-        rho = double_or_blank(card, 8, 'rho', 0.0)
+        rho = double_or_blank(card, 8, 'rho', default=0.0)
 
         gzx = double_or_blank(card, 11, 'gzx')
-        ax = double_or_blank(card, 12, 'ax', 0.0)
-        ath = double_or_blank(card, 13, 'ath', 0.0)
-        az = double_or_blank(card, 14, 'az', 0.0)
-        tref = double_or_blank(card, 15, 'tref', 0.0)
-        ge = double_or_blank(card, 16, 'ge', 0.0)
+        ax = double_or_blank(card, 12, 'ax', default=0.0)
+        ath = double_or_blank(card, 13, 'ath', default=0.0)
+        az = double_or_blank(card, 14, 'az', default=0.0)
+        tref = double_or_blank(card, 15, 'tref', default=0.0)
+        ge = double_or_blank(card, 16, 'ge', default=0.0)
         assert len(card) <= 17, f'len(MAT3 card) = {len(card):d}\ncard={card}'
         return MAT3(mid, ex, eth, ez, nuxth, nuthz, nuzx, rho=rho, gzx=gzx,
                     ax=ax, ath=ath, az=az, tref=tref, ge=ge, comment=comment)
@@ -1639,16 +1639,16 @@ class MAT5(ThermalMaterial):  # also AnisotropicMaterial
 
         """
         mid = integer(card, 1, 'mid')
-        kxx = double_or_blank(card, 2, 'kxx', 0.0)
-        kxy = double_or_blank(card, 3, 'kxy', 0.0)
-        kxz = double_or_blank(card, 4, 'kxz', 0.0)
-        kyy = double_or_blank(card, 5, 'kyy', 0.0)
-        kyz = double_or_blank(card, 6, 'kyz', 0.0)
-        kzz = double_or_blank(card, 7, 'kzz', 0.0)
+        kxx = double_or_blank(card, 2, 'kxx', default=0.0)
+        kxy = double_or_blank(card, 3, 'kxy', default=0.0)
+        kxz = double_or_blank(card, 4, 'kxz', default=0.0)
+        kyy = double_or_blank(card, 5, 'kyy', default=0.0)
+        kyz = double_or_blank(card, 6, 'kyz', default=0.0)
+        kzz = double_or_blank(card, 7, 'kzz', default=0.0)
 
-        cp = double_or_blank(card, 8, 'cp', 0.0)
-        rho = double_or_blank(card, 9, 'rho', 1.0)
-        hgen = double_or_blank(card, 10, 'hgen', 1.0)
+        cp = double_or_blank(card, 8, 'cp', default=0.0)
+        rho = double_or_blank(card, 9, 'rho', default=1.0)
+        hgen = double_or_blank(card, 10, 'hgen', default=1.0)
         assert len(card) <= 11, f'len(MAT5 card) = {len(card):d}\ncard={card}'
         return MAT5(mid, kxx, kxy, kxz, kyy, kyz, kzz,
                     cp, rho, hgen, comment=comment)
@@ -2252,36 +2252,36 @@ class MAT9(AnisotropicMaterial):
 
         """
         mid = integer(card, 1, 'mid')
-        G11 = double_or_blank(card, 2, 'G11', 0.0)
-        G12 = double_or_blank(card, 3, 'G12', 0.0)
-        G13 = double_or_blank(card, 4, 'G13', 0.0)
-        G14 = double_or_blank(card, 5, 'G14', 0.0)
-        G15 = double_or_blank(card, 6, 'G15', 0.0)
-        G16 = double_or_blank(card, 7, 'G16', 0.0)
-        G22 = double_or_blank(card, 8, 'G22', 0.0)
-        G23 = double_or_blank(card, 9, 'G23', 0.0)
-        G24 = double_or_blank(card, 10, 'G24', 0.0)
-        G25 = double_or_blank(card, 11, 'G25', 0.0)
-        G26 = double_or_blank(card, 12, 'G26', 0.0)
-        G33 = double_or_blank(card, 13, 'G33', 0.0)
-        G34 = double_or_blank(card, 14, 'G34', 0.0)
-        G35 = double_or_blank(card, 15, 'G35', 0.0)
-        G36 = double_or_blank(card, 16, 'G36', 0.0)
-        G44 = double_or_blank(card, 17, 'G44', 0.0)
-        G45 = double_or_blank(card, 18, 'G45', 0.0)
-        G46 = double_or_blank(card, 19, 'G46', 0.0)
-        G55 = double_or_blank(card, 20, 'G55', 0.0)
-        G56 = double_or_blank(card, 21, 'G56', 0.0)
-        G66 = double_or_blank(card, 22, 'G66', 0.0)
-        rho = double_or_blank(card, 23, 'rho', 0.0)
-        A = [double_or_blank(card, 24, 'A1', 0.0),
-             double_or_blank(card, 25, 'A2', 0.0),
-             double_or_blank(card, 26, 'A3', 0.0),
-             double_or_blank(card, 27, 'A4', 0.0),
-             double_or_blank(card, 28, 'A5', 0.0),
-             double_or_blank(card, 29, 'A6', 0.0)]
-        tref = double_or_blank(card, 30, 'tref', 0.0)
-        ge = double_or_blank(card, 31, 'ge', 0.0)
+        G11 = double_or_blank(card, 2, 'G11', default=0.0)
+        G12 = double_or_blank(card, 3, 'G12', default=0.0)
+        G13 = double_or_blank(card, 4, 'G13', default=0.0)
+        G14 = double_or_blank(card, 5, 'G14', default=0.0)
+        G15 = double_or_blank(card, 6, 'G15', default=0.0)
+        G16 = double_or_blank(card, 7, 'G16', default=0.0)
+        G22 = double_or_blank(card, 8, 'G22', default=0.0)
+        G23 = double_or_blank(card, 9, 'G23', default=0.0)
+        G24 = double_or_blank(card, 10, 'G24', default=0.0)
+        G25 = double_or_blank(card, 11, 'G25', default=0.0)
+        G26 = double_or_blank(card, 12, 'G26', default=0.0)
+        G33 = double_or_blank(card, 13, 'G33', default=0.0)
+        G34 = double_or_blank(card, 14, 'G34', default=0.0)
+        G35 = double_or_blank(card, 15, 'G35', default=0.0)
+        G36 = double_or_blank(card, 16, 'G36', default=0.0)
+        G44 = double_or_blank(card, 17, 'G44', default=0.0)
+        G45 = double_or_blank(card, 18, 'G45', default=0.0)
+        G46 = double_or_blank(card, 19, 'G46', default=0.0)
+        G55 = double_or_blank(card, 20, 'G55', default=0.0)
+        G56 = double_or_blank(card, 21, 'G56', default=0.0)
+        G66 = double_or_blank(card, 22, 'G66', default=0.0)
+        rho = double_or_blank(card, 23, 'rho', default=0.0)
+        A = [double_or_blank(card, 24, 'A1', default=0.0),
+             double_or_blank(card, 25, 'A2', default=0.0),
+             double_or_blank(card, 26, 'A3', default=0.0),
+             double_or_blank(card, 27, 'A4', default=0.0),
+             double_or_blank(card, 28, 'A5', default=0.0),
+             double_or_blank(card, 29, 'A6', default=0.0)]
+        tref = double_or_blank(card, 30, 'tref', default=0.0)
+        ge = double_or_blank(card, 31, 'ge', default=0.0)
         assert len(card) <= 32, f'len(MAT9 card) = {len(card):d}\ncard={card}'
         return MAT9(mid, G11, G12, G13, G14, G15, G16, G22, G23, G24, G25,
                     G26, G33, G34, G35, G36, G44, G45, G46,

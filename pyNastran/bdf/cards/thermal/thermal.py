@@ -388,16 +388,16 @@ class CHBDYG(ThermalElement):
         # no field 2
 
         surface_type = string(card, 3, 'Type')
-        iview_front = integer_or_blank(card, 4, 'iview_front', 0)
-        iview_back = integer_or_blank(card, 8, 'iview_back', 0)
-        rad_mid_front = integer_or_blank(card, 6, 'rad_mid_front', 0)
-        rad_mid_back = integer_or_blank(card, 7, 'rad_mid_back', 0)
+        iview_front = integer_or_blank(card, 4, 'iview_front', default=0)
+        iview_back = integer_or_blank(card, 8, 'iview_back', default=0)
+        rad_mid_front = integer_or_blank(card, 6, 'rad_mid_front', default=0)
+        rad_mid_back = integer_or_blank(card, 7, 'rad_mid_back', default=0)
         # no field 8
 
         n = 1
         nodes = []
         for i in range(9, len(card)):
-            grid = integer_or_blank(card, i, 'grid%i' % n)
+            grid = integer_or_blank(card, i, 'grid%d' % n)
             nodes.append(grid)  # used to have a None option
         assert len(nodes) > 0, 'card=%s' % card
         return CHBDYG(eid, surface_type, nodes,
