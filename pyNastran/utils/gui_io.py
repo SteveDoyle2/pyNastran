@@ -131,7 +131,7 @@ def load_file_dialog(title, wx_wildcard, qt_wildcard, dirname=''):
 
         output = QFileDialog.getOpenFileName(form, title,
             dirname, qt_wildcard)
-        if len(output) == 1:
+        if len(output) == 2:
             fname, wildcard_level = output
         else:
             fname = output
