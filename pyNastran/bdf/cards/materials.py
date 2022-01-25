@@ -436,7 +436,7 @@ class MAT1(IsotropicMaterial):
         self.matt1_ref = None
         if comment:
             self.comment = comment
-        E, G, nu = self.set_E_G_nu(E, G, nu)
+        E, G, nu = mat1_E_G_nu(E, G, nu)
 
         self.mid = mid
         self.e = E
@@ -637,30 +637,6 @@ class MAT1(IsotropicMaterial):
             E = self.e
         return E
 
-    @classmethod
-    def set_E_G_nu(cls, E, G, nu):
-        r"""\f[ G = \frac{E}{2 (1+\nu)} \f]"""
-        if G is None and E is None:  # no E,G
-            raise ValueError('G=%s E=%s cannot both be None' % (G, E))
-        elif E is not None and G is not None and nu is not None:
-            pass
-        elif E is not None and nu is not None:
-            G = E / 2. / (1 + nu)
-        elif G is not None and nu is not None:
-            E = 2 * (1 + nu) * G
-        elif G is not None and E is not None:
-            nu = E / (2 * G) - 1.
-        elif G is None and nu is None:
-            G = 0.0
-            nu = 0.0
-        elif E is None and nu is None:
-            E = 0.0
-            nu = 0.0
-        else:
-            msg = 'G=%s E=%s nu=%s' % (G, E, nu)
-            raise ValueError(msg)
-        return E, G, nu
-
     def cross_reference(self, model: BDF) -> None:
         """
         Cross links the card so referenced cards can be extracted directly
@@ -728,7 +704,6 @@ class MAT1(IsotropicMaterial):
         if size == 8:
             return self.comment + print_card_8(card)
         return self.comment + print_card_16(card)
-
 
     def D(self):
         E11 = self.E()
@@ -799,6 +774,30 @@ class MAT1(IsotropicMaterial):
         #Sp = rh.transformCompl(self.Smat,th)
         #return Sp
 
+
+
+def mat1_E_G_nu(E, G, nu):
+    r"""\f[ G = \frac{E}{2 (1+\nu)} \f]"""
+    if G is None and E is None:  # no E,G
+        raise ValueError('G=%s E=%s cannot both be None' % (G, E))
+    elif E is not None and G is not None and nu is not None:
+        pass
+    elif E is not None and nu is not None:
+        G = E / 2. / (1 + nu)
+    elif G is not None and nu is not None:
+        E = 2 * (1 + nu) * G
+    elif G is not None and E is not None:
+        nu = E / (2 * G) - 1.
+    elif G is None and nu is None:
+        G = 0.0
+        nu = 0.0
+    elif E is None and nu is None:
+        E = 0.0
+        nu = 0.0
+    else:
+        msg = 'G=%s E=%s nu=%s' % (G, E, nu)
+        raise ValueError(msg)
+    return E, G, nu
 
 def get_G_default(e: Optional[float], g: float, nu: float) -> float:
     if g == 0.0 or nu == 0.0:
@@ -2941,13 +2940,13 @@ class MAT11(Material):
         g13 = double(card, 9, 'g13')
         g23 = double(card, 10, 'g23')
 
-        rho = double_or_blank(card, 11, 'rho', 0.0)
-        a1 = double_or_blank(card, 12, 'a1', 0.0)
-        a2 = double_or_blank(card, 13, 'a2', 0.0)
-        a3 = double_or_blank(card, 14, 'a3', 0.0)
+        rho = double_or_blank(card, 11, 'rho', default=0.0)
+        a1 = double_or_blank(card, 12, 'a1', default=0.0)
+        a2 = double_or_blank(card, 13, 'a2', default=0.0)
+        a3 = double_or_blank(card, 14, 'a3', default=0.0)
 
-        tref = double_or_blank(card, 15, 'tref', 0.0)
-        ge = double_or_blank(card, 16, 'ge', 0.0)
+        tref = double_or_blank(card, 15, 'tref', default=0.0)
+        ge = double_or_blank(card, 16, 'ge', default=0.0)
         assert len(card) <= 17, f'len(MAT11 card) = {len(card):d}\ncard={card}'
         return MAT11(mid, e1, e2, e3, nu12, nu13, nu23, g12, g13, g23, rho=rho,
                      a1=a1, a2=a2, a3=a3, tref=tref, ge=ge, comment=comment)

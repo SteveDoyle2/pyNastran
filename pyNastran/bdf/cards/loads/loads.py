@@ -1337,16 +1337,16 @@ class RFORCE(Load):
 
         """
         sid = integer(card, 1, 'sid')
-        nid = integer_or_blank(card, 2, 'nid', 0)
-        cid = integer_or_blank(card, 3, 'cid', 0)
-        scale = double_or_blank(card, 4, 'scale', 1.)
-        r1 = double_or_blank(card, 5, 'r1', 0.)
-        r2 = double_or_blank(card, 6, 'r2', 0.)
-        r3 = double_or_blank(card, 7, 'r3', 0.)
-        method = integer_or_blank(card, 8, 'method', 1)
-        racc = double_or_blank(card, 9, 'racc', 0.)
-        mb = integer_or_blank(card, 10, 'mb', 0)
-        idrf = integer_or_blank(card, 11, 'idrf', 0)
+        nid = integer_or_blank(card, 2, 'nid', default=0)
+        cid = integer_or_blank(card, 3, 'cid', default=0)
+        scale = double_or_blank(card, 4, 'scale', default=1.)
+        r1 = double_or_blank(card, 5, 'r1', default=0.)
+        r2 = double_or_blank(card, 6, 'r2', default=0.)
+        r3 = double_or_blank(card, 7, 'r3', default=0.)
+        method = integer_or_blank(card, 8, 'method', default=1)
+        racc = double_or_blank(card, 9, 'racc', default=0.)
+        mb = integer_or_blank(card, 10, 'mb', default=0)
+        idrf = integer_or_blank(card, 11, 'idrf', default=0)
         assert len(card) <= 12, f'len(RFORCE card) = {len(card):d}\ncard={card}'
         return RFORCE(sid, nid, scale, [r1, r2, r3],
                       cid=cid, method=method, racc=racc, mb=mb, idrf=idrf, comment=comment)
@@ -1530,18 +1530,18 @@ class RFORCE1(Load):
 
         """
         sid = integer(card, 1, 'sid')
-        nid = integer_or_blank(card, 2, 'nid', 0)
-        cid = integer_or_blank(card, 3, 'cid', 0)
-        scale = double_or_blank(card, 4, 'scale', 1.)
+        nid = integer_or_blank(card, 2, 'nid', default=0)
+        cid = integer_or_blank(card, 3, 'cid', default=0)
+        scale = double_or_blank(card, 4, 'scale', default=1.)
         r123 = [
-            double_or_blank(card, 5, 'r1', 1.),
-            double_or_blank(card, 6, 'r2', 0.),
-            double_or_blank(card, 7, 'r3', 0.),
+            double_or_blank(card, 5, 'r1', default=1.),
+            double_or_blank(card, 6, 'r2', default=0.),
+            double_or_blank(card, 7, 'r3', default=0.),
         ]
-        method = integer_or_blank(card, 8, 'method', 1)
-        racc = double_or_blank(card, 9, 'racc', 0.)
-        mb = integer_or_blank(card, 10, 'mb', 0)
-        group_id = integer_or_blank(card, 11, 'group_id', 0)
+        method = integer_or_blank(card, 8, 'method', default=1)
+        racc = double_or_blank(card, 9, 'racc', default=0.)
+        mb = integer_or_blank(card, 10, 'mb', default=0)
+        group_id = integer_or_blank(card, 11, 'group_id', default=0)
         assert len(card) <= 12, f'len(RFORCE1 card) = {len(card):d}\ncard={card}'
         return RFORCE1(sid, nid, scale, cid=cid, r123=r123, racc=racc,
                        mb=mb, group_id=group_id, method=method, comment=comment)

@@ -659,7 +659,7 @@ class GetMethods(BDFAttributes):
             return self.caeros[eid]
         except KeyError:
             raise KeyError('eid=%s not found%s.  Allowed CAEROx=%s'
-                           % (eid, msg, _unique_keys(self.caero_ids)))
+                           % (eid, msg, _unique_keys(self.caeros)))
 
     def PAero(self, pid: int, msg: str='') -> Union[PAERO1, PAERO2, PAERO3, PAERO4, PAERO5]:
         """gets a PAEROx"""
@@ -912,6 +912,6 @@ def get_pid_to_nid_map(model: BDF) -> Dict[int, List[int]]:
         property_to_nodes_map2[pid] = nodes_list
     return property_to_nodes_map2
 
-def _unique_keys(mdyict: Dict[int, Any]) -> str:
+def _unique_keys(mydict: Dict[int, Any]) -> str:
     """helper method"""
-    return np.unique(list(mdyict.keys()))
+    return np.unique(list(mydict.keys()))

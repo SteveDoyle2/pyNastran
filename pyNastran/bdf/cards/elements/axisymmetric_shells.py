@@ -736,7 +736,7 @@ class CTRIAX6(TriShell):
             integer(card, 7, 'n5'),
             integer_or_blank(card, 8, 'n6'),
         ]
-        theta = double_or_blank(card, 9, 'theta', 0.0)
+        theta = double_or_blank(card, 9, 'theta', default=0.0)
         assert len(card) <= 10, f'len(CTRIAX6 card) = {len(card):d}\ncard={card}'
         return CTRIAX6(eid, mid, nids, theta=theta, comment=comment)
 
@@ -1125,7 +1125,7 @@ class CQUADX(AxisymmetricQuad):
         theta_mcid = set_blank_if_default(self.theta_mcid, 0.0)
         row2 = ['        ' if node is None else '%8i' % node for node in nodes[4:]
                  ] + [print_field_8(theta_mcid)]
-        msg = ('CQUADX  %8i%8i%8i%8i%8i%8i%8s%8s\n'
+        msg = ('CQUADX  %8d%8d%8d%8d%8d%8d%8s%8s\n'
                '        %8s%8s%8s%s' % tuple(data + row2))
         return self.comment + msg.rstrip() + '\n'
 
@@ -1197,7 +1197,7 @@ class CQUADX4(AxisymmetricQuad):
             integer(card, 5, 'n3'),
             integer(card, 6, 'n4'),
         ]
-        theta = integer_double_or_blank(card, 7, 'theta', 0.)
+        theta = integer_double_or_blank(card, 7, 'theta', default=0.)
         assert len(card) <= 8, f'len(CQUADX4 card) = {len(card):d}\ncard={card}'
         return CQUADX4(eid, pid, nids, theta=theta, comment=comment)
 
@@ -1273,6 +1273,7 @@ class CQUADX4(AxisymmetricQuad):
         nodes = self.node_ids
         data = ['CQUADX4', self.eid, self.Pid()] + nodes + [self.theta]
         return self.comment + print_card_8(data)
+
 
 class CQUADX8(AxisymmetricQuad):
     """

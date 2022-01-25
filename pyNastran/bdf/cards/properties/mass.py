@@ -638,7 +638,7 @@ class PMASS(Property):
         icard *= 2
         #: Property ID
         pid = integer(card, 1 + icard, 'pid')
-        mass = double_or_blank(card, 2 + icard, 'mass', 0.)
+        mass = double_or_blank(card, 2 + icard, 'mass', default=0.)
         return PMASS(pid, mass, comment=comment)
 
     @classmethod

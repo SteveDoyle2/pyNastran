@@ -728,9 +728,9 @@ class CMASS4(PointMassElement):
     def add_card(cls, card, icard=0, comment=''):
         ioffset = icard * 4
         eid = integer(card, 1 + ioffset, 'eid')
-        mass = double_or_blank(card, 2 + ioffset, 'mass', 0.)
+        mass = double_or_blank(card, 2 + ioffset, 'mass', default=0.)
         s1 = integer(card, 3 + ioffset, 's1')
-        s2 = integer_or_blank(card, 4 + ioffset, 's2', 0)
+        s2 = integer_or_blank(card, 4 + ioffset, 's2', default=0)
         assert len(card) <= 9, f'len(CMASS4 card) = {len(card):d}\ncard={card}'
         return CMASS4(eid, mass, [s1, s2], comment=comment)
 

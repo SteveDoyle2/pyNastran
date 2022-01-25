@@ -590,7 +590,7 @@ class GRDSET(BaseCard):
         seid = 0
         return GRDSET(cp, cd, ps, seid, comment='')
 
-    def __init__(self, cp, cd, ps, seid, comment=''):
+    def __init__(self, cp: int, cd: int, ps: str, seid: int, comment: str=''):
         """
         Creates the GRDSET card
 

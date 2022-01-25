@@ -328,7 +328,7 @@ class BDFAttributes:
         self.sol_method = None
         #: the line with SOL on it, marks ???
         self.sol_iline = None  # type : Optional[int]
-        self.case_control_deck = None  # type: Optional[Any]
+        self.case_control_deck = None  # type: Optional[CaseControlDeck]
 
         #: store the PARAM cards
         self.params = {}    # type: Dict[str, PARAM]
