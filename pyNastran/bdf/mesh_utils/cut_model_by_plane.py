@@ -574,88 +574,91 @@ def slice_faces(nodes, xyz_cid0, xyz_cid, faces, face_eids, nodal_result,
 
     #base, ext = os.path.splitext(plane_bdf_filename)
     #plane_bdf_filename2 = base + '2' + ext
-    with open(plane_bdf_filename, 'w') as fbdf, open(plane_bdf_filename2, 'w') as fbdf2:
-        fbdf = open(plane_bdf_filename, 'w')
-        fbdf.write('$pyNastran: punch=True\n')
-        fbdf.write('MAT1,1,3.0e7,,0.3\n')
-        fbdf.write('MAT1,2,3.0e7,,0.3\n')
+    #with open(plane_bdf_filename, 'w') as fbdf, open(plane_bdf_filename2, 'w') as fbdf2:
+    fbdf = open(plane_bdf_filename, 'w')
+    fbdf.write('$pyNastran: punch=True\n')
+    fbdf.write('MAT1,1,3.0e7,,0.3\n')
+    fbdf.write('MAT1,2,3.0e7,,0.3\n')
 
-        fbdf2.write('$pyNastran: punch=True\n')
-        fbdf2.write('MAT1,1,3.0e7,,0.3\n')
-        fbdf2.write('MAT1,2,3.0e7,,0.3\n')
+    fbdf2 = open(plane_bdf_filename2, 'w')
+    fbdf2.write('$pyNastran: punch=True\n')
+    fbdf2.write('MAT1,1,3.0e7,,0.3\n')
+    fbdf2.write('MAT1,2,3.0e7,,0.3\n')
 
-        for eid, face in zip(tri_face_eids, tri_faces):
-            #if len(face) == 4:
-                #print('skipping face=%s' % face)
-                #continue
-            (inid1, inid2, inid3) = face
-            xyz1_local = xyz_cid[inid1]
-            xyz2_local = xyz_cid[inid2]
-            xyz3_local = xyz_cid[inid3]
-            xyz1_global = xyz_cid0[inid1]
-            xyz2_global = xyz_cid0[inid2]
-            xyz3_global = xyz_cid0[inid3]
-            y1_local = xyz1_local[1]
-            y2_local = xyz2_local[1]
-            y3_local = xyz3_local[1]
-            y_local = xyz_cid0[face, 1]
-            abs_y_local = np.abs(y_local)
-            #abs_y1_local = np.abs(y1_local)
-            #abs_y2_local = np.abs(y2_local)
-            #abs_y3_local = np.abs(y3_local)
-            is_same_sign = np.sign(y1_local) == np.sign(y2_local) == np.sign(y3_local)
-            is_far_from_plane = all(np.greater(abs_y_local, plane_atol))
-            #print("  y_local = %s" % y_local)
-            #print('  xyz1-local=%s xyz2-local=%s' % (xyz1_local, xyz2_local))
-            #print('  xyz1-global=%s xyz2-global=%s' % (xyz1_global, xyz2_global))
+    for eid, face in zip(tri_face_eids, tri_faces):
+        #if len(face) == 4:
+            #print('skipping face=%s' % face)
+            #continue
+        (inid1, inid2, inid3) = face
+        xyz1_local = xyz_cid[inid1]
+        xyz2_local = xyz_cid[inid2]
+        xyz3_local = xyz_cid[inid3]
+        xyz1_global = xyz_cid0[inid1]
+        xyz2_global = xyz_cid0[inid2]
+        xyz3_global = xyz_cid0[inid3]
+        y1_local = xyz1_local[1]
+        y2_local = xyz2_local[1]
+        y3_local = xyz3_local[1]
+        y_local = xyz_cid0[face, 1]
+        abs_y_local = np.abs(y_local)
+        #abs_y1_local = np.abs(y1_local)
+        #abs_y2_local = np.abs(y2_local)
+        #abs_y3_local = np.abs(y3_local)
+        is_same_sign = np.sign(y1_local) == np.sign(y2_local) == np.sign(y3_local)
+        is_far_from_plane = all(np.greater(abs_y_local, plane_atol))
+        #print("  y_local = %s" % y_local)
+        #print('  xyz1-local=%s xyz2-local=%s' % (xyz1_local, xyz2_local))
+        #print('  xyz1-global=%s xyz2-global=%s' % (xyz1_global, xyz2_global))
+        #print('  is_same_sign=%s is_far_from_plane=%s' % (is_same_sign, is_far_from_plane))
+        if is_far_from_plane and is_same_sign:
+            #print('  far-face=%s' % str(face))
+            #print('skip y1_local=%.3f y2_local=%.3f plane_atol=%.e' % (
+                #y1_local, y2_local, plane_atol))
+            continue
+        elif np.allclose(y_local, y1_local, atol=plane_atol): # dot
+            continue
+            #print('  on_edge y12-face=%s' % (face))
+            #print('  xyz1-local=%s' % (xyz1_local,))
+            #print('  xyz2-local=%s' % (xyz2_local,))
+            #print('  xyz3-local=%s' % (xyz3_local,))
+            #eid_new, nid_new = _face_on_edge(eid_new, nid_new, face,
+                                             #xyz1_local, xyz2_local,
+                                             #cid, mid, area, J, bdf, geometry, result)
+        #elif np.allclose(y2_local, y3_local, atol=plane_atol):
+        #elif np.allclose(y1_local, y3_local, atol=plane_atol):
+
+        elif is_same_sign:  # Labs == Lpos
+            #print('  same sign-face=%s' % (face))
+            # same sign, so no crossing
+            #print('*edge =', edge)
+            #print("  xyz1_global=%s xyz2_global=%s" % (xyz1_global, xyz2_global))
+            #print("  xyz1_local =%s xyz2_local =%s" % (xyz1_local, xyz2_local))
+            continue
+        else:
+            # a crossing
+            #print('  intersection-eid=%s face=%s' % (eid, face))
             #print('  is_same_sign=%s is_far_from_plane=%s' % (is_same_sign, is_far_from_plane))
-            if is_far_from_plane and is_same_sign:
-                #print('  far-face=%s' % str(face))
-                #print('skip y1_local=%.3f y2_local=%.3f plane_atol=%.e' % (
-                    #y1_local, y2_local, plane_atol))
-                continue
-            elif np.allclose(y_local, y1_local, atol=plane_atol): # dot
-                continue
-                #print('  on_edge y12-face=%s' % (face))
-                #print('  xyz1-local=%s' % (xyz1_local,))
-                #print('  xyz2-local=%s' % (xyz2_local,))
-                #print('  xyz3-local=%s' % (xyz3_local,))
-                #eid_new, nid_new = _face_on_edge(eid_new, nid_new, face,
-                                                 #xyz1_local, xyz2_local,
-                                                 #cid, mid, area, J, bdf, geometry, result)
-            #elif np.allclose(y2_local, y3_local, atol=plane_atol):
-            #elif np.allclose(y1_local, y3_local, atol=plane_atol):
+            eid_new, nid_new = _interpolate_face_to_bar(
+                nodes, eid, eid_new, nid_new, mid, area, J,
+                fbdf, fbdf2,
+                inid1, inid2, inid3,
+                xyz1_local, xyz2_local, xyz3_local,
+                xyz1_global, xyz2_global, xyz3_global,
+                nodal_result,
+                local_points, global_points,
+                geometry, result,
+                rod_elements, rod_nids, rod_xyzs,
+                coord, plane_atol, plane_bdf_offset=plane_bdf_offset)
 
-            elif is_same_sign:  # Labs == Lpos
-                #print('  same sign-face=%s' % (face))
-                # same sign, so no crossing
-                #print('*edge =', edge)
-                #print("  xyz1_global=%s xyz2_global=%s" % (xyz1_global, xyz2_global))
-                #print("  xyz1_local =%s xyz2_local =%s" % (xyz1_local, xyz2_local))
-                continue
-            else:
-                # a crossing
-                #print('  intersection-eid=%s face=%s' % (eid, face))
-                #print('  is_same_sign=%s is_far_from_plane=%s' % (is_same_sign, is_far_from_plane))
-                eid_new, nid_new = _interpolate_face_to_bar(
-                    nodes, eid, eid_new, nid_new, mid, area, J,
-                    fbdf, fbdf2,
-                    inid1, inid2, inid3,
-                    xyz1_local, xyz2_local, xyz3_local,
-                    xyz1_global, xyz2_global, xyz3_global,
-                    nodal_result,
-                    local_points, global_points,
-                    geometry, result,
-                    rod_elements, rod_nids, rod_xyzs,
-                    coord, plane_atol, plane_bdf_offset=plane_bdf_offset)
-
-            if len(local_points) != len(result):
-                msg = 'lengths are not equal; local_points=%s result=%s' % (
-                    len(local_points), len(result))
-                raise RuntimeError(msg)
-            fbdf.write('$------\n')
-            fbdf2.write('$------\n')
-            #print('----------------------')
+        if len(local_points) != len(result):
+            msg = 'lengths are not equal; local_points=%s result=%s' % (
+                len(local_points), len(result))
+            raise RuntimeError(msg)
+        fbdf.write('$------\n')
+        fbdf2.write('$------\n')
+        #print('----------------------')
+    fbdf.close()
+    fbdf2.close()
 
     if len(rod_elements) == 0:
         os.remove(plane_bdf_filename)
@@ -1450,26 +1453,26 @@ def _get_shell_inertia(element: Union[CTRIA3, CQUAD4],
         #thicknessi = prop.Thickness()
         areai = thicknessi * lengthi
 
-    pid = pid_ref.pid
-    if pid == 10:
-        import copy
-        pid_ref45 = copy.deepcopy(pid_ref)
-        pid_ref45.mids_ref = [copy.deepcopy(pid_ref.mids_ref[0])]
-        pid_ref45.thetas = [copy.deepcopy(pid_ref.thetas[0])]
-        pid_ref45.thicknesses = [copy.deepcopy(pid_ref.thicknesses[0])]
-        pid_ref45.mids = [copy.deepcopy(pid_ref.mids[0])]
-        pid_ref45.get_thetas()
-        Ex45, Ey45, Gxy45, nu_xy45 = pid_ref45.get_Ainv_equivalent_pshell(
-            imat_rotation_angle_deg, thicknessi)
+    #pid = pid_ref.pid
+    #if pid == 10:
+        #import copy
+        #pid_ref45 = copy.deepcopy(pid_ref)
+        #pid_ref45.mids_ref = [copy.deepcopy(pid_ref.mids_ref[0])]
+        #pid_ref45.thetas = [copy.deepcopy(pid_ref.thetas[0])]
+        #pid_ref45.thicknesses = [copy.deepcopy(pid_ref.thicknesses[0])]
+        #pid_ref45.mids = [copy.deepcopy(pid_ref.mids[0])]
+        #pid_ref45.get_thetas()
+        #Ex45, Ey45, Gxy45, nu_xy45 = pid_ref45.get_Ainv_equivalent_pshell(
+            #imat_rotation_angle_deg, thicknessi)
 
-        pid_ref0 = copy.deepcopy(pid_ref)
-        pid_ref0.mids_ref = [copy.deepcopy(pid_ref.mids_ref[1])]
-        pid_ref0.thetas = [copy.deepcopy(pid_ref.thetas[1])]
-        pid_ref0.thicknesses = [copy.deepcopy(pid_ref.thicknesses[1])]
-        pid_ref0.mids = [copy.deepcopy(pid_ref.mids[1])]
-        pid_ref0.get_thetas()
-        Ex0, Ey0, Gxy0, nu_xy0 = pid_ref0.get_Ainv_equivalent_pshell(
-            imat_rotation_angle_deg, thicknessi)
-        x = 1
+        #pid_ref0 = copy.deepcopy(pid_ref)
+        #pid_ref0.mids_ref = [copy.deepcopy(pid_ref.mids_ref[1])]
+        #pid_ref0.thetas = [copy.deepcopy(pid_ref.thetas[1])]
+        #pid_ref0.thicknesses = [copy.deepcopy(pid_ref.thicknesses[1])]
+        #pid_ref0.mids = [copy.deepcopy(pid_ref.mids[1])]
+        #pid_ref0.get_thetas()
+        #Ex0, Ey0, Gxy0, nu_xy0 = pid_ref0.get_Ainv_equivalent_pshell(
+            #imat_rotation_angle_deg, thicknessi)
+        #x = 1
 
     return thicknessi, areai, imat_rotation_angle_deg, Ex, Ey, Gxy, nu_xy

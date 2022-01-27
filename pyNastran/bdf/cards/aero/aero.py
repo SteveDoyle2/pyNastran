@@ -1571,7 +1571,13 @@ class CAERO1(BaseCard):
             raise ValueError(msg)
         assert len(self.p1) == 3, 'p1=%s' % self.p1
         assert len(self.p4) == 3, 'p4=%s' % self.p4
-        p1, p2, p3, p4 = self.get_points()
+
+        # calculating area; assuming coordinate transformations don't matter
+        p1 = self.p1
+        p4 = self.p4
+        p2 = p1 + np.array([self.x12, 0., 0.])
+        p3 = p4 + np.array([self.x43, 0., 0.])
+
         a = p3 - p1
         b = p4 - p2
         area = np.linalg.norm(np.cross(a, b))
