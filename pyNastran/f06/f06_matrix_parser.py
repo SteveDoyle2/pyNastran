@@ -23,6 +23,7 @@ def read_f06_matrices(f06_filename: str,
                       log: Optional[SimpleLogger]=None,
                       nlines_max: int=1_000_000) -> tuple[dict[str, np.ndarray],
                                                           dict[str, np.ndarray]]:
+    """TODO: doesn't handle extra PAGE headers; requires LINE=1000000"""
     log = get_logger(log=log, level='debug', encoding='utf-8')
     with open(f06_filename, 'r') as f06_file:
         tables, matrices = _read_f06_matrices(f06_file, log, nlines_max)
@@ -179,6 +180,7 @@ def _read_matrix(f06_file, line: str, i: int, log: SimpleLogger) -> tuple[str, n
         assert line.strip() == 'ROW', line
 
         line = f06_file.readline().rstrip()
+        assert ')' in line, line
         i += 1
         row_lines = [line]
         while ')' in line:
@@ -339,56 +341,3 @@ def _parse_table_records(table_name: str, records: list[str], log: SimpleLogger)
             #shape=(mrows, ncols), dtype='f')
     #log.debug(str(matrix))
     return matrix
-
-def main():
-    f06_filename = r'C:\NASA\uuaero_flutterexplorer\flutter.alter.f06'
-    #f06_filename = r'C:\NASA\uuaero_flutterexplorer\models\jetzero_flutter\flutter.alter.f06'
-    #f06_filename = r'C:\NASA\uuaero_flutterexplorer\models\demo\examples\crm\crm_flutter_alter.f06'
-    tables, matrices = read_f06_matrices(f06_filename)
-    MKLIST = tables['MKLIST']
-    QHHA = matrices['QHHA']
-    nmodes, nmk_nmodes = QHHA.shape
-    assert nmk_nmodes % nmodes == 0
-    nmk = nmk_nmodes // nmodes
-    qhh_shape = (nmodes, nmodes, nmk)
-    QHHr = np.zeros(qhh_shape, dtype='float64')
-    QHHi = np.zeros(qhh_shape, dtype='float64')
-
-    # todo: verify
-    # todo: we could do this with a axis swap?
-    QHHAr = QHHA.real.reshape((nmodes, nmodes, nmk)) # v1
-    QHHAi = QHHA.imag.reshape((nmodes, nmodes, nmk))
-
-    #QHHAr = QHHA.real.reshape((nmodes, nmk, nmodes)) # v2
-    for jj in range(nmk):
-        mk = MKLIST[jj, :]
-        qhhar = QHHAr[:, :, jj]  # v1; best guess
-        #qhhar = QHHAr[:, jj, :]  # v2
-        print(mk)
-        print(qhhar)
-        print('---------')
-
-        #QHHAr = QHHA.real.reshape((nmodes, nmk, nmodes))
-        #qhhar = QHHAr[:, jj, :]
-        #[[-6.5440e+01 -5.4153e+01 -1.1214e+02  3.6589e+02  9.3012e+01]
-        # [ 1.2640e+01 -2.2370e+00  6.1121e-02 -9.4691e+01  3.2896e+01]
-        # [ 2.7129e+01 -7.8625e-01  7.0466e+00 -1.9454e+02  5.4725e+01]
-        # [-4.7326e+01 -2.2778e+01 -5.4106e+01  2.9052e+02  1.3453e+01]
-        # [-1.6278e+01 -3.4003e+01 -5.9597e+01  4.6454e+01  4.0195e+01]]
-
-        #QHHAr = QHHA.real.reshape((nmodes, nmodes, nmk))
-        #qhhar = QHHAr[:, :, jj]
-        #[[ 3.6634e+02 -1.1222e+02 -5.4153e+01 -6.5440e+01  9.3012e+01]
-        # [-9.4877e+01  9.3530e-02 -2.2370e+00  1.2640e+01  3.2896e+01]
-        # [-1.9492e+02  7.1120e+00 -7.8625e-01  2.7129e+01  5.4725e+01]
-        # [ 2.9107e+02 -5.4204e+01 -2.2778e+01 -4.7326e+01  1.3453e+01]
-        # [ 4.6313e+01 -5.9567e+01 -3.4003e+01 -1.6278e+01  4.0195e+01]]
-        qhhai = QHHAi[:, :, jj]
-        QHHr[:, :, jj] = qhhar
-        #if MKLIST[jj, 1] != 0.0:
-        QHHi[:, :, jj] = qhhai / MKLIST[jj, 1]
-    x = 1
-
-if __name__ == '__main__':
-    main()
-    x = 1
