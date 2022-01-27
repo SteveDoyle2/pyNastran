@@ -285,7 +285,7 @@ class RealEigenvalues(BaseScalarObject):
         op2_ascii.write('%s header 3c = %s\n' % (self.table_name, data))
         op2_file.write(pack(fmt, *data))
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         if self.data_frame is not None:
             return str(self.data_frame)
 
@@ -304,6 +304,14 @@ class RealEigenvalues(BaseScalarObject):
                 mode_num, extract_order, eigenvalue, radian, cycle, gen_m, gen_k)
         return msg
 
+    def Mhh_Khh(self, diag: bool=False) -> tuple[np.ndarray, np.ndarray]:
+        isort = np.argsort(self.eigenvalues)
+        Mhh = self.generalized_mass[isort]
+        Khh = self.eigenvalues[isort]
+        if diag:
+            Mhh = np.diag(Mhh)
+            Khh = np.diag(Khh)
+        return Mhh, Khh
 
 def _write_table_header(table_name: str, op2_file, fascii, date):
     table_name = '%-8s' % table_name # 'BOUGV1  '

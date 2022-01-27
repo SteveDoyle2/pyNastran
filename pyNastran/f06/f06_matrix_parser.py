@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Optional, TextIO
 import numpy as np
 import scipy.sparse
 from cpylog import SimpleLogger, get_logger
@@ -33,11 +33,12 @@ def read_f06_matrices(f06_filename: str,
         log.info('found the following matrices in the f06: %s' % (list(matrices)))
     return tables, matrices
 
-def _read_f06_matrices(f06_file, log: SimpleLogger, nlines_max: int) -> dict[str, np.ndarray]:
+def _read_f06_matrices(f06_file: TextIO, log: SimpleLogger, nlines_max: int) -> dict[str, np.ndarray]:
     i = 0
     debug = False
     tables = {}
     matrices = {}
+    iblank_count = 0
     while True:
         line = f06_file.readline()
         i += 1
@@ -53,59 +54,22 @@ def _read_f06_matrices(f06_file, log: SimpleLogger, nlines_max: int) -> dict[str
             line = f06_file.readline()
             i += 1
             # JANUARY  26, 2022  SIMCENTER NASTRAN  3/12/20   PAGE     2
-            while 'SIMCENTER NASTRAN' not in line and 'PAGE' not in line:
+            while 'NASTRAN' not in line and 'PAGE' not in line:
                 line = f06_file.readline()
                 i += 1
                 if i > nlines_max:
                     raise RuntimeError(f'{nlines_max:d} lines in file is max?...\n'
                                        'this will be removed once the parser is better tested')
             #log.debug(f'line = {line.rstrip()}')
+            continue
 
-        if 'E I G E N V A L U E  A N A L Y S I S   S U M M A R Y' in line:
-            while 'R E A L   E I G E N V A L U E S' not in line:
-                line = f06_file.readline()
-                i += 1
-                if i > nlines_max:
-                    raise RuntimeError(f'{nlines_max:d} lines in file is max?...\n'
-                                       'this will be removed once the parser is better tested')
-            line = f06_file.readline()
-            line = f06_file.readline()
-            line = f06_file.readline()
-            line_strip = line.strip()
-            i += 3
-
-            #line_strip = '1         1        4.637141E+01        6.809655E+00        1.083790E+00        1.000000E+00        4.637141E+01'
-            #R E A L   E I G E N V A L U E S
-            #MODE    EXTRACTION      EIGENVALUE            RADIANS             CYCLES            GENERALIZED         GENERALIZED
-            #    NO.       ORDER                                                                       MASS              STIFFNESS
-            #        1         1        4.637141E+01        6.809655E+00        1.083790E+00        1.000000E+00        4.637141E+01
-            #        2         2        2.369379E+02        1.539279E+01        2.449838E+00        1.000000E+00        2.369379E+02
-            Mhh_list = []
-            Khh_list = []
-            Bhh_list = []
-            while len(line_strip):
-                sline = line_strip.split()
-                if 'NASTRAN' in sline:
-                    break
-                assert len(sline) == 7, sline
-                mode_num, extraction_order, eigenvalue_str, radians, cycles, gen_mass_str, gen_stiffness_str = sline
-                eigenvalue = float(eigenvalue_str)
-                gen_mass = float(gen_mass_str)
-                Mhh_list.append(gen_mass)
-                Bhh_list.append(0.)
-                Khh_list.append(eigenvalue)
-                line = f06_file.readline()
-                line_strip = line.strip()
-                i += 1
-
-            Mhh = np.array(Mhh_list, dtype='float64')
-            Bhh = np.array(Bhh_list, dtype='float64')
-            Khh = np.array(Khh_list, dtype='float64')
+        if 'R E A L   E I G E N V A L U E S' in line:
+            Mhh, Bhh, Khh = _read_real_eigenvalues(f06_file, log, line, i)
             isort = np.argsort(Khh)
             matrices['MHH'] = np.diag(Mhh[isort])
             matrices['BHH'] = np.diag(Bhh[isort])
             matrices['KHH'] = np.diag(Khh[isort])
-            del line_strip, gen_mass, Mhh_list, Khh_list, Bhh_list
+            del line_strip, Mhh, Bhh, Khh
 
 
         if line.startswith('0    TABLE'):
@@ -117,9 +81,15 @@ def _read_f06_matrices(f06_file, log: SimpleLogger, nlines_max: int) -> dict[str
             matrix_name, matrix, line, i = _read_matrix(f06_file, line, i, log)
             matrices[matrix_name] = matrix
             del matrix_name, matrix
-        #else:
+        else:
+            line_strip = line.strip()
+            if len(line_strip) == 0:
+                iblank_count += 1
             #print(line)
         #print('----')
+        if iblank_count == 1000:
+            log.warning('breaking because 1000 blank lines were found; assuming theres an error (or incomplete deck)')
+            break
         if i > nlines_max:
             raise RuntimeError(f'{nlines_max:d} lines in file is max?...\n'
                                'this will be removed once the parser is better tested')
@@ -127,7 +97,50 @@ def _read_f06_matrices(f06_file, log: SimpleLogger, nlines_max: int) -> dict[str
             log.debug(f'i={i}')
     return tables, matrices
 
-def _read_matrix(f06_file, line: str, i: int, log: SimpleLogger) -> tuple[str, np.ndarray, str, int]:
+def _read_real_eigenvalues(f06_file: TextIO,
+                           log: SimpleLogger,
+                           line: str, i: int) -> tuple[np.ndarray,
+                                                       np.ndarray,
+                                                       np.ndarray]:
+    line = f06_file.readline()
+    line = f06_file.readline()
+    line = f06_file.readline()
+    line_strip = line.strip()
+    i += 3
+
+    #line_strip = '1         1        4.637141E+01        6.809655E+00        1.083790E+00        1.000000E+00        4.637141E+01'
+    #R E A L   E I G E N V A L U E S
+    #MODE    EXTRACTION      EIGENVALUE            RADIANS             CYCLES            GENERALIZED         GENERALIZED
+    #    NO.       ORDER                                                                       MASS              STIFFNESS
+    #        1         1        4.637141E+01        6.809655E+00        1.083790E+00        1.000000E+00        4.637141E+01
+    #        2         2        2.369379E+02        1.539279E+01        2.449838E+00        1.000000E+00        2.369379E+02
+    Mhh_list = []
+    Khh_list = []
+    Bhh_list = []
+    log.debug("mode_num, extraction_order, eigenvalue, radians, cycles, gen_mass, gen_stiffness")
+    while len(line_strip):
+        sline = line_strip.split()
+        if 'NASTRAN' in sline:
+            break
+        log.debug(f'eigenvalue: {line_strip}')
+        assert len(sline) == 7, sline
+        mode_num, extraction_order, eigenvalue_str, radians, cycles, gen_mass_str, gen_stiffness_str = sline
+        eigenvalue = float(eigenvalue_str)
+        gen_mass = float(gen_mass_str)
+        Mhh_list.append(gen_mass)
+        Bhh_list.append(0.)
+        Khh_list.append(eigenvalue)
+        line = f06_file.readline()
+        line_strip = line.strip()
+        i += 1
+
+    Mhh = np.array(Mhh_list, dtype='float64')
+    Bhh = np.array(Bhh_list, dtype='float64')
+    Khh = np.array(Khh_list, dtype='float64')
+    return Mhh, Bhh, Khh
+
+def _read_matrix(f06_file: TextIO,
+                 line: str, i: int, log: SimpleLogger) -> tuple[str, np.ndarray, str, int]:
     """
     0      MATRIX QHHA     (GINO NAME 101 ) IS A COMPLEX          100 COLUMN X          10 ROW RECTANG  MATRIX.
     0COLUMN        1      ROWS        1 THRU       10 --------------------------------------------------
@@ -258,7 +271,8 @@ def _parse_complex_row_lines(lines: list[str]) -> tuple[int, int]:
     data = np.array(data_list, dtype='complex128')
     return row_index, data
 
-def _read_table(f06_file, line: str, i: int, log: SimpleLogger) -> tuple[str, np.ndarray, str, int]:
+def _read_table(f06_file: TextIO, line: str, i: int,
+                log: SimpleLogger) -> tuple[str, np.ndarray, str, int]:
     """
     '0    TABLE   MKLIST                      LINES CONTAINING BINARY  ZERO HAVE BEEN DELETED.\n'
     ''
