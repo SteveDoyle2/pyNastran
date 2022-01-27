@@ -11,6 +11,7 @@ from pyNastran.bdf.cards.coordinate_systems import CORD2R
 from pyNastran.bdf.cards.aero.zona import ZONA
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.bdf.cards.dmig import DMIG, DMI, DMIJ, DMIK, DMIJI
+    from pyNastran.bdf.subcase import Subcase
 
 BDF_FORMATS = {'nx', 'msc', 'optistruct', 'zona', 'nasa95', 'mystran'}
 
@@ -1105,7 +1106,7 @@ class BDFAttributes:
         return self._sol
 
     @property
-    def subcases(self) -> Dict[int, Optional[Any]]:
+    def subcases(self) -> Dict[int, Subcase]:
         """gets the subcases"""
         if self.case_control_deck is None:
             return {}

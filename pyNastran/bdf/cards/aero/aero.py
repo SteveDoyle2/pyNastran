@@ -1302,6 +1302,7 @@ CAERO1_MSG = """
 +--------+-----+-----+----+-------+--------+--------+--------+------+
 |        |  X1 | Y1  | Z1 |  X12  |   X4   |   Y4   |   Z4   | X43  |
 +--------+-----+-----+----+-------+--------+--------+--------+------+""".strip()
+
 class CAERO1(BaseCard):
     """
     Defines an aerodynamic macro element (panel) in terms of two leading edge
@@ -1570,6 +1571,11 @@ class CAERO1(BaseCard):
             raise ValueError(msg)
         assert len(self.p1) == 3, 'p1=%s' % self.p1
         assert len(self.p4) == 3, 'p4=%s' % self.p4
+        p1, p2, p3, p4 = self.get_points()
+        a = p3 - p1
+        b = p4 - p2
+        area = np.linalg.norm(np.cross(a, b))
+        assert area > 0, f'p1={p1} p2={p2} p3={p3} p4={p4} area={area}'
 
     @classmethod
     def add_card(cls, card, comment=''):

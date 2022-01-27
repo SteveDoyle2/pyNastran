@@ -24,7 +24,9 @@ from pyNastran.bdf.cards.aero.aero import (
 )
 from pyNastran.bdf.cards.aero.dynamic_loads import AERO, FLFACT, FLUTTER, GUST, MKAERO1, MKAERO2
 from pyNastran.bdf.cards.aero.static_loads import AESTAT, AEROS, CSSCHD, TRIM, TRIM2, DIVERG
+from pyNastran.bdf.cards.aero.utils import build_trim_load_cases
 from pyNastran.bdf.cards.test.utils import save_load_deck
+from pyNastran.bdf.mesh_utils.export_caero_mesh import export_caero_mesh # build_structure_from_caero
 
 IS_MATPLOTLIB = False
 if IS_MATPLOTLIB:
@@ -33,7 +35,7 @@ if IS_MATPLOTLIB:
 
 ROOTPATH = pyNastran.__path__[0]
 MODEL_PATH = os.path.join(ROOTPATH, '..', 'models')
-#test_path = os.path.join(ROOTPATH, 'bdf', 'cards', 'test')
+TEST_PATH = os.path.join(ROOTPATH, 'bdf', 'cards', 'test')
 
 COMMENT_BAD = 'this is a bad comment'
 COMMENT_GOOD = 'this is a good comment\n'
@@ -2795,6 +2797,27 @@ class TestAero(unittest.TestCase):
         rotorg.validate()
         save_load_deck(model)
 
+    def _test_build_structure_from_caero(self):
+        model = BDF()
+        eid = 1
+        pid = 1
+        igroup = 1
+        p1 = [0., 0., 0.]
+        p4 = [0., 10., 0.]
+        x12 = 1.0
+        x43 = 0.5
+        model.add_caero1(eid, pid, igroup, p1, x12, p4, x43, cp=0, nspan=10, lspan=0, nchord=10, lchord=0, comment='')
+        model.add_paero1(pid)
+        caero_bdf_filename = os.path.join(TEST_PATH, 'caero.bdf')
+        build_structure_from_caero(model, caero_bdf_filename)
+
+        trim_load_cases = [
+                # subcase, name, trim_id, mach, q, label: value
+                (10, 'alpha=1', 10, 0.8, 1., {'ANGLEA': 1.,}),
+        ]
+        build_trim_load_cases(model, trim_load_cases, aeqr=1.0)
+
+
     def test_zona_1(self):
         """zona explicit test"""
         log = SimpleLogger(level='error', encoding='utf-8', log_func=None)  # lots of zona errors
@@ -2917,6 +2940,18 @@ def get_zona_model():
     )
     bdf_file.seek(0)
     return bdf_file
+
+
+def build_structure_from_caero(model: BDF, caero_bdf_filename: str):
+    export_caero_mesh(model, caero_bdf_filename=caero_bdf_filename,
+                      is_subpanel_model=True, pid_method='caero')
+    model_quads = read_bdf(caero_bdf_filename)
+    model.nodes = model_quads.nodes
+    model.elements = model_quads.elements
+    model.properties = model_quads.properties
+    model.materials = model_quads.materials
+    os.remove(caero_bdf_filename)
+    return model
 
 def _setup_aero_plot(fig_id: Optional[int]=None) -> Tuple[Any, Any]:
     """helper for plotting aero panels"""

@@ -1485,6 +1485,9 @@ class EDOM(GeomCommon):
             60 : 'TDISP',
             61 : 'TVELO',
             62 : 'TACCL',
+
+            # nx
+            #84 : 'FLUTTER',
         }
 
         #self.show_data(data[n:], types='qds')
@@ -1770,6 +1773,11 @@ class EDOM(GeomCommon):
                 attbf = floats[i0+8]
                 attb = _pick_attbi_attbf(attbi, attbf)
                 atti = ints[i0+9:i1].tolist()
+            elif flag == 84:
+                # nx flutter
+                print('ints =', ints)
+                print('floats =', floats)
+                continue
             else:
                 raise NotImplementedError(flag)
 

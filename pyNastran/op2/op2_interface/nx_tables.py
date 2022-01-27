@@ -527,6 +527,7 @@ NX_RESULT_TABLES = [
     b'ODAMGCZD',
     b'XCASECC',
     b'RST',
+    b'OVG',  # flutter velocity
 
     # displacements, velocity, acceleration
     # BOUGV1 - G-set results (displacement, velocity, acceleration, eigenvector)

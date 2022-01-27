@@ -728,6 +728,44 @@ class Subcase:
         self._validate_param_type(param_type)
         self._add_data(key, value, options, param_type)
 
+    #def add_string_type(self, key: str, value: Any, options: List[Any], param_type: str):
+        #"""
+        #Simple way to add something of the form:
+            #ANALYSIS = HEAT
+
+        #subcase.add_integer_type('SPC', 1)
+        #vs.
+        #subcase.add('SPC', 1, [], 'STRESS-type')
+        #"""
+        #assert isinstance(value, integer_types), f'value={value!r} and is not an integer'
+        #self.add(key, value, [], 'STRESS-type')
+
+    def add_integer_type(self, key: str, value: int):
+        """
+        Simple way to add something of the form:
+            SPC = 1
+
+        subcase.add_integer_type('SPC', 1)
+        vs.
+        subcase.add('SPC', 1, [], 'STRESS-type')
+        """
+        assert isinstance(value, integer_types), f'value={value!r} and is not an integer'
+        self.add(key, value, [], 'STRESS-type')
+
+    def add_result_type(self, key: str, value: Union[int, str], options: List[str]):
+        """
+        Simple way to add something of the form:
+            DISP(PLOT) = ALL
+            STRESS(PLOT) = ALL
+            FORCE(PLOT) = 1
+
+        subcase.add_integer_type('SPC', 1, ['PLOT'])
+        vs.
+        subcase.add('SPC', 'ALL', ['PLOT'], 'STRESS-type')
+        """
+        assert isinstance(value, (str, integer_types)), f'value={value!r} and is not an string/integer'
+        self.add(key, value, options, 'STRESS-type')
+
     def update(self, key, value, options, param_type):
         self._validate_param_type(param_type)
         assert key in self.params, f'key={key!r} is not in isubcase={self.id}'

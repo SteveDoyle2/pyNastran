@@ -887,6 +887,7 @@ class OP2_Scalar(OP2Common, FortranFormat):
 
             b'OUG1F'    : [reader_oug._read_oug1_3, reader_oug._read_oug_4],  # acoustic displacements in ? frame
 
+            #b'OVG'   : [reader_oug._read_oug1_3, reader_oug._read_oug_4],  # aeroelastic velocity
             b'OUGV1'   : [reader_oug._read_oug1_3, reader_oug._read_oug_4],  # displacements in nodal frame
             b'BOUGV1'  : [reader_oug._read_oug1_3, reader_oug._read_oug_4],  # OUG1 on the boundary???
             b'BOUGF1'  : [reader_oug._read_oug1_3, reader_oug._read_oug_4],  # OUG1 on the boundary???

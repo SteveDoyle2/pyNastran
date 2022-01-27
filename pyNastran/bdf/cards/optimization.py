@@ -5347,12 +5347,12 @@ class DVGRID(BaseCard):
         """
         dvid = integer(card, 1, 'dvid')
         nid = integer(card, 2, 'nid')
-        cid = integer_or_blank(card, 3, 'cid', 0)
-        coeff = double_or_blank(card, 4, 'coeff', 1.0)
+        cid = integer_or_blank(card, 3, 'cid', default=0)
+        coeff = double_or_blank(card, 4, 'coeff', default=1.0)
         dxyz = [
-            double_or_blank(card, 5, 'n1', 0.),
-            double_or_blank(card, 6, 'n2', 0.),
-            double_or_blank(card, 7, 'n3', 0.),
+            double_or_blank(card, 5, 'n1', default=0.),
+            double_or_blank(card, 6, 'n2', default=0.),
+            double_or_blank(card, 7, 'n3', default=0.),
         ]
         return DVGRID(dvid, nid, dxyz, cid=cid, coeff=coeff, comment=comment)
 

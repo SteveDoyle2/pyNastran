@@ -218,6 +218,8 @@ class OP2Reader:
             b'OBG1': self.read_obc1,
             b'PTMIC' : self._read_ptmic,
             b'MATPOOL' : self._read_matrix_matpool,
+            # OVG: Table of aeroelastic x-y plot data for V-g or V-f curves
+            b'MKLIST': self._read_mklist,
         }
 
     def read_nastran_version(self, mode: str):
@@ -337,6 +339,44 @@ class OP2Reader:
         self.op2.set_mode(mode)
         self.op2.set_table_type()
 
+
+    def _read_mklist(self):
+        """
+        reads the MKLIST table and puts it in:
+           - op2.op2_results.mklist
+        """
+        op2 = self.op2
+        size = self.size
+        unused_table_name = self._read_table_name(rewind=False)
+        assert size == 4, size
+        self.read_markers([-1])
+
+        #(101, 82, 0, 0, 0, 0, 0)
+        data = self._read_record()
+
+        itable = -2
+        #self.log.warning(f'MKLIST itable={itable}')
+        self.read_3_markers([itable, 1, 0])
+        #(b'MKLIST  ',)
+        data = self._read_record()
+        itable -= 1
+
+        #self.log.warning(f'MKLIST itable={itable}')
+        self.read_3_markers([itable, 1, 0])
+        #(0.45, 0.00283, ...
+        # 0.45, 0.02833)
+        data = self._read_record()
+        mk_data = np.frombuffer(data, dtype=op2.fdtype)
+        nmk = len(mk_data)
+        assert nmk > 0, nmk
+        assert nmk % 2 == 0, nmk
+        mk = mk_data.reshape(nmk // 2, 2)
+        if not hasattr(op2.op2_results, 'mklist'):
+            op2.op2_results.mklist = []
+        op2.op2_results.mklist.append(mk)
+        itable -= 1
+
+        self.read_markers([itable, 1, 0, 0])
 
     def _read_ptmic(self):
         """
@@ -571,7 +611,7 @@ class OP2Reader:
         #print('----------------------')
 
         self.read_3_markers([-2, 1, 0])
-        self.read_table_name(['EQEXIN', 'EQEXINS', 'EQEXNOUT'])
+        self.read_table_name(['EQEXIN', 'EQEXINS', 'EQEXNOUT', 'SAEQEXIN'])
         #print('----------------------')
         # ints - sort order
         self.read_3_markers([-3, 1, 0])
@@ -2348,7 +2388,7 @@ class OP2Reader:
         #print('--------------------')
 
         self.read_3_markers([-2, 1, 0])
-        self.read_table_name(['GPDT', 'GPDTS'])
+        self.read_table_name(['GPDT', 'GPDTS', 'SAGPDT'])
 
         #print('--------------------')
 

@@ -415,7 +415,7 @@ def make_flutter_plots(modes, flutters: Dict[int, FlutterResponse],
         subcases_set = set(subcases)
     missing_cases_set = subcases_set - subcases_flutter_set
 
-    log = get_logger2(log=log, debug=True, encoding='utf-8', nlevels=1)
+    log = get_logger2(log=log, debug=True, encoding='utf-8')
     if missing_cases_set:
         missing_cases_list = list(missing_cases_set)
         missing_cases_list.sort()

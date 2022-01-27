@@ -13,8 +13,33 @@ from pyNastran.bdf.field_writer_8 import print_card_8
 
 def export_caero_mesh(model: BDF, caero_bdf_filename: str='caero.bdf',
                       is_subpanel_model: bool=True,
-                      pid_method: str='aesurf') -> None:
-    """write the CAERO cards as CQUAD4s that can be visualized"""
+                      pid_method: str='aesurf',
+                      write_panel_xyz: bool=True) -> None:
+    """
+    Write the CAERO cards as CQUAD4s that can be visualized
+
+    model: BDF
+        a valid geometry
+    caero_bdf_filename : str
+        the file to write
+    is_subpanel_model : bool; default=True
+        True : write the subpanels as CQUAD4s
+        False : write the macro elements as CQUAD4s
+    pid_method : str; default='aesurf'
+        'aesurf' : write the referenced AESURF as the property ID
+                   main structure will be pid=1
+        'caero' : write the CAERO1 as the property id
+        'paero' : write the PAERO1 as the property id
+    write_panel_xyz : bool; default=True
+        write the following table...
+        $$  CAEROID      EID       XLE       YLE       ZLE     CHORD      SPAN   XLE+C/4
+        $$        1        1    0.0000    0.2500    0.0000    0.0988    0.5000    0.0247
+        $$        1        2    0.0988    0.2500    0.0000    0.0988    0.5000    0.1234
+
+    """
+    if not pid_method in {'aesurf', 'caero', 'paero'}:
+        raise RuntimeError(f'pid_method={pid_method!r} is not [aesurf, caero, paero]')
+
     inid = 1
     mid = 1
     model.log.debug('---starting export_caero_model of %s---' % caero_bdf_filename)
@@ -35,7 +60,8 @@ def export_caero_mesh(model: BDF, caero_bdf_filename: str='caero.bdf',
 
                 #bdf_file.write("$   CAEROID       ID       XLE      YLE      ZLE     CHORD      SPAN\n")
                 points, elements = caero.panel_points_elements()
-                _write_subpanel_strips(bdf_file, model, caero_eid, points, elements)
+                if write_panel_xyz:
+                    _write_subpanel_strips(bdf_file, model, caero_eid, points, elements)
 
                 npoints = points.shape[0]
                 #nelements = elements.shape[0]
@@ -73,15 +99,22 @@ def export_caero_mesh(model: BDF, caero_bdf_filename: str='caero.bdf',
                 p4 = inid + 3
                 bdf_file.write(print_card_8(['CQUAD4', caero_eid, pid, p1, p2, p3, p4]))
             inid += npoints
-        bdf_file.write('MAT1,%s,3.0E7,,0.3\n' % mid)
+
+        # aluminum
+        E = 350e9 # 350 GPa
+        #G = None
+        nu = 0.3
+        rho = 2700. # 2700 kg/m^3
+        bdf_file.write(f'MAT1,%s,{E},,{nu},{rho}\n' % mid)
         bdf_file.write('ENDDATA\n')
 
 
 def _write_subpanel_strips(bdf_file, model, caero_eid, points, elements):
     """writes the strips for the subpanels"""
     #bdf_file.write("$   CAEROID       ID       XLE      YLE      ZLE     CHORD      SPAN\n")
-    bdf_file.write('$$ %8s %8s %9s %9s %9s %9s %9s\n' % (
-        'CAEROID', 'ID', 'XLE', 'YLE', 'ZLE', 'CHORD', 'SPAN'))
+    bdf_file.write('$$\n$$ XYZ_LE is taken at the center of the leading edge; (p1+p4)/2\n$$\n')
+    bdf_file.write('$$ %8s %8s %9s %9s %9s %9s %9s %9s\n' % (
+        'CAEROID', 'EID', 'XLE', 'YLE', 'ZLE', 'CHORD', 'SPAN', 'XLE+C/4'))
 
     for i in range(elements.shape[0]):
         # The point numbers here are consistent with the CAERO1
@@ -91,12 +124,13 @@ def _write_subpanel_strips(bdf_file, model, caero_eid, points, elements):
         p3 = points[elements[i, 3], :]
         le = (p1 + p4)*0.5
         te = (p2 + p3)*0.5
-        dx = (p4 - p1)[1]
-        dy = (p4 - p1)[2]
-        span = math.sqrt(dx**2 + dy**2)
+        dy = (p4 - p1)[1]
+        dz = (p4 - p1)[2]
+        span = math.sqrt(dy**2 + dz**2)
         chord = te[0] - le[0]
-        bdf_file.write("$$ %8d %8d %9.4f %9.4f %9.4f %9.4f %9.4f\n" % (
-            caero_eid, caero_eid+i, le[0], le[1], le[2], chord, span))
+        xqc = le + chord / 4.
+        bdf_file.write("$$ %8d %8d %9.4f %9.4f %9.4f %9.4f %9.4f %9.4f\n" % (
+            caero_eid, caero_eid+i, le[0], le[1], le[2], chord, span, xqc[0]))
 
 def _get_subpanel_property(model: BDF, caero_id: int, eid: int, pid_method: str='aesurf') -> int:
     """gets the property id for the subpanel"""
@@ -114,7 +148,7 @@ def _get_subpanel_property(model: BDF, caero_id: int, eid: int, pid_method: str=
         caero = model.caeros[caero_id]
         pid = caero.pid
     else:  # pragma: no cover
-        raise RuntimeError('pid_method={pid_method!r} is not [aesurf, caero, paero]')
+        raise RuntimeError(f'pid_method={pid_method!r} is not [aesurf, caero, paero]')
 
     if pid is None:
         pid = 1
@@ -134,7 +168,7 @@ def _write_properties(model: BDF, bdf_file, pid_method: str='aesurf') -> None:
             bdf_file.write('$ ' + '\n$ '.join(scaero) + '\n')
             bdf_file.write('PSHELL,%s,%s,0.1\n' % (caero_eid, 1))
     else:  # pragma: no cover
-        raise RuntimeError('pid_method={repr(pid_method)} is not [aesurf, caero, paero]')
+        raise RuntimeError(f'pid_method={repr(pid_method)} is not [aesurf, caero, paero]')
 
 
 def _write_aesurf_properties(model: BDF, bdf_file):

@@ -299,13 +299,36 @@ def make_monpnt1s_from_cids(model: BDF, nids, cids, cid_to_inids,
 
         ids = nidsi
         model.add_set1(cid, ids, is_skin=False, comment='')
-        aecomp_name = 'ae%i' % cid
+        aecomp_name = 'ae%d' % cid
         list_type = 'SET1'
         lists = [cid]
         model.add_aecomp(aecomp_name, list_type, lists, comment='')
 
-        name = 'c%i' % cid
+        name = 'c%d' % cid
         axes = '123456'
         model.add_monpnt1(name, label, axes, aecomp_name, [0., 0., 0.], cp=cid, cd=None, comment='')
         nnodes_old = nnodes
         origin_old = origin
+
+
+def build_trim_load_cases(model: BDF, trim_load_cases: List[Tuple[str, int, float, float, Any]], aeqr: float=1.):
+    """
+    trim_load_cases = [
+        # subcase, name, trim_id, mach, q, label: value
+        (10, 'alpha=1', 10, 0.8, 1., {'ANGLEA': 1.,}),
+    ]
+    """
+    from pyNastran.bdf.case_control_deck import CaseControlDeck
+    cc = CaseControlDeck([], log=model.log)
+    model.case_control_deck = cc
+
+    for subcase_id, load_case_name, trim_id, mach, q, condition_dict in trim_load_cases:
+        subcase = cc.create_new_subcase(subcase_id)
+        subcase.add('TRIM', trim_id, [], 'STRESS-type')
+        labels = []
+        uxs = []
+        for label, ux in condition_dict.items():
+            labels.append(label)
+            uxs.append(ux)
+        model.add_trim(trim_id, mach, q, labels, uxs, aeqr=aeqr, trim_type=1, comment='')
+
