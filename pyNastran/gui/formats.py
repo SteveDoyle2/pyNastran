@@ -106,6 +106,13 @@ try:
 except ImportError:  # pragma: no cover
     pass
 
+try:
+    from pyNastran2.nastran_io2 import NastranV
+    CLASS_MAP['nastranv'] = NastranV
+except ImportError:  # pragma: no cover
+    pass
+
+
 if DEV:
     try:
         from pyNastran.dev.h5.h5_nastran_io import H5NastranIO

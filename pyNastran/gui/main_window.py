@@ -100,6 +100,7 @@ class MainWindow(GuiCommon, NastranIO):
             # no results unless specified
             'nastran',  # results
             'h5nastran',
+            'nastranv',
             'abaqus',
             'avus',
             'bedge', 'surf', 'ugrid', 'ugrid3d', # aflr

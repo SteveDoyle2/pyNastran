@@ -915,14 +915,9 @@ class Coord(BaseCard):
             t[i*3:i*3+2, i*3:i*3+2] = matrix[0:2, 0:2]
         return t
 
-    @staticmethod
-    def _check_square(matrix):
-        nx, ny = matrix.shape
-        assert nx == ny, f'nx={nx} ny={ny}'
-        assert nx % 3 == 0, f'nx={nx} is not a multiple of 3'
 
     def transform_matrix_to_global(self, matrix):
-        self._check_square(matrix)
+        _check_square(matrix)
         n = matrix.shape[0] // 3
         T = self.beta_n(n)
         matrix_out = T.T @ matrix @ T
@@ -931,7 +926,7 @@ class Coord(BaseCard):
     def transform_matrix_to_global_from_element_coord(self, matrix, n: int,
                                                       i, j, k):
         Tlocal = np.vstack([i, j, k])
-        self._check_square(Tlocal)
+        _check_square(Tlocal)
         n = matrix.shape[0] // 3
 
         T = self.beta_n(n) @ Tlocal
@@ -964,6 +959,11 @@ class Coord(BaseCard):
         else:
             raise RuntimeError('Cannot move %s; cid=%s' % (self.type, self.cid))
         self.origin = xyz
+
+def _check_square(matrix: np.ndarray):
+    nx, ny = matrix.shape
+    assert nx == ny, f'nx={nx} ny={ny}'
+    assert nx % 3 == 0, f'nx={nx} is not a multiple of 3'
 
 
 def _fix_xyz_shape(xyz: NDArray3float, name: str='xyz') -> NDArray3float:

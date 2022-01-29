@@ -1,6 +1,6 @@
 from math import sqrt
 from struct import pack
-from typing import List
+from typing import Tuple, List
 
 import numpy as np
 
@@ -304,7 +304,7 @@ class RealEigenvalues(BaseScalarObject):
                 mode_num, extract_order, eigenvalue, radian, cycle, gen_m, gen_k)
         return msg
 
-    def Mhh_Khh(self, diag: bool=False) -> tuple[np.ndarray, np.ndarray]:
+    def Mhh_Khh(self, diag: bool=False) -> Tuple[np.ndarray, np.ndarray]:
         isort = np.argsort(self.eigenvalues)
         Mhh = self.generalized_mass[isort]
         Khh = self.eigenvalues[isort]

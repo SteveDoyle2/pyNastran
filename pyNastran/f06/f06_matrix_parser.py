@@ -1,4 +1,4 @@
-from typing import Optional, TextIO
+from typing import Optional, TextIO, Tuple
 import numpy as np
 import scipy.sparse
 from cpylog import SimpleLogger, get_logger
@@ -6,6 +6,8 @@ from cpylog import SimpleLogger, get_logger
 TABLES_2D = {'MKLIST'}
 MATRICES_DENSE = {'QHHA'}
 SKIP_FLAGS = [
+    'This software and related documentation are',
+    'LIMITATIONS TO U.S. GOVERNMENT RIGHTS. UNPUBLISHED',
     'N A S T R A N    F I L E    A N D    S Y S T E M    P A R A M E T E R    E C H O',
     'N A S T R A N    E X E C U T I V E    C O N T R O L    E C H O',
     'N A S T R A N   S O U R C E   P R O G R A M   C O M P I L A T I O N',
@@ -13,16 +15,22 @@ SKIP_FLAGS = [
     'C A S E    C O N T R O L    E C H O',
     'E L E M E N T   G E O M E T R Y   T E S T   R E S U L T S   S U M M A R Y',
     'O U T P U T   F R O M   G R I D   P O I N T   W E I G H T   G E N E R A T O R',
+
+    # SOL 144
+    'N O N - D I M E N S I O N A L   S T A B I L I T Y   A N D   C O N T R O L   D E R I V A T I V E   C O E F F I C I E N T S',
+    'A E R O S T A T I C   D A T A   R E C O V E R Y   O U T P U T   T A B L E S',
+    'A E R O D Y N A M I C   M O N I T O R   P O I N T   I N T E G R A T E D   L O A D S',
+    'S T R U C T U R A L   M O N I T O R   P O I N T   I N T E G R A T E D   L O A D S',
     #'E I G E N V A L U E  A N A L Y S I S   S U M M A R Y   (READ MODULE)',
     #'R E A L   E I G E N V A L U E S',
     'MAXIMUM  DISPLACEMENTS',
     'FLUTTER  SUMMARY',
-    #'* * * *  A N A L Y S I S  S U M M A R Y  T A B L E  * * * *',
+    #'* * * *  A N A L Y S I S  S U M M A R Y  T A B L E  * * * *',  # causes a crash
 ]
 def read_f06_matrices(f06_filename: str,
                       log: Optional[SimpleLogger]=None,
-                      nlines_max: int=1_000_000) -> tuple[dict[str, np.ndarray],
-                                                          dict[str, np.ndarray]]:
+                      nlines_max: int=1_000_000) -> Tuple[Dict[str, np.ndarray],
+                                                          Dict[str, np.ndarray]]:
     """TODO: doesn't handle extra PAGE headers; requires LINE=1000000"""
     log = get_logger(log=log, level='debug', encoding='utf-8')
     with open(f06_filename, 'r') as f06_file:
@@ -43,13 +51,15 @@ def _read_f06_matrices(f06_file: TextIO, log: SimpleLogger, nlines_max: int) -> 
         line = f06_file.readline()
         i += 1
         if debug:
-            log.debug('i={i} {line.strip()}')
+            log.debug(f'i={i} {line.strip()}')
         if '* * * END OF JOB * * *' in line:
             #print("****done****")
             break
         iflags = [datai in line for datai in SKIP_FLAGS]
         if any(iflags):
             flag = SKIP_FLAGS[iflags.index(True)]
+            if debug:
+                log.info(f'******* found skip flag: {flag}')
             #print('skip', line)
             line = f06_file.readline()
             i += 1
@@ -78,7 +88,7 @@ def _read_f06_matrices(f06_file: TextIO, log: SimpleLogger, nlines_max: int) -> 
             del table_name, table
             debug = False
         elif line.startswith('0      MATRIX '):
-            matrix_name, matrix, line, i = _read_matrix(f06_file, line, i, log)
+            matrix_name, matrix, line, i = _read_matrix(f06_file, line, i, log, debug)
             matrices[matrix_name] = matrix
             del matrix_name, matrix
         else:
@@ -99,7 +109,7 @@ def _read_f06_matrices(f06_file: TextIO, log: SimpleLogger, nlines_max: int) -> 
 
 def _read_real_eigenvalues(f06_file: TextIO,
                            log: SimpleLogger,
-                           line: str, i: int) -> tuple[np.ndarray,
+                           line: str, i: int) -> Tuple[np.ndarray,
                                                        np.ndarray,
                                                        np.ndarray]:
     line = f06_file.readline()
@@ -140,7 +150,7 @@ def _read_real_eigenvalues(f06_file: TextIO,
     return Mhh, Bhh, Khh
 
 def _read_matrix(f06_file: TextIO,
-                 line: str, i: int, log: SimpleLogger) -> tuple[str, np.ndarray, str, int]:
+                 line: str, i: int, log: SimpleLogger, debug: bool) -> Tuple[str, np.ndarray, str, int]:
     """
     0      MATRIX QHHA     (GINO NAME 101 ) IS A COMPLEX          100 COLUMN X          10 ROW RECTANG  MATRIX.
     0COLUMN        1      ROWS        1 THRU       10 --------------------------------------------------
@@ -155,14 +165,19 @@ def _read_matrix(f06_file: TextIO,
 
     # (GINO NAME 101 )
     # IS A COMPLEX          100 COLUMN X          10 ROW RECTANG  MATRIX.
+    # IS A REAL               4 COLUMN X           4 ROW SQUARE   MATRIX.
     header_mid, header_right = header_midright.split(')')
     del header_midright
 
     is_complex = ('COMPLEX' in header_right)
+    is_real = ('REAL' in header_right)
     assert 'COLUMN' in header_right, header_right
     assert 'ROW' in header_right, header_right
+    assert is_complex or is_real
     header_sline_right = header_right.split()
 
+    matrix_shape_str = header_sline_right[-2]
+    assert matrix_shape_str in {'SQUARE', 'RECTANG'}, matrix_shape_str
     icolumn = header_sline_right.index('COLUMN')
     irow = header_sline_right.index('ROW')
 
@@ -178,7 +193,16 @@ def _read_matrix(f06_file: TextIO,
     row_list = []
     data_list = []
     while '0COLUMN' in line:
+        if 'NULL' in line:
+            if debug:
+                log.debug(f'found NULL line; {line.rstrip()}')
+            line = f06_file.readline()
+            i += 1
+            continue
         # column header
+        # 0COLUMNS       3 THRU       3 ARE NULL.
+        #
+        # valid case
         #    0           1        2         3  4          5
         # 0COLUMN        1      ROWS        1 THRU       10 --------------------------------------------------
         # 0COLUMN      100      ROWS        1 THRU       10
@@ -206,6 +230,8 @@ def _read_matrix(f06_file: TextIO,
 
         if is_complex:
             row_indexi, datai = _parse_complex_row_lines(row_lines)
+        elif is_real:
+            row_indexi, datai = _parse_real_row_lines(row_lines)
         else:
             raise RuntimeError(is_complex)
         #print(column)
@@ -237,7 +263,7 @@ def _read_matrix(f06_file: TextIO,
         matrix = sparse_matrix.toarray()
     return table_name, matrix, line, i
 
-def _parse_complex_row_lines(lines: list[str]) -> tuple[int, int]:
+def _parse_complex_row_lines(lines: list[str]) -> Tuple[int, int]:
     """
     1) -3.5846E+01,-1.3275E+02  -1.5510E+01, 2.3578E-01  -3.2339E+01,-4.9373E+00   6.8078E+01, 1.3428E+01   3.0262E+01, 2.4554E+01
     6) -3.5846E+01,-1.3275E+02  -1.5510E+01, 2.3578E-01  -3.2339E+01,-4.9373E+00   6.8078E+01, 1.3428E+01   3.0262E+01, 2.4554E+01
@@ -271,8 +297,49 @@ def _parse_complex_row_lines(lines: list[str]) -> tuple[int, int]:
     data = np.array(data_list, dtype='complex128')
     return row_index, data
 
+def _parse_real_row_lines(lines: list[str]) -> Tuple[int, int]:
+    """
+    1)    1.1010E+01  1.3762E+00 -4.2021E+00 -5.2526E-01
+    """
+    #lines = [
+        #'        1) -3.5846E+01,-1.3275E+02  -1.5510E+01, 2.3578E-01  -3.2339E+01,-4.9373E+00   6.8078E+01, 1.3428E+01   3.0262E+01, 2.4554E+01',
+        #'        6)  1.5360E-04,-1.1042E-04  -4.7606E-04, 2.3069E-04   1.0359E-03,-1.5668E-04  -1.3075E-03, 7.8472E-04   2.3471E-04,-4.8359E-04',
+    #]
+    #lines = [
+        #'        1) -3.5846E+01,-1.3275E+02',
+        #'        6)  1.5360E-04,-1.1042E-04',
+    #]
+
+    row_index_list = []
+    data_list = []
+    for line in lines:
+        row_id_str, data_str = line.split(')')
+        # pairs = [line[10:35], line[35:61], line[61:84], line[84:110], line[110:135]]
+        reals_str = data_str.split()
+        reals = [float(val) for val in reals_str]
+        nreals = len(reals)
+        row_i = int(row_id_str)
+
+        indexs = list(range(row_i, row_i+nreals))
+        assert len(indexs) == nreals
+        data_list.extend(reals)
+        row_index_list.extend(indexs)
+        #for pair in pairs:
+            #if len(pair) == 0:
+                #break
+            #real_str, complex_str = pair.split(',')
+            #reali = float(real_str)
+            #complexi = float(complex_str)
+            #datai = complex(reali, complexi)
+            #data_list.append(datai)
+            #row_index_list.append(row_i)
+            #row_i += 1
+    row_index = np.array(row_index_list, dtype='int32')
+    data = np.array(data_list, dtype='float64')
+    return row_index, data
+
 def _read_table(f06_file: TextIO, line: str, i: int,
-                log: SimpleLogger) -> tuple[str, np.ndarray, str, int]:
+                log: SimpleLogger) -> Tuple[str, np.ndarray, str, int]:
     """
     '0    TABLE   MKLIST                      LINES CONTAINING BINARY  ZERO HAVE BEEN DELETED.\n'
     ''

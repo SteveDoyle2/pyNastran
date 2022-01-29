@@ -58,7 +58,7 @@ def mixed_type_unstructured_grid():
         [0, 0, 0], [1, 0, 0], [0, 1, 0], [0, 0, 1], # tetra
         [2, 0, 0], [3, 0, 0], [3, 1, 0], [2, 1, 0],
         [2, 0, 1], [3, 0, 1], [3, 1, 1], [2, 1, 1], # Hex
-        ], dtype='float32')
+    ], dtype='float32')
     # shift the points so we can show both.
     pts[:, 1] += 2.0
     npoints = len(pts)
