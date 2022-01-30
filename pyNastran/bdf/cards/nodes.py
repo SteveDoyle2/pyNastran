@@ -1725,12 +1725,12 @@ class POINT(BaseCard):
 
         """
         nid = integer(card, 1, 'nid')
-        cp = integer_or_blank(card, 2, 'cp', 0)
+        cp = integer_or_blank(card, 2, 'cp', default=0)
 
         xyz = np.array([
-            double_or_blank(card, 3, 'x1', 0.),
-            double_or_blank(card, 4, 'x2', 0.),
-            double_or_blank(card, 5, 'x3', 0.)], dtype='float64')
+            double_or_blank(card, 3, 'x1', default=0.),
+            double_or_blank(card, 4, 'x2', default=0.),
+            double_or_blank(card, 5, 'x3', default=0.)], dtype='float64')
 
         assert len(card) <= 9, f'len(POINT card) = {len(card):d}\ncard={card}'
         return POINT(nid, xyz, cp=cp, comment=comment)

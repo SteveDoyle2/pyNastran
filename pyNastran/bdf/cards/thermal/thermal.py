@@ -1316,9 +1316,9 @@ class PHBDY(ThermalProperty):
 
         """
         pid = integer(card, 1, 'pid')
-        af = double_or_blank(card, 2, 'af')
-        d1 = double_or_blank(card, 3, 'd1')
-        d2 = double_or_blank(card, 4, 'd2', d1)
+        af = double_or_blank(card, 2, 'af', default=None)
+        d1 = double_or_blank(card, 3, 'd1', default=None)
+        d2 = double_or_blank(card, 4, 'd2', default=d1)
         assert len(card) <= 5, f'len(PHBDY card) = {len(card):d}\ncard={card}'
         return PHBDY(pid, af, d1, d2, comment=comment)
 

@@ -629,7 +629,7 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
         self.gui.nnodes = ngui_nodes
         self.gui.nelements = nelements  # approximate...
 
-        self.gui.log_info("nnodes=%i nelements=%i" % (self.nnodes, self.nelements))
+        self.gui.log_info(f'nnodes={self.nnodes:d} nelements={self.nelements:d}')
         msg = model.get_bdf_stats(return_type='string')
         self.gui.log_debug(msg)
         msg = model.get_bdf_stats(return_type='list')

@@ -761,7 +761,11 @@ def element_quality(model, nids=None, xyz_cid0=None, nid_map=None):
     return quality
 
 def tri_quality(p1, p2, p3):
-    """gets the quality metrics for a tri"""
+    """
+    gets the quality metrics for a tri
+
+    area, max_skew, aspect_ratio, min_theta, max_theta, dideal_theta, min_edge_length
+    """
     e1 = (p1 + p2) / 2.
     e2 = (p2 + p3) / 2.
     e3 = (p3 + p1) / 2.
