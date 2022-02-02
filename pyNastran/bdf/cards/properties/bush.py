@@ -682,16 +682,16 @@ class PBUSH1D(BushingProperty):
         assert isinstance(pid, int), 'pid=%r' % pid
 
     @staticmethod
-    def _read_shock(card, istart):
+    def _read_shock(card: BDFCard, istart: int) -> Tuple[str, float, float, float, float]:
         """
         F(u, v) = Cv * S(u) * sign(v) * |v|^ev
         """
         shock_type = string_or_blank(card, istart + 1, 'shockType')
         shock_cvt = double(card, istart + 2, 'shockCVT')
         shock_cvc = double_or_blank(card, istart + 3, 'shockCVC')
-        shock_exp_vt = double_or_blank(card, istart + 4, 'shockExpVT', 1.0)
+        shock_exp_vt = double_or_blank(card, istart + 4, 'shockExpVT', default=1.0)
         shock_exp_vc = double_or_blank(card, istart + 5,
-                                       'shockExpVC', shock_exp_vt)
+                                       'shockExpVC', default=shock_exp_vt)
 
         if shock_type == 'TABLE':
             shock_idts = None

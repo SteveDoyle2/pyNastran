@@ -18,7 +18,7 @@ All cards are Material objects.
 
 """
 from __future__ import annotations
-from typing import TYPE_CHECKING
+from typing import Optional, TYPE_CHECKING
 import numpy as np
 from numpy import zeros, array
 
@@ -4095,7 +4095,8 @@ class MATEV(ViscoelasticMaterial):
             #mcsid = set_blank_if_default(self.mcsid, 0)
             #list_fields = ['MAT1', self.mid, self.e, G, self.nu, rho, a, tref, ge,
                            #St, Sc, Ss, mcsid]
-        return list_fields
+        #return list_fields
+        raise NotImplementedError('MATEV repr_fields')
 
     def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.repr_fields()

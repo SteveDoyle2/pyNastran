@@ -1170,7 +1170,7 @@ class OP2(OP2_Scalar, OP2Writer):
             self.mpc_forces, ato.mpc_forces, crm.mpc_forces, psd.mpc_forces, rms.mpc_forces,
             abs.mpc_forces, nrl.mpc_forces, srss.mpc_forces,
 
-            self.applied_loads,
+            #self.applied_loads,
             self.load_vectors,
         ]
         for disp_like_dict in disp_like_dicts:

@@ -1006,7 +1006,7 @@ class NastranIO(NastranIO_xref):
 
             # untested
             [model.load_vectors, 'Load Vectors'],
-            [model.applied_loads, 'Applied Loads'],
+            #[model.applied_loads, 'Applied Loads'],
             [model.force_vectors, 'Force Vectors'],
             #[model.gridPointForces, 'GridPointForces'],  # TODO: this is buggy...
         ]

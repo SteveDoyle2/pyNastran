@@ -8416,7 +8416,8 @@ class AddCards:
         self._add_methods._add_dmig_object(dmig)
         return dmig
 
-    def add_dmi(self, name, form, tin, tout, nrows, ncols, GCj, GCi,
+    def add_dmi(self, name: str, form: int, tin: int, tout: int, nrows: int, ncols: int,
+                GCj, GCi,
                 Real, Complex=None, comment='') -> DMI:
         """Creates a DMI card"""
         dmi = DMI(name, form, tin, tout, nrows, ncols, GCj, GCi, Real,

@@ -779,7 +779,7 @@ class TRIM(BaseCard):
         .. warning ::  This probably gets AELINKs/AEPARMs/AESURFSs wrong.
 
         **The TRIM equality**
-        ndelta = (naestat + naesurf + naeparm) - (
+        ndelta = (naestat + naesurf + naeparm)
                - (ntrim + ntrim_aesurf? + naelink + nsuport_dofs + nsuport1_dofs)
         ndelta = 0
         ntrim_aesurf is not included, but it might exist...

@@ -149,7 +149,14 @@ class DTI_UNITS(BaseCard):
         card = self.repr_fields()
         return self.comment + print_card_8(card)
 
-
+# 0 means the same as tin
+# we won't handle it with this
+TOUT_DTYPE_MAP = {
+    1: 'float32',
+    2: 'float64',
+    3: 'complex64',
+    4: 'complex128',
+}
 class DTI(BaseCard):
     """
     +-----+-------+-----+------+-------+--------+------+-------------+
@@ -696,15 +703,8 @@ class NastranMatrix(BaseCard):
         return
 
     def write_card(self, size: int=8, is_double: bool=False) -> str:
-        # we ignore the requested is_double flag because otherwise Nastran
-        # can't read in the matrix
-        if self.tin in {1, 3}:
-            is_double = False
-        elif self.tin in {2, 4}:
-            is_double = True
-            size = 16
-        else:
-            raise RuntimeError('tin=%r must be 1, 2, 3, or 4' % self.tin)
+        size, is_double = _determine_size_double_from_tin(
+            tin, size, is_double)
 
         assert isinstance(self.GCi, (list, np.ndarray)), 'type(GCi)=%s' % type(self.GCi)
         assert isinstance(self.GCj, (list, np.ndarray)), 'type(GCj)=%s' % type(self.GCj)
@@ -773,6 +773,20 @@ class NastranMatrix(BaseCard):
         #assert isinstance(self.Real[0], (list, np.ndarray)), msg
         return msg
 
+def _determine_size_double_from_tin(tin: int,
+                                    size: int, is_double: bool) -> Tuple[int, bool]:
+    """
+    we ignore the requested is_double flag because otherwise Nastran
+    can't read in the matrix
+    """
+    if tin in {1, 3}:
+        is_double = False
+    elif tin in {2, 4}:
+        is_double = True
+        size = 16
+    else:
+        raise RuntimeError('tin=%r must be 1, 2, 3, or 4' % tin)
+    return size, is_double
 
 class DMIG_UACCEL(BaseCard):
     """
@@ -916,6 +930,7 @@ class DMIG_UACCEL(BaseCard):
 
     def __repr__(self):
         return self.write_card(size=8)
+
 
 class DMIG(NastranMatrix):
     """
@@ -1654,6 +1669,13 @@ class DMIK(NastranMatrix):
                                GCj, GCi, Real, Complex, comment=comment,
                                finalize=finalize)
 
+DMI_MATRIX_MAP = {
+    1 : 'square',
+    2 : 'rectangular', # 9 ???
+    3 : 'diagonal',
+    6 : 'symmetric',
+    9 : 'identity',
+}
 
 class DMI(NastranMatrix):
     """
@@ -1689,7 +1711,8 @@ class DMI(NastranMatrix):
     def export_to_hdf5(cls, h5_file, model, encoding):
         _export_dmig_to_hdf5(h5_file, model, model.dmi, encoding)
 
-    def __init__(self, name, matrix_form, tin, tout, nrows, ncols,
+    def __init__(self, name: str, matrix_form: int, tin: int, tout: int,
+                 nrows: int, ncols: int,
                  GCj, GCi, Real, Complex=None, comment='', finalize=True):
         #NastranMatrix.__init__(self, name, ifo, tin, tout, polar, ncols,
                                #GCj, GCi, Real, Complex, comment='')
@@ -1699,10 +1722,42 @@ class DMI(NastranMatrix):
         if Complex is None:
             Complex = []
 
+        #-------------------------------------------------------------------------------------
+        if isinstance(tin, str):
+            reverse_tout_map = {value: key for key, value in TOUT_DTYPE_MAP.items()}
+            tin2 = tin.lower().strip()
+            try:
+                tin = reverse_tout_map[tin2]
+            except:
+                keys = list(TOUT_DTYPE_MAP) + list(reverse_dmi_map)
+                raise SyntaxError(f'tin={tin!r} is not in allowed={keys}')
+
         if tout is None:
             tout = 0
+        if isinstance(tout, str):
+            reverse_tout_map = {value: key for key, value in TOUT_DTYPE_MAP.items()}
+            tout2 = tout.lower().strip()
+            try:
+                tout = reverse_tout_map[tout2]
+            except:
+                keys = list(TOUT_DTYPE_MAP) + list(reverse_dmi_map)
+                raise SyntaxError(f'tout={tout!r} is not in allowed={keys}')
 
-        if matrix_form not in [1, 2, 3, 4, 5, 6, 8]:
+        if isinstance(matrix_form, str):
+            reverse_dmi_map = {value: key for key, value in DMI_MATRIX_MAP.items()}
+            matrix_form2 = matrix_form.lower().strip()
+            try:
+                matrix_form = reverse_dmi_map[matrix_form2]
+            except KeyError:
+                keys = list(DMI_MATRIX_MAP) + list(reverse_dmi_map)
+                raise SyntaxError(f'matrix_form={matrix_form!r} is not in allowed={keys}')
+
+        #-------------------------------------------------------------------------------------
+
+        if tout not in {0, 1, 2, 3, 4}:
+            raise SyntaxError(f'tout={tout!r} is not in allowed; [1, 2, 3, 4]')
+
+        if matrix_form not in {1, 2, 3, 4, 5, 6, 8}:
             msg = (
                 '%s name=%r matrix_form=%r must be [1, 2, 3, 4, 5, 6, 8]\n'
                 '  1: Square\n'
@@ -1811,17 +1866,9 @@ class DMI(NastranMatrix):
                 self.matrix_form, type(self.matrix_form), self.name)
             raise TypeError(msg)
 
-        if self.matrix_form == 1:
-            matrix_type = 'square'
-        elif self.matrix_form == 2: # 9 ???
-            matrix_type = 'rectangular'
-        elif self.matrix_form == 3:
-            matrix_type = 'diagonal'
-        elif self.matrix_form == 6:
-            matrix_type = 'symmetric'
-        elif self.matrix_form == 9:
-            matrix_type = 'identity'
-        else:
+        try:
+            DMI_MATRIX_MAP[self.matrix_form]
+        except KeyError:
             raise NotImplementedError('%s matrix_form=%r is not supported' % (
                 self.type, self.matrix_form))
         return matrix_type
@@ -1833,7 +1880,7 @@ class DMI(NastranMatrix):
         elif self.tin in {3, 4}:
             is_polar = False # TODO: could be wrong...
         else:
-            raise NotImplementedError('nrows=%s ncols=%s' % (self.nrows, self.ncols))
+            raise NotImplementedError(f'nrows={self.nrows} ncols={self.ncols}; tin={tin} not [1,2,3,4]')
         return is_polar
 
     @property
@@ -2002,6 +2049,9 @@ class DMI(NastranMatrix):
             i = np.where(gcj == self.GCj)[0]
             gcis = self.GCi[i]
             reals = self.Real[i]
+            if reals.max() == 0. and reals.min() == 0.:
+                continue
+
             isort = np.argsort(gcis)
             list_fields = ['DMI', self.name, gcj]
 
@@ -2027,6 +2077,9 @@ class DMI(NastranMatrix):
             complexs = self.Complex[i]
             isort = np.argsort(gcis)
             list_fields = ['DMI', self.name, gcj]
+
+            if reals.max() == 0. and reals.min() == 0. and complexs.max() == 0. and complexs.min() == 0.:
+                continue
 
             # will always write the first one
             gci_last = -10
@@ -2085,7 +2138,7 @@ class DMI(NastranMatrix):
 
     def write_card_double(self):
         """writes the card in double precision"""
-        return self._write_card(print_card_16)
+        return self._write_card(print_card_double)
 
     def _write_card(self, func):
         """writes the card in single/double precision"""
@@ -2102,6 +2155,9 @@ class DMI(NastranMatrix):
         return msg
 
     def write_card(self, size: int=8, is_double: bool=False) -> str:
+        size, is_double = _determine_size_double_from_tin(
+            self.tin, size, is_double)
+
         if size == 8:
             return self.write_card_8()
         if is_double:

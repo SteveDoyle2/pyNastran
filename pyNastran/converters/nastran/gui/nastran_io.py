@@ -148,7 +148,7 @@ DESIRED_RESULTS = [
 
     # untested
     'load_vectors',
-    'applied_loads',
+    #'applied_loads',
     'force_vectors',
 
     # ---------

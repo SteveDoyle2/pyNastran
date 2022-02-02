@@ -1150,7 +1150,7 @@ def _fill_nastran_displacements(cases, model: OP2, key, icase: int,
             (model.glue_forces, 'Glue Forces', False),
 
             (model.load_vectors, 'LoadVectors', False),
-            (model.applied_loads, 'AppliedLoads', False),
+            #(model.applied_loads, 'AppliedLoads', False),
             (model.force_vectors, 'ForceVectors', False),
         ]
     else:  # pragma: no cover

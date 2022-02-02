@@ -2047,60 +2047,19 @@ class PBRSECT(LineProperty):
 
         self.nsm = 0.
         self.t = None
-        self.outp = None
 
         # int : int
-        self.brps = {}
-        self.inps = {}
+        #self.brps = {}
+        #self.inps = {}
 
         # int : floats
-        self.ts = {}
-        assert isinstance(options, list), options
-        for key_value in options:
-            try:
-                key, value = key_value
-            except ValueError:
-                print(key_value)
-                raise
-            key = key.upper()
-
-            if key == 'NSM':
-                self.nsm = float(value)
-            elif 'INP' in key:
-                if key.startswith('INP('):
-                    assert key.endswith(')'), 'key=%r' % key
-                    key_id = int(key[4:-1])
-                    self.inps[key_id] = int(value)
-                else:
-                    self.inps[0] = int(value)
-            elif key == 'OUTP':
-                self.outp = int(value)
-
-            elif key.startswith('BRP'):
-                if key.startswith('BRP('):
-                    assert key.endswith(')'), 'key=%r' % key
-                    key_id = int(key[4:-1])
-                    self.brps[key_id] = int(value)
-                else:
-                    self.brps[0] = int(value)
-
-            elif key.startswith('T('):
-                index, out = split_arbitrary_thickness_section(key, value)
-                self.ts[index] = out
-            elif key == 'T':
-                self.ts[1] = float(value)
-
-            #if key == 'NSM':
-                #self.nsm = float(value)
-            #elif key == 'OUTP':
-                #self.outp = int(value)
-            #elif key == 'BRP(1)':
-                #self.brp1 = int(value)
-            #elif key == 'T':
-                #self.t = float(value)
-            else:
-                raise NotImplementedError('PBRSECT.pid=%s key=%r value=%r' % (pid, key, value))
-
+        #self.ts = {}
+        nsm, brps, inps, outp, ts = parse_pbrsect_options(pid, options)
+        self.outp = outp
+        self.nsm = nsm
+        self.brps = brps
+        self.inps = inps
+        self.ts = ts
         self.mid_ref = None
         self.brps_ref = {}
         self.outp_ref = None
@@ -2303,6 +2262,66 @@ class PBRSECT(LineProperty):
     def __repr__(self):
         return self.write_card()
 
+
+
+def parse_pbrsect_options(pid: int, options: List[Any]):
+    # ???
+    outp = None
+
+    # int : int
+    brps = {}
+    inps = {}
+
+    # int : floats
+    ts = {}
+    nsm = 0.0
+    assert isinstance(options, list), options
+    for key_value in options:
+        try:
+            key, value = key_value
+        except ValueError:
+            print(key_value)
+            raise
+        key = key.upper()
+
+        if key == 'NSM':
+            nsm = float(value)
+        elif 'INP' in key:
+            if key.startswith('INP('):
+                assert key.endswith(')'), 'key=%r' % key
+                key_id = int(key[4:-1])
+                inps[key_id] = int(value)
+            else:
+                inps[0] = int(value)
+        elif key == 'OUTP':
+            outp = int(value)
+
+        elif key.startswith('BRP'):
+            if key.startswith('BRP('):
+                assert key.endswith(')'), 'key=%r' % key
+                key_id = int(key[4:-1])
+                brps[key_id] = int(value)
+            else:
+                brps[0] = int(value)
+
+        elif key.startswith('T('):
+            index, out = split_arbitrary_thickness_section(key, value)
+            ts[index] = out
+        elif key == 'T':
+            ts[1] = float(value)
+
+        #if key == 'NSM':
+            #self.nsm = float(value)
+        #elif key == 'OUTP':
+            #self.outp = int(value)
+        #elif key == 'BRP(1)':
+            #self.brp1 = int(value)
+        #elif key == 'T':
+            #self.t = float(value)
+        else:
+            raise NotImplementedError('PBRSECT.pid=%d key=%r value=%r' % (pid, key, value))
+
+    return nsm, brps, inps, outp, ts
 
 class PBEAM3(LineProperty):  # not done, cleanup; MSC specific card
     """

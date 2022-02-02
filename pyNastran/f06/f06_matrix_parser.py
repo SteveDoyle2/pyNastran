@@ -1,4 +1,4 @@
-from typing import Optional, TextIO, Tuple
+from typing import Optional, TextIO, Tuple, Dict
 import numpy as np
 import scipy.sparse
 from cpylog import SimpleLogger, get_logger
@@ -41,7 +41,7 @@ def read_f06_matrices(f06_filename: str,
         log.info('found the following matrices in the f06: %s' % (list(matrices)))
     return tables, matrices
 
-def _read_f06_matrices(f06_file: TextIO, log: SimpleLogger, nlines_max: int) -> dict[str, np.ndarray]:
+def _read_f06_matrices(f06_file: TextIO, log: SimpleLogger, nlines_max: int) -> Dict[str, np.ndarray]:
     i = 0
     debug = False
     tables = {}

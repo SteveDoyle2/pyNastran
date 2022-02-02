@@ -11,7 +11,8 @@ from pyNastran.op2.data_in_material_coord import (
     data_in_material_coord,
     get_eids_from_op2_vector, force_vectors, stress_vectors,
     strain_vectors)
-pkg_path = pyNastran.__path__[0]
+PKG_PATH = pyNastran.__path__[0]
+TEST_PATH = os.path.join(PKG_PATH, 'op2', 'test', 'examples')
 
 
 CASES = [
@@ -25,14 +26,30 @@ ATOL = 0.01
 
 
 class TestMaterialCoordReal(unittest.TestCase):
+    def test_ctria6_mcid(self):
+        log = get_logger(level='error')
+        bdf = BDF(debug=False, log=log)
+        op2 = OP2(debug=False, log=log, mode='msc')
+        basepath = os.path.join(TEST_PATH, 'CoordSysTest_new')
+        bdf_filename = os.path.join(basepath, 'CoordSysTest_new.bdf')
+        op2_filename = os.path.join(basepath, 'CoordSysTest_new.op2')
+        f06_filename = os.path.join(basepath, 'CoordSysTest_new.test.f06')
+        bdf.read_bdf(bdf_filename)
+        op2.read_op2(op2_filename)
+        log.level = 'debug'
+        op2_new = data_in_material_coord(bdf, op2)
+        op2_new.write_f06(f06_filename)
+
     def test_force(self):
         log = get_logger(level='warning')
         for folder, prefix, subcase in CASES:
             bdf = BDF(debug=False, log=log)
             op2 = OP2(debug=False, log=log)
-            basepath = os.path.join(pkg_path, 'op2', 'test', 'examples', folder)
-            bdf.read_bdf(os.path.join(basepath, prefix + '.bdf'))
-            op2.read_op2(os.path.join(basepath, prefix + '.op2'))
+            basepath = os.path.join(TEST_PATH, folder)
+            bdf_filename = os.path.join(basepath, f'{prefix}.bdf')
+            op2_filename = os.path.join(basepath, f'{prefix}.op2')
+            bdf.read_bdf(bdf_filename)
+            op2.read_op2(op2_filename)
             op2_new = data_in_material_coord(bdf, op2)
             for vecname in force_vectors:
                 vector = getattr(op2_new, vecname).get(subcase)
@@ -56,9 +73,11 @@ class TestMaterialCoordReal(unittest.TestCase):
         for folder, prefix, subcase in CASES:
             bdf = BDF(debug=False, log=log)
             op2 = OP2(debug=False, log=log)
-            basepath = os.path.join(pkg_path, 'op2', 'test', 'examples', folder)
-            bdf.read_bdf(os.path.join(basepath, prefix + '.bdf'))
-            op2.read_op2(os.path.join(basepath, prefix + '.op2'))
+            basepath = os.path.join(TEST_PATH, folder)
+            bdf_filename = os.path.join(basepath, prefix + '.bdf')
+            op2_filename = os.path.join(basepath, prefix + '.op2')
+            bdf.read_bdf(bdf_filename)
+            op2.read_op2(op2_filename)
             op2_new = data_in_material_coord(bdf, op2)
             for vecname in stress_vectors:
                 vector = getattr(op2_new, vecname).get(subcase)
@@ -83,9 +102,11 @@ class TestMaterialCoordReal(unittest.TestCase):
         for folder, prefix, subcase in CASES:
             bdf = BDF(debug=False, log=log)
             op2 = OP2(debug=False, log=log)
-            basepath = os.path.join(pkg_path, 'op2', 'test', 'examples', folder)
-            bdf.read_bdf(os.path.join(basepath, prefix + '.bdf'))
-            op2.read_op2(os.path.join(basepath, prefix + '.op2'))
+            basepath = os.path.join(TEST_PATH, folder)
+            bdf_filename = os.path.join(basepath, prefix + '.bdf')
+            op2_filename = os.path.join(basepath, prefix + '.op2')
+            bdf.read_bdf(bdf_filename)
+            op2.read_op2(op2_filename)
             op2_new = data_in_material_coord(bdf, op2)
             for vecname in strain_vectors:
                 vector = getattr(op2_new, vecname).get(subcase)

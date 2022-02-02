@@ -994,7 +994,7 @@ class OP2_F06_Common:
         self.load_vectors = {}       # OPG1; tCode=2  thermal=0
         self.load_vectors_v = {}     # OPGV1
         self.thermal_load_vectors = {}  # tCode=2  thermal=1
-        self.applied_loads = {}       # tCode=19 thermal=0
+        #self.applied_loads = {}       # tCode=19 thermal=0
         self.force_vectors = {}       # tCode=12 thermal=0
 
     def _get_result_length(self, res_types, res_key):
@@ -1094,7 +1094,7 @@ class OP2_F06_Common:
             # OPG - summation of loads for each element '
             'load_vectors', 'load_vectors_v',
             'thermal_load_vectors',
-            'applied_loads',
+            #'applied_loads',
             'force_vectors',
 
             # OES - isotropic CROD/CONROD/CTUBE stress/strain
