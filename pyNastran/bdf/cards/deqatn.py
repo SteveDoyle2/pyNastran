@@ -7,7 +7,7 @@ The capitalization of the sub-functions is important.
 """
 from __future__ import annotations
 import re
-from typing import TYPE_CHECKING
+from typing import Tuple, List, Dict, Union, Any, TYPE_CHECKING
 import numpy as np
 from numpy import (
     cos, sin, tan, log, log10, mean, exp, sqrt, square, mod, abs, sum,

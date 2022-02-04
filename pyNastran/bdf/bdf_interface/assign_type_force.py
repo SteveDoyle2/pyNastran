@@ -53,7 +53,7 @@ def force_double(card: BDFCard, ifield: int, fieldname: str) -> float:
         dtype = _get_dtype(svalue)
         warnings.warn('%s = %r (field #%s) on card must be a float (not %s).\n'
                       'card=%s' % (fieldname, svalue, ifield, dtype, card))
-        return float(value)
+        return float(svalue)
     elif svalue is None or len(svalue) == 0:  ## None
         dtype = _get_dtype(svalue)
         raise SyntaxError('%s = %r (field #%s) on card must be a float (not %s).\n'
@@ -131,7 +131,7 @@ def force_integer_or_blank(card: BDFCard, ifield: int, fieldname: str,
     raise SyntaxError('%s = %r (field #%s) on card must be an integer (not %s).\n'
                       'card=%s' % (fieldname, svalue, ifield, dtype, card))
 
-def force_double_or_blank(card: BDFCard, ifield: int, fieldname: str, default: Optional[Union[float]]=None):
+def force_double_or_blank(card: BDFCard, ifield: int, fieldname: str, default: Optional[float]=None):
     """see ``double_or_blank``"""
     svalue = card.field(ifield)
 

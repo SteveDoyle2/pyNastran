@@ -2942,9 +2942,12 @@ def get_zona_model():
     return bdf_file
 
 
-def build_structure_from_caero(model: BDF, caero_bdf_filename: str):
+def build_structure_from_caero(model: BDF,
+                               caero_bdf_filename: str,
+                               write_panel_xyz: bool=True):
     export_caero_mesh(model, caero_bdf_filename=caero_bdf_filename,
-                      is_subpanel_model=True, pid_method='caero')
+                      is_subpanel_model=True, pid_method='caero',
+                      write_panel_xyz=write_panel_xyz)
     model_quads = read_bdf(caero_bdf_filename)
     model.nodes = model_quads.nodes
     model.elements = model_quads.elements

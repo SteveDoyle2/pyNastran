@@ -20,7 +20,7 @@ All solid elements are SolidElement and Element objects.
 
 """
 from __future__ import annotations
-from typing import Tuple, Any, TYPE_CHECKING
+from typing import Tuple, List, Union, Any, TYPE_CHECKING
 import numpy as np
 from numpy import dot, cross
 from numpy.linalg import norm  # type: ignore

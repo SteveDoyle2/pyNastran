@@ -1363,7 +1363,7 @@ class SET2(Set):
         if self.xref_type == 'MACRO':
             self.xref_type = None
         else:
-            raise NotImplementedError(f"xref_type={xref_type!r} and must be ['MACRO']")
+            raise NotImplementedError(f"xref_type={self.xref_type!r} and must be ['MACRO']")
         self.macro_ref = None
 
 

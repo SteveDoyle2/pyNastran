@@ -1,10 +1,15 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING
+import numpy as np
+
 from pyNastran.bdf.cards.base_card import BaseCard
 from pyNastran.bdf.field_writer_8 import print_card_8
+from pyNastran.bdf.field_writer_16 import print_card_16
+from pyNastran.bdf.field_writer_double import print_card_double
 
 from pyNastran.bdf.bdf_interface.assign_type import (
-    string, string_or_blank, integer, integer_or_blank, double_or_blank)
+    string, string_or_blank, integer, integer_or_blank, double_or_blank,
+    integer_or_double)
 from pyNastran.bdf.cards.loads.static_loads import Load
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.bdf.bdf import BDF
@@ -373,11 +378,11 @@ class GMLOAD(Load):
 
         """
         sid = integer(card, 1, 'sid')
-        cid = integer_or_blank(card, 2, 'cid', 0)
-        normal = array([
-            double_or_blank(card, 3, 'N1', 0.),
-            double_or_blank(card, 4, 'N2', 0.),
-            double_or_blank(card, 5, 'N3', 1.),
+        cid = integer_or_blank(card, 2, 'cid', default=0)
+        normal = np.array([
+            double_or_blank(card, 3, 'N1', default=0.),
+            double_or_blank(card, 4, 'N2', default=0.),
+            double_or_blank(card, 5, 'N3', default=1.),
         ])
         entity = string(card, 6, 'entity')
         entity_id = integer(card, 7, 'entity_id')

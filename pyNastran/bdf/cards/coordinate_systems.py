@@ -17,7 +17,7 @@ from __future__ import annotations
 import copy
 from math import sqrt, degrees, radians, atan2, acos, sin, cos
 from abc import abstractproperty, abstractmethod
-from typing import Union, TYPE_CHECKING
+from typing import List, Union, TYPE_CHECKING
 import numpy as np
 from numpy.linalg import norm  # type: ignore
 

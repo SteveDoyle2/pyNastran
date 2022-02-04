@@ -6,7 +6,7 @@ defines:
 
 """
 from __future__ import annotations
-from typing import TYPE_CHECKING
+from typing import Tuple, Union, Any, TYPE_CHECKING
 
 import numpy as np
 from numpy.linalg import norm  # type: ignore
@@ -64,7 +64,7 @@ class CBEAM(LineElement):
         17:'sa', 18:'sb',
     }
 
-    def _get_field_helper(self, n: int) -> Union[float]:
+    def _get_field_helper(self, n: int) -> Union[int, float]:
         if n == 11:
             value = self.wa[0]
         elif n == 12:

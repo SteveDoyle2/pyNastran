@@ -9,7 +9,7 @@ Defines various utilities including:
 """
 from __future__ import annotations
 from copy import deepcopy
-from typing import List, Dict, TYPE_CHECKING
+from typing import Tuple, List, Dict, TYPE_CHECKING
 import numpy as np  # type: ignore
 from numpy import cross, dot  # type: ignore
 

@@ -23,7 +23,7 @@ All quads are QuadShell, ShellElement, and Element objects.
 
 """
 from __future__ import annotations
-from typing import List, Tuple, Union, Any, TYPE_CHECKING
+from typing import List, Tuple, Union, Optional, Any, TYPE_CHECKING
 
 import numpy as np
 from numpy import cross, allclose

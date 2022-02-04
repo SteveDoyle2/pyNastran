@@ -704,7 +704,7 @@ class NastranMatrix(BaseCard):
 
     def write_card(self, size: int=8, is_double: bool=False) -> str:
         size, is_double = _determine_size_double_from_tin(
-            tin, size, is_double)
+            self.tin, size, is_double)
 
         assert isinstance(self.GCi, (list, np.ndarray)), 'type(GCi)=%s' % type(self.GCi)
         assert isinstance(self.GCj, (list, np.ndarray)), 'type(GCj)=%s' % type(self.GCj)
@@ -1729,7 +1729,7 @@ class DMI(NastranMatrix):
             try:
                 tin = reverse_tout_map[tin2]
             except:
-                keys = list(TOUT_DTYPE_MAP) + list(reverse_dmi_map)
+                keys = list(TOUT_DTYPE_MAP) + list(reverse_tout_map)
                 raise SyntaxError(f'tin={tin!r} is not in allowed={keys}')
 
         if tout is None:
@@ -1740,7 +1740,7 @@ class DMI(NastranMatrix):
             try:
                 tout = reverse_tout_map[tout2]
             except:
-                keys = list(TOUT_DTYPE_MAP) + list(reverse_dmi_map)
+                keys = list(TOUT_DTYPE_MAP) + list(reverse_tout_map)
                 raise SyntaxError(f'tout={tout!r} is not in allowed={keys}')
 
         if isinstance(matrix_form, str):
@@ -1867,7 +1867,7 @@ class DMI(NastranMatrix):
             raise TypeError(msg)
 
         try:
-            DMI_MATRIX_MAP[self.matrix_form]
+            matrix_type = DMI_MATRIX_MAP[self.matrix_form]
         except KeyError:
             raise NotImplementedError('%s matrix_form=%r is not supported' % (
                 self.type, self.matrix_form))
@@ -1880,7 +1880,7 @@ class DMI(NastranMatrix):
         elif self.tin in {3, 4}:
             is_polar = False # TODO: could be wrong...
         else:
-            raise NotImplementedError(f'nrows={self.nrows} ncols={self.ncols}; tin={tin} not [1,2,3,4]')
+            raise NotImplementedError(f'nrows={self.nrows} ncols={self.ncols}; tin={self.tin} not [1,2,3,4]')
         return is_polar
 
     @property
@@ -2499,7 +2499,7 @@ def _fill_dense_rectangular_matrix_real(matrix: DMIG,
 
             msg += '\nCols:\n'
             for j, row in enumerate(cols):
-                msg += '  j=%s row=%s\n' % (j, col)
+                msg += '  j=%s row=%s\n' % (j, row)
             raise RuntimeError(msg)
     return dense_mat
 
@@ -2542,9 +2542,9 @@ def _fill_dense_column_matrix_real(matrix: DMIG,
                 j = cols[gcj]
                 dense_mat[i, j] += reali
         except IndexError:
-            msg = ('name=%s ndim=%s i=%s j=%s matrix_type=%s '
+            msg = ('name=%s ndim=%s gci=%s gcj=%s matrix_type=%s '
                    'is_polar=%s ncols=%s M.shape=%s\n' % (
-                       matrix.name, ndim, i, j, matrix.matrix_type,
+                       matrix.name, ndim, gci, gcj, matrix.matrix_type,
                        matrix.is_polar, matrix.ncols, dense_mat.shape))
             msg += 'Rows:\n'
             for i, row in enumerate(rows):

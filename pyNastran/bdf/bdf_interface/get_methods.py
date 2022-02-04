@@ -1,12 +1,13 @@
 """defines various methods to access low level BDF data"""
 from __future__ import annotations
 from itertools import chain
-from typing import List, Union, Optional, Iterable, TYPE_CHECKING
+from typing import List, Dict, Union, Optional, Iterable, Any, TYPE_CHECKING
 import numpy as np
 
 from pyNastran.bdf.bdf_interface.attributes import BDFAttributes
 from pyNastran.utils.numpy_utils import integer_types
 if TYPE_CHECKING:  # pragma: no cover
+    from pyNastran.bdf.bdf import BDF
     from pyNastran.bdf.cards.coordinate_systems import Coord
     from pyNastran.bdf.cards.nodes import POINT, GRID, SPOINT, EPOINT # , SPOINTs, EPOINTs, SEQGP, GRIDB
     from pyNastran.bdf.cards.aero.aero import (
@@ -24,8 +25,8 @@ if TYPE_CHECKING:  # pragma: no cover
     # MKAERO1, MKAERO2
     # ----------------------------------------------------
 
-    from .cards.elements.mass import CONM1, CONM2, CMASS1, CMASS2, CMASS3, CMASS4
-    from pyNastran.bdf.cards.properties.mass import PMASS, NSM1, NSML, NSML1 # NSM, NSMADD
+    from pyNastran.bdf.cards.elements.mass import CONM1, CONM2, CMASS1, CMASS2, CMASS3, CMASS4
+    from pyNastran.bdf.cards.properties.mass import PMASS, NSM1, NSML, NSML1, NSM, NSMADD
     from pyNastran.bdf.cards.constraints import (SPCADD, SPC1, # SPC,
                                                  #MPC,
                                                  MPCADD) # SUPORT1, SUPORT
@@ -33,7 +34,7 @@ if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.bdf.cards.dynamic import (
         #DELAY, DPHASE,
         NLPARM)
-    from .cards.elements.rigid import RBAR, RBAR1, RBE1, RBE2, RBE3, RROD, RSPLINE, RSSCON
+    from pyNastran.bdf.cards.elements.rigid import RBAR, RBAR1, RBE1, RBE2, RBE3, RROD, RSPLINE, RSSCON
     from pyNastran.bdf.cards.loads.loads import SLOAD, DAREA
     from pyNastran.bdf.cards.loads.dloads import DLOAD, TLOAD1, TLOAD2, RLOAD1, RLOAD2
     from pyNastran.bdf.cards.loads.static_loads import (LOAD, GRAV, ACCEL, ACCEL1, FORCE,
@@ -520,7 +521,7 @@ class GetMethods(BDFAttributes):
         return constraint
 
     def NSM(self, nsm_id: int, consider_nsmadd: bool=True,
-            msg: str='') -> Union[NSM, NSM1, NSML, NSML1, NSDADD]:
+            msg: str='') -> Union[NSM, NSM1, NSML, NSML1, NSMADD]:
         """
         Gets an LOAD or FORCE/PLOAD4/etc.
 

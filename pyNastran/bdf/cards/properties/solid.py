@@ -10,7 +10,7 @@ All solid properties are defined in this file.  This includes:
 
 """
 from __future__ import annotations
-from typing import Dict, Any, TYPE_CHECKING
+from typing import Dict, List, Any, TYPE_CHECKING
 import numpy as np
 
 from pyNastran.utils.numpy_utils import integer_types

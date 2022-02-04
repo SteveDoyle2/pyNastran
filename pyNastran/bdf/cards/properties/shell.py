@@ -15,7 +15,7 @@ from __future__ import annotations
 import copy
 from itertools import count, zip_longest
 import warnings
-from typing import List, Optional, Union, TYPE_CHECKING
+from typing import Tuple, List, Dict, Union, Optional, Any, TYPE_CHECKING
 import numpy as np
 
 from pyNastran.utils.numpy_utils import integer_types, float_types

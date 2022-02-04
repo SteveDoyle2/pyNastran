@@ -18,7 +18,7 @@ some missing optimization flags
 http://mscnastrannovice.blogspot.com/2014/06/msc-nastran-design-optimization-quick.html"""
 # pylint: disable=C0103,R0902,R0904,R0914
 from __future__ import annotations
-from typing import TYPE_CHECKING
+from typing import List, TYPE_CHECKING
 #from itertools import cycle, count
 import numpy as np
 
@@ -459,8 +459,7 @@ class GROUP(OptConstraint):
                         #print(f'breaking on {value}')
                         break
                     else:
-                        print(value)
-                        asdf
+                        raise TypeError(f'value={value!r} type={type(value)}')
                     i += 1
                     j += 1
             else:

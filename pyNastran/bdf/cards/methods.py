@@ -12,7 +12,7 @@ All cards are Method objects.
 
 """
 from __future__ import annotations
-from typing import TYPE_CHECKING
+from typing import List, Any, TYPE_CHECKING
 from pyNastran.bdf.field_writer_8 import set_blank_if_default
 from pyNastran.bdf.cards.base_card import BaseCard
 from pyNastran.bdf.bdf_interface.assign_type import (
@@ -358,14 +358,16 @@ class EIGC(Method):
         nalpha_a = len(self.alphaAjs)
         assert nalpha_a == len(self.omegaAjs), 'alphaAjs=%s omegaAj=%s' % (self.alphaAjs, self.omegaAjs)
         if self.method in ['HESS', 'INV']:
-            assert nalpha_a == len(self.alphaBjs), 'alphaAjs=%s alphaBj=%s' % (self.alphaAjs, self.alphaBjs)
+            nalpha_b = len(self.alphaBjs)
+            assert nalpha_a == nalpha_b, 'alphaAjs=%s alphaBj=%s' % (self.alphaAjs, self.alphaBjs)
             #assert nalpha_a == len(self.omegaBjs), 'alphaAjs=%s omegaBjs=%s' % (self.alphaAjs, self.omegaBjs)
             assert nalpha_a == len(self.LJs), 'alphaAjs=%s LJs=%s' % (self.alphaAjs, self.LJs)
             assert nalpha_a == len(self.NEJs), 'alphaAjs=%s NEJs=%s' % (self.alphaAjs, self.NEJs)
             assert nalpha_a == len(self.NDJs), 'alphaAjs=%s NDJs=%s' % (self.alphaAjs, self.NDJs)
         elif self.method == 'CLAN':
-            if nalpha_a == len(self.alphaBjs):
-                assert nalpha_a == len(self.alphaBjs), f'nalpha_a={nalpha_a} nalpha_b={nalpha_b}'
+            nalpha_b = len(self.alphaBjs)
+            if nalpha_a == nalpha_b:
+                assert nalpha_a == nalpha_b, f'nalpha_a={nalpha_a} nalpha_b={nalpha_b}'
                 assert nalpha_a == len(self.omegaBjs), f'nalpha_a={nalpha_a} nomega_b={len(self.omegaBjs)}'
                 assert nalpha_a == len(self.LJs)
                 assert nalpha_a == len(self.NEJs)
@@ -480,8 +482,9 @@ class EIGC(Method):
 
         elif self.method == 'CLAN':
             nalpha_a = len(self.alphaAjs)
+            nalpha_b = len(self.alphaBjs)
             assert nalpha_a == len(self.omegaAjs)
-            if nalpha_a == len(self.alphaBjs):  # pragma:no cover
+            if nalpha_a == nalpha_b:  # pragma:no cover
                 assert nalpha_a == len(self.alphaBjs), f'nalpha_a={nalpha_a} nalpha_b={nalpha_b}'
                 assert nalpha_a == len(self.omegaBjs), f'nalpha_a={nalpha_a} nomega_b={len(self.omegaBjs)}'
                 assert nalpha_a == len(self.LJs)

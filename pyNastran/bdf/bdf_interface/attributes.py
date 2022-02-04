@@ -2,7 +2,8 @@
 from __future__ import annotations
 from collections import defaultdict
 from typing import List, Dict, Optional, Any, Union, TYPE_CHECKING
-from numpy import array  # type: ignore
+from numpy import array
+from pyNastran.bdf.cards.superelements import SEEXCLD  # type: ignore
 
 from pyNastran.utils import object_attributes, object_methods, deprecated
 #from pyNastran.bdf.case_control_deck import CaseControlDeck
@@ -10,6 +11,73 @@ from pyNastran.bdf.cards.coordinate_systems import CORD2R
 #from pyNastran.bdf.cards.constraints import ConstraintObject
 from pyNastran.bdf.cards.aero.zona import ZONA
 if TYPE_CHECKING:  # pragma: no cover
+    from pyNastran.bdf import (
+        # BDF, 
+        CaseControlDeck,
+        #params,
+        PARAM, MDLPRM, 
+        # grids/points
+        POINT, SPOINT, EPOINT,
+        GRDSET, SEQGP, GRIDB,
+        # bar
+        BAROR, BEAMOR, 
+        # plot
+        PLOTEL,
+        # dynamic
+        TSTEP, TSTEP1, TSTEPNL,
+        NLPCI, NLPARM,
+        TABLES1,
+        TABLED1, TABLED2, TABLED3, TABLED4,
+        TABLEM1, TABLEM2, TABLEM3, TABLEM4,
+        TABDMP1,
+        TF, DELAY, #DPHASE,
+        # axisymmetric
+        RINGAX, CYAX, AXIF, RINGFL, CYJOIN, AXIC,
+        # shells
+        SNORM,
+        #CQUAD4, CQUAD8, CQUADR, CQUAD,
+        #CTRIA3, CTRIA6, CTRIAR,
+        # solids
+        #CTETRA4, CPYRAM5, CPENTA6, CHEXA8,
+        #CTETRA10, CPYRAM13, CPENTA15, CHEXA20,
+        # loads
+        TEMPD,
+        # thermal
+        #CHBYDP, CHBDYE, CHBDYP, 
+        PHBDY,
+        CONV, PCONV, PCONVM, #CONVM, 
+        RADCAV, RADMTX, VIEW, VIEW3D,
+        RADBC, #TEMPBC,
+        # aero
+        MONPNT1, MONPNT2, MONPNT3,
+        AECOMP, AEFACT, AELINK, AELIST, AEPARAM, AESURF, AESURFS, AESTAT,
+        AERO, AEROS,
+        CAERO1, CAERO2, CAERO3, CAERO4, CAERO5,
+        PAERO1, PAERO2, PAERO3, PAERO4, PAERO5,
+        SPLINE1, SPLINE2, SPLINE3, SPLINE4, SPLINE5,
+        FLUTTER, MKAERO1, MKAERO2, FLFACT,
+        TRIM, TRIM2, GUST, GUST2, DIVERG, CSSCHD,
+        # roter
+        ROTORD, ROTORG,
+        # modal
+        EIGRL, EIGR, EIGP, EIGC, EIGB, MODTRAK,
+        # optimization
+        DESVAR, DLINK, TOPVAR, DVGRID, 
+        DEQATN, DDVAL, DSCREEN,
+        DTABLE, DRESP1, DRESP2, DRESP3, 
+        DVPREL1, DVCREL1, DVMREL1, DVTREL1,
+        DVPREL2, DVCREL2, DVMREL2, DVTREL2,
+        DCONADD, DCONSTR, DOPTPRM,
+        DMNCON, GROUP,
+        # contact
+        BCPARA, BCBODY, BCTPARAM, BGSET, BCTADD, BSURF, BSURFS, BCONP, BLSEG, BFRIC,
+        BCTSET, BCTPARA, BGADD, BCTPARA, BCRPARA,
+        # superelements
+        SEBULK, SENQSET, SENQSET1, SEBNDRY, RELEASE, SELOC, SEMPLN, SETREE,
+        SELABEL, SECONCT, SEEXCLD, SEELT, SELOAD, CSUPER, CSUPEXT,   
+    )
+    #Coord = Union[CORD1R, CORD1C, CORD1S,
+    #              CORD2R, CORD2C, CORD2S]
     from pyNastran.bdf.cards.dmig import DMIG, DMI, DMIJ, DMIK, DMIJI
     from pyNastran.bdf.subcase import Subcase
 

@@ -435,7 +435,7 @@ def double(card: BDFCard, ifield: int, fieldname: str, end: str='') -> float:
     return value
 
 def double_or_blank(card: BDFCard, ifield: int, fieldname: str,
-                    default: Optional[Union[float]]=None,
+                    default: Optional[float]=None,
                     end: str='') -> float:
     """
     Casts a value to an double/blank

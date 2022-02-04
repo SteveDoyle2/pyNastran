@@ -1,6 +1,6 @@
 # pylint: disable=R0902,R0904,R0914
 from __future__ import annotations
-from typing import TYPE_CHECKING
+from typing import Union, TYPE_CHECKING
 from pyNastran.bdf.cards.nodes import SPOINT, EPOINT
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.bdf.bdf import (
@@ -63,7 +63,8 @@ if TYPE_CHECKING:  # pragma: no cover
         DELAY, DPHASE, FREQ, FREQ1, FREQ2, FREQ3, FREQ4, FREQ5,
         TSTEP, TSTEP1, TSTEPNL, NLPARM, NLPCI, TF, ROTORG, ROTORD, TIC)
     from pyNastran.bdf.cards.loads.loads import (
-        LSEQ, SLOAD, DAREA, RFORCE, RFORCE1, SPCD, DEFORM, LOADCYN)
+        LSEQ, SLOAD, DAREA, RFORCE, RFORCE1, SPCD, DEFORM, 
+        LOADCYN, LOADCYH)
     from pyNastran.bdf.cards.loads.dloads import ACSRCE, DLOAD, TLOAD1, TLOAD2, RLOAD1, RLOAD2
     from pyNastran.bdf.cards.loads.static_loads import (LOAD, CLOAD, GRAV, ACCEL, ACCEL1, FORCE,
                                                         FORCE1, FORCE2, MOMENT, MOMENT1, MOMENT2,
@@ -100,6 +101,7 @@ if TYPE_CHECKING:  # pragma: no cover
         DVCREL1, DVCREL2,
         DVMREL1, DVMREL2,
         DVPREL1, DVPREL2,
+        DVTREL1,
         DVGRID, DSCREEN)
     from pyNastran.bdf.cards.optimization_nx import (
         GROUP, DMNCON, DMNCON,
@@ -132,8 +134,9 @@ if TYPE_CHECKING:  # pragma: no cover
                                                 DTABLE)
     from pyNastran.bdf.cards.contact import (
         BCRPARA, BCTADD, BCTSET, BSURF, BSURFS, BCPARA, BCTPARA, BCONP, BLSEG,
-        BFRIC, BCTPARM, BGADD, BGSET)
+        BFRIC, BCTPARM, BGADD, BGSET, BCBODY)
     from pyNastran.bdf.cards.parametric.geometry import PSET, PVAL, FEEDGE, FEFACE, GMCURV, GMSURF
+    from pyNastran.bdf.cards.elements.acoustic import PACABS
 
 class AddMethods:
     """defines methods to add card objects to the BDF"""
@@ -227,7 +230,7 @@ class AddMethods:
                     model_mdlprm_dict[key] = value
         #model._type_to_id_map[param.type].append(key)
 
-    def _add_node_object(self, node: Union[GRID], allow_overwrites: bool=False) -> None:
+    def _add_node_object(self, node: GRID, allow_overwrites: bool=False) -> None:
         """adds a GRID card"""
         key = node.nid
         model = self.model
@@ -1325,7 +1328,7 @@ class AddMethods:
         self.model.flfacts[key] = flfact  # set id...
         self.model._type_to_id_map[flfact.type].append(key)
 
-    def _add_dconstr_object(self, dconstr: [DCONSTR, DCONADD]) -> None:
+    def _add_dconstr_object(self, dconstr: Union[DCONSTR, DCONADD]) -> None:
         """adds a DCONSTR object"""
         #key = (dconstr.oid, dconstr.rid)
         key = dconstr.oid
@@ -1442,7 +1445,7 @@ class AddMethods:
 
     #-----------------------------------------------------------
     # nx optimization
-    def _add_dvtrel_object(self, dvtrel: Union[DVTREL1]) -> None:
+    def _add_dvtrel_object(self, dvtrel: DVTREL1) -> None: # DVTREL2
         """adds a DVTREL1/DVTREL2 object"""
         key = dvtrel.dvtrel_id
         assert key not in self.model.dvtrels, 'DVTRELx=%s old\n%snew=\n%s' % (

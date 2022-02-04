@@ -9,7 +9,7 @@ defines:
 """
 # pylint: disable=R0904,R0902,E1101,E1103,C0111,C0302,C0103,W0101
 from __future__ import annotations
-from typing import Tuple, TYPE_CHECKING
+from typing import Tuple, Optional, Any, TYPE_CHECKING
 
 import numpy as np
 from numpy.linalg import norm
@@ -1321,10 +1321,11 @@ class CBEAM3(LineElement):  # was CBAR
         return volume
 
     def Nsm(self):
-        if isinstance(self.pid_ref, integer_types):
-            msg = 'Element eid=%i has not been cross referenced.\n%s' % (self.eid, str(self))
+        pid_ref = self.pid_ref
+        if pid_ref is None:
+            msg = f'Element eid={self.eid} has not been cross referenced.\n{self}'
             raise RuntimeError(msg)
-        nsm = self.pid_ref.Nsm()
+        nsm = pid_ref.Nsm()
         assert isinstance(nsm, float), nsm
 
         xyza = self.ga_ref.get_position() + self.wa
@@ -1333,7 +1334,7 @@ class CBEAM3(LineElement):  # was CBAR
             xa, ya, za = xyza
             xb, yb, zb = xyzb
             xc, yc, zc = self.gc_ref.get_position() + self.wc
-            nsma, nsmb, nsmc = self.pid_ref.nsm
+            nsma, nsmb, nsmc = pid_ref.nsm
             L = self.Length()
             nsm = self._integrate(
                 np.array([nsma * xa, nsmb * xb, nsmc * xc]) / L,
@@ -1341,6 +1342,8 @@ class CBEAM3(LineElement):  # was CBAR
                 np.array([nsma * za, nsmb * zb, nsmc * zc]) / L,
             )
         else:
+            L = self.Length()
+            nsma, nsmb = pid_ref.nsm
             nsm = np.linalg.norm(xyzb*nsmb - xyza*nsmb) / L
         assert isinstance(nsm, float), nsm
         return nsm

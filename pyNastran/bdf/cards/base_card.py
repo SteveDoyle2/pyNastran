@@ -27,7 +27,8 @@ if TYPE_CHECKING:  # pragma: no cover
 #from abc import ABC, abstractmethod
 
 
-def write_card(comment: str, card: List[Optional[int, float, str]],
+def write_card(comment: str,
+               card: List[Union[int, float, str, None]],
                size: int, is_double: bool) -> str:
     if size == 8:
         try:

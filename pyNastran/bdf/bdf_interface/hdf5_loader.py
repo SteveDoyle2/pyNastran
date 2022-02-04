@@ -1,7 +1,7 @@
 """Defines various helper functions for loading a HDF5 BDF file"""
 from __future__ import annotations
 from itertools import count
-from typing import TYPE_CHECKING
+from typing import List, Any, TYPE_CHECKING
 import numpy as np
 import h5py
 
