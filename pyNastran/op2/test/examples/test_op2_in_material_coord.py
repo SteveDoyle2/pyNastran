@@ -8,10 +8,12 @@ import pyNastran
 from pyNastran.utils import print_bad_path
 from pyNastran.bdf.bdf import BDF
 from pyNastran.op2.op2 import OP2
+from pyNastran.op2.test.test_op2 import IS_PANDAS
 from pyNastran.op2.data_in_material_coord import (
     data_in_material_coord,
     get_eids_from_op2_vector, force_vectors, stress_vectors,
     strain_vectors, get_eid_to_theta_rad, get_eid_to_theta_rad2)
+
 PKG_PATH = pyNastran.__path__[0]
 TEST_PATH = os.path.join(PKG_PATH, 'op2', 'test', 'examples', 'coord_transform')
 
@@ -78,10 +80,11 @@ class TestMaterialCoordReal(unittest.TestCase):
         op2_new = data_in_material_coord(bdf, op2)
         op2_new.write_f06(f06_filename)
 
-        op2_new.build_dataframe()
+        if IS_PANDAS:
+            op2_new.build_dataframe()
         ctria6_strain = op2_new.ctria6_strain[1]
         cols = ['ElementID', 'NodeID', 'exx', 'eyy', 'exy']
-        if hasattr(ctria6_strain, 'dataframe'):
+        if IS_PANDAS:
             df = ctria6_strain.dataframe.reset_index()[cols]
             #print(df.to_string(float_format='%e'))
         x = 1

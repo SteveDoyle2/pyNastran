@@ -221,6 +221,7 @@ def data_in_material_coord(bdf: BDF, op2: OP2,
         op2_new = op2
     else:
         op2_new = copy.deepcopy(op2)
+        op2_new.log = log
 
     for vec_name in force_vectors:
         op2_vectors = getattr(op2, vec_name)
