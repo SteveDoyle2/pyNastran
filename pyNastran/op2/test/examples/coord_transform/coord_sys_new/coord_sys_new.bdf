@@ -1,0 +1,104 @@
+$pyNastran: version=msc
+$pyNastran: punch=False
+$pyNastran: encoding=utf-8
+$pyNastran: nnodes=25
+$pyNastran: nelements=8
+$EXECUTIVE CONTROL DECK
+$ MSC.Nastran input file created on February  01, 2022 at 11:13:42 by
+$ Patran 2020
+$ Direct Text Input for Nastran System Cell Section
+$ Direct Text Input for File Management Section
+$ Direct Text Input for Executive Control
+$ Linear Static Analysis, Database
+SOL 101
+CEND
+$CASE CONTROL DECK
+ECHO = NONE
+TITLE = MSC.Nastran job created on 27-Jan-22 at 16:24:59
+SUBCASE 1
+    DISPLACEMENT(SORT1,REAL) = ALL
+    LOAD = 2
+    SPC = 2
+    SPCFORCES(SORT1,REAL) = ALL
+    STRAIN(SORT1,REAL,VONMISES,STRCUR,BILIN) = ALL
+    STRESS(SORT1,REAL,VONMISES,BILIN) = ALL
+    SUBTITLE = Default
+BEGIN BULK
+$PARAMS
+PARAM       OMID     YES
+PARAM       POST      -2
+PARAM    POSTEXT     YES
+PARAM   PRTMAXIM     YES
+$ Direct Text Input for Bulk Data
+MDLPRM      HDF5       0
+$NODES
+$ Nodes of the Entire Model
+GRID           1              0.      0.      0.
+GRID           2              5.    1.25      0.
+GRID           3             10.     2.5      0.
+GRID           4             15.    3.75      0.
+GRID           5             20.      5.      0.
+GRID           6              0.      5.      0.
+GRID           7              5.    6.25      0.
+GRID           8             10.     7.5      0.
+GRID           9             15.    8.75      0.
+GRID          10             20.     10.      0.
+GRID          11              0.     10.      0.
+GRID          12              5.   11.25      0.
+GRID          13             10.    12.5      0.
+GRID          14             15.   13.75      0.
+GRID          15             20.     15.      0.
+GRID          16              0.     15.      0.
+GRID          17              5.   16.25      0.
+GRID          18             10.    17.5      0.
+GRID          19             15.   18.75      0.
+GRID          20             20.     20.      0.
+GRID          21              0.     20.      0.
+GRID          22              5.   21.25      0.
+GRID          23             10.    22.5      0.
+GRID          24             15.   23.75      0.
+GRID          25             20.     25.      0.
+$ELEMENTS
+$ Pset: "mat_prop" will be imported as: "pshell.1"
+CTRIA6         1       1       1       3      11       2       7       6
+               0
+CTRIA6         2       1      13      11       3      12       7       8
+               0
+CTRIA6         3       1       3       5      13       4       9       8
+               0
+CTRIA6         4       1      15      13       5      14       9      10
+               0
+CTRIA6         5       1      11      13      21      12      17      16
+               0
+CTRIA6         6       1      23      21      13      22      17      18
+               0
+CTRIA6         7       1      13      15      23      14      19      18
+               0
+CTRIA6         8       1      25      23      15      24      19      20
+               0
+$PROPERTIES
+$ Elements and Element Properties for region : mat_prop
+PSHELL         1       1     10.       1               1
+$MATERIALS
+$ Referenced Material Records
+$ Material Record : Aluminium
+$ Description of Material : Date: 27-Jan-22           Time: 11:34:42
+MAT1           1  70000.             .33  2.7+12  .00024
+$LOADS
+LOAD           2      1.      1.       1
+$ Nodal Forces of Load Set : F_50
+FORCE          1      21             50.      0.      1.      0.
+FORCE          1      25             50.      0.      1.      0.
+$SPCs
+$ Loads for Load Case : Default
+SPCADD         2       1       3       4
+$ Displacement Constraints of Load Set : z_constraint
+SPC1           1     345       1       2       3       4       5       6
+               7       8       9      10      11      12      13      14
+              15      16      17      18      19      20      21      22
+              23      24      25
+$ Displacement Constraints of Load Set : x_constraint
+SPC1           3      16       1
+$ Displacement Constraints of Load Set : y_constraint
+SPC1           4       2       1       5
+ENDDATA

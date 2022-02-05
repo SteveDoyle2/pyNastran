@@ -10,7 +10,8 @@ from pyNastran.op2.data_in_material_coord import (
     data_in_material_coord,
     get_eids_from_op2_vector, force_vectors, stress_vectors,
     strain_vectors)
-pkg_path = pyNastran.__path__[0]
+PKG_PATH = pyNastran.__path__[0]
+TEST_PATH = os.path.join(PKG_PATH, 'op2', 'test', 'examples', 'coord_transform')
 
 
 CASES = [
@@ -34,10 +35,12 @@ class TestMaterialCoordComplex(unittest.TestCase):
         log = get_logger(level='warning')
         for folder, prefix, freqs in CASES:
             bdf = BDF(debug=False, log=log)
-            basepath = os.path.join(pkg_path, 'op2', 'test', 'examples', folder)
-            bdf.read_bdf(os.path.join(basepath, prefix + '.bdf'))
+            basepath = os.path.join(TEST_PATH, folder)
+            bdf_filename = os.path.join(basepath, f'{prefix}.bdf')
+            op2_filename = os.path.join(basepath, f'{prefix}.op2')
+            bdf.read_bdf(bdf_filename)
             op2 = read_op2(
-                os.path.join(basepath, prefix + '.op2'),
+                op2_filename,
                 debug=False, log=log,
                 exclude_results=['stress', 'strain'],
             )
@@ -70,10 +73,12 @@ class TestMaterialCoordComplex(unittest.TestCase):
         log = get_logger(level='warning')
         for folder, prefix, freqs in CASES:
             bdf = BDF(debug=False, log=log)
-            basepath = os.path.join(pkg_path, 'op2', 'test', 'examples', folder)
-            bdf.read_bdf(os.path.join(basepath, prefix + '.bdf'))
+            basepath = os.path.join(TEST_PATH, folder)
+            bdf_filename = os.path.join(basepath, f'{prefix}.bdf')
+            op2_filename = os.path.join(basepath, f'{prefix}.op2')
+            bdf.read_bdf(bdf_filename)
             op2 = read_op2(
-                os.path.join(basepath, prefix + '.op2'),
+                op2_filename,
                 debug=False, log=log,
                 exclude_results=['element_forces', 'strain'],
             )
@@ -110,10 +115,12 @@ class TestMaterialCoordComplex(unittest.TestCase):
         log = get_logger(level='warning')
         for folder, prefix, freqs in CASES:
             bdf = BDF(debug=False, log=log)
-            basepath = os.path.join(pkg_path, 'op2', 'test', 'examples', folder)
-            bdf.read_bdf(os.path.join(basepath, prefix + '.bdf'))
+            basepath = os.path.join(TEST_PATH, folder)
+            bdf_filename = os.path.join(basepath, f'{prefix}.bdf')
+            op2_filename = os.path.join(basepath, f'{prefix}.op2')
+            bdf.read_bdf(bdf_filename)
             op2 = read_op2(
-                os.path.join(basepath, prefix + '.op2'),
+                op2_filename,
                 debug=False, log=log,
                 exclude_results=['element_forces', 'stress'],
             )

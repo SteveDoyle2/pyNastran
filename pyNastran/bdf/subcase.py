@@ -1329,7 +1329,7 @@ def _load_hdf5_object(key, keys, sub_group, encoding):
         for keyi, valuei in zip(keys2, values2):
             data.append((keyi, valuei))
         class_obj = cls(data)
-        assert options is None, options
+        #assert options is None, options
     else:
         class_obj = cls(key, value, options_str)
         options = options_str

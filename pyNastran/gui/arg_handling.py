@@ -22,7 +22,7 @@ FORMAT_TO_EXTENSION = {
     # an extension should not be added to this list if it is shared with another type
     'nastran' : ['.bdf', '.ecd', '.nas', '.op2', '.pch'],
     'h5nastran' : ['.h5'],
-    'nastranv' : ['.bdf', '.ecd', '.nas',],
+    #'nastranv' : ['.bdf', '.ecd', '.nas',],
 
     'stl' : ['.stl'],
     'cart3d' : ['.tri', '.triq'],

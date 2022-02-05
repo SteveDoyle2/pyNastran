@@ -28,7 +28,11 @@ from pyNastran.gui.formats import NastranIO
 from pyNastran.gui.gui_common import GuiCommon
 from pyNastran.gui.menus.download import DownloadWindow
 from pyNastran.gui.menus.about.about import AboutWindow
-
+try:
+    import pyNastran2
+    ISPY2 = True
+except ImportError:
+    ISPY2 = False
 # tcolorpick.png and tabout.png trefresh.png icons on LGPL license, see
 # http://openiconlibrary.sourceforge.net/gallery2/?./Icons/actions/color-picker-grey.png
 # http://openiconlibrary.sourceforge.net/gallery2/?./Icons/actions/help-hint.png
@@ -99,8 +103,11 @@ class MainWindow(GuiCommon, NastranIO):
         fmt_order = [
             # no results unless specified
             'nastran',  # results
-            'h5nastran',
-            'nastranv',
+        ]
+        if ISPY2:
+            fmt_order += ['h5nastran', 'nastranv',]
+
+        fmt_order += [
             'abaqus',
             'avus',
             'bedge', 'surf', 'ugrid', 'ugrid3d', # aflr

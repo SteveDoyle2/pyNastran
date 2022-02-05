@@ -726,6 +726,8 @@ class TestBDF(Tester):
         log = SimpleLogger(level='warning', encoding='utf-8')
         bdf_filename = os.path.join(MODEL_PATH, 'aero', 'aerobeam.bdf')
         fem1, fem2, diff_cards = self.run_bdf('', bdf_filename, log=log)
+        #fa2j_1, _rows, _cols = fem1.dmi['FA2J'].get_matrix()
+        #fa2j_2, _rows, _cols = fem2.dmi['FA2J'].get_matrix()
         diff_cards2 = list(set(diff_cards))
         diff_cards2.sort()
         assert len(diff_cards2) == 0, diff_cards2

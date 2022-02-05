@@ -13,7 +13,7 @@ from pyNastran.op2.data_in_material_coord import (
     get_eids_from_op2_vector, force_vectors, stress_vectors,
     strain_vectors, get_eid_to_theta_rad, get_eid_to_theta_rad2)
 PKG_PATH = pyNastran.__path__[0]
-TEST_PATH = os.path.join(PKG_PATH, 'op2', 'test', 'examples')
+TEST_PATH = os.path.join(PKG_PATH, 'op2', 'test', 'examples', 'coord_transform')
 
 
 CASES = [
@@ -30,9 +30,7 @@ class TestMaterialCoordReal(unittest.TestCase):
     def test_ctria6_mcid(self):
         log = get_logger(level='error')
         model = BDF(debug=False, log=log)
-        op2 = None
 
-        eid = 1
         pid = 10
         mid = 100
         E = 3.0e7
@@ -70,10 +68,10 @@ class TestMaterialCoordReal(unittest.TestCase):
         log = get_logger(level='error')
         bdf = BDF(debug=False, log=log)
         op2 = OP2(debug=False, log=log, mode='msc')
-        basepath = os.path.join(TEST_PATH, 'CoordSysTest_new')
-        bdf_filename = os.path.join(basepath, 'CoordSysTest_new.bdf')
-        op2_filename = os.path.join(basepath, 'CoordSysTest_new.op2')
-        f06_filename = os.path.join(basepath, 'CoordSysTest_new.test.f06')
+        basepath = os.path.join(TEST_PATH, 'coord_sys_new')
+        bdf_filename = os.path.join(basepath, 'coord_sys_new.bdf')
+        op2_filename = os.path.join(basepath, 'coord_sys_new.op2')
+        f06_filename = os.path.join(basepath, 'coord_sys_new.test.f06')
         bdf.read_bdf(bdf_filename)
         op2.read_op2(op2_filename)
         log.level = 'debug'
@@ -83,8 +81,9 @@ class TestMaterialCoordReal(unittest.TestCase):
         op2_new.build_dataframe()
         ctria6_strain = op2_new.ctria6_strain[1]
         cols = ['ElementID', 'NodeID', 'exx', 'eyy', 'exy']
-        df = ctria6_strain.dataframe.reset_index()[cols]
-        #print(df.to_string(float_format='%e'))
+        if hasattr(ctria6_strain, 'dataframe'):
+            df = ctria6_strain.dataframe.reset_index()[cols]
+            #print(df.to_string(float_format='%e'))
         x = 1
 
     def test_force(self):
@@ -185,7 +184,7 @@ class TestMaterialCoordReal(unittest.TestCase):
 def _check_theta(model: BDF, eid_to_theta_deg_expected: Dict[int, float]):
     model.cross_reference()
 
-    model.log.level = 'debug'
+    model.log.level = 'warning'
     eid_to_theta_rad1 = get_eid_to_theta_rad(model, debug=True)
     eid_to_theta_rad2 = get_eid_to_theta_rad2(model, debug=True)
     model.log.level = 'info'

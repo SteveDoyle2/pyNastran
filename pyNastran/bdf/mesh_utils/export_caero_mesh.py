@@ -113,8 +113,8 @@ def _write_subpanel_strips(bdf_file, model, caero_eid, points, elements):
     """writes the strips for the subpanels"""
     #bdf_file.write("$   CAEROID       ID       XLE      YLE      ZLE     CHORD      SPAN\n")
     bdf_file.write('$$\n$$ XYZ_LE is taken at the center of the leading edge; (p1+p4)/2\n$$\n')
-    bdf_file.write('$$ %8s %8s %9s %9s %9s %9s %9s %9s\n' % (
-        'CAEROID', 'EID', 'XLE', 'YLE', 'ZLE', 'CHORD', 'SPAN', 'XLE+C/4'))
+    bdf_file.write('$$ %8s %8s %9s %9s %9s %9s %9s %9s %9s\n' % (
+        'CAEROID', 'EID', 'XLE', 'YLE', 'ZLE', 'CHORD', 'SPAN', 'XLE+C/4', 'XLE+C/2'))
 
     for i in range(elements.shape[0]):
         # The point numbers here are consistent with the CAERO1
@@ -128,9 +128,10 @@ def _write_subpanel_strips(bdf_file, model, caero_eid, points, elements):
         dz = (p4 - p1)[2]
         span = math.sqrt(dy**2 + dz**2)
         chord = te[0] - le[0]
-        xqc = le + chord / 4.
-        bdf_file.write("$$ %8d %8d %9.4f %9.4f %9.4f %9.4f %9.4f %9.4f\n" % (
-            caero_eid, caero_eid+i, le[0], le[1], le[2], chord, span, xqc[0]))
+        xqc = le[0] + chord / 4.
+        xmid = le[0] + chord / 2.
+        bdf_file.write("$$ %8d %8d %9.4f %9.4f %9.4f %9.4f %9.4f %9.4f %9.4f\n" % (
+            caero_eid, caero_eid+i, le[0], le[1], le[2], chord, span, xqc, xmid))
 
 def _get_subpanel_property(model: BDF, caero_id: int, eid: int, pid_method: str='aesurf') -> int:
     """gets the property id for the subpanel"""

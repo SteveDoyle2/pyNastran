@@ -20,6 +20,7 @@ from pyNastran.bdf.bdf_interface.assign_type import (
     integer, integer_or_blank, double, string, string_or_blank,
     parse_components, interpret_value, integer_double_string_or_blank)
 if TYPE_CHECKING:  # pragma: no cover
+    from pyNastran.bdf.bdf_interface.bdf_card import BDFCard
     from pyNastran.bdf.bdf import BDF
 
 
@@ -1910,7 +1911,7 @@ class DMI(NastranMatrix):
                 #self.matrix_form, self.nrows, self.ncols))
         #return ifo
 
-    def _add_column(self, card, comment=''):
+    def _add_column(self, card: BDFCard, comment: str=''):
         """
         .. todo:: support comment
         """
@@ -1946,6 +1947,7 @@ class DMI(NastranMatrix):
                         i += 1
                         i1 += 1
                     else:
+                        assert real_value == 'THRU', real_value
                         real_value = self.Real[-1]
                         end_i = fields[i + 1]
                         for ii in range(i1, end_i + 1):
@@ -2012,7 +2014,7 @@ class DMI(NastranMatrix):
     @property
     def is_complex(self) -> bool:
         """real vs. complex attribute"""
-        if self.tin in [3, 4]:
+        if self.tin in {3, 4}:
             return True
         return False
 
@@ -2049,11 +2051,16 @@ class DMI(NastranMatrix):
             i = np.where(gcj == self.GCj)[0]
             gcis = self.GCi[i]
             reals = self.Real[i]
-            if reals.max() == 0. and reals.min() == 0.:
+
+            list_fields = ['DMI', self.name, gcj]
+            max_value = reals.max()
+            if max_value == reals.min():
+                #DMI     WKK     1       1       1.0     THRU    112
+                list_fields.extend([1, max_value, 'THRU', self.nrows])
+                msg += func(list_fields)
                 continue
 
             isort = np.argsort(gcis)
-            list_fields = ['DMI', self.name, gcj]
 
             # will always write the first one
             gci_last = -1
@@ -2078,8 +2085,8 @@ class DMI(NastranMatrix):
             isort = np.argsort(gcis)
             list_fields = ['DMI', self.name, gcj]
 
-            if reals.max() == 0. and reals.min() == 0. and complexs.max() == 0. and complexs.min() == 0.:
-                continue
+            #if reals.max() == 0. and reals.min() == 0. and complexs.max() == 0. and complexs.min() == 0.:
+                #continue
 
             # will always write the first one
             gci_last = -10
@@ -2105,7 +2112,9 @@ class DMI(NastranMatrix):
                 msg += func(list_fields)
         return msg
 
-    def get_matrix(self, is_sparse: bool=False, apply_symmetry: bool=True) -> Tuple[np.array, None, None]:
+    def get_matrix(self,
+                   is_sparse: bool=False,
+                   apply_symmetry: bool=True) -> Tuple[np.array, None, None]:
         """
         Builds the Matrix
 
