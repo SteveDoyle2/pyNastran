@@ -1,7 +1,7 @@
 $ID BAH WING
-$SOL 145
+SOL 145
 $TIME 100
-include 'alter_flutter.inc'
+$include 'alter_flutter.inc'
 CEND
 $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 $ CASE CONTROL SECTION

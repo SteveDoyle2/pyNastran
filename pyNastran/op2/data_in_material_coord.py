@@ -134,7 +134,7 @@ def check_theta(elem) -> float:
         raise ValueError('MCID is accepted by this function')
     return theta
 
-def angle2vec(v1, v2):
+def angle2vec(v1: np.ndarray, v2: np.ndarray) -> np.ndarray:
     """
     Using the definition of the dot product to get the angle
 
@@ -147,7 +147,7 @@ def angle2vec(v1, v2):
     return theta
 
 
-def calc_imat(normals, csysi):
+def calc_imat(normals: np.ndarray, csysi: np.ndarray) -> np.ndarray:
     """
     Calculates the i vector in the material coordinate system.
 
@@ -202,20 +202,20 @@ def data_in_material_coord(bdf: BDF, op2: OP2,
     """
     log = bdf.log
 
-    eid_to_theta_rad = get_eid_to_theta_rad(bdf, debug)
-    eid_to_theta_rad2 = get_eid_to_theta_rad2(bdf, debug)
-    assert len(eid_to_theta_rad) == len(eid_to_theta_rad2)
-    is_failed = False
-    for eid, theta1 in eid_to_theta_rad.items():
-        theta2 = eid_to_theta_rad2[eid]
-        theta1_deg = np.degrees(theta1)
-        theta2_deg = np.degrees(theta2)
-        if not np.allclose(theta1_deg, theta2_deg):
-            elem = bdf.elements[eid]
-            log.warning(f'eid={eid} {elem.type} theta/mcid={elem.theta_mcid} theta1={theta1_deg} theta2={theta2_deg}')
-            is_failed = True
-    if is_failed:
-        x = 1
+    #eid_to_theta_rad = get_eid_to_theta_rad(bdf, debug)
+    eid_to_theta_rad = get_eid_to_theta_rad2(bdf, debug)
+    #assert len(eid_to_theta_rad) == len(eid_to_theta_rad2)
+    #is_failed = False
+    #for eid, theta1 in eid_to_theta_rad.items():
+        #theta2 = eid_to_theta_rad2[eid]
+        #theta1_deg = np.degrees(theta1)
+        #theta2_deg = np.degrees(theta2)
+        #if not np.allclose(theta1_deg, theta2_deg):
+            #elem = bdf.elements[eid]
+            #log.warning(f'eid={eid} {elem.type} theta/mcid={elem.theta_mcid} theta1={theta1_deg} theta2={theta2_deg}')
+            #is_failed = True
+    #if is_failed:
+        #x = 1
 
     if in_place:
         op2_new = op2
@@ -297,8 +297,7 @@ def get_eid_to_theta_rad(bdf: BDF, debug: bool) -> Dict[int, float]:
         gamma_rad = angle2vec(g4 - g2, g1 - g2)
         alpha_rad = (beta_rad + gamma_rad) / 2.
         tmp = theta_rad[~mcid]
-        tmp[this_quad] -= beta_rad
-        tmp[this_quad] += alpha_rad
+        tmp[this_quad] += alpha_rad - beta_rad
         theta_rad[~mcid] = tmp
 
         # elems with MCID
@@ -325,8 +324,7 @@ def get_eid_to_theta_rad(bdf: BDF, debug: bool) -> Dict[int, float]:
         beta_rad = angle2vec(g3 - g1, g2 - g1)
         gamma_rad = angle2vec(g4 - g2, g1 - g2)
         alpha_rad = (beta_rad + gamma_rad) / 2.
-        tmp[this_quad] -= beta_rad
-        tmp[this_quad] += alpha_rad
+        tmp[this_quad] += alpha_rad - beta_rad
         theta_rad[mcid] = tmp
 
     ctria_types = ['CTRIA3', 'CTRIA6', 'CTRIAR']
@@ -375,8 +373,8 @@ def _get_tri_nodes(nids: np.ndarray,
     return g1, g2, g3
 
 def _get_quad_nodes(nids: np.ndarray,
-                xyz_cid0: np.ndarray,
-                   element_nodes: np.ndarray) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
+                    xyz_cid0: np.ndarray,
+                    element_nodes: np.ndarray) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
     inode = np.searchsorted(nids, element_nodes)
     g1 = xyz_cid0[inode[:, 0], :]
     g2 = xyz_cid0[inode[:, 1], :]
@@ -472,7 +470,7 @@ def get_eid_to_theta_rad2(model: BDF, debug: bool) -> Dict[int, float]:
         beta_rad = angle2vec(g3 - g1, g21)
         gamma_rad = angle2vec(g4 - g2, g12)
         alpha_rad = (beta_rad + gamma_rad) / 2.
-        theta_radi = -beta_rad + alpha_rad
+        theta_radi = alpha_rad - beta_rad
         for eid, theta in zip(eid_quad_theta, quad_theta_rad+theta_radi):
             eid_to_theta_rad[eid] = theta
 
@@ -499,7 +497,7 @@ def get_eid_to_theta_rad2(model: BDF, debug: bool) -> Dict[int, float]:
         beta_rad = angle2vec(g31, g21)
         gamma_rad = angle2vec(g42, g12)
         alpha_rad = (beta_rad + gamma_rad) / 2.
-        theta_radi += -beta_rad + alpha_rad
+        theta_radi += alpha_rad - beta_rad
         for eid, theta in zip(eid_quad_mcid, theta_radi):
             eid_to_theta_rad[eid] = theta
 
@@ -543,10 +541,10 @@ def _transform_shell_force(vec_name: str,
     vec_theta_rad = np.array([eid_to_theta_rad.get(eid, 0.0) for eid in vec_eids])
 
     if vec_eids.shape[0] == vector.data.shape[1] // 5:
-        log.debug(f'A: vec_eids.shape={vec_eids.shape} vector.data.shape={vector.data.shape}')
+        #log.debug(f'A: vec_eids.shape={vec_eids.shape} vector.data.shape={vector.data.shape}')
         steps = [5, 5, 5, 5, 5]
     else: # assuming  always that veceids.shape[0] == vector.data.shape[1]
-        log.debug(f'B: vec_eids.shape={vec_eids.shape} vector.data.shape={vector.data.shape}')
+        #log.debug(f'B: vec_eids.shape={vec_eids.shape} vector.data.shape={vector.data.shape}')
         steps = [1]
 
     for start, step in enumerate(steps):
