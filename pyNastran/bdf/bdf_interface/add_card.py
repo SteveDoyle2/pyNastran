@@ -2537,7 +2537,7 @@ class AddCards:
         return prop
 
     def add_pbeaml(self, pid: int, mid: int, beam_type: str,
-                   xxb, dims, so=None, nsm=None,
+                   xxb: List[float], dims: List[List[float]], so=None, nsm=None,
                    group: str='MSCBML0', comment: str='') -> PBEAML:
         """
         Creates a PBEAML card
@@ -2568,6 +2568,10 @@ class AddCards:
             a comment for the card
 
         """
+        if not isinstance(xxb, (list, tuple, np.ndarray)) and len(xxb) == 0:
+            msg = f'pid={pid:d} xxb={xxb!r} and should be a list of floats with at least 1 value'
+            raise TypeError(msg)
+
         prop = PBEAML(pid, mid, beam_type, xxb, dims,
                       group=group, so=so, nsm=nsm, comment=comment)
         self._add_methods._add_property_object(prop)

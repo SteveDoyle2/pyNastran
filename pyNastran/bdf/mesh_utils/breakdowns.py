@@ -17,9 +17,13 @@ defines:
        stop_if_no_mass=True, detailed=True)
 
 """
-from typing import Dict, Any
+from __future__ import annotations
+from typing import Dict, Any, TYPE_CHECKING
+if TYPE_CHECKING:
+    from pyNastran.bdf.bdf import BDF
 
-def get_length_breakdown(model, property_ids=None, stop_if_no_length=True):
+def get_length_breakdown(model: BDF, property_ids=None,
+                         stop_if_no_length: bool=True):
     """
     Gets a breakdown of the length by property region.
 
@@ -99,7 +103,8 @@ def get_length_breakdown(model, property_ids=None, stop_if_no_length=True):
             raise RuntimeError(msg)
     return pids_to_length
 
-def get_area_breakdown(model, property_ids=None,
+def get_area_breakdown(model: BDF,
+                       property_ids=None,
                        stop_if_no_area: bool=True,
                        sum_bar_area: bool=True) -> Dict[int, float]:
     """
@@ -189,7 +194,7 @@ def get_area_breakdown(model, property_ids=None,
             raise RuntimeError(msg)
     return pids_to_area
 
-def get_volume_breakdown(model, property_ids=None, stop_if_no_volume=True):
+def get_volume_breakdown(model: BDF, property_ids=None, stop_if_no_volume=True):
     """
     Gets a breakdown of the volume by property region.
 
@@ -306,7 +311,7 @@ def get_volume_breakdown(model, property_ids=None, stop_if_no_volume=True):
             raise RuntimeError(msg)
     return pids_to_volume
 
-def get_mass_breakdown(model, property_ids=None,
+def get_mass_breakdown(model: BDF, property_ids=None,
                        stop_if_no_mass: bool=True,
                        detailed: bool=False) -> Any:
     """

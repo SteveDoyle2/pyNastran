@@ -818,6 +818,45 @@ class TestBeams(unittest.TestCase):
         model.add_mat1(mid, E, G, nu, rho=1.)
         save_load_deck(model, run_mass_properties=False, run_test_bdf=False)
 
+    def test_pbeaml_single_station(self):
+        """tests a PBEAML with 1 station (based on a bad error message)"""
+        model = BDF(debug=False, log=None, mode='msc')
+        model.add_grid(1, [0., 0., 0.])
+        model.add_grid(2, [1., 0., 0.])
+
+        eid = 1
+        pid = 1
+        mid = 1
+        beam_type = 'ROD'
+        d = 20  # [mm]
+        dimensions = [d / 2]
+        with self.assertRaises(TypeError):
+            pbeaml = model.add_pbeaml(pid, mid, beam_type, xxb='', dims=dimensions)
+        with self.assertRaises(TypeError):
+            pbeaml = model.add_pbeaml(pid, mid, beam_type, xxb=[0.], dims=dimensions)
+
+        # corrected
+        pbeaml = model.add_pbeaml(pid, mid, beam_type, xxb=[0.], dims=[dimensions])
+        pbeaml.validate()
+
+        E = 3.0e7
+        G = None
+        nu = 0.3
+        rho = 0.333
+        model.add_mat1(mid, E, G, nu, rho=rho)
+
+        x = [0., 1., 0.]
+        g0 = None
+        cbeam = model.add_cbeam(eid, pid, [1, 2], x, g0, offt='GGG', bit=None,
+                                pa=0, pb=0, wa=None, wb=None, sa=0, sb=0, comment='')
+        model.cross_reference()
+
+        L = 1.
+        expected_area = np.pi * d ** 2 / 4.
+        expected_mass = rho * expected_area * L
+        assert np.allclose(pbeaml.Area(), expected_area)
+        assert np.allclose(cbeam.Mass(), expected_mass)
+
 
     def test_beam_mass_01(self):
         """tests a CBEAM/PBEAM and gets the mass_properties"""

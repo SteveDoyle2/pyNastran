@@ -1296,7 +1296,7 @@ class PBEAML(IntegratedLineProperty):
 
         nxxb = len(xxb)
         if nxxb == 0:
-            raise IndexError('pid={pid:d}; len(xxb)=0; at least 1 station must be defined')
+            raise IndexError(f'pid={pid:d}; len(xxb)=0; at least 1 station must be defined')
         if nsm is None:
             nsm = [0.] * nxxb
         elif not isinstance(nsm, (list, tuple, ndarray)):
@@ -1311,7 +1311,8 @@ class PBEAML(IntegratedLineProperty):
 
         for istation, xxbi, nsmi, dim in zip(count(), xxb, nsm, dims):
             if not isinstance(dim, (list, ndarray)):
-                msg = f'dims = List[dim]; dim=List[floats]; type(dim)={type(dim)}'
+                msg = f'Expected List[List[float]] for dims.  Did you forget [] around dims?\n'
+                msg += 'dims = List[dim]; dim=List[floats]; type(dim)={type(dim)}'
                 raise TypeError(msg)
             assert len(dim) == ndim, f'beam_type={beam_type!r} ndim={ndim} len(dim)={len(dim)} xxb={xxbi} dim={dim}'
 

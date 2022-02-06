@@ -1103,32 +1103,32 @@ class NLPARM(BaseCard):
         # PARAM,NLTOL,0, in which case the default is 1.
         ninc = integer_or_blank(card, 2, 'ninc')
 
-        dt = double_or_blank(card, 3, 'dt', 0.0)
-        kmethod = string_or_blank(card, 4, 'kmethod', 'AUTO')
-        kstep = integer_or_blank(card, 5, 'kstep', 5)
-        max_iter = integer_or_blank(card, 6, 'max_iter', 25)
-        conv = string_or_blank(card, 7, 'conv', 'PW')
-        int_out = string_or_blank(card, 8, 'intOut', 'NO')
+        dt = double_or_blank(card, 3, 'dt', default=0.0)
+        kmethod = string_or_blank(card, 4, 'kmethod', default='AUTO')
+        kstep = integer_or_blank(card, 5, 'kstep', default=5)
+        max_iter = integer_or_blank(card, 6, 'max_iter', default=25)
+        conv = string_or_blank(card, 7, 'conv', default='PW')
+        int_out = string_or_blank(card, 8, 'intOut', default='NO')
 
         # line 2
-        eps_u = double_or_blank(card, 9, 'eps_u', 0.01)
-        eps_p = double_or_blank(card, 10, 'eps_p', 0.01)
-        eps_w = double_or_blank(card, 11, 'eps_w', 0.01)
-        max_div = integer_or_blank(card, 12, 'max_div', 3)
+        eps_u = double_or_blank(card, 9, 'eps_u', default=0.01)
+        eps_p = double_or_blank(card, 10, 'eps_p', default=0.01)
+        eps_w = double_or_blank(card, 11, 'eps_w', default=0.01)
+        max_div = integer_or_blank(card, 12, 'max_div', default=3)
 
         if kmethod == 'PFNT':
-            max_qn = integer_or_blank(card, 13, 'max_qn', 0)
+            max_qn = integer_or_blank(card, 13, 'max_qn', default=0)
         else:
-            max_qn = integer_or_blank(card, 13, 'max_qn', max_iter)
+            max_qn = integer_or_blank(card, 13, 'max_qn', default=max_iter)
 
-        max_ls = integer_or_blank(card, 14, 'max_ls', 4)
-        fstress = double_or_blank(card, 15, 'fstress', 0.2)
-        ls_tol = double_or_blank(card, 16, 'ls_tol', 0.5)
+        max_ls = integer_or_blank(card, 14, 'max_ls', default=4)
+        fstress = double_or_blank(card, 15, 'fstress', default=0.2)
+        ls_tol = double_or_blank(card, 16, 'ls_tol', default=0.5)
 
         # line 3
-        max_bisect = integer_or_blank(card, 17, 'max_bisect', 5)
-        max_r = double_or_blank(card, 21, 'max_r', 20.)
-        rtol_b = double_or_blank(card, 23, 'rtol_b', 20.)
+        max_bisect = integer_or_blank(card, 17, 'max_bisect', default=5)
+        max_r = double_or_blank(card, 21, 'max_r', default=20.)
+        rtol_b = double_or_blank(card, 23, 'rtol_b', default=20.)
         assert len(card) <= 24, f'len(NLPARM card) = {len(card):d}\ncard={card}'
         return NLPARM(nlparm_id, ninc, dt, kmethod, kstep, max_iter, conv,
                       int_out, eps_u, eps_p, eps_w, max_div,
@@ -2255,7 +2255,10 @@ class TSTEPNL(BaseCard):
         assert self.dt > 0.0, self.get_stats()
         assert self.no >= 1, self.get_stats()
         assert self.method in self.allowed_methods, self.get_stats()
-        assert self.kstep is None or self.kstep >= 2, self.get_stats()
+        if self.method in {'FNT', 'PFNT'}:
+            assert self.kstep in {-1, None, 1}, self.get_stats()
+        else:
+            assert self.kstep is None or self.kstep >= 2, self.get_stats()
 
         assert self.min_iter is None or self.min_iter >= 0, self.get_stats()
         assert self.max_iter != 0, self.get_stats()
@@ -2302,14 +2305,28 @@ class TSTEPNL(BaseCard):
         no = integer_or_blank(card, 4, 'no', 1)
 
         #: .. note:: not listed in all QRGs
-        method = string_or_blank(card, 5, 'method', 'ADAPT')
+        method = string_or_blank(card, 5, 'method', default='ADAPT')
         if method == 'ADAPT':
-            kstep = integer_or_blank(card, 6, 'kStep', 2)
+            kstep = integer_or_blank(card, 6, 'kStep', default=2)
         elif method == 'ITER':
-            kstep = integer_or_blank(card, 6, 'kStep', 10)
-        elif method in ['AUTO', 'TSTEP', 'SEMI', 'FNT']:
+            kstep = integer_or_blank(card, 6, 'kStep', default=10)
+        elif method in {'AUTO', 'TSTEP', 'SEMI'}:
             kstep = None
             #kstep = blank(card, 6, 'kStep') #: .. todo:: not blank
+        elif method in {'PFNT', 'FNT'}:
+            #METHOD = 'PFNT': This is the Pure Full Newton iteration method.
+            #The PFNT method is the same as the FNT method except that the defaults
+            #for PFNT method are EPSU=-0.01, EPSW=-0.01, and MAXLS=0.
+            #
+            # For FNT and PFNT methods, whether the stiffness matrix will
+            # be updated between the convergence of a load increment and
+            # the start of the next load increment depends on the value of
+            # KSTEP. In this case, KSTEP = -1, BLANK, or 1. A user fatal
+            # error will be issued if other value is input.
+            # KSTEP=1      stiffness matrix will not be updated.
+            # KSTEP=BLANK: the program will decide whether to update depending element type.
+            # KSTEP=-1:    stiffness matrix will be forced to be updated
+            kstep = integer(card, 6, 'kstep')
         else:
             msg = 'invalid TSTEPNL Method.  method=%r; allowed_methods=[%s]' % (
                 method, ', '.join(cls.allowed_methods))
