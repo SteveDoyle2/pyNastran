@@ -173,15 +173,16 @@ def expand_tabs(line: str) -> str:
     return line
 
 def parse_executive_control_deck(
-        executive_control_lines: List[str]) -> Tuple[Optional[int], Optional[str], Optional[int]]:
+        executive_control_lines: List[str]) -> Tuple[Optional[int], Optional[str], Optional[int], str]:
     """Extracts the solution from the executive control deck"""
     sol = None
     method = None
     sol_iline = None
+    app = ''
     for (i, eline) in enumerate(executive_control_lines):
         uline = eline.strip().upper()  # uppercase line
         uline = uline.split('$')[0].expandtabs()
-        if uline[:4] in ['SOL ']:
+        if uline[:4] == 'SOL ':
             if ',' in uline:
                 sline = uline.split(',')  # SOL 600,method
                 sol_value = sline[0].strip()
@@ -203,7 +204,13 @@ def parse_executive_control_deck(
                 raise ValueError('cannot overwrite solution existing='
                                  f'|SOL {sol}| new={uline!r}')
             sol_iline = i
-    return sol, method, sol_iline
+        elif uline.startswith('APP '):
+            #print('uline = %r' % uline)
+            sline = uline.strip().split()
+            assert len(sline) == 2, sline
+            app = sline[1]
+            assert app in {'HEAT', 'DISP', 'COUPLED', 'DISPLACEMENT'}, f'uline={uline!r}'
+    return sol, method, sol_iline, app
 
 
 def _parse_pynastran_header(line: str) -> Tuple[Optional[str], Optional[str]]:

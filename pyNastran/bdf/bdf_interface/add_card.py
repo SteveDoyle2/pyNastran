@@ -3058,7 +3058,8 @@ class AddCards:
         self._add_methods._add_property_object(prop)
         return prop
 
-    def add_pcomp(self, pid, mids, thicknesses, thetas=None, souts=None,
+    def add_pcomp(self, pid: int, mids: List[int], thicknesses: List[float],
+                  thetas=None, souts=None,
                   nsm=0., sb=0., ft=None, tref=0., ge=0., lam=None,
                   z0=None, comment='') -> PCOMP:
         """
@@ -7981,7 +7982,7 @@ class AddCards:
         return load
 
     def add_qbdy2(self, sid, eid, qfluxs, comment='') -> QBDY2:
-        """Creates a QBDY1 card"""
+        """Creates a QBDY2 card"""
         load = QBDY2(sid, eid, qfluxs, comment=comment)
         self._add_methods._add_thermal_load_object(load)
         return load

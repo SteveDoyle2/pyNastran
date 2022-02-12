@@ -12,6 +12,16 @@ TEST_PATH = os.path.join(PKG_PATH, 'bdf', 'test')
 
 
 class CaseControlTest(unittest.TestCase):
+    def test_case_control_null_1(self):
+        model = BDF(debug=False)
+        model.create_subcases()
+    def test_case_control_null_2(self):
+        model = BDF(debug=False)
+        model.create_subcases(1)
+    def test_case_control_null_3(self):
+        model = BDF(debug=False)
+        model.create_subcases(subcase_ids=[1, 2])
+
     def test_case_control_01(self):
         lines = ['SPC=2',
                  'MPC =3',

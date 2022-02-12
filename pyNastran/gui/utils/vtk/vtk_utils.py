@@ -114,7 +114,10 @@ def numpy_to_vtk_points(nodes, points=None, dtype='<f', deep=1):
     assert isinstance(nodes, np.ndarray), type(nodes)
     if points is None:
         points = vtk.vtkPoints()
-        nnodes, ndim = nodes.shape
+        try:
+            nnodes, ndim = nodes.shape
+        except:
+            raise RuntimeError(nodes)
         assert ndim == 3, nodes.shape
         points.SetNumberOfPoints(nnodes)
 

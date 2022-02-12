@@ -12,15 +12,15 @@ from pyNastran.bdf.cards.coordinate_systems import CORD2R
 from pyNastran.bdf.cards.aero.zona import ZONA
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.bdf import (
-        # BDF, 
+        # BDF,
         CaseControlDeck,
         #params,
-        PARAM, MDLPRM, 
+        PARAM, MDLPRM,
         # grids/points
         POINT, SPOINT, EPOINT,
         GRDSET, SEQGP, GRIDB,
         # bar
-        BAROR, BEAMOR, 
+        BAROR, BEAMOR,
         # plot
         PLOTEL,
         # dynamic
@@ -43,9 +43,9 @@ if TYPE_CHECKING:  # pragma: no cover
         # loads
         TEMPD,
         # thermal
-        #CHBYDP, CHBDYE, CHBDYP, 
+        #CHBYDP, CHBDYE, CHBDYP,
         PHBDY,
-        CONV, PCONV, PCONVM, #CONVM, 
+        CONV, PCONV, PCONVM, #CONVM,
         RADCAV, RADMTX, VIEW, VIEW3D,
         RADBC, #TEMPBC,
         # aero
@@ -62,9 +62,9 @@ if TYPE_CHECKING:  # pragma: no cover
         # modal
         EIGRL, EIGR, EIGP, EIGC, EIGB, MODTRAK,
         # optimization
-        DESVAR, DLINK, TOPVAR, DVGRID, 
+        DESVAR, DLINK, TOPVAR, DVGRID,
         DEQATN, DDVAL, DSCREEN,
-        DTABLE, DRESP1, DRESP2, DRESP3, 
+        DTABLE, DRESP1, DRESP2, DRESP3,
         DVPREL1, DVCREL1, DVMREL1, DVTREL1,
         DVPREL2, DVCREL2, DVMREL2, DVTREL2,
         DCONADD, DCONSTR, DOPTPRM,
@@ -74,7 +74,7 @@ if TYPE_CHECKING:  # pragma: no cover
         BCTSET, BCTPARA, BGADD, BCTPARA, BCRPARA,
         # superelements
         SEBULK, SENQSET, SENQSET1, SEBNDRY, RELEASE, SELOC, SEMPLN, SETREE,
-        SELABEL, SECONCT, SEEXCLD, SEELT, SELOAD, CSUPER, CSUPEXT,   
+        SELABEL, SECONCT, SEEXCLD, SEELT, SELOAD, CSUPER, CSUPEXT,
     )
     #Coord = Union[CORD1R, CORD1C, CORD1S,
     #              CORD2R, CORD2C, CORD2S]
@@ -529,12 +529,12 @@ class BDFAttributes:
 
         # ----------------------------------------------------------------
         #: direct matrix input - DMIG
-        self.dmi = {}  # type: Dict[str, Any]
-        self.dmig = {}  # type: Dict[str, Any]
-        self.dmij = {}  # type: Dict[str, Any]
-        self.dmiji = {}  # type: Dict[str, Any]
-        self.dmik = {}  # type: Dict[str, Any]
-        self.dmiax = {}  # type: Dict[str, Any]
+        self.dmi = {}  # type: Dict[str, DMI]
+        self.dmig = {}  # type: Dict[str, DMIG]
+        self.dmij = {}  # type: Dict[str, DMIJ]
+        self.dmiji = {}  # type: Dict[str, DMIJI]
+        self.dmik = {}  # type: Dict[str, DMIK]
+        self.dmiax = {}  # type: Dict[str, DMIAX]
         self.dti = {}  # type: Dict[str, Any]
         self._dmig_temp = defaultdict(list)  # type: Dict[str, List[str]]
 

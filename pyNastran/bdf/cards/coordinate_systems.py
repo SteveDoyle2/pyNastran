@@ -249,13 +249,13 @@ class Coord(BaseCard):
         except AssertionError:
             msg = 'Invalid Vector Length\n'
             msg += "type = %s\n" % (self.type)
-            msg += "cid  = %s\n" % (self.Cid())
+            msg += "cid  = %s\n" % (self.cid)
             msg += "e1 = %s\n" % str(self.e1)
             msg += "e2 = %s\n" % str(self.e2)
             msg += "e3 = %s\n" % str(self.e3)
             raise RuntimeError(msg)
 
-        if self.Cid() == 0:
+        if self.cid == 0:
             self.origin = np.array([0., 0., 0.], dtype='float64')
             self.i = np.array([1., 0., 0.], dtype='float64')
             self.j = np.array([0., 1., 0.], dtype='float64')
@@ -285,6 +285,13 @@ class Coord(BaseCard):
             e1 = self.origin
             e2 = rid_ref.transform_node_to_global(self.e2)
             e3 = rid_ref.transform_node_to_global(self.e3)
+            #print(f'cid={self.cid} rid={rid}')
+            #print(f'  self.e1={self.e1}')
+            #print(f'  self.e2={self.e2}')
+            #print(f'  self.e3={self.e3}')
+            #print(f'  e1={e1}')
+            #print(f'  e2={e2}')
+            #print(f'  e3={e3}')
 
         try:
             # e_{13}
@@ -296,7 +303,7 @@ class Coord(BaseCard):
         except TypeError:
             msg = ''
             msg += "\ntype = %s\n" % (self.type)
-            msg += "\ncid  = %s\n" % (self.Cid())
+            msg += "\ncid  = %s\n" % (self.cid)
             msg += "e1 = %s\n" % str(e1)
             msg += "e2 = %s\n" % str(e2)
             msg += "e3 = %s\n" % str(e3)
@@ -307,7 +314,7 @@ class Coord(BaseCard):
             self.k = normalize(e12)
         except RuntimeError:
             print("---InvalidUnitVectorError---")
-            print("Cp  = %s" % (self.Cid()))
+            print("Cp  = %s" % (self.cid))
             print("e1  = %s" % (self.e1))
             print("e2  = %s" % (self.e2))
             print("e3  = %s" % (self.e3))
@@ -324,7 +331,7 @@ class Coord(BaseCard):
             self.j = normalize(np.cross(self.k, e13))
         except RuntimeError:
             print("---InvalidUnitVectorError---")
-            print("Cp  = %s" % (self.Cid()))
+            print("Cp  = %s" % (self.cid))
             print("e1  = %s" % (self.e1))
             print("e2  = %s" % (self.e2))
             print("e3  = %s" % (self.e3))
@@ -345,7 +352,7 @@ class Coord(BaseCard):
             self.i = np.cross(self.j, self.k)
         except RuntimeError:
             print("---InvalidUnitVectorError---")
-            print("Cp  = %s" % (self.Cid()))
+            print("Cp  = %s" % (self.cid))
             print("Rid = %s" % (self.Rid()))
             print("e1  = %s" % (self.e1))
             print("e2  = %s" % (self.e2))

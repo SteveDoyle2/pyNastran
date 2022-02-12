@@ -1059,7 +1059,7 @@ class CPLSTN3(CPLSTx3):
     def write_card(self, size: int=8, is_double: bool=False) -> str:
         nodes = self.node_ids
         data = [self.eid, self.Pid()] + nodes + [self.theta]
-        msg = ('CPLSTN3 %8i%8i%8i%8i%8i%8s\n' % tuple(data))
+        msg = ('CPLSTN3 %8d%8d%8d%8d%8d%8s\n' % tuple(data))
         return self.comment + msg
 
 #class CPLSTS3(CPLSTx3):
@@ -1068,7 +1068,7 @@ class CPLSTN3(CPLSTx3):
     #def write_card(self, size: int=8, is_double: bool=False) -> str:
         #nodes = self.node_ids
         #data = [self.eid, self.Pid()] + nodes + [self.theta]
-        #msg = ('CPLSTS3 %8i%8i%8i%8i%8i%8s\n' % tuple(data))
+        #msg = ('CPLSTS3 %8d%8d%8d%8d%8d%8s\n' % tuple(data))
         #return self.comment + msg
 
 class CTRIA6(TriShell):
@@ -2900,7 +2900,7 @@ class CQUAD4(QuadShell):
             if size == 8:
                 row2 = [print_field_8(field) for field in row2_data]
                 data = [self.eid, self.Pid()] + nodes + row2
-                msg = ('CQUAD4  %8i%8i%8i%8i%8i%8i%8s%8s\n'
+                msg = ('CQUAD4  %8d%8d%8d%8d%8d%8d%8s%8s\n'
                        '                %8s%8s%8s%8s%8s' % tuple(data))
                 return self.comment + msg.rstrip('\n ') + '\n'
             else:
@@ -3150,7 +3150,7 @@ class CPLSTS4(CPLSTx4):
         #: Element ID
         eid = integer(card, 1, 'eid')
         #: Property ID
-        pid = integer_or_blank(card, 2, 'pid', eid)
+        pid = integer_or_blank(card, 2, 'pid', default=eid)
 
         nids = [
             integer(card, 3, 'n1'),
@@ -3159,15 +3159,15 @@ class CPLSTS4(CPLSTx4):
             integer(card, 6, 'n4'),
         ]
         if len(card) > 6:
-            theta = double_or_blank(card, 7, 'theta', 0.0)
+            theta = double_or_blank(card, 7, 'theta', default=0.0)
             blank(card, 8, 'blank')
             blank(card, 9, 'blank')
 
-            tflag = integer_or_blank(card, 12, 'tflag', 0)
+            tflag = integer_or_blank(card, 12, 'tflag', default=0)
             T1 = double_or_blank(card, 13, 'T1')
             T2 = double_or_blank(card, 14, 'T2')
             T3 = double_or_blank(card, 15, 'T3')
-            T4 = double_or_blank(card, 16, 'T3')
+            T4 = double_or_blank(card, 16, 'T4')
             assert len(card) <= 17, f'len(CPLSTS4 card) = {len(card):d}\ncard={card}'
         else:
             theta = 0.0
@@ -3291,17 +3291,18 @@ class CPLSTS4(CPLSTx4):
         T3 = set_blank_if_default(self.T3, 1.0)
 
         nodes = self.node_ids
-        row2_data = [theta, '', tflag, T1, T2, T3, T4]
+        row2_data = [theta, tflag, T1, T2, T3, T4]
         row2 = [print_field_8(field) for field in row2_data]
         data = [self.eid, self.Pid()] + nodes + row2
-        msg = ('CPLSTS4 %8i%8i%8i%8i%8i%8s%8s\n'
-               '                %8s%8s%8s%8s\n' % tuple(data))
+        #                1  2  3  4  5  6
+        msg = ('CPLSTS4 %8d%8d%8d%8d%8d%8d%8s\n'
+               '                %8s%8s%8s%8s%8s\n' % tuple(data))
         return self.comment + msg.rstrip() + '\n'
 
     #def write_card(self, size: int=8, is_double: bool=False) -> str:
         #nodes = self.node_ids
         #data = [self.eid, self.Pid()] + nodes + [print_float_8(self.theta)]
-        #msg = ('CPLSTS4 %8i%8i%8i%8i%8i%8i%8s\n' % tuple(data))
+        #msg = ('CPLSTS4 %8d%8d%8d%8d%8d%8d%8s\n' % tuple(data))
         #return self.comment + msg
 
 
@@ -3311,7 +3312,7 @@ class CPLSTN4(CPLSTx4):
     def write_card(self, size: int=8, is_double: bool=False) -> str:
         nodes = self.node_ids
         data = [self.eid, self.Pid()] + nodes + [print_float_8(self.theta)]
-        msg = ('CPLSTN4 %8i%8i%8i%8i%8i%8i%8s\n' % tuple(data))
+        msg = ('CPLSTN4 %8d%8d%8d%8d%8d%8d%8s\n' % tuple(data))
         return self.comment + msg
 
 
@@ -4333,7 +4334,7 @@ class CPLSTS3(TriShell):
         row2_data = [theta, '', tflag, T1, T2, T3]
         row2 = [print_field_8(field) for field in row2_data]
         data = [self.eid, self.Pid()] + nodes + row2
-        msg = ('CPLSTS3 %8i%8i%8i%8i%8i%8s%8s\n'
+        msg = ('CPLSTS3 %8d%8d%8d%8d%8d%8s%8s\n'
                '                %8s%8s%8s%8s\n' % tuple(data))
         return self.comment + msg.rstrip() + '\n'
 
@@ -4571,11 +4572,11 @@ class CQUAD(QuadShell):
 
     def write_card(self, size: int=8, is_double: bool=False) -> str:
         nodes = self.node_ids
-        nodes2 = ['' if node is None else '%8i' % node for node in nodes[4:]]
+        nodes2 = ['' if node is None else '%8d' % node for node in nodes[4:]]
         theta_mcid = self.theta_mcid
 
         data = [self.eid, self.Pid()] + nodes[:4] + nodes2 + [theta_mcid]
-        msg = ('CQUAD   %8i%8i%8i%8i%8i%8i%8s%8s\n'  # 6 nodes
+        msg = ('CQUAD   %8d%8d%8d%8d%8d%8d%8s%8s\n'  # 6 nodes
                '        %8s%8s%8s%8s\n' % tuple(data))
         return self.comment + msg.rstrip() + '\n'
 

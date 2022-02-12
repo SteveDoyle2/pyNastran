@@ -15,7 +15,7 @@ from __future__ import annotations
 from itertools import count
 from typing import Tuple, TYPE_CHECKING
 import numpy as np
-from numpy import array, unique, argsort, allclose, ndarray
+from numpy import unique, allclose, ndarray
 
 from pyNastran.bdf.bdf_interface.utils import to_fields
 from pyNastran.bdf.bdf_interface.bdf_card import BDFCard
@@ -778,69 +778,16 @@ class PBEAM(IntegratedLineProperty):
         comment : str; default=''
             a comment for the card
         """
-        (pid, mid, unused_nsegs, unused_ccf, unused_x) = data[:5]
-
-        rows = data[5:]
-        if len(rows) != 12:
-            msg = 'PBEAM: len(rows)=%s expected=13\n' % len(rows)
-            for datai in data:
-                msg += '    %s\n' % str(datai)
-            raise SyntaxError(msg)
-        area = []
-        so = []
-        xxb = []
-        i1 = []
-        i2 = []
-        i12 = []
-        j = []
-        nsm = []
-        c1 = []
-        c2 = []
-        d1 = []
-        d2 = []
-        e1 = []
-        e2 = []
-        f1 = []
-        f2 = []
-        ## TODO: PBEAM:op2 handle repeated x/xb = 0.0, 1.0
-
-        iis = []
-        for i, pack in enumerate(rows[:-1]):
-            (soi, xxbi, areai, i1i, i2i, i12i, ji, nsmi, c1i, c2i,
-             d1i, d2i, e1i, e2i, f1i, f2i) = pack
-            if i > 0 and allclose(xxbi, 0.0):
-                #print('PBEAM - skipping i=%s x/xb=%s' % (i, xxbi))
-                continue
-            if i > 0 and i != 10 and allclose(xxbi, 1.0):
-                #print('PBEAM - skipping i=%s x/xb=%s' % (i, xxbi))
-                continue
-            area.append(areai)
-            xxb.append(xxbi)
-            iis.append(i)
-            so.append(soi)
-            i1.append(i1i)
-            i2.append(i2i)
-            i12.append(i12i)
-            j.append(ji)
-            nsm.append(nsmi)
-            c1.append(c1i)
-            c2.append(c2i)
-            d1.append(d1i)
-            d2.append(d2i)
-            e1.append(e1i)
-            e2.append(e2i)
-            f1.append(f1i)
-            f2.append(f2i)
-        #print('*i = %s' % iis)
-        #print('*xxb = %s' % xxb)
-        #print('*i1 = %s' % i1)
-
-        (k1, k2, s1, s2, nsia, nsib, cwa, unused_cwb,
-         m1a, m2a, m1b, m2b, n1a, n2a, n1b, n2b) = data[-1]
+        (pid, mid, xxb, so, area, i1, i2, i12, j, nsm,
+         c1, c2, d1, d2, e1, e2, f1, f2,
+         k1, k2, s1, s2,
+         nsia, nsib, cwa, cwb,
+         m1a, m2a, m1b, m2b,
+         n1a, n2a, n1b, n2b) = pbeam_op2_data_to_init(data)
         return PBEAM(pid, mid, xxb, so, area, i1, i2, i12, j, nsm,
                      c1, c2, d1, d2, e1, e2, f1, f2,
                      k1=k1, k2=k2, s1=s1, s2=s2,
-                     nsia=nsia, nsib=nsib, cwa=cwa, cwb=None,
+                     nsia=nsia, nsib=nsib, cwa=cwa, cwb=cwb,
                      m1a=m1a, m2a=m2a, m1b=m1b, m2b=m2b,
                      n1a=n1a, n2a=n2a, n1b=n1b, n2b=n2b,
                      comment=comment)
@@ -1074,6 +1021,75 @@ class PBEAM(IntegratedLineProperty):
     def write_card_16(self, is_double=False):
         card = self.raw_fields()
         return self.comment + print_card_16(card)
+
+def pbeam_op2_data_to_init(data):
+    (pid, mid, unused_nsegs, unused_ccf, unused_x) = data[:5]
+
+    rows = data[5:]
+    if len(rows) != 12:
+        msg = 'PBEAM: len(rows)=%s expected=13\n' % len(rows)
+        for datai in data:
+            msg += '    %s\n' % str(datai)
+        raise SyntaxError(msg)
+    area = []
+    so = []
+    xxb = []
+    i1 = []
+    i2 = []
+    i12 = []
+    j = []
+    nsm = []
+    c1 = []
+    c2 = []
+    d1 = []
+    d2 = []
+    e1 = []
+    e2 = []
+    f1 = []
+    f2 = []
+    ## TODO: PBEAM: op2 handle repeated x/xb = 0.0, 1.0
+
+    iis = []
+    for i, pack in enumerate(rows[:-1]):
+        (soi, xxbi, areai, i1i, i2i, i12i, ji, nsmi, c1i, c2i,
+         d1i, d2i, e1i, e2i, f1i, f2i) = pack
+        if i > 0 and allclose(xxbi, 0.0):
+            #print('PBEAM - skipping i=%s x/xb=%s' % (i, xxbi))
+            continue
+        if i > 0 and i != 10 and allclose(xxbi, 1.0):
+            #print('PBEAM - skipping i=%s x/xb=%s' % (i, xxbi))
+            continue
+        area.append(areai)
+        xxb.append(xxbi)
+        iis.append(i)
+        so.append(soi)
+        i1.append(i1i)
+        i2.append(i2i)
+        i12.append(i12i)
+        j.append(ji)
+        nsm.append(nsmi)
+        c1.append(c1i)
+        c2.append(c2i)
+        d1.append(d1i)
+        d2.append(d2i)
+        e1.append(e1i)
+        e2.append(e2i)
+        f1.append(f1i)
+        f2.append(f2i)
+    #print('*i = %s' % iis)
+    #print('*xxb = %s' % xxb)
+    #print('*i1 = %s' % i1)
+
+    (k1, k2, s1, s2, nsia, nsib, cwa, unused_cwb,
+     m1a, m2a, m1b, m2b, n1a, n2a, n1b, n2b) = data[-1]
+    cwb = None
+    out = (pid, mid, xxb, so, area, i1, i2, i12, j, nsm,
+           c1, c2, d1, d2, e1, e2, f1, f2,
+           k1, k2, s1, s2,
+           nsia, nsib, cwa, cwb,
+           m1a, m2a, m1b, m2b,
+           n1a, n2a, n1b, n2b)
+    return out
 
 def update_pbeam_negative_integer(pname_fid):
     """
@@ -1485,49 +1501,7 @@ class PBEAML(IntegratedLineProperty):
         TODO: this doesn't work right for the calculation of area
               the card is all messed up
         """
-        (pid, mid, group, beam_type, fvalues) = data
-        group = group.strip()
-        beam_type = beam_type.strip()
-        ndim = cls.valid_types[beam_type]
-        nfvalues = len(fvalues)
-        nsections = nfvalues // (3 + ndim)
-        sections = fvalues.reshape(nsections, ndim+3)
-        #print('sections = \n%s' % sections)
-
-        xxb = []
-        so = []
-        dims = []
-        nsm = []
-        # XXB, SO, NSM, and dimensions
-        isections = []
-        for i, section in enumerate(sections):
-            xxbi = section[1]
-            #print('PBEAML - i=%s x/xb=%s' % (i, xxbi))
-            if i > 0 and allclose(xxbi, 0.0):
-                #print('  PBEAML - skipping i=%s x/xb=%s' % (i, xxbi))
-                continue
-            if xxbi in xxb:
-                #print("  PBEAML - skipping i=%s x/xb=%s because it's a duplicate" % (i, xxbi))
-                continue
-            isections.append(i)
-
-            so_float = section[0]
-            if so_float == 0.:
-                so_string = 'YES'
-            elif so_float == 1.:
-                so_string = 'NO'
-            else:
-                msg = 'so_float=%r; expected 0.0 or 1.0; data=%s' % (so_float, data)
-                raise NotImplementedError(msg)
-
-            dim = list(section[2:-1])
-            nsmi = section[-1]
-            #print(dim, section)
-            xxb.append(xxbi)
-            so.append(so_string)
-            dims.append(dim)
-            nsm.append(nsmi)
-        #print('sections2 = \n%s' % sections[isections])
+        pid, mid, beam_type, xxb, dims, group, so, nsm = pbeaml_op2_data_to_init(data, cls.valid_types)
         return PBEAML(pid, mid, beam_type, xxb, dims, group=group,
                       so=so, nsm=nsm, comment=comment)
 
@@ -1699,6 +1673,52 @@ class PBEAML(IntegratedLineProperty):
             return self.comment + print_card_8(card)
         return self.comment + print_card_16(card)  #is this allowed???
 
+
+def pbeaml_op2_data_to_init(data, valid_types: Dict[str, int]):
+    (pid, mid, group, beam_type, fvalues) = data
+    group = group.strip()
+    beam_type = beam_type.strip()
+    ndim = valid_types[beam_type]
+    nfvalues = len(fvalues)
+    nsections = nfvalues // (3 + ndim)
+    sections = fvalues.reshape(nsections, ndim+3)
+    #print('sections = \n%s' % sections)
+
+    xxb = []
+    so = []
+    dims = []
+    nsm = []
+    # XXB, SO, NSM, and dimensions
+    isections = []
+    for i, section in enumerate(sections):
+        xxbi = section[1]
+        #print('PBEAML - i=%s x/xb=%s' % (i, xxbi))
+        if i > 0 and allclose(xxbi, 0.0):
+            #print('  PBEAML - skipping i=%s x/xb=%s' % (i, xxbi))
+            continue
+        if xxbi in xxb:
+            #print("  PBEAML - skipping i=%s x/xb=%s because it's a duplicate" % (i, xxbi))
+            continue
+        isections.append(i)
+
+        so_float = section[0]
+        if so_float == 0.:
+            so_string = 'YES'
+        elif so_float == 1.:
+            so_string = 'NO'
+        else:
+            msg = 'so_float=%r; expected 0.0 or 1.0; data=%s' % (so_float, data)
+            raise NotImplementedError(msg)
+
+        dim = list(section[2:-1])
+        nsmi = section[-1]
+        #print(dim, section)
+        xxb.append(xxbi)
+        so.append(so_string)
+        dims.append(dim)
+        nsm.append(nsmi)
+    #print('sections2 = \n%s' % sections[isections])
+    return pid, mid, beam_type, xxb, dims, group, so, nsm
 
 def _sort_pbeam(pid: int,
                 xxb, so, area, i1, i2, i12, j, nsm,

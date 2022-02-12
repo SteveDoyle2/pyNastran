@@ -552,7 +552,7 @@ class QBDY2(ThermalLoad):  # not tested
         qfluxs = []
         j = 1
         for i in range(3, len(card)):
-            q = double_or_blank(card, i, 'qFlux%i' % j)
+            q = double_or_blank(card, i, 'qFlux%d' % j)
             qfluxs.append(q)
             j += 1
 

@@ -1342,13 +1342,16 @@ class DMIAX(BaseCard):
         return list_fields
 
     def write_card(self, size: int=8, is_double: bool=False) -> str:
-        if self.tin in [1, 3]:
+        if self.tin in {1, 3} and size == 8:
             is_double = False
             msg = self.write_card_8()
+        elif self.tin in {1, 3} and size == 16:
+            is_double = False
+            msg = self.write_card_16()
         elif self.tin in [2, 4]:
             is_double = True
             size = 16
-            msg = self.write_card_16()
+            msg = self.write_card_double()
         else:
             raise RuntimeError('tin=%r must be 1, 2, 3, or 4' % self.tin)
         return msg
@@ -1360,6 +1363,10 @@ class DMIAX(BaseCard):
     def write_card_16(self):
         """writes the card in small large format"""
         return self._write_card(print_card_16)
+
+    def write_card_double(self):
+        """writes the card in small large format"""
+        return self._write_card(print_card_double)
 
     def _write_card(self, func):
         """writes the card"""

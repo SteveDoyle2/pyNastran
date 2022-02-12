@@ -220,7 +220,7 @@ def triple_n33_n33(A, T, tranpose=False, debug=True):
         assert np.all(np.allclose(C, D)), 'tranpose=%s' % tranpose
     return C
 
-def triple_n33_33(A, T, tranpose=False, debug=True):
+def triple_n33_33(A, T, tranpose: bool=False, debug: bool=True):
     """
     Calculates the matrix triple product  for a series of::
 

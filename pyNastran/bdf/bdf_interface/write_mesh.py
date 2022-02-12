@@ -124,8 +124,8 @@ class WriteMesh(BDFAttributes):
         else:
             is_long_ids, size = self._get_long_ids(size)
 
-        out_filename = _output_helper(out_filename,
-                                      interspersed, size, is_double)
+        out_filename, size = _output_helper(
+            out_filename, interspersed, size, is_double, self.log)
         encoding = self.get_encoding(encoding)
         #assert encoding.lower() in ['ascii', 'latin1', 'utf8'], encoding
 
@@ -1252,7 +1252,7 @@ def _fix_sizes(size: int,
     return size, nodes_size, elements_size, loads_size
 
 def _output_helper(out_filename: Optional[str], interspersed: bool,
-                   size: int, is_double: bool) -> str:
+                   size: int, is_double: bool, log: SimpleLogger) -> Tuple[str, int]:
     """Performs type checking on the write_bdf inputs"""
     if out_filename is None:
         from pyNastran.utils.gui_io import save_file_dialog
@@ -1271,17 +1271,19 @@ def _output_helper(out_filename: Optional[str], interspersed: bool,
         msg = f'out_filename={out_filename!r} must be a string; type={type(out_filename)}'
         raise TypeError(msg)
 
+    assert size in {8, 16}, f'size={size!r}'
+    assert is_double in {True, False}, f'is_double={is_double!r}'
     if size == 8:
-        assert is_double is False, f'is_double={is_double!r}'
-    elif size == 16:
-        assert is_double in {True, False}, f'is_double={is_double!r}'
+        if is_double is True:
+            log.warning('is_double=True...changing size from 8 to 16...')
+            size = 16
     else:
-        assert size in {8, 16}, size
+        assert is_double in {True, False}, f'is_double={is_double!r}'
 
     assert isinstance(interspersed, bool)
     #fname = print_filename(out_filename)
     #self.log.debug("***writing %s" % fname)
-    return out_filename
+    return out_filename, size
 
 def get_optimization_include(model: BDF) -> Tuple[List[int], List[int]]:
     """gets the properties and materials refereced by DVPRELx/DVMRELx"""

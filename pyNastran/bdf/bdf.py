@@ -17,8 +17,9 @@ import sys
 from copy import deepcopy
 from io import StringIO, IOBase
 from pathlib import PurePath
-import traceback
+from functools import partial
 from collections import defaultdict
+import traceback
 
 from typing import (
     List, Dict, Set, Tuple, Sequence, Optional, Union, Any, cast, TYPE_CHECKING)
@@ -271,7 +272,6 @@ MISSING_CARDS = {
 
     ## Non Linear (SOL 400)
     'BCBODY', 'BSURF', 'BCTABLE', 'BCPARA', 'PSLDN1',
-
 
     ## Implicit Nonlinear (SOL 600) - marc
     'PARAMARC', 'MARCIN', 'MARCOUT',
@@ -645,7 +645,8 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             'PBEAML', 'PBMSECT', # not fully supported
             'PBEAM3',  # v1.3
 
-            'PSHELL', 'PCOMP', 'PCOMPG', 'PSHEAR', 'PTRSHL', 'PQUAD1',
+            'PSHELL', 'PCOMP', 'PCOMPG', 'PSHEAR',
+            'PTRSHL', 'PQUAD1',
             'PSOLID', 'PLSOLID', 'PVISC', 'PRAC2D', 'PRAC3D',
             'PIHEX', 'PCOMPS', 'PCOMPLS',
             # PQUAD4
@@ -880,7 +881,8 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             'CONVM',
             ## ???
             #'PANEL', 'SWLDPRM',
-            #'CWELD', 'PWELD', 'PWSEAM', 'CWSEAM', 'CSEAM', 'PSEAM', 'DVSHAP', 'BNDGRID',
+            #'CWELD', 'PWELD',
+            # 'PWSEAM', 'CWSEAM', 'CSEAM', 'PSEAM', 'DVSHAP', 'BNDGRID',
             #'CYSYM', 'CYJOIN', 'MODTRAK', 'DSCONS', 'DVAR', 'DVSET', 'DYNRED',
             #'BNDFIX', 'BNDFIX1',
             #'AEFORCE', 'UXVEC', 'GUST2',
@@ -1321,7 +1323,8 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
         self.executive_control_lines = executive_control_lines
         self.case_control_lines = case_control_lines
 
-        sol, method, sol_iline = parse_executive_control_deck(executive_control_lines)
+        sol, method, sol_iline, app = parse_executive_control_deck(executive_control_lines)
+        self.app = app
         self.update_solution(sol, method, sol_iline)
 
         self.case_control_deck = CaseControlDeck(case_control_lines, self.log)
@@ -4457,7 +4460,8 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
         self.executive_control_lines = executive_control_lines
         self.case_control_lines = case_control_lines
 
-        sol, method, sol_iline = parse_executive_control_deck(executive_control_lines)
+        sol, method, sol_iline, app = parse_executive_control_deck(executive_control_lines)
+        self.app = app
         self.update_solution(sol, method, sol_iline)
 
         #self._is_cards_dict = True
@@ -4986,63 +4990,6 @@ def _set_nodes(model: BDF,
 def _bool(value):
     """casts a lower string to a booean"""
     return True if value == 'true' else False
-
-#def _get_coords_to_update(coords: Dict[int, Union[CORD1R, CORD1S, CORD1C,
-                                                  #CORD2R, CORD2S, CORD2C]],
-                          #cps_to_check: List[int],
-                          #cps_checked: List[int],
-                          #nids_checked: List[int]) -> List[int]:
-    #"""helper method for ``transform_xyzcp_to_xyz_cid``"""
-    #cord1s_to_update_temp = []
-    #cord2s_to_update = []
-    #for cp in sorted(cps_to_check):
-        #coord = coords[cp]
-        #if coord.type in ['CORD2R', 'CORD2C', 'CORD2S']:
-            #if coord.rid in cps_checked:
-                #cord2s_to_update.append(cp)
-        #elif coord.type in ['CORD1R', 'CORD1C', 'CORD1S']:
-            #cord1s_to_update_temp.append(cp)
-        #else:
-            #raise NotImplementedError(coord.rstrip())
-
-    #cord1s_to_update = set()
-    #if cord1s_to_update_temp:
-        #if len(nids_checked) == 0:
-            #raise RuntimeError('len(nids_checked)=0...this should not happen.')
-        #elif len(nids_checked) == 1:
-            #pass
-        #else:
-            #nids_checked = [np.hstack(nids_checked)]
-
-        #nids_checkedi = nids_checked[0]
-        #if len(nids_checkedi) == 0:
-            ##print("no cord1s to check...")
-            #cord1s_to_update = []
-        #else:
-            ##print('nids_checked = ', nids_checkedi)
-            #for cp in cord1s_to_update_temp:
-                #coord = coords[cp]
-                #nids = coord.node_ids
-                ##print('cp=%s nids=%s' % (cp, nids))
-                #for nid in nids:
-                    #if nid not in nids_checkedi:
-                        ##print('  nid=%s break...' % nid)
-                        #break
-                #else:
-                    ##print('  passed')
-                    ## all nids passed
-                    #cord1s_to_update.add(cp)
-            #cord1s_to_update = list(cord1s_to_update)
-            #cord1s_to_update.sort()
-
-    #ncoords = len(cord1s_to_update) + len(cord2s_to_update)
-    ##if ncoords == 0:
-        ##msg = 'CPs not handled=%s cord1s_to_update=%s cord2s_to_update=%s\n' % (
-            ##cps_to_check, cord1s_to_update, cord2s_to_update)
-        ##for cp in (cord1s_to_update + cord2s_to_update):
-            ##msg += str(cp)
-        ##raise RuntimeError(msg)
-    #return ncoords, cord1s_to_update, cord2s_to_update, nids_checked
 
 
 def _get_coords_to_update(coords: Dict[int, Union[CORD1R, CORD1C, CORD1S,
