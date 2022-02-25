@@ -39,10 +39,11 @@ class GEOM1:
             (1701, 17, 6): ['CORD1C', self._read_cord1c],    # record 1
             (1801, 18, 5): ['CORD1R', self._read_cord1r],    # record 2
             (1901, 19, 7): ['CORD1S', self._read_cord1s],    # record 3
-            (2001, 20, 9): ['CORD2C', self._read_cord2c],    # record 4
 
+            (2001, 20, 9): ['CORD2C', self._read_cord2c],    # record 4
             (2101, 21, 8): ['CORD2R', self._read_cord2r],    # record 5
             (2201, 22, 10): ['CORD2S', self._read_cord2s],   # record 6
+
             (14301,143,651): ['CORD3G', self._read_cord3g],  # record 7
 
             (4501,  45,  1): ['GRID',   self._read_grid],    # record 17

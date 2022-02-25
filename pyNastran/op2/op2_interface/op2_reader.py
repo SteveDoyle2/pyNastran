@@ -203,6 +203,8 @@ class OP2Reader:
             # coordinate system transformation matrices
             b'CSTM' : self.read_cstm,
             b'CSTMS' : self.read_cstm,
+            #b'TRMBD': self.read_trmbd,
+            #b'TRMBU': self.read_trmbu,
 
             b'R1TABRG': self.read_r1tabrg,
             # Qualifier info table???
@@ -1323,7 +1325,9 @@ class OP2Reader:
             itable -= 1
         markers = self.get_nmarkers(1, rewind=False)
 
-        if not is_geometry: # or self.read_mode == 1 or b'GEOM1' in op2.table_names:
+        if not self.read_mode == 1: # or b'GEOM1' in op2.table_names:
+
+        #if not is_geometry: # or self.read_mode == 1 or b'GEOM1' in op2.table_names:
             return
         nblocks = len(blocks)
         if nblocks == 1:
@@ -1408,6 +1412,12 @@ class OP2Reader:
             ndoubles = len(doubles)
             ncoords = nints // 4
             ints = ints.reshape(ncoords, 4)
+            #doubles2 = doubles.reshape(ncoords, 12)
+
+            # origins = doubles[:, 3]
+            # zaxes = origins + doubles[:, 9:12]
+            # xzplanes = origins + doubles[:, 6:9]
+
             #print('ints =', ints.tolist())
             if ncoords == ndoubles // 12:
                 values = doubles.reshape(ncoords, 12)
@@ -1415,6 +1425,11 @@ class OP2Reader:
             else:
                 values = np.frombuffer(blocks[1], dtype='float32').reshape(ncoords // 4, 12)
                 #print('floats =', floats.tolist())
+
+            self.op2.cstm.data = np.concatenate([ints, values], axis=1)
+            if not is_geometry:
+                return
+
             for intsi, valuesi in zip(ints, values):
                 cid, cid_type, unused_int_index, unused_double_index = intsi
                 assert len(valuesi) == 12, valuesi
@@ -1491,6 +1506,416 @@ class OP2Reader:
             #print('coord_type = ', coord_type)
             #print('myints =', ints)
             #print('floats =', floats)
+
+    def read_trmbd(self):
+        """
+        Reads the TRMBD table, which defines the transform from material (deformed) to basic.
+        """
+        op2 = self.op2
+        is_geometry = op2.is_geometry
+        unused_table_name = self._read_table_name(rewind=False)
+        self.read_markers([-1])
+        data = self._read_record()
+        #print(self.show_data(data, types='ifsqd'))
+        # 101, 466286, 15,      1, 1, 180, 0
+        # 101, 466286, ncoords, 1, 1, 180, 0
+        header_int = np.frombuffer(data, dtype=op2.idtype8)
+        #header_float = np.frombuffer(data, dtype=op2.fdtype8)
+        ncoords = header_int[2]
+        #print('data =', header_int)
+        #print('ncoords =', ncoords)
+        factor = self.factor
+        #if self.size == 4:
+            #idtype = 'int32'
+            #fdtype = 'float32'
+        #else:
+            #idtype = 'int64'
+            #fdtype = 'float64'
+        assert len(data) == 28 * factor, len(data)
+
+        self.read_3_markers([-2, 1, 0])
+        data = self._read_record() # CSTM
+        # print(self.show_data(data, types='s'))
+        # assert len(data) == 8 * factor, len(data)
+
+        self.read_3_markers([-3, 1, 0])
+
+        itable = -4
+
+        blocks = []
+        while 1:
+            markers = self.get_nmarkers(1, rewind=True)
+            if markers == [0]:
+                break
+            data = self._read_record()
+            blocks.append(data)
+            self.read_markers([itable, 1, 0])
+            itable -= 1
+        markers = self.get_nmarkers(1, rewind=False)
+
+        if self.read_mode == 1:
+            return
+        nblocks = len(blocks)
+
+        assert(nblocks % 2 == 0)  # Should be even, first block is IDENT, second block is DATA
+
+        # Get time steps per subcase
+        time_steps = {}  # {subcase_id: {t1, t2, ...}
+        for i in range(0, nblocks, 2):
+            identifiers_int = np.frombuffer(blocks[i], dtype=op2.idtype8)
+            identifiers_float = np.frombuffer(blocks[i], dtype=op2.fdtype8)
+
+            acode = identifiers_int[0]
+            tcode = identifiers_int[1]
+            #eltype = identifiers_int[2]
+            subcase = identifiers_int[3]
+            time_step = identifiers_float[4]
+
+            if subcase not in time_steps:
+                time_steps[subcase] = {time_step, }
+            else:
+                time_steps[subcase].add(time_step)
+
+        # Create time step to tid mapper per subcase
+        for subcase, tsteps in time_steps.items():
+            time_steps[subcase] = np.array(list(tsteps))  # convert set to numpy array
+            tstep_to_index_mapper = {time_steps[subcase][x]: x for x in range(0, time_steps[subcase].shape[0])}
+
+        trmbd = op2.trmbd
+        # Read data
+        #print('nblocks =', nblocks)
+        for i in range(0, nblocks, 2):
+            identifiers_int = np.frombuffer(blocks[i], dtype=op2.idtype8)
+            identifiers_float = np.frombuffer(blocks[i], dtype=op2.fdtype8)
+
+            acode = identifiers_int[0]
+            tcode = identifiers_int[1]
+            element_type = identifiers_int[2]
+            subcase = identifiers_int[3]
+            time_step = identifiers_float[4]
+
+            op2.data_code = {}
+            op2.subtable_name = ''
+            approach_code = acode
+            tCode = tcode
+            int3 = element_type
+            isubcase = subcase
+            op2.element_type = element_type
+            op2._set_approach_code(approach_code, tCode, int3, isubcase)
+            #------------------------------------------------------------------------
+            int_data = np.frombuffer(blocks[i+1], dtype=op2.idtype8)
+            float_data = np.frombuffer(blocks[i+1], dtype=op2.fdtype8)
+
+            #grids = int_data[:, np.array([1, 5, 9, 13, 17, 21])]
+            if element_type == 363:
+                element = 'CROD'
+                nnodes = 2
+            elif element_type == 347:
+                nnodes = 2  # ???
+                element = 'CBAR'
+            elif element_type == 348:
+                element = 'CBEAM'
+                nnodes = 2  # ???
+
+            elif element_type == 301:
+                element = 'CPENTA'
+                nnodes = 6
+                #grids = int_data[:, np.array([1, 5, 9, 13, 17, 21])]
+                #eulers_x = float_data[:, np.array([2, 6, 10, 14, 18, 22])]
+                #eulers_y = float_data[:, np.array([3, 7, 11, 15, 19, 23])]
+                #eulers_z = float_data[:, np.array([4, 8, 12, 16, 20, 24])]
+            elif element_type == 302:
+                element = 'CTETRA'
+                nnodes = 4
+                #grids = int_data[:, np.array([1, 5, 9, 13])]
+                #eulers_x = float_data[:, np.array([2, 6, 10, 14])]
+                #eulers_y = float_data[:, np.array([3, 7, 11, 15])]
+                #eulers_z = float_data[:, np.array([4, 8, 12, 16])]
+            elif element_type == 303:
+                element = 'CPYRAM'
+                nnodes = 5
+
+            elif element_type == 343:
+                element = 'CTRIA6'
+                nnodes = 3
+            elif element_type == 344:
+                element = 'CQUAD8'
+                nnodes = 4
+            elif element_type == 346:
+                element = 'CQUADR'
+                nnodes = 4
+
+            elif element_type == 300: # or eltype == 67:
+                element = 'CHEXA8'
+                nnodes = 8
+
+            elif element_type == 345:
+                nnodes = 3
+                element = 'CTRIAR'
+            elif element_type == 346:
+                element = 'CQUADR'
+                nnodes = 4
+
+            elif element_type == 313:
+                element = 'CQUADX4'
+                nnodes = 4
+            elif element_type == 315:
+                element = 'CQUADX8'
+                nnodes = 4
+
+            elif element_type == 316:
+                nnodes = 3
+                element = 'CPLSTN3'
+            elif element_type == 317:
+                nnodes = 4
+                element = 'CPLSTN4'
+            elif element_type == 318:
+                nnodes = 3
+                element = 'CPLSTN6'
+            elif element_type == 319:
+                nnodes = 4
+                element = 'CPLSTN8'
+
+            #elif element_type == 323:
+                #nnodes = 6
+                #element = 'CPLSTS6'
+            elif element_type == 321:
+                nnodes = 4
+                element = 'CPLSTS4'
+            elif element_type == 323:
+                nnodes = 4
+                element = 'CPLSTS8'
+
+            else:
+                #print(int_data[:20])
+                print(op2.code_information())
+                raise NotImplementedError(f"Element type {element_type} is not implemented.\n")
+            n_elements, int_data, float_data = reshape_trmbd(element, nnodes, int_data, float_data)
+
+            eids = (int_data[:, 0] - op2.device_code) // 10
+            #nelements = len(eids)
+            #print('ndatai =', int_data.size)
+            #print('nelements =', nelements)
+            index = np.arange(1, 1+nnodes*4, 4)
+            grids = int_data[:, index]
+            eulers_x = float_data[:, index+1]
+            eulers_y = float_data[:, index+2]
+            eulers_z = float_data[:, index+3]
+
+            if subcase not in trmbd.eulersx:
+                trmbd.eulersx[subcase] = {}
+                trmbd.eulersy[subcase] = {}
+                trmbd.eulersz[subcase] = {}
+            if element not in trmbd.eulersx[subcase]:
+                #isubcase = time_steps[subcase]
+                trmbd.eulersx[subcase][element] = np.empty([time_steps[subcase].shape[0], n_elements, eulers_x.shape[1]])
+                trmbd.eulersy[subcase][element] = np.empty([time_steps[subcase].shape[0], n_elements, eulers_y.shape[1]])
+                trmbd.eulersz[subcase][element] = np.empty([time_steps[subcase].shape[0], n_elements, eulers_z.shape[1]])
+            if element not in trmbd.nodes:
+                nodes = np.empty([n_elements, grids.shape[1] + 1], dtype='int32')
+                nodes[:, 0] = eids
+                nodes[:, 1:] = grids
+
+            itime = tstep_to_index_mapper[time_step]
+            trmbd.eulersx[subcase][element][itime, :, :] = eulers_x
+            trmbd.eulersy[subcase][element][itime, :, :] = eulers_y
+            trmbd.eulersz[subcase][element][itime, :, :] = eulers_z
+
+        return
+
+    def read_trmbu(self):
+        """
+        Reads the TRMBU table, which defines the transform from material (undeformed) to basic.
+        """
+        op2 = self.op2
+        #is_geometry = op2.is_geometry
+        unused_table_name = self._read_table_name(rewind=False)
+        self.read_markers([-1])
+        data = self._read_record()
+        # print(self.show_data(data, types='ifsqd'))
+        # 101, 466286, 15,      1, 1, 180, 0
+        # 101, 466286, ncoords, 1, 1, 180, 0
+        factor = self.factor
+        #if self.size == 4:
+            #idtype = 'int32'
+            #fdtype = 'float32'
+        #else:
+            #idtype = 'int64'
+            #fdtype = 'float64'
+        assert len(data) == 28 * factor, len(data)
+
+        self.read_3_markers([-2, 1, 0])
+        data = self._read_record() # CSTM
+        # print(self.show_data(data, types='s'))
+        # assert len(data) == 8 * factor, len(data)
+
+        self.read_3_markers([-3, 1, 0])
+        itable = -4
+
+        blocks = []
+        while 1:
+            markers = self.get_nmarkers(1, rewind=True)
+            if markers == [0]:
+                break
+            data = self._read_record()
+            blocks.append(data)
+            self.read_markers([itable, 1, 0])
+            itable -= 1
+        markers = self.get_nmarkers(1, rewind=False)
+
+        if self.read_mode == 1:
+            return
+        nblocks = len(blocks)
+
+        assert(nblocks % 2 == 0)  # Should be even, first block is IDENT, second block is DATA
+
+        # Get time steps per subcase
+        time_steps = {}  # {subcase_id: {t1, t2, ...}
+        for i in range(0, nblocks, 2):
+            identifiers_int = np.frombuffer(blocks[i], dtype=op2.idtype8)
+            identifiers_float = np.frombuffer(blocks[i], dtype=op2.fdtype8)
+
+            acode = identifiers_int[0]
+            tcode = identifiers_int[1]
+            #eltype = identifiers_int[2]
+            subcase = identifiers_int[3]
+            time_step = identifiers_float[4]
+
+            if subcase not in time_steps:
+                time_steps[subcase] = {time_step, }
+            else:
+                time_steps[subcase].add(time_step)
+
+        # Create time step to tid mapper per subcase
+        for subcase, tsteps in time_steps.items():
+            time_steps[subcase] = np.array(list(tsteps))  # convert set to numpy array
+            tstep_to_index_mapper = {time_steps[subcase][x]: x for x in range(0, time_steps[subcase].shape[0])}
+
+        # Read data
+        trmbu = op2.trmbu
+        for i in range(0, nblocks, 2):
+            identifiers_int = np.frombuffer(blocks[i], dtype=op2.idtype8)
+            identifiers_float = np.frombuffer(blocks[i], dtype=op2.fdtype8)
+
+            acode = identifiers_int[0]
+            tcode = identifiers_int[1]
+            element_type = identifiers_int[2]
+            subcase = identifiers_int[3]
+            time_step = identifiers_float[4]
+
+            op2.data_code = {}
+            op2.subtable_name = ''
+            approach_code = acode
+            tCode = tcode
+            int3 = element_type
+            isubcase = subcase
+            op2.element_type = element_type
+            op2._set_approach_code(approach_code, tCode, int3, isubcase)
+            #------------------------------------------------------------------------
+
+            int_data = np.frombuffer(blocks[i+1], dtype=op2.idtype8)
+            float_data = np.frombuffer(blocks[i+1], dtype=op2.fdtype8)
+            numwide = 4
+            if element_type == 301: # or eltype == 67:
+                element = 'CPENTA'
+            elif element_type == 302: # or eltype == 67:
+                element = 'CTETRA'
+            elif element_type == 303: # or eltype == 67:
+                element = 'CPYRAM'
+
+            elif element_type == 300: # or eltype == 67:
+                element = 'CHEXA8'
+
+                numwide = 4
+                n_elements = int_data.shape[0] // numwide  # elid + 3 euler angles
+                #int_data = int_data.reshape(n_elements, numwide)
+                #float_data = float_data.reshape(n_elements, numwide)
+
+                #eids = (int_data[:, 0] - 2) // 10
+                # grids = int_data[:, np.array([1, 5, 9, 13, 17, 21, 25, 29])]
+
+                #eulers = float_data[:, np.array([1, 2, 3])]
+                # eulers_y = float_data[:, np.array([3, 7, 11, 15, 19, 23, 27, 31])]
+                # eulers_z = float_data[:, np.array([4, 8, 12, 16, 20, 24, 28, 32])]
+
+            elif element_type == 363:
+                numwide = 4
+                element = 'CROD'
+            elif element_type == 347:
+                numwide = 4
+                element = 'CBAR'
+            elif element_type == 348:
+                numwide = 4
+                element = 'CBEAM'
+
+            elif element_type == 345:
+                element = 'CTRIAR'
+                numwide = 4
+            elif element_type == 346:
+                element = 'CQUADR'
+                numwide = 4
+
+            elif element_type == 343:
+                element = 'CTRIA6'
+                numwide = 4
+            elif element_type == 344:
+                element = 'CQUAD8'
+                numwide = 4
+
+            elif element_type == 316:
+                numwide = 4
+                element = 'CPLSTN3'
+            elif element_type == 317:
+                numwide = 4
+                element = 'CPLSTN4'
+            elif element_type == 318:
+                element = 'CPLSTN6'
+            elif element_type == 319:
+                element = 'CPLSTN8'
+
+            #elif element_type == 316:
+                #numwide = 4
+                #element = 'CPLSTS3'
+            elif element_type == 321:
+                numwide = 4
+                element = 'CPLSTS4'
+            #elif element_type == 318:
+                #nnodes = 6
+                #element = 'CPLSTS6'
+            elif element_type == 323:
+                numwide = 4
+                element = 'CPLSTS8'
+
+            elif element_type == 313:
+                element = 'CQUADX4'
+                numwide = 4
+            elif element_type == 315:
+                element = 'CQUADX8'
+                numwide = 4
+            else:
+                print(int_data[:10])
+                print(op2.code_information())
+                raise NotImplementedError(f"Element type {element_type} is not implemented.\n")
+
+            assert numwide == 4, numwide
+            n_elements = int_data.shape[0] // numwide  # element_id + 3 euler angles
+            int_data = int_data.reshape(n_elements, numwide)
+            float_data = float_data.reshape(n_elements, numwide)
+
+            eids = (int_data[:, 0] - op2.device_code) // 10
+            eulers = float_data[:, 1:]
+
+            trmbu = op2.trmbu
+            if subcase not in trmbu.eulers:
+                trmbu.eulers[subcase] = {}
+            if element not in trmbu.eulers[subcase]:
+                trmbu.eulers[subcase][element] = np.empty([time_steps[subcase].shape[0], n_elements, 4])
+
+            itime = tstep_to_index_mapper[time_step]
+            trmbu.eulers[subcase][element][itime, :, 0] = eids
+            trmbu.eulers[subcase][element][itime, :, 1:] = eulers
+
+        return
 
     def read_obc1(self):
         op2 = self.op2
@@ -7473,3 +7898,12 @@ def _get_gpdt_nnodes2(ndata, header_ints, size):
         nnodes = nvalues // numwide
     assert ndata == nnodes * numwide * 4
     return nnodes, numwide
+
+def reshape_trmbd(element_name: str, nnodes: int, int_data, float_data):
+    ndata_per_element = 1 + nnodes + 3 * nnodes  # 1+4*(nnnodes) = 1+4*2 = 9
+    n_elements = int_data.shape[0] // ndata_per_element  # elid + 2 grid + 3*2 euler angles
+    assert int_data.shape[0] % ndata_per_element == 0, f'{element_name}: nnodes={nnodes} int_data.shape={int_data.shape}'
+
+    int_data = int_data.reshape(n_elements, ndata_per_element)
+    float_data = float_data.reshape(n_elements, ndata_per_element)
+    return n_elements, int_data, float_data

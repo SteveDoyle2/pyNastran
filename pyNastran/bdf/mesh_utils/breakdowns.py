@@ -19,8 +19,117 @@ defines:
 """
 from __future__ import annotations
 from typing import Dict, Any, TYPE_CHECKING
+from collections import defaultdict
 if TYPE_CHECKING:
     from pyNastran.bdf.bdf import BDF
+
+def get_material_mass_breakdown_table(model: BDF) -> Tuple[Dict[int, float],
+                                                           Dict[int, Dict[int, float]],
+                                                           Dict[int, Dict[int, float]],
+                                                           Dict[int, Dict[int, float]],
+                                                           ]:
+    mid_to_mass = defaultdict(float)
+    pid_to_mid_to_mass = defaultdict(lambda: defaultdict(float))
+    pid_to_mid_to_nsm_mass = defaultdict(lambda: defaultdict(float))
+    pid_to_mid_to_rho_mass = defaultdict(lambda: defaultdict(float))
+    line_elements = {'CBAR', 'CBEAM', 'CTUBE', 'CROD'}
+    solid_elements = {'CTETRA', 'CHEXA', 'CPENTA', 'CPYRAM'}
+    shell_elements = {'CQUAD4', 'CTRIA3', 'CQUAD8', 'CQUADR'}
+    skip_elements = {'CBUSH', 'CBUSH1D', 'CBUSH2D', 'CGAP', 'CRAC2D', 'CRAC3D'}
+
+    for eid, elem in model.elements.items():
+        elem_type = elem.type
+        if elem_type in skip_elements:
+            continue
+
+        if elem_type in line_elements:
+            prop = elem.pid_ref
+            length = elem.Length()
+            pid = prop.pid
+            mid = prop.Mid()
+            area = prop.Area()
+            nsm = prop.Nsm()
+            rho = prop.Rho()
+            massi = elem.Mass()
+            mid_to_mass[mid] += massi
+            pid_to_mid_to_mass[pid][mid] += massi
+            pid_to_mid_to_nsm_mass[pid][mid] += length * nsm
+            pid_to_mid_to_rho_mass[pid][mid] += length * rho * area
+        elif elem_type in solid_elements:
+            prop = elem.pid_ref
+            #volume = elem.Volume()
+            pid = prop.pid
+            mid = prop.Mid()
+            massi = elem.Mass()
+            mid_to_mass[mid] += massi
+            pid_to_mid_to_mass[pid][mid] += massi
+            pid_to_mid_to_nsm_mass[pid][mid] += 0.
+            pid_to_mid_to_rho_mass[pid][mid] += massi
+        elif elem_type in {'CONROD'}: # references a MAT directly
+            mid = prop.Mid()
+            length = elem.Length()
+            massi = elem.Mass()
+            nsm = elem.Nsm()
+            rho = elem.Area()
+            rho = elem.Rho()
+            mid_to_mass[mid] += massi
+            pid_to_mid_to_mass[0][mid] += massi
+            pid_to_mid_to_nsm_mass[0][mid] += length * nsm
+            pid_to_mid_to_rho_mass[0][mid] += length * rho * area
+        elif elem_type in shell_elements:
+            prop = elem.pid_ref
+            pid = prop.pid
+            prop_type = prop.type
+            area = elem.Area()
+            nsm = prop.Nsm()
+            if prop_type in {'PSHELL'}:
+                mid = prop.Mid()
+                massi = elem.Mass()
+                mid_to_mass[mid] += massi
+                pid_to_mid_to_mass[pid][mid] += massi
+                pid_to_mid_to_nsm_mass[pid][mid] += area * nsm
+                pid_to_mid_to_rho_mass[pid][mid] += area * rho * t
+            elif prop_type in {'PCOMP', 'PCOMPG'}:
+                nlayers = len(prop.mids)
+                pid_to_mid_to_nsm_mass[pid][0] += area * nsm
+                nsm_n = nsm / nlayers
+                if pid == 42:
+                    x = 1
+                for mid, t in zip(prop.mids, prop.thicknesses):
+                    mid_ref = model.materials[mid]
+                    rho = mid_ref.rho
+                    massi = area * (nsm_n + rho * t)
+                    mid_to_mass[mid] += massi
+                    pid_to_mid_to_rho_mass[pid][mid] += area * rho * t
+                    pid_to_mid_to_nsm_mass[pid][mid] += area * nsm_n
+                    pid_to_mid_to_mass[pid][mid] += massi
+        else:
+            raise NotImplementedError(elem)
+    return dict(mid_to_mass), dict(pid_to_mid_to_mass), dict(pid_to_mid_to_rho_mass), dict(pid_to_mid_to_nsm_mass)
+
+def get_property_mass_breakdown_table(model):
+    pids_to_thickness = get_thickness_breakdown(model, property_ids=None, stop_if_no_thickness=False)
+    pids_to_length = get_length_breakdown(model, property_ids=None, stop_if_no_length=False)
+    pids_to_area = get_area_breakdown(model, property_ids=None, sum_bar_area=False, stop_if_no_area=False)
+    pids_to_volume = get_volume_breakdown(model, property_ids=None, stop_if_no_volume=False)
+    pids_to_mass, mass_type_to_mass = get_mass_breakdown(model, stop_if_no_mass=False, detailed=False)
+
+    pids = set(list(pids_to_length) +
+               list(pids_to_area) +
+               list(pids_to_thickness) +
+               list(pids_to_volume) +
+               list(pids_to_mass))
+    pids = list(pids)
+    pids.sort()
+    data = []
+    for pid in pids:
+        length = pids_to_length.get(pid, 0.)
+        area = pids_to_area.get(pid, 0.)
+        thickness = pids_to_thickness.get(pid, 0.)
+        volume = pids_to_volume.get(pid, 0.)
+        mass = pids_to_mass.get(pid, 0.)
+        data.append((pid, length, area, thickness, volume, mass))
+    return data
 
 def get_length_breakdown(model: BDF, property_ids=None,
                          stop_if_no_length: bool=True):
@@ -193,6 +302,48 @@ def get_area_breakdown(model: BDF,
         if stop_if_no_area:
             raise RuntimeError(msg)
     return pids_to_area
+
+
+def get_thickness_breakdown(model, property_ids=None, stop_if_no_thickness=False):
+    skip_props = {'PBAR', 'PBARL', 'PROD', 'PSOLID', 'PBUSH', 'PBUSH1D', 'PGAP', 'PRAC2D', 'PRAC3D'}
+    pid_eids = model.get_element_ids_dict_with_pids(
+        property_ids, stop_if_no_eids=stop_if_no_thickness,
+        msg=' which is required by get_thickness_breakdown')
+    pids_to_thickness = {}
+    for pid, eids in pid_eids.items():
+        prop = model.properties[pid]
+        thickness_ = []
+        if prop.type in skip_props:
+            continue
+        elif prop.type in {'PSHELL', 'PCOMP', 'PCOMPG'}:
+            #['CBAR', 'CBEAM', 'CROD', 'CTUBE']:
+            # TODO: Do I need to consider the offset on length effects for a CBEAM?
+            for eid in eids:
+                elem = model.elements[eid]
+                try:
+                    thickness_.append(elem.Thickness())
+                except AttributeError:  # pragma: no cover
+                    print(prop)
+                    print(elem)
+                    raise
+        else:  # pragma: no cover
+            print('prop\n%s' % prop)
+            eid0 = eids[0]
+            elem = model.elements[eid0]
+            msg = str(prop) + str(elem)
+            raise NotImplementedError(msg)
+
+        if thickness_:
+            pids_to_thickness[pid] = sum(thickness_) / len(thickness_)
+
+    has_thickness = len(pids_to_thickness)
+
+    if not has_thickness:
+        msg = 'No elements with thickness were found'
+        model.log.warning(msg)
+        if stop_if_no_thickness:
+            raise RuntimeError(msg)
+    return pids_to_thickness
 
 def get_volume_breakdown(model: BDF, property_ids=None, stop_if_no_volume=True):
     """

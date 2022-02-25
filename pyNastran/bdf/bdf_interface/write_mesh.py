@@ -18,6 +18,7 @@ from pyNastran.bdf.bdf_interface.write_mesh_utils import (
 from pyNastran.bdf.cards.nodes import write_xpoints
 if TYPE_CHECKING:  # pragma: no cover
     from io import StringIO
+    from cpylog import SimpleLogger
     from pyNastran.bdf.bdf import BDF, DESVAR
 
 
@@ -1266,7 +1267,7 @@ def _output_helper(out_filename: Optional[str], interspersed: bool,
 
     has_read_write = hasattr(out_filename, 'read') and hasattr(out_filename, 'write')
     if has_read_write or isinstance(out_filename, IOBase):
-        return out_filename
+        return out_filename, size
     if not isinstance(out_filename, (str, PurePath)):
         msg = f'out_filename={out_filename!r} must be a string; type={type(out_filename)}'
         raise TypeError(msg)

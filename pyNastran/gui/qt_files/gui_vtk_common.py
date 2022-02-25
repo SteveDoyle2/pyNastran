@@ -40,7 +40,7 @@ class GuiVTKCommon(GuiQtCommon):
     def __init__(self, **kwds):
         if qt_version == 'pyqt5':
             super(GuiVTKCommon, self).__init__(**kwds)
-        elif qt_version == 'pyside2':
+        elif qt_version in {'pyside2', 'pyside6'}:
             GuiQtCommon.__init__(self, **kwds)
         else:  #: pragma: no cover
             raise NotImplementedError(qt_version)
@@ -416,7 +416,10 @@ class GuiVTKCommon(GuiQtCommon):
             centroid = np.zeros(3, dtype=dtype)
             return centroid
         cell = grid.GetCell(cell_id)
-        nnodes = cell.GetNumberOfPoints()
+        try:
+            nnodes = cell.GetNumberOfPoints()
+        except AttributeError:
+            return None
         points = cell.GetPoints()
         assert nnodes > 0, 'nnodes=%s cell_id=%s cell=%s' % (nnodes, cell_id, cell)
         centroid = np.zeros(3, dtype=dtype)

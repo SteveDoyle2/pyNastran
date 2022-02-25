@@ -35,6 +35,8 @@ if qt_version == 'pyqt5':
     import PyQt5
 elif qt_version == 'pyside2':
     import PySide2
+elif qt_version == 'pyside6':
+    import PySide6
 elif qt_version == 'pyqt6':
     import PyQt6
 else:

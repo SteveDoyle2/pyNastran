@@ -65,6 +65,10 @@ class Results:
         self.abs = ABS()
         self.nrl = NRL()
 
+        self.cstm = CSTM()
+        self.trmbd = TRMBD()
+        self.trmbu = TRMBU()
+
     def _get_sum_objects_map(self):
         sum_objs = {
             'acoustic' : self.acoustic,
@@ -648,3 +652,56 @@ class StrainEnergy:
             'cweld_strain_energy', 'cfast_strain_energy', 'cseam_strain_energy',
         ]
         return ['strain_energy.' + table for table in tables]
+
+
+class CSTM:
+    def __init__(self):
+        self.headers = {"cid": 0,
+                                 "cid_type": 1,
+                                 "unused_int_index": 2,
+                                 "unused_double_index": 3,
+                                 "ox": 4,
+                                 "oy": 5,
+                                 "oz": 6,
+                                 "T11": 7,
+                                 "T12": 8,
+                                 "T13": 9,
+                                 "T21": 10,
+                                 "T22": 11,
+                                 "T23": 12,
+                                 "T31": 13,
+                                 "T32": 14,
+                                 "T33": 15
+                                 }
+        self.data = None  # type: Optional[np.ndarray]  # Coordinate Transformation Matrices from Native to Global
+
+    def __repr__(self) -> str:
+        msg = 'CSTM:\n'
+        msg += f'  headers_str = {self.headers.keys()}\n'
+        msg += f'  headers_ints = {self.headers.values()}\n'
+        if self.data is not None:
+            msg += f'  data.shape = {self.data.shape}'
+        else:
+            msg += '  data = None'
+        return msg
+
+class TRMBD:
+    def __init__(self):
+        self.nodes = {}
+        self.eulersx = {}
+        self.eulersy = {}
+        self.eulersz = {}
+
+    def __repr__(self) -> str:
+        msg = 'TRMBD:\n'
+        msg += f'  nodes, eulersx, eulersy, eulersz'
+        return msg
+
+class TRMBU:
+    def __init__(self):
+        self.eulers = {}
+
+    def __repr__(self) -> str:
+        msg = 'TRMBD:\n'
+        msg += f'  eulers'
+        return msg

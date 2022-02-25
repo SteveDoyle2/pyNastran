@@ -1395,11 +1395,11 @@ class EPT:
         legacy MSC/NX format
         """
         op2 = self.op2
-        ntotal = 72 * self.factor
+        ntotal = 72 * self.factor  # 18*4
         struct1 = Struct(mapfmt(op2._endian + b'i17f', self.size))
         ndata = len(data) - n
         nentries = ndata // ntotal
-        assert nentries > 0, 'table={op2.table_name} len={ndata}'
+        assert nentries > 0, f'table={op2.table_name} len={ndata}'
         assert ndata % ntotal == 0, f'table={op2.table_name} leftover = {ndata} % {ntotal} = {ndata % ntotal}'
         props = []
         for unused_i in range(nentries):
@@ -1430,7 +1430,7 @@ class EPT:
 
         ndata = len(data) - n
         nentries = ndata // ntotal
-        assert nentries > 0, 'table={op2.table_name} len={ndata}'
+        assert nentries > 0, f'table={op2.table_name} len={ndata}'
         assert ndata % ntotal == 0, f'table={op2.table_name} leftover = {ndata} % {ntotal} = {ndata % ntotal}'
 
         props = []
@@ -1457,7 +1457,7 @@ class EPT:
 
         ndata = len(data) - n
         nentries = ndata // ntotal
-        assert nentries > 0, 'table={op2.table_name} len={ndata}'
+        assert nentries > 0, f'table={op2.table_name} len={ndata}'
         assert ndata % ntotal == 0, f'table={op2.table_name} leftover = {ndata} % {ntotal} = {ndata % ntotal}'
 
         props = []
@@ -1491,7 +1491,7 @@ class EPT:
 
         ndata = len(data) - n
         nentries = ndata // ntotal
-        assert nentries > 0, 'table={op2.table_name} len={ndata}'
+        assert nentries > 0, f'table={op2.table_name} len={ndata}'
         assert ndata % ntotal == 0, f'table={op2.table_name} leftover = {ndata} % {ntotal} = {ndata % ntotal}'
 
         props = []
@@ -2304,10 +2304,10 @@ class EPT:
         """
         op2 = self.op2
         ntotal = 16  # 4*4
-        struct_3if = Struct(op2._endian + b'3if')
         nentries = (len(data) - n) // ntotal
         assert (len(data) - n) % ntotal == 0
         props = []
+        struct_3if = Struct(op2._endian + b'3if')
         for unused_i in range(nentries):
             out = struct_3if.unpack(data[n:n+ntotal])
             (pconid, mid, form, expf) = out
@@ -2408,9 +2408,9 @@ class EPT:
     def _read_pelas(self, data: bytes, n: int) -> int:
         """PELAS(302,3,46) - the marker for Record 39"""
         op2 = self.op2
-        struct_i3f = Struct(mapfmt(op2._endian + b'i3f', self.size))
         ntotal = 16 * self.factor # 4*4
         nproperties = (len(data) - n) // ntotal
+        struct_i3f = Struct(mapfmt(op2._endian + b'i3f', self.size))
         for unused_i in range(nproperties):
             edata = data[n:n+ntotal]
             out = struct_i3f.unpack(edata)
@@ -2459,11 +2459,11 @@ class EPT:
         #struct1 = Struct(op2._endian + b'ifii 3f')
 
         ntotal = 100 * self.factor # 25*4
-        struct1 = Struct(op2._endian + b'2if 5i 2f2i2f 3i 2i 6f')
         ndatai = len(data) - n
         nproperties = ndatai // ntotal
         delta = ndatai % ntotal
         assert delta == 0, 'len(data)-n=%s n=%s' % (ndatai, ndatai / 100.)
+        struct1 = Struct(op2._endian + b'2if 5i 2f2i2f 3i 2i 6f')
         for unused_i in range(nproperties):
             edata = data[n:n+ntotal]
             out = struct1.unpack(edata)
@@ -2492,10 +2492,10 @@ class EPT:
         """
         op2 = self.op2
         ntotal = 48
-        struct1 = Struct(op2._endian + b'ifii 8f')
         nproperties = (len(data) - n) // ntotal
         delta = (len(data) - n) % ntotal
         assert delta == 0, 'len(data)-n=%s n=%s' % (len(data) - n, (len(data) - n) / 48.)
+        struct1 = Struct(op2._endian + b'ifii 8f')
         for unused_i in range(nproperties):
             edata = data[n:n+ntotal]
             out = struct1.unpack(edata)
@@ -2563,8 +2563,8 @@ class EPT:
         PHBDY(2802,28,236) - the marker for Record 43
         """
         op2 = self.op2
-        struct_i3f = Struct(op2._endian + b'ifff')
         nproperties = (len(data) - n) // 16
+        struct_i3f = Struct(op2._endian + b'ifff')
         for unused_i in range(nproperties):
             edata = data[n:n+16]
             out = struct_i3f.unpack(edata)
@@ -2869,8 +2869,8 @@ class EPT:
         """
         op2 = self.op2
         ntotal = 8 * self.factor # 2*4
-        struct_if = Struct(mapfmt(op2._endian + b'if', self.size))
         nentries = (len(data) - n) // ntotal
+        struct_if = Struct(mapfmt(op2._endian + b'if', self.size))
         for unused_i in range(nentries):
             edata = data[n:n + ntotal]
             out = struct_if.unpack(edata)
@@ -2908,8 +2908,8 @@ class EPT:
         """
         op2 = self.op2
         ntotal = 24 * self.factor
-        struct_2i4f = Struct(mapfmt(op2._endian + b'2i4f', self.size))
         nproperties = (len(data) - n) // ntotal
+        struct_2i4f = Struct(mapfmt(op2._endian + b'2i4f', self.size))
         for unused_i in range(nproperties):
             edata = data[n:n+ntotal]
             out = struct_2i4f.unpack(edata)
@@ -2928,8 +2928,8 @@ class EPT:
         """
         op2 = self.op2
         ntotal = 44 * self.factor  # 11*4
-        s = Struct(mapfmt(op2._endian + b'iififi4fi', self.size))
         nproperties = (len(data) - n) // ntotal
+        s = Struct(mapfmt(op2._endian + b'iififi4fi', self.size))
         for unused_i in range(nproperties):
             edata = data[n:n+ntotal]
             out = s.unpack(edata)
@@ -3010,8 +3010,9 @@ class EPT:
         .. warning:: assuming OD2 is not written (only done for thermal)
         """
         op2 = self.op2
+        ntotal = 20 * self.factor # 5*4
+        nproperties = (len(data) - n) // ntotal
         struct_2i3f = Struct(op2._endian + b'2i3f')
-        nproperties = (len(data) - n) // 20
         for unused_i in range(nproperties):
             edata = data[n:n+20]  # or 24???
             out = struct_2i3f.unpack(edata)

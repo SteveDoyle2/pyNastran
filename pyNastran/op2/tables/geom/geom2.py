@@ -707,6 +707,7 @@ class GEOM2:
             # CBAR    401     3       2217    81      .2769987-.931498-.235759  B
             # 'fe = 65; fe&3=1'
             # ints    = (401, 3, 2217, 81, 0.277, -0.931498, -0.235759, 65, 0, 0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0)
+            #print(f'eid={eid} fe={fe} f={f}')
             if f == 0:
                 # nodes defined in cid=0
                 # XYZ option -- basic coordinate system
@@ -1004,6 +1005,7 @@ class GEOM2:
         fe2 = 44 * self.factor
         nelements = (len(data) - n) // ntotal
         struct_i = op2.struct_i if self.size == 4 else self.struct_q
+        print(mapfmt(op2._endian + b'6i3f3i6f', self.size))
         s1 = Struct(mapfmt(op2._endian + b'6i3f3i6f', self.size))
         s3 = Struct(mapfmt(op2._endian + b'12i6f', self.size))
         for unused_i in range(nelements):
@@ -1052,6 +1054,7 @@ class GEOM2:
                                [f, g0]]
             else:
                 raise RuntimeError(f'invalid f value...f={f!r}')
+            print(f'eid={eid} fe={fe} f={f}')
             if op2.is_debug_file:
                 op2.binary_debug.write('  CBEAM eid=%s f=%s fe=%s %s\n' % (
                     eid, f, fe, str(data_in)))
@@ -1104,7 +1107,7 @@ class GEOM2:
         13 GEOM I Element geometry option
         """
         op2 = self.op2
-        ntotal = 52 # 4*13
+        ntotal = 52 * self.factor # 4*13
         nentries = (len(data) - n) // ntotal
         fstruc = Struct(op2._endian + b'4i 3f 6i')
         istruc = Struct(op2._endian + b'4i 3i 6i')
@@ -1198,7 +1201,7 @@ class GEOM2:
 
         """
         op2 = self.op2
-        ntotal = 32 *  self.factor # 4*8
+        ntotal = 32 * self.factor # 4*8
         nelements = (len(data) - n) // ntotal
         struct_6i = Struct(mapfmt(op2._endian + b'8i', self.size))
         for unused_i in range(nelements):
@@ -1366,7 +1369,7 @@ class GEOM2:
         """
         op2 = self.op2
         s1 = Struct(mapfmt(op2._endian + b'if4iff', self.size))
-        ntotal = 32 * self.factor
+        ntotal = 32 * self.factor # 8*4
         nelements = (len(data) - n) // ntotal
         for unused_i in range(nelements):
             edata = data[n:n+ntotal]
@@ -1596,7 +1599,7 @@ class GEOM2:
         """
         op2 = self.op2
         s = Struct(op2._endian + b'3i2fi')
-        ntotal = 24
+        ntotal = 24 * self.factor
         ndatai = len(data) - n
         nelements = ndatai // ntotal
         for unused_i in range(nelements):
@@ -1624,7 +1627,7 @@ class GEOM2:
         """
         op2 = self.op2
         s = Struct(op2._endian + b'4i2fi')
-        ntotal = 28
+        ntotal = 28 * self.factor
         ndatai = len(data) - n
         nelements = ndatai // ntotal
         for unused_i in range(nelements):
@@ -1653,7 +1656,7 @@ class GEOM2:
         """
         op2 = self.op2
         s = Struct(op2._endian + b'5i2fi')
-        ntotal = 32
+        ntotal = 32 * self.factor
         ndatai = len(data) - n
         nelements = ndatai // ntotal
         for unused_i in range(nelements):
@@ -1786,10 +1789,10 @@ class GEOM2:
         CHBDYE(8308,83,405) - the marker for Record ???
         """
         op2 = self.op2
-        ntotal = 28  # 7*4
-        s = Struct(op2._endian + b'7i')
+        ntotal = 28 * self.factor  # 7*4
         ndatai = len(data) - n
         nelements = ndatai // ntotal
+        s = Struct(op2._endian + b'7i')
         for unused_i in range(nelements):
             edata = data[n:n+28]
             out = s.unpack(edata)
@@ -1809,10 +1812,10 @@ class GEOM2:
         CHBDYG(10808,108,406) - the marker for Record 43
         """
         op2 = self.op2
-        ntotal = 64  # 16*4
-        s = Struct(op2._endian + b'16i')
+        ntotal = 64 * self.factor  # 16*4
         ndatai = len(data) - n
         nelements = ndatai // ntotal
+        s = Struct(op2._endian + b'16i')
         for unused_i in range(nelements):
             edata = data[n:n+64]
             out = s.unpack(edata)
@@ -1943,9 +1946,9 @@ class GEOM2:
         CMASS1(1001,10,65) - the marker for Record 51
         """
         op2 = self.op2
-        ntotal =  24 * self.factor  # 6*4
-        struct_6i = Struct(mapfmt(op2._endian + b'6i', self.size))
+        ntotal = 24 * self.factor  # 6*4
         nelements = (len(data) - n) // ntotal
+        struct_6i = Struct(mapfmt(op2._endian + b'6i', self.size))
         for unused_i in range(nelements):
             edata = data[n:n + ntotal]
             out = struct_6i.unpack(edata)
@@ -1964,8 +1967,8 @@ class GEOM2:
         """
         op2 = self.op2
         ntotal = 24 * self.factor  # 6*4
-        s = Struct(mapfmt(op2._endian + b'if4i', self.size))
         nelements = (len(data) - n) // ntotal
+        s = Struct(mapfmt(op2._endian + b'if4i', self.size))
         for unused_i in range(nelements):
             edata = data[n:n + ntotal]
             out = s.unpack(edata)
@@ -2065,8 +2068,8 @@ class GEOM2:
         """
         op2 = self.op2
         ntotal = 52 * self.factor  # 13*4
-        s = Struct(mapfmt(op2._endian + b'3i10f', self.size))
         nelements = (len(data) - n) // ntotal
+        s = Struct(mapfmt(op2._endian + b'3i10f', self.size))
         for unused_i in range(nelements):
             edata = data[n:n+ntotal]
             out = s.unpack(edata)
@@ -3914,11 +3917,11 @@ class GEOM2:
 
     def _read_ctria3fd_40(self, card_obj, data: bytes, n: int) -> int:
         op2 = self.op2
-        s = Struct(op2._endian + b'10i')
-        ntotal = 40
-        nelements = (len(data) - n) // ntotal  # 8*4
+        ntotal = 40 * self.factor
+        nelements = (len(data) - n) // ntotal  # 10*4
         assert (len(data) - n) % ntotal == 0
         elements = []
+        s = Struct(op2._endian + b'10i')
         for unused_i in range(nelements):
             edata = data[n:n + ntotal]
             out = s.unpack(edata)
@@ -3946,10 +3949,10 @@ class GEOM2:
         3 G(6) I Grid point identification numbers of connection points
         """
         op2 = self.op2
-        s = Struct(op2._endian + b'8i')
-        ntotal = 32
+        ntotal = 32 * self.factor
         nelements = (len(data) - n) // ntotal  # 8*4
         assert (len(data) - n) % ntotal == 0
+        s = Struct(op2._endian + b'8i')
         elements = []
         for unused_i in range(nelements):
             edata = data[n:n + ntotal]
@@ -4031,11 +4034,12 @@ class GEOM2:
                    16801, 16801, 16801, 16803, 16804, 0, 0, 0, 0, -1)
         """
         op2 = self.op2
-        s = Struct(op2._endian + b'10i')
         ntotal = 40 * self.factor
         nelements = (len(data) - n) // ntotal  # 8*4
         assert (len(data) - n) % ntotal == 0
+
         elements = []
+        s = Struct(op2._endian + b'10i')
         for unused_i in range(nelements):
             edata = data[n:n + ntotal]
             out = s.unpack(edata)
@@ -4193,10 +4197,10 @@ class GEOM2:
         """
         op2 = self.op2
         ntotal = 56 * self.factor # 14*4
-        s = Struct(mapfmt(op2._endian + b'8i 5f i', self.size))
         nelements = (len(data) - n) // ntotal
         assert (len(data) - n) % ntotal == 0
         elements = []
+        s = Struct(mapfmt(op2._endian + b'8i 5f i', self.size))
         for unused_i in range(nelements):
             edata = data[n:n + ntotal]
             out = s.unpack(edata)
@@ -4435,7 +4439,7 @@ class GEOM2:
         16901, 16901, 16901, 16903, 16904, 16909, 16907, 16908, 0, -1
         """
         op2 = self.op2
-        ntotal = 40  # 10*4
+        ntotal = 40 * self.factor  # 10*4
         struc = Struct(op2._endian + b'10i')
 
         nentries = (len(data) - n) // ntotal
@@ -4726,7 +4730,7 @@ class GEOM2:
         """(5201, 52, 11)"""
         op2 = self.op2
         struct_3i = Struct(op2._endian + b'3i')
-        ntotal = 12
+        ntotal = 12 * self.factor
         nelements = (len(data) - n) // ntotal
         assert (len(data) - n) % ntotal == 0
         assert nelements > 0
@@ -4758,7 +4762,7 @@ class GEOM2:
         #radbc   101     1.0             -99
         #RADBC NODAMB   FAMB CNTRLND     EID1 EID2 EID3
         structi = Struct(op2._endian + b'ifii')
-        ntotal = 16
+        ntotal = 16 * self.factor
         nelements = (len(data) - n) // ntotal
         assert (len(data) - n) % ntotal == 0
         assert nelements > 0
@@ -4821,6 +4825,7 @@ class GEOM2:
         return len(data)
 
     def _read_vubeam(self, data: bytes, n: int) -> int:  # 119
+        """(11601, 116, 9942)"""
         deltae = 100000000
         #deltan = 111000000 # 111001002
         def element(eid, pid, nids):

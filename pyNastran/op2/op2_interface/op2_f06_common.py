@@ -115,6 +115,16 @@ class OP2_F06_Common:
         """allows for simple OP2 vectorization"""
         return deprecated(old_name, new_name, deprecated_version, levels=[0, 1, 2])
 
+    #@property
+    #def cstm(self):
+        #return self.op2_results.cstm
+    #@property
+    #def trmbd(self):
+        #return self.op2_results.trmbd
+    #@property
+    #def trmbu(self):
+        #return self.op2_results.trmbu
+
     # ------------------------------------------------------------------
     # Strain Energy - Getter
     @property

@@ -419,8 +419,8 @@ class FlutterResponse:
         if fig is None:
             fig = plt.figure()
             axes = fig.add_subplot(111)
-        symbols = self._symbols
-        colors = self._colors
+
+        symbols, colors = self._get_symbols_colors_from_modes(modes)
         linestyle = 'None' if self.noline else '-'
 
         for i, imode, mode in zip(count(), imodes, modes):
@@ -501,8 +501,7 @@ class FlutterResponse:
         if ylim2:
             axes2.set_ylim(ylim2)
 
-        symbols = self._symbols
-        colors = self._colors
+        symbols, colors = self._get_symbols_colors_from_modes(modes)
 
         linestyle = 'None' if noline else '-'
         if nopoints: # and noline is False:
@@ -663,6 +662,28 @@ class FlutterResponse:
         # 4. find the critical mode
         # 5. ???
 
+    def _get_symbols_colors_from_modes(self, modes) -> Tuple[List[str], List[str]]:
+        """
+        We need to make sure we have a symbol and color for each mode,
+        even if we repeat them.
+
+        For the colors, calculate how many more we need N = ceil(nmodes/ncolors)
+        and just duplicate colors N times.
+        """
+        nmodes = len(modes)
+        colors = self._colors
+        ncolors = len(colors)
+        if ncolors < nmodes:
+            kcolor = int(np.ceil(nmodes / ncolors))
+            colors = self._colors * kcolor
+
+        symbols = self._symbols
+        nsymbols = len(symbols)
+        if nsymbols < nmodes:
+            ksymbol = int(np.ceil(nmodes / nsymbols))
+            symbols = self._symbols * ksymbol
+        return symbols, colors
+
     def plot_vg_vf(self, fig=None, damp_axes=None, freq_axes=None, modes=None,
                    plot_type='tas',
                    clear=False, close=False, legend=True,
@@ -687,8 +708,7 @@ class FlutterResponse:
 
         #self._set_xy_limits(xlim, ylim)
         modes, imodes = _get_modes_imodes(self.modes, modes)
-        symbols = self._symbols
-        colors = self._colors
+        symbols, colors = self._get_symbols_colors_from_modes(modes)
 
         if nopoints:
             symbols = ['None'] * len(symbols)

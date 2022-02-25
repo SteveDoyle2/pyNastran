@@ -585,6 +585,9 @@ class GuiQtCommon(GuiAttributes):
         ]
 
         for (imin_max, unused_value, xyz), text_actor in zip(min_maxs, self.min_max_actors):
+            if xyz is None:
+                self.log.error('couldnt update min/max actor')
+                continue
             self.imin = imin
             self.imax = imax
             text_actor.SetPosition(*xyz)

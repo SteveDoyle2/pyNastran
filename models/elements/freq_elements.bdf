@@ -59,12 +59,14 @@ TABLED1*8004            LINEAR          LINEAR
 $-------------------------------------------------------------------------------
 $ this is a preload buckling case
 $FREQ   FreqID          Freq1           Freq2           etc
-FREQ*   22                         1.e-5            1.e1            2.e1
-*                   3.e1            4.e1
+$FREQ	SID	F1	F2	F3	F4	F5	F6	F7
+FREQ	22	1.e-5	1.e1	2.e1	3.e1	4.e1
 $ freq1
-FREQ1	23		10.
+$FREQ1	SID	F1	DF	NDF
+FREQ1	23		10.	1
 $ freq2
-FREQ2	24	2.	10000.
+$FREQ2	SID	F1	F2	NF
+FREQ2	24	2.	10000.	1
 $ freq3
 FREQ3	25	0.
 $ freq4

@@ -298,7 +298,7 @@ class GEOM3:
         FORCE(4201,42,18) - the marker for Record 3
         """
         op2 = self.op2
-        ntotal = 28  # 7*4
+        ntotal = 28 * op2.factor # 7*4
         nentries = (len(data) - n) // ntotal
         s = Struct(op2._endian + b'iiiffff')
         for unused_i in range(nentries):
@@ -317,9 +317,9 @@ class GEOM3:
         FORCE1(4001,40,20) - the marker for Record 4
         """
         op2 = self.op2
-        ntotal = 20  # 5*4
-        s = Struct(op2._endian + b'iifii')
+        ntotal = 20 * self.factor  # 5*4
         nentries = (len(data) - n) // ntotal
+        s = Struct(op2._endian + b'iifii')
         for unused_i in range(nentries):
             edata = data[n:n + 20]
             out = s.unpack(edata)
@@ -337,7 +337,7 @@ class GEOM3:
         FORCE2(4101,41,22) - the marker for Record 5
         """
         op2 = self.op2
-        ntotal = 28  # 7*4
+        ntotal = 28 * self.factor  # 7*4
         s = Struct(op2._endian + b'iif4i')
         nentries = (len(data) - n) // ntotal
         for unused_i in range(nentries):
@@ -445,7 +445,7 @@ class GEOM3:
 
     def _read_lseq(self, data: bytes, n: int) -> int:
         op2 = self.op2
-        ntotal = 20  # 5*4
+        ntotal = 20 * self.factor  # 5*4
         struct_5i = Struct(op2._endian + b'5i')
         nentries = (len(data) - n) // ntotal
         for unused_i in range(nentries):
@@ -484,7 +484,7 @@ class GEOM3:
         MOMENT1(4601,46,21) - the marker for Record 14
         """
         op2 = self.op2
-        ntotal = 20  # 5*4
+        ntotal = 20 * self.factor  # 5*4
         nentries = (len(data) - n) // ntotal
         s = Struct(op2._endian + b'iifii')
         for unused_i in range(nentries):
@@ -504,7 +504,7 @@ class GEOM3:
         MOMENT2(4701,47,23) - the marker for Record 15
         """
         op2 = self.op2
-        ntotal = 28  # 7*4
+        ntotal = 28 * self.factor  # 7*4
         nentries = (len(data) - n) // ntotal
         s = Struct(op2._endian + b'iif4i')
         for unused_i in range(nentries):
@@ -524,9 +524,9 @@ class GEOM3:
         PLOAD(5101,51,24)
         """
         op2 = self.op2
-        ntotal = 24  # 6*4
-        s = Struct(op2._endian + b'i f 4i')
+        ntotal = 24 * self.factor  # 6*4
         nentries = (len(data) - n) // ntotal
+        s = Struct(op2._endian + b'i f 4i')
         for unused_i in range(nentries):
             edata = data[n:n + 24]
             out = s.unpack(edata)
@@ -564,7 +564,7 @@ class GEOM3:
         PLOAD2(6802,68,199) - the marker for Record 18
         """
         op2 = self.op2
-        ntotal = 12  # 3*4
+        ntotal = 12 * self.factor  # 3*4
         nentries = (len(data) - n) // ntotal
         struct_ifi = Struct(op2._endian + b'ifi')
         for unused_i in range(nentries):
@@ -583,9 +583,9 @@ class GEOM3:
         """PLOAD3(7109,71,255) - the marker for Record 19"""
         op2 = self.op2
         ntotal = 20  # 5*4
-        nentries = (len(data) - n) // ntotal
+        nloads = (len(data) - n) // ntotal
         s = Struct(op2._endian + b'if3i')
-        for unused_i in range(nentries):
+        for unused_i in range(nloads):
             edata = data[n:n + 20]
             out = s.unpack(edata)
             if op2.is_debug_file:
@@ -594,7 +594,7 @@ class GEOM3:
             load = PLOAD3.add_op2_data(out)  # undefined
             op2._add_methods._add_load_object(load)
             n += 20
-        op2.card_count['PLOAD3'] = nentries
+        op2.card_count['PLOAD3'] = nloads
         return n
 
     def _read_pload4(self, data: bytes, n: int) -> int:
@@ -705,10 +705,10 @@ class GEOM3:
         """
         op2 = self.op2
         ntotal = 24 * self.factor  # 6*4
-        nentries = (len(data) - n) // ntotal
+        nloads = (len(data) - n) // ntotal
         assert (len(data) - n) % ntotal == 0
         struc = Struct(mapfmt(op2._endian + b'iff3i', self.size))
-        for unused_i in range(nentries):
+        for unused_i in range(nloads):
             edata = data[n:n + ntotal]
             out = struc.unpack(edata)
             if op2.is_debug_file:
@@ -720,7 +720,7 @@ class GEOM3:
 
             #n += ntotal + 28 * self.factor
             n += ntotal
-        op2.card_count['PLOADX'] = nentries
+        op2.card_count['PLOADX'] = nloads
         return n
 
     def _read_ploadx1(self, data: bytes, n: int) -> int:
@@ -736,7 +736,7 @@ class GEOM3:
         7 THETA RS Angle between surface traction and inward normal
         """
         op2 = self.op2
-        ntotal = 28  # 7*4
+        ntotal = 28 * self.factor  # 7*4
         nentries = (len(data) - n) // ntotal
         struc = Struct(op2._endian + b'2i2f iif')
         for unused_i in range(nentries):
@@ -777,7 +777,7 @@ class GEOM3:
         QBDY2(4909,49,240) - the marker for Record 25
         """
         op2 = self.op2
-        ntotal = 40  # 10*4
+        ntotal = 40 * self.factor  # 10*4
         nentries = (len(data) - n) // ntotal
         struct_2i8f = Struct(op2._endian + b'ii8f')
         for unused_i in range(nentries):
@@ -908,9 +908,9 @@ class GEOM3:
         ntotal = 48 * self.factor  # 12*4
         ndatai = len(data) - n
         nentries = ndatai // ntotal
-        struct_if = Struct(op2._endian + b'i 2f i if if if 2i')
         assert nentries > 0, nentries
         assert ndatai % ntotal == 0, ndatai
+        struct_if = Struct(op2._endian + b'i 2f i if if if 2i')
 
 
         for unused_i in range(nentries):
@@ -940,7 +940,7 @@ class GEOM3:
 
         """
         op2 = self.op2
-        ntotal =  16  # 4*4
+        ntotal = 16 * self.factor  # 4*4
         nentries = (len(data) - n) // ntotal
         struc = Struct(op2._endian + b'if2i')
         for unused_i in range(nentries):
@@ -957,7 +957,7 @@ class GEOM3:
 
     def _read_rforce(self, data: bytes, n: int) -> int:
         op2 = self.op2
-        ntotal =  40 * self.factor  # 10*4
+        ntotal = 40 * self.factor  # 10*4
         nentries = (len(data) - n) // ntotal
         struc = Struct(mapfmt(op2._endian + b'3i 4f ifi', self.size))
         for unused_i in range(nentries):
@@ -975,7 +975,7 @@ class GEOM3:
     def _read_sload(self, data: bytes, n: int) -> int:
         """SLOAD(5401, 54, 25)"""
         op2 = self.op2
-        ntotal =  12  # 3*4
+        ntotal = 12 * self.factor  # 3*4
         nentries = (len(data) - n) // ntotal
         struc = Struct(op2._endian + b'2i f')
         for unused_i in range(nentries):
@@ -1000,10 +1000,10 @@ class GEOM3:
 
     def _read_tempp1(self, data: bytes, n: int) -> int:
         op2 = self.op2
-        ntotal =  24  # 6*4
-        nentries = (len(data) - n) // ntotal
+        ntotal = 24 * self.factor  # 6*4
+        nloads = (len(data) - n) // ntotal
         struc = Struct(op2._endian + b'2i 4f')
-        for unused_i in range(nentries):
+        for unused_i in range(nloads):
             edata = data[n:n + ntotal]
             out = struc.unpack(edata)
             if op2.is_debug_file:
@@ -1012,7 +1012,7 @@ class GEOM3:
             load = TEMPP1.add_op2_data(out)
             op2._add_methods._add_load_object(load)
             n += ntotal
-        op2.card_count['TEMPP1'] = nentries
+        op2.card_count['TEMPP1'] = nloads
         return n
 
     def _read_tempp2(self, data: bytes, n: int) -> int:

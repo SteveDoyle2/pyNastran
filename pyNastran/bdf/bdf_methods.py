@@ -107,8 +107,9 @@ class BDFMethods(BDFAttributes):
             Map from property id to mass.
         mass_type_to_mass : dict {str : float, ...}
             Map from mass id to mass for mass elements.
+            CONM2s are listed here
 
-        TODO: What about CONRODs, CONM2s?
+        TODO: What about CONRODs?
         #'PBCOMP', 'PBMSECT', 'PBEAM3', 'PBEND', 'PIHEX', 'PCOMPS',
 
         """
@@ -144,8 +145,9 @@ class BDFMethods(BDFAttributes):
             Map from property id to nonstructural mass.
         mass_type_to_mass : dict {str : float, ...}
             Map from mass id to mass for mass elements.
+            CONM2s are listed here
 
-        TODO: What about CONRODs, CONM2s?
+        TODO: What about CONRODs?
         #'PBCOMP', 'PBMSECT', 'PBEAM3', 'PBEND', 'PIHEX', 'PCOMPS',
 
         """

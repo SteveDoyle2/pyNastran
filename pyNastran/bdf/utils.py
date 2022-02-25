@@ -23,6 +23,7 @@ if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.bdf.bdf import BDF
     from pyNastran.bdf.cards.coordinate_systems import Coord
 
+
 def parse_femap_syntax(lines: List[str]) -> np.ndarray:
     """Parses the following syntax from FEMAP:
 
@@ -60,6 +61,25 @@ def parse_femap_syntax(lines: List[str]) -> np.ndarray:
     values2 = np.unique(np.hstack(values))
     return values2
 
+
+
+def get_femap_property_comments_dict(data_dict):
+    return _get_femap_comments_dict(data_dict, word='Femap Property')
+def get_femap_material_comments_dict(data_dict):
+    return _get_femap_comments_dict(data_dict, word='Femap Material')
+
+def _get_femap_comments_dict(data_dict, word: str):
+    word = word.lower()
+    comment_dict = {}
+    for pid, prop in data_dict.items():
+        lines = prop.comment.split('\n')
+        commenti = ''
+        for line in lines:
+            if word in line.lower():
+                base, commenti = line.split(':', 1)
+                break
+        comment_dict[pid] = commenti.strip()
+    return comment_dict
 
 def Position(xyz: NDArray3float, cid: int, model: BDF) -> np.ndarray:
     """

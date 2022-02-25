@@ -17,7 +17,7 @@ if qt_version == 'pyqt5':
         IS_SCINTILLA = True
     except ImportError:
         IS_SCINTILLA = False
-elif qt_version == 'pyside2':
+elif qt_version in {'pyside2', 'pyside6'}:
     IS_SCINTILLA = False
 else:
     raise NotImplementedError('qt_version = %r' % qt_version)

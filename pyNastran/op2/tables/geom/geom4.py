@@ -511,11 +511,11 @@ class GEOM4(GeomCommon):
         50503, 50003, 52127, 123456, 0, 0, 654321,
         """
         op2 = self.op2
-        s = Struct(mapfmt(op2._endian + b'7i', self.size))
         ntotal = 28 * self.factor
         nelements = (len(data) - n) // ntotal
         assert (len(data) - n) % ntotal == 0
         elems = []
+        s = Struct(mapfmt(op2._endian + b'7i', self.size))
         for unused_i in range(nelements):
             edata = data[n:n + ntotal]  # 8*4
             out = s.unpack(edata)
@@ -537,12 +537,12 @@ class GEOM4(GeomCommon):
     def _read_rbar_msc_32(self, card_obj, data: bytes, n: int) -> int:
         """RBAR(6601,66,292) - Record 22 - MSC version"""
         op2 = self.op2
-        s = Struct(mapfmt(op2._endian + b'7if', self.size))
         ntotal = 32 * self.factor  # 8*4
         nelements = (len(data) - n) // ntotal
         if not (len(data) - n) % ntotal == 0:
             raise MixedVersionCard('failed reading as MSC')
         elems = []
+        s = Struct(mapfmt(op2._endian + b'7if', self.size))
         for unused_i in range(nelements):
             edata = data[n:n + ntotal]
             out = s.unpack(edata)
@@ -564,12 +564,12 @@ class GEOM4(GeomCommon):
         """
         op2 = self.op2
         log = op2.log
-        s = Struct(mapfmt(op2._endian + b'7i 2f', self.size))
         ntotal = 36 * self.factor  # 9*4
         nelements = (len(data) - n) // ntotal
         if not (len(data) - n) % ntotal == 0:
             raise MixedVersionCard('failed reading as MSC')
         elems = []
+        s = Struct(mapfmt(op2._endian + b'7i 2f', self.size))
         for unused_i in range(nelements):
             edata = data[n:n + ntotal]
             out = s.unpack(edata)
@@ -649,8 +649,8 @@ class GEOM4(GeomCommon):
         RBE2(6901,69,295) - Record 24
         """
         op2 = self.op2
-        idata = np.frombuffer(data[n:], op2.idtype8).copy()
-        fdata = np.frombuffer(data[n:], op2.fdtype8).copy()
+        idata = np.frombuffer(data, op2.idtype8, offset=n).copy()
+        fdata = np.frombuffer(data, op2.fdtype8, offset=n).copy()
         read_rbe2s_from_idata_fdata(op2, idata, fdata)
         return len(data)
 
@@ -658,8 +658,8 @@ class GEOM4(GeomCommon):
         """RBE3(7101,71,187) - Record 25"""
         #self.show_data(data[n+80:], 'ifs')
         op2 = self.op2
-        idata = np.frombuffer(data[n:], op2.idtype8).copy()
-        fdata = np.frombuffer(data[n:], op2.fdtype8).copy()
+        idata = np.frombuffer(data, op2.idtype8, offset=n).copy()
+        fdata = np.frombuffer(data, op2.fdtype8, offset=n).copy()
         read_rbe3s_from_idata_fdata(op2, idata, fdata)
         return len(data)
 
@@ -849,7 +849,7 @@ class GEOM4(GeomCommon):
     def _read_spcoff(self, data: bytes, n: int) -> int:
         """SPCOFF(5501,55,16) - Record 44"""
         op2 = self.op2
-        ntotal = 16
+        ntotal = 16 * self.factor
         nentries = (len(data) - n) // ntotal
         struct_3if = Struct(op2._endian + b'iiif')
         for unused_i in range(nentries):
@@ -884,7 +884,7 @@ class GEOM4(GeomCommon):
         op2 = self.op2
         log = op2.log
         #log.debug('read_spc_mpc')
-        ntotal = 20
+        ntotal = 20 * self.factor
         nentries = (len(data) - n) // ntotal
         assert nentries > 0, nentries
         assert (len(data) - n) % ntotal == 0
@@ -1187,12 +1187,12 @@ class GEOM4(GeomCommon):
 
         """
         op2 = self.op2
-        struct_4if = Struct(op2._endian + b'4if')
-        ntotal = 20 # 5*4
+        ntotal = 20 * self.factor  # 5*4
         nentries = (len(data) - n) // ntotal
         assert nentries > 0, nentries
         assert (len(data) - n) % ntotal == 0
         constraints = []
+        struct_4if = Struct(op2._endian + b'4if')
         for unused_i in range(nentries):
             edata = data[n:n + ntotal]
             out = struct_4if.unpack(edata)

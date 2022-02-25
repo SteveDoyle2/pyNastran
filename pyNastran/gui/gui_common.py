@@ -69,7 +69,7 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
         #super(QMainWindow, self).__init__(self)
         if qt_version == 'pyqt5':
             super(GuiCommon, self).__init__(**kwds)
-        elif qt_version == 'pyside2':
+        elif qt_version in {'pyside2', 'pyside6'}:
             QMainWindow.__init__(self)
             GuiVTKCommon.__init__(self, **kwds)
         else:  #: pragma: no cover
