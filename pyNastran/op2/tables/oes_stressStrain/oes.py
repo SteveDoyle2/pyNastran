@@ -1482,7 +1482,7 @@ class OES(OP2Common2):
             n, nelements, ntotal = self._oes_cshear(data, ndata, dt, is_magnitude_phase,
                                                     result_type, prefix, postfix)
 
-        elif op2.element_type in [11, 12, 13, 14]:  # springs
+        elif op2.element_type in {11, 12, 13, 14}:  # springs
             # 11-CELAS1
             # 12-CELAS2
             # 13-CELAS3

@@ -116,6 +116,9 @@ table_name_to_table_code = {
     # displacement (msc/nx)
     'OUGV1' : 1,
     'BOUGV1' : 1,
+    # velocity
+    'OVG1': 11,
+
     # load vector (msc/nx)
     'OPG1' : 2,
     'BOPG1' : 2,

@@ -5,7 +5,7 @@ from numpy import zeros
 from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.op2.result_objects.op2_objects import get_complex_times_dtype
 from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import (
-    StressObject, StrainObject, OES_Object)
+    StressObject, StrainObject, OES_Object, get_scode, oes_complex_data_code)
 from pyNastran.f06.f06_formatting import write_imag_floats_13e, _eigenvalue_header
 
 
@@ -70,6 +70,77 @@ class ComplexSpringDamperArray(OES_Object):
         self.data_frame = self._build_pandas_transient_elements(
             column_values, column_names,
             headers, self.element, self.data)
+
+
+    @classmethod
+    def add_freq_case(cls, table_name, element, data, isubcase,
+                      freqs,
+                      element_name: str,
+                      is_strain: bool=True,
+                      is_sort1=True, is_random=False, is_msc=True,
+                      random_code=0, title='', subtitle='', label=''):
+
+        analysis_code = 5 # freq
+        data_code = oes_complex_data_code(
+            table_name, analysis_code,
+            is_sort1=is_sort1, is_random=is_random,
+            random_code=random_code, title=title, subtitle=subtitle, label=label,
+            is_msc=is_msc)
+        #data_code['modes'] = modes
+        #data_code['eigns'] = eigenvalues
+        #data_code['mode_cycles'] = mode_cycles
+        data_code['data_names'] = ['freq']
+        data_code['name'] = 'FREQ'
+
+        ntimes = data.shape[0]
+        nnodes = data.shape[1]
+        dt = freqs[0]
+
+        ELEMENT_NAME_TO_ELEMENT_TYPE = {
+            'CELAS1': 11,
+            'CELAS2': 12,
+            'CELAS3': 13,
+            'CELAS4': 14,
+        }
+        #
+        #stress_bits[1] = 1  # strain bit (vs. stress)
+        #stress_bits[2] = 1  # curvature bit (vs. fiber)     ---> always 0
+        #stress_bits[3] = 1  # strain bit (vs. stress)
+        #stress_bits[4] = 1  # von mises bit (vs. max shear) ---> always 0
+        if is_strain:
+            # fiber   # 2  =0
+            # strain  # 1,3=1
+            #stress_bits[2] == 0
+            stress_bits = [1, 1, 0, 1, 0]
+            #data_code['s_code'] = 1 # strain?
+        else:
+            # fiber   # 2   =0
+            # stress  # 1, 3=0
+            stress_bits = [0, 0, 0, 0, 0]
+            #data_code['s_code'] = 0
+
+        s_code = get_scode(stress_bits)
+        data_code['stress_bits'] = stress_bits
+        data_code['s_code'] = s_code
+
+        assert stress_bits[1] == stress_bits[3]  # strain
+
+        element_type = ELEMENT_NAME_TO_ELEMENT_TYPE[element_name.upper()]
+        data_code['element_name'] = element_name.upper()
+        data_code['element_type'] = element_type
+
+        obj = cls(data_code, is_sort1, isubcase, dt)
+        assert element.ndim == 1, element.shape
+        obj.element = element
+        obj.data = data
+
+        obj.stress_bits = stress_bits
+        obj.freqs = freqs
+
+        obj.ntimes = ntimes
+        obj.ntotal = nnodes
+        obj._times = freqs
+        return obj
 
     def __eq__(self, table):  # pragma: no cover
         assert self.is_sort1 == table.is_sort1
