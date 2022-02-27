@@ -4,7 +4,7 @@ from numpy import zeros, searchsorted, allclose
 
 from pyNastran.op2.result_objects.op2_objects import get_times_dtype
 from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import (
-    StressObject, StrainObject, OES_Object, oes_data_code)
+    StressObject, StrainObject, OES_Object, oes_real_data_code)
 from pyNastran.op2.op2_interface.write_utils import view_dtype, view_idtype_as_fdtype
 from pyNastran.f06.f06_formatting import write_floats_13e, _eigenvalue_header #, get_key0
 
@@ -33,11 +33,11 @@ class RealRodArray(OES_Object):
                         random_code=0, title='', subtitle='', label=''):
 
         analysis_code = 1 # static
-        data_code = oes_data_code(table_name, analysis_code,
-                                  is_sort1=is_sort1, is_random=is_random,
-                                  random_code=random_code,
-                                  title=title, subtitle=subtitle, label=label,
-                                  is_msc=is_msc)
+        data_code = oes_real_data_code(table_name, analysis_code,
+                                       is_sort1=is_sort1, is_random=is_random,
+                                       random_code=random_code,
+                                       title=title, subtitle=subtitle, label=label,
+                                       is_msc=is_msc)
         data_code['lsdvmns'] = [0] # TODO: ???
         data_code['data_names'] = []
 
@@ -305,7 +305,7 @@ class RealRodArray(OES_Object):
                   is_mag_phase=False, endian='>'):
         """writes an OP2"""
         import inspect
-        from struct import Struct, pack
+        from struct import pack # Struct,
         frame = inspect.currentframe()
         call_frame = inspect.getouterframes(frame, 2)
         op2_ascii.write(f'{self.__class__.__name__}.write_op2: {call_frame[1][3]}\n')
@@ -347,7 +347,7 @@ class RealRodArray(OES_Object):
 
         if not self.is_sort1:
             raise NotImplementedError('SORT2')
-        struct1 = Struct(endian + b'i4f')
+        #struct1 = Struct(endian + b'i4f')
 
         fdtype = self.data.dtype
         if self.size == 4:

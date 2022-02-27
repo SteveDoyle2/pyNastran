@@ -3,11 +3,10 @@ from struct import Struct, pack
 from typing import List, Tuple
 
 import numpy as np
-from numpy import zeros
 
-from pyNastran.utils.numpy_utils import integer_types
+from pyNastran.utils.numpy_utils import integer_types, zip_strict
 from pyNastran.op2.result_objects.op2_objects import get_complex_times_dtype
-from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import StressObject, StrainObject, OES_Object
+from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import StressObject, StrainObject, OES_Object, oes_complex_data_code
 from pyNastran.f06.f06_formatting import write_imag_floats_13e, write_float_13e
 
 #BASIC_TABLES = {
@@ -111,7 +110,7 @@ class ComplexPlateArray(OES_Object):
             #print(f'  SORT2: ntimes={ntimes} nelements={nelements} nlayers={nlayers} {self.element_name}-{self.element_type}')
         #print("nelements=%s nlayers=%s ntimes=%s" % (nelements, nlayers, ntimes))
 
-        self._times = zeros(ntimes, dtype=dtype)
+        self._times = np.zeros(ntimes, dtype=dtype)
         #self.ntotal = self.nelements * nnodes
 
         # the number is messed up because of the offset for the element's properties
@@ -122,14 +121,14 @@ class ComplexPlateArray(OES_Object):
                 #self.nelements * nnodes, self.ntotal)
             #raise RuntimeError(msg)
 
-        self.fiber_curvature = zeros(nlayers, 'float32')
+        self.fiber_curvature = np.zeros(nlayers, dtype='float32')
 
         nelement_nodes = nlayers
         # [oxx, oyy, txy]
-        self.data = zeros((ntimes, nlayers, 3), dtype=cfdtype)
+        self.data = np.zeros((ntimes, nlayers, 3), dtype=cfdtype)
 
         # TODO: could be more efficient by using nelements for cid
-        self.element_node = zeros((nelement_nodes, 2), dtype=idtype)
+        self.element_node = np.zeros((nelement_nodes, 2), dtype=idtype)
         #self.element_cid = zeros((self.nelements, 2), 'int32')
         #print(self.data.shape, self.element_node.shape)
 
@@ -333,7 +332,7 @@ class ComplexPlateArray(OES_Object):
         #nodes = self.element_node[:, 1]
 
         ilayer0 = True
-        for eid, fd, doxx, doyy, dtxy in zip(eids, fds, oxx, oyy, txy):
+        for eid, fd, doxx, doyy, dtxy in zip_strict(eids, fds, oxx, oyy, txy):
             fdr = write_float_13e(fd)
             [oxxr, oyyr, txyr,
              oxxi, oyyi, txyi,] = write_imag_floats_13e([doxx, doyy, dtxy], is_magnitude_phase)
@@ -363,7 +362,7 @@ class ComplexPlateArray(OES_Object):
         nodes = self.element_node[:, 1]
 
         ilayer0 = True
-        for eid, node, fd, doxx, doyy, dtxy in zip(eids, nodes, fds, oxx, oyy, txy):
+        for eid, node, fd, doxx, doyy, dtxy in zip_strict(eids, nodes, fds, oxx, oyy, txy):
             fdr = write_float_13e(fd)
             [oxxr, oyyr, txyr,
              oxxi, oyyi, txyi,] = write_imag_floats_13e([doxx, doyy, dtxy], is_magnitude_phase)
@@ -436,6 +435,7 @@ class ComplexPlateArray(OES_Object):
 
         op2_ascii.write(f'nelements={nelements:d}\n')
         if nnodes == 1: # CTRIA3 centroid
+            #num_wide = 17
             itable = self._write_op2_ctria3(
                 op2_file, op2_ascii, new_result, itable,
                 ntotal, eids_device)
@@ -555,6 +555,71 @@ class ComplexPlateArray(OES_Object):
             op2_ascii.write('footer = %s\n' % header)
             new_result = False
         return itable
+
+    @classmethod
+    def add_freq_case(cls, table_name, element_node, fiber, data, isubcase,
+                      freqs,
+                      element_name: str,
+                      is_stress: bool=True,
+                      is_sort1=True, is_random=False, is_msc=True,
+                      random_code=0, title='', subtitle='', label=''):
+
+        analysis_code = 5 # freq
+        data_code = oes_complex_data_code(
+            table_name, analysis_code,
+            is_sort1=is_sort1, is_random=is_random,
+            random_code=random_code, title=title, subtitle=subtitle, label=label,
+            is_msc=is_msc)
+        #data_code['modes'] = modes
+        #data_code['eigns'] = eigenvalues
+        #data_code['mode_cycles'] = mode_cycles
+        data_code['data_names'] = ['freq']
+        data_code['name'] = 'FREQ'
+
+        ntimes = data.shape[0]
+        nnodes = data.shape[1]
+        dt = freqs[0]
+
+        ELEMENT_NAME_TO_ELEMENT_TYPE = {
+            'CTRIA3' : 74,
+            'CQUAD4' : 33,
+
+            'CQUAD8' : 64,
+            'CTRIAR' : 70,
+            'CTRIA6' : 75,
+            #- 64 : CQUAD8
+            #- 70 : CTRIAR
+            #- 75 : CTRIA6
+            #- 82 : CQUADR
+            #- 144 : CQUAD4-bilinear
+
+        }
+        # totally guessing...
+        if is_stress:
+            stress_bits = [0, 0, 0, 0, 0]
+            data_code['s_code'] = 0
+        else:
+            stress_bits = [1, 0, 0, 1, 0]
+            data_code['s_code'] = 1 # strain?
+        data_code['stress_bits'] = stress_bits
+
+        element_type = ELEMENT_NAME_TO_ELEMENT_TYPE[element_name.upper()]
+        data_code['element_name'] = element_name.upper()
+        data_code['element_type'] = element_type
+
+        obj = cls(data_code, is_sort1, isubcase, dt)
+        assert element_node.ndim == 2, element_node.shape
+        obj.element_node = element_node
+        obj.fiber_curvature = fiber
+        obj.data = data
+
+        obj.stress_bits = stress_bits
+        obj.freqs = freqs
+
+        obj.ntimes = ntimes
+        obj.ntotal = nnodes
+        obj._times = freqs
+        return obj
 
 def _get_plate_msg(self, is_mag_phase=True, is_sort1=True) -> Tuple[List[str], int, bool]:
     #if self.is_von_mises:

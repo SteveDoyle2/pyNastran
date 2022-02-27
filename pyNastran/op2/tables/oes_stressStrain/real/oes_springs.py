@@ -7,7 +7,7 @@ from numpy import zeros
 from pyNastran.utils.numpy_utils import integer_types, float_types
 from pyNastran.op2.result_objects.op2_objects import get_times_dtype
 from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import (
-    StressObject, StrainObject, OES_Object, oes_data_code)
+    StressObject, StrainObject, OES_Object, oes_real_data_code)
 from pyNastran.f06.f06_formatting import write_float_13e, _eigenvalue_header
 
 ELEMENT_NAME_TO_ELEMENT_TYPE = {
@@ -34,11 +34,11 @@ class RealSpringArray(OES_Object):
                         random_code=0, title='', subtitle='', label=''):
 
         analysis_code = 1 # static
-        data_code = oes_data_code(table_name, analysis_code,
-                                  is_sort1=is_sort1, is_random=is_random,
-                                  random_code=random_code,
-                                  title=title, subtitle=subtitle, label=label,
-                                  is_msc=is_msc)
+        data_code = oes_real_data_code(table_name, analysis_code,
+                                       is_sort1=is_sort1, is_random=is_random,
+                                       random_code=random_code,
+                                       title=title, subtitle=subtitle, label=label,
+                                       is_msc=is_msc)
         data_code['lsdvmns'] = [0] # TODO: ???
         data_code['data_names'] = []
 
@@ -386,7 +386,7 @@ class RealSpringArray(OES_Object):
                   date, is_mag_phase=False, endian='>'):
         """writes an OP2"""
         import inspect
-        from struct import Struct, pack
+        from struct import pack
         frame = inspect.currentframe()
         call_frame = inspect.getouterframes(frame, 2)
         op2_ascii.write(f'{self.__class__.__name__}.write_op2: {call_frame[1][3]}\n')
@@ -421,7 +421,7 @@ class RealSpringArray(OES_Object):
 
         if not self.is_sort1:
             raise NotImplementedError('SORT2')
-        struct1 = Struct(endian + b'if')
+        #struct1 = Struct(endian + b'if')
 
         fdtype = self.data.dtype
         if self.size == 4:

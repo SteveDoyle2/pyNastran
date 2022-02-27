@@ -328,9 +328,37 @@ class StrainObject(OES_Object):
         return False
 
 
-def oes_data_code(table_name, analysis_code,
-                  is_sort1=True, is_random=False,
+def oes_complex_data_code(table_name: str, analysis_code: int,
+                          is_sort1: bool=True, is_random: bool=False,
+                          random_code=0, title='', subtitle='', label='', is_msc=True):
+    dtype_code = 1 # complex
+    data_code = _oes_data_code(table_name, analysis_code, dtype_code,
+                               is_sort1=is_sort1,
+                               is_random=is_random, random_code=random_code,
+                               title=title, subtitle=subtitle, label=label, is_msc=is_msc)
+    return data_code
+
+def oes_real_data_code(table_name: str, analysis_code: int,
+                       is_sort1: bool=True, is_random: bool=False,
+                       random_code=0, title='', subtitle='', label='', is_msc=True):
+    dtype_code = 0 # real
+    data_code = _oes_data_code(table_name, analysis_code, dtype_code,
+                               is_sort1=is_sort1,
+                               is_random=is_random, random_code=random_code,
+                               title=title, subtitle=subtitle, label=label, is_msc=is_msc)
+    return data_code
+
+def _oes_data_code(table_name: str, analysis_code: int, dtype_code: int,
+                  is_sort1: bool=True, is_random: bool=False,
                   random_code=0, title='', subtitle='', label='', is_msc=True):
+    """
+    Parameters
+    ----------
+    dtype_code : int
+      0 : real
+      1 : complex
+      2 : random
+    """
     sort1_sort_bit = 0 if is_sort1 else 1
     random_sort_bit = 1 if is_random else 0
     sort_method = 1 if is_sort1 else 2
@@ -365,7 +393,7 @@ def oes_data_code(table_name, analysis_code,
         'nonlinear_factor': None,
         'approach_code' : approach_code,
         'analysis_code' : analysis_code,
-        'sort_bits': [0, sort1_sort_bit, random_sort_bit], # real, sort1, random
+        'sort_bits': [dtype_code, sort1_sort_bit, random_sort_bit], # real, sort1, random
         'sort_method' : sort_method,
         'is_msc': is_msc,
         #'is_nasa95': is_nasa95,
@@ -379,7 +407,7 @@ def oes_data_code(table_name, analysis_code,
         'title' : title,
         'subtitle': subtitle,
         'label': label,
-        'num_wide' : 8, # displacement-style table
+        #'num_wide' : 8, # displacement-style table
     }
     return data_code
 

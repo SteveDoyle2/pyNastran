@@ -6,7 +6,7 @@ from numpy import zeros, searchsorted, ravel
 from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.op2.result_objects.op2_objects import get_times_dtype
 from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import (
-    StressObject, StrainObject, OES_Object, oes_data_code)
+    StressObject, StrainObject, OES_Object, oes_real_data_code)
 from pyNastran.f06.f06_formatting import write_floats_13e, _eigenvalue_header
 
 ELEMENT_NAME_TO_ELEMENT_TYPE = {
@@ -57,11 +57,11 @@ class RealBarArray(OES_Object):
                         random_code=0, title='', subtitle='', label=''):
 
         analysis_code = 1 # static
-        data_code = oes_data_code(table_name, analysis_code,
-                                  is_sort1=is_sort1, is_random=is_random,
-                                  random_code=random_code,
-                                  title=title, subtitle=subtitle, label=label,
-                                  is_msc=is_msc)
+        data_code = oes_real_data_code(table_name, analysis_code,
+                                       is_sort1=is_sort1, is_random=is_random,
+                                       random_code=random_code,
+                                       title=title, subtitle=subtitle, label=label,
+                                       is_msc=is_msc)
         data_code['lsdvmns'] = [0] # TODO: ???
         data_code['data_names'] = []
 

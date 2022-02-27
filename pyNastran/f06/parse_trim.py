@@ -34,6 +34,30 @@ SKIP_FLAGS = [
     'FLUTTER  SUMMARY',
     #'* * * *  A N A L Y S I S  S U M M A R Y  T A B L E  * * * *',  # causes a crash
 ]
+
+
+class TrimResults:
+    def __init__(self):
+        self.aero_pressure = {}
+        self.aero_force = {}
+
+    def __repr__(self) -> str:
+        msg = (
+            'TrimResults:'
+        )
+        if len(self.aero_force):
+            keys = [str(case) for case in self.aero_force]
+            msg += '\n  aero_force keys:\n - ' + '\n   - '.join(keys)
+        else:
+            msg += '\n  len(aero_force) = 0'
+
+        if len(self.aero_pressure):
+            keys = [str(case) for case in self.aero_pressure]
+            msg += '\n  aero_pressure keys:\n - ' + '\n   - '.join(keys)
+        else:
+            msg += '\n  len(aero_pressure) = 0'
+        return msg
+
 def read_f06_trim(f06_filename: str,
                       log: Optional[SimpleLogger]=None,
                       nlines_max: int=1_000_000) -> TrimResults:
@@ -46,6 +70,7 @@ def read_f06_trim(f06_filename: str,
         log.info('found the following tables in the f06: %s' % (list(tables)))
     if len(matrices):
         log.info('found the following matrices in the f06: %s' % (list(matrices)))
+    str(trim_results)
     return trim_results
 
 def _skip_to_page_stamp(f06_file: TextIO, line: str, i: int,
@@ -86,8 +111,8 @@ def _read_f06_trim(f06_file: TextIO, log: SimpleLogger,
         if any(iflags):
             iblank_count = 0
             flag = SKIP_FLAGS[iflags.index(True)]
-            if debug:
-                log.info(f'******* found skip flag: {flag}')
+            #if debug:
+                #log.info(f'******* found skip flag: {flag}')
             #print('skip', line)
             line, i = _skip_to_page_stamp(f06_file, line, i, nlines_max)
             if 'trademark' not in line:
@@ -101,7 +126,7 @@ def _read_f06_trim(f06_file: TextIO, log: SimpleLogger,
             #matrices[matrix_name] = matrix
             #del matrix_name, matrix
         elif 'A E R O S T A T I C   D A T A   R E C O V E R Y   O U T P U T   T A B L E S' in line:
-            log.debug('')
+            log.debug('reading aero static data recovery tables')
             iblank_count = 0
             line, i, ipressure, iforce = _read_aerostatic_data_recovery_output_table(
                 f06_file, line, i, nlines_max,
@@ -109,14 +134,10 @@ def _read_f06_trim(f06_file: TextIO, log: SimpleLogger,
                 title, subtitle, subcase,
                 dirname, ipressure, iforce, log)
         elif 'PAGE' in line and any(month in line for month in MONTHS):
-            if i > 800:
-                x = 1
             line, i, title, subtitle, subcase = _get_title_subtitle_subcase(f06_file, line, i, nlines_max)
-            log.info(f'title={title!r} subtitle={subtitle!r}')
+            #log.info(f'title={title!r} subtitle={subtitle!r}')
         else:
-            log.debug(f'else: i={i} {line.strip()}')
-            if i == 837:
-                x = 1
+            #log.debug(f'else: i={i} {line.strip()}')
             line_strip = line.strip()
             if len(line_strip) == 0:
                 iblank_count += 1
@@ -164,10 +185,6 @@ def _get_title_subtitle_subcase(f06_file: TextIO,
     assert len(subcase_int) < 4, f'len(subcase_int)={len(subcase_int)}; subcase_int={subcase_int!r}; subcase={subcase!r}'
     return line, i, title, subtitle, subcase_int
 
-class TrimResults:
-    def __init__(self):
-        self.aero_pressure = {}
-        self.aero_force = {}
 
 def _read_aerostatic_data_recovery_output_table(f06_file: TextIO,
                                                 line: str, i: int, nlines_max: int,
@@ -288,7 +305,7 @@ def _read_aerostatic_data_recover_output_table_pressure(f06_file: TextIO,
     '                                          32     LS            5.390633E-02         5.390633E-02'
     '                                          33     LS            4.857536E-02         4.857536E-02'
     """
-    log.debug('reading aero pressure')
+    log.debug(' - reading aero pressure')
     line1 = f06_file.readline()
     line2 = f06_file.readline()
     line3 = f06_file.readline()
@@ -336,7 +353,7 @@ def _read_aerostatic_data_recover_output_table_force(f06_file: TextIO,
     '        1        2   LS     0.000000E+00      0.000000E+00      2.964140E-03      0.000000E+00      3.705175E-05      0.000000E+00'
 
     """
-    log.debug('reading aero force')
+    log.debug(' - reading aero force')
     assert 'AERODYNAMIC FORCES ON THE AERODYNAMIC ELEMENTS' in line, line.strip()
 
     line = f06_file.readline()
