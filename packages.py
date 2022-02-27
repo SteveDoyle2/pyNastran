@@ -352,10 +352,11 @@ def get_package_requirements(is_gui: bool=True, add_vtk_qt: bool=True,
             all_reqs['pillow'] = 'pillow >=5.2.0, !=7.1.0'
             install_requires.append('pillow >= 5.2.0, !=7.1.0')  # 7.1.1 used
 
-            # pip messes up dependency resolution if you use newer versions of numpy
-            imageio_str_ver = '>= 2.2.0'
-            if found_numpy and int_version('numpy', all_reqs['numpy']) < (1, 20, 0):
-                imageio_str_ver = '>=2.2.0,<2.16.0'
+        # pip messes up dependency resolution if you use newer versions of numpy
+        imageio_str_ver = '>= 2.2.0'
+        if found_numpy and int_version('numpy', all_reqs['numpy']) < (1, 20, 0):
+            imageio_str_ver = '>=2.2.0,<2.16.0'
+
         try:
             import imageio
             if imageio.__version__ < '2.2.0':
@@ -365,7 +366,6 @@ def get_package_requirements(is_gui: bool=True, add_vtk_qt: bool=True,
             else:
                 all_reqs['imageio'] = imageio.__version__
         except ImportError:
-            if
             all_reqs['imageio'] = imageio_str_ver
             install_requires.append('imageio %s' % imageio_str_ver)  # 2.6.1 used
 
