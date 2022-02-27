@@ -8,7 +8,7 @@ from typing import TYPE_CHECKING
 import numpy as np
 
 from pyNastran.dev.solver.utils import lambda1d, get_ieids_eids
-from pyNastran.op2.op2_interface.hdf5_interface import (
+from pyNastran.op2.op2_interface.op2_classes import (
     RealRodStressArray,
 )
 from .static_spring import _recover_stress_celas

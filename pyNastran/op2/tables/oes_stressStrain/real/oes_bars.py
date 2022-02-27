@@ -62,6 +62,7 @@ class RealBarArray(OES_Object):
                                        random_code=random_code,
                                        title=title, subtitle=subtitle, label=label,
                                        is_msc=is_msc)
+        data_code['num_wide'] = 17
         data_code['lsdvmns'] = [0] # TODO: ???
         data_code['data_names'] = []
 

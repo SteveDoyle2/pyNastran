@@ -18,7 +18,7 @@ from pyNastran.f06.f06_writer import make_end
 from pyNastran.f06.tables.oload_resultant import Resultant
 
 from pyNastran.op2.op2 import OP2
-from pyNastran.op2.op2_interface.hdf5_interface import (
+from pyNastran.op2.op2_interface.op2_classes import (
     RealDisplacementArray, RealSPCForcesArray, RealLoadVectorArray,
     RealEigenvalues)
 from pyNastran.op2.result_objects.grid_point_weight import make_grid_point_weight

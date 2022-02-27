@@ -1354,6 +1354,8 @@ class OP2Reader:
                     print(op2.coords)
                 raise RuntimeError(msg)
 
+            if not is_geometry:
+                return
             for intsi, valuesi in zip(ints, floats):
                 cid = intsi[0]
                 coord_type_int = intsi[1]
@@ -1426,7 +1428,7 @@ class OP2Reader:
                 values = np.frombuffer(blocks[1], dtype='float32').reshape(ncoords // 4, 12)
                 #print('floats =', floats.tolist())
 
-            self.op2.cstm.data = np.concatenate([ints, values], axis=1)
+            op2.op2_results.cstm.data = np.concatenate([ints, values], axis=1)
             if not is_geometry:
                 return
 

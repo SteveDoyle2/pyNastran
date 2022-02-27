@@ -6,7 +6,7 @@ from pyNastran.nptyping import NDArrayNfloat
 from pyNastran.dev.solver.utils import lambda1d, get_ieids_eids
 from pyNastran.dev.solver.build_stiffness import ke_cbar
 from .static_spring import recover_celas
-from pyNastran.op2.op2_interface.hdf5_interface import (
+from pyNastran.op2.op2_interface.op2_classes import (
     #RealStrainEnergyArray,
     RealRodStrainArray,
     RealBarStrainArray,

@@ -10,7 +10,7 @@ PKG_PATH = pyNastran.__path__[0]
 TEST_PATH = os.path.join(PKG_PATH, 'bdf', 'dev_vectorized', 'solver', 'test')
 log = SimpleLogger('warning', encoding='utf8')
 
-class TestSolver(unittest.TestCase):
+class TestSolverSpring(unittest.TestCase):
     """tests the pyNastran solver"""
 
     def test_celas1(self):

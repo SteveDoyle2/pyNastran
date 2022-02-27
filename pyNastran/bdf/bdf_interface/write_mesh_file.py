@@ -88,8 +88,8 @@ class WriteMeshs(WriteMesh):
         #print("out_filename0 =", out_filename0)
 
         interspersed = False
-        out_filename = _output_helper(out_filename0,
-                                      interspersed, size, is_double)
+        out_filename, size = _output_helper(
+            out_filename0, interspersed, size, is_double, self.log)
         self.log.debug(f'---starting BDF.write_bdf of {out_filename}---')
         encoding = self.get_encoding(encoding)
 

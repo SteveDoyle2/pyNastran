@@ -293,10 +293,10 @@ class Solver(OP2):
         self.case_result_flags = {}
 
         #==============================
-        self.is_displacement = True
-        self.is_stress = True
-        self.is_strain = True
-        self.is_force = True
+        self.is_displacement_result = True
+        self.is_stress_result = True
+        self.is_strain_result = True
+        self.is_force_result = True
         self.positions = {}
         self.subtitle = None
         self.model = None
@@ -619,20 +619,22 @@ class Solver(OP2):
                 #else:
                     #raise NotImplementedError('FORCE = %r is not supported' % value)
 
-            self.is_displacement = True
-            self.is_stress = True
-            self.is_strain = True
-            self.is_force = True
+            self.is_displacement_result = True
+            self.is_stress_result = True
+            self.is_strain_result = True
+            self.is_force_result = True
             if not self.case_result_flags['DISPLACEMENT'][0]:
-                self.is_displacement = False
+                self.is_displacement_result = False
             if not self.case_result_flags['STRESS'][0]:
-                self.is_stress = False
+                self.is_stress_result = False
             if not self.case_result_flags['STRAIN'][0]:
-                self.is_strain = False
+                self.is_strain_result = False
             if not self.case_result_flags['FORCE'][0]:
-                self.is_force = False
+                self.is_force_result = False
 
-            if not(self.is_displacement or self.is_stress or self.is_strain or self.is_force):
+            if not(self.is_displacement_result or
+                   self.is_stress_result or self.is_strain_result or
+                   self.is_force_result):
                 msg = 'No results selected...'
                 raise RuntimeError(msg)
             if model.sol not in sols:
@@ -790,7 +792,7 @@ class Solver(OP2):
         #for (i, iu) in enumerate(dofsA):
             #U[iu] = Ua[i]
 
-        #if self.is_displacement:
+        #if self.is_displacement_result:
             #self._store_displacements(model, U, case)
         #q = U
 
@@ -865,7 +867,7 @@ class Solver(OP2):
             self.log.info("*U = \n%s" % U)
             self.log.info("dofsA = %s" % dofsA)
 
-            if self.is_displacement:
+            if self.is_displacement_result:
                 self._store_displacements(model, U, case)
             q = U
         else:
@@ -899,7 +901,7 @@ class Solver(OP2):
         #nchexa8s  = model.elements_solid.chexa8.n
 
         #=========================
-        if self.is_stress or self.is_strain or self.is_force:
+        if self.is_stress_result or self.is_strain_result or self.is_force_result:
             # SPRINGS
             nsprings = 0
             element_types = [
@@ -930,10 +932,10 @@ class Solver(OP2):
 
                         self._store_spring_oes(model, eids, e1, case, element_type.type,
                                                Type='strain')
-                        #if self.is_stress:
+                        #if self.is_stress_result:
                         self._store_spring_oes(model, eids, o1, case, element_type.type,
                                                Type='stress')
-                        #if self.is_force:
+                        #if self.is_force_result:
                         self._store_spring_oef(model, eids, f1, case, element_type.type)
                         del e1
                         del o1
@@ -945,9 +947,9 @@ class Solver(OP2):
             # RODS
             element_types = [model.crod, model.conrod]  # model.ctube
 
-            self.is_stress = True
-            self.is_strain = True
-            self.is_force = True
+            self.is_stress_result = True
+            self.is_strain_result = True
+            self.is_force_result = True
             for element_type in element_types:
                 n = element_type.n
                 self.log.info('Type=%s n=%s displacement_stress' % (element_type.type, n))
@@ -960,15 +962,15 @@ class Solver(OP2):
                      f1, f4) = element_type.displacement_stress(
                          model, self.positions, q, self.nidComponentToID)
                     eids = element_type.element_id
-                    if self.is_strain:
+                    if self.is_strain_result:
                         self._store_rod_oes(
                             model, eids, e1, e4, case, element_type.type, Type='strain')
                     del e1, e4
-                    if self.is_stress:
+                    if self.is_stress_result:
                         self._store_rod_oes(
                             model, eids, o1, o4, case, element_type.type, Type='stress')
                     del o1, o4
-                    if self.is_force:
+                    if self.is_force_result:
                         self._store_rod_oef(model, eids, f1, f4, case, element_type.type)
                     del f1, f4
                 del element_type
@@ -1010,11 +1012,11 @@ class Solver(OP2):
                     o1[i] = oxi
                     e1[i] = exi
                     f1[i] = fxi
-                #if self.is_strain:
+                #if self.is_strain_result:
                 self._store_bar_oes(model, cbars, e1, case, Type='strain')
-                #if self.is_stress:
+                #if self.is_stress_result:
                 self._store_bar_oes(model, cbars, o1, case, Type='stress')
-                #if self.is_force:
+                #if self.is_force_result:
                 self._store_bar_oef(model, cbars, f1, case)
                 del e1
                 del o1
@@ -1035,11 +1037,11 @@ class Solver(OP2):
                     o1[i] = oxi
                     e1[i] = exi
                     f1[i] = fxi
-                #if self.is_strain:
+                #if self.is_strain_result:
                 self._store_beam_oes(model, cbeams, e1, case, Type='strain')
-                #if self.is_stress:
+                #if self.is_stress_result:
                 self._store_beam_oes(model, cbeams, o1, case, Type='stress')
-                #if self.is_force:
+                #if self.is_force_result:
                 self._store_beam_oef(model, cbeams, f1, case)
                 del e1
                 del o1
@@ -1080,11 +1082,11 @@ class Solver(OP2):
                     force[i0+i, :] = forcei
 
             if nctria3s or ncquad4s:
-                #if self.is_strain:
+                #if self.is_strain_result:
                 self._store_plate_oes(model, cbeams, stress, case, Type='strain')
-                #if self.is_stress:
+                #if self.is_stress_result:
                 self._store_plate_oes(model, cbeams, strain, case, Type='stress')
-                #if self.is_force:
+                #if self.is_force_result:
                 self._store_plate_oef(model, cbeams, force, case)
                 del stress, strain, force
 
