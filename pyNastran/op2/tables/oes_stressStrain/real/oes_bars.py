@@ -52,32 +52,54 @@ class RealBarArray(OES_Object):
         self.ielement = 0
 
     @classmethod
+    def _add_case(cls, analysis_code,
+                  table_name, element_name, element, data, isubcase,
+                  is_sort1, is_random, is_stress, is_msc,
+                  random_code, title, subtitle, label):
+        num_wide = 17
+        data_code = oes_real_data_code(table_name, analysis_code,
+                                       element_name, num_wide,
+                                       is_sort1=is_sort1, is_random=is_random,
+                                       random_code=random_code,
+                                       title=title, subtitle=subtitle, label=label,
+                                       is_msc=is_msc)
+
+        # I'm only sure about the 1s in the strains and the
+        # corresponding 0s in the stresses.
+        if is_stress:
+            stress_bits = [0, 0, 0, 0]
+            s_code = 0
+        else:
+            stress_bits = [0, 1, 0, 1]
+            s_code = 1
+        data_code['stress_bits'] = stress_bits
+        data_code['s_code'] = s_code
+        #data_code['num_wide'] = 17
+
+        element_type = ELEMENT_NAME_TO_ELEMENT_TYPE[element_name]
+        data_code['element_name'] = element_name
+        data_code['element_type'] = element_type
+        return data_code
+
+    @classmethod
     def add_static_case(cls, table_name, element_name, element, data, isubcase,
                         is_sort1=True, is_random=False, is_stress=True, is_msc=True,
                         random_code=0, title='', subtitle='', label=''):
 
         analysis_code = 1 # static
-        data_code = oes_real_data_code(table_name, analysis_code,
-                                       is_sort1=is_sort1, is_random=is_random,
-                                       random_code=random_code,
-                                       title=title, subtitle=subtitle, label=label,
-                                       is_msc=is_msc)
-        data_code['num_wide'] = 17
+        data_code = cls._add_case(
+            analysis_code,
+            table_name, element_name, element, data,
+            isubcase, is_sort1, is_random, is_stress, is_msc,
+            random_code, title, subtitle, label)
+        #data_code = oes_real_data_code(table_name, analysis_code,
+                                       #is_sort1=is_sort1, is_random=is_random,
+                                       #random_code=random_code,
+                                       #title=title, subtitle=subtitle, label=label,
+                                       #is_msc=is_msc)
+        #data_code['num_wide'] = 17
         data_code['lsdvmns'] = [0] # TODO: ???
         data_code['data_names'] = []
-
-        # I'm only sure about the 1s in the strains and the
-        # corresponding 0s in the stresses.
-        if is_stress:
-            data_code['stress_bits'] = [0, 0, 0, 0]
-            data_code['s_code'] = 0
-        else:
-            data_code['stress_bits'] = [0, 1, 0, 1]
-            data_code['s_code'] = 1 # strain?
-
-        element_type = ELEMENT_NAME_TO_ELEMENT_TYPE[element_name]
-        data_code['element_name'] = element_name
-        data_code['element_type'] = element_type
         data_code['load_set'] = 1
 
         ntimes = data.shape[0]

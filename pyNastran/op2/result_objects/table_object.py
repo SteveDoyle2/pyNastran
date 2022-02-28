@@ -943,16 +943,9 @@ class RealTableArray(TableArray):
         data_code['lsdvmns'] = [0] # TODO: ???
         data_code['data_names'] = []
 
-        ntimes = data.shape[0]
-        nnodes = data.shape[1]
-        dt = None
-        obj = cls(data_code, is_sort1, isubcase, dt)
-        obj.node_gridtype = node_gridtype
-        obj.data = data
-
-        obj.ntimes = ntimes
-        obj.ntotal = nnodes
-        obj._times = [None]
+        times = [None]
+        obj = _set_class(cls, data_code, is_sort1, isubcase, times,
+                         node_gridtype, data)
         return obj
 
     @classmethod
@@ -968,17 +961,9 @@ class RealTableArray(TableArray):
                                   is_msc=is_msc)
         data_code['data_names'] = ['dt']
 
-        ntimes = data.shape[0]
-        nnodes = data.shape[1]
-        dt = times[0]
-        obj = cls(data_code, is_sort1, isubcase, dt)
-        obj.node_gridtype = node_gridtype
-        obj.data = data
-
-        obj.ntimes = ntimes
-        obj.ntotal = nnodes
+        obj = _set_class(cls, data_code, is_sort1, isubcase, times,
+                         node_gridtype, data)
         obj.dts = times
-        obj._times = times
         return obj
 
     @classmethod
@@ -1002,25 +987,16 @@ class RealTableArray(TableArray):
                                   is_sort1=is_sort1, is_random=is_random,
                                   random_code=random_code, title=title, subtitle=subtitle, label=label,
                                   is_msc=is_msc)
-        #data_code['modes'] = modes
-        #data_code['eigns'] = eigenvalues
-        #data_code['mode_cycles'] = mode_cycles
+        data_code['modes'] = modes
+        data_code['eigns'] = eigenvalues
+        data_code['mode_cycles'] = mode_cycles
         data_code['data_names'] = ['modes', 'eigns', 'mode_cycles']
 
-        ntimes = data.shape[0]
-        nnodes = data.shape[1]
-        dt = modes[0]
-        obj = cls(data_code, is_sort1, isubcase, dt)
-        obj.node_gridtype = node_gridtype
-        obj.data = data
-
+        obj = _set_class(cls, data_code, is_sort1, isubcase, modes,
+                         node_gridtype, data)
         obj.modes = modes
         obj.eigns = eigenvalues
         obj.mode_cycles = mode_cycles
-
-        obj.ntimes = ntimes
-        obj.ntotal = nnodes
-        obj._times = modes
         return obj
 
 
@@ -1406,6 +1382,20 @@ class RealTableArray(TableArray):
         inids = np.searchsorted(nids, node_ids)
         assert all(nids[inids] == node_ids), 'nids=%s expected=%s; all=%s'  % (nids[inids], node_ids, nids)
         return self.data[:, inids, i]
+
+def _set_class(cls, data_code, is_sort1, isubcase, times,
+               node_gridtype, data):
+    dt = times[0]
+    ntimes = data.shape[0]
+    nnodes = data.shape[1]
+    obj = cls(data_code, is_sort1, isubcase, dt)
+    obj.node_gridtype = node_gridtype
+    obj.data = data
+
+    obj.ntimes = ntimes
+    obj.ntotal = nnodes
+    obj._times = times
+    return obj
 
 
 class ComplexTableArray(TableArray):
