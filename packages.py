@@ -70,7 +70,7 @@ REQS = {
         'matplotlib' : ('2.2', '>=2.2'),
     },
 }
-MAX_VERSION = '3.9'
+MAX_VERSION = '3.10'
 
 def check_python_version() -> None:
     """verifies the python version"""
