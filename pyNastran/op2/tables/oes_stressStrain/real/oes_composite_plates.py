@@ -5,7 +5,9 @@ from numpy import zeros, searchsorted, unique, ravel
 from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.op2.result_objects.op2_objects import get_times_dtype
 from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import (
-    StressObject, StrainObject, OES_Object, oes_real_data_code, get_scode)
+    StressObject, StrainObject, OES_Object, oes_real_data_code, get_scode,
+    set_static_case, set_modal_case, set_transient_case,
+)
 from pyNastran.f06.f06_formatting import write_floats_12e, _eigenvalue_header
 
 
@@ -172,26 +174,14 @@ class RealCompositePlateArray(OES_Object):
             self.data_frame = data_frame
 
     @classmethod
-    def add_static_case(cls, table_name, element_layer, data, isubcase,
-                        element_name: str, is_strain: bool,
-                        is_sort1=True, is_random=False, is_msc=True,
-                        random_code=0, title='', subtitle='', label=''):
-
-        table_name = table_name
-        analysis_code = 1 # static
+    def _add_case(cls, analysis_code,
+                  table_name, element_name, element, data, isubcase,
+                  is_sort1, is_random, is_msc,
+                  random_code, title, subtitle, label):
+        is_strain = 'Strain' in cls.__name__
+        assert isinstance(is_strain, bool), is_strain
+        assert isinstance(element_name, str), element_name
         num_wide = 11
-        data_code = oes_real_data_code(table_name, analysis_code,
-                                       element_name, num_wide,
-                                       is_sort1=is_sort1, is_random=is_random,
-                                       random_code=random_code,
-                                       title=title, subtitle=subtitle, label=label,
-                                       is_msc=is_msc)
-        data_code['lsdvmns'] = [0] # TODO: ???
-        data_code['data_names'] = []
-
-        ntimes = data.shape[0]
-        nnodes = data.shape[1]
-        dt = None
 
         # 95 - CQUAD4
         # 96 - CQUAD8
@@ -204,7 +194,19 @@ class RealCompositePlateArray(OES_Object):
             'CQUAD8': 96,
             'CTRIA3': 97,
             'CTRIA6': 98,
+            'CQUADR': 232,
+            'CTRIAR': 233,
         }
+        element_type = ELEMENT_NAME_TO_ELEMENT_TYPE[element_name]
+
+        data_code = oes_real_data_code(table_name, analysis_code,
+                                       element_name, num_wide,
+                                       is_sort1=is_sort1, is_random=is_random,
+                                       random_code=random_code,
+                                       title=title, subtitle=subtitle, label=label,
+                                       is_msc=is_msc)
+        data_code['element_name'] = element_name
+        data_code['element_type'] = element_type
 
         if is_strain:
             # fiber   # 2  =0
@@ -223,18 +225,64 @@ class RealCompositePlateArray(OES_Object):
         data_code['s_code'] = s_code
 
         assert stress_bits[1] == stress_bits[3]  # strain
+        return data_code
 
-        element_type = ELEMENT_NAME_TO_ELEMENT_TYPE[element_name]
-        data_code['element_name'] = element_name
-        data_code['element_type'] = element_type
+    @classmethod
+    def add_static_case(cls, table_name, element_layer, data, isubcase,
+                        element_name: str,
+                        is_sort1=True, is_random=False, is_msc=True,
+                        random_code=0, title='', subtitle='', label=''):
 
-        obj = cls(data_code, is_sort1, isubcase, dt)
-        obj.element_layer = element_layer
-        obj.data = data
+        table_name = table_name
+        analysis_code = 1 # static
 
-        obj.ntimes = ntimes
-        obj.ntotal = nnodes
-        obj._times = [None]
+        data_code = cls._add_case(
+            analysis_code,
+            table_name, element_name, element_layer, data,
+            isubcase, is_sort1, is_random, is_msc,
+            random_code, title, subtitle, label)
+
+        times = [None]
+        obj = set_static_case(cls, is_sort1, isubcase, data_code,
+                              _set_class, (element_layer, data))
+        return obj
+
+    @classmethod
+    def add_transient_case(cls, table_name, element_layer, data, isubcase,
+                           element_name: str,
+                           times,
+                           is_sort1=True, is_random=False, is_msc=True,
+                           random_code=0, title='', subtitle='', label=''):
+
+        table_name = table_name
+        analysis_code = 6 # transient
+
+        data_code = cls._add_case(
+            analysis_code,
+            table_name, element_name, element_layer, data,
+            isubcase, is_sort1, is_random, is_msc,
+            random_code, title, subtitle, label)
+
+        obj = set_transient_case(cls, is_sort1, isubcase, data_code,
+                                 _set_class, (element_layer, data), times)
+        return obj
+
+    @classmethod
+    def add_modal_case(cls, table_name, element_layer, data, isubcase,
+                           element_name: str,
+                           modes, eigns, cycles,
+                           is_sort1=True, is_random=False, is_msc=True,
+                           random_code=0, title='', subtitle='', label=''):
+        table_name = table_name
+        analysis_code = 2 # modal
+        data_code = cls._add_case(
+            analysis_code,
+            table_name, element_name, element_layer, data,
+            isubcase, is_sort1, is_random, is_msc,
+            random_code, title, subtitle, label)
+        obj = set_modal_case(cls, is_sort1, isubcase, data_code,
+                             _set_class, (element_layer, data),
+                             modes, eigns, cycles)
         return obj
 
     def __eq__(self, table):  # pragma: no cover
@@ -479,7 +527,7 @@ class RealCompositePlateArray(OES_Object):
                   date, is_mag_phase=False, endian='>'):
         """writes an OP2"""
         import inspect
-        from struct import Struct, pack
+        from struct import pack
         frame = inspect.currentframe()
         call_frame = inspect.getouterframes(frame, 2)
         op2_ascii.write(f'{self.__class__.__name__}.write_op2: {call_frame[1][3]}\n')
@@ -613,3 +661,19 @@ class RealCompositePlateStrainArray(RealCompositePlateArray, StrainObject):
             ovm = 'max_shear'
         headers = ['e11', 'e22', 'e12', 'e1z', 'e2z', 'angle', 'major', 'minor', ovm]
         return headers
+
+def _set_class(cls, data_code, is_sort1, isubcase,
+               element_layer, data, times):
+    dt = times[0]
+    assert element_layer.ndim == 2, element_layer.shape
+    assert data.ndim == 3, data.shape
+    ntimes = data.shape[0]
+    nnodes = data.shape[1]
+    obj = cls(data_code, is_sort1, isubcase, dt)
+    obj.element_layer = element_layer
+    obj.data = data
+
+    obj.ntimes = ntimes
+    obj.ntotal = nnodes
+    obj._times = times
+    return obj

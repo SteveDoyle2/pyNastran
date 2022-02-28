@@ -354,6 +354,7 @@ def oes_real_data_code(table_name: str, analysis_code: int,
                        is_sort1: bool=True, is_random: bool=False,
                        random_code=0, title='', subtitle='', label='', is_msc=True):
     dtype_code = 0 # real
+    assert isinstance(element_name, str), element_name
     data_code = _oes_data_code(table_name, analysis_code, element_name, num_wide, dtype_code,
                                is_sort1=is_sort1,
                                is_random=is_random, random_code=random_code,
@@ -425,6 +426,52 @@ def _oes_data_code(table_name: str, analysis_code: int,
         #'num_wide' : 8, # displacement-style table
     }
     return data_code
+
+def set_static_case(cls, is_sort1, isubcase,
+                    data_code, func, args):
+    data_code['lsdvmns'] = [0] # TODO: ???
+    data_code['data_names'] = []
+    data_code['load_set'] = 1
+    times = [None]
+    obj = func(cls, data_code, is_sort1, isubcase,
+               *args, times)
+    return obj
+
+def set_modal_case(cls, is_sort1, isubcase, data_code,
+                   func, args, modes, eigns, cycles):
+    data_code['data_names'] = ['modes', 'eigns', 'mode_cycles']
+    #data_code['lsdvmns'] = [0] # TODO: ???
+
+    obj = func(cls, data_code, is_sort1, isubcase,
+                     *args, modes)
+    obj.modes = modes
+    obj.eigns = eigns
+    obj.mode_cycles = cycles
+    return obj
+
+def set_transient_case(cls, is_sort1, isubcase,
+                       data_code, func, args, times):
+    data_code['lsdvmns'] = [0] # TODO: ???
+    data_code['data_names'] = ['dt']
+    data_code['load_set'] = 1
+    obj = func(cls, data_code, is_sort1, isubcase,
+               *args, times)
+    obj.dts = times
+    return obj
+
+def set_element_case(cls, data_code, is_sort1, isubcase,
+                     element, data, times):
+    ntimes = data.shape[0]
+    nnodes = data.shape[1]
+    dt = times[0]
+    obj = cls(data_code, is_sort1, isubcase, dt)
+    obj.element = element
+    obj.data = data
+
+    obj.ntimes = ntimes
+    obj.ntotal = nnodes
+    obj._times = times
+    return obj
 
 def update_stress_force_time_word(obj) -> None:
     if obj.analysis_code == 1:

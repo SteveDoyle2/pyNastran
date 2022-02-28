@@ -558,12 +558,11 @@ class ComplexPlateArray(OES_Object):
         return itable
 
     @classmethod
-    def add_freq_case(cls, table_name, element_node, fiber, data, isubcase,
+    def add_freq_case(cls, table_name, element_name: str, element_node, fiber, data, isubcase,
                       freqs,
-                      element_name: str,
-                      is_strain: bool=True,
                       is_sort1=True, is_random=False, is_msc=True,
                       random_code=0, title='', subtitle='', label=''):
+        is_strain = 'Strain' in cls.__name__
         uelement_name = element_name.upper()
         num_wide = 8 # eid, fiber, (ox, oy, txy)r, (ox, oy, txy)i
         analysis_code = 5 # freq

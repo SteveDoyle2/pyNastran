@@ -7,7 +7,9 @@ from numpy import zeros
 from pyNastran.utils.numpy_utils import integer_types, float_types
 from pyNastran.op2.result_objects.op2_objects import get_times_dtype
 from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import (
-    StressObject, StrainObject, OES_Object, oes_real_data_code)
+    StressObject, StrainObject, OES_Object,
+    oes_real_data_code, set_static_case, set_modal_case, set_transient_case,
+    set_element_case)
 from pyNastran.f06.f06_formatting import write_float_13e, _eigenvalue_header
 
 ELEMENT_NAME_TO_ELEMENT_TYPE = {
@@ -30,10 +32,11 @@ class RealSpringArray(OES_Object):
 
     @classmethod
     def _add_case(cls, analysis_code,
-                  table_name, element_name, element, data, isubcase,
-                  is_sort1, is_random, is_stress, is_msc,
+                  table_name, element_name, isubcase,
+                  is_sort1, is_random, is_msc,
                   random_code, title, subtitle, label):
         num_wide = 2
+        is_strain = 'Strain' in cls.__name__
         data_code = oes_real_data_code(table_name, analysis_code,
                                        element_name, num_wide,
                                        is_sort1=is_sort1, is_random=is_random,
@@ -43,12 +46,12 @@ class RealSpringArray(OES_Object):
 
         # I'm only sure about the 1s in the strains and the
         # corresponding 0s in the stresses.
-        if is_stress:
-            stress_bits = [0, 0, 0, 0]
-            s_code = 0
-        else:
+        if is_strain:
             stress_bits = [0, 1, 0, 1]
             s_code = 1
+        else:
+            stress_bits = [0, 0, 0, 0]
+            s_code = 0
         data_code['stress_bits'] = stress_bits
         data_code['s_code'] = s_code
         #data_code['num_wide'] = 2
@@ -60,29 +63,52 @@ class RealSpringArray(OES_Object):
 
     @classmethod
     def add_static_case(cls, table_name, element_name, element, data, isubcase,
-                        is_sort1=True, is_random=False, is_stress=True, is_msc=True,
+                        is_sort1=True, is_random=False, is_msc=True,
                         random_code=0, title='', subtitle='', label=''):
         analysis_code = 1 # static
         data_code = cls._add_case(
             analysis_code,
-            table_name, element_name, element, data,
-            isubcase, is_sort1, is_random, is_stress, is_msc,
+            table_name, element_name,
+            isubcase, is_sort1, is_random, is_msc,
             random_code, title, subtitle, label)
+        obj = set_static_case(cls, is_sort1, isubcase, data_code,
+                              set_element_case, (element, data))
+        return obj
 
-        data_code['lsdvmns'] = [0] # TODO: ???
-        data_code['data_names'] = []
-        data_code['load_set'] = 1
+    @classmethod
+    def add_modal_case(cls, table_name, element_name: str, element, data, isubcase,
+                           modes, eigns, cycles,
+                           is_sort1=True, is_random=False, is_msc=True,
+                           random_code=0, title='', subtitle='', label=''):
+        table_name = table_name
+        analysis_code = 2 # modal
+        data_code = cls._add_case(
+            analysis_code,
+            table_name, element_name,
+            isubcase, is_sort1, is_random, is_msc,
+            random_code, title, subtitle, label)
+        obj = set_modal_case(cls, is_sort1, isubcase, data_code,
+                             set_element_case, (element, data),
+                             modes, eigns, cycles)
+        return obj
 
-        ntimes = data.shape[0]
-        nnodes = data.shape[1]
-        dt = None
-        obj = cls(data_code, is_sort1, isubcase, dt)
-        obj.element = element
-        obj.data = data
-
-        obj.ntimes = ntimes
-        obj.ntotal = nnodes
-        obj._times = [None]
+    @classmethod
+    def add_transient_case(cls, table_name, element_name, element, data, isubcase,
+                           times,
+                           is_sort1=True, is_random=False, is_msc=True,
+                           random_code=0, title='', subtitle='', label=''):
+        analysis_code = 6 # transient
+        data_code = cls._add_case(
+            analysis_code,
+            table_name, element_name,
+            isubcase, is_sort1, is_random, is_msc,
+            random_code, title, subtitle, label)
+        #data_code['lsdvmns'] = [0] # TODO: ???
+        #data_code['data_names'] = []
+        #data_code['load_set'] = 1
+        obj = set_transient_case(cls, is_sort1, isubcase, data_code,
+                                 set_element_case, (element, data),
+                                 times)
         return obj
 
     @property
