@@ -31,12 +31,15 @@ SORT2_TABLE_NAME_MAP = {
 TABLE_NAME_TO_TABLE_CODE = {
     # stress
     'OES1': 5,
+    'OES1C': 5,
     'OES1X1': 5,
     'OES2': 5,
 
     # strain
     'OSTR1': 5,
     'OSTR2': 5,
+
+    'OSTR1C': 5,
 }
 
 class OES_Object(BaseElement):
@@ -335,28 +338,32 @@ def get_scode(stress_bits: List[int]) -> int:
 
 
 def oes_complex_data_code(table_name: str, analysis_code: int,
+                          element_name: str, num_wide: int,
                           is_sort1: bool=True, is_random: bool=False,
                           random_code=0, title='', subtitle='', label='', is_msc=True):
     dtype_code = 1 # complex
-    data_code = _oes_data_code(table_name, analysis_code, dtype_code,
+    data_code = _oes_data_code(table_name, analysis_code,
+                               element_name, num_wide, dtype_code,
                                is_sort1=is_sort1,
                                is_random=is_random, random_code=random_code,
                                title=title, subtitle=subtitle, label=label, is_msc=is_msc)
     return data_code
 
 def oes_real_data_code(table_name: str, analysis_code: int,
+                       element_name: str, num_wide: int,
                        is_sort1: bool=True, is_random: bool=False,
                        random_code=0, title='', subtitle='', label='', is_msc=True):
     dtype_code = 0 # real
-    data_code = _oes_data_code(table_name, analysis_code, dtype_code,
+    data_code = _oes_data_code(table_name, analysis_code, element_name, num_wide, dtype_code,
                                is_sort1=is_sort1,
                                is_random=is_random, random_code=random_code,
                                title=title, subtitle=subtitle, label=label, is_msc=is_msc)
     return data_code
 
-def _oes_data_code(table_name: str, analysis_code: int, dtype_code: int,
-                  is_sort1: bool=True, is_random: bool=False,
-                  random_code=0, title='', subtitle='', label='', is_msc=True):
+def _oes_data_code(table_name: str, analysis_code: int,
+                   element_name: str, num_wide: int, dtype_code: int,
+                   is_sort1: bool=True, is_random: bool=False,
+                   random_code=0, title='', subtitle='', label='', is_msc=True):
     """
     Parameters
     ----------
@@ -413,6 +420,8 @@ def _oes_data_code(table_name: str, analysis_code: int, dtype_code: int,
         'title' : title,
         'subtitle': subtitle,
         'label': label,
+        'num_wide': num_wide,
+        'element_name': element_name,
         #'num_wide' : 8, # displacement-style table
     }
     return data_code

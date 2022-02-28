@@ -80,9 +80,11 @@ class ComplexRodArray(OES_Object):
                       is_sort1=True, is_random=False, is_msc=True,
                       random_code=0, title='', subtitle='', label=''):
 
+        num_wide = 5
         analysis_code = 5 # freq
         data_code = oes_complex_data_code(
             table_name, analysis_code,
+            element_name, num_wide,
             is_sort1=is_sort1, is_random=is_random,
             random_code=random_code, title=title, subtitle=subtitle, label=label,
             is_msc=is_msc)
@@ -125,7 +127,7 @@ class ComplexRodArray(OES_Object):
         assert stress_bits[1] == stress_bits[3]  # strain
 
         element_type = ELEMENT_NAME_TO_ELEMENT_TYPE[element_name.upper()]
-        data_code['element_name'] = element_name.upper()
+        #data_code['element_name'] = element_name.upper()
         data_code['element_type'] = element_type
 
         obj = cls(data_code, is_sort1, isubcase, dt)

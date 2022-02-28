@@ -80,9 +80,11 @@ class ComplexSpringDamperArray(OES_Object):
                       is_sort1=True, is_random=False, is_msc=True,
                       random_code=0, title='', subtitle='', label=''):
 
+        num_wide = 3
         analysis_code = 5 # freq
         data_code = oes_complex_data_code(
             table_name, analysis_code,
+            element_name, num_wide,
             is_sort1=is_sort1, is_random=is_random,
             random_code=random_code, title=title, subtitle=subtitle, label=label,
             is_msc=is_msc)

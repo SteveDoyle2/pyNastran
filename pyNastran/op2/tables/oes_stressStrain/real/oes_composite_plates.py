@@ -5,7 +5,7 @@ from numpy import zeros, searchsorted, unique, ravel
 from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.op2.result_objects.op2_objects import get_times_dtype
 from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import (
-    StressObject, StrainObject, OES_Object)
+    StressObject, StrainObject, OES_Object, oes_real_data_code, get_scode)
 from pyNastran.f06.f06_formatting import write_floats_12e, _eigenvalue_header
 
 
@@ -170,6 +170,72 @@ class RealCompositePlateArray(OES_Object):
             data_frame = pd.DataFrame(self.data[0], columns=headers, index=index)
             data_frame.columns.names = ['Static']
             self.data_frame = data_frame
+
+    @classmethod
+    def add_static_case(cls, table_name, element_layer, data, isubcase,
+                        element_name: str, is_strain: bool,
+                        is_sort1=True, is_random=False, is_msc=True,
+                        random_code=0, title='', subtitle='', label=''):
+
+        table_name = table_name
+        analysis_code = 1 # static
+        num_wide = 11
+        data_code = oes_real_data_code(table_name, analysis_code,
+                                       element_name, num_wide,
+                                       is_sort1=is_sort1, is_random=is_random,
+                                       random_code=random_code,
+                                       title=title, subtitle=subtitle, label=label,
+                                       is_msc=is_msc)
+        data_code['lsdvmns'] = [0] # TODO: ???
+        data_code['data_names'] = []
+
+        ntimes = data.shape[0]
+        nnodes = data.shape[1]
+        dt = None
+
+        # 95 - CQUAD4
+        # 96 - CQUAD8
+        # 97 - CTRIA3
+        # 98 - CTRIA6 (composite)
+        # 232 - QUADRLC (CQUADR-composite)
+        # 233 - TRIARLC (CTRIAR-composite)
+        ELEMENT_NAME_TO_ELEMENT_TYPE = {
+            'CQUAD4': 95,
+            'CQUAD8': 96,
+            'CTRIA3': 97,
+            'CTRIA6': 98,
+        }
+
+        if is_strain:
+            # fiber   # 2  =0
+            # strain  # 1,3=1
+            #stress_bits[2] == 0
+            stress_bits = [1, 1, 0, 1, 0]
+            #data_code['s_code'] = 1 # strain?
+        else:
+            # fiber   # 2   =0
+            # stress  # 1, 3=0
+            stress_bits = [0, 0, 0, 0, 0]
+            #data_code['s_code'] = 0
+
+        s_code = get_scode(stress_bits)
+        data_code['stress_bits'] = stress_bits
+        data_code['s_code'] = s_code
+
+        assert stress_bits[1] == stress_bits[3]  # strain
+
+        element_type = ELEMENT_NAME_TO_ELEMENT_TYPE[element_name]
+        data_code['element_name'] = element_name
+        data_code['element_type'] = element_type
+
+        obj = cls(data_code, is_sort1, isubcase, dt)
+        obj.element_layer = element_layer
+        obj.data = data
+
+        obj.ntimes = ntimes
+        obj.ntotal = nnodes
+        obj._times = [None]
+        return obj
 
     def __eq__(self, table):  # pragma: no cover
         assert self.is_sort1 == table.is_sort1
