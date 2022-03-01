@@ -166,6 +166,10 @@ class SafeXrefMesh(XrefMesh):
         #for aestat in self.aestats):
             #aestat.safe_cross_reference(self)
 
+        for aelinks in self.aelinks.values():
+            for aelink in aelinks:
+                aelink.cross_reference(self)
+
         xref_errors = defaultdict(list)
         for aesurf in self.aesurf.values():
             aesurf.safe_cross_reference(self, xref_errors)

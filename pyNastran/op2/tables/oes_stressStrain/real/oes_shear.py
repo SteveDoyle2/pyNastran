@@ -6,7 +6,10 @@ import numpy as np
 from numpy import zeros, allclose
 
 from pyNastran.op2.result_objects.op2_objects import get_times_dtype
-from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import StressObject, StrainObject, OES_Object
+from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import (
+    StressObject, StrainObject, OES_Object,
+    oes_real_data_code, set_element_case,
+    set_modal_case)
 from pyNastran.f06.f06_formatting import _eigenvalue_header #, get_key0
 
 
@@ -104,6 +107,61 @@ class RealShearArray(OES_Object):
             data_frame.index.name = 'ElementID'
             data_frame.columns.names = ['Static']
         self.data_frame = data_frame
+
+    @classmethod
+    def _add_case(cls, analysis_code,
+                  table_name, element_name, isubcase,
+                  is_sort1, is_random, is_msc,
+                  random_code, title, subtitle, label):
+        num_wide = 4
+        is_strain = 'Strain' in cls.__name__
+        data_code = oes_real_data_code(table_name, analysis_code,
+                                       element_name, num_wide,
+                                       is_sort1=is_sort1, is_random=is_random,
+                                       random_code=random_code,
+                                       title=title, subtitle=subtitle, label=label,
+                                       is_msc=is_msc)
+
+        # I'm only sure about the 1s in the strains and the
+        # corresponding 0s in the stresses.
+        #stress / strain -> 1, 3
+        if is_strain:
+            stress_bits = [0, 1, 0, 1, 0]
+            s_code = 1
+        else:
+            stress_bits = [0, 0, 0, 0, 0]
+            s_code = 0
+            assert stress_bits[1] == 0, 'stress_bits=%s' % (stress_bits)
+
+        # stress
+        assert stress_bits[1] == stress_bits[3], 'stress_bits=%s' % (stress_bits)
+        data_code['stress_bits'] = stress_bits
+        data_code['s_code'] = s_code
+
+        ELEMENT_NAME_TO_ELEMENT_TYPE = {
+            'CSHEAR': 4,
+        }
+        element_type = ELEMENT_NAME_TO_ELEMENT_TYPE[element_name]
+        data_code['element_name'] = element_name
+        data_code['element_type'] = element_type
+        return data_code
+
+    @classmethod
+    def add_modal_case(cls, table_name, element_name: str, element, data, isubcase,
+                           modes, eigns, cycles,
+                           is_sort1=True, is_random=False, is_msc=True,
+                           random_code=0, title='', subtitle='', label=''):
+        table_name = table_name
+        analysis_code = 2 # modal
+        data_code = cls._add_case(
+            analysis_code,
+            table_name, element_name,
+            isubcase, is_sort1, is_random, is_msc,
+            random_code, title, subtitle, label)
+        obj = set_modal_case(cls, is_sort1, isubcase, data_code,
+                             set_element_case, (element, data),
+                             modes, eigns, cycles)
+        return obj
 
     def __eq__(self, table):  # pragma: no cover
         assert self.is_sort1 == table.is_sort1

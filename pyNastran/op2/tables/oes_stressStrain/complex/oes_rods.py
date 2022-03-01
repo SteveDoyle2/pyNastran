@@ -6,7 +6,7 @@ from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.op2.result_objects.op2_objects import get_complex_times_dtype
 from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import (
     StressObject, StrainObject, OES_Object,
-    oes_complex_data_code, get_scode)
+    oes_complex_data_code, get_scode, set_element_case, set_freq_case)
 from pyNastran.f06.f06_formatting import write_imag_floats_13e, _eigenvalue_header # get_key0,
 
 
@@ -76,12 +76,12 @@ class ComplexRodArray(OES_Object):
     def add_freq_case(cls, table_name, element, data, isubcase,
                       freqs,
                       element_name: str,
-                      is_strain: bool=True,
                       is_sort1=True, is_random=False, is_msc=True,
                       random_code=0, title='', subtitle='', label=''):
 
         num_wide = 5
         analysis_code = 5 # freq
+        is_strain = 'Strain' in cls.__name__
         data_code = oes_complex_data_code(
             table_name, analysis_code,
             element_name, num_wide,
@@ -91,12 +91,6 @@ class ComplexRodArray(OES_Object):
         #data_code['modes'] = modes
         #data_code['eigns'] = eigenvalues
         #data_code['mode_cycles'] = mode_cycles
-        data_code['data_names'] = ['freq']
-        data_code['name'] = 'FREQ'
-
-        ntimes = data.shape[0]
-        nnodes = data.shape[1]
-        dt = freqs[0]
 
         ELEMENT_NAME_TO_ELEMENT_TYPE = {
             'CROD' : 1,
@@ -130,17 +124,9 @@ class ComplexRodArray(OES_Object):
         #data_code['element_name'] = element_name.upper()
         data_code['element_type'] = element_type
 
-        obj = cls(data_code, is_sort1, isubcase, dt)
-        assert element.ndim == 1, element.shape
-        obj.element = element
-        obj.data = data
-
+        obj = set_freq_case(cls, is_sort1, isubcase, data_code,
+                            set_element_case, (element, data), freqs)
         obj.stress_bits = stress_bits
-        obj.freqs = freqs
-
-        obj.ntimes = ntimes
-        obj.ntotal = nnodes
-        obj._times = freqs
         return obj
 
     def __eq__(self, table):  # pragma: no cover

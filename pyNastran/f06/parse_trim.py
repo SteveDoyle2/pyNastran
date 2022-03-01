@@ -1,4 +1,4 @@
-from typing import Optional, TextIO, Tuple, Dict
+from typing import Optional, TextIO, Tuple
 import os
 import numpy as np
 #import scipy.sparse
@@ -60,12 +60,14 @@ class TrimResults:
 
 def read_f06_trim(f06_filename: str,
                       log: Optional[SimpleLogger]=None,
-                      nlines_max: int=1_000_000) -> TrimResults:
+                      nlines_max: int=1_000_000,
+                      debug: bool=False) -> TrimResults:
     """TODO: doesn't handle extra PAGE headers; requires LINE=1000000"""
     log = get_logger(log=log, level='debug', encoding='utf-8')
     dirname = os.path.dirname(os.path.abspath(f06_filename))
     with open(f06_filename, 'r') as f06_file:
-        trim_results, tables, matrices = _read_f06_trim(f06_file, log, nlines_max, dirname)
+        trim_results, tables, matrices = _read_f06_trim(f06_file, log, nlines_max, dirname,
+                                                        debug=debug)
     if len(tables):
         log.info('found the following tables in the f06: %s' % (list(tables)))
     if len(matrices):
@@ -89,9 +91,10 @@ def _skip_to_page_stamp(f06_file: TextIO, line: str, i: int,
 
 
 def _read_f06_trim(f06_file: TextIO, log: SimpleLogger,
-                   nlines_max: int, dirname: str) -> dict[TrimResults, str, np.ndarray]:
+                   nlines_max: int, dirname: str,
+                   debug: bool=False) -> dict[TrimResults, str, np.ndarray]:
     i = 0
-    debug = True
+    #debug = True
     tables = {}
     matrices = {}
     trim_results = TrimResults()
@@ -102,8 +105,8 @@ def _read_f06_trim(f06_file: TextIO, log: SimpleLogger,
     while True:
         line = f06_file.readline()
         i += 1
-        #if debug:
-            #log.debug(f'i={i} {line.strip()}')
+        if debug:
+            log.debug(f'i={i} {line.strip()}')
         if '* * * END OF JOB * * *' in line:
             #print("****done****")
             break
@@ -111,8 +114,8 @@ def _read_f06_trim(f06_file: TextIO, log: SimpleLogger,
         if any(iflags):
             iblank_count = 0
             flag = SKIP_FLAGS[iflags.index(True)]
-            #if debug:
-                #log.info(f'******* found skip flag: {flag}')
+            if debug:
+                log.info(f'******* found skip flag: {flag}')
             #print('skip', line)
             line, i = _skip_to_page_stamp(f06_file, line, i, nlines_max)
             if 'trademark' not in line:

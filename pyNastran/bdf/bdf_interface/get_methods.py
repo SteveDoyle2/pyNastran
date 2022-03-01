@@ -589,13 +589,33 @@ class GetMethods(BDFAttributes):
             aefacts = _unique_keys(self.aefacts)
             raise KeyError(f'aefact={aefact} not found{msg}.  Allowed AEFACT={aefacts}')
 
-    def AESurf(self, aesurf_id: int, msg: str='') -> AESURF:
-        """gets an AESURF"""
+    def Trim(self, trim_id: int, msg: str='') -> TRIM:
+        """gets an TRIM"""
         try:
-            return self.aesurf[aesurf_id]
+            return self.trims[trim_id]
         except KeyError:
-            raise KeyError('aesurf=%s not found%s.  Allowed AESURF=%s'
-                           % (aesurf_id, msg, _unique_keys(self.aesurf)))
+            raise KeyError('TIM=%s not found%s.  Allowed TRIM=%s'
+                           % (trim_id, msg, _unique_keys(self.trims)))
+
+    def AESurf(self, aesurf_name: str, msg: str='') -> AESURF:
+        """gets an AESURF"""
+        #if isinstance(aesurf_name, integer_types):
+            #aesurf_id = aesurf_name
+            #try:
+                #return self.aesurf[aesurf_id]
+            #except KeyError:
+                #raise KeyError('aesurf=%s not found%s.  Allowed AESURF=%s'
+                               #% (aesurf_id, msg, _unique_keys(self.aesurf)))
+        #else:
+        assert isinstance(aesurf_name, str), f'aesurf_name={aesurf_name!r}'
+        names = []
+        for aesurf_int, aesurf in self.aesurf.items():
+            if aesurf.label == aesurf_name:
+                return aesurf
+            names.append(aesurf.label)
+        names.sort()
+        raise KeyError('aesurf=%s not found%s.  Allowed AESURF=%s'
+                       % (aesurf_name, msg, names))
 
     def Acsid(self, msg: str='') -> Coord:
         """gets the aerodynamic coordinate system"""

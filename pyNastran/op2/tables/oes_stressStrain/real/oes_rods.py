@@ -105,9 +105,6 @@ class RealRodArray(OES_Object):
             table_name, element_name,
             isubcase, is_sort1, is_random, is_msc,
             random_code, title, subtitle, label)
-        #data_code['lsdvmns'] = [0] # TODO: ???
-        #data_code['data_names'] = []
-        #data_code['load_set'] = 1
         obj = set_transient_case(cls, is_sort1, isubcase, data_code,
                                  set_element_case, (element, data),
                                  times)

@@ -276,7 +276,7 @@ def _save_spring_stress(op2, f06_file, page_num, page_stamp,
     data = stress.reshape(1, *stress.shape)
     table_name = 'OES1'
     spring_stress = RealSpringStressArray.add_static_case(
-        table_name, element_name, eids, data, isubcase, is_stress=True,
+        table_name, element_name, eids, data, isubcase,
         is_sort1=True, is_random=False, is_msc=True,
         random_code=0, title=title, subtitle=subtitle, label=label)
     if element_name == 'CELAS1':
@@ -302,7 +302,7 @@ def _save_spring_strain(op2, f06_file, page_num, page_stamp,
     data = strain.reshape(1, *strain.shape)
     table_name = 'OSTR1'
     spring_strain = RealSpringStrainArray.add_static_case(
-        table_name, element_name, eids, data, isubcase, is_stress=False,
+        table_name, element_name, eids, data, isubcase,
         is_sort1=True, is_random=False, is_msc=True,
         random_code=0, title=title, subtitle=subtitle, label=label)
     if element_name == 'CELAS1':

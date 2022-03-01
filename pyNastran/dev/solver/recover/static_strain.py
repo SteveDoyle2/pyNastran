@@ -140,7 +140,7 @@ def _recover_strain_rod(f06_file, op2,
     data = strains.reshape(1, *strains.shape)
     table_name = 'OSTR1'
     strain_obj = RealRodStrainArray.add_static_case(
-        table_name, element_name, eids, data, isubcase, is_stress=False,
+        table_name, element_name, eids, data, isubcase,
         is_sort1=True, is_random=False, is_msc=True,
         random_code=0, title=title, subtitle=subtitle, label=label)
 

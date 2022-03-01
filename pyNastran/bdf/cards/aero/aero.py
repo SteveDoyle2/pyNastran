@@ -508,6 +508,13 @@ class AELINK(BaseCard):
         #: an ID=0 is applicable to the global subcase, ID=1 only subcase 1
         self.aelink_id = aelink_id
 
+        self.dependent_label_ref = None
+        self.independent_labels_ref = []
+
+    @property
+    def dependent_label(self) -> str:
+        return self.label
+
     def validate(self):
         if isinstance(self.aelink_id, integer_types):
             assert self.aelink_id >= 0, f"aelink_id={self.aelink_id} and must be greater than or equal to 0 (or 'ALWAYS')"
@@ -552,9 +559,15 @@ class AELINK(BaseCard):
                       comment=comment)
 
     def cross_reference(self, model: BDF) -> None:
-        """We're simply going to validate the labels"""
-        sid_ref = model.trims[self.aelink_id]
-        independent_label_ref = model.AESurf(self.label, msg=f'which is required by {str(self)}')
+        """
+        We're simply going to validate the labels
+        Updating the labels on the AESURFs will NOT propogate to the AELINK
+        """
+        msg = ', which is required by:\n%s' % str(self)
+        sid_ref = model.Trim(self.aelink_id, msg=msg)
+        self.dependent_label_ref = model.AESurf(self.dependent_label, msg=msg)
+        self.independent_labels_ref = [model.AESurf(independent_label, msg=msg)
+                                       for independent_label in self.independent_labels]
 
     #def uncross_reference(self) -> None:
         #"""Removes cross-reference links"""

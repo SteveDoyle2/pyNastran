@@ -104,7 +104,7 @@ def _recover_stress_rod(f06_file, op2,
     data = stresses.reshape(1, *stresses.shape)
     table_name = 'OSTR1'
     stress_obj = RealRodStressArray.add_static_case(
-        table_name, element_name, eids, data, isubcase, is_stress=True,
+        table_name, element_name, eids, data, isubcase,
         is_sort1=True, is_random=False, is_msc=True,
         random_code=0, title=title, subtitle=subtitle, label=label)
 

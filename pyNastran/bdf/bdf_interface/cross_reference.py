@@ -265,8 +265,12 @@ class XrefMesh(BDFAttributes):
         for aeparam in self.aeparams.values():
             aeparam.cross_reference(self)
 
-        #for aestat in self.aestats.values(s):
+        #for aestat in self.aestats.values():
             #aestat.cross_reference(self)
+
+        for aelinks in self.aelinks.values():
+            for aelink in aelinks:
+                aelink.cross_reference(self)
 
         for aesurf in self.aesurf.values():
             aesurf.cross_reference(self)

@@ -8,12 +8,26 @@ import numpy as np
 from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.op2.op2_interface.write_utils import to_column_bytes, view_dtype, view_idtype_as_fdtype
 from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import (
-    StressObject, StrainObject, OES_Object)
+    StressObject, StrainObject, OES_Object,
+    oes_real_data_code, get_scode,
+    set_static_case, set_modal_case, set_transient_case)
 from pyNastran.op2.result_objects.op2_objects import get_times_dtype
 from pyNastran.f06.f06_formatting import write_floats_13e, _eigenvalue_header
 from pyNastran.op2.errors import SixtyFourBitError
 
+ELEMENT_NAME_TO_ELEMENT_TYPE = {
+    'CTRIA3': 74,
+    'CQUAD4': 33,
+    'CQUAD4-144': 144,
 
+    'CQUADR': 82,
+    'CQUAD8': 64,
+    'CTRIA6': 75,
+    'CTRIAR': 70,
+
+    'CTRIAR_LINEAR': 227,
+    'CQUADR_LINEAR': 228,
+}
 class RealPlateArray(OES_Object):
     def __init__(self, data_code, is_sort1, isubcase, dt):
         OES_Object.__init__(self, data_code, isubcase, apply_data_code=False)
@@ -239,6 +253,91 @@ class RealPlateArray(OES_Object):
             data_frame = df1.join(df2)
             data_frame = data_frame.reset_index().set_index(['ElementID', 'NodeID', 'Location'])
         self.data_frame = data_frame
+
+    @classmethod
+    def _add_case(cls, analysis_code,
+                  table_name, element_name, isubcase,
+                  is_sort1, is_random, is_msc,
+                  random_code, title, subtitle, label):
+        num_wide = 3
+        is_strain = 'Strain' in cls.__name__
+        data_code = oes_real_data_code(table_name, analysis_code,
+                                       element_name, num_wide,
+                                       is_sort1=is_sort1, is_random=is_random,
+                                       random_code=random_code,
+                                       title=title, subtitle=subtitle, label=label,
+                                       is_msc=is_msc)
+
+        # I'm only sure about the 1s in the strains and the
+        # corresponding 0s in the stresses.
+        #stress / strain -> 1, 3
+        # stress_bits[2] = 0 # curvature
+        # stress_bits[4] = 1 # von mises (vs. max shear)
+        fiber = 1
+        von_mises = 0
+        if is_strain:
+            strain = 1
+        else:
+            strain = 0
+        stress_bits = [0, strain, fiber, strain, von_mises]
+        s_code = get_scode(stress_bits)
+
+        # stress
+        assert stress_bits[1] == stress_bits[3], 'stress_bits=%s' % (stress_bits)
+        data_code['stress_bits'] = stress_bits
+        data_code['s_code'] = s_code
+
+        element_type = ELEMENT_NAME_TO_ELEMENT_TYPE[element_name]
+        data_code['element_name'] = element_name
+        data_code['element_type'] = element_type
+        return data_code
+
+    @classmethod
+    def add_static_case(cls, table_name, element_name, nnodes, element_node, fiber, data, isubcase,
+                        is_sort1=True, is_random=False, is_msc=True,
+                        random_code=0, title='', subtitle='', label=''):
+        analysis_code = 1 # static
+        data_code = cls._add_case(
+            analysis_code,
+            table_name, element_name,
+            isubcase, is_sort1, is_random, is_msc,
+            random_code, title, subtitle, label)
+        obj = set_static_case(cls, is_sort1, isubcase, data_code,
+                              set_element_node_fiber_case, (nnodes, element_node, fiber, data))
+        return obj
+
+    @classmethod
+    def add_modal_case(cls, table_name, element_name: str, nnodes, element_node, fiber, data, isubcase,
+                           modes, eigns, cycles,
+                           is_sort1=True, is_random=False, is_msc=True,
+                           random_code=0, title='', subtitle='', label=''):
+        table_name = table_name
+        analysis_code = 2 # modal
+        data_code = cls._add_case(
+            analysis_code,
+            table_name, element_name,
+            isubcase, is_sort1, is_random, is_msc,
+            random_code, title, subtitle, label)
+        obj = set_modal_case(cls, is_sort1, isubcase, data_code,
+                             set_element_node_fiber_case, (nnodes, element_node, fiber, data),
+                             modes, eigns, cycles)
+        return obj
+
+    @classmethod
+    def add_transient_case(cls, table_name, element_name, nnodes, element_node, fiber, data, isubcase,
+                           times,
+                           is_sort1=True, is_random=False, is_msc=True,
+                           random_code=0, title='', subtitle='', label=''):
+        analysis_code = 6 # transient
+        data_code = cls._add_case(
+            analysis_code,
+            table_name, element_name,
+            isubcase, is_sort1, is_random, is_msc,
+            random_code, title, subtitle, label)
+        obj = set_transient_case(cls, is_sort1, isubcase, data_code,
+                                 set_element_node_fiber_case, (nnodes, element_node, fiber, data),
+                                 times)
+        return obj
 
     def __eq__(self, table):  # pragma: no cover
         assert self.is_sort1 == table.is_sort1
@@ -815,3 +914,28 @@ def _get_plate_msg(self):
     else:  # pragma: no cover
         raise NotImplementedError(f'name={self.element_name} type={self.element_type}')
     return msg, nnodes, cen
+
+def set_element_node_fiber_case(cls, data_code, is_sort1, isubcase,
+                                nnodes, element_node, fiber_distance, data, times):
+    assert element_node.ndim == 2, element_node.shape
+    assert fiber_distance.ndim == 1, fiber_distance.shape
+    ntimes = data.shape[0]
+    nlayers = data.shape[1]
+    dt = times[0]
+    obj = cls(data_code, is_sort1, isubcase, dt)
+    obj.element_node = element_node
+    obj.fiber_distance = fiber_distance
+    obj.data = data
+
+    #fiber_dist, oxx, oyy, txy, angle, majorP, minorP, ovm
+    assert data.shape[2] == 8, data.shape
+
+    nelements = nlayers // (nnodes * 2)
+
+    obj.ntimes = ntimes
+    obj.ntotal = nnodes
+    obj.nelements = nelements
+    obj._times = times
+    obj.nnodes = nnodes
+    #obj.update_data_components()
+    return obj

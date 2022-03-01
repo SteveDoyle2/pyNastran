@@ -11,10 +11,17 @@ from numpy.linalg import eigh  # type: ignore
 from pyNastran.utils.numpy_utils import float_types
 from pyNastran.f06.f06_formatting import write_floats_13e, _eigenvalue_header
 from pyNastran.op2.result_objects.op2_objects import get_times_dtype
-from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import StressObject, StrainObject, OES_Object
+from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import (
+    StressObject, StrainObject, OES_Object,
+    oes_real_data_code, set_static_case, set_modal_case, set_transient_case)
 from pyNastran.op2.op2_interface.write_utils import to_column_bytes
 
-
+ELEMENT_NAME_TO_ELEMENT_TYPE = {
+    'CTETRA' : 39,
+    'CHEXA' : 67,
+    'CPENTA' : 68,
+    'CPYRAM' : 255,
+}
 class RealSolidArray(OES_Object):
     def __init__(self, data_code, is_sort1, isubcase, dt):
         OES_Object.__init__(self, data_code, isubcase, apply_data_code=False)
@@ -200,6 +207,89 @@ class RealSolidArray(OES_Object):
             data_frame = pd.DataFrame(self.data[0], columns=headers, index=index)
             data_frame.columns.names = ['Static']
         self.data_frame = data_frame
+
+    @classmethod
+    def _add_case(cls, analysis_code,
+                  table_name, element_name, isubcase,
+                  is_sort1, is_random, is_msc,
+                  random_code, title, subtitle, label):
+        num_wide = 3
+        is_strain = 'Strain' in cls.__name__
+        data_code = oes_real_data_code(table_name, analysis_code,
+                                       element_name, num_wide,
+                                       is_sort1=is_sort1, is_random=is_random,
+                                       random_code=random_code,
+                                       title=title, subtitle=subtitle, label=label,
+                                       is_msc=is_msc)
+
+        # I'm only sure about the 1s in the strains and the
+        # corresponding 0s in the stresses.
+        #stress / strain -> 1, 3
+        # stress_bits[4] = 1 # von mises (vs. max shear)
+        if is_strain:
+            stress_bits = [0, 1, 0, 1, 1]
+            s_code = 1
+        else:
+            stress_bits = [0, 0, 0, 0, 1]
+            s_code = 0
+            assert stress_bits[1] == 0, 'stress_bits=%s' % (stress_bits)
+
+        # stress
+        assert stress_bits[1] == stress_bits[3], 'stress_bits=%s' % (stress_bits)
+        data_code['stress_bits'] = stress_bits
+        data_code['s_code'] = s_code
+
+        element_type = ELEMENT_NAME_TO_ELEMENT_TYPE[element_name]
+        data_code['element_name'] = element_name
+        data_code['element_type'] = element_type
+        return data_code
+
+    @classmethod
+    def add_static_case(cls, table_name, element_name, element_node, element_cid, data, isubcase,
+                        is_sort1=True, is_random=False, is_msc=True,
+                        random_code=0, title='', subtitle='', label=''):
+        analysis_code = 1 # static
+        data_code = cls._add_case(
+            analysis_code,
+            table_name, element_name,
+            isubcase, is_sort1, is_random, is_msc,
+            random_code, title, subtitle, label)
+        obj = set_static_case(cls, is_sort1, isubcase, data_code,
+                              set_element_cid_case, (element_node, element_cid, data))
+        return obj
+
+    @classmethod
+    def add_modal_case(cls, table_name, element_name: str, element_node, element_cid, data, isubcase,
+                           modes, eigns, cycles,
+                           is_sort1=True, is_random=False, is_msc=True,
+                           random_code=0, title='', subtitle='', label=''):
+        table_name = table_name
+        analysis_code = 2 # modal
+        data_code = cls._add_case(
+            analysis_code,
+            table_name, element_name,
+            isubcase, is_sort1, is_random, is_msc,
+            random_code, title, subtitle, label)
+        obj = set_modal_case(cls, is_sort1, isubcase, data_code,
+                             set_element_cid_case, (element_node, element_cid, data),
+                             modes, eigns, cycles)
+        return obj
+
+    @classmethod
+    def add_transient_case(cls, table_name, element_name, element_node, element_cid, data, isubcase,
+                           times,
+                           is_sort1=True, is_random=False, is_msc=True,
+                           random_code=0, title='', subtitle='', label=''):
+        analysis_code = 6 # transient
+        data_code = cls._add_case(
+            analysis_code,
+            table_name, element_name,
+            isubcase, is_sort1, is_random, is_msc,
+            random_code, title, subtitle, label)
+        obj = set_transient_case(cls, is_sort1, isubcase, data_code,
+                                 set_element_cid_case, (element_node, element_cid, data),
+                                 times)
+        return obj
 
     def add_eid_sort1(self, unused_etype, cid, dt, eid, unused_node_id,
                       oxx, oyy, ozz, txy, tyz, txz, o1, o2, o3,
@@ -880,3 +970,22 @@ def calculate_ovm_shear(oxx, oyy, ozz,
         # max shear
         ovm_shear = (o1 - o3) / 2.
     return ovm_shear
+
+def set_element_cid_case(cls, data_code, is_sort1, isubcase,
+                         element_node, element_cid, data, times):
+    assert element_node.ndim == 2, element_node.shape
+    assert element_cid.ndim == 2, element_cid.shape
+    ntimes = data.shape[0]
+    nnodes = data.shape[1]
+    dt = times[0]
+    obj = cls(data_code, is_sort1, isubcase, dt)
+    obj.element_node = element_node
+    obj.element_cid = element_cid
+    obj.data = data
+
+    obj.ntimes = ntimes
+    obj.ntotal = nnodes
+    obj.nelements = element_cid.shape[0]
+    obj._times = times
+    obj.update_data_components()
+    return obj

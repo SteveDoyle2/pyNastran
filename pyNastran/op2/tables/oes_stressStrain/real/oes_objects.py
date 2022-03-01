@@ -435,6 +435,7 @@ def set_static_case(cls, is_sort1, isubcase,
     times = [None]
     obj = func(cls, data_code, is_sort1, isubcase,
                *args, times)
+    obj.is_built = True
     return obj
 
 def set_modal_case(cls, is_sort1, isubcase, data_code,
@@ -443,10 +444,11 @@ def set_modal_case(cls, is_sort1, isubcase, data_code,
     #data_code['lsdvmns'] = [0] # TODO: ???
 
     obj = func(cls, data_code, is_sort1, isubcase,
-                     *args, modes)
+               *args, modes)
     obj.modes = modes
     obj.eigns = eigns
     obj.mode_cycles = cycles
+    obj.is_built = True
     return obj
 
 def set_transient_case(cls, is_sort1, isubcase,
@@ -457,10 +459,26 @@ def set_transient_case(cls, is_sort1, isubcase,
     obj = func(cls, data_code, is_sort1, isubcase,
                *args, times)
     obj.dts = times
+    obj.is_built = True
+    return obj
+
+def set_freq_case(cls, is_sort1, isubcase,
+                  data_code, func, args, freqs):
+    #data_code['lsdvmns'] = [0] # TODO: ???
+    #data_code['data_names'] = ['dt']
+    #data_code['load_set'] = 1
+
+    data_code['data_names'] = ['freq']
+    data_code['name'] = 'FREQ'
+    obj = func(cls, data_code, is_sort1, isubcase,
+               *args, freqs)
+    obj.freqs = freqs
+    obj.is_built = True
     return obj
 
 def set_element_case(cls, data_code, is_sort1, isubcase,
                      element, data, times):
+    assert element.ndim == 1, element.shape
     ntimes = data.shape[0]
     nnodes = data.shape[1]
     dt = times[0]
@@ -470,6 +488,7 @@ def set_element_case(cls, data_code, is_sort1, isubcase,
 
     obj.ntimes = ntimes
     obj.ntotal = nnodes
+    obj.nelements = nnodes
     obj._times = times
     return obj
 

@@ -18,7 +18,9 @@ from pyNastran.f06.f06_formatting import (
     _eigenvalue_header,
 )
 from pyNastran.op2.op2_interface.write_utils import set_table3_field
-from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import update_stress_force_time_word
+from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import (
+    update_stress_force_time_word, set_element_case,
+    set_static_case, set_modal_case, set_transient_case)
 from pyNastran.op2.writer.utils import fix_table3_types
 
 
@@ -33,6 +35,119 @@ SORT2_TABLE_NAME_MAP = {
 TABLE_NAME_TO_TABLE_CODE = {
     'OEF1' : 4,
 }
+
+
+ELEMENT_NAME_TO_ELEMENT_TYPE = {
+    'CROD' : 1,
+    'CTUBE' : 3,
+    'CONROD' : 10,
+
+    'CELAS1' : 11,
+    'CELAS2' : 12,
+    'CELAS3' : 13,
+    'CELAS4' : 14,
+
+    'CDAMP1': 20,
+    'CDAMP2': 21,
+    'CDAMP3': 22,
+    'CDAMP4': 23,
+
+    'CSHEAR' : 4,
+    'CVISC': 24,
+}
+
+def oef_complex_data_code(table_name: str, analysis_code: int,
+                          element_name: str, num_wide: int,
+                          is_sort1: bool=True, is_random: bool=False,
+                          random_code=0, title='', subtitle='', label='',
+                          is_msc=True):
+    dtype_code = 1 # complex
+    data_code = _oef_data_code(table_name, analysis_code,
+                               element_name, num_wide, dtype_code,
+                               is_sort1=is_sort1,
+                               is_random=is_random, random_code=random_code,
+                               title=title, subtitle=subtitle, label=label, is_msc=is_msc)
+    return data_code
+
+def oef_real_data_code(table_name: str, analysis_code: int,
+                       element_name: str, num_wide: int,
+                       is_sort1: bool=True, is_random: bool=False,
+                       random_code=0, title='', subtitle='', label='',
+                       is_msc=True):
+    dtype_code = 0 # real
+    assert isinstance(element_name, str), element_name
+    data_code = _oef_data_code(table_name, analysis_code, element_name, num_wide, dtype_code,
+                               is_sort1=is_sort1,
+                               is_random=is_random, random_code=random_code,
+                               title=title, subtitle=subtitle, label=label, is_msc=is_msc)
+    return data_code
+
+def _oef_data_code(table_name: str, analysis_code: int,
+                   element_name: str, num_wide: int, dtype_code: int,
+                   is_sort1: bool=True, is_random: bool=False,
+                   random_code=0, title='', subtitle='', label='',
+                   is_msc=True):
+    """
+    Parameters
+    ----------
+    dtype_code : int
+      0 : real
+      1 : complex
+      2 : random
+    """
+    sort1_sort_bit = 0 if is_sort1 else 1
+    random_sort_bit = 1 if is_random else 0
+    sort_method = 1 if is_sort1 else 2
+    assert analysis_code != 0, analysis_code
+    #if format_code == 1:
+        #format_word = "Real"
+    #elif format_code == 2:
+        #format_word = "Real/Imaginary"
+    #elif format_code == 3:
+        #format_word = "Magnitude/Phase"
+    #DEVICE_CODE_MAP = {
+        #1 : "Print",
+        #2 : "Plot",
+        #3 : "Print and Plot",
+        #4 : "Punch",
+        #5 : "Print and Punch",
+        #6 : "Plot and Punch",
+        #7 : "Print, Plot, and Punch",
+    #}
+
+    table_code = TABLE_NAME_TO_TABLE_CODE[table_name]
+    sort_code = 1 # TODO: what should this be???
+
+    #table_code = tCode % 1000
+    #sort_code = tCode // 1000
+    tCode = table_code * 1000 + sort_code
+
+    device_code = 2  # Plot
+    approach_code = analysis_code * 10 + device_code
+    #print(f'approach_code={approach_code} analysis_code={analysis_code} device_code={device_code}')
+    data_code = {
+        'nonlinear_factor': None,
+        'approach_code' : approach_code,
+        'analysis_code' : analysis_code,
+        'sort_bits': [dtype_code, sort1_sort_bit, random_sort_bit], # real, sort1, random
+        'sort_method' : sort_method,
+        'is_msc': is_msc,
+        #'is_nasa95': is_nasa95,
+        'format_code': 1, # real
+        'table_code': table_code,
+        'tCode': tCode,
+        'table_name': table_name, ## TODO: should this be a string?
+        'device_code' : device_code,
+        'random_code' : random_code,
+        'thermal': 0,
+        'title' : title,
+        'subtitle': subtitle,
+        'label': label,
+        'num_wide': num_wide,
+        'element_name': element_name,
+        #'num_wide' : 8, # displacement-style table
+    }
+    return data_code
 
 class ForceObject(BaseElement):
     def __init__(self, data_code, isubcase, apply_data_code=True):
@@ -230,6 +345,24 @@ class RealForceObject(ForceObject):
     @property
     def is_complex(self) -> bool:
         return False
+
+    @classmethod
+    def _set_case(cls, analysis_code, table_name, element_name, isubcase,
+                  is_sort1, is_random, is_msc,
+                  random_code, title, subtitle, label):
+        data_code = oef_data_code(table_name, analysis_code,
+                                  is_sort1=is_sort1, is_random=is_random,
+                                  random_code=random_code,
+                                  title=title, subtitle=subtitle, label=label,
+                                  is_msc=is_msc)
+        data_code['loadIDs'] = [0] # TODO: ???
+        data_code['data_names'] = []
+
+        element_type = ELEMENT_NAME_TO_ELEMENT_TYPE[element_name]
+        data_code['element_name'] = element_name
+        data_code['element_type'] = element_type
+        #data_code['load_set'] = 1
+        return data_code
 
 
 """
@@ -455,44 +588,46 @@ class RealSpringDamperForceArray(RealForceObject):
                         random_code=0, title='', subtitle='', label=''):
 
         analysis_code = 1 # static
-        data_code = oef_data_code(table_name, analysis_code,
-                                  is_sort1=is_sort1, is_random=is_random,
-                                  random_code=random_code,
-                                  title=title, subtitle=subtitle, label=label,
-                                  is_msc=is_msc)
-        data_code['loadIDs'] = [0] # TODO: ???
-        data_code['data_names'] = []
+        data_code = cls._set_case(analysis_code, table_name, element_name,
+                                  isubcase, is_sort1,
+                                  is_random, is_msc, random_code,
+                                  title, subtitle, label)
 
-        # I'm only sure about the 1s in the strains and the
-        # corresponding 0s in the stresses.
-        #if is_stress:
-            #data_code['stress_bits'] = [0, 0, 0, 0]
-            #data_code['s_code'] = 0
-        #else:
-            #data_code['stress_bits'] = [0, 1, 0, 1]
-            #data_code['s_code'] = 1 # strain?
-        element_name_to_element_type = {
-            'CELAS1' : 11,
-            'CELAS2' : 12,
-            'CELAS3' : 13,
-            'CELAS4' : 14,
-        }
+        obj = set_static_case(cls, is_sort1, isubcase, data_code,
+                              set_element_case, (element, data))
+        obj.is_built = True
+        return obj
 
-        element_type = element_name_to_element_type[element_name]
-        data_code['element_name'] = element_name
-        data_code['element_type'] = element_type
-        #data_code['load_set'] = 1
+    @classmethod
+    def add_modal_case(cls, table_name, element_name, element, data, isubcase,
+                           modes, eigns, freqs,
+                           is_sort1=True, is_random=False, is_msc=True,
+                           random_code=0, title='', subtitle='', label=''):
+        analysis_code = 2 # modal
+        data_code = cls._set_case(analysis_code, table_name, element_name,
+                                  isubcase, is_sort1,
+                                  is_random, is_msc, random_code,
+                                  title, subtitle, label)
 
-        ntimes = data.shape[0]
-        nnodes = data.shape[1]
-        dt = None
-        obj = cls(data_code, is_sort1, isubcase, dt)
-        obj.element = element
-        obj.data = data
+        obj = set_modal_case(cls, is_sort1, isubcase, data_code,
+                             set_element_case, (element, data),
+                             modes, eigns, freqs)
+        obj.is_built = True
+        return obj
 
-        obj.ntimes = ntimes
-        obj.ntotal = nnodes
-        obj._times = [None]
+    @classmethod
+    def add_transient_case(cls, table_name, element_name, element, data, isubcase,
+                           times,
+                           is_sort1=True, is_random=False, is_msc=True,
+                           random_code=0, title='', subtitle='', label=''):
+        analysis_code = 6 # transient
+        data_code = cls._set_case(analysis_code, table_name, element_name,
+                                  isubcase, is_sort1,
+                                  is_random, is_msc, random_code,
+                                  title, subtitle, label)
+
+        obj = set_transient_case(cls, is_sort1, isubcase, data_code,
+                                 set_element_case, (element, data), times)
         obj.is_built = True
         return obj
 
@@ -857,43 +992,45 @@ class RealRodForceArray(RealForceObject):
                         random_code=0, title='', subtitle='', label=''):
 
         analysis_code = 1 # static
-        data_code = oef_data_code(table_name, analysis_code,
-                                  is_sort1=is_sort1, is_random=is_random,
-                                  random_code=random_code,
-                                  title=title, subtitle=subtitle, label=label,
-                                  is_msc=is_msc)
-        data_code['loadIDs'] = [0] # TODO: ???
-        data_code['data_names'] = []
+        data_code = cls._set_case(analysis_code, table_name, element_name,
+                                  isubcase, is_sort1,
+                                  is_random, is_msc, random_code,
+                                  title, subtitle, label)
 
-        # I'm only sure about the 1s in the strains and the
-        # corresponding 0s in the stresses.
-        #if is_stress:
-            #data_code['stress_bits'] = [0, 0, 0, 0]
-            #data_code['s_code'] = 0
-        #else:
-            #data_code['stress_bits'] = [0, 1, 0, 1]
-            #data_code['s_code'] = 1 # strain?
-        element_name_to_element_type = {
-            'CROD' : 1,
-            'CTUBE' : 3,
-            'CONROD' : 10,
-        }
+        obj = set_static_case(cls, is_sort1, isubcase, data_code,
+                              set_element_case, (element, data))
+        return obj
 
-        element_type = element_name_to_element_type[element_name]
-        data_code['element_name'] = element_name
-        data_code['element_type'] = element_type
-        #data_code['load_set'] = 1
+    @classmethod
+    def add_modal_case(cls, table_name, element_name, element, data, isubcase,
+                           modes, eigns, freqs,
+                           is_sort1=True, is_random=False, is_msc=True,
+                           random_code=0, title='', subtitle='', label=''):
+        analysis_code = 2 # modal
+        data_code = cls._set_case(analysis_code, table_name, element_name,
+                                  isubcase, is_sort1,
+                                  is_random, is_msc, random_code,
+                                  title, subtitle, label)
 
-        ntimes = data.shape[0]
-        nnodes = data.shape[1]
-        dt = None
-        obj = cls(data_code, is_sort1, isubcase, dt)
-        obj.element = element
-        obj.data = data
+        obj = set_modal_case(cls, is_sort1, isubcase, data_code,
+                             set_element_case, (element, data),
+                             modes, eigns, freqs)
+        obj.is_built = True
+        return obj
 
-        obj.ntimes = ntimes
-        obj.ntotal = nnodes
-        obj._times = [None]
+    @classmethod
+    def add_transient_case(cls, table_name, element_name, element, data, isubcase,
+                           times,
+                           is_sort1=True, is_random=False, is_msc=True,
+                           random_code=0, title='', subtitle='', label=''):
+        analysis_code = 6 # transient
+        data_code = cls._set_case(analysis_code, table_name, element_name,
+                                  isubcase, is_sort1,
+                                  is_random, is_msc, random_code,
+                                  title, subtitle, label)
+
+        obj = set_transient_case(cls, is_sort1, isubcase, data_code,
+                                 set_element_case, (element, data), times)
         obj.is_built = True
         return obj
 
@@ -1809,6 +1946,23 @@ class RealCShearForceArray(RealForceObject):
             data_frame.columns.names = ['Static']
         self.data_frame = data_frame
 
+    @classmethod
+    def add_modal_case(cls, table_name, element_name, element, data, isubcase,
+                           modes, eigns, freqs,
+                           is_sort1=True, is_random=False, is_msc=True,
+                           random_code=0, title='', subtitle='', label=''):
+        analysis_code = 2 # modal
+        data_code = cls._set_case(analysis_code, table_name, element_name,
+                                  isubcase, is_sort1,
+                                  is_random, is_msc, random_code,
+                                  title, subtitle, label)
+
+        obj = set_modal_case(cls, is_sort1, isubcase, data_code,
+                             set_element_case, (element, data),
+                             modes, eigns, freqs)
+        obj.is_built = True
+        return obj
+
     def __eq__(self, table):  # pragma: no cover
         assert self.is_sort1 == table.is_sort1
         is_nan = (
@@ -2170,6 +2324,22 @@ class RealViscForceArray(RealForceObject):  # 24-CVISC
             data_frame.index.name = 'ElementID'
             data_frame.columns.names = ['Static']
         self.data_frame = data_frame
+
+    @classmethod
+    def add_transient_case(cls, table_name, element_name, element, data, isubcase,
+                           times,
+                           is_sort1=True, is_random=False, is_msc=True,
+                           random_code=0, title='', subtitle='', label=''):
+        analysis_code = 6 # transient
+        data_code = cls._set_case(analysis_code, table_name, element_name,
+                                  isubcase, is_sort1,
+                                  is_random, is_msc, random_code,
+                                  title, subtitle, label)
+
+        obj = set_transient_case(cls, is_sort1, isubcase, data_code,
+                                 set_element_case, (element, data), times)
+        obj.is_built = True
+        return obj
 
     def add_sort1(self, dt, eid, axial, torque):
         """unvectorized method for adding SORT1 transient data"""
