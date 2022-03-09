@@ -251,6 +251,35 @@ class TestAero(unittest.TestCase):
         linking_coefficients = [1.0, 2.0, 3.0]
         model.add_aelink(idi, label, independent_labels, linking_coefficients)
 
+        sid = 10
+        mach = 0.5
+        q = 10.
+        labels = ['URDD3']
+        uxs = [1.0]
+        model.add_trim(sid, mach, q, labels, uxs, aeqr=1.0, trim_type=1, comment='')
+
+        sid = 11
+        model.add_trim(sid, mach, q, labels, uxs, aeqr=1.0, trim_type=1, comment='')
+
+        cid1 = 0
+        aesid_label_alids = [
+            (1, 'CS', 101),
+            (2, 'LABEL', 101),
+            (3, 'A', 101),
+            (4, 'B', 101),
+            #(5, 'C', 101),
+            (6, 'PIG', 101),
+            (7, 'FROG', 101),
+            (8, 'DOG', 101),
+        ]
+        for (aesid, label, alid1) in aesid_label_alids:
+            model.add_aesurf(aesid, label, cid1, alid1, cid2=None, alid2=None,
+                             eff=1.0, ldw='LDW', crefc=1.0, crefs=1.0,
+                             pllim=-np.pi/2., pulim=np.pi/2.,
+                             hmllim=None, hmulim=None,
+                             tqllim=None, tqulim=None, comment='')
+        elements = [100]
+        model.add_aelist(101, elements)
         model.validate()
         model.cross_reference()
 
@@ -263,6 +292,30 @@ class TestAero(unittest.TestCase):
         independent_labels = ['pig', 'frog', 'dog']
         linking_coefficients = [1.0, 2.0, 3.0]
         model.add_aelink(idi, label, independent_labels, linking_coefficients)
+
+        sid = 31
+        mach = 0.5
+        q = 10.
+        labels = ['URDD3']
+        uxs = [1.0]
+        model.add_trim(sid, mach, q, labels, uxs, aeqr=1.0, trim_type=1, comment='')
+
+        cid1 = 0
+        aesid_label_alids = [
+            (1, 'LABEL', 101),
+            (2, 'PIG', 101),
+            (3, 'FROG', 101),
+            (4, 'DOG', 101),
+        ]
+        for (aesid, label, alid1) in aesid_label_alids:
+            model.add_aesurf(aesid, label, cid1, alid1, cid2=None, alid2=None,
+                             eff=1.0, ldw='LDW', crefc=1.0, crefs=1.0,
+                             pllim=-np.pi/2., pulim=np.pi/2.,
+                             hmllim=None, hmulim=None,
+                             tqllim=None, tqulim=None, comment='')
+        elements = [100]
+        model.add_aelist(101, elements)
+
         save_load_deck(model, run_renumber=False)
 
     def test_aelist_1(self):

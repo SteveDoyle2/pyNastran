@@ -594,7 +594,7 @@ class GetMethods(BDFAttributes):
         try:
             return self.trims[trim_id]
         except KeyError:
-            raise KeyError('TIM=%s not found%s.  Allowed TRIM=%s'
+            raise KeyError('TRIM=%s not found%s.  Allowed TRIM=%s'
                            % (trim_id, msg, _unique_keys(self.trims)))
 
     def AESurf(self, aesurf_name: str, msg: str='') -> AESURF:
@@ -614,8 +614,8 @@ class GetMethods(BDFAttributes):
                 return aesurf
             names.append(aesurf.label)
         names.sort()
-        raise KeyError('aesurf=%s not found%s.  Allowed AESURF=%s'
-                       % (aesurf_name, msg, names))
+        raise KeyError('aesurf=%r not found%s.  Allowed AESURF=%s' % (
+            aesurf_name, msg, names))
 
     def Acsid(self, msg: str='') -> Coord:
         """gets the aerodynamic coordinate system"""

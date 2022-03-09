@@ -493,10 +493,11 @@ class AELINK(BaseCard):
         if comment:
             self.comment = comment
         #: defines the dependent variable name (string)
-        self.label = label
+        self.label = label.upper()
 
         #: defines the independent variable name (string)
-        self.independent_labels = independent_labels
+        self.independent_labels = [independent_label.upper()
+                                   for independent_label in independent_labels]
 
         #: linking coefficients (real)
         self.linking_coefficients = linking_coefficients
@@ -564,7 +565,8 @@ class AELINK(BaseCard):
         Updating the labels on the AESURFs will NOT propogate to the AELINK
         """
         msg = ', which is required by:\n%s' % str(self)
-        sid_ref = model.Trim(self.aelink_id, msg=msg)
+        if self.aelink_id not in {0, 'ALWAYS'}:
+            sid_ref = model.Trim(self.aelink_id, msg=msg)
         self.dependent_label_ref = model.AESurf(self.dependent_label, msg=msg)
         self.independent_labels_ref = [model.AESurf(independent_label, msg=msg)
                                        for independent_label in self.independent_labels]

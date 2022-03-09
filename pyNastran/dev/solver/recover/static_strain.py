@@ -235,7 +235,7 @@ def _recover_straini_ctube(xb, dof_map, elem: CTUBE, prop: PTUBE):
 
 def _recover_strain_bar(f06_file, op2,
                         model: BDF, dof_map, isubcase, xb, eids_str,
-                        element_name, fdtype='float32',
+                        element_name: str, fdtype='float32',
                         title: str='', subtitle: str='', label: str='',
                         page_num: int=1, page_stamp='PAGE %s') -> None:
     """recovers static rod strain"""
@@ -257,7 +257,7 @@ def _recover_strain_bar(f06_file, op2,
     table_name = 'OSTR1'
 
     strain_obj = RealBarStrainArray.add_static_case(
-        table_name, element_name, eids, data, isubcase, is_stress=False,
+        table_name, element_name, eids, data, isubcase,
         is_sort1=True, is_random=False, is_msc=True,
         random_code=0, title=title, subtitle=subtitle, label=label)
 

@@ -188,7 +188,7 @@ def _recover_force_cbar(f06_file, op2,
     data = forces.reshape(1, *forces.shape)
     table_name = 'OEF1'
     force_obj = RealCBarForceArray.add_static_case(
-        table_name, eids, data, isubcase,
+        table_name, 'CBAR', eids, data, isubcase,
         is_sort1=True, is_random=False, is_msc=True,
         random_code=0, title=title, subtitle=subtitle, label=label)
 

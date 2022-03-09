@@ -592,6 +592,7 @@ class RealSpringDamperForceArray(RealForceObject):
                                   isubcase, is_sort1,
                                   is_random, is_msc, random_code,
                                   title, subtitle, label)
+        data_code['num_wide'] = 2
 
         obj = set_static_case(cls, is_sort1, isubcase, data_code,
                               set_element_case, (element, data))
@@ -607,6 +608,7 @@ class RealSpringDamperForceArray(RealForceObject):
                                   isubcase, is_sort1,
                                   is_random, is_msc, random_code,
                                   title, subtitle, label)
+        data_code['num_wide'] = 2
 
         obj = set_modal_case(cls, is_sort1, isubcase, data_code,
                              set_element_case, (element, data),
@@ -623,6 +625,7 @@ class RealSpringDamperForceArray(RealForceObject):
                                   isubcase, is_sort1,
                                   is_random, is_msc, random_code,
                                   title, subtitle, label)
+        data_code['num_wide'] = 2
 
         obj = set_transient_case(cls, is_sort1, isubcase, data_code,
                                  set_element_case, (element, data), times)
@@ -989,10 +992,11 @@ class RealRodForceArray(RealForceObject):
                         is_sort1=True, is_random=False, is_msc=True,
                         random_code=0, title='', subtitle='', label=''):
 
-        data_code = cls._set_case(analysis_code, table_name, element_name,
+        data_code = cls._set_case(table_name, element_name,
                                   isubcase, is_sort1,
                                   is_random, is_msc, random_code,
                                   title, subtitle, label)
+        data_code['num_wide'] = 3
 
         obj = set_static_case(cls, is_sort1, isubcase, data_code,
                               set_element_case, (element, data))
@@ -1007,6 +1011,7 @@ class RealRodForceArray(RealForceObject):
                                   isubcase, is_sort1,
                                   is_random, is_msc, random_code,
                                   title, subtitle, label)
+        data_code['num_wide'] = 3
 
         obj = set_modal_case(cls, is_sort1, isubcase, data_code,
                              set_element_case, (element, data),
@@ -1023,6 +1028,7 @@ class RealRodForceArray(RealForceObject):
                                   isubcase, is_sort1,
                                   is_random, is_msc, random_code,
                                   title, subtitle, label)
+        data_code['num_wide'] = 3
 
         obj = set_transient_case(cls, is_sort1, isubcase, data_code,
                                  set_element_case, (element, data), times)
@@ -3634,6 +3640,7 @@ class RealCBarForceArray(RealCBarFastForceArray):  # 34-CBAR
                                   isubcase, is_sort1,
                                   is_random, is_msc, random_code,
                                   title, subtitle, label)
+        data_code['num_wide'] = 9
         obj = set_static_case(cls, is_sort1, isubcase, data_code,
                               set_element_case, (element, data))
         return obj
@@ -3647,6 +3654,7 @@ class RealCBarForceArray(RealCBarFastForceArray):  # 34-CBAR
                                   isubcase, is_sort1,
                                   is_random, is_msc, random_code,
                                   title, subtitle, label)
+        data_code['num_wide'] = 9
         obj = set_modal_case(cls, is_sort1, isubcase, data_code,
                              set_element_case, (element, data),
                              modes, eigns, cycles)
@@ -3661,6 +3669,7 @@ class RealCBarForceArray(RealCBarFastForceArray):  # 34-CBAR
                                   isubcase, is_sort1,
                                   is_random, is_msc, random_code,
                                   title, subtitle, label)
+        data_code['num_wide'] = 9
         obj = set_transient_case(cls, is_sort1, isubcase, data_code,
                                  set_element_case, (element, data),
                                  times)
