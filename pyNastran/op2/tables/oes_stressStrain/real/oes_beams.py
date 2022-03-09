@@ -8,10 +8,16 @@ from numpy import zeros
 from pyNastran.utils.numpy_utils import integer_types, float_types
 from pyNastran.op2.result_objects.op2_objects import get_times_dtype
 from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import (
-    StressObject, StrainObject, OES_Object)
+    StressObject, StrainObject, OES_Object,
+    oes_real_data_code, set_element_node_xxb_case,
+    set_static_case, set_modal_case, set_transient_case,
+)
 from pyNastran.f06.f06_formatting import write_floats_13e, _eigenvalue_header
 
 
+ELEMENT_NAME_TO_ELEMENT_TYPE = {
+    'CBEAM': 2,
+}
 class RealBeamArray(OES_Object):
     """
     common class used by:
@@ -141,6 +147,84 @@ class RealBeamArray(OES_Object):
             data_frame = pd.DataFrame(self.data[0], columns=headers, index=index)
             data_frame.columns.names = ['Static']
         self.data_frame = data_frame
+
+    @classmethod
+    def _add_case(cls,
+                  table_name, element_name, isubcase,
+                  is_sort1, is_random, is_msc,
+                  random_code, title, subtitle, label):
+        num_wide = 111
+        data_code = oes_real_data_code(table_name,
+                                       element_name, num_wide,
+                                       is_sort1=is_sort1, is_random=is_random,
+                                       random_code=random_code,
+                                       title=title, subtitle=subtitle, label=label,
+                                       is_msc=is_msc)
+
+        # I'm only sure about the 1s in the strains and the
+        # corresponding 0s in the stresses.
+        is_strain = 'Strain' in cls.__name__
+        if is_strain:
+            strain = 1
+            s_code = 1
+        else:
+            # stress
+            strain = 0
+            s_code = 0
+        stress_bits = [0, strain, 0, strain]
+        data_code['stress_bits'] = stress_bits
+        data_code['s_code'] = s_code
+        #data_code['num_wide'] = 17
+
+        element_type = ELEMENT_NAME_TO_ELEMENT_TYPE[element_name]
+        data_code['element_name'] = element_name
+        data_code['element_type'] = element_type
+        return data_code
+
+    @classmethod
+    def add_static_case(cls, table_name, element_name, element_node, xxb, data, isubcase,
+                        is_sort1=True, is_random=False, is_msc=True,
+                        random_code=0, title='', subtitle='', label=''):
+
+        data_code = cls._add_case(
+            table_name, element_name,
+            isubcase, is_sort1, is_random, is_msc,
+            random_code, title, subtitle, label)
+
+        obj = set_static_case(cls, is_sort1, isubcase, data_code,
+                              set_element_node_xxb_case, (element_node, xxb, data))
+        _filter_cbeam_blanks(obj)
+        return obj
+
+    @classmethod
+    def add_modal_case(cls, table_name, element_name: str, element_node, xxb, data, isubcase,
+                       modes, eigns, cycles,
+                       is_sort1=True, is_random=False, is_msc=True,
+                       random_code=0, title='', subtitle='', label=''):
+        data_code = cls._add_case(
+            table_name, element_name,
+            isubcase, is_sort1, is_random, is_msc,
+            random_code, title, subtitle, label)
+        obj = set_modal_case(cls, is_sort1, isubcase, data_code,
+                             set_element_node_xxb_case, (element_node, xxb, data),
+                             modes, eigns, cycles)
+        _filter_cbeam_blanks(obj)
+        return obj
+
+    @classmethod
+    def add_transient_case(cls, table_name, element_name, element_node, xxb, data, isubcase,
+                           times,
+                           is_sort1=True, is_random=False, is_msc=True,
+                           random_code=0, title='', subtitle='', label=''):
+        data_code = cls._add_case(
+            table_name, element_name,
+            isubcase, is_sort1, is_random, is_msc,
+            random_code, title, subtitle, label)
+        obj = set_transient_case(cls, is_sort1, isubcase, data_code,
+                                 set_element_node_xxb_case, (element_node, xxb, data),
+                                 times)
+        _filter_cbeam_blanks(obj)
+        return obj
 
     def __eq__(self, table):  # pragma: no cover
         assert self.is_sort1 == table.is_sort1
@@ -875,3 +959,13 @@ class RealNonlinearBeamStressArray(RealNonlinearBeamArray, StressObject):
         #                '                    STAT DIST/\n',
         #                '   ELEMENT-ID  GRID   LENGTH    SXC           SXD           SXE           SXF           S-MAX         S-MIN         M.S.-T   M.S.-C\n']
         return msg
+
+def _filter_cbeam_blanks(obj: Union[RealBeamStressArray, RealBeamStrainArray]):
+    i_nonzero = np.where((obj.element_node[:, 1] != 0) | (obj.xxb != 0.0))[0]
+
+    obj.element_node = obj.element_node[i_nonzero, :]
+    obj.data = obj.data[:, i_nonzero, :]
+    obj.element = obj.element_node[:, 0]
+    obj.xxb = obj.xxb[i_nonzero, 0]
+    obj.nelement = len(obj.element)
+

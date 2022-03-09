@@ -565,9 +565,8 @@ class ComplexPlateArray(OES_Object):
         is_strain = 'Strain' in cls.__name__
         uelement_name = element_name.upper()
         num_wide = 8 # eid, fiber, (ox, oy, txy)r, (ox, oy, txy)i
-        analysis_code = 5 # freq
         data_code = oes_complex_data_code(
-            table_name, analysis_code,
+            table_name,
             uelement_name, num_wide,
             is_sort1=is_sort1, is_random=is_random,
             random_code=random_code, title=title, subtitle=subtitle, label=label,
@@ -626,6 +625,8 @@ class ComplexPlateArray(OES_Object):
 
         obj = cls(data_code, is_sort1, isubcase, dt)
         assert element_node.ndim == 2, element_node.shape
+        nelements = element_node.shape[0]
+        assert data.shape[1] == nelements, f'data.shape={data.shape} nelements={nelements}'
         obj.element_node = element_node
         obj.fiber_curvature = fiber
         obj.data = data

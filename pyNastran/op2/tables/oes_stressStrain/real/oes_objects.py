@@ -32,11 +32,13 @@ TABLE_NAME_TO_TABLE_CODE = {
     # stress
     'OES1': 5,
     'OES1C': 5,
+    'OES1X': 5,
     'OES1X1': 5,
     'OES2': 5,
 
     # strain
     'OSTR1': 5,
+    'OSTR1X': 5,
     'OSTR2': 5,
 
     'OSTR1C': 5,
@@ -337,31 +339,31 @@ def get_scode(stress_bits: List[int]) -> int:
     return scode
 
 
-def oes_complex_data_code(table_name: str, analysis_code: int,
+def oes_complex_data_code(table_name: str,
                           element_name: str, num_wide: int,
                           is_sort1: bool=True, is_random: bool=False,
                           random_code=0, title='', subtitle='', label='', is_msc=True):
     dtype_code = 1 # complex
-    data_code = _oes_data_code(table_name, analysis_code,
+    data_code = _oes_data_code(table_name,
                                element_name, num_wide, dtype_code,
                                is_sort1=is_sort1,
                                is_random=is_random, random_code=random_code,
                                title=title, subtitle=subtitle, label=label, is_msc=is_msc)
     return data_code
 
-def oes_real_data_code(table_name: str, analysis_code: int,
+def oes_real_data_code(table_name: str,
                        element_name: str, num_wide: int,
                        is_sort1: bool=True, is_random: bool=False,
                        random_code=0, title='', subtitle='', label='', is_msc=True):
     dtype_code = 0 # real
     assert isinstance(element_name, str), element_name
-    data_code = _oes_data_code(table_name, analysis_code, element_name, num_wide, dtype_code,
+    data_code = _oes_data_code(table_name, element_name, num_wide, dtype_code,
                                is_sort1=is_sort1,
                                is_random=is_random, random_code=random_code,
                                title=title, subtitle=subtitle, label=label, is_msc=is_msc)
     return data_code
 
-def _oes_data_code(table_name: str, analysis_code: int,
+def _oes_data_code(table_name: str,
                    element_name: str, num_wide: int, dtype_code: int,
                    is_sort1: bool=True, is_random: bool=False,
                    random_code=0, title='', subtitle='', label='', is_msc=True):
@@ -376,7 +378,6 @@ def _oes_data_code(table_name: str, analysis_code: int,
     sort1_sort_bit = 0 if is_sort1 else 1
     random_sort_bit = 1 if is_random else 0
     sort_method = 1 if is_sort1 else 2
-    assert analysis_code != 0, analysis_code
     #if format_code == 1:
         #format_word = "Real"
     #elif format_code == 2:
@@ -401,12 +402,12 @@ def _oes_data_code(table_name: str, analysis_code: int,
     tCode = table_code * 1000 + sort_code
 
     device_code = 2  # Plot
-    approach_code = analysis_code * 10 + device_code
+    #approach_code = analysis_code * 10 + device_code
     #print(f'approach_code={approach_code} analysis_code={analysis_code} device_code={device_code}')
     data_code = {
         'nonlinear_factor': None,
-        'approach_code' : approach_code,
-        'analysis_code' : analysis_code,
+        #'approach_code' : approach_code,
+        #'analysis_code' : analysis_code,
         'sort_bits': [dtype_code, sort1_sort_bit, random_sort_bit], # real, sort1, random
         'sort_method' : sort_method,
         'is_msc': is_msc,
@@ -427,21 +428,33 @@ def _oes_data_code(table_name: str, analysis_code: int,
     }
     return data_code
 
+def set_approach_code(analysis_code: int, device_code: int):
+    approach_code = analysis_code * 10 + device_code
+    return approach_code
+
 def set_static_case(cls, is_sort1, isubcase,
                     data_code, func, args):
     data_code['lsdvmns'] = [0] # TODO: ???
     data_code['data_names'] = []
     data_code['load_set'] = 1
+    data_code['analysis_code'] = 1
+    data_code['approach_code'] = set_approach_code(data_code['analysis_code'],
+                                                   data_code['device_code'])
     times = [None]
     obj = func(cls, data_code, is_sort1, isubcase,
                *args, times)
     obj.is_built = True
+    obj.get_stats()
     return obj
 
 def set_modal_case(cls, is_sort1, isubcase, data_code,
                    func, args, modes, eigns, cycles):
+
     data_code['data_names'] = ['modes', 'eigns', 'mode_cycles']
     #data_code['lsdvmns'] = [0] # TODO: ???
+    data_code['analysis_code'] = 2 # modal
+    data_code['approach_code'] = set_approach_code(data_code['analysis_code'],
+                                                   data_code['device_code'])
 
     obj = func(cls, data_code, is_sort1, isubcase,
                *args, modes)
@@ -449,6 +462,7 @@ def set_modal_case(cls, is_sort1, isubcase, data_code,
     obj.eigns = eigns
     obj.mode_cycles = cycles
     obj.is_built = True
+    obj.get_stats()
     return obj
 
 def set_transient_case(cls, is_sort1, isubcase,
@@ -456,10 +470,14 @@ def set_transient_case(cls, is_sort1, isubcase,
     data_code['lsdvmns'] = [0] # TODO: ???
     data_code['data_names'] = ['dt']
     data_code['load_set'] = 1
+    data_code['analysis_code'] = 6
+    data_code['approach_code'] = set_approach_code(data_code['analysis_code'],
+                                                   data_code['device_code'])
     obj = func(cls, data_code, is_sort1, isubcase,
                *args, times)
     obj.dts = times
     obj.is_built = True
+    obj.get_stats()
     return obj
 
 def set_freq_case(cls, is_sort1, isubcase,
@@ -468,16 +486,48 @@ def set_freq_case(cls, is_sort1, isubcase,
     #data_code['data_names'] = ['dt']
     #data_code['load_set'] = 1
 
+    data_code['analysis_code'] = 5
+    data_code['approach_code'] = set_approach_code(data_code['analysis_code'],
+                                                   data_code['device_code'])
+
     data_code['data_names'] = ['freq']
     data_code['name'] = 'FREQ'
     obj = func(cls, data_code, is_sort1, isubcase,
                *args, freqs)
     obj.freqs = freqs
     obj.is_built = True
+    obj.get_stats()
+    return obj
+
+def set_complex_modes_case(cls, is_sort1, isubcase,
+                           data_code, func, args, modes, eigrs, eigis):
+    #data_code['lsdvmns'] = [0] # TODO: ???
+    #data_code['data_names'] = ['dt']
+    #data_code['load_set'] = 1
+
+    data_code['analysis_code'] = 9  # complex eigenvalues
+    data_code['approach_code'] = set_approach_code(data_code['analysis_code'],
+                                                   data_code['device_code'])
+
+    data_code['data_names'] = ['modes', 'eigrs', 'eigis']
+    data_code['name'] = 'mode'
+    obj = func(cls, data_code, is_sort1, isubcase,
+               *args, modes)
+    obj.modes = modes
+    obj.eigrs = eigrs
+    obj.eigis = eigis
+    obj.is_built = True
+    obj.get_stats()
     return obj
 
 def set_element_case(cls, data_code, is_sort1, isubcase,
                      element, data, times):
+    """
+    CBAR
+    CROD, CONROD, CTUBE
+    CELAS1-4, CDAMP1-4
+    CSHEAR
+    """
     assert element.ndim == 1, element.shape
     ntimes = data.shape[0]
     nnodes = data.shape[1]
@@ -489,6 +539,28 @@ def set_element_case(cls, data_code, is_sort1, isubcase,
     obj.ntimes = ntimes
     obj.ntotal = nnodes
     obj.nelements = nnodes
+    obj._times = times
+    return obj
+
+def set_element_node_xxb_case(cls, data_code, is_sort1, isubcase,
+                              element_node, xxb, data, times):
+    """CBEAM"""
+    assert element_node.ndim == 2, element_node.shape
+    ntimes = data.shape[0]
+    nelement_nnodes = data.shape[1]
+    dt = times[0]
+    obj = cls(data_code, is_sort1, isubcase, dt)
+    obj.nnodes = 11
+    obj.element = element_node[:, 0]
+    obj.xxb = xxb
+    obj.element_node = element_node
+    obj.data = data
+
+    assert element_node.shape == (nelement_nnodes, 2)
+
+    obj.ntimes = ntimes
+    obj.ntotal = nelement_nnodes
+    obj.nelements = nelement_nnodes
     obj._times = times
     return obj
 

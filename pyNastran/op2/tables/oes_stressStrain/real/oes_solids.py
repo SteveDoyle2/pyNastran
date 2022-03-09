@@ -209,13 +209,13 @@ class RealSolidArray(OES_Object):
         self.data_frame = data_frame
 
     @classmethod
-    def _add_case(cls, analysis_code,
+    def _add_case(cls,
                   table_name, element_name, isubcase,
                   is_sort1, is_random, is_msc,
                   random_code, title, subtitle, label):
         num_wide = 3
         is_strain = 'Strain' in cls.__name__
-        data_code = oes_real_data_code(table_name, analysis_code,
+        data_code = oes_real_data_code(table_name,
                                        element_name, num_wide,
                                        is_sort1=is_sort1, is_random=is_random,
                                        random_code=random_code,
@@ -248,9 +248,7 @@ class RealSolidArray(OES_Object):
     def add_static_case(cls, table_name, element_name, element_node, element_cid, data, isubcase,
                         is_sort1=True, is_random=False, is_msc=True,
                         random_code=0, title='', subtitle='', label=''):
-        analysis_code = 1 # static
         data_code = cls._add_case(
-            analysis_code,
             table_name, element_name,
             isubcase, is_sort1, is_random, is_msc,
             random_code, title, subtitle, label)
@@ -260,13 +258,10 @@ class RealSolidArray(OES_Object):
 
     @classmethod
     def add_modal_case(cls, table_name, element_name: str, element_node, element_cid, data, isubcase,
-                           modes, eigns, cycles,
-                           is_sort1=True, is_random=False, is_msc=True,
-                           random_code=0, title='', subtitle='', label=''):
-        table_name = table_name
-        analysis_code = 2 # modal
+                       modes, eigns, cycles,
+                       is_sort1=True, is_random=False, is_msc=True,
+                       random_code=0, title='', subtitle='', label=''):
         data_code = cls._add_case(
-            analysis_code,
             table_name, element_name,
             isubcase, is_sort1, is_random, is_msc,
             random_code, title, subtitle, label)
@@ -280,9 +275,7 @@ class RealSolidArray(OES_Object):
                            times,
                            is_sort1=True, is_random=False, is_msc=True,
                            random_code=0, title='', subtitle='', label=''):
-        analysis_code = 6 # transient
         data_code = cls._add_case(
-            analysis_code,
             table_name, element_name,
             isubcase, is_sort1, is_random, is_msc,
             random_code, title, subtitle, label)
@@ -975,6 +968,7 @@ def set_element_cid_case(cls, data_code, is_sort1, isubcase,
                          element_node, element_cid, data, times):
     assert element_node.ndim == 2, element_node.shape
     assert element_cid.ndim == 2, element_cid.shape
+    assert data.ndim == 3, data.shape
     ntimes = data.shape[0]
     nnodes = data.shape[1]
     dt = times[0]

@@ -19,7 +19,8 @@ from pyNastran.f06.f06_formatting import (
 )
 from pyNastran.op2.op2_interface.write_utils import set_table3_field
 from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import (
-    update_stress_force_time_word, set_element_case,
+    update_stress_force_time_word,
+    set_element_case, set_element_node_xxb_case,
     set_static_case, set_modal_case, set_transient_case)
 from pyNastran.op2.writer.utils import fix_table3_types
 
@@ -34,13 +35,17 @@ SORT2_TABLE_NAME_MAP = {
 }
 TABLE_NAME_TO_TABLE_CODE = {
     'OEF1' : 4,
+    'OEF1X' : 4,
 }
 
 
 ELEMENT_NAME_TO_ELEMENT_TYPE = {
     'CROD' : 1,
+    'CBEAM': 2,
     'CTUBE' : 3,
     'CONROD' : 10,
+
+    'CBAR': 34,
 
     'CELAS1' : 11,
     'CELAS2' : 12,
@@ -56,33 +61,33 @@ ELEMENT_NAME_TO_ELEMENT_TYPE = {
     'CVISC': 24,
 }
 
-def oef_complex_data_code(table_name: str, analysis_code: int,
+def oef_complex_data_code(table_name: str,
                           element_name: str, num_wide: int,
                           is_sort1: bool=True, is_random: bool=False,
                           random_code=0, title='', subtitle='', label='',
                           is_msc=True):
     dtype_code = 1 # complex
-    data_code = _oef_data_code(table_name, analysis_code,
+    data_code = _oef_data_code(table_name,
                                element_name, num_wide, dtype_code,
                                is_sort1=is_sort1,
                                is_random=is_random, random_code=random_code,
                                title=title, subtitle=subtitle, label=label, is_msc=is_msc)
     return data_code
 
-def oef_real_data_code(table_name: str, analysis_code: int,
+def oef_real_data_code(table_name: str,
                        element_name: str, num_wide: int,
                        is_sort1: bool=True, is_random: bool=False,
                        random_code=0, title='', subtitle='', label='',
                        is_msc=True):
     dtype_code = 0 # real
     assert isinstance(element_name, str), element_name
-    data_code = _oef_data_code(table_name, analysis_code, element_name, num_wide, dtype_code,
+    data_code = _oef_data_code(table_name, element_name, num_wide, dtype_code,
                                is_sort1=is_sort1,
                                is_random=is_random, random_code=random_code,
                                title=title, subtitle=subtitle, label=label, is_msc=is_msc)
     return data_code
 
-def _oef_data_code(table_name: str, analysis_code: int,
+def _oef_data_code(table_name: str,
                    element_name: str, num_wide: int, dtype_code: int,
                    is_sort1: bool=True, is_random: bool=False,
                    random_code=0, title='', subtitle='', label='',
@@ -98,7 +103,6 @@ def _oef_data_code(table_name: str, analysis_code: int,
     sort1_sort_bit = 0 if is_sort1 else 1
     random_sort_bit = 1 if is_random else 0
     sort_method = 1 if is_sort1 else 2
-    assert analysis_code != 0, analysis_code
     #if format_code == 1:
         #format_word = "Real"
     #elif format_code == 2:
@@ -123,12 +127,9 @@ def _oef_data_code(table_name: str, analysis_code: int,
     tCode = table_code * 1000 + sort_code
 
     device_code = 2  # Plot
-    approach_code = analysis_code * 10 + device_code
     #print(f'approach_code={approach_code} analysis_code={analysis_code} device_code={device_code}')
     data_code = {
         'nonlinear_factor': None,
-        'approach_code' : approach_code,
-        'analysis_code' : analysis_code,
         'sort_bits': [dtype_code, sort1_sort_bit, random_sort_bit], # real, sort1, random
         'sort_method' : sort_method,
         'is_msc': is_msc,
@@ -347,10 +348,10 @@ class RealForceObject(ForceObject):
         return False
 
     @classmethod
-    def _set_case(cls, analysis_code, table_name, element_name, isubcase,
+    def _set_case(cls, table_name, element_name, isubcase,
                   is_sort1, is_random, is_msc,
                   random_code, title, subtitle, label):
-        data_code = oef_data_code(table_name, analysis_code,
+        data_code = oef_data_code(table_name,
                                   is_sort1=is_sort1, is_random=is_random,
                                   random_code=random_code,
                                   title=title, subtitle=subtitle, label=label,
@@ -587,8 +588,7 @@ class RealSpringDamperForceArray(RealForceObject):
                         is_sort1=True, is_random=False, is_msc=True,
                         random_code=0, title='', subtitle='', label=''):
 
-        analysis_code = 1 # static
-        data_code = cls._set_case(analysis_code, table_name, element_name,
+        data_code = cls._set_case(table_name, element_name,
                                   isubcase, is_sort1,
                                   is_random, is_msc, random_code,
                                   title, subtitle, label)
@@ -600,11 +600,10 @@ class RealSpringDamperForceArray(RealForceObject):
 
     @classmethod
     def add_modal_case(cls, table_name, element_name, element, data, isubcase,
-                           modes, eigns, freqs,
-                           is_sort1=True, is_random=False, is_msc=True,
-                           random_code=0, title='', subtitle='', label=''):
-        analysis_code = 2 # modal
-        data_code = cls._set_case(analysis_code, table_name, element_name,
+                       modes, eigns, freqs,
+                       is_sort1=True, is_random=False, is_msc=True,
+                       random_code=0, title='', subtitle='', label=''):
+        data_code = cls._set_case(table_name, element_name,
                                   isubcase, is_sort1,
                                   is_random, is_msc, random_code,
                                   title, subtitle, label)
@@ -620,8 +619,7 @@ class RealSpringDamperForceArray(RealForceObject):
                            times,
                            is_sort1=True, is_random=False, is_msc=True,
                            random_code=0, title='', subtitle='', label=''):
-        analysis_code = 6 # transient
-        data_code = cls._set_case(analysis_code, table_name, element_name,
+        data_code = cls._set_case(table_name, element_name,
                                   isubcase, is_sort1,
                                   is_random, is_msc, random_code,
                                   title, subtitle, label)
@@ -991,7 +989,6 @@ class RealRodForceArray(RealForceObject):
                         is_sort1=True, is_random=False, is_msc=True,
                         random_code=0, title='', subtitle='', label=''):
 
-        analysis_code = 1 # static
         data_code = cls._set_case(analysis_code, table_name, element_name,
                                   isubcase, is_sort1,
                                   is_random, is_msc, random_code,
@@ -1003,11 +1000,10 @@ class RealRodForceArray(RealForceObject):
 
     @classmethod
     def add_modal_case(cls, table_name, element_name, element, data, isubcase,
-                           modes, eigns, freqs,
-                           is_sort1=True, is_random=False, is_msc=True,
-                           random_code=0, title='', subtitle='', label=''):
-        analysis_code = 2 # modal
-        data_code = cls._set_case(analysis_code, table_name, element_name,
+                       modes, eigns, freqs,
+                       is_sort1=True, is_random=False, is_msc=True,
+                       random_code=0, title='', subtitle='', label=''):
+        data_code = cls._set_case(table_name, element_name,
                                   isubcase, is_sort1,
                                   is_random, is_msc, random_code,
                                   title, subtitle, label)
@@ -1023,8 +1019,7 @@ class RealRodForceArray(RealForceObject):
                            times,
                            is_sort1=True, is_random=False, is_msc=True,
                            random_code=0, title='', subtitle='', label=''):
-        analysis_code = 6 # transient
-        data_code = cls._set_case(analysis_code, table_name, element_name,
+        data_code = cls._set_case(table_name, element_name,
                                   isubcase, is_sort1,
                                   is_random, is_msc, random_code,
                                   title, subtitle, label)
@@ -1435,6 +1430,46 @@ class RealCBeamForceArray(RealForceObject):
         #self.data_frame = data_frame.reset_index().replace({'NodeID': {0:'CEN'}}).set_index(['ElementID', 'NodeID'])
         self.data_frame = data_frame
 
+    @classmethod
+    def add_static_case(cls, table_name, element_name, element_node, xxb, data, isubcase,
+                        is_sort1=True, is_random=False, is_msc=True,
+                        random_code=0, title='', subtitle='', label=''):
+        data_code = cls._set_case(table_name, element_name,
+                                  isubcase, is_sort1,
+                                  is_random, is_msc, random_code,
+                                  title, subtitle, label)
+        obj = set_static_case(cls, is_sort1, isubcase, data_code,
+                              set_element_node_xxb_case, (element_node, xxb, data))
+        return obj
+
+    @classmethod
+    def add_modal_case(cls, table_name, element_name, element_node, xxb, data, isubcase,
+                       modes, eigns, freqs,
+                       is_sort1=True, is_random=False, is_msc=True,
+                       random_code=0, title='', subtitle='', label=''):
+        data_code = cls._set_case(table_name, element_name,
+                                  isubcase, is_sort1,
+                                  is_random, is_msc, random_code,
+                                  title, subtitle, label)
+        obj = set_modal_case(cls, is_sort1, isubcase, data_code,
+                              set_element_node_xxb_case, (element_node, xxb, data),
+                              modes, eigns, freqs)
+        return obj
+
+    @classmethod
+    def add_transient_case(cls, table_name, element_name, element_node, xxb, data, isubcase,
+                           times,
+                           is_sort1=True, is_random=False, is_msc=True,
+                           random_code=0, title='', subtitle='', label=''):
+        data_code = cls._set_case(table_name, element_name,
+                                  isubcase, is_sort1,
+                                  is_random, is_msc, random_code,
+                                  title, subtitle, label)
+        obj = set_transient_case(cls, is_sort1, isubcase, data_code,
+                                 set_element_node_xxb_case, (element_node, xxb, data),
+                                 times)
+        return obj
+
     def __eq__(self, table):  # pragma: no cover
         self._eq_header(table)
         assert self.is_sort1 == table.is_sort1
@@ -1447,7 +1482,7 @@ class RealCBeamForceArray(RealForceObject):
             i = 0
             if self.is_sort1:
                 for itime in range(ntimes):
-                    for ieid, eid, in enumerate(self.element):
+                    for ieid, eid in enumerate(self.element):
                         t1 = self.data[itime, ieid, :]
                         t2 = table.data[itime, ieid, :]
                         #sd = self.data[itime, :, 0]
@@ -1948,11 +1983,10 @@ class RealCShearForceArray(RealForceObject):
 
     @classmethod
     def add_modal_case(cls, table_name, element_name, element, data, isubcase,
-                           modes, eigns, freqs,
-                           is_sort1=True, is_random=False, is_msc=True,
-                           random_code=0, title='', subtitle='', label=''):
-        analysis_code = 2 # modal
-        data_code = cls._set_case(analysis_code, table_name, element_name,
+                       modes, eigns, freqs,
+                       is_sort1=True, is_random=False, is_msc=True,
+                       random_code=0, title='', subtitle='', label=''):
+        data_code = cls._set_case(table_name, element_name,
                                   isubcase, is_sort1,
                                   is_random, is_msc, random_code,
                                   title, subtitle, label)
@@ -2330,8 +2364,7 @@ class RealViscForceArray(RealForceObject):  # 24-CVISC
                            times,
                            is_sort1=True, is_random=False, is_msc=True,
                            random_code=0, title='', subtitle='', label=''):
-        analysis_code = 6 # transient
-        data_code = cls._set_case(analysis_code, table_name, element_name,
+        data_code = cls._set_case(table_name, element_name,
                                   isubcase, is_sort1,
                                   is_random, is_msc, random_code,
                                   title, subtitle, label)
@@ -3594,43 +3627,43 @@ class RealCBarForceArray(RealCBarFastForceArray):  # 34-CBAR
         RealCBarFastForceArray.__init__(self, data_code, is_sort1, isubcase, dt)
 
     @classmethod
-    def add_static_case(cls, table_name, element, data, isubcase,
+    def add_static_case(cls, table_name, element_name, element, data, isubcase,
                         is_sort1=True, is_random=False, is_msc=True,
                         random_code=0, title='', subtitle='', label=''):
+        data_code = cls._set_case(table_name, element_name,
+                                  isubcase, is_sort1,
+                                  is_random, is_msc, random_code,
+                                  title, subtitle, label)
+        obj = set_static_case(cls, is_sort1, isubcase, data_code,
+                              set_element_case, (element, data))
+        return obj
 
-        analysis_code = 1 # static
-        data_code = oef_data_code(table_name, analysis_code,
-                                  is_sort1=is_sort1, is_random=is_random,
-                                  random_code=random_code,
-                                  title=title, subtitle=subtitle, label=label,
-                                  is_msc=is_msc)
-        data_code['loadIDs'] = [0] # TODO: ???
-        data_code['data_names'] = []
+    @classmethod
+    def add_modal_case(cls, table_name, element_name, element, data, isubcase,
+                       modes, eigns, cycles,
+                       is_sort1=True, is_random=False, is_msc=True,
+                       random_code=0, title='', subtitle='', label=''):
+        data_code = cls._set_case(table_name, element_name,
+                                  isubcase, is_sort1,
+                                  is_random, is_msc, random_code,
+                                  title, subtitle, label)
+        obj = set_modal_case(cls, is_sort1, isubcase, data_code,
+                             set_element_case, (element, data),
+                             modes, eigns, cycles)
+        return obj
 
-        # I'm only sure about the 1s in the strains and the
-        # corresponding 0s in the stresses.
-        #if is_stress:
-            #data_code['stress_bits'] = [0, 0, 0, 0]
-            #data_code['s_code'] = 0
-        #else:
-            #data_code['stress_bits'] = [0, 1, 0, 1]
-            #data_code['s_code'] = 1 # strain?
-
-        data_code['element_name'] = 'CBAR'
-        data_code['element_type'] = 34
-        #data_code['load_set'] = 1
-
-        ntimes = data.shape[0]
-        nnodes = data.shape[1]
-        dt = None
-        obj = cls(data_code, is_sort1, isubcase, dt)
-        obj.element = element
-        obj.data = data
-
-        obj.ntimes = ntimes
-        obj.ntotal = nnodes
-        obj._times = [None]
-        obj.is_built = True
+    @classmethod
+    def add_transient_case(cls, table_name, element_name, element, data, isubcase,
+                           times,
+                           is_sort1=True, is_random=False, is_msc=True,
+                           random_code=0, title='', subtitle='', label=''):
+        data_code = cls._set_case(table_name, element_name,
+                                  isubcase, is_sort1,
+                                  is_random, is_msc, random_code,
+                                  title, subtitle, label)
+        obj = set_transient_case(cls, is_sort1, isubcase, data_code,
+                                 set_element_case, (element, data),
+                                 times)
         return obj
 
     def _words(self) -> List[str]:
@@ -5122,13 +5155,12 @@ class RealCFastForceArrayMSC(RealForceMomentArray):
            #'0                        599      0.0           2.000000E+00  3.421458E-14  1.367133E-13 -3.752247E-15  1.000000E+00\n']
         return msg
 
-def oef_data_code(table_name, analysis_code,
+def oef_data_code(table_name,
                   is_sort1=True, is_random=False,
                   random_code=0, title='', subtitle='', label='', is_msc=True):
     sort1_sort_bit = 0 if is_sort1 else 1
     random_sort_bit = 1 if is_random else 0
     sort_method = 1 if is_sort1 else 2
-    assert analysis_code != 0, analysis_code
     #if format_code == 1:
         #format_word = "Real"
     #elif format_code == 2:
@@ -5153,12 +5185,9 @@ def oef_data_code(table_name, analysis_code,
     tCode = table_code * 1000 + sort_code
 
     device_code = 2  # Plot
-    approach_code = analysis_code * 10 + device_code
     #print(f'approach_code={approach_code} analysis_code={analysis_code} device_code={device_code}')
     data_code = {
         'nonlinear_factor': None,
-        'approach_code' : approach_code,
-        'analysis_code' : analysis_code,
         'sort_bits': [0, sort1_sort_bit, random_sort_bit], # real, sort1, random
         'sort_method' : sort_method,
         'is_msc': is_msc,
@@ -5173,6 +5202,6 @@ def oef_data_code(table_name, analysis_code,
         'title' : title,
         'subtitle': subtitle,
         'label': label,
-        'num_wide' : 8, # displacement-style table
+        #'num_wide' : 8, # displacement-style table
     }
     return data_code

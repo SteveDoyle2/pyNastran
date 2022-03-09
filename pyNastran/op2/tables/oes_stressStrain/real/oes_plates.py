@@ -255,13 +255,13 @@ class RealPlateArray(OES_Object):
         self.data_frame = data_frame
 
     @classmethod
-    def _add_case(cls, analysis_code,
+    def _add_case(cls,
                   table_name, element_name, isubcase,
                   is_sort1, is_random, is_msc,
                   random_code, title, subtitle, label):
         num_wide = 3
         is_strain = 'Strain' in cls.__name__
-        data_code = oes_real_data_code(table_name, analysis_code,
+        data_code = oes_real_data_code(table_name,
                                        element_name, num_wide,
                                        is_sort1=is_sort1, is_random=is_random,
                                        random_code=random_code,
@@ -296,9 +296,7 @@ class RealPlateArray(OES_Object):
     def add_static_case(cls, table_name, element_name, nnodes, element_node, fiber, data, isubcase,
                         is_sort1=True, is_random=False, is_msc=True,
                         random_code=0, title='', subtitle='', label=''):
-        analysis_code = 1 # static
         data_code = cls._add_case(
-            analysis_code,
             table_name, element_name,
             isubcase, is_sort1, is_random, is_msc,
             random_code, title, subtitle, label)
@@ -308,13 +306,10 @@ class RealPlateArray(OES_Object):
 
     @classmethod
     def add_modal_case(cls, table_name, element_name: str, nnodes, element_node, fiber, data, isubcase,
-                           modes, eigns, cycles,
-                           is_sort1=True, is_random=False, is_msc=True,
-                           random_code=0, title='', subtitle='', label=''):
-        table_name = table_name
-        analysis_code = 2 # modal
+                       modes, eigns, cycles,
+                       is_sort1=True, is_random=False, is_msc=True,
+                       random_code=0, title='', subtitle='', label=''):
         data_code = cls._add_case(
-            analysis_code,
             table_name, element_name,
             isubcase, is_sort1, is_random, is_msc,
             random_code, title, subtitle, label)
@@ -328,9 +323,7 @@ class RealPlateArray(OES_Object):
                            times,
                            is_sort1=True, is_random=False, is_msc=True,
                            random_code=0, title='', subtitle='', label=''):
-        analysis_code = 6 # transient
         data_code = cls._add_case(
-            analysis_code,
             table_name, element_name,
             isubcase, is_sort1, is_random, is_msc,
             random_code, title, subtitle, label)

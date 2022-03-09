@@ -80,10 +80,9 @@ class ComplexRodArray(OES_Object):
                       random_code=0, title='', subtitle='', label=''):
 
         num_wide = 5
-        analysis_code = 5 # freq
         is_strain = 'Strain' in cls.__name__
         data_code = oes_complex_data_code(
-            table_name, analysis_code,
+            table_name,
             element_name, num_wide,
             is_sort1=is_sort1, is_random=is_random,
             random_code=random_code, title=title, subtitle=subtitle, label=label,

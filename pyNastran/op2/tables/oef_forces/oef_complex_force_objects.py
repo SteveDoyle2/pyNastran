@@ -9,11 +9,28 @@ from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.op2.result_objects.op2_objects import BaseElement, get_complex_times_dtype
 from pyNastran.op2.tables.oef_forces.oef_force_objects import ForceObject, oef_complex_data_code
 from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import (
-    oes_complex_data_code, set_element_case, set_freq_case)
+    oes_complex_data_code, set_element_case, set_freq_case, set_complex_modes_case)
 
 from pyNastran.f06.f06_formatting import write_imag_floats_13e, write_float_12e # get_key0,
 from pyNastran.f06.f06_formatting import _eigenvalue_header
 
+ELEMENT_NAME_TO_ELEMENT_TYPE = {
+    'CELAS1': 11,
+    'CELAS2': 12,
+    'CELAS3': 13,
+    'CELAS4': 14,
+
+    'CDAMP1': 20,
+    'CDAMP2': 21,
+    'CDAMP3': 22,
+    'CDAMP4': 23,
+
+    'CROD' : 1,
+    'CONROD' : 10,
+    'CTUBE' : 3,
+
+    'CSHEAR': 4,
+}
 
 class ComplexForceObject(ForceObject):
     def __init__(self, data_code, isubcase, apply_data_code=True):
@@ -98,19 +115,12 @@ class ComplexRodForceArray(ComplexForceObject):
                       is_sort1=True, is_random=False, is_msc=True,
                       random_code=0, title='', subtitle='', label=''):
         num_wide = 5
-        analysis_code = 5 # freq
         data_code = oef_complex_data_code(
-            table_name, analysis_code,
+            table_name,
             element_name, num_wide,
             is_sort1=is_sort1, is_random=is_random,
             random_code=random_code, title=title, subtitle=subtitle, label=label,
             is_msc=is_msc)
-
-        ELEMENT_NAME_TO_ELEMENT_TYPE = {
-            'CROD' : 1,
-            'CONROD' : 10,
-            'CTUBE' : 3,
-        }
 
         element_type = ELEMENT_NAME_TO_ELEMENT_TYPE[element_name.upper()]
         data_code['element_name'] = element_name.upper()
@@ -441,17 +451,12 @@ class ComplexCShearForceArray(BaseElement):
                       is_sort1=True, is_random=False, is_msc=True,
                       random_code=0, title='', subtitle='', label=''):
         num_wide = 33
-        analysis_code = 5 # freq
         data_code = oef_complex_data_code(
-            table_name, analysis_code,
+            table_name,
             element_name, num_wide,
             is_sort1=is_sort1, is_random=is_random,
             random_code=random_code, title=title, subtitle=subtitle, label=label,
             is_msc=is_msc)
-
-        ELEMENT_NAME_TO_ELEMENT_TYPE = {
-            'CSHEAR': 4,
-        }
 
         element_type = ELEMENT_NAME_TO_ELEMENT_TYPE[element_name.upper()]
         data_code['element_name'] = element_name.upper()
@@ -721,25 +726,12 @@ class ComplexSpringDamperForceArray(ComplexForceObject):
                       is_sort1=True, is_random=False, is_msc=True,
                       random_code=0, title='', subtitle='', label=''):
         num_wide = 3
-        analysis_code = 5 # freq
         data_code = oef_complex_data_code(
-            table_name, analysis_code,
+            table_name,
             element_name, num_wide,
             is_sort1=is_sort1, is_random=is_random,
             random_code=random_code, title=title, subtitle=subtitle, label=label,
             is_msc=is_msc)
-
-        ELEMENT_NAME_TO_ELEMENT_TYPE = {
-            'CELAS1': 11,
-            'CELAS2': 12,
-            'CELAS3': 13,
-            'CELAS4': 14,
-
-            'CDAMP1': 20,
-            'CDAMP2': 21,
-            'CDAMP3': 22,
-            'CDAMP4': 23,
-        }
 
         element_type = ELEMENT_NAME_TO_ELEMENT_TYPE[element_name.upper()]
         data_code['element_name'] = element_name.upper()
@@ -747,6 +739,28 @@ class ComplexSpringDamperForceArray(ComplexForceObject):
 
         obj = set_freq_case(cls, is_sort1, isubcase, data_code,
                             set_element_case, (element, data), freqs)
+        return obj
+
+    @classmethod
+    def add_complex_modes_case(cls, table_name, element, data, isubcase,
+                               modes, eigrs, eigis,
+                               element_name: str,
+                               is_sort1=True, is_random=False, is_msc=True,
+                               random_code=0, title='', subtitle='', label=''):
+        num_wide = 3
+        data_code = oef_complex_data_code(
+            table_name,
+            element_name, num_wide,
+            is_sort1=is_sort1, is_random=is_random,
+            random_code=random_code, title=title, subtitle=subtitle, label=label,
+            is_msc=is_msc)
+
+        element_type = ELEMENT_NAME_TO_ELEMENT_TYPE[element_name.upper()]
+        data_code['element_name'] = element_name.upper()
+        data_code['element_type'] = element_type
+
+        obj = set_complex_modes_case(cls, is_sort1, isubcase, data_code,
+                                     set_element_case, (element, data), modes, eigrs, eigis)
         return obj
 
     def __eq__(self, table):  # pragma: no cover
