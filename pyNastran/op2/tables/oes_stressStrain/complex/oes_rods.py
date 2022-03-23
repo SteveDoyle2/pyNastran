@@ -6,9 +6,16 @@ from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.op2.result_objects.op2_objects import get_complex_times_dtype
 from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import (
     StressObject, StrainObject, OES_Object,
-    oes_complex_data_code, get_scode, set_element_case, set_freq_case)
+    oes_complex_data_code, get_scode, set_element_case,
+    set_freq_case, set_complex_modes_case)
 from pyNastran.f06.f06_formatting import write_imag_floats_13e, _eigenvalue_header # get_key0,
 
+
+ELEMENT_NAME_TO_ELEMENT_TYPE = {
+    'CROD' : 1,
+    'CONROD' : 10,
+    'CTUBE' : 3,
+}
 
 class ComplexRodArray(OES_Object):
     def __init__(self, data_code, is_sort1, isubcase, dt):
@@ -73,14 +80,14 @@ class ComplexRodArray(OES_Object):
             headers, self.element, self.data)
 
     @classmethod
-    def add_freq_case(cls, table_name, element, data, isubcase,
-                      freqs,
-                      element_name: str,
-                      is_sort1=True, is_random=False, is_msc=True,
-                      random_code=0, title='', subtitle='', label=''):
-
-        num_wide = 5
+    def _add_case(cls,
+                  table_name, element_name, isubcase,
+                  is_sort1, is_random, is_msc,
+                  random_code, title, subtitle, label):
         is_strain = 'Strain' in cls.__name__
+        assert isinstance(is_strain, bool), is_strain
+        assert isinstance(element_name, str), element_name
+        num_wide = 5
         data_code = oes_complex_data_code(
             table_name,
             element_name, num_wide,
@@ -90,12 +97,6 @@ class ComplexRodArray(OES_Object):
         #data_code['modes'] = modes
         #data_code['eigns'] = eigenvalues
         #data_code['mode_cycles'] = mode_cycles
-
-        ELEMENT_NAME_TO_ELEMENT_TYPE = {
-            'CROD' : 1,
-            'CONROD' : 10,
-            'CTUBE' : 3,
-        }
         #
         #stress_bits[1] = 1  # strain bit (vs. stress)
         #stress_bits[2] = 1  # curvature bit (vs. fiber)     ---> always 0
@@ -122,10 +123,38 @@ class ComplexRodArray(OES_Object):
         element_type = ELEMENT_NAME_TO_ELEMENT_TYPE[element_name.upper()]
         #data_code['element_name'] = element_name.upper()
         data_code['element_type'] = element_type
+        return data_code
+
+    @classmethod
+    def add_freq_case(cls, table_name, element, data, isubcase,
+                      freqs,
+                      element_name: str,
+                      is_sort1=True, is_random=False, is_msc=True,
+                      random_code=0, title='', subtitle='', label=''):
+        data_code = cls._add_case(
+            table_name, element_name, isubcase,
+            is_sort1, is_random, is_msc,
+            random_code, title, subtitle, label)
 
         obj = set_freq_case(cls, is_sort1, isubcase, data_code,
                             set_element_case, (element, data), freqs)
-        obj.stress_bits = stress_bits
+        #obj.stress_bits = stress_bits
+        return obj
+
+    @classmethod
+    def add_complex_modes_case(cls, table_name, element, data, isubcase,
+                               modes, eigrs, eigis,
+                               element_name: str,
+                               is_sort1=True, is_random=False, is_msc=True,
+                               random_code=0, title='', subtitle='', label=''):
+        data_code = cls._add_case(
+            table_name, element_name, isubcase,
+            is_sort1, is_random, is_msc,
+            random_code, title, subtitle, label)
+
+        obj = set_complex_modes_case(cls, is_sort1, isubcase, data_code,
+                                     set_element_case, (element, data), modes, eigrs, eigis)
+        #obj.stress_bits = stress_bits
         return obj
 
     def __eq__(self, table):  # pragma: no cover

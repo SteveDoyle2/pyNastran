@@ -237,7 +237,7 @@ class ComplexLayeredCompositesArray(OES_Object):
 
             #self.element_layer = zeros((nlayers, 2), dtype=idtype)
 
-            #fds = self.fiber_curvature
+            #fds = self.fiber_distance
             o1a = self.data[itime, :, 0]
             o2a = self.data[itime, :, 1]
             t12a = self.data[itime, :, 2]

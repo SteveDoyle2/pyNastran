@@ -15,6 +15,24 @@ from pyNastran.op2.result_objects.op2_objects import get_times_dtype
 from pyNastran.f06.f06_formatting import write_floats_13e, _eigenvalue_header
 from pyNastran.op2.errors import SixtyFourBitError
 
+NUM_WIDE_CENTROID = 17
+NUM_WIDE_CORNER = 17
+ELEMENT_NAME_TO_NUM_WIDE = {
+    'CTRIA3': NUM_WIDE_CENTROID,
+    'CQUAD4': NUM_WIDE_CENTROID,
+
+    #2 + 17 * nnodes_all
+    'CQUAD4-144': 2 + NUM_WIDE_CORNER*4,
+    'CQUADR': 2 + NUM_WIDE_CORNER*5,
+    'CQUAD8': 2 + NUM_WIDE_CORNER*5,
+
+    'CTRIA6': 2 + NUM_WIDE_CORNER*4,
+    'CTRIAR': 2 + NUM_WIDE_CORNER*4,
+
+    'CTRIAR_LINEAR': NUM_WIDE_CENTROID,
+    'CQUADR_LINEAR': NUM_WIDE_CENTROID,
+}
+
 ELEMENT_NAME_TO_ELEMENT_TYPE = {
     'CTRIA3': 74,
     'CQUAD4': 33,
@@ -259,8 +277,9 @@ class RealPlateArray(OES_Object):
                   table_name, element_name, isubcase,
                   is_sort1, is_random, is_msc,
                   random_code, title, subtitle, label):
-        num_wide = 3
         is_strain = 'Strain' in cls.__name__
+
+        num_wide = ELEMENT_NAME_TO_NUM_WIDE[element_name]
         data_code = oes_real_data_code(table_name,
                                        element_name, num_wide,
                                        is_sort1=is_sort1, is_random=is_random,
@@ -412,7 +431,7 @@ class RealPlateArray(OES_Object):
         #ilayer = self.itotal % 2 == 0 # 0/1
         #ielement_inid = self.itotal // ntimes
         inid = self.itotal // (2 * ntimes)
-        if self.element_type in [33, 74, 227, 228]:
+        if self.element_type in {33, 74, 227, 228}:
             #  CQUAD4-33, CTRIA3-74, CTRIAR-227, CQUADR-228
             assert inid == 0, (self.element_name, self.element_type, inid)
             #print('inid', inid)
@@ -674,7 +693,7 @@ class RealPlateArray(OES_Object):
         cen_word_bytes = b'CEN/'
         idtype = self.element_node.dtype
         fdtype = self.data.dtype
-        if self.size == 4:
+        if self.size == fdtype.itemsize:
             pass
         else:
             print(f'downcasting {self.class_name}...')
@@ -699,6 +718,7 @@ class RealPlateArray(OES_Object):
         #print('nelements =', nelements)
         #print('nlayers =', nlayers)
         nnodes_per_element = nlayers // nelements // 2
+        assert nnodes_per_element in [1, 4, 5], nnodes_per_element
         # 21 = 1 node, 3 principal, 6 components, 9 vectors, 2 p/ovm
         #ntotal = ((nnodes * 21) + 1) + (nelements * 4)
 
@@ -742,7 +762,7 @@ class RealPlateArray(OES_Object):
             eids_device2 = view_idtype_as_fdtype(eids_device[::2*nnodes_per_element].reshape(nelements, 1),
                                                  fdtype)
             nids2 = view_idtype_as_fdtype(nids[::2].reshape(nelements_nnodes, 1),
-                               fdtype)
+                                          fdtype)
 
         #nheader = 15
         struct_i = Struct('i')
@@ -764,17 +784,20 @@ class RealPlateArray(OES_Object):
             op2_ascii.write(f'r4 [4, {itable:d}, 4]\n')
             op2_ascii.write(f'r4 [4, {4 * ntotal:d}, 4]\n')
 
+            datai_ = self.data[itime, :, :]
+            # 16 values
+            # [eid_device, fdi, oxxi, oyyi, txyi, anglei, major, minor, ovmi]
+            # [            fdi, oxxi, oyyi, txyi, anglei, major, minor, ovmi]
             if is_centroid:
-                # [eid_device, fdi, oxxi, oyyi, txyi, anglei, major, minor, ovmi]
-                # [            fdi, oxxi, oyyi, txyi, anglei, major, minor, ovmi]
-                datai = view_dtype(self.data[itime, :, :].reshape(nelements, 16), fdtype)
+                datai2_ = datai_.reshape(nelements, 16)
+                datai = view_dtype(datai2_, fdtype)
                 data_out = np.hstack([eids_device2, datai])
             elif is_nodes:
                 # CQUAD8, CTRIAR, CTRIA6, CQUADR, CQUAD4
                 # bilinear
-                datai = view_dtype(
-                    self.data[itime, :, :].reshape(nelements*nnodes_per_element, 16),
-                    fdtype)
+                #16
+                datai2_ = datai_.reshape(nelements*nnodes_per_element, 16)
+                datai = view_dtype(datai2_, fdtype)
                 nids_data = np.hstack([nids2, datai]).reshape(nelements, nnodes_per_element*17)
                 data_out = np.hstack([eids_device2, cen_word_array, nids_data])
             else:  # pragma: no cover
@@ -911,7 +934,10 @@ def _get_plate_msg(self):
 def set_element_node_fiber_case(cls, data_code, is_sort1, isubcase,
                                 nnodes, element_node, fiber_distance, data, times):
     assert element_node.ndim == 2, element_node.shape
+    assert element_node.shape[1] == 2, element_node.shape
     assert fiber_distance.ndim == 1, fiber_distance.shape
+    assert element_node[:, 0].min() > 0, element_node
+    assert element_node[:, 1].min() == 0, element_node
     ntimes = data.shape[0]
     nlayers = data.shape[1]
     dt = times[0]
@@ -921,9 +947,16 @@ def set_element_node_fiber_case(cls, data_code, is_sort1, isubcase,
     obj.data = data
 
     #fiber_dist, oxx, oyy, txy, angle, majorP, minorP, ovm
-    assert data.shape[2] == 8, data.shape
+    #assert data.shape[2] == 8, data.shape
 
+    # nlayers: includes all plies
+    # assumed 2 layers per node
+    # a CTRIA3 has 1 node; a CQUAD4-144 has 4+1=5 nodes (centroid is included)
+    # nelements should be the *actual* number of elements, not the size of element_node
+    #
+    # TODO: element_node should not contain duplicates?
     nelements = nlayers // (nnodes * 2)
+    assert nelements >= 1, nelements
 
     obj.ntimes = ntimes
     obj.ntotal = nnodes

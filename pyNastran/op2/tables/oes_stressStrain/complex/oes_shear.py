@@ -6,7 +6,7 @@ from pyNastran.op2.result_objects.op2_objects import get_complex_times_dtype
 from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import (
     StressObject, StrainObject, OES_Object,
     oes_complex_data_code, get_scode,
-    set_element_case, set_freq_case)
+    set_element_case, set_freq_case, set_complex_modes_case)
 from pyNastran.f06.f06_formatting import write_imag_floats_13e
 
 
@@ -100,12 +100,15 @@ class ComplexShearArray(OES_Object):
             column_values, column_names,
             self.headers, self.element, self.data)
 
+
     @classmethod
-    def add_freq_case(cls, table_name, element, data, isubcase,
-                      freqs,
-                      element_name: str,
-                      is_sort1=True, is_random=False, is_msc=True,
-                      random_code=0, title='', subtitle='', label=''):
+    def _add_case(cls,
+                  table_name, element_name, isubcase,
+                  is_sort1, is_random, is_msc,
+                  random_code, title, subtitle, label):
+        is_strain = 'Strain' in cls.__name__
+        assert isinstance(is_strain, bool), is_strain
+        assert isinstance(element_name, str), element_name
         is_strain = 'Strain' in cls.__name__
         num_wide = 3
         data_code = oes_complex_data_code(
@@ -145,9 +148,37 @@ class ComplexShearArray(OES_Object):
         element_type = ELEMENT_NAME_TO_ELEMENT_TYPE[element_name.upper()]
         data_code['element_name'] = element_name.upper()
         data_code['element_type'] = element_type
+        return data_code
+
+    @classmethod
+    def add_freq_case(cls, table_name, element, data, isubcase,
+                      freqs,
+                      element_name: str,
+                      is_sort1=True, is_random=False, is_msc=True,
+                      random_code=0, title='', subtitle='', label=''):
+        data_code = cls._add_case(
+            table_name, element_name, isubcase,
+            is_sort1, is_random, is_msc,
+            random_code, title, subtitle, label)
 
         obj = set_freq_case(cls, is_sort1, isubcase, data_code,
                             set_element_case, (element, data), freqs)
+        return obj
+
+    @classmethod
+    def add_complex_modes_case(cls, table_name, element, data, isubcase,
+                               modes, eigrs, eigis,
+                               element_name: str,
+                               is_sort1=True, is_random=False, is_msc=True,
+                               random_code=0, title='', subtitle='', label=''):
+        data_code = cls._add_case(
+            table_name, element_name, isubcase,
+            is_sort1, is_random, is_msc,
+            random_code, title, subtitle, label)
+
+        obj = set_complex_modes_case(cls, is_sort1, isubcase, data_code,
+                                     set_element_case, (element, data),
+                                     modes, eigrs, eigis)
         return obj
 
     def __eq__(self, table):  # pragma: no cover

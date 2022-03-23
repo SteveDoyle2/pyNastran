@@ -549,7 +549,7 @@ class RealCompositePlateStrengthRatioArray(OES_Object):
     #        raise NotImplementedError('SORT2')
     #
     #    fdtype = self.data.dtype
-    #    if self.size == 4:
+    #    if self.size == fdtype.itemsize:
     #        pass
     #    else:
     #        print(f'downcasting {self.class_name}...')

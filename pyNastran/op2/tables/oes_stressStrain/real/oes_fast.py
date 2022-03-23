@@ -264,7 +264,7 @@ class RealFastArray(OES_Object):
         #struct1 = Struct(endian + b'i 6f')
 
         fdtype = self.data.dtype
-        if self.size == 4:
+        if self.size == fdtype.itemsize:
             pass
         else:
             print(f'downcasting {self.class_name}...')

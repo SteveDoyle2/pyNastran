@@ -13,7 +13,8 @@ from pyNastran.f06.f06_formatting import write_floats_13e, _eigenvalue_header
 from pyNastran.op2.result_objects.op2_objects import get_times_dtype
 from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import (
     StressObject, StrainObject, OES_Object,
-    oes_real_data_code, set_static_case, set_modal_case, set_transient_case)
+    oes_real_data_code, set_static_case, set_modal_case,
+    set_transient_case, set_post_buckling_case)
 from pyNastran.op2.op2_interface.write_utils import to_column_bytes
 
 ELEMENT_NAME_TO_ELEMENT_TYPE = {
@@ -282,6 +283,20 @@ class RealSolidArray(OES_Object):
         obj = set_transient_case(cls, is_sort1, isubcase, data_code,
                                  set_element_cid_case, (element_node, element_cid, data),
                                  times)
+        return obj
+
+    @classmethod
+    def add_post_buckling_case(cls, table_name, element_name, element_node, element_cid, data, isubcase,
+                           modes, eigrs, eigis,
+                           is_sort1=True, is_random=False, is_msc=True,
+                           random_code=0, title='', subtitle='', label=''):
+        data_code = cls._add_case(
+            table_name, element_name,
+            isubcase, is_sort1, is_random, is_msc,
+            random_code, title, subtitle, label)
+        obj = set_post_buckling_case(cls, is_sort1, isubcase, data_code,
+                                     set_element_cid_case, (element_node, element_cid, data),
+                                     modes, eigrs, eigis)
         return obj
 
     def add_eid_sort1(self, unused_etype, cid, dt, eid, unused_node_id,
@@ -678,7 +693,7 @@ class RealSolidArray(OES_Object):
 
         idtype = self.element_cid.dtype
         fdtype = self.data.dtype
-        if self.size == 4:
+        if self.size == fdtype.itemsize:
             grid_bytes = b'GRID'
         else:
             warnings.warn(f'downcasting {self.class_name}...')
@@ -964,7 +979,7 @@ def calculate_ovm_shear(oxx, oyy, ozz,
         ovm_shear = (o1 - o3) / 2.
     return ovm_shear
 
-def set_element_cid_case(cls, data_code, is_sort1, isubcase,
+def set_element_cid_case(cls: RealSolidArray, data_code, is_sort1, isubcase,
                          element_node, element_cid, data, times):
     assert element_node.ndim == 2, element_node.shape
     assert element_cid.ndim == 2, element_cid.shape
@@ -973,13 +988,22 @@ def set_element_cid_case(cls, data_code, is_sort1, isubcase,
     nnodes = data.shape[1]
     dt = times[0]
     obj = cls(data_code, is_sort1, isubcase, dt)
+
+    nresults = data.shape[1]
+    nelements = element_cid.shape[0]
+
+    # including centroid
+    nnodes = nresults // nelements
+    assert nresults % nelements == 0
+
     obj.element_node = element_node
     obj.element_cid = element_cid
+    obj.nnodes = nnodes
     obj.data = data
 
     obj.ntimes = ntimes
     obj.ntotal = nnodes
-    obj.nelements = element_cid.shape[0]
+    obj.nelements = nelements
     obj._times = times
     obj.update_data_components()
     return obj

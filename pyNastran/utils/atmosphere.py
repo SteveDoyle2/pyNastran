@@ -505,7 +505,8 @@ def atm_pressure(alt: float,
     return p * factor
 
 def atm_dynamic_pressure(alt: float, mach: float,
-                         alt_units: str='ft', pressure_units: str='psf') -> float:
+                         alt_units: str='ft',
+                         pressure_units: str='psf') -> float:
     r"""
     Freestream Dynamic Pressure  \f$ q_{\infty} \f$
 
@@ -542,8 +543,10 @@ def atm_dynamic_pressure(alt: float, mach: float,
     q2 = q * factor
     return q2
 
-def atm_speed_of_sound(alt, alt_units='ft', velocity_units='ft/s', gamma=1.4):
-    # type : (float, str, str, float) -> float
+def atm_speed_of_sound(alt: float,
+                       alt_units: str='ft',
+                       velocity_units: str='ft/s',
+                       gamma: float=1.4) -> float:
     r"""
     Freestream Speed of Sound  \f$ a_{\infty} \f$
 
@@ -574,7 +577,9 @@ def atm_speed_of_sound(alt, alt_units='ft', velocity_units='ft/s', gamma=1.4):
     a2 = a * factor
     return a2
 
-def atm_velocity(alt: float, mach: float, alt_units: str='ft', velocity_units: str='ft/s') -> float:
+def atm_velocity(alt: float, mach: float,
+                 alt_units: str='ft',
+                 velocity_units: str='ft/s') -> float:
     r"""
     Freestream Velocity  \f$ V_{\infty} \f$
 
@@ -714,7 +719,9 @@ def atm_density(alt: float,
     rho2 = convert_density(rho, 'slug/ft^3', density_units)
     return rho2
 
-def atm_kinematic_viscosity_nu(alt: float, alt_units: str='ft', visc_units: str='ft^2/s') -> float:
+def atm_kinematic_viscosity_nu(alt: float,
+                               alt_units: str='ft',
+                               visc_units: str='ft^2/s') -> float:
     r"""
     Freestream Kinematic Viscosity \f$ \nu_{\infty} \f$
 
@@ -751,7 +758,9 @@ def atm_kinematic_viscosity_nu(alt: float, alt_units: str='ft', visc_units: str=
         raise NotImplementedError('visc_units=%r' % visc_units)
     return nu * factor
 
-def atm_dynamic_viscosity_mu(alt: float, alt_units: str='ft', visc_units: str='(lbf*s)/ft^2') -> float:
+def atm_dynamic_viscosity_mu(alt: float,
+                             alt_units: str='ft',
+                             visc_units: str='(lbf*s)/ft^2') -> float:
     r"""
     Freestream Dynamic Viscosity  \f$ \mu_{\infty} \f$
 
@@ -786,7 +795,8 @@ def atm_dynamic_viscosity_mu(alt: float, alt_units: str='ft', visc_units: str='(
     return mu * factor
 
 def atm_unit_reynolds_number2(alt: float, mach: float,
-                              alt_units: str='ft', reynolds_units: str='1/ft') -> float:
+                              alt_units: str='ft',
+                              reynolds_units: str='1/ft') -> float:
     r"""
     Returns the Reynolds Number per unit length.
 
@@ -827,7 +837,8 @@ def atm_unit_reynolds_number2(alt: float, mach: float,
     return ReL
 
 def atm_unit_reynolds_number(alt: float, mach: float,
-                             alt_units: str='ft', reynolds_units: str='1/ft') -> float:
+                             alt_units: str='ft',
+                             reynolds_units: str='1/ft') -> float:
     r"""
     Returns the Reynolds Number per unit length.
 

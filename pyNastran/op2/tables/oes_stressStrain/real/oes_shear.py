@@ -9,7 +9,7 @@ from pyNastran.op2.result_objects.op2_objects import get_times_dtype
 from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import (
     StressObject, StrainObject, OES_Object,
     oes_real_data_code, set_element_case,
-    set_modal_case)
+    set_modal_case, set_transient_case)
 from pyNastran.f06.f06_formatting import _eigenvalue_header #, get_key0
 
 
@@ -158,6 +158,20 @@ class RealShearArray(OES_Object):
         obj = set_modal_case(cls, is_sort1, isubcase, data_code,
                              set_element_case, (element, data),
                              modes, eigns, cycles)
+        return obj
+
+    @classmethod
+    def add_transient_case(cls, table_name, element_name, element, data, isubcase,
+                           times,
+                           is_sort1=True, is_random=False, is_msc=True,
+                           random_code=0, title='', subtitle='', label=''):
+        data_code = cls._add_case(
+            table_name, element_name,
+            isubcase, is_sort1, is_random, is_msc,
+            random_code, title, subtitle, label)
+        obj = set_transient_case(cls, is_sort1, isubcase, data_code,
+                                 set_element_case, (element, data),
+                                 times)
         return obj
 
     def __eq__(self, table):  # pragma: no cover
@@ -326,7 +340,7 @@ class RealShearArray(OES_Object):
         struct1 = Struct(endian + b'i 3f')
 
         fdtype = self.data.dtype
-        if self.size == 4:
+        if self.size == fdtype.itemsize:
             pass
         else:
             print(f'downcasting {self.class_name}...')

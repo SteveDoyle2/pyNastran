@@ -384,11 +384,12 @@ class CSSCHD(Aero):
     @classmethod
     def _init_from_empty(cls):
         sid = 1
-        aesid = 0
+        aesurf_id = 0
         lschd = 2
-        return CSSCHD(sid, aesid, lschd, lalpha=None, lmach=None, comment='')
+        return CSSCHD(sid, aesurf_id, lschd, lalpha=None, lmach=None, comment='')
 
-    def __init__(self, sid, aesid, lschd, lalpha=None, lmach=None, comment=''):
+    def __init__(self, sid: int, aesurf_id: int, lschd: int,
+                 lalpha=None, lmach=None, comment=''):
         """
         Creates an CSSCHD card, which defines a specified control surface
         deflection as a function of Mach and alpha (used in SOL 144/146).
@@ -397,7 +398,7 @@ class CSSCHD(Aero):
         ----------
         sid : int
             the unique id
-        aesid : int
+        aesurf_id : int
             the control surface (AESURF) id
         lalpha : int; default=None
             the angle of attack profile (AEFACT) id
@@ -413,14 +414,28 @@ class CSSCHD(Aero):
         if comment:
             self.comment = comment
         self.sid = sid
-        self.aesid = aesid
+        self.aesurf_id = aesurf_id
         self.lalpha = lalpha
         self.lmach = lmach
         self.lschd = lschd
-        self.aesid_ref = None
+        self.aesurf_ref = None
         self.lalpha_ref = None
         self.lmach_ref = None
         self.lschd_ref = None
+
+    @property
+    def aesid(self) -> int:
+        return self.aesurf_id
+    @aesid.setter
+    def aesid(self, aesid: int) -> None:
+        self.aesurf_id = aesid
+
+    @property
+    def aesid_ref(self):
+        return self.aesurf_ref
+    @aesid_ref.setter
+    def aesid_ref(self, aesid_ref: int) -> None:
+        self.aesurf_ref = aesid_ref
 
     def validate(self):
         if not(self.lalpha is None or isinstance(self.lalpha, integer_types)):
@@ -448,21 +463,21 @@ class CSSCHD(Aero):
 
         """
         sid = integer(card, 1, 'sid')
-        aesid = integer(card, 2, 'aesid')             # AESURF
+        aesurf_id = integer(card, 2, 'aesid')         # AESURF
         lalpha = integer_or_blank(card, 3, 'lAlpha')  # AEFACT
         lmach = integer_or_blank(card, 4, 'lMach')    # AEFACT
         lschd = integer(card, 5, 'lSchd')             # AEFACT
         assert len(card) <= 6, f'len(CSSCHD card) = {len(card):d}\ncard={card}'
-        return CSSCHD(sid, aesid, lalpha, lmach, lschd, comment=comment)
+        return CSSCHD(sid, aesurf_id, lalpha, lmach, lschd, comment=comment)
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
         sid = data[0]
-        aesid = data[1]   # AESURF
-        lalpha = data[2]  # AEFACT
-        lmach = data[3]   # AEFACT
-        lschd = data[4]   # AEFACT
-        return CSSCHD(sid, aesid, lalpha, lmach, lschd, comment=comment)
+        aesurf_id = data[1]   # AESURF
+        lalpha = data[2]      # AEFACT
+        lmach = data[3]       # AEFACT
+        lschd = data[4]       # AEFACT
+        return CSSCHD(sid, aesurf_id, lalpha, lmach, lschd, comment=comment)
 
     def cross_reference(self, model: BDF) -> None:
         """
@@ -475,7 +490,7 @@ class CSSCHD(Aero):
 
         """
         msg = ', which is required by CSSCHD sid=%s' % self.sid
-        self.aesid_ref = model.AESurf(self.aesid, msg=msg)
+        self.aesurf_ref = model.AESurf_int(self.aesurf_id, msg=msg)
         self.lalpha_ref = model.AEFact(self.lalpha, msg=msg)
         self.lmach_ref = model.AEFact(self.lmach, msg=msg)
         self.lschd_ref = model.AEFact(self.lschd, msg=msg)
@@ -483,7 +498,7 @@ class CSSCHD(Aero):
     def safe_cross_reference(self, model: BDF, xref_errors):
         msg = ', which is required by CSSCHD sid=%s' % self.sid
         try:
-            self.aesid_ref = model.AESurf(self.aesid, msg=msg)
+            self.aesurf_ref = model.AESurf_int(self.aesurf_id, msg=msg)
         except KeyError:
             pass
 
@@ -493,7 +508,7 @@ class CSSCHD(Aero):
 
     def uncross_reference(self) -> None:
         """Removes cross-reference links"""
-        self.aesid = self.AESid()
+        self.aesurf_id = self.AESid()
         self.lalpha = self.LAlpha()
         self.lmach = self.LMach()
         self.lschd = self.LSchd()
@@ -852,130 +867,131 @@ class TRIM(BaseCard):
         | URDD6  | ür (R3) | Yaw                         |
         +--------+---------+-----------------------------+
         """
-        if xref:
-            nsuport_dofs = 0
-            nsuport1_dofs = 0
-            suport_dofs = set()
-            assert isinstance(suport, list), type(suport)
-            for suporti in suport:
-                for nid, cs in zip(suporti.node_ids, suporti.Cs):
-                    for ci in cs:
-                        #print('  SUPORT: nid=%r C=%r' % (nid, ci))
-                        dof = (nid, ci)
-                        if dof in suport_dofs:
-                            msg = 'Duplicate DOF\n  dof=%s suport_dofs=%s' % (
-                                str(dof), str(suport_dofs))
-                            raise RuntimeError(msg)
-                        suport_dofs.add(dof)
-                        nsuport_dofs += 1
+        if not xref:
+            return
+        nsuport_dofs = 0
+        nsuport1_dofs = 0
+        suport_dofs = set()
+        assert isinstance(suport, list), type(suport)
+        for suporti in suport:
+            for nid, cs in zip(suporti.node_ids, suporti.Cs):
+                for ci in cs:
+                    #print('  SUPORT: nid=%r C=%r' % (nid, ci))
+                    dof = (nid, ci)
+                    if dof in suport_dofs:
+                        msg = 'Duplicate DOF\n  dof=%s suport_dofs=%s' % (
+                            str(dof), str(suport_dofs))
+                        raise RuntimeError(msg)
+                    suport_dofs.add(dof)
+                    nsuport_dofs += 1
 
-            suport_dof_msg2 = ''
-            if suport1:
-                #unused_conid = suport1.conid
-                nids = suport1.node_ids
-                suport_dof_msg = ''
-                for nid, components in zip(nids, suport1.Cs):
-                    for componenti in components:
-                        dof = (nid, componenti)
-                        suport_dof_msg += '    (%s, %s)\n' % (nid, componenti)
-                        if dof in suport_dofs:
-                            msg = 'dof=%s suport_dofs=%s' % (str(dof), str(suport_dofs))
-                            raise RuntimeError(msg)
-                        suport_dofs.add(dof)
-                        nsuport1_dofs += 1
-                suport_dof_msg2 = '\nsuport_dofs (nid, comp):\n%s\n' % suport_dof_msg.rstrip(',')
+        suport_dof_msg2 = ''
+        if suport1:
+            #unused_conid = suport1.conid
+            nids = suport1.node_ids
+            suport_dof_msg = ''
+            for nid, components in zip(nids, suport1.Cs):
+                for componenti in components:
+                    dof = (nid, componenti)
+                    suport_dof_msg += '    (%s, %s)\n' % (nid, componenti)
+                    if dof in suport_dofs:
+                        msg = 'dof=%s suport_dofs=%s' % (str(dof), str(suport_dofs))
+                        raise RuntimeError(msg)
+                    suport_dofs.add(dof)
+                    nsuport1_dofs += 1
+            suport_dof_msg2 = '\nsuport_dofs (nid, comp):\n%s\n' % suport_dof_msg.rstrip(',')
 
-            aesurf_names = [aesurfi.label for aesurfi in aesurf.values()]
-            aestat_labels = [aestat.label for aestat in aestats.values()]
-            aeparm_labels = [aeparm.label for aeparm in aeparms.values()]
-            naestat = len(aestat_labels)
-            ntrim = len(self.labels)
-            trim_aesurf_common = list(set(self.labels).intersection(set(aesurf_names)))
-            trim_aesurf_common.sort()
-            ntrim_aesurfs = len(trim_aesurf_common)
-            naesurf = len(aesurf_names)
-            naeparm = len(aeparm_labels)
+        aesurf_names = [aesurfi.label for aesurfi in aesurf.values()]
+        aestat_labels = [aestat.label for aestat in aestats.values()]
+        aeparm_labels = [aeparm.label for aeparm in aeparms.values()]
+        naestat = len(aestat_labels)
+        ntrim = len(self.labels)
+        trim_aesurf_common = list(set(self.labels).intersection(set(aesurf_names)))
+        trim_aesurf_common.sort()
+        ntrim_aesurfs = len(trim_aesurf_common)
+        naesurf = len(aesurf_names)
+        naeparm = len(aeparm_labels)
 
-            aelinksi = []
-            if 0 in aelinks:
-                aelinksi += [aelink.label for aelink in aelinks[0]]
-            #if 'ALWAYS' in aelinks:
-                #aelinksi += [aelink.label for aelink in aelinks['ALWAYS']]
+        aelinksi = []
+        if 0 in aelinks:
+            aelinksi += [aelink.label for aelink in aelinks[0]]
+        #if 'ALWAYS' in aelinks:
+            #aelinksi += [aelink.label for aelink in aelinks['ALWAYS']]
 
-            if self.sid in aelinks:
-                aelinksi += [aelink.label for aelink in aelinks[self.sid]]
-            naelink = len(aelinksi)
+        if self.sid in aelinks:
+            aelinksi += [aelink.label for aelink in aelinks[self.sid]]
+        naelink = len(aelinksi)
 
 
-            ntrim_aesurf = 0
-            labels = aestat_labels + aesurf_names + aeparm_labels
-            msg = ''
-            for label in self.labels:
-                if label not in labels:
-                    msg += 'TRIM label=%r is not defined\n' % label
+        ntrim_aesurf = 0
+        labels = aestat_labels + aesurf_names + aeparm_labels
+        msg = ''
+        for label in self.labels:
+            if label not in labels:
+                msg += 'TRIM label=%r is not defined\n' % label
 
-                if label in aesurf_names:
-                    #print('AESTAT/AESURF label = %r' % label)
-                    ntrim_aesurf += 1
-            if msg:
-                msg += '\n aestat_labels=%s\n aeparm_labels=%s\n aesurf_names=%s\n%s' % (
-                    aestat_labels, aeparm_labels, aesurf_names, str(self))
-                raise RuntimeError(msg)
+            if label in aesurf_names:
+                #print('AESTAT/AESURF label = %r' % label)
+                ntrim_aesurf += 1
+        if msg:
+            msg += '\n aestat_labels=%s\n aeparm_labels=%s\n aesurf_names=%s\n%s' % (
+                aestat_labels, aeparm_labels, aesurf_names, str(self))
+            raise RuntimeError(msg)
 
-            # TODO: this doesn't work for multiple subcases
-            #ntotal_suport_dofs = nsuport_dofs, nsuport1_dofs
-            #ndelta = ntrim - nsuport_dofs - nsuport1_dofs - naesurf
-            #if ndelta != 0:
-                #msg = 'ntrim - nsuport_dofs - nsuport1_dofs - naesurf = ndelta = %s; ndelta != 0\n' % ndelta
-                #msg += 'ntrim=%s nsuport_dofs=%s nsuport1_dofs=%s naesurfs=%s' % (
-                    #ntrim, nsuport_dofs, nsuport1_dofs, naesurf)
-                #raise RuntimeError(msg)
+        # TODO: this doesn't work for multiple subcases
+        #ntotal_suport_dofs = nsuport_dofs, nsuport1_dofs
+        #ndelta = ntrim - nsuport_dofs - nsuport1_dofs - naesurf
+        #if ndelta != 0:
+            #msg = 'ntrim - nsuport_dofs - nsuport1_dofs - naesurf = ndelta = %s; ndelta != 0\n' % ndelta
+            #msg += 'ntrim=%s nsuport_dofs=%s nsuport1_dofs=%s naesurfs=%s' % (
+                #ntrim, nsuport_dofs, nsuport1_dofs, naesurf)
+            #raise RuntimeError(msg)
 
-            #ndelta = (naestat + naesurf + naeparm + ntrim_aesurf) - (ntrim + naelink + nsuport_dofs + nsuport1_dofs)
-            #if ndelta != 0:
-                #msg = (
-                    #'(naestat + naesurf + naeparm + ntrim_aesurf) - '
-                    #'(ntrim + naelink + nsuport_dofs + nsuport1_dofs) = ndelta = %s; ndelta != 0\n'
-                    #'naestat=%s naesurf=%s naeparm=%s ntrim_aesurfs=%s\n'
-                    #'ntrim=%s naelink=%s nsuport_dofs=%s nsuport1_dofs=%s' % (
-                        #ndelta,
-                        #naestat, naesurf, naeparms, ntrim_aesurf,
-                        #ntrim, naelink, nsuport_dofs, nsuport1_dofs))
+        #ndelta = (naestat + naesurf + naeparm + ntrim_aesurf) - (ntrim + naelink + nsuport_dofs + nsuport1_dofs)
+        #if ndelta != 0:
+            #msg = (
+                #'(naestat + naesurf + naeparm + ntrim_aesurf) - '
+                #'(ntrim + naelink + nsuport_dofs + nsuport1_dofs) = ndelta = %s; ndelta != 0\n'
+                #'naestat=%s naesurf=%s naeparm=%s ntrim_aesurfs=%s\n'
+                #'ntrim=%s naelink=%s nsuport_dofs=%s nsuport1_dofs=%s' % (
+                    #ndelta,
+                    #naestat, naesurf, naeparms, ntrim_aesurf,
+                    #ntrim, naelink, nsuport_dofs, nsuport1_dofs))
 
-            nplus = (naestat + naesurf + naeparm)
-            nminus = ntrim + naelink + nsuport_dofs + nsuport1_dofs
+        nplus = (naestat + naesurf + naeparm)
+        nminus = ntrim + naelink + nsuport_dofs + nsuport1_dofs
 
-            ndelta = nplus - nminus + 0*2*ntrim_aesurfs
-            if ndelta != 0:
-                #msg = (
-                    #'(naestat + naesurf + naeparm) - (ntrim + ntrim_aesurf? + naelink + '
-                    #'nsuport_dofs + nsuport1_dofs) = ndelta = %s; ndelta != 0\n'
-                    #'naestat=%s naesurf=%s naeparm=%s ntrim=%s ntrim_aesurf=%s '
-                    #'naelink=%s nsuport_dofs=%s nsuport1_dofs=%s\n' % (
-                        #ndelta,
-                        #naestat, naesurf, naeparm, ntrim, ntrim_aesurf,
-                        #naelink, nsuport_dofs, nsuport1_dofs)
-                #)
-                msg = (
-                    'Invalid trim state (ndelta != 0):\n'
-                    f'   (naestat + naesurf + naeparm + 0*2*ntrim_aesurf?) = ({naestat} + {naesurf} + {naeparm} + 0*2*{ntrim_aesurf}) = {nplus}\n'
-                    f' - (ntrim + naelink + nsuport_dofs + nsuport1_dofs) = ({ntrim} + {naelink} + {nsuport_dofs} + {nsuport1_dofs}) = {nminus}\n'
-                    '===================================================================\n'
-                    f'  ndelta = {ndelta}\n\n'
-                    'Summary\n'
-                    '-------\n'
-                    f'  +naestat = {naestat}; {aestat_labels}\n'
-                    f'  +naesurf = {naesurf}; {aesurf_names}\n'
-                    f'  +naeparm = {naeparm}; {aeparm_labels}\n'
-                    f'  +0*2*ntrim_aesurf? = {2*ntrim_aesurf} -> 0; {trim_aesurf_common}\n'
-                    f'  -ntrim = {ntrim}; {self.labels}\n'
-                    f'  -naelink = {naelink}; {aelinksi}\n'
-                    f'  -nsuport_dofs = {nsuport_dofs}\n'
-                    f'  -nsuport1_dofs = {nsuport1_dofs}\n'
-                    f'{suport_dof_msg2}\n\n'
-                )
-                msg += str(self)
-                raise RuntimeError(msg)
+        ndelta = nplus - nminus + 0*2*ntrim_aesurfs
+        if ndelta != 0:
+            #msg = (
+                #'(naestat + naesurf + naeparm) - (ntrim + ntrim_aesurf? + naelink + '
+                #'nsuport_dofs + nsuport1_dofs) = ndelta = %s; ndelta != 0\n'
+                #'naestat=%s naesurf=%s naeparm=%s ntrim=%s ntrim_aesurf=%s '
+                #'naelink=%s nsuport_dofs=%s nsuport1_dofs=%s\n' % (
+                    #ndelta,
+                    #naestat, naesurf, naeparm, ntrim, ntrim_aesurf,
+                    #naelink, nsuport_dofs, nsuport1_dofs)
+            #)
+            msg = (
+                'Invalid trim state (ndelta != 0):\n'
+                f'   (naestat + naesurf + naeparm + 0*2*ntrim_aesurf?) = ({naestat} + {naesurf} + {naeparm} + 0*2*{ntrim_aesurf}) = {nplus}\n'
+                f' - (ntrim + naelink + nsuport_dofs + nsuport1_dofs) = ({ntrim} + {naelink} + {nsuport_dofs} + {nsuport1_dofs}) = {nminus}\n'
+                '===================================================================\n'
+                f'  ndelta = {ndelta}\n\n'
+                'Summary\n'
+                '-------\n'
+                f'  +naestat = {naestat}; {aestat_labels}\n'
+                f'  +naesurf = {naesurf}; {aesurf_names}\n'
+                f'  +naeparm = {naeparm}; {aeparm_labels}\n'
+                f'  +0*2*ntrim_aesurf? = {2*ntrim_aesurf} -> 0; {trim_aesurf_common}\n'
+                f'  -ntrim = {ntrim}; {self.labels}\n'
+                f'  -naelink = {naelink}; {aelinksi}\n'
+                f'  -nsuport_dofs = {nsuport_dofs}\n'
+                f'  -nsuport1_dofs = {nsuport1_dofs}\n'
+                f'{suport_dof_msg2}\n\n'
+            )
+            msg += str(self)
+            raise RuntimeError(msg)
 
     def cross_reference(self, model: BDF) -> None:
         pass

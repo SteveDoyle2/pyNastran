@@ -21,7 +21,8 @@ from pyNastran.op2.op2_interface.write_utils import set_table3_field
 from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import (
     update_stress_force_time_word,
     set_element_case, set_element_node_xxb_case,
-    set_static_case, set_modal_case, set_transient_case)
+    set_static_case, set_modal_case, set_transient_case,
+    set_post_buckling_case)
 from pyNastran.op2.writer.utils import fix_table3_types
 
 
@@ -626,9 +627,24 @@ class RealSpringDamperForceArray(RealForceObject):
                                   is_random, is_msc, random_code,
                                   title, subtitle, label)
         data_code['num_wide'] = 2
-
         obj = set_transient_case(cls, is_sort1, isubcase, data_code,
                                  set_element_case, (element, data), times)
+        obj.is_built = True
+        return obj
+
+    @classmethod
+    def add_post_buckling_case(cls, table_name, element_name, element, data, isubcase,
+                               modes, eigrs, eigis,
+                               is_sort1=True, is_random=False, is_msc=True,
+                               random_code=0, title='', subtitle='', label=''):
+        data_code = cls._set_case(table_name, element_name,
+                                  isubcase, is_sort1,
+                                  is_random, is_msc, random_code,
+                                  title, subtitle, label)
+        data_code['num_wide'] = 2
+        obj = set_post_buckling_case(cls, is_sort1, isubcase, data_code,
+                                     set_element_case, (element, data),
+                                     modes, eigrs, eigis)
         obj.is_built = True
         return obj
 
@@ -991,7 +1007,6 @@ class RealRodForceArray(RealForceObject):
     def add_static_case(cls, table_name, element_name, element, data, isubcase,
                         is_sort1=True, is_random=False, is_msc=True,
                         random_code=0, title='', subtitle='', label=''):
-
         data_code = cls._set_case(table_name, element_name,
                                   isubcase, is_sort1,
                                   is_random, is_msc, random_code,
@@ -1029,9 +1044,24 @@ class RealRodForceArray(RealForceObject):
                                   is_random, is_msc, random_code,
                                   title, subtitle, label)
         data_code['num_wide'] = 3
-
         obj = set_transient_case(cls, is_sort1, isubcase, data_code,
                                  set_element_case, (element, data), times)
+        obj.is_built = True
+        return obj
+
+    @classmethod
+    def add_post_buckling_case(cls, table_name, element_name, element, data, isubcase,
+                               modes, eigrs, eigis,
+                               is_sort1=True, is_random=False, is_msc=True,
+                               random_code=0, title='', subtitle='', label=''):
+        data_code = cls._set_case(table_name, element_name,
+                                  isubcase, is_sort1,
+                                  is_random, is_msc, random_code,
+                                  title, subtitle, label)
+        data_code['num_wide'] = 3
+        obj = set_post_buckling_case(cls, is_sort1, isubcase, data_code,
+                                     set_element_case, (element, data),
+                                     modes, eigrs, eigis)
         obj.is_built = True
         return obj
 
@@ -1444,6 +1474,7 @@ class RealCBeamForceArray(RealForceObject):
                                   isubcase, is_sort1,
                                   is_random, is_msc, random_code,
                                   title, subtitle, label)
+        data_code['num_wide'] = 100
         obj = set_static_case(cls, is_sort1, isubcase, data_code,
                               set_element_node_xxb_case, (element_node, xxb, data))
         return obj
@@ -1457,6 +1488,7 @@ class RealCBeamForceArray(RealForceObject):
                                   isubcase, is_sort1,
                                   is_random, is_msc, random_code,
                                   title, subtitle, label)
+        data_code['num_wide'] = 100
         obj = set_modal_case(cls, is_sort1, isubcase, data_code,
                               set_element_node_xxb_case, (element_node, xxb, data),
                               modes, eigns, freqs)
@@ -1471,9 +1503,25 @@ class RealCBeamForceArray(RealForceObject):
                                   isubcase, is_sort1,
                                   is_random, is_msc, random_code,
                                   title, subtitle, label)
+        data_code['num_wide'] = 100
         obj = set_transient_case(cls, is_sort1, isubcase, data_code,
                                  set_element_node_xxb_case, (element_node, xxb, data),
                                  times)
+        return obj
+
+    @classmethod
+    def add_post_buckling_case(cls, table_name, element_name, element_node, xxb, data, isubcase,
+                               modes, eigrs, eigis,
+                               is_sort1=True, is_random=False, is_msc=True,
+                               random_code=0, title='', subtitle='', label=''):
+        data_code = cls._set_case(table_name, element_name,
+                                  isubcase, is_sort1,
+                                  is_random, is_msc, random_code,
+                                  title, subtitle, label)
+        data_code['num_wide'] = 100
+        obj = set_post_buckling_case(cls, is_sort1, isubcase, data_code,
+                                     set_element_node_xxb_case, (element_node, xxb, data),
+                                     modes, eigrs, eigis)
         return obj
 
     def __eq__(self, table):  # pragma: no cover
@@ -3673,6 +3721,21 @@ class RealCBarForceArray(RealCBarFastForceArray):  # 34-CBAR
         obj = set_transient_case(cls, is_sort1, isubcase, data_code,
                                  set_element_case, (element, data),
                                  times)
+        return obj
+
+    @classmethod
+    def add_post_buckling_case(cls, table_name, element_name, element, data, isubcase,
+                               modes, eigrs, eigis,
+                               is_sort1=True, is_random=False, is_msc=True,
+                               random_code=0, title='', subtitle='', label=''):
+        data_code = cls._set_case(table_name, element_name,
+                                  isubcase, is_sort1,
+                                  is_random, is_msc, random_code,
+                                  title, subtitle, label)
+        data_code['num_wide'] = 9
+        obj = set_post_buckling_case(cls, is_sort1, isubcase, data_code,
+                                     set_element_case, (element, data),
+                                     modes, eigrs, eigis)
         return obj
 
     def _words(self) -> List[str]:

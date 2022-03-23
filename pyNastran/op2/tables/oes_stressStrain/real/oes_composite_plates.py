@@ -6,9 +6,10 @@ from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.op2.result_objects.op2_objects import get_times_dtype
 from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import (
     StressObject, StrainObject, OES_Object, oes_real_data_code, get_scode,
-    set_static_case, set_modal_case, set_transient_case,
+    set_static_case, set_modal_case, set_transient_case, set_post_buckling_case,
 )
 from pyNastran.f06.f06_formatting import write_floats_12e, _eigenvalue_header
+from pyNastran.op2.op2_interface.write_utils import set_table3_field, view_dtype, view_idtype_as_fdtype
 
 
 class RealCompositePlateArray(OES_Object):
@@ -175,7 +176,7 @@ class RealCompositePlateArray(OES_Object):
 
     @classmethod
     def _add_case(cls,
-                  table_name, element_name, element, data, isubcase,
+                  table_name, element_name, isubcase,
                   is_sort1, is_random, is_msc,
                   random_code, title, subtitle, label):
         is_strain = 'Strain' in cls.__name__
@@ -233,7 +234,7 @@ class RealCompositePlateArray(OES_Object):
                         is_sort1=True, is_random=False, is_msc=True,
                         random_code=0, title='', subtitle='', label=''):
         data_code = cls._add_case(
-            table_name, element_name, element_layer, data,
+            table_name, element_name,
             isubcase, is_sort1, is_random, is_msc,
             random_code, title, subtitle, label)
 
@@ -248,7 +249,7 @@ class RealCompositePlateArray(OES_Object):
                            is_sort1=True, is_random=False, is_msc=True,
                            random_code=0, title='', subtitle='', label=''):
         data_code = cls._add_case(
-            table_name, element_name, element_layer, data,
+            table_name, element_name,
             isubcase, is_sort1, is_random, is_msc,
             random_code, title, subtitle, label)
 
@@ -263,12 +264,27 @@ class RealCompositePlateArray(OES_Object):
                        is_sort1=True, is_random=False, is_msc=True,
                        random_code=0, title='', subtitle='', label=''):
         data_code = cls._add_case(
-            table_name, element_name, element_layer, data,
+            table_name, element_name,
             isubcase, is_sort1, is_random, is_msc,
             random_code, title, subtitle, label)
         obj = set_modal_case(cls, is_sort1, isubcase, data_code,
                              _set_class, (element_layer, data),
                              modes, eigns, cycles)
+        return obj
+
+    @classmethod
+    def add_post_buckling_case(cls, table_name, element_layer, data, isubcase,
+                               element_name: str,
+                               modes, eigrs, eigis,
+                               is_sort1=True, is_random=False, is_msc=True,
+                               random_code=0, title='', subtitle='', label=''):
+        data_code = cls._add_case(
+            table_name, element_name,
+            isubcase, is_sort1, is_random, is_msc,
+            random_code, title, subtitle, label)
+        obj = set_post_buckling_case(cls, is_sort1, isubcase, data_code,
+                                     _set_class, (element_layer, data),
+                                     modes, eigrs, eigis)
         return obj
 
     def __eq__(self, table):  # pragma: no cover
@@ -557,7 +573,7 @@ class RealCompositePlateArray(OES_Object):
             raise NotImplementedError('SORT2')
 
         fdtype = self.data.dtype
-        if self.size == 4:
+        if self.size == fdtype.itemsize:
             pass
         else:
             print(f'downcasting {self.class_name}...')
@@ -565,8 +581,8 @@ class RealCompositePlateArray(OES_Object):
             fdtype = np.float32(1.0)
 
         data_out = np.empty((nlayers, 11), dtype=fdtype)
-        data_out[:, 0] = eids_device.view(fdtype)
-        data_out[:, 1] = layers.view(fdtype)
+        data_out[:, 0] = view_idtype_as_fdtype(eids_device, fdtype)
+        data_out[:, 1] = view_idtype_as_fdtype(layers, fdtype)
 
         op2_ascii.write(f'nelements={nelements:d}\n')
         ntimes = self.data.shape[0]

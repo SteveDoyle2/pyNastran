@@ -90,7 +90,7 @@ class OP2Writer(OP2_F06_Common):
             #print('op2_outname =', op2_outname)
 
         try:
-            total_case_count = _write_op2(
+            total_case_count, table_names = _write_op2(
                 op2_file, fop2_ascii, self,
                 skips,
                 post=post, endian=endian,
@@ -156,7 +156,7 @@ def _set_skips(model: OP2Writer, includes: Optional[List[str]], skips: Optional[
 def _write_op2(op2_file, fop2_ascii, obj: OP2,
                skips: Set[str],
                post: int=-1, endian: bytes=b'<',
-               nastran_format: str='nx') -> int:
+               nastran_format: str='nx') -> Tuple[int, List[str]]:
     """actually writes the op2"""
     date = obj.date
     #op2_ascii.write('writing [3, 7, 0] header\n')
@@ -196,13 +196,14 @@ def _write_op2(op2_file, fop2_ascii, obj: OP2,
     # nastran puts the tables in order of the Case Control deck,
     # but we're lazy so we just hardcode the order
 
-    case_count = _write_result_tables(obj, op2_file, fop2_ascii, struct_3i, endian, skips)
-    return case_count
+    case_count, table_names = _write_result_tables(obj, op2_file, fop2_ascii, struct_3i, endian, skips)
+    return case_count, table_names
 
 def _write_result_tables(obj: OP2, op2_file, fop2_ascii,
                          struct_3i,
-                         endian, skips: Set[str]):
+                         endian, skips: Set[str]) -> Tuple[int, List[str]]:
     """writes the op2 result tables"""
+    table_names_found = []
     date = obj.date
     log = obj.log
     res_categories2 = defaultdict(list)
@@ -369,6 +370,9 @@ def _write_result_tables(obj: OP2, op2_file, fop2_ascii,
 
             #print(result.class_name)
             if hasattr(result, 'write_op2'):
+                if result.table_name not in table_names_found:
+                    table_names_found.append(result.table_name)
+
                 fop2_ascii.write('-' * 60 + '\n')
                 #if hasattr(result, 'is_bilinear') and result.is_bilinear():
                     #obj.log.warning("  *op2 - %s (%s) not written" % (
@@ -378,6 +382,7 @@ def _write_result_tables(obj: OP2, op2_file, fop2_ascii,
                 if hasattr(result, 'isubcase'): # no for eigenvalues
                     isubcase = result.isubcase
                     #print(f' {result.__class__.__name__} - isubcase={isubcase}')
+
                 try:
                     #print(' %-6s - %s - isubcase=%s%s; itable=%s %s' % (
                         #table_name, result.__class__.__name__,
@@ -428,7 +433,7 @@ def _write_result_tables(obj: OP2, op2_file, fop2_ascii,
     fop2_ascii.write('close_b = %s\n' % footer)
     op2_file.close()
     fop2_ascii.close()
-    return total_case_count
+    return total_case_count, table_names_found
 
 def _fix_subcase_id(key: Union[int, Tuple[Any]], res: Any) -> None:
     """

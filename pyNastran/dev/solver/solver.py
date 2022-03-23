@@ -939,7 +939,8 @@ class Solver:
         unused_eigenvalues = RealEigenvalues(title, 'LAMA', nmodes=0)
         #op2.eigenvalues[title] = eigenvalues
 
-        data = xg_out
+        nnodes = node_gridtype.shape[0]
+        data = xg_out.reshape((nmodes, nnodes, 6))
         table_name = 'OUGV1'
         modes = np.arange(1, nmodes + 1, dtype=idtype)
         unused_eigenvectors = RealDisplacementArray.add_modal_case(

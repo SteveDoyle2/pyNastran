@@ -4724,7 +4724,7 @@ class OES(OP2Common2):
                 isave2 = [2, 4, 6]
                 real_imag = apply_mag_phase(floats1, is_magnitude_phase, isave1, isave2)
 
-                obj.fiber_curvature[itotal:itotal2] = floats1[:, 0]
+                obj.fiber_distance[itotal:itotal2] = floats1[:, 0]
                 obj.data[obj.itime, itotal:itotal2, :] = real_imag
                 obj.itotal = itotal2
                 obj.ielement = ielement2
@@ -4799,7 +4799,7 @@ class OES(OP2Common2):
                     nf2 = floats2.shape[0]
                     floats3 = floats2.reshape(nf2*2, 4)
 
-                    obj.fiber_curvature[itotal:itotal2] = floats3[:, 0].copy()
+                    obj.fiber_distance[itotal:itotal2] = floats3[:, 0].copy()
                     obj.data[obj.itime, itotal:itotal2, :] = floats3[:, 1:].copy()
                     obj.itotal = itotal2
                     obj.ielement = ielement2
@@ -4845,7 +4845,7 @@ class OES(OP2Common2):
                     floats3 = floats2.reshape(nf2*2, 4)
                     # we only need to grab the first two fiber/curvature values
                     # as they're duplicated many times for the same element
-                    obj.fiber_curvature[2*obj.itime:2*obj.itime+2] = floats3[:2, 0].copy()
+                    obj.fiber_distance[2*obj.itime:2*obj.itime+2] = floats3[:2, 0].copy()
                     # we apply the data across 2 rows because we have 2 layers
                     obj.data[:, ie_upper, :] = floats3[::2, 1:].copy()
                     obj.data[:, ie_lower, :] = floats3[1::2, 1:].copy()
@@ -5119,7 +5119,7 @@ class OES(OP2Common2):
                 isave2 = [2, 4, 6]
                 real_imag = apply_mag_phase(floats1, is_magnitude_phase, isave1, isave2)
 
-                obj.fiber_curvature[itotal:itotal2] = floats1[:, 0]
+                obj.fiber_distance[itotal:itotal2] = floats1[:, 0]
                 obj.data[obj.itime, itotal:itotal2, :] = real_imag
                 obj.itotal = itotal2
                 obj.ielement = ielement2
@@ -5523,7 +5523,7 @@ class OES(OP2Common2):
                 isave2 = [2, 4, 6]
                 real_imag = apply_mag_phase(floats2, is_magnitude_phase, isave1, isave2)
 
-                obj.fiber_curvature[itotal:itotal2] = floats2[:, 0]
+                obj.fiber_distance[itotal:itotal2] = floats2[:, 0]
                 obj.data[obj.itime, itotal:itotal2, :] = real_imag
                 obj.itotal = itotal2
                 obj.ielement = ielement2
@@ -5976,7 +5976,7 @@ class OES(OP2Common2):
          - 233 : TRIARLC (CTRIAR-composite)
 
         """
-        op2 = self.op2
+        op2 = self.op2  # type: OP2
         table_name = op2.table_name
         assert isinstance(table_name, bytes), table_name
         n = 0
@@ -6017,7 +6017,9 @@ class OES(OP2Common2):
 
         etype = op2.element_name
         sort_method = op2.sort_method
-        if result_type == 0 and op2.num_wide == 11:  # real
+
+        num_wide = op2.num_wide
+        if result_type == 0 and num_wide == 11:  # real
             #                    S T R E S S E S   I N   L A Y E R E D   C O M P O S I T E   E L E M E N T S   ( T R I A R )
             #   ELEMENT      PLY STRESSES IN FIBER AND MATRIX DIRECTIONS   INTER-LAMINAR  STRESSES  PRINCIPAL STRESSES (ZERO SHEAR)      MAX
             #     ID          ID   NORMAL-1     NORMAL-2     SHEAR-12    SHEAR XZ-MAT  SHEAR YZ-MAT  ANGLE    MAJOR        MINOR        SHEAR
@@ -6098,7 +6100,7 @@ class OES(OP2Common2):
                 #obj.add_new_eid_sort1(dt, eid, theory, lamid, fp, fm, fb, fmax, fflag)
                 #n += ntotal
             #raise NotImplementedError('this is a really weird case...')
-        elif result_type == 1 and op2.num_wide == 11 and table_name in [b'OESCP', b'OESTRCP']:  # complex
+        elif result_type == 1 and num_wide == 11 and table_name in [b'OESCP', b'OESTRCP']:  # complex
             # OESCP - STRAINS IN LAYERED COMPOSITE ELEMENTS (QUAD4)
             ntotal = 44 * self.factor
             nelements = ndata // ntotal
@@ -6123,7 +6125,7 @@ class OES(OP2Common2):
                 result_type, sort_method, obj_vector_strength,
                 data, ndata, dt)
 
-        elif result_type == 1 and op2.num_wide == 13 and table_name in [b'OESVM1C', b'OSTRVM1C']: # complex
+        elif result_type == 1 and num_wide == 13 and table_name in [b'OESVM1C', b'OSTRVM1C']: # complex
             #op2.log.warning(f'skipping complex {op2.table_name_str}-PCOMP (numwide=13)')
             ntotal = 52 * self.factor
             nelements = ndata // ntotal
@@ -6143,7 +6145,7 @@ class OES(OP2Common2):
                                                dt, is_magnitude_phase)
             #return nelements * ntotal, None, None
 
-        elif result_type == 2 and op2.num_wide == 7:
+        elif result_type == 2 and num_wide == 7:
             # TCODE,7 =0 Real
             # 2 PLY I Lamina Number
             # 3 EX1 RS Normal-1
@@ -6201,7 +6203,7 @@ class OES(OP2Common2):
                 obj.add_sort1_7words(dt, eid, ply_id, oxx, oyy, txy, txz, tyz)
                 n += ntotal
 
-        elif result_type == 2 and op2.num_wide == 8:
+        elif result_type == 2 and num_wide == 8:
             # analysis_code = 5   Frequency
             # table_code    = 805 OESXRM1C-OESXRMS1 - element RMS stresses for random analysis that includes von Mises stress output.
             # format_code   = 1   Real
@@ -6223,7 +6225,33 @@ class OES(OP2Common2):
                    f'numwide_real=11 numwide_imag=9 result_type={result_type}')
             return op2._not_implemented_or_skip(data, ndata, msg), None, None
 
-        elif result_type == 1 and op2.num_wide in [11, 12]:
+        elif result_type == 1 and num_wide == 12 and op2.is_msc:
+            # analysis_code = 5   Frequency
+            # table_code    = 5   OES1C-OES - Element Stress
+            # format_code   = 2   Real/Imaginary
+            # result_type   = 1   Complex
+            # sort_method   = 1
+            # sort_code     = 1
+            #     sort_bits   = (1, 0, 1)
+            #     data_format = 1   Real/Imaginary
+            #     sort_type   = 0   Sort1
+            #     is_random   = 1   Random Responses
+            # random_code   = 0
+            # element_type  = 95  QUAD4LC-composite
+            # s_code        = 0   Coordinate Element - Stress Max Shear (Octahedral)
+            # thermal       = 0   isHeatTransfer = False
+            # thermal_bits  = [0, 0, 0, 0, 0]
+            # num_wide      = 12
+            # freq          = 990.0
+            # MSC Nastran
+            msg = (f'etype={op2.element_name} ({op2.element_type}) '
+                   f'{op2.table_name_str}-COMP-complex-numwide={num_wide} '
+                   #f'numwide_real=11 numwide_imag=9 result_type={result_type}'
+                   )
+            #op2.log.warning(f'skipping complex {op2.table_name_str}-PCOMP-12')
+            return op2._not_implemented_or_skip(data, ndata, msg), None, None
+
+        elif result_type == 1 and num_wide == 11:
             # analysis_code = 9   Complex eigenvalues
             # table_code    = 5   OESCP-OES - Element Stress
             # format_code   = 2   Real/Imaginary
@@ -6243,7 +6271,7 @@ class OES(OP2Common2):
             # NX Nastran
             msg = op2.code_information()
             msg = (f'etype={op2.element_name} ({op2.element_type}) '
-                   f'{op2.table_name_str}-COMP-random-numwide={op2.num_wide} '
+                   f'{op2.table_name_str}-COMP-random-numwide={num_wide} '
                    f'numwide_real=11 numwide_imag=9 result_type={result_type}')
             return op2._not_implemented_or_skip(data, ndata, msg), None, None
         else:

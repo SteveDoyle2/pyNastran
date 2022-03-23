@@ -85,6 +85,7 @@ class SubTableReadError(Exception):
     pass
 
 GEOM_TABLES = MSC_GEOM_TABLES + NX_GEOM_TABLES
+MSC_VERSIONS = [b'V2005R3B', b'XXXXXXXX']
 MSC_LONG_VERSION = [
     b'XXXXXXXX20140', b'XXXXXXXX20141', b'XXXXXXXX20142',
     b'XXXXXXXX20150', b'XXXXXXXX20151', b'XXXXXXXX20152',
@@ -103,7 +104,6 @@ DENSE_MATRICES = [
 
     b'EFMASSS', b'EFMFACS', b'EFMFSMS',
     b'MEFMASS', b'MEFWTS', b'MPFACS', b'RBMASSS',
-
 ]
 OPTISTRUCT_VERSIONS = [
     b'OS11XXXX', b'OS12.210', b'OS14.210',
@@ -7229,11 +7229,7 @@ def _parse_nastran_version(data: bytes, version: bytes, encoding: bytes,
 def _parse_nastran_version_16(data: bytes, version: bytes, encoding: str, log) -> str:
     """parses an 8 character version string"""
     version2 = reshape_bytes_block(version)
-    if version in [b'NX20    19.0',
-                   b'NX20    19.1',
-                   b'NX20    19.2']:
-        mode = 'nx'
-    elif version2[:2] == b'NX':
+    if version2[:2] == b'NX':
         version_str = version2[2:].decode('latin1')
         if version_str in NX_VERSIONS:
             mode = 'nx'
@@ -7267,11 +7263,11 @@ def _parse_nastran_version_8(data: bytes, version: bytes, encoding: str, log) ->
         # C:\Users\Steve\Dropbox\pyNastran_examples\move_tpl\loadf.op2
         #log.warning('Assuming MSC Nastran')
         mode = 'msc'
-    elif version in [b'V2005R3B']:
+    elif version in MSC_VERSIONS:
         mode = 'msc'
-    elif version in [b'XXXXXXXX']:
-        #log.warning('Assuming MSC Nastran')
-        mode = 'msc'
+    #elif version in [b'XXXXXXXX']:
+        ##log.warning('Assuming MSC Nastran')
+        #mode = 'msc'
     elif version in OPTISTRUCT_VERSIONS:
         # should this be called optistruct or radioss?
         mode = 'optistruct'

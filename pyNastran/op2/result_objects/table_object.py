@@ -38,6 +38,9 @@ from pyNastran.op2.errors import SixtyFourBitError
 from pyNastran.op2.op2_interface.write_utils import set_table3_field, view_dtype, view_idtype_as_fdtype
 from pyNastran.utils.numpy_utils import integer_types, float_types
 from pyNastran.op2.writer.utils import fix_table3_types
+from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import (
+    set_static_case, set_modal_case, set_transient_case,
+    set_freq_case, set_complex_modes_case)
 
 SORT2_TABLE_NAME_MAP = {
     # sort2_name : sort1_name
@@ -116,8 +119,15 @@ table_name_to_table_code = {
     # displacement (msc/nx)
     'OUGV1' : 1,
     'BOUGV1' : 1,
+
+    # eigenvector
+    # 7
+
     # velocity
-    'OVG1': 11,
+    'OVG1': 10,
+
+    # acceleration
+    'OAG1': 11,
 
     # load vector (msc/nx)
     'OPG1' : 2,
@@ -149,13 +159,13 @@ def append_sort1_sort2(data1, data2, to_sort1=True):
             data2,])
     return out
 
-def oug_data_code(table_name, analysis_code,
+def oug_data_code(table_name,
+                  is_real: bool=False, is_complex:bool=False,
                   is_sort1=True, is_random=False,
                   random_code=0, title='', subtitle='', label='', is_msc=True):
     sort1_sort_bit = 0 if is_sort1 else 1
     random_sort_bit = 1 if is_random else 0
     sort_method = 1 if is_sort1 else 2
-    assert analysis_code != 0, analysis_code
     #if format_code == 1:
         #format_word = "Real"
     #elif format_code == 2:
@@ -172,6 +182,11 @@ def oug_data_code(table_name, analysis_code,
         #7 : "Print, Plot, and Punch",
     #}
 
+    if is_real:
+        num_wide = 8
+    elif is_complex:
+        num_wide = 14
+
     table_code = table_name_to_table_code[table_name]
     sort_code = 1 # TODO: what should this be???
 
@@ -180,12 +195,8 @@ def oug_data_code(table_name, analysis_code,
     tCode = table_code * 1000 + sort_code
 
     device_code = 2  # Plot
-    approach_code = analysis_code * 10 + device_code
-    #print(f'approach_code={approach_code} analysis_code={analysis_code} device_code={device_code}')
     data_code = {
         'nonlinear_factor': None,
-        'approach_code' : approach_code,
-        'analysis_code' : analysis_code,
         'sort_bits': [0, sort1_sort_bit, random_sort_bit], # real, sort1, random
         'sort_method' : sort_method,
         'is_msc': is_msc,
@@ -200,7 +211,7 @@ def oug_data_code(table_name, analysis_code,
         'title' : title,
         'subtitle': subtitle,
         'label': label,
-        'num_wide' : 8, # displacement-style table
+        'num_wide': num_wide,
     }
     return data_code
 
@@ -932,20 +943,22 @@ class RealTableArray(TableArray):
     def add_static_case(cls, table_name, node_gridtype, data, isubcase,
                         is_sort1=True, is_random=False, is_msc=True,
                         random_code=0, title='', subtitle='', label=''):
-
-        table_name = table_name
-        analysis_code = 1 # static
-        data_code = oug_data_code(table_name, analysis_code,
+        data_code = oug_data_code(table_name,
+                                  is_real=True,
                                   is_sort1=is_sort1, is_random=is_random,
                                   random_code=random_code,
                                   title=title, subtitle=subtitle, label=label,
                                   is_msc=is_msc)
-        data_code['lsdvmns'] = [0] # TODO: ???
-        data_code['data_names'] = []
 
-        times = [None]
-        obj = _set_class(cls, data_code, is_sort1, isubcase, times,
-                         node_gridtype, data)
+        obj = set_static_case(cls, is_sort1, isubcase, data_code,
+                              set_real_table, (node_gridtype, data))
+
+        #data_code['lsdvmns'] = [0] # TODO: ???
+        #data_code['data_names'] = []
+
+        #times = [None]
+        #obj = _set_class(cls, data_code, is_sort1, isubcase, times,
+                         #node_gridtype, data)
         return obj
 
     @classmethod
@@ -953,17 +966,13 @@ class RealTableArray(TableArray):
                            times,
                            is_sort1=True, is_random=False, is_msc=True,
                            random_code=0, title='', subtitle='', label=''):
-
-        analysis_code = 6 # transient
-        data_code = oug_data_code(table_name, analysis_code,
+        data_code = oug_data_code(table_name,
+                                  is_real=True,
                                   is_sort1=is_sort1, is_random=is_random,
                                   random_code=random_code, title=title, subtitle=subtitle, label=label,
                                   is_msc=is_msc)
-        data_code['data_names'] = ['dt']
-
-        obj = _set_class(cls, data_code, is_sort1, isubcase, times,
-                         node_gridtype, data)
-        obj.dts = times
+        obj = set_transient_case(cls, is_sort1, isubcase, data_code,
+                                 set_real_table, (node_gridtype, data), times)
         return obj
 
     @classmethod
@@ -982,21 +991,24 @@ class RealTableArray(TableArray):
             #self.update_mode_cycle('mode_cycle')
             #self.data_names = self.apply_data_code_value('data_names', ['mode', 'eign', 'mode_cycle'])
 
-        analysis_code = 2 # modal
-        data_code = oug_data_code(table_name, analysis_code,
+        data_code = oug_data_code(table_name,
+                                  is_real=True,
                                   is_sort1=is_sort1, is_random=is_random,
                                   random_code=random_code, title=title, subtitle=subtitle, label=label,
                                   is_msc=is_msc)
-        data_code['modes'] = modes
-        data_code['eigns'] = eigenvalues
-        data_code['mode_cycles'] = mode_cycles
-        data_code['data_names'] = ['modes', 'eigns', 'mode_cycles']
+        obj = set_modal_case(cls, is_sort1, isubcase, data_code,
+                             set_real_table, (node_gridtype, data),
+                             modes, eigenvalues, mode_cycles)
+        #data_code['modes'] = modes
+        #data_code['eigns'] = eigenvalues
+        #data_code['mode_cycles'] = mode_cycles
+        #data_code['data_names'] = ['modes', 'eigns', 'mode_cycles']
 
-        obj = _set_class(cls, data_code, is_sort1, isubcase, modes,
-                         node_gridtype, data)
-        obj.modes = modes
-        obj.eigns = eigenvalues
-        obj.mode_cycles = mode_cycles
+        #obj = set_table_class(cls, data_code, is_sort1, isubcase, modes,
+                              #node_gridtype, data)
+        #obj.modes = modes
+        #obj.eigns = eigenvalues
+        #obj.mode_cycles = mode_cycles
         return obj
 
 
@@ -1151,7 +1163,7 @@ class RealTableArray(TableArray):
             raise SixtyFourBitError(f'64-bit OP2 writing is not supported; max id={max_id}')
 
         fdtype = self.data.dtype
-        if self.size == 4:
+        if self.size == fdtype.itemsize:
             pass
         else:
             warnings.warn(f'downcasting {self.class_name}...this is buggy')
@@ -1383,8 +1395,12 @@ class RealTableArray(TableArray):
         assert all(nids[inids] == node_ids), 'nids=%s expected=%s; all=%s'  % (nids[inids], node_ids, nids)
         return self.data[:, inids, i]
 
-def _set_class(cls, data_code, is_sort1, isubcase, times,
-               node_gridtype, data):
+def set_real_table(cls, data_code, is_sort1, isubcase,
+                   node_gridtype, data, times):
+#def set_real_table(cls, data_code, is_sort1, isubcase, times,
+                   #node_gridtype, data):
+    assert node_gridtype.ndim == 2, node_gridtype.shape
+    assert data.ndim == 3, data.shape
     dt = times[0]
     ntimes = data.shape[0]
     nnodes = data.shape[1]
@@ -1412,29 +1428,54 @@ class ComplexTableArray(TableArray):
                       random_code=0, title='', subtitle='', label=''):
 
         table_name = 'OUGV1'
-        analysis_code = 5 # freq
-        data_code = oug_data_code(table_name, analysis_code,
+        #analysis_code = 5 # freq
+        data_code = oug_data_code(table_name,
+                                  is_complex=True,
                                   is_sort1=is_sort1, is_random=is_random,
                                   random_code=random_code, title=title, subtitle=subtitle, label=label,
                                   is_msc=is_msc)
         #data_code['modes'] = modes
         #data_code['eigns'] = eigenvalues
         #data_code['mode_cycles'] = mode_cycles
-        data_code['data_names'] = ['freq']
-        data_code['name'] = 'FREQ'
+        #data_code['data_names'] = ['freq']
+        #data_code['name'] = 'FREQ'
 
-        ntimes = data.shape[0]
-        nnodes = data.shape[1]
-        dt = freqs[0]
-        obj = cls(data_code, is_sort1, isubcase, dt)
-        obj.node_gridtype = node_gridtype
-        obj.data = data
+        #ntimes = data.shape[0]
+        #nnodes = data.shape[1]
+        #dt = freqs[0]
+        #obj = cls(data_code, is_sort1, isubcase, dt)
+        #obj.node_gridtype = node_gridtype
+        #obj.data = data
 
-        obj.freqs = freqs
+        #obj.freqs = freqs
 
-        obj.ntimes = ntimes
-        obj.ntotal = nnodes
-        obj._times = freqs
+        #obj.ntimes = ntimes
+        #obj.ntotal = nnodes
+        #obj._times = freqs
+
+        obj = set_freq_case(cls, is_sort1, isubcase, data_code,
+                            set_complex_table, (node_gridtype, data),
+                            freqs)
+        return obj
+
+    @classmethod
+    def add_complex_modes_case(cls, table_name, element, data, isubcase,
+                               modes, eigrs, eigis,
+                               is_sort1=True, is_random=False, is_msc=True,
+                               random_code=0, title='', subtitle='', label=''):
+        #data_code = cls._add_case(
+            #table_name, isubcase,
+            #is_sort1, is_random, is_msc,
+            #random_code, title, subtitle, label)
+        data_code = oug_data_code(table_name,
+                                  is_complex=True,
+                                  is_sort1=is_sort1, is_random=is_random,
+                                  random_code=random_code, title=title, subtitle=subtitle, label=label,
+                                  is_msc=is_msc)
+
+        obj = set_complex_modes_case(cls, is_sort1, isubcase, data_code,
+                                     set_complex_table, (element, data),
+                                     modes, eigrs, eigis)
         return obj
 
     def extract_xyplot(self, node_ids, index, index_str):
@@ -1815,6 +1856,26 @@ class ComplexTableArray(TableArray):
             #f06_file.write(page_stamp % page_num)
             #page_num += 1
         #return page_num
+
+def set_complex_table(cls, data_code, is_sort1, isubcase,
+                      node_gridtype, data, times):
+    assert node_gridtype.ndim == 2, node_gridtype.shape
+    ntimes = data.shape[0]
+    nnodes = data.shape[1]
+    dt = times[0]
+    obj = cls(data_code, is_sort1, isubcase, dt)
+    obj.node_gridtype = node_gridtype
+    obj.data = data
+
+    ntimes = data.shape[0]
+    nnodes = data.shape[1]
+    #dt = freqs[0]
+
+    obj.ntimes = ntimes
+    obj.ntotal = nnodes
+    obj.nelements = nnodes
+    obj._times = times
+    return obj
 
 def pandas_extract_rows(data_frame, ugridtype_str, index_names):
     """removes the t2-t6 for S and E points"""

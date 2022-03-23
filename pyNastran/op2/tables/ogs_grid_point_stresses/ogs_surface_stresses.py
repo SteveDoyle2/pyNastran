@@ -380,7 +380,7 @@ class GridPointSurfaceArray(ScalarObject):
         #idtype = self.element_cid.dtype
         fdtype = self.data.dtype
         #print(self.size)
-        if self.size == 4:
+        if self.size == fdtype.itemsize:
             grid_bytes = b'GRID'
         else:
             warnings.warn(f'downcasting {self.class_name}...')

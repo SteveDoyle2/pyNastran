@@ -6,9 +6,16 @@ from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.op2.result_objects.op2_objects import get_complex_times_dtype
 from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import (
     StressObject, StrainObject, OES_Object, get_scode,
-    oes_complex_data_code, set_freq_case, set_element_case)
+    oes_complex_data_code, set_freq_case, set_complex_modes_case,
+    set_element_case)
 from pyNastran.f06.f06_formatting import write_imag_floats_13e, _eigenvalue_header
 
+ELEMENT_NAME_TO_ELEMENT_TYPE = {
+    'CELAS1': 11,
+    'CELAS2': 12,
+    'CELAS3': 13,
+    'CELAS4': 14,
+}
 
 class ComplexSpringDamperArray(OES_Object):
     def __init__(self, data_code, is_sort1, isubcase, dt):
@@ -73,12 +80,13 @@ class ComplexSpringDamperArray(OES_Object):
             headers, self.element, self.data)
 
     @classmethod
-    def add_freq_case(cls, table_name, element, data, isubcase,
-                      freqs,
-                      element_name: str,
-                      is_sort1=True, is_random=False, is_msc=True,
-                      random_code=0, title='', subtitle='', label=''):
+    def _add_case(cls,
+                  table_name, element_name, isubcase,
+                  is_sort1, is_random, is_msc,
+                  random_code, title, subtitle, label):
         is_strain = 'Strain' in cls.__name__
+        assert isinstance(is_strain, bool), is_strain
+        assert isinstance(element_name, str), element_name
         num_wide = 3
         data_code = oes_complex_data_code(
             table_name,
@@ -87,12 +95,6 @@ class ComplexSpringDamperArray(OES_Object):
             random_code=random_code, title=title, subtitle=subtitle, label=label,
             is_msc=is_msc)
 
-        ELEMENT_NAME_TO_ELEMENT_TYPE = {
-            'CELAS1': 11,
-            'CELAS2': 12,
-            'CELAS3': 13,
-            'CELAS4': 14,
-        }
         #
         #stress_bits[1] = 1  # strain bit (vs. stress)
         #stress_bits[2] = 1  # curvature bit (vs. fiber)     ---> always 0
@@ -119,9 +121,35 @@ class ComplexSpringDamperArray(OES_Object):
         element_type = ELEMENT_NAME_TO_ELEMENT_TYPE[element_name.upper()]
         data_code['element_name'] = element_name.upper()
         data_code['element_type'] = element_type
+        return data_code
 
+    @classmethod
+    def add_freq_case(cls, table_name, element, data, isubcase,
+                      freqs,
+                      element_name: str,
+                      is_sort1=True, is_random=False, is_msc=True,
+                      random_code=0, title='', subtitle='', label=''):
+        data_code = cls._add_case(
+            table_name, element_name, isubcase,
+            is_sort1, is_random, is_msc,
+            random_code, title, subtitle, label)
         obj = set_freq_case(cls, is_sort1, isubcase, data_code,
                             set_element_case, (element, data), freqs)
+        return obj
+
+    @classmethod
+    def add_complex_modes_case(cls, table_name, element, data, isubcase,
+                               modes, eigrs, eigis,
+                               element_name: str,
+                               is_sort1=True, is_random=False, is_msc=True,
+                               random_code=0, title='', subtitle='', label=''):
+        data_code = cls._add_case(
+            table_name, element_name, isubcase,
+            is_sort1, is_random, is_msc,
+            random_code, title, subtitle, label)
+
+        obj = set_complex_modes_case(cls, is_sort1, isubcase, data_code,
+                                     set_element_case, (element, data), modes, eigrs, eigis)
         return obj
 
     def __eq__(self, table):  # pragma: no cover

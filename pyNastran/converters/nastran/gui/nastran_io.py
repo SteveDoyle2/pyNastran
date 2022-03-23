@@ -7,7 +7,7 @@ import traceback
 from itertools import chain
 from io import StringIO
 from collections import defaultdict, OrderedDict
-from typing import List, Dict, Tuple, Any, TYPE_CHECKING
+from typing import Tuple, List, Dict, Set, Optional, Any, TYPE_CHECKING
 
 #VTK_TRIANGLE = 5
 #VTK_QUADRATIC_TRIANGLE = 22
@@ -5396,7 +5396,7 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
             print(sout)
         return icase
 
-    def load_nastran_results(self, results_filename):
+    def load_nastran_results(self, results_filename: str):
         """
         Loads the Nastran results into the GUI
         """
@@ -5406,60 +5406,12 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
 
         log = self.gui.log
         if isinstance(results_filename, str):
-            print("trying to read...%s" % results_filename)
-            ext = os.path.splitext(results_filename)[1].lower()
-
-            if ext == '.op2':
-                op2_filename = results_filename
-                try:
-                    mode = self.model.nastran_format
-                except AttributeError:
-                    mode = None
-
-                model = OP2(log=log, mode=mode, debug=True)
-                model.IS_TESTING = False
-
-                #if 0:  # pragma: no cover
-                    #model._results.saved = set()
-                    #all_results = model.get_all_results()
-                    #for result in DESIRED_RESULTS:
-                        #if result in all_results:
-                        #model._results.saved.add(result)
-
-                nastran_settings = self.gui.settings.nastran_settings  # type: NastranSettings
-                exclude_results = get_results_to_exclude(nastran_settings)
-                model.include_exclude_results(
-                    exclude_results=exclude_results,
-                    #include_results=include_results,
-                )
-
-                model.read_op2(op2_filename, combine=False)
-
-                if not IS_TESTING or self.is_testing_flag:
-                    log.info(model.get_op2_stats())
-                # print(model.get_op2_stats())
-
-            elif ext == '.nod':
-                self.gui.load_patran_nod(results_filename)
-                self.gui.cycle_results_explicit()  # start at icase=0
+            model = self._load_nastran_results_str(results_filename, log)
+            if model is None:
                 return
-            elif ext == '.h5' and IS_H5PY:
-                model = OP2(log=log, debug=True)
-                hdf5_filename = results_filename
-                model.load_hdf5_filename(hdf5_filename, combine=False)
-            #elif ext == '.pch':
-                #raise NotImplementedError('*.pch is not implemented; filename=%r' % op2_filename)
-            #elif ext == '.f06':
-                #model = F06(log=log, debug=True)
-                #model.set_vectorization(True)
-                #model.read_f06(op2_filename)
-            else:
-                #print("error...")
-                msg = 'extension=%r is not supported; filename=%r' % (ext, op2_filename)
-                raise NotImplementedError(msg)
         else:
-            model = op2_filename
-            op2_filename = op2_filename.filename
+            model = results_filename
+            op2_filename = results_filename.filename
 
         if self.save_data:
             self.model_results = model
@@ -5526,6 +5478,59 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
         #self.create_group_with_name(name, eids)
         #self.post_group_by_name(name)
 
+    def _load_nastran_results_str(self, results_filename: str, log) -> None:
+        print("trying to read...%s" % results_filename)
+        ext = os.path.splitext(results_filename)[1].lower()
+
+        if ext == '.op2':
+            op2_filename = results_filename
+            try:
+                mode = self.model.nastran_format
+            except AttributeError:
+                mode = None
+
+            model = OP2(log=log, mode=mode, debug=True)
+            model.IS_TESTING = False
+
+            #if 0:  # pragma: no cover
+                #model._results.saved = set()
+                #all_results = model.get_all_results()
+                #for result in DESIRED_RESULTS:
+                    #if result in all_results:
+                    #model._results.saved.add(result)
+
+            nastran_settings = self.gui.settings.nastran_settings  # type: NastranSettings
+            exclude_results = get_results_to_exclude(nastran_settings)
+            model.include_exclude_results(
+                exclude_results=exclude_results,
+                #include_results=include_results,
+            )
+
+            model.read_op2(op2_filename, combine=False)
+
+            if not IS_TESTING or self.is_testing_flag:
+                log.info(model.get_op2_stats())
+            # print(model.get_op2_stats())
+
+        elif ext == '.nod':
+            self.gui.load_patran_nod(results_filename)
+            self.gui.cycle_results_explicit()  # start at icase=0
+            return None
+        elif ext == '.h5' and IS_H5PY:
+            model = OP2(log=log, debug=True)
+            hdf5_filename = results_filename
+            model.load_hdf5_filename(hdf5_filename, combine=False)
+        #elif ext == '.pch':
+            #raise NotImplementedError('*.pch is not implemented; filename=%r' % op2_filename)
+        #elif ext == '.f06':
+            #model = F06(log=log, debug=True)
+            #model.set_vectorization(True)
+            #model.read_f06(op2_filename)
+        else:
+            #print("error...")
+            msg = 'extension=%r is not supported; filename=%r' % (ext, results_filename)
+            raise NotImplementedError(msg)
+        return model
 
     def _fill_op2_output(self, op2_filename, cases, model, form, icase, log):
         """

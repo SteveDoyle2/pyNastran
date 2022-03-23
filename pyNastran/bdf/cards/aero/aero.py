@@ -38,6 +38,7 @@ from pyNastran.bdf.cards.utils import wipe_empty_fields
 from pyNastran.bdf.cards.aero.utils import (
     points_elements_from_quad_points, create_axisymmetric_body)
 if TYPE_CHECKING:  # pragma: no cover
+    from pyNastran.nptyping import NDArray3float
     from pyNastran.bdf.bdf import BDF, BDFCard
     import matplotlib
     AxesSubplot = matplotlib.axes._subplots.AxesSubplot
@@ -861,16 +862,16 @@ class AESURF(BaseCard):
 
     @classmethod
     def _init_from_empty(cls):
-        aesid = 1
+        aesurf_id = 1
         label = 'name'
         cid1 = 1
         alid1 = 1
-        return AESURF(aesid, label, cid1, alid1,
+        return AESURF(aesurf_id, label, cid1, alid1,
                       cid2=None, alid2=None, eff=1.0, ldw='LDW',
                       crefc=1.0, crefs=1.0, pllim=-np.pi/2., pulim=np.pi/2.,
                       hmllim=None, hmulim=None, tqllim=None, tqulim=None, comment='')
 
-    def __init__(self, aesid: int, label: str, cid1: int, alid1: int,
+    def __init__(self, aesurf_id: int, label: str, cid1: int, alid1: int,
                  cid2: Optional[int]=None, alid2: Optional[int]=None,
                  eff: float=1.0, ldw: str='LDW',
                  crefc: float=1.0, crefs: float=1.0,
@@ -885,7 +886,7 @@ class AESURF(BaseCard):
 
         Parameters
         ----------
-        aesid : int
+        aesurf_id : int
             controller number
         label : str
             controller name
@@ -918,7 +919,7 @@ class AESURF(BaseCard):
         if comment:
             self.comment = comment
         #: Controller identification number
-        self.aesid = aesid
+        self.aesurf_id = aesurf_id
 
         #: Controller name.
         self.label = label
@@ -987,7 +988,7 @@ class AESURF(BaseCard):
             a comment for the card
 
         """
-        aesid = integer(card, 1, 'aesid')
+        aesurf_id = integer(card, 1, 'aesid')
         label = string(card, 2, 'label')
 
         cid1 = integer(card, 3, 'cid1')
@@ -996,22 +997,34 @@ class AESURF(BaseCard):
         cid2 = integer_or_blank(card, 5, 'cid2')
         alid2 = integer_or_blank(card, 6, 'alid2')
 
-        eff = double_or_blank(card, 7, 'eff', 1.0)
-        ldw = string_or_blank(card, 8, 'ldw', 'LDW')
-        crefc = double_or_blank(card, 9, 'crefc', 1.0)
-        crefs = double_or_blank(card, 10, 'crefs', 1.0)
+        eff = double_or_blank(card, 7, 'eff', default=1.0)
+        ldw = string_or_blank(card, 8, 'ldw', default='LDW')
+        crefc = double_or_blank(card, 9, 'crefc', default=1.0)
+        crefs = double_or_blank(card, 10, 'crefs', default=1.0)
 
-        pllim = double_or_blank(card, 11, 'pllim', -np.pi / 2.)
-        pulim = double_or_blank(card, 12, 'pulim', np.pi / 2.)
+        pllim = double_or_blank(card, 11, 'pllim', default=-np.pi / 2.)
+        pulim = double_or_blank(card, 12, 'pulim', default=np.pi / 2.)
 
         hmllim = double_or_blank(card, 13, 'hmllim')
         hmulim = double_or_blank(card, 14, 'hmulim')
         tqllim = integer_or_blank(card, 15, 'tqllim')
         tqulim = integer_or_blank(card, 16, 'tqulim')
         assert len(card) <= 17, f'len(AESURF card) = {len(card):d}\ncard={card}'
-        return AESURF(aesid, label, cid1, alid1, cid2, alid2, eff, ldw,
+        return AESURF(aesurf_id, label, cid1, alid1, cid2, alid2, eff, ldw,
                       crefc, crefs, pllim, pulim, hmllim, hmulim,
                       tqllim, tqulim, comment=comment)
+
+    @property
+    def aesid(self) -> int:
+        return self.aesurf_id
+
+    @aesid.setter
+    def aesid(self, aesid: int) -> None:
+        self.aesurf_id = aesid
+
+    #@property
+    #def aesid_ref(self):
+        #return self.aesurf_ref
 
     def Cid1(self):
         if self.cid1_ref is not None:
@@ -1107,7 +1120,7 @@ class AESURF(BaseCard):
             the fields that define the card
 
         """
-        list_fields = ['AESURF', self.aesid, self.label, self.Cid1(), self.aelist_id1(),
+        list_fields = ['AESURF', self.aesurf_id, self.label, self.Cid1(), self.aelist_id1(),
                        self.Cid2(), self.aelist_id2(), self.eff, self.ldw,
                        self.crefc, self.crefs, self.pllim, self.pulim, self.hmllim,
                        self.hmulim, self.tqllim, self.tqulim]
@@ -1131,7 +1144,7 @@ class AESURF(BaseCard):
         pllim = set_blank_if_default(self.pllim, -np.pi / 2.)
         pulim = set_blank_if_default(self.pulim, np.pi / 2.)
 
-        list_fields = ['AESURF', self.aesid, self.label, self.Cid1(), self.aelist_id1(),
+        list_fields = ['AESURF', self.aesurf_id, self.label, self.Cid1(), self.aelist_id1(),
                        self.Cid2(), self.aelist_id2(), eff, ldw, crefc, crefs,
                        pllim, pulim, self.hmllim, self.hmulim, self.tqllim,
                        self.tqulim]

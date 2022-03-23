@@ -617,6 +617,14 @@ class GetMethods(BDFAttributes):
         raise KeyError('aesurf=%r not found%s.  Allowed AESURF=%s' % (
             aesurf_name, msg, names))
 
+    def AESurf_int(self, aesurf_id: int, msg: str='') -> AESURF:
+        """gets an AESURF"""
+        try:
+            return self.aesurf[aesurf_id]
+        except KeyError:
+            raise KeyError('aesurf=%s not found%s.  Allowed AESURF=%s'
+                           % (aesurf_id, msg, _unique_keys(self.aesurf)))
+
     def Acsid(self, msg: str='') -> Coord:
         """gets the aerodynamic coordinate system"""
         if self.aero is not None:

@@ -7,9 +7,11 @@ from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.op2.result_objects.op2_objects import get_times_dtype
 from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import (
     StressObject, StrainObject, OES_Object, oes_real_data_code,
-    set_element_case, set_static_case, set_modal_case, set_transient_case,
+    set_element_case, set_static_case, set_modal_case,
+    set_transient_case, set_post_buckling_case,
 )
 from pyNastran.f06.f06_formatting import write_floats_13e, _eigenvalue_header
+from pyNastran.op2.op2_interface.write_utils import to_column_bytes, view_dtype, view_idtype_as_fdtype
 
 ELEMENT_NAME_TO_ELEMENT_TYPE = {
     'CBAR' : 34,
@@ -125,6 +127,20 @@ class RealBarArray(OES_Object):
         obj = set_transient_case(cls, is_sort1, isubcase, data_code,
                                  set_element_case, (element, data),
                                  times)
+        return obj
+
+    @classmethod
+    def add_post_buckling_case(cls, table_name, element_name, element, data, isubcase,
+                               modes, eigrs, eigis,
+                               is_sort1=True, is_random=False, is_msc=True,
+                               random_code=0, title='', subtitle='', label=''):
+        data_code = cls._add_case(
+            table_name, element_name,
+            isubcase, is_sort1, is_random, is_msc,
+            random_code, title, subtitle, label)
+        obj = set_post_buckling_case(cls, is_sort1, isubcase, data_code,
+                                     set_element_case, (element, data),
+                                     modes, eigrs, eigis)
         return obj
 
     def _get_msgs(self):
@@ -422,6 +438,12 @@ class RealBarArray(OES_Object):
             raise NotImplementedError('SORT2')
 
         op2_ascii.write(f'nelements={nelements:d}\n')
+
+        fdtype = np.float32(0.).dtype
+        idtype = np.int32(0.).dtype
+        datai = np.empty((nelements, self.num_wide), dtype=fdtype)
+        datai[:, 0] = eids_device
+
         for itime in range(self.ntimes):
             self._write_table_3(op2_file, op2_ascii, new_result, itable, itime)
 
@@ -438,37 +460,42 @@ class RealBarArray(OES_Object):
             op2_ascii.write(f'r4 [4, {itable:d}, 4]\n')
             op2_ascii.write(f'r4 [4, {4 * ntotal:d}, 4]\n')
 
-            s1a = self.data[itime, :, 0]
-            s2a = self.data[itime, :, 1]
-            s3a = self.data[itime, :, 2]
-            s4a = self.data[itime, :, 3]
+            if 0:
+                datai[:, 1:] = self.data[itime, :, :]
+                op2_file.write(datai)
 
-            axial = self.data[itime, :, 4]
-            smaxa = self.data[itime, :, 5]
-            smina = self.data[itime, :, 6]
-            MSt = self.data[itime, :, 7]
+            else:
+                s1a = self.data[itime, :, 0]
+                s2a = self.data[itime, :, 1]
+                s3a = self.data[itime, :, 2]
+                s4a = self.data[itime, :, 3]
 
-            s1b = self.data[itime, :, 8]
-            s2b = self.data[itime, :, 9]
-            s3b = self.data[itime, :, 10]
-            s4b = self.data[itime, :, 11]
+                axial = self.data[itime, :, 4]
+                smaxa = self.data[itime, :, 5]
+                smina = self.data[itime, :, 6]
+                MSt = self.data[itime, :, 7]
 
-            smaxb = self.data[itime, :, 12]
-            sminb = self.data[itime, :, 13]
-            MSc = self.data[itime, :, 14]
+                s1b = self.data[itime, :, 8]
+                s2b = self.data[itime, :, 9]
+                s3b = self.data[itime, :, 10]
+                s4b = self.data[itime, :, 11]
 
-            for (eid_device,
-                 s1ai, s2ai, s3ai, s4ai, axiali, smaxai, sminai, MSti,
-                 s1bi, s2bi, s3bi, s4bi,         smaxbi, sminbi, MSci) in zip(
-                eids_device,
-                s1a, s2a, s3a, s4a, axial, smaxa, smina, MSt,
-                s1b, s2b, s3b, s4b,        smaxb, sminb, MSc):
+                smaxb = self.data[itime, :, 12]
+                sminb = self.data[itime, :, 13]
+                MSc = self.data[itime, :, 14]
 
-                data = [eid_device,
-                        s1ai, s2ai, s3ai, s4ai, axiali, smaxai, sminai, MSti,
-                        s1bi, s2bi, s3bi, s4bi,         smaxbi, sminbi, MSci]
-                op2_ascii.write('  eid_device=%s data=%s\n' % (eid_device, str(data)))
-                op2_file.write(struct1.pack(*data))
+                for (eid_device,
+                     s1ai, s2ai, s3ai, s4ai, axiali, smaxai, sminai, MSti,
+                     s1bi, s2bi, s3bi, s4bi,         smaxbi, sminbi, MSci) in zip(
+                    eids_device,
+                    s1a, s2a, s3a, s4a, axial, smaxa, smina, MSt,
+                    s1b, s2b, s3b, s4b,        smaxb, sminb, MSc):
+
+                    data = [eid_device,
+                            s1ai, s2ai, s3ai, s4ai, axiali, smaxai, sminai, MSti,
+                            s1bi, s2bi, s3bi, s4bi,         smaxbi, sminbi, MSci]
+                    op2_ascii.write('  eid_device=%s data=%s\n' % (eid_device, str(data)))
+                    op2_file.write(struct1.pack(*data))
 
             itable -= 1
             header = [4 * ntotal,]

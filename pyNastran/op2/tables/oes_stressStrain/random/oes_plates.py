@@ -21,7 +21,7 @@ class RandomPlateArray(OES_Object):
     def __init__(self, data_code, is_sort1, isubcase, dt):
         OES_Object.__init__(self, data_code, isubcase, apply_data_code=False)   ## why???
         self.element_node = None
-        self.fiber_curvature = None
+        self.fiber_distance = None
         #self.code = [self.format_code, self.sort_code, self.s_code]
 
         #self.ntimes = 0  # or frequency/mode
@@ -161,7 +161,7 @@ class RandomPlateArray(OES_Object):
                 #self.ntimes, self.nelements, self.nelements * 2, self.ntotal)
             #raise RuntimeError(msg)
 
-        self.fiber_curvature = zeros(nlayers, 'float32')
+        self.fiber_distance = zeros(nlayers, 'float32')
 
         # [oxx, oyy, txy]
         #print(f'ntimes={self.ntimes} nelements={self.nelements} ntotal={self.ntotal}')
@@ -282,13 +282,13 @@ class RandomPlateArray(OES_Object):
         assert isinstance(eid, integer_types) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
         self.data[self.itime, self.itotal, :] = [oxx1, oyy1, txy1]
         self.element_node[self.itotal, :] = [eid, nid]  # 0 is center
-        self.fiber_curvature[self.itotal] = fd1
+        self.fiber_distance[self.itotal] = fd1
         #self.ielement += 1
         self.itotal += 1
 
         self.data[self.itime, self.itotal, :] = [oxx2, oyy2, txy2]
         self.element_node[self.itotal, :] = [eid, nid]  # 0 is center
-        self.fiber_curvature[self.itotal] = fd2
+        self.fiber_distance[self.itotal] = fd2
         self.itotal += 1
 
     def _get_sort2_itime_ilower_iupper_from_itotal(self):
@@ -335,8 +335,8 @@ class RandomPlateArray(OES_Object):
         if itime == 0:
             self.element_node[ie_upper, :] = [eid, nid]  # 0 is center
             self.element_node[ie_lower, :] = [eid, nid]  # 0 is center
-            self.fiber_curvature[ie_upper] = fd1
-            self.fiber_curvature[ie_lower] = fd2
+            self.fiber_distance[ie_upper] = fd1
+            self.fiber_distance[ie_lower] = fd2
             #if self.element_name == 'CQUAD4':
                 #print(self.element_node)
 
@@ -364,14 +364,14 @@ class RandomPlateArray(OES_Object):
         assert isinstance(eid, integer_types) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
         self.data[self.itime, self.itotal, :] = [oxx1, oyy1, txy1, ovm1]
         self.element_node[self.itotal, :] = [eid, nid]  # 0 is center
-        self.fiber_curvature[self.itotal] = fd1
+        self.fiber_distance[self.itotal] = fd1
         #self.ielement += 1
         self.itotal += 1
 
         #print(self.data.shape)
         self.data[self.itime, self.itotal, :] = [oxx2, oyy2, txy2, ovm2]
         self.element_node[self.itotal, :] = [eid, nid]  # 0 is center
-        self.fiber_curvature[self.itotal] = fd2
+        self.fiber_distance[self.itotal] = fd2
         self.itotal += 1
         #print(self.element_node)
 
@@ -459,7 +459,7 @@ class RandomPlateArray(OES_Object):
         CQUAD4 linear
         CTRIA3
         """
-        fds = self.fiber_curvature
+        fds = self.fiber_distance
         oxx = self.data[itime, :, 0]
         oyy = self.data[itime, :, 1]
         txy = self.data[itime, :, 2]
@@ -489,7 +489,7 @@ class RandomPlateArray(OES_Object):
         CTRIAR
         CTRIA6
         """
-        fds = self.fiber_curvature
+        fds = self.fiber_distance
         oxx = self.data[itime, :, 0]
         oyy = self.data[itime, :, 1]
         txy = self.data[itime, :, 2]

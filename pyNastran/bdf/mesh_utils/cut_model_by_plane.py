@@ -1421,7 +1421,7 @@ def _get_shell_inertia(element: Union[CTRIA3, CQUAD4],
     #
     # the theta to rotate by in order to orient imat with the normal
     #print(b, c)
-    imat_rotation_angle = np.asscalar(np.arctan2(b, c))
+    imat_rotation_angle = np.arctan2(b, c).item()
     imat_rotation_angle_deg = np.degrees(imat_rotation_angle)
     if imat_rotation_angle_deg <= -90.:
         imat_rotation_angle_deg += 180.

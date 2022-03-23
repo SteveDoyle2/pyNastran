@@ -542,7 +542,7 @@ class RealSolidCompositeArray(OES_Object):
 
         idtype = self.element_cid.dtype
         fdtype = self.data.dtype
-        if self.size == 4:
+        if self.size == fdtype.itemsize:
             grid_bytes = b'GRID'
         else:
             warnings.warn(f'downcasting {self.class_name}...')

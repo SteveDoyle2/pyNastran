@@ -121,7 +121,7 @@ class ComplexPlateVMArray(OES_Object):
                 #self.nelements * nnodes, self.ntotal)
             #raise RuntimeError(msg)
 
-        self.fiber_curvature = zeros(nlayers, 'float32')
+        self.fiber_distance = zeros(nlayers, 'float32')
 
         # [oxx, oyy, txy, ovm]
         self.data = zeros((ntimes, nlayers, 4), dtype=cfdtype)
@@ -205,13 +205,13 @@ class ComplexPlateVMArray(OES_Object):
         assert isinstance(node_id, int), node_id
         self.data[self.itime, self.itotal] = [oxx1, oyy1, txy1, ovm1]
         self.element_node[self.itotal, :] = [eid, node_id]  # 0 is center
-        self.fiber_curvature[self.itotal] = fdr1
+        self.fiber_distance[self.itotal] = fdr1
         #self.ielement += 1
         self.itotal += 1
 
         self.data[self.itime, self.itotal] = [oxx2, oyy2, txy2, ovm2]
         self.element_node[self.itotal, :] = [eid, node_id]  # 0 is center
-        self.fiber_curvature[self.itotal] = fdr2
+        self.fiber_distance[self.itotal] = fdr2
         self.itotal += 1
         #self.ielement += 1
 
@@ -243,8 +243,8 @@ class ComplexPlateVMArray(OES_Object):
             if itime == 0:
                 self.element_node[ie_upper, :] = [eid, nid]  # 0 is center
                 self.element_node[ie_lower, :] = [eid, nid]  # 0 is center
-                self.fiber_curvature[ie_upper] = fd1
-                self.fiber_curvature[ie_lower] = fd2
+                self.fiber_distance[ie_upper] = fd1
+                self.fiber_distance[ie_lower] = fd2
             self.data[itime, ie_upper, :] = [oxx1, oyy1, txy1, ovm1]
             self.data[itime, ie_lower, :] = [oxx2, oyy2, txy2, ovm2]
 
@@ -326,7 +326,7 @@ class ComplexPlateVMArray(OES_Object):
         CQUAD4 linear
         CTRIA3
         """
-        fds = self.fiber_curvature
+        fds = self.fiber_distance
         oxx = self.data[itime, :, 0]
         oyy = self.data[itime, :, 1]
         txy = self.data[itime, :, 2]
@@ -356,7 +356,7 @@ class ComplexPlateVMArray(OES_Object):
         CTRIAR
         CTRIA6
         """
-        fds = self.fiber_curvature
+        fds = self.fiber_distance
         oxx = self.data[itime, :, 0]
         oyy = self.data[itime, :, 1]
         txy = self.data[itime, :, 2]
@@ -458,7 +458,7 @@ class ComplexPlateVMArray(OES_Object):
             op2_ascii.write(f'r4 [4, {itable:d}, 4]\n')
             op2_ascii.write(f'r4 [4, {4 * ntotal:d}, 4]\n')
 
-            fds = self.fiber_curvature
+            fds = self.fiber_distance
             oxx = self.data[itime, :, 0]
             oyy = self.data[itime, :, 1]
             txy = self.data[itime, :, 2]
@@ -524,7 +524,7 @@ class ComplexPlateVMArray(OES_Object):
             op2_ascii.write(f'r4 [4, {itable:d}, 4]\n')
             op2_ascii.write(f'r4 [4, {4 * ntotal:d}, 4]\n')
 
-            fds = self.fiber_curvature
+            fds = self.fiber_distance
             oxx = self.data[itime, :, 0]
             oyy = self.data[itime, :, 1]
             txy = self.data[itime, :, 2]

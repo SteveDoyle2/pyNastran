@@ -1,4 +1,4 @@
-from typing import Tuple, List
+from typing import Tuple, List, Dict, Any
 import numpy as np
 from pyNastran.op2.result_objects.op2_objects import BaseElement
 from pyNastran.op2.op2_interface.write_utils import set_table3_field
@@ -432,6 +432,14 @@ def set_approach_code(analysis_code: int, device_code: int):
     approach_code = analysis_code * 10 + device_code
     return approach_code
 
+def _check_num_wide(data_code: Dict[str, Any]):
+    if 'num_wide' not in data_code:
+        if 'element_name' in data_code:
+            element_name = data_code['element_name']
+            raise RuntimeError(f'missing num_wide for {element_name}')
+        else:
+            raise RuntimeError(f'missing num_wide')
+
 def set_static_case(cls, is_sort1, isubcase,
                     data_code, func, args):
     data_code['lsdvmns'] = [0] # TODO: ???
@@ -441,6 +449,7 @@ def set_static_case(cls, is_sort1, isubcase,
     data_code['approach_code'] = set_approach_code(data_code['analysis_code'],
                                                    data_code['device_code'])
     times = [None]
+    _check_num_wide(data_code)
     obj = func(cls, data_code, is_sort1, isubcase,
                *args, times)
     obj.is_built = True
@@ -451,16 +460,20 @@ def set_modal_case(cls, is_sort1, isubcase, data_code,
                    func, args, modes, eigns, cycles):
 
     data_code['data_names'] = ['modes', 'eigns', 'mode_cycles']
+    data_code['load_set'] = 1
     #data_code['lsdvmns'] = [0] # TODO: ???
     data_code['analysis_code'] = 2 # modal
     data_code['approach_code'] = set_approach_code(data_code['analysis_code'],
                                                    data_code['device_code'])
 
+    _check_num_wide(data_code)
     obj = func(cls, data_code, is_sort1, isubcase,
                *args, modes)
     obj.modes = modes
     obj.eigns = eigns
+
     obj.mode_cycles = cycles
+    obj.cycles = cycles
     obj.is_built = True
     obj.get_stats()
     return obj
@@ -473,9 +486,33 @@ def set_transient_case(cls, is_sort1, isubcase,
     data_code['analysis_code'] = 6
     data_code['approach_code'] = set_approach_code(data_code['analysis_code'],
                                                    data_code['device_code'])
+
+    _check_num_wide(data_code)
     obj = func(cls, data_code, is_sort1, isubcase,
                *args, times)
+    obj.times = times
     obj.dts = times
+    obj.is_built = True
+    obj.get_stats()
+    return obj
+
+def set_post_buckling_case(cls, is_sort1, isubcase,
+                           data_code, func, args,
+                           modes, eigrs, eigis):
+    data_code['lsdvmns'] = [0] # TODO: ???
+    data_code['data_names'] = ['modes', 'eigrs', 'eigis']
+    data_code['load_set'] = 1
+    data_code['analysis_code'] = 8
+    data_code['approach_code'] = set_approach_code(data_code['analysis_code'],
+                                                   data_code['device_code'])
+
+    _check_num_wide(data_code)
+    obj = func(cls, data_code, is_sort1, isubcase,
+               *args, modes)
+    obj.dts = modes
+    obj.modes = modes
+    obj.eigrs = eigrs
+    obj.eigis = eigis
     obj.is_built = True
     obj.get_stats()
     return obj
@@ -485,10 +522,11 @@ def set_freq_case(cls, is_sort1, isubcase,
     #data_code['lsdvmns'] = [0] # TODO: ???
     #data_code['data_names'] = ['dt']
     #data_code['load_set'] = 1
-
+    data_code['load_set'] = 1
     data_code['analysis_code'] = 5
     data_code['approach_code'] = set_approach_code(data_code['analysis_code'],
                                                    data_code['device_code'])
+    _check_num_wide(data_code)
 
     data_code['data_names'] = ['freq']
     data_code['name'] = 'FREQ'
@@ -505,9 +543,11 @@ def set_complex_modes_case(cls, is_sort1, isubcase,
     #data_code['data_names'] = ['dt']
     #data_code['load_set'] = 1
 
+    data_code['load_set'] = 1
     data_code['analysis_code'] = 9  # complex eigenvalues
     data_code['approach_code'] = set_approach_code(data_code['analysis_code'],
                                                    data_code['device_code'])
+    _check_num_wide(data_code)
 
     data_code['data_names'] = ['modes', 'eigrs', 'eigis']
     data_code['name'] = 'mode'
@@ -600,3 +640,4 @@ def update_stress_force_time_word(obj) -> None:
         class_name = obj.__class__.__name__
         #assert obj._times.min() != obj._times.max(), f'{class_name}: old_times={old_times} -> times={obj._times}; data.shape={obj.data.shape}\n{obj.code_information()}'
     #print(obj.object_attributes())
+

@@ -240,7 +240,7 @@ def main():  # pragma: no cover
     #cart3d_geom_filename  = os.path.join('models','spike.a.tri')
     #outfilename = os.path.join('models', 'panair.inp')
     Cart3dToPanair(cart3d_geom_filename, panair_inp_filename, varmap)
-    print("done...")
+    #print("done...")
 
 if __name__ == '__main__':  # pragma: no cover
     main()

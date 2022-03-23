@@ -130,6 +130,28 @@ class ComplexRodForceArray(ComplexForceObject):
                             set_element_case, (element, data), freqs)
         return obj
 
+    @classmethod
+    def add_complex_modes_case(cls, table_name, element, data, isubcase,
+                               modes, eigrs, eigis,
+                               element_name: str,
+                               is_sort1=True, is_random=False, is_msc=True,
+                               random_code=0, title='', subtitle='', label=''):
+        num_wide = 5
+        data_code = oef_complex_data_code(
+            table_name,
+            element_name, num_wide,
+            is_sort1=is_sort1, is_random=is_random,
+            random_code=random_code, title=title, subtitle=subtitle, label=label,
+            is_msc=is_msc)
+
+        element_type = ELEMENT_NAME_TO_ELEMENT_TYPE[element_name.upper()]
+        data_code['element_name'] = element_name.upper()
+        data_code['element_type'] = element_type
+
+        obj = set_complex_modes_case(cls, is_sort1, isubcase, data_code,
+                                     set_element_case, (element, data), modes, eigrs, eigis)
+        return obj
+
     def __eq__(self, table):  # pragma: no cover
         self._eq_header(table)
         assert self.is_sort1 == table.is_sort1

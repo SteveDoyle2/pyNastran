@@ -240,7 +240,7 @@ class OUG:
             msg = f'invalid analysis_code...analysis_code={op2.analysis_code}\ndata={op2.data_code}'
             raise RuntimeError(msg)
 
-        #print op2.code_information()
+        #print(op2.code_information())
         op2._fix_oug_format_code()
         op2._parse_thermal_code()
         if op2.is_debug_file:
