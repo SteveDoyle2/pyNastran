@@ -967,10 +967,13 @@ def _remove(model: BDF,
 def _remove_optimization(model: BDF, pids_to_remove, desvars_to_remove, dresps_to_remove) -> None:
     for desvar_id in desvars_to_remove:
         del model.desvars[desvar_id]
-    model.log.debug('removing DESVAR %s' % desvars_to_remove)
+    if desvars_to_remove:
+        model.log.debug('removing DESVAR %s' % desvars_to_remove)
+
     for dresp_id in dresps_to_remove:
         del model.dresps[dresp_id]
-    model.log.debug('removing DRESPx %s' % dresps_to_remove)
+    if dresps_to_remove:
+        model.log.debug('removing DRESPx %s' % dresps_to_remove)
 
     dvprels_ids_to_remove = []
     dvprels_to_remove = []
@@ -979,7 +982,8 @@ def _remove_optimization(model: BDF, pids_to_remove, desvars_to_remove, dresps_t
         if pid in pids_to_remove:
             dvprels_ids_to_remove.append(dvprel_id)
             dvprels_to_remove.append((dvprel_id, f'removing DVPRELx={dvprel_id} because pid={pid} does not exist'))
-    model.log.debug('removing DVPRELx %s' % dvprels_ids_to_remove)
+    if dvprels_ids_to_remove:
+        model.log.debug('removing DVPRELx %s' % dvprels_ids_to_remove)
     _remove_dict(model.dvprels, dvprels_to_remove, model.log)
 
     #for dvprel_id, msg in dvprels_to_remove:

@@ -978,6 +978,7 @@ class RealNonlinearBeamStressArray(RealNonlinearBeamArray, StressObject):
 def _filter_cbeam_blanks(obj: Union[RealBeamStressArray, RealBeamStrainArray]):
     i_nonzero = np.where((obj.element_node[:, 1] != 0) | (obj.xxb != 0.0))[0]
 
+    ## TODO: fix slicing error...
     obj.element_node = obj.element_node[i_nonzero, :]
     obj.data = obj.data[:, i_nonzero, :]
     obj.element = obj.element_node[:, 0]

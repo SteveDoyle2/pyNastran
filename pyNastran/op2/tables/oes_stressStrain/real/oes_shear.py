@@ -11,6 +11,7 @@ from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import (
     oes_real_data_code, set_element_case,
     set_modal_case, set_transient_case)
 from pyNastran.f06.f06_formatting import _eigenvalue_header #, get_key0
+from pyNastran.op2.op2_interface.write_utils import to_column_bytes, view_dtype, view_idtype_as_fdtype
 
 
 class RealShearArray(OES_Object):
@@ -349,7 +350,7 @@ class RealShearArray(OES_Object):
 
         # [eid, max_shear, avg_shear, margin]
         data_out = np.empty((nelements, 4), dtype=fdtype)
-        data_out[:, 0] = eids_device.view(fdtype)
+        data_out[:, 0] = view_idtype_as_fdtype(eids_device, fdtype)
 
         op2_ascii.write(f'nelements={nelements:d}\n')
 

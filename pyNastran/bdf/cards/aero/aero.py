@@ -1026,22 +1026,22 @@ class AESURF(BaseCard):
     #def aesid_ref(self):
         #return self.aesurf_ref
 
-    def Cid1(self):
+    def Cid1(self) -> int:
         if self.cid1_ref is not None:
             return self.cid1_ref.cid
         return self.cid1
 
-    def Cid2(self):
+    def Cid2(self) -> Optional[int]:
         if self.cid2_ref is not None:
             return self.cid2_ref.cid
         return self.cid2
 
-    def aelist_id1(self):
+    def aelist_id1(self) -> int:
         if self.alid1_ref is not None:
             return self.alid1_ref.sid
         return self.alid1
 
-    def aelist_id2(self):
+    def aelist_id2(self) -> Optional[int]:
         if self.alid2_ref is not None:
             return self.alid2_ref.sid
         return self.alid2
@@ -1745,12 +1745,23 @@ class CAERO1(BaseCard):
             self._init_ids(dtype='int64')
         return self.box_ids
 
-    def Cp(self):
+    @property
+    def aefact_ids(self) -> List[int]:
+        aefact_ids = []
+        lchord = self.get_LChord()
+        lspan = self.get_LSpan()
+        if lchord:
+            aefact_ids.append(lchord)
+        if lspan:
+            aefact_ids.append(lspan)
+        return aefact_ids
+
+    def Cp(self) -> int:
         if self.cp_ref is not None:
             return self.cp_ref.cid
         return self.cp
 
-    def Pid(self):
+    def Pid(self) -> int:
         if self.pid_ref is not None:
             return self.pid_ref.pid
         return self.pid
@@ -2377,6 +2388,17 @@ class CAERO2(BaseCard):
         if self.pid_ref is not None:
             return self.pid_ref.pid
         return self.pid
+
+    @property
+    def aefact_ids(self) -> List[int]:
+        aefact_ids = []
+        lsb = self.Lsb()
+        lint = self.Lint()
+        if lsb:
+            aefact_ids.append(lsb)
+        if lint:
+            aefact_ids.append(lint)
+        return aefact_ids
 
     def Lsb(self):  # AEFACT
         if self.lsb_ref is not None:
