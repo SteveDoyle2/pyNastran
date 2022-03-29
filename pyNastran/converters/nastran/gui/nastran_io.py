@@ -118,6 +118,7 @@ from .menus.setup_model_sidebar import ModelSidebar
 if TYPE_CHECKING:  # pragma: no cover
     from cpylog import SimpleLogger
     from pyNastran.gui.gui_objects.settings import Settings, NastranSettings
+    from pyNastran.gui.main_window import MainWindow
 
 SIDE_MAP = {}
 SIDE_MAP['CHEXA'] = {
@@ -1248,6 +1249,7 @@ class NastranIO_(NastranGuiResults, NastranGeometryHelper):
             xyz_cid0, nid_cp_cd, nid_map, model, j, dim_max,
             plot=plot, xref_loads=xref_loads)
 
+        _create_monpnt(self, model, xyz_cid0, nid_cp_cd)
         self._create_aero(model, box_id_to_caero_element_map, cs_box_ids,
                           caero_points, ncaeros_points, ncaero_sub_points,
                           has_control_surface)
@@ -7170,6 +7172,60 @@ def _map_elements3_helper(model: BDF,
         max_aspect_ratio, area, area_ratio, taper_ratio, min_edge_length, normals,
         cell_types_array, cell_offsets_array, )
     return out
+
+def _create_monpnt(gui: MainWindow,
+                   model: BDF,
+                   xyz_cid0: np.ndarray,
+                   nid_cp_cd: np.ndarray):
+    cell_type_point = 1  # vtk.vtkVertex().GetCellType()
+
+    all_nids = nid_cp_cd[:, 0]
+    log = model.log
+    for monpnt in model.monitor_points:
+        from pyNastran.bdf.bdf import MONPNT1, CORD2R, AECOMP, SET1
+        monpnt = monpnt # type: MONPNT1
+        coord = model.coords[monpnt.cp]
+        coord = coord # type: CORD2R
+        xyz_global = coord.transform_node_to_global(monpnt.xyz).reshape(1, 3)
+        aecomp = model.aecomps[monpnt.comp]  # type: AECOMP
+        label = monpnt.label
+        if aecomp.list_type == 'SET1':
+            #set1_ids = aecomp.lists
+            nids = []
+            for set1_id in aecomp.lists:
+                set1 = model.sets[set1_id]  # type: SET1
+                nids += set1.ids
+
+            nids = np.unique(nids)
+            inids = np.searchsorted(all_nids, nids)
+            xyz = xyz_cid0[inids, :]
+
+            name = f'MONPNT1: {monpnt.name} GRIDs; cid={monpnt.cp}'
+            #------------------------------------------------------------
+            gui.create_alternate_vtk_grid(
+                name, color=RED_FLOAT, point_size=5, opacity=1.0,
+                representation='point', is_visible=False, is_pickable=False)
+            grid = gui.alt_grids[name]
+
+            npoints = len(xyz)
+            points = numpy_to_vtk_points(xyz, points=None, dtype='<f', deep=1)
+            grid.SetPoints(points)
+            elements = np.arange(npoints).reshape(npoints, 1)
+            create_vtk_cells_of_constant_element_type(grid, elements, cell_type_point)
+            #------------------------------------------------------------
+            name = f'MONPNT1: {monpnt.name} xyz'
+            gui.create_alternate_vtk_grid(
+                name, color=BLUE_FLOAT, point_size=5, opacity=1.0,
+                representation='point', is_visible=False, is_pickable=False)
+            grid = gui.alt_grids[name]
+
+            points = numpy_to_vtk_points(xyz_global, points=None, dtype='<f', deep=1)
+            grid.SetPoints(points)
+            elements = np.array([[0]], dtype='int32')
+            create_vtk_cells_of_constant_element_type(grid, elements, cell_type_point)
+        else:
+            log.warning(f'skipping:\n{monpnt}')
+            continue
 
 
 def get_results_to_exclude(nastran_settings: NastranSettings) -> Set[str]:

@@ -27,7 +27,7 @@ SKIP_FLAGS = [
     'N O N - D I M E N S I O N A L   S T A B I L I T Y   A N D   C O N T R O L   D E R I V A T I V E   C O E F F I C I E N T S',
     #'A E R O S T A T I C   D A T A   R E C O V E R Y   O U T P U T   T A B L E S',
     'A E R O D Y N A M I C   M O N I T O R   P O I N T   I N T E G R A T E D   L O A D S',
-    'S T R U C T U R A L   M O N I T O R   P O I N T   I N T E G R A T E D   L O A D S',
+    #'S T R U C T U R A L   M O N I T O R   P O I N T   I N T E G R A T E D   L O A D S',
     #'E I G E N V A L U E  A N A L Y S I S   S U M M A R Y   (READ MODULE)',
     #'R E A L   E I G E N V A L U E S',
     'MAXIMUM  DISPLACEMENTS',
@@ -36,10 +36,22 @@ SKIP_FLAGS = [
 ]
 
 
+class MonitorLoads:
+    def __init__(self, name, comp, classi, label, cp, xyz, coefficient):
+        self.name = name
+        self.comp = comp
+        self.group = classi
+        self.label = label
+        self.cp = cp
+        self.xyz = xyz
+        self.coefficient = coefficient
+
+
 class TrimResults:
     def __init__(self):
         self.aero_pressure = {}
         self.aero_force = {}
+        self.structural_monitor_loads = {}
 
     def __repr__(self) -> str:
         msg = (
@@ -136,6 +148,13 @@ def _read_f06_trim(f06_file: TextIO, log: SimpleLogger,
                 trim_results,
                 title, subtitle, subcase,
                 dirname, ipressure, iforce, log)
+        elif 'S T R U C T U R A L   M O N I T O R   P O I N T   I N T E G R A T E D   L O A D S' in line:
+            log.debug('reading aero static data recovery tables')
+            iblank_count = 0
+            line, i = _read_structural_monitor_point_integrated_loads(
+                f06_file, line, i, nlines_max, trim_results,
+                title, subtitle, subcase,
+                dirname, log)
         elif 'PAGE' in line and any(month in line for month in MONTHS):
             line, i, title, subtitle, subcase = _get_title_subtitle_subcase(f06_file, line, i, nlines_max)
             #log.info(f'title={title!r} subtitle={subtitle!r}')
@@ -188,6 +207,174 @@ def _get_title_subtitle_subcase(f06_file: TextIO,
     assert len(subcase_int) < 4, f'len(subcase_int)={len(subcase_int)}; subcase_int={subcase_int!r}; subcase={subcase!r}'
     return line, i, title, subtitle, subcase_int
 
+
+def _read_structural_monitor_point_integrated_loads(f06_file: TextIO,
+                                                line: str, i: int, nlines_max: int,
+                                                trim_results: TrimResults,
+                                                title: str, subtitle: str, subcase: str,
+                                                dirname: str,
+                                                #ipressure: int, iforce: int,
+                                                log: SimpleLogger):
+    """
+    '                              S T R U C T U R A L   M O N I T O R   P O I N T   I N T E G R A T E D   L O A D S'
+    '                         CONFIGURATION = AEROSG2D     XY-SYMMETRY = ASYMMETRIC     XZ-SYMMETRY = SYMMETRIC'
+    '                                           MACH = 1.000000E-01                Q = 1.587000E-01'
+    '
+    '        CONTROLLER STATE:'
+    '        ANGLEA   =   2.0420E-01'
+    '
+    '        MONITOR POINT NAME = AEROSG2D          COMPONENT =                   CLASS = COEFFICIENT               '
+    '        LABEL = Full Vehicle Integrated Loads                           '
+    '        CID =      102          X =  0.00000E+00          Y =  0.00000E+00          Z =  0.00000E+00'
+    '
+    '          AXIS      RIGID AIR       ELASTIC REST.   RIGID APPLIED    REST. APPLIED   '
+    '          ----    -------------    -------------    -------------    -------------   '
+    '           CX     0.000000E+00     0.000000E+00     0.000000E+00     0.000000E+00'
+    '           CY    -1.062477E+01    -1.062477E+01     0.000000E+00     0.000000E+00'
+    '           CZ     1.382605E+02     1.382605E+02     0.000000E+00     0.000000E+00'
+    '           CMX    3.801091E+03     3.801091E+03     0.000000E+00     0.000000E+00'
+    '           CMY   -1.767277E+03    -1.767277E+03     0.000000E+00     0.000000E+00'
+    '           CMZ   -1.948738E+02    -1.948738E+02     0.000000E+00     0.000000E+00'
+    ''
+    '        MONITOR POINT NAME = AE01              COMPONENT = AE01              CLASS = GENERAL                   '
+    """
+    header_lines = []
+    i0 = i
+
+    while 'MONITOR POINT NAME' not in line and ('NASTRAN' not in line and 'PAGE' not in line):
+        if i != i0:
+            header_lines.append(line)
+        line = f06_file.readline()
+        i += 1
+        #line, i = _read_structural_monitor_point_integrated_loads(
+        #f06_file, line, i, nlines_max,
+        #title, subtitle, subcase,
+        #dirname, log)
+
+    if 'MONITOR POINT NAME' not in line:
+        asfd
+
+    seek0 = f06_file.tell()
+    line_end, iend = _skip_to_page_stamp(f06_file, line, i, nlines_max)
+    seek1 = f06_file.tell()
+
+    f06_file.seek(seek0)
+
+    names = []
+    comps = []
+    classes = []
+    labels = []
+
+    #name_comps_classes_labels = []
+    xyzs = []
+    cids = []
+    all_coeffs = []
+    while i < iend and 'MONITOR POINT NAME' in line:
+        #'        MONITOR POINT NAME = AEROSG2D          COMPONENT =                   CLASS = COEFFICIENT               '
+        #'        LABEL = Full Vehicle Integrated Loads                           '
+        #'        CID =      102          X =  0.00000E+00          Y =  0.00000E+00          Z =  0.00000E+00'
+        name_comp_class = line.split('MONITOR POINT NAME =')[1]
+        name_comp, classi = name_comp_class.rsplit('CLASS = ')
+        name_comp = name_comp.strip()
+
+        # COEFFICIENT: summation about the CG?
+        # GENERAL:     MONPNT1
+        classi = classi.strip()
+        assert classi in ['COEFFICIENT', 'GENERAL'], classi
+        name, comp = name_comp.split('COMPONENT =')
+        name = name.strip()
+        comp = comp.strip()
+        #print(f'name={name!r} comp={comp!r} class={classi!r}')
+
+        #'        LABEL = Full Vehicle Integrated Loads                           '
+        line = f06_file.readline()
+        i += 1
+        label = line.split('LABEL =')[1].strip()
+
+        #'        CID =      102          X =  0.00000E+00          Y =  0.00000E+00          Z =  0.00000E+00'
+        line = f06_file.readline()
+        i += 1
+        sline = [val.strip() for val in line.split('=')]
+        assert sline[0] == 'CID'
+        cid = int(sline[1][:-1])
+        xyz = [float(sline[2][:-1]),
+               float(sline[3][:-1]),
+               float(sline[4])]
+
+        line = f06_file.readline()
+        line = f06_file.readline()
+        i += 2
+        #AXIS      RIGID AIR       ELASTIC REST.   RIGID APPLIED    REST. APPLIED
+
+        line = f06_file.readline()
+        i += 1
+        coeffs = np.zeros((6, 4), dtype='float64')
+
+        line = f06_file.readline()
+        i += 1
+        axis, rigid_air, elastic_rest, rigid_applied, rest_applied = line.split()
+        assert axis == 'CX', axis
+        coeffs[0, :] = [rigid_air, elastic_rest, rigid_applied, rest_applied]
+
+        line = f06_file.readline()
+        i += 1
+        axis, rigid_air, elastic_rest, rigid_applied, rest_applied = line.split()
+        assert axis == 'CY', axis
+        coeffs[1, :] = [rigid_air, elastic_rest, rigid_applied, rest_applied]
+
+        line = f06_file.readline()
+        i += 1
+        axis, rigid_air, elastic_rest, rigid_applied, rest_applied = line.split()
+        assert axis == 'CZ', axis
+        coeffs[2, :] = [rigid_air, elastic_rest, rigid_applied, rest_applied]
+
+        # -----
+        line = f06_file.readline()
+        i += 1
+        axis, rigid_air, elastic_rest, rigid_applied, rest_applied = line.split()
+        assert axis == 'CMX', axis
+        coeffs[3, :] = [rigid_air, elastic_rest, rigid_applied, rest_applied]
+
+        line = f06_file.readline()
+        i += 1
+        axis, rigid_air, elastic_rest, rigid_applied, rest_applied = line.split()
+        assert axis == 'CMY', axis
+        coeffs[4, :] = [rigid_air, elastic_rest, rigid_applied, rest_applied]
+
+        line = f06_file.readline()
+        i += 1
+        axis, rigid_air, elastic_rest, rigid_applied, rest_applied = line.split()
+        assert axis == 'CMZ', axis
+        coeffs[5, :] = [rigid_air, elastic_rest, rigid_applied, rest_applied]
+
+        line = f06_file.readline()
+        line = f06_file.readline()
+        i += 2
+        names.append(name)
+        comps.append(comp)
+        classes.append(classi)
+        labels.append(label)
+        #name_comps_classes_labels.append([name, comp, classi, label])
+        cids.append(cid)
+        xyzs.append(xyz)
+        all_coeffs.append(coeffs)
+    all_coeffs = np.stack(all_coeffs, axis=0)
+
+    names = np.array(names)
+    comps = np.array(comps)
+    classes = np.array(classes)
+    labels = np.array(labels)
+    cids = np.array(cids, dtype='int32')
+    xyzs = np.array(xyzs, dtype='float64')
+    all_coeffs = np.array(all_coeffs, dtype='float64')
+
+    isubcase = int(subcase)
+    trim_results.structural_monitor_loads[isubcase] = MonitorLoads(
+        names, comps, classes, labels,
+        cids, xyzs, all_coeffs)
+
+    f06_file.seek(seek1)
+    return line_end, iend
 
 def _read_aerostatic_data_recovery_output_table(f06_file: TextIO,
                                                 line: str, i: int, nlines_max: int,

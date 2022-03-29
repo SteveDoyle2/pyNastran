@@ -250,7 +250,8 @@ def run_lots_of_files(filenames: List[str], folder: str='',
 
 def run_bdf(folder, bdf_filename, debug=False, xref=True, check=True, punch=False,
             mesh_form='separate', is_folder=False, print_stats=False,
-            encoding=None, sum_load=True, size=8, is_double=False,
+            encoding=None, sum_load=True, run_mass=True,
+            size=8, is_double=False,
             hdf5=False,
             stop=False, nastran='', post=-1, dynamic_vars=None,
             quiet=False, dumplines=False, dictsort=False,
@@ -351,6 +352,7 @@ def run_bdf(folder, bdf_filename, debug=False, xref=True, check=True, punch=Fals
         limit_mesh_opt=limit_mesh_opt,
         run_extract_bodies=run_extract_bodies,
         run_skin_solids=run_skin_solids,
+        run_mass=run_mass,
         save_file_structure=save_file_structure,
         pickle_obj=pickle_obj,
         validate_case_control=validate_case_control,
@@ -390,6 +392,7 @@ def run_and_compare_fems(
         safe_xref: bool=True,
         run_extract_bodies: bool=False,
         run_skin_solids: bool=True,
+        run_mass: bool=True,
         pickle_obj: bool=False,
         validate_case_control: bool=True,
         stop_on_failure: bool=True,
@@ -445,7 +448,7 @@ def run_and_compare_fems(
                         stop_on_failure=stop_on_failure,
                         validate_case_control=validate_case_control, log=log)
 
-        diff_cards = compare(fem1, fem2, xref=xref, check=check,
+        diff_cards = compare(fem1, fem2, xref=xref, run_mass=run_mass, check=check,
                              print_stats=print_stats, quiet=quiet)
         test_get_cards_by_card_types(fem2)
 
@@ -1958,7 +1961,8 @@ def compute(cards1, cards2, quiet=False):
             print(msg)
 
 
-def get_element_stats(fem1: BDF, unused_fem2: BDF, quiet: bool=False) -> None:
+def get_element_stats(fem1: BDF, unused_fem2: BDF,
+                      run_mass: bool=True, quiet: bool=False) -> None:
     """verifies that the various element methods work"""
     for (unused_key, loads) in sorted(fem1.loads.items()):
         for load in loads:
@@ -1976,9 +1980,11 @@ def get_element_stats(fem1: BDF, unused_fem2: BDF, quiet: bool=False) -> None:
 
     if fem1.elements:
         fem1.get_elements_nodes_by_property_type()
-    check_mass(fem1, quiet=quiet)
+    check_mass(fem1, run_mass=run_mass, quiet=quiet)
 
-def check_mass(fem1: BDF, quiet: bool=False):
+def check_mass(fem1: BDF, run_mass: bool=True, quiet: bool=False):
+    if not run_mass:
+        return
     mass1, cg1, inertia1 = mass_properties(fem1, reference_point=None, sym_axis=None)
     mass2, cg2, inertia2 = mass_properties_nsm(fem1, reference_point=None, sym_axis=None)
     #mass3, cg3, inertia3 = mass_properties_breakdown(fem1)[:3]
@@ -2070,11 +2076,11 @@ def get_matrix_stats(fem1: BDF, unused_fem2: BDF) -> None:
                   % (dmik.type, dmik.name, str(dmik)))
             raise
 
-def compare(fem1, fem2, xref=True, check=True, print_stats=True, quiet=False):
+def compare(fem1, fem2, xref=True, run_mass=True, check=True, print_stats=True, quiet=False):
     """compares two fem objects"""
     diff_cards = compare_card_count(fem1, fem2, print_stats=print_stats, quiet=quiet)
     if xref and check:
-        get_element_stats(fem1, fem2, quiet=quiet)
+        get_element_stats(fem1, fem2, run_mass=run_mass, quiet=quiet)
         get_matrix_stats(fem1, fem2)
     compare_card_content(fem1, fem2)
     #compare_params(fem1, fem2)
@@ -2163,6 +2169,12 @@ def test_bdf_argparse(argv=None):
                                help='Allow for cross-reference errors (default=100)')
     parent_parser.add_argument('--encoding', default=encoding, type=str,
                                help='the encoding method (default=%r)\n' % encoding)
+    #parent_parser.add_argument('--skip_nominal', action='store_true',
+                               #help='skip the nominal model comparison (default=False)')
+    #parent_parser.add_argument('--skip_loads', action='store_true',
+                               #help='skip loads calcuations (default=False)')
+    parent_parser.add_argument('--skip_mass', action='store_true',
+                               help='skip mass calcuations (default=False)')
     parent_parser.add_argument('-q', '--quiet', action='store_true',
                                help='prints debug messages (default=False)')
     # --------------------------------------------------------------------------
@@ -2263,7 +2275,9 @@ def get_test_bdf_usage_args_examples(encoding):
     formats = '--msc|--nx|--optistruct|--nasa95|--mystran'
     options = (
         '\n  [options] = [-e E] [--encoding ENCODE] [-q] [--dumplines] [--dictsort]\n'
-        f'              [--crash C] [--pickle] [--profile] [--hdf5] [{formats}] [--filter]\n')
+        f'              [--crash C] [--pickle] [--profile] [--hdf5] [{formats}] [--filter]\n'
+        '              [--skip_mass]\n' # [--skip_loads]
+    )
     usage = (
         "Usage:\n"
         '  test_bdf [-x | --safe] [-p] [-c] [-L]      BDF_FILENAME [options]\n'
@@ -2317,6 +2331,8 @@ def get_test_bdf_usage_args_examples(encoding):
         '  --optistruct  Assume OptiStruct\n'
         '  --nasa95      Assume Nastran 95\n'
         '  --mystran     Assume Mystran\n'
+        #'  --skip_loads   skip the loads summation calculations (default=False)\n'
+        '  --skip_mass    skip the mass properties calculations (default=False)\n'
         '\n'
         'Info:\n'
         '  -h, --help     show this help message and exit\n'
@@ -2343,6 +2359,10 @@ def main(argv=None):
 
     import time
     time0 = time.time()
+
+    #data['run_nominal'] = not data['skip_nominal']
+    #data['run_loads'] = not data['skip_loads']
+    data['run_mass'] = not data['skip_mass']
 
     is_double = False
     if data['double']:
@@ -2378,6 +2398,9 @@ def main(argv=None):
             size=size,
             is_double=is_double,
             sum_load=data['loads'],
+            #run_nominal=data['run_nominal'],
+            #run_loads=data['run_loads'],
+            run_mass=data['run_mass'],
             stop=data['stop'],
             quiet=data['quiet'],
             dumplines=data['dumplines'],
@@ -2425,6 +2448,7 @@ def main(argv=None):
             size=size,
             is_double=is_double,
             sum_load=data['loads'],
+            run_mass=data['run_mass'],
             stop=data['stop'],
             quiet=data['quiet'],
             dumplines=data['dumplines'],
