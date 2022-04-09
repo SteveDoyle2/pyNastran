@@ -43,17 +43,17 @@ class CameraWindow(PyDialog):
         self.cameras = deepcopy(data['cameras'])
         self.names = sorted(self.cameras.keys())
 
-        self.name = QLabel("Name:")
+        self.name = QLabel('Name:')
         self.name_edit = QLineEdit(str(self._default_name))
 
-        self.delete_button = QPushButton("Delete")
-        self.set_button = QPushButton("Set")
-        self.save_button = QPushButton("Save")
+        self.delete_button = QPushButton('Delete')
+        self.set_button = QPushButton('Set')
+        self.save_button = QPushButton('Save')
 
         # closing
-        self.apply_button = QPushButton("Apply")
-        self.close_button = QPushButton("Close")
-        self.cancel_button = QPushButton("Cancel")
+        self.apply_button = QPushButton('Apply')
+        self.close_button = QPushButton('Close')
+        self.cancel_button = QPushButton('Cancel')
 
         self.table = QTableWidget()
         names_text = []
@@ -95,7 +95,6 @@ class CameraWindow(PyDialog):
         grid.addWidget(self.delete_button, irow, 0)
         grid.addWidget(self.set_button, irow, 1)
         irow += 1
-
 
         vbox = QVBoxLayout()
         vbox.addWidget(self.table)

@@ -579,10 +579,14 @@ class ShearMomentTorqueWindow(PyDialog):
                  flag10, flag11, flag12,
                  flag13, flag14]
         if all(flags):
+            # Z-Axis Method
+            # p1: origin
+            # p2: xz_plane
+            # p3: end
             self.out_data['method'] = method
-            self.out_data['p1'] = [p1_cid, p1]
-            self.out_data['p2'] = [p2_cid, p2]
-            self.out_data['p3'] = [p3_cid, p3]
+            self.out_data['p1'] = [p1_cid, p1]  # origin
+            self.out_data['p2'] = [p2_cid, p2]  # xzplane
+            self.out_data['p3'] = [p3_cid, p3]  # end
             self.out_data['zaxis'] = [zaxis_cid, zaxis]
             self.out_data['plane_color'] = self.plane_color_float
             self.out_data['plane_opacity'] = plane_opacity

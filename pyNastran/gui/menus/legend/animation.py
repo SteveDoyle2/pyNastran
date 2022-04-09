@@ -3,8 +3,10 @@ defines:
  - AnimationWindow
 
 """
+from __future__ import annotations
 import os
 from collections import OrderedDict
+from typing import TYPE_CHECKING
 
 from qtpy.QtCore import Qt
 from qtpy.QtWidgets import (
@@ -24,7 +26,8 @@ from pyNastran.gui.menus.results_sidebar_utils import (
 )
 
 from pyNastran.gui.menus.legend.write_gif import IS_IMAGEIO
-
+if TYPE_CHECKING:  # pragma: no cover
+    from pyNastran.gui.main_window import MainWindow
 
 ANIMATION_PROFILES = [
     #'0 to Scale',
@@ -116,7 +119,7 @@ class AnimationWindow(PyDialog):
         self.set_connections()
 
         self.is_gui = False
-        self.gui = None
+        self.gui = None  # type: MainWindow
         if hasattr(self.win_parent, '_updated_legend'):
             self.win_parent.is_animate_open = True
             self.is_gui = True
@@ -235,63 +238,63 @@ class AnimationWindow(PyDialog):
 
         #-----------------
         # Time plot
-        self.fringe_label = QLabel("Fringe")
+        self.fringe_label = QLabel('Fringe')
 
         self.icase_fringe_start_edit = QSpinBox(self)
         #self.icase_fringe_start_edit.setRange(0, icase_max)
         self.icase_fringe_start_edit.setSingleStep(1)
         self.icase_fringe_start_edit.setValue(self._icase_fringe)
-        self.icase_fringe_start_button = QPushButton("Default")
+        self.icase_fringe_start_button = QPushButton('Default')
 
         self.icase_fringe_end_edit = QSpinBox(self)
         #self.icase_fringe_end_edit.setRange(0, icase_max)
         self.icase_fringe_end_edit.setSingleStep(1)
         self.icase_fringe_end_edit.setValue(self._icase_fringe)
-        self.icase_fringe_end_button = QPushButton("Default")
+        self.icase_fringe_end_button = QPushButton('Default')
 
         self.icase_fringe_delta_edit = QSpinBox(self)
         #self.icase_fringe_delta_edit.setRange(1, icase_max)
         self.icase_fringe_delta_edit.setSingleStep(1)
         self.icase_fringe_delta_edit.setValue(1)
-        self.icase_fringe_delta_button = QPushButton("Default")
+        self.icase_fringe_delta_button = QPushButton('Default')
 
-        self.displacement_label = QLabel("Displacement")
-        self.icase_start = QLabel("iCase Start:")
+        self.displacement_label = QLabel('Displacement')
+        self.icase_start = QLabel('iCase Start:')
         self.icase_disp_start_edit = QSpinBox(self)
         #self.icase_disp_start_edit.setRange(0, icase_max)
         self.icase_disp_start_edit.setSingleStep(1)
         self.icase_disp_start_edit.setValue(self._icase_fringe)
-        self.icase_disp_start_button = QPushButton("Default")
+        self.icase_disp_start_button = QPushButton('Default')
 
-        self.icase_end_label = QLabel("iCase End:")
+        self.icase_end_label = QLabel('iCase End:')
         self.icase_disp_end_edit = QSpinBox(self)
         #self.icase_disp_end_edit.setRange(0, icase_max)
         self.icase_disp_end_edit.setSingleStep(1)
         self.icase_disp_end_edit.setValue(self._icase_fringe)
-        self.icase_disp_end_button = QPushButton("Default")
+        self.icase_disp_end_button = QPushButton('Default')
 
-        self.icase_delta_label = QLabel("iCase Delta:")
+        self.icase_delta_label = QLabel('iCase Delta:')
         self.icase_disp_delta_edit = QSpinBox(self)
         #self.icase_disp_delta_edit.setRange(1, icase_max)
         self.icase_disp_delta_edit.setSingleStep(1)
         self.icase_disp_delta_edit.setValue(1)
-        self.icase_disp_delta_button = QPushButton("Default")
+        self.icase_disp_delta_button = QPushButton('Default')
 
         self.min_value_enable = QCheckBox()
-        self.min_value_label = QLabel("Min Value:")
+        self.min_value_label = QLabel('Min Fringe:')
         self.min_value_edit = QLineEdit('')
         #self.min_value_edit.setRange(1, 1000)
         #self.min_value_edit.setSingleStep(1)
         #self.min_value_edit.setValue(1)
-        self.min_value_button = QPushButton("Default")
+        self.min_value_button = QPushButton('Default')
 
         self.max_value_enable = QCheckBox()
-        self.max_value_label = QLabel("Max Value:")
+        self.max_value_label = QLabel('Max Value:')
         self.max_value_edit = QLineEdit('')
         #self.min_value_edit.setRange(1, 1000)  # TODO: update 1000
         #self.min_value_edit.setSingleStep(1)
         #self.min_value_edit.setValue(1)
-        self.max_value_button = QPushButton("Default")
+        self.max_value_button = QPushButton('Default')
 
         # TODO: enable this (uncomment) ------------------------------------------
         #self.min_value_enable.hide()
@@ -341,10 +344,10 @@ class AnimationWindow(PyDialog):
 
         # scale / phase
         if 1: # pragma: no cover
-            self.animate_scale_radio = QRadioButton("Animate Scale")
-            self.animate_phase_radio = QRadioButton("Animate Phase")
-            self.animate_time_radio = QRadioButton("Animate Time")
-            self.animate_freq_sweeep_radio = QRadioButton("Animate Frequency Sweep")
+            self.animate_scale_radio = QRadioButton('Animate Scale')
+            self.animate_phase_radio = QRadioButton('Animate Phase')
+            self.animate_time_radio = QRadioButton('Animate Time')
+            self.animate_freq_sweeep_radio = QRadioButton('Animate Frequency Sweep')
             self.animate_scale_radio.setToolTip(
                 'Animates the scale factor based on the "Animation Type"')
             self.animate_time_radio.setToolTip('Animates the time/load/mode step')
@@ -360,7 +363,7 @@ class AnimationWindow(PyDialog):
                                                     '(only for complex results)')
                 msg += 'Phase : Animates the phase angle (only for complex results)\n'
             else:
-                self.animate_phase_radio.setToolTip("Animates the phase angle")
+                self.animate_phase_radio.setToolTip('Animates the phase angle')
                 msg += 'Phase : Animates the phase angle\n'
             msg += (
                 'Time : Animates the time/load/mode step\n'
@@ -387,7 +390,7 @@ class AnimationWindow(PyDialog):
                 '(not supported)\n'
             )
 
-        self.animation_type = QLabel("Animation Type:")
+        self.animation_type = QLabel('Animation Type:')
         animation_type = OrderedDict()
         #scale_msg = 'Scale\n'
         #phase_msg = 'Phase\n'
@@ -403,7 +406,7 @@ class AnimationWindow(PyDialog):
             self.animation_types.append('Animate Phase')
         self.animation_types.append('Animate Time')
 
-        self.animation_profile_label = QLabel("Animation Profile:")
+        self.animation_profile_label = QLabel('Animation Profile:')
 
         self.animation_profile_edit = QComboBox()
         for animation_profile in ANIMATION_PROFILES:
@@ -417,7 +420,7 @@ class AnimationWindow(PyDialog):
         #self.animation_type_edit.setToolTip('The profile for a scaled GIF')
         self.animation_type_edit.setToolTip(msg.rstrip())
 
-        self.csv_profile_label = QLabel("CSV profile:")
+        self.csv_profile_label = QLabel('CSV profile:')
         self.csv_profile_edit = QLineEdit()
         self.csv_profile_browse_button = QPushButton('Browse')
         self.csv_profile_edit.setToolTip(
@@ -431,11 +434,11 @@ class AnimationWindow(PyDialog):
         #horizontal_vertical_group.addButton(self.animate_freq_sweeep_radio)
 
         # animate in gui
-        self.animate_in_gui_checkbox = QCheckBox("Animate In GUI?")
+        self.animate_in_gui_checkbox = QCheckBox('Animate In GUI?')
         self.animate_in_gui_checkbox.setChecked(True)
 
         # make images
-        self.make_images_checkbox = QCheckBox("Make images?")
+        self.make_images_checkbox = QCheckBox('Make images?')
         self.make_images_checkbox.setChecked(True)
 
         # make images
@@ -443,13 +446,13 @@ class AnimationWindow(PyDialog):
         self.overwrite_images_checkbox.setChecked(True)
 
         # delete images when finished
-        self.delete_images_checkbox = QCheckBox("Delete images when finished?")
+        self.delete_images_checkbox = QCheckBox('Delete images when finished?')
         self.delete_images_checkbox.setChecked(True)
 
         # endless loop
-        self.repeat_checkbox = QCheckBox("Repeat?")
+        self.repeat_checkbox = QCheckBox('Repeat?')
         self.repeat_checkbox.setChecked(True)
-        self.repeat_checkbox.setToolTip("Repeating creates an infinitely looping gif")
+        self.repeat_checkbox.setToolTip('Repeating creates an infinitely looping gif')
 
         # endless loop
         self.make_gif_checkbox = QCheckBox("Make Gif?")
@@ -461,10 +464,10 @@ class AnimationWindow(PyDialog):
             self.make_gif_checkbox.setToolTip('imageio is not available; install it')
 
         # bottom buttons
-        self.step_button = QPushButton("Step")
-        self.wipe_button = QPushButton("Wipe Deformed Shape")
-        self.stop_button = QPushButton("Stop")
-        self.run_button = QPushButton("Run")
+        self.step_button = QPushButton('Step')
+        self.wipe_button = QPushButton('Wipe Deformed Shape')
+        self.stop_button = QPushButton('Stop')
+        self.run_button = QPushButton('Run')
 
         self.step_button.setToolTip('Steps through the animation (for testing)')
         self.wipe_button.setToolTip('Removes the existing "deflecton" from the animation')

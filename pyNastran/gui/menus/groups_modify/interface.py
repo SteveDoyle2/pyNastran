@@ -17,7 +17,7 @@ def on_set_modify_groups(self):
     if not len(self.groups):  # no 'main' group
         self.log_error('No main group to create.')
         return
-    print('groups.keys() = %s' % self.groups.keys())
+    #print('groups.keys() = %s' % list(self.groups.keys()))
 
     group_active = self.group_active
     assert isinstance(group_active, str), group_active

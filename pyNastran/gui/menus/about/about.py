@@ -69,7 +69,7 @@ class AboutWindow(PyDialog):
     | AboutWindow |
     +-------------+
     """
-    def __init__(self, data, win_parent=None, show_tol=True):
+    def __init__(self, data, win_parent=None, show_tol: bool=True):
         """
         Saves the data members from data and
         performs type checks
@@ -84,7 +84,7 @@ class AboutWindow(PyDialog):
         self.set_connections()
         self.on_font(self._default_font_size)
 
-    def create_widgets(self, show_tol):
+    def create_widgets(self, show_tol: bool) -> None:
         """creates the display window"""
         #-----------------------------------------------------------------------
         # closing
@@ -226,7 +226,7 @@ def get_version() -> Dict[str, str]:
     localei, unused_encoding = locale.getdefaultlocale()
     #try:
         #os_version = str(sys.getwindowsversion())
-    #except:
+    #except Exception:
         #os_version = '???'
 
     pmsg = [

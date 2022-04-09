@@ -129,6 +129,7 @@ def main():  # pragma: no cover
     app = QApplication(sys.argv)
     #The Main window
     d = {
+        'font_size': 10,
         'min_clip' : 0.,
         'max_clip' : 10,
     }
