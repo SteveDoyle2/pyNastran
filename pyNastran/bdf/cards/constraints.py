@@ -18,7 +18,7 @@ The ConstraintObject contain multiple constraints.
 """
 from __future__ import annotations
 from itertools import count
-from typing import TYPE_CHECKING
+from typing import Tuple, List, TYPE_CHECKING
 
 from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.bdf.cards.base_card import BaseCard, _node_ids, expand_thru
@@ -86,7 +86,7 @@ class SUPORT1(Constraint):
         nodes : List[int]
             the nodes to release
         Cs : List[str]
-            compoents to support at each node
+            components to support at each node
         comment : str; default=''
             a comment for the card
 
@@ -183,7 +183,7 @@ class SUPORT1(Constraint):
         msg = ', which is required by SUPORT1'
         self.nodes_ref = model.EmptyNodes(self.nodes, msg=msg)
 
-    def safe_cross_reference(self, model, debug=True):
+    def safe_cross_reference(self, model: BDF, debug=True):
         nids2 = []
         msg = ', which is required by SUPORT1=%s' % self.conid
         for nid in self.nodes:
@@ -243,7 +243,7 @@ class SUPORT(Constraint):
         nodes : List[int]
             the nodes to release
         Cs : List[str]
-            compoents to support at each node
+            components to support at each node
         comment : str; default=''
             a comment for the card
 
@@ -332,7 +332,7 @@ class SUPORT(Constraint):
         msg = ', which is required by SUPORT'
         self.nodes_ref = model.EmptyNodes(self.nodes, msg=msg)
 
-    def safe_cross_reference(self, model, debug=True):
+    def safe_cross_reference(self, model: BDF, debug=True):
         nids2 = []
         msg = ', which is required by SUPORT'
         for nid in self.nodes:
@@ -405,7 +405,8 @@ class MPC(Constraint):
         coefficients = [1.]
         return MPC(conid, nodes, components, coefficients)
 
-    def __init__(self, conid, nodes, components, coefficients, comment=''):
+    def __init__(self, conid: int, nodes: List[int], components: List[str],
+                 coefficients: List[float], comment: str=''):
         """
         Creates an MPC card
 
@@ -465,7 +466,7 @@ class MPC(Constraint):
             assert isinstance(coefficient, float), self.coefficients
 
     @classmethod
-    def add_card(cls, card, comment=''):
+    def add_card(cls, card: BDFCard, comment=''):
         """
         Adds an MPC card from ``BDF.add_card(...)``
 
@@ -591,7 +592,7 @@ class MPC(Constraint):
         msg = ', which is required by MPC=%s' % self.conid
         self.nodes_ref = model.EmptyNodes(self.nodes, msg=msg)
 
-    def safe_cross_reference(self, model, debug=True):
+    def safe_cross_reference(self, model: BDF, debug=True):
         nids2 = []
         msg = ', which is required by SPC=%s' % self.conid
         for nid in self.nodes:
@@ -688,7 +689,10 @@ class SPC(Constraint):
         enforced = [0., 0.]
         return SPC(conid, nodes, components, enforced, comment='')
 
-    def __init__(self, conid, nodes, components, enforced, comment=''):
+    def __init__(self, conid: int,
+                 nodes: List[int],
+                 components: List[str],
+                 enforced: List[float], comment: str=''):
         """
         Creates an SPC card, which defines the degree of freedoms to be
         constrained
@@ -873,7 +877,7 @@ class SPC(Constraint):
         msg = ', which is required by SPC=%s' % (self.conid)
         self.nodes_ref = model.EmptyNodes(self.nodes, msg=msg)
 
-    def safe_cross_reference(self, model, debug=True):
+    def safe_cross_reference(self, model: BDF, debug=True):
         nids2 = []
         msg = ', which is required by SPC=%s' % self.conid
         for nid in self.node_ids:
@@ -1108,7 +1112,7 @@ class SPC1(Constraint):
         nodes = [1]
         return SPC1(conid, components, nodes, comment='')
 
-    def __init__(self, conid, components, nodes, comment=''):
+    def __init__(self, conid: int, components: str, nodes: List[int], comment: str=''):
         """
         Creates an SPC1 card, which defines the degree of freedoms to be
         constrained to a value of 0.0
@@ -1216,7 +1220,7 @@ class SPC1(Constraint):
         msg = ', which is required by SPC1; conid=%s' % self.conid
         self.nodes_ref = model.EmptyNodes(self.node_ids, msg=msg)
 
-    def safe_cross_reference(self, model, debug=True):
+    def safe_cross_reference(self, model: BDF, debug=True):
         nids2 = []
         missing_nids = []
         for nid in self.node_ids:
@@ -1366,7 +1370,7 @@ class SPCOFF(Constraint):
         msg = ', which is required by SPCOFF'
         self.nodes_ref = model.EmptyNodes(self.nodes, msg=msg)
 
-    def safe_cross_reference(self, model, debug=True):
+    def safe_cross_reference(self, model: BDF, debug=True):
         nids2 = []
         missing_nids = []
         for nid in self.node_ids:
@@ -1487,7 +1491,7 @@ class SPCOFF1(Constraint):
         msg = ', which is required by SPCOFF1'
         self.nodes_ref = model.EmptyNodes(self.node_ids, msg=msg)
 
-    def safe_cross_reference(self, model, debug=True):
+    def safe_cross_reference(self, model: BDF, debug=True):
         nids2 = []
         missing_nids = []
         for nid in self.node_ids:
@@ -1622,7 +1626,7 @@ class SPCADD(ConstraintAdd):
         for spc_id in self.sets:
             self.sets_ref.append(model.SPC(spc_id, consider_spcadd=False, msg=msg))
 
-    def safe_cross_reference(self, model, debug=True):
+    def safe_cross_reference(self, model: BDF, debug=True):
         self.sets_ref = []
         msg = ', which is required by SPCADD=%s' % self.conid
         for spc_id in self.sets:
@@ -1744,7 +1748,7 @@ class MPCADD(ConstraintAdd):
         for mpc_id in self.sets:
             self.sets_ref.append(model.MPC(mpc_id, consider_mpcadd=False, msg=msg))
 
-    def safe_cross_reference(self, model, debug=True):
+    def safe_cross_reference(self, model: BDF, debug=True):
         self.sets_ref = []
         msg = ', which is required by MPCADD=%s' % self.conid
         for mpc_id in self.sets:

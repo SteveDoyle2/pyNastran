@@ -18,7 +18,7 @@ def verify_bdf(model: BDF, xref: bool) -> None:
     for unused_key, card in sorted(model.nodes.items()):
         try:
             card._verify(xref)
-        except:
+        except Exception:
             print(str(card))
             raise
 
@@ -26,7 +26,7 @@ def verify_bdf(model: BDF, xref: bool) -> None:
     for unused_key, card in sorted(model.elements.items()):
         try:
             card._verify(xref)
-        except:
+        except Exception:
             exc_type, exc_value, exc_traceback = sys.exc_info()
             print(repr(traceback.format_exception(exc_type, exc_value,
                                                   exc_traceback)))
@@ -36,7 +36,7 @@ def verify_bdf(model: BDF, xref: bool) -> None:
     for eid, cbarao in sorted(model.ao_element_flags.items()):
         try:
             assert model.elements[eid].type == 'CBAR', 'CBARAO error: eid=%s is not a CBAR' % eid
-        except:
+        except Exception:
             print(str(cbarao))
             raise
 
@@ -66,7 +66,7 @@ def _verify_dict(dict_obj: Dict[Any, Any], xref: bool) -> None:
     for unused_key, card in sorted(dict_obj.items()):
         try:
             card._verify(xref)
-        except:
+        except Exception:
             print(str(card))
             raise
 
@@ -85,7 +85,7 @@ def _verify_dict_list(dict_list: Dict[Any, List[Any]], xref: bool) -> None:
         for card in cards:
             try:
                 card._verify(xref)
-            except:
+            except Exception:
                 print(str(card))
                 raise
 

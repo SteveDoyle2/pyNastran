@@ -203,7 +203,7 @@ class PROD(Property):
         msg = ', which is required by PROD mid=%s' % self.mid
         self.mid_ref = model.Material(self.mid, msg=msg)
 
-    def safe_cross_reference(self, model, xref_errors):
+    def safe_cross_reference(self, model: BDF, xref_errors):
         """
         Cross links the card so referenced cards can be extracted directly
 
@@ -339,9 +339,9 @@ class PTUBE(Property):
         pid = integer(card, 1, 'pid')
         mid = integer(card, 2, 'mid')
         OD1 = double(card, 3, 'OD1')
-        t = double_or_blank(card, 4, 't', OD1/2.)
-        nsm = double_or_blank(card, 5, 'nsm', 0.0)
-        OD2 = double_or_blank(card, 6, 'OD2', OD1)
+        t = double_or_blank(card, 4, 't', default=OD1/2)
+        nsm = double_or_blank(card, 5, 'nsm', default=0.0)
+        OD2 = double_or_blank(card, 6, 'OD2', default=OD1)
         assert len(card) <= 7, 'len(PTUBE card) = %i\ncard=%s' % (len(card), card)
         return PTUBE(pid, mid, OD1, t, nsm, OD2, comment=comment)
 
@@ -394,7 +394,7 @@ class PTUBE(Property):
         msg = ', which is required by PTUBE mid=%s' % self.mid
         self.mid_ref = model.Material(self.mid, msg=msg)
 
-    def safe_cross_reference(self, model, xref_errors):
+    def safe_cross_reference(self, model: BDF, xref_errors):
         """
         Cross links the card so referenced cards can be extracted directly
 

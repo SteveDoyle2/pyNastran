@@ -300,7 +300,7 @@ class GetCard(GetMethods):
             #print('card_type=%r' % card_type)
             try:
                 key = rslot_map[card_type]  # update attributes.py ~line 740
-            except:
+            except Exception:
                 print(rslot_map.keys())
                 self.log.error("card_type=%r' hasn't been added to "
                                "self._slot_to_type_map...check for typos")
@@ -421,7 +421,7 @@ class GetCard(GetMethods):
             elif card.type in ['GMSPC', 'SPCAX']:
                 warnings += str(card)
             else:
-                msg = 'get_SPCx_node_ids_c1 doesnt supprt %r' % card.type
+                msg = 'get_SPCx_node_ids_c1 does not support %r' % card.type
                 if stop_on_failure:
                     raise RuntimeError(msg)
                 self.log.warning(msg)
@@ -1039,7 +1039,7 @@ class GetCard(GetMethods):
                                   for nid in nidsi]
                         try:
                             nids[i, :] = nidsi2
-                        except:
+                        except Exception:
                             print(elem)
                             print(nidsi)
                             print(nidsi2)
@@ -1074,7 +1074,7 @@ class GetCard(GetMethods):
                                   for nid in nidsi]
                         try:
                             nids[i, :] = nidsi2
-                        except:
+                        except Exception:
                             raise
                 if len(ieids_max):
                     etype_max = elem.type + str(nnodes_max)
@@ -1371,7 +1371,7 @@ class GetCard(GetMethods):
 
         """
         nid_to_eids_map = {}
-        for nid in self.nodes:  # initalize the mapper
+        for nid in self.nodes:  # initialize the mapper
             nid_to_eids_map[nid] = []
 
         if self.spoints:  # SPOINTs
@@ -1411,7 +1411,7 @@ class GetCard(GetMethods):
 
         """
         nid_to_elements_map = {}
-        for nid in self.nodes:  # initalize the mapper
+        for nid in self.nodes:  # initialize the mapper
             nid_to_elements_map[nid] = []
 
         for nid in self.spoints:

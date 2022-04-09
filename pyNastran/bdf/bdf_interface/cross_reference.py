@@ -264,7 +264,7 @@ class XrefMesh(BDFAttributes):
         for aeparam in self.aeparams.values():
             aeparam.cross_reference(self)
 
-        #for aestat in self.aestats.values(s):
+        #for aestat in self.aestats.values():
             #aestat.cross_reference(self)
 
         for aesurf in self.aesurf.values():
@@ -320,14 +320,14 @@ class XrefMesh(BDFAttributes):
         for node in self.nodes.values():
             try:
                 node.cross_reference(self, grdset)
-            except:
+            except Exception:
                 self.log.error("Couldn't cross reference GRID.\n%s" % (str(node)))
                 raise
 
         for point in self.points.values():
             try:
                 point.cross_reference(self)
-            except:
+            except Exception:
                 self.log.error("Couldn't cross reference POINT.\n%s" % (str(point)))
                 raise
 

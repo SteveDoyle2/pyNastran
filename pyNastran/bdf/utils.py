@@ -25,7 +25,7 @@ if TYPE_CHECKING:  # pragma: no cover
 
 
 
-def Position(xyz: NDArray3float, cid: int, model: BDF):
+def Position(xyz: NDArray3float, cid: int, model: BDF) -> np.ndarray:
     """
     Gets the point in the global XYZ coordinate system.
 
@@ -53,7 +53,7 @@ def TransformLoadWRT(F, M, cid, cid_new, model):
     deprecated('TransformLoadWRT', 'transform_load', '1.3', levels=[0, 1, 2])
     return transform_load(F, M, cid, cid_new, model)
 
-def transform_load(F, M, cid: int, cid_new: int, model: BDF):
+def transform_load(F, M, cid: int, cid_new: int, model: BDF) -> Tuple[np.ndarray, np.ndarray]:
     """
     Transforms a force/moment from an arbitrary coordinate system to another
     coordinate system.
@@ -197,7 +197,7 @@ def get_xyz_cid0_dict(model: BDF,
 
 def split_eids_along_nids(model: BDF, eids: List[int], nids: List[int]) -> None:
     """
-    Dissassociate a list of elements along a list of nodes.
+    Disassociate a list of elements along a list of nodes.
 
     The expected use of this function is that you have two bodies that
     are incorrectly equivalenced and you would like to create duplicate

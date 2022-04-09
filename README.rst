@@ -375,7 +375,6 @@ GUI:
 
 Known issues:
  - Transient Pandas Dataframes will fail for newer versions of numpy/pandas.
-   If anyone knows how to use a MultiIndex, this is probably pretty easy to fix.
 
 Older Releases
 --------------

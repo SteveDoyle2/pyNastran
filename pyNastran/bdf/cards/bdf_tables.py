@@ -21,7 +21,7 @@ All table cards are defined in this file.  This includes:
  * TABRNDG
 
 """
-from typing import Any
+from typing import List, Any
 import numpy as np
 
 from pyNastran.bdf.field_writer_8 import set_blank_if_default, print_card_8
@@ -205,7 +205,9 @@ class TABLED1(Table):
         y = [0., 1.]
         return TABLED1(tid, x, y, xaxis='LINEAR', yaxis='LINEAR', extrap=0, comment='')
 
-    def __init__(self, tid, x, y, xaxis='LINEAR', yaxis='LINEAR', extrap=0, comment=''):
+    def __init__(self, tid: int, x: np.ndarray, y: np.ndarray,
+                 xaxis: str='LINEAR', yaxis: str='LINEAR',
+                 extrap: int=0, comment: str=''):
         """
         Creates a TABLED1, which is a dynamic load card that is applied
         by the DAREA card
@@ -355,7 +357,9 @@ class TABLED2(Table):
         y = [0., 1.]
         return TABLED2(tid, x1, x, y, extrap=0, comment='')
 
-    def __init__(self, tid, x1, x, y, extrap=0, comment=''):
+    def __init__(self, tid: int, x1: float,
+                 x: np.ndarray, y: np.ndarray,
+                 extrap: int=0, comment: str=''):
         """
         Parameters
         ----------
@@ -480,7 +484,9 @@ class TABLED3(Table):
         y = [0., 1.]
         return TABLED3(tid, x1, x2, x, y, extrap=0, comment='')
 
-    def __init__(self, tid, x1, x2, x, y, extrap=0, comment=''):
+    def __init__(self, tid: int, x1: float, x2: float,
+                 x: np.ndarray, y: np.ndarray,
+                 extrap: int=0, comment: str=''):
         """
         Parameters
         ----------
@@ -584,7 +590,9 @@ class TABLED4(Table):
         a = [1., 2.]
         return TABLED4(tid, x1, x2, x3, x4, a, comment='')
 
-    def __init__(self, tid, x1, x2, x3, x4, a, comment=''):
+    def __init__(self, tid: int,
+                 x1: float, x2: float, x3: float, x4: float,
+                 a: List[float], comment: str=''):
         Table.__init__(self)
         if comment:
             self.comment = comment

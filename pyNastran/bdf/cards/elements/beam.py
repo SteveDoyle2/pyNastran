@@ -6,12 +6,13 @@ defines:
 
 """
 from __future__ import annotations
-from typing import TYPE_CHECKING
+from typing import Tuple, Union, Any, TYPE_CHECKING
 
 import numpy as np
 from numpy.linalg import norm  # type: ignore
 
 from pyNastran.utils.numpy_utils import integer_types
+from pyNastran.bdf.cards.base_card import BaseCard
 from pyNastran.bdf.cards.elements.bars import (
     LineElement, init_x_g0, BaseCard, rotate_v_wa_wb, check_offt)
 from pyNastran.bdf.bdf_interface.assign_type import (
@@ -23,7 +24,7 @@ from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
 from pyNastran.utils.mathematics import integrate_positive_unit_line
 if TYPE_CHECKING:  # pragma: no cover
-    from pyNastran.bdf.bdf import BDF
+    from pyNastran.bdf.bdf import BDF, GRID
 
 
 class CBEAM(LineElement):
@@ -50,8 +51,8 @@ class CBEAM(LineElement):
     |       | SA  | SB  |     |     |     |     |     |          |
     +-------+-----+-----+-----+-----+-----+-----+-----+----------+
 
-    offt/bit are MSC specific fields
-
+    bit is an MSC specific field
+    NX 2020 added offt
     """
     type = 'CBEAM'
     _field_map = {
@@ -535,7 +536,7 @@ class CBEAM(LineElement):
         #x = self.get_orientation_vector()
         return (ga + gb) / 2.
 
-    def get_axes(self, model):
+    def get_axes(self, model: BDF) -> Tuple[Any, Any, Any, Any, Any]:
         """
         Gets the axes of a CBAR/CBEAM, while respecting the OFFT flag.
 
@@ -576,7 +577,7 @@ class CBEAM(LineElement):
             model, pid_ref, node1, node2, xyz1, xyz2, model.log)
         return is_failed, (wa, wb, ihat, yhat, zhat)
 
-    def get_axes_by_nodes(self, model, pid_ref, node1, node2, xyz1, xyz2, log):
+    def get_axes_by_nodes(self, model: BDF, pid_ref, node1, node2, xyz1, xyz2, log):
         """
         Gets the axes of a CBAR/CBEAM, while respecting the OFFT flag.
 
@@ -605,16 +606,16 @@ class CBEAM(LineElement):
         # wa/wb are not considered in i_offset
         # they are considered in ihat
         i = xyz2 - xyz1
-        Li = norm(i)
-        if Li == 0.:
+        ihat_norm = norm(i)
+        if ihat_norm== 0.:
             msg = 'xyz1=%s xyz2=%s\n%s' % (xyz1, xyz2, self)
             raise ValueError(msg)
-        i_offset = i / Li
+        i_offset = i / ihat_norm
 
         unused_v, wa, wb, xform = rotate_v_wa_wb(
             model, elem,
             xyz1, xyz2, node1, node2,
-            i_offset, i, eid, Li, log)
+            i_offset, i, eid, ihat_norm, log)
         if wb is None:
             # one or more of v, wa, wb are bad
 
@@ -771,19 +772,19 @@ class CBEAM(LineElement):
             assert isinstance(mass, float), 'eid=%s mass=%r' % (eid, mass)
             assert L > 0.0, 'eid=%s L=%s' % (eid, L)
 
-    def Ga(self):
+    def Ga(self) -> int:
         """gets Ga/G1"""
         if self.ga_ref is None:
             return self.ga
         return self.ga_ref.nid
 
-    def Gb(self):
+    def Gb(self) -> int:
         """gets Gb/G2"""
         if self.gb_ref is None:
             return self.gb
         return self.gb_ref.nid
 
-    def G0(self):
+    def G0(self) -> int:
         """gets G0"""
         if self.g0_ref is None:
             return self.g0
@@ -848,7 +849,7 @@ class CBEAM(LineElement):
         card = self.repr_fields()
         return self.comment + print_card_16(card)
 
-def _init_offt_bit(card, unused_eid, offt_default):
+def _init_offt_bit(card, unused_eid: int, offt_default):
     """
     offt doesn't exist in NX nastran
     """

@@ -1,5 +1,6 @@
 """Subcase creation/extraction class"""
-from typing import List, Dict, Tuple, Any
+from __future__ import annotations
+from typing import Tuple, List, Dict, Union, Any, TYPE_CHECKING
 from numpy import ndarray
 
 from pyNastran.utils.numpy_utils import integer_types
@@ -8,6 +9,9 @@ from pyNastran.utils import object_attributes, deprecated
 from pyNastran.bdf.bdf_interface.case_control_cards import CLASS_MAP
 from pyNastran.bdf.bdf_interface.subcase_utils import (
     write_stress_type, write_set, expand_thru_case_control)
+
+if TYPE_CHECKING:
+    from cpylog import SimpleLogger
 
 
 INT_CARDS = (
@@ -72,7 +76,7 @@ class Subcase:
         self.log = None
         #print("\n***adding subcase %s***" % self.id)
 
-    def load_hdf5_file(self, hdf5_file, encoding):
+    def load_hdf5_file(self, hdf5_file, encoding: str):
         from pyNastran.utils.dict_to_h5py import _cast
 
         keys = list(hdf5_file.keys())
@@ -100,7 +104,7 @@ class Subcase:
             else:  # pragma: no cover
                 raise RuntimeError(f'failed exporting Subcase/{key}')
 
-    def export_to_hdf5(self, hdf5_file, encoding):
+    def export_to_hdf5(self, hdf5_file, encoding: str) -> None:
         keys_to_skip = ['log', 'solCodeMap', 'allowed_param_types']
         h5attrs = object_attributes(self, mode='both', keys_to_skip=keys_to_skip)
         #print('Subcase %i' % self.id)
@@ -240,7 +244,7 @@ class Subcase:
         """
         return deprecated(old_name, new_name, deprecated_version, levels=[0, 1, 2])
 
-    def add_op2_data(self, data_code, msg, log):
+    def add_op2_data(self, data_code: Dict[str, Any], msg: str, log: SimpleLogger) -> None:
         """
         >>> self.subcase.add_op2_data(self.data_code, 'VECTOR')
         """
@@ -278,7 +282,7 @@ class Subcase:
 
         #OUGF1, # OUG1F
         if table_name in ['OUGV1', 'BOUGV1', 'OUGV2', 'OUG1', 'OUGV1PAT', 'OUGMC1', 'OUGMC2',
-                          'OUGF1', 'OUGF2', 'BOUGF1', ]:
+                          'OUGF1', 'OUGF2', 'BOUGF1', 'OUG1F']:
             # OUG1F - acoustic displacements
             if table_code == 1:
                 thermal = data_code['thermal']
@@ -589,7 +593,7 @@ class Subcase:
                   for param_name in param_names]
         return exists
 
-    def __getitem__(self, param_name):
+    def __getitem__(self, param_name: str) -> Tuple[Union[int, str], List[Any]]:
         """
         Gets the [value, options] for a subcase.
 
@@ -618,7 +622,7 @@ class Subcase:
         """
         return self.get_parameter(param_name)
 
-    def suppress_output(self, suppress_to='PLOT'):
+    def suppress_output(self, suppress_to: str='PLOT') -> None:
         """
         Replaces F06 printing with OP2 printing
 
@@ -644,7 +648,7 @@ class Subcase:
             else:
                 raise NotImplementedError(key)
 
-    def get_parameter(self, param_name, msg='', obj=False):
+    def get_parameter(self, param_name: str, msg: str='', obj: bool=False) -> Tuple[Union[int, str], List[Any]]:
         """
         Gets the [value, options] for a subcase.
 
@@ -1101,7 +1105,7 @@ class Subcase:
                     sline = key.split(' ')
                     try:
                         key = int(sline[1])
-                    except:
+                    except Exception:
                         msg = f'error caclulating key; sline={sline}'
                         raise RuntimeError(msg)
 
@@ -1148,7 +1152,8 @@ class Subcase:
             assert nparams > 0, f'No subcase parameters are defined for isubcase={self.id:d}...'
         return msg
 
-def _load_hdf5_param(group, key, encoding):
+def _load_hdf5_param(group, key: str, encoding: str) -> Tuple[str, List[str], str]:
+    """('ALL', ['SORT2'], 'STRESS-type')"""
     import h5py
     from pyNastran.utils.dict_to_h5py import _cast
     #print('-----------------------------------------')

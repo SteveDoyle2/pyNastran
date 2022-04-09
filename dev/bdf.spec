@@ -40,7 +40,7 @@ try:
     ghash = subprocess.check_output(['git', 'describe', '--always'], cwd=os.path.dirname(init_filename))
     ghash = ghash.decode('utf-8').rstrip()
 except:
-    # git isnt installed
+    # git isn't installed
     ghash = 'no.checksum.error'
 
 # hacking on the __init___.py file to set:
@@ -341,6 +341,53 @@ h5py_imports = [
     'h5py.weakref',
 ]
 
+xlsxwriter_imports = [
+    'xlsxwriter', 'xlsxwriter.StringIO', 'xlsxwriter.app', 'xlsxwriter.chart',
+    'xlsxwriter.chart_area', 'xlsxwriter.chart_bar', 'xlsxwriter.chart_column',
+    'xlsxwriter.chart_doughnut', 'xlsxwriter.chart_line', 'xlsxwriter.chart_pie',
+    'xlsxwriter.chart_radar', 'xlsxwriter.chart_scatter', 'xlsxwriter.chart_stock',
+    'xlsxwriter.chartsheet', 'xlsxwriter.codecs', 'xlsxwriter.collections',
+    'xlsxwriter.comments', 'xlsxwriter.compatibility', 'xlsxwriter.contenttypes',
+    'xlsxwriter.copy', 'xlsxwriter.core', 'xlsxwriter.custom', 'xlsxwriter.datetime',
+    'xlsxwriter.decimal', 'xlsxwriter.drawing', 'xlsxwriter.format',
+    'xlsxwriter.fractions', 'xlsxwriter.io', 'xlsxwriter.operator', 'xlsxwriter.os',
+    'xlsxwriter.packager', 'xlsxwriter.re', 'xlsxwriter.relationships',
+    'xlsxwriter.shape', 'xlsxwriter.sharedstrings', 'xlsxwriter.shutil',
+    'xlsxwriter.stat', 'xlsxwriter.struct', 'xlsxwriter.styles', 'xlsxwriter.sys',
+    'xlsxwriter.table', 'xlsxwriter.tempfile', 'xlsxwriter.theme',
+    'xlsxwriter.utility', 'xlsxwriter.vml', 'xlsxwriter.warnings',
+    'xlsxwriter.workbook', 'xlsxwriter.worksheet', 'xlsxwriter.xmlwriter',
+    'xlsxwriter.zipfile',
+]
+
+pytest_imports = [
+    'pytest',
+    '_pytest', '_pytest.__future__', '_pytest._code', '_pytest._code.__future__',
+    '_pytest._code._ast', '_pytest._code._py2traceback', '_pytest._code.bisect',
+    '_pytest._code.code', '_pytest._code.inspect', '_pytest._code.py', '_pytest._code.re',
+    '_pytest._code.source', '_pytest._code.sys', '_pytest._code.tokenize',
+    '_pytest._code.types', '_pytest._code.weakref', '_pytest._pluggy', '_pytest._pytest',
+    '_pytest.argparse', '_pytest.assertion', '_pytest.assertion._ast',
+    '_pytest.assertion._pytest', '_pytest.assertion.ast', '_pytest.assertion.collections',
+    '_pytest.assertion.errno', '_pytest.assertion.fnmatch', '_pytest.assertion.imp',
+    '_pytest.assertion.itertools', '_pytest.assertion.marshal', '_pytest.assertion.os',
+    '_pytest.assertion.pprint', '_pytest.assertion.py', '_pytest.assertion.re',
+    '_pytest.assertion.rewrite', '_pytest.assertion.struct', '_pytest.assertion.sys',
+    '_pytest.assertion.types', '_pytest.assertion.util', '_pytest.bdb',
+    '_pytest.cacheprovider', '_pytest.capture', '_pytest.codecs', '_pytest.collections',
+    '_pytest.compat', '_pytest.config', '_pytest.contextlib', '_pytest.debugging',
+    '_pytest.doctest', '_pytest.enum', '_pytest.fixtures', '_pytest.fnmatch',
+    '_pytest.freeze_support', '_pytest.functools', '_pytest.helpconfig', '_pytest.hookspec',
+    '_pytest.inspect', '_pytest.itertools', '_pytest.json', '_pytest.junitxml',
+    '_pytest.main', '_pytest.mark', '_pytest.math', '_pytest.monkeypatch', '_pytest.nose',
+    '_pytest.os', '_pytest.pastebin', '_pytest.platform', '_pytest.py', '_pytest.pytest',
+    '_pytest.python', '_pytest.re', '_pytest.recwarn', '_pytest.resultlog', '_pytest.runner',
+    '_pytest.setuponly', '_pytest.setupplan', '_pytest.shlex', '_pytest.skipping',
+    '_pytest.sys', '_pytest.tempfile', '_pytest.terminal', '_pytest.time', '_pytest.tmpdir',
+    '_pytest.traceback', '_pytest.types', '_pytest.unittest', '_pytest.vendored_packages',
+    '_pytest.vendored_packages.inspect', '_pytest.vendored_packages.pluggy',
+    '_pytest.vendored_packages.sys', '_pytest.warnings',
+]
 excludes = [
     #'unittest',   # why cant I remove this?
     'matplotlib', 'wx', 'nose', 'Tkinter',
@@ -389,34 +436,8 @@ excludes = [
 
     'numpydoc', 'odo', 'openmdao', 'openpyxl', 'openssl',
 
-    '_pytest', '_pytest.__future__', '_pytest._code', '_pytest._code.__future__',
-    '_pytest._code._ast', '_pytest._code._py2traceback', '_pytest._code.bisect',
-    '_pytest._code.code', '_pytest._code.inspect', '_pytest._code.py', '_pytest._code.re',
-    '_pytest._code.source', '_pytest._code.sys', '_pytest._code.tokenize',
-    '_pytest._code.types', '_pytest._code.weakref', '_pytest._pluggy', '_pytest._pytest',
-    '_pytest.argparse', '_pytest.assertion', '_pytest.assertion._ast',
-    '_pytest.assertion._pytest', '_pytest.assertion.ast', '_pytest.assertion.collections',
-    '_pytest.assertion.errno', '_pytest.assertion.fnmatch', '_pytest.assertion.imp',
-    '_pytest.assertion.itertools', '_pytest.assertion.marshal', '_pytest.assertion.os',
-    '_pytest.assertion.pprint', '_pytest.assertion.py', '_pytest.assertion.re',
-    '_pytest.assertion.rewrite', '_pytest.assertion.struct', '_pytest.assertion.sys',
-    '_pytest.assertion.types', '_pytest.assertion.util', '_pytest.bdb',
-    '_pytest.cacheprovider', '_pytest.capture', '_pytest.codecs', '_pytest.collections',
-    '_pytest.compat', '_pytest.config', '_pytest.contextlib', '_pytest.debugging',
-    '_pytest.doctest', '_pytest.enum', '_pytest.fixtures', '_pytest.fnmatch',
-    '_pytest.freeze_support', '_pytest.functools', '_pytest.helpconfig', '_pytest.hookspec',
-    '_pytest.inspect', '_pytest.itertools', '_pytest.json', '_pytest.junitxml',
-    '_pytest.main', '_pytest.mark', '_pytest.math', '_pytest.monkeypatch', '_pytest.nose',
-    '_pytest.os', '_pytest.pastebin', '_pytest.platform', '_pytest.py', '_pytest.pytest',
-    '_pytest.python', '_pytest.re', '_pytest.recwarn', '_pytest.resultlog', '_pytest.runner',
-    '_pytest.setuponly', '_pytest.setupplan', '_pytest.shlex', '_pytest.skipping',
-    '_pytest.sys', '_pytest.tempfile', '_pytest.terminal', '_pytest.time', '_pytest.tmpdir',
-    '_pytest.traceback', '_pytest.types', '_pytest.unittest', '_pytest.vendored_packages',
-    '_pytest.vendored_packages.inspect', '_pytest.vendored_packages.pluggy',
-    '_pytest.vendored_packages.sys', '_pytest.warnings',
-
     'path.py', 'pep8', 'pi', 'pip',
-    'psutil', 'py', 'pylint', 'pyside','pyside2', 'pytest',
+    'psutil', 'py', 'pylint', 'pyside','pyside2',
     'pytools', 'pytz', 'pyyaml', 'pyzmq',
     'qtconsole', 'requests', 'ruamel_yaml', 'RunSnakeRun',
     'scikit-learn', 'setuptools',
@@ -424,23 +445,6 @@ excludes = [
     'spyder-app', 'sqlalchemy', 'sqlitedict', 'SquareMap', 'tornado',
     'traitlets', 'werkzeug', 'wheel',
     'wrapt', 'wxpython',
-
-    'xlsxwriter', 'xlsxwriter.StringIO', 'xlsxwriter.app', 'xlsxwriter.chart',
-    'xlsxwriter.chart_area', 'xlsxwriter.chart_bar', 'xlsxwriter.chart_column',
-    'xlsxwriter.chart_doughnut', 'xlsxwriter.chart_line', 'xlsxwriter.chart_pie',
-    'xlsxwriter.chart_radar', 'xlsxwriter.chart_scatter', 'xlsxwriter.chart_stock',
-    'xlsxwriter.chartsheet', 'xlsxwriter.codecs', 'xlsxwriter.collections',
-    'xlsxwriter.comments', 'xlsxwriter.compatibility', 'xlsxwriter.contenttypes',
-    'xlsxwriter.copy', 'xlsxwriter.core', 'xlsxwriter.custom', 'xlsxwriter.datetime',
-    'xlsxwriter.decimal', 'xlsxwriter.drawing', 'xlsxwriter.format',
-    'xlsxwriter.fractions', 'xlsxwriter.io', 'xlsxwriter.operator', 'xlsxwriter.os',
-    'xlsxwriter.packager', 'xlsxwriter.re', 'xlsxwriter.relationships',
-    'xlsxwriter.shape', 'xlsxwriter.sharedstrings', 'xlsxwriter.shutil',
-    'xlsxwriter.stat', 'xlsxwriter.struct', 'xlsxwriter.styles', 'xlsxwriter.sys',
-    'xlsxwriter.table', 'xlsxwriter.tempfile', 'xlsxwriter.theme',
-    'xlsxwriter.utility', 'xlsxwriter.vml', 'xlsxwriter.warnings',
-    'xlsxwriter.workbook', 'xlsxwriter.worksheet', 'xlsxwriter.xmlwriter',
-    'xlsxwriter.zipfile',
 
     'xlwings',
 
@@ -452,29 +456,30 @@ excludes = [
     'libpng',
     #'sip', 'colorama', 'numpy', 'pillow', 'qt',
     #'vtk', 'six', 'mkl', 'mkl-service',
-] + pandas_imports
+] + pandas_imports + xlsxwriter_imports + pytest_imports
 
 qt_imports = [
     'PyQt5.QtOpenGL', 'PyQt5.Qsci',
     'PyQt5.QtPrintSupport',  # needed for Qsci
 ]
-scipy_imports = ['scipy._lib.messagestream', 'scipy', 'scipy.signal', 'scipy.signal.bsplines',
-                 'scipy.special', 'scipy.special._ufuncs_cxx',
-                 'scipy.linalg.cython_blas',
-                 'scipy.linalg.cython_lapack',
-                 'scipy.integrate',
-                 'scipy.integrate.quadrature',
-                 'scipy.integrate.odepack',
-                 'scipy.integrate._odepack',
-                 'scipy.integrate.quadpack',
-                 'scipy.integrate._quadpack',
-                 'scipy.integrate._ode',
-                 'scipy.integrate.vode',
-                 'scipy.integrate._dop', 'scipy._lib', 'scipy._build_utils','scipy.__config__',
-                 'scipy.integrate.lsoda', 'scipy.cluster', 'scipy.constants','scipy.fftpack',
-                 'scipy.interpolate','scipy.io','scipy.linalg','scipy.misc','scipy.ndimage',
-                 'scipy.odr','scipy.optimize','scipy.setup','scipy.sparse','scipy.spatial',
-                 'scipy.special','scipy.stats','scipy.version']
+scipy_imports = [
+    'scipy._lib.messagestream', 'scipy', 'scipy.signal', 'scipy.signal.bsplines',
+    'scipy.special', 'scipy.special._ufuncs_cxx',
+    'scipy.linalg.cython_blas',
+    'scipy.linalg.cython_lapack',
+    'scipy.integrate',
+    'scipy.integrate.quadrature',
+    'scipy.integrate.odepack',
+    'scipy.integrate._odepack',
+    'scipy.integrate.quadpack',
+    'scipy.integrate._quadpack',
+    'scipy.integrate._ode',
+    'scipy.integrate.vode',
+    'scipy.integrate._dop', 'scipy._lib', 'scipy._build_utils','scipy.__config__',
+    'scipy.integrate.lsoda', 'scipy.cluster', 'scipy.constants','scipy.fftpack',
+    'scipy.interpolate','scipy.io','scipy.linalg','scipy.misc','scipy.ndimage',
+    'scipy.odr','scipy.optimize','scipy.setup','scipy.sparse','scipy.spatial',
+    'scipy.special','scipy.stats','scipy.version']
 hiddenimports = [
     'vtk.vtkCommonPythonSIP', 'vtk.vtkFilteringPythonSIP',
     'vtk.vtkRenderingPythonSIP',

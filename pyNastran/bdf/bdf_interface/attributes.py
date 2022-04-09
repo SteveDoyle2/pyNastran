@@ -10,7 +10,75 @@ from pyNastran.bdf.cards.coordinate_systems import CORD2R
 #from pyNastran.bdf.cards.constraints import ConstraintObject
 from pyNastran.bdf.cards.aero.zona import ZONA
 if TYPE_CHECKING:  # pragma: no cover
+    from pyNastran.bdf import (
+        # BDF,
+        CaseControlDeck,
+        #params,
+        PARAM, MDLPRM,
+        # grids/points
+        POINT, SPOINT, EPOINT,
+        GRDSET, SEQGP, GRIDB,
+        # bar
+        BAROR, BEAMOR,
+        # plot
+        PLOTEL,
+        # dynamic
+        TSTEP, TSTEP1, TSTEPNL,
+        NLPCI, NLPARM,
+        TABLES1,
+        TABLED1, TABLED2, TABLED3, TABLED4,
+        TABLEM1, TABLEM2, TABLEM3, TABLEM4,
+        TABDMP1,
+        TF, DELAY, #DPHASE,
+        # axisymmetric
+        RINGAX, CYAX, AXIF, RINGFL, CYJOIN, AXIC,
+        # shells
+        SNORM,
+        #CQUAD4, CQUAD8, CQUADR, CQUAD,
+        #CTRIA3, CTRIA6, CTRIAR,
+        # solids
+        #CTETRA4, CPYRAM5, CPENTA6, CHEXA8,
+        #CTETRA10, CPYRAM13, CPENTA15, CHEXA20,
+        # loads
+        TEMPD,
+        # thermal
+        #CHBYDP, CHBDYE, CHBDYP,
+        PHBDY,
+        CONV, PCONV, PCONVM, #CONVM,
+        RADCAV, RADMTX, VIEW, VIEW3D,
+        RADBC, #TEMPBC,
+        # aero
+        MONPNT1, MONPNT2, MONPNT3,
+        AECOMP, AEFACT, AELINK, AELIST, AEPARAM, AESURF, AESURFS, AESTAT,
+        AERO, AEROS,
+        CAERO1, CAERO2, CAERO3, CAERO4, CAERO5,
+        PAERO1, PAERO2, PAERO3, PAERO4, PAERO5,
+        SPLINE1, SPLINE2, SPLINE3, SPLINE4, SPLINE5,
+        FLUTTER, MKAERO1, MKAERO2, FLFACT,
+        TRIM, TRIM2, GUST, GUST2, DIVERG, CSSCHD,
+        # roter
+        ROTORD, ROTORG,
+        # modal
+        EIGRL, EIGR, EIGP, EIGC, EIGB, MODTRAK,
+        # optimization
+        DESVAR, DLINK, TOPVAR, DVGRID,
+        DEQATN, DDVAL, DSCREEN,
+        DTABLE, DRESP1, DRESP2, DRESP3,
+        DVPREL1, DVCREL1, DVMREL1, DVTREL1,
+        DVPREL2, DVCREL2, DVMREL2, DVTREL2,
+        DCONADD, DCONSTR, DOPTPRM,
+        DMNCON, GROUP,
+        # contact
+        BCPARA, BCBODY, BCTPARAM, BGSET, BCTADD, BSURF, BSURFS, BCONP, BLSEG, BFRIC,
+        BCTSET, BCTPARA, BGADD, BCTPARA, BCRPARA,
+        # superelements
+        SEBULK, SENQSET, SENQSET1, SEBNDRY, RELEASE, SELOC, SEMPLN, SETREE,
+        SELABEL, SECONCT, SEEXCLD, SEELT, SELOAD, CSUPER, CSUPEXT,
+    )
+    #Coord = Union[CORD1R, CORD1C, CORD1S,
+    #              CORD2R, CORD2C, CORD2S]
     from pyNastran.bdf.cards.dmig import DMIG, DMI, DMIJ, DMIK, DMIJI
+    from pyNastran.bdf.subcase import Subcase
 
 
 class BDFAttributes:
@@ -291,30 +359,30 @@ class BDFAttributes:
         self.sol_method = None
         #: the line with SOL on it, marks ???
         self.sol_iline = None  # type : Optional[int]
-        self.case_control_deck = None  # type: Optional[Any]
+        self.case_control_deck = None  # type: Optional[CaseControlDeck]
 
         #: store the PARAM cards
-        self.params = {}  # type: Dict[str, Any]
+        self.params = {}    # type: Dict[str, PARAM]
         # ------------------------------- nodes -------------------------------
         # main structural block
         #: stores POINT cards
-        self.points = {}  # type: Dict[int, Any]
+        self.points = {}  # type: Dict[int, POINT]
         #self.grids = {}
 
-        self.spoints = {}  # type: Dict[int, Any]
-        self.epoints = {}  # type: Dict[int, Any]
+        self.spoints = {}  # type: Dict[int, SPOINT]
+        self.epoints = {}  # type: Dict[int, EPOINT]
 
         #: stores GRIDSET card
-        self.grdset = None  # type: Optional[Any]
+        self.grdset = None  # type: Optional[GRDSET]
 
         #: stores SEQGP cards
-        self.seqgp = None  # type: Optional[Any]
+        self.seqgp = None  # type: Optional[SEQGP]
 
         ## stores RINGAX
-        self.ringaxs = {}  # type: Dict[int, Any]
+        self.ringaxs = {}  # type: Dict[int, RINGAX]
 
         ## stores GRIDB
-        self.gridb = {}  # type: Dict[int, Any]
+        self.gridb = {}  # type: Dict[int, GRIDB]
 
         #: stores elements (CQUAD4, CTRIA3, CHEXA8, CTETRA4, CROD, CONROD,
         #: etc.)
@@ -323,16 +391,16 @@ class BDFAttributes:
         #: stores CBARAO, CBEAMAO
         self.ao_element_flags = {}  # type: Dict[int, Any]
         #: stores BAROR
-        self.baror = None  # type: Optional[Any]
+        self.baror = None  # type: Optional[BAROR]
         #: stores BEAMOR
-        self.beamor = None  # type: Optional[Any]
+        self.beamor = None  # type: Optional[BEAMOR]
         #: stores SNORM
-        self.normals = {}  # type: Dict[int, Any]
+        self.normals = {}  # type: Dict[int, SNORM]
 
         #: stores rigid elements (RBE2, RBE3, RJOINT, etc.)
         self.rigid_elements = {}  # type: Dict[int, Any]
         #: stores PLOTELs
-        self.plotels = {}  # type: Optional[Any]
+        self.plotels = {}  # type: Optional[PLOTEL]
 
         #: stores CONM1, CONM2, CMASS1,CMASS2, CMASS3, CMASS4, CMASS5
         self.masses = {}  # type: Dict[int, Any]
@@ -344,7 +412,7 @@ class BDFAttributes:
         #: stores NSMADD
         self.nsmadds = {}  # type: Dict[int, List[Any]]
 
-        #: stores LOTS of propeties (PBAR, PBEAM, PSHELL, PCOMP, etc.)
+        #: stores LOTS of properties (PBAR, PBEAM, PSHELL, PCOMP, etc.)
         self.properties = {}  # type: Dict[int, Any]
 
         #: stores MAT1, MAT2, MAT3, MAT8, MAT10, MAT11
@@ -422,12 +490,12 @@ class BDFAttributes:
 
         # ----------------------------------------------------------------
         #: direct matrix input - DMIG
-        self.dmi = {}  # type: Dict[str, Any]
-        self.dmig = {}  # type: Dict[str, Any]
-        self.dmij = {}  # type: Dict[str, Any]
-        self.dmiji = {}  # type: Dict[str, Any]
-        self.dmik = {}  # type: Dict[str, Any]
-        self.dmiax = {}  # type: Dict[str, Any]
+        self.dmi = {}  # type: Dict[str, DMI]
+        self.dmig = {}  # type: Dict[str, DMIG]
+        self.dmij = {}  # type: Dict[str, DMIJ]
+        self.dmiji = {}  # type: Dict[str, DMIJI]
+        self.dmik = {}  # type: Dict[str, DMIK]
+        self.dmiax = {}  # type: Dict[str, DMIAX]
         self.dti = {}  # type: Dict[str, Any]
         self._dmig_temp = defaultdict(list)  # type: Dict[str, List[str]]
 
@@ -612,16 +680,22 @@ class BDFAttributes:
         self.radmtx = {}  # type: Dict[int, RADMTX]
 
         # -------------------------contact cards-------------------------------
+        self.bcbodys = {}  # type: Dict[int, BCBODY]
+        self.bcparas = {}  # type: Dict[int, BCPARA]
         self.bcrparas = {}  # type: Dict[int, BCRPARA]
         self.bctadds = {}  # type: Dict[int, BCTADD]
         self.bctparas = {}  # type: Dict[int, BCTPARA]
+
+        self.bctadds = {}  # type: Dict[int, BCTADD]
         self.bctsets = {}  # type: Dict[int, BCTSET]
         self.bsurf = {}  # type: Dict[int, BSURF]
         self.bsurfs = {}  # type: Dict[int, BSURFS]
         self.bconp = {}  # type: Dict[int, BCONP]
         self.blseg = {}  # type: Dict[int, BLSEG]
         self.bfric = {}  # type: Dict[int, BFRIC]
-
+        self.bgadds = {}  # type: Dict[int, BGADD]
+        self.bgsets = {}  # type: Dict[int, BGSET]
+        self.bctparms = {}  # type: Dict[int, BCTPARAM]
 
         #--------------------------superelements------------------------------
         self.setree = {}  # type: Dict[int, SETREE]
@@ -871,6 +945,10 @@ class BDFAttributes:
             'doptprm' : ['DOPTPRM'],
             'dscreen' : ['DSCREEN'],
 
+            # optimization - nx
+            'dmncon' : ['DMNCON'],
+            'dvtrels' : ['DVTREL1'],
+            'group' : ['GROUP'],
 
             # sets
             'asets' : ['ASET', 'ASET1'],
@@ -920,10 +998,16 @@ class BDFAttributes:
             'cMethods' : ['EIGC', 'EIGP'],
 
             # contact
+            'bcbodys' : ['BCBODY'],
+            'bcparas' : ['BCPARA'],
             'bctparas' : ['BCTPARA'],
             'bcrparas' : ['BCRPARA'],
+            'bctparms' : ['BCTPARM'],
+
             'bctadds' : ['BCTADD'],
             'bctsets' : ['BCTSET'],
+            'bgadds' : ['BGADD'],
+            'bgsets' : ['BGSET'],
             'bsurf' : ['BSURF'],
             'bsurfs' : ['BSURFS'],
             'bconp' : ['BCONP'],
@@ -1006,6 +1090,7 @@ class BDFAttributes:
 
     @nastran_format.setter
     def nastran_format(self, nastran_format: str) -> None:
+        assert isinstance(nastran_format, str), nastran_format
         fmt_lower = nastran_format.lower().strip()
         if fmt_lower not in ['nx', 'msc', 'zona', 'nasa95']:
             raise RuntimeError(nastran_format)
@@ -1033,7 +1118,7 @@ class BDFAttributes:
         return self._sol
 
     @property
-    def subcases(self) -> Dict[int, Optional[Any]]:
+    def subcases(self) -> Dict[int, Subcase]:
         """gets the subcases"""
         if self.case_control_deck is None:
             return {}

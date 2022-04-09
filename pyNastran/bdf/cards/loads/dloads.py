@@ -11,7 +11,7 @@ All dynamic loads are defined in this file.  This includes:
 
 """
 from __future__ import annotations
-from typing import TYPE_CHECKING
+from typing import Union, TYPE_CHECKING
 import numpy as np
 
 from pyNastran.utils.numpy_utils import integer_types
@@ -224,7 +224,7 @@ class ACSRCE(BaseCard):
         #self.dphases_ref = None
         #self.delays_ref = None
 
-    def safe_cross_reference(self, model, xref_errors):
+    def safe_cross_reference(self, model: BDF, xref_errors):
         return self.cross_reference(model)
 
     #def uncross_reference(self) -> None:
@@ -351,7 +351,7 @@ class DLOAD(LoadCombination):
             dload_ids2.append(dload_id2)
         self.load_ids_ref = dload_ids2
 
-    def safe_cross_reference(self, model, xref_errors, debug=True):
+    def safe_cross_reference(self, model: BDF, xref_errors, debug=True):
         dload_ids2 = []
         msg = ', which is required by DLOAD=%s' % (self.sid)
         for dload_id in self.load_ids:
@@ -534,7 +534,7 @@ class RLOAD1(DynamicLoad):
         if isinstance(self.dphase, integer_types) and self.dphase > 0:
             self.dphase_ref = model.DPHASE(self.dphase, msg=msg)
 
-    def safe_cross_reference(self, model, xref_errors, ):
+    def safe_cross_reference(self, model: BDF, xref_errors, ):
         msg = ', which is required by RLOAD1 sid=%s' % (self.sid)
         _cross_reference_excite_id(self, model, msg)
         if isinstance(self.tc, integer_types) and self.tc:
@@ -745,7 +745,7 @@ def _cross_reference_excite_id(self, model, msg):
             valid_lseqs.sort()
             #assert len(valid_lseqs) == 1, 'valid_lseqs=%s' % valid_lseqs
     #print('valid_lseqs =', valid_lseqs)
-    #  can Case Control LOADSET be substituded for Case Control DLOAD id?
+    #  can Case Control LOADSET be substituted for Case Control DLOAD id?
 
     excite_id_ref = []
     if self.excite_id in model.loads:
@@ -936,11 +936,11 @@ class RLOAD2(DynamicLoad):
         """
         sid = integer(card, 1, 'sid')
         excite_id = integer(card, 2, 'excite_id')
-        delay = integer_double_or_blank(card, 3, 'delay', 0)
-        dphase = integer_double_or_blank(card, 4, 'dphase', 0)
-        tb = integer_double_or_blank(card, 5, 'tb', 0)
-        tp = integer_double_or_blank(card, 6, 'tp', 0)
-        Type = integer_string_or_blank(card, 7, 'Type', 'LOAD')
+        delay = integer_double_or_blank(card, 3, 'delay', default=0)
+        dphase = integer_double_or_blank(card, 4, 'dphase', default=0)
+        tb = integer_double_or_blank(card, 5, 'tb', default=0)
+        tp = integer_double_or_blank(card, 6, 'tp', default=0)
+        Type = integer_string_or_blank(card, 7, 'Type', default='LOAD')
 
         assert len(card) <= 8, 'len(RLOAD2 card) = %i\ncard=%s' % (len(card), card)
         return RLOAD2(sid, excite_id, delay, dphase, tb, tp, Type, comment=comment)
@@ -1010,7 +1010,7 @@ class RLOAD2(DynamicLoad):
         if isinstance(self.dphase, integer_types) and self.dphase > 0:
             self.dphase_ref = model.DPHASE(self.dphase, msg=msg)
 
-    def safe_cross_reference(self, model, xref_errors, ):
+    def safe_cross_reference(self, model: BDF, xref_errors, ):
         msg = ', which is required by RLOAD2=%s' % (self.sid)
         _cross_reference_excite_id(self, model, msg)
         if isinstance(self.tb, integer_types) and self.tb:
@@ -1497,17 +1497,17 @@ class TLOAD2(DynamicLoad):
         """
         sid = integer(card, 1, 'sid')
         excite_id = integer(card, 2, 'excite_id')
-        delay = integer_double_or_blank(card, 3, 'delay', 0)
-        Type = integer_string_or_blank(card, 4, 'Type', 'LOAD')
+        delay = integer_double_or_blank(card, 3, 'delay', default=0)
+        Type = integer_string_or_blank(card, 4, 'Type', default='LOAD')
 
-        T1 = double_or_blank(card, 5, 'T1', 0.0)
-        T2 = double_or_blank(card, 6, 'T2', T1)
-        frequency = double_or_blank(card, 7, 'frequency', 0.)
-        phase = double_or_blank(card, 8, 'phase', 0.)
-        c = double_or_blank(card, 9, 'c', 0.)
-        b = double_or_blank(card, 10, 'b', 0.)
-        us0 = double_or_blank(card, 11, 'us0', 0.)
-        vs0 = double_or_blank(card, 12, 'vs0', 0.)
+        T1 = double_or_blank(card, 5, 'T1', default=0.0)
+        T2 = double_or_blank(card, 6, 'T2', default=T1)
+        frequency = double_or_blank(card, 7, 'frequency', default=0.)
+        phase = double_or_blank(card, 8, 'phase', default=0.)
+        c = double_or_blank(card, 9, 'c', default=0.)
+        b = double_or_blank(card, 10, 'b', default=0.)
+        us0 = double_or_blank(card, 11, 'us0', default=0.)
+        vs0 = double_or_blank(card, 12, 'vs0', default=0.)
 
         assert len(card) <= 13, 'len(TLOAD2 card) = %i\ncard=%s' % (len(card), card)
         return TLOAD2(sid, excite_id, delay, Type, T1, T2, frequency, phase,
@@ -1570,7 +1570,7 @@ class TLOAD2(DynamicLoad):
             self.delay_ref = model.DELAY(self.delay_id, msg=msg)
         # TODO: excite_id
 
-    def safe_cross_reference(self, model, xref_errors, debug=True):
+    def safe_cross_reference(self, model: BDF, xref_errors, debug=True):
         msg = ', which is required by TLOAD2 sid=%s' % (self.sid)
         _cross_reference_excite_id(self, model, msg)
         if isinstance(self.delay, integer_types) and self.delay > 0:

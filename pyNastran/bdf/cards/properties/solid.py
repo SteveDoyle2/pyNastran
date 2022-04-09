@@ -9,7 +9,7 @@ All solid properties are defined in this file.  This includes:
 
 """
 from __future__ import annotations
-from typing import Dict, Any, TYPE_CHECKING
+from typing import Dict, List, Any, TYPE_CHECKING
 import numpy as np
 
 from pyNastran.utils.numpy_utils import integer_types
@@ -225,12 +225,12 @@ class PCOMPS(Property):
             a comment for the card
         """
         pid = integer(card, 1, 'pid')
-        cordm = integer_or_blank(card, 2, 'cordm', 0)
-        psdir = integer_or_blank(card, 3, 'psdir', 13)
+        cordm = integer_or_blank(card, 2, 'cordm', default=0)
+        psdir = integer_or_blank(card, 3, 'psdir', default=13)
         sb = double_or_blank(card, 4, 'sb')
         nb = double_or_blank(card, 5, 'nb')
-        tref = double_or_blank(card, 6, 'tref', 0.0)
-        ge = double_or_blank(card, 7, 'ge', 0.0)
+        tref = double_or_blank(card, 6, 'tref', default=0.0)
+        ge = double_or_blank(card, 7, 'ge', default=0.0)
         nfields = len(card) - 1
         #nrows =
         ifield = 9

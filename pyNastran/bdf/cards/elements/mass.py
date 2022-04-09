@@ -13,7 +13,7 @@ All mass elements are PointMassElement and Element objects.
 
 """
 from __future__ import annotations
-from typing import TYPE_CHECKING
+from typing import Tuple, List, Union, TYPE_CHECKING
 import numpy as np
 
 from pyNastran.utils.numpy_utils import integer_types
@@ -185,7 +185,7 @@ class CMASS1(PointMassElement):
         self.nodes_ref = model.EmptyNodes(self.node_ids, msg=msg)
         self.pid_ref = model.PropertyMass(self.pid, msg=msg)
 
-    def safe_cross_reference(self, model, xref_errors):
+    def safe_cross_reference(self, model: BDF, xref_errors):
         """
         Cross links the card so referenced cards can be extracted directly
 
@@ -472,7 +472,7 @@ class CMASS2(PointMassElement):
         msg = ', which is required by CMASS2 eid=%s' % self.eid
         self.nodes_ref = model.EmptyNodes(self.nodes, msg=msg)
 
-    def safe_cross_reference(self, model, xref_errors):
+    def safe_cross_reference(self, model: BDF, xref_errors):
         """
         Cross links the card so referenced cards can be extracted directly
 
@@ -789,7 +789,7 @@ class CMASS4(PointMassElement):
         msg = ', which is required by CMASS4 eid=%s' % self.eid
         self.nodes_ref = model.EmptyNodes(self.nodes, msg=msg)
 
-    def safe_cross_reference(self, model, xref_errors):
+    def safe_cross_reference(self, model: BDF, xref_errors):
         self.cross_reference(model)
 
     def uncross_reference(self) -> None:
@@ -1067,7 +1067,7 @@ class CONM1(PointMassElement):
         self.nid_ref = model.Node(self.nid, msg=msg)
         self.cid_ref = model.Coord(self.cid, msg=msg)
 
-    def safe_cross_reference(self, model, xref_errors):
+    def safe_cross_reference(self, model: BDF, xref_errors):
         """
         Cross links the card so referenced cards can be extracted directly
 
@@ -1460,7 +1460,7 @@ class CONM2(PointMassElement):
             X2 = self.nid_ref.get_position() + dx
         return X2
 
-    def Centroid_no_xref(self, model):
+    def Centroid_no_xref(self, model: BDF) -> np.ndarray:
         """
         This method seems way more complicated than it needs to be thanks
         to all these little caveats that don't seem to be supported.
@@ -1499,7 +1499,7 @@ class CONM2(PointMassElement):
             X2 = nid_ref.get_position() + dx
         return X2
 
-    def center_of_mass(self):
+    def center_of_mass(self) -> np.ndarray:
         return self.Centroid()
 
     def cross_reference(self, model: BDF) -> None:
@@ -1519,7 +1519,7 @@ class CONM2(PointMassElement):
         if cid != -1:
             self.cid_ref = model.Coord(cid, msg=msg)
 
-    def safe_cross_reference(self, model, xref_errors):
+    def safe_cross_reference(self, model: BDF, xref_errors):
         """
         Cross links the card so referenced cards can be extracted directly
 

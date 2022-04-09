@@ -37,7 +37,7 @@ def tetgen_to_usm3d(base):
     #model.read_usm3d(basename)
     #model.write_usm3d(basename + '_2')
 
-def main():
+def main():  # pragma: no cover
     #base = 'tetgen_test_flipped.1'
     base = 'tetgen_test.1'
     tetgen_to_usm3d(base)

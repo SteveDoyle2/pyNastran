@@ -233,9 +233,9 @@ class PELAST(SpringProperty):
             a comment for the card
         """
         pid = integer(card, 1, 'pid')
-        tkid = integer_or_blank(card, 2, 'tkid', 0)
-        tgeid = integer_or_blank(card, 3, 'tgeid', 0)
-        tknid = integer_or_blank(card, 4, 'tknid', 0)
+        tkid = integer_or_blank(card, 2, 'tkid', default=0)
+        tgeid = integer_or_blank(card, 3, 'tgeid', default=0)
+        tknid = integer_or_blank(card, 4, 'tknid', default=0)
         assert len(card) <= 5, 'len(PELAST card) = %i\ncard=%s' % (len(card), card)
         return PELAST(pid, tkid, tgeid, tknid, comment=comment)
 

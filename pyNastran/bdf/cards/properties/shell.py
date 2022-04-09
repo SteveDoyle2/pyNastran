@@ -269,7 +269,7 @@ class CompositeShellProperty(Property):
             mids.append(self.Mid(iply))
         return mids
 
-    def get_density(self, iply) -> float:
+    def get_density(self, iply: int) -> float:
         """
         Gets the density of the :math:`i^{th}` ply
 
@@ -830,11 +830,11 @@ class PCOMP(CompositeShellProperty):
         # thickness first
         #self.z0 = double_or_blank(card, 1, 'pid')
 
-        nsm = double_or_blank(card, 3, 'nsm', 0.0)
-        sb = double_or_blank(card, 4, 'sb', 0.0)
+        nsm = double_or_blank(card, 3, 'nsm', default=0.0)
+        sb = double_or_blank(card, 4, 'sb', default=0.0)
         ft = string_or_blank(card, 5, 'ft')
-        tref = double_or_blank(card, 6, 'tref', 0.0)
-        ge = double_or_blank(card, 7, 'ge', 0.0)
+        tref = double_or_blank(card, 6, 'tref', default=0.0)
+        ge = double_or_blank(card, 7, 'ge', default=0.0)
         lam = string_or_blank(card, 8, 'lam') # default=blank -> nothing
 
         # -8 for the first 8 fields (1st line)
@@ -859,10 +859,10 @@ class PCOMP(CompositeShellProperty):
         souts = []
         for i in range(9, 9 + nplies * 4, 4):
             actual = card.fields(i, i + 4)
-            mid = integer_or_blank(card, i, 'mid', mid_last)
-            t = double_or_blank(card, i + 1, 't', thick_last)
-            theta = double_or_blank(card, i + 2, 'theta', 0.0)
-            sout = string_or_blank(card, i + 3, 'sout', 'NO')
+            mid = integer_or_blank(card, i, 'mid', default=mid_last)
+            t = double_or_blank(card, i + 1, 't', default=thick_last)
+            theta = double_or_blank(card, i + 2, 'theta', default=0.0)
+            sout = string_or_blank(card, i + 3, 'sout', default='NO')
 
             # if this card has 2 plies on the line
             if actual != [None, None, None, None]:
@@ -2305,36 +2305,36 @@ class PSHELL(Property):
             return self.mid1_ref
         return self.mid2_ref
 
-    def Mid(self):
+    def Mid(self) -> Optional[int]:
         """returns the material id used for mass"""
         mid1 = self.Mid1()
         if mid1 is not None:
             return mid1
         return self.Mid2()
 
-    def Mid1(self):
+    def Mid1(self) -> Optional[int]:
         """returns the extension material id"""
         if self.mid1_ref is not None:
             return self.mid1_ref.mid
         return self.mid1
 
-    def Mid2(self):
+    def Mid2(self) -> Optional[int]:
         """returns the bending material id"""
         if self.mid2_ref is not None:
             return self.mid2_ref.mid
         return self.mid2
 
-    def Mid3(self):
+    def Mid3(self) -> Optional[int]:
         if self.mid3_ref is not None:
             return self.mid3_ref.mid
         return self.mid3
 
-    def Mid4(self):
+    def Mid4(self) -> Optional[int]:
         if self.mid4_ref is not None:
             return self.mid4_ref.mid
         return self.mid4
 
-    def Thickness(self, tflag=1, tscales=None):
+    def Thickness(self, tflag: int=1, tscales=None):
         """returns the thickness of the element"""
         t0 = self.t
         if tscales is not None:
@@ -2354,11 +2354,11 @@ class PSHELL(Property):
             thickness = t0
         return thickness
 
-    def Rho(self):
+    def Rho(self) -> float:
         """returns the material density"""
         return self.mid_ref.rho
 
-    def Nsm(self):
+    def Nsm(self) -> float:
         """returns the non-structural mass"""
         return self.nsm
 
@@ -2373,7 +2373,7 @@ class PSHELL(Property):
         thickness = self.Thickness(tflag=tflag, tscales=tscales)
         try:
             mass_per_area = self.nsm + rho * thickness
-        except:
+        except Exception:
             print("nsm=%s rho=%s t=%s" % (self.nsm, rho, self.t))
             raise
         return mass_per_area
@@ -2388,7 +2388,7 @@ class PSHELL(Property):
         thickness = self.Thickness(tflag=tflag, tscales=tscales)
         try:
             mass_per_area = self.nsm + rho * thickness
-        except:
+        except Exception:
             print("nsm=%s rho=%s t=%s" % (self.nsm, rho, self.t))
             raise
         return mass_per_area
@@ -2402,7 +2402,7 @@ class PSHELL(Property):
         rho = mid_ref.Rho()
         try:
             mass_per_area = rho * self.t
-        except:
+        except Exception:
             print("nsm=%s rho=%s t=%s" % (self.nsm, rho, self.t))
             raise
         return mass_per_area
@@ -2469,7 +2469,7 @@ class PSHELL(Property):
             Qbar4 = self.get_Qbar_matrix(self.mid4_ref, theta=0.)
             B += Qbar4 * (z1 ** 2 - z0 ** 2)
 
-        ts = self.tst * thickness
+        unused_ts = self.tst * thickness
 
         # [N, M, Q].T =   [TG1, T^2 * G4, 0]              * [epsilon0]
                         # [T^2 * G4, T^3/12 * G2, 0]        [xi]

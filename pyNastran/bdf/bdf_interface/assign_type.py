@@ -1,6 +1,6 @@
 """Parses Nastran fields"""
 import re
-from typing import Union, Optional
+from typing import Tuple, List, Union, Optional, Any
 from pyNastran.bdf.bdf_interface.bdf_card import BDFCard
 from pyNastran.utils.numpy_utils import (
     integer_types, integer_float_types, float_types)
@@ -15,8 +15,8 @@ RE_INT = re.compile('^[-+]?[0-9]+$', flags=0)
 
 #[-+]?      - an optional (this is what ? means) minus or plus sign
 # \.        - period
-# [-|+?]    - required negtive sign or optional plus sign
-# [-|+]     - required negtive sign or plus sign
+# [-|+?]    - required negative sign or optional plus sign
+# [-|+]     - required negative sign or plus sign
 # [[0-9]+]? - optional N integers
 #
 #  1.032
@@ -161,8 +161,7 @@ def blank(card: BDFCard, ifield: int, fieldname: str, default=None) -> None:
     raise SyntaxError('%s = %r (field #%s) on card must be blank (not %s).\n'
                       'card=%s' % (fieldname, svalue, ifield, dtype, card))
 
-#def field(card, ifield, fieldname):
-    ## type: (BDFCard, int, str) -> Optional[Union[int, float, str]]
+#def field(card: BDFCard, ifield: int, fieldname: str) -> Optional[Union[int, float, str]]:
     #"""
     #Parameters
     #----------
@@ -240,7 +239,7 @@ def integer_double_string_or_blank(card: BDFCard, ifield: int, fieldname: str, d
 
 #def assert_int_bounded_range(card, ifield, fieldname, lower=None, upper=None):
 
-def fields(func, card, fieldname, i, j=None):
+def fields(func, card, fieldname, i, j=None) -> List[Any]:
     """
     .. todo:: improve fieldname
     """
@@ -297,6 +296,8 @@ def modal_components_or_blank(card: BDFCard, ifield: int, fieldname: str, defaul
 
 def integer(card: BDFCard, ifield: int, fieldname: str) -> int:
     """
+    Casts a value to an integer
+
     Parameters
     ----------
     card : BDFCard()
@@ -320,9 +321,10 @@ def integer(card: BDFCard, ifield: int, fieldname: str) -> int:
         raise SyntaxError('%s = %r (field #%s) on card must be an integer (not %s).\n'
                           'card=%s' % (fieldname, svalue, ifield, dtype, card))
 
-def integer_or_blank(card: BDFCard, ifield: int, fieldname: str, default=None):
-    # type (BDFCard, int, str, Optional[int]) -> Optional[int]
+def integer_or_blank(card: BDFCard, ifield: int, fieldname: str, default: Optional[int]=None) -> int:
     """
+    Casts a value to an integer
+
     Parameters
     ----------
     card : BDFCard()
@@ -363,7 +365,7 @@ def integer_or_blank(card: BDFCard, ifield: int, fieldname: str, default=None):
 
 def double(card: BDFCard, ifield: int, fieldname: str) -> float:
     """
-    Converts a field into a double
+    Casts a value to a double
 
     Parameters
     ----------
@@ -434,7 +436,7 @@ def double(card: BDFCard, ifield: int, fieldname: str) -> float:
 def double_or_blank(card: BDFCard, ifield: int, fieldname: str, default=None):
     # type (BDFCard, int, str, Optional[Union[float]]) -> Optional[Union[float]]
     """
-    Gets a double/blank value
+    Casts a value to a double/blank
 
     Parameters
     ----------
@@ -462,7 +464,7 @@ def double_or_blank(card: BDFCard, ifield: int, fieldname: str, default=None):
             return default
         try:
             return double(card, ifield, fieldname)
-        except:
+        except Exception:
             if svalue == '.':
                 return 0.
             dtype = _get_dtype(svalue)
@@ -472,7 +474,7 @@ def double_or_blank(card: BDFCard, ifield: int, fieldname: str, default=None):
 
 def double_or_string(card: BDFCard, ifield: int, fieldname: str) -> Union[float, str]:
     """
-    Converts a field into a double or a string
+    Casts a value to a double/string
 
     Parameters
     ----------

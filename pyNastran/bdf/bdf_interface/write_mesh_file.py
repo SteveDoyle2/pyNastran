@@ -598,7 +598,7 @@ class WriteMeshs(WriteMesh):
                     raise TypeError(reject_lines)
 
     def _write_rigid_elements_file(self, bdf_files: Any, size: int=8, is_double: bool=False,
-                           is_long_ids: Optional[bool]=None) -> None:
+                                   is_long_ids: Optional[bool]=None) -> None:
         """Writes the rigid elements in a sorted order"""
         size, is_long_ids = self._write_mesh_long_ids_size(size, is_long_ids)
         if self.rigid_elements:
@@ -608,7 +608,7 @@ class WriteMeshs(WriteMesh):
             write_bdfs_dict(bdf_files, self.plotels, size, is_double, is_long_ids)
 
     def _write_sets_file(self, bdf_files: Any, size: int=8, is_double: bool=False,
-                           is_long_ids: Optional[bool]=None) -> None:
+                         is_long_ids: Optional[bool]=None) -> None:
         """Writes the SETx cards sorted by ID"""
         is_sets = (self.sets or self.asets or self.omits or self.bsets or self.csets or self.qsets
                    or self.usets)

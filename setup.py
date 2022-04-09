@@ -5,7 +5,8 @@ from setuptools import setup, find_packages
 
 import pyNastran
 from packages import (check_python_version, get_package_requirements,
-                      update_version_file, LONG_DESCRIPTION)
+                      update_version_file, PYTHON_REQUIRES,
+                      LONG_DESCRIPTION, CLASSIFIERS, EXCLUDE_WORDS)
 
 add_vtk_qt = True
 bdist = False
@@ -28,9 +29,8 @@ for icon_file in icon_files:
     if icon_file.endswith('.png'):
         icon_files2.append(os.path.join(icon_path, icon_file))
 
-exclude_words = []
-packages = find_packages(exclude=['ez_setup', 'examples', 'tests'] + exclude_words)
-for exclude_word in exclude_words:
+packages = find_packages(exclude=['ez_setup', 'examples', 'tests'] + EXCLUDE_WORDS)
+for exclude_word in EXCLUDE_WORDS:
     packages = [package for package in packages if exclude_word not in package]
 #print(packages, len(packages)) # 83
 update_version_file()
@@ -41,15 +41,9 @@ setup(
     description=pyNastran.__desc__,
     long_description=LONG_DESCRIPTION,
     long_description_content_type='text/x-rst',
-    classifiers=[
-        'Natural Language :: English',
-        'Intended Audience :: Science/Research',
-        'License :: OSI Approved :: BSD License',
-        'Programming Language :: Python :: 3.7',
-        'Programming Language :: Python :: 3.8',
-    ], # Get strings from http://pypi.python.org/pypi?%3Aaction=list_classifiers
+    classifiers=CLASSIFIERS,
     keywords='',
-    python_requires='>=3.7',
+    python_requires=PYTHON_REQUIRES,
     author=pyNastran.__author__,
     author_email=pyNastran.__email__,
     url=pyNastran.__website__,

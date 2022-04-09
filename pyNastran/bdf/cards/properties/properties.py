@@ -63,13 +63,13 @@ class PFAST(Property):
     def __init__(self, pid, d, kt1, kt2, kt3, mcid=-1, mflag=0,
                  kr1=0., kr2=0., kr3=0., mass=0., ge=0., comment=''):
         """
-        Creates a PAST card
+        Creates a PFAST card
 
         Parameters
         ----------
         pid : int
             property id
-        d : int
+        d : float
             diameter of the fastener
         kt1, kt2, kt3 : float
             stiffness values in directions 1-3
@@ -344,16 +344,16 @@ class PGAP(Property):
             a comment for the card
         """
         pid = integer(card, 1, 'pid')
-        u0 = double_or_blank(card, 2, 'u0', 0.)
-        f0 = double_or_blank(card, 3, 'f0', 0.)
-        ka = double_or_blank(card, 4, 'ka', 1.e8)
-        kb = double_or_blank(card, 5, 'kb', 1e-14 * ka)
-        mu1 = double_or_blank(card, 7, 'mu1', 0.)
-        kt = double_or_blank(card, 6, 'kt', mu1 * ka)
-        mu2 = double_or_blank(card, 8, 'mu2', mu1)
-        tmax = double_or_blank(card, 9, 'tmax', 0.)
-        mar = double_or_blank(card, 10, 'mar', 100.)
-        trmin = double_or_blank(card, 11, 'trmin', 0.001)
+        u0 = double_or_blank(card, 2, 'u0', default=0.)
+        f0 = double_or_blank(card, 3, 'f0', default=0.)
+        ka = double_or_blank(card, 4, 'ka', default=1.e8)
+        kb = double_or_blank(card, 5, 'kb', default=1e-14 * ka)
+        mu1 = double_or_blank(card, 7, 'mu1', default=0.)
+        kt = double_or_blank(card, 6, 'kt', default=mu1 * ka)
+        mu2 = double_or_blank(card, 8, 'mu2', default=mu1)
+        tmax = double_or_blank(card, 9, 'tmax', default=0.)
+        mar = double_or_blank(card, 10, 'mar', default=100.)
+        trmin = double_or_blank(card, 11, 'trmin', default=0.001)
         assert len(card) <= 12, 'len(PGAP card) = %i\ncard=%s' % (len(card), card)
         return PGAP(pid, u0, f0, ka, kb, mu1, kt, mu2, tmax, mar, trmin,
                     comment=comment)

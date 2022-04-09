@@ -64,7 +64,7 @@ class OpenFoamIO:
                 #del self.caseKeys
                 #del self.iCase
                 #del self.gui.isubcase_name_map
-            #except:
+            #except Exception:
                 #print("cant delete geo")
             #skip_reading = False
         #self.scalar_bar_actor.Modified()

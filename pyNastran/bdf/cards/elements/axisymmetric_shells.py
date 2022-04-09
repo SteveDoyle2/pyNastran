@@ -14,7 +14,7 @@ All quads are QuadShell, ShellElement, and Element objects.
 
 """
 from __future__ import annotations
-from typing import TYPE_CHECKING
+from typing import List, Optional, Any, TYPE_CHECKING
 import numpy as np
 from numpy.linalg import norm  # type: ignore
 
@@ -610,7 +610,7 @@ class CTRIAX(AxisymmetricTri):
         self.nodes_ref = model.EmptyNodes(self.nodes, msg=msg)
         self.pid_ref = model.Property(self.pid, msg=msg)
 
-    def safe_cross_reference(self, model, xref_errors):
+    def safe_cross_reference(self, model: BDF, xref_errors):
         """
         Cross links the card so referenced cards can be extracted directly
 
@@ -759,7 +759,7 @@ class CTRIAX6(TriShell):
         self.nodes_ref = model.EmptyNodes(self.nodes, msg=msg)
         self.mid_ref = model.Material(self.mid)
 
-    def safe_cross_reference(self, model, xref_errors):
+    def safe_cross_reference(self, model: BDF, xref_errors):
         """
         Cross links the card so referenced cards can be extracted directly
 
@@ -866,7 +866,7 @@ class CTRIAX6(TriShell):
         n1, n3, n5 = self.get_node_positions(nodes=nodes)
         try:
             n = _normal(n1 - n3, n1 - n5)
-        except:
+        except Exception:
             msg = 'ERROR computing normal vector for eid=%i.\n' % self.eid
             msg += '  nid1=%i n1=%s\n' % (self.nodes_ref[0].nid, n1)
             msg += '  nid3=%i n3=%s\n' % (self.nodes_ref[2].nid, n3)
@@ -1056,7 +1056,7 @@ class CQUADX(AxisymmetricQuad):
         self.nodes_ref = model.EmptyNodes(self.node_ids, msg=msg)
         self.pid_ref = model.Property(self.Pid(), msg=msg)
 
-    def safe_cross_reference(self, model, xref_errors):
+    def safe_cross_reference(self, model: BDF, xref_errors):
         """
         Cross links the card so referenced cards can be extracted directly
 
@@ -1197,7 +1197,7 @@ class CQUADX4(AxisymmetricQuad):
             integer(card, 5, 'n3'),
             integer(card, 6, 'n4'),
         ]
-        theta = integer_double_or_blank(card, 7, 'theta', 0.)
+        theta = integer_double_or_blank(card, 7, 'theta', default=0.)
         assert len(card) <= 8, 'len(CQUADX4 card) = %i\ncard=%s' % (len(card), card)
         return CQUADX4(eid, pid, nids, theta=theta, comment=comment)
 

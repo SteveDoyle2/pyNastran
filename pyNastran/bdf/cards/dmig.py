@@ -1,7 +1,8 @@
 # pylint: disable=R0902,R0904,R0914
+from __future__ import annotations
 from math import sin, cos, radians, atan2, sqrt, degrees
 from itertools import count
-from typing import Tuple # , TYPE_CHECKING
+from typing import Tuple, Dict, Any, TYPE_CHECKING
 
 import numpy as np
 from numpy import array, zeros
@@ -16,6 +17,9 @@ from pyNastran.bdf.field_writer_double import print_card_double
 from pyNastran.bdf.bdf_interface.assign_type import (
     integer, integer_or_blank, double, string, string_or_blank,
     parse_components, interpret_value, integer_double_string_or_blank)
+if TYPE_CHECKING:  # pragma: no cover
+    from pyNastran.bdf.bdf_interface.bdf_card import BDFCard
+    from pyNastran.bdf.bdf import BDF
 
 
 class DTI(BaseCard):
@@ -468,7 +472,7 @@ class NastranMatrix(BaseCard):
         #if self.is_complex:
             #self.Complex(double(card, v, 'complex')
 
-    def get_matrix(self, is_sparse=False, apply_symmetry=True):
+    def get_matrix(self, is_sparse: bool=False, apply_symmetry: bool=True):
         """
         Builds the Matrix
 
@@ -496,16 +500,16 @@ class NastranMatrix(BaseCard):
         return get_matrix(self, is_sparse=is_sparse, apply_symmetry=apply_symmetry)
 
     @property
-    def is_real(self):
+    def is_real(self) -> bool:
         """real vs. complex attribute"""
         return not self.is_complex
 
     @property
-    def is_complex(self):
+    def is_complex(self) -> bool:
         """real vs. complex attribute"""
-        if self.tin in [1, 2]: # real
+        if self.tin in {1, 2}: # real
             return False
-        elif self.tin in [3, 4]: # complex
+        elif self.tin in {3, 4}: # complex
             return True
         msg = ('Matrix %r must have a value of TIN = [1, 2, 3, 4].\n'
                'TIN defines the type (real, complex) '
@@ -515,7 +519,7 @@ class NastranMatrix(BaseCard):
         raise ValueError(msg)
 
     @property
-    def is_polar(self):
+    def is_polar(self) -> bool:
         """
         Used by:
           - DMIG
@@ -543,19 +547,19 @@ class NastranMatrix(BaseCard):
         raise ValueError(msg)
 
     @property
-    def tin_dtype(self):
+    def tin_dtype(self) -> str:
         """gets the input dtype"""
         return _get_dtype(self.is_complex, self.tin)
 
     @property
-    def tout_dtype(self):
+    def tout_dtype(self) -> str:
         """gets the output dtype"""
         return _get_dtype(self.is_complex, self.tout)
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return self.write_card(size=8, is_double=False)
 
-    def fill_in_default_components(self, model):
+    def fill_in_default_components(self, model: BDF) -> None:
         for i, (Gi, Ci) in enumerate(self.GCi):
             if Ci is None:
                 node = model.nodes[Gi]
@@ -563,7 +567,7 @@ class NastranMatrix(BaseCard):
                     msg = ('Ci on DMIG card must be 1, 2, 3, 4, 5, or 6; '
                            'Node=%i (GRID); Ci=%s' % (Gi, Ci))
                     raise RuntimeError(msg)
-                elif node.type in ['SPOINT', 'EPOINT']:
+                elif node.type in {'SPOINT', 'EPOINT'}:
                     Ci = 0
                 else:
                     raise NotImplementedError(node)
@@ -576,7 +580,7 @@ class NastranMatrix(BaseCard):
                     msg = ('Cj on DMIG card must be 1, 2, 3, 4, 5, or 6; '
                            'Node=%i (GRID); Cj=%s' % (Gj, Cj))
                     raise RuntimeError(msg)
-                elif node.type in ['SPOINT', 'EPOINT']:
+                elif node.type in {'SPOINT', 'EPOINT'}:
                     Cj = 0
                 else:
                     raise NotImplementedError(node)
@@ -2397,7 +2401,7 @@ def get_matrix(self, is_sparse=False, apply_symmetry=True):
         return (M, rows_reversed, cols_reversed)
 
 
-def _export_dmig_to_hdf5(h5_file, model, dict_obj, encoding):
+def _export_dmig_to_hdf5(h5_file, model: BDF, dict_obj, encoding: str) -> None:
     """export dmigs, dmij, dmiji, dmik, dmi"""
     for name, dmig in dict_obj.items():
         dmig_group = h5_file.create_group(name)
@@ -2452,7 +2456,7 @@ def _export_dmig_to_hdf5(h5_file, model, dict_obj, encoding):
                 dmig_group.create_dataset('Complex', data=dmig.Complex)
 
 
-def _export_dmiax_to_hdf5(h5_file, model, dict_obj, encoding):
+def _export_dmiax_to_hdf5(h5_file, model, dict_obj, encoding: str) -> None:
     """export dmiax"""
     for name, dmiax in dict_obj.items():
         #print(f'exporting {dmiax.type} name={name!r}')
@@ -2509,12 +2513,12 @@ def _export_dmiax_to_hdf5(h5_file, model, dict_obj, encoding):
         if hasattr(dmiax, 'Complex') and dmiax.Complex is not None:
             dmiax_group.create_dataset('Complex', data=dmiax.Complex)
 
-def _set_polar(polar):
-    if polar in [None, 0, False]:
+def _set_polar(polar) -> int:
+    if polar in {None, 0, False}:
         polar = 0
-    elif polar in [1, True]:
+    elif polar in {1, True}:
         polar = 1
-    else:
+    else:  # pragma: no cover
         raise ValueError('polar=%r and must be 0 or 1' % polar)
     return polar
 
@@ -2532,7 +2536,7 @@ def _get_dtype(is_complex, type_flag):
             dtype = 'complex128'
         else:
             dtype = 'float64'
-    else:
+    else:  # pragma: no cover
         raise RuntimeError("invalid option for matrix format")
     return dtype
 

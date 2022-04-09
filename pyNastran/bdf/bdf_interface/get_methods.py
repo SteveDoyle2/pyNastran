@@ -514,7 +514,7 @@ class GetMethods(BDFAttributes):
         return constraint
 
     def NSM(self, nsm_id: int, consider_nsmadd: bool=True,
-            msg: str='') -> Union[NSM, NSM1, NSML, NSML1, NSDADD]:
+            msg: str='') -> Union[NSM, NSM1, NSML, NSML1, NSMADD]:
         """
         Gets an LOAD or FORCE/PLOAD4/etc.
 

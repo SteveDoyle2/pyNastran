@@ -4,13 +4,25 @@ defines:
  - points, elements = points_elements_from_quad_points(p1, p2, p3, p4, x, y, dtype='int32')
 
 """
+from __future__ import annotations
+from typing import TYPE_CHECKING
 import numpy as np
 from pyNastran.utils.numpy_utils import float_types
+if TYPE_CHECKING:  # pragma: no cover
+    from pyNastran.bdf.bdf import BDF
 
-def elements_from_quad(nx, ny, dtype='int32'):
+
+def elements_from_quad(nx: int, ny: int, dtype: str='int32'):
     """
     Creates an array of rectilinear mesh of nodes and then
     grabs indexs it to get the elements
+
+    Parameters
+    ----------
+    nx / ny : int
+        number of nodes in the x/y directions
+    dtype: str; default='int32'
+        the type of the integer
 
     """
     assert nx > 1
@@ -86,6 +98,7 @@ def points_elements_from_quad_points(p1, p2, p3, p4, x, y, dtype='int32'):
     elements (nquads, 4) int ndarray
         series of quad elements
         nquads = (nchord-1) * (nspan-1)
+
     """
     nx = x.shape[0]
     ny = y.shape[0]
@@ -169,7 +182,7 @@ def create_axisymmetric_body(xstation, ystation, zstation, radii, aspect_ratio,
             np.hstack(ys),
             np.hstack(zs),
         ]).T + p1
-    except:
+    except Exception:
         print('xs =', xs.shape)
         print('ys =', ys.shape)
         print('zs =', zs.shape)
@@ -231,7 +244,7 @@ def create_ellipse(aspect_ratio, radius, thetas=None):
     return xy
 
 
-def make_monpnt1s_from_cids(model, nids, cids, cid_to_inids,
+def make_monpnt1s_from_cids(model: BDF, nids, cids, cid_to_inids,
                             delete_unused_coords=True):
     """
     Creates MONPNT1s, AECOMPs, and SET1s by a series of coordinate systems

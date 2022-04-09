@@ -131,7 +131,7 @@ class RANDPS(RandomLoad):
             #self.tid = model.Table(self.tid, msg=msg)
             self.tid_ref = model.RandomTable(self.tid, msg=msg)
 
-    def safe_cross_reference(self, model, xref_errors):
+    def safe_cross_reference(self, model: BDF, xref_errors):
         return self.cross_reference(model)
 
     def uncross_reference(self) -> None:
@@ -177,8 +177,7 @@ class RANDT1(RandomLoad):
         tmax = 1.
         return RANDT1(sid, n, t0, tmax, comment='')
 
-    def __init__(self, sid, n, t0, tmax, comment=''):
-        # type: (int, int, int, float, str) -> None
+    def __init__(self, sid: int, n: int, t0: int, tmax: float, comment: str=''):
         """
         Creates a RANDT1 card
 
@@ -244,7 +243,7 @@ class RANDT1(RandomLoad):
         """
         pass
 
-    def safe_cross_reference(self, model, xref_errors):
+    def safe_cross_reference(self, model: BDF, xref_errors):
         pass
 
     def uncross_reference(self) -> None:

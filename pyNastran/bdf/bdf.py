@@ -6,6 +6,7 @@ Main BDF class.  Defines:
 
 """
 # see https://docs.plm.automation.siemens.com/tdoc/nxnastran/10/help/#uid:index
+from __future__ import annotations
 import os
 import sys
 from copy import deepcopy
@@ -1244,11 +1245,11 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
         if bulk_data_ilines is None:
             bulk_data_ilines = np.zeros((len(bulk_data_lines), 2), dtype='int32')
 
-        cards_list = []
-        cards_dict = defaultdict(list)
+        cards_list = []  # type: List[Any]
+        cards_dict = defaultdict(list)  # type: Dict[str, List[Any]]
         dict_cards = ['BAROR', 'BEAMOR']
         #cards = defaultdict(list)
-        card_count = defaultdict(int)
+        card_count = defaultdict(int)  # Dict[str, int]
         full_comment = ''
         card_lines = []
         old_ifile_iline = None
@@ -1791,7 +1792,6 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             'GUST2' : (Crash, None),
 
             #'RADBND' : (Crash, None),
-
 
             # nodes
             'GRID' : (GRID, self._add_node_object),
@@ -4079,7 +4079,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             subcases[subcase_id] = subcase
         return subcases
 
-    def _parse_cards_hdf5(self, cards: Dict[str, Any], unused_card_count):
+    def _parse_cards_hdf5(self, cards: Dict[str, Any], unused_card_count) -> Dict[str, List[Any]]:
         """creates card objects and adds the parsed cards to the deck"""
         self.echo = False
         cards_out = {}
@@ -4177,8 +4177,9 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
         class_instance = self._add_card_helper_hdf5(card_obj, card_name, card_name, comment)
         return class_instance
 
-    def _add_card_helper_hdf5(self, card_obj, card, card_name, comment=''):
-        # type: (BDFCard, List[str], str, str) -> None
+    def _add_card_helper_hdf5(self, card_obj: BDFCard,
+                              card: List[str],
+                              card_name: str, comment: str='') -> None:
         """
         Adds a card object to the BDF object.
 
@@ -4210,7 +4211,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
         if self.echo and not self.force_echo_off:
             try:
                 print(print_card_8(card_obj).rstrip())
-            except:
+            except Exception:
                 if card in ['DEQATN']:
                     print(str(card_obj).rstrip())
                 else:
@@ -4321,7 +4322,7 @@ def _echo_card(card, card_obj):
     """echos a card"""
     try:
         print(print_card_8(card_obj).rstrip())
-    except:
+    except Exception:
         if card in ['DEQATN']:
             print(str(card_obj).rstrip())
         else:
@@ -4332,9 +4333,8 @@ def read_bdf(bdf_filename: Optional[str]=None, validate: bool=True, xref: bool=T
              skip_cards: Optional[List[str]]=None,
              read_cards: Optional[List[str]]=None,
              encoding: Optional[str]=None,
-             log=None,
+             log: Optional[SimpleLogger]=None,
              debug: bool=True, mode: str='msc') -> BDF:
-    # Optional[SimpleLogger]
     """
     Creates the BDF object
 
@@ -4466,7 +4466,6 @@ def read_bdf(bdf_filename: Optional[str]=None, validate: bool=True, xref: bool=T
         #model.get_bdf_stats()
     return model
 
-
 def _prep_comment(comment):
     return comment.rstrip()
     #print('comment = %r' % comment)
@@ -4476,7 +4475,7 @@ def _prep_comment(comment):
              #for comment in comment.rstrip().split('\n')]
     #print('sline = ', sline)
 
-def _check_for_spaces(card_name: str, card_lines: List[str], comment: str, log: Any) -> None:
+def _check_for_spaces(card_name: str, card_lines: List[str], comment: str, log: SimpleLogger) -> None:
     if ' ' in card_name:
         if card_name.startswith(EXECUTIVE_CASE_SPACES):  # TODO verify upper
             msg = (
@@ -4598,14 +4597,14 @@ def main():  # pragma: no cover
     # so will this
     #note = b'á'.decode('utf-8')
 
-    # The encoding that goes into the comment must be consisent with the local
+    # The encoding that goes into the comment must be consistent with the local
     # file, so if your print doesn't work right, your comment will be bad too.
     #
     # If the print is correct, assuming all the characters are supported in your
     # desired encoding, it *should* work.
     print(note)
 
-    # Comments are unmodified, so you can inadvertantly add cards/bugs.
+    # Comments are unmodified, so you can inadvertently add cards/bugs.
     # A comment is a single string where all lines start with $ and end
     # with an endline character.
     node1.comment = '$ ' + note + '\n'

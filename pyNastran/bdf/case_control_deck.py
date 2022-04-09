@@ -99,30 +99,21 @@ class CaseControlDeck:
             #601 - Implicit Non-Linear (ADINA for NX Nastran, will no longer be available in NX NASTRAN after 2020)
             #700 - Explicit Non-Linear (LS Dyna plus MSC.Dytran - part of MSC.NASTRAN)
             #701 - Explicit Non-Linear (ADINA for NX Nastran, will no longer be available in NX NASTRAN after 2020)
-            'STATICS' : 101,
-            'STATIC' : 101,
-
-            'MODES' : 103,
-            'MODE' : 103,
-
-            'BUCK' : 105,
-            'BUCKLING' : 105,
+            'STATIC' : 101, 'STATICS' : 101,
+            'MODE' : 103, 'MODES' : 103,
+            'BUCK' : 105, 'BUCKLING' : 105,
 
             'DFREQ' : 108,
             'MFREQ' : 111,
             'SAERO' : 144,
-
-            'FLUTTER' : 145,
-            'FLUT' : 145,
-
-            'DIVERGE' : 144,
-            'DIVERG' : 145,
+            'FLUT' : 145, 'FLUTTER' : 145,
+            'DIVERG' : 144, 'DIVERGE' : 144,
 
             # 'HEAT' : ,
             # 'STRUCTURE' : ,
             'NLSTATICS' : 400,
             'LNSTATICS' : 400,
-            'MTRAN' : 112,
+            'MTRAN' : 112, 'MTRANS': 112,
             'DCEIG' : 107,
         }
         # 'HEAT', 'ANALYSIS', 'MFREQ', 'STATICS', 'MODES', 'DFREQ',
@@ -142,7 +133,7 @@ class CaseControlDeck:
         self.subcases = {0: Subcase(id=0)}  # type: Dict[int, Subcase]
         try:
             self._read(self.lines)
-        except:
+        except Exception:
             self.log.error('Invalid Case Control Deck:\n' + '\n'.join(self.lines))
             raise
 
@@ -1209,7 +1200,8 @@ def _clean_lines(lines: List[str]) -> List[str]:
     """
     lines2 = []  # type: List[str]
     for line in lines:
-        line = line.strip(' \n\r').split('$')[0].rstrip()
+        # ' \n\r\t'
+        line = line.strip().split('$')[0].rstrip()
         if line:
             lines2.append(line)
 
@@ -1242,7 +1234,7 @@ def _clean_lines(lines: List[str]) -> List[str]:
 
 def split_equal_space(line: str, word: str, example: str) -> str:
     """
-    Splits a case insensative line by an
+    Splits a case insensitive line by an
 
     reads:
      - 'SUBCASE = 5'

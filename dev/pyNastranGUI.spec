@@ -41,7 +41,7 @@ try:
     ghash = subprocess.check_output(['git', 'describe', '--always'], cwd=os.path.dirname(init_filename))
     ghash = ghash.decode('utf-8').rstrip()
 except:
-    # git isnt installed
+    # git isn't installed
     ghash = 'no.checksum.error'
 
 # hacking on the __init___.py file to set:
@@ -498,7 +498,7 @@ exe = EXE(pyz,
           name=os.path.join('build\\pyi.win32\\pyNastranGUI', 'pyNastranGUI.exe'),
           debug=DEBUG,
           strip=None,
-          #upx=True,
+          #upx=True,  # some compression thing; uses upx-dir defined somewhere...
           icon=icon_main,
           console=True )
 

@@ -31,7 +31,6 @@ from pyNastran.bdf.field_writer_16 import print_card_16
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.bdf.bdf import BDF
 
-
 class RigidElement(Element):
     def cross_reference(self, model: BDF) -> None:
         pass
@@ -1088,7 +1087,7 @@ class RBE2(RigidElement):
         self.Gmi_ref = model.EmptyNodes(self.Gmi, msg=msg)
         self.gn_ref = model.Node(self.Gn(), msg=msg)
 
-    def safe_cross_reference(self, model, xref_errors):
+    def safe_cross_reference(self, model: BDF, xref_errors):
         """
         Cross links the card so referenced cards can be extracted directly
 
@@ -1175,6 +1174,7 @@ class RBE3(RigidElement):
     type = 'RBE3'
     _properties = ['wt_cg_groups', 'ref_grid_id', 'Gijs_node_ids',
                    'dependent_nodes', 'independent_nodes']
+    _field_map = {4: 'refgrid', 5: 'refc',}
 
     @classmethod
     def _init_from_empty(cls):
@@ -1402,13 +1402,13 @@ class RBE3(RigidElement):
     #     return card
 
     @property
-    def ref_grid_id(self):
+    def ref_grid_id(self) -> int:
         if self.refgrid_ref is not None:
             return self.refgrid_ref.nid
         return self.refgrid
 
     @property
-    def Gmi_node_ids(self):
+    def Gmi_node_ids(self) -> List[int]:
         if self.Gmi_ref is None:
             return self.Gmi
         if len(self.Gmi_ref) == 0:
@@ -1416,7 +1416,7 @@ class RBE3(RigidElement):
         return self._node_ids(nodes=self.Gmi_ref, allow_empty_nodes=True)
 
     @property
-    def Gijs_node_ids(self):
+    def Gijs_node_ids(self) -> List[int]:
         if self.Gijs_ref is None:
             return self.Gijs
         Gijs = []
@@ -1445,7 +1445,7 @@ class RBE3(RigidElement):
         for Gij in self.Gijs:
             self.Gijs_ref.append(model.EmptyNodes(Gij, msg=msg))
 
-    def safe_cross_reference(self, model, debug=True):
+    def safe_cross_reference(self, model: BDF, debug: bool=True) -> int:
         msg = ', which is required by RBE3 eid=%s' % (self.eid)
         assert self.Gmi is not None
         self.Gmi_ref, unused_missing_nodes = model.safe_empty_nodes(self.Gmi, msg=msg)
@@ -1476,10 +1476,9 @@ class RBE3(RigidElement):
         self.Gijs = Gij
 
     @property
-    def independent_nodes(self):
+    def independent_nodes(self) -> List[int]:
         """
         gets the independent node ids
-        TODO: not checked
         """
         nodes = []
         for gij in self.Gijs:
@@ -1488,10 +1487,9 @@ class RBE3(RigidElement):
         return nodes
 
     @property
-    def dependent_nodes(self):
+    def dependent_nodes(self) -> List[int]:
         """
         gets the dependent node ids
-        TODO: not checked
         """
         nodes = [self.ref_grid_id]
         nodes += self.Gmi_node_ids
@@ -1572,6 +1570,7 @@ class RSPLINE(RigidElement):
             lengths of all segments
         comment : str; default=''
             a comment for the card
+
         """
         RigidElement.__init__(self)
         if comment:
@@ -1600,6 +1599,7 @@ class RSPLINE(RigidElement):
             a BDFCard object
         comment : str; default=''
             a comment for the card
+
         """
         eid = integer(card, 1, 'eid')
         diameter_ratio = double_or_blank(card, 2, 'diameter_ratio', 0.1)
@@ -1632,6 +1632,7 @@ class RSPLINE(RigidElement):
         ----------
         model : BDF()
             the BDF object
+
         """
         return
         #msg = ', which is required by RSPLINE eid=%s' % (self.eid)
@@ -1640,7 +1641,7 @@ class RSPLINE(RigidElement):
         #self.Gni_ref = self.Gni
         #self.Gmi_ref = self.Gmi
 
-    def safe_cross_reference(self, model, xref_errors):
+    def safe_cross_reference(self, model: BDF, xref_errors):
         """
         Cross links the card so referenced cards can be extracted directly
 
@@ -1648,6 +1649,7 @@ class RSPLINE(RigidElement):
         ----------
         model : BDF()
             the BDF object
+
         """
         self.cross_reference(model)
 
@@ -1836,7 +1838,7 @@ class RSSCON(RigidElement):
             #self.shell_eid_ref = model.Element(self.shell_eid, msg=msg)
             #self.solid_eid_ref = model.Element(self.shell_eid, msg=msg)
 
-    def safe_cross_reference(self, model, xref_errors):
+    def safe_cross_reference(self, model: BDF, xref_errors):
         """
         Cross links the card so referenced cards can be extracted directly
 

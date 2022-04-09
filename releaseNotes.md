@@ -8,6 +8,22 @@ If you have a bug/want a new feature or card, leave some feedback on the [Issue 
 
 Release Notes
 =============
+v1.3.5 (2022/4/xx)
+------------------
+This is a bug fix only release with the key reason being API dependency changes:
+ - numpy
+ - nptyping
+
+Requirements/Packages:
+ - adding support for vtk 9 (GUI)
+ - adding support for nptyping 1.1 (not 1.1.0)
+ - support for NX 2019.0, 2019.1
+
+Programmatics:
+ - Supports Python 3.7 and 3.8
+
+BDF:
+
 v1.3.3 (2020/6/28)
 ------------------
 This is a bug fix only release outside of:
@@ -16,7 +32,7 @@ which was overly complicated to do before.
 
 Requirements/Packages:
  - adding support for vtk 9 (GUI)
- - don't allow nptyping 1.1.0
+ - adding support for nptyping 1.1 (not 1.1.0)
  - support for NX 2019.0, 2019.1
 
 BDF:
@@ -28,7 +44,7 @@ BDF:
  - fixing TRIM2 aeqr setting bug (was defaulted to 1.0)
  - fixing ACMODL for NX (didn't support writing)
  - fixed DCONADD bug (added the dconadd_id to the summation)
- - DEQATN now checks that the function name is not an argument\
+ - DEQATN now checks that the function name is not an argument
  - DEQATN now supports tabs on line continuation lines
  - convert:
    - MAT8 now supports temperature scaling
@@ -85,6 +101,9 @@ F06 Flutter Plotter
  - better parsing of modes; '1,3:' is now supported
 
 minor:
+ - removal of some prints
+ - more docstrings
+ - more typing
  - fixing Tecplot to Nastran converter
 
 GUI:
@@ -261,7 +280,7 @@ Bug fixes:
 OP2:
  - geom bug fixes:
     - fixed reading bugs for QHBDY and SPCOFF
-    - better identifing duplicate property id (PBCOMP -> PBEAM)
+    - better identifying duplicate property id (PBCOMP -> PBEAM)
     - fixed CONVM error (it can be 6 or 7 fields, not only 6)
     - fixed ACCEL key
  - bug fixes:
@@ -273,7 +292,7 @@ GUI:
  - bug fixes:
    - better argument handling
    - fixed coordinate system scaling bug
-   - added check on highlight menu for model existance
+   - added check on highlight menu for model existence
    - fixed import for new version download menu
    - improved command line error message
    - fixed support for CAEROx models without elements
@@ -281,7 +300,7 @@ GUI:
 
 v1.3.1 / v1.3.0 (2020/4/8)
 --------------------------
- - This result has been superseeded by 1.3.2.  No code changes, but the PyPi page was redone.
+ - This result has been superseded by 1.3.2.  No code changes, but the PyPi page was redone.
 
 v1.2.1 (2019/5/24)
 ------------------

@@ -394,7 +394,7 @@ class CBUSH(BushElement):
         if self.ocid is not None and self.ocid != -1:
             self.ocid_ref = model.Coord(self.ocid, msg=msg)
 
-    def safe_cross_reference(self, model, xref_errors):
+    def safe_cross_reference(self, model: BDF, xref_errors):
         """
         Cross links the card so referenced cards can be extracted directly
 
@@ -540,7 +540,7 @@ class CBUSH1D(BushElement):
         if self.cid is not None:
             self.cid_ref = model.Coord(self.cid)
 
-    def safe_cross_reference(self, model, xref_errors):
+    def safe_cross_reference(self, model: BDF, xref_errors):
         """
         Cross links the card so referenced cards can be extracted directly
 
@@ -750,7 +750,7 @@ class CBUSH2D(BushElement):
         #if self.sptid is not None:
             #pass
 
-    def safe_cross_reference(self, model, xref_errors):
+    def safe_cross_reference(self, model: BDF, xref_errors):
         """
         Cross links the card so referenced cards can be extracted directly
 

@@ -134,7 +134,7 @@ class CFAST(Element):
         if self.gb:
             self.gb_ref = model.Node(self.Gb(), msg=msg)
 
-    def safe_cross_reference(self, model, xref_errors):
+    def safe_cross_reference(self, model: BDF, xref_errors):
         """
         Cross links the card so referenced cards can be extracted directly
 
@@ -399,7 +399,7 @@ class CGAP(Element):
             a comment for the card
         """
         eid = integer(card, 1, 'eid')
-        pid = integer_or_blank(card, 2, 'pid', eid)
+        pid = integer_or_blank(card, 2, 'pid', default=eid)
         ga = integer_or_blank(card, 3, 'ga')
         gb = integer_or_blank(card, 4, 'gb')
         x1_g0 = integer_double_or_blank(card, 5, 'x1_g0')
@@ -410,8 +410,8 @@ class CGAP(Element):
         elif isinstance(x1_g0, float):
             g0 = None
             x1 = x1_g0
-            x2 = double_or_blank(card, 6, 'x2', 0.0)
-            x3 = double_or_blank(card, 7, 'x3', 0.0)
+            x2 = double_or_blank(card, 6, 'x2', default=0.0)
+            x3 = double_or_blank(card, 7, 'x3', default=0.0)
             x = [x1, x2, x3]
         else:
             #raise RuntimeError('invalid CGAP...x1/g0 = %r' %(x1_g0))
@@ -495,7 +495,7 @@ class CGAP(Element):
         if self.cid:
             self.cid_ref = model.Coord(self.cid, msg=msg)
 
-    def safe_cross_reference(self, model, xref_errors):
+    def safe_cross_reference(self, model: BDF, xref_errors):
         """
         Cross links the card so referenced cards can be extracted directly
 
@@ -593,7 +593,7 @@ class CrackElement(Element):
         self.nodes_ref = model.EmptyNodes(self.nodes, msg=msg)
         self.pid_ref = model.Property(self.pid, msg=msg)
 
-    def safe_cross_reference(self, model, xref_errors):
+    def safe_cross_reference(self, model: BDF, xref_errors):
         """
         Cross links the card so referenced cards can be extracted directly
 
@@ -942,7 +942,7 @@ class PLOTEL(BaseCard):
             model.Node(self.nodes[1], msg=msg),
         ]
 
-    def safe_cross_reference(self, model, xref_errors):
+    def safe_cross_reference(self, model: BDF, xref_errors):
         """
         Cross links the card so referenced cards can be extracted directly
 
@@ -1168,7 +1168,7 @@ class GENEL(BaseCard):
         if len(self.ud):
             self.ud_nodes_ref = model.Nodes(self.ud[:, 0], msg=msg)
 
-    def safe_cross_reference(self, model, xref_errors):
+    def safe_cross_reference(self, model: BDF, xref_errors):
         """
         Cross links the card so referenced cards can be extracted directly
 

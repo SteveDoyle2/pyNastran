@@ -144,7 +144,7 @@ class DELAY(BaseCard):
     def get_delay_at_freq(self, freq):
         return self.nodes, self.components, self.delays
 
-    def cross_reference(self, model, xref_errors):
+    def cross_reference(self, model: BDF, xref_errors):
         """
         Cross links the card so referenced cards can be extracted directly
 
@@ -312,7 +312,7 @@ class DPHASE(BaseCard):
         msg = ', which is required by DPHASE sid=%s' % self.sid
         self.nodes_ref = model.Nodes(self.node_ids, msg=msg)
 
-    def safe_cross_reference(self, model, xref_errors):
+    def safe_cross_reference(self, model: BDF, xref_errors):
         return self.cross_reference(model)
 
     def uncross_reference(self) -> None:
@@ -1032,32 +1032,32 @@ class NLPARM(BaseCard):
         # PARAM,NLTOL,0, in which case the default is 1.
         ninc = integer_or_blank(card, 2, 'ninc')
 
-        dt = double_or_blank(card, 3, 'dt', 0.0)
-        kmethod = string_or_blank(card, 4, 'kmethod', 'AUTO')
-        kstep = integer_or_blank(card, 5, 'kstep', 5)
-        max_iter = integer_or_blank(card, 6, 'max_iter', 25)
-        conv = string_or_blank(card, 7, 'conv', 'PW')
-        int_out = string_or_blank(card, 8, 'intOut', 'NO')
+        dt = double_or_blank(card, 3, 'dt', default=0.0)
+        kmethod = string_or_blank(card, 4, 'kmethod', default='AUTO')
+        kstep = integer_or_blank(card, 5, 'kstep', default=5)
+        max_iter = integer_or_blank(card, 6, 'max_iter', default=25)
+        conv = string_or_blank(card, 7, 'conv', default='PW')
+        int_out = string_or_blank(card, 8, 'intOut', default='NO')
 
         # line 2
-        eps_u = double_or_blank(card, 9, 'eps_u', 0.01)
-        eps_p = double_or_blank(card, 10, 'eps_p', 0.01)
-        eps_w = double_or_blank(card, 11, 'eps_w', 0.01)
-        max_div = integer_or_blank(card, 12, 'max_div', 3)
+        eps_u = double_or_blank(card, 9, 'eps_u', default=0.01)
+        eps_p = double_or_blank(card, 10, 'eps_p', default=0.01)
+        eps_w = double_or_blank(card, 11, 'eps_w', default=0.01)
+        max_div = integer_or_blank(card, 12, 'max_div', default=3)
 
         if kmethod == 'PFNT':
-            max_qn = integer_or_blank(card, 13, 'max_qn', 0)
+            max_qn = integer_or_blank(card, 13, 'max_qn', default=0)
         else:
-            max_qn = integer_or_blank(card, 13, 'max_qn', max_iter)
+            max_qn = integer_or_blank(card, 13, 'max_qn', default=max_iter)
 
-        max_ls = integer_or_blank(card, 14, 'max_ls', 4)
-        fstress = double_or_blank(card, 15, 'fstress', 0.2)
-        ls_tol = double_or_blank(card, 16, 'ls_tol', 0.5)
+        max_ls = integer_or_blank(card, 14, 'max_ls', default=4)
+        fstress = double_or_blank(card, 15, 'fstress', default=0.2)
+        ls_tol = double_or_blank(card, 16, 'ls_tol', default=0.5)
 
         # line 3
-        max_bisect = integer_or_blank(card, 17, 'max_bisect', 5)
-        max_r = double_or_blank(card, 21, 'max_r', 20.)
-        rtol_b = double_or_blank(card, 23, 'rtol_b', 20.)
+        max_bisect = integer_or_blank(card, 17, 'max_bisect', default=5)
+        max_r = double_or_blank(card, 21, 'max_r', default=20.)
+        rtol_b = double_or_blank(card, 23, 'rtol_b', default=20.)
         assert len(card) <= 24, 'len(NLPARM card) = %i\ncard=%s' % (len(card), card)
         return NLPARM(nlparm_id, ninc, dt, kmethod, kstep, max_iter, conv,
                       int_out, eps_u, eps_p, eps_w, max_div,

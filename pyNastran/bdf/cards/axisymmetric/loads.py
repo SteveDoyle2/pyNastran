@@ -134,7 +134,7 @@ class FORCEAX(BaseCard):
     #def nodes_ref(self):
         #return [self.ga_ref, self.gb_ref]
 
-    def safe_cross_reference(self, model, safe_coord):
+    def safe_cross_reference(self, model: BDF, safe_coord):
         return self.cross_reference(model)
 
     def uncross_reference(self) -> None:
@@ -310,7 +310,7 @@ class PLOADX1(BaseCard):
     def nodes_ref(self):
         return [self.ga_ref, self.gb_ref]
 
-    def safe_cross_reference(self, model, safe_coord):
+    def safe_cross_reference(self, model: BDF, safe_coord):
         return self.cross_reference(model)
 
     def uncross_reference(self) -> None:
@@ -517,7 +517,7 @@ class TEMPAX(ThermalLoad):
     def cross_reference(self, model: BDF) -> None:
         pass
 
-    def safe_cross_reference(self, model, debug=True):
+    def safe_cross_reference(self, model: BDF, debug=True):
         pass
 
     def uncross_reference(self) -> None:

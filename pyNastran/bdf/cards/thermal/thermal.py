@@ -203,7 +203,7 @@ class CHBDYE(ThermalElement):
     def cross_reference(self, model: BDF) -> None:
         pass
 
-    def safe_cross_reference(self, model, xref_errors):
+    def safe_cross_reference(self, model: BDF, xref_errors):
         pass
 
     def uncross_reference(self) -> None:
@@ -388,10 +388,10 @@ class CHBDYG(ThermalElement):
         # no field 2
 
         surface_type = string(card, 3, 'Type')
-        iview_front = integer_or_blank(card, 4, 'iview_front', 0)
-        iview_back = integer_or_blank(card, 8, 'iview_back', 0)
-        rad_mid_front = integer_or_blank(card, 6, 'rad_mid_front', 0)
-        rad_mid_back = integer_or_blank(card, 7, 'rad_mid_back', 0)
+        iview_front = integer_or_blank(card, 4, 'iview_front', default=0)
+        iview_back = integer_or_blank(card, 8, 'iview_back', default=0)
+        rad_mid_front = integer_or_blank(card, 6, 'rad_mid_front', default=0)
+        rad_mid_back = integer_or_blank(card, 7, 'rad_mid_back', default=0)
         # no field 8
 
         n = 1
@@ -472,7 +472,7 @@ class CHBDYG(ThermalElement):
         msg = ', which is required by CHBDYG eid=%s' % self.eid
         self.nodes_ref = model.EmptyNodes(self.nodes, msg=msg)
 
-    def safe_cross_reference(self, model, xref_errors):
+    def safe_cross_reference(self, model: BDF, xref_errors):
         msg = ', which is required by CHBDYG eid=%s' % self.eid
         self.nodes_ref = model.EmptyNodes(self.nodes, msg=msg)
 
@@ -673,7 +673,7 @@ class CHBDYP(ThermalElement):
         pid = integer(card, 2, 'pid')
         surface_type = string(card, 3, 'Type')
 
-        iview_front = integer_or_blank(card, 4, 'iview_front', 0)
+        iview_front = integer_or_blank(card, 4, 'iview_front', default=0)
         iview_back = integer_or_blank(card, 5, 'iview_back', 0)
         g1 = integer(card, 6, 'g1')
 
@@ -682,11 +682,11 @@ class CHBDYP(ThermalElement):
         else:
             g2 = blank(card, 7, 'g2')
 
-        g0 = integer_or_blank(card, 8, 'g0', 0)
-        rad_mid_front = integer_or_blank(card, 9, 'rad_mid_front', 0)
-        rad_mid_back = integer_or_blank(card, 10, 'rad_mid_back', 0)
+        g0 = integer_or_blank(card, 8, 'g0', default=0)
+        rad_mid_front = integer_or_blank(card, 9, 'rad_mid_front', default=0)
+        rad_mid_back = integer_or_blank(card, 10, 'rad_mid_back', default=0)
         gmid = integer_or_blank(card, 11, 'gmid')
-        ce = integer_or_blank(card, 12, 'ce', 0)
+        ce = integer_or_blank(card, 12, 'ce', default=0)
         e1 = double_or_blank(card, 13, 'e1')
         e2 = double_or_blank(card, 14, 'e2')
         e3 = double_or_blank(card, 15, 'e3')
@@ -998,13 +998,13 @@ class PCONV(ThermalProperty):
         """
         pconid = integer(card, 1, 'pconid')
         mid = integer_or_blank(card, 2, 'mid')
-        form = integer_or_blank(card, 3, 'form', 0)
-        expf = double_or_blank(card, 4, 'expf', 0.0)
-        ftype = integer_or_blank(card, 5, 'ftype', 0)
+        form = integer_or_blank(card, 3, 'form', default=0)
+        expf = double_or_blank(card, 4, 'expf', default=0.0)
+        ftype = integer_or_blank(card, 5, 'ftype', default=0)
         tid = integer_or_blank(card, 6, 'tid')
         chlen = double_or_blank(card, 9, 'chlen')
         gidin = integer_or_blank(card, 10, 'gidin')
-        ce = integer_or_blank(card, 11, 'ce', 0)
+        ce = integer_or_blank(card, 11, 'ce', default=0)
         e1 = double_or_blank(card, 12, 'e1')
         e2 = double_or_blank(card, 13, 'e2')
         e3 = double_or_blank(card, 14, 'e3')
@@ -1190,12 +1190,12 @@ class PCONVM(ThermalProperty):
         """
         pconid = integer(card, 1, 'pconid')
         mid = integer(card, 2, 'mid')
-        form = integer_or_blank(card, 3, 'form', 0)
-        flag = integer_or_blank(card, 4, 'flag', 0)
+        form = integer_or_blank(card, 3, 'form', default=0)
+        flag = integer_or_blank(card, 4, 'flag', default=0)
         coef = double(card, 5, 'coef')
-        expr = double_or_blank(card, 6, 'expr', 0.0)
-        exppi = double_or_blank(card, 7, 'exppi', 0.0)
-        exppo = double_or_blank(card, 8, 'exppo', 0.0)
+        expr = double_or_blank(card, 6, 'expr', default=0.0)
+        exppi = double_or_blank(card, 7, 'exppi', default=0.0)
+        exppo = double_or_blank(card, 8, 'exppo', default=0.0)
         assert len(card) <= 9, 'len(PCONVM card) = %i\ncard=%s' % (len(card), card)
         return PCONVM(pconid, mid, coef, form=form, flag=flag,
                       expr=expr, exppi=exppi, exppo=exppo, comment=comment)
@@ -1316,9 +1316,9 @@ class PHBDY(ThermalProperty):
 
         """
         pid = integer(card, 1, 'pid')
-        af = double_or_blank(card, 2, 'af')
-        d1 = double_or_blank(card, 3, 'd1')
-        d2 = double_or_blank(card, 4, 'd2', d1)
+        af = double_or_blank(card, 2, 'af', default=None)
+        d1 = double_or_blank(card, 3, 'd1', default=None)
+        d2 = double_or_blank(card, 4, 'd2', default=d1)
         assert len(card) <= 5, 'len(PHBDY card) = %i\ncard=%s' % (len(card), card)
         return PHBDY(pid, af, d1, d2, comment=comment)
 
@@ -1673,8 +1673,6 @@ class CONVM(ThermalBC):
             element id (CHBDYP)
         pconid : int
             property ID (PCONVM)
-        mid : int
-            Material ID
         ta1 : int
             ambient point for convection
         ta2 : int; default=None
@@ -1729,11 +1727,11 @@ class CONVM(ThermalBC):
         """
         eid = integer(card, 1, 'eid')
         pconvm = integer(card, 2, 'pconvm')
-        film_node = integer_or_blank(card, 3, 'film_node', 0)
-        cntmdot = integer_or_blank(card, 4, 'cntmdot', 0)
+        film_node = integer_or_blank(card, 3, 'film_node', default=0)
+        cntmdot = integer_or_blank(card, 4, 'cntmdot', default=0)
         ta1 = integer(card, 5, 'ta1')
-        ta2 = integer_or_blank(card, 6, 'ta2', ta1)
-        mdot = double_or_blank(card, 7, 'mdot', 1.0)
+        ta2 = integer_or_blank(card, 6, 'ta2', default=ta1)
+        mdot = double_or_blank(card, 7, 'mdot', default=1.0)
         assert len(card) <= 8, 'len(CONVM card) = %i\ncard=%s' % (len(card), card)
         return CONVM(eid, pconvm, ta1, film_node=film_node, cntmdot=cntmdot,
                      ta2=ta2, mdot=mdot, comment=comment)

@@ -31,7 +31,7 @@ dict_int_list_obj_attrs = [
 
 # dict[key] : value
 dict_int_obj_attrs = [
-    # are handled explictly----
+    # are handled explicitly----
     #'elements',
     #'nodes',
     #'coords',
@@ -371,7 +371,7 @@ def _export_scalar_group(hdf5_file, model: BDF, encoding):
 
 def _export_minor_attributes(hdf5_file, model: BDF, encoding):
     """
-    Minor atributes include:
+    Minor attributes include:
      - encoding
      - include_dir
      - is_enddata
@@ -598,7 +598,7 @@ def _h5_export_class(sub_group: Any, model: BDF, key: str, value: Any,
         #for prop in value._properties:
             #try:
                 #h5attrs.remove(prop)
-            #except:
+            #except Exception:
                 #print('cant remove %s' % prop)
                 #print(value)
                 #raise

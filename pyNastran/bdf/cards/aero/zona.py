@@ -162,6 +162,7 @@ class ZONA:
                            % (pid, msg, np.unique(list(self.pafoil.keys()))))
 
     def update_for_zona(self):
+        """updates for zona"""
         card_parser = self.model._card_parser
         card_parser['TRIM'] = (TRIM_ZONA, self.model._add_trim_object)
         card_parser['CAERO7'] = (CAERO7, self.model._add_caero_object)
@@ -1235,7 +1236,7 @@ class PANLST1(Spline):
         self.caero_ref = model.CAero(self.macro_id, msg=msg)
         self.aero_element_ids = np.arange(self.box1, self.box2)
 
-    def safe_cross_reference(self, model, xref_errors):
+    def safe_cross_reference(self, model: BDF, xref_errors):
         self.cross_reference(model)
 
     def raw_fields(self):
@@ -1500,7 +1501,7 @@ class PAFOIL7(BaseCard):
         self.i_thickness_tip_ref = model.AEFact(self.i_thickness_tip, msg=msg)
         self.i_camber_tip_ref = model.AEFact(self.i_camber_tip, msg=msg)
 
-    def safe_cross_reference(self, model, xref_errors):
+    def safe_cross_reference(self, model: BDF, xref_errors):
         self.cross_reference(model)
 
     def uncross_reference(self) -> None:
@@ -1721,7 +1722,7 @@ class BODY7(BaseCard):
         #self.ascid_ref = model.Acsid(msg=msg)
         self.ascid_ref = model.Coord(0, msg=msg)
 
-    def safe_cross_reference(self, model, xref_errors):
+    def safe_cross_reference(self, model: BDF, xref_errors):
         self.cross_reference(model)
 
     def uncross_reference(self) -> None:
@@ -1795,6 +1796,7 @@ class BODY7(BaseCard):
         nsegmesh = len(self.segmesh_refs)
         if nsegmesh == 0:
             raise RuntimeError('Number of SEGMESH  references on BODY7=0\n%s' % str(self))
+
         for isegmesh, segmesh in enumerate(self.segmesh_refs):
             itypes = segmesh.itypes
 
@@ -2747,17 +2749,17 @@ class CAERO7(BaseCard):
 
     def get_box_index(self, box_id):
         """
-        Get the index of ``self.box_ids`` that coresponds to the given box id.
+        Get the index of ``self.box_ids`` that corresponds to the given box id.
 
         Parameters
         -----------
         box_id : int
-            Box id to ge tthe index of.
+            Box id to get the index of.
 
         Returns
         --------
         index : tuple
-            Index of ``self.box_ids`` that coresponds to the given box id.
+            Index of ``self.box_ids`` that corresponds to the given box id.
 
         """
         if box_id not in self.box_ids:
@@ -2778,7 +2780,7 @@ class CAERO7(BaseCard):
         Returns
         --------
         xyz_quarter_chord : ndarray
-            Location of box quater chord in global.
+            Location of box quarter chord in global.
 
         """
         return self._get_box_x_chord_center(box_id, 0.25)
@@ -2932,6 +2934,11 @@ class CAERO7(BaseCard):
         self.p1 += dxyz
         self.p4 += dxyz
 
+    def get_LSpan(self):
+        if self.lspan_ref is not None:
+            return self.lspan_ref.sid
+        return self.lspan
+
     def raw_fields(self):
         """
         Gets the fields in their unmodified form
@@ -2952,11 +2959,6 @@ class CAERO7(BaseCard):
             list(self.p1) + [self.x12, None, None, None, None] +
             list(self.p4) + [self.x43, None, None, None, None])
         return list_fields
-
-    def get_LSpan(self):
-        if self.lspan_ref is not None:
-            return self.lspan_ref.sid
-        return self.lspan
 
     def repr_fields(self):
         """
@@ -3589,7 +3591,7 @@ class FLUTTER_ZONA(Spline):
         #self.panlst_ref.cross_reference(model)
         #self.aero_element_ids = self.panlst_ref.aero_element_ids
 
-    def safe_cross_reference(self, model, xref_errors=None):
+    def safe_cross_reference(self, model: BDF, xref_errors=None):
         return
         #msg = ', which is required by SPLINE1 eid=%s' % self.eid
         #try:
@@ -3715,7 +3717,7 @@ class SPLINE1_ZONA(Spline):
         self.panlst_ref.cross_reference(model)
         self.aero_element_ids = self.panlst_ref.aero_element_ids
 
-    def safe_cross_reference(self, model, xref_errors):
+    def safe_cross_reference(self, model: BDF, xref_errors):
         msg = ', which is required by SPLINE1 eid=%s' % self.eid
         try:
             self.setg_ref = model.Set(self.setg, msg=msg)
@@ -3872,12 +3874,12 @@ class SPLINE2_ZONA(Spline):
         self.panlst_ref.cross_reference(model)
         self.aero_element_ids = self.panlst_ref.aero_element_ids
 
-    def safe_cross_reference(self, model, xref_errors):
+    def safe_cross_reference(self, model: BDF, xref_errors):
         try:
             msg = ', which is required by SPLINE1 eid=%s' % self.eid
             self.setg_ref = model.Set(self.setg, msg=msg)
             self.setg_ref.cross_reference_set(model, 'Node', msg=msg)
-        except:
+        except Exception:
             pass
         #self.nodes_ref = model.Nodes(self.nodes, msg=msg)
         #self.caero_ref = model.CAero(self.caero, msg=msg)
@@ -3978,12 +3980,12 @@ class SPLINE3_ZONA(Spline):
         self.panlst_ref.cross_reference(model)
         self.aero_element_ids = self.panlst_ref.aero_element_ids
 
-    def safe_cross_reference(self, model, xref_errors):
+    def safe_cross_reference(self, model: BDF, xref_errors):
         msg = ', which is required by SPLINE3 eid=%s' % self.eid
         try:
             self.setg_ref = model.Set(self.setg, msg=msg)
             self.setg_ref.cross_reference_set(model, 'Node', msg=msg)
-        except:
+        except Exception:
             pass
         self.panlst_ref = model.zona.panlsts[self.panlst]
         self.panlst_ref.safe_cross_reference(model, xref_errors)

@@ -16,7 +16,7 @@ All static loads are defined in this file.  This includes:
 
 """
 from __future__ import annotations
-from typing import TYPE_CHECKING
+from typing import List, Dict, Any, TYPE_CHECKING
 
 import numpy as np
 from numpy import array, cross, allclose, unique
@@ -163,7 +163,7 @@ class LOAD(LoadCombination):
                     scale_factors += [scale * j_scale
                                       for j_scale in reduced_scale_factors]
                 else:
-                    msg = ('%s isnt supported in get_reduced_loads method'
+                    msg = ('%s is not supported in get_reduced_loads method'
                            % load.__class__.__name__)
                     raise NotImplementedError(msg)
         return (scale_factors, loads)
@@ -190,7 +190,7 @@ class LOAD(LoadCombination):
             load_ids2.append(load_id2)
         self.load_ids_ref = load_ids2
 
-    def safe_cross_reference(self, model, xref_errors, debug=True):
+    def safe_cross_reference(self, model: BDF, xref_errors, debug=True):
         load_ids2 = []
         msg = ', which is required by LOAD=%s' % (self.sid)
         for load_id in self.load_ids:
@@ -283,7 +283,7 @@ class CLOAD(LoadCombination):
             load_ids2.append(load_id2)
         self.load_ids_ref = load_ids2
 
-    def safe_cross_reference(self, model, xref_errors, debug=True):
+    def safe_cross_reference(self, model: BDF, xref_errors, debug=True):
         self.cross_reference(model)
 
     def get_load_ids(self):
@@ -463,7 +463,7 @@ class GRAV(BaseCard):
         msg = ', which is required by GRAV sid=%s' % self.sid
         self.cid_ref = model.Coord(self.cid, msg=msg)
 
-    def safe_cross_reference(self, model, xref_errors, debug=True):
+    def safe_cross_reference(self, model: BDF, xref_errors, debug=True):
         # msg = "Couldn't find CORDx=%s which is required by GRAV sid=%s" % (self.cid, self.sid)
         msg = ', which is required by GRAV sid=%s' % self.sid
         self.cid_ref = model.safe_coord(self.cid, self.sid, xref_errors, msg=msg)
@@ -639,7 +639,7 @@ class ACCEL(BaseCard):
         self.cid = self.Cid()
         self.cid_ref = None
 
-    def safe_cross_reference(self, model, xref_errors, debug=True):
+    def safe_cross_reference(self, model: BDF, xref_errors, debug=True):
         msg = ', which is required by ACCEL sid=%s' % self.sid
         self.cid_ref = model.safe_coord(self.cid, self.sid, xref_errors, msg=msg)
 
@@ -784,7 +784,7 @@ class ACCEL1(BaseCard):
         self.cid_ref = model.Coord(self.cid, msg=msg)
         self.nodes_ref = model.EmptyNodes(self.node_ids, msg=msg)
 
-    def safe_cross_reference(self, model, xref_errors):
+    def safe_cross_reference(self, model: BDF, xref_errors):
         msg = ', which is required by ACCEL1 sid=%s' % self.sid
         self.cid_ref = model.safe_coord(self.cid, self.sid, xref_errors, msg=msg)
         self.nodes_ref = model.EmptyNodes(self.node_ids, msg=msg)
@@ -1013,7 +1013,7 @@ class Load0(BaseCard):
         self.node_ref = model.Node(self.node, msg=msg)
         self.cid_ref = model.Coord(self.cid, msg=msg)
 
-    def safe_cross_reference(self, model, xref_errors, debug=True):
+    def safe_cross_reference(self, model: BDF, xref_errors, debug=True):
         msg = ', which is required by %s sid=%s' % (self.type, self.sid)
         # try:
         self.node_ref = model.Node(self.node, msg=msg)
@@ -1237,7 +1237,7 @@ class Load1(BaseCard):
         self.g1_ref = None
         self.g2_ref = None
 
-    def safe_cross_reference(self, model, safe_coord, debug=True):
+    def safe_cross_reference(self, model: BDF, safe_coord, debug=True):
         """.. todo:: cross reference and fix repr function"""
         return self.cross_reference(model)
         #msg = ', which is required by FORCE1 sid=%s' % self.sid
@@ -1495,7 +1495,7 @@ class Load2(BaseCard):
             xyz1, xyz2, xyz3, xyz4, v21, v2, self.xyz)
         normalize(self, msgi)
 
-    def safe_cross_reference(self, model, safe_coord, debug=True):
+    def safe_cross_reference(self, model: BDF, safe_coord, debug=True):
         """.. todo:: cross reference and fix repr function"""
         msg = ', which is required by %s sid=%s' % (self.type, self.sid)
         is_failed = False
@@ -2069,7 +2069,7 @@ class PLOAD(Load):
         """
         pass
 
-    def safe_cross_reference(self, model, safe_coord):
+    def safe_cross_reference(self, model: BDF, safe_coord):
         return self.cross_reference(model)
 
     @staticmethod
@@ -2275,7 +2275,7 @@ class PLOAD1(Load):
         msg = ', which is required by PLOAD1 sid=%s' % self.sid
         self.eid_ref = model.Element(self.eid, msg=msg)
 
-    def safe_cross_reference(self, model, safe_coord):
+    def safe_cross_reference(self, model: BDF, safe_coord):
         return self.cross_reference(model)
 
     def uncross_reference(self) -> None:
@@ -2367,7 +2367,7 @@ class PLOAD2(Load):
         self.eids_ref = None
 
     @classmethod
-    def add_card(cls, card, comment=''):
+    def add_card(cls, card, comment: str=''):
         """
         Adds a PLOAD2 card from ``BDF.add_card(...)``
 
@@ -2441,7 +2441,7 @@ class PLOAD2(Load):
     def get_loads(self):
         return [self]
 
-    def raw_fields(self):
+    def raw_fields(self) -> List[Any]:
         list_fields = ['PLOAD2', self.sid, self.pressure]
         eids = self.element_ids
         if len(eids) <= 5:
@@ -2457,7 +2457,7 @@ class PLOAD2(Load):
             list_fields += [eids[0], 'THRU', eids[-1]]
         return list_fields
 
-    def repr_fields(self):
+    def repr_fields(self) -> List[Any]:
         return self.raw_fields()
 
     def write_card(self, size: int=8, is_double: bool=False) -> str:

@@ -157,7 +157,7 @@ class AEROS(Aero):
 
     def cross_reference(self, model: BDF) -> None:
         """
-        Cross refernece aerodynamic coordinate system.
+        Cross reference aerodynamic coordinate system.
 
         Parameters
         ----------
@@ -169,9 +169,9 @@ class AEROS(Aero):
         self.acsid_ref = model.Coord(self.acsid, msg=msg)
         self.rcsid_ref = model.Coord(self.rcsid, msg=msg)
 
-    def safe_cross_reference(self, model, xref_errors):
+    def safe_cross_reference(self, model: BDF, xref_errors):
         """
-        Safe cross refernece aerodynamic coordinate system.
+        Safe cross reference aerodynamic coordinate system.
 
         Parameters
         ----------
@@ -480,7 +480,7 @@ class CSSCHD(Aero):
         self.lmach_ref = model.AEFact(self.lmach, msg=msg)
         self.lschd_ref = model.AEFact(self.lschd, msg=msg)
 
-    def safe_cross_reference(self, model, xref_errors):
+    def safe_cross_reference(self, model: BDF, xref_errors):
         msg = ', which is required by CSSCHD sid=%s' % self.sid
         try:
             self.aesid_ref = model.AESurf(self.aesid, msg=msg)
@@ -570,7 +570,7 @@ class DIVERG(BaseCard):
         machs = [0.5, 0.75]
         return DIVERG(sid, nroots, machs, comment='')
 
-    def __init__(self, sid, nroots, machs, comment=''):
+    def __init__(self, sid: int, nroots: int, machs: List[float], comment: str=''):
         """
         Creates an DIVERG card, which is used in divergence
         analysis (SOL 144).
@@ -779,7 +779,7 @@ class TRIM(BaseCard):
         .. warning ::  This probably gets AELINKs/AEPARMs/AESURFSs wrong.
 
         **The TRIM equality**
-        ndelta = (naestat + naesurf + naeparm) - (
+        ndelta = (naestat + naesurf + naeparm)
                - (ntrim + ntrim_aesurf? + naelink + nsuport_dofs + nsuport1_dofs)
         ndelta = 0
         ntrim_aesurf is not included, but it might exist...

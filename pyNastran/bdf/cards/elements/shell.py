@@ -133,14 +133,12 @@ class ShellElement(Element):
     def __init__(self):
         Element.__init__(self)
 
-    def Theta_mcid(self):
-        # () -> int
+    def Theta_mcid(self) -> int:
         if self.theta_mcid_ref is None:
             return self.theta_mcid
         return self.theta_mcid_ref.cid
 
-    def _get_theta_mcid_repr(self):
-        # : () -> str
+    def _get_theta_mcid_repr(self) -> str:
         """
         set_blank_if_default doesn't distinguish between 0 and 0.0,
         so we fix it
@@ -329,7 +327,7 @@ class TriShell(ShellElement):
         n1, n2, n3 = self.get_node_positions(nodes=self.nodes_ref[:3])
         try:
             n = _normal(n1 - n2, n1 - n3)
-        except:
+        except Exception:
             msg = 'ERROR computing normal vector for eid=%i.\n' % self.eid
             msg += '  nid1=%i n1=%s\n' % (self.nodes_ref[0].nid, n1)
             msg += '  nid2=%i n2=%s\n' % (self.nodes_ref[1].nid, n2)
@@ -1524,7 +1522,7 @@ class CTRIAR(TriShell):
         if isinstance(self.theta_mcid, integer_types):
             self.theta_mcid_ref = model.Coord(self.theta_mcid, msg=msg)
 
-    def safe_cross_reference(self, model, xref_errors):
+    def safe_cross_reference(self, model: BDF, xref_errors):
         """
         Cross links the card so referenced cards can be extracted directly
 
@@ -1754,7 +1752,7 @@ class QuadShell(ShellElement):
         return self.Area()
 
     def Area(self):
-        """
+        r"""
         .. math:: A = \frac{1}{2} \lvert (n_1-n_3) \times (n_2-n_4) \rvert
         where a and b are the quad's cross node point vectors"""
         (n1, n2, n3, n4) = self.get_node_positions(nodes=self.nodes_ref[:4])
@@ -1762,7 +1760,7 @@ class QuadShell(ShellElement):
         return area
 
     def Area_no_xref(self, model):
-        """
+        r"""
         .. math:: A = \frac{1}{2} \lvert (n_1-n_3) \times (n_2-n_4) \rvert
         where a and b are the quad's cross node point vectors"""
         (n1, n2, n3, n4) = self.get_node_positions_no_xref(model, nodes=self.nodes[:4])
@@ -2334,7 +2332,7 @@ class CQUAD4(QuadShell):
         if isinstance(self.theta_mcid, integer_types):
             self.theta_mcid_ref = model.Coord(self.theta_mcid, msg=msg)
 
-    def safe_cross_reference(self, model, xref_errors):
+    def safe_cross_reference(self, model: BDF, xref_errors):
         """
         Cross links the card so referenced cards can be extracted directly
 
@@ -3051,7 +3049,7 @@ class CPLSTx6(TriShell):
         self.nodes_ref = model.EmptyNodes(self.node_ids, msg=msg)
         self.pid_ref = model.Property(self.Pid(), msg=msg)
 
-    def safe_cross_reference(self, model, xref_errors):
+    def safe_cross_reference(self, model: BDF, xref_errors):
         """
         Cross links the card so referenced cards can be extracted directly
 
@@ -3318,7 +3316,7 @@ class CPLSTx8(QuadShell):
         self.nodes_ref = model.EmptyNodes(self.node_ids, msg=msg)
         self.pid_ref = model.Property(self.Pid(), msg=msg)
 
-    def safe_cross_reference(self, model, xref_errors):
+    def safe_cross_reference(self, model: BDF, xref_errors):
         """
         Cross links the card so referenced cards can be extracted directly
 
@@ -3640,7 +3638,7 @@ class CQUADR(QuadShell):
         if isinstance(self.theta_mcid, integer_types):
             self.theta_mcid_ref = model.Coord(self.theta_mcid, msg=msg)
 
-    def safe_cross_reference(self, model, xref_errors):
+    def safe_cross_reference(self, model: BDF, xref_errors):
         """
         Cross links the card so referenced cards can be extracted directly
 
@@ -3866,7 +3864,7 @@ class CPLSTS3(TriShell):
         self.nodes_ref = model.Nodes(self.node_ids, msg=msg)
         self.pid_ref = model.Property(self.pid, msg=msg)
 
-    def safe_cross_reference(self, model, xref_errors):
+    def safe_cross_reference(self, model: BDF, xref_errors):
         """
         Cross links the card so referenced cards can be extracted directly
 
@@ -4117,7 +4115,7 @@ class CQUAD(QuadShell):
         if isinstance(self.theta_mcid, integer_types):
             self.theta_mcid_ref = model.Coord(self.theta_mcid, msg=msg)
 
-    def safe_cross_reference(self, model, xref_errors):
+    def safe_cross_reference(self, model: BDF, xref_errors):
         """
         Cross links the card so referenced cards can be extracted directly
 
@@ -4409,7 +4407,7 @@ class CQUAD8(QuadShell):
         if isinstance(self.theta_mcid, integer_types):
             self.theta_mcid_ref = model.Coord(self.theta_mcid, msg=msg)
 
-    def safe_cross_reference(self, model, xref_errors):
+    def safe_cross_reference(self, model: BDF, xref_errors):
         """
         Cross links the card so referenced cards can be extracted directly
 
@@ -4633,7 +4631,7 @@ class SNORM(BaseCard):
         msg = ', which is required by SNORM nid=%s' % self.nid
         self.cid_ref = model.Coord(self.cid, msg=msg)
 
-    def safe_cross_reference(self, model, xref_errors):
+    def safe_cross_reference(self, model: BDF, xref_errors):
         """
         Cross links the card so referenced cards can be extracted directly
 
