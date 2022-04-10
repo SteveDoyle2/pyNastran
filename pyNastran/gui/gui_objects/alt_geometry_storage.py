@@ -45,7 +45,7 @@ class AltGeometry:
             only relevant to wire+surf
             the active state of the mesh
         is_visible : bool; default=True
-            is this actor currently visable
+            is this actor currently visible
         is_pickable : bool; default=False
             can you pick a node/cell on this actor
         label_actors : List[annotation]; None -> []
@@ -102,6 +102,7 @@ class AltGeometry:
         if representation not in self.representations:
             msg = 'representation=%r is invalid\nrepresentations=%r' % (
                 representation, self.representations)
+            raise RuntimeError(msg)
         self.representation = representation
 
     def __deepcopy__(self, memo):
@@ -201,4 +202,5 @@ class AltGeometry:
         if representation not in self.representations:
             msg = 'representation=%r is invalid\nrepresentations=%r' % (
                 representation, self.representations)
+            raise RuntimeError(msg)
         self._representation = representation

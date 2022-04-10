@@ -51,7 +51,7 @@ elif qt_version == "pyside2":
     from PySide2.QtWidgets import QWidget, QSizePolicy, QApplication
     from PySide2.QtCore import Qt, QTimer, QObject, QSize, QEvent
 else:
-    raise ImportError("Unknown PyQt implementation " + repr(PyQtImpl))
+    raise ImportError("Unknown PyQt implementation " + repr(qt_version))
 
 
 class QVTKRenderWindowInteractor(QWidget):

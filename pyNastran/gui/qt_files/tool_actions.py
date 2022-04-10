@@ -2,7 +2,7 @@
 from __future__ import annotations
 import os
 import traceback
-from typing import List, Optional, TYPE_CHECKING
+from typing import Tuple, List, Dict, Optional, TYPE_CHECKING
 
 import numpy as np
 import vtk
@@ -67,11 +67,12 @@ class ToolActions:
         if not self.gui.run_vtk:
             return
         axes = vtk.vtkAxesActor()
-        self.gui.corner_axis = vtk.vtkOrientationMarkerWidget()
-        self.gui.corner_axis.SetOrientationMarker(axes)
-        self.gui.corner_axis.SetInteractor(self.vtk_interactor)
-        self.gui.corner_axis.SetEnabled(1)
-        self.gui.corner_axis.InteractiveOff()
+        corner_axis = vtk.vtkOrientationMarkerWidget()
+        corner_axis.SetOrientationMarker(axes)
+        corner_axis.SetInteractor(self.vtk_interactor)
+        corner_axis.SetEnabled(1)
+        corner_axis.InteractiveOff()
+        self.gui.corner_axis = corner_axis
 
     def create_coordinate_system(self, coord_id: int, dim_max: float, label: str='',
                                  origin=None, matrix_3x3=None,
@@ -137,7 +138,9 @@ class ToolActions:
             self.rend.AddActor(axes)
 
     #---------------------------------------------------------------------------
-    def create_text(self, position, label, text_size: int=18):
+    def create_text(self, position: np.ndarray,
+                    label: str,
+                    text_size: int=18):
         """creates the lower left text actors"""
         text_actor = vtk.vtkTextActor()
 
@@ -156,9 +159,10 @@ class ToolActions:
         self.gui.text_actors[self.itext] = text_actor
         self.itext += 1
 
-    def update_text_actors(self, subcase_id, subtitle,
-                           imin, min_value,
-                           imax, max_value, label, location):
+    def update_text_actors(self, subcase_id: int, subtitle: str,
+                           imin: int, min_value: float,
+                           imax: int, max_value: float,
+                           label: str, location: str) -> None:
         """
         Updates the text actors in the lower left
 
@@ -187,11 +191,11 @@ class ToolActions:
             max_msg = 'Max:  %s' % str(max_value)
             min_msg = 'Min:  %s' % str(min_value)
         elif (isinstance(max_value, float) or
-              hasattr(max_value, 'dtype') and max_value.dtype.name in ['float32']):
+              hasattr(max_value, 'dtype') and max_value.dtype.name in ['float32', 'float64']):
             max_msg = 'Max:  %g' % max_value
             min_msg = 'Min:  %g' % min_value
 
-        elif hasattr(max_value, 'dtype') and max_value.dtype.name in ['complex64']:
+        elif hasattr(max_value, 'dtype') and max_value.dtype.name in ['complex64', 'complex128']:
             raise RuntimeError(f'{max_value.dtype.name} should be a magnitude')
             #max_msg = 'Max:  %g, %gj' % (max_value.real, max_value.imag)
             #min_msg = 'Min:  %g, %gj' % (min_value.real, min_value.imag)
@@ -216,12 +220,12 @@ class ToolActions:
         else:
             self.gui.text_actors[3].VisibilityOff()
 
-    def turn_text_off(self):
+    def turn_text_off(self) -> None:
         """turns all the text actors off"""
         for text in self.gui.text_actors.values():
             text.VisibilityOff()
 
-    def turn_text_on(self):
+    def turn_text_on(self) -> None:
         """turns all the text actors on"""
         for text in self.gui.text_actors.values():
             text.VisibilityOn()
@@ -229,7 +233,7 @@ class ToolActions:
     #---------------------------------------------------------------------------
     def on_take_screenshot(self, fname: Optional[str]=None,
                            magnify: Optional[int]=None,
-                           show_msg: bool=True):
+                           show_msg: bool=True) -> None:
         """
         Take a screenshot of a current view and save as a file
 
@@ -279,7 +283,7 @@ class ToolActions:
         self._screenshot_teardown(line_widths0, point_sizes0,
                                   coord_scale0, coord_text_scale0, line_width0, axes_actor)
 
-    def _get_screenshot_filename(self, fname: Optional[str]):
+    def _get_screenshot_filename(self, fname: Optional[str]) -> Tuple[str, str]:
         """helper method for ``on_take_screenshot``"""
         if fname is None or fname is False:
             filt = ''
@@ -322,7 +326,11 @@ class ToolActions:
                 flt = 'png'
         return fname, flt
 
-    def _screenshot_setup(self, magnify: Optional[int], render_large):
+    def _screenshot_setup(self, magnify: Optional[int], render_large: vtk.vtkvtkRenderLargeImage) -> Tuple[
+            Dict[str, int], Dict[str, int],
+            Dict[str, float], Dict[str, float],
+            Dict[str, int],
+            vtk.vtkAxesActor, magnify: int]:
         """helper method for ``on_take_screenshot``"""
         if magnify is None:
             magnify_min = 1
@@ -371,8 +379,12 @@ class ToolActions:
         axes_actor.SetVisibility(False)
         return line_widths0, point_sizes0, coord_scale0, coord_text_scale0, linewidth0, axes_actor, magnify
 
-    def _screenshot_teardown(self, line_widths0, point_sizes0,
-                             coord_scale0, coord_text_scale0, linewidth0, axes_actor):
+    def _screenshot_teardown(self, line_widths0: Dict[str, int],
+                             point_sizes0: Dict[str, int],
+                             coord_scale0: Dict[str, float],
+                             coord_text_scale0: float,
+                             linewidth0: int,
+                             axes_actor: vtk.vtkAxesActor):
         """helper method for ``on_take_screenshot``"""
         self.settings.update_text_size(magnify=1.0)
         # show corner axes
@@ -398,7 +410,9 @@ class ToolActions:
                                          #render=True)
 
     #---------------------------------------------------------------------------
-    def on_load_user_geom(self, csv_filename=None, name=None, color=None):
+    def on_load_user_geom(self, csv_filename: Optional[str]=None,
+                          name: Optional[str]=None,
+                          color: Optional[List[float]]=None) -> None:
         """
         Loads a User Geometry CSV File of the form:
 
@@ -458,7 +472,7 @@ class ToolActions:
         self.gui.log_command('on_load_user_geom(%r, %r, %s)' % (
             csv_filename, name, str(color)))
 
-    def _add_user_geometry(self, csv_filename, name, color):
+    def _add_user_geometry(self, csv_filename: str, name: str, color: List[float]) -> None:
         """
         helper method for ``on_load_user_geom``
 
@@ -522,7 +536,9 @@ class ToolActions:
         #prop.SetPointSize(4)
 
     #---------------------------------------------------------------------------
-    def on_load_csv_points(self, csv_filename=None, name=None, color=None):
+    def on_load_csv_points(self, csv_filename: Optional[str]=None,
+                           name: Optional[str]=None,
+                           color: Optional[List[float]]=None):
         """
         Loads a User Points CSV File of the form:
 
@@ -568,7 +584,7 @@ class ToolActions:
         return is_failed
 
     def _add_user_points_from_csv(self, csv_points_filename: str, name: str,
-                                  color, point_size: int=4):
+                                  color: List[float], point_size: int=4) -> bool:
         """
         Helper method for adding csv nodes to the gui
 
@@ -606,8 +622,10 @@ class ToolActions:
         is_failed = False
         return False
 
-    def _add_user_points(self, user_points, name: str, color,
-                         csv_points_filename: str='', point_size: int=4):
+    def _add_user_points(self, user_points: np.ndarray,
+                         name: str, color: List[float],
+                         csv_points_filename: str='',
+                         point_size: int=4) -> None:
         """
         Helper method for adding csv nodes to the gui
 
@@ -624,15 +642,16 @@ class ToolActions:
 
         """
         if name in self.gui.geometry_actors:
-            msg = 'Name: %s is already in geometry_actors\nChoose a different name.' % name
+            msg = f'Name: {name} is already in geometry_actors\nChoose a different name.'
             raise ValueError(msg)
         if len(name) == 0:
-            msg = 'Invalid Name: name=%r' % name
+            msg = f'Invalid Name: name={name!r}'
             raise ValueError(msg)
 
         # create grid
-        self.gui.create_alternate_vtk_grid(name, color=color, line_width=5, opacity=1.0,
-                                           point_size=point_size, representation='point')
+        self.gui.create_alternate_vtk_grid(
+            name, color=color, line_width=5, opacity=1.0,
+            point_size=point_size, representation='point')
 
         npoints = user_points.shape[0]
         if npoints == 0:
@@ -669,8 +688,12 @@ class ToolActions:
         prop.SetPointSize(point_size)
 
     #---------------------------------------------------------------------------
-    def _add_alt_geometry(self, grid, name: str, color=None, line_width=None,
-                          opacity=None, representation=None):
+    def _add_alt_geometry(self, grid: vtk.vtkUnstructuredGrid,
+                          name: str,
+                          color: Optional[List[float]]=None,
+                          line_width: Optional[int]=None,
+                          opacity: Optional[float]=None,
+                          representation: Optional[str]=None) -> None:
         """NOTE: color, line_width, opacity are ignored if name already exists"""
         has_geometry_actor = name in self.gui.geometry_actors
 
@@ -743,7 +766,7 @@ class ToolActions:
         alt_geometry_actor.Modified()
 
     #---------------------------------------------------------------------------
-    def GetCamera(self):
+    def GetCamera(self) -> vtk.vtkCamera:
         return self.rend.GetActiveCamera()
 
     @property
@@ -751,7 +774,7 @@ class ToolActions:
         return self.gui.settings
 
     @property
-    def rend(self):
+    def rend(self) -> vtk.vtkRenderer:
         return self.gui.rend
 
     @property
@@ -759,10 +782,16 @@ class ToolActions:
         return self.gui.vtk_interactor
 
 
-def add_user_geometry(alt_grid, geom_grid,
-                      xyz, nid_map, nnodes,
-                      bars, tris, quads,
-                      nelements, nbars, ntris, nquads):
+def add_user_geometry(alt_grid: vtk.vtkUnstructuredGrid,
+                      geom_grid: vtk.vtkUnstructuredGrid,
+                      xyz: np.ndarray,
+                      nid_map: Dict[int, int],
+                      nnodes: int,
+                      bars: np.ndarray,
+                      tris: np.ndarray,
+                      quads: np.ndarray,
+                      nelements: int, nbars: int,
+                      ntris: int, nquads: int) -> vtk.vtkPoints:
     """helper method for ``_add_user_geometry``"""
     # set points
     points = numpy_to_vtk_points(xyz, dtype='<f')
@@ -819,11 +848,12 @@ def add_user_geometry(alt_grid, geom_grid,
     return points
 
 
-def set_vtk_property_to_unicode(prop, font_filei):
+def set_vtk_property_to_unicode(prop: vtk.vtkProp, font_filei: str) -> None:
     prop.SetFontFile(font_filei)
     prop.SetFontFamily(vtk.VTK_FONT_FILE)
 
-def make_vtk_transform(origin, matrix_3x3):
+def make_vtk_transform(origin: Optional[np.ndarray],
+                       matrix_3x3: Optional[np.ndarray]) -> vtk.vtkTransform:
     """makes a vtkTransform"""
     transform = vtk.vtkTransform()
     if origin is None and matrix_3x3 is None:
@@ -914,7 +944,7 @@ def _set_base_axes(axes: vtk.vtkAxesActor,
     yaxis.SetLineWidth(linewidth)
     zaxis.SetLineWidth(linewidth)
 
-def _remove_invalid_filename_characters(basename):
+def _remove_invalid_filename_characters(basename: str) -> str:
     """
     Helper method for exporting cases of 12*I/t^3.csv,
     which have invalid characters.
